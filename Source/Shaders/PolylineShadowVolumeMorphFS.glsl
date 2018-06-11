@@ -1,7 +1,3 @@
-#ifdef GL_EXT_frag_depth
-#extension GL_EXT_frag_depth : enable
-#endif
-
 varying vec3 v_forwardDirectionEC;
 varying vec3 v_texcoordNormalization_and_halfWidth;
 varying float v_batchId;
@@ -23,9 +19,6 @@ void main(void)
     vec4 eyeCoordinate = gl_FragCoord;
     eyeCoordinate /= eyeCoordinate.w;
 
-#ifdef PICK
-    gl_FragColor.a = 1.0;
-#else // PICK
 #ifdef PER_INSTANCE_COLOR
     gl_FragColor = v_color;
 #else // PER_INSTANCE_COLOR
@@ -49,6 +42,4 @@ void main(void)
     czm_material material = czm_getMaterial(materialInput);
     gl_FragColor = vec4(material.diffuse + material.emission, material.alpha);
 #endif // PER_INSTANCE_COLOR
-
-#endif // PICK
 }

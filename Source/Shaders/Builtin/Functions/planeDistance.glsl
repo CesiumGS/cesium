@@ -1,5 +1,5 @@
 /**
- * Computes distance from an point to a plane, typically in eye space.
+ * Computes distance from a point to a plane.
  *
  * @name czm_planeDistance
  * @glslFunction
@@ -13,7 +13,7 @@ float czm_planeDistance(vec4 plane, vec3 point) {
 }
 
 /**
- * Computes distance from an point to a plane, typically in eye space.
+ * Computes distance from a point to a plane.
  *
  * @name czm_planeDistance
  * @glslFunction

@@ -66,7 +66,7 @@ define([
      * A GroundPolylinePrimitive represents a polyline draped over the terrain in the {@link Scene}.
      * <p>
      *
-     * Only to be used with GeometryInstances containing GroundPolylineGeometries
+     * Only to be used with GeometryInstances containing {@link GroundPolylineGeometry}
      *
      * @param {Object} [options] Object with the following properties:
      * @param {Array|GeometryInstance} [options.geometryInstances] GeometryInstances containing GroundPolylineGeometry
@@ -397,19 +397,26 @@ define([
         // which causes problems when interpolating log depth from vertices.
         // So force computing and writing log depth in the fragment shader.
         // Re-enable at far distances to avoid z-fighting.
-        var colorDefine = appearance instanceof PolylineColorAppearance ? 'PER_INSTANCE_COLOR' : '';
-        var vsDefines =  ['ENABLE_GL_POSITION_LOG_DEPTH_AT_HEIGHT', colorDefine];
-        var fsDefines =  groundPolylinePrimitive.debugShowShadowVolume ? ['DEBUG_SHOW_VOLUME', colorDefine] : [colorDefine];
-        var materialShaderSource = defined(appearance.material) ? appearance.material.shaderSource : '';
+        var vsDefines =  ['ENABLE_GL_POSITION_LOG_DEPTH_AT_HEIGHT'];
+        var colorDefine = '';
+        var materialShaderSource = '';
+        if (defined(appearance.material)) {
+            materialShaderSource = defined(appearance.material) ? appearance.material.shaderSource : '';
 
-        // Check for use of v_width and v_polylineAngle in material shader
-        // to determine whether these varyings should be active in the vertex shader.
-        if (materialShaderSource.search(/varying\s+float\s+v_polylineAngle;/g) === -1) {
-            vsDefines.push('ANGLE_VARYING');
+            // Check for use of v_width and v_polylineAngle in material shader
+            // to determine whether these varyings should be active in the vertex shader.
+            if (materialShaderSource.search(/varying\s+float\s+v_polylineAngle;/g) === -1) {
+                vsDefines.push('ANGLE_VARYING');
+            }
+            if (materialShaderSource.search(/varying\s+float\s+v_width;/g) === -1) {
+                vsDefines.push('WIDTH_VARYING');
+            }
+        } else {
+            colorDefine = 'PER_INSTANCE_COLOR';
         }
-        if (materialShaderSource.search(/varying\s+float\s+v_width;/g) === -1) {
-            vsDefines.push('WIDTH_VARYING');
-        }
+
+        vsDefines.push(colorDefine);
+        var fsDefines =  groundPolylinePrimitive.debugShowShadowVolume ? ['DEBUG_SHOW_VOLUME', colorDefine] : [colorDefine];
 
         var vsColor3D = new ShaderSource({
             defines : vsDefines,
@@ -498,7 +505,7 @@ define([
             command.shaderProgram = groundPolylinePrimitive._sp;
             command.uniformMap = uniformMap;
             command.pass = pass;
-            command.pickId = 'czm_batchTable_pickColor(v_endPlaneNormalEC_and_batchId.w)';
+            command.pickId = 'czm_batchTable_pickColor(v_endPlaneNormalEcAndBatchId.w)';
 
             // derive for 2D
             var derivedColorCommand = command.derivedCommands.color2D;
@@ -511,7 +518,7 @@ define([
             derivedColorCommand.shaderProgram = groundPolylinePrimitive._sp2D;
             derivedColorCommand.uniformMap = uniformMap;
             derivedColorCommand.pass = pass;
-            derivedColorCommand.pickId = 'czm_batchTable_pickColor(v_endPlaneNormalEC_and_batchId.w)';
+            derivedColorCommand.pickId = 'czm_batchTable_pickColor(v_endPlaneNormalEcAndBatchId.w)';
 
             // derive for Morph
             derivedColorCommand = command.derivedCommands.colorMorph;
@@ -632,6 +639,9 @@ define([
                         value : [geometryInstance.geometry.width]
                     });
                 }
+
+                // Update each geometry for framestate.scene3DOnly = true
+                geometryInstance.geometry._scene3DOnly = frameState.scene3DOnly;
 
                 groundInstances[i] = new GeometryInstance({
                     geometry : geometryInstance.geometry,

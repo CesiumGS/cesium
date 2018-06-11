@@ -62,30 +62,30 @@ defineSuite([
         expect(geometry.indices.length).toEqual(36);
         expect(geometry.attributes.position.values.length).toEqual(24);
 
-        var startHi_and_forwardOffsetX = geometry.attributes.startHi_and_forwardOffsetX;
-        var startLo_and_forwardOffsetY = geometry.attributes.startLo_and_forwardOffsetY;
-        var startNormal_and_forwardOffsetZ = geometry.attributes.startNormal_and_forwardOffsetZ;
-        var endNormal_and_textureCoordinateNormalizationX = geometry.attributes.endNormal_and_textureCoordinateNormalizationX;
-        var rightNormal_and_textureCoordinateNormalizationY = geometry.attributes.rightNormal_and_textureCoordinateNormalizationY;
+        var startHiAndForwardOffsetX = geometry.attributes.startHiAndForwardOffsetX;
+        var startLoAndForwardOffsetY = geometry.attributes.startLoAndForwardOffsetY;
+        var startNormalAndForwardOffsetZ = geometry.attributes.startNormalAndForwardOffsetZ;
+        var endNormalAndTextureCoordinateNormalizationX = geometry.attributes.endNormalAndTextureCoordinateNormalizationX;
+        var rightNormalAndTextureCoordinateNormalizationY = geometry.attributes.rightNormalAndTextureCoordinateNormalizationY;
         var startHiLo2D = geometry.attributes.startHiLo2D;
         var offsetAndRight2D = geometry.attributes.offsetAndRight2D;
         var startEndNormals2D = geometry.attributes.startEndNormals2D;
         var texcoordNormalization2D = geometry.attributes.texcoordNormalization2D;
 
         // Expect each entry in the additional attributes to be identical across all vertices since this is a single segment,
-        // except endNormal_and_textureCoordinateNormalizationX and texcoordNormalization2D, which should be "sided"
-        verifyAttributeValuesIdentical(startHi_and_forwardOffsetX);
-        verifyAttributeValuesIdentical(startLo_and_forwardOffsetY);
-        verifyAttributeValuesIdentical(startNormal_and_forwardOffsetZ);
-        verifyAttributeValuesIdentical(rightNormal_and_textureCoordinateNormalizationY);
+        // except endNormalAndTextureCoordinateNormalizationX and texcoordNormalization2D, which should be "sided"
+        verifyAttributeValuesIdentical(startHiAndForwardOffsetX);
+        verifyAttributeValuesIdentical(startLoAndForwardOffsetY);
+        verifyAttributeValuesIdentical(startNormalAndForwardOffsetZ);
+        verifyAttributeValuesIdentical(rightNormalAndTextureCoordinateNormalizationY);
         verifyAttributeValuesIdentical(startHiLo2D);
         verifyAttributeValuesIdentical(offsetAndRight2D);
         verifyAttributeValuesIdentical(startEndNormals2D);
 
-        // Expect endNormal_and_textureCoordinateNormalizationX and texcoordNormalization2D.x to encode the "side" of the geometry
+        // Expect endNormalAndTextureCoordinateNormalizationX and texcoordNormalization2D.x to encode the "side" of the geometry
         var i;
         var index;
-        var values = endNormal_and_textureCoordinateNormalizationX.values;
+        var values = endNormalAndTextureCoordinateNormalizationX.values;
         for (i = 0; i < 4; i++) {
             index = i * 4 + 3;
             expect(Math.sign(values[index])).toEqual(1.0);
@@ -112,32 +112,32 @@ defineSuite([
         // - a right-facing normal
         // - parameters for localizing the position along the line to texture coordinates
         var startPosition3D = new Cartesian3();
-        startPosition3D.x = startHi_and_forwardOffsetX.values[0] + startLo_and_forwardOffsetY.values[0];
-        startPosition3D.y = startHi_and_forwardOffsetX.values[1] + startLo_and_forwardOffsetY.values[1];
-        startPosition3D.z = startHi_and_forwardOffsetX.values[2] + startLo_and_forwardOffsetY.values[2];
+        startPosition3D.x = startHiAndForwardOffsetX.values[0] + startLoAndForwardOffsetY.values[0];
+        startPosition3D.y = startHiAndForwardOffsetX.values[1] + startLoAndForwardOffsetY.values[1];
+        startPosition3D.z = startHiAndForwardOffsetX.values[2] + startLoAndForwardOffsetY.values[2];
         var reconstructedCarto = Cartographic.fromCartesian(startPosition3D);
         reconstructedCarto.height = 0.0;
         expect(Cartographic.equalsEpsilon(reconstructedCarto, startCartographic, CesiumMath.EPSILON7)).toBe(true);
 
         var endPosition3D = new Cartesian3();
-        endPosition3D.x = startPosition3D.x + startHi_and_forwardOffsetX.values[3];
-        endPosition3D.y = startPosition3D.y + startLo_and_forwardOffsetY.values[3];
-        endPosition3D.z = startPosition3D.z + startNormal_and_forwardOffsetZ.values[3];
+        endPosition3D.x = startPosition3D.x + startHiAndForwardOffsetX.values[3];
+        endPosition3D.y = startPosition3D.y + startLoAndForwardOffsetY.values[3];
+        endPosition3D.z = startPosition3D.z + startNormalAndForwardOffsetZ.values[3];
         reconstructedCarto = Cartographic.fromCartesian(endPosition3D);
         reconstructedCarto.height = 0.0;
         expect(Cartographic.equalsEpsilon(reconstructedCarto, endCartographic, CesiumMath.EPSILON7)).toBe(true);
 
-        var startNormal3D = Cartesian3.unpack(startNormal_and_forwardOffsetZ.values);
+        var startNormal3D = Cartesian3.unpack(startNormalAndForwardOffsetZ.values);
         expect(Cartesian3.equalsEpsilon(startNormal3D, new Cartesian3(0.0, 1.0, 0.0), CesiumMath.EPSILON2)).toBe(true);
 
-        var endNormal3D = Cartesian3.unpack(endNormal_and_textureCoordinateNormalizationX.values);
+        var endNormal3D = Cartesian3.unpack(endNormalAndTextureCoordinateNormalizationX.values);
         expect(Cartesian3.equalsEpsilon(endNormal3D, new Cartesian3(0.0, -1.0, 0.0), CesiumMath.EPSILON2)).toBe(true);
 
-        var rightNormal3D = Cartesian3.unpack(rightNormal_and_textureCoordinateNormalizationY.values);
+        var rightNormal3D = Cartesian3.unpack(rightNormalAndTextureCoordinateNormalizationY.values);
         expect(Cartesian3.equalsEpsilon(rightNormal3D, new Cartesian3(0.0, 0.0, -1.0), CesiumMath.EPSILON2)).toBe(true);
 
-        var texcoordNormalizationX = endNormal_and_textureCoordinateNormalizationX.values[3];
-        var texcoordNormalizationY = rightNormal_and_textureCoordinateNormalizationY.values[3];
+        var texcoordNormalizationX = endNormalAndTextureCoordinateNormalizationX.values[3];
+        var texcoordNormalizationY = rightNormalAndTextureCoordinateNormalizationY.values[3];
         expect(texcoordNormalizationX).toEqualEpsilon(1.0, CesiumMath.EPSILON3);
         expect(texcoordNormalizationY).toEqualEpsilon(0.0, CesiumMath.EPSILON3);
 
@@ -179,6 +179,33 @@ defineSuite([
         expect(texcoordNormalizationY).toEqualEpsilon(0.0, CesiumMath.EPSILON3);
     });
 
+    it('does not generate 2D attributes when scene3DOnly is true', function() {
+        var startCartographic = Cartographic.fromDegrees(0.01, 0.0);
+        var endCartographic = Cartographic.fromDegrees(0.02, 0.0);
+        var groundPolylineGeometry = new GroundPolylineGeometry({
+            positions : Cartesian3.fromRadiansArray([
+                startCartographic.longitude, startCartographic.latitude,
+                endCartographic.longitude, endCartographic.latitude
+            ]),
+            granularity : 0.0
+        });
+
+        groundPolylineGeometry._scene3DOnly = true;
+
+        var geometry = GroundPolylineGeometry.createGeometry(groundPolylineGeometry);
+
+        expect(geometry.attributes.startHiAndForwardOffsetX).toBeDefined();
+        expect(geometry.attributes.startLoAndForwardOffsetY).toBeDefined();
+        expect(geometry.attributes.startNormalAndForwardOffsetZ).toBeDefined();
+        expect(geometry.attributes.endNormalAndTextureCoordinateNormalizationX).toBeDefined();
+        expect(geometry.attributes.rightNormalAndTextureCoordinateNormalizationY).toBeDefined();
+
+        expect(geometry.attributes.startHiLo2D).not.toBeDefined();
+        expect(geometry.attributes.offsetAndRight2D).not.toBeDefined();
+        expect(geometry.attributes.startEndNormals2D).not.toBeDefined();
+        expect(geometry.attributes.texcoordNormalization2D).not.toBeDefined();
+    });
+
     it('miters turns', function() {
         var groundPolylineGeometry = new GroundPolylineGeometry({
             positions : Cartesian3.fromDegreesArray([
@@ -193,11 +220,11 @@ defineSuite([
         expect(geometry.indices.length).toEqual(72);
         expect(geometry.attributes.position.values.length).toEqual(48);
 
-        var startNormal_and_forwardOffsetZvalues = geometry.attributes.startNormal_and_forwardOffsetZ.values;
-        var endNormal_and_textureCoordinateNormalizationXvalues = geometry.attributes.endNormal_and_textureCoordinateNormalizationX.values;
+        var startNormalAndForwardOffsetZvalues = geometry.attributes.startNormalAndForwardOffsetZ.values;
+        var endNormalAndTextureCoordinateNormalizationXvalues = geometry.attributes.endNormalAndTextureCoordinateNormalizationX.values;
 
-        var miteredStartNormal = Cartesian3.unpack(startNormal_and_forwardOffsetZvalues, 32);
-        var miteredEndNormal = Cartesian3.unpack(endNormal_and_textureCoordinateNormalizationXvalues, 0);
+        var miteredStartNormal = Cartesian3.unpack(startNormalAndForwardOffsetZvalues, 32);
+        var miteredEndNormal = Cartesian3.unpack(endNormalAndTextureCoordinateNormalizationXvalues, 0);
         var reverseMiteredEndNormal = Cartesian3.multiplyByScalar(miteredEndNormal, -1.0, new Cartesian3());
 
         expect(Cartesian3.equalsEpsilon(miteredStartNormal, reverseMiteredEndNormal, CesiumMath.EPSILON7)).toBe(true);
@@ -219,11 +246,11 @@ defineSuite([
 
         var geometry = GroundPolylineGeometry.createGeometry(groundPolylineGeometry);
 
-        var startNormal_and_forwardOffsetZvalues = geometry.attributes.startNormal_and_forwardOffsetZ.values;
-        var endNormal_and_textureCoordinateNormalizationXvalues = geometry.attributes.endNormal_and_textureCoordinateNormalizationX.values;
+        var startNormalAndForwardOffsetZvalues = geometry.attributes.startNormalAndForwardOffsetZ.values;
+        var endNormalAndTextureCoordinateNormalizationXvalues = geometry.attributes.endNormalAndTextureCoordinateNormalizationX.values;
 
-        var miteredStartNormal = Cartesian3.unpack(startNormal_and_forwardOffsetZvalues, 32);
-        var miteredEndNormal = Cartesian3.unpack(endNormal_and_textureCoordinateNormalizationXvalues, 0);
+        var miteredStartNormal = Cartesian3.unpack(startNormalAndForwardOffsetZvalues, 32);
+        var miteredEndNormal = Cartesian3.unpack(endNormalAndTextureCoordinateNormalizationXvalues, 0);
         var reverseMiteredEndNormal = Cartesian3.multiplyByScalar(miteredEndNormal, -1.0, new Cartesian3());
 
         expect(Cartesian3.equalsEpsilon(miteredStartNormal, reverseMiteredEndNormal, CesiumMath.EPSILON7)).toBe(true);
@@ -246,12 +273,12 @@ defineSuite([
 
         geometry = GroundPolylineGeometry.createGeometry(groundPolylineGeometry);
 
-        startNormal_and_forwardOffsetZvalues = geometry.attributes.startNormal_and_forwardOffsetZ.values;
-        endNormal_and_textureCoordinateNormalizationXvalues = geometry.attributes.endNormal_and_textureCoordinateNormalizationX.values;
+        startNormalAndForwardOffsetZvalues = geometry.attributes.startNormalAndForwardOffsetZ.values;
+        endNormalAndTextureCoordinateNormalizationXvalues = geometry.attributes.endNormalAndTextureCoordinateNormalizationX.values;
 
         // Check normals at loop end
-        miteredStartNormal = Cartesian3.unpack(startNormal_and_forwardOffsetZvalues, 0);
-        miteredEndNormal = Cartesian3.unpack(endNormal_and_textureCoordinateNormalizationXvalues, 32 * 2);
+        miteredStartNormal = Cartesian3.unpack(startNormalAndForwardOffsetZvalues, 0);
+        miteredEndNormal = Cartesian3.unpack(endNormalAndTextureCoordinateNormalizationXvalues, 32 * 2);
 
         expect(Cartesian3.equalsEpsilon(miteredStartNormal, miteredEndNormal, CesiumMath.EPSILON7)).toBe(true);
 
@@ -402,6 +429,7 @@ defineSuite([
             loop : true,
             granularity : 10.0 // no interpolative subdivision
         });
+        groundPolylineGeometry._scene3DOnly = true;
 
         var packedArray = [0];
         GroundPolylineGeometry.pack(groundPolylineGeometry, packedArray, 1);
@@ -420,6 +448,7 @@ defineSuite([
         expect(scratch.loop).toBe(true);
         expect(scratch.granularity).toEqual(10.0);
         expect(scratch.ellipsoid.equals(Ellipsoid.WGS84)).toBe(true);
+        expect(scratch._scene3DOnly).toBe(true);
     });
 
     var positions = Cartesian3.fromDegreesArray([
@@ -454,5 +483,7 @@ defineSuite([
     Ellipsoid.pack(Ellipsoid.WGS84, packedInstance, packedInstance.length);
 
     packedInstance.push(0.0); // projection index for Geographic (default)
+    packedInstance.push(0.0); // scene3DModeOnly = false
+
     createPackableSpecs(GroundPolylineGeometry, polyline, packedInstance);
 });

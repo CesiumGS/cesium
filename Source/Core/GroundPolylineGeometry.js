@@ -51,8 +51,8 @@ define([
     var PROJECTIONS = [GeographicProjection, WebMercatorProjection];
     var PROJECTION_COUNT = PROJECTIONS.length;
 
-    var MITER_BREAK_SMALL = Math.cos(CesiumMath.toRadians(1));
-    var MITER_BREAK_LARGE = Math.cos(CesiumMath.toRadians(179));
+    var MITER_BREAK_SMALL = Math.cos(CesiumMath.toRadians(1.0));
+    var MITER_BREAK_LARGE = Math.cos(CesiumMath.toRadians(179.0));
 
     // Initial heights for constructing the wall.
     // Keeping WALL_INITIAL_MIN_HEIGHT near the ellipsoid surface helps
@@ -68,23 +68,33 @@ define([
     var WALL_INITIAL_MAX_HEIGHT = 1000.0;
 
     /**
-     * A description of a polyline on terrain. Only to be used with GroundPolylinePrimitive.
+     * A description of a polyline on terrain. Only to be used with {@link GroundPolylinePrimitive}.
      *
      * @alias GroundPolylineGeometry
      * @constructor
      *
      * @param {Object} options Options with the following properties:
-     * @param {Number} [options.width=1.0] The screen space width in pixels.
      * @param {Cartesian3[]} options.positions An array of {@link Cartesian3} defining the polyline's points. Heights above the ellipsoid will be ignored.
-     * @param {Number} [options.granularity=9999.0] The distance interval used for interpolating options.points. Defaults to 9999.0 meters. Zero indicates no interpolation.
+     * @param {Number} [options.width=1.0] The screen space width in pixels.
+     * @param {Number} [options.granularity=9999.0] The distance interval in meters used for interpolating options.points. Defaults to 9999.0 meters. Zero indicates no interpolation.
      * @param {Boolean} [options.loop=false] Whether during geometry creation a line segment will be added between the last and first line positions to make this Polyline a loop.
      * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] Ellipsoid that input positions will be clamped to.
      * @param {MapProjection} [options.projection] Map Projection for projecting coordinates to 2D.
      *
      * @exception {DeveloperError} At least two positions are required.
      *
-     * @see GroundPolylineGeometry#createGeometry
      * @see GroundPolylinePrimitive
+     *
+     * @example
+     * var positions = Cesium.Cartesian3.fromDegreesArray([
+     *   -112.1340164450331, 36.05494287836128,
+     *   -112.08821010582645, 36.097804071380715,
+     *   -112.13296079730024, 36.168769146801104
+     * ]);
+     *
+     * var geometry = new Cesium.GroundPolylineGeometry({
+     *   positions : positions
+     * });
      */
     function GroundPolylineGeometry(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -108,6 +118,7 @@ define([
          * The distance interval used for interpolating options.points. Zero indicates no interpolation.
          * Default of 9999.0 allows centimeter accuracy with 32 bit floating point.
          * @type {Boolean}
+         * @default 9999.0
          */
         this.granularity = defaultValue(options.granularity, 9999.0);
 
@@ -115,12 +126,14 @@ define([
          * Whether during geometry creation a line segment will be added between the last and first line positions to make this Polyline a loop.
          * If the geometry has two positions this parameter will be ignored.
          * @type {Boolean}
+         * @default false
          */
         this.loop = defaultValue(options.loop, false);
 
         /**
          * Ellipsoid for projecting cartographic coordinates to 3D.
          * @type {Ellipsoid}
+         * @default Ellipsoid.WGS84
          */
         this.ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
 
@@ -136,6 +149,9 @@ define([
         }
         this._projectionIndex = projectionIndex;
         this._workerName = 'createGroundPolylineGeometry';
+
+        // Used by GroundPolylinePrimitive to signal worker that scenemode is 3D only.
+        this._scene3DOnly = false;
     }
 
     defineProperties(GroundPolylineGeometry.prototype, {
@@ -148,7 +164,7 @@ define([
          */
         packedLength: {
             get: function() {
-                return 1.0 + this._positions.length * 3 + 1.0 + 1.0 + Ellipsoid.packedLength + 1.0;
+                return 1.0 + this._positions.length * 3 + 1.0 + 1.0 + Ellipsoid.packedLength + 1.0 + 1.0;
             }
         }
     });
@@ -249,6 +265,7 @@ define([
         index += Ellipsoid.packedLength;
 
         array[index++] = value._projectionIndex;
+        array[index++] = value._scene3DOnly ? 1.0 : 0.0;
 
         return array;
     };
@@ -281,15 +298,18 @@ define([
         index += Ellipsoid.packedLength;
 
         var projectionIndex = array[index++];
+        var scene3DOnly = (array[index++] === 1.0);
 
         if (!defined(result)) {
-            return new GroundPolylineGeometry({
+            var geometry = new GroundPolylineGeometry({
                 positions : positions,
                 granularity : granularity,
                 loop : loop,
                 ellipsoid : ellipsoid,
                 projection : new PROJECTIONS[projectionIndex](ellipsoid)
             });
+            geometry._scene3DOnly = scene3DOnly;
+            return geometry;
         }
 
         result._positions = positions;
@@ -297,6 +317,7 @@ define([
         result.loop = loop;
         result.ellipsoid = ellipsoid;
         result._projectionIndex = projectionIndex;
+        result._scene3DOnly = scene3DOnly;
 
         return result;
     };
@@ -361,11 +382,13 @@ define([
     /**
      * Computes shadow volumes for the ground polyline, consisting of its vertices, indices, and a bounding sphere.
      * Vertices are "fat," packing all the data needed in each volume to describe a line on terrain.
+     * Should not be called independent of {@link GroundPolylinePrimitive}.
      *
      * @param {GroundPolylineGeometry} groundPolylineGeometry
      * @private
      */
     GroundPolylineGeometry.createGeometry = function(groundPolylineGeometry) {
+        var compute2dAttributes = !groundPolylineGeometry._scene3DOnly;
         var loop = groundPolylineGeometry.loop;
         var ellipsoid = groundPolylineGeometry.ellipsoid;
         var granularity = groundPolylineGeometry.granularity;
@@ -517,7 +540,7 @@ define([
             cartographicsArray.push(startCartographic.longitude);
         }
 
-        return generateGeometryAttributes(loop, projection, bottomPositionsArray, topPositionsArray, normalsArray, cartographicsArray);
+        return generateGeometryAttributes(loop, projection, bottomPositionsArray, topPositionsArray, normalsArray, cartographicsArray, compute2dAttributes);
     };
 
     // If the end normal angle is too steep compared to the direction of the line segment,
@@ -677,7 +700,7 @@ define([
     // Each shadow volume's vertices encode a description of the line it contains,
     // including mitering planes at the end points, a plane along the line itself,
     // and attributes for computing length-wise texture coordinates.
-    function generateGeometryAttributes(loop, projection, bottomPositionsArray, topPositionsArray, normalsArray, cartographicsArray) {
+    function generateGeometryAttributes(loop, projection, bottomPositionsArray, topPositionsArray, normalsArray, cartographicsArray, compute2dAttributes) {
         var i;
         var index;
         var ellipsoid = projection.ellipsoid;
@@ -691,22 +714,28 @@ define([
         var indices = vertexCount > 65535 ? new Uint32Array(indexCount) : new Uint16Array(indexCount);
         var positionsArray = new Float64Array(vertexCount * 3);
 
-        var startHi_and_forwardOffsetX = new Float32Array(arraySizeVec4);
-        var startLo_and_forwardOffsetY = new Float32Array(arraySizeVec4);
-        var startNormal_and_forwardOffsetZ = new Float32Array(arraySizeVec4);
-        var endNormal_and_textureCoordinateNormalizationX = new Float32Array(arraySizeVec4);
-        var rightNormal_and_textureCoordinateNormalizationY = new Float32Array(arraySizeVec4);
+        var startHiAndForwardOffsetX = new Float32Array(arraySizeVec4);
+        var startLoAndForwardOffsetY = new Float32Array(arraySizeVec4);
+        var startNormalAndForwardOffsetZ = new Float32Array(arraySizeVec4);
+        var endNormalAndTextureCoordinateNormalizationX = new Float32Array(arraySizeVec4);
+        var rightNormalAndTextureCoordinateNormalizationY = new Float32Array(arraySizeVec4);
 
-        var startHiLo2D = new Float32Array(arraySizeVec4);
-        var offsetAndRight2D = new Float32Array(arraySizeVec4);
-        var startEndNormals2D = new Float32Array(arraySizeVec4);
-        var texcoordNormalization2D = new Float32Array(vertexCount * 2);
+        var startHiLo2D;
+        var offsetAndRight2D;
+        var startEndNormals2D;
+        var texcoordNormalization2D;
+
+        if (compute2dAttributes) {
+            startHiLo2D = new Float32Array(arraySizeVec4);
+            offsetAndRight2D = new Float32Array(arraySizeVec4);
+            startEndNormals2D = new Float32Array(arraySizeVec4);
+            texcoordNormalization2D = new Float32Array(vertexCount * 2);
+        }
 
         /*** Compute total lengths for texture coordinate normalization ***/
         // 2D
         var cartographicsLength = cartographicsArray.length / 2;
         var length2D = 0.0;
-        var length3D = 0.0;
 
         var startCartographic = startCartographicScratch;
         startCartographic.height = 0.0;
@@ -716,23 +745,26 @@ define([
         var segmentStartCartesian = segmentStartTopScratch;
         var segmentEndCartesian = segmentEndTopScratch;
 
-        index = 0;
-        for (i = 1; i < cartographicsLength; i++) {
-            // don't clone anything from previous segment b/c possible IDL touch
-            startCartographic.latitude = cartographicsArray[index];
-            startCartographic.longitude = cartographicsArray[index + 1];
-            endCartographic.latitude = cartographicsArray[index + 2];
-            endCartographic.longitude = cartographicsArray[index + 3];
+        if (compute2dAttributes) {
+            index = 0;
+            for (i = 1; i < cartographicsLength; i++) {
+                // don't clone anything from previous segment b/c possible IDL touch
+                startCartographic.latitude = cartographicsArray[index];
+                startCartographic.longitude = cartographicsArray[index + 1];
+                endCartographic.latitude = cartographicsArray[index + 2];
+                endCartographic.longitude = cartographicsArray[index + 3];
 
-            segmentStartCartesian = projection.project(startCartographic, segmentStartCartesian);
-            segmentEndCartesian = projection.project(endCartographic, segmentEndCartesian);
-            length2D += Cartesian3.distance(segmentStartCartesian, segmentEndCartesian);
-            index += 2;
+                segmentStartCartesian = projection.project(startCartographic, segmentStartCartesian);
+                segmentEndCartesian = projection.project(endCartographic, segmentEndCartesian);
+                length2D += Cartesian3.distance(segmentStartCartesian, segmentEndCartesian);
+                index += 2;
+            }
         }
 
         // 3D
         var positionsLength = topPositionsArray.length / 3;
         segmentEndCartesian = Cartesian3.unpack(topPositionsArray, 0, segmentEndCartesian);
+        var length3D = 0.0;
 
         index = 3;
         for (i = 1; i < positionsLength; i++) {
@@ -786,35 +818,41 @@ define([
             startCartographic.longitude = cartographicsArray[cartographicsIndex + 1];
             endCartographic.latitude = cartographicsArray[cartographicsIndex + 2];
             endCartographic.longitude = cartographicsArray[cartographicsIndex + 3];
+            var start2D;
+            var end2D;
+            var startGeometryNormal2D;
+            var endGeometryNormal2D;
 
-            var nudgeResult = nudgeCartographic(startCartographic, endCartographic);
-            var start2D = projection.project(startCartographic, segmentStart2DScratch);
-            var end2D = projection.project(endCartographic, segmentEnd2DScratch);
-            var direction2D = direction(end2D, start2D, forwardOffset2DScratch);
-            direction2D.y = Math.abs(direction2D.y);
+            if (compute2dAttributes) {
+                var nudgeResult = nudgeCartographic(startCartographic, endCartographic);
+                start2D = projection.project(startCartographic, segmentStart2DScratch);
+                end2D = projection.project(endCartographic, segmentEnd2DScratch);
+                var direction2D = direction(end2D, start2D, forwardOffset2DScratch);
+                direction2D.y = Math.abs(direction2D.y);
 
-            var startGeometryNormal2D = segmentStartNormal2DScratch;
-            var endGeometryNormal2D = segmentEndNormal2DScratch;
-            if (nudgeResult === 0 || Cartesian3.dot(direction2D, Cartesian3.UNIT_Y) > MITER_BREAK_SMALL) {
-                // No nudge - project the original normal
-                // Or, if the line's angle relative to the IDL is very acute,
-                // in which case snapping will produce oddly shaped volumes.
-                startGeometryNormal2D = projectNormal(projection, startCartographic, startGeometryNormal, start2D, segmentStartNormal2DScratch);
-                endGeometryNormal2D = projectNormal(projection, endCartographic, endGeometryNormal, end2D, segmentEndNormal2DScratch);
-            } else if (nudgeResult === 1) {
-                // Start is close to IDL - snap start normal to align with IDL
-                endGeometryNormal2D = projectNormal(projection, endCartographic, endGeometryNormal, end2D, segmentEndNormal2DScratch);
-                startGeometryNormal2D.x = 0.0;
-                // If start longitude is negative and end longitude is less negative, "right" is unit -Y
-                // If start longitude is positive and end longitude is less positive, "right" is unit +Y
-                startGeometryNormal2D.y = Math.sign(startCartographic.longitude - Math.abs(endCartographic.longitude));
-                startGeometryNormal2D.z = 0.0;
-            } else {
-                // End is close to IDL - snap end normal to align with IDL
-                startGeometryNormal2D = projectNormal(projection, startCartographic, startGeometryNormal, start2D, segmentStartNormal2DScratch);
-                endGeometryNormal2D.x = 0.0;
-                endGeometryNormal2D.y = Math.sign(endCartographic.longitude - Math.abs(startCartographic.longitude));
-                endGeometryNormal2D.z = 0.0;
+                startGeometryNormal2D = segmentStartNormal2DScratch;
+                endGeometryNormal2D = segmentEndNormal2DScratch;
+                if (nudgeResult === 0 || Cartesian3.dot(direction2D, Cartesian3.UNIT_Y) > MITER_BREAK_SMALL) {
+                    // No nudge - project the original normal
+                    // Or, if the line's angle relative to the IDL is very acute,
+                    // in which case snapping will produce oddly shaped volumes.
+                    startGeometryNormal2D = projectNormal(projection, startCartographic, startGeometryNormal, start2D, segmentStartNormal2DScratch);
+                    endGeometryNormal2D = projectNormal(projection, endCartographic, endGeometryNormal, end2D, segmentEndNormal2DScratch);
+                } else if (nudgeResult === 1) {
+                    // Start is close to IDL - snap start normal to align with IDL
+                    endGeometryNormal2D = projectNormal(projection, endCartographic, endGeometryNormal, end2D, segmentEndNormal2DScratch);
+                    startGeometryNormal2D.x = 0.0;
+                    // If start longitude is negative and end longitude is less negative, "right" is unit -Y
+                    // If start longitude is positive and end longitude is less positive, "right" is unit +Y
+                    startGeometryNormal2D.y = Math.sign(startCartographic.longitude - Math.abs(endCartographic.longitude));
+                    startGeometryNormal2D.z = 0.0;
+                } else {
+                    // End is close to IDL - snap end normal to align with IDL
+                    startGeometryNormal2D = projectNormal(projection, startCartographic, startGeometryNormal, start2D, segmentStartNormal2DScratch);
+                    endGeometryNormal2D.x = 0.0;
+                    endGeometryNormal2D.y = Math.sign(endCartographic.longitude - Math.abs(startCartographic.longitude));
+                    endGeometryNormal2D.z = 0.0;
+                }
             }
 
             /****************************************
@@ -854,22 +892,29 @@ define([
             var texcoordNormalization3DY = lengthSoFar3D / length3D;
 
             /** 2D **/
-            // In 2D case, positions and normals can be done as 2 components
-            var segmentLength2D = Cartesian3.distance(start2D, end2D);
+            var segmentLength2D = 0.0;
+            var encodedStart2D;
+            var forwardOffset2D;
+            var right2D;
+            var texcoordNormalization2DX = 0.0;
+            var texcoordNormalization2DY = 0.0;
+            if (compute2dAttributes) {
+                // In 2D case, positions and normals can be done as 2 components
+                segmentLength2D = Cartesian3.distance(start2D, end2D);
 
-            var encodedStart2D = EncodedCartesian3.fromCartesian(start2D, encodeScratch2D);
-            var forwardOffset2D = Cartesian3.subtract(end2D, start2D, forwardOffset2DScratch);
+                encodedStart2D = EncodedCartesian3.fromCartesian(start2D, encodeScratch2D);
+                forwardOffset2D = Cartesian3.subtract(end2D, start2D, forwardOffset2DScratch);
 
-            // Right direction is just forward direction rotated by -90 degrees around Z
-            // Similarly with plane normals
-            var right2D = Cartesian3.normalize(forwardOffset2D, right2DScratch);
-            var swap = right2D.x;
-            right2D.x = right2D.y;
-            right2D.y = -swap;
+                // Right direction is just forward direction rotated by -90 degrees around Z
+                // Similarly with plane normals
+                right2D = Cartesian3.normalize(forwardOffset2D, right2DScratch);
+                var swap = right2D.x;
+                right2D.x = right2D.y;
+                right2D.y = -swap;
 
-            var texcoordNormalization2DX = segmentLength2D / length2D;
-            var texcoordNormalization2DY = lengthSoFar2D / length2D;
-
+                texcoordNormalization2DX = segmentLength2D / length2D;
+                texcoordNormalization2DY = lengthSoFar2D / length2D;
+            }
             /** Pack **/
             for (j = 0; j < 8; j++) {
                 var vec4Index = vec4sWriteIndex + j * 4;
@@ -880,39 +925,41 @@ define([
                 var sidedness = j < 4 ? 1.0 : -1.0;
 
                 // 3D
-                Cartesian3.pack(encodedStart.high, startHi_and_forwardOffsetX, vec4Index);
-                startHi_and_forwardOffsetX[wIndex] = forwardOffset.x;
+                Cartesian3.pack(encodedStart.high, startHiAndForwardOffsetX, vec4Index);
+                startHiAndForwardOffsetX[wIndex] = forwardOffset.x;
 
-                Cartesian3.pack(encodedStart.low, startLo_and_forwardOffsetY, vec4Index);
-                startLo_and_forwardOffsetY[wIndex] = forwardOffset.y;
+                Cartesian3.pack(encodedStart.low, startLoAndForwardOffsetY, vec4Index);
+                startLoAndForwardOffsetY[wIndex] = forwardOffset.y;
 
-                Cartesian3.pack(startPlaneNormal, startNormal_and_forwardOffsetZ, vec4Index);
-                startNormal_and_forwardOffsetZ[wIndex] = forwardOffset.z;
+                Cartesian3.pack(startPlaneNormal, startNormalAndForwardOffsetZ, vec4Index);
+                startNormalAndForwardOffsetZ[wIndex] = forwardOffset.z;
 
-                Cartesian3.pack(endPlaneNormal, endNormal_and_textureCoordinateNormalizationX, vec4Index);
-                endNormal_and_textureCoordinateNormalizationX[wIndex] = texcoordNormalization3DX * sidedness;
+                Cartesian3.pack(endPlaneNormal, endNormalAndTextureCoordinateNormalizationX, vec4Index);
+                endNormalAndTextureCoordinateNormalizationX[wIndex] = texcoordNormalization3DX * sidedness;
 
-                Cartesian3.pack(rightNormal, rightNormal_and_textureCoordinateNormalizationY, vec4Index);
-                rightNormal_and_textureCoordinateNormalizationY[wIndex] = texcoordNormalization3DY;
+                Cartesian3.pack(rightNormal, rightNormalAndTextureCoordinateNormalizationY, vec4Index);
+                rightNormalAndTextureCoordinateNormalizationY[wIndex] = texcoordNormalization3DY;
 
                 // 2D
-                startHiLo2D[vec4Index] = encodedStart2D.high.x;
-                startHiLo2D[vec4Index + 1] = encodedStart2D.high.y;
-                startHiLo2D[vec4Index + 2] = encodedStart2D.low.x;
-                startHiLo2D[vec4Index + 3] = encodedStart2D.low.y;
+                if (compute2dAttributes) {
+                    startHiLo2D[vec4Index] = encodedStart2D.high.x;
+                    startHiLo2D[vec4Index + 1] = encodedStart2D.high.y;
+                    startHiLo2D[vec4Index + 2] = encodedStart2D.low.x;
+                    startHiLo2D[vec4Index + 3] = encodedStart2D.low.y;
 
-                startEndNormals2D[vec4Index] = -startGeometryNormal2D.y;
-                startEndNormals2D[vec4Index + 1] = startGeometryNormal2D.x;
-                startEndNormals2D[vec4Index + 2] = endGeometryNormal2D.y;
-                startEndNormals2D[vec4Index + 3] = -endGeometryNormal2D.x;
+                    startEndNormals2D[vec4Index] = -startGeometryNormal2D.y;
+                    startEndNormals2D[vec4Index + 1] = startGeometryNormal2D.x;
+                    startEndNormals2D[vec4Index + 2] = endGeometryNormal2D.y;
+                    startEndNormals2D[vec4Index + 3] = -endGeometryNormal2D.x;
 
-                offsetAndRight2D[vec4Index] = forwardOffset2D.x;
-                offsetAndRight2D[vec4Index + 1] = forwardOffset2D.y;
-                offsetAndRight2D[vec4Index + 2] = right2D.x;
-                offsetAndRight2D[vec4Index + 3] = right2D.y;
+                    offsetAndRight2D[vec4Index] = forwardOffset2D.x;
+                    offsetAndRight2D[vec4Index + 1] = forwardOffset2D.y;
+                    offsetAndRight2D[vec4Index + 2] = right2D.x;
+                    offsetAndRight2D[vec4Index + 3] = right2D.y;
 
-                texcoordNormalization2D[vec2Index] = texcoordNormalization2DX * sidedness;
-                texcoordNormalization2D[vec2Index + 1] = texcoordNormalization2DY;
+                    texcoordNormalization2D[vec2Index] = texcoordNormalization2DX * sidedness;
+                    texcoordNormalization2D[vec2Index + 1] = texcoordNormalization2DY;
+                }
             }
 
             /****************************************************************
@@ -998,30 +1045,34 @@ define([
         BoundingSphere.fromVertices(topPositionsArray, Cartesian3.ZERO, 3, boundingSpheres[1]);
         var boundingSphere = BoundingSphere.fromBoundingSpheres(boundingSpheres);
 
-        return new Geometry({
-            attributes : {
-                position : new GeometryAttribute({
-                    componentDatatype : ComponentDatatype.DOUBLE,
-                    componentsPerAttribute : 3,
-                    normalize : false,
-                    values : positionsArray
-                }),
-                startHi_and_forwardOffsetX : getVec4GeometryAttribute(startHi_and_forwardOffsetX),
-                startLo_and_forwardOffsetY : getVec4GeometryAttribute(startLo_and_forwardOffsetY),
-                startNormal_and_forwardOffsetZ : getVec4GeometryAttribute(startNormal_and_forwardOffsetZ),
-                endNormal_and_textureCoordinateNormalizationX : getVec4GeometryAttribute(endNormal_and_textureCoordinateNormalizationX),
-                rightNormal_and_textureCoordinateNormalizationY : getVec4GeometryAttribute(rightNormal_and_textureCoordinateNormalizationY),
+        var attributes = {
+            position : new GeometryAttribute({
+                componentDatatype : ComponentDatatype.DOUBLE,
+                componentsPerAttribute : 3,
+                normalize : false,
+                values : positionsArray
+            }),
+            startHiAndForwardOffsetX : getVec4GeometryAttribute(startHiAndForwardOffsetX),
+            startLoAndForwardOffsetY : getVec4GeometryAttribute(startLoAndForwardOffsetY),
+            startNormalAndForwardOffsetZ : getVec4GeometryAttribute(startNormalAndForwardOffsetZ),
+            endNormalAndTextureCoordinateNormalizationX : getVec4GeometryAttribute(endNormalAndTextureCoordinateNormalizationX),
+            rightNormalAndTextureCoordinateNormalizationY : getVec4GeometryAttribute(rightNormalAndTextureCoordinateNormalizationY)
+        };
 
-                startHiLo2D : getVec4GeometryAttribute(startHiLo2D),
-                offsetAndRight2D : getVec4GeometryAttribute(offsetAndRight2D),
-                startEndNormals2D : getVec4GeometryAttribute(startEndNormals2D),
-                texcoordNormalization2D : new GeometryAttribute({
-                    componentDatatype : ComponentDatatype.FLOAT,
-                    componentsPerAttribute : 2,
-                    normalize : false,
-                    values : texcoordNormalization2D
-                })
-            },
+        if (compute2dAttributes) {
+            attributes.startHiLo2D = getVec4GeometryAttribute(startHiLo2D);
+            attributes.offsetAndRight2D = getVec4GeometryAttribute(offsetAndRight2D);
+            attributes.startEndNormals2D = getVec4GeometryAttribute(startEndNormals2D);
+            attributes.texcoordNormalization2D = new GeometryAttribute({
+                componentDatatype : ComponentDatatype.FLOAT,
+                componentsPerAttribute : 2,
+                normalize : false,
+                values : texcoordNormalization2D
+            });
+        }
+
+        return new Geometry({
+            attributes : attributes,
             indices : indices,
             boundingSphere : boundingSphere
         });

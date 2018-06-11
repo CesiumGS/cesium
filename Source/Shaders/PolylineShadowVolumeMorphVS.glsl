@@ -1,11 +1,11 @@
 attribute vec3 position3DHigh;
 attribute vec3 position3DLow;
 
-attribute vec4 startHi_and_forwardOffsetX;
-attribute vec4 startLo_and_forwardOffsetY;
-attribute vec4 startNormal_and_forwardOffsetZ;
-attribute vec4 endNormal_and_textureCoordinateNormalizationX;
-attribute vec4 rightNormal_and_textureCoordinateNormalizationY;
+attribute vec4 startHiAndForwardOffsetX;
+attribute vec4 startLoAndForwardOffsetY;
+attribute vec4 startNormalAndForwardOffsetZ;
+attribute vec4 endNormalAndTextureCoordinateNormalizationX;
+attribute vec4 rightNormalAndTextureCoordinateNormalizationY;
 attribute vec4 startHiLo2D;
 attribute vec4 offsetAndRight2D;
 attribute vec4 startEndNormals2D;
@@ -40,7 +40,7 @@ void main()
 
     // Start position
     vec4 posRelativeToEye2D = czm_translateRelativeToEye(vec3(0.0, startHiLo2D.xy), vec3(0.0, startHiLo2D.zw));
-    vec4 posRelativeToEye3D = czm_translateRelativeToEye(startHi_and_forwardOffsetX.xyz, startLo_and_forwardOffsetY.xyz);
+    vec4 posRelativeToEye3D = czm_translateRelativeToEye(startHiAndForwardOffsetX.xyz, startLoAndForwardOffsetY.xyz);
     vec4 posRelativeToEye = czm_columbusViewMorph(posRelativeToEye2D, posRelativeToEye3D, czm_morphTime);
     vec3 ecPos2D = (czm_modelViewRelativeToEye * posRelativeToEye2D).xyz;
     vec3 ecPos3D = (czm_modelViewRelativeToEye * posRelativeToEye3D).xyz;
@@ -50,7 +50,7 @@ void main()
     vec4 startPlane2D;
     vec4 startPlane3D;
     startPlane2D.xyz = czm_normal * vec3(0.0, startEndNormals2D.xy);
-    startPlane3D.xyz = czm_normal * startNormal_and_forwardOffsetZ.xyz;
+    startPlane3D.xyz = czm_normal * startNormalAndForwardOffsetZ.xyz;
     startPlane2D.w = -dot(startPlane2D.xyz, ecPos2D);
     startPlane3D.w = -dot(startPlane3D.xyz, ecPos3D);
 
@@ -58,13 +58,13 @@ void main()
     vec4 rightPlane2D;
     vec4 rightPlane3D;
     rightPlane2D.xyz = czm_normal * vec3(0.0, offsetAndRight2D.zw);
-    rightPlane3D.xyz = czm_normal * rightNormal_and_textureCoordinateNormalizationY.xyz;
+    rightPlane3D.xyz = czm_normal * rightNormalAndTextureCoordinateNormalizationY.xyz;
     rightPlane2D.w = -dot(rightPlane2D.xyz, ecPos2D);
     rightPlane3D.w = -dot(rightPlane3D.xyz, ecPos3D);
 
     // End position
     posRelativeToEye2D = posRelativeToEye2D + vec4(0.0, offsetAndRight2D.xy, 0.0);
-    posRelativeToEye3D = posRelativeToEye3D + vec4(startHi_and_forwardOffsetX.w, startLo_and_forwardOffsetY.w, startNormal_and_forwardOffsetZ.w, 0.0);
+    posRelativeToEye3D = posRelativeToEye3D + vec4(startHiAndForwardOffsetX.w, startLoAndForwardOffsetY.w, startNormalAndForwardOffsetZ.w, 0.0);
     posRelativeToEye = czm_columbusViewMorph(posRelativeToEye2D, posRelativeToEye3D, czm_morphTime);
     ecPos2D = (czm_modelViewRelativeToEye * posRelativeToEye2D).xyz;
     ecPos3D = (czm_modelViewRelativeToEye * posRelativeToEye3D).xyz;
@@ -74,7 +74,7 @@ void main()
     vec4 endPlane2D;
     vec4 endPlane3D;
     endPlane2D.xyz = czm_normal * vec3(0.0, startEndNormals2D.zw);
-    endPlane3D.xyz = czm_normal * endNormal_and_textureCoordinateNormalizationX.xyz;
+    endPlane3D.xyz = czm_normal * endNormalAndTextureCoordinateNormalizationX.xyz;
     endPlane2D.w = -dot(endPlane2D.xyz, ecPos2D);
     endPlane3D.w = -dot(endPlane3D.xyz, ecPos3D);
 
@@ -83,7 +83,7 @@ void main()
 
     v_texcoordNormalization_and_halfWidth.xy = mix(
         vec2(abs(texcoordNormalization2D.x), texcoordNormalization2D.y),
-        vec2(abs(endNormal_and_textureCoordinateNormalizationX.w), rightNormal_and_textureCoordinateNormalizationY.w), czm_morphTime);
+        vec2(abs(endNormalAndTextureCoordinateNormalizationX.w), rightNormalAndTextureCoordinateNormalizationY.w), czm_morphTime);
 
 #ifdef PER_INSTANCE_COLOR
     v_color = czm_batchTable_color(batchId);
@@ -119,7 +119,7 @@ void main()
     vec3 normalEC = normalize(cross(planeDirection, upOrDown));         // In practice, the opposite seems to work too.
 
     // Determine if this vertex is on the "left" or "right"
-    normalEC *= sign(endNormal_and_textureCoordinateNormalizationX.w);
+    normalEC *= sign(endNormalAndTextureCoordinateNormalizationX.w);
 
     // A "perfect" implementation would push along normals according to the angle against forward.
     // In practice, just pushing the normal out by halfWidth is sufficient for morph views.

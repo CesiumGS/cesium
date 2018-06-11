@@ -1,12 +1,8 @@
-#ifdef GL_EXT_frag_depth
-#extension GL_EXT_frag_depth : enable
-#endif
-
-varying vec4 v_startPlaneNormalEC_and_halfWidth;
-varying vec4 v_endPlaneNormalEC_and_batchId;
+varying vec4 v_startPlaneNormalEcAndHalfWidth;
+varying vec4 v_endPlaneNormalEcAndBatchId;
 varying vec4 v_rightPlaneEC; // Technically can compute distance for this here
-varying vec4 v_ecEnd_and_ecStart_X;
-varying vec4 v_texcoordNormalization_and_ecStart_YZ;
+varying vec4 v_endEcAndStartEcX;
+varying vec4 v_texcoordNormalizationAndStartEcYZ;
 
 #ifdef PER_INSTANCE_COLOR
 varying vec4 v_color;
@@ -15,21 +11,21 @@ varying vec4 v_color;
 void main(void)
 {
     float logDepthOrDepth = czm_unpackDepth(texture2D(czm_globeDepthTexture, gl_FragCoord.xy / czm_viewport.zw));
-    vec3 ecStart = vec3(v_ecEnd_and_ecStart_X.w, v_texcoordNormalization_and_ecStart_YZ.zw);
+    vec3 ecStart = vec3(v_endEcAndStartEcX.w, v_texcoordNormalizationAndStartEcYZ.zw);
 
     // Discard for sky
-    bool shouldDiscard = logDepthOrDepth == 0.0;
+    bool shouldDiscard = (logDepthOrDepth == 0.0);
 
     vec4 eyeCoordinate = czm_windowToEyeCoordinates(gl_FragCoord.xy, logDepthOrDepth);
     eyeCoordinate /= eyeCoordinate.w;
 
-    float halfMaxWidth = v_startPlaneNormalEC_and_halfWidth.w * czm_metersPerPixel(eyeCoordinate);
+    float halfMaxWidth = v_startPlaneNormalEcAndHalfWidth.w * czm_metersPerPixel(eyeCoordinate);
     // Check distance of the eye coordinate against the right-facing plane
     float widthwiseDistance = czm_planeDistance(v_rightPlaneEC, eyeCoordinate.xyz);
 
     // Check eye coordinate against the mitering planes
-    float distanceFromStart = czm_planeDistance(v_startPlaneNormalEC_and_halfWidth.xyz, -dot(ecStart, v_startPlaneNormalEC_and_halfWidth.xyz), eyeCoordinate.xyz);
-    float distanceFromEnd = czm_planeDistance(v_endPlaneNormalEC_and_batchId.xyz, -dot(v_ecEnd_and_ecStart_X.xyz, v_endPlaneNormalEC_and_batchId.xyz), eyeCoordinate.xyz);
+    float distanceFromStart = czm_planeDistance(v_startPlaneNormalEcAndHalfWidth.xyz, -dot(ecStart, v_startPlaneNormalEcAndHalfWidth.xyz), eyeCoordinate.xyz);
+    float distanceFromEnd = czm_planeDistance(v_endPlaneNormalEcAndBatchId.xyz, -dot(v_endEcAndStartEcX.xyz, v_endPlaneNormalEcAndBatchId.xyz), eyeCoordinate.xyz);
 
     shouldDiscard = shouldDiscard || (abs(widthwiseDistance) > halfMaxWidth || distanceFromStart < 0.0 || distanceFromEnd < 0.0);
 
@@ -40,14 +36,14 @@ void main(void)
     vec3 alignedPlaneNormal;
 
     // start aligned plane
-    alignedPlaneNormal = cross(v_rightPlaneEC.xyz, v_startPlaneNormalEC_and_halfWidth.xyz);
+    alignedPlaneNormal = cross(v_rightPlaneEC.xyz, v_startPlaneNormalEcAndHalfWidth.xyz);
     alignedPlaneNormal = normalize(cross(alignedPlaneNormal, v_rightPlaneEC.xyz));
     distanceFromStart = czm_planeDistance(alignedPlaneNormal, -dot(alignedPlaneNormal, ecStart), eyeCoordinate.xyz);
 
     // end aligned plane
-    alignedPlaneNormal = cross(v_rightPlaneEC.xyz, v_endPlaneNormalEC_and_batchId.xyz);
+    alignedPlaneNormal = cross(v_rightPlaneEC.xyz, v_endPlaneNormalEcAndBatchId.xyz);
     alignedPlaneNormal = normalize(cross(alignedPlaneNormal, v_rightPlaneEC.xyz));
-    distanceFromEnd = czm_planeDistance(alignedPlaneNormal, -dot(alignedPlaneNormal, v_ecEnd_and_ecStart_X.xyz), eyeCoordinate.xyz);
+    distanceFromEnd = czm_planeDistance(alignedPlaneNormal, -dot(alignedPlaneNormal, v_endEcAndStartEcX.xyz), eyeCoordinate.xyz);
 
     shouldDiscard = shouldDiscard || distanceFromStart < -halfMaxWidth || distanceFromEnd < -halfMaxWidth;
 
@@ -66,7 +62,7 @@ void main(void)
     // Clamp - distance to aligned planes may be negative due to mitering,
     // so fragment texture coordinate might be out-of-bounds.
     float s = clamp(distanceFromStart / (distanceFromStart + distanceFromEnd), 0.0, 1.0);
-    s = (s * v_texcoordNormalization_and_ecStart_YZ.x) + v_texcoordNormalization_and_ecStart_YZ.y;
+    s = (s * v_texcoordNormalizationAndStartEcYZ.x) + v_texcoordNormalizationAndStartEcYZ.y;
     float t = (widthwiseDistance + halfMaxWidth) / (2.0 * halfMaxWidth);
 
     czm_materialInput materialInput;
