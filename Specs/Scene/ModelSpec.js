@@ -2380,14 +2380,14 @@ defineSuite([
         });
     });
 
-    fit('loads a gltf with WEB3D_quantized_attributes SCALAR attribute', function() {
+    it('loads a gltf with WEB3D_quantized_attributes SCALAR attribute', function() {
         return loadModel(boxScalarQuantizedUrl).then(function(m) {
             verifyRender(m);
             primitives.remove(m);
         });
     });
 
-    fit('loads with custom vertex attributes, vertexShader, fragmentShader, and uniform map', function() {
+    it('loads with custom vertex attributes, vertexShader, fragmentShader, and uniform map', function() {
         function vertexShaderLoaded(vs) {
             var renamedSource = ShaderSource.replaceMain(vs, 'czm_old_main');
             var newMain =
