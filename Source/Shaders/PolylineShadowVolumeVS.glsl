@@ -1,6 +1,9 @@
 attribute vec3 position3DHigh;
 attribute vec3 position3DLow;
 
+// In 2D and in 3D, texture coordinate normalization component signs encodes:
+// * X sign - sidedness relative to right plane
+// * Y sign - is negative OR magnitude is greater than 1.0 if vertex is on bottom of volume
 #ifndef COLUMBUS_VIEW_2D
 attribute vec4 startHiAndForwardOffsetX;
 attribute vec4 startLoAndForwardOffsetY;
@@ -57,7 +60,8 @@ void main()
     endPlaneEC.xyz =  czm_normal * vec3(0.0, startEndNormals2D.zw);
     endPlaneEC.w = -dot(endPlaneEC.xyz, ecEnd);
 
-    v_texcoordNormalizationAndStartEcYZ.xy = vec2(abs(texcoordNormalization2D.x), texcoordNormalization2D.y);
+    v_texcoordNormalizationAndStartEcYZ.x = abs(texcoordNormalization2D.x);
+    v_texcoordNormalizationAndStartEcYZ.y = texcoordNormalization2D.y;
 
 #else // COLUMBUS_VIEW_2D
     vec3 ecStart = (czm_modelViewRelativeToEye * czm_translateRelativeToEye(startHiAndForwardOffsetX.xyz, startLoAndForwardOffsetY.xyz)).xyz;
@@ -80,7 +84,8 @@ void main()
     v_rightPlaneEC.xyz = czm_normal * rightNormalAndTextureCoordinateNormalizationY.xyz;
     v_rightPlaneEC.w = -dot(v_rightPlaneEC.xyz, ecStart);
 
-    v_texcoordNormalizationAndStartEcYZ.xy = vec2(abs(endNormalAndTextureCoordinateNormalizationX.w), rightNormalAndTextureCoordinateNormalizationY.w);
+    v_texcoordNormalizationAndStartEcYZ.x = abs(endNormalAndTextureCoordinateNormalizationX.w);
+    v_texcoordNormalizationAndStartEcYZ.y = rightNormalAndTextureCoordinateNormalizationY.w;
 
 #endif // COLUMBUS_VIEW_2D
 
@@ -104,6 +109,15 @@ void main()
     vec3 planeDirection = czm_branchFreeTernary(absStartPlaneDistance < absEndPlaneDistance, startPlaneEC.xyz, endPlaneEC.xyz);
     vec3 upOrDown = normalize(cross(v_rightPlaneEC.xyz, planeDirection)); // Points "up" for start plane, "down" at end plane.
     vec3 normalEC = normalize(cross(planeDirection, upOrDown));           // In practice, the opposite seems to work too.
+
+    // Extrude bottom vertices downward for far view distances, like for GroundPrimitives
+    upOrDown = cross(forwardDirectionEC, normalEC);
+    upOrDown = float(czm_sceneMode == czm_sceneMode3D) * upOrDown;
+    upOrDown = float(v_texcoordNormalizationAndStartEcYZ.y > 1.0 || v_texcoordNormalizationAndStartEcYZ.y < 0.0) * upOrDown;
+    upOrDown = min(GLOBE_MINIMUM_ALTITUDE, czm_geometricToleranceOverMeter * length(positionRelativeToEye.xyz)) * upOrDown;
+    positionEC.xyz += upOrDown;
+
+    v_texcoordNormalizationAndStartEcYZ.y = czm_branchFreeTernary(v_texcoordNormalizationAndStartEcYZ.y > 1.0, 0.0, abs(v_texcoordNormalizationAndStartEcYZ.y));
 
     // Determine distance along normalEC to push for a volume of appropriate width.
     // Make volumes about double pixel width for a conservative fit - in practice the

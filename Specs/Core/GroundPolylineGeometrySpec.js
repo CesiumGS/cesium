@@ -77,7 +77,6 @@ defineSuite([
         verifyAttributeValuesIdentical(startHiAndForwardOffsetX);
         verifyAttributeValuesIdentical(startLoAndForwardOffsetY);
         verifyAttributeValuesIdentical(startNormalAndForwardOffsetZ);
-        verifyAttributeValuesIdentical(rightNormalAndTextureCoordinateNormalizationY);
         verifyAttributeValuesIdentical(startHiLo2D);
         verifyAttributeValuesIdentical(offsetAndRight2D);
         verifyAttributeValuesIdentical(startEndNormals2D);
@@ -104,6 +103,19 @@ defineSuite([
             index = i * 2;
             expect(Math.sign(values[index])).toEqual(-1.0);
         }
+
+        // Expect rightNormalAndTextureCoordinateNormalizationY and texcoordNormalization2D.y to encode if the vertex is on the bottom
+        values = rightNormalAndTextureCoordinateNormalizationY.values;
+        expect(values[3] > 1.0).toBe(true);
+        expect(values[1 * 4 + 3] > 1.0).toBe(true);
+        expect(values[4 * 4 + 3] > 1.0).toBe(true);
+        expect(values[5 * 4 + 3] > 1.0).toBe(true);
+
+        values = texcoordNormalization2D.values;
+        expect(values[1] > 1.0).toBe(true);
+        expect(values[1 * 2 + 1] > 1.0).toBe(true);
+        expect(values[4 * 2 + 1] > 1.0).toBe(true);
+        expect(values[5 * 2 + 1] > 1.0).toBe(true);
 
         // Line segment geometry is encoded as:
         // - start position
@@ -137,9 +149,7 @@ defineSuite([
         expect(Cartesian3.equalsEpsilon(rightNormal3D, new Cartesian3(0.0, 0.0, -1.0), CesiumMath.EPSILON2)).toBe(true);
 
         var texcoordNormalizationX = endNormalAndTextureCoordinateNormalizationX.values[3];
-        var texcoordNormalizationY = rightNormalAndTextureCoordinateNormalizationY.values[3];
         expect(texcoordNormalizationX).toEqualEpsilon(1.0, CesiumMath.EPSILON3);
-        expect(texcoordNormalizationY).toEqualEpsilon(0.0, CesiumMath.EPSILON3);
 
         // 2D
         var projection = new GeographicProjection();
@@ -174,9 +184,7 @@ defineSuite([
         expect(Cartesian3.equalsEpsilon(rightNormal2D, new Cartesian3(0.0, -1.0, 0.0), CesiumMath.EPSILON2)).toBe(true);
 
         texcoordNormalizationX = texcoordNormalization2D.values[0];
-        texcoordNormalizationY = texcoordNormalization2D.values[1];
         expect(texcoordNormalizationX).toEqualEpsilon(1.0, CesiumMath.EPSILON3);
-        expect(texcoordNormalizationY).toEqualEpsilon(0.0, CesiumMath.EPSILON3);
     });
 
     it('does not generate 2D attributes when scene3DOnly is true', function() {

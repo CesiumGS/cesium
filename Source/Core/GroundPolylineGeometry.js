@@ -927,8 +927,10 @@ define([
                 var vec2Index = vec2sWriteIndex + j * 2;
                 var wIndex = vec4Index + 3;
 
-                // Encode sidedness of vertex in texture coordinate normalization X
-                var sidedness = j < 4 ? 1.0 : -1.0;
+                // Encode sidedness of vertex relative to right plane in texture coordinate normalization X,
+                // whether vertex is top or bottom of volume in sign/magnitude of normalization Y.
+                var rightPlaneSide = j < 4 ? 1.0 : -1.0;
+                var topBottomSide = (j === 2 || j === 3 || j === 6 || j === 7) ? 1.0 : -1.0;
 
                 // 3D
                 Cartesian3.pack(encodedStart.high, startHiAndForwardOffsetX, vec4Index);
@@ -941,10 +943,15 @@ define([
                 startNormalAndForwardOffsetZ[wIndex] = forwardOffset.z;
 
                 Cartesian3.pack(endPlaneNormal, endNormalAndTextureCoordinateNormalizationX, vec4Index);
-                endNormalAndTextureCoordinateNormalizationX[wIndex] = texcoordNormalization3DX * sidedness;
+                endNormalAndTextureCoordinateNormalizationX[wIndex] = texcoordNormalization3DX * rightPlaneSide;
 
                 Cartesian3.pack(rightNormal, rightNormalAndTextureCoordinateNormalizationY, vec4Index);
-                rightNormalAndTextureCoordinateNormalizationY[wIndex] = texcoordNormalization3DY;
+
+                var texcoordNormalization = texcoordNormalization3DY * topBottomSide;
+                if (texcoordNormalization === 0.0 && topBottomSide < 0.0) {
+                    texcoordNormalization = Number.POSITIVE_INFINITY;
+                }
+                rightNormalAndTextureCoordinateNormalizationY[wIndex] = texcoordNormalization;
 
                 // 2D
                 if (compute2dAttributes) {
@@ -963,8 +970,13 @@ define([
                     offsetAndRight2D[vec4Index + 2] = right2D.x;
                     offsetAndRight2D[vec4Index + 3] = right2D.y;
 
-                    texcoordNormalization2D[vec2Index] = texcoordNormalization2DX * sidedness;
-                    texcoordNormalization2D[vec2Index + 1] = texcoordNormalization2DY;
+                    texcoordNormalization2D[vec2Index] = texcoordNormalization2DX * rightPlaneSide;
+
+                    texcoordNormalization = texcoordNormalization2DY * topBottomSide;
+                    if (texcoordNormalization === 0.0 && topBottomSide < 0.0) {
+                        texcoordNormalization = Number.POSITIVE_INFINITY;
+                    }
+                    texcoordNormalization2D[vec2Index + 1] = texcoordNormalization;
                 }
             }
 
