@@ -418,7 +418,9 @@ define([
             p0 = positions[i];
             p1 = positions[i + 1];
             intersection = IntersectionTests.lineSegmentPlane(p0, p1, XZ_PLANE, intersectionScratch);
-            if (defined(intersection)) {
+            if (defined(intersection) &&
+                !Cartesian3.equalsEpsilon(intersection, p0, CesiumMath.EPSILON7) &&
+                !Cartesian3.equalsEpsilon(intersection, p1, CesiumMath.EPSILON7)) {
                 splitPositions.push(Cartesian3.clone(intersection));
             }
             splitPositions.push(p1);
@@ -428,7 +430,9 @@ define([
             p0 = positions[positionsLength - 1];
             p1 = positions[0];
             intersection = IntersectionTests.lineSegmentPlane(p0, p1, XZ_PLANE, intersectionScratch);
-            if (defined(intersection)) {
+            if (defined(intersection) &&
+                !Cartesian3.equalsEpsilon(intersection, p0, CesiumMath.EPSILON7) &&
+                !Cartesian3.equalsEpsilon(intersection, p1, CesiumMath.EPSILON7)) {
                 splitPositions.push(Cartesian3.clone(intersection));
             }
         }
@@ -842,15 +846,17 @@ define([
                     // Start is close to IDL - snap start normal to align with IDL
                     endGeometryNormal2D = projectNormal(projection, endCartographic, endGeometryNormal, end2D, segmentEndNormal2DScratch);
                     startGeometryNormal2D.x = 0.0;
-                    // If start longitude is negative and end longitude is less negative, "right" is unit -Y
-                    // If start longitude is positive and end longitude is less positive, "right" is unit +Y
+                    // If start longitude is negative and end longitude is less negative, relative right is unit -Y
+                    // If start longitude is positive and end longitude is less positive, relative right is unit +Y
                     startGeometryNormal2D.y = Math.sign(startCartographic.longitude - Math.abs(endCartographic.longitude));
                     startGeometryNormal2D.z = 0.0;
                 } else {
                     // End is close to IDL - snap end normal to align with IDL
                     startGeometryNormal2D = projectNormal(projection, startCartographic, startGeometryNormal, start2D, segmentStartNormal2DScratch);
                     endGeometryNormal2D.x = 0.0;
-                    endGeometryNormal2D.y = Math.sign(endCartographic.longitude - Math.abs(startCartographic.longitude));
+                    // If end longitude is negative and start longitude is less negative, relative right is unit Y
+                    // If end longitude is positive and start longitude is less positive, relative right is unit -Y
+                    endGeometryNormal2D.y = Math.sign(startCartographic.longitude - endCartographic.longitude);
                     endGeometryNormal2D.z = 0.0;
                 }
             }
