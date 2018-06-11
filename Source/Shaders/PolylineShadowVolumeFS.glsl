@@ -14,7 +14,14 @@ void main(void)
     vec3 ecStart = vec3(v_endEcAndStartEcX.w, v_texcoordNormalizationAndStartEcYZ.zw);
 
     // Discard for sky
-    bool shouldDiscard = (logDepthOrDepth == 0.0);
+    if (logDepthOrDepth == 0.0) {
+#ifdef DEBUG_SHOW_VOLUME
+        gl_FragColor = vec4(1.0, 0.0, 0.0, 0.5);
+        return;
+#else // DEBUG_SHOW_VOLUME
+        discard;
+#endif // DEBUG_SHOW_VOLUME
+    }
 
     vec4 eyeCoordinate = czm_windowToEyeCoordinates(gl_FragCoord.xy, logDepthOrDepth);
     eyeCoordinate /= eyeCoordinate.w;
@@ -27,7 +34,14 @@ void main(void)
     float distanceFromStart = czm_planeDistance(v_startPlaneNormalEcAndHalfWidth.xyz, -dot(ecStart, v_startPlaneNormalEcAndHalfWidth.xyz), eyeCoordinate.xyz);
     float distanceFromEnd = czm_planeDistance(v_endPlaneNormalEcAndBatchId.xyz, -dot(v_endEcAndStartEcX.xyz, v_endPlaneNormalEcAndBatchId.xyz), eyeCoordinate.xyz);
 
-    shouldDiscard = shouldDiscard || (abs(widthwiseDistance) > halfMaxWidth || distanceFromStart < 0.0 || distanceFromEnd < 0.0);
+    if (abs(widthwiseDistance) > halfMaxWidth || distanceFromStart < 0.0 || distanceFromEnd < 0.0) {
+#ifdef DEBUG_SHOW_VOLUME
+        gl_FragColor = vec4(1.0, 0.0, 0.0, 0.5);
+        return;
+#else // DEBUG_SHOW_VOLUME
+        discard;
+#endif // DEBUG_SHOW_VOLUME
+    }
 
     // Check distance of the eye coordinate against start and end planes with normals in the right plane.
     // For computing unskewed linear texture coordinate and for clipping extremely pointy miters
@@ -45,9 +59,7 @@ void main(void)
     alignedPlaneNormal = normalize(cross(alignedPlaneNormal, v_rightPlaneEC.xyz));
     distanceFromEnd = czm_planeDistance(alignedPlaneNormal, -dot(alignedPlaneNormal, v_endEcAndStartEcX.xyz), eyeCoordinate.xyz);
 
-    shouldDiscard = shouldDiscard || distanceFromStart < -halfMaxWidth || distanceFromEnd < -halfMaxWidth;
-
-    if (shouldDiscard) {
+    if (distanceFromStart < -halfMaxWidth || distanceFromEnd < -halfMaxWidth) {
 #ifdef DEBUG_SHOW_VOLUME
         gl_FragColor = vec4(1.0, 0.0, 0.0, 0.5);
         return;
