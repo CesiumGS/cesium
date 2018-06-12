@@ -654,7 +654,7 @@ defineSuite([
             tileset.makeStyleDirty();
             expect(scene).toRender([0, 255, 0, 255]);
 
-            tileset.style.color = new Expression('color("blue", 1.0)');
+            tileset.style.color = new Expression('color("blue", 0.5)');
             tileset.makeStyleDirty();
             expect(scene).toRender([0, 0, 255, 255]);
 
