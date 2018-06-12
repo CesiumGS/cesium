@@ -51,26 +51,26 @@ defineSuite([
     var tilesetRectangle = Rectangle.fromDegrees(-0.01, -0.01, 0.01, 0.01);
     var combinedRectangle = Rectangle.fromDegrees(-0.02, -0.01, 0.02, 0.01);
 
-    var vectorPoints = './Data/Cesium3DTiles/Vector/VectorTilePoints';
-    var vectorPointsBatchedChildren = './Data/Cesium3DTiles/Vector/VectorTilePointsBatchedChildren';
-    var vectorPointsBatchedChildrenWithBatchTable = './Data/Cesium3DTiles/Vector/VectorTilePointsBatchedChildrenWithBatchTable';
-    var vectorPointsWithBatchTable = './Data/Cesium3DTiles/Vector/VectorTilePointsWithBatchTable';
-    var vectorPointsWithBatchIds = './Data/Cesium3DTiles/Vector/VectorTilePointsWithBatchIds';
+    var vectorPoints = './Data/Cesium3DTiles/Vector/VectorTilePoints/tileset.json';
+    var vectorPointsBatchedChildren = './Data/Cesium3DTiles/Vector/VectorTilePointsBatchedChildren/tileset.json';
+    var vectorPointsBatchedChildrenWithBatchTable = './Data/Cesium3DTiles/Vector/VectorTilePointsBatchedChildrenWithBatchTable/tileset.json';
+    var vectorPointsWithBatchTable = './Data/Cesium3DTiles/Vector/VectorTilePointsWithBatchTable/tileset.json';
+    var vectorPointsWithBatchIds = './Data/Cesium3DTiles/Vector/VectorTilePointsWithBatchIds/tileset.json';
 
-    var vectorPolygons = './Data/Cesium3DTiles/Vector/VectorTilePolygons';
-    var vectorPolygonsBatchedChildren = './Data/Cesium3DTiles/Vector/VectorTilePolygonsBatchedChildren';
-    var vectorPolygonsBatchedChildrenWithBatchTable = './Data/Cesium3DTiles/Vector/VectorTilePolygonsBatchedChildrenWithBatchTable';
-    var vectorPolygonsWithBatchTable = './Data/Cesium3DTiles/Vector/VectorTilePolygonsWithBatchTable';
-    var vectorPolygonsWithBatchIds = './Data/Cesium3DTiles/Vector/VectorTilePolygonsWithBatchIds';
+    var vectorPolygons = './Data/Cesium3DTiles/Vector/VectorTilePolygons/tileset.json';
+    var vectorPolygonsBatchedChildren = './Data/Cesium3DTiles/Vector/VectorTilePolygonsBatchedChildren/tileset.json';
+    var vectorPolygonsBatchedChildrenWithBatchTable = './Data/Cesium3DTiles/Vector/VectorTilePolygonsBatchedChildrenWithBatchTable/tileset.json';
+    var vectorPolygonsWithBatchTable = './Data/Cesium3DTiles/Vector/VectorTilePolygonsWithBatchTable/tileset.json';
+    var vectorPolygonsWithBatchIds = './Data/Cesium3DTiles/Vector/VectorTilePolygonsWithBatchIds/tileset.json';
 
-    var vectorPolylines = './Data/Cesium3DTiles/Vector/VectorTilePolylines';
-    var vectorPolylinesBatchedChildren = './Data/Cesium3DTiles/Vector/VectorTilePolylinesBatchedChildren';
-    var vectorPolylinesBatchedChildrenWithBatchTable = './Data/Cesium3DTiles/Vector/VectorTilePolylinesBatchedChildrenWithBatchTable';
-    var vectorPolylinesWithBatchTable = './Data/Cesium3DTiles/Vector/VectorTilePolylinesWithBatchTable';
-    var vectorPolylinesWithBatchIds = './Data/Cesium3DTiles/Vector/VectorTilePolylinesWithBatchIds';
+    var vectorPolylines = './Data/Cesium3DTiles/Vector/VectorTilePolylines/tileset.json';
+    var vectorPolylinesBatchedChildren = './Data/Cesium3DTiles/Vector/VectorTilePolylinesBatchedChildren/tileset.json';
+    var vectorPolylinesBatchedChildrenWithBatchTable = './Data/Cesium3DTiles/Vector/VectorTilePolylinesBatchedChildrenWithBatchTable/tileset.json';
+    var vectorPolylinesWithBatchTable = './Data/Cesium3DTiles/Vector/VectorTilePolylinesWithBatchTable/tileset.json';
+    var vectorPolylinesWithBatchIds = './Data/Cesium3DTiles/Vector/VectorTilePolylinesWithBatchIds/tileset.json';
 
-    var vectorCombined = './Data/Cesium3DTiles/Vector/VectorTileCombined';
-    var vectorCombinedWithBatchIds = './Data/Cesium3DTiles/Vector/VectorTileCombinedWithBatchIds';
+    var vectorCombined = './Data/Cesium3DTiles/Vector/VectorTileCombined/tileset.json';
+    var vectorCombinedWithBatchIds = './Data/Cesium3DTiles/Vector/VectorTileCombinedWithBatchIds/tileset.json';
 
     var scene;
     var rectangle;

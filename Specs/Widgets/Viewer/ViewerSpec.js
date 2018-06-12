@@ -1053,7 +1053,7 @@ defineSuite([
     it('zoomTo zooms to Cesium3DTileset with default offset when offset not defined', function() {
         viewer = createViewer(container);
 
-        var path = './Data/Cesium3DTiles/Tilesets/TilesetOfTilesets';
+        var path = './Data/Cesium3DTiles/Tilesets/TilesetOfTilesets/tileset.json';
         var tileset = new Cesium3DTileset({
             url : path
         });
@@ -1082,7 +1082,7 @@ defineSuite([
     it('zoomTo zooms to Cesium3DTileset with offset', function() {
         viewer = createViewer(container);
 
-        var path = './Data/Cesium3DTiles/Tilesets/TilesetOfTilesets';
+        var path = './Data/Cesium3DTiles/Tilesets/TilesetOfTilesets/tileset.json';
         var tileset = new Cesium3DTileset({
             url : path
         });
@@ -1184,7 +1184,7 @@ defineSuite([
     it('flyTo flies to Cesium3DTileset with default offset when options not defined', function() {
         viewer = createViewer(container);
 
-        var path = './Data/Cesium3DTiles/Tilesets/TilesetOfTilesets';
+        var path = './Data/Cesium3DTiles/Tilesets/TilesetOfTilesets/tileset.json';
         var tileset = new Cesium3DTileset({
             url : path
         });
@@ -1214,7 +1214,7 @@ defineSuite([
     it('flyTo flies to Cesium3DTileset with default offset when offset not defined', function() {
         viewer = createViewer(container);
 
-        var path = './Data/Cesium3DTiles/Tilesets/TilesetOfTilesets';
+        var path = './Data/Cesium3DTiles/Tilesets/TilesetOfTilesets/tileset.json';
         var tileset = new Cesium3DTileset({
             url : path
         });
@@ -1246,7 +1246,7 @@ defineSuite([
     it('flyTo flies to target when target is Cesium3DTileset and options are defined', function() {
         viewer = createViewer(container);
 
-        var path = './Data/Cesium3DTiles/Tilesets/TilesetOfTilesets';
+        var path = './Data/Cesium3DTiles/Tilesets/TilesetOfTilesets/tileset.json';
         var tileset = new Cesium3DTileset({
             url : path
         });
