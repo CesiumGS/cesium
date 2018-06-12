@@ -411,13 +411,13 @@ define([
     };
 
     Geometry3DTileContent.prototype.update = function(tileset, frameState) {
-        if (defined(this._batchTable)) {
-            this._batchTable.update(tileset, frameState);
-        }
         if (defined(this._geometries)) {
             this._geometries.classificationType = this._tileset.classificationType;
             this._geometries.debugWireframe = this._tileset.debugWireframe;
             this._geometries.update(frameState);
+        }
+        if (defined(this._batchTable) && this._geometries._ready) {
+            this._batchTable.update(tileset, frameState);
         }
 
         if (!defined(this._contentReadyPromise)) {

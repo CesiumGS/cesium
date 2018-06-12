@@ -69,6 +69,8 @@ define([
         this._pointOutlineWidth = undefined;
         this._heightOffset = undefined;
 
+        this._pickIds = new Array(3);
+
         setBillboardImage(this);
     }
 
@@ -614,6 +616,19 @@ define([
         primitive : {
             get : function() {
                 return this._content.tileset;
+            }
+        },
+
+        /**
+         * @private
+         */
+        pickIds : {
+            get : function() {
+                var ids  = this._pickIds;
+                ids[0] = this._billboard.pickId;
+                ids[1] = this._label.pickId;
+                ids[2] = this._polyline.pickId;
+                return ids;
             }
         }
     });
