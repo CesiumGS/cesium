@@ -675,16 +675,14 @@ define([
         this._credits = undefined;
 
         var that = this;
-        var tilesetResource;
+        var resource;
         when(options.url)
             .then(function(url) {
                 var basePath;
-                var resource = Resource.createIfNeeded(url);
+                resource = Resource.createIfNeeded(url);
 
                 // ion resources have a credits property we can use for additional attribution.
                 that._credits = resource.credits;
-
-                tilesetResource = resource;
 
                 if (resource.extension === 'json') {
                     basePath = resource.getBaseUri(true);
@@ -696,17 +694,17 @@ define([
                 that._basePath = basePath;
 
                 // We don't know the distance of the tileset until tileset JSON file is loaded, so use the default distance for now
-                return Cesium3DTileset.loadJson(tilesetResource);
+                return Cesium3DTileset.loadJson(resource);
             })
             .then(function(tilesetJson) {
-                return detectBrokenUrlWorkaround(that, tilesetResource, tilesetJson);
+                return detectBrokenUrlWorkaround(that, resource, tilesetJson);
             })
             .then(function(tilesetJson) {
                 if (that._brokenUrlWorkaround) {
                     deprecationWarning('Cesium3DTileset.leadingSlash', 'Having a leading slash in a tile URL that is actually relative to the tileset JSON file is deprecated.');
                 }
 
-                that._root = that.loadTileset(tilesetResource, tilesetJson);
+                that._root = that.loadTileset(resource, tilesetJson);
                 var gltfUpAxis = defined(tilesetJson.asset.gltfUpAxis) ? Axis.fromName(tilesetJson.asset.gltfUpAxis) : Axis.Y;
                 that._asset = tilesetJson.asset;
                 that._properties = tilesetJson.properties;
@@ -718,7 +716,7 @@ define([
             });
     }
 
-    function detectBrokenUrlWorkaround(tileset, tilesetResource, tilesetJson) {
+    function detectBrokenUrlWorkaround(tileset, resource, tilesetJson) {
         var testUrl = findBrokenUrl(tilesetJson.root);
 
         // If it's an empty string, we are good to load the tileset.
@@ -726,7 +724,7 @@ define([
             return tilesetJson;
         }
 
-        var testResource = tilesetResource.getDerivedResource({
+        var testResource = resource.getDerivedResource({
             url : testUrl
         });
 
@@ -1248,7 +1246,7 @@ define([
      *
      * @private
      */
-    Cesium3DTileset.prototype.loadTileset = function(tilesetResource, tilesetJson, parentTile) {
+    Cesium3DTileset.prototype.loadTileset = function(resource, tilesetJson, parentTile) {
         var asset = tilesetJson.asset;
         if (!defined(asset)) {
             throw new RuntimeError('Tileset must have an asset property.');
@@ -1259,18 +1257,18 @@ define([
 
         var statistics = this._statistics;
 
-        // Append the tileset version to the tilesetResource
-        if (!defined(tilesetResource.queryParameters.v)) {
+        // Append the tileset version to the resource
+        if (!defined(resource.queryParameters.v)) {
             var versionQuery = {
                 v: defaultValue(asset.tilesetVersion, '0.0')
             };
             this._basePath += '?v=' + versionQuery.v;
-            tilesetResource.setQueryParameters(versionQuery);
+            resource.setQueryParameters(versionQuery);
         }
 
         // A tileset JSON file referenced from a tile may exist in a different directory than the root tileset.
         // Get the basePath relative to the external tileset.
-        var rootTile = new Cesium3DTile(this, tilesetResource, tilesetJson.root, parentTile);
+        var rootTile = new Cesium3DTile(this, resource, tilesetJson.root, parentTile);
 
         // If there is a parentTile, add the root of the currently loading tileset
         // to parentTile's children, and update its _depth.
@@ -1295,7 +1293,7 @@ define([
                 var length = children.length;
                 for (var i = 0; i < length; ++i) {
                     var childHeader = children[i];
-                    var childTile = new Cesium3DTile(this, tilesetResource, childHeader, tile3D);
+                    var childTile = new Cesium3DTile(this, resource, childHeader, tile3D);
                     tile3D.children.push(childTile);
                     childTile._depth = tile3D._depth + 1;
                     ++statistics.numberOfTilesTotal;
