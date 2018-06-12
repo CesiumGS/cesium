@@ -10,11 +10,26 @@ attribute vec4 eyeOffset;                                  // eye offset in mete
 attribute vec4 scaleByDistance;                            // near, nearScale, far, farScale
 attribute vec4 pixelOffsetScaleByDistance;                 // near, nearScale, far, farScale
 attribute vec3 distanceDisplayConditionAndDisableDepth;    // near, far, disableDepthTestDistance
+#ifdef CLAMP_TO_GROUND
+attribute vec4 textureOffset;                              // the min and max x and y values for the texture coordinates
+attribute vec2 dimensions;
+#endif
 #ifdef VECTOR_TILE
 attribute float a_batchId;
 #endif
 
 varying vec2 v_textureCoordinates;
+#ifdef CLAMP_TO_GROUND
+varying vec4 v_textureOffset;
+varying vec2 v_originTextureCoordinate;
+varying vec2 v_leftTextureCoordinate;
+varying vec2 v_rightTextureCoordinate;
+varying vec2 v_dimensions;
+varying vec2 v_imageSize;
+varying vec2 v_translate;
+varying float v_eyeDepth;
+varying float v_disableDepthTestDistance;
+#endif
 
 varying vec4 v_pickColor;
 varying vec4 v_color;
@@ -116,6 +131,9 @@ void main()
     origin.y = floor(compressed * SHIFT_RIGHT3);
     compressed -= origin.y * SHIFT_LEFT3;
 
+#ifdef CLAMP_TO_GROUND
+    vec2 depthOrigin = origin.xy * 0.5;
+#endif
     origin -= vec2(1.0);
 
     float show = floor(compressed * SHIFT_RIGHT2);
@@ -145,9 +163,33 @@ void main()
     translate.y += (temp - floor(temp)) * SHIFT_LEFT8;
     translate.y -= UPPER_BOUND;
 
+    v_translate = translate.xy;
+
     temp = compressedAttribute1.x * SHIFT_RIGHT8;
 
     vec2 imageSize = vec2(floor(temp), compressedAttribute2.w);
+
+#ifdef CLAMP_TO_GROUND
+    v_textureOffset = textureOffset;
+    v_originTextureCoordinate = vec2(1.0) - depthOrigin; //the origin
+    if (v_originTextureCoordinate.y == 1.0) //vertical origin is top
+    {
+        v_leftTextureCoordinate = vec2(0.0, 0.0); //bottom left
+        v_rightTextureCoordinate = vec2(1.0, 0.0); //bottom right
+    }
+    else
+    {
+        if (v_originTextureCoordinate.y == 0.0)
+        {
+            v_originTextureCoordinate.y = 0.1;
+        }
+
+        v_leftTextureCoordinate = vec2(0.0, 1.0); //top left
+        v_rightTextureCoordinate = vec2(1.0, 1.0); //top right
+    }
+    v_dimensions = dimensions.xy;
+    v_imageSize = imageSize.xy;
+#endif
 
 #ifdef EYE_DISTANCE_TRANSLUCENCY
     vec4 translucencyByDistance;
@@ -200,6 +242,11 @@ void main()
 
     vec4 p = czm_translateRelativeToEye(positionHigh, positionLow);
     vec4 positionEC = czm_modelViewRelativeToEye * p;
+
+#ifdef CLAMP_TO_GROUND
+    v_eyeDepth = positionEC.z;
+#endif
+
     positionEC = czm_eyeOffset(positionEC, eyeOffset.xyz);
     positionEC.xyz *= show;
 
@@ -264,6 +311,11 @@ void main()
 
 #ifdef DISABLE_DEPTH_DISTANCE
     float disableDepthTestDistance = distanceDisplayConditionAndDisableDepth.z;
+
+    #ifdef CLAMP_TO_GROUND
+    v_disableDepthTestDistance = disableDepthTestDistance;
+    #endif
+
     if (disableDepthTestDistance == 0.0 && czm_minimumDisableDepthTestDistance != 0.0)
     {
         disableDepthTestDistance = czm_minimumDisableDepthTestDistance;
@@ -289,4 +341,5 @@ void main()
 
     v_color = color;
     v_color.a *= translucency;
+
 }
