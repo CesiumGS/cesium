@@ -214,6 +214,34 @@ define([
         }
     }
 
+    function getAnimatedNodes(gltf) {
+        var nodes = {};
+        ForEach.animation(gltf, function(animation) {
+            ForEach.animationChannel(animation, function(channel) {
+                var target = channel.target;
+                var nodeId = target.node;
+                var path = target.path;
+                // Ignore animations that target 'weights'
+                if (path === 'translation' || path === 'rotation' || path === 'scale') {
+                    nodes[nodeId] = true;
+                }
+            });
+        });
+        return nodes;
+    }
+
+    function addDefaultTransformToAnimatedNodes(gltf) {
+        var animatedNodes = getAnimatedNodes(gltf);
+        ForEach.node(gltf, function(node, id) {
+            if (defined(animatedNodes[id])) {
+                delete node.matrix;
+                node.translation = defaultValue(node.translation, [0.0, 0.0, 0.0]);
+                node.rotation = defaultValue(node.rotation, [0.0, 0.0, 0.0, 1.0]);
+                node.scale = defaultValue(node.scale, [1.0, 1.0, 1.0]);
+            }
+        });
+    }
+
     var defaultMaterial = {
         values : {
             emission : [
@@ -479,6 +507,7 @@ define([
     function addDefaults(gltf, options) {
         options = defaultValue(options, {});
         addDefaultsFromTemplate(gltf, gltfTemplate);
+        addDefaultTransformToAnimatedNodes(gltf);
         addDefaultMaterial(gltf);
         addDefaultTechnique(gltf);
         addDefaultByteOffsets(gltf);

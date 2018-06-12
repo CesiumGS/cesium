@@ -717,6 +717,7 @@ defineSuite([
             scene.render(); // Model is pre-loaded, render one frame to make it ready
 
             scene.camera.lookAt(origins[i], offsets[i]);
+            scene.camera.moveForward(0.5);
 
             // Render without shadows
             scene.shadowMap.enabled = false;
@@ -1116,9 +1117,18 @@ defineSuite([
             scene.render();
         }
 
-        // Expect derived commands to be updated twice for both the floor and box,
-        // once on the first frame and again when the shadow map is dirty
-        expect(spy.calls.count()).toEqual(4);
+        var callCount;
+        if (!scene.logarithmicDepthBuffer) {
+            // Expect derived commands to be updated twice for both the floor and box,
+            // once on the first frame and again when the shadow map is dirty
+            callCount = 4;
+        } else {
+            // Same as without log z, but doubled. The derived cast commands do not write log z, but
+            // the derived receive commands do.
+            callCount = 8;
+        }
+
+        expect(spy.calls.count()).toEqual(callCount);
 
         box.show = false;
         floor.show = false;

@@ -160,6 +160,8 @@ define([
         /**
          * Gets the tileset for this tile.
          *
+         * @memberof Cesium3DTileContent.prototype
+         *
          * @type {Cesium3DTileset}
          * @readonly
          */
@@ -171,6 +173,8 @@ define([
 
         /**
          * Gets the tile containing this content.
+         *
+         * @memberof Cesium3DTileContent.prototype
          *
          * @type {Cesium3DTile}
          * @readonly
@@ -325,8 +329,6 @@ define([
      * This is used to implement the <code>Cesium3DTileContent</code> interface, but is
      * not part of the public Cesium API.
      * </p>
-     *
-     * @returns {undefined}
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *

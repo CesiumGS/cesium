@@ -11,6 +11,7 @@ define([
         '../Core/Matrix4',
         '../Core/Quaternion',
         '../Core/Transforms',
+        '../Scene/GroundPrimitive',
         './BillboardGraphics',
         './BoxGraphics',
         './ConstantPositionProperty',
@@ -45,6 +46,7 @@ define([
         Matrix4,
         Quaternion,
         Transforms,
+        GroundPrimitive,
         BillboardGraphics,
         BoxGraphics,
         ConstantPositionProperty,
@@ -120,7 +122,7 @@ define([
      * @param {RectangleGraphics} [options.rectangle] A rectangle to associate with this entity.
      * @param {WallGraphics} [options.wall] A wall to associate with this entity.
      *
-     * @see {@link http://cesiumjs.org/2015/02/02/Visualizing-Spatial-Data/|Visualizing Spatial Data}
+     * @see {@link https://cesiumjs.org/tutorials/Visualizing-Spatial-Data/|Visualizing Spatial Data}
      */
     function Entity(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -615,6 +617,18 @@ define([
             result = Matrix4.fromRotationTranslation(Matrix3.fromQuaternion(orientation, matrix3Scratch), position, result);
         }
         return result;
+    };
+
+    /**
+     * Checks if the given Scene supports materials besides Color on Entities draped on terrain.
+     * If this feature is not supported, Entities with non-color materials but no `height` will
+     * instead be rendered as if height is 0.
+     *
+     * @param {Scene} scene The current scene.
+     * @returns {Boolean} Whether or not the current scene supports materials for entities on terrain.
+     */
+    Entity.supportsMaterialsforEntitiesOnTerrain = function(scene) {
+        return GroundPrimitive.supportsMaterials(scene);
     };
 
     return Entity;

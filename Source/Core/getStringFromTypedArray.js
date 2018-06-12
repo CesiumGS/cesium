@@ -43,7 +43,6 @@ define([
         return decoder.decode(view);
     };
 
-
     getStringFromTypedArray.decodeWithFromCharCode = function(view) {
         var result = '';
         var codePoints = utf8Handler(view);

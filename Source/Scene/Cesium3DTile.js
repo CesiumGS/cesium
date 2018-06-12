@@ -10,17 +10,15 @@ define([
         '../Core/destroyObject',
         '../Core/getMagic',
         '../Core/Intersect',
-        '../Core/joinUrls',
         '../Core/JulianDate',
-        '../Core/loadArrayBuffer',
         '../Core/Matrix3',
         '../Core/Matrix4',
-        '../Core/Plane',
         '../Core/Rectangle',
         '../Core/Request',
         '../Core/RequestScheduler',
         '../Core/RequestState',
         '../Core/RequestType',
+        '../Core/Resource',
         '../Core/RuntimeError',
         '../ThirdParty/when',
         './Cesium3DTileChildrenVisibility',
@@ -45,17 +43,15 @@ define([
         destroyObject,
         getMagic,
         Intersect,
-        joinUrls,
         JulianDate,
-        loadArrayBuffer,
         Matrix3,
         Matrix4,
-        Plane,
         Rectangle,
         Request,
         RequestScheduler,
         RequestState,
         RequestType,
+        Resource,
         RuntimeError,
         when,
         Cesium3DTileChildrenVisibility,
@@ -80,7 +76,7 @@ define([
      * @alias Cesium3DTile
      * @constructor
      */
-    function Cesium3DTile(tileset, basePath, header, parent) {
+    function Cesium3DTile(tileset, baseResource, header, parent) {
         this._tileset = tileset;
         this._header = header;
         var contentHeader = header.content;
@@ -183,14 +179,23 @@ define([
         var content;
         var hasEmptyContent;
         var contentState;
-        var contentUrl;
+        var contentResource;
         var serverKey;
 
+        baseResource = Resource.createIfNeeded(baseResource);
+
         if (defined(contentHeader)) {
+            var contentHeaderUrl = contentHeader.url;
+            if (tileset._brokenUrlWorkaround && contentHeaderUrl.length > 0 && (contentHeaderUrl[0] === '/')) {
+                contentHeaderUrl = contentHeader.url = contentHeaderUrl.substring(1);
+            }
+
             hasEmptyContent = false;
             contentState = Cesium3DTileContentState.UNLOADED;
-            contentUrl = joinUrls(basePath, contentHeader.url);
-            serverKey = RequestScheduler.getServerKey(contentUrl);
+            contentResource = baseResource.getDerivedResource({
+                url : contentHeaderUrl
+            });
+            serverKey = RequestScheduler.getServerKey(contentResource.getUrlComponent());
         } else {
             content = new Empty3DTileContent(tileset, this);
             hasEmptyContent = true;
@@ -198,7 +203,7 @@ define([
         }
 
         this._content = content;
-        this._contentUrl = contentUrl;
+        this._contentResource = contentResource;
         this._contentState = contentState;
         this._contentReadyToProcessPromise = undefined;
         this._contentReadyPromise = undefined;
@@ -303,6 +308,16 @@ define([
          */
         this._optimChildrenWithinParent = Cesium3DTileOptimizationHint.NOT_COMPUTED;
 
+        /**
+         * Tracks if the tile's relationship with a ClippingPlaneCollection has changed with regards
+         * to the ClippingPlaneCollection's state.
+         *
+         * @type {Boolean}
+         *
+         * @private
+         */
+        this.clippingPlanesDirty = false;
+
         // Members that are updated every frame for tree traversal and rendering optimizations:
         this._distanceToCamera = 0;
         this._visibilityPlaneMask = 0;
@@ -322,6 +337,7 @@ define([
         this._ancestorWithContent = undefined;
         this._ancestorWithLoadedContent = undefined;
         this._isClipped = true;
+        this._clippingPlanesState = 0; // encapsulates (_isClipped, clippingPlanes.enabled) and number/function
 
         this._debugBoundingVolume = undefined;
         this._debugContentBoundingVolume = undefined;
@@ -608,12 +624,13 @@ define([
             return false;
         }
 
-        var url = this._contentUrl;
+        var resource = this._contentResource.clone();
         var expired = this.contentExpired;
         if (expired) {
             // Append a query parameter of the tile expiration date to prevent caching
-            var timestampQuery = '?expired=' + this.expireDate.toString();
-            url = joinUrls(url, timestampQuery, false);
+            resource.setQueryParameters({
+                expired: this.expireDate.toString()
+            });
         }
 
         var request = new Request({
@@ -624,7 +641,9 @@ define([
             serverKey : this._serverKey
         });
 
-        var promise = loadArrayBuffer(url, undefined, request);
+        resource.request = request;
+
+        var promise = resource.fetchArrayBuffer();
 
         if (!defined(promise)) {
             return false;
@@ -652,12 +671,15 @@ define([
             var contentFactory = Cesium3DTileContentFactory[magic];
             var content;
 
+            // Vector and Geometry tile rendering do not support the skip LOD optimization.
+            tileset._disableSkipLevelOfDetail = tileset._disableSkipLevelOfDetail || magic === 'vctr' || magic === 'geom';
+
             if (defined(contentFactory)) {
-                content = contentFactory(tileset, that, that._contentUrl, arrayBuffer, 0);
+                content = contentFactory(tileset, that, that._contentResource, arrayBuffer, 0);
                 that.hasRenderableContent = true;
             } else {
                 // The content may be json instead
-                content = Cesium3DTileContentFactory.json(tileset, that, that._contentUrl, arrayBuffer, 0);
+                content = Cesium3DTileContentFactory.json(tileset, that, that._contentResource, arrayBuffer, 0);
                 that.hasTilesetContent = true;
             }
 
@@ -711,6 +733,8 @@ define([
         this.replacementNode = undefined;
 
         this.lastStyleTime = 0;
+        this.clippingPlanesDirty = (this._clippingPlanesState === 0);
+        this._clippingPlanesState = 0;
 
         this._debugColorizeTiles = false;
 
@@ -1035,6 +1059,23 @@ define([
         content.update(tileset, frameState);
     }
 
+    function updateClippingPlanes(tile, tileset) {
+        // Compute and compare ClippingPlanes state:
+        // - enabled-ness - are clipping planes enabled? is this tile clipped?
+        // - clipping plane count
+        // - clipping function (union v. intersection)
+        var clippingPlanes = tileset.clippingPlanes;
+        var currentClippingPlanesState = 0;
+        if (defined(clippingPlanes) && tile._isClipped && clippingPlanes.enabled) {
+            currentClippingPlanesState = clippingPlanes.clippingPlanesState;
+        }
+        // If clippingPlaneState for tile changed, mark clippingPlanesDirty so content can update
+        if (currentClippingPlanesState !== tile._clippingPlanesState) {
+            tile._clippingPlanesState = currentClippingPlanesState;
+            tile.clippingPlanesDirty = true;
+        }
+    }
+
     /**
      * Get the draw commands needed to render this tile.
      *
@@ -1042,9 +1083,12 @@ define([
      */
     Cesium3DTile.prototype.update = function(tileset, frameState) {
         var initCommandLength = frameState.commandList.length;
+        updateClippingPlanes(this, tileset);
         applyDebugSettings(this, tileset, frameState);
         updateContent(this, tileset, frameState);
         this._commandsLength = frameState.commandList.length - initCommandLength;
+
+        this.clippingPlanesDirty = false; // reset after content update
     };
 
     var scratchCommandList = [];

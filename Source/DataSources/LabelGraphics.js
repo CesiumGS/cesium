@@ -28,7 +28,7 @@ define([
      *
      * @param {Object} [options] Object with the following properties:
      * @param {Property} [options.text] A Property specifying the text. Explicit newlines '\n' are supported.
-     * @param {Property} [options.font='10px sans-serif'] A Property specifying the CSS font.
+     * @param {Property} [options.font='30px sans-serif'] A Property specifying the CSS font.
      * @param {Property} [options.style=LabelStyle.FILL] A Property specifying the {@link LabelStyle}.
      * @param {Property} [options.fillColor=Color.WHITE] A Property specifying the fill {@link Color}.
      * @param {Property} [options.outlineColor=Color.BLACK] A Property specifying the outline {@link Color}.
@@ -49,7 +49,7 @@ define([
      * @param {Property} [options.distanceDisplayCondition] A Property specifying at what distance from the camera that this label will be displayed.
      * @param {Property} [options.disableDepthTestDistance] A Property specifying the distance from the camera at which to disable the depth test to.
      *
-     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Labels.html|Cesium Sandcastle Labels Demo}
+     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Labels.html|Cesium Sandcastle Labels Demo}
      */
     function LabelGraphics(options) {
         this._text = undefined;

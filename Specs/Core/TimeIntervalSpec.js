@@ -100,6 +100,12 @@ defineSuite([
         expect(interval.data).toEqual(data);
     });
 
+    it('fromIso8601 throws error when given Invalid ISO 8601 date.', function() {
+        expect(function() {
+            TimeInterval.fromIso8601({ iso8601 : '2020-08-29T00:00:00+00:00' });
+        }).toThrowDeveloperError();
+    });
+
     it('toIso8601 works', function() {
         var isoDate1 = '0950-01-02T03:04:05Z';
         var isoDate2 = '0950-01-03T03:04:05Z';

@@ -1,5 +1,4 @@
 define([
-        './AttributeType',
         '../Core/Cartesian3',
         '../Core/ComponentDatatype',
         '../Core/defaultValue',
@@ -11,9 +10,9 @@ define([
         '../Core/WebGLConstants',
         '../Core/WeightSpline',
         '../ThirdParty/GltfPipeline/getAccessorByteStride',
-        '../ThirdParty/GltfPipeline/numberOfComponentsForType'
+        '../ThirdParty/GltfPipeline/numberOfComponentsForType',
+        './AttributeType'
     ], function(
-        AttributeType,
         Cartesian3,
         ComponentDatatype,
         defaultValue,
@@ -25,7 +24,8 @@ define([
         WebGLConstants,
         WeightSpline,
         getAccessorByteStride,
-        numberOfComponentsForType) {
+        numberOfComponentsForType,
+        AttributeType) {
     'use strict';
 
     /**
@@ -113,6 +113,12 @@ define([
     }
     ConstantSpline.prototype.evaluate = function(time, result) {
         return this._value;
+    };
+    ConstantSpline.prototype.wrapTime = function(time) {
+        return 0.0;
+    };
+    ConstantSpline.prototype.clampTime = function(time) {
+        return 0.0;
     };
 
     ModelAnimationCache.getAnimationSpline = function(model, animationName, animation, samplerName, sampler, input, path, output) {

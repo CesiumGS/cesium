@@ -38,7 +38,6 @@ define([
     var tangentScratch = new Cartesian3();
     var positionScratch = new Cartesian3();
 
-
     /**
      * A description of a cylinder.
      *
@@ -52,10 +51,6 @@ define([
      * @param {Number} [options.slices=128] The number of edges around the perimeter of the cylinder.
      * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
      *
-     * @exception {DeveloperError} options.length must be greater than 0.
-     * @exception {DeveloperError} options.topRadius must be greater than 0.
-     * @exception {DeveloperError} options.bottomRadius must be greater than 0.
-     * @exception {DeveloperError} bottomRadius and topRadius cannot both equal 0.
      * @exception {DeveloperError} options.slices must be greater than or equal to 3.
      *
      * @see CylinderGeometry.createGeometry
@@ -409,6 +404,26 @@ define([
             primitiveType : PrimitiveType.TRIANGLES,
             boundingSphere : boundingSphere
         });
+    };
+
+    var unitCylinderGeometry;
+
+    /**
+     * Returns the geometric representation of a unit cylinder, including its vertices, indices, and a bounding sphere.
+     * @returns {Geometry} The computed vertices and indices.
+     *
+     * @private
+     */
+    CylinderGeometry.getUnitCylinder = function() {
+        if (!defined(unitCylinderGeometry)) {
+            unitCylinderGeometry = CylinderGeometry.createGeometry(new CylinderGeometry({
+                topRadius : 1.0,
+                bottomRadius : 1.0,
+                length : 1.0,
+                vertexFormat : VertexFormat.POSITION_ONLY
+            }));
+        }
+        return unitCylinderGeometry;
     };
 
     return CylinderGeometry;

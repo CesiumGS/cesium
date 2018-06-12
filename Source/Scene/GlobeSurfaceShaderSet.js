@@ -3,20 +3,23 @@ define([
         '../Core/destroyObject',
         '../Core/TerrainQuantization',
         '../Renderer/ShaderProgram',
-        '../Scene/SceneMode'
+        './getClippingFunction',
+        './SceneMode'
     ], function(
         defined,
         destroyObject,
         TerrainQuantization,
         ShaderProgram,
+        getClippingFunction,
         SceneMode) {
     'use strict';
 
-    function GlobeSurfaceShader(numberOfDayTextures, flags, material, shaderProgram) {
+    function GlobeSurfaceShader(numberOfDayTextures, flags, material, shaderProgram, clippingShaderState) {
         this.numberOfDayTextures = numberOfDayTextures;
         this.flags = flags;
         this.material = material;
         this.shaderProgram = shaderProgram;
+        this.clippingShaderState = clippingShaderState;
     }
 
     /**
@@ -64,7 +67,7 @@ define([
         return useWebMercatorProjection ? get2DYPositionFractionMercatorProjection : get2DYPositionFractionGeographicProjection;
     }
 
-    GlobeSurfaceShaderSet.prototype.getShaderProgram = function(frameState, surfaceTile, numberOfDayTextures, applyBrightness, applyContrast, applyHue, applySaturation, applyGamma, applyAlpha, applySplit, showReflectiveOcean, showOceanWaves, enableLighting, hasVertexNormals, useWebMercatorProjection, enableFog, enableClippingPlanes, unionClippingRegions) {
+    GlobeSurfaceShaderSet.prototype.getShaderProgram = function(frameState, surfaceTile, numberOfDayTextures, applyBrightness, applyContrast, applyHue, applySaturation, applyGamma, applyAlpha, applySplit, showReflectiveOcean, showOceanWaves, enableLighting, hasVertexNormals, useWebMercatorProjection, enableFog, enableClippingPlanes, clippingPlanes) {
         var quantization = 0;
         var quantizationDefine = '';
 
@@ -93,26 +96,35 @@ define([
                     (applySplit << 15) |
                     (enableClippingPlanes << 16);
 
+        var currentClippingShaderState = 0;
+        if (defined(clippingPlanes)) {
+            currentClippingShaderState = enableClippingPlanes ? clippingPlanes.clippingPlanesState : 0;
+        }
         var surfaceShader = surfaceTile.surfaceShader;
         if (defined(surfaceShader) &&
             surfaceShader.numberOfDayTextures === numberOfDayTextures &&
             surfaceShader.flags === flags &&
-            surfaceShader.material === this.material) {
+            surfaceShader.material === this.material &&
+            surfaceShader.clippingShaderState === currentClippingShaderState) {
 
             return surfaceShader.shaderProgram;
         }
 
-        // New tile, or tile changed number of textures or flags.
+        // New tile, or tile changed number of textures, flags, or clipping planes
         var shadersByFlags = this._shadersByTexturesFlags[numberOfDayTextures];
         if (!defined(shadersByFlags)) {
             shadersByFlags = this._shadersByTexturesFlags[numberOfDayTextures] = [];
         }
 
         surfaceShader = shadersByFlags[flags];
-        if (!defined(surfaceShader) || surfaceShader.material !== this.material) {
+        if (!defined(surfaceShader) || surfaceShader.material !== this.material || surfaceShader.clippingShaderState !== currentClippingShaderState) {
             // Cache miss - we've never seen this combination of numberOfDayTextures and flags before.
             var vs = this.baseVertexShaderSource.clone();
             var fs = this.baseFragmentShaderSource.clone();
+
+            if (currentClippingShaderState !== 0) {
+                fs.sources.unshift(getClippingFunction(clippingPlanes, frameState.context)); // Need to go before GlobeFS
+            }
 
             vs.defines.push(quantizationDefine);
             fs.defines.push('TEXTURE_UNITS ' + numberOfDayTextures);
@@ -167,10 +179,6 @@ define([
 
             if (enableClippingPlanes) {
                 fs.defines.push('ENABLE_CLIPPING_PLANES');
-
-                if (unionClippingRegions) {
-                    fs.defines.push('UNION_CLIPPING_REGIONS');
-                }
             }
 
             var computeDayColor = '\
@@ -212,7 +220,7 @@ define([
                 attributeLocations : terrainEncoding.getAttributeLocations()
             });
 
-            surfaceShader = shadersByFlags[flags] = new GlobeSurfaceShader(numberOfDayTextures, flags, this.material, shader);
+            surfaceShader = shadersByFlags[flags] = new GlobeSurfaceShader(numberOfDayTextures, flags, this.material, shader, currentClippingShaderState);
         }
 
         surfaceTile.surfaceShader = surfaceShader;
