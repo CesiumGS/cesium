@@ -79,19 +79,19 @@ if (silhouetteBlue.isSupported(viewer.scene)) {
     // Silhouettes are supported
     silhouetteBlue.uniforms.color = Cesium.Color.BLUE;
     silhouetteBlue.uniforms.length = 0.01;
-    silhouetteBlue.selectedFeatures = [];
+    silhouetteBlue.selected = [];
 
     var silhouetteGreen = Cesium.PostProcessStageLibrary.createEdgeDetectionStage();
     silhouetteGreen.uniforms.color = Cesium.Color.LIME;
     silhouetteGreen.uniforms.length = 0.01;
-    silhouetteGreen.selectedFeatures = [];
+    silhouetteGreen.selected = [];
 
     viewer.scene.postProcessStages.add(Cesium.PostProcessStageLibrary.createSilhouetteStage([silhouetteBlue, silhouetteGreen]));
 
     // Silhouette a feature blue on hover.
     viewer.screenSpaceEventHandler.setInputAction(function onMouseMove(movement) {
         // If a feature was previously highlighted, undo the highlight
-        silhouetteBlue.selectedFeatures = [];
+        silhouetteBlue.selected = [];
 
         // Pick a new feature
         var pickedFeature = viewer.scene.pick(movement.endPosition);
@@ -112,14 +112,14 @@ if (silhouetteBlue.isSupported(viewer.scene)) {
 
         // Highlight the feature if it's not already selected.
         if (pickedFeature !== selected.feature) {
-            silhouetteBlue.selectedFeatures = [pickedFeature];
+            silhouetteBlue.selected = [pickedFeature];
         }
     }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
 
     // Silhouette a feature on selection and show metadata in the InfoBox.
     viewer.screenSpaceEventHandler.setInputAction(function onLeftClick(movement) {
         // If a feature was previously selected, undo the highlight
-        silhouetteGreen.selectedFeatures = [];
+        silhouetteGreen.selected = [];
 
         // Pick a new feature
         var pickedFeature = viewer.scene.pick(movement.position);
@@ -129,18 +129,18 @@ if (silhouetteBlue.isSupported(viewer.scene)) {
         }
 
         // Select the feature if it's not already selected
-        if (silhouetteGreen.selectedFeatures[0] === pickedFeature) {
+        if (silhouetteGreen.selected[0] === pickedFeature) {
             return;
         }
 
         // Save the selected feature's original color
-        var highlightedFeature = silhouetteBlue.selectedFeatures[0];
+        var highlightedFeature = silhouetteBlue.selected[0];
         if (pickedFeature === highlightedFeature) {
-            silhouetteBlue.selectedFeatures = [];
+            silhouetteBlue.selected = [];
         }
 
         // Highlight newly selected feature
-        silhouetteGreen.selectedFeatures = [pickedFeature];
+        silhouetteGreen.selected = [pickedFeature];
 
         // Set feature infobox description
         var featureName = pickedFeature.getProperty('name');

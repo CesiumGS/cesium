@@ -148,7 +148,7 @@ defineSuite([
             model.zoomTo();
 
             var stage = scene.postProcessStages.add(PostProcessStageLibrary.createBlackAndWhiteStage());
-            stage.selectedFeatures = [];
+            stage.selected = [];
 
             return pollToPromise(function() {
                 scene.renderForSpecs();
@@ -162,7 +162,7 @@ defineSuite([
                     expect(rgba[3]).toEqual(255);
                 });
 
-                stage.selectedFeatures = [model];
+                stage.selected = [model];
                 expect(scene).toRenderAndCall(function(rgba) {
                     expect(rgba).not.toEqual(color);
                 });

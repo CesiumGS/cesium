@@ -757,7 +757,7 @@ define([
             useOIT : false,
             useInvertClassification : false,
             usePostProcess : false,
-            usePostProcessSelectedFeatures : false
+            usePostProcessSelected : false
         };
 
         this._useWebVR = false;
@@ -2228,7 +2228,7 @@ define([
         var useDepthPlane = environmentState.useDepthPlane;
         var clearDepth = scene._depthClearCommand;
         var depthPlane = scene._depthPlane;
-        var usePostProcessSelectedFeatures = environmentState.usePostProcessSelectedFeatures;
+        var usePostProcessSelected = environmentState.usePostProcessSelected;
 
         var height2D = camera.position.z;
 
@@ -2457,7 +2457,7 @@ define([
                 pickDepth.executeCopyDepth(context, passState);
             }
 
-            if (picking || !usePostProcessSelectedFeatures) {
+            if (picking || !usePostProcessSelected) {
                 continue;
             }
 
@@ -3022,7 +3022,7 @@ define([
 
         var postProcess = scene.postProcessStages;
         var usePostProcess = environmentState.usePostProcess = !picking && (postProcess.length > 0 || postProcess.ambientOcclusion.enabled || postProcess.fxaa.enabled || postProcess.bloom.enabled);
-        environmentState.usePostProcessSelectedFeatures = false;
+        environmentState.usePostProcessSelected = false;
         if (usePostProcess) {
             scene._sceneFramebuffer.update(context, passState);
             scene._sceneFramebuffer.clear(context, passState, clearColor);
@@ -3034,7 +3034,7 @@ define([
             postProcess.clear(context);
 
             usePostProcess = environmentState.usePostProcess = postProcess.ready;
-            environmentState.usePostProcessSelectedFeatures = usePostProcess && postProcess.hasSelectedFeatures;
+            environmentState.usePostProcessSelected = usePostProcess && postProcess.hasSelected;
         }
 
         if (environmentState.isSunVisible && scene.sunBloom && !useWebVR) {
@@ -3220,7 +3220,7 @@ define([
         var frameNumber = CesiumMath.incrementWrap(frameState.frameNumber, 15000000.0, 1.0);
         updateFrameState(scene, frameNumber, time);
         frameState.passes.render = true;
-        frameState.passes.postProcess = scene.postProcessStages.hasSelectedFeatures;
+        frameState.passes.postProcess = scene.postProcessStages.hasSelected;
 
         var backgroundColor = defaultValue(scene.backgroundColor, Color.BLACK);
         frameState.backgroundColor = backgroundColor;

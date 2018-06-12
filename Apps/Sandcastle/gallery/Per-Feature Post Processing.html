@@ -41,10 +41,10 @@ viewer.trackedEntity = viewer.entities.add({
     }
 });
 
-var collection = viewer.scene.postProcessStages;
-var silhouette = collection.add(Cesium.PostProcessStageLibrary.createSilhouetteStage());
+var stages = viewer.scene.postProcessStages;
+var silhouette = stages.add(Cesium.PostProcessStageLibrary.createSilhouetteStage());
 silhouette.uniforms.color = Cesium.Color.LIME;
-var blackAndWhite = collection.add(Cesium.PostProcessStageLibrary.createBlackAndWhiteStage());
+var blackAndWhite = stages.add(Cesium.PostProcessStageLibrary.createBlackAndWhiteStage());
 blackAndWhite.uniforms.gradations = 5.0;
 
 if (!silhouette.isSupported(viewer.scene)) {
@@ -57,16 +57,16 @@ function addMouseOver(stage) {
     handler.setInputAction(function(movement) {
         var pickedObject = viewer.scene.pick(movement.endPosition);
         if (Cesium.defined(pickedObject)) {
-            stage.selectedFeatures = [pickedObject.primitive];
+            stage.selected = [pickedObject.primitive];
         } else {
-            stage.selectedFeatures = [];
+            stage.selected = [];
         }
     }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
 }
 
 function removeMouseOver(stage) {
     handler = handler && handler.destroy();
-    stage.selectedFeatures = [];
+    stage.selected = [];
 }
 
 Sandcastle.addToolbarMenu([{

@@ -106,15 +106,15 @@ define([
         this._textureCache = undefined;
         this._index = undefined;
 
-        this._selectedFeatures = undefined;
-        this._selectedFeaturesShadow = undefined;
-        this._parentSelectedFeatures = undefined;
-        this._parentSelectedFeaturesShadow = undefined;
-        this._combinedSelectedFeatures = undefined;
-        this._combinedSelectedFeaturesShadow = undefined;
-        this._selectedFeaturesLength = 0;
-        this._parentSelectedFeaturesLength = 0;
-        this._selectedFeaturesDirty = true;
+        this._selected = undefined;
+        this._selectedShadow = undefined;
+        this._parentSelected = undefined;
+        this._parentSelectedShadow = undefined;
+        this._combinedSelected = undefined;
+        this._combinedSelectedShadow = undefined;
+        this._selectedLength = 0;
+        this._parentSelectedLength = 0;
+        this._selectedDirty = true;
     }
 
     defineProperties(PostProcessStageComposite.prototype, {
@@ -210,23 +210,23 @@ define([
          * @memberof PostProcessStageComposite.prototype
          * @type {Array}
          */
-        selectedFeatures : {
+        selected : {
             get : function() {
-                return this._selectedFeatures;
+                return this._selected;
             },
             set : function(value) {
-                this._selectedFeatures = value;
+                this._selected = value;
             }
         },
         /**
          * @private
          */
-        parentSelectedFeatures : {
+        parentSelected : {
             get : function() {
-                return this._parentSelectedFeatures;
+                return this._parentSelected;
             },
             set : function(value) {
-                this._parentSelectedFeatures = value;
+                this._parentSelected = value;
             }
         }
     });
@@ -283,27 +283,27 @@ define([
     };
 
     function isSelectedTextureDirty(stage) {
-        var length = defined(stage._selectedFeatures) ? stage._selectedFeatures.length : 0;
-        var parentLength = defined(stage._parentSelectedFeatures) ? stage._parentSelectedFeatures : 0;
-        var dirty = stage._selectedFeatures !== stage._selectedFeaturesShadow || length !== stage._selectedFeaturesLength;
-        dirty = dirty || stage._parentSelectedFeatures !== stage._parentSelectedFeaturesShadow || parentLength !== stage._parentSelectedFeaturesLength;
+        var length = defined(stage._selected) ? stage._selected.length : 0;
+        var parentLength = defined(stage._parentSelected) ? stage._parentSelected : 0;
+        var dirty = stage._selected !== stage._selectedShadow || length !== stage._selectedLength;
+        dirty = dirty || stage._parentSelected !== stage._parentSelectedShadow || parentLength !== stage._parentSelectedLength;
 
-        if (defined(stage._selectedFeatures) && defined(stage._parentSelectedFeatures)) {
-            stage._combinedSelectedFeatures = stage._selectedFeatures.concat(stage._parentSelectedFeatures);
-        } else if (defined(stage._parentSelectedFeatures)) {
-            stage._combinedSelectedFeatures = stage._parentSelectedFeatures;
+        if (defined(stage._selected) && defined(stage._parentSelected)) {
+            stage._combinedSelected = stage._selected.concat(stage._parentSelected);
+        } else if (defined(stage._parentSelected)) {
+            stage._combinedSelected = stage._parentSelected;
         } else {
-            stage._combinedSelectedFeatures = stage._selectedFeatures;
+            stage._combinedSelected = stage._selected;
         }
 
-        if (!dirty && defined(stage._combinedSelectedFeatures)) {
-            if (!defined(stage._combinedSelectedFeaturesShadow)) {
+        if (!dirty && defined(stage._combinedSelected)) {
+            if (!defined(stage._combinedSelectedShadow)) {
                 return true;
             }
 
-            length = stage._combinedSelectedFeatures.length;
+            length = stage._combinedSelected.length;
             for (var i = 0; i < length; ++i) {
-                if (stage._combinedSelectedFeatures[i] !== stage._combinedSelectedFeaturesShadow[i]) {
+                if (stage._combinedSelected[i] !== stage._combinedSelectedShadow[i]) {
                     return true;
                 }
             }
@@ -317,20 +317,20 @@ define([
      * @private
      */
     PostProcessStageComposite.prototype.update = function(context, useLogDepth) {
-        this._selectedFeaturesDirty = isSelectedTextureDirty(this);
+        this._selectedDirty = isSelectedTextureDirty(this);
 
-        this._selectedFeaturesShadow = this._selectedFeatures;
-        this._parentSelectedFeaturesShadow = this._parentSelectedFeatures;
-        this._combinedSelectedFeaturesShadow = this._combinedSelectedFeatures;
-        this._selectedFeaturesLength = defined(this._selectedFeatures) ? this._selectedFeatures.length : 0;
-        this._parentSelectedFeaturesLength = defined(this._parentSelectedFeatures) ? this._parentSelectedFeatures.length : 0;
+        this._selectedShadow = this._selected;
+        this._parentSelectedShadow = this._parentSelected;
+        this._combinedSelectedShadow = this._combinedSelected;
+        this._selectedLength = defined(this._selected) ? this._selected.length : 0;
+        this._parentSelectedLength = defined(this._parentSelected) ? this._parentSelected.length : 0;
 
         var stages = this._stages;
         var length = stages.length;
         for (var i = 0; i < length; ++i) {
             var stage = stages[i];
-            if (this._selectedFeaturesDirty) {
-                stage.parentSelectedFeatures = this._combinedSelectedFeatures;
+            if (this._selectedDirty) {
+                stage.parentSelected = this._combinedSelected;
             }
             stage.update(context, useLogDepth);
         }

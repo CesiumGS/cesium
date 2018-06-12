@@ -228,17 +228,20 @@ define([
      * <li><code>color</code> is the color of the highlighted edge. The default is {@link Color#BLACK}.</li>
      * <li><code>length</code> is the length of the edges in pixels. The default is <code>0.5</code>.</li>
      * </ul>
+     * <p>
+     * This stage is not supported in 2D.
+     * </p>
      * @return {PostProcessStageComposite} A post-process stage that applies an edge detection effect.
      *
      * @example
      * // multiple silhouette effects
      * var yellowEdge = Cesium.PostProcessLibrary.createEdgeDetectionStage();
      * yellowEdge.uniforms.color = Cesium.Color.YELLOW;
-     * yellowEdge.selectedFeatures = [feature0];
+     * yellowEdge.selected = [feature0];
      *
      * var greenEdge = Cesium.PostProcessLibrary.createEdgeDetectionStage();
      * greenEdge.uniforms.color = Cesium.Color.LIME;
-     * greenEdge.selectedFeatures = [feature1];
+     * greenEdge.selected = [feature1];
      *
      * // draw edges around feature0 and feature1
      * postProcessStages.add(Cesium.PostProcessLibrary.createSilhouetteEffect([yellowEdge, greenEdge]);

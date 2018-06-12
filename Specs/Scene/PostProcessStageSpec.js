@@ -283,13 +283,13 @@ defineSuite([
             var stage = scene.postProcessStages.add(new PostProcessStage({
                 fragmentShader : fs
             }));
-            stage.selectedFeatures = [];
+            stage.selected = [];
             return pollToPromise(function() {
                 scene.renderForSpecs();
                 return stage.ready;
             }).then(function() {
                 expect(scene).toRender([255, 0, 0, 255]);
-                stage.selectedFeatures = [model];
+                stage.selected = [model];
                 expect(scene).toRenderAndCall(function(rgba) {
                     expect(rgba).not.toEqual([255, 0, 0, 255]);
                 });
