@@ -9,10 +9,9 @@ attribute vec4 compressedAttribute2;                       // image height, colo
 attribute vec4 eyeOffset;                                  // eye offset in meters, 4 bytes free (texture range)
 attribute vec4 scaleByDistance;                            // near, nearScale, far, farScale
 attribute vec4 pixelOffsetScaleByDistance;                 // near, nearScale, far, farScale
-attribute vec3 distanceDisplayConditionAndDisableDepth;    // near, far, disableDepthTestDistance
+attribute vec4 compressedAttribute3;                       // distnace display condition near, far, disableDepthTestDistance, dimensions
 #ifdef CLAMP_TO_GROUND
-attribute vec4 textureCoordinateBounds;                              // the min and max x and y values for the texture coordinates
-attribute vec2 dimensions;
+attribute vec4 textureCoordinateBounds;                    // the min and max x and y values for the texture coordinates
 #endif
 #ifdef VECTOR_TILE
 attribute float a_batchId;
@@ -21,14 +20,10 @@ attribute float a_batchId;
 varying vec2 v_textureCoordinates;
 #ifdef CLAMP_TO_GROUND
 varying vec4 v_textureCoordinateBounds;
-varying vec2 v_originTextureCoordinate;
-varying vec2 v_leftTextureCoordinate;
-varying vec2 v_rightTextureCoordinate;
-varying vec2 v_dimensions;
-varying vec2 v_imageSize;
-varying vec2 v_translate;
-varying float v_eyeDepth;
-varying float v_disableDepthTestDistance;
+varying vec4 v_originTextureCoordinateAndTranslate;
+varying vec4 v_leftAndRightTextureCoordinate;
+varying vec4 v_dimensionsAndImageSize;
+varying vec2 v_eyeDepthAndDistance;
 #endif
 
 varying vec4 v_pickColor;
@@ -37,6 +32,7 @@ varying vec4 v_color;
 const float UPPER_BOUND = 32768.0;
 
 const float SHIFT_LEFT16 = 65536.0;
+const float SHIFT_LEFT12 = 4096.0;
 const float SHIFT_LEFT8 = 256.0;
 const float SHIFT_LEFT7 = 128.0;
 const float SHIFT_LEFT5 = 32.0;
@@ -44,6 +40,7 @@ const float SHIFT_LEFT3 = 8.0;
 const float SHIFT_LEFT2 = 4.0;
 const float SHIFT_LEFT1 = 2.0;
 
+const float SHIFT_RIGHT12 = 1.0 / 4096.0;
 const float SHIFT_RIGHT8 = 1.0 / 256.0;
 const float SHIFT_RIGHT7 = 1.0 / 128.0;
 const float SHIFT_RIGHT5 = 1.0 / 32.0;
@@ -163,7 +160,7 @@ void main()
     translate.y += (temp - floor(temp)) * SHIFT_LEFT8;
     translate.y -= UPPER_BOUND;
 
-    v_translate = translate.xy;
+    v_originTextureCoordinateAndTranslate.zw = translate.xy;
 
     temp = compressedAttribute1.x * SHIFT_RIGHT8;
 
@@ -171,24 +168,26 @@ void main()
 
 #ifdef CLAMP_TO_GROUND
     v_textureCoordinateBounds = textureCoordinateBounds;
-    v_originTextureCoordinate = vec2(1.0) - depthOrigin; //the origin
-    if (v_originTextureCoordinate.y == 1.0) //vertical origin is top
+    v_originTextureCoordinateAndTranslate.xy = vec2(1.0) - depthOrigin; //the origin
+    if (v_originTextureCoordinateAndTranslate.y == 1.0) //vertical origin is top
     {
-        v_leftTextureCoordinate = vec2(0.0); //bottom left
-        v_rightTextureCoordinate = vec2(1.0, 0.0); //bottom right
+        v_leftAndRightTextureCoordinate = vec4(0.0, 0.0, 1.0, 0.0); //bottom left, bottom right
     }
     else
     {
-        if (v_originTextureCoordinate.y == 0.0)
+        if (v_originTextureCoordinateAndTranslate.y == 0.0)
         {
-            v_originTextureCoordinate.y = 0.1;
+            v_originTextureCoordinateAndTranslate.y = 0.1;
         }
 
-        v_leftTextureCoordinate = vec2(0.0, 1.0); //top left
-        v_rightTextureCoordinate = vec2(1.0); //top right
+        v_leftAndRightTextureCoordinate = vec4(0.0, 1.0, 1.0, 1.0); //top left, top right
     }
-    v_dimensions = dimensions.xy;
-    v_imageSize = imageSize.xy;
+
+    temp = compressedAttribute3.w;
+    temp = temp * SHIFT_RIGHT12;
+    v_dimensionsAndImageSize.y = (temp - floor(temp)) * SHIFT_LEFT12;
+    v_dimensionsAndImageSize.x = floor(temp);
+    v_dimensionsAndImageSize.zw = imageSize.xy;
 #endif
 
 #ifdef EYE_DISTANCE_TRANSLUCENCY
@@ -244,7 +243,7 @@ void main()
     vec4 positionEC = czm_modelViewRelativeToEye * p;
 
 #ifdef CLAMP_TO_GROUND
-    v_eyeDepth = positionEC.z;
+    v_eyeDepthAndDistance.x = positionEC.z;
 #endif
 
     positionEC = czm_eyeOffset(positionEC, eyeOffset.xyz);
@@ -293,8 +292,8 @@ void main()
 #endif
 
 #ifdef DISTANCE_DISPLAY_CONDITION
-    float nearSq = distanceDisplayConditionAndDisableDepth.x;
-    float farSq = distanceDisplayConditionAndDisableDepth.y;
+    float nearSq = compressedAttribute3.x;
+    float farSq = compressedAttribute3.y;
     if (lengthSq < nearSq || lengthSq > farSq)
     {
         positionEC.xyz = vec3(0.0);
@@ -310,10 +309,10 @@ void main()
 #endif
 
 #ifdef DISABLE_DEPTH_DISTANCE
-    float disableDepthTestDistance = distanceDisplayConditionAndDisableDepth.z;
+    float disableDepthTestDistance = compressedAttribute3.z;
 
     #ifdef CLAMP_TO_GROUND
-    v_disableDepthTestDistance = disableDepthTestDistance;
+    v_eyeDepthAndDistance.y = disableDepthTestDistance;
     #endif
 
     if (disableDepthTestDistance == 0.0 && czm_minimumDisableDepthTestDistance != 0.0)

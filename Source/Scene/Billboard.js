@@ -213,8 +213,7 @@ define([
     var DISTANCE_DISPLAY_CONDITION = Billboard.DISTANCE_DISPLAY_CONDITION = 14;
     var DISABLE_DEPTH_DISTANCE = Billboard.DISABLE_DEPTH_DISTANCE = 15;
     Billboard.TEXTURE_COORDINATE_BOUNDS = 16;
-    Billboard.DIMENSIONS = 17;
-    Billboard.NUMBER_OF_PROPERTIES = 18;
+    Billboard.NUMBER_OF_PROPERTIES = 17;
 
     function makeDirty(billboard, propertyChanged) {
         var billboardCollection = billboard._billboardCollection;
