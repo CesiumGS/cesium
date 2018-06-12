@@ -126,13 +126,13 @@ define([
      *
      * @example
      * var tileset = scene.primitives.add(new Cesium.Cesium3DTileset({
-     *      url : 'http://localhost:8002/tilesets/Seattle'
+     *      url : 'http://localhost:8002/tilesets/Seattle/tileset.json'
      * }));
      *
      * @example
      * // Common setting for the skipLevelOfDetail optimization
      * var tileset = scene.primitives.add(new Cesium.Cesium3DTileset({
-     *      url : 'http://localhost:8002/tilesets/Seattle',
+     *      url : 'http://localhost:8002/tilesets/Seattle/tileset.json',
      *      skipLevelOfDetail : true,
      *      baseScreenSpaceError : 1024,
      *      skipScreenSpaceErrorFactor : 16,
@@ -145,7 +145,7 @@ define([
      * @example
      * // Common settings for the dynamicScreenSpaceError optimization
      * var tileset = scene.primitives.add(new Cesium.Cesium3DTileset({
-     *      url : 'http://localhost:8002/tilesets/Seattle',
+     *      url : 'http://localhost:8002/tilesets/Seattle/tileset.json',
      *      dynamicScreenSpaceError : true,
      *      dynamicScreenSpaceErrorDensity : 0.00278,
      *      dynamicScreenSpaceErrorFactor : 4.0,
@@ -162,7 +162,6 @@ define([
         //>>includeEnd('debug');
 
         this._url = undefined;
-        this._tilesetUrl = undefined;
         this._basePath = undefined;
         this._root = undefined;
         this._asset = undefined; // Metadata for the entire tileset
@@ -694,7 +693,6 @@ define([
                 }
 
                 that._url = resource.url;
-                that._tilesetUrl = tilesetResource.url;
                 that._basePath = basePath;
 
                 // We don't know the distance of the tileset until tileset JSON file is loaded, so use the default distance for now
@@ -1075,7 +1073,7 @@ define([
          *
          * @example
          * var tileset = viewer.scene.primitives.add(new Cesium.Cesium3DTileset({
-         *     url : 'http://localhost:8002/tilesets/Seattle'
+         *     url : 'http://localhost:8002/tilesets/Seattle/tileset.json'
          * }));
          *
          * tileset.readyPromise.then(function(tileset) {

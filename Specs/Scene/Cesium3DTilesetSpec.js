@@ -318,7 +318,6 @@ defineSuite([
             url : path
         });
         expect(tileset.url).toEqual(path);
-        expect(tileset._tilesetUrl).toEqual(path);
     });
 
     it('url and tilesetUrl set up correctly given path with query string', function() {
@@ -328,7 +327,6 @@ defineSuite([
             url : path + param
         });
         expect(tileset.url).toEqual(path + param);
-        expect(tileset._tilesetUrl).toEqual(path + param);
     });
 
     it('resolves readyPromise', function() {
