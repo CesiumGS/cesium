@@ -9,7 +9,7 @@ varying vec4 v_pickColor;
 varying vec4 v_color;
 
 #ifdef CLAMP_TO_GROUND
-varying vec4 v_textureOffset;
+varying vec4 v_textureCoordinateBounds;
 varying vec2 v_originTextureCoordinate;
 varying vec2 v_leftTextureCoordinate;
 varying vec2 v_rightTextureCoordinate;
@@ -74,19 +74,24 @@ void main()
 
 #ifdef CLAMP_TO_GROUND
     if (v_eyeDepth > -v_disableDepthTestDistance) {
-        vec2 adjustedST = v_textureCoordinates - v_textureOffset.xy;
-        adjustedST = adjustedST / vec2(v_textureOffset.z - v_textureOffset.x, v_textureOffset.w - v_textureOffset.y);
-
-        float globeDepth1 = getGlobeDepth(adjustedST, v_originTextureCoordinate);
-        float globeDepth2 = getGlobeDepth(adjustedST, v_leftTextureCoordinate);
-        float globeDepth3 = getGlobeDepth(adjustedST, v_rightTextureCoordinate);
+        vec2 adjustedST = v_textureCoordinates - v_textureCoordinateBounds.xy;
+        adjustedST = adjustedST / vec2(v_textureCoordinateBounds.z - v_textureCoordinateBounds.x, v_textureCoordinateBounds.w - v_textureCoordinateBounds.y);
 
         float epsilonEyeDepth = v_eyeDepth + czm_epsilon5;
+        float globeDepth1 = getGlobeDepth(adjustedST, v_originTextureCoordinate);
 
         // negative values go into the screen
-        if (globeDepth1 > epsilonEyeDepth && globeDepth2 > epsilonEyeDepth && globeDepth3 > epsilonEyeDepth)
+        if (globeDepth1 > epsilonEyeDepth)
         {
-            discard;
+            float globeDepth2 = getGlobeDepth(adjustedST, v_leftTextureCoordinate);
+            if (globeDepth2 > epsilonEyeDepth)
+            {
+                float globeDepth3 = getGlobeDepth(adjustedST, v_rightTextureCoordinate);
+                if (globeDepth3 > epsilonEyeDepth)
+                {
+                    discard;
+                }
+            }
         }
     }
 #endif

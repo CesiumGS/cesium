@@ -86,7 +86,7 @@ define([
     var PIXEL_OFFSET_SCALE_BY_DISTANCE_INDEX = Billboard.PIXEL_OFFSET_SCALE_BY_DISTANCE_INDEX;
     var DISTANCE_DISPLAY_CONDITION_INDEX = Billboard.DISTANCE_DISPLAY_CONDITION;
     var DISABLE_DEPTH_DISTANCE = Billboard.DISABLE_DEPTH_DISTANCE;
-    var TEXTURE_OFFSET = Billboard.TEXTURE_OFFSET;
+    var TEXTURE_COORDINATE_BOUNDS = Billboard.TEXTURE_COORDINATE_BOUNDS;
     var DIMENSIONS = Billboard.DIMENSIONS;
     var NUMBER_OF_PROPERTIES = Billboard.NUMBER_OF_PROPERTIES;
 
@@ -102,7 +102,7 @@ define([
         scaleByDistance : 6,
         pixelOffsetScaleByDistance : 7,
         distanceDisplayConditionAndDisableDepth : 8,
-        textureOffset : 9,
+        textureCoordinateBounds : 9,
         dimensions : 10,
         a_batchId : 11
     };
@@ -118,7 +118,7 @@ define([
         scaleByDistance : 7,
         pixelOffsetScaleByDistance : 8,
         distanceDisplayConditionAndDisableDepth : 9,
-        textureOffset : 10,
+        textureCoordinateBounds : 10,
         dimensions : 11,
         a_batchId : 12
     };
@@ -312,7 +312,7 @@ define([
             BufferUsage.STATIC_DRAW, // TRANSLUCENCY_BY_DISTANCE_INDEX
             BufferUsage.STATIC_DRAW, // PIXEL_OFFSET_SCALE_BY_DISTANCE_INDEX
             BufferUsage.STATIC_DRAW, // DISTANCE_DISPLAY_CONDITION_INDEX
-            BufferUsage.STATIC_DRAW,  // TEXTURE_OFFSET
+            BufferUsage.STATIC_DRAW, // TEXTURE_COORDINATE_BOUNDS
             BufferUsage.STATIC_DRAW  // DIMENSIONS
         ];
 
@@ -748,10 +748,10 @@ define([
             componentDatatype : ComponentDatatype.FLOAT,
             usage : buffersUsage[DISTANCE_DISPLAY_CONDITION_INDEX]
         }, {
-            index : attributeLocations.textureOffset,
+            index : attributeLocations.textureCoordinateBounds,
             componentsPerAttribute : 4,
             componentDatatype : ComponentDatatype.FLOAT,
-            usage : buffersUsage[TEXTURE_OFFSET]
+            usage : buffersUsage[TEXTURE_COORDINATE_BOUNDS]
         }, {
             index : attributeLocations.dimensions,
             componentsPerAttribute : 2,
@@ -1221,12 +1221,12 @@ define([
         }
     }
 
-    function writeTextureOffset(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard) {
+    function writeTextureCoordinateBounds(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard) {
         if (billboard.heightReference === HeightReference.CLAMP_TO_GROUND) {
             billboardCollection._shaderClampToGround = true;
         }
         var i;
-        var writer = vafWriters[attributeLocations.textureOffset];
+        var writer = vafWriters[attributeLocations.textureCoordinateBounds];
 
         var minX = 0;
         var minY = 0;
@@ -1341,7 +1341,7 @@ define([
         writeScaleByDistance(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard);
         writePixelOffsetScaleByDistance(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard);
         writeDistanceDisplayConditionAndDepthDisable(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard);
-        writeTextureOffset(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard);
+        writeTextureCoordinateBounds(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard);
         writeDimensions(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard);
         writeBatchId(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard);
     }
@@ -1543,7 +1543,7 @@ define([
             }
 
             if (properties[IMAGE_INDEX_INDEX] || properties[POSITION_INDEX]) {
-                writers.push(writeTextureOffset);
+                writers.push(writeTextureCoordinateBounds);
             }
 
             if (properties[IMAGE_INDEX_INDEX] || properties[POSITION_INDEX]) {

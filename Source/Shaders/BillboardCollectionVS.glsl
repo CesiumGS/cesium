@@ -11,7 +11,7 @@ attribute vec4 scaleByDistance;                            // near, nearScale, f
 attribute vec4 pixelOffsetScaleByDistance;                 // near, nearScale, far, farScale
 attribute vec3 distanceDisplayConditionAndDisableDepth;    // near, far, disableDepthTestDistance
 #ifdef CLAMP_TO_GROUND
-attribute vec4 textureOffset;                              // the min and max x and y values for the texture coordinates
+attribute vec4 textureCoordinateBounds;                              // the min and max x and y values for the texture coordinates
 attribute vec2 dimensions;
 #endif
 #ifdef VECTOR_TILE
@@ -20,7 +20,7 @@ attribute float a_batchId;
 
 varying vec2 v_textureCoordinates;
 #ifdef CLAMP_TO_GROUND
-varying vec4 v_textureOffset;
+varying vec4 v_textureCoordinateBounds;
 varying vec2 v_originTextureCoordinate;
 varying vec2 v_leftTextureCoordinate;
 varying vec2 v_rightTextureCoordinate;
@@ -170,11 +170,11 @@ void main()
     vec2 imageSize = vec2(floor(temp), compressedAttribute2.w);
 
 #ifdef CLAMP_TO_GROUND
-    v_textureOffset = textureOffset;
+    v_textureCoordinateBounds = textureCoordinateBounds;
     v_originTextureCoordinate = vec2(1.0) - depthOrigin; //the origin
     if (v_originTextureCoordinate.y == 1.0) //vertical origin is top
     {
-        v_leftTextureCoordinate = vec2(0.0, 0.0); //bottom left
+        v_leftTextureCoordinate = vec2(0.0); //bottom left
         v_rightTextureCoordinate = vec2(1.0, 0.0); //bottom right
     }
     else
@@ -185,7 +185,7 @@ void main()
         }
 
         v_leftTextureCoordinate = vec2(0.0, 1.0); //top left
-        v_rightTextureCoordinate = vec2(1.0, 1.0); //top right
+        v_rightTextureCoordinate = vec2(1.0); //top right
     }
     v_dimensions = dimensions.xy;
     v_imageSize = imageSize.xy;
