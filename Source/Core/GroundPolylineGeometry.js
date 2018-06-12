@@ -51,8 +51,8 @@ define([
     var PROJECTIONS = [GeographicProjection, WebMercatorProjection];
     var PROJECTION_COUNT = PROJECTIONS.length;
 
-    var MITER_BREAK_SMALL = Math.cos(CesiumMath.toRadians(1.0));
-    var MITER_BREAK_LARGE = Math.cos(CesiumMath.toRadians(179.0));
+    var MITER_BREAK_SMALL = Math.cos(CesiumMath.toRadians(30.0));
+    var MITER_BREAK_LARGE = Math.cos(CesiumMath.toRadians(150.0));
 
     // Initial heights for constructing the wall.
     // Keeping WALL_INITIAL_MIN_HEIGHT near the ellipsoid surface helps
@@ -78,8 +78,6 @@ define([
      * @param {Number} [options.width=1.0] The screen space width in pixels.
      * @param {Number} [options.granularity=9999.0] The distance interval in meters used for interpolating options.points. Defaults to 9999.0 meters. Zero indicates no interpolation.
      * @param {Boolean} [options.loop=false] Whether during geometry creation a line segment will be added between the last and first line positions to make this Polyline a loop.
-     * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] Ellipsoid that input positions will be clamped to.
-     * @param {MapProjection} [options.projection] Map Projection for projecting coordinates to 2D.
      *
      * @exception {DeveloperError} At least two positions are required.
      *
@@ -130,24 +128,10 @@ define([
          */
         this.loop = defaultValue(options.loop, false);
 
-        /**
-         * Ellipsoid for projecting cartographic coordinates to 3D.
-         * @type {Ellipsoid}
-         * @default Ellipsoid.WGS84
-         */
-        this.ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
+        this._ellipsoid = Ellipsoid.WGS84;
 
         // MapProjections can't be packed, so store the index to a known MapProjection.
-        var projectionIndex = 0;
-        if (defined(options.projection)) {
-            for (var i = 0; i < PROJECTION_COUNT; i++) {
-                if (options.projection instanceof PROJECTIONS[i]) {
-                    projectionIndex = i;
-                    break;
-                }
-            }
-        }
-        this._projectionIndex = projectionIndex;
+        this._projectionIndex = 0;
         this._workerName = 'createGroundPolylineGeometry';
 
         // Used by GroundPolylinePrimitive to signal worker that scenemode is 3D only.
@@ -168,6 +152,27 @@ define([
             }
         }
     });
+
+    /**
+     * Set the GroundPolylineGeometry's projection and ellipsoid.
+     * Used by GroundPolylinePrimitive to signal scene information to the geometry for generating 2D attributes.
+     *
+     * @param {GroundPolylineGeometry} groundPolylineGeometry GroundPolylinGeometry describing a polyline on terrain.
+     * @param {Projection} mapProjection A MapProjection used for projecting cartographic coordinates to 2D.
+     * @private
+     */
+    GroundPolylineGeometry.setProjectionAndEllipsoid = function(groundPolylineGeometry, mapProjection) {
+        var projectionIndex = 0;
+        for (var i = 0; i < PROJECTION_COUNT; i++) {
+            if (mapProjection instanceof PROJECTIONS[i]) {
+                projectionIndex = i;
+                break;
+            }
+        }
+
+        groundPolylineGeometry._projectionIndex = projectionIndex;
+        groundPolylineGeometry._ellipsoid = mapProjection.ellipsoid;
+    };
 
     var cart3Scratch1 = new Cartesian3();
     var cart3Scratch2 = new Cartesian3();
@@ -261,7 +266,7 @@ define([
         array[index++] = value.granularity;
         array[index++] = value.loop ? 1.0 : 0.0;
 
-        Ellipsoid.pack(value.ellipsoid, array, index);
+        Ellipsoid.pack(value._ellipsoid, array, index);
         index += Ellipsoid.packedLength;
 
         array[index++] = value._projectionIndex;
@@ -315,7 +320,7 @@ define([
         result._positions = positions;
         result.granularity = granularity;
         result.loop = loop;
-        result.ellipsoid = ellipsoid;
+        result._ellipsoid = ellipsoid;
         result._projectionIndex = projectionIndex;
         result._scene3DOnly = scene3DOnly;
 
@@ -390,7 +395,7 @@ define([
     GroundPolylineGeometry.createGeometry = function(groundPolylineGeometry) {
         var compute2dAttributes = !groundPolylineGeometry._scene3DOnly;
         var loop = groundPolylineGeometry.loop;
-        var ellipsoid = groundPolylineGeometry.ellipsoid;
+        var ellipsoid = groundPolylineGeometry._ellipsoid;
         var granularity = groundPolylineGeometry.granularity;
         var projection = new PROJECTIONS[groundPolylineGeometry._projectionIndex](ellipsoid);
 
@@ -572,11 +577,11 @@ define([
     var normalStartpointScratch = new Cartesian3();
     var normalEndpointScratch = new Cartesian3();
     function projectNormal(projection, cartographic, normal, projectedPosition, result) {
-        var position = Cartographic.toCartesian(cartographic, projection.ellipsoid, normalStartpointScratch);
+        var position = Cartographic.toCartesian(cartographic, projection._ellipsoid, normalStartpointScratch);
         var normalEndpoint = Cartesian3.add(position, normal, normalEndpointScratch);
         var flipNormal = false;
 
-        var ellipsoid = projection.ellipsoid;
+        var ellipsoid = projection._ellipsoid;
         var normalEndpointCartographic = ellipsoid.cartesianToCartographic(normalEndpoint, endPosCartographicScratch);
         // If normal crosses the IDL, go the other way and flip the result.
         // In practice this almost never happens because the cartographic start
@@ -707,7 +712,7 @@ define([
     function generateGeometryAttributes(loop, projection, bottomPositionsArray, topPositionsArray, normalsArray, cartographicsArray, compute2dAttributes) {
         var i;
         var index;
-        var ellipsoid = projection.ellipsoid;
+        var ellipsoid = projection._ellipsoid;
 
         // Each segment will have 8 vertices
         var segmentCount = (bottomPositionsArray.length / 3) - 1;

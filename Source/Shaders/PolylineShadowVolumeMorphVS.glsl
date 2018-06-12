@@ -14,7 +14,7 @@ attribute vec2 texcoordNormalization2D;
 attribute float batchId;
 
 varying vec3 v_forwardDirectionEC;
-varying vec3 v_texcoordNormalization_and_halfWidth;
+varying vec3 v_texcoordNormalizationAndHalfWidth;
 varying float v_batchId;
 
 // For materials
@@ -91,7 +91,7 @@ void main()
     cleanTexcoordNormalization3D.y = rightNormalAndTextureCoordinateNormalizationY.w;
     cleanTexcoordNormalization3D.y = czm_branchFreeTernary(cleanTexcoordNormalization3D.y > 1.0, 0.0, abs(cleanTexcoordNormalization3D.y));
 
-    v_texcoordNormalization_and_halfWidth.xy = mix(cleanTexcoordNormalization2D, cleanTexcoordNormalization3D, czm_morphTime);
+    v_texcoordNormalizationAndHalfWidth.xy = mix(cleanTexcoordNormalization2D, cleanTexcoordNormalization3D, czm_morphTime);
 
 #ifdef PER_INSTANCE_COLOR
     v_color = czm_batchTable_color(batchId);
@@ -106,10 +106,10 @@ void main()
     float width = czm_batchTable_width(batchId);
     float halfWidth = width * 0.5;
     v_width = width;
-    v_texcoordNormalization_and_halfWidth.z = halfWidth;
+    v_texcoordNormalizationAndHalfWidth.z = halfWidth;
 #else
     float halfWidth = 0.5 * czm_batchTable_width(batchId);
-    v_texcoordNormalization_and_halfWidth.z = halfWidth;
+    v_texcoordNormalizationAndHalfWidth.z = halfWidth;
 #endif
 
     // Compute a normal along which to "push" the position out, extending the miter depending on view distance.

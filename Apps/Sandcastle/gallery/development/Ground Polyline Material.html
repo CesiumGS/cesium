@@ -32,6 +32,10 @@ var viewer = new Cesium.Viewer('cesiumContainer', {
 });
 var scene = viewer.scene;
 
+if (!Cesium.GroundPolylinePrimitive.isSupported(scene)) {
+    throw new Cesium.RuntimeError('Polylines on terrain are not supported on this platform.');
+}
+
 // Polyline Glow
 scene.groundPrimitives.add(new Cesium.GroundPolylinePrimitive({
     geometryInstances : new Cesium.GeometryInstance({

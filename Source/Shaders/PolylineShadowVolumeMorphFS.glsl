@@ -1,5 +1,5 @@
 varying vec3 v_forwardDirectionEC;
-varying vec3 v_texcoordNormalization_and_halfWidth;
+varying vec3 v_texcoordNormalizationAndHalfWidth;
 varying float v_batchId;
 
 #ifdef PER_INSTANCE_COLOR
@@ -31,7 +31,7 @@ void main(void)
     distanceFromEnd = max(0.0, distanceFromEnd);
 
     float s = distanceFromStart / (distanceFromStart + distanceFromEnd);
-    s = (s * v_texcoordNormalization_and_halfWidth.x) + v_texcoordNormalization_and_halfWidth.y;
+    s = (s * v_texcoordNormalizationAndHalfWidth.x) + v_texcoordNormalizationAndHalfWidth.y;
 
     czm_materialInput materialInput;
 

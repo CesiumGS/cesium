@@ -8,6 +8,7 @@ define([
         '../Core/DeveloperError',
         '../Core/GeometryInstance',
         '../Core/GeometryInstanceAttribute',
+        '../Core/GroundPolylineGeometry',
         '../Core/isArray',
         '../Shaders/PolylineShadowVolumeVS',
         '../Shaders/PolylineShadowVolumeFS',
@@ -35,6 +36,7 @@ define([
         DeveloperError,
         GeometryInstance,
         GeometryInstanceAttribute,
+        GroundPolylineGeometry,
         isArray,
         PolylineShadowVolumeVS,
         PolylineShadowVolumeFS,
@@ -643,8 +645,9 @@ define([
                     });
                 }
 
-                // Update each geometry for framestate.scene3DOnly = true
+                // Update each geometry for framestate.scene3DOnly = true and projection
                 geometryInstance.geometry._scene3DOnly = frameState.scene3DOnly;
+                GroundPolylineGeometry.setProjectionAndEllipsoid(geometryInstance.geometry, frameState.mapProjection);
 
                 groundInstances[i] = new GeometryInstance({
                     geometry : geometryInstance.geometry,

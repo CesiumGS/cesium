@@ -6,6 +6,7 @@ defineSuite([
         'Core/Math',
         'Core/Ellipsoid',
         'Core/GeographicProjection',
+        'Core/WebMercatorProjection',
         'Specs/createPackableSpecs'
     ], function(
         GroundPolylineGeometry,
@@ -15,6 +16,7 @@ defineSuite([
         CesiumMath,
         Ellipsoid,
         GeographicProjection,
+        WebMercatorProjection,
         createPackableSpecs) {
     'use strict';
 
@@ -455,8 +457,24 @@ defineSuite([
         expect(Cartesian3.equals(scratchPositions[1], groundPolylineGeometry._positions[1])).toBe(true);
         expect(scratch.loop).toBe(true);
         expect(scratch.granularity).toEqual(10.0);
-        expect(scratch.ellipsoid.equals(Ellipsoid.WGS84)).toBe(true);
+        expect(scratch._ellipsoid.equals(Ellipsoid.WGS84)).toBe(true);
         expect(scratch._scene3DOnly).toBe(true);
+    });
+
+    it('provides a method for setting projection and ellipsoid', function() {
+        var groundPolylineGeometry = new GroundPolylineGeometry({
+            positions : Cartesian3.fromDegreesArray([
+                -1.0, 0.0,
+                1.0, 0.0
+            ]),
+            loop : true,
+            granularity : 10.0 // no interpolative subdivision
+        });
+
+        GroundPolylineGeometry.setProjectionAndEllipsoid(groundPolylineGeometry, new WebMercatorProjection(Ellipsoid.UNIT_SPHERE));
+
+        expect(groundPolylineGeometry._projectionIndex).toEqual(1);
+        expect(groundPolylineGeometry._ellipsoid.equals(Ellipsoid.UNIT_SPHERE)).toBe(true);
     });
 
     var positions = Cartesian3.fromDegreesArray([

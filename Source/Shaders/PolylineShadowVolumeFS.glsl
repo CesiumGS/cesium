@@ -44,7 +44,8 @@ void main(void)
     }
 
     // Check distance of the eye coordinate against start and end planes with normals in the right plane.
-    // For computing unskewed linear texture coordinate and for clipping extremely pointy miters
+    // For computing unskewed lengthwise texture coordinate.
+    // Can also be used for clipping extremely pointy miters, but in practice unnecessary because of miter breaking.
 
     // aligned plane: cross the right plane normal with miter plane normal, then cross the result with right again to point it more "forward"
     vec3 alignedPlaneNormal;
@@ -58,15 +59,6 @@ void main(void)
     alignedPlaneNormal = cross(v_rightPlaneEC.xyz, v_endPlaneNormalEcAndBatchId.xyz);
     alignedPlaneNormal = normalize(cross(alignedPlaneNormal, v_rightPlaneEC.xyz));
     distanceFromEnd = czm_planeDistance(alignedPlaneNormal, -dot(alignedPlaneNormal, v_endEcAndStartEcX.xyz), eyeCoordinate.xyz);
-
-    if (distanceFromStart < -halfMaxWidth || distanceFromEnd < -halfMaxWidth) {
-#ifdef DEBUG_SHOW_VOLUME
-        gl_FragColor = vec4(1.0, 0.0, 0.0, 0.5);
-        return;
-#else // DEBUG_SHOW_VOLUME
-        discard;
-#endif // DEBUG_SHOW_VOLUME
-    }
 
 #ifdef PER_INSTANCE_COLOR
     gl_FragColor = v_color;
