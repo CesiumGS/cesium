@@ -1,6 +1,5 @@
 defineSuite([
         'Scene/GroundPolylinePrimitive',
-        'Core/ApproximateTerrainHeights',
         'Core/Color',
         'Core/ColorGeometryInstanceAttribute',
         'Core/Cartesian3',
@@ -21,7 +20,6 @@ defineSuite([
         'Specs/pollToPromise'
     ], function(
         GroundPolylinePrimitive,
-        ApproximateTerrainHeights,
         Color,
         ColorGeometryInstanceAttribute,
         Cartesian3,
@@ -160,9 +158,7 @@ defineSuite([
         expect(groundPolylinePrimitive.geometryInstances).not.toBeDefined();
         expect(groundPolylinePrimitive.appearance instanceof PolylineMaterialAppearance).toBe(true);
         expect(groundPolylinePrimitive.show).toEqual(true);
-        expect(groundPolylinePrimitive.vertexCacheOptimize).toEqual(false);
         expect(groundPolylinePrimitive.interleave).toEqual(false);
-        expect(groundPolylinePrimitive.compressVertices).toEqual(true);
         expect(groundPolylinePrimitive.releaseGeometryInstances).toEqual(true);
         expect(groundPolylinePrimitive.allowPicking).toEqual(true);
         expect(groundPolylinePrimitive.asynchronous).toEqual(true);
@@ -176,9 +172,7 @@ defineSuite([
         groundPolylinePrimitive = new GroundPolylinePrimitive({
             geometryInstances : geometryInstances,
             show : false,
-            vertexCacheOptimize : true,
             interleave : true,
-            compressVertices : false,
             releaseGeometryInstances : false,
             allowPicking : false,
             asynchronous : false,
@@ -188,9 +182,7 @@ defineSuite([
 
         expect(groundPolylinePrimitive.geometryInstances).toEqual(geometryInstances);
         expect(groundPolylinePrimitive.show).toEqual(false);
-        expect(groundPolylinePrimitive.vertexCacheOptimize).toEqual(true);
         expect(groundPolylinePrimitive.interleave).toEqual(true);
-        expect(groundPolylinePrimitive.compressVertices).toEqual(false);
         expect(groundPolylinePrimitive.releaseGeometryInstances).toEqual(false);
         expect(groundPolylinePrimitive.allowPicking).toEqual(false);
         expect(groundPolylinePrimitive.asynchronous).toEqual(false);

@@ -1,6 +1,5 @@
 define([
         '../Core/ApproximateTerrainHeights',
-        '../Core/Check',
         '../Core/ComponentDatatype',
         '../Core/defaultValue',
         '../Core/defined',
@@ -9,9 +8,7 @@ define([
         '../Core/DeveloperError',
         '../Core/GeometryInstance',
         '../Core/GeometryInstanceAttribute',
-        '../Core/GroundPolylineGeometry',
         '../Core/isArray',
-        '../Core/Matrix4',
         '../Shaders/PolylineShadowVolumeVS',
         '../Shaders/PolylineShadowVolumeFS',
         '../Shaders/PolylineShadowVolumeMorphVS',
@@ -24,14 +21,12 @@ define([
         '../ThirdParty/when',
         './BlendingState',
         './CullFace',
-        './Material',
         './PolylineColorAppearance',
         './PolylineMaterialAppearance',
         './Primitive',
         './SceneMode'
     ], function(
         ApproximateTerrainHeights,
-        Check,
         ComponentDatatype,
         defaultValue,
         defined,
@@ -40,9 +35,7 @@ define([
         DeveloperError,
         GeometryInstance,
         GeometryInstanceAttribute,
-        GroundPolylineGeometry,
         isArray,
-        Matrix4,
         PolylineShadowVolumeVS,
         PolylineShadowVolumeFS,
         PolylineShadowVolumeMorphVS,
@@ -55,7 +48,6 @@ define([
         when,
         BlendingState,
         CullFace,
-        Material,
         PolylineColorAppearance,
         PolylineMaterialAppearance,
         Primitive,
@@ -66,22 +58,65 @@ define([
      * A GroundPolylinePrimitive represents a polyline draped over the terrain in the {@link Scene}.
      * <p>
      *
-     * Only to be used with GeometryInstances containing {@link GroundPolylineGeometry}
+     * Only to be used with GeometryInstances containing {@link GroundPolylineGeometry}.
      *
      * @param {Object} [options] Object with the following properties:
      * @param {Array|GeometryInstance} [options.geometryInstances] GeometryInstances containing GroundPolylineGeometry
      * @param {Appearance} [options.appearance] The Appearance used to render the polyline. Defaults to a white color {@link Material} on a {@link PolylineMaterialAppearance}.
      * @param {Boolean} [options.show=true] Determines if this primitive will be shown.
-     * @param {Boolean} [options.vertexCacheOptimize=false] When <code>true</code>, geometry vertices are optimized for the pre and post-vertex-shader caches.
      * @param {Boolean} [options.interleave=false] When <code>true</code>, geometry vertex attributes are interleaved, which can slightly improve rendering performance but increases load time.
-     * @param {Boolean} [options.compressVertices=true] When <code>true</code>, the geometry vertices are compressed, which will save memory.
      * @param {Boolean} [options.releaseGeometryInstances=true] When <code>true</code>, the primitive does not keep a reference to the input <code>geometryInstances</code> to save memory.
      * @param {Boolean} [options.allowPicking=true] When <code>true</code>, each geometry instance will only be pickable with {@link Scene#pick}.  When <code>false</code>, GPU memory is saved.
      * @param {Boolean} [options.asynchronous=true] Determines if the primitive will be created asynchronously or block until ready. If false initializeTerrainHeights() must be called first.
      * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Determines if this primitive's commands' bounding spheres are shown.
-     * @param {Boolean} [options.debugShowShadowVolume=false] For debugging only. Determines if the shadow volume for each geometry in the primitive is drawn. Must be <code>true</code> on
-     *                  creation for the volumes to be created before the geometry is released or options.releaseGeometryInstance must be <code>false</code>.
+     * @param {Boolean} [options.debugShowShadowVolume=false] For debugging only. Determines if the shadow volume for each geometry in the primitive is drawn. Must be <code>true</code> on creation to have effect.
      *
+     * @example
+     * // 1. Draw a polyline on terrain with a basic color material
+     *
+     * var instance = new Cesium.GeometryInstance({
+     *   geometry : new Cesium.GroundPolylineGeometry({
+     *      positions : Cesium.Cartesian3.fromDegreesArray([
+     *          -112.1340164450331, 36.05494287836128,
+     *          -112.08821010582645, 36.097804071380715
+     *      ]),
+     *      width : 4.0
+     *   }),
+     *   id : 'object returned when this instance is picked and to get/set per-instance attributes'
+     * });
+     *
+     * scene.groundPrimitives.add(new Cesium.GroundPolylinePrimitive({
+     *   geometryInstances : instance,
+     *   appearance : new Cesium.PolylineMaterialAppearance({
+     *     material : Cesium.Material.fromType('Color')
+     *   })
+     * }));
+     *
+     * // 2. Draw a looped polyline on terrain with per-instance color and a distance display condition.
+     * // Distance display conditions for polylines on terrain are based on an approximate terrain height
+     * // instead of true terrain height.
+     *
+     * var instance = new Cesium.GeometryInstance({
+     *   geometry : new Cesium.GroundPolylineGeometry({
+     *      positions : Cesium.Cartesian3.fromDegreesArray([
+     *          -112.1340164450331, 36.05494287836128,
+     *          -112.08821010582645, 36.097804071380715,
+     *          -112.13296079730024, 36.168769146801104
+     *      ]),
+     *      loop : true,
+     *      width : 4.0
+     *   }),
+     *   attributes : {
+     *      color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.fromCssColorString('green').withAlpha(0.7)),
+            distanceDisplayCondition : new Cesium.DistanceDisplayConditionGeometryInstanceAttribute(1000, 30000)
+     *   },
+     *   id : 'object returned when this instance is picked and to get/set per-instance attributes'
+     * });
+     *
+     * scene.groundPrimitives.add(new Cesium.GroundPolylinePrimitive({
+     *   geometryInstances : instance,
+     *   appearance : Cesium.PolylineColorAppearance()
+     * }));
      */
     function GroundPolylinePrimitive(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -146,12 +181,12 @@ define([
         this._primitiveOptions = {
             geometryInstances : undefined,
             appearance : undefined,
-            vertexCacheOptimize : defaultValue(options.vertexCacheOptimize, false),
+            vertexCacheOptimize : false,
             interleave : defaultValue(options.interleave, false),
             releaseGeometryInstances : defaultValue(options.releaseGeometryInstances, true),
             allowPicking : defaultValue(options.allowPicking, true),
             asynchronous : defaultValue(options.asynchronous, true),
-            compressVertices : defaultValue(options.compressVertices, true),
+            compressVertices : false,
             _createShaderProgramFunction : undefined,
             _createCommandsFunction : undefined,
             _updateAndQueueCommandsFunction : undefined
@@ -191,22 +226,6 @@ define([
     }
 
     defineProperties(GroundPolylinePrimitive.prototype, {
-        /**
-         * When <code>true</code>, geometry vertices are optimized for the pre and post-vertex-shader caches.
-         *
-         * @memberof GroundPolylinePrimitive.prototype
-         *
-         * @type {Boolean}
-         * @readonly
-         *
-         * @default true
-         */
-        vertexCacheOptimize : {
-            get : function() {
-                return this._primitiveOptions.vertexCacheOptimize;
-            }
-        },
-
         /**
          * Determines if geometry vertex attributes are interleaved, which can slightly improve rendering performance.
          *
@@ -268,22 +287,6 @@ define([
         asynchronous : {
             get : function() {
                 return this._primitiveOptions.asynchronous;
-            }
-        },
-
-        /**
-         * When <code>true</code>, geometry vertices are compressed, which will save memory.
-         *
-         * @memberof GroundPolylinePrimitive.prototype
-         *
-         * @type {Boolean}
-         * @readonly
-         *
-         * @default true
-         */
-        compressVertices : {
-            get : function() {
-                return this._primitiveOptions.compressVertices;
             }
         },
 
