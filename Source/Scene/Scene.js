@@ -2086,19 +2086,21 @@ define([
     }
 
     function executeIdCommand(command, scene, context, passState) {
-        if (!defined(command.derivedCommands)) {
+        var derivedCommands = command.derivedCommands;
+        if (!defined(derivedCommands)) {
             return;
         }
 
-        if (scene._logDepthBuffer && defined(command.derivedCommands.logDepth)) {
-            command = command.derivedCommands.logDepth.command;
+        if (scene._logDepthBuffer && defined(derivedCommands.logDepth)) {
+            command = derivedCommands.logDepth.command;
         }
 
-        if (defined(command.derivedCommands.picking)) {
-            command = command.derivedCommands.picking.pickCommand;
+        derivedCommands = command.derivedCommands;
+        if (defined(derivedCommands.picking)) {
+            command = derivedCommands.picking.pickCommand;
             command.execute(context, passState);
-        } else if (defined(command.derivedCommands.depth)) {
-            command = command.derivedCommands.depth.depthOnlyCommand;
+        } else if (defined(derivedCommands.depth)) {
+            command = derivedCommands.depth.depthOnlyCommand;
             command.execute(context, passState);
         }
     }
