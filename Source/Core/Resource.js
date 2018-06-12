@@ -336,6 +336,10 @@ define([
         this.retryAttempts = defaultValue(options.retryAttempts, 0);
         this._retryCount = 0;
 
+        // True if the URL contains {placeholders}. We need to take care to avoid turning these into %7Bplaceholders%7D.
+        var open = options.url.indexOf('{');
+        this._containsPlaceholders = open >= 0 && open < options.url.indexOf('}');
+
         var uri = new Uri(options.url);
         parseQuery(uri, this, true, true);
 
@@ -524,7 +528,11 @@ define([
         }
 
         // objectToQuery escapes the placeholders.  Undo that.
-        var url = uri.toString().replace(/%7B/g, '{').replace(/%7D/g, '}');
+        var url = uri.toString();
+
+        if (this._containsPlaceholders) {
+            url = url.replace(/%7B/g, '{').replace(/%7D/g, '}');
+        }
 
         var template = this._templateValues;
         var keys = Object.keys(template);
@@ -715,6 +723,7 @@ define([
         result.retryAttempts = this.retryAttempts;
         result._retryCount = 0;
         result.request = this.request.clone();
+        result._containsPlaceholders = this._containsPlaceholders;
 
         return result;
     };
