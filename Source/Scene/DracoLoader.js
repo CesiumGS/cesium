@@ -155,7 +155,7 @@ define([
         var loadResources = model._loadResources;
         var cacheKey = model.cacheKey;
         if (defined(cacheKey)) {
-            if (!define(DracoLoader._decodedModelResourceCache)) {
+            if (!defined(DracoLoader._decodedModelResourceCache)) {
                 if (!defined(context.cache.modelDecodingCache)) {
                     context.cache.modelDecodingCache = {};
                 }
@@ -214,7 +214,7 @@ define([
             var cachedData = DracoLoader._decodedModelResourceCache[cacheKey];
             // Load decoded data for model when cache is ready
             if (defined(cachedData) && loadResources.pendingDecodingCache) {
-                return when(cachedData.cacheReady, function () {
+                return when(cachedData.ready, function () {
                     model._decodedData = cachedData.data;
                     loadResources.pendingDecodingCache = false;
                 });
@@ -222,7 +222,7 @@ define([
 
             // Decoded data for model should be cached when ready
             DracoLoader._decodedModelResourceCache[cacheKey] = {
-                cacheReady : false,
+                ready : false,
                 count : 1,
                 data : undefined
             };
@@ -252,8 +252,11 @@ define([
     DracoLoader.cacheDataForModel = function(model) {
         var cacheKey = model.cacheKey;
         if (defined(cacheKey) && defined(DracoLoader._decodedModelResourceCache)) {
-            model._decodedData.cacheReady = true;
-            DracoLoader._decodedModelResourceCache[cacheKey].data = model._decodedData;
+            var cachedData = DracoLoader._decodedModelResourceCache[cacheKey];
+            if (defined(cachedData)) {
+                cachedData.ready = true;
+                cachedData.data = model._decodedData;
+            }
         }
     };
 
@@ -264,7 +267,8 @@ define([
     DracoLoader.destroyCachedDataForModel = function(model) {
         var cacheKey = model.cacheKey;
         if (defined(cacheKey) && defined(DracoLoader._decodedModelResourceCache)) {
-            if (--DracoLoader._decodedModelResourceCache[cacheKey].count === 0) {
+            var cachedData = DracoLoader._decodedModelResourceCache[cacheKey];
+            if (defined(cachedData) && --cachedData.count === 0) {
                 delete DracoLoader._decodedModelResourceCache[cacheKey];
             }
         }
