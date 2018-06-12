@@ -2506,6 +2506,23 @@ defineSuite([
         });
     });
 
+    it('loads multiple draco models from cache without decoding', function() {
+        var initialModel;
+        var decoder = DracoLoader._getDecoderTaskProcessor();
+        return loadModel(dracoCompressedModelUrl)
+            .then(function(m) {
+                verifyRender(m);
+                initialModel = m;
+                spyOn(decoder, 'scheduleTask');
+                return loadModel(dracoCompressedModelUrl);
+            }).then(function(m) {
+                verifyRender(m);
+                expect(decoder.scheduleTask).not.toHaveBeenCalled();
+                primitives.remove(m);
+                primitives.remove(initialModel);
+            });
+    });
+
     it('error decoding a draco compressed glTF causes model loading to fail', function() {
         var decoder = DracoLoader._getDecoderTaskProcessor();
         spyOn(decoder, 'scheduleTask').and.returnValue(when.reject({message : 'my error'}));
