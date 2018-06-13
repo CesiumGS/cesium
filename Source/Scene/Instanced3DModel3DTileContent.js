@@ -21,6 +21,7 @@ define([
         '../Core/Transforms',
         '../Core/TranslationRotationScale',
         '../Renderer/Pass',
+        './Axis',
         './Cesium3DTileBatchTable',
         './Cesium3DTileFeature',
         './Cesium3DTileFeatureTable',
@@ -48,6 +49,7 @@ define([
         Transforms,
         TranslationRotationScale,
         Pass,
+        Axis,
         Cesium3DTileBatchTable,
         Cesium3DTileFeature,
         Cesium3DTileFeatureTable,
@@ -281,6 +283,7 @@ define([
             basePath : undefined,
             incrementallyLoadTextures : false,
             upAxis : content._tileset._gltfUpAxis,
+            forwardAxis : Axis.X,
             opaquePass : Pass.CESIUM_3D_TILE, // Draw opaque portions during the 3D Tiles pass
             pickIdLoaded : getPickIdCallback(content)
         };

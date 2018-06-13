@@ -4275,7 +4275,7 @@ define([
                     parseNodes(this);
 
                     // Start draco decoding
-                    DracoLoader.parse(this);
+                    DracoLoader.parse(this, context);
 
                     loadResources.initialized = true;
                 }
@@ -4288,6 +4288,8 @@ define([
                 if (loadResources.finishedDecoding() && !loadResources.resourcesParsed) {
                     this._boundingSphere = computeBoundingSphere(this);
                     this._initialRadius = this._boundingSphere.radius;
+
+                    DracoLoader.cacheDataForModel(this);
 
                     loadResources.resourcesParsed = true;
                 }
@@ -4617,6 +4619,7 @@ define([
 
         this._rendererResources = undefined;
         this._cachedRendererResources = this._cachedRendererResources && this._cachedRendererResources.release();
+        DracoLoader.destroyCachedDataForModel(this);
 
         var pickIds = this._pickIds;
         var length = pickIds.length;
