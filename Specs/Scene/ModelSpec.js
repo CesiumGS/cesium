@@ -2273,7 +2273,6 @@ defineSuite([
 
     function checkVertexColors(model) {
         model.zoomTo();
-        scene.camera.rotateRight(CesiumMath.PI_OVER_TWO);
         scene.camera.moveUp(0.1);
         // Red
         scene.camera.moveLeft(0.5);
@@ -2318,7 +2317,9 @@ defineSuite([
     });
 
     it('loads a glTF 2.0 with vertex colors', function() {
-        return loadModel(vertexColorTestUrl).then(function(m) {
+        return loadModel(vertexColorTestUrl, {
+            forwardAxis : Axis.X
+        }).then(function(m) {
             m.show = true;
             checkVertexColors(m);
             primitives.remove(m);
@@ -2504,6 +2505,23 @@ defineSuite([
             verifyRender(m);
             primitives.remove(m);
         });
+    });
+
+    it('loads multiple draco models from cache without decoding', function() {
+        var initialModel;
+        var decoder = DracoLoader._getDecoderTaskProcessor();
+        return loadModel(dracoCompressedModelUrl)
+            .then(function(m) {
+                verifyRender(m);
+                initialModel = m;
+                spyOn(decoder, 'scheduleTask');
+                return loadModel(dracoCompressedModelUrl);
+            }).then(function(m) {
+                verifyRender(m);
+                expect(decoder.scheduleTask).not.toHaveBeenCalled();
+                primitives.remove(m);
+                primitives.remove(initialModel);
+            });
     });
 
     it('error decoding a draco compressed glTF causes model loading to fail', function() {

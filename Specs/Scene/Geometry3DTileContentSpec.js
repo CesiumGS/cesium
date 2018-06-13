@@ -50,35 +50,35 @@ defineSuite([
 
     var tilesetRectangle = Rectangle.fromDegrees(-0.01, -0.01, 0.01, 0.01);
 
-    var geometryAll = './Data/Cesium3DTiles/Geometry/GeometryTileAll';
-    var geometryAllBatchedChildren = './Data/Cesium3DTiles/Geometry/GeometryTileAllBatchedChildren';
-    var geometryAllBatchedChildrenWithBatchTable = './Data/Cesium3DTiles/Geometry/GeometryTileAllBatchedChildrenWithBatchTable';
-    var geometryAllWithBatchTable = './Data/Cesium3DTiles/Geometry/GeometryTileAllWithBatchTable';
-    var geometryAllWithBatchIds = './Data/Cesium3DTiles/Geometry/GeometryTileAllWithBatchIds';
+    var geometryAll = './Data/Cesium3DTiles/Geometry/GeometryTileAll/tileset.json';
+    var geometryAllBatchedChildren = './Data/Cesium3DTiles/Geometry/GeometryTileAllBatchedChildren/tileset.json';
+    var geometryAllBatchedChildrenWithBatchTable = './Data/Cesium3DTiles/Geometry/GeometryTileAllBatchedChildrenWithBatchTable/tileset.json';
+    var geometryAllWithBatchTable = './Data/Cesium3DTiles/Geometry/GeometryTileAllWithBatchTable/tileset.json';
+    var geometryAllWithBatchIds = './Data/Cesium3DTiles/Geometry/GeometryTileAllWithBatchIds/tileset.json';
 
-    var geometryBoxes = './Data/Cesium3DTiles/Geometry/GeometryTileBoxes';
-    var geometryBoxesBatchedChildren = './Data/Cesium3DTiles/Geometry/GeometryTileBoxesBatchedChildren';
-    var geometryBoxesBatchedChildrenWithBatchTable = './Data/Cesium3DTiles/Geometry/GeometryTileBoxesBatchedChildrenWithBatchTable';
-    var geometryBoxesWithBatchTable = './Data/Cesium3DTiles/Geometry/GeometryTileBoxesWithBatchTable';
-    var geometryBoxesWithBatchIds = './Data/Cesium3DTiles/Geometry/GeometryTileBoxesWithBatchIds';
+    var geometryBoxes = './Data/Cesium3DTiles/Geometry/GeometryTileBoxes/tileset.json';
+    var geometryBoxesBatchedChildren = './Data/Cesium3DTiles/Geometry/GeometryTileBoxesBatchedChildren/tileset.json';
+    var geometryBoxesBatchedChildrenWithBatchTable = './Data/Cesium3DTiles/Geometry/GeometryTileBoxesBatchedChildrenWithBatchTable/tileset.json';
+    var geometryBoxesWithBatchTable = './Data/Cesium3DTiles/Geometry/GeometryTileBoxesWithBatchTable/tileset.json';
+    var geometryBoxesWithBatchIds = './Data/Cesium3DTiles/Geometry/GeometryTileBoxesWithBatchIds/tileset.json';
 
-    var geometryCylinders = './Data/Cesium3DTiles/Geometry/GeometryTileCylinders';
-    var geometryCylindersBatchedChildren = './Data/Cesium3DTiles/Geometry/GeometryTileCylindersBatchedChildren';
-    var geometryCylindersBatchedChildrenWithBatchTable = './Data/Cesium3DTiles/Geometry/GeometryTileCylindersBatchedChildrenWithBatchTable';
-    var geometryCylindersWithBatchTable = './Data/Cesium3DTiles/Geometry/GeometryTileCylindersWithBatchTable';
-    var geometryCylindersWithBatchIds = './Data/Cesium3DTiles/Geometry/GeometryTileCylindersWithBatchIds';
+    var geometryCylinders = './Data/Cesium3DTiles/Geometry/GeometryTileCylinders/tileset.json';
+    var geometryCylindersBatchedChildren = './Data/Cesium3DTiles/Geometry/GeometryTileCylindersBatchedChildren/tileset.json';
+    var geometryCylindersBatchedChildrenWithBatchTable = './Data/Cesium3DTiles/Geometry/GeometryTileCylindersBatchedChildrenWithBatchTable/tileset.json';
+    var geometryCylindersWithBatchTable = './Data/Cesium3DTiles/Geometry/GeometryTileCylindersWithBatchTable/tileset.json';
+    var geometryCylindersWithBatchIds = './Data/Cesium3DTiles/Geometry/GeometryTileCylindersWithBatchIds/tileset.json';
 
-    var geometryEllipsoids = './Data/Cesium3DTiles/Geometry/GeometryTileEllipsoids';
-    var geometryEllipsoidsBatchedChildren = './Data/Cesium3DTiles/Geometry/GeometryTileEllipsoidsBatchedChildren';
-    var geometryEllipsoidsBatchedChildrenWithBatchTable = './Data/Cesium3DTiles/Geometry/GeometryTileEllipsoidsBatchedChildrenWithBatchTable';
-    var geometryEllipsoidsWithBatchTable = './Data/Cesium3DTiles/Geometry/GeometryTileEllipsoidsWithBatchTable';
-    var geometryEllipsoidsWithBatchIds = './Data/Cesium3DTiles/Geometry/GeometryTileEllipsoidsWithBatchIds';
+    var geometryEllipsoids = './Data/Cesium3DTiles/Geometry/GeometryTileEllipsoids/tileset.json';
+    var geometryEllipsoidsBatchedChildren = './Data/Cesium3DTiles/Geometry/GeometryTileEllipsoidsBatchedChildren/tileset.json';
+    var geometryEllipsoidsBatchedChildrenWithBatchTable = './Data/Cesium3DTiles/Geometry/GeometryTileEllipsoidsBatchedChildrenWithBatchTable/tileset.json';
+    var geometryEllipsoidsWithBatchTable = './Data/Cesium3DTiles/Geometry/GeometryTileEllipsoidsWithBatchTable/tileset.json';
+    var geometryEllipsoidsWithBatchIds = './Data/Cesium3DTiles/Geometry/GeometryTileEllipsoidsWithBatchIds/tileset.json';
 
-    var geometrySpheres = './Data/Cesium3DTiles/Geometry/GeometryTileSpheres';
-    var geometrySpheresBatchedChildren = './Data/Cesium3DTiles/Geometry/GeometryTileSpheresBatchedChildren';
-    var geometrySpheresBatchedChildrenWithBatchTable = './Data/Cesium3DTiles/Geometry/GeometryTileSpheresBatchedChildrenWithBatchTable';
-    var geometrySpheresWithBatchTable = './Data/Cesium3DTiles/Geometry/GeometryTileSpheresWithBatchTable';
-    var geometrySpheresWithBatchIds = './Data/Cesium3DTiles/Geometry/GeometryTileSpheresWithBatchIds';
+    var geometrySpheres = './Data/Cesium3DTiles/Geometry/GeometryTileSpheres/tileset.json';
+    var geometrySpheresBatchedChildren = './Data/Cesium3DTiles/Geometry/GeometryTileSpheresBatchedChildren/tileset.json';
+    var geometrySpheresBatchedChildrenWithBatchTable = './Data/Cesium3DTiles/Geometry/GeometryTileSpheresBatchedChildrenWithBatchTable/tileset.json';
+    var geometrySpheresWithBatchTable = './Data/Cesium3DTiles/Geometry/GeometryTileSpheresWithBatchTable/tileset.json';
+    var geometrySpheresWithBatchIds = './Data/Cesium3DTiles/Geometry/GeometryTileSpheresWithBatchIds/tileset.json';
 
     var scene;
     var rectangle;
