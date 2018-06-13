@@ -1946,7 +1946,7 @@ define([
                     var modelMatrix = primitive.modelMatrix;
                     var offset = properties.offset;
                     if (defined(offset)) {
-                        transformBoundingSphere(boundingSphere.center, Cartesian3.fromArray(offset, 0, offsetScratch), primitive._offsetInstanceExtend[index]);
+                        transformBoundingSphere(boundingSphere, Cartesian3.fromArray(offset.get(), 0, offsetScratch), primitive._offsetInstanceExtend[index]);
                     }
                     if (defined(modelMatrix)) {
                         boundingSphere = BoundingSphere.transform(boundingSphere, modelMatrix);
