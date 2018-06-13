@@ -291,8 +291,21 @@ define([
     }
 
     function updateVisibility(tileset, tile, frameState) {
-        if (tile._updatedVisibilityFrame === frameState.frameNumber && !frameState.passes.pick) {
-            return;
+        // These checks are here to prevent updating tile visibility multiple times - once when checking children
+        // visibility with the cullWithChildrenBounds optimization, and again when checking the tile itself.
+        // This is also the only reason updateVisibility and updateTileVisibility are separate functions.
+        // Render and pick passes require different visibility checks since they use different frustums.
+        if (frameState.passes.pick) {
+            if (tile._updatedVisibilityFramePick === frameState.frameNumber) {
+                return;
+            }
+            tile._updatedVisibilityFramePick = frameState.frameNumber;
+        }
+        if (frameState.passes.render) {
+            if (tile._updatedVisibilityFrameRender === frameState.frameNumber) {
+                return;
+            }
+            tile._updatedVisibilityFrameRender = frameState.frameNumber;
         }
 
         var visibilityFlag = VisibilityFlag.NONE;
@@ -316,7 +329,6 @@ define([
         }
 
         tile._visibilityFlag = visibilityFlag;
-        tile._updatedVisibilityFrame = frameState.frameNumber;
     }
 
     function anyChildrenVisible(tileset, tile, frameState) {
@@ -461,13 +473,13 @@ define([
         if (tileset.immediatelyLoadDesiredLevelOfDetail) {
             return false;
         }
-        var parent = tile.parent;
         if (!defined(tile._ancestorWithContent)) {
-            // Include root tiles in the base traversal always so we will have something to select up to
+            // Include the highest up tiles with content in the base traversal so we have something to select up to
             return true;
         }
         if (tile._screenSpaceError === 0) {
-            return parent._screenSpaceError > baseScreenSpaceError;
+            // If a leaf, use parent's SSE
+            return tile.parent._screenSpaceError > baseScreenSpaceError;
         }
         return tile._screenSpaceError > baseScreenSpaceError;
     }
@@ -475,8 +487,10 @@ define([
     function executeTraversal(tileset, root, baseScreenSpaceError, maximumScreenSpaceError, frameState) {
         // Depth-first traversal that traverses all visible tiles and marks tiles for selection.
         // If skipLevelOfDetail is off then a tile does not refine until all children are loaded. This is the
-        // traditional replacement refinement approach.
-        // Otherwise we allow for skipping levels of the tree and rendering children and parent tiles simultaneously.
+        // traditional replacement refinement approach and is called the base traversal.
+        // Tiles that have a greater screen space error than the base screen space error are part of the base traversal,
+        // all other tiles are part of the skip traversal. The skip traversal allows for skipping levels of the tree
+        // and rendering children and parent tiles simultaneously.
         var stack = traversal.stack;
         stack.push(root);
 
