@@ -8,7 +8,8 @@ Change Log
 * Dropped support for directory URLs when loading tilesets to match the updated [3D Tiles spec](https://github.com/AnalyticalGraphicsInc/3d-tiles/issues/272). [#6502](https://github.com/AnalyticalGraphicsInc/cesium/issues/6502)
 
 ##### Additions :tada:
-* `PostProcessStage` has a `selected` property which is an array of primitives used for selectively applying a post-process stage.
+* Added `GroundPolylinePrimitive` and `GroundPolylineGeometry` for rendering polylines on terrain via the `Primitive` API. [#6615](https://github.com/AnalyticalGraphicsInc/cesium/pull/6615)
+* `PostProcessStage` has a `selected` property which is an array of primitives used for selectively applying a post-process stage. [#6476](https://github.com/AnalyticalGraphicsInc/cesium/pull/6476)
    * The `PostProcessStageLibrary.createBlackAndWhiteStage` and `PostProcessStageLibrary.createSilhouetteStage` have per-feature support.
 
 ##### Fixes :wrench:
