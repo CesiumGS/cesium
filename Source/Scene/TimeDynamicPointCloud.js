@@ -97,14 +97,14 @@ define([
     'use strict';
 
     /**
-     * A method for streaming time-dynamic point cloud data.
+     * A method for playing back time-dynamic point cloud data.
      *
-     * @alias PointCloudStream
+     * @alias TimeDynamicPointCloud
      * @constructor
      *
      * @private
      */
-    function PointCloudStream(options) {
+    function TimeDynamicPointCloud(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
         this.pointCloudShading = new PointCloudShading(options.pointCloudShading);
         this.style = options.style;
@@ -140,7 +140,7 @@ define([
         };
     }
 
-    PointCloudStream.prototype.addFrame = function(options) {
+    TimeDynamicPointCloud.prototype.addFrame = function(options) {
         //>>includeStart('debug', pragmas.debug);
         Check.typeOf.object('options', options);
         Check.typeOf.number.greaterThanOrEquals('options.index', options.index, 0);
@@ -156,11 +156,11 @@ define([
         });
     };
 
-    PointCloudStream.prototype.makeStyleDirty = function() {
+    TimeDynamicPointCloud.prototype.makeStyleDirty = function() {
         this._styleDirty = true;
     };
 
-    PointCloudStream.prototype.update = function(frameState) {
+    TimeDynamicPointCloud.prototype.update = function(frameState) {
         var time = frameState.time;
         var packets = this._packets;
         var firstPacket = packets[0];
@@ -279,11 +279,11 @@ define([
         }
     };
 
-    PointCloudStream.prototype.isDestroyed = function() {
+    TimeDynamicPointCloud.prototype.isDestroyed = function() {
         return false;
     };
 
-    PointCloudStream.prototype.destroy = function() {
+    TimeDynamicPointCloud.prototype.destroy = function() {
         var frames = this._frames;
         var framesLength = frames.length;
         for (var i = 0; i < framesLength; ++i) {
@@ -296,5 +296,5 @@ define([
         return destroyObject(this);
     };
 
-    return PointCloudStream;
+    return TimeDynamicPointCloud;
 });
