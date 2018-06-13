@@ -2,6 +2,7 @@ define([
         '../Core/BingMapsApi',
         '../Core/buildModuleUrl',
         '../Core/Cartesian2',
+        '../Core/Check',
         '../Core/Credit',
         '../Core/defaultValue',
         '../Core/defined',
@@ -22,6 +23,7 @@ define([
         BingMapsApi,
         buildModuleUrl,
         Cartesian2,
+        Check,
         Credit,
         defaultValue,
         defined,
@@ -103,14 +105,14 @@ define([
         //>>includeEnd('debug');
 
         this._key = BingMapsApi.getKey(options.key);
-        this._keyErrorCredit = BingMapsApi.getErrorCredit(options.key);
         this._resource = Resource.createIfNeeded(options.url);
+        this._resource.appendForwardSlash();
         this._tileProtocol = options.tileProtocol;
         this._mapStyle = defaultValue(options.mapStyle, BingMapsStyle.AERIAL);
         this._culture = defaultValue(options.culture, '');
         this._tileDiscardPolicy = options.tileDiscardPolicy;
         this._proxy = options.proxy;
-        this._credit = new Credit('<a href="http://www.bing.com"><img src="' + BingMapsImageryProvider._logoData + '" title="Bing Imagery"/></a>');
+        this._credit = new Credit('<a href="http://www.bing.com"><img src="' + BingMapsImageryProvider.logoUrl + '" title="Bing Imagery"/></a>');
 
         /**
          * The default {@link ImageryLayer#gamma} to use for imagery layers created for this provider.
@@ -140,7 +142,7 @@ define([
         this._readyPromise = when.defer();
 
         var metadataResource = this._resource.getDerivedResource({
-            url:'/REST/v1/Imagery/Metadata/' + this._mapStyle,
+            url:'REST/v1/Imagery/Metadata/' + this._mapStyle,
             queryParameters: {
                 incl: 'ImageryProviders',
                 key: this._key
@@ -510,10 +512,6 @@ define([
         var rectangle = this._tilingScheme.tileXYToRectangle(x, y, level, rectangleScratch);
         var result = getRectangleAttribution(this._attributionList, level, rectangle);
 
-        if (defined(this._keyErrorCredit)) {
-            result.push(this._keyErrorCredit);
-        }
-
         return result;
     };
 
@@ -559,8 +557,6 @@ define([
     BingMapsImageryProvider.prototype.pickFeatures = function(x, y, level, longitude, latitude) {
         return undefined;
     };
-
-    BingMapsImageryProvider._logoData = buildModuleUrl('Assets/Images/bing_maps_credit.png');
 
     /**
      * Converts a tiles (x, y, level) position into a quadkey used to request an image
@@ -623,6 +619,31 @@ define([
             level : level
         };
     };
+
+    BingMapsImageryProvider._logoUrl = undefined;
+
+    defineProperties(BingMapsImageryProvider, {
+        /**
+         * Gets or sets the URL to the Bing logo for display in the credit.
+         * @memberof BingMapsImageryProvider
+         * @type {String}
+         */
+        logoUrl: {
+            get: function() {
+                if (!defined(BingMapsImageryProvider._logoUrl)) {
+                    BingMapsImageryProvider._logoUrl = buildModuleUrl('Assets/Images/bing_maps_credit.png');
+                }
+                return BingMapsImageryProvider._logoUrl;
+            },
+            set: function(value) {
+                //>>includeStart('debug', pragmas.debug);
+                Check.defined('value', value);
+                //>>includeEnd('debug');
+
+                BingMapsImageryProvider._logoUrl = value;
+            }
+        }
+    });
 
     function buildImageResource(imageryProvider, x, y, level, request) {
         var imageUrl = imageryProvider._imageUrlTemplate;

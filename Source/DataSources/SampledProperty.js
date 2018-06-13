@@ -250,7 +250,7 @@ define([
         /**
          * Gets the type of property.
          * @memberof SampledProperty.prototype
-         * @type {Object}
+         * @type {*}
          */
         type : {
             get : function() {

@@ -12,10 +12,7 @@ define([
         '../Core/DoublyLinkedList',
         '../Core/Ellipsoid',
         '../Core/Event',
-        '../Core/getBaseUri',
-        '../Core/getExtensionFromUri',
         '../Core/getMagic',
-        '../Core/isDataUri',
         '../Core/JulianDate',
         '../Core/ManagedArray',
         '../Core/Math',
@@ -35,7 +32,6 @@ define([
         './Cesium3DTilesetStatistics',
         './Cesium3DTilesetTraversal',
         './Cesium3DTileStyleEngine',
-        './ClassificationType',
         './ClippingPlaneCollection',
         './LabelCollection',
         './PointCloudEyeDomeLighting',
@@ -59,10 +55,7 @@ define([
         DoublyLinkedList,
         Ellipsoid,
         Event,
-        getBaseUri,
-        getExtensionFromUri,
         getMagic,
-        isDataUri,
         JulianDate,
         ManagedArray,
         CesiumMath,
@@ -82,7 +75,6 @@ define([
         Cesium3DTilesetStatistics,
         Cesium3DTilesetTraversal,
         Cesium3DTileStyleEngine,
-        ClassificationType,
         ClippingPlaneCollection,
         LabelCollection,
         PointCloudEyeDomeLighting,
@@ -102,7 +94,7 @@ define([
      * @constructor
      *
      * @param {Object} options Object with the following properties:
-     * @param {Resource|String|Promise<Resource>|Promise<String>} options.url The url to a tileset.json file or to a directory containing a tileset.json file.
+     * @param {Resource|String|Promise<Resource>|Promise<String>} options.url The url to a tileset JSON file.
      * @param {Boolean} [options.show=true] Determines if the tileset will be shown.
      * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] A 4x4 transformation matrix that transforms the tileset's root tile.
      * @param {ShadowMode} [options.shadows=ShadowMode.ENABLED] Determines whether the tileset casts or receives shadows from each light source.
@@ -138,13 +130,13 @@ define([
      *
      * @example
      * var tileset = scene.primitives.add(new Cesium.Cesium3DTileset({
-     *      url : 'http://localhost:8002/tilesets/Seattle'
+     *      url : 'http://localhost:8002/tilesets/Seattle/tileset.json'
      * }));
      *
      * @example
      * // Common setting for the skipLevelOfDetail optimization
      * var tileset = scene.primitives.add(new Cesium.Cesium3DTileset({
-     *      url : 'http://localhost:8002/tilesets/Seattle',
+     *      url : 'http://localhost:8002/tilesets/Seattle/tileset.json',
      *      skipLevelOfDetail : true,
      *      baseScreenSpaceError : 1024,
      *      skipScreenSpaceErrorFactor : 16,
@@ -157,7 +149,7 @@ define([
      * @example
      * // Common settings for the dynamicScreenSpaceError optimization
      * var tileset = scene.primitives.add(new Cesium.Cesium3DTileset({
-     *      url : 'http://localhost:8002/tilesets/Seattle',
+     *      url : 'http://localhost:8002/tilesets/Seattle/tileset.json',
      *      dynamicScreenSpaceError : true,
      *      dynamicScreenSpaceErrorDensity : 0.00278,
      *      dynamicScreenSpaceErrorFactor : 4.0,
@@ -174,7 +166,6 @@ define([
         //>>includeEnd('debug');
 
         this._url = undefined;
-        this._tilesetUrl = undefined;
         this._basePath = undefined;
         this._root = undefined;
         this._asset = undefined; // Metadata for the entire tileset
@@ -669,7 +660,7 @@ define([
          */
         this.debugShowUrl = defaultValue(options.debugShowUrl, false);
 
-        // A bunch of tilesets were generated that have a leading / in front of all URLs in the tileset.json. If the tiles aren't
+        // A bunch of tilesets were generated that have a leading / in front of all URLs in the tileset JSON file. If the tiles aren't
         //  at the root of the domain they will not load anymore. If we find a b3dm file with a leading slash, we test load a tile.
         //  If it succeeds we continue on. If it fails, we set this to true so we know to strip the slash when loading tiles.
         this._brokenUrlWorkaround = false;
@@ -677,45 +668,36 @@ define([
         this._credits = undefined;
 
         var that = this;
-        var tilesetResource;
+        var resource;
         when(options.url)
             .then(function(url) {
                 var basePath;
-                var resource = Resource.createIfNeeded(url);
+                resource = Resource.createIfNeeded(url);
 
                 // ion resources have a credits property we can use for additional attribution.
                 that._credits = resource.credits;
-
-                tilesetResource = resource;
 
                 if (resource.extension === 'json') {
                     basePath = resource.getBaseUri(true);
                 } else if (resource.isDataUri) {
                     basePath = '';
-                } else {
-                    resource.appendForwardSlash();
-                    tilesetResource = resource.getDerivedResource({
-                        url: 'tileset.json'
-                    });
-                    basePath = resource.url;
                 }
 
                 that._url = resource.url;
-                that._tilesetUrl = tilesetResource.url;
                 that._basePath = basePath;
 
-                // We don't know the distance of the tileset until tileset.json is loaded, so use the default distance for now
-                return Cesium3DTileset.loadJson(tilesetResource);
+                // We don't know the distance of the tileset until tileset JSON file is loaded, so use the default distance for now
+                return Cesium3DTileset.loadJson(resource);
             })
             .then(function(tilesetJson) {
-                return detectBrokenUrlWorkaround(that, tilesetResource, tilesetJson);
+                return detectBrokenUrlWorkaround(that, resource, tilesetJson);
             })
             .then(function(tilesetJson) {
                 if (that._brokenUrlWorkaround) {
-                    deprecationWarning('Cesium3DTileset.leadingSlash', 'Having a leading slash in a tile URL that is actually relative to the tileset.json is deprecated.');
+                    deprecationWarning('Cesium3DTileset.leadingSlash', 'Having a leading slash in a tile URL that is actually relative to the tileset JSON file is deprecated.');
                 }
 
-                that._root = that.loadTileset(tilesetResource, tilesetJson);
+                that._root = that.loadTileset(resource, tilesetJson);
                 var gltfUpAxis = defined(tilesetJson.asset.gltfUpAxis) ? Axis.fromName(tilesetJson.asset.gltfUpAxis) : Axis.Y;
                 that._asset = tilesetJson.asset;
                 that._properties = tilesetJson.properties;
@@ -727,7 +709,7 @@ define([
             });
     }
 
-    function detectBrokenUrlWorkaround(tileset, tilesetResource, tilesetJson) {
+    function detectBrokenUrlWorkaround(tileset, resource, tilesetJson) {
         var testUrl = findBrokenUrl(tilesetJson.root);
 
         // If it's an empty string, we are good to load the tileset.
@@ -735,7 +717,7 @@ define([
             return tilesetJson;
         }
 
-        var testResource = tilesetResource.getDerivedResource({
+        var testResource = resource.getDerivedResource({
             url : testUrl
         });
 
@@ -809,6 +791,8 @@ define([
         },
         /**
          * The {@link ClippingPlaneCollection} used to selectively disable rendering the tileset.
+         *
+         * @memberof Cesium3DTileset.prototype
          *
          * @type {ClippingPlaneCollection}
          */
@@ -919,7 +903,7 @@ define([
         },
 
         /**
-         * The url to a tileset.json file or to a directory containing a tileset.json file.
+         * The url to a tileset JSON file.
          *
          * @memberof Cesium3DTileset.prototype
          *
@@ -933,7 +917,7 @@ define([
         },
 
         /**
-         * The base path that non-absolute paths in tileset.json are relative to.
+         * The base path that non-absolute paths in tileset JSON file are relative to.
          *
          * @memberof Cesium3DTileset.prototype
          *
@@ -943,7 +927,7 @@ define([
          */
         basePath : {
             get : function() {
-                deprecationWarning('Cesium3DTileset.basePath', 'Cesium3DTileset.basePath has been deprecated. All tiles are relative to the url of the tileset.json that contains them. Use the url property instead.');
+                deprecationWarning('Cesium3DTileset.basePath', 'Cesium3DTileset.basePath has been deprecated. All tiles are relative to the url of the tileset JSON file that contains them. Use the url property instead.');
                 return this._basePath;
             }
         },
@@ -1080,7 +1064,7 @@ define([
          *
          * @example
          * var tileset = viewer.scene.primitives.add(new Cesium.Cesium3DTileset({
-         *     url : 'http://localhost:8002/tilesets/Seattle'
+         *     url : 'http://localhost:8002/tilesets/Seattle/tileset.json'
          * }));
          *
          * tileset.readyPromise.then(function(tileset) {
@@ -1251,11 +1235,11 @@ define([
     };
 
     /**
-     * Loads the main tileset.json or a tileset.json referenced from a tile.
+     * Loads the main tileset JSON file or a tileset JSON file referenced from a tile.
      *
      * @private
      */
-    Cesium3DTileset.prototype.loadTileset = function(tilesetResource, tilesetJson, parentTile) {
+    Cesium3DTileset.prototype.loadTileset = function(resource, tilesetJson, parentTile) {
         var asset = tilesetJson.asset;
         if (!defined(asset)) {
             throw new RuntimeError('Tileset must have an asset property.');
@@ -1266,16 +1250,18 @@ define([
 
         var statistics = this._statistics;
 
-        // Append the tileset version to the tilesetResource
-        if (!defined(tilesetResource.queryParameters.v)) {
+        // Append the tileset version to the resource
+        if (!defined(resource.queryParameters.v)) {
             var versionQuery = {
                 v : defaultValue(asset.tilesetVersion, '0.0')
             };
             this._basePath += '?v=' + versionQuery.v;
-            tilesetResource.setQueryParameters(versionQuery);
+            resource.setQueryParameters(versionQuery);
         }
 
-        var rootTile = new Cesium3DTile(this, tilesetResource, tilesetJson.root, parentTile);
+        // A tileset JSON file referenced from a tile may exist in a different directory than the root tileset.
+        // Get the basePath relative to the external tileset.
+        var rootTile = new Cesium3DTile(this, resource, tilesetJson.root, parentTile);
 
         // If there is a parentTile, add the root of the currently loading tileset
         // to parentTile's children, and update its _depth.
@@ -1296,7 +1282,7 @@ define([
                 var length = children.length;
                 for (var i = 0; i < length; ++i) {
                     var childHeader = children[i];
-                    var childTile = new Cesium3DTile(this, tilesetResource, childHeader, tile);
+                    var childTile = new Cesium3DTile(this, resource, childHeader, tile);
                     tile.children.push(childTile);
                     childTile._depth = tile._depth + 1;
                     stack.push(childTile);
@@ -1417,25 +1403,8 @@ define([
 
         ++statistics.numberOfPendingRequests;
 
-        var removeFunction = removeFromProcessingQueue(tileset, tile);
         tile.contentReadyToProcessPromise.then(addToProcessingQueue(tileset, tile));
-        tile.contentReadyPromise.then(function() {
-            removeFunction();
-            tileset.tileLoad.raiseEvent(tile);
-        }).otherwise(function(error) {
-            removeFunction();
-            var url = tile._contentResource.url;
-            var message = defined(error.message) ? error.message : error.toString();
-            if (tileset.tileFailed.numberOfListeners > 0) {
-                tileset.tileFailed.raiseEvent({
-                    url : url,
-                    message : message
-                });
-            } else {
-                console.log('A 3D tile failed to load: ' + url);
-                console.log('Error: ' + message);
-            }
-        });
+        tile.contentReadyPromise.then(handleTileSuccess(tileset, tile)).otherwise(handleTileFailure(tileset, tile));
     }
 
     function sortRequestByPriority(a, b) {
@@ -1462,15 +1431,32 @@ define([
         };
     }
 
-    function removeFromProcessingQueue(tileset, tile) {
-        return function() {
-            if (tile._contentState === Cesium3DTileContentState.FAILED) {
-                // Not in processing queue
-                // For example, when a url request fails and the ready promise is rejected
+    function handleTileFailure(tileset, tile) {
+        return function(error) {
+            if (tileset._processingQueue.indexOf(tile) >= 0) {
+                // Failed during processing
+                --tileset._statistics.numberOfTilesProcessing;
+            } else {
+                // Failed when making request
                 --tileset._statistics.numberOfPendingRequests;
-                return;
             }
 
+            var url = tile._contentResource.url;
+            var message = defined(error.message) ? error.message : error.toString();
+            if (tileset.tileFailed.numberOfListeners > 0) {
+                tileset.tileFailed.raiseEvent({
+                    url : url,
+                    message : message
+                });
+            } else {
+                console.log('A 3D tile failed to load: ' + url);
+                console.log('Error: ' + message);
+            }
+        };
+    }
+
+    function handleTileSuccess(tileset, tile) {
+        return function() {
             --tileset._statistics.numberOfTilesProcessing;
 
             if (tile.hasRenderableContent) {
@@ -1481,6 +1467,8 @@ define([
 
                 tileset._cache.add(tile);
             }
+
+            tileset.tileLoad.raiseEvent(tile);
         };
     }
 

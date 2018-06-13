@@ -1230,10 +1230,7 @@ define([
         var extrude = queryBooleanValue(geometryNode, 'extrude', namespaces.kml);
         var tessellate = queryBooleanValue(geometryNode, 'tessellate', namespaces.kml);
         var canExtrude = isExtrudable(altitudeMode, gxAltitudeMode);
-
-        if (defined(queryNumericValue(geometryNode, 'drawOrder', namespaces.gx))) {
-            oneTimeWarning('kml-gx:drawOrder', 'KML - gx:drawOrder is not supported in LineStrings');
-        }
+        var zIndex = queryNumericValue(geometryNode, 'drawOrder', namespaces.gx);
 
         var ellipsoid = dataSource._ellipsoid;
         var coordinates = readCoordinates(coordinatesNode, ellipsoid);
@@ -1268,7 +1265,12 @@ define([
                 corridor.material = Color.WHITE;
                 corridor.width = 1.0;
             }
+            corridor.zIndex = zIndex;
         } else {
+            if (defined(zIndex)) {
+                oneTimeWarning('kml-gx:drawOrder', 'KML - gx:drawOrder is not supported in LineStrings when clampToGround is false');
+            }
+
             polyline = defined(polyline) ? polyline.clone() : new PolylineGraphics();
             entity.polyline = polyline;
             polyline.positions = createPositionPropertyArrayFromAltitudeMode(coordinates, altitudeMode, gxAltitudeMode, ellipsoid);
@@ -1875,13 +1877,16 @@ define([
 
         var ellipsoid = dataSource._ellipsoid;
         var positions = readCoordinates(queryFirstNode(groundOverlay, 'LatLonQuad', namespaces.gx), ellipsoid);
+        var zIndex = queryNumericValue(groundOverlay, 'drawOrder', namespaces.kml);
         if (defined(positions)) {
             geometry = createDefaultPolygon();
             geometry.hierarchy = new PolygonHierarchy(positions);
+            geometry.zIndex = zIndex;
             entity.polygon = geometry;
             isLatLonQuad = true;
         } else {
             geometry = new RectangleGraphics();
+            geometry.zIndex = zIndex;
             entity.rectangle = geometry;
 
             var latLonBox = queryFirstNode(groundOverlay, 'LatLonBox', namespaces.kml);
@@ -1942,6 +1947,7 @@ define([
             if (altitudeMode === 'absolute') {
                 //Use height above ellipsoid until we support MSL.
                 geometry.height = queryNumericValue(groundOverlay, 'altitude', namespaces.kml);
+                geometry.zIndex = undefined;
             } else if (altitudeMode !== 'clampToGround') {
                 oneTimeWarning('kml-altitudeMode-unknown', 'KML - Unknown altitudeMode: ' + altitudeMode);
             }
@@ -1951,6 +1957,7 @@ define([
             if (altitudeMode === 'relativeToSeaFloor') {
                 oneTimeWarning('kml-altitudeMode-relativeToSeaFloor', 'KML - altitudeMode relativeToSeaFloor is currently not supported, treating as absolute.');
                 geometry.height = queryNumericValue(groundOverlay, 'altitude', namespaces.kml);
+                geometry.zIndex = undefined;
             } else if (altitudeMode === 'clampToSeaFloor') {
                 oneTimeWarning('kml-altitudeMode-clampToSeaFloor', 'KML - altitudeMode clampToSeaFloor is currently not supported, treating as clampToGround.');
             } else if (defined(altitudeMode)) {

@@ -39,6 +39,7 @@ define([
      * @param {Property} [options.granularity=Cesium.Math.RADIANS_PER_DEGREE] A numeric Property specifying the distance between each latitude and longitude.
      * @param {Property} [options.shadows=ShadowMode.DISABLED] An enum Property specifying whether the corridor casts or receives shadows from each light source.
      * @param {Property} [options.distanceDisplayCondition] A Property specifying at what distance from the camera that this corridor will be displayed.
+     * @param {ConstantProperty} [options.zIndex] A Property specifying the zIndex of the corridor, used for ordering.  Only has an effect if height and extrudedHeight are undefined, and if the corridor is static.
      *
      * @see Entity
      * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Corridor.html|Cesium Sandcastle Corridor Demo}
@@ -74,6 +75,8 @@ define([
         this._distanceDisplayConditionSubscription = undefined;
         this._classificationType = undefined;
         this._classificationTypeSubscription = undefined;
+        this._zIndex = undefined;
+        this._zIndexSubscription = undefined;
         this._definitionChanged = new Event();
 
         this.merge(defaultValue(options, defaultValue.EMPTY_OBJECT));
@@ -207,9 +210,17 @@ define([
          * Gets or sets the {@link ClassificationType} Property specifying whether this corridor will classify terrain, 3D Tiles, or both when on the ground.
          * @memberof CorridorGraphics.prototype
          * @type {Property}
-         * @default ClassificationType.BOTH
+         * @default ClassificationType.TERRAIN
          */
-        classificationType : createPropertyDescriptor('classificationType')
+        classificationType : createPropertyDescriptor('classificationType'),
+
+        /**
+         * Gets or sets the zIndex Property specifying the ordering of the corridor.  Only has an effect if the coridor is static and neither height or exturdedHeight are specified.
+         * @memberof CorridorGraphics.prototype
+         * @type {ConstantProperty}
+         * @default 0
+         */
+        zIndex: createPropertyDescriptor('zIndex')
     });
 
     /**
@@ -237,6 +248,7 @@ define([
         result.shadows = this.shadows;
         result.distanceDisplayCondition = this.distanceDisplayCondition;
         result.classificationType = this.classificationType;
+        result.zIndex = this.zIndex;
         return result;
     };
 
@@ -268,6 +280,7 @@ define([
         this.shadows = defaultValue(this.shadows, source.shadows);
         this.distanceDisplayCondition = defaultValue(this.distanceDisplayCondition, source.distanceDisplayCondition);
         this.classificationType = defaultValue(this.classificationType, source.classificationType);
+        this.zIndex = defaultValue(this.zIndex, source.zIndex);
     };
 
     return CorridorGraphics;

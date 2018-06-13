@@ -1,4 +1,5 @@
 define([
+        './arrayFill',
         './BoundingSphere',
         './Cartesian3',
         './Cartographic',
@@ -10,6 +11,7 @@ define([
         './Geometry',
         './GeometryAttribute',
         './GeometryAttributes',
+        './GeometryOffsetAttribute',
         './IndexDatatype',
         './Math',
         './PolygonPipeline',
@@ -17,6 +19,7 @@ define([
         './Rectangle',
         './RectangleGeometryLibrary'
     ], function(
+        arrayFill,
         BoundingSphere,
         Cartesian3,
         Cartographic,
@@ -28,6 +31,7 @@ define([
         Geometry,
         GeometryAttribute,
         GeometryAttributes,
+        GeometryOffsetAttribute,
         IndexDatatype,
         CesiumMath,
         PolygonPipeline,
@@ -112,12 +116,10 @@ define([
         var surfaceHeight = options.surfaceHeight;
         var extrudedHeight = options.extrudedHeight;
         var ellipsoid = options.ellipsoid;
-        var minHeight = Math.min(extrudedHeight, surfaceHeight);
-        var maxHeight = Math.max(extrudedHeight, surfaceHeight);
+        var minHeight = extrudedHeight;
+        var maxHeight = surfaceHeight;
         var geo = constructRectangle(options);
-        if (CesiumMath.equalsEpsilon(minHeight, maxHeight, CesiumMath.EPSILON10)) {
-            return geo;
-        }
+
         var height = options.height;
         var width = options.width;
 
@@ -194,9 +196,7 @@ define([
         var rectangle = options.rectangle;
         var granularity = defaultValue(options.granularity, CesiumMath.RADIANS_PER_DEGREE);
         var ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
-        var surfaceHeight = defaultValue(options.height, 0.0);
         var rotation = defaultValue(options.rotation, 0.0);
-        var extrudedHeight = options.extrudedHeight;
 
         //>>includeStart('debug', pragmas.debug);
         if (!defined(rectangle)) {
@@ -208,12 +208,16 @@ define([
         }
         //>>includeEnd('debug');
 
+        var height = defaultValue(options.height, 0.0);
+        var extrudedHeight = defaultValue(options.extrudedHeight, height);
+
         this._rectangle = rectangle;
         this._granularity = granularity;
         this._ellipsoid = ellipsoid;
-        this._surfaceHeight = surfaceHeight;
+        this._surfaceHeight = Math.max(height, extrudedHeight);
         this._rotation = rotation;
-        this._extrudedHeight = extrudedHeight;
+        this._extrudedHeight = Math.min(height, extrudedHeight);
+        this._offsetAttribute = options.offsetAttribute;
         this._workerName = 'createRectangleOutlineGeometry';
     }
 
@@ -254,8 +258,8 @@ define([
         array[startingIndex++] = value._granularity;
         array[startingIndex++] = value._surfaceHeight;
         array[startingIndex++] = value._rotation;
-        array[startingIndex++] = defined(value._extrudedHeight) ? 1.0 : 0.0;
-        array[startingIndex] = defaultValue(value._extrudedHeight, 0.0);
+        array[startingIndex++] = value._extrudedHeight;
+        array[startingIndex] = defaultValue(value._offsetAttribute, -1);
 
         return array;
     };
@@ -268,7 +272,8 @@ define([
         granularity : undefined,
         height : undefined,
         rotation : undefined,
-        extrudedHeight : undefined
+        extrudedHeight : undefined,
+        offsetAttribute: undefined
     };
 
     /**
@@ -297,14 +302,16 @@ define([
         var granularity = array[startingIndex++];
         var height = array[startingIndex++];
         var rotation = array[startingIndex++];
-        var hasExtrudedHeight = array[startingIndex++];
-        var extrudedHeight = array[startingIndex];
+        var extrudedHeight = array[startingIndex++];
+        var offsetAttribute = array[startingIndex];
 
         if (!defined(result)) {
             scratchOptions.granularity = granularity;
             scratchOptions.height = height;
             scratchOptions.rotation = rotation;
-            scratchOptions.extrudedHeight = hasExtrudedHeight ? extrudedHeight : undefined;
+            scratchOptions.extrudedHeight = extrudedHeight;
+            scratchOptions.offsetAttribute = offsetAttribute === -1 ? undefined : offsetAttribute;
+
             return new RectangleOutlineGeometry(scratchOptions);
         }
 
@@ -312,7 +319,8 @@ define([
         result._ellipsoid = Ellipsoid.clone(ellipsoid, result._ellipsoid);
         result._surfaceHeight = height;
         result._rotation = rotation;
-        result._extrudedHeight = hasExtrudedHeight ? extrudedHeight : undefined;
+        result._extrudedHeight = extrudedHeight;
+        result._offsetAttribute = offsetAttribute === -1 ? undefined : offsetAttribute;
 
         return result;
     };
@@ -329,9 +337,6 @@ define([
     RectangleOutlineGeometry.createGeometry = function(rectangleGeometry) {
         var rectangle = Rectangle.clone(rectangleGeometry._rectangle, rectangleScratch);
         var ellipsoid = rectangleGeometry._ellipsoid;
-        var surfaceHeight = rectangleGeometry._surfaceHeight;
-        var extrudedHeight = rectangleGeometry._extrudedHeight;
-
         var options = RectangleGeometryLibrary.computeOptions(rectangleGeometry, rectangle, nwScratch);
         options.size =  2*options.width + 2*options.height - 4;
 
@@ -343,14 +348,48 @@ define([
              (CesiumMath.equalsEpsilon(rectangle.east, rectangle.west, CesiumMath.EPSILON10)))) {
             return undefined;
         }
-        if (defined(extrudedHeight)) {
+
+        var surfaceHeight = rectangleGeometry._surfaceHeight;
+        var extrudedHeight = rectangleGeometry._extrudedHeight;
+        var extrude = !CesiumMath.equalsEpsilon(surfaceHeight, extrudedHeight, 0, CesiumMath.EPSILON2);
+        var offsetValue;
+        if (extrude) {
             geometry = constructExtrudedRectangle(options);
+            if (defined(rectangleGeometry._offsetAttribute)) {
+                var size = geometry.attributes.position.values.length / 3;
+                var offsetAttribute = new Uint8Array(size);
+                if (rectangleGeometry._offsetAttribute === GeometryOffsetAttribute.TOP) {
+                    offsetAttribute = arrayFill(offsetAttribute, 1, 0, size / 2);
+                } else {
+                    offsetValue = rectangleGeometry._offsetAttribute === GeometryOffsetAttribute.NONE ? 0 : 1;
+                    offsetAttribute = arrayFill(offsetAttribute, offsetValue);
+                }
+
+                geometry.attributes.applyOffset = new GeometryAttribute({
+                    componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
+                    componentsPerAttribute : 1,
+                    values : offsetAttribute
+                });
+            }
             var topBS = BoundingSphere.fromRectangle3D(rectangle, ellipsoid, surfaceHeight, topBoundingSphere);
             var bottomBS = BoundingSphere.fromRectangle3D(rectangle, ellipsoid, extrudedHeight, bottomBoundingSphere);
             boundingSphere = BoundingSphere.union(topBS, bottomBS);
         } else {
             geometry = constructRectangle(options);
             geometry.attributes.position.values = PolygonPipeline.scaleToGeodeticHeight(geometry.attributes.position.values, surfaceHeight, ellipsoid, false);
+
+            if (defined(rectangleGeometry._offsetAttribute)) {
+                var length = geometry.attributes.position.values.length;
+                var applyOffset = new Uint8Array(length / 3);
+                offsetValue = rectangleGeometry._offsetAttribute === GeometryOffsetAttribute.NONE ? 0 : 1;
+                arrayFill(applyOffset, offsetValue);
+                geometry.attributes.applyOffset = new GeometryAttribute({
+                    componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
+                    componentsPerAttribute : 1,
+                    values: applyOffset
+                });
+            }
+
             boundingSphere = BoundingSphere.fromRectangle3D(rectangle, ellipsoid, surfaceHeight);
         }
 

@@ -64,6 +64,8 @@ define([
             geometryPropertyName : 'polylineVolume',
             observedPropertyNames : ['availability', 'polylineVolume']
         });
+
+        this._onEntityPropertyChanged(entity, 'polylineVolume', entity.polylineVolume, undefined);
     }
 
     if (defined(Object.create)) {

@@ -4,7 +4,7 @@ define([
         './defined',
         './defineProperties',
         './DeveloperError',
-        './GeographicTilingScheme',
+        './GeographicProjection',
         './HeightmapTessellator',
         './Math',
         './Rectangle',
@@ -18,7 +18,7 @@ define([
         defined,
         defineProperties,
         DeveloperError,
-        GeographicTilingScheme,
+        GeographicProjection,
         HeightmapTessellator,
         CesiumMath,
         Rectangle,
@@ -222,7 +222,7 @@ define([
             relativeToCenter : center,
             ellipsoid : ellipsoid,
             skirtHeight : this._skirtHeight,
-            isGeographic : tilingScheme instanceof GeographicTilingScheme,
+            isGeographic : tilingScheme.projection instanceof GeographicProjection,
             exaggeration : exaggeration
         });
 

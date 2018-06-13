@@ -104,7 +104,7 @@ defineSuite([
         height : 5,
         extrudedHeight : 7
     });
-    var packedInstance = [center.x, center.y, center.z, ellipsoid.radii.x, ellipsoid.radii.y, ellipsoid.radii.z, 2, 2, 0, 5, 1, 1, 7, 1, 4];
+    var packedInstance = [center.x, center.y, center.z, ellipsoid.radii.x, ellipsoid.radii.y, ellipsoid.radii.z, 2, 2, 0, 7, 1, 5, 4, -1];
     createPackableSpecs(CircleOutlineGeometry, packableInstance, packedInstance, 'extruded');
 
     //Because extrudedHeight is optional and has to be taken into account when packing, we have a second test without it.
@@ -116,6 +116,6 @@ defineSuite([
         numberOfVerticalLines : 4,
         height : 5
     });
-    packedInstance = [center.x, center.y, center.z, ellipsoid.radii.x, ellipsoid.radii.y, ellipsoid.radii.z, 2, 2, 0, 5, 1, 0, 0, 0, 4];
+    packedInstance = [center.x, center.y, center.z, ellipsoid.radii.x, ellipsoid.radii.y, ellipsoid.radii.z, 2, 2, 0, 5, 1, 5, 4, -1];
     createPackableSpecs(CircleOutlineGeometry, packableInstance, packedInstance, 'at height');
 });

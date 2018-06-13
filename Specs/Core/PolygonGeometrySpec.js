@@ -1,8 +1,10 @@
 defineSuite([
         'Core/PolygonGeometry',
+        'Core/arrayFill',
         'Core/BoundingSphere',
         'Core/Cartesian3',
         'Core/Ellipsoid',
+        'Core/GeometryOffsetAttribute',
         'Core/GeometryPipeline',
         'Core/Math',
         'Core/Rectangle',
@@ -10,9 +12,11 @@ defineSuite([
         'Specs/createPackableSpecs'
     ], function(
         PolygonGeometry,
+        arrayFill,
         BoundingSphere,
         Cartesian3,
         Ellipsoid,
+        GeometryOffsetAttribute,
         GeometryPipeline,
         CesiumMath,
         Rectangle,
@@ -307,7 +311,7 @@ defineSuite([
                                               -110.0, 35.0
                                           ]);
         for (i = 0; i < p.length; i++) {
-            expect(p[i]).toEqualEpsilon(pExpected[i], CesiumMath.EPSILON10);
+            expect(p[i]).toEqualEpsilon(pExpected[i], CesiumMath.EPSILON7);
         }
 
         var h1Expected = Cartesian3.fromDegreesArray([
@@ -317,7 +321,7 @@ defineSuite([
                                                -122.0, 39.0
                                            ]);
         for (i = 0; i < h1.length; i++) {
-            expect(h1[i]).toEqualEpsilon(h1Expected[i], CesiumMath.EPSILON10);
+            expect(h1[i]).toEqualEpsilon(h1Expected[i], CesiumMath.EPSILON7);
         }
 
         var h2Expected = Cartesian3.fromDegreesArray([
@@ -327,7 +331,7 @@ defineSuite([
                                                -114.0, 36.5
                                            ]);
         for (i = 0; i <h2.length; i++) {
-            expect(h2[i]).toEqualEpsilon(h2Expected[i], CesiumMath.EPSILON10);
+            expect(h2[i]).toEqualEpsilon(h2Expected[i], CesiumMath.EPSILON7);
         }
     });
 
@@ -448,6 +452,226 @@ defineSuite([
         expect(p.indices.length).toEqual(numTriangles * 3);
     });
 
+    it('computes offset attribute', function() {
+        var p = PolygonGeometry.createGeometry(PolygonGeometry.fromPositions({
+            vertexFormat : VertexFormat.POSITION_ONLY,
+            positions : Cartesian3.fromDegreesArray([
+                -1.0, -1.0,
+                1.0, -1.0,
+                1.0, 1.0,
+                -1.0, 1.0
+            ]),
+            granularity: CesiumMath.RADIANS_PER_DEGREE,
+            offsetAttribute: GeometryOffsetAttribute.TOP
+        }));
+
+        var numVertices = 13;
+        expect(p.attributes.position.values.length).toEqual(numVertices * 3);
+
+        var offset = p.attributes.applyOffset.values;
+        expect(offset.length).toEqual(numVertices);
+        var expected = new Array(offset.length);
+        expected = arrayFill(expected, 1);
+        expect(offset).toEqual(expected);
+    });
+
+    it('computes offset attribute extruded for top vertices', function() {
+        var p = PolygonGeometry.createGeometry(PolygonGeometry.fromPositions({
+            vertexFormat : VertexFormat.POSITION_ONLY,
+            positions : Cartesian3.fromDegreesArray([
+                -1.0, -1.0,
+                1.0, -1.0,
+                1.0, 1.0,
+                -1.0, 1.0
+            ]),
+            extrudedHeight: 30000,
+            offsetAttribute: GeometryOffsetAttribute.TOP
+        }));
+
+        var numVertices = 50;
+        expect(p.attributes.position.values.length).toEqual(numVertices * 3);
+
+        var offset = p.attributes.applyOffset.values;
+        expect(offset.length).toEqual(numVertices);
+        var expected = new Array(offset.length);
+        expected = arrayFill(expected, 0);
+        expected = arrayFill(expected, 1, 0, 13);
+        expected = arrayFill(expected, 1, 26, 38);
+        expect(offset).toEqual(expected);
+    });
+
+    it('computes offset attribute extruded and not closeTop for top vertices', function() {
+        var p = PolygonGeometry.createGeometry(PolygonGeometry.fromPositions({
+            vertexFormat : VertexFormat.POSITION_ONLY,
+            positions : Cartesian3.fromDegreesArray([
+                -1.0, -1.0,
+                1.0, -1.0,
+                1.0, 1.0,
+                -1.0, 1.0
+            ]),
+            extrudedHeight: 30000,
+            closeTop: false,
+            offsetAttribute: GeometryOffsetAttribute.TOP
+        }));
+
+        var numVertices = 37; // 13 bottom + 8 top edge + 8 bottom edge + 4 top corner + 4 bottom corner
+        expect(p.attributes.position.values.length).toEqual(numVertices * 3);
+
+        var offset = p.attributes.applyOffset.values;
+        expect(offset.length).toEqual(numVertices);
+        var expected = new Array(offset.length);
+        expected = arrayFill(expected, 0);
+        expected = arrayFill(expected, 1, 13, 25);
+        expect(offset).toEqual(expected);
+    });
+
+    it('computes offset attribute extruded and not closeBottom for top vertcies', function() {
+        var p = PolygonGeometry.createGeometry(PolygonGeometry.fromPositions({
+            vertexFormat : VertexFormat.POSITION_ONLY,
+            positions : Cartesian3.fromDegreesArray([
+                -1.0, -1.0,
+                1.0, -1.0,
+                1.0, 1.0,
+                -1.0, 1.0
+            ]),
+            extrudedHeight: 30000,
+            closeBottom: false,
+            offsetAttribute: GeometryOffsetAttribute.TOP
+        }));
+
+        var numVertices = 37;
+        expect(p.attributes.position.values.length).toEqual(numVertices * 3);
+
+        var offset = p.attributes.applyOffset.values;
+        expect(offset.length).toEqual(numVertices);
+        var expected = new Array(offset.length);
+        expected = arrayFill(expected, 0);
+        expected = arrayFill(expected, 1, 0, 25);
+        expect(offset).toEqual(expected);
+    });
+
+    it('computes offset attribute extruded and not closeBottom or closeTop for top vertices', function() {
+        var p = PolygonGeometry.createGeometry(PolygonGeometry.fromPositions({
+            vertexFormat : VertexFormat.POSITION_ONLY,
+            positions : Cartesian3.fromDegreesArray([
+                -1.0, -1.0,
+                1.0, -1.0,
+                1.0, 1.0,
+                -1.0, 1.0
+            ]),
+            extrudedHeight: 30000,
+            closeTop: false,
+            closeBottom: false,
+            offsetAttribute: GeometryOffsetAttribute.TOP
+        }));
+
+        var numVertices = 24;
+        expect(p.attributes.position.values.length).toEqual(numVertices * 3);
+
+        var offset = p.attributes.applyOffset.values;
+        expect(offset.length).toEqual(numVertices);
+        var expected = new Array(offset.length);
+        expected = arrayFill(expected, 0);
+        expected = arrayFill(expected, 1, 0, 12);
+        expect(offset).toEqual(expected);
+    });
+
+    it('computes offset attribute extruded for all vertices', function() {
+        var p = PolygonGeometry.createGeometry(PolygonGeometry.fromPositions({
+            vertexFormat : VertexFormat.POSITION_ONLY,
+            positions : Cartesian3.fromDegreesArray([
+                -1.0, -1.0,
+                1.0, -1.0,
+                1.0, 1.0,
+                -1.0, 1.0
+            ]),
+            extrudedHeight: 30000,
+            offsetAttribute: GeometryOffsetAttribute.ALL
+        }));
+
+        var numVertices = 50;
+        expect(p.attributes.position.values.length).toEqual(numVertices * 3);
+
+        var offset = p.attributes.applyOffset.values;
+        expect(offset.length).toEqual(numVertices);
+        var expected = new Array(offset.length);
+        expected = arrayFill(expected, 1);
+        expect(offset).toEqual(expected);
+    });
+
+    it('computes offset attribute extruded and not closeTop for all vertices', function() {
+        var p = PolygonGeometry.createGeometry(PolygonGeometry.fromPositions({
+            vertexFormat : VertexFormat.POSITION_ONLY,
+            positions : Cartesian3.fromDegreesArray([
+                -1.0, -1.0,
+                1.0, -1.0,
+                1.0, 1.0,
+                -1.0, 1.0
+            ]),
+            extrudedHeight: 30000,
+            closeTop: false,
+            offsetAttribute: GeometryOffsetAttribute.ALL
+        }));
+
+        var numVertices = 37; // 13 bottom + 8 top edge + 8 bottom edge + 4 top corner + 4 bottom corner
+        expect(p.attributes.position.values.length).toEqual(numVertices * 3);
+
+        var offset = p.attributes.applyOffset.values;
+        expect(offset.length).toEqual(numVertices);
+        var expected = new Array(offset.length);
+        expected = arrayFill(expected, 1);
+        expect(offset).toEqual(expected);
+    });
+
+    it('computes offset attribute extruded and not closeBottom for all vertcies', function() {
+        var p = PolygonGeometry.createGeometry(PolygonGeometry.fromPositions({
+            vertexFormat : VertexFormat.POSITION_ONLY,
+            positions : Cartesian3.fromDegreesArray([
+                -1.0, -1.0,
+                1.0, -1.0,
+                1.0, 1.0,
+                -1.0, 1.0
+            ]),
+            extrudedHeight: 30000,
+            closeBottom: false,
+            offsetAttribute: GeometryOffsetAttribute.ALL
+        }));
+
+        var numVertices = 37;
+        expect(p.attributes.position.values.length).toEqual(numVertices * 3);
+
+        var offset = p.attributes.applyOffset.values;
+        expect(offset.length).toEqual(numVertices);
+        var expected = new Array(offset.length);
+        expected = arrayFill(expected, 1);
+        expect(offset).toEqual(expected);
+    });
+
+    it('computes offset attribute extruded and not closeBottom or closeTop for all vertices', function() {
+        var p = PolygonGeometry.createGeometry(PolygonGeometry.fromPositions({
+            vertexFormat : VertexFormat.POSITION_ONLY,
+            positions : Cartesian3.fromDegreesArray([
+                -1.0, -1.0,
+                1.0, -1.0,
+                1.0, 1.0,
+                -1.0, 1.0
+            ]),
+            extrudedHeight: 30000,
+            closeTop: false,
+            closeBottom: false,
+            offsetAttribute: GeometryOffsetAttribute.ALL
+        }));
+
+        var numVertices = 24;
+        expect(p.attributes.position.values.length).toEqual(numVertices * 3);
+
+        var offset = p.attributes.applyOffset.values;
+        expect(offset.length).toEqual(numVertices);
+        var expected = new Array(offset.length);
+        expected = arrayFill(expected, 1);
+        expect(offset).toEqual(expected);
+    });
+
     it('removes duplicates extruded', function() {
         var p = PolygonGeometry.createGeometry(PolygonGeometry.fromPositions({
             vertexFormat : VertexFormat.POSITION_ONLY,
@@ -475,7 +699,7 @@ defineSuite([
                                                          -1.0, 1.0
                                                      ]),
             height: 0,
-            extrudedHeight: CesiumMath.EPSILON10
+            extrudedHeight: CesiumMath.EPSILON7
          }));
 
         expect(p.attributes.position.values.length).toEqual(13 * 3);
@@ -647,6 +871,53 @@ defineSuite([
         expect(CesiumMath.toDegrees(r.west)).toEqualEpsilon(-100.5, CesiumMath.EPSILON13);
     });
 
+    it('computing textureCoordinateRotationPoints property', function() {
+        var p = new PolygonGeometry({
+            vertexFormat : VertexFormat.POSITION_AND_ST,
+            polygonHierarchy: {
+                positions : Cartesian3.fromDegreesArrayHeights([
+                    -10.0, -10.0, 0,
+                    -10.0, 10.0, 0,
+                    10.0, -10.0, 0,
+                    10.0, 10.0, 0
+                ])},
+            granularity: CesiumMath.PI,
+            stRotation : CesiumMath.toRadians(90)
+        });
+
+        // 90 degree rotation means (0, 1) should be the new min and (1, 1) (0, 0) are extents
+        var textureCoordinateRotationPoints = p.textureCoordinateRotationPoints;
+        expect(textureCoordinateRotationPoints.length).toEqual(6);
+        expect(textureCoordinateRotationPoints[0]).toEqualEpsilon(0, CesiumMath.EPSILON7);
+        expect(textureCoordinateRotationPoints[1]).toEqualEpsilon(1, CesiumMath.EPSILON7);
+        expect(textureCoordinateRotationPoints[2]).toEqualEpsilon(1, CesiumMath.EPSILON7);
+        expect(textureCoordinateRotationPoints[3]).toEqualEpsilon(1, CesiumMath.EPSILON7);
+        expect(textureCoordinateRotationPoints[4]).toEqualEpsilon(0, CesiumMath.EPSILON7);
+        expect(textureCoordinateRotationPoints[5]).toEqualEpsilon(0, CesiumMath.EPSILON7);
+
+        p = new PolygonGeometry({
+            vertexFormat : VertexFormat.POSITION_AND_ST,
+            polygonHierarchy: {
+                positions : Cartesian3.fromDegreesArrayHeights([
+                    -10.0, -10.0, 0,
+                    -10.0, 10.0, 0,
+                    10.0, -10.0, 0,
+                    10.0, 10.0, 0
+                ])},
+            granularity: CesiumMath.PI,
+            stRotation : CesiumMath.toRadians(0)
+        });
+
+        textureCoordinateRotationPoints = p.textureCoordinateRotationPoints;
+        expect(textureCoordinateRotationPoints.length).toEqual(6);
+        expect(textureCoordinateRotationPoints[0]).toEqualEpsilon(0, CesiumMath.EPSILON7);
+        expect(textureCoordinateRotationPoints[1]).toEqualEpsilon(0, CesiumMath.EPSILON7);
+        expect(textureCoordinateRotationPoints[2]).toEqualEpsilon(0, CesiumMath.EPSILON7);
+        expect(textureCoordinateRotationPoints[3]).toEqualEpsilon(1, CesiumMath.EPSILON7);
+        expect(textureCoordinateRotationPoints[4]).toEqualEpsilon(1, CesiumMath.EPSILON7);
+        expect(textureCoordinateRotationPoints[5]).toEqualEpsilon(0, CesiumMath.EPSILON7);
+    });
+
     var positions = Cartesian3.fromDegreesArray([
         -12.4, 3.5,
         -12.0, 3.5,
@@ -687,7 +958,7 @@ defineSuite([
             array.push(positions[i].x, positions[i].y, positions[i].z);
         }
     }
-    var rectangle = new Rectangle(-0.21642082724729672, 0.06108652381980151, -0.20943951023931984, 0.06981317007977318);
+
     var packedInstance = [3.0, 1.0];
     addPositions(packedInstance, positions);
     packedInstance.push(3.0, 1.0);
@@ -696,7 +967,6 @@ defineSuite([
     addPositions(packedInstance, holePositions1);
     packedInstance.push(Ellipsoid.WGS84.radii.x, Ellipsoid.WGS84.radii.y, Ellipsoid.WGS84.radii.z);
     packedInstance.push(1.0, 0.0, 0.0, 0.0, 0.0, 0.0);
-    packedInstance.push(rectangle.west, rectangle.south, rectangle.east, rectangle.north);
-    packedInstance.push(0.0, 0.0, CesiumMath.PI_OVER_THREE, 0.0, 0.0, 1.0, 0, 1, 0, 56);
+    packedInstance.push(0.0, 0.0, CesiumMath.PI_OVER_THREE, 0.0, 0.0, 1.0, 0, 1, 0, -1, 53);
     createPackableSpecs(PolygonGeometry, polygon, packedInstance);
 });

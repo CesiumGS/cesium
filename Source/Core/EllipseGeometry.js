@@ -1,4 +1,5 @@
 define([
+        './arrayFill',
         './BoundingSphere',
         './Cartesian2',
         './Cartesian3',
@@ -15,17 +16,17 @@ define([
         './GeometryAttribute',
         './GeometryAttributes',
         './GeometryInstance',
+        './GeometryOffsetAttribute',
         './GeometryPipeline',
         './IndexDatatype',
         './Math',
         './Matrix3',
-        './Matrix4',
         './PrimitiveType',
         './Quaternion',
         './Rectangle',
-        './Transforms',
         './VertexFormat'
     ], function(
+        arrayFill,
         BoundingSphere,
         Cartesian2,
         Cartesian3,
@@ -42,15 +43,14 @@ define([
         GeometryAttribute,
         GeometryAttributes,
         GeometryInstance,
+        GeometryOffsetAttribute,
         GeometryPipeline,
         IndexDatatype,
         CesiumMath,
         Matrix3,
-        Matrix4,
         PrimitiveType,
         Quaternion,
         Rectangle,
-        Transforms,
         VertexFormat) {
     'use strict';
 
@@ -245,6 +245,22 @@ define([
                 componentDatatype : ComponentDatatype.FLOAT,
                 componentsPerAttribute : 3,
                 values : extrudeNormals
+            });
+        }
+
+        if (extrude && defined(options.offsetAttribute)) {
+            var offsetAttribute = new Uint8Array(size);
+            if (options.offsetAttribute === GeometryOffsetAttribute.TOP) {
+                offsetAttribute = arrayFill(offsetAttribute, 1, 0, size / 2);
+            } else {
+                var offsetValue = options.offsetAttribute === GeometryOffsetAttribute.NONE ? 0 : 1;
+                offsetAttribute = arrayFill(offsetAttribute, offsetValue);
+            }
+
+            attributes.applyOffset = new GeometryAttribute({
+                componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
+                componentsPerAttribute : 1,
+                values : offsetAttribute
             });
         }
 
@@ -565,6 +581,21 @@ define([
             });
         }
 
+        if (defined(options.offsetAttribute)) {
+            var offsetAttribute = new Uint8Array(size);
+            if (options.offsetAttribute === GeometryOffsetAttribute.TOP) {
+                offsetAttribute = arrayFill(offsetAttribute, 1, 0, size / 2);
+            } else {
+                var offsetValue = options.offsetAttribute === GeometryOffsetAttribute.NONE ? 0 : 1;
+                offsetAttribute = arrayFill(offsetAttribute, offsetValue);
+            }
+            attributes.applyOffset = new GeometryAttribute({
+                componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
+                componentsPerAttribute : 1,
+                values : offsetAttribute
+            });
+        }
+
         return attributes;
     }
 
@@ -667,7 +698,7 @@ define([
         for (var i = 0; i < positionsCount; ++i) {
             positions[i] = Cartesian3.fromArray(positionsFlat, i * 3);
         }
-        var rectangle = Rectangle.fromCartesianArray(positions);
+        var rectangle = Rectangle.fromCartesianArray(positions, ellipseGeometry._ellipsoid);
         // Rectangle width goes beyond 180 degrees when the ellipse crosses a pole.
         // When this happens, make the rectangle into a "circle" around the pole
         if (rectangle.width > CesiumMath.PI) {
@@ -722,9 +753,6 @@ define([
         var semiMajorAxis = options.semiMajorAxis;
         var semiMinorAxis = options.semiMinorAxis;
         var granularity = defaultValue(options.granularity, CesiumMath.RADIANS_PER_DEGREE);
-        var height = defaultValue(options.height, 0.0);
-        var extrudedHeight = options.extrudedHeight;
-        var extrude = (defined(extrudedHeight) && Math.abs(height - extrudedHeight) > 1.0);
         var vertexFormat = defaultValue(options.vertexFormat, VertexFormat.DEFAULT);
 
         //>>includeStart('debug', pragmas.debug);
@@ -745,21 +773,25 @@ define([
         }
         //>>includeEnd('debug');
 
+        var height = defaultValue(options.height, 0.0);
+        var extrudedHeight = defaultValue(options.extrudedHeight, height);
+
         this._center = Cartesian3.clone(center);
         this._semiMajorAxis = semiMajorAxis;
         this._semiMinorAxis = semiMinorAxis;
         this._ellipsoid = Ellipsoid.clone(ellipsoid);
         this._rotation = defaultValue(options.rotation, 0.0);
         this._stRotation = defaultValue(options.stRotation, 0.0);
-        this._height = height;
+        this._height = Math.max(extrudedHeight, height);
         this._granularity = granularity;
         this._vertexFormat = VertexFormat.clone(vertexFormat);
-        this._extrudedHeight = defaultValue(extrudedHeight, height);
-        this._extrude = extrude;
+        this._extrudedHeight = Math.min(extrudedHeight, height);
         this._shadowVolume = defaultValue(options.shadowVolume, false);
         this._workerName = 'createEllipseGeometry';
+        this._offsetAttribute = options.offsetAttribute;
 
         this._rectangle = undefined;
+        this._textureCoordinateRotationPoints = undefined;
     }
 
     /**
@@ -805,8 +837,8 @@ define([
         array[startingIndex++] = value._height;
         array[startingIndex++] = value._granularity;
         array[startingIndex++] = value._extrudedHeight;
-        array[startingIndex++] = value._extrude ? 1.0 : 0.0;
-        array[startingIndex] = value._shadowVolume ? 1.0 : 0.0;
+        array[startingIndex++] = value._shadowVolume ? 1.0 : 0.0;
+        array[startingIndex] = defaultValue(value._offsetAttribute, -1);
 
         return array;
     };
@@ -825,7 +857,8 @@ define([
         height : undefined,
         granularity : undefined,
         extrudedHeight : undefined,
-        shadowVolume: undefined
+        shadowVolume: undefined,
+        offsetAttribute: undefined
     };
 
     /**
@@ -861,8 +894,8 @@ define([
         var height = array[startingIndex++];
         var granularity = array[startingIndex++];
         var extrudedHeight = array[startingIndex++];
-        var extrude = array[startingIndex++] === 1.0;
-        var shadowVolume = array[startingIndex] === 1.0;
+        var shadowVolume = array[startingIndex++] === 1.0;
+        var offsetAttribute = array[startingIndex];
 
         if (!defined(result)) {
             scratchOptions.height = height;
@@ -873,6 +906,8 @@ define([
             scratchOptions.semiMajorAxis = semiMajorAxis;
             scratchOptions.semiMinorAxis = semiMinorAxis;
             scratchOptions.shadowVolume = shadowVolume;
+            scratchOptions.offsetAttribute = offsetAttribute === -1 ? undefined : offsetAttribute;
+
             return new EllipseGeometry(scratchOptions);
         }
 
@@ -886,8 +921,8 @@ define([
         result._height = height;
         result._granularity = granularity;
         result._extrudedHeight = extrudedHeight;
-        result._extrude = extrude;
         result._shadowVolume = shadowVolume;
+        result._offsetAttribute = offsetAttribute === -1 ? undefined : offsetAttribute;
 
         return result;
     };
@@ -903,6 +938,10 @@ define([
             return;
         }
 
+        var height = ellipseGeometry._height;
+        var extrudedHeight = ellipseGeometry._extrudedHeight;
+        var extrude = !CesiumMath.equalsEpsilon(height, extrudedHeight, 0, CesiumMath.EPSILON2);
+
         ellipseGeometry._center = ellipseGeometry._ellipsoid.scaleToGeodeticSurface(ellipseGeometry._center, ellipseGeometry._center);
         var options = {
             center : ellipseGeometry._center,
@@ -910,20 +949,31 @@ define([
             semiMinorAxis : ellipseGeometry._semiMinorAxis,
             ellipsoid : ellipseGeometry._ellipsoid,
             rotation : ellipseGeometry._rotation,
-            height : ellipseGeometry._height,
-            extrudedHeight : ellipseGeometry._extrudedHeight,
+            height : height,
             granularity : ellipseGeometry._granularity,
             vertexFormat : ellipseGeometry._vertexFormat,
             stRotation : ellipseGeometry._stRotation
         };
         var geometry;
-        if (ellipseGeometry._extrude) {
-            options.extrudedHeight = Math.min(ellipseGeometry._extrudedHeight, ellipseGeometry._height);
-            options.height = Math.max(ellipseGeometry._extrudedHeight, ellipseGeometry._height);
+        if (extrude) {
+            options.extrudedHeight = extrudedHeight;
             options.shadowVolume = ellipseGeometry._shadowVolume;
+            options.offsetAttribute = ellipseGeometry._offsetAttribute;
             geometry = computeExtrudedEllipse(options);
         } else {
             geometry = computeEllipse(options);
+
+            if (defined(ellipseGeometry._offsetAttribute)) {
+                var length = geometry.attributes.position.values.length;
+                var applyOffset = new Uint8Array(length / 3);
+                var offsetValue = ellipseGeometry._offsetAttribute === GeometryOffsetAttribute.NONE ? 0 : 1;
+                arrayFill(applyOffset, offsetValue);
+                geometry.attributes.applyOffset = new GeometryAttribute({
+                    componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
+                    componentsPerAttribute : 1,
+                    values: applyOffset
+                });
+            }
         }
 
         return new Geometry({
@@ -959,6 +1009,31 @@ define([
         });
     };
 
+    function textureCoordinateRotationPoints(ellipseGeometry) {
+        var stRotation = -ellipseGeometry._stRotation;
+        if (stRotation === 0.0) {
+            return [0, 0, 0, 1, 1, 0];
+        }
+
+        var cep = EllipseGeometryLibrary.computeEllipsePositions({
+            center : ellipseGeometry._center,
+            semiMajorAxis : ellipseGeometry._semiMajorAxis,
+            semiMinorAxis : ellipseGeometry._semiMinorAxis,
+            rotation : ellipseGeometry._rotation,
+            granularity : ellipseGeometry._granularity
+        }, false, true);
+        var positionsFlat = cep.outerPositions;
+        var positionsCount = positionsFlat.length / 3;
+        var positions = new Array(positionsCount);
+        for (var i = 0; i < positionsCount; ++i) {
+            positions[i] = Cartesian3.fromArray(positionsFlat, i * 3);
+        }
+
+        var ellipsoid = ellipseGeometry._ellipsoid;
+        var boundingRectangle = ellipseGeometry.rectangle;
+        return Geometry._textureCoordinateRotationPoints(positions, stRotation, ellipsoid, boundingRectangle);
+    }
+
     defineProperties(EllipseGeometry.prototype, {
         /**
          * @private
@@ -969,6 +1044,18 @@ define([
                     this._rectangle = computeRectangle(this);
                 }
                 return this._rectangle;
+            }
+        },
+        /**
+         * For remapping texture coordinates when rendering EllipseGeometries as GroundPrimitives.
+         * @private
+         */
+        textureCoordinateRotationPoints : {
+            get : function() {
+                if (!defined(this._textureCoordinateRotationPoints)) {
+                    this._textureCoordinateRotationPoints = textureCoordinateRotationPoints(this);
+                }
+                return this._textureCoordinateRotationPoints;
             }
         }
     });

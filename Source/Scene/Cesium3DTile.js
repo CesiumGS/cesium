@@ -14,7 +14,6 @@ define([
         '../Core/JulianDate',
         '../Core/Matrix3',
         '../Core/Matrix4',
-        '../Core/Plane',
         '../Core/Rectangle',
         '../Core/Request',
         '../Core/RequestScheduler',
@@ -48,7 +47,6 @@ define([
         JulianDate,
         Matrix3,
         Matrix4,
-        Plane,
         Rectangle,
         Request,
         RequestScheduler,
@@ -168,9 +166,9 @@ define([
         /**
          * This tile's parent or <code>undefined</code> if this tile is the root.
          * <p>
-         * When a tile's content points to an external tileset.json, the external tileset's
+         * When a tile's content points to an external tileset JSON file, the external tileset's
          * root tile's parent is not <code>undefined</code>; instead, the parent references
-         * the tile (with its content pointing to an external tileset.json) as if the two tilesets were merged.
+         * the tile (with its content pointing to an external tileset JSON file) as if the two tilesets were merged.
          * </p>
          *
          * @type {Cesium3DTile}
@@ -367,7 +365,7 @@ define([
 
         /**
          * The tile's content.  This represents the actual tile's payload,
-         * not the content's metadata in tileset.json.
+         * not the content's metadata in the tileset JSON file.
          *
          * @memberof Cesium3DTile.prototype
          *
@@ -727,6 +725,8 @@ define([
         this._contentReadyPromise = undefined;
 
         this.lastStyleTime = 0;
+        this.clippingPlanesDirty = (this._clippingPlanesState === 0);
+        this._clippingPlanesState = 0;
 
         this._debugColorizeTiles = false;
 

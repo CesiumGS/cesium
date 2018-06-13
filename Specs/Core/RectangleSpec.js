@@ -248,6 +248,22 @@ defineSuite([
         expect(Rectangle.equals(rectangle, undefined)).toEqual(false);
     });
 
+    it('Static equals epsilon works in all cases', function() {
+        var rectangle1 = new Rectangle(0.1, 0.2, 0.3, 0.4);
+        expect(Rectangle.equalsEpsilon(rectangle1, new Rectangle(0.1, 0.2, 0.3, 0.4), 0.0)).toEqual(true);
+        expect(Rectangle.equalsEpsilon(rectangle1, new Rectangle(0.5, 0.2, 0.3, 0.4), 0.0)).toEqual(false);
+        expect(Rectangle.equalsEpsilon(rectangle1, new Rectangle(0.1, 0.5, 0.3, 0.4), 0.0)).toEqual(false);
+        expect(Rectangle.equalsEpsilon(rectangle1, new Rectangle(0.1, 0.2, 0.5, 0.4), 0.0)).toEqual(false);
+        expect(Rectangle.equalsEpsilon(rectangle1, new Rectangle(0.1, 0.2, 0.3, 0.5), 0.0)).toEqual(false);
+        expect(Rectangle.equalsEpsilon(rectangle1, new Rectangle(0.5, 0.2, 0.3, 0.4), 0.4)).toEqual(true);
+        expect(Rectangle.equalsEpsilon(rectangle1, new Rectangle(0.1, 0.5, 0.3, 0.4), 0.3)).toEqual(true);
+        expect(Rectangle.equalsEpsilon(rectangle1, new Rectangle(0.1, 0.2, 0.5, 0.4), 0.2)).toEqual(true);
+        expect(Rectangle.equalsEpsilon(rectangle1, new Rectangle(0.1, 0.2, 0.3, 0.5), 0.1)).toEqual(true);
+        expect(Rectangle.equalsEpsilon(rectangle1, undefined, 0.0)).toEqual(false);
+        expect(Rectangle.equalsEpsilon(undefined, rectangle1, 0.0)).toEqual(false);
+        expect(Rectangle.equalsEpsilon(rectangle1, rectangle1, 0.0)).toEqual(true);
+    });
+
     it('Equals epsilon works in all cases', function() {
         var rectangle = new Rectangle(0.1, 0.2, 0.3, 0.4);
         expect(rectangle.equalsEpsilon(new Rectangle(0.1, 0.2, 0.3, 0.4), 0.0)).toEqual(true);

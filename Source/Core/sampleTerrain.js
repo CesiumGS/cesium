@@ -1,16 +1,10 @@
 define([
         '../ThirdParty/when',
-        './Check',
-        './defined',
-        './LRUCache'
+        './Check'
     ], function(
         when,
-        Check,
-        defined,
-        LRUCache) {
+        Check) {
     'use strict';
-
-    var cache = new LRUCache(256, 10000);
 
     /**
      * Initiates a terrain height query for an array of {@link Cartographic} positions by
@@ -92,15 +86,7 @@ define([
         var tilePromises = [];
         for (i = 0; i < tileRequests.length; ++i) {
             var tileRequest = tileRequests[i];
-            var cacheKey = tileRequest.x + '-' + tileRequest.y + '-' + tileRequest.level;
-            var requestPromise;
-            var cachedTilePromise = cache.get(cacheKey);
-            if (defined(cachedTilePromise)) {
-                requestPromise = cachedTilePromise;
-            } else {
-                requestPromise = tileRequest.terrainProvider.requestTileGeometry(tileRequest.x, tileRequest.y, tileRequest.level);
-                cache.set(cacheKey, requestPromise);
-            }
+            var requestPromise = tileRequest.terrainProvider.requestTileGeometry(tileRequest.x, tileRequest.y, tileRequest.level);
             var tilePromise = requestPromise
                 .then(createInterpolateFunction(tileRequest))
                 .otherwise(createMarkFailedFunction(tileRequest));

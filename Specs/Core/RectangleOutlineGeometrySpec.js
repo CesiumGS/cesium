@@ -1,8 +1,10 @@
 defineSuite([
         'Core/RectangleOutlineGeometry',
+        'Core/arrayFill',
         'Core/Cartesian2',
         'Core/Cartesian3',
         'Core/Ellipsoid',
+        'Core/GeometryOffsetAttribute',
         'Core/GeographicProjection',
         'Core/Math',
         'Core/Matrix2',
@@ -10,9 +12,11 @@ defineSuite([
         'Specs/createPackableSpecs'
     ], function(
         RectangleOutlineGeometry,
+        arrayFill,
         Cartesian2,
         Cartesian3,
         Ellipsoid,
+        GeometryOffsetAttribute,
         GeographicProjection,
         CesiumMath,
         Matrix2,
@@ -166,6 +170,66 @@ defineSuite([
         expect(geometry2).toBeUndefined();
     });
 
+    it('computes offset attribute', function() {
+        var rectangle = new Rectangle(-2.0, -1.0, 0.0, 1.0);
+        var m = RectangleOutlineGeometry.createGeometry(new RectangleOutlineGeometry({
+            rectangle : rectangle,
+            granularity : 1.0,
+            offsetAttribute : GeometryOffsetAttribute.TOP
+        }));
+        var positions = m.attributes.position.values;
+
+        var numVertices = 8;
+        expect(positions.length).toEqual(numVertices * 3);
+
+        var offset = m.attributes.applyOffset.values;
+        expect(offset.length).toEqual(numVertices);
+        var expected = new Array(offset.length);
+        expected = arrayFill(expected, 1);
+        expect(offset).toEqual(expected);
+    });
+
+    it('computes offset attribute extruded for top vertices', function() {
+        var rectangle = new Rectangle(-2.0, -1.0, 0.0, 1.0);
+        var m = RectangleOutlineGeometry.createGeometry(new RectangleOutlineGeometry({
+            rectangle : rectangle,
+            granularity : 1.0,
+            extrudedHeight : 2,
+            offsetAttribute : GeometryOffsetAttribute.TOP
+        }));
+        var positions = m.attributes.position.values;
+
+        var numVertices = 16;
+        expect(positions.length).toEqual(numVertices * 3);
+
+        var offset = m.attributes.applyOffset.values;
+        expect(offset.length).toEqual(numVertices);
+        var expected = new Array(offset.length);
+        expected = arrayFill(expected, 0);
+        expected = arrayFill(expected, 1, 0, 8);
+        expect(offset).toEqual(expected);
+    });
+
+    it('computes offset attribute extruded for all vertices', function() {
+        var rectangle = new Rectangle(-2.0, -1.0, 0.0, 1.0);
+        var m = RectangleOutlineGeometry.createGeometry(new RectangleOutlineGeometry({
+            rectangle : rectangle,
+            granularity : 1.0,
+            extrudedHeight : 2,
+            offsetAttribute : GeometryOffsetAttribute.ALL
+        }));
+        var positions = m.attributes.position.values;
+
+        var numVertices = 16;
+        expect(positions.length).toEqual(numVertices * 3);
+
+        var offset = m.attributes.applyOffset.values;
+        expect(offset.length).toEqual(numVertices);
+        var expected = new Array(offset.length);
+        expected = arrayFill(expected, 1);
+        expect(offset).toEqual(expected);
+    });
+
     var rectangle = new RectangleOutlineGeometry({
         rectangle : new Rectangle(0.1, 0.2, 0.3, 0.4),
         ellipsoid : new Ellipsoid(5, 6, 7),
@@ -174,7 +238,7 @@ defineSuite([
         rotation : 10,
         extrudedHeight : 11
     });
-    var packedInstance = [0.1, 0.2, 0.3, 0.4, 5, 6, 7, 8, 9, 10, 1, 11];
+    var packedInstance = [0.1, 0.2, 0.3, 0.4, 5, 6, 7, 8, 11, 10, 9, -1];
     createPackableSpecs(RectangleOutlineGeometry, rectangle, packedInstance, 'extruded');
 
     rectangle = new RectangleOutlineGeometry({
@@ -184,7 +248,7 @@ defineSuite([
         height : 9,
         rotation : 10
     });
-    packedInstance = [0.1, 0.2, 0.3, 0.4, 5, 6, 7, 8, 9, 10, 0, 0];
+    packedInstance = [0.1, 0.2, 0.3, 0.4, 5, 6, 7, 8, 9, 10, 9, -1];
     createPackableSpecs(RectangleOutlineGeometry, rectangle, packedInstance, 'at height');
 
 });

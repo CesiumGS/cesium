@@ -16,11 +16,8 @@ attribute float a_batchId;
 
 varying vec2 v_textureCoordinates;
 
-#ifdef RENDER_FOR_PICK
 varying vec4 v_pickColor;
-#else
 varying vec4 v_color;
-#endif
 
 const float UPPER_BOUND = 32768.0;
 
@@ -39,7 +36,7 @@ const float SHIFT_RIGHT3 = 1.0 / 8.0;
 const float SHIFT_RIGHT2 = 1.0 / 4.0;
 const float SHIFT_RIGHT1 = 1.0 / 2.0;
 
-vec4 computePositionWindowCoordinates(vec4 positionEC, vec2 imageSize, float scale, vec2 direction, vec2 origin, vec2 translate, vec2 pixelOffset, vec3 alignedAxis, bool validAlignedAxis, float rotation, bool sizeInMeters)
+vec4 addScreenSpaceOffset(vec4 positionEC, vec2 imageSize, float scale, vec2 direction, vec2 origin, vec2 translate, vec2 pixelOffset, vec3 alignedAxis, bool validAlignedAxis, float rotation, bool sizeInMeters)
 {
     // Note the halfSize cannot be computed in JavaScript because it is sent via
     // compressed vertex attributes that coerce it to an integer.
@@ -71,23 +68,23 @@ vec4 computePositionWindowCoordinates(vec4 positionEC, vec2 imageSize, float sca
         positionEC.xy += halfSize;
     }
 
-    vec4 positionWC = czm_eyeToWindowCoordinates(positionEC);
+    float mpp = czm_metersPerPixel(positionEC);
 
-    if (sizeInMeters)
-    {
-        originTranslate /= czm_metersPerPixel(positionEC);
-    }
-
-    positionWC.xy += originTranslate;
     if (!sizeInMeters)
     {
-        positionWC.xy += halfSize;
+        originTranslate *= mpp;
     }
 
-    positionWC.xy += translate;
-    positionWC.xy += (pixelOffset * czm_resolutionScale);
+    positionEC.xy += originTranslate;
+    if (!sizeInMeters)
+    {
+        positionEC.xy += halfSize * mpp;
+    }
 
-    return positionWC;
+    positionEC.xy += translate * mpp;
+    positionEC.xy += (pixelOffset * czm_resolutionScale) * mpp;
+
+    return positionEC;
 }
 
 void main()
@@ -172,13 +169,17 @@ void main()
     bool validAlignedAxis = false;
 #endif
 
-#ifdef RENDER_FOR_PICK
-    temp = compressedAttribute2.y;
-#else
-    temp = compressedAttribute2.x;
-#endif
-
+    vec4 pickColor;
     vec4 color;
+
+    temp = compressedAttribute2.y;
+    temp = temp * SHIFT_RIGHT8;
+    pickColor.b = (temp - floor(temp)) * SHIFT_LEFT8;
+    temp = floor(temp) * SHIFT_RIGHT8;
+    pickColor.g = (temp - floor(temp)) * SHIFT_LEFT8;
+    pickColor.r = floor(temp);
+
+    temp = compressedAttribute2.x;
     temp = temp * SHIFT_RIGHT8;
     color.b = (temp - floor(temp)) * SHIFT_LEFT8;
     temp = floor(temp) * SHIFT_RIGHT8;
@@ -189,13 +190,11 @@ void main()
     bool sizeInMeters = floor((temp - floor(temp)) * SHIFT_LEFT7) > 0.0;
     temp = floor(temp) * SHIFT_RIGHT8;
 
-#ifdef RENDER_FOR_PICK
-    color.a = (temp - floor(temp)) * SHIFT_LEFT8;
-    vec4 pickColor = color / 255.0;
-#else
+    pickColor.a = (temp - floor(temp)) * SHIFT_LEFT8;
+    pickColor /= 255.0;
+
     color.a = floor(temp);
     color /= 255.0;
-#endif
 
     ///////////////////////////////////////////////////////////////////////////
 
@@ -255,9 +254,13 @@ void main()
     }
 #endif
 
-    vec4 positionWC = computePositionWindowCoordinates(positionEC, imageSize, scale, direction, origin, translate, pixelOffset, alignedAxis, validAlignedAxis, rotation, sizeInMeters);
-    gl_Position = czm_viewportOrthographic * vec4(positionWC.xy, -positionWC.z, 1.0);
+    positionEC = addScreenSpaceOffset(positionEC, imageSize, scale, direction, origin, translate, pixelOffset, alignedAxis, validAlignedAxis, rotation, sizeInMeters);
+    gl_Position = czm_projection * positionEC;
     v_textureCoordinates = textureCoordinates;
+
+#ifdef LOG_DEPTH
+    czm_vertexLogDepth();
+#endif
 
 #ifdef DISABLE_DEPTH_DISTANCE
     float disableDepthTestDistance = distanceDisplayConditionAndDisableDepth.z;
@@ -275,14 +278,15 @@ void main()
         {
             // Position z on the near plane.
             gl_Position.z = -gl_Position.w;
+#ifdef LOG_DEPTH
+            czm_vertexLogDepth(vec4(czm_currentFrustum.x));
+#endif
         }
     }
 #endif
 
-#ifdef RENDER_FOR_PICK
     v_pickColor = pickColor;
-#else
+
     v_color = color;
     v_color.a *= translucency;
-#endif
 }
