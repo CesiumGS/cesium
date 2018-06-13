@@ -14,6 +14,7 @@ define([
         '../Core/DeveloperError',
         '../Core/FeatureDetection',
         '../Core/getStringFromTypedArray',
+        '../Core/getTimestamp',
         '../Core/JulianDate',
         '../Core/Math',
         '../Core/Matrix3',
@@ -22,6 +23,7 @@ define([
         '../Core/OrthographicFrustum',
         '../Core/Plane',
         '../Core/PrimitiveType',
+        '../Core/Resource',
         '../Core/RuntimeError',
         '../Core/TaskProcessor',
         '../Core/Transforms',
@@ -62,6 +64,7 @@ define([
         DeveloperError,
         FeatureDetection,
         getStringFromTypedArray,
+        getTimestamp,
         JulianDate,
         CesiumMath,
         Matrix3,
@@ -70,6 +73,7 @@ define([
         OrthographicFrustum,
         Plane,
         PrimitiveType,
+        Resource,
         RuntimeError,
         TaskProcessor,
         Transforms,
@@ -97,15 +101,25 @@ define([
     'use strict';
 
     /**
-     * A method for playing back time-dynamic point cloud data.
+     * Provides functionality for playback of time-dynamic point cloud data.
      *
      * @alias TimeDynamicPointCloud
      * @constructor
      *
-     * @private
+     * @param {Object} options Object with the following properties:
+     * @param {Clock} options.clock A Clock instance that is used when determining the value for the time dimension.
+     * @param {TimeIntervalCollection} options.times TimeIntervalCollection with its data property being an object containing a url to a Point Cloud tile and an optional transform.
+     * @param {PointCloudShading} options.pointCloudShading An object to control point attenuation based on geometric error and lighting.
+     * @param {Cesium3DTileStyle} options.pointCloudShading An object to control point attenuation based on geometric error and lighting.
      */
     function TimeDynamicPointCloud(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+
+        //>>includeStart('debug', pragmas.debug);
+        Check.typeOf.object('options.clock', options.clock);
+        Check.typeOf.object('options.times', options.times);
+        //>>includeEnd('debug');
+
         this.pointCloudShading = new PointCloudShading(options.pointCloudShading);
         this.style = options.style;
         this.clippingPlanes = options.clippingPlanes; // TODO : getter/setter for ownership
@@ -113,15 +127,21 @@ define([
         this.modelMatrix = Matrix4.clone(defaultValue(options.modelMatrix, Matrix4.IDENTITY));
         this.show = defaultValue(options.show, true);
 
-        this._packets = options.packets;
-
         this._pointCloudEyeDomeLighting = new PointCloudEyeDomeLighting();
         this._loadTimestamp = undefined;
         this._clippingPlanesState = 0;
         this._styleDirty = false;
         this._pickId = undefined;
+
+        var clock = options.clock;
+
+        this._clock = clock;
+        this._times = options.times;
+        this._frameIndex = -1;
         this._frames = [];
-        this._frameTransforms = [];
+
+        clock.onTick.addEventListener(this._clockOnTick, this);
+        this._clockOnTick(clock);
     }
 
     function getPickFragmentShaderLoaded(stream) {
@@ -140,76 +160,122 @@ define([
         };
     }
 
-    TimeDynamicPointCloud.prototype.addFrame = function(options) {
-        //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.object('options', options);
-        Check.typeOf.number.greaterThanOrEquals('options.index', options.index, 0);
-        Check.typeOf.object('options.arrayBuffer', options.arrayBuffer);
-        //>>includeEnd('debug');
-
-        this._frameTransforms[options.index] = Matrix4.clone(defaultValue(options.transform, Matrix4.IDENTITY));
-
-        this._frames[options.index] = new PointCloud({
-            arrayBuffer : options.arrayBuffer,
-            pickFragmentShaderLoaded : getPickFragmentShaderLoaded(this),
-            pickUniformMapLoaded : getPickUniformMapLoaded(this)
-        });
-    };
-
     TimeDynamicPointCloud.prototype.makeStyleDirty = function() {
         this._styleDirty = true;
     };
 
-    TimeDynamicPointCloud.prototype.update = function(frameState) {
-        var time = frameState.time;
-        var packets = this._packets;
-        var firstPacket = packets[0];
-        var lastPacket = packets[packets.length - 1];
-        if (time < firstPacket.time || time > lastPacket.time) {
+    function getApproachingInterval(that) {
+        var times = that._times;
+        var clock = that._clock;
+        var time = clock.currentTime;
+        var isAnimating = clock.canAnimate && clock.shouldAnimate;
+        var multiplier = clock.multiplier;
+
+        if (!isAnimating && multiplier !== 0) {
+            return undefined;
+        }
+
+        var seconds;
+        var index = times.indexOf(time);
+        if (index === -1) {
+            return undefined;
+        }
+
+        var interval = times.get(index);
+        if (multiplier > 0) { // animating forward
+            seconds = JulianDate.secondsDifference(interval.stop, time);
+            ++index;
+        } else { //backwards
+            seconds = JulianDate.secondsDifference(interval.start, time); // Will be negative
+            --index;
+        }
+        seconds /= multiplier; // Will always be positive
+
+        // Less than 5 wall time seconds
+        return (index >= 0 && seconds <= 5.0) ? times.get(index) : undefined;
+    }
+
+    function getCurrentInterval(that) {
+        var times = that._times;
+        var clock = that._clock;
+        var time = clock.currentTime;
+        var index = times.indexOf(time);
+        if (index === -1) {
+            return undefined;
+        }
+        return times.get(index);
+    }
+
+    function loadFrame(that, interval) {
+        var index = that._times.indexOf(interval.start);
+        var cache = that._cache;
+        if (!defined(cache[index])) {
+            cache[index] = {
+                pointCloud : undefined,
+                transform : interval.data.transform,
+                timer : getTimestamp(),
+                ready : false
+            };
+            Resource.fetchArrayBuffer({
+                url : interval.data.url
+            }).then(function(arrayBuffer) {
+                cache[index].pointCloud = new PointCloud({
+                    arrayBuffer : arrayBuffer,
+                    pickFragmentShaderLoaded : getPickFragmentShaderLoaded(that),
+                    pickUniformMapLoaded : getPickUniformMapLoaded(that)
+                });
+            }).otherwise(function(error) {
+                throw error;
+            });
+        }
+        return cache[index];
+    }
+
+    function prepareFrame(that, frame, frameState) {
+        var pointCloud = frame.pointCloud;
+        if (!defined(pointCloud)) {
+            // Still waiting on the request to finish
             return;
         }
 
-        // Find the current frame. See if it's loaded/ready. If it's ready, render it.
-        // If it's not ready we shouldn't necesarily load it
-
-
-        // If the current frame is not ready - try loading it.
-
-
-
-        // If the current frame is not ready, start preparing the next frame.
-        // Figure out how long it takes (can't rely on JulianData time - it might be paused)
-
-        // Find the packet associated with this time
-        if (time < this._packets[0].time) {
-
+        if (!pointCloud.ready) {
+            var commandList = frameState.commandList;
+            var lengthBeforeUpdate = commandList.length;
+            pointCloud.update(frameState);
+            if (pointCloud.ready) {
+                // Point cloud became ready this update
+                frame.ready = true;
+                frame.timer = getTimestamp() - frame.timer;
+                commandList.length = lengthBeforeUpdate; // Don't allow preparing frame to insert commands.
+            }
         }
+    }
 
+    function preloadFrame(that, interval, frameState) {
+        var frame = loadFrame(that, interval);
+        prepareFrame(that, frame, frameState);
+        return frame;
+    }
 
+    var scratchModelMatrix = new Matrix4();
 
+    // TODO : remove pick shaders in PointCloud
+    // TODO : merge in master
+    // TODO : need to take into account current real-time time it takes to process an average tile, because just fetching the next interval is naive
+    // TODO : make sure it works if clock is stopped
+    // TODO : measure time required to fetch the data and update it
+    // TODO : synchronous draco faster?
+    // TODO : picking code may be obsolete?
+    // TODO : clear any requests that didn't finish from the previous frame?
+    // TODO : once a skip factor is supported that introduces a can of worms
+    // TODO : LRU cache / GPU memory share?
 
+    TimeDynamicPointCloud.prototype.update = function(frameState) {
         if (frameState.mode === SceneMode.MORPHING) {
             return;
         }
 
         if (!this.show) {
-            return;
-        }
-
-        var frames = this._frames;
-        var framesLength = frames.length;
-        if (framesLength === 0) {
-            return;
-        }
-
-        var index = this.index;
-        if (index < 0 || index > framesLength) {
-            // Index not in range.
-            return;
-        }
-
-        var frame = frames[index];
-        if (!defined(frame)) {
             return;
         }
 
@@ -223,6 +289,7 @@ define([
             this._loadTimestamp = JulianDate.clone(frameState.time);
         }
 
+        // For styling
         var timeSinceLoad = Math.max(JulianDate.secondsDifference(frameState.time, this._loadTimestamp) * 1000, 0.0);
 
         // Update clipping planes
@@ -247,32 +314,40 @@ define([
         var commandList = frameState.commandList;
         var lengthBeforeUpdate = commandList.length;
 
-        // TODO : measure time required to fetch the data and update it
-        // TODO : synchronous draco faster?
+        var currentInterval = getCurrentInterval(this);
+        if (defined(currentInterval)) {
+            var frame = preloadFrame(this, currentInterval, frameState);
+            if (frame.ready) {
+                var pointCloud = frame.pointCloud;
+                var transform = defaultValue(frame.transform, Matrix4.IDENTITY);
+                var modelMatrix = Matrix4.multiplyTransformation(this.modelMatrix, transform, scratchModelMatrix);
+                pointCloud.modelMatrix = modelMatrix;
+                pointCloud.style = this.style;
+                pointCloud.styleDirty = this._styleDirty;
+                pointCloud.time = timeSinceLoad;
+                pointCloud.shadows = this.shadows;
+                pointCloud.clippingPlanes = clippingPlanes;
+                pointCloud.isClipped = isClipped;
+                pointCloud.clippingPlanesDirty = clippingPlanesDirty;
 
-        if (defined(frame)) {
-            var frameTransform = this._frameTransforms[index];
-            Matrix4.multiply(this.modelMatrix, frameTransform, frame.modelMatrix);
-            frame.style = this.style;
-            frame.styleDirty = this._styleDirty;
-            frame.time = timeSinceLoad;
-            frame.shadows = this.shadows;
-            frame.clippingPlanes = clippingPlanes;
-            frame.isClipped = isClipped;
-            frame.clippingPlanesDirty = clippingPlanesDirty;
-
-            if (defined(pointCloudShading)) {
-                frame.attenuation = pointCloudShading.attenuation;
-                frame.geometricError = 10.0; // TODO : If we had a bounding volume we could derive it
-                frame.geometricErrorScale = pointCloudShading.geometricErrorScale;
-                frame.maximumAttenuation = defined(pointCloudShading.maximumAttenuation) ? pointCloudShading.maximumAttenuation : 10;
+                if (defined(pointCloudShading)) {
+                    pointCloud.attenuation = pointCloudShading.attenuation;
+                    pointCloud.geometricError = 10.0; // TODO : If we had a bounding volume we could derive it
+                    pointCloud.geometricErrorScale = pointCloudShading.geometricErrorScale;
+                    pointCloud.maximumAttenuation = defined(pointCloudShading.maximumAttenuation) ? pointCloudShading.maximumAttenuation : 10;
+                }
+                pointCloud.update(frameState);
             }
-
-            frame.update(frameState);
         }
 
         var lengthAfterUpdate = commandList.length;
         var addedCommandsLength = lengthAfterUpdate - lengthBeforeUpdate;
+
+        // Start loading the approaching frame
+        var approachingInterval = getApproachingInterval(this);
+        if (defined(approachingInterval)) {
+            preloadFrame(this, approachingInterval);
+        }
 
         if (defined(pointCloudShading) && pointCloudShading.attenuation && pointCloudShading.eyeDomeLighting && (addedCommandsLength > 0)) {
             eyeDomeLighting.update(frameState, lengthBeforeUpdate, pointCloudShading);
@@ -284,7 +359,7 @@ define([
     };
 
     TimeDynamicPointCloud.prototype.destroy = function() {
-        var frames = this._frames;
+        var frames = this._cache;
         var framesLength = frames.length;
         for (var i = 0; i < framesLength; ++i) {
             var frame = frames[i];

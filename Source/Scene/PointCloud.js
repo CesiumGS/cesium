@@ -151,6 +151,7 @@ define([
 
         this._mode = undefined;
 
+        this._ready = false;
         this._readyPromise = when.defer();
         this._pointsLength = 0;
         this._geometryByteLength = 0;
@@ -200,6 +201,12 @@ define([
         geometryByteLength : {
             get : function() {
                 return this._geometryByteLength;
+            }
+        },
+
+        ready : {
+            get : function() {
+                return this._ready;
             }
         },
 
@@ -1257,6 +1264,7 @@ define([
             createResources(this, frameState);
             modelMatrixDirty = true;
             shadersDirty = true;
+            this._ready = true;
             this._readyPromise.resolve(this);
             this._parsedContent = undefined; // Unload
         }
