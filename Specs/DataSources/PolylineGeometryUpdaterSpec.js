@@ -1,17 +1,20 @@
 defineSuite([
         'DataSources/PolylineGeometryUpdater',
+        'Core/ApproximateTerrainHeights',
         'Core/BoundingSphere',
         'Core/Cartesian3',
         'Core/Color',
         'Core/ColorGeometryInstanceAttribute',
         'Core/DistanceDisplayCondition',
         'Core/DistanceDisplayConditionGeometryInstanceAttribute',
+        'Core/GroundPolylineGeometry',
         'Core/JulianDate',
         'Core/PolylinePipeline',
         'Core/ShowGeometryInstanceAttribute',
         'Core/TimeInterval',
         'Core/TimeIntervalCollection',
         'DataSources/BoundingSphereState',
+        'DataSources/CallbackProperty',
         'DataSources/ColorMaterialProperty',
         'DataSources/ConstantProperty',
         'DataSources/Entity',
@@ -27,18 +30,21 @@ defineSuite([
         'Specs/createScene'
     ], function(
         PolylineGeometryUpdater,
+        ApproximateTerrainHeights,
         BoundingSphere,
         Cartesian3,
         Color,
         ColorGeometryInstanceAttribute,
         DistanceDisplayCondition,
         DistanceDisplayConditionGeometryInstanceAttribute,
+        GroundPolylineGeometry,
         JulianDate,
         PolylinePipeline,
         ShowGeometryInstanceAttribute,
         TimeInterval,
         TimeIntervalCollection,
         BoundingSphereState,
+        CallbackProperty,
         ColorMaterialProperty,
         ConstantProperty,
         Entity,
@@ -58,10 +64,14 @@ defineSuite([
     beforeAll(function(){
         scene = createScene();
         scene.globe = new Globe();
+        return ApproximateTerrainHeights.initialize();
     });
 
     afterAll(function(){
         scene.destroyForSpecs();
+
+        ApproximateTerrainHeights._initPromise = undefined;
+        ApproximateTerrainHeights._terrainHeights = undefined;
     });
 
     beforeEach(function() {
@@ -100,6 +110,9 @@ defineSuite([
         expect(updater.shadowsProperty).toBe(undefined);
         expect(updater.distanceDisplayConditionProperty).toBe(undefined);
         expect(updater.isDynamic).toBe(false);
+        expect(updater.clampToGround).toBe(false);
+        expect(updater.zIndex).toBe(0);
+
         expect(updater.isOutlineVisible(time)).toBe(false);
         expect(updater.isFilled(time)).toBe(false);
         updater.destroy();
@@ -141,6 +154,8 @@ defineSuite([
         expect(updater.shadowsProperty).toEqual(new ConstantProperty(ShadowMode.DISABLED));
         expect(updater.distanceDisplayConditionProperty).toEqual(new ConstantProperty(new DistanceDisplayCondition()));
         expect(updater.isDynamic).toBe(false);
+        expect(updater.clampToGround).toBe(false);
+        expect(updater.zIndex).toEqual(new ConstantProperty(0));
     });
 
     it('Polyline material is correctly exposed.', function() {
@@ -202,8 +217,25 @@ defineSuite([
         expect(updater.isDynamic).toBe(true);
     });
 
+    it('A time-varying clampToGround causes geometry to be dynamic', function() {
+        var entity = createBasicPolyline();
+        var updater = new PolylineGeometryUpdater(entity, scene);
+        entity.polyline.clampToGround = new SampledProperty(Number);
+        entity.polyline.clampToGround.addSample(time, true);
+        expect(updater.isDynamic).toBe(true);
+    });
+
+    it('A time-varying zIndex causes geometry to be dynamic', function() {
+        var entity = createBasicPolyline();
+        var updater = new PolylineGeometryUpdater(entity, scene);
+        entity.polyline.zIndex = new SampledProperty(Number);
+        entity.polyline.zIndex.addSample(time, 1);
+        expect(updater.isDynamic).toBe(true);
+    });
+
     function validateGeometryInstance(options) {
         var entity = createBasicPolyline();
+        var clampToGround = options.clampToGround;
 
         var polyline = entity.polyline;
         polyline.show = new ConstantProperty(options.show);
@@ -214,6 +246,7 @@ defineSuite([
         polyline.followSurface = new ConstantProperty(options.followSurface);
         polyline.granularity = new ConstantProperty(options.granularity);
         polyline.distanceDisplayCondition = options.distanceDisplayCondition;
+        polyline.clampToGround = new ConstantProperty(clampToGround);
 
         var updater = new PolylineGeometryUpdater(entity, scene);
 
@@ -222,20 +255,26 @@ defineSuite([
         var attributes;
         instance = updater.createFillGeometryInstance(time);
         geometry = instance.geometry;
-        expect(geometry._width).toEqual(options.width);
-        expect(geometry._followSurface).toEqual(options.followSurface);
-        expect(geometry._granularity).toEqual(options.granularity);
-
         attributes = instance.attributes;
+
+        if (clampToGround) {
+            expect(geometry.width).toEqual(options.width);
+        } else {
+            expect(geometry._width).toEqual(options.width);
+            expect(geometry._followSurface).toEqual(options.followSurface);
+            expect(geometry._granularity).toEqual(options.granularity);
+
+            if (options.depthFailMaterial && options.depthFailMaterial instanceof ColorMaterialProperty) {
+                expect(attributes.depthFailColor.value).toEqual(ColorGeometryInstanceAttribute.toValue(options.depthFailMaterial.color.getValue(time)));
+            } else {
+                expect(attributes.depthFailColor).toBeUndefined();
+            }
+        }
+
         if (options.material instanceof ColorMaterialProperty) {
             expect(attributes.color.value).toEqual(ColorGeometryInstanceAttribute.toValue(options.material.color.getValue(time)));
         } else {
             expect(attributes.color).toBeUndefined();
-        }
-        if (options.depthFailMaterial && options.depthFailMaterial instanceof ColorMaterialProperty) {
-            expect(attributes.depthFailColor.value).toEqual(ColorGeometryInstanceAttribute.toValue(options.depthFailMaterial.color.getValue(time)));
-        } else {
-            expect(attributes.depthFailColor).toBeUndefined();
         }
         expect(attributes.show.value).toEqual(ShowGeometryInstanceAttribute.toValue(options.show));
         if (options.distanceDisplayCondition) {
@@ -249,6 +288,21 @@ defineSuite([
             material : new ColorMaterialProperty(Color.RED),
             width : 3,
             followSurface : false,
+            clampToGround : false,
+            granularity : 1.0
+        });
+
+        if (!Entity.supportsPolylinesOnTerrain(scene)) {
+            return;
+        }
+
+        // On terrain
+        validateGeometryInstance({
+            show : true,
+            material : new ColorMaterialProperty(Color.RED),
+            width : 3,
+            followSurface : false,
+            clampToGround : true,
             granularity : 1.0
         });
     });
@@ -260,6 +314,7 @@ defineSuite([
             depthFailMaterial : new ColorMaterialProperty(Color.BLUE),
             width : 3,
             followSurface : false,
+            clampToGround : false,
             granularity : 1.0
         });
     });
@@ -271,6 +326,7 @@ defineSuite([
             depthFailMaterial : new GridMaterialProperty(),
             width : 3,
             followSurface : false,
+            clampToGround : false,
             granularity : 1.0
         });
     });
@@ -281,6 +337,21 @@ defineSuite([
             material : new GridMaterialProperty(),
             width : 4,
             followSurface : true,
+            clampToGround : false,
+            granularity : 0.5
+        });
+
+        if (!Entity.supportsPolylinesOnTerrain(scene)) {
+            return;
+        }
+
+        // On terrain
+        validateGeometryInstance({
+            show : true,
+            material : new GridMaterialProperty(),
+            width : 4,
+            followSurface : true,
+            clampToGround : true,
             granularity : 0.5
         });
     });
@@ -292,6 +363,7 @@ defineSuite([
             depthFailMaterial : new ColorMaterialProperty(Color.BLUE),
             width : 4,
             followSurface : true,
+            clampToGround : false,
             granularity : 0.5
         });
     });
@@ -303,6 +375,7 @@ defineSuite([
             depthFailMaterial : new GridMaterialProperty(),
             width : 4,
             followSurface : true,
+            clampToGround : false,
             granularity : 0.5
         });
     });
@@ -313,6 +386,22 @@ defineSuite([
             material : new ColorMaterialProperty(Color.RED),
             width : 3,
             followSurface : false,
+            clampToGround : false,
+            granularity : 1.0,
+            distanceDisplayCondition : new DistanceDisplayCondition(10.0, 100.0)
+        });
+
+        if (!Entity.supportsPolylinesOnTerrain(scene)) {
+            return;
+        }
+
+        // On terrain
+        validateGeometryInstance({
+            show : true,
+            material : new ColorMaterialProperty(Color.RED),
+            width : 3,
+            followSurface : false,
+            clampToGround : true,
             granularity : 1.0,
             distanceDisplayCondition : new DistanceDisplayCondition(10.0, 100.0)
         });
@@ -390,7 +479,7 @@ defineSuite([
         var primitives = scene.primitives;
         expect(primitives.length).toBe(0);
 
-        var dynamicUpdater = updater.createDynamicUpdater(primitives);
+        var dynamicUpdater = updater.createDynamicUpdater(primitives, scene.groundPrimitives);
         expect(dynamicUpdater.isDestroyed()).toBe(false);
         expect(primitives.length).toBe(1);
 
@@ -413,6 +502,57 @@ defineSuite([
 
         dynamicUpdater.destroy();
         expect(primitives.length).toBe(0);
+        updater.destroy();
+    });
+
+    it('clampToGround can be dynamic', function() {
+        if (!Entity.supportsPolylinesOnTerrain(scene)) {
+            return;
+        }
+
+        var entity = new Entity();
+        var polyline = new PolylineGraphics();
+        entity.polyline = polyline;
+
+        var time = new JulianDate(0, 0);
+
+        var isClampedToGround = true;
+        var clampToGround = new CallbackProperty(function() {
+            return isClampedToGround;
+        }, false);
+
+        polyline.show = new ConstantProperty(true);
+        polyline.width = new ConstantProperty(1.0);
+        polyline.positions = new ConstantProperty([Cartesian3.fromDegrees(0, 0, 0), Cartesian3.fromDegrees(0, 1, 0)]);
+        polyline.material = new ColorMaterialProperty(Color.RED);
+        polyline.followSurface = new ConstantProperty(false);
+        polyline.granularity = new ConstantProperty(0.001);
+        polyline.clampToGround = clampToGround;
+
+        var updater = new PolylineGeometryUpdater(entity, scene);
+
+        var groundPrimitives = scene.groundPrimitives;
+        expect(groundPrimitives.length).toBe(0);
+
+        var dynamicUpdater = updater.createDynamicUpdater(scene.primitives, groundPrimitives);
+        expect(dynamicUpdater.isDestroyed()).toBe(false);
+        expect(groundPrimitives.length).toBe(0);
+
+        // Update twice for terrain heights initialization
+        dynamicUpdater.update(time);
+        dynamicUpdater.update(time);
+
+        expect(groundPrimitives.length).toBe(1);
+        var primitive = groundPrimitives.get(0);
+
+        expect(primitive.show).toEqual(true);
+
+        isClampedToGround = false;
+        dynamicUpdater.update(time);
+
+        expect(groundPrimitives.length).toBe(0);
+
+        dynamicUpdater.destroy();
         updater.destroy();
     });
 
@@ -473,7 +613,7 @@ defineSuite([
         var entity = createBasicPolyline();
         var updater = new PolylineGeometryUpdater(entity, scene);
         expect(function() {
-            return updater.createDynamicUpdater(scene.primitives);
+            return updater.createDynamicUpdater(scene.primitives, scene.groundPrimitives);
         }).toThrowDeveloperError();
         updater.destroy();
     });
@@ -485,7 +625,19 @@ defineSuite([
         var updater = new PolylineGeometryUpdater(entity, scene);
         expect(updater.isDynamic).toBe(true);
         expect(function() {
-            return updater.createDynamicUpdater(undefined);
+            return updater.createDynamicUpdater(undefined, scene.groundPrimitives);
+        }).toThrowDeveloperError();
+        updater.destroy();
+    });
+
+    it('createDynamicUpdater throws if groundPrimitives undefined', function() {
+        var entity = createBasicPolyline();
+        entity.polyline.width = new SampledProperty(Number);
+        entity.polyline.width.addSample(time, 4);
+        var updater = new PolylineGeometryUpdater(entity, scene);
+        expect(updater.isDynamic).toBe(true);
+        expect(function() {
+            return updater.createDynamicUpdater(scene.primitives);
         }).toThrowDeveloperError();
         updater.destroy();
     });
@@ -495,7 +647,7 @@ defineSuite([
         entity.polyline.width = new SampledProperty(Number);
         entity.polyline.width.addSample(time, 4);
         var updater = new PolylineGeometryUpdater(entity, scene);
-        var dynamicUpdater = updater.createDynamicUpdater(scene.primitives);
+        var dynamicUpdater = updater.createDynamicUpdater(scene.primitives, scene.groundPrimitives);
         expect(function() {
             dynamicUpdater.update(undefined);
         }).toThrowDeveloperError();
@@ -520,7 +672,7 @@ defineSuite([
         entity.polyline.width = createDynamicProperty(1);
 
         var updater = new PolylineGeometryUpdater(entity, scene);
-        var dynamicUpdater = updater.createDynamicUpdater(scene.primitives);
+        var dynamicUpdater = updater.createDynamicUpdater(scene.primitives, scene.groundPrimitives);
         dynamicUpdater.update(time);
 
         var result = new BoundingSphere(0);
@@ -539,7 +691,7 @@ defineSuite([
         var entity = createBasicPolyline();
         entity.polyline.width = createDynamicProperty(1);
         var updater = new PolylineGeometryUpdater(entity, scene);
-        var dynamicUpdater = updater.createDynamicUpdater(scene.primitives);
+        var dynamicUpdater = updater.createDynamicUpdater(scene.primitives, scene.groundPrimitives);
 
         var result = new BoundingSphere();
         var state = dynamicUpdater.getBoundingSphere(result);
@@ -553,7 +705,7 @@ defineSuite([
         var entity = createBasicPolyline();
         entity.polyline.width = createDynamicProperty(1);
         var updater = new PolylineGeometryUpdater(entity, scene);
-        var dynamicUpdater = updater.createDynamicUpdater(scene.primitives);
+        var dynamicUpdater = updater.createDynamicUpdater(scene.primitives, scene.groundPrimitives);
 
         expect(function() {
             dynamicUpdater.getBoundingSphere(undefined);
@@ -568,12 +720,30 @@ defineSuite([
         entity.polyline.width = createDynamicProperty(1);
         scene.globe = undefined;
         var updater = new PolylineGeometryUpdater(entity, scene);
-        var dynamicUpdater = updater.createDynamicUpdater(scene.primitives);
+        var dynamicUpdater = updater.createDynamicUpdater(scene.primitives, scene.groundPrimitives);
         spyOn(PolylinePipeline, 'generateCartesianArc').and.callThrough();
         dynamicUpdater.update(time);
         expect(PolylinePipeline.generateCartesianArc).not.toHaveBeenCalled();
         updater.destroy();
         scene.primitives.removeAll();
         scene.globe = new Globe();
+    });
+
+    it('clampToGround true without support for polylines on terrain does not generate GroundPolylineGeometry', function() {
+        spyOn(Entity, 'supportsPolylinesOnTerrain').and.callFake(function() {
+            return false;
+        });
+
+        var entity = createBasicPolyline();
+
+        var polyline = entity.polyline;
+        polyline.show = new ConstantProperty(true);
+        polyline.clampToGround = new ConstantProperty(true);
+
+        var updater = new PolylineGeometryUpdater(entity, scene);
+        expect(updater.clampToGround).toBe(false);
+
+        var instance = updater.createFillGeometryInstance(time);
+        expect(instance.geometry instanceof GroundPolylineGeometry).toBe(false);
     });
 }, 'WebGL');

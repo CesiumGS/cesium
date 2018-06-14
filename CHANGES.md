@@ -10,7 +10,13 @@ Change Log
 ##### Additions :tada:
 * `PostProcessStage` has a `selectedFeatures` property which is an array of primitives used for selectively applying a post-process stage. In the fragment shader, use the function `bool czm_selected(vec2 textureCoordinates` to determine whether or not the stage should be applied at that fragment.
    * The black-and-white and silhouette stages have per-feature support.
+* Added support for Polylines on Terrain via the `Entity` API [#6689](https://github.com/AnalyticalGraphicsInc/cesium/pull/6689)
+   * Use the `clampToGround` option for `PolylineGraphics`.
+   * Requires depth texture support (`WEBGL_depth_texture` or `WEBKIT_WEBGL_depth_texture`), otherwise `clampToGround` will be ignored.
+   * Added `Entity.supportsPolylinesOnTerrain` for checking if the current platform supports `clampToGround`.
 * Added `GroundPolylinePrimitive` and `GroundPolylineGeometry` for rendering polylines on terrain via the `Primitive` API. [#6615](https://github.com/AnalyticalGraphicsInc/cesium/pull/6615)
+   * Requires depth texture support (`WEBGL_depth_texture` or `WEBKIT_WEBGL_depth_texture`).
+   * Use `GroundPolylinePrimitive.isSupported` to check for support.
 
 ##### Fixes :wrench:
 * Fixed a bug causing crashes with custom vertex attributes on `Geometry` crossing the IDL. Attributes will be barycentrically interpolated. [#6644](https://github.com/AnalyticalGraphicsInc/cesium/pull/6644)
