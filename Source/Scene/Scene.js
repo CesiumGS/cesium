@@ -2019,13 +2019,22 @@ define([
         var commandList = frameState.commandList = [];
         scene._debugVolume.update(frameState);
 
+        command = commandList[0];
+
+        var frustum = scene.camera.frustum;
+        var useLogDepth = scene._logDepthBuffer && !(frustum instanceof OrthographicFrustum || frustum instanceof OrthographicOffCenterFrustum);
+        if (useLogDepth) {
+            var logDepth = DerivedCommand.createLogDepthCommand(command, context);
+            command = logDepth.command;
+        }
+
         var framebuffer;
         if (defined(debugFramebuffer)) {
             framebuffer = passState.framebuffer;
             passState.framebuffer = debugFramebuffer;
         }
 
-        commandList[0].execute(context, passState);
+        command.execute(context, passState);
 
         if (defined(framebuffer)) {
             passState.framebuffer = framebuffer;
