@@ -57,9 +57,9 @@ define([
         this._northwestChild = undefined;
         this._northeastChild = undefined;
 
-        // QuadtreeTileReplacementQueue gets/sets these private properties.
-        this._replacementPrevious = undefined;
-        this._replacementNext = undefined;
+        // TileReplacementQueue gets/sets these private properties.
+        this.replacementPrevious = undefined;
+        this.replacementNext = undefined;
 
         // The distance from the camera to this tile, updated when the tile is selected
         // for rendering.  We can get rid of this if we have a better way to sort by

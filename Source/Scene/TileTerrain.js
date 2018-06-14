@@ -92,7 +92,11 @@ define([
         tile.data.occludeePointInScaledSpace = Cartesian3.clone(mesh.occludeePointInScaledSpace, surfaceTile.occludeePointInScaledSpace);
     };
 
-    TileTerrain.prototype.processLoadStateMachine = function(frameState, terrainProvider, x, y, level, priorityFunction) {
+    TileTerrain.prototype.processLoadStateMachine = function(tile, frameState, terrainProvider, x, y, level, priorityFunction) {
+        if (this.state === TerrainState.FAILED) {
+            upsample(this, tile, frameState, terrainProvider, x, y, level, priorityFunction)
+        }
+
         if (this.state === TerrainState.UNLOADED) {
             requestTileGeometry(this, terrainProvider, x, y, level, priorityFunction);
         }
@@ -105,6 +109,34 @@ define([
             createResources(this, frameState.context, terrainProvider, x, y, level);
         }
     };
+
+    function upsample(tileTerrain, tile, frameState, terrainProvider, x, y, level, priorityFunction) {
+        var parent = tile.parent;
+        if (!parent) {
+            // Trying to upsample from a root tile. No can do.
+            return;
+        }
+
+        var sourceData = parent.data.terrainData;
+        var sourceX = parent.x;
+        var sourceY = parent.y;
+        var sourceLevel = parent.level;
+
+        tileTerrain.data = sourceData.upsample(terrainProvider.tilingScheme, sourceX, sourceY, sourceLevel, x, y, level);
+        if (!defined(tileTerrain.data)) {
+            // The upsample request has been deferred - try again later.
+            return;
+        }
+
+        tileTerrain.state = TerrainState.RECEIVING;
+
+        when(tileTerrain.data, function(terrainData) {
+            tileTerrain.data = terrainData;
+            tileTerrain.state = TerrainState.RECEIVED;
+        }, function() {
+            tileTerrain.state = TerrainState.FAILED;
+        });
+    }
 
     function requestTileGeometry(tileTerrain, terrainProvider, x, y, level, priorityFunction) {
         function success(terrainData) {

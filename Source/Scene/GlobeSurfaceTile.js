@@ -68,13 +68,11 @@ define([
         this.minimumHeight = 0.0;
         this.maximumHeight = 0.0;
         this.boundingSphere3D = new BoundingSphere();
-        this.boundingSphere2D = new BoundingSphere();
         this.orientedBoundingBox = undefined;
         this.tileBoundingRegion = undefined;
         this.occludeePointInScaledSpace = new Cartesian3();
 
         this.loadedTerrain = undefined;
-        this.upsampledTerrain = undefined;
 
         this.pickBoundingSphere = new BoundingSphere();
         this.pickTerrain = undefined;
@@ -101,11 +99,7 @@ define([
                 var loadingIsTransitioning = defined(loadedTerrain) &&
                                              (loadedTerrain.state === TerrainState.RECEIVING || loadedTerrain.state === TerrainState.TRANSFORMING);
 
-                var upsampledTerrain = this.upsampledTerrain;
-                var upsamplingIsTransitioning = defined(upsampledTerrain) &&
-                                                (upsampledTerrain.state === TerrainState.RECEIVING || upsampledTerrain.state === TerrainState.TRANSFORMING);
-
-                var shouldRemoveTile = !loadingIsTransitioning && !upsamplingIsTransitioning;
+                var shouldRemoveTile = !loadingIsTransitioning;
 
                 var imagery = this.imagery;
                 for (var i = 0, len = imagery.length; shouldRemoveTile && i < len; ++i) {
@@ -184,11 +178,6 @@ define([
         if (defined(this.loadedTerrain)) {
             this.loadedTerrain.freeResources();
             this.loadedTerrain = undefined;
-        }
-
-        if (defined(this.upsampledTerrain)) {
-            this.upsampledTerrain.freeResources();
-            this.upsampledTerrain = undefined;
         }
 
         if (defined(this.pickTerrain)) {
@@ -285,7 +274,7 @@ define([
         var isRenderable = defined(surfaceTile.vertexArray);
 
         // But it's not done loading until our two state machines are terminated.
-        var isDoneLoading = !defined(surfaceTile.loadedTerrain) && !defined(surfaceTile.upsampledTerrain);
+        var isDoneLoading = !defined(surfaceTile.loadedTerrain);
 
         // If this tile's terrain and imagery are just upsampled from its parent, mark the tile as
         // upsampled only.  We won't refine a tile if its four children are upsampled only.
@@ -356,13 +345,16 @@ define([
     function prepareNewTile(tile, terrainProvider, imageryLayerCollection) {
         var surfaceTile = tile.data;
 
-        var upsampleTileDetails = getUpsampleTileDetails(tile);
-        if (defined(upsampleTileDetails)) {
-            surfaceTile.upsampledTerrain = new TileTerrain(upsampleTileDetails);
-        }
+        surfaceTile.loadedTerrain = new TileTerrain();
 
-        if (isDataAvailable(tile, terrainProvider)) {
-            surfaceTile.loadedTerrain = new TileTerrain();
+        if (tile.parent && tile.parent.terrainData && !tile.parent.terrainData.isChildAvailable(tile.parent.x, tile.parent.y, tile.x, tile.y)) {
+            // Start upsampling right away.
+            surfaceTile.loadedTerrain.state = TerrainState.FAILED;
+        } else if (terrainProvider.getTileDataAvailable) {
+            if (!terrainProvider.getTileDataAvailable(tile.x, tile.y, tile.level)) {
+                // Start upsampling right away.
+                surfaceTile.loadedTerrain.state = TerrainState.FAILED;
+            }
         }
 
         // Map imagery tiles to this terrain tile
@@ -377,11 +369,9 @@ define([
     function processTerrainStateMachine(tile, frameState, terrainProvider, vertexArraysToDestroy) {
         var surfaceTile = tile.data;
         var loaded = surfaceTile.loadedTerrain;
-        var upsampled = surfaceTile.upsampledTerrain;
-        var suspendUpsampling = false;
 
         if (defined(loaded)) {
-            loaded.processLoadStateMachine(frameState, terrainProvider, tile.x, tile.y, tile.level, tile._priorityFunction);
+            loaded.processLoadStateMachine(tile, frameState, terrainProvider, tile.x, tile.y, tile.level, tile._priorityFunction);
 
             // Publish the terrain data on the tile as soon as it is available.
             // We'll potentially need it to upsample child tiles.
@@ -392,10 +382,7 @@ define([
                     // If there's a water mask included in the terrain data, create a
                     // texture for it.
                     createWaterMaskTextureIfNeeded(frameState.context, surfaceTile);
-
-                    propagateNewLoadedDataToChildren(tile);
                 }
-                suspendUpsampling = true;
             }
 
             if (loaded.state === TerrainState.READY) {
@@ -411,185 +398,10 @@ define([
                 loaded.vertexArray = undefined;
 
                 // No further loading or upsampling is necessary.
-                surfaceTile.pickTerrain = defaultValue(surfaceTile.loadedTerrain, surfaceTile.upsampledTerrain);
-                surfaceTile.loadedTerrain = undefined;
-                surfaceTile.upsampledTerrain = undefined;
-            } else if (loaded.state === TerrainState.FAILED) {
-                // Loading failed for some reason, or data is simply not available,
-                // so no need to continue trying to load.  Any retrying will happen before we
-                // reach this point.
+                surfaceTile.pickTerrain = surfaceTile.loadedTerrain;
                 surfaceTile.loadedTerrain = undefined;
             }
         }
-
-        if (!suspendUpsampling && defined(upsampled)) {
-            upsampled.processUpsampleStateMachine(frameState, terrainProvider, tile.x, tile.y, tile.level);
-
-            // Publish the terrain data on the tile as soon as it is available.
-            // We'll potentially need it to upsample child tiles.
-            // It's safe to overwrite terrainData because we won't get here after
-            // loaded terrain data has been received.
-            if (upsampled.state >= TerrainState.RECEIVED) {
-                if (surfaceTile.terrainData !== upsampled.data) {
-                    surfaceTile.terrainData = upsampled.data;
-
-                    // If the terrain provider has a water mask, "upsample" that as well
-                    // by computing texture translation and scale.
-                    if (terrainProvider.hasWaterMask) {
-                        upsampleWaterMask(tile);
-                    }
-
-                    propagateNewUpsampledDataToChildren(tile);
-                }
-            }
-
-            if (upsampled.state === TerrainState.READY) {
-                upsampled.publishToTile(tile);
-
-                if (defined(tile.data.vertexArray)) {
-                    // Free the tiles existing vertex array on next render.
-                    vertexArraysToDestroy.push(tile.data.vertexArray);
-                }
-
-                // Transfer ownership of the vertex array to the tile itself.
-                tile.data.vertexArray = upsampled.vertexArray;
-                upsampled.vertexArray = undefined;
-
-                // No further upsampling is necessary.  We need to continue loading, though.
-                surfaceTile.pickTerrain = surfaceTile.upsampledTerrain;
-                surfaceTile.upsampledTerrain = undefined;
-            } else if (upsampled.state === TerrainState.FAILED) {
-                // Upsampling failed for some reason.  This is pretty much a catastrophic failure,
-                // but maybe we'll be saved by loading.
-                surfaceTile.upsampledTerrain = undefined;
-            }
-        }
-    }
-
-    function getUpsampleTileDetails(tile) {
-        // Find the nearest ancestor with loaded terrain.
-        var sourceTile = tile.parent;
-        while (defined(sourceTile) && defined(sourceTile.data) && !defined(sourceTile.data.terrainData)) {
-            sourceTile = sourceTile.parent;
-        }
-
-        if (!defined(sourceTile) || !defined(sourceTile.data)) {
-            // No ancestors have loaded terrain - try again later.
-            return undefined;
-        }
-
-        return {
-            data : sourceTile.data.terrainData,
-            x : sourceTile.x,
-            y : sourceTile.y,
-            level : sourceTile.level
-        };
-    }
-
-    function propagateNewUpsampledDataToChildren(tile) {
-        // Now that there's new data for this tile:
-        //  - child tiles that were previously upsampled need to be re-upsampled based on the new data.
-
-        // Generally this is only necessary when a child tile is upsampled, and then one
-        // of its ancestors receives new (better) data and we want to re-upsample from the
-        // new data.
-
-        propagateNewUpsampledDataToChild(tile, tile._southwestChild);
-        propagateNewUpsampledDataToChild(tile, tile._southeastChild);
-        propagateNewUpsampledDataToChild(tile, tile._northwestChild);
-        propagateNewUpsampledDataToChild(tile, tile._northeastChild);
-    }
-
-    function propagateNewUpsampledDataToChild(tile, childTile) {
-        if (defined(childTile) && childTile.state !== QuadtreeTileLoadState.START) {
-            var childSurfaceTile = childTile.data;
-            if (defined(childSurfaceTile.terrainData) && !childSurfaceTile.terrainData.wasCreatedByUpsampling()) {
-                // Data for the child tile has already been loaded.
-                return;
-            }
-
-            // Restart the upsampling process, no matter its current state.
-            // We create a new instance rather than just restarting the existing one
-            // because there could be an asynchronous operation pending on the existing one.
-            if (defined(childSurfaceTile.upsampledTerrain)) {
-                childSurfaceTile.upsampledTerrain.freeResources();
-            }
-            childSurfaceTile.upsampledTerrain = new TileTerrain({
-                data : tile.data.terrainData,
-                x : tile.x,
-                y : tile.y,
-                level : tile.level
-            });
-
-            childTile.state = QuadtreeTileLoadState.LOADING;
-        }
-    }
-
-    function propagateNewLoadedDataToChildren(tile) {
-        var surfaceTile = tile.data;
-
-        // Now that there's new data for this tile:
-        //  - child tiles that were previously upsampled need to be re-upsampled based on the new data.
-        //  - child tiles that were previously deemed unavailable may now be available.
-
-        propagateNewLoadedDataToChildTile(tile, surfaceTile, tile.southwestChild);
-        propagateNewLoadedDataToChildTile(tile, surfaceTile, tile.southeastChild);
-        propagateNewLoadedDataToChildTile(tile, surfaceTile, tile.northwestChild);
-        propagateNewLoadedDataToChildTile(tile, surfaceTile, tile.northeastChild);
-    }
-
-    function propagateNewLoadedDataToChildTile(tile, surfaceTile, childTile) {
-        if (childTile.state !== QuadtreeTileLoadState.START) {
-            var childSurfaceTile = childTile.data;
-            if (defined(childSurfaceTile.terrainData) && !childSurfaceTile.terrainData.wasCreatedByUpsampling()) {
-                // Data for the child tile has already been loaded.
-                return;
-            }
-
-            // Restart the upsampling process, no matter its current state.
-            // We create a new instance rather than just restarting the existing one
-            // because there could be an asynchronous operation pending on the existing one.
-            if (defined(childSurfaceTile.upsampledTerrain)) {
-                childSurfaceTile.upsampledTerrain.freeResources();
-            }
-            childSurfaceTile.upsampledTerrain = new TileTerrain({
-                data : surfaceTile.terrainData,
-                x : tile.x,
-                y : tile.y,
-                level : tile.level
-            });
-
-            if (surfaceTile.terrainData.isChildAvailable(tile.x, tile.y, childTile.x, childTile.y)) {
-                // Data is available for the child now.  It might have been before, too.
-                if (!defined(childSurfaceTile.loadedTerrain)) {
-                    // No load process is in progress, so start one.
-                    childSurfaceTile.loadedTerrain = new TileTerrain();
-                }
-            }
-
-            childTile.state = QuadtreeTileLoadState.LOADING;
-        }
-    }
-
-    function isDataAvailable(tile, terrainProvider) {
-        var tileDataAvailable = terrainProvider.getTileDataAvailable(tile.x, tile.y, tile.level);
-        if (defined(tileDataAvailable)) {
-            return tileDataAvailable;
-        }
-
-        var parent = tile.parent;
-        if (!defined(parent)) {
-            // Data is assumed to be available for root tiles.
-            return true;
-        }
-
-        if (!defined(parent.data) || !defined(parent.data.terrainData)) {
-            // Parent tile data is not yet received or upsampled, so assume (for now) that this
-            // child tile is not available.
-            return false;
-        }
-
-        return parent.data.terrainData.isChildAvailable(parent.x, parent.y, tile.x, tile.y);
     }
 
     function getContextWaterMaskData(context) {

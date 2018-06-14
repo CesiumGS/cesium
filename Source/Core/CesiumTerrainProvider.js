@@ -527,8 +527,7 @@ define([
 
         var encodedNormalBuffer;
         var waterMaskBuffer;
-        var minimumHeights;
-        var maximumHeights;
+        var bvh;
         while (pos < view.byteLength) {
             var extensionId = view.getUint8(pos, true);
             pos += Uint8Array.BYTES_PER_ELEMENT;
@@ -540,11 +539,18 @@ define([
             } else if (extensionId === QuantizedMeshExtensionIds.WATER_MASK && provider._requestWaterMask) {
                 waterMaskBuffer = new Uint8Array(buffer, pos, extensionLength);
             } else if (extensionId === QuantizedMeshExtensionIds.BVH && provider._requestBvh) {
-                var numberOfHeights = view.getUint32(pos, true);
-                pos += Uint32Array.BYTES_PER_ELEMENT;
-                minimumHeights = new Float32Array(buffer, pos, numberOfHeights);
-                pos += Float32Array.BYTES_PER_ELEMENT * numberOfHeights;
-                maximumHeights = new Float32Array(buffer, pos, numberOfHeights);
+                var extensionPos = pos;
+
+                // Align to 4 bytes.
+                if (extensionPos % 4 !== 0) {
+                    extensionPos += (4 - (extensionPos % 4));
+                }
+
+                var numberOfHeights = view.getUint32(extensionPos, true);
+                extensionPos += Uint32Array.BYTES_PER_ELEMENT;
+
+                bvh = new Float32Array(buffer, extensionPos, numberOfHeights);
+                extensionPos += Float32Array.BYTES_PER_ELEMENT * numberOfHeights;
             }
             pos += extensionLength;
         }
@@ -586,8 +592,7 @@ define([
             childTileMask: provider.availability.computeChildMaskForTile(level, x, y),
             waterMask: waterMaskBuffer,
             credits: provider._tileCredits,
-            minimumHeights: minimumHeights,
-            maximumHeights: maximumHeights
+            bvh: bvh
         });
     }
 
