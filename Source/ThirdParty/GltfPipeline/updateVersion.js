@@ -883,8 +883,12 @@ define([
         if (!defined(gltf.asset)) {
             gltf.asset = {};
         }
+        if (!defined(gltf.asset.extras)) {
+            gltf.asset.extras = {};
+        }
         var asset = gltf.asset;
         asset.version = '2.0';
+        asset.extras.gltf_pipeline_upgrade_10to20 = true;
         // material.instanceTechnique properties should be directly on the material. instanceTechnique is a gltf 0.8 property but is seen in some 1.0 models.
         updateInstanceTechniques(gltf);
         // animation.samplers now refers directly to accessors and animation.parameters should be removed

@@ -239,7 +239,8 @@ define([
             }
             newSources[length] = newMain;
             fs = new ShaderSource({
-                sources : newSources
+                sources : newSources,
+                defines : fs.defines
             });
             shader = context.shaderCache.createDerivedShaderProgram(shaderProgram, 'pick', {
                 vertexShaderSource : shaderProgram.vertexShaderSource,
