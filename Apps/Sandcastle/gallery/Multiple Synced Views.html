@@ -46,14 +46,12 @@ function startup(Cesium) {
 // We want our two views to be synced across time, so we create
 // a shared clock object that both views share
 var clockViewModel = new Cesium.ClockViewModel();
-var options3D =
-{
+var options3D = {
     fullscreenButton : false,
     sceneModePicker : false,
     clockViewModel : clockViewModel
 };
-var options2D =
-{
+var options2D = {
     homeButton : false,
     fullscreenButton : false,
     sceneModePicker : false,
@@ -77,7 +75,7 @@ function sync2DView() {
     var viewCenter = new Cesium.Cartesian2(Math.floor(view3D.canvas.clientWidth / 2), Math.floor(view3D.canvas.clientHeight / 2));
     // Given the pixel in the center, get the world position
     var newWorldPosition = view3D.scene.camera.pickEllipsoid(viewCenter);
-    if(Cesium.defined(newWorldPosition)){
+    if (Cesium.defined(newWorldPosition)){
         // Guard against the case where the center of the screen
         // does not fall on a position on the globe
         worldPosition = newWorldPosition;
