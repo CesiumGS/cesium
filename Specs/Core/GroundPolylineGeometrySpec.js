@@ -499,6 +499,26 @@ defineSuite([
         expect(Cartesian3.equalsEpsilon(result, new Cartesian3(1.0, 0.0, 0.0), CesiumMath.EPSILON7)).toBe(true);
     });
 
+    it('creates bounding spheres that cover the entire polyline volume height', function() {
+        var positions = Cartesian3.fromDegreesArray([
+            -122.17580380403314, 46.19984918190237,
+            -122.17581380403314, 46.19984918190237
+        ]);
+
+        // Mt. St. Helens - provided coordinates are a few meters apart
+        var groundPolylineGeometry = new GroundPolylineGeometry({
+            positions : positions,
+            granularity : 0.0 // no interpolative subdivision
+        });
+
+        var geometry = GroundPolylineGeometry.createGeometry(groundPolylineGeometry);
+
+        var boundingSphere = geometry.boundingSphere;
+        var pointsDistance = Cartesian3.distance(positions[0], positions[1]);
+
+        expect(boundingSphere.radius > pointsDistance).toBe(true);
+    });
+
     var packedInstance = [positions.length];
     Cartesian3.pack(positions[0], packedInstance, packedInstance.length);
     Cartesian3.pack(positions[1], packedInstance, packedInstance.length);
