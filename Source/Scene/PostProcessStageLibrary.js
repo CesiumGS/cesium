@@ -217,6 +217,22 @@ define([
     };
 
     /**
+     * Whether or not a depth of field stage is supported.
+     * <p>
+     * This stage requires the WEBGL_depth_texture extension.
+     * </p>
+     *
+     * @param {Scene} scene The scene.
+     * @return {Boolean} Whether this post process stage is supported.
+     *
+     * @see {Context#depthTexture}
+     * @see {@link http://www.khronos.org/registry/webgl/extensions/WEBGL_depth_texture/|WEBGL_depth_texture}
+     */
+    PostProcessStageLibrary.isDepthOfFieldSupported = function(scene) {
+        return scene.context.depthTexture;
+    };
+
+    /**
      * Creates a post-process stage that detects edges.
      * <p>
      * Writes the color to the output texture with alpha set to 1.0 when it is on an edge.
@@ -257,6 +273,22 @@ define([
                 color : Color.clone(Color.BLACK)
             }
         });
+    };
+
+    /**
+     * Whether or not an edge detection stage is supported.
+     * <p>
+     * This stage requires the WEBGL_depth_texture extension.
+     * </p>
+     *
+     * @param {Scene} scene The scene.
+     * @return {Boolean} Whether this post process stage is supported.
+     *
+     * @see {Context#depthTexture}
+     * @see {@link http://www.khronos.org/registry/webgl/extensions/WEBGL_depth_texture/|WEBGL_depth_texture}
+     */
+    PostProcessStageLibrary.isEdgeDetectionSupported = function(scene) {
+        return scene.context.depthTexture;
     };
 
     function getSilhouetteEdgeDetection(edgeDetectionStages) {
@@ -338,6 +370,22 @@ define([
             inputPreviousStageTexture : false,
             uniforms : edgeDetection.uniforms
         });
+    };
+
+    /**
+     * Whether or not a silhouette stage is supported.
+     * <p>
+     * This stage requires the WEBGL_depth_texture extension.
+     * </p>
+     *
+     * @param {Scene} scene The scene.
+     * @return {Boolean} Whether this post process stage is supported.
+     *
+     * @see {Context#depthTexture}
+     * @see {@link http://www.khronos.org/registry/webgl/extensions/WEBGL_depth_texture/|WEBGL_depth_texture}
+     */
+    PostProcessStageLibrary.isSilhouetteSupported = function(scene) {
+        return scene.context.depthTexture;
     };
 
     /**
@@ -598,6 +646,22 @@ define([
             inputPreviousStageTexture : false,
             uniforms : uniforms
         });
+    };
+
+    /**
+     * Whether or not an ambient occlusion stage is supported.
+     * <p>
+     * This stage requires the WEBGL_depth_texture extension.
+     * </p>
+     *
+     * @param {Scene} scene The scene.
+     * @return {Boolean} Whether this post process stage is supported.
+     *
+     * @see {Context#depthTexture}
+     * @see {@link http://www.khronos.org/registry/webgl/extensions/WEBGL_depth_texture/|WEBGL_depth_texture}
+     */
+    PostProcessStageLibrary.isAmbientOcclusionSupported = function(scene) {
+        return scene.context.depthTexture;
     };
 
     var fxaaFS =

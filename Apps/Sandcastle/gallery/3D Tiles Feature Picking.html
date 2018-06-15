@@ -73,10 +73,9 @@ var clickHandler = viewer.screenSpaceEventHandler.getInputAction(Cesium.ScreenSp
 
 // If silhouettes are supported, silhouette features in blue on mouse over and silhouette green on mouse click.
 // If silhouettes are not supported, change the feature color to yellow on mouse over and green on mouse click.
-
-var silhouetteBlue = Cesium.PostProcessStageLibrary.createEdgeDetectionStage();
-if (silhouetteBlue.isSupported(viewer.scene)) {
+if (Cesium.PostProcessStageLibrary.isSilhouetteSupported(viewer.scene)) {
     // Silhouettes are supported
+    var silhouetteBlue = Cesium.PostProcessStageLibrary.createEdgeDetectionStage();
     silhouetteBlue.uniforms.color = Cesium.Color.BLUE;
     silhouetteBlue.uniforms.length = 0.01;
     silhouetteBlue.selected = [];
