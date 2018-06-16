@@ -1,5 +1,6 @@
 define([
         './ApproximateTerrainHeights',
+        './arrayRemoveDuplicates',
         './BoundingSphere',
         './Cartesian3',
         './Cartographic',
@@ -24,6 +25,7 @@ define([
         './WebMercatorProjection'
     ], function(
         ApproximateTerrainHeights,
+        arrayRemoveDuplicates,
         BoundingSphere,
         Cartesian3,
         Cartographic,
@@ -405,7 +407,7 @@ define([
         var index;
         var i;
 
-        var positions = groundPolylineGeometry._positions;
+        var positions = arrayRemoveDuplicates(groundPolylineGeometry._positions, Cartesian3.equalsEpsilon);
         var positionsLength = positions.length;
 
         if (positionsLength === 2) {

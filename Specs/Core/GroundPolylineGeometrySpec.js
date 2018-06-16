@@ -216,6 +216,24 @@ defineSuite([
         expect(geometry.attributes.texcoordNormalization2D).not.toBeDefined();
     });
 
+    it('removes adjacent duplicate positions', function() {
+        var startCartographic = Cartographic.fromDegrees(0.01, 0.0);
+        var endCartographic = Cartographic.fromDegrees(0.02, 0.0);
+        var groundPolylineGeometry = new GroundPolylineGeometry({
+            positions : Cartesian3.fromRadiansArray([
+                startCartographic.longitude, startCartographic.latitude,
+                endCartographic.longitude, endCartographic.latitude,
+                endCartographic.longitude, endCartographic.latitude
+            ]),
+            granularity : 0.0
+        });
+
+        var geometry = GroundPolylineGeometry.createGeometry(groundPolylineGeometry);
+
+        expect(geometry.indices.length).toEqual(36);
+        expect(geometry.attributes.position.values.length).toEqual(24);
+    });
+
     it('miters turns', function() {
         var groundPolylineGeometry = new GroundPolylineGeometry({
             positions : Cartesian3.fromDegreesArray([
