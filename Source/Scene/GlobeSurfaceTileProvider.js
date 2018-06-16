@@ -38,6 +38,7 @@ define([
         '../Scene/DepthFunction',
         '../Scene/PerInstanceColorAppearance',
         '../Scene/Primitive',
+        '../Scene/TileBoundingRegion',
         './ClippingPlaneCollection',
         './GlobeSurfaceTile',
         './ImageryLayer',
@@ -84,6 +85,7 @@ define([
         DepthFunction,
         PerInstanceColorAppearance,
         Primitive,
+        TileBoundingRegion,
         ClippingPlaneCollection,
         GlobeSurfaceTile,
         ImageryLayer,
@@ -522,6 +524,9 @@ define([
      * @returns {Visibility} The visibility of the tile.
      */
     GlobeSurfaceTileProvider.prototype.computeTileVisibility = function(tile, frameState, occluders) {
+        // TODO: this function is now called before the bounding volume and occludee point
+        // are initialized, so the visibility test is rubbish. 😳
+
         var distance = this.computeDistanceToTile(tile, frameState);
         tile._distance = distance;
 
@@ -533,6 +538,30 @@ define([
         }
 
         var surfaceTile = tile.data;
+
+        // We now need a bounding volume in order to determine visibility, but the tile
+        // may not be loaded yet.
+        if (surfaceTile.boundingVolumeSourceTile !== tile) {
+            var heightSource = updateTileBoundingRegion(tile, this.terrainProvider);
+            if (heightSource === undefined) {
+                // We have no idea where this tile is, so let's just call it visible.
+                return Visibility.PARTIAL;
+            }
+
+            if (heightSource !== surfaceTile.boundingVolumeSourceTile) {
+                // Heights are from a new source tile, so update the bounding volume.
+                surfaceTile.boundingVolumeSourceTile = heightSource;
+                var tileBoundingRegion = surfaceTile.tileBoundingRegion;
+                surfaceTile.orientedBoundingBox = OrientedBoundingBox.fromRectangle(
+                    tile.rectangle,
+                    tileBoundingRegion.minimumHeight,
+                    tileBoundingRegion.maximumHeight,
+                    tile.tilingScheme.ellipsoid,
+                    surfaceTile.orientedBoundingBox);
+                surfaceTile.boundingSphere3D = undefined; // TODO: compute the bounding sphere for real, or get rid of it entirely.
+            }
+        }
+
         var cullingVolume = frameState.cullingVolume;
         var boundingVolume = defaultValue(surfaceTile.orientedBoundingBox, surfaceTile.boundingSphere3D);
 
@@ -575,6 +604,18 @@ define([
         }
 
         return intersection;
+    };
+
+    /**
+     * Determines if the given tile can be refined
+     * @param {QuadtreeTile} tile The tile to check.
+     * @returns {boolean} True if the tile can be refined, false if it cannot.
+     */
+    GlobeSurfaceTileProvider.prototype.canRefine = function(tile) {
+        //return tile.southwestChild.renderable && tile.southeastChild.renderable && tile.northwestChild.renderable && tile.northeastChild.renderable;
+        // TODO: only allow refinement if we know if we know whether or not the children are available.
+        // TODO: do we need to do anything to limit the upsampled depth?
+        return true;
     };
 
     var modifiedModelViewScratch = new Matrix4();
@@ -625,10 +666,110 @@ define([
      * @returns {Number} The distance from the camera to the closest point on the tile, in meters.
      */
     GlobeSurfaceTileProvider.prototype.computeDistanceToTile = function(tile, frameState) {
+        // The distance should be:
+        // 1. the actual distance to the tight-fitting bounding volume, or
+        // 2. a distance that is equal to or greater than the actual distance to the tight-fitting bounding volume.
+        //
+        // When we don't know the min/max heights for a tile, but we do know the min/max of an ancestor tile, we can
+        // build a tight-fitting bounding volume horizontally, but not vertically. The min/max heights from the
+        // ancestor will likely form a volume that is much bigger than it needs to be. This means that the volume may
+        // be deemed to be much closer to the camera than it really is, causing us to select tiles that are too detailed.
+        // Loading too-detailed tiles is super expensive, so we don't want to do that. We don't know where the child
+        // tile really lies within the parent range of heights, but we _do_ know the child tile can't be any closer than
+        // the ancestor height surface (min or max) that is _farthest away_ from the camera. So if we computed distance
+        // based that conservative metric, we may end up loading tiles that are not detailed enough, but that's much
+        // better (faster) than loading tiles that are too detailed.
+
+        var heightSource = updateTileBoundingRegion(tile, this.terrainProvider);
+
         var surfaceTile = tile.data;
         var tileBoundingRegion = surfaceTile.tileBoundingRegion;
+
+        if (heightSource !== tile) {
+            if (heightSource === undefined) {
+                // Can't find any min/max heights anywhere? Ok, let's just say the
+                // tile is really far away so we'll load and render it rather than
+                // refining.
+                return 9999999999.0;
+            }
+
+            // Make the bounding region a pancake located at the farthest-away
+            // ancestor height surface.
+            var ancestorMin = tileBoundingRegion.minimumHeight;
+            var ancestorMax = tileBoundingRegion.maximumHeight;
+
+            var cameraHeight = frameState.camera.positionCartographic.height;
+            if (Math.abs(cameraHeight - ancestorMin) < Math.abs(cameraHeight - ancestorMax)) {
+                tileBoundingRegion.minimumHeight = ancestorMin;
+                tileBoundingRegion.maximumHeight = ancestorMin;
+            } else {
+                tileBoundingRegion.minimumHeight = ancestorMax;
+                tileBoundingRegion.maximumHeight = ancestorMax;
+            }
+        }
+
         return tileBoundingRegion.distanceToCamera(frameState);
     };
+
+    function updateTileBoundingRegion(tile, terrainProvider) {
+        var surfaceTile = tile.data;
+        if (surfaceTile === undefined) {
+            surfaceTile = tile.data = new GlobeSurfaceTile();
+            surfaceTile.tileBoundingRegion = new TileBoundingRegion({
+                computeBoundingVolumes : false,
+                rectangle : tile.rectangle,
+                ellipsoid : tile.tilingScheme.ellipsoid,
+                minimumHeight : 0.0,
+                maximumHeight : 0.0
+            });
+        }
+
+        var terrainData = surfaceTile.terrainData;
+        var tileBoundingRegion = surfaceTile.tileBoundingRegion;
+
+        if (terrainData !== undefined && terrainData._minimumHeight !== undefined && terrainData._maximumHeight !== undefined) {
+            // We have tight-fitting min/max heights from the geometry.
+            // TODO: HeightmapTerrainData won't have min/max properties, but the TerrainMesh will.
+            tileBoundingRegion.minimumHeight = terrainData._minimumHeight;
+            tileBoundingRegion.maximumHeight = terrainData._maximumHeight;
+            return tile;
+        }
+
+        var bvh = surfaceTile.getBvh(tile, terrainProvider.terrainProvider);
+        if (bvh !== undefined && bvh[0] === bvh[0] && bvh[1] === bvh[1]) {
+            // Have a BVH that covers this tile and the heights are not NaN.
+            tileBoundingRegion.minimumHeight = bvh[0];
+            tileBoundingRegion.maximumHeight = bvh[1];
+            return tile;
+        }
+
+        // No accurate BVH data available, so we're stuck with min/max heights from an ancestor tile.
+        tileBoundingRegion.minimumHeight = Number.NaN;
+        tileBoundingRegion.maximumHeight = Number.NaN;
+
+        var ancestor = tile.parent;
+        while (ancestor !== undefined) {
+            var ancestorSurfaceTile = ancestor.data;
+            if (ancestorSurfaceTile !== undefined) {
+                var ancestorTerrainData = ancestorSurfaceTile.terrainData;
+                if (ancestorTerrainData !== undefined && ancestorTerrainData._minimumHeight !== undefined && ancestorTerrainData._maximumHeight !== undefined) {
+                    // TODO: HeightmapTerrainData won't have min/max properties, but the TerrainMesh will.
+                    tileBoundingRegion.minimumHeight = ancestorTerrainData._minimumHeight;
+                    tileBoundingRegion.maximumHeight = ancestorTerrainData._maximumHeight;
+                    return ancestor;
+                }
+
+                var ancestorBvh = ancestorSurfaceTile._bvh;
+                if (ancestorBvh !== undefined) {
+                    tileBoundingRegion.minimumHeight = bvh[0];
+                    tileBoundingRegion.maximumHeight = bvh[1];
+                    return ancestor;
+                }
+            }
+        }
+
+        return undefined;
+    }
 
     /**
      * Returns true if this object was destroyed; otherwise, false.

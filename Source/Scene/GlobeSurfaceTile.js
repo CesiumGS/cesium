@@ -69,6 +69,16 @@ define([
         this.maximumHeight = 0.0;
         this.boundingSphere3D = new BoundingSphere();
         this.orientedBoundingBox = undefined;
+        this.boundingVolumeSourceTile = undefined;
+        this._bvh = undefined;
+
+        /**
+         * A bounding region used to estimate distance to the tile. The horizontal bounds are always tight-fitting,
+         * but the `minimumHeight` and `maximumHeight` properties may be derived from the min/max of an ancestor tile
+         * and be quite loose-fitting and thus very poor for estimating distance. The {@link TileBoundingRegion#boundingVolume}
+         * and {@link TileBoundingRegion#boundingSphere} will always be undefined; tiles store these separately.
+         * @type {TileBoundingRegion}
+         */
         this.tileBoundingRegion = undefined;
         this.occludeePointInScaledSpace = new Cartesian3();
 
@@ -111,6 +121,29 @@ define([
             }
         }
     });
+
+    GlobeSurfaceTile.prototype.getBvh = function(tile, terrainProvider) {
+        if (this._bvh === undefined) {
+            var terrainData = this.terrainData;
+            if (terrainData !== undefined && terrainData.bvh !== undefined) {
+                this._bvh = terrainData.bvh;
+            }
+
+            var parent = tile.parent;
+            if (parent !== undefined && parent.data !== undefined) {
+                var parentBvh = parent.data.getBvh(parent, terrainProvider);
+                if (parentBvh !== undefined && parentBvh.length > 2) {
+                    var subsetLength = (parentBvh.length - 2) / 4;
+                    // TODO: Cesium tiles are numbered from the North aren't there? This code is assuming from the South.
+                    var childIndex = ((tile.y % 2) === 0 ? 0 : 2) + ((tile.x % 2) === 0 ? 0 : 1);
+                    var start = 2 + subsetLength * childIndex;
+                    this._bvh = parentBvh.subarray(start, start + subsetLength);
+                }
+            }
+        }
+
+        return this._bvh;
+};
 
     function getPosition(encoding, mode, projection, vertices, index, result) {
         encoding.decodePosition(vertices, index, result);
@@ -234,6 +267,7 @@ define([
             maximumHeight = tile.parent.data.maximumHeight;
         }
         return new TileBoundingRegion({
+            computeBoundingVolumes : false,
             rectangle : tile.rectangle,
             ellipsoid : tile.tilingScheme.ellipsoid,
             minimumHeight : minimumHeight,

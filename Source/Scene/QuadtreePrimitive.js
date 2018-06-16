@@ -558,12 +558,12 @@ define([
         var southeastChild = tile.southeastChild;
         var northwestChild = tile.northwestChild;
         var northeastChild = tile.northeastChild;
-        var allAreRenderable = southwestChild.renderable && southeastChild.renderable &&
-                               northwestChild.renderable && northeastChild.renderable;
         var allAreUpsampled = southwestChild.upsampledFromParent && southeastChild.upsampledFromParent &&
                               northwestChild.upsampledFromParent && northeastChild.upsampledFromParent;
 
-        if (allAreRenderable) {
+        var tileProvider = primitive.tileProvider;
+
+        if (tileProvider.canRefine(tile)) {
             if (allAreUpsampled) {
                 // No point in rendering the children because they're all upsampled.  Render this tile instead.
                 addTileToRenderList(primitive, tile);

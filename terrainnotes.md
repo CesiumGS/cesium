@@ -74,3 +74,8 @@ A tile conceptually has three sets of min/max heights:
     * _frameUpdated (used in QuadtreeTile#_updateCustomData to determine when a parent tile was updated more (?) recently than this tile)
     * _frameRendered (used in QuadtreePrimitive#createRenderCommandsForSelectedTiles to determine which tiles need updated heights)
     * _loadedCallbacks (used for WMTS (?) to remove old imagery once new imagery is loaded. I think.)
+
+
+TileBoundingRegion has a both an oriented bounding box and a bounding sphere, but we don't use either of them for terrain.
+Instead, tiles store separate copies of these things (orientingBoundingBox and boundingSphere3D). That's probably good because we update the min/max height in publishToTile but we don't update either of the other two.
+

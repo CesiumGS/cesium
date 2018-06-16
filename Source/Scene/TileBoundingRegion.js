@@ -50,6 +50,8 @@ define([
      * @param {Number} [options.minimumHeight=0.0] The minimum height of the region.
      * @param {Number} [options.maximumHeight=0.0] The maximum height of the region.
      * @param {Ellipsoid} [options.ellipsoid=Cesium.Ellipsoid.WGS84] The ellipsoid.
+     * @param {Boolean} [options.computeBoundingVolumes=true] True to compute the {@link TileBoundingRegion#boundingVolume} and
+     *                  {@link TileBoundingVolume#boundingSphere}. If false, these properties will be undefined.
      *
      * @private
      */
@@ -122,10 +124,12 @@ define([
         var ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
         computeBox(this, options.rectangle, ellipsoid);
 
-        // An oriented bounding box that encloses this tile's region.  This is used to calculate tile visibility.
-        this._orientedBoundingBox = OrientedBoundingBox.fromRectangle(this.rectangle, this.minimumHeight, this.maximumHeight, ellipsoid);
+        if (defaultValue(options.computeBoundingVolumes, true)) {
+            // An oriented bounding box that encloses this tile's region.  This is used to calculate tile visibility.
+            this._orientedBoundingBox = OrientedBoundingBox.fromRectangle(this.rectangle, this.minimumHeight, this.maximumHeight, ellipsoid);
 
-        this._boundingSphere = BoundingSphere.fromOrientedBoundingBox(this._orientedBoundingBox);
+            this._boundingSphere = BoundingSphere.fromOrientedBoundingBox(this._orientedBoundingBox);
+        }
     }
 
     defineProperties(TileBoundingRegion.prototype, {

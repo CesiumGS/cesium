@@ -223,6 +223,17 @@ define([
             get : function() {
                 return this._waterMask;
             }
+        },
+
+        /**
+         * Gets the bounding-volume hierarchy (BVH) starting with this tile.
+         * @memberof QuantizedMeshTerrainData.prototype
+         * @type {Float32Array}
+         */
+        bvh : {
+            get : function() {
+                return this._bvh;
+            }
         }
     });
 
