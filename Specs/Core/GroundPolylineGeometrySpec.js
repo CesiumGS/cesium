@@ -216,14 +216,15 @@ defineSuite([
         expect(geometry.attributes.texcoordNormalization2D).not.toBeDefined();
     });
 
-    it('removes adjacent duplicate positions', function() {
+    it('removes adjacent positions with the same latitude/longitude', function() {
         var startCartographic = Cartographic.fromDegrees(0.01, 0.0);
         var endCartographic = Cartographic.fromDegrees(0.02, 0.0);
         var groundPolylineGeometry = new GroundPolylineGeometry({
-            positions : Cartesian3.fromRadiansArray([
-                startCartographic.longitude, startCartographic.latitude,
-                endCartographic.longitude, endCartographic.latitude,
-                endCartographic.longitude, endCartographic.latitude
+            positions : Cartesian3.fromRadiansArrayHeights([
+                startCartographic.longitude, startCartographic.latitude, 0.0,
+                endCartographic.longitude, endCartographic.latitude, 0.0,
+                endCartographic.longitude, endCartographic.latitude, 0.0,
+                endCartographic.longitude, endCartographic.latitude, 10.0
             ]),
             granularity : 0.0
         });

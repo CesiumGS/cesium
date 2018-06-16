@@ -407,7 +407,7 @@ define([
         var index;
         var i;
 
-        var positions = arrayRemoveDuplicates(groundPolylineGeometry._positions, Cartesian3.equalsEpsilon);
+        var positions = groundPolylineGeometry._positions;
         var positionsLength = positions.length;
 
         if (positionsLength === 2) {
@@ -452,6 +452,10 @@ define([
             cartographic.height = 0.0;
             cartographics[i] = cartographic;
         }
+
+        // Remove duplicates
+        cartographics = arrayRemoveDuplicates(cartographics, Cartographic.equalsEpsilon);
+        cartographicsLength = cartographics.length;
 
         /**** Build heap-side arrays for positions, interpolated cartographics, and normals from which to compute vertices ****/
         // We build a "wall" and then decompose it into separately connected component "volumes" because we need a lot
