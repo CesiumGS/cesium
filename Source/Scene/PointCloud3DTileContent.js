@@ -317,6 +317,7 @@ define([
     };
 
     PointCloud3DTileContent.prototype.destroy = function() {
+        this._pickId = this._pickId && this._pickId.destroy();
         this._pointCloud = this._pointCloud && this._pointCloud.destroy();
         this._batchTable = this._batchTable && this._batchTable.destroy();
         return destroyObject(this);

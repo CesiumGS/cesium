@@ -144,13 +144,11 @@ define([
         this._clockOnTick(clock);
     }
 
-    function getPickFragmentShaderLoaded(stream) {
-        return function(fs) {
-            return ShaderSource.createPickFragmentShaderSource(fs, 'uniform');
-        };
+    function getFragmentShaderLoaded(fs) {
+        return 'uniform vec4 czm_pickColor;\n' + fs;
     }
 
-    function getPickUniformMapLoaded(stream) {
+    function getUniformMapLoaded(stream) {
         return function(uniformMap) {
             return combine(uniformMap, {
                 czm_pickColor : function() {
@@ -221,8 +219,8 @@ define([
             }).then(function(arrayBuffer) {
                 cache[index].pointCloud = new PointCloud({
                     arrayBuffer : arrayBuffer,
-                    pickFragmentShaderLoaded : getPickFragmentShaderLoaded(that),
-                    pickUniformMapLoaded : getPickUniformMapLoaded(that)
+                    fragmentShaderLoaded : getFragmentShaderLoaded,
+                    uniformMapLoaded : getUniformMapLoaded(that)
                 });
             }).otherwise(function(error) {
                 throw error;
@@ -259,13 +257,10 @@ define([
 
     var scratchModelMatrix = new Matrix4();
 
-    // TODO : remove pick shaders in PointCloud
-    // TODO : merge in master
     // TODO : need to take into account current real-time time it takes to process an average tile, because just fetching the next interval is naive
     // TODO : make sure it works if clock is stopped
     // TODO : measure time required to fetch the data and update it
     // TODO : synchronous draco faster?
-    // TODO : picking code may be obsolete?
     // TODO : clear any requests that didn't finish from the previous frame?
     // TODO : once a skip factor is supported that introduces a can of worms
     // TODO : LRU cache / GPU memory share?
@@ -368,6 +363,7 @@ define([
             }
         }
         this._frames = undefined;
+        this._pickId = this._pickId && this._pickId.destroy();
         return destroyObject(this);
     };
 
