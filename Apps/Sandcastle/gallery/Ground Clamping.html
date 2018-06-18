@@ -218,6 +218,36 @@ Sandcastle.addDefaultToolbarMenu([{
             viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
         });
     }
+}, {
+    text : 'Draw polyline on terrain',
+    onselect : function() {
+
+        if (!Cesium.Entity.supportsPolylinesOnTerrain(viewer.scene)) {
+            console.log('Polylines on terrain are not supported on this platform');
+        }
+
+        viewer.entities.add({
+            polyline : {
+                positions : Cesium.Cartesian3.fromDegreesArray([
+                    86.953793, 27.928257,
+                    86.953793, 27.988257,
+                    86.896497, 27.988257
+                ]),
+                clampToGround : true,
+                width : 5,
+                material : new Cesium.PolylineOutlineMaterialProperty({
+                    color : Cesium.Color.ORANGE,
+                    outlineWidth : 2,
+                    outlineColor : Cesium.Color.BLACK
+                })
+            }
+        });
+
+        var target = new Cesium.Cartesian3(300770.50872389384, 5634912.131394585, 2978152.2865545116);
+        var offset = new Cesium.Cartesian3(6344.974098678562, -793.3419798081741, 2499.9508860763162);
+        viewer.camera.lookAt(target, offset);
+        viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
+    }
 }], 'zoomButtons');
 
 Sandcastle.reset = function () {

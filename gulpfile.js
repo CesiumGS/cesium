@@ -24,7 +24,7 @@ var gulpRename = require('gulp-rename');
 var gulpReplace = require('gulp-replace');
 var Promise = require('bluebird');
 var requirejs = require('requirejs');
-var karma = require('karma').Server;
+var Karma = require('karma').Server;
 var yargs = require('yargs');
 var aws = require('aws-sdk');
 var mime = require('mime');
@@ -634,16 +634,16 @@ gulp.task('test', function(done) {
         files.push({pattern : 'Build/**', included : false});
     }
 
-    karma.start({
+    var karma = new Karma({
         configFile: karmaConfigFile,
-        browsers : browsers,
+        browsers: browsers,
         specReporter: {
             suppressErrorSummary: false,
             suppressFailed: false,
             suppressPassed: suppressPassed,
             suppressSkipped: true
         },
-        detectBrowsers : {
+        detectBrowsers: {
             enabled: enableAllBrowsers
         },
         files: files,
@@ -653,6 +653,7 @@ gulp.task('test', function(done) {
     }, function(e) {
         return done(failTaskOnError ? e : undefined);
     });
+    karma.start();
 });
 
 gulp.task('generateStubs', ['build'], function(done) {

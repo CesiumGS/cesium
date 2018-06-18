@@ -130,7 +130,7 @@ define([
                 new ModelVisualizer(scene, entities),
                 new PointVisualizer(entityCluster, entities),
                 new PathVisualizer(scene, entities),
-                new PolylineVisualizer(scene, entities)];
+                new PolylineVisualizer(scene, entities, dataSource._groundPrimitives)];
     };
 
     defineProperties(DataSourceDisplay.prototype, {
