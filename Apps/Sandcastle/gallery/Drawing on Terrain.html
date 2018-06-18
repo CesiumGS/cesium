@@ -46,6 +46,7 @@ function startup(Cesium) {
 //Sandcastle_Begin
 var viewer = new Cesium.Viewer('cesiumContainer',  {
     selectionIndicator : false,
+    infoBox : false,
     terrainProvider : Cesium.createWorldTerrain()
 });
 // Create a function to place a point given a world position.
