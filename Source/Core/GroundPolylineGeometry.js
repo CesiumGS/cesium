@@ -1,5 +1,6 @@
 define([
         './ApproximateTerrainHeights',
+        './arrayRemoveDuplicates',
         './BoundingSphere',
         './Cartesian3',
         './Cartographic',
@@ -24,6 +25,7 @@ define([
         './WebMercatorProjection'
     ], function(
         ApproximateTerrainHeights,
+        arrayRemoveDuplicates,
         BoundingSphere,
         Cartesian3,
         Cartographic,
@@ -450,6 +452,10 @@ define([
             cartographic.height = 0.0;
             cartographics[i] = cartographic;
         }
+
+        // Remove duplicates
+        cartographics = arrayRemoveDuplicates(cartographics, Cartographic.equalsEpsilon);
+        cartographicsLength = cartographics.length;
 
         /**** Build heap-side arrays for positions, interpolated cartographics, and normals from which to compute vertices ****/
         // We build a "wall" and then decompose it into separately connected component "volumes" because we need a lot
