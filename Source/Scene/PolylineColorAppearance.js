@@ -20,7 +20,8 @@ define([
     var defaultFragmentShaderSource = PerInstanceFlatColorAppearanceFS;
 
     /**
-     * An appearance for {@link GeometryInstance} instances with color attributes and {@link PolylineGeometry}.
+     * An appearance for {@link GeometryInstance} instances with color attributes and
+     * {@link PolylineGeometry} or {@link GroundPolylineGeometry}.
      * This allows several geometry instances, each with a different color, to
      * be drawn with the same {@link Primitive}.
      *

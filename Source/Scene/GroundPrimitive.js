@@ -1,4 +1,5 @@
 define([
+        '../Core/ApproximateTerrainHeights',
         '../Core/BoundingSphere',
         '../Core/buildModuleUrl',
         '../Core/Cartesian2',
@@ -28,6 +29,7 @@ define([
         './SceneMode',
         './ShadowVolumeAppearance'
     ], function(
+        ApproximateTerrainHeights,
         BoundingSphere,
         buildModuleUrl,
         Cartesian2,
@@ -103,7 +105,7 @@ define([
      * @param {Boolean} [options.releaseGeometryInstances=true] When <code>true</code>, the primitive does not keep a reference to the input <code>geometryInstances</code> to save memory.
      * @param {Boolean} [options.allowPicking=true] When <code>true</code>, each geometry instance will only be pickable with {@link Scene#pick}.  When <code>false</code>, GPU memory is saved.
      * @param {Boolean} [options.asynchronous=true] Determines if the primitive will be created asynchronously or block until ready. If false initializeTerrainHeights() must be called first.
-     * @param {ClassificationType} [options.classificationType=ClassificationType.BOTH] Determines whether terrain, 3D Tiles or both will be classified.
+     * @param {ClassificationType} [options.classificationType=ClassificationType.TERRAIN] Determines whether terrain, 3D Tiles or both will be classified.
      * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Determines if this primitive's commands' bounding spheres are shown.
      * @param {Boolean} [options.debugShowShadowVolume=false] For debugging only. Determines if the shadow volume for each geometry in the primitive is drawn. Must be <code>true</code> on
      *                  creation for the volumes to be created before the geometry is released or options.releaseGeometryInstance must be <code>false</code>.
@@ -172,20 +174,24 @@ define([
                 }
             }
         }
-
+        /**
+         * The {@link Appearance} used to shade this primitive. Each geometry
+         * instance is shaded with the same appearance.  Some appearances, like
+         * {@link PerInstanceColorAppearance} allow giving each instance unique
+         * properties.
+         *
+         * @type Appearance
+         *
+         * @default undefined
+         */
         this.appearance = appearance;
 
         /**
-         * The geometry instance rendered with this primitive.  This may
+         * The geometry instances rendered with this primitive.  This may
          * be <code>undefined</code> if <code>options.releaseGeometryInstances</code>
          * is <code>true</code> when the primitive is constructed.
          * <p>
          * Changing this property after the primitive is rendered has no effect.
-         * </p>
-         * <p>
-         * Because of the rendering technique used, all geometry instances must be the same color.
-         * If there is an instance with a differing color, a <code>DeveloperError</code> will be thrown
-         * on the first attempt to render.
          * </p>
          *
          * @readonly
@@ -208,9 +214,9 @@ define([
          *
          * @type {ClassificationType}
          *
-         * @default ClassificationType.BOTH
+         * @default ClassificationType.TERRAIN
          */
-        this.classificationType = defaultValue(options.classificationType, ClassificationType.BOTH);
+        this.classificationType = defaultValue(options.classificationType, ClassificationType.TERRAIN);
         /**
          * This property is for debugging only; it is not for production use nor is it optimized.
          * <p>
@@ -246,13 +252,15 @@ define([
         this._maxHeight = undefined;
         this._minHeight = undefined;
 
-        this._maxTerrainHeight = GroundPrimitive._defaultMaxTerrainHeight;
-        this._minTerrainHeight = GroundPrimitive._defaultMinTerrainHeight;
+        this._maxTerrainHeight = ApproximateTerrainHeights._defaultMaxTerrainHeight;
+        this._minTerrainHeight = ApproximateTerrainHeights._defaultMinTerrainHeight;
 
         this._boundingSpheresKeys = [];
         this._boundingSpheres = [];
 
         this._useFragmentCulling = false;
+        // Used when inserting in an OrderedPrimitiveCollection
+        this._zIndex = undefined;
 
         var that = this;
         this._classificationPrimitiveOptions = {
@@ -401,16 +409,11 @@ define([
     /**
      * Determines if GroundPrimitive rendering is supported.
      *
+     * @function
      * @param {Scene} scene The scene.
      * @returns {Boolean} <code>true</code> if GroundPrimitives are supported; otherwise, returns <code>false</code>
      */
     GroundPrimitive.isSupported = ClassificationPrimitive.isSupported;
-
-    GroundPrimitive._defaultMaxTerrainHeight = 9000.0;
-    GroundPrimitive._defaultMinTerrainHeight = -100000.0;
-
-    GroundPrimitive._terrainHeights = undefined;
-    GroundPrimitive._terrainHeightsMaxLevel = 6;
 
     function getComputeMaximumHeightFunction(primitive) {
         return function(granularity, ellipsoid) {
@@ -431,9 +434,6 @@ define([
     var scratchBVCartesian = new Cartesian3();
     var scratchBVCartographic = new Cartographic();
     var scratchBVRectangle = new Rectangle();
-    var tilingScheme = new GeographicTilingScheme();
-    var scratchCorners = [new Cartographic(), new Cartographic(), new Cartographic(), new Cartographic()];
-    var scratchTileXY = new Cartesian2();
 
     function getRectangle(frameState, geometry) {
         var ellipsoid = frameState.mapProjection.ellipsoid;
@@ -480,110 +480,11 @@ define([
         return rectangle;
     }
 
-    var scratchDiagonalCartesianNE = new Cartesian3();
-    var scratchDiagonalCartesianSW = new Cartesian3();
-    var scratchDiagonalCartographic = new Cartographic();
-    var scratchCenterCartesian = new Cartesian3();
-    var scratchSurfaceCartesian = new Cartesian3();
-
-    function getTileXYLevel(rectangle) {
-        Cartographic.fromRadians(rectangle.east, rectangle.north, 0.0, scratchCorners[0]);
-        Cartographic.fromRadians(rectangle.west, rectangle.north, 0.0, scratchCorners[1]);
-        Cartographic.fromRadians(rectangle.east, rectangle.south, 0.0, scratchCorners[2]);
-        Cartographic.fromRadians(rectangle.west, rectangle.south, 0.0, scratchCorners[3]);
-
-        // Determine which tile the bounding rectangle is in
-        var lastLevelX = 0, lastLevelY = 0;
-        var currentX = 0, currentY = 0;
-        var maxLevel = GroundPrimitive._terrainHeightsMaxLevel;
-        var i;
-        for(i = 0; i <= maxLevel; ++i) {
-            var failed = false;
-            for(var j = 0; j < 4; ++j) {
-                var corner = scratchCorners[j];
-                tilingScheme.positionToTileXY(corner, i, scratchTileXY);
-                if (j === 0) {
-                    currentX = scratchTileXY.x;
-                    currentY = scratchTileXY.y;
-                } else if(currentX !== scratchTileXY.x || currentY !== scratchTileXY.y) {
-                    failed = true;
-                    break;
-                }
-            }
-
-            if (failed) {
-                break;
-            }
-
-            lastLevelX = currentX;
-            lastLevelY = currentY;
-        }
-
-        if (i === 0) {
-            return undefined;
-        }
-
-        return {
-            x : lastLevelX,
-            y : lastLevelY,
-            level : (i > maxLevel) ? maxLevel : (i - 1)
-        };
-    }
-
     function setMinMaxTerrainHeights(primitive, rectangle, ellipsoid) {
-        var xyLevel = getTileXYLevel(rectangle);
+        var result = ApproximateTerrainHeights.getApproximateTerrainHeights(rectangle, ellipsoid);
 
-        // Get the terrain min/max for that tile
-        var minTerrainHeight = GroundPrimitive._defaultMinTerrainHeight;
-        var maxTerrainHeight = GroundPrimitive._defaultMaxTerrainHeight;
-        if (defined(xyLevel)) {
-            var key = xyLevel.level + '-' + xyLevel.x + '-' + xyLevel.y;
-            var heights = GroundPrimitive._terrainHeights[key];
-            if (defined(heights)) {
-                minTerrainHeight = heights[0];
-                maxTerrainHeight = heights[1];
-            }
-
-            // Compute min by taking the center of the NE->SW diagonal and finding distance to the surface
-            ellipsoid.cartographicToCartesian(Rectangle.northeast(rectangle, scratchDiagonalCartographic),
-                scratchDiagonalCartesianNE);
-            ellipsoid.cartographicToCartesian(Rectangle.southwest(rectangle, scratchDiagonalCartographic),
-                scratchDiagonalCartesianSW);
-
-            Cartesian3.subtract(scratchDiagonalCartesianSW, scratchDiagonalCartesianNE, scratchCenterCartesian);
-            Cartesian3.add(scratchDiagonalCartesianNE,
-                Cartesian3.multiplyByScalar(scratchCenterCartesian, 0.5, scratchCenterCartesian), scratchCenterCartesian);
-            var surfacePosition = ellipsoid.scaleToGeodeticSurface(scratchCenterCartesian, scratchSurfaceCartesian);
-            if (defined(surfacePosition)) {
-                var distance = Cartesian3.distance(scratchCenterCartesian, surfacePosition);
-                minTerrainHeight = Math.min(minTerrainHeight, -distance);
-            } else {
-                minTerrainHeight = GroundPrimitive._defaultMinTerrainHeight;
-            }
-        }
-
-        primitive._minTerrainHeight = Math.max(GroundPrimitive._defaultMinTerrainHeight, minTerrainHeight);
-        primitive._maxTerrainHeight = maxTerrainHeight;
-    }
-
-    var scratchBoundingSphere = new BoundingSphere();
-    function getInstanceBoundingSphere(rectangle, ellipsoid) {
-        var xyLevel = getTileXYLevel(rectangle);
-
-        // Get the terrain max for that tile
-        var maxTerrainHeight = GroundPrimitive._defaultMaxTerrainHeight;
-        if (defined(xyLevel)) {
-            var key = xyLevel.level + '-' + xyLevel.x + '-' + xyLevel.y;
-            var heights = GroundPrimitive._terrainHeights[key];
-            if (defined(heights)) {
-                maxTerrainHeight = heights[1];
-            }
-        }
-
-        var result = BoundingSphere.fromRectangle3D(rectangle, ellipsoid, 0.0);
-        BoundingSphere.fromRectangle3D(rectangle, ellipsoid, maxTerrainHeight, scratchBoundingSphere);
-
-        return BoundingSphere.union(result, scratchBoundingSphere, result);
+        primitive._minTerrainHeight = result.minimumTerrainHeight;
+        primitive._maxTerrainHeight = result.maximumTerrainHeight;
     }
 
     function createBoundingVolume(groundPrimitive, frameState, geometry) {
@@ -644,7 +545,7 @@ define([
             for (i = 0; i < colorLength; ++i) {
                 colorCommand = colorCommands[i];
 
-                // derive a separate appearance command for 2D if needed
+                // Use derived appearance command for 2D if needed
                 if (frameState.mode !== SceneMode.SCENE3D &&
                     colorCommand.shaderProgram === classificationPrimitive._spColor &&
                     classificationPrimitive._needs2DShader) {
@@ -690,7 +591,7 @@ define([
             for (var j = 0; j < pickLength; ++j) {
                 var pickCommand = pickCommands[j];
 
-                // derive a separate appearance command for 2D if needed
+                // Use derived pick command for 2D if needed
                 if (frameState.mode !== SceneMode.SCENE3D &&
                     pickCommand.shaderProgram === classificationPrimitive._spPick &&
                     classificationPrimitive._needs2DShader) {
@@ -729,10 +630,10 @@ define([
             return initPromise;
         }
 
-        GroundPrimitive._initPromise = Resource.fetchJson(buildModuleUrl('Assets/approximateTerrainHeights.json')).then(function(json) {
-            GroundPrimitive._initialized = true;
-            GroundPrimitive._terrainHeights = json;
-        });
+        GroundPrimitive._initPromise = ApproximateTerrainHeights.initialize()
+            .then(function() {
+                GroundPrimitive._initialized = true;
+            });
 
         return GroundPrimitive._initPromise;
     };
@@ -745,9 +646,9 @@ define([
      * list the exceptions that may be propagated when the scene is rendered:
      * </p>
      *
+     * @exception {DeveloperError} For synchronous GroundPrimitive, you must call GroundPrimitive.initializeTerrainHeights() and wait for the returned promise to resolve.
      * @exception {DeveloperError} All instance geometries must have the same primitiveType.
      * @exception {DeveloperError} Appearance and material have a uniform with the same name.
-     * @exception {DeveloperError} Not all of the geometry instances have the same color attribute.
      */
     GroundPrimitive.prototype.update = function(frameState) {
         if (!defined(this._primitive) && !defined(this.geometryInstances)) {
@@ -799,7 +700,7 @@ define([
 
                 var id = instance.id;
                 if (defined(id) && defined(instanceRectangle)) {
-                    var boundingSphere = getInstanceBoundingSphere(instanceRectangle, ellipsoid);
+                    var boundingSphere = ApproximateTerrainHeights.getInstanceBoundingSphere(instanceRectangle, ellipsoid);
                     this._boundingSpheresKeys.push(id);
                     this._boundingSpheres.push(boundingSphere);
                 }

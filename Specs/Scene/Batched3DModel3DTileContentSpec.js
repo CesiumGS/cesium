@@ -28,20 +28,20 @@ defineSuite([
     var centerLongitude = -1.31968;
     var centerLatitude = 0.698874;
 
-    var withBatchTableUrl = './Data/Cesium3DTiles/Batched/BatchedWithBatchTable/';
-    var withBatchTableBinaryUrl = './Data/Cesium3DTiles/Batched/BatchedWithBatchTableBinary/';
-    var withoutBatchTableUrl = './Data/Cesium3DTiles/Batched/BatchedWithoutBatchTable/';
-    var translucentUrl = './Data/Cesium3DTiles/Batched/BatchedTranslucent/';
-    var translucentOpaqueMixUrl = './Data/Cesium3DTiles/Batched/BatchedTranslucentOpaqueMix/';
-    var withKHRMaterialsCommonUrl = './Data/Cesium3DTiles/Batched/BatchedWithKHRMaterialsCommon/';
-    var withTransformBoxUrl = './Data/Cesium3DTiles/Batched/BatchedWithTransformBox/';
-    var withTransformSphereUrl = './Data/Cesium3DTiles/Batched/BatchedWithTransformSphere/';
-    var withTransformRegionUrl = './Data/Cesium3DTiles/Batched/BatchedWithTransformRegion/';
-    var texturedUrl = './Data/Cesium3DTiles/Batched/BatchedTextured/';
-    var compressedTexturesUrl = './Data/Cesium3DTiles/Batched/BatchedCompressedTextures/';
-    var deprecated1Url = './Data/Cesium3DTiles/Batched/BatchedDeprecated1/';
-    var deprecated2Url = './Data/Cesium3DTiles/Batched/BatchedDeprecated2/';
-    var gltfZUpUrl = './Data/Cesium3DTiles/Batched/BatchedGltfZUp';
+    var withBatchTableUrl = './Data/Cesium3DTiles/Batched/BatchedWithBatchTable/tileset.json';
+    var withBatchTableBinaryUrl = './Data/Cesium3DTiles/Batched/BatchedWithBatchTableBinary/tileset.json';
+    var withoutBatchTableUrl = './Data/Cesium3DTiles/Batched/BatchedWithoutBatchTable/tileset.json';
+    var translucentUrl = './Data/Cesium3DTiles/Batched/BatchedTranslucent/tileset.json';
+    var translucentOpaqueMixUrl = './Data/Cesium3DTiles/Batched/BatchedTranslucentOpaqueMix/tileset.json';
+    var withKHRMaterialsCommonUrl = './Data/Cesium3DTiles/Batched/BatchedWithKHRMaterialsCommon/tileset.json';
+    var withTransformBoxUrl = './Data/Cesium3DTiles/Batched/BatchedWithTransformBox/tileset.json';
+    var withTransformSphereUrl = './Data/Cesium3DTiles/Batched/BatchedWithTransformSphere/tileset.json';
+    var withTransformRegionUrl = './Data/Cesium3DTiles/Batched/BatchedWithTransformRegion/tileset.json';
+    var texturedUrl = './Data/Cesium3DTiles/Batched/BatchedTextured/tileset.json';
+    var compressedTexturesUrl = './Data/Cesium3DTiles/Batched/BatchedCompressedTextures/tileset.json';
+    var deprecated1Url = './Data/Cesium3DTiles/Batched/BatchedDeprecated1/tileset.json';
+    var deprecated2Url = './Data/Cesium3DTiles/Batched/BatchedDeprecated2/tileset.json';
+    var gltfZUpUrl = './Data/Cesium3DTiles/Batched/BatchedGltfZUp/tileset.json';
 
     function setCamera(longitude, latitude) {
         // One feature is located at the center, point the camera there
@@ -319,6 +319,39 @@ defineSuite([
         });
     });
 
+    it('Links model to tileset clipping planes if tileset clipping planes are reassigned', function() {
+        return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl).then(function(tileset) {
+            var tile = tileset._root;
+            var model = tile.content._model;
+
+            expect(model.clippingPlanes).toBeUndefined();
+
+            var clippingPlaneCollection = new ClippingPlaneCollection({
+                planes : [
+                    new ClippingPlane(Cartesian3.UNIT_X, 0.0)
+                ]
+            });
+            tileset.clippingPlanes = clippingPlaneCollection;
+            clippingPlaneCollection.update(scene.frameState);
+            tile.update(tileset, scene.frameState);
+
+            expect(model.clippingPlanes).toBeDefined();
+            expect(model.clippingPlanes).toBe(tileset.clippingPlanes);
+
+            var newClippingPlaneCollection = new ClippingPlaneCollection({
+                planes : [
+                    new ClippingPlane(Cartesian3.UNIT_X, 0.0)
+                ]
+            });
+            tileset.clippingPlanes = newClippingPlaneCollection;
+            newClippingPlaneCollection.update(scene.frameState);
+            expect(model.clippingPlanes).not.toBe(tileset.clippingPlanes);
+
+            tile.update(tileset, scene.frameState);
+            expect(model.clippingPlanes).toBe(tileset.clippingPlanes);
+        });
+    });
+
     it('rebuilds Model shaders when clipping planes change', function() {
         spyOn(Model, '_getClippingFunction').and.callThrough();
 
@@ -334,7 +367,7 @@ defineSuite([
             clippingPlaneCollection.update(scene.frameState);
             tile.update(tileset, scene.frameState);
 
-            expect(Model._getClippingFunction.calls.count()).toEqual(2);
+            expect(Model._getClippingFunction.calls.count()).toEqual(1);
         });
     });
 

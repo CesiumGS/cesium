@@ -4,6 +4,7 @@ define([
         'DataSources/ColorMaterialProperty',
         'DataSources/ConstantProperty',
         'DataSources/SampledProperty',
+        'Scene/ClassificationType',
         'Scene/GroundPrimitive',
         'Scene/PrimitiveCollection'
     ], function(
@@ -12,12 +13,28 @@ define([
         ColorMaterialProperty,
         ConstantProperty,
         SampledProperty,
+        ClassificationType,
         GroundPrimitive,
         PrimitiveCollection) {
     'use strict';
 
     function createGeometryUpdaterGroundGeometrySpecs(Updater, geometryPropertyName, createEntity, createDynamicEntity, getScene) {
         var time = JulianDate.now();
+
+        it('has default zIndex of zero', function() {
+            var entity = createEntity();
+
+            var updater = new Updater(entity, getScene());
+            expect(updater.zIndex.getValue()).toBe(0);
+        });
+
+        it('uses zIndex value', function() {
+            var entity = createEntity();
+            entity[geometryPropertyName].zIndex = 22;
+
+            var updater = new Updater(entity, getScene());
+            expect(updater.zIndex.getValue()).toBe(22);
+        });
 
         it('A time-varying color causes ground geometry to be dynamic', function() {
             var entity = createEntity();
@@ -134,6 +151,25 @@ define([
             } else {
                 expect(primitives.length).toBe(2);
                 expect(groundPrimitives.length).toBe(0);
+            }
+
+            dynamicUpdater.destroy();
+            updater.destroy();
+        });
+
+        it('dynamic updater on terrain propagates classification type', function() {
+            var entity = createDynamicEntity();
+            entity[geometryPropertyName].classificationType = ClassificationType.BOTH;
+
+            var updater = new Updater(entity, getScene());
+            var primitives = new PrimitiveCollection();
+            var groundPrimitives = new PrimitiveCollection();
+            var dynamicUpdater = updater.createDynamicUpdater(primitives, groundPrimitives);
+
+            dynamicUpdater.update(time);
+
+            if (GroundPrimitive.isSupported(getScene())) {
+                expect(groundPrimitives.get(0).classificationType).toEqual(ClassificationType.BOTH);
             }
 
             dynamicUpdater.destroy();

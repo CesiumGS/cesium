@@ -123,6 +123,7 @@ define([
 
         this._colorTexture = undefined;
         this._depthTexture = undefined;
+        this._idTexture = undefined;
 
         this._actualUniforms = {};
         this._dirtyUniforms = [];
@@ -147,6 +148,17 @@ define([
 
         this._logDepthChanged = undefined;
         this._useLogDepth = undefined;
+
+        this._selectedIdTexture = undefined;
+        this._selectedFeatures = undefined;
+        this._selectedFeaturesShadow = undefined;
+        this._parentSelectedFeatures = undefined;
+        this._parentSelectedFeaturesShadow = undefined;
+        this._combinedSelectedFeatures = undefined;
+        this._combinedSelectedFeaturesShadow = undefined;
+        this._selectedFeaturesLength = 0;
+        this._parentSelectedFeaturesLength = 0;
+        this._selectedFeaturesDirty = true;
 
         // set by PostProcessStageCollection
         this._textureCache = undefined;
@@ -333,6 +345,42 @@ define([
                 }
                 return undefined;
             }
+        },
+        /**
+         * The features selected for applying the post-process.
+         * <p>
+         * In the fragment shader, use <code>czm_selected</code> to determine whether or not to apply the post-process
+         * stage to that fragment. For example:
+         * <code>
+         * if (czm_selected(v_textureCoordinates)) {
+         *     // apply post-process stage
+         * } else {
+         *     gl_FragColor = texture2D(colorTexture, v_textureCordinates);
+         * }
+         * </code>
+         * </p>
+         *
+         * @memberof PostProcessStage.prototype
+         * @type {Array}
+         */
+        selectedFeatures : {
+            get : function() {
+                return this._selectedFeatures;
+            },
+            set : function(value) {
+                this._selectedFeatures = value;
+            }
+        },
+        /**
+         * @private
+         */
+        parentSelectedFeatures : {
+            get : function() {
+                return this._parentSelectedFeatures;
+            },
+            set : function(value) {
+                this._parentSelectedFeatures = value;
+            }
         }
     });
 
@@ -466,21 +514,61 @@ define([
             },
             depthTextureDimensions : function() {
                 return stage._depthTexture.dimensions;
+            },
+            czm_idTexture : function() {
+                return stage._idTexture;
+            },
+            czm_selectedIdTexture : function() {
+                return stage._selectedIdTexture;
+            },
+            czm_selectedIdTextureStep : function() {
+                return 1.0 / stage._selectedIdTexture.width;
             }
         });
     }
 
     function createDrawCommand(stage, context) {
-        if (defined(stage._command) && !stage._logDepthChanged) {
+        if (defined(stage._command) && !stage._logDepthChanged && !stage._selectedFeaturesDirty) {
             return;
         }
 
-        var fs = new ShaderSource({
-            defines : [stage._useLogDepth ? 'LOG_DEPTH' : ''],
-            sources : [stage._fragmentShader]
-        });
+        var fs = stage._fragmentShader;
+        if (defined(stage._selectedIdTexture)) {
+            var width = stage._selectedIdTexture.width;
 
-        stage._command = context.createViewportQuadCommand(fs, {
+            fs = fs.replace(/varying\s+vec2\s+v_textureCoordinates;/g, '');
+            fs =
+                '#define CZM_SELECTED_FEATURE \n' +
+                'uniform sampler2D czm_idTexture; \n' +
+                'uniform sampler2D czm_selectedIdTexture; \n' +
+                'uniform float czm_selectedIdTextureStep; \n' +
+                'varying vec2 v_textureCoordinates; \n' +
+                'bool czm_selected(vec2 offset) \n' +
+                '{ \n' +
+                '    bool selected = false;\n' +
+                '    vec4 id = texture2D(czm_idTexture, v_textureCoordinates + offset); \n' +
+                '    for (int i = 0; i < ' + width + '; ++i) \n' +
+                '    { \n' +
+                '        vec4 selectedId = texture2D(czm_selectedIdTexture, vec2(float(i) * czm_selectedIdTextureStep, 0.5)); \n' +
+                '        if (all(equal(id, selectedId))) \n' +
+                '        { \n' +
+                '            return true; \n' +
+                '        } \n' +
+                '    } \n' +
+                '    return false; \n' +
+                '} \n\n' +
+                'bool czm_selected() \n' +
+                '{ \n' +
+                '    return czm_selected(vec2(0.0)); \n' +
+                '} \n\n' +
+                fs;
+        }
+
+        var fragmentShader = new ShaderSource({
+            defines : [stage._useLogDepth ? 'LOG_DEPTH' : ''],
+            sources : [fs]
+        });
+        stage._command = context.createViewportQuadCommand(fragmentShader, {
             uniformMap : stage._uniformMap,
             owner : stage
         });
@@ -603,6 +691,8 @@ define([
             stage._command = undefined;
         }
 
+        stage._selectedIdTexture = stage._selectedIdTexture && stage._selectedIdTexture.destroy();
+
         var textureCache = stage._textureCache;
         if (!defined(textureCache)) {
             return;
@@ -620,6 +710,133 @@ define([
                 }
             }
         }
+    }
+
+    function isSelectedTextureDirty(stage) {
+        var length = defined(stage._selectedFeatures) ? stage._selectedFeatures.length : 0;
+        var parentLength = defined(stage._parentSelectedFeatures) ? stage._parentSelectedFeatures : 0;
+        var dirty = stage._selectedFeatures !== stage._selectedFeaturesShadow || length !== stage._selectedFeaturesLength;
+        dirty = dirty || stage._parentSelectedFeatures !== stage._parentSelectedFeaturesShadow || parentLength !== stage._parentSelectedFeaturesLength;
+
+        if (defined(stage._selectedFeatures) && defined(stage._parentSelectedFeatures)) {
+            stage._combinedSelectedFeatures = stage._selectedFeatures.concat(stage._parentSelectedFeatures);
+        } else if (defined(stage._parentSelectedFeatures)) {
+            stage._combinedSelectedFeatures = stage._parentSelectedFeatures;
+        } else {
+            stage._combinedSelectedFeatures = stage._selectedFeatures;
+        }
+
+        if (!dirty && defined(stage._combinedSelectedFeatures)) {
+            if (!defined(stage._combinedSelectedFeaturesShadow)) {
+                return true;
+            }
+
+            length = stage._combinedSelectedFeatures.length;
+            for (var i = 0; i < length; ++i) {
+                if (stage._combinedSelectedFeatures[i] !== stage._combinedSelectedFeaturesShadow[i]) {
+                    return true;
+                }
+            }
+        }
+        return dirty;
+    }
+
+    function createSelectedTexture(stage, context) {
+        if (!stage._selectedFeaturesDirty) {
+            return;
+        }
+
+        stage._selectedIdTexture = stage._selectedIdTexture && stage._selectedIdTexture.destroy();
+        stage._selectedIdTexture = undefined;
+
+        var features = stage._combinedSelectedFeatures;
+        if (!defined(features)) {
+            return;
+        }
+
+        var i;
+        var feature;
+
+        var textureLength = 0;
+        var length = features.length;
+        for (i = 0; i < length; ++i) {
+            feature = features[i];
+            if (defined(feature.pickIds)) {
+                textureLength += feature.pickIds.length;
+            } else if (defined(feature.pickId)) {
+                ++textureLength;
+            }
+        }
+
+        if (length === 0 || textureLength === 0) {
+            // max pick id is reserved
+            var empty = new Uint8Array(4);
+            empty[0] = 255;
+            empty[1] = 255;
+            empty[2] = 255;
+            empty[3] = 255;
+
+            stage._selectedIdTexture = new Texture({
+                context : context,
+                pixelFormat : PixelFormat.RGBA,
+                pixelDatatype : PixelDatatype.UNSIGNED_BYTE,
+                source : {
+                    arrayBufferView : empty,
+                    width : 1,
+                    height : 1
+                },
+                sampler : new Sampler({
+                    wrapS : TextureWrap.CLAMP_TO_EDGE,
+                    wrapT : TextureWrap.CLAMP_TO_EDGE,
+                    minificationFilter : TextureMinificationFilter.NEAREST,
+                    magnificationFilter : TextureMagnificationFilter.NEAREST
+                })
+            });
+            return;
+        }
+
+        var pickColor;
+        var offset = 0;
+        var ids = new Uint8Array(textureLength * 4);
+        for (i = 0; i < length; ++i) {
+            feature = features[i];
+            if (defined(feature.pickIds)) {
+                var pickIds = feature.pickIds;
+                var pickIdsLength = pickIds.length;
+                for (var j = 0; j < pickIdsLength; ++j) {
+                    pickColor = pickIds[j].color;
+                    ids[offset] = Color.floatToByte(pickColor.red);
+                    ids[offset + 1] = Color.floatToByte(pickColor.green);
+                    ids[offset + 2] = Color.floatToByte(pickColor.blue);
+                    ids[offset + 3] = Color.floatToByte(pickColor.alpha);
+                    offset += 4;
+                }
+            } else if (defined(feature.pickId)) {
+                pickColor = feature.pickId.color;
+                ids[offset] = Color.floatToByte(pickColor.red);
+                ids[offset + 1] = Color.floatToByte(pickColor.green);
+                ids[offset + 2] = Color.floatToByte(pickColor.blue);
+                ids[offset + 3] = Color.floatToByte(pickColor.alpha);
+                offset += 4;
+            }
+        }
+
+        stage._selectedIdTexture = new Texture({
+            context : context,
+            pixelFormat : PixelFormat.RGBA,
+            pixelDatatype : PixelDatatype.UNSIGNED_BYTE,
+            source : {
+                arrayBufferView : ids,
+                width : textureLength,
+                height : 1
+            },
+            sampler : new Sampler({
+                wrapS : TextureWrap.CLAMP_TO_EDGE,
+                wrapT : TextureWrap.CLAMP_TO_EDGE,
+                minificationFilter : TextureMinificationFilter.NEAREST,
+                magnificationFilter : TextureMagnificationFilter.NEAREST
+            })
+        });
     }
 
     /**
@@ -640,10 +857,21 @@ define([
         this._logDepthChanged = useLogDepth !== this._useLogDepth;
         this._useLogDepth = useLogDepth;
 
+        this._selectedFeaturesDirty = isSelectedTextureDirty(this);
+
+        this._selectedFeaturesShadow = this._selectedFeatures;
+        this._parentSelectedFeaturesShadow = this._parentSelectedFeatures;
+        this._combinedSelectedFeaturesShadow = this._combinedSelectedFeatures;
+        this._selectedFeaturesLength = defined(this._selectedFeatures) ? this._selectedFeatures.length : 0;
+        this._parentSelectedFeaturesLength = defined(this._parentSelectedFeatures) ? this._parentSelectedFeatures.length : 0;
+
+        createSelectedTexture(this, context);
         createUniformMap(this);
         updateUniformTextures(this, context);
         createDrawCommand(this, context);
         createSampler(this);
+
+        this._selectedFeaturesDirty = false;
 
         if (!this._ready) {
             return;
@@ -677,13 +905,14 @@ define([
      * @param {Texture} depthTexture The input depth texture.
      * @private
      */
-    PostProcessStage.prototype.execute = function(context, colorTexture, depthTexture) {
+    PostProcessStage.prototype.execute = function(context, colorTexture, depthTexture, idTexture) {
         if (!defined(this._command) || !defined(this._command.framebuffer) || !this._ready || !this._enabled) {
             return;
         }
 
         this._colorTexture = colorTexture;
         this._depthTexture = depthTexture;
+        this._idTexture = idTexture;
 
         if (!Sampler.equals(this._colorTexture.sampler, this._sampler)) {
             this._colorTexture.sampler = this._sampler;

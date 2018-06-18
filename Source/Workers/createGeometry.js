@@ -1,11 +1,13 @@
 define([
         '../Core/defined',
         '../Scene/PrimitivePipeline',
+        '../ThirdParty/when',
         './createTaskProcessorWorker',
         'require'
     ], function(
         defined,
         PrimitivePipeline,
+        when,
         createTaskProcessorWorker,
         require) {
     'use strict';
@@ -33,7 +35,7 @@ define([
     function createGeometry(parameters, transferableObjects) {
         var subTasks = parameters.subTasks;
         var length = subTasks.length;
-        var results = new Array(length);
+        var resultsOrPromises = new Array(length);
 
         for (var i = 0; i < length; i++) {
             var task = subTasks[i];
@@ -42,14 +44,16 @@ define([
 
             if (defined(moduleName)) {
                 var createFunction = getModule(moduleName);
-                results[i] = createFunction(geometry, task.offset);
+                resultsOrPromises[i] = createFunction(geometry, task.offset);
             } else {
                 //Already created geometry
-                results[i] = geometry;
+                resultsOrPromises[i] = geometry;
             }
         }
 
-        return PrimitivePipeline.packCreateGeometryResults(results, transferableObjects);
+        return when.all(resultsOrPromises, function(results) {
+            return PrimitivePipeline.packCreateGeometryResults(results, transferableObjects);
+        });
     }
 
     return createTaskProcessorWorker(createGeometry);
