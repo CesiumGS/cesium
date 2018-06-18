@@ -559,6 +559,7 @@ define([
                     tile.tilingScheme.ellipsoid,
                     surfaceTile.orientedBoundingBox);
                 surfaceTile.boundingSphere3D = undefined; // TODO: compute the bounding sphere for real, or get rid of it entirely.
+                surfaceTile.occludeePointInScaledSpace = undefined; // TODO
             }
         }
 
@@ -760,12 +761,13 @@ define([
                 }
 
                 var ancestorBvh = ancestorSurfaceTile._bvh;
-                if (ancestorBvh !== undefined) {
-                    tileBoundingRegion.minimumHeight = bvh[0];
-                    tileBoundingRegion.maximumHeight = bvh[1];
+                if (ancestorBvh !== undefined && ancestorBvh[0] === ancestorBvh[0] && ancestorBvh[1] === ancestorBvh[1]) {
+                    tileBoundingRegion.minimumHeight = ancestorBvh[0];
+                    tileBoundingRegion.maximumHeight = ancestorBvh[1];
                     return ancestor;
                 }
             }
+            ancestor = ancestor.parent;
         }
 
         return undefined;
@@ -1074,6 +1076,9 @@ define([
             u_minimumBrightness : function() {
                 return frameState.fog.minimumBrightness;
             },
+            u_textureCoordinateSubset : function() {
+                return this.textureCoordinateSubset;
+            },
 
             // make a separate object so that changes to the properties are seen on
             // derived commands that combine another uniform map with this one.
@@ -1110,7 +1115,8 @@ define([
                 minMaxHeight : new Cartesian2(),
                 scaleAndBias : new Matrix4(),
                 clippingPlanesEdgeColor : Color.clone(Color.WHITE),
-                clippingPlanesEdgeWidth : 0.0
+                clippingPlanesEdgeWidth : 0.0,
+                textureCoordinateSubset : new Cartesian4()
             }
         };
 
@@ -1233,8 +1239,35 @@ define([
     })();
 
     var otherPassesInitialColor = new Cartesian4(0.0, 0.0, 0.0, 0.0);
+    var ancestorSubsetScratch = new Cartesian4();
 
-    function addDrawCommandsForTile(tileProvider, tile, frameState) {
+    function addDrawCommandsForTile(tileProvider, tile, frameState, subset) {
+        if (!tile.renderable) {
+            // We can't render this tile yet, so instead render a subset of our closest renderable ancestor.
+            var ancestor = tile.parent;
+            while (ancestor !== undefined && !ancestor.renderable) {
+                ancestor = ancestor.parent;
+            }
+
+            if (ancestor === undefined) {
+                // Can't find any renderable ancestor. This shouldn't happen because we
+                // don't start tile selection at all until the root tiles are loaded.
+                return;
+            }
+
+            var myRectangle = tile.rectangle;
+            var ancestorRectangle = ancestor.rectangle;
+            var ancestorSubset = ancestorSubsetScratch;
+
+            ancestorSubset.x = (myRectangle.west - ancestorRectangle.west) / (ancestorRectangle.east - ancestorRectangle.west);
+            ancestorSubset.y = (myRectangle.south - ancestorRectangle.south) / (ancestorRectangle.north - ancestorRectangle.south);
+            ancestorSubset.z = (myRectangle.east - ancestorRectangle.west) / (ancestorRectangle.east - ancestorRectangle.west);
+            ancestorSubset.w = (myRectangle.north - ancestorRectangle.south) / (ancestorRectangle.north - ancestorRectangle.south);
+
+            addDrawCommandsForTile(tileProvider, ancestor, frameState, ancestorSubset);
+            return;
+        }
+
         var surfaceTile = tile.data;
         var creditDisplay = frameState.creditDisplay;
 
@@ -1396,6 +1429,10 @@ define([
             uniformMapProperties.southMercatorYAndOneOverHeight.x = southMercatorY;
             uniformMapProperties.southMercatorYAndOneOverHeight.y = oneOverMercatorHeight;
 
+            if (subset !== undefined) {
+                Cartesian4.clone(subset, uniformMap.textureCoordinateSubset);
+            }
+
             // For performance, use fog in the shader only when the tile is in fog.
             var applyFog = enableFog && CesiumMath.fog(tile._distance, frameState.fog.density) > CesiumMath.EPSILON3;
 
@@ -1498,7 +1535,7 @@ define([
                 uniformMap = combine(uniformMap, tileProvider.uniformMap);
             }
 
-            command.shaderProgram = tileProvider._surfaceShaderSet.getShaderProgram(frameState, surfaceTile, numberOfDayTextures, applyBrightness, applyContrast, applyHue, applySaturation, applyGamma, applyAlpha, applySplit, showReflectiveOcean, showOceanWaves, tileProvider.enableLighting, hasVertexNormals, useWebMercatorProjection, applyFog, clippingPlanesEnabled, clippingPlanes);
+            command.shaderProgram = tileProvider._surfaceShaderSet.getShaderProgram(frameState, surfaceTile, numberOfDayTextures, applyBrightness, applyContrast, applyHue, applySaturation, applyGamma, applyAlpha, applySplit, showReflectiveOcean, showOceanWaves, tileProvider.enableLighting, hasVertexNormals, useWebMercatorProjection, applyFog, clippingPlanesEnabled, clippingPlanes, subset !== undefined);
             command.castShadows = castShadows;
             command.receiveShadows = receiveShadows;
             command.renderState = renderState;

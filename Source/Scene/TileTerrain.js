@@ -122,6 +122,11 @@ define([
         var sourceY = parent.y;
         var sourceLevel = parent.level;
 
+        if (sourceData === undefined) {
+            // Parent is not available, so we can't upsample this tile yet.
+            return;
+        }
+
         tileTerrain.data = sourceData.upsample(terrainProvider.tilingScheme, sourceX, sourceY, sourceLevel, x, y, level);
         if (!defined(tileTerrain.data)) {
             // The upsample request has been deferred - try again later.
