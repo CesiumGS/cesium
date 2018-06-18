@@ -500,6 +500,13 @@ define([
             result);
     };
 
+    Cesium3DTileBatchTable.prototype.getPickColor = function(batchId) {
+        //>>includeStart('debug', pragmas.debug);
+        checkBatchId(batchId, this.featuresLength);
+        //>>includeEnd('debug');
+        return this._pickIds[batchId];
+    };
+
     var scratchColor = new Color();
 
     Cesium3DTileBatchTable.prototype.applyStyle = function(frameState, style) {
@@ -873,6 +880,7 @@ define([
                 newMain +=
                     'uniform sampler2D tile_batchTexture; \n' +
                     'varying vec4 tile_featureColor; \n' +
+                    'varying vec2 tile_featureSt; \n' +
                     'void main() \n' +
                     '{ \n' +
                     '    vec2 st = computeSt(' + batchIdAttributeName + '); \n' +
@@ -900,6 +908,7 @@ define([
                 }
                 newMain +=
                     '    tile_featureColor = featureProperties; \n' +
+                    '    tile_featureSt = st; \n' +
                     '}';
             } else {
                 // When VTF is not supported, color blend mode MIX will look incorrect due to the feature's color not being available in the vertex shader
@@ -1035,6 +1044,8 @@ define([
             if (ContextLimits.maximumVertexTextureImageUnits > 0) {
                 // When VTF is supported, per-feature show/hide already happened in the fragment shader
                 source +=
+                    'uniform sampler2D tile_pickTexture; \n' +
+                    'varying vec2 tile_featureSt; \n' +
                     'varying vec4 tile_featureColor; \n' +
                     'void main() \n' +
                     '{ \n' +
@@ -1045,6 +1056,7 @@ define([
                     source += 'uniform bool tile_translucentCommand; \n';
                 }
                 source +=
+                    'uniform sampler2D tile_pickTexture; \n' +
                     'uniform sampler2D tile_batchTexture; \n' +
                     'varying vec2 tile_featureSt; \n' +
                     'void main() \n' +
@@ -1090,6 +1102,8 @@ define([
             if (ContextLimits.maximumVertexTextureImageUnits > 0) {
                 // When VTF is supported, per-feature show/hide already happened in the fragment shader
                 source +=
+                    'uniform sampler2D tile_pickTexture;\n' +
+                    'varying vec2 tile_featureSt; \n' +
                     'varying vec4 tile_featureColor; \n' +
                     'void main() \n' +
                     '{ \n' +
@@ -1099,6 +1113,7 @@ define([
             } else {
                 source +=
                     'uniform sampler2D tile_batchTexture; \n' +
+                    'uniform sampler2D tile_pickTexture;\n' +
                     'varying vec2 tile_featureSt; \n' +
                     'void main() \n' +
                     '{ \n' +
@@ -1153,6 +1168,9 @@ define([
                 },
                 tile_colorBlend : function() {
                     return getColorBlend(that);
+                },
+                tile_pickTexture : function() {
+                    return that._pickTexture;
                 }
             };
 
@@ -1160,156 +1178,8 @@ define([
         };
     };
 
-    Cesium3DTileBatchTable.prototype.getPickVertexShaderCallback = function(batchIdAttributeName) {
-        if (this.featuresLength === 0) {
-            return;
-        }
-
-        var that = this;
-        return function(source) {
-            var renamedSource = ShaderSource.replaceMain(source, 'tile_main');
-            var newMain;
-
-            if (ContextLimits.maximumVertexTextureImageUnits > 0) {
-                // When VTF is supported, perform per-feature show/hide in the vertex shader
-                newMain =
-                    'uniform sampler2D tile_batchTexture; \n' +
-                    'varying vec2 tile_featureSt; \n' +
-                    'void main() \n' +
-                    '{ \n' +
-                    '    tile_main(); \n' +
-                    '    vec2 st = computeSt(' + batchIdAttributeName + '); \n' +
-                    '    vec4 featureProperties = texture2D(tile_batchTexture, st); \n' +
-                    '    float show = ceil(featureProperties.a); \n' +    // 0 - false, non-zero - true
-                    '    gl_Position *= show; \n' +                       // Per-feature show/hide
-                    '    tile_featureSt = st; \n' +
-                    '}';
-            } else {
-                newMain =
-                    'varying vec2 tile_featureSt; \n' +
-                    'void main() \n' +
-                    '{ \n' +
-                    '    tile_main(); \n' +
-                    '    tile_featureSt = computeSt(' + batchIdAttributeName + '); \n' +
-                    '}';
-            }
-
-            return renamedSource + '\n' + getGlslComputeSt(that) + newMain;
-        };
-    };
-
-    Cesium3DTileBatchTable.prototype.getPickFragmentShaderCallback = function() {
-        if (this.featuresLength === 0) {
-            return;
-        }
-
-        return function(source) {
-            var renamedSource = ShaderSource.replaceMain(source, 'tile_main');
-            var newMain;
-
-            // Pick shaders do not need to take into account per-feature color/alpha.
-            // (except when alpha is zero, which is treated as if show is false, so
-            //  it does not write depth in the color or pick pass).
-            if (ContextLimits.maximumVertexTextureImageUnits > 0) {
-                // When VTF is supported, per-feature show/hide already happened in the fragment shader
-                newMain =
-                    'uniform sampler2D tile_pickTexture; \n' +
-                    'varying vec2 tile_featureSt; \n' +
-                    'void main() \n' +
-                    '{ \n' +
-                    '    tile_main(); \n' +
-                    '    if (gl_FragColor.a == 0.0) { \n' + // per-feature show: alpha == 0 - false, non-zeo - true
-                    '        discard; \n' +
-                    '    } \n' +
-                    '    gl_FragColor = texture2D(tile_pickTexture, tile_featureSt); \n' +
-                    '}';
-            } else {
-                newMain =
-                    'uniform sampler2D tile_pickTexture; \n' +
-                    'uniform sampler2D tile_batchTexture; \n' +
-                    'varying vec2 tile_featureSt; \n' +
-                    'void main() \n' +
-                    '{ \n' +
-                    '    vec4 featureProperties = texture2D(tile_batchTexture, tile_featureSt); \n' +
-                    '    if (featureProperties.a == 0.0) { \n' +  // per-feature show: alpha == 0 - false, non-zeo - true
-                    '        discard; \n' +
-                    '    } \n' +
-                    '    tile_main(); \n' +
-                    '    if (gl_FragColor.a == 0.0) { \n' +
-                    '        discard; \n' +
-                    '    } \n' +
-                    '    gl_FragColor = texture2D(tile_pickTexture, tile_featureSt); \n' +
-                    '}';
-            }
-
-            return renamedSource + '\n' + newMain;
-        };
-    };
-
-    Cesium3DTileBatchTable.prototype.getPickVertexShaderCallbackIgnoreShow = function(batchIdAttributeName) {
-        if (this.featuresLength === 0) {
-            return;
-        }
-
-        var that = this;
-        return function(source) {
-            var renamedSource = ShaderSource.replaceMain(source, 'tile_main');
-            var newMain =
-                'varying vec2 tile_featureSt; \n' +
-                'void main() \n' +
-                '{ \n' +
-                '    tile_main(); \n' +
-                '    tile_featureSt = computeSt(' + batchIdAttributeName + '); \n' +
-                '}';
-
-            return renamedSource + '\n' + getGlslComputeSt(that) + newMain;
-        };
-    };
-
-    Cesium3DTileBatchTable.prototype.getPickFragmentShaderCallbackIgnoreShow = function() {
-        if (this.featuresLength === 0) {
-            return;
-        }
-
-        return function(source) {
-            var renamedSource = ShaderSource.replaceMain(source, 'tile_main');
-            var newMain =
-                'uniform sampler2D tile_pickTexture; \n' +
-                'varying vec2 tile_featureSt; \n' +
-                'void main() \n' +
-                '{ \n' +
-                '    tile_main(); \n' +
-                '    gl_FragColor = texture2D(tile_pickTexture, tile_featureSt); \n' +
-                '}';
-
-            return renamedSource + '\n' + newMain;
-        };
-    };
-
-    Cesium3DTileBatchTable.prototype.getPickUniformMapCallback = function() {
-        if (this.featuresLength === 0) {
-            return;
-        }
-
-        var that = this;
-        return function(uniformMap) {
-            var batchUniformMap = {
-                tile_batchTexture : function() {
-                    return defaultValue(that._batchTexture, that._defaultTexture);
-                },
-                tile_textureDimensions : function() {
-                    return that._textureDimensions;
-                },
-                tile_textureStep : function() {
-                    return that._textureStep;
-                },
-                tile_pickTexture : function() {
-                    return that._pickTexture;
-                }
-            };
-
-            return combine(batchUniformMap, uniformMap);
-        };
+    Cesium3DTileBatchTable.prototype.getPickId = function() {
+        return 'texture2D(tile_pickTexture, tile_featureSt)';
     };
 
     ///////////////////////////////////////////////////////////////////////////
@@ -1578,8 +1448,8 @@ define([
         var context = frameState.context;
         this._defaultTexture = context.defaultTexture;
 
-        if (frameState.passes.pick) {
-            // Create pick texture on-demand
+        var passes = frameState.passes;
+        if (passes.pick || passes.postProcess) {
             createPickTexture(this, context);
         }
 

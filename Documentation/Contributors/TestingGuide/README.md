@@ -106,7 +106,7 @@ However, many users build apps using the built Cesium.js in `Build/Cesium` (whic
 
 The **Run All Tests against Combined File with Debug Code Removed** is the same except it is for use with the release version of the built Cesium.js (which is created, for example, by running `npm run combineRelease`).  The release version has `DeveloperError` exceptions optimized out so this test option makes `toThrowDeveloperError` always pass.
 
-See the [Contributor's Guide](https://github.com/AnalyticalGraphicsInc/cesium/wiki/Contributor%27s-Guide) for all the CesiumJS build options.
+See the [Build Guide](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Documentation/Contributors/BuildGuide/README.md#build-scripts) for all the CesiumJS build options.
 
 ### Run All Tests with Code Coverage (Build 'instrumentForCoverage' First)
 

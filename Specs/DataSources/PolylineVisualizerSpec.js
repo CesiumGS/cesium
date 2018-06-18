@@ -1,5 +1,6 @@
 defineSuite([
         'DataSources/PolylineVisualizer',
+        'Core/ApproximateTerrainHeights',
         'Core/BoundingSphere',
         'Core/Cartesian3',
         'Core/Color',
@@ -14,12 +15,7 @@ defineSuite([
         'DataSources/Entity',
         'DataSources/EntityCollection',
         'DataSources/PolylineArrowMaterialProperty',
-        'DataSources/PolylineGeometryUpdater',
         'DataSources/PolylineGraphics',
-        'DataSources/SampledProperty',
-        'DataSources/StaticGeometryColorBatch',
-        'DataSources/StaticGeometryPerMaterialBatch',
-        'DataSources/StaticOutlineGeometryBatch',
         'Scene/PolylineColorAppearance',
         'Scene/PolylineMaterialAppearance',
         'Scene/ShadowMode',
@@ -28,6 +24,7 @@ defineSuite([
         'Specs/pollToPromise'
     ], function(
         PolylineVisualizer,
+        ApproximateTerrainHeights,
         BoundingSphere,
         Cartesian3,
         Color,
@@ -42,12 +39,7 @@ defineSuite([
         Entity,
         EntityCollection,
         PolylineArrowMaterialProperty,
-        PolylineGeometryUpdater,
         PolylineGraphics,
-        SampledProperty,
-        StaticGeometryColorBatch,
-        StaticGeometryPerMaterialBatch,
-        StaticOutlineGeometryBatch,
         PolylineColorAppearance,
         PolylineMaterialAppearance,
         ShadowMode,
@@ -61,10 +53,15 @@ defineSuite([
     var scene;
     beforeAll(function() {
         scene = createScene();
+
+        ApproximateTerrainHeights.initialize();
     });
 
     afterAll(function() {
         scene.destroyForSpecs();
+
+        ApproximateTerrainHeights._initPromise = undefined;
+        ApproximateTerrainHeights._terrainHeights = undefined;
     });
 
     it('Can create and destroy', function() {
@@ -149,6 +146,50 @@ defineSuite([
                 expect(visualizer.update(time)).toBe(true);
                 scene.render(time);
                 return scene.primitives.length === 0;
+            }).then(function(){
+                visualizer.destroy();
+            });
+        });
+    });
+
+    it('Creates and removes static polylines on terrain', function() {
+        if (!Entity.supportsPolylinesOnTerrain(scene)) {
+            return;
+        }
+
+        var objects = new EntityCollection();
+        var visualizer = new PolylineVisualizer(scene, objects, scene.groundPrimitives);
+
+        var polyline = new PolylineGraphics();
+        polyline.positions = new ConstantProperty([Cartesian3.fromDegrees(0.0, 0.0), Cartesian3.fromDegrees(0.0, 1.0)]);
+        polyline.material = new ColorMaterialProperty();
+        polyline.clampToGround = new ConstantProperty(true);
+
+        var entity = new Entity();
+        entity.polyline = polyline;
+        objects.add(entity);
+
+        return pollToPromise(function() {
+            scene.initializeFrame();
+            var isUpdated = visualizer.update(time);
+            scene.render(time);
+            return isUpdated;
+        }).then(function() {
+            var primitive = scene.groundPrimitives.get(0);
+            var attributes = primitive.getGeometryInstanceAttributes(entity);
+            expect(attributes).toBeDefined();
+            expect(attributes.show).toEqual(ShowGeometryInstanceAttribute.toValue(true));
+            expect(attributes.color).toEqual(ColorGeometryInstanceAttribute.toValue(Color.WHITE));
+            expect(primitive.appearance).toBeInstanceOf(PolylineColorAppearance);
+            expect(primitive.appearance.closed).toBe(false);
+
+            objects.remove(entity);
+
+            return pollToPromise(function() {
+                scene.initializeFrame();
+                expect(visualizer.update(time)).toBe(true);
+                scene.render(time);
+                return scene.groundPrimitives.length === 0;
             }).then(function(){
                 visualizer.destroy();
             });
@@ -468,6 +509,7 @@ defineSuite([
     it('removes the listener from the entity collection when destroyed', function() {
         var entityCollection = new EntityCollection();
         var visualizer = new PolylineVisualizer(scene, entityCollection);
+
         expect(entityCollection.collectionChanged.numberOfListeners).toEqual(1);
         visualizer.destroy();
         expect(entityCollection.collectionChanged.numberOfListeners).toEqual(0);
@@ -529,7 +571,7 @@ defineSuite([
         visualizer.destroy();
     });
 
-    it('Can remove and entity and then add a new new instance with the same id.', function() {
+    it('Can remove an entity and then add a new instance with the same id.', function() {
         var objects = new EntityCollection();
         var visualizer = new PolylineVisualizer(scene, objects);
 

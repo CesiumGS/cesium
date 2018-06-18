@@ -65,11 +65,9 @@ define([
             opaquePass : Pass.CESIUM_3D_TILE,
             vertexShaderLoaded : getVertexShaderLoaded(this),
             fragmentShaderLoaded : getFragmentShaderLoaded(this),
-            pickVertexShaderLoaded : getPickVertexShaderLoaded(this),
-            pickFragmentShaderLoaded : getPickFragmentShaderLoaded(this),
             uniformMapLoaded : getUniformMapLoaded(this),
-            pickUniformMapLoaded : getPickUniformMapLoaded(this),
-            batchTableLoaded : getBatchTableLoaded(this)
+            batchTableLoaded : getBatchTableLoaded(this),
+            pickIdLoaded : getPickIdLoaded(this)
         });
     }
 
@@ -167,25 +165,7 @@ define([
             if (defined(content._batchTable)) {
                 return content._batchTable.getFragmentShaderCallback(false, undefined)(fs);
             }
-            return fs;
-        };
-    }
-
-    function getPickVertexShaderLoaded(content) {
-        return function(vs) {
-            if (defined(content._batchTable)) {
-                return content._batchTable.getPickVertexShaderCallback('a_batchId')(vs);
-            }
-            return vs;
-        };
-    }
-
-    function getPickFragmentShaderLoaded(content) {
-        return function(fs) {
-            if (defined(content._batchTable)) {
-                return content._batchTable.getPickFragmentShaderCallback()(fs);
-            }
-            return ShaderSource.createPickFragmentShaderSource(fs, 'uniform');
+            return 'uniform vec4 czm_pickColor;\n' + fs;
         };
     }
 
@@ -193,15 +173,6 @@ define([
         return function(uniformMap) {
             if (defined(content._batchTable)) {
                 return content._batchTable.getUniformMapCallback()(uniformMap);
-            }
-            return uniformMap;
-        };
-    }
-
-    function getPickUniformMapLoaded(content) {
-        return function(uniformMap) {
-            if (defined(content._batchTable)) {
-                return content._batchTable.getPickUniformMapCallback()(uniformMap);
             }
             return combine(uniformMap, {
                 czm_pickColor : function() {
@@ -214,6 +185,12 @@ define([
     function getBatchTableLoaded(content) {
         return function(batchLength, batchTableJson, batchTableBinary) {
             content._batchTable = new Cesium3DTileBatchTable(content, batchLength, batchTableJson, batchTableBinary);
+        };
+    }
+
+    function getPickIdLoaded(content) {
+        return function() {
+            return defined(content._batchTable) ? content._batchTable.getPickId() : 'czm_pickColor';
         };
     }
 

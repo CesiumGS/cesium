@@ -88,7 +88,7 @@ define([
     ///////////////////////////////////////////////////////////////////////////
 
     /**
-     * A 3D model for classifying other 3D assets based on glTF, the runtime asset format for WebGL, OpenGL ES, and OpenGL.
+     * A 3D model for classifying other 3D assets based on glTF, the runtime 3D asset format.
      * This is a special case when a model of a 3D tileset becomes a classifier when setting {@link Cesium3DTileset#classificationType}.
      *
      * @alias ClassificationModel
@@ -224,9 +224,7 @@ define([
         this._vertexShaderLoaded = options.vertexShaderLoaded;
         this._classificationShaderLoaded = options.classificationShaderLoaded;
         this._uniformMapLoaded = options.uniformMapLoaded;
-        this._pickVertexShaderLoaded = options.pickVertexShaderLoaded;
-        this._pickFragmentShaderLoaded = options.pickFragmentShaderLoaded;
-        this._pickUniformMapLoaded = options.pickUniformMapLoaded;
+        this._pickIdLoaded = options.pickIdLoaded;
         this._ignoreCommands = defaultValue(options.ignoreCommands, false);
         this._upAxis = defaultValue(options.upAxis, Axis.Y);
         this._batchTable = options.batchTable;
@@ -251,7 +249,6 @@ define([
         this._buffers = {};
         this._vertexArray = undefined;
         this._shaderProgram = undefined;
-        this._pickShaderProgram = undefined;
         this._uniformMap = undefined;
 
         this._geometryByteLength = 0;
@@ -728,19 +725,6 @@ define([
             fragmentShaderSource : drawFS,
             attributeLocations : attributeLocations
         };
-
-        // PERFORMANCE_IDEA: Can optimize this shader with a glTF hint. https://github.com/KhronosGroup/glTF/issues/181
-        var pickVS = modifyShader(vs, model._pickVertexShaderLoaded);
-        var pickFS = modifyShader(fs, model._pickFragmentShaderLoaded);
-
-        pickVS = ModelUtility.modifyVertexShaderForLogDepth(pickVS, toClip);
-        pickFS = ModelUtility.modifyFragmentShaderForLogDepth(pickFS);
-
-        model._pickShaderProgram = {
-            vertexShaderSource : pickVS,
-            fragmentShaderSource : pickFS,
-            attributeLocations : attributeLocations
-        };
     }
 
     function getAttributeLocations() {
@@ -974,20 +958,7 @@ define([
         var vertexShaderSource = shader.vertexShaderSource;
         var fragmentShaderSource = shader.fragmentShaderSource;
         var attributeLocations = shader.attributeLocations;
-
-        var pickUniformMap;
-        var pickShader = model._pickShaderProgram;
-        var pickVertexShaderSource = pickShader.vertexShaderSource;
-        var pickFragmentShaderSource = pickShader.fragmentShaderSource;
-
-        if (defined(model._pickUniformMapLoaded)) {
-            pickUniformMap = model._pickUniformMapLoaded(uniformMap);
-        } else {
-            // This is unlikely, but could happen if the override shader does not
-            // need new uniforms since, for example, its pick ids are coming from
-            // a vertex attribute or are baked into the shader source.
-            pickUniformMap = combine(uniformMap);
-        }
+        var pickId = defined(model._pickIdLoaded) ? model._pickIdLoaded() : undefined;
 
         model._primitive = new Vector3DTilePrimitive({
             classificationType : model._classificationType,
@@ -1003,10 +974,8 @@ define([
             _vertexShaderSource : vertexShaderSource,
             _fragmentShaderSource : fragmentShaderSource,
             _attributeLocations : attributeLocations,
-            _pickVertexShaderSource : pickVertexShaderSource,
-            _pickFragmentShaderSource : pickFragmentShaderSource,
             _uniformMap : uniformMap,
-            _pickUniformMap : pickUniformMap,
+            _pickId : pickId,
             _modelMatrix : new Matrix4(), // updated in update()
             _boundingSphere : boundingSphere // used to update boundingVolume
         });
@@ -1015,7 +984,6 @@ define([
         model._buffers = undefined;
         model._vertexArray = undefined;
         model._shaderProgram = undefined;
-        model._pickShaderProgram = undefined;
         model._uniformMap = undefined;
     }
 

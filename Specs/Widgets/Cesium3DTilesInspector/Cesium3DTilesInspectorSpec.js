@@ -13,7 +13,7 @@ defineSuite([
     'use strict';
 
     // Parent tile with content and four child tiles with content
-    var tilesetUrl = './Data/Cesium3DTiles/Tilesets/Tileset/';
+    var tilesetUrl = './Data/Cesium3DTiles/Tilesets/Tileset/tileset.json';
 
     var scene;
     beforeAll(function() {

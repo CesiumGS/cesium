@@ -114,7 +114,6 @@ define([
         this._parsedContent = undefined;
 
         this._drawCommand = undefined;
-        this._pickCommand = undefined;
         this._isTranslucent = false;
         this._styleTranslucent = false;
         this._constantColor = Color.clone(Color.DARKGRAY);
@@ -158,11 +157,9 @@ define([
 
         this._vertexShaderLoaded = options.vertexShaderLoaded;
         this._fragmentShaderLoaded = options.fragmentShaderLoaded;
-        this._pickVertexShaderLoaded = options.pickVertexShaderLoaded;
-        this._pickFragmentShaderLoaded = options.pickFragmentShaderLoaded;
         this._uniformMapLoaded = options.uniformMapLoaded;
-        this._pickUniformMapLoaded = options.pickUniformMapLoaded;
         this._batchTableLoaded = options.batchTableLoaded;
+        this._pickIdLoaded = options.pickIdLoaded;
         this._opaquePass = defaultValue(options.opaquePass, Pass.OPAQUE);
 
         this.style = undefined;
@@ -738,16 +735,8 @@ define([
             attributes : attributes
         });
 
-        var drawUniformMap = uniformMap;
-
         if (defined(pointCloud._uniformMapLoaded)) {
-            drawUniformMap = pointCloud._uniformMapLoaded(uniformMap);
-        }
-
-        var pickUniformMap = uniformMap;
-
-        if (defined(pointCloud._pickUniformMapLoaded)) {
-            pickUniformMap = pointCloud._pickUniformMapLoaded(uniformMap);
+            uniformMap = pointCloud._uniformMapLoaded(uniformMap);
         }
 
         pointCloud._opaqueRenderState = RenderState.fromCache({
@@ -772,26 +761,13 @@ define([
             vertexArray : vertexArray,
             count : pointsLength,
             shaderProgram : undefined, // Updated in createShaders
-            uniformMap : drawUniformMap,
+            uniformMap : uniformMap,
             renderState : isTranslucent ? pointCloud._translucentRenderState : pointCloud._opaqueRenderState,
             pass : isTranslucent ? Pass.TRANSLUCENT : pointCloud._opaquePass,
             owner : pointCloud,
             castShadows : false,
-            receiveShadows : false
-        });
-
-        pointCloud._pickCommand = new DrawCommand({
-            boundingVolume : undefined, // Updated in update
-            cull : false, // Already culled by 3D Tiles
-            modelMatrix : new Matrix4(),
-            primitiveType : PrimitiveType.POINTS,
-            vertexArray : vertexArray,
-            count : pointsLength,
-            shaderProgram : undefined, // Updated in createShaders
-            uniformMap : pickUniformMap,
-            renderState : isTranslucent ? pointCloud._translucentRenderState : pointCloud._opaqueRenderState,
-            pass : isTranslucent ? Pass.TRANSLUCENT : pointCloud._opaquePass,
-            owner : pointCloud
+            receiveShadows : false,
+            pickId : pointCloud._pickIdLoaded()
         });
     }
 
@@ -1131,26 +1107,12 @@ define([
 
         fs += '} \n';
 
-        var drawVS = vs;
-        var drawFS = fs;
-
         if (defined(pointCloud._vertexShaderLoaded)) {
-            drawVS = pointCloud._vertexShaderLoaded(vs);
+            vs = pointCloud._vertexShaderLoaded(vs);
         }
 
         if (defined(pointCloud._fragmentShaderLoaded)) {
-            drawFS = pointCloud._fragmentShaderLoaded(fs);
-        }
-
-        var pickVS = vs;
-        var pickFS = fs;
-
-        if (defined(pointCloud._pickVertexShaderLoaded)) {
-            pickVS = pointCloud._pickVertexShaderLoaded(vs);
-        }
-
-        if (defined(pointCloud._pickFragmentShaderLoaded)) {
-            pickFS = pointCloud._pickFragmentShaderLoaded(fs);
+            fs = pointCloud._fragmentShaderLoaded(fs);
         }
 
         var drawCommand = pointCloud._drawCommand;
@@ -1160,20 +1122,8 @@ define([
         }
         drawCommand.shaderProgram = ShaderProgram.fromCache({
             context : context,
-            vertexShaderSource : drawVS,
-            fragmentShaderSource : drawFS,
-            attributeLocations : attributeLocations
-        });
-
-        var pickCommand = pointCloud._pickCommand;
-        if (defined(pickCommand.shaderProgram)) {
-            // Destroy the old shader
-            pickCommand.shaderProgram.destroy();
-        }
-        pickCommand.shaderProgram = ShaderProgram.fromCache({
-            context : context,
-            vertexShaderSource : pickVS,
-            fragmentShaderSource : pickFS,
+            vertexShaderSource : vs,
+            fragmentShaderSource : fs,
             attributeLocations : attributeLocations
         });
 
@@ -1293,10 +1243,8 @@ define([
             }
 
             Matrix4.clone(modelMatrix, this._drawCommand.modelMatrix);
-            Matrix4.clone(modelMatrix, this._pickCommand.modelMatrix);
 
             this._drawCommand.boundingVolume = this.boundingVolume;
-            this._pickCommand.boundingVolume = this.boundingVolume;
         }
 
         if (this.clippingPlanesDirty) {
@@ -1333,11 +1281,8 @@ define([
         var commandList = frameState.commandList;
 
         var passes = frameState.passes;
-        if (passes.render) {
+        if (passes.render || passes.pick) {
             commandList.push(this._drawCommand);
-        }
-        if (passes.pick) {
-            commandList.push(this._pickCommand);
         }
     };
 
@@ -1347,11 +1292,9 @@ define([
 
     PointCloud.prototype.destroy = function() {
         var command = this._drawCommand;
-        var pickCommand = this._pickCommand;
         if (defined(command)) {
             command.vertexArray = command.vertexArray && command.vertexArray.destroy();
             command.shaderProgram = command.shaderProgram && command.shaderProgram.destroy();
-            pickCommand.shaderProgram = pickCommand.shaderProgram && pickCommand.shaderProgram.destroy();
         }
         return destroyObject(this);
     };

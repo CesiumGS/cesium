@@ -508,18 +508,22 @@ define([
     };
 
     Vector3DTileContent.prototype.update = function(tileset, frameState) {
-        if (defined(this._batchTable)) {
-            this._batchTable.update(tileset, frameState);
-        }
+        var ready = true;
         if (defined(this._polygons)) {
             this._polygons.classificationType = this._tileset.classificationType;
             this._polygons.update(frameState);
+            ready = ready && this._polygons._ready;
         }
         if (defined(this._polylines)) {
             this._polylines.update(frameState);
+            ready = ready && this._polylines._ready;
         }
         if (defined(this._points)) {
             this._points.update(frameState);
+            ready = ready && this._points._ready;
+        }
+        if (defined(this._batchTable) && ready) {
+            this._batchTable.update(tileset, frameState);
         }
 
         if (!defined(this._contentReadyPromise)) {
