@@ -81,7 +81,7 @@ void main()
         vec2 adjustedST = v_textureCoordinates - v_textureCoordinateBounds.xy;
         adjustedST = adjustedST / vec2(v_textureCoordinateBounds.z - v_textureCoordinateBounds.x, v_textureCoordinateBounds.w - v_textureCoordinateBounds.y);
 
-        float epsilonEyeDepth = v_eyeDepthAndDistance.x + czm_epsilon5;
+        float epsilonEyeDepth = v_eyeDepthAndDistance.x + czm_epsilon1;
         float globeDepth1 = getGlobeDepth(adjustedST, v_originTextureCoordinateAndTranslate.xy);
 
         // negative values go into the screen
