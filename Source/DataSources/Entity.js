@@ -12,6 +12,7 @@ define([
         '../Core/Quaternion',
         '../Core/Transforms',
         '../Scene/GroundPrimitive',
+        '../Scene/GroundPolylinePrimitive',
         './BillboardGraphics',
         './BoxGraphics',
         './ConstantPositionProperty',
@@ -47,6 +48,7 @@ define([
         Quaternion,
         Transforms,
         GroundPrimitive,
+        GroundPolylinePrimitive,
         BillboardGraphics,
         BoxGraphics,
         ConstantPositionProperty,
@@ -629,6 +631,18 @@ define([
      */
     Entity.supportsMaterialsforEntitiesOnTerrain = function(scene) {
         return GroundPrimitive.supportsMaterials(scene);
+    };
+
+    /**
+     * Checks if the given Scene supports polylines clamped to the ground..
+     * If this feature is not supported, Entities with PolylineGraphics will be rendered with vertices at
+     * the provided heights and using the `followSurface` parameter instead of clamped to the ground.
+     *
+     * @param {Scene} scene The current scene.
+     * @returns {Boolean} Whether or not the current scene supports Polylines on Terrain.
+     */
+    Entity.supportsPolylinesOnTerrain = function(scene) {
+        return GroundPolylinePrimitive.isSupported(scene);
     };
 
     return Entity;

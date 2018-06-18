@@ -364,6 +364,17 @@ define([
         return GroundPolylinePrimitive._initPromise;
     };
 
+    /**
+     * Synchronous check for if GroundPolylinePrimitive is initialized and
+     * synchronous GroundPolylinePrimitives can be created.
+     *
+     * @returns {Boolean} Whether GroundPolylinePrimitive is initialized.
+     * @private
+     */
+    GroundPolylinePrimitive._isInitialized = function() {
+        return GroundPolylinePrimitive._initialized;
+    };
+
     // For use with web workers.
     GroundPolylinePrimitive._initializeTerrainHeightsWorker = function() {
         var initPromise = GroundPolylinePrimitive._initPromise;
