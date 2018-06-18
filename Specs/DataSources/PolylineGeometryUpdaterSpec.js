@@ -25,9 +25,11 @@ defineSuite([
         'DataSources/SampledProperty',
         'DataSources/TimeIntervalCollectionProperty',
         'Scene/Globe',
+        'Scene/GroundPolylinePrimitive',
         'Scene/ShadowMode',
         'Specs/createDynamicProperty',
-        'Specs/createScene'
+        'Specs/createScene',
+        'Specs/pollToPromise'
     ], function(
         PolylineGeometryUpdater,
         ApproximateTerrainHeights,
@@ -55,20 +57,25 @@ defineSuite([
         SampledProperty,
         TimeIntervalCollectionProperty,
         Globe,
+        GroundPolylinePrimitive,
         ShadowMode,
         createDynamicProperty,
-        createScene) {
+        createScene,
+        pollToPromise) {
     'use strict';
 
     var scene;
     beforeAll(function(){
         scene = createScene();
         scene.globe = new Globe();
-        return ApproximateTerrainHeights.initialize();
+        return GroundPolylinePrimitive.initializeTerrainHeights();
     });
 
     afterAll(function(){
         scene.destroyForSpecs();
+
+        GroundPolylinePrimitive._initPromise = undefined;
+        GroundPolylinePrimitive._initialized = false;
 
         ApproximateTerrainHeights._initPromise = undefined;
         ApproximateTerrainHeights._terrainHeights = undefined;
@@ -76,18 +83,20 @@ defineSuite([
 
     beforeEach(function() {
         scene.primitives.removeAll();
+        scene.groundPrimitives.removeAll();
     });
 
     var time = JulianDate.now();
 
-    function createBasicPolyline() {
-        var polyline = new PolylineGraphics();
-        polyline.positions = new ConstantProperty(Cartesian3.fromRadiansArray([
+    var basicPositions = Cartesian3.fromRadiansArray([
             0, 0,
             1, 0,
             1, 1,
             0, 1
-        ]));
+    ]);
+    function createBasicPolyline() {
+        var polyline = new PolylineGraphics();
+        polyline.positions = new ConstantProperty(basicPositions);
         var entity = new Entity();
         entity.polyline = polyline;
         return entity;
@@ -481,10 +490,10 @@ defineSuite([
 
         var dynamicUpdater = updater.createDynamicUpdater(primitives, scene.groundPrimitives);
         expect(dynamicUpdater.isDestroyed()).toBe(false);
-        expect(primitives.length).toBe(1);
 
         dynamicUpdater.update(time2);
 
+        expect(primitives.length).toBe(1);
         var polylineCollection = primitives.get(0);
         var primitive = polylineCollection.get(0);
 
@@ -538,8 +547,6 @@ defineSuite([
         expect(dynamicUpdater.isDestroyed()).toBe(false);
         expect(groundPrimitives.length).toBe(0);
 
-        // Update twice for terrain heights initialization
-        dynamicUpdater.update(time);
         dynamicUpdater.update(time);
 
         expect(groundPrimitives.length).toBe(1);
@@ -554,6 +561,62 @@ defineSuite([
 
         dynamicUpdater.destroy();
         updater.destroy();
+    });
+
+    it('initializes terrain heights when clampToGround is dynamic', function() {
+        if (!Entity.supportsPolylinesOnTerrain(scene)) {
+            return;
+        }
+
+        var approximateTerrainHeightsInitPromise = ApproximateTerrainHeights._initPromise;
+        var approximateTerrainHeightsTerrainHeights = ApproximateTerrainHeights._terrainHeights;
+        var groundPolylinePrimitiveInitPromise = GroundPolylinePrimitive._initPromise;
+
+        ApproximateTerrainHeights._initPromise = undefined;
+        ApproximateTerrainHeights._terrainHeights = undefined;
+        GroundPolylinePrimitive._initPromise = undefined;
+        GroundPolylinePrimitive._initialized = false;
+
+        var entity = new Entity();
+        var polyline = new PolylineGraphics();
+        entity.polyline = polyline;
+
+        var time = new JulianDate(0, 0);
+
+        var isClampedToGround = true;
+        var clampToGround = new CallbackProperty(function() {
+            return isClampedToGround;
+        }, false);
+
+        polyline.show = new ConstantProperty(true);
+        polyline.width = new ConstantProperty(1.0);
+        polyline.positions = new ConstantProperty([Cartesian3.fromDegrees(0, 0, 0), Cartesian3.fromDegrees(0, 1, 0)]);
+        polyline.material = new ColorMaterialProperty(Color.RED);
+        polyline.followSurface = new ConstantProperty(false);
+        polyline.granularity = new ConstantProperty(0.001);
+        polyline.clampToGround = clampToGround;
+
+        var updater = new PolylineGeometryUpdater(entity, scene);
+
+        var groundPrimitives = scene.groundPrimitives;
+        expect(groundPrimitives.length).toBe(0);
+
+        var dynamicUpdater = updater.createDynamicUpdater(scene.primitives, groundPrimitives);
+        expect(dynamicUpdater.isDestroyed()).toBe(false);
+        expect(groundPrimitives.length).toBe(0);
+
+        dynamicUpdater.update(time);
+
+        expect(ApproximateTerrainHeights._initPromise).toBeDefined();
+        expect(GroundPolylinePrimitive._initPromise).toBeDefined();
+
+        dynamicUpdater.destroy();
+        updater.destroy();
+
+        ApproximateTerrainHeights._initPromise = approximateTerrainHeightsInitPromise;
+        ApproximateTerrainHeights._terrainHeights = approximateTerrainHeightsTerrainHeights;
+        GroundPolylinePrimitive._initPromise = groundPolylinePrimitiveInitPromise;
+        GroundPolylinePrimitive._initialized = true;
     });
 
     it('geometryChanged event is raised when expected', function() {
@@ -685,6 +748,38 @@ defineSuite([
 
         updater.destroy();
         scene.primitives.removeAll();
+    });
+
+    it('Computes dynamic geometry bounding sphere on terrain.', function() {
+        if (!Entity.supportsPolylinesOnTerrain(scene)) {
+            return;
+        }
+
+        var entity = createBasicPolyline();
+        entity.polyline.width = createDynamicProperty(1);
+        entity.polyline.clampToGround = true;
+
+        var updater = new PolylineGeometryUpdater(entity, scene);
+        var dynamicUpdater = updater.createDynamicUpdater(scene.primitives, scene.groundPrimitives);
+        dynamicUpdater.update(time);
+
+        var result = new BoundingSphere(0);
+        var state = dynamicUpdater.getBoundingSphere(result);
+        expect(state).toBe(BoundingSphereState.PENDING);
+
+        return pollToPromise(function() {
+            scene.initializeFrame();
+            scene.render();
+            state = dynamicUpdater.getBoundingSphere(result);
+            return state !== BoundingSphereState.PENDING;
+        }).then(function() {
+            var primitive = scene.groundPrimitives.get(0);
+            expect(state).toBe(BoundingSphereState.DONE);
+            var attributes = primitive.getGeometryInstanceAttributes(entity);
+            expect(result).toEqual(attributes.boundingSphere);
+
+            updater.destroy();
+        });
     });
 
     it('Fails dynamic geometry bounding sphere for entity without billboard.', function() {

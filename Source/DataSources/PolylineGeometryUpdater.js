@@ -559,9 +559,24 @@ define([
     };
 
     function DynamicGeometryUpdater(primitives, groundPrimitives, geometryUpdater) {
-        var sceneId = geometryUpdater._scene.id;
+        this._line = undefined;
+        this._primitives = primitives;
+        this._groundPrimitives = groundPrimitives;
+        this._groundPolylinePrimitive = undefined;
+        this._material = undefined;
+        this._geometryUpdater = geometryUpdater;
+        this._positions = [];
+        this._terrainHeightsReady = false;
+    }
 
+    function getLine(dynamicGeometryUpdater) {
+        if (defined(dynamicGeometryUpdater._line)) {
+            return dynamicGeometryUpdater._line;
+        }
+
+        var sceneId = dynamicGeometryUpdater._geometryUpdater._scene.id;
         var polylineCollection = polylineCollections[sceneId];
+        var primitives = dynamicGeometryUpdater._primitives;
         if (!defined(polylineCollection) || polylineCollection.isDestroyed()) {
             polylineCollection = new PolylineCollection();
             polylineCollections[sceneId] = polylineCollection;
@@ -571,34 +586,18 @@ define([
         }
 
         var line = polylineCollection.add();
-        line.id = geometryUpdater._entity;
-
-        this._line = line;
-        this._primitives = primitives;
-        this._groundPrimitives = groundPrimitives;
-        this._groundPolylinePrimitive = undefined;
-        this._geometryUpdater = geometryUpdater;
-        this._positions = [];
-        this._terrainHeightsReady = false;
+        line.id = dynamicGeometryUpdater._geometryUpdater._entity;
+        dynamicGeometryUpdater._line = line;
+        return line;
     }
 
     DynamicGeometryUpdater.prototype.update = function(time) {
         var geometryUpdater = this._geometryUpdater;
         var entity = geometryUpdater._entity;
         var polyline = entity.polyline;
-        var line = this._line;
-
-        if (!entity.isShowing || !entity.isAvailable(time) || !Property.getValueOrDefault(polyline._show, time, true)) {
-            line.show = false;
-            return;
-        }
 
         var positionsProperty = polyline.positions;
         var positions = Property.getValueOrUndefined(positionsProperty, time, this._positions);
-        if (!defined(positions) || positions.length < 2) {
-            line.show = false;
-            return;
-        }
 
         // Synchronize with geometryUpdater for GroundPolylinePrimitive
         geometryUpdater._clampToGround = Property.getValueOrDefault(polyline._clampToGround, time, false);
@@ -613,15 +612,26 @@ define([
         }
 
         if (geometryUpdater.clampToGround) {
+            if (!entity.isShowing || !entity.isAvailable(time) || !Property.getValueOrDefault(polyline._show, time, true)) {
+                return;
+            }
+
+            if (!defined(positions) || positions.length < 2) {
+                return;
+            }
+
             var that = this;
 
             // Load terrain heights
             if (!this._terrainHeightsReady) {
-                GroundPolylinePrimitive.initializeTerrainHeights()
-                    .then(function() {
-                        that._terrainHeightsReady = true;
-                    });
+                if (!GroundPolylinePrimitive._isInitialized()) {
+                    GroundPolylinePrimitive.initializeTerrainHeights()
+                        .then(function() {
+                            that._terrainHeightsReady = true;
+                        });
                     return;
+                }
+                this._terrainHeightsReady = true;
             }
 
             var fillMaterialProperty = geometryUpdater.fillMaterialProperty;
@@ -629,12 +639,12 @@ define([
             if (fillMaterialProperty instanceof ColorMaterialProperty) {
                 appearance = new PolylineColorAppearance();
             } else {
-                var material = MaterialProperty.getValue(time, fillMaterialProperty, line.material);
+                var material = MaterialProperty.getValue(time, fillMaterialProperty, this._material);
                 appearance = new PolylineMaterialAppearance({
                     material : material,
                     translucent : material.isTranslucent()
                 });
-                line.material = material;
+                this._material = material;
             }
 
             this._groundPolylinePrimitive = groundPrimitives.add(new GroundPolylinePrimitive({
@@ -643,7 +653,21 @@ define([
                 asynchronous : false
             }), Property.getValueOrUndefined(geometryUpdater.zIndex, time));
 
-            // Hide the polyline collection
+            // Hide the polyline in the collection, if any
+            if (defined(this._line)) {
+                this._line.show = false;
+            }
+            return;
+        }
+
+        var line = getLine(this);
+
+        if (!entity.isShowing || !entity.isAvailable(time) || !Property.getValueOrDefault(polyline._show, time, true)) {
+            line.show = false;
+            return;
+        }
+
+        if (!defined(positions) || positions.length < 2) {
             line.show = false;
             return;
         }
@@ -670,11 +694,29 @@ define([
         Check.defined('result', result);
         //>>includeEnd('debug');
 
-        var line = this._line;
-        if (line.show && line.positions.length > 0) {
-            BoundingSphere.fromPoints(line.positions, result);
+        if (!this._geometryUpdater.clampToGround) {
+            var line = getLine(this);
+            if (line.show && line.positions.length > 0) {
+                BoundingSphere.fromPoints(line.positions, result);
+                return BoundingSphereState.DONE;
+            }
+        } else {
+            var groundPolylinePrimitive = this._groundPolylinePrimitive;
+            if (defined(groundPolylinePrimitive) && groundPolylinePrimitive.show && groundPolylinePrimitive.ready) {
+                var attributes = groundPolylinePrimitive.getGeometryInstanceAttributes(this._geometryUpdater._entity);
+                if (defined(attributes) && defined(attributes.boundingSphere)) {
+                    BoundingSphere.clone(attributes.boundingSphere, result);
+                    return BoundingSphereState.DONE;
+                }
+            }
+
+            if ((defined(groundPolylinePrimitive) && !groundPolylinePrimitive.ready)) {
+                return BoundingSphereState.PENDING;
+            }
+
             return BoundingSphereState.DONE;
         }
+
         return BoundingSphereState.FAILED;
     };
 
@@ -686,10 +728,12 @@ define([
         var geometryUpdater = this._geometryUpdater;
         var sceneId = geometryUpdater._scene.id;
         var polylineCollection = polylineCollections[sceneId];
-        polylineCollection.remove(this._line);
-        if (polylineCollection.length === 0) {
-            this._primitives.removeAndDestroy(polylineCollection);
-            delete polylineCollections[sceneId];
+        if (defined(polylineCollection)) {
+            polylineCollection.remove(this._line);
+            if (polylineCollection.length === 0) {
+                this._primitives.removeAndDestroy(polylineCollection);
+                delete polylineCollections[sceneId];
+            }
         }
         if (defined(this._groundPolylinePrimitive)) {
             this._groundPrimitives.remove(this._groundPolylinePrimitive);
