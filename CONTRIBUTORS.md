@@ -44,6 +44,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
    * [William Ho](https://github.com/williamkho)
    * [Srinivas Kaza](https://github.com/AnimatedRNG)
    * [Hannah Bollar](https://github.com/hanbollar)
+   * [Jane Xu](https://github.com/janeyx99)
    * [Luke San Antonio Bialecki](https://github.com/lukesanantonio)
    * [Josh Lawrence](https://github.com/loshjawrence)
    * [Omar Shehata](https://github.com/OmarShehata)
