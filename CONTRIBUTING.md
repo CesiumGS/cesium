@@ -35,8 +35,8 @@ In addition to contributing core CesiumJS code, we appreciate many types of cont
 
 For ideas for CesiumJS code contributions, see:
 
-* issues labeled [beginner](https://github.com/AnalyticalGraphicsInc/cesium/labels/beginner) and
-* issues labeled [roadmap](https://github.com/AnalyticalGraphicsInc/cesium/labels/roadmap).
+* issues labeled [`good first issue`](https://github.com/AnalyticalGraphicsInc/cesium/labels/good%20first%20issue) and
+* issues labeled [`roadmap`](https://github.com/AnalyticalGraphicsInc/cesium/labels/roadmap).
 
 See the [Build Guide](Documentation/Contributors/BuildGuide/README.md) for how to build and run Cesium on your system.
 

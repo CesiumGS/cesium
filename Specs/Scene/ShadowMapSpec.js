@@ -717,6 +717,7 @@ defineSuite([
             scene.render(); // Model is pre-loaded, render one frame to make it ready
 
             scene.camera.lookAt(origins[i], offsets[i]);
+            scene.camera.moveForward(0.5);
 
             // Render without shadows
             scene.shadowMap.enabled = false;

@@ -2,6 +2,7 @@ defineSuite([
         'Core/BoundingRectangle',
         'Core/Cartesian3',
         'Core/Cartesian4',
+        'Core/Math',
         'Core/EncodedCartesian3',
         'Specs/createCamera',
         'Specs/createContext',
@@ -10,6 +11,7 @@ defineSuite([
         BoundingRectangle,
         Cartesian3,
         Cartesian4,
+        CesiumMath,
         EncodedCartesian3,
         createCamera,
         createContext,
@@ -149,6 +151,19 @@ defineSuite([
             '  vec3 point = vec3(1.0, 0.0, 0.0); ' +
             '  float expected = 1.0; ' +
             '  float actual = czm_planeDistance(plane, point); ' +
+            '  gl_FragColor = vec4(actual == expected); ' +
+            '}';
+        expect({
+            context : context,
+            fragmentShader : fs
+        }).contextToRender();
+
+        fs =
+            'void main() { ' +
+            '  vec4 plane = vec4(1.0, 0.0, 0.0, 0.0); ' +
+            '  vec3 point = vec3(1.0, 0.0, 0.0); ' +
+            '  float expected = 1.0; ' +
+            '  float actual = czm_planeDistance(plane.xyz, plane.w, point); ' +
             '  gl_FragColor = vec4(actual == expected); ' +
             '}';
         expect({
@@ -455,14 +470,62 @@ defineSuite([
         }).contextToRender();
     });
 
-    it('has czm_branchFreeTernaryFloat', function() {
+    it('has czm_branchFreeTernary', function() {
         var fs =
             'void main() { ' +
-            '  gl_FragColor = vec4(czm_branchFreeTernaryFloat(true, 1.0, 0.0));' +
+            '  gl_FragColor = vec4(czm_branchFreeTernary(true, 1.0, 0.0));' +
+            '}';
+        expect({
+            context : context,
+            fragmentShader : fs
+        }).contextToRender();
+
+        fs =
+            'void main() { ' +
+            '  gl_FragColor = vec4(czm_branchFreeTernary(true, vec2(1.0), vec2(0.0)), 1.0, 1.0);' +
+            '}';
+        expect({
+            context : context,
+            fragmentShader : fs
+        }).contextToRender();
+
+        fs =
+            'void main() { ' +
+            '  gl_FragColor = vec4(czm_branchFreeTernary(true, vec3(1.0), vec3(0.0)), 1.0);' +
+            '}';
+        expect({
+            context : context,
+            fragmentShader : fs
+        }).contextToRender();
+
+        fs =
+            'void main() { ' +
+            '  gl_FragColor = czm_branchFreeTernary(true, vec4(1.0), vec4(0.0));' +
             '}';
         expect({
             context : context,
             fragmentShader : fs
         }).contextToRender();
     });
+
+    it('has czm_fastApproximateAtan', function() {
+        var fsAtan =
+            'void main() { ' +
+            '  gl_FragColor = vec4(czm_fastApproximateAtan(0.0) == 0.0);' +
+            '}';
+        expect({
+            context : context,
+            fragmentShader : fsAtan
+        }).contextToRender();
+
+        var fsAtan2 =
+            'void main() { ' +
+            '  gl_FragColor = vec4(czm_fastApproximateAtan(1.0, 0.0) == 0.0);' +
+            '}';
+        expect({
+            context : context,
+            fragmentShader : fsAtan2
+        }).contextToRender();
+    });
+
 }, 'WebGL');

@@ -1,8 +1,10 @@
 define([
+        './arrayFill',
         './arrayRemoveDuplicates',
         './BoundingSphere',
         './Cartesian3',
         './Cartographic',
+        './Check',
         './ComponentDatatype',
         './CornerType',
         './CorridorGeometryLibrary',
@@ -14,6 +16,7 @@ define([
         './Geometry',
         './GeometryAttribute',
         './GeometryAttributes',
+        './GeometryOffsetAttribute',
         './IndexDatatype',
         './Math',
         './PolygonPipeline',
@@ -21,10 +24,12 @@ define([
         './Rectangle',
         './VertexFormat'
     ], function(
+        arrayFill,
         arrayRemoveDuplicates,
         BoundingSphere,
         Cartesian3,
         Cartographic,
+        Check,
         ComponentDatatype,
         CornerType,
         CorridorGeometryLibrary,
@@ -36,6 +41,7 @@ define([
         Geometry,
         GeometryAttribute,
         GeometryAttributes,
+        GeometryOffsetAttribute,
         IndexDatatype,
         CesiumMath,
         PolygonPipeline,
@@ -619,6 +625,21 @@ define([
                 attributes.normal = undefined;
             }
         }
+        if (defined(params.offsetAttribute)) {
+            var applyOffset = new Uint8Array(size * 6);
+            if (params.offsetAttribute === GeometryOffsetAttribute.TOP) {
+                applyOffset = arrayFill(applyOffset, 1, 0, size); // top face
+                applyOffset = arrayFill(applyOffset, 1, size*2, size * 4); // top wall
+            } else {
+                var applyOffsetValue = params.offsetAttribute === GeometryOffsetAttribute.NONE ? 0 : 1;
+                applyOffset = arrayFill(applyOffset, applyOffsetValue);
+            }
+            attributes.applyOffset = new GeometryAttribute({
+                componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
+                componentsPerAttribute : 1,
+                values: applyOffset
+            });
+        }
 
         var iLength = indices.length;
         var twoSize = size + size;
@@ -826,13 +847,14 @@ define([
         this._granularity = defaultValue(options.granularity, CesiumMath.RADIANS_PER_DEGREE);
         this._shadowVolume = defaultValue(options.shadowVolume, false);
         this._workerName = 'createCorridorGeometry';
+        this._offsetAttribute = options.offsetAttribute;
         this._rectangle = undefined;
 
         /**
          * The number of elements used to pack the object into an array.
          * @type {Number}
          */
-        this.packedLength = 1 + positions.length * Cartesian3.packedLength + Ellipsoid.packedLength + VertexFormat.packedLength + 6;
+        this.packedLength = 1 + positions.length * Cartesian3.packedLength + Ellipsoid.packedLength + VertexFormat.packedLength + 7;
     }
 
     /**
@@ -875,7 +897,8 @@ define([
         array[startingIndex++] = value._extrudedHeight;
         array[startingIndex++] = value._cornerType;
         array[startingIndex++] = value._granularity;
-        array[startingIndex] = value._shadowVolume ? 1.0 : 0.0;
+        array[startingIndex++] = value._shadowVolume ? 1.0 : 0.0;
+        array[startingIndex] = defaultValue(value._offsetAttribute, -1);
 
         return array;
     };
@@ -891,7 +914,8 @@ define([
         extrudedHeight : undefined,
         cornerType : undefined,
         granularity : undefined,
-        shadowVolume: undefined
+        shadowVolume: undefined,
+        offsetAttribute: undefined
     };
 
     /**
@@ -929,7 +953,8 @@ define([
         var extrudedHeight = array[startingIndex++];
         var cornerType = array[startingIndex++];
         var granularity = array[startingIndex++];
-        var shadowVolume = array[startingIndex] === 1.0;
+        var shadowVolume = array[startingIndex++] === 1.0;
+        var offsetAttribute = array[startingIndex];
 
         if (!defined(result)) {
             scratchOptions.positions = positions;
@@ -939,6 +964,8 @@ define([
             scratchOptions.cornerType = cornerType;
             scratchOptions.granularity = granularity;
             scratchOptions.shadowVolume = shadowVolume;
+            scratchOptions.offsetAttribute = offsetAttribute === -1 ? undefined : offsetAttribute;
+
             return new CorridorGeometry(scratchOptions);
         }
 
@@ -951,6 +978,7 @@ define([
         result._cornerType = cornerType;
         result._granularity = granularity;
         result._shadowVolume = shadowVolume;
+        result._offsetAttribute = offsetAttribute === -1 ? undefined : offsetAttribute;
 
         return result;
     };
@@ -991,11 +1019,24 @@ define([
             params.height = height;
             params.extrudedHeight = extrudedHeight;
             params.shadowVolume = corridorGeometry._shadowVolume;
+            params.offsetAttribute = corridorGeometry._offsetAttribute;
             attr = computePositionsExtruded(params, vertexFormat);
         } else {
             var computedPositions = CorridorGeometryLibrary.computePositions(params);
             attr = combine(computedPositions, vertexFormat, ellipsoid);
             attr.attributes.position.values = PolygonPipeline.scaleToGeodeticHeight(attr.attributes.position.values, height, ellipsoid);
+
+            if (defined(corridorGeometry._offsetAttribute)) {
+                var applyOffsetValue = corridorGeometry._offsetAttribute === GeometryOffsetAttribute.NONE ? 0 : 1;
+                var length = attr.attributes.position.values.length;
+                var applyOffset = new Uint8Array(length / 3);
+                arrayFill(applyOffset, applyOffsetValue);
+                attr.attributes.applyOffset = new GeometryAttribute({
+                    componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
+                    componentsPerAttribute : 1,
+                    values: applyOffset
+                });
+            }
         }
         var attributes = attr.attributes;
         var boundingSphere = BoundingSphere.fromVertices(attributes.position.values, undefined, 3);

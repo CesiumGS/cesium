@@ -12,6 +12,7 @@ define([
         '../Core/RequestType',
         '../Core/RuntimeError',
         '../Renderer/Pass',
+        './Axis',
         './Cesium3DTileBatchTable',
         './Cesium3DTileFeature',
         './Cesium3DTileFeatureTable',
@@ -32,6 +33,7 @@ define([
         RequestType,
         RuntimeError,
         Pass,
+        Axis,
         Cesium3DTileBatchTable,
         Cesium3DTileFeature,
         Cesium3DTileFeatureTable,
@@ -182,20 +184,6 @@ define([
         };
     }
 
-    function getPickVertexShaderCallback(content) {
-        return function(vs) {
-            var batchTable = content._batchTable;
-
-            var gltf = content._model.gltf;
-            if (defined(gltf)) {
-                content._batchIdAttributeName = getBatchIdAttributeName(gltf);
-            }
-
-            var callback = batchTable.getPickVertexShaderCallback(content._batchIdAttributeName);
-            return defined(callback) ? callback(vs) : vs;
-        };
-    }
-
     function getFragmentShaderCallback(content) {
         return function(fs, programId) {
             var batchTable = content._batchTable;
@@ -207,6 +195,12 @@ define([
             }
             var callback = batchTable.getFragmentShaderCallback(handleTranslucent, content._diffuseAttributeOrUniformName[programId]);
             return defined(callback) ? callback(fs) : fs;
+        };
+    }
+
+    function getPickIdCallback(content) {
+        return function() {
+            return content._batchTable.getPickId();
         };
     }
 
@@ -364,15 +358,14 @@ define([
                 requestType : RequestType.TILES3D,
                 modelMatrix : tile.computedTransform,
                 upAxis : tileset._gltfUpAxis,
+                forwardAxis : Axis.X,
                 shadows: tileset.shadows,
                 debugWireframe: tileset.debugWireframe,
                 incrementallyLoadTextures : false,
                 vertexShaderLoaded : getVertexShaderCallback(content),
                 fragmentShaderLoaded : getFragmentShaderCallback(content),
                 uniformMapLoaded : batchTable.getUniformMapCallback(),
-                pickVertexShaderLoaded : getPickVertexShaderCallback(content),
-                pickFragmentShaderLoaded : batchTable.getPickFragmentShaderCallback(),
-                pickUniformMapLoaded : batchTable.getPickUniformMapCallback(),
+                pickIdLoaded : getPickIdCallback(content),
                 addBatchIdToGeneratedShaders : (batchLength > 0), // If the batch table has values in it, generated shaders will need a batchId attribute
                 pickObject : pickObject
             });
@@ -386,13 +379,12 @@ define([
                 requestType : RequestType.TILES3D,
                 modelMatrix : tile.computedTransform,
                 upAxis : tileset._gltfUpAxis,
+                forwardAxis : Axis.X,
                 debugWireframe : tileset.debugWireframe,
                 vertexShaderLoaded : getVertexShaderCallback(content),
                 classificationShaderLoaded : getClassificationFragmentShaderCallback(content),
                 uniformMapLoaded : batchTable.getUniformMapCallback(),
-                pickVertexShaderLoaded : getPickVertexShaderCallback(content),
-                pickFragmentShaderLoaded : batchTable.getPickFragmentShaderCallback(),
-                pickUniformMapLoaded : batchTable.getPickUniformMapCallback(),
+                pickIdLoaded : getPickIdCallback(content),
                 classificationType : tileset._classificationType,
                 batchTable : batchTable
             });
@@ -469,7 +461,7 @@ define([
 
         // If any commands were pushed, add derived commands
         var commandEnd = frameState.commandList.length;
-        if ((commandStart < commandEnd) && frameState.passes.render && !defined(tileset.classificationType)) {
+        if ((commandStart < commandEnd) && (frameState.passes.render || frameState.passes.pick) && !defined(tileset.classificationType)) {
             var finalResolution = this._tile._finalResolution;
             this._batchTable.addDerivedCommands(frameState, commandStart, finalResolution);
         }

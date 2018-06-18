@@ -32,21 +32,25 @@ defineSuite([
     var centerLongitude = -1.31968;
     var centerLatitude = 0.698874;
 
-    var withBatchTableUrl = './Data/Cesium3DTiles/Batched/BatchedWithBatchTable/';
-    var withoutBatchTableUrl = './Data/Cesium3DTiles/Batched/BatchedWithoutBatchTable/';
-    var noBatchIdsUrl = './Data/Cesium3DTiles/Batched/BatchedNoBatchIds/';
-    var batchTableHierarchyUrl = './Data/Cesium3DTiles/Hierarchy/BatchTableHierarchy/';
-    var batchTableHierarchyBinaryUrl = './Data/Cesium3DTiles/Hierarchy/BatchTableHierarchyBinary/';
-    var batchTableHierarchyMultipleParentsUrl = './Data/Cesium3DTiles/Hierarchy/BatchTableHierarchyMultipleParents/';
-    var batchTableHierarchyNoParentsUrl = './Data/Cesium3DTiles/Hierarchy/BatchTableHierarchyNoParents/';
+    var withBatchTableUrl = './Data/Cesium3DTiles/Batched/BatchedWithBatchTable/tileset.json';
+    var withoutBatchTableUrl = './Data/Cesium3DTiles/Batched/BatchedWithoutBatchTable/tileset.json';
+    var noBatchIdsUrl = './Data/Cesium3DTiles/Batched/BatchedNoBatchIds/tileset.json';
+    var batchTableHierarchyUrl = './Data/Cesium3DTiles/Hierarchy/BatchTableHierarchy/tileset.json';
+    var batchTableHierarchyBinaryUrl = './Data/Cesium3DTiles/Hierarchy/BatchTableHierarchyBinary/tileset.json';
+    var batchTableHierarchyMultipleParentsUrl = './Data/Cesium3DTiles/Hierarchy/BatchTableHierarchyMultipleParents/tileset.json';
+    var batchTableHierarchyNoParentsUrl = './Data/Cesium3DTiles/Hierarchy/BatchTableHierarchyNoParents/tileset.json';
 
     var result = new Color();
 
     var mockTileset = {
         _statistics : {
             texturesByteLength : 0
+        },
+        getFeature : function(batchId) {
+            return { batchId : batchId };
         }
     };
+    mockTileset._tileset = mockTileset;
 
     beforeAll(function() {
         scene = createScene();
@@ -84,7 +88,7 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('setShow', function() {
+    it('setShow sets show', function() {
         var batchTable = new Cesium3DTileBatchTable(mockTileset, 1);
 
         // Batch table resources are undefined by default

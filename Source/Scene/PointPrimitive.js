@@ -439,6 +439,15 @@ define([
         },
 
         /**
+         * @private
+         */
+        pickId : {
+            get : function() {
+                return this._pickId;
+            }
+        },
+
+        /**
          * Determines whether or not this point will be shown or hidden because it was clustered.
          * @memberof PointPrimitive.prototype
          * @type {Boolean}

@@ -37,6 +37,7 @@ define([
         this.createdBufferViews = {};
         this.primitivesToDecode = new Queue();
         this.activeDecodingTasks = 0;
+        this.pendingDecodingCache = false;
 
         this.skinnedNodesIds = [];
     }
@@ -90,7 +91,7 @@ define([
     };
 
     ModelLoadResources.prototype.finishedDecoding = function() {
-        return this.primitivesToDecode.length === 0 && this.activeDecodingTasks === 0;
+        return this.primitivesToDecode.length === 0 && this.activeDecodingTasks === 0 && !this.pendingDecodingCache;
     };
 
     ModelLoadResources.prototype.finished = function() {

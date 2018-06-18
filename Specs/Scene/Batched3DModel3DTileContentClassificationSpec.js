@@ -46,9 +46,9 @@ defineSuite([
     var centerLongitude = -1.31968;
     var centerLatitude = 0.698874;
 
-    var withBatchTableUrl = './Data/Cesium3DTiles/Batched/BatchedWithBatchTable/';
-    var withBatchTableBinaryUrl = './Data/Cesium3DTiles/Batched/BatchedWithBatchTableBinary/';
-    var withQuantizationUrl = './Data/Cesium3DTiles/Batched/BatchedWithQuantization/';
+    var withBatchTableUrl = './Data/Cesium3DTiles/Batched/BatchedWithBatchTable/tileset.json';
+    var withBatchTableBinaryUrl = './Data/Cesium3DTiles/Batched/BatchedWithBatchTableBinary/tileset.json';
+    var withQuantizationUrl = './Data/Cesium3DTiles/Batched/BatchedWithQuantization/tileset.json';
 
     function setCamera(longitude, latitude) {
         // One feature is located at the center, point the camera there

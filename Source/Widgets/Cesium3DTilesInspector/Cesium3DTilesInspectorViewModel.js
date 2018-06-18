@@ -95,7 +95,7 @@ define([
                 '<li><strong>Processing: </strong>' + statistics.numberOfTilesProcessing.toLocaleString() + '</li>' +
                 '<li><strong>Content Ready: </strong>' + statistics.numberOfTilesWithContentReady.toLocaleString() + '</li>' +
                 // Total number of tiles includes tiles without content, so "Ready" may never reach
-                // "Total."  Total also will increase when a tile with a tileset.json content is loaded.
+                // "Total."  Total also will increase when a tile with a tileset JSON content is loaded.
                 '<li><strong>Total: </strong>' + statistics.numberOfTilesTotal.toLocaleString() + '</li>';
             s += '</ul>';
             s += '<ul class="cesium-cesiumInspector-statistics">';
