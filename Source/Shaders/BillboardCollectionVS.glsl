@@ -21,7 +21,6 @@ varying vec2 v_textureCoordinates;
 #ifdef CLAMP_TO_GROUND
 varying vec4 v_textureCoordinateBounds;
 varying vec4 v_originTextureCoordinateAndTranslate;
-varying vec4 v_leftAndRightTextureCoordinate;
 varying vec4 v_dimensionsAndImageSize;
 varying vec2 v_eyeDepthAndDistance;
 #endif
@@ -160,28 +159,14 @@ void main()
     translate.y += (temp - floor(temp)) * SHIFT_LEFT8;
     translate.y -= UPPER_BOUND;
 
-    v_originTextureCoordinateAndTranslate.zw = translate.xy;
-
     temp = compressedAttribute1.x * SHIFT_RIGHT8;
 
     vec2 imageSize = vec2(floor(temp), compressedAttribute2.w);
 
 #ifdef CLAMP_TO_GROUND
-    v_textureCoordinateBounds = textureCoordinateBounds;
     v_originTextureCoordinateAndTranslate.xy = vec2(1.0) - depthOrigin; //the origin
-    if (v_originTextureCoordinateAndTranslate.y == 1.0) //vertical origin is top
-    {
-        v_leftAndRightTextureCoordinate = vec4(0.0, 0.0, 1.0, 0.0); //bottom left, bottom right
-    }
-    else
-    {
-        if (v_originTextureCoordinateAndTranslate.y == 0.0)
-        {
-            v_originTextureCoordinateAndTranslate.y = 0.1;
-        }
-
-        v_leftAndRightTextureCoordinate = vec4(0.0, 1.0, 1.0, 1.0); //top left, top right
-    }
+    v_originTextureCoordinateAndTranslate.zw = translate.xy;
+    v_textureCoordinateBounds = textureCoordinateBounds;
 
     temp = compressedAttribute3.w;
     temp = temp * SHIFT_RIGHT12;

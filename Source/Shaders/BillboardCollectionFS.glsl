@@ -11,7 +11,6 @@ varying vec4 v_color;
 #ifdef CLAMP_TO_GROUND
 varying vec4 v_textureCoordinateBounds;                  // the min and max x and y values for the texture coordinates
 varying vec4 v_originTextureCoordinateAndTranslate;      // texture coordinate at the origin, billboard translate (used for label glyphs)
-varying vec4 v_leftAndRightTextureCoordinate;            // texture coordinates for left and right depth test
 varying vec4 v_dimensionsAndImageSize;                   // dimensions of the bounding rectangle and the size of the image.  The values will only be different for label glyphs
 varying vec2 v_eyeDepthAndDistance;                      // The depth of the billboard and the disable depth test distance
 
@@ -88,10 +87,10 @@ void main()
         // negative values go into the screen
         if (globeDepth1 != 0.0 && globeDepth1 > epsilonEyeDepth)
         {
-            float globeDepth2 = getGlobeDepth(adjustedST, v_leftAndRightTextureCoordinate.xy);
+            float globeDepth2 = getGlobeDepth(adjustedST, vec2(0.0, 1.0)); // top left corner
             if (globeDepth2 != 0.0 && globeDepth2 > epsilonEyeDepth)
             {
-                float globeDepth3 = getGlobeDepth(adjustedST, v_leftAndRightTextureCoordinate.zw);
+                float globeDepth3 = getGlobeDepth(adjustedST, vec2(1.0, 1.0)); // top right corner
                 if (globeDepth3 != 0.0 && globeDepth3 > epsilonEyeDepth)
                 {
                     discard;
