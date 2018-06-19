@@ -457,6 +457,11 @@ define([
         cartographics = arrayRemoveDuplicates(cartographics, Cartographic.equalsEpsilon);
         cartographicsLength = cartographics.length;
 
+        // In order to support external data that may have errors we treat this as an empty geometry.
+        if (cartographicsLength < 2) {
+            return undefined;
+        }
+
         /**** Build heap-side arrays for positions, interpolated cartographics, and normals from which to compute vertices ****/
         // We build a "wall" and then decompose it into separately connected component "volumes" because we need a lot
         // of information about the wall. Also, this simplifies interpolation.
