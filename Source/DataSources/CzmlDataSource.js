@@ -1792,8 +1792,10 @@ define([
         processMaterialPacketData(polyline, 'material', polylineData.material, interval, sourceUri, entityCollection);
         processMaterialPacketData(polyline, 'depthFailMaterial', polylineData.depthFailMaterial, interval, sourceUri, entityCollection);
         processPacketData(Boolean, polyline, 'followSurface', polylineData.followSurface, interval, sourceUri, entityCollection);
+        processPacketData(Boolean, polyline, 'clampToGround', polylineData.clampToGround, interval, sourceUri, entityCollection);
         processPacketData(ShadowMode, polyline, 'shadows', polylineData.shadows, interval, sourceUri, entityCollection);
         processPacketData(DistanceDisplayCondition, polyline, 'distanceDisplayCondition', polylineData.distanceDisplayCondition, interval, sourceUri, entityCollection);
+        processPacketData(Number, polyline, 'zIndex', polylineData.zIndex, interval, sourceUri, entityCollection);
     }
 
     function processRectangle(entity, packet, entityCollection, sourceUri) {
