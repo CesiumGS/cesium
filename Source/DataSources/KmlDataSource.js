@@ -1264,7 +1264,7 @@ define([
                 polylineGraphics.material = Color.WHITE;
                 polylineGraphics.width = 1.0;
             }
-            polyline.zIndex = zIndex;
+            polylineGraphics.zIndex = zIndex;
         } else {
             if (defined(zIndex)) {
                 oneTimeWarning('kml-gx:drawOrder', 'KML - gx:drawOrder is not supported in LineStrings when clampToGround is false');
