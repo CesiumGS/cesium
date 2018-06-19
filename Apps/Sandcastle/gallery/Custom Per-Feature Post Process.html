@@ -66,25 +66,15 @@ var stage = scene.postProcessStages.add(new Cesium.PostProcessStage({
 }));
 stage.selected = [];
 
-var remove = scene.postRender.addEventListener(function() {
-    var primitives = scene.primitives;
-    var length = primitives.length;
-
-    var i;
-    var primitive;
-    for (i = 0; i < length; ++i) {
-        primitive = primitives.get(i);
-        if (primitive.id === entity) {
-            remove();
-            break;
-        }
+var handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
+handler.setInputAction(function(movement) {
+    var pickedObject = viewer.scene.pick(movement.endPosition);
+    if (Cesium.defined(pickedObject)) {
+        stage.selected = [pickedObject.primitive];
+    } else {
+        stage.selected = [];
     }
-    if (i !== length) {
-        primitive.readyPromise.then(function() {
-            stage.selected = [primitive];
-        });
-    }
-});
+}, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
 
 //Sandcastle_End
     Sandcastle.finishedLoading();
