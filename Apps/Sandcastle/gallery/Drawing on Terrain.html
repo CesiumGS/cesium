@@ -43,6 +43,7 @@ var viewer = new Cesium.Viewer('cesiumContainer',  {
     infoBox : false,
     terrainProvider : Cesium.createWorldTerrain()
 });
+viewer.cesiumWidget.screenSpaceEventHandler.removeInputAction(Cesium.ScreenSpaceEventType.LEFT_DOUBLE_CLICK);
 function createPoint(worldPosition) {
     var point = viewer.entities.add({
         position : worldPosition,
@@ -52,8 +53,29 @@ function createPoint(worldPosition) {
             heightReference: Cesium.HeightReference.CLAMP_TO_GROUND
         }
     });
-
     return point;
+}
+function drawShape(positionData) {
+    var shape;
+    if (drawingMode === 'line') {
+        shape = viewer.entities.add({
+            polyline : {
+                positions : positionData,
+                clampToGround : true,
+                width : 3
+            }
+        });
+    }
+    else if (drawingMode === 'polygon') {
+        shape = viewer.entities.add({
+            polygon: {
+                hierarchy: positionData,
+                outline: true,
+                material: new Cesium.ColorMaterialProperty(Cesium.Color.WHITE.withAlpha(0.7))
+            }
+        });
+    }
+    return shape;
 }
 var activeShapePoints = [];
 var activeShape;
@@ -70,26 +92,12 @@ handler.setInputAction(function(event) {
             floatingPoint = createPoint(earthPosition);
             activeShapePoints.push(earthPosition);
             var dynamicPositions = new Cesium.CallbackProperty(function () {
+                if (activeShapePoints.length <= 2) { // Workaround until https://github.com/AnalyticalGraphicsInc/cesium/issues/6702 is fixed
+                    return [];
+                }
                 return activeShapePoints;
             }, false);
-            if (drawingMode === 'line') {
-                activeShape = viewer.entities.add({
-                    polyline : {
-                        positions : dynamicPositions,
-                        clampToGround : true,
-                        width : 3
-                    }
-                });
-            }
-            if (drawingMode === 'polygon') {
-                activeShape = viewer.entities.add({
-                    polygon: {
-                        hierarchy: dynamicPositions,
-                        outline: true,
-                        material: new Cesium.ColorMaterialProperty(Cesium.Color.WHITE.withAlpha(0.7))
-                    }
-                });
-            }
+            activeShape = drawShape(dynamicPositions);
         }
         activeShapePoints.push(earthPosition);
         createPoint(earthPosition);
@@ -106,28 +114,10 @@ handler.setInputAction(function(event) {
         }
     }
 }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
-
+// Redraw the shape so it's not dynamic and remove the dynamic shape.
 function terminateShape() {
     activeShapePoints.pop();
-    if (drawingMode === 'line') {
-        viewer.entities.add({
-            polyline : {
-                positions : activeShapePoints,
-                clampToGround : true,
-                width : 3
-            }
-        });
-    }
-    if (drawingMode === 'polygon') {
-        viewer.entities.add({
-            polygon: {
-                hierarchy: activeShapePoints,
-                outline: true,
-                material: new Cesium.ColorMaterialProperty(Cesium.Color.WHITE.withAlpha(0.7))
-            }
-        });
-    }
-
+    drawShape(activeShapePoints);
     viewer.entities.remove(floatingPoint);
     viewer.entities.remove(activeShape);
     floatingPoint = undefined;
@@ -156,8 +146,6 @@ Sandcastle.addToolbarMenu(options);
 // Zoom in to an area with mountains
 viewer.camera.lookAt(Cesium.Cartesian3.fromDegrees(-122.2058, 46.1955, 1000.0), new Cesium.Cartesian3(5000.0, 5000.0, 5000.0));
 viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
-
-viewer.cesiumWidget.screenSpaceEventHandler.removeInputAction(Cesium.ScreenSpaceEventType.LEFT_DOUBLE_CLICK);
 //Sandcastle_End
     Sandcastle.finishedLoading();
 }
