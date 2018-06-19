@@ -216,6 +216,40 @@ defineSuite([
         expect(geometry.attributes.texcoordNormalization2D).not.toBeDefined();
     });
 
+    it('removes adjacent positions with the same latitude/longitude', function() {
+        var startCartographic = Cartographic.fromDegrees(0.01, 0.0);
+        var endCartographic = Cartographic.fromDegrees(0.02, 0.0);
+        var groundPolylineGeometry = new GroundPolylineGeometry({
+            positions : Cartesian3.fromRadiansArrayHeights([
+                startCartographic.longitude, startCartographic.latitude, 0.0,
+                endCartographic.longitude, endCartographic.latitude, 0.0,
+                endCartographic.longitude, endCartographic.latitude, 0.0,
+                endCartographic.longitude, endCartographic.latitude, 10.0
+            ]),
+            granularity : 0.0
+        });
+
+        var geometry = GroundPolylineGeometry.createGeometry(groundPolylineGeometry);
+
+        expect(geometry.indices.length).toEqual(36);
+        expect(geometry.attributes.position.values.length).toEqual(24);
+    });
+
+    it('returns undefined if filtered points are not a valid geometry', function() {
+        var startCartographic = Cartographic.fromDegrees(0.01, 0.0);
+        var groundPolylineGeometry = new GroundPolylineGeometry({
+            positions : Cartesian3.fromRadiansArrayHeights([
+                startCartographic.longitude, startCartographic.latitude, 0.0,
+                startCartographic.longitude, startCartographic.latitude, 0.0
+            ]),
+            granularity : 0.0
+        });
+
+        var geometry = GroundPolylineGeometry.createGeometry(groundPolylineGeometry);
+
+        expect(geometry).toBeUndefined();
+    });
+
     it('miters turns', function() {
         var groundPolylineGeometry = new GroundPolylineGeometry({
             positions : Cartesian3.fromDegreesArray([

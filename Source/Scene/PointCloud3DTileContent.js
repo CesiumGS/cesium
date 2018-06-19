@@ -374,7 +374,10 @@ define([
         var batchIds;
         if (defined(featureTableJson.BATCH_ID)) {
             batchIds = featureTable.getPropertyArray('BATCH_ID', ComponentDatatype.UNSIGNED_SHORT, 1);
-
+            if (ComponentDatatype.fromTypedArray(batchIds) === ComponentDatatype.UNSIGNED_INT) {
+                // WebGL does not support UNSIGNED_INT vertex attributes. Convert these to FLOAT.
+                batchIds = new Float32Array(batchIds);
+            }
             var batchLength = featureTable.getGlobalProperty('BATCH_LENGTH');
             if (!defined(batchLength)) {
                 throw new RuntimeError('Global property: BATCH_LENGTH must be defined when BATCH_ID is defined.');
