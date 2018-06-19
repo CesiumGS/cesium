@@ -55,6 +55,7 @@ function createPoint(worldPosition) {
     });
     return point;
 }
+var drawingMode = 'line';
 function drawShape(positionData) {
     var shape;
     if (drawingMode === 'line') {
@@ -80,7 +81,6 @@ function drawShape(positionData) {
 var activeShapePoints = [];
 var activeShape;
 var floatingPoint;
-var drawingMode = 'line';
 var handler = new Cesium.ScreenSpaceEventHandler(viewer.canvas);
 handler.setInputAction(function(event) {
     // We use `viewer.scene.pickPosition` here instead of `viewer.camera.pickEllipsoid` so that
