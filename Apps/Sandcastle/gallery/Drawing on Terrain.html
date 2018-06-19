@@ -92,9 +92,6 @@ handler.setInputAction(function(event) {
             floatingPoint = createPoint(earthPosition);
             activeShapePoints.push(earthPosition);
             var dynamicPositions = new Cesium.CallbackProperty(function () {
-                if (activeShapePoints.length <= 2) { // Workaround until https://github.com/AnalyticalGraphicsInc/cesium/issues/6702 is fixed
-                    return [];
-                }
                 return activeShapePoints;
             }, false);
             activeShape = drawShape(dynamicPositions);
