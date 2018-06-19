@@ -555,6 +555,15 @@ define([
         return resource;
     }
 
+    var colorOptions = {
+        maximumRed : undefined,
+        red : undefined,
+        maximumGreen : undefined,
+        green : undefined,
+        maximumBlue : undefined,
+        blue : undefined
+    };
+
     function parseColorString(value, isRandom) {
         if (!defined(value) || /^\s*$/gm.test(value)) {
             return undefined;
@@ -573,21 +582,25 @@ define([
             return new Color(red, green, blue, alpha);
         }
 
-        var colorOptions = {};
-
         if (red > 0) {
             colorOptions.maximumRed = red;
+            colorOptions.red = undefined;
         } else {
+            colorOptions.maximumRed = undefined;
             colorOptions.red = 0;
         }
         if (green > 0) {
             colorOptions.maximumGreen = green;
+            colorOptions.green = undefined;
         } else {
+            colorOptions.maximumGreen = undefined;
             colorOptions.green = 0;
         }
         if (blue > 0) {
             colorOptions.maximumBlue = blue;
+            colorOptions.blue = undefined;
         } else {
+            colorOptions.maximumBlue = undefined;
             colorOptions.blue = 0;
         }
         colorOptions.alpha = alpha;
