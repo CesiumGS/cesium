@@ -1192,7 +1192,7 @@ define([
         }
 
         var disableDepthTestDistance = billboard.disableDepthTestDistance;
-        if (billboard.heightReference === HeightReference.CLAMP_TO_GROUND && disableDepthTestDistance === 0.0) {
+        if (billboard.heightReference === HeightReference.CLAMP_TO_GROUND && disableDepthTestDistance === 0.0 && billboardCollection._scene.context.depthTexture) {
             disableDepthTestDistance = 2000.0;
         }
 
@@ -1251,7 +1251,7 @@ define([
 
     function writeTextureCoordinateBounds(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard) {
         if (billboard.heightReference === HeightReference.CLAMP_TO_GROUND) {
-            billboardCollection._shaderClampToGround = true;
+            billboardCollection._shaderClampToGround = billboardCollection._scene.context.depthTexture;
         }
         var i;
         var writer = vafWriters[attributeLocations.textureCoordinateBounds];
