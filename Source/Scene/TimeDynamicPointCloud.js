@@ -403,6 +403,7 @@ define([
     // TODO : skipping frames
     // TODO : would be helpful to have a bounding sphere associated with the point cloud, better for the draw command to have one
     // TODO : czml to TimeDynamicIntervalCollection
+    // TODO : getAbsoluteUri removes the trailing dots
 
     TimeDynamicPointCloud.prototype.update = function(frameState) {
         if (frameState.mode === SceneMode.MORPHING) {
