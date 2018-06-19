@@ -12,7 +12,7 @@ varying vec4 v_color;
 varying vec4 v_textureCoordinateBounds;                  // the min and max x and y values for the texture coordinates
 varying vec4 v_originTextureCoordinateAndTranslate;      // texture coordinate at the origin, billboard translate (used for label glyphs)
 varying vec4 v_dimensionsAndImageSize;                   // dimensions of the bounding rectangle and the size of the image.  The values will only be different for label glyphs
-varying vec2 v_eyeDepthAndDistance;                      // The depth of the billboard and the disable depth test distance
+varying vec3 v_eyeDepthDistanceAndApplyTranslate;        // The depth of the billboard and the disable depth test distance
 
 float getGlobeDepth(vec2 adjustedST, vec2 depthLookupST)
 {
@@ -20,17 +20,17 @@ float getGlobeDepth(vec2 adjustedST, vec2 depthLookupST)
     vec2 imageSize = v_dimensionsAndImageSize.zw;
 
     vec2 lookupVector = imageSize * (depthLookupST - adjustedST);
-    vec2 labelOffset = depthLookupST * (dimensions - imageSize); // aligns label glyph with bounding rectangle.  Will be zero for billboards because dimensions and imageSize will be equal
+    vec2 labelOffset = depthLookupST * (dimensions - imageSize) * vec2(1.0, 1.0 - v_originTextureCoordinateAndTranslate.y); // aligns label glyph with bounding rectangle.  Will be zero for billboards because dimensions and imageSize will be equal
     vec2 translation = v_originTextureCoordinateAndTranslate.zw;
-    if (translation != vec2(0.0))
+
+    if (v_eyeDepthDistanceAndApplyTranslate.z != 0.0)
     {
         // this is only needed for labels where the horizontal origin is not LEFT
         // it moves the label back to where the "origin" should be since all label glyphs are set to HorizontalOrigin.LEFT
-        translation += (dimensions * v_originTextureCoordinateAndTranslate.xy * vec2(0, -1));
+        translation += (dimensions * v_originTextureCoordinateAndTranslate.xy * vec2(1.0, 0.0));
     }
 
     vec2 st = ((lookupVector - translation + labelOffset) + gl_FragCoord.xy) / czm_viewport.zw;
-
     float logDepthOrDepth = czm_unpackDepth(texture2D(czm_globeDepthTexture, st));
 
     if (logDepthOrDepth == 0.0)
@@ -77,11 +77,11 @@ void main()
     czm_writeLogDepth();
 
 #ifdef CLAMP_TO_GROUND
-    if (v_eyeDepthAndDistance.x > -v_eyeDepthAndDistance.y) {
+    if (v_eyeDepthDistanceAndApplyTranslate.x > -v_eyeDepthDistanceAndApplyTranslate.y) {
         vec2 adjustedST = v_textureCoordinates - v_textureCoordinateBounds.xy;
         adjustedST = adjustedST / vec2(v_textureCoordinateBounds.z - v_textureCoordinateBounds.x, v_textureCoordinateBounds.w - v_textureCoordinateBounds.y);
 
-        float epsilonEyeDepth = v_eyeDepthAndDistance.x + czm_epsilon1;
+        float epsilonEyeDepth = v_eyeDepthDistanceAndApplyTranslate.x + czm_epsilon1;
         float globeDepth1 = getGlobeDepth(adjustedST, v_originTextureCoordinateAndTranslate.xy);
 
         // negative values go into the screen

@@ -1033,6 +1033,9 @@ define([
         var dimensions = billboardCollection._textureAtlas.texture.dimensions;
         var imageHeight = Math.round(defaultValue(billboard.height, dimensions.y * height));
         billboardCollection._maxSize = Math.max(billboardCollection._maxSize, imageHeight);
+        var labelHorizontalOrigin = defaultValue(billboard._labelHorizontalOrigin, -2);
+        labelHorizontalOrigin += 2;
+        var compressed3 = imageHeight * LEFT_SHIFT2 + labelHorizontalOrigin;
 
         var red = Color.floatToByte(color.red);
         var green = Color.floatToByte(color.green);
@@ -1049,13 +1052,13 @@ define([
 
         if (billboardCollection._instanced) {
             i = billboard._index;
-            writer(i, compressed0, compressed1, compressed2, imageHeight);
+            writer(i, compressed0, compressed1, compressed2, compressed3);
         } else {
             i = billboard._index * 4;
-            writer(i + 0, compressed0, compressed1, compressed2, imageHeight);
-            writer(i + 1, compressed0, compressed1, compressed2, imageHeight);
-            writer(i + 2, compressed0, compressed1, compressed2, imageHeight);
-            writer(i + 3, compressed0, compressed1, compressed2, imageHeight);
+            writer(i + 0, compressed0, compressed1, compressed2, compressed3);
+            writer(i + 1, compressed0, compressed1, compressed2, compressed3);
+            writer(i + 2, compressed0, compressed1, compressed2, compressed3);
+            writer(i + 3, compressed0, compressed1, compressed2, compressed3);
         }
     }
 

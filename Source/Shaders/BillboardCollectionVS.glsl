@@ -5,11 +5,11 @@ attribute vec4 positionHighAndScale;
 attribute vec4 positionLowAndRotation;
 attribute vec4 compressedAttribute0;                       // pixel offset, translate, horizontal origin, vertical origin, show, direction, texture coordinates (texture offset)
 attribute vec4 compressedAttribute1;                       // aligned axis, translucency by distance, image width
-attribute vec4 compressedAttribute2;                       // image height, color, pick color, size in meters, valid aligned axis, 13 bits free
+attribute vec4 compressedAttribute2;                       // label horizontal origin, image height, color, pick color, size in meters, valid aligned axis, 13 bits free
 attribute vec4 eyeOffset;                                  // eye offset in meters, 4 bytes free (texture range)
 attribute vec4 scaleByDistance;                            // near, nearScale, far, farScale
 attribute vec4 pixelOffsetScaleByDistance;                 // near, nearScale, far, farScale
-attribute vec4 compressedAttribute3;                       // distnace display condition near, far, disableDepthTestDistance, dimensions
+attribute vec4 compressedAttribute3;                       // distance display condition near, far, disableDepthTestDistance, dimensions
 #ifdef CLAMP_TO_GROUND
 attribute vec4 textureCoordinateBounds;                    // the min and max x and y values for the texture coordinates
 #endif
@@ -22,7 +22,7 @@ varying vec2 v_textureCoordinates;
 varying vec4 v_textureCoordinateBounds;
 varying vec4 v_originTextureCoordinateAndTranslate;
 varying vec4 v_dimensionsAndImageSize;
-varying vec2 v_eyeDepthAndDistance;
+varying vec3 v_eyeDepthDistanceAndApplyTranslate;
 #endif
 
 varying vec4 v_pickColor;
@@ -128,7 +128,7 @@ void main()
     compressed -= origin.y * SHIFT_LEFT3;
 
 #ifdef CLAMP_TO_GROUND
-    vec2 depthOrigin = origin.xy * 0.5;
+    vec2 depthOrigin = origin.xy;
 #endif
     origin -= vec2(1.0);
 
@@ -160,11 +160,25 @@ void main()
     translate.y -= UPPER_BOUND;
 
     temp = compressedAttribute1.x * SHIFT_RIGHT8;
+    float temp2 = floor(compressedAttribute2.w * SHIFT_RIGHT2);
 
-    vec2 imageSize = vec2(floor(temp), compressedAttribute2.w);
+    vec2 imageSize = vec2(floor(temp), temp2);
 
 #ifdef CLAMP_TO_GROUND
-    v_originTextureCoordinateAndTranslate.xy = vec2(1.0) - depthOrigin; //the origin
+    float labelHorizontalOrigin = floor(compressedAttribute2.w - (temp2 * SHIFT_LEFT2));
+
+    if (labelHorizontalOrigin == 0.0) // is a billboard, so set apply translate to false
+    {
+        v_eyeDepthDistanceAndApplyTranslate.z = 0.0;
+    }
+    else // is a label, so we need to grab the correct horizontal origin texture coordinate
+    {
+        labelHorizontalOrigin -= 2.0;
+        v_eyeDepthDistanceAndApplyTranslate.z = 1.0;
+        depthOrigin.x = labelHorizontalOrigin + 1.0;
+    }
+
+    v_originTextureCoordinateAndTranslate.xy = vec2(1.0) - (depthOrigin * 0.5);
     v_originTextureCoordinateAndTranslate.zw = translate.xy;
     v_textureCoordinateBounds = textureCoordinateBounds;
 
@@ -172,6 +186,7 @@ void main()
     temp = temp * SHIFT_RIGHT12;
     v_dimensionsAndImageSize.y = (temp - floor(temp)) * SHIFT_LEFT12;
     v_dimensionsAndImageSize.x = floor(temp);
+
     v_dimensionsAndImageSize.zw = imageSize.xy;
 #endif
 
@@ -228,7 +243,7 @@ void main()
     vec4 positionEC = czm_modelViewRelativeToEye * p;
 
 #ifdef CLAMP_TO_GROUND
-    v_eyeDepthAndDistance.x = positionEC.z;
+    v_eyeDepthDistanceAndApplyTranslate.x = positionEC.z;
 #endif
 
     positionEC = czm_eyeOffset(positionEC, eyeOffset.xyz);
@@ -297,7 +312,7 @@ void main()
     float disableDepthTestDistance = compressedAttribute3.z;
 
     #ifdef CLAMP_TO_GROUND
-    v_eyeDepthAndDistance.y = disableDepthTestDistance;
+    v_eyeDepthDistanceAndApplyTranslate.y = disableDepthTestDistance;
     #endif
 
     if (disableDepthTestDistance == 0.0 && czm_minimumDisableDepthTestDistance != 0.0)

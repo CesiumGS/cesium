@@ -347,6 +347,7 @@ define([
         if (defined(backgroundBillboard)) {
             totalLineWidth += (backgroundPadding.x * 2);
             totalLineHeight += (backgroundPadding.y * 2);
+            backgroundBillboard._labelHorizontalOrigin = horizontalOrigin;
         }
 
         glyphPixelOffset.x = widthOffset * scale * resolutionScale;
@@ -380,6 +381,7 @@ define([
                     glyph.billboard._setTranslate(glyphPixelOffset);
                     glyph.billboard._labelDimensions.x = totalLineWidth;
                     glyph.billboard._labelDimensions.y = totalLineHeight;
+                    glyph.billboard._labelHorizontalOrigin = horizontalOrigin;
                 }
 
                 //Compute the next x offset taking into acocunt the kerning performed

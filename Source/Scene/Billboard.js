@@ -160,6 +160,7 @@ define([
         this._imageHeight = undefined;
 
         this._labelDimensions = undefined;
+        this._labelHorizontalOrigin = undefined;
 
         var image = options.image;
         var imageId = options.imageId;
