@@ -301,7 +301,7 @@ define([
         }
 
         if (tile.state === QuadtreeTileLoadState.LOADING) {
-            processTerrainStateMachine(tile, frameState, terrainProvider, vertexArraysToDestroy);
+            processTerrainStateMachine(tile, frameState, terrainProvider, imageryLayerCollection, vertexArraysToDestroy);
         }
 
         // The terrain is renderable as soon as we have a valid vertex array.
@@ -400,12 +400,51 @@ define([
         }
     }
 
-    function processTerrainStateMachine(tile, frameState, terrainProvider, vertexArraysToDestroy) {
+    // var startTime;
+    // var stopTime;
+
+    function processTerrainStateMachine(tile, frameState, terrainProvider, imageryLayerCollection, vertexArraysToDestroy) {
         var surfaceTile = tile.data;
         var loaded = surfaceTile.loadedTerrain;
 
         if (defined(loaded)) {
+            // If this tile is FAILED, we'll need to upsample from the parent. If the parent isn't
+            // ready for that, let's push it along.
+            var parent = tile.parent;
+            if (loaded.state === TerrainState.FAILED && parent !== undefined) {
+                var parentReady = parent.data !== undefined && parent.data.terrainData !== undefined && parent.data.terrainData._mesh !== undefined;
+                if (!parentReady) {
+                    //console.log('Waiting on L' + parent.level + 'X' + parent.x + 'Y' + parent.y);
+                    GlobeSurfaceTile.processStateMachine(parent, frameState, terrainProvider, imageryLayerCollection, vertexArraysToDestroy);
+                }
+            }
+
+            // if (tile.level === 11 && tile.x === 698 && tile.y === 603 ||
+            //     tile.level === 10 && tile.x === 349 && tile.y === 301 ||
+            //     tile.level === 9 && tile.x === 174 && tile.y === 150) {
+            //     //console.log('Before L' + tile.level + 'X' + tile.x + 'Y' + tile.y + ': ' + loaded.state);
+            // }
+
+            // if (tile.level === 10 && tile.x === 349 && tile.y === 301) {
+            //     if (parent.data && parent.data.terrainData && parent.data.terrainData._mesh && startTime === undefined) {
+            //         startTime = performance.now();
+            //     }
+            // }
+
             loaded.processLoadStateMachine(tile, frameState, terrainProvider, tile.x, tile.y, tile.level, tile._priorityFunction);
+
+            // if (tile.level === 10 && tile.x === 349 && tile.y === 301) {
+            //     if (tile.data && tile.data.terrainData && stopTime === undefined) {
+            //         stopTime = performance.now();
+            //         console.log('Full upsample: ' + (stopTime - startTime));
+            //     }
+            // }
+
+            // if (tile.level === 11 && tile.x === 698 && tile.y === 603 ||
+            //     tile.level === 10 && tile.x === 349 && tile.y === 301 ||
+            //     tile.level === 9 && tile.x === 174 && tile.y === 150) {
+            //     //console.log('After L' + tile.level + 'X' + tile.x + 'Y' + tile.y + ': ' + loaded.state);
+            // }
 
             // Publish the terrain data on the tile as soon as it is available.
             // We'll potentially need it to upsample child tiles.

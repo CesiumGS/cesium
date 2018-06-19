@@ -110,6 +110,9 @@ define([
         }
     };
 
+    // var startTime;
+    // var stopTime;
+
     function upsample(tileTerrain, tile, frameState, terrainProvider, x, y, level, priorityFunction) {
         var parent = tile.parent;
         if (!parent) {
@@ -122,10 +125,14 @@ define([
         var sourceY = parent.y;
         var sourceLevel = parent.level;
 
-        if (sourceData === undefined) {
+        if (sourceData === undefined || sourceData._mesh === undefined) {
             // Parent is not available, so we can't upsample this tile yet.
             return;
         }
+
+        // if (tile.level === 10 && tile.x === 349 && tile.y === 301 && startTime === undefined) {
+        //     startTime = performance.now();
+        // }
 
         tileTerrain.data = sourceData.upsample(terrainProvider.tilingScheme, sourceX, sourceY, sourceLevel, x, y, level);
         if (!defined(tileTerrain.data)) {
@@ -133,9 +140,18 @@ define([
             return;
         }
 
+        // if (tile.level === 10 && tile.x === 349 && tile.y === 301 && stopTime === undefined) {
+        //     stopTime = performance.now();
+        //     console.log('Waiting for a slot: ' + (stopTime - startTime));
+        // }
+
         tileTerrain.state = TerrainState.RECEIVING;
 
         when(tileTerrain.data, function(terrainData) {
+            // if (tile.level === 10 && tile.x === 349 && tile.y === 301) {
+            //     var stopTime = performance.now();
+            //     console.log('Full upsample2: ' + (stopTime - startTime));
+            // }
             tileTerrain.data = terrainData;
             tileTerrain.state = TerrainState.RECEIVED;
         }, function() {

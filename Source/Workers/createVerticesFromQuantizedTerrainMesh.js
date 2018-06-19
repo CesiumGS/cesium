@@ -46,6 +46,8 @@ define([
     var scratchFromENU = new Matrix4();
 
     function createVerticesFromQuantizedTerrainMesh(parameters, transferableObjects) {
+        // var startTime = performance.now();
+
         var quantizedVertices = parameters.quantizedVertices;
         var quantizedVertexCount = quantizedVertices.length / 3;
         var octEncodedNormals = parameters.octEncodedNormals;
@@ -207,6 +209,9 @@ define([
         addSkirt(vertexBuffer, vertexBufferIndex, indexBuffer, indexBufferIndex, parameters.northIndices, encoding, heights, uvs, octEncodedNormals, ellipsoid, rectangle, parameters.northSkirtHeight, true, exaggeration, southMercatorY, oneOverMercatorHeight, northLongitudeOffset, northLatitudeOffset);
 
         transferableObjects.push(vertexBuffer.buffer, indexBuffer.buffer);
+
+        // var stopTime = performance.now();
+        // console.log('createVerticesFromQuantizedTerrainMesh time: ' + (stopTime - startTime));
 
         return {
             vertices : vertexBuffer.buffer,
