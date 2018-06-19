@@ -17,6 +17,7 @@ Change Log
    * Use `GroundPolylinePrimitive.isSupported` to check for support.
 * `PostProcessStage` has a `selected` property which is an array of primitives used for selectively applying a post-process stage. [#6476](https://github.com/AnalyticalGraphicsInc/cesium/pull/6476)
    * The `PostProcessStageLibrary.createBlackAndWhiteStage` and `PostProcessStageLibrary.createSilhouetteStage` have per-feature support.
+* Added CZML support for `zIndex` for `corridor`, `ellipse`, `polygon` and `rectangle` [#6708](https://github.com/AnalyticalGraphicsInc/cesium/pull/6708) 
 
 ##### Fixes :wrench:
 * Fixed a bug causing crashes with custom vertex attributes on `Geometry` crossing the IDL. Attributes will be barycentrically interpolated. [#6644](https://github.com/AnalyticalGraphicsInc/cesium/pull/6644)
