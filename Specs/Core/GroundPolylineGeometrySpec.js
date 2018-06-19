@@ -247,7 +247,7 @@ defineSuite([
 
         var geometry = GroundPolylineGeometry.createGeometry(groundPolylineGeometry);
 
-        expect(geometry).not.toBeDefined();
+        expect(geometry).toBeUndefined();
     });
 
     it('miters turns', function() {
