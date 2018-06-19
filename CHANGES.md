@@ -8,12 +8,19 @@ Change Log
 * Dropped support for directory URLs when loading tilesets to match the updated [3D Tiles spec](https://github.com/AnalyticalGraphicsInc/3d-tiles/issues/272). [#6502](https://github.com/AnalyticalGraphicsInc/cesium/issues/6502)
 
 ##### Additions :tada:
+* Added support for Polylines on Terrain via the `Entity` API [#6689](https://github.com/AnalyticalGraphicsInc/cesium/pull/6689)
+   * Use the `clampToGround` option for `PolylineGraphics`.
+   * Requires depth texture support (`WEBGL_depth_texture` or `WEBKIT_WEBGL_depth_texture`), otherwise `clampToGround` will be ignored.
+   * Added `Entity.supportsPolylinesOnTerrain` for checking if the current platform supports `clampToGround`.
 * Added `GroundPolylinePrimitive` and `GroundPolylineGeometry` for rendering polylines on terrain via the `Primitive` API. [#6615](https://github.com/AnalyticalGraphicsInc/cesium/pull/6615)
+   * Requires depth texture support (`WEBGL_depth_texture` or `WEBKIT_WEBGL_depth_texture`).
+   * Use `GroundPolylinePrimitive.isSupported` to check for support.
 * `PostProcessStage` has a `selected` property which is an array of primitives used for selectively applying a post-process stage. [#6476](https://github.com/AnalyticalGraphicsInc/cesium/pull/6476)
    * The `PostProcessStageLibrary.createBlackAndWhiteStage` and `PostProcessStageLibrary.createSilhouetteStage` have per-feature support.
 
 ##### Fixes :wrench:
 * Fixed a bug causing crashes with custom vertex attributes on `Geometry` crossing the IDL. Attributes will be barycentrically interpolated. [#6644](https://github.com/AnalyticalGraphicsInc/cesium/pull/6644)
+* Fixed a bug causing Point Cloud tiles with unsigned int batch-ids to not load. [#6666](https://github.com/AnalyticalGraphicsInc/cesium/pull/6666)
 * Fixed a bug with Draco encoded i3dm tiles, and loading two Draco models with the same url. [#6668](https://github.com/AnalyticalGraphicsInc/cesium/issues/6668)
 
 ### 1.46.1 - 2018-06-01
