@@ -110,7 +110,6 @@ define([
         this._parsedContent = undefined;
 
         this._drawCommand = undefined;
-        this._pickCommand = undefined;
         this._pickId = undefined; // Only defined when batchTable is undefined
         this._isTranslucent = false;
         this._styleTranslucent = false;
@@ -375,7 +374,10 @@ define([
         var batchIds;
         if (defined(featureTableJson.BATCH_ID)) {
             batchIds = featureTable.getPropertyArray('BATCH_ID', ComponentDatatype.UNSIGNED_SHORT, 1);
-
+            if (ComponentDatatype.fromTypedArray(batchIds) === ComponentDatatype.UNSIGNED_INT) {
+                // WebGL does not support UNSIGNED_INT vertex attributes. Convert these to FLOAT.
+                batchIds = new Float32Array(batchIds);
+            }
             var batchLength = featureTable.getGlobalProperty('BATCH_LENGTH');
             if (!defined(batchLength)) {
                 throw new RuntimeError('Global property: BATCH_LENGTH must be defined when BATCH_ID is defined.');
@@ -696,26 +698,22 @@ define([
         });
 
         var drawUniformMap = uniformMap;
+        var pickId;
 
         if (hasBatchTable) {
             drawUniformMap = batchTable.getUniformMapCallback()(uniformMap);
-        }
-
-        var pickUniformMap;
-
-        if (hasBatchTable) {
-            pickUniformMap = batchTable.getPickUniformMapCallback()(uniformMap);
+            pickId = batchTable.getPickId();
         } else {
             content._pickId = context.createPickId({
                 primitive : content._tileset,
                 content : content
             });
-
-            pickUniformMap = combine(uniformMap, {
+            drawUniformMap = combine(uniformMap, {
                 czm_pickColor : function() {
                     return content._pickId.color;
                 }
             });
+            pickId = 'czm_pickColor';
         }
 
         content._opaqueRenderState = RenderState.fromCache({
@@ -745,21 +743,8 @@ define([
             pass : isTranslucent ? Pass.TRANSLUCENT : Pass.CESIUM_3D_TILE,
             owner : content,
             castShadows : false,
-            receiveShadows : false
-        });
-
-        content._pickCommand = new DrawCommand({
-            boundingVolume : undefined, // Updated in update
-            cull : false, // Already culled by 3D Tiles
-            modelMatrix : new Matrix4(),
-            primitiveType : PrimitiveType.POINTS,
-            vertexArray : vertexArray,
-            count : pointsLength,
-            shaderProgram : undefined, // Updated in createShaders
-            uniformMap : pickUniformMap,
-            renderState : isTranslucent ? content._translucentRenderState : content._opaqueRenderState,
-            pass : isTranslucent ? Pass.TRANSLUCENT : Pass.CESIUM_3D_TILE,
-            owner : content
+            receiveShadows : false,
+            pickId : pickId
         });
     }
 
@@ -1080,7 +1065,13 @@ define([
 
         vs += '} \n';
 
-        var fs = 'varying vec4 v_color; \n';
+        var fs = '';
+
+        if (!hasBatchTable) {
+            fs += 'uniform vec4 czm_pickColor;\n';
+        }
+
+        fs += 'varying vec4 v_color; \n';
 
         if (hasClippedContent) {
             fs += 'uniform sampler2D u_clippingPlanes; \n' +
@@ -1110,16 +1101,6 @@ define([
             drawFS = batchTable.getFragmentShaderCallback(false, undefined)(drawFS);
         }
 
-        var pickVS = vs;
-        var pickFS = fs;
-
-        if (hasBatchTable) {
-            pickVS = batchTable.getPickVertexShaderCallback('a_batchId')(pickVS);
-            pickFS = batchTable.getPickFragmentShaderCallback()(pickFS);
-        } else {
-            pickFS = ShaderSource.createPickFragmentShaderSource(pickFS, 'uniform');
-        }
-
         var drawCommand = content._drawCommand;
         if (defined(drawCommand.shaderProgram)) {
             // Destroy the old shader
@@ -1129,18 +1110,6 @@ define([
             context : context,
             vertexShaderSource : drawVS,
             fragmentShaderSource : drawFS,
-            attributeLocations : attributeLocations
-        });
-
-        var pickCommand = content._pickCommand;
-        if (defined(pickCommand.shaderProgram)) {
-            // Destroy the old shader
-            pickCommand.shaderProgram.destroy();
-        }
-        pickCommand.shaderProgram = ShaderProgram.fromCache({
-            context : context,
-            vertexShaderSource : pickVS,
-            fragmentShaderSource : pickFS,
             attributeLocations : attributeLocations
         });
 
@@ -1278,8 +1247,6 @@ define([
                 }
             }
 
-            Matrix4.clone(this._drawCommand.modelMatrix, this._pickCommand.modelMatrix);
-
             var boundingVolume;
             if (defined(this._tile._contentBoundingVolume)) {
                 boundingVolume = this._mode === SceneMode.SCENE3D ? this._tile._contentBoundingVolume.boundingSphere : this._tile._contentBoundingVolume2D.boundingSphere;
@@ -1288,7 +1255,6 @@ define([
             }
 
             this._drawCommand.boundingVolume = boundingVolume;
-            this._pickCommand.boundingVolume = boundingVolume;
         }
 
         this._drawCommand.castShadows = ShadowMode.castShadows(tileset.shadows);
@@ -1311,11 +1277,8 @@ define([
         var commandList = frameState.commandList;
 
         var passes = frameState.passes;
-        if (passes.render) {
+        if (passes.render || passes.pick) {
             commandList.push(this._drawCommand);
-        }
-        if (passes.pick) {
-            commandList.push(this._pickCommand);
         }
     };
 
@@ -1325,11 +1288,9 @@ define([
 
     PointCloud3DTileContent.prototype.destroy = function() {
         var command = this._drawCommand;
-        var pickCommand = this._pickCommand;
         if (defined(command)) {
             command.vertexArray = command.vertexArray && command.vertexArray.destroy();
             command.shaderProgram = command.shaderProgram && command.shaderProgram.destroy();
-            pickCommand.shaderProgram = pickCommand.shaderProgram && pickCommand.shaderProgram.destroy();
         }
         this._batchTable = this._batchTable && this._batchTable.destroy();
         return destroyObject(this);

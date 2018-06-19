@@ -838,6 +838,15 @@ define([
         },
 
         /**
+         * @private
+         */
+        pickId : {
+            get : function() {
+                return this._pickId;
+            }
+        },
+
+        /**
          * <p>
          * Gets or sets the image to be used for this billboard.  If a texture has already been created for the
          * given image, the existing texture is used.
