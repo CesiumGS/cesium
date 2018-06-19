@@ -435,12 +435,23 @@ define([
             throw new RuntimeError('Either POSITION or POSITION_QUANTIZED must be defined.');
         }
 
+<<<<<<< HEAD
         if (defined(featureTableJson.CONSTANT_RGBA)) {
             var constantRGBA = featureTable.getGlobalProperty('CONSTANT_RGBA', ComponentDatatype.UNSIGNED_BYTE, 4);
             content._constantColor = Color.fromBytes(constantRGBA[0], constantRGBA[1], constantRGBA[2], constantRGBA[3], content._constantColor);
         }
 
         if (hasBatchIds) {
+=======
+        // Get the batchIds and batch table. BATCH_ID does not need to be defined when the point cloud has per-point properties.
+        var batchIds;
+        if (defined(featureTableJson.BATCH_ID)) {
+            batchIds = featureTable.getPropertyArray('BATCH_ID', ComponentDatatype.UNSIGNED_SHORT, 1);
+            if (ComponentDatatype.fromTypedArray(batchIds) === ComponentDatatype.UNSIGNED_INT) {
+                // WebGL does not support UNSIGNED_INT vertex attributes. Convert these to FLOAT.
+                batchIds = new Float32Array(batchIds);
+            }
+>>>>>>> master
             var batchLength = featureTable.getGlobalProperty('BATCH_LENGTH');
             if (!defined(batchLength)) {
                 throw new RuntimeError('Global property: BATCH_LENGTH must be defined when BATCH_ID is defined.');
@@ -686,6 +697,10 @@ define([
 
         var batchIdsVertexBuffer;
         if (hasBatchIds) {
+            if (ComponentDatatype.fromTypedArray(batchIds) === ComponentDatatype.UNSIGNED_INT) {
+                // WebGL does not support UNSIGNED_INT vertex attributes. Convert these to FLOAT.
+                batchIds = new Float32Array(batchIds);
+            }
             batchIdsVertexBuffer = Buffer.createVertexBuffer({
                 context : context,
                 typedArray : batchIds,
