@@ -134,8 +134,7 @@ define([
                 var parentBvh = parent.data.getBvh(parent, terrainProvider);
                 if (parentBvh !== undefined && parentBvh.length > 2) {
                     var subsetLength = (parentBvh.length - 2) / 4;
-                    // TODO: Cesium tiles are numbered from the North aren't there? This code is assuming from the South.
-                    var childIndex = ((tile.y % 2) === 0 ? 0 : 2) + ((tile.x % 2) === 0 ? 0 : 1);
+                    var childIndex = (tile.y === parent.y * 2 ? 2 : 0) + (tile.x === parent.x * 2 ? 0 : 1);
                     var start = 2 + subsetLength * childIndex;
                     this._bvh = parentBvh.subarray(start, start + subsetLength);
                 }
