@@ -111,10 +111,10 @@ defineSuite([
                 var isUpdated = batch.update(time);
                 scene.render(time);
                 return isUpdated;
-            }).then(function() {
-                expect(scene.primitives.length).toEqual(2);
-                batch.removeAllPrimitives();
             });
+        }).then(function() {
+            expect(scene.primitives.length).toEqual(2);
+            batch.removeAllPrimitives();
         });
     });
 

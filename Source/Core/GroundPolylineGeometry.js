@@ -1,5 +1,6 @@
 define([
         './ApproximateTerrainHeights',
+        './arrayRemoveDuplicates',
         './BoundingSphere',
         './Cartesian3',
         './Cartographic',
@@ -24,6 +25,7 @@ define([
         './WebMercatorProjection'
     ], function(
         ApproximateTerrainHeights,
+        arrayRemoveDuplicates,
         BoundingSphere,
         Cartesian3,
         Cartographic,
@@ -451,6 +453,10 @@ define([
             cartographics[i] = cartographic;
         }
 
+        // Remove duplicates
+        cartographics = arrayRemoveDuplicates(cartographics, Cartographic.equalsEpsilon);
+        cartographicsLength = cartographics.length;
+
         /**** Build heap-side arrays for positions, interpolated cartographics, and normals from which to compute vertices ****/
         // We build a "wall" and then decompose it into separately connected component "volumes" because we need a lot
         // of information about the wall. Also, this simplifies interpolation.
@@ -693,6 +699,7 @@ define([
     var normalNudgeScratch = new Cartesian3();
 
     var scratchBoundingSpheres = [new BoundingSphere(), new BoundingSphere()];
+    var boundingSphereCenterCartographicScratch = new Cartographic();
 
     // Winding order is reversed so each segment's volume is inside-out
     var REFERENCE_INDICES = [
@@ -806,6 +813,9 @@ define([
 
         var lengthSoFar3D = 0.0;
         var lengthSoFar2D = 0.0;
+
+        // For translating bounding volume
+        var sumHeights = 0.0;
 
         for (i = 0; i < segmentCount; i++) {
             var startBottom = Cartesian3.clone(endBottom, segmentStartBottomScratch);
@@ -1005,6 +1015,9 @@ define([
             var minHeight = minMaxHeights.minimumTerrainHeight;
             var maxHeight = minMaxHeights.maximumTerrainHeight;
 
+            sumHeights += minHeight;
+            sumHeights += maxHeight;
+
             adjustHeights(startBottom, startTop, minHeight, maxHeight, adjustHeightStartBottom, adjustHeightStartTop);
             adjustHeights(endBottom, endTop, minHeight, maxHeight, adjustHeightEndBottom, adjustHeightEndTop);
 
@@ -1067,6 +1080,13 @@ define([
         BoundingSphere.fromVertices(bottomPositionsArray, Cartesian3.ZERO, 3, boundingSpheres[0]);
         BoundingSphere.fromVertices(topPositionsArray, Cartesian3.ZERO, 3, boundingSpheres[1]);
         var boundingSphere = BoundingSphere.fromBoundingSpheres(boundingSpheres);
+
+        // Adjust bounding sphere height and radius to cover whole volume
+        var midHeight = sumHeights / (segmentCount * 2.0);
+        var boundingSphereCenterCartographic = Cartographic.fromCartesian(boundingSphere.center, ellipsoid, boundingSphereCenterCartographicScratch);
+        boundingSphereCenterCartographic.height = midHeight;
+        boundingSphere.center = Cartographic.toCartesian(boundingSphereCenterCartographic, ellipsoid, boundingSphere.center);
+        boundingSphere.radius = Math.max(boundingSphere.radius, midHeight);
 
         var attributes = {
             position : new GeometryAttribute({

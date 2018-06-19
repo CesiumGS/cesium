@@ -216,6 +216,25 @@ defineSuite([
         expect(geometry.attributes.texcoordNormalization2D).not.toBeDefined();
     });
 
+    it('removes adjacent positions with the same latitude/longitude', function() {
+        var startCartographic = Cartographic.fromDegrees(0.01, 0.0);
+        var endCartographic = Cartographic.fromDegrees(0.02, 0.0);
+        var groundPolylineGeometry = new GroundPolylineGeometry({
+            positions : Cartesian3.fromRadiansArrayHeights([
+                startCartographic.longitude, startCartographic.latitude, 0.0,
+                endCartographic.longitude, endCartographic.latitude, 0.0,
+                endCartographic.longitude, endCartographic.latitude, 0.0,
+                endCartographic.longitude, endCartographic.latitude, 10.0
+            ]),
+            granularity : 0.0
+        });
+
+        var geometry = GroundPolylineGeometry.createGeometry(groundPolylineGeometry);
+
+        expect(geometry.indices.length).toEqual(36);
+        expect(geometry.attributes.position.values.length).toEqual(24);
+    });
+
     it('miters turns', function() {
         var groundPolylineGeometry = new GroundPolylineGeometry({
             positions : Cartesian3.fromDegreesArray([
@@ -497,6 +516,26 @@ defineSuite([
 
         GroundPolylineGeometry._projectNormal(projection, cartographic, normal, projectedPosition, result);
         expect(Cartesian3.equalsEpsilon(result, new Cartesian3(1.0, 0.0, 0.0), CesiumMath.EPSILON7)).toBe(true);
+    });
+
+    it('creates bounding spheres that cover the entire polyline volume height', function() {
+        var positions = Cartesian3.fromDegreesArray([
+            -122.17580380403314, 46.19984918190237,
+            -122.17581380403314, 46.19984918190237
+        ]);
+
+        // Mt. St. Helens - provided coordinates are a few meters apart
+        var groundPolylineGeometry = new GroundPolylineGeometry({
+            positions : positions,
+            granularity : 0.0 // no interpolative subdivision
+        });
+
+        var geometry = GroundPolylineGeometry.createGeometry(groundPolylineGeometry);
+
+        var boundingSphere = geometry.boundingSphere;
+        var pointsDistance = Cartesian3.distance(positions[0], positions[1]);
+
+        expect(boundingSphere.radius > pointsDistance).toBe(true);
     });
 
     var packedInstance = [positions.length];
