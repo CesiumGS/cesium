@@ -19,12 +19,6 @@
 <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
 <style>
     @import url(../templates/bucket.css);
-
-    #viewChanged, #cameraChanged {
-        display: none;
-        background-color: red;
-        color: white;
-    }
 </style>
 <div id="cesiumContainer" class="fullSize"></div>
 <div id="loadingOverlay"><h1>Loading...</h1></div>
@@ -49,9 +43,8 @@ var viewer = new Cesium.Viewer('cesiumContainer',  {
     infoBox : false,
     terrainProvider : Cesium.createWorldTerrain()
 });
-// Create a function to place a point given a world position.
 function createPoint(worldPosition) {
-    var point = new Cesium.Entity({
+    var point = viewer.entities.add({
         position : worldPosition,
         point : {
             color : Cesium.Color.WHITE,
@@ -59,12 +52,9 @@ function createPoint(worldPosition) {
             heightReference: Cesium.HeightReference.CLAMP_TO_GROUND
         }
     });
-    viewer.entities.add(point);
+
     return point;
 }
-// On left mouse click, we want to:
-// * Start a new shape if one doesn't already exist.
-// * Add a vertex to the active shape if one exists.
 var activeShapePoints = [];
 var activeShape;
 var floatingPoint;
@@ -76,25 +66,10 @@ handler.setInputAction(function(event) {
     var earthPosition = viewer.scene.pickPosition(event.position);
     // `earthPosition` will be undefined if our mouse is not over the globe.
     if (Cesium.defined(earthPosition)) {
-        // If this is the first point, we need to initialize the shape.
         if (activeShapePoints.length === 0) {
-            // This is the point that'll follow the mouse.
             floatingPoint = createPoint(earthPosition);
-            // For the first point, we want to push an extra position into our list of vertices
-            // this will be a dynamic point that'll be replaced when the mouse moves.
             activeShapePoints.push(earthPosition);
-            // We create a callback property for our positions since we want the shape to update
-            // in real time as we move the mouse. We make sure to pass `false` to the
-            // `CallbackProperty` constructor to mark it as not constant.
             var dynamicPositions = new Cesium.CallbackProperty(function () {
-                // This is a work-around since polylines when `clampToGround` is true will
-                // crash if you try to draw a zero length line
-                if (activeShapePoints.length === 2) {
-                    var distance = Cesium.Cartesian3.distance(activeShapePoints[0], activeShapePoints[1]);
-                    if (distance === 0) {
-                        return [];
-                    }
-                }
                 return activeShapePoints;
             }, false);
             if (drawingMode === 'line') {
@@ -116,14 +91,11 @@ handler.setInputAction(function(event) {
                 });
             }
         }
-        // Add this point to the list of vertices defining the shape
         activeShapePoints.push(earthPosition);
-        // Render a point to mark this vertex
         createPoint(earthPosition);
     }
 }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
-// On mouse move, if we have an active shape and a valid point, update the list of points
-// and since the shape is using `CallbackProperty` property it will automatically update.
+
 handler.setInputAction(function(event) {
     if (Cesium.defined(floatingPoint)) {
         var newPosition = viewer.scene.pickPosition(event.endPosition);
@@ -134,7 +106,7 @@ handler.setInputAction(function(event) {
         }
     }
 }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
-// On right click, terminate active shape and redraw it as a new entity without the `CallbackProperty`.
+
 function terminateShape() {
     activeShapePoints.pop();
     if (drawingMode === 'line') {
