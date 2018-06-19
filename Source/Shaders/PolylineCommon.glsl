@@ -99,7 +99,17 @@ vec4 getPolylineWindowCoordinatesEC(vec4 positionEC, vec4 prevEC, vec4 nextEC, f
         //     float sinAngle = length(cross(vec3(direction, 0.0), vec3(nextWC, 0.0)));
         // Because the z components of both vectors are zero, the x and y coordinate will be zero.
         // Therefore, the sine of the angle is just the z component of the cross product.
-        float sinAngle = abs(direction.x * nextWC.y - direction.y * nextWC.x);
+        
+        //float sinAngle = abs(direction.x * nextWC.y - direction.y * nextWC.x);
+        
+        // But sinAngle should not be computed using the Window Coordinates of the points,
+        // which leads to the variation of offset when the position of camera changes.
+        // We should use the Earth Coordinates.
+        
+        vec3 directionPrev = normalize(prevEC.xyz - positionEC.xyz);
+        vec3 directionNext = normalize(nextEC.xyz - positionEC.xyz);
+        vec3 directionEC = normalize(directionPrev + directionNext);
+        float sinAngle = length(cross(directionEC, directionNext));
         expandWidth = clamp(expandWidth / sinAngle, 0.0, width * 2.0);
     }
 
