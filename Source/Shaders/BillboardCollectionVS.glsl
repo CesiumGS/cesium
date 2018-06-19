@@ -166,28 +166,21 @@ void main()
 
 #ifdef CLAMP_TO_GROUND
     float labelHorizontalOrigin = floor(compressedAttribute2.w - (temp2 * SHIFT_LEFT2));
-
-    if (labelHorizontalOrigin == 0.0) // is a billboard, so set apply translate to false
+    float applyTranslate = 0.0;
+    if (labelHorizontalOrigin != 0.0) // is a billboard, so set apply translate to false
     {
-        v_eyeDepthDistanceAndApplyTranslate.z = 0.0;
-    }
-    else // is a label, so we need to grab the correct horizontal origin texture coordinate
-    {
+        applyTranslate = 1.0;
         labelHorizontalOrigin -= 2.0;
-        v_eyeDepthDistanceAndApplyTranslate.z = 1.0;
         depthOrigin.x = labelHorizontalOrigin + 1.0;
     }
 
-    v_originTextureCoordinateAndTranslate.xy = vec2(1.0) - (depthOrigin * 0.5);
-    v_originTextureCoordinateAndTranslate.zw = translate.xy;
-    v_textureCoordinateBounds = textureCoordinateBounds;
+    depthOrigin = vec2(1.0) - (depthOrigin * 0.5);
 
     temp = compressedAttribute3.w;
     temp = temp * SHIFT_RIGHT12;
-    v_dimensionsAndImageSize.y = (temp - floor(temp)) * SHIFT_LEFT12;
-    v_dimensionsAndImageSize.x = floor(temp);
-
-    v_dimensionsAndImageSize.zw = imageSize.xy;
+    vec2 dimensions;
+    dimensions.y = (temp - floor(temp)) * SHIFT_LEFT12;
+    dimensions.x = floor(temp);
 #endif
 
 #ifdef EYE_DISTANCE_TRANSLUCENCY
@@ -243,7 +236,7 @@ void main()
     vec4 positionEC = czm_modelViewRelativeToEye * p;
 
 #ifdef CLAMP_TO_GROUND
-    v_eyeDepthDistanceAndApplyTranslate.x = positionEC.z;
+    float eyeDepth = positionEC.z;
 #endif
 
     positionEC = czm_eyeOffset(positionEC, eyeOffset.xyz);
@@ -311,10 +304,6 @@ void main()
 #ifdef DISABLE_DEPTH_DISTANCE
     float disableDepthTestDistance = compressedAttribute3.z;
 
-    #ifdef CLAMP_TO_GROUND
-    v_eyeDepthDistanceAndApplyTranslate.y = disableDepthTestDistance;
-    #endif
-
     if (disableDepthTestDistance == 0.0 && czm_minimumDisableDepthTestDistance != 0.0)
     {
         disableDepthTestDistance = czm_minimumDisableDepthTestDistance;
@@ -336,9 +325,19 @@ void main()
     }
 #endif
 
+#ifdef CLAMP_TO_GROUND
+    v_eyeDepthDistanceAndApplyTranslate.x = eyeDepth;
+    v_eyeDepthDistanceAndApplyTranslate.y = disableDepthTestDistance;
+    v_eyeDepthDistanceAndApplyTranslate.z = applyTranslate;
+    v_originTextureCoordinateAndTranslate.xy = depthOrigin;
+    v_originTextureCoordinateAndTranslate.zw = translate;
+    v_textureCoordinateBounds = textureCoordinateBounds;
+    v_dimensionsAndImageSize.xy = dimensions * scale;
+    v_dimensionsAndImageSize.zw = imageSize * scale;
+#endif
+
     v_pickColor = pickColor;
 
     v_color = color;
     v_color.a *= translucency;
-
 }
