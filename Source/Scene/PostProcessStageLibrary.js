@@ -217,6 +217,22 @@ define([
     };
 
     /**
+     * Whether or not a depth of field stage is supported.
+     * <p>
+     * This stage requires the WEBGL_depth_texture extension.
+     * </p>
+     *
+     * @param {Scene} scene The scene.
+     * @return {Boolean} Whether this post process stage is supported.
+     *
+     * @see {Context#depthTexture}
+     * @see {@link http://www.khronos.org/registry/webgl/extensions/WEBGL_depth_texture/|WEBGL_depth_texture}
+     */
+    PostProcessStageLibrary.isDepthOfFieldSupported = function(scene) {
+        return scene.context.depthTexture;
+    };
+
+    /**
      * Creates a post-process stage that detects edges.
      * <p>
      * Writes the color to the output texture with alpha set to 1.0 when it is on an edge.
@@ -228,17 +244,20 @@ define([
      * <li><code>color</code> is the color of the highlighted edge. The default is {@link Color#BLACK}.</li>
      * <li><code>length</code> is the length of the edges in pixels. The default is <code>0.5</code>.</li>
      * </ul>
+     * <p>
+     * This stage is not supported in 2D.
+     * </p>
      * @return {PostProcessStageComposite} A post-process stage that applies an edge detection effect.
      *
      * @example
      * // multiple silhouette effects
      * var yellowEdge = Cesium.PostProcessLibrary.createEdgeDetectionStage();
      * yellowEdge.uniforms.color = Cesium.Color.YELLOW;
-     * yellowEdge.selectedFeatures = [feature0];
+     * yellowEdge.selected = [feature0];
      *
      * var greenEdge = Cesium.PostProcessLibrary.createEdgeDetectionStage();
      * greenEdge.uniforms.color = Cesium.Color.LIME;
-     * greenEdge.selectedFeatures = [feature1];
+     * greenEdge.selected = [feature1];
      *
      * // draw edges around feature0 and feature1
      * postProcessStages.add(Cesium.PostProcessLibrary.createSilhouetteEffect([yellowEdge, greenEdge]);
@@ -254,6 +273,22 @@ define([
                 color : Color.clone(Color.BLACK)
             }
         });
+    };
+
+    /**
+     * Whether or not an edge detection stage is supported.
+     * <p>
+     * This stage requires the WEBGL_depth_texture extension.
+     * </p>
+     *
+     * @param {Scene} scene The scene.
+     * @return {Boolean} Whether this post process stage is supported.
+     *
+     * @see {Context#depthTexture}
+     * @see {@link http://www.khronos.org/registry/webgl/extensions/WEBGL_depth_texture/|WEBGL_depth_texture}
+     */
+    PostProcessStageLibrary.isEdgeDetectionSupported = function(scene) {
+        return scene.context.depthTexture;
     };
 
     function getSilhouetteEdgeDetection(edgeDetectionStages) {
@@ -335,6 +370,22 @@ define([
             inputPreviousStageTexture : false,
             uniforms : edgeDetection.uniforms
         });
+    };
+
+    /**
+     * Whether or not a silhouette stage is supported.
+     * <p>
+     * This stage requires the WEBGL_depth_texture extension.
+     * </p>
+     *
+     * @param {Scene} scene The scene.
+     * @return {Boolean} Whether this post process stage is supported.
+     *
+     * @see {Context#depthTexture}
+     * @see {@link http://www.khronos.org/registry/webgl/extensions/WEBGL_depth_texture/|WEBGL_depth_texture}
+     */
+    PostProcessStageLibrary.isSilhouetteSupported = function(scene) {
+        return scene.context.depthTexture;
     };
 
     /**
@@ -595,6 +646,22 @@ define([
             inputPreviousStageTexture : false,
             uniforms : uniforms
         });
+    };
+
+    /**
+     * Whether or not an ambient occlusion stage is supported.
+     * <p>
+     * This stage requires the WEBGL_depth_texture extension.
+     * </p>
+     *
+     * @param {Scene} scene The scene.
+     * @return {Boolean} Whether this post process stage is supported.
+     *
+     * @see {Context#depthTexture}
+     * @see {@link http://www.khronos.org/registry/webgl/extensions/WEBGL_depth_texture/|WEBGL_depth_texture}
+     */
+    PostProcessStageLibrary.isAmbientOcclusionSupported = function(scene) {
+        return scene.context.depthTexture;
     };
 
     var fxaaFS =
