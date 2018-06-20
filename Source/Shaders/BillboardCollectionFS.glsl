@@ -22,7 +22,8 @@ float getGlobeDepth(vec2 adjustedST, vec2 depthLookupST)
 
     vec2 lookupVector = imageSize * (depthLookupST - adjustedST);
     lookupVector = v_rotationMatrix * lookupVector;
-    vec2 labelOffset = depthLookupST * (dimensions - imageSize) * vec2(1.0, 1.0 - v_originTextureCoordinateAndTranslate.y); // aligns label glyph with bounding rectangle.  Will be zero for billboards because dimensions and imageSize will be equal
+    vec2 labelOffset = (dimensions - imageSize) * (depthLookupST - vec2(0.0, v_originTextureCoordinateAndTranslate.y)); // aligns label glyph with bounding rectangle.  Will be zero for billboards because dimensions and imageSize will be equal
+
     vec2 translation = v_originTextureCoordinateAndTranslate.zw;
 
     if (v_eyeDepthDistanceAndApplyTranslate.z != 0.0)
