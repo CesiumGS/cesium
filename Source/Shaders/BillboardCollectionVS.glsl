@@ -23,6 +23,7 @@ varying vec4 v_textureCoordinateBounds;
 varying vec4 v_originTextureCoordinateAndTranslate;
 varying vec4 v_dimensionsAndImageSize;
 varying vec3 v_eyeDepthDistanceAndApplyTranslate;
+varying mat2 v_rotationMatrix;
 #endif
 
 varying vec4 v_pickColor;
@@ -71,6 +72,10 @@ vec4 addScreenSpaceOffset(vec4 positionEC, vec2 imageSize, float scale, vec2 dir
         float sinTheta = sin(angle);
         mat2 rotationMatrix = mat2(cosTheta, sinTheta, -sinTheta, cosTheta);
         halfSize = rotationMatrix * halfSize;
+
+        #ifdef CLAMP_TO_GROUND
+            v_rotationMatrix = rotationMatrix;
+        #endif
     }
 #endif
 
@@ -237,6 +242,7 @@ void main()
 
 #ifdef CLAMP_TO_GROUND
     float eyeDepth = positionEC.z;
+    v_rotationMatrix = mat2(1.0, 0.0, 0.0, 1.0);
 #endif
 
     positionEC = czm_eyeOffset(positionEC, eyeOffset.xyz);

@@ -13,6 +13,7 @@ varying vec4 v_textureCoordinateBounds;                  // the min and max x an
 varying vec4 v_originTextureCoordinateAndTranslate;      // texture coordinate at the origin, billboard translate (used for label glyphs)
 varying vec4 v_dimensionsAndImageSize;                   // dimensions of the bounding rectangle and the size of the image.  The values will only be different for label glyphs
 varying vec3 v_eyeDepthDistanceAndApplyTranslate;        // The depth of the billboard and the disable depth test distance
+varying mat2 v_rotationMatrix;
 
 float getGlobeDepth(vec2 adjustedST, vec2 depthLookupST)
 {
@@ -20,6 +21,7 @@ float getGlobeDepth(vec2 adjustedST, vec2 depthLookupST)
     vec2 imageSize = v_dimensionsAndImageSize.zw;
 
     vec2 lookupVector = imageSize * (depthLookupST - adjustedST);
+    lookupVector = v_rotationMatrix * lookupVector;
     vec2 labelOffset = depthLookupST * (dimensions - imageSize) * vec2(1.0, 1.0 - v_originTextureCoordinateAndTranslate.y); // aligns label glyph with bounding rectangle.  Will be zero for billboards because dimensions and imageSize will be equal
     vec2 translation = v_originTextureCoordinateAndTranslate.zw;
 
