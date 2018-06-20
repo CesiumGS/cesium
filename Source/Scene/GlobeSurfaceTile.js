@@ -77,10 +77,7 @@ define([
         this.waterMaskTranslationAndScale = new Cartesian4(0.0, 0.0, 1.0, 1.0);
 
         this.terrainData = undefined;
-        this.center = new Cartesian3();
         this.vertexArray = undefined;
-        this.minimumHeight = 0.0;
-        this.maximumHeight = 0.0;
         this.boundingSphere3D = new BoundingSphere();
         this.orientedBoundingBox = undefined;
         this.boundingVolumeSourceTile = undefined;

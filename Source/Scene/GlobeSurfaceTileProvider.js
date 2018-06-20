@@ -535,6 +535,7 @@ define([
         }
 
         var surfaceTile = tile.data;
+        var tileBoundingRegion = surfaceTile.tileBoundingRegion;
 
         // We now need a bounding volume in order to determine visibility, but the tile
         // may not be loaded yet.
@@ -548,7 +549,6 @@ define([
             if (heightSource !== surfaceTile.boundingVolumeSourceTile) {
                 // Heights are from a new source tile, so update the bounding volume.
                 surfaceTile.boundingVolumeSourceTile = heightSource;
-                var tileBoundingRegion = surfaceTile.tileBoundingRegion;
                 surfaceTile.orientedBoundingBox = OrientedBoundingBox.fromRectangle(
                     tile.rectangle,
                     tileBoundingRegion.minimumHeight,
@@ -565,7 +565,7 @@ define([
 
         if (frameState.mode !== SceneMode.SCENE3D) {
             boundingVolume = boundingSphereScratch;
-            BoundingSphere.fromRectangleWithHeights2D(tile.rectangle, frameState.mapProjection, surfaceTile.minimumHeight, surfaceTile.maximumHeight, boundingVolume);
+            BoundingSphere.fromRectangleWithHeights2D(tile.rectangle, frameState.mapProjection, tileBoundingRegion.minimumHeight, tileBoundingRegion.maximumHeight, boundingVolume);
             Cartesian3.fromElements(boundingVolume.center.z, boundingVolume.center.x, boundingVolume.center.y, boundingVolume.center);
 
             if (frameState.mode === SceneMode.MORPHING) {
@@ -1074,7 +1074,7 @@ define([
                 return frameState.fog.minimumBrightness;
             },
             u_textureCoordinateSubset : function() {
-                return this.textureCoordinateSubset;
+                return this.properties.textureCoordinateSubset;
             },
 
             // make a separate object so that changes to the properties are seen on
@@ -1427,7 +1427,7 @@ define([
             uniformMapProperties.southMercatorYAndOneOverHeight.y = oneOverMercatorHeight;
 
             if (subset !== undefined) {
-                Cartesian4.clone(subset, uniformMap.textureCoordinateSubset);
+                Cartesian4.clone(subset, uniformMapProperties.textureCoordinateSubset);
             }
 
             // For performance, use fog in the shader only when the tile is in fog.
@@ -1553,7 +1553,8 @@ define([
             var orientedBoundingBox = command.orientedBoundingBox;
 
             if (frameState.mode !== SceneMode.SCENE3D) {
-                BoundingSphere.fromRectangleWithHeights2D(tile.rectangle, frameState.mapProjection, surfaceTile.minimumHeight, surfaceTile.maximumHeight, boundingVolume);
+                var tileBoundingRegion = surfaceTile.tileBoundingRegion;
+                BoundingSphere.fromRectangleWithHeights2D(tile.rectangle, frameState.mapProjection, tileBoundingRegion.minimumHeight, tileBoundingRegion.maximumHeight, boundingVolume);
                 Cartesian3.fromElements(boundingVolume.center.z, boundingVolume.center.x, boundingVolume.center.y, boundingVolume.center);
 
                 if (frameState.mode === SceneMode.MORPHING) {
