@@ -6,6 +6,7 @@ Change Log
 ##### Breaking Changes :mega:
 * glTF 2.0 models corrected to face +Z forwards per specification.  Internally Cesium uses +X as forward, so a new +Z to +X rotation was added for 2.0 models only.  [#6632](https://github.com/AnalyticalGraphicsInc/cesium/pull/6632)
 * Dropped support for directory URLs when loading tilesets to match the updated [3D Tiles spec](https://github.com/AnalyticalGraphicsInc/3d-tiles/issues/272). [#6502](https://github.com/AnalyticalGraphicsInc/cesium/issues/6502)
+* KML and GeoJSON now use `PolylineGraphics` instead of `CorridorGraphics` for polylines on terrain. [#6706](https://github.com/AnalyticalGraphicsInc/cesium/pull/6706)
 
 ##### Additions :tada:
 * `PostProcessStage` has a `selectedFeatures` property which is an array of primitives used for selectively applying a post-process stage. In the fragment shader, use the function `bool czm_selected(vec2 textureCoordinates` to determine whether or not the stage should be applied at that fragment.
@@ -17,6 +18,7 @@ Change Log
 * Added `GroundPolylinePrimitive` and `GroundPolylineGeometry` for rendering polylines on terrain via the `Primitive` API. [#6615](https://github.com/AnalyticalGraphicsInc/cesium/pull/6615)
    * Requires depth texture support (`WEBGL_depth_texture` or `WEBKIT_WEBGL_depth_texture`).
    * Use `GroundPolylinePrimitive.isSupported` to check for support.
+* CZML now supports `clampToGround` and `zIndex` properties for polylines. [#6706](https://github.com/AnalyticalGraphicsInc/cesium/pull/6706)
 
 ##### Fixes :wrench:
 * Fixed a bug causing crashes with custom vertex attributes on `Geometry` crossing the IDL. Attributes will be barycentrically interpolated. [#6644](https://github.com/AnalyticalGraphicsInc/cesium/pull/6644)
