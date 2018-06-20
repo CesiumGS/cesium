@@ -88,7 +88,7 @@ define([
         this.renderable = false;
 
         /**
-         * Gets or set a value indicating whether or not the tile was entire upsampled from its
+         * Gets or set a value indicating whether or not the tile was entirely upsampled from its
          * parent tile.  If all four children of a parent tile were upsampled from the parent,
          * we will render the parent instead of the children even if the LOD indicates that
          * the children would be preferable.

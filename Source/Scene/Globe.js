@@ -521,7 +521,7 @@ define([
                    tile.northeastChild;
         }
 
-        while (defined(tile) && (!defined(tile.data) || !defined(tile.data.pickTerrain))) {
+        while (defined(tile) && (!defined(tile.data) || !defined(tile.data.mesh))) {
             tile = tile.parent;
         }
 

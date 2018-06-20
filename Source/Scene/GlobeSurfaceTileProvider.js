@@ -524,9 +524,6 @@ define([
      * @returns {Visibility} The visibility of the tile.
      */
     GlobeSurfaceTileProvider.prototype.computeTileVisibility = function(tile, frameState, occluders) {
-        // TODO: this function is now called before the bounding volume and occludee point
-        // are initialized, so the visibility test is rubbish. 😳
-
         var distance = this.computeDistanceToTile(tile, frameState);
         tile._distance = distance;
 
@@ -1298,8 +1295,8 @@ define([
             --maxTextures;
         }
 
-        var rtc = surfaceTile.center;
-        var encoding = surfaceTile.pickTerrain.mesh.encoding;
+        var rtc = surfaceTile.mesh.center;
+        var encoding = surfaceTile.mesh.encoding;
 
         // Not used in 3D.
         var tileRectangle = tileRectangleScratch;
@@ -1420,7 +1417,7 @@ define([
             uniformMapProperties.lightingFadeDistance.y = tileProvider.lightingFadeInDistance;
             uniformMapProperties.zoomedOutOceanSpecularIntensity = tileProvider.zoomedOutOceanSpecularIntensity;
 
-            uniformMapProperties.center3D = surfaceTile.center;
+            uniformMapProperties.center3D = surfaceTile.mesh.center;
             Cartesian3.clone(rtc, uniformMapProperties.rtc);
 
             Cartesian4.clone(tileRectangle, uniformMapProperties.tileRectangle);

@@ -70,7 +70,7 @@ define([
         var quantization = 0;
         var quantizationDefine = '';
 
-        var terrainEncoding = surfaceTile.pickTerrain.mesh.encoding;
+        var terrainEncoding = surfaceTile.mesh.encoding;
         var quantizationMode = terrainEncoding.quantization;
         if (quantizationMode === TerrainQuantization.BITS12) {
             quantization = 1;
