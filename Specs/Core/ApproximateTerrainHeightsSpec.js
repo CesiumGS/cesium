@@ -26,6 +26,20 @@ defineSuite([
             });
     });
 
+    it('initializes from a JSON string', function() {
+        var oldInitPromise = ApproximateTerrainHeights._initPromise;
+        var oldHeights = ApproximateTerrainHeights._terrainHeights;
+
+        ApproximateTerrainHeights.initializeFromString('{"6-0-0":[10.662392616271973,26.89437484741211]}');
+
+        var terrainHeightsJson = ApproximateTerrainHeights._terrainHeights;
+        expect(terrainHeightsJson).toBeDefined();
+        expect(terrainHeightsJson).not.toBe(oldHeights);
+
+        ApproximateTerrainHeights._initPromise = oldInitPromise;
+        ApproximateTerrainHeights._terrainHeights = oldHeights;
+    });
+
     it('getApproximateTerrainHeights computes minimum and maximum terrain heights', function() {
         var result = ApproximateTerrainHeights.getApproximateTerrainHeights(Rectangle.fromDegrees(-121.0, 10.0, -120.0, 11.0));
         expect(result.minimumTerrainHeight).toEqualEpsilon(-476.125711887558, CesiumMath.EPSILON10);

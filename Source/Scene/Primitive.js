@@ -1,4 +1,5 @@
 define([
+        '../Core/ApproximateTerrainHeights',
         '../Core/BoundingSphere',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
@@ -42,6 +43,7 @@ define([
         './SceneMode',
         './ShadowMode'
     ], function(
+        ApproximateTerrainHeights,
         BoundingSphere,
         Cartesian2,
         Cartesian3,
@@ -1119,57 +1121,79 @@ define([
                 });
             }
 
+            var transferTerrainHeightsPromise;
             if (!defined(createGeometryTaskProcessors)) {
                 createGeometryTaskProcessors = new Array(numberOfCreationWorkers);
                 for (i = 0; i < numberOfCreationWorkers; i++) {
                     createGeometryTaskProcessors[i] = new TaskProcessor('createGeometry', Number.POSITIVE_INFINITY);
                 }
+                // Push tasks transferring the JSON to the workers.
+                transferTerrainHeightsPromise = ApproximateTerrainHeights.initialize()
+                    .then(function() {
+                        var terrainHeightsString = JSON.stringify(ApproximateTerrainHeights._terrainHeights);
+                        var workerTerrainHeightsPromises = new Array(numberOfCreationWorkers);
+                        for (i = 0; i < numberOfCreationWorkers; i++) {
+                            workerTerrainHeightsPromises[i] = createGeometryTaskProcessors[i].scheduleTask({
+                                subTasks : [
+                                    {
+                                        moduleName : 'parseTerrainHeights',
+                                        geometry : terrainHeightsString
+                                    }
+                                ]
+                            });
+                        }
+                        return when.all(workerTerrainHeightsPromises);
+                    });
+            } else {
+                transferTerrainHeightsPromise = when();
             }
 
-            var subTask;
-            subTasks = subdivideArray(subTasks, numberOfCreationWorkers);
+            transferTerrainHeightsPromise.then(function() {
+                var subTask;
+                subTasks = subdivideArray(subTasks, numberOfCreationWorkers);
 
-            for (i = 0; i < subTasks.length; i++) {
-                var packedLength = 0;
-                var workerSubTasks = subTasks[i];
-                var workerSubTasksLength = workerSubTasks.length;
-                for (j = 0; j < workerSubTasksLength; ++j) {
-                    subTask = workerSubTasks[j];
-                    geometry = subTask.geometry;
-                    if (defined(geometry.constructor.pack)) {
-                        subTask.offset = packedLength;
-                        packedLength += defaultValue(geometry.constructor.packedLength, geometry.packedLength);
-                    }
-                }
-
-                var subTaskTransferableObjects;
-
-                if (packedLength > 0) {
-                    var array = new Float64Array(packedLength);
-                    subTaskTransferableObjects = [array.buffer];
-
+                for (i = 0; i < subTasks.length; i++) {
+                    var packedLength = 0;
+                    var workerSubTasks = subTasks[i];
+                    var workerSubTasksLength = workerSubTasks.length;
                     for (j = 0; j < workerSubTasksLength; ++j) {
                         subTask = workerSubTasks[j];
                         geometry = subTask.geometry;
                         if (defined(geometry.constructor.pack)) {
-                            geometry.constructor.pack(geometry, array, subTask.offset);
-                            subTask.geometry = array;
+                            subTask.offset = packedLength;
+                            packedLength += defaultValue(geometry.constructor.packedLength, geometry.packedLength);
                         }
                     }
+
+                    var subTaskTransferableObjects;
+
+                    if (packedLength > 0) {
+                        var array = new Float64Array(packedLength);
+                        subTaskTransferableObjects = [array.buffer];
+
+                        for (j = 0; j < workerSubTasksLength; ++j) {
+                            subTask = workerSubTasks[j];
+                            geometry = subTask.geometry;
+                            if (defined(geometry.constructor.pack)) {
+                                geometry.constructor.pack(geometry, array, subTask.offset);
+                                subTask.geometry = array;
+                            }
+                        }
+                    }
+
+                    promises.push(createGeometryTaskProcessors[i].scheduleTask({
+                        subTasks : subTasks[i]
+                    }, subTaskTransferableObjects));
                 }
 
-                promises.push(createGeometryTaskProcessors[i].scheduleTask({
-                    subTasks : subTasks[i]
-                }, subTaskTransferableObjects));
-            }
+                primitive._state = PrimitiveState.CREATING;
 
-            primitive._state = PrimitiveState.CREATING;
-
-            when.all(promises, function(results) {
-                primitive._createGeometryResults = results;
-                primitive._state = PrimitiveState.CREATED;
-            }).otherwise(function(error) {
-                setReady(primitive, frameState, PrimitiveState.FAILED, error);
+                when.all(promises, function(results) {
+                    primitive._createGeometryResults = results;
+                    primitive._state = PrimitiveState.CREATED;
+                }).otherwise(function(error) {
+                    setReady(primitive, frameState, PrimitiveState.FAILED, error);
+                });
             });
         } else if (primitive._state === PrimitiveState.CREATED) {
             var transferableObjects = [];

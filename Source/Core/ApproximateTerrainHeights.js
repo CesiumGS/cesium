@@ -11,7 +11,8 @@ define([
         './Ellipsoid',
         './GeographicTilingScheme',
         './Rectangle',
-        './Resource'
+        './Resource',
+        '../ThirdParty/when'
     ], function(
         buildModuleUrl,
         defaultValue,
@@ -25,7 +26,8 @@ define([
         Ellipsoid,
         GeographicTilingScheme,
         Rectangle,
-        Resource) {
+        Resource,
+        when) {
     'use strict';
 
     var scratchDiagonalCartesianNE = new Cartesian3();
@@ -49,18 +51,28 @@ define([
      * Initializes the minimum and maximum terrain heights
      * @return {Promise}
      */
-    ApproximateTerrainHeights.initialize = function(url) {
+    ApproximateTerrainHeights.initialize = function() {
         var initPromise = ApproximateTerrainHeights._initPromise;
         if (defined(initPromise)) {
             return initPromise;
         }
 
-        url = defaultValue(url, 'Assets/approximateTerrainHeights.json');
-        ApproximateTerrainHeights._initPromise = Resource.fetchJson(buildModuleUrl(url)).then(function(json) {
+        ApproximateTerrainHeights._initPromise = Resource.fetchJson(buildModuleUrl('Assets/approximateTerrainHeights.json')).then(function(json) {
             ApproximateTerrainHeights._terrainHeights = json;
         });
 
         return ApproximateTerrainHeights._initPromise;
+    };
+
+    /**
+     * Initializes the minimum and maximum terrain heights from a string.
+     * Used by workers to receive terrain heights from the main thread.
+     *
+     * @param {String} terrainHeightsString Stringified terrain heights JSON.
+     */
+    ApproximateTerrainHeights.initializeFromString = function(terrainHeightsString) {
+        ApproximateTerrainHeights._terrainHeights = JSON.parse(terrainHeightsString);
+        ApproximateTerrainHeights._initPromise = when();
     };
 
     /**
