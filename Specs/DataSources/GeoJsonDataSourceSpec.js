@@ -688,9 +688,10 @@ defineSuite([
             var entityCollection = dataSource.entities;
             var entity = entityCollection.values[0];
             expect(entity.properties).toBe(lineString.properties);
-            expect(entity.corridor.positions.getValue(time)).toEqual(coordinatesArrayToCartesian(lineString.coordinates));
-            expect(entity.corridor.material.color.getValue(time)).toEqual(GeoJsonDataSource.stroke);
-            expect(entity.corridor.width.getValue(time)).toEqual(2);
+            expect(entity.polyline.positions.getValue(time)).toEqual(coordinatesArrayToCartesian(lineString.coordinates));
+            expect(entity.polyline.material.color.getValue(time)).toEqual(GeoJsonDataSource.stroke);
+            expect(entity.polyline.width.getValue(time)).toEqual(2);
+            expect(entity.polyline.clampToGround.getValue(time)).toEqual(true);
         });
     });
 
@@ -721,9 +722,10 @@ defineSuite([
             for (var i = 0; i < multiLineString.coordinates.length; i++) {
                 var entity = entities[i];
                 expect(entity.properties).toBe(multiLineString.properties);
-                expect(entity.corridor.positions.getValue(time)).toEqual(lines[i]);
-                expect(entity.corridor.material.color.getValue(time)).toEqual(Color.YELLOW);
-                expect(entity.corridor.width.getValue(time)).toEqual(2);
+                expect(entity.polyline.positions.getValue(time)).toEqual(lines[i]);
+                expect(entity.polyline.material.color.getValue(time)).toEqual(Color.YELLOW);
+                expect(entity.polyline.width.getValue(time)).toEqual(2);
+                expect(entity.polyline.clampToGround.getValue(time)).toEqual(true);
             }
         });
     });
