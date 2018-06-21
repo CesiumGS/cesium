@@ -2513,6 +2513,42 @@ defineSuite([
         });
     });
 
+    it('CZML adds data for polyline clamped to terrain.', function() {
+        var polylinePacket = {
+            polyline : {
+                material : {
+                    polylineOutline : {
+                        color : {
+                            rgbaf : [0.1, 0.1, 0.1, 0.1]
+                        },
+                        outlineColor : {
+                            rgbaf : [0.2, 0.2, 0.2, 0.2]
+                        },
+                        outlineWidth : 1.0
+                    }
+                },
+                width : 1.0,
+                show : true,
+                clampToGround : true,
+                zIndex : 1
+            }
+        };
+
+        var dataSource = new CzmlDataSource();
+        return dataSource.load(makePacket(polylinePacket)).then(function(dataSource) {
+            var entity = dataSource.entities.values[0];
+
+            expect(entity.polyline).toBeDefined();
+            expect(entity.polyline.material.color.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Color(0.1, 0.1, 0.1, 0.1));
+            expect(entity.polyline.width.getValue(Iso8601.MINIMUM_VALUE)).toEqual(polylinePacket.polyline.width);
+            expect(entity.polyline.material.outlineColor.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Color(0.2, 0.2, 0.2, 0.2));
+            expect(entity.polyline.material.outlineWidth.getValue(Iso8601.MINIMUM_VALUE)).toEqual(1.0);
+            expect(entity.polyline.show.getValue(Iso8601.MINIMUM_VALUE)).toEqual(true);
+            expect(entity.polyline.clampToGround.getValue(Iso8601.MINIMUM_VALUE)).toEqual(true);
+            expect(entity.polyline.zIndex.getValue(Iso8601.MINIMUM_VALUE)).toEqual(1);
+        });
+    });
+
     it('CZML adds data for infinite model.', function() {
         var modelPacket = {
             model : {
