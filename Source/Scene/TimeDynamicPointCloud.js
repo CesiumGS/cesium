@@ -146,6 +146,14 @@ define([
         this._pickId = undefined;
         this._totalMemoryUsageInBytes = 0;
         this._frames = [];
+        this._previousInterval = undefined;
+        this._nextInterval = undefined;
+        this._clockMultiplier = 0.0;
+        this._lastRenderedFrame = undefined;
+
+        // For calculation average load time
+        this._runningLoadTime = 0.0;
+        this._runningLoadedFramesLength = 0;
     }
 
     defineProperties(TimeDynamicPointCloud.prototype, {
@@ -208,67 +216,51 @@ define([
         this._styleDirty = true;
     };
 
-    function getApproachingInterval(that) {
-        var intervals = that._intervals;
+    function getAverageLoadTime(that) {
+        if (that._runningLoadedFramesLength === 0) {
+            return undefined;
+        }
+
+        // TODO : the first frame to load will be slower due to initializing Draco, which impacts the average
+        var averageLoadTime = that._runningLoadTime / that._runningLoadedFramesLength;
+        return averageLoadTime; // Provide additional buffer since the actual load time fluctuates
+    }
+
+    var scratchDate = new JulianDate();
+
+    function getClockMultiplier(that) {
         var clock = that._clock;
-        var time = clock.currentTime;
         var isAnimating = clock.canAnimate && clock.shouldAnimate;
         var multiplier = clock.multiplier;
-
-        if (!isAnimating && multiplier !== 0) {
-            return undefined;
-        }
-
-        var seconds;
-        var index = intervals.indexOf(time);
-        if (index === -1) {
-            return undefined;
-        }
-
-        var interval = intervals.get(index);
-        if (multiplier > 0) { // animating forward
-            seconds = JulianDate.secondsDifference(interval.stop, time);
-            ++index;
-        } else { //backwards
-            seconds = JulianDate.secondsDifference(interval.start, time); // Will be negative
-            --index;
-        }
-        seconds /= multiplier; // Will always be positive
-
-        // Less than 5 wall time seconds
-        return (index >= 0 && seconds <= 5.0) ? intervals.get(index) : undefined;
+        return isAnimating ? multiplier : 0.0;
     }
 
-    function getLastReadyFrame(that, interval) {
-        var i;
-        var frame;
-        var frames = that._frames;
+    function getNextInterval(that) {
+        var intervals = that._intervals;
         var clock = that._clock;
-        var multiplier = clock.multiplier;
-        var index = getIntervalIndex(that, interval);
+        var multiplier = getClockMultiplier(that);
+
+        if (multiplier === 0.0) {
+            return undefined;
+        }
+
+        var averageLoadTime = getAverageLoadTime(that);
+        if (!defined(averageLoadTime)) {
+            // Don't return the next interval until there is an average load time
+            return undefined;
+        }
+
+        var time = JulianDate.addSeconds(clock.currentTime, averageLoadTime * multiplier, scratchDate);
+        var index = intervals.indexOf(time);
 
         if (multiplier >= 0) {
-            // Animating forwards, so look backwards
-            for (i = index - 1; i >= 0; --i) {
-                frame = frames[i];
-                if (defined(frame) && frame.ready) {
-                    return frame;
-                }
-            }
+            ++index;
         } else {
-            // Animating backwards, so look forwards
-            var length = frames.length;
-            for (i = index + 1; i < length; ++i) {
-                frame = frames[i];
-                if (defined(frame) && frame.ready) {
-                    return frame;
-                }
-            }
+            --index;
         }
-    }
 
-    function getIntervalIndex(that, interval) {
-        return that._intervals.indexOf(interval.start);
+        // Returns undefined if not in range
+        return intervals.get(index);
     }
 
     function getCurrentInterval(that) {
@@ -276,23 +268,46 @@ define([
         var clock = that._clock;
         var time = clock.currentTime;
         var index = intervals.indexOf(time);
-        if (index === -1) {
-            return undefined;
-        }
+
+        // Returns undefined if not in range
         return intervals.get(index);
     }
 
-    function requestFrame(that, interval) {
+    function reachedInterval(that, currentInterval, nextInterval) {
+        var multiplier = getClockMultiplier(that);
+        var currentIndex = getIntervalIndex(that, currentInterval);
+        var nextIndex = getIntervalIndex(that, nextInterval);
+
+        if (multiplier >= 0) {
+            return currentIndex >= nextIndex;
+        }
+        return currentIndex <= nextIndex;
+    }
+
+    function getIntervalIndex(that, interval) {
+        return that._intervals.indexOf(interval.start);
+    }
+
+    function getFrame(that, interval) {
+        var index = getIntervalIndex(that, interval);
+        var frames = that._frames;
+        return frames[index];
+    }
+
+    function requestFrame(that, interval, frameState) {
         var index = getIntervalIndex(that, interval);
         var frames = that._frames;
         var frame = frames[index];
         if (!defined(frame)) {
+            var transformArray = interval.data.transform;
+            var transform = defined(transformArray) ? Matrix4.fromArray(transformArray) : undefined;
             frame = {
-                pointCloud : undefined,
-                transform : interval.data.transform,
-                loadDuration : getTimestamp(), // Updated after the frame is loaded
-                ready : false,
-                touchedFrameNumber : 0
+                pointCloud : undefined, // Created after request resolves
+                transform : transform,
+                timestamp : getTimestamp(),
+                sequential : true, // Whether the frame was loaded in sequential updates
+                ready : false, // True once point cloud is ready
+                touchedFrameNumber : frameState.frameNumber
             };
             frames[index] = frame;
             Resource.fetchArrayBuffer({
@@ -312,23 +327,30 @@ define([
     }
 
     function prepareFrame(that, frame, frameState) {
-        var pointCloud = frame.pointCloud;
-        if (!defined(pointCloud)) {
-            // Still waiting on the request to finish
-            return;
+        if (frame.touchedFrameNumber < frameState.frameNumber - 1) {
+            // If this frame was not loaded in sequential updates then it can't be used it for calculating average load time.
+            // For example: selecting a frame on the timeline, selecting another frame before the request finishes, then selecting this frame later.
+            frame.sequential = false;
         }
 
-        if (!frame.ready) {
+        var pointCloud = frame.pointCloud;
+
+        if (defined(pointCloud) && !frame.ready) {
             // Call update to prepare renderer resources. Don't render anything yet.
             var commandList = frameState.commandList;
             var lengthBeforeUpdate = commandList.length;
             pointCloud.update(frameState);
+
             if (pointCloud.ready) {
                 // Point cloud became ready this update
                 frame.ready = true;
-                frame.loadDuration = getTimestamp() - frame.loadDuration;
                 that._totalMemoryUsageInBytes += pointCloud.geometryByteLength;
                 commandList.length = lengthBeforeUpdate; // Don't allow preparing frame to insert commands.
+                if (frame.sequential) {
+                    // Update the values used to calculate average load time
+                    that._runningLoadTime += (getTimestamp() - frame.timestamp) / 1000.0;
+                    ++that._runningLoadedFramesLength;
+                }
             }
         }
     }
@@ -359,7 +381,7 @@ define([
     }
 
     function loadFrame(that, interval, frameState) {
-        var frame = requestFrame(that, interval);
+        var frame = requestFrame(that, interval, frameState);
         prepareFrame(that, frame, frameState);
         frame.touchedFrameNumber = frameState.frameNumber;
         return frame;
@@ -391,7 +413,37 @@ define([
                 }
             }
         }
+        that._lastRenderedFrame = undefined; // TODO : better approach than this? Maybe last rendered interval?
     }
+
+    function getLastReadyFrame(that, previousInterval, currentInterval) {
+        var i;
+        var frame;
+        var frames = that._frames;
+        var clockMultiplier = getClockMultiplier(that);
+        var currentIndex = getIntervalIndex(that, currentInterval);
+        var previousIndex = getIntervalIndex(that, previousInterval);
+
+        if (clockMultiplier >= 0) {
+            // Animating forwards, so look backwards
+            for (i = currentIndex; i >= previousIndex; --i) {
+                frame = frames[i];
+                if (defined(frame) && frame.ready) {
+                    return frame;
+                }
+            }
+        } else {
+            // Animating backwards, so look forwards
+            for (i = currentIndex; i <= previousIndex; ++i) {
+                frame = frames[i];
+                if (defined(frame) && frame.ready) {
+                    return frame;
+                }
+            }
+        }
+    }
+
+    // TODO : if no frames have been loaded (don't know a load duration yet
 
     // TODO : need to take into account current real-time time it takes to process an average tile, because just fetching the next interval is naive
     // TODO : make sure it works if clock is stopped
@@ -404,6 +456,7 @@ define([
     // TODO : would be helpful to have a bounding sphere associated with the point cloud, better for the draw command to have one
     // TODO : czml to TimeDynamicIntervalCollection
     // TODO : getAbsoluteUri removes the trailing dots
+    // TODO : there is a slight jump when the sim is paused because the previous frame is set to the current frame but the current frame isn't loaded
 
     TimeDynamicPointCloud.prototype.update = function(frameState) {
         if (frameState.mode === SceneMode.MORPHING) {
@@ -449,26 +502,57 @@ define([
         var commandList = frameState.commandList;
         var lengthBeforeUpdate = commandList.length;
 
-        var frame;
-
+        var previousInterval = this._previousInterval;
+        var nextInterval = this._nextInterval;
         var currentInterval = getCurrentInterval(this);
-        if (defined(currentInterval)) {
-            frame = loadFrame(this, currentInterval, frameState);
 
-            if (!frame.ready) {
-                frame = getLastReadyFrame(this, currentInterval);
-            }
-
-            if (defined(frame)) {
-                renderFrame(this, frame, timeSinceLoad, isClipped, clippingPlanesDirty, frameState);
-            }
+        if (!defined(currentInterval)) {
+            // Nothing to render this frame
+            return;
         }
 
-        // Start loading the approaching frame
-        var approachingInterval = getApproachingInterval(this);
-        if (defined(approachingInterval)) {
-            loadFrame(this, approachingInterval, frameState);
+        var clockStateChanged = false;
+        var clockMultiplier = getClockMultiplier(this);
+        var clockPaused = clockMultiplier === 0;
+        if (clockMultiplier !== this._clockMultiplier) {
+            clockStateChanged = true;
+            this._clockMultiplier = clockMultiplier;
         }
+
+        if (!defined(previousInterval) || clockPaused) {
+            previousInterval = currentInterval;
+        }
+
+        if (!defined(nextInterval) || clockStateChanged) {
+            nextInterval = getNextInterval(this);
+        }
+
+        if (defined(nextInterval) && reachedInterval(this, currentInterval, nextInterval)) {
+            previousInterval = nextInterval;
+            nextInterval = getNextInterval(this);
+        }
+
+        var frame = getLastReadyFrame(this, previousInterval, currentInterval);
+
+        if (!defined(frame)) {
+            loadFrame(this, previousInterval, frameState);
+        }
+
+        // If the frame we want to render isn't ready for any reason, render the last rendered frame
+        frame = defaultValue(frame, this._lastRenderedFrame);
+
+        if (defined(frame)) {
+            renderFrame(this, frame, timeSinceLoad, isClipped, clippingPlanesDirty, frameState);
+        }
+
+        if (defined(nextInterval)) {
+            // Start loading the next frame
+            loadFrame(this, nextInterval, frameState);
+        }
+
+        this._previousInterval = previousInterval;
+        this._nextInterval = nextInterval;
+        this._lastRenderedFrame = frame;
 
         var totalMemoryUsageInBytes = this._totalMemoryUsageInBytes;
         var maximumMemoryUsageInBytes = this.maximumMemoryUsage * 1024 * 1024;
