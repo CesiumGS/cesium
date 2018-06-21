@@ -1391,6 +1391,7 @@ define([
         processPacketData(Number, corridor, 'outlineWidth', corridorData.outlineWidth, interval, sourceUri, entityCollection);
         processPacketData(ShadowMode, corridor, 'shadows', corridorData.shadows, interval, sourceUri, entityCollection);
         processPacketData(DistanceDisplayCondition, corridor, 'distanceDisplayCondition', corridorData.distanceDisplayCondition, interval, sourceUri, entityCollection);
+        processPacketData(Number, corridor, 'zIndex', corridorData.zIndex, interval, sourceUri, entityCollection);
     }
 
     function processCylinder(entity, packet, entityCollection, sourceUri) {
@@ -1505,6 +1506,7 @@ define([
         processPacketData(Number, ellipse, 'numberOfVerticalLines', ellipseData.numberOfVerticalLines, interval, sourceUri, entityCollection);
         processPacketData(ShadowMode, ellipse, 'shadows', ellipseData.shadows, interval, sourceUri, entityCollection);
         processPacketData(DistanceDisplayCondition, ellipse, 'distanceDisplayCondition', ellipseData.distanceDisplayCondition, interval, sourceUri, entityCollection);
+        processPacketData(Number, ellipse, 'zIndex', ellipseData.zIndex, interval, sourceUri, entityCollection);
     }
 
     function processEllipsoid(entity, packet, entityCollection, sourceUri) {
@@ -1765,6 +1767,7 @@ define([
         processPacketData(Boolean, polygon, 'closeBottom', polygonData.closeBottom, interval, sourceUri, entityCollection);
         processPacketData(ShadowMode, polygon, 'shadows', polygonData.shadows, interval, sourceUri, entityCollection);
         processPacketData(DistanceDisplayCondition, polygon, 'distanceDisplayCondition', polygonData.distanceDisplayCondition, interval, sourceUri, entityCollection);
+        processPacketData(Number, polygon, 'zIndex', polygonData.zIndex, interval, sourceUri, entityCollection);
     }
 
     function processPolyline(entity, packet, entityCollection, sourceUri) {
@@ -1830,6 +1833,7 @@ define([
         processPacketData(Number, rectangle, 'outlineWidth', rectangleData.outlineWidth, interval, sourceUri, entityCollection);
         processPacketData(ShadowMode, rectangle, 'shadows', rectangleData.shadows, interval, sourceUri, entityCollection);
         processPacketData(DistanceDisplayCondition, rectangle, 'distanceDisplayCondition', rectangleData.distanceDisplayCondition, interval, sourceUri, entityCollection);
+        processPacketData(Number, rectangle, 'zIndex', rectangleData.zIndex, interval, sourceUri, entityCollection);
     }
 
     function processWall(entity, packet, entityCollection, sourceUri) {

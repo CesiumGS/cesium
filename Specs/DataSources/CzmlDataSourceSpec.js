@@ -1115,7 +1115,8 @@ defineSuite([
                     rgbaf : [0.2, 0.2, 0.2, 0.2]
                 },
                 outlineWidth : 6,
-                shadows : 'ENABLED'
+                shadows : 'ENABLED',
+                zIndex: 8
             }
         };
 
@@ -1131,6 +1132,7 @@ defineSuite([
             expect(entity.ellipse.outlineColor.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Color(0.2, 0.2, 0.2, 0.2));
             expect(entity.ellipse.outlineWidth.getValue(Iso8601.MINIMUM_VALUE)).toEqual(6);
             expect(entity.ellipse.shadows.getValue(Iso8601.MINIMUM_VALUE)).toEqual(ShadowMode.ENABLED);
+            expect(entity.ellipse.zIndex.getValue(Iso8601.MINIMUM_VALUE)).toEqual(8);
         });
     });
 
@@ -2370,7 +2372,8 @@ defineSuite([
                 outlineWidth : 6,
                 closeTop : false,
                 closeBottom : false,
-                shadows : 'ENABLED'
+                shadows : 'ENABLED',
+                zIndex: 3
             }
         };
 
@@ -2391,6 +2394,7 @@ defineSuite([
             expect(entity.polygon.closeTop.getValue(Iso8601.MINIMUM_VALUE)).toEqual(false);
             expect(entity.polygon.closeBottom.getValue(Iso8601.MINIMUM_VALUE)).toEqual(false);
             expect(entity.polygon.shadows.getValue(Iso8601.MINIMUM_VALUE)).toEqual(ShadowMode.ENABLED);
+            expect(entity.polygon.zIndex.getValue(Iso8601.MINIMUM_VALUE)).toEqual(3);
         });
     });
 
@@ -2924,7 +2928,8 @@ defineSuite([
                     rgbaf : [0.2, 0.2, 0.2, 0.2]
                 },
                 outlineWidth : 6,
-                shadows : 'ENABLED'
+                shadows : 'ENABLED',
+                zIndex : 6
             }
         };
 
@@ -2947,6 +2952,7 @@ defineSuite([
             expect(entity.rectangle.outlineColor.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Color(0.2, 0.2, 0.2, 0.2));
             expect(entity.rectangle.outlineWidth.getValue(Iso8601.MINIMUM_VALUE)).toEqual(6);
             expect(entity.rectangle.shadows.getValue(Iso8601.MINIMUM_VALUE)).toEqual(ShadowMode.ENABLED);
+            expect(entity.rectangle.zIndex.getValue(Iso8601.MINIMUM_VALUE)).toEqual(6);
         });
     });
 
@@ -3210,7 +3216,8 @@ defineSuite([
                     rgbaf : [0.2, 0.2, 0.2, 0.2]
                 },
                 outlineWidth : 6,
-                shadows : 'ENABLED'
+                shadows : 'ENABLED',
+                zIndex: 5
             }
         };
 
@@ -3233,6 +3240,7 @@ defineSuite([
             expect(entity.corridor.outlineColor.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Color(0.2, 0.2, 0.2, 0.2));
             expect(entity.corridor.outlineWidth.getValue(Iso8601.MINIMUM_VALUE)).toEqual(6);
             expect(entity.corridor.shadows.getValue(Iso8601.MINIMUM_VALUE)).toEqual(ShadowMode.ENABLED);
+            expect(entity.corridor.zIndex.getValue(Iso8601.MINIMUM_VALUE)).toEqual(5);
         });
     });
 
