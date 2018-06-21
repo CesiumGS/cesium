@@ -94,6 +94,7 @@ define([
         var ellipsoid = tilingScheme.ellipsoid;
 
         this._tilesToRender = [];
+        this._nearestRenderableTiles = [];
         this._tileLoadQueueHigh = []; // high priority tiles are preventing refinement
         this._tileLoadQueueMedium = []; // medium priority tiles are being rendered
         this._tileLoadQueueLow = []; // low priority tiles were refined past or are non-visible parts of quads.
@@ -449,6 +450,7 @@ define([
         // Clear the render list.
         var tilesToRender = primitive._tilesToRender;
         tilesToRender.length = 0;
+        primitive._nearestRenderableTiles.length = 0;
 
         // We can't render anything before the level zero tiles exist.
         var tileProvider = primitive._tileProvider;
@@ -522,7 +524,7 @@ define([
                 }
                 ++debug.tilesWaitingForChildren;
             } else if (tileProvider.computeTileVisibility(tile, frameState, occluders) !== Visibility.NONE) {
-                visitTile(primitive, frameState, tile);
+                visitTile(primitive, frameState, tile, tile);
             } else {
                 if (tile.needsLoading) {
                     primitive._tileLoadQueueLow.push(tile);
@@ -532,7 +534,7 @@ define([
         }
     }
 
-    function visitTile(primitive, frameState, tile) {
+    function visitTile(primitive, frameState, tile, nearestRenderableTile) {
         var debug = primitive._debug;
 
         ++debug.tilesVisited;
@@ -544,13 +546,17 @@ define([
             debug.maxDepth = tile.level;
         }
 
+        if (tile.renderable) {
+            nearestRenderableTile = tile;
+        }
+
         if (screenSpaceError(primitive, frameState, tile) < primitive.maximumScreenSpaceError) {
             // This tile meets SSE requirements, so render it.
             if (tile.needsLoading) {
                 // Rendered tile meeting SSE loads with medium priority.
                 primitive._tileLoadQueueMedium.push(tile);
             }
-            addTileToRenderList(primitive, tile);
+            addTileToRenderList(primitive, tile, nearestRenderableTile);
             return;
         }
 
@@ -566,7 +572,7 @@ define([
         if (tileProvider.canRefine(tile)) {
             if (allAreUpsampled) {
                 // No point in rendering the children because they're all upsampled.  Render this tile instead.
-                addTileToRenderList(primitive, tile);
+                addTileToRenderList(primitive, tile, nearestRenderableTile);
 
                 // Load the children even though we're (currently) not going to render them.
                 // A tile that is "upsampled only" right now might change its tune once it does more loading.
@@ -580,7 +586,7 @@ define([
             } else {
                 // SSE is not good enough and children are loaded, so refine.
                 // No need to add the children to the load queue because they'll be added (if necessary) when they're visited.
-                visitVisibleChildrenNearToFar(primitive, southwestChild, southeastChild, northwestChild, northeastChild, frameState);
+                visitVisibleChildrenNearToFar(primitive, southwestChild, southeastChild, northwestChild, northeastChild, frameState, nearestRenderableTile);
 
                 // if (tile.needsLoading) {
                 //     // Tile is not rendered, so load it with low priority.
@@ -591,7 +597,7 @@ define([
             // We'd like to refine but can't because not all of our children are renderable.  Load the refinement blockers with high priority and
             // render this tile in the meantime.
             queueChildLoadNearToFar(primitive, frameState.camera.positionCartographic, southwestChild, southeastChild, northwestChild, northeastChild);
-            addTileToRenderList(primitive, tile);
+            addTileToRenderList(primitive, tile, nearestRenderableTile);
 
             if (tile.needsLoading) {
                 // We will refine this tile when it's possible, so load this tile only with low priority.
@@ -642,7 +648,7 @@ define([
         }
     }
 
-    function visitVisibleChildrenNearToFar(primitive, southwest, southeast, northwest, northeast, frameState) {
+    function visitVisibleChildrenNearToFar(primitive, southwest, southeast, northwest, northeast, frameState, nearestRenderableTile) {
         var cameraPosition = frameState.camera.positionCartographic;
         var tileProvider = primitive._tileProvider;
         var occluders = primitive._occluders;
@@ -650,35 +656,35 @@ define([
         if (cameraPosition.longitude < southwest.rectangle.east) {
             if (cameraPosition.latitude < southwest.rectangle.north) {
                 // Camera in southwest quadrant
-                visitIfVisible(primitive, southwest, tileProvider, frameState, occluders);
-                visitIfVisible(primitive, southeast, tileProvider, frameState, occluders);
-                visitIfVisible(primitive, northwest, tileProvider, frameState, occluders);
-                visitIfVisible(primitive, northeast, tileProvider, frameState, occluders);
+                visitIfVisible(primitive, southwest, tileProvider, frameState, occluders, nearestRenderableTile);
+                visitIfVisible(primitive, southeast, tileProvider, frameState, occluders, nearestRenderableTile);
+                visitIfVisible(primitive, northwest, tileProvider, frameState, occluders, nearestRenderableTile);
+                visitIfVisible(primitive, northeast, tileProvider, frameState, occluders, nearestRenderableTile);
             } else {
                 // Camera in northwest quadrant
-                visitIfVisible(primitive, northwest, tileProvider, frameState, occluders);
-                visitIfVisible(primitive, southwest, tileProvider, frameState, occluders);
-                visitIfVisible(primitive, northeast, tileProvider, frameState, occluders);
-                visitIfVisible(primitive, southeast, tileProvider, frameState, occluders);
+                visitIfVisible(primitive, northwest, tileProvider, frameState, occluders, nearestRenderableTile);
+                visitIfVisible(primitive, southwest, tileProvider, frameState, occluders, nearestRenderableTile);
+                visitIfVisible(primitive, northeast, tileProvider, frameState, occluders, nearestRenderableTile);
+                visitIfVisible(primitive, southeast, tileProvider, frameState, occluders, nearestRenderableTile);
             }
         } else if (cameraPosition.latitude < southwest.rectangle.north) {
             // Camera southeast quadrant
-            visitIfVisible(primitive, southeast, tileProvider, frameState, occluders);
-            visitIfVisible(primitive, southwest, tileProvider, frameState, occluders);
-            visitIfVisible(primitive, northeast, tileProvider, frameState, occluders);
-            visitIfVisible(primitive, northwest, tileProvider, frameState, occluders);
+            visitIfVisible(primitive, southeast, tileProvider, frameState, occluders, nearestRenderableTile);
+            visitIfVisible(primitive, southwest, tileProvider, frameState, occluders, nearestRenderableTile);
+            visitIfVisible(primitive, northeast, tileProvider, frameState, occluders, nearestRenderableTile);
+            visitIfVisible(primitive, northwest, tileProvider, frameState, occluders, nearestRenderableTile);
         } else {
             // Camera in northeast quadrant
-            visitIfVisible(primitive, northeast, tileProvider, frameState, occluders);
-            visitIfVisible(primitive, northwest, tileProvider, frameState, occluders);
-            visitIfVisible(primitive, southeast, tileProvider, frameState, occluders);
-            visitIfVisible(primitive, southwest, tileProvider, frameState, occluders);
+            visitIfVisible(primitive, northeast, tileProvider, frameState, occluders, nearestRenderableTile);
+            visitIfVisible(primitive, northwest, tileProvider, frameState, occluders, nearestRenderableTile);
+            visitIfVisible(primitive, southeast, tileProvider, frameState, occluders, nearestRenderableTile);
+            visitIfVisible(primitive, southwest, tileProvider, frameState, occluders, nearestRenderableTile);
         }
     }
 
-    function visitIfVisible(primitive, tile, tileProvider, frameState, occluders) {
+    function visitIfVisible(primitive, tile, tileProvider, frameState, occluders, nearestRenderableTile) {
         if (tileProvider.computeTileVisibility(tile, frameState, occluders) !== Visibility.NONE) {
-            visitTile(primitive, frameState, tile);
+            visitTile(primitive, frameState, tile, nearestRenderableTile);
         } else {
             ++primitive._debug.tilesCulled;
             primitive._tileReplacementQueue.markTileRendered(tile);
@@ -734,8 +740,9 @@ define([
         return error;
     }
 
-    function addTileToRenderList(primitive, tile) {
+    function addTileToRenderList(primitive, tile, nearestRenderableTile) {
         primitive._tilesToRender.push(tile);
+        primitive._nearestRenderableTiles.push(nearestRenderableTile);
         ++primitive._debug.tilesRendered;
     }
 
@@ -876,11 +883,12 @@ define([
     function createRenderCommandsForSelectedTiles(primitive, frameState) {
         var tileProvider = primitive._tileProvider;
         var tilesToRender = primitive._tilesToRender;
+        var nearestRenderableTiles = primitive._nearestRenderableTiles;
         var tilesToUpdateHeights = primitive._tileToUpdateHeights;
 
         for (var i = 0, len = tilesToRender.length; i < len; ++i) {
             var tile = tilesToRender[i];
-            tileProvider.showTileThisFrame(tile, frameState);
+            tileProvider.showTileThisFrame(tile, frameState, nearestRenderableTiles[i]);
 
             if (tile._frameRendered !== frameState.frameNumber - 1) {
                 tilesToUpdateHeights.push(tile);

@@ -555,13 +555,12 @@ define([
                     tileBoundingRegion.maximumHeight,
                     tile.tilingScheme.ellipsoid,
                     surfaceTile.orientedBoundingBox);
-                surfaceTile.boundingSphere3D = undefined; // TODO: compute the bounding sphere for real, or get rid of it entirely.
                 surfaceTile.occludeePointInScaledSpace = undefined; // TODO
             }
         }
 
         var cullingVolume = frameState.cullingVolume;
-        var boundingVolume = defaultValue(surfaceTile.orientedBoundingBox, surfaceTile.boundingSphere3D);
+        var boundingVolume = surfaceTile.orientedBoundingBox;
 
         if (frameState.mode !== SceneMode.SCENE3D) {
             boundingVolume = boundingSphereScratch;
@@ -569,7 +568,8 @@ define([
             Cartesian3.fromElements(boundingVolume.center.z, boundingVolume.center.x, boundingVolume.center.y, boundingVolume.center);
 
             if (frameState.mode === SceneMode.MORPHING) {
-                boundingVolume = BoundingSphere.union(surfaceTile.boundingSphere3D, boundingVolume, boundingVolume);
+                // TODO: mesh not necessarily available yet.
+                boundingVolume = BoundingSphere.union(surfaceTile.mesh.boundingSphere3D, boundingVolume, boundingVolume);
             }
         }
 
@@ -629,10 +629,11 @@ define([
      * render commands to the commandList, or use any other method as appropriate.  The tile is not
      * expected to be visible next frame as well, unless this method is called next frame, too.
      *
-     * @param {Object} tile The tile instance.
+     * @param {QuadtreeTile} tile The tile instance.
      * @param {FrameState} frameState The state information of the current rendering frame.
+     * @param {QuadtreeTile} [nearestRenderableTile] The nearest ancestor tile that is renderable.
      */
-    GlobeSurfaceTileProvider.prototype.showTileThisFrame = function(tile, frameState) {
+    GlobeSurfaceTileProvider.prototype.showTileThisFrame = function(tile, frameState, nearestRenderableTile) {
         var readyTextureCount = 0;
         var tileImageryCollection = tile.data.imagery;
         for (var i = 0, len = tileImageryCollection.length; i < len; ++i) {
@@ -649,6 +650,22 @@ define([
         }
 
         tileSet.push(tile);
+
+        var surfaceTile = tile.data;
+        if (nearestRenderableTile !== undefined && nearestRenderableTile !== tile) {
+            surfaceTile.renderableTile = nearestRenderableTile;
+
+            var myRectangle = tile.rectangle;
+            var ancestorRectangle = nearestRenderableTile.rectangle;
+            var ancestorSubset = surfaceTile.renderableTileSubset;
+
+            ancestorSubset.x = (myRectangle.west - ancestorRectangle.west) / (ancestorRectangle.east - ancestorRectangle.west);
+            ancestorSubset.y = (myRectangle.south - ancestorRectangle.south) / (ancestorRectangle.north - ancestorRectangle.south);
+            ancestorSubset.z = (myRectangle.east - ancestorRectangle.west) / (ancestorRectangle.east - ancestorRectangle.west);
+            ancestorSubset.w = (myRectangle.north - ancestorRectangle.south) / (ancestorRectangle.north - ancestorRectangle.south);
+        } else {
+            surfaceTile.renderableTile = undefined;
+        }
 
         var debug = this._debug;
         ++debug.tilesRendered;
@@ -1236,36 +1253,22 @@ define([
     })();
 
     var otherPassesInitialColor = new Cartesian4(0.0, 0.0, 0.0, 0.0);
-    var ancestorSubsetScratch = new Cartesian4();
 
     function addDrawCommandsForTile(tileProvider, tile, frameState, subset) {
-        if (!tile.renderable) {
+        var surfaceTile = tile.data;
+
+        if (surfaceTile.renderableTile !== undefined) {
             // We can't render this tile yet, so instead render a subset of our closest renderable ancestor.
-            var ancestor = tile.parent;
-            while (ancestor !== undefined && !ancestor.renderable) {
-                ancestor = ancestor.parent;
-            }
-
-            if (ancestor === undefined) {
-                // Can't find any renderable ancestor. This shouldn't happen because we
-                // don't start tile selection at all until the root tiles are loaded.
-                return;
-            }
-
-            var myRectangle = tile.rectangle;
-            var ancestorRectangle = ancestor.rectangle;
-            var ancestorSubset = ancestorSubsetScratch;
-
-            ancestorSubset.x = (myRectangle.west - ancestorRectangle.west) / (ancestorRectangle.east - ancestorRectangle.west);
-            ancestorSubset.y = (myRectangle.south - ancestorRectangle.south) / (ancestorRectangle.north - ancestorRectangle.south);
-            ancestorSubset.z = (myRectangle.east - ancestorRectangle.west) / (ancestorRectangle.east - ancestorRectangle.west);
-            ancestorSubset.w = (myRectangle.north - ancestorRectangle.south) / (ancestorRectangle.north - ancestorRectangle.south);
-
-            addDrawCommandsForTile(tileProvider, ancestor, frameState, ancestorSubset);
+            addDrawCommandsForTile(tileProvider, surfaceTile.renderableTile, frameState, surfaceTile.renderableTileSubset);
             return;
         }
 
-        var surfaceTile = tile.data;
+        //>>includeStart('debug', pragmas.debug);
+        if (!tile.renderable) {
+            throw new DeveloperError('A rendered tile is not renderable, this should not be possible.');
+        }
+        //>>includeEnd('debug');
+
         var creditDisplay = frameState.creditDisplay;
 
         var terrainData = surfaceTile.terrainData;
@@ -1405,8 +1408,8 @@ define([
                 // to have more than one selected tile, this would have to change.
                 if (defined(surfaceTile.orientedBoundingBox)) {
                     getDebugOrientedBoundingBox(surfaceTile.orientedBoundingBox, Color.RED).update(frameState);
-                } else if (defined(surfaceTile.boundingSphere3D)) {
-                    getDebugBoundingSphere(surfaceTile.boundingSphere3D, Color.RED).update(frameState);
+                } else if (defined(surfaceTile.mesh) && defined(surfaceTile.mesh.boundingSphere3D)) {
+                    getDebugBoundingSphere(surfaceTile.mesh.boundingSphere3D, Color.RED).update(frameState);
                 }
             }
 
@@ -1558,10 +1561,10 @@ define([
                 Cartesian3.fromElements(boundingVolume.center.z, boundingVolume.center.x, boundingVolume.center.y, boundingVolume.center);
 
                 if (frameState.mode === SceneMode.MORPHING) {
-                    boundingVolume = BoundingSphere.union(surfaceTile.boundingSphere3D, boundingVolume, boundingVolume);
+                    boundingVolume = BoundingSphere.union(surfaceTile.mesh.boundingSphere3D, boundingVolume, boundingVolume);
                 }
             } else {
-                command.boundingVolume = BoundingSphere.clone(surfaceTile.boundingSphere3D, boundingVolume);
+                command.boundingVolume = BoundingSphere.clone(surfaceTile.mesh.boundingSphere3D, boundingVolume);
                 command.orientedBoundingBox = OrientedBoundingBox.clone(surfaceTile.orientedBoundingBox, orientedBoundingBox);
             }
 

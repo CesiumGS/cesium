@@ -73,15 +73,16 @@ define([
         this.imagery = [];
 
         this.waterMaskTexture = undefined;
-
         this.waterMaskTranslationAndScale = new Cartesian4(0.0, 0.0, 1.0, 1.0);
 
         this.terrainData = undefined;
         this.vertexArray = undefined;
-        this.boundingSphere3D = new BoundingSphere();
         this.orientedBoundingBox = undefined;
         this.boundingVolumeSourceTile = undefined;
         this._bvh = undefined;
+
+        this.renderableTile = undefined;
+        this.renderableTileSubset = new Cartesian4();
 
         /**
          * A bounding region used to estimate distance to the tile. The horizontal bounds are always tight-fitting,
@@ -97,6 +98,7 @@ define([
         this.mesh = undefined;
         this.vertexArray = undefined;
 
+        // TODO: probably better to have a bounding sphere for 2D rather than one for picking.
         this.pickBoundingSphere = new BoundingSphere();
 
         this.surfaceShader = undefined;
