@@ -48,61 +48,6 @@ const float SHIFT_RIGHT3 = 1.0 / 8.0;
 const float SHIFT_RIGHT2 = 1.0 / 4.0;
 const float SHIFT_RIGHT1 = 1.0 / 2.0;
 
-vec4 addScreenSpaceOffset(vec4 positionEC, vec2 imageSize, float scale, vec2 direction, vec2 origin, vec2 translate, vec2 pixelOffset, vec3 alignedAxis, bool validAlignedAxis, float rotation, bool sizeInMeters)
-{
-    // Note the halfSize cannot be computed in JavaScript because it is sent via
-    // compressed vertex attributes that coerce it to an integer.
-    vec2 halfSize = imageSize * scale * czm_resolutionScale * 0.5;
-    halfSize *= ((direction * 2.0) - 1.0);
-
-    vec2 originTranslate = origin * abs(halfSize);
-
-#if defined(ROTATION) || defined(ALIGNED_AXIS)
-    if (validAlignedAxis || rotation != 0.0)
-    {
-        float angle = rotation;
-        if (validAlignedAxis)
-        {
-            vec4 projectedAlignedAxis = czm_modelViewProjection * vec4(alignedAxis, 0.0);
-            angle += sign(-projectedAlignedAxis.x) * acos( sign(projectedAlignedAxis.y) * (projectedAlignedAxis.y * projectedAlignedAxis.y) /
-                    (projectedAlignedAxis.x * projectedAlignedAxis.x + projectedAlignedAxis.y * projectedAlignedAxis.y) );
-        }
-
-        float cosTheta = cos(angle);
-        float sinTheta = sin(angle);
-        mat2 rotationMatrix = mat2(cosTheta, sinTheta, -sinTheta, cosTheta);
-        halfSize = rotationMatrix * halfSize;
-
-        #ifdef CLAMP_TO_GROUND
-            v_rotationMatrix = rotationMatrix;
-        #endif
-    }
-#endif
-
-    if (sizeInMeters)
-    {
-        positionEC.xy += halfSize;
-    }
-
-    float mpp = czm_metersPerPixel(positionEC);
-
-    if (!sizeInMeters)
-    {
-        originTranslate *= mpp;
-    }
-
-    positionEC.xy += originTranslate;
-    if (!sizeInMeters)
-    {
-        positionEC.xy += halfSize * mpp;
-    }
-
-    positionEC.xy += translate * mpp;
-    positionEC.xy += (pixelOffset * czm_resolutionScale) * mpp;
-
-    return positionEC;
-}
-
 void main()
 {
     // Modifying this shader may also require modifications to Billboard._computeScreenSpacePosition
@@ -299,7 +244,55 @@ void main()
     }
 #endif
 
-    positionEC = addScreenSpaceOffset(positionEC, imageSize, scale, direction, origin, translate, pixelOffset, alignedAxis, validAlignedAxis, rotation, sizeInMeters);
+    // Note the halfSize cannot be computed in JavaScript because it is sent via
+    // compressed vertex attributes that coerce it to an integer.
+    vec2 halfSize = imageSize * scale * czm_resolutionScale * 0.5;
+    halfSize *= ((direction * 2.0) - 1.0);
+
+    vec2 originTranslate = origin * abs(halfSize);
+
+#if defined(ROTATION) || defined(ALIGNED_AXIS)
+    if (validAlignedAxis || rotation != 0.0)
+    {
+        float angle = rotation;
+        if (validAlignedAxis)
+        {
+            vec4 projectedAlignedAxis = czm_modelViewProjection * vec4(alignedAxis, 0.0);
+            angle += sign(-projectedAlignedAxis.x) * acos( sign(projectedAlignedAxis.y) * (projectedAlignedAxis.y * projectedAlignedAxis.y) /
+                    (projectedAlignedAxis.x * projectedAlignedAxis.x + projectedAlignedAxis.y * projectedAlignedAxis.y) );
+        }
+
+        float cosTheta = cos(angle);
+        float sinTheta = sin(angle);
+        mat2 rotationMatrix = mat2(cosTheta, sinTheta, -sinTheta, cosTheta);
+        halfSize = rotationMatrix * halfSize;
+
+        #ifdef CLAMP_TO_GROUND
+            v_rotationMatrix = rotationMatrix;
+        #endif
+    }
+#endif
+
+    if (sizeInMeters)
+    {
+        positionEC.xy += halfSize;
+    }
+
+    float mpp = czm_metersPerPixel(positionEC);
+
+    if (!sizeInMeters)
+    {
+        originTranslate *= mpp;
+    }
+
+    positionEC.xy += originTranslate;
+    if (!sizeInMeters)
+    {
+        positionEC.xy += halfSize * mpp;
+    }
+
+    positionEC.xy += translate * mpp;
+    positionEC.xy += (pixelOffset * czm_resolutionScale) * mpp;
     gl_Position = czm_projection * positionEC;
     v_textureCoordinates = textureCoordinates;
 
@@ -332,6 +325,11 @@ void main()
 #endif
 
 #ifdef CLAMP_TO_GROUND
+    if (sizeInMeters) {
+        translate /= mpp;
+        dimensions /= mpp;
+        imageSize /= mpp;
+    }
     v_eyeDepthDistanceAndApplyTranslate.x = eyeDepth;
     v_eyeDepthDistanceAndApplyTranslate.y = disableDepthTestDistance;
     v_eyeDepthDistanceAndApplyTranslate.z = applyTranslate;
