@@ -54,14 +54,30 @@ defineSuite([
     beforeAll(function() {
         scene = createScene();
 
-        ApproximateTerrainHeights.initialize();
+        // Render a primitive to confirm that asynchronous primitives are ready
+        var objects = new EntityCollection();
+        var visualizer = new PolylineVisualizer(scene, objects);
+
+        var polyline = new PolylineGraphics();
+        polyline.positions = new ConstantProperty([Cartesian3.fromDegrees(0.0, 0.0), Cartesian3.fromDegrees(0.0, 1.0)]);
+        polyline.material = new ColorMaterialProperty();
+
+        var entity = new Entity();
+        entity.polyline = polyline;
+        objects.add(entity);
+
+        return pollToPromise(function() {
+            scene.initializeFrame();
+            var isUpdated = visualizer.update(time);
+            scene.render(time);
+            return isUpdated;
+        }).then(function() {
+            visualizer.destroy();
+        });
     });
 
     afterAll(function() {
         scene.destroyForSpecs();
-
-        ApproximateTerrainHeights._initPromise = undefined;
-        ApproximateTerrainHeights._terrainHeights = undefined;
     });
 
     it('Can create and destroy', function() {
