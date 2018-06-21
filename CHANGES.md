@@ -24,6 +24,7 @@ Change Log
 * Fixed a bug with Draco encoded i3dm tiles, and loading two Draco models with the same url. [#6668](https://github.com/AnalyticalGraphicsInc/cesium/issues/6668)
 * Fixed terrain clipping when the camera was close to flat terrain and was using logarithmic depth. [#6701](https://github.com/AnalyticalGraphicsInc/cesium/pull/6701)
 * Fixed KML bug that constantly requested the same image if it failed to load. [#6710](https://github.com/AnalyticalGraphicsInc/cesium/pull/6710)
+* Improved billboard and label rendering so they no longer sink into terrain when clamped to ground. [#6621](https://github.com/AnalyticalGraphicsInc/cesium/pull/6621)
 * Fixed an issue where KMLs containing a `colorMode` of `random` could return the exact same color on successive calls to `Color.fromRandom()`.
 
 ### 1.46.1 - 2018-06-01
