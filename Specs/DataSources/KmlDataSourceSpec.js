@@ -7,7 +7,6 @@ defineSuite([
         'Core/ClockStep',
         'Core/Color',
         'Core/combine',
-        'Core/DefaultProxy',
         'Core/Ellipsoid',
         'Core/Event',
         'Core/HeadingPitchRange',
@@ -46,7 +45,6 @@ defineSuite([
         ClockStep,
         Color,
         combine,
-        DefaultProxy,
         Ellipsoid,
         Event,
         HeadingPitchRange,
@@ -4422,7 +4420,7 @@ defineSuite([
         });
     });
 
-    it('when a LineString is clamped to ground and tesselated, entity has a corridor geometry and ColorProperty', function() {
+    it('when a LineString is clamped to ground and tesselated, entity has a polyline geometry and ColorProperty', function() {
         var kml = '<?xml version="1.0" encoding="UTF-8"?>\
             <Placemark>\
                 <Style>\
@@ -4441,12 +4439,13 @@ defineSuite([
         var clampToGroundOptions = combine(options, { clampToGround : true });
         return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), clampToGroundOptions).then(function(dataSource) {
             var entity = dataSource.entities.values[0];
-            expect(entity.corridor).toBeDefined();
-            expect(entity.corridor.material).toBeInstanceOf(ColorMaterialProperty);
+            expect(entity.polyline).toBeDefined();
+            expect(entity.polyline.clampToGround.getValue()).toEqual(true);
+            expect(entity.polyline.material).toBeInstanceOf(ColorMaterialProperty);
         });
     });
 
-    it('when a LineString is clamped to ground and tesselated with z draworder, entity has a corridor geometry and ColorProperty', function() {
+    it('when a LineString is clamped to ground and tesselated with z draworder, entity has a polyline geometry and ColorProperty', function() {
         var kml = '<?xml version="1.0" encoding="UTF-8"?>\
             <Document xmlns="http://www.opengis.net/kml/2.2"\
              xmlns:gx="http://www.google.com/kml/ext/2.2">\
@@ -4469,8 +4468,9 @@ defineSuite([
         var clampToGroundOptions = combine(options, { clampToGround : true });
         return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), clampToGroundOptions).then(function(dataSource) {
             var entity = dataSource.entities.values[0];
-            expect(entity.corridor).toBeDefined();
-            expect(entity.corridor.zIndex.getValue()).toBe(2);
+            expect(entity.polyline).toBeDefined();
+            expect(entity.polyline.clampToGround.getValue()).toEqual(true);
+            expect(entity.polyline.zIndex.getValue()).toBe(2);
         });
     });
 

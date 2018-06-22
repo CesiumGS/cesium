@@ -249,6 +249,7 @@ define([
                         billboard = labelCollection._billboardCollection.add({
                             collection : labelCollection
                         });
+                        billboard._labelDimensions = new Cartesian2();
                     }
                     glyph.billboard = billboard;
                 }
@@ -306,10 +307,9 @@ define([
         var glyphLength = glyphs.length;
 
         var backgroundBillboard = label._backgroundBillboard;
-        var backgroundPadding = scratchBackgroundPadding;
-        Cartesian2.clone(
+        var backgroundPadding = Cartesian2.clone(
             (defined(backgroundBillboard) ? label._backgroundPadding : Cartesian2.ZERO),
-            backgroundPadding);
+            scratchBackgroundPadding);
 
         for (glyphIndex = 0; glyphIndex < glyphLength; ++glyphIndex) {
             if (text.charAt(glyphIndex) === '\n') {
@@ -341,6 +341,14 @@ define([
         var widthOffset = calculateWidthOffset(lineWidth, horizontalOrigin, backgroundPadding);
         var lineSpacing = defaultLineSpacingPercent * maxLineHeight;
         var otherLinesHeight = lineSpacing * (numberOfLines - 1);
+        var totalLineWidth = maxLineWidth;
+        var totalLineHeight = maxLineHeight + otherLinesHeight;
+
+        if (defined(backgroundBillboard)) {
+            totalLineWidth += (backgroundPadding.x * 2);
+            totalLineHeight += (backgroundPadding.y * 2);
+            backgroundBillboard._labelHorizontalOrigin = horizontalOrigin;
+        }
 
         glyphPixelOffset.x = widthOffset * scale * resolutionScale;
         glyphPixelOffset.y = 0;
@@ -371,6 +379,9 @@ define([
 
                 if (defined(glyph.billboard)) {
                     glyph.billboard._setTranslate(glyphPixelOffset);
+                    glyph.billboard._labelDimensions.x = totalLineWidth;
+                    glyph.billboard._labelDimensions.y = totalLineHeight;
+                    glyph.billboard._labelHorizontalOrigin = horizontalOrigin;
                 }
 
                 //Compute the next x offset taking into acocunt the kerning performed
@@ -405,8 +416,8 @@ define([
             }
             glyphPixelOffset.y = glyphPixelOffset.y * scale * resolutionScale;
 
-            backgroundBillboard.width = maxLineWidth + (backgroundPadding.x * 2);
-            backgroundBillboard.height = maxLineHeight + otherLinesHeight + (backgroundPadding.y * 2);
+            backgroundBillboard.width = totalLineWidth;
+            backgroundBillboard.height = totalLineHeight;
             backgroundBillboard._setTranslate(glyphPixelOffset);
         }
     }
