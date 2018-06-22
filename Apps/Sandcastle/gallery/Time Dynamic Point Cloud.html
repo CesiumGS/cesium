@@ -42,20 +42,19 @@ dataSource.then(function(dataSource) {
     var properties = entity.properties;
     var frames = properties.frames;
     var intervals = frames.intervals;
-    
+
     // Update uris to be absolute
     var length = intervals.length;
     for (var i = 0; i < length; ++i) {
         var data = intervals.get(i).data;
-        // TODO : getAbsoluteUri removes the trailing dots
         data.uri = basePath + data.uri;
     }
-    
-    var timeDynamicPointCloud = viewer.scene.primitives.add(new Cesium.TimeDynamicPointCloud({
+
+    viewer.scene.primitives.add(new Cesium.TimeDynamicPointCloud({
         intervals : intervals,
         clock : viewer.clock,
         style : new Cesium.Cesium3DTileStyle({
-            pointSize : 10
+            pointSize : 5
         })
     }));
 });
