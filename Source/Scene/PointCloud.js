@@ -540,71 +540,6 @@ define([
                 }
             }
         }
-        var uniformMap = {
-            u_pointSizeAndTimeAndGeometricErrorAndDepthMultiplier : function() {
-                var scratch = scratchPointSizeAndTimeAndGeometricErrorAndDepthMultiplier;
-                scratch.x = pointCloud._attenuation ? pointCloud.maximumAttenuation : pointCloud._pointSize;
-                scratch.y = pointCloud.time;
-
-                if (pointCloud._attenuation) {
-                    var frustum = frameState.camera.frustum;
-                    var depthMultiplier;
-                    // Attenuation is maximumAttenuation in 2D/ortho
-                    if (frameState.mode === SceneMode.SCENE2D || frustum instanceof OrthographicFrustum) {
-                        depthMultiplier = Number.POSITIVE_INFINITY;
-                    } else {
-                        depthMultiplier = context.drawingBufferHeight / frameState.camera.frustum.sseDenominator;
-                    }
-
-                    scratch.z = pointCloud.geometricError * pointCloud.geometricErrorScale;
-                    scratch.w = depthMultiplier;
-                }
-
-                return scratch;
-            },
-            u_highlightColor : function() {
-                return pointCloud._highlightColor;
-            },
-            u_constantColor : function() {
-                return pointCloud._constantColor;
-            },
-            u_clippingPlanes : function() {
-                var clippingPlanes = pointCloud.clippingPlanes;
-                var isClipped = pointCloud.isClipped;
-                return isClipped ? clippingPlanes.texture : context.defaultTexture;
-            },
-            u_clippingPlanesEdgeStyle : function() {
-                var clippingPlanes = pointCloud.clippingPlanes;
-                if (!defined(clippingPlanes)) {
-                    return Color.TRANSPARENT;
-                }
-
-                var style = Color.clone(clippingPlanes.edgeColor, scratchColor);
-                style.alpha = clippingPlanes.edgeWidth;
-                return style;
-            },
-            u_clippingPlanesMatrix : function() {
-                var clippingPlanes = pointCloud.clippingPlanes;
-                if (!defined(clippingPlanes)) {
-                    return Matrix4.IDENTITY;
-                }
-                var modelViewMatrix = Matrix4.multiply(context.uniformState.view3D, pointCloud._modelMatrix, scratchClippingPlaneMatrix);
-                return Matrix4.multiply(modelViewMatrix, clippingPlanes.modelMatrix, scratchClippingPlaneMatrix);
-            }
-        };
-
-        if (isQuantized || isQuantizedDraco || isOctEncodedDraco) {
-            uniformMap = combine(uniformMap, {
-                u_quantizedVolumeScaleAndOctEncodedRange : function() {
-                    var scratch = scratchQuantizedVolumeScaleAndOctEncodedRange;
-                    if (defined(pointCloud._quantizedVolumeScale)) {
-                        Cartesian3.clone(pointCloud._quantizedVolumeScale, scratch);
-                    }
-                    scratch.w = pointCloud._octEncodedRange;
-                    return scratch;
-                }
-            });
-        }
 
         var positionsVertexBuffer = Buffer.createVertexBuffer({
             context : context,
@@ -735,10 +670,6 @@ define([
             attributes : attributes
         });
 
-        if (defined(pointCloud._uniformMapLoaded)) {
-            uniformMap = pointCloud._uniformMapLoaded(uniformMap);
-        }
-
         pointCloud._opaqueRenderState = RenderState.fromCache({
             depthTest : {
                 enabled : true
@@ -761,7 +692,7 @@ define([
             vertexArray : vertexArray,
             count : pointsLength,
             shaderProgram : undefined, // Updated in createShaders
-            uniformMap : uniformMap,
+            uniformMap : undefined, // Updated in createShaders
             renderState : isTranslucent ? pointCloud._translucentRenderState : pointCloud._opaqueRenderState,
             pass : isTranslucent ? Pass.TRANSLUCENT : pointCloud._opaquePass,
             owner : pointCloud,
@@ -769,6 +700,85 @@ define([
             receiveShadows : false,
             pickId : pointCloud._pickIdLoaded()
         });
+    }
+
+    function createUniformMap(pointCloud, frameState) {
+        var context = frameState.context;
+        var isQuantized = pointCloud._isQuantized;
+        var isQuantizedDraco = pointCloud._isQuantizedDraco;
+        var isOctEncodedDraco = pointCloud._isOctEncodedDraco;
+
+        var uniformMap = {
+            u_pointSizeAndTimeAndGeometricErrorAndDepthMultiplier : function() {
+                var scratch = scratchPointSizeAndTimeAndGeometricErrorAndDepthMultiplier;
+                scratch.x = pointCloud._attenuation ? pointCloud.maximumAttenuation : pointCloud._pointSize;
+                scratch.y = pointCloud.time;
+
+                if (pointCloud._attenuation) {
+                    var frustum = frameState.camera.frustum;
+                    var depthMultiplier;
+                    // Attenuation is maximumAttenuation in 2D/ortho
+                    if (frameState.mode === SceneMode.SCENE2D || frustum instanceof OrthographicFrustum) {
+                        depthMultiplier = Number.POSITIVE_INFINITY;
+                    } else {
+                        depthMultiplier = context.drawingBufferHeight / frameState.camera.frustum.sseDenominator;
+                    }
+
+                    scratch.z = pointCloud.geometricError * pointCloud.geometricErrorScale;
+                    scratch.w = depthMultiplier;
+                }
+
+                return scratch;
+            },
+            u_highlightColor : function() {
+                return pointCloud._highlightColor;
+            },
+            u_constantColor : function() {
+                return pointCloud._constantColor;
+            },
+            u_clippingPlanes : function() {
+                var clippingPlanes = pointCloud.clippingPlanes;
+                var isClipped = pointCloud.isClipped;
+                return isClipped ? clippingPlanes.texture : context.defaultTexture;
+            },
+            u_clippingPlanesEdgeStyle : function() {
+                var clippingPlanes = pointCloud.clippingPlanes;
+                if (!defined(clippingPlanes)) {
+                    return Color.TRANSPARENT;
+                }
+
+                var style = Color.clone(clippingPlanes.edgeColor, scratchColor);
+                style.alpha = clippingPlanes.edgeWidth;
+                return style;
+            },
+            u_clippingPlanesMatrix : function() {
+                var clippingPlanes = pointCloud.clippingPlanes;
+                if (!defined(clippingPlanes)) {
+                    return Matrix4.IDENTITY;
+                }
+                var modelViewMatrix = Matrix4.multiply(context.uniformState.view3D, pointCloud._modelMatrix, scratchClippingPlaneMatrix);
+                return Matrix4.multiply(modelViewMatrix, clippingPlanes.modelMatrix, scratchClippingPlaneMatrix);
+            }
+        };
+
+        if (isQuantized || isQuantizedDraco || isOctEncodedDraco) {
+            uniformMap = combine(uniformMap, {
+                u_quantizedVolumeScaleAndOctEncodedRange : function() {
+                    var scratch = scratchQuantizedVolumeScaleAndOctEncodedRange;
+                    if (defined(pointCloud._quantizedVolumeScale)) {
+                        Cartesian3.clone(pointCloud._quantizedVolumeScale, scratch);
+                    }
+                    scratch.w = pointCloud._octEncodedRange;
+                    return scratch;
+                }
+            });
+        }
+
+        if (defined(pointCloud._uniformMapLoaded)) {
+            uniformMap = pointCloud._uniformMapLoaded(uniformMap);
+        }
+
+        pointCloud._drawCommand.uniformMap = uniformMap;
     }
 
     var defaultProperties = ['POSITION', 'COLOR', 'NORMAL', 'POSITION_ABSOLUTE'];
@@ -934,6 +944,8 @@ define([
             attributeDeclarations += 'attribute ' + attributeType + ' ' + attributeName + '; \n';
             attributeLocations[attributeName] = attribute.location;
         }
+
+        createUniformMap(pointCloud, frameState);
 
         var vs = 'attribute vec3 a_position; \n' +
                  'varying vec4 v_color; \n' +
