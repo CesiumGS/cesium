@@ -44,7 +44,7 @@ define([
      *
      * @param {Object} options Object with the following properties:
      * @param {Clock} options.clock A {@link Clock} instance that is used when determining the value for the time dimension.
-     * @param {TimeIntervalCollection} options.intervals A {@link TimeIntervalCollection} with its data property being an object containing a uri to a Point Cloud tile and an optional transform.
+     * @param {TimeIntervalCollection} options.intervals A {@link TimeIntervalCollection} with its data property being an object containing a uri to a Point Cloud (.pnts) tile and an optional transform.
      * @param {Boolean} [options.show=true] Determines if the point cloud will be shown.
      * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] A 4x4 transformation matrix that transforms the point cloud.
      * @param {ShadowMode} [options.shadows=ShadowMode.ENABLED] Determines whether the point cloud casts or receives shadows from each light source.
@@ -148,10 +148,8 @@ define([
         this._frames = [];
         this._previousInterval = undefined;
         this._nextInterval = undefined;
-        this._clockMultiplier = 0.0;
         this._lastRenderedFrame = undefined;
-
-        // For calculation average load time
+        this._clockMultiplier = 0.0;
         this._runningLoadTime = 0.0;
         this._runningLoadedFramesLength = 0;
     }
@@ -220,10 +218,7 @@ define([
         if (that._runningLoadedFramesLength === 0) {
             return undefined;
         }
-
-        // TODO : the first frame to load will be slower due to initializing Draco, which impacts the average
-        var averageLoadTime = that._runningLoadTime / that._runningLoadedFramesLength;
-        return averageLoadTime; // Provide additional buffer since the actual load time fluctuates
+        return that._runningLoadTime / that._runningLoadedFramesLength;
     }
 
     var scratchDate = new JulianDate();
@@ -233,6 +228,10 @@ define([
         var isAnimating = clock.canAnimate && clock.shouldAnimate;
         var multiplier = clock.multiplier;
         return isAnimating ? multiplier : 0.0;
+    }
+
+    function getIntervalIndex(that, interval) {
+        return that._intervals.indexOf(interval.start);
     }
 
     function getNextInterval(that) {
@@ -246,7 +245,6 @@ define([
 
         var averageLoadTime = getAverageLoadTime(that);
         if (!defined(averageLoadTime)) {
-            // Don't return the next interval until there is an average load time
             return undefined;
         }
 
@@ -284,16 +282,6 @@ define([
         return currentIndex <= nextIndex;
     }
 
-    function getIntervalIndex(that, interval) {
-        return that._intervals.indexOf(interval.start);
-    }
-
-    function getFrame(that, interval) {
-        var index = getIntervalIndex(that, interval);
-        var frames = that._frames;
-        return frames[index];
-    }
-
     function requestFrame(that, interval, frameState) {
         var index = getIntervalIndex(that, interval);
         var frames = that._frames;
@@ -302,11 +290,11 @@ define([
             var transformArray = interval.data.transform;
             var transform = defined(transformArray) ? Matrix4.fromArray(transformArray) : undefined;
             frame = {
-                pointCloud : undefined, // Created after request resolves
+                pointCloud : undefined,
                 transform : transform,
                 timestamp : getTimestamp(),
-                sequential : true, // Whether the frame was loaded in sequential updates
-                ready : false, // True once point cloud is ready
+                sequential : true,
+                ready : false,
                 touchedFrameNumber : frameState.frameNumber
             };
             frames[index] = frame;
@@ -328,7 +316,7 @@ define([
 
     function prepareFrame(that, frame, frameState) {
         if (frame.touchedFrameNumber < frameState.frameNumber - 1) {
-            // If this frame was not loaded in sequential updates then it can't be used it for calculating average load time.
+            // If this frame was not loaded in sequential updates then it can't be used it for calculating the average load time.
             // For example: selecting a frame on the timeline, selecting another frame before the request finishes, then selecting this frame later.
             frame.sequential = false;
         }
@@ -384,7 +372,6 @@ define([
         var frame = requestFrame(that, interval, frameState);
         prepareFrame(that, frame, frameState);
         frame.touchedFrameNumber = frameState.frameNumber;
-        return frame;
     }
 
     function getUnloadCondition(frameState) {
@@ -406,34 +393,32 @@ define([
                         that._totalMemoryUsageInBytes -= pointCloud.geometryByteLength;
                     }
                     if (defined(pointCloud)) {
-                        // TODO : what happens if Draco decoding resolves after a frame is destroyed?
                         pointCloud.destroy();
+                    }
+                    if (frame === that._lastRenderedFrame) {
+                        that._lastRenderedFrame = undefined;
                     }
                     frames[i] = undefined;
                 }
             }
         }
-        that._lastRenderedFrame = undefined; // TODO : better approach than this? Maybe last rendered interval?
     }
 
-    function getLastReadyFrame(that, previousInterval, currentInterval) {
+    function getNearestReadyFrame(that, currentInterval, previousInterval) {
         var i;
         var frame;
         var frames = that._frames;
-        var clockMultiplier = getClockMultiplier(that);
         var currentIndex = getIntervalIndex(that, currentInterval);
         var previousIndex = getIntervalIndex(that, previousInterval);
 
-        if (clockMultiplier >= 0) {
-            // Animating forwards, so look backwards
+        if (currentIndex >= previousIndex) { // look backwards
             for (i = currentIndex; i >= previousIndex; --i) {
                 frame = frames[i];
                 if (defined(frame) && frame.ready) {
                     return frame;
                 }
             }
-        } else {
-            // Animating backwards, so look forwards
+        } else { // look forwards
             for (i = currentIndex; i <= previousIndex; ++i) {
                 frame = frames[i];
                 if (defined(frame) && frame.ready) {
@@ -442,21 +427,6 @@ define([
             }
         }
     }
-
-    // TODO : if no frames have been loaded (don't know a load duration yet
-
-    // TODO : need to take into account current real-time time it takes to process an average tile, because just fetching the next interval is naive
-    // TODO : make sure it works if clock is stopped
-    // TODO : measure time required to fetch the data and update it
-    // TODO : synchronous draco faster?
-    // TODO : clear any requests that didn't finish from the previous frame?
-    // TODO : once a skip factor is supported that introduces a can of worms
-    // TODO : LRU cache / GPU memory share?
-    // TODO : skipping frames
-    // TODO : would be helpful to have a bounding sphere associated with the point cloud, better for the draw command to have one
-    // TODO : czml to TimeDynamicIntervalCollection
-    // TODO : getAbsoluteUri removes the trailing dots
-    // TODO : there is a slight jump when the sim is paused because the previous frame is set to the current frame but the current frame isn't loaded
 
     TimeDynamicPointCloud.prototype.update = function(frameState) {
         if (frameState.mode === SceneMode.MORPHING) {
@@ -507,15 +477,14 @@ define([
         var currentInterval = getCurrentInterval(this);
 
         if (!defined(currentInterval)) {
-            // Nothing to render this frame
             return;
         }
 
-        var clockStateChanged = false;
+        var clockMultiplierChanged = false;
         var clockMultiplier = getClockMultiplier(this);
         var clockPaused = clockMultiplier === 0;
         if (clockMultiplier !== this._clockMultiplier) {
-            clockStateChanged = true;
+            clockMultiplierChanged  = true;
             this._clockMultiplier = clockMultiplier;
         }
 
@@ -523,7 +492,7 @@ define([
             previousInterval = currentInterval;
         }
 
-        if (!defined(nextInterval) || clockStateChanged) {
+        if (!defined(nextInterval) || clockMultiplierChanged ) {
             nextInterval = getNextInterval(this);
         }
 
@@ -532,14 +501,15 @@ define([
             nextInterval = getNextInterval(this);
         }
 
-        var frame = getLastReadyFrame(this, previousInterval, currentInterval);
+        var frame = getNearestReadyFrame(this, currentInterval, previousInterval);
 
         if (!defined(frame)) {
+            // The frame is not ready to render. This can happen when the simulation starts, when scrubbing the timeline
+            // to a frame that hasn't loaded yet, or reaching the next interval before its frame has finished loading.
+            // Just render the last rendered frame in its place until it finishes loading.
             loadFrame(this, previousInterval, frameState);
+            frame = this._lastRenderedFrame;
         }
-
-        // If the frame we want to render isn't ready for any reason, render the last rendered frame
-        frame = defaultValue(frame, this._lastRenderedFrame);
 
         if (defined(frame)) {
             renderFrame(this, frame, timeSinceLoad, isClipped, clippingPlanesDirty, frameState);
