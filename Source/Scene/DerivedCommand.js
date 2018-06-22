@@ -26,19 +26,50 @@ define([
             var attributeLocations = shaderProgram._attributeLocations;
             var fs = shaderProgram.fragmentShaderSource;
 
+            var i;
             var writesDepthOrDiscards = false;
             var sources = fs.sources;
             var length = sources.length;
-            for (var i = 0; i < length; ++i) {
+            for (i = 0; i < length; ++i) {
                 if (fragDepthRegex.test(sources[i]) || discardRegex.test(sources[i])) {
                     writesDepthOrDiscards = true;
                     break;
                 }
             }
 
-            if (!writesDepthOrDiscards) {
+            var usesLogDepth = false;
+            var defines = fs.defines;
+            length = defines.length;
+            for (i = 0; i < length; ++i) {
+                if (defines[i] === 'LOG_DEPTH') {
+                    usesLogDepth = true;
+                    break;
+                }
+            }
+
+            var source;
+            if (!writesDepthOrDiscards && !usesLogDepth) {
+                source =
+                    'void main() \n' +
+                    '{ \n' +
+                    '    gl_FragColor = vec4(1.0); \n' +
+                    '} \n';
                 fs = new ShaderSource({
-                    sources : ['void main() { gl_FragColor = vec4(1.0); }']
+                    sources : [source]
+                });
+            } else if (!writesDepthOrDiscards && usesLogDepth) {
+                source =
+                    '#ifdef GL_EXT_frag_depth \n' +
+                    '#extension GL_EXT_frag_depth : enable \n' +
+                    '#endif \n\n' +
+                    'void main() \n' +
+                    '{ \n' +
+                    '    gl_FragColor = vec4(1.0); \n' +
+                    '    czm_writeLogDepth(); \n' +
+                    '} \n';
+                fs = new ShaderSource({
+                    defines : ['LOG_DEPTH'],
+                    sources : [source]
                 });
             }
 
