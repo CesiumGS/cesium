@@ -15,10 +15,10 @@ define([
      * @constructor
      *
      * @param {Object} options Object with the following properties:
-     * @param {ComponentDatatype} [options.componentDatatype] The datatype of each component in the attribute, e.g., individual elements in values.
-     * @param {Number} [options.componentsPerAttribute] A number between 1 and 4 that defines the number of components in an attributes.
+     * @param {ComponentDatatype} options.componentDatatype The datatype of each component in the attribute, e.g., individual elements in values.
+     * @param {Number} options.componentsPerAttribute A number between 1 and 4 that defines the number of components in an attributes.
      * @param {Boolean} [options.normalize=false] When <code>true</code> and <code>componentDatatype</code> is an integer format, indicate that the components should be mapped to the range [0, 1] (unsigned) or [-1, 1] (signed) when they are accessed as floating-point for rendering.
-     * @param {Number[]} [options.value] The value for the attribute.
+     * @param {Number[]} options.value The value for the attribute.
      *
      * @exception {DeveloperError} options.componentsPerAttribute must be between 1 and 4.
      *

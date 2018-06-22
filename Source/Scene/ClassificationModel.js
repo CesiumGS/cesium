@@ -88,7 +88,7 @@ define([
     ///////////////////////////////////////////////////////////////////////////
 
     /**
-     * A 3D model for classifying other 3D assets based on glTF, the runtime asset format for WebGL, OpenGL ES, and OpenGL.
+     * A 3D model for classifying other 3D assets based on glTF, the runtime 3D asset format.
      * This is a special case when a model of a 3D tileset becomes a classifier when setting {@link Cesium3DTileset#classificationType}.
      *
      * @alias ClassificationModel

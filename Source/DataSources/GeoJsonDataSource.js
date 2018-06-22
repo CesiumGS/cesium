@@ -21,7 +21,6 @@ define([
         './ColorMaterialProperty',
         './ConstantPositionProperty',
         './ConstantProperty',
-        './CorridorGraphics',
         './DataSource',
         './EntityCluster',
         './EntityCollection',
@@ -50,7 +49,6 @@ define([
         ColorMaterialProperty,
         ConstantPositionProperty,
         ConstantProperty,
-        CorridorGraphics,
         DataSource,
         EntityCluster,
         EntityCollection,
@@ -360,18 +358,13 @@ define([
         }
 
         var entity = createObject(geoJson, dataSource._entityCollection, options.describe);
-        var graphics;
-        if (options.clampToGround) {
-            graphics = new CorridorGraphics();
-            entity.corridor = graphics;
-        } else {
-            graphics = new PolylineGraphics();
-            entity.polyline = graphics;
-        }
+        var polylineGraphics = new PolylineGraphics();
+        entity.polyline = polylineGraphics;
 
-        graphics.material = material;
-        graphics.width = widthProperty;
-        graphics.positions = new ConstantProperty(coordinatesArrayToCartesianArray(coordinates, crsFunction));
+        polylineGraphics.clampToGround = options.clampToGround;
+        polylineGraphics.material = material;
+        polylineGraphics.width = widthProperty;
+        polylineGraphics.positions = new ConstantProperty(coordinatesArrayToCartesianArray(coordinates, crsFunction));
     }
 
     function processLineString(dataSource, geoJson, geometry, crsFunction, options) {

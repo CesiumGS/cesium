@@ -30,12 +30,13 @@ function startup(Cesium) {
 var viewer = new Cesium.Viewer('cesiumContainer');
 
 var redLine = viewer.entities.add({
-    name : 'Red line on the surface',
+    name : 'Red line on terrain',
     polyline : {
         positions : Cesium.Cartesian3.fromDegreesArray([-75, 35,
                                                         -125, 35]),
         width : 5,
-        material : Cesium.Color.RED
+        material : Cesium.Color.RED,
+        clampToGround : true
     }
 });
 
