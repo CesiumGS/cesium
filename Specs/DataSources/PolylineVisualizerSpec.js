@@ -1,6 +1,5 @@
 defineSuite([
         'DataSources/PolylineVisualizer',
-        'Core/ApproximateTerrainHeights',
         'Core/BoundingSphere',
         'Core/Cartesian3',
         'Core/Color',
@@ -24,7 +23,6 @@ defineSuite([
         'Specs/pollToPromise'
     ], function(
         PolylineVisualizer,
-        ApproximateTerrainHeights,
         BoundingSphere,
         Cartesian3,
         Color,
@@ -54,12 +52,12 @@ defineSuite([
     beforeAll(function() {
         scene = createScene();
 
-        // Render a primitive to confirm that asynchronous primitives are ready
+        // Render a simple Primitive to ensure that asynchronous geometry workers are ready
         var objects = new EntityCollection();
         var visualizer = new PolylineVisualizer(scene, objects);
 
         var polyline = new PolylineGraphics();
-        polyline.positions = new ConstantProperty([Cartesian3.fromDegrees(0.0, 0.0), Cartesian3.fromDegrees(0.0, 1.0)]);
+        polyline.positions = new ConstantProperty([Cartesian3.fromDegrees(0.0, 0.0), Cartesian3.fromDegrees(0.0, 0.001)]);
         polyline.material = new ColorMaterialProperty();
 
         var entity = new Entity();
@@ -72,6 +70,10 @@ defineSuite([
             scene.render(time);
             return isUpdated;
         }).then(function() {
+            visualizer.destroy();
+        }).otherwise(function() {
+            // Possible that pollToPromise timed out.
+            // Primitive workers will continue to spin up.
             visualizer.destroy();
         });
     });
