@@ -125,6 +125,7 @@ defineSuite([
     var animatedMorphCubeUrl = './Data/Models/PBR/AnimatedMorphCube/AnimatedMorphCube.gltf';
     var twoSidedPlaneUrl = './Data/Models/PBR/TwoSidedPlane/TwoSidedPlane.gltf';
     var vertexColorTestUrl = './Data/Models/PBR/VertexColorTest/VertexColorTest.gltf';
+    var emissiveUrl = './Data/Models/PBR/BoxEmissive/BoxEmissive.gltf';
     var dracoCompressedModelUrl = './Data/Models/DracoCompression/CesiumMilkTruck/CesiumMilkTruck.gltf';
     var dracoCompressedModelWithAnimationUrl = './Data/Models/DracoCompression/CesiumMan/CesiumMan.gltf';
 
@@ -395,7 +396,7 @@ defineSuite([
         model.show = false;
     });
 
-    it('Renders x-up model', function() {
+    it('renders x-up model', function() {
         return Resource.fetchJson(boxEcefUrl).then(function(gltf) {
             // Model data is z-up. Edit the transform to be z-up to x-up.
             gltf.nodes.node_transform.matrix = Matrix4.pack(Axis.Z_UP_TO_X_UP, new Array(16));
@@ -411,7 +412,7 @@ defineSuite([
         });
     });
 
-    it('Renders y-up model', function() {
+    it('renders y-up model', function() {
         return Resource.fetchJson(boxEcefUrl).then(function(gltf) {
             // Model data is z-up. Edit the transform to be z-up to y-up.
             gltf.nodes.node_transform.matrix = Matrix4.pack(Axis.Z_UP_TO_Y_UP, new Array(16));
@@ -427,7 +428,7 @@ defineSuite([
         });
     });
 
-    it('Renders z-up model', function() {
+    it('renders z-up model', function() {
         return Resource.fetchJson(boxEcefUrl).then(function(gltf) {
             // Model data is z-up. Edit the transform to be the identity.
             gltf.nodes.node_transform.matrix = Matrix4.pack(Matrix4.IDENTITY, new Array(16));
@@ -438,6 +439,50 @@ defineSuite([
             }).then(function(m) {
                 verifyRender(m);
                 expect(m.upAxis).toBe(Axis.Z);
+                primitives.remove(m);
+            });
+        });
+    });
+
+    it('renders x-forward model', function() {
+        return Resource.fetchJson(boxEcefUrl).then(function(gltf) {
+            return loadModelJson(gltf, {
+                forwardAxis : Axis.X
+            }).then(function(m) {
+                verifyRender(m);
+                expect(m.forwardAxis).toBe(Axis.X);
+                primitives.remove(m);
+            });
+        });
+    });
+
+    it('renders z-forward model', function() {
+        return Resource.fetchJson(boxPbrUrl).then(function(gltf) {
+            return loadModelJson(gltf, {
+                forwardAxis : Axis.Z
+            }).then(function(m) {
+                verifyRender(m);
+                expect(m.forwardAxis).toBe(Axis.Z);
+                primitives.remove(m);
+            });
+        });
+    });
+
+    it('detects glTF 1.0 models as x-forward', function() {
+        return Resource.fetchJson(boxEcefUrl).then(function(gltf) {
+            return loadModelJson(gltf).then(function(m) {
+                verifyRender(m);
+                expect(m.forwardAxis).toBe(Axis.X);
+                primitives.remove(m);
+            });
+        });
+    });
+
+    it('detects glTF 2.0 models as z-forward', function() {
+        return Resource.fetchJson(boxPbrUrl).then(function(gltf) {
+            return loadModelJson(gltf).then(function(m) {
+                verifyRender(m);
+                expect(m.forwardAxis).toBe(Axis.Z);
                 primitives.remove(m);
             });
         });
@@ -837,12 +882,12 @@ defineSuite([
             model.clippingPlanes = clippingPlanes;
 
             scene.renderForSpecs();
-            expect(Model._getClippingFunction.calls.count()).toEqual(2);
+            expect(Model._getClippingFunction.calls.count()).toEqual(1);
 
             clippingPlanes.unionClippingRegions = true;
 
             scene.renderForSpecs();
-            expect(Model._getClippingFunction.calls.count()).toEqual(4);
+            expect(Model._getClippingFunction.calls.count()).toEqual(2);
 
             primitives.remove(model);
         });
@@ -1605,6 +1650,34 @@ defineSuite([
         expect(animations.update()).toEqual(false);
     });
 
+    it('animates a single keyframe', function() {
+        return Resource.fetchJson(animBoxesUrl).then(function(gltf) {
+            gltf.accessors['animAccessor_0'].count = 1;
+            gltf.accessors['animAccessor_1'].count = 1;
+
+            return loadModelJson(gltf).then(function(m) {
+                m.show = true;
+                var node = m.getNode('inner_box');
+                var time = JulianDate.fromDate(new Date('January 1, 2014 12:00:00 UTC'));
+                var animations = m.activeAnimations;
+                animations.add({
+                    name : 'animation_0',
+                    startTime : time
+                });
+
+                expect(node.matrix).toEqual(Matrix4.IDENTITY);
+                var previousMatrix = Matrix4.clone(node.matrix);
+
+                for (var i = 1; i < 4; ++i) {
+                    var t = JulianDate.addSeconds(time, i, new JulianDate());
+                    scene.renderForSpecs(t);
+                    expect(node.matrix).toEqual(previousMatrix);
+                }
+                primitives.remove(m);
+            });
+        });
+    });
+
     ///////////////////////////////////////////////////////////////////////////
 
     it('renders riggedFigure without animation', function() {
@@ -2243,11 +2316,28 @@ defineSuite([
         });
     });
 
-    it('load a glTF 2.0 with vertex colors', function() {
-        return loadModel(vertexColorTestUrl).then(function(m) {
+    it('loads a glTF 2.0 with vertex colors', function() {
+        return loadModel(vertexColorTestUrl, {
+            forwardAxis : Axis.X
+        }).then(function(m) {
             m.show = true;
             checkVertexColors(m);
             primitives.remove(m);
+        });
+    });
+
+    it('loads a glTF 2.0 with an emissive texture and no normals', function() {
+        return loadModel(emissiveUrl).then(function(model) {
+            model.show = true;
+            model.zoomTo();
+            expect(scene).toRenderAndCall(function(rgba) {
+                // Emissive texture is red
+                expect(rgba[0]).toBeGreaterThan(10);
+                expect(rgba[1]).toBeLessThan(10);
+                expect(rgba[2]).toBeLessThan(10);
+            });
+
+            primitives.remove(model);
         });
     });
 
@@ -2398,38 +2488,6 @@ defineSuite([
         });
     });
 
-    it('loads with custom pickFragmentShader and pickUniformMap', function() {
-        function pickFragmentShaderLoaded(fs) {
-            return ShaderSource.createPickFragmentShaderSource(fs, 'uniform');
-        }
-
-        var pickId = scene.context.createPickId({
-            custom : 'custom'
-        });
-
-        function pickUniformMapLoaded(uniformMap) {
-            return combine(uniformMap, {
-                czm_pickColor : function() {
-                    return pickId.color;
-                }
-            });
-        }
-
-        var options = {
-            pickFragmentShaderLoaded : pickFragmentShaderLoaded,
-            pickUniformMapLoaded : pickUniformMapLoaded
-        };
-
-        return loadModelJson(texturedBoxModel.gltf, options).then(function(model) {
-            model.show = true;
-            expect(scene).toPickAndCall(function(result) {
-                expect(result.custom).toEqual('custom');
-            });
-
-            primitives.remove(model);
-        });
-    });
-
     it('loads a glTF with KHR_draco_mesh_compression extension', function() {
         return loadModel(dracoCompressedModelUrl, {
             dequantizeInShader : false
@@ -2441,11 +2499,29 @@ defineSuite([
 
     it('loads a glTF with KHR_draco_mesh_compression extension with integer attributes', function() {
         return loadModel(dracoCompressedModelWithAnimationUrl, {
-            dequantizeInShader : false
+            dequantizeInShader : false,
+            forwardAxis : Axis.X
         }).then(function(m) {
             verifyRender(m);
             primitives.remove(m);
         });
+    });
+
+    it('loads multiple draco models from cache without decoding', function() {
+        var initialModel;
+        var decoder = DracoLoader._getDecoderTaskProcessor();
+        return loadModel(dracoCompressedModelUrl)
+            .then(function(m) {
+                verifyRender(m);
+                initialModel = m;
+                spyOn(decoder, 'scheduleTask');
+                return loadModel(dracoCompressedModelUrl);
+            }).then(function(m) {
+                verifyRender(m);
+                expect(decoder.scheduleTask).not.toHaveBeenCalled();
+                primitives.remove(m);
+                primitives.remove(initialModel);
+            });
     });
 
     it('error decoding a draco compressed glTF causes model loading to fail', function() {
@@ -2489,7 +2565,8 @@ defineSuite([
 
     it('loads a draco compressed glTF and dequantizes in the shader, skipping generic attributes', function() {
         return loadModel(dracoCompressedModelWithAnimationUrl, {
-            dequantizeInShader : true
+            dequantizeInShader : true,
+            forwardAxis : Axis.X
         }).then(function(m) {
             verifyRender(m);
 

@@ -7,6 +7,7 @@ define([
         '../Core/destroyObject',
         '../Core/EventHelper',
         '../Scene/GroundPrimitive',
+        '../Scene/OrderedGroundPrimitiveCollection',
         '../Scene/PrimitiveCollection',
         './BillboardVisualizer',
         './BoundingSphereState',
@@ -26,6 +27,7 @@ define([
         destroyObject,
         EventHelper,
         GroundPrimitive,
+        OrderedGroundPrimitiveCollection,
         PrimitiveCollection,
         BillboardVisualizer,
         BoundingSphereState,
@@ -128,7 +130,7 @@ define([
                 new ModelVisualizer(scene, entities),
                 new PointVisualizer(entityCluster, entities),
                 new PathVisualizer(scene, entities),
-                new PolylineVisualizer(scene, entities)];
+                new PolylineVisualizer(scene, entities, dataSource._groundPrimitives)];
     };
 
     defineProperties(DataSourceDisplay.prototype, {
@@ -362,7 +364,7 @@ define([
         var displayGroundPrimitives = this._groundPrimitives;
 
         var primitives = displayPrimitives.add(new PrimitiveCollection());
-        var groundPrimitives = displayGroundPrimitives.add(new PrimitiveCollection());
+        var groundPrimitives = displayGroundPrimitives.add(new OrderedGroundPrimitiveCollection());
 
         dataSource._primitives = primitives;
         dataSource._groundPrimitives = groundPrimitives;

@@ -131,12 +131,22 @@ define([
                     return this._credits;
                 }
 
-                this._credits = this._ionEndpoint.attributions.map(Credit.getIonCredit);
+                this._credits = IonResource.getCreditsFromEndpoint(this._ionEndpoint, this._ionEndpointResource);
 
                 return this._credits;
             }
         }
     });
+
+    /** @private */
+    IonResource.getCreditsFromEndpoint = function(endpoint, endpointResource) {
+        var credits = endpoint.attributions.map(Credit.getIonCredit);
+        var defaultTokenCredit = Ion.getDefaultTokenCredit(endpointResource.queryParameters.access_token);
+        if (defined(defaultTokenCredit)) {
+            credits.push(defaultTokenCredit);
+        }
+        return credits;
+    };
 
     /** @inheritdoc */
     IonResource.prototype.clone = function(result) {

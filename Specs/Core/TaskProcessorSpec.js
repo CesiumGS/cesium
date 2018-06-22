@@ -2,22 +2,17 @@ defineSuite([
         'Core/TaskProcessor',
         'require',
         'Core/FeatureDetection',
-        'ThirdParty/when'
+        'ThirdParty/when',
+        'Specs/absolutize'
     ], function(
         TaskProcessor,
         require,
         FeatureDetection,
-        when) {
+        when,
+        absolutize) {
     'use strict';
 
     var taskProcessor;
-
-    function absolutize(url) {
-        var a = document.createElement('a');
-        a.href = url;
-        a.href = a.href; // IE only absolutizes href on get, not set
-        return a.href;
-    }
 
     beforeEach(function() {
         TaskProcessor._workerModulePrefix = '../Specs/TestWorkers/';
@@ -177,13 +172,16 @@ defineSuite([
         taskProcessor = new TaskProcessor('returnWasmConfig', 5);
         var promise = taskProcessor.initWebAssemblyModule({
             modulePath : 'TestWasm/testWasmWrapper',
-            wasmBinaryFile : binaryUrl
+            wasmBinaryFile : binaryUrl,
+            fallbackModulePath : 'TestWasm/testWasmFallback'
         });
 
         return promise.then(function(result) {
             expect(result).toBeDefined();
-            expect(result.modulePath).toMatch(/TestWasm\/testWasmWrapper/);
-            expect(result.wasmBinary).toBeDefined();
+            if (FeatureDetection.supportsWebAssembly()) {
+                expect(result.modulePath).toMatch(/TestWasm\/testWasmWrapper/);
+                expect(result.wasmBinary).toBeDefined();
+            }
         });
     });
 

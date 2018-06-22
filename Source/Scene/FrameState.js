@@ -151,7 +151,14 @@ define([
              * @type {Boolean}
              * @default false
              */
-            depth : false
+            depth : false,
+
+            /**
+             * <code>true</code> if the primitive should update for a per-feature post-process pass, <code>false</code> otherwise.
+             * @type {Boolean}
+             * @default false
+             */
+            postProcess : false
         };
 
         /**

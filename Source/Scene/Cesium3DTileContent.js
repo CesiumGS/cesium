@@ -160,6 +160,8 @@ define([
         /**
          * Gets the tileset for this tile.
          *
+         * @memberof Cesium3DTileContent.prototype
+         *
          * @type {Cesium3DTileset}
          * @readonly
          */
@@ -171,6 +173,8 @@ define([
 
         /**
          * Gets the tile containing this content.
+         *
+         * @memberof Cesium3DTileContent.prototype
          *
          * @type {Cesium3DTile}
          * @readonly

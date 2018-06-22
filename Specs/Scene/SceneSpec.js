@@ -347,7 +347,7 @@ defineSuite([
         expect(scene).toRender([255, 0, 0, 255]);
 
         scene.debugShowGlobeDepth = true;
-        expect(scene).toRender([0, 0, 0, 255]);
+        expect(scene).notToRender([255, 0, 0, 255]);
 
         scene.debugShowGlobeDepth = false;
     });
@@ -716,11 +716,6 @@ defineSuite([
             var uniformState = scene.context.uniformState;
 
             expect(scene).toRenderAndCall(function(rgba) {
-                expect(uniformState.globeDepthTexture).not.toBeDefined();
-            });
-
-            scene.copyGlobeDepth = true;
-            expect(scene).toRenderAndCall(function(rgba) {
                 expect(uniformState.globeDepthTexture).toBeDefined();
             });
         }
@@ -867,11 +862,8 @@ defineSuite([
         var canvas = scene.canvas;
         var windowPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 2);
 
-        var rectanglePrimitive = createRectangle(rectangle);
+        var rectanglePrimitive = scene.primitives.add(createRectangle(rectangle));
         rectanglePrimitive.appearance.material.uniforms.color = new Color(1.0, 0.0, 0.0, 0.5);
-
-        var primitives = scene.primitives;
-        primitives.add(rectanglePrimitive);
 
         scene.useDepthPicking = true;
         scene.pickTranslucentDepth = false;

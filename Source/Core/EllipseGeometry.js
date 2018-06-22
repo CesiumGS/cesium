@@ -1,4 +1,5 @@
 define([
+        './arrayFill',
         './BoundingSphere',
         './Cartesian2',
         './Cartesian3',
@@ -15,6 +16,7 @@ define([
         './GeometryAttribute',
         './GeometryAttributes',
         './GeometryInstance',
+        './GeometryOffsetAttribute',
         './GeometryPipeline',
         './IndexDatatype',
         './Math',
@@ -24,6 +26,7 @@ define([
         './Rectangle',
         './VertexFormat'
     ], function(
+        arrayFill,
         BoundingSphere,
         Cartesian2,
         Cartesian3,
@@ -40,6 +43,7 @@ define([
         GeometryAttribute,
         GeometryAttributes,
         GeometryInstance,
+        GeometryOffsetAttribute,
         GeometryPipeline,
         IndexDatatype,
         CesiumMath,
@@ -241,6 +245,22 @@ define([
                 componentDatatype : ComponentDatatype.FLOAT,
                 componentsPerAttribute : 3,
                 values : extrudeNormals
+            });
+        }
+
+        if (extrude && defined(options.offsetAttribute)) {
+            var offsetAttribute = new Uint8Array(size);
+            if (options.offsetAttribute === GeometryOffsetAttribute.TOP) {
+                offsetAttribute = arrayFill(offsetAttribute, 1, 0, size / 2);
+            } else {
+                var offsetValue = options.offsetAttribute === GeometryOffsetAttribute.NONE ? 0 : 1;
+                offsetAttribute = arrayFill(offsetAttribute, offsetValue);
+            }
+
+            attributes.applyOffset = new GeometryAttribute({
+                componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
+                componentsPerAttribute : 1,
+                values : offsetAttribute
             });
         }
 
@@ -561,6 +581,21 @@ define([
             });
         }
 
+        if (defined(options.offsetAttribute)) {
+            var offsetAttribute = new Uint8Array(size);
+            if (options.offsetAttribute === GeometryOffsetAttribute.TOP) {
+                offsetAttribute = arrayFill(offsetAttribute, 1, 0, size / 2);
+            } else {
+                var offsetValue = options.offsetAttribute === GeometryOffsetAttribute.NONE ? 0 : 1;
+                offsetAttribute = arrayFill(offsetAttribute, offsetValue);
+            }
+            attributes.applyOffset = new GeometryAttribute({
+                componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
+                componentsPerAttribute : 1,
+                values : offsetAttribute
+            });
+        }
+
         return attributes;
     }
 
@@ -753,15 +788,17 @@ define([
         this._extrudedHeight = Math.min(extrudedHeight, height);
         this._shadowVolume = defaultValue(options.shadowVolume, false);
         this._workerName = 'createEllipseGeometry';
+        this._offsetAttribute = options.offsetAttribute;
 
         this._rectangle = undefined;
+        this._textureCoordinateRotationPoints = undefined;
     }
 
     /**
      * The number of elements used to pack the object into an array.
      * @type {Number}
      */
-    EllipseGeometry.packedLength = Cartesian3.packedLength + Ellipsoid.packedLength + VertexFormat.packedLength + 8;
+    EllipseGeometry.packedLength = Cartesian3.packedLength + Ellipsoid.packedLength + VertexFormat.packedLength + 9;
 
     /**
      * Stores the provided instance into the provided array.
@@ -800,7 +837,8 @@ define([
         array[startingIndex++] = value._height;
         array[startingIndex++] = value._granularity;
         array[startingIndex++] = value._extrudedHeight;
-        array[startingIndex] = value._shadowVolume ? 1.0 : 0.0;
+        array[startingIndex++] = value._shadowVolume ? 1.0 : 0.0;
+        array[startingIndex] = defaultValue(value._offsetAttribute, -1);
 
         return array;
     };
@@ -819,7 +857,8 @@ define([
         height : undefined,
         granularity : undefined,
         extrudedHeight : undefined,
-        shadowVolume: undefined
+        shadowVolume: undefined,
+        offsetAttribute: undefined
     };
 
     /**
@@ -855,7 +894,8 @@ define([
         var height = array[startingIndex++];
         var granularity = array[startingIndex++];
         var extrudedHeight = array[startingIndex++];
-        var shadowVolume = array[startingIndex] === 1.0;
+        var shadowVolume = array[startingIndex++] === 1.0;
+        var offsetAttribute = array[startingIndex];
 
         if (!defined(result)) {
             scratchOptions.height = height;
@@ -866,6 +906,8 @@ define([
             scratchOptions.semiMajorAxis = semiMajorAxis;
             scratchOptions.semiMinorAxis = semiMinorAxis;
             scratchOptions.shadowVolume = shadowVolume;
+            scratchOptions.offsetAttribute = offsetAttribute === -1 ? undefined : offsetAttribute;
+
             return new EllipseGeometry(scratchOptions);
         }
 
@@ -880,6 +922,7 @@ define([
         result._granularity = granularity;
         result._extrudedHeight = extrudedHeight;
         result._shadowVolume = shadowVolume;
+        result._offsetAttribute = offsetAttribute === -1 ? undefined : offsetAttribute;
 
         return result;
     };
@@ -897,7 +940,7 @@ define([
 
         var height = ellipseGeometry._height;
         var extrudedHeight = ellipseGeometry._extrudedHeight;
-        var extrude = !CesiumMath.equalsEpsilon(height, extrudedHeight, CesiumMath.EPSILON2);
+        var extrude = !CesiumMath.equalsEpsilon(height, extrudedHeight, 0, CesiumMath.EPSILON2);
 
         ellipseGeometry._center = ellipseGeometry._ellipsoid.scaleToGeodeticSurface(ellipseGeometry._center, ellipseGeometry._center);
         var options = {
@@ -915,9 +958,22 @@ define([
         if (extrude) {
             options.extrudedHeight = extrudedHeight;
             options.shadowVolume = ellipseGeometry._shadowVolume;
+            options.offsetAttribute = ellipseGeometry._offsetAttribute;
             geometry = computeExtrudedEllipse(options);
         } else {
             geometry = computeEllipse(options);
+
+            if (defined(ellipseGeometry._offsetAttribute)) {
+                var length = geometry.attributes.position.values.length;
+                var applyOffset = new Uint8Array(length / 3);
+                var offsetValue = ellipseGeometry._offsetAttribute === GeometryOffsetAttribute.NONE ? 0 : 1;
+                arrayFill(applyOffset, offsetValue);
+                geometry.attributes.applyOffset = new GeometryAttribute({
+                    componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
+                    componentsPerAttribute : 1,
+                    values: applyOffset
+                });
+            }
         }
 
         return new Geometry({
@@ -953,6 +1009,31 @@ define([
         });
     };
 
+    function textureCoordinateRotationPoints(ellipseGeometry) {
+        var stRotation = -ellipseGeometry._stRotation;
+        if (stRotation === 0.0) {
+            return [0, 0, 0, 1, 1, 0];
+        }
+
+        var cep = EllipseGeometryLibrary.computeEllipsePositions({
+            center : ellipseGeometry._center,
+            semiMajorAxis : ellipseGeometry._semiMajorAxis,
+            semiMinorAxis : ellipseGeometry._semiMinorAxis,
+            rotation : ellipseGeometry._rotation,
+            granularity : ellipseGeometry._granularity
+        }, false, true);
+        var positionsFlat = cep.outerPositions;
+        var positionsCount = positionsFlat.length / 3;
+        var positions = new Array(positionsCount);
+        for (var i = 0; i < positionsCount; ++i) {
+            positions[i] = Cartesian3.fromArray(positionsFlat, i * 3);
+        }
+
+        var ellipsoid = ellipseGeometry._ellipsoid;
+        var boundingRectangle = ellipseGeometry.rectangle;
+        return Geometry._textureCoordinateRotationPoints(positions, stRotation, ellipsoid, boundingRectangle);
+    }
+
     defineProperties(EllipseGeometry.prototype, {
         /**
          * @private
@@ -963,6 +1044,18 @@ define([
                     this._rectangle = computeRectangle(this);
                 }
                 return this._rectangle;
+            }
+        },
+        /**
+         * For remapping texture coordinates when rendering EllipseGeometries as GroundPrimitives.
+         * @private
+         */
+        textureCoordinateRotationPoints : {
+            get : function() {
+                if (!defined(this._textureCoordinateRotationPoints)) {
+                    this._textureCoordinateRotationPoints = textureCoordinateRotationPoints(this);
+                }
+                return this._textureCoordinateRotationPoints;
             }
         }
     });

@@ -960,9 +960,9 @@ define([
         },
 
         /**
-         * Gets or sets the user-defined object returned when the label is picked.
+         * Gets or sets the user-defined value returned when the label is picked.
          * @memberof Label.prototype
-         * @type {Object}
+         * @type {*}
          */
         id : {
             get : function() {
@@ -984,6 +984,18 @@ define([
                         backgroundBillboard.id = value;
                     }
                 }
+            }
+        },
+
+        /**
+         * @private
+         */
+        pickId : {
+            get : function() {
+                if (this._glyphs.length === 0 || !defined(this._glyphs[0].billboard)) {
+                    return undefined;
+                }
+                return this._glyphs[0].billboard.pickId;
             }
         },
 

@@ -249,7 +249,7 @@ define([
 
         var seconds;
         var index = times.indexOf(time);
-        if (index === -1) {
+        if (index < 0) {
             return undefined;
         }
 

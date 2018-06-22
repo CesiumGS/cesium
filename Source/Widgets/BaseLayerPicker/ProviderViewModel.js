@@ -1,10 +1,12 @@
 define([
+        '../../Core/defaultValue',
         '../../Core/defined',
         '../../Core/defineProperties',
         '../../Core/DeveloperError',
         '../../ThirdParty/knockout',
         '../createCommand'
     ], function(
+        defaultValue,
         defined,
         defineProperties,
         DeveloperError,
@@ -22,6 +24,7 @@ define([
      * @param {String} options.name The name of the layer.
      * @param {String} options.tooltip The tooltip to show when the item is moused over.
      * @param {String} options.iconUrl An icon representing the layer.
+     * @param {String} [options.category] A category for the layer.
      * @param {ProviderViewModel~CreationFunction|Command} options.creationFunction A function or Command
      *        that creates one or more providers which will be added to the globe when this item is selected.
      *
@@ -70,6 +73,8 @@ define([
          */
         this.iconUrl = options.iconUrl;
 
+        this._category = defaultValue(options.category, '');
+
         knockout.track(this, ['name', 'tooltip', 'iconUrl']);
     }
 
@@ -78,12 +83,25 @@ define([
          * Gets the Command that creates one or more providers which will be added to
          * the globe when this item is selected.
          * @memberof ProviderViewModel.prototype
-         *
+         * @memberof ProviderViewModel.prototype
          * @type {Command}
+         * @readonly
          */
         creationCommand : {
             get : function() {
                 return this._creationCommand;
+            }
+        },
+
+        /**
+         * Gets the category
+         * @type {String}
+         * @memberof ProviderViewModel.prototype
+         * @readonly
+         */
+        category : {
+            get: function() {
+                return this._category;
             }
         }
     });
