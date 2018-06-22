@@ -225,6 +225,12 @@ define([
             }
         },
 
+        childTileMask : {
+            get : function() {
+                return this._childTileMask;
+            }
+        },
+
         /**
          * Gets the bounding-volume hierarchy (BVH) starting with this tile.
          * @memberof QuantizedMeshTerrainData.prototype

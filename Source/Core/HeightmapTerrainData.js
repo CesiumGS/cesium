@@ -162,8 +162,14 @@ define([
             get : function() {
                 return this._waterMask;
             }
-        }
-    });
+        },
+
+        childTileMask : {
+            get : function() {
+                return this._childTileMask;
+            }
+        },
+});
 
     var taskProcessor = new TaskProcessor('createVerticesFromHeightmap');
 

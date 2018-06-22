@@ -610,10 +610,12 @@ define([
      * @returns {boolean} True if the tile can be refined, false if it cannot.
      */
     GlobeSurfaceTileProvider.prototype.canRefine = function(tile) {
-        //return tile.southwestChild.renderable && tile.southeastChild.renderable && tile.northwestChild.renderable && tile.northeastChild.renderable;
-        // TODO: only allow refinement if we know if we know whether or not the children are available.
-        // TODO: do we need to do anything to limit the upsampled depth?
-        return true;
+        // Only allow refinement it we know whether or not the children of this tile exist.
+        // For a tileset with `availability`, we'll always be able to refine.
+        // We can ask for availability of _any_ child tile because we only need to confirm
+        // that we get a yes or no answer, it doesn't matter what the answer is.
+        var childAvailable = tile.data.isChildAvailable(this.terrainProvider, tile, 0, 0);
+        return childAvailable !== undefined;
     };
 
     var modifiedModelViewScratch = new Matrix4();
@@ -740,11 +742,18 @@ define([
         }
 
         var terrainData = surfaceTile.terrainData;
+        var mesh = surfaceTile.mesh;
         var tileBoundingRegion = surfaceTile.tileBoundingRegion;
 
+        if (mesh !== undefined && mesh.minimumHeight !== undefined && mesh.maximumHeight !== undefined) {
+            // We have tight-fitting min/max heights from the mesh.
+            tileBoundingRegion.minimumHeight = mesh.minimumHeight;
+            tileBoundingRegion.maximumHeight = mesh.maximumHeight;
+            return tile;
+        }
+
         if (terrainData !== undefined && terrainData._minimumHeight !== undefined && terrainData._maximumHeight !== undefined) {
-            // We have tight-fitting min/max heights from the geometry.
-            // TODO: HeightmapTerrainData won't have min/max properties, but the TerrainMesh will.
+            // We have tight-fitting min/max heights from the terrain data.
             tileBoundingRegion.minimumHeight = terrainData._minimumHeight;
             tileBoundingRegion.maximumHeight = terrainData._maximumHeight;
             return tile;
@@ -766,9 +775,15 @@ define([
         while (ancestor !== undefined) {
             var ancestorSurfaceTile = ancestor.data;
             if (ancestorSurfaceTile !== undefined) {
+                var ancestorMesh = ancestorSurfaceTile.mesh;
+                if (ancestorMesh !== undefined && ancestorMesh.minimumHeight !== undefined && ancestorMesh.maximumHeight !== undefined) {
+                    tileBoundingRegion.minimumHeight = ancestorMesh.minimumHeight;
+                    tileBoundingRegion.maximumHeight = ancestorMesh.maximumHeight;
+                    return ancestor;
+                }
+
                 var ancestorTerrainData = ancestorSurfaceTile.terrainData;
                 if (ancestorTerrainData !== undefined && ancestorTerrainData._minimumHeight !== undefined && ancestorTerrainData._maximumHeight !== undefined) {
-                    // TODO: HeightmapTerrainData won't have min/max properties, but the TerrainMesh will.
                     tileBoundingRegion.minimumHeight = ancestorTerrainData._minimumHeight;
                     tileBoundingRegion.maximumHeight = ancestorTerrainData._maximumHeight;
                     return ancestor;

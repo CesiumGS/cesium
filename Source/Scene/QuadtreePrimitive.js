@@ -588,10 +588,10 @@ define([
                 // No need to add the children to the load queue because they'll be added (if necessary) when they're visited.
                 visitVisibleChildrenNearToFar(primitive, southwestChild, southeastChild, northwestChild, northeastChild, frameState, nearestRenderableTile);
 
-                // if (tile.needsLoading) {
-                //     // Tile is not rendered, so load it with low priority.
-                //     primitive._tileLoadQueueLow.push(tile);
-                // }
+                if (tile.needsLoading) {
+                    // Tile is not rendered, so load it with low priority.
+                    primitive._tileLoadQueueLow.push(tile);
+                }
             }
         } else {
             // We'd like to refine but can't because not all of our children are renderable.  Load the refinement blockers with high priority and
@@ -688,13 +688,6 @@ define([
         } else {
             ++primitive._debug.tilesCulled;
             primitive._tileReplacementQueue.markTileRendered(tile);
-
-            // We've decided this tile is not visible, but if it's not fully loaded yet, we've made
-            // this determination based on possibly-incorrect information.  We need to load this
-            // culled tile with low priority just in case it turns out to be visible after all.
-            // if (tile.needsLoading) {
-            //     primitive._tileLoadQueueLow.push(tile);
-            // }
         }
     }
 

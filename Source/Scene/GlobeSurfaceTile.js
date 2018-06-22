@@ -4,6 +4,7 @@ define([
         '../Core/Cartesian4',
         '../Core/defined',
         '../Core/defineProperties',
+        '../Core/DeveloperError',
         '../Core/IndexDatatype',
         '../Core/IntersectionTests',
         '../Core/PixelFormat',
@@ -32,6 +33,7 @@ define([
         Cartesian4,
         defined,
         defineProperties,
+        DeveloperError,
         IndexDatatype,
         IntersectionTests,
         PixelFormat,
@@ -103,6 +105,8 @@ define([
 
         this.surfaceShader = undefined;
         this.isClipped = true;
+
+        this.childTileMask = undefined;
     }
 
     defineProperties(GlobeSurfaceTile.prototype, {
@@ -390,17 +394,64 @@ define([
         }
     };
 
+    /**
+     * Determines if a given child tile is available.  The given child tile coordinates are assumed
+     * to be one of the four children of this tile.  If non-child tile coordinates are
+     * given, the availability of the southeast child tile is returned. This function determines
+     * the presence of child tiles from `terrainProvider.availability` or from `this.terrainData.childTileMask`.
+     *
+     * @param {TerrainProvider} terrainProvider The terrain provider.
+     * @param {QuatreeTile} tile The parent tile.
+     * @param {Number} childX The tile X coordinate of the child tile to check for availability.
+     * @param {Number} childY The tile Y coordinate of the child tile to check for availability.
+     * @returns {Boolean|undefined} True if the child tile is available; otherwise, false. If tile availability
+     *          cannot be determined, this function returns undefined.
+     */
+    GlobeSurfaceTile.prototype.isChildAvailable = function(terrainProvider, tile, childX, childY) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(terrainProvider)) {
+            throw new DeveloperError('terrainProvider is required.');
+        }
+        if (!defined(tile)) {
+            throw new DeveloperError('tile is required.');
+        }
+        if (!defined(childX)) {
+            throw new DeveloperError('childX is required.');
+        }
+        if (!defined(childY)) {
+            throw new DeveloperError('childY is required.');
+        }
+        //>>includeEnd('debug');
+
+        if (this.childTileMask === undefined) {
+            if (terrainProvider.availability !== undefined) {
+                this.childTileMask = terrainProvider.availability.computeChildMaskForTile(tile.level, tile.x, tile.y);
+            } else if (this.terrainData !== undefined && this.terrainData.childTileMask !== undefined) {
+                this.childTileMask = this.terrainData.childTileMask;
+            } else {
+                // No idea if children exist or not.
+                return undefined;
+            }
+        }
+
+        var bitNumber = 2; // northwest child
+        if (childX !== tile.x * 2) {
+            ++bitNumber; // east child
+        }
+        if (childY !== tile.y * 2) {
+            bitNumber -= 2; // south child
+        }
+
+        return (this.childTileMask & (1 << bitNumber)) !== 0;
+    };
+
     function prepareNewTile(tile, terrainProvider, imageryLayerCollection) {
         var surfaceTile = tile.data;
 
-        if (tile.parent && tile.parent.terrainData && !tile.parent.terrainData.isChildAvailable(tile.parent.x, tile.parent.y, tile.x, tile.y)) {
+        var parent = tile.parent;
+        if (parent !== undefined && !parent.data.isChildAvailable(parent.x, parent.y, tile.x, tile.y)) {
             // Start upsampling right away.
             surfaceTile.terrainState = TerrainState.FAILED;
-        } else if (terrainProvider.getTileDataAvailable) {
-            if (!terrainProvider.getTileDataAvailable(tile.x, tile.y, tile.level)) {
-                // Start upsampling right away.
-                surfaceTile.terrainState = TerrainState.FAILED;
-            }
         }
 
         // Map imagery tiles to this terrain tile
