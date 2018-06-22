@@ -1,5 +1,6 @@
 define([
         './ApproximateTerrainHeights',
+        './arrayRemoveDuplicates',
         './BoundingSphere',
         './Cartesian3',
         './Cartographic',
@@ -24,6 +25,7 @@ define([
         './WebMercatorProjection'
     ], function(
         ApproximateTerrainHeights,
+        arrayRemoveDuplicates,
         BoundingSphere,
         Cartesian3,
         Cartographic,
@@ -251,7 +253,6 @@ define([
 
         var index = defaultValue(startingIndex, 0);
 
-        // Pack position length, then all positions
         var positions = value._positions;
         var positionsLength = positions.length;
 
@@ -333,7 +334,6 @@ define([
         return result;
     }
 
-    // Inputs are cartesians
     var toPreviousScratch = new Cartesian3();
     var toNextScratch = new Cartesian3();
     var forwardScratch = new Cartesian3();
@@ -430,7 +430,7 @@ define([
             }
             splitPositions.push(p1);
         }
-        // Check if loop also crosses IDL/Prime Meridian
+
         if (loop) {
             p0 = positions[positionsLength - 1];
             p1 = positions[0];
@@ -443,12 +443,18 @@ define([
         }
         var cartographicsLength = splitPositions.length;
 
-        // Squash all cartesians to cartographic coordinates
         var cartographics = new Array(cartographicsLength);
         for (i = 0; i < cartographicsLength; i++) {
             var cartographic = Cartographic.fromCartesian(splitPositions[i], ellipsoid);
             cartographic.height = 0.0;
             cartographics[i] = cartographic;
+        }
+
+        cartographics = arrayRemoveDuplicates(cartographics, Cartographic.equalsEpsilon);
+        cartographicsLength = cartographics.length;
+
+        if (cartographicsLength < 2) {
+            return undefined;
         }
 
         /**** Build heap-side arrays for positions, interpolated cartographics, and normals from which to compute vertices ****/
@@ -489,7 +495,6 @@ define([
         cartographicsArray.push(startCartographic.latitude);
         cartographicsArray.push(startCartographic.longitude);
 
-        // Interpolate between start and start + 1
         interpolateSegment(startCartographic, nextCartographic, minHeight, maxHeight, granularity, ellipsoid, normalsArray, bottomPositionsArray, topPositionsArray, cartographicsArray);
 
         // All inbetween points
@@ -539,7 +544,6 @@ define([
         if (loop) {
             interpolateSegment(endCartographic, startCartographic, minHeight, maxHeight, granularity, ellipsoid, normalsArray, bottomPositionsArray, topPositionsArray, cartographicsArray);
             index = normalsArray.length;
-            // Copy the first vertex
             for (i = 0; i < 3; ++i) {
                 normalsArray[index + i] = normalsArray[i];
                 bottomPositionsArray[index + i] = bottomPositionsArray[i];
@@ -758,7 +762,7 @@ define([
         if (compute2dAttributes) {
             index = 0;
             for (i = 1; i < cartographicsLength; i++) {
-                // don't clone anything from previous segment b/c possible IDL touch
+                // Don't clone anything from previous segment b/c possible IDL touch
                 startCartographic.latitude = cartographicsArray[index];
                 startCartographic.longitude = cartographicsArray[index + 1];
                 endCartographic.latitude = cartographicsArray[index + 2];
@@ -882,22 +886,18 @@ define([
              /** 3D **/
             var segmentLength3D = Cartesian3.distance(startTop, endTop);
 
-            // Encode start position and end position as high precision point + offset
             var encodedStart = EncodedCartesian3.fromCartesian(startBottom, encodeScratch);
             var forwardOffset = Cartesian3.subtract(endBottom, startBottom, offsetScratch);
             var forward = Cartesian3.normalize(forwardOffset, rightScratch);
 
-            // Right plane
             var startUp = Cartesian3.subtract(startTop, startBottom, startUpScratch);
             startUp = Cartesian3.normalize(startUp, startUp);
             var rightNormal = Cartesian3.cross(forward, startUp, rightScratch);
             rightNormal = Cartesian3.normalize(rightNormal, rightNormal);
 
-            // Plane normals perpendicular to "geometry" normals, so cross (startTop - startBottom) with geometry normal at start
             var startPlaneNormal = Cartesian3.cross(startUp, startGeometryNormal, startPlaneNormalScratch);
             startPlaneNormal = Cartesian3.normalize(startPlaneNormal, startPlaneNormal);
 
-            // Similarly with (endTop - endBottom)
             var endUp = Cartesian3.subtract(endTop, endBottom, endUpScratch);
             endUp = Cartesian3.normalize(endUp, endUp);
             var endPlaneNormal = Cartesian3.cross(endGeometryNormal, endUp, endPlaneNormalScratch);
@@ -914,7 +914,6 @@ define([
             var texcoordNormalization2DX = 0.0;
             var texcoordNormalization2DY = 0.0;
             if (compute2dAttributes) {
-                // In 2D case, positions and normals can be done as 2 components
                 segmentLength2D = Cartesian3.distance(start2D, end2D);
 
                 encodedStart2D = EncodedCartesian3.fromCartesian(start2D, encodeScratch2D);
@@ -989,16 +988,7 @@ define([
                 }
             }
 
-            /****************************************************************
-             * Vertex Positions
-             *
-             * Encode which side of the line segment each position is on by
-             * pushing it "away" by 1 meter along the geometry normal.
-             *
-             * Needed when pushing the vertices out by varying amounts to
-             * help simulate constant screen-space line width.
-             ****************************************************************/
-            // Adjust heights of positions in 3D
+            // Adjust height of volume in 3D
             var adjustHeightStartBottom = adjustHeightStartBottomScratch;
             var adjustHeightEndBottom = adjustHeightEndBottomScratch;
             var adjustHeightStartTop = adjustHeightStartTopScratch;
@@ -1031,14 +1021,12 @@ define([
             Cartesian3.pack(adjustHeightEndTop, positionsArray, vec3sWriteIndex + 6);
             Cartesian3.pack(adjustHeightStartTop, positionsArray, vec3sWriteIndex + 9);
 
-            // Nudge in opposite direction
             normalNudge = Cartesian3.multiplyByScalar(rightNormal, -2.0 * CesiumMath.EPSILON5, normalNudgeScratch);
             Cartesian3.add(adjustHeightStartBottom, normalNudge, adjustHeightStartBottom);
             Cartesian3.add(adjustHeightEndBottom, normalNudge, adjustHeightEndBottom);
             Cartesian3.add(adjustHeightStartTop, normalNudge, adjustHeightStartTop);
             Cartesian3.add(adjustHeightEndTop, normalNudge, adjustHeightEndTop);
 
-            // Check against XZ plane again
             nudgeXZ(adjustHeightStartBottom, adjustHeightEndBottom);
             nudgeXZ(adjustHeightStartTop, adjustHeightEndTop);
 
@@ -1058,7 +1046,6 @@ define([
             lengthSoFar2D += segmentLength2D;
         }
 
-        /*** Generate indices ***/
         index = 0;
         var indexOffset = 0;
         for (i = 0; i < segmentCount; i++) {
@@ -1069,7 +1056,6 @@ define([
             index += REFERENCE_INDICES_LENGTH;
         }
 
-        // Generate bounding sphere
         var boundingSpheres = scratchBoundingSpheres;
         BoundingSphere.fromVertices(bottomPositionsArray, Cartesian3.ZERO, 3, boundingSpheres[0]);
         BoundingSphere.fromVertices(topPositionsArray, Cartesian3.ZERO, 3, boundingSpheres[1]);

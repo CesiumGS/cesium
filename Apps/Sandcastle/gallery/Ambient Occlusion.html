@@ -60,7 +60,7 @@ function startup(Cesium) {
 //Sandcastle_Begin
 var viewer = new Cesium.Viewer('cesiumContainer');
 
-if (!viewer.scene.postProcessStages.ambientOcclusion.isSupported(viewer.scene)) {
+if (!Cesium.PostProcessStageLibrary.isAmbientOcclusionSupported(viewer.scene)) {
     console.log('This browser does not support the ambient occlusion post process.');
 }
 
