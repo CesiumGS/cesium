@@ -1,21 +1,16 @@
 define([
         '../Core/defined',
-        '../Core/GroundPolylineGeometry',
-        '../Scene/GroundPolylinePrimitive'
+        '../Core/GroundPolylineGeometry'
     ], function(
         defined,
-        GroundPolylineGeometry,
-        GroundPolylinePrimitive) {
+        GroundPolylineGeometry) {
     'use strict';
 
     function createGroundPolylineGeometry(groundPolylineGeometry, offset) {
-        return GroundPolylinePrimitive._initializeTerrainHeightsWorker()
-            .then(function() {
-                if (defined(offset)) {
-                    groundPolylineGeometry = GroundPolylineGeometry.unpack(groundPolylineGeometry, offset);
-                }
-                return GroundPolylineGeometry.createGeometry(groundPolylineGeometry);
-            });
+        if (defined(offset)) {
+            groundPolylineGeometry = GroundPolylineGeometry.unpack(groundPolylineGeometry, offset);
+        }
+        return GroundPolylineGeometry.createGeometry(groundPolylineGeometry);
     }
 
     return createGroundPolylineGeometry;

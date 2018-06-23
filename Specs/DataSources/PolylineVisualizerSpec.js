@@ -1,6 +1,5 @@
 defineSuite([
         'DataSources/PolylineVisualizer',
-        'Core/ApproximateTerrainHeights',
         'Core/BoundingSphere',
         'Core/Cartesian3',
         'Core/Color',
@@ -24,7 +23,6 @@ defineSuite([
         'Specs/pollToPromise'
     ], function(
         PolylineVisualizer,
-        ApproximateTerrainHeights,
         BoundingSphere,
         Cartesian3,
         Color,
@@ -54,14 +52,34 @@ defineSuite([
     beforeAll(function() {
         scene = createScene();
 
-        ApproximateTerrainHeights.initialize();
+        // Render a simple Primitive to ensure that asynchronous geometry workers are ready
+        var objects = new EntityCollection();
+        var visualizer = new PolylineVisualizer(scene, objects);
+
+        var polyline = new PolylineGraphics();
+        polyline.positions = new ConstantProperty([Cartesian3.fromDegrees(0.0, 0.0), Cartesian3.fromDegrees(0.0, 0.001)]);
+        polyline.material = new ColorMaterialProperty();
+
+        var entity = new Entity();
+        entity.polyline = polyline;
+        objects.add(entity);
+
+        return pollToPromise(function() {
+            scene.initializeFrame();
+            var isUpdated = visualizer.update(time);
+            scene.render(time);
+            return isUpdated;
+        }).then(function() {
+            visualizer.destroy();
+        }).otherwise(function() {
+            // Possible that pollToPromise timed out.
+            // Primitive workers will continue to spin up.
+            visualizer.destroy();
+        });
     });
 
     afterAll(function() {
         scene.destroyForSpecs();
-
-        ApproximateTerrainHeights._initPromise = undefined;
-        ApproximateTerrainHeights._terrainHeights = undefined;
     });
 
     it('Can create and destroy', function() {

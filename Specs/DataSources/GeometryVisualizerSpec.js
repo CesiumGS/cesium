@@ -6,21 +6,18 @@ defineSuite([
         'Core/Color',
         'Core/ColorGeometryInstanceAttribute',
         'Core/JulianDate',
+        'Core/Rectangle',
         'Core/ShowGeometryInstanceAttribute',
         'DataSources/BoundingSphereState',
-        'DataSources/CallbackProperty',
         'DataSources/ColorMaterialProperty',
         'DataSources/ConstantPositionProperty',
         'DataSources/ConstantProperty',
-        'DataSources/EllipseGeometryUpdater',
         'DataSources/EllipseGraphics',
         'DataSources/Entity',
         'DataSources/EntityCollection',
         'DataSources/GridMaterialProperty',
+        'DataSources/RectangleGraphics',
         'DataSources/SampledProperty',
-        'DataSources/StaticGeometryColorBatch',
-        'DataSources/StaticGeometryPerMaterialBatch',
-        'DataSources/StaticOutlineGeometryBatch',
         'Scene/ClassificationType',
         'Scene/GroundPrimitive',
         'Scene/MaterialAppearance',
@@ -37,21 +34,18 @@ defineSuite([
         Color,
         ColorGeometryInstanceAttribute,
         JulianDate,
+        Rectangle,
         ShowGeometryInstanceAttribute,
         BoundingSphereState,
-        CallbackProperty,
         ColorMaterialProperty,
         ConstantPositionProperty,
         ConstantProperty,
-        EllipseGeometryUpdater,
         EllipseGraphics,
         Entity,
         EntityCollection,
         GridMaterialProperty,
+        RectangleGraphics,
         SampledProperty,
-        StaticGeometryColorBatch,
-        StaticGeometryPerMaterialBatch,
-        StaticOutlineGeometryBatch,
         ClassificationType,
         GroundPrimitive,
         MaterialAppearance,
@@ -68,7 +62,31 @@ defineSuite([
     beforeAll(function() {
         scene = createScene();
 
-        return GroundPrimitive.initializeTerrainHeights();
+        // Render a simple Primitive to ensure that asynchronous geometry workers are ready
+        var objects = new EntityCollection();
+        var visualizer = new GeometryVisualizer(scene, objects, scene.primitives, scene.groundPrimitives);
+
+        var rectangle = new RectangleGraphics({
+            coordinates : new Rectangle(0.0, 0.0, 0.0001, 0.0001)
+        });
+
+        var entity = new Entity();
+        entity.position = new ConstantPositionProperty(new Cartesian3(1234, 5678, 9101112));
+        entity.rectangle = rectangle;
+        objects.add(entity);
+
+        return pollToPromise(function() {
+            scene.initializeFrame();
+            var isUpdated = visualizer.update(time);
+            scene.render(time);
+            return isUpdated;
+        }).then(function() {
+            visualizer.destroy();
+        }).otherwise(function() {
+            // Possible that pollToPromise timed out.
+            // Primitive workers will continue to spin up.
+            visualizer.destroy();
+        });
     });
 
     afterAll(function() {
