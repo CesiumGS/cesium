@@ -1,10 +1,12 @@
 defineSuite([
         'Core/JulianDate',
+        'Core/Iso8601',
         'Core/Math',
         'Core/TimeConstants',
         'Core/TimeStandard'
     ], function(
         JulianDate,
+        Iso8601,
         CesiumMath,
         TimeConstants,
         TimeStandard) {
@@ -794,6 +796,16 @@ defineSuite([
         expect(date).toEqual('0950-01-02T03:04:05.012345Z');
         date = JulianDate.toIso8601(JulianDate.fromIso8601(isoDate), 7);
         expect(date).toEqual('0950-01-02T03:04:05.0123450Z');
+    });
+
+    it('can format Iso8601.MINIMUM_VALUE and MAXIMUM_VALUE to ISO strings', function() {
+        var minString = Iso8601.MINIMUM_VALUE.toString();
+        expect(minString).toEqual('0000-01-01T00:00:00Z');
+        expect(JulianDate.fromIso8601(minString)).toEqual(Iso8601.MINIMUM_VALUE);
+
+        var maxString = Iso8601.MAXIMUM_VALUE.toString();
+        expect(maxString).toEqual('9999-12-31T24:00:00Z');
+        expect(JulianDate.fromIso8601(maxString)).toEqual(Iso8601.MAXIMUM_VALUE);
     });
 
     it('secondsDifference works in UTC', function() {
