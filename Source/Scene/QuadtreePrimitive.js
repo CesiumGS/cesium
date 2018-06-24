@@ -534,6 +534,31 @@ define([
         }
     }
 
+    function getState(action, heightSource, renderable) {
+        return `A:${action} HS:${heightSource !== undefined ? heightSource.level : 'undefined'} R:${renderable}`;
+    }
+
+    var lastFrame;
+
+    function reportTileAction(frameState, tile, action) {
+        var heightSource = tile.data.boundingVolumeSourceTile;
+        var renderable = tile.renderable;
+        if (tile._lastAction !== action || tile._lastHeightSource !== heightSource || tile._lastRenderable !== renderable) {
+            if (lastFrame !== frameState.frameNumber) {
+                console.log('****** FRAME ' + frameState.frameNumber);
+                lastFrame = frameState.frameNumber;
+            }
+
+            var tileID = `L${tile.level}X${tile.x}Y${tile.y}`;
+            var emphasize = tile._lastAction !== undefined && tile._lastAction !== action ? '*' : '';
+            console.log(`${emphasize}${tileID} NOW ${getState(action, heightSource, renderable)} WAS ${getState(tile._lastAction, tile._lastHeightSource, tile._lastRenderable)}`);
+
+            tile._lastAction = action;
+            tile._lastHeightSource = heightSource;
+            tile._lastRenderable = renderable;
+        }
+    }
+
     function visitTile(primitive, frameState, tile, nearestRenderableTile) {
         var debug = primitive._debug;
 
@@ -551,6 +576,7 @@ define([
         }
 
         if (screenSpaceError(primitive, frameState, tile) < primitive.maximumScreenSpaceError) {
+            reportTileAction(frameState, tile, 'meets SSE');
             // This tile meets SSE requirements, so render it.
             if (tile.needsLoading) {
                 // Rendered tile meeting SSE loads with medium priority.
@@ -571,6 +597,7 @@ define([
 
         if (tileProvider.canRefine(tile)) {
             if (allAreUpsampled) {
+                reportTileAction(frameState, tile, 'all upsampled');
                 // No point in rendering the children because they're all upsampled.  Render this tile instead.
                 addTileToRenderList(primitive, tile, nearestRenderableTile);
 
@@ -584,6 +611,8 @@ define([
                     primitive._tileLoadQueueMedium.push(tile);
                 }
             } else {
+                reportTileAction(frameState, tile, 'refine');
+
                 // SSE is not good enough and children are loaded, so refine.
                 // No need to add the children to the load queue because they'll be added (if necessary) when they're visited.
                 visitVisibleChildrenNearToFar(primitive, southwestChild, southeastChild, northwestChild, northeastChild, frameState, nearestRenderableTile);
@@ -594,6 +623,7 @@ define([
                 }
             }
         } else {
+            reportTileAction(frameState, tile, 'can\'t refine');
             // We'd like to refine but can't because not all of our children are renderable.  Load the refinement blockers with high priority and
             // render this tile in the meantime.
             queueChildLoadNearToFar(primitive, frameState.camera.positionCartographic, southwestChild, southeastChild, northwestChild, northeastChild);
@@ -686,6 +716,7 @@ define([
         if (tileProvider.computeTileVisibility(tile, frameState, occluders) !== Visibility.NONE) {
             visitTile(primitive, frameState, tile, nearestRenderableTile);
         } else {
+            reportTileAction(frameState, tile, 'culled');
             ++primitive._debug.tilesCulled;
             primitive._tileReplacementQueue.markTileRendered(tile);
         }

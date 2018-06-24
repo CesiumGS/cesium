@@ -524,6 +524,16 @@ define([
      * @returns {Visibility} The visibility of the tile.
      */
     GlobeSurfaceTileProvider.prototype.computeTileVisibility = function(tile, frameState, occluders) {
+        var result = this.computeTileVisibilityInternal(tile, frameState, occluders);
+        // if (result !== tile._lastVisibility) {
+        //     console.log(`L${tile.level}X${tile.x}Y${tile.y}: state ${tile._lastState} -> ${tile.data.terrainState} visibility ${tile._lastVisibility} -> ${result}`);
+        //     tile._lastVisibility = result;
+        //     tile._lastState = tile.data.terrainState;
+        // }
+        return result;
+    };
+
+    GlobeSurfaceTileProvider.prototype.computeTileVisibilityInternal = function(tile, frameState, occluders) {
         var distance = this.computeDistanceToTile(tile, frameState);
         tile._distance = distance;
 
@@ -614,6 +624,9 @@ define([
         // For a tileset with `availability`, we'll always be able to refine.
         // We can ask for availability of _any_ child tile because we only need to confirm
         // that we get a yes or no answer, it doesn't matter what the answer is.
+        // if ((tile.level % 6) === 0 && tile.data.terrainData === undefined) {
+        //     return false;
+        // }
         var childAvailable = tile.data.isChildAvailable(this.terrainProvider, tile, 0, 0);
         return childAvailable !== undefined;
     };
@@ -717,11 +730,11 @@ define([
 
             var cameraHeight = frameState.camera.positionCartographic.height;
             if (Math.abs(cameraHeight - ancestorMin) < Math.abs(cameraHeight - ancestorMax)) {
-                tileBoundingRegion.minimumHeight = ancestorMin;
-                tileBoundingRegion.maximumHeight = ancestorMin;
-            } else {
                 tileBoundingRegion.minimumHeight = ancestorMax;
                 tileBoundingRegion.maximumHeight = ancestorMax;
+            } else {
+                tileBoundingRegion.minimumHeight = ancestorMin;
+                tileBoundingRegion.maximumHeight = ancestorMin;
             }
         }
 
