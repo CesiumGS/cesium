@@ -2509,7 +2509,7 @@ defineSuite([
         expect(passedOptions.pitch).toBe(options.orientation.pitch);
         expect(passedOptions.roll).toBe(options.orientation.roll);
         expect(typeof passedOptions.complete).toBe('function'); //complete function is wrapped by camera.
-        expect(passedOptions.cancel).toBe(options.cancel);
+        expect(typeof passedOptions.cancel).toBe('function'); //cancel function is wrapped by camera.
         expect(passedOptions.endTransform).toBe(options.endTransform);
         expect(passedOptions.convert).toBe(options.convert);
         expect(passedOptions.maximumHeight).toBe(options.maximumHeight);
