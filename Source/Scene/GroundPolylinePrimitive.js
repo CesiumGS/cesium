@@ -62,6 +62,9 @@ define([
      *
      * Only to be used with GeometryInstances containing {@link GroundPolylineGeometry}.
      *
+     * @alias GroundPolylinePrimitive
+     * @constructor
+     *
      * @param {Object} [options] Object with the following properties:
      * @param {Array|GeometryInstance} [options.geometryInstances] GeometryInstances containing GroundPolylineGeometry
      * @param {Appearance} [options.appearance] The Appearance used to render the polyline. Defaults to a white color {@link Material} on a {@link PolylineMaterialAppearance}.
@@ -348,7 +351,6 @@ define([
      * GroundPolylinePrimitive synchronously.
      *
      * @returns {Promise} A promise that will resolve once the terrain heights have been loaded.
-     *
      */
     GroundPolylinePrimitive.initializeTerrainHeights = function() {
         var initPromise = GroundPolylinePrimitive._initPromise;
@@ -362,17 +364,6 @@ define([
             });
 
         return GroundPolylinePrimitive._initPromise;
-    };
-
-    /**
-     * Synchronous check for if GroundPolylinePrimitive is initialized and
-     * synchronous GroundPolylinePrimitives can be created.
-     *
-     * @returns {Boolean} Whether GroundPolylinePrimitive is initialized.
-     * @private
-     */
-    GroundPolylinePrimitive._isInitialized = function() {
-        return GroundPolylinePrimitive._initialized;
     };
 
     // For use with web workers.
