@@ -5,7 +5,7 @@ To refine past a tile, one of the following conditions must be met:
       * The distance to the tile is known accurately (e.g. we know the precise min/max height), or
       * The bounding volume for the tile is known to be X or _closer_, and X is sufficient to necessitate refinement. For example, if we have no min/max height information for this tile, but the parent tile has a min of A and a max of B, we know the child must fall within these bounds as well. Therefore, the child tile can be no farther away than max(distance to A, distance to B).
 
-Idea: when a tile is determined to be _fully_ visible based on min/max heights from an ancestor, and it meets the SSE, we can be certain that either that tile or its children are relevant for rendering. But if its only partially visible, we might load it only to find out that it's culled. So, when we have BVH data available, and a tile is only partially visible based on estimated heights, we should load the nearest ancestor BVH node instead of loading the tile.
+Idea: when a tile is determined to be _fully_ visible based on min/max heights from an ancestor, and it meets the SSE, we can be certain that either that tile or its children are relevant for rendering. But if it's only partially visible, we might load it only to find out that it's culled. So, when we have BVH data available, and a tile is only partially visible based on estimated heights, we should load the nearest ancestor BVH node instead of loading the tile.
 
 GlobeSurfaceTile properties:
 

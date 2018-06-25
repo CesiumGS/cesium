@@ -504,6 +504,8 @@ define([
     GlobeSurfaceTileProvider.prototype.loadTile = function(frameState, tile) {
         GlobeSurfaceTile.processStateMachine(tile, frameState, this._terrainProvider, this._imageryLayers, this._vertexArraysToDestroy);
         var tileLoadedEvent = this._tileLoadedEvent;
+
+        // TODO: creating a new function for every loaded tile every frame?!
         tile._loadedCallbacks['tileLoadedEvent'] = function (tile) {
             tileLoadedEvent.raiseEvent();
             return true;
@@ -669,6 +671,10 @@ define([
         var surfaceTile = tile.data;
         if (nearestRenderableTile !== undefined && nearestRenderableTile !== tile) {
             surfaceTile.renderableTile = nearestRenderableTile;
+
+            // The renderable tile may have previously deferred to an ancestor.
+            // But we know it's renderable now, so mark it as such.
+            nearestRenderableTile.data.renderableTile = undefined;
 
             var myRectangle = tile.rectangle;
             var ancestorRectangle = nearestRenderableTile.rectangle;

@@ -541,6 +541,7 @@ define([
     var lastFrame;
 
     function reportTileAction(frameState, tile, action) {
+        return;
         var heightSource = tile.data.boundingVolumeSourceTile;
         var renderable = tile.renderable;
         if (tile._lastAction !== action || tile._lastHeightSource !== heightSource || tile._lastRenderable !== renderable) {
@@ -791,7 +792,31 @@ define([
         processSinglePriorityLoadQueue(primitive, frameState, tileProvider, endTime, tileLoadQueueLow);
     }
 
+    function sortByCenterness(a, b) {
+        return a._centerness - b._centerness;
+    }
+
+    var tileDirectionScratch = new Cartesian3();
+
     function processSinglePriorityLoadQueue(primitive, frameState, tileProvider, endTime, loadQueue) {
+        var cameraPosition = frameState.camera.positionWC;
+        var cameraDirection = frameState.camera.directionWC;
+        for (var i = 0, len = loadQueue.length; i < len && getTimestamp() < endTime; ++i) {
+            var tile = loadQueue[i];
+            var surfaceTile = tile.data;
+            if (surfaceTile === undefined) {
+                continue;
+            }
+            var obb = surfaceTile.orientedBoundingBox;
+            if (obb === undefined) {
+                continue;
+            }
+            var tileDirection = Cartesian3.normalize(Cartesian3.subtract(obb.center, cameraPosition, tileDirectionScratch), tileDirectionScratch);
+            tile._centerness = (1.0 - Cartesian3.dot(tileDirection, cameraDirection)) * tile._distance;
+        }
+
+        loadQueue.sort(sortByCenterness);
+
         for (var i = 0, len = loadQueue.length; i < len && getTimestamp() < endTime; ++i) {
             var tile = loadQueue[i];
             primitive._tileReplacementQueue.markTileRendered(tile);
