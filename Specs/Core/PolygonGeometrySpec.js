@@ -139,7 +139,7 @@ defineSuite([
         };
 
         var geometry = PolygonGeometry.createGeometry(new PolygonGeometry({ polygonHierarchy : hierarchy, perPositionHeight: true }));
-        expect(geometry).not.toBeUndefined();
+        expect(geometry).toBeDefined();
     });
 
     it('computes positions', function() {

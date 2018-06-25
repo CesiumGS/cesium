@@ -218,8 +218,10 @@ define([
             var holes = outerNode.holes;
 
             var i;
+            var length;
             if (!perPositionHeight) {
-                for (i = 0; i < outerRing.length; i++) {
+                length = outerRing.length;
+                for (i = 0; i < length; i++) {
                     ellipsoid.scaleToGeodeticSurface(outerRing[i], outerRing[i]);
                 }
             }
@@ -247,7 +249,8 @@ define([
                 var hole = holes[i];
                 var holePositions = hole.positions;
                 if (!perPositionHeight) {
-                    for (j = 0; j < holePositions.length; ++j) {
+                    length = holePositions.length;
+                    for (j = 0; j < length; ++j) {
                         ellipsoid.scaleToGeodeticSurface(holePositions[j], holePositions[j]);
                     }
                 }

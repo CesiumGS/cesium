@@ -484,11 +484,13 @@ define([
         queue.enqueue(polygonHierarchy);
         var i;
         var j;
+        var length;
         while (queue.length !== 0) {
             var outerNode = queue.dequeue();
             var outerRing = outerNode.positions;
             if (!perPositionHeight) {
-                for (i = 0; i < outerRing.length; i++) {
+                length = outerRing.length;
+                for (i = 0; i < length; i++) {
                     ellipsoid.scaleToGeodeticSurface(outerRing[i], outerRing[i]);
                 }
             }
@@ -503,7 +505,8 @@ define([
                 var hole = outerNode.holes[i];
                 var holePositions = hole.positions;
                 if (!perPositionHeight) {
-                    for (j = 0; j < holePositions.length; ++j) {
+                    length = holePositions.length;
+                    for (j = 0; j < length; ++j) {
                         ellipsoid.scaleToGeodeticSurface(holePositions[j], holePositions[j]);
                     }
                 }
@@ -566,7 +569,7 @@ define([
                 geometryInstance.geometry.attributes.position.values = PolygonPipeline.scaleToGeodeticHeight(geometryInstance.geometry.attributes.position.values, height, ellipsoid, !perPositionHeight);
 
                 if (defined(polygonGeometry._offsetAttribute)) {
-                    var length = geometryInstance.geometry.attributes.position.values.length;
+                    length = geometryInstance.geometry.attributes.position.values.length;
                     var applyOffset = new Uint8Array(length / 3);
                     offsetValue = polygonGeometry._offsetAttribute === GeometryOffsetAttribute.NONE ? 0 : 1;
                     arrayFill(applyOffset, offsetValue);

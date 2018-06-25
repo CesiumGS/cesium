@@ -133,7 +133,7 @@ defineSuite([
         };
 
         var geometry = PolygonOutlineGeometry.createGeometry(new PolygonOutlineGeometry({ polygonHierarchy : hierarchy, perPositionHeight: true }));
-        expect(geometry).not.toBeUndefined();
+        expect(geometry).toBeDefined();
     });
 
     it('computes positions', function() {
