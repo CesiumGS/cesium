@@ -2,22 +2,18 @@ define([
         './addPipelineExtras',
         './removeExtensionsUsed',
         './updateVersion',
-        '../../Core/ComponentDatatype',
         '../../Core/defined',
         '../../Core/DeveloperError',
         '../../Core/getMagic',
-        '../../Core/getStringFromTypedArray',
-        '../../Core/WebGLConstants'
+        '../../Core/getStringFromTypedArray'
     ], function(
         addPipelineExtras,
         removeExtensionsUsed,
         updateVersion,
-        ComponentDatatype,
         defined,
         DeveloperError,
         getMagic,
-        getStringFromTypedArray,
-        WebGLConstants) {
+        getStringFromTypedArray) {
     'use strict';
 
     /**
@@ -27,7 +23,7 @@ define([
      * @returns {Object} The parsed binary glTF.
      */
     function parseBinaryGltf(data) {
-        var headerView = ComponentDatatype.createArrayBufferView(WebGLConstants.INT, data.buffer, data.byteOffset, 5);
+        var headerView = new DataView(data.buffer, data.byteOffset, 20);
 
         // Check that the magic string is present
         var magic = getMagic(data);
@@ -36,7 +32,7 @@ define([
         }
 
         // Check that the version is 1 or 2
-        var version = headerView[1];
+        var version = headerView.getInt32(4,true);
         if (version !== 1 && version !== 2) {
             throw new DeveloperError('Binary glTF version is not 1 or 2');
         }
@@ -46,9 +42,9 @@ define([
         var length;
         // Load binary glTF version 1
         if (version === 1) {
-            length = headerView[2];
-            var contentLength = headerView[3];
-            var contentFormat = headerView[4];
+            length = headerView.getInt32(8,true);
+            var contentLength = headerView.getInt32(12,true);
+            var contentFormat = headerView.getInt32(16, true);
 
             // Check that the content format is 0, indicating that it is JSON
             if (contentFormat !== 0) {
@@ -87,13 +83,13 @@ define([
 
         // Load binary glTF version 2
         if (version === 2) {
-            length = headerView[2];
+            length = headerView.getInt32(8, true);
             var byteOffset = 12;
             var binaryBuffer;
             while (byteOffset < length) {
-                var chunkHeaderView = ComponentDatatype.createArrayBufferView(WebGLConstants.INT, data.buffer, data.byteOffset + byteOffset, 2);
-                var chunkLength = chunkHeaderView[0];
-                var chunkType = chunkHeaderView[1];
+                var chunkHeaderView = new DataView(data.buffer, data.byteOffset + byteOffset, 8);
+                var chunkLength = chunkHeaderView.getInt32(0, true);
+                var chunkType = chunkHeaderView.getInt32(4, true);
                 byteOffset += 8;
                 var chunkBuffer = data.subarray(byteOffset, byteOffset + chunkLength);
                 byteOffset += chunkLength;
