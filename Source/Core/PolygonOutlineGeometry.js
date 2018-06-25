@@ -483,9 +483,15 @@ define([
         var queue = new Queue();
         queue.enqueue(polygonHierarchy);
         var i;
+        var j;
         while (queue.length !== 0) {
             var outerNode = queue.dequeue();
             var outerRing = outerNode.positions;
+            if (!perPositionHeight) {
+                for (i = 0; i < outerRing.length; i++) {
+                    ellipsoid.scaleToGeodeticSurface(outerRing[i], outerRing[i]);
+                }
+            }
             outerRing = arrayRemoveDuplicates(outerRing, Cartesian3.equalsEpsilon, true);
             if (outerRing.length < 3) {
                 continue;
@@ -495,18 +501,24 @@ define([
             // The outer polygon contains inner polygons
             for (i = 0; i < numChildren; i++) {
                 var hole = outerNode.holes[i];
-                hole.positions = arrayRemoveDuplicates(hole.positions, Cartesian3.equalsEpsilon, true);
-                if (hole.positions.length < 3) {
+                var holePositions = hole.positions;
+                if (!perPositionHeight) {
+                    for (j = 0; j < holePositions.length; ++j) {
+                        ellipsoid.scaleToGeodeticSurface(holePositions[j], holePositions[j]);
+                    }
+                }
+                holePositions = arrayRemoveDuplicates(holePositions, Cartesian3.equalsEpsilon, true);
+                if (holePositions.length < 3) {
                     continue;
                 }
-                polygons.push(hole.positions);
+                polygons.push(holePositions);
 
                 var numGrandchildren = 0;
                 if (defined(hole.holes)) {
                     numGrandchildren = hole.holes.length;
                 }
 
-                for ( var j = 0; j < numGrandchildren; j++) {
+                for (j = 0; j < numGrandchildren; j++) {
                     queue.enqueue(hole.holes[j]);
                 }
             }
