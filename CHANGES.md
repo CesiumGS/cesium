@@ -28,6 +28,7 @@ Change Log
 * Improved billboard and label rendering so they no longer sink into terrain when clamped to ground. [#6621](https://github.com/AnalyticalGraphicsInc/cesium/pull/6621)
 * Fixed an issue where KMLs containing a `colorMode` of `random` could return the exact same color on successive calls to `Color.fromRandom()`.
 * `Iso8601.MAXIMUM_VALUE` now formats to a string which can be parsed by `fromIso8601`.
+* Fixed material support when using an image that is already loaded [#6729](https://github.com/AnalyticalGraphicsInc/cesium/pull/6729)
 
 ### 1.46.1 - 2018-06-01
 
