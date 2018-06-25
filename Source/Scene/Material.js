@@ -34,6 +34,7 @@ define([
         '../Shaders/Materials/SlopeRampMaterial',
         '../Shaders/Materials/StripeMaterial',
         '../Shaders/Materials/Water',
+		'../Shaders/Materials/SnowMaterial',
         '../ThirdParty/when'
     ], function(
         Cartesian2,
@@ -71,6 +72,7 @@ define([
         SlopeRampMaterial,
         StripeMaterial,
         WaterMaterial,
+		SnowMaterial,
         when) {
     'use strict';
 
@@ -1551,6 +1553,29 @@ define([
                 image: Material.DefaultImageId
             },
             source : SlopeRampMaterial
+        },
+        translucent : false
+    });
+
+	/**
+     * Gets the name of the snow terrain material.
+     * @type {String}
+     * @readonly
+     */
+    Material.SnowMaterialMaterialType = 'Snow';
+    Material._materialCache.addMaterial(Material.SnowMaterialMaterialType, {
+        fabric : {
+            type : Material.SnowMaterialMaterialType,
+            uniforms : {
+                u_level1normalMap: Material.DefaultImageId,
+				u_level2normalMap: Material.DefaultImageId,
+				u_level3normalMap: Material.DefaultImageId,
+				u_level4normalMap: Material.DefaultImageId,
+				u_level5normalMap: Material.DefaultImageId,
+				u_accumulationEndTime: 1000.0,
+				u_accumulationStartTime: 1.0
+            },
+            source : SnowMaterial
         },
         translucent : false
     });

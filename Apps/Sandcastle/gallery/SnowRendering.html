@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <meta name="description" content="Apply materials to the globe.">
+    <meta name="cesium-sandcastle-labels" content="Showcases">
+    <title>Cesium Demo</title>
+    <script type="text/javascript" src="../Sandcastle-header.js"></script>
+    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
+    <script type="text/javascript">
+    require.config({
+        baseUrl : '../../../Source',
+        waitSeconds : 60
+    });
+    </script>
+</head>
+<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
+<style>
+    @import url(../templates/bucket.css);
+</style>
+<div id="cesiumContainer" class="fullSize"></div>
+<div id="loadingOverlay"><h1>Loading...</h1></div>
+<div id="toolbar">
+<div id="terrainMenu"></div>
+<div id="materialMenu"></div>
+<div id="zoomButtons"></div>
+<div id="sampleButtons"></div>
+</div>
+
+
+
+<script id="cesium_sandcastle_script">
+function startup(Cesium) {
+    'use strict';
+//Sandcastle_Begin
+var viewer = new Cesium.Viewer('cesiumContainer');
+var scene = viewer.scene;
+var currentFrameNum = viewer.scene.frameState.frameNumber;
+var cesiumTerrainProviderMeshes = new Cesium.CesiumTerrainProvider({
+    url : 'https://assets.agi.com/stk-terrain/v1/tilesets/world/tiles',
+    requestWaterMask : true,
+    requestVertexNormals : true
+});
+viewer.terrainProvider = cesiumTerrainProviderMeshes;
+
+viewer.scene.globe.enableLighting = true;
+
+//viewer.scene.debugShowFramesPerSecond = true;
+
+// Set the clock so the lighting looks good on the initial viewpoint.
+viewer.clockViewModel.currentTime = Cesium.JulianDate.fromDate(new Date(2017, 8, 22, 0, 0, 0));
+
+
+
+function getColorRamp() {
+    var ramp = document.createElement('canvas');
+    ramp.width = 100;
+    ramp.height = 1;
+    var ctx = ramp.getContext('2d');
+
+    var grd = ctx.createLinearGradient(0, 0, 100, 0);
+    grd.addColorStop(0, "black");
+    grd.addColorStop(0.25, "red");
+    grd.addColorStop(0.5, "blue");
+    grd.addColorStop(0.75, "green");
+    grd.addColorStop(1.0, "white");
+
+    ctx.fillStyle = grd;
+    ctx.fillRect(0, 0, 100, 1);
+    return ramp;
+}
+
+
+
+// setup alternative terrain providers
+var ellipsoidProvider = new Cesium.EllipsoidTerrainProvider();
+
+var vrTheWorldProvider = new Cesium.VRTheWorldTerrainProvider({
+    url : 'http://www.vr-theworld.com/vr-theworld/tiles1.0.0/73/',
+    credit : 'Terrain data courtesy VT MÄK'
+});
+
+Sandcastle.addToolbarMenu([{
+    text : 'CesiumTerrainProvider - STK World Terrain',
+    onselect : function() {
+        viewer.terrainProvider = cesiumTerrainProviderMeshes;
+    }
+}, {
+    text : 'CesiumTerrainProvider - STK World Terrain - no effects',
+    onselect : function() {
+        viewer.terrainProvider = new Cesium.CesiumTerrainProvider({
+            url : 'https://assets.agi.com/stk-terrain/v1/tilesets/world/tiles'
+        });
+    }
+}, {
+    text : 'CesiumTerrainProvider - STK World Terrain w/ Lighting',
+    onselect : function() {
+        viewer.terrainProvider = new Cesium.CesiumTerrainProvider({
+            url : 'https://assets.agi.com/stk-terrain/v1/tilesets/world/tiles',
+            requestVertexNormals : true
+        });
+    }
+}, {
+    text : 'CesiumTerrainProvider - STK World Terrain w/ Water',
+    onselect : function() {
+        viewer.terrainProvider = new Cesium.CesiumTerrainProvider({
+            url : 'https://assets.agi.com/stk-terrain/v1/tilesets/world/tiles',
+            requestWaterMask : true
+        });
+    }
+}, {
+    text : 'EllipsoidTerrainProvider',
+    onselect : function() {
+        viewer.terrainProvider = ellipsoidProvider;
+    }
+}, {
+    text : 'VRTheWorldTerrainProvider',
+    onselect : function() {
+        viewer.terrainProvider = vrTheWorldProvider;
+    }
+}], 'terrainMenu');
+
+Sandcastle.addDefaultToolbarMenu([{
+    text : 'Grand Canyon',
+    onselect : function() {
+        var target = new Cesium.Cartesian3.fromDegrees(-112.1130, 36.1070, 2500);
+        var offset = new Cesium.Cartesian3(-6857.40902037546, -793.3419798081741, 2147.5545426812023);
+        viewer.camera.lookAt(target, offset);
+        viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
+    }
+}, {
+    text : 'Great Wall',
+    onselect : function() {
+        var target = new Cesium.Cartesian3.fromDegrees(116.5704, 40.4319, 2500);
+        var offset = new Cesium.Cartesian3(-6857.40902037546, 412.3284835694358, 2147.5545426812023);
+        viewer.camera.lookAt(target, offset);
+        viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
+    }
+}, {
+    text : 'Mount Fuji',
+    onselect : function() {
+        var target = new Cesium.Cartesian3.fromDegrees(138.7278, 35.3606, 2000);
+        var offset = new Cesium.Cartesian3(6344.974098678562, -793.3419798081741, 2499.9508860763162);
+        viewer.camera.lookAt(target, offset);
+        viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
+    }
+}, {
+    text : 'Pyramid',
+    onselect : function() {
+        var target = new Cesium.Cartesian3.fromDegrees(31.1342, 29.9792, 2000);
+        var offset = new Cesium.Cartesian3(2500.0, 500.0, 2500.0);
+        viewer.camera.lookAt(target, offset);
+        viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
+    }
+}, {
+    text : 'Taroko Park',
+    onselect : function() {
+        var target = new Cesium.Cartesian3.fromDegrees(121.747732, 24.275669, 1000);
+        var offset = new Cesium.Cartesian3(1500.0, 500.0, 1500.0);
+        viewer.camera.lookAt(target, offset);
+        viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
+    }
+}
+], 'zoomButtons');
+
+
+Sandcastle.addToolbarMenu([{
+    text : 'No Snow',
+    onselect : function() {
+        viewer.scene.globe.material = undefined;
+    }
+}, {
+    text : 'Snow On Ground',
+    onselect : function() {
+        viewer.scene.globe.material = Cesium.Material.fromType('Snow');
+        currentFrameNum = viewer.scene.frameState.frameNumber;
+        viewer.scene.globe.material.uniforms.u_accumulationStartTime = currentFrameNum;
+        currentFrameNum += 500.0;
+        viewer.scene.globe.material.uniforms.u_accumulationEndTime = currentFrameNum;
+        viewer.scene.globe.material.uniforms.u_level1normalMap = '../images/snowNormalMapLevel1.jpg';
+        viewer.scene.globe.material.uniforms.u_level2normalMap = '../images/snowNormalMapLevel2.jpg';
+        viewer.scene.globe.material.uniforms.u_level3normalMap = '../images/snowNormalMapLevel3.jpg';
+        viewer.scene.globe.material.uniforms.u_level4normalMap = '../images/snowNormalMapLevel4.jpg';
+        viewer.scene.globe.material.uniforms.u_level5normalMap = '../images/snowNormalMapLevel5.jpg';
+    }
+}], 'materialMenu');
+
+//Sandcastle_End
+    Sandcastle.finishedLoading();
+}
+if (typeof Cesium !== "undefined") {
+    startup(Cesium);
+} else if (typeof require === "function") {
+    require(["Cesium"], startup);
+}
+</script>
+</body>
+</html>
