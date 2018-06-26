@@ -234,7 +234,7 @@ define([
         return that._intervals.indexOf(interval.start);
     }
 
-    function getNextInterval(that) {
+    function getNextInterval(that, currentInterval) {
         var intervals = that._intervals;
         var clock = that._clock;
         var multiplier = getClockMultiplier(that);
@@ -251,10 +251,13 @@ define([
         var time = JulianDate.addSeconds(clock.currentTime, averageLoadTime * multiplier, scratchDate);
         var index = intervals.indexOf(time);
 
-        if (multiplier >= 0) {
-            ++index;
-        } else {
-            --index;
+        var currentIndex = getIntervalIndex(that, currentInterval);
+        if (index === currentIndex) {
+            if (multiplier >= 0) {
+                ++index;
+            } else {
+                --index;
+            }
         }
 
         // Returns undefined if not in range
@@ -521,7 +524,7 @@ define([
         }
 
         if (!defined(nextInterval) || clockMultiplierChanged || reachedInterval(this, currentInterval, nextInterval)) {
-            nextInterval = getNextInterval(this);
+            nextInterval = getNextInterval(this, currentInterval);
         }
 
         previousInterval = getNearestReadyInterval(this, previousInterval, currentInterval, frameState);
