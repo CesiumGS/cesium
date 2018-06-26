@@ -5,6 +5,7 @@ defineSuite([
         'Core/Ellipsoid',
         'Core/GeometryOffsetAttribute',
         'Core/Math',
+        'Core/Rectangle',
         'Core/VertexFormat',
         'Specs/createPackableSpecs'
     ], function(
@@ -14,6 +15,7 @@ defineSuite([
         Ellipsoid,
         GeometryOffsetAttribute,
         CesiumMath,
+        Rectangle,
         VertexFormat,
         createPackableSpecs) {
     'use strict';
@@ -333,6 +335,39 @@ defineSuite([
         expect(r.south).toEqualEpsilon(1.570483806950967, CesiumMath.EPSILON7);
         expect(r.east).toEqualEpsilon(CesiumMath.PI, CesiumMath.EPSILON7);
         expect(r.west).toEqualEpsilon(-CesiumMath.PI, CesiumMath.EPSILON7);
+    });
+
+    it('computeRectangle', function() {
+        var options = {
+            center : Cartesian3.fromDegrees(-30, 33),
+            semiMajorAxis : 2000.0,
+            semiMinorAxis : 1000.0,
+            rotation: CesiumMath.PI_OVER_TWO,
+            granularity: 0.5,
+            ellipsoid: Ellipsoid.UNIT_SPHERE
+        };
+        var geometry = new EllipseGeometry(options);
+
+        var expected = geometry.rectangle;
+        var result = EllipseGeometry.computeRectangle(options);
+
+        expect(result).toEqual(expected);
+    });
+
+    it('computeRectangle with result parameter', function() {
+        var options = {
+            center : Cartesian3.fromDegrees(30, -33),
+            semiMajorAxis : 500.0,
+            semiMinorAxis : 200.0
+        };
+        var geometry = new EllipseGeometry(options);
+
+        var result = new Rectangle();
+        var expected = geometry.rectangle;
+        var returned = EllipseGeometry.computeRectangle(options, result);
+
+        expect(returned).toEqual(expected);
+        expect(returned).toBe(result);
     });
 
     it('computing textureCoordinateRotationPoints property', function() {
