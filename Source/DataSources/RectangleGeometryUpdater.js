@@ -59,7 +59,7 @@ define([
     var scratchColor = new Color();
     var defaultOffset = Cartesian3.ZERO;
     var offsetScratch = new Cartesian3();
-    var scratchRectangleGeometry = new RectangleGeometry({rectangle: new Rectangle()});
+    var scratchRectangle = new Rectangle();
     var scratchCenterRect = new Rectangle();
     var scratchCarto = new Cartographic();
 
@@ -123,7 +123,9 @@ define([
 
         var attributes = {
             show : new ShowGeometryInstanceAttribute(isAvailable && entity.isShowing && this._showProperty.getValue(time) && this._fillProperty.getValue(time)),
-            distanceDisplayCondition : DistanceDisplayConditionGeometryInstanceAttribute.fromDistanceDisplayCondition(this._distanceDisplayConditionProperty.getValue(time))
+            distanceDisplayCondition : DistanceDisplayConditionGeometryInstanceAttribute.fromDistanceDisplayCondition(this._distanceDisplayConditionProperty.getValue(time)),
+            offset : undefined,
+            color : undefined
         };
 
         if (this._materialProperty instanceof ColorMaterialProperty) {
@@ -172,7 +174,8 @@ define([
         var attributes = {
             show : new ShowGeometryInstanceAttribute(isAvailable && entity.isShowing && this._showProperty.getValue(time) && this._showOutlineProperty.getValue(time)),
             color : ColorGeometryInstanceAttribute.fromColor(outlineColor),
-            distanceDisplayCondition : DistanceDisplayConditionGeometryInstanceAttribute.fromDistanceDisplayCondition(distanceDisplayCondition)
+            distanceDisplayCondition : DistanceDisplayConditionGeometryInstanceAttribute.fromDistanceDisplayCondition(distanceDisplayCondition),
+            offset : undefined
         };
 
         if (defined(this._options.offsetAttribute)) {
@@ -234,9 +237,8 @@ define([
         options.rotation = defined(rotation) ? rotation.getValue(Iso8601.MINIMUM_VALUE) : undefined;
         options.offsetAttribute = GeometryHeightProperty.computeGeometryOffsetAttribute(height, extrudedHeight, Iso8601.MINIMUM_VALUE);
 
-        if (extrudedHeight instanceof GeometryHeightProperty && Property.getValueOrDefault(extrudedHeight.height, Iso8601.MINIMUM_VALUE, HeightReference.NONE) === HeightReference.CLAMP_TO_GROUND) {
-            scratchRectangleGeometry.setOptions(options);
-            options.extrudedHeight = GeometryHeightProperty.getMinimumTerrainValue(scratchRectangleGeometry.rectangle);
+        if (extrudedHeight instanceof GeometryHeightProperty && Property.getValueOrDefault(extrudedHeight.heightReference, Iso8601.MINIMUM_VALUE, HeightReference.NONE) === HeightReference.CLAMP_TO_GROUND) {
+            options.extrudedHeight = GeometryHeightProperty.getMinimumTerrainValue(RectangleGeometry.computeRectangle(options, scratchRectangle));
         }
     };
 
@@ -277,9 +279,8 @@ define([
         options.rotation = Property.getValueOrUndefined(rectangle.rotation, time);
         options.offsetAttribute = GeometryHeightProperty.computeGeometryOffsetAttribute(height, extrudedHeight, time);
 
-        if (extrudedHeight instanceof GeometryHeightProperty && Property.getValueOrDefault(extrudedHeight.height, time, HeightReference.NONE) === HeightReference.CLAMP_TO_GROUND) {
-            scratchRectangleGeometry.setOptions(options);
-            options.extrudedHeight = GeometryHeightProperty.getMinimumTerrainValue(scratchRectangleGeometry.rectangle);
+        if (extrudedHeight instanceof GeometryHeightProperty && Property.getValueOrDefault(extrudedHeight.heightReference, time, HeightReference.NONE) === HeightReference.CLAMP_TO_GROUND) {
+            options.extrudedHeight = GeometryHeightProperty.getMinimumTerrainValue(RectangleGeometry.computeRectangle(options, scratchRectangle));
         }
     };
 

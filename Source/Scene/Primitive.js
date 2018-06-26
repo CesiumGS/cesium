@@ -526,7 +526,7 @@ define([
         var name;
 
         for (name in attributes0) {
-            if (attributes0.hasOwnProperty(name)) {
+            if (attributes0.hasOwnProperty(name) && defined(attributes0[name])) {
                 var attribute = attributes0[name];
                 var inAllInstances = true;
 

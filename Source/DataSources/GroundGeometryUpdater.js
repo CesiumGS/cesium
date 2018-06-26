@@ -73,14 +73,6 @@ define([
         }
     });
 
-    /**
-     * @param {Entity} entity
-     * @param {Object} geometry
-     * @param {JulianDate} time
-     * @param {Cartesian3} result
-     *
-     * @private
-     */
     GroundGeometryUpdater.prototype._computeCenter = DeveloperError.throwInstantiationError;
 
     GroundGeometryUpdater.prototype._onEntityPropertyChanged = function(entity, propertyName, newValue, oldValue) {
@@ -102,7 +94,7 @@ define([
         var heightProperty = geometry.height;
         var extrudedHeightProperty = geometry.extrudedHeight;
 
-        if (this._terrainOffsetProperty instanceof TerrainOffsetProperty) {
+        if (defined(this._terrainOffsetProperty)) {
             this._terrainOffsetProperty.destroy();
         }
 

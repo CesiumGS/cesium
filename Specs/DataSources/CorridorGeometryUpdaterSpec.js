@@ -1,5 +1,6 @@
 defineSuite([
         'DataSources/CorridorGeometryUpdater',
+        'Core/ApproximateTerrainHeights',
         'Core/Cartesian3',
         'Core/CornerType',
         'Core/GeometryOffsetAttribute',
@@ -22,6 +23,7 @@ defineSuite([
         'Specs/createScene'
     ], function(
         CorridorGeometryUpdater,
+        ApproximateTerrainHeights,
         Cartesian3,
         CornerType,
         GeometryOffsetAttribute,
@@ -50,10 +52,15 @@ defineSuite([
     beforeAll(function() {
         scene = createScene();
         time = JulianDate.now();
+
+        return ApproximateTerrainHeights.initialize();
     });
 
     afterAll(function() {
         scene.destroyForSpecs();
+
+        ApproximateTerrainHeights._initPromise = undefined;
+        ApproximateTerrainHeights._terrainHeights = undefined;
     });
 
     function createBasicCorridor() {

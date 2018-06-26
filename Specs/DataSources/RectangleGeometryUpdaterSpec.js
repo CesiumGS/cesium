@@ -1,5 +1,6 @@
 defineSuite([
         'DataSources/RectangleGeometryUpdater',
+        'Core/ApproximateTerrainHeights',
         'Core/Cartesian3',
         'Core/GeometryOffsetAttribute',
         'Core/JulianDate',
@@ -18,6 +19,7 @@ defineSuite([
         'Specs/createScene'
     ], function(
         RectangleGeometryUpdater,
+        ApproximateTerrainHeights,
         Cartesian3,
         GeometryOffsetAttribute,
         JulianDate,
@@ -42,10 +44,15 @@ defineSuite([
     beforeAll(function() {
         scene = createScene();
         time = new JulianDate(0, 0);
+
+        return ApproximateTerrainHeights.initialize();
     });
 
     afterAll(function() {
         scene.destroyForSpecs();
+
+        ApproximateTerrainHeights._initPromise = undefined;
+        ApproximateTerrainHeights._terrainHeights = undefined;
     });
 
     function createBasicRectangle() {

@@ -14,6 +14,7 @@ define([
         '../Core/PolygonGeometry',
         '../Core/PolygonHierarchy',
         '../Core/PolygonOutlineGeometry',
+        '../Core/Rectangle',
         '../Core/ShowGeometryInstanceAttribute',
         '../Scene/GroundPrimitive',
         '../Scene/HeightReference',
@@ -41,6 +42,7 @@ define([
         PolygonGeometry,
         PolygonHierarchy,
         PolygonOutlineGeometry,
+        Rectangle,
         ShowGeometryInstanceAttribute,
         GroundPrimitive,
         HeightReference,
@@ -57,7 +59,7 @@ define([
     var scratchColor = new Color();
     var defaultOffset = Cartesian3.ZERO;
     var offsetScratch = new Cartesian3();
-    var scratchPolygonGeometry = new PolygonGeometry({polygonHierarchy: new PolygonHierarchy});
+    var scratchRectangle = new Rectangle();
 
     function PolygonGeometryOptions(entity) {
         this.id = entity;
@@ -121,7 +123,9 @@ define([
 
         var attributes = {
             show : new ShowGeometryInstanceAttribute(isAvailable && entity.isShowing && this._showProperty.getValue(time) && this._fillProperty.getValue(time)),
-            distanceDisplayCondition : DistanceDisplayConditionGeometryInstanceAttribute.fromDistanceDisplayCondition(this._distanceDisplayConditionProperty.getValue(time))
+            distanceDisplayCondition : DistanceDisplayConditionGeometryInstanceAttribute.fromDistanceDisplayCondition(this._distanceDisplayConditionProperty.getValue(time)),
+            offset : undefined,
+            color : undefined
         };
 
         if (this._materialProperty instanceof ColorMaterialProperty) {
@@ -170,7 +174,8 @@ define([
         var attributes = {
             show : new ShowGeometryInstanceAttribute(isAvailable && entity.isShowing && this._showProperty.getValue(time) && this._showOutlineProperty.getValue(time)),
             color : ColorGeometryInstanceAttribute.fromColor(outlineColor),
-            distanceDisplayCondition : DistanceDisplayConditionGeometryInstanceAttribute.fromDistanceDisplayCondition(distanceDisplayCondition)
+            distanceDisplayCondition : DistanceDisplayConditionGeometryInstanceAttribute.fromDistanceDisplayCondition(distanceDisplayCondition),
+            offset : undefined
         };
 
         if (defined(this._options.offsetAttribute)) {
@@ -264,9 +269,8 @@ define([
         options.closeBottom = closeBottomValue;
         options.offsetAttribute = GeometryHeightProperty.computeGeometryOffsetAttribute(height, extrudedHeight, Iso8601.MINIMUM_VALUE);
 
-        if (extrudedHeight instanceof GeometryHeightProperty && Property.getValueOrDefault(extrudedHeight.height, Iso8601.MINIMUM_VALUE, HeightReference.NONE) === HeightReference.CLAMP_TO_GROUND) {
-            scratchPolygonGeometry.setOptions(options);
-            options.extrudedHeight = GeometryHeightProperty.getMinimumTerrainValue(scratchPolygonGeometry.rectangle);
+        if (extrudedHeight instanceof GeometryHeightProperty && Property.getValueOrDefault(extrudedHeight.heightReference, Iso8601.MINIMUM_VALUE, HeightReference.NONE) === HeightReference.CLAMP_TO_GROUND) {
+            options.extrudedHeight = GeometryHeightProperty.getMinimumTerrainValue(PolygonGeometry.computeRectangle(options, scratchRectangle));
         }
     };
 
@@ -316,9 +320,8 @@ define([
         options.closeBottom = Property.getValueOrDefault(polygon.closeBottom, time, true);
         options.offsetAttribute = GeometryHeightProperty.computeGeometryOffsetAttribute(height, extrudedHeight, time);
 
-        if (extrudedHeight instanceof GeometryHeightProperty && Property.getValueOrDefault(extrudedHeight.height, time, HeightReference.NONE) === HeightReference.CLAMP_TO_GROUND) {
-            scratchPolygonGeometry.setOptions(options);
-            options.extrudedHeight = GeometryHeightProperty.getMinimumTerrainValue(scratchPolygonGeometry.rectangle);
+        if (extrudedHeight instanceof GeometryHeightProperty && Property.getValueOrDefault(extrudedHeight.heightReference, time, HeightReference.NONE) === HeightReference.CLAMP_TO_GROUND) {
+            options.extrudedHeight = GeometryHeightProperty.getMinimumTerrainValue(PolygonGeometry.computeRectangle(options, scratchRectangle));
         }
 
     };

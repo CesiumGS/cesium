@@ -426,13 +426,10 @@ define([
                     } else {
                         this._closedColorBatches[shadows].add(time, updater);
                     }
+                } else if (defined(updater.terrainOffsetProperty)) {
+                    this._closedMaterialBatches[numberOfShadowModes + shadows].add(time, updater);
                 } else {
-                    // eslint-disable-next-line no-lonely-if
-                    if (defined(updater.terrainOffsetProperty)) {
-                        this._closedMaterialBatches[numberOfShadowModes + shadows].add(time, updater);
-                    } else {
-                        this._closedMaterialBatches[shadows].add(time, updater);
-                    }
+                    this._closedMaterialBatches[shadows].add(time, updater);
                 }
             } else if (updater.fillMaterialProperty instanceof ColorMaterialProperty) {
                 if (defined(updater.terrainOffsetProperty)) {
@@ -440,13 +437,10 @@ define([
                 } else {
                     this._openColorBatches[shadows].add(time, updater);
                 }
+            } else if (defined(updater.terrainOffsetProperty)) {
+                this._openMaterialBatches[numberOfShadowModes + shadows].add(time, updater);
             } else {
-                // eslint-disable-next-line no-lonely-if
-                if (defined(updater.terrainOffsetProperty)) {
-                    this._openMaterialBatches[numberOfShadowModes + shadows].add(time, updater);
-                } else {
-                    this._openMaterialBatches[shadows].add(time, updater);
-                }
+                this._openMaterialBatches[shadows].add(time, updater);
             }
         }
     };

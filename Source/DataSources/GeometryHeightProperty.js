@@ -21,7 +21,7 @@ define([
     'use strict';
 
     /**
-     * A {@link Property} which computes height or extrudedHeight for a {@link CorridorGraphics}, {@link EllipseGraphics}, {@link PolygonGraphics} or {@link RectangleGraphics}.
+     * A {@link Property} which computes height or extrudedHeight in relation to the current terrain visualization.
      *
      * @alias GeometryHeightProperty
      * @constructor
@@ -57,6 +57,11 @@ define([
         this._heightReference = undefined;
         this._heightReferenceSubscription = undefined;
         this._definitionChanged = new Event();
+
+        this._resultObject = {
+            height: 0,
+            heightReference: HeightReference.NONE
+        };
 
         this.height = height;
         this.heightReference = heightReference;
@@ -115,11 +120,18 @@ define([
         //>>includeEnd('debug');
 
         var heightReference = Property.getValueOrDefault(this._heightReference, time, HeightReference.NONE);
-
+        var height;
         if (heightReference !== HeightReference.CLAMP_TO_GROUND) {
-            return Property.getValueOrDefault(this._height, time, 0);
+            height = Property.getValueOrDefault(this._height, time, 0);
+        } else {
+            height = 0;
         }
-        return 0;
+/*
+        var result = this._resultObject;
+        result.height = height;
+        result.heightReference = heightReference;
+*/
+        return height;
     };
 
     /**

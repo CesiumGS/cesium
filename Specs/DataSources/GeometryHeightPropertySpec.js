@@ -52,8 +52,9 @@ defineSuite([
         var listener = jasmine.createSpy('listener');
         property.definitionChanged.addEventListener(listener);
 
-        property.height = new ConstantProperty();
-        expect(listener).toHaveBeenCalledWith(property);
+        var newValue = new ConstantProperty();
+        property.height = newValue;
+        expect(listener).toHaveBeenCalledWith(property, 'height', newValue, undefined);
     });
 
     it('setting heightReference raises definitionChanged event', function() {
@@ -62,8 +63,9 @@ defineSuite([
         var listener = jasmine.createSpy('listener');
         property.definitionChanged.addEventListener(listener);
 
-        property.heightReference = new ConstantProperty();
-        expect(listener).toHaveBeenCalledWith(property);
+        var newValue =new ConstantProperty();
+        property.heightReference = newValue;
+        expect(listener).toHaveBeenCalledWith(property, 'heightReference', newValue, undefined);
     });
 
     it('setting height does not raise definitionChanged event for same data', function() {

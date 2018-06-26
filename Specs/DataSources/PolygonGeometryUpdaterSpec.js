@@ -1,5 +1,6 @@
 defineSuite([
         'DataSources/PolygonGeometryUpdater',
+        'Core/ApproximateTerrainHeights',
         'Core/Cartesian3',
         'Core/Ellipsoid',
         'Core/GeometryOffsetAttribute',
@@ -22,6 +23,7 @@ defineSuite([
         'Specs/createScene'
     ], function(
         PolygonGeometryUpdater,
+        ApproximateTerrainHeights,
         Cartesian3,
         Ellipsoid,
         GeometryOffsetAttribute,
@@ -52,10 +54,14 @@ defineSuite([
         scene = createScene();
         time = JulianDate.now();
         groundPrimitiveSupported = GroundPrimitive.isSupported(scene);
+        return ApproximateTerrainHeights.initialize();
     });
 
     afterAll(function() {
         scene.destroyForSpecs();
+
+        ApproximateTerrainHeights._initPromise = undefined;
+        ApproximateTerrainHeights._terrainHeights = undefined;
     });
 
     function createBasicPolygon() {
