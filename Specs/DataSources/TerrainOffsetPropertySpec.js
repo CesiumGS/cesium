@@ -51,22 +51,6 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('throws without height', function() {
-        var getPosition = jasmine.createSpy();
-        var extrudedHeight = new ConstantProperty(0);
-        expect(function() {
-            return new TerrainOffsetProperty(scene, undefined, extrudedHeight, getPosition);
-        }).toThrowDeveloperError();
-    });
-
-    it('throws without extrudedHeight', function() {
-        var getPosition = jasmine.createSpy();
-        var height = new ConstantProperty(30);
-        expect(function() {
-            return new TerrainOffsetProperty(scene, height, undefined, getPosition);
-        }).toThrowDeveloperError();
-    });
-
     it('throws without getPosition', function() {
         var height = new ConstantProperty(30);
         var extrudedHeight = new ConstantProperty(0);

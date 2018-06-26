@@ -38,8 +38,6 @@ define([
     function TerrainOffsetProperty(scene, height, extrudedHeight, getPosition) {
         //>>includeStart('debug', pragmas.debug);
         Check.defined('scene', scene);
-        Check.defined('height', height);
-        Check.defined('extrudedHeight', extrudedHeight);
         Check.typeOf.func('getPosition', getPosition);
         //>>includeEnd('debug');
 
@@ -100,19 +98,20 @@ define([
      * @private
      */
     TerrainOffsetProperty.prototype._updateClamping = function() {
+        if (defined(this._removeCallbackFunc)) {
+            this._removeCallbackFunc();
+        }
+
         var scene = this._scene;
         var globe = scene.globe;
-        if (!defined(globe)) {
+        var position = this._position;
+
+        if (!defined(globe) || Cartesian3.equals(position, Cartesian3.ZERO)) {
             this._terrainHeight = 0;
             return;
         }
         var ellipsoid = globe.ellipsoid;
         var surface = globe._surface;
-
-        var position = this._position;
-        if (defined(this._removeCallbackFunc)) {
-            this._removeCallbackFunc();
-        }
 
         var that = this;
         var cartographicPosition = ellipsoid.cartesianToCartographic(position, this._cartographicPosition);
@@ -141,14 +140,19 @@ define([
         var extrudedHeightProperty = this._extrudedHeight;
         var heightReference = HeightReference.NONE;
         var extrudedHeightReference = HeightReference.NONE;
-        if (defined(heightProperty)) {
-            heightReference = Property.getValueOrDefault(heightProperty.heightReference, time, HeightReference.NONE);
+
+        var heightValue = Property.getValueOrUndefined(heightProperty, time);
+        if (defined(heightValue) && defined(heightValue.heightReference)) {
+            heightReference = heightValue.heightReference;
         }
-        if (defined(extrudedHeightProperty)) {
-            extrudedHeightReference = Property.getValueOrDefault(extrudedHeightProperty.heightReference, time, HeightReference.NONE);
+
+        var extrudedHeightValue = Property.getValueOrUndefined(extrudedHeightProperty, time);
+        if (defined(extrudedHeightValue) && defined(extrudedHeightValue.heightReference)) {
+            extrudedHeightReference = extrudedHeightValue.heightReference;
         }
 
         if (heightReference === HeightReference.NONE && extrudedHeightReference !== HeightReference.RELATIVE_TO_GROUND) {
+            this._position = Cartesian3.clone(Cartesian3.ZERO, this._position);
             return Cartesian3.clone(Cartesian3.ZERO, result);
         }
 

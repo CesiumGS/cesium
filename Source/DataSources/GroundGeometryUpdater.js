@@ -11,6 +11,7 @@ define([
     './ConstantProperty',
     './GeometryHeightProperty',
     './GeometryUpdater',
+    './Property',
     './TerrainOffsetProperty'
 ], function(
     Cartesian3,
@@ -25,6 +26,7 @@ define([
     ConstantProperty,
     GeometryHeightProperty,
     GeometryUpdater,
+    Property,
     TerrainOffsetProperty) {
     'use strict';
 
@@ -96,12 +98,15 @@ define([
 
         if (defined(this._terrainOffsetProperty)) {
             this._terrainOffsetProperty.destroy();
+            this._terrainOffsetProperty = undefined;
         }
 
-        if (heightProperty instanceof GeometryHeightProperty || extrudedHeightProperty instanceof GeometryHeightProperty) {
-            this._terrainOffsetProperty = new TerrainOffsetProperty(this._scene, heightProperty, extrudedHeightProperty, this._computeCenter.bind(this));
-        } else {
-            this._terrainOffsetProperty = undefined;
+        if (defined(heightProperty) || defined(extrudedHeightProperty)) {
+            var heightValue = Property.getValueOrUndefined(heightProperty, Iso8601.MINIMUM_VALUE);
+            var extrudedHeightValue = Property.getValueOrUndefined(extrudedHeightProperty, Iso8601.MINIMUM_VALUE);
+            if (this._dynamic || (defined(heightValue) && defined(heightValue.heightReference)) || (defined(extrudedHeightValue) && defined(extrudedHeightValue.heightReference))) {
+                this._terrainOffsetProperty = new TerrainOffsetProperty(this._scene, heightProperty, extrudedHeightProperty, this._computeCenter.bind(this));
+            }
         }
     };
 

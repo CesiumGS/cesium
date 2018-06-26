@@ -126,12 +126,12 @@ define([
         } else {
             height = 0;
         }
-/*
+
         var result = this._resultObject;
         result.height = height;
         result.heightReference = heightReference;
-*/
-        return height;
+
+        return result;
     };
 
     /**
@@ -154,12 +154,17 @@ define([
      * @private
      */
     GeometryHeightProperty.computeGeometryOffsetAttribute = function(height, extrudedHeight, time) {
-        if (!(extrudedHeight instanceof GeometryHeightProperty) && !(height instanceof GeometryHeightProperty)) {
-            return undefined;
-        }
+        var heightValue = Property.getValueOrUndefined(height, time);
+        var extrudedHeightValue = Property.getValueOrUndefined(extrudedHeight, time);
 
-        var heightReference = defined(height) ? Property.getValueOrDefault(height.heightReference, time, HeightReference.NONE) : HeightReference.NONE;
-        var extrudedHeightReference = defined(extrudedHeight) ? Property.getValueOrDefault(extrudedHeight.heightReference, time, HeightReference.NONE) : HeightReference.NONE;
+        var heightReference = HeightReference.NONE;
+        var extrudedHeightReference = HeightReference.NONE;
+        if (defined(heightValue) && defined(heightValue.heightReference)) {
+            heightReference = heightValue.heightReference;
+        }
+        if (defined(extrudedHeightValue) && defined(extrudedHeightValue.heightReference)) {
+            extrudedHeightReference = extrudedHeightValue.heightReference;
+        }
 
         var n = 0;
         if (heightReference !== HeightReference.NONE) {
@@ -174,6 +179,7 @@ define([
         if (n === 1) {
             return GeometryOffsetAttribute.TOP;
         }
+
         return undefined;
     };
 

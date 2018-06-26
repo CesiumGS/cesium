@@ -32,7 +32,10 @@ defineSuite([
         expect(property.definitionChanged).toBeInstanceOf(Event);
         expect(property.height).toBeUndefined();
         expect(property.heightReference).toBeUndefined();
-        expect(property.getValue(time)).toBe(0);
+        expect(property.getValue(time)).toEqual({
+            height: 0,
+            heightReference: HeightReference.NONE
+        });
     });
 
     it('can construct with arguments', function() {
@@ -43,7 +46,10 @@ defineSuite([
         expect(property.definitionChanged).toBeInstanceOf(Event);
         expect(property.height).toBe(height);
         expect(property.heightReference).toBe(heightReference);
-        expect(property.getValue(time)).toBe(30);
+        expect(property.getValue(time)).toEqual({
+            height: 30,
+            heightReference: HeightReference.NONE
+        });
     });
 
     it('setting height raises definitionChanged event', function() {
@@ -95,17 +101,26 @@ defineSuite([
         var height = new ConstantProperty(expected);
         var heightReference = new ConstantProperty(HeightReference.NONE);
         var property = new GeometryHeightProperty(height, heightReference);
-        expect(property.getValue(time)).toBe(expected);
+        expect(property.getValue(time)).toEqual({
+            height: expected,
+            heightReference: HeightReference.NONE
+        });
 
         property.heightReference = new ConstantProperty(HeightReference.RELATIVE_TO_GROUND);
-        expect(property.getValue(time)).toBe(expected);
+        expect(property.getValue(time)).toEqual({
+            height: expected,
+            heightReference: HeightReference.RELATIVE_TO_GROUND
+        });
     });
 
     it('getValue works for for height reference CLAMP_TO_GROUND', function() {
         var height = new ConstantProperty(50);
         var heightReference = new ConstantProperty(HeightReference.CLAMP_TO_GROUND);
         var property = new GeometryHeightProperty(height, heightReference);
-        expect(property.getValue(time)).toBe(0);
+        expect(property.getValue(time)).toEqual({
+            height: 0,
+            heightReference: HeightReference.CLAMP_TO_GROUND
+        });
     });
 
     it('equals works', function() {

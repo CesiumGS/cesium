@@ -29,20 +29,32 @@
 function startup(Cesium) {
     'use strict';
 //Sandcastle_Begin
+var cesiumTerrainProvider = Cesium.createWorldTerrain();
+var ellipsoidTerrainProvider = new Cesium.EllipsoidTerrainProvider();
 var viewer = new Cesium.Viewer('cesiumContainer', {
     baseLayerPicker: false,
-    terrainProvider: Cesium.createWorldTerrain()
+    terrainProvider: cesiumTerrainProvider
 });
 viewer.scene.globe.depthTestAgainstTerrain = true;
 
+Sandcastle.addToolbarButton('Enable Terrain', function() {
+    viewer.scene.terrainProvider = cesiumTerrainProvider;
+});
+
+Sandcastle.addToolbarButton('Disable Terrain', function() {
+    viewer.scene.terrainProvider = ellipsoidTerrainProvider;
+});
+
+
 var baseLon = 6.850615989890521;
 var baseLat = 45.89546589994886;
+var delta = 0.001;
 function addEntity(i, j) {
-    var lon1 = baseLon + 0.0001*i;
-    var lon2 = baseLon + 0.0001*i + 0.0001;
+    var lon1 = baseLon + delta*i;
+    var lon2 = baseLon + delta*i + delta;
 
-    var lat1 = baseLat + 0.0001*j;
-    var lat2 = baseLat + 0.0001*j + 0.0001;
+    var lat1 = baseLat + delta*j;
+    var lat2 = baseLat + delta*j + delta;
     var a = Cesium.Cartesian3.fromDegrees(lon1, lat1);
     var b = Cesium.Cartesian3.fromDegrees(lon1, lat2);
     var c = Cesium.Cartesian3.fromDegrees(lon2, lat2);
@@ -53,7 +65,7 @@ function addEntity(i, j) {
         polygon : {
             hierarchy : positions,
             material : Cesium.Color.fromRandom({alpha: 1}),
-            height : new Cesium.GeometryHeightProperty(10.0, Cesium.HeightReference.RELATIVE_TO_GROUND),
+            height : new Cesium.GeometryHeightProperty(40.0, Cesium.HeightReference.RELATIVE_TO_GROUND),
             extrudedHeight : new Cesium.GeometryHeightProperty(0.0, Cesium.HeightReference.CLAMP_TO_GROUND)
         }
     });
@@ -66,11 +78,11 @@ for (var i = 0; i < 4; i++) {
 }
 
 viewer.scene.camera.flyTo({
-    destination: new Cesium.Cartesian3(4415716.090770245, 530458.0589739879, 4558358.470675762),
+    destination: new Cesium.Cartesian3(4414709.69060132, 531290.9290968775, 4561007.639489886),
     orientation: {
-        heading: 2.9422859539310506,
-        pitch: -0.26904591127394784,
-        roll: 0.0006888582061437276
+        heading: 3.6086529754485834,
+        pitch: -0.6592870741832781,
+        roll: 6.28127756699859
     }
 });
 //Sandcastle_End
