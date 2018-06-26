@@ -1,19 +1,31 @@
 define([
+    '../Core/Cartesian3',
+    '../Core/Check',
     '../Core/defaultValue',
     '../Core/defined',
     '../Core/defineProperties',
+    '../Core/DeveloperError',
     '../Core/Iso8601',
     '../Core/oneTimeWarning',
+    '../Scene/HeightReference',
     './ConstantProperty',
-    './GeometryUpdater'
+    './GeometryHeightProperty',
+    './GeometryUpdater',
+    './TerrainOffsetProperty'
 ], function(
+    Cartesian3,
+    Check,
     defaultValue,
     defined,
     defineProperties,
+    DeveloperError,
     Iso8601,
     oneTimeWarning,
+    HeightReference,
     ConstantProperty,
-    GeometryUpdater) {
+    GeometryHeightProperty,
+    GeometryUpdater,
+    TerrainOffsetProperty) {
     'use strict';
 
     var defaultZIndex = new ConstantProperty(0);
@@ -33,6 +45,7 @@ define([
         GeometryUpdater.call(this, options);
 
         this._zIndex = 0;
+        this._terrainOffsetProperty = undefined;
     }
 
     if (defined(Object.create)) {
@@ -51,8 +64,24 @@ define([
             get: function() {
                 return this._zIndex;
             }
+        },
+
+        terrainOffsetProperty: {
+            get: function() {
+                return this._terrainOffsetProperty;
+            }
         }
     });
+
+    /**
+     * @param {Entity} entity
+     * @param {Object} geometry
+     * @param {JulianDate} time
+     * @param {Cartesian3} result
+     *
+     * @private
+     */
+    GroundGeometryUpdater.prototype._computeCenter = DeveloperError.throwInstantiationError;
 
     GroundGeometryUpdater.prototype._onEntityPropertyChanged = function(entity, propertyName, newValue, oldValue) {
         GeometryUpdater.prototype._onEntityPropertyChanged.call(this, entity, propertyName, newValue, oldValue);
@@ -69,6 +98,19 @@ define([
         }
 
         this._zIndex = defaultValue(geometry.zIndex, defaultZIndex);
+
+        var heightProperty = geometry.height;
+        var extrudedHeightProperty = geometry.extrudedHeight;
+
+        if (this._terrainOffsetProperty instanceof TerrainOffsetProperty) {
+            this._terrainOffsetProperty.destroy();
+        }
+
+        if (heightProperty instanceof GeometryHeightProperty || extrudedHeightProperty instanceof GeometryHeightProperty) {
+            this._terrainOffsetProperty = new TerrainOffsetProperty(this._scene, heightProperty, extrudedHeightProperty, this._computeCenter.bind(this));
+        } else {
+            this._terrainOffsetProperty = undefined;
+        }
     };
 
     return GroundGeometryUpdater;

@@ -1,6 +1,7 @@
 defineSuite([
         'DataSources/EllipseGeometryUpdater',
         'Core/Cartesian3',
+        'Core/GeometryOffsetAttribute',
         'Core/JulianDate',
         'Core/TimeIntervalCollection',
         'DataSources/ConstantPositionProperty',
@@ -18,6 +19,7 @@ defineSuite([
     ], function(
         EllipseGeometryUpdater,
         Cartesian3,
+        GeometryOffsetAttribute,
         JulianDate,
         TimeIntervalCollection,
         ConstantPositionProperty,
@@ -234,6 +236,7 @@ defineSuite([
         expect(geometry._height).toEqual(options.height);
         expect(geometry._granularity).toEqual(options.granularity);
         expect(geometry._extrudedHeight).toEqual(options.extrudedHeight);
+        expect(geometry._offsetAttribute).toBeUndefined();
 
         instance = updater.createOutlineGeometryInstance(time);
         geometry = instance.geometry;
@@ -245,6 +248,7 @@ defineSuite([
         expect(geometry._granularity).toEqual(options.granularity);
         expect(geometry._extrudedHeight).toEqual(options.extrudedHeight);
         expect(geometry._numberOfVerticalLines).toEqual(options.numberOfVerticalLines);
+        expect(geometry._offsetAttribute).toBeUndefined();
     });
 
     it('dynamic updater sets properties', function() {
@@ -265,6 +269,7 @@ defineSuite([
         expect(options.semiMajorAxis).toEqual(ellipse.semiMajorAxis.getValue());
         expect(options.semiMinorAxis).toEqual(ellipse.semiMinorAxis.getValue());
         expect(options.height).toEqual(ellipse.height.getValue());
+        expect(options.offsetAttribute).toBeUndefined();
     });
 
     it('geometryChanged event is raised when expected', function() {
@@ -302,6 +307,13 @@ defineSuite([
         entity.ellipse.semiMinorAxis = new SampledProperty(Number);
         updater._onEntityPropertyChanged(entity, 'ellipse');
         expect(listener.calls.count()).toEqual(5);
+    });
+
+    it('computes center', function() {
+        var entity = createBasicEllipse();
+        var updater = new EllipseGeometryUpdater(entity, scene);
+
+        expect(updater._computeCenter(time)).toEqual(entity.position.getValue(time));
     });
 
     function getScene() {

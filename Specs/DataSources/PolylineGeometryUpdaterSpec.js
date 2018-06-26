@@ -800,5 +800,7 @@ defineSuite([
 
         var instance = updater.createFillGeometryInstance(time);
         expect(instance.geometry instanceof GroundPolylineGeometry).toBe(false);
+
+        updater.destroy();
     });
 }, 'WebGL');

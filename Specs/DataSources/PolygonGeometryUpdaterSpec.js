@@ -1,7 +1,10 @@
 defineSuite([
         'DataSources/PolygonGeometryUpdater',
         'Core/Cartesian3',
+        'Core/Ellipsoid',
+        'Core/GeometryOffsetAttribute',
         'Core/JulianDate',
+        'Core/Math',
         'Core/PolygonHierarchy',
         'Core/TimeIntervalCollection',
         'DataSources/ConstantProperty',
@@ -20,7 +23,10 @@ defineSuite([
     ], function(
         PolygonGeometryUpdater,
         Cartesian3,
+        Ellipsoid,
+        GeometryOffsetAttribute,
         JulianDate,
+        CesiumMath,
         PolygonHierarchy,
         TimeIntervalCollection,
         ConstantProperty,
@@ -55,10 +61,10 @@ defineSuite([
     function createBasicPolygon() {
         var polygon = new PolygonGraphics();
         polygon.hierarchy = new ConstantProperty(new PolygonHierarchy(Cartesian3.fromRadiansArray([
-            0, 0,
-            1, 0,
+            -1, -1,
+            1, -1,
             1, 1,
-            0, 1
+            -1, 1
         ])));
         polygon.height = new ConstantProperty(0);
         var entity = new Entity();
@@ -225,6 +231,7 @@ defineSuite([
         expect(geometry._extrudedHeight).toEqual(options.extrudedHeight);
         expect(geometry._closeTop).toEqual(options.closeTop);
         expect(geometry._closeBottom).toEqual(options.closeBottom);
+        expect(geometry._offsetAttribute).toBeUndefined();
 
         instance = updater.createOutlineGeometryInstance(time);
         geometry = instance.geometry;
@@ -232,6 +239,7 @@ defineSuite([
         expect(geometry._granularity).toEqual(options.granularity);
         expect(geometry._extrudedHeight).toEqual(options.extrudedHeight);
         expect(geometry._perPositionHeight).toEqual(options.perPositionHeight);
+        expect(geometry._offsetAttribute).toBeUndefined();
     });
 
     it('Checks that a polygon with per position heights isn\'t on terrain', function() {
@@ -291,6 +299,7 @@ defineSuite([
         expect(options.stRotation).toEqual(polygon.stRotation.getValue());
         expect(options.closeTop).toEqual(polygon.closeTop.getValue());
         expect(options.closeBottom).toEqual(polygon.closeBottom.getValue());
+        expect(options.offsetAttribute).toBeUndefined();
     });
 
     it('geometryChanged event is raised when expected', function() {
@@ -331,6 +340,14 @@ defineSuite([
         entity.polygon.perPositionHeight = true;
         var updater = new PolygonGeometryUpdater(entity, scene);
         expect(updater.onTerrain).toBe(false);
+    });
+
+    it('computes center', function() {
+        var entity = createBasicPolygon();
+        var updater = new PolygonGeometryUpdater(entity, scene);
+        var result = updater._computeCenter(time);
+        result = Ellipsoid.WGS84.scaleToGeodeticSurface(result, result);
+        expect(result).toEqualEpsilon(Cartesian3.fromDegrees(0.0, 0.0), CesiumMath.EPSILON10);
     });
 
     function getScene() {
