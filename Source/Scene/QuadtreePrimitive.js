@@ -548,7 +548,7 @@ define([
     var lastFrame;
 
     function reportTileAction(frameState, tile, action) {
-        //return;
+        return;
         var heightSource = tile.data.boundingVolumeSourceTile;
         var renderable = tile.renderable;
         if (tile._lastAction !== action || tile._lastHeightSource !== heightSource || tile._lastRenderable !== renderable) {

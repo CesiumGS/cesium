@@ -316,14 +316,12 @@ define([
             maximumHeight = 0.0;
         }
 
-        var distanceAboveTop = cameraHeight - maximumHeight;
-        if (distanceAboveTop > 0.0) {
+        if (cameraHeight > maximumHeight) {
+            var distanceAboveTop = cameraHeight - maximumHeight;
             result += distanceAboveTop * distanceAboveTop;
-        } else {
+        } else if (cameraHeight < minimumHeight) {
             var distanceBelowBottom = minimumHeight - cameraHeight;
-            if (distanceBelowBottom > 0.0) {
-                result += distanceBelowBottom * distanceBelowBottom;
-            }
+            result += distanceBelowBottom * distanceBelowBottom;
         }
 
         return Math.sqrt(result);
