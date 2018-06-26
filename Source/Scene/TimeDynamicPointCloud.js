@@ -39,19 +39,24 @@ define([
     'use strict';
 
     /**
-     * Provides functionality for playback of time-dynamic point cloud data.
+     * Provides playback of time-dynamic point cloud data.
+     * <p>
+     * Point cloud frames are prefetched in intervals determined by the average frame load time and the current clock speed.
+     * If intermediate frames cannot be loaded in time to meet playback speed, they will be skipped. If frames are sufficiently
+     * small or the clock is sufficiently slow then no frames will be skipped.
+     * </p>
      *
      * @alias TimeDynamicPointCloud
      * @constructor
      *
      * @param {Object} options Object with the following properties:
      * @param {Clock} options.clock A {@link Clock} instance that is used when determining the value for the time dimension.
-     * @param {TimeIntervalCollection} options.intervals A {@link TimeIntervalCollection} with its data property being an object containing a uri to a Point Cloud (.pnts) tile and an optional transform.
+     * @param {TimeIntervalCollection} options.intervals A {@link TimeIntervalCollection} with its data property being an object containing a <code>uri</code> to a 3D Tiles Point Cloud tile and an optional <code>transform</code>.
      * @param {Boolean} [options.show=true] Determines if the point cloud will be shown.
      * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] A 4x4 transformation matrix that transforms the point cloud.
      * @param {ShadowMode} [options.shadows=ShadowMode.ENABLED] Determines whether the point cloud casts or receives shadows from each light source.
      * @param {Number} [options.maximumMemoryUsage=256] The maximum amount of memory in MB that can be used by the point cloud.
-     * @param {Object} [options.pointCloudShading] Options for constructing a {@link PointCloudShading} object to control point size based on geometric error and eye dome lighting.
+     * @param {Object} [options.pointCloudShading] Options for constructing a {@link PointCloudShading} object to control point attenuation and eye dome lighting.
      * @param {Cesium3DTileStyle} [options.style] The style, defined using the {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/Styling|3D Tiles Styling language}, applied to each point in the point cloud.
      * @param {ClippingPlaneCollection} [options.clippingPlanes] The {@link ClippingPlaneCollection} used to selectively disable rendering the point cloud.
      */
@@ -95,7 +100,12 @@ define([
 
         /**
          * The maximum amount of GPU memory (in MB) that may be used to cache point cloud frames.
-         *
+         * <p>
+         * Frames that are not being loaded or rendered are unloaded to enforce this.
+         * </p>
+         * <p>
+         * If decreasing this value results in unloading tiles, the tiles are unloaded the next frame.
+         * </p>
          * @memberof TimeDynamicPointCloud.prototype
          *
          * @type {Number}
