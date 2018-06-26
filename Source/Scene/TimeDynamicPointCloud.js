@@ -1,4 +1,5 @@
 define([
+        '../Core/arrayFill',
         '../Core/Check',
         '../Core/combine',
         '../Core/defaultValue',
@@ -17,6 +18,7 @@ define([
         './SceneMode',
         './ShadowMode'
     ], function(
+        arrayFill,
         Check,
         combine,
         defaultValue,
@@ -150,8 +152,13 @@ define([
         this._nextInterval = undefined;
         this._lastRenderedFrame = undefined;
         this._clockMultiplier = 0.0;
-        this._runningLoadTime = 0.0;
-        this._runningLoadedFramesLength = 0;
+
+        // For calculating average load time of the last N frames
+        this._runningSum = 0.0;
+        this._runningLength = 0;
+        this._runningIndex = 0;
+        this._runningSamples = arrayFill(new Array(5), 0.0);
+        this._runningAverage = 0.0;
     }
 
     defineProperties(TimeDynamicPointCloud.prototype, {
@@ -215,10 +222,10 @@ define([
     };
 
     function getAverageLoadTime(that) {
-        if (that._runningLoadedFramesLength === 0) {
+        if (that._runningLength === 0) {
             return undefined;
         }
-        return that._runningLoadTime / that._runningLoadedFramesLength;
+        return that._runningAverage;
     }
 
     var scratchDate = new JulianDate();
@@ -317,6 +324,15 @@ define([
         return frame;
     }
 
+    function updateAverageLoadTime(that, loadTime) {
+        that._runningSum += loadTime;
+        that._runningSum -= that._runningSamples[that._runningIndex];
+        that._runningSamples[that._runningIndex] = loadTime;
+        that._runningLength = Math.min(that._runningLength + 1, that._runningSamples.length);
+        that._runningIndex = (that._runningIndex + 1) % that._runningSamples.length;
+        that._runningAverage = that._runningSum / that._runningLength;
+    }
+
     function prepareFrame(that, frame, frameState) {
         if (frame.touchedFrameNumber < frameState.frameNumber - 1) {
             // If this frame was not loaded in sequential updates then it can't be used it for calculating the average load time.
@@ -339,8 +355,8 @@ define([
                 commandList.length = lengthBeforeUpdate; // Don't allow preparing frame to insert commands.
                 if (frame.sequential) {
                     // Update the values used to calculate average load time
-                    that._runningLoadTime += (getTimestamp() - frame.timestamp) / 1000.0;
-                    ++that._runningLoadedFramesLength;
+                    var loadTime = (getTimestamp() - frame.timestamp) / 1000.0;
+                    updateAverageLoadTime(that, loadTime);
                 }
             }
         }
@@ -420,10 +436,9 @@ define([
         if (defined(frame)) {
             if (frame.ready) {
                 return true;
-            } else {
-                loadFrame(that, interval, frameState);
-                return frame.ready;
             }
+            loadFrame(that, interval, frameState);
+            return frame.ready;
         }
         return false;
     }
