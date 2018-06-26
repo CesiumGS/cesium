@@ -2,9 +2,17 @@ uniform sampler2D colorTexture;
 
 varying vec2 v_textureCoordinates;
 
+#ifdef AUTO_EXPOSURE
+uniform sampler2D autoExposure;
+#endif
+
 void main()
 {
     vec3 color = texture2D(colorTexture, v_textureCoordinates).rgb;
+
+#ifdef AUTO_EXPOSURE
+    color /= texture2D(autoExposure, vec2(0.5)).r;
+#endif
 
     float a = 2.51;
     float b = 0.03;

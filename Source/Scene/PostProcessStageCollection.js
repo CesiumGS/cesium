@@ -58,10 +58,14 @@ define([
         var fxaa = PostProcessStageLibrary.createFXAAStage();
         var ao = PostProcessStageLibrary.createAmbientOcclusionStage();
         var bloom = PostProcessStageLibrary.createBloomStage();
-        //var tonemapping = PostProcessStageLibrary.createReinhardTonemappingStage();
-        //var tonemapping = PostProcessStageLibrary.createModifiedReinhardTonemappingStage();
-        //var tonemapping = PostProcessStageLibrary.createFilmicTonemappingStage();
-        var tonemapping = PostProcessStageLibrary.createACESTonemappingStage();
+        var tonemapping = PostProcessStageLibrary.createReinhardTonemappingStage(true);
+        //var tonemapping = PostProcessStageLibrary.createModifiedReinhardTonemappingStage(true);
+        //var tonemapping = PostProcessStageLibrary.createFilmicTonemappingStage(true);
+        //var tonemapping = PostProcessStageLibrary.createACESTonemappingStage(true);
+
+        //var autoexposure = PostProcessStageLibrary.createAutoExposureStage();
+
+        //tonemapping.uniforms.autoExposure = autoexposure.name;
 
         ao.enabled = false;
         bloom.enabled = false; // TODO HDR
@@ -75,7 +79,7 @@ define([
 
         var stageNames = {};
         var stack = stackScratch;
-        stack.push(fxaa, ao, bloom, tonemapping);
+        stack.push(fxaa, ao, bloom, /*autoexposure,*/ tonemapping);
         while (stack.length > 0) {
             var stage = stack.pop();
             stageNames[stage.name] = stage;
@@ -102,12 +106,14 @@ define([
 
         this._ao = ao;
         this._bloom = bloom;
+        //this._autoExposure = autoexposure;
         this._tonemapping = tonemapping;
         this._fxaa = fxaa;
 
         this._lastLength = undefined;
         this._aoEnabled = undefined;
         this._bloomEnabled = undefined;
+        //this._autoExposureEnabled = undefined;
         this._tonemappingEnabled = undefined;
         this._fxaaEnabled = undefined;
 
@@ -139,11 +145,13 @@ define([
                 var fxaa = this._fxaa;
                 var ao = this._ao;
                 var bloom = this._bloom;
+                //var autoexposure = this._autoExposure;
                 var tonemapping = this._tonemapping;
 
                 readyAndEnabled = readyAndEnabled || (fxaa.ready && fxaa.enabled);
                 readyAndEnabled = readyAndEnabled || (ao.ready && ao.enabled);
                 readyAndEnabled = readyAndEnabled || (bloom.ready && bloom.enabled);
+                //readyAndEnabled = readyAndEnabled || (autoexposure.ready && autoexposure.enabled);
                 readyAndEnabled = readyAndEnabled || (tonemapping.ready && tonemapping.enabled);
 
                 return readyAndEnabled;
@@ -285,6 +293,11 @@ define([
                 if (tonemapping.enabled && tonemapping.ready) {
                     return this.getOutputTexture(tonemapping.name);
                 }
+
+                //var autoexposure = this._autoExposure;
+                //if (autoexposure.enable && autoexposure.ready) {
+                //    return this.getOutputTexture(autoexposure.name);
+                //}
 
                 var bloom = this._bloom;
                 if (bloom.enabled && bloom.ready) {
@@ -518,17 +531,20 @@ define([
 
         var ao = this._ao;
         var bloom = this._bloom;
+        //var autoexposure = this._autoExposure;
         var tonemapping = this._tonemapping;
         var fxaa = this._fxaa;
 
+        //autoexposure.enabled = useHDR;
         tonemapping.enabled = useHDR;
 
         var aoEnabled = ao.enabled && ao._isSupported(context);
         var bloomEnabled = bloom.enabled && bloom._isSupported(context);
+        //var autoexposureEnabled = autoexposure.enabled && autoexposure._isSupported(context);
         var tonemappingEnabled = tonemapping.enabled && tonemapping._isSupported(context);
         var fxaaEnabled = fxaa.enabled && fxaa._isSupported(context);
 
-        if (activeStagesChanged || this._textureCacheDirty || count !== this._lastLength || aoEnabled !== this._aoEnabled ||
+        if (activeStagesChanged || this._textureCacheDirty || count !== this._lastLength || aoEnabled !== this._aoEnabled || /*autoexposureEnabled !== this._autoExposureEnabled ||*/
             bloomEnabled !== this._bloomEnabled || tonemappingEnabled !== this._tonemappingEnabled || fxaaEnabled !== this._fxaaEnabled) {
             // The number of stages to execute has changed.
             // Update dependencies and recreate framebuffers.
@@ -537,6 +553,7 @@ define([
             this._lastLength = count;
             this._aoEnabled = aoEnabled;
             this._bloomEnabled = bloomEnabled;
+            //this._autoExposureEnabled = autoexposureEnabled;
             this._tonemappingEnabled = tonemappingEnabled;
             this._fxaaEnabled = fxaaEnabled;
             this._textureCacheDirty = false;
@@ -577,6 +594,7 @@ define([
         fxaa.update(context, useLogDepth);
         ao.update(context, useLogDepth);
         bloom.update(context, useLogDepth);
+        //autoexposure.update(context, useLogDepth);
         tonemapping.update(context, useLogDepth);
 
         length = stages.length;
@@ -656,10 +674,12 @@ define([
         var fxaa = this._fxaa;
         var ao = this._ao;
         var bloom = this._bloom;
+        //var autoexposure = this._autoExposure;
         var tonemapping = this._tonemapping;
 
         var aoEnabled = ao.enabled && ao._isSupported(context);
         var bloomEnabled = bloom.enabled && bloom._isSupported(context);
+        //var autoexposureEnabled = autoexposure.enabled && autoexposure._isSupported(context);
         var tonemappingEnabled = tonemapping.enabled && tonemapping._isSupported(context);
         var fxaaEnabled = fxaa.enabled && fxaa._isSupported(context);
 
@@ -676,6 +696,9 @@ define([
             execute(bloom, context, initialTexture, depthTexture, idTexture);
             initialTexture = getOutputTexture(bloom);
         }
+        //if (autoexposureEnabled && autoexposure.ready) {
+        //    execute(autoexposure, context, initialTexture, depthTexture, idTexture);
+        //}
         if (tonemappingEnabled && tonemapping.ready) {
             execute(tonemapping, context, initialTexture, depthTexture);
             initialTexture = getOutputTexture(tonemapping);
@@ -753,6 +776,7 @@ define([
         this._fxaa.destroy();
         this._ao.destroy();
         this._bloom.destroy();
+        //this._autoExposure.destroy();
         this._tonemapping.destroy();
         this.removeAll();
         this._textureCache = this._textureCache && this._textureCache.destroy();
