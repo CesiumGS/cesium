@@ -293,12 +293,6 @@ define([
         });
     }
 
-    function createPriorityFunction(surfaceTile, frameState) {
-        return function() {
-            return surfaceTile.tileBoundingRegion.distanceToCamera(frameState);
-        };
-    }
-
     GlobeSurfaceTile.processStateMachine = function(tile, frameState, terrainProvider, imageryLayerCollection, vertexArraysToDestroy) {
         var surfaceTile = tile.data;
         if (!defined(surfaceTile)) {
@@ -306,11 +300,6 @@ define([
             // Create the TileBoundingRegion now in order to estimate the distance, which is used to prioritize the request.
             // Since the terrain isn't loaded yet, estimate the heights using its parent's values.
             surfaceTile.tileBoundingRegion = createTileBoundingRegion(tile);
-        }
-
-        if (!defined(tile._priorityFunction)) {
-            // The priority function is used to prioritize requests among all requested tiles
-            tile._priorityFunction = createPriorityFunction(surfaceTile, frameState);
         }
 
         if (tile.state === QuadtreeTileLoadState.START) {
@@ -389,7 +378,6 @@ define([
                 tile._loadedCallbacks = newCallbacks;
 
                 tile.state = QuadtreeTileLoadState.DONE;
-                tile._priorityFunction = undefined;
             }
         }
     };
@@ -481,11 +469,11 @@ define([
         }
 
         if (surfaceTile.terrainState === TerrainState.FAILED) {
-            upsample(surfaceTile, tile, frameState, terrainProvider, tile.x, tile.y, tile.level, tile._priorityFunction);
+            upsample(surfaceTile, tile, frameState, terrainProvider, tile.x, tile.y, tile.level);
         }
 
         if (surfaceTile.terrainState === TerrainState.UNLOADED) {
-            requestTileGeometry(surfaceTile, terrainProvider, tile.x, tile.y, tile.level, tile._priorityFunction);
+            requestTileGeometry(surfaceTile, terrainProvider, tile.x, tile.y, tile.level);
         }
 
         if (surfaceTile.terrainState === TerrainState.RECEIVED) {
@@ -497,7 +485,7 @@ define([
         }
     }
 
-    function upsample(surfaceTile, tile, frameState, terrainProvider, x, y, level, priorityFunction) {
+    function upsample(surfaceTile, tile, frameState, terrainProvider, x, y, level) {
         var parent = tile.parent;
         if (!parent) {
             // Trying to upsample from a root tile. No can do.
@@ -530,7 +518,7 @@ define([
         });
     }
 
-    function requestTileGeometry(surfaceTile, terrainProvider, x, y, level, priorityFunction) {
+    function requestTileGeometry(surfaceTile, terrainProvider, x, y, level) {
         function success(terrainData) {
             surfaceTile.terrainData = terrainData;
             surfaceTile.terrainState = TerrainState.RECEIVED;
@@ -564,10 +552,9 @@ define([
         function doRequest() {
             // Request the terrain from the terrain provider.
             var request = new Request({
-                throttle : true,
+                throttle : false,
                 throttleByServer : true,
-                type : RequestType.TERRAIN,
-                priorityFunction : priorityFunction
+                type : RequestType.TERRAIN
             });
             surfaceTile.request = request;
             var requestPromise = terrainProvider.requestTileGeometry(x, y, level, request);

@@ -633,6 +633,31 @@ define([
         return childAvailable !== undefined;
     };
 
+    var tileDirectionScratch = new Cartesian3();
+
+    /**
+     * Determines the priority for loading this tile. Lower priority values load sooner.
+     * @param {QuatreeTile} tile The tile.
+     * @param {FrameState} frameState The frame state.
+     * @returns {Number} The load priority value.
+     */
+    GlobeSurfaceTileProvider.prototype.computeTileLoadPriority = function(tile, frameState) {
+        var surfaceTile = tile.data;
+        if (surfaceTile === undefined) {
+            return 0.0;
+        }
+
+        var obb = surfaceTile.orientedBoundingBox;
+        if (obb === undefined) {
+            return 0.0;
+        }
+
+        var cameraPosition = frameState.camera.positionWC;
+        var cameraDirection = frameState.camera.directionWC;
+        var tileDirection = Cartesian3.normalize(Cartesian3.subtract(obb.center, cameraPosition, tileDirectionScratch), tileDirectionScratch);
+        return (1.0 - Cartesian3.dot(tileDirection, cameraDirection)) * tile._distance;
+    };
+
     var modifiedModelViewScratch = new Matrix4();
     var modifiedModelViewProjectionScratch = new Matrix4();
     var tileRectangleScratch = new Cartesian4();

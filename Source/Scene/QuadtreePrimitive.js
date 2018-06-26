@@ -519,19 +519,26 @@ define([
             tile = levelZeroTiles[i];
             primitive._tileReplacementQueue.markTileRendered(tile);
             if (!tile.renderable) {
-                if (tile.needsLoading) {
-                    primitive._tileLoadQueueHigh.push(tile);
-                }
+                queueTileLoad(primitive, primitive._tileLoadQueueHigh, tile, frameState);
                 ++debug.tilesWaitingForChildren;
             } else if (tileProvider.computeTileVisibility(tile, frameState, occluders) !== Visibility.NONE) {
                 visitTile(primitive, frameState, tile, tile);
             } else {
-                if (tile.needsLoading) {
-                    primitive._tileLoadQueueLow.push(tile);
-                }
+                queueTileLoad(primitive, primitive._tileLoadQueueLow, tile, frameState);
                 ++debug.tilesCulled;
             }
         }
+    }
+
+    function queueTileLoad(primitive, queue, tile, frameState) {
+        if (!tile.needsLoading) {
+            return;
+        }
+
+        if (primitive.computeTileLoadPriority !== undefined) {
+            tile._loadPriority = primitive.computeTileLoadPriority(tile, frameState);
+        }
+        queue.push(tile);
     }
 
     function getState(action, heightSource, renderable) {
@@ -541,7 +548,7 @@ define([
     var lastFrame;
 
     function reportTileAction(frameState, tile, action) {
-        return;
+        //return;
         var heightSource = tile.data.boundingVolumeSourceTile;
         var renderable = tile.renderable;
         if (tile._lastAction !== action || tile._lastHeightSource !== heightSource || tile._lastRenderable !== renderable) {
@@ -578,11 +585,8 @@ define([
 
         if (screenSpaceError(primitive, frameState, tile) < primitive.maximumScreenSpaceError) {
             reportTileAction(frameState, tile, 'meets SSE');
-            // This tile meets SSE requirements, so render it.
-            if (tile.needsLoading) {
-                // Rendered tile meeting SSE loads with medium priority.
-                primitive._tileLoadQueueMedium.push(tile);
-            }
+            // This tile meets SSE requirements, so render it and load it with medium priority.
+            queueTileLoad(primitive, primitive._tileLoadQueueMedium, tile, frameState);
             addTileToRenderList(primitive, tile, nearestRenderableTile);
             return;
         }
@@ -591,12 +595,13 @@ define([
         var southeastChild = tile.southeastChild;
         var northwestChild = tile.northwestChild;
         var northeastChild = tile.northeastChild;
-        var allAreUpsampled = southwestChild.upsampledFromParent && southeastChild.upsampledFromParent &&
-                              northwestChild.upsampledFromParent && northeastChild.upsampledFromParent;
 
         var tileProvider = primitive.tileProvider;
 
         if (tileProvider.canRefine(tile)) {
+            var allAreUpsampled = southwestChild.upsampledFromParent && southeastChild.upsampledFromParent &&
+                                  northwestChild.upsampledFromParent && northeastChild.upsampledFromParent;
+
             if (allAreUpsampled) {
                 reportTileAction(frameState, tile, 'all upsampled');
                 // No point in rendering the children because they're all upsampled.  Render this tile instead.
@@ -607,10 +612,8 @@ define([
                 // A tile that is upsampled now and forever should also be done loading, so no harm done.
                 queueChildLoadNearToFar(primitive, frameState.camera.positionCartographic, southwestChild, southeastChild, northwestChild, northeastChild);
 
-                if (tile.needsLoading) {
-                    // Rendered tile that's not waiting on children loads with medium priority.
-                    primitive._tileLoadQueueMedium.push(tile);
-                }
+                // Rendered tile that's not waiting on children loads with medium priority.
+                queueTileLoad(primitive, primitive._tileLoadQueueMedium, tile, frameState);
             } else {
                 reportTileAction(frameState, tile, 'refine');
 
@@ -618,22 +621,15 @@ define([
                 // No need to add the children to the load queue because they'll be added (if necessary) when they're visited.
                 visitVisibleChildrenNearToFar(primitive, southwestChild, southeastChild, northwestChild, northeastChild, frameState, nearestRenderableTile);
 
-                if (tile.needsLoading) {
-                    // Tile is not rendered, so load it with low priority.
-                    primitive._tileLoadQueueLow.push(tile);
-                }
+                // Tile is not rendered, so load it with low priority.
+                queueTileLoad(primitive, primitive._tileLoadQueueLow, tile, frameState);
             }
         } else {
             reportTileAction(frameState, tile, 'can\'t refine');
-            // We'd like to refine but can't because not all of our children are renderable.  Load the refinement blockers with high priority and
-            // render this tile in the meantime.
-            queueChildLoadNearToFar(primitive, frameState.camera.positionCartographic, southwestChild, southeastChild, northwestChild, northeastChild);
-            addTileToRenderList(primitive, tile, nearestRenderableTile);
 
-            if (tile.needsLoading) {
-                // We will refine this tile when it's possible, so load this tile only with low priority.
-                primitive._tileLoadQueueLow.push(tile);
-            }
+            // We'd like to refine but can't because this tile isn't loaded yet.
+            addTileToRenderList(primitive, tile, nearestRenderableTile);
+            queueTileLoad(primitive, primitive._tileLoadQueueHigh, tile, frameState);
         }
     }
 
@@ -787,40 +783,25 @@ define([
         var endTime = getTimestamp() + primitive._loadQueueTimeSlice;
         var tileProvider = primitive._tileProvider;
 
-        processSinglePriorityLoadQueue(primitive, frameState, tileProvider, endTime, tileLoadQueueHigh);
-        processSinglePriorityLoadQueue(primitive, frameState, tileProvider, endTime, tileLoadQueueMedium);
-        processSinglePriorityLoadQueue(primitive, frameState, tileProvider, endTime, tileLoadQueueLow);
+        var didSomething = processSinglePriorityLoadQueue(primitive, frameState, tileProvider, endTime, tileLoadQueueHigh, false);
+        didSomething = processSinglePriorityLoadQueue(primitive, frameState, tileProvider, endTime, tileLoadQueueMedium, didSomething);
+        processSinglePriorityLoadQueue(primitive, frameState, tileProvider, endTime, tileLoadQueueLow, didSomething);
     }
 
-    function sortByCenterness(a, b) {
-        return a._centerness - b._centerness;
+    function sortByLoadPriority(a, b) {
+        return a._loadPriority - b._loadPriority;
     }
 
-    var tileDirectionScratch = new Cartesian3();
-
-    function processSinglePriorityLoadQueue(primitive, frameState, tileProvider, endTime, loadQueue) {
-        var cameraPosition = frameState.camera.positionWC;
-        var cameraDirection = frameState.camera.directionWC;
-        for (var i = 0, len = loadQueue.length; i < len && getTimestamp() < endTime; ++i) {
-            var tile = loadQueue[i];
-            var surfaceTile = tile.data;
-            if (surfaceTile === undefined) {
-                continue;
-            }
-            var obb = surfaceTile.orientedBoundingBox;
-            if (obb === undefined) {
-                continue;
-            }
-            var tileDirection = Cartesian3.normalize(Cartesian3.subtract(obb.center, cameraPosition, tileDirectionScratch), tileDirectionScratch);
-            tile._centerness = (1.0 - Cartesian3.dot(tileDirection, cameraDirection)) * tile._distance;
+    function processSinglePriorityLoadQueue(primitive, frameState, tileProvider, endTime, loadQueue, didSomething) {
+        if (tileProvider.computeTileLoadPriority !== undefined) {
+            loadQueue.sort(sortByLoadPriority);
         }
 
-        loadQueue.sort(sortByCenterness);
-
-        for (var i = 0, len = loadQueue.length; i < len && getTimestamp() < endTime; ++i) {
+        for (var i = 0, len = loadQueue.length; i < len && (getTimestamp() < endTime || !didSomething); ++i) {
             var tile = loadQueue[i];
             primitive._tileReplacementQueue.markTileRendered(tile);
             tileProvider.loadTile(frameState, tile);
+            didSomething = true;
         }
     }
 

@@ -304,16 +304,26 @@ define([
         }
 
         var cameraHeight;
+        var minimumHeight;
+        var maximumHeight;
         if (frameState.mode === SceneMode.SCENE3D) {
             cameraHeight = cameraCartographicPosition.height;
+            minimumHeight = this.minimumHeight;
+            maximumHeight = this.maximumHeight;
         } else {
             cameraHeight = cameraCartesianPosition.x;
+            minimumHeight = 0.0;
+            maximumHeight = 0.0;
         }
 
-        var maximumHeight = frameState.mode === SceneMode.SCENE3D ? this.maximumHeight : 0.0;
-        var distanceFromTop = cameraHeight - maximumHeight;
-        if (distanceFromTop > 0.0) {
-            result += distanceFromTop * distanceFromTop;
+        var distanceAboveTop = cameraHeight - maximumHeight;
+        if (distanceAboveTop > 0.0) {
+            result += distanceAboveTop * distanceAboveTop;
+        } else {
+            var distanceBelowBottom = minimumHeight - cameraHeight;
+            if (distanceBelowBottom > 0.0) {
+                result += distanceBelowBottom * distanceBelowBottom;
+            }
         }
 
         return Math.sqrt(result);

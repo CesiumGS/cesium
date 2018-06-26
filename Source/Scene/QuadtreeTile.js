@@ -66,7 +66,7 @@ define([
         // distance - for example, by using the natural ordering of a quadtree.
         // QuadtreePrimitive gets/sets this private property.
         this._distance = 0.0;
-        this._priorityFunction = undefined;
+        this._loadPriority = 0.0;
 
         this._customData = [];
         this._frameUpdated = undefined;
@@ -104,6 +104,10 @@ define([
          * @default undefined
          */
         this.data = undefined;
+    }
+
+    function getPriority() {
+        return this._priority;
     }
 
     /**

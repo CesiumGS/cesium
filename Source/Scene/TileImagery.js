@@ -49,7 +49,7 @@ define([
         var loadingImagery = this.loadingImagery;
         var imageryLayer = loadingImagery.imageryLayer;
 
-        loadingImagery.processStateMachine(frameState, !this.useWebMercatorT, tile._priorityFunction);
+        loadingImagery.processStateMachine(frameState, !this.useWebMercatorT);
 
         if (loadingImagery.state === ImageryState.READY) {
             if (defined(this.readyImagery)) {
@@ -91,7 +91,7 @@ define([
                 // Push the ancestor's load process along a bit.  This is necessary because some ancestor imagery
                 // tiles may not be attached directly to a terrain tile.  Such tiles will never load if
                 // we don't do it here.
-                closestAncestorThatNeedsLoading.processStateMachine(frameState, !this.useWebMercatorT, tile._priorityFunction);
+                closestAncestorThatNeedsLoading.processStateMachine(frameState, !this.useWebMercatorT);
                 return false; // not done loading
             }
             // This imagery tile is failed or invalid, and we have the "best available" substitute.
