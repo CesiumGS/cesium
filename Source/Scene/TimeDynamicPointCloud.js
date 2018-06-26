@@ -341,6 +341,8 @@ define([
                 }
             }
         }
+
+        frame.touchedFrameNumber = frameState.frameNumber;
     }
 
     var scratchModelMatrix = new Matrix4();
@@ -371,7 +373,6 @@ define([
     function loadFrame(that, interval, frameState) {
         var frame = requestFrame(that, interval, frameState);
         prepareFrame(that, frame, frameState);
-        frame.touchedFrameNumber = frameState.frameNumber;
     }
 
     function getUnloadCondition(frameState) {
@@ -404,28 +405,55 @@ define([
         }
     }
 
-    function getNearestReadyFrame(that, currentInterval, previousInterval) {
+    function getFrame(that, interval) {
+        var index = getIntervalIndex(that, interval);
+        var frame = that._frames[index];
+        if (defined(frame) && frame.ready) {
+            return frame;
+        }
+    }
+
+    function updateInterval(that, interval, frame, frameState) {
+        if (defined(frame)) {
+            if (frame.ready) {
+                return true;
+            } else {
+                loadFrame(that, interval, frameState);
+                return frame.ready;
+            }
+        }
+        return false;
+    }
+
+    function getNearestReadyInterval(that, previousInterval, currentInterval, frameState) {
         var i;
+        var interval;
         var frame;
+        var intervals = that._intervals;
         var frames = that._frames;
         var currentIndex = getIntervalIndex(that, currentInterval);
         var previousIndex = getIntervalIndex(that, previousInterval);
 
         if (currentIndex >= previousIndex) { // look backwards
             for (i = currentIndex; i >= previousIndex; --i) {
+                interval = intervals.get(i);
                 frame = frames[i];
-                if (defined(frame) && frame.ready) {
-                    return frame;
+                if (updateInterval(that, interval, frame, frameState)) {
+                    return interval;
                 }
             }
         } else { // look forwards
             for (i = currentIndex; i <= previousIndex; ++i) {
+                interval = intervals.get(i);
                 frame = frames[i];
-                if (defined(frame) && frame.ready) {
-                    return frame;
+                if (updateInterval(that, interval, frame, frameState)) {
+                    return interval;
                 }
             }
         }
+
+        // If no intervals are ready return the previous interval
+        return previousInterval;
     }
 
     TimeDynamicPointCloud.prototype.update = function(frameState) {
@@ -492,21 +520,16 @@ define([
             previousInterval = currentInterval;
         }
 
-        if (!defined(nextInterval) || clockMultiplierChanged ) {
+        if (!defined(nextInterval) || clockMultiplierChanged || reachedInterval(this, currentInterval, nextInterval)) {
             nextInterval = getNextInterval(this);
         }
 
-        if (defined(nextInterval) && reachedInterval(this, currentInterval, nextInterval)) {
-            previousInterval = nextInterval;
-            nextInterval = getNextInterval(this);
-        }
-
-        var frame = getNearestReadyFrame(this, currentInterval, previousInterval);
+        previousInterval = getNearestReadyInterval(this, previousInterval, currentInterval, frameState);
+        var frame = getFrame(this, previousInterval);
 
         if (!defined(frame)) {
-            // The frame is not ready to render. This can happen when the simulation starts, when scrubbing the timeline
-            // to a frame that hasn't loaded yet, or reaching the next interval before its frame has finished loading.
-            // Just render the last rendered frame in its place until it finishes loading.
+            // The frame is not ready to render. This can happen when the simulation starts or when scrubbing the timeline
+            // to a frame that hasn't loaded yet. Just render the last rendered frame in its place until it finishes loading.
             loadFrame(this, previousInterval, frameState);
             frame = this._lastRenderedFrame;
         }
