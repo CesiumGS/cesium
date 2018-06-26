@@ -155,6 +155,7 @@ define([
         return function(vs) {
             if (defined(content._batchTable)) {
                 return content._batchTable.getVertexShaderCallback(false, 'a_batchId', undefined)(vs);
+
             }
             return vs;
         };
