@@ -4,7 +4,6 @@ define([
         'Core/JulianDate',
         'DataSources/ColorMaterialProperty',
         'DataSources/ConstantProperty',
-        'DataSources/GeometryHeightProperty',
         'DataSources/SampledProperty',
         'Scene/ClassificationType',
         'Scene/GroundPrimitive',
@@ -16,7 +15,6 @@ define([
         JulianDate,
         ColorMaterialProperty,
         ConstantProperty,
-        GeometryHeightProperty,
         SampledProperty,
         ClassificationType,
         GroundPrimitive,
@@ -142,84 +140,84 @@ define([
             var graphics = entity[geometryPropertyName];
             graphics.outline = true;
             graphics.outlineColor = Color.BLACK;
+            graphics.height = new ConstantProperty(20.0);
+            graphics.extrudedHeight = new ConstantProperty(0.0);
             var updater = new Updater(entity, getScene());
 
             var instance;
 
-            graphics.height = new ConstantProperty(20.0);
-            graphics.extrudedHeight = new ConstantProperty(0.0);
             updater._onEntityPropertyChanged(entity, geometryPropertyName);
             instance = updater.createFillGeometryInstance(time);
             expect(instance.geometry._offsetAttribute).toBeUndefined();
             instance = updater.createOutlineGeometryInstance(time);
             expect(instance.geometry._offsetAttribute).toBeUndefined();
 
-            graphics.height = new GeometryHeightProperty(20.0, HeightReference.NONE);
-            graphics.extrudedHeight = new GeometryHeightProperty(0.0, HeightReference.NONE);
+            graphics.heightReference = new ConstantProperty(HeightReference.NONE);
+            graphics.extrudedHeightReference = new ConstantProperty(HeightReference.NONE);
             updater._onEntityPropertyChanged(entity, geometryPropertyName);
             instance = updater.createFillGeometryInstance(time);
             expect(instance.geometry._offsetAttribute).toBeUndefined();
             instance = updater.createOutlineGeometryInstance(time);
             expect(instance.geometry._offsetAttribute).toBeUndefined();
 
-            graphics.height = new GeometryHeightProperty(20.0, HeightReference.NONE);
-            graphics.extrudedHeight = new GeometryHeightProperty(0.0, HeightReference.CLAMP_TO_GROUND);
+            graphics.heightReference = new ConstantProperty(HeightReference.NONE);
+            graphics.extrudedHeightReference = new ConstantProperty(HeightReference.CLAMP_TO_GROUND);
             updater._onEntityPropertyChanged(entity, geometryPropertyName);
             instance = updater.createFillGeometryInstance(time);
             expect(instance.geometry._offsetAttribute).toBeUndefined();
             instance = updater.createOutlineGeometryInstance(time);
             expect(instance.geometry._offsetAttribute).toBeUndefined();
 
-            graphics.height = new GeometryHeightProperty(20.0, HeightReference.NONE);
-            graphics.extrudedHeight = new GeometryHeightProperty(0.0, HeightReference.RELATIVE_TO_GROUND);
+            graphics.heightReference = new ConstantProperty(HeightReference.NONE);
+            graphics.extrudedHeightReference = new ConstantProperty(HeightReference.RELATIVE_TO_GROUND);
             updater._onEntityPropertyChanged(entity, geometryPropertyName);
             instance = updater.createFillGeometryInstance(time);
             expect(instance.geometry._offsetAttribute).toEqual(GeometryOffsetAttribute.TOP);
             instance = updater.createOutlineGeometryInstance(time);
             expect(instance.geometry._offsetAttribute).toEqual(GeometryOffsetAttribute.TOP);
 
-            graphics.height = new GeometryHeightProperty(20.0, HeightReference.CLAMP_TO_GROUND);
-            graphics.extrudedHeight = new GeometryHeightProperty(0.0, HeightReference.NONE);
+            graphics.heightReference = new ConstantProperty(HeightReference.CLAMP_TO_GROUND);
+            graphics.extrudedHeightReference = new ConstantProperty(HeightReference.NONE);
             updater._onEntityPropertyChanged(entity, geometryPropertyName);
             instance = updater.createFillGeometryInstance(time);
             expect(instance.geometry._offsetAttribute).toEqual(GeometryOffsetAttribute.TOP);
             instance = updater.createOutlineGeometryInstance(time);
             expect(instance.geometry._offsetAttribute).toEqual(GeometryOffsetAttribute.TOP);
 
-            graphics.height = new GeometryHeightProperty(20.0, HeightReference.CLAMP_TO_GROUND);
-            graphics.extrudedHeight = new GeometryHeightProperty(0.0, HeightReference.CLAMP_TO_GROUND);
+            graphics.heightReference = new ConstantProperty(HeightReference.CLAMP_TO_GROUND);
+            graphics.extrudedHeightReference = new ConstantProperty(HeightReference.CLAMP_TO_GROUND);
             updater._onEntityPropertyChanged(entity, geometryPropertyName);
             instance = updater.createFillGeometryInstance(time);
             expect(instance.geometry._offsetAttribute).toEqual(GeometryOffsetAttribute.TOP);
             instance = updater.createOutlineGeometryInstance(time);
             expect(instance.geometry._offsetAttribute).toEqual(GeometryOffsetAttribute.TOP);
 
-            graphics.height = new GeometryHeightProperty(20.0, HeightReference.CLAMP_TO_GROUND);
-            graphics.extrudedHeight = new GeometryHeightProperty(0.0, HeightReference.RELATIVE_TO_GROUND);
+            graphics.heightReference = new ConstantProperty(HeightReference.CLAMP_TO_GROUND);
+            graphics.extrudedHeightReference = new ConstantProperty(HeightReference.RELATIVE_TO_GROUND);
             updater._onEntityPropertyChanged(entity, geometryPropertyName);
             instance = updater.createFillGeometryInstance(time);
             expect(instance.geometry._offsetAttribute).toEqual(GeometryOffsetAttribute.ALL);
             instance = updater.createOutlineGeometryInstance(time);
             expect(instance.geometry._offsetAttribute).toEqual(GeometryOffsetAttribute.ALL);
 
-            graphics.height = new GeometryHeightProperty(20.0, HeightReference.RELATIVE_TO_GROUND);
-            graphics.extrudedHeight = new GeometryHeightProperty(0.0, HeightReference.NONE);
+            graphics.heightReference = new ConstantProperty(HeightReference.RELATIVE_TO_GROUND);
+            graphics.extrudedHeightReference = new ConstantProperty(HeightReference.NONE);
             updater._onEntityPropertyChanged(entity, geometryPropertyName);
             instance = updater.createFillGeometryInstance(time);
             expect(instance.geometry._offsetAttribute).toEqual(GeometryOffsetAttribute.TOP);
             instance = updater.createOutlineGeometryInstance(time);
             expect(instance.geometry._offsetAttribute).toEqual(GeometryOffsetAttribute.TOP);
 
-            graphics.height = new GeometryHeightProperty(20.0, HeightReference.RELATIVE_TO_GROUND);
-            graphics.extrudedHeight = new GeometryHeightProperty(0.0, HeightReference.CLAMP_TO_GROUND);
+            graphics.heightReference = new ConstantProperty(HeightReference.RELATIVE_TO_GROUND);
+            graphics.extrudedHeightReference = new ConstantProperty(HeightReference.CLAMP_TO_GROUND);
             updater._onEntityPropertyChanged(entity, geometryPropertyName);
             instance = updater.createFillGeometryInstance(time);
             expect(instance.geometry._offsetAttribute).toEqual(GeometryOffsetAttribute.TOP);
             instance = updater.createOutlineGeometryInstance(time);
             expect(instance.geometry._offsetAttribute).toEqual(GeometryOffsetAttribute.TOP);
 
-            graphics.height = new GeometryHeightProperty(20.0, HeightReference.RELATIVE_TO_GROUND);
-            graphics.extrudedHeight = new GeometryHeightProperty(0.0, HeightReference.RELATIVE_TO_GROUND);
+            graphics.heightReference = new ConstantProperty(HeightReference.RELATIVE_TO_GROUND);
+            graphics.extrudedHeightReference = new ConstantProperty(HeightReference.RELATIVE_TO_GROUND);
             updater._onEntityPropertyChanged(entity, geometryPropertyName);
             instance = updater.createFillGeometryInstance(time);
             expect(instance.geometry._offsetAttribute).toEqual(GeometryOffsetAttribute.ALL);

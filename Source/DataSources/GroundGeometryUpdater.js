@@ -1,30 +1,32 @@
 define([
+    '../Core/ApproximateTerrainHeights',
     '../Core/Cartesian3',
     '../Core/Check',
     '../Core/defaultValue',
     '../Core/defined',
     '../Core/defineProperties',
     '../Core/DeveloperError',
+    '../Core/GeometryOffsetAttribute',
     '../Core/Iso8601',
     '../Core/oneTimeWarning',
     '../Scene/HeightReference',
     './ConstantProperty',
-    './GeometryHeightProperty',
     './GeometryUpdater',
     './Property',
     './TerrainOffsetProperty'
 ], function(
+    ApproximateTerrainHeights,
     Cartesian3,
     Check,
     defaultValue,
     defined,
     defineProperties,
     DeveloperError,
+    GeometryOffsetAttribute,
     Iso8601,
     oneTimeWarning,
     HeightReference,
     ConstantProperty,
-    GeometryHeightProperty,
     GeometryUpdater,
     Property,
     TerrainOffsetProperty) {
@@ -93,21 +95,69 @@ define([
 
         this._zIndex = defaultValue(geometry.zIndex, defaultZIndex);
 
-        var heightProperty = geometry.height;
-        var extrudedHeightProperty = geometry.extrudedHeight;
-
         if (defined(this._terrainOffsetProperty)) {
             this._terrainOffsetProperty.destroy();
             this._terrainOffsetProperty = undefined;
         }
 
-        if (defined(heightProperty) || defined(extrudedHeightProperty)) {
-            var heightValue = Property.getValueOrUndefined(heightProperty, Iso8601.MINIMUM_VALUE);
-            var extrudedHeightValue = Property.getValueOrUndefined(extrudedHeightProperty, Iso8601.MINIMUM_VALUE);
-            if (this._dynamic || (defined(heightValue) && defined(heightValue.heightReference)) || (defined(extrudedHeightValue) && defined(extrudedHeightValue.heightReference))) {
-                this._terrainOffsetProperty = new TerrainOffsetProperty(this._scene, heightProperty, extrudedHeightProperty, this._computeCenter.bind(this));
-            }
+        var heightReferenceProperty = geometry.heightReference;
+        var extrudedHeightReferenceProperty = geometry.extrudedHeightReference;
+
+        if (defined(heightReferenceProperty) || defined(extrudedHeightReferenceProperty)) {
+            this._terrainOffsetProperty = new TerrainOffsetProperty(this._scene, heightReferenceProperty, extrudedHeightReferenceProperty, this._computeCenter.bind(this));
         }
+    };
+
+    /**
+     * @private
+     */
+    GroundGeometryUpdater.getGeometryHeight = function(heightProperty, heightReferenceProperty, time) {
+        var heightReference = Property.getValueOrDefault(heightReferenceProperty, time, HeightReference.NONE);
+        if (heightReference !== HeightReference.CLAMP_TO_GROUND) {
+            return Property.getValueOrUndefined(heightProperty, time);
+        }
+        return 0.0;
+    };
+
+    /**
+     * @private
+     */
+    GroundGeometryUpdater.getGeometryExtrudedHeight = function(extrudedHeightProperty, extrudedHeightReferenceProperty, time) {
+        var heightReference = Property.getValueOrDefault(extrudedHeightReferenceProperty, time, HeightReference.NONE);
+        if (heightReference !== HeightReference.CLAMP_TO_GROUND) {
+            return Property.getValueOrUndefined(extrudedHeightProperty, time);
+        }
+
+        return GroundGeometryUpdater.CLAMP_TO_GROUND;
+    };
+
+    /**
+     * @private
+     */
+    GroundGeometryUpdater.CLAMP_TO_GROUND = 'clamp';
+
+    /**
+     * @private
+     */
+    GroundGeometryUpdater.computeGeometryOffsetAttribute = function(heightReferenceProperty, extrudedHeightReferenceProperty, time) {
+        var heightReference = Property.getValueOrDefault(heightReferenceProperty, time, HeightReference.NONE);
+        var extrudedHeightReference = Property.getValueOrDefault(extrudedHeightReferenceProperty, time, HeightReference.NONE);
+
+        var n = 0;
+        if (heightReference !== HeightReference.NONE) {
+            n++;
+        }
+        if (extrudedHeightReference === HeightReference.RELATIVE_TO_GROUND) {
+            n++;
+        }
+        if (n === 2) {
+            return GeometryOffsetAttribute.ALL;
+        }
+        if (n === 1) {
+            return GeometryOffsetAttribute.TOP;
+        }
+
+        return undefined;
     };
 
     return GroundGeometryUpdater;

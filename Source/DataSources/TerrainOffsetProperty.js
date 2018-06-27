@@ -29,21 +29,16 @@ define([
 
     /**
      * @private
-     * @param {Scene} scene
-     * @param {Property} height
-     * @param {Property} extrudedHeight
-     * @param {TerrainOffsetProperty~PositionFunction} getPosition
-     * @constructor
      */
-    function TerrainOffsetProperty(scene, height, extrudedHeight, getPosition) {
+    function TerrainOffsetProperty(scene, heightReference, extrudedHeightReference, getPosition) {
         //>>includeStart('debug', pragmas.debug);
         Check.defined('scene', scene);
         Check.typeOf.func('getPosition', getPosition);
         //>>includeEnd('debug');
 
         this._scene = scene;
-        this._height = height;
-        this._extrudedHeight = extrudedHeight;
+        this._heightReference = heightReference;
+        this._extrudedHeightReference = extrudedHeightReference;
         this._getPosition = getPosition;
 
         this._position = new Cartesian3();
@@ -136,20 +131,8 @@ define([
      * @returns {Cartesian3} The offset
      */
     TerrainOffsetProperty.prototype.getValue = function(time, result) {
-        var heightProperty = this._height;
-        var extrudedHeightProperty = this._extrudedHeight;
-        var heightReference = HeightReference.NONE;
-        var extrudedHeightReference = HeightReference.NONE;
-
-        var heightValue = Property.getValueOrUndefined(heightProperty, time);
-        if (defined(heightValue) && defined(heightValue.heightReference)) {
-            heightReference = heightValue.heightReference;
-        }
-
-        var extrudedHeightValue = Property.getValueOrUndefined(extrudedHeightProperty, time);
-        if (defined(extrudedHeightValue) && defined(extrudedHeightValue.heightReference)) {
-            extrudedHeightReference = extrudedHeightValue.heightReference;
-        }
+        var heightReference = Property.getValueOrDefault(this._heightReference, time, HeightReference.NONE);
+        var extrudedHeightReference = Property.getValueOrDefault(this._extrudedHeightReference, time, HeightReference.NONE);
 
         if (heightReference === HeightReference.NONE && extrudedHeightReference !== HeightReference.RELATIVE_TO_GROUND) {
             this._position = Cartesian3.clone(Cartesian3.ZERO, this._position);
