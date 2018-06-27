@@ -1,4 +1,5 @@
 define([
+        '../Core/arrayFill',
         '../Core/Check',
         '../Core/combine',
         '../Core/defaultValue',
@@ -17,6 +18,7 @@ define([
         './SceneMode',
         './ShadowMode'
     ], function(
+        arrayFill,
         Check,
         combine,
         defaultValue,
@@ -37,19 +39,24 @@ define([
     'use strict';
 
     /**
-     * Provides functionality for playback of time-dynamic point cloud data.
+     * Provides playback of time-dynamic point cloud data.
+     * <p>
+     * Point cloud frames are prefetched in intervals determined by the average frame load time and the current clock speed.
+     * If intermediate frames cannot be loaded in time to meet playback speed, they will be skipped. If frames are sufficiently
+     * small or the clock is sufficiently slow then no frames will be skipped.
+     * </p>
      *
      * @alias TimeDynamicPointCloud
      * @constructor
      *
      * @param {Object} options Object with the following properties:
      * @param {Clock} options.clock A {@link Clock} instance that is used when determining the value for the time dimension.
-     * @param {TimeIntervalCollection} options.intervals A {@link TimeIntervalCollection} with its data property being an object containing a uri to a Point Cloud (.pnts) tile and an optional transform.
+     * @param {TimeIntervalCollection} options.intervals A {@link TimeIntervalCollection} with its data property being an object containing a <code>uri</code> to a 3D Tiles Point Cloud tile and an optional <code>transform</code>.
      * @param {Boolean} [options.show=true] Determines if the point cloud will be shown.
      * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] A 4x4 transformation matrix that transforms the point cloud.
      * @param {ShadowMode} [options.shadows=ShadowMode.ENABLED] Determines whether the point cloud casts or receives shadows from each light source.
      * @param {Number} [options.maximumMemoryUsage=256] The maximum amount of memory in MB that can be used by the point cloud.
-     * @param {Object} [options.pointCloudShading] Options for constructing a {@link PointCloudShading} object to control point size based on geometric error and eye dome lighting.
+     * @param {Object} [options.pointCloudShading] Options for constructing a {@link PointCloudShading} object to control point attenuation and eye dome lighting.
      * @param {Cesium3DTileStyle} [options.style] The style, defined using the {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/Styling|3D Tiles Styling language}, applied to each point in the point cloud.
      * @param {ClippingPlaneCollection} [options.clippingPlanes] The {@link ClippingPlaneCollection} used to selectively disable rendering the point cloud.
      */
@@ -93,7 +100,12 @@ define([
 
         /**
          * The maximum amount of GPU memory (in MB) that may be used to cache point cloud frames.
-         *
+         * <p>
+         * Frames that are not being loaded or rendered are unloaded to enforce this.
+         * </p>
+         * <p>
+         * If decreasing this value results in unloading tiles, the tiles are unloaded the next frame.
+         * </p>
          * @memberof TimeDynamicPointCloud.prototype
          *
          * @type {Number}
@@ -150,8 +162,13 @@ define([
         this._nextInterval = undefined;
         this._lastRenderedFrame = undefined;
         this._clockMultiplier = 0.0;
-        this._runningLoadTime = 0.0;
-        this._runningLoadedFramesLength = 0;
+
+        // For calculating average load time of the last N frames
+        this._runningSum = 0.0;
+        this._runningLength = 0;
+        this._runningIndex = 0;
+        this._runningSamples = arrayFill(new Array(5), 0.0);
+        this._runningAverage = 0.0;
     }
 
     defineProperties(TimeDynamicPointCloud.prototype, {
@@ -215,10 +232,11 @@ define([
     };
 
     function getAverageLoadTime(that) {
-        if (that._runningLoadedFramesLength === 0) {
-            return undefined;
+        if (that._runningLength === 0) {
+            // Before any frames have loaded make a best guess about the average load time
+            return 0.05;
         }
-        return that._runningLoadTime / that._runningLoadedFramesLength;
+        return that._runningAverage;
     }
 
     var scratchDate = new JulianDate();
@@ -234,7 +252,7 @@ define([
         return that._intervals.indexOf(interval.start);
     }
 
-    function getNextInterval(that) {
+    function getNextInterval(that, currentInterval) {
         var intervals = that._intervals;
         var clock = that._clock;
         var multiplier = getClockMultiplier(that);
@@ -244,17 +262,16 @@ define([
         }
 
         var averageLoadTime = getAverageLoadTime(that);
-        if (!defined(averageLoadTime)) {
-            return undefined;
-        }
-
         var time = JulianDate.addSeconds(clock.currentTime, averageLoadTime * multiplier, scratchDate);
         var index = intervals.indexOf(time);
 
-        if (multiplier >= 0) {
-            ++index;
-        } else {
-            --index;
+        var currentIndex = getIntervalIndex(that, currentInterval);
+        if (index === currentIndex) {
+            if (multiplier >= 0) {
+                ++index;
+            } else {
+                --index;
+            }
         }
 
         // Returns undefined if not in range
@@ -301,8 +318,11 @@ define([
             Resource.fetchArrayBuffer({
                 url : interval.data.uri
             }).then(function(arrayBuffer) {
+                // PERFORMANCE_IDEA: share a memory pool, render states, shaders, and other resources among all
+                // frames. Each frame just needs an index/offset into the pool.
                 frame.pointCloud = new PointCloud({
                     arrayBuffer : arrayBuffer,
+                    cull : true,
                     fragmentShaderLoaded : getFragmentShaderLoaded,
                     uniformMapLoaded : getUniformMapLoaded(that),
                     pickIdLoaded : getPickIdLoaded
@@ -312,6 +332,15 @@ define([
             });
         }
         return frame;
+    }
+
+    function updateAverageLoadTime(that, loadTime) {
+        that._runningSum += loadTime;
+        that._runningSum -= that._runningSamples[that._runningIndex];
+        that._runningSamples[that._runningIndex] = loadTime;
+        that._runningLength = Math.min(that._runningLength + 1, that._runningSamples.length);
+        that._runningIndex = (that._runningIndex + 1) % that._runningSamples.length;
+        that._runningAverage = that._runningSum / that._runningLength;
     }
 
     function prepareFrame(that, frame, frameState) {
@@ -336,14 +365,34 @@ define([
                 commandList.length = lengthBeforeUpdate; // Don't allow preparing frame to insert commands.
                 if (frame.sequential) {
                     // Update the values used to calculate average load time
-                    that._runningLoadTime += (getTimestamp() - frame.timestamp) / 1000.0;
-                    ++that._runningLoadedFramesLength;
+                    var loadTime = (getTimestamp() - frame.timestamp) / 1000.0;
+                    updateAverageLoadTime(that, loadTime);
                 }
             }
         }
+
+        frame.touchedFrameNumber = frameState.frameNumber;
     }
 
     var scratchModelMatrix = new Matrix4();
+
+    function getGeometricError(that, pointCloud) {
+        var pointCloudShading = that.pointCloudShading;
+        if (defined(pointCloudShading) && defined(pointCloudShading.baseResolution)) {
+            return pointCloudShading.baseResolution;
+        }
+        return CesiumMath.cbrt(pointCloud.boundingSphere.volume() / pointCloud.pointsLength);
+    }
+
+    function getMaximumAttenuation(that) {
+        var pointCloudShading = that.pointCloudShading;
+        if (defined(pointCloudShading) && defined(pointCloudShading.maximumAttenuation)) {
+            return pointCloudShading.maximumAttenuation;
+        }
+
+        // Return a hardcoded maximum attenuation. For a tileset this would instead be the maximum screen space error.
+        return 10.0;
+    }
 
     function renderFrame(that, frame, timeSinceLoad, isClipped, clippingPlanesDirty, frameState) {
         var pointCloud = frame.pointCloud;
@@ -360,9 +409,9 @@ define([
         var pointCloudShading = that.pointCloudShading;
         if (defined(pointCloudShading)) {
             pointCloud.attenuation = pointCloudShading.attenuation;
-            pointCloud.geometricError = 10.0; // TODO : If we had a bounding volume we could derive it
+            pointCloud.geometricError = getGeometricError(that, pointCloud);
             pointCloud.geometricErrorScale = pointCloudShading.geometricErrorScale;
-            pointCloud.maximumAttenuation = defined(pointCloudShading.maximumAttenuation) ? pointCloudShading.maximumAttenuation : 10;
+            pointCloud.maximumAttenuation = getMaximumAttenuation(that);
         }
         pointCloud.update(frameState);
         frame.touchedFrameNumber = frameState.frameNumber;
@@ -371,7 +420,6 @@ define([
     function loadFrame(that, interval, frameState) {
         var frame = requestFrame(that, interval, frameState);
         prepareFrame(that, frame, frameState);
-        frame.touchedFrameNumber = frameState.frameNumber;
     }
 
     function getUnloadCondition(frameState) {
@@ -404,28 +452,54 @@ define([
         }
     }
 
-    function getNearestReadyFrame(that, currentInterval, previousInterval) {
+    function getFrame(that, interval) {
+        var index = getIntervalIndex(that, interval);
+        var frame = that._frames[index];
+        if (defined(frame) && frame.ready) {
+            return frame;
+        }
+    }
+
+    function updateInterval(that, interval, frame, frameState) {
+        if (defined(frame)) {
+            if (frame.ready) {
+                return true;
+            }
+            loadFrame(that, interval, frameState);
+            return frame.ready;
+        }
+        return false;
+    }
+
+    function getNearestReadyInterval(that, previousInterval, currentInterval, frameState) {
         var i;
+        var interval;
         var frame;
+        var intervals = that._intervals;
         var frames = that._frames;
         var currentIndex = getIntervalIndex(that, currentInterval);
         var previousIndex = getIntervalIndex(that, previousInterval);
 
         if (currentIndex >= previousIndex) { // look backwards
             for (i = currentIndex; i >= previousIndex; --i) {
+                interval = intervals.get(i);
                 frame = frames[i];
-                if (defined(frame) && frame.ready) {
-                    return frame;
+                if (updateInterval(that, interval, frame, frameState)) {
+                    return interval;
                 }
             }
         } else { // look forwards
             for (i = currentIndex; i <= previousIndex; ++i) {
+                interval = intervals.get(i);
                 frame = frames[i];
-                if (defined(frame) && frame.ready) {
-                    return frame;
+                if (updateInterval(that, interval, frame, frameState)) {
+                    return interval;
                 }
             }
         }
+
+        // If no intervals are ready return the previous interval
+        return previousInterval;
     }
 
     TimeDynamicPointCloud.prototype.update = function(frameState) {
@@ -492,21 +566,16 @@ define([
             previousInterval = currentInterval;
         }
 
-        if (!defined(nextInterval) || clockMultiplierChanged ) {
-            nextInterval = getNextInterval(this);
+        if (!defined(nextInterval) || clockMultiplierChanged || reachedInterval(this, currentInterval, nextInterval)) {
+            nextInterval = getNextInterval(this, currentInterval);
         }
 
-        if (defined(nextInterval) && reachedInterval(this, currentInterval, nextInterval)) {
-            previousInterval = nextInterval;
-            nextInterval = getNextInterval(this);
-        }
-
-        var frame = getNearestReadyFrame(this, currentInterval, previousInterval);
+        previousInterval = getNearestReadyInterval(this, previousInterval, currentInterval, frameState);
+        var frame = getFrame(this, previousInterval);
 
         if (!defined(frame)) {
-            // The frame is not ready to render. This can happen when the simulation starts, when scrubbing the timeline
-            // to a frame that hasn't loaded yet, or reaching the next interval before its frame has finished loading.
-            // Just render the last rendered frame in its place until it finishes loading.
+            // The frame is not ready to render. This can happen when the simulation starts or when scrubbing the timeline
+            // to a frame that hasn't loaded yet. Just render the last rendered frame in its place until it finishes loading.
             loadFrame(this, previousInterval, frameState);
             frame = this._lastRenderedFrame;
         }

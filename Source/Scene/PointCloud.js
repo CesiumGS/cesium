@@ -1,7 +1,9 @@
 define([
         '../Core/arraySlice',
+        '../Core/BoundingSphere',
         '../Core/Cartesian3',
         '../Core/Cartesian4',
+        '../Core/Math',
         '../Core/Check',
         '../Core/Color',
         '../Core/combine',
@@ -39,8 +41,10 @@ define([
         './ShadowMode'
     ], function(
         arraySlice,
+        BoundingSphere,
         Cartesian3,
         Cartesian4,
+        CesiumMath,
         Check,
         Color,
         combine,
@@ -161,6 +165,7 @@ define([
         this._batchTableLoaded = options.batchTableLoaded;
         this._pickIdLoaded = options.pickIdLoaded;
         this._opaquePass = defaultValue(options.opaquePass, Pass.OPAQUE);
+        this._cull = defaultValue(options.cull, true);
 
         this.style = undefined;
         this._style = undefined;
@@ -171,7 +176,7 @@ define([
 
         this.time = 0.0; // For styling
         this.shadows = ShadowMode.ENABLED;
-        this.boundingVolume = undefined;
+        this.boundingSphere = undefined;
 
         this.clippingPlanes = undefined;
         this.isClipped = false;
@@ -452,6 +457,31 @@ define([
         pointCloud._hasBatchIds = hasBatchIds;
     }
 
+    var scratchMin = new Cartesian3();
+    var scratchMax = new Cartesian3();
+    var scratchPosition = new Cartesian3();
+
+    function computeApproximateBoundingSphereFromPositions(positions) {
+        var pointsLength = positions.length / 3;
+        var samplesLength = Math.min(pointsLength, 20);
+        var maxValue = Number.MAX_VALUE;
+        var minValue = -Number.MAX_VALUE;
+        var min = Cartesian3.fromElements(maxValue, maxValue, maxValue, scratchMin);
+        var max = Cartesian3.fromElements(minValue, minValue, minValue, scratchMax);
+        for (var i = 0; i < samplesLength; ++i) {
+            var index = Math.floor(i * pointsLength / samplesLength);
+            var position = Cartesian3.unpack(positions, index * 3, scratchPosition);
+            Cartesian3.minimumByComponent(min, position, min);
+            Cartesian3.maximumByComponent(max, position, max);
+        }
+
+        var boundingSphere = BoundingSphere.fromCornerPoints(min, max);
+        if (pointsLength === 1) {
+            boundingSphere.radius = CesiumMath.EPSILON2; // To avoid radius of zero
+        }
+        return boundingSphere;
+    }
+
     function prepareVertexAttribute(typedArray) {
         // WebGL does not support UNSIGNED_INT, INT, or DOUBLE vertex attributes. Convert these to FLOAT.
         var componentDatatype = ComponentDatatype.fromTypedArray(typedArray);
@@ -473,6 +503,7 @@ define([
     var numberOfAttributes = 4;
 
     var scratchClippingPlaneMatrix = new Matrix4();
+
     function createResources(pointCloud, frameState) {
         var context = frameState.context;
         var parsedContent = pointCloud._parsedContent;
@@ -602,6 +633,18 @@ define([
             strideInBytes : 0
         });
 
+        if (pointCloud._cull) {
+            if (isQuantized || isQuantizedDraco) {
+                // Quantized volume offset is applied to the model matrix, not the bounding sphere
+                var scale = pointCloud._quantizedVolumeScale;
+                var center = Cartesian3.multiplyByScalar(scale, 0.5, new Cartesian3());
+                var radius = Cartesian3.maximumComponent(scale) * 0.5;
+                pointCloud.boundingSphere = new BoundingSphere(center, radius);
+            } else {
+                pointCloud.boundingSphere = computeApproximateBoundingSphereFromPositions(positions);
+            }
+        }
+
         if (hasColors) {
             if (isRGB565) {
                 attributes.push({
@@ -685,8 +728,8 @@ define([
         });
 
         pointCloud._drawCommand = new DrawCommand({
-            boundingVolume : undefined, // Updated in update
-            cull : false, // Already culled by 3D Tiles
+            boundingVolume : new BoundingSphere(),
+            cull : pointCloud._cull,
             modelMatrix : new Matrix4(),
             primitiveType : PrimitiveType.POINTS,
             vertexArray : vertexArray,
@@ -1206,10 +1249,6 @@ define([
         }
     }
 
-    var scratchComputedTranslation = new Cartesian4();
-    var scratchComputedMatrixIn2D = new Matrix4();
-    var scratchModelMatrix = new Matrix4();
-
     function decodeDraco(pointCloud, context) {
         if (pointCloud._decodingState === DecodingState.READY) {
             return false;
@@ -1265,6 +1304,10 @@ define([
         return true;
     }
 
+    var scratchComputedTranslation = new Cartesian4();
+    var scratchModelMatrix = new Matrix4();
+    var scratchScale = new Cartesian3();
+
     PointCloud.prototype.update = function(frameState) {
         var context = frameState.context;
         var decoding = decodeDraco(this, context);
@@ -1305,16 +1348,20 @@ define([
                 var translation = Matrix4.getColumn(modelMatrix, 3, scratchComputedTranslation);
                 if (!Cartesian4.equals(translation, Cartesian4.UNIT_W)) {
                     Transforms.basisTo2D(projection, modelMatrix, modelMatrix);
-                } else {
-                    var center = this.boundingVolume.center;
-                    var to2D = Transforms.wgs84To2DModelMatrix(projection, center, scratchComputedMatrixIn2D);
-                    Matrix4.multiply(to2D, modelMatrix, modelMatrix);
                 }
             }
 
             Matrix4.clone(modelMatrix, this._drawCommand.modelMatrix);
 
-            this._drawCommand.boundingVolume = this.boundingVolume;
+            var boundingSphere = this._drawCommand.boundingVolume;
+            BoundingSphere.clone(this.boundingSphere, boundingSphere);
+
+            if (this._cull) {
+                var center = boundingSphere.center;
+                Matrix4.multiplyByPoint(modelMatrix, center, center);
+                var scale = Matrix4.getScale(modelMatrix, scratchScale);
+                boundingSphere.radius *= Cartesian3.maximumComponent(scale);
+            }
         }
 
         if (this.clippingPlanesDirty) {
