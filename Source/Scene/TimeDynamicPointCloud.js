@@ -320,6 +320,7 @@ define([
             }).then(function(arrayBuffer) {
                 frame.pointCloud = new PointCloud({
                     arrayBuffer : arrayBuffer,
+                    cull : true,
                     fragmentShaderLoaded : getFragmentShaderLoaded,
                     uniformMapLoaded : getUniformMapLoaded(that),
                     pickIdLoaded : getPickIdLoaded
@@ -373,6 +374,24 @@ define([
 
     var scratchModelMatrix = new Matrix4();
 
+    function getGeometricError(that, pointCloud) {
+        var pointCloudShading = that.pointCloudShading;
+        if (defined(pointCloudShading) && defined(pointCloudShading.baseResolution)) {
+            return pointCloudShading.baseResolution;
+        }
+        return CesiumMath.cbrt(pointCloud.boundingSphere.volume() / pointCloud.pointsLength);
+    }
+
+    function getMaximumAttenuation(that) {
+        var pointCloudShading = that.pointCloudShading;
+        if (defined(pointCloudShading) && defined(pointCloudShading.maximumAttenuation)) {
+            return pointCloudShading.maximumAttenuation;
+        }
+
+        // Return a hardcoded maximum attenuation. For a tileset this would instead be the maximum screen space error.
+        return 10.0;
+    }
+
     function renderFrame(that, frame, timeSinceLoad, isClipped, clippingPlanesDirty, frameState) {
         var pointCloud = frame.pointCloud;
         var transform = defaultValue(frame.transform, Matrix4.IDENTITY);
@@ -388,9 +407,9 @@ define([
         var pointCloudShading = that.pointCloudShading;
         if (defined(pointCloudShading)) {
             pointCloud.attenuation = pointCloudShading.attenuation;
-            pointCloud.geometricError = 10.0; // TODO : If we had a bounding volume we could derive it
+            pointCloud.geometricError = getGeometricError(that, pointCloud);
             pointCloud.geometricErrorScale = pointCloudShading.geometricErrorScale;
-            pointCloud.maximumAttenuation = defined(pointCloudShading.maximumAttenuation) ? pointCloudShading.maximumAttenuation : 10;
+            pointCloud.maximumAttenuation = getMaximumAttenuation(that);
         }
         pointCloud.update(frameState);
         frame.touchedFrameNumber = frameState.frameNumber;

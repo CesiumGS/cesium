@@ -62,6 +62,7 @@ define([
         this._pointCloud = new PointCloud({
             arrayBuffer : arrayBuffer,
             byteOffset : byteOffset,
+            cull : false,
             opaquePass : Pass.CESIUM_3D_TILE,
             vertexShaderLoaded : getVertexShaderLoaded(this),
             fragmentShaderLoaded : getFragmentShaderLoaded(this),
@@ -286,11 +287,11 @@ define([
             batchTable.update(tileset, frameState);
         }
 
-        var boundingVolume;
+        var boundingSphere;
         if (defined(tile._contentBoundingVolume)) {
-            boundingVolume = mode === SceneMode.SCENE3D ? tile._contentBoundingVolume.boundingSphere : tile._contentBoundingVolume2D.boundingSphere;
+            boundingSphere = mode === SceneMode.SCENE3D ? tile._contentBoundingVolume.boundingSphere : tile._contentBoundingVolume2D.boundingSphere;
         } else {
-            boundingVolume = mode === SceneMode.SCENE3D ? tile._boundingVolume.boundingSphere : tile._boundingVolume2D.boundingSphere;
+            boundingSphere = mode === SceneMode.SCENE3D ? tile._boundingVolume.boundingSphere : tile._boundingVolume2D.boundingSphere;
         }
 
         var styleDirty = this._styleDirty;
@@ -301,7 +302,7 @@ define([
         pointCloud.modelMatrix = tile.computedTransform;
         pointCloud.time = tileset.timeSinceLoad;
         pointCloud.shadows = tileset.shadows;
-        pointCloud.boundingVolume = boundingVolume;
+        pointCloud.boundingSphere = boundingSphere;
         pointCloud.clippingPlanes = clippingPlanes;
         pointCloud.isClipped = defined(clippingPlanes) && clippingPlanes.enabled && tile._isClipped;
         pointCloud.clippingPlanesDirty = tile.clippingPlanesDirty;
