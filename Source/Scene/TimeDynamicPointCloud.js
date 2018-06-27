@@ -318,6 +318,8 @@ define([
             Resource.fetchArrayBuffer({
                 url : interval.data.uri
             }).then(function(arrayBuffer) {
+                // PERFORMANCE_IDEA: share a memory pool, render states, shaders, and other resources among all
+                // frames. Each frame just needs an index/offset into the pool.
                 frame.pointCloud = new PointCloud({
                     arrayBuffer : arrayBuffer,
                     cull : true,
