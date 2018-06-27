@@ -358,6 +358,7 @@ define([
                     throw new RuntimeError('Global property: QUANTIZED_VOLUME_SCALE must be defined for quantized positions.');
                 }
                 pointCloud._quantizedVolumeScale = Cartesian3.unpack(quantizedVolumeScale);
+                pointCloud._quantizedRange = (1 << 16) - 1;
 
                 var quantizedVolumeOffset = featureTable.getGlobalProperty('QUANTIZED_VOLUME_OFFSET', ComponentDatatype.FLOAT, 3);
                 if (!defined(quantizedVolumeOffset)) {
@@ -614,13 +615,10 @@ define([
 
         if (isQuantized) {
             componentDatatype = ComponentDatatype.UNSIGNED_SHORT;
-            normalize = true; // Convert position to 0 to 1 before entering the shader
         } else if (isQuantizedDraco) {
             componentDatatype = (quantizedRange <= 255) ? ComponentDatatype.UNSIGNED_BYTE : ComponentDatatype.UNSIGNED_SHORT;
-            normalize = false; // Normalization is done in the shader based on quantizationBits
         } else {
             componentDatatype = ComponentDatatype.FLOAT;
-            normalize = false;
         }
 
         attributes.push({
@@ -628,18 +626,14 @@ define([
             vertexBuffer : positionsVertexBuffer,
             componentsPerAttribute : 3,
             componentDatatype : componentDatatype,
-            normalize : normalize,
+            normalize : false,
             offsetInBytes : 0,
             strideInBytes : 0
         });
 
         if (pointCloud._cull) {
             if (isQuantized || isQuantizedDraco) {
-                // Quantized volume offset is applied to the model matrix, not the bounding sphere
-                var scale = pointCloud._quantizedVolumeScale;
-                var center = Cartesian3.multiplyByScalar(scale, 0.5, new Cartesian3());
-                var radius = Cartesian3.maximumComponent(scale) * 0.5;
-                pointCloud.boundingSphere = new BoundingSphere(center, radius);
+                pointCloud.boundingSphere = BoundingSphere.fromCornerPoints(Cartesian3.ZERO, pointCloud._quantizedVolumeScale);
             } else {
                 pointCloud.boundingSphere = computeApproximateBoundingSphereFromPositions(positions);
             }
@@ -809,7 +803,8 @@ define([
                 u_quantizedVolumeScaleAndOctEncodedRange : function() {
                     var scratch = scratchQuantizedVolumeScaleAndOctEncodedRange;
                     if (defined(pointCloud._quantizedVolumeScale)) {
-                        Cartesian3.clone(pointCloud._quantizedVolumeScale, scratch);
+                        var scale = Cartesian3.clone(pointCloud._quantizedVolumeScale, scratch);
+                        Cartesian3.divideByScalar(scale, pointCloud._quantizedRange, scratch);
                     }
                     scratch.w = pointCloud._octEncodedRange;
                     return scratch;
@@ -1210,8 +1205,8 @@ define([
                     var decodedBatchIds = defined(result.BATCH_ID) ? result.BATCH_ID.array : undefined;
                     if (defined(decodedPositions) && pointCloud._isQuantizedDraco) {
                         var quantization = result.POSITION.data.quantization;
-                        var scale = quantization.range / (1 << quantization.quantizationBits);
-                        pointCloud._quantizedVolumeScale = Cartesian3.fromElements(scale, scale, scale);
+                        var range = quantization.range;
+                        pointCloud._quantizedVolumeScale = Cartesian3.fromElements(range, range, range);
                         pointCloud._quantizedVolumeOffset = Cartesian3.unpack(quantization.minValues);
                         pointCloud._quantizedRange = (1 << quantization.quantizationBits) - 1.0;
                     }
@@ -1276,7 +1271,8 @@ define([
 
         if (modelMatrixDirty) {
             Matrix4.clone(this.modelMatrix, this._modelMatrix);
-            var modelMatrix = Matrix4.clone(this._modelMatrix, scratchModelMatrix);
+            var modelMatrix = this._drawCommand.modelMatrix;
+            Matrix4.clone(this._modelMatrix, modelMatrix);
 
             if (defined(this._rtcCenter)) {
                 Matrix4.multiplyByTranslation(modelMatrix, this._rtcCenter, modelMatrix);
@@ -1292,8 +1288,6 @@ define([
                     Transforms.basisTo2D(projection, modelMatrix, modelMatrix);
                 }
             }
-
-            Matrix4.clone(modelMatrix, this._drawCommand.modelMatrix);
 
             var boundingSphere = this._drawCommand.boundingVolume;
             BoundingSphere.clone(this.boundingSphere, boundingSphere);
