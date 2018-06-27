@@ -149,6 +149,10 @@ define([
         this.backFaceCulling = false;
         this._backFaceCulling = false;
 
+        // Whether to enable normal shading
+        this.normalShading = true;
+        this._normalShading = true;
+
         this._opaqueRenderState = undefined;
         this._translucentRenderState = undefined;
 
@@ -875,6 +879,7 @@ define([
         var hasNormals = pointCloud._hasNormals;
         var hasBatchIds = pointCloud._hasBatchIds;
         var backFaceCulling = pointCloud._backFaceCulling;
+        var normalShading = pointCloud._normalShading;
         var vertexArray = pointCloud._drawCommand.vertexArray;
         var clippingPlanes = pointCloud.clippingPlanes;
         var attenuation = pointCloud._attenuation;
@@ -947,13 +952,20 @@ define([
             colorVertexAttribute.enabled = usesColors;
         }
 
+        var usesNormals = hasNormals && (normalShading || backFaceCulling || usesNormalSemantic);
+        if (hasNormals) {
+            // Disable the normal vertex attribute if normals are not used
+            var normalVertexAttribute = getVertexAttribute(vertexArray, normalLocation);
+            normalVertexAttribute.enabled = usesNormals;
+        }
+
         var attributeLocations = {
             a_position : positionLocation
         };
         if (usesColors) {
             attributeLocations.a_color = colorLocation;
         }
-        if (hasNormals) {
+        if (usesNormals) {
             attributeLocations.a_normal = normalLocation;
         }
         if (hasBatchIds) {
@@ -1015,7 +1027,7 @@ define([
                 vs += 'attribute vec3 a_color; \n';
             }
         }
-        if (hasNormals) {
+        if (usesNormals) {
             if (isOctEncoded16P || isOctEncodedDraco) {
                 vs += 'attribute vec2 a_normal; \n';
             } else {
@@ -1079,7 +1091,7 @@ define([
         }
         vs += '    vec3 position_absolute = vec3(czm_model * vec4(position, 1.0)); \n';
 
-        if (hasNormals) {
+        if (usesNormals) {
             if (isOctEncoded16P) {
                 vs += '    vec3 normal = czm_octDecode(a_normal); \n';
             } else if (isOctEncodedDraco) {
@@ -1113,7 +1125,7 @@ define([
 
         vs += '    color = color * u_highlightColor; \n';
 
-        if (hasNormals) {
+        if (usesNormals && normalShading) {
             vs += '    normal = czm_normal * normal; \n' +
                   '    float diffuseStrength = czm_getLambertDiffuse(czm_sunDirectionEC, normal); \n' +
                   '    diffuseStrength = max(diffuseStrength, 0.4); \n' + // Apply some ambient lighting
@@ -1123,7 +1135,7 @@ define([
         vs += '    v_color = color; \n' +
               '    gl_Position = czm_modelViewProjection * vec4(position, 1.0); \n';
 
-        if (hasNormals && backFaceCulling) {
+        if (usesNormals && backFaceCulling) {
             vs += '    float visible = step(-normal.z, 0.0); \n' +
                   '    gl_Position *= visible; \n' +
                   '    gl_PointSize *= visible; \n';
@@ -1242,7 +1254,6 @@ define([
     }
 
     var scratchComputedTranslation = new Cartesian4();
-    var scratchModelMatrix = new Matrix4();
     var scratchScale = new Cartesian3();
 
     PointCloud.prototype.update = function(frameState) {
@@ -1311,6 +1322,11 @@ define([
 
         if (this.backFaceCulling !== this._backFaceCulling) {
             this._backFaceCulling = this.backFaceCulling;
+            shadersDirty = true;
+        }
+
+        if (this.normalShading !== this._normalShading) {
+            this._normalShading = this.normalShading;
             shadersDirty = true;
         }
 
