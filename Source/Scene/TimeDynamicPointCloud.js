@@ -233,7 +233,8 @@ define([
 
     function getAverageLoadTime(that) {
         if (that._runningLength === 0) {
-            return undefined;
+            // Before any frames have loaded make a best guess about the average load time
+            return 0.05;
         }
         return that._runningAverage;
     }
@@ -261,10 +262,6 @@ define([
         }
 
         var averageLoadTime = getAverageLoadTime(that);
-        if (!defined(averageLoadTime)) {
-            return undefined;
-        }
-
         var time = JulianDate.addSeconds(clock.currentTime, averageLoadTime * multiplier, scratchDate);
         var index = intervals.indexOf(time);
 
