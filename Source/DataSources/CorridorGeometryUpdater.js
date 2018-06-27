@@ -192,7 +192,7 @@ define([
     };
 
     CorridorGeometryUpdater.prototype._isHidden = function(entity, corridor) {
-        return !defined(corridor.positions) || GeometryUpdater.prototype._isHidden.call(this, entity, corridor);
+        return !defined(corridor.positions) || !defined(corridor.width) || GeometryUpdater.prototype._isHidden.call(this, entity, corridor);
     };
 
     CorridorGeometryUpdater.prototype._isOnTerrain = function(entity, corridor) {
