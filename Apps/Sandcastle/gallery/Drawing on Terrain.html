@@ -71,7 +71,6 @@ function drawShape(positionData) {
         shape = viewer.entities.add({
             polygon: {
                 hierarchy: positionData,
-                outline: true,
                 material: new Cesium.ColorMaterialProperty(Cesium.Color.WHITE.withAlpha(0.7))
             }
         });
