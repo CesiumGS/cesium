@@ -911,6 +911,48 @@ defineSuite([
         expect(CesiumMath.toDegrees(r.west)).toEqualEpsilon(-100.5, CesiumMath.EPSILON13);
     });
 
+    it('computeRectangle', function() {
+        var options = {
+            vertexFormat : VertexFormat.POSITION_AND_ST,
+            polygonHierarchy: {
+                positions : Cartesian3.fromDegreesArrayHeights([
+                    -100.5, 30.0, 92,
+                    -100.0, 30.0, 92,
+                    -100.0, 30.5, 92,
+                    -100.5, 30.5, 92
+                ])
+            },
+            ellipsoid: Ellipsoid.UNIT_SPHERE
+        };
+        var geometry = new PolygonGeometry(options);
+
+        var expected = geometry.rectangle;
+        var result = PolygonGeometry.computeRectangle(options);
+
+        expect(result).toEqual(expected);
+    });
+
+    it('computeRectangle with result parameter', function() {
+        var options = {
+            polygonHierarchy: {
+                positions : Cartesian3.fromDegreesArray([
+                    -10.5, 25.0,
+                    -10.0, 25.0,
+                    -10.0, 25.5,
+                    -10.5, 25.5
+                ])
+            }
+        };
+        var geometry = new PolygonGeometry(options);
+
+        var result = new Rectangle();
+        var expected = geometry.rectangle;
+        var returned = PolygonGeometry.computeRectangle(options, result);
+
+        expect(returned).toEqual(expected);
+        expect(returned).toBe(result);
+    });
+
     it('computing textureCoordinateRotationPoints property', function() {
         var p = new PolygonGeometry({
             vertexFormat : VertexFormat.POSITION_AND_ST,
