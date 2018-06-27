@@ -1,6 +1,7 @@
-import defaultValue from "../Core/defaultValue.js";
-import defined from "../Core/defined.js";
-import PrimitiveType from "../Core/PrimitiveType.js";
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import Pass from '../Renderer/Pass.js';
+import PrimitiveType from '../Core/PrimitiveType.js';
 
 /**
  * Represents a command to the renderer for drawing.
@@ -556,13 +557,17 @@ DrawCommand.shallowClone = function (command, result) {
   return result;
 };
 
-/**
- * Executes the draw command.
- *
- * @param {Context} context The renderer context in which to draw.
- * @param {PassState} [passState] The state for the current render pass.
- */
-DrawCommand.prototype.execute = function (context, passState) {
-  context.draw(this, passState);
-};
+    /**
+     * Executes the draw command.
+     *
+     * @param {Context} context The renderer context in which to draw.
+     * @param {PassState} [passState] The state for the current render pass.
+     */
+    DrawCommand.prototype.execute = function(context, passState) {
+        const v = this.vertexArray;
+        if(!v || !v.isDestroyed()) //TODO после сортировки CESIUM_3D_TILE стали попадаться битые команды
+            context.draw(this, passState);
+        else
+            console.warn("destroyed command");
+    };
 export default DrawCommand;

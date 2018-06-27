@@ -568,13 +568,23 @@ ShaderProgram.prototype._bind = function () {
   this._gl.useProgram(this._program);
 };
 
-ShaderProgram.prototype._setUniforms = function (
+    /**Хеш код предыдущего набора параметров, позволяет быстро понять нужно ли делать перенастройку шейдера**/
+    ShaderProgram.prototype.previousUniformHash = null;
+
+ShaderProgram.prototype._setUniforms = function(
   uniformMap,
   uniformState,
   validate
 ) {
-  var len;
-  var i;
+
+        if(this.previousUniformHash && c60.JHashUtils.compareLong(this.previousUniformHash, uniformMap.hashCode) == 0)
+            return;//Настройки совпадают можно ничего не делать.
+        else if(uniformMap)
+            this.previousUniformHash = uniformMap.hashCode;
+
+
+        var len;
+        var i;
 
   if (defined(uniformMap)) {
     var manualUniforms = this._manualUniforms;

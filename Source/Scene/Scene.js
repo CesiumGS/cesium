@@ -2265,11 +2265,44 @@ var scratchPerspectiveOffCenterFrustum = new PerspectiveOffCenterFrustum();
 var scratchOrthographicFrustum = new OrthographicFrustum();
 var scratchOrthographicOffCenterFrustum = new OrthographicOffCenterFrustum();
 
-function executeCommands(scene, passState) {
-  var camera = scene.camera;
-  var context = scene.context;
-  var frameState = scene.frameState;
-  var us = context.uniformState;
+    /**Сравнивает DrawCommand по хеш коду uniformMap**/
+    function commandComparator(cmdA, cmdB){
+        const h1 = cmdA._uniformMap ? cmdA._uniformMap.hashCode : undefined;
+        const h2 = cmdB._uniformMap ? cmdB._uniformMap.hashCode : undefined;
+        return c60.JHashUtils.compareLong(h1, h2);
+    }
+
+    /**Выполнить команды так, чтобы одинаковые по параметрам стиля шли подряд (отсортированы по хешу)**/
+    function execGropedByHashCommands(commands, scene, context, passState){
+        //При необходимости сортируем функции, так чтобы команды с одинаковыми параметрами шли подряд
+        var checkSort = true;
+        var prevCommand = null;
+        if(!commands.isSorted){
+            commands.isSorted = true;
+            commands.sort(commandComparator)
+            checkSort = false;
+        }
+        var j;
+        const length = commands.length;
+        for (j = 0; j < length; ++j) {
+            const cmd = commands[j];
+            if(checkSort){
+                if(prevCommand && commandComparator(prevCommand, cmd) > 0){
+                    //Требуется пересортировка списка комманд в следующий раз
+                    commands.isSorted = false;
+                    checkSort = false;
+                }
+                prevCommand = cmd;
+            }
+            executeCommand(cmd, scene, context, passState);
+        }
+    }
+
+    function executeCommands(scene, passState) {
+        var camera = scene.camera;
+        var context = scene.context;
+        var frameState = scene.frameState;
+        var us = context.uniformState;
 
   us.updateCamera(camera);
 
@@ -2510,13 +2543,11 @@ function executeCommands(scene, passState) {
     ) {
       // Common/fastest path. Draw 3D Tiles and classification normally.
 
-      // Draw 3D Tiles
-      us.updatePass(Pass.CESIUM_3D_TILE);
-      commands = frustumCommands.commands[Pass.CESIUM_3D_TILE];
-      length = frustumCommands.indices[Pass.CESIUM_3D_TILE];
-      for (j = 0; j < length; ++j) {
-        executeCommand(commands[j], scene, context, passState);
-      }
+	  // Draw 3D Tiles
+	  us.updatePass(Pass.CESIUM_3D_TILE);
+	  commands = frustumCommands.commands[Pass.CESIUM_3D_TILE];
+	  length = frustumCommands.indices[Pass.CESIUM_3D_TILE];
+	  execGropedByHashCommands(commands, scene, context, passState);
 
       if (length > 0) {
         if (defined(globeDepth) && environmentState.useGlobeDepthFramebuffer) {
