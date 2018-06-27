@@ -301,7 +301,7 @@ define([
                 boundingSpheres[i] = geometry.boundingSphere;
                 boundingSpheresCV[i] = geometry.boundingSphereCV;
                 if (hasOffset) {
-                    offsetInstanceExtend[i] = defined(instance.geometry.attributes) && defined(instance.geometry.attributes.applyOffset) && instance.geometry.attributes.applyOffset.values.indexOf(0) !== -1;
+                    offsetInstanceExtend[i] = instance.geometry.offsetAttribute;
                 }
             }
 

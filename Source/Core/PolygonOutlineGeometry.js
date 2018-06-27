@@ -591,7 +591,8 @@ define([
             attributes : geometry.attributes,
             indices : geometry.indices,
             primitiveType : geometry.primitiveType,
-            boundingSphere : boundingSphere
+            boundingSphere : boundingSphere,
+            offsetAttribute : polygonGeometry._offsetAttribute
         });
     };
 

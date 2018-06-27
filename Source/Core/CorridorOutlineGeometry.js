@@ -546,7 +546,8 @@ define([
             attributes : attributes,
             indices : attr.indices,
             primitiveType : PrimitiveType.LINES,
-            boundingSphere : boundingSphere
+            boundingSphere : boundingSphere,
+            offsetAttribute : corridorOutlineGeometry._offsetAttribute
         });
     };
 
