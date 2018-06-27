@@ -1009,7 +1009,8 @@ define([
             attributes : geometry.attributes,
             indices : geometry.indices,
             primitiveType : PrimitiveType.TRIANGLES,
-            boundingSphere : geometry.boundingSphere
+            boundingSphere : geometry.boundingSphere,
+            offsetAttribute : ellipseGeometry._offsetAttribute
         });
     };
 
