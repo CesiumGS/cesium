@@ -2890,7 +2890,7 @@ defineSuite([
         });
     });
 
-    fit('supports content data URIs', function() {
+    it('supports content data URIs', function() {
         return Cesium3DTilesTester.loadTileset(scene, tilesetUrlWithContentUri).then(function(tileset) {
             var statistics = tileset._statistics;
             expect(statistics.visited).toEqual(1);
