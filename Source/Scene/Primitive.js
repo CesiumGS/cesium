@@ -1341,6 +1341,7 @@ define([
 
         for (i = 0; i < result.length; i++) {
             var boundingSphere = result[i].clone(primitive._boundingSpheres[i]);
+            console.log(boundingSphere.radius);
             primitive._boundingSpheres[i] = boundingSphere;
             primitive._boundingSphereCV[i] = BoundingSphere.projectTo2D(boundingSphere, frameState.mapProjection, primitive._boundingSphereCV[i]);
         }
@@ -1943,6 +1944,7 @@ define([
             get : function() {
                 var boundingSphere = primitive._instanceBoundingSpheres[index];
                 if (defined(boundingSphere)) {
+                    boundingSphere = boundingSphere.clone();
                     var modelMatrix = primitive.modelMatrix;
                     var offset = properties.offset;
                     if (defined(offset)) {

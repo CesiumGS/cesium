@@ -31,61 +31,64 @@ function startup(Cesium) {
 //Sandcastle_Begin
 var cesiumTerrainProvider = Cesium.createWorldTerrain();
 var ellipsoidTerrainProvider = new Cesium.EllipsoidTerrainProvider();
+
 var viewer = new Cesium.Viewer('cesiumContainer', {
-    baseLayerPicker: false,
-    terrainProvider: cesiumTerrainProvider
+    baseLayerPicker : false,
+    terrainProvider : cesiumTerrainProvider
 });
+
+// depth test against terrain is required to make the polygons clamp to terrain
+// instead of showing through it from underground
 viewer.scene.globe.depthTestAgainstTerrain = true;
 
-Sandcastle.addToolbarButton('Enable Terrain', function() {
-    viewer.scene.terrainProvider = cesiumTerrainProvider;
-});
 
-Sandcastle.addToolbarButton('Disable Terrain', function() {
-    viewer.scene.terrainProvider = ellipsoidTerrainProvider;
-});
+Sandcastle.addToolbarMenu([{
+    text : 'Terrain Enabled',
+    onselect : function() {
+        viewer.scene.terrainProvider = cesiumTerrainProvider;
+    }
+}, {
+    text : 'Terrain Disabled',
+    onselect : function() {
+        viewer.scene.terrainProvider = ellipsoidTerrainProvider;
+    }
+}]);
 
-
-var baseLon = 6.850615989890521;
-var baseLat = 45.89546589994886;
+var longitude = 6.850615989890521;
+var latitude = 45.89546589994886;
 var delta = 0.001;
-function addEntity(i, j) {
-    var lon1 = baseLon + delta*i;
-    var lon2 = baseLon + delta*i + delta;
 
-    var lat1 = baseLat + delta*j;
-    var lat2 = baseLat + delta*j + delta;
-    var a = Cesium.Cartesian3.fromDegrees(lon1, lat1);
-    var b = Cesium.Cartesian3.fromDegrees(lon1, lat2);
-    var c = Cesium.Cartesian3.fromDegrees(lon2, lat2);
-    var d = Cesium.Cartesian3.fromDegrees(lon2, lat1);
+function addEntity(i, j) {
+    var west = longitude + delta * i;
+    var east = longitude + delta * i + delta;
+
+    var south = latitude + delta * j;
+    var north = latitude + delta * j + delta;
+    var a = Cesium.Cartesian3.fromDegrees(west, south);
+    var b = Cesium.Cartesian3.fromDegrees(west, north);
+    var c = Cesium.Cartesian3.fromDegrees(east, north);
+    var d = Cesium.Cartesian3.fromDegrees(east, south);
 
     var positions = [a, b, c, d];
     viewer.entities.add({
         polygon : {
             hierarchy : positions,
-            material : Cesium.Color.fromRandom({alpha: 1}),
+            material : Cesium.Color.fromRandom({alpha : 1}),
             height : new Cesium.GeometryHeightProperty(40.0, Cesium.HeightReference.RELATIVE_TO_GROUND),
             extrudedHeight : new Cesium.GeometryHeightProperty(0.0, Cesium.HeightReference.CLAMP_TO_GROUND)
         }
     });
 }
 
+// create 16 polygons that are side-by-side
 for (var i = 0; i < 4; i++) {
     for (var j = 0; j < 4; j++) {
         addEntity(i, j);
     }
 }
 
-viewer.scene.camera.flyTo({
-    destination: new Cesium.Cartesian3(4414709.69060132, 531290.9290968775, 4561007.639489886),
-    orientation: {
-        heading: 3.6086529754485834,
-        pitch: -0.6592870741832781,
-        roll: 6.28127756699859
-    }
-});
-//Sandcastle_End
+viewer.camera.lookAt(Cesium.Cartesian3.fromDegrees(longitude, latitude, 500), new Cesium.HeadingPitchRange(Cesium.Math.PI, -Cesium.Math.PI_OVER_FOUR, 2000));
+viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);//Sandcastle_End
     Sandcastle.finishedLoading();
 }
 if (typeof Cesium !== "undefined") {
