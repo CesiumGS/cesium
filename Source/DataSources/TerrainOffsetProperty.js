@@ -30,16 +30,16 @@ define([
     /**
      * @private
      */
-    function TerrainOffsetProperty(scene, heightReference, extrudedHeightReference, getPosition) {
+    function TerrainOffsetProperty(scene, heightReferenceProperty, extrudedHeightReferenceProperty, positionProperty) {
         //>>includeStart('debug', pragmas.debug);
         Check.defined('scene', scene);
-        Check.typeOf.func('getPosition', getPosition);
+        Check.defined('positionProperty', positionProperty);
         //>>includeEnd('debug');
 
         this._scene = scene;
-        this._heightReference = heightReference;
-        this._extrudedHeightReference = extrudedHeightReference;
-        this._getPosition = getPosition;
+        this._heightReference = heightReferenceProperty;
+        this._extrudedHeightReference = extrudedHeightReferenceProperty;
+        this._positionProperty = positionProperty;
 
         this._position = new Cartesian3();
         this._cartographicPosition = new Cartographic();
@@ -59,6 +59,18 @@ define([
             this._removeModeListener = scene.morphComplete.addEventListener(function() {
                 that._updateClamping();
             });
+        }
+
+        if (positionProperty.isConstant) {
+            var position = positionProperty.getValue(Iso8601.MINIMUM_VALUE, scratchPosition);
+            if (!defined(position) || Cartesian3.equals(position, Cartesian3.ZERO) || !defined(scene.globe)) {
+                return;
+            }
+            this._position = Cartesian3.clone(position, this._position);
+
+            this._updateClamping();
+
+            this._normal = scene.globe.ellipsoid.geodeticSurfaceNormal(position, this._normal);
         }
     }
 
@@ -139,8 +151,12 @@ define([
             return Cartesian3.clone(Cartesian3.ZERO, result);
         }
 
+        if (this._positionProperty.isConstant) {
+            return Cartesian3.multiplyByScalar(this._normal, this._terrainHeight, result);
+        }
+
         var scene = this._scene;
-        var position = this._getPosition(time, scratchPosition);
+        var position = this._positionProperty.getValue(time, scratchPosition);
         if (!defined(position) || Cartesian3.equals(position, Cartesian3.ZERO) || !defined(scene.globe)) {
             return Cartesian3.clone(Cartesian3.ZERO, result);
         }

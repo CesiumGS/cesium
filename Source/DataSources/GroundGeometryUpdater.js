@@ -10,6 +10,7 @@ define([
     '../Core/Iso8601',
     '../Core/oneTimeWarning',
     '../Scene/HeightReference',
+    './CallbackProperty',
     './ConstantProperty',
     './GeometryUpdater',
     './Property',
@@ -26,6 +27,7 @@ define([
     Iso8601,
     oneTimeWarning,
     HeightReference,
+    CallbackProperty,
     ConstantProperty,
     GeometryUpdater,
     Property,
@@ -104,7 +106,8 @@ define([
         var extrudedHeightReferenceProperty = geometry.extrudedHeightReference;
 
         if (defined(heightReferenceProperty) || defined(extrudedHeightReferenceProperty)) {
-            this._terrainOffsetProperty = new TerrainOffsetProperty(this._scene, heightReferenceProperty, extrudedHeightReferenceProperty, this._computeCenter.bind(this));
+            var centerPosition = new CallbackProperty(this._computeCenter.bind(this), !this._dynamic);
+            this._terrainOffsetProperty = new TerrainOffsetProperty(this._scene, heightReferenceProperty, extrudedHeightReferenceProperty, centerPosition);
         }
     };
 

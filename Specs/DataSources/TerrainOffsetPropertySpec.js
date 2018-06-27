@@ -5,6 +5,7 @@ defineSuite([
     'Core/JulianDate',
     'Core/Rectangle',
     'Scene/HeightReference',
+    'DataSources/CallbackProperty',
     'DataSources/ConstantProperty',
     'Specs/createGlobe',
     'Specs/createScene'
@@ -15,6 +16,7 @@ defineSuite([
     JulianDate,
     Rectangle,
     HeightReference,
+    CallbackProperty,
     ConstantProperty,
     createGlobe,
     createScene) {
@@ -32,10 +34,10 @@ defineSuite([
     });
 
     it('can construct and destroy', function() {
-        var getPosition = jasmine.createSpy();
+        var position = new CallbackProperty(jasmine.createSpy(), false);
         var height = new ConstantProperty(30);
         var extrudedHeight = new ConstantProperty(0);
-        var property = new TerrainOffsetProperty(scene, height, extrudedHeight, getPosition);
+        var property = new TerrainOffsetProperty(scene, height, extrudedHeight, position);
         expect(property.isConstant).toBe(false);
         expect(property.getValue(time)).toEqual(Cartesian3.ZERO);
         property.destroy();
@@ -43,15 +45,15 @@ defineSuite([
     });
 
     it('throws without scene', function() {
-        var getPosition = jasmine.createSpy();
+        var position = new CallbackProperty(jasmine.createSpy(), false);
         var height = new ConstantProperty(30);
         var extrudedHeight = new ConstantProperty(0);
         expect(function() {
-            return new TerrainOffsetProperty(undefined, height, extrudedHeight, getPosition);
+            return new TerrainOffsetProperty(undefined, height, extrudedHeight, position);
         }).toThrowDeveloperError();
     });
 
-    it('throws without getPosition', function() {
+    it('throws without position', function() {
         var height = new ConstantProperty(30);
         var extrudedHeight = new ConstantProperty(0);
         expect(function() {
