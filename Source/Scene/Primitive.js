@@ -18,6 +18,7 @@ define([
         '../Core/Geometry',
         '../Core/GeometryAttribute',
         '../Core/GeometryAttributes',
+        '../Core/GeometryOffsetAttribute',
         '../Core/Intersect',
         '../Core/isArray',
         '../Core/Matrix4',
@@ -61,6 +62,7 @@ define([
         Geometry,
         GeometryAttribute,
         GeometryAttributes,
+        GeometryOffsetAttribute,
         Intersect,
         isArray,
         Matrix4,
@@ -526,7 +528,7 @@ define([
         var name;
 
         for (name in attributes0) {
-            if (attributes0.hasOwnProperty(name)) {
+            if (attributes0.hasOwnProperty(name) && defined(attributes0[name])) {
                 var attribute = attributes0[name];
                 var inAllInstances = true;
 
@@ -1893,13 +1895,13 @@ define([
 
     var offsetBoundingSphereScratch1 = new BoundingSphere();
     var offsetBoundingSphereScratch2 = new BoundingSphere();
-    function transformBoundingSphere(boundingSphere, offset, extend) {
-        if (extend) {
+    function transformBoundingSphere(boundingSphere, offset, offsetAttribute) {
+        if (offsetAttribute === GeometryOffsetAttribute.TOP) {
             var origBS = BoundingSphere.clone(boundingSphere, offsetBoundingSphereScratch1);
             var offsetBS = BoundingSphere.clone(boundingSphere, offsetBoundingSphereScratch2);
             offsetBS.center = Cartesian3.add(offsetBS.center, offset, offsetBS.center);
             boundingSphere = BoundingSphere.union(origBS, offsetBS, boundingSphere);
-        } else {
+        } else if (offsetAttribute === GeometryOffsetAttribute.ALL) {
             boundingSphere.center = Cartesian3.add(boundingSphere.center, offset, boundingSphere.center);
         }
 
@@ -1943,6 +1945,7 @@ define([
             get : function() {
                 var boundingSphere = primitive._instanceBoundingSpheres[index];
                 if (defined(boundingSphere)) {
+                    boundingSphere = boundingSphere.clone();
                     var modelMatrix = primitive.modelMatrix;
                     var offset = properties.offset;
                     if (defined(offset)) {
