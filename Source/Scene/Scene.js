@@ -311,8 +311,10 @@ define([
         this._executeOITFunction = undefined;
 
         var globeDepth;
+        var globeDepthTest;
         if (context.depthTexture) {
             globeDepth = new GlobeDepth();
+            globeDepthTest = new GlobeDepth();
         }
 
         var oit;
@@ -321,6 +323,7 @@ define([
         }
 
         this._globeDepth = globeDepth;
+        this._globeDepthTest = globeDepthTest;
         this._depthPlane = new DepthPlane();
         this._oit = oit;
         this._sceneFramebuffer = new SceneFramebuffer();
@@ -2248,6 +2251,11 @@ define([
         var frustumCommandsList = scene._frustumCommandsList;
         var numFrustums = frustumCommandsList.length;
 
+        if (defined(scene._globeDepthTest)) {
+            scene._globeDepthTest.update(context, passState);
+            //scene._globeDepthTest.clear(context, passState, new Color(0.0, 0.0, 0.0, 1.0));
+        }
+
         for (var i = 0; i < numFrustums; ++i) {
             var index = numFrustums - i - 1;
             var frustumCommands = frustumCommandsList[index];
@@ -2287,10 +2295,24 @@ define([
                 executeCommand(commands[j], scene, context, passState);
             }
 
-            if (defined(globeDepth) && environmentState.useGlobeDepthFramebuffer) {
-                globeDepth.update(context, passState);
-                globeDepth.executeCopyDepth(context, passState);
+            if (defined(scene._globeDepthTest)) {
+                var tempFramebuffer = passState.framebuffer;
+                passState.framebuffer = scene._globeDepthTest.framebuffer;
+
+                clearDepth.execute(context, passState);
+
+                for (j = 0; j < length; ++j) {
+                    executeCommand(commands[j], scene, context, passState);
+                }
+                passState.framebuffer = tempFramebuffer;
+
+                context.uniformState.globeDepthTexture = scene._globeDepthTest.framebuffer.depthStencilTexture || scene._globeDepthTest.framebuffer.depthTexture;
             }
+
+            //if (defined(globeDepth) && environmentState.useGlobeDepthFramebuffer) {
+            //    globeDepth.update(context, passState);
+            //    globeDepth.executeCopyDepth(context, passState);
+            //}
 
             if (scene.debugShowGlobeDepth && defined(globeDepth) && environmentState.useGlobeDepthFramebuffer) {
                 passState.framebuffer = fb;
