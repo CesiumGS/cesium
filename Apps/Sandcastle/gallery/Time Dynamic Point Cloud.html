@@ -42,26 +42,17 @@ var dates = [
     '2018-07-19T15:18:02.5Z'
 ];
 
-var transforms = [
-    Cesium.Matrix4.fromColumnMajorArray([0.968635634376879,0.24848542777253735,0,0,-0.15986460794399626,0.6231776137472074,0.7655670897127491,0,0.190232265775849,-0.7415555636019701,0.6433560687121489,0,1215012.8828876738,-4736313.051199594,4081605.22126042,1]),
-    Cesium.Matrix4.fromColumnMajorArray([0.968634888916237,0.24848833367832227,0,0,-0.1598664774761181,0.6231771341505793,0.7655670897127493,0,0.19023449044168372,-0.7415549929018358,0.6433560687121489,0,1215027.0918213597,-4736309.406139632,4081605.22126042,1]),
-    Cesium.Matrix4.fromColumnMajorArray([0.9686341434468771,0.24849123958187078,0,0,-0.1598683470068011,0.6231766545483426,0.7655670897127493,0,0.19023671510580634,-0.7415544221950274,0.6433560687121489,0,1215041.3007441103,-4736305.761037043,4081605.22126042,1]),
-    Cesium.Matrix4.fromColumnMajorArray([0.9686333979687994,0.24849414548318288,0,0,-0.15987021653604533,0.6231761749404972,0.7655670897127491,0,0.19023893976821685,-0.7415538514815451,0.6433560687121489,0,1215055.5096559257,-4736302.115891827,4081605.22126042,1]),
-    Cesium.Matrix4.fromColumnMajorArray([0.9686326524820043,0.2484970513822586,0,0,-0.15987208606385075,0.6231756953270434,0.7655670897127492,0,0.19024116442891523,-0.7415532807613887,0.6433560687121489,0,1215069.7185568055,-4736298.470703985,4081605.22126042,1])
-];
-
 var uris = [
     '../../SampleData/tilesets/PointCloud/PointCloudTimeDynamic/0.pnts',
     '../../SampleData/tilesets/PointCloud/PointCloudTimeDynamic/1.pnts',
     '../../SampleData/tilesets/PointCloud/PointCloudTimeDynamic/2.pnts',
     '../../SampleData/tilesets/PointCloud/PointCloudTimeDynamic/3.pnts',
-    '../../SampleData/tilesets/PointCloud/PointCloudTimeDynamic/4.pnts',
+    '../../SampleData/tilesets/PointCloud/PointCloudTimeDynamic/4.pnts'
 ];
 
 function dataCallback(interval, index) {
     return {
-        uri: uris[index],
-        transform: transforms[index]
+        uri: uris[index]
     };
 }
 
@@ -70,13 +61,14 @@ var timeIntervalCollection = Cesium.TimeIntervalCollection.fromIso8601DateArray(
     dataCallback: dataCallback
 });
 
-viewer.scene.primitives.add(new Cesium.TimeDynamicPointCloud({
+var pointCloud = new Cesium.TimeDynamicPointCloud({
     intervals : timeIntervalCollection,
     clock : viewer.clock,
     style : new Cesium.Cesium3DTileStyle({
         pointSize : 5
     })
-}));
+});
+viewer.scene.primitives.add(pointCloud);
 
 var start = Cesium.JulianDate.fromIso8601(dates[0]);
 var stop = Cesium.JulianDate.fromIso8601(dates[dates.length - 1]);
@@ -90,8 +82,8 @@ clock.stopTime = stop;
 clock.clockRange = Cesium.ClockRange.LOOP_STOP;
 
 viewer.camera.setView({
-    destination: new Cesium.Cartesian3(1215092.7260503182, -4736533.485206121, 4081535.746782565),
-    orientation: new Cesium.HeadingPitchRoll(6.207713496216043, -0.6084278199488593, 6.282880789149928),
+    destination: new Cesium.Cartesian3(1215034.013185971, -4736376.364704681, 4081587.528471664),
+    orientation: new Cesium.HeadingPitchRoll(6.2077134961933265, -0.6084278203800215, 6.282880789189662),
     endTransform : Cesium.Matrix4.IDENTITY
 });
 //Sandcastle_End

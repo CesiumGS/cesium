@@ -481,9 +481,7 @@ define([
         }
 
         var boundingSphere = BoundingSphere.fromCornerPoints(min, max);
-        if (pointsLength === 1) {
-            boundingSphere.radius = CesiumMath.EPSILON2; // To avoid radius of zero
-        }
+        boundingSphere.radius += CesiumMath.EPSILON2; // To avoid radius of zero
         return boundingSphere;
     }
 
@@ -533,7 +531,6 @@ define([
 
         var componentsPerAttribute;
         var componentDatatype;
-        var normalize;
 
         var styleableVertexAttributes = [];
         var styleableShaderAttributes = {};
@@ -1312,6 +1309,7 @@ define([
         }
 
         if (this.clippingPlanesDirty) {
+            this.clippingPlanesDirty = false;
             shadersDirty = true;
         }
 
@@ -1332,6 +1330,7 @@ define([
 
         if (this._style !== this.style || this.styleDirty) {
             this._style = this.style;
+            this.styleDirty = false;
             shadersDirty = true;
         }
 

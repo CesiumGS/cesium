@@ -6,6 +6,7 @@ define([
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/destroyObject',
+        '../Core/Event',
         '../Core/getTimestamp',
         '../Core/JulianDate',
         '../Core/Math',
@@ -25,6 +26,7 @@ define([
         defined,
         defineProperties,
         destroyObject,
+        Event,
         getTimestamp,
         JulianDate,
         CesiumMath,
@@ -106,7 +108,6 @@ define([
          * <p>
          * If decreasing this value results in unloading tiles, the tiles are unloaded the next frame.
          * </p>
-         * @memberof TimeDynamicPointCloud.prototype
          *
          * @type {Number}
          * @default 256
@@ -148,9 +149,27 @@ define([
          */
         this.style = options.style;
 
+        /**
+         * The event fired to indicate that a frame failed to load.
+         * <p>
+         * If there are no event listeners, error messages will be logged to the console.
+         * </p>
+         *
+         * @type {Event}
+         * @default new Event()
+         *
+         * @example
+         * pointCloud.frameFailed.addEventListener(function(error) {
+         *     console.log('An error occurred loading frame: ' + error.url);
+         *     console.log('Error: ' + error.message);
+         * });
+         */
+        this.frameFailed = new Event();
+
         this._clock = options.clock;
         this._intervals = options.intervals;
-        this._clippingPlanes = options.clippingPlanes;
+        this._clippingPlanes = undefined;
+        this.clippingPlanes = options.clippingPlanes; // Call setter
         this._pointCloudEyeDomeLighting = new PointCloudEyeDomeLighting();
         this._loadTimestamp = undefined;
         this._clippingPlanesState = 0;
@@ -231,13 +250,18 @@ define([
         this._styleDirty = true;
     };
 
-    function getAverageLoadTime(that) {
-        if (that._runningLength === 0) {
+    /**
+     * Exposed for testing.
+     *
+     * @private
+     */
+    TimeDynamicPointCloud.prototype._getAverageLoadTime = function() {
+        if (this._runningLength === 0) {
             // Before any frames have loaded make a best guess about the average load time
             return 0.05;
         }
-        return that._runningAverage;
-    }
+        return this._runningAverage;
+    };
 
     var scratchDate = new JulianDate();
 
@@ -261,7 +285,7 @@ define([
             return undefined;
         }
 
-        var averageLoadTime = getAverageLoadTime(that);
+        var averageLoadTime = that._getAverageLoadTime();
         var time = JulianDate.addSeconds(clock.currentTime, averageLoadTime * multiplier, scratchDate);
         var index = intervals.indexOf(time);
 
@@ -299,6 +323,21 @@ define([
         return currentIndex <= nextIndex;
     }
 
+    function handleFrameFailure(that, uri) {
+        return function(error) {
+            var message = defined(error.message) ? error.message : error.toString();
+            if (that.frameFailed.numberOfListeners > 0) {
+                that.frameFailed.raiseEvent({
+                    url : uri,
+                    message : message
+                });
+            } else {
+                console.log('A frame failed to load: ' + uri);
+                console.log('Error: ' + message);
+            }
+        };
+    }
+
     function requestFrame(that, interval, frameState) {
         var index = getIntervalIndex(that, interval);
         var frames = that._frames;
@@ -306,6 +345,7 @@ define([
         if (!defined(frame)) {
             var transformArray = interval.data.transform;
             var transform = defined(transformArray) ? Matrix4.fromArray(transformArray) : undefined;
+            var uri = interval.data.uri;
             frame = {
                 pointCloud : undefined,
                 transform : transform,
@@ -316,7 +356,7 @@ define([
             };
             frames[index] = frame;
             Resource.fetchArrayBuffer({
-                url : interval.data.uri
+                url : uri
             }).then(function(arrayBuffer) {
                 // PERFORMANCE_IDEA: share a memory pool, render states, shaders, and other resources among all
                 // frames. Each frame just needs an index/offset into the pool.
@@ -327,9 +367,8 @@ define([
                     uniformMapLoaded : getUniformMapLoaded(that),
                     pickIdLoaded : getPickIdLoaded
                 });
-            }).otherwise(function(error) {
-                throw error;
-            });
+                return frame.pointCloud.readyPromise;
+            }).otherwise(handleFrameFailure(that, uri));
         }
         return frame;
     }
@@ -401,12 +440,10 @@ define([
         var transform = defaultValue(frame.transform, Matrix4.IDENTITY);
         pointCloud.modelMatrix = Matrix4.multiplyTransformation(that.modelMatrix, transform, scratchModelMatrix);
         pointCloud.style = that.style;
-        pointCloud.styleDirty = that._styleDirty;
         pointCloud.time = updateState.timeSinceLoad;
         pointCloud.shadows = that.shadows;
         pointCloud.clippingPlanes = that._clippingPlanes;
         pointCloud.isClipped = updateState.isClipped;
-        pointCloud.clippingPlanesDirty = updateState.clippingPlanesDirty;
 
         var pointCloudShading = that.pointCloudShading;
         if (defined(pointCloudShading)) {
@@ -504,12 +541,32 @@ define([
         return previousInterval;
     }
 
+    function setFramesDirty(that, clippingPlanesDirty, styleDirty) {
+        var frames = that._frames;
+        var framesLength = frames.length;
+        for (var i = 0; i < framesLength; ++i) {
+            var frame = frames[i];
+            if (defined(frame) && defined(frame.pointCloud)) {
+                frame.pointCloud.clippingPlanesDirty = clippingPlanesDirty;
+                frame.pointCloud.styleDirty = styleDirty;
+            }
+        }
+    }
+
     var updateState = {
         timeSinceLoad : 0,
         isClipped : false,
         clippingPlanesDirty : false
     };
 
+    /**
+     * Called when {@link Viewer} or {@link CesiumWidget} render the scene to
+     * get the draw commands needed to render this primitive.
+     * <p>
+     * Do not call this function directly.  This is documented just to
+     * list the exceptions that may be propagated when the scene is rendered:
+     * </p>
+     */
     TimeDynamicPointCloud.prototype.update = function(frameState) {
         if (frameState.mode === SceneMode.MORPHING) {
             return;
@@ -548,9 +605,15 @@ define([
             clippingPlanesDirty = true;
         }
 
+        var styleDirty = this._styleDirty;
+        this._styleDirty = false;
+
+        if (clippingPlanesDirty || styleDirty) {
+            setFramesDirty(this, clippingPlanesDirty, styleDirty);
+        }
+
         updateState.timeSinceLoad = timeSinceLoad;
         updateState.isClipped = isClipped;
-        updateState.clippingPlanesDirty = clippingPlanesDirty;
 
         var pointCloudShading = this.pointCloudShading;
         var eyeDomeLighting = this._pointCloudEyeDomeLighting;
@@ -620,10 +683,35 @@ define([
         }
     };
 
+    /**
+     * Returns true if this object was destroyed; otherwise, false.
+     * <br /><br />
+     * If this object was destroyed, it should not be used; calling any function other than
+     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
+     *
+     * @returns {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
+     *
+     * @see TimeDynamicPointCloud#destroy
+     */
     TimeDynamicPointCloud.prototype.isDestroyed = function() {
         return false;
     };
 
+    /**
+     * Destroys the WebGL resources held by this object.  Destroying an object allows for deterministic
+     * release of WebGL resources, instead of relying on the garbage collector to destroy this object.
+     * <br /><br />
+     * Once an object is destroyed, it should not be used; calling any function other than
+     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
+     * assign the return value (<code>undefined</code>) to the object as done in the example.
+     *
+     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
+     *
+     * @example
+     * pointCloud = pointCloud && pointCloud.destroy();
+     *
+     * @see TimeDynamicPointCloud#isDestroyed
+     */
     TimeDynamicPointCloud.prototype.destroy = function() {
         unloadFrames(this);
         this._clippingPlanes = this._clippingPlanes && this._clippingPlanes.destroy();
