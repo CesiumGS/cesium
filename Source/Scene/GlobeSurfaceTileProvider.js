@@ -549,26 +549,9 @@ define([
         var surfaceTile = tile.data;
         var tileBoundingRegion = surfaceTile.tileBoundingRegion;
 
-        // We now need a bounding volume in order to determine visibility, but the tile
-        // may not be loaded yet.
-        if (surfaceTile.boundingVolumeSourceTile !== tile) {
-            var heightSource = updateTileBoundingRegion(tile, this.terrainProvider);
-            if (heightSource === undefined) {
-                // We have no idea where this tile is, so let's just call it visible.
-                return Visibility.PARTIAL;
-            }
-
-            if (heightSource !== surfaceTile.boundingVolumeSourceTile) {
-                // Heights are from a new source tile, so update the bounding volume.
-                surfaceTile.boundingVolumeSourceTile = heightSource;
-                surfaceTile.orientedBoundingBox = OrientedBoundingBox.fromRectangle(
-                    tile.rectangle,
-                    tileBoundingRegion.minimumHeight,
-                    tileBoundingRegion.maximumHeight,
-                    tile.tilingScheme.ellipsoid,
-                    surfaceTile.orientedBoundingBox);
-                surfaceTile.occludeePointInScaledSpace = undefined; // TODO
-            }
+        if (surfaceTile.boundingVolumeSourceTile === undefined) {
+            // We have no idea where this tile is, so let's just call it partially visible.
+            return Visibility.PARTIAL;
         }
 
         var cullingVolume = frameState.cullingVolume;
@@ -642,6 +625,8 @@ define([
      * @returns {Number} The load priority value.
      */
     GlobeSurfaceTileProvider.prototype.computeTileLoadPriority = function(tile, frameState) {
+        return tile._distance;
+
         var surfaceTile = tile.data;
         if (surfaceTile === undefined) {
             return 0.0;
@@ -718,6 +703,8 @@ define([
         debug.texturesRendered += readyTextureCount;
     };
 
+    var cornerPositionsScratch = [new Cartesian3(), new Cartesian3(), new Cartesian3(), new Cartesian3()];
+
     /**
      * Gets the distance from the camera to the closest point on the tile.  This is used for level-of-detail selection.
      *
@@ -742,40 +729,61 @@ define([
         // better (faster) than loading tiles that are too detailed.
 
         var heightSource = updateTileBoundingRegion(tile, this.terrainProvider);
-
         var surfaceTile = tile.data;
         var tileBoundingRegion = surfaceTile.tileBoundingRegion;
 
-        if (heightSource !== tile) {
-            if (heightSource === undefined) {
-                // Can't find any min/max heights anywhere? Ok, let's just say the
-                // tile is really far away so we'll load and render it rather than
-                // refining.
-                return 9999999999.0;
-            }
+        if (heightSource === undefined) {
+            // Can't find any min/max heights anywhere? Ok, let's just say the
+            // tile is really far away so we'll load and render it rather than
+            // refining.
+            return 9999999999.0;
+        } else if (surfaceTile.boundingVolumeSourceTile !== heightSource) {
+            // Heights are from a new source tile, so update the bounding volume.
+            surfaceTile.boundingVolumeSourceTile = heightSource;
+            surfaceTile.orientedBoundingBox = OrientedBoundingBox.fromRectangle(
+                tile.rectangle,
+                tileBoundingRegion.minimumHeight,
+                tileBoundingRegion.maximumHeight,
+                tile.tilingScheme.ellipsoid,
+                surfaceTile.orientedBoundingBox);
 
-            // Make the bounding region a pancake located at the farthest-away
-            // ancestor height surface.
-            var ancestorMin = tileBoundingRegion.minimumHeight;
-            var ancestorMax = tileBoundingRegion.maximumHeight;
+                var rectangle = tile.rectangle;
+                var height = tileBoundingRegion.minimumHeight;
 
-            var cameraHeight = frameState.camera.positionCartographic.height;
-            if (Math.abs(cameraHeight - ancestorMin) < Math.abs(cameraHeight - ancestorMax)) {
-                tileBoundingRegion.minimumHeight = ancestorMax;
-                tileBoundingRegion.maximumHeight = ancestorMax;
-            } else {
-                tileBoundingRegion.minimumHeight = ancestorMin;
-                tileBoundingRegion.maximumHeight = ancestorMin;
-            }
+                var ellipsoidalOccluder = this.quadtree._occluders.ellipsoid;
+                var ellipsoid = ellipsoidalOccluder.ellipsoid;
+
+                var cornerPositions = cornerPositionsScratch;
+                Cartesian3.fromRadians(rectangle.west, rectangle.south, height, ellipsoid, cornerPositions[0]);
+                Cartesian3.fromRadians(rectangle.east, rectangle.south, height, ellipsoid, cornerPositions[1]);
+                Cartesian3.fromRadians(rectangle.west, rectangle.north, height, ellipsoid, cornerPositions[2]);
+                Cartesian3.fromRadians(rectangle.east, rectangle.north, height, ellipsoid, cornerPositions[3]);
+
+                surfaceTile.occludeePointInScaledSpace = ellipsoidalOccluder.computeHorizonCullingPoint(surfaceTile.orientedBoundingBox.center, cornerPositions, surfaceTile.occludeePointInScaledSpace);
         }
 
-        return tileBoundingRegion.distanceToCamera(frameState);
+        // Compute the distance to the OBB
+        var distanceToObb = Math.sqrt(surfaceTile.orientedBoundingBox.distanceSquaredTo(frameState.camera.positionWC));
+
+        if (surfaceTile.boundingVolumeSourceTile !== tile) {
+            // Bounding volume is approximate, so, as described above, we want the distance to the
+            // farther-away height surface, not the closer one. The following is a super quick-and-dirty
+            // way to compute a distance that is that _or farther_.
+            // TODO: could do a better job approximating this. Maybe like the dot product of
+            //       the "height" part of the OBB with the camera look direction or something like that?
+            distanceToObb += (tileBoundingRegion.maximumHeight - tileBoundingRegion.minimumHeight);
+        }
+
+        return distanceToObb;
     };
 
     function updateTileBoundingRegion(tile, terrainProvider) {
         var surfaceTile = tile.data;
         if (surfaceTile === undefined) {
             surfaceTile = tile.data = new GlobeSurfaceTile();
+        }
+
+        if (surfaceTile.tileBoundingRegion === undefined) {
             surfaceTile.tileBoundingRegion = new TileBoundingRegion({
                 computeBoundingVolumes : false,
                 rectangle : tile.rectangle,

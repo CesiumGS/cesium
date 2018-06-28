@@ -585,6 +585,7 @@ define([
 
         if (screenSpaceError(primitive, frameState, tile) < primitive.maximumScreenSpaceError) {
             reportTileAction(frameState, tile, 'meets SSE');
+
             // This tile meets SSE requirements, so render it and load it with medium priority.
             queueTileLoad(primitive, primitive._tileLoadQueueMedium, tile, frameState);
             addTileToRenderList(primitive, tile, nearestRenderableTile);
@@ -625,16 +626,18 @@ define([
                 // No need to add the children to the load queue because they'll be added (if necessary) when they're visited.
                 var anyAreRenderable = visitVisibleChildrenNearToFar(primitive, southwestChild, southeastChild, northwestChild, northeastChild, frameState, nearestRenderableTile);
 
-                if (!anyAreRenderable && firstRenderedDescendantIndex !== primitive._tilesToRender.length) {
-                    // None of our descendants are renderable, so they'll all end up rendering an ancestor.
-                    // That's a big waste of time, so kick them all out of the render list and render this tile instead.
-                    primitive._tilesToRender.length = firstRenderedDescendantIndex;
-                    primitive._nearestRenderableTiles.length = firstRenderedDescendantIndex;
-                    addTileToRenderList(primitive, tile, nearestRenderableTile);
-                }
+                if (firstRenderedDescendantIndex !== primitive._tilesToRender.length) {
+                    if (!anyAreRenderable) {
+                        // None of our descendants are renderable, so they'll all end up rendering an ancestor.
+                        // That's a big waste of time, so kick them all out of the render list and render this tile instead.
+                        primitive._tilesToRender.length = firstRenderedDescendantIndex;
+                        primitive._nearestRenderableTiles.length = firstRenderedDescendantIndex;
+                        addTileToRenderList(primitive, tile, nearestRenderableTile);
+                    }
 
-                // Tile is not rendered, so load it with low priority.
-                queueTileLoad(primitive, primitive._tileLoadQueueLow, tile, frameState);
+                    // Tile is not rendered but some descendants are, so load it with low priority.
+                    queueTileLoad(primitive, primitive._tileLoadQueueLow, tile, frameState);
+                }
 
                 return anyAreRenderable || tile.renderable;
             }

@@ -521,6 +521,62 @@ define([
     };
 
     var maxShort = 32767;
+
+    // QuantizedMeshTerrainData.prototype.getFastMinMaxHeightsOfSubset = function(thisRectangle, descendantRectangle) {
+    //     var minU = maxShort * (descendantRectangle.west - thisRectangle.west) / (thisRectangle.east - thisRectangle.west);
+    //     var maxU = maxShort * (descendantRectangle.east - thisRectangle.west) / (thisRectangle.east - thisRectangle.west);
+    //     var minV = maxShort * (descendantRectangle.south - thisRectangle.south) / (thisRectangle.north - thisRectangle.south);
+    //     var maxV = maxShort * (descendantRectangle.north - thisRectangle.south) / (thisRectangle.north - thisRectangle.south);
+
+    //     var indices = this._indices;
+    //     var uBuffer = this._uValues;
+    //     var vBuffer = this._vValues;
+    //     var heightBuffer = this._heightValues;
+
+    //     var minHeight = maxShort;
+    //     var maxHeight = 0;
+
+    //     //CesiumMath.lerp(terrainData._minimumHeight, terrainData._maximumHeight, quantizedHeight / maxShort)
+
+    //     for (var i = 0, len = indices.length; i < len; i += 3) {
+    //         var i0 = indices[i];
+    //         var i1 = indices[i + 1];
+    //         var i2 = indices[i + 2];
+
+    //         var u0 = uBuffer[i0];
+    //         var u1 = uBuffer[i1];
+    //         var u2 = uBuffer[i2];
+
+    //         var v0 = vBuffer[i0];
+    //         var v1 = vBuffer[i1];
+    //         var v2 = vBuffer[i2];
+
+    //         var relevant = false;
+    //         if (u0 >= minU && u0 <= maxU && v0 >= minV && v0 <= maxV ||
+    //             u1 >= minU && u1 <= maxU && v1 >= minV && v1 <= maxV ||
+    //             u2 >= minU && u2 <= maxU && v2 >= minV && v2 <= maxV) {
+    //             // At least one vertex is inside the descendant bounds
+    //             relevant = true;
+    //         } else if (u0 < minU && u1 < minU && u2 < minU ||
+    //                    u0 > maxU && u1 > maxU && u2 > maxU ||
+    //                    v0 < minV && v1 < minV && v2 < minV ||
+    //                    v0 > maxV && v1 > maxV && v2 < maxV) {
+    //             // Triangle is entirely on a single side of a descendant border.
+    //             relevant = false;
+    //         } else if ()
+
+    //         if (relevant) {
+    //             minHeight = Math.min(minHeight, heightBuffer[i0]);
+    //             minHeight = Math.min(minHeight, heightBuffer[i1]);
+    //             minHeight = Math.min(minHeight, heightBuffer[i2]);
+
+    //             maxHeight = Math.max(maxHeight, heightBuffer[i0]);
+    //             maxHeight = Math.max(maxHeight, heightBuffer[i1]);
+    //             maxHeight = Math.max(maxHeight, heightBuffer[i2]);
+    //         }
+    //     }
+    // };
+
     var barycentricCoordinateScratch = new Cartesian3();
 
     /**

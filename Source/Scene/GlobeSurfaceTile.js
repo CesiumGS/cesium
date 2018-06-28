@@ -277,29 +277,26 @@ define([
         }
     };
 
-    function createTileBoundingRegion(tile) {
-        var minimumHeight;
-        var maximumHeight;
-        if (defined(tile.parent) && defined(tile.parent.data)) {
-            minimumHeight = tile.parent.data.minimumHeight;
-            maximumHeight = tile.parent.data.maximumHeight;
-        }
-        return new TileBoundingRegion({
-            computeBoundingVolumes : false,
-            rectangle : tile.rectangle,
-            ellipsoid : tile.tilingScheme.ellipsoid,
-            minimumHeight : minimumHeight,
-            maximumHeight : maximumHeight
-        });
-    }
+    // var renderedJson = [{"level":18,"x":87944,"y":76105},{"level":18,"x":87945,"y":76105},{"level":19,"x":175890,"y":152209},{"level":19,"x":175891,"y":152209},{"level":19,"x":175892,"y":152210},{"level":19,"x":175892,"y":152208},{"level":18,"x":87947,"y":76104},{"level":18,"x":87948,"y":76103},{"level":18,"x":87949,"y":76102},{"level":17,"x":43975,"y":38051},{"level":17,"x":43975,"y":38050},{"level":16,"x":21991,"y":19026},{"level":16,"x":21991,"y":19027},{"level":16,"x":21989,"y":19025},{"level":17,"x":43977,"y":38049},{"level":16,"x":21989,"y":19024},{"level":16,"x":21990,"y":19025},{"level":16,"x":21991,"y":19025},{"level":16,"x":21990,"y":19024},{"level":16,"x":21991,"y":19024},{"level":16,"x":21991,"y":19028},{"level":16,"x":21991,"y":19029},{"level":16,"x":21991,"y":19030},{"level":16,"x":21992,"y":19026},{"level":16,"x":21992,"y":19027},{"level":16,"x":21993,"y":19026},{"level":16,"x":21993,"y":19027},{"level":15,"x":10997,"y":9513},{"level":15,"x":10996,"y":9512},{"level":15,"x":10997,"y":9512},{"level":16,"x":21992,"y":19028},{"level":16,"x":21992,"y":19029},{"level":16,"x":21993,"y":19028},{"level":16,"x":21993,"y":19029},{"level":15,"x":10996,"y":9515},{"level":15,"x":10997,"y":9514},{"level":15,"x":10997,"y":9515},{"level":15,"x":10998,"y":9513},{"level":15,"x":10999,"y":9513},{"level":15,"x":10998,"y":9512},{"level":15,"x":10999,"y":9512},{"level":15,"x":10998,"y":9514},{"level":15,"x":10998,"y":9515},{"level":15,"x":10999,"y":9514},{"level":15,"x":10999,"y":9515},{"level":15,"x":10998,"y":9516},{"level":15,"x":10999,"y":9516},{"level":14,"x":5500,"y":4756},{"level":14,"x":5500,"y":4757},{"level":14,"x":5501,"y":4756},{"level":14,"x":5501,"y":4757},{"level":14,"x":5500,"y":4758},{"level":14,"x":5501,"y":4758},{"level":14,"x":5501,"y":4759},{"level":14,"x":5502,"y":4756},{"level":14,"x":5502,"y":4757},{"level":14,"x":5503,"y":4756},{"level":14,"x":5503,"y":4757},{"level":14,"x":5502,"y":4758},{"level":14,"x":5502,"y":4759},{"level":14,"x":5503,"y":4758},{"level":14,"x":5503,"y":4759},{"level":16,"x":21991,"y":19023},{"level":16,"x":21993,"y":19023},{"level":16,"x":21993,"y":19022},{"level":15,"x":10997,"y":9511},{"level":15,"x":10998,"y":9511},{"level":15,"x":10999,"y":9511},{"level":15,"x":10998,"y":9510},{"level":15,"x":10999,"y":9510},{"level":14,"x":5500,"y":4755},{"level":14,"x":5501,"y":4755},{"level":14,"x":5500,"y":4754},{"level":14,"x":5501,"y":4754},{"level":14,"x":5502,"y":4755},{"level":14,"x":5503,"y":4755},{"level":14,"x":5502,"y":4754},{"level":14,"x":5503,"y":4754},{"level":14,"x":5503,"y":4753},{"level":13,"x":2751,"y":2380},{"level":13,"x":2752,"y":2378},{"level":13,"x":2752,"y":2379},{"level":13,"x":2753,"y":2378},{"level":13,"x":2753,"y":2379},{"level":13,"x":2754,"y":2378},{"level":13,"x":2754,"y":2379},{"level":13,"x":2755,"y":2378},{"level":13,"x":2755,"y":2379},{"level":13,"x":2752,"y":2377},{"level":13,"x":2753,"y":2377},{"level":13,"x":2752,"y":2376},{"level":13,"x":2753,"y":2376},{"level":13,"x":2754,"y":2377},{"level":13,"x":2755,"y":2377},{"level":13,"x":2754,"y":2376},{"level":13,"x":2752,"y":2380},{"level":13,"x":2753,"y":2380},{"level":13,"x":2753,"y":2381},{"level":12,"x":1377,"y":1190},{"level":12,"x":1377,"y":1191},{"level":12,"x":1378,"y":1189},{"level":12,"x":1379,"y":1189},{"level":12,"x":1378,"y":1188},{"level":12,"x":1379,"y":1188},{"level":12,"x":1378,"y":1190},{"level":12,"x":1378,"y":1191},{"level":12,"x":1379,"y":1190},{"level":11,"x":690,"y":594},{"level":11,"x":690,"y":595},{"level":11,"x":691,"y":594},{"level":11,"x":691,"y":595},{"level":12,"x":1377,"y":1187},{"level":12,"x":1379,"y":1187},{"level":12,"x":1379,"y":1186},{"level":11,"x":690,"y":593},{"level":11,"x":691,"y":593},{"level":11,"x":691,"y":592},{"level":11,"x":689,"y":596},{"level":11,"x":690,"y":596},{"level":11,"x":691,"y":596},{"level":11,"x":691,"y":597},{"level":10,"x":346,"y":297},{"level":10,"x":347,"y":297},{"level":10,"x":346,"y":296},{"level":10,"x":347,"y":296},{"level":10,"x":346,"y":298},{"level":10,"x":346,"y":299},{"level":10,"x":347,"y":298},{"level":10,"x":347,"y":299},{"level":9,"x":174,"y":148},{"level":9,"x":174,"y":149},{"level":9,"x":175,"y":148},{"level":9,"x":175,"y":149},{"level":9,"x":174,"y":150},{"level":9,"x":175,"y":150},{"level":10,"x":346,"y":295},{"level":10,"x":347,"y":295},{"level":9,"x":174,"y":147},{"level":9,"x":175,"y":147}];
+    // var expectedTiles = {};
+    // var unexpectedTiles = {};
 
-    GlobeSurfaceTile.processStateMachine = function(tile, frameState, terrainProvider, imageryLayerCollection, vertexArraysToDestroy) {
+    // function tileID(level, x, y) {
+    //     return `L${level}X${x}Y${y}`;
+    // }
+    // renderedJson.forEach(tile => {
+    //     while (tile.level >= 0) {
+    //         expectedTiles[tileID(tile.level, tile.x, tile.y)] = true;
+    //         --tile.level;
+    //         tile.x >>= 1;
+    //         tile.y >>= 1;
+    //     }
+    // });
+
+    GlobeSurfaceTile.processStateMachine = function(tile, frameState, terrainProvider, imageryLayerCollection, vertexArraysToDestroy, terrainOnly) {
         var surfaceTile = tile.data;
         if (!defined(surfaceTile)) {
             surfaceTile = tile.data = new GlobeSurfaceTile();
-            // Create the TileBoundingRegion now in order to estimate the distance, which is used to prioritize the request.
-            // Since the terrain isn't loaded yet, estimate the heights using its parent's values.
-            surfaceTile.tileBoundingRegion = createTileBoundingRegion(tile);
         }
 
         if (tile.state === QuadtreeTileLoadState.START) {
@@ -307,9 +304,34 @@ define([
             tile.state = QuadtreeTileLoadState.LOADING;
         }
 
+        var bvhLevel = terrainProvider.getNearestBvhLevel(tile.x, tile.y, tile.level);
+        if (bvhLevel !== -1 && bvhLevel !== tile.level) {
+            var ancestor = tile.parent;
+            while (ancestor.level !== bvhLevel) {
+                ancestor = ancestor.parent;
+            }
+
+            if (ancestor.data === undefined || ancestor.data.terrainData === undefined) {
+                GlobeSurfaceTile.processStateMachine(ancestor, frameState, terrainProvider, imageryLayerCollection, vertexArraysToDestroy, true);
+                return;
+            }
+        }
+
         if (tile.state === QuadtreeTileLoadState.LOADING) {
             processTerrainStateMachine(tile, frameState, terrainProvider, imageryLayerCollection, vertexArraysToDestroy);
         }
+
+        if (terrainOnly || (tile.level !== 0 && tile.data.boundingVolumeSourceTile !== tile)) {
+            return;
+        }
+
+        // var id = tileID(tile.level, tile.x, tile.y);
+        // if (!expectedTiles[id]) {
+        //     if (!unexpectedTiles[id]) {
+        //         unexpectedTiles[id] = true;
+        //         console.log('Unexpected: ' + id);
+        //     }
+        // }
 
         // The terrain is renderable as soon as we have a valid vertex array.
         var isRenderable = defined(surfaceTile.vertexArray);
@@ -464,7 +486,7 @@ define([
             var parentReady = parent.data !== undefined && parent.data.terrainData !== undefined && parent.data.terrainData._mesh !== undefined;
             if (!parentReady) {
                 //console.log('Waiting on L' + parent.level + 'X' + parent.x + 'Y' + parent.y);
-                GlobeSurfaceTile.processStateMachine(parent, frameState, terrainProvider, imageryLayerCollection, vertexArraysToDestroy);
+                GlobeSurfaceTile.processStateMachine(parent, frameState, terrainProvider, imageryLayerCollection, vertexArraysToDestroy, true);
             }
         }
 
@@ -484,6 +506,9 @@ define([
             createResources(surfaceTile, frameState.context, terrainProvider, tile.x, tile.y, tile.level);
         }
     }
+
+    var upsamplesStarted = 0;
+    var upsamplesCompleted = 0;
 
     function upsample(surfaceTile, tile, frameState, terrainProvider, x, y, level) {
         var parent = tile.parent;
@@ -508,9 +533,12 @@ define([
             return;
         }
 
+        ++upsamplesStarted;
+
         surfaceTile.terrainState = TerrainState.RECEIVING;
 
         when(terrainDataPromise, function(terrainData) {
+            ++upsamplesCompleted;
             surfaceTile.terrainData = terrainData;
             surfaceTile.terrainState = TerrainState.RECEIVED;
         }, function() {

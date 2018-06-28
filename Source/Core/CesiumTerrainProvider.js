@@ -57,6 +57,7 @@ define([
         this.hasVertexNormals = layer.hasVertexNormals;
         this.hasWaterMask = layer.hasWaterMask;
         this.hasBvh = layer.hasBvh;
+        this.bvhLevels = layer.bvhLevels;
         this.littleEndianExtensionSize = layer.littleEndianExtensionSize;
     }
 
@@ -291,6 +292,7 @@ define([
                 hasVertexNormals: hasVertexNormals,
                 hasWaterMask: hasWaterMask,
                 hasBvh: hasBvh,
+                bvhLevels: data.bvhlevels,
                 littleEndianExtensionSize: littleEndianExtensionSize
             }));
 
@@ -595,6 +597,35 @@ define([
             bvh: bvh
         });
     }
+
+    CesiumTerrainProvider.prototype.getNearestBvhLevel = function(x, y, level) {
+        var layers = this._layers;
+        var layerToUse;
+        var layerCount = layers.length;
+
+        if (layerCount === 1) { // Optimized path for single layers
+            layerToUse = layers[0];
+        } else {
+            for (var i = 0; i < layerCount; ++i) {
+                var layer = layers[i];
+                if (!defined(layer.availability) || layer.availability.isTileAvailable(level, x, y)) {
+                    layerToUse = layer;
+                    break;
+                }
+            }
+        }
+
+        if (!defined(layerToUse)) {
+            return when.reject(new RuntimeError('Terrain tile doesn\'t exist'));
+        }
+
+        if (!layerToUse.hasBvh) {
+            return -1;
+        }
+
+        var bvhLevels = layerToUse.bvhLevels;
+        return ((level / bvhLevels) | 0) * bvhLevels;
+    };
 
     /**
      * Requests the geometry for a given tile.  This function should not be called before
