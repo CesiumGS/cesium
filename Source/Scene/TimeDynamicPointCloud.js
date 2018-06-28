@@ -343,7 +343,7 @@ define([
         that._runningAverage = that._runningSum / that._runningLength;
     }
 
-    function prepareFrame(that, frame, frameState) {
+    function prepareFrame(that, frame, updateState, frameState) {
         if (frame.touchedFrameNumber < frameState.frameNumber - 1) {
             // If this frame was not loaded in sequential updates then it can't be used it for calculating the average load time.
             // For example: selecting a frame on the timeline, selecting another frame before the request finishes, then selecting this frame later.
@@ -356,7 +356,7 @@ define([
             // Call update to prepare renderer resources. Don't render anything yet.
             var commandList = frameState.commandList;
             var lengthBeforeUpdate = commandList.length;
-            pointCloud.update(frameState);
+            renderFrame(that, frame, updateState, frameState);
 
             if (pointCloud.ready) {
                 // Point cloud became ready this update
@@ -380,8 +380,10 @@ define([
         var pointCloudShading = that.pointCloudShading;
         if (defined(pointCloudShading) && defined(pointCloudShading.baseResolution)) {
             return pointCloudShading.baseResolution;
+        } else if (defined(pointCloud.boundingSphere)) {
+            return CesiumMath.cbrt(pointCloud.boundingSphere.volume() / pointCloud.pointsLength);
         }
-        return CesiumMath.cbrt(pointCloud.boundingSphere.volume() / pointCloud.pointsLength);
+        return 0.0;
     }
 
     function getMaximumAttenuation(that) {
@@ -394,17 +396,17 @@ define([
         return 10.0;
     }
 
-    function renderFrame(that, frame, timeSinceLoad, isClipped, clippingPlanesDirty, frameState) {
+    function renderFrame(that, frame, updateState, frameState) {
         var pointCloud = frame.pointCloud;
         var transform = defaultValue(frame.transform, Matrix4.IDENTITY);
         pointCloud.modelMatrix = Matrix4.multiplyTransformation(that.modelMatrix, transform, scratchModelMatrix);
         pointCloud.style = that.style;
         pointCloud.styleDirty = that._styleDirty;
-        pointCloud.time = timeSinceLoad;
+        pointCloud.time = updateState.timeSinceLoad;
         pointCloud.shadows = that.shadows;
         pointCloud.clippingPlanes = that._clippingPlanes;
-        pointCloud.isClipped = isClipped;
-        pointCloud.clippingPlanesDirty = clippingPlanesDirty;
+        pointCloud.isClipped = updateState.isClipped;
+        pointCloud.clippingPlanesDirty = updateState.clippingPlanesDirty;
 
         var pointCloudShading = that.pointCloudShading;
         if (defined(pointCloudShading)) {
@@ -417,9 +419,9 @@ define([
         frame.touchedFrameNumber = frameState.frameNumber;
     }
 
-    function loadFrame(that, interval, frameState) {
+    function loadFrame(that, interval, updateState, frameState) {
         var frame = requestFrame(that, interval, frameState);
-        prepareFrame(that, frame, frameState);
+        prepareFrame(that, frame, updateState, frameState);
     }
 
     function getUnloadCondition(frameState) {
@@ -460,18 +462,18 @@ define([
         }
     }
 
-    function updateInterval(that, interval, frame, frameState) {
+    function updateInterval(that, interval, frame, updateState, frameState) {
         if (defined(frame)) {
             if (frame.ready) {
                 return true;
             }
-            loadFrame(that, interval, frameState);
+            loadFrame(that, interval, updateState, frameState);
             return frame.ready;
         }
         return false;
     }
 
-    function getNearestReadyInterval(that, previousInterval, currentInterval, frameState) {
+    function getNearestReadyInterval(that, previousInterval, currentInterval, updateState, frameState) {
         var i;
         var interval;
         var frame;
@@ -484,7 +486,7 @@ define([
             for (i = currentIndex; i >= previousIndex; --i) {
                 interval = intervals.get(i);
                 frame = frames[i];
-                if (updateInterval(that, interval, frame, frameState)) {
+                if (updateInterval(that, interval, frame, updateState, frameState)) {
                     return interval;
                 }
             }
@@ -492,7 +494,7 @@ define([
             for (i = currentIndex; i <= previousIndex; ++i) {
                 interval = intervals.get(i);
                 frame = frames[i];
-                if (updateInterval(that, interval, frame, frameState)) {
+                if (updateInterval(that, interval, frame, updateState, frameState)) {
                     return interval;
                 }
             }
@@ -501,6 +503,12 @@ define([
         // If no intervals are ready return the previous interval
         return previousInterval;
     }
+
+    var updateState = {
+        timeSinceLoad : 0,
+        isClipped : false,
+        clippingPlanesDirty : false
+    };
 
     TimeDynamicPointCloud.prototype.update = function(frameState) {
         if (frameState.mode === SceneMode.MORPHING) {
@@ -540,6 +548,10 @@ define([
             clippingPlanesDirty = true;
         }
 
+        updateState.timeSinceLoad = timeSinceLoad;
+        updateState.isClipped = isClipped;
+        updateState.clippingPlanesDirty = clippingPlanesDirty;
+
         var pointCloudShading = this.pointCloudShading;
         var eyeDomeLighting = this._pointCloudEyeDomeLighting;
 
@@ -570,23 +582,23 @@ define([
             nextInterval = getNextInterval(this, currentInterval);
         }
 
-        previousInterval = getNearestReadyInterval(this, previousInterval, currentInterval, frameState);
+        previousInterval = getNearestReadyInterval(this, previousInterval, currentInterval, updateState, frameState);
         var frame = getFrame(this, previousInterval);
 
         if (!defined(frame)) {
             // The frame is not ready to render. This can happen when the simulation starts or when scrubbing the timeline
             // to a frame that hasn't loaded yet. Just render the last rendered frame in its place until it finishes loading.
-            loadFrame(this, previousInterval, frameState);
+            loadFrame(this, previousInterval, updateState, frameState);
             frame = this._lastRenderedFrame;
         }
 
         if (defined(frame)) {
-            renderFrame(this, frame, timeSinceLoad, isClipped, clippingPlanesDirty, frameState);
+            renderFrame(this, frame, updateState, frameState);
         }
 
         if (defined(nextInterval)) {
             // Start loading the next frame
-            loadFrame(this, nextInterval, frameState);
+            loadFrame(this, nextInterval, updateState, frameState);
         }
 
         this._previousInterval = previousInterval;
