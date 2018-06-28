@@ -1429,7 +1429,6 @@ define([
     }
 
     var offsetScratchCartesian = new Cartesian3();
-    var offsetScratchCartesian2 = new Cartesian3();
     function updateBatchTableOffsets(primitive, frameState) {
         var hasOffset = defined(primitive._batchTableAttributeIndices.offset);
         if (!hasOffset|| primitive._batchTableOffsetsUpdated || frameState.scene3DOnly) {
