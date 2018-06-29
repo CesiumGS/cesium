@@ -17,6 +17,7 @@ Change Log
   * The `PostProcessStageLibrary.createBlackAndWhiteStage` and `PostProcessStageLibrary.createSilhouetteStage` have per-feature support.
 * Added CZML support for `zIndex` for `corridor`, `ellipse`, `polygon`, `polyline` and `rectangle`. [#6708](https://github.com/AnalyticalGraphicsInc/cesium/pull/6708)
 * Added CZML `clampToGround` option for `polyline`. [#6706](https://github.com/AnalyticalGraphicsInc/cesium/pull/6706)
+* Added support for `RTC_CENTER` property in batched 3D model tilesets to conform to the updated [3D Tiles spec](https://github.com/AnalyticalGraphicsInc/3d-tiles/issues/263). [#6488](https://github.com/AnalyticalGraphicsInc/cesium/issues/6488)
 * Added `heightReference` and `extrudedHeightReference` properties to `CorridorGraphics`, `EllipseGraphics`, `PolygonGraphics` and `RectangleGraphics`. [#6717](https://github.com/AnalyticalGraphicsInc/cesium/pull/6717)
   * This can be used in conjunction with the `height` and/or `extrudedHeight` properties to clamp the geometry to terrain or set the height relative to terrain.
   * Note, this will not make the geometry conform to terrain.  Extruded geoemtry that is clamped to the ground will have a flat top will sinks into the terrain at the base.
