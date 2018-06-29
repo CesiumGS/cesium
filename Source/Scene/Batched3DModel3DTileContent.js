@@ -355,7 +355,7 @@ define([
             primitive : tileset
         };
 
-        content._rtcCenterTransform = Matrix4.IDENTITY.clone();
+        content._rtcCenterTransform = Matrix4.clone(Matrix4.IDENTITY);
         var rtcCenter = featureTable.getGlobalProperty('RTC_CENTER', ComponentDatatype.FLOAT, 3);
         if (defined(rtcCenter)) {
             content._rtcCenterTransform = Matrix4.fromTranslation(Cartesian3.fromArray(rtcCenter), content._rtcCenterTransform);

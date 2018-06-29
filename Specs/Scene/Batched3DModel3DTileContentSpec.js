@@ -383,7 +383,7 @@ defineSuite([
 
             var expectedModelTransform = Matrix4.multiply(tileset._root.transform, rtcTransform, new Matrix4());
             expect(tileset._root._content._contentModelMatrix).toEqual(expectedModelTransform);
-            expect(tileset._root._content._model._modelMatrix).toEqual(expectedModelTransform );
+            expect(tileset._root._content._model._modelMatrix).toEqual(expectedModelTransform);
 
              // Update tile transform
             var newLongitude = -1.31962;
