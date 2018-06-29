@@ -175,14 +175,8 @@ a.linkButton:focus, a.linkButton:hover {
 }
 
 .bottomPanel #innerPanel_tablist {
-    overflow-y: hidden!important;
-    max-height: 34px;
-}
-
-@media (max-width: 1064px){
-    .bottomPanel #innerPanel_tablist {
-        overflow-y: scroll!important;
-    }
+    max-height: 28px;
+    overflow: auto !important;
 }
 
 .claro .dijitTabContainerTop-tabs .dijitTabChecked .dijitTabContent {
