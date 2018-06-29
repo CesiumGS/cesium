@@ -9,6 +9,7 @@ define([
     '../Core/Iso8601',
     '../Core/Math',
     '../Scene/HeightReference',
+    '../Scene/SceneMode',
     './Property'
 ], function(
     Cartesian3,
@@ -21,6 +22,7 @@ define([
     Iso8601,
     CesiumMath,
     HeightReference,
+    SceneMode,
     Property) {
     'use strict';
 
@@ -130,8 +132,12 @@ define([
         }
 
         function updateFunction(clampedPosition) {
-            var carto = ellipsoid.cartesianToCartographic(clampedPosition, scratchCarto);
-            that._terrainHeight = carto.height;
+            if (scene.mode === SceneMode.SCENE3D) {
+                var carto = ellipsoid.cartesianToCartographic(clampedPosition, scratchCarto);
+                that._terrainHeight = carto.height;
+            } else {
+                that._terrainHeight = clampedPosition.x;
+            }
             that.definitionChanged.raiseEvent();
         }
         this._removeCallbackFunc = surface.updateHeight(cartographicPosition, updateFunction);
