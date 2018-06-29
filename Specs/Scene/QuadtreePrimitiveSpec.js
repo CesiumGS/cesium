@@ -47,7 +47,7 @@ defineSuite([
         var result = jasmine.createSpyObj('tileProvider', [
             'getQuadtree', 'setQuadtree', 'getReady', 'getTilingScheme', 'getErrorEvent',
             'initialize', 'updateImagery', 'beginUpdate', 'endUpdate', 'getLevelMaximumGeometricError', 'loadTile',
-            'computeTileVisibility', 'showTileThisFrame', 'computeDistanceToTile', 'isDestroyed', 'destroy']);
+            'computeTileVisibility', 'showTileThisFrame', 'computeDistanceToTile', 'canRefine', 'isDestroyed', 'destroy']);
 
         defineProperties(result, {
             quadtree : {
@@ -67,6 +67,10 @@ defineSuite([
 
         var tilingScheme = new GeographicTilingScheme();
         result.getTilingScheme.and.returnValue(tilingScheme);
+
+        result.canRefine.and.callFake(function(tile) {
+            return tile.renderable;
+        });
 
         return result;
     }
@@ -298,6 +302,8 @@ defineSuite([
         quadtree.render(scene.frameState);
         quadtree.endFrame(scene.frameState);
 
+        ++scene.frameState.frameNumber;
+
         // load tiles
         quadtree.update(scene.frameState);
         quadtree.beginFrame(scene.frameState);
@@ -312,6 +318,8 @@ defineSuite([
         expect(addedCallback).toEqual(true);
 
         removeFunc();
+
+        ++scene.frameState.frameNumber;
 
         quadtree.update(scene.frameState);
         quadtree.beginFrame(scene.frameState);
@@ -462,16 +470,11 @@ defineSuite([
         quadtree.endFrame(scene.frameState);
 
         // levelZeroTiles[0] should move to medium priority.
-        // Its descendents should continue loading, so they have a chance to decide they're not upsampled later.
         expect(quadtree._tileLoadQueueHigh.length).toBe(1);
         expect(quadtree._tileLoadQueueHigh).toContain(quadtree._levelZeroTiles[1]);
         expect(quadtree._tileLoadQueueMedium.length).toBe(1);
         expect(quadtree._tileLoadQueueMedium).toContain(quadtree._levelZeroTiles[0]);
-        expect(quadtree._tileLoadQueueLow.length).toBe(4);
-        expect(quadtree._tileLoadQueueLow).toContain(quadtree._levelZeroTiles[0].children[0]);
-        expect(quadtree._tileLoadQueueLow).toContain(quadtree._levelZeroTiles[0].children[1]);
-        expect(quadtree._tileLoadQueueLow).toContain(quadtree._levelZeroTiles[0].children[2]);
-        expect(quadtree._tileLoadQueueLow).toContain(quadtree._levelZeroTiles[0].children[3]);
+        expect(quadtree._tileLoadQueueLow.length).toBe(0);
     });
 
     it('renders tiles in approximate near-to-far order', function() {
