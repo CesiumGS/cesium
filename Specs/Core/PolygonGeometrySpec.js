@@ -84,22 +84,62 @@ defineSuite([
 
     it('createGeometry returns undefined due to duplicate hierarchy positions', function() {
         var hierarchy = {
+            positions : Cartesian3.fromDegreesArray([
+                1.0, 1.0,
+                1.0, 1.0,
+                1.0, 1.0
+            ]),
+            holes : [{
                 positions : Cartesian3.fromDegreesArray([
-                    1.0, 1.0,
-                    1.0, 1.0,
-                    1.0, 1.0
-                ]),
-                holes : [{
-                    positions : Cartesian3.fromDegreesArray([
-                        0.0, 0.0,
-                        0.0, 0.0,
-                        0.0, 0.0
-                    ])
-                }]
+                    0.0, 0.0,
+                    0.0, 0.0,
+                    0.0, 0.0
+                ])
+            }]
         };
 
         var geometry = PolygonGeometry.createGeometry(new PolygonGeometry({ polygonHierarchy : hierarchy }));
         expect(geometry).toBeUndefined();
+    });
+
+    it('createGeometry returns undefined due to duplicate hierarchy positions with different heights', function() {
+        var hierarchy = {
+            positions : Cartesian3.fromDegreesArrayHeights([
+                1.0, 1.0, 10.0,
+                1.0, 1.0, 20.0,
+                1.0, 1.0, 30.0
+            ]),
+            holes : [{
+                positions : Cartesian3.fromDegreesArrayHeights([
+                    0.0, 0.0, 10.0,
+                    0.0, 0.0, 20.0,
+                    0.0, 0.0, 30.0
+                ])
+            }]
+        };
+
+        var geometry = PolygonGeometry.createGeometry(new PolygonGeometry({ polygonHierarchy : hierarchy }));
+        expect(geometry).toBeUndefined();
+    });
+
+    it('createGeometry returns geometry if duplicate hierarchy positions with different heights and perPositionHeight is true', function() {
+        var hierarchy = {
+            positions : Cartesian3.fromDegreesArrayHeights([
+                1.0, 1.0, 10.0,
+                1.0, 1.0, 20.0,
+                1.0, 1.0, 30.0
+            ]),
+            holes : [{
+                positions : Cartesian3.fromDegreesArrayHeights([
+                    0.0, 0.0, 10.0,
+                    0.0, 0.0, 20.0,
+                    0.0, 0.0, 30.0
+                ])
+            }]
+        };
+
+        var geometry = PolygonGeometry.createGeometry(new PolygonGeometry({ polygonHierarchy : hierarchy, perPositionHeight: true }));
+        expect(geometry).toBeDefined();
     });
 
     it('computes positions', function() {
@@ -869,6 +909,48 @@ defineSuite([
         expect(CesiumMath.toDegrees(r.south)).toEqualEpsilon(30.0, CesiumMath.EPSILON13);
         expect(CesiumMath.toDegrees(r.east)).toEqualEpsilon(-100.0, CesiumMath.EPSILON13);
         expect(CesiumMath.toDegrees(r.west)).toEqualEpsilon(-100.5, CesiumMath.EPSILON13);
+    });
+
+    it('computeRectangle', function() {
+        var options = {
+            vertexFormat : VertexFormat.POSITION_AND_ST,
+            polygonHierarchy: {
+                positions : Cartesian3.fromDegreesArrayHeights([
+                    -100.5, 30.0, 92,
+                    -100.0, 30.0, 92,
+                    -100.0, 30.5, 92,
+                    -100.5, 30.5, 92
+                ])
+            },
+            ellipsoid: Ellipsoid.UNIT_SPHERE
+        };
+        var geometry = new PolygonGeometry(options);
+
+        var expected = geometry.rectangle;
+        var result = PolygonGeometry.computeRectangle(options);
+
+        expect(result).toEqual(expected);
+    });
+
+    it('computeRectangle with result parameter', function() {
+        var options = {
+            polygonHierarchy: {
+                positions : Cartesian3.fromDegreesArray([
+                    -10.5, 25.0,
+                    -10.0, 25.0,
+                    -10.0, 25.5,
+                    -10.5, 25.5
+                ])
+            }
+        };
+        var geometry = new PolygonGeometry(options);
+
+        var result = new Rectangle();
+        var expected = geometry.rectangle;
+        var returned = PolygonGeometry.computeRectangle(options, result);
+
+        expect(returned).toEqual(expected);
+        expect(returned).toBe(result);
     });
 
     it('computing textureCoordinateRotationPoints property', function() {

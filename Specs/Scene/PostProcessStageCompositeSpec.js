@@ -167,32 +167,6 @@ defineSuite([
         expect(scene).toRender([0, 0, 255, 255]);
     });
 
-    it('isSupported throws without a scene', function() {
-        var stage = new PostProcessStageComposite({
-            stages : [new PostProcessStage({
-                fragmentShader : 'void main() { gl_FragColor = vec4(1.0); }'
-            })]
-        });
-        expect(function() {
-            return stage.isSupported();
-        }).toThrowDeveloperError();
-    });
-
-    it('isSupported', function() {
-        var stage = new PostProcessStageComposite({
-            stages : [new PostProcessStage({
-                fragmentShader : 'void main() { gl_FragColor = vec4(1.0); }'
-            })]
-        });
-        expect(stage.isSupported(scene)).toEqual(true);
-        stage = new PostProcessStageComposite({
-            stages : [new PostProcessStage({
-                fragmentShader : 'uniform sampler2D depthTexture; void main() { texture2D(depthTexture, vec2(0.5)); }'
-            })]
-        });
-        expect(stage.isSupported(scene)).toEqual(scene.context.depthTexture);
-    });
-
     it('does not run a stage that requires depth textures when depth textures are not supported', function() {
         var s = createScene();
         s.context._depthTexture = false;

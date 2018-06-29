@@ -115,14 +115,26 @@ define([
                 width : width,
                 height : height,
                 pixelFormat : PixelFormat.DEPTH_STENCIL,
-                pixelDatatype : PixelDatatype.UNSIGNED_INT_24_8
+                pixelDatatype : PixelDatatype.UNSIGNED_INT_24_8,
+                sampler : new Sampler({
+                    wrapS : TextureWrap.CLAMP_TO_EDGE,
+                    wrapT : TextureWrap.CLAMP_TO_EDGE,
+                    minificationFilter : TextureMinificationFilter.NEAREST,
+                    magnificationFilter : TextureMagnificationFilter.NEAREST
+                })
             });
             this._depthStencilIdTexture = new Texture({
                 context : context,
                 width : width,
                 height : height,
                 pixelFormat : PixelFormat.DEPTH_STENCIL,
-                pixelDatatype : PixelDatatype.UNSIGNED_INT_24_8
+                pixelDatatype : PixelDatatype.UNSIGNED_INT_24_8,
+                sampler : new Sampler({
+                    wrapS : TextureWrap.CLAMP_TO_EDGE,
+                    wrapT : TextureWrap.CLAMP_TO_EDGE,
+                    minificationFilter : TextureMinificationFilter.NEAREST,
+                    magnificationFilter : TextureMagnificationFilter.NEAREST
+                })
             });
         } else {
             this._depthStencilRenderbuffer = new Renderbuffer({

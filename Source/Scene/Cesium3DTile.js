@@ -250,6 +250,8 @@ define([
         /**
          * The corresponding node in the cache.
          *
+         * See {@link Cesium3DTilesetCache}
+         *
          * @type {DoublyLinkedListNode}
          * @readonly
          *

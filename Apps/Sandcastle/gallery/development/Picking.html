@@ -402,7 +402,7 @@ Sandcastle.addToolbarMenu([{
         viewer.terrainProvider = Cesium.createWorldTerrain();
 
         tileset = viewer.scene.primitives.add(new Cesium.Cesium3DTileset({
-            url : '../../../Specs/Data/Cesium3DTiles/Vector/VectorTilePolygons'
+            url : '../../../Specs/Data/Cesium3DTiles/Vector/VectorTilePolygons/tileset.json'
         }));
 
         tileset.readyPromise.then(function() {
@@ -435,7 +435,7 @@ Sandcastle.addToolbarMenu([{
         viewer.terrainProvider = Cesium.createWorldTerrain();
 
         tileset = viewer.scene.primitives.add(new Cesium.Cesium3DTileset({
-            url : '../../../Specs/Data/Cesium3DTiles/Vector/VectorTilePolylines'
+            url : '../../../Specs/Data/Cesium3DTiles/Vector/VectorTilePolylines/tileset.json'
         }));
 
         tileset.readyPromise.then(function() {

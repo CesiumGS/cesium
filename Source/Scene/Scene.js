@@ -757,7 +757,7 @@ define([
             useOIT : false,
             useInvertClassification : false,
             usePostProcess : false,
-            usePostProcessSelectedFeatures : false
+            usePostProcessSelected : false
         };
 
         this._useWebVR = false;
@@ -2019,13 +2019,22 @@ define([
         var commandList = frameState.commandList = [];
         scene._debugVolume.update(frameState);
 
+        command = commandList[0];
+
+        var frustum = scene.camera.frustum;
+        var useLogDepth = scene._logDepthBuffer && !(frustum instanceof OrthographicFrustum || frustum instanceof OrthographicOffCenterFrustum);
+        if (useLogDepth) {
+            var logDepth = DerivedCommand.createLogDepthCommand(command, context);
+            command = logDepth.command;
+        }
+
         var framebuffer;
         if (defined(debugFramebuffer)) {
             framebuffer = passState.framebuffer;
             passState.framebuffer = debugFramebuffer;
         }
 
-        commandList[0].execute(context, passState);
+        command.execute(context, passState);
 
         if (defined(framebuffer)) {
             passState.framebuffer = framebuffer;
@@ -2086,19 +2095,21 @@ define([
     }
 
     function executeIdCommand(command, scene, context, passState) {
-        if (!defined(command.derivedCommands)) {
+        var derivedCommands = command.derivedCommands;
+        if (!defined(derivedCommands)) {
             return;
         }
 
-        if (scene._logDepthBuffer && defined(command.derivedCommands.logDepth)) {
-            command = command.derivedCommands.logDepth.command;
+        if (scene._logDepthBuffer && defined(derivedCommands.logDepth)) {
+            command = derivedCommands.logDepth.command;
         }
 
-        if (defined(command.derivedCommands.picking)) {
-            command = command.derivedCommands.picking.pickCommand;
+        derivedCommands = command.derivedCommands;
+        if (defined(derivedCommands.picking)) {
+            command = derivedCommands.picking.pickCommand;
             command.execute(context, passState);
-        } else if (defined(command.derivedCommands.depth)) {
-            command = command.derivedCommands.depth.depthOnlyCommand;
+        } else if (defined(derivedCommands.depth)) {
+            command = derivedCommands.depth.depthOnlyCommand;
             command.execute(context, passState);
         }
     }
@@ -2228,7 +2239,7 @@ define([
         var useDepthPlane = environmentState.useDepthPlane;
         var clearDepth = scene._depthClearCommand;
         var depthPlane = scene._depthPlane;
-        var usePostProcessSelectedFeatures = environmentState.usePostProcessSelectedFeatures;
+        var usePostProcessSelected = environmentState.usePostProcessSelected;
 
         var height2D = camera.position.z;
 
@@ -2457,7 +2468,7 @@ define([
                 pickDepth.executeCopyDepth(context, passState);
             }
 
-            if (picking || !usePostProcessSelectedFeatures) {
+            if (picking || !usePostProcessSelected) {
                 continue;
             }
 
@@ -3022,7 +3033,7 @@ define([
 
         var postProcess = scene.postProcessStages;
         var usePostProcess = environmentState.usePostProcess = !picking && (postProcess.length > 0 || postProcess.ambientOcclusion.enabled || postProcess.fxaa.enabled || postProcess.bloom.enabled);
-        environmentState.usePostProcessSelectedFeatures = false;
+        environmentState.usePostProcessSelected = false;
         if (usePostProcess) {
             scene._sceneFramebuffer.update(context, passState);
             scene._sceneFramebuffer.clear(context, passState, clearColor);
@@ -3034,7 +3045,7 @@ define([
             postProcess.clear(context);
 
             usePostProcess = environmentState.usePostProcess = postProcess.ready;
-            environmentState.usePostProcessSelectedFeatures = usePostProcess && postProcess.hasSelectedFeatures;
+            environmentState.usePostProcessSelected = usePostProcess && postProcess.hasSelected;
         }
 
         if (environmentState.isSunVisible && scene.sunBloom && !useWebVR) {
@@ -3220,7 +3231,7 @@ define([
         var frameNumber = CesiumMath.incrementWrap(frameState.frameNumber, 15000000.0, 1.0);
         updateFrameState(scene, frameNumber, time);
         frameState.passes.render = true;
-        frameState.passes.postProcess = scene.postProcessStages.hasSelectedFeatures;
+        frameState.passes.postProcess = scene.postProcessStages.hasSelected;
 
         var backgroundColor = defaultValue(scene.backgroundColor, Color.BLACK);
         frameState.backgroundColor = backgroundColor;

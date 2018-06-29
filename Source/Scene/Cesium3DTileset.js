@@ -1465,6 +1465,7 @@ define([
                 tileset._statistics.incrementLoadCounts(tile.content);
                 ++tileset._statistics.numberOfTilesWithContentReady;
 
+                // Add to the tile cache. Previously expired tiles are already in the cache and won't get re-added.
                 tileset._cache.add(tile);
             }
 

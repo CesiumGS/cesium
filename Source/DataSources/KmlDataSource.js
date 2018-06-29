@@ -42,7 +42,6 @@ define([
         '../ThirdParty/zip',
         './BillboardGraphics',
         './CompositePositionProperty',
-        './CorridorGraphics',
         './DataSource',
         './DataSourceClock',
         './Entity',
@@ -108,7 +107,6 @@ define([
         zip,
         BillboardGraphics,
         CompositePositionProperty,
-        CorridorGraphics,
         DataSource,
         DataSourceClock,
         Entity,
@@ -555,7 +553,14 @@ define([
         return resource;
     }
 
-    var colorOptions = {};
+    var colorOptions = {
+        maximumRed : undefined,
+        red : undefined,
+        maximumGreen : undefined,
+        green : undefined,
+        maximumBlue : undefined,
+        blue : undefined
+    };
 
     function parseColorString(value, isRandom) {
         if (!defined(value) || /^\s*$/gm.test(value)) {
@@ -577,17 +582,23 @@ define([
 
         if (red > 0) {
             colorOptions.maximumRed = red;
+            colorOptions.red = undefined;
         } else {
+            colorOptions.maximumRed = undefined;
             colorOptions.red = 0;
         }
         if (green > 0) {
             colorOptions.maximumGreen = green;
+            colorOptions.green = undefined;
         } else {
+            colorOptions.maximumGreen = undefined;
             colorOptions.green = 0;
         }
         if (blue > 0) {
             colorOptions.maximumBlue = blue;
+            colorOptions.blue = undefined;
         } else {
+            colorOptions.maximumBlue = undefined;
             colorOptions.blue = 0;
         }
         colorOptions.alpha = alpha;
@@ -1255,17 +1266,18 @@ define([
                 wall.outlineColor = defined(polygon.material) ? polygon.material.color : Color.WHITE;
             }
         } else if (dataSource._clampToGround && !canExtrude && tessellate) {
-            var corridor = new CorridorGraphics();
-            entity.corridor = corridor;
-            corridor.positions = coordinates;
+            var polylineGraphics = new PolylineGraphics();
+            polylineGraphics.clampToGround = true;
+            entity.polyline = polylineGraphics;
+            polylineGraphics.positions = coordinates;
             if (defined(polyline)) {
-                corridor.material = defined(polyline.material) ? polyline.material.color.getValue(Iso8601.MINIMUM_VALUE) : Color.WHITE;
-                corridor.width = defaultValue(polyline.width, 1.0);
+                polylineGraphics.material = defined(polyline.material) ? polyline.material.color.getValue(Iso8601.MINIMUM_VALUE) : Color.WHITE;
+                polylineGraphics.width = defaultValue(polyline.width, 1.0);
             } else {
-                corridor.material = Color.WHITE;
-                corridor.width = 1.0;
+                polylineGraphics.material = Color.WHITE;
+                polylineGraphics.width = 1.0;
             }
-            corridor.zIndex = zIndex;
+            polylineGraphics.zIndex = zIndex;
         } else {
             if (defined(zIndex)) {
                 oneTimeWarning('kml-gx:drawOrder', 'KML - gx:drawOrder is not supported in LineStrings when clampToGround is false');

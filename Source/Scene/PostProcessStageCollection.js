@@ -289,12 +289,12 @@ define([
          * @readonly
          * @private
          */
-        hasSelectedFeatures : {
+        hasSelected : {
             get : function() {
                 var stages = arraySlice(this._stages);
                 while (stages.length > 0) {
                     var stage = stages.pop();
-                    if (defined(stage.selectedFeatures)) {
+                    if (defined(stage.selected)) {
                         return true;
                     }
                     var length = stage.length;

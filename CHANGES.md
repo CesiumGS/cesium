@@ -6,14 +6,30 @@ Change Log
 ##### Breaking Changes :mega:
 * glTF 2.0 models corrected to face +Z forwards per specification.  Internally Cesium uses +X as forward, so a new +Z to +X rotation was added for 2.0 models only.  [#6632](https://github.com/AnalyticalGraphicsInc/cesium/pull/6632)
 * Dropped support for directory URLs when loading tilesets to match the updated [3D Tiles spec](https://github.com/AnalyticalGraphicsInc/3d-tiles/issues/272). [#6502](https://github.com/AnalyticalGraphicsInc/cesium/issues/6502)
+* KML and GeoJSON now use `PolylineGraphics` instead of `CorridorGraphics` for polylines on terrain. [#6706](https://github.com/AnalyticalGraphicsInc/cesium/pull/6706)
 
 ##### Additions :tada:
-* `PostProcessStage` has a `selectedFeatures` property which is an array of primitives used for selectively applying a post-process stage. In the fragment shader, use the function `bool czm_selected(vec2 textureCoordinates` to determine whether or not the stage should be applied at that fragment.
-   * The black-and-white and silhouette stages have per-feature support.
+* Added support for polylines on terrain [#6689](https://github.com/AnalyticalGraphicsInc/cesium/pull/6689) [#6615](https://github.com/AnalyticalGraphicsInc/cesium/pull/6615)
+  * Use the `clampToGround` option for `PolylineGraphics` (polyline entities).
+  * Requires depth texture support (`WEBGL_depth_texture` or `WEBKIT_WEBGL_depth_texture`), otherwise `clampToGround` will be ignored.  Use `Entity.supportsPolylinesOnTerrain` to check for support.
+  * Added `GroundPolylinePrimitive` and `GroundPolylineGeometry`.
+* `PostProcessStage` has a `selected` property which is an array of primitives used for selectively applying a post-process stage. [#6476](https://github.com/AnalyticalGraphicsInc/cesium/pull/6476)
+   * The `PostProcessStageLibrary.createBlackAndWhiteStage` and `PostProcessStageLibrary.createSilhouetteStage` have per-feature support.
+* Added CZML support for `zIndex` for `corridor`, `ellipse`, `polygon`, `polyline` and `rectangle`. [#6708](https://github.com/AnalyticalGraphicsInc/cesium/pull/6708)
+* Added CZML `clampToGround` option for `polyline`. [#6706](https://github.com/AnalyticalGraphicsInc/cesium/pull/6706)
 
 ##### Fixes :wrench:
+* Fixed a bug that caused Cesium to be unable to load local resources in Electron. [#6726](https://github.com/AnalyticalGraphicsInc/cesium/pull/6726)
 * Fixed a bug causing crashes with custom vertex attributes on `Geometry` crossing the IDL. Attributes will be barycentrically interpolated. [#6644](https://github.com/AnalyticalGraphicsInc/cesium/pull/6644)
+* Fixed a bug causing Point Cloud tiles with unsigned int batch-ids to not load. [#6666](https://github.com/AnalyticalGraphicsInc/cesium/pull/6666)
 * Fixed a bug with Draco encoded i3dm tiles, and loading two Draco models with the same url. [#6668](https://github.com/AnalyticalGraphicsInc/cesium/issues/6668)
+* Fixed a bug caused by creating a polygon with positions at the same longitude/latitude position but different heights [#6731](https://github.com/AnalyticalGraphicsInc/cesium/pull/6731)
+* Fixed terrain clipping when the camera was close to flat terrain and was using logarithmic depth. [#6701](https://github.com/AnalyticalGraphicsInc/cesium/pull/6701)
+* Fixed KML bug that constantly requested the same image if it failed to load. [#6710](https://github.com/AnalyticalGraphicsInc/cesium/pull/6710)
+* Improved billboard and label rendering so they no longer sink into terrain when clamped to ground. [#6621](https://github.com/AnalyticalGraphicsInc/cesium/pull/6621)
+* Fixed an issue where KMLs containing a `colorMode` of `random` could return the exact same color on successive calls to `Color.fromRandom()`.
+* `Iso8601.MAXIMUM_VALUE` now formats to a string which can be parsed by `fromIso8601`.
+* Fixed material support when using an image that is already loaded [#6729](https://github.com/AnalyticalGraphicsInc/cesium/pull/6729)
 
 ### 1.46.1 - 2018-06-01
 
@@ -66,6 +82,7 @@ Change Log
 * Fixed polygon outline when using `perPositionHeight` and `extrudedHeight`. [#6595](https://github.com/AnalyticalGraphicsInc/cesium/issues/6595)
 * Fixed broken links in documentation of `createTileMapServiceImageryProvider`. [#5818](https://github.com/AnalyticalGraphicsInc/cesium/issues/5818)
 * Transitioning from 2 touches to 1 touch no longer triggers a new pan gesture. [#6479](https://github.com/AnalyticalGraphicsInc/cesium/pull/6479)
+
 ### 1.45 - 2018-05-01
 
 ##### Major Announcements :loudspeaker:
