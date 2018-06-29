@@ -609,9 +609,6 @@ define([
         // For a tileset with `availability`, we'll always be able to refine.
         // We can ask for availability of _any_ child tile because we only need to confirm
         // that we get a yes or no answer, it doesn't matter what the answer is.
-        // if ((tile.level % 6) === 0 && tile.data.terrainData === undefined) {
-        //     return false;
-        // }
         var childAvailable = tile.data.isChildAvailable(this.terrainProvider, tile, 0, 0);
         return childAvailable !== undefined;
     };
@@ -625,8 +622,6 @@ define([
      * @returns {Number} The load priority value.
      */
     GlobeSurfaceTileProvider.prototype.computeTileLoadPriority = function(tile, frameState) {
-        return tile._distance;
-
         var surfaceTile = tile.data;
         if (surfaceTile === undefined) {
             return 0.0;
