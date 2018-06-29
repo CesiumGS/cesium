@@ -1429,9 +1429,10 @@ define([
     }
 
     var offsetScratchCartesian = new Cartesian3();
+    var offsetCenterScratch = new Cartesian3();
     function updateBatchTableOffsets(primitive, frameState) {
         var hasOffset = defined(primitive._batchTableAttributeIndices.offset);
-        if (!hasOffset|| primitive._batchTableOffsetsUpdated || frameState.scene3DOnly) {
+        if (!hasOffset || primitive._batchTableOffsetsUpdated || frameState.scene3DOnly) {
             return;
         }
 
@@ -1461,7 +1462,7 @@ define([
             }
 
             var center = boundingSphere.center;
-            center = ellipsoid.scaleToGeodeticSurface(center, center);
+            center = ellipsoid.scaleToGeodeticSurface(center, offsetCenterScratch);
             var cartographic = ellipsoid.cartesianToCartographic(center, scratchBoundingSphereCartographic);
             var center2D = projection.project(cartographic, scratchBoundingSphereCenter2D);
 
