@@ -521,11 +521,8 @@ define([
             if (!tile.renderable) {
                 queueTileLoad(primitive, primitive._tileLoadQueueHigh, tile, frameState);
                 ++debug.tilesWaitingForChildren;
-            } else if (tileProvider.computeTileVisibility(tile, frameState, occluders) !== Visibility.NONE) {
-                visitTile(primitive, frameState, tile, tile);
             } else {
-                queueTileLoad(primitive, primitive._tileLoadQueueLow, tile, frameState);
-                ++debug.tilesCulled;
+                visitIfVisible(primitive, tile, tileProvider, frameState, occluders, tile);
             }
         }
     }
