@@ -386,6 +386,8 @@ define([
         this._batchTable = undefined;
         this._batchTableAttributeIndices = undefined;
         this._offsetInstanceExtend = undefined;
+        this._batchTableOffsetAttribute2DIndex = undefined;
+        this._batchTableOffsetsUpdated = false;
         this._instanceBoundingSpheres = undefined;
         this._instanceBoundingSpheresCV = undefined;
         this._tempBoundingSpheres = undefined;
@@ -586,6 +588,7 @@ define([
         var attributes = [];
         var attributeIndices = {};
         var boundingSphereAttributeIndices = {};
+        var offset2DIndex;
 
         var firstInstance = instances[0];
         var instanceAttributes = firstInstance.attributes;
@@ -636,6 +639,15 @@ define([
             boundingSphereAttributeIndices.radius = attributes.length - 1;
         }
 
+        if (names.indexOf('offset') !== -1) {
+            attributes.push({
+                functionName : 'czm_batchTable_offset2D',
+                componentDatatype : ComponentDatatype.FLOAT,
+                componentsPerAttribute : 3
+            });
+            offset2DIndex = attributes.length - 1;
+        }
+
         attributes.push({
             functionName : 'czm_batchTable_pickColor',
             componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
@@ -682,6 +694,7 @@ define([
         primitive._batchTable = batchTable;
         primitive._batchTableAttributeIndices = attributeIndices;
         primitive._batchTableBoundingSphereAttributeIndices = boundingSphereAttributeIndices;
+        primitive._batchTableOffsetAttribute2DIndex = offset2DIndex;
     }
 
     function cloneAttribute(attribute) {
@@ -887,7 +900,14 @@ define([
         var modifiedShader = vertexShaderSource.replace(/attribute\s+float\s+batchId;/g, attr);
 
         var str = 'vec4 $1 = czm_computePosition();\n';
-        str += '    $1 = $1 + vec4(czm_batchTable_offset(batchId) * applyOffset, 0.0);';
+        str += '    if (czm_sceneMode == czm_sceneMode3D)\n';
+        str += '    {\n';
+        str += '        $1 = $1 + vec4(czm_batchTable_offset(batchId) * applyOffset, 0.0);';
+        str += '    }\n';
+        str += '    else\n';
+        str += '    {\n';
+        str += '        $1 = $1 + vec4(czm_batchTable_offset2D(batchId) * applyOffset, 0.0);';
+        str += '    }\n';
         modifiedShader = modifiedShader.replace(/vec4\s+([A-Za-z0-9_]+)\s+=\s+czm_computePosition\(\);/g, str);
         return modifiedShader;
     };
@@ -905,12 +925,12 @@ define([
             '    vec2 distanceDisplayCondition = czm_batchTable_distanceDisplayCondition(batchId);\n' +
             '    vec3 boundingSphereCenter3DHigh = czm_batchTable_boundingSphereCenter3DHigh(batchId);\n' +
             '    vec3 boundingSphereCenter3DLow = czm_batchTable_boundingSphereCenter3DLow(batchId);\n' +
-            '    vec3 boundingSphereCenter2DHigh = czm_batchTable_boundingSphereCenter2DHigh(batchId);\n' +
-            '    vec3 boundingSphereCenter2DLow = czm_batchTable_boundingSphereCenter2DLow(batchId);\n' +
             '    float boundingSphereRadius = czm_batchTable_boundingSphereRadius(batchId);\n';
 
         if (!scene3DOnly) {
             distanceDisplayConditionMain +=
+                '    vec3 boundingSphereCenter2DHigh = czm_batchTable_boundingSphereCenter2DHigh(batchId);\n' +
+                '    vec3 boundingSphereCenter2DLow = czm_batchTable_boundingSphereCenter2DLow(batchId);\n' +
                 '    vec4 centerRTE;\n' +
                 '    if (czm_morphTime == 1.0)\n' +
                 '    {\n' +
@@ -1394,15 +1414,74 @@ define([
             batchTable.setBatchedAttribute(i, center3DHighIndex, encodedCenter.high);
             batchTable.setBatchedAttribute(i, center3DLowIndex, encodedCenter.low);
 
-            var cartographic = ellipsoid.cartesianToCartographic(center, scratchBoundingSphereCartographic);
-            var center2D = projection.project(cartographic, scratchBoundingSphereCenter2D);
-            encodedCenter = EncodedCartesian3.fromCartesian(center2D, scratchBoundingSphereCenterEncoded);
-            batchTable.setBatchedAttribute(i, center2DHighIndex, encodedCenter.high);
-            batchTable.setBatchedAttribute(i, center2DLowIndex, encodedCenter.low);
+            if (!frameState.scene3DOnly) {
+                var cartographic = ellipsoid.cartesianToCartographic(center, scratchBoundingSphereCartographic);
+                var center2D = projection.project(cartographic, scratchBoundingSphereCenter2D);
+                encodedCenter = EncodedCartesian3.fromCartesian(center2D, scratchBoundingSphereCenterEncoded);
+                batchTable.setBatchedAttribute(i, center2DHighIndex, encodedCenter.high);
+                batchTable.setBatchedAttribute(i, center2DLowIndex, encodedCenter.low);
+            }
+
             batchTable.setBatchedAttribute(i, radiusIndex, radius);
         }
 
         primitive._batchTableBoundingSpheresUpdated = true;
+    }
+
+    var offsetScratchCartesian = new Cartesian3();
+    var offsetCenterScratch = new Cartesian3();
+    function updateBatchTableOffsets(primitive, frameState) {
+        var hasOffset = defined(primitive._batchTableAttributeIndices.offset);
+        if (!hasOffset || primitive._batchTableOffsetsUpdated || frameState.scene3DOnly) {
+            return;
+        }
+
+        var index2D = primitive._batchTableOffsetAttribute2DIndex;
+
+        var projection = frameState.mapProjection;
+        var ellipsoid = projection.ellipsoid;
+
+        var batchTable = primitive._batchTable;
+        var boundingSpheres = primitive._instanceBoundingSpheres;
+        var length = boundingSpheres.length;
+
+        for (var i = 0; i < length; ++i) {
+            var boundingSphere = boundingSpheres[i];
+            if (!defined(boundingSphere)) {
+                continue;
+            }
+            var offset = batchTable.getBatchedAttribute(i, primitive._batchTableAttributeIndices.offset);
+            if (Cartesian3.equals(offset, Cartesian3.ZERO)) {
+                batchTable.setBatchedAttribute(i, index2D, Cartesian3.ZERO);
+                continue;
+            }
+
+            var modelMatrix = primitive.modelMatrix;
+            if (defined(modelMatrix)) {
+                boundingSphere = BoundingSphere.transform(boundingSphere, modelMatrix, scratchBoundingSphere);
+            }
+
+            var center = boundingSphere.center;
+            center = ellipsoid.scaleToGeodeticSurface(center, offsetCenterScratch);
+            var cartographic = ellipsoid.cartesianToCartographic(center, scratchBoundingSphereCartographic);
+            var center2D = projection.project(cartographic, scratchBoundingSphereCenter2D);
+
+            var newPoint = Cartesian3.add(offset, center, offsetScratchCartesian);
+            cartographic = ellipsoid.cartesianToCartographic(newPoint, cartographic);
+
+            var newPointProjected = projection.project(cartographic, offsetScratchCartesian);
+
+            var newVector = Cartesian3.subtract(newPointProjected, center2D, offsetScratchCartesian);
+
+            var x = newVector.x;
+            newVector.x = newVector.z;
+            newVector.z = newVector.y;
+            newVector.y = x;
+
+            batchTable.setBatchedAttribute(i, index2D, newVector);
+        }
+
+        primitive._batchTableOffsetsUpdated = true;
     }
 
     function createVertexArray(primitive, frameState) {
@@ -1822,6 +1901,7 @@ define([
 
         if (this._state === PrimitiveState.COMBINED) {
             updateBatchTableBoundingSpheres(this, frameState);
+            updateBatchTableOffsets(this, frameState);
             createVertexArray(this, frameState);
         }
 
@@ -1829,6 +1909,9 @@ define([
             return;
         }
 
+        if (!this._batchTableOffsetsUpdated) {
+            updateBatchTableOffsets(this, frameState);
+        }
         if (this._recomputeBoundingSpheres) {
             recomputeBoundingSpheres(this, frameState);
         }
@@ -1934,6 +2017,7 @@ define([
             batchTable.setBatchedAttribute(instanceIndex, attributeIndex, attributeValue);
             if (name === 'offset') {
                 primitive._recomputeBoundingSpheres = true;
+                primitive._batchTableOffsetsUpdated = false;
             }
         };
     }
