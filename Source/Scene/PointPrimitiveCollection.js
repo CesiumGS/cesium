@@ -91,7 +91,7 @@ define([
      * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Determines if this primitive's commands' bounding spheres are shown.
      * @param {BlendOption} [options.blendOption=BlendOption.OPAQUE_AND_TRANSLUCENT] The point blending option. The default
      * is used for rendering both opaque and translucent points. However, if either all of the points are completely opaque or all are completely translucent,
-     * setting the technique to BillboardRenderTechnique.OPAQUE or BillboardRenderTechnique.TRANSLUCENT can improve performance by up to 2x.
+     * setting the technique to BlendOption.OPAQUE or BlendOption.TRANSLUCENT can improve performance by up to 2x.
      *
      * @performance For best performance, prefer a few collections, each with many points, to
      * many collections with only a few points each.  Organize collections so that points
@@ -121,7 +121,6 @@ define([
 
         this._sp = undefined;
         this._spTranslucent = undefined;
-        this._spPick = undefined;
         this._rsOpaque = undefined;
         this._rsTranslucent = undefined;
         this._vaf = undefined;
@@ -134,19 +133,15 @@ define([
 
         this._shaderScaleByDistance = false;
         this._compiledShaderScaleByDistance = false;
-        this._compiledShaderScaleByDistancePick = false;
 
         this._shaderTranslucencyByDistance = false;
         this._compiledShaderTranslucencyByDistance = false;
-        this._compiledShaderTranslucencyByDistancePick = false;
 
         this._shaderDistanceDisplayCondition = false;
         this._compiledShaderDistanceDisplayCondition = false;
-        this._compiledShaderDistanceDisplayConditionPick = false;
 
         this._shaderDisableDepthDistance = false;
         this._compiledShaderDisableDepthDistance = false;
-        this._compiledShaderDisableDepthDistancePick = false;
 
         this._propertiesChanged = new Uint32Array(NUMBER_OF_PROPERTIES);
 
@@ -159,7 +154,6 @@ define([
         this._boundingVolumeDirty = false;
 
         this._colorCommands = [];
-        this._pickCommands = [];
 
         /**
          * The 4x4 transformation matrix that transforms each point in this collection from model to world coordinates.
@@ -211,7 +205,7 @@ define([
         /**
          * The point blending option. The default is used for rendering both opaque and translucent points.
          * However, if either all of the points are completely opaque or all are completely translucent,
-         * setting the technique to BillboardRenderTechnique.OPAQUE or BillboardRenderTechnique.TRANSLUCENT can improve
+         * setting the technique to BlendOption.OPAQUE or BlendOption.TRANSLUCENT can improve
          * performance by up to 2x.
          * @type {BlendOption}
          * @default BlendOption.OPAQUE_AND_TRANSLUCENT
@@ -982,49 +976,6 @@ define([
             this._compiledShaderDisableDepthDistance = this._shaderDisableDepthDistance;
         }
 
-        if (!defined(this._spPick) ||
-            (this._shaderScaleByDistance && !this._compiledShaderScaleByDistancePick) ||
-            (this._shaderTranslucencyByDistance && !this._compiledShaderTranslucencyByDistancePick) ||
-            (this._shaderDistanceDisplayCondition && !this._compiledShaderDistanceDisplayConditionPick) ||
-            (this._shaderDisableDepthDistance !== this._compiledShaderDisableDepthDistancePick)) {
-
-            vs = new ShaderSource({
-                defines : ['RENDER_FOR_PICK'],
-                sources : [PointPrimitiveCollectionVS]
-            });
-
-            if (this._shaderScaleByDistance) {
-                vs.defines.push('EYE_DISTANCE_SCALING');
-            }
-            if (this._shaderTranslucencyByDistance) {
-                vs.defines.push('EYE_DISTANCE_TRANSLUCENCY');
-            }
-            if (this._shaderDistanceDisplayCondition) {
-                vs.defines.push('DISTANCE_DISPLAY_CONDITION');
-            }
-            if (this._shaderDisableDepthDistance) {
-                vs.defines.push('DISABLE_DEPTH_DISTANCE');
-            }
-
-            fs = new ShaderSource({
-                defines : ['RENDER_FOR_PICK'],
-                sources : [PointPrimitiveCollectionFS]
-            });
-
-            this._spPick = ShaderProgram.replaceCache({
-                context : context,
-                shaderProgram : this._spPick,
-                vertexShaderSource : vs,
-                fragmentShaderSource : fs,
-                attributeLocations : attributeLocations
-            });
-
-            this._compiledShaderScaleByDistancePick = this._shaderScaleByDistance;
-            this._compiledShaderTranslucencyByDistancePick = this._shaderTranslucencyByDistance;
-            this._compiledShaderDistanceDisplayConditionPick = this._shaderDistanceDisplayCondition;
-            this._compiledShaderDisableDepthDistancePick = this._shaderDisableDepthDistance;
-        }
-
         var va;
         var vaLength;
         var command;
@@ -1032,7 +983,7 @@ define([
 
         var commandList = frameState.commandList;
 
-        if (pass.render) {
+        if (pass.render || picking) {
             var colorList = this._colorCommands;
 
             var opaque = this._blendOption === BlendOption.OPAQUE;
@@ -1063,34 +1014,7 @@ define([
                 command.vertexArray = va[index].va;
                 command.renderState = opaqueCommand ? this._rsOpaque : this._rsTranslucent;
                 command.debugShowBoundingVolume = this.debugShowBoundingVolume;
-
-                commandList.push(command);
-            }
-        }
-
-        if (picking) {
-            var pickList = this._pickCommands;
-
-            va = this._vaf.va;
-            vaLength = va.length;
-
-            pickList.length = vaLength;
-            for (j = 0; j < vaLength; ++j) {
-                command = pickList[j];
-                if (!defined(command)) {
-                    command = pickList[j] = new DrawCommand({
-                        primitiveType : PrimitiveType.POINTS,
-                        pass : Pass.OPAQUE,
-                        owner : this
-                    });
-                }
-
-                command.boundingVolume = boundingVolume;
-                command.modelMatrix = modelMatrix;
-                command.shaderProgram = this._spPick;
-                command.uniformMap = this._uniforms;
-                command.vertexArray = va[j].va;
-                command.renderState = this._rsOpaque;
+                command.pickId = 'v_pickColor';
 
                 commandList.push(command);
             }

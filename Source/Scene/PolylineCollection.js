@@ -185,7 +185,6 @@ define([
         this._translucentRS = undefined;
 
         this._colorCommands = [];
-        this._pickCommands = [];
 
         this._polylinesUpdated = false;
         this._polylinesRemoved = false;
@@ -299,13 +298,18 @@ define([
     PolylineCollection.prototype.remove = function(polyline) {
         if (this.contains(polyline)) {
             this._polylines[polyline._index] = undefined; // Removed later
+
+            var polylineUpdateIndex = this._polylinesToUpdate.indexOf(polyline);
+            if (polylineUpdateIndex !== -1) {
+                this._polylinesToUpdate.splice(polylineUpdateIndex, 1);
+            }
+
             this._polylinesRemoved = true;
             this._createVertexArray = true;
             this._createBatchTable = true;
             if (defined(polyline._bucket)) {
                 var bucket = polyline._bucket;
                 bucket.shaderProgram = bucket.shaderProgram && bucket.shaderProgram.destroy();
-                bucket.pickShaderProgram = bucket.pickShaderProgram && bucket.pickShaderProgram.destroy();
             }
             polyline._destroy();
             return true;
@@ -564,21 +568,16 @@ define([
 
         this._batchTable.update(frameState);
 
-        if (pass.render) {
+        if (pass.render || pass.pick) {
             var colorList = this._colorCommands;
-            createCommandLists(this, frameState, colorList, modelMatrix, true);
-        }
-
-        if (pass.pick) {
-            var pickList = this._pickCommands;
-            createCommandLists(this, frameState, pickList, modelMatrix, false);
+            createCommandLists(this, frameState, colorList, modelMatrix);
         }
     };
 
     var boundingSphereScratch = new BoundingSphere();
     var boundingSphereScratch2 = new BoundingSphere();
 
-    function createCommandLists(polylineCollection, frameState, commands, modelMatrix, renderPass) {
+    function createCommandLists(polylineCollection, frameState, commands, modelMatrix) {
         var context = frameState.context;
         var commandList = frameState.commandList;
 
@@ -602,7 +601,7 @@ define([
                 var bucketLocator = buckets[n];
 
                 var offset = bucketLocator.offset;
-                var sp = renderPass ? bucketLocator.bucket.shaderProgram : bucketLocator.bucket.pickShaderProgram;
+                var sp = bucketLocator.bucket.shaderProgram;
 
                 var polylines = bucketLocator.bucket.polylines;
                 var polylineLength = polylines.length;
@@ -638,7 +637,8 @@ define([
                             command.vertexArray = va.va;
                             command.renderState = translucent ? polylineCollection._translucentRS : polylineCollection._opaqueRS;
                             command.pass = translucent ? Pass.TRANSLUCENT : Pass.OPAQUE;
-                            command.debugShowBoundingVolume = renderPass ? debugShowBoundingVolume : false;
+                            command.debugShowBoundingVolume = debugShowBoundingVolume;
+                            command.pickId = 'v_pickColor';
 
                             command.uniformMap = uniformMap;
                             command.count = count;
@@ -707,7 +707,8 @@ define([
                     command.vertexArray = va.va;
                     command.renderState = currentMaterial.isTranslucent() ? polylineCollection._translucentRS : polylineCollection._opaqueRS;
                     command.pass = currentMaterial.isTranslucent() ? Pass.TRANSLUCENT : Pass.OPAQUE;
-                    command.debugShowBoundingVolume = renderPass ? debugShowBoundingVolume : false;
+                    command.debugShowBoundingVolume = debugShowBoundingVolume;
+                    command.pickId = 'v_pickColor';
 
                     command.uniformMap = uniformMap;
                     command.count = count;
@@ -1152,7 +1153,6 @@ define([
         this.lengthOfPositions = 0;
         this.material = material;
         this.shaderProgram = undefined;
-        this.pickShaderProgram = undefined;
         this.mode = mode;
         this.modelMatrix = modelMatrix;
     }
@@ -1182,7 +1182,7 @@ define([
 
         var fs = new ShaderSource({
             defines : defines,
-            sources : [this.material.shaderSource, PolylineFS]
+            sources : ['varying vec4 v_pickColor;\n', this.material.shaderSource, PolylineFS]
         });
 
         var vsSource = batchTable.getVertexShaderCallback()(PolylineVS);
@@ -1191,22 +1191,10 @@ define([
             sources : [PolylineCommon, vsSource]
         });
 
-        var fsPick = new ShaderSource({
-            sources : fs.sources,
-            pickColorQualifier : 'varying'
-        });
-
         this.shaderProgram = ShaderProgram.fromCache({
             context : context,
             vertexShaderSource : vs,
             fragmentShaderSource : fs,
-            attributeLocations : attributeLocations
-        });
-
-        this.pickShaderProgram = ShaderProgram.fromCache({
-            context : context,
-            vertexShaderSource : vs,
-            fragmentShaderSource : fsPick,
             attributeLocations : attributeLocations
         });
     };

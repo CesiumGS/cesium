@@ -1,6 +1,7 @@
 define([
         '../Core/Cartesian2',
         '../Core/Cartesian3',
+        '../Core/Check',
         '../Core/Color',
         '../Core/defaultValue',
         '../Core/defined',
@@ -8,6 +9,7 @@ define([
     ], function(
         Cartesian2,
         Cartesian3,
+        Check,
         Color,
         defaultValue,
         defined,
@@ -23,16 +25,16 @@ define([
      * @constructor
      *
      * @param {Object} options An object with the following properties:
-     * @param {Number} [options.mass=1.0] The mass of particles in kilograms.
+     * @param {Number} [options.mass=1.0] The mass of the particle in kilograms.
      * @param {Cartesian3} [options.position=Cartesian3.ZERO] The initial position of the particle in world coordinates.
      * @param {Cartesian3} [options.velocity=Cartesian3.ZERO] The velocity vector of the particle in world coordinates.
-     * @param {Number} [options.life=Number.MAX_VALUE] The life of particles in seconds.
+     * @param {Number} [options.life=Number.MAX_VALUE] The life of the particle in seconds.
      * @param {Object} [options.image] The URI, HTMLImageElement, or HTMLCanvasElement to use for the billboard.
      * @param {Color} [options.startColor=Color.WHITE] The color of a particle when it is born.
      * @param {Color} [options.endColor=Color.WHITE] The color of a particle when it dies.
      * @param {Number} [options.startScale=1.0] The scale of the particle when it is born.
      * @param {Number} [options.endScale=1.0] The scale of the particle when it dies.
-     * @param {Cartesian2} [options.size=new Cartesian2(1.0, 1.0)] The dimensions of particles in pixels.
+     * @param {Cartesian2} [options.imageSize=new Cartesian2(1.0, 1.0)] The dimensions, width by height, to scale the particle image in pixels.
      */
     function Particle(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -92,11 +94,11 @@ define([
          */
         this.endScale = defaultValue(options.endScale, 1.0);
         /**
-         * The dimensions of the particle in pixels.
+         * The dimensions, width by height, to scale the particle image in pixels.
          * @type {Cartesian2}
          * @default new Cartesian(1.0, 1.0)
          */
-        this.size = Cartesian2.clone(defaultValue(options.size, defaultSize));
+        this.imageSize = Cartesian2.clone(defaultValue(options.imageSize, defaultSize));
 
         this._age = 0.0;
         this._normalizedAge = 0.0;
@@ -133,21 +135,14 @@ define([
     /**
      * @private
      */
-    Particle.prototype.update = function(dt, forces) {
+    Particle.prototype.update = function(dt, particleUpdateFunction) {
         // Apply the velocity
         Cartesian3.multiplyByScalar(this.velocity, dt, deltaScratch);
         Cartesian3.add(this.position, deltaScratch, this.position);
 
         // Update any forces.
-        if (defined(forces)) {
-            var length = forces.length;
-            for (var i = 0; i < length; ++i) {
-                var force = forces[i];
-                if (typeof force === 'function') {
-                    // Force is just a simple callback function.
-                    force(this, dt);
-                }
-            }
+        if (defined(particleUpdateFunction)) {
+            particleUpdateFunction(this, dt);
         }
 
         // Age the particle

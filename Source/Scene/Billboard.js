@@ -159,6 +159,9 @@ define([
         this._imageWidth = undefined;
         this._imageHeight = undefined;
 
+        this._labelDimensions = undefined;
+        this._labelHorizontalOrigin = undefined;
+
         var image = options.image;
         var imageId = options.imageId;
         if (defined(image)) {
@@ -210,7 +213,8 @@ define([
     var PIXEL_OFFSET_SCALE_BY_DISTANCE_INDEX = Billboard.PIXEL_OFFSET_SCALE_BY_DISTANCE_INDEX = 13;
     var DISTANCE_DISPLAY_CONDITION = Billboard.DISTANCE_DISPLAY_CONDITION = 14;
     var DISABLE_DEPTH_DISTANCE = Billboard.DISABLE_DEPTH_DISTANCE = 15;
-    Billboard.NUMBER_OF_PROPERTIES = 16;
+    Billboard.TEXTURE_COORDINATE_BOUNDS = 16;
+    Billboard.NUMBER_OF_PROPERTIES = 17;
 
     function makeDirty(billboard, propertyChanged) {
         var billboardCollection = billboard._billboardCollection;
@@ -834,6 +838,15 @@ define([
                 if (defined(this._pickId)) {
                     this._pickId.object.primitive = value;
                 }
+            }
+        },
+
+        /**
+         * @private
+         */
+        pickId : {
+            get : function() {
+                return this._pickId;
             }
         },
 

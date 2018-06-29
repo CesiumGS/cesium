@@ -8,6 +8,7 @@ define([
         '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/Event',
+        '../Core/GeographicProjection',
         '../Core/GeographicTilingScheme',
         '../Core/Math',
         '../Core/Rectangle',
@@ -30,6 +31,7 @@ define([
         defineProperties,
         DeveloperError,
         Event,
+        GeographicProjection,
         GeographicTilingScheme,
         CesiumMath,
         Rectangle,
@@ -259,7 +261,7 @@ define([
                 f: 'image'
             };
 
-            if (imageryProvider._tilingScheme instanceof GeographicTilingScheme) {
+            if (imageryProvider._tilingScheme.projection instanceof GeographicProjection) {
                 query.bboxSR = 4326;
                 query.imageSR = 4326;
             } else {
@@ -622,7 +624,7 @@ define([
         var horizontal;
         var vertical;
         var sr;
-        if (this._tilingScheme instanceof GeographicTilingScheme) {
+        if (this._tilingScheme.projection instanceof GeographicProjection) {
             horizontal = CesiumMath.toDegrees(longitude);
             vertical = CesiumMath.toDegrees(latitude);
             sr = '4326';

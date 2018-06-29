@@ -71,6 +71,7 @@ define([
             if (defined(unsubscribe)) {
                 unsubscribe();
                 this.subscriptions.remove(id);
+                this.showsUpdated.remove(id);
             }
         }
     };
@@ -111,6 +112,7 @@ define([
                 }
 
                 primitive = new Primitive({
+                    show : false,
                     asynchronous : true,
                     geometryInstances : geometries,
                     appearance : new PerInstanceColorAppearance({
@@ -142,6 +144,7 @@ define([
             this.createPrimitive = false;
             this.waitingOnCreate = true;
         } else if (defined(primitive) && primitive.ready) {
+            primitive.show = true;
             if (defined(this.oldPrimitive)) {
                 primitives.remove(this.oldPrimitive);
                 this.oldPrimitive = undefined;
@@ -373,7 +376,7 @@ define([
         var solidBatchesLength = solidBatches.length;
         for (i = 0; i < solidBatchesLength; i++) {
             var solidBatch = solidBatches[i];
-            if(solidBatch.contains(updater)){
+            if (solidBatch.contains(updater)){
                 return solidBatch.getBoundingSphere(updater, result);
             }
         }
@@ -382,7 +385,7 @@ define([
         var translucentBatchesLength = translucentBatches.length;
         for (i = 0; i < translucentBatchesLength; i++) {
             var translucentBatch = translucentBatches[i];
-            if(translucentBatch.contains(updater)){
+            if (translucentBatch.contains(updater)){
                 return translucentBatch.getBoundingSphere(updater, result);
             }
         }

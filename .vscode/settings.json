@@ -6,21 +6,19 @@
         "**/Thumbs.db": true,
         ".idea": true,
         ".metadata": true,
-        "Build": true,
-        "Instrumented": true,
-        "node_modules": true,
         ".settings": true,
         ".externalToolBuilders": true,
         ".project": true,
-        "launches": true,
-        "Cesium-*.zip": true,
-        "cesium-*.tgz": true,
-        "Apps/Sandcastle/jsHintOptions.js": true,
-        "Apps/Sandcastle/gallery/gallery-index.js": true,
-        "Source/Cesium.js": true,
-        "Source/Shaders/**/*.js": true,
-        "Specs/SpecList.js": true,
-        "npm-debug.log": true
+        "launches": true
+    },
+    "search.exclude": {
+        "Build": true,
+        "Instrumented": true,
+        "node_modules": true,
+        "Source/Shaders/**/*.js": true
+    },
+    "files.associations": {
+        "*.czml": "json"
     },
     "files.trimTrailingWhitespace": true,
     "files.insertFinalNewline": true,

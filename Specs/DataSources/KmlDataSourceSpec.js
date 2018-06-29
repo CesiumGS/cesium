@@ -7,7 +7,6 @@ defineSuite([
         'Core/ClockStep',
         'Core/Color',
         'Core/combine',
-        'Core/DefaultProxy',
         'Core/Ellipsoid',
         'Core/Event',
         'Core/HeadingPitchRange',
@@ -16,6 +15,7 @@ defineSuite([
         'Core/JulianDate',
         'Core/Math',
         'Core/NearFarScalar',
+        'Core/PerspectiveFrustum',
         'Core/Rectangle',
         'Core/RequestErrorEvent',
         'Core/Resource',
@@ -45,7 +45,6 @@ defineSuite([
         ClockStep,
         Color,
         combine,
-        DefaultProxy,
         Ellipsoid,
         Event,
         HeadingPitchRange,
@@ -54,6 +53,7 @@ defineSuite([
         JulianDate,
         CesiumMath,
         NearFarScalar,
+        PerspectiveFrustum,
         Rectangle,
         RequestErrorEvent,
         Resource,
@@ -136,10 +136,7 @@ defineSuite([
             upWC : new Cartesian3(0.0, 1.0, 0.0),
             pitch : 0.0,
             heading : 0.0,
-            frustum : {
-                aspectRatio : 1.0,
-                fov : CesiumMath.PI_OVER_FOUR
-            },
+            frustum : new PerspectiveFrustum(),
             computeViewRectangle : function() {
                 return Rectangle.MAX_VALUE;
             },
@@ -152,6 +149,8 @@ defineSuite([
             clientHeight : 512
         }
     };
+    options.camera.frustum.fov = CesiumMath.PI_OVER_FOUR;
+    options.camera.frustum.aspectRatio = 1.0;
 
     beforeEach(function() {
         // Reset camera - x value will change during onStop tests
@@ -888,7 +887,7 @@ defineSuite([
         });
     });
 
-    it('GroundOverlay: Sets rectangle coordinates and rotation', function() {
+    it('GroundOverlay: Sets rectangle coordinates, rotation and zIndex', function() {
         var kml = '<?xml version="1.0" encoding="UTF-8"?>\
         <GroundOverlay>\
             <LatLonBox>\
@@ -898,6 +897,7 @@ defineSuite([
                 <north>2</north>\
                 <rotation>45</rotation>\
             </LatLonBox>\
+            <drawOrder>3</drawOrder>\
         </GroundOverlay>';
 
         return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
@@ -906,6 +906,7 @@ defineSuite([
             expect(entity.rectangle.coordinates.getValue()).toEqualEpsilon(Rectangle.fromDegrees(3, 1, 4, 2), CesiumMath.EPSILON14);
             expect(entity.rectangle.rotation.getValue()).toEqual(Math.PI / 4);
             expect(entity.rectangle.stRotation.getValue()).toEqual(Math.PI / 4);
+            expect(entity.rectangle.zIndex.getValue()).toEqual(3);
         });
     });
 
@@ -981,6 +982,24 @@ defineSuite([
             var entity = dataSource.entities.values[0];
             expect(entity.polygon.material).toBeInstanceOf(ImageMaterialProperty);
             expect(entity.polygon.material.image.getValue().url).toEqual('http://test.invalid/image.png');
+        });
+    });
+
+    it('GroundOverlay: Sets polygon zIndex for gx:LatLonQuad', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+        <GroundOverlay xmlns="http://www.opengis.net/kml/2.2"\
+                       xmlns:gx="http://www.google.com/kml/ext/2.2">\
+            <gx:LatLonQuad>\
+                <coordinates>\
+                1,2 3,4 5,6 7,8\
+                </coordinates>\
+            </gx:LatLonQuad>\
+            <drawOrder>3</drawOrder>\
+        </GroundOverlay>';
+
+        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+            var entity = dataSource.entities.values[0];
+            expect(entity.polygon.zIndex.getValue()).toEqual(3);
         });
     });
 
@@ -4079,7 +4098,7 @@ defineSuite([
         return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
             expect(dataSource.entities.values.length).toEqual(1);
             expect(console.warn.calls.count()).toEqual(1);
-            expect(console.warn).toHaveBeenCalledWith('KML - gx:drawOrder is not supported in LineStrings');
+            expect(console.warn).toHaveBeenCalledWith('KML - gx:drawOrder is not supported in LineStrings when clampToGround is false');
         });
     });
 
@@ -4401,7 +4420,7 @@ defineSuite([
         });
     });
 
-    it('when a LineString is clamped to ground and tesselated, entity has a corridor geometry and ColorProperty', function() {
+    it('when a LineString is clamped to ground and tesselated, entity has a polyline geometry and ColorProperty', function() {
         var kml = '<?xml version="1.0" encoding="UTF-8"?>\
             <Placemark>\
                 <Style>\
@@ -4420,8 +4439,105 @@ defineSuite([
         var clampToGroundOptions = combine(options, { clampToGround : true });
         return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), clampToGroundOptions).then(function(dataSource) {
             var entity = dataSource.entities.values[0];
-            expect(entity.corridor).toBeDefined();
-            expect(entity.corridor.material).toBeInstanceOf(ColorMaterialProperty);
+            expect(entity.polyline).toBeDefined();
+            expect(entity.polyline.clampToGround.getValue()).toEqual(true);
+            expect(entity.polyline.material).toBeInstanceOf(ColorMaterialProperty);
+        });
+    });
+
+    it('when a LineString is clamped to ground and tesselated with z draworder, entity has a polyline geometry and ColorProperty', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+            <Document xmlns="http://www.opengis.net/kml/2.2"\
+             xmlns:gx="http://www.google.com/kml/ext/2.2">\
+            <Placemark>\
+                <Style>\
+                    <LineStyle>\
+                        <color>FFFF0000</color>\
+                    </LineStyle>\
+                </Style>\
+                <LineString>\
+                    <altitudeMode>clampToGround</altitudeMode>\
+                    <tessellate>true</tessellate>\
+                    <coordinates>1,2,3\
+                                4,5,6\
+                    </coordinates>\
+                    <gx:drawOrder>2</gx:drawOrder>\
+                </LineString>\
+            </Placemark>\
+            </Document>';
+        var clampToGroundOptions = combine(options, { clampToGround : true });
+        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), clampToGroundOptions).then(function(dataSource) {
+            var entity = dataSource.entities.values[0];
+            expect(entity.polyline).toBeDefined();
+            expect(entity.polyline.clampToGround.getValue()).toEqual(true);
+            expect(entity.polyline.zIndex.getValue()).toBe(2);
+        });
+    });
+
+    it('correctly uses random colors', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\n' +
+                  '<Document>\n' +
+                      '<Style id="color2">\n' +
+                          '<PolyStyle>\n' +
+                              '<color>00000000</color>\n' +
+                              '<colorMode>random</colorMode>\n' +
+                          '</PolyStyle>\n' +
+                      '</Style>\n' +
+                          '<Style id="color3">\n' +
+                          '<PolyStyle>\n' +
+                              '<color>9991ccfa</color>\n' +
+                              '<colorMode>random</colorMode>\n' +
+                          '</PolyStyle>\n' +
+                      '</Style>\n' +
+                          '<Style id="color4">\n' +
+                          '<PolyStyle>\n' +
+                              '<color>9991ccfa</color>\n' +
+                              '<colorMode>random</colorMode>\n' +
+                          '</PolyStyle>\n' +
+                      '</Style>\n' +
+                      '<Folder>\n' +
+                          '<Placemark>\n' +
+                              '<styleUrl>#color2</styleUrl>\n' +
+                              '<Polygon>\n' +
+                                  '<outerBoundaryIs>\n' +
+                                      '<LinearRing>\n' +
+                                          '<coordinates>\n' +
+                                              '-89.52101149718367,44.23294548447373,0 -91.98408516538682,47.97512147591338,0 -96.92502046753899,45.42403256080313,0 -89.52101149718367,44.23294548447373,0 \n' +
+                                          '</coordinates>\n' +
+                                      '</LinearRing>\n' +
+                                  '</outerBoundaryIs>\n' +
+                              '</Polygon>\n' +
+                          '</Placemark>\n' +
+                          '<Placemark>\n' +
+                              '<styleUrl>#color3</styleUrl>\n' +
+                              '<Polygon>\n' +
+                                  '<outerBoundaryIs>\n' +
+                                      '<LinearRing>\n' +
+                                          '<coordinates>\n' +
+                                              '-87.93623144974434,37.55775744070508,0 -89.46217805511263,41.26028180023913,0 -96.5546236391081,37.07597093222066,0 -87.93623144974434,37.55775744070508,0 \n' +
+                                          '</coordinates>\n' +
+                                      '</LinearRing>\n' +
+                                  '</outerBoundaryIs>\n' +
+                              '</Polygon>\n' +
+                          '</Placemark>\n' +
+                          '<Placemark>\n' +
+                              '<styleUrl>#color4</styleUrl>\n' +
+                              '<Polygon>\n' +
+                                  '<outerBoundaryIs>\n' +
+                                      '<LinearRing>\n' +
+                                          '<coordinates>\n' +
+                                              '-104.347585776386,32.33288590150301,0 -103.8767557883591,37.6658714706182,0 -109.2704409486033,39.04706243328442,0 -104.347585776386,32.33288590150301,0 \n' +
+                                          '</coordinates>\n' +
+                                      '</LinearRing>\n' +
+                                  '</outerBoundaryIs>\n' +
+                              '</Polygon>\n' +
+                          '</Placemark>\n' +
+                      '</Folder>\n' +
+                  '</Document>\n';
+        CesiumMath.setRandomNumberSeed(0);
+        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+            expect(dataSource.entities.values.length).toEqual(4);
+            expect(dataSource.entities.values[2].polygon.material.color.getValue()).not.toEqual(dataSource.entities.values[3].polygon.material.color.getValue());
         });
     });
 });

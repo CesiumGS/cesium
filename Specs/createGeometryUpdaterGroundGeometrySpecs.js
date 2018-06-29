@@ -3,8 +3,8 @@ define([
         'Core/JulianDate',
         'DataSources/ColorMaterialProperty',
         'DataSources/ConstantProperty',
-        'DataSources/GridMaterialProperty',
         'DataSources/SampledProperty',
+        'Scene/ClassificationType',
         'Scene/GroundPrimitive',
         'Scene/PrimitiveCollection'
     ], function(
@@ -12,14 +12,29 @@ define([
         JulianDate,
         ColorMaterialProperty,
         ConstantProperty,
-        GridMaterialProperty,
         SampledProperty,
+        ClassificationType,
         GroundPrimitive,
         PrimitiveCollection) {
     'use strict';
 
     function createGeometryUpdaterGroundGeometrySpecs(Updater, geometryPropertyName, createEntity, createDynamicEntity, getScene) {
         var time = JulianDate.now();
+
+        it('has default zIndex of zero', function() {
+            var entity = createEntity();
+
+            var updater = new Updater(entity, getScene());
+            expect(updater.zIndex.getValue()).toBe(0);
+        });
+
+        it('uses zIndex value', function() {
+            var entity = createEntity();
+            entity[geometryPropertyName].zIndex = 22;
+
+            var updater = new Updater(entity, getScene());
+            expect(updater.zIndex.getValue()).toBe(22);
+        });
 
         it('A time-varying color causes ground geometry to be dynamic', function() {
             var entity = createEntity();
@@ -31,7 +46,7 @@ define([
             expect(updater.isDynamic).toBe(true);
         });
 
-        it('Checks that an entity without height and extrudedHeight and with a color material is on terrain', function() {
+        it('Checks that an entity without height and extrudedHeight is on terrain', function() {
             var entity = createEntity();
             var geometry = entity[geometryPropertyName];
             geometry.height = undefined;
@@ -62,17 +77,6 @@ define([
             var geometry = entity[geometryPropertyName];
             geometry.height = undefined;
             geometry.extrudedHeight = new ConstantProperty(1);
-
-            var updater = new Updater(entity, getScene());
-
-            expect(updater.onTerrain).toBe(false);
-        });
-
-        it('Checks that an entity with a non-color material isn\'t on terrain', function() {
-            var entity = createEntity();
-            var geometry = entity[geometryPropertyName];
-            geometry.height = undefined;
-            geometry.material = new GridMaterialProperty(Color.BLUE);
 
             var updater = new Updater(entity, getScene());
 
@@ -128,15 +132,6 @@ define([
             }
         });
 
-        it('non-color material sets onTerrain to false', function() {
-            var entity = createEntity();
-            var geometry = entity[geometryPropertyName];
-            geometry.fill = true;
-            geometry.material = new GridMaterialProperty();
-            var updater = new Updater(entity, getScene());
-            expect(updater.onTerrain).toBe(false);
-        });
-
         it('dynamic updater on terrain', function() {
             var entity = createDynamicEntity();
 
@@ -156,6 +151,25 @@ define([
             } else {
                 expect(primitives.length).toBe(2);
                 expect(groundPrimitives.length).toBe(0);
+            }
+
+            dynamicUpdater.destroy();
+            updater.destroy();
+        });
+
+        it('dynamic updater on terrain propagates classification type', function() {
+            var entity = createDynamicEntity();
+            entity[geometryPropertyName].classificationType = ClassificationType.BOTH;
+
+            var updater = new Updater(entity, getScene());
+            var primitives = new PrimitiveCollection();
+            var groundPrimitives = new PrimitiveCollection();
+            var dynamicUpdater = updater.createDynamicUpdater(primitives, groundPrimitives);
+
+            dynamicUpdater.update(time);
+
+            if (GroundPrimitive.isSupported(getScene())) {
+                expect(groundPrimitives.get(0).classificationType).toEqual(ClassificationType.BOTH);
             }
 
             dynamicUpdater.destroy();

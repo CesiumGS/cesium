@@ -662,8 +662,8 @@ defineSuite([
         return updateUntilDone(scene.globe).then(function() {
             var creditDisplay = scene.frameState.creditDisplay;
             creditDisplay.showLightbox();
-            expect(creditDisplay._currentFrameCredits.lightboxCredits).toContain(imageryCredit);
-            expect(creditDisplay._currentFrameCredits.lightboxCredits).toContain(terrainCredit);
+            expect(creditDisplay._currentFrameCredits.lightboxCredits.values).toContain(imageryCredit);
+            expect(creditDisplay._currentFrameCredits.lightboxCredits.values).toContain(terrainCredit);
             creditDisplay.hideLightbox();
         });
     });

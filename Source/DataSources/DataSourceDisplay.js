@@ -5,9 +5,10 @@ define([
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/destroyObject',
-        '../Core/DeveloperError',
         '../Core/EventHelper',
+        '../Scene/GroundPolylinePrimitive',
         '../Scene/GroundPrimitive',
+        '../Scene/OrderedGroundPrimitiveCollection',
         '../Scene/PrimitiveCollection',
         './BillboardVisualizer',
         './BoundingSphereState',
@@ -25,9 +26,10 @@ define([
         defined,
         defineProperties,
         destroyObject,
-        DeveloperError,
         EventHelper,
+        GroundPolylinePrimitive,
         GroundPrimitive,
+        OrderedGroundPrimitiveCollection,
         PrimitiveCollection,
         BillboardVisualizer,
         BoundingSphereState,
@@ -60,6 +62,7 @@ define([
         //>>includeEnd('debug');
 
         GroundPrimitive.initializeTerrainHeights();
+        GroundPolylinePrimitive.initializeTerrainHeights();
 
         var scene = options.scene;
         var dataSourceCollection = options.dataSourceCollection;
@@ -130,7 +133,7 @@ define([
                 new ModelVisualizer(scene, entities),
                 new PointVisualizer(entityCluster, entities),
                 new PathVisualizer(scene, entities),
-                new PolylineVisualizer(scene, entities)];
+                new PolylineVisualizer(scene, entities, dataSource._primitives, dataSource._groundPrimitives)];
     };
 
     defineProperties(DataSourceDisplay.prototype, {
@@ -364,7 +367,7 @@ define([
         var displayGroundPrimitives = this._groundPrimitives;
 
         var primitives = displayPrimitives.add(new PrimitiveCollection());
-        var groundPrimitives = displayGroundPrimitives.add(new PrimitiveCollection());
+        var groundPrimitives = displayGroundPrimitives.add(new OrderedGroundPrimitiveCollection());
 
         dataSource._primitives = primitives;
         dataSource._groundPrimitives = groundPrimitives;

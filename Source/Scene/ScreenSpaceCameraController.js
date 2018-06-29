@@ -97,7 +97,7 @@ define([
          */
         this.enableZoom = true;
         /**
-         * If true, allows the user to rotate the camera.  If false, the camera is locked to the current heading.
+         * If true, allows the user to rotate the world which translates the user's position.
          * This flag only applies in 2D and 3D.
          * @type {Boolean}
          * @default true
