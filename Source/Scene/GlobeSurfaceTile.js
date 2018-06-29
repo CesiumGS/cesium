@@ -304,16 +304,24 @@ define([
             tile.state = QuadtreeTileLoadState.LOADING;
         }
 
-        var bvhLevel = terrainProvider.getNearestBvhLevel(tile.x, tile.y, tile.level);
-        if (bvhLevel !== -1 && bvhLevel !== tile.level) {
-            var ancestor = tile.parent;
-            while (ancestor.level !== bvhLevel) {
-                ancestor = ancestor.parent;
-            }
+        if (surfaceTile.boundingVolumeSourceTile !== tile && terrainProvider.getNearestBvhLevel !== undefined) {
+            // So here we are loading this tile, but we know our bounding volume isn't very good, and so our
+            // judgement that it's visible is kind of suspect. If this terrain source has bounding volume data
+            // outside of individual tiles, let's get our hands on that before we waste time downloading
+            // potentially not-actually-visible tiles like this one.
+            var bvhLevel = terrainProvider.getNearestBvhLevel(tile.x, tile.y, tile.level);
+            if (bvhLevel !== -1 && bvhLevel !== tile.level) {
+                var ancestor = tile.parent;
+                while (ancestor.level !== bvhLevel) {
+                    ancestor = ancestor.parent;
+                }
 
-            if (ancestor.data === undefined || ancestor.data.terrainData === undefined) {
-                GlobeSurfaceTile.processStateMachine(ancestor, frameState, terrainProvider, imageryLayerCollection, vertexArraysToDestroy, true);
-                return;
+                if (ancestor.data === undefined || ancestor.data.terrainData === undefined) {
+                    // The ancestor that holds the BVH data isn't loaded yet; load it (terrain only!) instead of this tile.
+                    GlobeSurfaceTile.processStateMachine(ancestor, frameState, terrainProvider, imageryLayerCollection, vertexArraysToDestroy, true);
+                    return;
+
+                }
             }
         }
 
@@ -321,6 +329,12 @@ define([
             processTerrainStateMachine(tile, frameState, terrainProvider, imageryLayerCollection, vertexArraysToDestroy);
         }
 
+        // From here down we're loading imagery, not terrain. We don't want to load imagery until
+        // we're certain that the terrain tiles are actually visible, though. So if our bounding
+        // volume isn't accurate, stop here. Also stop here if we're explicitly loading terrain
+        // only, which happens in these two scenarios:
+        //   * we want ancestor BVH data from this tile but don't plan to render it (see code above).
+        //   * we want to upsample from this tile but don't plan to render it (see processTerrainStateMachine).
         if (terrainOnly || (tile.level !== 0 && tile.data.boundingVolumeSourceTile !== tile)) {
             return;
         }
