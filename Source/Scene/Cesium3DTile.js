@@ -924,8 +924,6 @@ define([
     }
 
     function createRegion(region, transform, result) {
-        var rectangleRegion = Rectangle.unpack(region, 0, scratchRectangle);
-
         if (!Matrix4.equalsEpsilon(transform, Matrix4.IDENTITY, CesiumMath.EPSILON6)) {
             return createBoxFromTransformedRegion(region, transform, result);
         }
@@ -934,6 +932,9 @@ define([
             // Don't update regions when the transform changes
             return result;
         }
+
+        var rectangleRegion = Rectangle.unpack(region, 0, scratchRectangle);
+
         return new TileBoundingRegion({
             rectangle : rectangleRegion,
             minimumHeight : region[4],
