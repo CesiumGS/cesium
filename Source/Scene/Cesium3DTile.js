@@ -8,11 +8,14 @@ define([
         '../Core/defineProperties',
         '../Core/deprecationWarning',
         '../Core/destroyObject',
+        '../Core/Ellipsoid',
         '../Core/getMagic',
         '../Core/Intersect',
         '../Core/JulianDate',
+        '../Core/Math',
         '../Core/Matrix3',
         '../Core/Matrix4',
+        '../Core/OrientedBoundingBox',
         '../Core/Rectangle',
         '../Core/Request',
         '../Core/RequestScheduler',
@@ -41,11 +44,14 @@ define([
         defineProperties,
         deprecationWarning,
         destroyObject,
+        Ellipsoid,
         getMagic,
         Intersect,
         JulianDate,
+        CesiumMath,
         Matrix3,
         Matrix4,
+        OrientedBoundingBox,
         Rectangle,
         Request,
         RequestScheduler,
@@ -877,6 +883,7 @@ define([
     var scratchHalfAxes = new Matrix3();
     var scratchCenter = new Cartesian3();
     var scratchRectangle = new Rectangle();
+    var scratchOrientedBoundingBox = new OrientedBoundingBox();
 
     function createBox(box, transform, result) {
         var center = Cartesian3.fromElements(box[0], box[1], box[2], scratchCenter);
@@ -894,8 +901,34 @@ define([
         return new TileOrientedBoundingBox(center, halfAxes);
     }
 
-    function createRegion(region, result) {
+    function createBoxFromTransformedRegion(region, transform, result) {
+        var rectangle = Rectangle.unpack(region, 0, scratchRectangle);
+        var minimumHeight = region[4];
+        var maximumHeight = region[5];
+
+        var orientedBoundingBox = OrientedBoundingBox.fromRectangle(rectangle, minimumHeight, maximumHeight, Ellipsoid.WGS84, scratchOrientedBoundingBox);
+        var center = orientedBoundingBox.center;
+        var halfAxes = orientedBoundingBox.halfAxes;
+
+        // Find the transformed center and halfAxes
+        center = Matrix4.multiplyByPoint(transform, center, center);
+        var rotationScale = Matrix4.getRotation(transform, scratchMatrix);
+        halfAxes = Matrix3.multiply(rotationScale, halfAxes, halfAxes);
+
+        if (defined(result) && (result instanceof TileOrientedBoundingBox)) {
+            result.update(center, halfAxes);
+            return result;
+        }
+
+        return new TileOrientedBoundingBox(center, halfAxes);
+    }
+
+    function createRegion(region, transform, result) {
         var rectangleRegion = Rectangle.unpack(region, 0, scratchRectangle);
+
+        if (!Matrix4.equalsEpsilon(transform, Matrix4.IDENTITY, CesiumMath.EPSILON6)) {
+            return createBoxFromTransformedRegion(region, transform, result);
+        }
 
         if (defined(result)) {
             // Don't update regions when the transform changes
@@ -944,7 +977,7 @@ define([
             return createBox(boundingVolumeHeader.box, transform, result);
         }
         if (defined(boundingVolumeHeader.region)) {
-            return createRegion(boundingVolumeHeader.region, result);
+            return createRegion(boundingVolumeHeader.region, transform, result);
         }
         if (defined(boundingVolumeHeader.sphere)) {
             return createSphere(boundingVolumeHeader.sphere, transform, result);
