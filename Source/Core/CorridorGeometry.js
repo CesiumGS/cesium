@@ -11,7 +11,6 @@ define([
         './defaultValue',
         './defined',
         './defineProperties',
-        './DeveloperError',
         './Ellipsoid',
         './Geometry',
         './GeometryAttribute',
@@ -36,7 +35,6 @@ define([
         defaultValue,
         defined,
         defineProperties,
-        DeveloperError,
         Ellipsoid,
         Geometry,
         GeometryAttribute,
@@ -725,7 +723,7 @@ define([
     var scratchCartographicMin = new Cartographic();
     var scratchCartographicMax = new Cartographic();
 
-    function computeRectangle(positions, ellipsoid, width, cornerType) {
+    function computeRectangle(positions, ellipsoid, width, cornerType, result) {
         positions = scaleToSurface(positions, ellipsoid);
         var cleanPositions = arrayRemoveDuplicates(positions, Cartesian3.equalsEpsilon);
         var length = cleanPositions.length;
@@ -783,7 +781,7 @@ define([
             scratchCartographicMax.longitude = Math.max(scratchCartographicMax.longitude, lon);
         }
 
-        var rectangle = new Rectangle();
+        var rectangle = defined(result) ? result : new Rectangle();
         rectangle.north = scratchCartographicMax.latitude;
         rectangle.south = scratchCartographicMin.latitude;
         rectangle.east = scratchCartographicMax.longitude;
@@ -826,12 +824,8 @@ define([
         var width = options.width;
 
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(positions)) {
-            throw new DeveloperError('options.positions is required.');
-        }
-        if (!defined(width)) {
-            throw new DeveloperError('options.width is required.');
-        }
+        Check.defined('options.positions', positions);
+        Check.defined('options.width', width);
         //>>includeEnd('debug');
 
         var height = defaultValue(options.height, 0.0);
@@ -868,12 +862,8 @@ define([
      */
     CorridorGeometry.pack = function(value, array, startingIndex) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(value)) {
-            throw new DeveloperError('value is required');
-        }
-        if (!defined(array)) {
-            throw new DeveloperError('array is required');
-        }
+        Check.defined('value', value);
+        Check.defined('array', array);
         //>>includeEnd('debug');
 
         startingIndex = defaultValue(startingIndex, 0);
@@ -928,9 +918,7 @@ define([
      */
     CorridorGeometry.unpack = function(array, startingIndex, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(array)) {
-            throw new DeveloperError('array is required');
-        }
+        Check.defined('array', array);
         //>>includeEnd('debug');
 
         startingIndex = defaultValue(startingIndex, 0);
@@ -981,6 +969,34 @@ define([
         result._offsetAttribute = offsetAttribute === -1 ? undefined : offsetAttribute;
 
         return result;
+    };
+
+    /**
+     * Computes the bounding rectangle given the provided options
+     *
+     * @param {Object} options Object with the following properties:
+     * @param {Cartesian3[]} options.positions An array of positions that define the center of the corridor.
+     * @param {Number} options.width The distance between the edges of the corridor in meters.
+     * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid to be used as a reference.
+     * @param {CornerType} [options.cornerType=CornerType.ROUNDED] Determines the style of the corners.
+     * @param {Rectangle} [result] An object in which to store the result.
+     *
+     * @returns {Rectangle} The result rectangle.
+     */
+    CorridorGeometry.computeRectangle = function(options, result) {
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+        var positions = options.positions;
+        var width = options.width;
+
+        //>>includeStart('debug', pragmas.debug);
+        Check.defined('options.positions', positions);
+        Check.defined('options.width', width);
+        //>>includeEnd('debug');
+
+        var ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
+        var cornerType = defaultValue(options.cornerType, CornerType.ROUNDED);
+
+        return computeRectangle(positions, ellipsoid, width, cornerType, result);
     };
 
     /**
@@ -1048,7 +1064,8 @@ define([
             attributes : attributes,
             indices : attr.indices,
             primitiveType : PrimitiveType.TRIANGLES,
-            boundingSphere : boundingSphere
+            boundingSphere : boundingSphere,
+            offsetAttribute : corridorGeometry._offsetAttribute
         });
     };
 

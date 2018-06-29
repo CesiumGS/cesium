@@ -13,7 +13,7 @@ define([
     'use strict';
 
     /**
-     * Value and type information for per-instance geometry attribute that determines if the geometry instance has a distance display condition.
+     * Value and type information for per-instance geometry attribute that determines the geometry instance offset
      *
      * @alias OffsetGeometryInstanceAttribute
      * @constructor
@@ -22,23 +22,8 @@ define([
      * @param {Number} [y=0] The y translation
      * @param {Number} [z=0] The z translation
      *
-     * @example
-     * var center = Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883);
-     * var offset = Cartesian3.multiplyByScalar(ellipsoid.geodeticSurfaceNormal(center), 1000, new Cartesian3());
-     * var instance = new Cesium.GeometryInstance({
-     *   geometry : new Cesium.BoxGeometry({
-     *     vertexFormat : Cesium.VertexFormat.POSITION_AND_NORMAL,
-     *     minimum : new Cesium.Cartesian3(-250000.0, -250000.0, -250000.0),
-     *     maximum : new Cesium.Cartesian3(250000.0, 250000.0, 250000.0)
-     *   }),
-     *   modelMatrix : Cesium.Transforms.eastNorthUpToFixedFrame(center),
-     *   id : 'box',
-     *   attributes : {
-     *     offset : Cesium.OffsetGeometryInstanceAttribute.fromCartesian3(offset)
-     *   }
-     * });
-     *
      * @private
+     *
      * @see GeometryInstance
      * @see GeometryInstanceAttribute
      */

@@ -395,6 +395,20 @@ define([
         return geometry;
     }
 
+    function computeRectangle(positions, ellipsoid, result) {
+        if (!defined(positions) || positions.length < 3) {
+            if (!defined(result)) {
+                return new Rectangle();
+            }
+            result.west = 0.0;
+            result.north = 0.0;
+            result.south = 0.0;
+            result.east = 0.0;
+            return result;
+        }
+        return Rectangle.fromCartesianArray(positions, ellipsoid, result);
+    }
+
     var createGeometryFromPositionsExtrudedPositions = [];
 
     function createGeometryFromPositionsExtruded(ellipsoid, polygon, granularity, hierarchy, perPositionHeight, closeTop, closeBottom, vertexFormat) {
@@ -795,6 +809,28 @@ define([
     };
 
     /**
+     * Returns the bounding rectangle given the provided options
+     *
+     * @param {Object} options Object with the following properties:
+     * @param {PolygonHierarchy} options.polygonHierarchy A polygon hierarchy that can include holes.
+     * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid to be used as a reference.
+     * @param {Rectangle} [result] An object in which to store the result.
+     *
+     * @returns {Rectangle} The result rectangle
+     */
+    PolygonGeometry.computeRectangle = function(options, result) {
+        //>>includeStart('debug', pragmas.debug);
+        Check.typeOf.object('options', options);
+        Check.typeOf.object('options.polygonHierarchy', options.polygonHierarchy);
+        //>>includeEnd('debug');
+
+        var polygonHierarchy = options.polygonHierarchy;
+        var ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
+
+        return computeRectangle(polygonHierarchy.positions, ellipsoid, result);
+    };
+
+    /**
      * Computes the geometric representation of a polygon, including its vertices, indices, and a bounding sphere.
      *
      * @param {PolygonGeometry} polygonGeometry A description of the polygon.
@@ -927,7 +963,8 @@ define([
             attributes : attributes,
             indices : geometry.indices,
             primitiveType : geometry.primitiveType,
-            boundingSphere : boundingSphere
+            boundingSphere : boundingSphere,
+            offsetAttribute : polygonGeometry._offsetAttribute
         });
     };
 
@@ -973,11 +1010,7 @@ define([
             get : function() {
                 if (!defined(this._rectangle)) {
                     var positions = this._polygonHierarchy.positions;
-                    if (!defined(positions) || positions.length < 3) {
-                        this._rectangle = new Rectangle();
-                    } else {
-                        this._rectangle = Rectangle.fromCartesianArray(positions, this._ellipsoid);
-                    }
+                    this._rectangle = computeRectangle(positions, this._ellipsoid);
                 }
 
                 return this._rectangle;

@@ -422,6 +422,37 @@ defineSuite([
         expect(textureCoordinateRotationPoints[5]).toEqualEpsilon(0, CesiumMath.EPSILON7);
     });
 
+    it('computeRectangle', function() {
+        var options = {
+            vertexFormat : VertexFormat.POSITION_ONLY,
+            rectangle : new Rectangle.fromDegrees(-1.0, -1.0, 1.0, 1.0),
+            granularity : 1.0,
+            ellipsoid: Ellipsoid.UNIT_SPHERE,
+            rotation: CesiumMath.PI
+        };
+        var geometry = new RectangleGeometry(options);
+
+        var expected = geometry.rectangle;
+        var result = RectangleGeometry.computeRectangle(options);
+
+        expect(result).toEqual(expected);
+    });
+
+    it('computeRectangle with result parameter', function() {
+        var options = {
+            vertexFormat : VertexFormat.POSITION_ONLY,
+            rectangle : new Rectangle.fromDegrees(-1.0, -1.0, 1.0, 1.0)
+        };
+        var geometry = new RectangleGeometry(options);
+
+        var result = new Rectangle();
+        var expected = geometry.rectangle;
+        var returned = RectangleGeometry.computeRectangle(options, result);
+
+        expect(returned).toEqual(expected);
+        expect(returned).toBe(result);
+    });
+
     it('computing rectangle property with zero rotation', function() {
         expect(function() {
             return RectangleGeometry.createGeometry(new RectangleGeometry({

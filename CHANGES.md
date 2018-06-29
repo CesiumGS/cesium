@@ -14,10 +14,13 @@ Change Log
   * Requires depth texture support (`WEBGL_depth_texture` or `WEBKIT_WEBGL_depth_texture`), otherwise `clampToGround` will be ignored.  Use `Entity.supportsPolylinesOnTerrain` to check for support.
   * Added `GroundPolylinePrimitive` and `GroundPolylineGeometry`.
 * `PostProcessStage` has a `selected` property which is an array of primitives used for selectively applying a post-process stage. [#6476](https://github.com/AnalyticalGraphicsInc/cesium/pull/6476)
-   * The `PostProcessStageLibrary.createBlackAndWhiteStage` and `PostProcessStageLibrary.createSilhouetteStage` have per-feature support.
+  * The `PostProcessStageLibrary.createBlackAndWhiteStage` and `PostProcessStageLibrary.createSilhouetteStage` have per-feature support.
 * Added CZML support for `zIndex` for `corridor`, `ellipse`, `polygon`, `polyline` and `rectangle`. [#6708](https://github.com/AnalyticalGraphicsInc/cesium/pull/6708)
 * Added CZML `clampToGround` option for `polyline`. [#6706](https://github.com/AnalyticalGraphicsInc/cesium/pull/6706)
 * Added support for `RTC_CENTER` property in batched 3D model tilesets to conform to the updated [3D Tiles spec](https://github.com/AnalyticalGraphicsInc/3d-tiles/issues/263). [#6488](https://github.com/AnalyticalGraphicsInc/cesium/issues/6488)
+* Added `heightReference` and `extrudedHeightReference` properties to `CorridorGraphics`, `EllipseGraphics`, `PolygonGraphics` and `RectangleGraphics`. [#6717](https://github.com/AnalyticalGraphicsInc/cesium/pull/6717)
+  * This can be used in conjunction with the `height` and/or `extrudedHeight` properties to clamp the geometry to terrain or set the height relative to terrain.
+  * Note, this will not make the geometry conform to terrain.  Extruded geoemtry that is clamped to the ground will have a flat top will sinks into the terrain at the base.
 
 ##### Fixes :wrench:
 * Fixed a bug that caused Cesium to be unable to load local resources in Electron. [#6726](https://github.com/AnalyticalGraphicsInc/cesium/pull/6726)

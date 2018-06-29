@@ -389,7 +389,8 @@ define([
             attributes : geometry.attributes,
             indices : geometry.indices,
             primitiveType : PrimitiveType.LINES,
-            boundingSphere : geometry.boundingSphere
+            boundingSphere : geometry.boundingSphere,
+            offsetAttribute : ellipseGeometry._offsetAttribute
         });
     };
 
