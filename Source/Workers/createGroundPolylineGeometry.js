@@ -9,7 +9,7 @@ define([
     'use strict';
 
     function createGroundPolylineGeometry(groundPolylineGeometry, offset) {
-        return GroundPolylinePrimitive._initializeTerrainHeightsWorker()
+        return GroundPolylinePrimitive.initializeTerrainHeights()
             .then(function() {
                 if (defined(offset)) {
                     groundPolylineGeometry = GroundPolylineGeometry.unpack(groundPolylineGeometry, offset);

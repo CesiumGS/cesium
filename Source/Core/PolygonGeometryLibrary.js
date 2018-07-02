@@ -217,6 +217,15 @@ define([
             var outerRing = outerNode.positions;
             var holes = outerNode.holes;
 
+            var i;
+            var length;
+            if (!perPositionHeight) {
+                length = outerRing.length;
+                for (i = 0; i < length; i++) {
+                    ellipsoid.scaleToGeodeticSurface(outerRing[i], outerRing[i]);
+                }
+            }
+
             outerRing = arrayRemoveDuplicates(outerRing, Cartesian3.equalsEpsilon, true);
             if (outerRing.length < 3) {
                 continue;
@@ -234,12 +243,19 @@ define([
             var positions = outerRing.slice();
             var numChildren = defined(holes) ? holes.length : 0;
             var polygonHoles = [];
-            var i;
             var j;
 
             for (i = 0; i < numChildren; i++) {
                 var hole = holes[i];
-                var holePositions = arrayRemoveDuplicates(hole.positions, Cartesian3.equalsEpsilon, true);
+                var holePositions = hole.positions;
+                if (!perPositionHeight) {
+                    length = holePositions.length;
+                    for (j = 0; j < length; ++j) {
+                        ellipsoid.scaleToGeodeticSurface(holePositions[j], holePositions[j]);
+                    }
+                }
+
+                holePositions = arrayRemoveDuplicates(holePositions, Cartesian3.equalsEpsilon, true);
                 if (holePositions.length < 3) {
                     continue;
                 }
@@ -264,18 +280,6 @@ define([
 
                 for (j = 0; j < numGrandchildren; j++) {
                     queue.enqueue(hole.holes[j]);
-                }
-            }
-
-            if (!perPositionHeight) {
-                for (i = 0; i < outerRing.length; i++) {
-                    ellipsoid.scaleToGeodeticSurface(outerRing[i], outerRing[i]);
-                }
-                for (i = 0; i < polygonHoles.length; i++) {
-                    var polygonHole = polygonHoles[i];
-                    for (j = 0; j < polygonHole.length; ++j) {
-                        ellipsoid.scaleToGeodeticSurface(polygonHole[j], polygonHole[j]);
-                    }
                 }
             }
 

@@ -483,9 +483,17 @@ define([
         var queue = new Queue();
         queue.enqueue(polygonHierarchy);
         var i;
+        var j;
+        var length;
         while (queue.length !== 0) {
             var outerNode = queue.dequeue();
             var outerRing = outerNode.positions;
+            if (!perPositionHeight) {
+                length = outerRing.length;
+                for (i = 0; i < length; i++) {
+                    ellipsoid.scaleToGeodeticSurface(outerRing[i], outerRing[i]);
+                }
+            }
             outerRing = arrayRemoveDuplicates(outerRing, Cartesian3.equalsEpsilon, true);
             if (outerRing.length < 3) {
                 continue;
@@ -495,18 +503,25 @@ define([
             // The outer polygon contains inner polygons
             for (i = 0; i < numChildren; i++) {
                 var hole = outerNode.holes[i];
-                hole.positions = arrayRemoveDuplicates(hole.positions, Cartesian3.equalsEpsilon, true);
-                if (hole.positions.length < 3) {
+                var holePositions = hole.positions;
+                if (!perPositionHeight) {
+                    length = holePositions.length;
+                    for (j = 0; j < length; ++j) {
+                        ellipsoid.scaleToGeodeticSurface(holePositions[j], holePositions[j]);
+                    }
+                }
+                holePositions = arrayRemoveDuplicates(holePositions, Cartesian3.equalsEpsilon, true);
+                if (holePositions.length < 3) {
                     continue;
                 }
-                polygons.push(hole.positions);
+                polygons.push(holePositions);
 
                 var numGrandchildren = 0;
                 if (defined(hole.holes)) {
                     numGrandchildren = hole.holes.length;
                 }
 
-                for ( var j = 0; j < numGrandchildren; j++) {
+                for (j = 0; j < numGrandchildren; j++) {
                     queue.enqueue(hole.holes[j]);
                 }
             }
@@ -554,7 +569,7 @@ define([
                 geometryInstance.geometry.attributes.position.values = PolygonPipeline.scaleToGeodeticHeight(geometryInstance.geometry.attributes.position.values, height, ellipsoid, !perPositionHeight);
 
                 if (defined(polygonGeometry._offsetAttribute)) {
-                    var length = geometryInstance.geometry.attributes.position.values.length;
+                    length = geometryInstance.geometry.attributes.position.values.length;
                     var applyOffset = new Uint8Array(length / 3);
                     offsetValue = polygonGeometry._offsetAttribute === GeometryOffsetAttribute.NONE ? 0 : 1;
                     arrayFill(applyOffset, offsetValue);
@@ -576,7 +591,8 @@ define([
             attributes : geometry.attributes,
             indices : geometry.indices,
             primitiveType : geometry.primitiveType,
-            boundingSphere : boundingSphere
+            boundingSphere : boundingSphere,
+            offsetAttribute : polygonGeometry._offsetAttribute
         });
     };
 

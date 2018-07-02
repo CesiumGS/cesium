@@ -1,8 +1,11 @@
 defineSuite([
         'DataSources/CorridorGeometryUpdater',
+        'Core/ApproximateTerrainHeights',
         'Core/Cartesian3',
         'Core/CornerType',
+        'Core/GeometryOffsetAttribute',
         'Core/JulianDate',
+        'Core/Math',
         'Core/TimeInterval',
         'Core/TimeIntervalCollection',
         'DataSources/ConstantProperty',
@@ -20,9 +23,12 @@ defineSuite([
         'Specs/createScene'
     ], function(
         CorridorGeometryUpdater,
+        ApproximateTerrainHeights,
         Cartesian3,
         CornerType,
+        GeometryOffsetAttribute,
         JulianDate,
+        CesiumMath,
         TimeInterval,
         TimeIntervalCollection,
         ConstantProperty,
@@ -46,15 +52,20 @@ defineSuite([
     beforeAll(function() {
         scene = createScene();
         time = JulianDate.now();
+
+        return ApproximateTerrainHeights.initialize();
     });
 
     afterAll(function() {
         scene.destroyForSpecs();
+
+        ApproximateTerrainHeights._initPromise = undefined;
+        ApproximateTerrainHeights._terrainHeights = undefined;
     });
 
     function createBasicCorridor() {
         var corridor = new CorridorGraphics();
-        corridor.positions = new ConstantProperty(Cartesian3.fromRadiansArray([
+        corridor.positions = new ConstantProperty(Cartesian3.fromDegreesArray([
             0, 0,
             1, 0,
             1, 1,
@@ -69,13 +80,13 @@ defineSuite([
 
     function createDynamicCorridor() {
         var entity = createBasicCorridor();
-        entity.corridor.positions = createDynamicProperty(Cartesian3.fromRadiansArray([0, 0, 1, 0, 1, 1, 0, 1]));
+        entity.corridor.positions = createDynamicProperty(Cartesian3.fromDegreesArray([0, 0, 1, 0, 1, 1, 0, 1]));
         return entity;
     }
 
     function createBasicCorridorWithoutHeight() {
         var corridor = new CorridorGraphics();
-        corridor.positions = new ConstantProperty(Cartesian3.fromRadiansArray([
+        corridor.positions = new ConstantProperty(Cartesian3.fromDegreesArray([
             0, 0,
             1, 0,
             1, 1,
@@ -89,7 +100,7 @@ defineSuite([
 
     function createDynamicCorridorWithoutHeight() {
         var entity = createBasicCorridorWithoutHeight();
-        entity.corridor.positions = createDynamicProperty(Cartesian3.fromRadiansArray([0, 0, 1, 0, 1, 1, 0, 1]));
+        entity.corridor.positions = createDynamicProperty(Cartesian3.fromDegreesArray([0, 0, 1, 0, 1, 1, 0, 1]));
         return entity;
     }
 
@@ -193,6 +204,7 @@ defineSuite([
         expect(geometry._granularity).toEqual(options.granularity);
         expect(geometry._extrudedHeight).toEqual(options.extrudedHeight);
         expect(geometry._cornerType).toEqual(options.cornerType);
+        expect(geometry._offsetAttribute).toBeUndefined();
 
         instance = updater.createOutlineGeometryInstance(time);
         geometry = instance.geometry;
@@ -201,11 +213,12 @@ defineSuite([
         expect(geometry._granularity).toEqual(options.granularity);
         expect(geometry._extrudedHeight).toEqual(options.extrudedHeight);
         expect(geometry._cornerType).toEqual(options.cornerType);
+        expect(geometry._offsetAttribute).toBeUndefined();
     });
 
     it('dynamic updater sets properties', function() {
         var corridor = new CorridorGraphics();
-        corridor.positions = createDynamicProperty(Cartesian3.fromRadiansArray([
+        corridor.positions = createDynamicProperty(Cartesian3.fromDegreesArray([
             0, 0,
             1, 0,
             1, 1,
@@ -234,6 +247,7 @@ defineSuite([
         expect(options.width).toEqual(corridor.width.getValue());
         expect(options.granularity).toEqual(corridor.granularity.getValue());
         expect(options.cornerType).toEqual(corridor.cornerType.getValue());
+        expect(options.offsetAttribute).toBeUndefined();
     });
 
     it('geometryChanged event is raised when expected', function() {
@@ -266,6 +280,13 @@ defineSuite([
         entity.viewFrom = new ConstantProperty(Cartesian3.UNIT_X);
         updater._onEntityPropertyChanged(entity, 'viewFrom');
         expect(listener.calls.count()).toEqual(4);
+    });
+
+    it('computes center', function() {
+        var entity = createBasicCorridor();
+        var updater = new CorridorGeometryUpdater(entity, scene);
+
+        expect(updater._computeCenter(time)).toEqualEpsilon(Cartesian3.fromDegrees(1.0, 1.0), CesiumMath.EPSILON10);
     });
 
     function getScene() {
