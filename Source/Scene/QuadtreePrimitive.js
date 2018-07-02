@@ -135,6 +135,8 @@ define([
 
         this._tileLoadProgressEvent = new Event();
         this._lastTileLoadQueueLength = 0;
+
+        this._lastSelectionFrameNumber = undefined;
     }
 
     defineProperties(QuadtreePrimitive.prototype, {
@@ -525,6 +527,8 @@ define([
                 visitIfVisible(primitive, tile, tileProvider, frameState, occluders, tile);
             }
         }
+
+        primitive._lastSelectionFrameNumber = frameNumber;
     }
 
     function queueTileLoad(primitive, queue, tile, frameState) {
@@ -546,22 +550,38 @@ define([
 
     function reportTileAction(frameState, tile, action) {
         return;
-        var heightSource = tile.data.boundingVolumeSourceTile;
-        var renderable = tile.renderable;
-        if (tile._lastAction !== action || tile._lastHeightSource !== heightSource || tile._lastRenderable !== renderable) {
-            if (lastFrame !== frameState.frameNumber) {
-                console.log('****** FRAME ' + frameState.frameNumber);
-                lastFrame = frameState.frameNumber;
-            }
+        // var heightSource = tile.data.boundingVolumeSourceTile;
+        // var renderable = tile.renderable;
+        // if (tile._lastAction !== action || tile._lastHeightSource !== heightSource || tile._lastRenderable !== renderable) {
+        //     if (lastFrame !== frameState.frameNumber) {
+        //         console.log('****** FRAME ' + frameState.frameNumber);
+        //         lastFrame = frameState.frameNumber;
+        //     }
 
-            var tileID = `L${tile.level}X${tile.x}Y${tile.y}`;
-            var emphasize = tile._lastAction !== undefined && tile._lastAction !== action ? '*' : '';
-            console.log(`${emphasize}${tileID} NOW ${getState(action, heightSource, renderable)} WAS ${getState(tile._lastAction, tile._lastHeightSource, tile._lastRenderable)}`);
+        //     var tileID = `L${tile.level}X${tile.x}Y${tile.y}`;
+        //     var emphasize = tile._lastAction !== undefined && tile._lastAction !== action ? '*' : '';
+        //     console.log(`${emphasize}${tileID} NOW ${getState(action, heightSource, renderable)} WAS ${getState(tile._lastAction, tile._lastHeightSource, tile._lastRenderable)}`);
 
-            tile._lastAction = action;
-            tile._lastHeightSource = heightSource;
-            tile._lastRenderable = renderable;
-        }
+        //     tile._lastAction = action;
+        //     tile._lastHeightSource = heightSource;
+        //     tile._lastRenderable = renderable;
+        // }
+    }
+
+    function isAnyAreRenderable(bitMask) {
+        return (bitMask & 1) === 1;
+    }
+
+    function isAllAreRenderable(bitMask) {
+        return (bitMask & 2) === 2;
+    }
+
+    function isAnyWereRenderedLastFrame(bitMask) {
+        return (bitMask & 4) === 4;
+    }
+
+    function createBitMask(anyAreRenderable, allAreRenderable, anyWereRenderedLastFrame) {
+        return (anyAreRenderable ? 1 : 0) | (allAreRenderable ? 2 : 0) | (anyWereRenderedLastFrame ? 4 : 0);
     }
 
     /**
@@ -576,6 +596,8 @@ define([
      * @param {FrameState} frameState The frame state.
      * @param {QuadtreeTile} tile The tile to visit
      * @param {QuadtreeTile} nearestRenderableTile The nearest ancestor tile for which the `renderable` property is true.
+     * @returns A bit mask where bit 1 is set if this tile or _any_ of its descendants are renderable, and bit 2 is
+     *          set if _all_ selected tiles starting with this tile are renderable.
      */
     function visitTile(primitive, frameState, tile, nearestRenderableTile) {
         var debug = primitive._debug;
@@ -598,7 +620,7 @@ define([
             reportTileAction(frameState, tile, 'meets SSE');
             queueTileLoad(primitive, primitive._tileLoadQueueMedium, tile, frameState);
             addTileToRenderList(primitive, tile, nearestRenderableTile);
-            return tile.renderable;
+            return createBitMask(tile.renderable, tile.renderable, tile._frameRendered === primitive._lastSelectionFrameNumber);
         }
 
         var southwestChild = tile.southwestChild;
@@ -626,7 +648,7 @@ define([
                 primitive._tileReplacementQueue.markTileRendered(northwestChild);
                 primitive._tileReplacementQueue.markTileRendered(northeastChild);
 
-                return tile.renderable;
+                return createBitMask(tile.renderable, tile.renderable, tile._frameRendered === primitive._lastSelectionFrameNumber);
             } else {
                 // SSE is not good enough, so refine.
                 reportTileAction(frameState, tile, 'refine');
@@ -634,7 +656,10 @@ define([
                 var firstRenderedDescendantIndex = primitive._tilesToRender.length;
 
                 // No need to add the children to the load queue because they'll be added (if necessary) when they're visited.
-                var anyAreRenderable = visitVisibleChildrenNearToFar(primitive, southwestChild, southeastChild, northwestChild, northeastChild, frameState, nearestRenderableTile);
+                var bitMask = visitVisibleChildrenNearToFar(primitive, southwestChild, southeastChild, northwestChild, northeastChild, frameState, nearestRenderableTile);
+                var anyAreRenderable = isAnyAreRenderable(bitMask);
+                var allAreRenderable = isAllAreRenderable(bitMask);
+                var anyWereRenderedLastFrame = isAnyWereRenderedLastFrame(bitMask);
 
                 if (firstRenderedDescendantIndex !== primitive._tilesToRender.length) {
                     // If no descendant tiles were added to the render list, it means they were all
@@ -642,12 +667,15 @@ define([
 
                     // Since we're in this `if` block though, at least one descendant tile _was_ added to the render list!
 
-                    if (!anyAreRenderable) {
+                    if (!allAreRenderable && !anyWereRenderedLastFrame) {
                         // But none of our descendants are renderable, so they'll all end up rendering an ancestor.
                         // That's a big waste of time, so kick them all out of the render list and render this tile instead.
                         primitive._tilesToRender.length = firstRenderedDescendantIndex;
                         primitive._nearestRenderableTiles.length = firstRenderedDescendantIndex;
                         addTileToRenderList(primitive, tile, nearestRenderableTile);
+                        anyAreRenderable = tile.renderable;
+                        allAreRenderable = tile.renderable;
+                        anyWereRenderedLastFrame = tile._frameRendered === primitive._lastSelectionFrameNumber;
                     }
 
                     // We'd like to be rendering one or more descendents, and we're either not rendering this
@@ -665,7 +693,7 @@ define([
                     queueTileLoad(primitive, primitive._tileLoadQueueLow, tile, frameState);
                 }
 
-                return anyAreRenderable || tile.renderable;
+                return createBitMask(anyAreRenderable, allAreRenderable, anyWereRenderedLastFrame);
             }
         } else {
             reportTileAction(frameState, tile, 'can\'t refine');
@@ -677,7 +705,7 @@ define([
             addTileToRenderList(primitive, tile, nearestRenderableTile);
             queueTileLoad(primitive, primitive._tileLoadQueueHigh, tile, frameState);
 
-            return tile.renderable;
+            return createBitMask(tile.renderable, tile.renderable, tile._frameRendered === primitive._lastSelectionFrameNumber);
         }
     }
 
@@ -686,37 +714,41 @@ define([
         var tileProvider = primitive._tileProvider;
         var occluders = primitive._occluders;
 
-        var anyAreRenderable = false;
+        var swMask, seMask, nwMask, neMask;
 
         if (cameraPosition.longitude < southwest.rectangle.east) {
             if (cameraPosition.latitude < southwest.rectangle.north) {
                 // Camera in southwest quadrant
-                anyAreRenderable = visitIfVisible(primitive, southwest, tileProvider, frameState, occluders, nearestRenderableTile) || anyAreRenderable;
-                anyAreRenderable = visitIfVisible(primitive, southeast, tileProvider, frameState, occluders, nearestRenderableTile) || anyAreRenderable;
-                anyAreRenderable = visitIfVisible(primitive, northwest, tileProvider, frameState, occluders, nearestRenderableTile) || anyAreRenderable;
-                anyAreRenderable = visitIfVisible(primitive, northeast, tileProvider, frameState, occluders, nearestRenderableTile) || anyAreRenderable;
+                swMask = visitIfVisible(primitive, southwest, tileProvider, frameState, occluders, nearestRenderableTile);
+                seMask = visitIfVisible(primitive, southeast, tileProvider, frameState, occluders, nearestRenderableTile);
+                nwMask = visitIfVisible(primitive, northwest, tileProvider, frameState, occluders, nearestRenderableTile);
+                neMask = visitIfVisible(primitive, northeast, tileProvider, frameState, occluders, nearestRenderableTile);
             } else {
                 // Camera in northwest quadrant
-                anyAreRenderable = visitIfVisible(primitive, northwest, tileProvider, frameState, occluders, nearestRenderableTile) || anyAreRenderable;
-                anyAreRenderable = visitIfVisible(primitive, southwest, tileProvider, frameState, occluders, nearestRenderableTile) || anyAreRenderable;
-                anyAreRenderable = visitIfVisible(primitive, northeast, tileProvider, frameState, occluders, nearestRenderableTile) || anyAreRenderable;
-                anyAreRenderable = visitIfVisible(primitive, southeast, tileProvider, frameState, occluders, nearestRenderableTile) || anyAreRenderable;
+                nwMask = visitIfVisible(primitive, northwest, tileProvider, frameState, occluders, nearestRenderableTile);
+                swMask = visitIfVisible(primitive, southwest, tileProvider, frameState, occluders, nearestRenderableTile);
+                neMask = visitIfVisible(primitive, northeast, tileProvider, frameState, occluders, nearestRenderableTile);
+                seMask = visitIfVisible(primitive, southeast, tileProvider, frameState, occluders, nearestRenderableTile);
             }
         } else if (cameraPosition.latitude < southwest.rectangle.north) {
             // Camera southeast quadrant
-            anyAreRenderable = visitIfVisible(primitive, southeast, tileProvider, frameState, occluders, nearestRenderableTile) || anyAreRenderable;
-            anyAreRenderable = visitIfVisible(primitive, southwest, tileProvider, frameState, occluders, nearestRenderableTile) || anyAreRenderable;
-            anyAreRenderable = visitIfVisible(primitive, northeast, tileProvider, frameState, occluders, nearestRenderableTile) || anyAreRenderable;
-            anyAreRenderable = visitIfVisible(primitive, northwest, tileProvider, frameState, occluders, nearestRenderableTile) || anyAreRenderable;
+            seMask = visitIfVisible(primitive, southeast, tileProvider, frameState, occluders, nearestRenderableTile);
+            swMask = visitIfVisible(primitive, southwest, tileProvider, frameState, occluders, nearestRenderableTile);
+            neMask = visitIfVisible(primitive, northeast, tileProvider, frameState, occluders, nearestRenderableTile);
+            nwMask = visitIfVisible(primitive, northwest, tileProvider, frameState, occluders, nearestRenderableTile);
         } else {
             // Camera in northeast quadrant
-            anyAreRenderable = visitIfVisible(primitive, northeast, tileProvider, frameState, occluders, nearestRenderableTile) || anyAreRenderable;
-            anyAreRenderable = visitIfVisible(primitive, northwest, tileProvider, frameState, occluders, nearestRenderableTile) || anyAreRenderable;
-            anyAreRenderable = visitIfVisible(primitive, southeast, tileProvider, frameState, occluders, nearestRenderableTile) || anyAreRenderable;
-            anyAreRenderable = visitIfVisible(primitive, southwest, tileProvider, frameState, occluders, nearestRenderableTile) || anyAreRenderable;
+            neMask = visitIfVisible(primitive, northeast, tileProvider, frameState, occluders, nearestRenderableTile);
+            nwMask = visitIfVisible(primitive, northwest, tileProvider, frameState, occluders, nearestRenderableTile);
+            seMask = visitIfVisible(primitive, southeast, tileProvider, frameState, occluders, nearestRenderableTile);
+            swMask = visitIfVisible(primitive, southwest, tileProvider, frameState, occluders, nearestRenderableTile);
         }
 
-        return anyAreRenderable;
+        var anyAreRenderable = isAnyAreRenderable(swMask) || isAnyAreRenderable(seMask) || isAnyAreRenderable(nwMask) || isAnyAreRenderable(neMask);
+        var allAreRenderable = isAllAreRenderable(swMask) && isAllAreRenderable(seMask) && isAllAreRenderable(nwMask) && isAllAreRenderable(neMask);
+        var anyWereRenderedLastFrame = isAnyWereRenderedLastFrame(swMask) || isAnyWereRenderedLastFrame(seMask) || isAnyWereRenderedLastFrame(nwMask) || isAnyWereRenderedLastFrame(neMask);
+        var mask = createBitMask(anyAreRenderable, allAreRenderable, anyWereRenderedLastFrame);
+        return mask
     }
 
     function visitIfVisible(primitive, tile, tileProvider, frameState, occluders, nearestRenderableTile) {
@@ -726,7 +758,7 @@ define([
             reportTileAction(frameState, tile, 'culled');
             ++primitive._debug.tilesCulled;
             primitive._tileReplacementQueue.markTileRendered(tile);
-            return false;
+            return createBitMask(false, true, false);
         }
     }
 

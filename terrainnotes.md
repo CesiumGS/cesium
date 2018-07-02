@@ -80,3 +80,18 @@ A tile conceptually has three sets of min/max heights:
 TileBoundingRegion has a both an oriented bounding box and a bounding sphere, but we don't use either of them for terrain.
 Instead, tiles store separate copies of these things (orientingBoundingBox and boundingSphere3D). That's probably good because we update the min/max height in publishToTile but we don't update either of the other two.
 
+## Rendering without data
+
+When the camera moves, new tiles become visible. If those tiles aren't loaded yet, what do we do? Options are:
+
+   1. Render nothing. There will be holes in the Earth's surface.
+   2. Upsample synchronously. Each upsample takes 2-3ms on a fast computer so we can't do much of this without the frame rate taking a dive.
+   3. Render an ancestor tile and discard fragments outside the bounds of the tile. This is nearly free on the CPU, but expensive on the GPU because we end up rendering large tiles and discarding most of the fragments.
+   4. Create a tile on-the-fly to fill the space, e.g. that aligns with the edge vertices of adjacent tiles.
+   5. Don't refine until all descendants are renderable (but do load the descendants we want to render, of course!).
+   6. Show some kind of blurry blobby placeholder for the not-yet-available tile.
+
+Number 5 is a tempting strategy, with one big problem: it can cause us to lose detail from the scene with small camera movements. For example, if we're looking at a detailed scene that shows 3 out of 4 children of a level 14 tile, and then move the camera so that the 4th is visible, suddenly that level 14 tile isn't refinable anymore. If we start rendering that level 14 tiles intead of its children, we'll lose detail from the scene for a second until that 4th tile loads. This looks really bad.
+
+So, our rule is: if we rendered a tile last frame, and it's still visible and the correct SSE this frame, we must render it this frame. In the scenario above, we must use one of our other strategies to fill the space of that 4th child of the level 14 tiles.
+
