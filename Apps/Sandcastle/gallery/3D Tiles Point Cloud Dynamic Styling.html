@@ -29,13 +29,13 @@
 function startup(Cesium) {
     'use strict';
 //Sandcastle_Begin
+// Mt. St. Helens 3D Tileset generated from LAS provided by https://www.liblas.org/samples/
 var viewer = new Cesium.Viewer('cesiumContainer', {
     shouldAnimate : true
 });
 
 var entityPosition = new Cesium.Cartesian3();
 
-// TODO : need st-helens to not have batch ids
 var style = new Cesium.Cesium3DTileStyle({
     mutables : {
         entityPosition : {
@@ -49,20 +49,17 @@ var style = new Cesium.Cesium3DTileStyle({
     color : 'mix(color("yellow"), color("red"), ${distance})'
 });
 
-// Mt. St. Helens 3D Tileset generated from LAS provided by https://www.liblas.org/samples/
-var tileset = new Cesium.Cesium3DTileset({ url: Cesium.IonResource.fromAssetId(3844) });
+var tileset = new Cesium.Cesium3DTileset({ url: Cesium.IonResource.fromAssetId(5255) });
 viewer.scene.primitives.add(tileset);
-tileset.maximumScreenSpaceError = 8.0;
 tileset.pointCloudShading.attenuation = true;
 tileset.style = style;
 
-// Animate the plane
 var start = Cesium.JulianDate.fromDate(new Date(2015, 2, 25, 16));
 var stop = Cesium.JulianDate.addSeconds(start, 360, new Cesium.JulianDate());
 
-viewer.clock.startTime = start.clone();
-viewer.clock.stopTime = stop.clone();
-viewer.clock.currentTime = start.clone();
+viewer.clock.startTime = start;
+viewer.clock.stopTime = stop;
+viewer.clock.currentTime = start;
 viewer.clock.clockRange = Cesium.ClockRange.LOOP_STOP;
 viewer.clock.multiplier = 50;
 
@@ -79,8 +76,8 @@ function computeCirclularFlight(lon, lat, radius) {
     return property;
 }
 
-var position = computeCirclularFlight(-122.2, 46.2, 0.01);
-position.setInterpolationOptions({
+var positionProperty = computeCirclularFlight(-122.2, 46.2, 0.01);
+positionProperty.setInterpolationOptions({
     interpolationDegree : 5,
     interpolationAlgorithm : Cesium.LagrangePolynomialApproximation
 });
@@ -90,8 +87,8 @@ var entity = viewer.entities.add({
         start : start,
         stop : stop
     })]),
-    position : position,
-    orientation : new Cesium.VelocityOrientationProperty(position),
+    position : positionProperty,
+    orientation : new Cesium.VelocityOrientationProperty(positionProperty),
     model : {
         uri : '../../SampleData/models/CesiumAir/Cesium_Air.gltf',
         minimumPixelSize : 80
@@ -99,7 +96,7 @@ var entity = viewer.entities.add({
 });
 
 viewer.scene.postUpdate.addEventListener(function(scene, time) {
-    style.setMutableValue('entityPosition', position.getValue(time, entityPosition));
+    style.setMutableValue('entityPosition', positionProperty.getValue(time, entityPosition));
 });
 
 // Set the initial camera view
