@@ -1949,10 +1949,10 @@ defineSuite([
         var index;
 
         // Expect eastern hemisphere vertices to all be 255 or 127 at the end of the value
-        expect(newScalars.indexOf(127)).not.toBe(-1);
-        expect(newVec4s.indexOf(127)).not.toBe(-1);
-        expect(newVec3s.indexOf(127)).not.toBe(-1);
-        expect(newVec2s.indexOf(127)).not.toBe(-1);
+        expect(Array.prototype.indexOf.call(newScalars, 127)).not.toBe(-1);
+        expect(Array.prototype.indexOf.call(newVec4s, 127)).not.toBe(-1);
+        expect(Array.prototype.indexOf.call(newVec3s, 127)).not.toBe(-1);
+        expect(Array.prototype.indexOf.call(newVec2s, 127)).not.toBe(-1);
         for (i = 0; i < 3; i++) {
             expect(newScalars[i] === 255 || newScalars[i] === 127).toBe(true);
 
@@ -1981,10 +1981,10 @@ defineSuite([
         newScalars = westHemisphereGeometry.attributes.scalars.values;
 
         // Expect eastern hemisphere vertices to all be 0 or 127 at the end of the value
-        expect(newScalars.indexOf(127)).not.toBe(-1);
-        expect(newVec4s.indexOf(127)).not.toBe(-1);
-        expect(newVec3s.indexOf(127)).not.toBe(-1);
-        expect(newVec2s.indexOf(127)).not.toBe(-1);
+        expect(Array.prototype.indexOf.call(newScalars, 127)).not.toBe(-1);
+        expect(Array.prototype.indexOf.call(newVec4s, 127)).not.toBe(-1);
+        expect(Array.prototype.indexOf.call(newVec3s, 127)).not.toBe(-1);
+        expect(Array.prototype.indexOf.call(newVec2s, 127)).not.toBe(-1);
         for (i = 0; i < 4; i++) {
             expect(newScalars[i] === 0 || newScalars[i] === 127).toBe(true);
 
