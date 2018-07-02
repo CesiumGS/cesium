@@ -832,9 +832,20 @@ function combineCesium(debug, optimizer, combineOutput) {
 
 function combineWorkers(debug, optimizer, combineOutput) {
     //This is done waterfall style for concurrency reasons.
-    return globby(['Source/Workers/cesiumWorkerBootstrapper.js',
-                   'Source/Workers/transferTypedArrayTest.js',
-                   'Source/ThirdParty/Workers/*.js'])
+    // Copy files that are already minified
+    return globby(['Source/ThirdParty/Workers/draco*.js'])
+        .then(function(files) {
+            var stream = gulp.src(files, { base: 'Source' })
+                .pipe(gulp.dest(combineOutput));
+            return streamToPromise(stream);
+        })
+        .then(function () {
+            return globby(['Source/Workers/cesiumWorkerBootstrapper.js',
+                'Source/Workers/transferTypedArrayTest.js',
+                'Source/ThirdParty/Workers/*.js',
+                // Files are already minified, don't optimize
+                '!Source/ThirdParty/Workers/draco*.js']);
+        })
         .then(function(files) {
             return Promise.map(files, function(file) {
                 return requirejsOptimize(file, {

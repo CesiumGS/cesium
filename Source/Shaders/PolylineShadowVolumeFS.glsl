@@ -1,3 +1,7 @@
+#ifdef GL_EXT_frag_depth
+#extension GL_EXT_frag_depth : enable
+#endif
+
 varying vec4 v_startPlaneNormalEcAndHalfWidth;
 varying vec4 v_endPlaneNormalEcAndBatchId;
 varying vec4 v_rightPlaneEC; // Technically can compute distance for this here
@@ -78,4 +82,6 @@ void main(void)
     czm_material material = czm_getMaterial(materialInput);
     gl_FragColor = vec4(material.diffuse + material.emission, material.alpha);
 #endif // PER_INSTANCE_COLOR
+
+    czm_writeDepthClampedToFarPlane();
 }

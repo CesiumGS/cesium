@@ -29,7 +29,9 @@ define([
      * @param {Property} [options.semiMajorAxis] The numeric Property specifying the semi-major axis.
      * @param {Property} [options.semiMinorAxis] The numeric Property specifying the semi-minor axis.
      * @param {Property} [options.height=0] A numeric Property specifying the altitude of the ellipse relative to the ellipsoid surface.
+     * @param {Property} [options.heightReference] A Property specifying what the height is relative to.
      * @param {Property} [options.extrudedHeight] A numeric Property specifying the altitude of the ellipse's extruded face relative to the ellipsoid surface.
+     * @param {Property} [options.extrudedHeightReference] A Property specifying what the extrudedHeight is relative to.
      * @param {Property} [options.show=true] A boolean Property specifying the visibility of the ellipse.
      * @param {Property} [options.fill=true] A boolean Property specifying whether the ellipse is filled with the provided material.
      * @param {MaterialProperty} [options.material=Color.WHITE] A Property specifying the material used to fill the ellipse.
@@ -59,8 +61,12 @@ define([
         this._materialSubscription = undefined;
         this._height = undefined;
         this._heightSubscription = undefined;
+        this._heightReference = undefined;
+        this._heightReferenceSubscription = undefined;
         this._extrudedHeight = undefined;
         this._extrudedHeightSubscription = undefined;
+        this._extrudedHeightReference = undefined;
+        this._extrudedHeightReferenceSubscription = undefined;
         this._granularity = undefined;
         this._granularitySubscription = undefined;
         this._stRotation = undefined;
@@ -149,12 +155,28 @@ define([
         height : createPropertyDescriptor('height'),
 
         /**
+         * Gets or sets the Property specifying the {@link HeightReference}.
+         * @memberof EllipseGraphics.prototype
+         * @type {Property}
+         * @default HeightReference.NONE
+         */
+        heightReference : createPropertyDescriptor('heightReference'),
+
+        /**
          * Gets or sets the numeric Property specifying the altitude of the ellipse extrusion.
          * Setting this property creates volume starting at height and ending at this altitude.
          * @memberof EllipseGraphics.prototype
          * @type {Property}
          */
         extrudedHeight : createPropertyDescriptor('extrudedHeight'),
+
+        /**
+         * Gets or sets the Property specifying the extruded {@link HeightReference}.
+         * @memberof EllipseGraphics.prototype
+         * @type {Property}
+         * @default HeightReference.NONE
+         */
+        extrudedHeightReference : createPropertyDescriptor('extrudedHeightReference'),
 
         /**
          * Gets or sets the numeric Property specifying the angular distance between points on the ellipse.
@@ -261,7 +283,9 @@ define([
         result.show = this.show;
         result.material = this.material;
         result.height = this.height;
+        result.heightReference = this.heightReference;
         result.extrudedHeight = this.extrudedHeight;
+        result.extrudedHeightReference = this.extrudedHeightReference;
         result.granularity = this.granularity;
         result.stRotation = this.stRotation;
         result.fill = this.fill;
@@ -295,7 +319,9 @@ define([
         this.show = defaultValue(this.show, source.show);
         this.material = defaultValue(this.material, source.material);
         this.height = defaultValue(this.height, source.height);
+        this.heightReference = defaultValue(this.heightReference, source.heightReference);
         this.extrudedHeight = defaultValue(this.extrudedHeight, source.extrudedHeight);
+        this.extrudedHeightReference = defaultValue(this.extrudedHeightReference,  source.extrudedHeightReference);
         this.granularity = defaultValue(this.granularity, source.granularity);
         this.stRotation = defaultValue(this.stRotation, source.stRotation);
         this.fill = defaultValue(this.fill, source.fill);

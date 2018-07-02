@@ -27,7 +27,9 @@ define([
      * @param {Object} [options] Object with the following properties:
      * @param {Property} [options.hierarchy] A Property specifying the {@link PolygonHierarchy}.
      * @param {Property} [options.height=0] A numeric Property specifying the altitude of the polygon relative to the ellipsoid surface.
+     * @param {Property} [options.heightReference] A Property specifying what the height is relative to.
      * @param {Property} [options.extrudedHeight] A numeric Property specifying the altitude of the polygon's extruded face relative to the ellipsoid surface.
+     * @param {Property} [options.extrudedHeightReference] A Property specifying what the extrudedHeight is relative to.
      * @param {Property} [options.show=true] A boolean Property specifying the visibility of the polygon.
      * @param {Property} [options.fill=true] A boolean Property specifying whether the polygon is filled with the provided material.
      * @param {MaterialProperty} [options.material=Color.WHITE] A Property specifying the material used to fill the polygon.
@@ -55,8 +57,12 @@ define([
         this._hierarchySubscription = undefined;
         this._height = undefined;
         this._heightSubscription = undefined;
+        this._heightReference = undefined;
+        this._heightReferenceSubscription = undefined;
         this._extrudedHeight = undefined;
         this._extrudedHeightSubscription = undefined;
+        this._extrudedHeightReference = undefined;
+        this._extrudedHeightReferenceSubscription = undefined;
         this._granularity = undefined;
         this._granularitySubscription = undefined;
         this._stRotation = undefined;
@@ -134,6 +140,14 @@ define([
         height : createPropertyDescriptor('height'),
 
         /**
+         * Gets or sets the Property specifying the {@link HeightReference}.
+         * @memberof PolygonGraphics.prototype
+         * @type {Property}
+         * @default HeightReference.NONE
+         */
+        heightReference : createPropertyDescriptor('heightReference'),
+
+        /**
          * Gets or sets the numeric Property specifying the altitude of the polygon extrusion.
          * If {@link PolygonGraphics#perPositionHeight} is false, the volume starts at {@link PolygonGraphics#height} and ends at this altitude.
          * If {@link PolygonGraphics#perPositionHeight} is true, the volume starts at the height of each {@link PolygonGraphics#hierarchy} position and ends at this altitude.
@@ -141,6 +155,14 @@ define([
          * @type {Property}
          */
         extrudedHeight : createPropertyDescriptor('extrudedHeight'),
+
+        /**
+         * Gets or sets the Property specifying the extruded {@link HeightReference}.
+         * @memberof PolygonGraphics.prototype
+         * @type {Property}
+         * @default HeightReference.NONE
+         */
+        extrudedHeightReference : createPropertyDescriptor('extrudedHeightReference'),
 
         /**
          * Gets or sets the numeric Property specifying the angular distance between points on the polygon.
@@ -260,7 +282,9 @@ define([
         result.material = this.material;
         result.hierarchy = this.hierarchy;
         result.height = this.height;
+        result.heightReference = this.heightReference;
         result.extrudedHeight = this.extrudedHeight;
+        result.extrudedHeightReference = this.extrudedHeightReference;
         result.granularity = this.granularity;
         result.stRotation = this.stRotation;
         result.fill = this.fill;
@@ -295,7 +319,9 @@ define([
         this.material = defaultValue(this.material, source.material);
         this.hierarchy = defaultValue(this.hierarchy, source.hierarchy);
         this.height = defaultValue(this.height, source.height);
+        this.heightReference = defaultValue(this.heightReference, source.heightReference);
         this.extrudedHeight = defaultValue(this.extrudedHeight, source.extrudedHeight);
+        this.extrudedHeightReference = defaultValue(this.extrudedHeightReference,  source.extrudedHeightReference);
         this.granularity = defaultValue(this.granularity, source.granularity);
         this.stRotation = defaultValue(this.stRotation, source.stRotation);
         this.fill = defaultValue(this.fill, source.fill);

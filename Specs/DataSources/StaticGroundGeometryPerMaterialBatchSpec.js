@@ -1,5 +1,6 @@
 defineSuite([
         'DataSources/StaticGroundGeometryPerMaterialBatch',
+        'Core/ApproximateTerrainHeights',
         'Core/Cartesian2',
         'Core/Cartesian3',
         'Core/Color',
@@ -27,6 +28,7 @@ defineSuite([
         'Specs/pollToPromise'
     ], function(
         StaticGroundGeometryPerMaterialBatch,
+        ApproximateTerrainHeights,
         Cartesian2,
         Cartesian3,
         Color,
@@ -58,10 +60,18 @@ defineSuite([
     var scene;
     beforeAll(function() {
         scene = createScene();
+
+        return GroundPrimitive.initializeTerrainHeights();
     });
 
     afterAll(function() {
         scene.destroyForSpecs();
+
+        // Leave ground primitive uninitialized
+        GroundPrimitive._initialized = false;
+        GroundPrimitive._initPromise = undefined;
+        ApproximateTerrainHeights._initPromise = undefined;
+        ApproximateTerrainHeights._terrainHeights = undefined;
     });
 
     it('handles shared material being invalidated with geometry', function() {

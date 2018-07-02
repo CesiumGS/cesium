@@ -54,7 +54,7 @@ defineSuite([
     beforeAll(function() {
         scene = createScene();
 
-        ApproximateTerrainHeights.initialize();
+        return ApproximateTerrainHeights.initialize();
     });
 
     afterAll(function() {

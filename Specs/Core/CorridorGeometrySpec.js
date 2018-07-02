@@ -355,6 +355,44 @@ defineSuite([
         expect(CesiumMath.toDegrees(r.west)).toEqual(-67.6550047734171);
     });
 
+    it('computeRectangle', function() {
+        var options = {
+            vertexFormat : VertexFormat.POSITION_ONLY,
+            positions : Cartesian3.fromDegreesArray([
+                -67.655, 0.0,
+                -67.655, 15.0,
+                -67.655, 20.0
+            ]),
+            cornerType: CornerType.MITERED,
+            width : 1
+        };
+        var geometry = new CorridorGeometry(options);
+
+        var expected = geometry.rectangle;
+        var result = CorridorGeometry.computeRectangle(options);
+
+        expect(result).toEqual(expected);
+    });
+
+    it('computeRectangle with result parameter', function() {
+        var options = {
+            positions : Cartesian3.fromDegreesArray([
+                72.0, 0.0,
+                85.0, 15.0,
+                83.0, 20.0
+            ]),
+            width : 5
+        };
+        var geometry = new CorridorGeometry(options);
+
+        var result = new Rectangle();
+        var expected = geometry.rectangle;
+        var returned = CorridorGeometry.computeRectangle(options, result);
+
+        expect(returned).toEqual(expected);
+        expect(returned).toBe(result);
+    });
+
     it('computing textureCoordinateRotationPoints property', function() {
         var c = new CorridorGeometry({
             vertexFormat : VertexFormat.POSITION_ONLY,
