@@ -71,13 +71,13 @@ imageryLayers.addImageryProvider(provider);
 provider.readyPromise
     .then(function() {
         var start = Cesium.JulianDate.fromIso8601('2015-07-30');
-        var end = Cesium.JulianDate.fromIso8601('2017-06-17');
+        var stop = Cesium.JulianDate.fromIso8601('2017-06-17');
 
-        viewer.timeline.zoomTo(start, end);
+        viewer.timeline.zoomTo(start, stop);
 
         var clock = viewer.clock;
         clock.startTime = start;
-        clock.endTime = end;
+        clock.stopTime = stop;
         clock.currentTime = start;
         clock.clockRange = Cesium.ClockRange.LOOP_STOP;
         clock.multiplier = 86400;

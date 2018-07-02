@@ -33,35 +33,57 @@ var viewer = new Cesium.Viewer('cesiumContainer', {
     shouldAnimate : true
 });
 
-var basePath = '../../SampleData/test/PointCloudTimeDynamic/';
-var czmlPath = basePath + 'frames.czml';
-var dataSource = viewer.dataSources.add(Cesium.CzmlDataSource.load(czmlPath));
-dataSource.then(function(dataSource) {
-    var entities = dataSource.entities;
-    var entity = entities.getById('Time Dynamic Point Cloud');
-    var properties = entity.properties;
-    var frames = properties.frames;
-    var intervals = frames.intervals;
+var dates = [
+    '2018-07-19T15:18:00Z',
+    '2018-07-19T15:18:00.5Z',
+    '2018-07-19T15:18:01Z',
+    '2018-07-19T15:18:01.5Z',
+    '2018-07-19T15:18:02Z',
+    '2018-07-19T15:18:02.5Z'
+];
 
-    // Update uris to be absolute
-    var length = intervals.length;
-    for (var i = 0; i < length; ++i) {
-        var data = intervals.get(i).data;
-        data.uri = basePath + data.uri;
-    }
+var uris = [
+    '../../SampleData/Cesium3DTiles/PointCloud/PointCloudTimeDynamic/0.pnts',
+    '../../SampleData/Cesium3DTiles/PointCloud/PointCloudTimeDynamic/1.pnts',
+    '../../SampleData/Cesium3DTiles/PointCloud/PointCloudTimeDynamic/2.pnts',
+    '../../SampleData/Cesium3DTiles/PointCloud/PointCloudTimeDynamic/3.pnts',
+    '../../SampleData/Cesium3DTiles/PointCloud/PointCloudTimeDynamic/4.pnts'
+];
 
-    viewer.scene.primitives.add(new Cesium.TimeDynamicPointCloud({
-        intervals : intervals,
-        clock : viewer.clock,
-        style : new Cesium.Cesium3DTileStyle({
-            pointSize : 5
-        })
-    }));
+function dataCallback(interval, index) {
+    return {
+        uri: uris[index]
+    };
+}
+
+var timeIntervalCollection = Cesium.TimeIntervalCollection.fromIso8601DateArray({
+    iso8601Dates: dates,
+    dataCallback: dataCallback
 });
 
+var pointCloud = new Cesium.TimeDynamicPointCloud({
+    intervals : timeIntervalCollection,
+    clock : viewer.clock,
+    style : new Cesium.Cesium3DTileStyle({
+        pointSize : 5
+    })
+});
+viewer.scene.primitives.add(pointCloud);
+
+var start = Cesium.JulianDate.fromIso8601(dates[0]);
+var stop = Cesium.JulianDate.fromIso8601(dates[dates.length - 1]);
+
+viewer.timeline.zoomTo(start, stop);
+
+var clock = viewer.clock;
+clock.startTime = start;
+clock.currentTime = start;
+clock.stopTime = stop;
+clock.clockRange = Cesium.ClockRange.LOOP_STOP;
+
 viewer.camera.setView({
-    destination: new Cesium.Cartesian3(1215092.7260503182, -4736533.485206121, 4081535.746782565),
-    orientation: new Cesium.HeadingPitchRoll(6.207713496216043, -0.6084278199488593, 6.282880789149928),
+    destination: new Cesium.Cartesian3(1215034.013185971, -4736376.364704681, 4081587.528471664),
+    orientation: new Cesium.HeadingPitchRoll(6.2077134961933265, -0.6084278203800215, 6.282880789189662),
     endTransform : Cesium.Matrix4.IDENTITY
 });
 //Sandcastle_End

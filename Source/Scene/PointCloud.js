@@ -149,6 +149,10 @@ define([
         this.backFaceCulling = false;
         this._backFaceCulling = false;
 
+        // Whether to enable normal shading
+        this.normalShading = true;
+        this._normalShading = true;
+
         this._opaqueRenderState = undefined;
         this._translucentRenderState = undefined;
 
@@ -358,6 +362,7 @@ define([
                     throw new RuntimeError('Global property: QUANTIZED_VOLUME_SCALE must be defined for quantized positions.');
                 }
                 pointCloud._quantizedVolumeScale = Cartesian3.unpack(quantizedVolumeScale);
+                pointCloud._quantizedRange = (1 << 16) - 1;
 
                 var quantizedVolumeOffset = featureTable.getGlobalProperty('QUANTIZED_VOLUME_OFFSET', ComponentDatatype.FLOAT, 3);
                 if (!defined(quantizedVolumeOffset)) {
@@ -476,9 +481,7 @@ define([
         }
 
         var boundingSphere = BoundingSphere.fromCornerPoints(min, max);
-        if (pointsLength === 1) {
-            boundingSphere.radius = CesiumMath.EPSILON2; // To avoid radius of zero
-        }
+        boundingSphere.radius += CesiumMath.EPSILON2; // To avoid radius of zero
         return boundingSphere;
     }
 
@@ -528,7 +531,6 @@ define([
 
         var componentsPerAttribute;
         var componentDatatype;
-        var normalize;
 
         var styleableVertexAttributes = [];
         var styleableShaderAttributes = {};
@@ -614,13 +616,10 @@ define([
 
         if (isQuantized) {
             componentDatatype = ComponentDatatype.UNSIGNED_SHORT;
-            normalize = true; // Convert position to 0 to 1 before entering the shader
         } else if (isQuantizedDraco) {
             componentDatatype = (quantizedRange <= 255) ? ComponentDatatype.UNSIGNED_BYTE : ComponentDatatype.UNSIGNED_SHORT;
-            normalize = false; // Normalization is done in the shader based on quantizationBits
         } else {
             componentDatatype = ComponentDatatype.FLOAT;
-            normalize = false;
         }
 
         attributes.push({
@@ -628,18 +627,14 @@ define([
             vertexBuffer : positionsVertexBuffer,
             componentsPerAttribute : 3,
             componentDatatype : componentDatatype,
-            normalize : normalize,
+            normalize : false,
             offsetInBytes : 0,
             strideInBytes : 0
         });
 
         if (pointCloud._cull) {
             if (isQuantized || isQuantizedDraco) {
-                // Quantized volume offset is applied to the model matrix, not the bounding sphere
-                var scale = pointCloud._quantizedVolumeScale;
-                var center = Cartesian3.multiplyByScalar(scale, 0.5, new Cartesian3());
-                var radius = Cartesian3.maximumComponent(scale) * 0.5;
-                pointCloud.boundingSphere = new BoundingSphere(center, radius);
+                pointCloud.boundingSphere = BoundingSphere.fromCornerPoints(Cartesian3.ZERO, pointCloud._quantizedVolumeScale);
             } else {
                 pointCloud.boundingSphere = computeApproximateBoundingSphereFromPositions(positions);
             }
@@ -816,7 +811,8 @@ define([
                 u_quantizedVolumeScaleAndOctEncodedRange : function() {
                     var scratch = scratchQuantizedVolumeScaleAndOctEncodedRange;
                     if (defined(pointCloud._quantizedVolumeScale)) {
-                        Cartesian3.clone(pointCloud._quantizedVolumeScale, scratch);
+                        var scale = Cartesian3.clone(pointCloud._quantizedVolumeScale, scratch);
+                        Cartesian3.divideByScalar(scale, pointCloud._quantizedRange, scratch);
                     }
                     scratch.w = pointCloud._octEncodedRange;
                     return scratch;
@@ -926,6 +922,7 @@ define([
         var hasNormals = pointCloud._hasNormals;
         var hasBatchIds = pointCloud._hasBatchIds;
         var backFaceCulling = pointCloud._backFaceCulling;
+        var normalShading = pointCloud._normalShading;
         var vertexArray = pointCloud._drawCommand.vertexArray;
         var clippingPlanes = pointCloud.clippingPlanes;
         var attenuation = pointCloud._attenuation;
@@ -1002,13 +999,20 @@ define([
             colorVertexAttribute.enabled = usesColors;
         }
 
+        var usesNormals = hasNormals && (normalShading || backFaceCulling || usesNormalSemantic);
+        if (hasNormals) {
+            // Disable the normal vertex attribute if normals are not used
+            var normalVertexAttribute = getVertexAttribute(vertexArray, normalLocation);
+            normalVertexAttribute.enabled = usesNormals;
+        }
+
         var attributeLocations = {
             a_position : positionLocation
         };
         if (usesColors) {
             attributeLocations.a_color = colorLocation;
         }
-        if (hasNormals) {
+        if (usesNormals) {
             attributeLocations.a_normal = normalLocation;
         }
         if (hasBatchIds) {
@@ -1078,7 +1082,7 @@ define([
                 vs += 'attribute vec3 a_color; \n';
             }
         }
-        if (hasNormals) {
+        if (usesNormals) {
             if (isOctEncoded16P || isOctEncodedDraco) {
                 vs += 'attribute vec2 a_normal; \n';
             } else {
@@ -1142,7 +1146,7 @@ define([
         }
         vs += '    vec3 position_absolute = vec3(czm_model * vec4(position, 1.0)); \n';
 
-        if (hasNormals) {
+        if (usesNormals) {
             if (isOctEncoded16P) {
                 vs += '    vec3 normal = czm_octDecode(a_normal); \n';
             } else if (isOctEncodedDraco) {
@@ -1176,7 +1180,7 @@ define([
 
         vs += '    color = color * u_highlightColor; \n';
 
-        if (hasNormals) {
+        if (usesNormals && normalShading) {
             vs += '    normal = czm_normal * normal; \n' +
                   '    float diffuseStrength = czm_getLambertDiffuse(czm_sunDirectionEC, normal); \n' +
                   '    diffuseStrength = max(diffuseStrength, 0.4); \n' + // Apply some ambient lighting
@@ -1186,7 +1190,7 @@ define([
         vs += '    v_color = color; \n' +
               '    gl_Position = czm_modelViewProjection * vec4(position, 1.0); \n';
 
-        if (hasNormals && backFaceCulling) {
+        if (usesNormals && backFaceCulling) {
             vs += '    float visible = step(-normal.z, 0.0); \n' +
                   '    gl_Position *= visible; \n' +
                   '    gl_PointSize *= visible; \n';
@@ -1268,8 +1272,8 @@ define([
                     var decodedBatchIds = defined(result.BATCH_ID) ? result.BATCH_ID.array : undefined;
                     if (defined(decodedPositions) && pointCloud._isQuantizedDraco) {
                         var quantization = result.POSITION.data.quantization;
-                        var scale = quantization.range / (1 << quantization.quantizationBits);
-                        pointCloud._quantizedVolumeScale = Cartesian3.fromElements(scale, scale, scale);
+                        var range = quantization.range;
+                        pointCloud._quantizedVolumeScale = Cartesian3.fromElements(range, range, range);
                         pointCloud._quantizedVolumeOffset = Cartesian3.unpack(quantization.minValues);
                         pointCloud._quantizedRange = (1 << quantization.quantizationBits) - 1.0;
                     }
@@ -1305,7 +1309,6 @@ define([
     }
 
     var scratchComputedTranslation = new Cartesian4();
-    var scratchModelMatrix = new Matrix4();
     var scratchScale = new Cartesian3();
 
     PointCloud.prototype.update = function(frameState) {
@@ -1334,7 +1337,8 @@ define([
 
         if (modelMatrixDirty) {
             Matrix4.clone(this.modelMatrix, this._modelMatrix);
-            var modelMatrix = Matrix4.clone(this._modelMatrix, scratchModelMatrix);
+            var modelMatrix = this._drawCommand.modelMatrix;
+            Matrix4.clone(this._modelMatrix, modelMatrix);
 
             if (defined(this._rtcCenter)) {
                 Matrix4.multiplyByTranslation(modelMatrix, this._rtcCenter, modelMatrix);
@@ -1351,8 +1355,6 @@ define([
                 }
             }
 
-            Matrix4.clone(modelMatrix, this._drawCommand.modelMatrix);
-
             var boundingSphere = this._drawCommand.boundingVolume;
             BoundingSphere.clone(this.boundingSphere, boundingSphere);
 
@@ -1365,6 +1367,7 @@ define([
         }
 
         if (this.clippingPlanesDirty) {
+            this.clippingPlanesDirty = false;
             shadersDirty = true;
         }
 
@@ -1378,8 +1381,14 @@ define([
             shadersDirty = true;
         }
 
+        if (this.normalShading !== this._normalShading) {
+            this._normalShading = this.normalShading;
+            shadersDirty = true;
+        }
+
         if (this._style !== this.style || this.styleDirty) {
             this._style = this.style;
+            this.styleDirty = false;
             shadersDirty = true;
         }
 

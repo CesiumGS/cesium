@@ -517,7 +517,6 @@ defineSuite([
             scene.renderForSpecs();
             expect(commandList.length).toBe(0);
         });
-
     });
 
     it('renders tileset with empty root tile', function() {

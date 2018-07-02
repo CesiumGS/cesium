@@ -1,6 +1,11 @@
 Change Log
 ==========
 
+### 1.48 - 2018-08-01
+
+##### Additions :tada:
+* Added `TimeDynamicPointCloud` for playback of time-dynamic point cloud data, where each frame is a 3D Tiles Point Cloud tile. [#6721](https://github.com/AnalyticalGraphicsInc/cesium/pull/6721)
+
 ### 1.47 - 2018-07-02
 
 ##### Breaking Changes :mega:

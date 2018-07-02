@@ -182,6 +182,16 @@ defineSuite([
         expect(content._pointCloud._drawCommand._vertexArray._attributes[1].componentDatatype).toEqual(ComponentDatatype.UNSIGNED_SHORT);
     });
 
+    it('gets tileset properties', function() {
+        return Cesium3DTilesTester.loadTileset(scene, pointCloudRGBUrl).then(function(tileset) {
+            var root = tileset._root;
+            var content = root._content;
+            expect(content.tileset).toBe(tileset);
+            expect(content.tile).toBe(root);
+            expect(content.url.indexOf(root._header.content.url) > -1).toBe(true);
+        });
+    });
+
     it('resolves readyPromise', function() {
         return Cesium3DTilesTester.resolvesReadyPromise(scene, pointCloudRGBUrl);
     });
