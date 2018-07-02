@@ -4,7 +4,9 @@ Change Log
 ### 1.47 - 2018-07-02
 
 ##### Breaking Changes :mega:
-* glTF 2.0 models corrected to face +Z forwards per specification.  Internally Cesium uses +X as forward, so a new +Z to +X rotation was added for 2.0 models only.  [#6632](https://github.com/AnalyticalGraphicsInc/cesium/pull/6632)
+* glTF 2.0 models corrected to face +Z forwards per specification.  Internally Cesium uses +X as forward, so a new +Z to +X rotation was added for 2.0 models only. To fix models that are oriented incorrectly after this change:
+    * If the model faces +X forwards update the glTF to face +Z forwards. This can be done by loading the glTF in a model editor and applying a 90 degree clockwise rotation about the up-axis. Alternatively, add a new root node to the glTF node hierarchy whose `matrix` is `[0,0,1,0,0,1,0,0,-1,0,0,0,0,0,0,1]`.
+    * Apply a -90 degree rotation to the model's heading. This can be done by setting the model's `orientation` using the Entity API or from within CZML. See [#6738](https://github.com/AnalyticalGraphicsInc/cesium/pull/6738) for more details.
 * Dropped support for directory URLs when loading tilesets to match the updated [3D Tiles spec](https://github.com/AnalyticalGraphicsInc/3d-tiles/issues/272). [#6502](https://github.com/AnalyticalGraphicsInc/cesium/issues/6502)
 * KML and GeoJSON now use `PolylineGraphics` instead of `CorridorGraphics` for polylines on terrain. [#6706](https://github.com/AnalyticalGraphicsInc/cesium/pull/6706)
 
