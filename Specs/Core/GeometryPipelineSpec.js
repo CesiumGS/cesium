@@ -1,5 +1,6 @@
 defineSuite([
         'Core/GeometryPipeline',
+        'Core/arraySlice',
         'Core/AttributeCompression',
         'Core/BoundingSphere',
         'Core/BoxGeometry',
@@ -22,6 +23,7 @@ defineSuite([
         'Core/VertexFormat'
     ], function(
         GeometryPipeline,
+        arraySlice,
         AttributeCompression,
         BoundingSphere,
         BoxGeometry,
@@ -1739,7 +1741,7 @@ defineSuite([
             minimum : new Cartesian3(-250000.0, -250000.0, -250000.0)
         }));
         expect(geometry.attributes.normal).toBeDefined();
-        var originalNormals = Array.prototype.slice.call(geometry.attributes.normal.values);
+        var originalNormals = arraySlice(geometry.attributes.normal.values);
 
         geometry = GeometryPipeline.compressVertices(geometry);
 
@@ -1763,7 +1765,7 @@ defineSuite([
             minimum : new Cartesian3(-250000.0, -250000.0, -250000.0)
         }));
         expect(geometry.attributes.st).toBeDefined();
-        var originalST = Array.prototype.slice.call(geometry.attributes.st.values);
+        var originalST = arraySlice(geometry.attributes.st.values);
 
         geometry = GeometryPipeline.compressVertices(geometry);
 
@@ -1794,8 +1796,8 @@ defineSuite([
         }));
         expect(geometry.attributes.normal).toBeDefined();
         expect(geometry.attributes.st).toBeDefined();
-        var originalNormals = Array.prototype.slice.call(geometry.attributes.normal.values);
-        var originalST = Array.prototype.slice.call(geometry.attributes.st.values);
+        var originalNormals = arraySlice(geometry.attributes.normal.values);
+        var originalST = arraySlice(geometry.attributes.st.values);
 
         geometry = GeometryPipeline.compressVertices(geometry);
 
@@ -1826,9 +1828,9 @@ defineSuite([
         expect(geometry.attributes.normal).toBeDefined();
         expect(geometry.attributes.tangent).toBeDefined();
         expect(geometry.attributes.bitangent).toBeDefined();
-        var originalNormals = Array.prototype.slice.call(geometry.attributes.normal.values);
-        var originalTangents = Array.prototype.slice.call(geometry.attributes.tangent.values);
-        var originalBitangents = Array.prototype.slice.call(geometry.attributes.bitangent.values);
+        var originalNormals = arraySlice(geometry.attributes.normal.values);
+        var originalTangents = arraySlice(geometry.attributes.tangent.values);
+        var originalBitangents = arraySlice(geometry.attributes.bitangent.values);
 
         geometry = GeometryPipeline.compressVertices(geometry);
 

@@ -1,6 +1,7 @@
 defineSuite([
         'Core/GroundPolylineGeometry',
         'Core/ApproximateTerrainHeights',
+        'Core/arraySlice',
         'Core/Cartesian3',
         'Core/Cartographic',
         'Core/Math',
@@ -11,6 +12,7 @@ defineSuite([
     ], function(
         GroundPolylineGeometry,
         ApproximateTerrainHeights,
+        arraySlice,
         Cartesian3,
         Cartographic,
         CesiumMath,
@@ -33,11 +35,11 @@ defineSuite([
         var values = attribute.values;
         var componentsPerAttribute = attribute.componentsPerAttribute;
         var vertexCount = values.length / componentsPerAttribute;
-        var firstVertex = Array.prototype.slice.call(values, 0, componentsPerAttribute);
+        var firstVertex = arraySlice(values, 0, componentsPerAttribute);
         var identical = true;
         for (var i = 1; i < vertexCount; i++) {
             var index = i * componentsPerAttribute;
-            var vertex = Array.prototype.slice.call(values, index, index + componentsPerAttribute);
+            var vertex = arraySlice(values, index, index + componentsPerAttribute);
             for (var j = 0; j < componentsPerAttribute; j++) {
                 if (vertex[j] !== firstVertex[j]) {
                     identical = false;
