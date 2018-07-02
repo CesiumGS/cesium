@@ -1,14 +1,14 @@
 define([
         './defined',
         './DeveloperError',
+        './getAbsoluteUri',
         './Resource',
-        '../ThirdParty/Uri',
         'require'
     ], function(
         defined,
         DeveloperError,
+        getAbsoluteUri,
         Resource,
-        Uri,
         require) {
     'use strict';
     /*global CESIUM_BASE_URL*/
@@ -50,6 +50,8 @@ define([
         var baseUrlString;
         if (typeof CESIUM_BASE_URL !== 'undefined') {
             baseUrlString = CESIUM_BASE_URL;
+        } else if (defined(define.amd) && !define.amd.toUrlUndefined && defined(require.toUrl)) {
+            baseUrlString = getAbsoluteUri('..', buildModuleUrl('Core/buildModuleUrl.js'));
         } else {
             baseUrlString = getBaseUrlFromCesiumScript();
         }
