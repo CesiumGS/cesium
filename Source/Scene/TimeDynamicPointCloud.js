@@ -222,6 +222,22 @@ define([
             get : function() {
                 return this._totalMemoryUsageInBytes;
             }
+        },
+
+        /**
+         * The bounding sphere of the frame being rendered. Returns <code>undefined</code> if no frame is being rendered.
+         *
+         * @memberof TimeDynamicPointCloud.prototype
+         *
+         * @type {BoundingSphere}
+         * @readonly
+         */
+        boundingSphere : {
+            get : function() {
+                if (defined(this._lastRenderedFrame)) {
+                    return this._lastRenderedFrame.pointCloud.boundingSphere;
+                }
+            }
         }
     });
 

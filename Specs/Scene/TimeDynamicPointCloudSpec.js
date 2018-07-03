@@ -1,5 +1,6 @@
 defineSuite([
         'Scene/TimeDynamicPointCloud',
+        'Core/BoundingSphere',
         'Core/Cartesian3',
         'Core/Clock',
         'Core/ClockStep',
@@ -26,6 +27,7 @@ defineSuite([
         'ThirdParty/when'
     ], function(
         TimeDynamicPointCloud,
+        BoundingSphere,
         Cartesian3,
         Clock,
         ClockStep,
@@ -237,6 +239,22 @@ defineSuite([
             expect(scene).toRender([255, 0, 0, 255]);
             scene.camera.moveRight(10.0);
             expect(scene).toRender([0, 0, 0, 255]);
+        });
+    });
+
+    it('gets bounding sphere of the rendered frame', function() {
+        var pointCloud = createTimeDynamicPointCloud({
+            useTransforms : true
+        });
+        expect(pointCloud.boundingSphere).toBeUndefined(); // Undefined until a frame is rendered
+        return loadAllFrames(pointCloud).then(function() {
+            var boundingSphereFrame0 = pointCloud.boundingSphere;
+            expect(boundingSphereFrame0).toBeDefined();
+            goToFrame(1);
+            scene.renderForSpecs();
+            var boundingSphereFrame1 = pointCloud.boundingSphere;
+            expect(boundingSphereFrame1).toBeDefined();
+            expect(BoundingSphere.equals(boundingSphereFrame0, boundingSphereFrame1)).toBe(false);
         });
     });
 

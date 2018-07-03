@@ -5,10 +5,12 @@ defineSuite([
         'Core/ClockRange',
         'Core/ClockStep',
         'Core/Color',
+        'Core/defined',
         'Core/EllipsoidTerrainProvider',
         'Core/HeadingPitchRange',
         'Core/JulianDate',
         'Core/Matrix4',
+        'Core/TimeIntervalCollection',
         'Core/WebMercatorProjection',
         'DataSources/BoundingSphereState',
         'DataSources/ConstantPositionProperty',
@@ -23,6 +25,7 @@ defineSuite([
         'Scene/ImageryLayerCollection',
         'Scene/SceneMode',
         'Scene/ShadowMode',
+        'Scene/TimeDynamicPointCloud',
         'Specs/createViewer',
         'Specs/DomEventSimulator',
         'Specs/MockDataSource',
@@ -46,10 +49,12 @@ defineSuite([
         ClockRange,
         ClockStep,
         Color,
+        defined,
         EllipsoidTerrainProvider,
         HeadingPitchRange,
         JulianDate,
         Matrix4,
+        TimeIntervalCollection,
         WebMercatorProjection,
         BoundingSphereState,
         ConstantPositionProperty,
@@ -64,6 +69,7 @@ defineSuite([
         ImageryLayerCollection,
         SceneMode,
         ShadowMode,
+        TimeDynamicPointCloud,
         createViewer,
         DomEventSimulator,
         MockDataSource,
@@ -1108,6 +1114,91 @@ defineSuite([
         });
     });
 
+    function loadTimeDynamicPointCloud(viewer) {
+        var scene = viewer.scene;
+        var clock = viewer.clock;
+
+        var uri = './Data/Cesium3DTiles/PointCloud/PointCloudTimeDynamic/0.pnts';
+        var dates = [
+            '2018-07-19T15:18:00Z',
+            '2018-07-19T15:18:00.5Z'
+        ];
+
+        function dataCallback() {
+            return {
+                uri: uri
+            };
+        }
+
+        var timeIntervalCollection = TimeIntervalCollection.fromIso8601DateArray({
+            iso8601Dates: dates,
+            dataCallback: dataCallback
+        });
+
+        var pointCloud = new TimeDynamicPointCloud({
+            intervals : timeIntervalCollection,
+            clock : clock
+        });
+
+        var start = JulianDate.fromIso8601(dates[0]);
+
+        clock.startTime = start;
+        clock.currentTime = start;
+        clock.multiplier = 0.0;
+
+        return pollToPromise(function() {
+            pointCloud.update(scene.frameState);
+            var frame = pointCloud._frames[0];
+            return defined(frame) && frame.ready;
+        }).then(function() {
+            return pointCloud;
+        });
+    }
+
+    it('zoomTo zooms to TimeDynamicPointCloud with default offset when offset not defined', function() {
+        viewer = createViewer(container);
+        return loadTimeDynamicPointCloud(viewer).then(function(pointCloud) {
+            var expectedBoundingSphere = pointCloud.boundingSphere;
+            var expectedOffset = new HeadingPitchRange(0.0, -0.5, expectedBoundingSphere.radius);
+
+            var promise = viewer.zoomTo(pointCloud);
+            var wasCompleted = false;
+            spyOn(viewer.camera, 'viewBoundingSphere').and.callFake(function(boundingSphere, offset) {
+                expect(boundingSphere).toEqual(expectedBoundingSphere);
+                expect(offset).toEqual(expectedOffset);
+                wasCompleted = true;
+            });
+
+            viewer._postRender();
+
+            return promise.then(function() {
+                expect(wasCompleted).toEqual(true);
+            });
+        });
+    });
+
+    it('zoomTo zooms to TimeDynamicPointCloud with offset', function() {
+        viewer = createViewer(container);
+        return loadTimeDynamicPointCloud(viewer).then(function(pointCloud) {
+            var expectedBoundingSphere = pointCloud.boundingSphere;
+            var expectedOffset = new HeadingPitchRange(0.4, 1.2, 4.0 * expectedBoundingSphere.radius);
+
+            var promise = viewer.zoomTo(pointCloud, expectedOffset);
+            var wasCompleted = false;
+            spyOn(viewer.camera, 'viewBoundingSphere').and.callFake(function(boundingSphere, offset) {
+                expect(boundingSphere).toEqual(expectedBoundingSphere);
+                expect(offset).toEqual(expectedOffset);
+                wasCompleted = true;
+            });
+
+            viewer._postRender();
+
+            return promise.then(function() {
+                expect(wasCompleted).toEqual(true);
+            });
+        });
+    });
+
     it('zoomTo zooms to entity with undefined offset when offset not defined', function() {
         viewer = createViewer(container);
         viewer.entities.add({
@@ -1208,7 +1299,6 @@ defineSuite([
                 expect(wasCompleted).toEqual(true);
             });
         });
-
     });
 
     it('flyTo flies to Cesium3DTileset with default offset when offset not defined', function() {
@@ -1239,11 +1329,10 @@ defineSuite([
             return promise.then(function() {
                 expect(wasCompleted).toEqual(true);
             });
-
         });
     });
 
-    it('flyTo flies to target when target is Cesium3DTileset and options are defined', function() {
+    it('flyTo flies to Cesium3DTileset when options are defined', function() {
         viewer = createViewer(container);
 
         var path = './Data/Cesium3DTiles/Tilesets/TilesetOfTilesets/tileset.json';
@@ -1275,7 +1364,78 @@ defineSuite([
             return promise.then(function() {
                 expect(wasCompleted).toEqual(true);
             });
+        });
+    });
 
+    it('flyTo flies to TimeDynamicPointCloud with default offset when options not defined', function() {
+        viewer = createViewer(container);
+        return loadTimeDynamicPointCloud(viewer).then(function(pointCloud) {
+            var promise = viewer.flyTo(pointCloud);
+            var wasCompleted = false;
+
+            spyOn(viewer.camera, 'flyToBoundingSphere').and.callFake(function(target, options) {
+                expect(options.offset).toBeDefined();
+                expect(options.duration).toBeUndefined();
+                expect(options.maximumHeight).toBeUndefined();
+                wasCompleted = true;
+                options.complete();
+            });
+
+            viewer._postRender();
+
+            return promise.then(function() {
+                expect(wasCompleted).toEqual(true);
+            });
+        });
+    });
+
+    it('flyTo flies to TimeDynamicPointCloud with default offset when offset not defined', function() {
+        viewer = createViewer(container);
+        return loadTimeDynamicPointCloud(viewer).then(function(pointCloud) {
+            var options = {};
+            var promise = viewer.flyTo(pointCloud, options);
+            var wasCompleted = false;
+
+            spyOn(viewer.camera, 'flyToBoundingSphere').and.callFake(function(target, options) {
+                expect(options.offset).toBeDefined();
+                expect(options.duration).toBeUndefined();
+                expect(options.maximumHeight).toBeUndefined();
+                wasCompleted = true;
+                options.complete();
+            });
+
+            viewer._postRender();
+
+            return promise.then(function() {
+                expect(wasCompleted).toEqual(true);
+            });
+        });
+    });
+
+    it('flyTo flies to TimeDynamicPointCloud when options are defined', function() {
+        viewer = createViewer(container);
+        return loadTimeDynamicPointCloud(viewer).then(function(pointCloud) {
+            var offsetVal = new HeadingPitchRange(3.0, 0.2, 2.3);
+            var options = {
+                offset : offsetVal,
+                duration : 3.0,
+                maximumHeight : 5.0
+            };
+            var promise = viewer.flyTo(pointCloud, options);
+            var wasCompleted = false;
+
+            spyOn(viewer.camera, 'flyToBoundingSphere').and.callFake(function(target, options) {
+                expect(options.duration).toBeDefined();
+                expect(options.maximumHeight).toBeDefined();
+                wasCompleted = true;
+                options.complete();
+            });
+
+            viewer._postRender();
+
+            return promise.then(function() {
+                expect(wasCompleted).toEqual(true);
+            });
         });
     });
 
@@ -1309,7 +1469,6 @@ defineSuite([
         return promise.then(function() {
             expect(wasCompleted).toEqual(true);
         });
-
     });
 
     it('flyTo flys to entity with default offset when offset not defined', function() {

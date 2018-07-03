@@ -180,7 +180,7 @@ define([
 
         this.time = 0.0; // For styling
         this.shadows = ShadowMode.ENABLED;
-        this.boundingSphere = undefined;
+        this._boundingSphere = undefined;
 
         this.clippingPlanes = undefined;
         this.isClipped = false;
@@ -228,6 +228,17 @@ define([
             },
             set : function(value) {
                 this._highlightColor = Color.clone(value, this._highlightColor);
+            }
+        },
+
+        boundingSphere : {
+            get : function() {
+                if (defined(this._drawCommand)) {
+                    return this._drawCommand.boundingVolume;
+                }
+            },
+            set : function(value) {
+                this._boundingSphere = BoundingSphere.clone(value);
             }
         }
     });
@@ -634,9 +645,9 @@ define([
 
         if (pointCloud._cull) {
             if (isQuantized || isQuantizedDraco) {
-                pointCloud.boundingSphere = BoundingSphere.fromCornerPoints(Cartesian3.ZERO, pointCloud._quantizedVolumeScale);
+                pointCloud._boundingSphere = BoundingSphere.fromCornerPoints(Cartesian3.ZERO, pointCloud._quantizedVolumeScale);
             } else {
-                pointCloud.boundingSphere = computeApproximateBoundingSphereFromPositions(positions);
+                pointCloud._boundingSphere = computeApproximateBoundingSphereFromPositions(positions);
             }
         }
 
@@ -1298,7 +1309,7 @@ define([
             }
 
             var boundingSphere = this._drawCommand.boundingVolume;
-            BoundingSphere.clone(this.boundingSphere, boundingSphere);
+            BoundingSphere.clone(this._boundingSphere, boundingSphere);
 
             if (this._cull) {
                 var center = boundingSphere.center;
