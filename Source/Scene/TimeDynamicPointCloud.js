@@ -150,7 +150,8 @@ define([
         this.style = options.style;
 
         /**
-         * The event fired to indicate that a frame failed to load.
+         * The event fired to indicate that a frame failed to load. A frame may fail to load if the
+         * request for its uri fails or processing fails due to invalid content.
          * <p>
          * If there are no event listeners, error messages will be logged to the console.
          * </p>
