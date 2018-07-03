@@ -1,5 +1,7 @@
 define([
+        '../Core/Cartesian3',
         '../Core/Color',
+        '../Core/ComponentDatatype',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
@@ -9,6 +11,7 @@ define([
         '../Core/FeatureDetection',
         '../Core/getBaseUri',
         '../Core/getStringFromTypedArray',
+        '../Core/Matrix4',
         '../Core/RequestType',
         '../Core/RuntimeError',
         '../Renderer/Pass',
@@ -20,7 +23,9 @@ define([
         './Model',
         './ModelUtility'
     ], function(
+        Cartesian3,
         Color,
+        ComponentDatatype,
         defaultValue,
         defined,
         defineProperties,
@@ -30,6 +35,7 @@ define([
         FeatureDetection,
         getBaseUri,
         getStringFromTypedArray,
+        Matrix4,
         RequestType,
         RuntimeError,
         Pass,
@@ -72,6 +78,9 @@ define([
         // Populate from gltf when available
         this._batchIdAttributeName = undefined;
         this._diffuseAttributeOrUniformName = {};
+
+        this._rtcCenterTransform = undefined;
+        this._contentModelMatrix = undefined;
 
         this.featurePropertiesDirty = false;
 
@@ -346,6 +355,14 @@ define([
             primitive : tileset
         };
 
+        content._rtcCenterTransform = Matrix4.clone(Matrix4.IDENTITY);
+        var rtcCenter = featureTable.getGlobalProperty('RTC_CENTER', ComponentDatatype.FLOAT, 3);
+        if (defined(rtcCenter)) {
+            content._rtcCenterTransform = Matrix4.fromTranslation(Cartesian3.fromArray(rtcCenter), content._rtcCenterTransform);
+        }
+
+        content._contentModelMatrix = Matrix4.multiply(tile.computedTransform, content._rtcCenterTransform, new Matrix4());
+
         if (!defined(tileset.classificationType)) {
             // PERFORMANCE_IDEA: patch the shader on demand, e.g., the first time show/color changes.
             // The pick shader still needs to be patched.
@@ -356,7 +373,7 @@ define([
                 opaquePass : Pass.CESIUM_3D_TILE, // Draw opaque portions of the model during the 3D Tiles pass
                 basePath : resource,
                 requestType : RequestType.TILES3D,
-                modelMatrix : tile.computedTransform,
+                modelMatrix: content._contentModelMatrix,
                 upAxis : tileset._gltfUpAxis,
                 forwardAxis : Axis.X,
                 shadows: tileset.shadows,
@@ -377,7 +394,7 @@ define([
                 cull : false,           // The model is already culled by 3D Tiles
                 basePath : resource,
                 requestType : RequestType.TILES3D,
-                modelMatrix : tile.computedTransform,
+                modelMatrix: content._contentModelMatrix,
                 upAxis : tileset._gltfUpAxis,
                 forwardAxis : Axis.X,
                 debugWireframe : tileset.debugWireframe,
@@ -438,7 +455,10 @@ define([
         // the content's resource loading.  In the READY state, it will
         // actually generate commands.
         this._batchTable.update(tileset, frameState);
-        this._model.modelMatrix = this._tile.computedTransform;
+
+        this._contentModelMatrix = Matrix4.multiply(this._tile.computedTransform, this._rtcCenterTransform, this._contentModelMatrix);
+        this._model.modelMatrix = this._contentModelMatrix;
+
         this._model.shadows = this._tileset.shadows;
         this._model.debugWireframe = this._tileset.debugWireframe;
 
