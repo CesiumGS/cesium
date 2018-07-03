@@ -58,7 +58,7 @@ define([
      * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] A 4x4 transformation matrix that transforms the point cloud.
      * @param {ShadowMode} [options.shadows=ShadowMode.ENABLED] Determines whether the point cloud casts or receives shadows from each light source.
      * @param {Number} [options.maximumMemoryUsage=256] The maximum amount of memory in MB that can be used by the point cloud.
-     * @param {Object} [options.pointCloudShading] Options for constructing a {@link PointCloudShading} object to control point attenuation and eye dome lighting.
+     * @param {Object} [options.shading] Options for constructing a {@link PointCloudShading} object to control point attenuation and eye dome lighting.
      * @param {Cesium3DTileStyle} [options.style] The style, defined using the {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/Styling|3D Tiles Styling language}, applied to each point in the point cloud.
      * @param {ClippingPlaneCollection} [options.clippingPlanes] The {@link ClippingPlaneCollection} used to selectively disable rendering the point cloud.
      */
@@ -120,7 +120,7 @@ define([
          * Options for controlling point size based on geometric error and eye dome lighting.
          * @type {PointCloudShading}
          */
-        this.pointCloudShading = new PointCloudShading(options.pointCloudShading);
+        this.shading = new PointCloudShading(options.shading);
 
         /**
          * The style, defined using the
@@ -416,9 +416,9 @@ define([
     var scratchModelMatrix = new Matrix4();
 
     function getGeometricError(that, pointCloud) {
-        var pointCloudShading = that.pointCloudShading;
-        if (defined(pointCloudShading) && defined(pointCloudShading.baseResolution)) {
-            return pointCloudShading.baseResolution;
+        var shading = that.shading;
+        if (defined(shading) && defined(shading.baseResolution)) {
+            return shading.baseResolution;
         } else if (defined(pointCloud.boundingSphere)) {
             return CesiumMath.cbrt(pointCloud.boundingSphere.volume() / pointCloud.pointsLength);
         }
@@ -426,9 +426,9 @@ define([
     }
 
     function getMaximumAttenuation(that) {
-        var pointCloudShading = that.pointCloudShading;
-        if (defined(pointCloudShading) && defined(pointCloudShading.maximumAttenuation)) {
-            return pointCloudShading.maximumAttenuation;
+        var shading = that.shading;
+        if (defined(shading) && defined(shading.maximumAttenuation)) {
+            return shading.maximumAttenuation;
         }
 
         // Return a hardcoded maximum attenuation. For a tileset this would instead be the maximum screen space error.
@@ -445,11 +445,11 @@ define([
         pointCloud.clippingPlanes = that._clippingPlanes;
         pointCloud.isClipped = updateState.isClipped;
 
-        var pointCloudShading = that.pointCloudShading;
-        if (defined(pointCloudShading)) {
-            pointCloud.attenuation = pointCloudShading.attenuation;
+        var shading = that.shading;
+        if (defined(shading)) {
+            pointCloud.attenuation = shading.attenuation;
             pointCloud.geometricError = getGeometricError(that, pointCloud);
-            pointCloud.geometricErrorScale = pointCloudShading.geometricErrorScale;
+            pointCloud.geometricErrorScale = shading.geometricErrorScale;
             pointCloud.maximumAttenuation = getMaximumAttenuation(that);
         }
         pointCloud.update(frameState);
@@ -615,7 +615,7 @@ define([
         updateState.timeSinceLoad = timeSinceLoad;
         updateState.isClipped = isClipped;
 
-        var pointCloudShading = this.pointCloudShading;
+        var shading = this.shading;
         var eyeDomeLighting = this._pointCloudEyeDomeLighting;
 
         var commandList = frameState.commandList;
@@ -678,8 +678,8 @@ define([
         var lengthAfterUpdate = commandList.length;
         var addedCommandsLength = lengthAfterUpdate - lengthBeforeUpdate;
 
-        if (defined(pointCloudShading) && pointCloudShading.attenuation && pointCloudShading.eyeDomeLighting && (addedCommandsLength > 0)) {
-            eyeDomeLighting.update(frameState, lengthBeforeUpdate, pointCloudShading);
+        if (defined(shading) && shading.attenuation && shading.eyeDomeLighting && (addedCommandsLength > 0)) {
+            eyeDomeLighting.update(frameState, lengthBeforeUpdate, shading);
         }
     };
 

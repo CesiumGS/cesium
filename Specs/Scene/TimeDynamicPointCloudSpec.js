@@ -324,7 +324,7 @@ defineSuite([
         initializeScene();
 
         var pointCloud = createTimeDynamicPointCloud({
-            pointCloudShading : {
+            shading : {
                 attenuation : true,
                 eyeDomeLighting : false
             },
@@ -338,7 +338,7 @@ defineSuite([
             });
 
             // Disable attenuation and expect less pixels to be drawn
-            pointCloud.pointCloudShading.attenuation = false;
+            pointCloud.shading.attenuation = false;
             expect(scene).toRenderPixelCountAndCall(function(pixelCount) {
                 expect(pixelCount).toBeLessThan(attenuationPixelCount);
             });
@@ -356,8 +356,8 @@ defineSuite([
         var pointCloud = createTimeDynamicPointCloud();
         return loadFrame(pointCloud).then(function() {
             expect(scene.frameState.commandList.length).toBe(1);
-            pointCloud.pointCloudShading.attenuation = true;
-            pointCloud.pointCloudShading.eyeDomeLighting = true;
+            pointCloud.shading.attenuation = true;
+            pointCloud.shading.eyeDomeLighting = true;
             scene.renderForSpecs();
             expect(scene.frameState.commandList.length).toBe(3); // Added 2 EDL commands
         });
