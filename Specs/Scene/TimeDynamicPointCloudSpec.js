@@ -18,6 +18,7 @@ defineSuite([
         'Scene/ClippingPlane',
         'Scene/ClippingPlaneCollection',
         'Scene/DracoLoader',
+        'Scene/PointCloudEyeDomeLighting',
         'Scene/ShadowMode',
         'Specs/createCanvas',
         'Specs/createScene',
@@ -43,6 +44,7 @@ defineSuite([
         ClippingPlane,
         ClippingPlaneCollection,
         DracoLoader,
+        PointCloudEyeDomeLighting,
         ShadowMode,
         createCanvas,
         createScene,
@@ -341,15 +343,23 @@ defineSuite([
                 expect(pixelCount).toBeLessThan(attenuationPixelCount);
             });
 
-            // Enable eye dome lighting
+            scene.destroyForSpecs();
+            scene = oldScene;
+        });
+    });
+
+    it('enabled eye dome lighting', function() {
+        if (!PointCloudEyeDomeLighting.isSupported(scene.frameState.context)) {
+            return;
+        }
+
+        var pointCloud = createTimeDynamicPointCloud();
+        return loadFrame(pointCloud).then(function() {
             expect(scene.frameState.commandList.length).toBe(1);
             pointCloud.pointCloudShading.attenuation = true;
             pointCloud.pointCloudShading.eyeDomeLighting = true;
             scene.renderForSpecs();
             expect(scene.frameState.commandList.length).toBe(3); // Added 2 EDL commands
-
-            scene.destroyForSpecs();
-            scene = oldScene;
         });
     });
 
