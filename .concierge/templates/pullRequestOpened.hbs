@@ -32,6 +32,10 @@ Thanks for the pull request @{{ userName }}!
 * :grey_question: Changes to third party files were made.
     * Looks like a file in one of our ThirdParty folders (`{{ thirdPartyFolders }}`) has been added or modified. Please verify that it has a section in [LICENSE.md]({{ repository_url }}/blob/master/LICENSE.md) and that its license information is up to date with this new version.
 {{/if}}
+{{#if askAboutTests}}
+* :grey_question: Unit tests were not updated.
+    * Make sure you've [updated tests](https://github.com/AnalyticalGraphicsInc/cesium/tree/master/Documentation/Contributors/TestingGuide) to reflect your changes, added tests for any new code, and ran the code coverage tool.
+{{/if}}
 
 Reviewers, don't forget to make sure that:
 
