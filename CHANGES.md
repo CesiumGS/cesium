@@ -1,6 +1,11 @@
 Change Log
 ==========
 
+### 1.48 - 2018-08-01
+
+##### Additions :tada:
+* Added `CoplanarPolygonGeometry` and `CoplanarPolygonGeometryOutline` for drawing polygons composed of coplanar positions that are not necessarliy on the ellipsoid surface. [#6769](https://github.com/AnalyticalGraphicsInc/cesium/pull/6769)
+
 ### 1.47 - 2018-07-02
 
 ##### Highlights :sparkler:
