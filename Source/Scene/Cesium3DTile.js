@@ -323,8 +323,7 @@ define([
         this._stackLength = 0;
         this._selectionDepth = 0;
 
-        this._updatedVisibilityFrameRender = 0;
-        this._updatedVisibilityFramePick = 0;
+        this._updatedVisibilityFrame = 0;
         this._touchedFrame = 0;
         this._selectedFrame = 0;
         this._requestedFrame = 0;

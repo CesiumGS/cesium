@@ -180,6 +180,8 @@ define([
         this._selectedTilesToStyle = [];
         this._loadTimestamp = undefined;
         this._timeSinceLoad = 0.0;
+        this._pass = 0;
+        this._passDirty = true;
 
         this._cullWithChildrenBounds = defaultValue(options.cullWithChildrenBounds, true);
         this._allTilesAdditive = true;
@@ -1806,6 +1808,18 @@ define([
 
     ///////////////////////////////////////////////////////////////////////////
 
+    function getPass(frameState) {
+        // Convert the passes object to a bitfield to determine when the pass has changed.
+        var passState = 0;
+        var passes = frameState.passes;
+        for (var pass in passes) {
+            if (passes.hasOwnProperty(pass)) {
+                passState = (passState << 1) | (passes[pass] ? 1 : 0);
+            }
+        }
+        return passState;
+    }
+
     /**
      * Called when {@link Viewer} or {@link CesiumWidget} render the scene to
      * get the draw commands needed to render this primitive.
@@ -1853,6 +1867,10 @@ define([
         if (outOfCore) {
             this._cache.reset();
         }
+
+        var pass = getPass(frameState);
+        this._passDirty = this._pass !== pass;
+        this._pass = pass;
 
         this._requestedTiles.length = 0;
         Cesium3DTilesetTraversal.selectTiles(this, frameState);

@@ -222,6 +222,7 @@ define([
 
     function touchTile(tileset, tile, frameState) {
         if (frameState.passes.pick) {
+            // Tiles already touched in render pass.
             return;
         }
         tileset._cache.touch(tile);
@@ -291,22 +292,14 @@ define([
     }
 
     function updateVisibility(tileset, tile, frameState) {
-        // These checks are here to prevent updating tile visibility multiple times - once when checking children
+        // Prevent updating tile visibility multiple times - once when checking children
         // visibility with the cullWithChildrenBounds optimization, and again when checking the tile itself.
         // This is also the only reason updateVisibility and updateTileVisibility are separate functions.
-        // Render and pick passes require different visibility checks since they use different frustums.
-        if (frameState.passes.pick) {
-            if (tile._updatedVisibilityFramePick === frameState.frameNumber) {
-                return;
-            }
-            tile._updatedVisibilityFramePick = frameState.frameNumber;
+        if (!tileset._passDirty && (tile._updatedVisibilityFrame === frameState.frameNumber)) {
+            return;
         }
-        if (frameState.passes.render) {
-            if (tile._updatedVisibilityFrameRender === frameState.frameNumber) {
-                return;
-            }
-            tile._updatedVisibilityFrameRender = frameState.frameNumber;
-        }
+
+        tile._updatedVisibilityFrame = frameState.frameNumber;
 
         var visibilityFlag = VisibilityFlag.NONE;
 
