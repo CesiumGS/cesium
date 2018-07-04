@@ -1031,6 +1031,7 @@ defineSuite([
         //
         viewRootOnly();
         return Cesium3DTilesTester.loadTileset(scene, tilesetReplacement1Url).then(function(tileset) {
+            tileset.skipLevelOfDetail = false;
             viewAllTiles();
             scene.renderForSpecs();
 
@@ -1060,6 +1061,7 @@ defineSuite([
 
         viewRootOnly();
         return Cesium3DTilesTester.loadTileset(scene, tilesetReplacement2Url).then(function(tileset) {
+            tileset.skipLevelOfDetail = false;
             var statistics = tileset._statistics;
             return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset).then(function() {
                 expect(statistics.numberOfCommands).toEqual(1);
@@ -1085,6 +1087,7 @@ defineSuite([
 
         viewRootOnly();
         return Cesium3DTilesTester.loadTileset(scene, tilesetReplacement3Url).then(function(tileset) {
+            tileset.skipLevelOfDetail = false;
             var statistics = tileset._statistics;
             var root = tileset._root;
             expect(statistics.numberOfCommands).toEqual(1);
@@ -2665,6 +2668,15 @@ defineSuite([
                 return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset).then(function(tileset) {
                     var statistics = tileset._statistics;
                     expect(statistics.numberOfTilesWithContentReady).toBe(1);
+                    // Renders child while parent loads
+                    viewRootOnly();
+                    scene.renderForSpecs();
+                    expect(isSelected(tileset, tileset._root.children[0]));
+                    expect(!isSelected(tileset, tileset._root));
+                    return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset).then(function(tileset) {
+                        expect(!isSelected(tileset, tileset._root.children[0]));
+                        expect(isSelected(tileset, tileset._root));
+                    });
                 });
             });
         });
