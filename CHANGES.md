@@ -93,6 +93,7 @@ Change Log
 * Fixed polygon outline when using `perPositionHeight` and `extrudedHeight`. [#6595](https://github.com/AnalyticalGraphicsInc/cesium/issues/6595)
 * Fixed broken links in documentation of `createTileMapServiceImageryProvider`. [#5818](https://github.com/AnalyticalGraphicsInc/cesium/issues/5818)
 * Transitioning from 2 touches to 1 touch no longer triggers a new pan gesture. [#6479](https://github.com/AnalyticalGraphicsInc/cesium/pull/6479)
+* Fixed `EllipsoidTerrainProvider.requestTileGeometry` not returning a Promise [#6637](https://github.com/AnalyticalGraphicsInc/cesium/pull/6637)
 
 ### 1.45 - 2018-05-01
 

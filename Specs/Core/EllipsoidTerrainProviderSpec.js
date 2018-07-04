@@ -1,11 +1,13 @@
 defineSuite([
         'Core/EllipsoidTerrainProvider',
         'Core/TerrainProvider',
-        'Specs/createContext'
+        'Specs/createContext',
+        'ThirdParty/when'
     ], function(
         EllipsoidTerrainProvider,
         TerrainProvider,
-        createContext) {
+        createContext,
+        when) {
     'use strict';
 
     var context;
@@ -34,7 +36,7 @@ defineSuite([
     it('requestTileGeometry creates terrain data.', function() {
         var terrain = new EllipsoidTerrainProvider();
         var terrainData = terrain.requestTileGeometry(0, 0, 0);
-        expect(terrainData).toBeDefined();
+        expect(when.isPromise(terrainData)).toBeTruthy();
     });
 
     it('has error event', function() {
