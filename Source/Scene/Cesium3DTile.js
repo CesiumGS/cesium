@@ -988,7 +988,16 @@ define([
 
         var showVolume = tileset.debugShowBoundingVolume || (tileset.debugShowContentBoundingVolume && !hasContentBoundingVolume);
         if (showVolume) {
-            var color = tile._finalResolution ? ((hasContentBoundingVolume || empty) ? Color.WHITE : Color.RED) : Color.YELLOW;
+            var color;
+            if (!tile._finalResolution) {
+                color = Color.YELLOW;
+            } else if (hasContentBoundingVolume) {
+                color = Color.WHITE;
+            } else if (empty) {
+                color = Color.GREEN;
+            } else {
+                color = Color.RED;
+            }
             if (!defined(tile._debugBoundingVolume)) {
                 tile._debugBoundingVolume = tile._boundingVolume.createDebugVolume(color);
             }
