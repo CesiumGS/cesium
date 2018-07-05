@@ -1,6 +1,16 @@
 Change Log
 ==========
 
+### 1.48 2018-08-01
+
+##### Fixes :wrench:
+* Several performance improvements and fixes to the 3D Tiles traversal code. [#6390](https://github.com/AnalyticalGraphicsInc/cesium/pull/6390)
+    * Improved load performance when `skipLevelOfDetail` is false.
+    * Fixed a bug that caused some skipped tiles to load when `skipLevelOfDetail` is true.
+    * Fixed pick statistics in the 3D Tiles Inspector.
+    * Fixed drawing of debug labels for external tilesets.
+    * Fixed drawing of debug outlines for empty tiles.
+
 ### 1.47 - 2018-07-02
 
 ##### Breaking Changes :mega:
