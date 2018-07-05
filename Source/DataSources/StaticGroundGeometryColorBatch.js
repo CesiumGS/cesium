@@ -24,8 +24,9 @@ define([
     var distanceDisplayConditionScratch = new DistanceDisplayCondition();
     var defaultDistanceDisplayCondition = new DistanceDisplayCondition();
 
-    function Batch(primitives, classificationType, color, key) {
+    function Batch(primitives, classificationType, color, key, zIndex) {
         this.primitives = primitives;
+        this.zIndex = zIndex;
         this.classificationType = classificationType;
         this.color = color;
         this.key = key;
@@ -69,8 +70,11 @@ define([
             if (defined(unsubscribe)) {
                 unsubscribe();
                 this.subscriptions.remove(id);
+                this.showsUpdated.remove(id);
             }
+            return true;
         }
+        return false;
     };
 
     var scratchArray = new Array(4);
@@ -116,7 +120,7 @@ define([
                     geometryInstances : geometries,
                     classificationType : this.classificationType
                 });
-                primitives.add(primitive);
+                primitives.add(primitive, this.zIndex);
                 isUpdated = false;
             } else {
                 if (defined(primitive)) {
@@ -264,13 +268,14 @@ define([
     StaticGroundGeometryColorBatch.prototype.add = function(time, updater) {
         var instance = updater.createFillGeometryInstance(time);
         var batches = this._batches;
-        // instance.attributes.color.value is a Uint8Array, so just read it as a Uint32 and make that the key
-        var batchKey = new Uint32Array(instance.attributes.color.value.buffer)[0];
+        // color and zIndex are batch breakers, so we'll use that for the key
+        var zIndex = Property.getValueOrDefault(updater.zIndex, 0);
+        var batchKey = new Uint32Array(instance.attributes.color.value.buffer)[0] + ':' + zIndex;
         var batch;
         if (batches.contains(batchKey)) {
             batch = batches.get(batchKey);
         } else {
-            batch = new Batch(this._primitives, this._classificationType, instance.attributes.color.value, batchKey);
+            batch = new Batch(this._primitives, this._classificationType, instance.attributes.color.value, batchKey, zIndex);
             batches.set(batchKey, batch);
         }
         batch.add(updater, instance);

@@ -47,8 +47,8 @@ define([
      * @function
      *
      * @param {Number} time The time at which to evaluate the curve.
-     * @param {Cartesian3|Quaternion} [result] The object onto which to store the result.
-     * @returns {Cartesian3|Quaternion} The modified result parameter or a new instance of the point on the curve at the given time.
+     * @param {Cartesian3|Quaternion|Number[]} [result] The object onto which to store the result.
+     * @returns {Cartesian3|Quaternion|Number[]} The modified result parameter or a new instance of the point on the curve at the given time.
      *
      * @exception {DeveloperError} time must be in the range <code>[t<sub>0</sub>, t<sub>n</sub>]</code>, where <code>t<sub>0</sub></code>
      *                             is the first element in the array <code>times</code> and <code>t<sub>n</sub></code> is the last element

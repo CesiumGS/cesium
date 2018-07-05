@@ -313,6 +313,42 @@ defineSuite([
         expect(CesiumMath.toDegrees(r.west)).toEqual(-1.4142135623730951);
     });
 
+    it('computing textureCoordinateRotationPoints property', function() {
+        var rectangle = new Rectangle.fromDegrees(-1.0, -1.0, 1.0, 1.0);
+        var geometry = new RectangleGeometry({
+            vertexFormat : VertexFormat.POSITION_ONLY,
+            rectangle : rectangle,
+            granularity : 1.0,
+            rotation : CesiumMath.toRadians(90.0)
+        });
+
+        // 90 degree rotation means (0, 1) should be the new min and (1, 1) (0, 0) are extents
+        var textureCoordinateRotationPoints = geometry.textureCoordinateRotationPoints;
+        expect(textureCoordinateRotationPoints.length).toEqual(6);
+        expect(textureCoordinateRotationPoints[0]).toEqualEpsilon(0, CesiumMath.EPSILON7);
+        expect(textureCoordinateRotationPoints[1]).toEqualEpsilon(0, CesiumMath.EPSILON7);
+        expect(textureCoordinateRotationPoints[2]).toEqualEpsilon(0, CesiumMath.EPSILON7);
+        expect(textureCoordinateRotationPoints[3]).toEqualEpsilon(1, CesiumMath.EPSILON7);
+        expect(textureCoordinateRotationPoints[4]).toEqualEpsilon(1, CesiumMath.EPSILON7);
+        expect(textureCoordinateRotationPoints[5]).toEqualEpsilon(0, CesiumMath.EPSILON7);
+
+        geometry = new RectangleGeometry({
+            vertexFormat : VertexFormat.POSITION_ONLY,
+            rectangle : rectangle,
+            granularity : 1.0,
+            rotation : CesiumMath.toRadians(90.0)
+        });
+
+        textureCoordinateRotationPoints = geometry.textureCoordinateRotationPoints;
+        expect(textureCoordinateRotationPoints.length).toEqual(6);
+        expect(textureCoordinateRotationPoints[0]).toEqualEpsilon(0, CesiumMath.EPSILON7);
+        expect(textureCoordinateRotationPoints[1]).toEqualEpsilon(0, CesiumMath.EPSILON7);
+        expect(textureCoordinateRotationPoints[2]).toEqualEpsilon(0, CesiumMath.EPSILON7);
+        expect(textureCoordinateRotationPoints[3]).toEqualEpsilon(1, CesiumMath.EPSILON7);
+        expect(textureCoordinateRotationPoints[4]).toEqualEpsilon(1, CesiumMath.EPSILON7);
+        expect(textureCoordinateRotationPoints[5]).toEqualEpsilon(0, CesiumMath.EPSILON7);
+    });
+
     it('computing rectangle property with zero rotation', function() {
         expect(function() {
             return RectangleGeometry.createGeometry(new RectangleGeometry({

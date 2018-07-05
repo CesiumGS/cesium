@@ -1045,6 +1045,18 @@ define([
                 }
                 return this._rectangle;
             }
+        },
+        /**
+         * For remapping texture coordinates when rendering CorridorGeometries as GroundPrimitives.
+         *
+         * Corridors don't support stRotation,
+         * so just return the corners of the original system.
+         * @private
+         */
+        textureCoordinateRotationPoints : {
+            get : function() {
+                return [0, 0, 0, 1, 1, 0];
+            }
         }
     });
 

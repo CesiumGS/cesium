@@ -2,22 +2,17 @@ defineSuite([
         'Core/TaskProcessor',
         'require',
         'Core/FeatureDetection',
-        'ThirdParty/when'
+        'ThirdParty/when',
+        'Specs/absolutize'
     ], function(
         TaskProcessor,
         require,
         FeatureDetection,
-        when) {
+        when,
+        absolutize) {
     'use strict';
 
     var taskProcessor;
-
-    function absolutize(url) {
-        var a = document.createElement('a');
-        a.href = url;
-        a.href = a.href; // IE only absolutizes href on get, not set
-        return a.href;
-    }
 
     beforeEach(function() {
         TaskProcessor._workerModulePrefix = '../Specs/TestWorkers/';

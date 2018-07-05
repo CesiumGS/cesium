@@ -6,7 +6,7 @@ define([
         '../Core/freezeObject',
         '../Core/GeographicTilingScheme',
         '../Core/Resource',
-        '../Core/WebMercatorTilingScheme',
+        '../Core/WebMercatorProjection',
         './GetFeatureInfoFormat',
         './UrlTemplateImageryProvider'
     ], function(
@@ -17,7 +17,7 @@ define([
         freezeObject,
         GeographicTilingScheme,
         Resource,
-        WebMercatorTilingScheme,
+        WebMercatorProjection,
         GetFeatureInfoFormat,
         UrlTemplateImageryProvider) {
     'use strict';
@@ -118,10 +118,10 @@ define([
             // Use CRS with 1.3.0 and going forward.
             // For GeographicTilingScheme, use CRS:84 vice EPSG:4326 to specify lon, lat (x, y) ordering for
             // bbox requests.
-            parameters.crs = defaultValue(options.crs, options.tilingScheme instanceof WebMercatorTilingScheme ? 'EPSG:3857' : 'CRS:84');
+            parameters.crs = defaultValue(options.crs, options.tilingScheme && options.tilingScheme.projection instanceof WebMercatorProjection ? 'EPSG:3857' : 'CRS:84');
         } else {
             // SRS for WMS 1.1.0 or 1.1.1.
-            parameters.srs = defaultValue(options.srs, options.tilingScheme instanceof WebMercatorTilingScheme ? 'EPSG:3857' : 'EPSG:4326');
+            parameters.srs = defaultValue(options.srs, options.tilingScheme && options.tilingScheme.projection instanceof WebMercatorProjection ? 'EPSG:3857' : 'EPSG:4326');
         }
 
         resource.setQueryParameters(parameters, true);

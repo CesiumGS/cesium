@@ -1,6 +1,54 @@
 Change Log
 ==========
 
+### 1.46 - 2018-06-01
+
+##### Highlights :sparkler:
+* Added support for materials on terrain entities (entities with unspecified `height`) and `GroundPrimitives`. [#6393](https://github.com/AnalyticalGraphicsInc/cesium/pull/6393)
+* Added a post-processing framework. [#5615](https://github.com/AnalyticalGraphicsInc/cesium/pull/5615)
+* Added `zIndex` for ground geometry, including corridor, ellipse, polygon and rectangle entities. [#6362](https://github.com/AnalyticalGraphicsInc/cesium/pull/6362)
+
+##### Breaking Changes :mega:
+* `ParticleSystem` no longer uses `forces`. [#6510](https://github.com/AnalyticalGraphicsInc/cesium/pull/6510)
+* `Particle` no longer uses `size`, `rate`, `lifeTime`, `life`, `minimumLife`, `maximumLife`, `minimumWidth`, `minimumHeight`, `maximumWidth`, and `maximumHeight`. [#6510](https://github.com/AnalyticalGraphicsInc/cesium/pull/6510)
+* Removed `Scene.copyGlobeDepth`. Globe depth will now be copied by default when supported. [#6393](https://github.com/AnalyticalGraphicsInc/cesium/pull/6393)
+* The default `classificationType` for `GroundPrimitive`, `CorridorGraphics`, `EllipseGraphics`, `PolygonGraphics` and `RectangleGraphics` is now `ClassificationType.TERRAIN`.  If you wish the geometry to color both terrain and 3D tiles, pass in the option `classificationType: Cesium.ClassificationType.BOTH`.
+* Removed support for the `options` argument for `Credit` [#6373](https://github.com/AnalyticalGraphicsInc/cesium/issues/6373).  Pass in an html string instead.
+
+##### Deprecated :hourglass_flowing_sand:
+* The `Scene.fxaa` property has been deprecated and will be removed in Cesium 1.47. Use `Scene.postProcessStages.fxaa.enabled`.
+
+##### Additions :tada:
+* Added support for materials on terrain entities (entities with unspecified `height`) and `GroundPrimitives`. [#6393](https://github.com/AnalyticalGraphicsInc/cesium/pull/6393)
+  * Only available for `ClassificationType.TERRAIN` at this time. Adding a material to a terrain `Entity` will cause it to behave as if it is `ClassificationType.TERRAIN`.
+  * Requires depth texture support (`WEBGL_depth_texture` or `WEBKIT_WEBGL_depth_texture`), so materials on terrain entities and `GroundPrimitives` are not supported in Internet Explorer.
+  * Best suited for notational patterns and not intended for precisely mapping textures to terrain - for that use case, use `SingleTileImageryProvider`.
+* Added `GroundPrimitive.supportsMaterials` and `Entity.supportsMaterialsforEntitiesOnTerrain`, both of which can be used to check if materials on terrain entities and `GroundPrimitives` is supported. [#6393](https://github.com/AnalyticalGraphicsInc/cesium/pull/6393)
+* Added a post-processing framework. [#5615](https://github.com/AnalyticalGraphicsInc/cesium/pull/5615)
+   * Added `Scene.postProcessStages` which is a collection of post-process stages to be run in order.
+      * Has a built-in `ambientOcclusion` property which will apply screen space ambient occlusion to the scene and run before all stages.
+      * Has a built-in `bloom` property which applies a bloom filter to the scene before all other stages but after the ambient occlusion stage.
+      * Has a built-in `fxaa` property which applies Fast Approximate Anti-aliasing (FXAA) to the scene after all other stages.
+   * Added `PostProcessStageLibrary` which contains several built-in stages that can be added to the collection.
+   * Added `PostProcessStage` which takes a fragment shader that processes the color and depth texture from the stage run before it.
+   * Added `PostProcessStageComposite` for multi-stage post-processes like depth of field.
+   * Added a new Sandcastle label `Post Processing` to showcase the different built-in post-process stages.
+ * Added `zIndex` for ground geometry, including corridor, ellipse, polygon and rectangle entities. [#6362](https://github.com/AnalyticalGraphicsInc/cesium/pull/6362)
+ * Added `Rectangle.equalsEpsilon` for comparing the equality of two rectangles [#6533](https://github.com/AnalyticalGraphicsInc/cesium/pull/6533)
+ 
+##### Fixes :wrench:
+* Fixed a bug causing custom TilingScheme classes to not be able to use a GeographicProjection. [#6524](https://github.com/AnalyticalGraphicsInc/cesium/pull/6524)
+* Fixed incorrect 3D Tiles statistics when a tile fails during processing. [#6558](https://github.com/AnalyticalGraphicsInc/cesium/pull/6558)
+* Fixed race condition causing intermittent crash when changing geometry show value [#3061](https://github.com/AnalyticalGraphicsInc/cesium/issues/3061)
+* `ProviderViewModel`s with no category are displayed in an untitled group in `BaseLayerPicker` instead of being labeled as `'Other'` [#6574](https://github.com/AnalyticalGraphicsInc/cesium/pull/6574)
+* Fixed a bug causing intermittent crashes with clipping planes due to uninitialized textures. [#6576](https://github.com/AnalyticalGraphicsInc/cesium/pull/6576)
+* Added a workaround for clipping planes causing a picking shader compilation failure for gltf models and 3D Tilesets in Internet Explorer [#6575](https://github.com/AnalyticalGraphicsInc/cesium/issues/6575)
+* Allowed Bing Maps servers with a subpath (instead of being at the root) to work correctly. [#6597](https://github.com/AnalyticalGraphicsInc/cesium/pull/6597)
+* Added support for loading of Draco compressed glTF assets in IE11 [#6404](https://github.com/AnalyticalGraphicsInc/cesium/issues/6404)
+* Fixed polygon outline when using `perPositionHeight` and `extrudedHeight`. [#6595](https://github.com/AnalyticalGraphicsInc/cesium/issues/6595)
+* Fixed broken links in documentation of `createTileMapServiceImageryProvider`. [#5818](https://github.com/AnalyticalGraphicsInc/cesium/issues/5818)
+* Transitioning from 2 touches to 1 touch no longer triggers a new pan gesture. [#6479](https://github.com/AnalyticalGraphicsInc/cesium/pull/6479)
+
 ### 1.45 - 2018-05-01
 
 ##### Major Announcements :loudspeaker:

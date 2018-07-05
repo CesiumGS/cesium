@@ -248,7 +248,7 @@ define([
      * </li><li>
      * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/1.0/Vendor/WEB3D_quantized_attributes/README.md|WEB3D_quantized_attributes}
      * </li><li>
-     * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/2.0/Khronos/KHR_draco_mesh_compression/README.md|KHR_draco_mesh_compression} (Not supported in Internet Explorer)
+     * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/2.0/Khronos/KHR_draco_mesh_compression/README.md|KHR_draco_mesh_compression}
      * </li>
      * </ul>
      * </p>
@@ -1096,7 +1096,7 @@ define([
      * </li><li>
      * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/1.0/Vendor/WEB3D_quantized_attributes/README.md|WEB3D_quantized_attributes}
      * </li><li>
-     * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/2.0/Khronos/KHR_draco_mesh_compression/README.md|KHR_draco_mesh_compression} (Not supported in Internet Explorer)
+     * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/2.0/Khronos/KHR_draco_mesh_compression/README.md|KHR_draco_mesh_compression}
      * </li>
      * </ul>
      * </p>
@@ -1995,10 +1995,16 @@ define([
         var drawVS = modifyShader(vs, id, model._vertexShaderLoaded);
         var drawFS = modifyShader(fs, id, model._fragmentShaderLoaded);
 
-        drawVS = ModelUtility.modifyVertexShaderForLogDepth(drawVS, toClipCoordinatesGLSL);
-        drawFS = ModelUtility.modifyFragmentShaderForLogDepth(drawFS);
+        // Internet Explorer seems to have problems with discard (for clipping planes) after too many levels of indirection:
+        // https://github.com/AnalyticalGraphicsInc/cesium/issues/6575.
+        // For IE log depth code is defined out anyway due to unsupported WebGL extensions, so the wrappers can be omitted.
+        if (!FeatureDetection.isInternetExplorer()) {
+            drawVS = ModelUtility.modifyVertexShaderForLogDepth(drawVS, toClipCoordinatesGLSL);
+            drawFS = ModelUtility.modifyFragmentShaderForLogDepth(drawFS);
+        }
 
-        var pickFS, pickVS;
+        var pickFS;
+        var pickVS;
         if (model.allowPicking) {
             // PERFORMANCE_IDEA: Can optimize this shader with a glTF hint. https://github.com/KhronosGroup/glTF/issues/181
             pickVS = modifyShader(vs, id, model._pickVertexShaderLoaded);
@@ -2008,8 +2014,10 @@ define([
                 pickFS = ShaderSource.createPickFragmentShaderSource(fs, 'uniform');
             }
 
-            pickVS = ModelUtility.modifyVertexShaderForLogDepth(pickVS, toClipCoordinatesGLSL);
-            pickFS = ModelUtility.modifyFragmentShaderForLogDepth(pickFS);
+            if (!FeatureDetection.isInternetExplorer()) {
+                pickVS = ModelUtility.modifyVertexShaderForLogDepth(pickVS, toClipCoordinatesGLSL);
+                pickFS = ModelUtility.modifyFragmentShaderForLogDepth(pickFS);
+            }
         }
         createAttributesAndProgram(id, drawFS, drawVS, pickFS, pickVS, model, context);
     }
@@ -2035,16 +2043,19 @@ define([
             finalFS = Model._modifyShaderForColor(finalFS, model._hasPremultipliedAlpha);
         }
         if (addClippingPlaneCode) {
-            finalFS = modifyShaderForClippingPlanes(finalFS, clippingPlaneCollection);
+            finalFS = modifyShaderForClippingPlanes(finalFS, clippingPlaneCollection, context);
         }
 
         var drawVS = modifyShader(vs, id, model._vertexShaderLoaded);
         var drawFS = modifyShader(finalFS, id, model._fragmentShaderLoaded);
 
-        drawVS = ModelUtility.modifyVertexShaderForLogDepth(drawVS, toClipCoordinatesGLSL);
-        drawFS = ModelUtility.modifyFragmentShaderForLogDepth(drawFS);
+        if (!FeatureDetection.isInternetExplorer()) {
+            drawVS = ModelUtility.modifyVertexShaderForLogDepth(drawVS, toClipCoordinatesGLSL);
+            drawFS = ModelUtility.modifyFragmentShaderForLogDepth(drawFS);
+        }
 
-        var pickFS, pickVS;
+        var pickFS;
+        var pickVS;
         if (model.allowPicking) {
             // PERFORMANCE_IDEA: Can optimize this shader with a glTF hint. https://github.com/KhronosGroup/glTF/issues/181
             pickVS = modifyShader(vs, id, model._pickVertexShaderLoaded);
@@ -2055,11 +2066,13 @@ define([
             }
 
             if (addClippingPlaneCode) {
-                pickFS = modifyShaderForClippingPlanes(pickFS, clippingPlaneCollection);
+                pickFS = modifyShaderForClippingPlanes(pickFS, clippingPlaneCollection, context);
             }
 
-            pickVS = ModelUtility.modifyVertexShaderForLogDepth(pickVS, toClipCoordinatesGLSL);
-            pickFS = ModelUtility.modifyFragmentShaderForLogDepth(pickFS);
+            if (!FeatureDetection.isInternetExplorer()) {
+                pickVS = ModelUtility.modifyVertexShaderForLogDepth(pickVS, toClipCoordinatesGLSL);
+                pickFS = ModelUtility.modifyFragmentShaderForLogDepth(pickFS);
+            }
         }
         createAttributesAndProgram(id, drawFS, drawVS, pickFS, pickVS, model, context);
     }
@@ -3947,9 +3960,9 @@ define([
         }
     }
 
-    function modifyShaderForClippingPlanes(shader, clippingPlaneCollection) {
+    function modifyShaderForClippingPlanes(shader, clippingPlaneCollection, context) {
         shader = ShaderSource.replaceMain(shader, 'gltf_clip_main');
-        shader += Model._getClippingFunction(clippingPlaneCollection) + '\n';
+        shader += Model._getClippingFunction(clippingPlaneCollection, context) + '\n';
         shader +=
             'uniform sampler2D gltf_clippingPlanes; \n' +
             'uniform mat4 gltf_clippingPlanesMatrix; \n' +
