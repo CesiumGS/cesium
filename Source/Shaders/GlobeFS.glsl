@@ -112,6 +112,8 @@ vec4 sampleAndBlend(
     vec3 color = value.rgb;
     float alpha = value.a;
 
+    color = pow(color, vec3(2.2));
+
 #ifdef APPLY_SPLIT
     float splitPosition = czm_imagerySplitPosition;
     // Split to the left
@@ -140,9 +142,9 @@ vec4 sampleAndBlend(
     color = czm_saturation(color, textureSaturation);
 #endif
 
-#ifdef APPLY_GAMMA
-    color = pow(color, vec3(textureOneOverGamma));
-#endif
+//#ifdef APPLY_GAMMA
+//    color = pow(color, vec3(textureOneOverGamma));
+//#endif
 
     float sourceAlpha = alpha * textureAlpha;
     float outAlpha = mix(previousColor.a, 1.0, sourceAlpha);

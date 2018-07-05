@@ -2,9 +2,9 @@ uniform sampler2D colorTexture;
 
 varying vec2 v_textureCoordinates;
 
-#ifdef AUTO_EXPOSURE
-uniform sampler2D autoExposure;
-#endif
+//#ifdef AUTO_EXPOSURE
+//uniform sampler2D autoExposure;
+//#endif
 
 // See slides 142 and 143:
 //     http://www.gdcvault.com/play/1012459/Uncharted_2__HDR_Lighting
@@ -13,9 +13,9 @@ void main()
 {
     vec3 color = texture2D(colorTexture, v_textureCoordinates).rgb;
 
-#ifdef AUTO_EXPOSURE
-    color /= texture2D(autoExposure, vec2(0.5)).r;
-#endif
+//#ifdef AUTO_EXPOSURE
+//    color /= texture2D(autoExposure, vec2(0.5)).r;
+//#endif
 
 	const float A = 0.22; // shoulder strength
 	const float B = 0.30; // linear strength
@@ -29,5 +29,7 @@ void main()
 	vec3 c = ((color * (A * color + C * B) + D * E) / (color * ( A * color + B) + D * F)) - E / F;
 	float w = ((white * (A * white + C * B) + D * E) / (white * ( A * white + B) + D * F)) - E / F;
 
-	gl_FragColor = vec4(c / w, 1.0);
+    c = c / w;
+    c = pow(c, vec3(1.0 / 2.2));
+	gl_FragColor = vec4(c, 1.0);
 }
