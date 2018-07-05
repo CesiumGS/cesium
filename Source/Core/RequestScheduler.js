@@ -6,9 +6,9 @@ define([
         './defined',
         './defineProperties',
         './Event',
+        './Heap',
         './isBlobUri',
         './isDataUri',
-        './RequestQueue',
         './RequestState'
     ], function(
         Uri,
@@ -18,11 +18,15 @@ define([
         defined,
         defineProperties,
         Event,
+        Heap,
         isBlobUri,
         isDataUri,
-        RequestQueue,
         RequestState) {
     'use strict';
+
+    function sortRequests(a, b) {
+        return a.priority - b.priority;
+    }
 
     var statistics = {
         numberOfAttemptedRequests : 0,
@@ -33,8 +37,12 @@ define([
         numberOfActiveRequestsEver : 0
     };
 
-    var requestQueueLength = 20;
-    var requestQueue = new RequestQueue(requestQueueLength);
+    var priorityHeapLength = 20;
+    var requestHeap = new Heap({
+        comparator : sortRequests
+    });
+    requestHeap.maximumLength = priorityHeapLength;
+    requestHeap.reserve(priorityHeapLength);
 
     var activeRequests = [];
     var numberOfActiveRequestsByServer = {};
@@ -115,28 +123,29 @@ define([
         },
 
         /**
-         * The maximum length of the request queue. This limits the number of requests that are sorted by priority. Only applies to requests that are not yet active.
+         * The maximum size of the priority heap. This limits the number of requests that are sorted by priority. Only applies to requests that are not yet active.
          *
          * @memberof RequestScheduler
          *
          * @type {Number}
          * @default 20
-         *
-         * @private
          */
-        requestQueueLength : {
+        priorityHeapLength : {
             get : function() {
-                return requestQueueLength;
+                return priorityHeapLength;
             },
             set : function(value) {
-                // Cancel all requests and resize the queue
-                var length = requestQueue.length;
-                for (var i = 0; i < length; ++i) {
-                    var request = requestQueue.get(i);
-                    cancelRequest(request);
+                // If the new length shrinks the heap, need to cancel some of the requests.
+                // Since this value is not intended to be tweaked regularly it is fine to just cancel the high priority requests.
+                if (value < priorityHeapLength) {
+                    while (requestHeap.length > value) {
+                        var request = requestHeap.pop();
+                        cancelRequest(request);
+                    }
                 }
-                requestQueue = new RequestQueue(value);
-                RequestScheduler.requestQueue = requestQueue;
+                priorityHeapLength = value;
+                requestHeap.maximumLength = value;
+                requestHeap.reserve(value);
             }
         }
     });
@@ -245,19 +254,21 @@ define([
         }
         activeRequests.length -= removeCount;
 
-        // Update priority of issued requests and resort the queue
-        requestQueue.forEach(updatePriority);
-        requestQueue.sort();
+        // Update priority of issued requests and resort the heap
+        var issuedRequests = requestHeap.internalArray;
+        var issuedLength = requestHeap.length;
+        for (i = 0; i < issuedLength; ++i) {
+            updatePriority(issuedRequests[i]);
+        }
+        requestHeap.resort();
 
         // Get the number of open slots and fill with the highest priority requests.
         // Un-throttled requests are automatically added to activeRequests, so activeRequests.length may exceed maximumRequests
         var openSlots = Math.max(RequestScheduler.maximumRequests - activeRequests.length, 0);
         var filledSlots = 0;
-        var processedRequests = 0;
-        var totalRequests = requestQueue.length;
-        while (filledSlots < openSlots && processedRequests < totalRequests) {
-            // Loop until all open slots are filled or the queue becomes empty
-            request = requestQueue.get(processedRequests++);
+        while (filledSlots < openSlots && requestHeap.length > 0) {
+            // Loop until all open slots are filled or the heap becomes empty
+            request = requestHeap.pop();
             if (request.cancelled) {
                 // Request was explicitly cancelled
                 cancelRequest(request);
@@ -273,7 +284,6 @@ define([
             startRequest(request);
             ++filledSlots;
         }
-        requestQueue.remove(processedRequests);
 
         updateStatistics();
     };
@@ -346,9 +356,10 @@ define([
             return undefined;
         }
 
-        // Insert into the priority queue and see if a request was bumped off. If this request is the lowest priority it will be returned.
+        // Insert into the priority heap and see if a request was bumped off. If this request is the lowest
+        // priority it will be returned.
         updatePriority(request);
-        var removedRequest = requestQueue.insert(request);
+        var removedRequest = requestHeap.insert(request);
 
         if (defined(removedRequest)) {
             if (removedRequest === request) {
@@ -398,19 +409,12 @@ define([
      * @private
      */
     RequestScheduler.clearForSpecs = function() {
-        var request;
-        var length;
-        var i;
-
-        length = requestQueue.length;
-        for (i = 0; i < length; ++i) {
-            request = requestQueue.get(i);
+        while (requestHeap.length > 0) {
+            var request = requestHeap.pop();
             cancelRequest(request);
         }
-        requestQueue.remove(length);
-
-        length = activeRequests.length;
-        for (i = 0; i < length; ++i) {
+        var length = activeRequests.length;
+        for (var i = 0; i < length; ++i) {
             cancelRequest(activeRequests[i]);
         }
         activeRequests.length = 0;
@@ -439,7 +443,7 @@ define([
      *
      * @private
      */
-    RequestScheduler.requestQueue = requestQueue;
+    RequestScheduler.requestHeap = requestHeap;
 
     return RequestScheduler;
 });

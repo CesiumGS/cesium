@@ -7,7 +7,6 @@ define([
         '../Core/defineProperties',
         '../Core/IntersectionTests',
         '../Core/PixelFormat',
-        '../Core/Rectangle',
         '../Renderer/PixelDatatype',
         '../Renderer/Sampler',
         '../Renderer/Texture',
@@ -29,7 +28,6 @@ define([
         defineProperties,
         IntersectionTests,
         PixelFormat,
-        Rectangle,
         PixelDatatype,
         Sampler,
         Texture,
@@ -256,10 +254,6 @@ define([
 
     function createPriorityFunction(surfaceTile, frameState) {
         return function() {
-            if (Rectangle.contains(surfaceTile.tileBoundingRegion.rectangle, frameState.camera.positionCartographic)) {
-                // If the camera is inside this tile's bounding region treat it as highest priority
-                return 0.0;
-            }
             return surfaceTile.tileBoundingRegion.distanceToCamera(frameState);
         };
     }
