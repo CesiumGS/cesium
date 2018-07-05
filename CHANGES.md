@@ -1,6 +1,11 @@
 Change Log
 ==========
 
+### 1.48 - 2018-08-01
+
+#### Fixes :wrench:
+* Fixed bug causing billboards and labels to appear the wrong size when switching scene modes [#6745](https://github.com/AnalyticalGraphicsInc/cesium/issues/6745)
+
 ### 1.47 - 2018-07-02
 
 ##### Highlights :sparkler:
