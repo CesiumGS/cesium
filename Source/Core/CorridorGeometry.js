@@ -1064,7 +1064,8 @@ define([
             attributes : attributes,
             indices : attr.indices,
             primitiveType : PrimitiveType.TRIANGLES,
-            boundingSphere : boundingSphere
+            boundingSphere : boundingSphere,
+            offsetAttribute : corridorGeometry._offsetAttribute
         });
     };
 

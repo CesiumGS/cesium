@@ -397,7 +397,8 @@ define([
             attributes : geometry.attributes,
             indices : geometry.indices,
             primitiveType : PrimitiveType.LINES,
-            boundingSphere : boundingSphere
+            boundingSphere : boundingSphere,
+            offsetAttribute : rectangleGeometry._offsetAttribute
         });
     };
 
