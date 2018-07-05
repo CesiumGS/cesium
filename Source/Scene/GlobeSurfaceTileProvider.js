@@ -94,6 +94,11 @@ define([
         ShadowMode) {
     'use strict';
 
+    var MissingTileStrategy = {
+        RENDER_NOTHING: 0,
+        RENDER_ANCESTOR_SUBSET: 1
+    };
+
     /**
      * Provides quadtree tiles representing the surface of the globe.  This type is intended to be used
      * with {@link QuadtreePrimitive}.
@@ -128,6 +133,11 @@ define([
         this.zoomedOutOceanSpecularIntensity = 0.5;
         this.enableLighting = false;
         this.shadows = ShadowMode.RECEIVE_ONLY;
+
+        /**
+         * The strategy to use to fill holes in the globe when terrain tiles are not yet loaded.
+         */
+        this.missingTileStrategy = MissingTileStrategy.RENDER_ANCESTOR_SUBSET;
 
         this._quadtree = undefined;
         this._terrainProvider = options.terrainProvider;
@@ -1321,7 +1331,10 @@ define([
 
         if (surfaceTile.renderableTile !== undefined) {
             // We can't render this tile yet, so instead render a subset of our closest renderable ancestor.
-            addDrawCommandsForTile(tileProvider, surfaceTile.renderableTile, frameState, surfaceTile.renderableTileSubset);
+            var missingTileStrategy = tileProvider.missingTileStrategy;
+            if (missingTileStrategy === MissingTileStrategy.RENDER_ANCESTOR_SUBSET) {
+                addDrawCommandsForTile(tileProvider, surfaceTile.renderableTile, frameState, surfaceTile.renderableTileSubset);
+            }
             return;
         }
 

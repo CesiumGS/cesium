@@ -129,6 +129,16 @@ define([
          */
         this.tileCacheSize = defaultValue(options.tileCacheSize, 100);
 
+        /**
+         * Gets or sets whether to reveal tiles in chunks while loading. If true, tiles
+         * will be shown as they become renderable. If false, tiles will only be shown
+         * when all visible siblings in the same quad are renderable, OR if they were
+         * shown in the last frame. Detail will not flicker out with either settings.
+         * @type {Boolean}
+         * @default true
+         */
+        this.revealInChunks = false;
+
         this._occluders = new QuadtreeOccluders({
             ellipsoid : ellipsoid
         });
@@ -667,7 +677,9 @@ define([
 
                     // Since we're in this `if` block though, at least one descendant tile _was_ added to the render list!
 
-                    if (!allAreRenderable && !anyWereRenderedLastFrame) {
+                    var revealInChunks = primitive.revealInChunks;
+                    if (revealInChunks && !allAreRenderable && !anyWereRenderedLastFrame ||
+                        !revealInChunks && !anyAreRenderable) {
                         // But none of our descendants are renderable, so they'll all end up rendering an ancestor.
                         // That's a big waste of time, so kick them all out of the render list and render this tile instead.
                         primitive._tilesToRender.length = firstRenderedDescendantIndex;
