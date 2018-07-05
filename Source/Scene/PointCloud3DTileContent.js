@@ -343,8 +343,6 @@ define([
         var isTranslucent = false;
         var isRGB565 = false;
         var isOctEncoded16P = false;
-        var isQuantizedDraco = false;
-        var isOctEncodedDraco = false;
 
         var dracoBuffer;
         var dracoFeatureTableProperties;
@@ -370,8 +368,6 @@ define([
             hasNormals = defined(dracoFeatureTableProperties.NORMAL);
             hasBatchIds = defined(dracoFeatureTableProperties.BATCH_ID);
             isTranslucent = defined(dracoFeatureTableProperties.RGBA);
-            isQuantizedDraco = hasPositions && content._dequantizeInShader;
-            isOctEncodedDraco = hasNormals && content._dequantizeInShader;
             content._decodingState = DecodingState.NEEDS_DECODE;
         }
 
@@ -475,9 +471,7 @@ define([
         };
         content._pointsLength = pointsLength;
         content._isQuantized = isQuantized;
-        content._isQuantizedDraco = isQuantizedDraco;
         content._isOctEncoded16P = isOctEncoded16P;
-        content._isOctEncodedDraco = isOctEncodedDraco;
         content._isRGB565 = isRGB565;
         content._isTranslucent = isTranslucent;
         content._hasColors = hasColors;
@@ -1296,15 +1290,19 @@ define([
                     var decodedRgba = defined(result.RGBA) ? result.RGBA.array : undefined;
                     var decodedNormals = defined(result.NORMAL) ? result.NORMAL.array : undefined;
                     var decodedBatchIds = defined(result.BATCH_ID) ? result.BATCH_ID.array : undefined;
-                    if (defined(decodedPositions) && content._isQuantizedDraco) {
+                    var isQuantizedDraco = defined(decodedPositions) && defined(result.POSITION.data.quantization);
+                    var isOctEncodedDraco = defined(decodedNormals) && defined(result.NORMAL.data.quantization);
+                    if (isQuantizedDraco) {
                         var quantization = result.POSITION.data.quantization;
                         var scale = quantization.range / (1 << quantization.quantizationBits);
                         content._quantizedVolumeScale = Cartesian3.fromElements(scale, scale, scale);
                         content._quantizedVolumeOffset = Cartesian3.unpack(quantization.minValues);
                         content._quantizedRange = (1 << quantization.quantizationBits) - 1.0;
+                        content._isQuantizedDraco = true;
                     }
-                    if (defined(decodedNormals) && content._isOctEncodedDraco) {
+                    if (isOctEncodedDraco) {
                         content._octEncodedRange = (1 << result.NORMAL.data.quantization.quantizationBits) - 1.0;
+                        content._isOctEncodedDraco = true;
                     }
                     var styleableProperties = parsedContent.styleableProperties;
                     var batchTableProperties = draco.batchTableProperties;
