@@ -1334,8 +1334,7 @@ define([
 
     PointCloud3DTileContent.prototype.update = function(tileset, frameState) {
         var context = frameState.context;
-        var decoding = decodeDraco(this, context);
-        if (decoding) {
+        if (decodeDraco(this, context)) {
             return;
         }
 
