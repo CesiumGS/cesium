@@ -4,6 +4,7 @@ defineSuite([
         'Core/Color',
         'Core/HeadingPitchRange',
         'Core/HeadingPitchRoll',
+        'Core/Matrix4',
         'Core/Transforms',
         'Scene/ClippingPlane',
         'Scene/ClippingPlaneCollection',
@@ -16,6 +17,7 @@ defineSuite([
         Color,
         HeadingPitchRange,
         HeadingPitchRoll,
+        Matrix4,
         Transforms,
         ClippingPlane,
         ClippingPlaneCollection,
@@ -28,20 +30,21 @@ defineSuite([
     var centerLongitude = -1.31968;
     var centerLatitude = 0.698874;
 
-    var withBatchTableUrl = './Data/Cesium3DTiles/Batched/BatchedWithBatchTable/';
-    var withBatchTableBinaryUrl = './Data/Cesium3DTiles/Batched/BatchedWithBatchTableBinary/';
-    var withoutBatchTableUrl = './Data/Cesium3DTiles/Batched/BatchedWithoutBatchTable/';
-    var translucentUrl = './Data/Cesium3DTiles/Batched/BatchedTranslucent/';
-    var translucentOpaqueMixUrl = './Data/Cesium3DTiles/Batched/BatchedTranslucentOpaqueMix/';
-    var withKHRMaterialsCommonUrl = './Data/Cesium3DTiles/Batched/BatchedWithKHRMaterialsCommon/';
-    var withTransformBoxUrl = './Data/Cesium3DTiles/Batched/BatchedWithTransformBox/';
-    var withTransformSphereUrl = './Data/Cesium3DTiles/Batched/BatchedWithTransformSphere/';
-    var withTransformRegionUrl = './Data/Cesium3DTiles/Batched/BatchedWithTransformRegion/';
-    var texturedUrl = './Data/Cesium3DTiles/Batched/BatchedTextured/';
-    var compressedTexturesUrl = './Data/Cesium3DTiles/Batched/BatchedCompressedTextures/';
-    var deprecated1Url = './Data/Cesium3DTiles/Batched/BatchedDeprecated1/';
-    var deprecated2Url = './Data/Cesium3DTiles/Batched/BatchedDeprecated2/';
-    var gltfZUpUrl = './Data/Cesium3DTiles/Batched/BatchedGltfZUp';
+    var withBatchTableUrl = './Data/Cesium3DTiles/Batched/BatchedWithBatchTable/tileset.json';
+    var withBatchTableBinaryUrl = './Data/Cesium3DTiles/Batched/BatchedWithBatchTableBinary/tileset.json';
+    var withoutBatchTableUrl = './Data/Cesium3DTiles/Batched/BatchedWithoutBatchTable/tileset.json';
+    var translucentUrl = './Data/Cesium3DTiles/Batched/BatchedTranslucent/tileset.json';
+    var translucentOpaqueMixUrl = './Data/Cesium3DTiles/Batched/BatchedTranslucentOpaqueMix/tileset.json';
+    var withKHRMaterialsCommonUrl = './Data/Cesium3DTiles/Batched/BatchedWithKHRMaterialsCommon/tileset.json';
+    var withTransformBoxUrl = './Data/Cesium3DTiles/Batched/BatchedWithTransformBox/tileset.json';
+    var withTransformSphereUrl = './Data/Cesium3DTiles/Batched/BatchedWithTransformSphere/tileset.json';
+    var withTransformRegionUrl = './Data/Cesium3DTiles/Batched/BatchedWithTransformRegion/tileset.json';
+    var texturedUrl = './Data/Cesium3DTiles/Batched/BatchedTextured/tileset.json';
+    var compressedTexturesUrl = './Data/Cesium3DTiles/Batched/BatchedCompressedTextures/tileset.json';
+    var deprecated1Url = './Data/Cesium3DTiles/Batched/BatchedDeprecated1/tileset.json';
+    var deprecated2Url = './Data/Cesium3DTiles/Batched/BatchedDeprecated2/tileset.json';
+    var gltfZUpUrl = './Data/Cesium3DTiles/Batched/BatchedGltfZUp/tileset.json';
+    var withRtcCenterUrl = './Data/Cesium3DTiles/Batched/BatchedWithRtcCenter/tileset.json';
 
     function setCamera(longitude, latitude) {
         // One feature is located at the center, point the camera there
@@ -367,7 +370,32 @@ defineSuite([
             clippingPlaneCollection.update(scene.frameState);
             tile.update(tileset, scene.frameState);
 
-            expect(Model._getClippingFunction.calls.count()).toEqual(2);
+            expect(Model._getClippingFunction.calls.count()).toEqual(1);
+        });
+    });
+
+    it('transforms model positions by RTC_CENTER property in the features table', function() {
+        return Cesium3DTilesTester.loadTileset(scene, withRtcCenterUrl).then(function(tileset) {
+            Cesium3DTilesTester.expectRenderTileset(scene, tileset);
+
+            var rtcTransform = tileset._root._content._rtcCenterTransform;
+            expect(rtcTransform).toEqual(Matrix4.fromTranslation(new Cartesian3(0.1, 0.2, 0.3)));
+
+            var expectedModelTransform = Matrix4.multiply(tileset._root.transform, rtcTransform, new Matrix4());
+            expect(tileset._root._content._contentModelMatrix).toEqual(expectedModelTransform);
+            expect(tileset._root._content._model._modelMatrix).toEqual(expectedModelTransform);
+
+             // Update tile transform
+            var newLongitude = -1.31962;
+            var newLatitude = 0.698874;
+            var newCenter = Cartesian3.fromRadians(newLongitude, newLatitude, 0.0);
+            var newHPR = new HeadingPitchRoll();
+            var newTransform = Transforms.headingPitchRollToFixedFrame(newCenter, newHPR);
+            tileset._root.transform = newTransform;
+            scene.renderForSpecs();
+
+            expectedModelTransform = Matrix4.multiply(tileset._root.computedTransform, rtcTransform, expectedModelTransform);
+            expect(tileset._root._content._model._modelMatrix).toEqual(expectedModelTransform);
         });
     });
 

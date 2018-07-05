@@ -135,7 +135,6 @@ define([
 
         this._renderState = undefined;
         this._blendRenderState = undefined;
-        this._pickRenderState = undefined;
 
         this._errorEvent = new Event();
 
@@ -151,9 +150,7 @@ define([
         this._tilesToRenderByTextureCount = [];
         this._drawCommands = [];
         this._uniformMaps = [];
-        this._pickCommands = [];
         this._usedDrawCommands = 0;
-        this._usedPickCommands = 0;
 
         this._vertexArraysToDestroy = [];
 
@@ -473,26 +470,10 @@ define([
      * @param {FrameState} frameState The frame state.
      */
     GlobeSurfaceTileProvider.prototype.updateForPick = function(frameState) {
-        if (!defined(this._pickRenderState)) {
-            this._pickRenderState = RenderState.fromCache({
-                colorMask : {
-                    red : false,
-                    green : false,
-                    blue : false,
-                    alpha : false
-                },
-                depthTest : {
-                    enabled : true
-                }
-            });
-        }
-
-        this._usedPickCommands = 0;
-        var drawCommands = this._drawCommands;
-
         // Add the tile pick commands from the tiles drawn last frame.
+        var drawCommands = this._drawCommands;
         for (var i = 0, length = this._usedDrawCommands; i < length; ++i) {
-            addPickCommandsForTile(this, drawCommands[i], frameState);
+            frameState.commandList.push(drawCommands[i]);
         }
     };
 
@@ -1419,36 +1400,6 @@ define([
             renderState = otherPassesRenderState;
             initialColor = otherPassesInitialColor;
         } while (imageryIndex < imageryLen);
-    }
-
-    function addPickCommandsForTile(tileProvider, drawCommand, frameState) {
-        var pickCommand;
-        if (tileProvider._pickCommands.length <= tileProvider._usedPickCommands) {
-            pickCommand = new DrawCommand();
-            pickCommand.cull = false;
-
-            tileProvider._pickCommands.push(pickCommand);
-        } else {
-            pickCommand = tileProvider._pickCommands[tileProvider._usedPickCommands];
-        }
-
-        ++tileProvider._usedPickCommands;
-
-        var surfaceTile = drawCommand.owner.data;
-        var useWebMercatorProjection = frameState.projection instanceof WebMercatorProjection;
-
-        pickCommand.shaderProgram = tileProvider._surfaceShaderSet.getPickShaderProgram(frameState, surfaceTile, useWebMercatorProjection);
-        pickCommand.renderState = tileProvider._pickRenderState;
-
-        pickCommand.owner = drawCommand.owner;
-        pickCommand.primitiveType = drawCommand.primitiveType;
-        pickCommand.vertexArray = drawCommand.vertexArray;
-        pickCommand.uniformMap = drawCommand.uniformMap;
-        pickCommand.boundingVolume = drawCommand.boundingVolume;
-        pickCommand.orientedBoundingBox = drawCommand.orientedBoundingBox;
-        pickCommand.pass = drawCommand.pass;
-
-        frameState.commandList.push(pickCommand);
     }
 
     return GlobeSurfaceTileProvider;

@@ -128,7 +128,11 @@ define([
     };
 
     Cesium3DTilesTester.loadTile = function(scene, arrayBuffer, type) {
-        var tileset = {};
+        var tileset = {
+            _statistics : {
+                batchTableByteLength : 0
+            }
+        };
         var url = Resource.createIfNeeded('');
         var content = Cesium3DTileContentFactory[type](tileset, mockTile, url, arrayBuffer, 0);
         content.update(tileset, scene.frameState);
@@ -140,7 +144,10 @@ define([
     var counter = 0;
     Cesium3DTilesTester.rejectsReadyPromiseOnError = function(scene, arrayBuffer, type) {
         var tileset = {
-            basePath : counter++
+            basePath : counter++,
+            _statistics : {
+                batchTableByteLength : 0
+            }
         };
         var url = Resource.createIfNeeded('');
         var content = Cesium3DTileContentFactory[type](tileset, mockTile, url, arrayBuffer, 0);

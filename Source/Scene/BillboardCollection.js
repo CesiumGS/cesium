@@ -84,8 +84,9 @@ define([
     var SCALE_BY_DISTANCE_INDEX = Billboard.SCALE_BY_DISTANCE_INDEX;
     var TRANSLUCENCY_BY_DISTANCE_INDEX = Billboard.TRANSLUCENCY_BY_DISTANCE_INDEX;
     var PIXEL_OFFSET_SCALE_BY_DISTANCE_INDEX = Billboard.PIXEL_OFFSET_SCALE_BY_DISTANCE_INDEX;
-    var DISTANCE_DISPLAY_CONDITION_INDEX = Billboard.DISTANCE_DISPLAY_CONDITION_INDEX;
+    var DISTANCE_DISPLAY_CONDITION_INDEX = Billboard.DISTANCE_DISPLAY_CONDITION;
     var DISABLE_DEPTH_DISTANCE = Billboard.DISABLE_DEPTH_DISTANCE;
+    var TEXTURE_COORDINATE_BOUNDS = Billboard.TEXTURE_COORDINATE_BOUNDS;
     var NUMBER_OF_PROPERTIES = Billboard.NUMBER_OF_PROPERTIES;
 
     var attributeLocations;
@@ -99,8 +100,9 @@ define([
         eyeOffset : 5,                   // 4 bytes free
         scaleByDistance : 6,
         pixelOffsetScaleByDistance : 7,
-        distanceDisplayConditionAndDisableDepth : 8,
-        a_batchId : 9
+        compressedAttribute3 : 8,
+        textureCoordinateBounds : 9,
+        a_batchId : 10
     };
 
     var attributeLocationsInstanced = {
@@ -113,8 +115,9 @@ define([
         eyeOffset : 6,                  // texture range in w
         scaleByDistance : 7,
         pixelOffsetScaleByDistance : 8,
-        distanceDisplayConditionAndDisableDepth : 9,
-        a_batchId : 10
+        compressedAttribute3 : 9,
+        textureCoordinateBounds : 10,
+        a_batchId : 11
     };
 
     /**
@@ -177,7 +180,6 @@ define([
         this._destroyTextureAtlas = true;
         this._sp = undefined;
         this._spTranslucent = undefined;
-        this._spPick = undefined;
         this._rsOpaque = undefined;
         this._rsTranslucent = undefined;
         this._vaf = undefined;
@@ -190,31 +192,27 @@ define([
 
         this._shaderRotation = false;
         this._compiledShaderRotation = false;
-        this._compiledShaderRotationPick = false;
 
         this._shaderAlignedAxis = false;
         this._compiledShaderAlignedAxis = false;
-        this._compiledShaderAlignedAxisPick = false;
 
         this._shaderScaleByDistance = false;
         this._compiledShaderScaleByDistance = false;
-        this._compiledShaderScaleByDistancePick = false;
 
         this._shaderTranslucencyByDistance = false;
         this._compiledShaderTranslucencyByDistance = false;
-        this._compiledShaderTranslucencyByDistancePick = false;
 
         this._shaderPixelOffsetScaleByDistance = false;
         this._compiledShaderPixelOffsetScaleByDistance = false;
-        this._compiledShaderPixelOffsetScaleByDistancePick = false;
 
         this._shaderDistanceDisplayCondition = false;
         this._compiledShaderDistanceDisplayCondition = false;
-        this._compiledShaderDistanceDisplayConditionPick = false;
 
         this._shaderDisableDepthDistance = false;
         this._compiledShaderDisableDepthDistance = false;
-        this._compiledShaderDisableDepthDistancePick = false;
+
+        this._shaderClampToGround = false;
+        this._compiledShaderClampToGround = false;
 
         this._propertiesChanged = new Uint32Array(NUMBER_OF_PROPERTIES);
 
@@ -233,7 +231,6 @@ define([
         this._boundingVolumeDirty = false;
 
         this._colorCommands = [];
-        this._pickCommands = [];
 
         /**
          * The 4x4 transformation matrix that transforms each billboard in this collection from model to world coordinates.
@@ -311,7 +308,8 @@ define([
             BufferUsage.STATIC_DRAW, // SCALE_BY_DISTANCE_INDEX
             BufferUsage.STATIC_DRAW, // TRANSLUCENCY_BY_DISTANCE_INDEX
             BufferUsage.STATIC_DRAW, // PIXEL_OFFSET_SCALE_BY_DISTANCE_INDEX
-            BufferUsage.STATIC_DRAW  // DISTANCE_DISPLAY_CONDITION_INDEX
+            BufferUsage.STATIC_DRAW, // DISTANCE_DISPLAY_CONDITION_INDEX
+            BufferUsage.STATIC_DRAW  // TEXTURE_COORDINATE_BOUNDS
         ];
 
         this._highlightColor = Color.clone(Color.WHITE); // Only used by Vector3DTilePoints
@@ -741,10 +739,15 @@ define([
             componentDatatype : ComponentDatatype.FLOAT,
             usage : buffersUsage[PIXEL_OFFSET_SCALE_BY_DISTANCE_INDEX]
         }, {
-            index : attributeLocations.distanceDisplayConditionAndDisableDepth,
-            componentsPerAttribute : 3,
+            index : attributeLocations.compressedAttribute3,
+            componentsPerAttribute : 4,
             componentDatatype : ComponentDatatype.FLOAT,
             usage : buffersUsage[DISTANCE_DISPLAY_CONDITION_INDEX]
+        }, {
+            index : attributeLocations.textureCoordinateBounds,
+            componentsPerAttribute : 4,
+            componentDatatype : ComponentDatatype.FLOAT,
+            usage : buffersUsage[TEXTURE_COORDINATE_BOUNDS]
         }];
 
         // Instancing requires one non-instanced attribute.
@@ -827,6 +830,7 @@ define([
     var UPPER_BOUND = 32768.0;  // 2^15
 
     var LEFT_SHIFT16 = 65536.0; // 2^16
+    var LEFT_SHIFT12 = 4096.0;  // 2^12
     var LEFT_SHIFT8 = 256.0;    // 2^8
     var LEFT_SHIFT7 = 128.0;
     var LEFT_SHIFT5 = 32.0;
@@ -1029,6 +1033,9 @@ define([
         var dimensions = billboardCollection._textureAtlas.texture.dimensions;
         var imageHeight = Math.round(defaultValue(billboard.height, dimensions.y * height));
         billboardCollection._maxSize = Math.max(billboardCollection._maxSize, imageHeight);
+        var labelHorizontalOrigin = defaultValue(billboard._labelHorizontalOrigin, -2);
+        labelHorizontalOrigin += 2;
+        var compressed3 = imageHeight * LEFT_SHIFT2 + labelHorizontalOrigin;
 
         var red = Color.floatToByte(color.red);
         var green = Color.floatToByte(color.green);
@@ -1045,13 +1052,13 @@ define([
 
         if (billboardCollection._instanced) {
             i = billboard._index;
-            writer(i, compressed0, compressed1, compressed2, imageHeight);
+            writer(i, compressed0, compressed1, compressed2, compressed3);
         } else {
             i = billboard._index * 4;
-            writer(i + 0, compressed0, compressed1, compressed2, imageHeight);
-            writer(i + 1, compressed0, compressed1, compressed2, imageHeight);
-            writer(i + 2, compressed0, compressed1, compressed2, imageHeight);
-            writer(i + 3, compressed0, compressed1, compressed2, imageHeight);
+            writer(i + 0, compressed0, compressed1, compressed2, compressed3);
+            writer(i + 1, compressed0, compressed1, compressed2, compressed3);
+            writer(i + 2, compressed0, compressed1, compressed2, compressed3);
+            writer(i + 3, compressed0, compressed1, compressed2, compressed3);
         }
     }
 
@@ -1167,9 +1174,9 @@ define([
         }
     }
 
-    function writeDistanceDisplayConditionAndDepthDisable(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard) {
+    function writeCompressedAttribute3(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard) {
         var i;
-        var writer = vafWriters[attributeLocations.distanceDisplayConditionAndDisableDepth];
+        var writer = vafWriters[attributeLocations.compressedAttribute3];
         var near = 0.0;
         var far = Number.MAX_VALUE;
 
@@ -1185,6 +1192,10 @@ define([
         }
 
         var disableDepthTestDistance = billboard.disableDepthTestDistance;
+        if (billboard.heightReference === HeightReference.CLAMP_TO_GROUND && disableDepthTestDistance === 0.0 && billboardCollection._scene.context.depthTexture) {
+            disableDepthTestDistance = 2000.0;
+        }
+
         disableDepthTestDistance *= disableDepthTestDistance;
         if (disableDepthTestDistance > 0.0) {
             billboardCollection._shaderDisableDepthDistance = true;
@@ -1193,15 +1204,89 @@ define([
             }
         }
 
+        var imageHeight;
+        var imageWidth;
+
+        if (!defined(billboard._labelDimensions)) {
+            var height = 0;
+            var width = 0;
+            var index = billboard._imageIndex;
+            if (index !== -1) {
+                var imageRectangle = textureAtlasCoordinates[index];
+
+                //>>includeStart('debug', pragmas.debug);
+                if (!defined(imageRectangle)) {
+                    throw new DeveloperError('Invalid billboard image index: ' + index);
+                }
+                //>>includeEnd('debug');
+
+                height = imageRectangle.height;
+                width = imageRectangle.width;
+            }
+
+            imageHeight = Math.round(defaultValue(billboard.height, billboardCollection._textureAtlas.texture.dimensions.y * height));
+
+            var textureWidth = billboardCollection._textureAtlas.texture.width;
+            imageWidth = Math.round(defaultValue(billboard.width, textureWidth * width));
+        } else {
+            imageWidth = billboard._labelDimensions.x;
+            imageHeight = billboard._labelDimensions.y;
+        }
+
+        var w = Math.floor(CesiumMath.clamp(imageWidth, 0.0, LEFT_SHIFT12));
+        var h = Math.floor(CesiumMath.clamp(imageHeight, 0.0, LEFT_SHIFT12));
+        var dimensions = w * LEFT_SHIFT12 + h;
+
         if (billboardCollection._instanced) {
             i = billboard._index;
-            writer(i, near, far, disableDepthTestDistance);
+            writer(i, near, far, disableDepthTestDistance, dimensions);
         } else {
             i = billboard._index * 4;
-            writer(i + 0, near, far, disableDepthTestDistance);
-            writer(i + 1, near, far, disableDepthTestDistance);
-            writer(i + 2, near, far, disableDepthTestDistance);
-            writer(i + 3, near, far, disableDepthTestDistance);
+            writer(i + 0, near, far, disableDepthTestDistance, dimensions);
+            writer(i + 1, near, far, disableDepthTestDistance, dimensions);
+            writer(i + 2, near, far, disableDepthTestDistance, dimensions);
+            writer(i + 3, near, far, disableDepthTestDistance, dimensions);
+        }
+    }
+
+    function writeTextureCoordinateBounds(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard) {
+        if (billboard.heightReference === HeightReference.CLAMP_TO_GROUND) {
+            billboardCollection._shaderClampToGround = billboardCollection._scene.context.depthTexture;
+        }
+        var i;
+        var writer = vafWriters[attributeLocations.textureCoordinateBounds];
+
+        var minX = 0;
+        var minY = 0;
+        var width = 0;
+        var height = 0;
+        var index = billboard._imageIndex;
+        if (index !== -1) {
+            var imageRectangle = textureAtlasCoordinates[index];
+
+            //>>includeStart('debug', pragmas.debug);
+            if (!defined(imageRectangle)) {
+                throw new DeveloperError('Invalid billboard image index: ' + index);
+            }
+            //>>includeEnd('debug');
+
+            minX = imageRectangle.x;
+            minY = imageRectangle.y;
+            width = imageRectangle.width;
+            height = imageRectangle.height;
+        }
+        var maxX = minX + width;
+        var maxY = minY + height;
+
+        if (billboardCollection._instanced) {
+            i = billboard._index;
+            writer(i, minX, minY, maxX, maxY);
+        } else {
+            i = billboard._index * 4;
+            writer(i + 0, minX, minY, maxX, maxY);
+            writer(i + 1, minX, minY, maxX, maxY);
+            writer(i + 2, minX, minY, maxX, maxY);
+            writer(i + 3, minX, minY, maxX, maxY);
         }
     }
 
@@ -1234,7 +1319,8 @@ define([
         writeEyeOffset(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard);
         writeScaleByDistance(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard);
         writePixelOffsetScaleByDistance(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard);
-        writeDistanceDisplayConditionAndDepthDisable(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard);
+        writeCompressedAttribute3(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard);
+        writeTextureCoordinateBounds(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard);
         writeBatchId(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard);
     }
 
@@ -1430,8 +1516,12 @@ define([
                 writers.push(writePixelOffsetScaleByDistance);
             }
 
-            if (properties[DISTANCE_DISPLAY_CONDITION_INDEX] || properties[DISABLE_DEPTH_DISTANCE]) {
-                writers.push(writeDistanceDisplayConditionAndDepthDisable);
+            if (properties[DISTANCE_DISPLAY_CONDITION_INDEX] || properties[DISABLE_DEPTH_DISTANCE] || properties[IMAGE_INDEX_INDEX] || properties[POSITION_INDEX]) {
+                writers.push(writeCompressedAttribute3);
+            }
+
+            if (properties[IMAGE_INDEX_INDEX] || properties[POSITION_INDEX]) {
+                writers.push(writeTextureCoordinateBounds);
             }
 
             var numWriters = writers.length;
@@ -1549,7 +1639,8 @@ define([
             (this._shaderTranslucencyByDistance !== this._compiledShaderTranslucencyByDistance) ||
             (this._shaderPixelOffsetScaleByDistance !== this._compiledShaderPixelOffsetScaleByDistance) ||
             (this._shaderDistanceDisplayCondition !== this._compiledShaderDistanceDisplayCondition) ||
-            (this._shaderDisableDepthDistance !== this._compiledShaderDisableDepthDistance)) {
+            (this._shaderDisableDepthDistance !== this._compiledShaderDisableDepthDistance) ||
+            (this._shaderClampToGround !== this._compiledShaderClampToGround)) {
 
             vsSource = BillboardCollectionVS;
             fsSource = BillboardCollectionFS;
@@ -1589,6 +1680,9 @@ define([
             if (this._shaderDisableDepthDistance) {
                 vs.defines.push('DISABLE_DEPTH_DISTANCE');
             }
+            if (this._shaderClampToGround) {
+                vs.defines.push('CLAMP_TO_GROUND');
+            }
 
             var vectorFragDefine = defined(this._batchTable) ? 'VECTOR_TILE' : '';
 
@@ -1597,6 +1691,9 @@ define([
                     defines : ['OPAQUE', vectorFragDefine],
                     sources : [fsSource]
                 });
+                if (this._shaderClampToGround) {
+                    fs.defines.push('CLAMP_TO_GROUND');
+                }
                 this._sp = ShaderProgram.replaceCache({
                     context : context,
                     shaderProgram : this._sp,
@@ -1609,6 +1706,9 @@ define([
                     defines : ['TRANSLUCENT', vectorFragDefine],
                     sources : [fsSource]
                 });
+                if (this._shaderClampToGround) {
+                    fs.defines.push('CLAMP_TO_GROUND');
+                }
                 this._spTranslucent = ShaderProgram.replaceCache({
                     context : context,
                     shaderProgram : this._spTranslucent,
@@ -1623,6 +1723,9 @@ define([
                     defines : [vectorFragDefine],
                     sources : [fsSource]
                 });
+                if (this._shaderClampToGround) {
+                    fs.defines.push('CLAMP_TO_GROUND');
+                }
                 this._sp = ShaderProgram.replaceCache({
                     context : context,
                     shaderProgram : this._sp,
@@ -1637,6 +1740,9 @@ define([
                     defines : [vectorFragDefine],
                     sources : [fsSource]
                 });
+                if (this._shaderClampToGround) {
+                    fs.defines.push('CLAMP_TO_GROUND');
+                }
                 this._spTranslucent = ShaderProgram.replaceCache({
                     context : context,
                     shaderProgram : this._spTranslucent,
@@ -1653,106 +1759,33 @@ define([
             this._compiledShaderPixelOffsetScaleByDistance = this._shaderPixelOffsetScaleByDistance;
             this._compiledShaderDistanceDisplayCondition = this._shaderDistanceDisplayCondition;
             this._compiledShaderDisableDepthDistance = this._shaderDisableDepthDistance;
+            this._compiledShaderClampToGround = this._shaderClampToGround;
         }
-
-        if (!defined(this._spPick) ||
-            (this._shaderRotation !== this._compiledShaderRotationPick) ||
-            (this._shaderAlignedAxis !== this._compiledShaderAlignedAxisPick) ||
-            (this._shaderScaleByDistance !== this._compiledShaderScaleByDistancePick) ||
-            (this._shaderTranslucencyByDistance !== this._compiledShaderTranslucencyByDistancePick) ||
-            (this._shaderPixelOffsetScaleByDistance !== this._compiledShaderPixelOffsetScaleByDistancePick) ||
-            (this._shaderDistanceDisplayCondition !== this._compiledShaderDistanceDisplayConditionPick) ||
-            (this._shaderDisableDepthDistance !== this._compiledShaderDisableDepthDistancePick)) {
-
-            vsSource = BillboardCollectionVS;
-            fsSource = BillboardCollectionFS;
-
-            vertDefines = [];
-            if (defined(this._batchTable)) {
-                vertDefines.push('VECTOR_TILE');
-                vsSource = this._batchTable.getPickVertexShaderCallback('a_batchId')(vsSource);
-                fsSource = this._batchTable.getPickFragmentShaderCallback()(fsSource);
-            }
-
-            vertDefines.push(defined(this._batchTable) ? '' : 'RENDER_FOR_PICK');
-
-            vs = new ShaderSource({
-                defines : vertDefines,
-                sources : [vsSource]
-            });
-
-            if(this._instanced) {
-                vs.defines.push('INSTANCED');
-            }
-            if (this._shaderRotation) {
-                vs.defines.push('ROTATION');
-            }
-            if (this._shaderAlignedAxis) {
-                vs.defines.push('ALIGNED_AXIS');
-            }
-            if (this._shaderScaleByDistance) {
-                vs.defines.push('EYE_DISTANCE_SCALING');
-            }
-            if (this._shaderTranslucencyByDistance) {
-                vs.defines.push('EYE_DISTANCE_TRANSLUCENCY');
-            }
-            if (this._shaderPixelOffsetScaleByDistance) {
-                vs.defines.push('EYE_DISTANCE_PIXEL_OFFSET');
-            }
-            if (this._shaderDistanceDisplayCondition) {
-                vs.defines.push('DISTANCE_DISPLAY_CONDITION');
-            }
-            if (this._shaderDisableDepthDistance) {
-                vs.defines.push('DISABLE_DEPTH_DISTANCE');
-            }
-
-            fs = new ShaderSource({
-                defines : vertDefines,
-                sources : [fsSource]
-            });
-
-            this._spPick = ShaderProgram.replaceCache({
-                context : context,
-                shaderProgram : this._spPick,
-                vertexShaderSource : vs,
-                fragmentShaderSource : fs,
-                attributeLocations : attributeLocations
-            });
-            this._compiledShaderRotationPick = this._shaderRotation;
-            this._compiledShaderAlignedAxisPick = this._shaderAlignedAxis;
-            this._compiledShaderScaleByDistancePick = this._shaderScaleByDistance;
-            this._compiledShaderTranslucencyByDistancePick = this._shaderTranslucencyByDistance;
-            this._compiledShaderPixelOffsetScaleByDistancePick = this._shaderPixelOffsetScaleByDistance;
-            this._compiledShaderDistanceDisplayConditionPick = this._shaderDistanceDisplayCondition;
-            this._compiledShaderDisableDepthDistancePick = this._shaderDisableDepthDistance;
-        }
-
-        var va;
-        var vaLength;
-        var command;
-        var uniforms;
-        var j;
 
         var commandList = frameState.commandList;
 
-        if (pass.render) {
+        if (pass.render || pass.pick) {
             var colorList = this._colorCommands;
 
             var opaque = this._blendOption === BlendOption.OPAQUE;
             var opaqueAndTranslucent = this._blendOption === BlendOption.OPAQUE_AND_TRANSLUCENT;
 
-            va = this._vaf.va;
-            vaLength = va.length;
+            var va = this._vaf.va;
+            var vaLength = va.length;
 
-            uniforms = this._uniforms;
+            var uniforms = this._uniforms;
+            var pickId;
             if (defined(this._batchTable)) {
                 uniforms = this._batchTable.getUniformMapCallback()(uniforms);
+                pickId = this._batchTable.getPickId();
+            } else {
+                pickId = 'v_pickColor';
             }
 
             colorList.length = vaLength;
             var totalLength = opaqueAndTranslucent ? vaLength * 2 : vaLength;
-            for (j = 0; j < totalLength; ++j) {
-                command = colorList[j];
+            for (var j = 0; j < totalLength; ++j) {
+                var command = colorList[j];
                 if (!defined(command)) {
                     command = colorList[j] = new DrawCommand();
                 }
@@ -1771,44 +1804,7 @@ define([
                 command.vertexArray = va[index].va;
                 command.renderState = opaqueCommand ? this._rsOpaque : this._rsTranslucent;
                 command.debugShowBoundingVolume = this.debugShowBoundingVolume;
-
-                if (this._instanced) {
-                    command.count = 6;
-                    command.instanceCount = billboardsLength;
-                }
-
-                commandList.push(command);
-            }
-        }
-
-        if (picking) {
-            var pickList = this._pickCommands;
-
-            va = this._vaf.va;
-            vaLength = va.length;
-
-            uniforms = this._uniforms;
-            if (defined(this._batchTable)) {
-                uniforms = this._batchTable.getPickUniformMapCallback()(uniforms);
-            }
-
-            pickList.length = vaLength;
-            for (j = 0; j < vaLength; ++j) {
-                command = pickList[j];
-                if (!defined(command)) {
-                    command = pickList[j] = new DrawCommand({
-                        pass : Pass.OPAQUE,
-                        owner : this
-                    });
-                }
-
-                command.boundingVolume = boundingVolume;
-                command.modelMatrix = modelMatrix;
-                command.count = va[j].indicesCount;
-                command.shaderProgram = this._spPick;
-                command.uniformMap = uniforms;
-                command.vertexArray = va[j].va;
-                command.renderState = this._rsOpaque;
+                command.pickId = pickId;
 
                 if (this._instanced) {
                     command.count = 6;
@@ -1859,7 +1855,6 @@ define([
         this._textureAtlas = this._destroyTextureAtlas && this._textureAtlas && this._textureAtlas.destroy();
         this._sp = this._sp && this._sp.destroy();
         this._spTranslucent = this._spTranslucent && this._spTranslucent.destroy();
-        this._spPick = this._spPick && this._spPick.destroy();
         this._vaf = this._vaf && this._vaf.destroy();
         destroyBillboards(this._billboards);
 

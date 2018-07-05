@@ -33,7 +33,6 @@ define([
         this.baseFragmentShaderSource = undefined;
 
         this._shadersByTexturesFlags = [];
-        this._pickShaderPrograms = [];
 
         this.material = undefined;
     }
@@ -78,6 +77,13 @@ define([
             quantizationDefine = 'QUANTIZATION_BITS12';
         }
 
+        var vertexLogDepth = 0;
+        var vertexLogDepthDefine = '';
+        if (surfaceTile.terrainData._createdByUpsampling) {
+            vertexLogDepth = 1;
+            vertexLogDepthDefine = 'DISABLE_GL_POSITION_LOG_DEPTH';
+        }
+
         var sceneMode = frameState.mode;
         var flags = sceneMode |
                     (applyBrightness << 2) |
@@ -94,7 +100,8 @@ define([
                     (enableFog << 13) |
                     (quantization << 14) |
                     (applySplit << 15) |
-                    (enableClippingPlanes << 16);
+                    (enableClippingPlanes << 16) |
+                    (vertexLogDepth << 17);
 
         var currentClippingShaderState = 0;
         if (defined(clippingPlanes)) {
@@ -126,7 +133,7 @@ define([
                 fs.sources.unshift(getClippingFunction(clippingPlanes, frameState.context)); // Need to go before GlobeFS
             }
 
-            vs.defines.push(quantizationDefine);
+            vs.defines.push(quantizationDefine, vertexLogDepthDefine);
             fs.defines.push('TEXTURE_UNITS ' + numberOfDayTextures);
 
             if (applyBrightness) {
@@ -227,45 +234,6 @@ define([
         return surfaceShader.shaderProgram;
     };
 
-    GlobeSurfaceShaderSet.prototype.getPickShaderProgram = function(frameState, surfaceTile, useWebMercatorProjection) {
-        var quantization = 0;
-        var quantizationDefine = '';
-
-        var terrainEncoding = surfaceTile.pickTerrain.mesh.encoding;
-        var quantizationMode = terrainEncoding.quantization;
-        if (quantizationMode === TerrainQuantization.BITS12) {
-            quantization = 1;
-            quantizationDefine = 'QUANTIZATION_BITS12';
-        }
-
-        var sceneMode = frameState.mode;
-        var flags = sceneMode | (useWebMercatorProjection << 2) | (quantization << 3);
-        var pickShader = this._pickShaderPrograms[flags];
-
-        if (!defined(pickShader)) {
-            var vs = this.baseVertexShaderSource.clone();
-            vs.defines.push(quantizationDefine);
-            vs.sources.push(getPositionMode(sceneMode));
-            vs.sources.push(get2DYPositionFraction(useWebMercatorProjection));
-
-            // pass through fragment shader. only depth is rendered for the globe on a pick pass
-            var fs =
-                'void main()\n' +
-                '{\n' +
-                '    gl_FragColor = vec4(1.0, 1.0, 0.0, 1.0);\n' +
-                '}\n';
-
-            pickShader = this._pickShaderPrograms[flags] = ShaderProgram.fromCache({
-                context : frameState.context,
-                vertexShaderSource : vs,
-                fragmentShaderSource : fs,
-                attributeLocations : terrainEncoding.getAttributeLocations()
-            });
-        }
-
-        return pickShader;
-    };
-
     GlobeSurfaceShaderSet.prototype.destroy = function() {
         var flags;
         var shader;
@@ -286,14 +254,6 @@ define([
                         }
                     }
                 }
-            }
-        }
-
-        var pickShaderPrograms = this._pickShaderPrograms;
-        for (flags in pickShaderPrograms) {
-            if (pickShaderPrograms.hasOwnProperty(flags)) {
-                shader = pickShaderPrograms[flags];
-                shader.destroy();
             }
         }
 
