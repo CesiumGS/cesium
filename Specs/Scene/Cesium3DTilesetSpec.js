@@ -117,6 +117,8 @@ defineSuite([
     var tilesetReplacementWithViewerRequestVolumeUrl = 'Data/Cesium3DTiles/Tilesets/TilesetReplacementWithViewerRequestVolume/tileset.json';
 
     var tilesetWithExternalResourcesUrl = 'Data/Cesium3DTiles/Tilesets/TilesetWithExternalResources/tileset.json';
+    var tilesetUrlWithContentUri = 'Data/Cesium3DTiles/Tilesets/TilesetWithContentUri/tileset.json';
+
     var tilesetSubtreeExpirationUrl = 'Data/Cesium3DTiles/Tilesets/TilesetSubtreeExpiration/tileset.json';
     var tilesetSubtreeUrl = 'Data/Cesium3DTiles/Tilesets/TilesetSubtreeExpiration/subtree.json';
     var batchedExpirationUrl = 'Data/Cesium3DTiles/Batched/BatchedExpiration/tileset.json';
@@ -2885,6 +2887,14 @@ defineSuite([
                 expect(tile._expiredContent).toBeUndefined();
                 expect(tile.expireDate).toBeUndefined();
             });
+        });
+    });
+
+    it('supports content data URIs', function() {
+        return Cesium3DTilesTester.loadTileset(scene, tilesetUrlWithContentUri).then(function(tileset) {
+            var statistics = tileset._statistics;
+            expect(statistics.visited).toEqual(1);
+            expect(statistics.numberOfCommands).toEqual(1);
         });
     });
 
