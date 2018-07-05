@@ -17,6 +17,7 @@ define([
         '../Core/WebGLConstants',
         '../Renderer/Buffer',
         '../Renderer/BufferUsage',
+        '../Renderer/ContextLimits',
         '../Renderer/DrawCommand',
         '../Renderer/Pass',
         '../Renderer/RenderState',
@@ -52,6 +53,7 @@ define([
         WebGLConstants,
         Buffer,
         BufferUsage,
+        ContextLimits,
         DrawCommand,
         Pass,
         RenderState,
@@ -1632,6 +1634,8 @@ define([
         var fs;
         var vertDefines;
 
+        var supportVSTextureReads = ContextLimits.maximumVertexTextureImageUnits > 0;
+
         if (blendOptionChanged ||
             (this._shaderRotation !== this._compiledShaderRotation) ||
             (this._shaderAlignedAxis !== this._compiledShaderAlignedAxis) ||
@@ -1681,7 +1685,11 @@ define([
                 vs.defines.push('DISABLE_DEPTH_DISTANCE');
             }
             if (this._shaderClampToGround) {
-                vs.defines.push('CLAMP_TO_GROUND');
+                if (supportVSTextureReads) {
+                    vs.defines.push('VERTEX_DEPTH_CHECK');
+                } else {
+                    vs.defines.push('FRAGMENT_DEPTH_CHECK');
+                }
             }
 
             var vectorFragDefine = defined(this._batchTable) ? 'VECTOR_TILE' : '';
@@ -1692,7 +1700,11 @@ define([
                     sources : [fsSource]
                 });
                 if (this._shaderClampToGround) {
-                    fs.defines.push('CLAMP_TO_GROUND');
+                    if (supportVSTextureReads) {
+                        fs.defines.push('VERTEX_DEPTH_CHECK');
+                    } else {
+                        fs.defines.push('FRAGMENT_DEPTH_CHECK');
+                    }
                 }
                 this._sp = ShaderProgram.replaceCache({
                     context : context,
@@ -1707,7 +1719,11 @@ define([
                     sources : [fsSource]
                 });
                 if (this._shaderClampToGround) {
-                    fs.defines.push('CLAMP_TO_GROUND');
+                    if (supportVSTextureReads) {
+                        fs.defines.push('VERTEX_DEPTH_CHECK');
+                    } else {
+                        fs.defines.push('FRAGMENT_DEPTH_CHECK');
+                    }
                 }
                 this._spTranslucent = ShaderProgram.replaceCache({
                     context : context,
@@ -1724,7 +1740,11 @@ define([
                     sources : [fsSource]
                 });
                 if (this._shaderClampToGround) {
-                    fs.defines.push('CLAMP_TO_GROUND');
+                    if (supportVSTextureReads) {
+                        fs.defines.push('VERTEX_DEPTH_CHECK');
+                    } else {
+                        fs.defines.push('FRAGMENT_DEPTH_CHECK');
+                    }
                 }
                 this._sp = ShaderProgram.replaceCache({
                     context : context,
@@ -1741,7 +1761,11 @@ define([
                     sources : [fsSource]
                 });
                 if (this._shaderClampToGround) {
-                    fs.defines.push('CLAMP_TO_GROUND');
+                    if (supportVSTextureReads) {
+                        fs.defines.push('VERTEX_DEPTH_CHECK');
+                    } else {
+                        fs.defines.push('FRAGMENT_DEPTH_CHECK');
+                    }
                 }
                 this._spTranslucent = ShaderProgram.replaceCache({
                     context : context,
