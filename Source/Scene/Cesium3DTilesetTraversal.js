@@ -222,7 +222,7 @@ define([
             var useParentScreenSpaceError = defined(parent) && (!skipLevelOfDetail(tileset) || (tile._screenSpaceError === 0.0));
             var screenSpaceError = useParentScreenSpaceError ? parent._screenSpaceError : tile._screenSpaceError;
             var rootScreenSpaceError = tileset._root._screenSpaceError;
-            return rootScreenSpaceError - screenSpaceError; // Map higher SSE to lower values (e.g. 0.0 is highest priority)
+            return rootScreenSpaceError - screenSpaceError; // Map higher SSE to lower values (e.g. root tile is highest priority)
         }
     }
 
@@ -240,7 +240,6 @@ define([
             return 0.0;
         }
 
-        // Avoid divide by zero when viewer is inside the tile
         var camera = frameState.camera;
         var frustum = camera.frustum;
         var context = frameState.context;
@@ -255,6 +254,7 @@ define([
             var pixelSize = Math.max(frustum.top - frustum.bottom, frustum.right - frustum.left) / Math.max(width, height);
             error = geometricError / pixelSize;
         } else {
+            // Avoid divide by zero when viewer is inside the tile
             var distance = Math.max(tile._distanceToCamera, CesiumMath.EPSILON7);
             var sseDenominator = camera.frustum.sseDenominator;
             error = (geometricError * height) / (distance * sseDenominator);
@@ -587,7 +587,7 @@ define([
             selectionTraversal.ancestorStackMaximumLength = Math.max(selectionTraversal.ancestorStackMaximumLength, ancestorStack.length);
 
             if (ancestorStack.length > 0) {
-                var waitingTile = ancestorStack.get(ancestorStack.length - 1);
+                var waitingTile = ancestorStack.peek();
                 if (waitingTile._stackLength === stack.length) {
                     ancestorStack.pop();
                     if (waitingTile === lastAncestor) {
