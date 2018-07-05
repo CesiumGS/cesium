@@ -55,11 +55,13 @@ define([
             return initPromise;
         }
 
-        ApproximateTerrainHeights._initPromise = Resource.fetchJson(buildModuleUrl('Assets/approximateTerrainHeights.json')).then(function(json) {
-            ApproximateTerrainHeights._terrainHeights = json;
-        });
+        initPromise = Resource.fetchJson(buildModuleUrl('Assets/approximateTerrainHeights.json'))
+            .then(function(json) {
+                ApproximateTerrainHeights._terrainHeights = json;
+            });
+        ApproximateTerrainHeights._initPromise = initPromise;
 
-        return ApproximateTerrainHeights._initPromise;
+        return initPromise;
     };
 
     /**

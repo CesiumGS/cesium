@@ -1,9 +1,11 @@
 define([
+        '../Core/defaultValue',
         '../Core/defined',
         '../Renderer/DrawCommand',
         '../Renderer/RenderState',
         '../Renderer/ShaderSource'
     ], function(
+        defaultValue,
         defined,
         DrawCommand,
         RenderState,
@@ -24,19 +26,50 @@ define([
             var attributeLocations = shaderProgram._attributeLocations;
             var fs = shaderProgram.fragmentShaderSource;
 
+            var i;
             var writesDepthOrDiscards = false;
             var sources = fs.sources;
             var length = sources.length;
-            for (var i = 0; i < length; ++i) {
+            for (i = 0; i < length; ++i) {
                 if (fragDepthRegex.test(sources[i]) || discardRegex.test(sources[i])) {
                     writesDepthOrDiscards = true;
                     break;
                 }
             }
 
-            if (!writesDepthOrDiscards) {
+            var usesLogDepth = false;
+            var defines = fs.defines;
+            length = defines.length;
+            for (i = 0; i < length; ++i) {
+                if (defines[i] === 'LOG_DEPTH') {
+                    usesLogDepth = true;
+                    break;
+                }
+            }
+
+            var source;
+            if (!writesDepthOrDiscards && !usesLogDepth) {
+                source =
+                    'void main() \n' +
+                    '{ \n' +
+                    '    gl_FragColor = vec4(1.0); \n' +
+                    '} \n';
                 fs = new ShaderSource({
-                    sources : ['void main() { gl_FragColor = vec4(1.0); }']
+                    sources : [source]
+                });
+            } else if (!writesDepthOrDiscards && usesLogDepth) {
+                source =
+                    '#ifdef GL_EXT_frag_depth \n' +
+                    '#extension GL_EXT_frag_depth : enable \n' +
+                    '#endif \n\n' +
+                    'void main() \n' +
+                    '{ \n' +
+                    '    gl_FragColor = vec4(1.0); \n' +
+                    '    czm_writeLogDepth(); \n' +
+                    '} \n';
+                fs = new ShaderSource({
+                    defines : ['LOG_DEPTH'],
+                    sources : [source]
                 });
             }
 
@@ -208,6 +241,83 @@ define([
             result.shaderProgramId = command.shaderProgram.id;
         } else {
             result.command.shaderProgram = shader;
+        }
+
+        return result;
+    };
+
+    function getPickShaderProgram(context, shaderProgram, pickId) {
+        var shader = context.shaderCache.getDerivedShaderProgram(shaderProgram, 'pick');
+        if (!defined(shader)) {
+            var attributeLocations = shaderProgram._attributeLocations;
+            var fs = shaderProgram.fragmentShaderSource;
+
+            var sources = fs.sources;
+            var length = sources.length;
+
+            var newMain =
+                'void main() \n' +
+                '{ \n' +
+                '    czm_non_pick_main(); \n' +
+                '    if (gl_FragColor.a == 0.0) { \n' +
+                '        discard; \n' +
+                '    } \n' +
+                '    gl_FragColor = ' + pickId + '; \n' +
+                '} \n';
+            var newSources = new Array(length + 1);
+            for (var i = 0; i < length; ++i) {
+                newSources[i] = ShaderSource.replaceMain(sources[i], 'czm_non_pick_main');
+            }
+            newSources[length] = newMain;
+            fs = new ShaderSource({
+                sources : newSources,
+                defines : fs.defines
+            });
+            shader = context.shaderCache.createDerivedShaderProgram(shaderProgram, 'pick', {
+                vertexShaderSource : shaderProgram.vertexShaderSource,
+                fragmentShaderSource : fs,
+                attributeLocations : attributeLocations
+            });
+        }
+
+        return shader;
+    }
+
+    function getPickRenderState(scene, renderState) {
+        var cache = scene._pickRenderStateCache;
+        var pickState = cache[renderState.id];
+        if (!defined(pickState)) {
+            var rs = RenderState.getState(renderState);
+            rs.blending.enabled = false;
+
+            pickState = RenderState.fromCache(rs);
+            cache[renderState.id] = pickState;
+        }
+
+        return pickState;
+    }
+
+    DerivedCommand.createPickDerivedCommand = function(scene, command, context, result) {
+        if (!defined(result)) {
+            result = {};
+        }
+
+        var shader;
+        var renderState;
+        if (defined(result.pickCommand)) {
+            shader = result.pickCommand.shaderProgram;
+            renderState = result.pickCommand.renderState;
+        }
+
+        result.pickCommand = DrawCommand.shallowClone(command, result.pickCommand);
+
+        if (!defined(shader) || result.shaderProgramId !== command.shaderProgram.id) {
+            result.pickCommand.shaderProgram = getPickShaderProgram(context, command.shaderProgram, command.pickId);
+            result.pickCommand.renderState = getPickRenderState(scene, command.renderState);
+            result.shaderProgramId = command.shaderProgram.id;
+        } else {
+            result.pickCommand.shaderProgram = shader;
+            result.pickCommand.renderState = renderState;
         }
 
         return result;

@@ -44,20 +44,20 @@ defineSuite([
     var centerLongitude = -1.31968;
     var centerLatitude = 0.698874;
 
-    var pointCloudRGBUrl = './Data/Cesium3DTiles/PointCloud/PointCloudRGB';
-    var pointCloudRGBAUrl = './Data/Cesium3DTiles/PointCloud/PointCloudRGBA';
-    var pointCloudRGB565Url = './Data/Cesium3DTiles/PointCloud/PointCloudRGB565';
-    var pointCloudNoColorUrl = './Data/Cesium3DTiles/PointCloud/PointCloudNoColor';
-    var pointCloudConstantColorUrl = './Data/Cesium3DTiles/PointCloud/PointCloudConstantColor';
-    var pointCloudNormalsUrl = './Data/Cesium3DTiles/PointCloud/PointCloudNormals';
-    var pointCloudNormalsOctEncodedUrl = './Data/Cesium3DTiles/PointCloud/PointCloudNormalsOctEncoded';
-    var pointCloudQuantizedUrl = './Data/Cesium3DTiles/PointCloud/PointCloudQuantized';
-    var pointCloudQuantizedOctEncodedUrl = './Data/Cesium3DTiles/PointCloud/PointCloudQuantizedOctEncoded';
-    var pointCloudWGS84Url = './Data/Cesium3DTiles/PointCloud/PointCloudWGS84';
-    var pointCloudBatchedUrl = './Data/Cesium3DTiles/PointCloud/PointCloudBatched';
-    var pointCloudWithPerPointPropertiesUrl = './Data/Cesium3DTiles/PointCloud/PointCloudWithPerPointProperties';
-    var pointCloudWithTransformUrl = './Data/Cesium3DTiles/PointCloud/PointCloudWithTransform';
-    var pointCloudTilesetUrl = './Data/Cesium3DTiles/Tilesets/TilesetPoints';
+    var pointCloudRGBUrl = './Data/Cesium3DTiles/PointCloud/PointCloudRGB/tileset.json';
+    var pointCloudRGBAUrl = './Data/Cesium3DTiles/PointCloud/PointCloudRGBA/tileset.json';
+    var pointCloudRGB565Url = './Data/Cesium3DTiles/PointCloud/PointCloudRGB565/tileset.json';
+    var pointCloudNoColorUrl = './Data/Cesium3DTiles/PointCloud/PointCloudNoColor/tileset.json';
+    var pointCloudConstantColorUrl = './Data/Cesium3DTiles/PointCloud/PointCloudConstantColor/tileset.json';
+    var pointCloudNormalsUrl = './Data/Cesium3DTiles/PointCloud/PointCloudNormals/tileset.json';
+    var pointCloudNormalsOctEncodedUrl = './Data/Cesium3DTiles/PointCloud/PointCloudNormalsOctEncoded/tileset.json';
+    var pointCloudQuantizedUrl = './Data/Cesium3DTiles/PointCloud/PointCloudQuantized/tileset.json';
+    var pointCloudQuantizedOctEncodedUrl = './Data/Cesium3DTiles/PointCloud/PointCloudQuantizedOctEncoded/tileset.json';
+    var pointCloudWGS84Url = './Data/Cesium3DTiles/PointCloud/PointCloudWGS84/tileset.json';
+    var pointCloudBatchedUrl = './Data/Cesium3DTiles/PointCloud/PointCloudBatched/tileset.json';
+    var pointCloudWithPerPointPropertiesUrl = './Data/Cesium3DTiles/PointCloud/PointCloudWithPerPointProperties/tileset.json';
+    var pointCloudWithTransformUrl = './Data/Cesium3DTiles/PointCloud/PointCloudWithTransform/tileset.json';
+    var pointCloudTilesetUrl = './Data/Cesium3DTiles/Tilesets/TilesetPoints/tileset.json';
 
     function setCamera(longitude, latitude) {
         // Point the camera to the center of the tile
