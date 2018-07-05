@@ -48,6 +48,76 @@ const float SHIFT_RIGHT3 = 1.0 / 8.0;
 const float SHIFT_RIGHT2 = 1.0 / 4.0;
 const float SHIFT_RIGHT1 = 1.0 / 2.0;
 
+vec4 addScreenSpaceOffset(vec4 positionEC, vec2 imageSize, float scale, vec2 direction, vec2 origin, vec2 translate, vec2 pixelOffset, vec3 alignedAxis, bool validAlignedAxis, float rotation, bool sizeInMeters, out mat2 rotationMatrix, out float mpp)
+{
+
+    // Note the halfSize cannot be computed in JavaScript because it is sent via
+    // compressed vertex attributes that coerce it to an integer.
+    vec2 halfSize = imageSize * scale * czm_resolutionScale * 0.5;
+    halfSize *= ((direction * 2.0) - 1.0);
+
+    vec2 originTranslate = origin * abs(halfSize);
+
+#if defined(ROTATION) || defined(ALIGNED_AXIS)
+    if (validAlignedAxis || rotation != 0.0)
+    {
+        float angle = rotation;
+        if (validAlignedAxis)
+        {
+            vec4 projectedAlignedAxis = czm_modelViewProjection * vec4(alignedAxis, 0.0);
+            angle += sign(-projectedAlignedAxis.x) * acos( sign(projectedAlignedAxis.y) * (projectedAlignedAxis.y * projectedAlignedAxis.y) /
+                    (projectedAlignedAxis.x * projectedAlignedAxis.x + projectedAlignedAxis.y * projectedAlignedAxis.y) );
+        }
+
+        float cosTheta = cos(angle);
+        float sinTheta = sin(angle);
+        rotationMatrix = mat2(cosTheta, sinTheta, -sinTheta, cosTheta);
+        halfSize = rotationMatrix * halfSize;
+    }
+    else
+    {
+        rotationMatrix = mat2(1.0, 0.0, 0.0, 1.0);
+    }
+#endif
+
+    if (sizeInMeters)
+    {
+        positionEC.xy += halfSize;
+    }
+
+    mpp = czm_metersPerPixel(positionEC);
+
+    if (!sizeInMeters)
+    {
+        originTranslate *= mpp;
+    }
+
+    positionEC.xy += originTranslate;
+    if (!sizeInMeters)
+    {
+        positionEC.xy += halfSize * mpp;
+    }
+
+    positionEC.xy += translate * mpp;
+    positionEC.xy += (pixelOffset * czm_resolutionScale) * mpp;
+    return positionEC;
+}
+
+float getGlobeDepth(vec4 positionEC)
+{
+    vec4 posWC = czm_eyeToWindowCoordinates(positionEC);
+
+    float globeDepth = czm_unpackDepth(texture2D(czm_globeDepthTexture, posWC.xy/czm_viewport.zw));
+
+    if (globeDepth == 0.0)
+    {
+        return 0.0; // not on the globe
+    }
+
+    vec4 eyeCoordinate = czm_windowToEyeCoordinates(posWC.xy, globeDepth);
+    return eyeCoordinate.z / eyeCoordinate.w;
+}
+
 void main()
 {
     // Modifying this shader may also require modifications to Billboard._computeScreenSpacePosition
@@ -187,7 +257,6 @@ void main()
 
 #ifdef CLAMP_TO_GROUND
     float eyeDepth = positionEC.z;
-    v_rotationMatrix = mat2(1.0, 0.0, 0.0, 1.0);
 #endif
 
     positionEC = czm_eyeOffset(positionEC, eyeOffset.xyz);
@@ -244,55 +313,29 @@ void main()
     }
 #endif
 
-    // Note the halfSize cannot be computed in JavaScript because it is sent via
-    // compressed vertex attributes that coerce it to an integer.
-    vec2 halfSize = imageSize * scale * czm_resolutionScale * 0.5;
-    halfSize *= ((direction * 2.0) - 1.0);
+    mat2 rotationMatrix;
+    float mpp;
 
-    vec2 originTranslate = origin * abs(halfSize);
+    vec4 pEC1 = addScreenSpaceOffset(positionEC, imageSize, scale, vec2(0.0), origin, translate, pixelOffset, alignedAxis, validAlignedAxis, rotation, sizeInMeters, rotationMatrix, mpp);
+    float t1 = getGlobeDepth(pEC1);
 
-#if defined(ROTATION) || defined(ALIGNED_AXIS)
-    if (validAlignedAxis || rotation != 0.0)
+    if (pEC1.z < t1)
     {
-        float angle = rotation;
-        if (validAlignedAxis)
+        vec4 pEC2 = addScreenSpaceOffset(positionEC, imageSize, scale, vec2(0.0, 1.0), origin, translate, pixelOffset, alignedAxis, validAlignedAxis, rotation, sizeInMeters, rotationMatrix, mpp);
+        float t2 = getGlobeDepth(pEC2);
+
+        if (pEC2.z < t2 )
         {
-            vec4 projectedAlignedAxis = czm_modelViewProjection * vec4(alignedAxis, 0.0);
-            angle += sign(-projectedAlignedAxis.x) * acos( sign(projectedAlignedAxis.y) * (projectedAlignedAxis.y * projectedAlignedAxis.y) /
-                    (projectedAlignedAxis.x * projectedAlignedAxis.x + projectedAlignedAxis.y * projectedAlignedAxis.y) );
+            vec4 pEC3 = addScreenSpaceOffset(positionEC, imageSize, scale, vec2(1.0), origin, translate, pixelOffset, alignedAxis, validAlignedAxis, rotation, sizeInMeters, rotationMatrix, mpp);
+            float t3 = getGlobeDepth(pEC3);
+            if (pEC3.z < t3)
+            {
+                positionEC.xyz = vec3(0.0);
+            }
         }
-
-        float cosTheta = cos(angle);
-        float sinTheta = sin(angle);
-        mat2 rotationMatrix = mat2(cosTheta, sinTheta, -sinTheta, cosTheta);
-        halfSize = rotationMatrix * halfSize;
-
-        #ifdef CLAMP_TO_GROUND
-            v_rotationMatrix = rotationMatrix;
-        #endif
-    }
-#endif
-
-    if (sizeInMeters)
-    {
-        positionEC.xy += halfSize;
     }
 
-    float mpp = czm_metersPerPixel(positionEC);
-
-    if (!sizeInMeters)
-    {
-        originTranslate *= mpp;
-    }
-
-    positionEC.xy += originTranslate;
-    if (!sizeInMeters)
-    {
-        positionEC.xy += halfSize * mpp;
-    }
-
-    positionEC.xy += translate * mpp;
-    positionEC.xy += (pixelOffset * czm_resolutionScale) * mpp;
+    positionEC = addScreenSpaceOffset(positionEC, imageSize, scale, direction, origin, translate, pixelOffset, alignedAxis, validAlignedAxis, rotation, sizeInMeters, rotationMatrix, mpp);
     gl_Position = czm_projection * positionEC;
     v_textureCoordinates = textureCoordinates;
 
@@ -330,6 +373,13 @@ void main()
         dimensions /= mpp;
         imageSize /= mpp;
     }
+
+    #if defined(ROTATION) || defined(ALIGNED_AXIS)
+    v_rotationMatrix = rotationMatrix;
+    #else
+    v_rotationMatrix = mat2(1.0, 0.0, 0.0, 1.0);
+    #endif
+
     v_eyeDepthDistanceAndApplyTranslate.x = eyeDepth;
     v_eyeDepthDistanceAndApplyTranslate.y = disableDepthTestDistance;
     v_eyeDepthDistanceAndApplyTranslate.z = applyTranslate;
