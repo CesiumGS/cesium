@@ -147,7 +147,7 @@ define([
         }
 
         /**
-         * Specifies the type of refinment that is used when traversing this tile for rendering.
+         * Specifies the type of refinement that is used when traversing this tile for rendering.
          *
          * @type {Cesium3DTileRefine}
          * @readonly
@@ -185,15 +185,20 @@ define([
         baseResource = Resource.createIfNeeded(baseResource);
 
         if (defined(contentHeader)) {
-            var contentHeaderUrl = contentHeader.url;
-            if (tileset._brokenUrlWorkaround && contentHeaderUrl.length > 0 && (contentHeaderUrl[0] === '/')) {
-                contentHeaderUrl = contentHeader.url = contentHeaderUrl.substring(1);
+            var contentHeaderUri = contentHeader.uri;
+            if (defined(contentHeader.url)) {
+                Cesium3DTile._deprecationWarning('contentUrl', 'This tileset JSON uses the "content.url" property which has been deprecated. Use "content.uri" instead.');
+                contentHeaderUri = contentHeader.url;
+            }
+
+            if (tileset._brokenUrlWorkaround && contentHeaderUri.length > 0 && (contentHeaderUri[0] === '/')) {
+                contentHeaderUri = contentHeader.uri = contentHeaderUri.substring(1);
             }
 
             hasEmptyContent = false;
             contentState = Cesium3DTileContentState.UNLOADED;
             contentResource = baseResource.getDerivedResource({
-                url : contentHeaderUrl
+                url : contentHeaderUri
             });
             serverKey = RequestScheduler.getServerKey(contentResource.getUrlComponent());
         } else {

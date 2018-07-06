@@ -366,21 +366,6 @@ define([
         return GroundPolylinePrimitive._initPromise;
     };
 
-    // For use with web workers.
-    GroundPolylinePrimitive._initializeTerrainHeightsWorker = function() {
-        var initPromise = GroundPolylinePrimitive._initPromise;
-        if (defined(initPromise)) {
-            return initPromise;
-        }
-
-        GroundPolylinePrimitive._initPromise = ApproximateTerrainHeights.initialize('../Assets/approximateTerrainHeights.json')
-            .then(function() {
-                GroundPolylinePrimitive._initialized = true;
-            });
-
-        return GroundPolylinePrimitive._initPromise;
-    };
-
     function createShaderProgram(groundPolylinePrimitive, frameState, appearance) {
         var context = frameState.context;
         var primitive = groundPolylinePrimitive._primitive;

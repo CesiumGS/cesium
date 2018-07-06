@@ -158,10 +158,10 @@ defineSuite([
         });
 
         var r = ellipse.rectangle;
-        expect(r.north).toEqual(0.698966597893341);
-        expect(r.south).toEqual(0.698652226072367);
-        expect(r.east).toEqual(-1.3192254919753026);
-        expect(r.west).toEqual(-1.3196344953554853);
+        expect(r.north).toEqualEpsilon(0.698966597893341, CesiumMath.EPSILON15);
+        expect(r.south).toEqualEpsilon(0.698652226072367, CesiumMath.EPSILON15);
+        expect(r.east).toEqualEpsilon(-1.3192254919753026, CesiumMath.EPSILON15);
+        expect(r.west).toEqualEpsilon(-1.3196344953554853, CesiumMath.EPSILON15);
     });
 
     it('computing textureCoordinateRotationPoints property', function() {
