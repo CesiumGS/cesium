@@ -117,8 +117,7 @@ define([
     }
 
     function skipLevelOfDetail(tileset) {
-        // Optimization: if all tiles are additive turn off skipLevelOfDetail to save some processing
-        return tileset._skipLevelOfDetail && !tileset._allTilesAdditive;
+        return tileset._skipLevelOfDetail;
     }
 
     function addEmptyTile(tileset, tile) {
@@ -195,9 +194,6 @@ define([
     }
 
     function visitTile(tileset, tile, frameState) {
-        if (!tileset._passDirty && (tile._visitedFrame === frameState.frameNumber)) {
-            return;
-        }
         ++tileset._statistics.visited;
         tile._visitedFrame = frameState.frameNumber;
     }
@@ -275,15 +271,11 @@ define([
     }
 
     function updateVisibility(tileset, tile, frameState) {
-        if (!tileset._passDirty && (tile._updatedVisibilityFrame === frameState.frameNumber)) {
-            // Return early if visibility has already been checked during this pass and this frame.
+        if (tile._updatedVisibilityFrame === frameState.frameNumber) {
+            // Return early if visibility has already been checked during the traversal.
             // The visibility may have already been checked if the cullWithChildrenBounds optimization is used.
-            // Visibility must be checked again if the pass changes since the pick pass uses
-            // a smaller frustum than the render pass.
             return;
         }
-
-        tile._updatedVisibilityFrame = frameState.frameNumber;
 
         var parent = tile.parent;
         var parentTransform = defined(parent) ? parent.computedTransform : tileset._modelMatrix;
@@ -296,6 +288,7 @@ define([
         tile._visibilityPlaneMask = tile.visibility(frameState, parentVisibilityPlaneMask); // Use parent's plane mask to speed up visibility test
         tile._visible = tile._visibilityPlaneMask !== CullingVolume.MASK_OUTSIDE;
         tile._inRequestVolume = tile.insideViewerRequestVolume(frameState);
+        tile._updatedVisibilityFrame = frameState.frameNumber;
     }
 
     function anyChildrenVisible(tileset, tile, frameState) {
@@ -514,6 +507,7 @@ define([
             visitTile(tileset, tile, frameState);
             touchTile(tileset, tile, frameState);
             tile._refines = refines;
+            tile._updatedVisibilityFrame = 0; // Reset so visibility is checked during the next pass
         }
     }
 
