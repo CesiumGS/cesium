@@ -2314,6 +2314,9 @@ define([
 
             if (clearGlobeDepth) {
                 clearDepth.execute(context, passState);
+                if (useDepthPlane) {
+                    depthPlane.execute(context, passState);
+                }
             }
 
             if (!environmentState.useInvertClassification || picking) {
@@ -2429,10 +2432,6 @@ define([
 
             if (length > 0 && context.stencilBuffer) {
                 scene._stencilClearCommand.execute(context, passState);
-            }
-
-            if (clearGlobeDepth && useDepthPlane) {
-                depthPlane.execute(context, passState);
             }
 
             us.updatePass(Pass.OPAQUE);
