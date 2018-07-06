@@ -456,8 +456,9 @@ define([
          */
         rectangle : createPropertyTypeDescriptor('rectangle', RectangleGraphics),
         /**
-         * Gets or sets the suggested initial offset for viewing this object
-         * with the camera.  The offset is defined in the east-north-up reference frame.
+         * Gets or sets the suggested initial offset when tracking this object.
+         * The offset is typically defined in the east-north-up reference frame,
+         * but may be another frame depending on the object's velocity.
          * @memberof Entity.prototype
          * @type {Property}
          */
