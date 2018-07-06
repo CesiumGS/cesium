@@ -147,6 +147,13 @@ define([
             pick : false,
 
             /**
+             * <code>true</code> if the primitive should update for a pick off-screen pass, <code>false</code> otherwise.
+             * @type {Boolean}
+             * @default false
+             */
+            pickOffscreen : false,
+
+            /**
              * <code>true</code> if the primitive should update for a depth only pass, <code>false</code> otherwise.
              * @type {Boolean}
              * @default false

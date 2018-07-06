@@ -6,6 +6,7 @@ define([
         '../Core/Cartesian3',
         '../Core/Cartesian4',
         '../Core/Cartographic',
+        '../Core/Check',
         '../Core/Color',
         '../Core/ColorGeometryInstanceAttribute',
         '../Core/createGuid',
@@ -34,6 +35,7 @@ define([
         '../Core/PerspectiveFrustum',
         '../Core/PerspectiveOffCenterFrustum',
         '../Core/PixelFormat',
+        '../Core/Ray',
         '../Core/RequestScheduler',
         '../Core/ShowGeometryInstanceAttribute',
         '../Core/TaskProcessor',
@@ -68,6 +70,7 @@ define([
         './PerformanceDisplay',
         './PerInstanceColorAppearance',
         './PickDepth',
+        './Picker',
         './PostProcessStageCollection',
         './Primitive',
         './PrimitiveCollection',
@@ -87,6 +90,7 @@ define([
         Cartesian3,
         Cartesian4,
         Cartographic,
+        Check,
         Color,
         ColorGeometryInstanceAttribute,
         createGuid,
@@ -115,6 +119,7 @@ define([
         PerspectiveFrustum,
         PerspectiveOffCenterFrustum,
         PixelFormat,
+        Ray,
         RequestScheduler,
         ShowGeometryInstanceAttribute,
         TaskProcessor,
@@ -149,6 +154,7 @@ define([
         PerformanceDisplay,
         PerInstanceColorAppearance,
         PickDepth,
+        Picker,
         PostProcessStageCollection,
         Primitive,
         PrimitiveCollection,
@@ -340,6 +346,10 @@ define([
 
         this._pickDepths = [];
         this._debugGlobeDepths = [];
+
+
+        this._picker = new Picker();
+        this._pickerCamera = undefined;
 
         this._pickDepthPassState = undefined;
         this._pickDepthFramebuffer = undefined;
@@ -1580,6 +1590,7 @@ define([
         passes.pick = false;
         passes.depth = false;
         passes.postProcess = false;
+        passes.pickOffscreen = false;
     }
 
     function updateFrameState(scene, frameNumber, time) {
@@ -3734,6 +3745,83 @@ define([
 
             var cart = projection.unproject(result, scratchPickPositionCartographic);
             ellipsoid.cartographicToCartesian(cart, result);
+        }
+
+        return result;
+    };
+
+    // TODO : doc
+    Scene.prototype.pickPositionFromRay = function(ray, result) {
+        if (!this.useDepthPicking) {
+            return undefined;
+        }
+        //>>includeStart('debug', pragmas.debug);
+        Check.defined('ray', ray);
+        //>>includeEnd('debug');
+
+        var pickerCamera = this._pickerCamera;
+        if (!defined(pickerCamera)) {
+            pickerCamera = new Camera(this);
+            pickerCamera.frustum = new OrthographicFrustum({
+                width: 0.1,
+                aspectRatio: 1.0,
+                near: 0.1,
+                far: 500000000.0
+            });
+            this._pickerCamera = pickerCamera;
+        }
+
+        var context = this._context;
+        var uniformState = context.uniformState;
+        var frameState = this._frameState;
+
+        var picker = this._picker;
+        pickerCamera.position = ray.origin;
+        pickerCamera.direction = ray.direction;
+        var sceneCamera = this._camera;
+        this._camera = pickerCamera;
+
+        this._jobScheduler.disableThisFrame();
+
+        // Update with previous frame's number and time, assuming that render is called before picking.
+        updateFrameState(this, frameState.frameNumber, frameState.time);
+        frameState.invertClassification = false;
+        frameState.passes.pick = true;
+        frameState.passes.depth = true;
+
+        uniformState.update(frameState);
+
+        var passState = picker.begin(frameState);
+
+
+        frameState.commandList.length = 0;
+        updateAndRenderPrimitives(this);
+        createPotentiallyVisibleSet(this);
+        executeCommands(this, passState);
+
+        var depth = picker.getDepth(frameState);
+        var near = pickerCamera.frustum.near;
+        var far = pickerCamera.frustum.far;
+
+        this._camera = sceneCamera;
+        context.endFrame();
+        callAfterRenderFunctions(this);
+
+        if (CesiumMath.equalsEpsilon(depth, 1.0, CesiumMath.EPSILON8)) {
+            return undefined;
+        }
+
+        var distance = near + depth * (far - near);
+        result = Ray.getPoint(ray, distance, result);
+
+        if (this.mode !== SceneMode.SCENE3D) {
+            Cartesian3.fromElements(result.y, result.z, result.x, result);
+
+            var projection = this.mapProjection;
+            var ellipsoid = projection.ellipsoid;
+
+            var cartographic = projection.unproject(result, scratchPickPositionCartographic);
+            ellipsoid.cartographicToCartesian(cartographic, result);
         }
 
         return result;

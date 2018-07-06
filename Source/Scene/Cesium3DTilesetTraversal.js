@@ -552,6 +552,40 @@ define([
         return allDescendantsLoaded;
     }
 
+    function executePickFromExistingTraversal(tileset, root, screenSpaceError, frameState) {
+        var stack = traversal.stack;
+        stack.push(root);
+
+        // TODO Make sure skiplods stuff is off and same with culling optimization?
+        // TODO also set passDirty to true because visibility needs to be rechecked
+        // TODO make sure statistics aren't updated due to this pass - or have a separate set of statistics?
+        // TODO for async approach, need to make sure touching/touched frame is correctly done
+
+        while (stack.length > 0) {
+            traversal.stackMaximumLength = Math.max(traversal.stackMaximumLength, stack.length);
+            var tile = stack.pop();
+            var children = tile.children;
+            var childrenLength = children.length;
+            var visited = (tile._visitedFrame === frameState.frameNumber); // Set from previous pass
+            var selected = (tile._selectedFrame === frameState.frameNumber); // Set from previous pass
+            var finalResolution = tile._finalResolution; // Set from previous pass
+            var traverse = visited && (childrenLength > 0);
+
+            updateTile(tileset, tile, frameState);
+
+            if (traverse) {
+                for (var i = 0; i < childrenLength; ++i) {
+                    var child = children[i];
+                    stack.push(child);
+                }
+            }
+
+            if (selected && finalResolution && isVisible(tile)) {
+                tileset._selectedTiles.push(tile);
+            }
+        }
+    }
+
     /**
      * Traverse the tree and check if their selected frame is the current frame. If so, add it to a selection queue.
      * Furthermore, this is a preorder traversal so children tiles are selected before ancestor tiles.
