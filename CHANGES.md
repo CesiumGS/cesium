@@ -8,6 +8,7 @@ Change Log
 
 #### Fixes :wrench:
 * Fixed bug causing billboards and labels to appear the wrong size when switching scene modes [#6745](https://github.com/AnalyticalGraphicsInc/cesium/issues/6745)
+* Fixed occlusion bug for tiles use a depth pane [#6714](https://github.com/AnalyticalGraphicsInc/cesium/issues/6714)
 
 ### 1.47 - 2018-07-02
 
