@@ -318,7 +318,7 @@ define([
 
         // Members that are updated every frame for tree traversal and rendering optimizations:
         this._distanceToCamera = 0;
-        this._centerZDepth = 0; // TODO : remove?
+        this._centerZDepth = 0;
         this._screenSpaceError = 0;
         this._visibilityPlaneMask = 0;
         this._visible = false;
