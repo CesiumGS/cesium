@@ -10,6 +10,7 @@ define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
+        '../Core/deprecationWarning',
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/Math',
@@ -44,6 +45,7 @@ define([
         defaultValue,
         defined,
         defineProperties,
+        deprecationWarning,
         destroyObject,
         DeveloperError,
         CesiumMath,
@@ -80,33 +82,25 @@ define([
          */
         this.featuresLength = featuresLength;
 
-        this._translucentFeaturesLength = 0; // Number of features in the tile that are translucent
-
-        /**
-         * @private
-         */
-        this.batchTableJson = batchTableJson;
-
         /**
          * @private
          */
         this.batchTableBinary = batchTableBinary;
 
-        var batchTableHierarchy;
-        var batchTableBinaryProperties;
-        if (defined(batchTableJson)) {
-            // Extract the hierarchy and remove it from the batch table json
-            batchTableHierarchy = batchTableJson.HIERARCHY;
-            if (defined(batchTableHierarchy)) {
-                delete batchTableJson.HIERARCHY;
-                batchTableHierarchy = initializeHierarchy(batchTableHierarchy, batchTableBinary);
-            }
-            // Get the binary properties
-            batchTableBinaryProperties = Cesium3DTileBatchTable.getBinaryProperties(featuresLength, batchTableJson, batchTableBinary);
-        }
+        this._translucentFeaturesLength = 0; // Number of features in the tile that are translucent
 
-        this._batchTableHierarchy = batchTableHierarchy;
-        this._batchTableBinaryProperties = batchTableBinaryProperties;
+        var extensions;
+        if (defined(batchTableJson)) {
+            extensions = batchTableJson.extensions;
+        }
+        this._extensions = defaultValue(extensions, {});
+        this._extras = defined(batchTableJson) ? batchTableJson.extras : undefined;
+
+        var properties = initializeProperties(batchTableJson);
+        this._properties = properties;
+
+        this._batchTableHierarchy = initializeHierarchy(this, batchTableJson, batchTableBinary);
+        this._batchTableBinaryProperties = getBinaryProperties(featuresLength, properties, batchTableBinary);
 
         // PERFORMANCE_IDEA: These parallel arrays probably generate cache misses in get/set color/show
         // and use A LOT of memory.  How can we use less memory?
@@ -146,6 +140,9 @@ define([
         this._textureStep = textureStep;
     }
 
+    // This can be overridden for testing purposes
+    Cesium3DTileBatchTable._deprecationWarning = deprecationWarning;
+
     defineProperties(Cesium3DTileBatchTable.prototype, {
         memorySizeInBytes : {
             get : function() {
@@ -161,23 +158,59 @@ define([
         }
     });
 
-    function initializeHierarchy(json, binary) {
+    function initializeProperties(jsonHeader) {
+        var properties = {};
+
+        if (!defined(jsonHeader)) {
+            return properties;
+        }
+
+        for (var propertyName in jsonHeader) {
+            if (jsonHeader.hasOwnProperty(propertyName)
+                    && propertyName !== 'HIERARCHY' // Deprecated HIERARCHY property
+                    && propertyName !== 'extensions'
+                    && propertyName !== 'extras') {
+                properties[propertyName] = clone(jsonHeader[propertyName], true);
+            }
+        }
+
+        return properties;
+    }
+
+    function initializeHierarchy(batchTable, jsonHeader, binaryBody) {
+        if (!defined(jsonHeader)) {
+            return;
+        }
+
+        var hierarchy = batchTable.getExtension('3DTILES_batch_table_hierarchy');
+
+        var legacyHierarchy = jsonHeader.HIERARCHY;
+        if (defined(legacyHierarchy)) {
+            Cesium3DTileBatchTable._deprecationWarning('batchTableHierarchyExtension', 'The batch table HIERARCHY property has been moved to an extension. Use extension.3DTILES_batch_table_hierarchy instead.');
+            batchTable._extensions['3DTILES_batch_table_hierarchy'] = legacyHierarchy;
+            hierarchy = legacyHierarchy;
+        }
+
+        return initializeHierarchyValues(hierarchy, binaryBody);
+    }
+
+    function initializeHierarchyValues(hierarchyJson, binaryBody) {
         var i;
         var classId;
         var binaryAccessor;
 
-        var instancesLength = json.instancesLength;
-        var classes = json.classes;
-        var classIds = json.classIds;
-        var parentCounts = json.parentCounts;
-        var parentIds = json.parentIds;
+        var instancesLength = hierarchyJson.instancesLength;
+        var classes = hierarchyJson.classes;
+        var classIds = hierarchyJson.classIds;
+        var parentCounts = hierarchyJson.parentCounts;
+        var parentIds = hierarchyJson.parentIds;
         var parentIdsLength = instancesLength;
 
         if (defined(classIds.byteOffset)) {
             classIds.componentType = defaultValue(classIds.componentType, ComponentDatatype.UNSIGNED_SHORT);
             classIds.type = AttributeType.SCALAR;
             binaryAccessor = getBinaryAccessor(classIds);
-            classIds = binaryAccessor.createArrayBufferView(binary.buffer, binary.byteOffset + classIds.byteOffset, instancesLength);
+            classIds = binaryAccessor.createArrayBufferView(binaryBody.buffer, binaryBody.byteOffset + classIds.byteOffset, instancesLength);
         }
 
         var parentIndexes;
@@ -186,7 +219,7 @@ define([
                 parentCounts.componentType = defaultValue(parentCounts.componentType, ComponentDatatype.UNSIGNED_SHORT);
                 parentCounts.type = AttributeType.SCALAR;
                 binaryAccessor = getBinaryAccessor(parentCounts);
-                parentCounts = binaryAccessor.createArrayBufferView(binary.buffer, binary.byteOffset + parentCounts.byteOffset, instancesLength);
+                parentCounts = binaryAccessor.createArrayBufferView(binaryBody.buffer, binaryBody.byteOffset + parentCounts.byteOffset, instancesLength);
             }
             parentIndexes = new Uint16Array(instancesLength);
             parentIdsLength = 0;
@@ -200,14 +233,14 @@ define([
             parentIds.componentType = defaultValue(parentIds.componentType, ComponentDatatype.UNSIGNED_SHORT);
             parentIds.type = AttributeType.SCALAR;
             binaryAccessor = getBinaryAccessor(parentIds);
-            parentIds = binaryAccessor.createArrayBufferView(binary.buffer, binary.byteOffset + parentIds.byteOffset, parentIdsLength);
+            parentIds = binaryAccessor.createArrayBufferView(binaryBody.buffer, binaryBody.byteOffset + parentIds.byteOffset, parentIdsLength);
         }
 
         var classesLength = classes.length;
         for (i = 0; i < classesLength; ++i) {
             var classInstancesLength = classes[i].length;
             var properties = classes[i].instances;
-            var binaryProperties = Cesium3DTileBatchTable.getBinaryProperties(classInstancesLength, properties, binary);
+            var binaryProperties = getBinaryProperties(classInstancesLength, properties, binaryBody);
             classes[i].instances = combine(binaryProperties, properties);
         }
 
@@ -282,11 +315,15 @@ define([
     }
     //>>includeEnd('debug');
 
-    Cesium3DTileBatchTable.getBinaryProperties = function(featuresLength, json, binary) {
+    function getBinaryProperties(featuresLength, properties, binaryBody) {
+        if (!defined(properties)) {
+            return;
+        }
+
         var binaryProperties;
-        for (var name in json) {
-            if (json.hasOwnProperty(name)) {
-                var property = json[name];
+        for (var name in properties) {
+            if (properties.hasOwnProperty(name)) {
+                var property = properties[name];
                 var byteOffset = property.byteOffset;
                 if (defined(byteOffset)) {
                     // This is a binary property
@@ -298,14 +335,14 @@ define([
                     if (!defined(type)) {
                         throw new RuntimeError('type is required.');
                     }
-                    if (!defined(binary)) {
+                    if (!defined(binaryBody)) {
                         throw new RuntimeError('Property ' + name + ' requires a batch table binary.');
                     }
 
                     var binaryAccessor = getBinaryAccessor(property);
                     var componentCount = binaryAccessor.componentsPerAttribute;
                     var classType = binaryAccessor.classType;
-                    var typedArray = binaryAccessor.createArrayBufferView(binary.buffer, binary.byteOffset + byteOffset, featuresLength);
+                    var typedArray = binaryAccessor.createArrayBufferView(binaryBody.buffer, binaryBody.byteOffset + byteOffset, featuresLength);
 
                     if (!defined(binaryProperties)) {
                         binaryProperties = {};
@@ -322,6 +359,10 @@ define([
             }
         }
         return binaryProperties;
+    }
+
+    Cesium3DTileBatchTable.prototype.getBinaryProperties = function(featuresLength) {
+        return getBinaryProperties(featuresLength, this._properties, this.batchTableBinary);
     };
 
     function getByteLength(batchTable) {
@@ -738,8 +779,7 @@ define([
         Check.typeOf.string('name', name);
         //>>includeEnd('debug');
 
-        var json = this.batchTableJson;
-        return (defined(json) && defined(json[name])) || (defined(this._batchTableHierarchy) && hasPropertyInHierarchy(this, batchId, name));
+        return (defined(this._properties[name])) || (defined(this._batchTableHierarchy) && hasPropertyInHierarchy(this, batchId, name));
     };
 
     Cesium3DTileBatchTable.prototype.getPropertyNames = function(batchId, results) {
@@ -750,12 +790,8 @@ define([
         results = defined(results) ? results : [];
         results.length = 0;
 
-        var json = this.batchTableJson;
-        for (var name in json) {
-            if (json.hasOwnProperty(name)) {
-                results.push(name);
-            }
-        }
+        var propertyNames = Object.keys(this._properties);
+        results.push.apply(results, propertyNames);
 
         if (defined(this._batchTableHierarchy)) {
             getPropertyNamesInHierarchy(this, batchId, results);
@@ -770,10 +806,6 @@ define([
         Check.typeOf.string('name', name);
         //>>includeEnd('debug');
 
-        if (!defined(this.batchTableJson)) {
-            return undefined;
-        }
-
         if (defined(this._batchTableBinaryProperties)) {
             var binaryProperty = this._batchTableBinaryProperties[name];
             if (defined(binaryProperty)) {
@@ -781,7 +813,7 @@ define([
             }
         }
 
-        var propertyValues = this.batchTableJson[name];
+        var propertyValues = this._properties[name];
         if (defined(propertyValues)) {
             return clone(propertyValues[batchId], true);
         }
@@ -817,17 +849,11 @@ define([
             }
         }
 
-        if (!defined(this.batchTableJson)) {
-            // Tile payload did not have a batch table. Create one for new user-defined properties.
-            this.batchTableJson = {};
-        }
-
-        var propertyValues = this.batchTableJson[name];
-
+        var propertyValues = this._properties[name];
         if (!defined(propertyValues)) {
             // Property does not exist. Create it.
-            this.batchTableJson[name] = new Array(featuresLength);
-            propertyValues = this.batchTableJson[name];
+            this._properties[name] = new Array(featuresLength);
+            propertyValues = this._properties[name];
         }
 
         propertyValues[batchId] = clone(value, true);
@@ -1464,6 +1490,23 @@ define([
 
             updateBatchTexture(this);  // Apply per-feature show/color updates
         }
+    };
+
+    /**
+     * Returns the contents of the batch table extension, or <code>undefined</code>
+     * if the extension is not present.
+     * @param {String} extensionName The name of the extension.
+     *
+     * @returns {Object|undefined} The contents of the batch table extension, or <code>undefined</code>
+     * if the extension is not present.
+     */
+    Cesium3DTileBatchTable.prototype.getExtension = function(extensionName) {
+        var extensions = this._extensions;
+        if (!defined(extensions)) {
+            return;
+        }
+
+        return extensions[extensionName];
     };
 
     Cesium3DTileBatchTable.prototype.isDestroyed = function() {

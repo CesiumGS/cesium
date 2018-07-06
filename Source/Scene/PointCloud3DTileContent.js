@@ -393,7 +393,7 @@ define([
         // If points are not batched and there are per-point properties, use these properties for styling purposes
         var styleableProperties;
         if (!defined(batchIds) && defined(batchTableBinary)) {
-            styleableProperties = Cesium3DTileBatchTable.getBinaryProperties(pointsLength, batchTableJson, batchTableBinary);
+            styleableProperties = content._batchTable.getBinaryProperties(pointsLength);
 
             // WebGL does not support UNSIGNED_INT, INT, or DOUBLE vertex attributes. Convert these to FLOAT.
             for (var name in styleableProperties) {

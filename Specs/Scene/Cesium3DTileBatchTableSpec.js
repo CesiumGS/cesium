@@ -39,6 +39,7 @@ defineSuite([
     var batchTableHierarchyBinaryUrl = './Data/Cesium3DTiles/Hierarchy/BatchTableHierarchyBinary/tileset.json';
     var batchTableHierarchyMultipleParentsUrl = './Data/Cesium3DTiles/Hierarchy/BatchTableHierarchyMultipleParents/tileset.json';
     var batchTableHierarchyNoParentsUrl = './Data/Cesium3DTiles/Hierarchy/BatchTableHierarchyNoParents/tileset.json';
+    var batchTableHierarchyExtensionUrl = './Data/Cesium3DTiles/Hierarchy/BatchTableHierarchyExtension/tileset.json';
 
     var result = new Color();
 
@@ -58,6 +59,9 @@ defineSuite([
         // One feature is located at the center, point the camera there
         var center = Cartesian3.fromRadians(centerLongitude, centerLatitude);
         scene.camera.lookAt(center, new HeadingPitchRange(0.0, -1.57, 20.0));
+
+        // Keep the error from logging to the console when running tests
+        Cesium3DTileBatchTable._deprecationWarning = function () {};
     });
 
     afterAll(function() {
@@ -900,6 +904,10 @@ defineSuite([
         return checkBatchTableHierarchy(batchTableHierarchyUrl, false);
     });
 
+    it('renders tileset with batch table hierarchy extension', function() {
+        return checkBatchTableHierarchy(batchTableHierarchyExtensionUrl, false);
+    });
+
     it('renders tileset with batch table hierarchy using binary properties', function() {
         return checkBatchTableHierarchy(batchTableHierarchyBinaryUrl, true);
     });
@@ -910,6 +918,14 @@ defineSuite([
 
     it('renders tileset with batch table hierarchy with no parents', function() {
         return checkBatchTableHierarchyNoParents(batchTableHierarchyNoParentsUrl);
+    });
+
+    it('warns about deprecated batch hierarchy (pre-version 1.0)', function() {
+        spyOn(Cesium3DTileBatchTable, '_deprecationWarning');
+        return checkBatchTableHierarchy(batchTableHierarchyUrl, false)
+            .then(function(tileset) {
+                expect(Cesium3DTileBatchTable._deprecationWarning).toHaveBeenCalled();
+            });
     });
 
     it('validates hierarchy with multiple parents', function() {
