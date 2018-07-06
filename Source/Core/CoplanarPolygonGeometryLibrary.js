@@ -6,9 +6,7 @@ define([
         './IntersectionTests',
         './Math',
         './Matrix3',
-        './OrientedBoundingBox',
-        './Plane',
-        './Ray'
+        './OrientedBoundingBox'
     ], function(
         defined,
         Cartesian2,
@@ -17,9 +15,7 @@ define([
         IntersectionTests,
         CesiumMath,
         Matrix3,
-        OrientedBoundingBox,
-        Plane,
-        Ray
+        OrientedBoundingBox
     ) {
     'use strict';
 
@@ -34,8 +30,6 @@ define([
     var scratchZAxis = new Cartesian3();
     var scratchOrigin = new Cartesian3();
     var scratchNormal = new Cartesian3();
-    var scratchRay = new Ray();
-    var scratchPlane = new Plane(Cartesian3.UNIT_X, 0);
     var obbScratch = new OrientedBoundingBox();
 
     // call after removeDuplicates
@@ -45,8 +39,8 @@ define([
         Check.defined('positionsResult', positionsResult);
         //>>includeEnd('debug');
 
-        var obb = OrientedBoundingBox.fromPoints(positions, obbScratch);
-        var halfAxes = obb.halfAxes;
+        var orientedBoundingBox = OrientedBoundingBox.fromPoints(positions, obbScratch);
+        var halfAxes = orientedBoundingBox.halfAxes;
         var xAxis = Matrix3.getColumn(halfAxes, 0, scratchXAxis);
         var yAxis = Matrix3.getColumn(halfAxes, 1, scratchYAxis);
         var zAxis = Matrix3.getColumn(halfAxes, 2, scratchZAxis);
@@ -56,73 +50,53 @@ define([
         var zMag = Cartesian3.magnitude(zAxis);
         var min = Math.min(xMag, yMag, zMag);
 
-        var i;
-        // If all the points are on a line, just remove one of the zero dimensions
+        // If all the points are on a line return undefined because we can't draw a polygon
         if ((xMag === 0 && (yMag === 0 || zMag === 0)) || (yMag === 0 && zMag === 0)) {
             return;
         }
-        var center = obb.center;
-        var planeXAxis;
-        var planeYAxis;
+        var center = orientedBoundingBox.center;
         var origin = Cartesian3.clone(center, scratchOrigin);
         var normal;
+        var planeAxis1;
+        var planeAxis2;
+
+        if (min === yMag || min === zMag) {
+            planeAxis1 = xAxis;
+        }
         if (min === xMag) {
-            if (min !== 0) {
-                origin = Cartesian3.add(origin, xAxis, origin);
-                normal = Cartesian3.normalize(xAxis, scratchNormal);
-            }
-            planeXAxis = Cartesian3.normalize(yAxis, yAxis);
-            planeYAxis = Cartesian3.normalize(zAxis, zAxis);
-        } else if (min === yMag) {
-            if (min !== 0) {
-                origin = Cartesian3.add(origin, yAxis, origin);
-                normal = Cartesian3.normalize(yAxis, scratchNormal);
-            }
-            planeXAxis = Cartesian3.normalize(xAxis, xAxis);
-            planeYAxis = Cartesian3.normalize(zAxis, zAxis);
-        } else {
-            if (min !== 0) {
-                origin = Cartesian3.add(origin, zAxis, origin);
-                normal = Cartesian3.normalize(zAxis, scratchNormal);
-            }
-            planeXAxis = Cartesian3.normalize(xAxis, xAxis);
-            planeYAxis = Cartesian3.normalize(yAxis, yAxis);
+            planeAxis1 = yAxis;
+        } else if (min === zMag) {
+            planeAxis2 = yAxis;
+        }
+        if (min === xMag || min === yMag) {
+            planeAxis2 = zAxis;
         }
 
-        if (min === 0) {
-            normal = Cartesian3.cross(planeXAxis, planeYAxis, scratchNormal);
-            normal = Cartesian3.normalize(normal, normal);
-        }
+        planeAxis1 = Cartesian3.normalize(planeAxis1, planeAxis1);
+        planeAxis2 = Cartesian3.normalize(planeAxis2, planeAxis2);
+        normal = Cartesian3.cross(planeAxis1, planeAxis2, scratchNormal);
+        normal = Cartesian3.normalize(normal, normal);
 
         if (defined(normalResult)) {
             Cartesian3.clone(normal, normalResult);
         }
         if (defined(tangentResult)) {
-            Cartesian3.clone(planeXAxis, tangentResult);
+            Cartesian3.clone(planeAxis1, tangentResult);
         }
         if (defined(bitangentResult)) {
-            Cartesian3.clone(planeYAxis, bitangentResult);
+            Cartesian3.clone(planeAxis2, bitangentResult);
         }
 
-        var plane = Plane.fromPointNormal(origin, normal, scratchPlane);
-        var ray = scratchRay;
-        ray.direction = Cartesian3.clone(normal, ray.direction);
-
-        for (i = 0; i < positions.length; i++) {
-            ray.origin = Cartesian3.clone(positions[i], ray.origin);
-
-            var intersectionPoint = IntersectionTests.rayPlane(ray, plane, scratchIntersectionPoint);
-
-            if (!defined(intersectionPoint)) {
-                ray.direction = Cartesian3.negate(ray.direction, ray.direction);
-                intersectionPoint = IntersectionTests.rayPlane(ray, plane, scratchIntersectionPoint);
-            }
-            var v = Cartesian3.subtract(intersectionPoint, origin, intersectionPoint);
-            var x = Cartesian3.dot(planeXAxis, v);
-            var y = Cartesian3.dot(planeYAxis, v);
+        for (var i = 0; i < positions.length; i++) {
+            var position = positions[i];
+            var v = Cartesian3.subtract(position, origin, scratchIntersectionPoint);
+            var x = Cartesian3.dot(planeAxis1, v);
+            var y = Cartesian3.dot(planeAxis2, v);
 
             positionsResult[i] = Cartesian2.fromElements(x, y, positionsResult[i]);
         }
+
+        positionsResult.length = positions.length;
 
         return positionsResult;
     };

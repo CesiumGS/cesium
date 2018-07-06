@@ -176,7 +176,7 @@ define([
         if (positions.length < 3) {
             return;
         }
-        var bs = BoundingSphere.fromPoints(positions);
+        var boundingSphere = BoundingSphere.fromPoints(positions);
 
         var normal;
         var tangent;
@@ -310,7 +310,7 @@ define([
             attributes : attributes,
             indices : newIndices,
             primitiveType : PrimitiveType.TRIANGLES,
-            boundingSphere : bs
+            boundingSphere : boundingSphere
         });
     };
 

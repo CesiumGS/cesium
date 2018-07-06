@@ -151,7 +151,7 @@ define([
         if (positions.length < 3) {
             return;
         }
-        var bs = BoundingSphere.fromPoints(positions);
+        var boundingSphere = BoundingSphere.fromPoints(positions);
 
         var positions2D = CoplanarPolygonGeometryLibrary.projectTo2D(positions, scratchPositions2D);
         if (!defined(positions2D)) {
@@ -192,7 +192,7 @@ define([
             attributes : attributes,
             indices : indices,
             primitiveType : PrimitiveType.LINES,
-            boundingSphere : bs
+            boundingSphere : boundingSphere
         });
     };
 
