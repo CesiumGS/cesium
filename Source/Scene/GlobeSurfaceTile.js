@@ -521,9 +521,6 @@ define([
         }
     }
 
-    var upsamplesStarted = 0;
-    var upsamplesCompleted = 0;
-
     function upsample(surfaceTile, tile, frameState, terrainProvider, x, y, level) {
         var parent = tile.parent;
         if (!parent) {
@@ -547,12 +544,9 @@ define([
             return;
         }
 
-        ++upsamplesStarted;
-
         surfaceTile.terrainState = TerrainState.RECEIVING;
 
         when(terrainDataPromise, function(terrainData) {
-            ++upsamplesCompleted;
             surfaceTile.terrainData = terrainData;
             surfaceTile.terrainState = TerrainState.RECEIVED;
         }, function() {

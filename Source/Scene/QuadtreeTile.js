@@ -106,10 +106,6 @@ define([
         this.data = undefined;
     }
 
-    function getPriority() {
-        return this._priority;
-    }
-
     /**
      * Creates a rectangular set of tiles for level of detail zero, the coarsest, least detailed level.
      *

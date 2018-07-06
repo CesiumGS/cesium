@@ -552,11 +552,11 @@ define([
         queue.push(tile);
     }
 
-    function getState(action, heightSource, renderable) {
-        return `A:${action} HS:${heightSource !== undefined ? heightSource.level : 'undefined'} R:${renderable}`;
-    }
+    // function getState(action, heightSource, renderable) {
+    //     return `A:${action} HS:${heightSource !== undefined ? heightSource.level : 'undefined'} R:${renderable}`;
+    // }
 
-    var lastFrame;
+    // var lastFrame;
 
     function reportTileAction(frameState, tile, action) {
         return;
@@ -660,66 +660,66 @@ define([
                 primitive._tileReplacementQueue.markTileRendered(northeastChild);
 
                 return createBitMask(tile.renderable, tile.renderable, tile._frameRendered === primitive._lastSelectionFrameNumber);
-            } else {
-                // SSE is not good enough, so refine.
-                reportTileAction(frameState, tile, 'refine');
+            }
 
-                var firstRenderedDescendantIndex = primitive._tilesToRender.length;
+            // SSE is not good enough, so refine.
+            reportTileAction(frameState, tile, 'refine');
 
-                // No need to add the children to the load queue because they'll be added (if necessary) when they're visited.
-                var bitMask = visitVisibleChildrenNearToFar(primitive, southwestChild, southeastChild, northwestChild, northeastChild, frameState, nearestRenderableTile);
-                var anyAreRenderable = isAnyAreRenderable(bitMask);
-                var allAreRenderable = isAllAreRenderable(bitMask);
-                var anyWereRenderedLastFrame = isAnyWereRenderedLastFrame(bitMask);
+            var firstRenderedDescendantIndex = primitive._tilesToRender.length;
 
-                if (firstRenderedDescendantIndex !== primitive._tilesToRender.length) {
-                    // If no descendant tiles were added to the render list, it means they were all
-                    // culled even though this tile was deemed visible. That's pretty common.
+            // No need to add the children to the load queue because they'll be added (if necessary) when they're visited.
+            var bitMask = visitVisibleChildrenNearToFar(primitive, southwestChild, southeastChild, northwestChild, northeastChild, frameState, nearestRenderableTile);
+            var anyAreRenderable = isAnyAreRenderable(bitMask);
+            var allAreRenderable = isAllAreRenderable(bitMask);
+            var anyWereRenderedLastFrame = isAnyWereRenderedLastFrame(bitMask);
 
-                    // Since we're in this `if` block though, at least one descendant tile _was_ added to the render list!
+            if (firstRenderedDescendantIndex !== primitive._tilesToRender.length) {
+                // If no descendant tiles were added to the render list, it means they were all
+                // culled even though this tile was deemed visible. That's pretty common.
 
-                    var revealInChunks = primitive.revealInChunks;
-                    if (revealInChunks && !allAreRenderable && !anyWereRenderedLastFrame ||
-                        !revealInChunks && !anyAreRenderable) {
-                        // But none of our descendants are renderable, so they'll all end up rendering an ancestor.
-                        // That's a big waste of time, so kick them all out of the render list and render this tile instead.
-                        primitive._tilesToRender.length = firstRenderedDescendantIndex;
-                        primitive._nearestRenderableTiles.length = firstRenderedDescendantIndex;
-                        addTileToRenderList(primitive, tile, nearestRenderableTile);
-                        anyAreRenderable = tile.renderable;
-                        allAreRenderable = tile.renderable;
-                        anyWereRenderedLastFrame = tile._frameRendered === primitive._lastSelectionFrameNumber;
-                    }
+                // Since we're in this `if` block though, at least one descendant tile _was_ added to the render list!
 
-                    // We'd like to be rendering one or more descendents, and we're either not rendering this
-                    // tile at all, or we're only rendering it temporarily because _none_ of our children
-                    // are renderable. In either case, load this tile with low priority so that zooming
-                    // out or panning quickly doesn't leave us with huge holes in the terrain surface.
-
-                    // It'd be nice if we didn't need to do this; we could avoid loading heaps of tiles.
-                    // But first we'd need a way to fill those holes. If we're showing a bunch of level 15
-                    // tiles and the user zooms out so we want to be showing level 14 but none of those
-                    // level 14 tiles are loaded because we removed this line below, it's not really acceptable
-                    // to a) draw nothing, or b) draw level 0 tiles, because either strategy will likely
-                    // leave us with massive gaps visible in the globe.
-
-                    queueTileLoad(primitive, primitive._tileLoadQueueLow, tile, frameState);
+                var revealInChunks = primitive.revealInChunks;
+                if (revealInChunks && !allAreRenderable && !anyWereRenderedLastFrame ||
+                    !revealInChunks && !anyAreRenderable) {
+                    // But none of our descendants are renderable, so they'll all end up rendering an ancestor.
+                    // That's a big waste of time, so kick them all out of the render list and render this tile instead.
+                    primitive._tilesToRender.length = firstRenderedDescendantIndex;
+                    primitive._nearestRenderableTiles.length = firstRenderedDescendantIndex;
+                    addTileToRenderList(primitive, tile, nearestRenderableTile);
+                    anyAreRenderable = tile.renderable;
+                    allAreRenderable = tile.renderable;
+                    anyWereRenderedLastFrame = tile._frameRendered === primitive._lastSelectionFrameNumber;
                 }
 
-                return createBitMask(anyAreRenderable, allAreRenderable, anyWereRenderedLastFrame);
+                // We'd like to be rendering one or more descendents, and we're either not rendering this
+                // tile at all, or we're only rendering it temporarily because _none_ of our children
+                // are renderable. In either case, load this tile with low priority so that zooming
+                // out or panning quickly doesn't leave us with huge holes in the terrain surface.
+
+                // It'd be nice if we didn't need to do this; we could avoid loading heaps of tiles.
+                // But first we'd need a way to fill those holes. If we're showing a bunch of level 15
+                // tiles and the user zooms out so we want to be showing level 14 but none of those
+                // level 14 tiles are loaded because we removed this line below, it's not really acceptable
+                // to a) draw nothing, or b) draw level 0 tiles, because either strategy will likely
+                // leave us with massive gaps visible in the globe.
+
+                queueTileLoad(primitive, primitive._tileLoadQueueLow, tile, frameState);
             }
-        } else {
-            reportTileAction(frameState, tile, 'can\'t refine');
 
-            // We'd like to refine but can't because we have no availability data for this tile's children,
-            // so we have no idea if refinining would involve a load or an upsample. We'll have to finish
-            // loading this tile first in order to find that out, so load this refinement blocker with
-            // high priority.
-            addTileToRenderList(primitive, tile, nearestRenderableTile);
-            queueTileLoad(primitive, primitive._tileLoadQueueHigh, tile, frameState);
-
-            return createBitMask(tile.renderable, tile.renderable, tile._frameRendered === primitive._lastSelectionFrameNumber);
+            return createBitMask(anyAreRenderable, allAreRenderable, anyWereRenderedLastFrame);
         }
+
+        reportTileAction(frameState, tile, 'can\'t refine');
+
+        // We'd like to refine but can't because we have no availability data for this tile's children,
+        // so we have no idea if refinining would involve a load or an upsample. We'll have to finish
+        // loading this tile first in order to find that out, so load this refinement blocker with
+        // high priority.
+        addTileToRenderList(primitive, tile, nearestRenderableTile);
+        queueTileLoad(primitive, primitive._tileLoadQueueHigh, tile, frameState);
+
+        return createBitMask(tile.renderable, tile.renderable, tile._frameRendered === primitive._lastSelectionFrameNumber);
     }
 
     function visitVisibleChildrenNearToFar(primitive, southwest, southeast, northwest, northeast, frameState, nearestRenderableTile) {
@@ -761,18 +761,18 @@ define([
         var allAreRenderable = isAllAreRenderable(swMask) && isAllAreRenderable(seMask) && isAllAreRenderable(nwMask) && isAllAreRenderable(neMask);
         var anyWereRenderedLastFrame = isAnyWereRenderedLastFrame(swMask) || isAnyWereRenderedLastFrame(seMask) || isAnyWereRenderedLastFrame(nwMask) || isAnyWereRenderedLastFrame(neMask);
         var mask = createBitMask(anyAreRenderable, allAreRenderable, anyWereRenderedLastFrame);
-        return mask
+        return mask;
     }
 
     function visitIfVisible(primitive, tile, tileProvider, frameState, occluders, nearestRenderableTile) {
         if (tileProvider.computeTileVisibility(tile, frameState, occluders) !== Visibility.NONE) {
             return visitTile(primitive, frameState, tile, nearestRenderableTile);
-        } else {
-            reportTileAction(frameState, tile, 'culled');
-            ++primitive._debug.tilesCulled;
-            primitive._tileReplacementQueue.markTileRendered(tile);
-            return createBitMask(false, true, false);
         }
+
+        reportTileAction(frameState, tile, 'culled');
+        ++primitive._debug.tilesCulled;
+        primitive._tileReplacementQueue.markTileRendered(tile);
+        return createBitMask(false, true, false);
     }
 
     function screenSpaceError(primitive, frameState, tile) {

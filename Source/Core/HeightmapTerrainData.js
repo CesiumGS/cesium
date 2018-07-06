@@ -168,7 +168,7 @@ define([
             get : function() {
                 return this._childTileMask;
             }
-        },
+        }
 });
 
     var taskProcessor = new TaskProcessor('createVerticesFromHeightmap');
