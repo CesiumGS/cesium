@@ -54,6 +54,9 @@ defineSuite([
 
     beforeAll(function() {
         scene = createScene();
+
+        // Keep the error from logging to the console when running tests
+        Batched3DModel3DTileContent._deprecationWarning = function() {};
     });
 
     afterAll(function() {
@@ -82,7 +85,7 @@ defineSuite([
                 expect(Batched3DModel3DTileContent._deprecationWarning).toHaveBeenCalled();
                 Cesium3DTilesTester.expectRenderTileset(scene, tileset);
                 var batchTable = tileset._root._content.batchTable;
-                expect(batchTable.batchTableJson).toBeDefined();
+                expect(batchTable._properties).toBeDefined();
                 expect(batchTable.batchTableBinary).toBeUndefined();
             });
     });
@@ -94,7 +97,7 @@ defineSuite([
                 expect(Batched3DModel3DTileContent._deprecationWarning).toHaveBeenCalled();
                 Cesium3DTilesTester.expectRenderTileset(scene, tileset);
                 var batchTable = tileset._root._content.batchTable;
-                expect(batchTable.batchTableJson).toBeDefined();
+                expect(batchTable._properties).toBeDefined();
                 expect(batchTable.batchTableBinary).toBeUndefined();
             });
     });

@@ -191,6 +191,10 @@ define([
             hierarchy = legacyHierarchy;
         }
 
+        if (!defined(hierarchy)) {
+            return;
+        }
+
         return initializeHierarchyValues(hierarchy, binaryBody);
     }
 
@@ -361,8 +365,8 @@ define([
         return binaryProperties;
     }
 
-    Cesium3DTileBatchTable.prototype.getBinaryProperties = function(featuresLength) {
-        return getBinaryProperties(featuresLength, this._properties, this.batchTableBinary);
+    Cesium3DTileBatchTable.getBinaryProperties = function(featuresLength, batchTableJson, batchTableBinary) {
+        return getBinaryProperties(featuresLength, batchTableJson, batchTableBinary);
     };
 
     function getByteLength(batchTable) {
