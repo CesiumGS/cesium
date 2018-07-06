@@ -1,53 +1,23 @@
 define([
-        '../Core/BoundingRectangle',
-        '../Core/Check',
         '../Core/Color',
-        '../Core/combine',
-        '../Core/createGuid',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/destroyObject',
-        '../Core/DeveloperError',
-        '../Core/Math',
         '../Core/PixelFormat',
-        '../Core/Resource',
-        '../Renderer/PassState',
+        '../Renderer/Framebuffer',
         '../Renderer/PixelDatatype',
-        '../Renderer/RenderState',
-        '../Renderer/Sampler',
-        '../Renderer/ShaderSource',
-        '../Renderer/Texture',
-        '../Renderer/TextureMagnificationFilter',
-        '../Renderer/TextureMinificationFilter',
-        '../Renderer/TextureWrap',
-        '../ThirdParty/when',
-        './PostProcessStageSampleMode'
+        '../Renderer/Texture'
     ], function(
-        BoundingRectangle,
-        Check,
         Color,
-        combine,
-        createGuid,
         defaultValue,
         defined,
         defineProperties,
         destroyObject,
-        DeveloperError,
-        CesiumMath,
         PixelFormat,
-        Resource,
-        PassState,
+        Framebuffer,
         PixelDatatype,
-        RenderState,
-        Sampler,
-        ShaderSource,
-        Texture,
-        TextureMagnificationFilter,
-        TextureMinificationFilter,
-        TextureWrap,
-        when,
-        PostProcessStageSampleMode) {
+        Texture) {
     'use strict';
 
     function AutoExposure(options) {
@@ -144,25 +114,55 @@ define([
     }
 
     function createUniformMap(autoexposure, index) {
+        var texture;
         if (index === 0) {
-            return {
-                colorTexture : function() {
-                    return autoexposure._colorTexture;
-                }
-            };
+            texture = autoexposure._colorTexture;
+        } else {
+            texture = autoexposure._framebuffers[index - 1].getColorTexture(0);
         }
         return {
             colorTexture : function() {
-                return autoexposure._framebuffers[index - 1].getColorTexture(0);
+                return texture;
+            },
+            colorTextureDimensions : function() {
+                return texture.dimensions;
             }
         };
     }
 
-    function getShaderSource(autoexposure, index) {
-        var framebuffers = autoexposure._framebuffers;
+    function getShaderSource(index) {
+        var source;
         if (index === 0) {
-
+            source =
+                'uniform sampler2D colorTexture; \n' +
+                'varying vec2 v_textureCoordinates; \n' +
+                'void main() { \n' +
+                '    vec4 color = texture2D(colorTexture, v_textureCoordinates); \n' +
+                '    gl_FragColor = max(color.r, max(color.g, color.b)); \n' +
+                '} \n';
+            return source;
         }
+
+        source =
+            'uniform sampler2D colorTexture; \n' +
+            'uniform vec2 colorTextureDimensions; \n' +
+            'varying vec2 v_textureCoordinates; \n' +
+            'void main() { \n' +
+            '    float color = 0.0; \n' +
+            '    float xStep = 1.0 /colorTextureDimensions.x; \n' +
+            '    float yStep = 1.0 /colorTextureDimensions.y; \n' +
+            '    color += texture2D(colorTexture, v_textureCoordinates + vec2(-xStep, yStep)).r; \n' +
+            '    color += texture2D(colorTexture, v_textureCoordinates + vec2(0.0, yStep)).r; \n' +
+            '    color += texture2D(colorTexture, v_textureCoordinates + vec2(xStep, yStep)).r; \n' +
+            '    color += texture2D(colorTexture, v_textureCoordinates + vec2(-xStep, 0.0)).r; \n' +
+            '    color += texture2D(colorTexture, v_textureCoordinates + vec2(0.0, 0.0)).r; \n' +
+            '    color += texture2D(colorTexture, v_textureCoordinates + vec2(xStep, 0.0)).r; \n' +
+            '    color += texture2D(colorTexture, v_textureCoordinates + vec2(-xStep, -yStep)).r; \n' +
+            '    color += texture2D(colorTexture, v_textureCoordinates + vec2(0.0, -yStep)).r; \n' +
+            '    color += texture2D(colorTexture, v_textureCoordinates + vec2(xStep, -yStep)).r; \n' +
+            '    gl_FragColor = vec4(color / 9.0); \n' +
+            '} \n';
+        return source;
     }
 
     function createCommands(autoexposure, context) {
@@ -175,7 +175,7 @@ define([
         for (var i = 1; i < length; ++i) {
             commands[i] = context.createViewportQuadCommand(getShaderSource(i), {
                 framebuffer : framebuffers[i],
-                uniformMap : createUniformMap(i)
+                uniformMap : createUniformMap(autoexposure, i)
             });
         }
     }
@@ -196,6 +196,17 @@ define([
     };
 
     AutoExposure.prototype.execute = function(context, colorTexture, depthTexture, idTexture) {
+        this._colorTexture = colorTexture;
+
+        var commands = this._commands;
+        if (!defined(commands)) {
+            return;
+        }
+
+        var length = commands.length;
+        for (var i = 0; i < length; ++i) {
+            commands[i].execute(context);
+        }
     };
 
     AutoExposure.prototype.isDestroyed = function() {
@@ -203,6 +214,8 @@ define([
     };
 
     AutoExposure.prototype.destroy = function() {
+        destroyFramebuffers(this);
+        destroyCommands(this);
         return destroyObject(this);
     };
 
