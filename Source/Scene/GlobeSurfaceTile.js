@@ -519,6 +519,15 @@ define([
         if (surfaceTile.terrainState === TerrainState.TRANSFORMED) {
             createResources(surfaceTile, frameState.context, terrainProvider, tile.x, tile.y, tile.level);
         }
+
+        if (surfaceTile.terrainState >= TerrainState.RECEIVED && surfaceTile.waterMaskTexture === undefined && terrainProvider.hasWaterMask) {
+            var terrainData = surfaceTile.terrainData;
+            if (terrainData.waterMask !== undefined) {
+                createWaterMaskTextureIfNeeded(frameState.context, surfaceTile);
+            } else {
+                upsampleWaterMask(tile);
+            }
+        }
     }
 
     function upsample(surfaceTile, tile, frameState, terrainProvider, x, y, level) {
