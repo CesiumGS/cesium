@@ -562,8 +562,7 @@ define([
             BoundingSphere.fromRectangleWithHeights2D(tile.rectangle, frameState.mapProjection, tileBoundingRegion.minimumHeight, tileBoundingRegion.maximumHeight, boundingVolume);
             Cartesian3.fromElements(boundingVolume.center.z, boundingVolume.center.x, boundingVolume.center.y, boundingVolume.center);
 
-            if (frameState.mode === SceneMode.MORPHING) {
-                // TODO: mesh not necessarily available yet.
+            if (frameState.mode === SceneMode.MORPHING && surfaceTile.mesh !== undefined) {
                 boundingVolume = BoundingSphere.union(surfaceTile.mesh.boundingSphere3D, boundingVolume, boundingVolume);
             }
         }

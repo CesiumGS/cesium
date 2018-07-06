@@ -9,6 +9,7 @@ define([
         '../Core/getTimestamp',
         '../Core/Math',
         '../Core/OrthographicFrustum',
+        '../Core/OrthographicOffCenterFrustum',
         '../Core/Ray',
         '../Core/Rectangle',
         '../Core/Visibility',
@@ -28,6 +29,7 @@ define([
         getTimestamp,
         CesiumMath,
         OrthographicFrustum,
+        OrthographicOffCenterFrustum,
         Ray,
         Rectangle,
         Visibility,
@@ -776,7 +778,7 @@ define([
     }
 
     function screenSpaceError(primitive, frameState, tile) {
-        if (frameState.mode === SceneMode.SCENE2D || frameState.camera.frustum instanceof OrthographicFrustum) {
+        if (frameState.mode === SceneMode.SCENE2D || frameState.camera.frustum instanceof OrthographicFrustum || frameState.camera.frustum instanceof OrthographicOffCenterFrustum) {
             return screenSpaceError2D(primitive, frameState, tile);
         }
 
