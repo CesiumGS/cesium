@@ -194,8 +194,12 @@ define([
         }
     }
 
-    function visitTile(tileset) {
+    function visitTile(tileset, tile, frameState) {
+        if (!tileset._passDirty && (tile._visitedFrame === frameState.frameNumber)) {
+            return;
+        }
         ++tileset._statistics.visited;
+        tile._visitedFrame = frameState.frameNumber;
     }
 
     function touchTile(tileset, tile, frameState) {
@@ -507,7 +511,7 @@ define([
                 }
             }
 
-            visitTile(tileset);
+            visitTile(tileset, tile, frameState);
             touchTile(tileset, tile, frameState);
             tile._refines = refines;
         }
