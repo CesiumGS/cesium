@@ -103,7 +103,7 @@ define([
         scaleByDistance : 6,
         pixelOffsetScaleByDistance : 7,
         compressedAttribute3 : 8,
-        textureCoordinateBounds : 9,
+        textureCoordinateBoundsOrLabelTranslate : 9,
         a_batchId : 10
     };
 
@@ -118,7 +118,7 @@ define([
         scaleByDistance : 7,
         pixelOffsetScaleByDistance : 8,
         compressedAttribute3 : 9,
-        textureCoordinateBounds : 10,
+        textureCoordinateBoundsOrLabelTranslate : 10,
         a_batchId : 11
     };
 
@@ -746,7 +746,7 @@ define([
             componentDatatype : ComponentDatatype.FLOAT,
             usage : buffersUsage[DISTANCE_DISPLAY_CONDITION_INDEX]
         }, {
-            index : attributeLocations.textureCoordinateBounds,
+            index : attributeLocations.textureCoordinateBoundsOrLabelTranslate,
             componentsPerAttribute : 4,
             componentDatatype : ComponentDatatype.FLOAT,
             usage : buffersUsage[TEXTURE_COORDINATE_BOUNDS]
@@ -1251,44 +1251,65 @@ define([
         }
     }
 
-    function writeTextureCoordinateBounds(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard) {
+    function writeTextureCoordinateBoundsOrLabelTranslate(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard) {
         if (billboard.heightReference === HeightReference.CLAMP_TO_GROUND) {
             billboardCollection._shaderClampToGround = billboardCollection._scene.context.depthTexture;
         }
         var i;
-        var writer = vafWriters[attributeLocations.textureCoordinateBounds];
+        var writer = vafWriters[attributeLocations.textureCoordinateBoundsOrLabelTranslate];
 
-        var minX = 0;
-        var minY = 0;
-        var width = 0;
-        var height = 0;
-        var index = billboard._imageIndex;
-        if (index !== -1) {
-            var imageRectangle = textureAtlasCoordinates[index];
-
-            //>>includeStart('debug', pragmas.debug);
-            if (!defined(imageRectangle)) {
-                throw new DeveloperError('Invalid billboard image index: ' + index);
+        if (ContextLimits.maximumVertexTextureImageUnits > 0) {
+            //write _labelTranslate, used by depth testing in the vertex shader
+            var translateX = 0;
+            var translateY = 0;
+            if (defined(billboard._labelTranslate)) {
+                translateX = billboard._labelTranslate.x;
+                translateY = billboard._labelTranslate.y;
             }
-            //>>includeEnd('debug');
-
-            minX = imageRectangle.x;
-            minY = imageRectangle.y;
-            width = imageRectangle.width;
-            height = imageRectangle.height;
-        }
-        var maxX = minX + width;
-        var maxY = minY + height;
-
-        if (billboardCollection._instanced) {
-            i = billboard._index;
-            writer(i, minX, minY, maxX, maxY);
+            if (billboardCollection._instanced) {
+                i = billboard._index;
+                writer(i, translateX, translateY, 0.0, 0.0);
+            } else {
+                i = billboard._index * 4;
+                writer(i + 0, translateX, translateY, 0.0, 0.0);
+                writer(i + 1, translateX, translateY, 0.0, 0.0);
+                writer(i + 2, translateX, translateY, 0.0, 0.0);
+                writer(i + 3, translateX, translateY, 0.0, 0.0);
+            }
         } else {
-            i = billboard._index * 4;
-            writer(i + 0, minX, minY, maxX, maxY);
-            writer(i + 1, minX, minY, maxX, maxY);
-            writer(i + 2, minX, minY, maxX, maxY);
-            writer(i + 3, minX, minY, maxX, maxY);
+            //write texture coordiante bounds, used by depth testing in fragment shader
+            var minX = 0;
+            var minY = 0;
+            var width = 0;
+            var height = 0;
+            var index = billboard._imageIndex;
+            if (index !== -1) {
+                var imageRectangle = textureAtlasCoordinates[index];
+
+                //>>includeStart('debug', pragmas.debug);
+                if (!defined(imageRectangle)) {
+                    throw new DeveloperError('Invalid billboard image index: ' + index);
+                }
+                //>>includeEnd('debug');
+
+                minX = imageRectangle.x;
+                minY = imageRectangle.y;
+                width = imageRectangle.width;
+                height = imageRectangle.height;
+            }
+            var maxX = minX + width;
+            var maxY = minY + height;
+
+            if (billboardCollection._instanced) {
+                i = billboard._index;
+                writer(i, minX, minY, maxX, maxY);
+            } else {
+                i = billboard._index * 4;
+                writer(i + 0, minX, minY, maxX, maxY);
+                writer(i + 1, minX, minY, maxX, maxY);
+                writer(i + 2, minX, minY, maxX, maxY);
+                writer(i + 3, minX, minY, maxX, maxY);
+            }
         }
     }
 
@@ -1322,7 +1343,7 @@ define([
         writeScaleByDistance(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard);
         writePixelOffsetScaleByDistance(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard);
         writeCompressedAttribute3(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard);
-        writeTextureCoordinateBounds(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard);
+        writeTextureCoordinateBoundsOrLabelTranslate(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard);
         writeBatchId(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard);
     }
 
@@ -1523,7 +1544,7 @@ define([
             }
 
             if (properties[IMAGE_INDEX_INDEX] || properties[POSITION_INDEX]) {
-                writers.push(writeTextureCoordinateBounds);
+                writers.push(writeTextureCoordinateBoundsOrLabelTranslate);
             }
 
             var numWriters = writers.length;

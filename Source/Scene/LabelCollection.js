@@ -11,6 +11,7 @@ define([
         '../Core/writeTextToCanvas',
         './BillboardCollection',
         './BlendOption',
+        './HeightReference',
         './HorizontalOrigin',
         './Label',
         './LabelStyle',
@@ -29,6 +30,7 @@ define([
         writeTextToCanvas,
         BillboardCollection,
         BlendOption,
+        HeightReference,
         HorizontalOrigin,
         Label,
         LabelStyle,
@@ -250,6 +252,7 @@ define([
                             collection : labelCollection
                         });
                         billboard._labelDimensions = new Cartesian2();
+                        billboard._labelTranslate = new Cartesian2();
                     }
                     glyph.billboard = billboard;
                 }
@@ -419,6 +422,15 @@ define([
             backgroundBillboard.width = totalLineWidth;
             backgroundBillboard.height = totalLineHeight;
             backgroundBillboard._setTranslate(glyphPixelOffset);
+        }
+
+        if (label.heightReference === HeightReference.CLAMP_TO_GROUND) {
+            for (glyphIndex = 0; glyphIndex < glyphLength; ++glyphIndex) {
+                if (text.charAt(glyphIndex) !== '\n') {
+                    glyph = glyphs[glyphIndex];
+                    Cartesian2.clone(glyphPixelOffset, glyph._labelTranslate);
+                }
+            }
         }
     }
 

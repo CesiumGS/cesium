@@ -10,8 +10,8 @@ attribute vec4 eyeOffset;                                  // eye offset in mete
 attribute vec4 scaleByDistance;                            // near, nearScale, far, farScale
 attribute vec4 pixelOffsetScaleByDistance;                 // near, nearScale, far, farScale
 attribute vec4 compressedAttribute3;                       // distance display condition near, far, disableDepthTestDistance, dimensions
-#ifdef FRAGMENT_DEPTH_CHECK
-attribute vec4 textureCoordinateBounds;                    // the min and max x and y values for the texture coordinates
+#if defined(VERTEX_DEPTH_CHECK) || defined(FRAGMENT_DEPTH_CHECK)
+attribute vec4 textureCoordinateBoundsOrLabelTranslate;                    // the min and max x and y values for the texture coordinates
 #endif
 #ifdef VECTOR_TILE
 attribute float a_batchId;
@@ -196,11 +196,11 @@ void main()
     }
 
     depthOrigin = vec2(1.0) - (depthOrigin * 0.5);
-
-    temp = compressedAttribute3.w;
-    temp = temp * SHIFT_RIGHT12;
 #endif
 #if defined(VERTEX_DEPTH_CHECK) || defined(FRAGMENT_DEPTH_CHECK)
+    temp = compressedAttribute3.w;
+    temp = temp * SHIFT_RIGHT12;
+
     vec2 dimensions;
     dimensions.y = (temp - floor(temp)) * SHIFT_LEFT12;
     dimensions.x = floor(temp);
@@ -325,17 +325,18 @@ void main()
 
 #ifdef VERTEX_DEPTH_CHECK
 if (lengthSq < disableDepthTestDistance) {
-    vec4 pEC1 = addScreenSpaceOffset(positionEC, imageSize, scale, vec2(0.0), origin, translate, pixelOffset, alignedAxis, validAlignedAxis, rotation, sizeInMeters, rotationMatrix, mpp);
+    vec2 labelTranslate = textureCoordinateBoundsOrLabelTranslate.xy;
+    vec4 pEC1 = addScreenSpaceOffset(positionEC, dimensions, scale, vec2(0.0), origin, labelTranslate, pixelOffset, alignedAxis, validAlignedAxis, rotation, sizeInMeters, rotationMatrix, mpp);
     float globeDepth1 = getGlobeDepth(pEC1);
 
     if (globeDepth1 != 0.0 && pEC1.z < globeDepth1)
     {
-        vec4 pEC2 = addScreenSpaceOffset(positionEC, imageSize, scale, vec2(0.0, 1.0), origin, translate, pixelOffset, alignedAxis, validAlignedAxis, rotation, sizeInMeters, rotationMatrix, mpp);
+        vec4 pEC2 = addScreenSpaceOffset(positionEC, dimensions, scale, vec2(0.0, 1.0), origin, labelTranslate, pixelOffset, alignedAxis, validAlignedAxis, rotation, sizeInMeters, rotationMatrix, mpp);
         float globeDepth2 = getGlobeDepth(pEC2);
 
         if (globeDepth2 != 0.0 && pEC2.z < globeDepth2)
         {
-            vec4 pEC3 = addScreenSpaceOffset(positionEC, imageSize, scale, vec2(1.0), origin, translate, pixelOffset, alignedAxis, validAlignedAxis, rotation, sizeInMeters, rotationMatrix, mpp);
+            vec4 pEC3 = addScreenSpaceOffset(positionEC, dimensions, scale, vec2(1.0), origin, labelTranslate, pixelOffset, alignedAxis, validAlignedAxis, rotation, sizeInMeters, rotationMatrix, mpp);
             float globeDepth3 = getGlobeDepth(pEC3);
             if (globeDepth3 != 0.0 && pEC3.z < globeDepth3)
             {
@@ -402,7 +403,7 @@ if (lengthSq < disableDepthTestDistance) {
     v_eyeDepthDistanceAndApplyTranslate.z = applyTranslate;
     v_originTextureCoordinateAndTranslate.xy = depthOrigin;
     v_originTextureCoordinateAndTranslate.zw = translate;
-    v_textureCoordinateBounds = textureCoordinateBounds;
+    v_textureCoordinateBounds = textureCoordinateBoundsOrLabelTranslate;
     v_dimensionsAndImageSize.xy = dimensions * scale;
     v_dimensionsAndImageSize.zw = imageSize * scale;
 #endif
