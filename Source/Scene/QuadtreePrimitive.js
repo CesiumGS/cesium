@@ -599,9 +599,10 @@ define([
      *
      *    * the tile has been determined to be visible (possibly based on a bounding volume that is not very tight-fitting)
      *    * its parent tile does _not_ meet the SSE.
-     *    * may or may not be renderable
+     *    * the tile may or may not be renderable
      *
      * @private
+     *
      * @param {Primitive} primitive The QuadtreePrimitive.
      * @param {FrameState} frameState The frame state.
      * @param {QuadtreeTile} tile The tile to visit

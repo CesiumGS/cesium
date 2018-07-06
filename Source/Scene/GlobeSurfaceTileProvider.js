@@ -536,16 +536,6 @@ define([
      * @returns {Visibility} The visibility of the tile.
      */
     GlobeSurfaceTileProvider.prototype.computeTileVisibility = function(tile, frameState, occluders) {
-        var result = this.computeTileVisibilityInternal(tile, frameState, occluders);
-        // if (result !== tile._lastVisibility) {
-        //     console.log(`L${tile.level}X${tile.x}Y${tile.y}: state ${tile._lastState} -> ${tile.data.terrainState} visibility ${tile._lastVisibility} -> ${result}`);
-        //     tile._lastVisibility = result;
-        //     tile._lastState = tile.data.terrainState;
-        // }
-        return result;
-    };
-
-    GlobeSurfaceTileProvider.prototype.computeTileVisibilityInternal = function(tile, frameState, occluders) {
         var distance = this.computeDistanceToTile(tile, frameState);
         tile._distance = distance;
 
@@ -733,7 +723,7 @@ define([
         // based that conservative metric, we may end up loading tiles that are not detailed enough, but that's much
         // better (faster) than loading tiles that are too detailed.
 
-        var heightSource = updateTileBoundingRegion(tile, this.terrainProvider);
+        var heightSource = updateTileBoundingRegion(tile, this.terrainProvider, frameState);
         var surfaceTile = tile.data;
         var tileBoundingRegion = surfaceTile.tileBoundingRegion;
 
@@ -767,22 +757,29 @@ define([
                 surfaceTile.occludeePointInScaledSpace = ellipsoidalOccluder.computeHorizonCullingPoint(surfaceTile.orientedBoundingBox.center, cornerPositions, surfaceTile.occludeePointInScaledSpace);
         }
 
-        // Compute the distance to the OBB
-        var distanceToObb = Math.sqrt(surfaceTile.orientedBoundingBox.distanceSquaredTo(frameState.camera.positionWC));
+        var min = tileBoundingRegion.minimumHeight;
+        var max = tileBoundingRegion.maximumHeight;
 
         if (surfaceTile.boundingVolumeSourceTile !== tile) {
-            // Bounding volume is approximate, so, as described above, we want the distance to the
-            // farther-away height surface, not the closer one. The following is a super quick-and-dirty
-            // way to compute a distance that is that _or farther_.
-            // TODO: could do a better job approximating this. Maybe like the dot product of
-            //       the "height" part of the OBB with the camera look direction or something like that?
-            distanceToObb += (tileBoundingRegion.maximumHeight - tileBoundingRegion.minimumHeight);
+            var cameraHeight = frameState.camera.positionCartographic.height;
+            var distanceToMin = Math.abs(cameraHeight - min);
+            var distanceToMax = Math.abs(cameraHeight - max);
+            if (distanceToMin > distanceToMax) {
+                tileBoundingRegion.minimumHeight = min;
+                tileBoundingRegion.maximumHeight = min;
+            } else {
+                tileBoundingRegion.minimumHeight = max;
+                tileBoundingRegion.maximumHeight = max;
+            }
         }
 
-        return distanceToObb;
+        tileBoundingRegion.minimumHeight = min;
+        tileBoundingRegion.maximumHeight = max;
+
+        return tileBoundingRegion.distanceToCamera(frameState);
     };
 
-    function updateTileBoundingRegion(tile, terrainProvider) {
+    function updateTileBoundingRegion(tile, terrainProvider, frameState) {
         var surfaceTile = tile.data;
         if (surfaceTile === undefined) {
             surfaceTile = tile.data = new GlobeSurfaceTile();
@@ -811,16 +808,16 @@ define([
 
         if (terrainData !== undefined && terrainData._minimumHeight !== undefined && terrainData._maximumHeight !== undefined) {
             // We have tight-fitting min/max heights from the terrain data.
-            tileBoundingRegion.minimumHeight = terrainData._minimumHeight;
-            tileBoundingRegion.maximumHeight = terrainData._maximumHeight;
+            tileBoundingRegion.minimumHeight = terrainData._minimumHeight * frameState.terrainExaggeration;
+            tileBoundingRegion.maximumHeight = terrainData._maximumHeight * frameState.terrainExaggeration;
             return tile;
         }
 
         var bvh = surfaceTile.getBvh(tile, terrainProvider.terrainProvider);
         if (bvh !== undefined && bvh[0] === bvh[0] && bvh[1] === bvh[1]) {
             // Have a BVH that covers this tile and the heights are not NaN.
-            tileBoundingRegion.minimumHeight = bvh[0];
-            tileBoundingRegion.maximumHeight = bvh[1];
+            tileBoundingRegion.minimumHeight = bvh[0] * frameState.terrainExaggeration;
+            tileBoundingRegion.maximumHeight = bvh[1] * frameState.terrainExaggeration;
             return tile;
         }
 
@@ -841,15 +838,15 @@ define([
 
                 var ancestorTerrainData = ancestorSurfaceTile.terrainData;
                 if (ancestorTerrainData !== undefined && ancestorTerrainData._minimumHeight !== undefined && ancestorTerrainData._maximumHeight !== undefined) {
-                    tileBoundingRegion.minimumHeight = ancestorTerrainData._minimumHeight;
-                    tileBoundingRegion.maximumHeight = ancestorTerrainData._maximumHeight;
+                    tileBoundingRegion.minimumHeight = ancestorTerrainData._minimumHeight * frameState.terrainExaggeration;
+                    tileBoundingRegion.maximumHeight = ancestorTerrainData._maximumHeight * frameState.terrainExaggeration;
                     return ancestor;
                 }
 
                 var ancestorBvh = ancestorSurfaceTile._bvh;
                 if (ancestorBvh !== undefined && ancestorBvh[0] === ancestorBvh[0] && ancestorBvh[1] === ancestorBvh[1]) {
-                    tileBoundingRegion.minimumHeight = ancestorBvh[0];
-                    tileBoundingRegion.maximumHeight = ancestorBvh[1];
+                    tileBoundingRegion.minimumHeight = ancestorBvh[0] * frameState.terrainExaggeration;
+                    tileBoundingRegion.maximumHeight = ancestorBvh[1] * frameState.terrainExaggeration;
                     return ancestor;
                 }
             }
