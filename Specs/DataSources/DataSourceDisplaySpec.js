@@ -7,7 +7,9 @@ defineSuite([
         'DataSources/BoundingSphereState',
         'DataSources/DataSourceCollection',
         'DataSources/Entity',
+        'Scene/GroundPolylinePrimitive',
         'Scene/GroundPrimitive',
+        'ThirdParty/when',
         'Specs/createScene',
         'Specs/MockDataSource'
     ], function(
@@ -19,7 +21,9 @@ defineSuite([
         BoundingSphereState,
         DataSourceCollection,
         Entity,
+        GroundPolylinePrimitive,
         GroundPrimitive,
+        when,
         createScene,
         MockDataSource) {
     'use strict';
@@ -31,7 +35,7 @@ defineSuite([
         scene = createScene();
         dataSourceCollection = new DataSourceCollection();
 
-        return GroundPrimitive.initializeTerrainHeights();
+        return when.join(GroundPrimitive.initializeTerrainHeights(), GroundPolylinePrimitive.initializeTerrainHeights());
     });
 
     afterAll(function() {
@@ -40,6 +44,8 @@ defineSuite([
         // Leave ground primitive uninitialized
         GroundPrimitive._initialized = false;
         GroundPrimitive._initPromise = undefined;
+        GroundPolylinePrimitive._initialized = false;
+        GroundPolylinePrimitive._initPromise = undefined;
         ApproximateTerrainHeights._initPromise = undefined;
         ApproximateTerrainHeights._terrainHeights = undefined;
     });

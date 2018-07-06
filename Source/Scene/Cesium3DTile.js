@@ -147,7 +147,7 @@ define([
         }
 
         /**
-         * Specifies the type of refinment that is used when traversing this tile for rendering.
+         * Specifies the type of refinement that is used when traversing this tile for rendering.
          *
          * @type {Cesium3DTileRefine}
          * @readonly
@@ -166,9 +166,9 @@ define([
         /**
          * This tile's parent or <code>undefined</code> if this tile is the root.
          * <p>
-         * When a tile's content points to an external tileset.json, the external tileset's
+         * When a tile's content points to an external tileset JSON file, the external tileset's
          * root tile's parent is not <code>undefined</code>; instead, the parent references
-         * the tile (with its content pointing to an external tileset.json) as if the two tilesets were merged.
+         * the tile (with its content pointing to an external tileset JSON file) as if the two tilesets were merged.
          * </p>
          *
          * @type {Cesium3DTile}
@@ -185,15 +185,20 @@ define([
         baseResource = Resource.createIfNeeded(baseResource);
 
         if (defined(contentHeader)) {
-            var contentHeaderUrl = contentHeader.url;
-            if (tileset._brokenUrlWorkaround && contentHeaderUrl.length > 0 && (contentHeaderUrl[0] === '/')) {
-                contentHeaderUrl = contentHeader.url = contentHeaderUrl.substring(1);
+            var contentHeaderUri = contentHeader.uri;
+            if (defined(contentHeader.url)) {
+                Cesium3DTile._deprecationWarning('contentUrl', 'This tileset JSON uses the "content.url" property which has been deprecated. Use "content.uri" instead.');
+                contentHeaderUri = contentHeader.url;
+            }
+
+            if (tileset._brokenUrlWorkaround && contentHeaderUri.length > 0 && (contentHeaderUri[0] === '/')) {
+                contentHeaderUri = contentHeader.uri = contentHeaderUri.substring(1);
             }
 
             hasEmptyContent = false;
             contentState = Cesium3DTileContentState.UNLOADED;
             contentResource = baseResource.getDerivedResource({
-                url : contentHeaderUrl
+                url : contentHeaderUri
             });
             serverKey = RequestScheduler.getServerKey(contentResource.getUrlComponent());
         } else {
@@ -371,7 +376,7 @@ define([
 
         /**
          * The tile's content.  This represents the actual tile's payload,
-         * not the content's metadata in tileset.json.
+         * not the content's metadata in the tileset JSON file.
          *
          * @memberof Cesium3DTile.prototype
          *

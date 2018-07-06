@@ -380,10 +380,10 @@ defineSuite([
         });
 
         var r = geometry.rectangle;
-        expect(CesiumMath.toDegrees(r.north)).toEqual(1.414213562373095);
-        expect(CesiumMath.toDegrees(r.south)).toEqual(-1.414213562373095);
-        expect(CesiumMath.toDegrees(r.east)).toEqual(1.414213562373095);
-        expect(CesiumMath.toDegrees(r.west)).toEqual(-1.4142135623730951);
+        expect(CesiumMath.toDegrees(r.north)).toEqualEpsilon(1.414213562373095, CesiumMath.EPSILON15);
+        expect(CesiumMath.toDegrees(r.south)).toEqualEpsilon(-1.414213562373095, CesiumMath.EPSILON15);
+        expect(CesiumMath.toDegrees(r.east)).toEqualEpsilon(1.414213562373095, CesiumMath.EPSILON15);
+        expect(CesiumMath.toDegrees(r.west)).toEqualEpsilon(-1.4142135623730951, CesiumMath.EPSILON15);
     });
 
     it('computing textureCoordinateRotationPoints property', function() {
@@ -420,6 +420,37 @@ defineSuite([
         expect(textureCoordinateRotationPoints[3]).toEqualEpsilon(1, CesiumMath.EPSILON7);
         expect(textureCoordinateRotationPoints[4]).toEqualEpsilon(1, CesiumMath.EPSILON7);
         expect(textureCoordinateRotationPoints[5]).toEqualEpsilon(0, CesiumMath.EPSILON7);
+    });
+
+    it('computeRectangle', function() {
+        var options = {
+            vertexFormat : VertexFormat.POSITION_ONLY,
+            rectangle : new Rectangle.fromDegrees(-1.0, -1.0, 1.0, 1.0),
+            granularity : 1.0,
+            ellipsoid: Ellipsoid.UNIT_SPHERE,
+            rotation: CesiumMath.PI
+        };
+        var geometry = new RectangleGeometry(options);
+
+        var expected = geometry.rectangle;
+        var result = RectangleGeometry.computeRectangle(options);
+
+        expect(result).toEqual(expected);
+    });
+
+    it('computeRectangle with result parameter', function() {
+        var options = {
+            vertexFormat : VertexFormat.POSITION_ONLY,
+            rectangle : new Rectangle.fromDegrees(-1.0, -1.0, 1.0, 1.0)
+        };
+        var geometry = new RectangleGeometry(options);
+
+        var result = new Rectangle();
+        var expected = geometry.rectangle;
+        var returned = RectangleGeometry.computeRectangle(options, result);
+
+        expect(returned).toEqual(expected);
+        expect(returned).toBe(result);
     });
 
     it('computing rectangle property with zero rotation', function() {

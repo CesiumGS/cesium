@@ -77,6 +77,13 @@ define([
             quantizationDefine = 'QUANTIZATION_BITS12';
         }
 
+        var vertexLogDepth = 0;
+        var vertexLogDepthDefine = '';
+        if (surfaceTile.terrainData._createdByUpsampling) {
+            vertexLogDepth = 1;
+            vertexLogDepthDefine = 'DISABLE_GL_POSITION_LOG_DEPTH';
+        }
+
         var sceneMode = frameState.mode;
         var flags = sceneMode |
                     (applyBrightness << 2) |
@@ -94,7 +101,8 @@ define([
                     (quantization << 14) |
                     (applySplit << 15) |
                     (enableClippingPlanes << 16) |
-                    (renderPartialTile << 17);
+                    (vertexLogDepth << 17) |
+                    (renderPartialTile << 18);
 
         var currentClippingShaderState = 0;
         if (defined(clippingPlanes)) {
@@ -126,7 +134,7 @@ define([
                 fs.sources.unshift(getClippingFunction(clippingPlanes, frameState.context)); // Need to go before GlobeFS
             }
 
-            vs.defines.push(quantizationDefine);
+            vs.defines.push(quantizationDefine, vertexLogDepthDefine);
             fs.defines.push('TEXTURE_UNITS ' + numberOfDayTextures);
 
             if (applyBrightness) {

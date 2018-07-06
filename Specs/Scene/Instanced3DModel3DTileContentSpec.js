@@ -28,22 +28,22 @@ defineSuite([
     var centerLongitude = -1.31968;
     var centerLatitude = 0.698874;
 
-    var gltfExternalUrl = './Data/Cesium3DTiles/Instanced/InstancedGltfExternal/';
-    var withBatchTableUrl = './Data/Cesium3DTiles/Instanced/InstancedWithBatchTable/';
-    var withBatchTableBinaryUrl = './Data/Cesium3DTiles/Instanced/InstancedWithBatchTableBinary/';
-    var withoutBatchTableUrl = './Data/Cesium3DTiles/Instanced/InstancedWithoutBatchTable/';
-    var orientationUrl = './Data/Cesium3DTiles/Instanced/InstancedOrientation/';
-    var oct16POrientationUrl = './Data/Cesium3DTiles/Instanced/InstancedOct32POrientation/';
-    var scaleUrl = './Data/Cesium3DTiles/Instanced/InstancedScale/';
-    var scaleNonUniformUrl = './Data/Cesium3DTiles/Instanced/InstancedScaleNonUniform/';
-    var rtcUrl = './Data/Cesium3DTiles/Instanced/InstancedRTC';
-    var quantizedUrl = './Data/Cesium3DTiles/Instanced/InstancedQuantized/';
-    var quantizedOct32POrientationUrl = './Data/Cesium3DTiles/Instanced/InstancedQuantizedOct32POrientation/';
-    var withTransformUrl = './Data/Cesium3DTiles/Instanced/InstancedWithTransform/';
-    var withBatchIdsUrl = './Data/Cesium3DTiles/Instanced/InstancedWithBatchIds/';
-    var texturedUrl = './Data/Cesium3DTiles/Instanced/InstancedTextured/';
-    var compressedTexturesUrl = './Data/Cesium3DTiles/Instanced/InstancedCompressedTextures/';
-    var gltfZUpUrl = './Data/Cesium3DTiles/Instanced/InstancedGltfZUp';
+    var gltfExternalUrl = './Data/Cesium3DTiles/Instanced/InstancedGltfExternal/tileset.json';
+    var withBatchTableUrl = './Data/Cesium3DTiles/Instanced/InstancedWithBatchTable/tileset.json';
+    var withBatchTableBinaryUrl = './Data/Cesium3DTiles/Instanced/InstancedWithBatchTableBinary/tileset.json';
+    var withoutBatchTableUrl = './Data/Cesium3DTiles/Instanced/InstancedWithoutBatchTable/tileset.json';
+    var orientationUrl = './Data/Cesium3DTiles/Instanced/InstancedOrientation/tileset.json';
+    var oct16POrientationUrl = './Data/Cesium3DTiles/Instanced/InstancedOct32POrientation/tileset.json';
+    var scaleUrl = './Data/Cesium3DTiles/Instanced/InstancedScale/tileset.json';
+    var scaleNonUniformUrl = './Data/Cesium3DTiles/Instanced/InstancedScaleNonUniform/tileset.json';
+    var rtcUrl = './Data/Cesium3DTiles/Instanced/InstancedRTC/tileset.json';
+    var quantizedUrl = './Data/Cesium3DTiles/Instanced/InstancedQuantized/tileset.json';
+    var quantizedOct32POrientationUrl = './Data/Cesium3DTiles/Instanced/InstancedQuantizedOct32POrientation/tileset.json';
+    var withTransformUrl = './Data/Cesium3DTiles/Instanced/InstancedWithTransform/tileset.json';
+    var withBatchIdsUrl = './Data/Cesium3DTiles/Instanced/InstancedWithBatchIds/tileset.json';
+    var texturedUrl = './Data/Cesium3DTiles/Instanced/InstancedTextured/tileset.json';
+    var compressedTexturesUrl = './Data/Cesium3DTiles/Instanced/InstancedCompressedTextures/tileset.json';
+    var gltfZUpUrl = './Data/Cesium3DTiles/Instanced/InstancedGltfZUp/tileset.json';
 
     function setCamera(longitude, latitude) {
         // One instance is located at the center, point the camera there
