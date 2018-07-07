@@ -121,8 +121,8 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
    * @type {Number}
    * @readonly
    */
-  this.geometricError = header.geometricError;
-  this._geometricError = header.geometricError;
+  this.geometricError = header.geometricError * (cesiumDetalizationMultipler ? cesiumDetalizationMultipler : 1);
+  this._geometricError = this.geometricError;
 
   if (!defined(this._geometricError)) {
     this._geometricError = defined(parent)
