@@ -69,7 +69,7 @@ html, body {
     white-space: nowrap;
 }
 
-.demoTileThumbnail {	
+.demoTileThumbnail {
     max-height: 150px;
     max-width: 225px;
     height: 100px;
@@ -172,6 +172,11 @@ a.linkButton:focus, a.linkButton:hover {
 .claro .bottomPanel {
     padding: 0;
     overflow: hidden;
+}
+
+.bottomPanel #innerPanel_tablist {
+    max-height: 28px;
+    overflow: auto !important;
 }
 
 .claro .dijitTabContainerTop-tabs .dijitTabChecked .dijitTabContent {
