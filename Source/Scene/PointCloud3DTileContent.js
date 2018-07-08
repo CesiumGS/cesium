@@ -371,6 +371,17 @@ define([
             content._decodingState = DecodingState.NEEDS_DECODE;
         }
 
+        var draco;
+        if (defined(dracoBuffer)) {
+            draco = {
+                buffer : dracoBuffer,
+                featureTableProperties : dracoFeatureTableProperties,
+                batchTableProperties : dracoBatchTableProperties,
+                properties : combine(dracoFeatureTableProperties, dracoBatchTableProperties),
+                dequantizeInShader : content._dequantizeInShader
+            };
+        }
+
         if (!hasPositions) {
             if (defined(featureTableJson.POSITION)) {
                 positions = featureTable.getPropertyArray('POSITION', ComponentDatatype.FLOAT, 3);
@@ -461,13 +472,7 @@ define([
             normals : normals,
             batchIds : batchIds,
             styleableProperties : styleableProperties,
-            draco : {
-                buffer : dracoBuffer,
-                featureTableProperties : dracoFeatureTableProperties,
-                batchTableProperties : dracoBatchTableProperties,
-                properties : combine(dracoFeatureTableProperties, dracoBatchTableProperties),
-                dequantizeInShader : content._dequantizeInShader
-            }
+            draco : draco
         };
         content._pointsLength = pointsLength;
         content._isQuantized = isQuantized;
