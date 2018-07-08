@@ -96,6 +96,9 @@ define([
         var parentTransform = defined(parent) ? parent.computedTransform : tileset.modelMatrix;
         var computedTransform = Matrix4.multiply(parentTransform, this.transform, new Matrix4());
 
+        var parentInitialTransform = defined(parent) ? parent._initialTransform : Matrix4.IDENTITY;
+        this._initialTransform = Matrix4.multiply(parentInitialTransform, this.transform, new Matrix4());
+
         /**
          * The final computed transform of this tile
          * @type {Matrix4}
@@ -884,6 +887,7 @@ define([
     var scratchCenter = new Cartesian3();
     var scratchRectangle = new Rectangle();
     var scratchOrientedBoundingBox = new OrientedBoundingBox();
+    var scratchTransform = new Matrix4();
 
     function createBox(box, transform, result) {
         var center = Cartesian3.fromElements(box[0], box[1], box[2], scratchCenter);
@@ -901,7 +905,7 @@ define([
         return new TileOrientedBoundingBox(center, halfAxes);
     }
 
-    function createBoxFromTransformedRegion(region, transform, result) {
+    function createBoxFromTransformedRegion(region, transform, initialTransform, result) {
         var rectangle = Rectangle.unpack(region, 0, scratchRectangle);
         var minimumHeight = region[4];
         var maximumHeight = region[5];
@@ -910,7 +914,10 @@ define([
         var center = orientedBoundingBox.center;
         var halfAxes = orientedBoundingBox.halfAxes;
 
-        // Find the transformed center and halfAxes
+        // A region bounding volume is not transformed by the transform in the tileset JSON,
+        // but may be transformed by additional transforms applied in Cesium.
+        // This is why the transform is calculated as the difference between the initial transform and the current transform.
+        transform = Matrix4.multiplyTransformation(transform, Matrix4.inverseTransformation(initialTransform, scratchTransform), scratchTransform);
         center = Matrix4.multiplyByPoint(transform, center, center);
         var rotationScale = Matrix4.getRotation(transform, scratchMatrix);
         halfAxes = Matrix3.multiply(rotationScale, halfAxes, halfAxes);
@@ -923,9 +930,9 @@ define([
         return new TileOrientedBoundingBox(center, halfAxes);
     }
 
-    function createRegion(region, transform, result) {
-        if (!Matrix4.equalsEpsilon(transform, Matrix4.IDENTITY, CesiumMath.EPSILON6)) {
-            return createBoxFromTransformedRegion(region, transform, result);
+    function createRegion(region, transform, initialTransform, result) {
+        if (!Matrix4.equalsEpsilon(transform, initialTransform, CesiumMath.EPSILON8)) {
+            return createBoxFromTransformedRegion(region, transform, initialTransform, result);
         }
 
         if (defined(result)) {
@@ -978,15 +985,13 @@ define([
             return createBox(boundingVolumeHeader.box, transform, result);
         }
         if (defined(boundingVolumeHeader.region)) {
-            return createRegion(boundingVolumeHeader.region, transform, result);
+            return createRegion(boundingVolumeHeader.region, transform, this._initialTransform, result);
         }
         if (defined(boundingVolumeHeader.sphere)) {
             return createSphere(boundingVolumeHeader.sphere, transform, result);
         }
         throw new RuntimeError('boundingVolume must contain a sphere, region, or box');
     };
-
-    var scratchTransform = new Matrix4();
 
     /**
      * Update the tile's transform. The transform is applied to the tile's bounding volumes.
@@ -1007,12 +1012,12 @@ define([
         // Update the bounding volumes
         var header = this._header;
         var content = this._header.content;
-        this._boundingVolume = this.createBoundingVolume(header.boundingVolume, computedTransform, this._boundingVolume);
+        this._boundingVolume = this.createBoundingVolume(header.boundingVolume, this.computedTransform, this._boundingVolume);
         if (defined(this._contentBoundingVolume)) {
-            this._contentBoundingVolume = this.createBoundingVolume(content.boundingVolume, computedTransform, this._contentBoundingVolume);
+            this._contentBoundingVolume = this.createBoundingVolume(content.boundingVolume, this.computedTransform, this._contentBoundingVolume);
         }
         if (defined(this._viewerRequestVolume)) {
-            this._viewerRequestVolume = this.createBoundingVolume(header.viewerRequestVolume, computedTransform, this._viewerRequestVolume);
+            this._viewerRequestVolume = this.createBoundingVolume(header.viewerRequestVolume, this.computedTransform, this._viewerRequestVolume);
         }
 
         // Destroy the debug bounding volumes. They will be generated fresh.

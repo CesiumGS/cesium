@@ -199,9 +199,7 @@ defineSuite([
     });
 
     it('renders with a tile transform and region bounding volume', function() {
-        return Cesium3DTilesTester.loadTileset(scene, withTransformRegionUrl).then(function(tileset) {
-            Cesium3DTilesTester.expectRenderTileset(scene, tileset);
-        });
+        return expectRenderWithTransform(withTransformRegionUrl);
     });
 
     it('picks with batch table', function() {
