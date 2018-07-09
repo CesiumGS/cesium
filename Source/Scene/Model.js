@@ -4281,7 +4281,7 @@ define([
                 }
 
                 if (!loadResources.finishedDecoding()) {
-                    DracoLoader.decode(this, context)
+                    DracoLoader.decodeModel(this, context)
                         .otherwise(getFailedLoadFunction(this, 'model', this.basePath));
                 }
 
