@@ -5,6 +5,7 @@ define([
         '../Core/defineProperties',
         '../Core/destroyObject',
         '../Core/PixelFormat',
+        '../Renderer/ClearCommand',
         '../Renderer/Framebuffer',
         '../Renderer/PixelDatatype',
         '../Renderer/Sampler',
@@ -19,6 +20,7 @@ define([
         defineProperties,
         destroyObject,
         PixelFormat,
+        ClearCommand,
         Framebuffer,
         PixelDatatype,
         Sampler,
@@ -29,8 +31,6 @@ define([
     'use strict';
 
     function AutoExposure() {
-        this._clearColor = new Color(0.0, 0.0, 0.0, 0.0);
-
         this._uniformMap = undefined;
         this._command = undefined;
 
@@ -45,12 +45,18 @@ define([
         this._useLogDepth = undefined;
 
         this._framebuffers = undefined;
+        this._previousLuminance = undefined;
+
         this._commands = undefined;
+        this._clearCommand = new ClearCommand({
+            color : new Color(0.0, 0.0, 0.0, 0.0),
+            framebuffer : undefined
+        });
 
         this.enabled = true;
         this._enabled = true;
 
-        this.minimumLuminance = 0.1;
+        this.minimumLuminance = 0.05;
         this.maximumLuminance = 10.0;
     }
 
@@ -87,6 +93,9 @@ define([
             framebuffers[i].destroy();
         }
         autoexposure._framebuffers = undefined;
+
+        autoexposure._previousLuminance.destroy();
+        autoexposure._previousLuminance = undefined;
     }
 
     function createFramebuffers(autoexposure, context) {
@@ -94,6 +103,15 @@ define([
 
         var width = autoexposure._width;
         var height = autoexposure._height;
+
+        var pixelFormat = PixelFormat.RGBA;
+        var pixelDatatype = PixelDatatype.FLOAT;
+        var sampler = new Sampler({
+            wrapS : TextureWrap.CLAMP_TO_EDGE,
+            wrapT : TextureWrap.CLAMP_TO_EDGE,
+            minificationFilter : TextureMinificationFilter.NEAREST,
+            magnificationFilter : TextureMagnificationFilter.NEAREST
+        });
 
         var length = Math.ceil(Math.log(Math.max(width, height)) / Math.log(3.0));
         var framebuffers = new Array(length);
@@ -106,17 +124,25 @@ define([
                     context : context,
                     width : width,
                     height : height,
-                    pixelFormat : PixelFormat.RGBA,
-                    pixelDatatype : PixelDatatype.FLOAT,
-                    sampler : new Sampler({
-                        wrapS : TextureWrap.CLAMP_TO_EDGE,
-                        wrapT : TextureWrap.CLAMP_TO_EDGE,
-                        minificationFilter : TextureMinificationFilter.NEAREST,
-                        magnificationFilter : TextureMagnificationFilter.NEAREST
-                    })
+                    pixelFormat : pixelFormat,
+                    pixelDatatype : pixelDatatype,
+                    sampler : sampler
                 })]
             });
         }
+
+        var lastTexture = framebuffers[length - 1].getColorTexture(0);
+        autoexposure._previousLuminance = new Framebuffer({
+            context : context,
+            colorTextures : [new Texture({
+                context : context,
+                width : lastTexture.width,
+                height : lastTexture.height,
+                pixelFormat : pixelFormat,
+                pixelDatatype : pixelDatatype,
+                sampler : sampler
+            })]
+        });
 
         autoexposure._framebuffers = framebuffers;
     }
@@ -163,6 +189,9 @@ define([
         uniforms.maximumLuminance = function() {
             return autoexposure.maximumLuminance;
         };
+        uniforms.previousLuminance = function() {
+            return autoexposure._previousLuminance;
+        };
 
         return uniforms;
     }
@@ -176,7 +205,7 @@ define([
         if (index === 0) {
             source +=
                 '    vec4 color = texture2D(colorTexture, v_textureCoordinates + offset); \n' +
-                '    return max(color.r, max(color.g, color.b)); \n';
+                '    return czm_luminance(color.rgb); \n';
         } else {
             source +=
                 '    return texture2D(colorTexture, v_textureCoordinates + offset).r; \n';
@@ -188,6 +217,7 @@ define([
             'uniform vec2 colorTextureDimensions; \n' +
             'uniform float minimumLuminance; \n' +
             'uniform float maximumLuminance; \n' +
+            'uniform sampler2D previousLuminance; \n' +
             'void main() { \n' +
             '    float color = 0.0; \n' +
             '    float xStep = 1.0 /colorTextureDimensions.x; \n' +
@@ -205,6 +235,8 @@ define([
 
         if (index === length - 1) {
             source +=
+                '    float previous = texture2D(previousLuminance, vec2(0.5)).r; \n' +
+                '    color = previous + (color - previous) / (60.0 * 4.0); \n' +
                 '    color = clamp(color, minimumLuminance, maximumLuminance); \n';
         }
 
@@ -230,23 +262,41 @@ define([
         autoexposure._commands = commands;
     }
 
+    AutoExposure.prototype.clear = function(context) {
+        var framebuffers = this._framebuffers;
+        if (!defined(framebuffers)) {
+            return;
+        }
+
+        var clearCommand = this._clearCommand;
+        var length = framebuffers.length;
+        for (var i = 0; i < length; ++i) {
+            clearCommand.framebuffer = framebuffers[i];
+            clearCommand.execute(context);
+        }
+    };
+
     AutoExposure.prototype.update = function(context, useLogDepth) {
         var width = context.drawingBufferWidth;
         var height = context.drawingBufferHeight;
 
-        if (width === this._width || height === this._height) {
-            return;
+        if (width !== this._width || height !== this._height) {
+            this._width = width;
+            this._height = height;
+
+            createFramebuffers(this, context);
+            createCommands(this, context);
+
+            if (!this._ready) {
+                this._ready = true;
+            }
         }
 
-        this._width = width;
-        this._height = height;
-
-        createFramebuffers(this, context);
-        createCommands(this, context);
-
-        if (!this._ready) {
-            this._ready = true;
-        }
+        var framebuffers = this._framebuffers;
+        var temp = framebuffers[framebuffers.length - 1];
+        framebuffers[framebuffers.length - 1] = this._previousLuminance;
+        this._commands[this._commands.length - 1].framebuffer = this._previousLuminance;
+        this._previousLuminance = temp;
     };
 
     AutoExposure.prototype.execute = function(context, colorTexture, depthTexture, idTexture) {

@@ -615,6 +615,7 @@ define([
      */
     PostProcessStageCollection.prototype.clear = function(context) {
         this._textureCache.clear(context);
+        this._autoExposure.clear(context);
     };
 
     function getOutputTexture(stage) {
