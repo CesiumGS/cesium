@@ -327,8 +327,6 @@ define([
         var isTranslucent = false;
         var isRGB565 = false;
         var isOctEncoded16P = false;
-        var isQuantizedDraco = false;
-        var isOctEncodedDraco = false;
 
         var dracoBuffer;
         var dracoFeatureTableProperties;
@@ -354,9 +352,18 @@ define([
             hasNormals = defined(dracoFeatureTableProperties.NORMAL);
             hasBatchIds = defined(dracoFeatureTableProperties.BATCH_ID);
             isTranslucent = defined(dracoFeatureTableProperties.RGBA);
-            isQuantizedDraco = hasPositions && pointCloud._dequantizeInShader;
-            isOctEncodedDraco = hasNormals && pointCloud._dequantizeInShader;
             pointCloud._decodingState = DecodingState.NEEDS_DECODE;
+        }
+
+        var draco;
+        if (defined(dracoBuffer)) {
+            draco = {
+                buffer : dracoBuffer,
+                featureTableProperties : dracoFeatureTableProperties,
+                batchTableProperties : dracoBatchTableProperties,
+                properties : combine(dracoFeatureTableProperties, dracoBatchTableProperties),
+                dequantizeInShader : pointCloud._dequantizeInShader
+            };
         }
 
         if (!hasPositions) {
@@ -453,19 +460,11 @@ define([
             normals : normals,
             batchIds : batchIds,
             styleableProperties : styleableProperties,
-            draco : {
-                buffer : dracoBuffer,
-                featureTableProperties : dracoFeatureTableProperties,
-                batchTableProperties : dracoBatchTableProperties,
-                properties : combine(dracoFeatureTableProperties, dracoBatchTableProperties),
-                dequantizeInShader : pointCloud._dequantizeInShader
-            }
+            draco : draco
         };
         pointCloud._pointsLength = pointsLength;
         pointCloud._isQuantized = isQuantized;
-        pointCloud._isQuantizedDraco = isQuantizedDraco;
         pointCloud._isOctEncoded16P = isOctEncoded16P;
-        pointCloud._isOctEncodedDraco = isOctEncodedDraco;
         pointCloud._isRGB565 = isRGB565;
         pointCloud._isTranslucent = isTranslucent;
         pointCloud._hasColors = hasColors;
@@ -1223,15 +1222,19 @@ define([
                     var decodedRgba = defined(result.RGBA) ? result.RGBA.array : undefined;
                     var decodedNormals = defined(result.NORMAL) ? result.NORMAL.array : undefined;
                     var decodedBatchIds = defined(result.BATCH_ID) ? result.BATCH_ID.array : undefined;
-                    if (defined(decodedPositions) && pointCloud._isQuantizedDraco) {
+                    var isQuantizedDraco = defined(decodedPositions) && defined(result.POSITION.data.quantization);
+                    var isOctEncodedDraco = defined(decodedNormals) && defined(result.NORMAL.data.quantization);
+                    if (isQuantizedDraco) {
                         var quantization = result.POSITION.data.quantization;
                         var range = quantization.range;
                         pointCloud._quantizedVolumeScale = Cartesian3.fromElements(range, range, range);
                         pointCloud._quantizedVolumeOffset = Cartesian3.unpack(quantization.minValues);
                         pointCloud._quantizedRange = (1 << quantization.quantizationBits) - 1.0;
+                        pointCloud._isQuantizedDraco = true;
                     }
-                    if (defined(decodedNormals) && pointCloud._isOctEncodedDraco) {
+                    if (isOctEncodedDraco) {
                         pointCloud._octEncodedRange = (1 << result.NORMAL.data.quantization.quantizationBits) - 1.0;
+                        pointCloud._isOctEncodedDraco = true;
                     }
                     var styleableProperties = parsedContent.styleableProperties;
                     var batchTableProperties = draco.batchTableProperties;

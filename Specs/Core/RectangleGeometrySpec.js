@@ -380,10 +380,10 @@ defineSuite([
         });
 
         var r = geometry.rectangle;
-        expect(CesiumMath.toDegrees(r.north)).toEqual(1.414213562373095);
-        expect(CesiumMath.toDegrees(r.south)).toEqual(-1.414213562373095);
-        expect(CesiumMath.toDegrees(r.east)).toEqual(1.414213562373095);
-        expect(CesiumMath.toDegrees(r.west)).toEqual(-1.4142135623730951);
+        expect(CesiumMath.toDegrees(r.north)).toEqualEpsilon(1.414213562373095, CesiumMath.EPSILON15);
+        expect(CesiumMath.toDegrees(r.south)).toEqualEpsilon(-1.414213562373095, CesiumMath.EPSILON15);
+        expect(CesiumMath.toDegrees(r.east)).toEqualEpsilon(1.414213562373095, CesiumMath.EPSILON15);
+        expect(CesiumMath.toDegrees(r.west)).toEqualEpsilon(-1.4142135623730951, CesiumMath.EPSILON15);
     });
 
     it('computing textureCoordinateRotationPoints property', function() {

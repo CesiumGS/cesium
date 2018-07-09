@@ -418,33 +418,6 @@ define([
         var complete = complete3DCallback(camera3D);
         createMorphHandler(transitioner, complete);
 
-        var startPos = Cartesian3.clone(camera.position, scratch3DToCVStartPos);
-        var startDir = Cartesian3.clone(camera.direction, scratch3DToCVStartDir);
-        var startUp = Cartesian3.clone(camera.up, scratch3DToCVStartUp);
-
-        var endPos = Cartesian3.fromElements(0.0, 0.0, 5.0 * ellipsoid.maximumRadius, scratch3DToCVEndPos);
-        var endDir = Cartesian3.negate(Cartesian3.UNIT_Z, scratch3DToCVEndDir);
-        var endUp = Cartesian3.clone(Cartesian3.UNIT_Y, scratch3DToCVEndUp);
-
-        var startRight = camera.frustum.right;
-        var endRight = endPos.z * 0.5;
-
-        function update(value) {
-            columbusViewMorph(startPos, endPos, value.time, camera.position);
-            columbusViewMorph(startDir, endDir, value.time, camera.direction);
-            columbusViewMorph(startUp, endUp, value.time, camera.up);
-            Cartesian3.cross(camera.direction, camera.up, camera.right);
-            Cartesian3.normalize(camera.right, camera.right);
-
-            var frustum = camera.frustum;
-            frustum.right = CesiumMath.lerp(startRight, endRight, value.time);
-            frustum.left = -frustum.right;
-            frustum.top = frustum.right * (scene.drawingBufferHeight / scene.drawingBufferWidth);
-            frustum.bottom = -frustum.top;
-
-            camera.position.z = 2.0 * scene.mapProjection.ellipsoid.maximumRadius;
-        }
-
         var morph;
         if (transitioner._morphToOrthographic) {
             morph = function() {
@@ -459,22 +432,15 @@ define([
         }
 
         if (duration > 0.0) {
-            var tween = scene.tweens.add({
+            scene._mode = SceneMode.SCENE2D;
+            camera.flyTo({
                 duration : duration,
-                easingFunction : EasingFunction.QUARTIC_OUT,
-                startObject : {
-                    time : 0.0
-                },
-                stopObject : {
-                    time : 1.0
-                },
-                update : update,
+                destination : Cartesian3.fromDegrees(0.0, 0.0, 5.0 * ellipsoid.maximumRadius, ellipsoid, scratch3DToCVEndPos),
                 complete : function() {
                     scene._mode = SceneMode.MORPHING;
                     morph();
                 }
             });
-            transitioner._currentTweens.push(tween);
         } else {
             morph();
         }

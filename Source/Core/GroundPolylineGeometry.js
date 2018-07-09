@@ -648,11 +648,11 @@ define([
         var absStartLon = Math.abs(start.longitude);
         var absEndLon = Math.abs(end.longitude);
         if (CesiumMath.equalsEpsilon(absStartLon, CesiumMath.PI, CesiumMath.EPSILON11)) {
-            var endSign = Math.sign(end.longitude);
+            var endSign = CesiumMath.sign(end.longitude);
             start.longitude = endSign * (absStartLon - CesiumMath.EPSILON11);
             return 1;
         } else if (CesiumMath.equalsEpsilon(absEndLon, CesiumMath.PI, CesiumMath.EPSILON11)) {
-            var startSign = Math.sign(start.longitude);
+            var startSign = CesiumMath.sign(start.longitude);
             end.longitude = startSign * (absEndLon - CesiumMath.EPSILON11);
             return 2;
         }
@@ -861,7 +861,7 @@ define([
                     startGeometryNormal2D.x = 0.0;
                     // If start longitude is negative and end longitude is less negative, relative right is unit -Y
                     // If start longitude is positive and end longitude is less positive, relative right is unit +Y
-                    startGeometryNormal2D.y = Math.sign(startCartographic.longitude - Math.abs(endCartographic.longitude));
+                    startGeometryNormal2D.y = CesiumMath.sign(startCartographic.longitude - Math.abs(endCartographic.longitude));
                     startGeometryNormal2D.z = 0.0;
                 } else {
                     // End is close to IDL - snap end normal to align with IDL
@@ -869,7 +869,7 @@ define([
                     endGeometryNormal2D.x = 0.0;
                     // If end longitude is negative and start longitude is less negative, relative right is unit Y
                     // If end longitude is positive and start longitude is less positive, relative right is unit -Y
-                    endGeometryNormal2D.y = Math.sign(startCartographic.longitude - endCartographic.longitude);
+                    endGeometryNormal2D.y = CesiumMath.sign(startCartographic.longitude - endCartographic.longitude);
                     endGeometryNormal2D.z = 0.0;
                 }
             }

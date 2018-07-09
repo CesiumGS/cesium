@@ -199,6 +199,7 @@ define([
         }
 
         draco.destroy(dracoPointCloud);
+        draco.destroy(dracoDecoder);
 
         return result;
     }
@@ -248,6 +249,7 @@ define([
         };
 
         draco.destroy(dracoGeometry);
+        draco.destroy(dracoDecoder);
 
         return result;
     }
