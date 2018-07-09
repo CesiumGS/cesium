@@ -27,6 +27,7 @@ define([
         '../shaders/PostProcessStages/ReinhardTonemapping',
         '../Shaders/PostProcessStages/Silhouette',
         '../ThirdParty/Shaders/FXAA3_11',
+        './AutoExposure',
         './PostProcessStage',
         './PostProcessStageComposite',
         './PostProcessStageSampleMode'
@@ -59,6 +60,7 @@ define([
         ReinhardTonemapping,
         Silhouette,
         FXAA3_11,
+        AutoExposure,
         PostProcessStage,
         PostProcessStageComposite,
         PostProcessStageSampleMode) {
@@ -900,30 +902,35 @@ define([
     };
 
     PostProcessStageLibrary.createReinhardTonemappingStage = function(useAutoExposure) {
-        var autoExposure = PostProcessStageLibrary.createAutoExposureStage();
+        //var autoExposure = PostProcessStageLibrary.createAutoExposureStage();
 
         useAutoExposure = false;
 
         var fs = useAutoExposure ? '#define AUTO_EXPOSURE\n' : '';
         fs += ReinhardTonemapping;
+        /*
         return new PostProcessStage({
             name : 'czm_reinhard',
             fragmentShader : fs
         });
+        */
 
         var tonemapping = new PostProcessStage({
             name : 'czm_reinhard',
             fragmentShader : fs,
             uniforms : {
-                autoExposure : autoExposure.name
+                autoExposure : undefined//autoExposure.name
             }
         });
 
+        /*
         return new PostProcessStageComposite({
             name : 'czm_tonemapping',
             stages : [autoExposure, tonemapping],
             inputPreviousStageTexture : false
         });
+        */
+        return tonemapping;
     };
 
     PostProcessStageLibrary.createModifiedReinhardTonemappingStage = function(useAutoExposure) {
@@ -940,6 +947,8 @@ define([
     };
 
     PostProcessStageLibrary.createAutoExposureStage = function() {
+        return new AutoExposure();
+        /*
         var toLuminance = 'uniform sampler2D colorTexture; varying vec2 v_textureCoordinates; void main() { gl_FragColor = vec4(czm_luminance(texture2D(colorTexture, v_textureCoordinates).rgb)); }';
         var luminance = new PostProcessStage({
             fragmentShader : toLuminance,
@@ -972,6 +981,7 @@ define([
             name : 'czm_auto_exposure',
             stages : [luminance, downsample, downsample2, downsample3, downsample4]
         });
+        */
     };
 
     /**

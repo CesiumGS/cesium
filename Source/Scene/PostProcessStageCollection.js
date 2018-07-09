@@ -63,9 +63,12 @@ define([
         //var tonemapping = PostProcessStageLibrary.createFilmicTonemappingStage(true);
         //var tonemapping = PostProcessStageLibrary.createACESTonemappingStage(true);
 
-        //var autoexposure = PostProcessStageLibrary.createAutoExposureStage();
+        var autoexposure = PostProcessStageLibrary.createAutoExposureStage();
 
         //tonemapping.uniforms.autoExposure = autoexposure.name;
+        tonemapping.uniforms.autoExposure = function() {
+            return autoexposure.outputTexture;
+        };
 
         ao.enabled = false;
         bloom.enabled = false; // TODO HDR
@@ -106,7 +109,7 @@ define([
 
         this._ao = ao;
         this._bloom = bloom;
-        //this._autoExposure = autoexposure;
+        this._autoExposure = autoexposure;
         this._tonemapping = tonemapping;
         this._fxaa = fxaa;
 
@@ -531,7 +534,7 @@ define([
 
         var ao = this._ao;
         var bloom = this._bloom;
-        //var autoexposure = this._autoExposure;
+        var autoexposure = this._autoExposure;
         var tonemapping = this._tonemapping;
         var fxaa = this._fxaa;
 
@@ -594,7 +597,7 @@ define([
         fxaa.update(context, useLogDepth);
         ao.update(context, useLogDepth);
         bloom.update(context, useLogDepth);
-        //autoexposure.update(context, useLogDepth);
+        autoexposure.update(context, useLogDepth);
         tonemapping.update(context, useLogDepth);
 
         length = stages.length;
@@ -674,7 +677,7 @@ define([
         var fxaa = this._fxaa;
         var ao = this._ao;
         var bloom = this._bloom;
-        //var autoexposure = this._autoExposure;
+        var autoexposure = this._autoExposure;
         var tonemapping = this._tonemapping;
 
         var aoEnabled = ao.enabled && ao._isSupported(context);
@@ -696,9 +699,9 @@ define([
             execute(bloom, context, initialTexture, depthTexture, idTexture);
             initialTexture = getOutputTexture(bloom);
         }
-        //if (autoexposureEnabled && autoexposure.ready) {
-        //    execute(autoexposure, context, initialTexture, depthTexture, idTexture);
-        //}
+        if (/*autoexposureEnabled &&*/ autoexposure.ready) {
+            execute(autoexposure, context, initialTexture, depthTexture, idTexture);
+        }
         if (tonemappingEnabled && tonemapping.ready) {
             execute(tonemapping, context, initialTexture, depthTexture);
             initialTexture = getOutputTexture(tonemapping);

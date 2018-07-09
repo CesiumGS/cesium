@@ -7,7 +7,11 @@ define([
         '../Core/PixelFormat',
         '../Renderer/Framebuffer',
         '../Renderer/PixelDatatype',
-        '../Renderer/Texture'
+        '../Renderer/Sampler',
+        '../Renderer/Texture',
+        '../Renderer/TextureMagnificationFilter',
+        '../Renderer/TextureMinificationFilter',
+        '../Renderer/TextureWrap'
     ], function(
         Color,
         defaultValue,
@@ -17,11 +21,15 @@ define([
         PixelFormat,
         Framebuffer,
         PixelDatatype,
-        Texture) {
+        Sampler,
+        Texture,
+        TextureMagnificationFilter,
+        TextureMinificationFilter,
+        TextureWrap) {
     'use strict';
 
-    function AutoExposure(options) {
-        this._clearColor = defaultValue(options.clearColor, Color.BLACK);
+    function AutoExposure() {
+        this._clearColor = new Color(0.0, 0.0, 0.0, 0.0);
 
         this._uniformMap = undefined;
         this._command = undefined;
@@ -36,11 +44,14 @@ define([
         this._logDepthChanged = undefined;
         this._useLogDepth = undefined;
 
+        this._framebuffers = undefined;
+        this._commands = undefined;
+
         this.enabled = true;
         this._enabled = true;
 
-        this._framebuffers = undefined;
-        this._commands = undefined;
+        this.minimumLuminance = 0.1;
+        this.maximumLuminance = 10.0;
     }
 
     defineProperties(AutoExposure.prototype, {
@@ -56,7 +67,11 @@ define([
         },
         outputTexture : {
             get : function() {
-                return undefined;
+                var framebuffers = this._framebuffers;
+                if (!defined(framebuffers)) {
+                    return undefined;
+                }
+                return framebuffers[framebuffers.length - 1].getColorTexture(0);
             }
         }
     });
@@ -80,7 +95,7 @@ define([
         var width = autoexposure._width;
         var height = autoexposure._height;
 
-        var length = Math.ceil(Math.max(width, height) / 3.0);
+        var length = Math.ceil(Math.log(Math.max(width, height)) / Math.log(3.0));
         var framebuffers = new Array(length);
         for (var i = 0; i < length; ++i) {
             width = Math.max(Math.ceil(width / 3.0), 1.0);
@@ -92,7 +107,13 @@ define([
                     width : width,
                     height : height,
                     pixelFormat : PixelFormat.RGBA,
-                    pixelDatatype : PixelDatatype.FLOAT
+                    pixelDatatype : PixelDatatype.FLOAT,
+                    sampler : new Sampler({
+                        wrapS : TextureWrap.CLAMP_TO_EDGE,
+                        wrapT : TextureWrap.CLAMP_TO_EDGE,
+                        minificationFilter : TextureMinificationFilter.NEAREST,
+                        magnificationFilter : TextureMagnificationFilter.NEAREST
+                    })
                 })]
             });
         }
@@ -114,53 +135,81 @@ define([
     }
 
     function createUniformMap(autoexposure, index) {
-        var texture;
+        var uniforms;
         if (index === 0) {
-            texture = autoexposure._colorTexture;
+            uniforms = {
+                colorTexture : function() {
+                    return autoexposure._colorTexture;
+                },
+                colorTextureDimensions : function() {
+                    return autoexposure._colorTexture.dimensions;
+                }
+            };
         } else {
-            texture = autoexposure._framebuffers[index - 1].getColorTexture(0);
+            var texture = autoexposure._framebuffers[index - 1].getColorTexture(0);
+            uniforms = {
+                colorTexture : function() {
+                    return texture;
+                },
+                colorTextureDimensions : function() {
+                    return texture.dimensions;
+                }
+            };
         }
-        return {
-            colorTexture : function() {
-                return texture;
-            },
-            colorTextureDimensions : function() {
-                return texture.dimensions;
-            }
+
+        uniforms.minimumLuminance = function() {
+            return autoexposure.minimumLuminance;
         };
+        uniforms.maximumLuminance = function() {
+            return autoexposure.maximumLuminance;
+        };
+
+        return uniforms;
     }
 
-    function getShaderSource(index) {
-        var source;
+    function getShaderSource(index, length) {
+        var source =
+            'uniform sampler2D colorTexture; \n' +
+            'varying vec2 v_textureCoordinates; \n' +
+            'float sampleTexture(vec2 offset) { \n';
+
         if (index === 0) {
-            source =
-                'uniform sampler2D colorTexture; \n' +
-                'varying vec2 v_textureCoordinates; \n' +
-                'void main() { \n' +
-                '    vec4 color = texture2D(colorTexture, v_textureCoordinates); \n' +
-                '    gl_FragColor = max(color.r, max(color.g, color.b)); \n' +
-                '} \n';
-            return source;
+            source +=
+                '    vec4 color = texture2D(colorTexture, v_textureCoordinates + offset); \n' +
+                '    return max(color.r, max(color.g, color.b)); \n';
+        } else {
+            source +=
+                '    return texture2D(colorTexture, v_textureCoordinates + offset).r; \n';
         }
 
-        source =
-            'uniform sampler2D colorTexture; \n' +
+        source += '}\n\n';
+
+        source +=
             'uniform vec2 colorTextureDimensions; \n' +
-            'varying vec2 v_textureCoordinates; \n' +
+            'uniform float minimumLuminance; \n' +
+            'uniform float maximumLuminance; \n' +
             'void main() { \n' +
             '    float color = 0.0; \n' +
             '    float xStep = 1.0 /colorTextureDimensions.x; \n' +
             '    float yStep = 1.0 /colorTextureDimensions.y; \n' +
-            '    color += texture2D(colorTexture, v_textureCoordinates + vec2(-xStep, yStep)).r; \n' +
-            '    color += texture2D(colorTexture, v_textureCoordinates + vec2(0.0, yStep)).r; \n' +
-            '    color += texture2D(colorTexture, v_textureCoordinates + vec2(xStep, yStep)).r; \n' +
-            '    color += texture2D(colorTexture, v_textureCoordinates + vec2(-xStep, 0.0)).r; \n' +
-            '    color += texture2D(colorTexture, v_textureCoordinates + vec2(0.0, 0.0)).r; \n' +
-            '    color += texture2D(colorTexture, v_textureCoordinates + vec2(xStep, 0.0)).r; \n' +
-            '    color += texture2D(colorTexture, v_textureCoordinates + vec2(-xStep, -yStep)).r; \n' +
-            '    color += texture2D(colorTexture, v_textureCoordinates + vec2(0.0, -yStep)).r; \n' +
-            '    color += texture2D(colorTexture, v_textureCoordinates + vec2(xStep, -yStep)).r; \n' +
-            '    gl_FragColor = vec4(color / 9.0); \n' +
+            '    color += sampleTexture(vec2(-xStep, yStep)); \n' +
+            '    color += sampleTexture(vec2(0.0, yStep)); \n' +
+            '    color += sampleTexture(vec2(xStep, yStep)); \n' +
+            '    color += sampleTexture(vec2(-xStep, 0.0)); \n' +
+            '    color += sampleTexture(vec2(0.0, 0.0)); \n' +
+            '    color += sampleTexture(vec2(xStep, 0.0)); \n' +
+            '    color += sampleTexture(vec2(-xStep, -yStep)); \n' +
+            '    color += sampleTexture(vec2(0.0, -yStep)); \n' +
+            '    color += sampleTexture(vec2(xStep, -yStep)); \n' +
+            '    color /= 9.0; \n';
+
+        if (index === length - 1) {
+            source +=
+                '    color = clamp(color, minimumLuminance, maximumLuminance); \n';
+        }
+
+        source +=
+            '    gl_FragColor = vec4(color); \n' +
             '} \n';
         return source;
     }
@@ -172,12 +221,13 @@ define([
 
         var commands = new Array(length);
 
-        for (var i = 1; i < length; ++i) {
-            commands[i] = context.createViewportQuadCommand(getShaderSource(i), {
+        for (var i = 0; i < length; ++i) {
+            commands[i] = context.createViewportQuadCommand(getShaderSource(i, length), {
                 framebuffer : framebuffers[i],
                 uniformMap : createUniformMap(autoexposure, i)
             });
         }
+        autoexposure._commands = commands;
     }
 
     AutoExposure.prototype.update = function(context, useLogDepth) {
@@ -193,6 +243,10 @@ define([
 
         createFramebuffers(this, context);
         createCommands(this, context);
+
+        if (!this._ready) {
+            this._ready = true;
+        }
     };
 
     AutoExposure.prototype.execute = function(context, colorTexture, depthTexture, idTexture) {
