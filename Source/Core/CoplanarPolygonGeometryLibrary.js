@@ -28,8 +28,6 @@ define([
     var scratchXAxis = new Cartesian3();
     var scratchYAxis = new Cartesian3();
     var scratchZAxis = new Cartesian3();
-    var scratchOrigin = new Cartesian3();
-    var scratchNormal = new Cartesian3();
     var obbScratch = new OrientedBoundingBox();
 
     // call after removeDuplicates
@@ -54,9 +52,7 @@ define([
         if ((xMag === 0 && (yMag === 0 || zMag === 0)) || (yMag === 0 && zMag === 0)) {
             return;
         }
-        var center = orientedBoundingBox.center;
-        var origin = Cartesian3.clone(center, scratchOrigin);
-        var normal;
+
         var planeAxis1;
         var planeAxis2;
 
@@ -74,11 +70,10 @@ define([
 
         planeAxis1 = Cartesian3.normalize(planeAxis1, planeAxis1);
         planeAxis2 = Cartesian3.normalize(planeAxis2, planeAxis2);
-        normal = Cartesian3.cross(planeAxis1, planeAxis2, scratchNormal);
-        normal = Cartesian3.normalize(normal, normal);
 
         if (defined(normalResult)) {
-            Cartesian3.clone(normal, normalResult);
+            normalResult = Cartesian3.cross(planeAxis1, planeAxis2, normalResult);
+            normalResult = Cartesian3.normalize(normalResult, normalResult);
         }
         if (defined(tangentResult)) {
             Cartesian3.clone(planeAxis1, tangentResult);
@@ -89,7 +84,7 @@ define([
 
         for (var i = 0; i < positions.length; i++) {
             var position = positions[i];
-            var v = Cartesian3.subtract(position, origin, scratchIntersectionPoint);
+            var v = Cartesian3.subtract(position, orientedBoundingBox.center, scratchIntersectionPoint);
             var x = Cartesian3.dot(planeAxis1, v);
             var y = Cartesian3.dot(planeAxis2, v);
 
