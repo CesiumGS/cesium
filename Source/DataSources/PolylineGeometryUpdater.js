@@ -566,7 +566,6 @@ define([
         this._material = undefined;
         this._geometryUpdater = geometryUpdater;
         this._positions = [];
-        this._terrainHeightsReady = false;
     }
 
     function getLine(dynamicGeometryUpdater) {
@@ -618,20 +617,6 @@ define([
 
             if (!defined(positions) || positions.length < 2) {
                 return;
-            }
-
-            var that = this;
-
-            // Load terrain heights
-            if (!this._terrainHeightsReady) {
-                if (!GroundPolylinePrimitive._isInitialized()) {
-                    GroundPolylinePrimitive.initializeTerrainHeights()
-                        .then(function() {
-                            that._terrainHeightsReady = true;
-                        });
-                    return;
-                }
-                this._terrainHeightsReady = true;
             }
 
             var fillMaterialProperty = geometryUpdater.fillMaterialProperty;

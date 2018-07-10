@@ -6,6 +6,7 @@ define([
         '../Core/defineProperties',
         '../Core/destroyObject',
         '../Core/EventHelper',
+        '../Scene/GroundPolylinePrimitive',
         '../Scene/GroundPrimitive',
         '../Scene/OrderedGroundPrimitiveCollection',
         '../Scene/PrimitiveCollection',
@@ -26,6 +27,7 @@ define([
         defineProperties,
         destroyObject,
         EventHelper,
+        GroundPolylinePrimitive,
         GroundPrimitive,
         OrderedGroundPrimitiveCollection,
         PrimitiveCollection,
@@ -60,6 +62,7 @@ define([
         //>>includeEnd('debug');
 
         GroundPrimitive.initializeTerrainHeights();
+        GroundPolylinePrimitive.initializeTerrainHeights();
 
         var scene = options.scene;
         var dataSourceCollection = options.dataSourceCollection;
@@ -130,7 +133,7 @@ define([
                 new ModelVisualizer(scene, entities),
                 new PointVisualizer(entityCluster, entities),
                 new PathVisualizer(scene, entities),
-                new PolylineVisualizer(scene, entities, dataSource._groundPrimitives)];
+                new PolylineVisualizer(scene, entities, dataSource._primitives, dataSource._groundPrimitives)];
     };
 
     defineProperties(DataSourceDisplay.prototype, {

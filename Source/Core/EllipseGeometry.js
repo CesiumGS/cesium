@@ -4,6 +4,7 @@ define([
         './Cartesian2',
         './Cartesian3',
         './Cartographic',
+        './Check',
         './ComponentDatatype',
         './defaultValue',
         './defined',
@@ -31,6 +32,7 @@ define([
         Cartesian2,
         Cartesian3,
         Cartographic,
+        Check,
         ComponentDatatype,
         defaultValue,
         defined,
@@ -684,13 +686,13 @@ define([
         };
     }
 
-    function computeRectangle(ellipseGeometry) {
+    function computeRectangle(center, semiMajorAxis, semiMinorAxis, rotation, granularity, ellipsoid, result) {
         var cep = EllipseGeometryLibrary.computeEllipsePositions({
-            center : ellipseGeometry._center,
-            semiMajorAxis : ellipseGeometry._semiMajorAxis,
-            semiMinorAxis : ellipseGeometry._semiMinorAxis,
-            rotation : ellipseGeometry._rotation,
-            granularity : ellipseGeometry._granularity
+            center : center,
+            semiMajorAxis : semiMajorAxis,
+            semiMinorAxis : semiMinorAxis,
+            rotation : rotation,
+            granularity : granularity
         }, false, true);
         var positionsFlat = cep.outerPositions;
         var positionsCount = positionsFlat.length / 3;
@@ -698,7 +700,7 @@ define([
         for (var i = 0; i < positionsCount; ++i) {
             positions[i] = Cartesian3.fromArray(positionsFlat, i * 3);
         }
-        var rectangle = Rectangle.fromCartesianArray(positions, ellipseGeometry._ellipsoid);
+        var rectangle = Rectangle.fromCartesianArray(positions, ellipsoid, result);
         // Rectangle width goes beyond 180 degrees when the ellipse crosses a pole.
         // When this happens, make the rectangle into a "circle" around the pole
         if (rectangle.width > CesiumMath.PI) {
@@ -756,15 +758,9 @@ define([
         var vertexFormat = defaultValue(options.vertexFormat, VertexFormat.DEFAULT);
 
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(center)) {
-            throw new DeveloperError('center is required.');
-        }
-        if (!defined(semiMajorAxis)) {
-            throw new DeveloperError('semiMajorAxis is required.');
-        }
-        if (!defined(semiMinorAxis)) {
-            throw new DeveloperError('semiMinorAxis is required.');
-        }
+        Check.defined('options.center', center);
+        Check.typeOf.number('options.semiMajorAxis', semiMajorAxis);
+        Check.typeOf.number('options.semiMinorAxis', semiMinorAxis);
         if (semiMajorAxis < semiMinorAxis) {
             throw new DeveloperError('semiMajorAxis must be greater than or equal to the semiMinorAxis.');
         }
@@ -811,12 +807,8 @@ define([
      */
     EllipseGeometry.pack = function(value, array, startingIndex) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(value)) {
-            throw new DeveloperError('value is required');
-        }
-        if (!defined(array)) {
-            throw new DeveloperError('array is required');
-        }
+        Check.defined('value', value);
+        Check.defined('array', array);
         //>>includeEnd('debug');
 
         startingIndex = defaultValue(startingIndex, 0);
@@ -871,9 +863,7 @@ define([
      */
     EllipseGeometry.unpack = function(array, startingIndex, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(array)) {
-            throw new DeveloperError('array is required');
-        }
+        Check.defined('array', array);
         //>>includeEnd('debug');
 
         startingIndex = defaultValue(startingIndex, 0);
@@ -925,6 +915,45 @@ define([
         result._offsetAttribute = offsetAttribute === -1 ? undefined : offsetAttribute;
 
         return result;
+    };
+
+    /**
+     * Computes the bounding rectangle based on the provided options
+     *
+     * @param {Object} options Object with the following properties:
+     * @param {Cartesian3} options.center The ellipse's center point in the fixed frame.
+     * @param {Number} options.semiMajorAxis The length of the ellipse's semi-major axis in meters.
+     * @param {Number} options.semiMinorAxis The length of the ellipse's semi-minor axis in meters.
+     * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid the ellipse will be on.
+     * @param {Number} [options.rotation=0.0] The angle of rotation counter-clockwise from north.
+     * @param {Number} [options.granularity=CesiumMath.RADIANS_PER_DEGREE] The angular distance between points on the ellipse in radians.
+     * @param {Rectangle} [result] An object in which to store the result
+     *
+     * @returns {Rectangle} The result rectangle
+     */
+    EllipseGeometry.computeRectangle = function(options, result) {
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+
+        var center = options.center;
+        var ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
+        var semiMajorAxis = options.semiMajorAxis;
+        var semiMinorAxis = options.semiMinorAxis;
+        var granularity = defaultValue(options.granularity, CesiumMath.RADIANS_PER_DEGREE);
+        var rotation = defaultValue(options.rotation, 0.0);
+
+        //>>includeStart('debug', pragmas.debug);
+        Check.defined('options.center', center);
+        Check.typeOf.number('options.semiMajorAxis', semiMajorAxis);
+        Check.typeOf.number('options.semiMinorAxis', semiMinorAxis);
+        if (semiMajorAxis < semiMinorAxis) {
+            throw new DeveloperError('semiMajorAxis must be greater than or equal to the semiMinorAxis.');
+        }
+        if (granularity <= 0.0) {
+            throw new DeveloperError('granularity must be greater than zero.');
+        }
+        //>>includeEnd('debug');
+
+        return computeRectangle(center, semiMajorAxis, semiMinorAxis, rotation, granularity, ellipsoid, result);
     };
 
     /**
@@ -980,7 +1009,8 @@ define([
             attributes : geometry.attributes,
             indices : geometry.indices,
             primitiveType : PrimitiveType.TRIANGLES,
-            boundingSphere : geometry.boundingSphere
+            boundingSphere : geometry.boundingSphere,
+            offsetAttribute : ellipseGeometry._offsetAttribute
         });
     };
 
@@ -1041,7 +1071,7 @@ define([
         rectangle : {
             get : function() {
                 if (!defined(this._rectangle)) {
-                    this._rectangle = computeRectangle(this);
+                    this._rectangle = computeRectangle(this._center, this._semiMajorAxis, this._semiMinorAxis, this._rotation, this._granularity, this._ellipsoid);
                 }
                 return this._rectangle;
             }

@@ -17,6 +17,9 @@
         "node_modules": true,
         "Source/Shaders/**/*.js": true
     },
+    "files.associations": {
+        "*.czml": "json"
+    },
     "files.trimTrailingWhitespace": true,
     "files.insertFinalNewline": true,
     "editor.insertSpaces": true,
