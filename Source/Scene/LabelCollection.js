@@ -11,6 +11,7 @@ define([
         '../Core/writeTextToCanvas',
         './BillboardCollection',
         './BlendOption',
+        './HeightReference',
         './HorizontalOrigin',
         './Label',
         './LabelStyle',
@@ -29,6 +30,7 @@ define([
         writeTextToCanvas,
         BillboardCollection,
         BlendOption,
+        HeightReference,
         HorizontalOrigin,
         Label,
         LabelStyle,
@@ -250,6 +252,7 @@ define([
                             collection : labelCollection
                         });
                         billboard._labelDimensions = new Cartesian2();
+                        billboard._labelTranslate = new Cartesian2();
                     }
                     glyph.billboard = billboard;
                 }
@@ -303,7 +306,7 @@ define([
         var maxGlyphDescent = Number.NEGATIVE_INFINITY;
         var maxGlyphY = 0;
         var numberOfLines = 1;
-        var glyphIndex = 0;
+        var glyphIndex;
         var glyphLength = glyphs.length;
 
         var backgroundBillboard = label._backgroundBillboard;
@@ -384,7 +387,7 @@ define([
                     glyph.billboard._labelHorizontalOrigin = horizontalOrigin;
                 }
 
-                //Compute the next x offset taking into acocunt the kerning performed
+                //Compute the next x offset taking into account the kerning performed
                 //on both the current letter as well as the next letter to be drawn
                 //as well as any applied scale.
                 if (glyphIndex < glyphLength - 1) {
@@ -419,6 +422,17 @@ define([
             backgroundBillboard.width = totalLineWidth;
             backgroundBillboard.height = totalLineHeight;
             backgroundBillboard._setTranslate(glyphPixelOffset);
+            backgroundBillboard._labelTranslate = Cartesian2.clone(glyphPixelOffset, backgroundBillboard._labelTranslate);
+        }
+
+        if (label.heightReference === HeightReference.CLAMP_TO_GROUND) {
+            for (glyphIndex = 0; glyphIndex < glyphLength; ++glyphIndex) {
+                glyph = glyphs[glyphIndex];
+                var billboard = glyph.billboard;
+                if (defined(billboard)) {
+                    billboard._labelTranslate = Cartesian2.clone(glyphPixelOffset, billboard._labelTranslate);
+                }
+            }
         }
     }
 
