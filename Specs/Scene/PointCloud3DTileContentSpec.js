@@ -1,4 +1,5 @@
 defineSuite([
+        'Scene/PointCloud3DTileContent',
         'Core/Cartesian3',
         'Core/Color',
         'Core/ComponentDatatype',
@@ -13,12 +14,15 @@ defineSuite([
         'Scene/Cesium3DTileStyle',
         'Scene/ClippingPlane',
         'Scene/ClippingPlaneCollection',
+        'Scene/DracoLoader',
         'Scene/Expression',
         'Specs/Cesium3DTilesTester',
         'Specs/createCanvas',
         'Specs/createScene',
+        'Specs/pollToPromise',
         'ThirdParty/when'
-    ], 'Scene/PointCloud3DTileContent', function(
+    ], function(
+        PointCloud3DTileContent,
         Cartesian3,
         Color,
         ComponentDatatype,
@@ -33,10 +37,12 @@ defineSuite([
         Cesium3DTileStyle,
         ClippingPlane,
         ClippingPlaneCollection,
+        DracoLoader,
         Expression,
         Cesium3DTilesTester,
         createCanvas,
         createScene,
+        pollToPromise,
         when) {
     'use strict';
 
@@ -53,6 +59,9 @@ defineSuite([
     var pointCloudNormalsOctEncodedUrl = './Data/Cesium3DTiles/PointCloud/PointCloudNormalsOctEncoded/tileset.json';
     var pointCloudQuantizedUrl = './Data/Cesium3DTiles/PointCloud/PointCloudQuantized/tileset.json';
     var pointCloudQuantizedOctEncodedUrl = './Data/Cesium3DTiles/PointCloud/PointCloudQuantizedOctEncoded/tileset.json';
+    var pointCloudDracoUrl = './Data/Cesium3DTiles/PointCloud/PointCloudDraco/tileset.json';
+    var pointCloudDracoPartialUrl = './Data/Cesium3DTiles/PointCloud/PointCloudDracoPartial/tileset.json';
+    var pointCloudDracoBatchedUrl = './Data/Cesium3DTiles/PointCloud/PointCloudDracoBatched/tileset.json';
     var pointCloudWGS84Url = './Data/Cesium3DTiles/PointCloud/PointCloudWGS84/tileset.json';
     var pointCloudBatchedUrl = './Data/Cesium3DTiles/PointCloud/PointCloudBatched/tileset.json';
     var pointCloudWithPerPointPropertiesUrl = './Data/Cesium3DTiles/PointCloud/PointCloudWithPerPointProperties/tileset.json';
@@ -228,6 +237,50 @@ defineSuite([
     it('renders point cloud with quantized positions and oct-encoded normals', function() {
         return Cesium3DTilesTester.loadTileset(scene, pointCloudQuantizedOctEncodedUrl).then(function(tileset) {
             Cesium3DTilesTester.expectRender(scene, tileset);
+        });
+    });
+
+    it('renders point cloud with draco encoded positions, normals, colors, and batch table properties', function() {
+        return Cesium3DTilesTester.loadTileset(scene, pointCloudDracoUrl).then(function(tileset) {
+            Cesium3DTilesTester.expectRender(scene, tileset);
+            // Test that Draco-encoded batch table properties are functioning correctly
+            tileset.style = new Cesium3DTileStyle({
+                color : 'vec4(Number(${secondaryColor}[0] < 1.0), 0.0, 0.0, 1.0)'
+            });
+            expect(scene).toRenderAndCall(function(rgba) {
+                // Produces a red color
+                expect(rgba[0]).toBeGreaterThan(rgba[1]);
+                expect(rgba[0]).toBeGreaterThan(rgba[2]);
+            });
+        });
+    });
+
+    it('renders point cloud with draco encoded positions and uncompressed normals and colors', function() {
+        return Cesium3DTilesTester.loadTileset(scene, pointCloudDracoPartialUrl).then(function(tileset) {
+            Cesium3DTilesTester.expectRender(scene, tileset);
+        });
+    });
+
+    it('renders point cloud with draco encoded positions, colors, and batch ids', function() {
+        return Cesium3DTilesTester.loadTileset(scene, pointCloudDracoBatchedUrl).then(function(tileset) {
+            Cesium3DTilesTester.expectRender(scene, tileset);
+        });
+    });
+
+    it('error decoding a draco point cloud causes loading to fail', function() {
+        return pollToPromise(function() {
+            return DracoLoader._taskProcessorReady;
+        }).then(function() {
+            var decoder = DracoLoader._getDecoderTaskProcessor();
+            spyOn(decoder, 'scheduleTask').and.returnValue(when.reject({message : 'my error'}));
+            return Cesium3DTilesTester.loadTileset(scene, pointCloudDracoUrl).then(function(tileset) {
+                var root = tileset._root;
+                return root.contentReadyPromise.then(function() {
+                    fail('should not resolve');
+                }).otherwise(function(error) {
+                    expect(error.message).toBe('my error');
+                });
+            });
         });
     });
 
@@ -815,14 +868,14 @@ defineSuite([
         });
     });
 
-    it('Rebuilds shaders when clipping planes are enabled, change between union and intersection, or change count', function () {
+    it('rebuilds shaders when clipping planes are enabled, change between union and intersection, or change count', function () {
         return Cesium3DTilesTester.loadTileset(scene, pointCloudRGBUrl).then(function(tileset) {
             var tile = tileset._root;
             tile._isClipped = true;
             var content = tile.content;
 
             var noClipFS = content._drawCommand.shaderProgram._fragmentShaderText;
-            expect(noClipFS.includes('clip')).toBe(false);
+            expect(noClipFS.indexOf('clip') !== -1).toBe(false);
 
             var clippingPlanes = new ClippingPlaneCollection({
                 planes : [
@@ -835,16 +888,16 @@ defineSuite([
             clippingPlanes.update(scene.frameState);
             tile.update(tileset, scene.frameState);
             var clipOneIntersectFS = content._drawCommand.shaderProgram._fragmentShaderText;
-            expect(clipOneIntersectFS.includes('= clip(')).toBe(true);
-            expect(clipOneIntersectFS.includes('float clip')).toBe(true);
+            expect(clipOneIntersectFS.indexOf('= clip(') !== -1).toBe(true);
+            expect(clipOneIntersectFS.indexOf('float clip') !== -1).toBe(true);
 
             clippingPlanes.unionClippingRegions = true;
 
             clippingPlanes.update(scene.frameState);
             tile.update(tileset, scene.frameState);
             var clipOneUnionFS = content._drawCommand.shaderProgram._fragmentShaderText;
-            expect(clipOneUnionFS.includes('= clip(')).toBe(true);
-            expect(clipOneUnionFS.includes('float clip')).toBe(true);
+            expect(clipOneUnionFS.indexOf('= clip(') !== -1).toBe(true);
+            expect(clipOneUnionFS.indexOf('float clip') !== -1).toBe(true);
             expect(clipOneUnionFS).not.toEqual(clipOneIntersectFS);
 
             clippingPlanes.add(new ClippingPlane(Cartesian3.UNIT_Y, 1.0));
@@ -852,14 +905,14 @@ defineSuite([
             clippingPlanes.update(scene.frameState);
             tile.update(tileset, scene.frameState);
             var clipTwoUnionFS = content._drawCommand.shaderProgram._fragmentShaderText;
-            expect(clipTwoUnionFS.includes('= clip(')).toBe(true);
-            expect(clipTwoUnionFS.includes('float clip')).toBe(true);
+            expect(clipTwoUnionFS.indexOf('= clip(') !== -1).toBe(true);
+            expect(clipTwoUnionFS.indexOf('float clip') !== -1).toBe(true);
             expect(clipTwoUnionFS).not.toEqual(clipOneIntersectFS);
             expect(clipTwoUnionFS).not.toEqual(clipOneUnionFS);
         });
     });
 
-    it('Clipping planes selectively disable rendering', function () {
+    it('clipping planes selectively disable rendering', function () {
         return Cesium3DTilesTester.loadTileset(scene, pointCloudRGBUrl).then(function(tileset) {
             var color;
             expect(scene).toRenderAndCall(function(rgba) {
