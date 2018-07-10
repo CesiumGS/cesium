@@ -119,7 +119,6 @@ define([
             tangentMatrix = Matrix3.clone(Matrix3.IDENTITY, tangentMatrix);
         }
 
-
         var minTexCoord = Cartesian2.fromElements(Number.POSITIVE_INFINITY, Number.POSITIVE_INFINITY, scratchMinTexCoord);
         var maxTexCoord = Cartesian2.fromElements(Number.NEGATIVE_INFINITY, Number.NEGATIVE_INFINITY, scratchMaxTexCoord);
 
