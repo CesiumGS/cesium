@@ -338,7 +338,7 @@ defineSuite([
         var instance;
         beforeAll(function() {
             instance = new GeometryInstance({
-                geometry : new CoplanarPolygonGeometry({
+                geometry : CoplanarPolygonGeometry.fromPositions({
                     positions : Cartesian3.fromDegreesArrayHeights([
                         71.0, -10.0, 0.0,
                         70.0, 0.0, 20000.0,
