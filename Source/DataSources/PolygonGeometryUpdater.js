@@ -149,12 +149,9 @@ define([
 
         var geometry;
         if (options.perPositionHeight && !defined(options.extrudedHeight)) {
-            options.positions = options.polygonHierarchy.positions;
             geometry = new CoplanarPolygonGeometry(options);
-            console.log('coplanar');
         } else {
             geometry = new PolygonGeometry(options);
-            console.log('polygon');
         }
 
         return new GeometryInstance({
@@ -200,7 +197,6 @@ define([
 
         var geometry;
         if (options.perPositionHeight && !defined(options.extrudedHeight)) {
-            options.positions = options.polygonHierarchy.positions;
             geometry = new CoplanarPolygonOutlineGeometry(options);
         } else {
             geometry = new PolygonOutlineGeometry(options);
