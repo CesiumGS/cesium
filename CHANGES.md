@@ -13,6 +13,7 @@ Change Log
 #### Fixes :wrench:
 * Fixed bug causing billboards and labels to appear the wrong size when switching scene modes [#6745](https://github.com/AnalyticalGraphicsInc/cesium/issues/6745)
 * Fixed a bug that was preventing 3D Tilesets on the opposite side of the globe from being occluded [#6714](https://github.com/AnalyticalGraphicsInc/cesium/issues/6714)
+* Fixed `PolygonGeometry` and `EllipseGeometry` tangent and bitangent attributes when a texture rotation is used [#6788](https://github.com/AnalyticalGraphicsInc/cesium/pull/6788)
 
 ### 1.47 - 2018-07-02
 
