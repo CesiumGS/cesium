@@ -12,6 +12,7 @@ define([
         '../Core/Math',
         '../Core/Matrix4',
         '../Core/Resource',
+        '../ThirdParty/when',
         './ClippingPlaneCollection',
         './PointCloud',
         './PointCloudEyeDomeLighting',
@@ -32,6 +33,7 @@ define([
         CesiumMath,
         Matrix4,
         Resource,
+        when,
         ClippingPlaneCollection,
         PointCloud,
         PointCloudEyeDomeLighting,
@@ -155,17 +157,38 @@ define([
          * <p>
          * If there are no event listeners, error messages will be logged to the console.
          * </p>
+         * <p>
+         * The error object passed to the listener contains two properties:
+         * <ul>
+         * <li><code>uri</code>: the uri of the failed frame.</li>
+         * <li><code>message</code>: the error message.</li>
+         * </ul>
          *
          * @type {Event}
          * @default new Event()
          *
          * @example
          * pointCloud.frameFailed.addEventListener(function(error) {
-         *     console.log('An error occurred loading frame: ' + error.url);
+         *     console.log('An error occurred loading frame: ' + error.uri);
          *     console.log('Error: ' + error.message);
          * });
          */
         this.frameFailed = new Event();
+
+        /**
+         * The event fired to indicate that a new frame was rendered.
+         * <p>
+         * The time dynamic point cloud {@link TimeDynamicPointCloud} is passed to the event listener.
+         * </p>
+         * @type {Event}
+         * @default new Event()
+         *
+         * @example
+         * pointCloud.frameChanged.addEventListener(function(timeDynamicPointCloud) {
+         *     viewer.camera.viewBoundingSphere(timeDynamicPointCloud.boundingSphere);
+         * });
+         */
+        this.frameChanged = new Event();
 
         this._clock = options.clock;
         this._intervals = options.intervals;
@@ -182,6 +205,7 @@ define([
         this._nextInterval = undefined;
         this._lastRenderedFrame = undefined;
         this._clockMultiplier = 0.0;
+        this._readyPromise = when.defer();
 
         // For calculating average load time of the last N frames
         this._runningSum = 0.0;
@@ -237,6 +261,20 @@ define([
                 if (defined(this._lastRenderedFrame)) {
                     return this._lastRenderedFrame.pointCloud.boundingSphere;
                 }
+            }
+        },
+
+        /**
+         * Gets the promise that will be resolved when the point cloud renders a frame for the first time.
+         *
+         * @memberof TimeDynamicPointCloud.prototype
+         *
+         * @type {Promise.<TimeDynamicPointCloud>}
+         * @readonly
+         */
+        readyPromise : {
+            get : function() {
+                return this._readyPromise.promise;
             }
         }
     });
@@ -345,7 +383,7 @@ define([
             var message = defined(error.message) ? error.message : error.toString();
             if (that.frameFailed.numberOfListeners > 0) {
                 that.frameFailed.raiseEvent({
-                    url : uri,
+                    uri : uri,
                     message : message
                 });
             } else {
@@ -576,14 +614,6 @@ define([
         clippingPlanesDirty : false
     };
 
-    /**
-     * Called when {@link Viewer} or {@link CesiumWidget} render the scene to
-     * get the draw commands needed to render this primitive.
-     * <p>
-     * Do not call this function directly.  This is documented just to
-     * list the exceptions that may be propagated when the scene is rendered:
-     * </p>
-     */
     TimeDynamicPointCloud.prototype.update = function(frameState) {
         if (frameState.mode === SceneMode.MORPHING) {
             return;
@@ -679,6 +709,21 @@ define([
         if (defined(nextInterval)) {
             // Start loading the next frame
             loadFrame(this, nextInterval, updateState, frameState);
+        }
+
+        var that = this;
+        if (defined(frame) && !defined(this._lastRenderedFrame)) {
+            frameState.afterRender.push(function() {
+                that._readyPromise.resolve(that);
+            });
+        }
+
+        if (defined(frame) && (frame !== this._lastRenderedFrame)) {
+            if (that.frameChanged.numberOfListeners > 0) {
+                frameState.afterRender.push(function() {
+                    that.frameChanged.raiseEvent(that);
+                });
+            }
         }
 
         this._previousInterval = previousInterval;

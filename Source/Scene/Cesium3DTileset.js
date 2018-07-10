@@ -417,6 +417,12 @@ define([
          * <p>
          * If there are no event listeners, error messages will be logged to the console.
          * </p>
+         * <p>
+         * The error object passed to the listener contains two properties:
+         * <ul>
+         * <li><code>url</code>: the url of the failed tile.</li>
+         * <li><code>message</code>: the error message.</li>
+         * </ul>
          *
          * @type {Event}
          * @default new Event()
@@ -1839,14 +1845,6 @@ define([
 
     ///////////////////////////////////////////////////////////////////////////
 
-    /**
-     * Called when {@link Viewer} or {@link CesiumWidget} render the scene to
-     * get the draw commands needed to render this primitive.
-     * <p>
-     * Do not call this function directly.  This is documented just to
-     * list the exceptions that may be propagated when the scene is rendered:
-     * </p>
-     */
     Cesium3DTileset.prototype.update = function(frameState) {
         if (frameState.mode === SceneMode.MORPHING) {
             return;

@@ -258,6 +258,15 @@ defineSuite([
         });
     });
 
+    it('resolves ready promise', function() {
+        var pointCloud = createTimeDynamicPointCloud();
+        return loadFrame(pointCloud).then(function() {
+            return pointCloud.readyPromise.then(function(pointCloud) {
+                expect(pointCloud.boundingSphere).toBeDefined();
+            });
+        });
+    });
+
     it('sets show', function() {
         var pointCloud = createTimeDynamicPointCloud();
 
@@ -705,7 +714,7 @@ defineSuite([
         for (i = 0; i < 5; ++i) {
             var arg = spyUpdate.calls.argsFor(i)[0];
             expect(arg).toBeDefined();
-            expect(arg.url).toContain(i + '.pnts');
+            expect(arg.uri).toContain(i + '.pnts');
             expect(arg.message).toBe('404');
         }
     });
@@ -735,9 +744,35 @@ defineSuite([
             }).then(function() {
                 var arg = spyUpdate.calls.argsFor(0)[0];
                 expect(arg).toBeDefined();
-                expect(arg.url).toContain('1.pnts');
+                expect(arg.uri).toContain('1.pnts');
                 expect(arg.message).toBe('my error');
             });
+        });
+    });
+
+    it('raises frame changed event', function() {
+        var pointCloud = createTimeDynamicPointCloud();
+        var spyFrameChanged = jasmine.createSpy('listener');
+        pointCloud.frameChanged.addEventListener(spyFrameChanged);
+
+        return loadAllFrames(pointCloud).then(function() {
+            expect(spyFrameChanged.calls.count()).toBe(5);
+
+            // Go to random frame
+            goToFrame(2);
+            scene.renderForSpecs();
+            expect(spyFrameChanged.calls.count()).toBe(6);
+
+            // Go out of range. No event raised.
+            clock.currentTime = JulianDate.addSeconds(dates[0], -10.0, new JulianDate());
+            scene.renderForSpecs();
+            expect(spyFrameChanged.calls.count()).toBe(6);
+
+            goToFrame(0);
+            scene.renderForSpecs();
+            expect(spyFrameChanged.calls.count()).toBe(7);
+
+            expect(spyFrameChanged.calls.argsFor(0)[0]).toBe(pointCloud);
         });
     });
 

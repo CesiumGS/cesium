@@ -475,16 +475,31 @@ define([
     var scratchMin = new Cartesian3();
     var scratchMax = new Cartesian3();
     var scratchPosition = new Cartesian3();
+    var randomValues;
+
+    function getRandomValues(samplesLength) {
+        // Use same random values across all runs
+        if (!defined(randomValues)) {
+            CesiumMath.setRandomNumberSeed(0);
+            randomValues = new Array(20);
+            for (var i = 0; i < samplesLength; ++i) {
+                randomValues[i] = CesiumMath.nextRandomNumber();
+            }
+        }
+        return randomValues;
+    }
 
     function computeApproximateBoundingSphereFromPositions(positions) {
+        var maximumSamplesLength = 20;
         var pointsLength = positions.length / 3;
-        var samplesLength = Math.min(pointsLength, 20);
+        var samplesLength = Math.min(pointsLength, maximumSamplesLength);
+        var randomValues = getRandomValues(maximumSamplesLength);
         var maxValue = Number.MAX_VALUE;
         var minValue = -Number.MAX_VALUE;
         var min = Cartesian3.fromElements(maxValue, maxValue, maxValue, scratchMin);
         var max = Cartesian3.fromElements(minValue, minValue, minValue, scratchMax);
         for (var i = 0; i < samplesLength; ++i) {
-            var index = Math.floor(i * pointsLength / samplesLength);
+            var index = Math.floor(randomValues[i] * pointsLength);
             var position = Cartesian3.unpack(positions, index * 3, scratchPosition);
             Cartesian3.minimumByComponent(min, position, min);
             Cartesian3.maximumByComponent(max, position, max);

@@ -1938,8 +1938,8 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
 
         // If zoomTarget was TimeDynamicPointCloud
         if (target instanceof TimeDynamicPointCloud) {
-            boundingSphere = target.boundingSphere;
-            if (defined(boundingSphere)) {
+            return target.readyPromise.then(function() {
+                var boundingSphere = target.boundingSphere;
                 // If offset was originally undefined then give it base value instead of empty object
                 if (!defined(zoomOptions.offset)) {
                     zoomOptions.offset = new HeadingPitchRange(0.0, -0.5, boundingSphere.radius);
@@ -1968,8 +1968,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
                 }
 
                 clearZoom(viewer);
-            }
-            return;
+            });
         }
 
         // If zoomTarget was an ImageryLayer
