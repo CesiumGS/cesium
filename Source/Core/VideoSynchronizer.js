@@ -172,7 +172,12 @@ define([
             return;
         }
 
-        element.playbackRate = clock.multiplier;
+        try {
+            element.playbackRate = clock.multiplier;
+        } catch(error) {
+            // Seek manually for unsupported playbackRates.
+            element.playbackRate = 0.0;
+        }
 
         var clockTime = clock.currentTime;
         var epoch = defaultValue(this.epoch, Iso8601.MINIMUM_VALUE);
