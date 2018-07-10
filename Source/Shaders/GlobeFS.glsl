@@ -238,7 +238,7 @@ void main()
 #endif
 
 #ifdef FOG
-    const float fExposure = 2.0;
+    const float fExposure = 1.3;
     vec3 fogColor = v_mieColor + finalColor.rgb * v_rayleighColor;
     fogColor = vec3(1.0) - exp(-fExposure * fogColor);
 
@@ -337,9 +337,14 @@ vec4 computeWaterColor(vec3 positionEyeCoordinates, vec2 textureCoordinates, mat
     // Add specular highlights in 3D, and in all modes when zoomed in.
     float specularIntensity = czm_getSpecular(czm_sunDirectionEC, normalizedpositionToEyeEC, normalEC, 10.0) + 0.25 * czm_getSpecular(czm_moonDirectionEC, normalizedpositionToEyeEC, normalEC, 10.0);
     float surfaceReflectance = mix(0.0, mix(u_zoomedOutOceanSpecularIntensity, oceanSpecularIntensity, waveIntensity), maskValue);
-    float specular = specularIntensity * surfaceReflectance;
+    float specular = specularIntensity * surfaceReflectance * 1.4;
 
-    return vec4(imageryColor.rgb + diffuseHighlight + nonDiffuseHighlight + specular, imageryColor.a);
+    float e = 0.2;
+    float d = 3.3;
+    float c = 1.7;
+
+    return vec4(imageryColor.rgb + (c * (vec3(e) + imageryColor.rgb * d) * (diffuseHighlight + nonDiffuseHighlight + specular)), imageryColor.a);
+    //return vec4(imageryColor.rgb + diffuseHighlight + nonDiffuseHighlight + specular, imageryColor.a);
 }
 
 #endif // #ifdef SHOW_REFLECTIVE_OCEAN
