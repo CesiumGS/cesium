@@ -1276,40 +1276,41 @@ define([
                 writer(i + 2, translateX, translateY, 0.0, 0.0);
                 writer(i + 3, translateX, translateY, 0.0, 0.0);
             }
+            return;
+        }
+
+        //write texture coordinate bounds, used by depth testing in fragment shader
+        var minX = 0;
+        var minY = 0;
+        var width = 0;
+        var height = 0;
+        var index = billboard._imageIndex;
+        if (index !== -1) {
+            var imageRectangle = textureAtlasCoordinates[index];
+
+            //>>includeStart('debug', pragmas.debug);
+            if (!defined(imageRectangle)) {
+                throw new DeveloperError('Invalid billboard image index: ' + index);
+            }
+            //>>includeEnd('debug');
+
+            minX = imageRectangle.x;
+            minY = imageRectangle.y;
+            width = imageRectangle.width;
+            height = imageRectangle.height;
+        }
+        var maxX = minX + width;
+        var maxY = minY + height;
+
+        if (billboardCollection._instanced) {
+            i = billboard._index;
+            writer(i, minX, minY, maxX, maxY);
         } else {
-            //write texture coordiante bounds, used by depth testing in fragment shader
-            var minX = 0;
-            var minY = 0;
-            var width = 0;
-            var height = 0;
-            var index = billboard._imageIndex;
-            if (index !== -1) {
-                var imageRectangle = textureAtlasCoordinates[index];
-
-                //>>includeStart('debug', pragmas.debug);
-                if (!defined(imageRectangle)) {
-                    throw new DeveloperError('Invalid billboard image index: ' + index);
-                }
-                //>>includeEnd('debug');
-
-                minX = imageRectangle.x;
-                minY = imageRectangle.y;
-                width = imageRectangle.width;
-                height = imageRectangle.height;
-            }
-            var maxX = minX + width;
-            var maxY = minY + height;
-
-            if (billboardCollection._instanced) {
-                i = billboard._index;
-                writer(i, minX, minY, maxX, maxY);
-            } else {
-                i = billboard._index * 4;
-                writer(i + 0, minX, minY, maxX, maxY);
-                writer(i + 1, minX, minY, maxX, maxY);
-                writer(i + 2, minX, minY, maxX, maxY);
-                writer(i + 3, minX, minY, maxX, maxY);
-            }
+            i = billboard._index * 4;
+            writer(i + 0, minX, minY, maxX, maxY);
+            writer(i + 1, minX, minY, maxX, maxY);
+            writer(i + 2, minX, minY, maxX, maxY);
+            writer(i + 3, minX, minY, maxX, maxY);
         }
     }
 

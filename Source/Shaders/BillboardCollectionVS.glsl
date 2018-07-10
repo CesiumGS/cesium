@@ -50,7 +50,6 @@ const float SHIFT_RIGHT1 = 1.0 / 2.0;
 
 vec4 addScreenSpaceOffset(vec4 positionEC, vec2 imageSize, float scale, vec2 direction, vec2 origin, vec2 translate, vec2 pixelOffset, vec3 alignedAxis, bool validAlignedAxis, float rotation, bool sizeInMeters, out mat2 rotationMatrix, out float mpp)
 {
-
     // Note the halfSize cannot be computed in JavaScript because it is sent via
     // compressed vertex attributes that coerce it to an integer.
     vec2 halfSize = imageSize * scale * czm_resolutionScale * 0.5;
@@ -65,8 +64,8 @@ vec4 addScreenSpaceOffset(vec4 positionEC, vec2 imageSize, float scale, vec2 dir
         if (validAlignedAxis)
         {
             vec4 projectedAlignedAxis = czm_modelViewProjection * vec4(alignedAxis, 0.0);
-            angle += sign(-projectedAlignedAxis.x) * acos( sign(projectedAlignedAxis.y) * (projectedAlignedAxis.y * projectedAlignedAxis.y) /
-                    (projectedAlignedAxis.x * projectedAlignedAxis.x + projectedAlignedAxis.y * projectedAlignedAxis.y) );
+            angle += sign(-projectedAlignedAxis.x) * acos(sign(projectedAlignedAxis.y) * (projectedAlignedAxis.y * projectedAlignedAxis.y) /
+                    (projectedAlignedAxis.x * projectedAlignedAxis.x + projectedAlignedAxis.y * projectedAlignedAxis.y));
         }
 
         float cosTheta = cos(angle);
@@ -108,7 +107,7 @@ float getGlobeDepth(vec4 positionEC)
 {
     vec4 posWC = czm_eyeToWindowCoordinates(positionEC);
 
-    float globeDepth = czm_unpackDepth(texture2D(czm_globeDepthTexture, posWC.xy/czm_viewport.zw));
+    float globeDepth = czm_unpackDepth(texture2D(czm_globeDepthTexture, posWC.xy / czm_viewport.zw));
 
     if (globeDepth == 0.0)
     {
@@ -384,11 +383,11 @@ if (lengthSq < disableDepthTestDistance) {
         imageSize /= mpp;
     }
 
-    #if defined(ROTATION) || defined(ALIGNED_AXIS)
+#if defined(ROTATION) || defined(ALIGNED_AXIS)
     v_rotationMatrix = rotationMatrix;
-    #else
+#else
     v_rotationMatrix = mat2(1.0, 0.0, 0.0, 1.0);
-    #endif
+#endif
 
     v_eyeDepthDistanceAndApplyTranslate.x = eyeDepth;
     if (lengthSq < disableDepthTestDistance)
