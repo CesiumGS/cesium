@@ -3,14 +3,16 @@ Change Log
 
 ### 1.48 - 2018-08-01
 
-#### Deprecated :hourglass_flowing_sand:
+##### Deprecated :hourglass_flowing_sand:
 * Support for 3D Tiles `content.url` is deprecated to reflect updates to the [3D Tiles spec](https://github.com/AnalyticalGraphicsInc/3d-tiles/pull/301). Use `content.uri instead`. Support for `content.url` will remain for backwards compatibility. [#6744](https://github.com/AnalyticalGraphicsInc/cesium/pull/6744)
 
 ##### Additions :tada:
+* Added support for loading Draco compressed Point Cloud tiles for 2-3x better compression. [#6559](https://github.com/AnalyticalGraphicsInc/cesium/pull/6559)
 * Added `CoplanarPolygonGeometry` and `CoplanarPolygonGeometryOutline` for drawing polygons composed of coplanar positions that are not necessarliy on the ellipsoid surface. [#6769](https://github.com/AnalyticalGraphicsInc/cesium/pull/6769)
 
 #### Fixes :wrench:
 * Fixed bug causing billboards and labels to appear the wrong size when switching scene modes [#6745](https://github.com/AnalyticalGraphicsInc/cesium/issues/6745)
+* Fixed a bug that was preventing 3D Tilesets on the opposite side of the globe from being occluded [#6714](https://github.com/AnalyticalGraphicsInc/cesium/issues/6714)
 
 ### 1.47 - 2018-07-02
 
