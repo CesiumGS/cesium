@@ -1148,10 +1148,9 @@ defineSuite([
 
         return pollToPromise(function() {
             pointCloud.update(scene.frameState);
-            var frame = pointCloud._frames[0];
-            return defined(frame) && frame.ready;
+            return defined(pointCloud.boundingSphere);
         }).then(function() {
-            return pointCloud;
+            return pointCloud.readyPromise;
         });
     }
 

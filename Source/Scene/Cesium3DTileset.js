@@ -1845,6 +1845,9 @@ define([
 
     ///////////////////////////////////////////////////////////////////////////
 
+    /**
+     * @private
+     */
     Cesium3DTileset.prototype.update = function(frameState) {
         if (frameState.mode === SceneMode.MORPHING) {
             return;

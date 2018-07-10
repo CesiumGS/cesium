@@ -614,6 +614,9 @@ define([
         clippingPlanesDirty : false
     };
 
+    /**
+     * @private
+     */
     TimeDynamicPointCloud.prototype.update = function(frameState) {
         if (frameState.mode === SceneMode.MORPHING) {
             return;

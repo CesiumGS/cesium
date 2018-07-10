@@ -481,7 +481,7 @@ define([
         // Use same random values across all runs
         if (!defined(randomValues)) {
             CesiumMath.setRandomNumberSeed(0);
-            randomValues = new Array(20);
+            randomValues = new Array(samplesLength);
             for (var i = 0; i < samplesLength; ++i) {
                 randomValues[i] = CesiumMath.nextRandomNumber();
             }
