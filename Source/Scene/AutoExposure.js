@@ -56,7 +56,7 @@ define([
         this.enabled = true;
         this._enabled = true;
 
-        this.minimumLuminance = 0.05;
+        this.minimumLuminance = 0.1;
         this.maximumLuminance = 10.0;
     }
 

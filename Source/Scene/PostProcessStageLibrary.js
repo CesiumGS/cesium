@@ -902,35 +902,15 @@ define([
     };
 
     PostProcessStageLibrary.createReinhardTonemappingStage = function(useAutoExposure) {
-        //var autoExposure = PostProcessStageLibrary.createAutoExposureStage();
-
-        useAutoExposure = false;
-
         var fs = useAutoExposure ? '#define AUTO_EXPOSURE\n' : '';
         fs += ReinhardTonemapping;
-        /*
         return new PostProcessStage({
-            name : 'czm_reinhard',
-            fragmentShader : fs
-        });
-        */
-
-        var tonemapping = new PostProcessStage({
             name : 'czm_reinhard',
             fragmentShader : fs,
             uniforms : {
-                autoExposure : undefined//autoExposure.name
+                autoExposure : undefined
             }
         });
-
-        /*
-        return new PostProcessStageComposite({
-            name : 'czm_tonemapping',
-            stages : [autoExposure, tonemapping],
-            inputPreviousStageTexture : false
-        });
-        */
-        return tonemapping;
     };
 
     PostProcessStageLibrary.createModifiedReinhardTonemappingStage = function(useAutoExposure) {
@@ -948,40 +928,6 @@ define([
 
     PostProcessStageLibrary.createAutoExposureStage = function() {
         return new AutoExposure();
-        /*
-        var toLuminance = 'uniform sampler2D colorTexture; varying vec2 v_textureCoordinates; void main() { gl_FragColor = vec4(czm_luminance(texture2D(colorTexture, v_textureCoordinates).rgb)); }';
-        var luminance = new PostProcessStage({
-            fragmentShader : toLuminance,
-            textureScale : 0.5,
-            pixelDatatype : PixelDatatype.FLOAT
-        });
-        var passThrough = 'uniform sampler2D colorTexture; varying vec2 v_textureCoordinates; void main() { gl_FragColor = texture2D(colorTexture, v_textureCoordinates); }';
-        var downsample = new PostProcessStage({
-            fragmentShader : passThrough,
-            textureScale : 0.5,
-            pixelDatatype : PixelDatatype.FLOAT
-        });
-        var downsample2 = new PostProcessStage({
-            fragmentShader : passThrough,
-            textureScale : 0.25,
-            pixelDatatype : PixelDatatype.FLOAT
-        });
-        var downsample3 = new PostProcessStage({
-            fragmentShader : passThrough,
-            textureScale : 0.125,
-            pixelDatatype : PixelDatatype.FLOAT
-        });
-        var downsample4 = new PostProcessStage({
-            fragmentShader : passThrough,
-            textureScale : 0.0625,
-            pixelDatatype : PixelDatatype.FLOAT
-        });
-
-        return new PostProcessStageComposite({
-            name : 'czm_auto_exposure',
-            stages : [luminance, downsample, downsample2, downsample3, downsample4]
-        });
-        */
     };
 
     /**
