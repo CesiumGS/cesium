@@ -2651,62 +2651,69 @@ define([
         viewport.height = context.drawingBufferHeight;
 
         var frameState = scene._frameState;
-        var camera = frameState.camera;
         var mode = frameState.mode;
-        var depthOnly = frameState.passes.depth;
 
         if (scene._useWebVR && mode !== SceneMode.SCENE2D) {
-            updateAndClearFramebuffers(scene, passState, backgroundColor);
-
-            if (!depthOnly) {
-                updateAndRenderPrimitives(scene);
-            }
-
-            createPotentiallyVisibleSet(scene);
-
-            if (!depthOnly) {
-                executeComputeCommands(scene);
-                executeShadowMapCastCommands(scene);
-            }
-
-            // Based on Calculating Stereo pairs by Paul Bourke
-            // http://paulbourke.net/stereographics/stereorender/
-
-            viewport.x = 0;
-            viewport.y = 0;
-            viewport.width = context.drawingBufferWidth * 0.5;
-            viewport.height = context.drawingBufferHeight;
-
-            var savedCamera = Camera.clone(camera, scene._cameraVR);
-
-            var near = camera.frustum.near;
-            var fo = near * defaultValue(scene.focalLength, 5.0);
-            var eyeSeparation = defaultValue(scene.eyeSeparation, fo / 30.0);
-            var eyeTranslation = Cartesian3.multiplyByScalar(savedCamera.right, eyeSeparation * 0.5, scratchEyeTranslation);
-
-            camera.frustum.aspectRatio = viewport.width / viewport.height;
-
-            var offset = 0.5 * eyeSeparation * near / fo;
-
-            Cartesian3.add(savedCamera.position, eyeTranslation, camera.position);
-            camera.frustum.xOffset = offset;
-
-            executeCommands(scene, passState);
-
-            viewport.x = passState.viewport.width;
-
-            Cartesian3.subtract(savedCamera.position, eyeTranslation, camera.position);
-            camera.frustum.xOffset = -offset;
-
-            executeCommands(scene, passState);
-
-            Camera.clone(savedCamera, camera);
+            executeWebVRCommands(scene, passState, backgroundColor);
         } else if (mode !== SceneMode.SCENE2D || scene._mapMode2D === MapMode2D.ROTATE) {
             executeCommandsInViewport(true, scene, passState, backgroundColor);
         } else {
             updateAndClearFramebuffers(scene, passState, backgroundColor);
             execute2DViewportCommands(scene, passState);
         }
+    }
+
+    function executeWebVRCommands(scene, passState, backgroundColor) {
+        var frameState = scene._frameState;
+        var context = scene._context;
+        var camera = frameState.camera;
+        var depthOnly = frameState.passes.depth;
+
+        updateAndClearFramebuffers(scene, passState, backgroundColor);
+
+        if (!depthOnly) {
+            updateAndRenderPrimitives(scene);
+        }
+
+        createPotentiallyVisibleSet(scene);
+
+        if (!depthOnly) {
+            executeComputeCommands(scene);
+            executeShadowMapCastCommands(scene);
+        }
+
+        // Based on Calculating Stereo pairs by Paul Bourke
+        // http://paulbourke.net/stereographics/stereorender/
+        var viewport = passState.viewport;
+        viewport.x = 0;
+        viewport.y = 0;
+        viewport.width = context.drawingBufferWidth * 0.5;
+        viewport.height = context.drawingBufferHeight;
+
+        var savedCamera = Camera.clone(camera, scene._cameraVR);
+
+        var near = camera.frustum.near;
+        var fo = near * defaultValue(scene.focalLength, 5.0);
+        var eyeSeparation = defaultValue(scene.eyeSeparation, fo / 30.0);
+        var eyeTranslation = Cartesian3.multiplyByScalar(savedCamera.right, eyeSeparation * 0.5, scratchEyeTranslation);
+
+        camera.frustum.aspectRatio = viewport.width / viewport.height;
+
+        var offset = 0.5 * eyeSeparation * near / fo;
+
+        Cartesian3.add(savedCamera.position, eyeTranslation, camera.position);
+        camera.frustum.xOffset = offset;
+
+        executeCommands(scene, passState);
+
+        viewport.x = passState.viewport.width;
+
+        Cartesian3.subtract(savedCamera.position, eyeTranslation, camera.position);
+        camera.frustum.xOffset = -offset;
+
+        executeCommands(scene, passState);
+
+        Camera.clone(savedCamera, camera);
     }
 
     var scratch2DViewportCartographic = new Cartographic(Math.PI, CesiumMath.PI_OVER_TWO);
