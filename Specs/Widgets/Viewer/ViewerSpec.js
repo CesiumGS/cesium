@@ -1146,8 +1146,10 @@ defineSuite([
         clock.currentTime = start;
         clock.multiplier = 0.0;
 
+        scene.primitives.add(pointCloud);
+
         return pollToPromise(function() {
-            pointCloud.update(scene.frameState);
+            scene.render();
             return defined(pointCloud.boundingSphere);
         }).then(function() {
             return pointCloud.readyPromise;
@@ -1172,6 +1174,7 @@ defineSuite([
 
             return promise.then(function() {
                 expect(wasCompleted).toEqual(true);
+                viewer.scene.primitives.remove(pointCloud);
             });
         });
     });
@@ -1194,6 +1197,7 @@ defineSuite([
 
             return promise.then(function() {
                 expect(wasCompleted).toEqual(true);
+                viewer.scene.primitives.remove(pointCloud);
             });
         });
     });
@@ -1384,6 +1388,7 @@ defineSuite([
 
             return promise.then(function() {
                 expect(wasCompleted).toEqual(true);
+                viewer.scene.primitives.remove(pointCloud);
             });
         });
     });
@@ -1407,6 +1412,7 @@ defineSuite([
 
             return promise.then(function() {
                 expect(wasCompleted).toEqual(true);
+                viewer.scene.primitives.remove(pointCloud);
             });
         });
     });
@@ -1434,6 +1440,7 @@ defineSuite([
 
             return promise.then(function() {
                 expect(wasCompleted).toEqual(true);
+                viewer.scene.primitives.remove(pointCloud);
             });
         });
     });
