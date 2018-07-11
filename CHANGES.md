@@ -13,6 +13,7 @@ Change Log
 #### Fixes :wrench:
 * Fixed bug causing billboards and labels to appear the wrong size when switching scene modes [#6745](https://github.com/AnalyticalGraphicsInc/cesium/issues/6745)
 * Fixed a bug that was preventing 3D Tilesets on the opposite side of the globe from being occluded [#6714](https://github.com/AnalyticalGraphicsInc/cesium/issues/6714)
+* Fixed a bug where 3D Tilesets using the `region` bounding volume don't get transformed when the tileset's `modelMatrix` changes. [6755](https://github.com/AnalyticalGraphicsInc/cesium/pull/6755)
 
 ### 1.47 - 2018-07-02
 
