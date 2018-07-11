@@ -757,7 +757,8 @@ define([
             useOIT : false,
             useInvertClassification : false,
             usePostProcess : false,
-            usePostProcessSelected : false
+            usePostProcessSelected : false,
+            useLogDepth : false
         };
 
         this._useWebVR = false;
@@ -1493,6 +1494,7 @@ define([
 
     function updateDerivedCommands(scene, command) {
         var frameState = scene.frameState;
+        var environmentState = scene._environmentState;
         var context = scene._context;
         var shadowsEnabled = frameState.shadowHints.shadowsEnabled;
         var shadowMaps = frameState.shadowHints.shadowMaps;
@@ -1512,8 +1514,7 @@ define([
         if ((scene._logDepthBufferDirty || scene._frustumChanged || command.dirty) && defined(derivedCommands)) {
             command.dirty = false;
 
-            var frustum = scene.camera.frustum;
-            var useLogDepth = scene._logDepthBuffer && !(frustum instanceof OrthographicFrustum || frustum instanceof OrthographicOffCenterFrustum);
+            var useLogDepth = environmentState.useLogDepth;
             var logDepthCommand;
             var logDepthDerivedCommands;
             if (useLogDepth) {
@@ -1601,6 +1602,7 @@ define([
         frameState.terrainExaggeration = scene._terrainExaggeration;
         frameState.minimumDisableDepthTestDistance = scene._minimumDisableDepthTestDistance;
         frameState.invertClassification = scene.invertClassification;
+        frameState.useLogDepth = scene._environmentState.useLogDepth;
 
         scene._actualInvertClassificationColor = Color.clone(scene.invertClassificationColor, scene._actualInvertClassificationColor);
         if (!InvertClassification.isTranslucencySupported(scene._context)) {
@@ -1701,6 +1703,7 @@ define([
 
     function createPotentiallyVisibleSet(scene) {
         var frameState = scene._frameState;
+        var environmentState = scene._environmentState;
         var camera = frameState.camera;
         var direction = camera.directionWC;
         var position = camera.positionWC;
@@ -1822,7 +1825,7 @@ define([
         // Exploit temporal coherence. If the frustums haven't changed much, use the frustums computed
         // last frame, else compute the new frustums and sort them by frustum again.
         var is2D = scene.mode === SceneMode.SCENE2D;
-        var logDepth = scene._logDepthBuffer && !(camera.frustum instanceof OrthographicFrustum || camera.frustum instanceof OrthographicOffCenterFrustum);
+        var logDepth = environmentState.useLogDepth;
         var farToNearRatio = logDepth ? scene.logarithmicDepthFarToNearRatio : scene.farToNearRatio;
         var numFrustums;
 
@@ -1952,6 +1955,7 @@ define([
         // Debug code to draw bounding volume for command.  Not optimized!
         // Assumes bounding volume is a bounding sphere or box
         var frameState = scene._frameState;
+        var environmentState = scene._environmentState;
         var context = frameState.context;
         var boundingVolume = command.boundingVolume;
 
@@ -2021,9 +2025,7 @@ define([
 
         command = commandList[0];
 
-        var frustum = scene.camera.frustum;
-        var useLogDepth = scene._logDepthBuffer && !(frustum instanceof OrthographicFrustum || frustum instanceof OrthographicOffCenterFrustum);
-        if (useLogDepth) {
+        if (environmentState.useLogDepth) {
             var logDepth = DerivedCommand.createLogDepthCommand(command, context);
             command = logDepth.command;
         }
@@ -2045,6 +2047,7 @@ define([
 
     function executeCommand(command, scene, context, passState, debugFramebuffer) {
         var frameState = scene._frameState;
+        var environmentState = scene._environmentState;
 
         if ((defined(scene.debugCommandFilter)) && !scene.debugCommandFilter(command)) {
             return;
@@ -2059,7 +2062,7 @@ define([
             debugShowBoundingVolume(command, scene, passState, debugFramebuffer);
         }
 
-        if (scene._logDepthBuffer && defined(command.derivedCommands.logDepth)) {
+        if (environmentState.useLogDepth && defined(command.derivedCommands.logDepth)) {
             command = command.derivedCommands.logDepth.command;
         }
 
@@ -2095,12 +2098,13 @@ define([
     }
 
     function executeIdCommand(command, scene, context, passState) {
+        var environmentState = scene._environmentState;
         var derivedCommands = command.derivedCommands;
         if (!defined(derivedCommands)) {
             return;
         }
 
-        if (scene._logDepthBuffer && defined(derivedCommands.logDepth)) {
+        if (environmentState.useLogDepth && defined(derivedCommands.logDepth)) {
             command = derivedCommands.logDepth.command;
         }
 
@@ -2881,10 +2885,10 @@ define([
             environmentState.moonCommand = defined(scene.moon) ? scene.moon.update(frameState) : undefined;
         }
 
+        var useLogDepth = environmentState.useLogDepth = scene._logDepthBuffer && !(scene.camera.frustum instanceof OrthographicFrustum || scene.camera.frustum instanceof OrthographicOffCenterFrustum);
         var clearGlobeDepth = environmentState.clearGlobeDepth = defined(globe) && (!globe.depthTestAgainstTerrain || scene.mode === SceneMode.SCENE2D);
         var useDepthPlane = environmentState.useDepthPlane = clearGlobeDepth && scene.mode === SceneMode.SCENE3D;
         if (useDepthPlane) {
-            var useLogDepth = scene._logDepthBuffer && !(scene.camera.frustum instanceof OrthographicFrustum || scene.camera.frustum instanceof OrthographicOffCenterFrustum);
             // Update the depth plane that is rendered in 3D when the primitives are
             // not depth tested against terrain so primitives on the backface
             // of the globe are not picked.
@@ -3038,10 +3042,7 @@ define([
             scene._sceneFramebuffer.update(context, passState);
             scene._sceneFramebuffer.clear(context, passState, clearColor);
 
-            var camera = scene.camera;
-            var useLogDepth = scene._logDepthBuffer && !(camera.frustum instanceof OrthographicFrustum || camera.frustum instanceof OrthographicOffCenterFrustum);
-
-            postProcess.update(context, useLogDepth);
+            postProcess.update(context, environmentState.useLogDepth);
             postProcess.clear(context);
 
             usePostProcess = environmentState.usePostProcess = postProcess.ready;
@@ -3123,8 +3124,7 @@ define([
             scene._globeDepth.executeCopyColor(context, passState);
         }
 
-        var frustum = scene.camera.frustum;
-        var useLogDepth = scene._logDepthBuffer && !(frustum instanceof OrthographicFrustum || frustum instanceof OrthographicOffCenterFrustum);
+        var useLogDepth = environmentState.useLogDepth;
 
         if (scene.debugShowGlobeDepth && useGlobeDepthFramebuffer) {
             var gd = getDebugGlobeDepth(scene, scene.debugShowDepthFrustum - 1);
