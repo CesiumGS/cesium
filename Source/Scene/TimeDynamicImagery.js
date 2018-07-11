@@ -25,8 +25,8 @@ define([
      * @constructor
      *
      * @param {Object} options Object with the following properties:
-     * @param {Clock} options.clock A Clock instance that is used when determining the value for the time dimension. Required when options.times is specified.
-     * @param {TimeIntervalCollection} options.times TimeIntervalCollection with its data property being an object containing time dynamic dimension and their values.
+     * @param {Clock} options.clock A Clock instance that is used when determining the value for the time dimension. Required when <code>options.times</code> is specified.
+     * @param {TimeIntervalCollection} options.times TimeIntervalCollection with its <code>data</code> property being an object containing time dynamic dimension and their values.
      * @param {Function} options.requestImageFunction A function that will request imagery tiles.
      * @param {Function} options.reloadFunction A function that will be called when all imagery tiles need to be reloaded.
      */
@@ -249,7 +249,7 @@ define([
 
         var seconds;
         var index = times.indexOf(time);
-        if (index === -1) {
+        if (index < 0) {
             return undefined;
         }
 
