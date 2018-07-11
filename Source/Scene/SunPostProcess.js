@@ -227,7 +227,7 @@ define([
         var framebuffer = sceneFramebuffer.getFramebuffer();
 
         this._textureCache.update(context);
-        this._stages.update(context);
+        this._stages.update(context, false);
 
         var viewport = passState.viewport;
         updateSunPosition(this, context, viewport);

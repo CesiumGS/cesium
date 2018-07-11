@@ -731,7 +731,6 @@ define([
         }
 
         this._cameraClone = Camera.clone(camera);
-        this._frustumChanged = true;
 
         // Keeps track of the state of a frame. FrameState is the state across
         // the primitives of the scene. This state is for internally keeping track
@@ -1454,7 +1453,7 @@ define([
          */
         opaqueFrustumNearOffset : {
             get : function() {
-                return this._logDepthBuffer ? 0.9 : 0.9999;
+                return this._frameState.useLogDepth ? 0.9 : 0.9999;
             }
         }
     });
@@ -1510,11 +1509,10 @@ define([
         }
 
         var derivedCommands = command.derivedCommands;
-        if ((scene._logDepthBufferDirty || scene._frustumChanged || command.dirty) && defined(derivedCommands)) {
+        if ((frameState.useLogDepthDirty || command.dirty) && defined(derivedCommands)) {
             command.dirty = false;
 
-            var frustum = scene.camera.frustum;
-            var useLogDepth = scene._logDepthBuffer && !(frustum instanceof OrthographicFrustum || frustum instanceof OrthographicOffCenterFrustum);
+            var useLogDepth = frameState.useLogDepth;
             var logDepthCommand;
             var logDepthDerivedCommands;
             if (useLogDepth) {
@@ -1602,6 +1600,11 @@ define([
         frameState.terrainExaggeration = scene._terrainExaggeration;
         frameState.minimumDisableDepthTestDistance = scene._minimumDisableDepthTestDistance;
         frameState.invertClassification = scene.invertClassification;
+
+        var useLogDepth = scene._logDepthBuffer && !(scene.camera.frustum instanceof OrthographicFrustum || scene.camera.frustum instanceof OrthographicOffCenterFrustum);
+        var useLogDepthDirty = useLogDepth !== frameState.useLogDepth;
+        frameState.useLogDepth = useLogDepth;
+        frameState.useLogDepthDirty = useLogDepthDirty;
 
         scene._actualInvertClassificationColor = Color.clone(scene.invertClassificationColor, scene._actualInvertClassificationColor);
         if (!InvertClassification.isTranslucencySupported(scene._context)) {
@@ -1823,7 +1826,7 @@ define([
         // Exploit temporal coherence. If the frustums haven't changed much, use the frustums computed
         // last frame, else compute the new frustums and sort them by frustum again.
         var is2D = scene.mode === SceneMode.SCENE2D;
-        var logDepth = scene._logDepthBuffer && !(camera.frustum instanceof OrthographicFrustum || camera.frustum instanceof OrthographicOffCenterFrustum);
+        var logDepth = frameState.useLogDepth;
         var farToNearRatio = logDepth ? scene.logarithmicDepthFarToNearRatio : scene.farToNearRatio;
         var numFrustums;
 
@@ -2022,9 +2025,7 @@ define([
 
         command = commandList[0];
 
-        var frustum = scene.camera.frustum;
-        var useLogDepth = scene._logDepthBuffer && !(frustum instanceof OrthographicFrustum || frustum instanceof OrthographicOffCenterFrustum);
-        if (useLogDepth) {
+        if (frameState.useLogDepth) {
             var logDepth = DerivedCommand.createLogDepthCommand(command, context);
             command = logDepth.command;
         }
@@ -2060,7 +2061,7 @@ define([
             debugShowBoundingVolume(command, scene, passState, debugFramebuffer);
         }
 
-        if (scene._logDepthBuffer && defined(command.derivedCommands.logDepth)) {
+        if (frameState.useLogDepth && defined(command.derivedCommands.logDepth)) {
             command = command.derivedCommands.logDepth.command;
         }
 
@@ -2093,12 +2094,13 @@ define([
     }
 
     function executeIdCommand(command, scene, context, passState) {
+        var frameState = scene._frameState;
         var derivedCommands = command.derivedCommands;
         if (!defined(derivedCommands)) {
             return;
         }
 
-        if (scene._logDepthBuffer && defined(derivedCommands.logDepth)) {
+        if (frameState.useLogDepth && defined(derivedCommands.logDepth)) {
             command = derivedCommands.logDepth.command;
         }
 
@@ -2158,6 +2160,7 @@ define([
         var camera = scene._camera;
         var context = scene.context;
         var us = context.uniformState;
+        var frameState = scene._frameState;
 
         us.updateCamera(camera);
 
@@ -2883,11 +2886,10 @@ define([
         var clearGlobeDepth = environmentState.clearGlobeDepth = defined(globe) && (!globe.depthTestAgainstTerrain || scene.mode === SceneMode.SCENE2D);
         var useDepthPlane = environmentState.useDepthPlane = clearGlobeDepth && scene.mode === SceneMode.SCENE3D;
         if (useDepthPlane) {
-            var useLogDepth = scene._logDepthBuffer && !(scene.camera.frustum instanceof OrthographicFrustum || scene.camera.frustum instanceof OrthographicOffCenterFrustum);
             // Update the depth plane that is rendered in 3D when the primitives are
             // not depth tested against terrain so primitives on the backface
             // of the globe are not picked.
-            scene._depthPlane.update(frameState, useLogDepth);
+            scene._depthPlane.update(frameState);
         }
 
         var occluder = (frameState.mode === SceneMode.SCENE3D) ? frameState.occluder: undefined;
@@ -2989,6 +2991,7 @@ define([
 
     function updateAndClearFramebuffers(scene, passState, clearColor) {
         var context = scene._context;
+        var frameState = scene._frameState;
         var environmentState = scene._environmentState;
 
         var passes = scene._frameState.passes;
@@ -3040,10 +3043,7 @@ define([
             scene._sceneFramebuffer.update(context, passState);
             scene._sceneFramebuffer.clear(context, passState, clearColor);
 
-            var camera = scene.camera;
-            var useLogDepth = scene._logDepthBuffer && !(camera.frustum instanceof OrthographicFrustum || camera.frustum instanceof OrthographicOffCenterFrustum);
-
-            postProcess.update(context, useLogDepth);
+            postProcess.update(context, frameState.useLogDepth);
             postProcess.clear(context);
 
             usePostProcess = environmentState.usePostProcess = postProcess.ready;
@@ -3090,6 +3090,7 @@ define([
 
     function resolveFramebuffers(scene, passState) {
         var context = scene._context;
+        var frameState = scene._frameState;
         var environmentState = scene._environmentState;
 
         var useOIT = environmentState.useOIT;
@@ -3125,8 +3126,7 @@ define([
             scene._globeDepth.executeCopyColor(context, passState);
         }
 
-        var frustum = scene.camera.frustum;
-        var useLogDepth = scene._logDepthBuffer && !(frustum instanceof OrthographicFrustum || frustum instanceof OrthographicOffCenterFrustum);
+        var useLogDepth = frameState.useLogDepth;
 
         if (scene.debugShowGlobeDepth && useGlobeDepthFramebuffer) {
             var gd = getDebugGlobeDepth(scene, scene.debugShowDepthFrustum - 1);
@@ -3175,8 +3175,6 @@ define([
     function checkForCameraUpdates(scene) {
         var camera = scene._camera;
         var cameraClone = scene._cameraClone;
-
-        scene._frustumChanged = !camera.frustum.equals(cameraClone.frustum);
 
         if (!cameraEqual(camera, cameraClone, CesiumMath.EPSILON15)) {
             if (!scene._cameraStartFired) {
@@ -3316,8 +3314,9 @@ define([
         tryAndCatchError(this, time, update);
         this._postUpdate.raiseEvent(this, time);
 
+        var frustumChanged = !this._camera.frustum.equals(this._cameraClone.frustum);
         var cameraChanged = checkForCameraUpdates(this);
-        var shouldRender = !this.requestRenderMode || this._renderRequested || cameraChanged || this._logDepthBufferDirty || (this.mode === SceneMode.MORPHING);
+        var shouldRender = !this.requestRenderMode || this._renderRequested || cameraChanged || frustumChanged || this._logDepthBufferDirty || (this.mode === SceneMode.MORPHING);
         if (!shouldRender && defined(this.maximumRenderTimeChange) && defined(this._lastRenderTime)) {
             var difference = Math.abs(JulianDate.secondsDifference(this._lastRenderTime, time));
             shouldRender = shouldRender || difference > this.maximumRenderTimeChange;

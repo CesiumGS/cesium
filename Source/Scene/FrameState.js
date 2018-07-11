@@ -330,6 +330,22 @@ define([
          * @type {Color}
          */
         this.invertClassificationColor = undefined;
+
+        /**
+         * Whether or not the scene uses a logarithmic depth buffer.
+         *
+         * @type {Boolean}
+         * @default false
+         */
+        this.useLogDepth = false;
+
+        /**
+         * Whether or not the scene's logarithmic depth buffer usage changed since last frame.
+         *
+         * @type {Boolean}
+         * @default false
+         */
+        this.useLogDepthDirty = false;
     }
 
     /**

@@ -306,7 +306,7 @@ define([
         var near = currentFrustum.x;
         var far = currentFrustum.y;
 
-        if (scene._logDepthBuffer && !(scene.camera.frustum instanceof OrthographicFrustum || scene.camera.frustum instanceof OrthographicOffCenterFrustum)) {
+        if (scene.frameState.useLogDepth) {
             // transforming logarithmic depth of form
             // log2(z + 1) / log2( far + 1);
             // to perspective form
