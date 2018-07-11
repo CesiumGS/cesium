@@ -941,7 +941,6 @@ define([
         }
 
         if (defined(result)) {
-            // Don't update regions when the transform changes
             return result;
         }
 
