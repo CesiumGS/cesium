@@ -411,7 +411,7 @@ define([
                 }
 
                 topGeo.attributes.position.values = topBottomPositions;
-                if (perPositionHeight) {
+                if (perPositionHeight && vertexFormat.normal) {
                     var normals = topGeo.attributes.normal.values;
                     topGeo.attributes.normal.values = new Float32Array(topBottomPositions.length);
                     topGeo.attributes.normal.values.set(normals);
