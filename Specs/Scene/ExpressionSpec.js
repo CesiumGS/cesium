@@ -3326,7 +3326,7 @@ defineSuite([
     it('gets shader expression for tiles3d_tileset_time', function() {
         var expression = new Expression('${tiles3d_tileset_time}');
         var shaderExpression = expression.getShaderExpression('', {});
-        var expected = 'u_tilesetTime';
+        var expected = 'u_time';
         expect(shaderExpression).toEqual(expected);
     });
 
