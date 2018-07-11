@@ -1,5 +1,6 @@
 define([
         './arrayRemoveDuplicates',
+        './Cartesian2',
         './Cartesian3',
         './ComponentDatatype',
         './defaultValue',
@@ -11,12 +12,15 @@ define([
         './GeometryPipeline',
         './IndexDatatype',
         './Math',
+        './Matrix3',
         './PolygonPipeline',
         './PrimitiveType',
+        './Quaternion',
         './Queue',
         './WindingOrder'
     ], function(
         arrayRemoveDuplicates,
+        Cartesian2,
         Cartesian3,
         ComponentDatatype,
         defaultValue,
@@ -28,8 +32,10 @@ define([
         GeometryPipeline,
         IndexDatatype,
         CesiumMath,
+        Matrix3,
         PolygonPipeline,
         PrimitiveType,
+        Quaternion,
         Queue,
         WindingOrder) {
     'use strict';
@@ -203,7 +209,63 @@ define([
         return geometry;
     };
 
-    PolygonGeometryLibrary.polygonsFromHierarchy = function(polygonHierarchy, perPositionHeight, tangentPlane, ellipsoid) {
+    PolygonGeometryLibrary.polygonOutlinesFromHierarchy = function(polygonHierarchy, scaleToEllipsoidSurface, ellipsoid) {
+        // create from a polygon hierarchy
+        // Algorithm adapted from http://www.geometrictools.com/Documentation/TriangulationByEarClipping.pdf
+        var polygons = [];
+        var queue = new Queue();
+        queue.enqueue(polygonHierarchy);
+        var i;
+        var j;
+        var length;
+        while (queue.length !== 0) {
+            var outerNode = queue.dequeue();
+            var outerRing = outerNode.positions;
+            if (scaleToEllipsoidSurface) {
+                length = outerRing.length;
+                for (i = 0; i < length; i++) {
+                    ellipsoid.scaleToGeodeticSurface(outerRing[i], outerRing[i]);
+                }
+            }
+            outerRing = arrayRemoveDuplicates(outerRing, Cartesian3.equalsEpsilon, true);
+            if (outerRing.length < 3) {
+                continue;
+            }
+
+            var numChildren = outerNode.holes ? outerNode.holes.length : 0;
+            // The outer polygon contains inner polygons
+            for (i = 0; i < numChildren; i++) {
+                var hole = outerNode.holes[i];
+                var holePositions = hole.positions;
+                if (scaleToEllipsoidSurface) {
+                    length = holePositions.length;
+                    for (j = 0; j < length; ++j) {
+                        ellipsoid.scaleToGeodeticSurface(holePositions[j], holePositions[j]);
+                    }
+                }
+                holePositions = arrayRemoveDuplicates(holePositions, Cartesian3.equalsEpsilon, true);
+                if (holePositions.length < 3) {
+                    continue;
+                }
+                polygons.push(holePositions);
+
+                var numGrandchildren = 0;
+                if (defined(hole.holes)) {
+                    numGrandchildren = hole.holes.length;
+                }
+
+                for (j = 0; j < numGrandchildren; j++) {
+                    queue.enqueue(hole.holes[j]);
+                }
+            }
+
+            polygons.push(outerRing);
+        }
+
+        return polygons;
+    };
+
+    PolygonGeometryLibrary.polygonsFromHierarchy = function(polygonHierarchy, projectPointsTo2D, scaleToEllipsoidSurface, ellipsoid) {
         // create from a polygon hierarchy
         // Algorithm adapted from http://www.geometrictools.com/Documentation/TriangulationByEarClipping.pdf
         var hierarchy = [];
@@ -219,7 +281,7 @@ define([
 
             var i;
             var length;
-            if (!perPositionHeight) {
+            if (scaleToEllipsoidSurface) {
                 length = outerRing.length;
                 for (i = 0; i < length; i++) {
                     ellipsoid.scaleToGeodeticSurface(outerRing[i], outerRing[i]);
@@ -231,7 +293,10 @@ define([
                 continue;
             }
 
-            var positions2D = tangentPlane.projectPointsOntoPlane(outerRing);
+            var positions2D = projectPointsTo2D(outerRing);
+            if (!defined(positions2D)) {
+                continue;
+            }
             var holeIndices = [];
 
             var originalWindingOrder = PolygonPipeline.computeWindingOrder2D(positions2D);
@@ -248,7 +313,7 @@ define([
             for (i = 0; i < numChildren; i++) {
                 var hole = holes[i];
                 var holePositions = hole.positions;
-                if (!perPositionHeight) {
+                if (scaleToEllipsoidSurface) {
                     length = holePositions.length;
                     for (j = 0; j < length; ++j) {
                         ellipsoid.scaleToGeodeticSurface(holePositions[j], holePositions[j]);
@@ -260,7 +325,10 @@ define([
                     continue;
                 }
 
-                var holePositions2D = tangentPlane.projectPointsOntoPlane(holePositions);
+                var holePositions2D = projectPointsTo2D(holePositions);
+                if (!defined(holePositions2D)) {
+                    continue;
+                }
 
                 originalWindingOrder = PolygonPipeline.computeWindingOrder2D(holePositions2D);
                 if (originalWindingOrder === WindingOrder.CLOCKWISE) {
@@ -298,6 +366,41 @@ define([
             hierarchy : hierarchy,
             polygons : polygons
         };
+    };
+
+    var computeBoundingRectangleCartesian2 = new Cartesian2();
+    var computeBoundingRectangleCartesian3 = new Cartesian3();
+    var computeBoundingRectangleQuaternion = new Quaternion();
+    var computeBoundingRectangleMatrix3 = new Matrix3();
+    PolygonGeometryLibrary.computeBoundingRectangle = function (planeNormal, projectPointTo2D, positions, angle, result) {
+        var rotation = Quaternion.fromAxisAngle(planeNormal, angle, computeBoundingRectangleQuaternion);
+        var textureMatrix = Matrix3.fromQuaternion(rotation, computeBoundingRectangleMatrix3);
+
+        var minX = Number.POSITIVE_INFINITY;
+        var maxX = Number.NEGATIVE_INFINITY;
+        var minY = Number.POSITIVE_INFINITY;
+        var maxY = Number.NEGATIVE_INFINITY;
+
+        var length = positions.length;
+        for ( var i = 0; i < length; ++i) {
+            var p = Cartesian3.clone(positions[i], computeBoundingRectangleCartesian3);
+            Matrix3.multiplyByVector(textureMatrix, p, p);
+            var st = projectPointTo2D(p, computeBoundingRectangleCartesian2);
+
+            if (defined(st)) {
+                minX = Math.min(minX, st.x);
+                maxX = Math.max(maxX, st.x);
+
+                minY = Math.min(minY, st.y);
+                maxY = Math.max(maxY, st.y);
+            }
+        }
+
+        result.x = minX;
+        result.y = minY;
+        result.width = maxX - minX;
+        result.height = maxY - minY;
+        return result;
     };
 
     PolygonGeometryLibrary.createGeometryFromPositions = function(ellipsoid, polygon, granularity, perPositionHeight, vertexFormat) {

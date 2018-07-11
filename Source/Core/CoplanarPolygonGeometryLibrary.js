@@ -22,7 +22,7 @@ define([
     /**
      * @private
      */
-    var PolygonGeometryLibrary = {};
+    var CoplanarPolygonGeometryLibrary = {};
 
     var scratchIntersectionPoint = new Cartesian3();
     var scratchXAxis = new Cartesian3();
@@ -30,11 +30,32 @@ define([
     var scratchZAxis = new Cartesian3();
     var obbScratch = new OrientedBoundingBox();
 
-    // call after removeDuplicates
-    PolygonGeometryLibrary.projectTo2D = function(positions, positionsResult, normalResult, tangentResult, bitangentResult) {
+    CoplanarPolygonGeometryLibrary.validOutline = function(positions) {
         //>>includeStart('debug', pragmas.debug);
         Check.defined('positions', positions);
-        Check.defined('positionsResult', positionsResult);
+        //>>includeEnd('debug');
+
+        var orientedBoundingBox = OrientedBoundingBox.fromPoints(positions, obbScratch);
+        var halfAxes = orientedBoundingBox.halfAxes;
+        var xAxis = Matrix3.getColumn(halfAxes, 0, scratchXAxis);
+        var yAxis = Matrix3.getColumn(halfAxes, 1, scratchYAxis);
+        var zAxis = Matrix3.getColumn(halfAxes, 2, scratchZAxis);
+
+        var xMag = Cartesian3.magnitude(xAxis);
+        var yMag = Cartesian3.magnitude(yAxis);
+        var zMag = Cartesian3.magnitude(zAxis);
+
+        // If all the points are on a line return undefined because we can't draw a polygon
+        return !((xMag === 0 && (yMag === 0 || zMag === 0)) || (yMag === 0 && zMag === 0));
+    };
+
+    // call after removeDuplicates
+    CoplanarPolygonGeometryLibrary.computeProjectTo2DArguments = function(positions, centerResult, planeAxis1Result, planeAxis2Result) {
+        //>>includeStart('debug', pragmas.debug);
+        Check.defined('positions', positions);
+        Check.defined('centerResult', centerResult);
+        Check.defined('planeAxis1Result', planeAxis1Result);
+        Check.defined('planeAxis2Result', planeAxis2Result);
         //>>includeEnd('debug');
 
         var orientedBoundingBox = OrientedBoundingBox.fromPoints(positions, obbScratch);
@@ -50,7 +71,7 @@ define([
 
         // If all the points are on a line return undefined because we can't draw a polygon
         if ((xMag === 0 && (yMag === 0 || zMag === 0)) || (yMag === 0 && zMag === 0)) {
-            return;
+            return false;
         }
 
         var planeAxis1;
@@ -68,33 +89,36 @@ define([
             planeAxis2 = zAxis;
         }
 
-        planeAxis1 = Cartesian3.normalize(planeAxis1, planeAxis1);
-        planeAxis2 = Cartesian3.normalize(planeAxis2, planeAxis2);
-
-        if (defined(normalResult)) {
-            normalResult = Cartesian3.cross(planeAxis1, planeAxis2, normalResult);
-            normalResult = Cartesian3.normalize(normalResult, normalResult);
-        }
-        if (defined(tangentResult)) {
-            Cartesian3.clone(planeAxis1, tangentResult);
-        }
-        if (defined(bitangentResult)) {
-            Cartesian3.clone(planeAxis2, bitangentResult);
-        }
-
-        for (var i = 0; i < positions.length; i++) {
-            var position = positions[i];
-            var v = Cartesian3.subtract(position, orientedBoundingBox.center, scratchIntersectionPoint);
-            var x = Cartesian3.dot(planeAxis1, v);
-            var y = Cartesian3.dot(planeAxis2, v);
-
-            positionsResult[i] = Cartesian2.fromElements(x, y, positionsResult[i]);
-        }
-
-        positionsResult.length = positions.length;
-
-        return positionsResult;
+        Cartesian3.normalize(planeAxis1, planeAxis1Result);
+        Cartesian3.normalize(planeAxis2, planeAxis2Result);
+        Cartesian3.clone(orientedBoundingBox.center, centerResult);
+        return true;
     };
 
-    return PolygonGeometryLibrary;
+    function projectTo2D(position, center, axis1, axis2, result) {
+        var v = Cartesian3.subtract(position, center, scratchIntersectionPoint);
+        var x = Cartesian3.dot(axis1, v);
+        var y = Cartesian3.dot(axis2, v);
+
+        return Cartesian2.fromElements(x, y, result);
+    }
+
+    CoplanarPolygonGeometryLibrary.createProjectPointsTo2DFunction = function(center, axis1, axis2) {
+        return function(positions) {
+            var positionResults = new Array(positions.length);
+            for (var i = 0; i < positions.length; i++) {
+                positionResults[i] = projectTo2D(positions[i], center, axis1, axis2);
+            }
+
+            return positionResults;
+        };
+    };
+
+    CoplanarPolygonGeometryLibrary.createProjectPointTo2DFunction = function(center, axis1, axis2) {
+        return function(position, result) {
+            return projectTo2D(position, center, axis1, axis2, result);
+        };
+    };
+
+    return CoplanarPolygonGeometryLibrary;
 });
