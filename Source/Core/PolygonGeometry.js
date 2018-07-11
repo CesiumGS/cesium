@@ -60,42 +60,6 @@ define([
         WindingOrder) {
     'use strict';
 
-    var computeBoundingRectangleCartesian2 = new Cartesian2();
-    var computeBoundingRectangleCartesian3 = new Cartesian3();
-    var computeBoundingRectangleQuaternion = new Quaternion();
-    var computeBoundingRectangleMatrix3 = new Matrix3();
-
-    function computeBoundingRectangle(tangentPlane, positions, angle, result) {
-        var rotation = Quaternion.fromAxisAngle(tangentPlane._plane.normal, angle, computeBoundingRectangleQuaternion);
-        var textureMatrix = Matrix3.fromQuaternion(rotation, computeBoundingRectangleMatrix3);
-
-        var minX = Number.POSITIVE_INFINITY;
-        var maxX = Number.NEGATIVE_INFINITY;
-        var minY = Number.POSITIVE_INFINITY;
-        var maxY = Number.NEGATIVE_INFINITY;
-
-        var length = positions.length;
-        for ( var i = 0; i < length; ++i) {
-            var p = Cartesian3.clone(positions[i], computeBoundingRectangleCartesian3);
-            Matrix3.multiplyByVector(textureMatrix, p, p);
-            var st = tangentPlane.projectPointOntoPlane(p, computeBoundingRectangleCartesian2);
-
-            if (defined(st)) {
-                minX = Math.min(minX, st.x);
-                maxX = Math.max(maxX, st.x);
-
-                minY = Math.min(minY, st.y);
-                maxY = Math.max(maxY, st.y);
-            }
-        }
-
-        result.x = minX;
-        result.y = minY;
-        result.width = maxX - minX;
-        result.height = maxY - minY;
-        return result;
-    }
-
     var scratchCarto1 = new Cartographic();
     var scratchCarto2 = new Cartographic();
     function adjustPosHeightsForNormal(position, p1, p2, ellipsoid) {
@@ -458,7 +422,7 @@ define([
                 }
 
                 topGeo.attributes.position.values = topBottomPositions;
-                if (perPositionHeight) {
+                if (perPositionHeight && vertexFormat.normal) {
                     var normals = topGeo.attributes.normal.values;
                     topGeo.attributes.normal.values = new Float32Array(topBottomPositions.length);
                     topGeo.attributes.normal.values.set(normals);
@@ -864,7 +828,7 @@ define([
 
         var tangentPlane = EllipsoidTangentPlane.fromPoints(outerPositions, ellipsoid);
 
-        var results = PolygonGeometryLibrary.polygonsFromHierarchy(polygonHierarchy, perPositionHeight, tangentPlane, ellipsoid);
+        var results = PolygonGeometryLibrary.polygonsFromHierarchy(polygonHierarchy, tangentPlane.projectPointsOntoPlane.bind(tangentPlane), !perPositionHeight, ellipsoid);
         var hierarchy = results.hierarchy;
         var polygons = results.polygons;
 
@@ -873,7 +837,7 @@ define([
         }
 
         outerPositions = hierarchy[0].outerRing;
-        var boundingRectangle = computeBoundingRectangle(tangentPlane, outerPositions, stRotation, scratchBoundingRectangle);
+        var boundingRectangle = PolygonGeometryLibrary.computeBoundingRectangle(tangentPlane.plane.normal, tangentPlane.projectPointOntoPlane.bind(tangentPlane), outerPositions, stRotation, scratchBoundingRectangle);
 
         var geometries = [];
 

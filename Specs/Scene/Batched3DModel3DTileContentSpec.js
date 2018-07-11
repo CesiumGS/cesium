@@ -202,9 +202,7 @@ defineSuite([
     });
 
     it('renders with a tile transform and region bounding volume', function() {
-        return Cesium3DTilesTester.loadTileset(scene, withTransformRegionUrl).then(function(tileset) {
-            Cesium3DTilesTester.expectRenderTileset(scene, tileset);
-        });
+        return expectRenderWithTransform(withTransformRegionUrl);
     });
 
     it('picks with batch table', function() {
@@ -392,6 +390,7 @@ defineSuite([
             var newHPR = new HeadingPitchRoll();
             var newTransform = Transforms.headingPitchRollToFixedFrame(newCenter, newHPR);
             tileset._root.transform = newTransform;
+            scene.camera.lookAt(newCenter, new HeadingPitchRange(0.0, 0.0, 15.0));
             scene.renderForSpecs();
 
             expectedModelTransform = Matrix4.multiply(tileset._root.computedTransform, rtcTransform, expectedModelTransform);

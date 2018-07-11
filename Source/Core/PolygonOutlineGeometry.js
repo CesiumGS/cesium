@@ -477,57 +477,7 @@ define([
         var polygonHierarchy = polygonGeometry._polygonHierarchy;
         var perPositionHeight = polygonGeometry._perPositionHeight;
 
-        // create from a polygon hierarchy
-        // Algorithm adapted from http://www.geometrictools.com/Documentation/TriangulationByEarClipping.pdf
-        var polygons = [];
-        var queue = new Queue();
-        queue.enqueue(polygonHierarchy);
-        var i;
-        var j;
-        var length;
-        while (queue.length !== 0) {
-            var outerNode = queue.dequeue();
-            var outerRing = outerNode.positions;
-            if (!perPositionHeight) {
-                length = outerRing.length;
-                for (i = 0; i < length; i++) {
-                    ellipsoid.scaleToGeodeticSurface(outerRing[i], outerRing[i]);
-                }
-            }
-            outerRing = arrayRemoveDuplicates(outerRing, Cartesian3.equalsEpsilon, true);
-            if (outerRing.length < 3) {
-                continue;
-            }
-
-            var numChildren = outerNode.holes ? outerNode.holes.length : 0;
-            // The outer polygon contains inner polygons
-            for (i = 0; i < numChildren; i++) {
-                var hole = outerNode.holes[i];
-                var holePositions = hole.positions;
-                if (!perPositionHeight) {
-                    length = holePositions.length;
-                    for (j = 0; j < length; ++j) {
-                        ellipsoid.scaleToGeodeticSurface(holePositions[j], holePositions[j]);
-                    }
-                }
-                holePositions = arrayRemoveDuplicates(holePositions, Cartesian3.equalsEpsilon, true);
-                if (holePositions.length < 3) {
-                    continue;
-                }
-                polygons.push(holePositions);
-
-                var numGrandchildren = 0;
-                if (defined(hole.holes)) {
-                    numGrandchildren = hole.holes.length;
-                }
-
-                for (j = 0; j < numGrandchildren; j++) {
-                    queue.enqueue(hole.holes[j]);
-                }
-            }
-
-            polygons.push(outerRing);
-        }
+        var polygons = PolygonGeometryLibrary.polygonOutlinesFromHierarchy(polygonHierarchy, !perPositionHeight, ellipsoid);
 
         if (polygons.length === 0) {
             return undefined;
@@ -541,6 +491,7 @@ define([
         var extrudedHeight = polygonGeometry._extrudedHeight;
         var extrude = polygonGeometry._perPositionHeightExtrude || !CesiumMath.equalsEpsilon(height, extrudedHeight, 0, CesiumMath.EPSILON2);
         var offsetValue;
+        var i;
         if (extrude) {
             for (i = 0; i < polygons.length; i++) {
                 geometryInstance = createGeometryFromPositionsExtruded(ellipsoid, polygons[i], minDistance, perPositionHeight);
@@ -569,7 +520,7 @@ define([
                 geometryInstance.geometry.attributes.position.values = PolygonPipeline.scaleToGeodeticHeight(geometryInstance.geometry.attributes.position.values, height, ellipsoid, !perPositionHeight);
 
                 if (defined(polygonGeometry._offsetAttribute)) {
-                    length = geometryInstance.geometry.attributes.position.values.length;
+                    var length = geometryInstance.geometry.attributes.position.values.length;
                     var applyOffset = new Uint8Array(length / 3);
                     offsetValue = polygonGeometry._offsetAttribute === GeometryOffsetAttribute.NONE ? 0 : 1;
                     arrayFill(applyOffset, offsetValue);

@@ -1748,7 +1748,7 @@ define([
                 throw new RuntimeError('Error generating style shader: undefined is not supported.');
             case ExpressionNodeType.BUILTIN_VARIABLE:
                 if (value === 'tiles3d_tileset_time') {
-                    return 'u_tilesetTime';
+                    return 'u_time';
                 }
         }
     };
