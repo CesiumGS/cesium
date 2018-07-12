@@ -731,7 +731,6 @@ define([
         }
 
         this._cameraClone = Camera.clone(camera);
-        this._frustumChanged = true;
 
         // Keeps track of the state of a frame. FrameState is the state across
         // the primitives of the scene. This state is for internally keeping track
@@ -760,6 +759,7 @@ define([
             usePostProcess : false,
             usePostProcessSelected : false,
             useLogDepth : false,
+            useLogDepthDirty : false,
             useWebVR : false
         };
 
@@ -1513,7 +1513,7 @@ define([
         }
 
         var derivedCommands = command.derivedCommands;
-        if ((scene._logDepthBufferDirty || scene._frustumChanged || command.dirty) && defined(derivedCommands)) {
+        if ((environmentState.useLogDepthDirty || command.dirty) && defined(derivedCommands)) {
             command.dirty = false;
 
             var useLogDepth = environmentState.useLogDepth;
@@ -2900,7 +2900,11 @@ define([
             environmentState.moonCommand = defined(scene.moon) ? scene.moon.update(frameState) : undefined;
         }
 
-        var useLogDepth = environmentState.useLogDepth = scene._logDepthBuffer && !(scene.camera.frustum instanceof OrthographicFrustum || scene.camera.frustum instanceof OrthographicOffCenterFrustum);
+        var useLogDepth = scene._logDepthBuffer && !(scene.camera.frustum instanceof OrthographicFrustum || scene.camera.frustum instanceof OrthographicOffCenterFrustum);
+        var useLogDepthDirty = useLogDepth !== environmentState.useLogDepth;
+        environmentState.useLogDepth = useLogDepth;
+        environmentState.useLogDepthDirty = useLogDepthDirty;
+
         var clearGlobeDepth = environmentState.clearGlobeDepth = defined(globe) && (!globe.depthTestAgainstTerrain || scene.mode === SceneMode.SCENE2D);
         var useDepthPlane = environmentState.useDepthPlane = clearGlobeDepth && scene.mode === SceneMode.SCENE3D;
         if (useDepthPlane) {
@@ -3328,10 +3332,9 @@ define([
         tryAndCatchError(this, time, update);
         this._postUpdate.raiseEvent(this, time);
 
-        this._frustumChanged = !this._camera.frustum.equals(this._cameraClone.frustum);
-
+        var frustumChanged = !this._camera.frustum.equals(this._cameraClone.frustum);
         var cameraChanged = checkForCameraUpdates(this);
-        var shouldRender = !this.requestRenderMode || this._renderRequested || cameraChanged || this._frustumChanged || this._logDepthBufferDirty || (this.mode === SceneMode.MORPHING);
+        var shouldRender = !this.requestRenderMode || this._renderRequested || cameraChanged || frustumChanged || this._logDepthBufferDirty || (this.mode === SceneMode.MORPHING);
         if (!shouldRender && defined(this.maximumRenderTimeChange) && defined(this._lastRenderTime)) {
             var difference = Math.abs(JulianDate.secondsDifference(this._lastRenderTime, time));
             shouldRender = shouldRender || difference > this.maximumRenderTimeChange;
