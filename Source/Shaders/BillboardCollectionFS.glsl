@@ -8,7 +8,7 @@ varying vec2 v_textureCoordinates;
 varying vec4 v_pickColor;
 varying vec4 v_color;
 
-#ifdef CLAMP_TO_GROUND
+#ifdef FRAGMENT_DEPTH_CHECK
 varying vec4 v_textureCoordinateBounds;                  // the min and max x and y values for the texture coordinates
 varying vec4 v_originTextureCoordinateAndTranslate;      // texture coordinate at the origin, billboard translate (used for label glyphs)
 varying vec4 v_dimensionsAndImageSize;                   // dimensions of the bounding rectangle and the size of the image.  The values will only be different for label glyphs
@@ -79,8 +79,8 @@ void main()
 
     czm_writeLogDepth();
 
-#ifdef CLAMP_TO_GROUND
-    if (v_eyeDepthDistanceAndApplyTranslate.x > -v_eyeDepthDistanceAndApplyTranslate.y) {
+#ifdef FRAGMENT_DEPTH_CHECK
+    if (v_eyeDepthDistanceAndApplyTranslate.y != 0.0) {
         vec2 adjustedST = v_textureCoordinates - v_textureCoordinateBounds.xy;
         adjustedST = adjustedST / vec2(v_textureCoordinateBounds.z - v_textureCoordinateBounds.x, v_textureCoordinateBounds.w - v_textureCoordinateBounds.y);
 
