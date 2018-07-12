@@ -1201,7 +1201,6 @@ define([
         for (var i = commandStart; i < commandEnd; ++i) {
             var command = commandList[i];
             var derivedCommands = command.derivedCommands.tileset;
-            // Command may be marked dirty from Model shader recompilation for clipping planes
             if (!defined(derivedCommands) || command.dirty) {
                 derivedCommands = {};
                 command.derivedCommands.tileset = derivedCommands;
@@ -1209,13 +1208,10 @@ define([
                 command.dirty = false;
             }
 
-            updateDerivedCommand(derivedCommands.originalCommand, command);
-
             if (styleCommandsNeeded !== StyleCommandsNeeded.ALL_OPAQUE) {
                 if (!defined(derivedCommands.translucent)) {
                     derivedCommands.translucent = deriveTranslucentCommand(derivedCommands.originalCommand);
                 }
-                updateDerivedCommand(derivedCommands.translucent, command);
             }
 
             if (bivariateVisibilityTest) {
@@ -1228,7 +1224,6 @@ define([
                 if (!defined(derivedCommands.stencil) || tile._selectionDepth !== getLastSelectionDepth(derivedCommands.stencil)) {
                     derivedCommands.stencil = deriveStencilCommand(derivedCommands.originalCommand, tile._selectionDepth);
                 }
-                updateDerivedCommand(derivedCommands.stencil, command);
             }
 
             var opaqueCommand = bivariateVisibilityTest ? derivedCommands.stencil : derivedCommands.originalCommand;
@@ -1263,12 +1258,6 @@ define([
             }
         }
     };
-
-    function updateDerivedCommand(derivedCommand, command) {
-        derivedCommand.castShadows = command.castShadows;
-        derivedCommand.receiveShadows = command.receiveShadows;
-        derivedCommand.primitiveType = command.primitiveType;
-    }
 
     function getStyleCommandsNeeded(batchTable) {
         var translucentFeaturesLength = batchTable._translucentFeaturesLength;
