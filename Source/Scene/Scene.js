@@ -622,7 +622,7 @@ define([
         this.useDepthPicking = true;
 
         /**
-         * When <code>true</code>, enables picking translucent geometry using the depth buffer. Note that {@link Scene#useDepthPicking} must also be true for this enabling to work.
+         * When <code>true</code>, enables picking translucent geometry using the depth buffer. Note that {@link Scene#useDepthPicking} must also be true for enabling this to work.
          *
          * <p>
          * Render must be called between picks.
@@ -751,6 +751,7 @@ define([
 
             clearGlobeDepth : false,
             useDepthPlane : false,
+            renderTranslucentDepthForPick : false,
 
             originalFramebuffer : undefined,
             useGlobeDepthFramebuffer : false,
@@ -2132,8 +2133,8 @@ define([
         }
 
         var length = commands.length;
-        for (var j = 0; j < length; ++j) {
-            executeFunction(commands[j], scene, context, passState);
+        for (var i = 0; i < length; ++i) {
+            executeFunction(commands[i], scene, context, passState);
         }
     }
 
@@ -2189,8 +2190,8 @@ define([
         var useWebVR = scene._useWebVR && scene.mode !== SceneMode.SCENE2D;
         var passes = scene._frameState.passes;
         var picking = passes.pick;
-        var depthOnly = passes.depth;
         var environmentState = scene._environmentState;
+        var renderTranslucentDepthForPick = environmentState.renderTranslucentDepthForPick;
 
         // Do not render environment primitives during a pick pass since they do not generate picking commands.
         if (!picking) {
@@ -2464,9 +2465,9 @@ define([
             commands.length = frustumCommands.indices[Pass.TRANSLUCENT];
             executeTranslucentCommands(scene, executeCommand, passState, commands, invertClassification);
 
-            if (defined(globeDepth) && (environmentState.useGlobeDepthFramebuffer || depthOnly) && scene.useDepthPicking) {
+            if (defined(globeDepth) && (environmentState.useGlobeDepthFramebuffer || renderTranslucentDepthForPick) && scene.useDepthPicking) {
                 // PERFORMANCE_IDEA: Use MRT to avoid the extra copy.
-                var depthStencilTexture = depthOnly ? passState.framebuffer.depthStencilTexture : globeDepth.framebuffer.depthStencilTexture;
+                var depthStencilTexture = renderTranslucentDepthForPick ? passState.framebuffer.depthStencilTexture : globeDepth.framebuffer.depthStencilTexture;
                 var pickDepth = getPickDepth(scene, index);
                 pickDepth.update(context, depthStencilTexture);
                 pickDepth.executeCopyDepth(context, passState);
@@ -2643,15 +2644,14 @@ define([
 
     function updateAndExecuteCommands(scene, passState, backgroundColor) {
         var context = scene._context;
+        var frameState = scene._frameState;
+        var mode = frameState.mode;
 
         var viewport = passState.viewport;
         viewport.x = 0;
         viewport.y = 0;
         viewport.width = context.drawingBufferWidth;
         viewport.height = context.drawingBufferHeight;
-
-        var frameState = scene._frameState;
-        var mode = frameState.mode;
 
         if (scene._useWebVR && mode !== SceneMode.SCENE2D) {
             executeWebVRCommands(scene, passState, backgroundColor);
@@ -2665,19 +2665,20 @@ define([
 
     function executeWebVRCommands(scene, passState, backgroundColor) {
         var frameState = scene._frameState;
+        var environmentState = scene._environmentState;
         var context = scene._context;
         var camera = frameState.camera;
-        var depthOnly = frameState.passes.depth;
+        var renderTranslucentDepthForPick = environmentState.renderTranslucentDepthForPick;
 
         updateAndClearFramebuffers(scene, passState, backgroundColor);
 
-        if (!depthOnly) {
+        if (!renderTranslucentDepthForPick) {
             updateAndRenderPrimitives(scene);
         }
 
         createPotentiallyVisibleSet(scene);
 
-        if (!depthOnly) {
+        if (!renderTranslucentDepthForPick) {
             executeComputeCommands(scene);
             executeShadowMapCastCommands(scene);
         }
@@ -2839,13 +2840,14 @@ define([
     }
 
     function executeCommandsInViewport(firstViewport, scene, passState, backgroundColor) {
-        var depthOnly = scene.frameState.passes.depth;
+        var environmentState = scene._environmentState;
+        var renderTranslucentDepthForPick = environmentState.renderTranslucentDepthForPick;
 
-        if (!firstViewport && !depthOnly) {
+        if (!firstViewport && !renderTranslucentDepthForPick) {
             scene.frameState.commandList.length = 0;
         }
 
-        if (!depthOnly) {
+        if (!renderTranslucentDepthForPick) {
             updateAndRenderPrimitives(scene);
         }
 
@@ -2855,7 +2857,7 @@ define([
             if (defined(backgroundColor)) {
                 updateAndClearFramebuffers(scene, passState, backgroundColor);
             }
-            if (!depthOnly) {
+            if (!renderTranslucentDepthForPick) {
                 executeComputeCommands(scene);
                 executeShadowMapCastCommands(scene);
             }
@@ -2901,6 +2903,8 @@ define([
             // of the globe are not picked.
             scene._depthPlane.update(frameState, useLogDepth);
         }
+
+        environmentState.renderTranslucentDepthForPick = false;
 
         var occluder = (frameState.mode === SceneMode.SCENE3D) ? frameState.occluder: undefined;
         var cullingVolume = frameState.cullingVolume;
@@ -3592,6 +3596,8 @@ define([
         passState.scissorTest.rectangle.height = 1;
 
         updateEnvironment(scene, passState);
+        scene._environmentState.renderTranslucentDepthForPick = true;
+
         updateAndExecuteCommands(scene, passState, scratchColorZero);
         resolveFramebuffers(scene, passState);
 
@@ -3624,7 +3630,7 @@ define([
         }
 
         //>>includeStart('debug', pragmas.debug);
-        if(!defined(windowPosition)) {
+        if (!defined(windowPosition)) {
             throw new DeveloperError('windowPosition is undefined.');
         }
         if (!defined(this._globeDepth)) {
