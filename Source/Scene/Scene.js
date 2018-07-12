@@ -1495,6 +1495,11 @@ define([
     }
 
     function updateDerivedCommands(scene, command) {
+        if (!defined(command.derivedCommands)) {
+            // Is not a DrawCommand
+            return;
+        }
+
         var frameState = scene.frameState;
         var environmentState = scene._environmentState;
         var context = scene._context;
@@ -1513,7 +1518,7 @@ define([
         }
 
         var derivedCommands = command.derivedCommands;
-        if ((environmentState.useLogDepthDirty || command.dirty) && defined(derivedCommands)) {
+        if ((environmentState.useLogDepthDirty || command.dirty)) {
             command.dirty = false;
 
             var useLogDepth = environmentState.useLogDepth;
