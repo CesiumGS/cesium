@@ -757,7 +757,8 @@ define([
             useOIT : false,
             useInvertClassification : false,
             usePostProcess : false,
-            usePostProcessSelected : false
+            usePostProcessSelected : false,
+            useWebVR : false
         };
 
         this._useWebVR = false;
@@ -2184,11 +2185,11 @@ define([
         us.updateFrustum(frustum);
         us.updatePass(Pass.ENVIRONMENT);
 
-        var useWebVR = scene._useWebVR && scene.mode !== SceneMode.SCENE2D;
         var passes = scene._frameState.passes;
         var picking = passes.pick;
         var environmentState = scene._environmentState;
         var renderTranslucentDepthForPick = environmentState.renderTranslucentDepthForPick;
+        var useWebVR = environmentState.useWebVR;
 
         // Do not render environment primitives during a pick pass since they do not generate picking commands.
         if (!picking) {
@@ -2643,6 +2644,7 @@ define([
         var context = scene._context;
         var frameState = scene._frameState;
         var mode = frameState.mode;
+        var useWebVR = scene._environmentState.useWebVR;
 
         var viewport = passState.viewport;
         viewport.x = 0;
@@ -2650,7 +2652,7 @@ define([
         viewport.width = context.drawingBufferWidth;
         viewport.height = context.drawingBufferHeight;
 
-        if (scene._useWebVR && mode !== SceneMode.SCENE2D) {
+        if (useWebVR) {
             executeWebVRCommands(scene, passState, backgroundColor);
         } else if (mode !== SceneMode.SCENE2D || scene._mapMode2D === MapMode2D.ROTATE) {
             executeCommandsInViewport(true, scene, passState, backgroundColor);
@@ -2902,6 +2904,7 @@ define([
         }
 
         environmentState.renderTranslucentDepthForPick = false;
+        environmentState.useWebVR = scene._useWebVR && scene.mode !== SceneMode.SCENE2D;
 
         var occluder = (frameState.mode === SceneMode.SCENE3D) ? frameState.occluder: undefined;
         var cullingVolume = frameState.cullingVolume;
@@ -3007,7 +3010,7 @@ define([
 
         var passes = scene._frameState.passes;
         var picking = passes.pick;
-        var useWebVR = scene._useWebVR && scene.mode !== SceneMode.SCENE2D;
+        var useWebVR = environmentState.useWebVR;
 
         // Preserve the reference to the original framebuffer.
         environmentState.originalFramebuffer = passState.framebuffer;
