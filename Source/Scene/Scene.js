@@ -1496,14 +1496,14 @@ define([
         var frameState = scene.frameState;
         var environmentState = scene._environmentState;
         var context = scene._context;
-        var shadowsEnabled = frameState.shadowHints.shadowsEnabled;
-        var shadowMaps = frameState.shadowHints.shadowMaps;
-        var lightShadowMaps = frameState.shadowHints.lightShadowMaps;
+        var shadowsEnabled = frameState.shadowState.shadowsEnabled;
+        var shadowMaps = frameState.shadowState.shadowMaps;
+        var lightShadowMaps = frameState.shadowState.lightShadowMaps;
         var lightShadowsEnabled = shadowsEnabled && (lightShadowMaps.length > 0);
 
         // Update derived commands when any shadow maps become dirty
         var shadowsDirty = false;
-        var lastDirtyTime = frameState.shadowHints.lastDirtyTime;
+        var lastDirtyTime = frameState.shadowState.lastDirtyTime;
         if (command.lastDirtyTime !== lastDirtyTime) {
             command.lastDirtyTime = lastDirtyTime;
             command.dirty = true;
@@ -1735,7 +1735,7 @@ define([
         var far = -Number.MAX_VALUE;
         var undefBV = false;
 
-        var shadowsEnabled = frameState.shadowHints.shadowsEnabled;
+        var shadowsEnabled = frameState.shadowState.shadowsEnabled;
         var shadowNear = Number.MAX_VALUE;
         var shadowFar = -Number.MAX_VALUE;
         var shadowClosestObjectSize = Number.MAX_VALUE;
@@ -1817,9 +1817,9 @@ define([
 
         // Use the computed near and far for shadows
         if (shadowsEnabled) {
-            frameState.shadowHints.nearPlane = shadowNear;
-            frameState.shadowHints.farPlane = shadowFar;
-            frameState.shadowHints.closestObjectSize = shadowClosestObjectSize;
+            frameState.shadowState.nearPlane = shadowNear;
+            frameState.shadowState.farPlane = shadowFar;
+            frameState.shadowState.closestObjectSize = shadowClosestObjectSize;
         }
 
         // Exploit temporal coherence. If the frustums haven't changed much, use the frustums computed
@@ -2084,8 +2084,8 @@ define([
             return;
         }
 
-        var shadowsEnabled = scene.frameState.shadowHints.shadowsEnabled;
-        var lightShadowsEnabled = shadowsEnabled && (scene.frameState.shadowHints.lightShadowMaps.length > 0);
+        var shadowsEnabled = scene.frameState.shadowState.shadowsEnabled;
+        var lightShadowsEnabled = shadowsEnabled && (scene.frameState.shadowState.lightShadowMaps.length > 0);
 
         if (lightShadowsEnabled && command.receiveShadows && defined(command.derivedCommands.shadows)) {
             // If the command receives shadows, execute the derived shadows command.
@@ -2595,10 +2595,10 @@ define([
 
     function executeShadowMapCastCommands(scene) {
         var frameState = scene.frameState;
-        var shadowMaps = frameState.shadowHints.shadowMaps;
+        var shadowMaps = frameState.shadowState.shadowMaps;
         var shadowMapLength = shadowMaps.length;
 
-        if (!frameState.shadowHints.shadowsEnabled) {
+        if (!frameState.shadowState.shadowsEnabled) {
             return;
         }
 
@@ -2943,10 +2943,10 @@ define([
         var length = shadowMaps.length;
 
         var shadowsEnabled = (length > 0) && !frameState.passes.pick && (scene.mode === SceneMode.SCENE3D);
-        if (shadowsEnabled !== frameState.shadowHints.shadowsEnabled) {
+        if (shadowsEnabled !== frameState.shadowState.shadowsEnabled) {
             // Update derived commands when shadowsEnabled changes
-            ++frameState.shadowHints.lastDirtyTime;
-            frameState.shadowHints.shadowsEnabled = shadowsEnabled;
+            ++frameState.shadowState.lastDirtyTime;
+            frameState.shadowState.shadowsEnabled = shadowsEnabled;
         }
 
         if (!shadowsEnabled) {
@@ -2956,27 +2956,27 @@ define([
         // Check if the shadow maps are different than the shadow maps last frame.
         // If so, the derived commands need to be updated.
         for (var j = 0; j < length; ++j) {
-            if (shadowMaps[j] !== frameState.shadowHints.shadowMaps[j]) {
-                ++frameState.shadowHints.lastDirtyTime;
+            if (shadowMaps[j] !== frameState.shadowState.shadowMaps[j]) {
+                ++frameState.shadowState.lastDirtyTime;
                 break;
             }
         }
 
-        frameState.shadowHints.shadowMaps.length = 0;
-        frameState.shadowHints.lightShadowMaps.length = 0;
+        frameState.shadowState.shadowMaps.length = 0;
+        frameState.shadowState.lightShadowMaps.length = 0;
 
         for (var i = 0; i < length; ++i) {
             var shadowMap = shadowMaps[i];
             shadowMap.update(frameState);
 
-            frameState.shadowHints.shadowMaps.push(shadowMap);
+            frameState.shadowState.shadowMaps.push(shadowMap);
 
             if (shadowMap.fromLightSource) {
-                frameState.shadowHints.lightShadowMaps.push(shadowMap);
+                frameState.shadowState.lightShadowMaps.push(shadowMap);
             }
 
             if (shadowMap.dirty) {
-                ++frameState.shadowHints.lastDirtyTime;
+                ++frameState.shadowState.lastDirtyTime;
                 shadowMap.dirty = false;
             }
         }

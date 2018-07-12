@@ -232,7 +232,7 @@ define([
          */
         this.terrainExaggeration = 1.0;
 
-        this.shadowHints = {
+        this.shadowState = {
             /**
              * Whether there are any active shadow maps this frame.
              * @type {Boolean}
