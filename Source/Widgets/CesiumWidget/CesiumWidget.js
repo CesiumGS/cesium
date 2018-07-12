@@ -120,10 +120,11 @@ define([
         var canvas = widget._canvas;
         var width = canvas.width;
         var height = canvas.height;
+        var useWebVR = widget._useWebVR = widget.scene._useWebVR;
         if (width !== 0 && height !== 0) {
             var frustum = widget._scene.camera.frustum;
             if (defined(frustum.aspectRatio)) {
-                frustum.aspectRatio = width / height;
+                frustum.aspectRatio = useWebVR  ?  (width >> 1) / height  :  width / height;
             } else {
                 frustum.top = frustum.right * (height / width);
                 frustum.bottom = -frustum.top;
@@ -672,7 +673,8 @@ define([
         var canvas = this._canvas;
         var width = canvas.clientWidth;
         var height = canvas.clientHeight;
-        if (!this._forceResize && this._canvasWidth === width && this._canvasHeight === height) {
+        var useWebVR = this.scene._useWebVR;
+        if (!this._forceResize && this._canvasWidth === width && this._canvasHeight === height && this._useWebVR === useWebVR) {
             return;
         }
         this._forceResize = false;

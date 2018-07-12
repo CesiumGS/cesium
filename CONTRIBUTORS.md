@@ -109,6 +109,8 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
    * [Jeremy Marzano](https://github.com/JeremyMarzano-ISPA/)
 * [Orbit Logic](http://www.orbitlogic.com)
    * [Roderick Green](https://github.com/roderickgreen/)
+* [Outdooractive](https://www.outdooractive.com)
+   * [Guillaume Lathoud](https://github.com/glathoud/)
 
 ## [Individual CLA](Documentation/Contributors/CLAs/individual-cla-agi-v1.0.txt)
 * [Victor Berchet](https://github.com/vicb)
