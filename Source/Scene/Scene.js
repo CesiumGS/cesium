@@ -1582,6 +1582,7 @@ define([
         passes.pick = false;
         passes.depth = false;
         passes.postProcess = false;
+        passes.offscreen = false;
     }
 
     function updateFrameState(scene, frameNumber, time) {
@@ -2646,14 +2647,17 @@ define([
         var context = scene._context;
         var frameState = scene._frameState;
         var mode = frameState.mode;
+        var offscreen = frameState.passes.offscreen;
 
-        var viewport = passState.viewport;
-        viewport.x = 0;
-        viewport.y = 0;
-        viewport.width = context.drawingBufferWidth;
-        viewport.height = context.drawingBufferHeight;
+        if (!offscreen) {
+            var viewport = passState.viewport;
+            viewport.x = 0;
+            viewport.y = 0;
+            viewport.width = context.drawingBufferWidth;
+            viewport.height = context.drawingBufferHeight;
+        }
 
-        if (scene._useWebVR && mode !== SceneMode.SCENE2D) {
+        if (scene._useWebVR && mode !== SceneMode.SCENE2D && !offscreen) {
             executeWebVRCommands(scene, passState, backgroundColor);
         } else if (mode !== SceneMode.SCENE2D || scene._mapMode2D === MapMode2D.ROTATE) {
             executeCommandsInViewport(true, scene, passState, backgroundColor);
@@ -3031,8 +3035,8 @@ define([
         clear.execute(context, passState);
 
         // Update globe depth rendering based on the current context and clear the globe depth framebuffer.
-        // Globe depth needs is copied for Pick to support picking batched geometries in GroundPrimitives.
-        var useGlobeDepthFramebuffer = environmentState.useGlobeDepthFramebuffer = defined(scene._globeDepth);
+        // Globe depth is copied for the pick pass to support picking batched geometries in GroundPrimitives.
+        var useGlobeDepthFramebuffer = environmentState.useGlobeDepthFramebuffer = defined(scene._globeDepth) && !passes.offscreen;
         if (useGlobeDepthFramebuffer) {
             scene._globeDepth.update(context, passState);
             scene._globeDepth.clear(context, passState, clearColor);
