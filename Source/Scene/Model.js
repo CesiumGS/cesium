@@ -1382,14 +1382,14 @@ define([
         }
 
         var boundingSphere = BoundingSphere.fromCornerPoints(min, max);
+        if (model._forwardAxis === Axis.Z) {
+            // glTF 2.0 has a Z-forward convention that must be adapted here to X-forward.
+            BoundingSphere.transformWithoutScale(boundingSphere, Axis.Z_UP_TO_X_UP, boundingSphere);
+        }
         if (model._upAxis === Axis.Y) {
             BoundingSphere.transformWithoutScale(boundingSphere, Axis.Y_UP_TO_Z_UP, boundingSphere);
         } else if (model._upAxis === Axis.X) {
             BoundingSphere.transformWithoutScale(boundingSphere, Axis.X_UP_TO_Z_UP, boundingSphere);
-        }
-        if (model._forwardAxis === Axis.Z) {
-            // glTF 2.0 has a Z-forward convention that must be adapted here to X-forward.
-            BoundingSphere.transformWithoutScale(boundingSphere, Axis.Z_UP_TO_X_UP, boundingSphere);
         }
         return boundingSphere;
     }
