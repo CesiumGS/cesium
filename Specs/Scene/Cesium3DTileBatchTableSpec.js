@@ -37,7 +37,7 @@ defineSuite([
     var withBatchTableUrl = './Data/Cesium3DTiles/Batched/BatchedWithBatchTable/tileset.json';
     var withoutBatchTableUrl = './Data/Cesium3DTiles/Batched/BatchedWithoutBatchTable/tileset.json';
     var noBatchIdsUrl = './Data/Cesium3DTiles/Batched/BatchedNoBatchIds/tileset.json';
-    var batchTableHierarchyExtensionUrl = './Data/Cesium3DTiles/Hierarchy/BatchTableHierarchyExtension/tileset.json';
+    var batchTableHierarchyUrl = './Data/Cesium3DTiles/Hierarchy/BatchTableHierarchy/tileset.json';
     var batchTableHierarchyBinaryUrl = './Data/Cesium3DTiles/Hierarchy/BatchTableHierarchyBinary/tileset.json';
     var batchTableHierarchyMultipleParentsUrl = './Data/Cesium3DTiles/Hierarchy/BatchTableHierarchyMultipleParents/tileset.json';
     var batchTableHierarchyNoParentsUrl = './Data/Cesium3DTiles/Hierarchy/BatchTableHierarchyNoParents/tileset.json';
@@ -63,8 +63,8 @@ defineSuite([
         scene.camera.lookAt(center, new HeadingPitchRange(0.0, -1.57, 20.0));
 
         // Keep the error from logging to the console when running tests
-        Cesium3DTileBatchTable._deprecationWarning = function() {};
-        Batched3DModel3DTileContent._deprecationWarning = function() {};
+        spyOn(Cesium3DTileBatchTable, '_deprecationWarning');
+        spyOn(Batched3DModel3DTileContent, '_deprecationWarning');
     });
 
     afterAll(function() {
@@ -904,7 +904,7 @@ defineSuite([
     }
 
     it('renders tileset with batch table hierarchy extension', function() {
-        return checkBatchTableHierarchy(batchTableHierarchyExtensionUrl, false);
+        return checkBatchTableHierarchy(batchTableHierarchyUrl, false);
     });
 
     it('renders tileset with batch table hierarchy using binary properties', function() {
@@ -924,7 +924,6 @@ defineSuite([
     });
 
     it('warns about deprecated batch hierarchy (pre-version 1.0)', function() {
-        spyOn(Cesium3DTileBatchTable, '_deprecationWarning');
         return checkBatchTableHierarchy(batchTableHierarchyLegacyUrl, false)
             .then(function(tileset) {
                 expect(Cesium3DTileBatchTable._deprecationWarning).toHaveBeenCalled();

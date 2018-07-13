@@ -82,11 +82,6 @@ define([
          */
         this.featuresLength = featuresLength;
 
-        /**
-         * @private
-         */
-        this.batchTableBinary = batchTableBinary;
-
         this._translucentFeaturesLength = 0; // Number of features in the tile that are translucent
 
         var extensions;
@@ -94,7 +89,6 @@ define([
             extensions = batchTableJson.extensions;
         }
         this._extensions = defaultValue(extensions, {});
-        this._extras = defined(batchTableJson) ? batchTableJson.extras : undefined;
 
         var properties = initializeProperties(batchTableJson);
         this._properties = properties;
@@ -182,11 +176,11 @@ define([
             return;
         }
 
-        var hierarchy = batchTable.getExtension('3DTILES_batch_table_hierarchy');
+        var hierarchy = batchTable._extensions['3DTILES_batch_table_hierarchy'];
 
         var legacyHierarchy = jsonHeader.HIERARCHY;
         if (defined(legacyHierarchy)) {
-            Cesium3DTileBatchTable._deprecationWarning('batchTableHierarchyExtension', 'The batch table HIERARCHY property has been moved to an extension. Use extension.3DTILES_batch_table_hierarchy instead.');
+            Cesium3DTileBatchTable._deprecationWarning('batchTableHierarchyExtension', 'The batch table HIERARCHY property has been moved to an extension. Use extensions.3DTILES_batch_table_hierarchy instead.');
             batchTable._extensions['3DTILES_batch_table_hierarchy'] = legacyHierarchy;
             hierarchy = legacyHierarchy;
         }
@@ -320,10 +314,6 @@ define([
     //>>includeEnd('debug');
 
     function getBinaryProperties(featuresLength, properties, binaryBody) {
-        if (!defined(properties)) {
-            return;
-        }
-
         var binaryProperties;
         for (var name in properties) {
             if (properties.hasOwnProperty(name)) {
@@ -1494,23 +1484,6 @@ define([
 
             updateBatchTexture(this);  // Apply per-feature show/color updates
         }
-    };
-
-    /**
-     * Returns the contents of the batch table extension, or <code>undefined</code>
-     * if the extension is not present.
-     * @param {String} extensionName The name of the extension.
-     *
-     * @returns {Object|undefined} The contents of the batch table extension, or <code>undefined</code>
-     * if the extension is not present.
-     */
-    Cesium3DTileBatchTable.prototype.getExtension = function(extensionName) {
-        var extensions = this._extensions;
-        if (!defined(extensions)) {
-            return;
-        }
-
-        return extensions[extensionName];
     };
 
     Cesium3DTileBatchTable.prototype.isDestroyed = function() {

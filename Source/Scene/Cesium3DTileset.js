@@ -1918,10 +1918,10 @@ define([
     };
 
     /**
-     * <code>true</code> if this the tileset JSON file lists the extension in extensionsUsed; otherwise, <code>false</code>.
+     * <code>true</code> if the tileset JSON file lists the extension in extensionsUsed; otherwise, <code>false</code>.
      * @param {String} extensionName The name of the extension to check.
      *
-     * @returns {Boolean} <code>true</code> if this the tileset JSON file lists the extension in extensionsUsed; otherwise, <code>false</code>.
+     * @returns {Boolean} <code>true</code> if the tileset JSON file lists the extension in extensionsUsed; otherwise, <code>false</code>.
      */
     Cesium3DTileset.prototype.hasExtension = function(extensionName) {
         if (!defined(this._extensionsUsed)) {
