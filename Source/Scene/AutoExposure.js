@@ -222,21 +222,27 @@ define([
             '    float color = 0.0; \n' +
             '    float xStep = 1.0 /colorTextureDimensions.x; \n' +
             '    float yStep = 1.0 /colorTextureDimensions.y; \n' +
-            '    color += sampleTexture(vec2(-xStep, yStep)); \n' +
-            '    color += sampleTexture(vec2(0.0, yStep)); \n' +
-            '    color += sampleTexture(vec2(xStep, yStep)); \n' +
-            '    color += sampleTexture(vec2(-xStep, 0.0)); \n' +
-            '    color += sampleTexture(vec2(0.0, 0.0)); \n' +
-            '    color += sampleTexture(vec2(xStep, 0.0)); \n' +
-            '    color += sampleTexture(vec2(-xStep, -yStep)); \n' +
-            '    color += sampleTexture(vec2(0.0, -yStep)); \n' +
-            '    color += sampleTexture(vec2(xStep, -yStep)); \n' +
-            '    color /= 9.0; \n';
+            '    int count = 0; \n' +
+            '    for (int i = 0; i < 3; ++i) { \n' +
+            '        for (int j = 0; j < 3; ++j) { \n' +
+            '            vec2 offset; \n' +
+            '            offset.x = -xStep + float(i) * xStep; \n' +
+            '            offset.y = -yStep + float(j) * yStep; \n' +
+            '            if (offset.x < 0.0 || offset.x > 1.0 || offset.y < 0.0 || offset.y > 1.0) { \n' +
+            '                continue; \n' +
+            '            } \n' +
+            '            color += sampleTexture(offset); \n' +
+            '            ++count; \n' +
+            '        } \n' +
+            '    } \n' +
+            '    if (count > 0) { \n' +
+            '        color /= float(count); \n' +
+            '    } \n';
 
         if (index === length - 1) {
             source +=
-                '    float previous = texture2D(previousLuminance, vec2(0.5)).r; \n' +
-                '    color = previous + (color - previous) / (60.0 * 4.0); \n' +
+                //'    float previous = texture2D(previousLuminance, vec2(0.5)).r; \n' +
+                //'    color = previous + (color - previous) / (60.0 * 3.0); \n' +
                 '    color = clamp(color, minimumLuminance, maximumLuminance); \n';
         }
 
