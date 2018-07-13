@@ -1192,7 +1192,7 @@ define([
 
         var disableDepthTestDistance = billboard.disableDepthTestDistance;
         if (disableDepthTestDistance === 0.0 && billboardCollection._scene.context.depthTexture) {
-            disableDepthTestDistance = 2000.0;
+            disableDepthTestDistance = 4000.0;
         }
 
         disableDepthTestDistance *= disableDepthTestDistance;
