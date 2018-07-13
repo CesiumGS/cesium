@@ -219,7 +219,6 @@ define([
 
             fs.sources.unshift('#extension GL_EXT_draw_buffers : enable \n');
             fs.sources.push(
-                'varying float v_depthOrLogDepth; \n' +
                 'void main() \n' +
                 '{ \n' +
                 '    czm_point_cloud_post_process_main(); \n' +
