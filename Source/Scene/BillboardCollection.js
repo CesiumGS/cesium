@@ -213,9 +213,6 @@ define([
         this._shaderDisableDepthDistance = false;
         this._compiledShaderDisableDepthDistance = false;
 
-        this._shaderClampToGround = false;
-        this._compiledShaderClampToGround = false;
-
         this._propertiesChanged = new Uint32Array(NUMBER_OF_PROPERTIES);
 
         this._maxSize = 0.0;
@@ -1194,7 +1191,7 @@ define([
         }
 
         var disableDepthTestDistance = billboard.disableDepthTestDistance;
-        if (billboard.heightReference === HeightReference.CLAMP_TO_GROUND && disableDepthTestDistance === 0.0 && billboardCollection._scene.context.depthTexture) {
+        if (disableDepthTestDistance === 0.0 && billboardCollection._scene.context.depthTexture) {
             disableDepthTestDistance = 2000.0;
         }
 
@@ -1252,9 +1249,6 @@ define([
     }
 
     function writeTextureCoordinateBoundsOrLabelTranslate(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard) {
-        if (billboard.heightReference === HeightReference.CLAMP_TO_GROUND) {
-            billboardCollection._shaderClampToGround = billboardCollection._scene.context.depthTexture;
-        }
         var i;
         var writer = vafWriters[attributeLocations.textureCoordinateBoundsOrLabelTranslate];
 
@@ -1665,8 +1659,7 @@ define([
             (this._shaderTranslucencyByDistance !== this._compiledShaderTranslucencyByDistance) ||
             (this._shaderPixelOffsetScaleByDistance !== this._compiledShaderPixelOffsetScaleByDistance) ||
             (this._shaderDistanceDisplayCondition !== this._compiledShaderDistanceDisplayCondition) ||
-            (this._shaderDisableDepthDistance !== this._compiledShaderDisableDepthDistance) ||
-            (this._shaderClampToGround !== this._compiledShaderClampToGround)) {
+            (this._shaderDisableDepthDistance !== this._compiledShaderDisableDepthDistance)) {
 
             vsSource = BillboardCollectionVS;
             fsSource = BillboardCollectionFS;
@@ -1706,12 +1699,10 @@ define([
             if (this._shaderDisableDepthDistance) {
                 vs.defines.push('DISABLE_DEPTH_DISTANCE');
             }
-            if (this._shaderClampToGround) {
-                if (supportVSTextureReads) {
-                    vs.defines.push('VERTEX_DEPTH_CHECK');
-                } else {
-                    vs.defines.push('FRAGMENT_DEPTH_CHECK');
-                }
+            if (supportVSTextureReads) {
+                vs.defines.push('VERTEX_DEPTH_CHECK');
+            } else {
+                vs.defines.push('FRAGMENT_DEPTH_CHECK');
             }
 
             var vectorFragDefine = defined(this._batchTable) ? 'VECTOR_TILE' : '';
@@ -1721,12 +1712,10 @@ define([
                     defines : ['OPAQUE', vectorFragDefine],
                     sources : [fsSource]
                 });
-                if (this._shaderClampToGround) {
-                    if (supportVSTextureReads) {
-                        fs.defines.push('VERTEX_DEPTH_CHECK');
-                    } else {
-                        fs.defines.push('FRAGMENT_DEPTH_CHECK');
-                    }
+                if (supportVSTextureReads) {
+                    fs.defines.push('VERTEX_DEPTH_CHECK');
+                } else {
+                    fs.defines.push('FRAGMENT_DEPTH_CHECK');
                 }
                 this._sp = ShaderProgram.replaceCache({
                     context : context,
@@ -1740,12 +1729,10 @@ define([
                     defines : ['TRANSLUCENT', vectorFragDefine],
                     sources : [fsSource]
                 });
-                if (this._shaderClampToGround) {
-                    if (supportVSTextureReads) {
-                        fs.defines.push('VERTEX_DEPTH_CHECK');
-                    } else {
-                        fs.defines.push('FRAGMENT_DEPTH_CHECK');
-                    }
+                if (supportVSTextureReads) {
+                    fs.defines.push('VERTEX_DEPTH_CHECK');
+                } else {
+                    fs.defines.push('FRAGMENT_DEPTH_CHECK');
                 }
                 this._spTranslucent = ShaderProgram.replaceCache({
                     context : context,
@@ -1761,12 +1748,10 @@ define([
                     defines : [vectorFragDefine],
                     sources : [fsSource]
                 });
-                if (this._shaderClampToGround) {
-                    if (supportVSTextureReads) {
-                        fs.defines.push('VERTEX_DEPTH_CHECK');
-                    } else {
-                        fs.defines.push('FRAGMENT_DEPTH_CHECK');
-                    }
+                if (supportVSTextureReads) {
+                    fs.defines.push('VERTEX_DEPTH_CHECK');
+                } else {
+                    fs.defines.push('FRAGMENT_DEPTH_CHECK');
                 }
                 this._sp = ShaderProgram.replaceCache({
                     context : context,
@@ -1782,12 +1767,10 @@ define([
                     defines : [vectorFragDefine],
                     sources : [fsSource]
                 });
-                if (this._shaderClampToGround) {
-                    if (supportVSTextureReads) {
-                        fs.defines.push('VERTEX_DEPTH_CHECK');
-                    } else {
-                        fs.defines.push('FRAGMENT_DEPTH_CHECK');
-                    }
+                if (supportVSTextureReads) {
+                    fs.defines.push('VERTEX_DEPTH_CHECK');
+                } else {
+                    fs.defines.push('FRAGMENT_DEPTH_CHECK');
                 }
                 this._spTranslucent = ShaderProgram.replaceCache({
                     context : context,
@@ -1805,7 +1788,6 @@ define([
             this._compiledShaderPixelOffsetScaleByDistance = this._shaderPixelOffsetScaleByDistance;
             this._compiledShaderDistanceDisplayCondition = this._shaderDistanceDisplayCondition;
             this._compiledShaderDisableDepthDistance = this._shaderDisableDepthDistance;
-            this._compiledShaderClampToGround = this._shaderClampToGround;
         }
 
         var commandList = frameState.commandList;
