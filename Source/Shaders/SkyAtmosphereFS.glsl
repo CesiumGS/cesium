@@ -61,7 +61,7 @@ void main (void)
 
 #ifndef HDR
     const float exposure = 1.1;
-    rgb = vec3(1.0) - exp(-exposure * rgb);
+    //rgb = vec3(1.0) - exp(-exposure * rgb);
 #endif
 
 #ifdef COLOR_CORRECT

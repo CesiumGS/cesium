@@ -240,14 +240,17 @@ void main()
 #ifdef FOG
     const float fExposure = 1.3;
     vec3 fogColor = v_mieColor + finalColor.rgb * v_rayleighColor;
-    fogColor = vec3(1.0) - exp(-fExposure * fogColor);
+    // TODO: disable exposure if using HDR
+    //fogColor = vec3(1.0) - exp(-fExposure * fogColor);
 
 #if defined(ENABLE_VERTEX_LIGHTING) || defined(ENABLE_DAYNIGHT_SHADING)
     float darken = clamp(dot(normalize(czm_viewerPositionWC), normalize(czm_sunPositionWC)), u_minimumBrightness, 1.0);
     fogColor *= darken;
 #endif
 
-    gl_FragColor = vec4(czm_fog(v_distance, finalColor.rgb, fogColor), finalColor.a);
+    // TODO: Only use modified fog function if HDR
+    const float modifier = 0.15;
+    gl_FragColor = vec4(czm_fog(v_distance, finalColor.rgb, fogColor, modifier), finalColor.a);
 #else
     gl_FragColor = finalColor;
 #endif
