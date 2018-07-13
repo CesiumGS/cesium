@@ -73,7 +73,7 @@ define([
      */
     var PostProcessStageLibrary = {};
 
-    function createBlur(name, pixelDatatype, forcePowerOfTwo, textureScale) {
+    function createBlur(name, pixelDatatype, textureScale) {
         var delta = 1.0;
         var sigma = 2.0;
         var stepSize = 1.0;
@@ -90,7 +90,6 @@ define([
             },
             sampleMode : PostProcessStageSampleMode.LINEAR,
             pixelDatatype : pixelDatatype,
-            forcePowerOfTwo : forcePowerOfTwo,
             textureScale : textureScale
         });
         var blurY = new PostProcessStage({
@@ -104,7 +103,6 @@ define([
             },
             sampleMode : PostProcessStageSampleMode.LINEAR,
             pixelDatatype : pixelDatatype,
-            forcePowerOfTwo : forcePowerOfTwo,
             textureScale : textureScale
         });
 
@@ -431,168 +429,8 @@ define([
      *
      * @private
      */
-    // TODO HDR
-    /*
     PostProcessStageLibrary.createBloomStage = function() {
-        var contrastBias = new PostProcessStage({
-            name : 'czm_bloom_contrast_bias',
-            fragmentShader : ContrastBias,
-            uniforms : {
-                contrast : 128.0,
-                brightness : -0.3
-            }
-        });
-        var blur = createBlur('czm_bloom_blur');
-        var generateComposite = new PostProcessStageComposite({
-            name : 'czm_bloom_contrast_bias_blur',
-            stages : [contrastBias, blur]
-        });
-
-        var bloomComposite = new PostProcessStage({
-            name : 'czm_bloom_generate_composite',
-            fragmentShader : BloomComposite,
-            uniforms : {
-                glowOnly : false,
-                bloomTexture : generateComposite.name
-            }
-        });
-
-        var uniforms = {};
-        defineProperties(uniforms, {
-            glowOnly : {
-                get : function() {
-                    return bloomComposite.uniforms.glowOnly;
-                },
-                set : function(value) {
-                    bloomComposite.uniforms.glowOnly = value;
-                }
-            },
-            contrast : {
-                get : function() {
-                    return contrastBias.uniforms.contrast;
-                },
-                set : function(value) {
-                    contrastBias.uniforms.contrast = value;
-                }
-            },
-            brightness : {
-                get : function() {
-                    return contrastBias.uniforms.brightness;
-                },
-                set : function(value) {
-                    contrastBias.uniforms.brightness = value;
-                }
-            },
-            delta : {
-                get : function() {
-                    return blur.uniforms.delta;
-                },
-                set : function(value) {
-                    blur.uniforms.delta = value;
-                }
-            },
-            sigma : {
-                get : function() {
-                    return blur.uniforms.sigma;
-                },
-                set : function(value) {
-                    blur.uniforms.sigma = value;
-                }
-            },
-            stepSize : {
-                get : function() {
-                    return blur.uniforms.stepSize;
-                },
-                set : function(value) {
-                    blur.uniforms.stepSize = value;
-                }
-            }
-        });
-
-        return new PostProcessStageComposite({
-            name : 'czm_bloom',
-            stages : [generateComposite, bloomComposite],
-            inputPreviousStageTexture : false,
-            uniforms : uniforms
-        });
-    };
-    */
-
-    PostProcessStageLibrary.createBloomStage = function() {
-        var scale = 0.75;
-
-        var toLuminance = 'uniform sampler2D colorTexture; varying vec2 v_textureCoordinates; void main() { gl_FragColor = vec4(czm_luminance(texture2D(colorTexture, v_textureCoordinates).rgb)); }';
-        var luminance = new PostProcessStage({
-            fragmentShader : toLuminance,
-            textureScale : 0.5,
-            pixelDatatype : PixelDatatype.FLOAT
-        });
-        var passThrough = 'uniform sampler2D colorTexture; varying vec2 v_textureCoordinates; void main() { gl_FragColor = texture2D(colorTexture, v_textureCoordinates); }';
-        var downsample = new PostProcessStage({
-            fragmentShader : passThrough,
-            textureScale : 0.5,
-            pixelDatatype : PixelDatatype.FLOAT
-        });
-        var downsample2 = new PostProcessStage({
-            fragmentShader : passThrough,
-            textureScale : 0.25,
-            pixelDatatype : PixelDatatype.FLOAT
-        });
-        var downsample3 = new PostProcessStage({
-            fragmentShader : passThrough,
-            textureScale : 0.125,
-            pixelDatatype : PixelDatatype.FLOAT
-        });
-        var downsample4 = new PostProcessStage({
-            fragmentShader : passThrough,
-            textureScale : 0.0625,
-            pixelDatatype : PixelDatatype.FLOAT
-        });
-
-        var avgLuminance = new PostProcessStageComposite({
-            stages : [luminance, downsample, downsample2, downsample3, downsample4]
-        });
-
-        var brightPassFS =
-            'uniform sampler2D colorTexture; \n' +
-            'uniform sampler2D luminanceTexture; \n' +
-            'uniform float threshold; \n' +
-            'uniform float offset; \n' +
-            'varying vec2 v_textureCoordinates; \n' +
-            'float key(float avg) { \n' +
-            '    float guess = 1.5 - (1.5 / (avg * 0.1 + 1.0)); \n' +
-            '    return max(0.0, guess) + 0.1; \n' +
-            '} \n' +
-            'void main() { \n' +
-            '    vec4 color = texture2D(colorTexture, v_textureCoordinates); \n' +
-            //'    float avgLuminance = texture2D(luminanceTexture, vec2(0.5)).r; \n' +
-            '    float avgLuminance = 1.5; \n' +
-            '    vec3 Yxy = czm_RGBToXYZ(color.rgb); \n' +
-            '    float luminance = Yxy.r; \n' +
-            '    float scaledLum = key(avgLuminance) * luminance / avgLuminance; \n' +
-            '    float brightLum = max(scaledLum - threshold, 0.0); \n' +
-            '    float brightness = brightLum / (offset + brightLum); \n' +
-            '    Yxy.r = brightness; \n' +
-            '    gl_FragColor = vec4(czm_XYZToRGB(Yxy), 1.0); \n' +
-            '} \n';
-
-        var brightPass = new PostProcessStage({
-            fragmentShader : brightPassFS,
-            uniforms : {
-                luminanceTexture : avgLuminance.name,
-                threshold : 0.25,
-                offset : 0.1
-            },
-            pixelDatatype : PixelDatatype.FLOAT,
-            textureScale : scale
-        });
-
-        var brightPassComposite = new PostProcessStageComposite({
-            stages : [avgLuminance, brightPass],
-            inputPreviousStageTexture : false
-        });
-
-        /*
+        var scale = 1.0;
         var brightFS =
             'uniform sampler2D colorTexture; \n' +
             'varying vec2 v_textureCoordinates; \n' +
@@ -604,65 +442,23 @@ define([
             '        gl_FragColor = vec4(vec3(0.0), 1.0); \n' +
             '    } \n' +
             '} \n';
-        var scale = 0.75;
         var brightPass = new PostProcessStage({
             fragmentShader : brightFS,
             pixelDatatype : PixelDatatype.FLOAT,
-            textureScale : scale
+            textureScale : scale,
+            sampleMode : PostProcessStageSampleMode.LINEAR
         });
-        */
-
-        var blurFS =
-            'uniform sampler2D colorTexture; \n' +
-            'uniform vec2 colorTextureDimensions; \n' +
-            'uniform bool horizontal; \n' +
-            'varying vec2 v_textureCoordinates; \n' +
-            'void main() { \n' +
-            'float weights[5]; \n' +
-            'weights[0] = 0.227027; \n' +
-            'weights[1] = 0.1945946; \n' +
-            'weights[2] = 0.1216216; \n' +
-            'weights[3] = 0.054054; \n' +
-            'weights[4] = 0.016216; \n' +
-            '    vec2 offset = 1.0 / colorTextureDimensions; \n' +
-            '    vec3 result = texture2D(colorTexture, v_textureCoordinates).rgb * weights[0]; \n' +
-            '    if(horizontal) { \n' +
-            '        for(int i = 1; i < 5; ++i) { \n' +
-            '            result += texture2D(colorTexture, v_textureCoordinates + vec2(offset.x * float(i), 0.0)).rgb * weights[i]; \n' +
-            '            result += texture2D(colorTexture, v_textureCoordinates - vec2(offset.x * float(i), 0.0)).rgb * weights[i]; \n' +
-            '        } \n' +
-            '    } else { \n' +
-            '        for(int i = 1; i < 5; ++i) { \n' +
-            '            result += texture2D(colorTexture, v_textureCoordinates + vec2(0.0, offset.y * float(i))).rgb * weights[i]; \n' +
-            '            result += texture2D(colorTexture, v_textureCoordinates - vec2(0.0, offset.y * float(i))).rgb * weights[i]; \n' +
-            '        } \n' +
-            '    } \n' +
-            '    gl_FragColor = vec4(result, 1.0); \n' +
-            '} \n';
-        var blurX = new PostProcessStage({
-            fragmentShader : blurFS,
-            uniforms : {
-                horizontal : true
-            },
-            pixelDatatype : PixelDatatype.FLOAT,
-            textureScale : scale
-        });
-        var blurY = new PostProcessStage({
-            fragmentShader : blurFS,
-            uniforms : {
-                horizontal : false
-            },
-            pixelDatatype : PixelDatatype.FLOAT,
-            textureScale : scale
-        });
-        var blur = new PostProcessStageComposite({
-            stages : [blurX, blurY]
-        });
-        //var blur = createBlur('czm_bloom_blur0', PixelDatatype.FLOAT, powerOfTwo, scale);
+        var numBlur = 6;
+        var blurs = new Array(numBlur);
+        for (var i = 0; i < numBlur; ++i) {
+            blurs[i] = createBlur('czm_bloom_blur_' + i, PixelDatatype.FLOAT, scale);
+            blurs[i].uniforms.delta = 1.5;
+            blurs[i].uniforms.sigma = 5.0;
+        }
         var brightBlur = new PostProcessStageComposite({
             name : 'czm_brightness_blur',
-            //stages : [brightPass, blur]
-            stages : [brightPassComposite, blur]
+            stages : [brightPass].concat(blurs),
+            textureScale : scale
         });
 
         var addFS =
