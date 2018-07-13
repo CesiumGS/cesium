@@ -167,6 +167,7 @@ define([
         this._asset = undefined; // Metadata for the entire tileset
         this._properties = undefined; // Metadata for per-model/point/etc properties
         this._geometricError = undefined; // Geometric error when the tree is not rendered at all
+        this._extensionsUsed = undefined;
         this._gltfUpAxis = undefined;
         this._processingQueue = [];
         this._selectedTiles = [];
@@ -715,6 +716,7 @@ define([
                 that._asset = tilesetJson.asset;
                 that._properties = tilesetJson.properties;
                 that._geometricError = tilesetJson.geometricError;
+                that._extensionsUsed = tilesetJson.extensionsUsed;
                 that._gltfUpAxis = gltfUpAxis;
                 that._readyPromise.resolve(that);
             }).otherwise(function(error) {
@@ -1914,6 +1916,20 @@ define([
                 }
             }
         }
+    };
+
+    /**
+     * <code>true</code> if the tileset JSON file lists the extension in extensionsUsed; otherwise, <code>false</code>.
+     * @param {String} extensionName The name of the extension to check.
+     *
+     * @returns {Boolean} <code>true</code> if the tileset JSON file lists the extension in extensionsUsed; otherwise, <code>false</code>.
+     */
+    Cesium3DTileset.prototype.hasExtension = function(extensionName) {
+        if (!defined(this._extensionsUsed)) {
+            return false;
+        }
+
+        return (this._extensionsUsed.indexOf(extensionName) > -1);
     };
 
     /**
