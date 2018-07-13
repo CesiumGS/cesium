@@ -190,7 +190,7 @@ define([
             return autoexposure.maximumLuminance;
         };
         uniforms.previousLuminance = function() {
-            return autoexposure._previousLuminance;
+            return autoexposure._previousLuminance.getColorTexture(0);
         };
 
         return uniforms;
@@ -241,8 +241,9 @@ define([
 
         if (index === length - 1) {
             source +=
-                //'    float previous = texture2D(previousLuminance, vec2(0.5)).r; \n' +
-                //'    color = previous + (color - previous) / (60.0 * 3.0); \n' +
+                '    float previous = texture2D(previousLuminance, vec2(0.5)).r; \n' +
+                '    color = clamp(color, minimumLuminance, maximumLuminance); \n' +
+                '    color = previous + (color - previous) / (60.0 * 3.0); \n' +
                 '    color = clamp(color, minimumLuminance, maximumLuminance); \n';
         }
 
