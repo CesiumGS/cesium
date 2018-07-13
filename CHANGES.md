@@ -17,6 +17,7 @@ Change Log
 * Fixed a bug that was preventing 3D Tilesets on the opposite side of the globe from being occluded [#6714](https://github.com/AnalyticalGraphicsInc/cesium/issues/6714)
 * Fixed a bug where 3D Tilesets using the `region` bounding volume don't get transformed when the tileset's `modelMatrix` changes. [6755](https://github.com/AnalyticalGraphicsInc/cesium/pull/6755)
 * Fixed `PolygonGeometry` and `EllipseGeometry` tangent and bitangent attributes when a texture rotation is used [#6788](https://github.com/AnalyticalGraphicsInc/cesium/pull/6788)
+* Fixed a bug that caused eye dome lighting for point clouds to fail in Safari on macOS by removing the dependency on floating point color textures. [#6792](https://github.com/AnalyticalGraphicsInc/cesium/issues/6792)
 
 ### 1.47 - 2018-07-02
 
