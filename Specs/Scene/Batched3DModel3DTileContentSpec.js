@@ -85,7 +85,6 @@ defineSuite([
                 Cesium3DTilesTester.expectRenderTileset(scene, tileset);
                 var batchTable = tileset._root._content.batchTable;
                 expect(batchTable._properties).toBeDefined();
-                expect(batchTable.batchTableBinary).toBeUndefined();
             });
     });
 
@@ -96,7 +95,6 @@ defineSuite([
                 Cesium3DTilesTester.expectRenderTileset(scene, tileset);
                 var batchTable = tileset._root._content.batchTable;
                 expect(batchTable._properties).toBeDefined();
-                expect(batchTable.batchTableBinary).toBeUndefined();
             });
     });
 
