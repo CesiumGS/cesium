@@ -1517,19 +1517,24 @@ define([
             shadowsDirty = true;
         }
 
+        var useLogDepth = environmentState.useLogDepth;
         var derivedCommands = command.derivedCommands;
-        if ((environmentState.useLogDepthDirty || command.dirty)) {
+
+        if (environmentState.useLogDepthDirty && !command.dirty) {
+            var needsLogDepthDerivedCommands = useLogDepth && !defined(derivedCommands.logDepth);
+            var needsDerivedCommands = !useLogDepth && !defined(derivedCommands.depth);
+            command.dirty = needsLogDepthDerivedCommands || needsDerivedCommands;
+        }
+
+        if (command.dirty) {
             command.dirty = false;
 
-            var useLogDepth = environmentState.useLogDepth;
             var logDepthCommand;
             var logDepthDerivedCommands;
             if (useLogDepth) {
                 derivedCommands.logDepth = DerivedCommand.createLogDepthCommand(command, context, derivedCommands.logDepth);
                 logDepthCommand = derivedCommands.logDepth.command;
                 logDepthDerivedCommands = logDepthCommand.derivedCommands;
-            } else {
-                derivedCommands.logDepth = undefined;
             }
 
             if (scene.frameState.passes.pick && !defined(command.pickId)) {
