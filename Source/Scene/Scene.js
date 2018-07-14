@@ -1515,19 +1515,24 @@ define([
             shadowsDirty = true;
         }
 
+        var useLogDepth = frameState.useLogDepth;
         var derivedCommands = command.derivedCommands;
-        if ((frameState.useLogDepthDirty || command.dirty)) {
+
+        if (frameState.useLogDepthDirty && !command.dirty) {
+            var needsLogDepthDerivedCommands = useLogDepth && !defined(derivedCommands.logDepth);
+            var needsDerivedCommands = !useLogDepth && !defined(derivedCommands.depth);
+            command.dirty = needsLogDepthDerivedCommands || needsDerivedCommands;
+        }
+
+        if (command.dirty) {
             command.dirty = false;
 
-            var useLogDepth = frameState.useLogDepth;
             var logDepthCommand;
             var logDepthDerivedCommands;
             if (useLogDepth) {
                 derivedCommands.logDepth = DerivedCommand.createLogDepthCommand(command, context, derivedCommands.logDepth);
                 logDepthCommand = derivedCommands.logDepth.command;
                 logDepthDerivedCommands = logDepthCommand.derivedCommands;
-            } else {
-                derivedCommands.logDepth = undefined;
             }
 
             if (shadowsEnabled && (command.receiveShadows || command.castShadows)) {
