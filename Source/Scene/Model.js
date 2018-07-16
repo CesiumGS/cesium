@@ -2342,9 +2342,10 @@ define([
         if (!defined(material)) {
             return attributeLocations;
         }
+
         var technique = techniques[material._technique];
         if (!defined(technique)) {
-            return;
+            return attributeLocations;
         }
 
         var attributes = technique.attributes;
@@ -2920,8 +2921,8 @@ define([
         });
 
         return {
-            map : uniformMap,                         // uniform name -> function for the renderer
-            values : uniformValues,                          // material parameter name -> ModelMaterial for modifying the parameter at runtime
+            map : uniformMap,
+            values : uniformValues,
             jointMatrixUniformName : jointMatrixUniformName,
             morphWeightsUniformName : morphWeightsUniformName
         };
@@ -3377,10 +3378,10 @@ define([
                 var program = programs[programId];
                 var shader = shaders[program.vertexShader].extras._pipeline.source;
                 if (model.extensionsUsed.WEB3D_quantized_attributes || model._dequantizeInShader) {
-                        var quantizedVS = quantizedVertexShaders[programId];
+                    var quantizedVS = quantizedVertexShaders[programId];
                     if (!defined(quantizedVS)) {
-                            quantizedVS = modifyShaderForQuantizedAttributes(shader, programId, model);
-                            quantizedVertexShaders[programId] = quantizedVS;
+                        quantizedVS = modifyShaderForQuantizedAttributes(shader, programId, model);
+                        quantizedVertexShaders[programId] = quantizedVS;
                     }
                     shader = quantizedVS;
                 }
@@ -4263,13 +4264,11 @@ define([
 
                     // glTF pipeline updates
                     addPipelineExtras(this.gltf);
-
                     updateVersion(this.gltf);
                     if (defined(this.gltf.asset) && defined(this.gltf.asset.extras) &&
-                        this.gltf.asset.extras.gltf_pipeline_upgrade_10to20) {
+                            this.gltf.asset.extras.gltf_pipeline_upgrade_10to20) {
                         this._forwardAxis = Axis.X;
                     }
-
                     addDefaults(this.gltf);
 
                     var options = {

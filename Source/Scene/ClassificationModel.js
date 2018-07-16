@@ -133,7 +133,7 @@ define([
         var gltfMeshes = gltf.meshes;
 
         var gltfNode = gltfNodes.rootNode;
-        if (!defined(gltfNode)) {
+        if (!defined(gltfNode) || !defined(gltfNode.meshes)) {
             throw new RuntimeError('Only one node is supported for classification and it must have a mesh.');
         }
 
