@@ -86,6 +86,8 @@ defineSuite([
     var withBatchTableUrl = 'Data/Cesium3DTiles/Batched/BatchedWithBatchTable/tileset.json';
     var noBatchIdsUrl = 'Data/Cesium3DTiles/Batched/BatchedNoBatchIds/tileset.json';
 
+    var withBatchTableHierarchyUrl = 'Data/Cesium3DTiles/Hierarchy/BatchTableHierarchy/tileset.json';
+
     var withTransformBoxUrl = 'Data/Cesium3DTiles/Batched/BatchedWithTransformBox/tileset.json';
     var withTransformSphereUrl = 'Data/Cesium3DTiles/Batched/BatchedWithTransformSphere/tileset.json';
     var withTransformRegionUrl = 'Data/Cesium3DTiles/Batched/BatchedWithTransformRegion/tileset.json';
@@ -358,6 +360,13 @@ defineSuite([
         });
     });
 
+    it('hasExtension returns true if the tileset JSON file uses the specified extension', function() {
+        return Cesium3DTilesTester.loadTileset(scene, withBatchTableHierarchyUrl).then(function(tileset) {
+            expect(tileset.hasExtension('3DTILES_batch_table_hierarchy')).toBe(true);
+            expect(tileset.hasExtension('3DTILES_nonexistant_extension')).toBe(false);
+        });
+    });
+
     it('passes version in query string to tiles', function() {
         return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function(tileset) {
             expect(tileset._root.content._resource.url).toEqual(getAbsoluteUri(tilesetUrl.replace('tileset.json','parent.b3dm?v=1.2.3')));
@@ -519,7 +528,6 @@ defineSuite([
             scene.renderForSpecs();
             expect(commandList.length).toBe(0);
         });
-
     });
 
     it('renders tileset with empty root tile', function() {

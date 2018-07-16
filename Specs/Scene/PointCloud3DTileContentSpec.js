@@ -179,7 +179,17 @@ defineSuite([
             }
         });
         var content = Cesium3DTilesTester.loadTile(scene, arrayBuffer, 'pnts');
-        expect(content._drawCommand._vertexArray._attributes[1].componentDatatype).toEqual(ComponentDatatype.UNSIGNED_SHORT);
+        expect(content._pointCloud._drawCommand._vertexArray._attributes[1].componentDatatype).toEqual(ComponentDatatype.UNSIGNED_SHORT);
+    });
+
+    it('gets tileset properties', function() {
+        return Cesium3DTilesTester.loadTileset(scene, pointCloudRGBUrl).then(function(tileset) {
+            var root = tileset._root;
+            var content = root._content;
+            expect(content.tileset).toBe(tileset);
+            expect(content.tile).toBe(root);
+            expect(content.url.indexOf(root._header.content.url) > -1).toBe(true);
+        });
     });
 
     it('resolves readyPromise', function() {
@@ -451,7 +461,7 @@ defineSuite([
 
             expect(scene).toPickAndCall(function(result) {
                 // Set culling to true
-                content.backFaceCulling = true;
+                content._pointCloud.backFaceCulling = true;
 
                 expect(scene).toPickAndCall(function(result) {
                     picked = result;
@@ -474,7 +484,7 @@ defineSuite([
                 }
 
                 // Set culling to false
-                content.backFaceCulling = false;
+                content._pointCloud.backFaceCulling = false;
 
                 expect(scene).toPickAndCall(function(result) {
                     picked = result;
@@ -602,7 +612,7 @@ defineSuite([
                 color : 'color("red")'
             });
             expect(scene).toRender([255, 0, 0, 255]);
-            expect(content._styleTranslucent).toBe(false);
+            expect(content._pointCloud._styleTranslucent).toBe(false);
 
             // Applies translucency
             tileset.style = new Cesium3DTileStyle({
@@ -614,7 +624,7 @@ defineSuite([
                 expect(rgba[1]).toBe(0);
                 expect(rgba[2]).toBe(0);
                 expect(rgba[3]).toBe(255);
-                expect(content._styleTranslucent).toBe(true);
+                expect(content._pointCloud._styleTranslucent).toBe(true);
             });
 
             // Style with property
@@ -765,22 +775,22 @@ defineSuite([
 
     it('throws if style references the NORMAL semantic but the point cloud does not have per-point normals', function() {
         return Cesium3DTilesTester.loadTileset(scene, pointCloudRGBUrl).then(function(tileset) {
-            var content = tileset._root.content;
+            tileset.style = new Cesium3DTileStyle({
+                color : '${NORMAL}[0] > 0.5'
+            });
             expect(function() {
-                content.applyStyle(scene.frameState, new Cesium3DTileStyle({
-                    color : '${NORMAL}[0] > 0.5'
-                }));
+                scene.renderForSpecs();
             }).toThrowRuntimeError();
         });
     });
 
     it('throws when shader style reference a non-existent property', function() {
         return Cesium3DTilesTester.loadTileset(scene, pointCloudWithPerPointPropertiesUrl).then(function(tileset) {
-            var content = tileset._root.content;
+            tileset.style = new Cesium3DTileStyle({
+                color : 'color() * ${non_existent_property}'
+            });
             expect(function() {
-                content.applyStyle(scene.frameState, new Cesium3DTileStyle({
-                    color : 'color() * ${non_existent_property}'
-                }));
+                scene.renderForSpecs();
             }).toThrowRuntimeError();
         });
     });
@@ -788,11 +798,12 @@ defineSuite([
     it('does not apply shader style if the point cloud has a batch table', function() {
         return Cesium3DTilesTester.loadTileset(scene, pointCloudBatchedUrl).then(function(tileset) {
             var content = tileset._root.content;
-            var shaderProgram = content._drawCommand.shaderProgram;
+            var shaderProgram = content._pointCloud._drawCommand.shaderProgram;
             tileset.style = new Cesium3DTileStyle({
                 color:'color("red")'
             });
-            expect(content._drawCommand.shaderProgram).toBe(shaderProgram);
+            scene.renderForSpecs();
+            expect(content._pointCloud._drawCommand.shaderProgram).toBe(shaderProgram);
 
             // Point cloud is styled through the batch table
             expect(scene).notToRender([0, 0, 0, 255]);
@@ -801,11 +812,11 @@ defineSuite([
 
     it('throws when shader style is invalid', function() {
         return Cesium3DTilesTester.loadTileset(scene, pointCloudRGBUrl).then(function(tileset) {
-            var content = tileset._root.content;
+            tileset.style = new Cesium3DTileStyle({
+                show : '1 < "2"'
+            });
             expect(function() {
-                content.applyStyle(scene.frameState, new Cesium3DTileStyle({
-                    show : '1 < "2"'
-                }));
+                scene.renderForSpecs();
             }).toThrowRuntimeError();
         });
     });
@@ -874,7 +885,7 @@ defineSuite([
             tile._isClipped = true;
             var content = tile.content;
 
-            var noClipFS = content._drawCommand.shaderProgram._fragmentShaderText;
+            var noClipFS = content._pointCloud._drawCommand.shaderProgram._fragmentShaderText;
             expect(noClipFS.indexOf('clip') !== -1).toBe(false);
 
             var clippingPlanes = new ClippingPlaneCollection({
@@ -887,7 +898,7 @@ defineSuite([
 
             clippingPlanes.update(scene.frameState);
             tile.update(tileset, scene.frameState);
-            var clipOneIntersectFS = content._drawCommand.shaderProgram._fragmentShaderText;
+            var clipOneIntersectFS = content._pointCloud._drawCommand.shaderProgram._fragmentShaderText;
             expect(clipOneIntersectFS.indexOf('= clip(') !== -1).toBe(true);
             expect(clipOneIntersectFS.indexOf('float clip') !== -1).toBe(true);
 
@@ -895,7 +906,7 @@ defineSuite([
 
             clippingPlanes.update(scene.frameState);
             tile.update(tileset, scene.frameState);
-            var clipOneUnionFS = content._drawCommand.shaderProgram._fragmentShaderText;
+            var clipOneUnionFS = content._pointCloud._drawCommand.shaderProgram._fragmentShaderText;
             expect(clipOneUnionFS.indexOf('= clip(') !== -1).toBe(true);
             expect(clipOneUnionFS.indexOf('float clip') !== -1).toBe(true);
             expect(clipOneUnionFS).not.toEqual(clipOneIntersectFS);
@@ -904,7 +915,7 @@ defineSuite([
 
             clippingPlanes.update(scene.frameState);
             tile.update(tileset, scene.frameState);
-            var clipTwoUnionFS = content._drawCommand.shaderProgram._fragmentShaderText;
+            var clipTwoUnionFS = content._pointCloud._drawCommand.shaderProgram._fragmentShaderText;
             expect(clipTwoUnionFS.indexOf('= clip(') !== -1).toBe(true);
             expect(clipTwoUnionFS.indexOf('float clip') !== -1).toBe(true);
             expect(clipTwoUnionFS).not.toEqual(clipOneIntersectFS);

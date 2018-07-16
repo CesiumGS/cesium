@@ -891,6 +891,24 @@ defineSuite([
         expect(notEqualCount).toEqual(6);
     });
 
+    it('computes geometry with position only vertex format with perPositionHeight and extrudedHeight', function() {
+        var positions = Cartesian3.fromDegreesArrayHeights([
+            -1.0, -1.0, 100.0,
+            1.0, -1.0, 0.0,
+            1.0, 1.0, 100.0,
+            -1.0, 1.0, 0.0
+        ]);
+        var geometry = PolygonGeometry.createGeometry(PolygonGeometry.fromPositions({
+            positions : positions,
+            extrudedHeight: 0,
+            vertexFormat : VertexFormat.POSITION_ONLY,
+            perPositionHeight : true
+        }));
+        expect(geometry).toBeDefined();
+        expect(geometry.attributes.position).toBeDefined();
+        expect(geometry.attributes.normal).toBeUndefined();
+    });
+
     it('computing rectangle property', function() {
         var p = new PolygonGeometry({
             vertexFormat : VertexFormat.POSITION_AND_ST,
