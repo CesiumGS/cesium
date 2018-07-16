@@ -24,7 +24,7 @@ define([
         '../ThirdParty/GltfPipeline/ForEach',
         '../ThirdParty/GltfPipeline/getAccessorByteStride',
         '../ThirdParty/GltfPipeline/numberOfComponentsForType',
-        '../ThirdParty/GltfPipeline/parseBinaryGltf',
+        '../ThirdParty/GltfPipeline/parseGlb',
         '../ThirdParty/when',
         './Axis',
         './ClassificationType',
@@ -59,7 +59,7 @@ define([
         ForEach,
         getAccessorByteStride,
         numberOfComponentsForType,
-        parseBinaryGltf,
+        parseGlb,
         when,
         Axis,
         ClassificationType,
@@ -124,7 +124,7 @@ define([
 
         if (gltf instanceof Uint8Array) {
             // Binary glTF
-            gltf = parseBinaryGltf(gltf);
+            gltf = parseGlb(gltf);
         } else {
             throw new RuntimeError('Only binary glTF is supported as a classifier.');
         }
@@ -132,17 +132,17 @@ define([
         var gltfNodes = gltf.nodes;
         var gltfMeshes = gltf.meshes;
 
-        var gltfNode = gltfNodes[0];
-        var meshId = gltfNode.mesh;
-        if (gltfNodes.length !== 1 || !defined(meshId)) {
+        var gltfNode = gltfNodes.rootNode;
+        if (!defined(gltfNode)) {
             throw new RuntimeError('Only one node is supported for classification and it must have a mesh.');
         }
 
-        if (gltfMeshes.length !== 1) {
-            throw new RuntimeError('Only one mesh is supported when using b3dm for classification.');
+        var nodeMesh = gltfNode.meshes[0];
+        if (!defined(nodeMesh)) {
+            throw new RuntimeError('Only one node is supported for classification and it must have a mesh.');
         }
 
-        var gltfPrimitives = gltfMeshes[0].primitives;
+        var gltfPrimitives = gltfMeshes[nodeMesh].primitives;
         if (gltfPrimitives.length !== 1) {
             throw new RuntimeError('Only one primitive per mesh is supported when using b3dm for classification.');
         }
@@ -499,8 +499,8 @@ define([
         var min = new Cartesian3(Number.MAX_VALUE, Number.MAX_VALUE, Number.MAX_VALUE);
         var max = new Cartesian3(-Number.MAX_VALUE, -Number.MAX_VALUE, -Number.MAX_VALUE);
 
-        var n = gltfNodes[0];
-        var meshId = n.mesh;
+        var n = gltfNodes.rootNode;
+        var meshId = n.meshes[0];
 
         var transformToRoot = ModelUtility.getTransform(n);
         var mesh = gltfMeshes[meshId];
@@ -646,7 +646,9 @@ define([
     }
 
     function modifyShaderForQuantizedAttributes(shader, model) {
-        var primitive = model.gltf.meshes[0].primitives[0];
+        var gltfMeshes = model.gltf.meshes;
+        var gltfRootNode = model.gltf.nodes.rootNode;
+        var primitive = gltfMeshes[gltfRootNode.meshes[0]].primitives[0];
         var result = ModelUtility.modifyShaderForQuantizedAttributes(model.gltf, primitive, shader);
         model._quantizedUniforms = result.uniforms;
         return result.shader;
@@ -748,7 +750,8 @@ define([
         var gltf = model.gltf;
         var accessors = gltf.accessors;
         var meshes = gltf.meshes;
-        var primitives = meshes[0].primitives;
+        var rootNode = gltf.nodes.rootNode;
+        var primitives = meshes[rootNode.meshes[0]].primitives;
 
         var primitive = primitives[0];
         var attributeLocations = getAttributeLocations();
@@ -804,23 +807,19 @@ define([
             return;
         }
 
-        var techniques = model.gltf.techniques;
-        var technique = techniques[0];
-        var parameters = technique.parameters;
-        var uniforms = technique.uniforms;
-
         var uniformMap = {};
-        for (var name in uniforms) {
-            if (uniforms.hasOwnProperty(name) && name !== 'extras') {
-                var parameterName = uniforms[name];
+        ForEach.technique(model.gltf, function(technique) {
+            var parameters = technique.parameters;
+            ForEach.techniqueUniform(technique, function(parameterName, uniformName) {
                 var parameter = parameters[parameterName];
 
                 if (!defined(parameter.semantic) || !defined(gltfSemanticUniforms[parameter.semantic])) {
-                    continue;
+                    return;
                 }
-                uniformMap[name] = gltfSemanticUniforms[parameter.semantic](context.uniformState, model);
-            }
-        }
+
+                uniformMap[uniformName] = gltfSemanticUniforms[parameter.semantic](context.uniformState, model);
+            });
+        });
 
         model._uniformMap = uniformMap;
     }
@@ -850,7 +849,8 @@ define([
         var gltf = model.gltf;
         var accessors = gltf.accessors;
         var gltfMeshes = gltf.meshes;
-        var primitive = gltfMeshes[0].primitives[0];
+        var gltfRootNode = gltf.nodes.rootNode;
+        var primitive = gltfMeshes[gltfRootNode.meshes[0]].primitives[0];
         var ix = accessors[primitive.indices];
 
         var positionAccessor = primitive.attributes.POSITION;
@@ -999,7 +999,7 @@ define([
 
         var gltf = model.gltf;
         var nodes = gltf.nodes;
-        var gltfNode = nodes[0];
+        var gltfNode = nodes.rootNode;
         model._nodeMatrix = ModelUtility.getTransform(gltfNode, model._nodeMatrix);
 
         createPrimitive(model);

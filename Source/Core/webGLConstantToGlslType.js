@@ -1,5 +1,5 @@
 define([
-        '../../Core/WebGLConstants'
+        './WebGLConstants'
     ], function(
         WebGLConstants) {
     'use strict';

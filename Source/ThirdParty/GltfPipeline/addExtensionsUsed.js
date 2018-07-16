@@ -10,6 +10,8 @@ define([
      *
      * @param {Object} gltf A javascript object containing a glTF asset.
      * @param {String} extension The extension to add.
+     *
+     * @private
      */
     function addExtensionsUsed(gltf, extension) {
         var extensionsUsed = gltf.extensionsUsed;
@@ -17,9 +19,10 @@ define([
             extensionsUsed = [];
             gltf.extensionsUsed = extensionsUsed;
         }
-        if (extensionsUsed.indexOf(extension) < 0) {
+        if (extensionsUsed.indexOf(extension) === -1) {
             extensionsUsed.push(extension);
         }
     }
+
     return addExtensionsUsed;
 });

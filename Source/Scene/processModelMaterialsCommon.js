@@ -1,25 +1,24 @@
 define([
-        './addToArray',
-        './ForEach',
-        './numberOfComponentsForType',
-        './techniqueParameterForSemantic',
-        './webGLConstantToGlslType',
-        './glslTypeToWebGLConstant',
-        '../../Core/clone',
-        '../../Core/defined',
-        '../../Core/defaultValue',
-        '../../Core/WebGLConstants'
+        './ModelUtility',
+        '../Core/defined',
+        '../Core/defaultValue',
+        '../Core/WebGLConstants',
+        '../Core/webGLConstantToGlslType',
+        '../ThirdParty/GltfPipeline/addToArray',
+        '../ThirdParty/GltfPipeline/ForEach',
+        '../ThirdParty/GltfPipeline/hasExtension',
+        '../ThirdParty/GltfPipeline/numberOfComponentsForType'
     ], function(
-        addToArray,
-        ForEach,
-        numberOfComponentsForType,
-        techniqueParameterForSemantic,
-        webGLConstantToGlslType,
-        glslTypeToWebGLConstant,
-        clone,
+        ModelUtility,
         defined,
         defaultValue,
-        WebGLConstants) {
+        WebGLConstants,
+        webGLConstantToGlslType,
+        addToArray,
+        ForEach,
+        hasExtension,
+        numberOfComponentsForType
+    ) {
     'use strict';
 
     /**
@@ -29,85 +28,81 @@ define([
         options = defaultValue(options, {});
 
         if (!defined(gltf)) {
-            return undefined;
+            return;
         }
 
-        var hasExtension = false;
-        var extensionsRequired = gltf.extensionsRequired;
-        var extensionsUsed = gltf.extensionsUsed;
-        if (defined(extensionsUsed)) {
-            var index = extensionsUsed.indexOf('KHR_materials_common');
-            if (index >= 0) {
-                extensionsUsed.splice(index, 1);
-                hasExtension = true;
-            }
-            if (defined(extensionsRequired)) {
-                index = extensionsRequired.indexOf('KHR_materials_common');
-                if (index >= 0) {
-                    extensionsRequired.splice(index, 1);
-                }
-            }
+        if (!hasExtension(gltf, 'KHR_materials_common')) {
+            return;
         }
 
-        if (hasExtension) {
-            if (!defined(gltf.programs)) {
-                gltf.programs = [];
-            }
-            if (!defined(gltf.shaders)) {
-                gltf.shaders = [];
-            }
-            if (!defined(gltf.techniques)) {
-                gltf.techniques = [];
-            }
-            lightDefaults(gltf);
-
-            var lightParameters = generateLightParameters(gltf);
-
-            // Pre-processing to address incompatibilities between primitives using the same materials. Handles skinning and vertex color incompatibilities.
-            splitIncompatibleMaterials(gltf);
-
-            var techniques = {};
-            ForEach.material(gltf, function(material) {
-                if (defined(material.extensions) && defined(material.extensions.KHR_materials_common)) {
-                    var khrMaterialsCommon = material.extensions.KHR_materials_common;
-                    var techniqueKey = getTechniqueKey(khrMaterialsCommon);
-                    var technique = techniques[techniqueKey];
-                    if (!defined(technique)) {
-                        technique = generateTechnique(gltf, khrMaterialsCommon, lightParameters, options);
-                        techniques[techniqueKey] = technique;
-                    }
-
-                    // Take advantage of the fact that we generate techniques that use the
-                    // same parameter names as the extension values.
-                    material.values = {};
-                    var values = khrMaterialsCommon.values;
-                    for (var valueName in values) {
-                        if (values.hasOwnProperty(valueName)) {
-                            var value = values[valueName];
-                            material.values[valueName] = value;
-                        }
-                    }
-
-                    material.technique = technique;
-
-                    delete material.extensions.KHR_materials_common;
-                    if (Object.keys(material.extensions).length === 0) {
-                        delete material.extensions;
-                    }
-                }
-            });
-
-            if (defined(gltf.extensions)) {
-                delete gltf.extensions.KHR_materials_common;
-                if (Object.keys(gltf.extensions).length === 0) {
-                    delete gltf.extensions;
-                }
-            }
-
-            // If any primitives have semantics that aren't declared in the generated
-            // shaders, we want to preserve them.
-            ensureSemanticExistence(gltf);
+        if (!hasExtension('KHR_techniques_webgl')) {
+            gltf.extensions.KHR_techniques_webgl = {
+                programs : [],
+                shaders : [],
+                techniques : []
+            };
+            gltf.extensionsUsed.push('KHR_techniques_webgl');
+            gltf.extensionsRequired.push('KHR_techniques_webgl');
         }
+
+        var techniquesWebgl = gltf.extensions.KHR_techniques_webgl;
+
+        lightDefaults(gltf);
+
+        var lightParameters = generateLightParameters(gltf);
+
+        ModelUtility.splitIncompatibleMaterials (gltf);
+
+        var techniques = {};
+        ForEach.material(gltf, function(material) {
+            if (defined(material.extensions) && defined(material.extensions.KHR_materials_common)) {
+                var khrMaterialsCommon = material.extensions.KHR_materials_common;
+                var techniqueKey = getTechniqueKey(material, khrMaterialsCommon);
+                var technique = techniques[techniqueKey];
+                var primitiveInfo = material.extras._pipeline.primitive;
+
+                if (!defined(technique)) {
+                    technique = generateTechnique(gltf, techniquesWebgl, primitiveInfo, khrMaterialsCommon, lightParameters, options.addBatchIdToGeneratedShaders);
+                    techniques[techniqueKey] = technique;
+                }
+
+                var materialValues = {};
+                var values = khrMaterialsCommon.values;
+                var uniformName;
+                for (var valueName in values) {
+                    if (values.hasOwnProperty(valueName) && (valueName !== 'transparent') && (valueName !== 'doubleSided')) {
+                        uniformName = 'u_' + valueName.toLowerCase();
+                        materialValues[uniformName] = values[valueName];
+                    }
+                }
+
+                material.extensions.KHR_techniques_webgl = {
+                    technique: technique,
+                    values: materialValues
+                };
+
+                if (khrMaterialsCommon.transparent) {
+                    material.alphaMode = 'BLEND';
+                    material.extensions.KHR_blend = {
+                        blendFactors: [
+                            WebGLConstants.ONE,
+                            WebGLConstants.ONE_MINUS_SRC_ALPHA,
+                            WebGLConstants.ONE,
+                            WebGLConstants.ONE_MINUS_SRC_ALPHA
+                        ]
+                    };
+                    if (!hasExtension(gltf, 'KHR_blend')) {
+                        gltf.extensions.push('KHR_blend');
+                    }
+                } else if (khrMaterialsCommon.doubleSided) {
+                    material.doubleSided = true;
+                }
+            }
+        });
+
+        // If any primitives have semantics that aren't declared in the generated
+        // shaders, we want to preserve them.
+        ModelUtility.ensureSemanticExistence(gltf);
 
         return gltf;
     }
@@ -226,28 +221,17 @@ define([
         return result;
     }
 
-    function generateTechnique(gltf, khrMaterialsCommon, lightParameters, options) {
-        var optimizeForCesium = defaultValue(options.optimizeForCesium, false);
-        var hasCesiumRTCExtension = defined(gltf.extensions) && defined(gltf.extensions.CESIUM_RTC);
-        var addBatchIdToGeneratedShaders = defaultValue(options.addBatchIdToGeneratedShaders, false);
+    function generateTechnique(gltf, techniquesWebgl, primitiveInfo, khrMaterialsCommon, lightParameters, addBatchIdToGeneratedShaders) {
+        addBatchIdToGeneratedShaders = defaultValue(addBatchIdToGeneratedShaders, false);
 
-        var techniques = gltf.techniques;
-        var shaders = gltf.shaders;
-        var programs = gltf.programs;
+        var techniques = techniquesWebgl.techniques;
+        var shaders = techniquesWebgl.shaders;
+        var programs = techniquesWebgl.programs;
         var lightingModel = khrMaterialsCommon.technique.toUpperCase();
-        var lights;
-        if (defined(gltf.extensions) && defined(gltf.extensions.KHR_materials_common)) {
-            lights = gltf.extensions.KHR_materials_common.lights;
-        }
+        var lights = gltf.extensions.KHR_materials_common.lights;
+
         var parameterValues = khrMaterialsCommon.values;
-        if (defined(khrMaterialsCommon.transparent)) {
-            parameterValues.transparent = khrMaterialsCommon.transparent;
-        }
-        if (defined(khrMaterialsCommon.doubleSided)) {
-            parameterValues.doubleSided = khrMaterialsCommon.doubleSided;
-        }
         var jointCount = defaultValue(khrMaterialsCommon.jointCount, 0);
-        var primitiveInfo = khrMaterialsCommon.extras._pipeline.primitive;
 
         var skinningInfo;
         var hasSkinning = false;
@@ -265,78 +249,77 @@ define([
         var hasNormals = (lightingModel !== 'CONSTANT');
 
         // Add techniques
-        var techniqueParameters = {
-            // Add matrices
-            modelViewMatrix: {
-                semantic: hasCesiumRTCExtension ? 'CESIUM_RTC_MODELVIEW' : 'MODELVIEW',
+        var techniqueUniforms = {
+            u_modelViewMatrix: {
+                semantic: hasExtension(gltf, 'CESIUM_RTC') ? 'CESIUM_RTC_MODELVIEW' : 'MODELVIEW',
                 type: WebGLConstants.FLOAT_MAT4
             },
-            projectionMatrix: {
+            u_projectionMatrix: {
                 semantic: 'PROJECTION',
                 type: WebGLConstants.FLOAT_MAT4
             }
         };
 
         if (hasNormals) {
-            techniqueParameters.normalMatrix = {
+            techniqueUniforms.u_normalMatrix = {
                 semantic: 'MODELVIEWINVERSETRANSPOSE',
                 type: WebGLConstants.FLOAT_MAT3
             };
         }
 
         if (hasSkinning) {
-            techniqueParameters.jointMatrix = {
+            techniqueUniforms.u_jointMatrix = {
                 count: jointCount,
                 semantic: 'JOINTMATRIX',
                 type: WebGLConstants.FLOAT_MAT4
             };
         }
 
-        // Add material parameters
-        var lowerCase;
+        // Add material values
+        var uniformName;
         var hasTexCoords = false;
         for (var name in parameterValues) {
             //generate shader parameters for KHR_materials_common attributes
             //(including a check, because some boolean flags should not be used as shader parameters)
             if (parameterValues.hasOwnProperty(name) && (name !== 'transparent') && (name !== 'doubleSided')) {
-                var valType = getKHRMaterialsCommonValueType(name, parameterValues[name]);
-                lowerCase = name.toLowerCase();
-                if (!hasTexCoords && (valType === WebGLConstants.SAMPLER_2D)) {
+                var uniformType = getKHRMaterialsCommonValueType(name, parameterValues[name]);
+                uniformName = 'u_' + name.toLowerCase();
+                if (!hasTexCoords && (uniformType === WebGLConstants.SAMPLER_2D)) {
                     hasTexCoords = true;
                 }
-                techniqueParameters[lowerCase] = {
-                    type: valType
+
+                techniqueUniforms[uniformName] = {
+                    type : uniformType
                 };
             }
         }
 
         // Give the diffuse uniform a semantic to support color replacement in 3D Tiles
-        if (defined(techniqueParameters.diffuse) && optimizeForCesium) {
-            techniqueParameters.diffuse.semantic = '_3DTILESDIFFUSE';
+        if (defined(techniqueUniforms.u_diffuse)) {
+            techniqueUniforms.u_diffuse.semantic = '_3DTILESDIFFUSE';
         }
 
         // Copy light parameters into technique parameters
         if (defined(lightParameters)) {
             for (var lightParamName in lightParameters) {
                 if (lightParameters.hasOwnProperty(lightParamName)) {
-                    techniqueParameters[lightParamName] = lightParameters[lightParamName];
+                    uniformName = 'u_' + lightParamName;
+                    techniqueUniforms[uniformName] = lightParameters[lightParamName];
                 }
             }
         }
 
-        // Generate uniforms object before attributes are added
-        var techniqueUniforms = {};
-        for (var paramName in techniqueParameters) {
-            if (techniqueParameters.hasOwnProperty(paramName) && paramName !== 'extras') {
-                var param = techniqueParameters[paramName];
-                techniqueUniforms['u_' + paramName] = paramName;
-                var arraySize = defined(param.count) ? '[' + param.count + ']' : '';
-                if (((param.type !== WebGLConstants.FLOAT_MAT3) && (param.type !== WebGLConstants.FLOAT_MAT4)) ||
-                    param.useInFragment) {
-                    fragmentShader += 'uniform ' + webGLConstantToGlslType(param.type) + ' u_' + paramName + arraySize + ';\n';
-                    delete param.useInFragment;
+        // Add uniforms to shaders
+        for (uniformName in techniqueUniforms) {
+            if (techniqueUniforms.hasOwnProperty(uniformName)) {
+                var uniform = techniqueUniforms[uniformName];
+                var arraySize = defined(uniform.count) ? '[' + uniform.count + ']' : '';
+                if (((uniform.type !== WebGLConstants.FLOAT_MAT3) && (uniform.type !== WebGLConstants.FLOAT_MAT4)) ||
+                    uniform.useInFragment) {
+                    fragmentShader += 'uniform ' + webGLConstantToGlslType(uniform.type) + ' ' + uniformName + arraySize + ';\n';
+                    delete uniform.useInFragment;
                 } else {
-                    vertexShader += 'uniform ' + webGLConstantToGlslType(param.type) + ' u_' + paramName + arraySize + ';\n';
+                    vertexShader += 'uniform ' + webGLConstantToGlslType(uniform.type) + ' ' + uniformName + arraySize + ';\n';
                 }
             }
         }
@@ -376,11 +359,9 @@ define([
 
         // Add position always
         var techniqueAttributes = {
-            a_position: 'position'
-        };
-        techniqueParameters.position = {
-            semantic: 'POSITION',
-            type: WebGLConstants.FLOAT_VEC3
+            a_position: {
+                semantic : 'POSITION'
+            }
         };
         vertexShader += 'attribute vec3 a_position;\n';
         vertexShader += 'varying vec3 v_positionEC;\n';
@@ -395,10 +376,8 @@ define([
 
         // Add normal if we don't have constant lighting
         if (hasNormals) {
-            techniqueAttributes.a_normal = 'normal';
-            techniqueParameters.normal = {
-                semantic: 'NORMAL',
-                type: WebGLConstants.FLOAT_VEC3
+            techniqueAttributes.a_normal = {
+                semantic: 'NORMAL'
             };
             vertexShader += 'attribute vec3 a_normal;\n';
             vertexShader += 'varying vec3 v_normal;\n';
@@ -414,10 +393,8 @@ define([
         // Add texture coordinates if the material uses them
         var v_texcoord;
         if (hasTexCoords) {
-            techniqueAttributes.a_texcoord_0 = 'texcoord_0';
-            techniqueParameters.texcoord_0 = {
-                semantic: 'TEXCOORD_0',
-                type: WebGLConstants.FLOAT_VEC2
+            techniqueAttributes.a_texcoord_0 = {
+                semantic: 'TEXCOORD_0'
             };
 
             v_texcoord = 'v_texcoord_0';
@@ -429,18 +406,12 @@ define([
         }
 
         if (hasSkinning) {
-            techniqueAttributes.a_joint = 'joint';
-            var attributeType = getShaderVariable(skinningInfo.type);
-            var webGLConstant = glslTypeToWebGLConstant(attributeType);
-
-            techniqueParameters.joint = {
-                semantic: 'JOINT',
-                type: webGLConstant
+            var attributeType = ModelUtility.getShaderVariable(skinningInfo.type);
+            techniqueAttributes.a_joint = {
+                semantic: 'JOINT'
             };
-            techniqueAttributes.a_weight = 'weight';
-            techniqueParameters.weight = {
-                semantic: 'WEIGHT',
-                type: webGLConstant
+            techniqueAttributes.a_weight = {
+                semantic: 'WEIGHT'
             };
 
             vertexShader += 'attribute ' + attributeType + ' a_joint;\n';
@@ -448,10 +419,8 @@ define([
         }
 
         if (hasVertexColors) {
-            techniqueAttributes.a_vertexColor = 'vertexColor';
-            techniqueParameters.vertexColor = {
-                semantic: 'COLOR_0',
-                type: WebGLConstants.FLOAT_VEC4
+            techniqueAttributes.a_vertexColor = {
+                semantic: 'COLOR_0'
             };
             vertexShader += 'attribute vec4 a_vertexColor;\n';
             vertexShader += 'varying vec4 v_vertexColor;\n';
@@ -460,17 +429,15 @@ define([
         }
 
         if (addBatchIdToGeneratedShaders) {
-            techniqueAttributes.a_batchId = 'batchId';
-            techniqueParameters.batchId = {
-                semantic: '_BATCHID',
-                type: WebGLConstants.FLOAT
+            techniqueAttributes.a_batchId = {
+                semantic: '_BATCHID'
             };
             vertexShader += 'attribute float a_batchId;\n';
         }
 
         var hasSpecular = hasNormals && ((lightingModel === 'BLINN') || (lightingModel === 'PHONG')) &&
-            defined(techniqueParameters.specular) && defined(techniqueParameters.shininess) &&
-            (techniqueParameters.shininess > 0.0);
+            defined(techniqueUniforms.u_specular) && defined(techniqueUniforms.u_shininess) &&
+            (techniqueUniforms.u_shininess > 0.0);
 
         // Generate lighting code blocks
         var hasNonAmbientLights = false;
@@ -553,12 +520,8 @@ define([
         }
 
         if (!hasNonAmbientLights && (lightingModel !== 'CONSTANT')) {
-            if (optimizeForCesium) {
-                fragmentLightingBlock += '  vec3 l = normalize(czm_sunDirectionEC);\n';
-            } else {
-                fragmentLightingBlock += '  vec3 l = vec3(0.0, 0.0, 1.0);\n';
-            }
-            var minimumLighting = optimizeForCesium ? '0.2' : '0.0'; // Use strings instead of values as 0.0 -> 0 when stringified
+            fragmentLightingBlock += '  vec3 l = normalize(czm_sunDirectionEC);\n';
+            var minimumLighting = '0.2'; // Use strings instead of values as 0.0 -> 0 when stringified
             fragmentLightingBlock += '  diffuseLight += vec3(1.0, 1.0, 1.0) * max(dot(normal,l), ' + minimumLighting + ');\n';
 
             if (hasSpecular) {
@@ -592,8 +555,8 @@ define([
 
         var finalColorComputation;
         if (lightingModel !== 'CONSTANT') {
-            if (defined(techniqueParameters.diffuse)) {
-                if (techniqueParameters.diffuse.type === WebGLConstants.SAMPLER_2D) {
+            if (defined(techniqueUniforms.u_diffuse)) {
+                if (techniqueUniforms.u_diffuse.type === WebGLConstants.SAMPLER_2D) {
                     fragmentShader += '  vec4 diffuse = texture2D(u_diffuse, ' + v_texcoord + ');\n';
                 } else {
                     fragmentShader += '  vec4 diffuse = u_diffuse;\n';
@@ -603,7 +566,7 @@ define([
             }
 
             if (hasSpecular) {
-                if (techniqueParameters.specular.type === WebGLConstants.SAMPLER_2D) {
+                if (techniqueUniforms.u_specular.type === WebGLConstants.SAMPLER_2D) {
                     fragmentShader += '  vec3 specular = texture2D(u_specular, ' + v_texcoord + ').rgb;\n';
                 } else {
                     fragmentShader += '  vec3 specular = u_specular.rgb;\n';
@@ -612,25 +575,23 @@ define([
                 colorCreationBlock += '  color += specular * specularLight;\n';
             }
 
-            if (defined(techniqueParameters.transparency)) {
+            if (defined(techniqueUniforms.u_transparency)) {
                 finalColorComputation = '  gl_FragColor = vec4(color * diffuse.a * u_transparency, diffuse.a * u_transparency);\n';
             } else {
                 finalColorComputation = '  gl_FragColor = vec4(color * diffuse.a, diffuse.a);\n';
             }
-        } else {
-            if (defined(techniqueParameters.transparency)) {
+        } else if (defined(techniqueUniforms.u_transparency)) {
                 finalColorComputation = '  gl_FragColor = vec4(color * u_transparency, u_transparency);\n';
             } else {
                 finalColorComputation = '  gl_FragColor = vec4(color, 1.0);\n';
             }
-        }
 
         if (hasVertexColors) {
             colorCreationBlock += '  color *= v_vertexColor.rgb;\n';
         }
 
-        if (defined(techniqueParameters.emission)) {
-            if (techniqueParameters.emission.type === WebGLConstants.SAMPLER_2D) {
+        if (defined(techniqueUniforms.u_emission)) {
+            if (techniqueUniforms.u_emission.type === WebGLConstants.SAMPLER_2D) {
                 fragmentShader += '  vec3 emission = texture2D(u_emission, ' + v_texcoord + ').rgb;\n';
             } else {
                 fragmentShader += '  vec3 emission = u_emission.rgb;\n';
@@ -638,9 +599,9 @@ define([
             colorCreationBlock += '  color += emission;\n';
         }
 
-        if (defined(techniqueParameters.ambient) || (lightingModel !== 'CONSTANT')) {
-            if (defined(techniqueParameters.ambient)) {
-                if (techniqueParameters.ambient.type === WebGLConstants.SAMPLER_2D) {
+        if (defined(techniqueUniforms.u_ambient) || (lightingModel !== 'CONSTANT')) {
+            if (defined(techniqueUniforms.u_ambient)) {
+                if (techniqueUniforms.u_ambient.type === WebGLConstants.SAMPLER_2D) {
                     fragmentShader += '  vec3 ambient = texture2D(u_ambient, ' + v_texcoord + ').rgb;\n';
                 } else {
                     fragmentShader += '  vec3 ambient = u_ambient.rgb;\n';
@@ -660,49 +621,13 @@ define([
         fragmentShader += finalColorComputation;
         fragmentShader += '}\n';
 
-        var techniqueStates;
-        if (parameterValues.transparent) {
-            techniqueStates = {
-                enable: [
-                    WebGLConstants.DEPTH_TEST,
-                    WebGLConstants.BLEND
-                ],
-                functions: {
-                    depthMask : [false],
-                    blendEquationSeparate: [
-                        WebGLConstants.FUNC_ADD,
-                        WebGLConstants.FUNC_ADD
-                    ],
-                    blendFuncSeparate: [
-                        WebGLConstants.ONE,
-                        WebGLConstants.ONE_MINUS_SRC_ALPHA,
-                        WebGLConstants.ONE,
-                        WebGLConstants.ONE_MINUS_SRC_ALPHA
-                    ]
-                }
-            };
-        } else if (khrMaterialsCommon.doubleSided) {
-            techniqueStates = {
-                enable: [
-                    WebGLConstants.DEPTH_TEST
-                ]
-            };
-        } else { // Not transparent or double sided
-            techniqueStates = {
-                enable: [
-                    WebGLConstants.CULL_FACE,
-                    WebGLConstants.DEPTH_TEST
-                ]
-            };
-        }
-
         // Add shaders
         var vertexShaderId = addToArray(shaders, {
             type: WebGLConstants.VERTEX_SHADER,
-                extras: {
-                    _pipeline: {
-                        source: vertexShader,
-                        extension: '.glsl'
+            extras: {
+                _pipeline: {
+                    source: vertexShader,
+                    extension: '.glsl'
                 }
             }
         });
@@ -718,18 +643,14 @@ define([
         });
 
         // Add program
-        var programAttributes = Object.keys(techniqueAttributes);
         var programId = addToArray(programs, {
-            attributes: programAttributes,
             fragmentShader: fragmentShaderId,
             vertexShader: vertexShaderId
         });
 
         var techniqueId = addToArray(techniques, {
             attributes: techniqueAttributes,
-            parameters: techniqueParameters,
             program: programId,
-            states: techniqueStates,
             uniforms: techniqueUniforms
         });
 
@@ -772,7 +693,7 @@ define([
         }
     }
 
-    function getTechniqueKey(khrMaterialsCommon) {
+    function getTechniqueKey(material, khrMaterialsCommon) {
         var techniqueKey = '';
         techniqueKey += 'technique:' + khrMaterialsCommon.technique + ';';
 
@@ -787,13 +708,9 @@ define([
             }
         }
 
-        var doubleSided = defaultValue(khrMaterialsCommon.doubleSided, defaultValue(khrMaterialsCommon.values.doubleSided, false));
-        techniqueKey += doubleSided.toString() + ';';
-        var transparent = defaultValue(khrMaterialsCommon.transparent, defaultValue(khrMaterialsCommon.values.transparent, false));
-        techniqueKey += transparent.toString() + ';';
         var jointCount = defaultValue(khrMaterialsCommon.jointCount, 0);
         techniqueKey += jointCount.toString() + ';';
-        var primitiveInfo = khrMaterialsCommon.extras._pipeline.primitive;
+        var primitiveInfo = material.extras._pipeline.primitive;
         if (defined(primitiveInfo)) {
             var skinningInfo = primitiveInfo.skinning;
             if (jointCount > 0) {
@@ -806,15 +723,7 @@ define([
     }
 
     function lightDefaults(gltf) {
-        if (!defined(gltf.extensions)) {
-            gltf.extensions = {};
-        }
-        var extensions = gltf.extensions;
-
-        if (!defined(extensions.KHR_materials_common)) {
-            extensions.KHR_materials_common = {};
-        }
-        var khrMaterialsCommon = extensions.KHR_materials_common;
+        var khrMaterialsCommon = gltf.extensions.KHR_materials_common;
 
         if (!defined(khrMaterialsCommon.lights)) {
             khrMaterialsCommon.lights = {};
@@ -872,113 +781,6 @@ define([
                 spotLight.quadraticAttenuation = defaultValue(spotLight.quadraticAttenuation, 0.0);
             }
         }
-    }
-
-    function getShaderVariable(type) {
-        if (type === 'SCALAR') {
-            return 'float';
-        }
-        return type.toLowerCase();
-    }
-
-    function ensureSemanticExistenceForPrimitive(gltf, primitive) {
-        var accessors = gltf.accessors;
-        var materials = gltf.materials;
-        var techniques = gltf.techniques;
-        var programs = gltf.programs;
-        var shaders = gltf.shaders;
-
-        var attributes = primitive.attributes;
-        var material = materials[primitive.material];
-        var technique = techniques[material.technique];
-        var program = programs[technique.program];
-        var vertexShader = shaders[program.vertexShader];
-
-        for (var semantic in attributes) {
-            if (attributes.hasOwnProperty(semantic)) {
-                if (!defined(techniqueParameterForSemantic(technique, semantic))) {
-                    var accessorId = attributes[semantic];
-                    var accessor = accessors[accessorId];
-                    var lowerCase = semantic.toLowerCase();
-                    if (lowerCase.charAt(0) === '_') {
-                        lowerCase = lowerCase.slice(1);
-                    }
-                    var attributeName = 'a_' + lowerCase;
-                    technique.parameters[lowerCase] = {
-                        semantic: semantic,
-                        type: accessor.componentType
-                    };
-                    technique.attributes[attributeName] = lowerCase;
-                    program.attributes.push(attributeName);
-                    var pipelineExtras = vertexShader.extras._pipeline;
-                    var shaderText = pipelineExtras.source;
-                    shaderText = 'attribute ' + getShaderVariable(accessor.type) + ' ' + attributeName + ';\n' + shaderText;
-                    pipelineExtras.source = shaderText;
-                }
-            }
-        }
-    }
-
-    function ensureSemanticExistence(gltf) {
-        ForEach.mesh(gltf, function(mesh) {
-            ForEach.meshPrimitive(mesh, function(primitive) {
-                ensureSemanticExistenceForPrimitive(gltf, primitive);
-            });
-        });
-    }
-
-    function splitIncompatibleMaterials(gltf) {
-        var accessors = gltf.accessors;
-        var materials = gltf.materials;
-        ForEach.mesh(gltf, function(mesh) {
-           ForEach.meshPrimitive(mesh, function(primitive) {
-               var materialId = primitive.material;
-               var material = materials[materialId];
-
-               if (defined(material.extensions) && defined(material.extensions.KHR_materials_common)) {
-                   var khrMaterialsCommon = material.extensions.KHR_materials_common;
-                   var jointAccessorId = primitive.attributes.JOINT;
-                   var componentType;
-                   var type;
-                   if (defined(jointAccessorId)) {
-                       var jointAccessor = accessors[jointAccessorId];
-                       componentType = jointAccessor.componentType;
-                       type = jointAccessor.type;
-                   }
-                   var isSkinned = defined(jointAccessorId);
-                   var hasVertexColors = defined(primitive.attributes.COLOR_0);
-
-                   var primitiveInfo = khrMaterialsCommon.extras._pipeline.primitive;
-                   if (!defined(primitiveInfo)) {
-                       khrMaterialsCommon.extras._pipeline.primitive = {
-                           skinning : {
-                               skinned: isSkinned,
-                               componentType: componentType,
-                               type: type
-                           },
-                           hasVertexColors : hasVertexColors
-                       };
-                   } else if ((primitiveInfo.skinning.skinned !== isSkinned) || (primitiveInfo.skinning.type !== type) || (primitiveInfo.hasVertexColors !== hasVertexColors)) {
-                       // This primitive uses the same material as another one that either:
-                       // * Isn't skinned
-                       // * Uses a different type to store joints and weights
-                       // * Doesn't have vertex colors
-                       var clonedMaterial = clone(material, true);
-                       clonedMaterial.extensions.KHR_materials_common.extras._pipeline.primitive = {
-                           skinning : {
-                               skinned: isSkinned,
-                               componentType: componentType,
-                               type: type
-                           },
-                           hasVertexColors : hasVertexColors
-                       };
-                       // Split this off as a separate material
-                       materialId = addToArray(materials, clonedMaterial);
-                       primitive.material = materialId;
-                   }
-               }
-           });
-        });
     }
 
     return processModelMaterialsCommon;

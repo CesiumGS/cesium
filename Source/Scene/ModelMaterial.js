@@ -26,6 +26,10 @@ define([
         this._name = material.name;
         this._id = id;
         this._uniformMap = model._uniformMaps[id];
+
+        this._technique = undefined;
+        this._program = undefined;
+        this._values = undefined;
     }
 
     defineProperties(ModelMaterial.prototype, {
