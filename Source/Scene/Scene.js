@@ -2283,6 +2283,7 @@ define([
         var clearGlobeDepth = environmentState.clearGlobeDepth;
         var useDepthPlane = environmentState.useDepthPlane;
         var clearDepth = scene._depthClearCommand;
+        var clearStencil = scene._stencilClearCommand;
         var depthPlane = scene._depthPlane;
         var usePostProcessSelected = environmentState.usePostProcessSelected;
 
@@ -2323,7 +2324,10 @@ define([
             }
 
             clearDepth.execute(context, passState);
-            scene._stencilClearCommand.execute(context, passState);
+
+            if (context.stencilBuffer) {
+                clearStencil.execute(context, passState);
+            }
 
             us.updatePass(Pass.GLOBE);
             var commands = frustumCommands.commands[Pass.GLOBE];
@@ -2452,7 +2456,7 @@ define([
 
                 // Clear stencil set by the classification for the next classification pass
                 if (length > 0 && context.stencilBuffer) {
-                    scene._stencilClearCommand.execute(context, passState);
+                    clearStencil.execute(context, passState);
                 }
 
                 // Draw style over classification.
@@ -2473,7 +2477,7 @@ define([
             }
 
             if (length > 0 && context.stencilBuffer) {
-                scene._stencilClearCommand.execute(context, passState);
+                clearStencil.execute(context, passState);
             }
 
             if (clearGlobeDepth && useDepthPlane) {
