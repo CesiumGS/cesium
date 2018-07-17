@@ -476,6 +476,7 @@ defineSuite([
             granularity : 10.0 // no interpolative subdivision
         });
         groundPolylineGeometry._scene3DOnly = true;
+        GroundPolylineGeometry.setProjectionAndEllipsoid(groundPolylineGeometry, new WebMercatorProjection(Ellipsoid.WGS84));
 
         var packedArray = [0];
         GroundPolylineGeometry.pack(groundPolylineGeometry, packedArray, 1);
@@ -495,6 +496,7 @@ defineSuite([
         expect(scratch.granularity).toEqual(10.0);
         expect(scratch._ellipsoid.equals(Ellipsoid.WGS84)).toBe(true);
         expect(scratch._scene3DOnly).toBe(true);
+        expect(scratch._projectionIndex).toEqual(1);
     });
 
     it('provides a method for setting projection and ellipsoid', function() {
