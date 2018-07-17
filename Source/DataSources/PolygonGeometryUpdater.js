@@ -4,6 +4,8 @@ define([
         '../Core/Check',
         '../Core/Color',
         '../Core/ColorGeometryInstanceAttribute',
+        '../Core/CoplanarPolygonGeometry',
+        '../Core/CoplanarPolygonOutlineGeometry',
         '../Core/defined',
         '../Core/DeveloperError',
         '../Core/DistanceDisplayConditionGeometryInstanceAttribute',
@@ -32,6 +34,8 @@ define([
         Check,
         Color,
         ColorGeometryInstanceAttribute,
+        CoplanarPolygonGeometry,
+        CoplanarPolygonOutlineGeometry,
         defined,
         DeveloperError,
         DistanceDisplayConditionGeometryInstanceAttribute,
@@ -120,6 +124,7 @@ define([
 
         var entity = this._entity;
         var isAvailable = entity.isAvailable(time);
+        var options = this._options;
 
         var attributes = {
             show : new ShowGeometryInstanceAttribute(isAvailable && entity.isShowing && this._showProperty.getValue(time) && this._fillProperty.getValue(time)),
@@ -138,13 +143,20 @@ define([
             }
             attributes.color = ColorGeometryInstanceAttribute.fromColor(currentColor);
         }
-        if (defined(this._options.offsetAttribute)) {
+        if (defined(options.offsetAttribute)) {
             attributes.offset = OffsetGeometryInstanceAttribute.fromCartesian3(Property.getValueOrDefault(this._terrainOffsetProperty, time, defaultOffset, offsetScratch));
+        }
+
+        var geometry;
+        if (options.perPositionHeight && !defined(options.extrudedHeight)) {
+            geometry = new CoplanarPolygonGeometry(options);
+        } else {
+            geometry = new PolygonGeometry(options);
         }
 
         return new GeometryInstance({
             id : entity,
-            geometry : new PolygonGeometry(this._options),
+            geometry : geometry,
             attributes : attributes
         });
     };
@@ -168,6 +180,7 @@ define([
 
         var entity = this._entity;
         var isAvailable = entity.isAvailable(time);
+        var options = this._options;
         var outlineColor = Property.getValueOrDefault(this._outlineColorProperty, time, Color.BLACK, scratchColor);
         var distanceDisplayCondition = this._distanceDisplayConditionProperty.getValue(time);
 
@@ -178,13 +191,19 @@ define([
             offset : undefined
         };
 
-        if (defined(this._options.offsetAttribute)) {
+        if (defined(options.offsetAttribute)) {
             attributes.offset = OffsetGeometryInstanceAttribute.fromCartesian3(Property.getValueOrDefault(this._terrainOffsetProperty, time, defaultOffset, offsetScratch));
         }
 
+        var geometry;
+        if (options.perPositionHeight && !defined(options.extrudedHeight)) {
+            geometry = new CoplanarPolygonOutlineGeometry(options);
+        } else {
+            geometry = new PolygonOutlineGeometry(options);
+        }
         return new GeometryInstance({
             id : entity,
-            geometry : new PolygonOutlineGeometry(this._options),
+            geometry : geometry,
             attributes : attributes
         });
     };

@@ -54,6 +54,9 @@ defineSuite([
 
     beforeAll(function() {
         scene = createScene();
+
+        // Keep the error from logging to the console when running tests
+        spyOn(Batched3DModel3DTileContent, '_deprecationWarning');
     });
 
     afterAll(function() {
@@ -76,31 +79,26 @@ defineSuite([
     });
 
     it('recognizes the legacy 20-byte header', function() {
-        spyOn(Batched3DModel3DTileContent, '_deprecationWarning');
         return Cesium3DTilesTester.loadTileset(scene, deprecated1Url)
             .then(function(tileset) {
                 expect(Batched3DModel3DTileContent._deprecationWarning).toHaveBeenCalled();
                 Cesium3DTilesTester.expectRenderTileset(scene, tileset);
                 var batchTable = tileset._root._content.batchTable;
-                expect(batchTable.batchTableJson).toBeDefined();
-                expect(batchTable.batchTableBinary).toBeUndefined();
+                expect(batchTable._properties).toBeDefined();
             });
     });
 
     it('recognizes the legacy 24-byte header', function() {
-        spyOn(Batched3DModel3DTileContent, '_deprecationWarning');
         return Cesium3DTilesTester.loadTileset(scene, deprecated2Url)
             .then(function(tileset) {
                 expect(Batched3DModel3DTileContent._deprecationWarning).toHaveBeenCalled();
                 Cesium3DTilesTester.expectRenderTileset(scene, tileset);
                 var batchTable = tileset._root._content.batchTable;
-                expect(batchTable.batchTableJson).toBeDefined();
-                expect(batchTable.batchTableBinary).toBeUndefined();
+                expect(batchTable._properties).toBeDefined();
             });
     });
 
     it('logs deprecation warning for use of BATCHID without prefixed underscore', function() {
-        spyOn(Batched3DModel3DTileContent, '_deprecationWarning');
         return Cesium3DTilesTester.loadTileset(scene, deprecated1Url)
             .then(function(tileset) {
                 expect(Batched3DModel3DTileContent._deprecationWarning).toHaveBeenCalled();
