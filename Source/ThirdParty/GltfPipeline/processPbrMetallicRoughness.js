@@ -442,20 +442,18 @@ define([
                 '}\n\n';
         }
 
-        // TODO HDR
         fragmentShader += 'vec3 SRGBtoLINEAR3(vec3 srgbIn) \n' +
             '{\n' +
-            //'    return pow(srgbIn, vec3(2.2));\n' +
-            '    return srgbIn;\n' +
+            '    return pow(srgbIn, vec3(2.2));\n' +
             '}\n\n';
 
         fragmentShader += 'vec4 SRGBtoLINEAR4(vec4 srgbIn) \n' +
             '{\n' +
-            //'    vec3 linearOut = pow(srgbIn.rgb, vec3(2.2));\n' +
-            //'   return vec4(linearOut, srgbIn.a);\n' +
-            '    return srgbIn;\n' +
+            '    vec3 linearOut = pow(srgbIn.rgb, vec3(2.2));\n' +
+            '    return vec4(linearOut, srgbIn.a);\n' +
             '}\n\n';
 
+        // TODO HDR
         fragmentShader += 'vec3 LINEARtoSRGB(vec3 linearIn) \n' +
             '{\n' +
             //'    return pow(linearIn, vec3(1.0/2.2));\n' +

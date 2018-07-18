@@ -2,9 +2,9 @@ uniform sampler2D colorTexture;
 
 varying vec2 v_textureCoordinates;
 
-//#ifdef AUTO_EXPOSURE
-//uniform sampler2D autoExposure;
-//#endif
+#ifdef AUTO_EXPOSURE
+uniform sampler2D autoExposure;
+#endif
 
 // See slides 142 and 143:
 //     http://www.gdcvault.com/play/1012459/Uncharted_2__HDR_Lighting
@@ -13,9 +13,10 @@ void main()
 {
     vec3 color = texture2D(colorTexture, v_textureCoordinates).rgb;
 
-//#ifdef AUTO_EXPOSURE
-//    color /= texture2D(autoExposure, vec2(0.5)).r;
-//#endif
+#ifdef AUTO_EXPOSURE
+    float exposure = texture2D(autoExposure, vec2(0.5)).r;
+    color /= exposure;
+#endif
 
 	const float A = 0.22; // shoulder strength
 	const float B = 0.30; // linear strength

@@ -58,16 +58,20 @@ define([
         var fxaa = PostProcessStageLibrary.createFXAAStage();
         var ao = PostProcessStageLibrary.createAmbientOcclusionStage();
         var bloom = PostProcessStageLibrary.createBloomStage();
-        //var tonemapping = PostProcessStageLibrary.createReinhardTonemappingStage(true);
-        //var tonemapping = PostProcessStageLibrary.createModifiedReinhardTonemappingStage(true);
-        //var tonemapping = PostProcessStageLibrary.createFilmicTonemappingStage(true);
-        var tonemapping = PostProcessStageLibrary.createACESTonemappingStage(true);
+
+        var useAutoExposure = false;
+        var tonemapping = PostProcessStageLibrary.createReinhardTonemappingStage(useAutoExposure);
+        //var tonemapping = PostProcessStageLibrary.createModifiedReinhardTonemappingStage(useAutoExposure);
+        //var tonemapping = PostProcessStageLibrary.createFilmicTonemappingStage(useAutoExposure);
+        //var tonemapping = PostProcessStageLibrary.createACESTonemappingStage(useAutoExposure);
 
         var autoexposure = PostProcessStageLibrary.createAutoExposureStage();
 
-        tonemapping.uniforms.autoExposure = function() {
-            return autoexposure.outputTexture;
-        };
+        if (useAutoExposure) {
+            tonemapping.uniforms.autoExposure = function() {
+                return autoexposure.outputTexture;
+            };
+        }
 
         ao.enabled = false;
         bloom.enabled = false; // TODO HDR
