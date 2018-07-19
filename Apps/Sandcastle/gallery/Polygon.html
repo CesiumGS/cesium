@@ -10,10 +10,12 @@
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
     <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
     <script type="text/javascript">
-    require.config({
-        baseUrl : '../../../Source',
-        waitSeconds : 60
-    });
+        if(typeof require === "function") {
+            require.config({
+                baseUrl : '../../../Source',
+                waitSeconds : 120
+            });
+        }
     </script>
 </head>
 <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
@@ -108,8 +110,22 @@ var bluePolygon = viewer.entities.add({
     }
 });
 
-viewer.zoomTo(viewer.entities);
-//Sandcastle_End
+var cyanPolygon = viewer.entities.add({
+    name : 'Cyan vertical polygon with per-position heights and outline',
+    polygon : {
+        hierarchy : Cesium.Cartesian3.fromDegreesArrayHeights([
+           -90.0, 41.0, 0.0,
+           -85.0, 41.0, 500000.0,
+           -80.0, 41.0, 0.0
+        ]),
+        perPositionHeight : true,
+        material : Cesium.Color.CYAN.withAlpha(0.5),
+        outline : true,
+        outlineColor : Cesium.Color.BLACK
+    }
+});
+
+viewer.zoomTo(viewer.entities);//Sandcastle_End
     Sandcastle.finishedLoading();
 }
 if (typeof Cesium !== "undefined") {
