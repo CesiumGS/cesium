@@ -44,15 +44,15 @@ define([
     var defaultSizeInMeters = false;
     var defaultDisableDepthTestDistance = 0.0;
 
-    var position = new Cartesian3();
-    var color = new Color();
-    var eyeOffset = new Cartesian3();
-    var pixelOffset = new Cartesian2();
-    var scaleByDistance = new NearFarScalar();
-    var translucencyByDistance = new NearFarScalar();
-    var pixelOffsetScaleByDistance = new NearFarScalar();
-    var boundingRectangle = new BoundingRectangle();
-    var distanceDisplayCondition = new DistanceDisplayCondition();
+    var positionScratch = new Cartesian3();
+    var colorScratch = new Color();
+    var eyeOffsetScratch = new Cartesian3();
+    var pixelOffsetScratch = new Cartesian2();
+    var scaleByDistanceScratch = new NearFarScalar();
+    var translucencyByDistanceScratch = new NearFarScalar();
+    var pixelOffsetScaleByDistanceScratch = new NearFarScalar();
+    var boundingRectangleScratch = new BoundingRectangle();
+    var distanceDisplayConditionScratch = new DistanceDisplayCondition();
 
     function EntityData(entity) {
         this.entity = entity;
@@ -110,9 +110,9 @@ define([
             var textureValue;
             var billboard = item.billboard;
             var show = entity.isShowing && entity.isAvailable(time) && Property.getValueOrDefault(billboardGraphics._show, time, true);
-
+            var position;
             if (show) {
-                position = Property.getValueOrUndefined(entity._position, time, position);
+                position = Property.getValueOrUndefined(entity._position, time, positionScratch);
                 textureValue = Property.getValueOrUndefined(billboardGraphics._image, time);
                 show = defined(position) && defined(textureValue);
             }
@@ -140,10 +140,10 @@ define([
                 item.textureValue = textureValue;
             }
             billboard.position = position;
-            billboard.color = Property.getValueOrDefault(billboardGraphics._color, time, defaultColor, color);
-            billboard.eyeOffset = Property.getValueOrDefault(billboardGraphics._eyeOffset, time, defaultEyeOffset, eyeOffset);
+            billboard.color = Property.getValueOrDefault(billboardGraphics._color, time, defaultColor, colorScratch);
+            billboard.eyeOffset = Property.getValueOrDefault(billboardGraphics._eyeOffset, time, defaultEyeOffset, eyeOffsetScratch);
             billboard.heightReference = Property.getValueOrDefault(billboardGraphics._heightReference, time, defaultHeightReference);
-            billboard.pixelOffset = Property.getValueOrDefault(billboardGraphics._pixelOffset, time, defaultPixelOffset, pixelOffset);
+            billboard.pixelOffset = Property.getValueOrDefault(billboardGraphics._pixelOffset, time, defaultPixelOffset, pixelOffsetScratch);
             billboard.scale = Property.getValueOrDefault(billboardGraphics._scale, time, defaultScale);
             billboard.rotation = Property.getValueOrDefault(billboardGraphics._rotation, time, defaultRotation);
             billboard.alignedAxis = Property.getValueOrDefault(billboardGraphics._alignedAxis, time, defaultAlignedAxis);
@@ -151,14 +151,14 @@ define([
             billboard.verticalOrigin = Property.getValueOrDefault(billboardGraphics._verticalOrigin, time, defaultVerticalOrigin);
             billboard.width = Property.getValueOrUndefined(billboardGraphics._width, time);
             billboard.height = Property.getValueOrUndefined(billboardGraphics._height, time);
-            billboard.scaleByDistance = Property.getValueOrUndefined(billboardGraphics._scaleByDistance, time, scaleByDistance);
-            billboard.translucencyByDistance = Property.getValueOrUndefined(billboardGraphics._translucencyByDistance, time, translucencyByDistance);
-            billboard.pixelOffsetScaleByDistance = Property.getValueOrUndefined(billboardGraphics._pixelOffsetScaleByDistance, time, pixelOffsetScaleByDistance);
+            billboard.scaleByDistance = Property.getValueOrUndefined(billboardGraphics._scaleByDistance, time, scaleByDistanceScratch);
+            billboard.translucencyByDistance = Property.getValueOrUndefined(billboardGraphics._translucencyByDistance, time, translucencyByDistanceScratch);
+            billboard.pixelOffsetScaleByDistance = Property.getValueOrUndefined(billboardGraphics._pixelOffsetScaleByDistance, time, pixelOffsetScaleByDistanceScratch);
             billboard.sizeInMeters = Property.getValueOrDefault(billboardGraphics._sizeInMeters, time, defaultSizeInMeters);
-            billboard.distanceDisplayCondition = Property.getValueOrUndefined(billboardGraphics._distanceDisplayCondition, time, distanceDisplayCondition);
+            billboard.distanceDisplayCondition = Property.getValueOrUndefined(billboardGraphics._distanceDisplayCondition, time, distanceDisplayConditionScratch);
             billboard.disableDepthTestDistance = Property.getValueOrDefault(billboardGraphics._disableDepthTestDistance, time, defaultDisableDepthTestDistance);
 
-            var subRegion = Property.getValueOrUndefined(billboardGraphics._imageSubRegion, time, boundingRectangle);
+            var subRegion = Property.getValueOrUndefined(billboardGraphics._imageSubRegion, time, boundingRectangleScratch);
             if (defined(subRegion)) {
                 billboard.setImageSubRegion(billboard._imageId, subRegion);
             }
