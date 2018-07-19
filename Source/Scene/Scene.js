@@ -1,10 +1,12 @@
 define([
+        '../Core/ApproximateTerrainHeights',
         '../Core/BoundingRectangle',
         '../Core/BoundingSphere',
         '../Core/BoxGeometry',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Cartographic',
+        '../Core/Check',
         '../Core/Color',
         '../Core/ColorGeometryInstanceAttribute',
         '../Core/createGuid',
@@ -31,6 +33,7 @@ define([
         '../Core/PerspectiveFrustum',
         '../Core/PerspectiveOffCenterFrustum',
         '../Core/PixelFormat',
+        '../Core/Ray',
         '../Core/RequestScheduler',
         '../Core/ShowGeometryInstanceAttribute',
         '../Core/TaskProcessor',
@@ -75,12 +78,14 @@ define([
         './TweenCollection',
         './View'
     ], function(
+        ApproximateTerrainHeights,
         BoundingRectangle,
         BoundingSphere,
         BoxGeometry,
         Cartesian2,
         Cartesian3,
         Cartographic,
+        Check,
         Color,
         ColorGeometryInstanceAttribute,
         createGuid,
@@ -107,6 +112,7 @@ define([
         PerspectiveFrustum,
         PerspectiveOffCenterFrustum,
         PixelFormat,
+        Ray,
         RequestScheduler,
         ShowGeometryInstanceAttribute,
         TaskProcessor,
@@ -764,6 +770,18 @@ define([
             camera.frustum.near = 0.1;
             camera.frustum.far = 10000000000.0;
         }
+
+        var pickOffscreenViewport = new BoundingRectangle(0, 0, 1, 1);
+        var pickOffscreenCamera = new Camera(this);
+        pickOffscreenCamera.frustum = new OrthographicFrustum({
+            width: 0.01,
+            aspectRatio: 1.0,
+            near: 0.1,
+            far: 500000000.0
+        });
+
+        this._view = new View(this, camera, viewport);
+        this._pickOffscreenView = new View(this, pickOffscreenCamera, pickOffscreenViewport);
 
         this._defaultView = new View(this, camera, viewport);
         this._view = this._defaultView;
@@ -1530,6 +1548,7 @@ define([
         passes.pick = false;
         passes.depth = false;
         passes.postProcess = false;
+        passes.offscreen = false;
     }
 
     function updateFrameState(scene, frameNumber, time) {
@@ -2611,6 +2630,7 @@ define([
         // Update celestial and terrestrial environment effects.
         var environmentState = scene._environmentState;
         var renderPass = frameState.passes.render;
+        var offscreenPass = frameState.passes.offscreen;
         var skyAtmosphere = scene.skyAtmosphere;
         var globe = scene.globe;
 
@@ -2643,7 +2663,7 @@ define([
         }
 
         environmentState.renderTranslucentDepthForPick = false;
-        environmentState.useWebVR = scene._useWebVR && scene.mode !== SceneMode.SCENE2D;
+        environmentState.useWebVR = scene._useWebVR && scene.mode !== SceneMode.SCENE2D  && !offscreenPass;
 
         var occluder = (frameState.mode === SceneMode.SCENE3D) ? frameState.occluder: undefined;
         var cullingVolume = frameState.cullingVolume;
@@ -3456,6 +3476,266 @@ define([
         return result;
     };
 
+    function drillPick(limit, pickCallback) {
+        // PERFORMANCE_IDEA: This function calls each primitive's update for each pass. Instead
+        // we could update the primitive once, and then just execute their commands for each pass,
+        // and cull commands for picked primitives.  e.g., base on the command's owner.
+        var i;
+        var attributes;
+        var result = [];
+        var pickedPrimitives = [];
+        var pickedAttributes = [];
+        var pickedFeatures = [];
+        if (!defined(limit)) {
+            limit = Number.MAX_VALUE;
+        }
+
+        var pickedResult = pickCallback();
+        while (defined(pickedResult) && defined(pickedResult.object) && defined(pickedResult.object.primitive)) {
+            result.push(pickedResult);
+            if (0 >= --limit) {
+                break;
+            }
+
+            var object = pickedResult.object;
+            var primitive = object.primitive;
+            var hasShowAttribute = false;
+
+            // If the picked object has a show attribute, use it.
+            if (typeof primitive.getGeometryInstanceAttributes === 'function') {
+                if (defined(object.id)) {
+                    attributes = primitive.getGeometryInstanceAttributes(object.id);
+                    if (defined(attributes) && defined(attributes.show)) {
+                        hasShowAttribute = true;
+                        attributes.show = ShowGeometryInstanceAttribute.toValue(false, attributes.show);
+                        pickedAttributes.push(attributes);
+                    }
+                }
+            }
+
+            if (object instanceof Cesium3DTileFeature) {
+                hasShowAttribute = true;
+                object.show = false;
+                pickedFeatures.push(object);
+            }
+
+            // Otherwise, hide the entire primitive
+            if (!hasShowAttribute) {
+                primitive.show = false;
+                pickedPrimitives.push(primitive);
+            }
+
+            pickedResult = pickCallback();
+        }
+
+        // Unhide everything we hid while drill picking
+        for (i = 0; i < pickedPrimitives.length; ++i) {
+            pickedPrimitives[i].show = true;
+        }
+
+        for (i = 0; i < pickedAttributes.length; ++i) {
+            attributes = pickedAttributes[i];
+            attributes.show = ShowGeometryInstanceAttribute.toValue(true, attributes.show);
+        }
+
+        for (i = 0; i < pickedFeatures.length; ++i) {
+            pickedFeatures[i].show = true;
+        }
+
+        return result;
+    }
+
+    var scratchRight = new Cartesian3();
+    var scratchUp = new Cartesian3();
+
+    function pickFromRay(scene, ray, pickPosition, pickObject) {
+        var context = scene._context;
+        var uniformState = context.uniformState;
+        var frameState = scene._frameState;
+
+        var view = scene._pickOffscreenView;
+        scene._view = view;
+
+        var direction = ray.direction;
+        var orthogonalAxis = Cartesian3.mostOrthogonalAxis(direction, scratchRight);
+        var right = Cartesian3.cross(direction, orthogonalAxis, scratchRight);
+        var up = Cartesian3.cross(direction, right, scratchUp);
+
+        var pickOffscreenCamera = view.camera;
+        pickOffscreenCamera.position = ray.origin;
+        pickOffscreenCamera.direction = direction;
+        pickOffscreenCamera.up = up;
+        pickOffscreenCamera.right = right;
+
+        scratchRectangle = BoundingRectangle.clone(view.viewport, scratchRectangle);
+
+        var passState = view.pickFramebuffer.begin(scratchRectangle, view.viewport);
+
+        scene._jobScheduler.disableThisFrame();
+
+        // Update with previous frame's number and time, assuming that render is called before picking.
+        updateFrameState(scene, frameState.frameNumber, frameState.time);
+        frameState.invertClassification = false;
+        frameState.passes.pick = true;
+        frameState.passes.offscreen = true;
+
+        uniformState.update(frameState);
+
+        updateEnvironment(scene, view);
+        updateAndExecuteCommands(scene, passState, scratchColorZero);
+        resolveFramebuffers(scene, passState);
+
+        var position;
+        var object;
+
+        if (pickObject) {
+            object = view.pickFramebuffer.end(context);
+            pickPosition = pickPosition && defined(object);
+        }
+
+        if (pickPosition) {
+            var numFrustums = view.frustumCommandsList.length;
+            for (var i = 0; i < numFrustums; ++i) {
+                var pickDepth = getPickDepth(scene, i);
+                var depth = pickDepth.getDepth(context, 0, 0);
+                if (depth > 0.0 && depth < 1.0) {
+                    var renderedFrustum = view.frustumCommandsList[i];
+                    var near = renderedFrustum.near * (i !== 0 ? scene.opaqueFrustumNearOffset : 1.0);
+                    var far = renderedFrustum.far;
+                    var distance = near + depth * (far - near);
+                    position = Ray.getPoint(ray, distance);
+                    break;
+                }
+            }
+
+            if (defined(position) && (scene.mode !== SceneMode.SCENE3D)) {
+                Cartesian3.fromElements(position.y, position.z, position.x, position);
+
+                var projection = scene.mapProjection;
+                var ellipsoid = projection.ellipsoid;
+
+                var cartographic = projection.unproject(position, scratchPickPositionCartographic);
+                ellipsoid.cartographicToCartesian(cartographic, position);
+            }
+        }
+
+        scene._view = scene._defaultView;
+        context.endFrame();
+        callAfterRenderFunctions(scene);
+
+        if (!defined(object) && !defined(position)) {
+            return;
+        }
+
+        return {
+            object : object,
+            position : position
+        };
+    }
+
+    /**
+     * Returns an object with a `primitive` property that contains the first (top) primitive in the scene
+     * hit by the ray or undefined if nothing is hit. Other properties may potentially be set depending on the type of primitive.
+     * <p>
+     * When a feature of a 3D Tiles tileset is picked, <code>pick</code> returns a {@link Cesium3DTileFeature} object.
+     * </p>
+     *
+     * @private
+     *
+     * @param {Ray} ray The ray to pick from.
+     * @returns {Object} Object containing the picked primitive.
+     *
+     * @see Scene#pick
+     */
+    Scene.prototype.pickFromRay = function(ray) {
+        //>>includeStart('debug', pragmas.debug);
+        Check.defined('ray', ray);
+        //>>includeEnd('debug');
+        var pickResult = pickFromRay(this, ray, false, true);
+        if (defined(pickResult)) {
+            return pickResult.object;
+        }
+    };
+
+    /**
+     * Returns the cartesian position of the first intersection of the ray or undefined if nothing is hit.
+     *
+     * @private
+     *
+     * @param {Ray} ray The ray to pick from.
+     * @param {Cartesian3} [result] The object on which to restore the result.
+     * @returns {Cartesian3} The cartesian position.
+     *
+     * @exception {DeveloperError} Picking from the depth buffer is not supported. Check pickPositionSupported.
+     */
+    Scene.prototype.pickPositionFromRay = function(ray, result) {
+        //>>includeStart('debug', pragmas.debug);
+        Check.defined('ray', ray);
+        if (!this.pickPositionSupported) {
+            throw new DeveloperError('Picking from the depth buffer is not supported. Check pickPositionSupported.');
+        }
+        //>>includeEnd('debug');
+        var pickResult = pickFromRay(this, ray, true, false);
+        if (defined(pickResult)) {
+            return Cartesian3.clone(pickResult.position, result);
+        }
+    };
+
+    /**
+     * Returns a list of objects, each containing a `primitive` property, for all primitives hit
+     * by the ray. Other properties may also be set depending on the type of primitive.
+     * The primitives in the list are ordered by their visual order in the scene (front to back).
+     *
+     * @private
+     *
+     * @param {Ray} ray The ray to pick from.
+     * @param {Number} [limit] If supplied, stop drilling after collecting this many picks.
+     * @returns {Object[]} Array of objects, each containing 1 picked primitives.
+     *
+     * @see Scene#drillPick
+     */
+    Scene.prototype.drillPickFromRay = function(ray, limit) {
+        //>>includeStart('debug', pragmas.debug);
+        Check.defined('ray', ray);
+        //>>includeEnd('debug');
+        var that = this;
+        var pickCallback = function() {
+            return pickFromRay(that, ray, false, true);
+        };
+        var objects = drillPick(limit, pickCallback);
+        return objects.map(function(element) {
+            return element.object;
+        });
+    };
+
+    /**
+     * Returns a list of cartesian positions containing intersections of the ray in the scene.
+     *
+     * @private
+     *
+     * @param {Ray} ray The ray to pick from.
+     * @param {Number} [limit] If supplied, stop drilling after collecting this many picks.
+     * @returns {Cartesian3[]} Array of cartesian positions.
+     *
+     * @exception {DeveloperError} Picking from the depth buffer is not supported. Check pickPositionSupported.
+     */
+    Scene.prototype.drillPickPositionFromRay = function(ray, limit) {
+        //>>includeStart('debug', pragmas.debug);
+        Check.defined('ray', ray);
+        //>>includeEnd('debug');
+        if (!this.pickPositionSupported) {
+            throw new DeveloperError('Picking from the depth buffer is not supported. Check pickPositionSupported.');
+        }
+        var that = this;
+        var pickCallback = function() {
+            return pickFromRay(that, ray, true, true);
+        };
+        var objects = drillPick(limit, pickCallback);
+        return objects.map(function(element) {
+            return element.position;
+        });
+    };
+
     /**
      * Returns a list of objects, each containing a `primitive` property, for all primitives at
      * a particular window coordinate position. Other properties may also be set depending on the
@@ -3477,78 +3757,65 @@ define([
      *
      */
     Scene.prototype.drillPick = function(windowPosition, limit, width, height) {
-        // PERFORMANCE_IDEA: This function calls each primitive's update for each pass. Instead
-        // we could update the primitive once, and then just execute their commands for each pass,
-        // and cull commands for picked primitives.  e.g., base on the command's owner.
-
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(windowPosition)) {
-            throw new DeveloperError('windowPosition is undefined.');
-        }
+        Check.defined('windowPosition', windowPosition);
         //>>includeEnd('debug');
-
-        var i;
-        var attributes;
-        var result = [];
-        var pickedPrimitives = [];
-        var pickedAttributes = [];
-        var pickedFeatures = [];
-        if (!defined(limit)) {
-            limit = Number.MAX_VALUE;
-        }
-
-        var pickedResult = this.pick(windowPosition, width, height);
-        while (defined(pickedResult) && defined(pickedResult.primitive)) {
-            result.push(pickedResult);
-            if (0 >= --limit) {
-                break;
+        var that = this;
+        var pickCallback = function() {
+            var object = that.pick(windowPosition, width, height);
+            if (defined(object)) {
+                return {
+                    object : object
+                };
             }
+        };
+        var objects = drillPick(limit, pickCallback);
+        return objects.map(function(element) {
+            return element.object;
+        });
+    };
 
-            var primitive = pickedResult.primitive;
-            var hasShowAttribute = false;
+    var scratchSurfacePosition = new Cartesian3();
+    var scratchSurfaceNormal = new Cartesian3();
+    var scratchSurfaceRay = new Ray();
+    var scratchRay = new Ray();
+    var scratchPickPosition = new Cartesian3();
+    var scratchPickCartographic = new Cartographic();
 
-            //If the picked object has a show attribute, use it.
-            if (typeof primitive.getGeometryInstanceAttributes === 'function') {
-                if (defined(pickedResult.id)) {
-                    attributes = primitive.getGeometryInstanceAttributes(pickedResult.id);
-                    if (defined(attributes) && defined(attributes.show)) {
-                        hasShowAttribute = true;
-                        attributes.show = ShowGeometryInstanceAttribute.toValue(false, attributes.show);
-                        pickedAttributes.push(attributes);
-                    }
-                }
-            }
-
-            if (pickedResult instanceof Cesium3DTileFeature) {
-                hasShowAttribute = true;
-                pickedResult.show = false;
-                pickedFeatures.push(pickedResult);
-            }
-
-            // Otherwise, hide the entire primitive
-            if (!hasShowAttribute) {
-                primitive.show = false;
-                pickedPrimitives.push(primitive);
-            }
-
-            pickedResult = this.pick(windowPosition, width, height);
+    /**
+     * Returns the height of scene geometry at the given cartographic position. May be used to clamp objects
+     * to the globe, 3D Tiles, or primitives in the scene.
+     * <p>
+     * This function only samples height from globe tiles and 3D Tiles that are rendered in the current view. All other
+     * primitives are sampled regardless of visibility.
+     * </p>
+     *
+     * @param {Cartographic} position The position to sample from.
+     * @returns {Number} The height.
+     *
+     * @see sampleTerrain
+     * @see sampleTerrainMostDetailed
+     */
+    Scene.prototype.sampleHeight = function(position) {
+        //>>includeStart('debug', pragmas.debug);
+        Check.defined('position', position);
+        //>>includeEnd('debug');
+        var globe = this.globe;
+        var ellipsoid = defined(globe) ? globe.ellipsoid : this.mapProjection.ellipsoid;
+        var height = ApproximateTerrainHeights._defaultMaxTerrainHeight;
+        var surfaceNormal = ellipsoid.geodeticSurfaceNormalCartographic(position, scratchSurfaceNormal);
+        var surfacePosition = Cartographic.toCartesian(position, ellipsoid, scratchSurfacePosition);
+        var surfaceRay = scratchSurfaceRay;
+        surfaceRay.origin = surfacePosition;
+        surfaceRay.direction =  surfaceNormal;
+        var ray = scratchRay;
+        Ray.getPoint(surfaceRay, height, ray.origin);
+        Cartesian3.negate(surfaceNormal, ray.direction);
+        var pickPosition = this.pickPositionFromRay(ray, scratchPickPosition);
+        if (defined(pickPosition)) {
+            var pickCartographic = Cartographic.fromCartesian(pickPosition, ellipsoid, scratchPickCartographic);
+            return pickCartographic.height;
         }
-
-        // Unhide everything we hid while drill picking
-        for (i = 0; i < pickedPrimitives.length; ++i) {
-            pickedPrimitives[i].show = true;
-        }
-
-        for (i = 0; i < pickedAttributes.length; ++i) {
-            attributes = pickedAttributes[i];
-            attributes.show = ShowGeometryInstanceAttribute.toValue(true, attributes.show);
-        }
-
-        for (i = 0; i < pickedFeatures.length; ++i) {
-            pickedFeatures[i].show = true;
-        }
-
-        return result;
     };
 
     /**
@@ -3677,6 +3944,7 @@ define([
         this._brdfLutGenerator = this._brdfLutGenerator && this._brdfLutGenerator.destroy();
 
         this._defaultView = this._defaultView && this._defaultView.destroy();
+        this._pickOffscreenView = this._pickOffscreenView && this._pickOffscreenView.destroy();
         this._view = undefined;
 
         if (this._removeCreditContainer) {

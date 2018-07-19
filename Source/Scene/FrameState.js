@@ -159,7 +159,14 @@ define([
              * @type {Boolean}
              * @default false
              */
-            postProcess : false
+            postProcess : false,
+
+            /**
+             * <code>true</code> if the primitive should update for an offscreen pass, <code>false</code> otherwise.
+             * @type {Boolean}
+             * @default false
+             */
+            offscreen : false
         };
 
         /**
