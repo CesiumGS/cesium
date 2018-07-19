@@ -101,6 +101,30 @@ defineSuite([
         expect(returnedResults).toEqual(expectedResults);
     });
 
+    it('projectPointOntoEllipsoid works without a result parameter', function () {
+        var ellipsoid = Ellipsoid.UNIT_SPHERE;
+        var origin = new Cartesian3(1, 0, 0);
+        var tangentPlane = new EllipsoidTangentPlane(origin, ellipsoid);
+
+        var position = new Cartesian3(2, 2, 0);
+        var expectedResult = new Cartesian3(1/3, 2/3,  2/3);
+        var returnedResult = tangentPlane.projectPointOntoEllipsoid(position);
+        expect(returnedResult).toEqual(expectedResult);
+    });
+
+    it('projectPointOntoEllipsoid works with a result parameter', function () {
+        var ellipsoid = Ellipsoid.UNIT_SPHERE;
+        var origin = new Cartesian3(1, 0, 0);
+        var tangentPlane = new EllipsoidTangentPlane(origin, ellipsoid);
+
+        var position = new Cartesian3(2, -2, 0);
+        var expectedResult = new Cartesian3(1/3, 2/3, -2/3);
+        var result = new Cartesian3();
+        var returnedResult = tangentPlane.projectPointOntoEllipsoid(position, result);
+        expect(result).toBe(returnedResult);
+        expect(returnedResult).toEqual(expectedResult);
+    });
+
     it('projectPointsOntoEllipsoid works without a result parameter', function () {
         var ellipsoid = Ellipsoid.UNIT_SPHERE;
         var origin = new Cartesian3(1, 0, 0);

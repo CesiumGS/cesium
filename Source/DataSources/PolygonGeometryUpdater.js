@@ -1,5 +1,6 @@
 define([
         '../Core/ApproximateTerrainHeights',
+        '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Check',
         '../Core/Color',
@@ -9,6 +10,7 @@ define([
         '../Core/defined',
         '../Core/DeveloperError',
         '../Core/DistanceDisplayConditionGeometryInstanceAttribute',
+        '../Core/EllipsoidTangentPlane',
         '../Core/GeometryInstance',
         '../Core/GeometryOffsetAttribute',
         '../Core/isArray',
@@ -30,6 +32,7 @@ define([
         './Property'
     ], function(
         ApproximateTerrainHeights,
+        Cartesian2,
         Cartesian3,
         Check,
         Color,
@@ -39,6 +42,7 @@ define([
         defined,
         DeveloperError,
         DistanceDisplayConditionGeometryInstanceAttribute,
+        EllipsoidTangentPlane,
         GeometryInstance,
         GeometryOffsetAttribute,
         isArray,
@@ -64,6 +68,8 @@ define([
     var defaultOffset = Cartesian3.ZERO;
     var offsetScratch = new Cartesian3();
     var scratchRectangle = new Rectangle();
+    var scratch2DPositions = [];
+    var cart2Scratch = new Cartesian2();
 
     function PolygonGeometryOptions(entity) {
         this.id = entity;
@@ -216,17 +222,30 @@ define([
         if (positions.length === 0) {
             return;
         }
+        var ellipsoid = this._scene.mapProjection.ellipsoid;
 
-        var centroid = Cartesian3.clone(Cartesian3.ZERO, result);
-        var length = positions.length;
-        for (var i = 0; i < length; i++) {
-            centroid = Cartesian3.add(positions[i], centroid, centroid);
+        var tangentPlane = EllipsoidTangentPlane.fromPoints(positions, ellipsoid);
+        var positions2D = tangentPlane.projectPointsOntoPlane(positions, scratch2DPositions);
+
+        var length = positions2D.length;
+        var area = 0;
+        var j = length - 1;
+        var centroid2D = new Cartesian2();
+        for (var i = 0; i < length; j = i++) {
+            var p1 = positions2D[i];
+            var p2 = positions2D[j];
+            var f = p1.x * p2.y - p2.x * p1.y;
+
+            var sum = Cartesian2.add(p1, p2, cart2Scratch);
+            sum = Cartesian2.multiplyByScalar(sum, f, sum);
+            centroid2D = Cartesian2.add(centroid2D, sum, centroid2D);
+
+            area += f;
         }
-        centroid = Cartesian3.multiplyByScalar(centroid, 1 / length, centroid);
-        if (defined(this._scene.globe)) {
-            centroid = this._scene.globe.ellipsoid.scaleToGeodeticSurface(centroid, centroid);
-        }
-        return centroid;
+
+        var a = 1 / (area * 6);
+        centroid2D = Cartesian2.multiplyByScalar(centroid2D, a, centroid2D);
+        return tangentPlane.projectPointOntoEllipsoid(centroid2D, result);
     };
 
     PolygonGeometryUpdater.prototype._isHidden = function(entity, polygon) {
