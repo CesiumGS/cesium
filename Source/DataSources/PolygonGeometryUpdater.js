@@ -243,7 +243,7 @@ define([
             area += f;
         }
 
-        var a = 1 / (area * 3);
+        var a = 1.0 / (area * 3.0);
         centroid2D = Cartesian2.multiplyByScalar(centroid2D, a, centroid2D);
         return tangentPlane.projectPointOntoEllipsoid(centroid2D, result);
     };
