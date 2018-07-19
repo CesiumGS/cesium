@@ -603,12 +603,12 @@ define([
         this._runtime = {
             animations : undefined,
             rootNodes : undefined,
-            nodes : undefined,            // Indexed with the node property's name, i.e., glTF id
+            nodes : undefined,            // Indexed with the node's index
             nodesByName : undefined,      // Indexed with name property in the node
             skinnedNodes : undefined,
             meshesByName : undefined,     // Indexed with the name property in the mesh
             materialsByName : undefined,  // Indexed with the name property in the material
-            materialsById : undefined     // Indexed with the material's property name
+            materialsById : undefined     // Indexed with the material's index
         };
 
         this._uniformMaps = {};           // Not cached since it can be targeted by glTF animation
@@ -1547,8 +1547,8 @@ define([
             if (!defined(sourcePrograms[programId])) {
                 sourcePrograms[programId] = clone(programs[programId]);
                 model._loadResources.programsToCreate.enqueue({
-                    id: programId,
-                    technique: techniqueId
+                    id : programId,
+                    technique : techniqueId
                 });
             }
         });

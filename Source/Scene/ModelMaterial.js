@@ -34,10 +34,7 @@ define([
 
     defineProperties(ModelMaterial.prototype, {
         /**
-         * The value of the <code>name</code> property of this material.  This is the
-         * name assigned by the artist when the asset is created.  This can be
-         * different than the name of the material property ({@link ModelMaterial#id}),
-         * which is internal to glTF.
+         * The value of the <code>name</code> property of this material.
          *
          * @memberof ModelMaterial.prototype
          *
@@ -51,10 +48,7 @@ define([
         },
 
         /**
-         * The name of the glTF JSON property for this material.  This is guaranteed
-         * to be unique among all materials.  It may not match the material's <code>
-         * name</code> property (@link ModelMaterial#name), which is assigned by
-         * the artist when the asset is created.
+         * The index of the material.
          *
          * @memberof ModelMaterial.prototype
          *
@@ -80,7 +74,7 @@ define([
      *
      * @example
      * material.setValue('diffuse', new Cesium.Cartesian4(1.0, 0.0, 0.0, 1.0));  // vec4
-     * material.setValue('shininess', 256.0);                             // scalar
+     * material.setValue('shininess', 256.0); // scalar
      */
     ModelMaterial.prototype.setValue = function(name, value) {
         //>>includeStart('debug', pragmas.debug);
