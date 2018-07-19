@@ -2496,9 +2496,9 @@ define([
             commands.length = frustumCommands.indices[Pass.TRANSLUCENT];
             executeTranslucentCommands(scene, executeCommand, passState, commands, invertClassification);
 
-            if (defined(globeDepth) && (environmentState.useGlobeDepthFramebuffer || renderTranslucentDepthForPick) && scene.useDepthPicking) {
+            if (context.depthTexture && scene.useDepthPicking && (environmentState.useGlobeDepthFramebuffer || renderTranslucentDepthForPick || passes.offscreen)) {
                 // PERFORMANCE_IDEA: Use MRT to avoid the extra copy.
-                var depthStencilTexture = renderTranslucentDepthForPick ? passState.framebuffer.depthStencilTexture : globeDepth.framebuffer.depthStencilTexture;
+                var depthStencilTexture = (renderTranslucentDepthForPick || passes.offscreen) ? passState.framebuffer.depthStencilTexture : globeDepth.framebuffer.depthStencilTexture;
                 var pickDepth = getPickDepth(scene, index);
                 pickDepth.update(context, depthStencilTexture);
                 pickDepth.executeCopyDepth(context, passState);
@@ -3643,9 +3643,6 @@ define([
         context.endFrame();
     }
 
-    var scratchPackedDepth = new Cartesian4();
-    var packedDepthScale = new Cartesian4(1.0, 1.0 / 255.0, 1.0 / 65025.0, 1.0 / 16581375.0);
-
     /**
      * Returns the cartesian position reconstructed from the depth buffer and window position.
      * The returned position is in world coordinates. Used internally by camera functions to
@@ -3712,18 +3709,7 @@ define([
         var numFrustums = this.numberOfFrustums;
         for (var i = 0; i < numFrustums; ++i) {
             var pickDepth = getPickDepth(this, i);
-            var pixels = context.readPixels({
-                x : drawingBufferPosition.x,
-                y : drawingBufferPosition.y,
-                width : 1,
-                height : 1,
-                framebuffer : pickDepth.framebuffer
-            });
-
-            var packedDepth = Cartesian4.unpack(pixels, 0, scratchPackedDepth);
-            Cartesian4.divideByScalar(packedDepth, 255.0, packedDepth);
-            var depth = Cartesian4.dot(packedDepth, packedDepthScale);
-
+            var depth = pickDepth.getDepth(context, drawingBufferPosition.x, drawingBufferPosition.y);
             if (depth > 0.0 && depth < 1.0) {
                 var renderedFrustum = this._frustumCommandsList[i];
                 var height2D;
