@@ -2686,6 +2686,7 @@ define([
             viewport.height = context.drawingBufferHeight;
 
             var savedCamera = Camera.clone(camera, scene._cameraVR);
+            savedCamera.frustum = camera.frustum;
 
             var near = camera.frustum.near;
             var fo = near * defaultValue(scene.focalLength, 5.0);
