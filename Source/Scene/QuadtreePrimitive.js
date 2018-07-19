@@ -833,9 +833,8 @@ define([
                     var position = tile.data.pick(scratchRay, mode, projection, false, scratchPosition);
                     if (defined(position)) {
                         data.callback(position);
+                        data.level = tile.level;
                     }
-
-                    data.level = tile.level;
                 } else if (tile.level === data.level) {
                     var children = tile.children;
                     var childrenLength = children.length;
