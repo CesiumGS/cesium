@@ -21,7 +21,7 @@ czm_material czm_getMaterial(czm_materialInput materialInput)
     material.alpha = (distanceToContour < (czm_resolutionScale * width)) ? 1.0 : 0.0;
 #endif
 
-    material.diffuse = color.rgb;
+    material.diffuse = czm_gammaCorrect(color.rgb);
 
     return material;
 }

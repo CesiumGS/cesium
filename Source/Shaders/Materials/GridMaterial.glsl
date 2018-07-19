@@ -49,8 +49,8 @@ czm_material czm_getMaterial(czm_materialInput materialInput)
     value *= (1.0 - sRim);
 
     vec3 halfColor = color.rgb * 0.5;
-    material.diffuse = halfColor;
-    material.emission = halfColor;
+    material.diffuse = czm_gammaCorrect(halfColor);
+    material.emission = czm_gammaCorrect(halfColor);
     material.alpha = color.a * (1.0 - ((1.0 - cellAlpha) * value));
 
     return material;

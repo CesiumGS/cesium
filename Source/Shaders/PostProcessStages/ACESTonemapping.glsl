@@ -21,6 +21,6 @@ void main()
     float e = 0.01;
     color = (color * (a * color + b)) / (color * (c * color + d) + e);
     color = clamp(color, 0.0, 1.0);
-    color = pow(color, vec3(1.0 / 1.52));
+    color = czm_inverseGamma(color);
     gl_FragColor = vec4(color, 1.0);
 }

@@ -94,15 +94,16 @@ void main(void)
 
 #ifdef PER_INSTANCE_COLOR
 
+    vec4 color = vec4(czm_gammaCorrect(v_color.rgb), v_color.a);
 #ifdef FLAT
-    gl_FragColor = v_color;
+    gl_FragColor = color;
 #else // FLAT
     czm_materialInput materialInput;
     materialInput.normalEC = normalEC;
     materialInput.positionToEyeEC = -eyeCoordinate.xyz;
     czm_material material = czm_getDefaultMaterial(materialInput);
-    material.diffuse = v_color.rgb;
-    material.alpha = v_color.a;
+    material.diffuse = color.rgb;
+    material.alpha = color.a;
 
     gl_FragColor = czm_phong(normalize(-eyeCoordinate.xyz), material);
 #endif // FLAT

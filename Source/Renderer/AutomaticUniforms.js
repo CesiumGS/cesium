@@ -1624,6 +1624,20 @@ define([
             getValue : function(uniformState) {
                 return uniformState.invertClassificationColor;
             }
+        }),
+
+        /**
+         * An automatic GLSL uniform that will be used for gamma correction.
+         *
+         * @alias czm_gamma
+         * @glslUniform
+         */
+        czm_gamma : new AutomaticUniform({
+            size : 1,
+            datatype : WebGLConstants.FLOAT,
+            getValue : function(uniformState) {
+                return uniformState.gamma;
+            }
         })
     };
 

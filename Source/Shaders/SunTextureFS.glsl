@@ -17,22 +17,12 @@ vec4 addBurst(vec2 position, vec2 direction)
     return vec4(burst);
 }
 
-// TODO HDR
-#define HDR
-
 void main()
 {
     vec2 position = v_textureCoordinates - vec2(0.5);
     float radius = length(position);
     float surface = step(radius, u_radiusTS);
-
-#ifdef HDR
-    vec2 rg = vec2(1.5, 1.2);
-#else
-    vec2 rg = vec2(1.0);
-#endif
-
-    vec4 color = vec4(rg, surface + 0.2, surface);
+    vec4 color = vec4(vec2(1.0), surface + 0.2, surface);
 
     float glow = 1.0 - smoothstep(0.0, 0.55, radius);
     color.ba += mix(vec2(0.0), vec2(1.0), glow) * 0.75;
@@ -62,9 +52,5 @@ void main()
 
     color += clamp(burst, vec4(0.0), vec4(1.0)) * 0.15;
 
-#ifdef HDR
-    gl_FragColor = color;
-#else
     gl_FragColor = clamp(color, vec4(0.0), vec4(1.0));
-#endif
 }

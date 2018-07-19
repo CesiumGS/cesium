@@ -21,7 +21,7 @@ czm_material czm_getMaterial(czm_materialInput materialInput)
     vec4 currentColor = mix(lightColor, darkColor, b);
     vec4 color = czm_antialias(lightColor, darkColor, currentColor, value, 0.03);
 
-    material.diffuse = color.rgb;
+    material.diffuse = czm_gammaCorrect(color.rgb);
     material.alpha = color.a;
 
     return material;

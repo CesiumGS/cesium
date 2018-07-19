@@ -49,7 +49,7 @@ float getGlobeDepth(vec2 adjustedST, vec2 depthLookupST)
 void main()
 {
     vec4 color = texture2D(u_atlas, v_textureCoordinates);
-    color.rgb = pow(color.rgb, vec3(2.2));
+    color.rgb = czm_gammaCorrect(color.rgb);
     color *= v_color;
 
 // Fully transparent parts of the billboard are not pickable.

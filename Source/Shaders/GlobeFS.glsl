@@ -112,7 +112,7 @@ vec4 sampleAndBlend(
     vec3 color = value.rgb;
     float alpha = value.a;
 
-    color = pow(color, vec3(2.2));
+    color = czm_gammaCorrect(color);
 
 #ifdef APPLY_SPLIT
     float splitPosition = czm_imagerySplitPosition;

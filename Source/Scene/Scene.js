@@ -804,6 +804,8 @@ define([
         this._removeTaskProcessorListenerCallback = TaskProcessor.taskCompletedEvent.addEventListener(requestRenderAfterFrame(this));
         this._removeGlobeCallbacks = [];
 
+        this.gamma = 2.2;
+
         // initial guess at frustums.
         var near = camera.frustum.near;
         var far = camera.frustum.far;
@@ -1449,6 +1451,15 @@ define([
             set : function(value) {
                 deprecationWarning('Scene.fxaa', 'The Scene.fxaa property has been deprecated. Use Scene.postProcessStages.fxaa.');
                 this.postProcessStages.fxaa.enabled = value;
+            }
+        },
+
+        gamma : {
+            get : function() {
+                return this._context.uniformState.gamma;
+            },
+            set : function(value) {
+                this._context.uniformState.gamma = value;
             }
         },
 
