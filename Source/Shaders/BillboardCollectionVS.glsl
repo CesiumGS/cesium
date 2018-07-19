@@ -328,16 +328,18 @@ if (lengthSq < disableDepthTestDistance) {
     vec4 pEC1 = addScreenSpaceOffset(positionEC, dimensions, scale, vec2(0.0), origin, labelTranslate, pixelOffset, alignedAxis, validAlignedAxis, rotation, sizeInMeters, rotationMatrix, mpp);
     float globeDepth1 = getGlobeDepth(pEC1);
 
-    if (globeDepth1 != 0.0 && pEC1.z < globeDepth1)
+    float depthsilon = 10.0;
+
+    if (globeDepth1 != 0.0 && pEC1.z + depthsilon < globeDepth1)
     {
         vec4 pEC2 = addScreenSpaceOffset(positionEC, dimensions, scale, vec2(0.0, 1.0), origin, labelTranslate, pixelOffset, alignedAxis, validAlignedAxis, rotation, sizeInMeters, rotationMatrix, mpp);
         float globeDepth2 = getGlobeDepth(pEC2);
 
-        if (globeDepth2 != 0.0 && pEC2.z < globeDepth2)
+        if (globeDepth2 != 0.0 && pEC2.z + depthsilon < globeDepth2)
         {
             vec4 pEC3 = addScreenSpaceOffset(positionEC, dimensions, scale, vec2(1.0), origin, labelTranslate, pixelOffset, alignedAxis, validAlignedAxis, rotation, sizeInMeters, rotationMatrix, mpp);
             float globeDepth3 = getGlobeDepth(pEC3);
-            if (globeDepth3 != 0.0 && pEC3.z < globeDepth3)
+            if (globeDepth3 != 0.0 && pEC3.z + depthsilon < globeDepth3)
             {
                 positionEC.xyz = vec3(0.0);
             }
