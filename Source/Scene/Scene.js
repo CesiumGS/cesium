@@ -6,6 +6,7 @@ define([
         '../Core/Cartesian3',
         '../Core/Cartesian4',
         '../Core/Cartographic',
+        '../Core/Check',
         '../Core/Color',
         '../Core/ColorGeometryInstanceAttribute',
         '../Core/createGuid',
@@ -34,6 +35,7 @@ define([
         '../Core/PerspectiveFrustum',
         '../Core/PerspectiveOffCenterFrustum',
         '../Core/PixelFormat',
+        '../Core/Ray',
         '../Core/RequestScheduler',
         '../Core/ShowGeometryInstanceAttribute',
         '../Core/TaskProcessor',
@@ -68,6 +70,7 @@ define([
         './PerformanceDisplay',
         './PerInstanceColorAppearance',
         './PickDepth',
+        './PickOffscreenFramebuffer',
         './PostProcessStageCollection',
         './Primitive',
         './PrimitiveCollection',
@@ -87,6 +90,7 @@ define([
         Cartesian3,
         Cartesian4,
         Cartographic,
+        Check,
         Color,
         ColorGeometryInstanceAttribute,
         createGuid,
@@ -115,6 +119,7 @@ define([
         PerspectiveFrustum,
         PerspectiveOffCenterFrustum,
         PixelFormat,
+        Ray,
         RequestScheduler,
         ShowGeometryInstanceAttribute,
         TaskProcessor,
@@ -149,6 +154,7 @@ define([
         PerformanceDisplay,
         PerInstanceColorAppearance,
         PickDepth,
+        PickOffscreenFramebuffer,
         PostProcessStageCollection,
         Primitive,
         PrimitiveCollection,
@@ -731,6 +737,15 @@ define([
         }
 
         this._cameraClone = Camera.clone(camera);
+
+        this._pickOffscreenFramebuffer = new PickOffscreenFramebuffer();
+        this._pickOffscreenCamera = new Camera(this);
+        this._pickOffscreenCamera.frustum = new OrthographicFrustum({
+            width: 0.1,
+            aspectRatio: 1.0,
+            near: 0.1,
+            far: 500000000.0
+        });
 
         // Keeps track of the state of a frame. FrameState is the state across
         // the primitives of the scene. This state is for internally keeping track
@@ -3535,7 +3550,7 @@ define([
      * @param {Number} [height=3] Height of the pick rectangle.
      * @returns {Object} Object containing the picked primitive.
      *
-     * @exception {DeveloperError} windowPosition is undefined.
+     * @see Scene#pick
      */
     Scene.prototype.pick = function(windowPosition, width, height) {
         //>>includeStart('debug', pragmas.debug);
@@ -3761,6 +3776,8 @@ define([
      * @returns {Cartesian3} The cartesian position.
      *
      * @exception {DeveloperError} Picking from the depth buffer is not supported. Check pickPositionSupported.
+     *
+     * @see Scene#pickPositionFromRay
      */
     Scene.prototype.pickPosition = function(windowPosition, result) {
         result = this.pickPositionWorldCoordinates(windowPosition, result);
@@ -3777,32 +3794,10 @@ define([
         return result;
     };
 
-    /**
-     * Returns a list of objects, each containing a `primitive` property, for all primitives at
-     * a particular window coordinate position. Other properties may also be set depending on the
-     * type of primitive. The primitives in the list are ordered by their visual order in the
-     * scene (front to back).
-     *
-     * @param {Cartesian2} windowPosition Window coordinates to perform picking on.
-     * @param {Number} [limit] If supplied, stop drilling after collecting this many picks.
-     * @returns {Object[]} Array of objects, each containing 1 picked primitives.
-     *
-     * @exception {DeveloperError} windowPosition is undefined.
-     *
-     * @example
-     * var pickedObjects = scene.drillPick(new Cesium.Cartesian2(100.0, 200.0));
-     */
-    Scene.prototype.drillPick = function(windowPosition, limit) {
+    function drillPick(limit, pickCallback) {
         // PERFORMANCE_IDEA: This function calls each primitive's update for each pass. Instead
         // we could update the primitive once, and then just execute their commands for each pass,
         // and cull commands for picked primitives.  e.g., base on the command's owner.
-
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(windowPosition)) {
-            throw new DeveloperError('windowPosition is undefined.');
-        }
-        //>>includeEnd('debug');
-
         var i;
         var attributes;
         var result = [];
@@ -3812,20 +3807,20 @@ define([
             limit = Number.MAX_VALUE;
         }
 
-        var pickedResult = this.pick(windowPosition);
-        while (defined(pickedResult) && defined(pickedResult.primitive)) {
+        var pickedResult = pickCallback();
+        while (defined(pickedResult) && defined(pickedResult.object) && defined(pickedResult.object.primitive)) {
             result.push(pickedResult);
             if (0 >= --limit) {
                 break;
             }
 
-            var primitive = pickedResult.primitive;
+            var primitive = pickedResult.object.primitive;
             var hasShowAttribute = false;
 
-            //If the picked object has a show attribute, use it.
+            // If the picked object has a show attribute, use it.
             if (typeof primitive.getGeometryInstanceAttributes === 'function') {
-                if (defined(pickedResult.id)) {
-                    attributes = primitive.getGeometryInstanceAttributes(pickedResult.id);
+                if (defined(pickedResult.object.id)) {
+                    attributes = primitive.getGeometryInstanceAttributes(pickedResult.object.id);
                     if (defined(attributes) && defined(attributes.show)) {
                         hasShowAttribute = true;
                         attributes.show = ShowGeometryInstanceAttribute.toValue(false, attributes.show);
@@ -3840,7 +3835,7 @@ define([
                 pickedPrimitives.push(primitive);
             }
 
-            pickedResult = this.pick(windowPosition);
+            pickedResult = pickCallback();
         }
 
         // unhide everything we hid while drill picking
@@ -3854,6 +3849,187 @@ define([
         }
 
         return result;
+    }
+
+    function pickFromRay(scene, ray, pickPosition, pickObject) {
+        var context = scene._context;
+        var uniformState = context.uniformState;
+        var frameState = scene._frameState;
+
+        var pickOffscreenCamera = scene._pickOffscreenCamera;
+        pickOffscreenCamera.position = ray.origin;
+        pickOffscreenCamera.direction = ray.direction;
+
+        var pickOffscreenFramebuffer = scene._pickOffscreenFramebuffer;
+
+        // Switch out the scene's camera with the offscreen camera
+        var sceneCamera = scene._camera;
+        scene._camera = pickOffscreenCamera;
+
+        scene._jobScheduler.disableThisFrame();
+
+        // Update with previous frame's number and time, assuming that render is called before picking.
+        updateFrameState(scene, frameState.frameNumber, frameState.time);
+        frameState.invertClassification = false;
+        frameState.passes.pick = true;
+        frameState.passes.offscreen = true;
+
+        uniformState.update(frameState);
+
+        var passState = pickOffscreenFramebuffer.begin(frameState);
+
+        updateEnvironment(scene, passState);
+        updateAndExecuteCommands(scene, passState, scratchColorZero);
+        resolveFramebuffers(scene, passState);
+
+        var position;
+        var object;
+
+        if (pickObject) {
+            object = pickOffscreenFramebuffer.end(context);
+            pickPosition = pickPosition && defined(object);
+        }
+
+        if (pickPosition) {
+            var numFrustums = scene.numberOfFrustums;
+            for (var i = 0; i < numFrustums; ++i) {
+                var pickDepth = getPickDepth(scene, i);
+                var depth = pickDepth.getDepth(context, 0, 0);
+                if (depth > 0.0 && depth < 1.0) {
+                    var renderedFrustum = scene._frustumCommandsList[i];
+                    var near = renderedFrustum.near * (i !== 0 ? scene.opaqueFrustumNearOffset : 1.0);
+                    var far = renderedFrustum.far;
+                    var distance = near + depth * (far - near);
+                    position = Ray.getPoint(ray, distance);
+                    break;
+                }
+            }
+
+            if (defined(position) && (scene.mode !== SceneMode.SCENE3D)) {
+                Cartesian3.fromElements(position.y, position.z, position.x, position);
+
+                var projection = scene.mapProjection;
+                var ellipsoid = projection.ellipsoid;
+
+                var cartographic = projection.unproject(position, scratchPickPositionCartographic);
+                ellipsoid.cartographicToCartesian(cartographic, position);
+            }
+        }
+
+        scene._camera = sceneCamera;
+        context.endFrame();
+        callAfterRenderFunctions(scene);
+
+        if (!defined(object) && !defined(position)) {
+            return;
+        }
+
+        return {
+            object : object,
+            position : position
+        };
+    }
+
+    /**
+     * Returns an object with a `primitive` property that contains the first (top) primitive in the scene
+     * hit by the ray or undefined if nothing is hit. Other properties may potentially be set depending on the type of primitive.
+     * <p>
+     * When a feature of a 3D Tiles tileset is picked, <code>pick</code> returns a {@link Cesium3DTileFeature} object.
+     * </p>
+     *
+     * @example TODO
+     *
+     * @param {Ray} ray The ray to pick from.
+     * @returns {Object} Object containing the picked primitive.
+     *
+     * @see Scene#pick
+     */
+    Scene.prototype.pickFromRay = function(ray) {
+        //>>includeStart('debug', pragmas.debug);
+        Check.defined('ray', ray);
+        //>>includeEnd('debug');
+        var pickResult = pickFromRay(this, ray, false, true);
+        if (defined(pickResult)) {
+            return pickResult.object;
+        }
+    };
+
+    /**
+     * TODO
+     */
+    Scene.prototype.pickPositionFromRay = function(ray, result) {
+        //>>includeStart('debug', pragmas.debug);
+        Check.defined('ray', ray);
+        if (!this.pickPositionSupported) {
+            throw new DeveloperError('Picking from the depth buffer is not supported. Check pickPositionSupported.');
+        }
+        //>>includeEnd('debug');
+        var pickResult = pickFromRay(this, ray, true, false);
+        if (defined(pickResult)) {
+            return Cartesian3.clone(pickResult.position, result);
+        }
+    };
+
+    Scene.prototype.drillPickFromRay = function(ray, limit) {
+        //>>includeStart('debug', pragmas.debug);
+        Check.defined('ray', ray);
+        //>>includeEnd('debug');
+        var that = this;
+        var pickCallback = function() {
+            return pickFromRay(that, ray, false, true);
+        };
+        var objects = drillPick(limit, pickCallback);
+        return objects.map(function(element) {
+            return element.object;
+        });
+    };
+
+    Scene.prototype.drillPickPositionFromRay = function(ray, limit) {
+        //>>includeStart('debug', pragmas.debug);
+        Check.defined('ray', ray);
+        //>>includeEnd('debug');
+        var that = this;
+        var pickCallback = function() {
+            return pickFromRay(that, ray, true, true);
+        };
+        var objects = drillPick(limit, pickCallback);
+        return objects.map(function(element) {
+            return element.position;
+        });
+    };
+
+    /**
+     * Returns a list of objects, each containing a `primitive` property, for all primitives at
+     * a particular window coordinate position. Other properties may also be set depending on the
+     * type of primitive. The primitives in the list are ordered by their visual order in the
+     * scene (front to back).
+     *
+     * @param {Cartesian2} windowPosition Window coordinates to perform picking on.
+     * @param {Number} [limit] If supplied, stop drilling after collecting this many picks.
+     * @returns {Object[]} Array of objects, each containing 1 picked primitives.
+     *
+     * @example
+     * var pickedObjects = scene.drillPick(new Cesium.Cartesian2(100.0, 200.0));
+     *
+     * TODO : width height params?
+     */
+    Scene.prototype.drillPick = function(windowPosition, limit) {
+        //>>includeStart('debug', pragmas.debug);
+        Check.defined('windowPosition', windowPosition);
+        //>>includeEnd('debug');
+        var that = this;
+        var pickCallback = function() {
+            var object = that.pick(windowPosition);
+            if (defined(object)) {
+                return {
+                    object : object
+                };
+            }
+        };
+        var objects = drillPick(limit, pickCallback);
+        return objects.map(function(element) {
+            return element.object;
+        });
     };
 
     /**
