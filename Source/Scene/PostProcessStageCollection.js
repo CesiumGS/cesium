@@ -60,10 +60,10 @@ define([
         var bloom = PostProcessStageLibrary.createBloomStage();
 
         var useAutoExposure = false;
-        var tonemapping = PostProcessStageLibrary.createReinhardTonemappingStage(useAutoExposure);
+        //var tonemapping = PostProcessStageLibrary.createReinhardTonemappingStage(useAutoExposure);
         //var tonemapping = PostProcessStageLibrary.createModifiedReinhardTonemappingStage(useAutoExposure);
         //var tonemapping = PostProcessStageLibrary.createFilmicTonemappingStage(useAutoExposure);
-        //var tonemapping = PostProcessStageLibrary.createACESTonemappingStage(useAutoExposure);
+        var tonemapping = PostProcessStageLibrary.createACESTonemappingStage(useAutoExposure);
 
         var autoexposure = PostProcessStageLibrary.createAutoExposureStage();
 

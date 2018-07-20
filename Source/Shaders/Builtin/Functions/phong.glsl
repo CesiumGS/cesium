@@ -28,6 +28,7 @@ float czm_private_getSpecularOfMaterial(vec3 lightDirectionEC, vec3 toEyeEC, czm
  */
 vec4 czm_phong(vec3 toEye, czm_material material)
 {
+/*
     // Diffuse from directional light sources at eye (for top-down)
     float diffuse = czm_private_getLambertDiffuseOfMaterial(vec3(0.0, 0.0, 1.0), material);
     if (czm_sceneMode == czm_sceneMode3D) {
@@ -45,6 +46,26 @@ vec4 czm_phong(vec3 toEye, czm_material material)
     vec3 color = ambient + material.emission;
     color += materialDiffuse * diffuse;
     color += material.specular * specular;
+
+    return vec4(color, material.alpha);
+    */
+
+    vec3 color = material.emission + material.diffuse * 0.25;
+
+    vec3 sunColor = vec3(1.5, 1.4, 1.2);
+
+#define USE_SUN_LIGHTING
+
+#ifdef USE_SUN_LIGHTING
+    float sunDiffuse = czm_private_getLambertDiffuseOfMaterial(czm_sunDirectionEC, material);
+    float sunSpecular = czm_private_getSpecularOfMaterial(czm_sunDirectionEC, toEye, material);
+
+    color += material.diffuse * sunDiffuse * sunColor;
+    color += material.specular * sunSpecular;
+#else
+    float cameraDiffuse = czm_private_getLambertDiffuseOfMaterial(vec3(0.0, 0.0, 1.0), material);
+    color += material.diffuse * cameraDiffuse * sunColor;
+#endif
 
     return vec4(color, material.alpha);
 }

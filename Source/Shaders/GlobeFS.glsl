@@ -175,10 +175,10 @@ void main()
     }
 #endif
 
-#if defined(SHOW_REFLECTIVE_OCEAN) || defined(ENABLE_DAYNIGHT_SHADING)
+//#if defined(SHOW_REFLECTIVE_OCEAN) || defined(ENABLE_DAYNIGHT_SHADING)
     vec3 normalMC = czm_geodeticSurfaceNormal(v_positionMC, vec3(0.0), vec3(1.0));   // normalized surface normal in model coordinates
     vec3 normalEC = czm_normal3D * normalMC;                                         // normalized surface normal in eye coordiantes
-#endif
+//#endif
 
 #ifdef SHOW_REFLECTIVE_OCEAN
     vec2 waterMaskTranslation = u_waterMaskTranslationAndScale.xy;
@@ -211,6 +211,7 @@ void main()
     color.xyz = mix(color.xyz, material.diffuse, material.alpha);
 #endif
 
+/*
 #ifdef ENABLE_VERTEX_LIGHTING
     float diffuseIntensity = clamp(czm_getLambertDiffuse(czm_sunDirectionEC, normalize(v_normalEC)) * 0.9 + 0.3, 0.0, 1.0);
     vec4 finalColor = vec4(color.rgb * diffuseIntensity, color.a);
@@ -225,6 +226,20 @@ void main()
 #else
     vec4 finalColor = color;
 #endif
+*/
+
+//#ifdef ENABLE_VERTEX_LIGHTING
+    czm_material material;
+    material.diffuse = color.rgb;
+    material.alpha = color.a;
+    material.normal = normalEC;
+    vec4 finalColor = czm_phong(normalize(-v_positionEC), material);
+//#else
+//    vec4 finalColor = color;
+//#endif
+
+    gl_FragColor = finalColor;
+    return;
 
 #ifdef ENABLE_CLIPPING_PLANES
     vec4 clippingPlanesEdgeColor = vec4(1.0);
@@ -347,6 +362,7 @@ vec4 computeWaterColor(vec3 positionEyeCoordinates, vec2 textureCoordinates, mat
     float c = 1.7;
 
     return vec4(imageryColor.rgb + (c * (vec3(e) + imageryColor.rgb * d) * (diffuseHighlight + nonDiffuseHighlight + specular)), imageryColor.a);
+    //return vec4(0.0, 0.0, 1.0, 1.0);
     //return vec4(imageryColor.rgb + diffuseHighlight + nonDiffuseHighlight + specular, imageryColor.a);
 }
 

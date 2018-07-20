@@ -243,7 +243,7 @@ define([
             source +=
                 '    float previous = texture2D(previousLuminance, vec2(0.5)).r; \n' +
                 '    color = clamp(color, minimumLuminance, maximumLuminance); \n' +
-                '    color = previous + (color - previous) / (60.0 * 3.0); \n' +
+                '    color = previous + (color - previous) / (60.0 * 1.5); \n' +
                 '    color = clamp(color, minimumLuminance, maximumLuminance); \n';
         }
 
