@@ -15,10 +15,10 @@ void main()
 #endif
 
     float a = 2.61;
-    float b = 0.08;
+    float b = 0.07;
     float c = 2.49;
-    float d = 0.63;
-    float e = 0.01;
+    float d = 0.68;
+    float e = 0.09;
     color = (color * (a * color + b)) / (color * (c * color + d) + e);
     color = clamp(color, 0.0, 1.0);
     color = czm_inverseGamma(color);

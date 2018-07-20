@@ -804,7 +804,7 @@ define([
         this._removeTaskProcessorListenerCallback = TaskProcessor.taskCompletedEvent.addEventListener(requestRenderAfterFrame(this));
         this._removeGlobeCallbacks = [];
 
-        this.gamma = 2.2;
+        this.gamma = 2.5;
 
         // initial guess at frustums.
         var near = camera.frustum.near;
