@@ -196,14 +196,6 @@ void main()
 
     depthOrigin = vec2(1.0) - (depthOrigin * 0.5);
 #endif
-#if defined(VERTEX_DEPTH_CHECK) || defined(FRAGMENT_DEPTH_CHECK)
-    temp = compressedAttribute3.w;
-    temp = temp * SHIFT_RIGHT12;
-
-    vec2 dimensions;
-    dimensions.y = (temp - floor(temp)) * SHIFT_LEFT12;
-    dimensions.x = floor(temp);
-#endif
 
 #ifdef EYE_DISTANCE_TRANSLUCENCY
     vec4 translucencyByDistance;
@@ -214,6 +206,15 @@ void main()
 
     temp = compressedAttribute1.y * SHIFT_RIGHT8;
     translucencyByDistance.w = ((temp - floor(temp)) * SHIFT_LEFT8) / 255.0;
+#endif
+
+#if defined(VERTEX_DEPTH_CHECK) || defined(FRAGMENT_DEPTH_CHECK)
+    temp = compressedAttribute3.w;
+    temp = temp * SHIFT_RIGHT12;
+
+    vec2 dimensions;
+    dimensions.y = (temp - floor(temp)) * SHIFT_LEFT12;
+    dimensions.x = floor(temp);
 #endif
 
 #ifdef ALIGNED_AXIS

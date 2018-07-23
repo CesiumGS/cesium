@@ -94,12 +94,12 @@ defineSuite([
         expect(label.horizontalOrigin).toEqual(HorizontalOrigin.LEFT);
         expect(label.verticalOrigin).toEqual(VerticalOrigin.BASELINE);
         expect(label.scale).toEqual(1.0);
-        expect(label.id).not.toBeDefined();
-        expect(label.translucencyByDistance).not.toBeDefined();
-        expect(label.pixelOffsetScaleByDistance).not.toBeDefined();
-        expect(label.scaleByDistance).not.toBeDefined();
-        expect(label.distanceDisplayCondition).not.toBeDefined();
-        expect(label.disableDepthTestDistance).toEqual(0.0);
+        expect(label.id).toBeUndefined();
+        expect(label.translucencyByDistance).toBeUndefined();
+        expect(label.pixelOffsetScaleByDistance).toBeUndefined();
+        expect(label.scaleByDistance).toBeUndefined();
+        expect(label.distanceDisplayCondition).toBeUndefined();
+        expect(label.disableDepthTestDistance).toBeUndefined();
     });
 
     it('can add a label with specified values', function() {
@@ -385,7 +385,8 @@ defineSuite([
             position : Cartesian3.ZERO,
             text : solidBox,
             horizontalOrigin : HorizontalOrigin.CENTER,
-            verticalOrigin : VerticalOrigin.CENTER
+            verticalOrigin : VerticalOrigin.CENTER,
+            disableDepthTestDistance : 0.0
         });
 
         expect(scene).toRenderAndCall(function(rgba) {
@@ -404,7 +405,8 @@ defineSuite([
                 alpha : 1.0
             },
             horizontalOrigin : HorizontalOrigin.CENTER,
-            verticalOrigin : VerticalOrigin.CENTER
+            verticalOrigin : VerticalOrigin.CENTER,
+            disableDepthTestDistance : 0.0
         });
 
         expect(scene).toRenderAndCall(function(rgba) {
@@ -689,14 +691,16 @@ defineSuite([
             text : solidBox,
             fillColor : Color.LIME,
             horizontalOrigin : HorizontalOrigin.CENTER,
-            verticalOrigin : VerticalOrigin.CENTER
+            verticalOrigin : VerticalOrigin.CENTER,
+            disableDepthTestDistance : 0.0
         });
         labels.add({
             position : Cartesian3.ZERO,
             text : solidBox,
             fillColor : Color.BLUE,
             horizontalOrigin : HorizontalOrigin.CENTER,
-            verticalOrigin : VerticalOrigin.CENTER
+            verticalOrigin : VerticalOrigin.CENTER,
+            disableDepthTestDistance : 0.0
         });
 
         expect(scene).toRender([0, 0, 255, 255]);
@@ -2321,7 +2325,7 @@ defineSuite([
             scene.globe.removedCallback = false;
             l.heightReference = HeightReference.NONE;
             expect(scene.globe.removedCallback).toEqual(true);
-            expect(scene.globe.callback).not.toBeDefined();
+            expect(scene.globe.callback).toBeUndefined();
         });
 
         it('changing the position updates the callback', function() {
@@ -2384,7 +2388,7 @@ defineSuite([
             var spy = spyOn(billboard, '_removeCallbackFunc');
             labelsWithHeight.remove(l);
             expect(spy).toHaveBeenCalled();
-            expect(labelsWithHeight._spareBillboards[0]._removeCallbackFunc).not.toBeDefined();
+            expect(labelsWithHeight._spareBillboards[0]._removeCallbackFunc).toBeUndefined();
         });
     });
 

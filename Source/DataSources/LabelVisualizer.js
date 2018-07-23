@@ -48,7 +48,6 @@ define([
     var defaultHeightReference = HeightReference.NONE;
     var defaultHorizontalOrigin = HorizontalOrigin.CENTER;
     var defaultVerticalOrigin = VerticalOrigin.CENTER;
-    var defaultDisableDepthTestDistance = 0.0;
 
     var positionScratch = new Cartesian3();
     var fillColorScratch = new Color();
@@ -164,7 +163,7 @@ define([
             label.pixelOffsetScaleByDistance = Property.getValueOrUndefined(labelGraphics._pixelOffsetScaleByDistance, time, pixelOffsetScaleByDistanceScratch);
             label.scaleByDistance = Property.getValueOrUndefined(labelGraphics._scaleByDistance, time, scaleByDistanceScratch);
             label.distanceDisplayCondition = Property.getValueOrUndefined(labelGraphics._distanceDisplayCondition, time, distanceDisplayConditionScratch);
-            label.disableDepthTestDistance = Property.getValueOrDefault(labelGraphics._disableDepthTestDistance, time, defaultDisableDepthTestDistance);
+            label.disableDepthTestDistance = Property.getValueOrUndefined(labelGraphics._disableDepthTestDistance, time);
         }
         return true;
     };

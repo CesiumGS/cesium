@@ -1191,16 +1191,14 @@ define([
         }
 
         var disableDepthTestDistance = billboard.disableDepthTestDistance;
-        if (disableDepthTestDistance === 0.0 && context.depthTexture) {
-            disableDepthTestDistance = 4000.0;
+        if (!defined(disableDepthTestDistance)) {
+            disableDepthTestDistance = context.depthTexture ? 5000.0 : 0.0;
         }
 
         disableDepthTestDistance *= disableDepthTestDistance;
-        if (disableDepthTestDistance > 0.0) {
-            billboardCollection._shaderDisableDepthDistance = true;
-            if (disableDepthTestDistance === Number.POSITIVE_INFINITY) {
-                disableDepthTestDistance = -1.0;
-            }
+        billboardCollection._shaderDisableDepthDistance = true;
+        if (disableDepthTestDistance === Number.POSITIVE_INFINITY) {
+            disableDepthTestDistance = -1.0;
         }
 
         var imageHeight;

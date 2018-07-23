@@ -113,23 +113,23 @@ defineSuite([
         expect(b.horizontalOrigin).toEqual(HorizontalOrigin.CENTER);
         expect(b.verticalOrigin).toEqual(VerticalOrigin.CENTER);
         expect(b.scale).toEqual(1.0);
-        expect(b.image).not.toBeDefined();
+        expect(b.image).toBeUndefined();
         expect(b.color.red).toEqual(1.0);
         expect(b.color.green).toEqual(1.0);
         expect(b.color.blue).toEqual(1.0);
         expect(b.color.alpha).toEqual(1.0);
         expect(b.rotation).toEqual(0.0);
         expect(b.alignedAxis).toEqual(Cartesian3.ZERO);
-        expect(b.scaleByDistance).not.toBeDefined();
-        expect(b.translucencyByDistance).not.toBeDefined();
-        expect(b.pixelOffsetScaleByDistance).not.toBeDefined();
-        expect(b.width).not.toBeDefined();
-        expect(b.height).not.toBeDefined();
-        expect(b.id).not.toBeDefined();
+        expect(b.scaleByDistance).toBeUndefined();
+        expect(b.translucencyByDistance).toBeUndefined();
+        expect(b.pixelOffsetScaleByDistance).toBeUndefined();
+        expect(b.width).toBeUndefined();
+        expect(b.height).toBeUndefined();
+        expect(b.id).toBeUndefined();
         expect(b.heightReference).toEqual(HeightReference.NONE);
         expect(b.sizeInMeters).toEqual(false);
-        expect(b.distanceDisplayCondition).not.toBeDefined();
-        expect(b.disableDepthTestDistance).toEqual(0.0);
+        expect(b.distanceDisplayCondition).toBeUndefined();
+        expect(b.disableDepthTestDistance).toBeUndefined();
     });
 
     it('can add and remove before first update.', function() {
@@ -287,7 +287,7 @@ defineSuite([
             scaleByDistance : new NearFarScalar(1.0, 3.0, 1.0e6, 0.0)
         });
         b.scaleByDistance = undefined;
-        expect(b.scaleByDistance).not.toBeDefined();
+        expect(b.scaleByDistance).toBeUndefined();
     });
 
     it('disables billboard translucencyByDistance', function() {
@@ -295,7 +295,7 @@ defineSuite([
             translucencyByDistance : new NearFarScalar(1.0, 1.0, 1.0e6, 0.0)
         });
         b.translucencyByDistance = undefined;
-        expect(b.translucencyByDistance).not.toBeDefined();
+        expect(b.translucencyByDistance).toBeUndefined();
     });
 
     it('disables billboard pixelOffsetScaleByDistance', function() {
@@ -303,7 +303,7 @@ defineSuite([
             pixelOffsetScaleByDistance : new NearFarScalar(1.0, 1.0, 1.0e6, 0.0)
         });
         b.pixelOffsetScaleByDistance = undefined;
-        expect(b.pixelOffsetScaleByDistance).not.toBeDefined();
+        expect(b.pixelOffsetScaleByDistance).toBeUndefined();
     });
 
     it('renders billboard with scaleByDistance', function() {
@@ -461,11 +461,13 @@ defineSuite([
     it('renders with disableDepthTestDistance', function() {
         var b = billboards.add({
             position : new Cartesian3(-1.0, 0.0, 0.0),
-            image : greenImage
+            image : greenImage,
+            disableDepthTestDistance : 0.0
         });
         billboards.add({
             position : Cartesian3.ZERO,
-            image : blueImage
+            image : blueImage,
+            disableDepthTestDistance : 0.0
         });
 
         expect(scene).toRender([0, 0, 255, 255]);
@@ -620,7 +622,7 @@ defineSuite([
     });
 
     it('sets and gets a texture atlas', function() {
-        expect(billboards.textureAtlas).not.toBeDefined();
+        expect(billboards.textureAtlas).toBeUndefined();
 
         var atlas = new TextureAtlas({ context : scene.context });
         billboards.textureAtlas = atlas;
@@ -682,14 +684,16 @@ defineSuite([
     it('adds and renders a billboard', function() {
         billboards.add({
             position : Cartesian3.ZERO,
-            image : greenImage
+            image : greenImage,
+            disableDepthTestDistance : 0.0
         });
 
         expect(scene).toRender([0, 255, 0, 255]);
 
         billboards.add({
             position : new Cartesian3(1.0, 0.0, 0.0), // Closer to camera
-            image : largeBlueImage
+            image : largeBlueImage,
+            disableDepthTestDistance : 0.0
         });
 
         expect(scene).toRender([0, 0, 255, 255]);
@@ -698,11 +702,13 @@ defineSuite([
     it('removes and renders a billboard', function() {
         billboards.add({
             position : Cartesian3.ZERO,
-            image : greenImage
+            image : greenImage,
+            disableDepthTestDistance : 0.0
         });
         var blueBillboard = billboards.add({
             position : new Cartesian3(1.0, 0.0, 0.0), // Closer to camera
-            image : largeBlueImage
+            image : largeBlueImage,
+            disableDepthTestDistance : 0.0
         });
 
         expect(scene).toRender([0, 0, 255, 255]);
@@ -915,13 +921,15 @@ defineSuite([
 
         var b1 = billboards.add({
             position : Cartesian3.ZERO,
-            image : greenImage
+            image : greenImage,
+            disableDepthTestDistance : 0.0
         });
         expect(scene).toRender([0, 255, 0, 255]);
 
         var b2 = billboards.add({
             position : new Cartesian3(1.0, 0.0, 0.0), // Closer to camera
-            image : largeBlueImage
+            image : largeBlueImage,
+            disableDepthTestDistance : 0.0
         });
         expect(scene).toRender([0, 0, 255, 255]);
 
@@ -1864,7 +1872,7 @@ defineSuite([
             scene.globe.removedCallback = false;
             b.heightReference = HeightReference.NONE;
             expect(scene.globe.removedCallback).toEqual(true);
-            expect(scene.globe.callback).not.toBeDefined();
+            expect(scene.globe.callback).toBeUndefined();
         });
 
         it('changing the position updates the callback', function() {
