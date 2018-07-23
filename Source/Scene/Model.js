@@ -2194,7 +2194,7 @@ define([
         }
     }
 
-    function createSamplers(model, context) {
+    function createSamplers(model) {
         var loadResources = model._loadResources;
 
         if (loadResources.createSamplers) {

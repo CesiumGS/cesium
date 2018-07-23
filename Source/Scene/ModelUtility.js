@@ -391,7 +391,7 @@ define([
         'KHR_binary_glTF' : true,
         'KHR_draco_mesh_compression' : true,
         'KHR_materials_common' : true,
-        'KHR_techniques_webgl': true,
+        'KHR_techniques_webgl' : true,
         'WEB3D_quantized_attributes' : true
     };
 

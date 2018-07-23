@@ -17,8 +17,7 @@ define([
         addToArray,
         ForEach,
         hasExtension,
-        numberOfComponentsForType
-) {
+        numberOfComponentsForType) {
     'use strict';
 
     /**
