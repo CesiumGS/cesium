@@ -147,6 +147,7 @@ define([
         this._sunPositionColumbusView = new Cartesian3();
         this._sunDirectionWC = new Cartesian3();
         this._sunDirectionEC = new Cartesian3();
+        this._sunColor = new Color();
         this._moonDirectionEC = new Cartesian3();
 
         this._pass = undefined;
@@ -742,6 +743,17 @@ define([
         },
 
         /**
+         * The color of the light emitted by the sun.
+         * @memberof UniformState.prototype
+         * @type {Color}
+         */
+        sunColor: {
+            get: function() {
+                return this._sunColor;
+            }
+        },
+
+        /**
          * A normalized vector to the moon in eye coordinates at the current scene time.  In 3D mode, this
          * returns the actual vector from the camera position to the moon position.  In 2D and Columbus View, it returns
          * the vector from the equivalent 3D camera position to the position of the moon in the 3D scene.
@@ -1073,6 +1085,7 @@ define([
         }
 
         setSunAndMoonDirections(this, frameState);
+        this._sunColor = Color.clone(frameState.sunColor, this._sunColor);
 
         var brdfLutGenerator = frameState.brdfLutGenerator;
         var brdfLut = defined(brdfLutGenerator) ? brdfLutGenerator.colorTexture : undefined;

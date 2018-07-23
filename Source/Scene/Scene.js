@@ -804,7 +804,8 @@ define([
         this._removeTaskProcessorListenerCallback = TaskProcessor.taskCompletedEvent.addEventListener(requestRenderAfterFrame(this));
         this._removeGlobeCallbacks = [];
 
-        this.gamma = 2.5;
+        this.gamma = 2.4;
+        this._sunColor = new Color(0.8, 0.85, 1.0, 1.0);
 
         // initial guess at frustums.
         var near = camera.frustum.near;
@@ -1464,6 +1465,22 @@ define([
         },
 
         /**
+         * Gets or sets the color of the light emitted by the sun.
+         *
+         * @memberof Scene.prototype
+         * @type {Color}
+         * @default Color(0.8,0.8,0.8)
+         */
+        sunColor: {
+            get: function() {
+                return this._sunColor;
+            },
+            set: function(value) {
+                this._sunColor = value;
+            }
+        },
+
+        /**
          * @private
          */
         opaqueFrustumNearOffset : {
@@ -1615,6 +1632,7 @@ define([
         frameState.terrainExaggeration = scene._terrainExaggeration;
         frameState.minimumDisableDepthTestDistance = scene._minimumDisableDepthTestDistance;
         frameState.invertClassification = scene.invertClassification;
+        frameState.sunColor = scene._sunColor;
 
         scene._actualInvertClassificationColor = Color.clone(scene.invertClassificationColor, scene._actualInvertClassificationColor);
         if (!InvertClassification.isTranslucencySupported(scene._context)) {

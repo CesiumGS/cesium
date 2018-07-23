@@ -52,7 +52,7 @@ vec4 czm_phong(vec3 toEye, czm_material material)
 
     vec3 color = material.emission + material.diffuse * 0.25;
 
-    vec3 sunColor = vec3(1.5, 1.4, 1.2);
+    vec3 sunColor = czm_sunColor.rgb + czm_sunColor.a;
 
 #define USE_SUN_LIGHTING
 

@@ -696,7 +696,7 @@ define([
                 for ( var component in components) {
                     if (components.hasOwnProperty(component)) {
                         if (component === 'diffuse' || component === 'emission') {
-                            material.shaderSource += 'material.' + component + ' = pow(' + components[component] + ', vec3(2.2)); \n';
+                            material.shaderSource += 'material.' + component + ' = czm_gammaCorrect(' + components[component] + '); \n';
                         } else {
                             material.shaderSource += 'material.' + component + ' = ' + components[component] + ';\n';
                         }

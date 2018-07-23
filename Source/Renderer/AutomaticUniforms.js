@@ -1638,6 +1638,20 @@ define([
             getValue : function(uniformState) {
                 return uniformState.gamma;
             }
+        }),
+
+        /**
+         * An automatic GLSL uniform that defines the color of light emitted by the sun.
+         *
+         * @alias czm_sunColor
+         * @glslUniform
+         */
+        czm_sunColor: new AutomaticUniform({
+            size: 1,
+            datatype: WebGLConstants.FLOAT_VEC4,
+            getValue: function(uniformState) {
+                return uniformState.sunColor;
+            }
         })
     };
 
