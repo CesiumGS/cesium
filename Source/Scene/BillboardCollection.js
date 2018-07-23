@@ -210,9 +210,6 @@ define([
         this._shaderDistanceDisplayCondition = false;
         this._compiledShaderDistanceDisplayCondition = false;
 
-        this._shaderDisableDepthDistance = false;
-        this._compiledShaderDisableDepthDistance = false;
-
         this._propertiesChanged = new Uint32Array(NUMBER_OF_PROPERTIES);
 
         this._maxSize = 0.0;
@@ -1196,7 +1193,6 @@ define([
         }
 
         disableDepthTestDistance *= disableDepthTestDistance;
-        billboardCollection._shaderDisableDepthDistance = true;
         if (disableDepthTestDistance === Number.POSITIVE_INFINITY) {
             disableDepthTestDistance = -1.0;
         }
@@ -1640,8 +1636,6 @@ define([
             }
         }
 
-        this._shaderDisableDepthDistance = this._shaderDisableDepthDistance || frameState.minimumDisableDepthTestDistance !== 0.0;
-
         var vsSource;
         var fsSource;
         var vs;
@@ -1656,8 +1650,7 @@ define([
             (this._shaderScaleByDistance !== this._compiledShaderScaleByDistance) ||
             (this._shaderTranslucencyByDistance !== this._compiledShaderTranslucencyByDistance) ||
             (this._shaderPixelOffsetScaleByDistance !== this._compiledShaderPixelOffsetScaleByDistance) ||
-            (this._shaderDistanceDisplayCondition !== this._compiledShaderDistanceDisplayCondition) ||
-            (this._shaderDisableDepthDistance !== this._compiledShaderDisableDepthDistance)) {
+            (this._shaderDistanceDisplayCondition !== this._compiledShaderDistanceDisplayCondition)) {
 
             vsSource = BillboardCollectionVS;
             fsSource = BillboardCollectionFS;
@@ -1693,9 +1686,6 @@ define([
             }
             if (this._shaderDistanceDisplayCondition) {
                 vs.defines.push('DISTANCE_DISPLAY_CONDITION');
-            }
-            if (this._shaderDisableDepthDistance) {
-                vs.defines.push('DISABLE_DEPTH_DISTANCE');
             }
             if (supportVSTextureReads) {
                 vs.defines.push('VERTEX_DEPTH_CHECK');
@@ -1785,7 +1775,6 @@ define([
             this._compiledShaderTranslucencyByDistance = this._shaderTranslucencyByDistance;
             this._compiledShaderPixelOffsetScaleByDistance = this._shaderPixelOffsetScaleByDistance;
             this._compiledShaderDistanceDisplayCondition = this._shaderDistanceDisplayCondition;
-            this._compiledShaderDisableDepthDistance = this._shaderDisableDepthDistance;
         }
 
         var commandList = frameState.commandList;

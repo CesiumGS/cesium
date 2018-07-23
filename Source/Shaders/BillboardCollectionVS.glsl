@@ -267,7 +267,6 @@ void main()
 
     ///////////////////////////////////////////////////////////////////////////
 
-#if defined(EYE_DISTANCE_SCALING) || defined(EYE_DISTANCE_TRANSLUCENCY) || defined(EYE_DISTANCE_PIXEL_OFFSET) || defined(DISTANCE_DISPLAY_CONDITION) || defined(DISABLE_DEPTH_DISTANCE)
     float lengthSq;
     if (czm_sceneMode == czm_sceneMode2D)
     {
@@ -279,7 +278,6 @@ void main()
     {
         lengthSq = dot(positionEC.xyz, positionEC.xyz);
     }
-#endif
 
 #ifdef EYE_DISTANCE_SCALING
     float distanceScale = czm_nearFarScalar(scaleByDistance, lengthSq);
@@ -319,9 +317,7 @@ void main()
     mat2 rotationMatrix;
     float mpp;
 
-#ifdef DISABLE_DEPTH_DISTANCE
     float disableDepthTestDistance = compressedAttribute3.z;
-#endif
 
 #ifdef VERTEX_DEPTH_CHECK
 if (lengthSq < disableDepthTestDistance) {
@@ -357,7 +353,6 @@ if (lengthSq < disableDepthTestDistance) {
     czm_vertexLogDepth();
 #endif
 
-#ifdef DISABLE_DEPTH_DISTANCE
     if (disableDepthTestDistance == 0.0 && czm_minimumDisableDepthTestDistance != 0.0)
     {
         disableDepthTestDistance = czm_minimumDisableDepthTestDistance;
@@ -377,7 +372,6 @@ if (lengthSq < disableDepthTestDistance) {
 #endif
         }
     }
-#endif
 
 #ifdef FRAGMENT_DEPTH_CHECK
     if (sizeInMeters) {
