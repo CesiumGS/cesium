@@ -71,6 +71,7 @@ define([
      * @see Label
      *
      * @internalConstructor
+     * @class
      *
      * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Billboards.html|Cesium Sandcastle Billboard Demo}
      */

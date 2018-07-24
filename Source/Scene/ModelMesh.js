@@ -12,6 +12,7 @@ define([
      *
      * @alias ModelMesh
      * @internalConstructor
+     * @class
      *
      * @see Model#getMesh
      */
