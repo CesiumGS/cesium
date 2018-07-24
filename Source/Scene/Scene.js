@@ -52,6 +52,7 @@ define([
         '../Renderer/Texture',
         './BrdfLutGenerator',
         './Camera',
+        './Cesium3DTileFeature',
         './CreditDisplay',
         './DebugCameraPrimitive',
         './DepthPlane',
@@ -133,6 +134,7 @@ define([
         Texture,
         BrdfLutGenerator,
         Camera,
+        Cesium3DTileFeature,
         CreditDisplay,
         DebugCameraPrimitive,
         DepthPlane,
@@ -3826,6 +3828,7 @@ define([
         var result = [];
         var pickedPrimitives = [];
         var pickedAttributes = [];
+        var pickedFeatures = [];
         if (!defined(limit)) {
             limit = Number.MAX_VALUE;
         }
@@ -3852,7 +3855,13 @@ define([
                 }
             }
 
-            //Otherwise, hide the entire primitive
+            if (pickedResult instanceof Cesium3DTileFeature) {
+                hasShowAttribute = true;
+                pickedResult.show = false;
+                pickedFeatures.push(pickedResult);
+            }
+
+            // Otherwise, hide the entire primitive
             if (!hasShowAttribute) {
                 primitive.show = false;
                 pickedPrimitives.push(primitive);
@@ -3861,7 +3870,7 @@ define([
             pickedResult = this.pick(windowPosition, width, height);
         }
 
-        // unhide everything we hid while drill picking
+        // Unhide everything we hid while drill picking
         for (i = 0; i < pickedPrimitives.length; ++i) {
             pickedPrimitives[i].show = true;
         }
@@ -3869,6 +3878,10 @@ define([
         for (i = 0; i < pickedAttributes.length; ++i) {
             attributes = pickedAttributes[i];
             attributes.show = ShowGeometryInstanceAttribute.toValue(true, attributes.show);
+        }
+
+        for (i = 0; i < pickedFeatures.length; ++i) {
+            pickedFeatures[i].show = true;
         }
 
         return result;
