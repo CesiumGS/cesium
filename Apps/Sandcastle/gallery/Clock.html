@@ -29,9 +29,9 @@ function startup(Cesium) {
 //Sandcastle_Begin
 // Create a clock that loops on Christmas day 2013 and runs in 4000x real time.
 var clock = new Cesium.Clock({
-   startTime : Cesium.JulianDate.fromIso8601("2013-12-25"),
-   currentTime : Cesium.JulianDate.fromIso8601("2013-12-25"),
-   stopTime : Cesium.JulianDate.fromIso8601("2013-12-26"),
+   startTime : Cesium.JulianDate.fromIso8601('2013-12-25'),
+   currentTime : Cesium.JulianDate.fromIso8601('2013-12-25'),
+   stopTime : Cesium.JulianDate.fromIso8601('2013-12-26'),
    clockRange : Cesium.ClockRange.LOOP_STOP, // loop when we hit the end time
    clockStep : Cesium.ClockStep.SYSTEM_CLOCK_MULTIPLIER,
    multiplier : 4000, // how much time to advance each tick
@@ -59,10 +59,10 @@ Sandcastle.addToolbarButton('Speed Up Clock', function() {
 });//Sandcastle_End
     Sandcastle.finishedLoading();
 }
-if (typeof Cesium !== "undefined") {
+if (typeof Cesium !== 'undefined') {
     startup(Cesium);
-} else if (typeof require === "function") {
-    require(["Cesium"], startup);
+} else if (typeof require === 'function') {
+    require(['Cesium'], startup);
 }
 </script>
 </body>
