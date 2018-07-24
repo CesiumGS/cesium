@@ -690,6 +690,16 @@ defineSuite([
         expect(left).toEqual(expectedResult);
     });
 
+    it('midpoint works with a result parameter', function() {
+        var left = new Cartesian3(0.0, 0.0, 6.0);
+        var right = new Cartesian3(0.0, 0.0, -6.0);
+        var result = new Cartesian3();
+        var expectedResult = new Cartesian3(0.0, 0.0, 0.0);
+        var returnedResult = Cartesian3.midpoint(left, right, result);
+        expect(returnedResult).toBe(result);
+        expect(result).toEqual(expectedResult);
+    });
+
     it('fromSpherical throws with no spherical parameter', function() {
         expect(function() {
             Cartesian3.fromSpherical(undefined);
