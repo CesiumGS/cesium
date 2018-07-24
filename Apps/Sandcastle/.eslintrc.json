@@ -10,7 +10,6 @@
     "rules": {
         "no-alert": ["off"],
         "no-implicit-globals": "off",
-        "no-unused-vars": ["off"],
-        "quotes": "off"
+        "no-unused-vars": ["off"]
     }
 }

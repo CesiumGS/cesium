@@ -100,55 +100,55 @@ function addStyle(name, style) {
 addStyle('No style', {});
 
 addStyle('Color by building', {
-    "color" : {
-        "conditions" : [
+    'color' : {
+        'conditions' : [
             ["${building_name} === 'building0'", "color('purple')"],
             ["${building_name} === 'building1'", "color('red')"],
             ["${building_name} === 'building2'", "color('orange')"],
-            ["true", "color('blue')"]
+            ['true', "color('blue')"]
         ]
     }
 });
 
 addStyle('Color all doors', {
-    "color" : {
-        "conditions" : [
+    'color' : {
+        'conditions' : [
             ["isExactClass('door')", "color('orange')"],
-            ["true", "color('white')"]
+            ['true', "color('white')"]
         ]
     }
 });
 
 addStyle('Color all features derived from door', {
-    "color" : {
-        "conditions" : [
+    'color' : {
+        'conditions' : [
             ["isClass('door')", "color('orange')"],
-            ["true", "color('white')"]
+            ['true', "color('white')"]
         ]
     }
 });
 
 addStyle('Color features by class name', {
-    "defines" : {
-        "suffix" : "regExp('door(.*)').exec(getExactClassName())"
+    'defines' : {
+        'suffix' : "regExp('door(.*)').exec(getExactClassName())"
     },
-    "color" : {
-        "conditions" : [
+    'color' : {
+        'conditions' : [
             ["${suffix} === 'knob'", "color('yellow')"],
             ["${suffix} === ''", "color('lime')"],
-            ["${suffix} === null", "color('gray')"],
-            ["true", "color('blue')"]
+            ['${suffix} === null', "color('gray')"],
+            ['true', "color('blue')"]
         ]
     }
 });
 
 addStyle('Style by height', {
-    "color" : {
-        "conditions" : [
-            ["${height} >= 10", "color('purple')"],
-            ["${height} >= 6", "color('red')"],
-            ["${height} >= 5", "color('orange')"],
-            ["true", "color('blue')"]
+    'color' : {
+        'conditions' : [
+            ['${height} >= 10', "color('purple')"],
+            ['${height} >= 6', "color('red')"],
+            ['${height} >= 5', "color('orange')"],
+            ['true', "color('blue')"]
         ]
     }
 });
@@ -200,10 +200,10 @@ handler.setInputAction(function(movement) {
 //Sandcastle_End
 Sandcastle.finishedLoading();
 }
-if (typeof Cesium !== "undefined") {
+if (typeof Cesium !== 'undefined') {
     startup(Cesium);
-} else if (typeof require === "function") {
-    require(["Cesium"], startup);
+} else if (typeof require === 'function') {
+    require(['Cesium'], startup);
 }
 </script>
 </body>

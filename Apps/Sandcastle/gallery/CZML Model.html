@@ -29,19 +29,19 @@ function startup(Cesium) {
     'use strict';
 //Sandcastle_Begin
 var czml = [{
-    "id" : "document",
-    "name" : "CZML Model",
-    "version" : "1.0"
+    'id' : 'document',
+    'name' : 'CZML Model',
+    'version' : '1.0'
 }, {
-    "id" : "aircraft model",
-    "name" : "Cesium Air",
-    "position" : {
-        "cartographicDegrees" : [-77, 37, 10000]
+    'id' : 'aircraft model',
+    'name' : 'Cesium Air',
+    'position' : {
+        'cartographicDegrees' : [-77, 37, 10000]
     },
-    "model": {
-        "gltf" : "../../SampleData/models/CesiumAir/Cesium_Air.glb",
-        "scale" : 2.0,
-        "minimumPixelSize": 128
+    'model': {
+        'gltf' : '../../SampleData/models/CesiumAir/Cesium_Air.glb',
+        'scale' : 2.0,
+        'minimumPixelSize': 128
     }
 }];
 
@@ -60,10 +60,10 @@ dataSourcePromise.then(function(dataSource){
   //Sandcastle_End
     Sandcastle.finishedLoading();
 }
-if (typeof Cesium !== "undefined") {
+if (typeof Cesium !== 'undefined') {
     startup(Cesium);
-} else if (typeof require === "function") {
-    require(["Cesium"], startup);
+} else if (typeof require === 'function') {
+    require(['Cesium'], startup);
 }
 </script>
 </body>
