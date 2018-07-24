@@ -50,7 +50,7 @@ define([
             viewModel._eventHandler.removeInputAction(ScreenSpaceEventType.MOUSE_MOVE);
 
             // Restore hover-over selection to its current value
-            viewModel.picking = viewModel.picking;
+            viewModel.picking = viewModel.picking; // eslint-disable-line no-self-assign
         }
     }
 
@@ -998,7 +998,7 @@ define([
         var loadSiblings = knockout.observable();
         knockout.defineProperty(this, 'loadSiblings', {
             get : function() {
-                loadSiblings();
+                return loadSiblings();
             },
             set : function(value) {
                 loadSiblings(value);

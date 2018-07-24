@@ -39,7 +39,7 @@
     "cloc": "^2.3.3",
     "compressible": "^2.0.9",
     "compression": "^1.6.2",
-    "eslint": "^4.0.0",
+    "eslint": "^5.2.0",
     "eslint-plugin-html": "^4.0.2",
     "event-stream": "^3.3.4",
     "express": "^4.15.0",
