@@ -54,6 +54,7 @@ define([
         '../Renderer/Texture',
         './BrdfLutGenerator',
         './Camera',
+        './Cesium3DTileFeature',
         './CreditDisplay',
         './DebugCameraPrimitive',
         './DepthPlane',
@@ -138,6 +139,7 @@ define([
         Texture,
         BrdfLutGenerator,
         Camera,
+        Cesium3DTileFeature,
         CreditDisplay,
         DebugCameraPrimitive,
         DepthPlane,
@@ -741,7 +743,7 @@ define([
         this._pickOffscreenFramebuffer = new PickOffscreenFramebuffer();
         this._pickOffscreenCamera = new Camera(this);
         this._pickOffscreenCamera.frustum = new OrthographicFrustum({
-            width: 0.1,
+            width: 0.01,
             aspectRatio: 1.0,
             near: 0.1,
             far: 500000000.0
@@ -1472,7 +1474,7 @@ define([
          */
         opaqueFrustumNearOffset : {
             get : function() {
-                return this._logDepthBuffer ? 0.9 : 0.9999;
+                return this._environmentState.useLogDepth ? 0.9 : 0.9999;
             }
         }
     });
@@ -3803,6 +3805,7 @@ define([
         var result = [];
         var pickedPrimitives = [];
         var pickedAttributes = [];
+        var pickedFeatures = [];
         if (!defined(limit)) {
             limit = Number.MAX_VALUE;
         }
@@ -3814,13 +3817,14 @@ define([
                 break;
             }
 
-            var primitive = pickedResult.object.primitive;
+            var object = pickedResult.object;
+            var primitive = object.primitive;
             var hasShowAttribute = false;
 
             // If the picked object has a show attribute, use it.
             if (typeof primitive.getGeometryInstanceAttributes === 'function') {
-                if (defined(pickedResult.object.id)) {
-                    attributes = primitive.getGeometryInstanceAttributes(pickedResult.object.id);
+                if (defined(object.id)) {
+                    attributes = primitive.getGeometryInstanceAttributes(object.id);
                     if (defined(attributes) && defined(attributes.show)) {
                         hasShowAttribute = true;
                         attributes.show = ShowGeometryInstanceAttribute.toValue(false, attributes.show);
@@ -3829,7 +3833,13 @@ define([
                 }
             }
 
-            //Otherwise, hide the entire primitive
+            if (object instanceof Cesium3DTileFeature) {
+                hasShowAttribute = true;
+                object.show = false;
+                pickedFeatures.push(object);
+            }
+
+            // Otherwise, hide the entire primitive
             if (!hasShowAttribute) {
                 primitive.show = false;
                 pickedPrimitives.push(primitive);
@@ -3838,7 +3848,7 @@ define([
             pickedResult = pickCallback();
         }
 
-        // unhide everything we hid while drill picking
+        // Unhide everything we hid while drill picking
         for (i = 0; i < pickedPrimitives.length; ++i) {
             pickedPrimitives[i].show = true;
         }
@@ -3846,6 +3856,10 @@ define([
         for (i = 0; i < pickedAttributes.length; ++i) {
             attributes = pickedAttributes[i];
             attributes.show = ShowGeometryInstanceAttribute.toValue(true, attributes.show);
+        }
+
+        for (i = 0; i < pickedFeatures.length; ++i) {
+            pickedFeatures[i].show = true;
         }
 
         return result;
