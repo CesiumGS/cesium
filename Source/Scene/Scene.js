@@ -1550,6 +1550,10 @@ define([
                 }
             }
 
+            if (scene.frameState.passes.pick && !defined(command.pickId)) {
+                return;
+            }
+
             derivedCommands.depth = DerivedCommand.createDepthOnlyDerivedCommand(scene, command, context, derivedCommands.depth);
         }
     }
