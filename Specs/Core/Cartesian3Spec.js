@@ -700,6 +700,24 @@ defineSuite([
         expect(result).toEqual(expectedResult);
     });
 
+    it('midpoint throws with no left', function() {
+        expect(function() {
+            return Cartesian3.midpoint(undefined, new Cartesian3(), new Cartesian3());
+        }).toThrowDeveloperError();
+    });
+
+    it('midpoint throws with no right', function() {
+        expect(function() {
+            return Cartesian3.midpoint(new Cartesian3(), undefined, new Cartesian3());
+        }).toThrowDeveloperError();
+    });
+
+    it('midpoint throws with no result', function() {
+        expect(function() {
+            return Cartesian3.midpoint(new Cartesian3(), new Cartesian3(), undefined);
+        }).toThrowDeveloperError();
+    });
+
     it('fromSpherical throws with no spherical parameter', function() {
         expect(function() {
             Cartesian3.fromSpherical(undefined);
