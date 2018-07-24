@@ -1524,10 +1524,6 @@ define([
                 derivedCommands.logDepth = undefined;
             }
 
-            if (scene.frameState.passes.pick && !defined(command.pickId)) {
-                return;
-            }
-
             if (shadowsEnabled && (command.receiveShadows || command.castShadows)) {
                 derivedCommands.shadows = ShadowMap.createDerivedCommands(shadowMaps, lightShadowMaps, command, shadowsDirty, context, derivedCommands.shadows);
                 if (useLogDepth) {
@@ -1552,6 +1548,10 @@ define([
                 } else {
                     derivedCommands.oit = oit.createDerivedCommands(command, context, derivedCommands.oit);
                 }
+            }
+
+            if (scene.frameState.passes.pick && !defined(command.pickId)) {
+                return;
             }
 
             derivedCommands.depth = DerivedCommand.createDepthOnlyDerivedCommand(scene, command, context, derivedCommands.depth);
