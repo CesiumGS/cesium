@@ -2271,7 +2271,7 @@ defineSuite([
         it('explicitly constructs a label with height reference', function() {
             scene.globe = createGlobe();
             var l = labelsWithHeight.add({
-                text : "test",
+                text : 'test',
                 heightReference : HeightReference.CLAMP_TO_GROUND
             });
 
@@ -2281,7 +2281,7 @@ defineSuite([
         it('set label height reference property', function() {
             scene.globe = createGlobe();
             var l = labelsWithHeight.add({
-                text : "test"
+                text : 'test'
             });
             l.heightReference = HeightReference.CLAMP_TO_GROUND;
 

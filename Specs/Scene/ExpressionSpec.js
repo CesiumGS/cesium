@@ -2521,8 +2521,8 @@ defineSuite([
         feature.addProperty('null', null);
         feature.addProperty('undefined', undefined);
         feature.addProperty('address', {
-            "street" : "Example Street",
-            "city" : "Example City"
+            'street' : 'Example Street',
+            'city' : 'Example City'
         });
 
         var expression = new Expression('${vector.x}');
@@ -2552,10 +2552,10 @@ defineSuite([
         expect(expression.evaluate(frameState, feature)).toEqual(1.0);
 
         expression = new Expression('${address.street}');
-        expect(expression.evaluate(frameState, feature)).toEqual("Example Street");
+        expect(expression.evaluate(frameState, feature)).toEqual('Example Street');
 
         expression = new Expression('${address.city}');
-        expect(expression.evaluate(frameState, feature)).toEqual("Example City");
+        expect(expression.evaluate(frameState, feature)).toEqual('Example City');
     });
 
     it('evaluates member expression with brackets', function() {
@@ -2572,10 +2572,10 @@ defineSuite([
         });
         feature.addProperty('null', null);
         feature.addProperty('undefined', undefined);
-        feature.addProperty('address.street', "Other Street");
+        feature.addProperty('address.street', 'Other Street');
         feature.addProperty('address', {
-            "street" : "Example Street",
-            "city" : "Example City"
+            'street' : 'Example Street',
+            'city' : 'Example City'
         });
 
         var expression = new Expression('${vector["x"]}');
@@ -2609,22 +2609,22 @@ defineSuite([
         expect(expression.evaluate(frameState, feature)).toEqual(Cartesian4.UNIT_Y);
 
         expression = new Expression('${address.street}');
-        expect(expression.evaluate(frameState, feature)).toEqual("Example Street");
+        expect(expression.evaluate(frameState, feature)).toEqual('Example Street');
 
         expression = new Expression('${feature.address.street}');
-        expect(expression.evaluate(frameState, feature)).toEqual("Example Street");
+        expect(expression.evaluate(frameState, feature)).toEqual('Example Street');
 
         expression = new Expression('${feature["address"].street}');
-        expect(expression.evaluate(frameState, feature)).toEqual("Example Street");
+        expect(expression.evaluate(frameState, feature)).toEqual('Example Street');
 
         expression = new Expression('${feature["address.street"]}');
-        expect(expression.evaluate(frameState, feature)).toEqual("Other Street");
+        expect(expression.evaluate(frameState, feature)).toEqual('Other Street');
 
         expression = new Expression('${address["street"]}');
-        expect(expression.evaluate(frameState, feature)).toEqual("Example Street");
+        expect(expression.evaluate(frameState, feature)).toEqual('Example Street');
 
         expression = new Expression('${address["city"]}');
-        expect(expression.evaluate(frameState, feature)).toEqual("Example City");
+        expect(expression.evaluate(frameState, feature)).toEqual('Example City');
     });
 
     it('member expressions throw without variable notation', function() {
@@ -2664,7 +2664,7 @@ defineSuite([
 
     it('constructs regex', function() {
         var feature = new MockFeature();
-        feature.addProperty('pattern', "[abc]");
+        feature.addProperty('pattern', '[abc]');
 
         var expression = new Expression('regExp("a")');
         expect(expression.evaluate(frameState, undefined)).toEqual(/a/);
@@ -2920,8 +2920,8 @@ defineSuite([
             'anotherproperty' : Cartesian4.UNIT_W
         }]);
         feature.addProperty('temperatures', {
-            "scale" : "fahrenheit",
-            "values" : [70, 80, 90]
+            'scale' : 'fahrenheit',
+            'values' : [70, 80, 90]
         });
 
         var expression = new Expression('[1, 2, 3]');

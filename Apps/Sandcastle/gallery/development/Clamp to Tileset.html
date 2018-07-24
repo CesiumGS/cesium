@@ -48,7 +48,7 @@ var canvas = scene.canvas;
 var lastFrame = new Image();
 lastFrame.width = canvas.width;
 lastFrame.height = canvas.height;
-lastFrame.style = "position: absolute; left: 0; top: 0;";
+lastFrame.style = 'position: absolute; left: 0; top: 0;';
 canvas.parentNode.appendChild(lastFrame);
 
 var samplePosition = Cesium.Cartesian3.fromDegrees(-76.360485, 34.949670, 0);
@@ -144,10 +144,10 @@ function duplicateLastFrame() {
 //Sandcastle_End
 Sandcastle.finishedLoading();
 }
-if (typeof Cesium !== "undefined") {
+if (typeof Cesium !== 'undefined') {
     startup(Cesium);
-} else if (typeof require === "function") {
-    require(["Cesium"], startup);
+} else if (typeof require === 'function') {
+    require(['Cesium'], startup);
 }
 </script>
 </body>
