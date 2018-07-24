@@ -7,6 +7,7 @@
         "defineSuite": true
     },
     "rules": {
-        "quotes": "off"
+        "quotes": "off",
+        "no-self-assign": "off"
     }
 }
