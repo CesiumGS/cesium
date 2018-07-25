@@ -69,7 +69,7 @@ for (var name in viewModel) {
     }
 }
 
-var lensFlare = viewer.scene.postProcessStages.add(Cesium.PostProcessStageLibrary.createLensFlarStage());
+var lensFlare = viewer.scene.postProcessStages.add(Cesium.PostProcessStageLibrary.createLensFlareStage());
 
 function updatePostProcess() {
     lensFlare.enabled = Boolean(viewModel.show);
