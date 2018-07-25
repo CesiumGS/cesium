@@ -133,7 +133,7 @@ define([
          * @type {Boolean}
          * @default false
          */
-        this.enableLighting = false;
+        this.enableLighting = true;//false;
 
         /**
          * The distance where everything becomes lit. This only takes effect
