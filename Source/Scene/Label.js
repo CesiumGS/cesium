@@ -63,6 +63,7 @@ define([
      *
      * @alias Label
      * @internalConstructor
+     * @class
      *
      * @exception {DeveloperError} translucencyByDistance.far must be greater than translucencyByDistance.near
      * @exception {DeveloperError} pixelOffsetScaleByDistance.far must be greater than pixelOffsetScaleByDistance.near
