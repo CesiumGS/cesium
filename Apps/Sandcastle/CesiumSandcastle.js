@@ -27,10 +27,10 @@ require({
         location: '../Apps/Sandcastle/ThirdParty'
     }]
 }, [
-        "dijit/Dialog",
-        "dijit/form/Button",
-        "dijit/form/Form",
-        "dijit/form/Textarea",
+        'dijit/Dialog',
+        'dijit/form/Button',
+        'dijit/form/Form',
+        'dijit/form/Textarea',
         'CodeMirror/lib/codemirror',
         'dijit/layout/ContentPane',
         'dijit/popup',
@@ -549,10 +549,10 @@ require({
                '//Sandcastle_End\n' +
                '    Sandcastle.finishedLoading();\n' +
                '}\n' +
-               'if (typeof Cesium !== "undefined") {\n' +
+               'if (typeof Cesium !== \'undefined\') {\n' +
                '    startup(Cesium);\n' +
-               '} else if (typeof require === "function") {\n' +
-               '    require(["Cesium"], startup);\n' +
+               '} else if (typeof require === \'function\') {\n' +
+               '    require([\'Cesium\'], startup);\n' +
                '}\n';
     }
 
@@ -949,7 +949,7 @@ require({
     });
 
     registry.byId('buttonImport').on('click', function() {
-        var gistId = document.getElementById("gistId").value;
+        var gistId = document.getElementById('gistId').value;
         var gistParameter = '&gist=';
         var gistIndex = gistId.indexOf(gistParameter);
         if (gistIndex !== -1) {
@@ -1196,7 +1196,7 @@ require({
         demoLink.className = 'linkButton';
         demoLink.href = 'gallery/' + encodeURIComponent(demo.name) + '.html';
 
-        if (demo.name === "Hello World") {
+        if (demo.name === 'Hello World') {
             newDemo = demo;
         }
         demoLink.onclick = function(e) {

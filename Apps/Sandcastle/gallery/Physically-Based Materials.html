@@ -10,7 +10,7 @@
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
     <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
     <script type="text/javascript">
-        if(typeof require === "function") {
+        if(typeof require === 'function') {
             require.config({
                 baseUrl : '../../../Source',
                 waitSeconds : 120
@@ -30,9 +30,9 @@ function startup(Cesium) {
     'use strict';
 //Sandcastle_Begin
 var clock = new Cesium.Clock({
-    startTime : Cesium.JulianDate.fromIso8601("2017-07-11T00:00:00Z"),
-    stopTime : Cesium.JulianDate.fromIso8601("2017-07-11T24:00:00Z"),
-    currentTime : Cesium.JulianDate.fromIso8601("2017-07-11T10:00:00Z"),
+    startTime : Cesium.JulianDate.fromIso8601('2017-07-11T00:00:00Z'),
+    stopTime : Cesium.JulianDate.fromIso8601('2017-07-11T24:00:00Z'),
+    currentTime : Cesium.JulianDate.fromIso8601('2017-07-11T10:00:00Z'),
     clockRange : Cesium.ClockRange.LOOP_STOP,
     clockStep : Cesium.ClockStep.SYSTEM_CLOCK_MULTIPLIER,
     multiplier : 1000,
@@ -123,34 +123,34 @@ Sandcastle.addToolbarMenu([{
     text : 'Front reflection',
     onselect : function() {
         viewer.scene.camera.flyTo(frontView);
-        viewer.clockViewModel.clock.currentTime = Cesium.JulianDate.fromIso8601("2017-07-11T20:00:00Z");
+        viewer.clockViewModel.clock.currentTime = Cesium.JulianDate.fromIso8601('2017-07-11T20:00:00Z');
     }
 }, {
     text : 'Three quarters sunrise',
     onselect : function() {
         viewer.scene.camera.flyTo(threeQuartersView);
-        viewer.clockViewModel.clock.currentTime = Cesium.JulianDate.fromIso8601("2017-07-11T11:00:00Z");
+        viewer.clockViewModel.clock.currentTime = Cesium.JulianDate.fromIso8601('2017-07-11T11:00:00Z');
     }
 }, {
     text : 'Top reflection',
     onselect : function() {
         viewer.scene.camera.flyTo(topView);
-        viewer.clockViewModel.clock.currentTime = Cesium.JulianDate.fromIso8601("2017-07-11T12:00:00Z");
+        viewer.clockViewModel.clock.currentTime = Cesium.JulianDate.fromIso8601('2017-07-11T12:00:00Z');
     }
 }, {
     text : 'Upward angle side reflection',
     onselect : function() {
         viewer.scene.camera.flyTo(upwardsView);
-        viewer.clockViewModel.clock.currentTime = Cesium.JulianDate.fromIso8601("2017-07-11T23:00:00Z");
+        viewer.clockViewModel.clock.currentTime = Cesium.JulianDate.fromIso8601('2017-07-11T23:00:00Z');
     }
 }], 'toolbar');
 //Sandcastle_End
     Sandcastle.finishedLoading();
 }
-if (typeof Cesium !== "undefined") {
+if (typeof Cesium !== 'undefined') {
     startup(Cesium);
-} else if (typeof require === "function") {
-    require(["Cesium"], startup);
+} else if (typeof require === 'function') {
+    require(['Cesium'], startup);
 }
 </script>
 </body>

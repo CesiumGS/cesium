@@ -11,13 +11,13 @@ defineSuite([
     'use strict';
 
     function getPinColor(canvas) {
-        var context2D = canvas.getContext("2d");
+        var context2D = canvas.getContext('2d');
         var data = context2D.getImageData(64, 5, 1, 1).data;
         return Color.fromBytes(data[0], data[1], data[2]);
     }
 
     function getIconColor(canvas) {
-        var context2D = canvas.getContext("2d");
+        var context2D = canvas.getContext('2d');
         var data = context2D.getImageData(64, 32, 1, 1).data;
         return Color.fromBytes(data[0], data[1], data[2]);
     }

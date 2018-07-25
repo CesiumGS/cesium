@@ -300,7 +300,7 @@ defineSuite([
             minimumLevel : 0,
             maximumLevel : 12,
             rectangle : rectangle,
-            credit : "Thanks for using our WMTS server."
+            credit : 'Thanks for using our WMTS server.'
         });
         expect(provider.format).toEqual('someFormat');
         expect(provider.tileWidth).toEqual(512);

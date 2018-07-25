@@ -4,6 +4,7 @@ define([
         '../Core/Color',
         '../Core/defined',
         '../Core/defineProperties',
+        '../Core/deprecationWarning',
         '../Core/destroyObject',
         '../Core/Ellipsoid',
         '../Shaders/PostProcessStages/AmbientOcclusionGenerate',
@@ -30,6 +31,7 @@ define([
         Color,
         defined,
         defineProperties,
+        deprecationWarning,
         destroyObject,
         Ellipsoid,
         AmbientOcclusionGenerate,
@@ -751,14 +753,14 @@ define([
      * <li><code>starTexture</code> is the texture sampled for the star pattern of the flare.</li>
      * <li><code>intensity</code> is a scalar multiplied by the result of the lens flare. The default value is <code>2.0</code>.</li>
      * <li><code>distortion</code> is a scalar value that affects the chromatic effect distortion. The default value is <code>10.0</code>.</li>
-     * <li><code>ghostDispesal</code> is a scalar indicating how far the halo effect is from the center of the texture. The default value is <code>0.4</code>.</li>
+     * <li><code>ghostDispersal</code> is a scalar indicating how far the halo effect is from the center of the texture. The default value is <code>0.4</code>.</li>
      * <li><code>haloWidth</code> is a scalar representing the width of the halo  from the ghost dispersal. The default value is <code>0.4</code>.</li>
      * <li><code>earthRadius</code> is the maximum radius of the earth. The default value is <code>Ellipsoid.WGS84.maximumRadius</code>.</li>
      * </ul>
      * </p>
      * @return {PostProcessStage} A post-process stage for applying a lens flare effect.
      */
-    PostProcessStageLibrary.createLensFlarStage = function() {
+    PostProcessStageLibrary.createLensFlareStage = function() {
         return new PostProcessStage({
             name : 'czm_lens_flare',
             fragmentShader : LensFlare,
@@ -772,6 +774,19 @@ define([
                 earthRadius : Ellipsoid.WGS84.maximumRadius
             }
         });
+    };
+
+    /**
+     * Renaming createLensFlarStage to createLensFlareStage would lead to breaking change
+     * @deprecated
+     * @private
+     */
+    PostProcessStageLibrary.createLensFlarStage = function() {
+        deprecationWarning(
+            'PostProcessStageLibrary.createLensFlarStage',
+            'createLensFlarStage has been deprecated and will be removed in Cesium 1.49. Use createLensFlareStage instead'
+        );
+        return PostProcessStageLibrary.createLensFlareStage();
     };
 
     return PostProcessStageLibrary;

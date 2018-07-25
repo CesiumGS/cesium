@@ -51,14 +51,22 @@ define([
     }
 
     var depthQuadScratch = FeatureDetection.supportsTypedArrays() ? new Float32Array(12) : [];
+    var scratchRadii = new Cartesian3();
     var scratchCartesian1 = new Cartesian3();
     var scratchCartesian2 = new Cartesian3();
     var scratchCartesian3 = new Cartesian3();
     var scratchCartesian4 = new Cartesian3();
 
     function computeDepthQuad(ellipsoid, frameState) {
-        var radii = ellipsoid.radii;
+        var radii = Cartesian3.clone(ellipsoid.radii, scratchRadii);
         var p = frameState.camera.positionWC;
+
+        // Where did this magical number come from? It's how far a GroundPrimitive will be extruded below the surface
+        // of the Earth. This effectively pushes the depth plane farther from the camera so that classifications on
+        // 3D Tiles do not intersect the depth plane. This can be removed when depth testing is enabled by default.
+        radii.x -= 11000.0;
+        radii.y -= 11000.0;
+        radii.z -= 11000.0;
 
         // Find the corresponding position in the scaled space of the ellipsoid.
         var q = Cartesian3.multiplyComponents(ellipsoid.oneOverRadii, p, scratchCartesian1);

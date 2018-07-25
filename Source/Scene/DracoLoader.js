@@ -203,7 +203,7 @@ define([
      * Schedules decoding tasks available this frame.
      * @private
      */
-    DracoLoader.decode = function(model, context) {
+    DracoLoader.decodeModel = function(model, context) {
         if (!DracoLoader.hasExtension(model)) {
             return when.resolve();
         }
@@ -243,6 +243,19 @@ define([
         }
 
         return when.all(decodingPromises);
+    };
+
+    /**
+     * Decodes a compressed point cloud. Returns undefined if the task cannot be scheduled.
+     * @private
+     */
+    DracoLoader.decodePointCloud = function(parameters) {
+        var decoderTaskProcessor = DracoLoader._getDecoderTaskProcessor();
+        if (!DracoLoader._taskProcessorReady) {
+            // The task processor is not ready to schedule tasks
+            return;
+        }
+        return decoderTaskProcessor.scheduleTask(parameters, [parameters.buffer.buffer]);
     };
 
     /**

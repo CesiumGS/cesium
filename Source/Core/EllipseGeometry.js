@@ -62,6 +62,7 @@ define([
     var scratchCartesian4 = new Cartesian3();
     var texCoordScratch = new Cartesian2();
     var textureMatrixScratch = new Matrix3();
+    var tangentMatrixScratch = new Matrix3();
     var quaternionScratch = new Quaternion();
 
     var scratchNormal = new Cartesian3();
@@ -104,8 +105,19 @@ define([
 
         var geodeticNormal = ellipsoid.scaleToGeodeticSurface(center, scratchCartesian1);
         ellipsoid.geodeticSurfaceNormal(geodeticNormal, geodeticNormal);
-        var rotation = Quaternion.fromAxisAngle(geodeticNormal, stRotation, quaternionScratch);
-        var textureMatrix = Matrix3.fromQuaternion(rotation, textureMatrixScratch);
+
+        var textureMatrix = textureMatrixScratch;
+        var tangentMatrix = tangentMatrixScratch;
+        if (stRotation !== 0) {
+            var rotation = Quaternion.fromAxisAngle(geodeticNormal, stRotation, quaternionScratch);
+            textureMatrix = Matrix3.fromQuaternion(rotation, textureMatrix);
+
+            rotation = Quaternion.fromAxisAngle(geodeticNormal, -stRotation, quaternionScratch);
+            tangentMatrix = Matrix3.fromQuaternion(rotation, tangentMatrix);
+        } else {
+            textureMatrix = Matrix3.clone(Matrix3.IDENTITY, textureMatrix);
+            tangentMatrix = Matrix3.clone(Matrix3.IDENTITY, tangentMatrix);
+        }
 
         var minTexCoord = Cartesian2.fromElements(Number.POSITIVE_INFINITY, Number.POSITIVE_INFINITY, scratchMinTexCoord);
         var maxTexCoord = Cartesian2.fromElements(Number.NEGATIVE_INFINITY, Number.NEGATIVE_INFINITY, scratchMaxTexCoord);
@@ -152,7 +164,7 @@ define([
                 if (vertexFormat.normal || vertexFormat.tangent || vertexFormat.bitangent) {
                     if (vertexFormat.tangent || vertexFormat.bitangent) {
                         tangent = Cartesian3.normalize(Cartesian3.cross(Cartesian3.UNIT_Z, normal, tangent), tangent);
-                        Matrix3.multiplyByVector(textureMatrix, tangent, tangent);
+                        Matrix3.multiplyByVector(tangentMatrix, tangent, tangent);
                     }
                     if (vertexFormat.normal) {
                         normals[i] = normal.x;
