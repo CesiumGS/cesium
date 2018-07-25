@@ -3882,14 +3882,24 @@ define([
         return result;
     }
 
+    var scratchRight = new Cartesian3();
+    var scratchUp = new Cartesian3();
+
     function pickFromRay(scene, ray, pickPosition, pickObject) {
         var context = scene._context;
         var uniformState = context.uniformState;
         var frameState = scene._frameState;
 
+        var direction = ray.direction;
+        var orthogonalAxis = Cartesian3.mostOrthogonalAxis(direction, scratchRight);
+        var right = Cartesian3.cross(direction, orthogonalAxis, scratchRight);
+        var up = Cartesian3.cross(direction, right, scratchUp);
+
         var pickOffscreenCamera = scene._pickOffscreenCamera;
         pickOffscreenCamera.position = ray.origin;
-        pickOffscreenCamera.direction = ray.direction;
+        pickOffscreenCamera.direction = direction;
+        pickOffscreenCamera.up = up;
+        pickOffscreenCamera.right = right;
 
         var pickOffscreenFramebuffer = scene._pickOffscreenFramebuffer;
 
