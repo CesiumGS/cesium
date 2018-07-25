@@ -1,6 +1,7 @@
 defineSuite([
         'Core/BoundingSphere',
         'Core/Cartesian3',
+        'Core/CartographicGeocoderService',
         'Core/Clock',
         'Core/ClockRange',
         'Core/ClockStep',
@@ -45,6 +46,7 @@ defineSuite([
     ], 'Widgets/Viewer/Viewer', function(
         BoundingSphere,
         Cartesian3,
+        CartographicGeocoderService,
         Clock,
         ClockRange,
         ClockStep,
@@ -384,6 +386,34 @@ defineSuite([
         expect(viewer.selectionIndicator).toBeInstanceOf(SelectionIndicator);
         viewer.resize();
         viewer.render();
+    });
+
+    it('constructs geocoder', function() {
+        viewer = createViewer(container, {
+            geocoder : true
+        });
+        expect(viewer.geocoder).toBeDefined();
+        expect(viewer.geocoder.viewModel._geocoderServices.length).toBe(2);
+    });
+
+    it('constructs geocoder with geocoder service option', function() {
+        var service = new CartographicGeocoderService();
+        viewer = createViewer(container, {
+            geocoder : service
+        });
+        expect(viewer.geocoder).toBeDefined();
+        expect(viewer.geocoder.viewModel._geocoderServices.length).toBe(1);
+        expect(viewer.geocoder.viewModel._geocoderServices[0]).toBe(service);
+    });
+
+    it('constructs geocoder with geocoder service options', function() {
+        var service = new CartographicGeocoderService();
+        viewer = createViewer(container, {
+            geocoder : [service]
+        });
+        expect(viewer.geocoder).toBeDefined();
+        expect(viewer.geocoder.viewModel._geocoderServices.length).toBe(1);
+        expect(viewer.geocoder.viewModel._geocoderServices[0]).toBe(service);
     });
 
     it('can shut off SelectionIndicator', function() {
