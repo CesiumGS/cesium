@@ -17,9 +17,10 @@ define([
     };
 
     ShadowMapShader.createShadowCastVertexShader = function(vs, isPointLight, isTerrain) {
-        vs.defines.push('SHADOW_MAP');
         var defines = vs.defines.slice(0);
         var sources = vs.sources.slice(0);
+
+        vs.defines.push('SHADOW_MAP');
 
         if (isTerrain) {
             defines.push('GENERATE_POSITION');
@@ -128,9 +129,10 @@ define([
     };
 
     ShadowMapShader.createShadowReceiveVertexShader = function(vs, isTerrain, hasTerrainNormal) {
-        vs.defines.push('SHADOW_MAP');
         var defines = vs.defines.slice(0);
         var sources = vs.sources.slice(0);
+
+        vs.defines.push('SHADOW_MAP');
 
         if (isTerrain) {
             if (hasTerrainNormal) {
