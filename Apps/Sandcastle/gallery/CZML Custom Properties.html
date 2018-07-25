@@ -32,63 +32,63 @@ function startup(Cesium) {
     'use strict';
 //Sandcastle_Begin
 var czml = [{
-    'id' : 'document',
-    'name' : 'CZML Custom Properties',
-    'version' : '1.0',
-    'clock': {
-        'interval': '1970/2010',
-        'currentTime': '1970',
-        'multiplier': 500000000
+    "id" : "document",
+    "name" : "CZML Custom Properties",
+    "version" : "1.0",
+    "clock": {
+        "interval": "1970/2010",
+        "currentTime": "1970",
+        "multiplier": 500000000
     }
 }, {
-    'id' : 'custom_property_object',
-    'name' : 'An object with custom properties',
-    'properties' : {
-        'constant_property' : true,
-        'population_intervals' : [{
-            'interval': '1970/1980',
-            'number': 2209600
+    "id" : "custom_property_object",
+    "name" : "An object with custom properties",
+    "properties" : {
+        "constant_property" : true,
+        "population_intervals" : [{
+            "interval": "1970/1980",
+            "number": 2209600
         }, {
-            'interval': '1980/2090',
-            'number': 2889700
+            "interval": "1980/2090",
+            "number": 2889700
         }, {
-            'interval' : '1990/2000',
-            'number': 3307600
+            "interval" : "1990/2000",
+            "number": 3307600
         }, {
-            'interval' : '2000/2010',
-            'number' : 4326900
+            "interval" : "2000/2010",
+            "number" : 4326900
         }],
-        'population_sampled' : {
-            'number': [
-                '1970', 2209600,
-                '1980', 2889700,
-                '1990', 3307600,
-                '2000', 4326900,
-                '2010', 5049100
+        "population_sampled" : {
+            "number": [
+                "1970", 2209600,
+                "1980", 2889700,
+                "1990", 3307600,
+                "2000", 4326900,
+                "2010", 5049100
             ]
         }
     }
 }, {
-    'id' : 'colorado',
-    'name' : 'Colorado',
-    'polygon' : {
-        'positions' : {
-            'cartographicDegrees' : [
+    "id" : "colorado",
+    "name" : "Colorado",
+    "polygon" : {
+        "positions" : {
+            "cartographicDegrees" : [
                 -109.03, 41, 0,
                 -102.03, 41, 0,
                 -102.03, 37, 0,
                 -109.03, 37, 0
             ]
         },
-        'material' : {
-            'solidColor' : {
-                'color' : {
-                    'rgba' : [0, 255, 0, 150]
+        "material" : {
+            "solidColor" : {
+                "color" : {
+                    "rgba" : [0, 255, 0, 150]
                 }
             }
         },
-        'height' : 0,
-        'extrudedHeight': 0
+        "height" : 0,
+        "extrudedHeight": 0
     }
 }];
 

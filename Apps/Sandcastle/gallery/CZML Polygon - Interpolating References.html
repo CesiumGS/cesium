@@ -29,42 +29,42 @@ function startup(Cesium) {
     'use strict';
 //Sandcastle_Begin
 var czml = [{
-    'id' : 'document',
-    'name' : 'CZML Polygon - Interpolating References',
-    'version' : '1.0'
+    "id" : "document",
+    "name" : "CZML Polygon - Interpolating References",
+    "version" : "1.0"
 }, {
-    'id' : 'dynamicPolygon',
-    'name': 'Dynamic Polygon with Reference Properties',
-    'availability':'2012-08-04T16:00:00Z/2012-08-04T17:00:00Z',
-    'polygon': {
-        'positions': {
-            'references': [
-                'v1#position',
-                'v2#position',
-                'v3#position'
+    "id" : "dynamicPolygon",
+    "name": "Dynamic Polygon with Reference Properties",
+    "availability":"2012-08-04T16:00:00Z/2012-08-04T17:00:00Z",
+    "polygon": {
+        "positions": {
+            "references": [
+                "v1#position",
+                "v2#position",
+                "v3#position"
             ]
         },
-        'perPositionHeight' : true,
-        'material': {
-            'solidColor': {
-                'color': [{
-                    'interval' : '2012-08-04T16:00:00Z/2012-08-04T16:25:00Z',
-                    'rgbaf' : [1, 0, 1, 1]
+        "perPositionHeight" : true,
+        "material": {
+            "solidColor": {
+                "color": [{
+                    "interval" : "2012-08-04T16:00:00Z/2012-08-04T16:25:00Z",
+                    "rgbaf" : [1, 0, 1, 1]
                 }, {
-                    'interval' : '2012-08-04T16:30:00Z/2012-08-04T17:00:00Z',
-                    'rgbaf' : [0, 1, 1, 1]
+                    "interval" : "2012-08-04T16:30:00Z/2012-08-04T17:00:00Z",
+                    "rgbaf" : [0, 1, 1, 1]
                 }]
             }
         }
     }
 }, {
-    'id': 'v1',
-    'position': {
-        'interpolationAlgorithm': 'LINEAR',
-        'interpolationDegree': 1,
-        'interval' : '2012-08-04T16:00:00Z/2012-08-04T17:00:00Z',
-        'epoch' : '2012-08-04T16:00:00Z',
-        'cartographicDegrees': [
+    "id": "v1",
+    "position": {
+        "interpolationAlgorithm": "LINEAR",
+        "interpolationDegree": 1,
+        "interval" : "2012-08-04T16:00:00Z/2012-08-04T17:00:00Z",
+        "epoch" : "2012-08-04T16:00:00Z",
+        "cartographicDegrees": [
             0, -60, 35, 30000,
             160, -65, 35, 5000000,
             400, -70, 40, 20000,
@@ -74,21 +74,21 @@ var czml = [{
         ]
     }
 }, {
-    'id': 'v2',
-    'position': {
-        'interval' : '2012-08-04T16:00:00Z/2012-08-04T17:00:00Z',
-        'cartographicDegrees': [
+    "id": "v2",
+    "position": {
+        "interval" : "2012-08-04T16:00:00Z/2012-08-04T17:00:00Z",
+        "cartographicDegrees": [
             -45.0, 20, 4000000
         ]
     }
 }, {
-    'id': 'v3',
-    'position': {
-        'interpolationAlgorithm': 'LINEAR',
-        'interpolationDegree': 1,
-        'interval' : '2012-08-04T16:00:00Z/2012-08-04T17:00:00Z',
-        'epoch' : '2012-08-04T16:00:00Z',
-        'cartographicDegrees': [
+    "id": "v3",
+    "position": {
+        "interpolationAlgorithm": "LINEAR",
+        "interpolationDegree": 1,
+        "interval" : "2012-08-04T16:00:00Z/2012-08-04T17:00:00Z",
+        "epoch" : "2012-08-04T16:00:00Z",
+        "cartographicDegrees": [
             0, -45, 60, 4000,
             400, -40, 70, 2000000,
             1000, -35, 75, 100000,
