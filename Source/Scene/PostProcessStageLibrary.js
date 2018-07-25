@@ -4,6 +4,7 @@ define([
         '../Core/Color',
         '../Core/defined',
         '../Core/defineProperties',
+        '../Core/deprecationWarning',
         '../Core/destroyObject',
         '../Core/Ellipsoid',
         '../Shaders/PostProcessStages/AmbientOcclusionGenerate',
@@ -30,6 +31,7 @@ define([
         Color,
         defined,
         defineProperties,
+        deprecationWarning,
         destroyObject,
         Ellipsoid,
         AmbientOcclusionGenerate,
@@ -774,7 +776,18 @@ define([
         });
     };
 
-    PostProcessStageLibrary.createLensFlarStage = PostProcessStageLibrary.createLensFlareStage;
+    /**
+     * Renaming createLensFlarStage to createLensFlareStage would lead to breaking change
+     * @deprecated
+     * @private
+     */
+    PostProcessStageLibrary.createLensFlarStage = function() {
+        deprecationWarning(
+            'PostProcessStageLibrary.createLensFlarStage',
+            'createLensFlarStage has been renamed to createLensFlareStage and is now deprecated'
+        );
+        return PostProcessStageLibrary.createLensFlareStage();
+    };
 
     return PostProcessStageLibrary;
 });
