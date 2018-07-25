@@ -1524,10 +1524,6 @@ define([
                 derivedCommands.logDepth = undefined;
             }
 
-            if (scene.frameState.passes.pick && !defined(command.pickId)) {
-                return;
-            }
-
             if (shadowsEnabled && (command.receiveShadows || command.castShadows)) {
                 derivedCommands.shadows = ShadowMap.createDerivedCommands(shadowMaps, lightShadowMaps, command, shadowsDirty, context, derivedCommands.shadows);
                 if (useLogDepth) {
@@ -1552,6 +1548,10 @@ define([
                 } else {
                     derivedCommands.oit = oit.createDerivedCommands(command, context, derivedCommands.oit);
                 }
+            }
+
+            if (scene.frameState.passes.pick && !defined(command.pickId)) {
+                return;
             }
 
             derivedCommands.depth = DerivedCommand.createDepthOnlyDerivedCommand(scene, command, context, derivedCommands.depth);
@@ -2314,6 +2314,9 @@ define([
 
             if (clearGlobeDepth) {
                 clearDepth.execute(context, passState);
+                if (useDepthPlane) {
+                    depthPlane.execute(context, passState);
+                }
             }
 
             if (!environmentState.useInvertClassification || picking) {
@@ -2429,10 +2432,6 @@ define([
 
             if (length > 0 && context.stencilBuffer) {
                 scene._stencilClearCommand.execute(context, passState);
-            }
-
-            if (clearGlobeDepth && useDepthPlane) {
-                depthPlane.execute(context, passState);
             }
 
             us.updatePass(Pass.OPAQUE);
@@ -2674,6 +2673,7 @@ define([
             viewport.height = context.drawingBufferHeight;
 
             var savedCamera = Camera.clone(camera, scene._cameraVR);
+            savedCamera.frustum = camera.frustum;
 
             var near = camera.frustum.near;
             var fo = near * defaultValue(scene.focalLength, 5.0);

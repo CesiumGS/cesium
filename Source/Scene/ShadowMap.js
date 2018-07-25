@@ -112,6 +112,7 @@ define([
      *
      * @alias ShadowMap
      * @internalConstructor
+     * @class
      *
      * @param {Object} options An object containing the following properties:
      * @param {Camera} options.lightCamera A camera representing the light source.

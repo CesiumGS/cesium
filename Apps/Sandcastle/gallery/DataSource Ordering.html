@@ -10,7 +10,7 @@
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
     <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
     <script type="text/javascript">
-        if(typeof require === "function") {
+        if(typeof require === 'function') {
             require.config({
                 baseUrl : '../../../Source',
                 waitSeconds : 120
@@ -30,33 +30,33 @@ function startup(Cesium) {
     'use strict';
 //Sandcastle_Begin
 var czml1 = [{
-    "id" : "document",
-    "name" : "CZML Geometries: Rectangle",
-    "version" : "1.0"
+    'id' : 'document',
+    'name' : 'CZML Geometries: Rectangle',
+    'version' : '1.0'
 }, {
-    "rectangle" : {
-        "coordinates" : {
-            "wsenDegrees" : [-120, 40, -110, 50]
+    'rectangle' : {
+        'coordinates' : {
+            'wsenDegrees' : [-120, 40, -110, 50]
         },
-        "fill" : true,
-        "material" : {
-            "solidColor" : {
-                "color": {
-                    "rgba" : [255, 0, 0, 255]
+        'fill' : true,
+        'material' : {
+            'solidColor' : {
+                'color': {
+                    'rgba' : [255, 0, 0, 255]
                 }
             }
         }
     }
 }, {
-    "rectangle" : {
-        "coordinates" : {
-            "wsenDegrees" : [-110, 40, -100, 50]
+    'rectangle' : {
+        'coordinates' : {
+            'wsenDegrees' : [-110, 40, -100, 50]
         },
-        "fill" : true,
-        "material" : {
-            "solidColor" : {
-                "color": {
-                    "rgba" : [0, 0, 255, 255]
+        'fill' : true,
+        'material' : {
+            'solidColor' : {
+                'color': {
+                    'rgba' : [0, 0, 255, 255]
                 }
             }
         }
@@ -64,33 +64,33 @@ var czml1 = [{
 }];
 
 var czml2 = [{
-    "id" : "document",
-    "name" : "CZML Geometries: Rectangle",
-    "version" : "1.0"
+    'id' : 'document',
+    'name' : 'CZML Geometries: Rectangle',
+    'version' : '1.0'
 }, {
-    "rectangle" : {
-        "coordinates" : {
-            "wsenDegrees" : [-120, 45, -110, 55]
+    'rectangle' : {
+        'coordinates' : {
+            'wsenDegrees' : [-120, 45, -110, 55]
         },
-        "fill" : true,
-        "material" : {
-            "solidColor" : {
-                "color": {
-                    "rgba" : [255, 255, 0, 255]
+        'fill' : true,
+        'material' : {
+            'solidColor' : {
+                'color': {
+                    'rgba' : [255, 255, 0, 255]
                 }
             }
         }
     }
 }, {
-    "rectangle" : {
-        "coordinates" : {
-            "wsenDegrees" : [-110, 45, -100, 55]
+    'rectangle' : {
+        'coordinates' : {
+            'wsenDegrees' : [-110, 45, -100, 55]
         },
-        "fill" : true,
-        "material" : {
-            "solidColor" : {
-                "color": {
-                    "rgba" : [0, 255, 255, 255]
+        'fill' : true,
+        'material' : {
+            'solidColor' : {
+                'color': {
+                    'rgba' : [0, 255, 255, 255]
                 }
             }
         }
@@ -117,10 +117,10 @@ Sandcastle.addToolbarButton('Swap', function() {
 });//Sandcastle_End
     Sandcastle.finishedLoading();
 }
-if (typeof Cesium !== "undefined") {
+if (typeof Cesium !== 'undefined') {
     startup(Cesium);
-} else if (typeof require === "function") {
-    require(["Cesium"], startup);
+} else if (typeof require === 'function') {
+    require(['Cesium'], startup);
 }
 </script>
 </body>

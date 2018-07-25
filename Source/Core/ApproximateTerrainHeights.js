@@ -98,9 +98,7 @@ define([
             ellipsoid.cartographicToCartesian(Rectangle.southwest(rectangle, scratchDiagonalCartographic),
                 scratchDiagonalCartesianSW);
 
-            Cartesian3.subtract(scratchDiagonalCartesianSW, scratchDiagonalCartesianNE, scratchCenterCartesian);
-            Cartesian3.add(scratchDiagonalCartesianNE,
-                Cartesian3.multiplyByScalar(scratchCenterCartesian, 0.5, scratchCenterCartesian), scratchCenterCartesian);
+            Cartesian3.midpoint(scratchDiagonalCartesianSW, scratchDiagonalCartesianNE, scratchCenterCartesian);
             var surfacePosition = ellipsoid.scaleToGeodeticSurface(scratchCenterCartesian, scratchSurfaceCartesian);
             if (defined(surfacePosition)) {
                 var distance = Cartesian3.distance(scratchCenterCartesian, surfacePosition);

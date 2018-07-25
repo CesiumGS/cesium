@@ -311,9 +311,9 @@ define([
                 positions : positions,
                 granularity : granularity,
                 loop : loop,
-                ellipsoid : ellipsoid,
-                projection : new PROJECTIONS[projectionIndex](ellipsoid)
+                ellipsoid : ellipsoid
             });
+            geometry._projectionIndex = projectionIndex;
             geometry._scene3DOnly = scene3DOnly;
             return geometry;
         }

@@ -27,6 +27,7 @@ define([
      *
      * @alias ModelAnimationCollection
      * @internalConstructor
+     * @class
      *
      * @see Model#activeAnimations
      */

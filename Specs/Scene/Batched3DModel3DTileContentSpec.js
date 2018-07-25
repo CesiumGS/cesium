@@ -54,6 +54,9 @@ defineSuite([
 
     beforeAll(function() {
         scene = createScene();
+
+        // Keep the error from logging to the console when running tests
+        spyOn(Batched3DModel3DTileContent, '_deprecationWarning');
     });
 
     afterAll(function() {
@@ -76,31 +79,26 @@ defineSuite([
     });
 
     it('recognizes the legacy 20-byte header', function() {
-        spyOn(Batched3DModel3DTileContent, '_deprecationWarning');
         return Cesium3DTilesTester.loadTileset(scene, deprecated1Url)
             .then(function(tileset) {
                 expect(Batched3DModel3DTileContent._deprecationWarning).toHaveBeenCalled();
                 Cesium3DTilesTester.expectRenderTileset(scene, tileset);
                 var batchTable = tileset._root._content.batchTable;
-                expect(batchTable.batchTableJson).toBeDefined();
-                expect(batchTable.batchTableBinary).toBeUndefined();
+                expect(batchTable._properties).toBeDefined();
             });
     });
 
     it('recognizes the legacy 24-byte header', function() {
-        spyOn(Batched3DModel3DTileContent, '_deprecationWarning');
         return Cesium3DTilesTester.loadTileset(scene, deprecated2Url)
             .then(function(tileset) {
                 expect(Batched3DModel3DTileContent._deprecationWarning).toHaveBeenCalled();
                 Cesium3DTilesTester.expectRenderTileset(scene, tileset);
                 var batchTable = tileset._root._content.batchTable;
-                expect(batchTable.batchTableJson).toBeDefined();
-                expect(batchTable.batchTableBinary).toBeUndefined();
+                expect(batchTable._properties).toBeDefined();
             });
     });
 
     it('logs deprecation warning for use of BATCHID without prefixed underscore', function() {
-        spyOn(Batched3DModel3DTileContent, '_deprecationWarning');
         return Cesium3DTilesTester.loadTileset(scene, deprecated1Url)
             .then(function(tileset) {
                 expect(Batched3DModel3DTileContent._deprecationWarning).toHaveBeenCalled();
@@ -202,9 +200,7 @@ defineSuite([
     });
 
     it('renders with a tile transform and region bounding volume', function() {
-        return Cesium3DTilesTester.loadTileset(scene, withTransformRegionUrl).then(function(tileset) {
-            Cesium3DTilesTester.expectRenderTileset(scene, tileset);
-        });
+        return expectRenderWithTransform(withTransformRegionUrl);
     });
 
     it('picks with batch table', function() {
@@ -392,6 +388,7 @@ defineSuite([
             var newHPR = new HeadingPitchRoll();
             var newTransform = Transforms.headingPitchRollToFixedFrame(newCenter, newHPR);
             tileset._root.transform = newTransform;
+            scene.camera.lookAt(newCenter, new HeadingPitchRange(0.0, 0.0, 15.0));
             scene.renderForSpecs();
 
             expectedModelTransform = Matrix4.multiply(tileset._root.computedTransform, rtcTransform, expectedModelTransform);

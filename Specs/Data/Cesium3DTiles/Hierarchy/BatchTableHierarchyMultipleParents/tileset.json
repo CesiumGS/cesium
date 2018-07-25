@@ -41,7 +41,13 @@
     },
     "geometricError": 0,
     "content": {
-      "url": "tile.b3dm"
+      "uri": "tile.b3dm"
     }
-  }
+  },
+  "extensionsUsed": [
+    "3DTILES_batch_table_hierarchy"
+  ],
+  "extensionsRequired": [
+    "3DTILES_batch_table_hierarchy"
+  ]
 }
