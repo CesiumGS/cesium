@@ -19,6 +19,7 @@ Change Log
 * Fixed `PolygonGeometry` when using `VertexFormat.POSITION_ONLY`, `perPositionHeight` and `extrudedHeight` [#6790](expect(https://github.com/AnalyticalGraphicsInc/cesium/pull/6790)
 * Fixed a bug that was preventing 3D Tilesets on the opposite side of the globe from being occluded [#6714](https://github.com/AnalyticalGraphicsInc/cesium/issues/6714)
 * Fixed a bug where 3D Tilesets using the `region` bounding volume don't get transformed when the tileset's `modelMatrix` changes. [#6755](https://github.com/AnalyticalGraphicsInc/cesium/pull/6755)
+* Fixed issues related to updating entity show and geometry color [#6835](https://github.com/AnalyticalGraphicsInc/cesium/pull/6835)
 * Fixed `PolygonGeometry` and `EllipseGeometry` tangent and bitangent attributes when a texture rotation is used [#6788](https://github.com/AnalyticalGraphicsInc/cesium/pull/6788)
 * Fixed an issue where tiles were missing in VR mode. [#6612](https://github.com/AnalyticalGraphicsInc/cesium/issues/6612)
 * Fixed an issue where glTF 2.0 models sometimes wouldn't be centered in the view after putting the camera on them. [#6784](https://github.com/AnalyticalGraphicsInc/cesium/issues/6784)
