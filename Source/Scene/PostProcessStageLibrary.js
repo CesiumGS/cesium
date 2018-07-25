@@ -784,7 +784,7 @@ define([
     PostProcessStageLibrary.createLensFlarStage = function() {
         deprecationWarning(
             'PostProcessStageLibrary.createLensFlarStage',
-            'createLensFlarStage has been renamed to createLensFlareStage and is now deprecated'
+            'createLensFlarStage has been deprecated and will be removed in Cesium 1.49. Use createLensFlareStage instead'
         );
         return PostProcessStageLibrary.createLensFlareStage();
     };
