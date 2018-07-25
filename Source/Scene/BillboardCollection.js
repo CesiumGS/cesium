@@ -331,7 +331,7 @@ define([
             this._removeCallbackFunc = scene.terrainProviderChanged.addEventListener(function() {
                 var billboards = this._billboards;
                 var length = billboards.length;
-                for (var i=0;i<length;++i) {
+                for (var i = 0; i < length; ++i) {
                     billboards[i]._updateClamping();
                 }
             }, this);
@@ -690,7 +690,7 @@ define([
         var usageChanged = false;
 
         var properties = this._propertiesChanged;
-        for ( var k = 0; k < NUMBER_OF_PROPERTIES; ++k) {
+        for (var k = 0; k < NUMBER_OF_PROPERTIES; ++k) {
             var newUsage = (properties[k] === 0) ? BufferUsage.STATIC_DRAW : BufferUsage.STREAM_DRAW;
             usageChanged = usageChanged || (buffersUsage[k] !== newUsage);
             buffersUsage[k] = newUsage;
@@ -1194,12 +1194,13 @@ define([
         }
 
         var disableDepthTestDistance = billboard.disableDepthTestDistance;
-        if (billboard.heightReference === HeightReference.CLAMP_TO_GROUND && disableDepthTestDistance === 0.0 && billboardCollection._scene.context.depthTexture) {
-            disableDepthTestDistance = 2000.0;
+        var clampToGround = billboard.heightReference === HeightReference.CLAMP_TO_GROUND && billboardCollection._scene.context.depthTexture;
+        if (!defined(disableDepthTestDistance)) {
+            disableDepthTestDistance = clampToGround ? 5000.0 : 0.0;
         }
 
         disableDepthTestDistance *= disableDepthTestDistance;
-        if (disableDepthTestDistance > 0.0) {
+        if (clampToGround || disableDepthTestDistance > 0.0) {
             billboardCollection._shaderDisableDepthDistance = true;
             if (disableDepthTestDistance === Number.POSITIVE_INFINITY) {
                 disableDepthTestDistance = -1.0;
@@ -1358,7 +1359,7 @@ define([
         }
 
         var positions = [];
-        for ( var i = 0; i < length; ++i) {
+        for (var i = 0; i < length; ++i) {
             var billboard = billboards[i];
             var position = billboard.position;
             var actualPosition = Billboard._computeActualPosition(billboard, position, frameState, modelMatrix);
@@ -1411,7 +1412,7 @@ define([
         }
 
         var size = pixelScale * collection._maxScale * collection._maxSize * 2.0;
-        if (collection._allHorizontalCenter && collection._allVerticalCenter ) {
+        if (collection._allHorizontalCenter && collection._allVerticalCenter) {
             size *= 0.5;
         }
 
@@ -1560,7 +1561,7 @@ define([
                     var b = billboardsToUpdate[m];
                     b._dirty = false;
 
-                    for ( var n = 0; n < numWriters; ++n) {
+                    for (var n = 0; n < numWriters; ++n) {
                         writers[n](this, context, textureAtlasCoordinates, vafWriters, b);
                     }
                 }
@@ -1570,7 +1571,7 @@ define([
                     var bb = billboardsToUpdate[h];
                     bb._dirty = false;
 
-                    for ( var o = 0; o < numWriters; ++o) {
+                    for (var o = 0; o < numWriters; ++o) {
                         writers[o](this, context, textureAtlasCoordinates, vafWriters, bb);
                     }
 
