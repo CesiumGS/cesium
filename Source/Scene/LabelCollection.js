@@ -599,7 +599,7 @@ define([
      * calling <code>update</code>.
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
-     * @memberOf {LabelCollection.prototype}
+     *
      *
      * @example
      * // Example 1:  Add a label, specifying all the default values.
@@ -660,7 +660,7 @@ define([
      * {@link Label#show} instead of removing and re-adding the label.
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
-     * @memberOf {LabelCollection.prototype}
+     *
      *
      * @example
      * var l = labels.add(...);
@@ -689,7 +689,7 @@ define([
      * from a collection and then add new ones than to create a new collection entirely.
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
-     * @memberOf {LabelCollection.prototype}
+     *
      *
      * @example
      * labels.add(...);
@@ -716,7 +716,7 @@ define([
      * @returns {Boolean} true if this collection contains the label, false otherwise.
      *
      * @see LabelCollection#get
-     * @memberOf {LabelCollection.prototype}
+     *
      */
     LabelCollection.prototype.contains = function(label) {
         return defined(label) && label._labelCollection === this;
@@ -738,7 +738,7 @@ define([
      * operation is performed.
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
-     * @memberOf {LabelCollection.prototype}
+     *
      *
      * @example
      * // Toggle the show property of every label in the collection
@@ -762,7 +762,7 @@ define([
 
     /**
      * @private
-     * @memberOf {LabelCollection.prototype}
+     *
      */
     LabelCollection.prototype.update = function(frameState) {
         var billboardCollection = this._billboardCollection;
@@ -845,7 +845,7 @@ define([
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
      *
      * @returns {Boolean} True if this object was destroyed; otherwise, false.
-     * @memberOf {LabelCollection.prototype}
+     *
      * @see LabelCollection#destroy
      */
     LabelCollection.prototype.isDestroyed = function() {
@@ -861,7 +861,7 @@ define([
      * assign the return value (<code>undefined</code>) to the object as done in the example.
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
-     * @memberOf {LabelCollection.prototype}
+     *
      *
      * @example
      * labels = labels && labels.destroy();
