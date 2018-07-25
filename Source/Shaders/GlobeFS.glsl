@@ -292,6 +292,11 @@ void main()
     vec3 rgb = v_mieColor + finalColor.rgb * v_rayleighColor;
     rgb = vec3(1.0) - exp(-fExposure * rgb);
 
+    float darken = clamp(dot(normalize(czm_viewerPositionWC), normalize(czm_sunPositionWC)), u_minimumBrightness, 1.0);
+    vec3 fogColor = rgb * darken;
+
+    finalColor = vec4(czm_fog(v_distance, finalColor.rgb, fogColor), finalColor.a);
+
     const float u_dayNightBlendDelta = 0.05;
 
     if (diffuse < -u_dayNightBlendDelta)
@@ -305,15 +310,6 @@ void main()
         float t = (diffuse + u_dayNightBlendDelta) / (2.0 * u_dayNightBlendDelta);
         rgb = mix(vec3(0.0), rgb, t);
     }
-
-    /*
-    #if defined(ENABLE_VERTEX_LIGHTING) || defined(ENABLE_DAYNIGHT_SHADING)
-        float darken = clamp(dot(normalize(czm_viewerPositionWC), normalize(czm_sunPositionWC)), u_minimumBrightness, 1.0);
-        fogColor *= darken;
-    #endif
-
-        gl_FragColor = vec4(czm_fog(v_distance, finalColor.rgb, fogColor), finalColor.a);
-        */
 
     gl_FragColor = vec4(mix(finalColor.rgb, rgb, fade), finalColor.a);
 }
