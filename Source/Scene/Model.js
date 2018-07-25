@@ -232,8 +232,6 @@ define([
      * Cesium supports glTF assets with the following extensions:
      * <ul>
      * <li>
-     * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/1.0/Khronos/KHR_binary_glTF/README.md|KHR_binary_glTF}
-     * </li><li>
      * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/1.0/Khronos/KHR_materials_common/README.md|KHR_materials_common}
      * </li><li>
      * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/1.0/Vendor/WEB3D_quantized_attributes/README.md|WEB3D_quantized_attributes}
@@ -256,7 +254,7 @@ define([
      * @constructor
      *
      * @param {Object} [options] Object with the following properties:
-     * @param {Object|ArrayBuffer|Uint8Array} [options.gltf] The object for the glTF JSON or an arraybuffer of Binary glTF defined by the KHR_binary_glTF extension.
+     * @param {Object|ArrayBuffer|Uint8Array} [options.gltf] A glTF JSON object, or a binary glTF buffer.
      * @param {Resource|String} [options.basePath=''] The base path that paths in the glTF JSON are relative to.
      * @param {Boolean} [options.show=true] Determines if the model primitive will be shown.
      * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The 4x4 transformation matrix that transforms the model from model to world coordinates.
@@ -281,9 +279,6 @@ define([
      * @param {Number} [options.silhouetteSize=0.0] The size of the silhouette in pixels.
      * @param {ClippingPlaneCollection} [options.clippingPlanes] The {@link ClippingPlaneCollection} used to selectively disable rendering the model.
      * @param {Boolean} [options.dequantizeInShader=true] Determines if a {@link https://github.com/google/draco|Draco} encoded model is dequantized on the GPU. This decreases total memory usage for encoded models.
-     *
-     * @exception {DeveloperError} bgltf is not a valid Binary glTF file.
-     * @exception {DeveloperError} Only glTF Binary version 1 is supported.
      *
      * @see Model.fromGltf
      *
@@ -503,7 +498,6 @@ define([
         this.color = defaultValue(options.color, Color.WHITE);
         this._color = new Color();
         this._colorPreviousAlpha = 1.0;
-        this._hasPremultipliedAlpha = false;
 
         /**
          * Defines how the color blends with the model.
@@ -1103,15 +1097,12 @@ define([
      * and shader files are downloaded and the WebGL resources are created, the {@link Model#readyPromise} is resolved.
      * </p>
      * <p>
-     * The model can be a traditional glTF asset with a .gltf extension or a Binary glTF using the
-     * KHR_binary_glTF extension with a .glb extension.
+     * The model can be a traditional glTF asset with a .gltf extension or a Binary glTF using the .glb extension.
      * </p>
      * <p>
      * Cesium supports glTF assets with the following extensions:
      * <ul>
      * <li>
-     * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/1.0/Khronos/KHR_binary_glTF/README.md|KHR_binary_glTF}
-     * </li><li>
      * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/1.0/Khronos/KHR_materials_common/README.md|KHR_materials_common}
      * </li><li>
      * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/1.0/Vendor/WEB3D_quantized_attributes/README.md|WEB3D_quantized_attributes}
@@ -1158,9 +1149,6 @@ define([
      * @param {Boolean} [options.dequantizeInShader=true] Determines if a {@link https://github.com/google/draco|Draco} encoded model is dequantized on the GPU. This decreases total memory usage for encoded models.
      *
      * @returns {Model} The newly created model.
-     *
-     * @exception {DeveloperError} bgltf is not a valid Binary glTF file.
-     * @exception {DeveloperError} Only glTF Binary version 1 is supported.
      *
      * @example
      * // Example 1. Create a model from a glTF asset
@@ -1426,29 +1414,25 @@ define([
 
     function parseBuffers(model) {
         var loadResources = model._loadResources;
-        // Iterate this way for compatibility with objects and arrays
-        var buffers = model.gltf.buffers;
-        for (var id in buffers) {
-            if (buffers.hasOwnProperty(id)) {
-                var buffer = buffers[id];
-                buffer.extras = defaultValue(buffer.extras, {});
-                buffer.extras._pipeline = defaultValue(buffer.extras._pipeline, {});
-                if (defined(buffer.extras._pipeline.source)) {
-                    loadResources.buffers[id] = buffer.extras._pipeline.source;
-                } else {
-                    var bufferResource = model._resource.getDerivedResource({
-                        url : buffer.uri
-                    });
-                    ++loadResources.pendingBufferLoads;
-                    bufferResource.fetchArrayBuffer().then(bufferLoad(model, id)).otherwise(getFailedLoadFunction(model, 'buffer', bufferResource.url));
-                }
+        ForEach.buffer(model.gltf, function(buffer, bufferViewId) {
+            buffer.extras = defaultValue(buffer.extras, {});
+            buffer.extras._pipeline = defaultValue(buffer.extras._pipeline, {});
+            if (defined(buffer.extras._pipeline.source)) {
+                loadResources.buffers[bufferViewId] = buffer.extras._pipeline.source;
+            } else {
+                var bufferResource = model._resource.getDerivedResource({
+                    url: buffer.uri
+                });
+                ++loadResources.pendingBufferLoads;
+                bufferResource.fetchArrayBuffer()
+                    .then(bufferLoad(model, bufferViewId))
+                    .otherwise(getFailedLoadFunction(model, 'buffer', bufferResource.url));
             }
-        }
+        });
     }
 
     function parseBufferViews(model) {
         var bufferViews = model.gltf.bufferViews;
-
         var vertexBuffersToCreate = model._loadResources.vertexBuffersToCreate;
 
         // Only ARRAY_BUFFER here.  ELEMENT_ARRAY_BUFFER created below.
@@ -1490,7 +1474,7 @@ define([
                 bufferView : undefined
             };
             --loadResources.pendingShaderLoads;
-            model._shaders[id].extras._pipeline.source = source;
+            model._sourceShaders[id].extras._pipeline.source = source;
         };
     }
 
@@ -1498,7 +1482,10 @@ define([
         var gltf = model.gltf;
         var buffers = gltf.buffers;
         var bufferViews = gltf.bufferViews;
-        ForEach.shader(gltf, function(shader, id) {
+        ForEach.shader(gltf, function(sourceShader, id) {
+            // retain reference to source shader
+            var shader = model._sourceShaders[id] = clone(sourceShader);
+
             // Shader references either uri (external or base64-encoded) or bufferView
             if (defined(shader.bufferView)) {
                 var bufferViewId = shader.bufferView;
@@ -1527,14 +1514,11 @@ define([
                     .then(shaderLoad(model, shader.type, id))
                     .otherwise(getFailedLoadFunction(model, 'shader', shaderResource.url));
             }
-
-            // retain reference to source shader
-            model._sourceShaders[id] = clone(shader);
         });
     }
 
     function parsePrograms(model) {
-        var sourcePrograms = model._sourcePrograms = {};
+        var sourcePrograms = model._sourcePrograms;
         var gltf = model.gltf;
 
         if (!hasExtension(gltf, 'KHR_techniques_webgl')) {
@@ -1547,8 +1531,8 @@ define([
             if (!defined(sourcePrograms[programId])) {
                 sourcePrograms[programId] = clone(programs[programId]);
                 model._loadResources.programsToCreate.enqueue({
-                    id : programId,
-                    technique : techniqueId
+                    programId : programId,
+                    techniqueId : techniqueId
                 });
             }
         });
@@ -1715,7 +1699,7 @@ define([
 
     function parseMaterials(model) {
         var gltf = model.gltf;
-        var techniques = model._sourceTechniques = {};
+        var techniques = model._sourceTechniques;
 
         ForEach.technique(model.gltf, function(technique, index) {
             techniques[index] = clone(technique);
@@ -1741,16 +1725,13 @@ define([
                 modelMaterial._technique = techniqueId;
                 modelMaterial._program = techniques[techniqueId].program;
 
-                var values = material.extensions.KHR_techniques_webgl.values;
-                for (var uniformName in values) {
-                    if (values.hasOwnProperty(uniformName)) {
-                        if (!defined(modelMaterial._values)) {
-                            modelMaterial._values = {};
-                        }
-
-                        modelMaterial._values[uniformName] = clone(values[uniformName]);
+                ForEach.materialValue(material, function(value, uniformName) {
+                    if (!defined(modelMaterial._values)) {
+                        modelMaterial._values = {};
                     }
-                }
+
+                    modelMaterial._values[uniformName] = clone(value);
+                });
             }
 
             runtimeMaterialsByName[material.name] = modelMaterial;
@@ -1765,23 +1746,20 @@ define([
         var runtimeMeshesByName = {};
         var runtimeMaterialsById = model._runtime.materialsById;
 
-        ForEach.mesh(model.gltf, function(mesh, id) {
-            runtimeMeshesByName[mesh.name] = new ModelMesh(mesh, runtimeMaterialsById, id);
+        ForEach.mesh(model.gltf, function(mesh, meshId) {
+            runtimeMeshesByName[mesh.name] = new ModelMesh(mesh, runtimeMaterialsById, meshId);
             if (defined(model.extensionsUsed.WEB3D_quantized_attributes) || model._dequantizeInShader) {
                 // Cache primitives according to their program
-                var primitives = mesh.primitives;
-                var primitivesLength = primitives.length;
-                for (var i = 0; i < primitivesLength; i++) {
-                    var primitive = primitives[i];
+                ForEach.meshPrimitive(mesh, function(primitive, primitiveId) {
                     var programId = getProgramForPrimitive(model, primitive);
                     var programPrimitives = model._programPrimitives[programId];
                     if (!defined(programPrimitives)) {
                         programPrimitives = {};
                         model._programPrimitives[programId] = programPrimitives;
                     }
-                    programPrimitives[id + '.primitive.' + i] = primitive;
+                    programPrimitives[meshId + '.primitive.' + primitiveId] = primitive;
+                });
                 }
-            }
         });
 
         model._runtime.meshesByName = runtimeMeshesByName;
@@ -1959,35 +1937,14 @@ define([
         return result.shader;
     }
 
-    function hasPremultipliedAlpha(model) {
-        var gltf = model.gltf;
-        return defined(gltf.asset) ? defaultValue(gltf.asset.premultipliedAlpha, false) : false;
-    }
-
-    function modifyShaderForColor(shader, premultipliedAlpha) {
+    function modifyShaderForColor(shader) {
         shader = ShaderSource.replaceMain(shader, 'gltf_blend_main');
         shader +=
             'uniform vec4 gltf_color; \n' +
             'uniform float gltf_colorBlend; \n' +
             'void main() \n' +
             '{ \n' +
-            '    gltf_blend_main(); \n';
-
-        // Un-premultiply the alpha so that blending is correct.
-
-        // Avoid divide-by-zero. The code below is equivalent to:
-        // if (gl_FragColor.a > 0.0)
-        // {
-        //     gl_FragColor.rgb /= gl_FragColor.a;
-        // }
-
-        if (premultipliedAlpha) {
-            shader +=
-                '    float alpha = 1.0 - ceil(gl_FragColor.a) + gl_FragColor.a; \n' +
-                '    gl_FragColor.rgb /= alpha; \n';
-        }
-
-        shader +=
+            '    gltf_blend_main(); \n' +
             '    gl_FragColor.rgb = mix(gl_FragColor.rgb, gltf_color.rgb, gltf_colorBlend); \n' +
             '    float highlight = ceil(gltf_colorBlend); \n' +
             '    gl_FragColor.rgb *= mix(gltf_color.rgb, vec3(1.0), highlight); \n' +
@@ -2005,19 +1962,19 @@ define([
     }
 
     var CreateProgramJob = function() {
-        this.id = undefined;
+        this.programToCreate = undefined;
         this.model = undefined;
         this.context = undefined;
     };
 
-    CreateProgramJob.prototype.set = function(id, model, context) {
-        this.id = id;
+    CreateProgramJob.prototype.set = function(programToCreate, model, context) {
+        this.programToCreate = programToCreate;
         this.model = model;
         this.context = context;
     };
 
     CreateProgramJob.prototype.execute = function() {
-        createProgram(this.id, this.model, this.context);
+        createProgram(this.programToCreate, this.model, this.context);
     };
 
     ///////////////////////////////////////////////////////////////////////////
@@ -2025,8 +1982,8 @@ define([
     // When building programs for the first time, do not include modifiers for clipping planes and color
     // since this is the version of the program that will be cached for use with other Models.
     function createProgram(programToCreate, model, context) {
-        var programId = programToCreate.id;
-        var techniqueId = programToCreate.technique;
+        var programId = programToCreate.programId;
+        var techniqueId = programToCreate.techniqueId;
         var program = model._sourcePrograms[programId];
         var shaders = model._sourceShaders;
 
@@ -2064,8 +2021,8 @@ define([
     }
 
     function recreateProgram(programToCreate, model, context) {
-        var programId = programToCreate.id;
-        var techniqueId = programToCreate.technique;
+        var programId = programToCreate.programId;
+        var techniqueId = programToCreate.techniqueId;
         var program = model._sourcePrograms[programId];
         var shaders = model._sourceShaders;
 
@@ -2084,7 +2041,7 @@ define([
 
         var finalFS = fs;
         if (isColorShadingEnabled(model)) {
-            finalFS = Model._modifyShaderForColor(finalFS, model._hasPremultipliedAlpha);
+            finalFS = Model._modifyShaderForColor(finalFS);
         }
         if (addClippingPlaneCode) {
             finalFS = modifyShaderForClippingPlanes(finalFS, clippingPlaneCollection, context);
@@ -2196,24 +2153,18 @@ define([
 
     function createSamplers(model) {
         var loadResources = model._loadResources;
-
         if (loadResources.createSamplers) {
             loadResources.createSamplers = false;
 
             var rendererSamplers = model._rendererResources.samplers;
-            var samplers = model.gltf.samplers;
-            for (var id in samplers) {
-                if (samplers.hasOwnProperty(id)) {
-                    var sampler = samplers[id];
-
-                    rendererSamplers[id] = new Sampler({
-                        wrapS : sampler.wrapS,
-                        wrapT : sampler.wrapT,
-                        minificationFilter : sampler.minFilter,
-                        magnificationFilter : sampler.magFilter
-                    });
-                }
-            }
+            ForEach.sampler(model.gltf, function(sampler, samplerId) {
+                rendererSamplers[samplerId] = new Sampler({
+                    wrapS: sampler.wrapS,
+                    wrapT: sampler.wrapT,
+                    minificationFilter: sampler.minFilter,
+                    magnificationFilter: sampler.magFilter
+                });
+            });
         }
     }
 
@@ -2550,12 +2501,8 @@ define([
 
     function createVertexArrays(model, context) {
         var loadResources = model._loadResources;
-
-        if (!loadResources.finishedBuffersCreation() || !loadResources.finishedProgramCreation()) {
-            return;
-        }
-
-        if (!loadResources.createVertexArrays) {
+        if (!loadResources.finishedBuffersCreation() || !loadResources.finishedProgramCreation()
+                || !loadResources.createVertexArrays) {
             return;
         }
         loadResources.createVertexArrays = false;
@@ -2564,115 +2511,91 @@ define([
         var rendererVertexArrays = model._rendererResources.vertexArrays;
         var gltf = model.gltf;
         var accessors = gltf.accessors;
-        var meshes = gltf.meshes;
-
-        for (var meshId in meshes) {
-            if (meshes.hasOwnProperty(meshId)) {
-                var primitives = meshes[meshId].primitives;
-                var primitivesLength = primitives.length;
-
-                for (var i = 0; i < primitivesLength; ++i) {
-                    var primitive = primitives[i];
-                    var decodedData = model._decodedData[meshId + '.primitive.' + i];
-
-                    // GLTF_SPEC: This does not take into account attribute arrays,
-                    // indicated by when an attribute points to a parameter with a
-                    // count property.
-                    //
-                    // https://github.com/KhronosGroup/glTF/issues/258
-
-                    var attributeLocations = getAttributeLocations(model, primitive);
-
-                    var attributeName;
-                    var attributeLocation;
-                    var attribute;
-                    var attributes = [];
-                    var primitiveAttributes = primitive.attributes;
-                    for (attributeName in primitiveAttributes) {
-                        if (primitiveAttributes.hasOwnProperty(attributeName)) {
-                            attributeLocation = attributeLocations[attributeName];
-                            // Skip if the attribute is not used by the material, e.g., because the asset was exported
-                            // with an attribute that wasn't used and the asset wasn't optimized.
-                            if (defined(attributeLocation)) {
-                                // Use attributes of previously decoded draco geometry
-                                if (defined(decodedData)) {
-                                    var decodedAttributes = decodedData.attributes;
-                                    if (decodedAttributes.hasOwnProperty(attributeName)) {
-                                        var decodedAttribute = decodedAttributes[attributeName];
-                                        attributes.push({
-                                            index : attributeLocation,
-                                            vertexBuffer : rendererBuffers[decodedAttribute.bufferView],
-                                            componentsPerAttribute : decodedAttribute.componentsPerAttribute,
-                                            componentDatatype : decodedAttribute.componentDatatype,
-                                            normalize: decodedAttribute.normalized,
-                                            offsetInBytes : decodedAttribute.byteOffset,
-                                            strideInBytes : decodedAttribute.byteStride
-                                        });
-
-                                        continue;
-                                    }
-                                }
-
-                                var a = accessors[primitiveAttributes[attributeName]];
-
-                                var normalize = false;
-                                if (defined(a.normalized) && a.normalized) {
-                                    normalize = true;
-                                }
-
-                                attributes.push({
-                                    index : attributeLocation,
-                                    vertexBuffer : rendererBuffers[a.bufferView],
-                                    componentsPerAttribute : numberOfComponentsForType(a.type),
-                                    componentDatatype : a.componentType,
-                                    normalize : normalize,
-                                    offsetInBytes : a.byteOffset,
-                                    strideInBytes : getAccessorByteStride(gltf, a)
-                                });
-                            }
-                        }
-                    }
-
-                    // Add pre-created attributes
-                    var precreatedAttributes = model._precreatedAttributes;
-                    if (defined(precreatedAttributes)) {
-                        for (attributeName in precreatedAttributes) {
-                            if (precreatedAttributes.hasOwnProperty(attributeName)) {
-                                attributeLocation = attributeLocations[attributeName];
-                                if (defined(attributeLocation)) {
-                                    attribute = precreatedAttributes[attributeName];
-                                    attribute.index = attributeLocation;
-                                    attributes.push(attribute);
-                                }
-                            }
-                        }
-                    }
-
-                    var indexBuffer;
-                    if (defined(primitive.indices)) {
-                        var accessor = accessors[primitive.indices];
-                        var bufferView = accessor.bufferView;
-
-                        // Use buffer of previously decoded draco geometry
+        ForEach.mesh(gltf, function(mesh, meshId) {
+            ForEach.meshPrimitive(mesh, function(primitive, primitiveId) {
+                var attributes = [];
+                var attributeLocation;
+                var attributeLocations = getAttributeLocations(model, primitive);
+                var decodedData = model._decodedData[meshId + '.primitive.' + primitiveId];
+                ForEach.meshPrimitiveAttribute(primitive, function(accessorId, attributeName) {
+                    // Skip if the attribute is not used by the material, e.g., because the asset
+                    // was exported with an attribute that wasn't used and the asset wasn't optimized.
+                    attributeLocation = attributeLocations[attributeName];
+                    if (defined(attributeLocation)) {
+                        // Use attributes of previously decoded draco geometry
                         if (defined(decodedData)) {
-                            bufferView = decodedData.bufferView;
+                            var decodedAttributes = decodedData.attributes;
+                            if (decodedAttributes.hasOwnProperty(attributeName)) {
+                                var decodedAttribute = decodedAttributes[attributeName];
+                                attributes.push({
+                                    index: attributeLocation,
+                                    vertexBuffer: rendererBuffers[decodedAttribute.bufferView],
+                                    componentsPerAttribute: decodedAttribute.componentsPerAttribute,
+                                    componentDatatype: decodedAttribute.componentDatatype,
+                                    normalize: decodedAttribute.normalized,
+                                    offsetInBytes: decodedAttribute.byteOffset,
+                                    strideInBytes: decodedAttribute.byteStride
+                                });
+
+                                return;
+                            }
                         }
 
-                        indexBuffer = rendererBuffers[bufferView];
+                        var a = accessors[accessorId];
+                        var normalize = defined(a.normalized) && a.normalized;
+                        attributes.push({
+                            index: attributeLocation,
+                            vertexBuffer: rendererBuffers[a.bufferView],
+                            componentsPerAttribute: numberOfComponentsForType(a.type),
+                            componentDatatype: a.componentType,
+                            normalize: normalize,
+                            offsetInBytes: a.byteOffset,
+                            strideInBytes: getAccessorByteStride(gltf, a)
+                        });
                     }
-                    rendererVertexArrays[meshId + '.primitive.' + i] = new VertexArray({
-                        context : context,
-                        attributes : attributes,
-                        indexBuffer : indexBuffer
-                    });
+                });
+
+                // Add pre-created attributes
+                var attribute;
+                var attributeName;
+                var precreatedAttributes = model._precreatedAttributes;
+                if (defined(precreatedAttributes)) {
+                    for (attributeName in precreatedAttributes) {
+                        if (precreatedAttributes.hasOwnProperty(attributeName)) {
+                            attributeLocation = attributeLocations[attributeName];
+                            if (defined(attributeLocation)) {
+                                attribute = precreatedAttributes[attributeName];
+                                attribute.index = attributeLocation;
+                                attributes.push(attribute);
+                            }
+                        }
+                    }
                 }
-            }
-        }
+
+                var indexBuffer;
+                if (defined(primitive.indices)) {
+                    var accessor = accessors[primitive.indices];
+                    var bufferView = accessor.bufferView;
+
+                    // Use buffer of previously decoded draco geometry
+                    if (defined(decodedData)) {
+                        bufferView = decodedData.bufferView;
+                    }
+
+                    indexBuffer = rendererBuffers[bufferView];
+                }
+                rendererVertexArrays[meshId + '.primitive.' + primitiveId] = new VertexArray({
+                    context: context,
+                    attributes: attributes,
+                    indexBuffer: indexBuffer
+                });
+            });
+        });
     }
 
     function getBooleanStates(material) {
         var booleanStates = {};
-        booleanStates[WebGLConstants.BLEND] = (defined(material.alphaMode) && material.alphaMode !== 'OPAQUE');
+        booleanStates[WebGLConstants.BLEND] = (material.alphaMode === 'BLEND');
         booleanStates[WebGLConstants.CULL_FACE] = !material.doubleSided;
         booleanStates[WebGLConstants.DEPTH_TEST] = true;
         booleanStates[WebGLConstants.POLYGON_OFFSET_FILL] = false;
@@ -2680,19 +2603,18 @@ define([
         return booleanStates;
     }
 
-    function createRenderStates(model, context) {
+    function createRenderStates(model) {
         var loadResources = model._loadResources;
-
         if (loadResources.createRenderStates) {
             loadResources.createRenderStates = false;
 
             ForEach.material(model.gltf, function (material, materialId) {
-                createRenderStateForMaterial(model, material, materialId, context);
+                createRenderStateForMaterial(model, material, materialId);
             });
         }
     }
 
-    function createRenderStateForMaterial(model, material, materialId, context) {
+    function createRenderStateForMaterial(model, material, materialId) {
         var rendererRenderStates = model._rendererResources.renderStates;
 
         var blendEquationSeparate = [
@@ -2719,15 +2641,6 @@ define([
         };
 
         var booleanStates = getBooleanStates(material);
-        // Change the render state to use traditional alpha blending instead of premultiplied alpha blending
-        if (booleanStates[WebGLConstants.BLEND] && model._hasPremultipliedAlpha) {
-            if ((blendFuncSeparate[0] === WebGLConstants.ONE) && (blendFuncSeparate[1] === WebGLConstants.ONE_MINUS_SRC_ALPHA)) {
-                blendFuncSeparate[0] = WebGLConstants.SRC_ALPHA;
-                blendFuncSeparate[1] = WebGLConstants.ONE_MINUS_SRC_ALPHA;
-                blendFuncSeparate[2] = WebGLConstants.SRC_ALPHA;
-                blendFuncSeparate[3] = WebGLConstants.ONE_MINUS_SRC_ALPHA;
-            }
-        }
 
         rendererRenderStates[materialId] = RenderState.fromCache({
             frontFace : defined(statesFunctions.frontFace) ? statesFunctions.frontFace[0] : WebGLConstants.CCW,
@@ -3157,8 +3070,6 @@ define([
             uniformMap = combine(uniformMap, quantizedUniformMap);
 
             var rs = rendererRenderStates[primitive.material];
-
-            // GLTF_SPEC: Official means to determine translucency. https://github.com/KhronosGroup/glTF/issues/105
             var isTranslucent = rs.blending.enabled;
 
             var owner = model._pickObject;
@@ -3368,7 +3279,6 @@ define([
 
         // Retain references to updated source shaders for rebuilding as needed
         var shaders = model._sourceShaders;
-        model._hasPremultipliedAlpha = hasPremultipliedAlpha(model);
 
         var quantizedVertexShaders = model._quantizedVertexShaders;
         var toClipCoordinates = model._toClipCoordinatesGLSL = {};
@@ -3377,6 +3287,9 @@ define([
             if (programs.hasOwnProperty(programId)) {
                 var program = programs[programId];
                 var shader = shaders[program.vertexShader].extras._pipeline.source;
+
+                ModelUtility.checkSupportedGlExtensions(program.glExtensions, context);
+
                 if (model.extensionsUsed.WEB3D_quantized_attributes || model._dequantizeInShader) {
                     var quantizedVS = quantizedVertexShaders[programId];
                     if (!defined(quantizedVS)) {
@@ -3391,7 +3304,6 @@ define([
             }
         }
 
-        ModelUtility.checkSupportedGlExtensions(model.gltf.glExtensionsUsed, context);
         if (model._loadRendererResourcesFromCache) {
             var resources = model._rendererResources;
             var cachedResources = model._cachedRendererResources;
@@ -3424,7 +3336,7 @@ define([
 
         if (!model._loadRendererResourcesFromCache) {
             createVertexArrays(model, context); // using glTF meshes
-            createRenderStates(model, context); // using glTF materials/techniques/states
+            createRenderStates(model); // using glTF materials/techniques/states
             // Long-term, we might not cache render states if they could change
             // due to an animation, e.g., a uniform going from opaque to transparent.
             // Could use copy-on-write if it is worth it.  Probably overkill.
@@ -4265,8 +4177,7 @@ define([
                     // glTF pipeline updates
                     addPipelineExtras(this.gltf);
                     updateVersion(this.gltf);
-                    if (defined(this.gltf.asset) && defined(this.gltf.asset.extras) &&
-                            this.gltf.asset.extras.gltf_pipeline_upgrade_10to20) {
+                    if (this.gltf.extras._pipeline.gltf_pipeline_upgrade_10to20) {
                         this._forwardAxis = Axis.X;
                     }
                     addDefaults(this.gltf);
@@ -4567,8 +4478,8 @@ define([
                     if (!visitedPrograms[programId]) {
                         visitedPrograms[programId] = true;
                         recreateProgram({
-                            id: programId,
-                            technique: techniqueId
+                            programId: programId,
+                            techniqueId: techniqueId
                         }, model, frameState.context);
                     }
                 }
