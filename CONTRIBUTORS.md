@@ -97,6 +97,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 * [virtualcitySYSTEMS GmbH](https://www.virtualcitysystems.de)
    * [Jannes Bolling](https://github.com/jbo023)
    * [Arne Schilling](https://github.com/arneschilling)
+   * [Ben Kuster](https://github.com/bkuster)
 * [Logilab](https://www.logilab.fr/)
    * [Florent Cayré](https://github.com/fcayre/)
 * [webiks](https://www.webiks.com)
