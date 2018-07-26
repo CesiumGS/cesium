@@ -4,10 +4,10 @@ if (typeof self === 'undefined') {
 
 self.onmessage = function(event) {
     var data = event.data;
-
     require(data.loaderConfig, [data.workerModule], function(workerModule) {
         //replace onmessage with the required-in workerModule
         self.onmessage = workerModule;
+        CESIUM_BASE_URL = data.loaderConfig.baseUrl;
     });
 };
 

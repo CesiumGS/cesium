@@ -180,7 +180,7 @@ define([
 
         this.time = 0.0; // For styling
         this.shadows = ShadowMode.ENABLED;
-        this.boundingSphere = undefined;
+        this._boundingSphere = undefined;
 
         this.clippingPlanes = undefined;
         this.isClipped = false;
@@ -228,6 +228,17 @@ define([
             },
             set : function(value) {
                 this._highlightColor = Color.clone(value, this._highlightColor);
+            }
+        },
+
+        boundingSphere : {
+            get : function() {
+                if (defined(this._drawCommand)) {
+                    return this._drawCommand.boundingVolume;
+                }
+            },
+            set : function(value) {
+                this._boundingSphere = BoundingSphere.clone(value);
             }
         }
     });
@@ -316,8 +327,6 @@ define([
         var isTranslucent = false;
         var isRGB565 = false;
         var isOctEncoded16P = false;
-        var isQuantizedDraco = false;
-        var isOctEncodedDraco = false;
 
         var dracoBuffer;
         var dracoFeatureTableProperties;
@@ -343,9 +352,18 @@ define([
             hasNormals = defined(dracoFeatureTableProperties.NORMAL);
             hasBatchIds = defined(dracoFeatureTableProperties.BATCH_ID);
             isTranslucent = defined(dracoFeatureTableProperties.RGBA);
-            isQuantizedDraco = hasPositions && pointCloud._dequantizeInShader;
-            isOctEncodedDraco = hasNormals && pointCloud._dequantizeInShader;
             pointCloud._decodingState = DecodingState.NEEDS_DECODE;
+        }
+
+        var draco;
+        if (defined(dracoBuffer)) {
+            draco = {
+                buffer : dracoBuffer,
+                featureTableProperties : dracoFeatureTableProperties,
+                batchTableProperties : dracoBatchTableProperties,
+                properties : combine(dracoFeatureTableProperties, dracoBatchTableProperties),
+                dequantizeInShader : pointCloud._dequantizeInShader
+            };
         }
 
         if (!hasPositions) {
@@ -442,19 +460,11 @@ define([
             normals : normals,
             batchIds : batchIds,
             styleableProperties : styleableProperties,
-            draco : {
-                buffer : dracoBuffer,
-                featureTableProperties : dracoFeatureTableProperties,
-                batchTableProperties : dracoBatchTableProperties,
-                properties : combine(dracoFeatureTableProperties, dracoBatchTableProperties),
-                dequantizeInShader : pointCloud._dequantizeInShader
-            }
+            draco : draco
         };
         pointCloud._pointsLength = pointsLength;
         pointCloud._isQuantized = isQuantized;
-        pointCloud._isQuantizedDraco = isQuantizedDraco;
         pointCloud._isOctEncoded16P = isOctEncoded16P;
-        pointCloud._isOctEncodedDraco = isOctEncodedDraco;
         pointCloud._isRGB565 = isRGB565;
         pointCloud._isTranslucent = isTranslucent;
         pointCloud._hasColors = hasColors;
@@ -465,16 +475,31 @@ define([
     var scratchMin = new Cartesian3();
     var scratchMax = new Cartesian3();
     var scratchPosition = new Cartesian3();
+    var randomValues;
+
+    function getRandomValues(samplesLength) {
+        // Use same random values across all runs
+        if (!defined(randomValues)) {
+            CesiumMath.setRandomNumberSeed(0);
+            randomValues = new Array(samplesLength);
+            for (var i = 0; i < samplesLength; ++i) {
+                randomValues[i] = CesiumMath.nextRandomNumber();
+            }
+        }
+        return randomValues;
+    }
 
     function computeApproximateBoundingSphereFromPositions(positions) {
+        var maximumSamplesLength = 20;
         var pointsLength = positions.length / 3;
-        var samplesLength = Math.min(pointsLength, 20);
+        var samplesLength = Math.min(pointsLength, maximumSamplesLength);
+        var randomValues = getRandomValues(maximumSamplesLength);
         var maxValue = Number.MAX_VALUE;
         var minValue = -Number.MAX_VALUE;
         var min = Cartesian3.fromElements(maxValue, maxValue, maxValue, scratchMin);
         var max = Cartesian3.fromElements(minValue, minValue, minValue, scratchMax);
         for (var i = 0; i < samplesLength; ++i) {
-            var index = Math.floor(i * pointsLength / samplesLength);
+            var index = Math.floor(randomValues[i] * pointsLength);
             var position = Cartesian3.unpack(positions, index * 3, scratchPosition);
             Cartesian3.minimumByComponent(min, position, min);
             Cartesian3.maximumByComponent(max, position, max);
@@ -634,9 +659,9 @@ define([
 
         if (pointCloud._cull) {
             if (isQuantized || isQuantizedDraco) {
-                pointCloud.boundingSphere = BoundingSphere.fromCornerPoints(Cartesian3.ZERO, pointCloud._quantizedVolumeScale);
+                pointCloud._boundingSphere = BoundingSphere.fromCornerPoints(Cartesian3.ZERO, pointCloud._quantizedVolumeScale);
             } else {
-                pointCloud.boundingSphere = computeApproximateBoundingSphereFromPositions(positions);
+                pointCloud._boundingSphere = computeApproximateBoundingSphereFromPositions(positions);
             }
         }
 
@@ -1270,15 +1295,21 @@ define([
                     var decodedRgba = defined(result.RGBA) ? result.RGBA.array : undefined;
                     var decodedNormals = defined(result.NORMAL) ? result.NORMAL.array : undefined;
                     var decodedBatchIds = defined(result.BATCH_ID) ? result.BATCH_ID.array : undefined;
-                    if (defined(decodedPositions) && pointCloud._isQuantizedDraco) {
+                    var isQuantizedDraco = defined(decodedPositions) && defined(result.POSITION.data.quantization);
+                    var isOctEncodedDraco = defined(decodedNormals) && defined(result.NORMAL.data.quantization);
+                    if (isQuantizedDraco) {
+                        // Draco quantization range == quantized volume scale - size in meters of the quantized volume
+                        // Internal quantized range is the range of values of the quantized data, e.g. 255 for 8-bit, 1023 for 10-bit, etc
                         var quantization = result.POSITION.data.quantization;
                         var range = quantization.range;
                         pointCloud._quantizedVolumeScale = Cartesian3.fromElements(range, range, range);
                         pointCloud._quantizedVolumeOffset = Cartesian3.unpack(quantization.minValues);
                         pointCloud._quantizedRange = (1 << quantization.quantizationBits) - 1.0;
+                        pointCloud._isQuantizedDraco = true;
                     }
-                    if (defined(decodedNormals) && pointCloud._isOctEncodedDraco) {
+                    if (isOctEncodedDraco) {
                         pointCloud._octEncodedRange = (1 << result.NORMAL.data.quantization.quantizationBits) - 1.0;
+                        pointCloud._isOctEncodedDraco = true;
                     }
                     var styleableProperties = parsedContent.styleableProperties;
                     var batchTableProperties = draco.batchTableProperties;
@@ -1356,7 +1387,7 @@ define([
             }
 
             var boundingSphere = this._drawCommand.boundingVolume;
-            BoundingSphere.clone(this.boundingSphere, boundingSphere);
+            BoundingSphere.clone(this._boundingSphere, boundingSphere);
 
             if (this._cull) {
                 var center = boundingSphere.center;

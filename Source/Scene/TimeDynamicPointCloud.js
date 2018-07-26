@@ -12,6 +12,7 @@ define([
         '../Core/Math',
         '../Core/Matrix4',
         '../Core/Resource',
+        '../ThirdParty/when',
         './ClippingPlaneCollection',
         './PointCloud',
         './PointCloudEyeDomeLighting',
@@ -32,6 +33,7 @@ define([
         CesiumMath,
         Matrix4,
         Resource,
+        when,
         ClippingPlaneCollection,
         PointCloud,
         PointCloudEyeDomeLighting,
@@ -58,7 +60,7 @@ define([
      * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] A 4x4 transformation matrix that transforms the point cloud.
      * @param {ShadowMode} [options.shadows=ShadowMode.ENABLED] Determines whether the point cloud casts or receives shadows from each light source.
      * @param {Number} [options.maximumMemoryUsage=256] The maximum amount of memory in MB that can be used by the point cloud.
-     * @param {Object} [options.pointCloudShading] Options for constructing a {@link PointCloudShading} object to control point attenuation and eye dome lighting.
+     * @param {Object} [options.shading] Options for constructing a {@link PointCloudShading} object to control point attenuation and eye dome lighting.
      * @param {Cesium3DTileStyle} [options.style] The style, defined using the {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/Styling|3D Tiles Styling language}, applied to each point in the point cloud.
      * @param {ClippingPlaneCollection} [options.clippingPlanes] The {@link ClippingPlaneCollection} used to selectively disable rendering the point cloud.
      */
@@ -120,7 +122,7 @@ define([
          * Options for controlling point size based on geometric error and eye dome lighting.
          * @type {PointCloudShading}
          */
-        this.pointCloudShading = new PointCloudShading(options.pointCloudShading);
+        this.shading = new PointCloudShading(options.shading);
 
         /**
          * The style, defined using the
@@ -150,21 +152,43 @@ define([
         this.style = options.style;
 
         /**
-         * The event fired to indicate that a frame failed to load.
+         * The event fired to indicate that a frame failed to load. A frame may fail to load if the
+         * request for its uri fails or processing fails due to invalid content.
          * <p>
          * If there are no event listeners, error messages will be logged to the console.
          * </p>
+         * <p>
+         * The error object passed to the listener contains two properties:
+         * <ul>
+         * <li><code>uri</code>: the uri of the failed frame.</li>
+         * <li><code>message</code>: the error message.</li>
+         * </ul>
          *
          * @type {Event}
          * @default new Event()
          *
          * @example
          * pointCloud.frameFailed.addEventListener(function(error) {
-         *     console.log('An error occurred loading frame: ' + error.url);
+         *     console.log('An error occurred loading frame: ' + error.uri);
          *     console.log('Error: ' + error.message);
          * });
          */
         this.frameFailed = new Event();
+
+        /**
+         * The event fired to indicate that a new frame was rendered.
+         * <p>
+         * The time dynamic point cloud {@link TimeDynamicPointCloud} is passed to the event listener.
+         * </p>
+         * @type {Event}
+         * @default new Event()
+         *
+         * @example
+         * pointCloud.frameChanged.addEventListener(function(timeDynamicPointCloud) {
+         *     viewer.camera.viewBoundingSphere(timeDynamicPointCloud.boundingSphere);
+         * });
+         */
+        this.frameChanged = new Event();
 
         this._clock = options.clock;
         this._intervals = options.intervals;
@@ -181,6 +205,7 @@ define([
         this._nextInterval = undefined;
         this._lastRenderedFrame = undefined;
         this._clockMultiplier = 0.0;
+        this._readyPromise = when.defer();
 
         // For calculating average load time of the last N frames
         this._runningSum = 0.0;
@@ -220,6 +245,36 @@ define([
         totalMemoryUsageInBytes : {
             get : function() {
                 return this._totalMemoryUsageInBytes;
+            }
+        },
+
+        /**
+         * The bounding sphere of the frame being rendered. Returns <code>undefined</code> if no frame is being rendered.
+         *
+         * @memberof TimeDynamicPointCloud.prototype
+         *
+         * @type {BoundingSphere}
+         * @readonly
+         */
+        boundingSphere : {
+            get : function() {
+                if (defined(this._lastRenderedFrame)) {
+                    return this._lastRenderedFrame.pointCloud.boundingSphere;
+                }
+            }
+        },
+
+        /**
+         * Gets the promise that will be resolved when the point cloud renders a frame for the first time.
+         *
+         * @memberof TimeDynamicPointCloud.prototype
+         *
+         * @type {Promise.<TimeDynamicPointCloud>}
+         * @readonly
+         */
+        readyPromise : {
+            get : function() {
+                return this._readyPromise.promise;
             }
         }
     });
@@ -328,7 +383,7 @@ define([
             var message = defined(error.message) ? error.message : error.toString();
             if (that.frameFailed.numberOfListeners > 0) {
                 that.frameFailed.raiseEvent({
-                    url : uri,
+                    uri : uri,
                     message : message
                 });
             } else {
@@ -416,9 +471,9 @@ define([
     var scratchModelMatrix = new Matrix4();
 
     function getGeometricError(that, pointCloud) {
-        var pointCloudShading = that.pointCloudShading;
-        if (defined(pointCloudShading) && defined(pointCloudShading.baseResolution)) {
-            return pointCloudShading.baseResolution;
+        var shading = that.shading;
+        if (defined(shading) && defined(shading.baseResolution)) {
+            return shading.baseResolution;
         } else if (defined(pointCloud.boundingSphere)) {
             return CesiumMath.cbrt(pointCloud.boundingSphere.volume() / pointCloud.pointsLength);
         }
@@ -426,9 +481,9 @@ define([
     }
 
     function getMaximumAttenuation(that) {
-        var pointCloudShading = that.pointCloudShading;
-        if (defined(pointCloudShading) && defined(pointCloudShading.maximumAttenuation)) {
-            return pointCloudShading.maximumAttenuation;
+        var shading = that.shading;
+        if (defined(shading) && defined(shading.maximumAttenuation)) {
+            return shading.maximumAttenuation;
         }
 
         // Return a hardcoded maximum attenuation. For a tileset this would instead be the maximum screen space error.
@@ -445,11 +500,11 @@ define([
         pointCloud.clippingPlanes = that._clippingPlanes;
         pointCloud.isClipped = updateState.isClipped;
 
-        var pointCloudShading = that.pointCloudShading;
-        if (defined(pointCloudShading)) {
-            pointCloud.attenuation = pointCloudShading.attenuation;
+        var shading = that.shading;
+        if (defined(shading)) {
+            pointCloud.attenuation = shading.attenuation;
             pointCloud.geometricError = getGeometricError(that, pointCloud);
-            pointCloud.geometricErrorScale = pointCloudShading.geometricErrorScale;
+            pointCloud.geometricErrorScale = shading.geometricErrorScale;
             pointCloud.maximumAttenuation = getMaximumAttenuation(that);
         }
         pointCloud.update(frameState);
@@ -560,12 +615,7 @@ define([
     };
 
     /**
-     * Called when {@link Viewer} or {@link CesiumWidget} render the scene to
-     * get the draw commands needed to render this primitive.
-     * <p>
-     * Do not call this function directly.  This is documented just to
-     * list the exceptions that may be propagated when the scene is rendered:
-     * </p>
+     * @private
      */
     TimeDynamicPointCloud.prototype.update = function(frameState) {
         if (frameState.mode === SceneMode.MORPHING) {
@@ -615,7 +665,7 @@ define([
         updateState.timeSinceLoad = timeSinceLoad;
         updateState.isClipped = isClipped;
 
-        var pointCloudShading = this.pointCloudShading;
+        var shading = this.shading;
         var eyeDomeLighting = this._pointCloudEyeDomeLighting;
 
         var commandList = frameState.commandList;
@@ -664,6 +714,21 @@ define([
             loadFrame(this, nextInterval, updateState, frameState);
         }
 
+        var that = this;
+        if (defined(frame) && !defined(this._lastRenderedFrame)) {
+            frameState.afterRender.push(function() {
+                that._readyPromise.resolve(that);
+            });
+        }
+
+        if (defined(frame) && (frame !== this._lastRenderedFrame)) {
+            if (that.frameChanged.numberOfListeners > 0) {
+                frameState.afterRender.push(function() {
+                    that.frameChanged.raiseEvent(that);
+                });
+            }
+        }
+
         this._previousInterval = previousInterval;
         this._nextInterval = nextInterval;
         this._lastRenderedFrame = frame;
@@ -678,8 +743,8 @@ define([
         var lengthAfterUpdate = commandList.length;
         var addedCommandsLength = lengthAfterUpdate - lengthBeforeUpdate;
 
-        if (defined(pointCloudShading) && pointCloudShading.attenuation && pointCloudShading.eyeDomeLighting && (addedCommandsLength > 0)) {
-            eyeDomeLighting.update(frameState, lengthBeforeUpdate, pointCloudShading);
+        if (defined(shading) && shading.attenuation && shading.eyeDomeLighting && (addedCommandsLength > 0)) {
+            eyeDomeLighting.update(frameState, lengthBeforeUpdate, shading);
         }
     };
 

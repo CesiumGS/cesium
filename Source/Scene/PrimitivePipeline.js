@@ -1,6 +1,7 @@
 define([
         '../Core/BoundingSphere',
         '../Core/ComponentDatatype',
+        '../Core/defaultValue',
         '../Core/defined',
         '../Core/DeveloperError',
         '../Core/Ellipsoid',
@@ -17,6 +18,7 @@ define([
     ], function(
         BoundingSphere,
         ComponentDatatype,
+        defaultValue,
         defined,
         DeveloperError,
         Ellipsoid,
@@ -301,7 +303,7 @@ define([
                 boundingSpheres[i] = geometry.boundingSphere;
                 boundingSpheresCV[i] = geometry.boundingSphereCV;
                 if (hasOffset) {
-                    offsetInstanceExtend[i] = defined(instance.geometry.attributes) && defined(instance.geometry.attributes.applyOffset) && instance.geometry.attributes.applyOffset.values.indexOf(0) !== -1;
+                    offsetInstanceExtend[i] = instance.geometry.offsetAttribute;
                 }
             }
 
@@ -366,7 +368,7 @@ define([
 
             var attributes = geometry.attributes;
 
-            count += 6 + 2 * BoundingSphere.packedLength + (defined(geometry.indices) ? geometry.indices.length : 0);
+            count += 7 + 2 * BoundingSphere.packedLength + (defined(geometry.indices) ? geometry.indices.length : 0);
 
             for (var property in attributes) {
                 if (attributes.hasOwnProperty(property) && defined(attributes[property])) {
@@ -402,6 +404,7 @@ define([
 
             packedData[count++] = geometry.primitiveType;
             packedData[count++] = geometry.geometryType;
+            packedData[count++] = defaultValue(geometry.offsetAttribute, -1);
 
             var validBoundingSphere = defined(geometry.boundingSphere) ? 1.0 : 0.0;
             packedData[count++] = validBoundingSphere;
@@ -482,6 +485,10 @@ define([
 
             var primitiveType = packedGeometry[packedGeometryIndex++];
             var geometryType = packedGeometry[packedGeometryIndex++];
+            var offsetAttribute = packedGeometry[packedGeometryIndex++];
+            if (offsetAttribute === -1) {
+                offsetAttribute = undefined;
+            }
 
             var boundingSphere;
             var boundingSphereCV;
@@ -542,7 +549,8 @@ define([
                 boundingSphere : boundingSphere,
                 boundingSphereCV : boundingSphereCV,
                 indices : indices,
-                attributes : attributes
+                attributes : attributes,
+                offsetAttribute: offsetAttribute
             });
         }
 

@@ -204,9 +204,9 @@ defineSuite([
     });
 
     it('pause button restores current state', function() {
-        clockViewModel.startTime = JulianDate.fromIso8601("2012-01-01T00:00:00");
-        clockViewModel.stopTime = JulianDate.fromIso8601("2012-01-02T00:00:00");
-        clockViewModel.currentTime = JulianDate.fromIso8601("2012-01-01T12:00:00");
+        clockViewModel.startTime = JulianDate.fromIso8601('2012-01-01T00:00:00');
+        clockViewModel.stopTime = JulianDate.fromIso8601('2012-01-02T00:00:00');
+        clockViewModel.currentTime = JulianDate.fromIso8601('2012-01-01T12:00:00');
         clockViewModel.multiplier = 1;
         clockViewModel.clockStep = ClockStep.TICK_DEPENDENT;
         clockViewModel.clockRange = ClockRange.UNBOUNDED;
@@ -251,10 +251,10 @@ defineSuite([
     });
 
     it('animating backwards pauses with a bounded startTime', function() {
-        var centerTime = JulianDate.fromIso8601("2012-01-01T12:00:00");
+        var centerTime = JulianDate.fromIso8601('2012-01-01T12:00:00');
 
-        clockViewModel.startTime = JulianDate.fromIso8601("2012-01-01T00:00:00");
-        clockViewModel.stopTime = JulianDate.fromIso8601("2012-01-02T00:00:00");
+        clockViewModel.startTime = JulianDate.fromIso8601('2012-01-01T00:00:00');
+        clockViewModel.stopTime = JulianDate.fromIso8601('2012-01-02T00:00:00');
         clockViewModel.clockStep = ClockStep.TICK_DEPENDENT;
         clockViewModel.currentTime = centerTime;
         clockViewModel.shouldAnimate = false;
@@ -299,10 +299,10 @@ defineSuite([
     });
 
     it('dragging shuttle ring does not pause with bounded start or stop Time', function() {
-        var centerTime = JulianDate.fromIso8601("2012-01-01T12:00:00");
+        var centerTime = JulianDate.fromIso8601('2012-01-01T12:00:00');
 
-        clockViewModel.startTime = JulianDate.fromIso8601("2012-01-01T00:00:00");
-        clockViewModel.stopTime = JulianDate.fromIso8601("2012-01-02T00:00:00");
+        clockViewModel.startTime = JulianDate.fromIso8601('2012-01-01T00:00:00');
+        clockViewModel.stopTime = JulianDate.fromIso8601('2012-01-02T00:00:00');
         clockViewModel.clockStep = ClockStep.TICK_DEPENDENT;
         clockViewModel.clockRange = ClockRange.CLAMPED;
         clockViewModel.multiplier = 1;
@@ -339,10 +339,10 @@ defineSuite([
     });
 
     it('animating forward pauses with a bounded stopTime', function() {
-        var centerTime = JulianDate.fromIso8601("2012-01-01T12:00:00");
+        var centerTime = JulianDate.fromIso8601('2012-01-01T12:00:00');
 
-        clockViewModel.startTime = JulianDate.fromIso8601("2012-01-01T00:00:00");
-        clockViewModel.stopTime = JulianDate.fromIso8601("2012-01-02T00:00:00");
+        clockViewModel.startTime = JulianDate.fromIso8601('2012-01-01T00:00:00');
+        clockViewModel.stopTime = JulianDate.fromIso8601('2012-01-02T00:00:00');
         clockViewModel.clockStep = ClockStep.TICK_DEPENDENT;
         clockViewModel.currentTime = centerTime;
         clockViewModel.shouldAnimate = false;

@@ -142,7 +142,7 @@ defineSuite([
         ellipsoid : new Ellipsoid(12, 13, 14)
     });
     var packedInstance = [3, 1, 2, 3, 4, 5, 6, 7, 8, 9, 3, 1, 0, 0, 1, 0, 1, 0, 1, 0, 0, 1, 1, 12, 13, 14, 1, 0, 11];
-    createPackableSpecs(SimplePolylineGeometry, line, packedInstance, "per vertex colors");
+    createPackableSpecs(SimplePolylineGeometry, line, packedInstance, 'per vertex colors');
 
     line = new SimplePolylineGeometry({
         positions : positions,

@@ -1,5 +1,6 @@
 defineSuite([
         'DataSources/StaticGroundPolylinePerMaterialBatch',
+        'Core/ApproximateTerrainHeights',
         'Core/BoundingSphere',
         'Core/Cartesian3',
         'Core/Color',
@@ -21,6 +22,7 @@ defineSuite([
         'Specs/pollToPromise'
     ], function(
         StaticGroundPolylinePerMaterialBatch,
+        ApproximateTerrainHeights,
         BoundingSphere,
         Cartesian3,
         Color,
@@ -46,10 +48,18 @@ defineSuite([
     var scene;
     beforeAll(function() {
         scene = createScene();
+
+        return GroundPolylinePrimitive.initializeTerrainHeights();
     });
 
     afterAll(function() {
         scene.destroyForSpecs();
+
+        GroundPolylinePrimitive._initPromise = undefined;
+        GroundPolylinePrimitive._initialized = false;
+
+        ApproximateTerrainHeights._initPromise = undefined;
+        ApproximateTerrainHeights._terrainHeights = undefined;
     });
 
     function createGroundPolyline() {

@@ -167,6 +167,7 @@ define([
         this._asset = undefined; // Metadata for the entire tileset
         this._properties = undefined; // Metadata for per-model/point/etc properties
         this._geometricError = undefined; // Geometric error when the tree is not rendered at all
+        this._extensionsUsed = undefined;
         this._gltfUpAxis = undefined;
         this._processingQueue = [];
         this._selectedTiles = [];
@@ -417,6 +418,12 @@ define([
          * <p>
          * If there are no event listeners, error messages will be logged to the console.
          * </p>
+         * <p>
+         * The error object passed to the listener contains two properties:
+         * <ul>
+         * <li><code>url</code>: the url of the failed tile.</li>
+         * <li><code>message</code>: the error message.</li>
+         * </ul>
          *
          * @type {Event}
          * @default new Event()
@@ -709,6 +716,7 @@ define([
                 that._asset = tilesetJson.asset;
                 that._properties = tilesetJson.properties;
                 that._geometricError = tilesetJson.geometricError;
+                that._extensionsUsed = tilesetJson.extensionsUsed;
                 that._gltfUpAxis = gltfUpAxis;
                 that._readyPromise.resolve(that);
             }).otherwise(function(error) {
@@ -1840,12 +1848,7 @@ define([
     ///////////////////////////////////////////////////////////////////////////
 
     /**
-     * Called when {@link Viewer} or {@link CesiumWidget} render the scene to
-     * get the draw commands needed to render this primitive.
-     * <p>
-     * Do not call this function directly.  This is documented just to
-     * list the exceptions that may be propagated when the scene is rendered:
-     * </p>
+     * @private
      */
     Cesium3DTileset.prototype.update = function(frameState) {
         if (frameState.mode === SceneMode.MORPHING) {
@@ -1913,6 +1916,20 @@ define([
                 }
             }
         }
+    };
+
+    /**
+     * <code>true</code> if the tileset JSON file lists the extension in extensionsUsed; otherwise, <code>false</code>.
+     * @param {String} extensionName The name of the extension to check.
+     *
+     * @returns {Boolean} <code>true</code> if the tileset JSON file lists the extension in extensionsUsed; otherwise, <code>false</code>.
+     */
+    Cesium3DTileset.prototype.hasExtension = function(extensionName) {
+        if (!defined(this._extensionsUsed)) {
+            return false;
+        }
+
+        return (this._extensionsUsed.indexOf(extensionName) > -1);
     };
 
     /**

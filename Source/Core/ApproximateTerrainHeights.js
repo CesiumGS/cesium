@@ -49,18 +49,19 @@ define([
      * Initializes the minimum and maximum terrain heights
      * @return {Promise}
      */
-    ApproximateTerrainHeights.initialize = function(url) {
+    ApproximateTerrainHeights.initialize = function() {
         var initPromise = ApproximateTerrainHeights._initPromise;
         if (defined(initPromise)) {
             return initPromise;
         }
 
-        url = defaultValue(url, 'Assets/approximateTerrainHeights.json');
-        ApproximateTerrainHeights._initPromise = Resource.fetchJson(buildModuleUrl(url)).then(function(json) {
-            ApproximateTerrainHeights._terrainHeights = json;
-        });
+        initPromise = Resource.fetchJson(buildModuleUrl('Assets/approximateTerrainHeights.json'))
+            .then(function(json) {
+                ApproximateTerrainHeights._terrainHeights = json;
+            });
+        ApproximateTerrainHeights._initPromise = initPromise;
 
-        return ApproximateTerrainHeights._initPromise;
+        return initPromise;
     };
 
     /**
@@ -97,9 +98,7 @@ define([
             ellipsoid.cartographicToCartesian(Rectangle.southwest(rectangle, scratchDiagonalCartographic),
                 scratchDiagonalCartesianSW);
 
-            Cartesian3.subtract(scratchDiagonalCartesianSW, scratchDiagonalCartesianNE, scratchCenterCartesian);
-            Cartesian3.add(scratchDiagonalCartesianNE,
-                Cartesian3.multiplyByScalar(scratchCenterCartesian, 0.5, scratchCenterCartesian), scratchCenterCartesian);
+            Cartesian3.midpoint(scratchDiagonalCartesianSW, scratchDiagonalCartesianNE, scratchCenterCartesian);
             var surfacePosition = ellipsoid.scaleToGeodeticSurface(scratchCenterCartesian, scratchSurfaceCartesian);
             if (defined(surfacePosition)) {
                 var distance = Cartesian3.distance(scratchCenterCartesian, surfacePosition);

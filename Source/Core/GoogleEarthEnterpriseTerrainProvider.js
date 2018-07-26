@@ -374,13 +374,13 @@ define([
         var buffer = terrainCache.get(quadKey);
         if (defined(buffer)) {
             var credit = metadata.providers[info.terrainProvider];
-            return new GoogleEarthEnterpriseTerrainData({
+            return when.resolve(new GoogleEarthEnterpriseTerrainData({
                 buffer : buffer,
                 childTileMask : computeChildMask(quadKey, info, metadata),
                 credits : defined(credit) ? [credit] : undefined,
                 negativeAltitudeExponentBias: metadata.negativeAltitudeExponentBias,
                 negativeElevationThreshold: metadata.negativeAltitudeThreshold
-            });
+            }));
         }
 
         // Clean up the cache
@@ -389,11 +389,11 @@ define([
         // We have a tile, check to see if no ancestors have terrain or that we know for sure it doesn't
         if (!info.ancestorHasTerrain) {
             // We haven't reached a level with terrain, so return the ellipsoid
-            return new HeightmapTerrainData({
+            return when.resovle(new HeightmapTerrainData({
                 buffer : new Uint8Array(16 * 16),
                 width : 16,
                 height : 16
-            });
+            }));
         } else if (terrainState === TerrainState.NONE) {
             // Already have info and there isn't any terrain here
             return when.reject(new RuntimeError('Terrain tile doesn\'t exist'));

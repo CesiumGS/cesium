@@ -1,6 +1,6 @@
 {
   "asset": {
-    "version": "0.0"
+    "version": "1.0"
   },
   "extensionsUsed": [
     "3DTILES_draco_point_compression"
@@ -21,7 +21,7 @@
     },
     "geometricError": 0,
     "content": {
-      "url": "pointCloudDraco.pnts"
+      "uri": "pointCloudDraco.pnts"
     }
   }
 }

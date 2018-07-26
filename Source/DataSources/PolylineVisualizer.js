@@ -87,17 +87,17 @@ define([
      *
      * @param {Scene} scene The scene the primitives will be rendered in.
      * @param {EntityCollection} entityCollection The entityCollection to visualize.
-     * @param {PrimitiveCollection|OrderedGroundPrimitiveCollection} [groundPrimitives] A collection to add ground primitives related to the entities
+     * @param {PrimitiveCollection} [primitives=scene.primitives] A collection to add primitives related to the entities
+     * @param {PrimitiveCollection} [groundPrimitives=scene.groundPrimitives] A collection to add ground primitives related to the entities
      */
-    function PolylineVisualizer(scene, entityCollection, groundPrimitives) {
+    function PolylineVisualizer(scene, entityCollection, primitives, groundPrimitives) {
         //>>includeStart('debug', pragmas.debug);
         Check.defined('scene', scene);
         Check.defined('entityCollection', entityCollection);
         //>>includeEnd('debug');
 
         groundPrimitives = defaultValue(groundPrimitives, scene.groundPrimitives);
-
-        var primitives = scene.primitives;
+        primitives = defaultValue(primitives, scene.primitives);
 
         this._scene = scene;
         this._primitives = primitives;

@@ -477,42 +477,7 @@ define([
         var polygonHierarchy = polygonGeometry._polygonHierarchy;
         var perPositionHeight = polygonGeometry._perPositionHeight;
 
-        // create from a polygon hierarchy
-        // Algorithm adapted from http://www.geometrictools.com/Documentation/TriangulationByEarClipping.pdf
-        var polygons = [];
-        var queue = new Queue();
-        queue.enqueue(polygonHierarchy);
-        var i;
-        while (queue.length !== 0) {
-            var outerNode = queue.dequeue();
-            var outerRing = outerNode.positions;
-            outerRing = arrayRemoveDuplicates(outerRing, Cartesian3.equalsEpsilon, true);
-            if (outerRing.length < 3) {
-                continue;
-            }
-
-            var numChildren = outerNode.holes ? outerNode.holes.length : 0;
-            // The outer polygon contains inner polygons
-            for (i = 0; i < numChildren; i++) {
-                var hole = outerNode.holes[i];
-                hole.positions = arrayRemoveDuplicates(hole.positions, Cartesian3.equalsEpsilon, true);
-                if (hole.positions.length < 3) {
-                    continue;
-                }
-                polygons.push(hole.positions);
-
-                var numGrandchildren = 0;
-                if (defined(hole.holes)) {
-                    numGrandchildren = hole.holes.length;
-                }
-
-                for ( var j = 0; j < numGrandchildren; j++) {
-                    queue.enqueue(hole.holes[j]);
-                }
-            }
-
-            polygons.push(outerRing);
-        }
+        var polygons = PolygonGeometryLibrary.polygonOutlinesFromHierarchy(polygonHierarchy, !perPositionHeight, ellipsoid);
 
         if (polygons.length === 0) {
             return undefined;
@@ -526,6 +491,7 @@ define([
         var extrudedHeight = polygonGeometry._extrudedHeight;
         var extrude = polygonGeometry._perPositionHeightExtrude || !CesiumMath.equalsEpsilon(height, extrudedHeight, 0, CesiumMath.EPSILON2);
         var offsetValue;
+        var i;
         if (extrude) {
             for (i = 0; i < polygons.length; i++) {
                 geometryInstance = createGeometryFromPositionsExtruded(ellipsoid, polygons[i], minDistance, perPositionHeight);
@@ -576,7 +542,8 @@ define([
             attributes : geometry.attributes,
             indices : geometry.indices,
             primitiveType : geometry.primitiveType,
-            boundingSphere : boundingSphere
+            boundingSphere : boundingSphere,
+            offsetAttribute : polygonGeometry._offsetAttribute
         });
     };
 

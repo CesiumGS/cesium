@@ -86,6 +86,8 @@ defineSuite([
     var withBatchTableUrl = 'Data/Cesium3DTiles/Batched/BatchedWithBatchTable/tileset.json';
     var noBatchIdsUrl = 'Data/Cesium3DTiles/Batched/BatchedNoBatchIds/tileset.json';
 
+    var withBatchTableHierarchyUrl = 'Data/Cesium3DTiles/Hierarchy/BatchTableHierarchy/tileset.json';
+
     var withTransformBoxUrl = 'Data/Cesium3DTiles/Batched/BatchedWithTransformBox/tileset.json';
     var withTransformSphereUrl = 'Data/Cesium3DTiles/Batched/BatchedWithTransformSphere/tileset.json';
     var withTransformRegionUrl = 'Data/Cesium3DTiles/Batched/BatchedWithTransformRegion/tileset.json';
@@ -117,6 +119,8 @@ defineSuite([
     var tilesetReplacementWithViewerRequestVolumeUrl = 'Data/Cesium3DTiles/Tilesets/TilesetReplacementWithViewerRequestVolume/tileset.json';
 
     var tilesetWithExternalResourcesUrl = 'Data/Cesium3DTiles/Tilesets/TilesetWithExternalResources/tileset.json';
+    var tilesetUrlWithContentUri = 'Data/Cesium3DTiles/Tilesets/TilesetWithContentUri/tileset.json';
+
     var tilesetSubtreeExpirationUrl = 'Data/Cesium3DTiles/Tilesets/TilesetSubtreeExpiration/tileset.json';
     var tilesetSubtreeUrl = 'Data/Cesium3DTiles/Tilesets/TilesetSubtreeExpiration/subtree.json';
     var batchedExpirationUrl = 'Data/Cesium3DTiles/Batched/BatchedExpiration/tileset.json';
@@ -353,6 +357,13 @@ defineSuite([
             expect(tileset._geometricError).toEqual(240.0);
             expect(tileset._root).toBeDefined();
             expect(tileset.url).toEqual(tilesetUrl);
+        });
+    });
+
+    it('hasExtension returns true if the tileset JSON file uses the specified extension', function() {
+        return Cesium3DTilesTester.loadTileset(scene, withBatchTableHierarchyUrl).then(function(tileset) {
+            expect(tileset.hasExtension('3DTILES_batch_table_hierarchy')).toBe(true);
+            expect(tileset.hasExtension('3DTILES_nonexistant_extension')).toBe(false);
         });
     });
 
@@ -2884,6 +2895,14 @@ defineSuite([
                 expect(tile._expiredContent).toBeUndefined();
                 expect(tile.expireDate).toBeUndefined();
             });
+        });
+    });
+
+    it('supports content data URIs', function() {
+        return Cesium3DTilesTester.loadTileset(scene, tilesetUrlWithContentUri).then(function(tileset) {
+            var statistics = tileset._statistics;
+            expect(statistics.visited).toEqual(1);
+            expect(statistics.numberOfCommands).toEqual(1);
         });
     });
 

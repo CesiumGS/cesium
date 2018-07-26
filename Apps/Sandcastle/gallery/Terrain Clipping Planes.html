@@ -10,7 +10,7 @@
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
     <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
     <script type="text/javascript">
-        if(typeof require === "function") {
+        if(typeof require === 'function') {
             require.config({
                 baseUrl : '../../../Source',
                 waitSeconds : 120
@@ -176,7 +176,7 @@ function loadStHelens() {
         tileset.modelMatrix = Cesium.Matrix4.fromTranslation(translation);
 
         tileset.style = new Cesium.Cesium3DTileStyle({
-            color : "rgb(207, 255, 207)"
+            color : 'rgb(207, 255, 207)'
         });
 
         viewer.scene.primitives.add(tileset);
@@ -213,10 +213,10 @@ Cesium.knockout.getObservable(viewModel, 'currentExampleType').subscribe(functio
 //Sandcastle_End
     Sandcastle.finishedLoading();
 }
-if (typeof Cesium !== "undefined") {
+if (typeof Cesium !== 'undefined') {
     startup(Cesium);
-} else if (typeof require === "function") {
-    require(["Cesium"], startup);
+} else if (typeof require === 'function') {
+    require(['Cesium'], startup);
 }
 </script>
 </body>

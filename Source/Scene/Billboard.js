@@ -71,6 +71,7 @@ define([
      * @see Label
      *
      * @internalConstructor
+     * @class
      *
      * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Billboards.html|Cesium Sandcastle Billboard Demo}
      */
@@ -161,6 +162,7 @@ define([
 
         this._labelDimensions = undefined;
         this._labelHorizontalOrigin = undefined;
+        this._labelTranslate = undefined;
 
         var image = options.image;
         var imageId = options.imageId;

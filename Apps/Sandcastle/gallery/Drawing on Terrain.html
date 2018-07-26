@@ -71,7 +71,6 @@ function drawShape(positionData) {
         shape = viewer.entities.add({
             polygon: {
                 hierarchy: positionData,
-                outline: true,
                 material: new Cesium.ColorMaterialProperty(Cesium.Color.WHITE.withAlpha(0.7))
             }
         });
@@ -146,10 +145,10 @@ viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
 //Sandcastle_End
     Sandcastle.finishedLoading();
 }
-if (typeof Cesium !== "undefined") {
+if (typeof Cesium !== 'undefined') {
     startup(Cesium);
-} else if (typeof require === "function") {
-    require(["Cesium"], startup);
+} else if (typeof require === 'function') {
+    require(['Cesium'], startup);
 }
 </script>
 </body>

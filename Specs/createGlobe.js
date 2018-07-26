@@ -8,7 +8,7 @@ define([
         defineProperties,
         Ellipsoid,
         Event) {
-    "use strict";
+    'use strict';
 
     function createGlobe(ellipsoid) {
         ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);

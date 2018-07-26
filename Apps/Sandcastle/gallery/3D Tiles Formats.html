@@ -122,13 +122,13 @@ Cesium.knockout.getObservable(viewModel, 'selectedTileset').subscribe(function(o
             tileset.style = new Cesium.Cesium3DTileStyle({
                 color: {
                     conditions: [
-                        ["${Height} >= 83", "color('purple', 0.5)"],
-                        ["${Height} >= 80", "color('red')"],
-                        ["${Height} >= 70", "color('orange')"],
-                        ["${Height} >= 12", "color('yellow')"],
-                        ["${Height} >= 7", "color('lime')"],
-                        ["${Height} >= 1", "color('cyan')"],
-                        ["true", "color('blue')"]
+                        ['${Height} >= 83', "color('purple', 0.5)"],
+                        ['${Height} >= 80', "color('red')"],
+                        ['${Height} >= 70', "color('orange')"],
+                        ['${Height} >= 12', "color('yellow')"],
+                        ['${Height} >= 7', "color('lime')"],
+                        ['${Height} >= 1', "color('cyan')"],
+                        ['true', "color('blue')"]
                     ]
                 }
             });
@@ -163,10 +163,10 @@ handler.setInputAction(function(movement) {
 //Sandcastle_End
 Sandcastle.finishedLoading();
 }
-if (typeof Cesium !== "undefined") {
+if (typeof Cesium !== 'undefined') {
     startup(Cesium);
-} else if (typeof require === "function") {
-    require(["Cesium"], startup);
+} else if (typeof require === 'function') {
+    require(['Cesium'], startup);
 }
 </script>
 </body>

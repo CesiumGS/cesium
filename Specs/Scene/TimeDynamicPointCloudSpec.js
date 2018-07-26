@@ -1,5 +1,6 @@
 defineSuite([
         'Scene/TimeDynamicPointCloud',
+        'Core/BoundingSphere',
         'Core/Cartesian3',
         'Core/Clock',
         'Core/ClockStep',
@@ -18,6 +19,7 @@ defineSuite([
         'Scene/ClippingPlane',
         'Scene/ClippingPlaneCollection',
         'Scene/DracoLoader',
+        'Scene/PointCloudEyeDomeLighting',
         'Scene/ShadowMode',
         'Specs/createCanvas',
         'Specs/createScene',
@@ -25,6 +27,7 @@ defineSuite([
         'ThirdParty/when'
     ], function(
         TimeDynamicPointCloud,
+        BoundingSphere,
         Cartesian3,
         Clock,
         ClockStep,
@@ -43,6 +46,7 @@ defineSuite([
         ClippingPlane,
         ClippingPlaneCollection,
         DracoLoader,
+        PointCloudEyeDomeLighting,
         ShadowMode,
         createCanvas,
         createScene,
@@ -238,6 +242,31 @@ defineSuite([
         });
     });
 
+    it('gets bounding sphere of the rendered frame', function() {
+        var pointCloud = createTimeDynamicPointCloud({
+            useTransforms : true
+        });
+        expect(pointCloud.boundingSphere).toBeUndefined(); // Undefined until a frame is rendered
+        return loadAllFrames(pointCloud).then(function() {
+            var boundingSphereFrame0 = pointCloud.boundingSphere;
+            expect(boundingSphereFrame0).toBeDefined();
+            goToFrame(1);
+            scene.renderForSpecs();
+            var boundingSphereFrame1 = pointCloud.boundingSphere;
+            expect(boundingSphereFrame1).toBeDefined();
+            expect(BoundingSphere.equals(boundingSphereFrame0, boundingSphereFrame1)).toBe(false);
+        });
+    });
+
+    it('resolves ready promise', function() {
+        var pointCloud = createTimeDynamicPointCloud();
+        return loadFrame(pointCloud).then(function() {
+            return pointCloud.readyPromise.then(function(pointCloud) {
+                expect(pointCloud.boundingSphere).toBeDefined();
+            });
+        });
+    });
+
     it('sets show', function() {
         var pointCloud = createTimeDynamicPointCloud();
 
@@ -322,7 +351,7 @@ defineSuite([
         initializeScene();
 
         var pointCloud = createTimeDynamicPointCloud({
-            pointCloudShading : {
+            shading : {
                 attenuation : true,
                 eyeDomeLighting : false
             },
@@ -336,20 +365,28 @@ defineSuite([
             });
 
             // Disable attenuation and expect less pixels to be drawn
-            pointCloud.pointCloudShading.attenuation = false;
+            pointCloud.shading.attenuation = false;
             expect(scene).toRenderPixelCountAndCall(function(pixelCount) {
                 expect(pixelCount).toBeLessThan(attenuationPixelCount);
             });
 
-            // Enable eye dome lighting
-            expect(scene.frameState.commandList.length).toBe(1);
-            pointCloud.pointCloudShading.attenuation = true;
-            pointCloud.pointCloudShading.eyeDomeLighting = true;
-            scene.renderForSpecs();
-            expect(scene.frameState.commandList.length).toBe(3); // Added 2 EDL commands
-
             scene.destroyForSpecs();
             scene = oldScene;
+        });
+    });
+
+    it('enabled eye dome lighting', function() {
+        if (!PointCloudEyeDomeLighting.isSupported(scene.frameState.context)) {
+            return;
+        }
+
+        var pointCloud = createTimeDynamicPointCloud();
+        return loadFrame(pointCloud).then(function() {
+            expect(scene.frameState.commandList.length).toBe(1);
+            pointCloud.shading.attenuation = true;
+            pointCloud.shading.eyeDomeLighting = true;
+            scene.renderForSpecs();
+            expect(scene.frameState.commandList.length).toBe(3); // Added 2 EDL commands
         });
     });
 
@@ -677,7 +714,7 @@ defineSuite([
         for (i = 0; i < 5; ++i) {
             var arg = spyUpdate.calls.argsFor(i)[0];
             expect(arg).toBeDefined();
-            expect(arg.url).toContain(i + '.pnts');
+            expect(arg.uri).toContain(i + '.pnts');
             expect(arg.message).toBe('404');
         }
     });
@@ -707,9 +744,35 @@ defineSuite([
             }).then(function() {
                 var arg = spyUpdate.calls.argsFor(0)[0];
                 expect(arg).toBeDefined();
-                expect(arg.url).toContain('1.pnts');
+                expect(arg.uri).toContain('1.pnts');
                 expect(arg.message).toBe('my error');
             });
+        });
+    });
+
+    it('raises frame changed event', function() {
+        var pointCloud = createTimeDynamicPointCloud();
+        var spyFrameChanged = jasmine.createSpy('listener');
+        pointCloud.frameChanged.addEventListener(spyFrameChanged);
+
+        return loadAllFrames(pointCloud).then(function() {
+            expect(spyFrameChanged.calls.count()).toBe(5);
+
+            // Go to random frame
+            goToFrame(2);
+            scene.renderForSpecs();
+            expect(spyFrameChanged.calls.count()).toBe(6);
+
+            // Go out of range. No event raised.
+            clock.currentTime = JulianDate.addSeconds(dates[0], -10.0, new JulianDate());
+            scene.renderForSpecs();
+            expect(spyFrameChanged.calls.count()).toBe(6);
+
+            goToFrame(0);
+            scene.renderForSpecs();
+            expect(spyFrameChanged.calls.count()).toBe(7);
+
+            expect(spyFrameChanged.calls.argsFor(0)[0]).toBe(pointCloud);
         });
     });
 

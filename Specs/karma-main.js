@@ -1,6 +1,6 @@
 (function() {
     /*global __karma__,require*/
-    "use strict";
+    'use strict';
 
     var included = '';
     var excluded = '';
