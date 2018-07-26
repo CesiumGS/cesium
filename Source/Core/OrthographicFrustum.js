@@ -270,8 +270,6 @@ define([
 
         return (this.width === other.width &&
                 this.aspectRatio === other.aspectRatio &&
-                this.near === other.near &&
-                this.far === other.far &&
                 this._offCenterFrustum.equals(other._offCenterFrustum));
     };
 
@@ -295,8 +293,6 @@ define([
 
         return (CesiumMath.equalsEpsilon(this.width, other.width, relativeEpsilon, absoluteEpsilon) &&
                 CesiumMath.equalsEpsilon(this.aspectRatio, other.aspectRatio, relativeEpsilon, absoluteEpsilon) &&
-                CesiumMath.equalsEpsilon(this.near, other.near, relativeEpsilon, absoluteEpsilon) &&
-                CesiumMath.equalsEpsilon(this.far, other.far, relativeEpsilon, absoluteEpsilon) &&
                 this._offCenterFrustum.equalsEpsilon(other._offCenterFrustum, relativeEpsilon, absoluteEpsilon));
     };
 
