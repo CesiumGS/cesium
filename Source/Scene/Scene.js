@@ -1,4 +1,5 @@
 define([
+        '../Core/ApproximateTerrainHeights',
         '../Core/BoundingRectangle',
         '../Core/BoundingSphere',
         '../Core/BoxGeometry',
@@ -84,6 +85,7 @@ define([
         './SunPostProcess',
         './TweenCollection'
     ], function(
+        ApproximateTerrainHeights,
         BoundingRectangle,
         BoundingSphere,
         BoxGeometry,
@@ -4071,6 +4073,38 @@ define([
         return objects.map(function(element) {
             return element.object;
         });
+    };
+
+    var scratchSurfacePosition = new Cartesian3();
+    var scratchSurfaceNormal = new Cartesian3();
+    var scratchSurfaceRay = new Ray();
+    var scratchRay = new Ray();
+    var scratchPickPosition = new Cartesian3();
+    var scratchPickCartographic = new Cartographic();
+
+    /**
+     * @param {Cartographic cartographic The position.
+     */
+    Scene.prototype.sampleHeight = function(position) {
+        //>>includeStart('debug', pragmas.debug);
+        Check.defined('position', position);
+        //>>includeEnd('debug');
+        var globe = this.globe;
+        var ellipsoid = defined(globe) ? globe.ellipsoid : this.mapProjection.ellipsoid;
+        var height = ApproximateTerrainHeights._defaultMaxTerrainHeight;
+        var surfaceNormal = ellipsoid.geodeticSurfaceNormalCartographic(position, scratchSurfaceNormal);
+        var surfacePosition = Cartographic.toCartesian(position, ellipsoid, scratchSurfacePosition);
+        var surfaceRay = scratchSurfaceRay;
+        surfaceRay.origin = surfacePosition;
+        surfaceRay.direction =  surfaceNormal;
+        var ray = scratchRay;
+        Ray.getPoint(surfaceRay, height, ray.origin);
+        Cartesian3.negate(surfaceNormal, ray.direction);
+        var pickPosition = this.pickPositionFromRay(ray, scratchPickPosition);
+        if (defined(pickPosition)) {
+            var pickCartographic = Cartographic.fromCartesian(pickPosition, ellipsoid, scratchPickCartographic);
+            return pickCartographic.height;
+        }
     };
 
     /**
