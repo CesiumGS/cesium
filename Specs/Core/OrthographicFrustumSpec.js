@@ -207,7 +207,7 @@ defineSuite([
         expect(frustum.equalsEpsilon(frustum4, CesiumMath.EPSILON2)).toEqual(false);
     });
 
-    fit('equals undefined', function() {
+    it('equals undefined', function() {
         expect(frustum.equals()).toEqual(false);
     });
 
