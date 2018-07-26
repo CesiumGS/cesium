@@ -2023,7 +2023,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         boundingSphere = BoundingSphere.fromBoundingSpheres(boundingSpheres);
 
         if (!viewer._zoomIsFlight) {
-            camera.viewBoundingSphere(boundingSphere, viewer._zoomOptions.offset);
+            camera.viewBoundingSphere(boundingSphere, zoomOptions.offset);
             camera.lookAtTransform(Matrix4.IDENTITY);
             clearZoom(viewer);
             zoomPromise.resolve(true);
