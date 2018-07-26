@@ -1635,12 +1635,13 @@ define([
     };
 
     Cesium3DTileStyle.prototype.setMutableValue = function(mutableName, value) {
+        var mutables = this._mutables;
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(this._mutables[mutableName])) {
+        if (!defined(mutables) || !defined(mutables[mutableName])) {
             throw new DeveloperError('Unknown mutable "' + mutableName + '".');
         }
         //>>includeEnd('debug');
-        this._mutables[mutableName].value = value;
+        mutables[mutableName].value = value;
     };
 
     return Cesium3DTileStyle;
