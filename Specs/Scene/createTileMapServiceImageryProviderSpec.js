@@ -125,7 +125,7 @@ defineSuite([
                     '       <TileSet href="3" units-per-pixel="19567.87924100512100" order="3"/>' +
                     '   </TileSets>' +
                     '</TileMap>';
-                var xml = parser.parseFromString(xmlString, "text/xml");
+                var xml = parser.parseFromString(xmlString, 'text/xml');
                 deferred.resolve(xml);
             }, 1);
         };
@@ -160,7 +160,7 @@ defineSuite([
                     '       <TileSet href="3" units-per-pixel="19567.87924100512100" order="3"/>' +
                     '   </TileSets>' +
                     '</TileMap>';
-                var xml = parser.parseFromString(xmlString, "text/xml");
+                var xml = parser.parseFromString(xmlString, 'text/xml');
                 deferred.resolve(xml);
             }, 1);
         };
@@ -434,17 +434,17 @@ defineSuite([
             var parser = new DOMParser();
             var xmlString =
                 "<TileMap version='1.0.0' tilemapservice='http://tms.osgeo.org/1.0.0'>" +
-                "  <Title>dnb_land_ocean_ice.2012.54000x27000_geo.tif</Title>" +
-                "  <Abstract/>" +
-                "  <SRS>EPSG:900913</SRS>" +
+                '  <Title>dnb_land_ocean_ice.2012.54000x27000_geo.tif</Title>' +
+                '  <Abstract/>' +
+                '  <SRS>EPSG:900913</SRS>' +
                 "  <BoundingBox miny='-88.0' minx='-185.0' maxy='88.0' maxx='185.0'/>" +
                 "  <Origin y='-88.0' x='-180.00000000000000'/>" +
                 "  <TileFormat width='256' height='256' mime-type='image/png' extension='png'/>" +
                 "  <TileSets profile='mercator'>" +
                 "    <TileSet href='8' units-per-pixel='611.49622617187504' order='8'/>" +
-                "  </TileSets>" +
-                "</TileMap>";
-            var xml = parser.parseFromString(xmlString, "text/xml");
+                '  </TileSets>' +
+                '</TileMap>';
+            var xml = parser.parseFromString(xmlString, 'text/xml');
             deferred.resolve(xml);
         };
 
@@ -471,18 +471,18 @@ defineSuite([
             var parser = new DOMParser();
             var xmlString =
                 "<TileMap version='1.0.0' tilemapservice='http://tms.osgeo.org/1.0.0'>" +
-                "  <Title>dnb_land_ocean_ice.2012.54000x27000_geo.tif</Title>" +
-                "  <Abstract/>" +
-                "  <SRS>EPSG:900913</SRS>" +
+                '  <Title>dnb_land_ocean_ice.2012.54000x27000_geo.tif</Title>' +
+                '  <Abstract/>' +
+                '  <SRS>EPSG:900913</SRS>' +
                 "  <BoundingBox minx='-10.0' miny='5.0' maxx='-9.0' maxy='6.0'/>" +
                 "  <Origin x='-88.0' y='-180.00000000000000'/>" +
                 "  <TileFormat width='256' height='256' mime-type='image/png' extension='png'/>" +
                 "  <TileSets profile='mercator'>" +
                 "    <TileSet href='7' units-per-pixel='1222.99245234375008' order='7'/>" +
                 "    <TileSet href='8' units-per-pixel='611.49622617187504' order='8'/>" +
-                "  </TileSets>" +
-                "</TileMap>";
-            var xml = parser.parseFromString(xmlString, "text/xml");
+                '  </TileSets>' +
+                '</TileMap>';
+            var xml = parser.parseFromString(xmlString, 'text/xml');
             deferred.resolve(xml);
         };
 
@@ -503,18 +503,18 @@ defineSuite([
             var parser = new DOMParser();
             var xmlString =
                 "<TileMap version='1.0.0' tilemapservice='http://tms.osgeo.org/1.0.0'>" +
-                "  <Title>dnb_land_ocean_ice.2012.54000x27000_geo.tif</Title>" +
-                "  <Abstract/>" +
-                "  <SRS>EPSG:900913</SRS>" +
+                '  <Title>dnb_land_ocean_ice.2012.54000x27000_geo.tif</Title>' +
+                '  <Abstract/>' +
+                '  <SRS>EPSG:900913</SRS>' +
                 "  <BoundingBox minx='-170.0' miny='-85.0' maxx='170.0' maxy='85.0'/>" +
                 "  <Origin x='-88.0' y='-180.00000000000000'/>" +
                 "  <TileFormat width='256' height='256' mime-type='image/png' extension='png'/>" +
                 "  <TileSets profile='mercator'>" +
                 "    <TileSet href='7' units-per-pixel='1222.99245234375008' order='7'/>" +
                 "    <TileSet href='8' units-per-pixel='611.49622617187504' order='8'/>" +
-                "  </TileSets>" +
-                "</TileMap>";
-            var xml = parser.parseFromString(xmlString, "text/xml");
+                '  </TileSets>' +
+                '</TileMap>';
+            var xml = parser.parseFromString(xmlString, 'text/xml');
             deferred.resolve(xml);
         };
 
@@ -535,18 +535,18 @@ defineSuite([
             var parser = new DOMParser();
             var xmlString =
                 "<Tilemap version='1.0.0' tilemapservice='http://tms.osgeo.org/1.0.0'>" +
-                "  <Title>dnb_land_ocean_ice.2012.54000x27000_geo.tif</Title>" +
-                "  <Abstract/>" +
-                "  <SRS>EPSG:900913</SRS>" +
+                '  <Title>dnb_land_ocean_ice.2012.54000x27000_geo.tif</Title>' +
+                '  <Abstract/>' +
+                '  <SRS>EPSG:900913</SRS>' +
                 "  <boundingbox minx='-10.0' miny='5.0' maxx='-9.0' maxy='6.0'/>" +
                 "  <Origin x='-88.0' y='-180.00000000000000'/>" +
                 "  <Tileformat width='256' height='256' mime-type='image/png' extension='png'/>" +
                 "  <TileSets profile='mercator'>" +
                 "    <tiLeset href='7' units-per-pixel='1222.99245234375008' order='7'/>" +
                 "    <tileset href='8' units-per-pixel='611.49622617187504' order='8'/>" +
-                "  </TileSets>" +
-                "</Tilemap>";
-            var xml = parser.parseFromString(xmlString, "text/xml");
+                '  </TileSets>' +
+                '</Tilemap>';
+            var xml = parser.parseFromString(xmlString, 'text/xml');
             deferred.resolve(xml);
         };
 
@@ -578,7 +578,7 @@ defineSuite([
                 '       <TileSet href="3" units-per-pixel="19567.87924100512100" order="3"/>' +
                 '   </TileSets>' +
                 '</TileMap>';
-            var xml = parser.parseFromString(xmlString, "text/xml");
+            var xml = parser.parseFromString(xmlString, 'text/xml');
             deferred.resolve(xml);
         };
 
@@ -619,7 +619,7 @@ defineSuite([
                 '       <TileSet href="3" units-per-pixel="19567.87924100512100" order="3"/>' +
                 '   </TileSets>' +
                 '</TileMap>';
-            var xml = parser.parseFromString(xmlString, "text/xml");
+            var xml = parser.parseFromString(xmlString, 'text/xml');
             deferred.resolve(xml);
         };
 
@@ -659,7 +659,7 @@ defineSuite([
                 '       <TileSet href="3" units-per-pixel="19567.87924100512100" order="3"/>' +
                 '   </TileSets>' +
                 '</TileMap>';
-            var xml = parser.parseFromString(xmlString, "text/xml");
+            var xml = parser.parseFromString(xmlString, 'text/xml');
             deferred.resolve(xml);
         };
 
@@ -700,7 +700,7 @@ defineSuite([
                 '       <TileSet href="3" units-per-pixel="19567.87924100512100" order="3"/>' +
                 '   </TileSets>' +
                 '</TileMap>';
-            var xml = parser.parseFromString(xmlString, "text/xml");
+            var xml = parser.parseFromString(xmlString, 'text/xml');
             deferred.resolve(xml);
         };
 
@@ -744,7 +744,7 @@ defineSuite([
                     '       <TileSet href="3" units-per-pixel="19567.87924100512100" order="3"/>' +
                     '   </TileSets>' +
                     '</TileMap>';
-                var xml = parser.parseFromString(xmlString, "text/xml");
+                var xml = parser.parseFromString(xmlString, 'text/xml');
                 deferred.resolve(xml);
             }, 1);
         };

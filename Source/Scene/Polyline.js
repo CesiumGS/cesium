@@ -31,6 +31,7 @@ define([
      *
      * @alias Polyline
      * @internalConstructor
+     * @class
      *
      * @param {Object} [options] Object with the following properties:
      * @param {Boolean} [options.show=true] <code>true</code> if this polyline will be shown; otherwise, <code>false</code>.

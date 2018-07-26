@@ -730,6 +730,7 @@ define([
      * @returns {Boolean} true if this collection contains the label, false otherwise.
      *
      * @see LabelCollection#get
+     *
      */
     LabelCollection.prototype.contains = function(label) {
         return defined(label) && label._labelCollection === this;
@@ -775,6 +776,7 @@ define([
 
     /**
      * @private
+     *
      */
     LabelCollection.prototype.update = function(frameState) {
         var billboardCollection = this._billboardCollection;

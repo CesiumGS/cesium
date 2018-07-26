@@ -256,13 +256,13 @@ defineSuite([
             style = new Cesium3DTileStyle({
                 color : {
                     conditions : [
-                        ["${Height} >= 83", "color('purple', 0.5)"],
-                        ["${Height} >= 80", "color('red')"],
-                        ["${Height} >= 70", "color('orange')"],
-                        ["${Height} >= 12", "color('yellow')"],
-                        ["${Height} >= 7", "color('lime')"],
-                        ["${Height} >= 1", "color('cyan')"],
-                        ["true", "color('blue')"]
+                        ['${Height} >= 83', "color('purple', 0.5)"],
+                        ['${Height} >= 80', "color('red')"],
+                        ['${Height} >= 70', "color('orange')"],
+                        ['${Height} >= 12', "color('yellow')"],
+                        ['${Height} >= 7', "color('lime')"],
+                        ['${Height} >= 1', "color('cyan')"],
+                        ['true', "color('blue')"]
                     ]
                 },
                 meta : {

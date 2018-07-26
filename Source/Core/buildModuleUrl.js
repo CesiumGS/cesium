@@ -37,7 +37,9 @@ define([
             a = document.createElement('a');
         }
         a.href = url;
-        a.href = a.href; // IE only absolutizes href on get, not set
+
+        // IE only absolutizes href on get, not set
+        a.href = a.href; // eslint-disable-line no-self-assign
         return a.href;
     }
 
