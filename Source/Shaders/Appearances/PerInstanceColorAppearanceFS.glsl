@@ -17,6 +17,7 @@ void main()
     czm_material material = czm_getDefaultMaterial(materialInput);
     material.diffuse = v_color.rgb;
     material.alpha = v_color.a;
+    material.roughness = 0.8;
 
-    gl_FragColor = czm_phong(normalize(positionToEyeEC), material);
+    gl_FragColor = czm_phongWithIBL(v_positionEC, material);
 }

@@ -19,4 +19,5 @@ struct czm_material
     vec3 normal;
     vec3 emission;
     float alpha;
+    float roughness;
 };

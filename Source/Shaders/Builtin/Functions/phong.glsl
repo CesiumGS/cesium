@@ -50,9 +50,9 @@ vec4 czm_phong(vec3 toEye, czm_material material)
     return vec4(color, material.alpha);
     */
 
-    vec3 color = material.emission + material.diffuse * 0.25;
-
     vec3 sunColor = czm_sunColor.rgb + czm_sunColor.a;
+
+    vec3 color = material.emission + material.diffuse * 0.25;
 
 #define USE_SUN_LIGHTING
 
@@ -60,11 +60,11 @@ vec4 czm_phong(vec3 toEye, czm_material material)
     float sunDiffuse = czm_private_getLambertDiffuseOfMaterial(czm_sunDirectionEC, material);
     float sunSpecular = czm_private_getSpecularOfMaterial(czm_sunDirectionEC, toEye, material);
 
-    color += material.diffuse * sunDiffuse * sunColor;
-    color += material.specular * sunSpecular;
+    //color += material.diffuse * sunDiffuse * sunColor;
+    //color += material.specular * sunSpecular;
 #else
     float cameraDiffuse = czm_private_getLambertDiffuseOfMaterial(vec3(0.0, 0.0, 1.0), material);
-    color += material.diffuse * cameraDiffuse * sunColor;
+    color += material.diffuse * cameraDiffuse;// * sunColor;
 #endif
 
     return vec4(color, material.alpha);

@@ -233,10 +233,13 @@ void main()
     material.diffuse = color.rgb;
     material.alpha = color.a;
     material.normal = normalEC;
-    vec4 finalColor = czm_phong(normalize(-v_positionEC), material);
+//    vec4 finalColor = czm_phong(normalize(-v_positionEC), material);
 //#else
 //    vec4 finalColor = color;
 //#endif
+
+    float diffuseIntensity = clamp(czm_getLambertDiffuse(czm_sunDirectionEC, normalize(v_normalEC)) * 0.9 + 0.3, 0.0, 1.0);
+    vec4 finalColor = vec4(color.rgb * diffuseIntensity, color.a);
 
     gl_FragColor = finalColor;
     return;
