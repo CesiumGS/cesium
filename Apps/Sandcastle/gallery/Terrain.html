@@ -40,6 +40,8 @@ var viewer = new Cesium.Viewer('cesiumContainer', {
     terrainProvider: worldTerrain
 });
 
+Cesium.viewerCesiumInspectorMixin(viewer);
+
 // set lighting to true
 viewer.scene.globe.enableLighting = true;
 
@@ -56,6 +58,22 @@ Sandcastle.addToolbarMenu([{
     onselect : function() {
         viewer.terrainProvider = worldTerrain;
         viewer.scene.globe.enableLighting = true;
+    }
+}, {
+    text : 'STK World Terrain',
+    onselect : function() {
+        viewer.terrainProvider = new Cesium.CesiumTerrainProvider({
+            url: 'http://assets.agi.com/stk-terrain/world'
+        });
+        viewer.scene.globe.enableLighting = false;
+    }
+}, {
+    text : 'Local with Half Dome',
+    onselect : function() {
+        viewer.terrainProvider = new Cesium.CesiumTerrainProvider({
+            url: 'http://localhost:8081/2018-07-10'
+        });
+        viewer.scene.globe.enableLighting = false;
     }
 }, {
     text : 'CesiumTerrainProvider - Cesium World Terrain - no effects',

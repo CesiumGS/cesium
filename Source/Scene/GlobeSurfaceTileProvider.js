@@ -1,9 +1,11 @@
 define([
+        '../Core/AttributeCompression',
         '../Core/BoundingSphere',
         '../Core/BoxOutlineGeometry',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Cartesian4',
+        '../Core/Cartographic',
         '../Core/Color',
         '../Core/ColorGeometryInstanceAttribute',
         '../Core/combine',
@@ -18,13 +20,18 @@ define([
         '../Core/IndexDatatype',
         '../Core/Intersect',
         '../Core/Math',
+        '../Core/Matrix3',
         '../Core/Matrix4',
         '../Core/OrientedBoundingBox',
         '../Core/OrthographicFrustum',
         '../Core/PrimitiveType',
         '../Core/Rectangle',
         '../Core/SphereOutlineGeometry',
+        '../Core/TerrainEncoding',
+        '../Core/TerrainMesh',
         '../Core/TerrainQuantization',
+        '../Core/TerrainTileEdgeDetails',
+        '../Core/TileEdge',
         '../Core/Visibility',
         '../Core/WebMercatorProjection',
         '../Renderer/Buffer',
@@ -36,6 +43,7 @@ define([
         '../Renderer/VertexArray',
         '../Scene/BlendingState',
         '../Scene/DepthFunction',
+        '../Scene/ImageryState',
         '../Scene/PerInstanceColorAppearance',
         '../Scene/Primitive',
         '../Scene/TileBoundingRegion',
@@ -46,11 +54,13 @@ define([
         './SceneMode',
         './ShadowMode'
     ], function(
+        AttributeCompression,
         BoundingSphere,
         BoxOutlineGeometry,
         Cartesian2,
         Cartesian3,
         Cartesian4,
+        Cartographic,
         Color,
         ColorGeometryInstanceAttribute,
         combine,
@@ -65,13 +75,18 @@ define([
         IndexDatatype,
         Intersect,
         CesiumMath,
+        Matrix3,
         Matrix4,
         OrientedBoundingBox,
         OrthographicFrustum,
         PrimitiveType,
         Rectangle,
         SphereOutlineGeometry,
+        TerrainEncoding,
+        TerrainMesh,
         TerrainQuantization,
+        TerrainTileEdgeDetails,
+        TileEdge,
         Visibility,
         WebMercatorProjection,
         Buffer,
@@ -83,6 +98,7 @@ define([
         VertexArray,
         BlendingState,
         DepthFunction,
+        ImageryState,
         PerInstanceColorAppearance,
         Primitive,
         TileBoundingRegion,
@@ -94,9 +110,35 @@ define([
         ShadowMode) {
     'use strict';
 
+    /**
+     * The strategy to use to fill the space of tiles that are selected for rendering but that
+     * are not yet loaded / renderable.
+     * @private
+     */
     var MissingTileStrategy = {
+        /**
+         * Render nothing, the globe will have holes during load.
+         */
         RENDER_NOTHING: 0,
-        RENDER_ANCESTOR_SUBSET: 1
+
+        /**
+         * Render a subset of the closest renderable ancestor. This is cheap on the CPU, but can be very expensive in terms
+         * of GPU fill rate. It also leads to cracking due to missing skirts.
+         */
+        RENDER_ANCESTOR_SUBSET: 1,
+
+        /**
+         * Create a very simple tile to fill the space by matching the heights of adjacent tiles on the edges. This is
+         * cheaper on the CPU than a full upsample and avoids cracks. But it's less representative of the real
+         * terrain surface than an upsample from a nearby ancestor.
+         */
+        CREATE_FILL_TILE: 2
+
+        /**
+         * Synchronously upsample the tile. This is expensive on the CPU and, when skipping several levels, it sometimes
+         * results in big cracks anyway. (currently not implemented)
+         */
+        // SYNCHRONOUS_UPSAMPLE: 3
     };
 
     /**
@@ -137,7 +179,7 @@ define([
         /**
          * The strategy to use to fill holes in the globe when terrain tiles are not yet loaded.
          */
-        this.missingTileStrategy = MissingTileStrategy.RENDER_ANCESTOR_SUBSET;
+        this.missingTileStrategy = MissingTileStrategy.CREATE_FILL_TILE;
 
         this._quadtree = undefined;
         this._terrainProvider = options.terrainProvider;
@@ -501,6 +543,8 @@ define([
         return this._terrainProvider.getLevelMaximumGeometricError(level);
     };
 
+    var stopLoad = false;
+
     /**
      * Loads, or continues loading, a given tile.  This function will continue to be called
      * until {@link QuadtreeTile#state} is no longer {@link QuadtreeTileLoadState#LOADING}.  This function should
@@ -512,6 +556,9 @@ define([
      * @exception {DeveloperError} <code>loadTile</code> must not be called before the tile provider is ready.
      */
     GlobeSurfaceTileProvider.prototype.loadTile = function(frameState, tile) {
+        if (stopLoad) {
+            return;
+        }
         GlobeSurfaceTile.processStateMachine(tile, frameState, this._terrainProvider, this._imageryLayers, this._vertexArraysToDestroy);
         var tileLoadedEvent = this._tileLoadedEvent;
 
@@ -699,6 +746,19 @@ define([
 
     var cornerPositionsScratch = [new Cartesian3(), new Cartesian3(), new Cartesian3(), new Cartesian3()];
 
+    function computeOccludeePoint(tileProvider, center, rectangle, height, result) {
+        var ellipsoidalOccluder = tileProvider.quadtree._occluders.ellipsoid;
+        var ellipsoid = ellipsoidalOccluder.ellipsoid;
+
+        var cornerPositions = cornerPositionsScratch;
+        Cartesian3.fromRadians(rectangle.west, rectangle.south, height, ellipsoid, cornerPositions[0]);
+        Cartesian3.fromRadians(rectangle.east, rectangle.south, height, ellipsoid, cornerPositions[1]);
+        Cartesian3.fromRadians(rectangle.west, rectangle.north, height, ellipsoid, cornerPositions[2]);
+        Cartesian3.fromRadians(rectangle.east, rectangle.north, height, ellipsoid, cornerPositions[3]);
+
+        return ellipsoidalOccluder.computeHorizonCullingPoint(center, cornerPositions, result);
+}
+
     /**
      * Gets the distance from the camera to the closest point on the tile.  This is used for level-of-detail selection.
      *
@@ -741,19 +801,7 @@ define([
                 tile.tilingScheme.ellipsoid,
                 surfaceTile.orientedBoundingBox);
 
-                var rectangle = tile.rectangle;
-                var height = tileBoundingRegion.minimumHeight;
-
-                var ellipsoidalOccluder = this.quadtree._occluders.ellipsoid;
-                var ellipsoid = ellipsoidalOccluder.ellipsoid;
-
-                var cornerPositions = cornerPositionsScratch;
-                Cartesian3.fromRadians(rectangle.west, rectangle.south, height, ellipsoid, cornerPositions[0]);
-                Cartesian3.fromRadians(rectangle.east, rectangle.south, height, ellipsoid, cornerPositions[1]);
-                Cartesian3.fromRadians(rectangle.west, rectangle.north, height, ellipsoid, cornerPositions[2]);
-                Cartesian3.fromRadians(rectangle.east, rectangle.north, height, ellipsoid, cornerPositions[3]);
-
-                surfaceTile.occludeePointInScaledSpace = ellipsoidalOccluder.computeHorizonCullingPoint(surfaceTile.orientedBoundingBox.center, cornerPositions, surfaceTile.occludeePointInScaledSpace);
+            surfaceTile.occludeePointInScaledSpace = computeOccludeePoint(this, surfaceTile.orientedBoundingBox.center, tile.rectangle, tileBoundingRegion.maximumHeight, surfaceTile.occludeePointInScaledSpace);
         }
 
         var min = tileBoundingRegion.minimumHeight;
@@ -772,10 +820,12 @@ define([
             }
         }
 
+        var result = tileBoundingRegion.distanceToCamera(frameState);
+
         tileBoundingRegion.minimumHeight = min;
         tileBoundingRegion.maximumHeight = max;
 
-        return tileBoundingRegion.distanceToCamera(frameState);
+        return result;
     };
 
     function updateTileBoundingRegion(tile, terrainProvider, frameState) {
@@ -1320,6 +1370,490 @@ define([
         };
     })();
 
+    function findRenderedTiles(startTile, currentFrameNumber, edge) {
+        if (startTile._frameRendered === currentFrameNumber) {
+            return [startTile];
+        }
+
+        if (startTile._frameVisited !== currentFrameNumber) {
+            // This tile wasn't even visited, so find the closest ancestor that was.
+            var tile = startTile.parent;
+            while (tile && tile._frameVisited !== currentFrameNumber) {
+                tile = tile.parent;
+            }
+
+            if (!tile || tile._frameRendered !== currentFrameNumber) {
+                // No ancestor was visited, or the closest visited ancestor was culled.
+                return [];
+            }
+
+            return [tile];
+        }
+
+        // This tile was visited but not rendered, so find rendered children, if any.
+        // Return the tiles in clockwise order.
+        switch (edge) {
+            case TileEdge.WEST:
+                return findRenderedTiles(startTile.southwestChild, currentFrameNumber, edge).concat(findRenderedTiles(startTile.northwestChild, currentFrameNumber, edge));
+            case TileEdge.EAST:
+                return findRenderedTiles(startTile.northeastChild, currentFrameNumber, edge).concat(findRenderedTiles(startTile.southeastChild, currentFrameNumber, edge));
+            case TileEdge.SOUTH:
+                return findRenderedTiles(startTile.southeastChild, currentFrameNumber, edge).concat(findRenderedTiles(startTile.southwestChild, currentFrameNumber, edge));
+            case TileEdge.NORTH:
+                return findRenderedTiles(startTile.northwestChild, currentFrameNumber, edge).concat(findRenderedTiles(startTile.northeastChild, currentFrameNumber, edge));
+            default:
+                throw new DeveloperError('Invalid edge');
+        }
+    }
+
+    function getEdgeVertices(tile, startingTile, currentFrameNumber, tileEdge, result) {
+        var ellipsoid = tile.tilingScheme.ellipsoid;
+        var edgeTiles = findRenderedTiles(startingTile, currentFrameNumber, tileEdge);
+
+        result.clear();
+
+        for (var i = 0; i < edgeTiles.length; ++i) {
+            var edgeTile = edgeTiles[i];
+            var surfaceTile = edgeTile.data;
+            if (surfaceTile && surfaceTile.mesh) {
+                surfaceTile.mesh.getEdgeVertices(tileEdge, edgeTile.rectangle, tile.rectangle, ellipsoid, result);
+            }
+        }
+
+        return result;
+    }
+
+    function getAverageHeight(vertices, stride) {
+        var sum = 0;
+        for (var i = 3; i < vertices.length; i += stride) {
+            sum += vertices[i];
+        }
+        return sum / (vertices.length / stride);
+    }
+
+    function hasVertexAtStart(edge, edgeDetails, stride) {
+        var vertices = edgeDetails.vertices;
+
+        if (vertices.length === 0) {
+            return false;
+        }
+
+        var firstU = vertices[4];
+        var firstV = vertices[5];
+
+        switch (edge) {
+            case TileEdge.WEST:
+                return firstV === 1.0;
+            case TileEdge.SOUTH:
+                return firstU === 0.0;
+            case TileEdge.EAST:
+                return firstV === 0.0;
+            case TileEdge.NORTH:
+                return firstU === 1.0;
+            default:
+                throw new DeveloperError('Unsupported case');
+        }
+    }
+
+    function hasVertexAtEnd(edge, edgeDetails, stride) {
+        var vertices = edgeDetails.vertices;
+
+        if (vertices.length === 0) {
+            return false;
+        }
+
+        var lastVertexStart = (vertices.length - 1) * stride;
+        var lastU = vertices[lastVertexStart + 4];
+        var lastV = vertices[lastVertexStart + 5];
+
+        switch (edge) {
+            case TileEdge.WEST:
+                return lastV === 0.0;
+            case TileEdge.SOUTH:
+                return lastU === 1.0;
+            case TileEdge.EAST:
+                return lastV === 1.0;
+            case TileEdge.NORTH:
+                return lastU === 0.0;
+            default:
+                throw new DeveloperError('Unsupported case');
+        }
+    }
+
+    function countOutputVertices(edge, edgeDetails, stride) {
+        // Don't count the last vertex, because that is shared with the next edge
+        var vertices = edgeDetails.vertices;
+        var vertexCount = vertices.length - 1;
+
+        if (!hasVertexAtStart(edge, edgeDetails, stride)) {
+            // First vertex is not at the start of the edge, so we'll have to insert an extra vertex there.
+            ++vertexCount;
+        }
+
+        if (!hasVertexAtEnd(edge, edgeDetails, stride)) {
+            // Normally the vertex at the end of the edge is included in the _next_ edge. But in this case,
+            // the last vertex falls short of the end of the edge, so include it.
+            ++vertexCount;
+        }
+
+        return vertexCount;
+    }
+
+    var cartographicScratch = new Cartographic();
+    var cartesianScratch = new Cartesian3();
+    var normalScratch = new Cartesian3();
+    var octEncodedNormalScratch = new Cartesian2();
+
+    function addCornerVertexIfNecessary(ellipsoid, u, v, longitude, latitude, height, edgeDetails, previousEdgeDetails, hasVertexNormals, hasWebMercatorT, tileVertices) {
+        var vertices = edgeDetails.vertices;
+
+        if (u === vertices[4] && v === vertices[5]) {
+            // First vertex is a corner vertex, as expected.
+            return;
+        }
+
+        // Can we use the last vertex of the previous edge as the corner vertex?
+        var stride = 6 + (hasWebMercatorT ? 1 : 0) + (hasVertexNormals ? 2 : 0);
+        var previousVertices = previousEdgeDetails.vertices;
+        var lastVertexStart = previousVertices.length - stride;
+        var lastU = previousVertices[lastVertexStart + 4];
+        var lastV = previousVertices[lastVertexStart + 5];
+
+        if (lastU === u && lastV === v) {
+            for (var i = 0; i < stride; ++i) {
+                tileVertices.push(previousVertices[lastVertexStart + i]);
+            }
+            return;
+        }
+
+        // Previous edge doesn't contain a suitable vertex either, so fabricate one.
+        cartographicScratch.longitude = longitude;
+        cartographicScratch.latitude = latitude;
+        cartographicScratch.height = height;
+        ellipsoid.cartographicToCartesian(cartographicScratch, cartesianScratch);
+        tileVertices.push(cartesianScratch.x, cartesianScratch.y, cartesianScratch.z, height, u, v);
+
+        if (hasWebMercatorT) {
+            // Identical to v at 0.0 and 1.0.
+            tileVertices.push(v);
+        }
+
+        if (hasVertexNormals) {
+            ellipsoid.geodeticSurfaceNormalCartographic(cartographicScratch, normalScratch);
+            AttributeCompression.octEncode(normalScratch, octEncodedNormalScratch);
+            tileVertices.push(octEncodedNormalScratch.x, octEncodedNormalScratch.y);
+            //tileVertices.push(AttributeCompression.octPackFloat(octEncodedNormalScratch));
+        }
+    }
+
+    function addVerticesToFillTile(edgeDetails, stride, tileVertices) {
+        var vertices = edgeDetails.vertices;
+
+        // Copy all but the last vertex.
+        var i;
+        for (i = 0; i < vertices.length - stride; ++i) {
+            tileVertices.push(vertices[i]);
+        }
+
+        // Copy the last vertex too if it's _not_ a corner vertex.
+        var lastVertexStart = i;
+        var u = vertices[lastVertexStart + 4];
+        var v = vertices[lastVertexStart + 5];
+        if (lastVertexStart < vertices.length && ((u !== 0.0 && u !== 1.0) || (v !== 0.0 && v !== 1.0))) {
+            for (; i < vertices.length; ++i) {
+                tileVertices.push(vertices[i]);
+            }
+        }
+    }
+
+    var westScratch = new TerrainTileEdgeDetails();
+    var southScratch = new TerrainTileEdgeDetails();
+    var eastScratch = new TerrainTileEdgeDetails();
+    var northScratch = new TerrainTileEdgeDetails();
+    var tileVerticesScratch = [];
+
+    function createFillTile(tileProvider, tile, frameState) {
+        console.log('L' + tile.level + 'X' + tile.x + 'Y' + tile.y);
+        var start = performance.now();
+
+        var mesh;
+        var typedArray;
+        var indices;
+        var surfaceTile = tile.data;
+        // if (surfaceTile.mesh === undefined) {
+            var levelZeroTiles = tileProvider._quadtree._levelZeroTiles;
+
+            var west = getEdgeVertices(tile, tile.findTileToWest(levelZeroTiles), frameState.frameNumber, TileEdge.EAST, westScratch);
+            var south = getEdgeVertices(tile, tile.findTileToSouth(levelZeroTiles), frameState.frameNumber, TileEdge.NORTH, southScratch);
+            var east = getEdgeVertices(tile, tile.findTileToEast(levelZeroTiles), frameState.frameNumber, TileEdge.WEST, eastScratch);
+            var north = getEdgeVertices(tile, tile.findTileToNorth(levelZeroTiles), frameState.frameNumber, TileEdge.SOUTH, northScratch);
+
+            var hasVertexNormals = tileProvider.terrainProvider.hasVertexNormals;
+            var hasWebMercatorT = true; // TODO
+            var stride = 6 + (hasWebMercatorT ? 1 : 0) + (hasVertexNormals ? 2 : 0);
+
+            var minimumHeight = Number.MAX_VALUE;
+            var maximumHeight = -Number.MAX_VALUE;
+            var hasAnyVertices = false;
+
+            if (west.vertices.length > 0) {
+                minimumHeight = Math.min(minimumHeight, west.minimumHeight);
+                maximumHeight = Math.max(maximumHeight, west.maximumHeight);
+                hasAnyVertices = true;
+            }
+
+            if (south.vertices.length > 0) {
+                minimumHeight = Math.min(minimumHeight, south.minimumHeight);
+                maximumHeight = Math.max(maximumHeight, south.maximumHeight);
+                hasAnyVertices = true;
+            }
+
+            if (east.vertices.length > 0) {
+                minimumHeight = Math.min(minimumHeight, east.minimumHeight);
+                maximumHeight = Math.max(maximumHeight, east.maximumHeight);
+                hasAnyVertices = true;
+            }
+
+            if (north.vertices.length > 0) {
+                minimumHeight = Math.min(minimumHeight, north.minimumHeight);
+                maximumHeight = Math.max(maximumHeight, north.maximumHeight);
+                hasAnyVertices = true;
+            }
+
+            if (!hasAnyVertices) {
+                var tileBoundingRegion = surfaceTile.tileBoundingRegion;
+                minimumHeight = tileBoundingRegion.minimumHeight;
+                maximumHeight = tileBoundingRegion.maximumHeight;
+            }
+
+            var middleHeight = (minimumHeight + maximumHeight) * 0.5;
+
+            var tileVertices = tileVerticesScratch;
+            tileVertices.length = 0;
+
+            var ellipsoid = tile.tilingScheme.ellipsoid;
+            var rectangle = tile.rectangle;
+
+            var northwestIndex = 0;
+            addCornerVertexIfNecessary(ellipsoid, 0.0, 1.0, rectangle.west, rectangle.north, middleHeight, west, north, hasVertexNormals, hasWebMercatorT, tileVertices);
+            addVerticesToFillTile(west, stride, tileVertices);
+            var southwestIndex = tileVertices.length / stride;
+            addCornerVertexIfNecessary(ellipsoid, 0.0, 0.0, rectangle.west, rectangle.south, middleHeight, south, west, hasVertexNormals, hasWebMercatorT, tileVertices);
+            addVerticesToFillTile(south, stride, tileVertices);
+            var southeastIndex = tileVertices.length / stride;
+            addCornerVertexIfNecessary(ellipsoid, 1.0, 0.0, rectangle.east, rectangle.south, middleHeight, east, south, hasVertexNormals, hasWebMercatorT, tileVertices);
+            addVerticesToFillTile(east, stride, tileVertices);
+            var northeastIndex = tileVertices.length / stride;
+            addCornerVertexIfNecessary(ellipsoid, 1.0, 1.0, rectangle.east, rectangle.north, middleHeight, north, east, hasVertexNormals, hasWebMercatorT, tileVertices);
+            addVerticesToFillTile(north, stride, tileVertices);
+
+            // Add a single vertex at the center of the tile.
+            var obb = OrientedBoundingBox.fromRectangle(tile.rectangle, minimumHeight, maximumHeight, tile.tilingScheme.ellipsoid);
+            var center = obb.center;
+
+            ellipsoid.cartesianToCartographic(center, cartographicScratch);
+            cartographicScratch.height = middleHeight;
+            var centerVertexPosition = ellipsoid.cartographicToCartesian(cartographicScratch, cartesianScratch);
+
+            tileVertices.push(centerVertexPosition.x, centerVertexPosition.y, centerVertexPosition.z, middleHeight);
+            tileVertices.push((cartographicScratch.longitude - rectangle.west) / (rectangle.east - rectangle.west));
+            tileVertices.push((cartographicScratch.latitude - rectangle.south) / (rectangle.north - rectangle.south));
+
+            if (hasWebMercatorT) {
+                var southMercatorY = WebMercatorProjection.geodeticLatitudeToMercatorAngle(rectangle.south);
+                var oneOverMercatorHeight = 1.0 / (WebMercatorProjection.geodeticLatitudeToMercatorAngle(rectangle.north) - southMercatorY);
+                tileVertices.push((WebMercatorProjection.geodeticLatitudeToMercatorAngle(cartographicScratch.latitude) - southMercatorY) * oneOverMercatorHeight);
+            }
+
+            if (hasVertexNormals) {
+                ellipsoid.geodeticSurfaceNormalCartographic(cartographicScratch, normalScratch);
+                AttributeCompression.octEncode(normalScratch, octEncodedNormalScratch);
+                tileVertices.push(octEncodedNormalScratch.x, octEncodedNormalScratch.y);
+            }
+
+            var vertexCount = tileVertices.length / stride;
+            indices = new Uint16Array((vertexCount - 1) * 3); // one triangle per edge vertex
+            var centerIndex = vertexCount - 1;
+
+            var indexOut = 0;
+            var i;
+            for (i = 0; i < vertexCount - 2; ++i) {
+                indices[indexOut++] = centerIndex;
+                indices[indexOut++] = i;
+                indices[indexOut++] = i + 1;
+            }
+
+            indices[indexOut++] = centerIndex;
+            indices[indexOut++] = i;
+            indices[indexOut++] = 0;
+
+            var westIndicesSouthToNorth = [];
+            for (i = southwestIndex; i >= northwestIndex; --i) {
+                westIndicesSouthToNorth.push(i);
+            }
+
+            var southIndicesEastToWest = [];
+            for (i = southeastIndex; i >= southwestIndex; --i) {
+                southIndicesEastToWest.push(i);
+            }
+
+            var eastIndicesNorthToSouth = [];
+            for (i = northeastIndex; i >= southeastIndex; --i) {
+                eastIndicesNorthToSouth.push(i);
+            }
+
+            var northIndicesWestToEast = [];
+            northIndicesWestToEast.push(0);
+            for (i = centerIndex - 1; i >= northeastIndex; --i) {
+                northIndicesWestToEast.push(i);
+            }
+
+            // var westVertexCount = countOutputVertices(west, stride);
+            // var southVertexCount = countOutputVertices(west, stride);
+            // var eastVertexCount = countOutputVertices(east, stride);
+            // var northVertexCount = countOutputVertices(north, stride);
+            // var vertexCount = westVertexCount + southVertexCount + eastVertexCount + northVertexCount;
+
+            var packedStride = hasVertexNormals ? stride - 1 : stride; // normal is packed into 1 float
+            typedArray = new Float32Array(vertexCount * packedStride);
+
+            for (i = 0; i < vertexCount; ++i) {
+                var read = i * stride;
+                var write = i * packedStride;
+                typedArray[write++] = tileVertices[read++] - center.x;
+                typedArray[write++] = tileVertices[read++] - center.y;
+                typedArray[write++] = tileVertices[read++] - center.z;
+                typedArray[write++] = tileVertices[read++];
+                typedArray[write++] = tileVertices[read++];
+                typedArray[write++] = tileVertices[read++];
+
+                if (hasWebMercatorT) {
+                    typedArray[write++] = tileVertices[read++];
+                }
+
+                if (hasVertexNormals) {
+                    typedArray[write++] = AttributeCompression.octPackFloat(Cartesian2.fromElements(tileVertices[read++], tileVertices[read++], octEncodedNormalScratch));
+                }
+            }
+
+            var encoding = new TerrainEncoding(undefined, minimumHeight, maximumHeight, undefined, hasVertexNormals, hasWebMercatorT);
+            encoding.center = center;
+
+            mesh = new TerrainMesh(
+                obb.center,
+                typedArray,
+                indices,
+                minimumHeight,
+                maximumHeight,
+                BoundingSphere.fromOrientedBoundingBox(obb),
+                computeOccludeePoint(tileProvider, center, rectangle, maximumHeight),
+                encoding.getStride(),
+                obb,
+                encoding,
+                frameState.terrainExaggeration,
+                westIndicesSouthToNorth,
+                southIndicesEastToWest,
+                eastIndicesNorthToSouth,
+                northIndicesWestToEast
+            );
+
+            var oldMesh = surfaceTile.mesh;
+            surfaceTile.mesh = mesh;
+        // } else {
+        //     mesh = surfaceTile.mesh;
+        //     typedArray = mesh.vertices;
+        //     indices = mesh.indices;
+        // }
+
+        var context = frameState.context;
+
+        var buffer = Buffer.createVertexBuffer({
+            context : context,
+            typedArray : typedArray,
+            usage : BufferUsage.STATIC_DRAW
+        });
+        var attributes = mesh.encoding.getAttributes(buffer);
+
+        var indexBuffers = mesh.indices.indexBuffers || {};
+        var indexBuffer = indexBuffers[context.id];
+        if (!defined(indexBuffer) || indexBuffer.isDestroyed()) {
+            var indexDatatype = (indices.BYTES_PER_ELEMENT === 2) ?  IndexDatatype.UNSIGNED_SHORT : IndexDatatype.UNSIGNED_INT;
+            indexBuffer = Buffer.createIndexBuffer({
+                context : context,
+                typedArray : surfaceTile.mesh.indices,
+                usage : BufferUsage.STATIC_DRAW,
+                indexDatatype : indexDatatype
+            });
+            indexBuffer.vertexArrayDestroyable = false;
+            indexBuffer.referenceCount = 1;
+            indexBuffers[context.id] = indexBuffer;
+            surfaceTile.mesh.indices.indexBuffers = indexBuffers;
+        } else {
+            ++indexBuffer.referenceCount;
+        }
+
+        var oldVertexArray = surfaceTile.vertexArray;
+        surfaceTile.vertexArray = new VertexArray({
+            context : context,
+            attributes : attributes,
+            indexBuffer : indexBuffer
+        });
+
+        var tileImageryCollection = surfaceTile.imagery;
+
+        var len;
+        if (tileImageryCollection.length === 0) {
+            var imageryLayerCollection = tileProvider._imageryLayers;
+            var terrainProvider = tileProvider.terrainProvider;
+            for (i = 0, len = imageryLayerCollection.length; i < len; ++i) {
+                var layer = imageryLayerCollection.get(i);
+                if (layer.show) {
+                    layer._createTileImagerySkeletons(tile, terrainProvider);
+                }
+            }
+        }
+
+        for (i = 0, len = tileImageryCollection.length; i < len; ++i) {
+            var tileImagery = tileImageryCollection[i];
+            if (!defined(tileImagery.loadingImagery)) {
+                continue;
+            }
+
+            if (tileImagery.loadingImagery.state === ImageryState.PLACEHOLDER) {
+                var imageryLayer = tileImagery.loadingImagery.imageryLayer;
+                if (imageryLayer.imageryProvider.ready) {
+                    // Remove the placeholder and add the actual skeletons (if any)
+                    // at the same position.  Then continue the loop at the same index.
+                    tileImagery.freeResources();
+                    tileImageryCollection.splice(i, 1);
+                    imageryLayer._createTileImagerySkeletons(tile, tileProvider.terrainProvider, i);
+                    --i;
+                    len = tileImageryCollection.length;
+                    continue;
+                }
+            }
+
+            tileImagery.processStateMachine(tile, frameState, true);
+        }
+
+        var oldRenderable = tile.renderable;
+        tile.renderable = true;
+
+        var stop = performance.now();
+
+        console.log('fill: ' + (stop - start));
+
+        var oldRenderableTile = surfaceTile.renderableTile;
+        surfaceTile.renderableTile = undefined;
+
+        addDrawCommandsForTile(tileProvider, tile, frameState, undefined);
+
+        surfaceTile.renderableTile = oldRenderableTile;
+        tile.renderable = oldRenderable;
+        surfaceTile.vertexArray = oldVertexArray; // TODO: free it
+        surfaceTile.mesh = oldMesh;
+    }
+
     var otherPassesInitialColor = new Cartesian4(0.0, 0.0, 0.0, 0.0);
 
     function addDrawCommandsForTile(tileProvider, tile, frameState, subset) {
@@ -1330,14 +1864,20 @@ define([
             var missingTileStrategy = tileProvider.missingTileStrategy;
             if (missingTileStrategy === MissingTileStrategy.RENDER_ANCESTOR_SUBSET) {
                 addDrawCommandsForTile(tileProvider, surfaceTile.renderableTile, frameState, surfaceTile.renderableTileSubset);
+                return;
+            } else if (missingTileStrategy === MissingTileStrategy.CREATE_FILL_TILE) {
+                //if (tile.level===11&&tile.x===3037&&tile.y===705) {
+                    createFillTile(tileProvider, tile, frameState);
+                //}
+                return;
+                // TODO: get ancestor imagery if necessary
             }
-            return;
         }
 
         //>>includeStart('debug', pragmas.debug);
-        if (!tile.renderable) {
-            throw new DeveloperError('A rendered tile is not renderable, this should not be possible.');
-        }
+        // if (!tile.renderable) {
+        //     throw new DeveloperError('A rendered tile is not renderable, this should not be possible.');
+        // }
         //>>includeEnd('debug');
 
         var creditDisplay = frameState.creditDisplay;
@@ -1474,11 +2014,15 @@ define([
             ++tileProvider._usedDrawCommands;
 
             if (tile === tileProvider._debug.boundingSphereTile) {
+                //var obb = surfaceTile.orientedBoundingBox;
+                var obb = new OrientedBoundingBox(
+                    new Cartesian3(296241.1872327779, 5633328.627100673, 2981274.607864871),
+                    Matrix3.unpack([-2161.393502911665, 113.66171224228782, 0, -60.148176278433304, -1143.778981114305, 2152.7355430938214, 82.359194412753, 1566.144167609453, 834.4157931580422], 0));
                 // If a debug primitive already exists for this tile, it will not be
                 // re-created, to avoid allocation every frame. If it were possible
                 // to have more than one selected tile, this would have to change.
-                if (defined(surfaceTile.orientedBoundingBox)) {
-                    getDebugOrientedBoundingBox(surfaceTile.orientedBoundingBox, Color.RED).update(frameState);
+                if (defined(obb)) {
+                    getDebugOrientedBoundingBox(obb, Color.RED).update(frameState);
                 } else if (defined(surfaceTile.mesh) && defined(surfaceTile.mesh.boundingSphere3D)) {
                     getDebugBoundingSphere(surfaceTile.mesh.boundingSphere3D, Color.RED).update(frameState);
                 }

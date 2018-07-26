@@ -61,6 +61,9 @@ define([
         //     console.log('time until start: ' + (startTime - parameters.startTime));
         // }
 
+        // var startTime = Date.now();
+        // console.log('time until start: ' + (startTime - parameters.startTime));
+
         var isEastChild = parameters.isEastChild;
         var isNorthChild = parameters.isNorthChild;
 

@@ -137,7 +137,7 @@ define([
          * when all visible siblings in the same quad are renderable, OR if they were
          * shown in the last frame. Detail will not flicker out with either settings.
          * @type {Boolean}
-         * @default true
+         * @default false
          */
         this.revealInChunks = false;
 
@@ -629,6 +629,24 @@ define([
         }
 
         if (screenSpaceError(primitive, frameState, tile) < primitive.maximumScreenSpaceError) {
+            // TODO: This is the tile we want to render this frame, but if it's not renderable yet
+            // we'll do something different depending on what we did _last_ frame.
+            // 1. If any descendant tiles were rendered last frame:
+            //   A. Continue rendering previously-rendered descendants, and
+            //   B. Create fill tiles for previously-culled descendants.
+            // 2. If this tile's subtree was culled last frame:
+            //   A. Generate a fill for this tile.
+            // 3. If an ancestor tile was rendered last frame:
+            //   A. Continue rendering the ancestor until all its visible descendants are renderable.
+            //
+            // 3A means that we will sometimes wait a long time with no visible progress and then
+            // a bunch of detail will appear all at once. To mitigate this, count the number of
+            // visible-but-not-loaded descendants of a given tile. If it's higher than
+            // some threshold, load this tile's visible children instead of any of its
+            // deeper descendants. Then, for traversal back up, we say that the tile is
+            // waiting on (up to) 4 descendants instead of the total number its really
+            // waiting on.
+
             // This tile meets SSE requirements, so render it and load it with medium priority.
             reportTileAction(frameState, tile, 'meets SSE');
             queueTileLoad(primitive, primitive._tileLoadQueueMedium, tile, frameState);
@@ -767,6 +785,8 @@ define([
     }
 
     function visitIfVisible(primitive, tile, tileProvider, frameState, occluders, nearestRenderableTile) {
+        tile._frameVisited = frameState.frameNumber;
+
         if (tileProvider.computeTileVisibility(tile, frameState, occluders) !== Visibility.NONE) {
             return visitTile(primitive, frameState, tile, nearestRenderableTile);
         }

@@ -128,12 +128,6 @@ defineSuite([
             expect(rootTile.state).toBe(QuadtreeTileLoadState.LOADING);
         });
 
-        it('creates loadedTerrain but not upsampledTerrain for root tiles', function() {
-            GlobeSurfaceTile.processStateMachine(rootTile, scene.frameState, alwaysDeferTerrainProvider, imageryLayerCollection, []);
-            expect(rootTile.data.loadedTerrain).toBeDefined();
-            expect(rootTile.data.upsampledTerrain).toBeUndefined();
-        });
-
         it('non-root tiles get neither loadedTerrain nor upsampledTerrain when their parent is not loaded nor upsampled', function() {
             var children = rootTile.children;
             for (var i = 0; i < children.length; ++i) {

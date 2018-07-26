@@ -93,5 +93,21 @@ When the camera moves, new tiles become visible. If those tiles aren't loaded ye
 
 Number 5 is a tempting strategy, with one big problem: it can cause us to lose detail from the scene with small camera movements. For example, if we're looking at a detailed scene that shows 3 out of 4 children of a level 14 tile, and then move the camera so that the 4th is visible, suddenly that level 14 tile isn't refinable anymore. If we start rendering that level 14 tiles intead of its children, we'll lose detail from the scene for a second until that 4th tile loads. This looks really bad.
 
-So, our rule is: if we rendered a tile last frame, and it's still visible and the correct SSE this frame, we must render it this frame. In the scenario above, we must use one of our other strategies to fill the space of that 4th child of the level 14 tiles.
+Important rules:
+* if we rendered a tile last frame, and it's still visible and the correct SSE this frame, we must render it this frame. In the scenario above, we must use one of our other strategies to fill the space of that 4th child of the level 14 tiles.
+* Detail should never disappear when zooming in. i.e. upsampling is ok, but creating fill tiles is not.
+* We can create fill tiles for areas the user hasn't seen recently.
 
+Specifically:
+* Ancestor rendered last frame -> upsample (e.g. zooming in)
+* Descendants rendered last frame but now this tile meets SSE -> continue rendering descendants, create fill tiles as necessary for areas that weren't previously visible (e.g. zooming out)
+  * _Optionally_ we can preload ancestors to optimize the zoom out experience.
+  * Note that this applies to imagery too! Zooming out should never cause detail to disappear and then come back.
+* Sub-tree was culled last frame but now it's visible -> create fill tiles as necessary (e.g. panning)
+
+## Min/max heights
+
+Tiles have min/max heights in a whole bunch of places 😨:
+* GlobeSurfaceTile.tileBoundingRegion
+* GlobeSurfaceTile.terrainData
+* GlobeSurfaceTile.mesh.encoding

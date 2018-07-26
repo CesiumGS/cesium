@@ -79,10 +79,10 @@ define([
 
         var vertexLogDepth = 0;
         var vertexLogDepthDefine = '';
-        if (surfaceTile.terrainData._createdByUpsampling) {
-            vertexLogDepth = 1;
-            vertexLogDepthDefine = 'DISABLE_GL_POSITION_LOG_DEPTH';
-        }
+        // if (surfaceTile.terrainData._createdByUpsampling) {
+        //     vertexLogDepth = 1;
+        //     vertexLogDepthDefine = 'DISABLE_GL_POSITION_LOG_DEPTH';
+        // }
 
         var sceneMode = frameState.mode;
         var flags = sceneMode |

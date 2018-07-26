@@ -71,6 +71,7 @@ define([
         this._customData = [];
         this._frameUpdated = undefined;
         this._frameRendered = undefined;
+        this._frameVisited = undefined;
         this._loadedCallbacks = {};
 
         /**
@@ -393,6 +394,107 @@ define([
             }
         }
     });
+
+    QuadtreeTile.prototype.findLevelZeroTile = function(levelZeroTiles, x, y) {
+        var xTiles = this.tilingScheme.getNumberOfXTilesAtLevel(0);
+        if (x < 0) {
+            x += xTiles;
+        } else if (x >= xTiles) {
+            x -= xTiles;
+        }
+
+        if (y < 0 || y >= this.tilingScheme.getNumberOfYTilesAtLevel(0)) {
+            return undefined;
+        }
+
+        return levelZeroTiles.filter(function(tile) {
+            return tile.x === x && tile.y === y;
+        })[0];
+    };
+
+    QuadtreeTile.prototype.findTileToWest = function(levelZeroTiles) {
+        var parent = this.parent;
+        if (parent === undefined) {
+            return this.findLevelZeroTile(levelZeroTiles, this.x - 1, this.y);
+        }
+
+        if (parent.southeastChild === this) {
+            return parent.southwestChild;
+        } else if (parent.northeastChild === this) {
+            return parent.northwestChild;
+        }
+
+        var westOfParent = parent.findTileToWest(levelZeroTiles);
+        if (westOfParent === undefined) {
+            return undefined;
+        } else if (parent.southwestChild === this) {
+            return westOfParent.southeastChild;
+        }
+        return westOfParent.northeastChild;
+    };
+
+    QuadtreeTile.prototype.findTileToEast = function(levelZeroTiles) {
+        var parent = this.parent;
+        if (parent === undefined) {
+            return this.findLevelZeroTile(levelZeroTiles, this.x + 1, this.y);
+        }
+
+        if (parent.southwestChild === this) {
+            return parent.southeastChild;
+        } else if (parent.northwestChild === this) {
+            return parent.northeastChild;
+        }
+
+        var eastOfParent = parent.findTileToEast(levelZeroTiles);
+        if (eastOfParent === undefined) {
+            return undefined;
+        } else if (parent.southeastChild === this) {
+            return eastOfParent.southwestChild;
+        }
+        return eastOfParent.northwestChild;
+    };
+
+    QuadtreeTile.prototype.findTileToSouth = function(levelZeroTiles) {
+        var parent = this.parent;
+        if (parent === undefined) {
+            return this.findLevelZeroTile(levelZeroTiles, this.x, this.y + 1);
+        }
+
+        if (parent.northwestChild === this) {
+            return parent.southwestChild;
+        } else if (parent.northeastChild === this) {
+            return parent.southeastChild;
+        }
+
+        var southOfParent = parent.findTileToSouth(levelZeroTiles);
+        if (southOfParent === undefined) {
+            return undefined;
+        } else if (parent.southwestChild === this) {
+            return southOfParent.northwestChild;
+        }
+        return southOfParent.northeastChild;
+    };
+
+    QuadtreeTile.prototype.findTileToNorth = function(levelZeroTiles) {
+        var parent = this.parent;
+        if (parent === undefined) {
+            return this.findLevelZeroTile(levelZeroTiles, this.x, this.y - 1);
+        }
+
+        if (parent.southwestChild === this) {
+            return parent.northwestChild;
+        } else if (parent.southeastChild === this) {
+            return parent.northeastChild;
+        }
+
+        var northOfParent = parent.findTileToNorth(levelZeroTiles);
+        if (northOfParent === undefined) {
+            return undefined;
+        } else if (parent.northwestChild === this) {
+            return northOfParent.southwestChild;
+        }
+        return northOfParent.southeastChild;
+    };
 
     /**
      * Frees the resources associated with this tile and returns it to the <code>START</code>

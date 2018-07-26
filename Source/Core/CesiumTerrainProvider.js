@@ -623,7 +623,7 @@ define([
             return -1;
         }
 
-        var bvhLevels = layerToUse.bvhLevels;
+        var bvhLevels = layerToUse.bvhLevels - 1;
         return ((level / bvhLevels) | 0) * bvhLevels;
     };
 
