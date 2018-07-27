@@ -609,10 +609,12 @@ define([
      * @param {FrameState} frameState The frame state.
      * @param {QuadtreeTile} tile The tile to visit
      * @param {QuadtreeTile} nearestRenderableTile The nearest ancestor tile for which the `renderable` property is true.
+     * @param {Boolean} ancestorMeetsSse True if a tile higher in the tile tree already met the SSE and we're refining further only
+     *                  to maintain detail while that higher tile loads.
      * @returns A bit mask where bit 1 is set if this tile or _any_ of its descendants are renderable, and bit 2 is
      *          set if _all_ selected tiles starting with this tile are renderable.
      */
-    function visitTile(primitive, frameState, tile, nearestRenderableTile) {
+    function visitTile(primitive, frameState, tile, nearestRenderableTile, ancestorMeetsSse) {
         var debug = primitive._debug;
 
         ++debug.tilesVisited;
@@ -628,36 +630,57 @@ define([
             nearestRenderableTile = tile;
         }
 
-        if (screenSpaceError(primitive, frameState, tile) < primitive.maximumScreenSpaceError) {
-            // TODO: This is the tile we want to render this frame, but if it's not renderable yet
-            // we'll do something different depending on what we did _last_ frame.
-            // 1. If any descendant tiles were rendered last frame:
-            //   A. Continue rendering previously-rendered descendants, and
-            //   B. Create fill tiles for previously-culled descendants.
-            // 2. If this tile's subtree was culled last frame:
-            //   A. Generate a fill for this tile.
-            // 3. If an ancestor tile was rendered last frame:
-            //   A. Continue rendering the ancestor until all its visible descendants are renderable.
-            //
-            // 3A means that we will sometimes wait a long time with no visible progress and then
-            // a bunch of detail will appear all at once. To mitigate this, count the number of
-            // visible-but-not-loaded descendants of a given tile. If it's higher than
-            // some threshold, load this tile's visible children instead of any of its
-            // deeper descendants. Then, for traversal back up, we say that the tile is
-            // waiting on (up to) 4 descendants instead of the total number its really
-            // waiting on.
-
-            // This tile meets SSE requirements, so render it and load it with medium priority.
-            reportTileAction(frameState, tile, 'meets SSE');
-            queueTileLoad(primitive, primitive._tileLoadQueueMedium, tile, frameState);
-            addTileToRenderList(primitive, tile, nearestRenderableTile);
-            return createBitMask(tile.renderable, tile.renderable, tile._frameRendered === primitive._lastSelectionFrameNumber);
-        }
+        var meetsSse = screenSpaceError(primitive, frameState, tile) < primitive.maximumScreenSpaceError;
 
         var southwestChild = tile.southwestChild;
         var southeastChild = tile.southeastChild;
         var northwestChild = tile.northwestChild;
         var northeastChild = tile.northeastChild;
+
+        var lastFrame = primitive._lastSelectionFrameNumber;
+
+        if (meetsSse || ancestorMeetsSse) {
+            // Only load this tile if it (not just an ancestor) meets the SSE.
+            if (meetsSse) {
+                reportTileAction(frameState, tile, 'meets SSE');
+                queueTileLoad(primitive, primitive._tileLoadQueueMedium, tile, frameState);
+            } else {
+                reportTileAction(frameState, tile, 'ancestor meets SSE');
+            }
+
+            // This is the tile we want to render this frame, but we'll do different things depending
+            // on the state of this tile and on what we did _last_ frame.
+
+            // 1. If it's completely loaded (terrain _and_ imagery), render it.
+            //      TODO: technically we only need to ensure that the geometry and any imagery layers previously
+            //            loaded on descendants are loaded on this tile. It doesn't need to be really, totally
+            //            done loading. Hard to determine this though.
+            // 2. If it's renderable at all (even if not all imagery is loaded) and we were previously rendering it
+            //    (even if we were rendering a fill), render it.
+            // 3. If this tile's children were not visited last frame because this tile was culled
+            //    or because an ancestor tile met the SSE, then render this tile, or a fill if this tile isn't
+            //    renderable yet.
+            var oneCompletelyLoaded = tile.state === QuadtreeTileLoadState.DONE;
+            var twoRenderableAndPreviouslyRendered = tile.renderable && tile._frameRendered === lastFrame;
+            var threeNoChildrenVisitedLastFrame =
+                southwestChild._frameVisited !== lastFrame &&
+                southeastChild._frameVisited !== lastFrame &&
+                northwestChild._frameVisited !== lastFrame &&
+                northeastChild._frameVisited !== lastFrame;
+
+            if (oneCompletelyLoaded || twoRenderableAndPreviouslyRendered || threeNoChildrenVisitedLastFrame) {
+                addTileToRenderList(primitive, tile, nearestRenderableTile);
+                return createBitMask(tile.renderable, tile.renderable, tile._frameRendered === primitive._lastSelectionFrameNumber);
+            }
+
+            // 4. Otherwise, we can't render this tile (or its fill) because it would cause detail to disappear
+            //    that was visible last frame. Instead, keep rendering any still-visible descendants that were rendered
+            //    last frame and render fills for newly-visible descendants. E.g. if we were rendering level 15 last
+            //    frame but this frame we want level 14 and the closest renderable level <= 14 is 0, rendering level
+            //    zero would be pretty jarring so instead we keep rendering level 15 even though its SSE is better
+            //    than required. So fall through to continue traversal...
+            ancestorMeetsSse = true;
+        }
 
         var tileProvider = primitive.tileProvider;
 
@@ -688,7 +711,7 @@ define([
             var firstRenderedDescendantIndex = primitive._tilesToRender.length;
 
             // No need to add the children to the load queue because they'll be added (if necessary) when they're visited.
-            var bitMask = visitVisibleChildrenNearToFar(primitive, southwestChild, southeastChild, northwestChild, northeastChild, frameState, nearestRenderableTile);
+            var bitMask = visitVisibleChildrenNearToFar(primitive, southwestChild, southeastChild, northwestChild, northeastChild, frameState, nearestRenderableTile, ancestorMeetsSse);
             var anyAreRenderable = isAnyAreRenderable(bitMask);
             var allAreRenderable = isAllAreRenderable(bitMask);
             var anyWereRenderedLastFrame = isAnyWereRenderedLastFrame(bitMask);
@@ -724,7 +747,7 @@ define([
                 // to a) draw nothing, or b) draw level 0 tiles, because either strategy will likely
                 // leave us with massive gaps visible in the globe.
 
-                queueTileLoad(primitive, primitive._tileLoadQueueLow, tile, frameState);
+                //queueTileLoad(primitive, primitive._tileLoadQueueLow, tile, frameState);
             }
 
             return createBitMask(anyAreRenderable, allAreRenderable, anyWereRenderedLastFrame);
@@ -742,7 +765,7 @@ define([
         return createBitMask(tile.renderable, tile.renderable, tile._frameRendered === primitive._lastSelectionFrameNumber);
     }
 
-    function visitVisibleChildrenNearToFar(primitive, southwest, southeast, northwest, northeast, frameState, nearestRenderableTile) {
+    function visitVisibleChildrenNearToFar(primitive, southwest, southeast, northwest, northeast, frameState, nearestRenderableTile, ancestorMeetsSse) {
         var cameraPosition = frameState.camera.positionCartographic;
         var tileProvider = primitive._tileProvider;
         var occluders = primitive._occluders;
@@ -752,29 +775,29 @@ define([
         if (cameraPosition.longitude < southwest.rectangle.east) {
             if (cameraPosition.latitude < southwest.rectangle.north) {
                 // Camera in southwest quadrant
-                swMask = visitIfVisible(primitive, southwest, tileProvider, frameState, occluders, nearestRenderableTile);
-                seMask = visitIfVisible(primitive, southeast, tileProvider, frameState, occluders, nearestRenderableTile);
-                nwMask = visitIfVisible(primitive, northwest, tileProvider, frameState, occluders, nearestRenderableTile);
-                neMask = visitIfVisible(primitive, northeast, tileProvider, frameState, occluders, nearestRenderableTile);
+                swMask = visitIfVisible(primitive, southwest, tileProvider, frameState, occluders, nearestRenderableTile, ancestorMeetsSse);
+                seMask = visitIfVisible(primitive, southeast, tileProvider, frameState, occluders, nearestRenderableTile, ancestorMeetsSse);
+                nwMask = visitIfVisible(primitive, northwest, tileProvider, frameState, occluders, nearestRenderableTile, ancestorMeetsSse);
+                neMask = visitIfVisible(primitive, northeast, tileProvider, frameState, occluders, nearestRenderableTile, ancestorMeetsSse);
             } else {
                 // Camera in northwest quadrant
-                nwMask = visitIfVisible(primitive, northwest, tileProvider, frameState, occluders, nearestRenderableTile);
-                swMask = visitIfVisible(primitive, southwest, tileProvider, frameState, occluders, nearestRenderableTile);
-                neMask = visitIfVisible(primitive, northeast, tileProvider, frameState, occluders, nearestRenderableTile);
-                seMask = visitIfVisible(primitive, southeast, tileProvider, frameState, occluders, nearestRenderableTile);
+                nwMask = visitIfVisible(primitive, northwest, tileProvider, frameState, occluders, nearestRenderableTile, ancestorMeetsSse);
+                swMask = visitIfVisible(primitive, southwest, tileProvider, frameState, occluders, nearestRenderableTile, ancestorMeetsSse);
+                neMask = visitIfVisible(primitive, northeast, tileProvider, frameState, occluders, nearestRenderableTile, ancestorMeetsSse);
+                seMask = visitIfVisible(primitive, southeast, tileProvider, frameState, occluders, nearestRenderableTile, ancestorMeetsSse);
             }
         } else if (cameraPosition.latitude < southwest.rectangle.north) {
             // Camera southeast quadrant
-            seMask = visitIfVisible(primitive, southeast, tileProvider, frameState, occluders, nearestRenderableTile);
-            swMask = visitIfVisible(primitive, southwest, tileProvider, frameState, occluders, nearestRenderableTile);
-            neMask = visitIfVisible(primitive, northeast, tileProvider, frameState, occluders, nearestRenderableTile);
-            nwMask = visitIfVisible(primitive, northwest, tileProvider, frameState, occluders, nearestRenderableTile);
+            seMask = visitIfVisible(primitive, southeast, tileProvider, frameState, occluders, nearestRenderableTile, ancestorMeetsSse);
+            swMask = visitIfVisible(primitive, southwest, tileProvider, frameState, occluders, nearestRenderableTile, ancestorMeetsSse);
+            neMask = visitIfVisible(primitive, northeast, tileProvider, frameState, occluders, nearestRenderableTile, ancestorMeetsSse);
+            nwMask = visitIfVisible(primitive, northwest, tileProvider, frameState, occluders, nearestRenderableTile, ancestorMeetsSse);
         } else {
             // Camera in northeast quadrant
-            neMask = visitIfVisible(primitive, northeast, tileProvider, frameState, occluders, nearestRenderableTile);
-            nwMask = visitIfVisible(primitive, northwest, tileProvider, frameState, occluders, nearestRenderableTile);
-            seMask = visitIfVisible(primitive, southeast, tileProvider, frameState, occluders, nearestRenderableTile);
-            swMask = visitIfVisible(primitive, southwest, tileProvider, frameState, occluders, nearestRenderableTile);
+            neMask = visitIfVisible(primitive, northeast, tileProvider, frameState, occluders, nearestRenderableTile, ancestorMeetsSse);
+            nwMask = visitIfVisible(primitive, northwest, tileProvider, frameState, occluders, nearestRenderableTile, ancestorMeetsSse);
+            seMask = visitIfVisible(primitive, southeast, tileProvider, frameState, occluders, nearestRenderableTile, ancestorMeetsSse);
+            swMask = visitIfVisible(primitive, southwest, tileProvider, frameState, occluders, nearestRenderableTile, ancestorMeetsSse);
         }
 
         var anyAreRenderable = isAnyAreRenderable(swMask) || isAnyAreRenderable(seMask) || isAnyAreRenderable(nwMask) || isAnyAreRenderable(neMask);
