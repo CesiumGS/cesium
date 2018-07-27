@@ -278,7 +278,7 @@ define([
      * <code>true</code> if they pass an absolute or relative tolerance test,
      * <code>false</code> otherwise.
      *
-     * @param {OrthographicFrustum} [other] The right hand side OrthographicFrustum.
+     * @param {OrthographicFrustum} other The right hand side OrthographicFrustum.
      * @param {Number} relativeEpsilon The relative epsilon tolerance to use for equality testing.
      * @param {Number} [absoluteEpsilon=relativeEpsilon] The absolute epsilon tolerance to use for equality testing.
      * @returns {Boolean} <code>true</code> if this and other are within the provided epsilon, <code>false</code> otherwise.

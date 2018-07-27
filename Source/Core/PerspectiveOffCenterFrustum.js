@@ -428,7 +428,7 @@ define([
      * <code>true</code> if they pass an absolute or relative tolerance test,
      * <code>false</code> otherwise.
      *
-     * @param {PerspectiveOffCenterFrustum} [other] The right hand side PerspectiveOffCenterFrustum.
+     * @param {PerspectiveOffCenterFrustum} other The right hand side PerspectiveOffCenterFrustum.
      * @param {Number} relativeEpsilon The relative epsilon tolerance to use for equality testing.
      * @param {Number} [absoluteEpsilon=relativeEpsilon] The absolute epsilon tolerance to use for equality testing.
      * @returns {Boolean} <code>true</code> if this and other are within the provided epsilon, <code>false</code> otherwise.
