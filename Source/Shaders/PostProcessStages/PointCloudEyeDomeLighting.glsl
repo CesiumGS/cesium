@@ -24,7 +24,7 @@ void main()
 
     float log2Depth = log2(-eyeCoordinate.z);
 
-    if (length(eyeCoordinate.xyz) < czm_epsilon7)
+    if (depthOrLogDepth == 0.0) // 0.0 is the clear value for the gbuffer
     {
         discard;
     }
