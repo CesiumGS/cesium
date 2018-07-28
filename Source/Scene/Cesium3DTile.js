@@ -236,19 +236,6 @@ define([
         this.hasEmptyContent = hasEmptyContent;
 
         /**
-         * When <code>true</code>, the tile's content is renderable.
-         * <p>
-         * This is <code>false</code> until the tile's content is loaded.
-         * </p>
-         *
-         * @type {Boolean}
-         * @readonly
-         *
-         * @private
-         */
-        this.hasRenderableContent = false;
-
-        /**
          * When <code>true</code>, the tile's content points to an external tileset.
          * <p>
          * This is <code>false</code> until the tile's content is loaded.
@@ -465,7 +452,7 @@ define([
          */
         contentAvailable : {
             get : function() {
-                return (this.contentReady && this.hasRenderableContent) || (defined(this._expiredContent) && !this.contentFailed);
+                return (this.contentReady && !this.hasEmptyContent && !this.hasTilesetContent) || (defined(this._expiredContent) && !this.contentFailed);
             }
         },
 
@@ -705,7 +692,6 @@ define([
 
             if (defined(contentFactory)) {
                 content = contentFactory(tileset, that, that._contentResource, arrayBuffer, 0);
-                that.hasRenderableContent = true;
             } else {
                 // The content may be json instead
                 content = Cesium3DTileContentFactory.json(tileset, that, that._contentResource, arrayBuffer, 0);
@@ -750,7 +736,7 @@ define([
      * @private
      */
     Cesium3DTile.prototype.unloadContent = function() {
-        if (!this.hasRenderableContent) {
+        if (this.hasEmptyContent || this.hasTilesetContent) {
             return;
         }
 

@@ -693,7 +693,6 @@ define([
                 that._url = resource.url;
                 that._basePath = basePath;
 
-                // We don't know the distance of the tileset until tileset JSON file is loaded, so use the default distance for now
                 return Cesium3DTileset.loadJson(resource);
             })
             .then(function(tilesetJson) {
@@ -1401,11 +1400,11 @@ define([
         }
 
         if (expired) {
-            if (tile.hasRenderableContent) {
+            if (tile.hasTilesetContent) {
+                destroySubtree(tileset, tile);
+            } else {
                 statistics.decrementLoadCounts(tile.content);
                 --tileset._statistics.numberOfTilesWithContentReady;
-            } else if (tile.hasTilesetContent) {
-                destroySubtree(tileset, tile);
             }
         }
 
@@ -1467,7 +1466,7 @@ define([
         return function() {
             --tileset._statistics.numberOfTilesProcessing;
 
-            if (tile.hasRenderableContent) {
+            if (!tile.hasTilesetContent) {
                 // RESEARCH_IDEA: ability to unload tiles (without content) for an
                 // external tileset when all the tiles are unloaded.
                 tileset._statistics.incrementLoadCounts(tile.content);
