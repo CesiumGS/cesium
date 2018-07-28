@@ -262,7 +262,7 @@ define([
         this.hasTilesetContent = false;
 
         /**
-         * The corresponding node in the cache.
+         * The node in the tileset's LRU cache, used to determine when to unload a tile's content.
          *
          * See {@link Cesium3DTilesetCache}
          *
@@ -465,7 +465,7 @@ define([
          */
         contentAvailable : {
             get : function() {
-                return (this.contentReady && this.hasRenderableContent) || (defined(this._expiredContent) && this._contentState !== Cesium3DTileContentState.FAILED);
+                return (this.contentReady && this.hasRenderableContent) || (defined(this._expiredContent) && !this.contentFailed);
             }
         },
 
@@ -517,6 +517,23 @@ define([
         contentExpired : {
             get : function() {
                 return this._contentState === Cesium3DTileContentState.EXPIRED;
+            }
+        },
+
+        /**
+         * Determines if the tile's content failed to load.  <code>true</code> if the tile's
+         * content failed to load; otherwise, <code>false</code>.
+         *
+         * @memberof Cesium3DTile.prototype
+         *
+         * @type {Boolean}
+         * @readonly
+         *
+         * @private
+         */
+        contentFailed : {
+            get : function() {
+                return this._contentState === Cesium3DTileContentState.FAILED;
             }
         },
 
@@ -1035,12 +1052,10 @@ define([
             var color;
             if (!tile._finalResolution) {
                 color = Color.YELLOW;
-            } else if (hasContentBoundingVolume) {
-                color = Color.WHITE;
             } else if (empty) {
-                color = Color.GREEN;
+                color = Color.DARKGRAY;
             } else {
-                color = Color.RED;
+                color = Color.WHITE;
             }
             if (!defined(tile._debugBoundingVolume)) {
                 tile._debugBoundingVolume = tile._boundingVolume.createDebugVolume(color);

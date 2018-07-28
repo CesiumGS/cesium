@@ -76,7 +76,7 @@ define([
             return;
         }
 
-        // The SSE of not rendering the tree is small enough that the tree does not need to be rendered
+        // The tileset doesn't meet the SSE requirement, therefore the tree does not need to be rendered
         if (getScreenSpaceError(tileset, tileset._geometricError, root, frameState) <= tileset._maximumScreenSpaceError) {
             return;
         }
@@ -213,17 +213,14 @@ define([
         // Replacement tiles are prioritized by screen space error.
         // A tileset that has both additive and replacement tiles may not prioritize tiles as effectively since SSE and distance
         // are different types of values. Maybe all priorities need to be normalized to 0-1 range.
-        var parent = tile.parent;
-        var replace = tile.refine === Cesium3DTileRefine.REPLACE;
-        var add = tile.refine === Cesium3DTileRefine.ADD;
-        if (add) {
+        if (tile.refine === Cesium3DTileRefine.ADD) {
             return tile._distanceToCamera;
-        } else if (replace) {
-            var useParentScreenSpaceError = defined(parent) && (!skipLevelOfDetail(tileset) || (tile._screenSpaceError === 0.0));
-            var screenSpaceError = useParentScreenSpaceError ? parent._screenSpaceError : tile._screenSpaceError;
-            var rootScreenSpaceError = tileset._root._screenSpaceError;
-            return rootScreenSpaceError - screenSpaceError; // Map higher SSE to lower values (e.g. root tile is highest priority)
         }
+        var parent = tile.parent;
+        var useParentScreenSpaceError = defined(parent) && (!skipLevelOfDetail(tileset) || (tile._screenSpaceError === 0.0));
+        var screenSpaceError = useParentScreenSpaceError ? parent._screenSpaceError : tile._screenSpaceError;
+        var rootScreenSpaceError = tileset._root._screenSpaceError;
+        return rootScreenSpaceError - screenSpaceError; // Map higher SSE to lower values (e.g. root tile is highest priority)
     }
 
     function loadTile(tileset, tile, frameState) {
@@ -478,6 +475,7 @@ define([
 
             if (hasEmptyContent(tile)) {
                 // Add empty tile just to show its debug bounding volume
+                // If the tile has tileset content load the external tileset
                 addEmptyTile(tileset, tile, frameState);
                 loadTile(tileset, tile, frameState);
             } else if (add) {
@@ -554,7 +552,7 @@ define([
 
     /**
      * Traverse the tree and check if their selected frame is the current frame. If so, add it to a selection queue.
-     * Furthermore, this is a preorder traversal so children tiles are selected before ancestor tiles.
+     * This is a preorder traversal so children tiles are selected before ancestor tiles.
      *
      * The reason for the preorder traversal is so that tiles can easily be marked with their
      * selection depth. A tile's _selectionDepth is its depth in the tree where all non-selected tiles are removed.
