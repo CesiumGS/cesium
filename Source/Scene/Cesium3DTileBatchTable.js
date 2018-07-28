@@ -1210,10 +1210,11 @@ define([
         OPAQUE_AND_TRANSLUCENT : 2
     };
 
-    Cesium3DTileBatchTable.prototype.addDerivedCommands = function(frameState, commandStart, finalResolution) {
+    Cesium3DTileBatchTable.prototype.addDerivedCommands = function(frameState, commandStart) {
         var commandList = frameState.commandList;
         var commandEnd = commandList.length;
         var tile = this._content._tile;
+        var finalResolution = tile._finalResolution;
         var tileset = tile._tileset;
         var bivariateVisibilityTest = tileset._skipLevelOfDetail && tileset._hasMixedContent && frameState.context.stencilBuffer;
         var styleCommandsNeeded = getStyleCommandsNeeded(this);

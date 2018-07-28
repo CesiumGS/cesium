@@ -121,7 +121,6 @@ define([
     }
 
     function addEmptyTile(tileset, tile) {
-        tile._finalResolution = true;
         tileset._emptyTiles.push(tile);
     }
 
@@ -162,7 +161,6 @@ define([
                     updateTile(tileset, child, frameState);
                     touchTile(tileset, child, frameState);
                     selectTile(tileset, child, frameState);
-                    tile._finalResolution = true;
                 } else if (child._depth - root._depth < descendantSelectionDepth) {
                     // Continue traversing, but not too far
                     stack.push(child);
@@ -176,7 +174,6 @@ define([
             if (tile.contentAvailable) {
                 // The tile can be selected right away and does not require traverseAndSelect
                 selectTile(tileset, tile, frameState);
-                tile._finalResolution = true;
             }
             return;
         }
@@ -332,7 +329,7 @@ define([
         tile.updateExpiration();
 
         tile._shouldSelect = false;
-        tile._finalResolution = false;
+        tile._finalResolution = true;
         tile._ancestorWithContent = undefined;
         tile._ancestorWithContentAvailable = undefined;
 
@@ -586,8 +583,8 @@ define([
                 var waitingTile = ancestorStack.peek();
                 if (waitingTile._stackLength === stack.length) {
                     ancestorStack.pop();
-                    if (waitingTile === lastAncestor) {
-                        waitingTile._finalResolution = true;
+                    if (waitingTile !== lastAncestor) {
+                        waitingTile._finalResolution = false;
                     }
                     selectTile(tileset, waitingTile, frameState);
                     continue;
@@ -609,7 +606,6 @@ define([
             if (shouldSelect) {
                 if (add) {
                     selectTile(tileset, tile, frameState);
-                    tile._finalResolution = true;
                 } else {
                     tile._selectionDepth = ancestorStack.length;
                     if (tile._selectionDepth > 0) {
@@ -618,7 +614,6 @@ define([
                     lastAncestor = tile;
                     if (!traverse) {
                         selectTile(tileset, tile, frameState);
-                        tile._finalResolution = true;
                         continue;
                     }
                     ancestorStack.push(tile);
