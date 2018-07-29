@@ -47,7 +47,7 @@
     },
     "geometricError": 0,
     "content": {
-      "url": "instancedWithTransform.i3dm"
+      "uri": "instancedWithTransform.i3dm"
     }
   }
 }
