@@ -15,7 +15,7 @@
     },
     "geometricError": 0,
     "content": {
-      "url": "pointCloudRGB.pnts"
+      "uri": "pointCloudRGB.pnts"
     }
   }
 }

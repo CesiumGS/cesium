@@ -1603,7 +1603,7 @@ define([
         }
 
         if (tileset.debugShowUrl) {
-            labelString += '\nUrl: ' + tile._header.content.url;
+            labelString += '\nUrl: ' + tile._header.content.uri;
             attributes++;
         }
 

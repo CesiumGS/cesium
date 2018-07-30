@@ -21,7 +21,7 @@
     },
     "geometricError": 0,
     "content": {
-      "uri": "pointCloudDracoBatched.pnts"
+      "url": "pointCloudDracoBatched.pnts"
     }
   }
 }

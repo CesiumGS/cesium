@@ -346,7 +346,7 @@ defineSuite([
     it('enables attenuation and eye dome lighting', function() {
         var oldScene = scene;
         scene = createScene({
-            canvas : createCanvas(10, 10)
+            canvas : createCanvas(100, 100)
         });
         initializeScene();
 

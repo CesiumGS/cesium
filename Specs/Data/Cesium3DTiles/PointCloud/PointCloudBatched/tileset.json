@@ -15,7 +15,7 @@
     },
     "geometricError": 0,
     "content": {
-      "url": "pointCloudBatched.pnts"
+      "uri": "pointCloudBatched.pnts"
     }
   }
 }

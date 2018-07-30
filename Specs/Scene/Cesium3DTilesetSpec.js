@@ -119,7 +119,7 @@ defineSuite([
     var tilesetReplacementWithViewerRequestVolumeUrl = 'Data/Cesium3DTiles/Tilesets/TilesetReplacementWithViewerRequestVolume/tileset.json';
 
     var tilesetWithExternalResourcesUrl = 'Data/Cesium3DTiles/Tilesets/TilesetWithExternalResources/tileset.json';
-    var tilesetUrlWithContentUri = 'Data/Cesium3DTiles/Tilesets/TilesetWithContentUri/tileset.json';
+    var tilesetUrlWithContentUri = 'Data/Cesium3DTiles/Batched/BatchedWithContentDataUri/tileset.json';
 
     var tilesetSubtreeExpirationUrl = 'Data/Cesium3DTiles/Tilesets/TilesetSubtreeExpiration/tileset.json';
     var tilesetSubtreeUrl = 'Data/Cesium3DTiles/Tilesets/TilesetSubtreeExpiration/subtree.json';
@@ -131,8 +131,6 @@ defineSuite([
 
     var pointCloudUrl = 'Data/Cesium3DTiles/PointCloud/PointCloudRGB/tileset.json';
     var pointCloudBatchedUrl = 'Data/Cesium3DTiles/PointCloud/PointCloudBatched/tileset.json';
-
-    var invalidTileset = './Data/Cesium3DTiles/Tilesets/TilesetInvalid/tileset.json';
 
     beforeAll(function() {
         scene = createScene();
@@ -672,8 +670,8 @@ defineSuite([
     });
 
     it('verify memory usage statistics', function() {
-        // Calculations in Batched3DModel3DTilesContentSpec
-        var singleTileGeometryMemory = 8880;
+        // Calculations in Batched3DModel3DTileContentSpec, minus uvs
+        var singleTileGeometryMemory = 7440;
         var singleTileTextureMemory = 0;
         var singleTileBatchTextureMemory = 40;
         var singleTilePickTextureMemory = 40;
@@ -745,8 +743,8 @@ defineSuite([
         var b3dmGeometryMemory = 840; // Only one box in the tile, unlike most other test tiles
         var i3dmGeometryMemory = 840;
 
-        // Texture is 211x211 RGB bytes, but upsampled to 256x256 because the wrap mode is REPEAT
-        var texturesByteLength = 196608;
+        // Texture is 128x128 RGBA bytes, not mipmapped
+        var texturesByteLength = 65536;
 
         var expectedGeometryMemory = b3dmGeometryMemory * 2 + i3dmGeometryMemory * 3;
         var expectedTextureMemory = texturesByteLength * 5;
@@ -1258,7 +1256,6 @@ defineSuite([
 
                 // Check that headers are equal
                 var subtreeRoot = root.children[0];
-                expect(root.geometricError).toEqual(subtreeRoot.geometricError);
                 expect(root.refine).toEqual(subtreeRoot.refine);
                 expect(root.contentBoundingVolume.boundingVolume).toEqual(subtreeRoot.contentBoundingVolume.boundingVolume);
 
@@ -1542,7 +1539,7 @@ defineSuite([
             expect(tileset._tileDebugLabels.length).toEqual(1);
 
             var expected = 'Texture Memory: 0\n' +
-                           'Geometry Memory: 0.008';
+                           'Geometry Memory: 0.007';
 
             expect(tileset._tileDebugLabels._labels[0].text).toEqual(expected);
 
@@ -1568,7 +1565,7 @@ defineSuite([
                            'Triangles: 120\n' +
                            'Features: 10\n' +
                            'Texture Memory: 0\n' +
-                           'Geometry Memory: 0.008\n' +
+                           'Geometry Memory: 0.007\n' +
                            'Url: parent.b3dm';
             expect(tileset._tileDebugLabels._labels[0].text).toEqual(expected);
 
@@ -1602,7 +1599,7 @@ defineSuite([
                            'Triangles: 120\n' +
                            'Features: 10\n' +
                            'Texture Memory: 0\n' +
-                           'Geometry Memory: 0.008\n' +
+                           'Geometry Memory: 0.007\n' +
                            'Url: parent.b3dm';
             expect(tileset._tileDebugLabels.get(0).text).toEqual(expected);
             expect(tileset._tileDebugLabels.get(0).position).toEqual(scratchPosition);
@@ -1753,7 +1750,10 @@ defineSuite([
 
     it('tile failed event is raised', function() {
         viewNothing();
-        return Cesium3DTilesTester.loadTileset(scene, invalidTileset).then(function(tileset) {
+        return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function(tileset) {
+            spyOn(Resource._Implementations, 'loadWithXhr').and.callFake(function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+                deferred.reject('404');
+            });
             var spyUpdate = jasmine.createSpy('listener');
             tileset.tileFailed.addEventListener(spyUpdate);
             tileset.maximumMemoryUsage = 0;
@@ -1763,7 +1763,7 @@ defineSuite([
 
                 var arg = spyUpdate.calls.argsFor(0)[0];
                 expect(arg).toBeDefined();
-                expect(arg.url).toContain('does_not_exist.b3dm');
+                expect(arg.url).toContain('parent.b3dm');
                 expect(arg.message).toBeDefined();
             });
         });
@@ -2051,9 +2051,9 @@ defineSuite([
             });
 
             expect(renderOptions).toRenderAndCall(function(rgba) {
-                expect(rgba[0]).toBeGreaterThan(0);
-                expect(rgba[1]).toEqual(0);
-                expect(rgba[2]).toEqual(0);
+                expect(rgba[0]).toBeGreaterThan(200);
+                expect(rgba[1]).toBeLessThan(25);
+                expect(rgba[2]).toBeLessThan(25);
                 expect(rgba[3]).toEqual(255);
             });
 
@@ -2065,10 +2065,10 @@ defineSuite([
                 color : 'rgb(128, 128, 0)'
             });
             expect(renderOptions).toRenderAndCall(function(rgba) {
-                expect(rgba[0]).toBeGreaterThan(0);
+                expect(rgba[0]).toBeGreaterThan(100);
                 expect(rgba[0]).toBeLessThan(sourceRed);
-                expect(rgba[1]).toEqual(0);
-                expect(rgba[2]).toEqual(0);
+                expect(rgba[1]).toBeLessThan(25);
+                expect(rgba[2]).toBeLessThan(25);
                 expect(rgba[3]).toEqual(255);
             });
 
@@ -2077,10 +2077,10 @@ defineSuite([
                 color : 'rgba(255, 255, 0, 0.5)'
             });
             expect(renderOptions).toRenderAndCall(function(rgba) {
-                expect(rgba[0]).toBeGreaterThan(0);
+                expect(rgba[0]).toBeGreaterThan(100);
                 expect(rgba[0]).toBeLessThan(sourceRed);
-                expect(rgba[1]).toEqual(0);
-                expect(rgba[2]).toEqual(0);
+                expect(rgba[1]).toBeLessThan(25);
+                expect(rgba[2]).toBeLessThan(25);
                 expect(rgba[3]).toEqual(255);
             });
 
@@ -2096,11 +2096,11 @@ defineSuite([
             expect(renderOptions).toRenderAndCall(function(rgba) {
                 replaceRed = rgba[0];
                 replaceGreen = rgba[1];
-                expect(rgba[0]).toBeGreaterThan(0);
+                expect(rgba[0]).toBeGreaterThan(100);
                 expect(rgba[0]).toBeLessThan(255);
-                expect(rgba[1]).toBeGreaterThan(0);
+                expect(rgba[1]).toBeGreaterThan(100);
                 expect(rgba[1]).toBeLessThan(255);
-                expect(rgba[2]).toEqual(0);
+                expect(rgba[2]).toBeLessThan(25);
                 expect(rgba[3]).toEqual(255);
             });
 
@@ -2109,11 +2109,11 @@ defineSuite([
                 color : 'rgba(255, 255, 0, 0.5)'
             });
             expect(renderOptions).toRenderAndCall(function(rgba) {
-                expect(rgba[0]).toBeGreaterThan(0);
+                expect(rgba[0]).toBeGreaterThan(100);
                 expect(rgba[0]).toBeLessThan(255);
-                expect(rgba[1]).toBeGreaterThan(0);
+                expect(rgba[1]).toBeGreaterThan(100);
                 expect(rgba[1]).toBeLessThan(255);
-                expect(rgba[2]).toEqual(0);
+                expect(rgba[2]).toBeLessThan(25);
                 expect(rgba[3]).toEqual(255);
             });
 
@@ -2132,9 +2132,9 @@ defineSuite([
                 mixGreen = rgba[1];
                 expect(rgba[0]).toBeGreaterThan(replaceRed);
                 expect(rgba[0]).toBeLessThan(sourceRed);
-                expect(rgba[1]).toBeGreaterThan(0);
+                expect(rgba[1]).toBeGreaterThan(50);
                 expect(rgba[1]).toBeLessThan(replaceGreen);
-                expect(rgba[2]).toEqual(0);
+                expect(rgba[2]).toBeLessThan(25);
                 expect(rgba[3]).toEqual(255);
             });
 
@@ -2145,7 +2145,7 @@ defineSuite([
                 expect(rgba[0]).toBeLessThan(sourceRed);
                 expect(rgba[1]).toBeGreaterThan(0);
                 expect(rgba[1]).toBeLessThan(mixGreen);
-                expect(rgba[2]).toEqual(0);
+                expect(rgba[2]).toBeLessThan(25);
                 expect(rgba[3]).toEqual(255);
             });
 
@@ -2153,8 +2153,8 @@ defineSuite([
             tileset.colorBlendAmount = 0.0;
             expect(renderOptions).toRenderAndCall(function(rgba) {
                 expect(rgba[0]).toEqual(sourceRed);
-                expect(rgba[1]).toEqual(0);
-                expect(rgba[2]).toEqual(0);
+                expect(rgba[1]).toBeLessThan(25);
+                expect(rgba[2]).toBeLessThan(25);
                 expect(rgba[3]).toEqual(255);
             });
 
@@ -2163,7 +2163,7 @@ defineSuite([
             expect(renderOptions).toRenderAndCall(function(rgba) {
                 expect(rgba[0]).toEqual(replaceRed);
                 expect(rgba[1]).toEqual(replaceGreen);
-                expect(rgba[2]).toEqual(0);
+                expect(rgba[2]).toBeLessThan(25);
                 expect(rgba[3]).toEqual(255);
             });
 
@@ -2175,7 +2175,7 @@ defineSuite([
             expect(renderOptions).toRenderAndCall(function(rgba) {
                 expect(rgba[0]).toBeGreaterThan(0);
                 expect(rgba[1]).toBeGreaterThan(0);
-                expect(rgba[2]).toEqual(0);
+                expect(rgba[2]).toBeLessThan(25);
                 expect(rgba[3]).toEqual(255);
             });
         });
@@ -2222,7 +2222,7 @@ defineSuite([
             var statistics = tileset._statistics;
             expect(statistics.numberOfCommands).toEqual(5);
             expect(statistics.numberOfTilesWithContentReady).toEqual(5); // Five loaded tiles
-            expect(tileset.totalMemoryUsageInBytes).toEqual(44400); // Specific to this tileset
+            expect(tileset.totalMemoryUsageInBytes).toEqual(37200); // Specific to this tileset
 
             // Zoom out so only root tile is needed to meet SSE.  This unloads
             // the four children since the maximum memory usage is zero.
@@ -2231,7 +2231,7 @@ defineSuite([
 
             expect(statistics.numberOfCommands).toEqual(1);
             expect(statistics.numberOfTilesWithContentReady).toEqual(1);
-            expect(tileset.totalMemoryUsageInBytes).toEqual(8880); // Specific to this tileset
+            expect(tileset.totalMemoryUsageInBytes).toEqual(7440); // Specific to this tileset
 
             // Zoom back in so all four children are re-requested.
             viewAllTiles();
@@ -2239,15 +2239,14 @@ defineSuite([
             return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset).then(function() {
                 expect(statistics.numberOfCommands).toEqual(5);
                 expect(statistics.numberOfTilesWithContentReady).toEqual(5); // Five loaded tiles
-                expect(tileset.totalMemoryUsageInBytes).toEqual(44400); // Specific to this tileset
+                expect(tileset.totalMemoryUsageInBytes).toEqual(37200); // Specific to this tileset
             });
         });
     });
 
     it('Unload some cached tiles not required to meet SSE using maximumMemoryUsage', function() {
         return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function(tileset) {
-            tileset.maximumMemoryUsage = 0.03;  // Just enough memory to allow 3 tiles to remain
-
+            tileset.maximumMemoryUsage = 0.025;  // Just enough memory to allow 3 tiles to remain
             // Render parent and four children (using additive refinement)
             viewAllTiles();
             scene.renderForSpecs();
@@ -2306,7 +2305,7 @@ defineSuite([
             var statistics = tileset._statistics;
             var replacementList = tileset._replacementList;
 
-            tileset.maximumMemoryUsage = 0.025;
+            tileset.maximumMemoryUsage = 0.02;
 
             scene.renderForSpecs();
             expect(statistics.numberOfCommands).toEqual(5);
@@ -2338,7 +2337,7 @@ defineSuite([
         return Cesium3DTilesTester.loadTileset(scene, tilesetEmptyRootUrl).then(function(tileset) {
             var statistics = tileset._statistics;
 
-            tileset.maximumMemoryUsage = 0.025;
+            tileset.maximumMemoryUsage = 0.02;
 
             scene.renderForSpecs();
             expect(statistics.numberOfCommands).toEqual(4);
