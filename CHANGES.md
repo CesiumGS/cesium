@@ -9,6 +9,7 @@ Change Log
 * Added `CoplanarPolygonGeometry` and `CoplanarPolygonGeometryOutline` for drawing polygons composed of coplanar positions that are not necessarily on the ellipsoid surface. [#6769](https://github.com/AnalyticalGraphicsInc/cesium/pull/6769)
 * Improved support for polygon entities using `perPositionHeight`, including supporting vertical polygons.  This also improves KML compatibility. [#6791](https://github.com/AnalyticalGraphicsInc/cesium/pull/6791)
 * Added `Cartesian3.midpoint` to compute the midpoint between two `Cartesian3` positions [#6836](https://github.com/AnalyticalGraphicsInc/cesium/pull/6836)
+* Added `equalsEpsilon` methods to `OrthographicFrustum`, `PerspectiveFrustum`, `OrthographicOffCenterFrustum` and `PerspectiveOffCenterFrustum`.
 
 ##### Deprecated :hourglass_flowing_sand:
 * Support for 3D Tiles `content.url` is deprecated to reflect updates to the [3D Tiles spec](https://github.com/AnalyticalGraphicsInc/3d-tiles/pull/301). Use `content.uri instead`. Support for `content.url` will remain for backwards compatibility. [#6744](https://github.com/AnalyticalGraphicsInc/cesium/pull/6744)
@@ -31,6 +32,7 @@ Change Log
 * Fixed a bug that caused billboard positions to be set incorrectly when using a `CallbackProperty`. [#6815](https://github.com/AnalyticalGraphicsInc/cesium/pull/6815)
 * Improved support for generating a TypeScript typings file using `tsd-jsdoc` [#6767](https://github.com/AnalyticalGraphicsInc/cesium/pull/6767)
 * Updated viewBoundingSphere to use correct zoomOptions [#6848](https://github.com/AnalyticalGraphicsInc/cesium/issues/6848)
+* Fixed a bug that caused the scene to continuously render after resizing the viewer when `requestRenderMode` was enabled. [#6812](https://github.com/AnalyticalGraphicsInc/cesium/issues/6812)
 
 ### 1.47 - 2018-07-02
 
