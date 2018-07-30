@@ -29,7 +29,7 @@ define([
      * // Create Cesium World Terrain with water and normals.
      * var viewer = new Cesium.Viewer('cesiumContainer', {
      *     imageryProvider : Cesium.createWorldImagery({
-     *         mapStyle : Cesium.BingMapsStyle.AERIAL_WITH_LABELS
+     *         style: Cesium.IonWorldImageryStyle.AERIAL_WITH_LABELS
      *     })
      * });
      *
