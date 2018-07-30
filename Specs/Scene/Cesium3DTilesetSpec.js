@@ -1256,7 +1256,6 @@ defineSuite([
 
                 // Check that headers are equal
                 var subtreeRoot = root.children[0];
-                expect(root.geometricError).toEqual(subtreeRoot.geometricError);
                 expect(root.refine).toEqual(subtreeRoot.refine);
                 expect(root.contentBoundingVolume.boundingVolume).toEqual(subtreeRoot.contentBoundingVolume.boundingVolume);
 
