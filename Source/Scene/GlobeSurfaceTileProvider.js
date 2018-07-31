@@ -1371,6 +1371,11 @@ define([
     })();
 
     function findRenderedTiles(startTile, currentFrameNumber, edge) {
+        if (startTile === undefined) {
+            // There are no tiles North or South of the poles.
+            return [];
+        }
+
         if (startTile._frameRendered === currentFrameNumber) {
             return [startTile];
         }
@@ -1421,82 +1426,6 @@ define([
         }
 
         return result;
-    }
-
-    function getAverageHeight(vertices, stride) {
-        var sum = 0;
-        for (var i = 3; i < vertices.length; i += stride) {
-            sum += vertices[i];
-        }
-        return sum / (vertices.length / stride);
-    }
-
-    function hasVertexAtStart(edge, edgeDetails, stride) {
-        var vertices = edgeDetails.vertices;
-
-        if (vertices.length === 0) {
-            return false;
-        }
-
-        var firstU = vertices[4];
-        var firstV = vertices[5];
-
-        switch (edge) {
-            case TileEdge.WEST:
-                return firstV === 1.0;
-            case TileEdge.SOUTH:
-                return firstU === 0.0;
-            case TileEdge.EAST:
-                return firstV === 0.0;
-            case TileEdge.NORTH:
-                return firstU === 1.0;
-            default:
-                throw new DeveloperError('Unsupported case');
-        }
-    }
-
-    function hasVertexAtEnd(edge, edgeDetails, stride) {
-        var vertices = edgeDetails.vertices;
-
-        if (vertices.length === 0) {
-            return false;
-        }
-
-        var lastVertexStart = (vertices.length - 1) * stride;
-        var lastU = vertices[lastVertexStart + 4];
-        var lastV = vertices[lastVertexStart + 5];
-
-        switch (edge) {
-            case TileEdge.WEST:
-                return lastV === 0.0;
-            case TileEdge.SOUTH:
-                return lastU === 1.0;
-            case TileEdge.EAST:
-                return lastV === 1.0;
-            case TileEdge.NORTH:
-                return lastU === 0.0;
-            default:
-                throw new DeveloperError('Unsupported case');
-        }
-    }
-
-    function countOutputVertices(edge, edgeDetails, stride) {
-        // Don't count the last vertex, because that is shared with the next edge
-        var vertices = edgeDetails.vertices;
-        var vertexCount = vertices.length - 1;
-
-        if (!hasVertexAtStart(edge, edgeDetails, stride)) {
-            // First vertex is not at the start of the edge, so we'll have to insert an extra vertex there.
-            ++vertexCount;
-        }
-
-        if (!hasVertexAtEnd(edge, edgeDetails, stride)) {
-            // Normally the vertex at the end of the edge is included in the _next_ edge. But in this case,
-            // the last vertex falls short of the end of the edge, so include it.
-            ++vertexCount;
-        }
-
-        return vertexCount;
     }
 
     var cartographicScratch = new Cartographic();
@@ -1707,12 +1636,6 @@ define([
             for (i = centerIndex - 1; i >= northeastIndex; --i) {
                 northIndicesWestToEast.push(i);
             }
-
-            // var westVertexCount = countOutputVertices(west, stride);
-            // var southVertexCount = countOutputVertices(west, stride);
-            // var eastVertexCount = countOutputVertices(east, stride);
-            // var northVertexCount = countOutputVertices(north, stride);
-            // var vertexCount = westVertexCount + southVertexCount + eastVertexCount + northVertexCount;
 
             var packedStride = hasVertexNormals ? stride - 1 : stride; // normal is packed into 1 float
             typedArray = new Float32Array(vertexCount * packedStride);
