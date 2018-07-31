@@ -389,7 +389,7 @@ define([
         // We have a tile, check to see if no ancestors have terrain or that we know for sure it doesn't
         if (!info.ancestorHasTerrain) {
             // We haven't reached a level with terrain, so return the ellipsoid
-            return when.resovle(new HeightmapTerrainData({
+            return when.resolve(new HeightmapTerrainData({
                 buffer : new Uint8Array(16 * 16),
                 width : 16,
                 height : 16
