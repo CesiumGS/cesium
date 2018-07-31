@@ -301,7 +301,8 @@ define([
             var currentVertex = currentVertexScratch;
 
             if (crossedFirst || crossedSecond) {
-                getVertex(encoding, vertices, index - 1, previousVertex, 0);
+                var lastIndex = indices[i - 1];
+                getVertex(encoding, vertices, lastIndex, previousVertex, 0);
                 getVertex(encoding, vertices, index, currentVertex, 0);
             }
 

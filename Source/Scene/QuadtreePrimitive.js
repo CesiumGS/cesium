@@ -132,14 +132,26 @@ define([
         this.tileCacheSize = defaultValue(options.tileCacheSize, 100);
 
         /**
-         * Gets or sets whether to reveal tiles in chunks while loading. If true, tiles
-         * will be shown as they become renderable. If false, tiles will only be shown
-         * when all visible siblings in the same quad are renderable, OR if they were
-         * shown in the last frame. Detail will not flicker out with either settings.
+         * Gets or sets the number of loading descendant tiles that is considered "too many".
+         * If a tile has too many loading descendants, that tile will be loaded and rendered before any of
+         * its descendants are loaded and rendered. This means more feedback for the user that something
+         * is happening at the cost of a longer overall load time. Setting this to 0 will cause each
+         * tile level to be loaded successively, significantly increasing load time. Setting it to a large
+         * number (e.g. 100000) will minimize the number of tiles that are loaded but tend to make
+         * detail appear all at once after a long wait.
+         * @type {Number}
+         * @default 20
+         */
+        this.loadingDescendantLimit = 20;
+
+        /**
+         * Gets or sets a value indicating whether the ancestors of rendered tiles should be preloaded.
+         * Setting this to true optimizes the zoom-out experience and provides more detail in
+         * newly-exposed areas when panning. The down side is that is requires loading more tiles.
          * @type {Boolean}
          * @default false
          */
-        this.revealInChunks = true;
+        this.preloadAncestors = false;
 
         this._occluders = new QuadtreeOccluders({
             ellipsoid : ellipsoid
@@ -591,22 +603,6 @@ define([
         // }
     }
 
-    function isAnyAreRenderable(bitMask) {
-        return (bitMask & 1) === 1;
-    }
-
-    function isAllAreRenderable(bitMask) {
-        return (bitMask & 2) === 2;
-    }
-
-    function isAnyWereRenderedLastFrame(bitMask) {
-        return (bitMask & 4) === 4;
-    }
-
-    function createBitMask(anyAreRenderable, allAreRenderable, anyWereRenderedLastFrame) {
-        return (anyAreRenderable ? 1 : 0) | (allAreRenderable ? 2 : 0) | (anyWereRenderedLastFrame ? 4 : 0);
-    }
-
     function TraversalDetails() {
         this.allAreRenderable = true;
         this.anyWereRenderedLastFrame = false;
@@ -800,10 +796,8 @@ define([
                     // EXCEPT if we're waiting heaps of descendants, the above will take too long. So in that case,
                     // load this tile INSTEAD of loading any of the descendants, and tell the up-level we're only waiting
                     // on this tile.
-                    var heapsOfDescendants = 10;
                     var wasRenderedLastFrame = tile._frameRendered === primitive._lastSelectionFrameNumber;
-                    if (!wasRenderedLastFrame && notYetRenderableCount > heapsOfDescendants) {
-                        // TODO: load the visible _children_ of this tile, not this tile.
+                    if (!wasRenderedLastFrame && notYetRenderableCount > primitive.loadingDescendantLimit) {
                         primitive._tileLoadQueueLow.length = loadIndexLow;
                         primitive._tileLoadQueueMedium.length = loadIndexMedium;
                         primitive._tileLoadQueueHigh.length = loadIndexHigh;
@@ -818,19 +812,9 @@ define([
                     ++debug.tilesWaitingForChildren;
                 }
 
-                // We'd like to be rendering one or more descendents, and we're either not rendering this
-                // tile at all, or we're only rendering it temporarily because _none_ of our children
-                // are renderable. In either case, load this tile with low priority so that zooming
-                // out or panning quickly doesn't leave us with huge holes in the terrain surface.
-
-                // It'd be nice if we didn't need to do this; we could avoid loading heaps of tiles.
-                // But first we'd need a way to fill those holes. If we're showing a bunch of level 15
-                // tiles and the user zooms out so we want to be showing level 14 but none of those
-                // level 14 tiles are loaded because we removed this line below, it's not really acceptable
-                // to a) draw nothing, or b) draw level 0 tiles, because either strategy will likely
-                // leave us with massive gaps visible in the globe.
-
-                //queueTileLoad(primitive, primitive._tileLoadQueueLow, tile, frameState);
+                if (primitive.preloadAncestors) {
+                    queueTileLoad(primitive, primitive._tileLoadQueueLow, tile, frameState);
+                }
             }
 
             return;
