@@ -247,7 +247,7 @@ define([
         var contextOptions = options.contextOptions;
         var creditContainer = options.creditContainer;
         var creditViewport = options.creditViewport;
-        var showCredit = defaultValue(options.showCredit, defaultValue.TRUE);
+        var showCredit = defaultValue(options.showCredit, true);
         var creditDisplay;
 
         //>>includeStart('debug', pragmas.debug);
