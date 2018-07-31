@@ -36,7 +36,6 @@
     "refine": "REPLACE",
     "content": {
       "uri": "content.geom"
-    },
-    "children": []
+    }
   }
 }
