@@ -26,10 +26,12 @@
 function startup(Cesium) {
     'use strict';
 //Sandcastle_Begin
-var viewer = new Cesium.Viewer('cesiumContainer');
+var viewer = new Cesium.Viewer('cesiumContainer', {
+    terrainProvider: Cesium.createWorldTerrain()
+});
 
 var tileset = new Cesium.Cesium3DTileset({
-    url: Cesium.IonResource.fromAssetId(3836)
+    url: Cesium.IonResource.fromAssetId(5712)
 });
 
 viewer.scene.primitives.add(tileset);
