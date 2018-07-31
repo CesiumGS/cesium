@@ -832,7 +832,7 @@ define([
         }
 
         var ray = camera.getPickRay(mousePosition, pickGlobeScratchRay);
-        var rayIntersection = globe.pick(ray, scene, scratchRayIntersection);
+        var rayIntersection = globe.pickWorldCoordinates(ray, scene, scratchRayIntersection);
 
         var pickDistance = defined(depthIntersection) ? Cartesian3.distance(depthIntersection, camera.positionWC) : Number.POSITIVE_INFINITY;
         var rayDistance = defined(rayIntersection) ? Cartesian3.distance(rayIntersection, camera.positionWC) : Number.POSITIVE_INFINITY;

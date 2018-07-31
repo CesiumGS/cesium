@@ -64,7 +64,7 @@ defineSuite([
         this.getHeight = function(cartographic) {
             return 0.0;
         };
-        this.pick = function() {
+        this.pickWorldCoordinates = function() {
             return new Cartesian3(0.0, 0.0, 1.0);
         };
         this._surface = {

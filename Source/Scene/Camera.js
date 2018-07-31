@@ -1013,7 +1013,7 @@ define([
             mousePosition.y = scene.drawingBufferHeight / 2.0;
 
             var ray = this.getPickRay(mousePosition, pickGlobeScratchRay);
-            rayIntersection = globe.pick(ray, scene, scratchRayIntersection);
+            rayIntersection = globe.pickWorldCoordinates(ray, scene, scratchRayIntersection);
 
             if (scene.pickPositionSupported) {
                 depthIntersection = scene.pickPositionWorldCoordinates(mousePosition, scratchDepthIntersection);
