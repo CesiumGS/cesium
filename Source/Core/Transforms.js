@@ -760,6 +760,8 @@ define([
 
         var normal = defaultValue(ellipsoid, Ellipsoid.WGS84).geodeticSurfaceNormal(position, normalScratch);
         var right = Cartesian3.cross(velocity, normal, rightScratch);
+        Cartesian3.normalize(right, right);
+        
         if (Cartesian3.equalsEpsilon(right, Cartesian3.ZERO, CesiumMath.EPSILON6)) {
             right = Cartesian3.clone(Cartesian3.UNIT_X, right);
         }
