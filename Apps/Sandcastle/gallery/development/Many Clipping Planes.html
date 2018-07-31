@@ -226,9 +226,7 @@ Cesium.knockout.getObservable(viewModel, 'currentExampleType').subscribe(functio
         });
     } else if (newValue === clipObjects[3]) {
         // i3dm
-        instancedUrl.then(function(resource) {
-            return loadTileset(resource);
-        }).then(function() {
+        loadTileset(instancedUrl).then(function() {
             tileset.clippingPlanes.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(tileset.boundingSphere.center);
         });
     } else if (newValue === clipObjects[4]) {
