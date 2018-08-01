@@ -17,16 +17,16 @@ Change Log
 * `PostProcessStageLibrary.createLensFlarStage` is deprecated due to misspelling and will be removed in Cesium 1.49. Use `PostProcessStageLibrary.createLensFlareStage` instead.
 
 #### Fixes :wrench:
-* Fixed bug causing billboards and labels to appear the wrong size when switching scene modes [#6745](https://github.com/AnalyticalGraphicsInc/cesium/issues/6745)
-* Fixed `PolygonGeometry` when using `VertexFormat.POSITION_ONLY`, `perPositionHeight` and `extrudedHeight` [#6790](expect(https://github.com/AnalyticalGraphicsInc/cesium/pull/6790)
 * Fixed a bug where 3D Tilesets using the `region` bounding volume don't get transformed when the tileset's `modelMatrix` changes. [#6755](https://github.com/AnalyticalGraphicsInc/cesium/pull/6755)
-* Fixed issues related to updating entity show and geometry color [#6835](https://github.com/AnalyticalGraphicsInc/cesium/pull/6835)
-* Fixed `PolygonGeometry` and `EllipseGeometry` tangent and bitangent attributes when a texture rotation is used [#6788](https://github.com/AnalyticalGraphicsInc/cesium/pull/6788)
-* Fixed an issue where tiles were missing in VR mode. [#6612](https://github.com/AnalyticalGraphicsInc/cesium/issues/6612)
-* Fixed an issue where glTF 2.0 models sometimes wouldn't be centered in the view after putting the camera on them. [#6784](https://github.com/AnalyticalGraphicsInc/cesium/issues/6784)
 * Fixed a bug that caused eye dome lighting for point clouds to fail in Safari on macOS and Edge on Windows by removing the dependency on floating point color textures. [#6792](https://github.com/AnalyticalGraphicsInc/cesium/issues/6792)
 * Fixed a bug that caused polylines on terrain to render incorrectly in 2D and Columbus View with a `WebMercatorProjection`. [#6809](https://github.com/AnalyticalGraphicsInc/cesium/issues/6809)
+* Fixed bug causing billboards and labels to appear the wrong size when switching scene modes [#6745](https://github.com/AnalyticalGraphicsInc/cesium/issues/6745)
+* Fixed `PolygonGeometry` when using `VertexFormat.POSITION_ONLY`, `perPositionHeight` and `extrudedHeight` [#6790](expect(https://github.com/AnalyticalGraphicsInc/cesium/pull/6790)
+* Fixed an issue where tiles were missing in VR mode. [#6612](https://github.com/AnalyticalGraphicsInc/cesium/issues/6612)
+* Fixed issues related to updating entity show and geometry color [#6835](https://github.com/AnalyticalGraphicsInc/cesium/pull/6835)
+* Fixed `PolygonGeometry` and `EllipseGeometry` tangent and bitangent attributes when a texture rotation is used [#6788](https://github.com/AnalyticalGraphicsInc/cesium/pull/6788)
 * Fixed bug where entities with a height reference weren't being updated correctly when the terrain provider was changed. [#6820](https://github.com/AnalyticalGraphicsInc/cesium/pull/6820)
+* Fixed an issue where glTF 2.0 models sometimes wouldn't be centered in the view after putting the camera on them. [#6784](https://github.com/AnalyticalGraphicsInc/cesium/issues/6784)
 * Fixed the geocoder when `Viewer` is passed the option `geocoder: true` [#6833](https://github.com/AnalyticalGraphicsInc/cesium/pull/6833)
 * Improved performance for billboards and labels clamped to terrain [#6781](https://github.com/AnalyticalGraphicsInc/cesium/pull/6781) [#6844](https://github.com/AnalyticalGraphicsInc/cesium/pull/6844)
 * Fixed a bug that caused billboard positions to be set incorrectly when using a `CallbackProperty`. [#6815](https://github.com/AnalyticalGraphicsInc/cesium/pull/6815)
