@@ -11,6 +11,7 @@ define([
         '../Core/deprecationWarning',
         '../Core/destroyObject',
         '../Core/DeveloperError',
+        '../Core/Event',
         '../Core/Intersect',
         '../Core/Matrix4',
         '../Core/PixelFormat',
@@ -36,6 +37,7 @@ define([
         deprecationWarning,
         destroyObject,
         DeveloperError,
+        Event,
         Intersect,
         Matrix4,
         PixelFormat,
@@ -75,15 +77,6 @@ define([
         this._dirtyIndex = -1;
         this._multipleDirtyPlanes = false;
 
-        // Add each ClippingPlane object.
-        var planes = options.planes;
-        if (defined(planes)) {
-            var planesLength = planes.length;
-            for (var i = 0; i < planesLength; ++i) {
-                this.add(planes[i]);
-            }
-        }
-
         this._enabled = defaultValue(options.enabled, true);
 
         /**
@@ -111,6 +104,8 @@ define([
          */
         this.edgeWidth = defaultValue(options.edgeWidth, 0.0);
 
+        this._collectionChanged = new Event();
+
         // If this ClippingPlaneCollection has an owner, only its owner should update or destroy it.
         // This is because in a Cesium3DTileset multiple models may reference the tileset's ClippingPlaneCollection.
         this._owner = undefined;
@@ -123,6 +118,15 @@ define([
         this._float32View = undefined;
 
         this._clippingPlanesTexture = undefined;
+
+        // Add each ClippingPlane object.
+        var planes = options.planes;
+        if (defined(planes)) {
+            var planesLength = planes.length;
+            for (var i = 0; i < planesLength; ++i) {
+                this.add(planes[i]);
+            }
+        }
     }
 
     function unionIntersectFunction(value) {
@@ -146,6 +150,18 @@ define([
         length : {
             get : function() {
                 return this._planes.length;
+            }
+        },
+
+        /**
+         * Gets the event fired when members of the collection have been added or removed
+         * @type {Event}
+         * @memberof ClippingPlaneCollection.prototype
+         * @readonly
+         */
+        collectionChanged : {
+            get : function() {
+                return this._collectionChanged;
             }
         },
 
@@ -263,6 +279,8 @@ define([
 
         setIndexDirty(this, newPlaneIndex);
         this._planes.push(plane);
+
+        this._collectionChanged.raiseEvent();
     };
 
     /**
@@ -346,6 +364,8 @@ define([
         this._multipleDirtyPlanes = true;
         planes.length = length;
 
+        this._collectionChanged.raiseEvent();
+
         return true;
     };
 
@@ -368,6 +388,8 @@ define([
         }
         this._multipleDirtyPlanes = true;
         this._planes = [];
+
+        this._collectionChanged.raiseEvent();
     };
 
     var distanceEncodeScratch = new Cartesian4();
