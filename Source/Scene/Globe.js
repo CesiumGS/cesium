@@ -133,7 +133,9 @@ define([
          * @type {Boolean}
          * @default false
          */
-        this.enableLighting = true;//false;
+        this.enableLighting = false;
+
+        this.showGroundAtmosphere = true;
 
         /**
          * The distance where everything becomes lit. This only takes effect
@@ -627,6 +629,7 @@ define([
             tileProvider.hasWaterMask = hasWaterMask;
             tileProvider.oceanNormalMap = this._oceanNormalMap;
             tileProvider.enableLighting = this.enableLighting;
+            tileProvider.showGroundAtmosphere = this.showGroundAtmosphere;
             tileProvider.shadows = this.shadows;
 
             surface.beginFrame(frameState);

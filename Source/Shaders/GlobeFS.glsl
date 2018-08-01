@@ -1,12 +1,3 @@
-#define SHOW_TERMINATOR
-
-#ifdef SHOW_TERMINATOR
-#ifdef GL_OES_standard_derivatives
-#extension GL_OES_standard_derivatives : enable
-#endif
-#endif
-
-//#define SHOW_TILE_BOUNDARIES
 uniform vec4 u_initialColor;
 
 #if TEXTURE_UNITS > 0
@@ -55,9 +46,9 @@ uniform float u_zoomedOutOceanSpecularIntensity;
 uniform sampler2D u_oceanNormalMap;
 #endif
 
-//#ifdef ENABLE_DAYNIGHT_SHADING
+#if defined(ENABLE_DAYNIGHT_SHADING) || defined(GROUND_ATMOSPHERE)
 uniform vec2 u_lightingFadeDistance;
-//#endif
+#endif
 
 #ifdef ENABLE_CLIPPING_PLANES
 uniform sampler2D u_clippingPlanes;
@@ -65,9 +56,9 @@ uniform mat4 u_clippingPlanesMatrix;
 uniform vec4 u_clippingPlanesEdgeStyle;
 #endif
 
-//#if defined(FOG) && (defined(ENABLE_VERTEX_LIGHTING) || defined(ENABLE_DAYNIGHT_SHADING))
+#if defined(FOG) && (defined(ENABLE_VERTEX_LIGHTING) || defined(ENABLE_DAYNIGHT_SHADING)) || defined(GROUND_ATMOSPHERE)
 uniform float u_minimumBrightness;
-//#endif
+#endif
 
 varying vec3 v_positionMC;
 varying vec3 v_positionEC;
@@ -80,11 +71,11 @@ varying float v_height;
 varying float v_slope;
 #endif
 
-//#ifdef FOG
+#if defined(FOG) || defined(GROUND_ATMOSPHERE)
 varying float v_distance;
 varying vec3 v_rayleighColor;
 varying vec3 v_mieColor;
-//#endif
+#endif
 
 vec4 sampleAndBlend(
     vec4 previousColor,
@@ -181,10 +172,10 @@ void main()
     }
 #endif
 
-//#if defined(SHOW_REFLECTIVE_OCEAN) || defined(ENABLE_DAYNIGHT_SHADING)
+#if defined(SHOW_REFLECTIVE_OCEAN) || defined(ENABLE_DAYNIGHT_SHADING) || defined(GROUND_ATMOSPHERE)
     vec3 normalMC = czm_geodeticSurfaceNormal(v_positionMC, vec3(0.0), vec3(1.0));   // normalized surface normal in model coordinates
     vec3 normalEC = czm_normal3D * normalMC;                                         // normalized surface normal in eye coordiantes
-//#endif
+#endif
 
 #ifdef SHOW_REFLECTIVE_OCEAN
     vec2 waterMaskTranslation = u_waterMaskTranslationAndScale.xy;
@@ -217,20 +208,23 @@ void main()
     color.xyz = mix(color.xyz, material.diffuse, material.alpha);
 #endif
 
-//#ifdef ENABLE_VERTEX_LIGHTING
-//    float diffuseIntensity = clamp(czm_getLambertDiffuse(czm_sunDirectionEC, normalize(v_normalEC)) * 0.9 + 0.3, 0.0, 1.0);
-//    vec4 finalColor = vec4(color.rgb * diffuseIntensity, color.a);
-//#elif defined(ENABLE_DAYNIGHT_SHADING)
-//    float diffuseIntensity = clamp(czm_getLambertDiffuse(czm_sunDirectionEC, normalEC) * 5.0 + 0.3, 0.0, 1.0);
-//    float cameraDist = length(czm_view[3]);
-//    float fadeOutDist = u_lightingFadeDistance.x;
-//    float fadeInDist = u_lightingFadeDistance.y;
-//    float t = clamp((cameraDist - fadeOutDist) / (fadeInDist - fadeOutDist), 0.0, 1.0);
-//    diffuseIntensity = mix(1.0, diffuseIntensity, t);
-//    vec4 finalColor = vec4(color.rgb * diffuseIntensity, color.a);
-//#else
+#if defined(ENABLE_DAYNIGHT_SHADING) || defined(GROUND_ATMOSPHERE)
+    float cameraDist = length(czm_view[3]);
+    float fadeOutDist = u_lightingFadeDistance.x;
+    float fadeInDist = u_lightingFadeDistance.y;
+    float fade = clamp((cameraDist - fadeOutDist) / (fadeInDist - fadeOutDist), 0.0, 1.0);
+#endif
+
+#if defined(ENABLE_VERTEX_LIGHTING) && !defined(GROUND_ATMOSPHERE)
+    float diffuseIntensity = clamp(czm_getLambertDiffuse(czm_sunDirectionEC, normalize(v_normalEC)) * 0.9 + 0.3, 0.0, 1.0);
+    vec4 finalColor = vec4(color.rgb * diffuseIntensity, color.a);
+#elif defined(ENABLE_DAYNIGHT_SHADING) && !defined(GROUND_ATMOSPHERE)
+    float diffuseIntensity = clamp(czm_getLambertDiffuse(czm_sunDirectionEC, normalEC) * 5.0 + 0.3, 0.0, 1.0);
+    diffuseIntensity = mix(1.0, diffuseIntensity, fade);
+    vec4 finalColor = vec4(color.rgb * diffuseIntensity, color.a);
+#else
     vec4 finalColor = color;
-//#endif
+#endif
 
 #ifdef ENABLE_CLIPPING_PLANES
     vec4 clippingPlanesEdgeColor = vec4(1.0);
@@ -243,75 +237,49 @@ void main()
     }
 #endif
 
-/*
-#ifdef FOG
+#if defined(FOG) || defined(GROUND_ATMOSPHERE)
     const float fExposure = 2.0;
-    vec3 fogColor = v_mieColor + finalColor.rgb * v_rayleighColor;
-    fogColor = vec3(1.0) - exp(-fExposure * fogColor);
+    vec3 groundAtmosphereColor = v_mieColor + finalColor.rgb * v_rayleighColor;
+    groundAtmosphereColor = vec3(1.0) - exp(-fExposure * groundAtmosphereColor);
+#endif
 
-#if defined(ENABLE_VERTEX_LIGHTING) || defined(ENABLE_DAYNIGHT_SHADING)
+#ifdef FOG
+#if defined(ENABLE_VERTEX_LIGHTING) || defined(ENABLE_DAYNIGHT_SHADING) || defined(GROUND_ATMOSPHERE)
     float darken = clamp(dot(normalize(czm_viewerPositionWC), normalize(czm_sunPositionWC)), u_minimumBrightness, 1.0);
-    fogColor *= darken;
+    groundAtmosphereColor *= darken;
 #endif
 
-    gl_FragColor = vec4(czm_fog(v_distance, finalColor.rgb, fogColor), finalColor.a);
-#else
-    gl_FragColor = finalColor;
+    finalColor = vec4(czm_fog(v_distance, finalColor.rgb, groundAtmosphereColor), finalColor.a);
 #endif
-*/
+
+#ifdef GROUND_ATMOSPHERE
+    const float u_dayNightBlendDelta = 0.05;
+
+    fadeOutDist = 25000000.0;
+    fadeInDist = 10000000.0;
+
+    float nightIntensity = clamp((cameraDist - fadeOutDist) / (fadeInDist - fadeOutDist), 0.25, 1.0);
+    vec3 nightColor = finalColor.rgb * nightIntensity;
 
     float diffuse = dot(czm_sunDirectionEC, normalEC);
 
-/*
-#ifdef SHOW_TERMINATOR
-    // TODO:  Custom color and line width
-    float absDiffuse = abs(diffuse);
-#ifdef GL_OES_standard_derivatives
-    if ((absDiffuse < abs(dFdx(diffuse)) * 1.0) ||
-        (absDiffuse < abs(dFdy(diffuse)) * 1.0))
-    {
-        gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
-        return;
-    }
-#else
-    if (absDiffuse < 0.005)
-    {
-        gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
-        return;
-    }
-#endif
-#endif
-*/
-
-    float cameraDist = length(czm_view[3]);
-    float fadeOutDist = u_lightingFadeDistance.x;
-    float fadeInDist = u_lightingFadeDistance.y;
-    float fade = clamp((cameraDist - fadeOutDist) / (fadeInDist - fadeOutDist), 0.0, 1.0);
-
-    const float fExposure = 2.0;
-    vec3 rgb = v_mieColor + finalColor.rgb * v_rayleighColor;
-    rgb = vec3(1.0) - exp(-fExposure * rgb);
-
-    float darken = clamp(dot(normalize(czm_viewerPositionWC), normalize(czm_sunPositionWC)), u_minimumBrightness, 1.0);
-    vec3 fogColor = rgb * darken;
-
-    finalColor = vec4(czm_fog(v_distance, finalColor.rgb, fogColor), finalColor.a);
-
-    const float u_dayNightBlendDelta = 0.05;
-
+    vec3 rgb = groundAtmosphereColor;
     if (diffuse < -u_dayNightBlendDelta)
     {
         // Night time
-        rgb = vec3(0.0);
+        rgb = nightColor;
     }
     else if (diffuse <= u_dayNightBlendDelta)
     {
         // Dusk/dawn
         float t = (diffuse + u_dayNightBlendDelta) / (2.0 * u_dayNightBlendDelta);
-        rgb = mix(vec3(0.0), rgb, t);
+        rgb = mix(nightColor, rgb, t);
     }
 
-    gl_FragColor = vec4(mix(finalColor.rgb, rgb, fade), finalColor.a);
+    finalColor = vec4(mix(finalColor.rgb, rgb, fade), finalColor.a);
+#endif
+
+    gl_FragColor = finalColor;
 }
 
 #ifdef SHOW_REFLECTIVE_OCEAN
