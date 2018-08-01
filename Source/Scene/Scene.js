@@ -2872,7 +2872,7 @@ define([
             environmentState.moonCommand = undefined;
         } else {
             if (defined(skyAtmosphere) && defined(globe)) {
-                skyAtmosphere.setDynamicAtmosphereColor(globe.enableLighting);
+                skyAtmosphere.setDynamicAtmosphereColor(globe.enableLighting || globe.showGroundAtmosphere);
                 environmentState.isReadyForAtmosphere = environmentState.isReadyForAtmosphere || globe._surface._tilesToRender.length > 0;
             }
             environmentState.skyAtmosphereCommand = defined(skyAtmosphere) ? skyAtmosphere.update(frameState) : undefined;
