@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">  <!-- Use Chrome Frame in IE -->
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
     <meta name="description" content="User-defined clipping planes applied to a batched 3D Tileset, point cloud, and model.">
     <meta name="cesium-sandcastle-labels" content="Showcases, 3D Tiles">
@@ -10,10 +10,12 @@
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
     <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
     <script type="text/javascript">
-    require.config({
-        baseUrl : '../../../Source',
-        waitSeconds : 60
-    });
+        if(typeof require === 'function') {
+            require.config({
+                baseUrl : '../../../Source',
+                waitSeconds : 120
+            });
+        }
     </script>
 </head>
 <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
@@ -45,7 +47,6 @@
 function startup(Cesium) {
     'use strict';
 //Sandcastle_Begin
-
 // Add a clipping plane, a plane geometry to show the representation of the
 // plane, and control the magnitude of the plane distance with the mouse.
 
@@ -154,18 +155,12 @@ function loadTileset(url) {
 
 var modelEntityClippingPlanes;
 function loadModel(url) {
-    var clippingPlanes = [
-        new Cesium.ClippingPlane(new Cesium.Cartesian3(0.0, 0.0, -1.0), -100.0)
-    ];
-
-    modelEntityClippingPlanes = new Cesium.ClippingPlaneCollection({
-        planes : clippingPlanes,
+    var clippingPlanes = new Cesium.ClippingPlaneCollection({
+        planes : [
+            new Cesium.ClippingPlane(new Cesium.Cartesian3(0.0, 0.0, -1.0), -100.0)
+        ],
         edgeWidth : viewModel.edgeStylingEnabled ? 1.0 : 0.0
     });
-
-    function updateClippingPlanes() {
-        return modelEntityClippingPlanes;
-    }
 
     var position = Cesium.Cartesian3.fromDegrees(-123.0744619, 44.0503706, 100.0);
     var heading = Cesium.Math.toRadians(135.0);
@@ -181,14 +176,14 @@ function loadModel(url) {
             uri : url,
             scale : 8,
             minimumPixelSize : 100.0,
-            clippingPlanes : new Cesium.CallbackProperty(updateClippingPlanes, false)
+            clippingPlanes : clippingPlanes
         }
     });
 
     viewer.trackedEntity = entity;
 
     for (var i = 0; i < clippingPlanes.length; ++i) {
-        var plane = clippingPlanes[i];
+        var plane = clippingPlanes.get(i);
         var planeEntity = viewer.entities.add({
             position : position,
             plane : {
@@ -262,7 +257,7 @@ function reset() {
 }
 
 //Sandcastle_End
-Sandcastle.finishedLoading();
+    Sandcastle.finishedLoading();
 }
 if (typeof Cesium !== 'undefined') {
     startup(Cesium);

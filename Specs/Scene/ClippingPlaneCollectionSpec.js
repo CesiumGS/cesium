@@ -576,56 +576,6 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('clone without a result parameter returns new copy', function() {
-        clippingPlanes = new ClippingPlaneCollection({
-            planes : planes,
-            enabled : false,
-            edgeColor : Color.RED,
-            modelMatrix : transform
-        });
-
-        var result = clippingPlanes.clone();
-        expect(result).not.toBe(clippingPlanes);
-        expect(Cartesian3.equals(result._planes[0].normal, planes[0].normal)).toBe(true);
-        expect(result._planes[0].distance).toEqual(planes[0].distance);
-        expect(Cartesian3.equals(result._planes[1].normal, planes[1].normal)).toBe(true);
-        expect(result._planes[1].distance).toEqual(planes[1].distance);
-        expect(result.enabled).toEqual(false);
-        expect(result.modelMatrix).toEqual(transform);
-        expect(result.edgeColor).toEqual(Color.RED);
-        expect(result.edgeWidth).toEqual(0.0);
-        expect(result.unionClippingRegions).toEqual(false);
-        expect(result._testIntersection).not.toBeUndefined();
-    });
-
-    it('clone stores copy in result parameter', function() {
-        clippingPlanes = new ClippingPlaneCollection({
-            planes : planes,
-            enabled : false,
-            edgeColor : Color.RED,
-            modelMatrix : transform
-        });
-        var result = new ClippingPlaneCollection();
-        var copy = clippingPlanes.clone(result);
-        expect(copy).toBe(result);
-        expect(result._planes).not.toBe(planes);
-        expect(Cartesian3.equals(result._planes[0].normal, planes[0].normal)).toBe(true);
-        expect(result._planes[0].distance).toEqual(planes[0].distance);
-        expect(Cartesian3.equals(result._planes[1].normal, planes[1].normal)).toBe(true);
-        expect(result._planes[1].distance).toEqual(planes[1].distance);
-        expect(result.enabled).toEqual(false);
-        expect(result.modelMatrix).toEqual(transform);
-        expect(result.edgeColor).toEqual(Color.RED);
-        expect(result.edgeWidth).toEqual(0.0);
-        expect(result.unionClippingRegions).toEqual(false);
-        expect(result._testIntersection).not.toBeUndefined();
-
-        // Only allocate a new array if needed
-        var previousPlanes = result._planes;
-        clippingPlanes.clone(result);
-        expect(result._planes).toBe(previousPlanes);
-    });
-
     it('setting unionClippingRegions updates testIntersection function', function() {
         clippingPlanes = new ClippingPlaneCollection();
         var originalIntersectFunction = clippingPlanes._testIntersection;
