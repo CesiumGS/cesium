@@ -23,7 +23,6 @@ define([
         './CubeMap',
         './DrawCommand',
         './PassState',
-        './PickFramebuffer',
         './PixelDatatype',
         './RenderState',
         './ShaderCache',
@@ -56,7 +55,6 @@ define([
         CubeMap,
         DrawCommand,
         PassState,
-        PickFramebuffer,
         PixelDatatype,
         RenderState,
         ShaderCache,
@@ -1156,10 +1154,6 @@ define([
             framebuffer : overrides.framebuffer,
             pass : overrides.pass
         });
-    };
-
-    Context.prototype.createPickFramebuffer = function() {
-        return new PickFramebuffer(this);
     };
 
     /**

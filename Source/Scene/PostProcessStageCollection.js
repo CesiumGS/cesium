@@ -621,6 +621,7 @@ define([
      * @param {Context} context The context.
      * @param {Texture} colorTexture The color texture rendered to by the scene.
      * @param {Texture} depthTexture The depth texture written to by the scene.
+     * @param {Texture} idTexture The id texture written to by the scene.
      *
      * @private
      */

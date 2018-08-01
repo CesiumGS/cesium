@@ -72,6 +72,7 @@ define([
         './PerformanceDisplay',
         './PerInstanceColorAppearance',
         './PickDepth',
+        './PickFramebuffer',
         './PickOffscreenFramebuffer',
         './PostProcessStageCollection',
         './Primitive',
@@ -158,6 +159,7 @@ define([
         PerformanceDisplay,
         PerInstanceColorAppearance,
         PickDepth,
+        PickFramebuffer,
         PickOffscreenFramebuffer,
         PostProcessStageCollection,
         Primitive,
@@ -3590,7 +3592,7 @@ define([
         var drawingBufferPosition = SceneTransforms.transformWindowToDrawingBuffer(this, windowPosition, scratchPosition);
 
         if (!defined(this._pickFramebuffer)) {
-            this._pickFramebuffer = context.createPickFramebuffer();
+            this._pickFramebuffer = new PickFramebuffer();
         }
 
         this._jobScheduler.disableThisFrame();
