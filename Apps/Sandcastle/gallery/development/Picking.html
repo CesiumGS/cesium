@@ -308,7 +308,7 @@ Sandcastle.addToolbarMenu([{
     text : 'Batched 3D Model',
     onselect : function() {
         tileset = viewer.scene.primitives.add(new Cesium.Cesium3DTileset({
-            url : Cesium.IonResource.fromAssetId(3883)
+            url: '../../SampleData/Cesium3DTiles/Tilesets/Tileset/tileset.json'
         }));
 
         tileset.readyPromise.then(function() {
@@ -336,7 +336,7 @@ Sandcastle.addToolbarMenu([{
     text : 'Instanced 3D Model',
     onselect : function() {
         tileset = viewer.scene.primitives.add(new Cesium.Cesium3DTileset({
-            url : Cesium.IonResource.fromAssetId(3877)
+            url : '../../SampleData/Cesium3DTiles/Instanced/InstancedWithBatchTable/tileset.json'
         }));
 
         tileset.readyPromise.then(function() {
@@ -364,7 +364,7 @@ Sandcastle.addToolbarMenu([{
     text : 'Point cloud',
     onselect : function() {
         tileset = viewer.scene.primitives.add(new Cesium.Cesium3DTileset({
-            url : Cesium.IonResource.fromAssetId(3881)
+            url : '../../SampleData/Cesium3DTiles/PointCloud/PointCloudRGB/tileset.json'
         }));
 
         tileset.readyPromise.then(function() {

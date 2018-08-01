@@ -42,7 +42,6 @@ define([
     var defaultHorizontalOrigin = HorizontalOrigin.CENTER;
     var defaultVerticalOrigin = VerticalOrigin.CENTER;
     var defaultSizeInMeters = false;
-    var defaultDisableDepthTestDistance = 0.0;
 
     var positionScratch = new Cartesian3();
     var colorScratch = new Color();
@@ -156,7 +155,7 @@ define([
             billboard.pixelOffsetScaleByDistance = Property.getValueOrUndefined(billboardGraphics._pixelOffsetScaleByDistance, time, pixelOffsetScaleByDistanceScratch);
             billboard.sizeInMeters = Property.getValueOrDefault(billboardGraphics._sizeInMeters, time, defaultSizeInMeters);
             billboard.distanceDisplayCondition = Property.getValueOrUndefined(billboardGraphics._distanceDisplayCondition, time, distanceDisplayConditionScratch);
-            billboard.disableDepthTestDistance = Property.getValueOrDefault(billboardGraphics._disableDepthTestDistance, time, defaultDisableDepthTestDistance);
+            billboard.disableDepthTestDistance = Property.getValueOrUndefined(billboardGraphics._disableDepthTestDistance, time);
 
             var subRegion = Property.getValueOrUndefined(billboardGraphics._imageSubRegion, time, boundingRectangleScratch);
             if (defined(subRegion)) {

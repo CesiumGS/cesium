@@ -11,7 +11,7 @@ attribute vec4 scaleByDistance;                            // near, nearScale, f
 attribute vec4 pixelOffsetScaleByDistance;                 // near, nearScale, far, farScale
 attribute vec4 compressedAttribute3;                       // distance display condition near, far, disableDepthTestDistance, dimensions
 #if defined(VERTEX_DEPTH_CHECK) || defined(FRAGMENT_DEPTH_CHECK)
-attribute vec4 textureCoordinateBoundsOrLabelTranslate;                    // the min and max x and y values for the texture coordinates
+attribute vec4 textureCoordinateBoundsOrLabelTranslate;    // the min and max x and y values for the texture coordinates
 #endif
 #ifdef VECTOR_TILE
 attribute float a_batchId;
@@ -21,8 +21,7 @@ varying vec2 v_textureCoordinates;
 #ifdef FRAGMENT_DEPTH_CHECK
 varying vec4 v_textureCoordinateBounds;
 varying vec4 v_originTextureCoordinateAndTranslate;
-varying vec4 v_dimensionsAndImageSize;
-varying vec3 v_eyeDepthDistanceAndApplyTranslate;
+varying vec4 v_compressed;                                 // x: eyeDepth, y: applyTranslate & enableDepthCheck, z: dimensions, w: imageSize
 varying mat2 v_rotationMatrix;
 #endif
 
@@ -196,14 +195,6 @@ void main()
 
     depthOrigin = vec2(1.0) - (depthOrigin * 0.5);
 #endif
-#if defined(VERTEX_DEPTH_CHECK) || defined(FRAGMENT_DEPTH_CHECK)
-    temp = compressedAttribute3.w;
-    temp = temp * SHIFT_RIGHT12;
-
-    vec2 dimensions;
-    dimensions.y = (temp - floor(temp)) * SHIFT_LEFT12;
-    dimensions.x = floor(temp);
-#endif
 
 #ifdef EYE_DISTANCE_TRANSLUCENCY
     vec4 translucencyByDistance;
@@ -214,6 +205,15 @@ void main()
 
     temp = compressedAttribute1.y * SHIFT_RIGHT8;
     translucencyByDistance.w = ((temp - floor(temp)) * SHIFT_LEFT8) / 255.0;
+#endif
+
+#if defined(VERTEX_DEPTH_CHECK) || defined(FRAGMENT_DEPTH_CHECK)
+    temp = compressedAttribute3.w;
+    temp = temp * SHIFT_RIGHT12;
+
+    vec2 dimensions;
+    dimensions.y = (temp - floor(temp)) * SHIFT_LEFT12;
+    dimensions.x = floor(temp);
 #endif
 
 #ifdef ALIGNED_AXIS
@@ -324,20 +324,22 @@ void main()
 
 #ifdef VERTEX_DEPTH_CHECK
 if (lengthSq < disableDepthTestDistance) {
+    float depthsilon = 10.0;
+
     vec2 labelTranslate = textureCoordinateBoundsOrLabelTranslate.xy;
     vec4 pEC1 = addScreenSpaceOffset(positionEC, dimensions, scale, vec2(0.0), origin, labelTranslate, pixelOffset, alignedAxis, validAlignedAxis, rotation, sizeInMeters, rotationMatrix, mpp);
     float globeDepth1 = getGlobeDepth(pEC1);
 
-    if (globeDepth1 != 0.0 && pEC1.z < globeDepth1)
+    if (globeDepth1 != 0.0 && pEC1.z + depthsilon < globeDepth1)
     {
         vec4 pEC2 = addScreenSpaceOffset(positionEC, dimensions, scale, vec2(0.0, 1.0), origin, labelTranslate, pixelOffset, alignedAxis, validAlignedAxis, rotation, sizeInMeters, rotationMatrix, mpp);
         float globeDepth2 = getGlobeDepth(pEC2);
 
-        if (globeDepth2 != 0.0 && pEC2.z < globeDepth2)
+        if (globeDepth2 != 0.0 && pEC2.z + depthsilon < globeDepth2)
         {
             vec4 pEC3 = addScreenSpaceOffset(positionEC, dimensions, scale, vec2(1.0), origin, labelTranslate, pixelOffset, alignedAxis, validAlignedAxis, rotation, sizeInMeters, rotationMatrix, mpp);
             float globeDepth3 = getGlobeDepth(pEC3);
-            if (globeDepth3 != 0.0 && pEC3.z < globeDepth3)
+            if (globeDepth3 != 0.0 && pEC3.z + depthsilon < globeDepth3)
             {
                 positionEC.xyz = vec3(0.0);
             }
@@ -389,22 +391,26 @@ if (lengthSq < disableDepthTestDistance) {
     v_rotationMatrix = mat2(1.0, 0.0, 0.0, 1.0);
 #endif
 
-    v_eyeDepthDistanceAndApplyTranslate.x = eyeDepth;
+    float enableDepthCheck = 0.0;
     if (lengthSq < disableDepthTestDistance)
     {
-        v_eyeDepthDistanceAndApplyTranslate.y = 1.0;
-    }
-    else
-    {
-        v_eyeDepthDistanceAndApplyTranslate.y = 0.0;
+        enableDepthCheck = 1.0;
     }
 
-    v_eyeDepthDistanceAndApplyTranslate.z = applyTranslate;
+    float dw = floor(clamp(dimensions.x, 0.0, SHIFT_LEFT12));
+    float dh = floor(clamp(dimensions.y, 0.0, SHIFT_LEFT12));
+
+    float iw = floor(clamp(imageSize.x, 0.0, SHIFT_LEFT12));
+    float ih = floor(clamp(imageSize.y, 0.0, SHIFT_LEFT12));
+
+    v_compressed.x = eyeDepth;
+    v_compressed.y = applyTranslate * SHIFT_LEFT1 + enableDepthCheck;
+    v_compressed.z = dw * SHIFT_LEFT12 + dh;
+    v_compressed.w = iw * SHIFT_LEFT12 + ih;
     v_originTextureCoordinateAndTranslate.xy = depthOrigin;
     v_originTextureCoordinateAndTranslate.zw = translate;
     v_textureCoordinateBounds = textureCoordinateBoundsOrLabelTranslate;
-    v_dimensionsAndImageSize.xy = dimensions * scale;
-    v_dimensionsAndImageSize.zw = imageSize * scale;
+
 #endif
 
     v_pickColor = pickColor;
