@@ -19,9 +19,11 @@ czm_material czm_getDefaultMaterial(czm_materialInput materialInput)
     czm_material material;
     material.diffuse = vec3(0.0);
     material.specular = 0.0;
+    material.specularColor = vec3(1.0);
     material.shininess = 1.0;
     material.normal = materialInput.normalEC;
     material.emission = vec3(0.0);
     material.alpha = 1.0;
+    material.roughness = 0.8; // TODO roughness from shininess?
     return material;
 }

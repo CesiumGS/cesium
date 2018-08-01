@@ -211,7 +211,6 @@ void main()
     color.xyz = mix(color.xyz, material.diffuse, material.alpha);
 #endif
 
-/*
 #ifdef ENABLE_VERTEX_LIGHTING
     float diffuseIntensity = clamp(czm_getLambertDiffuse(czm_sunDirectionEC, normalize(v_normalEC)) * 0.9 + 0.3, 0.0, 1.0);
     vec4 finalColor = vec4(color.rgb * diffuseIntensity, color.a);
@@ -226,23 +225,6 @@ void main()
 #else
     vec4 finalColor = color;
 #endif
-*/
-
-//#ifdef ENABLE_VERTEX_LIGHTING
-    czm_material material;
-    material.diffuse = color.rgb;
-    material.alpha = color.a;
-    material.normal = normalEC;
-//    vec4 finalColor = czm_phong(normalize(-v_positionEC), material);
-//#else
-//    vec4 finalColor = color;
-//#endif
-
-    float diffuseIntensity = clamp(czm_getLambertDiffuse(czm_sunDirectionEC, normalize(v_normalEC)) * 0.9 + 0.3, 0.0, 1.0);
-    vec4 finalColor = vec4(color.rgb * diffuseIntensity, color.a);
-
-    gl_FragColor = finalColor;
-    return;
 
 #ifdef ENABLE_CLIPPING_PLANES
     vec4 clippingPlanesEdgeColor = vec4(1.0);

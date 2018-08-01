@@ -1620,6 +1620,7 @@ define([
         frameState.commandList.length = 0;
         frameState.shadowMaps.length = 0;
         frameState.brdfLutGenerator = scene._brdfLutGenerator;
+        frameState.brdfLutGenerator.update(frameState);
         frameState.environmentMap = scene.skyBox && scene.skyBox._cubeMap;
         frameState.mode = scene._mode;
         frameState.morphTime = scene.morphTime;

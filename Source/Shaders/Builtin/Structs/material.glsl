@@ -15,9 +15,12 @@ struct czm_material
 {
     vec3 diffuse;
     float specular;
+    vec3 specularColor;
     float shininess;
     vec3 normal;
     vec3 emission;
     float alpha;
     float roughness;
 };
+
+// TODO: Docs

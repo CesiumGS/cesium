@@ -16,8 +16,9 @@ void main()
     materialInput.positionToEyeEC = positionToEyeEC;
     czm_material material = czm_getDefaultMaterial(materialInput);
     material.diffuse = v_color.rgb;
+    material.emission = v_color.rgb * 0.15;
     material.alpha = v_color.a;
-    material.roughness = 0.6;
+    material.specularColor = mix(material.diffuse, vec3(0.04), material.roughness);
 
     gl_FragColor = czm_phongWithIBL(v_positionEC, material);
 }
