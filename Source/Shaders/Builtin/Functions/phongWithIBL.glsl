@@ -5,8 +5,8 @@ vec4 czm_phongWithIBL(vec3 positionEC, czm_material material)
     vec3 sunColor = czm_sunColor.rgb + czm_sunColor.a;
     vec3 iblColor = czm_getIBLColor(toEye, positionWC, material.normal, material.diffuse, material.roughness);
 
-    vec3 diffuseIBL = iblColor * clamp(material.diffuse + 0.5, 0., 1.);
-    vec3 color = mix(material.diffuse, diffuseIBL, 0.35);
+    vec3 diffuseIBL = iblColor * mix(material.diffuse, vec3(1., 1., 1.), 0.6);
+    vec3 color = material.diffuse + diffuseIBL * 0.4;
     color = czm_gammaCorrect(color);
 
     // "Unlit" camera lighting

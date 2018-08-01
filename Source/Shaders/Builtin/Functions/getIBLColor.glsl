@@ -22,11 +22,10 @@ vec3 czm_getIBLColor(vec3 toEye, vec3 positionWC, vec3 normal, vec3 diffuseColor
     vec3 belowHorizonColor = mix(vec3(0.1, 0.15, 0.25), vec3(0.4, 0.7, 0.9), smoothstepHeight);
     vec3 nadirColor = belowHorizonColor * 0.5;
     vec3 aboveHorizonColor = mix(vec3(0.4, 0.7, 0.9), belowHorizonColor, roughness * 0.5);
-    vec3 blueSkyColor = mix(vec3(0.18, 0.26, 0.48), aboveHorizonColor, reflectionDotNadir * inverseRoughness * 0.5 + 0.75);
+    vec3 blueSkyColor = mix(vec3(0.18, 0.26, 0.48), aboveHorizonColor, reflectionDotNadir * inverseRoughness * 0.7 + 0.25);
     vec3 zenithColor = mix(blueSkyColor, sceneSkyBox, smoothstepHeight);
 
-    vec3 ambiantColor = zenithColor * 0.1;;
-    //return ambiantColor;
+    vec3 ambiantColor = zenithColor * 0.5;
 
     vec3 blueSkyDiffuseColor = vec3(0.7, 0.85, 0.9); // TODO: Where to grab this value from?
     float diffuseIrradianceFromEarth = (1.0 - horizonDotNadir) * (reflectionDotNadir * 0.25 + 0.75) * smoothstepHeight;
