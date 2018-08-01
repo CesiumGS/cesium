@@ -4,11 +4,11 @@ define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/destroyObject',
-        './Framebuffer',
-        './PassState',
-        './Renderbuffer',
-        './RenderbufferFormat',
-        './Texture'
+        '../Renderer/Framebuffer',
+        '../Renderer/PassState',
+        '../Renderer/Renderbuffer',
+        '../Renderer/RenderbufferFormat',
+        '../Renderer/Texture'
     ], function(
         BoundingRectangle,
         Color,
