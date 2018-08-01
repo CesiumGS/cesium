@@ -719,9 +719,8 @@ define([
             frustum = frustum._offCenterFrustum;
         }
 
-        var context = frameState.context;
-        var width = context.drawingBufferWidth;
-        var height = context.drawingBufferHeight;
+        var width = frameState.viewport.width;
+        var height = frameState.viewport.height;
 
         var maxGeometricError = primitive._tileProvider.getLevelMaximumGeometricError(tile.level);
         var pixelSize = Math.max(frustum.top - frustum.bottom, frustum.right - frustum.left) / Math.max(width, height);

@@ -720,7 +720,7 @@ define([
     }
 
     function updateBoundingVolume(collection, frameState, boundingVolume) {
-        var pixelSize = frameState.camera.getPixelSize(boundingVolume, frameState.context.drawingBufferWidth, frameState.context.drawingBufferHeight);
+        var pixelSize = frameState.camera.getPixelSize(boundingVolume, frameState.viewport.width, frameState.viewport.width);
         var size = pixelSize * collection._maxPixelSize;
         boundingVolume.radius += size;
     }

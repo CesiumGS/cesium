@@ -154,7 +154,7 @@ define([
          * @see OrthographicFrustum
          */
         this.frustum = new PerspectiveFrustum();
-        this.frustum.aspectRatio = scene.drawingBufferWidth / scene.drawingBufferHeight;
+        this.frustum.aspectRatio = scene.drawingBufferWidth / scene.drawingBufferHeight; // TODO : how to use FrameState here?
         this.frustum.fov = CesiumMath.toRadians(60.0);
 
         /**
@@ -1009,8 +1009,9 @@ define([
 
         if (defined(globe)) {
             var mousePosition = scratchAdjustOrtghographicFrustumMousePosition;
-            mousePosition.x = scene.drawingBufferWidth / 2.0;
-            mousePosition.y = scene.drawingBufferHeight / 2.0;
+            var viewport = scene.frameState.viewport;
+            mousePosition.x = viewport.x + viewport.width / 2.0;
+            mousePosition.y = viewport.y + viewport.height / 2.0;
 
             var ray = this.getPickRay(mousePosition, pickGlobeScratchRay);
             rayIntersection = globe.pick(ray, scene, scratchRayIntersection);
@@ -3185,9 +3186,9 @@ define([
             return;
         }
 
-        var scene = this._scene;
+        var viewport = this._scene.frameState.viewport;
         this.frustum = new PerspectiveFrustum();
-        this.frustum.aspectRatio = scene.drawingBufferWidth / scene.drawingBufferHeight;
+        this.frustum.aspectRatio = viewport.width / viewport.height;
         this.frustum.fov = CesiumMath.toRadians(60.0);
     };
 
@@ -3201,9 +3202,9 @@ define([
             return;
         }
 
-        var scene = this._scene;
+        var viewport = this._scene.frameState.viewport;
         this.frustum = new OrthographicFrustum();
-        this.frustum.aspectRatio = scene.drawingBufferWidth / scene.drawingBufferHeight;
+        this.frustum.aspectRatio = viewport.width / viewport.height;
 
         // It doesn't matter what we set this to. The adjust below will correct the width based on the camera position.
         this.frustum.width = Cartesian3.magnitude(this.position);

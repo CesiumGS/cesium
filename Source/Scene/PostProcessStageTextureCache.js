@@ -251,9 +251,10 @@ define([
     /**
      * Called before the stages in the collection are executed. Creates the minimum amount of framebuffers for a post-process collection.
      *
-     * @param {Context} context The context.
+     * @param {FrameState} frameState The frame state.
      */
-    PostProcessStageTextureCache.prototype.update = function(context) {
+    PostProcessStageTextureCache.prototype.update = function(frameState) {
+        var context = frameState.context;
         var collection = this._collection;
         var updateDependencies = this._updateDependencies;
         var aoEnabled = defined(collection.ambientOcclusion) && collection.ambientOcclusion.enabled && collection.ambientOcclusion._isSupported(context);
@@ -276,8 +277,8 @@ define([
             createFramebuffers(this, context);
         }
 
-        var width = context.drawingBufferWidth;
-        var height = context.drawingBufferHeight;
+        var width = frameState.viewport.width;
+        var height = frameState.viewport.height;
         var dimensionsChanged = this._width !== width || this._height !== height;
         if (!updateDependencies && !dimensionsChanged) {
             return;

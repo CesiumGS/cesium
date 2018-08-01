@@ -90,9 +90,10 @@ define([
         processor._clearCommand = undefined;
     }
 
-    function createFramebuffer(processor, context) {
-        var screenWidth = context.drawingBufferWidth;
-        var screenHeight = context.drawingBufferHeight;
+    function createFramebuffer(processor, frameState) {
+        var context = frameState.context;
+        var screenWidth = frameState.viewport.width;
+        var screenHeight = frameState.viewport.height;
 
         var colorGBuffer = new Texture({
             context : context,
@@ -137,7 +138,7 @@ define([
 
     var distancesAndEdlStrengthScratch = new Cartesian3();
 
-    function createCommands(processor, context) {
+    function createCommands(processor, frameState) {
         var blendFS = PointCloudEyeDomeLightingShader;
 
         var blendUniformMap = {
@@ -148,8 +149,8 @@ define([
                 return processor._depthGBuffer;
             },
             u_distancesAndEdlStrength : function() {
-                distancesAndEdlStrengthScratch.x = processor._radius / context.drawingBufferWidth;
-                distancesAndEdlStrengthScratch.y = processor._radius / context.drawingBufferHeight;
+                distancesAndEdlStrengthScratch.x = processor._radius / frameState.viewport.width;
+                distancesAndEdlStrengthScratch.y = processor._radius / frameState.viewport.height;
                 distancesAndEdlStrengthScratch.z = processor._strength;
                 return distancesAndEdlStrengthScratch;
             }
@@ -163,7 +164,7 @@ define([
             }
         });
 
-        processor._drawCommand = context.createViewportQuadCommand(blendFS, {
+        processor._drawCommand = frameState.context.createViewportQuadCommand(blendFS, {
             uniformMap : blendUniformMap,
             renderState : blendRenderState,
             pass : Pass.CESIUM_3D_TILE,
@@ -180,9 +181,9 @@ define([
         });
     }
 
-    function createResources(processor, context) {
-        var screenWidth = context.drawingBufferWidth;
-        var screenHeight = context.drawingBufferHeight;
+    function createResources(processor, frameState) {
+        var screenWidth = frameState.viewport.width;
+        var screenHeight = frameState.viewport.height;
         var colorGBuffer = processor._colorGBuffer;
         var nowDirty = false;
         var resized = defined(colorGBuffer) &&
@@ -191,8 +192,8 @@ define([
 
         if (!defined(colorGBuffer) || resized) {
             destroyFramebuffer(processor);
-            createFramebuffer(processor, context);
-            createCommands(processor, context);
+            createFramebuffer(processor, frameState);
+            createCommands(processor, frameState);
             nowDirty = true;
         }
         return nowDirty;
@@ -245,7 +246,7 @@ define([
         this._strength = pointCloudShading.eyeDomeLightingStrength;
         this._radius = pointCloudShading.eyeDomeLightingRadius;
 
-        var dirty = createResources(this, frameState.context);
+        var dirty = createResources(this, frameState);
 
         // Hijack existing point commands to render into an offscreen FBO.
         var i;

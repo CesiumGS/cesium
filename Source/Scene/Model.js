@@ -3959,7 +3959,7 @@ define([
     function scaleInPixels(positionWC, radius, frameState) {
         scratchBoundingSphere.center = positionWC;
         scratchBoundingSphere.radius = radius;
-        return frameState.camera.getPixelSize(scratchBoundingSphere, frameState.context.drawingBufferWidth, frameState.context.drawingBufferHeight);
+        return frameState.camera.getPixelSize(scratchBoundingSphere, frameState.viewport.width, frameState.viewport.height);
     }
 
     var scratchPosition = new Cartesian3();
@@ -3970,8 +3970,7 @@ define([
 
         if (model.minimumPixelSize !== 0.0) {
             // Compute size of bounding sphere in pixels
-            var context = frameState.context;
-            var maxPixelSize = Math.max(context.drawingBufferWidth, context.drawingBufferHeight);
+            var maxPixelSize = Math.max(frameState.viewport.width, frameState.viewport.height);
             var m = defined(model._clampedModelMatrix) ? model._clampedModelMatrix : model.modelMatrix;
             scratchPosition.x = m[12];
             scratchPosition.y = m[13];

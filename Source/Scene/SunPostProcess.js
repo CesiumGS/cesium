@@ -160,7 +160,10 @@ define([
     var sizeScratch = new Cartesian2();
     var postProcessMatrix4Scratch= new Matrix4();
 
-    function updateSunPosition(postProcess, context, viewport) {
+    function updateSunPosition(postProcess, frameState) {
+        // TODO : does this need to know x,y offset?
+        var context = frameState.context;
+        var viewport = frameState.viewport;
         var us = context.uniformState;
         var sunPosition = us.sunPositionWC;
         var viewMatrix = us.view;
@@ -183,8 +186,8 @@ define([
         postProcess._uCenter = Cartesian2.clone(sunPositionWC, postProcess._uCenter);
         postProcess._uRadius = Math.max(size.x, size.y) * 0.15;
 
-        var width = context.drawingBufferWidth;
-        var height = context.drawingBufferHeight;
+        var width = viewport.width;
+        var height = viewport.height;
 
         var stages = postProcess._stages;
         var firstStage = stages.get(0);
@@ -219,18 +222,17 @@ define([
         this._textureCache.clear(context);
     };
 
-    SunPostProcess.prototype.update = function(passState) {
-        var context = passState.context;
+    SunPostProcess.prototype.update = function(frameState) {
+        var context = frameState.context;
 
         var sceneFramebuffer = this._sceneFramebuffer;
         sceneFramebuffer.update(context);
         var framebuffer = sceneFramebuffer.getFramebuffer();
 
-        this._textureCache.update(context);
-        this._stages.update(context);
+        this._textureCache.update(frameState);
+        this._stages.update(frameState);
 
-        var viewport = passState.viewport;
-        updateSunPosition(this, context, viewport);
+        updateSunPosition(this, frameState);
 
         return framebuffer;
     };

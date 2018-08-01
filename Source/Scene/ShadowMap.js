@@ -819,8 +819,8 @@ define([
     function updateDebugShadowViewCommand(shadowMap, frameState) {
         // Draws the shadow map on the bottom-right corner of the screen
         var context = frameState.context;
-        var screenWidth = frameState.context.drawingBufferWidth;
-        var screenHeight = frameState.context.drawingBufferHeight;
+        var screenWidth = frameState.viewport.width;
+        var screenHeight = frameState.viewport.height;
         var size = Math.min(screenWidth, screenHeight) * 0.3;
 
         var viewport = scratchViewport;

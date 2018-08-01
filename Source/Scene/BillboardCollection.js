@@ -1407,7 +1407,7 @@ define([
     function updateBoundingVolume(collection, frameState, boundingVolume) {
         var pixelScale = 1.0;
         if (!collection._allSizedInMeters || collection._maxPixelOffset !== 0.0) {
-            pixelScale = frameState.camera.getPixelSize(boundingVolume, frameState.context.drawingBufferWidth, frameState.context.drawingBufferHeight);
+            pixelScale = frameState.camera.getPixelSize(boundingVolume, frameState.viewport.width, frameState.viewport.height);
         }
 
         var size = pixelScale * collection._maxScale * collection._maxSize * 2.0;
