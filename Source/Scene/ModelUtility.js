@@ -3,6 +3,7 @@ define([
         '../Core/Cartesian3',
         '../Core/Cartesian4',
         '../Core/clone',
+        '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/Matrix2',
@@ -21,6 +22,7 @@ define([
         Cartesian3,
         Cartesian4,
         clone,
+        defaultValue,
         defined,
         defineProperties,
         Matrix2,
@@ -169,6 +171,41 @@ define([
             return 'float';
         }
         return type.toLowerCase();
+    };
+
+    ModelUtility.ModelState = {
+        NEEDS_LOAD: 0,
+        LOADING: 1,
+        LOADED: 2, // Renderable, but textures can still be pending when incrementallyLoadTextures is true.
+        FAILED: 3
+    };
+
+    ModelUtility.getFailedLoadFunction = function(model, type, path) {
+        return function(error) {
+            model._state = ModelUtility.ModelState.FAILED;
+            var message = 'Failed to load ' + type + ': ' + path;
+            if (defined(error)) {
+                message += '\n' + error.message;
+            }
+            model._readyPromise.reject(new RuntimeError(message));
+        };
+    };
+
+    ModelUtility.parseBuffers = function(model, bufferLoad) {
+        var loadResources = model._loadResources;
+        ForEach.buffer(model.gltf, function(buffer, bufferViewId) {
+            if (defined(buffer.extras._pipeline.source)) {
+                loadResources.buffers[bufferViewId] = buffer.extras._pipeline.source;
+            } else {
+                var bufferResource = model._resource.getDerivedResource({
+                    url: buffer.uri
+                });
+                ++loadResources.pendingBufferLoads;
+                bufferResource.fetchArrayBuffer()
+                    .then(bufferLoad(model, bufferViewId))
+                    .otherwise(ModelUtility.getFailedLoadFunction(model, 'buffer', bufferResource.url));
+            }
+        });
     };
 
     function techniqueAttributeForSemantic(technique, semantic) {

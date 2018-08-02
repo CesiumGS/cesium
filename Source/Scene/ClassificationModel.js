@@ -3,7 +3,6 @@ define([
         '../Core/BoundingSphere',
         '../Core/Cartesian3',
         '../Core/Cartesian4',
-        '../Core/Cartographic',
         '../Core/Color',
         '../Core/combine',
         '../Core/ComponentDatatype',
@@ -16,20 +15,23 @@ define([
         '../Core/IndexDatatype',
         '../Core/Matrix4',
         '../Core/PrimitiveType',
-        '../Core/Quaternion',
         '../Core/Resource',
         '../Core/RuntimeError',
         '../Core/Transforms',
         '../Core/WebGLConstants',
+        '../ThirdParty/GltfPipeline/addDefaults',
         '../ThirdParty/GltfPipeline/ForEach',
         '../ThirdParty/GltfPipeline/getAccessorByteStride',
         '../ThirdParty/GltfPipeline/numberOfComponentsForType',
         '../ThirdParty/GltfPipeline/parseGlb',
+        '../ThirdParty/GltfPipeline/updateVersion',
         '../ThirdParty/when',
         './Axis',
         './ClassificationType',
         './ModelLoadResources',
         './ModelUtility',
+        './processModelMaterialsCommon',
+        './processPbrMetallicRoughness',
         './SceneMode',
         './Vector3DTileBatch',
         './Vector3DTilePrimitive'
@@ -38,7 +40,6 @@ define([
         BoundingSphere,
         Cartesian3,
         Cartesian4,
-        Cartographic,
         Color,
         combine,
         ComponentDatatype,
@@ -51,20 +52,23 @@ define([
         IndexDatatype,
         Matrix4,
         PrimitiveType,
-        Quaternion,
         Resource,
         RuntimeError,
         Transforms,
         WebGLConstants,
+        addDefaults,
         ForEach,
         getAccessorByteStride,
         numberOfComponentsForType,
         parseGlb,
+        updateVersion,
         when,
         Axis,
         ClassificationType,
         ModelLoadResources,
         ModelUtility,
+        processModelMaterialsCommon,
+        processPbrMetallicRoughness,
         SceneMode,
         Vector3DTileBatch,
         Vector3DTilePrimitive) {
@@ -78,12 +82,7 @@ define([
 
     var boundingSphereCartesian3Scratch = new Cartesian3();
 
-    var ModelState = {
-        NEEDS_LOAD : 0,
-        LOADING : 1,
-        LOADED : 2,
-        FAILED : 3
-    };
+    var ModelState = ModelUtility.ModelState;
 
     ///////////////////////////////////////////////////////////////////////////
 
@@ -125,6 +124,10 @@ define([
         if (gltf instanceof Uint8Array) {
             // Binary glTF
             gltf = parseGlb(gltf);
+            updateVersion(gltf);
+            addDefaults(gltf);
+            processModelMaterialsCommon(gltf);
+            processPbrMetallicRoughness(gltf);
         } else {
             throw new RuntimeError('Only binary glTF is supported as a classifier.');
         }
@@ -132,17 +135,17 @@ define([
         var gltfNodes = gltf.nodes;
         var gltfMeshes = gltf.meshes;
 
-        var gltfNode = gltfNodes.rootNode;
-        if (!defined(gltfNode) || !defined(gltfNode.meshes)) {
+        var gltfNode = gltfNodes[0];
+        var meshId = gltfNode.mesh;
+        if (gltfNodes.length !== 1 || !defined(meshId)) {
             throw new RuntimeError('Only one node is supported for classification and it must have a mesh.');
         }
 
-        var nodeMesh = gltfNode.meshes[0];
-        if (!defined(nodeMesh)) {
-            throw new RuntimeError('Only one node is supported for classification and it must have a mesh.');
+        if (gltfMeshes.length !== 1) {
+            throw new RuntimeError('Only one mesh is supported when using b3dm for classification.');
         }
 
-        var gltfPrimitives = gltfMeshes[nodeMesh].primitives;
+        var gltfPrimitives = gltfMeshes[0].primitives;
         if (gltfPrimitives.length !== 1) {
             throw new RuntimeError('Only one primitive per mesh is supported when using b3dm for classification.');
         }
@@ -499,8 +502,8 @@ define([
         var min = new Cartesian3(Number.MAX_VALUE, Number.MAX_VALUE, Number.MAX_VALUE);
         var max = new Cartesian3(-Number.MAX_VALUE, -Number.MAX_VALUE, -Number.MAX_VALUE);
 
-        var n = gltfNodes.rootNode;
-        var meshId = n.meshes[0];
+        var n = gltfNodes[0];
+        var meshId = n.mesh;
 
         var transformToRoot = ModelUtility.getTransform(n);
         var mesh = gltfMeshes[meshId];
@@ -527,13 +530,6 @@ define([
 
     ///////////////////////////////////////////////////////////////////////////
 
-    function getFailedLoadFunction(model, type, path) {
-        return function() {
-            model._state = ModelState.FAILED;
-            model._readyPromise.reject(new RuntimeError('Failed to load ' + type + ': ' + path));
-        };
-    }
-
     function addBuffersToLoadResources(model) {
         var gltf = model.gltf;
         var loadResources = model._loadResources;
@@ -549,27 +545,6 @@ define([
             --loadResources.pendingBufferLoads;
             model.gltf.buffers[id].extras._pipeline.source = buffer;
         };
-    }
-
-    function parseBuffers(model) {
-        var loadResources = model._loadResources;
-        // Iterate this way for compatibility with objects and arrays
-        var buffers = model.gltf.buffers;
-        var length = buffers.length;
-        for (var i = 0; i < length; ++i) {
-            var buffer = buffers[i];
-            buffer.extras = defaultValue(buffer.extras, {});
-            buffer.extras._pipeline = defaultValue(buffer.extras._pipeline, {});
-            if (defined(buffer.extras._pipeline.source)) {
-                loadResources.buffers[i] = buffer.extras._pipeline.source;
-            } else {
-                var bufferResource = model._resource.getDerivedResource({
-                    url : buffer.uri
-                });
-                ++loadResources.pendingBufferLoads;
-                bufferResource.fetchArrayBuffer().then(bufferLoad(model, i)).otherwise(getFailedLoadFunction(model, 'buffer', bufferResource.uri));
-            }
-        }
     }
 
     function parseBufferViews(model) {
@@ -646,9 +621,7 @@ define([
     }
 
     function modifyShaderForQuantizedAttributes(shader, model) {
-        var gltfMeshes = model.gltf.meshes;
-        var gltfRootNode = model.gltf.nodes.rootNode;
-        var primitive = gltfMeshes[gltfRootNode.meshes[0]].primitives[0];
+        var primitive = model.gltf.meshes[0].primitives[0];
         var result = ModelUtility.modifyShaderForQuantizedAttributes(model.gltf, primitive, shader);
         model._quantizedUniforms = result.uniforms;
         return result.shader;
@@ -738,11 +711,7 @@ define([
 
     function createVertexArray(model) {
         var loadResources = model._loadResources;
-        if (!loadResources.finishedBuffersCreation()) {
-            return;
-        }
-
-        if (defined(model._vertexArray)) {
+        if (!loadResources.finishedBuffersCreation() || defined(model._vertexArray)) {
             return;
         }
 
@@ -750,31 +719,27 @@ define([
         var gltf = model.gltf;
         var accessors = gltf.accessors;
         var meshes = gltf.meshes;
-        var rootNode = gltf.nodes.rootNode;
-        var primitives = meshes[rootNode.meshes[0]].primitives;
+        var primitives = meshes[0].primitives;
 
         var primitive = primitives[0];
         var attributeLocations = getAttributeLocations();
         var attributes = {};
-        var primitiveAttributes = primitive.attributes;
-        for (var attributeName in primitiveAttributes) {
-            if (primitiveAttributes.hasOwnProperty(attributeName)) {
-                var attributeLocation = attributeLocations[attributeName];
-                // Skip if the attribute is not used by the material, e.g., because the asset was exported
-                // with an attribute that wasn't used and the asset wasn't optimized.
-                if (defined(attributeLocation)) {
-                    var a = accessors[primitiveAttributes[attributeName]];
-                    attributes[attributeName] = {
-                        index : attributeLocation,
-                        vertexBuffer : rendererBuffers[a.bufferView],
-                        componentsPerAttribute : numberOfComponentsForType(a.type),
-                        componentDatatype : a.componentType,
-                        offsetInBytes : a.byteOffset,
-                        strideInBytes : getAccessorByteStride(gltf, a)
-                    };
-                }
+        ForEach.meshPrimitiveAttribute(primitive, function(accessorId, attributeName) {
+            // Skip if the attribute is not used by the material, e.g., because the asset
+            // was exported with an attribute that wasn't used and the asset wasn't optimized.
+            var attributeLocation = attributeLocations[attributeName];
+            if (defined(attributeLocation)) {
+                var a = accessors[accessorId];
+                attributes[attributeName] = {
+                    index: attributeLocation,
+                    vertexBuffer: rendererBuffers[a.bufferView],
+                    componentsPerAttribute: numberOfComponentsForType(a.type),
+                    componentDatatype: a.componentType,
+                    offsetInBytes: a.byteOffset,
+                    strideInBytes: getAccessorByteStride(gltf, a)
+                };
             }
-        }
+        });
 
         var indexBuffer;
         if (defined(primitive.indices)) {
@@ -809,15 +774,12 @@ define([
 
         var uniformMap = {};
         ForEach.technique(model.gltf, function(technique) {
-            var parameters = technique.parameters;
-            ForEach.techniqueUniform(technique, function(parameterName, uniformName) {
-                var parameter = parameters[parameterName];
-
-                if (!defined(parameter.semantic) || !defined(gltfSemanticUniforms[parameter.semantic])) {
+            ForEach.techniqueUniform(technique, function(uniform, uniformName) {
+                if (!defined(uniform.semantic) || !defined(gltfSemanticUniforms[uniform.semantic])) {
                     return;
                 }
 
-                uniformMap[uniformName] = gltfSemanticUniforms[parameter.semantic](context.uniformState, model);
+                uniformMap[uniformName] = gltfSemanticUniforms[uniform.semantic](context.uniformState, model);
             });
         });
 
@@ -849,8 +811,7 @@ define([
         var gltf = model.gltf;
         var accessors = gltf.accessors;
         var gltfMeshes = gltf.meshes;
-        var gltfRootNode = gltf.nodes.rootNode;
-        var primitive = gltfMeshes[gltfRootNode.meshes[0]].primitives[0];
+        var primitive = gltfMeshes[0].primitives[0];
         var ix = accessors[primitive.indices];
 
         var positionAccessor = primitive.attributes.POSITION;
@@ -999,7 +960,7 @@ define([
 
         var gltf = model.gltf;
         var nodes = gltf.nodes;
-        var gltfNode = nodes.rootNode;
+        var gltfNode = nodes[0];
         model._nodeMatrix = ModelUtility.getTransform(gltfNode, model._nodeMatrix);
 
         createPrimitive(model);
@@ -1086,7 +1047,7 @@ define([
                 }
 
                 this._loadResources = new ModelLoadResources();
-                parseBuffers(this);
+                ModelUtility.parseBuffers(this, bufferLoad);
             }
         }
 

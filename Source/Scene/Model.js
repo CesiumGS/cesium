@@ -154,12 +154,7 @@ define([
 
     var boundingSphereCartesian3Scratch = new Cartesian3();
 
-    var ModelState = {
-        NEEDS_LOAD : 0,
-        LOADING : 1,
-        LOADED : 2,  // Renderable, but textures can still be pending when incrementallyLoadTextures is true.
-        FAILED : 3
-    };
+    var ModelState = ModelUtility.ModelState;
 
     // glTF MIME types discussed in https://github.com/KhronosGroup/glTF/issues/412 and https://github.com/KhronosGroup/glTF/issues/943
     var defaultModelAccept = 'model/gltf-binary,model/gltf+json;q=0.8,application/json;q=0.2,*/*;q=0.01';
@@ -1233,7 +1228,7 @@ define([
                     var json = getStringFromTypedArray(array);
                     cachedGltf.makeReady(JSON.parse(json));
                 }
-            }).otherwise(getFailedLoadFunction(model, 'model', url));
+            }).otherwise(ModelUtility.getFailedLoadFunction(model, 'model', url));
         } else if (!cachedGltf.ready) {
             // Cache hit but the fetchArrayBuffer() or fetchText() request is still pending
             ++cachedGltf.count;
@@ -1384,17 +1379,6 @@ define([
 
     ///////////////////////////////////////////////////////////////////////////
 
-    function getFailedLoadFunction(model, type, path) {
-        return function(error) {
-            model._state = ModelState.FAILED;
-            var message = 'Failed to load ' + type + ': ' + path;
-            if (defined(error)) {
-                message += '\n' + error.message;
-            }
-            model._readyPromise.reject(new RuntimeError(message));
-        };
-    }
-
     function addBuffersToLoadResources(model) {
         var gltf = model.gltf;
         var loadResources = model._loadResources;
@@ -1426,7 +1410,7 @@ define([
                 ++loadResources.pendingBufferLoads;
                 bufferResource.fetchArrayBuffer()
                     .then(bufferLoad(model, bufferViewId))
-                    .otherwise(getFailedLoadFunction(model, 'buffer', bufferResource.url));
+                    .otherwise(ModelUtility.getFailedLoadFunction(model, 'buffer', bufferResource.url));
             }
         });
     }
@@ -1512,7 +1496,7 @@ define([
 
                 shaderResource.fetchText()
                     .then(shaderLoad(model, shader.type, id))
-                    .otherwise(getFailedLoadFunction(model, 'shader', shaderResource.url));
+                    .otherwise(ModelUtility.getFailedLoadFunction(model, 'shader', shaderResource.url));
             }
         });
     }
@@ -1632,7 +1616,7 @@ define([
                 } else {
                     promise = imageResource.fetchImage();
                 }
-                promise.then(imageLoad(model, id, imageId)).otherwise(getFailedLoadFunction(model, 'image', imageResource.url));
+                promise.then(imageLoad(model, id, imageId)).otherwise(ModelUtility.getFailedLoadFunction(model, 'image', imageResource.url));
             }
         });
     }
@@ -2134,7 +2118,7 @@ define([
             var bufferView = gltf.bufferViews[gltfTexture.bufferView];
             var imageId = gltf.textures[gltfTexture.id].source;
 
-            var onerror = getFailedLoadFunction(model, 'image', 'id: ' + gltfTexture.id + ', bufferView: ' + gltfTexture.bufferView);
+            var onerror = ModelUtility.getFailedLoadFunction(model, 'image', 'id: ' + gltfTexture.id + ', bufferView: ' + gltfTexture.bufferView);
 
             if (gltfTexture.mimeType === 'image/ktx') {
                 loadKTX(loadResources.getBuffer(bufferView)).then(imageLoad(model, gltfTexture.id, imageId)).otherwise(onerror);
@@ -4168,7 +4152,7 @@ define([
 
                 if (!loadResources.finishedDecoding()) {
                     DracoLoader.decodeModel(this, context)
-                        .otherwise(getFailedLoadFunction(this, 'model', this.basePath));
+                        .otherwise(ModelUtility.getFailedLoadFunction(this, 'model', this.basePath));
                 }
 
                 if (loadResources.finishedDecoding() && !loadResources.resourcesParsed) {
