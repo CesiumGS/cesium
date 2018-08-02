@@ -135,6 +135,12 @@ define([
          */
         this.enableLighting = true;
 
+        /**
+         * Enable the ground atmosphere.
+         *
+         * @type {Boolean}
+         * @default true
+         */
         this.showGroundAtmosphere = true;
 
         /**
@@ -155,7 +161,22 @@ define([
          */
         this.lightingFadeInDistance = 9000000.0;
 
+        /**
+         * The distance where the darkness of night from the ground atmosphere fades out to a lit ground atmosphere.
+         * This only takes effect when <code>showGroundAtmosphere</code> is <code>true</code>.
+         *
+         * @type {Number}
+         * @default 10000000.0
+         */
         this.nightFadeOutDistance = 10000000.0;
+
+        /**
+         * The distance where the darkness of night from the ground atmosphere fades in to an unlit ground atmosphere.
+         * This only takes effect when <code>showGroundAtmosphere</code> is <code>true</code>.
+         *
+         * @type {Number}
+         * @default 40000000.0
+         */
         this.nightFadeInDistance = 40000000.0;
 
         /**
