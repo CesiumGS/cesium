@@ -1518,7 +1518,7 @@ define([
     }
 
     function parsePrograms(model) {
-        var sourcePrograms = model._sourcePrograms;
+        var sourcePrograms = model._sourcePrograms = {};
         var gltf = model.gltf;
 
         if (!hasExtension(gltf, 'KHR_techniques_webgl')) {
@@ -2593,16 +2593,6 @@ define([
         });
     }
 
-    function getBooleanStates(material) {
-        var booleanStates = {};
-        booleanStates[WebGLConstants.BLEND] = (material.alphaMode === 'BLEND');
-        booleanStates[WebGLConstants.CULL_FACE] = !material.doubleSided;
-        booleanStates[WebGLConstants.DEPTH_TEST] = true;
-        booleanStates[WebGLConstants.POLYGON_OFFSET_FILL] = false;
-
-        return booleanStates;
-    }
-
     function createRenderStates(model) {
         var loadResources = model._loadResources;
         if (loadResources.createRenderStates) {
@@ -2633,50 +2623,17 @@ define([
             blendFuncSeparate = material.extensions.KHR_blend.blendFactors;
         }
 
-        var statesFunctions = {
-            blendColor : [0.0, 0.0, 0.0, 0.0],
-            colorMask : [true, true, true, true],
-            depthRange : [0.0, 1.0],
-            polygonOffset : [0.0, 0.0]
-        };
-
-        var booleanStates = getBooleanStates(material);
-
+        var enableCulling = !material.doubleSided;
+        var blendingEnabled = (material.alphaMode === 'BLEND');
         rendererRenderStates[materialId] = RenderState.fromCache({
-            frontFace : defined(statesFunctions.frontFace) ? statesFunctions.frontFace[0] : WebGLConstants.CCW,
             cull : {
-                enabled : booleanStates[WebGLConstants.CULL_FACE],
-                face : defined(statesFunctions.cullFace) ? statesFunctions.cullFace[0] : WebGLConstants.BACK
-            },
-            lineWidth : defined(statesFunctions.lineWidth) ? statesFunctions.lineWidth[0] : 1.0,
-            polygonOffset : {
-                enabled : booleanStates[WebGLConstants.POLYGON_OFFSET_FILL],
-                factor: statesFunctions.polygonOffset[0],
-                units: statesFunctions.polygonOffset[1]
-            },
-            depthRange : {
-                near: statesFunctions.depthRange[0],
-                far: statesFunctions.depthRange[1]
+                enabled : enableCulling
             },
             depthTest : {
-                enabled : booleanStates[WebGLConstants.DEPTH_TEST],
-                func : defined(statesFunctions.depthFunc) ? statesFunctions.depthFunc[0] : WebGLConstants.LESS
+                enabled : true
             },
-            colorMask : {
-                red: statesFunctions.colorMask[0],
-                green: statesFunctions.colorMask[1],
-                blue: statesFunctions.colorMask[2],
-                alpha: statesFunctions.colorMask[3]
-            },
-            depthMask : defined(statesFunctions.depthMask) ? statesFunctions.depthMask[0] : true,
             blending : {
-                enabled : booleanStates[WebGLConstants.BLEND],
-                color : {
-                    red: statesFunctions.blendColor[0],
-                    green: statesFunctions.blendColor[1],
-                    blue: statesFunctions.blendColor[2],
-                    alpha: statesFunctions.blendColor[3]
-                },
+                enabled : blendingEnabled,
                 equationRgb : blendEquationSeparate[0],
                 equationAlpha : blendEquationSeparate[1],
                 functionSourceRgb : blendFuncSeparate[0],
