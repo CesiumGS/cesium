@@ -1,6 +1,6 @@
 {
   "name": "eslint-config-cesium",
-  "version": "5.0.0",
+  "version": "6.0.0",
   "description": "ESLint shareable configs for Cesium",
   "homepage": "http://cesiumjs.org",
   "license": "Apache-2.0",
@@ -19,6 +19,6 @@
     "cesium"
   ],
   "peerDependencies": {
-    "eslint": ">= 4"
+    "eslint": ">= 5"
   }
 }

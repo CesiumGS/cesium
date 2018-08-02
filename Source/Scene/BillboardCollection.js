@@ -17,6 +17,7 @@ define([
         '../Core/WebGLConstants',
         '../Renderer/Buffer',
         '../Renderer/BufferUsage',
+        '../Renderer/ContextLimits',
         '../Renderer/DrawCommand',
         '../Renderer/Pass',
         '../Renderer/RenderState',
@@ -52,6 +53,7 @@ define([
         WebGLConstants,
         Buffer,
         BufferUsage,
+        ContextLimits,
         DrawCommand,
         Pass,
         RenderState,
@@ -101,7 +103,7 @@ define([
         scaleByDistance : 6,
         pixelOffsetScaleByDistance : 7,
         compressedAttribute3 : 8,
-        textureCoordinateBounds : 9,
+        textureCoordinateBoundsOrLabelTranslate : 9,
         a_batchId : 10
     };
 
@@ -116,7 +118,7 @@ define([
         scaleByDistance : 7,
         pixelOffsetScaleByDistance : 8,
         compressedAttribute3 : 9,
-        textureCoordinateBounds : 10,
+        textureCoordinateBoundsOrLabelTranslate : 10,
         a_batchId : 11
     };
 
@@ -329,7 +331,7 @@ define([
             this._removeCallbackFunc = scene.terrainProviderChanged.addEventListener(function() {
                 var billboards = this._billboards;
                 var length = billboards.length;
-                for (var i=0;i<length;++i) {
+                for (var i = 0; i < length; ++i) {
                     billboards[i]._updateClamping();
                 }
             }, this);
@@ -688,7 +690,7 @@ define([
         var usageChanged = false;
 
         var properties = this._propertiesChanged;
-        for ( var k = 0; k < NUMBER_OF_PROPERTIES; ++k) {
+        for (var k = 0; k < NUMBER_OF_PROPERTIES; ++k) {
             var newUsage = (properties[k] === 0) ? BufferUsage.STATIC_DRAW : BufferUsage.STREAM_DRAW;
             usageChanged = usageChanged || (buffersUsage[k] !== newUsage);
             buffersUsage[k] = newUsage;
@@ -744,7 +746,7 @@ define([
             componentDatatype : ComponentDatatype.FLOAT,
             usage : buffersUsage[DISTANCE_DISPLAY_CONDITION_INDEX]
         }, {
-            index : attributeLocations.textureCoordinateBounds,
+            index : attributeLocations.textureCoordinateBoundsOrLabelTranslate,
             componentsPerAttribute : 4,
             componentDatatype : ComponentDatatype.FLOAT,
             usage : buffersUsage[TEXTURE_COORDINATE_BOUNDS]
@@ -1192,12 +1194,13 @@ define([
         }
 
         var disableDepthTestDistance = billboard.disableDepthTestDistance;
-        if (billboard.heightReference === HeightReference.CLAMP_TO_GROUND && disableDepthTestDistance === 0.0 && billboardCollection._scene.context.depthTexture) {
-            disableDepthTestDistance = 2000.0;
+        var clampToGround = billboard.heightReference === HeightReference.CLAMP_TO_GROUND && billboardCollection._scene.context.depthTexture;
+        if (!defined(disableDepthTestDistance)) {
+            disableDepthTestDistance = clampToGround ? 5000.0 : 0.0;
         }
 
         disableDepthTestDistance *= disableDepthTestDistance;
-        if (disableDepthTestDistance > 0.0) {
+        if (clampToGround || disableDepthTestDistance > 0.0) {
             billboardCollection._shaderDisableDepthDistance = true;
             if (disableDepthTestDistance === Number.POSITIVE_INFINITY) {
                 disableDepthTestDistance = -1.0;
@@ -1249,13 +1252,35 @@ define([
         }
     }
 
-    function writeTextureCoordinateBounds(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard) {
+    function writeTextureCoordinateBoundsOrLabelTranslate(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard) {
         if (billboard.heightReference === HeightReference.CLAMP_TO_GROUND) {
             billboardCollection._shaderClampToGround = billboardCollection._scene.context.depthTexture;
         }
         var i;
-        var writer = vafWriters[attributeLocations.textureCoordinateBounds];
+        var writer = vafWriters[attributeLocations.textureCoordinateBoundsOrLabelTranslate];
 
+        if (ContextLimits.maximumVertexTextureImageUnits > 0) {
+            //write _labelTranslate, used by depth testing in the vertex shader
+            var translateX = 0;
+            var translateY = 0;
+            if (defined(billboard._labelTranslate)) {
+                translateX = billboard._labelTranslate.x;
+                translateY = billboard._labelTranslate.y;
+            }
+            if (billboardCollection._instanced) {
+                i = billboard._index;
+                writer(i, translateX, translateY, 0.0, 0.0);
+            } else {
+                i = billboard._index * 4;
+                writer(i + 0, translateX, translateY, 0.0, 0.0);
+                writer(i + 1, translateX, translateY, 0.0, 0.0);
+                writer(i + 2, translateX, translateY, 0.0, 0.0);
+                writer(i + 3, translateX, translateY, 0.0, 0.0);
+            }
+            return;
+        }
+
+        //write texture coordinate bounds, used by depth testing in fragment shader
         var minX = 0;
         var minY = 0;
         var width = 0;
@@ -1320,7 +1345,7 @@ define([
         writeScaleByDistance(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard);
         writePixelOffsetScaleByDistance(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard);
         writeCompressedAttribute3(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard);
-        writeTextureCoordinateBounds(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard);
+        writeTextureCoordinateBoundsOrLabelTranslate(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard);
         writeBatchId(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard);
     }
 
@@ -1334,7 +1359,7 @@ define([
         }
 
         var positions = [];
-        for ( var i = 0; i < length; ++i) {
+        for (var i = 0; i < length; ++i) {
             var billboard = billboards[i];
             var position = billboard.position;
             var actualPosition = Billboard._computeActualPosition(billboard, position, frameState, modelMatrix);
@@ -1387,7 +1412,7 @@ define([
         }
 
         var size = pixelScale * collection._maxScale * collection._maxSize * 2.0;
-        if (collection._allHorizontalCenter && collection._allVerticalCenter ) {
+        if (collection._allHorizontalCenter && collection._allVerticalCenter) {
             size *= 0.5;
         }
 
@@ -1521,7 +1546,7 @@ define([
             }
 
             if (properties[IMAGE_INDEX_INDEX] || properties[POSITION_INDEX]) {
-                writers.push(writeTextureCoordinateBounds);
+                writers.push(writeTextureCoordinateBoundsOrLabelTranslate);
             }
 
             var numWriters = writers.length;
@@ -1536,7 +1561,7 @@ define([
                     var b = billboardsToUpdate[m];
                     b._dirty = false;
 
-                    for ( var n = 0; n < numWriters; ++n) {
+                    for (var n = 0; n < numWriters; ++n) {
                         writers[n](this, context, textureAtlasCoordinates, vafWriters, b);
                     }
                 }
@@ -1546,7 +1571,7 @@ define([
                     var bb = billboardsToUpdate[h];
                     bb._dirty = false;
 
-                    for ( var o = 0; o < numWriters; ++o) {
+                    for (var o = 0; o < numWriters; ++o) {
                         writers[o](this, context, textureAtlasCoordinates, vafWriters, bb);
                     }
 
@@ -1632,6 +1657,8 @@ define([
         var fs;
         var vertDefines;
 
+        var supportVSTextureReads = ContextLimits.maximumVertexTextureImageUnits > 0;
+
         if (blendOptionChanged ||
             (this._shaderRotation !== this._compiledShaderRotation) ||
             (this._shaderAlignedAxis !== this._compiledShaderAlignedAxis) ||
@@ -1681,7 +1708,11 @@ define([
                 vs.defines.push('DISABLE_DEPTH_DISTANCE');
             }
             if (this._shaderClampToGround) {
-                vs.defines.push('CLAMP_TO_GROUND');
+                if (supportVSTextureReads) {
+                    vs.defines.push('VERTEX_DEPTH_CHECK');
+                } else {
+                    vs.defines.push('FRAGMENT_DEPTH_CHECK');
+                }
             }
 
             var vectorFragDefine = defined(this._batchTable) ? 'VECTOR_TILE' : '';
@@ -1692,7 +1723,11 @@ define([
                     sources : [fsSource]
                 });
                 if (this._shaderClampToGround) {
-                    fs.defines.push('CLAMP_TO_GROUND');
+                    if (supportVSTextureReads) {
+                        fs.defines.push('VERTEX_DEPTH_CHECK');
+                    } else {
+                        fs.defines.push('FRAGMENT_DEPTH_CHECK');
+                    }
                 }
                 this._sp = ShaderProgram.replaceCache({
                     context : context,
@@ -1707,7 +1742,11 @@ define([
                     sources : [fsSource]
                 });
                 if (this._shaderClampToGround) {
-                    fs.defines.push('CLAMP_TO_GROUND');
+                    if (supportVSTextureReads) {
+                        fs.defines.push('VERTEX_DEPTH_CHECK');
+                    } else {
+                        fs.defines.push('FRAGMENT_DEPTH_CHECK');
+                    }
                 }
                 this._spTranslucent = ShaderProgram.replaceCache({
                     context : context,
@@ -1724,7 +1763,11 @@ define([
                     sources : [fsSource]
                 });
                 if (this._shaderClampToGround) {
-                    fs.defines.push('CLAMP_TO_GROUND');
+                    if (supportVSTextureReads) {
+                        fs.defines.push('VERTEX_DEPTH_CHECK');
+                    } else {
+                        fs.defines.push('FRAGMENT_DEPTH_CHECK');
+                    }
                 }
                 this._sp = ShaderProgram.replaceCache({
                     context : context,
@@ -1741,7 +1784,11 @@ define([
                     sources : [fsSource]
                 });
                 if (this._shaderClampToGround) {
-                    fs.defines.push('CLAMP_TO_GROUND');
+                    if (supportVSTextureReads) {
+                        fs.defines.push('VERTEX_DEPTH_CHECK');
+                    } else {
+                        fs.defines.push('FRAGMENT_DEPTH_CHECK');
+                    }
                 }
                 this._spTranslucent = ShaderProgram.replaceCache({
                     context : context,

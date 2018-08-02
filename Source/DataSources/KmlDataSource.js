@@ -2534,7 +2534,7 @@ define([
      * @param {Camera} options.camera The camera that is used for viewRefreshModes and sending camera properties to network links.
      * @param {Canvas} options.canvas The canvas that is used for sending viewer properties to network links.
      * @param {String} [options.sourceUri] Overrides the url to use for resolving relative links and other KML network features.
-     * @param {Boolean} [options.clampToGround=false] true if we want the geometry features (Polygons, LineStrings and LinearRings) clamped to the ground. If true, lines will use corridors so use Entity.corridor instead of Entity.polyline.
+     * @param {Boolean} [options.clampToGround=false] true if we want the geometry features (Polygons, LineStrings and LinearRings) clamped to the ground.
      * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The global ellipsoid used for geographical calculations.
      *
      * @returns {Promise.<KmlDataSource>} A promise that will resolve to a new KmlDataSource instance once the KML is loaded.
