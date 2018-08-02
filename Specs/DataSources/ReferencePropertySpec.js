@@ -52,7 +52,7 @@ defineSuite([
     it('fromString works with escaped values', function() {
         var collection = new EntityCollection();
         var objectId = '#identif\\#ier.';
-        var propertyNames = ["propertyName", ".abc\\", "def"];
+        var propertyNames = ['propertyName', '.abc\\', 'def'];
         var property = ReferenceProperty.fromString(collection, '\\#identif\\\\\\#ier\\.#propertyName.\\.abc\\\\.def');
 
         expect(property.targetCollection).toBe(collection);

@@ -337,17 +337,17 @@ defineSuite([
     it('defaults to WebMercatorTilingScheme when no projection specified', function() {
         Resource._Implementations.loadWithXhr = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
             return deferred.resolve(JSON.stringify({
-                "isAuthenticated" : true,
-                "layers" : [{
-                    "icon" : "icons/773_l.png",
-                    "id" : 1234,
-                    "initialState" : true,
-                    "label" : "Imagery",
-                    "requestType" : "ImageryMaps",
-                    "version" : 1
+                'isAuthenticated' : true,
+                'layers' : [{
+                    'icon' : 'icons/773_l.png',
+                    'id' : 1234,
+                    'initialState' : true,
+                    'label' : 'Imagery',
+                    'requestType' : 'ImageryMaps',
+                    'version' : 1
                 }],
-                "serverUrl" : "https://example.invalid",
-                "useGoogleLayers" : false
+                'serverUrl' : 'https://example.invalid',
+                'useGoogleLayers' : false
             }));
         };
 
@@ -367,18 +367,18 @@ defineSuite([
     it('Projection is WebMercatorTilingScheme when server projection is mercator', function() {
         Resource._Implementations.loadWithXhr = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
             return deferred.resolve(JSON.stringify({
-                "isAuthenticated" : true,
-                "layers" : [{
-                    "icon" : "icons/773_l.png",
-                    "id" : 1234,
-                    "initialState" : true,
-                    "label" : "Imagery",
-                    "requestType" : "ImageryMaps",
-                    "version" : 1
+                'isAuthenticated' : true,
+                'layers' : [{
+                    'icon' : 'icons/773_l.png',
+                    'id' : 1234,
+                    'initialState' : true,
+                    'label' : 'Imagery',
+                    'requestType' : 'ImageryMaps',
+                    'version' : 1
                 }],
-                "projection" : "mercator",
-                "serverUrl" : "https://example.invalid",
-                "useGoogleLayers" : false
+                'projection' : 'mercator',
+                'serverUrl' : 'https://example.invalid',
+                'useGoogleLayers' : false
             }));
         };
 
@@ -398,18 +398,18 @@ defineSuite([
     it('Projection is GeographicTilingScheme when server projection is flat', function() {
         Resource._Implementations.loadWithXhr = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
             return deferred.resolve(JSON.stringify({
-                "isAuthenticated" : true,
-                "layers" : [{
-                    "icon" : "icons/773_l.png",
-                    "id" : 1234,
-                    "initialState" : true,
-                    "label" : "Imagery",
-                    "requestType" : "ImageryMaps",
-                    "version" : 1
+                'isAuthenticated' : true,
+                'layers' : [{
+                    'icon' : 'icons/773_l.png',
+                    'id' : 1234,
+                    'initialState' : true,
+                    'label' : 'Imagery',
+                    'requestType' : 'ImageryMaps',
+                    'version' : 1
                 }],
-                "projection" : "flat",
-                "serverUrl" : "https://example.invalid",
-                "useGoogleLayers" : false
+                'projection' : 'flat',
+                'serverUrl' : 'https://example.invalid',
+                'useGoogleLayers' : false
             }));
         };
 

@@ -508,8 +508,12 @@ define([
         options = defaultValue(options, {});
         addDefaultsFromTemplate(gltf, gltfTemplate);
         addDefaultTransformToAnimatedNodes(gltf);
-        addDefaultMaterial(gltf);
-        addDefaultTechnique(gltf);
+
+        if (gltf.asset.extras.gltf_pipeline_upgrade_10to20) {
+            addDefaultMaterial(gltf);
+            addDefaultTechnique(gltf);
+        }
+
         addDefaultByteOffsets(gltf);
         selectDefaultScene(gltf);
         inferBufferViewTargets(gltf);

@@ -437,6 +437,7 @@ define([
      *    format=image/jpeg
      *
      * @constant
+     * @type {Object}
      */
     WebMapServiceImageryProvider.DefaultParameters = freezeObject({
         service : 'WMS',
@@ -453,6 +454,7 @@ define([
      *     request=GetFeatureInfo
      *
      * @constant
+     * @type {Object}
      */
     WebMapServiceImageryProvider.GetFeatureInfoDefaultParameters = freezeObject({
         service : 'WMS',
