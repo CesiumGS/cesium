@@ -131,9 +131,9 @@ define([
          * Enable lighting the globe with the sun as a light source.
          *
          * @type {Boolean}
-         * @default false
+         * @default true
          */
-        this.enableLighting = false;
+        this.enableLighting = true;
 
         this.showGroundAtmosphere = true;
 
@@ -154,6 +154,9 @@ define([
          * @default 9000000.0
          */
         this.lightingFadeInDistance = 9000000.0;
+
+        this.nightFadeOutDistance = 10000000.0;
+        this.nightFadeInDistance = 40000000.0;
 
         /**
          * True if an animated wave effect should be shown in areas of the globe
@@ -625,6 +628,8 @@ define([
             tileProvider.terrainProvider = this.terrainProvider;
             tileProvider.lightingFadeOutDistance = this.lightingFadeOutDistance;
             tileProvider.lightingFadeInDistance = this.lightingFadeInDistance;
+            tileProvider.nightFadeOutDistance = this.nightFadeOutDistance;
+            tileProvider.nightFadeInDistance = this.nightFadeInDistance;
             tileProvider.zoomedOutOceanSpecularIntensity = this._zoomedOutOceanSpecularIntensity;
             tileProvider.hasWaterMask = hasWaterMask;
             tileProvider.oceanNormalMap = this._oceanNormalMap;
