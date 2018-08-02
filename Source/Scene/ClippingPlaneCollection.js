@@ -104,7 +104,21 @@ define([
          */
         this.edgeWidth = defaultValue(options.edgeWidth, 0.0);
 
-        this._collectionChanged = new Event();
+        /**
+         * An event triggered when a new clipping plane is added to the collection.  Event handlers
+         * are passed the new plane and the index at which it was added.
+         * @type {Event}
+         * @default Event()
+         */
+        this.planeAdded = new Event();
+
+        /**
+         * An event triggered when a new clipping plane is removed from the collection.  Event handlers
+         * are passed the new plane and the index from which it was removed.
+         * @type {Event}
+         * @default Event()
+         */
+        this.planeRemoved = new Event();
 
         // If this ClippingPlaneCollection has an owner, only its owner should update or destroy it.
         // This is because in a Cesium3DTileset multiple models may reference the tileset's ClippingPlaneCollection.
@@ -150,18 +164,6 @@ define([
         length : {
             get : function() {
                 return this._planes.length;
-            }
-        },
-
-        /**
-         * Gets the event fired when members of the collection have been added or removed
-         * @type {Event}
-         * @memberof ClippingPlaneCollection.prototype
-         * @readonly
-         */
-        collectionChanged : {
-            get : function() {
-                return this._collectionChanged;
             }
         },
 
@@ -279,8 +281,7 @@ define([
 
         setIndexDirty(this, newPlaneIndex);
         this._planes.push(plane);
-
-        this._collectionChanged.raiseEvent();
+        this.planeAdded.raiseEvent(plane, newPlaneIndex);
     };
 
     /**
@@ -364,7 +365,7 @@ define([
         this._multipleDirtyPlanes = true;
         planes.length = length;
 
-        this._collectionChanged.raiseEvent();
+        this.planeRemoved.raiseEvent(clippingPlane, index);
 
         return true;
     };
@@ -385,11 +386,10 @@ define([
                 plane.onChangeCallback = undefined;
                 plane.index = -1;
             }
+            this.planeRemoved.raiseEvent(plane, i);
         }
         this._multipleDirtyPlanes = true;
         this._planes = [];
-
-        this._collectionChanged.raiseEvent();
     };
 
     var distanceEncodeScratch = new Cartesian4();

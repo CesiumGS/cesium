@@ -95,10 +95,10 @@ defineSuite([
         expect(clippingPlanes._planes[0]).toBe(planes[0]);
     });
 
-    it('fires the collectionChanged event when a plane is added', function() {
+    it('fires the planeAdded event when a plane is added', function() {
         clippingPlanes = new ClippingPlaneCollection();
         var spy = jasmine.createSpy();
-        clippingPlanes.collectionChanged.addEventListener(spy);
+        clippingPlanes.planeAdded.addEventListener(spy);
         clippingPlanes.add(planes[0]);
         expect(spy).toHaveBeenCalled();
     });
@@ -146,13 +146,13 @@ defineSuite([
         expect(result).toBe(false);
     });
 
-    it('remove fires collectionChanged event', function() {
+    it('remove fires planeRemoved event', function() {
         clippingPlanes = new ClippingPlaneCollection({
             planes : planes
         });
 
         var spy = jasmine.createSpy();
-        clippingPlanes.collectionChanged.addEventListener(spy);
+        clippingPlanes.planeRemoved.addEventListener(spy);
 
         clippingPlanes.remove(planes[0]);
         expect(spy).toHaveBeenCalled();
@@ -170,13 +170,13 @@ defineSuite([
         expect(clippingPlanes.length).toBe(0);
     });
 
-    it('removeAll fires collectionChanged event', function() {
+    it('removeAll fires planeRemoved event', function() {
         clippingPlanes = new ClippingPlaneCollection({
             planes : planes
         });
 
         var spy = jasmine.createSpy();
-        clippingPlanes.collectionChanged.addEventListener(spy);
+        clippingPlanes.planeRemoved.addEventListener(spy);
 
         clippingPlanes.removeAll();
 
