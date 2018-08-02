@@ -73,6 +73,11 @@ varying float v_slope;
 
 #if defined(FOG) || defined(GROUND_ATMOSPHERE)
 varying float v_distance;
+varying vec3 v_fogRayleighColor;
+varying vec3 v_fogMieColor;
+#endif
+
+#ifdef GROUND_ATMOSPHERE
 varying vec3 v_rayleighColor;
 varying vec3 v_mieColor;
 #endif
@@ -239,44 +244,30 @@ void main()
 
 #if defined(FOG) || defined(GROUND_ATMOSPHERE)
     const float fExposure = 2.0;
-    vec3 groundAtmosphereColor = v_mieColor + finalColor.rgb * v_rayleighColor;
-    groundAtmosphereColor = vec3(1.0) - exp(-fExposure * groundAtmosphereColor);
+    vec3 fogColor = v_fogMieColor + finalColor.rgb * v_fogRayleighColor;
+    fogColor = vec3(1.0) - exp(-fExposure * fogColor);
 #endif
 
 #ifdef FOG
 #if defined(ENABLE_VERTEX_LIGHTING) || defined(ENABLE_DAYNIGHT_SHADING) || defined(GROUND_ATMOSPHERE)
     float darken = clamp(dot(normalize(czm_viewerPositionWC), normalize(czm_sunPositionWC)), u_minimumBrightness, 1.0);
-    groundAtmosphereColor *= darken;
+    fogColor *= darken;
 #endif
 
-    finalColor = vec4(czm_fog(v_distance, finalColor.rgb, groundAtmosphereColor), finalColor.a);
+    finalColor = vec4(czm_fog(v_distance, finalColor.rgb, fogColor), finalColor.a);
 #endif
 
 #ifdef GROUND_ATMOSPHERE
-    const float u_dayNightBlendDelta = 0.05;
+    vec3 groundAtmosphereColor = v_mieColor + finalColor.rgb * v_rayleighColor;
+    groundAtmosphereColor = vec3(1.0) - exp(-fExposure * groundAtmosphereColor);
 
-    fadeOutDist = 25000000.0;
+    fadeOutDist = 40000000.0;
     fadeInDist = 10000000.0;
 
-    float nightIntensity = clamp((cameraDist - fadeOutDist) / (fadeInDist - fadeOutDist), 0.25, 1.0);
-    vec3 nightColor = groundAtmosphereColor.rgb * nightIntensity;
+    float sunlitAtmosphereIntensity = clamp((cameraDist - fadeOutDist) / (fadeInDist - fadeOutDist), 0.0, 1.0);
+    groundAtmosphereColor = mix(groundAtmosphereColor, fogColor, sunlitAtmosphereIntensity);
 
-    float diffuse = dot(czm_sunDirectionEC, normalEC);
-
-    vec3 rgb = groundAtmosphereColor;
-    if (diffuse < -u_dayNightBlendDelta)
-    {
-        // Night time
-        rgb = nightColor;
-    }
-    else if (diffuse <= u_dayNightBlendDelta)
-    {
-        // Dusk/dawn
-        float t = (diffuse + u_dayNightBlendDelta) / (2.0 * u_dayNightBlendDelta);
-        rgb = mix(nightColor, rgb, t);
-    }
-
-    finalColor = vec4(mix(finalColor.rgb, rgb, fade), finalColor.a);
+    finalColor = vec4(mix(finalColor.rgb, groundAtmosphereColor, fade), finalColor.a);
 #endif
 
     gl_FragColor = finalColor;
