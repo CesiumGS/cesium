@@ -52,6 +52,7 @@ define([
      * @see PointPrimitiveCollection#add
      *
      * @internalConstructor
+     * @class
      *
      * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Points.html|Cesium Sandcastle Points Demo}
      */

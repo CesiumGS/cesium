@@ -191,6 +191,13 @@ define([
             }
         }
 
+        if (optimizeForCesium) {
+            var baseColorParameter = defaultValue(techniqueParameters.baseColorTexture, techniqueParameters.baseColorFactor);
+            if (defined(baseColorParameter)) {
+                baseColorParameter.semantic = '_3DTILESDIFFUSE';
+            }
+        }
+
         // Generate uniforms object before attributes are added
         var techniqueUniforms = {};
         for (var paramName in techniqueParameters) {

@@ -24,13 +24,13 @@ defineSuite([
         var query = 'some query';
         var data = {
             features: [{
-                type: "Feature",
+                type: 'Feature',
                 geometry: {
-                    type: "Point",
+                    type: 'Point',
                     coordinates: [-75.172489, 39.927828]
                 },
                 properties: {
-                    label: "1826 S 16th St, Philadelphia, PA, USA"
+                    label: '1826 S 16th St, Philadelphia, PA, USA'
                 }
             }]
         };

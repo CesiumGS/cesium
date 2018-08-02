@@ -17,7 +17,7 @@
     },
     "Height": {
       "minimum": 6.161747192963958,
-      "maximum": 84.83180232718587
+      "maximum": 85.41026367992163
     }
   },
   "geometricError": 240,
@@ -35,7 +35,7 @@
     "geometricError": 70,
     "refine": "REPLACE",
     "content": {
-      "url": "parent.b3dm",
+      "uri": "parent.b3dm",
       "boundingVolume": {
         "region": [
           -1.3197004795898053,
@@ -62,7 +62,7 @@
         "geometricError": 70,
         "refine": "ADD",
         "content": {
-          "url": "tileset2.json"
+          "uri": "tileset2.json"
         }
       }
     ]
