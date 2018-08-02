@@ -1,6 +1,16 @@
 Change Log
 ==========
 
+### 1.49 - 2018-09-03
+
+##### Additions :tada:
+
+##### Deprecated :hourglass_flowing_sand:
+
+#### Fixes :wrench:
+
+The Geocoder widget now takes terrain altitude into account when calculating its final destination.
+
 ### 1.48 - 2018-08-01
 
 ##### Additions :tada:
