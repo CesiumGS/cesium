@@ -259,7 +259,7 @@ void main()
     fadeInDist = 10000000.0;
 
     float nightIntensity = clamp((cameraDist - fadeOutDist) / (fadeInDist - fadeOutDist), 0.25, 1.0);
-    vec3 nightColor = finalColor.rgb * nightIntensity;
+    vec3 nightColor = groundAtmosphereColor.rgb * nightIntensity;
 
     float diffuse = dot(czm_sunDirectionEC, normalEC);
 
