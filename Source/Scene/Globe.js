@@ -131,10 +131,17 @@ define([
          * Enable lighting the globe with the sun as a light source.
          *
          * @type {Boolean}
-         * @default false
+         * @default true
          */
-        this.enableLighting = true;  // TODO HDR
-        //this.enableLighting = false;
+        this.enableLighting = true;
+
+        /**
+         * Enable the ground atmosphere.
+         *
+         * @type {Boolean}
+         * @default true
+         */
+        this.showGroundAtmosphere = true;
 
         /**
          * The distance where everything becomes lit. This only takes effect
@@ -153,6 +160,24 @@ define([
          * @default 9000000.0
          */
         this.lightingFadeInDistance = 9000000.0;
+
+        /**
+         * The distance where the darkness of night from the ground atmosphere fades out to a lit ground atmosphere.
+         * This only takes effect when <code>showGroundAtmosphere</code> is <code>true</code>.
+         *
+         * @type {Number}
+         * @default 10000000.0
+         */
+        this.nightFadeOutDistance = 10000000.0;
+
+        /**
+         * The distance where the darkness of night from the ground atmosphere fades in to an unlit ground atmosphere.
+         * This only takes effect when <code>showGroundAtmosphere</code> is <code>true</code>.
+         *
+         * @type {Number}
+         * @default 40000000.0
+         */
+        this.nightFadeInDistance = 40000000.0;
 
         /**
          * True if an animated wave effect should be shown in areas of the globe
@@ -624,10 +649,13 @@ define([
             tileProvider.terrainProvider = this.terrainProvider;
             tileProvider.lightingFadeOutDistance = this.lightingFadeOutDistance;
             tileProvider.lightingFadeInDistance = this.lightingFadeInDistance;
+            tileProvider.nightFadeOutDistance = this.nightFadeOutDistance;
+            tileProvider.nightFadeInDistance = this.nightFadeInDistance;
             tileProvider.zoomedOutOceanSpecularIntensity = this._zoomedOutOceanSpecularIntensity;
             tileProvider.hasWaterMask = hasWaterMask;
             tileProvider.oceanNormalMap = this._oceanNormalMap;
             tileProvider.enableLighting = this.enableLighting;
+            tileProvider.showGroundAtmosphere = this.showGroundAtmosphere;
             tileProvider.shadows = this.shadows;
 
             surface.beginFrame(frameState);

@@ -125,6 +125,7 @@ define([
         this.oceanNormalMap = undefined;
         this.zoomedOutOceanSpecularIntensity = 0.5;
         this.enableLighting = false;
+        this.showGroundAtmosphere = false;
         this.shadows = ShadowMode.RECEIVE_ONLY;
 
         this._quadtree = undefined;
@@ -839,6 +840,9 @@ define([
             u_lightingFadeDistance : function() {
                 return this.properties.lightingFadeDistance;
             },
+            u_nightFadeDistance : function() {
+                return this.properties.nightFadeDistance;
+            },
             u_center3D : function() {
                 return this.properties.center3D;
             },
@@ -941,6 +945,7 @@ define([
                 zoomedOutOceanSpecularIntensity : 0.5,
                 oceanNormalMap : undefined,
                 lightingFadeDistance : new Cartesian2(6500000.0, 9000000.0),
+                nightFadeDistance : new Cartesian2(10000000.0, 40000000.0),
 
                 center3D : undefined,
                 rtc : new Cartesian3(),
@@ -1114,6 +1119,7 @@ define([
         var showOceanWaves = showReflectiveOcean && defined(oceanNormalMap);
         var hasVertexNormals = tileProvider.terrainProvider.ready && tileProvider.terrainProvider.hasVertexNormals;
         var enableFog = frameState.fog.enabled;
+        var showGroundAtmosphere = tileProvider.showGroundAtmosphere;
         var castShadows = ShadowMode.castShadows(tileProvider.shadows);
         var receiveShadows = ShadowMode.receiveShadows(tileProvider.shadows);
 
@@ -1244,6 +1250,8 @@ define([
             uniformMapProperties.oceanNormalMap = oceanNormalMap;
             uniformMapProperties.lightingFadeDistance.x = tileProvider.lightingFadeOutDistance;
             uniformMapProperties.lightingFadeDistance.y = tileProvider.lightingFadeInDistance;
+            uniformMapProperties.nightFadeDistance.x = tileProvider.nightFadeOutDistance;
+            uniformMapProperties.nightFadeDistance.y = tileProvider.nightFadeInDistance;
             uniformMapProperties.zoomedOutOceanSpecularIntensity = tileProvider.zoomedOutOceanSpecularIntensity;
 
             uniformMapProperties.center3D = surfaceTile.center;
@@ -1357,7 +1365,7 @@ define([
                 uniformMap = combine(uniformMap, tileProvider.uniformMap);
             }
 
-            command.shaderProgram = tileProvider._surfaceShaderSet.getShaderProgram(frameState, surfaceTile, numberOfDayTextures, applyBrightness, applyContrast, applyHue, applySaturation, applyGamma, applyAlpha, applySplit, showReflectiveOcean, showOceanWaves, tileProvider.enableLighting, hasVertexNormals, useWebMercatorProjection, applyFog, clippingPlanesEnabled, clippingPlanes);
+            command.shaderProgram = tileProvider._surfaceShaderSet.getShaderProgram(frameState, surfaceTile, numberOfDayTextures, applyBrightness, applyContrast, applyHue, applySaturation, applyGamma, applyAlpha, applySplit, showReflectiveOcean, showOceanWaves, tileProvider.enableLighting, showGroundAtmosphere, hasVertexNormals, useWebMercatorProjection, applyFog, clippingPlanesEnabled, clippingPlanes);
             command.castShadows = castShadows;
             command.receiveShadows = receiveShadows;
             command.renderState = renderState;

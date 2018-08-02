@@ -66,7 +66,7 @@ define([
         return useWebMercatorProjection ? get2DYPositionFractionMercatorProjection : get2DYPositionFractionGeographicProjection;
     }
 
-    GlobeSurfaceShaderSet.prototype.getShaderProgram = function(frameState, surfaceTile, numberOfDayTextures, applyBrightness, applyContrast, applyHue, applySaturation, applyGamma, applyAlpha, applySplit, showReflectiveOcean, showOceanWaves, enableLighting, hasVertexNormals, useWebMercatorProjection, enableFog, enableClippingPlanes, clippingPlanes) {
+    GlobeSurfaceShaderSet.prototype.getShaderProgram = function(frameState, surfaceTile, numberOfDayTextures, applyBrightness, applyContrast, applyHue, applySaturation, applyGamma, applyAlpha, applySplit, showReflectiveOcean, showOceanWaves, enableLighting, showGroundAtmosphere, hasVertexNormals, useWebMercatorProjection, enableFog, enableClippingPlanes, clippingPlanes) {
         var quantization = 0;
         var quantizationDefine = '';
 
@@ -95,13 +95,14 @@ define([
                     (showReflectiveOcean << 8) |
                     (showOceanWaves << 9) |
                     (enableLighting << 10) |
-                    (hasVertexNormals << 11) |
-                    (useWebMercatorProjection << 12) |
-                    (enableFog << 13) |
-                    (quantization << 14) |
-                    (applySplit << 15) |
-                    (enableClippingPlanes << 16) |
-                    (vertexLogDepth << 17);
+                    (showGroundAtmosphere << 11) |
+                    (hasVertexNormals << 12) |
+                    (useWebMercatorProjection << 13) |
+                    (enableFog << 14) |
+                    (quantization << 15) |
+                    (applySplit << 16) |
+                    (enableClippingPlanes << 17) |
+                    (vertexLogDepth << 18);
 
         var currentClippingShaderState = 0;
         if (defined(clippingPlanes)) {
@@ -170,6 +171,11 @@ define([
                     vs.defines.push('ENABLE_DAYNIGHT_SHADING');
                     fs.defines.push('ENABLE_DAYNIGHT_SHADING');
                 }
+            }
+
+            if (showGroundAtmosphere) {
+                vs.defines.push('GROUND_ATMOSPHERE');
+                fs.defines.push('GROUND_ATMOSPHERE');
             }
 
             vs.defines.push('INCLUDE_WEB_MERCATOR_Y');

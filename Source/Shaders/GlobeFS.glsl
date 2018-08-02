@@ -1,4 +1,3 @@
-//#define SHOW_TILE_BOUNDARIES
 uniform vec4 u_initialColor;
 
 #if TEXTURE_UNITS > 0
@@ -47,8 +46,12 @@ uniform float u_zoomedOutOceanSpecularIntensity;
 uniform sampler2D u_oceanNormalMap;
 #endif
 
-#ifdef ENABLE_DAYNIGHT_SHADING
+#if defined(ENABLE_DAYNIGHT_SHADING) || defined(GROUND_ATMOSPHERE)
 uniform vec2 u_lightingFadeDistance;
+#endif
+
+#ifdef GROUND_ATMOSPHERE
+uniform vec2 u_nightFadeDistance;
 #endif
 
 #ifdef ENABLE_CLIPPING_PLANES
@@ -57,7 +60,7 @@ uniform mat4 u_clippingPlanesMatrix;
 uniform vec4 u_clippingPlanesEdgeStyle;
 #endif
 
-#if defined(FOG) && (defined(ENABLE_VERTEX_LIGHTING) || defined(ENABLE_DAYNIGHT_SHADING))
+#if defined(FOG) && (defined(ENABLE_VERTEX_LIGHTING) || defined(ENABLE_DAYNIGHT_SHADING)) || defined(GROUND_ATMOSPHERE)
 uniform float u_minimumBrightness;
 #endif
 
@@ -72,8 +75,13 @@ varying float v_height;
 varying float v_slope;
 #endif
 
-#ifdef FOG
+#if defined(FOG) || defined(GROUND_ATMOSPHERE)
 varying float v_distance;
+varying vec3 v_fogRayleighColor;
+varying vec3 v_fogMieColor;
+#endif
+
+#ifdef GROUND_ATMOSPHERE
 varying vec3 v_rayleighColor;
 varying vec3 v_mieColor;
 #endif
@@ -211,35 +219,37 @@ void main()
     color.xyz = mix(color.xyz, material.diffuse, material.alpha);
 #endif
 
-/*
-#ifdef ENABLE_VERTEX_LIGHTING
-    float diffuseIntensity = clamp(czm_getLambertDiffuse(czm_sunDirectionEC, normalize(v_normalEC)) * 0.9 + 0.3, 0.0, 1.0);
-    vec4 finalColor = vec4(color.rgb * diffuseIntensity, color.a);
-#elif defined(ENABLE_DAYNIGHT_SHADING)
-    float diffuseIntensity = clamp(czm_getLambertDiffuse(czm_sunDirectionEC, normalEC) * 5.0 + 0.3, 0.0, 1.0);
+#if defined(ENABLE_DAYNIGHT_SHADING) || defined(GROUND_ATMOSPHERE)
     float cameraDist = length(czm_view[3]);
     float fadeOutDist = u_lightingFadeDistance.x;
     float fadeInDist = u_lightingFadeDistance.y;
-    float t = clamp((cameraDist - fadeOutDist) / (fadeInDist - fadeOutDist), 0.0, 1.0);
-    diffuseIntensity = mix(1.0, diffuseIntensity, t);
+    float fade = clamp((cameraDist - fadeOutDist) / (fadeInDist - fadeOutDist), 0.0, 1.0);
+#endif
+
+#if defined(ENABLE_VERTEX_LIGHTING) && !defined(GROUND_ATMOSPHERE)
+    float diffuseIntensity = clamp(czm_getLambertDiffuse(czm_sunDirectionEC, normalize(v_normalEC)) * 0.9 + 0.3, 0.0, 1.0);
+    vec4 finalColor = vec4(color.rgb * diffuseIntensity, color.a);
+#elif defined(ENABLE_DAYNIGHT_SHADING) && !defined(GROUND_ATMOSPHERE)
+    float diffuseIntensity = clamp(czm_getLambertDiffuse(czm_sunDirectionEC, normalEC) * 5.0 + 0.3, 0.0, 1.0);
+    diffuseIntensity = mix(1.0, diffuseIntensity, fade);
     vec4 finalColor = vec4(color.rgb * diffuseIntensity, color.a);
 #else
     vec4 finalColor = color;
 #endif
-*/
 
 //#ifdef ENABLE_VERTEX_LIGHTING
     czm_material material;
     material.diffuse = color.rgb;
     material.alpha = color.a;
     material.normal = normalEC;
-    vec4 finalColor = czm_phong(normalize(-v_positionEC), material);
+    //vec4 finalColor = czm_phong(normalize(-v_positionEC), material);
+    finalColor = czm_phong(normalize(-v_positionEC), material);
 //#else
 //    vec4 finalColor = color;
 //#endif
 
-    gl_FragColor = finalColor;
-    return;
+    //gl_FragColor = finalColor;
+    //return;
 
 #ifdef ENABLE_CLIPPING_PLANES
     vec4 clippingPlanesEdgeColor = vec4(1.0);
@@ -252,23 +262,45 @@ void main()
     }
 #endif
 
-#ifdef FOG
+#if defined(FOG) || defined(GROUND_ATMOSPHERE)
     const float fExposure = 1.3;
-    vec3 fogColor = v_mieColor + finalColor.rgb * v_rayleighColor;
+    vec3 fogColor = v_fogMieColor + finalColor.rgb * v_fogRayleighColor;
+    fogColor = vec3(1.0) - exp(-fExposure * fogColor);
+#endif
     // TODO: disable exposure if using HDR
     //fogColor = vec3(1.0) - exp(-fExposure * fogColor);
 
-#if defined(ENABLE_VERTEX_LIGHTING) || defined(ENABLE_DAYNIGHT_SHADING)
+#ifdef FOG
+#if defined(ENABLE_VERTEX_LIGHTING) || defined(ENABLE_DAYNIGHT_SHADING) || defined(GROUND_ATMOSPHERE)
     float darken = clamp(dot(normalize(czm_viewerPositionWC), normalize(czm_sunPositionWC)), u_minimumBrightness, 1.0);
     fogColor *= darken;
 #endif
 
     // TODO: Only use modified fog function if HDR
     const float modifier = 0.15;
-    gl_FragColor = vec4(czm_fog(v_distance, finalColor.rgb, fogColor, modifier), finalColor.a);
-#else
-    gl_FragColor = finalColor;
+    finalColor = vec4(czm_fog(v_distance, finalColor.rgb, fogColor, modifier), finalColor.a);
 #endif
+
+#ifdef GROUND_ATMOSPHERE
+    if (czm_sceneMode != czm_sceneMode3D)
+    {
+        gl_FragColor = finalColor;
+        return;
+    }
+
+    vec3 groundAtmosphereColor = v_mieColor + finalColor.rgb * v_rayleighColor;
+    groundAtmosphereColor = vec3(1.0) - exp(-fExposure * groundAtmosphereColor);
+
+    fadeInDist = u_nightFadeDistance.x;
+    fadeOutDist = u_nightFadeDistance.y;
+
+    float sunlitAtmosphereIntensity = clamp((cameraDist - fadeOutDist) / (fadeInDist - fadeOutDist), 0.0, 1.0);
+    groundAtmosphereColor = mix(groundAtmosphereColor, fogColor, sunlitAtmosphereIntensity);
+
+    finalColor = vec4(mix(finalColor.rgb, groundAtmosphereColor, fade), finalColor.a);
+#endif
+
+    gl_FragColor = finalColor;
 }
 
 #ifdef SHOW_REFLECTIVE_OCEAN
