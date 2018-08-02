@@ -262,6 +262,12 @@ void main()
 #endif
 
 #ifdef GROUND_ATMOSPHERE
+    if (czm_sceneMode != czm_sceneMode3D)
+    {
+        gl_FragColor = finalColor;
+        return;
+    }
+
     vec3 groundAtmosphereColor = v_mieColor + finalColor.rgb * v_rayleighColor;
     groundAtmosphereColor = vec3(1.0) - exp(-fExposure * groundAtmosphereColor);
 
