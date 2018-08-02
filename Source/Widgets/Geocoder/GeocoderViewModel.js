@@ -12,6 +12,7 @@ define([
         '../../Core/Matrix4',
         '../../Core/Rectangle',
         '../../Core/sampleTerrainMostDetailed',
+        '../../Scene/SceneMode',
         '../../ThirdParty/knockout',
         '../../ThirdParty/when',
         '../createCommand',
@@ -30,6 +31,7 @@ define([
         Matrix4,
         Rectangle,
         sampleTerrainMostDetailed,
+        SceneMode,
         knockout,
         when,
         createCommand,
@@ -383,9 +385,15 @@ define([
                         maxHeight = Math.max(p.height, maxHeight);
                     });
 
-                    var finalPosition = ellipsoid.cartesianToCartographic(camera.getRectangleCameraCoordinates(destination));
-                    finalPosition.height += maxHeight * 2;
+                    var tmp = camera.getRectangleCameraCoordinates(destination);
+                    var finalPosition;
+                    if (scene.mode === SceneMode.SCENE3D) {
+                        finalPosition = ellipsoid.cartesianToCartographic(tmp);
+                    } else {
+                        finalPosition = scene.mapProjection.unproject(tmp, tmp);
+                    }
 
+                    finalPosition.height += maxHeight * 2;
                     return ellipsoid.cartographicToCartesian(finalPosition);
                 });
         }
