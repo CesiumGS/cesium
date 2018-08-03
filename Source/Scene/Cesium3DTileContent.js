@@ -271,7 +271,7 @@ define([
      * not part of the public Cesium API.
      * </p>
      *
-     * @param {FrameSate} frameState The frame state.
+     * @param {FrameState} frameState The frame state.
      * @param {Cesium3DTileStyle} style The style.
      *
      * @private
