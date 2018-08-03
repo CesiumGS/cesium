@@ -21,7 +21,7 @@ define([
     /**
      * Convert a binary glTF to glTF.
      *
-     * The returned glTF has pipeline extras included. The binary data is stored in gltf.buffers[0].extras._pipeline.source.
+     * The returned glTF has pipeline extras included. The embedded binary data is stored in gltf.buffers[0].extras._pipeline.source.
      *
      * @param {Buffer} glb The glb data to parse.
      * @returns {Object} A javascript object containing a glTF asset with pipeline extras included.

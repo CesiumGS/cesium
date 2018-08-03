@@ -8,12 +8,15 @@ define([
         './moveTechniqueRenderStates',
         './moveTechniquesToExtension',
         './removeUnusedElements',
+        './updateAccessorComponentTypes',
         '../../Core/Cartesian3',
+        '../../Core/Cartesian4',
         '../../Core/clone',
         '../../Core/ComponentDatatype',
         '../../Core/defaultValue',
         '../../Core/defined',
         '../../Core/isArray',
+        '../../Core/Matrix4',
         '../../Core/Quaternion',
         '../../Core/WebGLConstants'
     ], function(
@@ -26,12 +29,15 @@ define([
         moveTechniqueRenderStates,
         moveTechniquesToExtension,
         removeUnusedElements,
+        updateAccessorComponentTypes,
         Cartesian3,
+        Cartesian4,
         clone,
         ComponentDatatype,
         defaultValue,
         defined,
         isArray,
+        Matrix4,
         Quaternion,
         WebGLConstants) {
     'use strict';
@@ -572,6 +578,14 @@ define([
         });
     }
 
+    function removeAnimationSamplerNames(gltf) {
+        ForEach.animation(gltf, function(animation) {
+            ForEach.animationSampler(animation, function(sampler) {
+                delete sampler.name;
+            });
+        });
+    }
+
     function removeEmptyArrays(gltf) {
         for (var topLevelId in gltf) {
             if (gltf.hasOwnProperty(topLevelId)) {
@@ -830,6 +844,71 @@ define([
         });
     }
 
+    function isNodeEmpty(node) {
+        return (!defined(node.children) || node.children.length === 0) &&
+            (!defined(node.meshes) || node.meshes.length === 0) &&
+            !defined(node.camera) && !defined(node.skin) && !defined(node.skeletons) && !defined(node.jointName) &&
+            (!defined(node.translation) || Cartesian3.fromArray(node.translation).equals(Cartesian3.ZERO)) &&
+            (!defined(node.scale) || Cartesian3.fromArray(node.scale).equals(new Cartesian3(1.0, 1.0, 1.0))) &&
+            (!defined(node.rotation) || Cartesian4.fromArray(node.rotation).equals(new Cartesian4(0.0, 0.0, 0.0, 1.0))) &&
+            (!defined(node.matrix) || Matrix4.fromColumnMajorArray(node.matrix).equals(Matrix4.IDENTITY));
+    }
+
+    function deleteNode(gltf, nodeId) {
+        // Remove from list of nodes in scene
+        ForEach.scene(gltf, function(scene) {
+            var sceneNodes = scene.nodes;
+            if (defined(sceneNodes)) {
+                var sceneNodesLength = sceneNodes.length;
+                for (var i = sceneNodesLength; i >= 0; --i) {
+                    if (sceneNodes[i] === nodeId) {
+                        sceneNodes.splice(i, 1);
+                        return;
+                    }
+                }
+            }
+        });
+
+        // Remove parent node's reference to this node, and delete the parent if also empty
+        ForEach.node(gltf, function(parentNode, parentNodeId) {
+            if (defined(parentNode.children)) {
+                var index = parentNode.children.indexOf(nodeId);
+                if (index > -1) {
+                    parentNode.children.splice(index, 1);
+
+                    if (isNodeEmpty(parentNode)) {
+                        deleteNode(gltf, parentNodeId);
+                    }
+                }
+            }
+        });
+
+        delete gltf.nodes[nodeId];
+    }
+
+    function removeEmptyNodes(gltf) {
+        ForEach.node(gltf, function(node, nodeId) {
+            if (isNodeEmpty(node)) {
+                deleteNode(gltf, nodeId);
+            }
+        });
+
+        return gltf;
+    }
+
+    function requireAnimationAccessorMinMax(gltf) {
+        ForEach.animation(gltf, function(animation) {
+            ForEach.animationSampler(animation, function(sampler) {
+                var accessor = gltf.accessors[sampler.input];
+                if (!defined(accessor.min) || !defined(accessor.max)) {
+                    var minMax = findAccessorMinMax(gltf, accessor);
+                    accessor.min = minMax.min;
+                    accessor.max = minMax.max;
+                }
+            });
+        });
+    }
+
     function glTF10to20(gltf) {
         gltf.asset = defaultValue(gltf.asset, {});
         gltf.asset.version = '2.0';
@@ -837,8 +916,12 @@ define([
         updateInstanceTechniques(gltf);
         // animation.samplers now refers directly to accessors and animation.parameters should be removed
         removeAnimationSamplersIndirection(gltf);
+        // Remove empty nodes and re-assign referencing indices
+        removeEmptyNodes(gltf);
         // Top-level objects are now arrays referenced by index instead of id
         objectsToArrays(gltf);
+        // Animation.sampler objects cannot have names
+        removeAnimationSamplerNames(gltf);
         // asset.profile no longer exists
         stripAsset(gltf);
         // Move known extensions from extensionsUsed to extensionsRequired
@@ -849,6 +932,8 @@ define([
         moveByteStrideToBufferView(gltf);
         // accessor.min and accessor.max must be defined for accessors containing POSITION attributes
         requirePositionAccessorMinMax(gltf);
+        // An animation sampler's input accessor must have min and max properties defined
+        requireAnimationAccessorMinMax(gltf);
         // buffer.type is unnecessary and should be removed
         removeBufferType(gltf);
         // Remove format, internalFormat, target, and type
@@ -857,6 +942,8 @@ define([
         requireAttributeSetIndex(gltf);
         // Add underscores to application-specific parameters
         underscoreApplicationSpecificSemantics(gltf);
+        // Accessors referenced by JOINTS_0 and WEIGHTS_0 attributes must have correct component types
+        updateAccessorComponentTypes(gltf);
         // Clamp camera parameters
         clampCameraParameters(gltf);
         // Move legacy technique render states to material properties and add KHR_blend extension blending functions

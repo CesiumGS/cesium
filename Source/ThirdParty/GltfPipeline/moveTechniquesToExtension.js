@@ -31,6 +31,10 @@ define([
                 techniques: []
             };
 
+            // Some 1.1 models have a glExtensionsUsed property that can be transferred to program.glExtensions
+            var glExtensions = gltf.glExtensionsUsed;
+            delete gltf.glExtensionsUsed;
+
             ForEach.technique(gltf, function (techniqueLegacy, techniqueIndex) {
                 var technique = {
                     name: techniqueLegacy.name,
@@ -65,14 +69,15 @@ define([
                 var program = {
                     name: programLegacy.name,
                     fragmentShader: undefined,
-                    vertexShader: undefined
+                    vertexShader: undefined,
+                    glExtensions: glExtensions
                 };
 
                 var fs = gltf.shaders[programLegacy.fragmentShader];
-                program.fragmentShader = addToArray(extension.shaders, fs);
+                program.fragmentShader = addToArray(extension.shaders, fs, true);
 
                 var vs = gltf.shaders[programLegacy.vertexShader];
-                program.vertexShader = addToArray(extension.shaders, vs);
+                program.vertexShader = addToArray(extension.shaders, vs, true);
 
                 technique.program = addToArray(extension.programs, program);
 

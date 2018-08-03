@@ -1,8 +1,10 @@
 define([
         './addExtensionsUsed',
+        './addToArray',
         '../../Core/defined'
     ], function(
         addExtensionsUsed,
+        addToArray,
         defined) {
     'use strict';
 
@@ -21,9 +23,7 @@ define([
             extensionsRequired = [];
             gltf.extensionsRequired = extensionsRequired;
         }
-        if (extensionsRequired.indexOf(extension) === -1) {
-            extensionsRequired.push(extension);
-        }
+        addToArray(extensionsRequired, extension, true);
         addExtensionsUsed(gltf, extension);
     }
 

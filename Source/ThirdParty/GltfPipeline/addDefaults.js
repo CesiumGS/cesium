@@ -20,11 +20,15 @@ define([
      */
     function addDefaults(gltf) {
         ForEach.accessor(gltf, function(accessor) {
-            accessor.byteOffset = defaultValue(accessor.byteOffset, 0);
+            if (defined(accessor.bufferView)) {
+                accessor.byteOffset = defaultValue(accessor.byteOffset, 0);
+            }
         });
 
         ForEach.bufferView(gltf, function(bufferView) {
-            bufferView.byteOffset = defaultValue(bufferView.byteOffset, 0);
+            if (defined(bufferView.buffer)) {
+                bufferView.byteOffset = defaultValue(bufferView.byteOffset, 0);
+            }
         });
 
         ForEach.mesh(gltf, function(mesh) {
