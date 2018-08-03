@@ -67,6 +67,7 @@ var viewModel = {
 var targetY = 0.0;
 var planeEntities = [];
 var selectedPlane;
+var clippingPlanes;
 
 // Select plane when mouse down
 var downHandler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
@@ -113,16 +114,16 @@ function createPlaneUpdateFunction(plane, transform) {
 
 var tileset;
 function loadTileset(url) {
-    var clippingPlanes = [
-        new Cesium.ClippingPlane(new Cesium.Cartesian3(0.0, 0.0, -1.0), -100.0)
-    ];
+    clippingPlanes = new Cesium.ClippingPlaneCollection({
+        planes : [
+            new Cesium.ClippingPlane(new Cesium.Cartesian3(0.0, 0.0, -1.0), -100.0)
+        ],
+        edgeWidth : viewModel.edgeStylingEnabled ? 1.0 : 0.0
+    });
 
     tileset = viewer.scene.primitives.add(new Cesium.Cesium3DTileset({
         url : url,
-        clippingPlanes : new Cesium.ClippingPlaneCollection({
-            planes : clippingPlanes,
-            edgeWidth : viewModel.edgeStylingEnabled ? 1.0 : 0.0
-        })
+        clippingPlanes : clippingPlanes
     }));
 
     tileset.debugShowBoundingVolume = viewModel.debugBoundingVolumesEnabled;
@@ -133,7 +134,7 @@ function loadTileset(url) {
         viewer.zoomTo(tileset, new Cesium.HeadingPitchRange(0.5, -0.2, radius * 4.0));
 
         for (var i = 0; i < clippingPlanes.length; ++i) {
-            var plane = clippingPlanes[i];
+            var plane = clippingPlanes.get(i);
             var planeEntity = viewer.entities.add({
                 position : boundingSphere.center,
                 plane : {
@@ -153,9 +154,8 @@ function loadTileset(url) {
     });
 }
 
-var modelEntityClippingPlanes;
 function loadModel(url) {
-    var clippingPlanes = new Cesium.ClippingPlaneCollection({
+    clippingPlanes = new Cesium.ClippingPlaneCollection({
         planes : [
             new Cesium.ClippingPlane(new Cesium.Cartesian3(0.0, 0.0, -1.0), -100.0)
         ],
@@ -239,13 +239,7 @@ Cesium.knockout.getObservable(viewModel, 'debugBoundingVolumesEnabled').subscrib
 Cesium.knockout.getObservable(viewModel, 'edgeStylingEnabled').subscribe(function(value) {
     var edgeWidth = value ? 1.0 : 0.0;
 
-    if (Cesium.defined(tileset)) {
-        tileset.clippingPlanes.edgeWidth = edgeWidth;
-    }
-
-    if (Cesium.defined(modelEntityClippingPlanes)) {
-        modelEntityClippingPlanes.edgeWidth = edgeWidth;
-    }
+    clippingPlanes.edgeWidth = edgeWidth;
 });
 
 function reset() {
