@@ -4,7 +4,7 @@ Change Log
 ### 1.49 - 2018-09-03
 
 ##### Additions :tada:
-* Added `ClippingPlaneCollection.collectionChanged` event.  This event is raised when a `ClippingPlane` is added or removed from the collection [#6875](https://github.com/AnalyticalGraphicsInc/cesium/pull/6875)
+* Added `ClippingPlaneCollection.planeAdded` and `ClippingPlaneCollection.planeRemoved` events.  `planeAdded` is raised when a new plane is added to the collection and `planeRemoved` is raised when a plane is removed. [#6875](https://github.com/AnalyticalGraphicsInc/cesium/pull/6875)
 
 ### 1.48 - 2018-08-01
 
