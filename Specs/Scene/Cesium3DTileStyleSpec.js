@@ -72,58 +72,58 @@ defineSuite([
         return tileStyle.readyPromise.then(function(style) {
             expect(style.style).toEqual({
                 color : "color('red')",
-                show : "${id} < 100.0",
-                pointSize : "${id} / 100.0",
+                show : '${id} < 100.0',
+                pointSize : '${id} / 100.0',
                 pointOutlineColor : "color('blue')",
-                pointOutlineWidth : "5.0",
+                pointOutlineWidth : '5.0',
                 labelColor : "color('yellow')",
                 labelOutlineColor : "color('orange')",
-                labelOutlineWidth : "6.0",
+                labelOutlineWidth : '6.0',
                 font : "'24px Helvetica'",
-                labelStyle : "1",
+                labelStyle : '1',
                 labelText : "'label text'",
                 backgroundColor : "color('coral')",
-                backgroundPadding : "vec2(1.0, 2.0)",
-                backgroundEnabled : "true",
-                scaleByDistance : "vec4(1.0, 2.0, 3.0, 4.0)",
-                translucencyByDistance : "vec4(5.0, 6.0, 7.0, 8.0)",
-                distanceDisplayCondition : "vec2(3.0, 4.0)",
-                heightOffset : "10.0",
-                anchorLineEnabled : "true",
+                backgroundPadding : 'vec2(1.0, 2.0)',
+                backgroundEnabled : 'true',
+                scaleByDistance : 'vec4(1.0, 2.0, 3.0, 4.0)',
+                translucencyByDistance : 'vec4(5.0, 6.0, 7.0, 8.0)',
+                distanceDisplayCondition : 'vec2(3.0, 4.0)',
+                heightOffset : '10.0',
+                anchorLineEnabled : 'true',
                 anchorLineColor : "color('fuchsia')",
                 image : "'url/to/invalid/image'",
-                disableDepthTestDistance : "1000.0",
-                horizontalOrigin : "0",
-                verticalOrigin : "0",
-                labelHorizontalOrigin : "0",
-                labelVerticalOrigin : "0"
+                disableDepthTestDistance : '1000.0',
+                horizontalOrigin : '0',
+                verticalOrigin : '0',
+                labelHorizontalOrigin : '0',
+                labelVerticalOrigin : '0'
             });
             expect(style.color).toEqual(new Expression("color('red')"));
             expect(style.show).toEqual(new Expression('${id} < 100.0'));
             expect(style.pointSize).toEqual(new Expression('${id} / 100.0'));
             expect(style.pointOutlineColor).toEqual(new Expression("color('blue')"));
-            expect(style.pointOutlineWidth).toEqual(new Expression("5.0"));
+            expect(style.pointOutlineWidth).toEqual(new Expression('5.0'));
             expect(style.labelColor).toEqual(new Expression("color('yellow')"));
             expect(style.labelOutlineColor).toEqual(new Expression("color('orange')"));
-            expect(style.labelOutlineWidth).toEqual(new Expression("6.0"));
+            expect(style.labelOutlineWidth).toEqual(new Expression('6.0'));
             expect(style.font).toEqual(new Expression("'24px Helvetica'"));
-            expect(style.labelStyle).toEqual(new Expression("1"));
+            expect(style.labelStyle).toEqual(new Expression('1'));
             expect(style.labelText).toEqual(new Expression("'label text'"));
             expect(style.backgroundColor).toEqual(new Expression("color('coral')"));
-            expect(style.backgroundPadding).toEqual(new Expression("vec2(1.0, 2.0)"));
-            expect(style.backgroundEnabled).toEqual(new Expression("true"));
-            expect(style.scaleByDistance).toEqual(new Expression("vec4(1.0, 2.0, 3.0, 4.0)"));
-            expect(style.translucencyByDistance).toEqual(new Expression("vec4(5.0, 6.0, 7.0, 8.0)"));
-            expect(style.distanceDisplayCondition).toEqual(new Expression("vec2(3.0, 4.0)"));
-            expect(style.heightOffset).toEqual(new Expression("10.0"));
-            expect(style.anchorLineEnabled).toEqual(new Expression("true"));
+            expect(style.backgroundPadding).toEqual(new Expression('vec2(1.0, 2.0)'));
+            expect(style.backgroundEnabled).toEqual(new Expression('true'));
+            expect(style.scaleByDistance).toEqual(new Expression('vec4(1.0, 2.0, 3.0, 4.0)'));
+            expect(style.translucencyByDistance).toEqual(new Expression('vec4(5.0, 6.0, 7.0, 8.0)'));
+            expect(style.distanceDisplayCondition).toEqual(new Expression('vec2(3.0, 4.0)'));
+            expect(style.heightOffset).toEqual(new Expression('10.0'));
+            expect(style.anchorLineEnabled).toEqual(new Expression('true'));
             expect(style.anchorLineColor).toEqual(new Expression("color('fuchsia')"));
             expect(style.image).toEqual(new Expression("'url/to/invalid/image'"));
-            expect(style.disableDepthTestDistance).toEqual(new Expression("1000.0"));
-            expect(style.horizontalOrigin).toEqual(new Expression("0"));
-            expect(style.verticalOrigin).toEqual(new Expression("0"));
-            expect(style.labelHorizontalOrigin).toEqual(new Expression("0"));
-            expect(style.labelVerticalOrigin).toEqual(new Expression("0"));
+            expect(style.disableDepthTestDistance).toEqual(new Expression('1000.0'));
+            expect(style.horizontalOrigin).toEqual(new Expression('0'));
+            expect(style.verticalOrigin).toEqual(new Expression('0'));
+            expect(style.labelHorizontalOrigin).toEqual(new Expression('0'));
+            expect(style.labelVerticalOrigin).toEqual(new Expression('0'));
             expect(tileStyle.ready).toEqual(true);
         }).otherwise(function() {
             fail('should load style.json');
@@ -138,58 +138,58 @@ defineSuite([
         return tileStyle.readyPromise.then(function(style) {
             expect(style.style).toEqual({
                 color : "color('red')",
-                show : "${id} < 100.0",
-                pointSize : "${id} / 100.0",
+                show : '${id} < 100.0',
+                pointSize : '${id} / 100.0',
                 pointOutlineColor : "color('blue')",
-                pointOutlineWidth : "5.0",
+                pointOutlineWidth : '5.0',
                 labelColor : "color('yellow')",
                 labelOutlineColor : "color('orange')",
-                labelOutlineWidth : "6.0",
+                labelOutlineWidth : '6.0',
                 font : "'24px Helvetica'",
-                labelStyle : "1",
+                labelStyle : '1',
                 labelText : "'label text'",
                 backgroundColor : "color('coral')",
-                backgroundPadding : "vec2(1.0, 2.0)",
-                backgroundEnabled : "true",
-                scaleByDistance : "vec4(1.0, 2.0, 3.0, 4.0)",
-                translucencyByDistance : "vec4(5.0, 6.0, 7.0, 8.0)",
-                distanceDisplayCondition : "vec2(3.0, 4.0)",
-                heightOffset : "10.0",
-                anchorLineEnabled : "true",
+                backgroundPadding : 'vec2(1.0, 2.0)',
+                backgroundEnabled : 'true',
+                scaleByDistance : 'vec4(1.0, 2.0, 3.0, 4.0)',
+                translucencyByDistance : 'vec4(5.0, 6.0, 7.0, 8.0)',
+                distanceDisplayCondition : 'vec2(3.0, 4.0)',
+                heightOffset : '10.0',
+                anchorLineEnabled : 'true',
                 anchorLineColor : "color('fuchsia')",
                 image : "'url/to/invalid/image'",
-                disableDepthTestDistance : "1000.0",
-                horizontalOrigin : "0",
-                verticalOrigin : "0",
-                labelHorizontalOrigin : "0",
-                labelVerticalOrigin : "0"
+                disableDepthTestDistance : '1000.0',
+                horizontalOrigin : '0',
+                verticalOrigin : '0',
+                labelHorizontalOrigin : '0',
+                labelVerticalOrigin : '0'
             });
             expect(style.color).toEqual(new Expression("color('red')"));
             expect(style.show).toEqual(new Expression('${id} < 100.0'));
             expect(style.pointSize).toEqual(new Expression('${id} / 100.0'));
             expect(style.pointOutlineColor).toEqual(new Expression("color('blue')"));
-            expect(style.pointOutlineWidth).toEqual(new Expression("5.0"));
+            expect(style.pointOutlineWidth).toEqual(new Expression('5.0'));
             expect(style.labelColor).toEqual(new Expression("color('yellow')"));
             expect(style.labelOutlineColor).toEqual(new Expression("color('orange')"));
-            expect(style.labelOutlineWidth).toEqual(new Expression("6.0"));
+            expect(style.labelOutlineWidth).toEqual(new Expression('6.0'));
             expect(style.font).toEqual(new Expression("'24px Helvetica'"));
-            expect(style.labelStyle).toEqual(new Expression("1"));
+            expect(style.labelStyle).toEqual(new Expression('1'));
             expect(style.labelText).toEqual(new Expression("'label text'"));
             expect(style.backgroundColor).toEqual(new Expression("color('coral')"));
-            expect(style.backgroundPadding).toEqual(new Expression("vec2(1.0, 2.0)"));
-            expect(style.backgroundEnabled).toEqual(new Expression("true"));
-            expect(style.scaleByDistance).toEqual(new Expression("vec4(1.0, 2.0, 3.0, 4.0)"));
-            expect(style.translucencyByDistance).toEqual(new Expression("vec4(5.0, 6.0, 7.0, 8.0)"));
-            expect(style.distanceDisplayCondition).toEqual(new Expression("vec2(3.0, 4.0)"));
-            expect(style.heightOffset).toEqual(new Expression("10.0"));
-            expect(style.anchorLineEnabled).toEqual(new Expression("true"));
+            expect(style.backgroundPadding).toEqual(new Expression('vec2(1.0, 2.0)'));
+            expect(style.backgroundEnabled).toEqual(new Expression('true'));
+            expect(style.scaleByDistance).toEqual(new Expression('vec4(1.0, 2.0, 3.0, 4.0)'));
+            expect(style.translucencyByDistance).toEqual(new Expression('vec4(5.0, 6.0, 7.0, 8.0)'));
+            expect(style.distanceDisplayCondition).toEqual(new Expression('vec2(3.0, 4.0)'));
+            expect(style.heightOffset).toEqual(new Expression('10.0'));
+            expect(style.anchorLineEnabled).toEqual(new Expression('true'));
             expect(style.anchorLineColor).toEqual(new Expression("color('fuchsia')"));
             expect(style.image).toEqual(new Expression("'url/to/invalid/image'"));
-            expect(style.disableDepthTestDistance).toEqual(new Expression("1000.0"));
-            expect(style.horizontalOrigin).toEqual(new Expression("0"));
-            expect(style.verticalOrigin).toEqual(new Expression("0"));
-            expect(style.labelHorizontalOrigin).toEqual(new Expression("0"));
-            expect(style.labelVerticalOrigin).toEqual(new Expression("0"));
+            expect(style.disableDepthTestDistance).toEqual(new Expression('1000.0'));
+            expect(style.horizontalOrigin).toEqual(new Expression('0'));
+            expect(style.verticalOrigin).toEqual(new Expression('0'));
+            expect(style.labelHorizontalOrigin).toEqual(new Expression('0'));
+            expect(style.labelVerticalOrigin).toEqual(new Expression('0'));
             expect(tileStyle.ready).toEqual(true);
         }).otherwise(function() {
             fail('should load style.json');
@@ -2512,7 +2512,7 @@ defineSuite([
                 description : '"Hello, ${name}"'
             }
         });
-        expect(style.meta.description.evaluate(frameState, feature1)).toEqual("Hello, Hello");
+        expect(style.meta.description.evaluate(frameState, feature1)).toEqual('Hello, Hello');
 
         style = new Cesium3DTileStyle({
             meta : {
@@ -2557,9 +2557,9 @@ defineSuite([
 
     it('applies default style', function() {
         var style = new Cesium3DTileStyle({
-            "show" : "true",
-            "color" : "color('#ffffff')",
-            "pointSize" : "1.0"
+            'show' : 'true',
+            'color' : "color('#ffffff')",
+            'pointSize' : '1.0'
         });
 
         expect(style.show.evaluate(frameState, undefined)).toEqual(true);
@@ -2569,7 +2569,7 @@ defineSuite([
 
     it('applies show style with variable', function() {
         var style = new Cesium3DTileStyle({
-            "show" : "${ZipCode} === '19341'"
+            'show' : "${ZipCode} === '19341'"
         });
 
         expect(style.show.evaluate(frameState, feature1)).toEqual(true);
@@ -2578,7 +2578,7 @@ defineSuite([
 
     it('applies show style with regexp and variables', function() {
         var style = new Cesium3DTileStyle({
-            "show" : "(regExp('^Chest').test(${County})) && (${YearBuilt} >= 1970)"
+            'show' : "(regExp('^Chest').test(${County})) && (${YearBuilt} >= 1970)"
         });
 
         expect(style.show.evaluate(frameState, feature1)).toEqual(true);
@@ -2587,14 +2587,14 @@ defineSuite([
 
     it('applies show style with conditional', function() {
         var style = new Cesium3DTileStyle({
-            "show" : {
-                "conditions" : [
-                    ["(${Height} >= 100.0)", "false"],
-                    ["(${Height} >= 70.0)", "true"],
-                    ["(${Height} >= 50.0)", "false"],
-                    ["(${Height} >= 30.0)", "true"],
-                    ["(${Height} >= 10.0)", "false"],
-                    ["(${Height} >= 1.0)", "true"]
+            'show' : {
+                'conditions' : [
+                    ['(${Height} >= 100.0)', 'false'],
+                    ['(${Height} >= 70.0)', 'true'],
+                    ['(${Height} >= 50.0)', 'false'],
+                    ['(${Height} >= 30.0)', 'true'],
+                    ['(${Height} >= 10.0)', 'false'],
+                    ['(${Height} >= 1.0)', 'true']
                 ]
             }
         });
@@ -2604,7 +2604,7 @@ defineSuite([
 
     it('applies color style variables', function() {
         var style = new Cesium3DTileStyle({
-            "color" : "(${Temperature} > 90) ? color('red') : color('white')"
+            'color' : "(${Temperature} > 90) ? color('red') : color('white')"
         });
         expect(style.color.evaluateColor(frameState, feature1)).toEqual(Color.WHITE);
         expect(style.color.evaluateColor(frameState, feature2)).toEqual(Color.RED);
@@ -2612,7 +2612,7 @@ defineSuite([
 
     it('applies color style with new color', function() {
         var style = new Cesium3DTileStyle({
-            "color" : "rgba(${red}, ${green}, ${blue}, (${volume} > 100 ? 0.5 : 1.0))"
+            'color' : 'rgba(${red}, ${green}, ${blue}, (${volume} > 100 ? 0.5 : 1.0))'
         });
         expect(style.color.evaluateColor(frameState, feature1)).toEqual(new Color(38/255, 255/255, 82/255, 0.5));
         expect(style.color.evaluateColor(frameState, feature2)).toEqual(new Color(255/255, 30/255, 30/255, 1.0));
@@ -2620,14 +2620,14 @@ defineSuite([
 
     it('applies color style that maps id to color', function() {
         var style = new Cesium3DTileStyle({
-            "defines" : {
-                "id" : "regExp('^1(\\d)').exec(String(${id}))"
+            'defines' : {
+                'id' : "regExp('^1(\\d)').exec(String(${id}))"
             },
-            "color" : {
-                "conditions" : [
+            'color' : {
+                'conditions' : [
                     ["${id} === '1'", "color('#FF0000')"],
                     ["${id} === '2'", "color('#00FF00')"],
-                    ["true", "color('#FFFFFF')"]
+                    ['true', "color('#FFFFFF')"]
                 ]
             }
         });
@@ -2637,14 +2637,14 @@ defineSuite([
 
     it('applies color style with conditional', function() {
         var style = new Cesium3DTileStyle({
-            "color" : {
-                "conditions" : [
-                    ["(${Height} >= 100.0)", "color('#0000FF')"],
-                    ["(${Height} >= 70.0)", "color('#00FFFF')"],
-                    ["(${Height} >= 50.0)", "color('#00FF00')"],
-                    ["(${Height} >= 30.0)", "color('#FFFF00')"],
-                    ["(${Height} >= 10.0)", "color('#FF0000')"],
-                    ["(${Height} >= 1.0)", "color('#FF00FF')"]
+            'color' : {
+                'conditions' : [
+                    ['(${Height} >= 100.0)', "color('#0000FF')"],
+                    ['(${Height} >= 70.0)', "color('#00FFFF')"],
+                    ['(${Height} >= 50.0)', "color('#00FF00')"],
+                    ['(${Height} >= 30.0)', "color('#FFFF00')"],
+                    ['(${Height} >= 10.0)', "color('#FF0000')"],
+                    ['(${Height} >= 1.0)', "color('#FF00FF')"]
                 ]
             }
         });
@@ -2654,7 +2654,7 @@ defineSuite([
 
     it('applies pointSize style with variable', function() {
         var style = new Cesium3DTileStyle({
-            "pointSize" : "${Temperature} / 10.0"
+            'pointSize' : '${Temperature} / 10.0'
         });
 
         expect(style.pointSize.evaluate(frameState, feature1)).toEqual(7.8);
@@ -2663,7 +2663,7 @@ defineSuite([
 
     it('applies pointSize style with regexp and variables', function() {
         var style = new Cesium3DTileStyle({
-            "pointSize" : "(regExp('^Chest').test(${County})) ? 2.0 : 1.0"
+            'pointSize' : "(regExp('^Chest').test(${County})) ? 2.0 : 1.0"
         });
 
         expect(style.pointSize.evaluate(frameState, feature1)).toEqual(2.0);
@@ -2672,14 +2672,14 @@ defineSuite([
 
     it('applies pointSize style with conditional', function() {
         var style = new Cesium3DTileStyle({
-            "pointSize" : {
-                "conditions" : [
-                    ["(${Height} >= 100.0)", "6"],
-                    ["(${Height} >= 70.0)", "5"],
-                    ["(${Height} >= 50.0)", "4"],
-                    ["(${Height} >= 30.0)", "3"],
-                    ["(${Height} >= 10.0)", "2"],
-                    ["(${Height} >= 1.0)", "1"]
+            'pointSize' : {
+                'conditions' : [
+                    ['(${Height} >= 100.0)', '6'],
+                    ['(${Height} >= 70.0)', '5'],
+                    ['(${Height} >= 50.0)', '4'],
+                    ['(${Height} >= 30.0)', '3'],
+                    ['(${Height} >= 10.0)', '2'],
+                    ['(${Height} >= 1.0)', '1']
                 ]
             }
         });
@@ -2689,21 +2689,21 @@ defineSuite([
 
     it('applies with defines', function() {
         var style = new Cesium3DTileStyle({
-            "defines" : {
-                "halfHeight" : "${Height} / 2",
-                "quarterHeight" : "${Height} / 4",
-                "halfVolume" : "${volume} / 2"
+            'defines' : {
+                'halfHeight' : '${Height} / 2',
+                'quarterHeight' : '${Height} / 4',
+                'halfVolume' : '${volume} / 2'
             },
-            "color" : {
-                "conditions" : [
-                    ["(${halfHeight} >= 25.0)", "color('red')"],
-                    ["(${Height} >= 1.0)", "color('blue')"]
+            'color' : {
+                'conditions' : [
+                    ['(${halfHeight} >= 25.0)', "color('red')"],
+                    ['(${Height} >= 1.0)', "color('blue')"]
                 ]
             },
-            "show" : "(${quarterHeight} >= 20.0)",
-            "pointSize" : "${halfVolume} + ${halfHeight}",
-            "meta" : {
-                "description" : "'Half height is ' + ${halfHeight}"
+            'show' : '(${quarterHeight} >= 20.0)',
+            'pointSize' : '${halfVolume} + ${halfHeight}',
+            'meta' : {
+                'description' : "'Half height is ' + ${halfHeight}"
             }
         });
 

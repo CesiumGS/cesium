@@ -257,7 +257,7 @@ define([
      * @param {Boolean} [options.baseLayerPicker=true] If set to false, the BaseLayerPicker widget will not be created.
      * @param {Boolean} [options.fullscreenButton=true] If set to false, the FullscreenButton widget will not be created.
      * @param {Boolean} [options.vrButton=false] If set to true, the VRButton widget will be created.
-     * @param {Boolean} [options.geocoder=true] If set to false, the Geocoder widget will not be created.
+     * @param {Boolean|GeocoderService[]} [options.geocoder=true] If set to false, the Geocoder widget will not be created.
      * @param {Boolean} [options.homeButton=true] If set to false, the HomeButton widget will not be created.
      * @param {Boolean} [options.infoBox=true] If set to false, the InfoBox widget will not be created.
      * @param {Boolean} [options.sceneModePicker=true] If set to false, the SceneModePicker widget will not be created.
@@ -489,9 +489,13 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
             var geocoderContainer = document.createElement('div');
             geocoderContainer.className = 'cesium-viewer-geocoderContainer';
             toolbar.appendChild(geocoderContainer);
+            var geocoderService;
+            if (defined(options.geocoder) && typeof options.geocoder !== 'boolean') {
+                geocoderService = isArray(options.geocoder) ? options.geocoder : [options.geocoder];
+            }
             geocoder = new Geocoder({
                 container : geocoderContainer,
-                geocoderServices : defined(options.geocoder) ? (isArray(options.geocoder) ? options.geocoder : [options.geocoder]) : undefined,
+                geocoderServices : geocoderService,
                 scene : scene
             });
             // Subscribe to search so that we can clear the trackedEntity when it is clicked.
@@ -2019,7 +2023,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         boundingSphere = BoundingSphere.fromBoundingSpheres(boundingSpheres);
 
         if (!viewer._zoomIsFlight) {
-            camera.viewBoundingSphere(boundingSphere, viewer._zoomOptions.offset);
+            camera.viewBoundingSphere(boundingSphere, zoomOptions.offset);
             camera.lookAtTransform(Matrix4.IDENTITY);
             clearZoom(viewer);
             zoomPromise.resolve(true);

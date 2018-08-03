@@ -62,15 +62,15 @@ define([
 
         ForEach.material(gltf, function(material, materialIndex) {
             if (isPbrMaterial(material)) {
-                var values = {};
-                var technique = generateTechnique(gltf, material, materialIndex, values, options);
+                var generatedMaterialValues = {};
+                var technique = generateTechnique(gltf, material, materialIndex, generatedMaterialValues, options);
 
                 if (!defined(material.extensions)) {
                     material.extensions = {};
                 }
 
                 material.extensions.KHR_techniques_webgl = {
-                    values : values,
+                    values : generatedMaterialValues,
                     technique : technique
                 };
             }
@@ -94,7 +94,7 @@ define([
                defined(material.doubleSided);
     }
 
-    function generateTechnique(gltf, material, materialIndex, values, options) {
+    function generateTechnique(gltf, material, materialIndex, generatedMaterialValues, options) {
         var addBatchIdToGeneratedShaders = defaultValue(options.addBatchIdToGeneratedShaders, false);
 
         var techniquesWebgl = gltf.extensions.KHR_techniques_webgl;
@@ -102,21 +102,20 @@ define([
         var shaders = techniquesWebgl.shaders;
         var programs = techniquesWebgl.programs;
 
-        var parameterValues = values;
         var uniformName;
         var pbrMetallicRoughness = material.pbrMetallicRoughness;
         if (defined(pbrMetallicRoughness)) {
             for (var parameterName in pbrMetallicRoughness) {
                 if (pbrMetallicRoughness.hasOwnProperty(parameterName)) {
                     uniformName = 'u_' + parameterName;
-                    parameterValues[uniformName] = pbrMetallicRoughness[parameterName];
+                    generatedMaterialValues[uniformName] = pbrMetallicRoughness[parameterName];
                 }
             }
         }
         for (var additional in material) {
             if (material.hasOwnProperty(additional) && ((additional.indexOf('Texture') >= 0) || additional.indexOf('Factor') >= 0)) {
                 uniformName = 'u_' + additional;
-                parameterValues[uniformName] = material[additional];
+                generatedMaterialValues[uniformName] = material[additional];
             }
         }
 
@@ -199,13 +198,18 @@ define([
             };
         }
 
-        // Add material parameters
-        for (uniformName in parameterValues) {
-            if (parameterValues.hasOwnProperty(uniformName)) {
+        // Add material values
+        for (uniformName in generatedMaterialValues) {
+            if (generatedMaterialValues.hasOwnProperty(uniformName)) {
                 techniqueUniforms[uniformName] = {
                     type : getPBRValueType(uniformName)
                 };
             }
+        }
+
+        var baseColorUniform = defaultValue(techniqueUniforms.u_baseColorTexture, techniqueUniforms.u_baseColorFactor);
+        if (defined(baseColorUniform)) {
+            baseColorUniform.semantic = '_3DTILESDIFFUSE';
         }
 
         // Add uniforms to shaders
@@ -453,7 +457,7 @@ define([
         // Add normal mapping to fragment shader
         if (hasNormals) {
             fragmentShader += '    vec3 ng = normalize(v_normal);\n';
-            if (defined(parameterValues.u_normalTexture)) {
+            if (defined(generatedMaterialValues.u_normalTexture)) {
                 if (hasTangents) {
                     // Read tangents from varying
                     fragmentShader += '    vec3 t = normalize(v_tangent.xyz);\n';
@@ -495,12 +499,12 @@ define([
         }
 
         // Add base color to fragment shader
-        if (defined(parameterValues.u_baseColorTexture)) {
+        if (defined(generatedMaterialValues.u_baseColorTexture)) {
             fragmentShader += '    vec4 baseColorWithAlpha = SRGBtoLINEAR4(texture2D(u_baseColorTexture, ' + v_texcoord + '));\n';
-            if (defined(parameterValues.u_baseColorFactor)) {
+            if (defined(generatedMaterialValues.u_baseColorFactor)) {
                 fragmentShader += '    baseColorWithAlpha *= u_baseColorFactor;\n';
             }
-        } else if (defined(parameterValues.u_baseColorFactor)) {
+        } else if (defined(generatedMaterialValues.u_baseColorFactor)) {
                 fragmentShader += '    vec4 baseColorWithAlpha = u_baseColorFactor;\n';
             } else {
                 fragmentShader += '    vec4 baseColorWithAlpha = vec4(1.0);\n';
@@ -514,23 +518,23 @@ define([
 
         if (hasNormals) {
             // Add metallic-roughness to fragment shader
-            if (defined(parameterValues.u_metallicRoughnessTexture)) {
+            if (defined(generatedMaterialValues.u_metallicRoughnessTexture)) {
                 fragmentShader += '    vec3 metallicRoughness = texture2D(u_metallicRoughnessTexture, ' + v_texcoord + ').rgb;\n';
                 fragmentShader += '    float metalness = clamp(metallicRoughness.b, 0.0, 1.0);\n';
                 fragmentShader += '    float roughness = clamp(metallicRoughness.g, 0.04, 1.0);\n';
-                if (defined(parameterValues.u_metallicFactor)) {
+                if (defined(generatedMaterialValues.u_metallicFactor)) {
                     fragmentShader += '    metalness *= u_metallicFactor;\n';
                 }
-                if (defined(parameterValues.u_roughnessFactor)) {
+                if (defined(generatedMaterialValues.u_roughnessFactor)) {
                     fragmentShader += '    roughness *= u_roughnessFactor;\n';
                 }
             } else {
-                if (defined(parameterValues.u_metallicFactor)) {
+                if (defined(generatedMaterialValues.u_metallicFactor)) {
                     fragmentShader += '    float metalness = clamp(u_metallicFactor, 0.0, 1.0);\n';
                 } else {
                     fragmentShader += '    float metalness = 1.0;\n';
                 }
-                if (defined(parameterValues.u_roughnessFactor)) {
+                if (defined(generatedMaterialValues.u_roughnessFactor)) {
                     fragmentShader += '    float roughness = clamp(u_roughnessFactor, 0.04, 1.0);\n';
                 } else {
                     fragmentShader += '    float roughness = 1.0;\n';
@@ -610,17 +614,17 @@ define([
             fragmentShader += '    vec3 color = baseColor;\n';
         }
 
-        if (defined(parameterValues.u_occlusionTexture)) {
+        if (defined(generatedMaterialValues.u_occlusionTexture)) {
             fragmentShader += '    color *= texture2D(u_occlusionTexture, ' + v_texcoord + ').r;\n';
         }
-        if (defined(parameterValues.u_emissiveTexture)) {
+        if (defined(generatedMaterialValues.u_emissiveTexture)) {
             fragmentShader += '    vec3 emissive = SRGBtoLINEAR3(texture2D(u_emissiveTexture, ' + v_texcoord + ').rgb);\n';
-            if (defined(parameterValues.u_emissiveFactor)) {
+            if (defined(generatedMaterialValues.u_emissiveFactor)) {
                 fragmentShader += '    emissive *= u_emissiveFactor;\n';
             }
             fragmentShader += '    color += emissive;\n';
         }
-        else if (defined(parameterValues.u_emissiveFactor)) {
+        else if (defined(generatedMaterialValues.u_emissiveFactor)) {
                 fragmentShader += '    color += u_emissiveFactor;\n';
             }
 

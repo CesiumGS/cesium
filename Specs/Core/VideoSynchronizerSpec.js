@@ -75,7 +75,7 @@ defineSuite([
         expect(videoSynchronizer.isDestroyed()).toBe(true);
     });
 
-    xit('Syncs time when looping', function() {
+    it('Syncs time when looping', function() {
         var epoch = JulianDate.fromIso8601('2015-11-01T00:00:00Z');
         var clock = new Clock();
         clock.shouldAnimate = false;
@@ -116,7 +116,7 @@ defineSuite([
         });
     });
 
-    xit('Syncs time when not looping', function() {
+    it('Syncs time when not looping', function() {
         var epoch = JulianDate.fromIso8601('2015-11-01T00:00:00Z');
         var clock = new Clock();
         clock.shouldAnimate = false;

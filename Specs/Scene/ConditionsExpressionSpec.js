@@ -76,7 +76,7 @@ defineSuite([
 
     it('constructs and evaluates empty conditional', function() {
         var expression = new ConditionsExpression({
-            "conditions" : []
+            'conditions' : []
         });
         expect(expression._conditions).toEqual([]);
         expect(expression.evaluate(frameState, new MockFeature(101))).toEqual(undefined);

@@ -2,7 +2,7 @@
   "asset": {
     "version": "1.0"
   },
-  "geometricError": 70,
+  "geometricError": 240,
   "root": {
     "boundingVolume": {
       "region": [
@@ -17,7 +17,7 @@
     "geometricError": 70,
     "refine": "ADD",
     "content": {
-      "url": "parent.b3dm"
+      "uri": "parent.b3dm"
     },
     "children": [
       {
@@ -31,9 +31,9 @@
             20
           ]
         },
-        "geometricError": 0,
+        "geometricError": 70,
         "content": {
-          "url": "tileset3/tileset3.json"
+          "uri": "tileset3/tileset3.json"
         }
       },
       {
@@ -49,7 +49,7 @@
         },
         "geometricError": 0,
         "content": {
-          "url": "lr.b3dm"
+          "uri": "lr.b3dm"
         }
       },
       {
@@ -65,7 +65,7 @@
         },
         "geometricError": 0,
         "content": {
-          "url": "ur.b3dm"
+          "uri": "ur.b3dm"
         }
       },
       {
@@ -81,7 +81,7 @@
         },
         "geometricError": 0,
         "content": {
-          "url": "ul.b3dm"
+          "uri": "ul.b3dm"
         }
       }
     ]

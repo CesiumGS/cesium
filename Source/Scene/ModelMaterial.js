@@ -19,6 +19,7 @@ define([
      *
      * @alias ModelMaterial
      * @internalConstructor
+     * @class
      *
      * @see Model#getMaterial
      */

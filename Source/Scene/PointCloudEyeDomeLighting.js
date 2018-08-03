@@ -46,14 +46,14 @@ define([
 
     /**
      * Eye dome lighting. Does not support points with per-point translucency, but does allow translucent styling against the globe.
-     * Requires support for EXT_frag_depth, OES_texture_float, and WEBGL_draw_buffers extensions in WebGL 1.0.
+     * Requires support for EXT_frag_depth and WEBGL_draw_buffers extensions in WebGL 1.0.
      *
      * @private
      */
     function PointCloudEyeDomeLighting() {
         this._framebuffer = undefined;
-        this._colorTexture = undefined; // color gbuffer
-        this._ecAndLogDepthTexture = undefined; // depth gbuffer
+        this._colorGBuffer = undefined; // color gbuffer
+        this._depthGBuffer = undefined; // depth gbuffer
         this._depthTexture = undefined; // needed to write depth so camera based on depth works
         this._drawCommand = undefined;
         this._clearCommand = undefined;
@@ -77,14 +77,14 @@ define([
             return;
         }
 
-        processor._colorTexture.destroy();
-        processor._ecAndLogDepthTexture.destroy();
+        processor._colorGBuffer.destroy();
+        processor._depthGBuffer.destroy();
         processor._depthTexture.destroy();
         framebuffer.destroy();
 
         processor._framebuffer = undefined;
-        processor._colorTexture = undefined;
-        processor._ecAndLogDepthTexture = undefined;
+        processor._colorGBuffer = undefined;
+        processor._depthGBuffer = undefined;
         processor._depthTexture = undefined;
         processor._drawCommand = undefined;
         processor._clearCommand = undefined;
@@ -94,22 +94,21 @@ define([
         var screenWidth = context.drawingBufferWidth;
         var screenHeight = context.drawingBufferHeight;
 
-        var colorTexture = new Texture({
+        var colorGBuffer = new Texture({
             context : context,
             width : screenWidth,
             height : screenHeight,
             pixelFormat : PixelFormat.RGBA,
-            // Firefox as of 57.02 throws FRAMEBUFFER_UNSUPPORTED 0x8CDD if this doesn't match what's in ecTexture
-            pixelDatatype : FeatureDetection.isFirefox() ? PixelDatatype.FLOAT : PixelDatatype.UNSIGNED_BYTE,
+            pixelDatatype : PixelDatatype.UNSIGNED_BYTE,
             sampler : createSampler()
         });
 
-        var ecTexture = new Texture({
+        var depthGBuffer = new Texture({
             context : context,
             width : screenWidth,
             height : screenHeight,
             pixelFormat : PixelFormat.RGBA,
-            pixelDatatype : PixelDatatype.FLOAT,
+            pixelDatatype : PixelDatatype.UNSIGNED_BYTE,
             sampler : createSampler()
         });
 
@@ -125,14 +124,14 @@ define([
         processor._framebuffer = new Framebuffer({
             context : context,
             colorTextures : [
-                colorTexture,
-                ecTexture
+                colorGBuffer,
+                depthGBuffer
             ],
             depthTexture : depthTexture,
             destroyAttachments : false
         });
-        processor._colorTexture = colorTexture;
-        processor._ecAndLogDepthTexture = ecTexture;
+        processor._colorGBuffer = colorGBuffer;
+        processor._depthGBuffer = depthGBuffer;
         processor._depthTexture = depthTexture;
     }
 
@@ -142,11 +141,11 @@ define([
         var blendFS = PointCloudEyeDomeLightingShader;
 
         var blendUniformMap = {
-            u_pointCloud_colorTexture : function() {
-                return processor._colorTexture;
+            u_pointCloud_colorGBuffer : function() {
+                return processor._colorGBuffer;
             },
-            u_pointCloud_ecAndLogDepthTexture : function() {
-                return processor._ecAndLogDepthTexture;
+            u_pointCloud_depthGBuffer : function() {
+                return processor._depthGBuffer;
             },
             u_distancesAndEdlStrength : function() {
                 distancesAndEdlStrengthScratch.x = processor._radius / context.drawingBufferWidth;
@@ -184,13 +183,13 @@ define([
     function createResources(processor, context) {
         var screenWidth = context.drawingBufferWidth;
         var screenHeight = context.drawingBufferHeight;
-        var colorTexture = processor._colorTexture;
+        var colorGBuffer = processor._colorGBuffer;
         var nowDirty = false;
-        var resized = defined(colorTexture) &&
-                      ((colorTexture.width !== screenWidth) ||
-                       (colorTexture.height !== screenHeight));
+        var resized = defined(colorGBuffer) &&
+                      ((colorGBuffer.width !== screenWidth) ||
+                       (colorGBuffer.height !== screenHeight));
 
-        if (!defined(colorTexture) || resized) {
+        if (!defined(colorGBuffer) || resized) {
             destroyFramebuffer(processor);
             createFramebuffer(processor, context);
             createCommands(processor, context);
@@ -200,7 +199,7 @@ define([
     }
 
     function isSupported(context) {
-        return context.floatingPointTexture && context.drawBuffers && context.fragmentDepth;
+        return context.drawBuffers && context.fragmentDepth;
     }
 
     PointCloudEyeDomeLighting.isSupported = isSupported;
@@ -210,13 +209,7 @@ define([
         if (!defined(shader)) {
             var attributeLocations = shaderProgram._attributeLocations;
 
-            var vs = shaderProgram.vertexShaderSource.clone();
             var fs = shaderProgram.fragmentShaderSource.clone();
-
-            vs.sources = vs.sources.map(function(source) {
-                source = ShaderSource.replaceMain(source, 'czm_point_cloud_post_process_main');
-                return source;
-            });
 
             fs.sources = fs.sources.map(function(source) {
                 source = ShaderSource.replaceMain(source, 'czm_point_cloud_post_process_main');
@@ -224,25 +217,16 @@ define([
                 return source;
             });
 
-            vs.sources.push(
-                'varying vec3 v_positionEC; \n' +
-                'void main() \n' +
-                '{ \n' +
-                '    czm_point_cloud_post_process_main(); \n' +
-                '    v_positionEC = (czm_inverseProjection * gl_Position).xyz; \n' +
-                '}');
             fs.sources.unshift('#extension GL_EXT_draw_buffers : enable \n');
             fs.sources.push(
-                'varying vec3 v_positionEC; \n' +
                 'void main() \n' +
                 '{ \n' +
                 '    czm_point_cloud_post_process_main(); \n' +
-                // Write log base 2 depth to alpha for EDL
-                '    gl_FragData[1] = vec4(v_positionEC, log2(-v_positionEC.z)); \n' +
+                '    gl_FragData[1] = czm_packDepth(gl_FragCoord.z); \n' +
                 '}');
 
             shader = context.shaderCache.createDerivedShaderProgram(shaderProgram, 'EC', {
-                vertexShaderSource : vs,
+                vertexShaderSource : shaderProgram.vertexShaderSource,
                 fragmentShaderSource : fs,
                 attributeLocations : attributeLocations
             });
