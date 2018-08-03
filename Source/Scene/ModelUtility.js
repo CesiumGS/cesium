@@ -1,4 +1,5 @@
 define([
+        '../Core/BoundingSphere',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Cartesian4',
@@ -16,8 +17,10 @@ define([
         '../ThirdParty/GltfPipeline/addToArray',
         '../ThirdParty/GltfPipeline/ForEach',
         '../ThirdParty/GltfPipeline/hasExtension',
-        './AttributeType'
+        './AttributeType',
+        './Axis'
     ], function(
+        BoundingSphere,
         Cartesian2,
         Cartesian3,
         Cartesian4,
@@ -35,7 +38,8 @@ define([
         addToArray,
         ForEach,
         hasExtension,
-        AttributeType) {
+        AttributeType,
+        Axis) {
     'use strict';
 
     /**
@@ -196,7 +200,7 @@ define([
         ForEach.buffer(model.gltf, function(buffer, bufferViewId) {
             if (defined(buffer.extras._pipeline.source)) {
                 loadResources.buffers[bufferViewId] = buffer.extras._pipeline.source;
-            } else {
+            } else if (defined(bufferLoad)) {
                 var bufferResource = model._resource.getDerivedResource({
                     url: buffer.uri
                 });
@@ -206,6 +210,78 @@ define([
                     .otherwise(ModelUtility.getFailedLoadFunction(model, 'buffer', bufferResource.url));
             }
         });
+    };
+
+    var aMinScratch = new Cartesian3();
+    var aMaxScratch = new Cartesian3();
+
+    ModelUtility.computeBoundingSphere = function(model) {
+        var gltf = model.gltf;
+        var gltfNodes = gltf.nodes;
+        var gltfMeshes = gltf.meshes;
+        var rootNodes = gltf.scenes[gltf.scene].nodes;
+        var rootNodesLength = rootNodes.length;
+
+        var nodeStack = [];
+
+        var min = new Cartesian3(Number.MAX_VALUE, Number.MAX_VALUE, Number.MAX_VALUE);
+        var max = new Cartesian3(-Number.MAX_VALUE, -Number.MAX_VALUE, -Number.MAX_VALUE);
+
+        for (var i = 0; i < rootNodesLength; ++i) {
+            var n = gltfNodes[rootNodes[i]];
+            n._transformToRoot = ModelUtility.getTransform(n);
+            nodeStack.push(n);
+
+            while (nodeStack.length > 0) {
+                n = nodeStack.pop();
+                var transformToRoot = n._transformToRoot;
+
+                var meshId = n.mesh;
+                if (defined(meshId)) {
+                    var mesh = gltfMeshes[meshId];
+                    var primitives = mesh.primitives;
+                    var primitivesLength = primitives.length;
+                    for (var m = 0; m < primitivesLength; ++m) {
+                        var positionAccessor = primitives[m].attributes.POSITION;
+                        if (defined(positionAccessor)) {
+                            var minMax = ModelUtility.getAccessorMinMax(gltf, positionAccessor);
+                            var aMin = Cartesian3.fromArray(minMax.min, 0, aMinScratch);
+                            var aMax = Cartesian3.fromArray(minMax.max, 0, aMaxScratch);
+                            if (defined(min) && defined(max)) {
+                                Matrix4.multiplyByPoint(transformToRoot, aMin, aMin);
+                                Matrix4.multiplyByPoint(transformToRoot, aMax, aMax);
+                                Cartesian3.minimumByComponent(min, aMin, min);
+                                Cartesian3.maximumByComponent(max, aMax, max);
+                            }
+                        }
+                    }
+                }
+
+                var children = n.children;
+                if (defined(children)) {
+                    var childrenLength = children.length;
+                    for (var k = 0; k < childrenLength; ++k) {
+                        var child = gltfNodes[children[k]];
+                        child._transformToRoot = ModelUtility.getTransform(child);
+                        Matrix4.multiplyTransformation(transformToRoot, child._transformToRoot, child._transformToRoot);
+                        nodeStack.push(child);
+                    }
+                }
+                delete n._transformToRoot;
+            }
+        }
+
+        var boundingSphere = BoundingSphere.fromCornerPoints(min, max);
+        if (model._forwardAxis === Axis.Z) {
+            // glTF 2.0 has a Z-forward convention that must be adapted here to X-forward.
+            BoundingSphere.transformWithoutScale(boundingSphere, Axis.Z_UP_TO_X_UP, boundingSphere);
+        }
+        if (model._upAxis === Axis.Y) {
+            BoundingSphere.transformWithoutScale(boundingSphere, Axis.Y_UP_TO_Z_UP, boundingSphere);
+        } else if (model._upAxis === Axis.X) {
+            BoundingSphere.transformWithoutScale(boundingSphere, Axis.X_UP_TO_Z_UP, boundingSphere);
+        }
+        return boundingSphere;
     };
 
     function techniqueAttributeForSemantic(technique, semantic) {

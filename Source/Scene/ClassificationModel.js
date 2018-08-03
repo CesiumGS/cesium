@@ -15,7 +15,6 @@ define([
         '../Core/IndexDatatype',
         '../Core/Matrix4',
         '../Core/PrimitiveType',
-        '../Core/Resource',
         '../Core/RuntimeError',
         '../Core/Transforms',
         '../Core/WebGLConstants',
@@ -52,7 +51,6 @@ define([
         IndexDatatype,
         Matrix4,
         PrimitiveType,
-        Resource,
         RuntimeError,
         Transforms,
         WebGLConstants,
@@ -96,17 +94,15 @@ define([
      * @private
      *
      * @param {Object} [options] Object with the following properties:
-     * @param {Object|ArrayBuffer|Uint8Array} options.gltf The object for the glTF JSON or an arraybuffer of Binary glTF defined by the KHR_binary_glTF extension.
-     * @param {Resource|String} [options.basePath=''] The base path that paths in the glTF JSON are relative to.
+     * @param {ArrayBuffer|Uint8Array} [options.gltf] A binary glTF buffer.
      * @param {Boolean} [options.show=true] Determines if the model primitive will be shown.
      * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The 4x4 transformation matrix that transforms the model from model to world coordinates.
      * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Draws the bounding sphere for each draw command in the model.
      * @param {Boolean} [options.debugWireframe=false] For debugging only. Draws the model in wireframe.
      * @param {ClassificationType} [options.classificationType] What this model will classify.
      *
-     * @exception {DeveloperError} bgltf is not a valid Binary glTF file.
-     * @exception {DeveloperError} Only glTF Binary version 1 is supported.
      * @exception {RuntimeError} Only binary glTF is supported.
+     * @exception {RuntimeError} Buffer data must be embedded in the binary glTF.
      * @exception {RuntimeError} Only one node is supported for classification and it must have a mesh.
      * @exception {RuntimeError} Only one mesh is supported when using b3dm for classification.
      * @exception {RuntimeError} Only one primitive per mesh is supported when using b3dm for classification.
@@ -122,7 +118,7 @@ define([
         }
 
         if (gltf instanceof Uint8Array) {
-            // Binary glTF
+            // Parse and update binary glTF
             gltf = parseGlb(gltf);
             updateVersion(gltf);
             addDefaults(gltf);
@@ -131,6 +127,12 @@ define([
         } else {
             throw new RuntimeError('Only binary glTF is supported as a classifier.');
         }
+
+        ForEach.buffer(gltf, function(buffer) {
+            if (!defined(buffer.extras._pipeline.source)) {
+                throw new RuntimeError('Buffer data must be embedded in the binary gltf.');
+            }
+        });
 
         var gltfNodes = gltf.nodes;
         var gltfMeshes = gltf.meshes;
@@ -161,9 +163,6 @@ define([
         }
 
         this._gltf = gltf;
-
-        var basePath = defaultValue(options.basePath, '');
-        this._resource = Resource.createIfNeeded(basePath);
 
         /**
          * Determines if the model primitive will be shown.
@@ -279,26 +278,6 @@ define([
         gltf : {
             get : function() {
                 return this._gltf;
-            }
-        },
-
-        /**
-         * The base path that paths in the glTF JSON are relative to.  The base
-         * path is the same path as the path containing the .gltf file
-         * minus the .gltf file, when binary, image, and shader files are
-         * in the same directory as the .gltf.  When this is <code>''</code>,
-         * the app's base path is used.
-         *
-         * @memberof ClassificationModel.prototype
-         *
-         * @type {String}
-         * @readonly
-         *
-         * @default ''
-         */
-        basePath : {
-            get : function() {
-                return this._resource.url;
             }
         },
 
@@ -491,43 +470,6 @@ define([
         }
     });
 
-    var aMinScratch = new Cartesian3();
-    var aMaxScratch = new Cartesian3();
-
-    function computeBoundingSphere(model) {
-        var gltf = model.gltf;
-        var gltfNodes = gltf.nodes;
-        var gltfMeshes = gltf.meshes;
-
-        var min = new Cartesian3(Number.MAX_VALUE, Number.MAX_VALUE, Number.MAX_VALUE);
-        var max = new Cartesian3(-Number.MAX_VALUE, -Number.MAX_VALUE, -Number.MAX_VALUE);
-
-        var n = gltfNodes[0];
-        var meshId = n.mesh;
-
-        var transformToRoot = ModelUtility.getTransform(n);
-        var mesh = gltfMeshes[meshId];
-        var primitive = mesh.primitives[0];
-        var positionAccessor = primitive.attributes.POSITION;
-        var minMax = ModelUtility.getAccessorMinMax(gltf, positionAccessor);
-        var aMin = Cartesian3.fromArray(minMax.min, 0, aMinScratch);
-        var aMax = Cartesian3.fromArray(minMax.max, 0, aMaxScratch);
-        if (defined(min) && defined(max)) {
-            Matrix4.multiplyByPoint(transformToRoot, aMin, aMin);
-            Matrix4.multiplyByPoint(transformToRoot, aMax, aMax);
-            Cartesian3.minimumByComponent(min, aMin, min);
-            Cartesian3.maximumByComponent(max, aMax, max);
-        }
-
-        var boundingSphere = BoundingSphere.fromCornerPoints(min, max);
-        if (model._upAxis === Axis.Y) {
-            BoundingSphere.transformWithoutScale(boundingSphere, Axis.Y_UP_TO_Z_UP, boundingSphere);
-        } else if (model._upAxis === Axis.X) {
-            BoundingSphere.transformWithoutScale(boundingSphere, Axis.X_UP_TO_Z_UP, boundingSphere);
-        }
-        return boundingSphere;
-    }
-
     ///////////////////////////////////////////////////////////////////////////
 
     function addBuffersToLoadResources(model) {
@@ -536,15 +478,6 @@ define([
         ForEach.buffer(gltf, function(buffer, id) {
             loadResources.buffers[id] = buffer.extras._pipeline.source;
         });
-    }
-
-    function bufferLoad(model, id) {
-        return function(arrayBuffer) {
-            var loadResources = model._loadResources;
-            var buffer = new Uint8Array(arrayBuffer);
-            --loadResources.pendingBufferLoads;
-            model.gltf.buffers[id].extras._pipeline.source = buffer;
-        };
     }
 
     function parseBufferViews(model) {
@@ -1047,7 +980,7 @@ define([
                 }
 
                 this._loadResources = new ModelLoadResources();
-                ModelUtility.parseBuffers(this, bufferLoad);
+                ModelUtility.parseBuffers(this);
             }
         }
 
@@ -1063,7 +996,7 @@ define([
                 addBuffersToLoadResources(this);
                 parseBufferViews(this);
 
-                this._boundingSphere = computeBoundingSphere(this);
+                this._boundingSphere = ModelUtility.computeBoundingSphere(this);
                 this._initialRadius = this._boundingSphere.radius;
                 createResources(this, frameState);
             }
