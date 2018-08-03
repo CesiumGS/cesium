@@ -1,5 +1,6 @@
 define([
         '../../Core/IonGeocoderService',
+        '../../Core/Cartesian3',
         '../../Core/CartographicGeocoderService',
         '../../Core/defaultValue',
         '../../Core/defined',
@@ -7,13 +8,18 @@ define([
         '../../Core/DeveloperError',
         '../../Core/Event',
         '../../Core/GeocodeType',
+        '../../Core/Math',
         '../../Core/Matrix4',
+        '../../Core/Rectangle',
+        '../../Core/sampleTerrainMostDetailed',
+        '../../Scene/SceneMode',
         '../../ThirdParty/knockout',
         '../../ThirdParty/when',
         '../createCommand',
         '../getElement'
     ], function(
         IonGeocoderService,
+        Cartesian3,
         CartographicGeocoderService,
         defaultValue,
         defined,
@@ -21,7 +27,11 @@ define([
         DeveloperError,
         Event,
         GeocodeType,
+        CesiumMath,
         Matrix4,
+        Rectangle,
+        sampleTerrainMostDetailed,
+        SceneMode,
         knockout,
         when,
         createCommand,
@@ -331,14 +341,79 @@ define([
     }
 
     function updateCamera(viewModel, destination) {
-        viewModel._scene.camera.flyTo({
-            destination : destination,
-            complete: function() {
-                viewModel._complete.raiseEvent();
-            },
-            duration : viewModel._flightDuration,
-            endTransform : Matrix4.IDENTITY
-        });
+        var scene = viewModel._scene;
+        var globe = scene.globe;
+        var ellipsoid;
+        if (defined(globe)) {
+            ellipsoid = globe.ellipsoid;
+        } else {
+            ellipsoid = scene.mapProjection.ellipsoid;
+        }
+
+        var camera = scene.camera;
+        var terrainProvider = scene.terrainProvider;
+        var availability = defined(terrainProvider) ? terrainProvider.availability : undefined;
+
+        // Always expand single points so we don't zoom
+        // directly into the ground, even when not using terrain.
+        if (destination instanceof Cartesian3) {
+            var carto = ellipsoid.cartesianToCartographic(destination);
+            var offset = CesiumMath.toRadians(0.001);
+            destination = new Rectangle(
+                carto.longitude - offset,
+                carto.latitude - offset,
+                carto.longitude + offset,
+                carto.latitude + offset);
+        }
+
+        var newDestination = destination;
+        if (defined(availability)) {
+            var cartographics;
+
+            cartographics = [
+                Rectangle.center(destination),
+                Rectangle.southeast(destination),
+                Rectangle.southwest(destination),
+                Rectangle.northeast(destination),
+                Rectangle.northwest(destination)
+            ];
+
+            newDestination = sampleTerrainMostDetailed(terrainProvider, cartographics)
+                .then(function(positionsOnTerrain) {
+                    var maxHeight = -Number.MAX_VALUE;
+                    positionsOnTerrain.forEach(function(p) {
+                        maxHeight = Math.max(p.height, maxHeight);
+                    });
+
+                    var tmp = camera.getRectangleCameraCoordinates(destination);
+                    var finalPosition;
+                    if (scene.mode === SceneMode.SCENE3D) {
+                        finalPosition = ellipsoid.cartesianToCartographic(tmp);
+                    } else {
+                        finalPosition = scene.mapProjection.unproject(tmp, tmp);
+                    }
+
+                    finalPosition.height += maxHeight * 2;
+                    return ellipsoid.cartographicToCartesian(finalPosition);
+                });
+        }
+
+        var finalDestination = destination;
+        when(newDestination)
+            .then(function(result) {
+                finalDestination = result;
+            })
+            .always(function(){
+                // Whether terrain querying succeeded or not, fly to the destination.
+                camera.flyTo({
+                    destination: finalDestination,
+                    complete: function() {
+                        viewModel._complete.raiseEvent();
+                    },
+                    duration: viewModel._flightDuration,
+                    endTransform: Matrix4.IDENTITY
+                });
+            });
     }
 
     function chainPromise(promise, geocoderService, query, geocodeType) {
