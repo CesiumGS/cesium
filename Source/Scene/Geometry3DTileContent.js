@@ -317,7 +317,7 @@ define([
             return;
         }
 
-        var modelMatrix = content._tile.computedTransform;
+        var modelMatrix = content.tile.computedTransform;
 
         var center;
         if (defined(featureTableJson.RTC_CENTER)) {
@@ -365,7 +365,7 @@ define([
                 center : center,
                 modelMatrix : modelMatrix,
                 batchTable : batchTable,
-                boundingVolume : content._tile._boundingVolume.boundingVolume
+                boundingVolume : content.tile.boundingVolume.boundingVolume
             });
         }
     }

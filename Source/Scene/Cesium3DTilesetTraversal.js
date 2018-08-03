@@ -46,8 +46,8 @@ define([
         var replacementList = tileset._replacementList;
         replacementList.splice(replacementList.tail, tileset._replacementSentinel);
 
-        var root = tileset._root;
-        root.updateTransform(tileset._modelMatrix);
+        var root = tileset.root;
+        root.updateTransform(tileset.modelMatrix);
 
         if (!root.insideViewerRequestVolume(frameState)) {
             return;
@@ -486,7 +486,7 @@ define([
     }
 
     InternalSkipTraversal.prototype.execute = function(root, queue) {
-        this.tileset = root._tileset;
+        this.tileset = root.tileset;
         this.root = root;
         this.queue = queue;
         depthFirstSearch(root, this);
@@ -634,7 +634,7 @@ define([
     function computeSSE(tile, frameState) {
         if (tile._screenSpaceErrorComputedFrame !== frameState.frameNumber) {
             tile._screenSpaceErrorComputedFrame = frameState.frameNumber;
-            tile._screenSpaceError = getScreenSpaceError(tile._tileset, tile.geometricError, tile, frameState);
+            tile._screenSpaceError = getScreenSpaceError(tile.tileset, tile.geometricError, tile, frameState);
         }
     }
 

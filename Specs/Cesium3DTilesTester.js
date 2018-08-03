@@ -162,7 +162,7 @@ define([
 
     Cesium3DTilesTester.resolvesReadyPromise = function(scene, url) {
         return Cesium3DTilesTester.loadTileset(scene, url).then(function(tileset) {
-            var content = tileset._root.content;
+            var content = tileset.root.content;
             return content.readyPromise.then(function(content) {
                 expect(content).toBeDefined();
             });
@@ -171,7 +171,7 @@ define([
 
     Cesium3DTilesTester.tileDestroys = function(scene, url) {
         return Cesium3DTilesTester.loadTileset(scene, url).then(function(tileset) {
-            var content = tileset._root.content;
+            var content = tileset.root.content;
             expect(content.isDestroyed()).toEqual(false);
             scene.primitives.remove(tileset);
             expect(content.isDestroyed()).toEqual(true);

@@ -399,6 +399,21 @@ define([
         },
 
         /**
+         * Get the tile's bounding volume.
+         *
+         * @memberof Cesium3DTile.prototype
+         *
+         * @type {TileBoundingVolume}
+         * @readonly
+         * @private
+         */
+        boundingVolume : {
+            get : function() {
+                return this._boundingVolume;
+            }
+        },
+
+        /**
          * Get the bounding volume of the tile's contents.  This defaults to the
          * tile's bounding volume when the content's bounding volume is
          * <code>undefined</code>.
@@ -794,7 +809,7 @@ define([
         var tileset = this._tileset;
         var clippingPlanes = tileset.clippingPlanes;
         if (defined(clippingPlanes) && clippingPlanes.enabled) {
-            var tileTransform = tileset._root.computedTransform;
+            var tileTransform = tileset.root.computedTransform;
             var intersection = clippingPlanes.computeIntersectionWithBoundingVolume(boundingVolume, tileTransform);
             this._isClipped = intersection !== Intersect.INSIDE;
             if (intersection === Intersect.OUTSIDE) {
@@ -829,7 +844,7 @@ define([
         var tileset = this._tileset;
         var clippingPlanes = tileset.clippingPlanes;
         if (defined(clippingPlanes) && clippingPlanes.enabled) {
-            var tileTransform = tileset._root.computedTransform;
+            var tileTransform = tileset.root.computedTransform;
             var intersection = clippingPlanes.computeIntersectionWithBoundingVolume(boundingVolume, tileTransform);
             this._isClipped = intersection !== Intersect.INSIDE;
             if (intersection === Intersect.OUTSIDE) {

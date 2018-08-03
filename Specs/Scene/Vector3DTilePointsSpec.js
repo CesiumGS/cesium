@@ -60,13 +60,11 @@ defineSuite([
         _statistics : {
             texturesByteLength : 0
         },
-        _tileset : {
+        tileset : {
             _statistics : {
                 batchTableByteLength : 0
             },
-            colorBlendMode : ColorBlendMode.HIGHLIGHT
-        },
-        tileset : {
+            colorBlendMode : ColorBlendMode.HIGHLIGHT,
             ellipsoid : Ellipsoid.WGS84
         },
         getFeature : function(id) { return { batchId : id }; }
