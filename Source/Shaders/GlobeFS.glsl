@@ -265,10 +265,9 @@ void main()
 #if defined(FOG) || defined(GROUND_ATMOSPHERE)
     const float fExposure = 1.3;
     vec3 fogColor = v_fogMieColor + finalColor.rgb * v_fogRayleighColor;
-    fogColor = vec3(1.0) - exp(-fExposure * fogColor);
-#endif
     // TODO: disable exposure if using HDR
     //fogColor = vec3(1.0) - exp(-fExposure * fogColor);
+#endif
 
 #ifdef FOG
 #if defined(ENABLE_VERTEX_LIGHTING) || defined(ENABLE_DAYNIGHT_SHADING) || defined(GROUND_ATMOSPHERE)
@@ -289,7 +288,7 @@ void main()
     }
 
     vec3 groundAtmosphereColor = v_mieColor + finalColor.rgb * v_rayleighColor;
-    groundAtmosphereColor = vec3(1.0) - exp(-fExposure * groundAtmosphereColor);
+    //groundAtmosphereColor = vec3(1.0) - exp(-fExposure * groundAtmosphereColor);
 
     fadeInDist = u_nightFadeDistance.x;
     fadeOutDist = u_nightFadeDistance.y;
