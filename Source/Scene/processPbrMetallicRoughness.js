@@ -40,7 +40,6 @@ define([
         // No need to create new techniques if they already exist,
         // the shader should handle these values
         if (hasExtension(gltf, 'KHR_techniques_webgl')) {
-            // TODO: Modify shader values for alphaMode or doubleSided?
             return gltf;
         }
 
@@ -198,6 +197,14 @@ define([
             };
         }
 
+        var alphaMode = material.alphaMode;
+        if (defined(alphaMode) && alphaMode === 'MASK') {
+            techniqueUniforms.u_alphaCutoff = {
+                semantic: 'ALPHACUTOFF',
+                type: WebGLConstants.FLOAT
+            };
+        }
+
         // Add material values
         for (uniformName in generatedMaterialValues) {
             if (generatedMaterialValues.hasOwnProperty(uniformName)) {
@@ -291,11 +298,11 @@ define([
                         };
                         vertexShader += 'attribute vec3 ' + attributeName + ';\n';
                         if (targetAttribute === 'POSITION') {
-                            vertexShaderMain += '    weightedPosition += u_morphWeights[' + k + '] * a_' + attributeName + ';\n';
+                            vertexShaderMain += '    weightedPosition += u_morphWeights[' + k + '] * ' + attributeName + ';\n';
                         } else if (targetAttribute === 'NORMAL') {
-                            vertexShaderMain += '    weightedNormal += u_morphWeights[' + k + '] * a_' + attributeName + ';\n';
+                            vertexShaderMain += '    weightedNormal += u_morphWeights[' + k + '] * ' + attributeName + ';\n';
                         } else if (hasTangents && targetAttribute === 'TANGENT') {
-                            vertexShaderMain += '    weightedTangent.xyz += u_morphWeights[' + k + '] * a_' + attributeName + ';\n';
+                            vertexShaderMain += '    weightedTangent.xyz += u_morphWeights[' + k + '] * ' + attributeName + ';\n';
                         }
                     }
                 }
@@ -630,11 +637,9 @@ define([
 
         // Final color
         fragmentShader += '    color = LINEARtoSRGB(color);\n';
-        var alphaMode = material.alphaMode;
         if (defined(alphaMode)) {
             if (alphaMode === 'MASK') {
-                var alphaCutoff = defaultValue(material.alphaCutoff, 0.5);
-                fragmentShader += '    gl_FragColor = vec4(color, int(baseColorWithAlpha.a >= ' + alphaCutoff + '));\n';
+                fragmentShader += '    gl_FragColor = vec4(color, int(baseColorWithAlpha.a >= u_alphaCutoff));\n';
             } else if (alphaMode === 'BLEND') {
                 fragmentShader += '    gl_FragColor = vec4(color, baseColorWithAlpha.a);\n';
             } else {

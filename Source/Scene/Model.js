@@ -27,7 +27,6 @@ define([
         '../Core/PrimitiveType',
         '../Core/Quaternion',
         '../Core/Resource',
-        '../Core/RuntimeError',
         '../Core/Transforms',
         '../Core/WebGLConstants',
         '../Renderer/Buffer',
@@ -100,7 +99,6 @@ define([
         PrimitiveType,
         Quaternion,
         Resource,
-        RuntimeError,
         Transforms,
         WebGLConstants,
         Buffer,
@@ -2535,7 +2533,7 @@ define([
         }
 
         var enableCulling = !material.doubleSided;
-        var blendingEnabled = (material.alphaMode === 'BLEND');
+        var blendingEnabled = (material.alphaMode !== 'OPAQUE');
         rendererRenderStates[materialId] = RenderState.fromCache({
             cull : {
                 enabled : enableCulling
@@ -2659,7 +2657,7 @@ define([
         return gltfUniformsFromNode[semantic](uniformState, model, runtimeNode);
     }
 
-    function createUniformsForMaterial(model, technique, instanceValues, context, textures, defaultTexture) {
+    function createUniformsForMaterial(model, material, technique, instanceValues, context, textures, defaultTexture) {
         var uniformMap = {};
         var uniformValues = {};
         var jointMatrixUniformName;
@@ -2677,9 +2675,10 @@ define([
             //
             // https://github.com/KhronosGroup/glTF/issues/142
 
+            var uv;
             if (defined(instanceValues[uniformName])) {
                 // Parameter overrides by the instance technique
-                var uv = ModelUtility.createUniformFunction(uniform.type, instanceValues[uniformName], textures, defaultTexture);
+                uv = ModelUtility.createUniformFunction(uniform.type, instanceValues[uniformName], textures, defaultTexture);
                 uniformMap[uniformName] = uv.func;
                 uniformValues[uniformName] = uv;
             } else if (defined(uniform.node)) {
@@ -2689,6 +2688,16 @@ define([
                     jointMatrixUniformName = uniformName;
                 } else if (uniform.semantic === 'MORPHWEIGHTS') {
                     morphWeightsUniformName = uniformName;
+                } else if (uniform.semantic === 'ALPHACUTOFF') {
+                    // The material's alphaCutoff value uses a uniform with semantic ALPHACUTOFF.
+                    // A uniform with this semantic will ignore the instance or default values.
+                    var alphaMode = material.alphaMode;
+                    if (defined(alphaMode) && alphaMode === 'MASK') {
+                        var alphaCutoffValue = defaultValue(material.alphaCutoff, 0.5);
+                        uv = ModelUtility.createUniformFunction(uniform.type, alphaCutoffValue, textures, defaultTexture);
+                        uniformMap[uniformName] = uv.func;
+                        uniformValues[uniformName] = uv;
+                    }
                 } else {
                     // Map glTF semantic to Cesium automatic uniform
                     uniformMap[uniformName] = ModelUtility.getGltfSemanticUniforms()[uniform.semantic](context.uniformState, model);
@@ -2733,7 +2742,7 @@ define([
             var technique = techniques[modelMaterial._technique];
             var instanceValues = modelMaterial._values;
 
-            var uniforms = createUniformsForMaterial(model, technique, instanceValues, context, textures, defaultTexture);
+            var uniforms = createUniformsForMaterial(model, material, technique, instanceValues, context, textures, defaultTexture);
 
             var u = uniformMaps[materialId];
             u.uniformMap = uniforms.map;                          // uniform name -> function for the renderer

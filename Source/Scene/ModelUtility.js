@@ -368,6 +368,7 @@ define([
      */
     ModelUtility.createAttributeLocations = function(technique, precreatedAttributes) {
         var attributeLocations = {};
+        var hasIndex0 = false;
         var i = 1;
 
         ForEach.techniqueAttribute(technique, function (attribute, attributeName) {
@@ -375,8 +376,9 @@ define([
             // will not work correctly if the 0th attribute is not active. For example, some glTF models
             // list the normal attribute first but derived shaders like the cast-shadows shader do not use
             // the normal attribute.
-            if (/pos/i.test(attributeName)) {
+            if (/pos/i.test(attributeName) && !hasIndex0) {
                 attributeLocations[attributeName] = 0;
+                hasIndex0 = true;
             } else {
                 attributeLocations[attributeName] = i++;
             }
