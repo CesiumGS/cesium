@@ -5,7 +5,10 @@ Change Log
 
 ##### Breaking Changes :mega:
 * Removed `ClippingPlaneCollection.clone`
- 
+
+##### Additions :tada:
+* Added `ClippingPlaneCollection.collectionChanged` event.  This event is raised when a `ClippingPlane` is added or removed from the collection [#6875](https://github.com/AnalyticalGraphicsInc/cesium/pull/6875)
+
 ##### Fixes :wrench:
 * Fixed bug that caused a new `ClippingPlaneCollection` to be created every frame when used with a model entity [#6872](https://github.com/AnalyticalGraphicsInc/cesium/pull/6872)
 

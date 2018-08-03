@@ -11,6 +11,7 @@ define([
         '../Core/deprecationWarning',
         '../Core/destroyObject',
         '../Core/DeveloperError',
+        '../Core/Event',
         '../Core/Intersect',
         '../Core/Matrix4',
         '../Core/PixelFormat',
@@ -36,6 +37,7 @@ define([
         deprecationWarning,
         destroyObject,
         DeveloperError,
+        Event,
         Intersect,
         Matrix4,
         PixelFormat,
@@ -75,15 +77,6 @@ define([
         this._dirtyIndex = -1;
         this._multipleDirtyPlanes = false;
 
-        // Add each ClippingPlane object.
-        var planes = options.planes;
-        if (defined(planes)) {
-            var planesLength = planes.length;
-            for (var i = 0; i < planesLength; ++i) {
-                this.add(planes[i]);
-            }
-        }
-
         this._enabled = defaultValue(options.enabled, true);
 
         /**
@@ -111,6 +104,22 @@ define([
          */
         this.edgeWidth = defaultValue(options.edgeWidth, 0.0);
 
+        /**
+         * An event triggered when a new clipping plane is added to the collection.  Event handlers
+         * are passed the new plane and the index at which it was added.
+         * @type {Event}
+         * @default Event()
+         */
+        this.planeAdded = new Event();
+
+        /**
+         * An event triggered when a new clipping plane is removed from the collection.  Event handlers
+         * are passed the new plane and the index from which it was removed.
+         * @type {Event}
+         * @default Event()
+         */
+        this.planeRemoved = new Event();
+
         // If this ClippingPlaneCollection has an owner, only its owner should update or destroy it.
         // This is because in a Cesium3DTileset multiple models may reference the tileset's ClippingPlaneCollection.
         this._owner = undefined;
@@ -123,6 +132,15 @@ define([
         this._float32View = undefined;
 
         this._clippingPlanesTexture = undefined;
+
+        // Add each ClippingPlane object.
+        var planes = options.planes;
+        if (defined(planes)) {
+            var planesLength = planes.length;
+            for (var i = 0; i < planesLength; ++i) {
+                this.add(planes[i]);
+            }
+        }
     }
 
     function unionIntersectFunction(value) {
@@ -263,6 +281,7 @@ define([
 
         setIndexDirty(this, newPlaneIndex);
         this._planes.push(plane);
+        this.planeAdded.raiseEvent(plane, newPlaneIndex);
     };
 
     /**
@@ -346,6 +365,8 @@ define([
         this._multipleDirtyPlanes = true;
         planes.length = length;
 
+        this.planeRemoved.raiseEvent(clippingPlane, index);
+
         return true;
     };
 
@@ -365,6 +386,7 @@ define([
                 plane.onChangeCallback = undefined;
                 plane.index = -1;
             }
+            this.planeRemoved.raiseEvent(plane, i);
         }
         this._multipleDirtyPlanes = true;
         this._planes = [];
