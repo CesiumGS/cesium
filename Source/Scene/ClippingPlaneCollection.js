@@ -568,47 +568,6 @@ define([
         this._dirtyIndex = -1;
     };
 
-    /**
-     * Duplicates this ClippingPlaneCollection instance.
-     *
-     * @param {ClippingPlaneCollection} [result] The object onto which to store the result.
-     * @returns {ClippingPlaneCollection} The modified result parameter or a new ClippingPlaneCollection instance if one was not provided.
-     */
-    ClippingPlaneCollection.prototype.clone = function(result) {
-        if (!defined(result)) {
-            result = new ClippingPlaneCollection();
-        }
-
-        var length = this.length;
-        var i;
-        if (result.length !== length) {
-            var planes = result._planes;
-            var index = planes.length;
-
-            planes.length = length;
-            for (i = index; i < length; ++i) {
-                result._planes[i] = new ClippingPlane(Cartesian3.UNIT_X, 0.0);
-            }
-        }
-
-        for (i = 0; i < length; ++i) {
-            var resultPlane = result._planes[i];
-            resultPlane.index = i;
-            resultPlane.onChangeCallback = function(index) {
-                setIndexDirty(result, index);
-            };
-            ClippingPlane.clone(this._planes[i], resultPlane);
-        }
-
-        result.enabled = this.enabled;
-        Matrix4.clone(this.modelMatrix, result.modelMatrix);
-        result.unionClippingRegions = this.unionClippingRegions;
-        Color.clone(this.edgeColor, result.edgeColor);
-        result.edgeWidth = this.edgeWidth;
-
-        return result;
-    };
-
     var scratchMatrix = new Matrix4();
     var scratchPlane = new Plane(Cartesian3.UNIT_X, 0.0);
     /**

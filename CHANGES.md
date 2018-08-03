@@ -3,8 +3,14 @@ Change Log
 
 ### 1.49 - 2018-09-03
 
+##### Breaking Changes :mega:
+* Removed `ClippingPlaneCollection.clone`
+
 ##### Additions :tada:
 * Added `ClippingPlaneCollection.planeAdded` and `ClippingPlaneCollection.planeRemoved` events.  `planeAdded` is raised when a new plane is added to the collection and `planeRemoved` is raised when a plane is removed. [#6875](https://github.com/AnalyticalGraphicsInc/cesium/pull/6875)
+
+##### Fixes :wrench:
+* Fixed bug that caused a new `ClippingPlaneCollection` to be created every frame when used with a model entity [#6872](https://github.com/AnalyticalGraphicsInc/cesium/pull/6872)
 
 ### 1.48 - 2018-08-01
 
@@ -21,7 +27,7 @@ Change Log
 * Support for the 3D Tiles pre-version 1.0 Batch Table Hierarchy is deprecated to reflect updates to the [3D Tiles spec](https://github.com/AnalyticalGraphicsInc/3d-tiles/pull/301). Use the [`3DTILES_batch_table_hierarchy`](https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/1.0/extensions/3DTILES_batch_table_hierarchy) extension instead. Support for the deprecated batch table hierarchy will remain for backwards compatibility. [#6780](https://github.com/AnalyticalGraphicsInc/cesium/pull/6780)
 * `PostProcessStageLibrary.createLensFlarStage` is deprecated due to misspelling and will be removed in Cesium 1.49. Use `PostProcessStageLibrary.createLensFlareStage` instead.
 
-#### Fixes :wrench:
+##### Fixes :wrench:
 * Fixed a bug where 3D Tilesets using the `region` bounding volume don't get transformed when the tileset's `modelMatrix` changes. [#6755](https://github.com/AnalyticalGraphicsInc/cesium/pull/6755)
 * Fixed a bug that caused eye dome lighting for point clouds to fail in Safari on macOS and Edge on Windows by removing the dependency on floating point color textures. [#6792](https://github.com/AnalyticalGraphicsInc/cesium/issues/6792)
 * Fixed a bug that caused polylines on terrain to render incorrectly in 2D and Columbus View with a `WebMercatorProjection`. [#6809](https://github.com/AnalyticalGraphicsInc/cesium/issues/6809)
