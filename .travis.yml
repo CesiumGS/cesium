@@ -39,7 +39,7 @@ script:
   - echo -en 'travis_fold:end:script.deploy\\r'
 
   - echo 'test webgl-stub release' && echo -en 'travis_fold:start:script test.release\\r'
-  - npm run test -- --browsers FirefoxHeadless --failTaskOnError --webgl-stub --release --suppressPassed
+  - npm run test -- --browsers ChromeCI --failTaskOnError --webgl-stub --release --suppressPassed
   - echo -en 'travis_fold:end:script test.release\\r'
 
   - echo 'test node' && echo -en 'travis_fold:start:script test.node\\r'
