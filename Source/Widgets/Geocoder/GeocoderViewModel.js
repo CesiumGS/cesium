@@ -1,6 +1,5 @@
 define([
         '../../Core/IonGeocoderService',
-        '../../Core/Cartesian3',
         '../../Core/CartographicGeocoderService',
         '../../Core/defaultValue',
         '../../Core/defined',
@@ -19,7 +18,6 @@ define([
         '../getElement'
     ], function(
         IonGeocoderService,
-        Cartesian3,
         CartographicGeocoderService,
         defaultValue,
         defined,
@@ -37,6 +35,9 @@ define([
         createCommand,
         getElement) {
     'use strict';
+
+    // The height we use if geocoding to a specific point instead of an rectangle.
+    var DEFAULT_HEIGHT = 1000;
 
     /**
      * The view model for the {@link Geocoder} widget.
@@ -340,70 +341,90 @@ define([
         adjustSuggestionsScroll(viewModel, next);
     }
 
+    function computeFlyToLocationForRectangle(rectangle, terrainProvider, camera, mapProjection, sceneMode) {
+        var availability = defined(terrainProvider) ? terrainProvider.availability : undefined;
+
+        if (!defined(availability)) {
+            return when.resolve(rectangle);
+        }
+
+        var cartographics = [
+            Rectangle.center(rectangle),
+            Rectangle.southeast(rectangle),
+            Rectangle.southwest(rectangle),
+            Rectangle.northeast(rectangle),
+            Rectangle.northwest(rectangle)
+        ];
+
+        return sampleTerrainMostDetailed(terrainProvider, cartographics)
+            .then(function(positionsOnTerrain) {
+                var maxHeight = positionsOnTerrain.reduce(function(currentMax, item) {
+                    return Math.max(item.height, currentMax);
+                }, -Number.MAX_VALUE);
+
+                var finalPosition;
+
+                var ellipsoid = mapProjection.ellipsoid;
+                var tmp = camera.getRectangleCameraCoordinates(rectangle);
+                if (sceneMode === SceneMode.SCENE3D) {
+                    finalPosition = ellipsoid.cartesianToCartographic(tmp);
+                } else {
+                    finalPosition = mapProjection.unproject(tmp, tmp);
+                }
+
+                finalPosition.height += maxHeight;
+                return finalPosition;
+            });
+    }
+
+    function computeFlyToLocationForCartographic(cartographic, terrainProvider) {
+        var availability = defined(terrainProvider) ? terrainProvider.availability : undefined;
+
+        if (!defined(availability)) {
+            cartographic.height += DEFAULT_HEIGHT;
+            return when.resolve(cartographic);
+        }
+
+        return sampleTerrainMostDetailed(terrainProvider, [cartographic])
+            .then(function(positionOnTerrain) {
+                cartographic = positionOnTerrain[0];
+                cartographic.height += DEFAULT_HEIGHT;
+                return cartographic;
+            });
+    }
+
     function updateCamera(viewModel, destination) {
         var scene = viewModel._scene;
-        var globe = scene.globe;
-        var ellipsoid;
-        if (defined(globe)) {
-            ellipsoid = globe.ellipsoid;
-        } else {
-            ellipsoid = scene.mapProjection.ellipsoid;
-        }
+        var mapProjection = scene.mapProjection;
+        var ellipsoid = mapProjection.ellipsoid;
 
         var camera = scene.camera;
         var terrainProvider = scene.terrainProvider;
-        var availability = defined(terrainProvider) ? terrainProvider.availability : undefined;
-
-        // Always expand single points so we don't zoom
-        // directly into the ground, even when not using terrain.
-        if (destination instanceof Cartesian3) {
-            var carto = ellipsoid.cartesianToCartographic(destination);
-            var offset = CesiumMath.toRadians(0.001);
-            destination = new Rectangle(
-                carto.longitude - offset,
-                carto.latitude - offset,
-                carto.longitude + offset,
-                carto.latitude + offset);
-        }
-
-        var newDestination = destination;
-        if (defined(availability)) {
-            var cartographics;
-
-            cartographics = [
-                Rectangle.center(destination),
-                Rectangle.southeast(destination),
-                Rectangle.southwest(destination),
-                Rectangle.northeast(destination),
-                Rectangle.northwest(destination)
-            ];
-
-            newDestination = sampleTerrainMostDetailed(terrainProvider, cartographics)
-                .then(function(positionsOnTerrain) {
-                    var maxHeight = -Number.MAX_VALUE;
-                    positionsOnTerrain.forEach(function(p) {
-                        maxHeight = Math.max(p.height, maxHeight);
-                    });
-
-                    var tmp = camera.getRectangleCameraCoordinates(destination);
-                    var finalPosition;
-                    if (scene.mode === SceneMode.SCENE3D) {
-                        finalPosition = ellipsoid.cartesianToCartographic(tmp);
-                    } else {
-                        finalPosition = scene.mapProjection.unproject(tmp, tmp);
-                    }
-
-                    finalPosition.height += maxHeight * 2;
-                    return ellipsoid.cartographicToCartesian(finalPosition);
-                });
-        }
-
         var finalDestination = destination;
-        when(newDestination)
+
+        var promise;
+        if (destination instanceof Rectangle) {
+            // Some geocoders return a Rectangle of zero width/height, treat it like a point instead.
+            if (CesiumMath.equalsEpsilon(destination.south, destination.north, CesiumMath.EPSILON7) &&
+                CesiumMath.equalsEpsilon(destination.east, destination.west, CesiumMath.EPSILON7)) {
+                // destination is now a Cartographic
+                destination = Rectangle.center(destination);
+            } else {
+                promise = computeFlyToLocationForRectangle(destination, terrainProvider, camera, mapProjection, scene.mode);
+            }
+        } else { // destination is a Cartesian3
+            destination = ellipsoid.cartesianToCartographic(destination);
+        }
+
+        if (!defined(promise)) {
+            promise = computeFlyToLocationForCartographic(destination, terrainProvider);
+        }
+
+        promise
             .then(function(result) {
-                finalDestination = result;
+                finalDestination = ellipsoid.cartographicToCartesian(result);
             })
-            .always(function(){
+            .always(function() {
                 // Whether terrain querying succeeded or not, fly to the destination.
                 camera.flyTo({
                     destination: finalDestination,
