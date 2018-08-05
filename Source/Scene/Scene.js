@@ -182,15 +182,6 @@ define([
         };
     };
 
-    function ViewState() {
-        this.camera = undefined;
-        this.viewport = undefined;
-        this.globeDepth = undefined;
-        this.sceneFramebuffer = undefined;
-        this.pickDepths = undefined;
-        this.frustumCommandsList = undefined;
-    }
-
     /**
      * The container for all 3D graphical objects and state in a Cesium virtual scene.  Generally,
      * a scene is not created directly; instead, it is implicitly created by {@link CesiumWidget}.
@@ -886,13 +877,13 @@ define([
         },
 
         /**
-         * The drawingBufferHeight of the underlying GL context.
+         * The drawingBufferWidth of the underlying GL context.
          * @memberof Scene.prototype
          *
          * @type {Number}
          * @readonly
          *
-         * @see {@link https://www.khronos.org/registry/webgl/specs/1.0/#DOM-WebGLRenderingContext-drawingBufferHeight|drawingBufferHeight}
+         * @see {@link https://www.khronos.org/registry/webgl/specs/1.0/#DOM-WebGLRenderingContext-drawingBufferWidth|drawingBufferWidth}
          */
         drawingBufferHeight : {
             get : function() {
@@ -1650,7 +1641,6 @@ define([
         frameState.frameNumber = frameNumber;
         frameState.time = JulianDate.clone(time, frameState.time);
         frameState.camera = camera;
-        frameState.viewport = // TODO;
         frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.positionWC, camera.directionWC, camera.upWC);
         frameState.occluder = getOccluder(scene);
         frameState.terrainExaggeration = scene._terrainExaggeration;
@@ -2728,7 +2718,6 @@ define([
         var useWebVR = scene._environmentState.useWebVR;
 
         if (!offscreen) {
-            // TODO : move this outside of here
             var viewport = passState.viewport;
             viewport.x = 0;
             viewport.y = 0;
@@ -3092,7 +3081,6 @@ define([
     function updateAndClearFramebuffers(scene, passState, clearColor) {
         var context = scene._context;
         var environmentState = scene._environmentState;
-        var frameState = scene._frameState;
 
         var passes = scene._frameState.passes;
         var picking = passes.pick;
@@ -3143,7 +3131,7 @@ define([
             scene._sceneFramebuffer.update(context, passState);
             scene._sceneFramebuffer.clear(context, passState, clearColor);
 
-            postProcess.update(frameState);
+            postProcess.update(context, environmentState.useLogDepth);
             postProcess.clear(context);
 
             usePostProcess = environmentState.usePostProcess = postProcess.ready;
@@ -3151,7 +3139,7 @@ define([
         }
 
         if (environmentState.isSunVisible && scene.sunBloom && !useWebVR) {
-            passState.framebuffer = scene._sunPostProcess.update(frameState);
+            passState.framebuffer = scene._sunPostProcess.update(passState);
             scene._sunPostProcess.clear(context, passState, clearColor);
         } else if (useGlobeDepthFramebuffer) {
             passState.framebuffer = scene._globeDepth.framebuffer;
@@ -3174,7 +3162,7 @@ define([
 
             if (defined(depthFramebuffer) || context.depthTexture) {
                 scene._invertClassification.previousFramebuffer = depthFramebuffer;
-                scene._invertClassification.update(context, passState);
+                scene._invertClassification.update(context);
                 scene._invertClassification.clear(context, passState);
 
                 if (scene.frameState.invertClassificationColor.alpha < 1.0 && useOIT) {
@@ -3357,8 +3345,6 @@ define([
         passState.framebuffer = undefined;
         passState.blendingEnabled = undefined;
         passState.scissorTest = undefined;
-        passState.viewport.width = context.drawingBufferWidth;
-        passState.viewport.height = context.drawingBufferHeight;
 
         if (defined(scene.globe)) {
             scene.globe.beginFrame(frameState);
@@ -3623,7 +3609,7 @@ define([
         scratchRectangle.y = (this.drawingBufferHeight - drawingBufferPosition.y) - ((rectangleHeight - 1.0) * 0.5);
         scratchRectangle.width = rectangleWidth;
         scratchRectangle.height = rectangleHeight;
-        var passState = this._pickFramebuffer.begin(scratchRectangle, this._passState.viewport);
+        var passState = this._pickFramebuffer.begin(scratchRectangle);
 
         updateEnvironment(this, passState);
         updateAndExecuteCommands(this, passState, scratchColorZero);
@@ -3658,7 +3644,6 @@ define([
         var width = context.drawingBufferWidth;
         var height = context.drawingBufferHeight;
 
-        // TODO : can this use a SceneFramebuffer?
         var framebuffer = scene._pickDepthFramebuffer;
         var pickDepthFBWidth = scene._pickDepthFramebufferWidth;
         var pickDepthFBHeight = scene._pickDepthFramebufferHeight;

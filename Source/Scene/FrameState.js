@@ -106,12 +106,6 @@ define([
         this.camera = undefined;
 
         /**
-         * The current viewport.
-         * @type {BoundingRectangle}
-         */
-        this.viewport = undefined;
-
-        /**
          * The culling volume.
          *
          * @type {CullingVolume}

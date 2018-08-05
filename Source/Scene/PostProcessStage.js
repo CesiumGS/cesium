@@ -848,10 +848,10 @@ define([
 
     /**
      * A function that will be called before execute. Used to create WebGL resources and load any textures.
-     * @param {Context} frameState The frame state.
+     * @param {Context} context The context.
      * @private
      */
-    PostProcessStage.prototype.update = function(frameState) {
+    PostProcessStage.prototype.update = function(context, useLogDepth) {
         if (this.enabled !== this._enabled && !this.enabled) {
             releaseResources(this);
         }
@@ -861,8 +861,6 @@ define([
             return;
         }
 
-        var context = frameState.context;
-        var useLogDepth = frameState.useLogDepth;
         this._logDepthChanged = useLogDepth !== this._useLogDepth;
         this._useLogDepth = useLogDepth;
 
@@ -895,7 +893,7 @@ define([
 
         var colorTexture = framebuffer.getColorTexture(0);
         var renderState;
-        if (colorTexture.width !== frameState.viewport.width || colorTexture.height !== frameState.viewport.height) {
+        if (colorTexture.width !== context.drawingBufferWidth || colorTexture.height !== context.drawingBufferHeight) {
             renderState = this._renderState;
             if (!defined(renderState) || colorTexture.width !== renderState.viewport.width || colorTexture.height !== renderState.viewport.height) {
                 this._renderState = RenderState.fromCache({

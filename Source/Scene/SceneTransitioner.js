@@ -156,10 +156,6 @@ define([
             }
         }
 
-        // TODO : account for viewport - search for .drawingBufferWidth
-        // TODO : also scene transitioner is really tied to the scene's main camera
-        var viewport = scene.frameState.viewport;
-
         var frustum;
         if (this._morphToOrthographic) {
             frustum = scratchToCVFrustumOrthographic;

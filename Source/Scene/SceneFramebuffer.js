@@ -71,9 +71,9 @@ define([
         post._depthStencilIdRenderbuffer = undefined;
     }
 
-    SceneFramebuffer.prototype.update = function(context, passState) {
-        var width = passState.viewport.width;
-        var height = passState.viewport.height;
+    SceneFramebuffer.prototype.update = function(context) {
+        var width = context.drawingBufferWidth;
+        var height = context.drawingBufferHeight;
         var colorTexture = this._colorTexture;
         if (defined(colorTexture) && colorTexture.width === width && colorTexture.height === height) {
             return;

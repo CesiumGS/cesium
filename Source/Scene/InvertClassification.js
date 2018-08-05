@@ -192,13 +192,13 @@ define([
         '#endif\n' +
         '}\n';
 
-    InvertClassification.prototype.update = function(context, passState) {
+    InvertClassification.prototype.update = function(context) {
         var texture = this._texture;
         var previousFramebufferChanged = !defined(texture) || this.previousFramebuffer !== this._previousFramebuffer;
         this._previousFramebuffer = this.previousFramebuffer;
 
-        var width = passState.viewport.width;
-        var height = passState.viewport.height;
+        var width = context.drawingBufferWidth;
+        var height = context.drawingBufferHeight;
 
         var textureChanged = !defined(texture) || texture.width !== width || texture.height !== height;
         if (textureChanged || previousFramebufferChanged) {

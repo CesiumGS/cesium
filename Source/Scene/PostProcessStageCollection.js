@@ -463,12 +463,11 @@ define([
     /**
      * Called before the post-process stages in the collection are executed. Calls update for each stage and creates WebGL resources.
      *
-     * @param {FrameState} frameState The frame state.
+     * @param {Context} context The context.
      *
      * @private
      */
-    PostProcessStageCollection.prototype.update = function(frameState) {
-        var context = frameState.context;
+    PostProcessStageCollection.prototype.update = function(context, useLogDepth) {
         removeStages(this);
 
         var previousActiveStages = this._activeStages;
@@ -549,15 +548,15 @@ define([
             });
         }
 
-        this._textureCache.update(frameState);
+        this._textureCache.update(context);
 
-        fxaa.update(frameState);
-        ao.update(frameState);
-        bloom.update(frameState);
+        fxaa.update(context, useLogDepth);
+        ao.update(context, useLogDepth);
+        bloom.update(context, useLogDepth);
 
         length = stages.length;
         for (i = 0; i < length; ++i) {
-            stages[i].update(frameState);
+            stages[i].update(context, useLogDepth);
         }
     };
 

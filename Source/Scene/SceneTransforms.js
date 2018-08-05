@@ -286,7 +286,6 @@ define([
      * @private
      */
     SceneTransforms.transformWindowToDrawingBuffer = function(scene, windowPosition, result) {
-        // TODO : account for frustum and also x,y offsets
         var canvas = scene.canvas;
         var xScale = scene.drawingBufferWidth / canvas.clientWidth;
         var yScale = scene.drawingBufferHeight / canvas.clientHeight;

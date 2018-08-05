@@ -240,8 +240,8 @@ define([
     };
 
     GlobeDepth.prototype.update = function(context, passState) {
-        var width = passState.viewport.width;
-        var height = passState.viewport.height;
+        var width = context.drawingBufferWidth;
+        var height = context.drawingBufferHeight;
 
         updateFramebuffers(this, context, width, height);
         updateCopyCommands(this, context, width, height, passState);

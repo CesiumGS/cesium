@@ -242,14 +242,15 @@ define([
 
         var camera = frameState.camera;
         var frustum = camera.frustum;
-        var width = frameState.viewport.width;
-        var height = frameState.viewport.height;
+        var context = frameState.context;
+        var height = context.drawingBufferHeight;
 
         var error;
         if (frameState.mode === SceneMode.SCENE2D || frustum instanceof OrthographicFrustum) {
             if (defined(frustum._offCenterFrustum)) {
                 frustum = frustum._offCenterFrustum;
             }
+            var width = context.drawingBufferWidth;
             var pixelSize = Math.max(frustum.top - frustum.bottom, frustum.right - frustum.left) / Math.max(width, height);
             error = geometricError / pixelSize;
         } else {
