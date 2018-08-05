@@ -3591,7 +3591,7 @@ define([
         var drawingBufferPosition = SceneTransforms.transformWindowToDrawingBuffer(this, windowPosition, scratchPosition);
 
         if (!defined(this._pickFramebuffer)) {
-            this._pickFramebuffer = new PickFramebuffer();
+            this._pickFramebuffer = new PickFramebuffer(context);
         }
 
         this._jobScheduler.disableThisFrame();
