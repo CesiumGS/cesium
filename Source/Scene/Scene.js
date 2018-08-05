@@ -877,13 +877,13 @@ define([
         },
 
         /**
-         * The drawingBufferWidth of the underlying GL context.
+         * The drawingBufferHeight of the underlying GL context.
          * @memberof Scene.prototype
          *
          * @type {Number}
          * @readonly
          *
-         * @see {@link https://www.khronos.org/registry/webgl/specs/1.0/#DOM-WebGLRenderingContext-drawingBufferWidth|drawingBufferWidth}
+         * @see {@link https://www.khronos.org/registry/webgl/specs/1.0/#DOM-WebGLRenderingContext-drawingBufferHeight|drawingBufferHeight}
          */
         drawingBufferHeight : {
             get : function() {
