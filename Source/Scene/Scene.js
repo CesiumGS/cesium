@@ -72,6 +72,7 @@ define([
         './PerformanceDisplay',
         './PerInstanceColorAppearance',
         './PickDepth',
+        './PickDepthFramebuffer',
         './PickFramebuffer',
         './PickOffscreenFramebuffer',
         './PostProcessStageCollection',
@@ -159,6 +160,7 @@ define([
         PerformanceDisplay,
         PerInstanceColorAppearance,
         PickDepth,
+        PickDepthFramebuffer,
         PickFramebuffer,
         PickOffscreenFramebuffer,
         PostProcessStageCollection,
@@ -318,6 +320,7 @@ define([
         this._overlayCommandList = [];
 
         this._pickFramebuffer = undefined;
+        this._pickDepthFramebuffer = new PickDepthFramebuffer();
 
         this._useOIT = defaultValue(options.orderIndependentTranslucency, true);
         this._executeOITFunction = undefined;
@@ -353,10 +356,6 @@ define([
         this._pickDepths = [];
         this._debugGlobeDepths = [];
 
-        this._pickDepthPassState = undefined;
-        this._pickDepthFramebuffer = undefined;
-        this._pickDepthFramebufferWidth = undefined;
-        this._pickDepthFramebufferHeight = undefined;
         this._depthOnlyRenderStateCache = {};
         this._pickRenderStateCache = {};
 
@@ -3631,46 +3630,7 @@ define([
         frameState.passes.depth = true;
         frameState.cullingVolume = getPickCullingVolume(scene, drawingBufferPosition, 1, 1);
 
-        var passState = scene._pickDepthPassState;
-        if (!defined(passState)) {
-            passState = scene._pickDepthPassState = new PassState(context);
-            passState.scissorTest = {
-                enabled : true,
-                rectangle : new BoundingRectangle()
-            };
-            passState.viewport = new BoundingRectangle();
-        }
-
-        var width = context.drawingBufferWidth;
-        var height = context.drawingBufferHeight;
-
-        var framebuffer = scene._pickDepthFramebuffer;
-        var pickDepthFBWidth = scene._pickDepthFramebufferWidth;
-        var pickDepthFBHeight = scene._pickDepthFramebufferHeight;
-        if (!defined(framebuffer) || pickDepthFBWidth !== width || pickDepthFBHeight !== height) {
-            scene._pickDepthFramebuffer = scene._pickDepthFramebuffer && scene._pickDepthFramebuffer.destroy();
-            framebuffer = scene._pickDepthFramebuffer = new Framebuffer({
-                context : context,
-                depthStencilTexture : new Texture({
-                    context : context,
-                    width : width,
-                    height : height,
-                    pixelFormat : PixelFormat.DEPTH_STENCIL,
-                    pixelDatatype : PixelDatatype.UNSIGNED_INT_24_8
-                })
-            });
-
-            scene._pickDepthFramebufferWidth = width;
-            scene._pickDepthFramebufferHeight = height;
-        }
-
-        passState.framebuffer = framebuffer;
-        passState.viewport.width = width;
-        passState.viewport.height = height;
-        passState.scissorTest.rectangle.x = drawingBufferPosition.x;
-        passState.scissorTest.rectangle.y = height - drawingBufferPosition.y;
-        passState.scissorTest.rectangle.width = 1;
-        passState.scissorTest.rectangle.height = 1;
+        var passState = scene._pickDepthFramebuffer.update(context, drawingBufferPosition);
 
         updateEnvironment(scene, passState);
         scene._environmentState.renderTranslucentDepthForPick = true;
