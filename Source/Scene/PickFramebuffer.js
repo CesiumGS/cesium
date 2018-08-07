@@ -41,10 +41,10 @@ define([
         this._width = 0;
         this._height = 0;
     }
-    PickFramebuffer.prototype.begin = function(screenSpaceRectangle) {
+    PickFramebuffer.prototype.begin = function(screenSpaceRectangle, passState) {
         var context = this._context;
-        var width = context.drawingBufferWidth;
-        var height = context.drawingBufferHeight;
+        var width = passState.viewport.width;
+        var height = passState.viewport.height;
 
         BoundingRectangle.clone(screenSpaceRectangle, this._passState.scissorTest.rectangle);
 
@@ -69,8 +69,7 @@ define([
             this._passState.framebuffer = this._fb;
         }
 
-        this._passState.viewport.width = width;
-        this._passState.viewport.height = height;
+        BoundingRectangle.clone(passState.viewport, this._passState.viewport);
 
         return this._passState;
     };

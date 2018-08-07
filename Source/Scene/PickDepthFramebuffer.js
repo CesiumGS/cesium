@@ -68,9 +68,9 @@ define([
         pickDepth._passState = passState;
     }
 
-    PickDepthFramebuffer.prototype.update = function(context, drawingBufferPosition) {
-        var width = context.drawingBufferWidth;
-        var height = context.drawingBufferHeight;
+    PickDepthFramebuffer.prototype.update = function(context, drawingBufferPosition, passState) {
+        var width = passState.viewport.width;
+        var height = passState.viewport.height;
 
         if (!defined(this._framebuffer) || width !== this._depthStencilTexture.width || height !== this._depthStencilTexture.height) {
             destroyResources(this);
@@ -78,7 +78,7 @@ define([
         }
 
         var framebuffer = this._framebuffer;
-        var passState = this._passState;
+        passState = this._passState;
         passState.framebuffer = framebuffer;
         passState.viewport.width = width;
         passState.viewport.height = height;

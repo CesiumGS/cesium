@@ -1,4 +1,5 @@
 define([
+        '../Core/BoundingRectangle',
         '../Core/BoundingSphere',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
@@ -27,6 +28,7 @@ define([
         './SceneMode',
         './SceneTransforms'
     ], function(
+        BoundingRectangle,
         BoundingSphere,
         Cartesian2,
         Cartesian3,
@@ -93,6 +95,7 @@ define([
         this._texture = undefined;
         this._drawingBufferWidth = undefined;
         this._drawingBufferHeight = undefined;
+        this._viewport = new BoundingRectangle();
         this._radiusTS = undefined;
         this._size = undefined;
 
@@ -138,7 +141,7 @@ define([
     /**
      * @private
      */
-    Sun.prototype.update = function(frameState, passState) {
+    Sun.prototype.update = function(frameState) {
         if (!this.show) {
             return undefined;
         }
@@ -153,8 +156,13 @@ define([
         }
 
         var context = frameState.context;
-        var drawingBufferWidth = passState.viewport.width;
-        var drawingBufferHeight = passState.viewport.height;
+        var drawingBufferWidth = context.drawingBufferWidth;
+        var drawingBufferHeight = context.drawingBufferHeight;
+
+        this._viewport.x = 0;
+        this._viewport.y = 0;
+        this._viewport.width = drawingBufferWidth;
+        this._viewport.height = drawingBufferHeight;
 
         if (!defined(this._texture) ||
                 drawingBufferWidth !== this._drawingBufferWidth ||
@@ -295,11 +303,11 @@ define([
         positionEC.w = 1;
 
         var positionCC = Matrix4.multiplyByVector(projMatrix, positionEC, scratchCartesian4);
-        var positionWC = SceneTransforms.clipToGLWindowCoordinates(passState.viewport, positionCC, scratchPositionWC);
+        var positionWC = SceneTransforms.clipToGLWindowCoordinates(this._viewport, positionCC, scratchPositionWC);
 
         positionEC.x = CesiumMath.SOLAR_RADIUS;
         var limbCC = Matrix4.multiplyByVector(projMatrix, positionEC, scratchCartesian4);
-        var limbWC = SceneTransforms.clipToGLWindowCoordinates(passState.viewport, limbCC, scratchLimbWC);
+        var limbWC = SceneTransforms.clipToGLWindowCoordinates(this._viewport, limbCC, scratchLimbWC);
 
         this._size = Math.ceil(Cartesian2.magnitude(Cartesian2.subtract(limbWC, positionWC, scratchCartesian4)));
         this._size = 2.0 * this._size * (1.0 + 2.0 * this._glowLengthTS);

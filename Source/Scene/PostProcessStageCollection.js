@@ -464,6 +464,7 @@ define([
      * Called before the post-process stages in the collection are executed. Calls update for each stage and creates WebGL resources.
      *
      * @param {Context} context The context.
+     * @param {Boolean} useLogDepth Whether or not the scene uses a logarithmic depth buffer.
      *
      * @private
      */
