@@ -70,7 +70,8 @@ define([
         var quantization = 0;
         var quantizationDefine = '';
 
-        var terrainEncoding = surfaceTile.mesh.encoding;
+        var mesh = surfaceTile.mesh || surfaceTile.fillMesh;
+        var terrainEncoding = mesh.encoding;
         var quantizationMode = terrainEncoding.quantization;
         if (quantizationMode === TerrainQuantization.BITS12) {
             quantization = 1;
@@ -79,10 +80,10 @@ define([
 
         var vertexLogDepth = 0;
         var vertexLogDepthDefine = '';
-        // if (surfaceTile.terrainData._createdByUpsampling) {
-        //     vertexLogDepth = 1;
-        //     vertexLogDepthDefine = 'DISABLE_GL_POSITION_LOG_DEPTH';
-        // }
+        if (surfaceTile.terrainData !== undefined && surfaceTile.terrainData._createdByUpsampling) {
+            vertexLogDepth = 1;
+            vertexLogDepthDefine = 'DISABLE_GL_POSITION_LOG_DEPTH';
+        }
 
         var sceneMode = frameState.mode;
         var flags = sceneMode |

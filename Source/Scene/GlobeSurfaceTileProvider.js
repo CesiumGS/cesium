@@ -41,12 +41,13 @@ define([
         '../Renderer/Pass',
         '../Renderer/RenderState',
         '../Renderer/VertexArray',
-        '../Scene/BlendingState',
-        '../Scene/DepthFunction',
-        '../Scene/ImageryState',
-        '../Scene/PerInstanceColorAppearance',
-        '../Scene/Primitive',
-        '../Scene/TileBoundingRegion',
+        './BlendingState',
+        './DepthFunction',
+        './ImageryState',
+        './PerInstanceColorAppearance',
+        './Primitive',
+        './TileBoundingRegion',
+        './TileSelectionResult',
         './ClippingPlaneCollection',
         './GlobeSurfaceTile',
         './ImageryLayer',
@@ -102,6 +103,7 @@ define([
         PerInstanceColorAppearance,
         Primitive,
         TileBoundingRegion,
+        TileSelectionResult,
         ClippingPlaneCollection,
         GlobeSurfaceTile,
         ImageryLayer,
@@ -1258,15 +1260,32 @@ define([
     function createWireframeVertexArrayIfNecessary(context, provider, tile) {
         var surfaceTile = tile.data;
 
+        var mesh;
+        var vertexArray;
+
+        if (surfaceTile.vertexArray !== undefined) {
+            mesh = surfaceTile.mesh;
+            vertexArray = surfaceTile.vertexArray;
+        } else if (surfaceTile.fillVertexArray !== undefined) {
+            mesh = surfaceTile.fillMesh;
+            vertexArray = surfaceTile.fillVertexArray;
+        }
+
+        if (!defined(mesh) || !defined(vertexArray)) {
+            return;
+        }
+
         if (defined(surfaceTile.wireframeVertexArray)) {
-            return;
+            if (surfaceTile.wireframeVertexArray.mesh === mesh) {
+                return;
+            }
+
+            surfaceTile.wireframeVertexArray.destroy();
+            surfaceTile.wireframeVertexArray = undefined;
         }
 
-        if (!defined(surfaceTile.terrainData) || !defined(surfaceTile.terrainData._mesh)) {
-            return;
-        }
-
-        surfaceTile.wireframeVertexArray = createWireframeVertexArray(context, surfaceTile.vertexArray, surfaceTile.terrainData._mesh);
+        surfaceTile.wireframeVertexArray = createWireframeVertexArray(context, vertexArray, mesh);
+        surfaceTile.wireframeVertexArray.mesh = mesh;
     }
 
     /**
@@ -1370,42 +1389,50 @@ define([
         };
     })();
 
-    function findRenderedTiles(startTile, currentFrameNumber, edge) {
+    function findRenderedTiles(startTile, currentFrameNumber, edge, downOnly) {
         if (startTile === undefined) {
             // There are no tiles North or South of the poles.
             return [];
         }
 
-        if (startTile._frameRendered === currentFrameNumber) {
-            return [startTile];
-        }
-
-        if (startTile._frameVisited !== currentFrameNumber) {
-            // This tile wasn't even visited, so find the closest ancestor that was.
-            var tile = startTile.parent;
-            while (tile && tile._frameVisited !== currentFrameNumber) {
-                tile = tile.parent;
-            }
-
-            if (!tile || tile._frameRendered !== currentFrameNumber) {
-                // No ancestor was visited, or the closest visited ancestor was culled.
+        if (startTile._lastSelectionResultFrame !== currentFrameNumber || startTile._lastSelectionResult === TileSelectionResult.KICKED) {
+            if (downOnly) {
                 return [];
             }
 
-            return [tile];
+            // This wasn't visited or was visited and then kicked, so walk up to find the closest ancestor that was rendered.
+            var tile = startTile.parent;
+            while (tile && tile._lastSelectionResultFrame !== currentFrameNumber) {
+                tile = tile.parent;
+            }
+
+            if (tile !== undefined && tile._lastSelectionResult === TileSelectionResult.RENDERED) {
+                return [tile];
+            }
+
+            // No ancestor was rendered.
+            return [];
         }
 
-        // This tile was visited but not rendered, so find rendered children, if any.
+        if (startTile._lastSelectionResult === TileSelectionResult.RENDERED) {
+            return [startTile];
+        }
+
+        if (startTile._lastSelectionResult === TileSelectionResult.CULLED) {
+            return [];
+        }
+
+        // This tile was refined, so find rendered children, if any.
         // Return the tiles in clockwise order.
         switch (edge) {
             case TileEdge.WEST:
-                return findRenderedTiles(startTile.southwestChild, currentFrameNumber, edge).concat(findRenderedTiles(startTile.northwestChild, currentFrameNumber, edge));
+                return findRenderedTiles(startTile.southwestChild, currentFrameNumber, edge, true).concat(findRenderedTiles(startTile.northwestChild, currentFrameNumber, edge, true));
             case TileEdge.EAST:
-                return findRenderedTiles(startTile.northeastChild, currentFrameNumber, edge).concat(findRenderedTiles(startTile.southeastChild, currentFrameNumber, edge));
+                return findRenderedTiles(startTile.northeastChild, currentFrameNumber, edge, true).concat(findRenderedTiles(startTile.southeastChild, currentFrameNumber, edge, true));
             case TileEdge.SOUTH:
-                return findRenderedTiles(startTile.southeastChild, currentFrameNumber, edge).concat(findRenderedTiles(startTile.southwestChild, currentFrameNumber, edge));
+                return findRenderedTiles(startTile.southeastChild, currentFrameNumber, edge, true).concat(findRenderedTiles(startTile.southwestChild, currentFrameNumber, edge, true));
             case TileEdge.NORTH:
-                return findRenderedTiles(startTile.northwestChild, currentFrameNumber, edge).concat(findRenderedTiles(startTile.northeastChild, currentFrameNumber, edge));
+                return findRenderedTiles(startTile.northwestChild, currentFrameNumber, edge, true).concat(findRenderedTiles(startTile.northeastChild, currentFrameNumber, edge, true));
             default:
                 throw new DeveloperError('Invalid edge');
         }
@@ -1415,13 +1442,31 @@ define([
         var ellipsoid = tile.tilingScheme.ellipsoid;
         var edgeTiles = findRenderedTiles(startingTile, currentFrameNumber, tileEdge);
 
+        tile.edgeTiles = tile.edgeTiles || [];
+        tile.edgeTiles[tileEdge] = edgeTiles;
+
         result.clear();
 
         for (var i = 0; i < edgeTiles.length; ++i) {
             var edgeTile = edgeTiles[i];
             var surfaceTile = edgeTile.data;
-            if (surfaceTile && surfaceTile.mesh) {
-                surfaceTile.mesh.getEdgeVertices(tileEdge, edgeTile.rectangle, tile.rectangle, ellipsoid, result);
+            if (surfaceTile === undefined) {
+                continue;
+            }
+
+            var mesh = surfaceTile.fillMesh;
+            if (surfaceTile.mesh !== undefined && surfaceTile.vertexArray !== undefined) {
+                mesh = surfaceTile.mesh;
+            }
+
+            if (mesh !== undefined) {
+                var beforeLength = result.vertices.length;
+                mesh.getEdgeVertices(tileEdge, edgeTile.rectangle, tile.rectangle, ellipsoid, result);
+                var afterLength = result.vertices.length;
+                var numberOfVertices = afterLength - beforeLength;
+                if (surfaceTile.mesh === undefined && numberOfVertices > 27) {
+                    console.log(`${numberOfVertices} from L${edgeTile.level}X${edgeTile.x}Y${edgeTile.y}`);
+                }
             }
         }
 
@@ -1480,15 +1525,38 @@ define([
 
         // Copy all but the last vertex.
         var i;
-        for (i = 0; i < vertices.length - stride; ++i) {
-            tileVertices.push(vertices[i]);
+        var u;
+        var v;
+        var lastU;
+        var lastV;
+        for (i = 0; i < vertices.length - stride; i += stride) {
+            u = vertices[i + 4];
+            v = vertices[i + 5];
+            if (Math.abs(u - lastU) < CesiumMath.EPSILON4 && Math.abs(v - lastV) < CesiumMath.EPSILON4) {
+                // Vertex is very close to the previous one, so skip it.
+                continue;
+            }
+
+            var end = i + stride;
+            for (var j = i; j < end; ++j) {
+                tileVertices.push(vertices[j]);
+            }
+
+            lastU = u;
+            lastV = v;
         }
 
         // Copy the last vertex too if it's _not_ a corner vertex.
         var lastVertexStart = i;
-        var u = vertices[lastVertexStart + 4];
-        var v = vertices[lastVertexStart + 5];
+        u = vertices[lastVertexStart + 4];
+        v = vertices[lastVertexStart + 5];
+
         if (lastVertexStart < vertices.length && ((u !== 0.0 && u !== 1.0) || (v !== 0.0 && v !== 1.0))) {
+            if (Math.abs(u - lastU) < CesiumMath.EPSILON4 && Math.abs(v - lastV) < CesiumMath.EPSILON4) {
+                // Overwrite the previous vertex because it's very close to the last one.
+                tileVertices.length -= stride;
+            }
+
             for (; i < vertices.length; ++i) {
                 tileVertices.push(vertices[i]);
             }
@@ -1502,7 +1570,7 @@ define([
     var tileVerticesScratch = [];
 
     function createFillTile(tileProvider, tile, frameState) {
-        console.log('L' + tile.level + 'X' + tile.x + 'Y' + tile.y);
+        //console.log('L' + tile.level + 'X' + tile.x + 'Y' + tile.y);
         var start = performance.now();
 
         var mesh;
@@ -1510,12 +1578,14 @@ define([
         var indices;
         var surfaceTile = tile.data;
         // if (surfaceTile.mesh === undefined) {
-            var levelZeroTiles = tileProvider._quadtree._levelZeroTiles;
+            var quadtree = tileProvider._quadtree;
+            var levelZeroTiles = quadtree._levelZeroTiles;
+            var lastSelectionFrameNumber = quadtree._lastSelectionFrameNumber;
 
-            var west = getEdgeVertices(tile, tile.findTileToWest(levelZeroTiles), frameState.frameNumber, TileEdge.EAST, westScratch);
-            var south = getEdgeVertices(tile, tile.findTileToSouth(levelZeroTiles), frameState.frameNumber, TileEdge.NORTH, southScratch);
-            var east = getEdgeVertices(tile, tile.findTileToEast(levelZeroTiles), frameState.frameNumber, TileEdge.WEST, eastScratch);
-            var north = getEdgeVertices(tile, tile.findTileToNorth(levelZeroTiles), frameState.frameNumber, TileEdge.SOUTH, northScratch);
+            var west = getEdgeVertices(tile, tile.findTileToWest(levelZeroTiles), lastSelectionFrameNumber, TileEdge.EAST, westScratch);
+            var south = getEdgeVertices(tile, tile.findTileToSouth(levelZeroTiles), lastSelectionFrameNumber, TileEdge.NORTH, southScratch);
+            var east = getEdgeVertices(tile, tile.findTileToEast(levelZeroTiles), lastSelectionFrameNumber, TileEdge.WEST, eastScratch);
+            var north = getEdgeVertices(tile, tile.findTileToNorth(levelZeroTiles), lastSelectionFrameNumber, TileEdge.SOUTH, northScratch);
 
             var hasVertexNormals = tileProvider.terrainProvider.hasVertexNormals;
             var hasWebMercatorT = true; // TODO
@@ -1680,8 +1750,7 @@ define([
                 northIndicesWestToEast
             );
 
-            var oldMesh = surfaceTile.mesh;
-            surfaceTile.mesh = mesh;
+            surfaceTile.fillMesh = mesh;
         // } else {
         //     mesh = surfaceTile.mesh;
         //     typedArray = mesh.vertices;
@@ -1690,6 +1759,11 @@ define([
 
         var context = frameState.context;
 
+        if (surfaceTile.fillVertexArray !== undefined) {
+            surfaceTile.fillVertexArray.destroy();
+            surfaceTile.fillVertexArray = undefined;
+        }
+
         var buffer = Buffer.createVertexBuffer({
             context : context,
             typedArray : typedArray,
@@ -1697,26 +1771,15 @@ define([
         });
         var attributes = mesh.encoding.getAttributes(buffer);
 
-        var indexBuffers = mesh.indices.indexBuffers || {};
-        var indexBuffer = indexBuffers[context.id];
-        if (!defined(indexBuffer) || indexBuffer.isDestroyed()) {
-            var indexDatatype = (indices.BYTES_PER_ELEMENT === 2) ?  IndexDatatype.UNSIGNED_SHORT : IndexDatatype.UNSIGNED_INT;
-            indexBuffer = Buffer.createIndexBuffer({
-                context : context,
-                typedArray : surfaceTile.mesh.indices,
-                usage : BufferUsage.STATIC_DRAW,
-                indexDatatype : indexDatatype
-            });
-            indexBuffer.vertexArrayDestroyable = false;
-            indexBuffer.referenceCount = 1;
-            indexBuffers[context.id] = indexBuffer;
-            surfaceTile.mesh.indices.indexBuffers = indexBuffers;
-        } else {
-            ++indexBuffer.referenceCount;
-        }
+        var indexDatatype = (indices.BYTES_PER_ELEMENT === 2) ?  IndexDatatype.UNSIGNED_SHORT : IndexDatatype.UNSIGNED_INT;
+        var indexBuffer = Buffer.createIndexBuffer({
+            context : context,
+            typedArray : mesh.indices,
+            usage : BufferUsage.STATIC_DRAW,
+            indexDatatype : indexDatatype
+        });
 
-        var oldVertexArray = surfaceTile.vertexArray;
-        surfaceTile.vertexArray = new VertexArray({
+        surfaceTile.fillVertexArray = new VertexArray({
             context : context,
             attributes : attributes,
             indexBuffer : indexBuffer
@@ -1759,22 +1822,9 @@ define([
             tileImagery.processStateMachine(tile, frameState, true);
         }
 
-        var oldRenderable = tile.renderable;
-        tile.renderable = true;
-
         var stop = performance.now();
 
-        console.log('fill: ' + (stop - start));
-
-        var oldRenderableTile = surfaceTile.renderableTile;
-        surfaceTile.renderableTile = undefined;
-
-        addDrawCommandsForTile(tileProvider, tile, frameState, undefined);
-
-        surfaceTile.renderableTile = oldRenderableTile;
-        tile.renderable = oldRenderable;
-        surfaceTile.vertexArray = oldVertexArray; // TODO: free it
-        surfaceTile.mesh = oldMesh;
+        //console.log('fill: ' + (stop - start));
     }
 
     var otherPassesInitialColor = new Cartesian4(0.0, 0.0, 0.0, 0.0);
@@ -1789,11 +1839,7 @@ define([
                 addDrawCommandsForTile(tileProvider, surfaceTile.renderableTile, frameState, surfaceTile.renderableTileSubset);
                 return;
             } else if (missingTileStrategy === MissingTileStrategy.CREATE_FILL_TILE) {
-                //if (tile.level===11&&tile.x===3037&&tile.y===705) {
-                    createFillTile(tileProvider, tile, frameState);
-                //}
-                return;
-                // TODO: get ancestor imagery if necessary
+                createFillTile(tileProvider, tile, frameState);
             }
         }
 
@@ -1832,8 +1878,9 @@ define([
             --maxTextures;
         }
 
-        var rtc = surfaceTile.mesh.center;
-        var encoding = surfaceTile.mesh.encoding;
+        var mesh = surfaceTile.vertexArray ? surfaceTile.mesh : surfaceTile.fillMesh;
+        var rtc = mesh.center;
+        var encoding = mesh.encoding;
 
         // Not used in 3D.
         var tileRectangle = tileRectangleScratch;
@@ -1937,17 +1984,14 @@ define([
             ++tileProvider._usedDrawCommands;
 
             if (tile === tileProvider._debug.boundingSphereTile) {
-                //var obb = surfaceTile.orientedBoundingBox;
-                var obb = new OrientedBoundingBox(
-                    new Cartesian3(296241.1872327779, 5633328.627100673, 2981274.607864871),
-                    Matrix3.unpack([-2161.393502911665, 113.66171224228782, 0, -60.148176278433304, -1143.778981114305, 2152.7355430938214, 82.359194412753, 1566.144167609453, 834.4157931580422], 0));
+                var obb = surfaceTile.orientedBoundingBox;
                 // If a debug primitive already exists for this tile, it will not be
                 // re-created, to avoid allocation every frame. If it were possible
                 // to have more than one selected tile, this would have to change.
                 if (defined(obb)) {
                     getDebugOrientedBoundingBox(obb, Color.RED).update(frameState);
-                } else if (defined(surfaceTile.mesh) && defined(surfaceTile.mesh.boundingSphere3D)) {
-                    getDebugBoundingSphere(surfaceTile.mesh.boundingSphere3D, Color.RED).update(frameState);
+                } else if (defined(mesh) && defined(mesh.boundingSphere3D)) {
+                    getDebugBoundingSphere(mesh.boundingSphere3D, Color.RED).update(frameState);
                 }
             }
 
@@ -1958,7 +2002,7 @@ define([
             uniformMapProperties.lightingFadeDistance.y = tileProvider.lightingFadeInDistance;
             uniformMapProperties.zoomedOutOceanSpecularIntensity = tileProvider.zoomedOutOceanSpecularIntensity;
 
-            uniformMapProperties.center3D = surfaceTile.mesh.center;
+            uniformMapProperties.center3D = mesh.center;
             Cartesian3.clone(rtc, uniformMapProperties.rtc);
 
             Cartesian4.clone(tileRectangle, uniformMapProperties.tileRectangle);
@@ -2078,7 +2122,7 @@ define([
             command.receiveShadows = receiveShadows;
             command.renderState = renderState;
             command.primitiveType = PrimitiveType.TRIANGLES;
-            command.vertexArray = surfaceTile.vertexArray;
+            command.vertexArray = surfaceTile.vertexArray || surfaceTile.fillVertexArray;
             command.uniformMap = uniformMap;
             command.pass = Pass.GLOBE;
 
@@ -2099,10 +2143,10 @@ define([
                 Cartesian3.fromElements(boundingVolume.center.z, boundingVolume.center.x, boundingVolume.center.y, boundingVolume.center);
 
                 if (frameState.mode === SceneMode.MORPHING) {
-                    boundingVolume = BoundingSphere.union(surfaceTile.mesh.boundingSphere3D, boundingVolume, boundingVolume);
+                    boundingVolume = BoundingSphere.union(mesh.boundingSphere3D, boundingVolume, boundingVolume);
                 }
             } else {
-                command.boundingVolume = BoundingSphere.clone(surfaceTile.mesh.boundingSphere3D, boundingVolume);
+                command.boundingVolume = BoundingSphere.clone(mesh.boundingSphere3D, boundingVolume);
                 command.orientedBoundingBox = OrientedBoundingBox.clone(surfaceTile.orientedBoundingBox, orientedBoundingBox);
             }
 

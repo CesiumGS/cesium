@@ -17,7 +17,8 @@ define([
         './QuadtreeTile',
         './QuadtreeTileLoadState',
         './SceneMode',
-        './TileReplacementQueue'
+        './TileReplacementQueue',
+        './TileSelectionResult'
     ], function(
         Cartesian3,
         Cartographic,
@@ -37,7 +38,8 @@ define([
         QuadtreeTile,
         QuadtreeTileLoadState,
         SceneMode,
-        TileReplacementQueue) {
+        TileReplacementQueue,
+        TileSelectionResult) {
     'use strict';
 
     /**
@@ -718,6 +720,9 @@ define([
                 }
                 addTileToRenderList(primitive, tile, nearestRenderableTile);
 
+                tile._lastSelectionResultFrame = frameState.frameNumber;
+                tile._lastSelectionResult = TileSelectionResult.RENDERED;
+
                 traversalDetails.anyAreRenderable = tile.renderable;
                 traversalDetails.allAreRenderable = tile.renderable;
                 traversalDetails.anyWereRenderedLastFrame = tile._frameRendered === primitive._lastSelectionFrameNumber;
@@ -725,7 +730,7 @@ define([
                 return;
             }
 
-            // 4. Otherwise, we can't render this tile (or its fill) because it would cause detail to disappear
+            // 4. Otherwise, we can't render this tile (or its fill) because doing so would cause detail to disappear
             //    that was visible last frame. Instead, keep rendering any still-visible descendants that were rendered
             //    last frame and render fills for newly-visible descendants. E.g. if we were rendering level 15 last
             //    frame but this frame we want level 14 and the closest renderable level <= 14 is 0, rendering level
@@ -747,6 +752,10 @@ define([
 
             if (allAreUpsampled) {
                 reportTileAction(frameState, tile, 'all upsampled');
+
+                tile._lastSelectionResultFrame = frameState.frameNumber;
+                tile._lastSelectionResult = TileSelectionResult.RENDERED;
+
                 // No point in rendering the children because they're all upsampled.  Render this tile instead.
                 addTileToRenderList(primitive, tile, nearestRenderableTile);
 
@@ -769,6 +778,9 @@ define([
             // SSE is not good enough, so refine.
             reportTileAction(frameState, tile, 'refine');
 
+            tile._lastSelectionResultFrame = frameState.frameNumber;
+            tile._lastSelectionResult = TileSelectionResult.REFINED;
+
             var firstRenderedDescendantIndex = primitive._tilesToRender.length;
             var loadIndexLow = primitive._tileLoadQueueLow.length;
             var loadIndexMedium = primitive._tileLoadQueueMedium.length;
@@ -789,9 +801,21 @@ define([
                 if (!allAreRenderable && !anyWereRenderedLastFrame) {
                     // Some of our descendants aren't ready to render yet, and none were rendered last frame,
                     // so kick them all out of the render list and render this tile instead. Continue to load them though!
+
+                    var renderList = primitive._tilesToRender;
+                    for (var i = firstRenderedDescendantIndex; i < renderList.length; ++i) {
+                        var workTile = renderList[i];
+                        while (workTile !== undefined && workTile._lastSelectionResult !== TileSelectionResult.KICKED && workTile !== tile) {
+                            workTile._lastSelectionResult = TileSelectionResult.KICKED;
+                            workTile = workTile.parent;
+                        }
+                    }
+
                     primitive._tilesToRender.length = firstRenderedDescendantIndex;
                     primitive._nearestRenderableTiles.length = firstRenderedDescendantIndex;
                     addTileToRenderList(primitive, tile, nearestRenderableTile);
+
+                    tile._lastSelectionResult = TileSelectionResult.RENDERED;
 
                     // EXCEPT if we're waiting heaps of descendants, the above will take too long. So in that case,
                     // load this tile INSTEAD of loading any of the descendants, and tell the up-level we're only waiting
@@ -821,6 +845,9 @@ define([
         }
 
         reportTileAction(frameState, tile, 'can\'t refine');
+
+        tile._lastSelectionResultFrame = frameState.frameNumber;
+        tile._lastSelectionResult = TileSelectionResult.RENDERED;
 
         // We'd like to refine but can't because we have no availability data for this tile's children,
         // so we have no idea if refinining would involve a load or an upsample. We'll have to finish
@@ -885,6 +912,8 @@ define([
         }
 
         reportTileAction(frameState, tile, 'culled');
+        tile._lastSelectionResultFrame = frameState.frameNumber;
+        tile._lastSelectionResult = TileSelectionResult.CULLED;
         ++primitive._debug.tilesCulled;
         primitive._tileReplacementQueue.markTileRendered(tile);
 

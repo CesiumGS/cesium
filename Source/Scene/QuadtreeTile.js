@@ -3,13 +3,15 @@ define([
         '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/Rectangle',
-        './QuadtreeTileLoadState'
+        './QuadtreeTileLoadState',
+        './TileSelectionResult'
     ], function(
         defined,
         defineProperties,
         DeveloperError,
         Rectangle,
-        QuadtreeTileLoadState) {
+        QuadtreeTileLoadState,
+        TileSelectionResult) {
     'use strict';
 
     /**
@@ -72,6 +74,8 @@ define([
         this._frameUpdated = undefined;
         this._frameRendered = undefined;
         this._frameVisited = undefined;
+        this._lastSelectionResult = TileSelectionResult.CULLED;
+        this._lastSelectionResultFrame = undefined;
         this._loadedCallbacks = {};
 
         /**

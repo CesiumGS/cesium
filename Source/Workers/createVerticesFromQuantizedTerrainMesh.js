@@ -136,16 +136,16 @@ define([
             Cartesian3.maximumByComponent(cartesian3Scratch, maximum, maximum);
         }
 
-        var westIndicesSouthToNorth = parameters.westIndices.sort(function(a, b) {
+        var westIndicesSouthToNorth = parameters.westIndices.slice().sort(function(a, b) {
             return uvs[a].y - uvs[b].y;
         });
-        var eastIndicesNorthToSouth = parameters.eastIndices.sort(function(a, b) {
+        var eastIndicesNorthToSouth = parameters.eastIndices.slice().sort(function(a, b) {
             return uvs[b].y - uvs[a].y;
         });
-        var southIndicesEastToWest = parameters.southIndices.sort(function(a, b) {
+        var southIndicesEastToWest = parameters.southIndices.slice().sort(function(a, b) {
             return uvs[b].x - uvs[a].x;
         });
-        var northIndicesWestToEast = parameters.northIndices.sort(function(a, b) {
+        var northIndicesWestToEast = parameters.northIndices.slice().sort(function(a, b) {
             return uvs[a].x - uvs[b].x;
         });
 

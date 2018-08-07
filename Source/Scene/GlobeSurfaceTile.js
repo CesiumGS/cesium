@@ -98,7 +98,9 @@ define([
 
         this.terrainState = TerrainState.UNLOADED;
         this.mesh = undefined;
+        this.fillMesh = undefined;
         this.vertexArray = undefined;
+        this.fillVertexArray = undefined;
 
         // TODO: probably better to have a bounding sphere for 2D rather than one for picking.
         this.pickBoundingSphere = new BoundingSphere();
@@ -180,7 +182,7 @@ define([
     var scratchResult = new Cartesian3();
 
     GlobeSurfaceTile.prototype.pick = function(ray, mode, projection, cullBackFaces, result) {
-        var mesh = this.mesh;
+        var mesh = this.mesh || this.fillMesh;
         if (!defined(mesh)) {
             return undefined;
         }
@@ -221,25 +223,10 @@ define([
 
         this.terrainState = TerrainState.UNLOADED;
         this.mesh = undefined;
-
-        if (defined(this.vertexArray)) {
-            var indexBuffer = this.vertexArray.indexBuffer;
-
-            this.vertexArray.destroy();
-            this.vertexArray = undefined;
-
-            if (!indexBuffer.isDestroyed() && defined(indexBuffer.referenceCount)) {
-                --indexBuffer.referenceCount;
-                if (indexBuffer.referenceCount === 0) {
-                    indexBuffer.destroy();
-                }
-            }
-        }
-
-        var i, len;
+        this.fillMesh = undefined;
 
         var imageryList = this.imagery;
-        for (i = 0, len = imageryList.length; i < len; ++i) {
+        for (var i = 0, len = imageryList.length; i < len; ++i) {
             imageryList[i].freeResources();
         }
         this.imagery.length = 0;
@@ -263,6 +250,11 @@ define([
             }
         }
 
+        if (defined(this.fillVertexArray)) {
+            this.fillVertexArray.destroy();
+            this.fillVertexArray = undefined;
+        }
+
         if (defined(this.wireframeVertexArray)) {
             indexBuffer = this.wireframeVertexArray.indexBuffer;
 
@@ -276,22 +268,6 @@ define([
             }
         }
     };
-
-    // var renderedJson = [{"level":18,"x":87944,"y":76105},{"level":18,"x":87945,"y":76105},{"level":19,"x":175890,"y":152209},{"level":19,"x":175891,"y":152209},{"level":19,"x":175892,"y":152210},{"level":19,"x":175892,"y":152208},{"level":18,"x":87947,"y":76104},{"level":18,"x":87948,"y":76103},{"level":18,"x":87949,"y":76102},{"level":17,"x":43975,"y":38051},{"level":17,"x":43975,"y":38050},{"level":16,"x":21991,"y":19026},{"level":16,"x":21991,"y":19027},{"level":16,"x":21989,"y":19025},{"level":17,"x":43977,"y":38049},{"level":16,"x":21989,"y":19024},{"level":16,"x":21990,"y":19025},{"level":16,"x":21991,"y":19025},{"level":16,"x":21990,"y":19024},{"level":16,"x":21991,"y":19024},{"level":16,"x":21991,"y":19028},{"level":16,"x":21991,"y":19029},{"level":16,"x":21991,"y":19030},{"level":16,"x":21992,"y":19026},{"level":16,"x":21992,"y":19027},{"level":16,"x":21993,"y":19026},{"level":16,"x":21993,"y":19027},{"level":15,"x":10997,"y":9513},{"level":15,"x":10996,"y":9512},{"level":15,"x":10997,"y":9512},{"level":16,"x":21992,"y":19028},{"level":16,"x":21992,"y":19029},{"level":16,"x":21993,"y":19028},{"level":16,"x":21993,"y":19029},{"level":15,"x":10996,"y":9515},{"level":15,"x":10997,"y":9514},{"level":15,"x":10997,"y":9515},{"level":15,"x":10998,"y":9513},{"level":15,"x":10999,"y":9513},{"level":15,"x":10998,"y":9512},{"level":15,"x":10999,"y":9512},{"level":15,"x":10998,"y":9514},{"level":15,"x":10998,"y":9515},{"level":15,"x":10999,"y":9514},{"level":15,"x":10999,"y":9515},{"level":15,"x":10998,"y":9516},{"level":15,"x":10999,"y":9516},{"level":14,"x":5500,"y":4756},{"level":14,"x":5500,"y":4757},{"level":14,"x":5501,"y":4756},{"level":14,"x":5501,"y":4757},{"level":14,"x":5500,"y":4758},{"level":14,"x":5501,"y":4758},{"level":14,"x":5501,"y":4759},{"level":14,"x":5502,"y":4756},{"level":14,"x":5502,"y":4757},{"level":14,"x":5503,"y":4756},{"level":14,"x":5503,"y":4757},{"level":14,"x":5502,"y":4758},{"level":14,"x":5502,"y":4759},{"level":14,"x":5503,"y":4758},{"level":14,"x":5503,"y":4759},{"level":16,"x":21991,"y":19023},{"level":16,"x":21993,"y":19023},{"level":16,"x":21993,"y":19022},{"level":15,"x":10997,"y":9511},{"level":15,"x":10998,"y":9511},{"level":15,"x":10999,"y":9511},{"level":15,"x":10998,"y":9510},{"level":15,"x":10999,"y":9510},{"level":14,"x":5500,"y":4755},{"level":14,"x":5501,"y":4755},{"level":14,"x":5500,"y":4754},{"level":14,"x":5501,"y":4754},{"level":14,"x":5502,"y":4755},{"level":14,"x":5503,"y":4755},{"level":14,"x":5502,"y":4754},{"level":14,"x":5503,"y":4754},{"level":14,"x":5503,"y":4753},{"level":13,"x":2751,"y":2380},{"level":13,"x":2752,"y":2378},{"level":13,"x":2752,"y":2379},{"level":13,"x":2753,"y":2378},{"level":13,"x":2753,"y":2379},{"level":13,"x":2754,"y":2378},{"level":13,"x":2754,"y":2379},{"level":13,"x":2755,"y":2378},{"level":13,"x":2755,"y":2379},{"level":13,"x":2752,"y":2377},{"level":13,"x":2753,"y":2377},{"level":13,"x":2752,"y":2376},{"level":13,"x":2753,"y":2376},{"level":13,"x":2754,"y":2377},{"level":13,"x":2755,"y":2377},{"level":13,"x":2754,"y":2376},{"level":13,"x":2752,"y":2380},{"level":13,"x":2753,"y":2380},{"level":13,"x":2753,"y":2381},{"level":12,"x":1377,"y":1190},{"level":12,"x":1377,"y":1191},{"level":12,"x":1378,"y":1189},{"level":12,"x":1379,"y":1189},{"level":12,"x":1378,"y":1188},{"level":12,"x":1379,"y":1188},{"level":12,"x":1378,"y":1190},{"level":12,"x":1378,"y":1191},{"level":12,"x":1379,"y":1190},{"level":11,"x":690,"y":594},{"level":11,"x":690,"y":595},{"level":11,"x":691,"y":594},{"level":11,"x":691,"y":595},{"level":12,"x":1377,"y":1187},{"level":12,"x":1379,"y":1187},{"level":12,"x":1379,"y":1186},{"level":11,"x":690,"y":593},{"level":11,"x":691,"y":593},{"level":11,"x":691,"y":592},{"level":11,"x":689,"y":596},{"level":11,"x":690,"y":596},{"level":11,"x":691,"y":596},{"level":11,"x":691,"y":597},{"level":10,"x":346,"y":297},{"level":10,"x":347,"y":297},{"level":10,"x":346,"y":296},{"level":10,"x":347,"y":296},{"level":10,"x":346,"y":298},{"level":10,"x":346,"y":299},{"level":10,"x":347,"y":298},{"level":10,"x":347,"y":299},{"level":9,"x":174,"y":148},{"level":9,"x":174,"y":149},{"level":9,"x":175,"y":148},{"level":9,"x":175,"y":149},{"level":9,"x":174,"y":150},{"level":9,"x":175,"y":150},{"level":10,"x":346,"y":295},{"level":10,"x":347,"y":295},{"level":9,"x":174,"y":147},{"level":9,"x":175,"y":147}];
-    // var expectedTiles = {};
-    // var unexpectedTiles = {};
-
-    // function tileID(level, x, y) {
-    //     return `L${level}X${x}Y${y}`;
-    // }
-    // renderedJson.forEach(tile => {
-    //     while (tile.level >= 0) {
-    //         expectedTiles[tileID(tile.level, tile.x, tile.y)] = true;
-    //         --tile.level;
-    //         tile.x >>= 1;
-    //         tile.y >>= 1;
-    //     }
-    // });
 
     GlobeSurfaceTile.processStateMachine = function(tile, frameState, terrainProvider, imageryLayerCollection, vertexArraysToDestroy, terrainOnly) {
         var surfaceTile = tile.data;
@@ -338,14 +314,6 @@ define([
         if (terrainOnly || (tile.level !== 0 && tile.data.boundingVolumeSourceTile !== tile)) {
             return;
         }
-
-        // var id = tileID(tile.level, tile.x, tile.y);
-        // if (!expectedTiles[id]) {
-        //     if (!unexpectedTiles[id]) {
-        //         unexpectedTiles[id] = true;
-        //         console.log('Unexpected: ' + id);
-        //     }
-        // }
 
         // The terrain is renderable as soon as we have a valid vertex array.
         var isRenderable = defined(surfaceTile.vertexArray);
@@ -486,9 +454,6 @@ define([
             }
         }
     }
-
-    // var startTime;
-    // var stopTime;
 
     function processTerrainStateMachine(tile, frameState, terrainProvider, imageryLayerCollection, vertexArraysToDestroy) {
         var surfaceTile = tile.data;
