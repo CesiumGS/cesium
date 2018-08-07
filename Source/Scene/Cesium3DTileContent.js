@@ -57,7 +57,7 @@ define([
          * equals the number of groups of points as distinguished by the <code>BATCH_ID</code> feature table semantic.
          * </p>
          *
-         * @see {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/specification/TileFormats/PointCloud#batched-pointss}
+         * @see {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/specification/TileFormats/PointCloud#batched-points}
          *
          * @memberof Cesium3DTileContent.prototype
          *
