@@ -2414,7 +2414,7 @@ define([
     function pickMap2D(camera, windowPosition, projection, result) {
         var ray = camera.getPickRay(windowPosition, pickEllipsoid2DRay);
         var position = ray.origin;
-        position.z = 0.0;
+        position = Cartesian3.fromElements(position.y, position.z, 0.0, position);
         var cart = projection.unproject(position);
 
         if (cart.latitude < -CesiumMath.PI_OVER_TWO || cart.latitude > CesiumMath.PI_OVER_TWO) {
