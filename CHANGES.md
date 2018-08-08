@@ -4,7 +4,8 @@ Change Log
 ### 1.49 - 2018-09-03
 
 ##### Breaking Changes :mega:
-* Removed `ClippingPlaneCollection.clone`
+* Removed `ClippingPlaneCollection.clone` [#6872](https://github.com/AnalyticalGraphicsInc/cesium/pull/6872)
+* Changed `Globe.pick` to return a position in ECEF coordinates regardless of the current scene mode.  This will only effect you if you were working around a bug to make `Globe.pick` work in 2D and Columbus View.  Use `Globe.pickWorldCoordinates` to get the position in world coordinates that correlate to the current scene mode. [#6859](https://github.com/AnalyticalGraphicsInc/cesium/pull/6859)
 
 ##### Additions :tada:
 * Added `ClippingPlaneCollection.planeAdded` and `ClippingPlaneCollection.planeRemoved` events.  `planeAdded` is raised when a new plane is added to the collection and `planeRemoved` is raised when a plane is removed. [#6875](https://github.com/AnalyticalGraphicsInc/cesium/pull/6875)
@@ -13,6 +14,9 @@ Change Log
 ##### Fixes :wrench:
 * The Geocoder widget now takes terrain altitude into account when calculating its final destination.
 * The Viewer widget now takes terrain altitude into account when zooming or flying to imagery layers.
+* Fixed `getPickRay` in 2D. [#2480](https://github.com/AnalyticalGraphicsInc/cesium/issues/2480)
+* Fixed `Globe.pick` for 2D and Columbus View [#6859](https://github.com/AnalyticalGraphicsInc/cesium/pull/6859)
+* Fixed imagery layer feature picking in 2D and Columbus view [#6859](https://github.com/AnalyticalGraphicsInc/cesium/pull/6859)
 * Fixed bug that caused a new `ClippingPlaneCollection` to be created every frame when used with a model entity [#6872](https://github.com/AnalyticalGraphicsInc/cesium/pull/6872)
 * Fixed crash when rendering translucent objects when all shadow maps in the scene set `fromLightSource` to false. [#6883](https://github.com/AnalyticalGraphicsInc/cesium/pull/6883)
 
