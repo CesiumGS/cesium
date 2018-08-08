@@ -42,6 +42,7 @@ define([
     /**
      * A collection of functions for approximating terrain height
      * @private
+     * @exports ApproximateTerrainHeights
      */
     var ApproximateTerrainHeights = {};
 

@@ -11,6 +11,7 @@ define([
      * outside of the frustum's 6 planes (OUTSIDE).
      *
      * @exports Intersect
+     * @namespace
      */
     var Intersect = {
         /**
