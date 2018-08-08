@@ -1,4 +1,4 @@
-fdefineSuite([
+defineSuite([
         'Scene/computeFlyToLocationForRectangle',
         'Core/EllipsoidTerrainProvider',
         'Core/Rectangle',
