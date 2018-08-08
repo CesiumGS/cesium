@@ -1107,6 +1107,9 @@ define([
             u_initialColor : function() {
                 return this.properties.initialColor;
             },
+            u_isFill : function() {
+                return this.properties.isFill;
+            },
             u_zoomedOutOceanSpecularIntensity : function() {
                 return this.properties.zoomedOutOceanSpecularIntensity;
             },
@@ -1218,6 +1221,7 @@ define([
             // derived commands that combine another uniform map with this one.
             properties : {
                 initialColor : new Cartesian4(0.0, 0.0, 0.5, 1.0),
+                isFill : false,
                 zoomedOutOceanSpecularIntensity : 0.5,
                 oceanNormalMap : undefined,
                 lightingFadeDistance : new Cartesian2(6500000.0, 9000000.0),
@@ -1997,6 +2001,7 @@ define([
 
             var uniformMapProperties = uniformMap.properties;
             Cartesian4.clone(initialColor, uniformMapProperties.initialColor);
+            uniformMapProperties.isFill = surfaceTile.vertexArray === undefined;
             uniformMapProperties.oceanNormalMap = oceanNormalMap;
             uniformMapProperties.lightingFadeDistance.x = tileProvider.lightingFadeOutDistance;
             uniformMapProperties.lightingFadeDistance.y = tileProvider.lightingFadeInDistance;

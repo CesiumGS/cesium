@@ -817,7 +817,7 @@ define([
 
                     tile._lastSelectionResult = TileSelectionResult.RENDERED;
 
-                    // EXCEPT if we're waiting heaps of descendants, the above will take too long. So in that case,
+                    // EXCEPT if we're waiting on heaps of descendants, the above will take too long. So in that case,
                     // load this tile INSTEAD of loading any of the descendants, and tell the up-level we're only waiting
                     // on this tile.
                     var wasRenderedLastFrame = tile._frameRendered === primitive._lastSelectionFrameNumber;

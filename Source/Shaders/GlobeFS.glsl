@@ -1,5 +1,6 @@
 //#define SHOW_TILE_BOUNDARIES
 uniform vec4 u_initialColor;
+uniform bool u_isFill;
 
 #if TEXTURE_UNITS > 0
 uniform sampler2D u_dayTextures[TEXTURE_UNITS];
@@ -248,6 +249,11 @@ void main()
         finalColor = clippingPlanesEdgeColor;
     }
 #endif
+
+    if (u_isFill)
+    {
+        finalColor = vec4(mix(vec3(1.0, 0.0, 0.0), finalColor.rgb, 0.25), finalColor.a);
+    }
 
 #ifdef FOG
     const float fExposure = 2.0;
