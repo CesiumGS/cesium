@@ -14,6 +14,7 @@ Change Log
 * The Viewer widget now takes terrain altitude into account when zooming or flying to imagery layers.
 * Fixed bug that caused a new `ClippingPlaneCollection` to be created every frame when used with a model entity [#6872](https://github.com/AnalyticalGraphicsInc/cesium/pull/6872)
 * Fixed crash when rendering translucent objects when all shadow maps in the scene set `fromLightSource` to false. [#6883](https://github.com/AnalyticalGraphicsInc/cesium/pull/6883)
+* Fixed night shading in 2D. [#4122](https://github.com/AnalyticalGraphicsInc/cesium/issues/4122)
 
 ### 1.48 - 2018-08-01
 
