@@ -11,6 +11,7 @@ Change Log
 
 ##### Fixes :wrench:
 * The Geocoder widget now takes terrain altitude into account when calculating its final destination.
+* The Viewer widget now takes terrain altitude into account when zooming or flying to imagery layers.
 * Fixed bug that caused a new `ClippingPlaneCollection` to be created every frame when used with a model entity [#6872](https://github.com/AnalyticalGraphicsInc/cesium/pull/6872)
 
 ### 1.48 - 2018-08-01

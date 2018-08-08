@@ -11,7 +11,7 @@ define([
         '../../Core/Matrix4',
         '../../Core/Rectangle',
         '../../Core/sampleTerrainMostDetailed',
-        '../../Scene/SceneMode',
+        '../../Scene/computeFlyToLocationForRectangle',
         '../../ThirdParty/knockout',
         '../../ThirdParty/when',
         '../createCommand',
@@ -29,7 +29,7 @@ define([
         Matrix4,
         Rectangle,
         sampleTerrainMostDetailed,
-        SceneMode,
+        computeFlyToLocationForRectangle,
         knockout,
         when,
         createCommand,
@@ -341,42 +341,6 @@ define([
         adjustSuggestionsScroll(viewModel, next);
     }
 
-    function computeFlyToLocationForRectangle(rectangle, terrainProvider, camera, mapProjection, sceneMode) {
-        var availability = defined(terrainProvider) ? terrainProvider.availability : undefined;
-
-        if (!defined(availability)) {
-            return when.resolve(rectangle);
-        }
-
-        var cartographics = [
-            Rectangle.center(rectangle),
-            Rectangle.southeast(rectangle),
-            Rectangle.southwest(rectangle),
-            Rectangle.northeast(rectangle),
-            Rectangle.northwest(rectangle)
-        ];
-
-        return sampleTerrainMostDetailed(terrainProvider, cartographics)
-            .then(function(positionsOnTerrain) {
-                var maxHeight = positionsOnTerrain.reduce(function(currentMax, item) {
-                    return Math.max(item.height, currentMax);
-                }, -Number.MAX_VALUE);
-
-                var finalPosition;
-
-                var ellipsoid = mapProjection.ellipsoid;
-                var tmp = camera.getRectangleCameraCoordinates(rectangle);
-                if (sceneMode === SceneMode.SCENE3D) {
-                    finalPosition = ellipsoid.cartesianToCartographic(tmp);
-                } else {
-                    finalPosition = mapProjection.unproject(tmp, tmp);
-                }
-
-                finalPosition.height += maxHeight;
-                return finalPosition;
-            });
-    }
-
     function computeFlyToLocationForCartographic(cartographic, terrainProvider) {
         var availability = defined(terrainProvider) ? terrainProvider.availability : undefined;
 
@@ -410,7 +374,7 @@ define([
                 // destination is now a Cartographic
                 destination = Rectangle.center(destination);
             } else {
-                promise = computeFlyToLocationForRectangle(destination, terrainProvider, camera, mapProjection, scene.mode);
+                promise = computeFlyToLocationForRectangle(destination, scene);
             }
         } else { // destination is a Cartesian3
             destination = ellipsoid.cartesianToCartographic(destination);
