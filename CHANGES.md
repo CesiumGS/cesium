@@ -1,6 +1,11 @@
 Change Log
 ==========
 
+### 1.49 - 2018-09-03
+
+#### Fixes :wrench:
+* Fixed `getPickRay` in 2D. [#2480](https://github.com/AnalyticalGraphicsInc/cesium/issues/2480)
+
 ### 1.48 - 2018-08-01
 
 ##### Additions :tada:
