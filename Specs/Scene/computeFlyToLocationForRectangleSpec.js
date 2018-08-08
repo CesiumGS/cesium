@@ -1,4 +1,4 @@
-defineSuite([
+fdefineSuite([
         'Scene/computeFlyToLocationForRectangle',
         'Core/EllipsoidTerrainProvider',
         'Core/Rectangle',
@@ -64,11 +64,10 @@ defineSuite([
         var expectedResult;
         if (sceneMode === SceneMode.SCENE3D) {
             expectedResult = scene.mapProjection.ellipsoid.cartesianToCartographic(scene.camera.getRectangleCameraCoordinates(rectangle));
-            expectedResult.height += maxHeight;
         } else {
             expectedResult = scene.mapProjection.unproject(scene.camera.getRectangleCameraCoordinates(rectangle));
-            expectedResult.height += maxHeight;
         }
+        expectedResult.height += maxHeight;
 
         return computeFlyToLocationForRectangle(rectangle, scene)
             .then(function(result) {
@@ -78,15 +77,29 @@ defineSuite([
     }
 
     it('samples terrain and returns expected result in 3D', function() {
-        return sampleTest(SceneMode.SCENE2D);
-    });
-
-    it('samples terrain and returns expected result in 2D', function() {
         return sampleTest(SceneMode.SCENE3D);
     });
 
     it('samples terrain and returns expected result in CV', function() {
         return sampleTest(SceneMode.COLUMBUS_VIEW);
+    });
+
+    it('returns original rectangle in 2D', function() {
+        var terrainProvider = new EllipsoidTerrainProvider();
+        terrainProvider.availability = {};
+
+        scene.globe = new Globe();
+        scene.terrainProvider = terrainProvider;
+        scene.mode = SceneMode.SCENE2D;
+
+        var rectangle = new Rectangle(0.2, 0.4, 0.6, 0.8);
+        spyOn(computeFlyToLocationForRectangle, '_sampleTerrainMostDetailed');
+
+        return computeFlyToLocationForRectangle(rectangle, scene)
+            .then(function(result) {
+                expect(result).toBe(rectangle);
+                expect(computeFlyToLocationForRectangle._sampleTerrainMostDetailed).not.toHaveBeenCalled();
+            });
     });
 
     it('returns original rectangle when terrain not available', function() {

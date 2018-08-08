@@ -26,7 +26,7 @@ define([
         var terrainProvider = scene.terrainProvider;
         var availability = defined(terrainProvider) ? terrainProvider.availability : undefined;
 
-        if (!defined(availability)) {
+        if (!defined(availability) || scene.mode === SceneMode.SCENE2D) {
             return when.resolve(rectangle);
         }
 
