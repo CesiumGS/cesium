@@ -53,7 +53,7 @@ canvas.parentNode.appendChild(lastFrame);
 
 var samplePosition = Cesium.Cartesian3.fromDegrees(-76.360485, 34.949670, 0);
 
-var tileset = new Cesium.Cesium3DTileset({ url: Cesium.IonResource.fromAssetId(3837) });
+var tileset = new Cesium.Cesium3DTileset({ url: Cesium.IonResource.fromAssetId(5743) });
 tileset.readyPromise.then(function(tileset) {
     scene.primitives.add(tileset);
     viewer.zoomTo(tileset, new Cesium.HeadingPitchRange(0.5, -0.2, tileset.boundingSphere.radius * 4.0));

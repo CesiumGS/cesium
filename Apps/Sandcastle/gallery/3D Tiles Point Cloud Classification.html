@@ -31,7 +31,7 @@ var viewer = new Cesium.Viewer('cesiumContainer');
 
 //Point Cloud by Prof. Peter Allen, Columbia University Robotics Lab. Scanning by Alejandro Troccoli and Matei Ciocarlie.
 var tileset = new Cesium.Cesium3DTileset({
-    url: Cesium.IonResource.fromAssetId(3838)
+    url: Cesium.IonResource.fromAssetId(5714)
 });
 viewer.scene.primitives.add(tileset);
 
@@ -39,7 +39,7 @@ viewer.scene.primitives.add(tileset);
 // For more details, see:
 //    https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/3d-tiles-next/TileFormats/Geometry
 var classificationTileset = new Cesium.Cesium3DTileset({
-    url: Cesium.IonResource.fromAssetId(3842),
+    url: '../../SampleData/Cesium3DTiles/Classification/PointCloud/tileset.json',
     classificationType: Cesium.ClassificationType.CESIUM_3D_TILE
 });
 viewer.scene.primitives.add(classificationTileset);

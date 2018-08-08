@@ -28,7 +28,7 @@ function startup(Cesium) {
     'use strict';
 //Sandcastle_Begin
 // A demo of interactive 3D Tiles styling
-// Styling language Documentation: https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/Styling
+// Styling language Documentation: https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/specification/Styling
 // Building data courtesy of NYC OpenData portal: http://www1.nyc.gov/site/doitt/initiatives/3d-building.page
 var viewer = new Cesium.Viewer('cesiumContainer', {
     terrainProvider: Cesium.createWorldTerrain()
@@ -46,7 +46,7 @@ viewer.scene.camera.setView({
 });
 
 // Load the NYC buildings tileset.
-var tileset = new Cesium.Cesium3DTileset({ url: Cesium.IonResource.fromAssetId(4693) });
+var tileset = new Cesium.Cesium3DTileset({ url: Cesium.IonResource.fromAssetId(5741) });
 viewer.scene.primitives.add(tileset);
 
 // Color buildings based on their height.

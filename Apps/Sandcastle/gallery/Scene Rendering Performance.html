@@ -105,7 +105,8 @@ function startup(Cesium) {
 // updates to the scene require it to reduce overall CPU usage.
 var viewer = new Cesium.Viewer('cesiumContainer', {
     requestRenderMode : true,
-    maximumRenderTimeChange : Infinity
+    maximumRenderTimeChange : Infinity,
+    terrainProvider: Cesium.createWorldTerrain()
 });
 
 var scene = viewer.scene;
@@ -146,7 +147,7 @@ function resetScene() {
 function loadTilesetScenario() {
     resetScene();
 
-    tileset = new Cesium.Cesium3DTileset({ url: Cesium.IonResource.fromAssetId(3836) });
+    tileset = new Cesium.Cesium3DTileset({ url: Cesium.IonResource.fromAssetId(5712) });
     viewer.scene.primitives.add(tileset);
     viewer.zoomTo(tileset);
 }
