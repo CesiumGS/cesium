@@ -14,6 +14,7 @@ Change Log
 * The Geocoder widget now takes terrain altitude into account when calculating its final destination.
 * The Viewer widget now takes terrain altitude into account when zooming or flying to imagery layers.
 * Fixed `getPickRay` in 2D. [#2480](https://github.com/AnalyticalGraphicsInc/cesium/issues/2480)
+* Fixed `Globe.pick` for 2D and Columbus View [#6859](https://github.com/AnalyticalGraphicsInc/cesium/pull/6859)
 * Fixed imagery layer feature picking in 2D and Columbus view [#6859](https://github.com/AnalyticalGraphicsInc/cesium/pull/6859)
 * Fixed bug that caused a new `ClippingPlaneCollection` to be created every frame when used with a model entity [#6872](https://github.com/AnalyticalGraphicsInc/cesium/pull/6872)
 * Fixed crash when rendering translucent objects when all shadow maps in the scene set `fromLightSource` to false. [#6883](https://github.com/AnalyticalGraphicsInc/cesium/pull/6883)
