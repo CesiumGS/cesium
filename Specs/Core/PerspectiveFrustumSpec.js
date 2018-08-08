@@ -180,6 +180,29 @@ defineSuite([
         expect(frustum.equals(frustum2)).toEqual(true);
     });
 
+    it('equals epsilon', function() {
+        var frustum2 = new PerspectiveFrustum();
+        frustum2.near = 1.0;
+        frustum2.far = 2.0;
+        frustum2.fov = (Math.PI) / 3.0;
+        frustum2.aspectRatio = 1.0;
+        expect(frustum.equalsEpsilon(frustum2, CesiumMath.EPSILON7)).toEqual(true);
+
+        var frustum3 = new PerspectiveFrustum();
+        frustum3.near = 1.01;
+        frustum3.far = 2.01;
+        frustum3.fov = ((Math.PI) / 3.0) + 0.01;
+        frustum3.aspectRatio = 1.01;
+        expect(frustum.equalsEpsilon(frustum3, CesiumMath.EPSILON1)).toEqual(true);
+
+        var frustum4 = new PerspectiveFrustum();
+        frustum4.near = 1.0;
+        frustum4.far = 2.0;
+        frustum4.fov = (Math.PI) / 3.0;
+        frustum4.aspectRatio = 1.1;
+        expect(frustum.equalsEpsilon(frustum4, CesiumMath.EPSILON2)).toEqual(false);
+    });
+
     it('equals undefined', function() {
         expect(frustum.equals()).toEqual(false);
     });

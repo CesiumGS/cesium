@@ -195,6 +195,39 @@ defineSuite([
         expect(frustum).toEqual(frustum2);
     });
 
+    it('equals epsilon', function() {
+        var frustum2 = new PerspectiveOffCenterFrustum();
+        frustum2.right = 1.0;
+        frustum2.left = -frustum.right;
+        frustum2.top = 1.0;
+        frustum2.bottom = -frustum.top;
+        frustum2.near = 1.0;
+        frustum2.far = 2.0;
+        expect(frustum.equalsEpsilon(frustum2, CesiumMath.EPSILON7)).toEqual(true);
+
+        var frustum3 = new PerspectiveOffCenterFrustum();
+        frustum3.right = 1.01;
+        frustum3.left = -frustum.right;
+        frustum3.top = 1.01;
+        frustum3.bottom = -frustum.top;
+        frustum3.near = 1.01;
+        frustum3.far = 1.99;
+        expect(frustum.equalsEpsilon(frustum3, CesiumMath.EPSILON1)).toEqual(true);
+
+        var frustum4 = new PerspectiveOffCenterFrustum();
+        frustum4.right = 1.1;
+        frustum4.left = -frustum.right;
+        frustum4.top = 1.0;
+        frustum4.bottom = -frustum.top;
+        frustum4.near = 1.0;
+        frustum4.far = 2.0;
+        expect(frustum.equalsEpsilon(frustum4, CesiumMath.EPSILON2)).toEqual(false);
+    });
+
+    it('equals undefined', function() {
+        expect(frustum.equals()).toEqual(false);
+    });
+
     it('throws with undefined frustum parameters', function() {
         var frustum = new PerspectiveOffCenterFrustum();
         expect(function() {

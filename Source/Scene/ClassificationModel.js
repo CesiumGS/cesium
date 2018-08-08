@@ -21,10 +21,13 @@ define([
         '../Core/RuntimeError',
         '../Core/Transforms',
         '../Core/WebGLConstants',
+        '../ThirdParty/GltfPipeline/addDefaults',
         '../ThirdParty/GltfPipeline/ForEach',
         '../ThirdParty/GltfPipeline/getAccessorByteStride',
         '../ThirdParty/GltfPipeline/numberOfComponentsForType',
         '../ThirdParty/GltfPipeline/parseBinaryGltf',
+        '../ThirdParty/GltfPipeline/processModelMaterialsCommon',
+        '../ThirdParty/GltfPipeline/processPbrMetallicRoughness',
         '../ThirdParty/when',
         './Axis',
         './ClassificationType',
@@ -56,10 +59,13 @@ define([
         RuntimeError,
         Transforms,
         WebGLConstants,
+        addDefaults,
         ForEach,
         getAccessorByteStride,
         numberOfComponentsForType,
         parseBinaryGltf,
+        processModelMaterialsCommon,
+        processPbrMetallicRoughness,
         when,
         Axis,
         ClassificationType,
@@ -124,7 +130,10 @@ define([
 
         if (gltf instanceof Uint8Array) {
             // Binary glTF
-            gltf = parseBinaryGltf(gltf);
+            gltf = parseBinaryGltf(gltf); // Updates to 2.0 and adds pipeline extras
+            addDefaults(gltf);
+            processModelMaterialsCommon(gltf);
+            processPbrMetallicRoughness(gltf);
         } else {
             throw new RuntimeError('Only binary glTF is supported as a classifier.');
         }

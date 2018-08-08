@@ -1492,7 +1492,8 @@ define([
                Cartesian3.equalsEpsilon(camera0.direction, camera1.direction, epsilon) &&
                Cartesian3.equalsEpsilon(camera0.up, camera1.up, epsilon) &&
                Cartesian3.equalsEpsilon(camera0.right, camera1.right, epsilon) &&
-               Matrix4.equalsEpsilon(camera0.transform, camera1.transform, epsilon);
+               Matrix4.equalsEpsilon(camera0.transform, camera1.transform, epsilon) &&
+               camera0.frustum.equalsEpsilon(camera1.frustum, epsilon);
     }
 
     function updateDerivedCommands(scene, command) {
@@ -1501,7 +1502,7 @@ define([
         var shadowsEnabled = frameState.shadowHints.shadowsEnabled;
         var shadowMaps = frameState.shadowHints.shadowMaps;
         var lightShadowMaps = frameState.shadowHints.lightShadowMaps;
-        var lightShadowsEnabled = shadowsEnabled && (lightShadowMaps.length > 0);
+        var lightShadowsEnabled = frameState.shadowHints.lightShadowsEnabled;
 
         // Update derived commands when any shadow maps become dirty
         var shadowsDirty = false;
@@ -1528,10 +1529,6 @@ define([
                 derivedCommands.logDepth = undefined;
             }
 
-            if (scene.frameState.passes.pick && !defined(command.pickId)) {
-                return;
-            }
-
             if (shadowsEnabled && (command.receiveShadows || command.castShadows)) {
                 derivedCommands.shadows = ShadowMap.createDerivedCommands(shadowMaps, lightShadowMaps, command, shadowsDirty, context, derivedCommands.shadows);
                 if (useLogDepth) {
@@ -1556,6 +1553,10 @@ define([
                 } else {
                     derivedCommands.oit = oit.createDerivedCommands(command, context, derivedCommands.oit);
                 }
+            }
+
+            if (scene.frameState.passes.pick && !defined(command.pickId)) {
+                return;
             }
 
             derivedCommands.depth = DerivedCommand.createDepthOnlyDerivedCommand(scene, command, context, derivedCommands.depth);
@@ -2086,10 +2087,7 @@ define([
             return;
         }
 
-        var shadowsEnabled = scene.frameState.shadowHints.shadowsEnabled;
-        var lightShadowsEnabled = shadowsEnabled && (scene.frameState.shadowHints.lightShadowMaps.length > 0);
-
-        if (lightShadowsEnabled && command.receiveShadows && defined(command.derivedCommands.shadows)) {
+        if (frameState.shadowHints.lightShadowsEnabled && command.receiveShadows && defined(command.derivedCommands.shadows)) {
             // If the command receives shadows, execute the derived shadows command.
             // Some commands, such as OIT derived commands, do not have derived shadow commands themselves
             // and instead shadowing is built-in. In this case execute the command regularly below.
@@ -2319,9 +2317,6 @@ define([
 
             if (clearGlobeDepth) {
                 clearDepth.execute(context, passState);
-                if (useDepthPlane) {
-                    depthPlane.execute(context, passState);
-                }
             }
 
             if (!environmentState.useInvertClassification || picking) {
@@ -2437,6 +2432,10 @@ define([
 
             if (length > 0 && context.stencilBuffer) {
                 scene._stencilClearCommand.execute(context, passState);
+            }
+
+            if (clearGlobeDepth && useDepthPlane) {
+                depthPlane.execute(context, passState);
             }
 
             us.updatePass(Pass.OPAQUE);
@@ -2943,6 +2942,8 @@ define([
             frameState.shadowHints.shadowsEnabled = shadowsEnabled;
         }
 
+        frameState.shadowHints.lightShadowsEnabled = false;
+
         if (!shadowsEnabled) {
             return;
         }
@@ -2967,6 +2968,7 @@ define([
 
             if (shadowMap.fromLightSource) {
                 frameState.shadowHints.lightShadowMaps.push(shadowMap);
+                frameState.shadowHints.lightShadowsEnabled = true;
             }
 
             if (shadowMap.dirty) {
@@ -3177,13 +3179,17 @@ define([
 
     function checkForCameraUpdates(scene) {
         var camera = scene._camera;
-        if (!cameraEqual(camera, scene._cameraClone, CesiumMath.EPSILON15)) {
+        var cameraClone = scene._cameraClone;
+
+        scene._frustumChanged = !camera.frustum.equals(cameraClone.frustum);
+
+        if (!cameraEqual(camera, cameraClone, CesiumMath.EPSILON15)) {
             if (!scene._cameraStartFired) {
                 camera.moveStart.raiseEvent();
                 scene._cameraStartFired = true;
             }
             scene._cameraMovedTime = getTimestamp();
-            Camera.clone(camera, scene._cameraClone);
+            Camera.clone(camera, cameraClone);
 
             return true;
         }
@@ -3315,10 +3321,8 @@ define([
         tryAndCatchError(this, time, update);
         this._postUpdate.raiseEvent(this, time);
 
-        this._frustumChanged = !this._camera.frustum.equals(this._cameraClone.frustum);
-
         var cameraChanged = checkForCameraUpdates(this);
-        var shouldRender = !this.requestRenderMode || this._renderRequested || cameraChanged || this._frustumChanged || this._logDepthBufferDirty || (this.mode === SceneMode.MORPHING);
+        var shouldRender = !this.requestRenderMode || this._renderRequested || cameraChanged || this._logDepthBufferDirty || (this.mode === SceneMode.MORPHING);
         if (!shouldRender && defined(this.maximumRenderTimeChange) && defined(this._lastRenderTime)) {
             var difference = Math.abs(JulianDate.secondsDifference(this._lastRenderTime, time));
             shouldRender = shouldRender || difference > this.maximumRenderTimeChange;
