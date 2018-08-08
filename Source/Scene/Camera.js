@@ -2536,7 +2536,7 @@ define([
 
         Cartesian3.clone(camera.directionWC, result.direction);
 
-        if (camera._mode === SceneMode.COLUMBUS_VIEW) {
+        if (camera._mode === SceneMode.COLUMBUS_VIEW || camera._mode === SceneMode.SCENE2D) {
             Cartesian3.fromElements(result.origin.z, result.origin.x, result.origin.y, result.origin);
         }
 
