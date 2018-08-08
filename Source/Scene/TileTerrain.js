@@ -1,5 +1,6 @@
 define([
         '../Core/BoundingSphere',
+        '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/defined',
         '../Core/DeveloperError',
@@ -16,6 +17,7 @@ define([
         './TerrainState'
     ], function(
         BoundingSphere,
+        Cartesian2,
         Cartesian3,
         defined,
         DeveloperError,
@@ -83,6 +85,9 @@ define([
 
         var mesh = this.mesh;
         Cartesian3.clone(mesh.center, surfaceTile.center);
+        if (mesh.encoding.has2dPositions) {
+            Cartesian2.clone(mesh.encoding.center2D, surfaceTile.center2D);
+        }
         surfaceTile.minimumHeight = mesh.minimumHeight;
         surfaceTile.maximumHeight = mesh.maximumHeight;
         surfaceTile.boundingSphere3D = BoundingSphere.clone(mesh.boundingSphere3D, surfaceTile.boundingSphere3D);
@@ -208,7 +213,7 @@ define([
         var tilingScheme = terrainProvider.tilingScheme;
 
         var terrainData = tileTerrain.data;
-        var meshPromise = terrainData.createMesh(tilingScheme, x, y, level, frameState.terrainExaggeration);
+        var meshPromise = terrainData.createMesh(tilingScheme, x, y, level,  frameState.serializedMapProjection, frameState.terrainExaggeration);
 
         if (!defined(meshPromise)) {
             // Postponed.

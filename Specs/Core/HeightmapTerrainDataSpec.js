@@ -1,10 +1,14 @@
 defineSuite([
         'Core/HeightmapTerrainData',
+        'Core/GeographicProjection',
         'Core/GeographicTilingScheme',
+        'Core/SerializedMapProjection',
         'Core/TerrainData'
     ], function(
         HeightmapTerrainData,
+        GeographicProjection,
         GeographicTilingScheme,
+        SerializedMapProjection,
         TerrainData) {
      'use strict';
 
@@ -48,6 +52,7 @@ defineSuite([
      describe('createMesh', function() {
          var data;
          var tilingScheme;
+         var serializedMapProjection = new SerializedMapProjection(new GeographicProjection());
 
          beforeEach(function() {
              tilingScheme = new GeographicTilingScheme();
@@ -60,32 +65,39 @@ defineSuite([
 
          it('requires tilingScheme', function() {
              expect(function() {
-                 data.createMesh(undefined, 0, 0, 0);
+                 data.createMesh(undefined, 0, 0, 0, serializedMapProjection);
              }).toThrowDeveloperError();
          });
 
          it('requires x', function() {
              expect(function() {
-                 data.createMesh(tilingScheme, undefined, 0, 0);
+                 data.createMesh(tilingScheme, undefined, 0, 0, serializedMapProjection);
              }).toThrowDeveloperError();
          });
 
          it('requires y', function() {
              expect(function() {
-                 data.createMesh(tilingScheme, 0, undefined, 0);
+                 data.createMesh(tilingScheme, 0, undefined, 0, serializedMapProjection);
              }).toThrowDeveloperError();
          });
 
          it('requires level', function() {
              expect(function() {
-                 data.createMesh(tilingScheme, 0, 0, undefined);
+                 data.createMesh(tilingScheme, 0, 0, undefined, serializedMapProjection);
              }).toThrowDeveloperError();
          });
+
+         it('requires serializedMapProjection', function() {
+            expect(function() {
+                data.createMesh(tilingScheme, 0, 0, 0, undefined);
+            }).toThrowDeveloperError();
+        });
      });
 
      describe('upsample', function() {
          var data;
          var tilingScheme;
+         var serializedMapProjection = new SerializedMapProjection(new GeographicProjection());
 
          beforeEach(function() {
              tilingScheme = new GeographicTilingScheme();
@@ -151,7 +163,7 @@ defineSuite([
                  height : 4
              });
 
-             return data.createMesh(tilingScheme, 0, 0, 0, 1).then(function() {
+             return data.createMesh(tilingScheme, 0, 0, 0, serializedMapProjection, 1).then(function() {
                  return data.upsample(tilingScheme, 0, 0, 0, 0, 0, 1);
              }).then(function(upsampled) {
                  expect(upsampled.wasCreatedByUpsampling()).toBe(true);
@@ -172,7 +184,7 @@ defineSuite([
                  }
              });
 
-             return data.createMesh(tilingScheme, 0, 0, 0, 1).then(function() {
+             return data.createMesh(tilingScheme, 0, 0, 0, serializedMapProjection, 1).then(function() {
                  return data.upsample(tilingScheme, 0, 0, 0, 0, 0, 1);
              }).then(function(upsampled) {
                  expect(upsampled.wasCreatedByUpsampling()).toBe(true);
@@ -194,7 +206,7 @@ defineSuite([
                  }
              });
 
-             return data.createMesh(tilingScheme, 0, 0, 0, 1).then(function() {
+             return data.createMesh(tilingScheme, 0, 0, 0, serializedMapProjection, 1).then(function() {
                  return data.upsample(tilingScheme, 0, 0, 0, 0, 0, 1);
              }).then(function(upsampled) {
                  expect(upsampled.wasCreatedByUpsampling()).toBe(true);
@@ -211,7 +223,7 @@ defineSuite([
                  height : 4
              });
 
-             return data.createMesh(tilingScheme, 0, 0, 0, 1).then(function() {
+             return data.createMesh(tilingScheme, 0, 0, 0, serializedMapProjection, 1).then(function() {
                  return data.upsample(tilingScheme, 0, 0, 0, 1, 0, 1);
              }).then(function(upsampled) {
                  expect(upsampled.wasCreatedByUpsampling()).toBe(true);
@@ -232,7 +244,7 @@ defineSuite([
                  }
              });
 
-             return data.createMesh(tilingScheme, 0, 0, 0, 1).then(function() {
+             return data.createMesh(tilingScheme, 0, 0, 0, serializedMapProjection, 1).then(function() {
                  return data.upsample(tilingScheme, 0, 0, 0, 1, 0, 1);
              }).then(function(upsampled) {
                  expect(upsampled.wasCreatedByUpsampling()).toBe(true);
@@ -255,7 +267,7 @@ defineSuite([
                  }
              });
 
-             return data.createMesh(tilingScheme, 0, 0, 0, 1).then(function() {
+             return data.createMesh(tilingScheme, 0, 0, 0, serializedMapProjection, 1).then(function() {
                  return data.upsample(tilingScheme, 0, 0, 0, 0, 0, 1);
              }).then(function(upsampled) {
                  expect(upsampled.wasCreatedByUpsampling()).toBe(true);

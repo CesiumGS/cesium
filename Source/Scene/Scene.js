@@ -35,6 +35,7 @@ define([
         '../Core/PerspectiveOffCenterFrustum',
         '../Core/PixelFormat',
         '../Core/RequestScheduler',
+        '../Core/SerializedMapProjection',
         '../Core/ShowGeometryInstanceAttribute',
         '../Core/TaskProcessor',
         '../Core/Transforms',
@@ -116,6 +117,7 @@ define([
         PerspectiveOffCenterFrustum,
         PixelFormat,
         RequestScheduler,
+        SerializedMapProjection,
         ShowGeometryInstanceAttribute,
         TaskProcessor,
         Transforms,
@@ -454,7 +456,9 @@ define([
 
         this._mode = SceneMode.SCENE3D;
 
-        this._mapProjection = defined(options.mapProjection) ? options.mapProjection : new GeographicProjection();
+        var mapProjection = defined(options.mapProjection) ? options.mapProjection : new GeographicProjection();
+        this._mapProjection = mapProjection;
+        this._serializedMapProjection = new SerializedMapProjection(mapProjection);
 
         /**
          * The current morph transition time between 2D/Columbus View and 3D,
@@ -1593,6 +1597,7 @@ define([
         frameState.mode = scene._mode;
         frameState.morphTime = scene.morphTime;
         frameState.mapProjection = scene.mapProjection;
+        frameState.serializedMapProjection = scene._serializedMapProjection;
         frameState.frameNumber = frameNumber;
         frameState.time = JulianDate.clone(time, frameState.time);
         frameState.camera = camera;

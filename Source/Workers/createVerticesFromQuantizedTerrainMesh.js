@@ -11,6 +11,7 @@ define([
         '../Core/Math',
         '../Core/Matrix4',
         '../Core/OrientedBoundingBox',
+        '../Core/SerializedMapProjection',
         '../Core/TerrainEncoding',
         '../Core/Transforms',
         '../Core/WebMercatorProjection',
@@ -28,6 +29,7 @@ define([
         CesiumMath,
         Matrix4,
         OrientedBoundingBox,
+        SerializedMapProjection,
         TerrainEncoding,
         Transforms,
         WebMercatorProjection,
@@ -35,6 +37,12 @@ define([
     'use strict';
 
     var maxShort = 32767;
+
+    function createVerticesFromQuantizedTerrainMesh(parameters, transferableObjects) {
+        return SerializedMapProjection.deserialize(parameters.serializedMapProjection).then(function(mapProjection) {
+            return implementation(parameters, transferableObjects, mapProjection);
+        });
+    }
 
     var cartesian3Scratch = new Cartesian3();
     var scratchMinimum = new Cartesian3();
@@ -44,8 +52,10 @@ define([
     var scratchNormal = new Cartesian3();
     var scratchToENU = new Matrix4();
     var scratchFromENU = new Matrix4();
-
-    function createVerticesFromQuantizedTerrainMesh(parameters, transferableObjects) {
+    var projectedCartesian3Scratch = new Cartesian3();
+    var projectedCartographicScratch = new Cartographic();
+    var relativeToCenter2dScratch = new Cartesian2();
+    function implementation(parameters, transferableObjects, mapProjection) {
         var quantizedVertices = parameters.quantizedVertices;
         var quantizedVertexCount = quantizedVertices.length / 3;
         var octEncodedNormals = parameters.octEncodedNormals;
@@ -69,6 +79,8 @@ define([
         var fromENU = Transforms.eastNorthUpToFixedFrame(center, ellipsoid);
         var toENU = Matrix4.inverseTransformation(fromENU, new Matrix4());
 
+        var hasCustomProjection = !mapProjection.isEquatorialCylindrical;
+
         var southMercatorY;
         var oneOverMercatorHeight;
         if (includeWebMercatorT) {
@@ -85,6 +97,20 @@ define([
         var heights = new Array(quantizedVertexCount);
         var positions = new Array(quantizedVertexCount);
         var webMercatorTs = includeWebMercatorT ? new Array(quantizedVertexCount) : [];
+        var positions2D;
+        if (hasCustomProjection) {
+            positions2D = new Array(quantizedVertexCount);
+        }
+
+        var relativeToCenter2D;
+        if (hasCustomProjection) {
+            var cartographicRTC = ellipsoid.cartesianToCartographic(center, projectedCartographicScratch);
+            cartographicRTC.height = 0.0;
+            var projectedRTC = mapProjection.project(cartographicRTC, projectedCartesian3Scratch);
+            relativeToCenter2D = relativeToCenter2dScratch;
+            relativeToCenter2D.x = projectedRTC.x;
+            relativeToCenter2D.y = projectedRTC.y;
+        }
 
         var minimum = scratchMinimum;
         minimum.x = Number.POSITIVE_INFINITY;
@@ -120,6 +146,14 @@ define([
             uvs[i] = new Cartesian2(u, v);
             heights[i] = height;
             positions[i] = position;
+            if (hasCustomProjection) {
+                var heightlessCartographic = projectedCartographicScratch;
+                heightlessCartographic.longitude = cartographicScratch.longitude;
+                heightlessCartographic.latitude = cartographicScratch.latitude;
+                heightlessCartographic.height = 0.0;
+                var projectedPosition = mapProjection.project(heightlessCartographic, projectedCartesian3Scratch);
+                positions2D[i] = new Cartesian2(projectedPosition.x, projectedPosition.y);
+            }
 
             if (includeWebMercatorT) {
                 webMercatorTs[i] = (WebMercatorProjection.geodeticLatitudeToMercatorAngle(cartographicScratch.latitude) - southMercatorY) * oneOverMercatorHeight;
@@ -147,7 +181,7 @@ define([
         hMin = Math.min(hMin, findMinMaxSkirts(parameters.northIndices, parameters.northSkirtHeight, heights, uvs, rectangle, ellipsoid, toENU, minimum, maximum));
 
         var aaBox = new AxisAlignedBoundingBox(minimum, maximum, center);
-        var encoding = new TerrainEncoding(aaBox, hMin, maximumHeight, fromENU, hasVertexNormals, includeWebMercatorT);
+        var encoding = new TerrainEncoding(aaBox, hMin, maximumHeight, fromENU, hasVertexNormals, includeWebMercatorT, relativeToCenter2D);
         var vertexStride = encoding.getStride();
         var size = quantizedVertexCount * vertexStride + edgeVertexCount * vertexStride;
         var vertexBuffer = new Float32Array(size);
@@ -175,7 +209,11 @@ define([
                 }
             }
 
-            bufferIndex = encoding.encode(vertexBuffer, bufferIndex, positions[j], uvs[j], heights[j], toPack, webMercatorTs[j]);
+            if (hasCustomProjection) {
+                bufferIndex = encoding.encode(vertexBuffer, bufferIndex, positions[j], uvs[j], heights[j], toPack, webMercatorTs[j], positions2D[j]);
+            } else {
+                bufferIndex = encoding.encode(vertexBuffer, bufferIndex, positions[j], uvs[j], heights[j], toPack, webMercatorTs[j]);
+            }
         }
 
         var edgeTriangleCount = Math.max(0, (edgeVertexCount - 4) * 2);
@@ -198,13 +236,13 @@ define([
         // Add skirts.
         var vertexBufferIndex = quantizedVertexCount * vertexStride;
         var indexBufferIndex = parameters.indices.length;
-        indexBufferIndex = addSkirt(vertexBuffer, vertexBufferIndex, indexBuffer, indexBufferIndex, parameters.westIndices, encoding, heights, uvs, octEncodedNormals, ellipsoid, rectangle, parameters.westSkirtHeight, true, exaggeration, southMercatorY, oneOverMercatorHeight, westLongitudeOffset, westLatitudeOffset);
+        indexBufferIndex = addSkirt(vertexBuffer, vertexBufferIndex, indexBuffer, indexBufferIndex, parameters.westIndices, encoding, heights, uvs, octEncodedNormals, ellipsoid, rectangle, parameters.westSkirtHeight, true, exaggeration, southMercatorY, oneOverMercatorHeight, westLongitudeOffset, westLatitudeOffset, mapProjection);
         vertexBufferIndex += parameters.westIndices.length * vertexStride;
-        indexBufferIndex = addSkirt(vertexBuffer, vertexBufferIndex, indexBuffer, indexBufferIndex, parameters.southIndices, encoding, heights, uvs, octEncodedNormals, ellipsoid, rectangle, parameters.southSkirtHeight, false, exaggeration, southMercatorY, oneOverMercatorHeight, southLongitudeOffset, southLatitudeOffset);
+        indexBufferIndex = addSkirt(vertexBuffer, vertexBufferIndex, indexBuffer, indexBufferIndex, parameters.southIndices, encoding, heights, uvs, octEncodedNormals, ellipsoid, rectangle, parameters.southSkirtHeight, false, exaggeration, southMercatorY, oneOverMercatorHeight, southLongitudeOffset, southLatitudeOffset, mapProjection);
         vertexBufferIndex += parameters.southIndices.length * vertexStride;
-        indexBufferIndex = addSkirt(vertexBuffer, vertexBufferIndex, indexBuffer, indexBufferIndex, parameters.eastIndices, encoding, heights, uvs, octEncodedNormals, ellipsoid, rectangle, parameters.eastSkirtHeight, false, exaggeration, southMercatorY, oneOverMercatorHeight, eastLongitudeOffset, eastLatitudeOffset);
+        indexBufferIndex = addSkirt(vertexBuffer, vertexBufferIndex, indexBuffer, indexBufferIndex, parameters.eastIndices, encoding, heights, uvs, octEncodedNormals, ellipsoid, rectangle, parameters.eastSkirtHeight, false, exaggeration, southMercatorY, oneOverMercatorHeight, eastLongitudeOffset, eastLatitudeOffset, mapProjection);
         vertexBufferIndex += parameters.eastIndices.length * vertexStride;
-        addSkirt(vertexBuffer, vertexBufferIndex, indexBuffer, indexBufferIndex, parameters.northIndices, encoding, heights, uvs, octEncodedNormals, ellipsoid, rectangle, parameters.northSkirtHeight, true, exaggeration, southMercatorY, oneOverMercatorHeight, northLongitudeOffset, northLatitudeOffset);
+        addSkirt(vertexBuffer, vertexBufferIndex, indexBuffer, indexBufferIndex, parameters.northIndices, encoding, heights, uvs, octEncodedNormals, ellipsoid, rectangle, parameters.northSkirtHeight, true, exaggeration, southMercatorY, oneOverMercatorHeight, northLongitudeOffset, northLatitudeOffset, mapProjection);
 
         transferableObjects.push(vertexBuffer.buffer, indexBuffer.buffer);
 
@@ -255,7 +293,8 @@ define([
         return hMin;
     }
 
-    function addSkirt(vertexBuffer, vertexBufferIndex, indexBuffer, indexBufferIndex, edgeVertices, encoding, heights, uvs, octEncodedNormals, ellipsoid, rectangle, skirtLength, isWestOrNorthEdge, exaggeration, southMercatorY, oneOverMercatorHeight, longitudeOffset, latitudeOffset) {
+    var skirtCartesian2Scratch = new Cartesian2();
+    function addSkirt(vertexBuffer, vertexBufferIndex, indexBuffer, indexBufferIndex, edgeVertices, encoding, heights, uvs, octEncodedNormals, ellipsoid, rectangle, skirtLength, isWestOrNorthEdge, exaggeration, southMercatorY, oneOverMercatorHeight, longitudeOffset, latitudeOffset, mapProjection) {
         var start, end, increment;
         if (isWestOrNorthEdge) {
             start = edgeVertices.length - 1;
@@ -282,6 +321,8 @@ define([
             east += CesiumMath.TWO_PI;
         }
 
+        var hasCustomProjection = !mapProjection.isEquatorialCylindrical;
+
         for (var i = start; i !== end; i += increment) {
             var index = edgeVertices[i];
             var h = heights[index];
@@ -292,6 +333,18 @@ define([
             cartographicScratch.height = h - skirtLength;
 
             var position = ellipsoid.cartographicToCartesian(cartographicScratch, cartesian3Scratch);
+
+            var position2D;
+            if (hasCustomProjection) {
+                position2D = skirtCartesian2Scratch;
+                var heightlessCartographic = projectedCartographicScratch;
+                heightlessCartographic.longitude = cartographicScratch.longitude;
+                heightlessCartographic.latitude = cartographicScratch.latitude;
+                heightlessCartographic.height = 0.0;
+                var projectedPosition = mapProjection.project(heightlessCartographic, projectedCartesian3Scratch);
+                position2D.x = projectedPosition.x;
+                position2D.y = projectedPosition.y;
+            }
 
             if (hasVertexNormals) {
                 var n = index * 2.0;
@@ -319,7 +372,7 @@ define([
                 webMercatorT = (WebMercatorProjection.geodeticLatitudeToMercatorAngle(cartographicScratch.latitude) - southMercatorY) * oneOverMercatorHeight;
             }
 
-            vertexBufferIndex = encoding.encode(vertexBuffer, vertexBufferIndex, position, uv, cartographicScratch.height, toPack, webMercatorT);
+            vertexBufferIndex = encoding.encode(vertexBuffer, vertexBufferIndex, position, uv, cartographicScratch.height, toPack, webMercatorT, position2D);
 
             if (previousIndex !== -1) {
                 indexBuffer[indexBufferIndex++] = previousIndex;

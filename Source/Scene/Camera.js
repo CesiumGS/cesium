@@ -62,6 +62,8 @@ define([
         SceneMode) {
     'use strict';
 
+    var maxCoordCartographicScratch = new Cartographic();
+
     /**
      * The camera is defined by a position, orientation, and view frustum.
      * <br /><br />
@@ -222,7 +224,32 @@ define([
         this._modeChanged = true;
         var projection = scene.mapProjection;
         this._projection = projection;
-        this._maxCoord = projection.project(new Cartographic(Math.PI, CesiumMath.PI_OVER_TWO));
+
+        // Check the four corners of the projection and the four edge-centers.
+        var maxCoord = new Cartesian3();
+        var cartographicExtreme = maxCoordCartographicScratch;
+
+        var halfMapWidth = 0.0;
+        var halfMapHeight = 0.0;
+
+        for (var x = -1; x < 2; x++) {
+            for (var y = -1; y < 2; y++) {
+                if (x === 0 && y === 0) {
+                    continue;
+                }
+
+                cartographicExtreme.longitude = CesiumMath.PI * x;
+                cartographicExtreme.latitude = CesiumMath.PI_OVER_TWO * y;
+                projection.project(cartographicExtreme, maxCoord);
+
+                halfMapWidth = Math.max(halfMapWidth, Math.abs(maxCoord.x));
+                halfMapHeight = Math.max(halfMapHeight, Math.abs(maxCoord.y));
+            }
+        }
+        maxCoord.x = halfMapWidth;
+        maxCoord.y = halfMapHeight;
+
+        this._maxCoord = maxCoord;
         this._max2Dfrustum = undefined;
         this._suspendTerrainAdjustment = false;
 

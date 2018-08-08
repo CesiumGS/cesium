@@ -1181,7 +1181,8 @@ define([
                 }
 
                 promises.push(createGeometryTaskProcessors[i].scheduleTask({
-                    subTasks : subTasks[i]
+                    subTasks : subTasks[i],
+                    serializedMapProjection : frameState.serializedMapProjection
                 }, subTaskTransferableObjects));
             }
 
@@ -1198,19 +1199,18 @@ define([
             instances = (isArray(primitive.geometryInstances)) ? primitive.geometryInstances : [primitive.geometryInstances];
 
             var scene3DOnly = frameState.scene3DOnly;
-            var projection = frameState.mapProjection;
 
             var promise = combineGeometryTaskProcessor.scheduleTask(PrimitivePipeline.packCombineGeometryParameters({
                 createGeometryResults : primitive._createGeometryResults,
                 instances : instances,
-                ellipsoid : projection.ellipsoid,
-                projection : projection,
+                ellipsoid : frameState.mapProjection.ellipsoid,
                 elementIndexUintSupported : frameState.context.elementIndexUint,
                 scene3DOnly : scene3DOnly,
                 vertexCacheOptimize : primitive.vertexCacheOptimize,
                 compressVertices : primitive.compressVertices,
                 modelMatrix : primitive.modelMatrix,
-                createPickOffsets : primitive._createPickOffsets
+                createPickOffsets : primitive._createPickOffsets,
+                serializedMapProjection : frameState.serializedMapProjection
             }, transferableObjects), transferableObjects);
 
             primitive._createGeometryResults = undefined;

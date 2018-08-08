@@ -230,6 +230,21 @@ defineSuite([
         expect(encoding.decodeHeight(buffer, 0)).toEqualEpsilon(height, 200.0 / 4095.0);
     });
 
+    it('encodes with 2D positions', function() {
+        var center2D = new Cartesian2(center.x, center.y);
+        var encoding = new TerrainEncoding(aabox, minimumHeight, maximumHeight, fromENU, false, false, center2D);
+
+        var buffer = [];
+        var height = (maximumHeight + minimumHeight) * 0.5;
+        encoding.encode(buffer, 0, center, Cartesian2.ZERO, height, Cartesian3.UNIT_X, 0.0, center2D);
+
+        expect(encoding.getStride()).toEqual(5);
+        expect(buffer.length).toEqual(encoding.getStride());
+
+        expect(buffer[3]).toEqual(0.0);
+        expect(buffer[4]).toEqual(0.0);
+    });
+
     it('gets oct-encoded normal', function() {
         var hasVertexNormals = true;
         var encoding = new TerrainEncoding(aabox, minimumHeight, maximumHeight, fromENU, hasVertexNormals);
@@ -286,6 +301,104 @@ defineSuite([
         var attributeLocations = encoding.getAttributeLocations();
 
         expect(attributeLocations).toBeDefined();
+    });
+
+    it('gets attributes with 2D positions', function() {
+        // without quantization
+        var center = Cartesian3.fromDegrees(0.0, 0.0);
+        var center2D = new Cartesian2(center.x, center.y);
+        var maximum = new Cartesian3(1.0e6, 1.0e6, 1.0e6);
+        var minimum = Cartesian3.negate(maximum, new Cartesian3());
+        var aabox = new AxisAlignedBoundingBox(minimum, maximum, center);
+
+        var maximumHeight = 1.0e6;
+        var minimumHeight = maximumHeight;
+
+        var fromENU = Transforms.eastNorthUpToFixedFrame(center);
+
+        var hasVertexNormals = false;
+        var hasWebMercatorT = false;
+
+        var encoding = new TerrainEncoding(aabox, minimumHeight, maximumHeight, fromENU, hasVertexNormals, hasWebMercatorT, center2D);
+
+        var buffer = [];
+        var attributes = encoding.getAttributes(buffer);
+
+        expect(attributes).toBeDefined();
+        expect(attributes.length).toEqual(3);
+
+        // with quantization, with webMercatorT and vertex normals
+        maximum = new Cartesian3(1.0e2, 1.0e2, 1.0e2);
+        minimum = Cartesian3.negate(maximum, new Cartesian3());
+        aabox = new AxisAlignedBoundingBox(minimum, maximum, center);
+
+        maximumHeight = 1.0e2;
+        minimumHeight = maximumHeight;
+
+        hasVertexNormals = true;
+        hasWebMercatorT = true;
+
+        encoding = new TerrainEncoding(aabox, minimumHeight, maximumHeight, fromENU, hasVertexNormals, hasWebMercatorT, center2D);
+
+        buffer = [];
+        attributes = encoding.getAttributes(buffer);
+
+        expect(attributes).toBeDefined();
+        expect(attributes.length).toEqual(3);
+
+        // with quantization, without webMercatorT and vertex normals
+        maximum = new Cartesian3(1.0e2, 1.0e2, 1.0e2);
+        minimum = Cartesian3.negate(maximum, new Cartesian3());
+        aabox = new AxisAlignedBoundingBox(minimum, maximum, center);
+
+        maximumHeight = 1.0e2;
+        minimumHeight = maximumHeight;
+
+        hasVertexNormals = false;
+        hasWebMercatorT = false;
+
+        encoding = new TerrainEncoding(aabox, minimumHeight, maximumHeight, fromENU, hasVertexNormals, hasWebMercatorT, center2D);
+
+        buffer = [];
+        attributes = encoding.getAttributes(buffer);
+
+        expect(attributes).toBeDefined();
+        expect(attributes.length).toEqual(2);
+    });
+
+    it('gets attribute locations with 2D positions', function() {
+        var center = Cartesian3.fromDegrees(0.0, 0.0);
+        var center2D = new Cartesian2(center.x, center.y);
+
+        var maximum = new Cartesian3(1.0e6, 1.0e6, 1.0e6);
+        var minimum = Cartesian3.negate(maximum, new Cartesian3());
+        var aabox = new AxisAlignedBoundingBox(minimum, maximum, center);
+
+        var maximumHeight = 1.0e6;
+        var minimumHeight = maximumHeight;
+
+        var fromENU = Transforms.eastNorthUpToFixedFrame(center);
+
+        var hasVertexNormals = false;
+
+        var encoding = new TerrainEncoding(aabox, minimumHeight, maximumHeight, fromENU, hasVertexNormals, false, center2D);
+        var attributeLocations = encoding.getAttributeLocations();
+
+        expect(attributeLocations).toBeDefined();
+
+        // with quantization
+        maximum = new Cartesian3(1.0e2, 1.0e2, 1.0e2);
+        minimum = Cartesian3.negate(maximum, new Cartesian3());
+        aabox = new AxisAlignedBoundingBox(minimum, maximum, center);
+
+        maximumHeight = 1.0e2;
+        minimumHeight = maximumHeight;
+
+        encoding = new TerrainEncoding(aabox, minimumHeight, maximumHeight, fromENU, hasVertexNormals, false, center2D);
+
+        var quantizedAttributeLocations = encoding.getAttributeLocations();
+
+        expect(quantizedAttributeLocations).toBeDefined();
     });
 
     it('clones', function() {

@@ -98,6 +98,14 @@ define([
         this.mapProjection = undefined;
 
         /**
+         * The serialized map projection.
+         *
+         * @type {SerializedMapProjection}
+         * @default undefined
+         */
+        this.serializedMapProjection = undefined;
+
+        /**
          * The current camera.
          *
          * @type {Camera}

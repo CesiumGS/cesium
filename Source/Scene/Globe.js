@@ -278,6 +278,20 @@ define([
             }
         },
         /**
+         * A property that limits the area over which terrain is rendered.
+         *
+         * @memberof Globe.prototype
+         * @type {Rectangle}
+         */
+        tileLimitRectangle : {
+            get : function() {
+                return this._surface.tileProvider.tileLimitRectangle;
+            },
+            set : function(value) {
+                this._surface.tileProvider.tileLimitRectangle = value;
+            }
+        },
+        /**
          * The normal map to use for rendering waves in the ocean.  Setting this property will
          * only have an effect if the configured terrain provider includes a water mask.
          * @memberof Globe.prototype

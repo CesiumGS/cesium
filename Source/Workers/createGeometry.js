@@ -1,11 +1,13 @@
 define([
         '../Core/defined',
+        '../Core/SerializedMapProjection',
         '../Scene/PrimitivePipeline',
         '../ThirdParty/when',
         './createTaskProcessorWorker',
         'require'
     ], function(
         defined,
+        SerializedMapProjection,
         PrimitivePipeline,
         when,
         createTaskProcessorWorker,
@@ -35,25 +37,28 @@ define([
     function createGeometry(parameters, transferableObjects) {
         var subTasks = parameters.subTasks;
         var length = subTasks.length;
-        var resultsOrPromises = new Array(length);
+        return SerializedMapProjection.deserialize(parameters.serializedMapProjection)
+            .then(function(mapProjection) {
+                var resultsOrPromises = new Array(length);
 
-        for (var i = 0; i < length; i++) {
-            var task = subTasks[i];
-            var geometry = task.geometry;
-            var moduleName = task.moduleName;
+                for (var i = 0; i < length; i++) {
+                    var task = subTasks[i];
+                    var geometry = task.geometry;
+                    var moduleName = task.moduleName;
 
-            if (defined(moduleName)) {
-                var createFunction = getModule(moduleName);
-                resultsOrPromises[i] = createFunction(geometry, task.offset);
-            } else {
-                //Already created geometry
-                resultsOrPromises[i] = geometry;
-            }
-        }
+                    if (defined(moduleName)) {
+                        var createFunction = getModule(moduleName);
+                        resultsOrPromises[i] = createFunction(geometry, task.offset, mapProjection);
+                    } else {
+                        //Already created geometry
+                        resultsOrPromises[i] = geometry;
+                    }
+                }
 
-        return when.all(resultsOrPromises, function(results) {
-            return PrimitivePipeline.packCreateGeometryResults(results, transferableObjects);
-        });
+                return when.all(resultsOrPromises, function(results) {
+                    return PrimitivePipeline.packCreateGeometryResults(results, transferableObjects);
+                });
+            });
     }
 
     return createTaskProcessorWorker(createGeometry);

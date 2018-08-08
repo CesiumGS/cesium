@@ -1,0 +1,38 @@
+function projectionFactory(callback) {
+    require(['./Core/Matrix4', './Core/Cartesian3', './Core/Math', './Core/Quaternion'], function(Matrix4, Cartesian3, CesiumMath, Quaternion) {
+        var projectScratch = new Cartesian3();
+        var unprojectScratch = new Cartesian3();
+
+        var data = [1.0E-05,-3.0E-10,0,-1.0E-16,-4.0E-09,-8.0E-06,0,-1.0E-16,0,0,1,0,35.0,32.0,0,1];
+        var affineGeoTransform = Matrix4.fromColumnMajorArray(data);
+
+        var rotationMatrix = Matrix4.fromTranslationQuaternionRotationScale(Cartesian3.ZERO, Quaternion.fromAxisAngle(new Cartesian3(0.0, 0.0, 1.0), 0.3), new Cartesian3(1.0, 1.0, 1.0));
+        var scaleMatrix = Matrix4.fromScale(new Cartesian3(1.0, 0.5, 1.0));
+
+        affineGeoTransform = Matrix4.multiply(affineGeoTransform, rotationMatrix, affineGeoTransform);
+        affineGeoTransform = Matrix4.multiply(affineGeoTransform, scaleMatrix, affineGeoTransform);
+
+        var inverse = Matrix4.inverse(affineGeoTransform, new Matrix4());
+
+        function project(longitude, latitude, result) {
+            projectScratch.x = CesiumMath.toDegrees(longitude);
+            projectScratch.y = CesiumMath.toDegrees(latitude);
+            projectScratch.z = 0.0;
+            Matrix4.multiplyByPoint(inverse, projectScratch, projectScratch);
+
+            result[0] = projectScratch.x;
+            result[1] = -projectScratch.y;
+        }
+
+        function unproject(x, y, result) {
+            unprojectScratch.x = x;
+            unprojectScratch.y = -y;
+            unprojectScratch.z = 0.0;
+            Matrix4.multiplyByPoint(affineGeoTransform, unprojectScratch, unprojectScratch);
+            result[0] = CesiumMath.toRadians(unprojectScratch.x);
+            result[1] = CesiumMath.toRadians(unprojectScratch.y);
+        }
+
+        callback(project, unproject);
+    });
+}
