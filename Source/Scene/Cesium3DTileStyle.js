@@ -24,7 +24,7 @@ define([
      * A style that is applied to a {@link Cesium3DTileset}.
      * <p>
      * Evaluates an expression defined using the
-     * {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/Styling|3D Tiles Styling language}.
+     * {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/specification/Styling|3D Tiles Styling language}.
      * </p>
      *
      * @alias Cesium3DTileStyle
@@ -53,7 +53,7 @@ define([
      *     pointSize : '${Temperature} * 2.0'
      * });
      *
-     * @see {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/Styling|3D Tiles Styling language}
+     * @see {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/specification/Styling|3D Tiles Styling language}
      */
     function Cesium3DTileStyle(style) {
         this._style = undefined;
@@ -176,7 +176,7 @@ define([
     defineProperties(Cesium3DTileStyle.prototype, {
         /**
          * Gets the object defining the style using the
-         * {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/Styling|3D Tiles Styling language}.
+         * {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/specification/Styling|3D Tiles Styling language}.
          *
          * @memberof Cesium3DTileStyle.prototype
          *
