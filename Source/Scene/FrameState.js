@@ -240,6 +240,12 @@ define([
             shadowsEnabled : true,
 
             /**
+             * Whether there are any active shadow maps that originate from light sources. Does not
+             * include shadow maps that are used for analytical purposes.
+             */
+            lightShadowsEnabled : true,
+
+            /**
              * All shadow maps that are enabled this frame.
              */
             shadowMaps : [],

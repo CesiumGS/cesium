@@ -1090,7 +1090,7 @@ define([
      *
      * @param {Matrix4} matrix The matrix to use.
      * @param {Cartesian3} translation The translation that replaces the translation of the provided matrix.
-     * @param {Cartesian4} result The object onto which to store the result.
+     * @param {Matrix4} result The object onto which to store the result.
      * @returns {Matrix4} The modified result parameter.
      */
     Matrix4.setTranslation = function(matrix, translation, result) {
@@ -1121,6 +1121,27 @@ define([
         result[15] = matrix[15];
 
         return result;
+    };
+
+    var scaleScratch = new Cartesian3();
+    /**
+     * Computes a new matrix that replaces the scale with the provided scale.  This assumes the matrix is an affine transformation
+     *
+     * @param {Matrix4} matrix The matrix to use.
+     * @param {Cartesian3} scale The scale that replaces the scale of the provided matrix.
+     * @param {Matrix4} result The object onto which to store the result.
+     * @returns {Matrix4} The modified result parameter.
+     */
+    Matrix4.setScale = function(matrix, scale, result) {
+        //>>includeStart('debug', pragmas.debug);
+        Check.typeOf.object('matrix', matrix);
+        Check.typeOf.object('scale', scale);
+        Check.typeOf.object('result', result);
+        //>>includeEnd('debug');
+
+        var existingScale = Matrix4.getScale(matrix, scaleScratch);
+        var newScale = Cartesian3.divideComponents(scale, existingScale, scaleScratch);
+        return Matrix4.multiplyByScale(matrix, newScale, result);
     };
 
     /**

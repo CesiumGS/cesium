@@ -1,12 +1,14 @@
 defineSuite([
         'Widgets/Geocoder/GeocoderViewModel',
         'Core/Cartesian3',
+        'Core/Rectangle',
         'Specs/createScene',
         'Specs/pollToPromise',
         'ThirdParty/when'
     ], function(
         GeocoderViewModel,
         Cartesian3,
+        Rectangle,
         createScene,
         pollToPromise,
         when) {
@@ -179,7 +181,7 @@ defineSuite([
         spyOn(geocoder, '_updateCamera');
         spyOn(geocoder, '_adjustSuggestionsScroll');
 
-        var suggestion = {displayName: 'a', destination: {west: 0.0, east: 0.1, north: 0.1, south: -0.1}};
+        var suggestion = { displayName: 'a', destination: new Rectangle(0.0, -0.1, 0.1, 0.1) };
         geocoder._selectedSuggestion = suggestion;
         geocoder.activateSuggestion(suggestion);
         expect(geocoder._searchText).toEqual('a');
