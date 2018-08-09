@@ -105,7 +105,7 @@ var pointClouds = ['St. Helens', 'Church'];
 var viewModel = {
     exampleTypes : pointClouds,
     currentExampleType : pointClouds[0],
-    maximumScreenSpaceError : 8.0,
+    maximumScreenSpaceError : 16.0,
     geometricErrorScale : 1.0,
     maximumAttenuation : 0, // Equivalent to undefined
     baseResolution : 0, // Equivalent to undefined
@@ -138,10 +138,10 @@ function loadStHelens() {
     // Mt. St. Helens 3D Tileset generated from LAS provided by https://www.liblas.org/samples/
     // This tileset uses replacement refinement and has geometric error approximately equal to
     // the average interpoint distance in each tile.
-    var tileset = new Cesium.Cesium3DTileset({ url: Cesium.IonResource.fromAssetId(3844) });
+    var tileset = new Cesium.Cesium3DTileset({ url: Cesium.IonResource.fromAssetId(5713) });
     viewer.scene.primitives.add(tileset);
 
-    tileset.maximumScreenSpaceError = 8.0;
+    tileset.maximumScreenSpaceError = 16.0;
     tileset.pointCloudShading.maximumAttenuation = undefined; // Will be based on maximumScreenSpaceError instead
     tileset.pointCloudShading.baseResolution = undefined;
     tileset.pointCloudShading.geometricErrorScale = 1.0;
@@ -154,7 +154,7 @@ function loadStHelens() {
 function loadChurch() {
     // Point Cloud by Prof. Peter Allen, Columbia University Robotics Lab. Scanning by Alejandro Troccoli and Matei Ciocarlie.
     // This tileset uses additive refinement and has geometric error based on the bounding box size for each tile.
-    var tileset = new Cesium.Cesium3DTileset({ url: Cesium.IonResource.fromAssetId(3838) });
+    var tileset = new Cesium.Cesium3DTileset({ url: Cesium.IonResource.fromAssetId(5714) });
     viewer.scene.primitives.add(tileset);
 
     tileset.maximumScreenSpaceError = 1024.0; // For better performance, due to how this tileset treats geometric error.

@@ -188,7 +188,7 @@ defineSuite([
             var content = root._content;
             expect(content.tileset).toBe(tileset);
             expect(content.tile).toBe(root);
-            expect(content.url.indexOf(root._header.content.url) > -1).toBe(true);
+            expect(content.url.indexOf(root._header.content.uri) > -1).toBe(true);
         });
     });
 

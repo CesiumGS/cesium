@@ -969,6 +969,38 @@ define([
                '} \n';
     }
 
+    function replaceDiffuseTextureCalls(source, diffuseAttributeOrUniformName) {
+        var functionCall = 'texture2D(' + diffuseAttributeOrUniformName;
+
+        var fromIndex = 0;
+        var startIndex = source.indexOf(functionCall, fromIndex);
+        var endIndex;
+
+        while (startIndex > -1) {
+            var nestedLevel = 0;
+            for (var i = startIndex; i < source.length; ++i) {
+                var character = source.charAt(i);
+                if (character === '(') {
+                    ++nestedLevel;
+                } else if (character === ')') {
+                    --nestedLevel;
+                    if (nestedLevel === 0) {
+                        endIndex = i + 1;
+                        break;
+                    }
+                }
+            }
+            var extractedFunction = source.slice(startIndex, endIndex);
+            var replacedFunction = 'tile_diffuse_final(' + extractedFunction + ', tile_diffuse)';
+
+            source = source.slice(0, startIndex) + replacedFunction + source.slice(endIndex);
+            fromIndex = startIndex + replacedFunction.length;
+            startIndex = source.indexOf(functionCall, fromIndex);
+        }
+
+        return source;
+    }
+
     function modifyDiffuse(source, diffuseAttributeOrUniformName, applyHighlight) {
         // If the glTF does not specify the _3DTILESDIFFUSE semantic, return the default shader.
         // Otherwise if _3DTILESDIFFUSE is defined prefer the shader below that can switch the color mode at runtime.
@@ -1027,11 +1059,10 @@ define([
                 '    tile_diffuse = tile_diffuse_final(source, tile_featureColor); \n' +
                 '    tile_main(); \n';
         } else if (type === 'sampler2D') {
-            // Regex handles up to one level of nested parentheses:
+            // Handles any number of nested parentheses
             // E.g. texture2D(u_diffuse, uv)
             // E.g. texture2D(u_diffuse, computeUV(index))
-            regex = new RegExp('texture2D\\(' + diffuseAttributeOrUniformName + '.*?(\\)\\)|\\))', 'g');
-            source = source.replace(regex, 'tile_diffuse_final($&, tile_diffuse)');
+            source = replaceDiffuseTextureCalls(source, diffuseAttributeOrUniformName);
             setColor =
                 '    tile_diffuse = tile_featureColor; \n' +
                 '    tile_main(); \n';

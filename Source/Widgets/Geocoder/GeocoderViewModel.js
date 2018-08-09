@@ -7,7 +7,11 @@ define([
         '../../Core/DeveloperError',
         '../../Core/Event',
         '../../Core/GeocodeType',
+        '../../Core/Math',
         '../../Core/Matrix4',
+        '../../Core/Rectangle',
+        '../../Core/sampleTerrainMostDetailed',
+        '../../Scene/computeFlyToLocationForRectangle',
         '../../ThirdParty/knockout',
         '../../ThirdParty/when',
         '../createCommand',
@@ -21,12 +25,19 @@ define([
         DeveloperError,
         Event,
         GeocodeType,
+        CesiumMath,
         Matrix4,
+        Rectangle,
+        sampleTerrainMostDetailed,
+        computeFlyToLocationForRectangle,
         knockout,
         when,
         createCommand,
         getElement) {
     'use strict';
+
+    // The height we use if geocoding to a specific point instead of an rectangle.
+    var DEFAULT_HEIGHT = 1000;
 
     /**
      * The view model for the {@link Geocoder} widget.
@@ -330,15 +341,64 @@ define([
         adjustSuggestionsScroll(viewModel, next);
     }
 
+    function computeFlyToLocationForCartographic(cartographic, terrainProvider) {
+        var availability = defined(terrainProvider) ? terrainProvider.availability : undefined;
+
+        if (!defined(availability)) {
+            cartographic.height += DEFAULT_HEIGHT;
+            return when.resolve(cartographic);
+        }
+
+        return sampleTerrainMostDetailed(terrainProvider, [cartographic])
+            .then(function(positionOnTerrain) {
+                cartographic = positionOnTerrain[0];
+                cartographic.height += DEFAULT_HEIGHT;
+                return cartographic;
+            });
+    }
+
     function updateCamera(viewModel, destination) {
-        viewModel._scene.camera.flyTo({
-            destination : destination,
-            complete: function() {
-                viewModel._complete.raiseEvent();
-            },
-            duration : viewModel._flightDuration,
-            endTransform : Matrix4.IDENTITY
-        });
+        var scene = viewModel._scene;
+        var mapProjection = scene.mapProjection;
+        var ellipsoid = mapProjection.ellipsoid;
+
+        var camera = scene.camera;
+        var terrainProvider = scene.terrainProvider;
+        var finalDestination = destination;
+
+        var promise;
+        if (destination instanceof Rectangle) {
+            // Some geocoders return a Rectangle of zero width/height, treat it like a point instead.
+            if (CesiumMath.equalsEpsilon(destination.south, destination.north, CesiumMath.EPSILON7) &&
+                CesiumMath.equalsEpsilon(destination.east, destination.west, CesiumMath.EPSILON7)) {
+                // destination is now a Cartographic
+                destination = Rectangle.center(destination);
+            } else {
+                promise = computeFlyToLocationForRectangle(destination, scene);
+            }
+        } else { // destination is a Cartesian3
+            destination = ellipsoid.cartesianToCartographic(destination);
+        }
+
+        if (!defined(promise)) {
+            promise = computeFlyToLocationForCartographic(destination, terrainProvider);
+        }
+
+        promise
+            .then(function(result) {
+                finalDestination = ellipsoid.cartographicToCartesian(result);
+            })
+            .always(function() {
+                // Whether terrain querying succeeded or not, fly to the destination.
+                camera.flyTo({
+                    destination: finalDestination,
+                    complete: function() {
+                        viewModel._complete.raiseEvent();
+                    },
+                    duration: viewModel._flightDuration,
+                    endTransform: Matrix4.IDENTITY
+                });
+            });
     }
 
     function chainPromise(promise, geocoderService, query, geocodeType) {

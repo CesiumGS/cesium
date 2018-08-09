@@ -17,7 +17,7 @@
     "geometricError": 0,
     "refine": "ADD",
     "content": {
-      "url": "ll.b3dm"
+      "uri": "ll.b3dm"
     }
   }
 }

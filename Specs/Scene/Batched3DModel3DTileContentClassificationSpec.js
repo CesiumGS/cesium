@@ -48,7 +48,6 @@ defineSuite([
 
     var withBatchTableUrl = './Data/Cesium3DTiles/Batched/BatchedWithBatchTable/tileset.json';
     var withBatchTableBinaryUrl = './Data/Cesium3DTiles/Batched/BatchedWithBatchTableBinary/tileset.json';
-    var withQuantizationUrl = './Data/Cesium3DTiles/Batched/BatchedWithQuantization/tileset.json';
 
     function setCamera(longitude, latitude) {
         // One feature is located at the center, point the camera there
@@ -139,18 +138,6 @@ defineSuite([
         Cartesian3.multiplyByScalar(translation, -5.0, translation);
 
         return Cesium3DTilesTester.loadTileset(scene, withBatchTableBinaryUrl, {
-            classificationType : ClassificationType.CESIUM_3D_TILE,
-            modelMatrix : Matrix4.fromTranslation(translation)
-        }).then(function(tileset) {
-            Cesium3DTilesTester.expectRenderTileset(scene, tileset);
-        });
-    });
-
-    it('renders with quantization', function() {
-        var translation = Ellipsoid.WGS84.geodeticSurfaceNormalCartographic(new Cartographic(centerLongitude, centerLatitude));
-        Cartesian3.multiplyByScalar(translation, -5.0, translation);
-
-        return Cesium3DTilesTester.loadTileset(scene, withQuantizationUrl, {
             classificationType : ClassificationType.CESIUM_3D_TILE,
             modelMatrix : Matrix4.fromTranslation(translation)
         }).then(function(tileset) {
