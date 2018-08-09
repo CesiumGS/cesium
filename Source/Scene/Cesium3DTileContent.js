@@ -57,7 +57,7 @@ define([
          * equals the number of groups of points as distinguished by the <code>BATCH_ID</code> feature table semantic.
          * </p>
          *
-         * @see {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/blob/master/TileFormats/PointCloud/README.md#batched-points}
+         * @see {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/specification/TileFormats/PointCloud#batched-points}
          *
          * @memberof Cesium3DTileContent.prototype
          *
@@ -130,7 +130,7 @@ define([
          * Gets the array of {@link Cesium3DTileContent} objects that represent the
          * content a composite's inner tiles, which can also be composites.
          *
-         * @see {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/blob/master/TileFormats/Composite/README.md}
+         * @see {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/specification/TileFormats/Composite}
          *
          * @memberof Cesium3DTileContent.prototype
          *
@@ -237,7 +237,7 @@ define([
      * Features in a tile are ordered by <code>batchId</code>, an index used to retrieve their metadata from the batch table.
      * </p>
      *
-     * @see {@link  https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/TileFormats/BatchTable}.
+     * @see {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/specification/TileFormats/BatchTable}.
      *
      * @param {Number} batchId The batchId for the feature.
      * @returns {Cesium3DTileFeature} The corresponding {@link Cesium3DTileFeature} object.

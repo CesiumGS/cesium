@@ -1529,7 +1529,7 @@ define([
         var shadowsEnabled = frameState.shadowHints.shadowsEnabled;
         var shadowMaps = frameState.shadowHints.shadowMaps;
         var lightShadowMaps = frameState.shadowHints.lightShadowMaps;
-        var lightShadowsEnabled = shadowsEnabled && (lightShadowMaps.length > 0);
+        var lightShadowsEnabled = frameState.shadowHints.lightShadowsEnabled;
 
         // Update derived commands when any shadow maps become dirty
         var shadowsDirty = false;
@@ -2114,10 +2114,7 @@ define([
             return;
         }
 
-        var shadowsEnabled = scene.frameState.shadowHints.shadowsEnabled;
-        var lightShadowsEnabled = shadowsEnabled && (scene.frameState.shadowHints.lightShadowMaps.length > 0);
-
-        if (lightShadowsEnabled && command.receiveShadows && defined(command.derivedCommands.shadows)) {
+        if (frameState.shadowHints.lightShadowsEnabled && command.receiveShadows && defined(command.derivedCommands.shadows)) {
             // If the command receives shadows, execute the derived shadows command.
             // Some commands, such as OIT derived commands, do not have derived shadow commands themselves
             // and instead shadowing is built-in. In this case execute the command regularly below.
@@ -2971,6 +2968,8 @@ define([
             frameState.shadowHints.shadowsEnabled = shadowsEnabled;
         }
 
+        frameState.shadowHints.lightShadowsEnabled = false;
+
         if (!shadowsEnabled) {
             return;
         }
@@ -2995,6 +2994,7 @@ define([
 
             if (shadowMap.fromLightSource) {
                 frameState.shadowHints.lightShadowMaps.push(shadowMap);
+                frameState.shadowHints.lightShadowsEnabled = true;
             }
 
             if (shadowMap.dirty) {

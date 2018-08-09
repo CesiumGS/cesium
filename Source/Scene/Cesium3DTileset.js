@@ -83,7 +83,7 @@ define([
     'use strict';
 
     /**
-     * A {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/blob/master/README.md|3D Tiles tileset},
+     * A {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/specification|3D Tiles tileset},
      * used for streaming massive heterogeneous 3D geospatial datasets.
      *
      * @alias Cesium3DTileset
@@ -122,7 +122,7 @@ define([
      * @param {Boolean} [options.debugShowMemoryUsage=false] For debugging only. When true, draws labels to indicate the texture and geometry memory in megabytes used by each tile.
      * @param {Boolean} [options.debugShowUrl=false] For debugging only. When true, draws labels to indicate the url of each tile.
      *
-     * @exception {DeveloperError} The tileset must be 3D Tiles version 0.0 or 1.0.  See {@link https://github.com/AnalyticalGraphicsInc/3d-tiles#spec-status}
+     * @exception {DeveloperError} The tileset must be 3D Tiles version 0.0 or 1.0.
      *
      * @example
      * var tileset = scene.primitives.add(new Cesium.Cesium3DTileset({
@@ -152,7 +152,7 @@ define([
      *      dynamicScreenSpaceErrorHeightFalloff : 0.25
      * }));
      *
-     * @see {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/blob/master/README.md|3D Tiles specification}
+     * @see {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/specification|3D Tiles specification}
      */
     function Cesium3DTileset(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -782,7 +782,7 @@ define([
         /**
          * Gets the tileset's asset object property, which contains metadata about the tileset.
          * <p>
-         * See the {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/blob/master/schema/asset.schema.json|asset schema}
+         * See the {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/specification#reference-asset|asset schema reference}
          * in the 3D Tiles spec for the full set of properties.
          * </p>
          *
@@ -823,7 +823,7 @@ define([
         /**
          * Gets the tileset's properties dictionary object, which contains metadata about per-feature properties.
          * <p>
-         * See the {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/blob/master/schema/properties.schema.json|properties schema}
+         * See the {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/specification#reference-properties|properties schema reference}
          * in the 3D Tiles spec for the full set of properties.
          * </p>
          *
@@ -949,7 +949,7 @@ define([
 
         /**
          * The style, defined using the
-         * {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/Styling|3D Tiles Styling language},
+         * {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/specification/Styling|3D Tiles Styling language},
          * applied to each feature in the tileset.
          * <p>
          * Assign <code>undefined</code> to remove the style, which will restore the visual
@@ -983,7 +983,7 @@ define([
          *    }
          * });
          *
-         * @see {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/Styling|3D Tiles Styling language}
+         * @see {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/specification/Styling|3D Tiles Styling language}
          */
         style : {
             get : function() {
@@ -1260,7 +1260,7 @@ define([
             throw new RuntimeError('Tileset must have an asset property.');
         }
         if (asset.version !== '0.0' && asset.version !== '1.0') {
-            throw new RuntimeError('The tileset must be 3D Tiles version 0.0 or 1.0.  See https://github.com/AnalyticalGraphicsInc/3d-tiles#spec-status');
+            throw new RuntimeError('The tileset must be 3D Tiles version 0.0 or 1.0.');
         }
 
         var statistics = this._statistics;
