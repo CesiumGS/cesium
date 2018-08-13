@@ -1095,6 +1095,7 @@ define([
                 }
                 //>>includeEnd('debug');
 
+                this._root.updateTransform(this._modelMatrix);
                 return this._root.boundingSphere;
             }
         },
@@ -1123,11 +1124,6 @@ define([
             },
             set : function(value) {
                 this._modelMatrix = Matrix4.clone(value, this._modelMatrix);
-                if (defined(this._root)) {
-                    // Update the root transform right away instead of waiting for the next update loop.
-                    // Useful, for example, when setting the modelMatrix and then having the camera view the tileset.
-                    this._root.updateTransform(this._modelMatrix);
-                }
             }
         },
 
