@@ -544,7 +544,7 @@ define([
 
     var scratchColor = new Color();
 
-    Cesium3DTileBatchTable.prototype.applyStyle = function(frameState, style) {
+    Cesium3DTileBatchTable.prototype.applyStyle = function(style) {
         if (!defined(style)) {
             this.setAllColor(DEFAULT_COLOR_VALUE);
             this.setAllShow(true);

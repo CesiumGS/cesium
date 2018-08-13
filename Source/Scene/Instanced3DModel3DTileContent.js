@@ -451,8 +451,8 @@ define([
         this._batchTable.setAllColor(color);
     };
 
-    Instanced3DModel3DTileContent.prototype.applyStyle = function(frameState, style) {
-        this._batchTable.applyStyle(frameState, style);
+    Instanced3DModel3DTileContent.prototype.applyStyle = function(style) {
+        this._batchTable.applyStyle(style);
     };
 
     Instanced3DModel3DTileContent.prototype.update = function(tileset, frameState) {

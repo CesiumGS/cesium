@@ -71,7 +71,7 @@ define([
                 //   2) this tile is now visible, but it wasn't visible when the style was first assigned
                 var content = tile.content;
                 tile.lastStyleTime = lastStyleTime;
-                content.applyStyle(frameState, this._style);
+                content.applyStyle(this._style);
                 statistics.numberOfFeaturesStyled += content.featuresLength;
                 ++statistics.numberOfTilesStyled;
             }
