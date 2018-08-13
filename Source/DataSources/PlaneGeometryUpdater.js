@@ -250,6 +250,7 @@ define([
     var scratchAxis2 = new Cartesian3();
     var scratchTranslation = new Cartesian3();
     var scratchNormal = new Cartesian3();
+    var negateScratch = new Cartesian3();
     var scratchScale = new Cartesian3();
     var scratchQuaternion = new Quaternion();
     var scratchMatrix3 = new Matrix3();
@@ -262,9 +263,10 @@ define([
 
         var transformedNormal = Matrix4.multiplyByPointAsVector(transform, normal, scratchNormal);
         Cartesian3.normalize(transformedNormal, transformedNormal);
+        var negatedTransformedNormal = Cartesian3.negate(transformedNormal, negateScratch);
 
         var up = ellipsoid.geodeticSurfaceNormal(translation, scratchAxis2);
-        if (Cartesian3.equalsEpsilon(up, transformedNormal, CesiumMath.EPSILON8)) {
+        if (Cartesian3.equalsEpsilon(up, transformedNormal, CesiumMath.EPSILON8) || Cartesian3.equalsEpsilon(up, negatedTransformedNormal, CesiumMath.EPSILON8)) {
             up = Cartesian3.clone(Cartesian3.UNIT_Z, up);
         }
 
@@ -284,6 +286,11 @@ define([
 
         return Matrix4.fromTranslationQuaternionRotationScale(translation, rotation, scale, result);
     }
+
+    /**
+     * @private
+     */
+    PlaneGeometryUpdater.createPrimitiveMatrix = createPrimitiveMatrix;
 
     return PlaneGeometryUpdater;
 });
