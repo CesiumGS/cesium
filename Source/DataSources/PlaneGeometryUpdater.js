@@ -264,7 +264,7 @@ define([
         Cartesian3.normalize(transformedNormal, transformedNormal);
 
         var up = ellipsoid.geodeticSurfaceNormal(translation, scratchAxis2);
-        if (Cartesian3.equalsEpsilon(up, transformedNormal, CesiumMath.EPSILON8)) {
+        if (CesiumMath.equalsEpsilon(Math.abs(Cartesian3.dot(up, transformedNormal)), 1.0, CesiumMath.EPSILON8)) {
             up = Cartesian3.clone(Cartesian3.UNIT_Z, up);
         }
 
@@ -284,6 +284,11 @@ define([
 
         return Matrix4.fromTranslationQuaternionRotationScale(translation, rotation, scale, result);
     }
+
+    /**
+     * @private
+     */
+    PlaneGeometryUpdater.createPrimitiveMatrix = createPrimitiveMatrix;
 
     return PlaneGeometryUpdater;
 });
