@@ -262,6 +262,8 @@ define([
      * @param {Number} maximumZ Maximum Z extent in tangent plane space.
      * @param {OrientedBoundingBox} [result] The object onto which to store the result.
      * @returns {OrientedBoundingBox} The modified result parameter or a new OrientedBoundingBox instance if one was not provided.
+     *
+     * @exports fromTangentPlaneExtents
      */
     function fromTangentPlaneExtents(tangentPlane, minimumX, maximumX, minimumY, maximumY, minimumZ, maximumZ, result) {
         //>>includeStart('debug', pragmas.debug);
