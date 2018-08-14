@@ -300,6 +300,11 @@ define([
             return;
         }
 
+        if (this._tilesInvalidated) {
+            invalidateAllTiles(this);
+            this._tilesInvalidated = false;
+        }
+
         // Gets commands for any texture re-projections
         this._tileProvider.initialize(frameState);
 
@@ -376,16 +381,10 @@ define([
             return;
         }
 
-        if (this._tilesInvalidated) {
-            invalidateAllTiles(this);
-        }
-
         // Load/create resources for terrain and imagery. Prepare texture re-projections for the next frame.
         processTileLoadQueue(this, frameState);
         updateHeights(this, frameState);
         updateTileLoadProgress(this, frameState);
-
-        this._tilesInvalidated = false;
     };
 
     /**
