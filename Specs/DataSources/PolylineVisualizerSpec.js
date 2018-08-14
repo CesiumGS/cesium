@@ -712,4 +712,51 @@ defineSuite([
             visualizer.destroy();
         });
     });
+
+    it('Sets static geometry primitive show attribute when clamped to ground', function() {
+        if (!Entity.supportsPolylinesOnTerrain(scene)) {
+            return;
+        }
+
+        var objects = new EntityCollection();
+        var visualizer = new PolylineVisualizer(scene, objects, scene.groundPrimitives);
+
+        var polyline = new PolylineGraphics();
+        polyline.positions = new ConstantProperty([Cartesian3.fromDegrees(0.0, 0.0), Cartesian3.fromDegrees(0.0, 1.0)]);
+        polyline.material = new ColorMaterialProperty();
+        polyline.clampToGround = new ConstantProperty(true);
+
+        var entity = new Entity();
+        entity.polyline = polyline;
+        objects.add(entity);
+
+        return pollToPromise(function() {
+            scene.initializeFrame();
+            var isUpdated = visualizer.update(time);
+            scene.render(time);
+            return isUpdated;
+        }).then(function() {
+            var primitive = scene.groundPrimitives.get(0);
+            var attributes = primitive.getGeometryInstanceAttributes(entity);
+            expect(attributes).toBeDefined();
+            expect(attributes.show).toEqual(ShowGeometryInstanceAttribute.toValue(true));
+            expect(attributes.color).toEqual(ColorGeometryInstanceAttribute.toValue(Color.WHITE));
+            expect(primitive.appearance).toBeInstanceOf(PolylineColorAppearance);
+            expect(primitive.appearance.closed).toBe(false);
+
+            entity.polyline.show = false;
+
+            return pollToPromise(function() {
+                scene.initializeFrame();
+                var isUpdated = visualizer.update(time);
+                scene.render(time);
+                return isUpdated;
+            });
+        }).then(function() {
+            expect(scene.primitives.length).toEqual(0);
+
+            objects.remove(entity);
+            visualizer.destroy();
+        });
+    });
 }, 'WebGL');
