@@ -50,7 +50,7 @@ define([
      *        If more than one are supplied, suggestions will be gathered for the geocoders that support it,
      *        and if no suggestion is selected the result from the first geocoder service wil be used.
      * @param {Number} [options.flightDuration] The duration of the camera flight to an entered location, in seconds.
-     * @param {Geocoder~DestinationFoundFunction} [options.destinationFound] A callback function that is called after a successful geocode.  If not supplied, the default behavior is to fly the camera to the result destination.
+     * @param {Geocoder~DestinationFoundFunction} [options.destinationFound=GeocoderViewModel.flyToDestination] A callback function that is called after a successful geocode.  If not supplied, the default behavior is to fly the camera to the result destination.
      */
     function GeocoderViewModel(options) {
         //>>includeStart('debug', pragmas.debug);
