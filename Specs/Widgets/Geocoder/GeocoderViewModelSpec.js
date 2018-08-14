@@ -177,7 +177,7 @@ defineSuite([
     });
 
     it('can activate selected search suggestion', function () {
-        spyOn(GeocoderViewModel, '_updateCamera');
+        spyOn(GeocoderViewModel, 'flyToDestination');
         var destination = new Rectangle(0.0, -0.1, 0.1, 0.1);
         var geocoder = new GeocoderViewModel({
             scene : scene,
@@ -188,11 +188,11 @@ defineSuite([
         geocoder._selectedSuggestion = suggestion;
         geocoder.activateSuggestion(suggestion);
         expect(geocoder._searchText).toEqual('a');
-        expect(GeocoderViewModel._updateCamera).toHaveBeenCalledWith(geocoder, destination);
+        expect(GeocoderViewModel.flyToDestination).toHaveBeenCalledWith(geocoder, destination);
     });
 
     it('if more than one geocoder service is provided, use first result from first geocode in array order', function () {
-        spyOn(GeocoderViewModel, '_updateCamera');
+        spyOn(GeocoderViewModel, 'flyToDestination');
 
         var geocoder = new GeocoderViewModel({
             scene : scene,
@@ -202,7 +202,7 @@ defineSuite([
 
         geocoder.search();
         expect(geocoder._searchText).toEqual(geocoderResults2[0].displayName);
-        expect(GeocoderViewModel._updateCamera).toHaveBeenCalledWith(geocoder, mockDestination);
+        expect(GeocoderViewModel.flyToDestination).toHaveBeenCalledWith(geocoder, mockDestination);
     });
 
     it('can update autoComplete suggestions list using multiple geocoders', function () {
@@ -216,7 +216,7 @@ defineSuite([
     });
 
     it('uses custom destination found callback', function () {
-        spyOn(GeocoderViewModel, '_updateCamera');
+        spyOn(GeocoderViewModel, 'flyToDestination');
 
         var destinationFound = jasmine.createSpy();
         var geocoder = new GeocoderViewModel({
@@ -228,7 +228,7 @@ defineSuite([
         geocoder.search();
 
         expect(geocoder._searchText).toEqual(geocoderResults2[0].displayName);
-        expect(GeocoderViewModel._updateCamera).not.toHaveBeenCalled();
+        expect(GeocoderViewModel.flyToDestination).not.toHaveBeenCalled();
         expect(destinationFound).toHaveBeenCalledWith(geocoder, mockDestination);
     });
 

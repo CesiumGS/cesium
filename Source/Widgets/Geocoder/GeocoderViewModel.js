@@ -139,7 +139,7 @@ define([
             that._searchText = data.displayName;
             var destination = data.destination;
             clearSuggestions(that);
-            that.destinationFoundCommand(that, destination);
+            that.destinationFound(that, destination);
         };
 
         this.hideSuggestions = function () {
@@ -174,9 +174,9 @@ define([
 
         /**
          * Gets and sets the command called when a geocode destination is found
-         * @type {Command}
+         * @type {Geocoder~DestinationFoundFunction}
          */
-        this.destinationFoundCommand = createCommand(defaultValue(options.destinationFound, GeocoderViewModel._updateCamera));
+        this.destinationFound = defaultValue(options.destinationFound, GeocoderViewModel.flyToDestination);
 
         this._focusTextbox = false;
 
@@ -362,7 +362,7 @@ define([
             });
     }
 
-    function updateCamera(viewModel, destination) {
+    function flyToDestination(viewModel, destination) {
         var scene = viewModel._scene;
         var mapProjection = scene.mapProjection;
         var ellipsoid = mapProjection.ellipsoid;
@@ -450,7 +450,7 @@ define([
                 var geocoderResults = result.value;
                 if (result.state === 'fulfilled' && defined(geocoderResults) && geocoderResults.length > 0) {
                     viewModel._searchText = geocoderResults[0].displayName;
-                    viewModel.destinationFoundCommand(viewModel, geocoderResults[0].destination);
+                    viewModel.destinationFound(viewModel, geocoderResults[0].destination);
                     return;
                 }
                 viewModel._searchText = query + ' (not found)';
@@ -526,8 +526,13 @@ define([
             });
     }
 
+    /**
+     * A function to fly to the destination found by a successful geocode.
+     * @type {Geocoder~DestinationFoundFunction}
+     */
+    GeocoderViewModel.flyToDestination = flyToDestination;
+
     //exposed for testing
-    GeocoderViewModel._updateCamera = updateCamera;
     GeocoderViewModel._updateSearchSuggestions = updateSearchSuggestions;
     GeocoderViewModel._adjustSuggestionsScroll = adjustSuggestionsScroll;
 

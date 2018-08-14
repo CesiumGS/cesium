@@ -34,8 +34,7 @@ defineSuite([
         var viewModel = geocoder.viewModel;
         expect(viewModel.scene).toBe(scene);
         expect(viewModel.flightDuration).toBe(flightDuration);
-        viewModel.destinationFoundCommand();
-        expect(destinationFound).toHaveBeenCalled();
+        expect(viewModel.destinationFound).toBe(destinationFound);
         geocoder.destroy();
     });
 
