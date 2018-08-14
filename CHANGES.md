@@ -23,6 +23,7 @@ Change Log
 * Improved `Plane` entities so they are better aligned with the globe surface [#6887](https://github.com/AnalyticalGraphicsInc/cesium/pull/6887)
 * Fixed crash when rendering translucent objects when all shadow maps in the scene set `fromLightSource` to false. [#6883](https://github.com/AnalyticalGraphicsInc/cesium/pull/6883)
 * Fixed night shading in 2D and Columbus view. [#4122](https://github.com/AnalyticalGraphicsInc/cesium/issues/4122)
+* Fixed a crash when setting show to `false` on a polyline clamped to the ground. [#6912](https://github.com/AnalyticalGraphicsInc/cesium/issues/6912)
 
 ### 1.48 - 2018-08-01
 
