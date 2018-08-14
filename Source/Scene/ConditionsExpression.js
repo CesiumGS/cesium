@@ -34,7 +34,7 @@ define([
      *         ['true', 'color("#FFFFFF")']
      *     ]
      * });
-     * expression.evaluateColor(frameState, feature, result); // returns a Cesium.Color object
+     * expression.evaluateColor(feature, result); // returns a Cesium.Color object
      */
     function ConditionsExpression(conditionsExpression, defines) {
         this._conditionsExpression = clone(conditionsExpression, true);
@@ -96,12 +96,11 @@ define([
      * a {@link Cartesian2}, {@link Cartesian3}, or {@link Cartesian4} object will be returned. If the <code>result</code> argument is
      * a {@link Color}, the {@link Cartesian4} value is converted to a {@link Color} and then returned.
      *
-     * @param {FrameState} frameState The frame state.
      * @param {Cesium3DTileFeature} feature The feature whose properties may be used as variables in the expression.
      * @param {Object} [result] The object onto which to store the result.
      * @returns {Boolean|Number|String|RegExp|Cartesian2|Cartesian3|Cartesian4|Color} The result of evaluating the expression.
      */
-    ConditionsExpression.prototype.evaluate = function(frameState, feature, result) {
+    ConditionsExpression.prototype.evaluate = function(feature, result) {
         var conditions = this._runtimeConditions;
         if (!defined(conditions)) {
             return undefined;
@@ -109,8 +108,8 @@ define([
         var length = conditions.length;
         for (var i = 0; i < length; ++i) {
             var statement = conditions[i];
-            if (statement.condition.evaluate(frameState, feature)) {
-                return statement.expression.evaluate(frameState, feature, result);
+            if (statement.condition.evaluate(feature)) {
+                return statement.expression.evaluate(feature, result);
             }
         }
     };
@@ -120,12 +119,11 @@ define([
      * <p>
      * This is equivalent to {@link ConditionsExpression#evaluate} but always returns a {@link Color} object.
      * </p>
-     * @param {FrameState} frameState The frame state.
      * @param {Cesium3DTileFeature} feature The feature whose properties may be used as variables in the expression.
      * @param {Color} [result] The object in which to store the result
      * @returns {Color} The modified result parameter or a new Color instance if one was not provided.
      */
-    ConditionsExpression.prototype.evaluateColor = function(frameState, feature, result) {
+    ConditionsExpression.prototype.evaluateColor = function(feature, result) {
         var conditions = this._runtimeConditions;
         if (!defined(conditions)) {
             return undefined;
@@ -133,8 +131,8 @@ define([
         var length = conditions.length;
         for (var i = 0; i < length; ++i) {
             var statement = conditions[i];
-            if (statement.condition.evaluate(frameState, feature)) {
-                return statement.expression.evaluateColor(frameState, feature, result);
+            if (statement.condition.evaluate(feature)) {
+                return statement.expression.evaluateColor(feature, result);
             }
         }
     };

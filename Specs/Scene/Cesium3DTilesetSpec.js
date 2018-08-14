@@ -2016,13 +2016,13 @@ defineSuite([
     it('applies custom style to a tileset', function() {
         var style = new Cesium3DTileStyle();
         style.show = {
-            evaluate : function(frameState, feature) {
+            evaluate : function(feature) {
                 return this._value;
             },
             _value : false
         };
         style.color = {
-            evaluateColor : function(frameState, feature, result) {
+            evaluateColor : function(feature, result) {
                 return Color.clone(Color.WHITE, result);
             }
         };

@@ -23,6 +23,9 @@ defineSuite([
     }, {
         displayName: 'b',
         destination: mockDestination
+    }, {
+        displayName: 'c',
+        destination: mockDestination
     }];
     var customGeocoderOptions = {
         autoComplete: true,
@@ -158,8 +161,8 @@ defineSuite([
             geocoderServices : [customGeocoderOptions]
         });
         geocoder._searchText = 'some_text';
-        geocoder._updateSearchSuggestions(geocoder);
-        expect(geocoder._suggestions.length).toEqual(2);
+        GeocoderViewModel._updateSearchSuggestions(geocoder);
+        expect(geocoder._suggestions.length).toEqual(3);
     });
 
     it('update search suggestions results in empty list if the query is empty', function() {
@@ -168,35 +171,38 @@ defineSuite([
             geocoderServices : [customGeocoderOptions]
         });
         geocoder._searchText = '';
-        spyOn(geocoder, '_adjustSuggestionsScroll');
-        geocoder._updateSearchSuggestions(geocoder);
+
+        GeocoderViewModel._updateSearchSuggestions(geocoder);
         expect(geocoder._suggestions.length).toEqual(0);
     });
 
     it('can activate selected search suggestion', function () {
+        spyOn(GeocoderViewModel, 'flyToDestination');
+        var destination = new Rectangle(0.0, -0.1, 0.1, 0.1);
         var geocoder = new GeocoderViewModel({
             scene : scene,
             geocoderServices : [customGeocoderOptions]
         });
-        spyOn(geocoder, '_updateCamera');
-        spyOn(geocoder, '_adjustSuggestionsScroll');
 
-        var suggestion = { displayName: 'a', destination: new Rectangle(0.0, -0.1, 0.1, 0.1) };
+        var suggestion = { displayName: 'a', destination: destination };
         geocoder._selectedSuggestion = suggestion;
         geocoder.activateSuggestion(suggestion);
         expect(geocoder._searchText).toEqual('a');
+        expect(GeocoderViewModel.flyToDestination).toHaveBeenCalledWith(geocoder, destination);
     });
 
     it('if more than one geocoder service is provided, use first result from first geocode in array order', function () {
+        spyOn(GeocoderViewModel, 'flyToDestination');
+
         var geocoder = new GeocoderViewModel({
             scene : scene,
             geocoderServices : [noResultsGeocoder, customGeocoderOptions2]
         });
         geocoder._searchText = 'sthsnth'; // an empty query will prevent geocoding
-        spyOn(geocoder, '_updateCamera');
-        spyOn(geocoder, '_adjustSuggestionsScroll');
+
         geocoder.search();
         expect(geocoder._searchText).toEqual(geocoderResults2[0].displayName);
+        expect(GeocoderViewModel.flyToDestination).toHaveBeenCalledWith(geocoder, mockDestination);
     });
 
     it('can update autoComplete suggestions list using multiple geocoders', function () {
@@ -205,10 +211,48 @@ defineSuite([
             geocoderServices : [customGeocoderOptions, customGeocoderOptions2]
         });
         geocoder._searchText = 'sthsnth'; // an empty query will prevent geocoding
-        spyOn(geocoder, '_updateCamera');
-        spyOn(geocoder, '_adjustSuggestionsScroll');
-        geocoder._updateSearchSuggestions(geocoder);
+        GeocoderViewModel._updateSearchSuggestions(geocoder);
         expect(geocoder._suggestions.length).toEqual(geocoderResults1.length + geocoderResults2.length);
     });
 
+    it('uses custom destination found callback', function () {
+        spyOn(GeocoderViewModel, 'flyToDestination');
+
+        var destinationFound = jasmine.createSpy();
+        var geocoder = new GeocoderViewModel({
+            scene : scene,
+            geocoderServices : [noResultsGeocoder, customGeocoderOptions2],
+            destinationFound: destinationFound
+        });
+        geocoder._searchText = 'sthsnth'; // an empty query will prevent geocoding
+        geocoder.search();
+
+        expect(geocoder._searchText).toEqual(geocoderResults2[0].displayName);
+        expect(GeocoderViewModel.flyToDestination).not.toHaveBeenCalled();
+        expect(destinationFound).toHaveBeenCalledWith(geocoder, mockDestination);
+    });
+
+    it('automatic suggestions can be navigated by arrow up/down keys', function() {
+        spyOn(GeocoderViewModel, '_adjustSuggestionsScroll');
+        var viewModel = new GeocoderViewModel({
+            scene : scene,
+            geocoderServices : [customGeocoderOptions]
+        });
+        viewModel._searchText = 'some_text';
+        GeocoderViewModel._updateSearchSuggestions(viewModel);
+
+        expect(viewModel._selectedSuggestion).toEqual(undefined);
+        viewModel._handleArrowDown(viewModel);
+        expect(viewModel._selectedSuggestion.displayName).toEqual('a');
+        viewModel._handleArrowDown(viewModel);
+        viewModel._handleArrowDown(viewModel);
+        expect(viewModel._selectedSuggestion.displayName).toEqual('c');
+        viewModel._handleArrowDown(viewModel);
+        expect(viewModel._selectedSuggestion.displayName).toEqual('a');
+        viewModel._handleArrowDown(viewModel);
+        viewModel._handleArrowUp(viewModel);
+        expect(viewModel._selectedSuggestion.displayName).toEqual('a');
+        viewModel._handleArrowUp(viewModel);
+        expect(viewModel._selectedSuggestion).toBeUndefined();
+    });
 }, 'WebGL');
