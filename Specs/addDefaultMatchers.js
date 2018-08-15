@@ -297,6 +297,22 @@ define([
                 };
             },
 
+            toDrillPickPrimitive : function(util, customEqualityTesters) {
+                return {
+                    compare : function(actual, expected, x, y, width, height) {
+                        return drillPickPrimitiveEquals(actual, 1, x, y, width, height);
+                    }
+                };
+            },
+
+            notToDrillPick : function(util, customEqualityTesters) {
+                return {
+                    compare : function(actual, expected, x, y, width, height) {
+                        return drillPickPrimitiveEquals(actual, 0, x, y, width, height);
+                    }
+                };
+            },
+
             toPickAndCall : function(util, customEqualityTesters) {
                 return {
                     compare : function(actual, expected) {
@@ -518,6 +534,36 @@ define([
 
         if (defined(expected)) {
             pass = (result.primitive === expected);
+        } else {
+            pass = !defined(result);
+        }
+
+        if (!pass) {
+            message = 'Expected to pick ' + expected + ', but picked: ' + result;
+        }
+
+        return {
+            pass : pass,
+            message : message
+        };
+    }
+
+    function drillPickPrimitiveEquals(actual, expected, x, y, width, height) {
+        var scene = actual;
+        var windowPosition = new Cartesian2(x, y);
+        var result = scene.drillPick(windowPosition, undefined, width, height);
+
+        if (!!window.webglStub) {
+            return {
+                pass : true
+            };
+        }
+
+        var pass = true;
+        var message;
+
+        if (defined(expected)) {
+            pass = (result.length === expected);
         } else {
             pass = !defined(result);
         }

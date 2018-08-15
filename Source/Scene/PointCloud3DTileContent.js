@@ -260,9 +260,9 @@ define([
         this._pointCloud.color = enabled ? color : Color.WHITE;
     };
 
-    PointCloud3DTileContent.prototype.applyStyle = function(frameState, style) {
+    PointCloud3DTileContent.prototype.applyStyle = function(style) {
         if (defined(this._batchTable)) {
-            this._batchTable.applyStyle(frameState, style);
+            this._batchTable.applyStyle(style);
         } else {
             this._styleDirty = true;
         }

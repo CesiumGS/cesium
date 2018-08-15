@@ -50,6 +50,7 @@ define([
      *        If more than one are supplied, suggestions will be gathered for the geocoders that support it,
      *        and if no suggestion is selected the result from the first geocoder service wil be used.
      * @param {Number} [options.flightDuration] The duration of the camera flight to an entered location, in seconds.
+     * @param {Geocoder~DestinationFoundFunction} [options.destinationFound=GeocoderViewModel.flyToDestination] A callback function that is called after a successful geocode.  If not supplied, the default behavior is to fly the camera to the result destination.
      */
     function GeocoderViewModel(options) {
         //>>includeStart('debug', pragmas.debug);
@@ -77,9 +78,7 @@ define([
         this._suggestions = [];
         this._selectedSuggestion = undefined;
         this._showSuggestions = true;
-        this._updateCamera = updateCamera;
-        this._adjustSuggestionsScroll = adjustSuggestionsScroll;
-        this._updateSearchSuggestions = updateSearchSuggestions;
+
         this._handleArrowDown = handleArrowDown;
         this._handleArrowUp = handleArrowUp;
 
@@ -140,7 +139,7 @@ define([
             that._searchText = data.displayName;
             var destination = data.destination;
             clearSuggestions(that);
-            updateCamera(that, destination);
+            that.destinationFound(that, destination);
         };
 
         this.hideSuggestions = function () {
@@ -173,6 +172,12 @@ define([
          */
         this.autoComplete = defaultValue(options.autocomplete, true);
 
+        /**
+         * Gets and sets the command called when a geocode destination is found
+         * @type {Geocoder~DestinationFoundFunction}
+         */
+        this.destinationFound = defaultValue(options.destinationFound, GeocoderViewModel.flyToDestination);
+
         this._focusTextbox = false;
 
         knockout.track(this, ['_searchText', '_isSearchInProgress', 'keepExpanded', '_suggestions', '_selectedSuggestion', '_showSuggestions', '_focusTextbox']);
@@ -180,7 +185,7 @@ define([
         var searchTextObservable = knockout.getObservable(this, '_searchText');
         searchTextObservable.extend({ rateLimit: { timeout: 500 } });
         this._suggestionSubscription = searchTextObservable.subscribe(function() {
-            updateSearchSuggestions(that);
+            GeocoderViewModel._updateSearchSuggestions(that);
         });
         /**
          * Gets a value indicating whether a search is currently in progress.  This property is observable.
@@ -326,7 +331,7 @@ define([
         }
         next = currentIndex - 1;
         viewModel._selectedSuggestion = viewModel._suggestions[next];
-        adjustSuggestionsScroll(viewModel, next);
+        GeocoderViewModel._adjustSuggestionsScroll(viewModel, next);
     }
 
     function handleArrowDown(viewModel) {
@@ -338,7 +343,7 @@ define([
         var next = (currentIndex + 1) % numberOfSuggestions;
         viewModel._selectedSuggestion = viewModel._suggestions[next];
 
-        adjustSuggestionsScroll(viewModel, next);
+        GeocoderViewModel._adjustSuggestionsScroll(viewModel, next);
     }
 
     function computeFlyToLocationForCartographic(cartographic, terrainProvider) {
@@ -357,7 +362,7 @@ define([
             });
     }
 
-    function updateCamera(viewModel, destination) {
+    function flyToDestination(viewModel, destination) {
         var scene = viewModel._scene;
         var mapProjection = scene.mapProjection;
         var ellipsoid = mapProjection.ellipsoid;
@@ -445,7 +450,7 @@ define([
                 var geocoderResults = result.value;
                 if (result.state === 'fulfilled' && defined(geocoderResults) && geocoderResults.length > 0) {
                     viewModel._searchText = geocoderResults[0].displayName;
-                    updateCamera(viewModel, geocoderResults[0].destination);
+                    viewModel.destinationFound(viewModel, geocoderResults[0].destination);
                     return;
                 }
                 viewModel._searchText = query + ' (not found)';
@@ -520,6 +525,16 @@ define([
                 }
             });
     }
+
+    /**
+     * A function to fly to the destination found by a successful geocode.
+     * @type {Geocoder~DestinationFoundFunction}
+     */
+    GeocoderViewModel.flyToDestination = flyToDestination;
+
+    //exposed for testing
+    GeocoderViewModel._updateSearchSuggestions = updateSearchSuggestions;
+    GeocoderViewModel._adjustSuggestionsScroll = adjustSuggestionsScroll;
 
     return GeocoderViewModel;
 });

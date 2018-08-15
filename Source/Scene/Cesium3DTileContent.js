@@ -271,12 +271,11 @@ define([
      * not part of the public Cesium API.
      * </p>
      *
-     * @param {FrameSate} frameState The frame state.
      * @param {Cesium3DTileStyle} style The style.
      *
      * @private
      */
-    Cesium3DTileContent.prototype.applyStyle = function(frameState, style) {
+    Cesium3DTileContent.prototype.applyStyle = function(style) {
         DeveloperError.throwInstantiationError();
     };
 
