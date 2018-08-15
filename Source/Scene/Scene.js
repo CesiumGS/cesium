@@ -176,6 +176,59 @@ define([
         };
     };
 
+    function View(scene, camera, viewport) {
+        var context = scene.context;
+
+        var globeDepth;
+        if (context.depthTexture) {
+            globeDepth = new GlobeDepth();
+        }
+
+        var oit;
+        if (scene._useOIT && context.depthTexture) {
+            oit = new OIT(context);
+        }
+
+        var passState = new PassState(context);
+        passState.viewport = BoundingRectangle.clone(viewport);
+
+        this.camera = camera;
+        this.viewport = viewport;
+        this.passState = passState;
+        this.pickFramebuffer = new PickFramebuffer(context);
+        this.pickDepthFramebuffer = new PickDepthFramebuffer();
+        this.sceneFramebuffer = new SceneFramebuffer();
+        this.globeDepth = globeDepth;
+        this.oit = oit;
+        this.pickDepths = [];
+        this.debugGlobeDepths = [];
+        this.frustumCommandsList = [];
+    }
+
+    View.prototype.destroy = function() {
+        this.pickFramebuffer = this.pickFramebuffer && this.pickFramebuffer.destroy();
+        this.pickDepthFramebuffer = this.pickDepthFramebuffer && this.pickDepthFramebuffer.destroy();
+        this.sceneFramebuffer = this.sceneFramebuffer && this.sceneFramebuffer.destroy();
+        this.globeDepth = this.globeDepth && this.globeDepth.destroy();
+        this.oit = this.oit && this.oit.destroy();
+
+        var i;
+        var length;
+
+        var pickDepths = this.pickDepths;
+        var debugGlobeDepths = this.debugGlobeDepths;
+
+        length = pickDepths.length;
+        for (i = 0; i < length; ++i) {
+            pickDepths[i].destroy();
+        }
+
+        length = debugGlobeDepths.length;
+        for (i = 0; i < length; ++i) {
+            debugGlobeDepths[i].destroy();
+        }
+    };
+
     /**
      * The container for all 3D graphical objects and state in a Cesium virtual scene.  Generally,
      * a scene is not created directly; instead, it is implicitly created by {@link CesiumWidget}.
@@ -282,14 +335,6 @@ define([
         this._removeCreditContainer = !hasCreditContainer;
         this._creditContainer = creditContainer;
 
-        var ps = new PassState(context);
-        ps.viewport = new BoundingRectangle();
-        ps.viewport.x = 0;
-        ps.viewport.y = 0;
-        ps.viewport.width = context.drawingBufferWidth;
-        ps.viewport.height = context.drawingBufferHeight;
-        this._passState = ps;
-
         this._canvas = canvas;
         this._context = context;
         this._computeEngine = new ComputeEngine(context);
@@ -308,29 +353,12 @@ define([
         this._sunPostProcess = undefined;
 
         this._computeCommandList = [];
-        this._frustumCommandsList = [];
         this._overlayCommandList = [];
-
-        this._pickFramebuffer = undefined;
-        this._pickDepthFramebuffer = new PickDepthFramebuffer();
 
         this._useOIT = defaultValue(options.orderIndependentTranslucency, true);
         this._executeOITFunction = undefined;
 
-        var globeDepth;
-        if (context.depthTexture) {
-            globeDepth = new GlobeDepth();
-        }
-
-        var oit;
-        if (this._useOIT && defined(globeDepth)) {
-            oit = new OIT(context);
-        }
-
-        this._globeDepth = globeDepth;
         this._depthPlane = new DepthPlane();
-        this._oit = oit;
-        this._sceneFramebuffer = new SceneFramebuffer();
 
         this._clearColorCommand = new ClearCommand({
             color : new Color(),
@@ -344,9 +372,6 @@ define([
         this._stencilClearCommand = new ClearCommand({
             stencil : 0
         });
-
-        this._pickDepths = [];
-        this._debugGlobeDepths = [];
 
         this._depthOnlyRenderStateCache = {};
         this._pickRenderStateCache = {};
@@ -766,12 +791,22 @@ define([
             renderTranslucentDepthForPick : false,
 
             originalFramebuffer : undefined,
+            pickFramebuffer : undefined,
+            pickDepthFramebuffer : undefined,
+            sceneFramebuffer : undefined,
+            pickDepths : undefined,
+            globeDepth : undefined,
+            debugGlobeDepths : undefined,
+            oit : undefined,
+
             useGlobeDepthFramebuffer : false,
             useOIT : false,
             useInvertClassification : false,
             usePostProcess : false,
             usePostProcessSelected : false,
-            useWebVR : false
+            useWebVR : false,
+
+            frustumCommandsList : undefined
         };
 
         this._useWebVR = false;
@@ -810,10 +845,15 @@ define([
          */
         this.maximumRenderTimeChange = defaultValue(options.maximumRenderTimeChange, 0.0);
         this._lastRenderTime = undefined;
+        this._frameRateMonitor = undefined;
 
         this._removeRequestListenerCallback = RequestScheduler.requestCompletedEvent.addEventListener(requestRenderAfterFrame(this));
         this._removeTaskProcessorListenerCallback = TaskProcessor.taskCompletedEvent.addEventListener(requestRenderAfterFrame(this));
         this._removeGlobeCallbacks = [];
+
+        var viewport = new BoundingRectangle(0, 0, context.drawingBufferWidth, context.drawingBufferHeight);
+
+        this._view = new View(this, this._camera, viewport);
 
         // initial guess at frustums.
         var near = camera.frustum.near;
@@ -821,7 +861,7 @@ define([
         var farToNearRatio = this._logDepthBuffer ? this.logarithmicDepthFarToNearRatio : this.farToNearRatio;
 
         var numFrustums = Math.ceil(Math.log(far / near) / Math.log(farToNearRatio));
-        updateFrustums(near, far, farToNearRatio, numFrustums, this._logDepthBuffer, this._frustumCommandsList, false, undefined, false, undefined);
+        updateFrustums(near, far, farToNearRatio, numFrustums, this._logDepthBuffer, this._view.frustumCommandsList, false, undefined, false, undefined);
 
         // give frameState, camera, and screen space camera controller initial state before rendering
         updateFrameState(this, 0.0, JulianDate.now());
@@ -1267,7 +1307,7 @@ define([
          */
         orderIndependentTranslucency : {
             get : function() {
-                return defined(this._oit);
+                return this._useOIT;
             }
         },
 
@@ -1317,13 +1357,26 @@ define([
         /**
          * Gets the number of frustums used in the last frame.
          * @memberof Scene.prototype
+         * @type {FrustumCommands[]}
+         *
+         * @private
+         */
+        frustumCommandsList : {
+            get : function() {
+                return this._environmentState.frustumCommandsList;
+            }
+        },
+
+        /**
+         * Gets the number of frustums used in the last frame.
+         * @memberof Scene.prototype
          * @type {Number}
          *
          * @private
          */
         numberOfFrustums : {
             get : function() {
-                return this._frustumCommandsList.length;
+                return this._environmentState.frustumCommandsList.length;
             }
         },
 
@@ -1513,6 +1566,7 @@ define([
         }
 
         var frameState = scene.frameState;
+        var environmentState = scene._environmentState;
         var context = scene._context;
         var shadowsEnabled = frameState.shadowState.shadowsEnabled;
         var shadowMaps = frameState.shadowState.shadowMaps;
@@ -1564,7 +1618,7 @@ define([
                 derivedCommands.picking = DerivedCommand.createPickDerivedCommand(scene, command, context, derivedCommands.picking);
             }
 
-            var oit = scene._oit;
+            var oit = environmentState.oit;
             if (command.pass === Pass.TRANSLUCENT && defined(oit) && oit.isSupported()) {
                 if (lightShadowsEnabled && command.receiveShadows) {
                     derivedCommands.oit = defined(derivedCommands.oit) ? derivedCommands.oit : {};
@@ -1682,7 +1736,7 @@ define([
             command.debugOverlappingFrustums = 0;
         }
 
-        var frustumCommandsList = scene._frustumCommandsList;
+        var frustumCommandsList = scene._environmentState.frustumCommandsList;
         var length = frustumCommandsList.length;
 
         for (var i = 0; i < length; ++i) {
@@ -1733,6 +1787,7 @@ define([
 
     function createPotentiallyVisibleSet(scene) {
         var frameState = scene._frameState;
+        var environmentState = scene._environmentState;
         var camera = frameState.camera;
         var direction = camera.directionWC;
         var position = camera.positionWC;
@@ -1748,7 +1803,7 @@ define([
             };
         }
 
-        var frustumCommandsList = scene._frustumCommandsList;
+        var frustumCommandsList = environmentState.frustumCommandsList;
         var numberOfFrustums = frustumCommandsList.length;
         var numberOfPasses = Pass.NUMBER_OF_PASSES;
         for (var n = 0; n < numberOfFrustums; ++n) {
@@ -2179,19 +2234,21 @@ define([
     }
 
     function getDebugGlobeDepth(scene, index) {
-        var globeDepth = scene._debugGlobeDepths[index];
+        var globeDepths = scene._environmentState.debugGlobeDepths;
+        var globeDepth = globeDepths[index];
         if (!defined(globeDepth) && scene.context.depthTexture) {
             globeDepth = new GlobeDepth();
-            scene._debugGlobeDepths[index] = globeDepth;
+            globeDepths[index] = globeDepth;
         }
         return globeDepth;
     }
 
     function getPickDepth(scene, index) {
-        var pickDepth = scene._pickDepths[index];
+        var pickDepths = scene._environmentState.pickDepths;
+        var pickDepth = pickDepths[index];
         if (!defined(pickDepth)) {
             pickDepth = new PickDepth();
-            scene._pickDepths[index] = pickDepth;
+            pickDepths[index] = pickDepth;
         }
         return pickDepth;
     }
@@ -2205,7 +2262,6 @@ define([
         var camera = scene._camera;
         var context = scene.context;
         var us = context.uniformState;
-        var frameState = scene._frameState;
 
         us.updateCamera(camera);
 
@@ -2250,9 +2306,9 @@ define([
                 if (scene.sunBloom && !useWebVR) {
                     var framebuffer;
                     if (environmentState.useGlobeDepthFramebuffer) {
-                        framebuffer = scene._globeDepth.framebuffer;
+                        framebuffer = environmentState.globeDepth.framebuffer;
                     } else if (environmentState.usePostProcess) {
-                        framebuffer = scene._sceneFramebuffer.getFramebuffer();
+                        framebuffer = environmentState.sceneFramebuffer.getFramebuffer();
                     } else {
                         framebuffer = environmentState.originalFramebuffer;
                     }
@@ -2273,7 +2329,7 @@ define([
         if (environmentState.useOIT) {
             if (!defined(scene._executeOITFunction)) {
                 scene._executeOITFunction = function(scene, executeFunction, passState, commands, invertClassification) {
-                    scene._oit.executeCommands(scene, executeFunction, passState, commands, invertClassification);
+                    environmentState.oit.executeCommands(scene, executeFunction, passState, commands, invertClassification);
                 };
             }
             executeTranslucentCommands = scene._executeOITFunction;
@@ -2294,7 +2350,7 @@ define([
 
         // Execute commands in each frustum in back to front order
         var j;
-        var frustumCommandsList = scene._frustumCommandsList;
+        var frustumCommandsList = environmentState.frustumCommandsList;
         var numFrustums = frustumCommandsList.length;
 
         for (var i = 0; i < numFrustums; ++i) {
@@ -2316,11 +2372,11 @@ define([
                 us.updateFrustum(frustum);
             }
 
-            var globeDepth = scene.debugShowGlobeDepth ? getDebugGlobeDepth(scene, index) : scene._globeDepth;
+            var globeDepth = scene.debugShowGlobeDepth ? getDebugGlobeDepth(scene, index) : environmentState.globeDepth;
 
             var fb;
             if (scene.debugShowGlobeDepth && defined(globeDepth) && environmentState.useGlobeDepthFramebuffer) {
-                globeDepth.update(context, passState);
+                globeDepth.update(context, passState, environmentState.view.viewport);
                 globeDepth.clear(context, passState, scene._clearColorCommand.color);
                 fb = passState.framebuffer;
                 passState.framebuffer = globeDepth.framebuffer;
@@ -2340,7 +2396,7 @@ define([
             }
 
             if (defined(globeDepth) && environmentState.useGlobeDepthFramebuffer) {
-                globeDepth.update(context, passState);
+                globeDepth.update(context, passState, environmentState.view.viewport);
                 globeDepth.executeCopyDepth(context, passState);
             }
 
@@ -2525,7 +2581,7 @@ define([
             }
 
             var originalFramebuffer = passState.framebuffer;
-            passState.framebuffer = scene._sceneFramebuffer.getIdFramebuffer();
+            passState.framebuffer = environmentState.sceneFramebuffer.getIdFramebuffer();
 
             // reset frustum
             frustum.near = index !== 0 ? frustumCommands.near * scene.opaqueFrustumNearOffset : frustumCommands.near;
@@ -2690,16 +2746,9 @@ define([
     var scratchEyeTranslation = new Cartesian3();
 
     function updateAndExecuteCommands(scene, passState, backgroundColor) {
-        var context = scene._context;
         var frameState = scene._frameState;
         var mode = frameState.mode;
         var useWebVR = scene._environmentState.useWebVR;
-
-        var viewport = passState.viewport;
-        viewport.x = 0;
-        viewport.y = 0;
-        viewport.width = context.drawingBufferWidth;
-        viewport.height = context.drawingBufferHeight;
 
         if (useWebVR) {
             executeWebVRCommands(scene, passState, backgroundColor);
@@ -2714,7 +2763,6 @@ define([
     function executeWebVRCommands(scene, passState, backgroundColor) {
         var frameState = scene._frameState;
         var environmentState = scene._environmentState;
-        var context = scene._context;
         var camera = frameState.camera;
         var renderTranslucentDepthForPick = environmentState.renderTranslucentDepthForPick;
 
@@ -2736,8 +2784,7 @@ define([
         var viewport = passState.viewport;
         viewport.x = 0;
         viewport.y = 0;
-        viewport.width = context.drawingBufferWidth * 0.5;
-        viewport.height = context.drawingBufferHeight;
+        viewport.width = viewport.width * 0.5;
 
         var savedCamera = Camera.clone(camera, scene._cameraVR);
         savedCamera.frustum = camera.frustum;
@@ -2756,7 +2803,7 @@ define([
 
         executeCommands(scene, passState);
 
-        viewport.x = passState.viewport.width;
+        viewport.x = viewport.width;
 
         Cartesian3.subtract(savedCamera.position, eyeTranslation, camera.position);
         camera.frustum.xOffset = -offset;
@@ -2915,7 +2962,7 @@ define([
         executeCommands(scene, passState);
     }
 
-    function updateEnvironment(scene, passState) {
+    function updateEnvironment(scene, view) {
         var frameState = scene._frameState;
 
         // Update celestial and terrestrial environment effects.
@@ -2937,11 +2984,20 @@ define([
             }
             environmentState.skyAtmosphereCommand = defined(skyAtmosphere) ? skyAtmosphere.update(frameState) : undefined;
             environmentState.skyBoxCommand = defined(scene.skyBox) ? scene.skyBox.update(frameState) : undefined;
-            var sunCommands = defined(scene.sun) ? scene.sun.update(frameState, passState) : undefined;
+            var sunCommands = defined(scene.sun) ? scene.sun.update(frameState, view.passState) : undefined;
             environmentState.sunDrawCommand = defined(sunCommands) ? sunCommands.drawCommand : undefined;
             environmentState.sunComputeCommand = defined(sunCommands) ? sunCommands.computeCommand : undefined;
             environmentState.moonCommand = defined(scene.moon) ? scene.moon.update(frameState) : undefined;
         }
+
+        // Update framebuffers
+        environmentState.pickFramebuffer = view.pickFramebuffer;
+        environmentState.pickDepthFramebuffer = view.pickDepthFramebuffer;
+        environmentState.sceneFramebuffer = view.sceneFramebuffer;
+        environmentState.pickDepths = view.pickDepths;
+        environmentState.globeDepth = view.globeDepth;
+        environmentState.debugGlobeDepths = view.debugGlobeDepths;
+        environmentState.oit = view.oit;
 
         var clearGlobeDepth = environmentState.clearGlobeDepth = defined(globe) && (!globe.depthTestAgainstTerrain || scene.mode === SceneMode.SCENE2D);
         var useDepthPlane = environmentState.useDepthPlane = clearGlobeDepth && scene.mode === SceneMode.SCENE3D;
@@ -2954,6 +3010,8 @@ define([
 
         environmentState.renderTranslucentDepthForPick = false;
         environmentState.useWebVR = scene._useWebVR && scene.mode !== SceneMode.SCENE2D;
+        environmentState.frustumCommandsList = view.frustumCommandsList;
+        environmentState.view = view;
 
         var occluder = (frameState.mode === SceneMode.SCENE3D) ? frameState.occluder: undefined;
         var cullingVolume = frameState.cullingVolume;
@@ -3084,27 +3142,28 @@ define([
         clear.execute(context, passState);
 
         // Update globe depth rendering based on the current context and clear the globe depth framebuffer.
-        // Globe depth needs is copied for Pick to support picking batched geometries in GroundPrimitives.
-        var useGlobeDepthFramebuffer = environmentState.useGlobeDepthFramebuffer = defined(scene._globeDepth);
+        // Globe depth is copied for the pick pass to support picking batched geometries in GroundPrimitives.
+        var useGlobeDepthFramebuffer = environmentState.useGlobeDepthFramebuffer = defined(environmentState.globeDepth);
         if (useGlobeDepthFramebuffer) {
-            scene._globeDepth.update(context, passState);
-            scene._globeDepth.clear(context, passState, clearColor);
+            environmentState.globeDepth.update(context, passState, environmentState.view.viewport);
+            environmentState.globeDepth.clear(context, passState, clearColor);
         }
 
         // If supported, configure OIT to use the globe depth framebuffer and clear the OIT framebuffer.
-        var useOIT = environmentState.useOIT = !picking && defined(scene._oit) && scene._oit.isSupported();
+        var oit = environmentState.oit;
+        var useOIT = environmentState.useOIT = !picking && defined(oit) && oit.isSupported();
         if (useOIT) {
-            scene._oit.update(context, passState, scene._globeDepth.framebuffer);
-            scene._oit.clear(context, passState, clearColor);
-            environmentState.useOIT = scene._oit.isSupported();
+            oit.update(context, passState, environmentState.globeDepth.framebuffer);
+            oit.clear(context, passState, clearColor);
+            environmentState.useOIT = oit.isSupported();
         }
 
         var postProcess = scene.postProcessStages;
         var usePostProcess = environmentState.usePostProcess = !picking && (postProcess.length > 0 || postProcess.ambientOcclusion.enabled || postProcess.fxaa.enabled || postProcess.bloom.enabled);
         environmentState.usePostProcessSelected = false;
         if (usePostProcess) {
-            scene._sceneFramebuffer.update(context, passState);
-            scene._sceneFramebuffer.clear(context, passState, clearColor);
+            environmentState.sceneFramebuffer.update(context, environmentState.view.viewport);
+            environmentState.sceneFramebuffer.clear(context, passState, clearColor);
 
             postProcess.update(context, frameState.useLogDepth);
             postProcess.clear(context);
@@ -3117,9 +3176,9 @@ define([
             passState.framebuffer = scene._sunPostProcess.update(passState);
             scene._sunPostProcess.clear(context, passState, clearColor);
         } else if (useGlobeDepthFramebuffer) {
-            passState.framebuffer = scene._globeDepth.framebuffer;
+            passState.framebuffer = environmentState.globeDepth.framebuffer;
         } else if (usePostProcess) {
-            passState.framebuffer = scene._sceneFramebuffer.getFramebuffer();
+            passState.framebuffer = environmentState.sceneFramebuffer.getFramebuffer();
         }
 
         if (defined(passState.framebuffer)) {
@@ -3131,7 +3190,7 @@ define([
             var depthFramebuffer;
             if (scene.frameState.invertClassificationColor.alpha === 1.0) {
                 if (environmentState.useGlobeDepthFramebuffer) {
-                    depthFramebuffer = scene._globeDepth.framebuffer;
+                    depthFramebuffer = environmentState.globeDepth.framebuffer;
                 }
             }
 
@@ -3143,7 +3202,7 @@ define([
                 if (scene.frameState.invertClassificationColor.alpha < 1.0 && useOIT) {
                     var command = scene._invertClassification.unclassifiedCommand;
                     var derivedCommands = command.derivedCommands;
-                    derivedCommands.oit = scene._oit.createDerivedCommands(command, context, derivedCommands.oit);
+                    derivedCommands.oit = oit.createDerivedCommands(command, context, derivedCommands.oit);
                 }
             } else {
                 environmentState.useInvertClassification = false;
@@ -3161,13 +3220,13 @@ define([
         var usePostProcess = environmentState.usePostProcess;
 
         var defaultFramebuffer = environmentState.originalFramebuffer;
-        var globeFramebuffer = useGlobeDepthFramebuffer ? scene._globeDepth.framebuffer : undefined;
-        var sceneFramebuffer = scene._sceneFramebuffer.getFramebuffer();
-        var idFramebuffer = scene._sceneFramebuffer.getIdFramebuffer();
+        var globeFramebuffer = useGlobeDepthFramebuffer ? environmentState.globeDepth.framebuffer : undefined;
+        var sceneFramebuffer = environmentState.sceneFramebuffer.getFramebuffer();
+        var idFramebuffer = environmentState.sceneFramebuffer.getIdFramebuffer();
 
         if (useOIT) {
             passState.framebuffer = usePostProcess ? sceneFramebuffer : defaultFramebuffer;
-            scene._oit.execute(context, passState);
+            environmentState.oit.execute(context, passState);
         }
 
         if (usePostProcess) {
@@ -3186,7 +3245,7 @@ define([
 
         if (!useOIT && !usePostProcess && useGlobeDepthFramebuffer) {
             passState.framebuffer = defaultFramebuffer;
-            scene._globeDepth.executeCopyColor(context, passState);
+            environmentState.globeDepth.executeCopyColor(context, passState);
         }
 
         var useLogDepth = frameState.useLogDepth;
@@ -3319,16 +3378,24 @@ define([
         scene._computeCommandList.length = 0;
         scene._overlayCommandList.length = 0;
 
-        var passState = scene._passState;
+        var view = scene._view;
+        var viewport = view.viewport;
+        viewport.x = 0;
+        viewport.y = 0;
+        viewport.width = context.drawingBufferWidth;
+        viewport.height = context.drawingBufferHeight;
+
+        var passState = view.passState;
         passState.framebuffer = undefined;
         passState.blendingEnabled = undefined;
         passState.scissorTest = undefined;
+        passState.viewport = BoundingRectangle.clone(viewport, passState.viewport);
 
         if (defined(scene.globe)) {
             scene.globe.beginFrame(frameState);
         }
 
-        updateEnvironment(scene, passState);
+        updateEnvironment(scene, scene._view);
         updateAndExecuteCommands(scene, passState, backgroundColor);
         resolveFramebuffers(scene, passState);
 
@@ -3440,14 +3507,13 @@ define([
     var scratchPixelSize = new Cartesian2();
     var scratchPickVolumeMatrix4 = new Matrix4();
 
-    function getPickOrthographicCullingVolume(scene, drawingBufferPosition, width, height) {
+    function getPickOrthographicCullingVolume(scene, drawingBufferPosition, width, height, viewport) {
         var camera = scene._camera;
         var frustum = camera.frustum;
         if (defined(frustum._offCenterFrustum)) {
             frustum = frustum._offCenterFrustum;
         }
 
-        var viewport = scene._passState.viewport;
         var x = 2.0 * (drawingBufferPosition.x - viewport.x) / viewport.width - 1.0;
         x *= (frustum.right - frustum.left) * 0.5;
         var y = 2.0 * (viewport.height - drawingBufferPosition.y - viewport.y) / viewport.height - 1.0;
@@ -3483,7 +3549,7 @@ define([
 
     var perspPickingFrustum = new PerspectiveOffCenterFrustum();
 
-    function getPickPerspectiveCullingVolume(scene, drawingBufferPosition, width, height) {
+    function getPickPerspectiveCullingVolume(scene, drawingBufferPosition, width, height, viewport) {
         var camera = scene._camera;
         var frustum = camera.frustum;
         var near = frustum.near;
@@ -3491,7 +3557,6 @@ define([
         var tanPhi = Math.tan(frustum.fovy * 0.5);
         var tanTheta = frustum.aspectRatio * tanPhi;
 
-        var viewport = scene._passState.viewport;
         var x = 2.0 * (drawingBufferPosition.x - viewport.x) / viewport.width - 1.0;
         var y = 2.0 * (viewport.height - drawingBufferPosition.y - viewport.y) / viewport.height - 1.0;
 
@@ -3513,13 +3578,13 @@ define([
         return offCenter.computeCullingVolume(camera.positionWC, camera.directionWC, camera.upWC);
     }
 
-    function getPickCullingVolume(scene, drawingBufferPosition, width, height) {
+    function getPickCullingVolume(scene, drawingBufferPosition, width, height, viewport) {
         var frustum = scene.camera.frustum;
         if (frustum instanceof OrthographicFrustum || frustum instanceof OrthographicOffCenterFrustum) {
-            return getPickOrthographicCullingVolume(scene, drawingBufferPosition, width, height);
+            return getPickOrthographicCullingVolume(scene, drawingBufferPosition, width, height, viewport);
         }
 
-        return getPickPerspectiveCullingVolume(scene, drawingBufferPosition, width, height);
+        return getPickPerspectiveCullingVolume(scene, drawingBufferPosition, width, height, viewport);
     }
 
     // pick rectangle width and height, assumed odd
@@ -3550,12 +3615,10 @@ define([
      * @param {Number} [width=3] Width of the pick rectangle.
      * @param {Number} [height=3] Height of the pick rectangle.
      * @returns {Object} Object containing the picked primitive.
-     *
-     * @exception {DeveloperError} windowPosition is undefined.
      */
     Scene.prototype.pick = function(windowPosition, width, height) {
         //>>includeStart('debug', pragmas.debug);
-        if(!defined(windowPosition)) {
+        if (!defined(windowPosition)) {
             throw new DeveloperError('windowPosition is undefined.');
         }
         //>>includeEnd('debug');
@@ -3566,34 +3629,42 @@ define([
         var context = this._context;
         var us = context.uniformState;
         var frameState = this._frameState;
+        var environmentState = this._environmentState;
+
+        var view = this._view;
+        var viewport = view.viewport;
+        viewport.x = 0;
+        viewport.y = 0;
+        viewport.width = context.drawingBufferWidth;
+        viewport.height = context.drawingBufferHeight;
+
+        var passState = view.passState;
+        passState.viewport = BoundingRectangle.clone(viewport, passState.viewport);
 
         var drawingBufferPosition = SceneTransforms.transformWindowToDrawingBuffer(this, windowPosition, scratchPosition);
-
-        if (!defined(this._pickFramebuffer)) {
-            this._pickFramebuffer = new PickFramebuffer(context);
-        }
 
         this._jobScheduler.disableThisFrame();
 
         // Update with previous frame's number and time, assuming that render is called before picking.
         updateFrameState(this, frameState.frameNumber, frameState.time);
-        frameState.cullingVolume = getPickCullingVolume(this, drawingBufferPosition, rectangleWidth, rectangleHeight);
+        frameState.cullingVolume = getPickCullingVolume(this, drawingBufferPosition, rectangleWidth, rectangleHeight, viewport);
         frameState.invertClassification = false;
         frameState.passes.pick = true;
 
         us.update(frameState);
 
+        updateEnvironment(this, view);
+
         scratchRectangle.x = drawingBufferPosition.x - ((rectangleWidth - 1.0) * 0.5);
         scratchRectangle.y = (this.drawingBufferHeight - drawingBufferPosition.y) - ((rectangleHeight - 1.0) * 0.5);
         scratchRectangle.width = rectangleWidth;
         scratchRectangle.height = rectangleHeight;
-        var passState = this._pickFramebuffer.begin(scratchRectangle);
+        passState = environmentState.pickFramebuffer.begin(scratchRectangle, view.viewport);
 
-        updateEnvironment(this, passState);
         updateAndExecuteCommands(this, passState, scratchColorZero);
         resolveFramebuffers(this, passState);
 
-        var object = this._pickFramebuffer.end(scratchRectangle);
+        var object = environmentState.pickFramebuffer.end(scratchRectangle);
         context.endFrame();
         callAfterRenderFunctions(this);
         return object;
@@ -3603,16 +3674,26 @@ define([
         // PERFORMANCE_IDEA: render translucent only and merge with the previous frame
         var context = scene._context;
         var frameState = scene._frameState;
+        var environmentState = scene._environmentState;
+
+        var view = scene._view;
+        var viewport = view.viewport;
+        viewport.x = 0;
+        viewport.y = 0;
+        viewport.width = context.drawingBufferWidth;
+        viewport.height = context.drawingBufferHeight;
+
+        var passState = view.passState;
+        passState.viewport = BoundingRectangle.clone(viewport, passState.viewport);
 
         clearPasses(frameState.passes);
         frameState.passes.pick = true;
         frameState.passes.depth = true;
-        frameState.cullingVolume = getPickCullingVolume(scene, drawingBufferPosition, 1, 1);
+        frameState.cullingVolume = getPickCullingVolume(scene, drawingBufferPosition, 1, 1, viewport);
 
-        var passState = scene._pickDepthFramebuffer.update(context, drawingBufferPosition);
-
-        updateEnvironment(scene, passState);
-        scene._environmentState.renderTranslucentDepthForPick = true;
+        updateEnvironment(scene, scene._view);
+        environmentState.renderTranslucentDepthForPick = true;
+        passState = environmentState.pickDepthFramebuffer.update(context, drawingBufferPosition, viewport);
 
         updateAndExecuteCommands(scene, passState, scratchColorZero);
         resolveFramebuffers(scene, passState);
@@ -3646,7 +3727,7 @@ define([
         if (!defined(windowPosition)) {
             throw new DeveloperError('windowPosition is undefined.');
         }
-        if (!defined(this._globeDepth)) {
+        if (!this._context.depthTexture) {
             throw new DeveloperError('Picking from the depth buffer is not supported. Check pickPositionSupported.');
         }
         //>>includeEnd('debug');
@@ -3662,10 +3743,13 @@ define([
 
         var context = this._context;
         var uniformState = context.uniformState;
+        var environmentState = this._environmentState;
 
         var drawingBufferPosition = SceneTransforms.transformWindowToDrawingBuffer(this, windowPosition, scratchPosition);
         if (this.pickTranslucentDepth) {
             renderTranslucentDepthForPick(this, drawingBufferPosition);
+        } else {
+            updateEnvironment(this, this._view);
         }
         drawingBufferPosition.y = this.drawingBufferHeight - drawingBufferPosition.y;
 
@@ -3683,12 +3767,12 @@ define([
             frustum = camera.frustum.clone(scratchOrthographicOffCenterFrustum);
         }
 
-        var numFrustums = this.numberOfFrustums;
+        var numFrustums = environmentState.frustumCommandsList.length;
         for (var i = 0; i < numFrustums; ++i) {
             var pickDepth = getPickDepth(this, i);
             var depth = pickDepth.getDepth(context, drawingBufferPosition.x, drawingBufferPosition.y);
             if (depth > 0.0 && depth < 1.0) {
-                var renderedFrustum = this._frustumCommandsList[i];
+                var renderedFrustum = environmentState.frustumCommandsList[i];
                 var height2D;
                 if (this.mode === SceneMode.SCENE2D) {
                     height2D = camera.position.z;
@@ -3961,8 +4045,6 @@ define([
         this._computeEngine = this._computeEngine && this._computeEngine.destroy();
         this._screenSpaceCameraController = this._screenSpaceCameraController && this._screenSpaceCameraController.destroy();
         this._deviceOrientationCameraController = this._deviceOrientationCameraController && !this._deviceOrientationCameraController.isDestroyed() && this._deviceOrientationCameraController.destroy();
-        this._pickFramebuffer = this._pickFramebuffer && this._pickFramebuffer.destroy();
-        this._pickDepthFramebuffer = this._pickDepthFramebuffer && this._pickDepthFramebuffer.destroy();
         this._primitives = this._primitives && this._primitives.destroy();
         this._groundPrimitives = this._groundPrimitives && this._groundPrimitives.destroy();
         this._globe = this._globe && this._globe.destroy();
@@ -3976,18 +4058,12 @@ define([
         this._debugFrustumPlanes = this._debugFrustumPlanes && this._debugFrustumPlanes.destroy();
         this._brdfLutGenerator = this._brdfLutGenerator && this._brdfLutGenerator.destroy();
 
-        if (defined(this._globeDepth)) {
-            this._globeDepth.destroy();
-        }
+        this._view = this._view && this._view.destroy();
+
         if (this._removeCreditContainer) {
             this._canvas.parentNode.removeChild(this._creditContainer);
         }
 
-        if (defined(this._oit)) {
-            this._oit.destroy();
-        }
-
-        this._sceneFramebuffer = this._sceneFramebuffer && this._sceneFramebuffer.destroy();
         this.postProcessStages = this.postProcessStages && this.postProcessStages.destroy();
 
         this._context = this._context && this._context.destroy();

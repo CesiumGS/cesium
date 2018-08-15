@@ -333,7 +333,7 @@ defineSuite([
     });
 
     it('debugShowGlobeDepth', function() {
-        if(!defined(scene._globeDepth)){
+        if (!scene.context.depthTexture) {
             return;
         }
 
@@ -702,7 +702,7 @@ defineSuite([
 
     it('copies the globe depth', function() {
         var scene = createScene();
-        if (defined(scene._globeDepth)) {
+        if (scene.context.depthTexture) {
             var rectangle = Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0);
 
             var rectanglePrimitive = createRectangle(rectangle, 1000.0);
@@ -1657,7 +1657,7 @@ defineSuite([
 
     function getFrustumCommandsLength(scene) {
         var commandsLength = 0;
-        var frustumCommandsList = scene._frustumCommandsList;
+        var frustumCommandsList = scene.frustumCommandsList;
         var frustumsLength = frustumCommandsList.length;
         for (var i = 0; i < frustumsLength; ++i) {
             var frustumCommands = frustumCommandsList[i];
