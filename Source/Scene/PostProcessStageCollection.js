@@ -1,4 +1,5 @@
 define([
+        '../Core/arraySlice',
         '../Core/Check',
         '../Core/defaultValue',
         '../Core/defined',
@@ -16,6 +17,7 @@ define([
         './PostProcessStageLibrary',
         './PostProcessStageTextureCache'
     ], function(
+        arraySlice,
         Check,
         defaultValue,
         defined,
@@ -80,6 +82,7 @@ define([
 
         this._stages = [];
         this._activeStages = [];
+        this._previousActiveStages = [];
 
         this._randomTexture = undefined; // For AO
 
@@ -157,7 +160,7 @@ define([
          * <p>
          * The uniforms have the following properties: <code>intensity</code>, <code>bias</code>, <code>lengthCap</code>,
          * <code>stepSize</code>, <code>frustumLength</code>, <code>ambientOcclusionOnly</code>,
-         * <code>delta</code>, <code>sigma</code>, and <code>kernelSize</code>.
+         * <code>delta</code>, <code>sigma</code>, and <code>blurStepSize</code>.
          * </p>
          * <ul>
          * <li><code>intensity</code> is a scalar value used to lighten or darken the shadows exponentially. Higher values make the shadows darker. The default value is <code>3.0</code>.</li>
@@ -177,7 +180,7 @@ define([
          * with the ambient occlusion. This is a useful debug option for seeing the effects of changing the uniform values. The default value is <code>false</code>.</li>
          * </ul>
          * <p>
-         * <code>delta</code>, <code>sigma</code>, and <code>kernelSize</code> are the same properties as {@link PostProcessStageLibrary#createBlurStage}.
+         * <code>delta</code>, <code>sigma</code>, and <code>blurStepSize</code> are the same properties as {@link PostProcessStageLibrary#createBlurStage}.
          * The blur is applied to the shadows generated from the image to make them smoother.
          * </p>
          * <p>
@@ -200,7 +203,7 @@ define([
          * </p>
          * <p>
          * This stage has the following uniforms: <code>contrast</code>, <code>brightness</code>, <code>glowOnly</code>,
-         * <code>delta</code>, <code>sigma</code>, and <code>kernelSize</code>.
+         * <code>delta</code>, <code>sigma</code>, and <code>stepSize</code>.
          * </p>
          * <ul>
          * <li><code>contrast</code> is a scalar value in the range [-255.0, 255.0] and affects the contract of the effect. The default value is <code>128.0</code>.</li>
@@ -212,7 +215,7 @@ define([
          * The default value is <code>false</code>. This is a debug option for viewing the effects when changing the other uniform values.</li>
          * </ul>
          * <p>
-         * <code>delta</code>, <code>sigma</code>, and <code>kernelSize</code> are the same properties as {@link PostProcessStageLibrary#createBlurStage}.
+         * <code>delta</code>, <code>sigma</code>, and <code>stepSize</code> are the same properties as {@link PostProcessStageLibrary#createBlurStage}.
          * The blur is applied to the shadows generated from the image to make them smoother.
          * </p>
          * <p>
@@ -276,6 +279,32 @@ define([
                 }
 
                 return undefined;
+            }
+        },
+        /**
+         * Whether the collection has a stage that has selected features.
+         *
+         * @memberof PostProcessStageCollection.prototype
+         * @type {Boolean}
+         * @readonly
+         * @private
+         */
+        hasSelected : {
+            get : function() {
+                var stages = arraySlice(this._stages);
+                while (stages.length > 0) {
+                    var stage = stages.pop();
+                    if (defined(stage.selected)) {
+                        return true;
+                    }
+                    var length = stage.length;
+                    if (defined(length)) {
+                        for (var i = 0; i < length; ++i) {
+                            stages.push(stage.get(i));
+                        }
+                    }
+                }
+                return false;
             }
         }
     });
@@ -441,7 +470,10 @@ define([
     PostProcessStageCollection.prototype.update = function(context, useLogDepth) {
         removeStages(this);
 
-        var activeStages = this._activeStages;
+        var previousActiveStages = this._activeStages;
+        var activeStages = this._activeStages = this._previousActiveStages;
+        this._previousActiveStages = previousActiveStages;
+
         var stages = this._stages;
         var length = activeStages.length = stages.length;
 
@@ -456,6 +488,16 @@ define([
         }
         activeStages.length = count;
 
+        var activeStagesChanged = count !== previousActiveStages.length;
+        if (!activeStagesChanged) {
+            for (i = 0; i < count; ++i) {
+                if (activeStages[i] !== previousActiveStages[i]) {
+                    activeStagesChanged = true;
+                    break;
+                }
+            }
+        }
+
         var ao = this._ao;
         var bloom = this._bloom;
         var fxaa = this._fxaa;
@@ -464,7 +506,7 @@ define([
         var bloomEnabled = bloom.enabled && bloom._isSupported(context);
         var fxaaEnabled = fxaa.enabled && fxaa._isSupported(context);
 
-        if (this._textureCacheDirty || count !== this._lastLength || aoEnabled !== this._aoEnabled || bloomEnabled !== this._bloomEnabled || fxaaEnabled !== this._fxaaEnabled) {
+        if (activeStagesChanged || this._textureCacheDirty || count !== this._lastLength || aoEnabled !== this._aoEnabled || bloomEnabled !== this._bloomEnabled || fxaaEnabled !== this._fxaaEnabled) {
             // The number of stages to execute has changed.
             // Update dependencies and recreate framebuffers.
             this._textureCache.updateDependencies();
@@ -552,9 +594,9 @@ define([
         return getOutputTexture(stage);
     };
 
-    function execute(stage, context, colorTexture, depthTexture) {
+    function execute(stage, context, colorTexture, depthTexture, idTexture) {
         if (defined(stage.execute)) {
-            stage.execute(context, colorTexture, depthTexture);
+            stage.execute(context, colorTexture, depthTexture, idTexture);
             return;
         }
 
@@ -562,13 +604,13 @@ define([
         var i;
 
         if (stage.inputPreviousStageTexture) {
-            execute(stage.get(0), context, colorTexture, depthTexture);
+            execute(stage.get(0), context, colorTexture, depthTexture, idTexture);
             for (i = 1; i < length; ++i) {
-                execute(stage.get(i), context, getOutputTexture(stage.get(i - 1)), depthTexture);
+                execute(stage.get(i), context, getOutputTexture(stage.get(i - 1)), depthTexture, idTexture);
             }
         } else {
             for (i = 0; i < length; ++i) {
-                execute(stage.get(i), context, colorTexture, depthTexture);
+                execute(stage.get(i), context, colorTexture, depthTexture, idTexture);
             }
         }
     }
@@ -582,7 +624,7 @@ define([
      *
      * @private
      */
-    PostProcessStageCollection.prototype.execute = function(context, colorTexture, depthTexture) {
+    PostProcessStageCollection.prototype.execute = function(context, colorTexture, depthTexture, idTexture) {
         var activeStages = this._activeStages;
         var length = activeStages.length;
 
@@ -600,26 +642,26 @@ define([
 
         var initialTexture = colorTexture;
         if (aoEnabled && ao.ready) {
-            execute(ao, context, initialTexture, depthTexture);
+            execute(ao, context, initialTexture, depthTexture, idTexture);
             initialTexture = getOutputTexture(ao);
         }
         if (bloomEnabled && bloom.ready) {
-            execute(bloom, context, initialTexture, depthTexture);
+            execute(bloom, context, initialTexture, depthTexture, idTexture);
             initialTexture = getOutputTexture(bloom);
         }
 
         var lastTexture = initialTexture;
 
         if (length > 0) {
-            execute(activeStages[0], context, initialTexture, depthTexture);
+            execute(activeStages[0], context, initialTexture, depthTexture, idTexture);
             for (var i = 1; i < length; ++i) {
-                execute(activeStages[i], context, getOutputTexture(activeStages[i - 1]), depthTexture);
+                execute(activeStages[i], context, getOutputTexture(activeStages[i - 1]), depthTexture, idTexture);
             }
             lastTexture = getOutputTexture(activeStages[length - 1]);
         }
 
         if (fxaaEnabled && fxaa.ready) {
-            execute(fxaa, context, lastTexture, depthTexture);
+            execute(fxaa, context, lastTexture, depthTexture, idTexture);
         }
     };
 

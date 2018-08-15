@@ -137,6 +137,15 @@ define([
             get : function() {
                 return this._content.tileset;
             }
+        },
+
+        /**
+         * @private
+         */
+        pickId : {
+            get : function() {
+                return this._content.batchTable.getPickColor(this._batchId);
+            }
         }
     });
 

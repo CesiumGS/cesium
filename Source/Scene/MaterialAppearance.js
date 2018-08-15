@@ -282,6 +282,7 @@ define([
      * {@link MaterialAppearance} instance.  This is a trade-off between
      * flexibility (a wide array of materials) and memory/performance
      * (required vertex format and GLSL shader complexity.
+     * @exports MaterialAppearance.MaterialSupport
      */
     MaterialAppearance.MaterialSupport = {
         /**

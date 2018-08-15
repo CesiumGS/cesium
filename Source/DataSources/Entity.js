@@ -12,6 +12,7 @@ define([
         '../Core/Quaternion',
         '../Core/Transforms',
         '../Scene/GroundPrimitive',
+        '../Scene/GroundPolylinePrimitive',
         './BillboardGraphics',
         './BoxGraphics',
         './ConstantPositionProperty',
@@ -47,6 +48,7 @@ define([
         Quaternion,
         Transforms,
         GroundPrimitive,
+        GroundPolylinePrimitive,
         BillboardGraphics,
         BoxGraphics,
         ConstantPositionProperty,
@@ -454,8 +456,9 @@ define([
          */
         rectangle : createPropertyTypeDescriptor('rectangle', RectangleGraphics),
         /**
-         * Gets or sets the suggested initial offset for viewing this object
-         * with the camera.  The offset is defined in the east-north-up reference frame.
+         * Gets or sets the suggested initial offset when tracking this object.
+         * The offset is typically defined in the east-north-up reference frame,
+         * but may be another frame depending on the object's velocity.
          * @memberof Entity.prototype
          * @type {Property}
          */
@@ -629,6 +632,18 @@ define([
      */
     Entity.supportsMaterialsforEntitiesOnTerrain = function(scene) {
         return GroundPrimitive.supportsMaterials(scene);
+    };
+
+    /**
+     * Checks if the given Scene supports polylines clamped to the ground..
+     * If this feature is not supported, Entities with PolylineGraphics will be rendered with vertices at
+     * the provided heights and using the `followSurface` parameter instead of clamped to the ground.
+     *
+     * @param {Scene} scene The current scene.
+     * @returns {Boolean} Whether or not the current scene supports Polylines on Terrain.
+     */
+    Entity.supportsPolylinesOnTerrain = function(scene) {
+        return GroundPolylinePrimitive.isSupported(scene);
     };
 
     return Entity;

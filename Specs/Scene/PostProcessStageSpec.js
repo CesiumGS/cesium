@@ -1,10 +1,15 @@
 defineSuite([
         'Scene/PostProcessStage',
         'Core/BoundingRectangle',
+        'Core/Cartesian3',
         'Core/Color',
         'Core/defined',
+        'Core/HeadingPitchRange',
+        'Core/Matrix4',
         'Core/PixelFormat',
+        'Core/Transforms',
         'Renderer/PixelDatatype',
+        'Scene/Model',
         'Scene/PostProcessStageSampleMode',
         'Specs/createScene',
         'Specs/pollToPromise',
@@ -12,10 +17,15 @@ defineSuite([
     ], function(
         PostProcessStage,
         BoundingRectangle,
+        Cartesian3,
         Color,
         defined,
+        HeadingPitchRange,
+        Matrix4,
         PixelFormat,
+        Transforms,
         PixelDatatype,
+        Model,
         PostProcessStageSampleMode,
         createScene,
         pollToPromise,
@@ -35,6 +45,7 @@ defineSuite([
 
     afterEach(function() {
         scene.postProcessStages.removeAll();
+        scene.primitives.removeAll();
     });
 
     it('constructs', function() {
@@ -181,26 +192,6 @@ defineSuite([
         });
     });
 
-    it('isSupported throws without a scene', function() {
-        var stage = new PostProcessStage({
-            fragmentShader : 'void main() { gl_FragColor = vec4(1.0); }'
-        });
-        expect(function() {
-            return stage.isSupported();
-        }).toThrowDeveloperError();
-    });
-
-    it('isSupported', function() {
-        var stage = new PostProcessStage({
-            fragmentShader : 'void main() { gl_FragColor = vec4(1.0); }'
-        });
-        expect(stage.isSupported(scene)).toEqual(true);
-        stage = new PostProcessStage({
-            fragmentShader : 'uniform sampler2D depthTexture; void main() { texture2D(depthTexture, vec2(0.5)); }'
-        });
-        expect(stage.isSupported(scene)).toEqual(scene.context.depthTexture);
-    });
-
     it('does not run a stage that requires depth textures when depth textures are not supported', function() {
         var s = createScene();
         s.context._depthTexture = false;
@@ -228,6 +219,61 @@ defineSuite([
             if (e) {
                 return when.reject(e);
             }
+        });
+    });
+
+    var model;
+
+    function loadModel(url) {
+        model = scene.primitives.add(Model.fromGltf({
+            modelMatrix : Transforms.eastNorthUpToFixedFrame(Cartesian3.fromDegrees(0.0, 0.0, 100.0)),
+            url : url
+        }));
+        model.zoomTo = function() {
+            var camera = scene.camera;
+            var center = Matrix4.multiplyByPoint(model.modelMatrix, model.boundingSphere.center, new Cartesian3());
+            var r = 4.0 * Math.max(model.boundingSphere.radius, camera.frustum.near);
+            camera.lookAt(center, new HeadingPitchRange(0.0, 0.0, r));
+        };
+
+        return pollToPromise(function() {
+            // Render scene to progressively load the model
+            scene.renderForSpecs();
+            return model.ready;
+        }, { timeout: 10000 }).then(function() {
+            return model;
+        }).otherwise(function() {
+            return when.reject(model);
+        });
+    }
+
+    it('per-feature post process stage', function() {
+        return loadModel('./Data/Models/Box/CesiumBoxTest.gltf').then(function() {
+            model.zoomTo();
+            var fs =
+                'uniform sampler2D colorTexture; \n' +
+                'varying vec2 v_textureCoordinates; \n' +
+                'void main() { \n' +
+                '    if (czm_selected(v_textureCoordinates)) { \n' +
+                '        gl_FragColor = texture2D(colorTexture, v_textureCoordinates); \n' +
+                '    } else { \n' +
+                '        gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0); \n' +
+                '    } \n' +
+                '} \n';
+            var stage = scene.postProcessStages.add(new PostProcessStage({
+                fragmentShader : fs
+            }));
+            stage.selected = [];
+            return pollToPromise(function() {
+                scene.renderForSpecs();
+                return stage.ready;
+            }).then(function() {
+                expect(scene).toRender([255, 0, 0, 255]);
+                stage.selected = [model];
+                expect(scene).toRenderAndCall(function(rgba) {
+                    expect(rgba).not.toEqual([255, 0, 0, 255]);
+                });
+            });
         });
     });
 

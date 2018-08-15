@@ -1,5 +1,7 @@
 define([
+        '../Core/Cartesian3',
         '../Core/Color',
+        '../Core/ComponentDatatype',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
@@ -9,9 +11,11 @@ define([
         '../Core/FeatureDetection',
         '../Core/getBaseUri',
         '../Core/getStringFromTypedArray',
+        '../Core/Matrix4',
         '../Core/RequestType',
         '../Core/RuntimeError',
         '../Renderer/Pass',
+        './Axis',
         './Cesium3DTileBatchTable',
         './Cesium3DTileFeature',
         './Cesium3DTileFeatureTable',
@@ -19,7 +23,9 @@ define([
         './Model',
         './ModelUtility'
     ], function(
+        Cartesian3,
         Color,
+        ComponentDatatype,
         defaultValue,
         defined,
         defineProperties,
@@ -29,9 +35,11 @@ define([
         FeatureDetection,
         getBaseUri,
         getStringFromTypedArray,
+        Matrix4,
         RequestType,
         RuntimeError,
         Pass,
+        Axis,
         Cesium3DTileBatchTable,
         Cesium3DTileFeature,
         Cesium3DTileFeatureTable,
@@ -70,6 +78,9 @@ define([
         // Populate from gltf when available
         this._batchIdAttributeName = undefined;
         this._diffuseAttributeOrUniformName = {};
+
+        this._rtcCenterTransform = undefined;
+        this._contentModelMatrix = undefined;
 
         this.featurePropertiesDirty = false;
 
@@ -182,20 +193,6 @@ define([
         };
     }
 
-    function getPickVertexShaderCallback(content) {
-        return function(vs) {
-            var batchTable = content._batchTable;
-
-            var gltf = content._model.gltf;
-            if (defined(gltf)) {
-                content._batchIdAttributeName = getBatchIdAttributeName(gltf);
-            }
-
-            var callback = batchTable.getPickVertexShaderCallback(content._batchIdAttributeName);
-            return defined(callback) ? callback(vs) : vs;
-        };
-    }
-
     function getFragmentShaderCallback(content) {
         return function(fs, programId) {
             var batchTable = content._batchTable;
@@ -207,6 +204,12 @@ define([
             }
             var callback = batchTable.getFragmentShaderCallback(handleTranslucent, content._diffuseAttributeOrUniformName[programId]);
             return defined(callback) ? callback(fs) : fs;
+        };
+    }
+
+    function getPickIdCallback(content) {
+        return function() {
+            return content._batchTable.getPickId();
         };
     }
 
@@ -352,6 +355,14 @@ define([
             primitive : tileset
         };
 
+        content._rtcCenterTransform = Matrix4.clone(Matrix4.IDENTITY);
+        var rtcCenter = featureTable.getGlobalProperty('RTC_CENTER', ComponentDatatype.FLOAT, 3);
+        if (defined(rtcCenter)) {
+            content._rtcCenterTransform = Matrix4.fromTranslation(Cartesian3.fromArray(rtcCenter), content._rtcCenterTransform);
+        }
+
+        content._contentModelMatrix = Matrix4.multiply(tile.computedTransform, content._rtcCenterTransform, new Matrix4());
+
         if (!defined(tileset.classificationType)) {
             // PERFORMANCE_IDEA: patch the shader on demand, e.g., the first time show/color changes.
             // The pick shader still needs to be patched.
@@ -362,17 +373,16 @@ define([
                 opaquePass : Pass.CESIUM_3D_TILE, // Draw opaque portions of the model during the 3D Tiles pass
                 basePath : resource,
                 requestType : RequestType.TILES3D,
-                modelMatrix : tile.computedTransform,
+                modelMatrix: content._contentModelMatrix,
                 upAxis : tileset._gltfUpAxis,
+                forwardAxis : Axis.X,
                 shadows: tileset.shadows,
                 debugWireframe: tileset.debugWireframe,
                 incrementallyLoadTextures : false,
                 vertexShaderLoaded : getVertexShaderCallback(content),
                 fragmentShaderLoaded : getFragmentShaderCallback(content),
                 uniformMapLoaded : batchTable.getUniformMapCallback(),
-                pickVertexShaderLoaded : getPickVertexShaderCallback(content),
-                pickFragmentShaderLoaded : batchTable.getPickFragmentShaderCallback(),
-                pickUniformMapLoaded : batchTable.getPickUniformMapCallback(),
+                pickIdLoaded : getPickIdCallback(content),
                 addBatchIdToGeneratedShaders : (batchLength > 0), // If the batch table has values in it, generated shaders will need a batchId attribute
                 pickObject : pickObject
             });
@@ -384,15 +394,14 @@ define([
                 cull : false,           // The model is already culled by 3D Tiles
                 basePath : resource,
                 requestType : RequestType.TILES3D,
-                modelMatrix : tile.computedTransform,
+                modelMatrix: content._contentModelMatrix,
                 upAxis : tileset._gltfUpAxis,
+                forwardAxis : Axis.X,
                 debugWireframe : tileset.debugWireframe,
                 vertexShaderLoaded : getVertexShaderCallback(content),
                 classificationShaderLoaded : getClassificationFragmentShaderCallback(content),
                 uniformMapLoaded : batchTable.getUniformMapCallback(),
-                pickVertexShaderLoaded : getPickVertexShaderCallback(content),
-                pickFragmentShaderLoaded : batchTable.getPickFragmentShaderCallback(),
-                pickUniformMapLoaded : batchTable.getPickUniformMapCallback(),
+                pickIdLoaded : getPickIdCallback(content),
                 classificationType : tileset._classificationType,
                 batchTable : batchTable
             });
@@ -446,7 +455,10 @@ define([
         // the content's resource loading.  In the READY state, it will
         // actually generate commands.
         this._batchTable.update(tileset, frameState);
-        this._model.modelMatrix = this._tile.computedTransform;
+
+        this._contentModelMatrix = Matrix4.multiply(this._tile.computedTransform, this._rtcCenterTransform, this._contentModelMatrix);
+        this._model.modelMatrix = this._contentModelMatrix;
+
         this._model.shadows = this._tileset.shadows;
         this._model.debugWireframe = this._tileset.debugWireframe;
 
@@ -469,7 +481,7 @@ define([
 
         // If any commands were pushed, add derived commands
         var commandEnd = frameState.commandList.length;
-        if ((commandStart < commandEnd) && frameState.passes.render && !defined(tileset.classificationType)) {
+        if ((commandStart < commandEnd) && (frameState.passes.render || frameState.passes.pick) && !defined(tileset.classificationType)) {
             var finalResolution = this._tile._finalResolution;
             this._batchTable.addDerivedCommands(frameState, commandStart, finalResolution);
         }

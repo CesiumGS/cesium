@@ -7,7 +7,6 @@ defineSuite([
         'Core/ClockStep',
         'Core/Color',
         'Core/combine',
-        'Core/DefaultProxy',
         'Core/Ellipsoid',
         'Core/Event',
         'Core/HeadingPitchRange',
@@ -46,7 +45,6 @@ defineSuite([
         ClockStep,
         Color,
         combine,
-        DefaultProxy,
         Ellipsoid,
         Event,
         HeadingPitchRange,
@@ -76,7 +74,7 @@ defineSuite([
         createCamera,
         pollToPromise,
         when) {
-    "use strict";
+    'use strict';
 
     var parser = new DOMParser();
 
@@ -367,7 +365,7 @@ defineSuite([
             <name>NameInKml</name>\
             </Document>';
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), {
             camera : options.camera,
             canvas : options. canvas,
             sourceUri : 'NameFromUri.kml'
@@ -384,7 +382,7 @@ defineSuite([
             </Document>\
             </kml>';
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), {
             camera : options.camera,
             canvas : options. canvas,
             sourceUri : 'NameFromUri.kml'
@@ -398,7 +396,7 @@ defineSuite([
             <Document>\
             </Document>';
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), {
             camera : options.camera,
             canvas : options.canvas,
             sourceUri : 'NameFromUri.kml'
@@ -418,18 +416,18 @@ defineSuite([
         var spy = jasmine.createSpy('changedEvent');
         dataSource.changedEvent.addEventListener(spy);
 
-        return dataSource.load(parser.parseFromString(kml, "text/xml")).then(function() {
+        return dataSource.load(parser.parseFromString(kml, 'text/xml')).then(function() {
             //Initial load
             expect(spy).toHaveBeenCalledWith(dataSource);
 
             spy.calls.reset();
-            return dataSource.load(parser.parseFromString(kml, "text/xml")).then(function() {
+            return dataSource.load(parser.parseFromString(kml, 'text/xml')).then(function() {
                 //Loading KML with same name
                 expect(spy).not.toHaveBeenCalled();
 
                 kml = kml.replace('NameInKml', 'newName');
                 spy.calls.reset();
-                return dataSource.load(parser.parseFromString(kml, "text/xml")).then(function() {
+                return dataSource.load(parser.parseFromString(kml, 'text/xml')).then(function() {
                     //Loading KML with different name.
                     expect(spy).toHaveBeenCalledWith(dataSource);
                 });
@@ -494,7 +492,7 @@ defineSuite([
           </Placemark>\
         </Document>';
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), options).then(function(dataSource) {
             var clock = dataSource.clock;
             expect(dataSource.clock).toBeDefined();
             expect(clock.startTime).toEqual(beginDate);
@@ -513,7 +511,7 @@ defineSuite([
                   </GroundOverlay>\
                 </Document>';
 
-            return dataSource.load(parser.parseFromString(kml, "text/xml"), options);
+            return dataSource.load(parser.parseFromString(kml, 'text/xml'), options);
         }).then(function(dataSource) {
             expect(dataSource.clock).toBeUndefined();
         });
@@ -524,7 +522,7 @@ defineSuite([
         <Placemark id="Bob">\
         </Placemark>';
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), options).then(function(dataSource) {
             var entity = dataSource.entities.values[0];
             expect(entity.id).toBe('Bob');
         });
@@ -540,7 +538,7 @@ defineSuite([
             </Placemark>\
         </Document>';
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), options).then(function(dataSource) {
             var entities = dataSource.entities.values;
             expect(entities[0].id).toBe('Bob');
             expect(entities[1].id).not.toBe('Bob');
@@ -553,7 +551,7 @@ defineSuite([
             <name>bob</name>\
         </Placemark>';
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), options).then(function(dataSource) {
             var entity = dataSource.entities.values[0];
             expect(entity.name).toBe('bob');
             expect(entity.label).toBeDefined();
@@ -567,7 +565,7 @@ defineSuite([
             <address>1826 South 16th Street</address>\
         </Placemark>';
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), options).then(function(dataSource) {
             var entity = dataSource.entities.values[0];
             expect(entity.kml.address).toBe('1826 South 16th Street');
         });
@@ -579,7 +577,7 @@ defineSuite([
             <phoneNumber>555-555-5555</phoneNumber>\
         </Placemark>';
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), options).then(function(dataSource) {
             var entity = dataSource.entities.values[0];
             expect(entity.kml.phoneNumber).toBe('555-555-5555');
         });
@@ -591,7 +589,7 @@ defineSuite([
             <Snippet>Hey!</Snippet>\
         </Placemark>';
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), options).then(function(dataSource) {
             var entity = dataSource.entities.values[0];
             expect(entity.kml.snippet).toBe('Hey!');
         });
@@ -608,7 +606,7 @@ defineSuite([
             </atom:author>\
         </Placemark>';
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), options).then(function(dataSource) {
             var entity = dataSource.entities.values[0];
             expect(entity.kml).toBeDefined();
             expect(entity.kml.author).toBeDefined();
@@ -631,7 +629,7 @@ defineSuite([
                 length="123"/>\
         </Placemark>';
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), options).then(function(dataSource) {
             var entity = dataSource.entities.values[0];
             expect(entity.kml).toBeDefined();
             expect(entity.kml.link).toBeDefined();
@@ -656,7 +654,7 @@ defineSuite([
             </TimeSpan>\
         </Placemark>';
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), options).then(function(dataSource) {
             var entity = dataSource.entities.values[0];
             expect(entity.availability).toBeDefined();
             expect(entity.availability.start).toEqual(beginDate);
@@ -676,7 +674,7 @@ defineSuite([
             </TimeSpan>\
         </Placemark>';
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), options).then(function(dataSource) {
             var entity = dataSource.entities.values[0];
             expect(entity.availability).toBeDefined();
             expect(entity.availability.start).toEqual(beginDate);
@@ -691,7 +689,7 @@ defineSuite([
             </TimeSpan>\
         </Placemark>';
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), options).then(function(dataSource) {
             var entity = dataSource.entities.values[0];
             expect(entity.availability).toBeUndefined();
         });
@@ -707,7 +705,7 @@ defineSuite([
             </TimeSpan>\
         </Placemark>';
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), options).then(function(dataSource) {
             var entity = dataSource.entities.values[0];
             expect(entity.availability).toBeDefined();
             expect(entity.availability.start).toEqual(Iso8601.MINIMUM_VALUE);
@@ -725,7 +723,7 @@ defineSuite([
             </TimeSpan>\
         </Placemark>';
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), options).then(function(dataSource) {
             var entity = dataSource.entities.values[0];
             expect(entity.availability).toBeDefined();
             expect(entity.availability.start).toEqual(date);
@@ -743,7 +741,7 @@ defineSuite([
             </TimeStamp>\
         </Placemark>';
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), options).then(function(dataSource) {
             var entity = dataSource.entities.values[0];
             expect(entity.availability).toBeDefined();
             expect(entity.availability.start).toEqual(date);
@@ -757,7 +755,7 @@ defineSuite([
             <visibility>0</visibility>\
         </Placemark>';
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), options).then(function(dataSource) {
             var entity = dataSource.entities.values[0];
             expect(entity.show).toBe(false);
         });
@@ -770,7 +768,7 @@ defineSuite([
             </TimeStamp>\
         </Placemark>';
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), options).then(function(dataSource) {
             var entity = dataSource.entities.values[0];
             expect(entity.availability).toBeUndefined();
         });
@@ -784,7 +782,7 @@ defineSuite([
             </TimeStamp>\
         </Placemark>';
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), options).then(function(dataSource) {
             var entity = dataSource.entities.values[0];
             expect(entity.availability).toBeUndefined();
         });
@@ -807,7 +805,7 @@ defineSuite([
             </ExtendedData>\
         </Placemark>';
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), options).then(function(dataSource) {
             var entity = dataSource.entities.values[0];
             expect(entity.kml.extendedData).toBeDefined();
 
@@ -830,7 +828,7 @@ defineSuite([
         <GroundOverlay>\
         </GroundOverlay>';
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), options).then(function(dataSource) {
             var entity = dataSource.entities.values[0];
             expect(entity.name).toBeUndefined();
             expect(entity.availability).toBeUndefined();
@@ -851,7 +849,7 @@ defineSuite([
             </Icon>\
         </GroundOverlay>';
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), options).then(function(dataSource) {
             var entity = dataSource.entities.values[0];
             expect(entity.rectangle.material).toBeInstanceOf(ImageMaterialProperty);
             expect(entity.rectangle.material.image.getValue().url).toEqual('http://test.invalid/image.png');
@@ -867,7 +865,7 @@ defineSuite([
             </Icon>\
         </GroundOverlay>';
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), options).then(function(dataSource) {
             var entity = dataSource.entities.values[0];
             expect(entity.rectangle.material).toBeInstanceOf(ImageMaterialProperty);
             expect(entity.rectangle.material.image.getValue().url).toEqual('http://test.invalid/image.png');
@@ -882,7 +880,7 @@ defineSuite([
             <color>ffeeddcc</color>\
         </GroundOverlay>';
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), options).then(function(dataSource) {
             var entity = dataSource.entities.values[0];
             expect(entity.rectangle.material).toBeInstanceOf(ColorMaterialProperty);
             expect(entity.rectangle.material.color.getValue()).toEqual(color);
@@ -902,7 +900,7 @@ defineSuite([
             <drawOrder>3</drawOrder>\
         </GroundOverlay>';
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), options).then(function(dataSource) {
             var entity = dataSource.entities.values[0];
             expect(entity.polygon).toBeUndefined();
             expect(entity.rectangle.coordinates.getValue()).toEqualEpsilon(Rectangle.fromDegrees(3, 1, 4, 2), CesiumMath.EPSILON14);
@@ -923,7 +921,7 @@ defineSuite([
             </LatLonBox>\
         </GroundOverlay>';
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), options).then(function(dataSource) {
             var entity = dataSource.entities.values[0];
             expect(entity.polygon).toBeUndefined();
             expect(entity.rectangle.coordinates.getValue()).toEqual(Rectangle.fromDegrees(-180, -90, 180, 90));
@@ -941,7 +939,7 @@ defineSuite([
             </LatLonBox>\
         </GroundOverlay>';
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), options).then(function(dataSource) {
             var entity = dataSource.entities.values[0];
             expect(entity.polygon).toBeUndefined();
             expect(entity.rectangle.coordinates.getValue()).toEqual(Rectangle.fromDegrees(-180, -90, 180, 90));
@@ -959,7 +957,7 @@ defineSuite([
             </gx:LatLonQuad>\
         </GroundOverlay>';
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), options).then(function(dataSource) {
             var entity = dataSource.entities.values[0];
             expect(entity.rectangle).toBeUndefined();
             expect(entity.polygon.hierarchy.getValue().positions).toEqualEpsilon(Cartesian3.fromDegreesArray([1, 2, 3, 4, 5, 6, 7, 8]), CesiumMath.EPSILON14);
@@ -980,7 +978,7 @@ defineSuite([
             </gx:LatLonQuad>\
         </GroundOverlay>';
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), options).then(function(dataSource) {
             var entity = dataSource.entities.values[0];
             expect(entity.polygon.material).toBeInstanceOf(ImageMaterialProperty);
             expect(entity.polygon.material.image.getValue().url).toEqual('http://test.invalid/image.png');
@@ -999,7 +997,7 @@ defineSuite([
             <drawOrder>3</drawOrder>\
         </GroundOverlay>';
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), options).then(function(dataSource) {
             var entity = dataSource.entities.values[0];
             expect(entity.polygon.zIndex.getValue()).toEqual(3);
         });
@@ -1012,7 +1010,7 @@ defineSuite([
             <altitude>23</altitude>\
         </GroundOverlay>';
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), options).then(function(dataSource) {
             var entity = dataSource.entities.values[0];
             expect(entity.rectangle.height.getValue()).toEqual(23);
         });
@@ -1031,7 +1029,7 @@ defineSuite([
             </Placemark>\
             </Document>';
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), options).then(function(dataSource) {
             var entities = dataSource.entities.values;
             expect(entities.length).toEqual(1);
             expect(entities[0].billboard.scale.getValue()).toEqual(3.0);
@@ -1051,7 +1049,7 @@ defineSuite([
             </Placemark>\
             </Document>';
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), options).then(function(dataSource) {
             var entities = dataSource.entities.values;
             expect(entities.length).toEqual(1);
             expect(entities[0].billboard.scale.getValue()).toEqual(3.0);
@@ -1064,7 +1062,7 @@ defineSuite([
               <styleUrl>Data/KML/externalStyle.kml#testStyle</styleUrl>\
             </Placemark>';
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), options).then(function(dataSource) {
             var entities = dataSource.entities.values;
             expect(entities[0].billboard.scale.getValue()).toEqual(3.0);
         });
@@ -1076,7 +1074,7 @@ defineSuite([
               <styleUrl>Data/KML/externalStyle.kml#testStyleMap</styleUrl>\
             </Placemark>';
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), options).then(function(dataSource) {
             var entities = dataSource.entities.values;
             expect(entities[0].billboard.scale.getValue()).toEqual(3.0);
         });
@@ -1104,7 +1102,7 @@ defineSuite([
             </Placemark>\
             </Document>';
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), options).then(function(dataSource) {
             var entities = dataSource.entities.values;
             expect(entities.length).toEqual(1);
 
@@ -1128,7 +1126,7 @@ defineSuite([
               </Style>\
             </Placemark>';
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), options).then(function(dataSource) {
             var generatedColor = dataSource.entities.values[0].billboard.color.getValue();
             expect(generatedColor.red).toBeLessThan(1.0);
             expect(generatedColor.green).toBeLessThan(1.0);
@@ -1150,7 +1148,7 @@ defineSuite([
               </Style>\
             </Placemark>';
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), options).then(function(dataSource) {
             var generatedColor = dataSource.entities.values[0].billboard.color.getValue();
             expect(generatedColor.red).toEqual(0);
             expect(generatedColor.green).toEqual(0);
@@ -1171,7 +1169,7 @@ defineSuite([
               </Style>\
             </Placemark>';
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), options).then(function(dataSource) {
             expect(dataSource.entities.values[0].billboard.color).toBeUndefined();
         });
     });
@@ -1189,7 +1187,7 @@ defineSuite([
           </Placemark>\
         </Document>';
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), options).then(function(dataSource) {
             var entity = dataSource.entities.values[0];
 
             expect(entity.label).toBeDefined();
@@ -1221,7 +1219,7 @@ defineSuite([
           </Placemark>\
         </Document>';
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), options).then(function(dataSource) {
             var entity = dataSource.entities.values[0];
 
             expect(entity.label.text.getValue()).toEqual('TheName');
@@ -1254,7 +1252,7 @@ defineSuite([
           </Placemark>\
         </Document>';
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), options).then(function(dataSource) {
             var entity = dataSource.entities.values[0];
             expect(entity.polyline.material).toBeInstanceOf(ColorMaterialProperty);
             expect(entity.polyline.material.color.getValue()).toEqual(uberLineColor);
@@ -1281,7 +1279,7 @@ defineSuite([
           </Placemark>\
         </Document>';
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), options).then(function(dataSource) {
             var entity = dataSource.entities.values[0];
 
             expect(entity.wall.material).toBeInstanceOf(ColorMaterialProperty);
@@ -1317,7 +1315,7 @@ defineSuite([
             </Placemark>\
         </Document>';
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), options).then(function(dataSource) {
             var entity = dataSource.entities.values[0];
 
             expect(entity.polygon.material).toBeInstanceOf(ColorMaterialProperty);
@@ -1345,7 +1343,7 @@ defineSuite([
           </Placemark>\
         </Document>';
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), options).then(function(dataSource) {
             var entity = dataSource.entities.values[0];
 
             expect(entity.label).toBeDefined();
@@ -1385,7 +1383,7 @@ defineSuite([
           </Placemark>\
         </Document>';
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), options).then(function(dataSource) {
             var entity = dataSource.entities.values[0];
 
             expect(entity.label.text.getValue()).toEqual('TheName');
@@ -1427,7 +1425,7 @@ defineSuite([
           </Placemark>\
         </Document>';
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), options).then(function(dataSource) {
             var entity = dataSource.entities.values[0];
 
             expect(entity.label).toBeDefined();
@@ -1469,7 +1467,7 @@ defineSuite([
           </Placemark>\
         </Document>';
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), options).then(function(dataSource) {
             var entity = dataSource.entities.values[0];
 
             expect(entity.label.text.getValue()).toEqual('TheName');
@@ -1512,7 +1510,7 @@ defineSuite([
           </Placemark>\
         </Document>';
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), options).then(function(dataSource) {
             var entity = dataSource.entities.values[0];
             expect(entity.billboard.scale.getValue()).toBe(2.0);
         });
@@ -1536,7 +1534,7 @@ defineSuite([
           </Placemark>\
         </Document>';
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), options).then(function(dataSource) {
             var entity = dataSource.entities.values[0];
             expect(entity.billboard.scale.getValue()).toBe(2.0);
         });
@@ -1561,7 +1559,7 @@ defineSuite([
             </Placemark>\
         </Document>';
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), options).then(function(dataSource) {
             var entity = dataSource.entities.values[0];
             expect(entity.billboard.scale.getValue()).toBe(2.0);
         });
@@ -1586,7 +1584,7 @@ defineSuite([
             </Placemark>\
         </Document>';
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), options).then(function(dataSource) {
             var entity = dataSource.entities.values[0];
             expect(entity.billboard.scale.getValue()).toBe(2.0);
         });
@@ -1601,7 +1599,7 @@ defineSuite([
             </Style>\
           </Placemark>';
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), options).then(function(dataSource) {
             var entities = dataSource.entities.values;
             expect(entities[0].billboard).toBeDefined();
         });
@@ -1619,7 +1617,7 @@ defineSuite([
               </Style>\
           </Placemark>';
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), options).then(function(dataSource) {
             var entities = dataSource.entities.values;
             var billboard = entities[0].billboard;
             expect(billboard.image.getValue().url).toEqual('http://test.invalid/image.png');
@@ -1638,7 +1636,7 @@ defineSuite([
               </Style>\
           </Placemark>';
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), options).then(function(dataSource) {
             var entities = dataSource.entities.values;
             var billboard = entities[0].billboard;
             expect(billboard.image.getValue().url).toEqual('https://maps.google.com/mapfiles/kml/pal3/icon56.png');
@@ -1657,7 +1655,7 @@ defineSuite([
               </Style>\
           </Placemark>';
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), {
             camera : options.camera,
             canvas : options.canvas,
             sourceUri : 'http://test.invalid'
@@ -1697,7 +1695,7 @@ defineSuite([
             url: 'whiteShapes.png'
         }).url;
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), options).then(function(dataSource) {
             var billboard = dataSource.entities.values[0].billboard;
             expect(billboard.image.getValue().url).toEqual(expectedIconHref);
             expect(billboard.imageSubRegion.getValue()).toEqual(new BoundingRectangle(49, 43, 18, 18));
@@ -1714,7 +1712,7 @@ defineSuite([
                     </Style>\
                   </Placemark>';
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), options).then(function(dataSource) {
             var billboard = dataSource.entities.values[0].billboard;
             expect(billboard.pixelOffset.getValue()).toEqual(new Cartesian2(8, 8));
         });
@@ -1730,7 +1728,7 @@ defineSuite([
                     </Style>\
                   </Placemark>';
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), options).then(function(dataSource) {
             var billboard = dataSource.entities.values[0].billboard;
             expect(billboard.pixelOffset.getValue()).toEqual(new Cartesian2(15, -14));
         });
@@ -1746,7 +1744,7 @@ defineSuite([
                     </Style>\
                   </Placemark>';
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), options).then(function(dataSource) {
             var billboard = dataSource.entities.values[0].billboard;
             expect(billboard.pixelOffset.getValue()).toEqual(new Cartesian2(-15, 14));
         });
@@ -1763,7 +1761,7 @@ defineSuite([
             </Style>\
           </Placemark>';
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), options).then(function(dataSource) {
             var entities = dataSource.entities.values;
             expect(entities[0].billboard.color.getValue()).toEqual(color);
         });
@@ -1779,7 +1777,7 @@ defineSuite([
             </Style>\
           </Placemark>';
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), options).then(function(dataSource) {
             var entities = dataSource.entities.values;
             expect(entities[0].billboard.scale.getValue()).toEqual(2.2);
         });
@@ -1795,7 +1793,7 @@ defineSuite([
             </Style>\
           </Placemark>';
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), options).then(function(dataSource) {
             var entities = dataSource.entities.values;
             expect(entities[0].billboard.rotation.getValue()).toEqual(CesiumMath.toRadians(-4));
             expect(entities[0].billboard.alignedAxis.getValue()).toEqual(Cartesian3.UNIT_Z);
@@ -1824,7 +1822,7 @@ defineSuite([
             </ExtendedData>\
         </Placemark>';
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), options).then(function(dataSource) {
             var entity = dataSource.entities.values[0];
 
             var element = document.createElement('div');
@@ -1848,7 +1846,7 @@ defineSuite([
             </Style>\
         </Placemark>';
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), options).then(function(dataSource) {
             var entity = dataSource.entities.values[0];
 
             var element = document.createElement('div');
@@ -1865,7 +1863,7 @@ defineSuite([
             <description>The Description</description>\
         </Placemark>';
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), options).then(function(dataSource) {
             var entity = dataSource.entities.values[0];
 
             var element = document.createElement('div');
@@ -1896,7 +1894,7 @@ defineSuite([
                 </ExtendedData>\
             </Placemark>';
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), options).then(function(dataSource) {
             var entity = dataSource.entities.values[0];
 
             var element = document.createElement('div');
@@ -1932,7 +1930,7 @@ defineSuite([
                 </ExtendedData>\
             </Placemark>';
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), options).then(function(dataSource) {
             var entity = dataSource.entities.values[0];
             expect(entity.description).toBeUndefined();
         });
@@ -1944,7 +1942,7 @@ defineSuite([
             <description>http://cesiumjs.org</description>\
         </Placemark>';
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), options).then(function(dataSource) {
             var entity = dataSource.entities.values[0];
 
             var element = document.createElement('div');
@@ -1963,7 +1961,7 @@ defineSuite([
             <description><![CDATA[<img src="foo/bar.png"/>]]></description>\
         </Placemark>';
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), {
             camera : options.camera,
             canvas : options.canvas,
             sourceUri : 'http://test.invalid'
@@ -1985,7 +1983,7 @@ defineSuite([
             <description><![CDATA[<a href="http://cesiumjs.org" target="_self">Homepage</a>]]></description>\
         </Placemark>';
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), options).then(function(dataSource) {
             var entity = dataSource.entities.values[0];
 
             var element = document.createElement('div');
@@ -2005,7 +2003,7 @@ defineSuite([
             <description>states.id google.com</description>\
         </Placemark>';
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), options).then(function(dataSource) {
             var entity = dataSource.entities.values[0];
 
             var element = document.createElement('div');
@@ -2047,7 +2045,7 @@ defineSuite([
             </Style>\
           </Placemark>';
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), options).then(function(dataSource) {
             var entities = dataSource.entities.values;
             var label = entities[0].label;
             expect(label).toBeDefined();
@@ -2091,7 +2089,7 @@ defineSuite([
             </Style>\
           </Placemark>';
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), options).then(function(dataSource) {
             var entities = dataSource.entities.values;
             expect(entities[0].label.fillColor.getValue()).toEqual(color);
         });
@@ -2109,7 +2107,7 @@ defineSuite([
               </Style>\
             </Placemark>';
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), options).then(function(dataSource) {
             var entities = dataSource.entities.values;
             expect(entities[0].label.pixelOffset.getValue()).toEqual(new Cartesian2(33, 0));
         });
@@ -2125,7 +2123,7 @@ defineSuite([
             </Style>\
           </Placemark>';
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), options).then(function(dataSource) {
             var entities = dataSource.entities.values;
             expect(entities[0].label.pixelOffset.getValue()).toEqual(new Cartesian3(3 * 16 + 1, 0));
         });
@@ -2141,7 +2139,7 @@ defineSuite([
             </Style>\
           </Placemark>';
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), options).then(function(dataSource) {
             var entities = dataSource.entities.values;
             expect(entities[0].label.pixelOffset).toBeUndefined();
             expect(entities[0].label.horizontalOrigin).toBeUndefined();
@@ -2157,7 +2155,7 @@ defineSuite([
             </Style>\
           </Placemark>';
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), options).then(function(dataSource) {
             var entities = dataSource.entities.values;
             var polyline = entities[0].polyline;
             expect(polyline).toBeDefined();
@@ -2182,7 +2180,7 @@ defineSuite([
             </Style>\
           </Placemark>';
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), options).then(function(dataSource) {
             var entities = dataSource.entities.values;
             var polyline = entities[0].polyline;
             expect(polyline.material).toBeInstanceOf(ColorMaterialProperty);
@@ -2200,7 +2198,7 @@ defineSuite([
             </Style>\
           </Placemark>';
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), options).then(function(dataSource) {
             var entities = dataSource.entities.values;
             var polyline = entities[0].polyline;
             expect(polyline.width.getValue()).toEqual(2.75);
@@ -2216,7 +2214,7 @@ defineSuite([
             </Style>\
           </Placemark>';
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), options).then(function(dataSource) {
             var entities = dataSource.entities.values;
             var polygon = entities[0].polygon;
             expect(polygon).toBeDefined();
@@ -2248,7 +2246,7 @@ defineSuite([
             </Style>\
           </Placemark>';
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), options).then(function(dataSource) {
             var entities = dataSource.entities.values;
             var polygon = entities[0].polygon;
             expect(polygon.material).toBeInstanceOf(ColorMaterialProperty);
@@ -2266,7 +2264,7 @@ defineSuite([
             </Style>\
           </Placemark>';
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), options).then(function(dataSource) {
             var entities = dataSource.entities.values;
             var polygon = entities[0].polygon;
             expect(polygon.fill.getValue()).toEqual(false);
@@ -2283,7 +2281,7 @@ defineSuite([
             </Style>\
           </Placemark>';
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), options).then(function(dataSource) {
             var entities = dataSource.entities.values;
             var polygon = entities[0].polygon;
             expect(polygon.outline.getValue()).toEqual(false);
@@ -2297,7 +2295,7 @@ defineSuite([
             </Placemark>\
         </Folder>';
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), options).then(function(dataSource) {
             var entities = dataSource.entities;
             var folder = entities.getById('parent');
             var placemark = entities.getById('child');
@@ -2319,7 +2317,7 @@ defineSuite([
             </TimeSpan>\
           </Folder>';
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), options).then(function(dataSource) {
             var start = JulianDate.fromIso8601('2000-01-01');
             var stop = JulianDate.fromIso8601('2000-01-03');
 
@@ -2348,7 +2346,7 @@ defineSuite([
             </TimeSpan>\
           </Folder>';
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), options).then(function(dataSource) {
             var startFolder = JulianDate.fromIso8601('2000-01-01');
             var stopFolder = JulianDate.fromIso8601('2000-01-04');
             var startFeature = JulianDate.fromIso8601('2000-01-02');
@@ -2376,7 +2374,7 @@ defineSuite([
             </TimeStamp>\
           </Folder>';
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), options).then(function(dataSource) {
             var start = JulianDate.fromIso8601('2000-01-03');
 
             var entities = dataSource.entities.values;
@@ -2403,7 +2401,7 @@ defineSuite([
             </TimeStamp>\
           </Folder>';
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), options).then(function(dataSource) {
             var startFolder = JulianDate.fromIso8601('2000-01-03');
             var startFeature = JulianDate.fromIso8601('2000-01-04');
             var stopFeature = JulianDate.fromIso8601('2000-01-05');
@@ -2427,7 +2425,7 @@ defineSuite([
             </Point>\
           </Placemark>';
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), options).then(function(dataSource) {
             var entities = dataSource.entities.values;
             expect(entities.length).toEqual(1);
             expect(entities[0].position.getValue(Iso8601.MINIMUM_VALUE)).toEqual(Cartesian3.fromDegrees(0, 0, 0));
@@ -2444,7 +2442,7 @@ defineSuite([
             </Point>\
           </Placemark>';
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), options).then(function(dataSource) {
             var entities = dataSource.entities.values;
             expect(entities.length).toEqual(1);
             expect(entities[0].position.getValue(Iso8601.MINIMUM_VALUE)).toEqual(Cartesian3.fromDegrees(1, 2, 3));
@@ -2460,7 +2458,7 @@ defineSuite([
             </Point>\
           </Placemark>';
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), options).then(function(dataSource) {
             var entities = dataSource.entities.values;
             expect(entities.length).toEqual(1);
             expect(entities[0].position.getValue(Iso8601.MINIMUM_VALUE)).toEqual(Cartesian3.fromDegrees(0, 0, 0));
@@ -2476,7 +2474,7 @@ defineSuite([
             </Point>\
           </Placemark>';
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), {
             camera : options.camera,
             canvas : options.canvas,
             clampToGround : true
@@ -2497,7 +2495,7 @@ defineSuite([
             </Point>\
           </Placemark>';
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), options).then(function(dataSource) {
             var entities = dataSource.entities.values;
             expect(entities.length).toEqual(1);
             expect(entities[0].position.getValue(Iso8601.MINIMUM_VALUE)).toEqual(Cartesian3.fromDegrees(1, 2, 3));
@@ -2515,7 +2513,7 @@ defineSuite([
             </Point>\
           </Placemark>';
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), options).then(function(dataSource) {
             var entities = dataSource.entities.values;
             expect(entities.length).toEqual(1);
             expect(entities[0].position.getValue(Iso8601.MINIMUM_VALUE)).toEqual(Cartesian3.fromDegrees(1, 2, 3));
@@ -2534,7 +2532,7 @@ defineSuite([
             </Point>\
           </Placemark>';
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), options).then(function(dataSource) {
             var entities = dataSource.entities.values;
             expect(entities.length).toEqual(1);
             expect(entities[0].position.getValue(Iso8601.MINIMUM_VALUE)).toEqual(Cartesian3.fromDegrees(1, 2, 0));
@@ -2554,7 +2552,7 @@ defineSuite([
             </Point>\
           </Placemark>';
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), options).then(function(dataSource) {
             var entities = dataSource.entities.values;
             expect(entities.length).toEqual(1);
             expect(entities[0].position.getValue(Iso8601.MINIMUM_VALUE)).toEqual(Cartesian3.fromDegrees(1, 2));
@@ -2572,7 +2570,7 @@ defineSuite([
             </Point>\
           </Placemark>';
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), options).then(function(dataSource) {
             var entities = dataSource.entities.values;
             expect(entities.length).toEqual(1);
             expect(entities[0].position.getValue(Iso8601.MINIMUM_VALUE)).toEqual(Cartesian3.fromDegrees(1, 2, 3));
@@ -2594,7 +2592,7 @@ defineSuite([
             </Point>\
           </Placemark>';
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), options).then(function(dataSource) {
             var entities = dataSource.entities.values;
             expect(entities.length).toEqual(1);
             expect(entities[0].position.getValue(Iso8601.MINIMUM_VALUE)).toEqual(Cartesian3.fromDegrees(1, 2, 3));
@@ -2615,7 +2613,7 @@ defineSuite([
             </Point>\
           </Placemark>';
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), options).then(function(dataSource) {
             var entities = dataSource.entities.values;
             expect(entities.length).toEqual(1);
             expect(entities[0].position.getValue(Iso8601.MINIMUM_VALUE)).toEqual(Cartesian3.fromDegrees(1, 2, 3));
@@ -2634,7 +2632,7 @@ defineSuite([
             </Point>\
           </Placemark>';
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), options).then(function(dataSource) {
             var entities = dataSource.entities.values;
             expect(entities.length).toEqual(1);
             expect(entities[0].position.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Cartesian3(213935.5635247161,
@@ -2652,7 +2650,7 @@ defineSuite([
           </Placemark>';
 
         var moonOptions = combine(options, { ellipsoid : Ellipsoid.MOON });
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), moonOptions).then(function(moonDataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), moonOptions).then(function(moonDataSource) {
             var entities = moonDataSource.entities.values;
             expect(entities.length).toEqual(1);
             expect(entities[0].position.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Cartesian3(58080.7702560248,
@@ -2674,7 +2672,7 @@ defineSuite([
             </Polygon>\
           </Placemark>';
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), options).then(function(dataSource) {
             var entity = dataSource.entities.values[0];
             expect(entity.polygon.hierarchy).toBeUndefined();
         });
@@ -2696,7 +2694,7 @@ defineSuite([
             </Polygon>\
           </Placemark>';
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), options).then(function(dataSource) {
             var entity = dataSource.entities.values[0];
             var coordinates = [Cartesian3.fromDegrees(1, 2, 3), Cartesian3.fromDegrees(4, 5, 6), Cartesian3.fromDegrees(7, 8, 9)];
             expect(entity.polygon.hierarchy.getValue().positions).toEqual(coordinates);
@@ -2737,7 +2735,7 @@ defineSuite([
             </Polygon>\
           </Placemark>';
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), options).then(function(dataSource) {
             var entity = dataSource.entities.values[0];
             var coordinates = [Cartesian3.fromDegrees(1, 2, 3), Cartesian3.fromDegrees(4, 5, 6), Cartesian3.fromDegrees(7, 8, 9)];
             var holeCoordinates = [Cartesian3.fromDegrees(1.1, 2.1, 3.1), Cartesian3.fromDegrees(4.1, 5.1, 6.1), Cartesian3.fromDegrees(7.1, 8.1, 9.1)];
@@ -2764,7 +2762,7 @@ defineSuite([
             </Polygon>\
           </Placemark>';
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), options).then(function(dataSource) {
             var entity = dataSource.entities.values[0];
             expect(entity.polygon.perPositionHeight.getValue()).toEqual(true);
             expect(entity.polygon.extrudedHeight.getValue()).toEqual(0);
@@ -2780,7 +2778,7 @@ defineSuite([
             </Polygon>\
           </Placemark>';
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), options).then(function(dataSource) {
             var entity = dataSource.entities.values[0];
             expect(entity.polygon.perPositionHeight.getValue()).toEqual(true);
             expect(entity.polygon.extrudedHeight.getValue()).toEqual(0);
@@ -2797,7 +2795,7 @@ defineSuite([
             </Polygon>\
           </Placemark>';
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), options).then(function(dataSource) {
             var entity = dataSource.entities.values[0];
             expect(entity.polygon.perPositionHeight).toBeUndefined();
             expect(entity.polygon.extrudedHeight).toBeUndefined();
@@ -2814,7 +2812,7 @@ defineSuite([
             </Polygon>\
           </Placemark>';
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), options).then(function(dataSource) {
             var entity = dataSource.entities.values[0];
             expect(entity.polygon.perPositionHeight.getValue()).toEqual(true);
             expect(entity.polygon.extrudedHeight.getValue()).toEqual(0);
@@ -2831,7 +2829,7 @@ defineSuite([
             </Polygon>\
           </Placemark>';
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), options).then(function(dataSource) {
             var entity = dataSource.entities.values[0];
             expect(entity.polygon.perPositionHeight).toBeUndefined();
             expect(entity.polygon.extrudedHeight).toBeUndefined();
@@ -2856,7 +2854,7 @@ defineSuite([
             </Placemark>';
 
         var moonOptions = combine(options, { ellipsoid : Ellipsoid.MOON });
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), moonOptions).then(function(moonDataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), moonOptions).then(function(moonDataSource) {
             var entity = moonDataSource.entities.values[0];
             var moonPoint = entity.polygon.hierarchy.getValue().positions[0];
             expect(moonPoint).toEqual(new Cartesian3(58080.7702560248, 25945.04756005268, 1736235.0758562544));
@@ -2880,7 +2878,7 @@ defineSuite([
                 </Polygon>\
             </Placemark>';
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), options).then(function(dataSource) {
             var entity = dataSource.entities.values[0];
             var earthPoint = entity.polygon.hierarchy.getValue().positions[0];
             expect(earthPoint).toEqual(new Cartesian3(213935.5635247161, 95566.36983235707, 6352461.425213023));
@@ -2894,7 +2892,7 @@ defineSuite([
             </LineString>\
             </Placemark>';
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), options).then(function(dataSource) {
             var entities = dataSource.entities.values;
             expect(entities.length).toEqual(1);
 
@@ -2915,7 +2913,7 @@ defineSuite([
             </LineString>\
             </Placemark>';
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), options).then(function(dataSource) {
             var entities = dataSource.entities.values;
             expect(entities.length).toEqual(1);
 
@@ -2941,7 +2939,7 @@ defineSuite([
             </LineString>\
             </Placemark>';
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), options).then(function(dataSource) {
             var entities = dataSource.entities.values;
             expect(entities.length).toEqual(1);
 
@@ -2965,7 +2963,7 @@ defineSuite([
             </LineString>\
             </Placemark>';
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), options).then(function(dataSource) {
             var entities = dataSource.entities.values;
             expect(entities.length).toEqual(1);
 
@@ -2988,7 +2986,7 @@ defineSuite([
             </LineString>\
             </Placemark>';
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), options).then(function(dataSource) {
             var entities = dataSource.entities.values;
             expect(entities.length).toEqual(1);
 
@@ -3011,7 +3009,7 @@ defineSuite([
         </LineString>\
         </Placemark>';
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), options).then(function(dataSource) {
             var entities = dataSource.entities.values;
             expect(entities.length).toEqual(1);
 
@@ -3034,7 +3032,7 @@ defineSuite([
             </LineString>\
             </Placemark>';
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), options).then(function(dataSource) {
             var entities = dataSource.entities.values;
             expect(entities.length).toEqual(1);
 
@@ -3057,7 +3055,7 @@ defineSuite([
             </LineString>\
             </Placemark>';
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), options).then(function(dataSource) {
             var entities = dataSource.entities.values;
             expect(entities.length).toEqual(1);
 
@@ -3083,7 +3081,7 @@ defineSuite([
               </gx:Track>\
             </Placemark>';
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), {
             camera : options.camera,
             canvas : options.canvas,
             clampToGround : true
@@ -3122,7 +3120,7 @@ defineSuite([
               </gx:Track>\
             </Placemark>';
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), {
             camera : options.camera,
             canvas : options.canvas,
             clampToGround : true
@@ -3158,7 +3156,7 @@ defineSuite([
               </gx:Track>\
             </Placemark>';
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), options).then(function(dataSource) {
             var time1 = JulianDate.fromIso8601('2000-01-01T00:00:00Z');
             var time2 = JulianDate.fromIso8601('2000-01-01T00:00:01Z');
             var time3 = JulianDate.fromIso8601('2000-01-01T00:00:02Z');
@@ -3190,7 +3188,7 @@ defineSuite([
               </gx:Track>\
             </Placemark>';
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), options).then(function(dataSource) {
             var time1 = JulianDate.fromIso8601('2000-01-01T00:00:00Z');
             var time2 = JulianDate.fromIso8601('2000-01-01T00:00:01Z');
             var time3 = JulianDate.fromIso8601('2000-01-01T00:00:02Z');
@@ -3219,7 +3217,7 @@ defineSuite([
                 </gx:Track>\
           </Placemark>';
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), {
             camera : options.camera,
             canvas : options.canvas,
             clampToGround : true
@@ -3263,7 +3261,7 @@ defineSuite([
               </gx:MultiTrack>\
           </Placemark>';
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), options).then(function(dataSource) {
             var time1 = JulianDate.fromIso8601('2000-01-01T00:00:00Z');
             var time2 = JulianDate.fromIso8601('2000-01-01T00:00:01Z');
             var time3 = JulianDate.fromIso8601('2000-01-01T00:00:02Z');
@@ -3304,7 +3302,7 @@ defineSuite([
               </gx:MultiTrack>\
           </Placemark>';
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), options).then(function(dataSource) {
             var time1 = JulianDate.fromIso8601('2000-01-01T00:00:00Z');
             var time2 = JulianDate.fromIso8601('2000-01-01T00:00:01Z');
             var time3 = JulianDate.fromIso8601('2000-01-01T00:00:02Z');
@@ -3347,7 +3345,7 @@ defineSuite([
               </gx:MultiTrack>\
           </Placemark>';
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), options).then(function(dataSource) {
             var time1 = JulianDate.fromIso8601('2000-01-01T00:00:00Z');
             var time2 = JulianDate.fromIso8601('2000-01-01T00:00:01Z');
             var time3 = JulianDate.fromIso8601('2000-01-01T00:00:02Z');
@@ -3380,7 +3378,7 @@ defineSuite([
           </MultiGeometry>\
           </Placemark>';
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), options).then(function(dataSource) {
             var entities = dataSource.entities;
             expect(entities.values.length).toEqual(3);
 
@@ -3424,7 +3422,7 @@ defineSuite([
             </Link>\
           </NetworkLink>';
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), options).then(function(dataSource) {
             var entities = dataSource.entities.values;
             expect(entities.length).toEqual(3);
             var link1 = entities[0];
@@ -3466,7 +3464,7 @@ defineSuite([
             </Link>\
           </NetworkLink>';
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), options).then(function(dataSource) {
             var entities = dataSource.entities.values;
             expect(entities.length).toEqual(3);
             var link1 = entities[0];
@@ -3508,7 +3506,7 @@ defineSuite([
             </Link>\
           </NetworkLink>';
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), options).then(function(dataSource) {
             var entities = dataSource.entities.values;
             expect(entities.length).toEqual(3);
             var link1 = entities[0];
@@ -3558,7 +3556,7 @@ defineSuite([
             deferred.reject();
         });
 
-        KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options);
+        KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), options);
 
         return requestNetworkLink.promise.then(function(url) {
             expect(url).toEqual(expectedRefreshLinkHref);
@@ -3579,7 +3577,7 @@ defineSuite([
             deferred.reject();
         });
 
-        KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options);
+        KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), options);
 
         return requestNetworkLink.promise.then(function(url) {
             expect(url).toEqual(expectedRefreshLinkHref);
@@ -3601,7 +3599,7 @@ defineSuite([
             deferred.reject();
         });
 
-        KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options);
+        KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), options);
 
         return requestNetworkLink.promise.then(function(url) {
             expect(url).toEqual(expectedRefreshLinkHref + '?BBOX=-180%2C-90%2C180%2C90');
@@ -3624,7 +3622,7 @@ defineSuite([
             deferred.reject();
         });
 
-        KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options);
+        KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), options);
 
         return requestNetworkLink.promise.then(function(url) {
             expect(url).toEqual(expectedRefreshLinkHref + '?client=Cesium-v1&v=2.2&lang=English');
@@ -3647,7 +3645,7 @@ defineSuite([
             deferred.reject();
         });
 
-        KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options);
+        KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), options);
 
         return requestNetworkLink.promise.then(function(url) {
             expect(url).toEqual(expectedRefreshLinkHref + '?client=Cesium-v1&v=2.2&lang=English');
@@ -3672,7 +3670,7 @@ defineSuite([
             deferred.reject();
         });
 
-        KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options);
+        KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), options);
 
         return requestNetworkLink.promise.then(function(url) {
             expect(url).toEqual(expectedRefreshLinkHref + '?BBOX=-180%2C-90%2C180%2C90&CAMERA=0%2C0%2C6378137%2C0%2C0&VIEW=45%2C45%2C512%2C512%2C1');
@@ -3697,7 +3695,7 @@ defineSuite([
             deferred.reject();
         });
 
-        KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options);
+        KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), options);
 
         return requestNetworkLink.promise.then(function(url) {
             expect(url).toEqual(expectedRefreshLinkHref + '?BBOX=-180%2C-90%2C180%2C90&CAMERA=0%2C0%2C6378137%2C0%2C0&VIEW=45%2C45%2C512%2C512%2C1');
@@ -3721,7 +3719,7 @@ defineSuite([
             deferred.reject();
         });
 
-        KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options);
+        KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), options);
 
         return requestNetworkLink.promise.then(function(url) {
             expect(url).toEqual(expectedRefreshLinkHref + '?hq=1&vf=1');
@@ -3758,7 +3756,7 @@ defineSuite([
             canvas : options.canvas
         };
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), ourOptions).then(function(dataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), ourOptions).then(function(dataSource) {
             var entities = dataSource.entities.values;
             expect(entities.length).toEqual(3);
             var link1 = entities[0];
@@ -3806,7 +3804,7 @@ defineSuite([
             </TimeSpan>\
           </NetworkLink>';
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), options).then(function(dataSource) {
             var start = JulianDate.fromIso8601('2000-01-01');
             var stop = JulianDate.fromIso8601('2000-01-03');
 
@@ -3831,7 +3829,7 @@ defineSuite([
             </TimeStamp>\
           </NetworkLink>';
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), options).then(function(dataSource) {
             var start = JulianDate.fromIso8601('2000-01-03');
 
             var entities = dataSource.entities.values;
@@ -3886,7 +3884,7 @@ defineSuite([
             </Polygon>\
           </Placemark>';
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), options).then(function(dataSource) {
             var entity = dataSource.entities.values[0];
             expect(entity.polygon.perPositionHeight.getValue()).toEqual(true);
         });
@@ -3901,7 +3899,7 @@ defineSuite([
             </Polygon>\
           </Placemark>';
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), options).then(function(dataSource) {
             var entity = dataSource.entities.values[0];
             expect(entity.polygon.perPositionHeight.getValue()).toEqual(true);
         });
@@ -3917,7 +3915,7 @@ defineSuite([
             </Placemark>\
             </kml>';
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), options).then(function(dataSource) {
             var entity = dataSource.entities.values[0];
             expect(entity.name).toBe('bob');
             expect(entity.label).toBeDefined();
@@ -3939,7 +3937,7 @@ defineSuite([
               <extrude>1</extrude>\
             </Polygon>\
           </Placemark>';
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), options).then(function(dataSource) {
             var entityCollection = dataSource.entities;
             var entity = entityCollection.values[0];
             expect(entity.entityCollection).toEqual(entityCollection);
@@ -3957,7 +3955,7 @@ defineSuite([
 
         spyOn(console, 'warn').and.callThrough();
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), options).then(function(dataSource) {
             expect(dataSource.entities.values.length).toEqual(1);
             expect(console.warn.calls.count()).toEqual(1);
 			expect(console.warn).toHaveBeenCalledWith('KML - Unsupported Icon refreshMode: onInterval');
@@ -3975,7 +3973,7 @@ defineSuite([
 
         spyOn(console, 'warn').and.callThrough();
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), options).then(function(dataSource) {
             expect(dataSource.entities.values.length).toEqual(1);
             expect(console.warn.calls.count()).toEqual(1);
             expect(console.warn).toHaveBeenCalledWith('KML - Unsupported Icon viewRefreshMode: onStop');
@@ -3996,7 +3994,7 @@ defineSuite([
 
         spyOn(console, 'warn').and.callThrough();
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), options).then(function(dataSource) {
             expect(dataSource.entities.values.length).toEqual(1);
             expect(console.warn.calls.count()).toEqual(1);
             expect(console.warn).toHaveBeenCalledWith('KML - gx:x, gx:y, gx:w, gx:h aren\'t supported for GroundOverlays');
@@ -4026,7 +4024,7 @@ defineSuite([
 
         spyOn(console, 'warn').and.callThrough();
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), options).then(function(dataSource) {
             expect(dataSource.entities.values.length).toEqual(1);
             expect(console.warn.calls.count()).toEqual(4);
             expect(console.warn.calls.argsFor(0)[0]).toBe('KML - gx:outerColor is not supported in a LineStyle');
@@ -4048,7 +4046,7 @@ defineSuite([
 
         spyOn(console, 'warn').and.callThrough();
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), options).then(function(dataSource) {
             expect(dataSource.entities.values.length).toEqual(1);
             expect(console.warn.calls.count()).toEqual(1);
             expect(console.warn).toHaveBeenCalledWith('KML - Unsupported ListStyle with listItemType: radioFolder');
@@ -4074,7 +4072,7 @@ defineSuite([
 
         spyOn(console, 'warn').and.callThrough();
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), options).then(function(dataSource) {
             expect(dataSource.entities.values.length).toEqual(1);
             expect(console.warn.calls.count()).toEqual(1);
             expect(console.warn).toHaveBeenCalledWith('KML - Unsupported StyleMap key: highlighted');
@@ -4097,7 +4095,7 @@ defineSuite([
 
         spyOn(console, 'warn').and.callThrough();
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), options).then(function(dataSource) {
             expect(dataSource.entities.values.length).toEqual(1);
             expect(console.warn.calls.count()).toEqual(1);
             expect(console.warn).toHaveBeenCalledWith('KML - gx:drawOrder is not supported in LineStrings when clampToGround is false');
@@ -4117,7 +4115,7 @@ defineSuite([
 
         spyOn(console, 'warn').and.callThrough();
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), options).then(function(dataSource) {
             expect(dataSource.entities.values.length).toEqual(1);
             expect(console.warn.calls.count()).toEqual(1);
             expect(console.warn).toHaveBeenCalledWith('KML - gx:angles are not supported in gx:Tracks');
@@ -4132,7 +4130,7 @@ defineSuite([
 
         spyOn(console, 'warn').and.callThrough();
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), options).then(function(dataSource) {
             expect(dataSource.entities.values.length).toEqual(1);
             expect(console.warn.calls.count()).toEqual(1);
             expect(console.warn).toHaveBeenCalledWith('KML - Unsupported geometry: Model');
@@ -4154,7 +4152,7 @@ defineSuite([
 
         spyOn(console, 'warn').and.callThrough();
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), options).then(function(dataSource) {
             expect(dataSource.entities.values.length).toEqual(1);
             expect(console.warn.calls.count()).toEqual(2);
             expect(console.warn.calls.argsFor(0)[0]).toBe('KML - SchemaData is unsupported');
@@ -4183,7 +4181,7 @@ defineSuite([
 
         spyOn(console, 'warn').and.callThrough();
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), options).then(function(dataSource) {
             expect(dataSource.entities.values.length).toEqual(1);
             var placemark = dataSource.entities.values[0];
             expect(placemark.kml.camera).toBeInstanceOf(KmlCamera);
@@ -4206,7 +4204,7 @@ defineSuite([
 
         spyOn(console, 'warn').and.callThrough();
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), options).then(function(dataSource) {
             expect(dataSource.entities.values.length).toEqual(1);
             expect(console.warn.calls.count()).toEqual(1);
             expect(console.warn).toHaveBeenCalledWith('KML - Placemark Regions are unsupported');
@@ -4224,7 +4222,7 @@ defineSuite([
 
         spyOn(console, 'warn').and.callThrough();
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), options).then(function(dataSource) {
             expect(dataSource.entities.values.length).toEqual(2);
             expect(console.warn.calls.count()).toEqual(1);
             expect(console.warn).toHaveBeenCalledWith('KML - Unsupported viewRefreshMode: onRegion');
@@ -4248,12 +4246,12 @@ defineSuite([
               </gx:Tour>\
             </Document>';
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), options).then(function(dataSource) {
             expect(dataSource.kmlTours.length).toEqual(1);
             var tour = dataSource.kmlTours[0];
             expect(tour).toBeInstanceOf(KmlTour);
-            expect(tour.name).toEqual("Tour 1");
-            expect(tour.id).toEqual("id_123");
+            expect(tour.name).toEqual('Tour 1');
+            expect(tour.id).toEqual('id_123');
             expect(tour.playlist.length).toEqual(2);
 
             expect(tour.playlist[0].duration).toEqual(2);
@@ -4298,7 +4296,7 @@ defineSuite([
               </gx:Tour>\
             </Document>';
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), options).then(function(dataSource) {
             expect(dataSource.kmlTours.length).toEqual(1);
             var tour = dataSource.kmlTours[0];
             expect(tour.playlist.length).toEqual(2);
@@ -4339,7 +4337,7 @@ defineSuite([
 
         spyOn(console, 'warn').and.callThrough();
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), options).then(function(dataSource) {
             expect(dataSource.kmlTours.length).toEqual(1);
             expect(dataSource.kmlTours[0].playlist.length).toEqual(0);
             expect(console.warn).toHaveBeenCalledWith('KML Tour unsupported node AnimatedUpdate');
@@ -4359,7 +4357,7 @@ defineSuite([
 
         spyOn(console, 'warn').and.callThrough();
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), options).then(function(dataSource) {
             expect(dataSource.entities.values.length).toEqual(2);
             expect(console.warn.calls.count()).toEqual(1);
             expect(console.warn).toHaveBeenCalledWith('KML - refreshMode of onExpire requires the NetworkLinkControl to have an expires element');
@@ -4387,7 +4385,7 @@ defineSuite([
 
         camera._mode = SceneMode.MORPHING;
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), kmlOptions).then(function(dataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), kmlOptions).then(function(dataSource) {
             expect(dataSource.entities.values.length).toEqual(2);
         });
     });
@@ -4400,7 +4398,7 @@ defineSuite([
             </Polygon>\
           </Placemark>';
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), options).then(function(dataSource) {
             var entity = dataSource.entities.values[0];
             expect(entity.polygon.perPositionHeight.getValue()).toEqual(true);
             expect(entity.polygon.height).toBeUndefined();
@@ -4415,14 +4413,14 @@ defineSuite([
             </Polygon>\
           </Placemark>';
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), options).then(function(dataSource) {
             var entity = dataSource.entities.values[0];
             expect(entity.polygon.perPositionHeight).toBeUndefined();
             expect(entity.polygon.height.getValue()).toEqual(0);
         });
     });
 
-    it('when a LineString is clamped to ground and tesselated, entity has a corridor geometry and ColorProperty', function() {
+    it('when a LineString is clamped to ground and tesselated, entity has a polyline geometry and ColorProperty', function() {
         var kml = '<?xml version="1.0" encoding="UTF-8"?>\
             <Placemark>\
                 <Style>\
@@ -4439,14 +4437,15 @@ defineSuite([
                 </LineString>\
             </Placemark>';
         var clampToGroundOptions = combine(options, { clampToGround : true });
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), clampToGroundOptions).then(function(dataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), clampToGroundOptions).then(function(dataSource) {
             var entity = dataSource.entities.values[0];
-            expect(entity.corridor).toBeDefined();
-            expect(entity.corridor.material).toBeInstanceOf(ColorMaterialProperty);
+            expect(entity.polyline).toBeDefined();
+            expect(entity.polyline.clampToGround.getValue()).toEqual(true);
+            expect(entity.polyline.material).toBeInstanceOf(ColorMaterialProperty);
         });
     });
 
-    it('when a LineString is clamped to ground and tesselated with z draworder, entity has a corridor geometry and ColorProperty', function() {
+    it('when a LineString is clamped to ground and tesselated with z draworder, entity has a polyline geometry and ColorProperty', function() {
         var kml = '<?xml version="1.0" encoding="UTF-8"?>\
             <Document xmlns="http://www.opengis.net/kml/2.2"\
              xmlns:gx="http://www.google.com/kml/ext/2.2">\
@@ -4467,10 +4466,78 @@ defineSuite([
             </Placemark>\
             </Document>';
         var clampToGroundOptions = combine(options, { clampToGround : true });
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), clampToGroundOptions).then(function(dataSource) {
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), clampToGroundOptions).then(function(dataSource) {
             var entity = dataSource.entities.values[0];
-            expect(entity.corridor).toBeDefined();
-            expect(entity.corridor.zIndex.getValue()).toBe(2);
+            expect(entity.polyline).toBeDefined();
+            expect(entity.polyline.clampToGround.getValue()).toEqual(true);
+            expect(entity.polyline.zIndex.getValue()).toBe(2);
+        });
+    });
+
+    it('correctly uses random colors', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\n' +
+                  '<Document>\n' +
+                      '<Style id="color2">\n' +
+                          '<PolyStyle>\n' +
+                              '<color>00000000</color>\n' +
+                              '<colorMode>random</colorMode>\n' +
+                          '</PolyStyle>\n' +
+                      '</Style>\n' +
+                          '<Style id="color3">\n' +
+                          '<PolyStyle>\n' +
+                              '<color>9991ccfa</color>\n' +
+                              '<colorMode>random</colorMode>\n' +
+                          '</PolyStyle>\n' +
+                      '</Style>\n' +
+                          '<Style id="color4">\n' +
+                          '<PolyStyle>\n' +
+                              '<color>9991ccfa</color>\n' +
+                              '<colorMode>random</colorMode>\n' +
+                          '</PolyStyle>\n' +
+                      '</Style>\n' +
+                      '<Folder>\n' +
+                          '<Placemark>\n' +
+                              '<styleUrl>#color2</styleUrl>\n' +
+                              '<Polygon>\n' +
+                                  '<outerBoundaryIs>\n' +
+                                      '<LinearRing>\n' +
+                                          '<coordinates>\n' +
+                                              '-89.52101149718367,44.23294548447373,0 -91.98408516538682,47.97512147591338,0 -96.92502046753899,45.42403256080313,0 -89.52101149718367,44.23294548447373,0 \n' +
+                                          '</coordinates>\n' +
+                                      '</LinearRing>\n' +
+                                  '</outerBoundaryIs>\n' +
+                              '</Polygon>\n' +
+                          '</Placemark>\n' +
+                          '<Placemark>\n' +
+                              '<styleUrl>#color3</styleUrl>\n' +
+                              '<Polygon>\n' +
+                                  '<outerBoundaryIs>\n' +
+                                      '<LinearRing>\n' +
+                                          '<coordinates>\n' +
+                                              '-87.93623144974434,37.55775744070508,0 -89.46217805511263,41.26028180023913,0 -96.5546236391081,37.07597093222066,0 -87.93623144974434,37.55775744070508,0 \n' +
+                                          '</coordinates>\n' +
+                                      '</LinearRing>\n' +
+                                  '</outerBoundaryIs>\n' +
+                              '</Polygon>\n' +
+                          '</Placemark>\n' +
+                          '<Placemark>\n' +
+                              '<styleUrl>#color4</styleUrl>\n' +
+                              '<Polygon>\n' +
+                                  '<outerBoundaryIs>\n' +
+                                      '<LinearRing>\n' +
+                                          '<coordinates>\n' +
+                                              '-104.347585776386,32.33288590150301,0 -103.8767557883591,37.6658714706182,0 -109.2704409486033,39.04706243328442,0 -104.347585776386,32.33288590150301,0 \n' +
+                                          '</coordinates>\n' +
+                                      '</LinearRing>\n' +
+                                  '</outerBoundaryIs>\n' +
+                              '</Polygon>\n' +
+                          '</Placemark>\n' +
+                      '</Folder>\n' +
+                  '</Document>\n';
+        CesiumMath.setRandomNumberSeed(0);
+        return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), options).then(function(dataSource) {
+            expect(dataSource.entities.values.length).toEqual(4);
+            expect(dataSource.entities.values[2].polygon.material.color.getValue()).not.toEqual(dataSource.entities.values[3].polygon.material.color.getValue());
         });
     });
 });

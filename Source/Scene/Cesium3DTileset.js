@@ -90,7 +90,7 @@ define([
      * @constructor
      *
      * @param {Object} options Object with the following properties:
-     * @param {Resource|String|Promise<Resource>|Promise<String>} options.url The url to a tileset.json file or to a directory containing a tileset.json file.
+     * @param {Resource|String|Promise<Resource>|Promise<String>} options.url The url to a tileset JSON file.
      * @param {Boolean} [options.show=true] Determines if the tileset will be shown.
      * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] A 4x4 transformation matrix that transforms the tileset's root tile.
      * @param {ShadowMode} [options.shadows=ShadowMode.ENABLED] Determines whether the tileset casts or receives shadows from each light source.
@@ -110,6 +110,7 @@ define([
      * @param {ClippingPlaneCollection} [options.clippingPlanes] The {@link ClippingPlaneCollection} used to selectively disable rendering the tileset.
      * @param {ClassificationType} [options.classificationType] Determines whether terrain, 3D Tiles or both will be classified by this tileset. See {@link Cesium3DTileset#classificationType} for details about restrictions and limitations.
      * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid determining the size and shape of the globe.
+     * @param {Object} [options.pointCloudShading] Options for constructing a {@link PointCloudShading} object to control point attenuation based on geometric error and lighting.
      * @param {Boolean} [options.debugFreezeFrame=false] For debugging only. Determines if only the tiles from last frame should be used for rendering.
      * @param {Boolean} [options.debugColorizeTiles=false] For debugging only. When true, assigns a random color to each tile.
      * @param {Boolean} [options.debugWireframe=false] For debugging only. When true, render's each tile's content as a wireframe.
@@ -120,19 +121,18 @@ define([
      * @param {Boolean} [options.debugShowRenderingStatistics=false] For debugging only. When true, draws labels to indicate the number of commands, points, triangles and features for each tile.
      * @param {Boolean} [options.debugShowMemoryUsage=false] For debugging only. When true, draws labels to indicate the texture and geometry memory in megabytes used by each tile.
      * @param {Boolean} [options.debugShowUrl=false] For debugging only. When true, draws labels to indicate the url of each tile.
-     * @param {Object} [options.pointCloudShading] Options for constructing a {@link PointCloudShading} object to control point attenuation based on geometric error and lighting.
      *
      * @exception {DeveloperError} The tileset must be 3D Tiles version 0.0 or 1.0.  See {@link https://github.com/AnalyticalGraphicsInc/3d-tiles#spec-status}
      *
      * @example
      * var tileset = scene.primitives.add(new Cesium.Cesium3DTileset({
-     *      url : 'http://localhost:8002/tilesets/Seattle'
+     *      url : 'http://localhost:8002/tilesets/Seattle/tileset.json'
      * }));
      *
      * @example
      * // Common setting for the skipLevelOfDetail optimization
      * var tileset = scene.primitives.add(new Cesium.Cesium3DTileset({
-     *      url : 'http://localhost:8002/tilesets/Seattle',
+     *      url : 'http://localhost:8002/tilesets/Seattle/tileset.json',
      *      skipLevelOfDetail : true,
      *      baseScreenSpaceError : 1024,
      *      skipScreenSpaceErrorFactor : 16,
@@ -145,7 +145,7 @@ define([
      * @example
      * // Common settings for the dynamicScreenSpaceError optimization
      * var tileset = scene.primitives.add(new Cesium.Cesium3DTileset({
-     *      url : 'http://localhost:8002/tilesets/Seattle',
+     *      url : 'http://localhost:8002/tilesets/Seattle/tileset.json',
      *      dynamicScreenSpaceError : true,
      *      dynamicScreenSpaceErrorDensity : 0.00278,
      *      dynamicScreenSpaceErrorFactor : 4.0,
@@ -162,12 +162,12 @@ define([
         //>>includeEnd('debug');
 
         this._url = undefined;
-        this._tilesetUrl = undefined;
         this._basePath = undefined;
         this._root = undefined;
         this._asset = undefined; // Metadata for the entire tileset
         this._properties = undefined; // Metadata for per-model/point/etc properties
         this._geometricError = undefined; // Geometric error when the tree is not rendered at all
+        this._extensionsUsed = undefined;
         this._gltfUpAxis = undefined;
         this._processingQueue = [];
         this._selectedTiles = [];
@@ -418,6 +418,12 @@ define([
          * <p>
          * If there are no event listeners, error messages will be logged to the console.
          * </p>
+         * <p>
+         * The error object passed to the listener contains two properties:
+         * <ul>
+         * <li><code>url</code>: the url of the failed tile.</li>
+         * <li><code>message</code>: the error message.</li>
+         * </ul>
          *
          * @type {Event}
          * @default new Event()
@@ -668,7 +674,7 @@ define([
          */
         this.debugShowUrl = defaultValue(options.debugShowUrl, false);
 
-        // A bunch of tilesets were generated that have a leading / in front of all URLs in the tileset.json. If the tiles aren't
+        // A bunch of tilesets were generated that have a leading / in front of all URLs in the tileset JSON file. If the tiles aren't
         //  at the root of the domain they will not load anymore. If we find a b3dm file with a leading slash, we test load a tile.
         //  If it succeeds we continue on. If it fails, we set this to true so we know to strip the slash when loading tiles.
         this._brokenUrlWorkaround = false;
@@ -676,49 +682,41 @@ define([
         this._credits = undefined;
 
         var that = this;
-        var tilesetResource;
+        var resource;
         when(options.url)
             .then(function(url) {
                 var basePath;
-                var resource = Resource.createIfNeeded(url);
+                resource = Resource.createIfNeeded(url);
 
                 // ion resources have a credits property we can use for additional attribution.
                 that._credits = resource.credits;
-
-                tilesetResource = resource;
 
                 if (resource.extension === 'json') {
                     basePath = resource.getBaseUri(true);
                 } else if (resource.isDataUri) {
                     basePath = '';
-                } else {
-                    resource.appendForwardSlash();
-                    tilesetResource = resource.getDerivedResource({
-                        url: 'tileset.json'
-                    });
-                    basePath = resource.url;
                 }
 
                 that._url = resource.url;
-                that._tilesetUrl = tilesetResource.url;
                 that._basePath = basePath;
 
-                // We don't know the distance of the tileset until tileset.json is loaded, so use the default distance for now
-                return Cesium3DTileset.loadJson(tilesetResource);
+                // We don't know the distance of the tileset until tileset JSON file is loaded, so use the default distance for now
+                return Cesium3DTileset.loadJson(resource);
             })
             .then(function(tilesetJson) {
-                return detectBrokenUrlWorkaround(that, tilesetResource, tilesetJson);
+                return detectBrokenUrlWorkaround(that, resource, tilesetJson);
             })
             .then(function(tilesetJson) {
                 if (that._brokenUrlWorkaround) {
-                    deprecationWarning('Cesium3DTileset.leadingSlash', 'Having a leading slash in a tile URL that is actually relative to the tileset.json is deprecated.');
+                    deprecationWarning('Cesium3DTileset.leadingSlash', 'Having a leading slash in a tile URL that is actually relative to the tileset JSON file is deprecated.');
                 }
 
-                that._root = that.loadTileset(tilesetResource, tilesetJson);
+                that._root = that.loadTileset(resource, tilesetJson);
                 var gltfUpAxis = defined(tilesetJson.asset.gltfUpAxis) ? Axis.fromName(tilesetJson.asset.gltfUpAxis) : Axis.Y;
                 that._asset = tilesetJson.asset;
                 that._properties = tilesetJson.properties;
                 that._geometricError = tilesetJson.geometricError;
+                that._extensionsUsed = tilesetJson.extensionsUsed;
                 that._gltfUpAxis = gltfUpAxis;
                 that._readyPromise.resolve(that);
             }).otherwise(function(error) {
@@ -726,7 +724,7 @@ define([
             });
     }
 
-    function detectBrokenUrlWorkaround(tileset, tilesetResource, tilesetJson) {
+    function detectBrokenUrlWorkaround(tileset, resource, tilesetJson) {
         var testUrl = findBrokenUrl(tilesetJson.root);
 
         // If it's an empty string, we are good to load the tileset.
@@ -734,7 +732,7 @@ define([
             return tilesetJson;
         }
 
-        var testResource = tilesetResource.getDerivedResource({
+        var testResource = resource.getDerivedResource({
             url : testUrl
         });
 
@@ -920,7 +918,7 @@ define([
         },
 
         /**
-         * The url to a tileset.json file or to a directory containing a tileset.json file.
+         * The url to a tileset JSON file.
          *
          * @memberof Cesium3DTileset.prototype
          *
@@ -934,7 +932,7 @@ define([
         },
 
         /**
-         * The base path that non-absolute paths in tileset.json are relative to.
+         * The base path that non-absolute paths in tileset JSON file are relative to.
          *
          * @memberof Cesium3DTileset.prototype
          *
@@ -944,7 +942,7 @@ define([
          */
         basePath : {
             get : function() {
-                deprecationWarning('Cesium3DTileset.basePath', 'Cesium3DTileset.basePath has been deprecated. All tiles are relative to the url of the tileset.json that contains them. Use the url property instead.');
+                deprecationWarning('Cesium3DTileset.basePath', 'Cesium3DTileset.basePath has been deprecated. All tiles are relative to the url of the tileset JSON file that contains them. Use the url property instead.');
                 return this._basePath;
             }
         },
@@ -1081,7 +1079,7 @@ define([
          *
          * @example
          * var tileset = viewer.scene.primitives.add(new Cesium.Cesium3DTileset({
-         *     url : 'http://localhost:8002/tilesets/Seattle'
+         *     url : 'http://localhost:8002/tilesets/Seattle/tileset.json'
          * }));
          *
          * tileset.readyPromise.then(function(tileset) {
@@ -1252,11 +1250,11 @@ define([
     };
 
     /**
-     * Loads the main tileset.json or a tileset.json referenced from a tile.
+     * Loads the main tileset JSON file or a tileset JSON file referenced from a tile.
      *
      * @private
      */
-    Cesium3DTileset.prototype.loadTileset = function(tilesetResource, tilesetJson, parentTile) {
+    Cesium3DTileset.prototype.loadTileset = function(resource, tilesetJson, parentTile) {
         var asset = tilesetJson.asset;
         if (!defined(asset)) {
             throw new RuntimeError('Tileset must have an asset property.');
@@ -1267,18 +1265,18 @@ define([
 
         var statistics = this._statistics;
 
-        // Append the tileset version to the tilesetResource
-        if (!defined(tilesetResource.queryParameters.v)) {
+        // Append the tileset version to the resource
+        if (!defined(resource.queryParameters.v)) {
             var versionQuery = {
                 v: defaultValue(asset.tilesetVersion, '0.0')
             };
             this._basePath += '?v=' + versionQuery.v;
-            tilesetResource.setQueryParameters(versionQuery);
+            resource.setQueryParameters(versionQuery);
         }
 
-        // A tileset.json referenced from a tile may exist in a different directory than the root tileset.
+        // A tileset JSON file referenced from a tile may exist in a different directory than the root tileset.
         // Get the basePath relative to the external tileset.
-        var rootTile = new Cesium3DTile(this, tilesetResource, tilesetJson.root, parentTile);
+        var rootTile = new Cesium3DTile(this, resource, tilesetJson.root, parentTile);
 
         // If there is a parentTile, add the root of the currently loading tileset
         // to parentTile's children, and update its _depth.
@@ -1303,7 +1301,7 @@ define([
                 var length = children.length;
                 for (var i = 0; i < length; ++i) {
                     var childHeader = children[i];
-                    var childTile = new Cesium3DTile(this, tilesetResource, childHeader, tile3D);
+                    var childTile = new Cesium3DTile(this, resource, childHeader, tile3D);
                     tile3D.children.push(childTile);
                     childTile._depth = tile3D._depth + 1;
                     ++statistics.numberOfTilesTotal;
@@ -1605,7 +1603,7 @@ define([
         }
 
         if (tileset.debugShowUrl) {
-            labelString += '\nUrl: ' + tile._header.content.url;
+            labelString += '\nUrl: ' + tile._header.content.uri;
             attributes++;
         }
 
@@ -1730,7 +1728,7 @@ define([
         if (tileset.pointCloudShading.attenuation &&
             tileset.pointCloudShading.eyeDomeLighting &&
             (addedCommandsLength > 0)) {
-            tileset._pointCloudEyeDomeLighting.update(frameState, numberOfInitialCommands, tileset);
+            tileset._pointCloudEyeDomeLighting.update(frameState, numberOfInitialCommands, tileset.pointCloudShading);
         }
 
         if (tileset.debugShowGeometricError || tileset.debugShowRenderingStatistics || tileset.debugShowMemoryUsage || tileset.debugShowUrl) {
@@ -1850,12 +1848,7 @@ define([
     ///////////////////////////////////////////////////////////////////////////
 
     /**
-     * Called when {@link Viewer} or {@link CesiumWidget} render the scene to
-     * get the draw commands needed to render this primitive.
-     * <p>
-     * Do not call this function directly.  This is documented just to
-     * list the exceptions that may be propagated when the scene is rendered:
-     * </p>
+     * @private
      */
     Cesium3DTileset.prototype.update = function(frameState) {
         if (frameState.mode === SceneMode.MORPHING) {
@@ -1923,6 +1916,20 @@ define([
                 }
             }
         }
+    };
+
+    /**
+     * <code>true</code> if the tileset JSON file lists the extension in extensionsUsed; otherwise, <code>false</code>.
+     * @param {String} extensionName The name of the extension to check.
+     *
+     * @returns {Boolean} <code>true</code> if the tileset JSON file lists the extension in extensionsUsed; otherwise, <code>false</code>.
+     */
+    Cesium3DTileset.prototype.hasExtension = function(extensionName) {
+        if (!defined(this._extensionsUsed)) {
+            return false;
+        }
+
+        return (this._extensionsUsed.indexOf(extensionName) > -1);
     };
 
     /**
