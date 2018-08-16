@@ -17,7 +17,7 @@ define([
      *
      * @alias ModelNode
      * @internalConstructor
-     *
+     * @class
      *
      * @example
      * var node = model.getNode('LOD3sp');

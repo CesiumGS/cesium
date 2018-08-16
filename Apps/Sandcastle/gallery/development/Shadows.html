@@ -306,7 +306,7 @@ var uiOptions = {
         '3D Tiles' : {
             'centerLongitude' : -1.31968,
             'centerLatitude' : 0.698874,
-            'tileset' : Cesium.IonResource.fromAssetId(3883)
+            'tileset' : '../../SampleData/Cesium3DTiles/Tilesets/Tileset/tileset.json'
         }
     }
 };
@@ -742,10 +742,10 @@ handler.setInputAction(function(movement) {
 //Sandcastle_End
 Sandcastle.finishedLoading();
 }
-if (typeof Cesium !== "undefined") {
+if (typeof Cesium !== 'undefined') {
     startup(Cesium);
-} else if (typeof require === "function") {
-    require(["Cesium"], startup);
+} else if (typeof require === 'function') {
+    require(['Cesium'], startup);
 }
 </script>
 </body>

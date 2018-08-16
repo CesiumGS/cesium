@@ -7,6 +7,7 @@ define([
     '../Core/defineProperties',
     '../Core/destroyObject',
     '../Core/EventHelper',
+    '../Scene/GroundPolylinePrimitive',
     '../Scene/GroundPrimitive',
     '../Scene/OrderedGroundPrimitiveCollection',
     '../Scene/PrimitiveCollection',
@@ -28,6 +29,7 @@ define([
     defineProperties,
     destroyObject,
     EventHelper,
+    GroundPolylinePrimitive,
     GroundPrimitive,
     OrderedGroundPrimitiveCollection,
     PrimitiveCollection,
@@ -62,6 +64,7 @@ function DataSourceDisplay(options) {
     //>>includeEnd('debug');
 
     GroundPrimitive.initializeTerrainHeights();
+    GroundPolylinePrimitive.initializeTerrainHeights();
 
     this._displayID = createGuid();
 

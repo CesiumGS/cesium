@@ -141,13 +141,13 @@ define([
 
         if (defined(TaskProcessor._loaderConfig)) {
             bootstrapMessage.loaderConfig = TaskProcessor._loaderConfig;
-        } else if (typeof self.define !== 'undefined' && defined(define.amd) && !define.amd.toUrlUndefined && defined(require.toUrl)) {
-            bootstrapMessage.loaderConfig.baseUrl =
-                getAbsoluteUri('..', buildModuleUrl('Workers/cesiumWorkerBootstrapper.js'));
         } else {
-            bootstrapMessage.loaderConfig.paths = {
-                'Workers' : buildModuleUrl('Workers')
-            };
+            if (!(typeof self.define !== 'undefined' && defined(define.amd) && !define.amd.toUrlUndefined && defined(require.toUrl))) {
+                bootstrapMessage.loaderConfig.paths = {
+                    'Workers': buildModuleUrl('Workers')
+                };
+            }
+            bootstrapMessage.loaderConfig.baseUrl = buildModuleUrl.getCesiumBaseUrl().url;
         }
 
         worker.postMessage(bootstrapMessage);

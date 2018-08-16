@@ -27,7 +27,7 @@ define([
                 new ModelVisualizer(scene, entities),
                 new PointVisualizer(entityCluster, entities),
                 new PathVisualizer(scene, entities),
-                new PolylineVisualizer(scene, entities)];
+                new PolylineVisualizer(scene, entities, dataSource._primitives, dataSource._groundPrimitives)];
     }
 
     return createCesiumVisualizers;

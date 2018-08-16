@@ -69,7 +69,7 @@ for (var name in viewModel) {
     }
 }
 
-var lensFlare = viewer.scene.postProcessStages.add(Cesium.PostProcessStageLibrary.createLensFlarStage());
+var lensFlare = viewer.scene.postProcessStages.add(Cesium.PostProcessStageLibrary.createLensFlareStage());
 
 function updatePostProcess() {
     lensFlare.enabled = Boolean(viewModel.show);
@@ -91,10 +91,10 @@ viewer.clock.currentTime = new Cesium.JulianDate(2458047, 27399.860215000022);
 //Sandcastle_End
 Sandcastle.finishedLoading();
 }
-if (typeof Cesium !== "undefined") {
+if (typeof Cesium !== 'undefined') {
     startup(Cesium);
-} else if (typeof require === "function") {
-    require(["Cesium"], startup);
+} else if (typeof require === 'function') {
+    require(['Cesium'], startup);
 }
 </script>
 </body>

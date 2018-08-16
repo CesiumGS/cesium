@@ -8,7 +8,7 @@ defineSuite([
         Cartographic,
         CesiumTerrainProvider,
         createWorldTerrain) {
-    "use strict";
+    'use strict';
 
     var worldTerrain = createWorldTerrain();
 

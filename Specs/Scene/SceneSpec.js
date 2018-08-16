@@ -862,11 +862,8 @@ defineSuite([
         var canvas = scene.canvas;
         var windowPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 2);
 
-        var rectanglePrimitive = createRectangle(rectangle);
+        var rectanglePrimitive = scene.primitives.add(createRectangle(rectangle));
         rectanglePrimitive.appearance.material.uniforms.color = new Color(1.0, 0.0, 0.0, 0.5);
-
-        var primitives = scene.primitives;
-        primitives.add(rectanglePrimitive);
 
         scene.useDepthPicking = true;
         scene.pickTranslucentDepth = false;
@@ -1356,6 +1353,32 @@ defineSuite([
 
         scene.renderForSpecs();
         expect(scene.lastRenderTime).not.toEqual(lastRenderTime);
+
+        scene.destroyForSpecs();
+    });
+
+    it('changing the camera frustum does not cause continuous rendering in requestRenderMode', function() {
+        var scene = createScene();
+
+        scene.renderForSpecs();
+
+        var lastRenderTime = JulianDate.clone(scene.lastRenderTime, scratchTime);
+        expect(lastRenderTime).toBeDefined();
+        expect(scene._renderRequested).toBe(false);
+
+        scene.requestRenderMode = true;
+        scene.maximumRenderTimeChange = undefined;
+
+        scene.camera.frustum.near *= 1.1;
+
+        // Render once properly
+        scene.renderForSpecs();
+        expect(scene.lastRenderTime).not.toEqual(lastRenderTime);
+
+        // Render again - but this time nothing should happen.
+        lastRenderTime = JulianDate.clone(scene.lastRenderTime, scratchTime);
+        scene.renderForSpecs();
+        expect(scene.lastRenderTime).toEqual(lastRenderTime);
 
         scene.destroyForSpecs();
     });

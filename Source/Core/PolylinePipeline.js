@@ -201,6 +201,7 @@ define([
 
     /**
      * Subdivides polyline and raises all points to the specified height.  Returns an array of numbers to represent the positions.
+     * @param {Object} options Object with the following properties:
      * @param {Cartesian3[]} options.positions The array of type {Cartesian3} representing positions.
      * @param {Number|Number[]} [options.height=0.0] A number or array of numbers representing the heights of each position.
      * @param {Number} [options.granularity = CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
@@ -288,6 +289,7 @@ define([
 
     /**
      * Subdivides polyline and raises all points to the specified height. Returns an array of new {Cartesian3} positions.
+     * @param {Object} options Object with the following properties:
      * @param {Cartesian3[]} options.positions The array of type {Cartesian3} representing positions.
      * @param {Number|Number[]} [options.height=0.0] A number or array of numbers representing the heights of each position.
      * @param {Number} [options.granularity = CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.

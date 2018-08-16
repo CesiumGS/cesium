@@ -337,8 +337,8 @@ define([
         this._retryCount = 0;
 
         // True if the URL contains {placeholders}. We need to take care to avoid turning these into %7Bplaceholders%7D.
-        var open = options.url.indexOf('{');
-        this._containsPlaceholders = open >= 0 && open < options.url.indexOf('}');
+        var open = options.url.indexOf('%7B');
+        this._containsPlaceholders = !(open >= 0 && open < options.url.indexOf('%7D'));
 
         var uri = new Uri(options.url);
         parseQuery(uri, this, true, true);
@@ -1893,6 +1893,7 @@ define([
             }).end();
     }
 
+    var noXMLHttpRequest = typeof XMLHttpRequest === 'undefined';
     Resource._Implementations.loadWithXhr = function(url, responseType, method, data, headers, deferred, overrideMimeType, timeout) {
         var dataUriRegexResult = dataUriRegex.exec(url);
         if (dataUriRegexResult !== null) {
@@ -1900,7 +1901,7 @@ define([
             return;
         }
 
-        if (FeatureDetection.isNodeJs()) {
+        if (noXMLHttpRequest) {
             loadWithHttpRequest(url, responseType, method, data, headers, deferred, overrideMimeType);
             return;
         }

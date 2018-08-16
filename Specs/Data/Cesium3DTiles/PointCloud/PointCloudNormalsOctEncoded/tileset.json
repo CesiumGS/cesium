@@ -15,7 +15,7 @@
     },
     "geometricError": 0,
     "content": {
-      "url": "pointCloudNormalsOctEncoded.pnts"
+      "uri": "pointCloudNormalsOctEncoded.pnts"
     }
   }
 }
