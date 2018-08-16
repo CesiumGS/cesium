@@ -26,6 +26,7 @@ Change Log
 * Fixed night shading in 2D and Columbus view. [#4122](https://github.com/AnalyticalGraphicsInc/cesium/issues/4122)
 * Fixed a crash when setting show to `false` on a polyline clamped to the ground. [#6912](https://github.com/AnalyticalGraphicsInc/cesium/issues/6912)
 * Fixed crash that happened when calling `scene.pick` after setting a new terrain provider [#6918](https://github.com/AnalyticalGraphicsInc/cesium/pull/6918)
+* Fixed an issue that caused the browser to hang when using `drillPick` on a polyline clamped to the ground. [6907](https://github.com/AnalyticalGraphicsInc/cesium/issues/6907)
 
 ### 1.48 - 2018-08-01
 
