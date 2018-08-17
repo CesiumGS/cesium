@@ -15,6 +15,12 @@ Change Log
 * Added optional `width` and `height` to `Scene.drillPick` for specifying a search area.
 
 ##### Fixes :wrench:
+* Several performance improvements and fixes to the 3D Tiles traversal code. [#6390](https://github.com/AnalyticalGraphicsInc/cesium/pull/6390)
+    * Improved load performance when `skipLevelOfDetail` is false.
+    * Fixed a bug that caused some skipped tiles to load when `skipLevelOfDetail` is true.
+    * Fixed pick statistics in the 3D Tiles Inspector.
+    * Fixed drawing of debug labels for external tilesets.
+    * Fixed drawing of debug outlines for empty tiles.
 * The Geocoder widget now takes terrain altitude into account when calculating its final destination.
 * The Viewer widget now takes terrain altitude into account when zooming or flying to imagery layers.
 * Fixed `getPickRay` in 2D. [#2480](https://github.com/AnalyticalGraphicsInc/cesium/issues/2480)

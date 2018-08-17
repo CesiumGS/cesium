@@ -97,6 +97,7 @@ define([
             scene.renderForSpecs();
             return tileset.tilesLoaded;
         }).then(function() {
+            scene.renderForSpecs();
             return tileset;
         });
     };
