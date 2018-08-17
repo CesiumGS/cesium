@@ -137,7 +137,7 @@ define([
         array[startingIndex++] = value._length;
         array[startingIndex++] = value._topRadius;
         array[startingIndex++] = value._bottomRadius;
-        array[startingIndex++]   = value._slices;
+        array[startingIndex++] = value._slices;
         array[startingIndex] = defaultValue(value._offsetAttribute, -1);
 
         return array;
