@@ -38,9 +38,6 @@
 <div id="cesiumContainer" class="fullSize"></div>
 <div id="loadingOverlay"><h1>Loading...</h1></div>
 <div id="toolbar">
-    <select data-bind="options: exampleTypes, value: currentExampleType"></select>
-    <input type="checkbox" value="false" data-bind="checked: debugBoundingVolumesEnabled, valueUpdate: 'input'"> Show bounding volume
-    <input type="checkbox" value="true" data-bind="checked: edgeStylingEnabled, valueUpdate: 'input'"> Enable edge styling
 </div>
 
 <script id="cesium_sandcastle_script">
@@ -57,17 +54,14 @@ var viewer = new Cesium.Viewer('cesiumContainer', {
 var scene = viewer.scene;
 
 var clipObjects = ['BIM', 'Point Cloud', 'Instanced', 'Model'];
-var viewModel = {
-    debugBoundingVolumesEnabled : false,
-    edgeStylingEnabled : true,
-    exampleTypes : clipObjects,
-    currentExampleType : clipObjects[0]
-};
 
 var targetY = 0.0;
 var planeEntities = [];
 var selectedPlane;
 var clippingPlanes;
+
+var showBoundingVolume = false;
+var edgeStyling = true;
 
 // Select plane when mouse down
 var downHandler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
@@ -118,7 +112,7 @@ function loadTileset(url) {
         planes : [
             new Cesium.ClippingPlane(new Cesium.Cartesian3(0.0, 0.0, -1.0), -100.0)
         ],
-        edgeWidth : viewModel.edgeStylingEnabled ? 1.0 : 0.0
+        edgeWidth : edgeStyling
     });
 
     tileset = viewer.scene.primitives.add(new Cesium.Cesium3DTileset({
@@ -126,7 +120,7 @@ function loadTileset(url) {
         clippingPlanes : clippingPlanes
     }));
 
-    tileset.debugShowBoundingVolume = viewModel.debugBoundingVolumesEnabled;
+    tileset.debugShowBoundingVolume = showBoundingVolume;
     return tileset.readyPromise.then(function() {
         var boundingSphere = tileset.boundingSphere;
         var radius = boundingSphere.radius;
@@ -159,7 +153,7 @@ function loadModel(url) {
         planes : [
             new Cesium.ClippingPlane(new Cesium.Cartesian3(0.0, 0.0, -1.0), -100.0)
         ],
-        edgeWidth : viewModel.edgeStylingEnabled ? 1.0 : 0.0
+        edgeWidth : edgeStyling
     });
 
     var position = Cesium.Cartesian3.fromDegrees(-123.0744619, 44.0503706, 100.0);
@@ -205,43 +199,6 @@ var pointCloudUrl = Cesium.IonResource.fromAssetId(5714);
 var instancedUrl = '../../SampleData/Cesium3DTiles/Instanced/InstancedOrientation/tileset.json';
 var modelUrl = '../../SampleData/models/CesiumAir/Cesium_Air.glb';
 
-loadTileset(bimUrl);
-
-// Track and create the bindings for the view model
-var toolbar = document.getElementById('toolbar');
-Cesium.knockout.track(viewModel);
-Cesium.knockout.applyBindings(viewModel, toolbar);
-
-Cesium.knockout.getObservable(viewModel, 'currentExampleType').subscribe(function(newValue) {
-    reset();
-
-    if (newValue === clipObjects[0]) {
-        loadTileset(bimUrl);
-    } else if (newValue === clipObjects[1]) {
-        loadTileset(pointCloudUrl).then(function(tileset) {
-            tileset.clippingPlanes.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(tileset.boundingSphere.center);
-        });
-    } else if (newValue === clipObjects[2]) {
-        loadTileset(instancedUrl).then(function(tileset) {
-            tileset.clippingPlanes.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(tileset.boundingSphere.center);
-        });
-    } else {
-        loadModel(modelUrl);
-    }
-});
-
-Cesium.knockout.getObservable(viewModel, 'debugBoundingVolumesEnabled').subscribe(function(value) {
-    if (Cesium.defined(tileset)) {
-        tileset.debugShowBoundingVolume = value;
-    }
-});
-
-Cesium.knockout.getObservable(viewModel, 'edgeStylingEnabled').subscribe(function(value) {
-    var edgeWidth = value ? 1.0 : 0.0;
-
-    clippingPlanes.edgeWidth = edgeWidth;
-});
-
 function reset() {
     viewer.entities.removeAll();
     viewer.scene.primitives.remove(tileset);
@@ -250,7 +207,47 @@ function reset() {
     tileset = undefined;
 }
 
-//Sandcastle_End
+Sandcastle.addToolbarMenu([{
+    text : '3D Tiles BIM Model',
+    onselect : function() {
+        reset();
+        loadTileset(bimUrl);
+    }
+}, {
+    text : '3D Tiles Point Cloud',
+    onselect : function() {
+        reset();
+        loadTileset(pointCloudUrl).then(function(tileset) {
+            tileset.clippingPlanes.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(tileset.boundingSphere.center);
+        });
+    }
+}, {
+    text : '3D Tiles Instanced Models',
+    onselect : function() {
+        reset();
+        loadTileset(instancedUrl).then(function(tileset) {
+            tileset.clippingPlanes.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(tileset.boundingSphere.center);
+        });
+    }
+}, {
+    text : 'glTF Model',
+    onselect : function() {
+        reset();
+        loadModel(modelUrl);
+    }
+}]);
+
+Sandcastle.addToggleButton('Show bounding volume', showBoundingVolume, function(checked) {
+    if (Cesium.defined(tileset)) {
+        tileset.debugShowBoundingVolume = checked;
+    }
+    showBoundingVolume = checked;
+});
+
+Sandcastle.addToggleButton('Enable edge styling', edgeStyling, function(checked) {
+    edgeStyling = checked;
+    clippingPlanes.edgeWidth = checked ? 1.0 : 0.0;
+});//Sandcastle_End
     Sandcastle.finishedLoading();
 }
 if (typeof Cesium !== 'undefined') {

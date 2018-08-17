@@ -10,10 +10,12 @@
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
     <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
     <script type="text/javascript">
-    require.config({
-        baseUrl : '../../../Source',
-        waitSeconds : 60
-    });
+        if(typeof require === 'function') {
+            require.config({
+                baseUrl : '../../../Source',
+                waitSeconds : 120
+            });
+        }
     </script>
 </head>
 <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
@@ -71,16 +73,16 @@ for (var i = 0; i < 5; ++i) {
 
 viewer.zoomTo(viewer.entities);
 
-Sandcastle.addToolbarButton('Toggle Boxes', function(){
-    boxes.show = !boxes.show;
+Sandcastle.addToggleButton('Show boxes', true, function(checked) {
+    boxes.show = checked;
 });
 
-Sandcastle.addToolbarButton('Toggle Ellipsoids', function(){
-    ellipsoids.show = !ellipsoids.show;
+Sandcastle.addToggleButton('Show Ellipsoids', true, function(checked){
+    ellipsoids.show = checked;
 });
 
-Sandcastle.addToolbarButton('Toggle Spheres', function(){
-    spheres.show = !spheres.show;
+Sandcastle.addToggleButton('Show Spheres', true, function(checked){
+    spheres.show = checked;
 });
 //Sandcastle_End
     Sandcastle.finishedLoading();

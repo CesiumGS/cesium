@@ -41,17 +41,13 @@ var viewer = new Cesium.Viewer('cesiumContainer', {
 // instead of showing through it from underground
 viewer.scene.globe.depthTestAgainstTerrain = true;
 
-Sandcastle.addToolbarMenu([{
-    text : 'Terrain Enabled',
-    onselect : function() {
+Sandcastle.addToggleButton('Terrain Enabled', true, function(checked) {
+    if (checked) {
         viewer.scene.terrainProvider = cesiumTerrainProvider;
-    }
-}, {
-    text : 'Terrain Disabled',
-    onselect : function() {
+    } else {
         viewer.scene.terrainProvider = ellipsoidTerrainProvider;
     }
-}]);
+});
 
 var longitude = 6.850615989890521;
 var latitude = 45.89546589994886;

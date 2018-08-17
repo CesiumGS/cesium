@@ -10,10 +10,12 @@
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
     <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
     <script type="text/javascript">
-    require.config({
-        baseUrl : '../../../Source',
-        waitSeconds : 60
-    });
+        if(typeof require === 'function') {
+            require.config({
+                baseUrl : '../../../Source',
+                waitSeconds : 120
+            });
+        }
     </script>
 </head>
 <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
@@ -24,21 +26,20 @@
         padding: 4px;
         border-radius: 4px;
     }
+    #slider {
+        position: absolute;
+        top: 45px;
+        left: 5px;
+        background: rgba(42, 42, 42, 0.8);
+        padding: 4px;
+        border-radius: 4px;
+    }
 </style>
 <div id="cesiumContainer" class="fullSize"></div>
 <div id="loadingOverlay"><h1>Loading...</h1></div>
-<div id="toolbar">
+<div id="toolbar"></div>
+<div id="slider">
     <table><tbody>
-    <tr>
-        <td><button class="cesium-button" data-bind="click: highlightTrees">Highlight trees</button></td>
-    </tr>
-    <tr>
-        <td><button class="cesium-button" data-bind="click: highlightBuilding">Highlight building face</button></td>
-    </tr>
-    <tr>
-        <td>invert classification</td>
-        <td><input type="checkbox" data-bind="checked: inverted" /></td>
-    </tr>
     <tr>
         <td>inverted color alpha</td>
         <td>
@@ -46,9 +47,8 @@
             <input type="text" size="3" data-bind="value: invertedAlpha">
         </td>
     </tr>
-</tbody></table>
-</div>
-<script id="cesium_sandcastle_script">
+    </tbody></table>
+</div><script id="cesium_sandcastle_script">
 function startup(Cesium) {
     'use strict';
 //Sandcastle_Begin
@@ -203,17 +203,13 @@ scene.primitives.add(tileset);
 
 var viewModel = {
     inverted: viewer.scene.invertClassification,
-    invertedAlpha: viewer.scene.invertClassificationColor.alpha,
-    highlightBuilding: highlightBuilding,
-    highlightTrees: highlightTrees
+    invertedAlpha: viewer.scene.invertClassificationColor.alpha
 };
 Cesium.knockout.track(viewModel);
-var toolbar = document.getElementById('toolbar');
+var toolbar = document.getElementById('slider');
 Cesium.knockout.applyBindings(viewModel, toolbar);
 Cesium.knockout.getObservable(viewModel, 'inverted').subscribe(invertClassification);
 Cesium.knockout.getObservable(viewModel, 'invertedAlpha').subscribe(updateAlpha);
-
-highlightTrees();
 
 var currentObjectId;
 var currentPrimitive;
@@ -259,6 +255,22 @@ handler.setInputAction(function(movement) {
         currentColor = undefined;
     }
 }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+
+Sandcastle.addToolbarMenu([{
+    text : 'Highlight Trees',
+    onselect : function() {
+        highlightTrees();
+    }
+}, {
+    text : 'Highlight building face',
+    onselect : function() {
+        highlightBuilding();
+    }
+}]);
+
+Sandcastle.addToggleButton('Invert Classification', false, function(checked){
+    invertClassification(checked);
+});
 //Sandcastle_End
     Sandcastle.finishedLoading();
 }
