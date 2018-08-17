@@ -23,6 +23,7 @@ define([
      * @constructor
      *
      * @param {Object} [options] Object with the following properties:
+     * @param {Property} [options.heightReference] A Property specifying what the height from the entity position is relative to.
      * @param {Property} [options.radii] A {@link Cartesian3} Property specifying the radii of the ellipsoid.
      * @param {Property} [options.show=true] A boolean Property specifying the visibility of the ellipsoid.
      * @param {Property} [options.fill=true] A boolean Property specifying whether the ellipsoid is filled with the provided material.
@@ -39,6 +40,7 @@ define([
      * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Spheres%20and%20Ellipsoids.html|Cesium Sandcastle Spheres and Ellipsoids Demo}
      */
     function EllipsoidGraphics(options) {
+        this._heightReference = undefined;
         this._show = undefined;
         this._showSubscription = undefined;
         this._radii = undefined;
@@ -81,6 +83,14 @@ define([
                 return this._definitionChanged;
             }
         },
+
+        /**
+         * Gets or sets the Property specifying the {@link HeightReference}.
+         * @memberof EllipsoidGraphics.prototype
+         * @type {Property}
+         * @default HeightReference.NONE
+         */
+        heightReference : createPropertyDescriptor('heightReference'),
 
         /**
          * Gets or sets the boolean Property specifying the visibility of the ellipsoid.
@@ -188,6 +198,7 @@ define([
         if (!defined(result)) {
             return new EllipsoidGraphics(this);
         }
+        result.heightReference = this.heightReference;
         result.show = this.show;
         result.radii = this.radii;
         result.material = this.material;
@@ -217,6 +228,7 @@ define([
         }
         //>>includeEnd('debug');
 
+        this.heightReference = defaultValue(this.heightReference, source.heightReference);
         this.show = defaultValue(this.show, source.show);
         this.radii = defaultValue(this.radii, source.radii);
         this.material = defaultValue(this.material, source.material);
