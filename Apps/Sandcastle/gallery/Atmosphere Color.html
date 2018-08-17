@@ -10,10 +10,12 @@
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
     <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
     <script type="text/javascript">
-    require.config({
-        baseUrl : '../../../Source',
-        waitSeconds : 60
-    });
+        if(typeof require === 'function') {
+            require.config({
+                baseUrl : '../../../Source',
+                waitSeconds : 120
+            });
+        }
     </script>
 </head>
 <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
@@ -32,31 +34,7 @@
 </style>
 <div id="cesiumContainer" class="fullSize"></div>
 <div id="loadingOverlay"><h1>Loading...</h1></div>
-<div id="toolbar">
-<table>
-    <tbody><tr>
-        <td>hueShift</td>
-        <td>
-            <input type="range" min="-1" max="1" step="0.01" data-bind="value: hueShift, valueUpdate: 'input'">
-            <input type="text" size="5" data-bind="value: hueShift">
-        </td>
-    </tr>
-    <tr>
-        <td>saturationShift</td>
-        <td>
-            <input type="range" min="-1" max="1" step="0.01" data-bind="value: saturationShift, valueUpdate: 'input'">
-            <input type="text" size="5" data-bind="value: saturationShift">
-        </td>
-    </tr>
-    <tr>
-        <td>brightnessShift</td>
-        <td>
-            <input type="range" min="-1" max="1" step="0.01" data-bind="value: brightnessShift, valueUpdate: 'input'">
-            <input type="text" size="5" data-bind="value: brightnessShift">
-        </td>
-    </tr>
-</tbody></table>
-</div>
+<div id="toolbar"></div>
 <script id="cesium_sandcastle_script">
 function startup(Cesium) {
     'use strict';
@@ -67,31 +45,18 @@ var viewer = new Cesium.Viewer('cesiumContainer', {
 var scene = viewer.scene;
 var skyAtmosphere = scene.skyAtmosphere;
 
-// The viewModel tracks the state of our mini application.
-var viewModel = {
-    hueShift: 0.0,
-    saturationShift: 0.0,
-    brightnessShift: 0.0
-};
-// Convert the viewModel members into knockout observables.
-Cesium.knockout.track(viewModel);
 
-// Bind the viewModel to the DOM elements of the UI that call for it.
-var toolbar = document.getElementById('toolbar');
-Cesium.knockout.applyBindings(viewModel, toolbar);
+Sandcastle.addSlider('Hue', {minimum: -1.0, maximum: 1.0, stepSize: 0.1, value: 0.0}, function(value) {
+    skyAtmosphere.hueShift = value;
+});
+Sandcastle.addSlider('Saturation', {minimum: -1.0, maximum: 1.0, stepSize: 0.1, value: 0.0}, function(value) {
+    skyAtmosphere.saturationShift = value;
+});
 
-// Make the skyAtmosphere's HSB parameters subscribers of the viewModel.
-function subscribeParameter(name) {
-    Cesium.knockout.getObservable(viewModel, name).subscribe(
-        function(newValue) {
-            skyAtmosphere[name] = newValue;
-        }
-    );
-}
+Sandcastle.addSlider('Brightness', {minimum: -1.0, maximum: 1.0, stepSize: 0.1, value: 0.0}, function(value) {
+    skyAtmosphere.brightnessShift = value;
+});
 
-subscribeParameter('hueShift');
-subscribeParameter('saturationShift');
-subscribeParameter('brightnessShift');
 
 Sandcastle.addToggleButton('Lighting', scene.globe.enableLighting, function(checked) {
     scene.globe.enableLighting = checked;

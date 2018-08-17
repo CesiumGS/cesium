@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">  <!-- Use Chrome Frame in IE -->
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
     <meta name="description" content="Adjust the height of a 3D Tiles tileset.">
     <meta name="cesium-sandcastle-labels" content="3D Tiles">
@@ -10,10 +10,12 @@
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
     <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
     <script type="text/javascript">
-    require.config({
-        baseUrl : '../../../Source',
-        waitSeconds : 60
-    });
+        if(typeof require === 'function') {
+            require.config({
+                baseUrl : '../../../Source',
+                waitSeconds : 120
+            });
+        }
     </script>
 </head>
 <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
@@ -32,11 +34,7 @@
 </style>
 <div id="cesiumContainer" class="fullSize"></div>
 <div id="loadingOverlay"><h1>Loading...</h1></div>
-<div id="toolbar">
-    <div>Height</div>
-    <input type="range" min="-100.0" max="100.0" step="1" data-bind="value: height, valueUpdate: 'input'">
-    <input type="text" size="5" data-bind="value: height">
-</div>
+<div id="toolbar"></div>
 <script id="cesium_sandcastle_script">
 function startup(Cesium) {
     'use strict';
@@ -47,15 +45,7 @@ var viewer = new Cesium.Viewer('cesiumContainer', {
 
 viewer.scene.globe.depthTestAgainstTerrain = true;
 
-var viewModel = {
-    height: 0
-};
-
-Cesium.knockout.track(viewModel);
-
 var toolbar = document.getElementById('toolbar');
-Cesium.knockout.applyBindings(viewModel, toolbar);
-
 var tileset = new Cesium.Cesium3DTileset({
     url: '../../SampleData/Cesium3DTiles/Tilesets/Tileset/tileset.json'
 });
@@ -67,21 +57,14 @@ tileset.readyPromise.then(function(tileset) {
     console.log(error);
 });
 
-Cesium.knockout.getObservable(viewModel, 'height').subscribe(function(height) {
-    height = Number(height);
-    if (isNaN(height)) {
-        return;
-    }
-
+Sandcastle.addSlider('Height', {minimum: -100.0, maximum: 100.0, stepSize: 1.0, value: 0.0}, function(height) {
     var cartographic = Cesium.Cartographic.fromCartesian(tileset.boundingSphere.center);
     var surface = Cesium.Cartesian3.fromRadians(cartographic.longitude, cartographic.latitude, 0.0);
     var offset = Cesium.Cartesian3.fromRadians(cartographic.longitude, cartographic.latitude, height);
     var translation = Cesium.Cartesian3.subtract(offset, surface, new Cesium.Cartesian3());
     tileset.modelMatrix = Cesium.Matrix4.fromTranslation(translation);
-});
-
-//Sandcastle_End
-Sandcastle.finishedLoading();
+});//Sandcastle_End
+    Sandcastle.finishedLoading();
 }
 if (typeof Cesium !== 'undefined') {
     startup(Cesium);

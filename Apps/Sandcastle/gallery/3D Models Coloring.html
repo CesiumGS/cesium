@@ -10,10 +10,12 @@
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
     <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
     <script type="text/javascript">
-    require.config({
-        baseUrl : '../../../Source',
-        waitSeconds : 60
-    });
+        if(typeof require === 'function') {
+            require.config({
+                baseUrl : '../../../Source',
+                waitSeconds : 120
+            });
+        }
     </script>
 </head>
 <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
@@ -23,6 +25,7 @@
         background: rgba(42, 42, 42, 0.8);
         padding: 4px;
         border-radius: 4px;
+        color: #edffff;
     }
     #toolbar input {
         vertical-align: middle;
@@ -32,54 +35,25 @@
     #toolbar .header {
         font-weight: bold;
     }
+    #silhouetteColor, #modelColor, #blendMode {
+        display: inline-block;
+    }
 </style>
 <div id="cesiumContainer" class="fullSize"></div>
 <div id="loadingOverlay"><h1>Loading...</h1></div>
 <div id="toolbar">
-    <table><tbody>
-    <tr><td class="header">Model Color</td></tr>
-    <tr>
-        <td>Mode</td>
-        <td><select data-bind="options: colorBlendModes, value: colorBlendMode"></select></td>
-    </tr>
-    <tr>
-        <td>Color</td>
-        <td><select data-bind="options: colors, value: color"></select></td>
-    </tr>
-    <tr>
-        <td>Alpha</td>
-        <td>
-            <input type="range" min="0.0" max="1.0" step="0.01" data-bind="value: alpha, valueUpdate: 'input'">
-            <input type="text" size="5" data-bind="value: alpha">
-        </td>
-    </tr>
-    <tr>
-        <td data-bind="style: { color: colorBlendAmountEnabled ? '' : 'gray'}">Mix</td>
-        <td>
-            <input type="range" min="0.0" max="1.0" step="0.01" data-bind="value: colorBlendAmount, valueUpdate: 'input', enable: colorBlendAmountEnabled">
-            <input type="text" size="5" data-bind="value: colorBlendAmount, enable: colorBlendAmountEnabled">
-        </td>
-    </tr>
-    <tr><td class="header">Model Silhouette</td></tr>
-    <tr>
-        <td>Color</td>
-        <td><select data-bind="options: silhouetteColors, value: silhouetteColor"></select></td>
-    </tr>
-    <tr>
-        <td>Alpha</td>
-        <td>
-            <input type="range" min="0.0" max="1.0" step="0.01" data-bind="value: silhouetteAlpha, valueUpdate: 'input'">
-            <input type="text" size="5" data-bind="value: silhouetteAlpha">
-        </td>
-    </tr>
-    <tr>
-        <td>Size</td>
-        <td>
-            <input type="range" min="0.0" max="10.0" step="0.01" data-bind="value: silhouetteSize, valueUpdate: 'input'">
-            <input type="text" size="5" data-bind="value: silhouetteSize">
-        </td>
-    </tr>
-    </tbody></table>
+    <div id="optionsSection"></div>
+    <h3>Model Color</h3>
+    <div>
+        <div>Color: <div id="modelColor"></div></div>
+        <div>Blend Mode: <div id="blendMode"></div></div>
+        <div id="colorSection"></div>
+    </div>
+    <h3>Model Silhouette</h3>
+    <div>
+        <div>Color: <div id="silhouetteColor"></div></div>
+        <div id="silhouetteSection"></div>
+    </div>
 </div>
 <script id="cesium_sandcastle_script">
 function startup(Cesium) {
@@ -94,80 +68,22 @@ var viewer = new Cesium.Viewer('cesiumContainer', {
 
 var entity;
 
-function getColorBlendMode(colorBlendMode) {
-    return Cesium.ColorBlendMode[colorBlendMode.toUpperCase()];
+var mode = Cesium.ColorBlendMode.HIGHLIGHT;
+var mix = 0.5;
+
+var modelColor = Cesium.Color.WHITE;
+var modelColorAlpha = 1.0;
+
+var silhouetteColor = Cesium.Color.RED;
+var silhouetteColorAlpha = 1.0;
+var silhouetteSize = 2.0;
+
+function setColor(){
+    entity.model.color = modelColor.withAlpha(modelColorAlpha);
 }
-
-function getColor(colorName, alpha) {
-    var color = Cesium.Color[colorName.toUpperCase()];
-    return Cesium.Color.fromAlpha(color, parseFloat(alpha));
+function setSilhouetteColor() {
+    entity.model.silhouetteColor = silhouetteColor.withAlpha(silhouetteColorAlpha);
 }
-
-// The viewModel tracks the state of our mini application.
-var viewModel = {
-    color : 'Red',
-    colors : ['White', 'Red', 'Green', 'Blue', 'Yellow', 'Gray'],
-    alpha : 1.0,
-    colorBlendMode : 'Highlight',
-    colorBlendModes : ['Highlight', 'Replace', 'Mix'],
-    colorBlendAmount : 0.5,
-    colorBlendAmountEnabled : false,
-    silhouetteColor : 'Red',
-    silhouetteColors : ['Red', 'Green', 'Blue', 'Yellow', 'Gray'],
-    silhouetteAlpha : 1.0,
-    silhouetteSize : 2.0
-};
-
-// Convert the viewModel members into knockout observables.
-Cesium.knockout.track(viewModel);
-
-// Bind the viewModel to the DOM elements of the UI that call for it.
-var toolbar = document.getElementById('toolbar');
-Cesium.knockout.applyBindings(viewModel, toolbar);
-
-Cesium.knockout.getObservable(viewModel, 'color').subscribe(
-    function(newValue) {
-        entity.model.color = getColor(newValue, viewModel.alpha);
-    }
-);
-
-Cesium.knockout.getObservable(viewModel, 'alpha').subscribe(
-    function(newValue) {
-        entity.model.color = getColor(viewModel.color, newValue);
-    }
-);
-
-Cesium.knockout.getObservable(viewModel, 'colorBlendMode').subscribe(
-    function(newValue) {
-        var colorBlendMode = getColorBlendMode(newValue);
-        entity.model.colorBlendMode = colorBlendMode;
-        viewModel.colorBlendAmountEnabled = (colorBlendMode === Cesium.ColorBlendMode.MIX);
-    }
-);
-
-Cesium.knockout.getObservable(viewModel, 'colorBlendAmount').subscribe(
-    function(newValue) {
-        entity.model.colorBlendAmount = parseFloat(newValue);
-    }
-);
-
-Cesium.knockout.getObservable(viewModel, 'silhouetteColor').subscribe(
-    function(newValue) {
-        entity.model.silhouetteColor = getColor(newValue, viewModel.silhouetteAlpha);
-    }
-);
-
-Cesium.knockout.getObservable(viewModel, 'silhouetteAlpha').subscribe(
-    function(newValue) {
-        entity.model.silhouetteColor = getColor(viewModel.silhouetteColor, newValue);
-    }
-);
-
-Cesium.knockout.getObservable(viewModel, 'silhouetteSize').subscribe(
-    function(newValue) {
-        entity.model.silhouetteSize = parseFloat(newValue);
-    }
-);
 
 function createModel(url, height) {
     viewer.entities.removeAll();
@@ -187,11 +103,11 @@ function createModel(url, height) {
             uri : url,
             minimumPixelSize : 128,
             maximumScale : 20000,
-            color : getColor(viewModel.color, viewModel.alpha),
-            colorBlendMode : getColorBlendMode(viewModel.colorBlendMode),
-            colorBlendAmount : parseFloat(viewModel.colorBlendAmount),
-            silhouetteColor : getColor(viewModel.silhouetteColor, viewModel.silhouetteAlpha),
-            silhouetteSize : parseFloat(viewModel.silhouetteSize)
+            color : modelColor.withAlpha(modelColorAlpha),
+            colorBlendMode : mode,
+            colorBlendAmount : mix,
+            silhouetteColor : silhouetteColor.withAlpha(silhouetteColorAlpha),
+            silhouetteSize : silhouetteSize
         }
     });
     viewer.trackedEntity = entity;
@@ -224,14 +140,93 @@ var options = [{
     }
 }];
 
-Sandcastle.addToolbarMenu(options);
+Sandcastle.addToolbarMenu(options, 'optionsSection');
 
 Sandcastle.addToggleButton('Shadows', viewer.shadows, function(checked) {
     viewer.shadows = checked;
-});
+}, 'optionsSection');
 
-//Sandcastle_End
-Sandcastle.finishedLoading();
+Sandcastle.addToolbarMenu([{
+    text: 'White',
+    onselect: function() {
+        modelColor = Cesium.Color.WHITE;
+        setColor();
+    }
+}, {
+    text: 'Red',
+    onselect: function() {
+        modelColor = Cesium.Color.RED;
+        setColor();
+    }
+}, {
+    text: 'Blue',
+    onselect: function() {
+        modelColor = Cesium.Color.BLUE;
+        setColor();
+    }
+}], 'modelColor');
+
+Sandcastle.addToolbarMenu([{
+    text: 'Highlight',
+    onselect: function() {
+        mode = Cesium.ColorBlendMode.HIGHLIGHT;
+        entity.model.colorBlendMode = Cesium.ColorBlendMode.HIGHLIGHT;
+    }
+}, {
+    text: 'Replace',
+    onselect: function() {
+        mode = Cesium.ColorBlendMode.REPLACE;
+        entity.model.colorBlendMode = Cesium.ColorBlendMode.REPLACE;
+    }
+}, {
+    text: 'Mix',
+    onselect: function() {
+        mode = Cesium.ColorBlendMode.MIX;
+        entity.model.colorBlendMode = Cesium.ColorBlendMode.MIX;
+    }
+}], 'blendMode');
+
+Sandcastle.addSlider('Alpha', {minimum: 0.0, maximum: 1.0, stepSize: 0.1, value: modelColorAlpha}, function(value) {
+    modelColorAlpha = value;
+    setColor();
+}, 'colorSection');
+
+Sandcastle.addSlider('Mix Amount', {minimum: 0.0, maximum: 1.0, stepSize: 0.1, value: mix}, function(value) {
+    mix = value;
+    entity.model.colorBlendAmount = value;
+}, 'colorSection');
+
+
+Sandcastle.addToolbarMenu([{
+    text: 'Color: Red',
+    onselect: function() {
+        silhouetteColor = Cesium.Color.RED;
+        setSilhouetteColor();
+    }
+}, {
+    text: 'Color: Green',
+    onselect: function() {
+        silhouetteColor = Cesium.Color.GREEN;
+        setSilhouetteColor();
+    }
+}, {
+    text: 'Color: Blue',
+    onselect: function() {
+        silhouetteColor = Cesium.Color.BLUE;
+        setSilhouetteColor();
+    }
+}], 'silhouetteColor');
+
+Sandcastle.addSlider('Alpha', {minimum: 0.0, maximum: 1.0, stepSize: 0.1, value: silhouetteColorAlpha}, function(value) {
+    silhouetteColorAlpha = value;
+    setSilhouetteColor();
+}, 'silhouetteSection');
+
+Sandcastle.addSlider('Size', {minimum: 0.0, maximum: 10.0, stepSize: 0.1, value: silhouetteSize}, function(value) {
+    silhouetteSize = value;
+    entity.model.silhouetteSize = value;
+}, 'silhouetteSection');//Sandcastle_End
+    Sandcastle.finishedLoading();
 }
 if (typeof Cesium !== 'undefined') {
     startup(Cesium);
