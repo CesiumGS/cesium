@@ -122,7 +122,7 @@ define([
         array[startingIndex++] = value._topRadius;
         array[startingIndex++] = value._bottomRadius;
         array[startingIndex++] = value._slices;
-        array[startingIndex++]   = value._numberOfVerticalLines;
+        array[startingIndex++] = value._numberOfVerticalLines;
         array[startingIndex] = defaultValue(value._offsetAttribute, -1);
 
         return array;

@@ -123,7 +123,7 @@ define([
 
         array[startingIndex++] = value._stackPartitions;
         array[startingIndex++] = value._slicePartitions;
-        array[startingIndex++]   = value._subdivisions;
+        array[startingIndex++] = value._subdivisions;
         array[startingIndex] = defaultValue(value._offsetAttribute, -1);
 
         return array;
