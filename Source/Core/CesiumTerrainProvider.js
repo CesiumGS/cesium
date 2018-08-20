@@ -61,8 +61,7 @@ define([
 
     /**
      * A {@link TerrainProvider} that accesses terrain data in a Cesium terrain format.
-     * The format is described on the
-     * {@link https://github.com/AnalyticalGraphicsInc/cesium/wiki/Cesium-Terrain-Server|Cesium wiki}.
+     * The format is described on the {@link https://github.com/AnalyticalGraphicsInc/quantized-mesh|Quantized Mesh page}.
      *
      * @alias CesiumTerrainProvider
      * @constructor
@@ -81,7 +80,7 @@ define([
      *     terrainProvider : new Cesium.CesiumTerrainProvider({
      *         url : Cesium.IonResource.fromAssetId(3956),
      *         requestVertexNormals : true
-     *     });
+     *     })
      * });
      *
      * @see createWorldTerrain
