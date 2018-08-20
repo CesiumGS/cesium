@@ -1123,6 +1123,23 @@ define([
         var castShadows = ShadowMode.castShadows(tileProvider.shadows);
         var receiveShadows = ShadowMode.receiveShadows(tileProvider.shadows);
 
+        var perFragmentGroundAtmosphere = false;
+        if (showGroundAtmosphere) {
+            var mode = frameState.mode;
+            var camera = frameState.camera;
+            var cameraDistance;
+            if (mode === SceneMode.SCENE2D || mode === SceneMode.COLUMBUS_VIEW) {
+                cameraDistance = camera.positionCartographic.height;
+            } else {
+                cameraDistance = Cartesian3.magnitude(camera.positionWC);
+            }
+            var fadeOutDistance = tileProvider.nightFadeOutDistance;
+            if (mode !== SceneMode.SCENE3D) {
+                fadeOutDistance -= frameState.mapProjection.ellipsoid.maximumRadius;
+            }
+            perFragmentGroundAtmosphere = cameraDistance > fadeOutDistance;
+        }
+
         if (showReflectiveOcean) {
             --maxTextures;
         }
@@ -1365,7 +1382,7 @@ define([
                 uniformMap = combine(uniformMap, tileProvider.uniformMap);
             }
 
-            command.shaderProgram = tileProvider._surfaceShaderSet.getShaderProgram(frameState, surfaceTile, numberOfDayTextures, applyBrightness, applyContrast, applyHue, applySaturation, applyGamma, applyAlpha, applySplit, showReflectiveOcean, showOceanWaves, tileProvider.enableLighting, showGroundAtmosphere, hasVertexNormals, useWebMercatorProjection, applyFog, clippingPlanesEnabled, clippingPlanes);
+            command.shaderProgram = tileProvider._surfaceShaderSet.getShaderProgram(frameState, surfaceTile, numberOfDayTextures, applyBrightness, applyContrast, applyHue, applySaturation, applyGamma, applyAlpha, applySplit, showReflectiveOcean, showOceanWaves, tileProvider.enableLighting, showGroundAtmosphere, perFragmentGroundAtmosphere, hasVertexNormals, useWebMercatorProjection, applyFog, clippingPlanesEnabled, clippingPlanes);
             command.castShadows = castShadows;
             command.receiveShadows = receiveShadows;
             command.renderState = renderState;

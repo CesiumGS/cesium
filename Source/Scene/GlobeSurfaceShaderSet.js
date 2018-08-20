@@ -66,7 +66,7 @@ define([
         return useWebMercatorProjection ? get2DYPositionFractionMercatorProjection : get2DYPositionFractionGeographicProjection;
     }
 
-    GlobeSurfaceShaderSet.prototype.getShaderProgram = function(frameState, surfaceTile, numberOfDayTextures, applyBrightness, applyContrast, applyHue, applySaturation, applyGamma, applyAlpha, applySplit, showReflectiveOcean, showOceanWaves, enableLighting, showGroundAtmosphere, hasVertexNormals, useWebMercatorProjection, enableFog, enableClippingPlanes, clippingPlanes) {
+    GlobeSurfaceShaderSet.prototype.getShaderProgram = function(frameState, surfaceTile, numberOfDayTextures, applyBrightness, applyContrast, applyHue, applySaturation, applyGamma, applyAlpha, applySplit, showReflectiveOcean, showOceanWaves, enableLighting, showGroundAtmosphere, perFragmentGroundAtmosphere, hasVertexNormals, useWebMercatorProjection, enableFog, enableClippingPlanes, clippingPlanes) {
         var quantization = 0;
         var quantizationDefine = '';
 
@@ -96,13 +96,14 @@ define([
                     (showOceanWaves << 9) |
                     (enableLighting << 10) |
                     (showGroundAtmosphere << 11) |
-                    (hasVertexNormals << 12) |
-                    (useWebMercatorProjection << 13) |
-                    (enableFog << 14) |
-                    (quantization << 15) |
-                    (applySplit << 16) |
-                    (enableClippingPlanes << 17) |
-                    (vertexLogDepth << 18);
+                    (perFragmentGroundAtmosphere << 12) |
+                    (hasVertexNormals << 13) |
+                    (useWebMercatorProjection << 14) |
+                    (enableFog << 15) |
+                    (quantization << 16) |
+                    (applySplit << 17) |
+                    (enableClippingPlanes << 18) |
+                    (vertexLogDepth << 19);
 
         var currentClippingShaderState = 0;
         if (defined(clippingPlanes)) {
@@ -176,6 +177,9 @@ define([
             if (showGroundAtmosphere) {
                 vs.defines.push('GROUND_ATMOSPHERE');
                 fs.defines.push('GROUND_ATMOSPHERE');
+                if (perFragmentGroundAtmosphere) {
+                    fs.defines.push('PER_FRAGMENT_GROUND_ATMOSPHERE');
+                }
             }
 
             vs.defines.push('INCLUDE_WEB_MERCATOR_Y');
