@@ -1597,9 +1597,14 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         var entityView = this._entityView;
         if (defined(entityView)) {
             var trackedEntity = this._trackedEntity;
-            var trackedState = this._dataSourceDisplay.getBoundingSphere(trackedEntity, false, boundingSphereScratch);
-            if (trackedState === BoundingSphereState.DONE) {
+            if (this.cameraFix) {
+                this._dataSourceDisplay.getBoundingSphere(trackedEntity, true, boundingSphereScratch, true);
                 entityView.update(time, boundingSphereScratch);
+            } else {
+                var trackedState = this._dataSourceDisplay.getBoundingSphere(trackedEntity, false, boundingSphereScratch);
+                if (trackedState === BoundingSphereState.DONE) {
+                    entityView.update(time, boundingSphereScratch);
+                }
             }
         }
 
