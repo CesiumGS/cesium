@@ -116,6 +116,21 @@ defineSuite([
             });
     });
 
+    it('waits for terrain to become ready', function() {
+        var terrainProvider = new EllipsoidTerrainProvider();
+        spyOn(terrainProvider.readyPromise, 'then').and.callThrough();
+
+        scene.globe = new Globe();
+        scene.terrainProvider = terrainProvider;
+
+        var rectangle = new Rectangle(0.2, 0.4, 0.6, 0.8);
+        return computeFlyToLocationForRectangle(rectangle, scene)
+            .then(function(result) {
+                expect(result).toBe(rectangle);
+                expect(terrainProvider.readyPromise.then).toHaveBeenCalled();
+            });
+    });
+
     it('returns original rectangle when terrain undefined', function() {
         scene.terrainProvider = undefined;
         var rectangle = new Rectangle(0.2, 0.4, 0.6, 0.8);

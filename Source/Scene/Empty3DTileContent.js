@@ -119,7 +119,7 @@ define([
     Empty3DTileContent.prototype.applyDebugSettings = function(enabled, color) {
     };
 
-    Empty3DTileContent.prototype.applyStyle = function(frameState, style) {
+    Empty3DTileContent.prototype.applyStyle = function(style) {
     };
 
     Empty3DTileContent.prototype.update = function(tileset, frameState) {

@@ -33,11 +33,6 @@ varying vec3 v_fogMieColor;
 varying vec3 v_fogRayleighColor;
 #endif
 
-#ifdef GROUND_ATMOSPHERE
-varying vec3 v_mieColor;
-varying vec3 v_rayleighColor;
-#endif
-
 // These functions are generated at runtime.
 vec4 getPosition(vec3 position, float height, vec2 textureCoordinates);
 float get2DYPositionFraction(vec2 textureCoordinates);
@@ -177,12 +172,6 @@ void main()
     v_fogMieColor = atmosFogColor.mie;
     v_fogRayleighColor = atmosFogColor.rayleigh;
     v_distance = length((czm_modelView3D * vec4(position3DWC, 1.0)).xyz);
-#endif
-
-#ifdef GROUND_ATMOSPHERE
-    AtmosphereColor atmosColor = computeGroundAtmosphereFromSpace(position3DWC, true);
-    v_mieColor = atmosColor.mie;
-    v_rayleighColor = atmosColor.rayleigh;
 #endif
 
 #ifdef APPLY_MATERIAL

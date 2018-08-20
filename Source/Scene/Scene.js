@@ -3782,14 +3782,19 @@ define([
      *
      * @param {Cartesian2} windowPosition Window coordinates to perform picking on.
      * @param {Number} [limit] If supplied, stop drilling after collecting this many picks.
+     * @param {Number} [width=3] Width of the pick rectangle.
+     * @param {Number} [height=3] Height of the pick rectangle.
      * @returns {Object[]} Array of objects, each containing 1 picked primitives.
      *
      * @exception {DeveloperError} windowPosition is undefined.
      *
      * @example
      * var pickedObjects = scene.drillPick(new Cesium.Cartesian2(100.0, 200.0));
+     *
+     * @see Scene#pick
+     *
      */
-    Scene.prototype.drillPick = function(windowPosition, limit) {
+    Scene.prototype.drillPick = function(windowPosition, limit, width, height) {
         // PERFORMANCE_IDEA: This function calls each primitive's update for each pass. Instead
         // we could update the primitive once, and then just execute their commands for each pass,
         // and cull commands for picked primitives.  e.g., base on the command's owner.
@@ -3809,7 +3814,7 @@ define([
             limit = Number.MAX_VALUE;
         }
 
-        var pickedResult = this.pick(windowPosition);
+        var pickedResult = this.pick(windowPosition, width, height);
         while (defined(pickedResult) && defined(pickedResult.primitive)) {
             result.push(pickedResult);
             if (0 >= --limit) {
@@ -3837,7 +3842,7 @@ define([
                 pickedPrimitives.push(primitive);
             }
 
-            pickedResult = this.pick(windowPosition);
+            pickedResult = this.pick(windowPosition, width, height);
         }
 
         // unhide everything we hid while drill picking

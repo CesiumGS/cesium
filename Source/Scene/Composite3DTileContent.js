@@ -250,11 +250,11 @@ define([
         }
     };
 
-    Composite3DTileContent.prototype.applyStyle = function(frameState, style) {
+    Composite3DTileContent.prototype.applyStyle = function(style) {
         var contents = this._contents;
         var length = contents.length;
         for (var i = 0; i < length; ++i) {
-            contents[i].applyStyle(frameState, style);
+            contents[i].applyStyle(style);
         }
     };
 
