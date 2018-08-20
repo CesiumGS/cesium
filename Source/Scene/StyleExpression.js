@@ -33,12 +33,11 @@ define([
      * a {@link Cartesian2}, {@link Cartesian3}, or {@link Cartesian4} object will be returned. If the <code>result</code> argument is
      * a {@link Color}, the {@link Cartesian4} value is converted to a {@link Color} and then returned.
      *
-     * @param {FrameState} frameState The frame state.
      * @param {Cesium3DTileFeature} feature The feature whose properties may be used as variables in the expression.
      * @param {Object} [result] The object onto which to store the result.
      * @returns {Boolean|Number|String|RegExp|Cartesian2|Cartesian3|Cartesian4|Color} The result of evaluating the expression.
      */
-    StyleExpression.prototype.evaluate = function(frameState, feature, result) {
+    StyleExpression.prototype.evaluate = function(feature, result) {
         DeveloperError.throwInstantiationError();
     };
 
@@ -48,12 +47,11 @@ define([
      * This is equivalent to {@link StyleExpression#evaluate} but always returns a {@link Color} object.
      * </p>
      *
-     * @param {FrameState} frameState The frame state.
      * @param {Cesium3DTileFeature} feature The feature whose properties may be used as variables in the expression.
      * @param {Color} [result] The object in which to store the result.
      * @returns {Color} The modified result parameter or a new Color instance if one was not provided.
      */
-    StyleExpression.prototype.evaluateColor = function(frameState, feature, result) {
+    StyleExpression.prototype.evaluateColor = function(feature, result) {
         DeveloperError.throwInstantiationError();
     };
 

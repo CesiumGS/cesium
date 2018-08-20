@@ -148,7 +148,7 @@ define([
     Tileset3DTileContent.prototype.applyDebugSettings = function(enabled, color) {
     };
 
-    Tileset3DTileContent.prototype.applyStyle = function(frameState, style) {
+    Tileset3DTileContent.prototype.applyStyle = function(style) {
     };
 
     Tileset3DTileContent.prototype.update = function(tileset, frameState) {

@@ -24,41 +24,48 @@ define([
      */
     function computeFlyToLocationForRectangle(rectangle, scene) {
         var terrainProvider = scene.terrainProvider;
-        var availability = defined(terrainProvider) ? terrainProvider.availability : undefined;
 
-        if (!defined(availability) || scene.mode === SceneMode.SCENE2D) {
+        if (!defined(terrainProvider)) {
             return when.resolve(rectangle);
         }
 
-        var cartographics = [
-            Rectangle.center(rectangle),
-            Rectangle.southeast(rectangle),
-            Rectangle.southwest(rectangle),
-            Rectangle.northeast(rectangle),
-            Rectangle.northwest(rectangle)
-        ];
+        return terrainProvider.readyPromise.then(function() {
+            var availability = terrainProvider.availability;
 
-        return computeFlyToLocationForRectangle._sampleTerrainMostDetailed(terrainProvider, cartographics)
-            .then(function(positionsOnTerrain) {
-                var maxHeight = positionsOnTerrain.reduce(function(currentMax, item) {
-                    return Math.max(item.height, currentMax);
-                }, -Number.MAX_VALUE);
+            if (!defined(availability) || scene.mode === SceneMode.SCENE2D) {
+                return rectangle;
+            }
 
-                var finalPosition;
+            var cartographics = [
+                Rectangle.center(rectangle),
+                Rectangle.southeast(rectangle),
+                Rectangle.southwest(rectangle),
+                Rectangle.northeast(rectangle),
+                Rectangle.northwest(rectangle)
+            ];
 
-                var camera = scene.camera;
-                var mapProjection = scene.mapProjection;
-                var ellipsoid = mapProjection.ellipsoid;
-                var tmp = camera.getRectangleCameraCoordinates(rectangle);
-                if (scene.mode === SceneMode.SCENE3D) {
-                    finalPosition = ellipsoid.cartesianToCartographic(tmp);
-                } else {
-                    finalPosition = mapProjection.unproject(tmp);
-                }
+            return computeFlyToLocationForRectangle._sampleTerrainMostDetailed(terrainProvider, cartographics)
+                .then(function(positionsOnTerrain) {
+                    var maxHeight = positionsOnTerrain.reduce(function(currentMax, item) {
+                        return Math.max(item.height, currentMax);
+                    }, -Number.MAX_VALUE);
 
-                finalPosition.height += maxHeight;
-                return finalPosition;
-            });
+                    var finalPosition;
+
+                    var camera = scene.camera;
+                    var mapProjection = scene.mapProjection;
+                    var ellipsoid = mapProjection.ellipsoid;
+                    var tmp = camera.getRectangleCameraCoordinates(rectangle);
+                    if (scene.mode === SceneMode.SCENE3D) {
+                        finalPosition = ellipsoid.cartesianToCartographic(tmp);
+                    } else {
+                        finalPosition = mapProjection.unproject(tmp);
+                    }
+
+                    finalPosition.height += maxHeight;
+                    return finalPosition;
+                });
+        });
     }
 
     //Exposed for testing.
