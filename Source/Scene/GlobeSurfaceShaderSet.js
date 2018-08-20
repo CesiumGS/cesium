@@ -91,11 +91,11 @@ define([
             positions2dDefine = 'POSITIONS_2D';
         }
 
-        var tileLimitRectangleFlag = 0;
-        var tileLimitRectangleDefine = '';
+        var geographicLimitRectangleFlag = 0;
+        var geographicLimitRectangleDefine = '';
         if (clippedByBoundaries && frameState.mode !== SceneMode.SCENE3D) {
-            tileLimitRectangleFlag = 1;
-            tileLimitRectangleDefine = 'TILE_LIMIT_RECTANGLE';
+            geographicLimitRectangleFlag = 1;
+            geographicLimitRectangleDefine = 'TILE_LIMIT_RECTANGLE';
         }
 
         var sceneMode = frameState.mode;
@@ -117,7 +117,7 @@ define([
                     (enableClippingPlanes << 16) |
                     (vertexLogDepth << 17) |
                     (positions2d << 18) |
-                    (tileLimitRectangleFlag << 19);
+                    (geographicLimitRectangleFlag << 19);
 
         var currentClippingShaderState = 0;
         if (defined(clippingPlanes)) {
@@ -150,7 +150,7 @@ define([
             }
 
             vs.defines.push(quantizationDefine, vertexLogDepthDefine, positions2dDefine);
-            fs.defines.push('TEXTURE_UNITS ' + numberOfDayTextures, tileLimitRectangleDefine);
+            fs.defines.push('TEXTURE_UNITS ' + numberOfDayTextures, geographicLimitRectangleDefine);
 
             if (applyBrightness) {
                 fs.defines.push('APPLY_BRIGHTNESS');

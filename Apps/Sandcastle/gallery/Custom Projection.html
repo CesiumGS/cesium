@@ -30,7 +30,22 @@ function startup(Cesium) {
     'use strict';
 //Sandcastle_Begin
 
-var customProjection = new Cesium.CustomProjection('../../SampleData/UserProjection.txt', 'projectionFactory');
+var projectionTextUrl = 'data:,' +
+    'function projectionFactory(callback) {\n' +
+    '     function project(longitude, latitude, result) {\n' +
+    '          result[0] = longitude * 6378137.0;\n' +
+    '          result[1] = latitude * 6378137.0;\n' +
+    '     }\n' +
+
+    '     function unproject(x, y, result) {\n' +
+    '          result[0] = x / 6378137.0;\n' +
+    '          result[1] = y / 6378137.0;\n' +
+    '     }\n' +
+
+    '     callback(project, unproject);\n' +
+    ' }\n';
+
+var customProjection = new Cesium.CustomProjection(projectionTextUrl, 'projectionFactory');
 customProjection.readyPromise
     .then(function(projection) {
 

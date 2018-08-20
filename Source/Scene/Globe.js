@@ -283,12 +283,12 @@ define([
          * @memberof Globe.prototype
          * @type {Rectangle}
          */
-        tileLimitRectangle : {
+        geographicLimitRectangle : {
             get : function() {
-                return this._surface.tileProvider.tileLimitRectangle;
+                return this._surface.tileProvider.geographicLimitRectangle;
             },
             set : function(value) {
-                this._surface.tileProvider.tileLimitRectangle = value;
+                this._surface.tileProvider.geographicLimitRectangle = value;
             }
         },
         /**

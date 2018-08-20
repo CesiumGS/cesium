@@ -174,7 +174,7 @@ define([
          * For limiting terrain in scenes that use custom projections or Proj4JS projections that cause overlapping tiles.
          * @type {Rectangle}
          */
-        this.tileLimitRectangle = Rectangle.clone(Rectangle.MAX_VALUE);
+        this.geographicLimitRectangle = Rectangle.clone(Rectangle.MAX_VALUE);
     }
 
     defineProperties(GlobeSurfaceTileProvider.prototype, {
@@ -546,9 +546,12 @@ define([
 
         if (frameState.mode !== SceneMode.SCENE3D) {
 
-            // Check if the tile is outside the limit area in 2D
+            // Check if the tile intersects the limit area in 2D.
+            // If it is entirely outside, the tile should not be rendered at all.
+            // If it is entirely inside, the tile should be rendered without shader modification.
+            // If it is on the boundary itself, set a flag for shader modification.
             surfaceTile.clippedByBoundaries = false;
-            var areaLimitIntersection = Rectangle.simpleIntersection(this.tileLimitRectangle, tile.rectangle, rectangleIntersectionScratch);
+            var areaLimitIntersection = Rectangle.simpleIntersection(this.geographicLimitRectangle, tile.rectangle, rectangleIntersectionScratch);
             if (!defined(areaLimitIntersection)) {
                 return Visibility.NONE;
             }
@@ -599,7 +602,7 @@ define([
     var modifiedModelViewScratch = new Matrix4();
     var modifiedModelViewProjectionScratch = new Matrix4();
     var tileRectangleScratch = new Cartesian4();
-    var localizedTileLimitRectangleScratch = new Cartesian4();
+    var localizedGeographicLimitRectangleScratch = new Cartesian4();
     var rtcScratch = new Cartesian3();
     var centerEyeScratch = new Cartesian3();
     var southwestScratch = new Cartesian3();
@@ -944,8 +947,8 @@ define([
                 }
                 return frameState.context.defaultTexture;
             },
-            u_tileLimitRectangle : function() {
-                return this.properties.localizedTileLimitRectangle;
+            u_geographicLimitRectangle : function() {
+                return this.properties.localizedGeographicLimitRectangle;
             },
             u_clippingPlanesMatrix : function() {
                 var clippingPlanes = globeSurfaceTileProvider._clippingPlanes;
@@ -998,7 +1001,7 @@ define([
                 clippingPlanesEdgeColor : Color.clone(Color.WHITE),
                 clippingPlanesEdgeWidth : 0.0,
 
-                localizedTileLimitRectangle : new Cartesian4()
+                localizedGeographicLimitRectangle : new Cartesian4()
             }
         };
 
@@ -1158,8 +1161,8 @@ define([
 
         // Not used in 3D.
         var tileRectangle = tileRectangleScratch;
-        var localizedTileLimitRectangle = localizedTileLimitRectangleScratch;
-        var tileLimitRectangle = tileProvider.tileLimitRectangle;
+        var localizedGeographicLimitRectangle = localizedGeographicLimitRectangleScratch;
+        var geographicLimitRectangle = tileProvider.geographicLimitRectangle;
 
         // Only used for Mercator projections.
         var southLatitude = 0.0;
@@ -1202,10 +1205,10 @@ define([
                 var cartographicTileRectangle = tile.rectangle;
                 var inverseTileWidth = 1.0 / cartographicTileRectangle.width;
                 var inverseTileHeight = 1.0 / cartographicTileRectangle.height;
-                localizedTileLimitRectangle.x = (tileLimitRectangle.west - cartographicTileRectangle.west) * inverseTileWidth;
-                localizedTileLimitRectangle.y = (tileLimitRectangle.south - cartographicTileRectangle.south) * inverseTileHeight;
-                localizedTileLimitRectangle.z = (tileLimitRectangle.east - cartographicTileRectangle.west) * inverseTileWidth;
-                localizedTileLimitRectangle.w = (tileLimitRectangle.north - cartographicTileRectangle.south) * inverseTileHeight;
+                localizedGeographicLimitRectangle.x = (geographicLimitRectangle.west - cartographicTileRectangle.west) * inverseTileWidth;
+                localizedGeographicLimitRectangle.y = (geographicLimitRectangle.south - cartographicTileRectangle.south) * inverseTileHeight;
+                localizedGeographicLimitRectangle.z = (geographicLimitRectangle.east - cartographicTileRectangle.west) * inverseTileWidth;
+                localizedGeographicLimitRectangle.w = (geographicLimitRectangle.north - cartographicTileRectangle.south) * inverseTileHeight;
             }
 
             if (frameState.mode === SceneMode.SCENE2D && encoding.quantization === TerrainQuantization.BITS12) {
@@ -1304,7 +1307,7 @@ define([
             uniformMapProperties.southMercatorYAndOneOverHeight.x = southMercatorY;
             uniformMapProperties.southMercatorYAndOneOverHeight.y = oneOverMercatorHeight;
 
-            Cartesian4.clone(localizedTileLimitRectangle, uniformMapProperties.localizedTileLimitRectangle);
+            Cartesian4.clone(localizedGeographicLimitRectangle, uniformMapProperties.localizedGeographicLimitRectangle);
 
             // For performance, use fog in the shader only when the tile is in fog.
             var applyFog = enableFog && CesiumMath.fog(tile._distance, frameState.fog.density) > CesiumMath.EPSILON3;

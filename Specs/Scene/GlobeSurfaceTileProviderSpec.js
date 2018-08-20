@@ -936,7 +936,7 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('tileLimitRectangle selectively enables rendering globe surface', function() {
+    it('geographicLimitRectangle selectively enables rendering globe surface', function() {
         expect(scene).toRender([0, 0, 0, 255]);
 
         switchViewMode(SceneMode.COLUMBUS_VIEW, new GeographicProjection(Ellipsoid.WGS84));
@@ -949,12 +949,12 @@ defineSuite([
                 expect(rgba).not.toEqual([0, 0, 0, 255]);
             });
 
-            scene.globe.tileLimitRectangle = Rectangle.fromDegrees(-2, -2, -1, -1);
+            scene.globe.geographicLimitRectangle = Rectangle.fromDegrees(-2, -2, -1, -1);
 
             expect(scene).notToRender(result);
 
             scene.camera.setView({
-                destination : scene.globe.tileLimitRectangle
+                destination : scene.globe.geographicLimitRectangle
             });
 
             return updateUntilDone(scene.globe);
@@ -964,14 +964,14 @@ defineSuite([
             });
     });
 
-    it('tileLimitRectangle culls tiles outside the region', function() {
+    it('geographicLimitRectangle culls tiles outside the region', function() {
         switchViewMode(SceneMode.COLUMBUS_VIEW, new GeographicProjection(Ellipsoid.WGS84));
 
         var unculledCommandCount;
         return updateUntilDone(scene.globe).then(function() {
             unculledCommandCount = scene.frameState.commandList.length;
 
-            scene.globe.tileLimitRectangle = Rectangle.fromDegrees(-2, -2, -1, -1);
+            scene.globe.geographicLimitRectangle = Rectangle.fromDegrees(-2, -2, -1, -1);
 
             return updateUntilDone(scene.globe);
         })
@@ -980,7 +980,7 @@ defineSuite([
             });
     });
 
-    it('tileLimitRectangle not used in 3D', function() {
+    it('geographicLimitRectangle not used in 3D', function() {
         expect(scene).toRender([0, 0, 0, 255]);
 
         switchViewMode(SceneMode.SCENE3D, new GeographicProjection(Ellipsoid.WGS84));
@@ -993,7 +993,7 @@ defineSuite([
                 expect(rgba).not.toEqual([0, 0, 0, 255]);
             });
 
-            scene.globe.tileLimitRectangle = Rectangle.fromDegrees(-2, -2, -1, -1);
+            scene.globe.geographicLimitRectangle = Rectangle.fromDegrees(-2, -2, -1, -1);
 
             expect(scene).toRender(result);
         });

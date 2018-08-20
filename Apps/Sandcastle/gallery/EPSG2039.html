@@ -40,7 +40,7 @@ var viewer = new Cesium.Viewer('cesiumContainer', {
 
 var epsg2039Bounds = Cesium.Rectangle.fromDegrees(34.2200, 29.4900, 35.6800, 33.2700);
 
-viewer.scene.globe.tileLimitRectangle = epsg2039Bounds;
+viewer.scene.globe.geographicLimitRectangle = epsg2039Bounds;
 
 //Add Cesium Inspector
 viewer.extend(Cesium.viewerCesiumInspectorMixin);
