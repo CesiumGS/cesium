@@ -305,8 +305,23 @@ void main()
         return;
     }
 
-    vec3 groundAtmosphereColor = v_mieColor + finalColor.rgb * v_rayleighColor;
-    //groundAtmosphereColor = vec3(1.0) - exp(-fExposure * groundAtmosphereColor);
+    czm_ellipsoid ellipsoid = czm_getWgs84EllipsoidEC();
+
+    float mpp = czm_metersPerPixel(vec4(0.0, 0.0, -czm_currentFrustum.x, 1.0));
+    vec2 xy = gl_FragCoord.xy / czm_viewport.zw * 2.0 - vec2(1.0);
+    xy *= czm_viewport.zw * mpp * 0.5;
+
+    vec3 direction = normalize(vec3(xy, -czm_currentFrustum.x));
+    czm_ray ray = czm_ray(vec3(0.0), direction);
+
+    czm_raySegment intersection = czm_rayEllipsoidIntersectionInterval(ray, ellipsoid);
+
+    vec3 ellipsoidPosition = czm_pointAlongRay(ray, intersection.start);
+    ellipsoidPosition = (czm_inverseView * vec4(ellipsoidPosition, 1.0)).xyz;
+    AtmosphereColor atmosColor = computeGroundAtmosphereFromSpace(ellipsoidPosition, true);
+
+    vec3 groundAtmosphereColor = atmosColor.mie + finalColor.rgb * atmosColor.rayleigh;
+    groundAtmosphereColor = vec3(1.0) - exp(-fExposure * groundAtmosphereColor);
 
     fadeInDist = u_nightFadeDistance.x;
     fadeOutDist = u_nightFadeDistance.y;

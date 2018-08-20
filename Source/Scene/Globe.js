@@ -390,7 +390,7 @@ define([
 
         var requireNormals = defined(globe._material) && (globe._material.shaderSource.match(/slope/) || globe._material.shaderSource.match('normalEC'));
 
-        var fragmentSources = [];
+        var fragmentSources = [GroundAtmosphere];
         if (defined(globe._material) && (!requireNormals || globe._terrainProvider.requestVertexNormals)) {
             fragmentSources.push(globe._material.shaderSource);
             defines.push('APPLY_MATERIAL');
