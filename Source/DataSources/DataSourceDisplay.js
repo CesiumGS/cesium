@@ -301,14 +301,14 @@ import PolylineVisualizer from './PolylineVisualizer.js';
      *                       BoundingSphereState.FAILED if the entity has no visualization in the current scene.
      * @private
      */
-    DataSourceDisplay.prototype.getBoundingSphere = function(entity, allowPartial, result) {
+    DataSourceDisplay.prototype.getBoundingSphere = function(entity, allowPartial, result, cameraFix) {
         //>>includeStart('debug', pragmas.debug);
         Check.defined('entity', entity);
         Check.typeOf.bool('allowPartial', allowPartial);
         Check.defined('result', result);
         //>>includeEnd('debug');
 
-        if (!this._ready) {
+        if (!this._ready && !cameraFix) {
             return BoundingSphereState.PENDING;
         }
 
