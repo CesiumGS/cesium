@@ -2261,7 +2261,7 @@ defineSuite([
         var ray = camera.getPickRay(windowCoord);
 
         var cameraPosition = camera.position;
-        var expectedPosition = new Cartesian3(cameraPosition.x + 2.0, cameraPosition.y + 2, cameraPosition.z);
+        var expectedPosition = new Cartesian3(cameraPosition.z, cameraPosition.x + 2.0, cameraPosition.y + 2.0);
         expect(ray.origin).toEqualEpsilon(expectedPosition, CesiumMath.EPSILON14);
         expect(ray.direction).toEqual(camera.directionWC);
     });

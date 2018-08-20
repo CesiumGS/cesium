@@ -44,7 +44,7 @@ defineSuite([
         DomEventSimulator) {
     'use strict';
 
-    var usePointerEvents = FeatureDetection.supportsPointerEvents();
+    var usePointerEvents;
     var scene;
     var canvas;
     var camera;
@@ -64,7 +64,7 @@ defineSuite([
         this.getHeight = function(cartographic) {
             return 0.0;
         };
-        this.pick = function() {
+        this.pickWorldCoordinates = function() {
             return new Cartesian3(0.0, 0.0, 1.0);
         };
         this._surface = {
@@ -80,6 +80,13 @@ defineSuite([
         };
     }
     beforeAll(function() {
+        usePointerEvents = FeatureDetection.supportsPointerEvents();
+
+        //See https://github.com/AnalyticalGraphicsInc/cesium/issues/6539
+        if (FeatureDetection.isFirefox()) {
+            usePointerEvents = false;
+            spyOn(FeatureDetection, 'supportsPointerEvents').and.returnValue(false);
+        }
         canvas = createCanvas(1024, 768);
     });
 

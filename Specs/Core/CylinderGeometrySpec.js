@@ -1,9 +1,13 @@
 defineSuite([
         'Core/CylinderGeometry',
+        'Core/arrayFill',
+        'Core/GeometryOffsetAttribute',
         'Core/VertexFormat',
         'Specs/createPackableSpecs'
     ], function(
         CylinderGeometry,
+        arrayFill,
+        GeometryOffsetAttribute,
         VertexFormat,
         createPackableSpecs) {
     'use strict';
@@ -55,6 +59,26 @@ defineSuite([
         var numTriangles = 8; // 1 top  + 1 bottom + 2 triangles * 3 sides
         expect(m.attributes.position.values.length).toEqual(numVertices * 3);
         expect(m.indices.length).toEqual(numTriangles * 3);
+    });
+
+    it('computes offset attribute', function() {
+        var m = CylinderGeometry.createGeometry(new CylinderGeometry({
+            vertexFormat : VertexFormat.POSITION_ONLY,
+            length: 1,
+            topRadius: 1,
+            bottomRadius: 1,
+            slices: 3,
+            offsetAttribute: GeometryOffsetAttribute.ALL
+        }));
+
+        var numVertices = 12;
+        expect(m.attributes.position.values.length).toEqual(numVertices * 3);
+
+        var offset = m.attributes.applyOffset.values;
+        expect(offset.length).toEqual(numVertices);
+        var expected = new Array(offset.length);
+        expected = arrayFill(expected, 1);
+        expect(offset).toEqual(expected);
     });
 
     it('compute all vertex attributes', function() {
@@ -154,6 +178,6 @@ defineSuite([
         bottomRadius: 0,
         slices: 3
     });
-    var packedInstance = [1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 0.0, 3.0];
+    var packedInstance = [1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 0.0, 3.0, -1.0];
     createPackableSpecs(CylinderGeometry, cylinder, packedInstance);
 });

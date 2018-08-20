@@ -114,6 +114,22 @@ defineSuite([
         expect(scene).notToPick(7, 7, 3);
     });
 
+    it('drill picks a primitive with a modified pick search area', function() {
+        if (FeatureDetection.isInternetExplorer()) {
+            // Workaround IE 11.0.9.  This test fails when all tests are ran without a breakpoint here.
+            return;
+        }
+
+        camera.setView({
+            destination : Rectangle.fromDegrees(-10.0, -10.0, 10.0, 10.0)
+        });
+
+        var rectangle = createRectangle();
+
+        expect(scene).toDrillPickPrimitive(rectangle, 7, 7, 5);
+        expect(scene).notToDrillPick(7, 7, 3);
+    });
+
     it('does not pick primitives when show is false', function() {
         var rectangle = createRectangle();
         rectangle.show = false;
