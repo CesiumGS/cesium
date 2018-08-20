@@ -284,7 +284,7 @@ define([
         }
 
         var radii = Property.getValueOrUndefined(ellipsoid.radii, time, radiiScratch);
-        var modelMatrix = entity.computeModelMatrixForHeightReference(time, ellipsoid.heightReference, radii.z * 0.5, this._scene.mapProjection.ellipsoid, this._modelMatrix);
+        var modelMatrix = defined(radii) ? entity.computeModelMatrixForHeightReference(time, ellipsoid.heightReference, radii.z * 0.5, this._scene.mapProjection.ellipsoid, this._modelMatrix) : undefined;
         if (!defined(modelMatrix) || !defined(radii)) {
             if (defined(this._primitive)) {
                 this._primitive.show = false;
