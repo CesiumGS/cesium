@@ -42,8 +42,6 @@ defineSuite([
     var withTransformUrl = './Data/Cesium3DTiles/Instanced/InstancedWithTransform/tileset.json';
     var withBatchIdsUrl = './Data/Cesium3DTiles/Instanced/InstancedWithBatchIds/tileset.json';
     var texturedUrl = './Data/Cesium3DTiles/Instanced/InstancedTextured/tileset.json';
-    var compressedTexturesUrl = './Data/Cesium3DTiles/Instanced/InstancedCompressedTextures/tileset.json';
-    var gltfZUpUrl = './Data/Cesium3DTiles/Instanced/InstancedGltfZUp/tileset.json';
 
     function setCamera(longitude, latitude) {
         // One instance is located at the center, point the camera there
@@ -175,12 +173,6 @@ defineSuite([
         });
     });
 
-    it('renders with a gltf z-up axis', function() {
-        return Cesium3DTilesTester.loadTileset(scene, gltfZUpUrl).then(function(tileset) {
-            Cesium3DTilesTester.expectRenderTileset(scene, tileset);
-        });
-    });
-
     it('renders with tile transform', function() {
         return Cesium3DTilesTester.loadTileset(scene, withTransformUrl).then(function(tileset) {
             Cesium3DTilesTester.expectRenderTileset(scene, tileset);
@@ -201,12 +193,6 @@ defineSuite([
 
     it('renders with textures', function() {
         return Cesium3DTilesTester.loadTileset(scene, texturedUrl).then(function(tileset) {
-            Cesium3DTilesTester.expectRenderTileset(scene, tileset);
-        });
-    });
-
-    it('renders with compressed textures', function() {
-        return Cesium3DTilesTester.loadTileset(scene, compressedTexturesUrl).then(function(tileset) {
             Cesium3DTilesTester.expectRenderTileset(scene, tileset);
         });
     });
@@ -276,12 +262,12 @@ defineSuite([
         return Cesium3DTilesTester.loadTileset(scene, texturedUrl).then(function(tileset) {
             var content = tileset._root.content;
 
-            // Box model - 32 ushort indices and 24 vertices per building, 8 float components (position, normal, uv) per vertex.
+            // Box model - 36 ushort indices and 24 vertices per building, 8 float components (position, normal, uv) per vertex.
             // (24 * 8 * 4) + (36 * 2) = 840
             var geometryByteLength = 840;
 
-            // Texture is 211x211 RGB bytes, but upsampled to 256x256 because the wrap mode is REPEAT
-            var texturesByteLength = 196608;
+            // Texture is 128x128 RGBA bytes, not mipmapped
+            var texturesByteLength = 65536;
 
             // One RGBA byte pixel per feature
             var batchTexturesByteLength = content.featuresLength * 4;
@@ -373,7 +359,6 @@ defineSuite([
         return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl).then(function(tileset) {
             var tile = tileset._root;
             var content = tile.content;
-
             var clippingPlaneCollection = new ClippingPlaneCollection({
                 planes : [
                     new ClippingPlane(Cartesian3.UNIT_X, 0.0)

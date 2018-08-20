@@ -23,7 +23,7 @@
     },
     "geometricError": 0,
     "content": {
-      "url": "instancedWithBatchIds.i3dm"
+      "uri": "instancedWithBatchIds.i3dm"
     }
   }
 }

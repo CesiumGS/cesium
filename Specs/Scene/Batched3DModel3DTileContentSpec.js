@@ -35,15 +35,12 @@ defineSuite([
     var withoutBatchTableUrl = './Data/Cesium3DTiles/Batched/BatchedWithoutBatchTable/tileset.json';
     var translucentUrl = './Data/Cesium3DTiles/Batched/BatchedTranslucent/tileset.json';
     var translucentOpaqueMixUrl = './Data/Cesium3DTiles/Batched/BatchedTranslucentOpaqueMix/tileset.json';
-    var withKHRMaterialsCommonUrl = './Data/Cesium3DTiles/Batched/BatchedWithKHRMaterialsCommon/tileset.json';
     var withTransformBoxUrl = './Data/Cesium3DTiles/Batched/BatchedWithTransformBox/tileset.json';
     var withTransformSphereUrl = './Data/Cesium3DTiles/Batched/BatchedWithTransformSphere/tileset.json';
     var withTransformRegionUrl = './Data/Cesium3DTiles/Batched/BatchedWithTransformRegion/tileset.json';
     var texturedUrl = './Data/Cesium3DTiles/Batched/BatchedTextured/tileset.json';
-    var compressedTexturesUrl = './Data/Cesium3DTiles/Batched/BatchedCompressedTextures/tileset.json';
     var deprecated1Url = './Data/Cesium3DTiles/Batched/BatchedDeprecated1/tileset.json';
     var deprecated2Url = './Data/Cesium3DTiles/Batched/BatchedDeprecated2/tileset.json';
-    var gltfZUpUrl = './Data/Cesium3DTiles/Batched/BatchedGltfZUp/tileset.json';
     var withRtcCenterUrl = './Data/Cesium3DTiles/Batched/BatchedWithRtcCenter/tileset.json';
 
     function setCamera(longitude, latitude) {
@@ -146,28 +143,9 @@ defineSuite([
         });
     });
 
-    it('renders with KHR_materials_common extension', function() {
-        // Tests that the batchId attribute and CESIUM_RTC extension are handled correctly
-        return Cesium3DTilesTester.loadTileset(scene, withKHRMaterialsCommonUrl).then(function(tileset) {
-            Cesium3DTilesTester.expectRenderTileset(scene, tileset);
-        });
-    });
-
     it('renders with textures', function() {
         return Cesium3DTilesTester.loadTileset(scene, texturedUrl).then(function(tileset) {
             Cesium3DTilesTester.expectRender(scene, tileset);
-        });
-    });
-
-    it('renders with compressed textures', function() {
-        return Cesium3DTilesTester.loadTileset(scene, compressedTexturesUrl).then(function(tileset) {
-            Cesium3DTilesTester.expectRender(scene, tileset);
-        });
-    });
-
-    it('renders with a gltf z-up axis', function() {
-        return Cesium3DTilesTester.loadTileset(scene, gltfZUpUrl).then(function(tileset) {
-            Cesium3DTilesTester.expectRenderTileset(scene, tileset);
         });
     });
 
@@ -260,9 +238,9 @@ defineSuite([
         return Cesium3DTilesTester.loadTileset(scene, texturedUrl).then(function(tileset) {
             var content = tileset._root.content;
 
-            // 10 buildings, 32 ushort indices and 24 vertices per building, 8 float components (position, normal, uv) and 1 ushort component (batchId) per vertex.
-            // 10 * ((24 * (8 * 4 + 1 * 2)) + (36 * 2)) = 8880
-            var geometryByteLength = 8880;
+            // 10 buildings, 36 ushort indices and 24 vertices per building, 8 float components (position, normal, uv) and 1 uint component (batchId) per vertex.
+            // 10 * ((24 * (8 * 4 + 1 * 4)) + (36 * 2)) = 9360
+            var geometryByteLength = 9360;
 
             // Texture is 128x128 RGBA bytes, not mipmapped
             var texturesByteLength = 65536;

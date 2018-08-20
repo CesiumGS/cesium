@@ -97,7 +97,7 @@ define([
 
     /**
      * Represents the contents of a
-     * {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/blob/master/TileFormats/PointCloud/README.md|Point Cloud}
+     * {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/specification/TileFormats/PointCloud|Point Cloud}
      * tile. Used internally by {@link PointCloud3DTileContent} and {@link TimeDynamicPointCloud}.
      *
      * @alias PointCloud

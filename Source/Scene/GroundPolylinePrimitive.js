@@ -639,7 +639,8 @@ define([
                 groundInstances[i] = new GeometryInstance({
                     geometry : geometryInstance.geometry,
                     attributes : attributes,
-                    id : geometryInstance.id
+                    id : geometryInstance.id,
+                    pickPrimitive : that
                 });
             }
 

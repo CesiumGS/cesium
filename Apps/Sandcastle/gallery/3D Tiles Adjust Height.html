@@ -56,7 +56,10 @@ Cesium.knockout.track(viewModel);
 var toolbar = document.getElementById('toolbar');
 Cesium.knockout.applyBindings(viewModel, toolbar);
 
-var tileset = new Cesium.Cesium3DTileset({ url: Cesium.IonResource.fromAssetId(3883) });
+var tileset = new Cesium.Cesium3DTileset({
+    url: '../../SampleData/Cesium3DTiles/Tilesets/Tileset/tileset.json'
+});
+
 tileset.readyPromise.then(function(tileset) {
     viewer.scene.primitives.add(tileset);
     viewer.zoomTo(tileset, new Cesium.HeadingPitchRange(0.0, -0.5, tileset.boundingSphere.radius * 2.0));

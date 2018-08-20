@@ -544,7 +544,7 @@ define([
 
     var scratchColor = new Color();
 
-    Cesium3DTileBatchTable.prototype.applyStyle = function(frameState, style) {
+    Cesium3DTileBatchTable.prototype.applyStyle = function(style) {
         if (!defined(style)) {
             this.setAllColor(DEFAULT_COLOR_VALUE);
             this.setAllShow(true);
@@ -555,8 +555,8 @@ define([
         var length = this.featuresLength;
         for (var i = 0; i < length; ++i) {
             var feature = content.getFeature(i);
-            var color = defined(style.color) ? style.color.evaluateColor(frameState, feature, scratchColor) : DEFAULT_COLOR_VALUE;
-            var show = defined(style.show) ? style.show.evaluate(frameState, feature) : DEFAULT_SHOW_VALUE;
+            var color = defined(style.color) ? style.color.evaluateColor(feature, scratchColor) : DEFAULT_COLOR_VALUE;
+            var show = defined(style.show) ? style.show.evaluate(feature) : DEFAULT_SHOW_VALUE;
             this.setColor(i, color);
             this.setShow(i, show);
         }
@@ -969,6 +969,38 @@ define([
                '} \n';
     }
 
+    function replaceDiffuseTextureCalls(source, diffuseAttributeOrUniformName) {
+        var functionCall = 'texture2D(' + diffuseAttributeOrUniformName;
+
+        var fromIndex = 0;
+        var startIndex = source.indexOf(functionCall, fromIndex);
+        var endIndex;
+
+        while (startIndex > -1) {
+            var nestedLevel = 0;
+            for (var i = startIndex; i < source.length; ++i) {
+                var character = source.charAt(i);
+                if (character === '(') {
+                    ++nestedLevel;
+                } else if (character === ')') {
+                    --nestedLevel;
+                    if (nestedLevel === 0) {
+                        endIndex = i + 1;
+                        break;
+                    }
+                }
+            }
+            var extractedFunction = source.slice(startIndex, endIndex);
+            var replacedFunction = 'tile_diffuse_final(' + extractedFunction + ', tile_diffuse)';
+
+            source = source.slice(0, startIndex) + replacedFunction + source.slice(endIndex);
+            fromIndex = startIndex + replacedFunction.length;
+            startIndex = source.indexOf(functionCall, fromIndex);
+        }
+
+        return source;
+    }
+
     function modifyDiffuse(source, diffuseAttributeOrUniformName, applyHighlight) {
         // If the glTF does not specify the _3DTILESDIFFUSE semantic, return the default shader.
         // Otherwise if _3DTILESDIFFUSE is defined prefer the shader below that can switch the color mode at runtime.
@@ -1027,11 +1059,10 @@ define([
                 '    tile_diffuse = tile_diffuse_final(source, tile_featureColor); \n' +
                 '    tile_main(); \n';
         } else if (type === 'sampler2D') {
-            // Regex handles up to one level of nested parentheses:
+            // Handles any number of nested parentheses
             // E.g. texture2D(u_diffuse, uv)
             // E.g. texture2D(u_diffuse, computeUV(index))
-            regex = new RegExp('texture2D\\(' + diffuseAttributeOrUniformName + '.*?(\\)\\)|\\))', 'g');
-            source = source.replace(regex, 'tile_diffuse_final($&, tile_diffuse)');
+            source = replaceDiffuseTextureCalls(source, diffuseAttributeOrUniformName);
             setColor =
                 '    tile_diffuse = tile_featureColor; \n' +
                 '    tile_main(); \n';
@@ -1210,10 +1241,11 @@ define([
         OPAQUE_AND_TRANSLUCENT : 2
     };
 
-    Cesium3DTileBatchTable.prototype.addDerivedCommands = function(frameState, commandStart, finalResolution) {
+    Cesium3DTileBatchTable.prototype.addDerivedCommands = function(frameState, commandStart) {
         var commandList = frameState.commandList;
         var commandEnd = commandList.length;
         var tile = this._content._tile;
+        var finalResolution = tile._finalResolution;
         var tileset = tile._tileset;
         var bivariateVisibilityTest = tileset._skipLevelOfDetail && tileset._hasMixedContent && frameState.context.stencilBuffer;
         var styleCommandsNeeded = getStyleCommandsNeeded(this);
@@ -1245,9 +1277,8 @@ define([
                     }
                     tileset._backfaceCommands.push(derivedCommands.zback);
                 }
-                if (!defined(derivedCommands.stencil) || tile._selectionDepth !== tile._lastSelectionDepth) {
+                if (!defined(derivedCommands.stencil) || tile._selectionDepth !== getLastSelectionDepth(derivedCommands.stencil)) {
                     derivedCommands.stencil = deriveStencilCommand(derivedCommands.originalCommand, tile._selectionDepth);
-                    tile._lastSelectionDepth = tile._selectionDepth;
                 }
                 updateDerivedCommand(derivedCommands.stencil, command);
             }
@@ -1390,6 +1421,10 @@ define([
             derivedCommand.renderState = RenderState.fromCache(rs);
         }
         return derivedCommand;
+    }
+
+    function getLastSelectionDepth(stencilCommand) {
+        return stencilCommand.renderState.stencilTest.reference >>> 4;
     }
 
     function getTranslucentRenderState(renderState) {
