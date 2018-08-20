@@ -870,6 +870,8 @@ define([
          */
         this.debugShowUrl = defaultValue(options.debugShowUrl, false);
 
+        this._depthMask = options.depthMask;
+
         var that = this;
         var resource;
         when(options.url)

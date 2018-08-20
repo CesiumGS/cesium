@@ -389,7 +389,8 @@ define([
                 lightColor : tileset.lightColor,
                 luminanceAtZenith : tileset.luminanceAtZenith,
                 sphericalHarmonicCoefficients : tileset.sphericalHarmonicCoefficients,
-                specularEnvironmentMaps : tileset.specularEnvironmentMaps
+                specularEnvironmentMaps : tileset.specularEnvironmentMaps,
+                depthMask : tileset._depthMask
             });
         } else {
             // This transcodes glTF to an internal representation for geometry so we can take advantage of the re-batching of vector data.
