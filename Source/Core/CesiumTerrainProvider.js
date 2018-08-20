@@ -319,12 +319,14 @@ define([
                         }
                     }
 
-                    var layerJsonCredit = new Credit(attribution);
+                    if (attribution.length > 0) {
+                        var layerJsonCredit = new Credit(attribution);
 
-                    if (defined(that._tileCredits)) {
-                        that._tileCredits.push(layerJsonCredit);
-                    } else {
-                        that._tileCredits = [layerJsonCredit];
+                        if (defined(that._tileCredits)) {
+                            that._tileCredits.push(layerJsonCredit);
+                        } else {
+                            that._tileCredits = [layerJsonCredit];
+                        }
                     }
 
                     that._ready = true;
