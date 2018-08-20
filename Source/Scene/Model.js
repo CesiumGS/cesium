@@ -1321,25 +1321,6 @@ define([
         };
     }
 
-    function parseBuffers(model) {
-        var loadResources = model._loadResources;
-        ForEach.buffer(model.gltf, function(buffer, bufferViewId) {
-            buffer.extras = defaultValue(buffer.extras, {});
-            buffer.extras._pipeline = defaultValue(buffer.extras._pipeline, {});
-            if (defined(buffer.extras._pipeline.source)) {
-                loadResources.buffers[bufferViewId] = buffer.extras._pipeline.source;
-            } else {
-                var bufferResource = model._resource.getDerivedResource({
-                    url: buffer.uri
-                });
-                ++loadResources.pendingBufferLoads;
-                bufferResource.fetchArrayBuffer()
-                    .then(bufferLoad(model, bufferViewId))
-                    .otherwise(ModelUtility.getFailedLoadFunction(model, 'buffer', bufferResource.url));
-            }
-        });
-    }
-
     function parseBufferViews(model) {
         var bufferViews = model.gltf.bufferViews;
         var vertexBuffersToCreate = model._loadResources.vertexBuffersToCreate;
@@ -1383,7 +1364,7 @@ define([
                 bufferView : undefined
             };
             --loadResources.pendingShaderLoads;
-            model._sourceShaders[id].extras._pipeline.source = source;
+            model._sourceShaders[id] = source;
         };
     }
 
@@ -1391,9 +1372,9 @@ define([
         var gltf = model.gltf;
         var buffers = gltf.buffers;
         var bufferViews = gltf.bufferViews;
-        ForEach.shader(gltf, function(sourceShader, id) {
-            // retain reference to source shader
-            var shader = model._sourceShaders[id] = clone(sourceShader);
+        ForEach.shader(gltf, function(shader, id) {
+            // retain reference to source shader text
+            var sourceShader = model._sourceShaders[id] = clone(shader.extras._pipeline.source);
 
             // Shader references either uri (external or base64-encoded) or bufferView
             if (defined(shader.bufferView)) {
@@ -1406,17 +1387,17 @@ define([
                     source : source,
                     bufferView : undefined
                 };
-                shader.extras._pipeline.source = source;
-            } else if (defined(shader.extras._pipeline.source)) {
+                model._sourceShaders[id] = source;
+            } else if (defined(sourceShader)) {
                 model._loadResources.shaders[id] = {
-                    source : shader.extras._pipeline.source,
+                    source: sourceShader,
                     bufferView : undefined
                 };
             } else {
                 ++model._loadResources.pendingShaderLoads;
 
                 var shaderResource = model._resource.getDerivedResource({
-                    url : shader.uri
+                    url: shader.uri
                 });
 
                 shaderResource.fetchText()
@@ -1447,9 +1428,8 @@ define([
         });
     }
 
-    function imageLoad(model, textureId, imageId) {
+    function imageLoad(model, textureId) {
         return function(image) {
-            var gltf = model.gltf;
             var loadResources = model._loadResources;
             --loadResources.pendingTextureLoads;
             loadResources.texturesToCreate.enqueue({
@@ -1460,7 +1440,6 @@ define([
                 height : image.height,
                 internalFormat : image.internalFormat
             });
-            gltf.images[imageId].extras._pipeline.source = image;
         };
     }
 
@@ -1896,8 +1875,8 @@ define([
         var program = model._sourcePrograms[programId];
         var shaders = model._sourceShaders;
 
-        var vs = shaders[program.vertexShader].extras._pipeline.source;
-        var fs = shaders[program.fragmentShader].extras._pipeline.source;
+        var vs = shaders[program.vertexShader];
+        var fs = shaders[program.fragmentShader];
 
         var quantizedVertexShaders = model._quantizedVertexShaders;
         var toClipCoordinatesGLSL = model._toClipCoordinatesGLSL[programId];
@@ -1941,8 +1920,8 @@ define([
         var clippingPlaneCollection = model.clippingPlanes;
         var addClippingPlaneCode = isClippingEnabled(model);
 
-        var vs = shaders[program.vertexShader].extras._pipeline.source;
-        var fs = shaders[program.fragmentShader].extras._pipeline.source;
+        var vs = shaders[program.vertexShader];
+        var fs = shaders[program.fragmentShader];
 
         if (model.extensionsUsed.WEB3D_quantized_attributes || model._dequantizeInShader) {
             vs = quantizedVertexShaders[programId];
@@ -3164,7 +3143,7 @@ define([
         for (var programId in programs) {
             if (programs.hasOwnProperty(programId)) {
                 var program = programs[programId];
-                var shader = shaders[program.vertexShader].extras._pipeline.source;
+                var shader = shaders[program.vertexShader];
 
                 ModelUtility.checkSupportedGlExtensions(program.glExtensions, context);
 
@@ -4031,10 +4010,12 @@ define([
                     }
                 }
 
+                addPipelineExtras(this.gltf);
+
                 this._loadResources = new ModelLoadResources();
                 if (!this._loadRendererResourcesFromCache) {
                     // Buffers are required to updateVersion
-                    parseBuffers(this);
+                    ModelUtility.parseBuffers(this, bufferLoad);
                 }
             }
         }
@@ -4053,7 +4034,6 @@ define([
                     ModelUtility.checkSupportedExtensions(this.extensionsRequired);
 
                     // glTF pipeline updates
-                    addPipelineExtras(this.gltf);
                     updateVersion(this.gltf);
                     if (this.gltf.extras._pipeline.gltf_pipeline_upgrade_10to20) {
                         this._forwardAxis = Axis.X;
