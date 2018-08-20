@@ -50,15 +50,16 @@ define([
 
         var lightParameters = generateLightParameters(gltf);
 
-        ModelUtility.splitIncompatibleMaterials (gltf);
+       var primitiveByMaterial = ModelUtility.splitIncompatibleMaterials(gltf);
 
         var techniques = {};
-        ForEach.material(gltf, function(material) {
+        ForEach.material(gltf, function(material, materialIndex) {
             if (defined(material.extensions) && defined(material.extensions.KHR_materials_common)) {
                 var khrMaterialsCommon = material.extensions.KHR_materials_common;
-                var techniqueKey = getTechniqueKey(material, khrMaterialsCommon);
+                var primitiveInfo = primitiveByMaterial[materialIndex];
+
+                var techniqueKey = getTechniqueKey(khrMaterialsCommon, primitiveInfo);
                 var technique = techniques[techniqueKey];
-                var primitiveInfo = material.extras._pipeline.primitive;
 
                 if (!defined(technique)) {
                     technique = generateTechnique(gltf, techniquesWebgl, primitiveInfo, khrMaterialsCommon, lightParameters, options.addBatchIdToGeneratedShaders);
@@ -80,20 +81,12 @@ define([
                     values: materialValues
                 };
 
+                material.alphaMode = 'OPAQUE';
                 if (khrMaterialsCommon.transparent) {
                     material.alphaMode = 'BLEND';
-                    material.extensions.KHR_blend = {
-                        blendFactors: [
-                            WebGLConstants.ONE,
-                            WebGLConstants.ONE_MINUS_SRC_ALPHA,
-                            WebGLConstants.ONE,
-                            WebGLConstants.ONE_MINUS_SRC_ALPHA
-                        ]
-                    };
-                    if (!hasExtension(gltf, 'KHR_blend')) {
-                        gltf.extensions.push('KHR_blend');
-                    }
-                } else if (khrMaterialsCommon.doubleSided) {
+                }
+
+                if (khrMaterialsCommon.doubleSided) {
                     material.doubleSided = true;
                 }
             }
@@ -580,10 +573,10 @@ define([
                 finalColorComputation = '  gl_FragColor = vec4(color * diffuse.a, diffuse.a);\n';
             }
         } else if (defined(techniqueUniforms.u_transparency)) {
-                finalColorComputation = '  gl_FragColor = vec4(color * u_transparency, u_transparency);\n';
-            } else {
-                finalColorComputation = '  gl_FragColor = vec4(color, 1.0);\n';
-            }
+            finalColorComputation = '  gl_FragColor = vec4(color * u_transparency, u_transparency);\n';
+        } else {
+            finalColorComputation = '  gl_FragColor = vec4(color, 1.0);\n';
+        }
 
         if (hasVertexColors) {
             colorCreationBlock += '  color *= v_vertexColor.rgb;\n';
@@ -692,7 +685,7 @@ define([
         }
     }
 
-    function getTechniqueKey(material, khrMaterialsCommon) {
+    function getTechniqueKey(khrMaterialsCommon, primitiveInfo) {
         var techniqueKey = '';
         techniqueKey += 'technique:' + khrMaterialsCommon.technique + ';';
 
@@ -709,7 +702,6 @@ define([
 
         var jointCount = defaultValue(khrMaterialsCommon.jointCount, 0);
         techniqueKey += jointCount.toString() + ';';
-        var primitiveInfo = material.extras._pipeline.primitive;
         if (defined(primitiveInfo)) {
             var skinningInfo = primitiveInfo.skinning;
             if (jointCount > 0) {

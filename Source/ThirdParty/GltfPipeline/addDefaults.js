@@ -1,10 +1,12 @@
 define([
+        './addToArray',
         './ForEach',
         './getAccessorByteStride',
         '../../Core/defaultValue',
         '../../Core/defined',
         '../../Core/WebGLConstants'
     ], function(
+        addToArray,
         ForEach,
         getAccessorByteStride,
         defaultValue,
@@ -17,6 +19,8 @@ define([
      *
      * @param {Object} gltf A javascript object containing a glTF asset.
      * @returns {Object} The modified glTF.
+     *
+     * @private
      */
     function addDefaults(gltf) {
         ForEach.accessor(gltf, function(accessor) {
@@ -34,6 +38,15 @@ define([
         ForEach.mesh(gltf, function(mesh) {
             ForEach.meshPrimitive(mesh, function(primitive) {
                 primitive.mode = defaultValue(primitive.mode, WebGLConstants.TRIANGLES);
+                if (!defined(primitive.material)) {
+                    if (!defined(gltf.materials)) {
+                        gltf.materials = [];
+                    }
+                    var defaultMaterial = {
+                        name: 'default'
+                    };
+                    primitive.material = addToArray(gltf.materials, defaultMaterial);
+                }
             });
         });
 

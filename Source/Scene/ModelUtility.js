@@ -96,10 +96,11 @@ define([
     ModelUtility.splitIncompatibleMaterials = function(gltf) {
         var accessors = gltf.accessors;
         var materials = gltf.materials;
+        var primitiveInfoByMaterial = {};
         ForEach.mesh(gltf, function(mesh) {
             ForEach.meshPrimitive(mesh, function(primitive) {
-                var materialId = primitive.material;
-                var material = materials[materialId];
+                var materialIndex = primitive.material;
+                var material = materials[materialIndex];
 
                 var jointAccessorId = primitive.attributes.JOINTS_0;
                 var componentType;
@@ -116,15 +117,9 @@ define([
                 var hasTangents = defined(primitive.attributes.TANGENT);
                 var hasTexCoords = defined(primitive.attributes.TEXCOORD_0);
 
-                if (!defined(material.extras) || !defined(material.extras._pipeline)) {
-                    material.extras = {
-                        _pipeline: {}
-                    };
-                }
-
-                var primitiveInfo = material.extras._pipeline.primitive;
+                var primitiveInfo = primitiveInfoByMaterial[materialIndex];
                 if (!defined(primitiveInfo)) {
-                    material.extras._pipeline.primitive = {
+                    primitiveInfoByMaterial[materialIndex] = {
                         skinning: {
                             skinned: isSkinned,
                             componentType: componentType,
@@ -148,7 +143,10 @@ define([
                     // * Uses a different type to store joints and weights
                     // * Doesn't have vertex colors, morph targets, normals, tangents, or texCoords
                     var clonedMaterial = clone(material, true);
-                    clonedMaterial.extras._pipeline.primitive = {
+                    // Split this off as a separate material
+                    materialIndex = addToArray(materials, clonedMaterial);
+                    primitive.material = materialIndex;
+                    primitiveInfoByMaterial[materialIndex] = {
                         skinning: {
                             skinned: isSkinned,
                             componentType: componentType,
@@ -160,14 +158,11 @@ define([
                         hasTangents: hasTangents,
                         hasTexCoords: hasTexCoords
                     };
-                    // Split this off as a separate material
-                    materialId = addToArray(materials, clonedMaterial);
-                    primitive.material = materialId;
                 }
             });
         });
 
-        return gltf;
+        return primitiveInfoByMaterial;
     };
 
     ModelUtility.getShaderVariable = function(type) {
@@ -502,7 +497,7 @@ define([
 
     ModelUtility.supportedExtensions = {
         'CESIUM_RTC' : true,
-        'EXT_blend' : true,
+        'KHR_blend' : true,
         'KHR_binary_glTF' : true,
         'KHR_draco_mesh_compression' : true,
         'KHR_materials_common' : true,

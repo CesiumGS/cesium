@@ -2541,6 +2541,7 @@ define([
             depthTest : {
                 enabled : true
             },
+            depthMask : !blendingEnabled,
             blending : {
                 enabled : blendingEnabled,
                 equationRgb : blendEquationSeparate[0],

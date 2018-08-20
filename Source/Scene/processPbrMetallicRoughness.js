@@ -57,12 +57,12 @@ define([
         gltf.extensionsUsed.push('KHR_techniques_webgl');
         gltf.extensionsRequired.push('KHR_techniques_webgl');
 
-        ModelUtility.splitIncompatibleMaterials(gltf);
+        var primitiveByMaterial = ModelUtility.splitIncompatibleMaterials(gltf);
 
         ForEach.material(gltf, function(material, materialIndex) {
             if (isPbrMaterial(material)) {
                 var generatedMaterialValues = {};
-                var technique = generateTechnique(gltf, material, materialIndex, generatedMaterialValues, options);
+                var technique = generateTechnique(gltf, material, materialIndex, generatedMaterialValues, primitiveByMaterial, options);
 
                 if (!defined(material.extensions)) {
                     material.extensions = {};
@@ -93,7 +93,7 @@ define([
                defined(material.doubleSided);
     }
 
-    function generateTechnique(gltf, material, materialIndex, generatedMaterialValues, options) {
+    function generateTechnique(gltf, material, materialIndex, generatedMaterialValues, primitiveByMaterial, options) {
         var addBatchIdToGeneratedShaders = defaultValue(options.addBatchIdToGeneratedShaders, false);
 
         var techniquesWebgl = gltf.extensions.KHR_techniques_webgl;
@@ -127,7 +127,8 @@ define([
         }
         var joints = (defined(skin)) ? skin.joints : [];
         var jointCount = joints.length;
-        var primitiveInfo = material.extras._pipeline.primitive;
+
+        var primitiveInfo = primitiveByMaterial[materialIndex];
 
         var skinningInfo;
         var hasSkinning = false;

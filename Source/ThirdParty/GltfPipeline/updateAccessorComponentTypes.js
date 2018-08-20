@@ -1,11 +1,11 @@
 define([
-        './addToArray',
+        './addBuffer',
         './ForEach',
         './readAccessorPacked',
         '../../Core/ComponentDatatype',
         '../../Core/WebGLConstants'
     ], function(
-        addToArray,
+        addBuffer,
         ForEach,
         readAccessorPacked,
         ComponentDatatype,
@@ -48,22 +48,9 @@ define([
     function convertType(gltf, accessor, updatedComponentType) {
         var typedArray = ComponentDatatype.createTypedArray(updatedComponentType, readAccessorPacked(gltf, accessor));
         var newBuffer = new Uint8Array(typedArray.buffer);
-        var newBufferLength = newBuffer.length;
-        var buffer = {
-            byteLength: newBufferLength,
-            extras: {
-                _pipeline: {
-                    source: newBuffer
-                }
-            }
-        };
-
-        var bufferId = addToArray(gltf.buffers, buffer);
+        accessor.bufferView = addBuffer(gltf, newBuffer);
         accessor.componentType = updatedComponentType;
-        accessor.bufferView = addToArray(gltf.bufferViews, {
-            buffer: bufferId,
-            byteLength: newBufferLength
-        });
+        accessor.byteOffset = 0;
     }
 
     return updateAccessorComponentTypes;
