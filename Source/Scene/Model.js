@@ -515,6 +515,7 @@ import ShadowMode from './ShadowMode.js';
         this._upAxis = defaultValue(options.upAxis, Axis.Y);
         this._gltfForwardAxis = Axis.Z;
         this._forwardAxis = options.forwardAxis;
+        this._depthMask = options.depthMask;
 
         /**
          * @private
@@ -3014,7 +3015,7 @@ import ShadowMode from './ShadowMode.js';
             depthTest : {
                 enabled : true
             },
-            depthMask : !blendingEnabled,
+            depthMask : defaultValue(model._depthMask, !blendingEnabled),
             blending : {
                 enabled : blendingEnabled,
                 equationRgb : blendEquationSeparate[0],
