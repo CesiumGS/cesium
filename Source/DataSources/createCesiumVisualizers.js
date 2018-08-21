@@ -7,7 +7,7 @@ define([
         './ModelVisualizer',
         './PathVisualizer',
         './PointVisualizer',
-        './PolylineVisualizer',
+        './PolylineVisualizer'
     ], function(
         DataSourceDisplay,
         BillboardVisualizer,
