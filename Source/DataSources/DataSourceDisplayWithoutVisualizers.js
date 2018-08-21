@@ -10,15 +10,8 @@ define([
         '../Scene/GroundPrimitive',
         '../Scene/OrderedGroundPrimitiveCollection',
         '../Scene/PrimitiveCollection',
-        './BillboardVisualizer',
         './BoundingSphereState',
-        './CustomDataSource',
-        './GeometryVisualizer',
-        './LabelVisualizer',
-        './ModelVisualizer',
-        './PathVisualizer',
-        './PointVisualizer',
-        './PolylineVisualizer'
+        './CustomDataSource'
     ], function(
         BoundingSphere,
         Check,
@@ -31,15 +24,8 @@ define([
         GroundPrimitive,
         OrderedGroundPrimitiveCollection,
         PrimitiveCollection,
-        BillboardVisualizer,
         BoundingSphereState,
-        CustomDataSource,
-        GeometryVisualizer,
-        LabelVisualizer,
-        ModelVisualizer,
-        PathVisualizer,
-        PointVisualizer,
-        PolylineVisualizer) {
+        CustomDataSource) {
     'use strict';
 
     /**
@@ -126,14 +112,7 @@ define([
      * @type {DataSourceDisplay~VisualizersCallback}
      */
     DataSourceDisplay.defaultVisualizersCallback = function(scene, entityCluster, dataSource) {
-        var entities = dataSource.entities;
-        return [new BillboardVisualizer(entityCluster, entities),
-                new GeometryVisualizer(scene, entities, dataSource._primitives, dataSource._groundPrimitives),
-                new LabelVisualizer(entityCluster, entities),
-                new ModelVisualizer(scene, entities),
-                new PointVisualizer(entityCluster, entities),
-                new PathVisualizer(scene, entities),
-                new PolylineVisualizer(scene, entities, dataSource._primitives, dataSource._groundPrimitives)];
+        return [];
     };
 
     defineProperties(DataSourceDisplay.prototype, {
