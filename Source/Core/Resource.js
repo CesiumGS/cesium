@@ -1834,6 +1834,7 @@ define([
             }).end();
     }
 
+    var noXMLHttpRequest = typeof XMLHttpRequest === 'undefined';
     Resource._Implementations.loadWithXhr = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
         var dataUriRegexResult = dataUriRegex.exec(url);
         if (dataUriRegexResult !== null) {
@@ -1841,7 +1842,7 @@ define([
             return;
         }
 
-        if (FeatureDetection.isNodeJs()) {
+        if (noXMLHttpRequest) {
             loadWithHttpRequest(url, responseType, method, data, headers, deferred, overrideMimeType);
             return;
         }

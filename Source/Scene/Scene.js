@@ -757,7 +757,7 @@ define([
             useOIT : false,
             useInvertClassification : false,
             usePostProcess : false,
-            usePostProcessSelectedFeatures : false
+            usePostProcessSelected : false
         };
 
         this._useWebVR = false;
@@ -1488,7 +1488,8 @@ define([
                Cartesian3.equalsEpsilon(camera0.direction, camera1.direction, epsilon) &&
                Cartesian3.equalsEpsilon(camera0.up, camera1.up, epsilon) &&
                Cartesian3.equalsEpsilon(camera0.right, camera1.right, epsilon) &&
-               Matrix4.equalsEpsilon(camera0.transform, camera1.transform, epsilon);
+               Matrix4.equalsEpsilon(camera0.transform, camera1.transform, epsilon) &&
+               camera0.frustum.equalsEpsilon(camera1.frustum, epsilon);
     }
 
     function updateDerivedCommands(scene, command) {
@@ -1524,10 +1525,6 @@ define([
                 derivedCommands.logDepth = undefined;
             }
 
-            if (scene.frameState.passes.pick && !defined(command.pickId)) {
-                return;
-            }
-
             if (shadowsEnabled && (command.receiveShadows || command.castShadows)) {
                 derivedCommands.shadows = ShadowMap.createDerivedCommands(shadowMaps, lightShadowMaps, command, shadowsDirty, context, derivedCommands.shadows);
                 if (useLogDepth) {
@@ -1552,6 +1549,10 @@ define([
                 } else {
                     derivedCommands.oit = oit.createDerivedCommands(command, context, derivedCommands.oit);
                 }
+            }
+
+            if (scene.frameState.passes.pick && !defined(command.pickId)) {
+                return;
             }
 
             derivedCommands.depth = DerivedCommand.createDepthOnlyDerivedCommand(scene, command, context, derivedCommands.depth);
@@ -2019,13 +2020,22 @@ define([
         var commandList = frameState.commandList = [];
         scene._debugVolume.update(frameState);
 
+        command = commandList[0];
+
+        var frustum = scene.camera.frustum;
+        var useLogDepth = scene._logDepthBuffer && !(frustum instanceof OrthographicFrustum || frustum instanceof OrthographicOffCenterFrustum);
+        if (useLogDepth) {
+            var logDepth = DerivedCommand.createLogDepthCommand(command, context);
+            command = logDepth.command;
+        }
+
         var framebuffer;
         if (defined(debugFramebuffer)) {
             framebuffer = passState.framebuffer;
             passState.framebuffer = debugFramebuffer;
         }
 
-        commandList[0].execute(context, passState);
+        command.execute(context, passState);
 
         if (defined(framebuffer)) {
             passState.framebuffer = framebuffer;
@@ -2086,19 +2096,21 @@ define([
     }
 
     function executeIdCommand(command, scene, context, passState) {
-        if (!defined(command.derivedCommands)) {
+        var derivedCommands = command.derivedCommands;
+        if (!defined(derivedCommands)) {
             return;
         }
 
-        if (scene._logDepthBuffer && defined(command.derivedCommands.logDepth)) {
-            command = command.derivedCommands.logDepth.command;
+        if (scene._logDepthBuffer && defined(derivedCommands.logDepth)) {
+            command = derivedCommands.logDepth.command;
         }
 
-        if (defined(command.derivedCommands.picking)) {
-            command = command.derivedCommands.picking.pickCommand;
+        derivedCommands = command.derivedCommands;
+        if (defined(derivedCommands.picking)) {
+            command = derivedCommands.picking.pickCommand;
             command.execute(context, passState);
-        } else if (defined(command.derivedCommands.depth)) {
-            command = command.derivedCommands.depth.depthOnlyCommand;
+        } else if (defined(derivedCommands.depth)) {
+            command = derivedCommands.depth.depthOnlyCommand;
             command.execute(context, passState);
         }
     }
@@ -2228,7 +2240,7 @@ define([
         var useDepthPlane = environmentState.useDepthPlane;
         var clearDepth = scene._depthClearCommand;
         var depthPlane = scene._depthPlane;
-        var usePostProcessSelectedFeatures = environmentState.usePostProcessSelectedFeatures;
+        var usePostProcessSelected = environmentState.usePostProcessSelected;
 
         var height2D = camera.position.z;
 
@@ -2457,7 +2469,7 @@ define([
                 pickDepth.executeCopyDepth(context, passState);
             }
 
-            if (picking || !usePostProcessSelectedFeatures) {
+            if (picking || !usePostProcessSelected) {
                 continue;
             }
 
@@ -2663,6 +2675,7 @@ define([
             viewport.height = context.drawingBufferHeight;
 
             var savedCamera = Camera.clone(camera, scene._cameraVR);
+            savedCamera.frustum = camera.frustum;
 
             var near = camera.frustum.near;
             var fo = near * defaultValue(scene.focalLength, 5.0);
@@ -3022,7 +3035,7 @@ define([
 
         var postProcess = scene.postProcessStages;
         var usePostProcess = environmentState.usePostProcess = !picking && (postProcess.length > 0 || postProcess.ambientOcclusion.enabled || postProcess.fxaa.enabled || postProcess.bloom.enabled);
-        environmentState.usePostProcessSelectedFeatures = false;
+        environmentState.usePostProcessSelected = false;
         if (usePostProcess) {
             scene._sceneFramebuffer.update(context, passState);
             scene._sceneFramebuffer.clear(context, passState, clearColor);
@@ -3034,7 +3047,7 @@ define([
             postProcess.clear(context);
 
             usePostProcess = environmentState.usePostProcess = postProcess.ready;
-            environmentState.usePostProcessSelectedFeatures = usePostProcess && postProcess.hasSelectedFeatures;
+            environmentState.usePostProcessSelected = usePostProcess && postProcess.hasSelected;
         }
 
         if (environmentState.isSunVisible && scene.sunBloom && !useWebVR) {
@@ -3161,13 +3174,17 @@ define([
 
     function checkForCameraUpdates(scene) {
         var camera = scene._camera;
-        if (!cameraEqual(camera, scene._cameraClone, CesiumMath.EPSILON15)) {
+        var cameraClone = scene._cameraClone;
+
+        scene._frustumChanged = !camera.frustum.equals(cameraClone.frustum);
+
+        if (!cameraEqual(camera, cameraClone, CesiumMath.EPSILON15)) {
             if (!scene._cameraStartFired) {
                 camera.moveStart.raiseEvent();
                 scene._cameraStartFired = true;
             }
             scene._cameraMovedTime = getTimestamp();
-            Camera.clone(camera, scene._cameraClone);
+            Camera.clone(camera, cameraClone);
 
             return true;
         }
@@ -3220,7 +3237,7 @@ define([
         var frameNumber = CesiumMath.incrementWrap(frameState.frameNumber, 15000000.0, 1.0);
         updateFrameState(scene, frameNumber, time);
         frameState.passes.render = true;
-        frameState.passes.postProcess = scene.postProcessStages.hasSelectedFeatures;
+        frameState.passes.postProcess = scene.postProcessStages.hasSelected;
 
         var backgroundColor = defaultValue(scene.backgroundColor, Color.BLACK);
         frameState.backgroundColor = backgroundColor;
@@ -3299,10 +3316,8 @@ define([
         tryAndCatchError(this, time, update);
         this._postUpdate.raiseEvent(this, time);
 
-        this._frustumChanged = !this._camera.frustum.equals(this._cameraClone.frustum);
-
         var cameraChanged = checkForCameraUpdates(this);
-        var shouldRender = !this.requestRenderMode || this._renderRequested || cameraChanged || this._frustumChanged || this._logDepthBufferDirty || (this.mode === SceneMode.MORPHING);
+        var shouldRender = !this.requestRenderMode || this._renderRequested || cameraChanged || this._logDepthBufferDirty || (this.mode === SceneMode.MORPHING);
         if (!shouldRender && defined(this.maximumRenderTimeChange) && defined(this._lastRenderTime)) {
             var difference = Math.abs(JulianDate.secondsDifference(this._lastRenderTime, time));
             shouldRender = shouldRender || difference > this.maximumRenderTimeChange;

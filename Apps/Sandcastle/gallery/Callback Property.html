@@ -68,7 +68,7 @@ function getLength(time, result) {
 
     geodesic.setEndPoints(startCartographic, endCartographic);
     var lengthInMeters = Math.round(geodesic.surfaceDistance);
-    return (lengthInMeters / 1000).toFixed(1) + " km";
+    return (lengthInMeters / 1000).toFixed(1) + ' km';
 }
 
 function getMidpoint(time, result) {
@@ -97,10 +97,10 @@ viewer.trackedEntity = label;
 //Sandcastle_End
     Sandcastle.finishedLoading();
 }
-if (typeof Cesium !== "undefined") {
+if (typeof Cesium !== 'undefined') {
     startup(Cesium);
-} else if (typeof require === "function") {
-    require(["Cesium"], startup);
+} else if (typeof require === 'function') {
+    require(['Cesium'], startup);
 }
 </script>
 </body>

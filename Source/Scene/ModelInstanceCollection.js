@@ -152,6 +152,7 @@ define([
         this._asynchronous = options.asynchronous;
         this._incrementallyLoadTextures = options.incrementallyLoadTextures;
         this._upAxis = options.upAxis; // Undocumented option
+        this._forwardAxis = options.forwardAxis; // Undocumented option
 
         this.shadows = defaultValue(options.shadows, ShadowMode.ENABLED);
         this._shadows = this.shadows;
@@ -569,6 +570,7 @@ define([
             allowPicking : allowPicking,
             incrementallyLoadTextures : collection._incrementallyLoadTextures,
             upAxis : collection._upAxis,
+            forwardAxis : collection._forwardAxis,
             precreatedAttributes : undefined,
             vertexShaderLoaded : undefined,
             fragmentShaderLoaded : undefined,

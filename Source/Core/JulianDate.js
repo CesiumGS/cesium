@@ -657,22 +657,39 @@ define([
         //>>includeEnd('debug');
 
         var gDate = JulianDate.toGregorianDate(julianDate, gregorianDateScratch);
+        var year = gDate.year;
+        var month = gDate.month;
+        var day = gDate.day;
+        var hour = gDate.hour;
+        var minute = gDate.minute;
+        var second = gDate.second;
+        var millisecond = gDate.millisecond;
+
+        // special case - Iso8601.MAXIMUM_VALUE produces a string which we can't parse unless we adjust.
+        // 10000-01-01T00:00:00 is the same instant as 9999-12-31T24:00:00
+        if (year === 10000 && month === 1 && day === 1 && hour === 0 && minute === 0 && second === 0 && millisecond === 0) {
+            year = 9999;
+            month = 12;
+            day = 31;
+            hour = 24;
+        }
+
         var millisecondStr;
 
-        if (!defined(precision) && gDate.millisecond !== 0) {
+        if (!defined(precision) && millisecond !== 0) {
             //Forces milliseconds into a number with at least 3 digits to whatever the default toString() precision is.
-            millisecondStr = (gDate.millisecond * 0.01).toString().replace('.', '');
-            return sprintf('%04d-%02d-%02dT%02d:%02d:%02d.%sZ', gDate.year, gDate.month, gDate.day, gDate.hour, gDate.minute, gDate.second, millisecondStr);
+            millisecondStr = (millisecond * 0.01).toString().replace('.', '');
+            return sprintf('%04d-%02d-%02dT%02d:%02d:%02d.%sZ', year, month, day, hour, minute, second, millisecondStr);
         }
 
         //Precision is either 0 or milliseconds is 0 with undefined precision, in either case, leave off milliseconds entirely
         if (!defined(precision) || precision === 0) {
-            return sprintf('%04d-%02d-%02dT%02d:%02d:%02dZ', gDate.year, gDate.month, gDate.day, gDate.hour, gDate.minute, gDate.second);
+            return sprintf('%04d-%02d-%02dT%02d:%02d:%02dZ', year, month, day, hour, minute, second);
         }
 
         //Forces milliseconds into a number with at least 3 digits to whatever the specified precision is.
-        millisecondStr = (gDate.millisecond * 0.01).toFixed(precision).replace('.', '').slice(0, precision);
-        return sprintf('%04d-%02d-%02dT%02d:%02d:%02d.%sZ', gDate.year, gDate.month, gDate.day, gDate.hour, gDate.minute, gDate.second, millisecondStr);
+        millisecondStr = (millisecond * 0.01).toFixed(precision).replace('.', '').slice(0, precision);
+        return sprintf('%04d-%02d-%02dT%02d:%02d:%02d.%sZ', year, month, day, hour, minute, second, millisecondStr);
     };
 
     /**

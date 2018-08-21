@@ -31,7 +31,7 @@
         "geometricError": 70,
         "refine": "ADD",
         "content": {
-          "url": "external.b3dm"
+          "uri": "external.b3dm"
         },
         "transform": [
           0.9686356343768792,
@@ -66,7 +66,7 @@
         "geometricError": 70,
         "refine": "ADD",
         "content": {
-          "url": "external.i3dm"
+          "uri": "external.i3dm"
         },
         "transform": [
           0.9686366521446808,
@@ -101,7 +101,7 @@
         "geometricError": 70,
         "refine": "ADD",
         "content": {
-          "url": "embed.i3dm"
+          "uri": "embed.i3dm"
         },
         "transform": [
           0.9686376698962317,

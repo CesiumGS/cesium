@@ -77,7 +77,7 @@ scene.camera.setView({
 });
 
 // Load the NYC buildings tileset.
-var tileset = new Cesium.Cesium3DTileset({ url: Cesium.IonResource.fromAssetId(4693) });
+var tileset = new Cesium.Cesium3DTileset({ url: Cesium.IonResource.fromAssetId(5741) });
 scene.primitives.add(tileset);
 tileset.style = new Cesium.Cesium3DTileStyle({
     meta: {
@@ -194,10 +194,10 @@ function offsetFromHeadingPitchRange(heading, pitch, range) {
 //Sandcastle_End
 Sandcastle.finishedLoading();
 }
-if (typeof Cesium !== "undefined") {
+if (typeof Cesium !== 'undefined') {
     startup(Cesium);
-} else if (typeof require === "function") {
-    require(["Cesium"], startup);
+} else if (typeof require === 'function') {
+    require(['Cesium'], startup);
 }
 </script>
 </body>
