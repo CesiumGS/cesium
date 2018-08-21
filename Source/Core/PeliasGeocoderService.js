@@ -1,4 +1,5 @@
 define([
+    './Cartesian3',
     './Check',
     './defined',
     './defineProperties',
@@ -6,6 +7,7 @@ define([
     './Rectangle',
     './Resource'
 ], function (
+    Cartesian3,
     Check,
     defined,
     defineProperties,
@@ -77,24 +79,20 @@ define([
         return resource.fetchJson()
             .then(function (results) {
                 return results.features.map(function (resultObject) {
+                    var destination;
                     var bboxDegrees = resultObject.bbox;
 
-                    // Pelias does not always provide bounding information
-                    // so just expand the location slightly.
-                    if (!defined(bboxDegrees)) {
+                    if (defined(bboxDegrees)) {
+                        destination = Rectangle.fromDegrees(bboxDegrees[0], bboxDegrees[1], bboxDegrees[2], bboxDegrees[3]);
+                    } else {
                         var lon = resultObject.geometry.coordinates[0];
                         var lat = resultObject.geometry.coordinates[1];
-                        bboxDegrees = [
-                            lon - 0.001,
-                            lat - 0.001,
-                            lon + 0.001,
-                            lat + 0.001
-                        ];
+                        destination = Cartesian3.fromDegrees(lon, lat);
                     }
 
                     return {
                         displayName: resultObject.properties.label,
-                        destination: Rectangle.fromDegrees(bboxDegrees[0], bboxDegrees[1], bboxDegrees[2], bboxDegrees[3])
+                        destination: destination
                     };
                 });
             });

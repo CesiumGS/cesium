@@ -10,6 +10,7 @@ defineSuite([
         'Core/TimeInterval',
         'Core/TimeIntervalCollection',
         'DataSources/BoundingSphereState',
+        'DataSources/ColorMaterialProperty',
         'DataSources/ConstantProperty',
         'DataSources/Entity',
         'DataSources/PolylineOutlineMaterialProperty',
@@ -32,6 +33,7 @@ defineSuite([
         TimeInterval,
         TimeIntervalCollection,
         BoundingSphereState,
+        ColorMaterialProperty,
         ConstantProperty,
         Entity,
         PolylineOutlineMaterialProperty,
@@ -119,6 +121,52 @@ defineSuite([
                 expect(scene.groundPrimitives.length).toEqual(2);
                 batch.removeAllPrimitives();
             });
+        });
+    });
+
+    it('updates with sampled color out of range', function() {
+        if (!GroundPolylinePrimitive.isSupported(scene)) {
+            // Don't fail if GroundPolylinePrimitive is not supported
+            return;
+        }
+
+        var validTime = JulianDate.fromIso8601('2018-02-14T04:10:00+1100');
+        var color = new TimeIntervalCollectionProperty();
+        color.intervals.addInterval(TimeInterval.fromIso8601({
+            iso8601: '2018-02-14T04:00:00+1100/2018-02-14T04:15:00+1100',
+            data: Color.RED
+        }));
+        var polyline = createGroundPolyline();
+        polyline.material = new ColorMaterialProperty(color);
+        var entity = new Entity({
+            availability: new TimeIntervalCollection([TimeInterval.fromIso8601({iso8601: '2018-02-14T04:00:00+1100/2018-02-14T04:30:00+1100'})]),
+            polyline: polyline
+        });
+
+        var batch = new StaticGroundPolylinePerMaterialBatch(scene.groundPrimitives);
+
+        var updater = new PolylineGeometryUpdater(entity, scene);
+        batch.add(validTime, updater);
+
+        return pollToPromise(function() {
+            scene.initializeFrame();
+            var isUpdated = batch.update(validTime);
+            scene.render(validTime);
+            return isUpdated;
+        }).then(function() {
+            expect(scene.groundPrimitives.length).toEqual(1);
+            var primitive = scene.groundPrimitives.get(0);
+            var attributes = primitive.getGeometryInstanceAttributes(entity);
+            expect(attributes.color).toEqual([255, 0, 0, 255]);
+
+            batch.update(time);
+            scene.render(time);
+
+            primitive = scene.groundPrimitives.get(0);
+            attributes = primitive.getGeometryInstanceAttributes(entity);
+            expect(attributes.color).toEqual([255, 255, 255, 255]);
+
+            batch.removeAllPrimitives();
         });
     });
 

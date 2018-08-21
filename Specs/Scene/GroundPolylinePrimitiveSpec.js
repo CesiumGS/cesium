@@ -688,6 +688,7 @@ defineSuite([
         verifyGroundPolylinePrimitiveRender(groundPolylinePrimitive, polylineColor);
 
         expect(scene).toPickAndCall(function(result) {
+            expect(result.primitive).toEqual(groundPolylinePrimitive);
             expect(result.id).toEqual('polyline on terrain');
         });
     });
@@ -707,6 +708,7 @@ defineSuite([
         verifyGroundPolylinePrimitiveRender(groundPolylinePrimitive, polylineColor);
 
         expect(scene).toPickAndCall(function(result) {
+            expect(result.primitive).toEqual(groundPolylinePrimitive);
             expect(result.id).toEqual('polyline on terrain');
         });
     });
@@ -726,6 +728,7 @@ defineSuite([
         verifyGroundPolylinePrimitiveRender(groundPolylinePrimitive, polylineColor);
 
         expect(scene).toPickAndCall(function(result) {
+            expect(result.primitive).toEqual(groundPolylinePrimitive);
             expect(result.id).toEqual('polyline on terrain');
         });
     });
@@ -764,6 +767,7 @@ defineSuite([
         verifyGroundPolylinePrimitiveRender(groundPolylinePrimitive, polylineColor);
 
         expect(scene).toPickAndCall(function(result) {
+            expect(result.primitive).toEqual(groundPolylinePrimitive);
             expect(result.id).toEqual('big polyline on terrain');
         });
         scene.completeMorph();

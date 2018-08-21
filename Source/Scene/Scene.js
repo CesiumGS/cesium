@@ -1498,7 +1498,7 @@ define([
         var shadowsEnabled = frameState.shadowHints.shadowsEnabled;
         var shadowMaps = frameState.shadowHints.shadowMaps;
         var lightShadowMaps = frameState.shadowHints.lightShadowMaps;
-        var lightShadowsEnabled = shadowsEnabled && (lightShadowMaps.length > 0);
+        var lightShadowsEnabled = frameState.shadowHints.lightShadowsEnabled;
 
         // Update derived commands when any shadow maps become dirty
         var shadowsDirty = false;
@@ -2082,10 +2082,7 @@ define([
             return;
         }
 
-        var shadowsEnabled = scene.frameState.shadowHints.shadowsEnabled;
-        var lightShadowsEnabled = shadowsEnabled && (scene.frameState.shadowHints.lightShadowMaps.length > 0);
-
-        if (lightShadowsEnabled && command.receiveShadows && defined(command.derivedCommands.shadows)) {
+        if (frameState.shadowHints.lightShadowsEnabled && command.receiveShadows && defined(command.derivedCommands.shadows)) {
             // If the command receives shadows, execute the derived shadows command.
             // Some commands, such as OIT derived commands, do not have derived shadow commands themselves
             // and instead shadowing is built-in. In this case execute the command regularly below.
@@ -2940,6 +2937,8 @@ define([
             frameState.shadowHints.shadowsEnabled = shadowsEnabled;
         }
 
+        frameState.shadowHints.lightShadowsEnabled = false;
+
         if (!shadowsEnabled) {
             return;
         }
@@ -2964,6 +2963,7 @@ define([
 
             if (shadowMap.fromLightSource) {
                 frameState.shadowHints.lightShadowMaps.push(shadowMap);
+                frameState.shadowHints.lightShadowsEnabled = true;
             }
 
             if (shadowMap.dirty) {
@@ -3751,14 +3751,19 @@ define([
      *
      * @param {Cartesian2} windowPosition Window coordinates to perform picking on.
      * @param {Number} [limit] If supplied, stop drilling after collecting this many picks.
+     * @param {Number} [width=3] Width of the pick rectangle.
+     * @param {Number} [height=3] Height of the pick rectangle.
      * @returns {Object[]} Array of objects, each containing 1 picked primitives.
      *
      * @exception {DeveloperError} windowPosition is undefined.
      *
      * @example
      * var pickedObjects = scene.drillPick(new Cesium.Cartesian2(100.0, 200.0));
+     *
+     * @see Scene#pick
+     *
      */
-    Scene.prototype.drillPick = function(windowPosition, limit) {
+    Scene.prototype.drillPick = function(windowPosition, limit, width, height) {
         // PERFORMANCE_IDEA: This function calls each primitive's update for each pass. Instead
         // we could update the primitive once, and then just execute their commands for each pass,
         // and cull commands for picked primitives.  e.g., base on the command's owner.
@@ -3778,7 +3783,7 @@ define([
             limit = Number.MAX_VALUE;
         }
 
-        var pickedResult = this.pick(windowPosition);
+        var pickedResult = this.pick(windowPosition, width, height);
         while (defined(pickedResult) && defined(pickedResult.primitive)) {
             result.push(pickedResult);
             if (0 >= --limit) {
@@ -3806,7 +3811,7 @@ define([
                 pickedPrimitives.push(primitive);
             }
 
-            pickedResult = this.pick(windowPosition);
+            pickedResult = this.pick(windowPosition, width, height);
         }
 
         // unhide everything we hid while drill picking

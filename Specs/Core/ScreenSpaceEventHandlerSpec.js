@@ -20,7 +20,7 @@ defineSuite([
         DomEventSimulator) {
     'use strict';
 
-    var usePointerEvents = FeatureDetection.supportsPointerEvents();
+    var usePointerEvents;
     var element;
     var handler;
 
@@ -62,6 +62,16 @@ defineSuite([
         event.stopPropagation();
         event.preventDefault();
     }
+
+    beforeAll(function(){
+        usePointerEvents = FeatureDetection.supportsPointerEvents();
+
+        //See https://github.com/AnalyticalGraphicsInc/cesium/issues/6539
+        if (FeatureDetection.isFirefox()) {
+            usePointerEvents = false;
+            spyOn(FeatureDetection, 'supportsPointerEvents').and.returnValue(false);
+        }
+    });
 
     beforeEach(function() {
         // ignore events that bubble up to the document.

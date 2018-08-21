@@ -678,20 +678,22 @@ defineSuite([
 
     it('frames not loaded in sequential updates do not impact average load time', function() {
         var pointCloud = createTimeDynamicPointCloud();
-        var initialAverageLoadTime = pointCloud._getAverageLoadTime();
+        expect(pointCloud._runningAverage).toBe(0.0);
         return loadFrame(pointCloud).then(function() {
-            var firstFrameLoadTime = pointCloud._getAverageLoadTime();
-            expect(firstFrameLoadTime).not.toBe(initialAverageLoadTime);
-            expect(firstFrameLoadTime).toBeGreaterThan(0.0);
+            expect(pointCloud._frames[0].sequential).toBe(true);
+            expect(pointCloud._runningLength).toBe(1);
+            expect(pointCloud._runningAverage).toBeGreaterThan(0.0);
             goToFrame(2); // Start loading frame 2, but don't finish loading it now
             scene.renderForSpecs();
             return loadFrame(pointCloud, 1).then(function() {
-                var averageLoadTime = pointCloud._getAverageLoadTime();
-                expect(averageLoadTime).not.toBe(firstFrameLoadTime);
-                expect(averageLoadTime).toBeGreaterThan(0.0);
+                var twoFrameAverage = pointCloud._runningAverage;
+                expect(pointCloud._frames[1].sequential).toBe(true);
+                expect(pointCloud._runningLength).toBe(2);
+                expect(pointCloud._runningAverage).toBeGreaterThan(0.0);
                 return loadFrame(pointCloud, 2).then(function() {
                     expect(pointCloud._frames[2].sequential).toBe(false);
-                    expect(pointCloud._getAverageLoadTime()).toBe(averageLoadTime);
+                    expect(pointCloud._runningLength).toBe(2); // No update
+                    expect(pointCloud._runningAverage).toBe(twoFrameAverage); // No update
                 });
             });
         });

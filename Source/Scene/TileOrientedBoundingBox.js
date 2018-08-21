@@ -134,6 +134,7 @@ define([
         var modelMatrix = Matrix4.fromRotationTranslation(this.boundingVolume.halfAxes, this.boundingVolume.center);
         var instance = new GeometryInstance({
             geometry : geometry,
+            id : 'outline',
             modelMatrix : modelMatrix,
             attributes : {
                 color : ColorGeometryInstanceAttribute.fromColor(color)

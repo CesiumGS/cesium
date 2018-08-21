@@ -323,6 +323,7 @@ defineSuite([
         var scene;
         beforeEach(function() {
             scene = createScene();
+            scene.frameState.passes.render = true;
         });
 
         afterEach(function() {

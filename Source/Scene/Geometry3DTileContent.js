@@ -403,10 +403,10 @@ define([
         }
     };
 
-    Geometry3DTileContent.prototype.applyStyle = function(frameState, style) {
+    Geometry3DTileContent.prototype.applyStyle = function(style) {
         createFeatures(this);
         if (defined(this._geometries)) {
-            this._geometries.applyStyle(frameState, style, this._features);
+            this._geometries.applyStyle(style, this._features);
         }
     };
 

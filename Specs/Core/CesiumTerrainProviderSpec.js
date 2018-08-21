@@ -461,6 +461,20 @@ defineSuite([
         });
     });
 
+    it('do not add blank attribution if layer.json does not have one', function() {
+        returnTileJson('Data/CesiumTerrainTileJson/WaterMask.tile.json');
+
+        var provider = new CesiumTerrainProvider({
+            url : 'made/up/url'
+        });
+
+        return pollToPromise(function() {
+            return provider.ready;
+        }).then(function() {
+            expect(provider._tileCredit).toBeUndefined();
+        });
+    });
+
     describe('requestTileGeometry', function() {
 
         it('uses multiple urls specified in layer.json', function() {

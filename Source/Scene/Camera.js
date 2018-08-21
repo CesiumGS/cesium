@@ -1013,7 +1013,7 @@ define([
             mousePosition.y = scene.drawingBufferHeight / 2.0;
 
             var ray = this.getPickRay(mousePosition, pickGlobeScratchRay);
-            rayIntersection = globe.pick(ray, scene, scratchRayIntersection);
+            rayIntersection = globe.pickWorldCoordinates(ray, scene, scratchRayIntersection);
 
             if (scene.pickPositionSupported) {
                 depthIntersection = scene.pickPositionWorldCoordinates(mousePosition, scratchDepthIntersection);
@@ -2414,7 +2414,7 @@ define([
     function pickMap2D(camera, windowPosition, projection, result) {
         var ray = camera.getPickRay(windowPosition, pickEllipsoid2DRay);
         var position = ray.origin;
-        position.z = 0.0;
+        position = Cartesian3.fromElements(position.y, position.z, 0.0, position);
         var cart = projection.unproject(position);
 
         if (cart.latitude < -CesiumMath.PI_OVER_TWO || cart.latitude > CesiumMath.PI_OVER_TWO) {
@@ -2536,7 +2536,7 @@ define([
 
         Cartesian3.clone(camera.directionWC, result.direction);
 
-        if (camera._mode === SceneMode.COLUMBUS_VIEW) {
+        if (camera._mode === SceneMode.COLUMBUS_VIEW || camera._mode === SceneMode.SCENE2D) {
             Cartesian3.fromElements(result.origin.z, result.origin.x, result.origin.y, result.origin);
         }
 
