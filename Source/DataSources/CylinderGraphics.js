@@ -88,7 +88,7 @@ define([
 
         /**
          * Gets or sets the Property specifying the {@link HeightReference}.
-         * @memberof EllipsoidGraphics.prototype
+         * @memberof CylinderGraphics.prototype
          * @type {Property}
          * @default HeightReference.NONE
          */

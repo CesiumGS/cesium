@@ -81,9 +81,7 @@ function addGeometry(i, j) {
             position: Cesium.Cartesian3.fromDegrees(west, north, 0.0),
             box : {
                 dimensions : new Cesium.Cartesian3(40.0, 30.0, 50.0),
-                material : Cesium.Color.fromRandom({alpha : 1}),
-                outline : true,
-                outlineColor : Cesium.Color.BLACK,
+                material : Cesium.Color.fromRandom({alpha : 1.0}),
                 heightReference: Cesium.HeightReference.CLAMP_TO_GROUND
             }
         });
@@ -94,9 +92,7 @@ function addGeometry(i, j) {
                 length :50.0,
                 topRadius : 20.0,
                 bottomRadius : 20.0,
-                material : Cesium.Color.fromRandom({alpha : 1}),
-                outline : true,
-                outlineColor : Cesium.Color.BLACK,
+                material : Cesium.Color.fromRandom({alpha : 1.0}),
                 heightReference: Cesium.HeightReference.CLAMP_TO_GROUND
             }
         });
@@ -105,9 +101,7 @@ function addGeometry(i, j) {
             position: Cesium.Cartesian3.fromDegrees(west, north, 0.0),
             ellipsoid : {
                 radii : new Cesium.Cartesian3(20.0, 15.0, 25.0),
-                material : Cesium.Color.fromRandom({alpha : 1}),
-                outline : true,
-                outlineColor : Cesium.Color.BLACK,
+                material : Cesium.Color.fromRandom({alpha : 1.0}),
                 heightReference: Cesium.HeightReference.CLAMP_TO_GROUND
             }
         });
