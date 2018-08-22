@@ -1,5 +1,7 @@
 define([
         '../Core/AssociativeArray',
+        '../Core/Color',
+        '../Core/ColorGeometryInstanceAttribute',
         '../Core/defined',
         '../Core/DistanceDisplayCondition',
         '../Core/DistanceDisplayConditionGeometryInstanceAttribute',
@@ -13,6 +15,8 @@ define([
         './Property'
     ], function(
         AssociativeArray,
+        Color,
+        ColorGeometryInstanceAttribute,
         defined,
         DistanceDisplayCondition,
         DistanceDisplayConditionGeometryInstanceAttribute,
@@ -26,6 +30,7 @@ define([
         Property) {
     'use strict';
 
+    var scratchColor = new Color();
     var distanceDisplayConditionScratch = new DistanceDisplayCondition();
     var defaultDistanceDisplayCondition = new DistanceDisplayCondition();
 
@@ -193,6 +198,15 @@ define([
                 if (!defined(attributes)) {
                     attributes = primitive.getGeometryInstanceAttributes(instance.id);
                     this.attributes.set(instance.id.id, attributes);
+                }
+
+                if (!updater.fillMaterialProperty.isConstant) {
+                    var colorProperty = updater.fillMaterialProperty.color;
+                    var resultColor = Property.getValueOrDefault(colorProperty, time, Color.WHITE, scratchColor);
+                    if (!Color.equals(attributes._lastColor, resultColor)) {
+                        attributes._lastColor = Color.clone(resultColor, attributes._lastColor);
+                        attributes.color = ColorGeometryInstanceAttribute.toValue(resultColor, attributes.color);
+                    }
                 }
 
                 var show = entity.isShowing && (updater.hasConstantFill || updater.isFilled(time));

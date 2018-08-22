@@ -61,8 +61,7 @@ define([
 
     /**
      * A {@link TerrainProvider} that accesses terrain data in a Cesium terrain format.
-     * The format is described on the
-     * {@link https://github.com/AnalyticalGraphicsInc/cesium/wiki/Cesium-Terrain-Server|Cesium wiki}.
+     * The supported formats are described on the {@link https://cesiumjs.org/data-and-assets/terrain/formats/|Terrain Formats page}.
      *
      * @alias CesiumTerrainProvider
      * @constructor
@@ -81,7 +80,7 @@ define([
      *     terrainProvider : new Cesium.CesiumTerrainProvider({
      *         url : Cesium.IonResource.fromAssetId(3956),
      *         requestVertexNormals : true
-     *     });
+     *     })
      * });
      *
      * @see createWorldTerrain
@@ -320,12 +319,14 @@ define([
                         }
                     }
 
-                    var layerJsonCredit = new Credit(attribution);
+                    if (attribution.length > 0) {
+                        var layerJsonCredit = new Credit(attribution);
 
-                    if (defined(that._tileCredits)) {
-                        that._tileCredits.push(layerJsonCredit);
-                    } else {
-                        that._tileCredits = [layerJsonCredit];
+                        if (defined(that._tileCredits)) {
+                            that._tileCredits.push(layerJsonCredit);
+                        } else {
+                            that._tileCredits = [layerJsonCredit];
+                        }
                     }
 
                     that._ready = true;
