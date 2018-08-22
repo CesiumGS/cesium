@@ -1,6 +1,7 @@
 {
   "asset": {
-    "version": "1.0"
+    "version": "1.0",
+    "tilesetVersion": "1.2.3"
   },
   "properties": {
     "id": {

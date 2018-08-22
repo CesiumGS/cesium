@@ -1253,11 +1253,14 @@ define([
 
         var statistics = this._statistics;
 
-        // Append the tileset version to the resource
-        var versionQuery = {
-            v : defaultValue(asset.tilesetVersion, '0.0')
-        };
-        this._basePath += '?v=' + versionQuery.v;
+        var versionQuery = {};
+        if (defined(asset.tilesetVersion)) {
+            // Append the tileset version to the resource
+            versionQuery.v = asset.tilesetVersion;
+            this._basePath += '?v=' + asset.tilesetVersion;
+        }
+        // Always set query parameters to make sure the tilesetVersion matches the current tileset
+        // Otherwise a child tileset might use the tilesetVersion from the parent
         resource.setQueryParameters(versionQuery);
 
         // A tileset JSON file referenced from a tile may exist in a different directory than the root tileset.
