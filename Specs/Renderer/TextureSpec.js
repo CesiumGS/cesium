@@ -188,7 +188,7 @@ defineSuite([
     });
 
     it('draws the expected floating-point texture color', function() {
-        if (context.floatingPointTexture) {
+        if (!context.floatingPointTexture) {
             return;
         }
 
