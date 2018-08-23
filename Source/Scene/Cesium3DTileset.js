@@ -1253,12 +1253,11 @@ define([
 
         var statistics = this._statistics;
 
-        var versionQuery = {};
-        if (defined(asset.tilesetVersion)) {
+        var tilesetVersion = asset.tilesetVersion;
+        if (defined(tilesetVersion)) {
             // Append the tileset version to the resource
-            versionQuery.v = asset.tilesetVersion;
-            this._basePath += '?v=' + asset.tilesetVersion;
-            resource.setQueryParameters(versionQuery);
+            this._basePath += '?v=' + tilesetVersion;
+            resource.setQueryParameters({ v: tilesetVersion });
         } else {
             delete resource.queryParameters.v;
         }
