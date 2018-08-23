@@ -1,5 +1,6 @@
 define([
         '../Core/Cartesian3',
+        '../Core/Cartographic',
         '../Core/Check',
         '../Core/createGuid',
         '../Core/defaultValue',
@@ -7,10 +8,12 @@ define([
         '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/Event',
+        '../Core/Math',
         '../Core/Matrix3',
         '../Core/Matrix4',
         '../Core/Quaternion',
         '../Core/Transforms',
+        '../Scene/HeightReference',
         '../Scene/GroundPrimitive',
         '../Scene/GroundPolylinePrimitive',
         './BillboardGraphics',
@@ -36,6 +39,7 @@ define([
         './WallGraphics'
     ], function(
         Cartesian3,
+        Cartographic,
         Check,
         createGuid,
         defaultValue,
@@ -43,10 +47,12 @@ define([
         defineProperties,
         DeveloperError,
         Event,
+        CesiumMath,
         Matrix3,
         Matrix4,
         Quaternion,
         Transforms,
+        HeightReference,
         GroundPrimitive,
         GroundPolylinePrimitive,
         BillboardGraphics,
@@ -71,6 +77,8 @@ define([
         RectangleGraphics,
         WallGraphics) {
     'use strict';
+
+    var cartoScratch = new Cartographic();
 
     function createConstantPositionProperty(value) {
         return new ConstantPositionProperty(value);
@@ -608,11 +616,44 @@ define([
      * @returns {Matrix4} The modified result parameter or a new Matrix4 instance if one was not provided. Result is undefined if position or orientation are undefined.
      */
     Entity.prototype.computeModelMatrix = function(time, result) {
+        //>>includeStart('debug', pragmas.debug);
         Check.typeOf.object('time', time);
+        //>>includeEnd('debug');
         var position = Property.getValueOrUndefined(this._position, time, positionScratch);
         if (!defined(position)) {
             return undefined;
         }
+
+        var orientation = Property.getValueOrUndefined(this._orientation, time, orientationScratch);
+        if (!defined(orientation)) {
+            result = Transforms.eastNorthUpToFixedFrame(position, undefined, result);
+        } else {
+            result = Matrix4.fromRotationTranslation(Matrix3.fromQuaternion(orientation, matrix3Scratch), position, result);
+        }
+        return result;
+    };
+
+    /**
+     * @private
+     */
+    Entity.prototype.computeModelMatrixForHeightReference = function(time, heightReferenceProperty, heightOffset, ellipsoid, result) {
+        //>>includeStart('debug', pragmas.debug);
+        Check.typeOf.object('time', time);
+        //>>includeEnd('debug');
+        var heightReference = Property.getValueOrDefault(heightReferenceProperty, time, HeightReference.NONE);
+        var position = Property.getValueOrUndefined(this._position, time, positionScratch);
+        if (heightReference === HeightReference.NONE || !defined(position) || Cartesian3.equalsEpsilon(position, Cartesian3.ZERO, CesiumMath.EPSILON8)) {
+            return this.computeModelMatrix(time, result);
+        }
+
+        var carto = ellipsoid.cartesianToCartographic(position, cartoScratch);
+        if (heightReference === HeightReference.CLAMP_TO_GROUND) {
+            carto.height = heightOffset;
+        } else {
+            carto.height += heightOffset;
+        }
+        position = ellipsoid.cartographicToCartesian(carto, position);
+
         var orientation = Property.getValueOrUndefined(this._orientation, time, orientationScratch);
         if (!defined(orientation)) {
             result = Transforms.eastNorthUpToFixedFrame(position, undefined, result);

@@ -32,7 +32,7 @@ define([
     /**
      * @private
      */
-    function TerrainOffsetProperty(scene, heightReferenceProperty, extrudedHeightReferenceProperty, positionProperty) {
+    function TerrainOffsetProperty(scene, positionProperty, heightReferenceProperty, extrudedHeightReferenceProperty) {
         //>>includeStart('debug', pragmas.debug);
         Check.defined('scene', scene);
         Check.defined('positionProperty', positionProperty);
