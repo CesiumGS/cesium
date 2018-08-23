@@ -33,6 +33,7 @@ Change Log
 * Fixed crash when rendering translucent objects when all shadow maps in the scene set `fromLightSource` to false. [#6883](https://github.com/AnalyticalGraphicsInc/cesium/pull/6883)
 * Fixed night shading in 2D and Columbus view. [#4122](https://github.com/AnalyticalGraphicsInc/cesium/issues/4122)
 * Fixed a crash when setting show to `false` on a polyline clamped to the ground. [#6912](https://github.com/AnalyticalGraphicsInc/cesium/issues/6912)
+* Fixed a bug where `Cesium3DTileset` wasn't using the correct tilesetVersion [#6933](https://github.com/AnalyticalGraphicsInc/cesium/pull/6933)
 * Fixed crash that happened when calling `scene.pick` after setting a new terrain provider [#6918](https://github.com/AnalyticalGraphicsInc/cesium/pull/6918)
 * Fixed an issue that caused the browser to hang when using `drillPick` on a polyline clamped to the ground. [6907](https://github.com/AnalyticalGraphicsInc/cesium/issues/6907)
 * Fixed an issue where color wasn't updated propertly for polylines clamped to ground [#6927](https://github.com/AnalyticalGraphicsInc/cesium/pull/6927)

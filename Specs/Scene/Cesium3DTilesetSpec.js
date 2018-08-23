@@ -1289,9 +1289,8 @@ defineSuite([
 
             return tileset._root.contentReadyPromise;
         }).then(function() {
-            //Make sure tileset2.json was requested with query parameters and version
-            var queryParamsWithVersion = 'v=0.0&' + queryParams;
-            expectedUrl = getAbsoluteUri('Data/Cesium3DTiles/Tilesets/TilesetOfTilesets/tileset2.json?' + queryParamsWithVersion);
+            //Make sure tileset2.json was requested with query parameters and does not use parent tilesetVersion
+            expectedUrl = getAbsoluteUri('Data/Cesium3DTiles/Tilesets/TilesetOfTilesets/tileset2.json?v=1.2.3&' + queryParams);
             expect(Resource._Implementations.loadWithXhr.calls.argsFor(0)[0]).toEqual(expectedUrl);
         });
     });

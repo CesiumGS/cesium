@@ -1253,13 +1253,13 @@ define([
 
         var statistics = this._statistics;
 
-        // Append the tileset version to the resource
-        if (!defined(resource.queryParameters.v)) {
-            var versionQuery = {
-                v : defaultValue(asset.tilesetVersion, '0.0')
-            };
-            this._basePath += '?v=' + versionQuery.v;
-            resource.setQueryParameters(versionQuery);
+        var tilesetVersion = asset.tilesetVersion;
+        if (defined(tilesetVersion)) {
+            // Append the tileset version to the resource
+            this._basePath += '?v=' + tilesetVersion;
+            resource.setQueryParameters({ v: tilesetVersion });
+        } else {
+            delete resource.queryParameters.v;
         }
 
         // A tileset JSON file referenced from a tile may exist in a different directory than the root tileset.
