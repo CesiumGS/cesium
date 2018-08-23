@@ -1258,10 +1258,10 @@ define([
             // Append the tileset version to the resource
             versionQuery.v = asset.tilesetVersion;
             this._basePath += '?v=' + asset.tilesetVersion;
+            resource.setQueryParameters(versionQuery);
+        } else {
+            delete resource.queryParameters.v;
         }
-        // Always set query parameters to make sure the tilesetVersion matches the current tileset
-        // Otherwise a child tileset might use the tilesetVersion from the parent
-        resource.setQueryParameters(versionQuery);
 
         // A tileset JSON file referenced from a tile may exist in a different directory than the root tileset.
         // Get the basePath relative to the external tileset.
