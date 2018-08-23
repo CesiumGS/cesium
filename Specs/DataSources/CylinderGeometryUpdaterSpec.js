@@ -1,6 +1,8 @@
 defineSuite([
         'DataSources/CylinderGeometryUpdater',
         'Core/Cartesian3',
+        'Core/Color',
+        'Core/GeometryOffsetAttribute',
         'Core/JulianDate',
         'Core/Quaternion',
         'Core/TimeIntervalCollection',
@@ -10,6 +12,7 @@ defineSuite([
         'DataSources/Entity',
         'DataSources/SampledPositionProperty',
         'DataSources/SampledProperty',
+        'Scene/HeightReference',
         'Scene/PrimitiveCollection',
         'Specs/createDynamicGeometryUpdaterSpecs',
         'Specs/createDynamicProperty',
@@ -18,6 +21,8 @@ defineSuite([
     ], function(
         CylinderGeometryUpdater,
         Cartesian3,
+        Color,
+        GeometryOffsetAttribute,
         JulianDate,
         Quaternion,
         TimeIntervalCollection,
@@ -27,6 +32,7 @@ defineSuite([
         Entity,
         SampledPositionProperty,
         SampledProperty,
+        HeightReference,
         PrimitiveCollection,
         createDynamicGeometryUpdaterSpecs,
         createDynamicProperty,
@@ -164,6 +170,7 @@ defineSuite([
         expect(geometry._topRadius).toEqual(options.topRadius);
         expect(geometry._bottomRadius).toEqual(options.bottomRadius);
         expect(geometry._length).toEqual(options.length);
+        expect(geometry._offsetAttribute).toBeUndefined();
 
         instance = updater.createOutlineGeometryInstance(time);
         geometry = instance.geometry;
@@ -171,6 +178,46 @@ defineSuite([
         expect(geometry._bottomRadius).toEqual(options.bottomRadius);
         expect(geometry._length).toEqual(options.length);
         expect(geometry._numberOfVerticalLines).toEqual(options.numberOfVerticalLines);
+        expect(geometry._offsetAttribute).toBeUndefined();
+    });
+
+    it('Creates geometry with expected offsetAttribute', function() {
+        var entity = createBasicCylinder();
+        var graphics = entity.cylinder;
+        graphics.outline = true;
+        graphics.outlineColor = Color.BLACK;
+        graphics.height = new ConstantProperty(20.0);
+        graphics.extrudedHeight = new ConstantProperty(0.0);
+        var updater = new CylinderGeometryUpdater(entity, getScene());
+
+        var instance;
+
+        updater._onEntityPropertyChanged(entity, 'cylinder');
+        instance = updater.createFillGeometryInstance(time);
+        expect(instance.geometry._offsetAttribute).toBeUndefined();
+        instance = updater.createOutlineGeometryInstance(time);
+        expect(instance.geometry._offsetAttribute).toBeUndefined();
+
+        graphics.heightReference = new ConstantProperty(HeightReference.NONE);
+        updater._onEntityPropertyChanged(entity, 'cylinder');
+        instance = updater.createFillGeometryInstance(time);
+        expect(instance.geometry._offsetAttribute).toBeUndefined();
+        instance = updater.createOutlineGeometryInstance(time);
+        expect(instance.geometry._offsetAttribute).toBeUndefined();
+
+        graphics.heightReference = new ConstantProperty(HeightReference.CLAMP_TO_GROUND);
+        updater._onEntityPropertyChanged(entity, 'cylinder');
+        instance = updater.createFillGeometryInstance(time);
+        expect(instance.geometry._offsetAttribute).toEqual(GeometryOffsetAttribute.ALL);
+        instance = updater.createOutlineGeometryInstance(time);
+        expect(instance.geometry._offsetAttribute).toEqual(GeometryOffsetAttribute.ALL);
+
+        graphics.heightReference = new ConstantProperty(HeightReference.RELATIVE_TO_GROUND);
+        updater._onEntityPropertyChanged(entity, 'cylinder');
+        instance = updater.createFillGeometryInstance(time);
+        expect(instance.geometry._offsetAttribute).toEqual(GeometryOffsetAttribute.ALL);
+        instance = updater.createOutlineGeometryInstance(time);
+        expect(instance.geometry._offsetAttribute).toEqual(GeometryOffsetAttribute.ALL);
     });
 
     it('dynamic updater sets properties', function() {
@@ -191,6 +238,7 @@ defineSuite([
         expect(options.topRadius).toEqual(cylinder.topRadius.getValue());
         expect(options.bottomRadius).toEqual(cylinder.bottomRadius.getValue());
         expect(options.length).toEqual(cylinder.length.getValue());
+        expect(options.offsetAttribute).toBeUndefined();
     });
 
     it('geometryChanged event is raised when expected', function() {
@@ -228,6 +276,13 @@ defineSuite([
         entity.cylinder.bottomRadius = new SampledProperty(Number);
         updater._onEntityPropertyChanged(entity, 'cylinder');
         expect(listener.calls.count()).toEqual(5);
+    });
+
+    it('computes center', function() {
+        var entity = createBasicCylinder();
+        var updater = new CylinderGeometryUpdater(entity, scene);
+
+        expect(updater._computeCenter(time)).toEqual(entity.position.getValue(time));
     });
 
     function getScene() {

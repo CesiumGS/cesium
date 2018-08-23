@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
-    <meta name="description" content="An example for how to use the GeometryHeightProperty to height reference a corridor, ellipse, polygon or rectangle.">
+    <meta name="description" content="An example for how to use the HeightReference property on different geometry entities.">
     <meta name="cesium-sandcastle-labels" content="Geometries">
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
@@ -42,6 +42,20 @@ var viewer = new Cesium.Viewer('cesiumContainer', {
 viewer.scene.globe.depthTestAgainstTerrain = true;
 
 Sandcastle.addToolbarMenu([{
+    text : 'Polygons',
+    onselect : function() {
+        viewer.entities.removeAll();
+        addPolygons();
+    }
+}, {
+    text : 'Boxes, Cylinders and Ellipsoids',
+    onselect : function() {
+        viewer.entities.removeAll();
+        addGeometries();
+    }
+}]);
+
+Sandcastle.addToolbarMenu([{
     text : 'Terrain Enabled',
     onselect : function() {
         viewer.scene.terrainProvider = cesiumTerrainProvider;
@@ -53,11 +67,57 @@ Sandcastle.addToolbarMenu([{
     }
 }]);
 
-var longitude = 6.850615989890521;
-var latitude = 45.89546589994886;
+var longitude = 6.950615989890521;
+var latitude = 45.79546589994886;
 var delta = 0.001;
 
-function addEntity(i, j) {
+function addGeometry(i, j) {
+    var west = longitude + delta * i;
+    var north = latitude + delta * j + delta;
+
+    var type = Math.floor(Math.random() * 3);
+    if (type === 0) {
+        viewer.entities.add({
+            position: Cesium.Cartesian3.fromDegrees(west, north, 0.0),
+            box : {
+                dimensions : new Cesium.Cartesian3(40.0, 30.0, 50.0),
+                material : Cesium.Color.fromRandom({alpha : 1.0}),
+                heightReference: Cesium.HeightReference.CLAMP_TO_GROUND
+            }
+        });
+    } else if (type === 1) {
+        viewer.entities.add({
+            position: Cesium.Cartesian3.fromDegrees(west, north, 0.0),
+            cylinder : {
+                length :50.0,
+                topRadius : 20.0,
+                bottomRadius : 20.0,
+                material : Cesium.Color.fromRandom({alpha : 1.0}),
+                heightReference: Cesium.HeightReference.CLAMP_TO_GROUND
+            }
+        });
+    } else {
+        viewer.entities.add({
+            position: Cesium.Cartesian3.fromDegrees(west, north, 0.0),
+            ellipsoid : {
+                radii : new Cesium.Cartesian3(20.0, 15.0, 25.0),
+                material : Cesium.Color.fromRandom({alpha : 1.0}),
+                heightReference: Cesium.HeightReference.CLAMP_TO_GROUND
+            }
+        });
+    }
+}
+
+function addGeometries(){
+    for (var i = 0; i < 4; i++) {
+        for (var j = 0; j < 4; j++) {
+            addGeometry(i, j);
+        }
+    }
+    viewer.zoomTo(viewer.entities);
+}
+
+function addPolygon(i, j) {
     var west = longitude + delta * i;
     var east = longitude + delta * i + delta;
 
@@ -81,15 +141,17 @@ function addEntity(i, j) {
     });
 }
 
-// create 16 polygons that are side-by-side
-for (var i = 0; i < 4; i++) {
-    for (var j = 0; j < 4; j++) {
-        addEntity(i, j);
+function addPolygons() {
+    // create 16 polygons that are side-by-side
+    for (var i = 0; i < 4; i++) {
+        for (var j = 0; j < 4; j++) {
+            addPolygon(i, j);
+        }
     }
+    viewer.camera.lookAt(Cesium.Cartesian3.fromDegrees(longitude, latitude, 1500), new Cesium.HeadingPitchRange(-Cesium.Math.PI/2, -Cesium.Math.PI_OVER_FOUR, 2000));
+    viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
 }
-
-viewer.camera.lookAt(Cesium.Cartesian3.fromDegrees(longitude, latitude, 500), new Cesium.HeadingPitchRange(Cesium.Math.PI, -Cesium.Math.PI_OVER_FOUR, 2000));
-viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);//Sandcastle_End
+//Sandcastle_End
     Sandcastle.finishedLoading();
 }
 if (typeof Cesium !== 'undefined') {
