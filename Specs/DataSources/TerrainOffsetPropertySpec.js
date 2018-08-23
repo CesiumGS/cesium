@@ -37,7 +37,7 @@ defineSuite([
         var position = new CallbackProperty(jasmine.createSpy(), false);
         var height = new ConstantProperty(30);
         var extrudedHeight = new ConstantProperty(0);
-        var property = new TerrainOffsetProperty(scene, height, extrudedHeight, position);
+        var property = new TerrainOffsetProperty(scene, position, height, extrudedHeight);
         expect(property.isConstant).toBe(false);
         expect(property.getValue(time)).toEqual(Cartesian3.ZERO);
         property.destroy();
@@ -49,7 +49,7 @@ defineSuite([
         var height = new ConstantProperty(30);
         var extrudedHeight = new ConstantProperty(0);
         expect(function() {
-            return new TerrainOffsetProperty(undefined, height, extrudedHeight, position);
+            return new TerrainOffsetProperty(undefined, position, height, extrudedHeight);
         }).toThrowDeveloperError();
     });
 
@@ -57,7 +57,7 @@ defineSuite([
         var height = new ConstantProperty(30);
         var extrudedHeight = new ConstantProperty(0);
         expect(function() {
-            return new TerrainOffsetProperty(scene, height, extrudedHeight, undefined);
+            return new TerrainOffsetProperty(scene, undefined, height, extrudedHeight);
         }).toThrowDeveloperError();
     });
 });
