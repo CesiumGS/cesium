@@ -31,6 +31,20 @@ define([
          */
         ellipsoid : {
             get : DeveloperError.throwInstantiationError
+        },
+        /**
+         * Gets whether or not the projection is cylindrical about the equator.
+         * Projections that are cylindrical around the equator (such as Web Mercator and Geographic) do not need
+         * addition 2D vertex attributes and are more efficient to render.
+         *
+         * @memberof MapProjection.prototype
+         *
+         * @type {Boolean}
+         * @readonly
+         * @private
+         */
+        isEquatorialCylindrical : {
+            get : DeveloperError.throwInstantiationError
         }
     });
 

@@ -476,7 +476,7 @@ defineSuite([
             granularity : 10.0 // no interpolative subdivision
         });
         groundPolylineGeometry._scene3DOnly = true;
-        GroundPolylineGeometry.setProjectionAndEllipsoid(groundPolylineGeometry, new WebMercatorProjection(Ellipsoid.WGS84));
+        GroundPolylineGeometry.setProjection(groundPolylineGeometry, new WebMercatorProjection(Ellipsoid.WGS84));
 
         var packedArray = [0];
         GroundPolylineGeometry.pack(groundPolylineGeometry, packedArray, 1);
@@ -494,12 +494,10 @@ defineSuite([
         expect(Cartesian3.equals(scratchPositions[1], groundPolylineGeometry._positions[1])).toBe(true);
         expect(scratch.loop).toBe(true);
         expect(scratch.granularity).toEqual(10.0);
-        expect(scratch._ellipsoid.equals(Ellipsoid.WGS84)).toBe(true);
         expect(scratch._scene3DOnly).toBe(true);
-        expect(scratch._projectionIndex).toEqual(1);
     });
 
-    it('provides a method for setting projection and ellipsoid', function() {
+    it('provides a method for setting projection', function() {
         var groundPolylineGeometry = new GroundPolylineGeometry({
             positions : Cartesian3.fromDegreesArray([
                 -1.0, 0.0,
@@ -509,10 +507,10 @@ defineSuite([
             granularity : 10.0 // no interpolative subdivision
         });
 
-        GroundPolylineGeometry.setProjectionAndEllipsoid(groundPolylineGeometry, new WebMercatorProjection(Ellipsoid.UNIT_SPHERE));
+        var projection = new WebMercatorProjection(Ellipsoid.UNIT_SPHERE);
+        GroundPolylineGeometry.setProjection(groundPolylineGeometry, projection);
 
-        expect(groundPolylineGeometry._projectionIndex).toEqual(1);
-        expect(groundPolylineGeometry._ellipsoid.equals(Ellipsoid.UNIT_SPHERE)).toBe(true);
+        expect(groundPolylineGeometry._projection).toEqual(projection);
     });
 
     var positions = Cartesian3.fromDegreesArray([
@@ -563,10 +561,6 @@ defineSuite([
     Cartesian3.pack(positions[2], packedInstance, packedInstance.length);
     packedInstance.push(polyline.granularity);
     packedInstance.push(polyline.loop ? 1.0 : 0.0);
-
-    Ellipsoid.pack(Ellipsoid.WGS84, packedInstance, packedInstance.length);
-
-    packedInstance.push(0.0); // projection index for Geographic (default)
     packedInstance.push(0.0); // scene3DModeOnly = false
 
     createPackableSpecs(GroundPolylineGeometry, polyline, packedInstance);

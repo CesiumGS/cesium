@@ -66,7 +66,7 @@ define([
         return useWebMercatorProjection ? get2DYPositionFractionMercatorProjection : get2DYPositionFractionGeographicProjection;
     }
 
-    GlobeSurfaceShaderSet.prototype.getShaderProgram = function(frameState, surfaceTile, numberOfDayTextures, applyBrightness, applyContrast, applyHue, applySaturation, applyGamma, applyAlpha, applySplit, showReflectiveOcean, showOceanWaves, enableLighting, hasVertexNormals, useWebMercatorProjection, enableFog, enableClippingPlanes, clippingPlanes) {
+    GlobeSurfaceShaderSet.prototype.getShaderProgram = function(frameState, surfaceTile, numberOfDayTextures, applyBrightness, applyContrast, applyHue, applySaturation, applyGamma, applyAlpha, applySplit, showReflectiveOcean, showOceanWaves, enableLighting, hasVertexNormals, useWebMercatorProjection, enableFog, enableClippingPlanes, clippingPlanes, clippedByBoundaries) {
         var quantization = 0;
         var quantizationDefine = '';
 
@@ -82,6 +82,20 @@ define([
         if (surfaceTile.terrainData._createdByUpsampling) {
             vertexLogDepth = 1;
             vertexLogDepthDefine = 'DISABLE_GL_POSITION_LOG_DEPTH';
+        }
+
+        var positions2d = 0;
+        var positions2dDefine = '';
+        if (!frameState.mapProjection.isEquatorialCylindrical) {
+            positions2d = 1;
+            positions2dDefine = 'POSITIONS_2D';
+        }
+
+        var geographicLimitRectangleFlag = 0;
+        var geographicLimitRectangleDefine = '';
+        if (clippedByBoundaries && frameState.mode !== SceneMode.SCENE3D) {
+            geographicLimitRectangleFlag = 1;
+            geographicLimitRectangleDefine = 'TILE_LIMIT_RECTANGLE';
         }
 
         var sceneMode = frameState.mode;
@@ -101,7 +115,9 @@ define([
                     (quantization << 14) |
                     (applySplit << 15) |
                     (enableClippingPlanes << 16) |
-                    (vertexLogDepth << 17);
+                    (vertexLogDepth << 17) |
+                    (positions2d << 18) |
+                    (geographicLimitRectangleFlag << 19);
 
         var currentClippingShaderState = 0;
         if (defined(clippingPlanes)) {
@@ -133,8 +149,8 @@ define([
                 fs.sources.unshift(getClippingFunction(clippingPlanes, frameState.context)); // Need to go before GlobeFS
             }
 
-            vs.defines.push(quantizationDefine, vertexLogDepthDefine);
-            fs.defines.push('TEXTURE_UNITS ' + numberOfDayTextures);
+            vs.defines.push(quantizationDefine, vertexLogDepthDefine, positions2dDefine);
+            fs.defines.push('TEXTURE_UNITS ' + numberOfDayTextures, geographicLimitRectangleDefine);
 
             if (applyBrightness) {
                 fs.defines.push('APPLY_BRIGHTNESS');

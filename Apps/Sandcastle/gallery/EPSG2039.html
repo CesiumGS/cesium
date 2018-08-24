@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <meta name="description" content="Demonstration of Proj4JS projections.">
+    <meta name="cesium-sandcastle-labels" content="Showcases">
+    <title>Cesium Demo</title>
+    <script type="text/javascript" src="../Sandcastle-header.js"></script>
+    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
+    <script type="text/javascript">
+        if(typeof require === "function") {
+            require.config({
+                baseUrl : '../../../Source',
+                waitSeconds : 120
+            });
+        }
+    </script>
+</head>
+<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
+<style>
+    @import url(../templates/bucket.css);
+</style>
+<div id="cesiumContainer" class="fullSize"></div>
+<div id="loadingOverlay"><h1>Loading...</h1></div>
+<div id="toolbar"></div>
+<script id="cesium_sandcastle_script">
+function startup(Cesium) {
+    'use strict';
+//Sandcastle_Begin
+var viewer = new Cesium.Viewer('cesiumContainer', {
+    sceneMode : Cesium.SceneMode.COLUMBUS_VIEW,
+    mapProjection : new Cesium.Proj4Projection('+proj=tmerc +lat_0=31.73439361111111 +lon_0=35.20451694444445 +k=1.0000067 +x_0=219529.584 +y_0=626907.39 +ellps=GRS80 +towgs84=-48,55,52,0,0,0,0 +units=m +no_defs '),
+    terrainProvider: Cesium.createWorldTerrain({
+        requestVertexNormals : true,
+        requestWaterMask : true
+    })
+});
+
+var epsg2039Bounds = Cesium.Rectangle.fromDegrees(34.2200, 29.4900, 35.6800, 33.2700);
+
+viewer.scene.globe.geographicLimitRectangle = epsg2039Bounds;
+
+//Add Cesium Inspector
+viewer.extend(Cesium.viewerCesiumInspectorMixin);
+
+// Add rectangles to show bounds
+
+var rectangles = [];
+
+for (var i = 0; i < 10; i++) {
+    rectangles.push(viewer.entities.add({
+        name : 'EPSG 2093 bounds',
+        rectangle : {
+            coordinates : epsg2039Bounds,
+            material : Cesium.Color.WHITE.withAlpha(0.0),
+            height : i * 500.0,
+            outline : true,
+            outlineWidth : 4.0,
+            outlineColor : Cesium.Color.WHITE
+        }
+    }));
+}
+
+Sandcastle.addToolbarButton('Show/Hide Bounds', function() {
+    var rectanglesLength = rectangles.length;
+    for (var i = 0; i < rectanglesLength; i++) {
+        var rectangleEntity = rectangles[i];
+        rectangleEntity.show = !rectangleEntity.show;
+    }
+});
+
+viewer.zoomTo(viewer.entities);
+
+//Sandcastle_End
+    Sandcastle.finishedLoading();
+}
+if (typeof Cesium !== "undefined") {
+    startup(Cesium);
+} else if (typeof require === "function") {
+    require(["Cesium"], startup);
+}
+</script>
+</body>
+</html>

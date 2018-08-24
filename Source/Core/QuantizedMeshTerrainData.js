@@ -3,6 +3,7 @@ define([
         './BoundingSphere',
         './Cartesian2',
         './Cartesian3',
+        './Check',
         './defaultValue',
         './defined',
         './defineProperties',
@@ -19,6 +20,7 @@ define([
         BoundingSphere,
         Cartesian2,
         Cartesian3,
+        Check,
         defaultValue,
         defined,
         defineProperties,
@@ -253,25 +255,19 @@ define([
      * @param {Number} x The X coordinate of the tile for which to create the terrain data.
      * @param {Number} y The Y coordinate of the tile for which to create the terrain data.
      * @param {Number} level The level of the tile for which to create the terrain data.
+     * @param {SerializedMapProjection} serializedMapProjection Serialized map projection.
      * @param {Number} [exaggeration=1.0] The scale used to exaggerate the terrain.
      * @returns {Promise.<TerrainMesh>|undefined} A promise for the terrain mesh, or undefined if too many
      *          asynchronous mesh creations are already in progress and the operation should
      *          be retried later.
      */
-    QuantizedMeshTerrainData.prototype.createMesh = function(tilingScheme, x, y, level, exaggeration) {
+    QuantizedMeshTerrainData.prototype.createMesh = function(tilingScheme, x, y, level, serializedMapProjection, exaggeration) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(tilingScheme)) {
-            throw new DeveloperError('tilingScheme is required.');
-        }
-        if (!defined(x)) {
-            throw new DeveloperError('x is required.');
-        }
-        if (!defined(y)) {
-            throw new DeveloperError('y is required.');
-        }
-        if (!defined(level)) {
-            throw new DeveloperError('level is required.');
-        }
+        Check.typeOf.object('tilingScheme', tilingScheme);
+        Check.typeOf.number('x', x);
+        Check.typeOf.number('y', y);
+        Check.typeOf.number('level', level);
+        Check.defined('serializedMapProjection', serializedMapProjection);
         //>>includeEnd('debug');
 
         var ellipsoid = tilingScheme.ellipsoid;
@@ -296,7 +292,8 @@ define([
             rectangle : rectangle,
             relativeToCenter : this._boundingSphere.center,
             ellipsoid : ellipsoid,
-            exaggeration : exaggeration
+            exaggeration : exaggeration,
+            serializedMapProjection : serializedMapProjection
         });
 
         if (!defined(verticesPromise)) {

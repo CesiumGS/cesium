@@ -8,12 +8,13 @@ define([
         GroundPolylinePrimitive) {
     'use strict';
 
-    function createGroundPolylineGeometry(groundPolylineGeometry, offset) {
+    function createGroundPolylineGeometry(groundPolylineGeometry, offset, mapProjection) {
         return GroundPolylinePrimitive.initializeTerrainHeights()
             .then(function() {
                 if (defined(offset)) {
                     groundPolylineGeometry = GroundPolylineGeometry.unpack(groundPolylineGeometry, offset);
                 }
+                GroundPolylineGeometry.setProjection(groundPolylineGeometry, mapProjection);
                 return GroundPolylineGeometry.createGeometry(groundPolylineGeometry);
             });
     }
