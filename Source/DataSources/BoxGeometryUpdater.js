@@ -6,13 +6,18 @@ define([
         '../Core/Color',
         '../Core/ColorGeometryInstanceAttribute',
         '../Core/defined',
+        '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/DistanceDisplayConditionGeometryInstanceAttribute',
         '../Core/GeometryInstance',
+        '../Core/GeometryOffsetAttribute',
         '../Core/Iso8601',
+        '../Core/OffsetGeometryInstanceAttribute',
         '../Core/ShowGeometryInstanceAttribute',
+        '../Scene/HeightReference',
         '../Scene/MaterialAppearance',
         '../Scene/PerInstanceColorAppearance',
+        './heightReferenceOnEntityPropertyChanged',
         './ColorMaterialProperty',
         './DynamicGeometryUpdater',
         './GeometryUpdater',
@@ -25,19 +30,27 @@ define([
         Color,
         ColorGeometryInstanceAttribute,
         defined,
+        defineProperties,
         DeveloperError,
         DistanceDisplayConditionGeometryInstanceAttribute,
         GeometryInstance,
+        GeometryOffsetAttribute,
         Iso8601,
+        OffsetGeometryInstanceAttribute,
         ShowGeometryInstanceAttribute,
+        HeightReference,
         MaterialAppearance,
         PerInstanceColorAppearance,
+        heightReferenceOnEntityPropertyChanged,
         ColorMaterialProperty,
         DynamicGeometryUpdater,
         GeometryUpdater,
         Property) {
     'use strict';
 
+    var defaultOffset = Cartesian3.ZERO;
+
+    var offsetScratch = new Cartesian3();
     var positionScratch = new Cartesian3();
     var scratchColor = new Color();
 
@@ -45,6 +58,7 @@ define([
         this.id = entity;
         this.vertexFormat = undefined;
         this.dimensions = undefined;
+        this.offsetAttribute = undefined;
     }
 
     /**
@@ -73,6 +87,20 @@ define([
         BoxGeometryUpdater.prototype.constructor = BoxGeometryUpdater;
     }
 
+    defineProperties(BoxGeometryUpdater.prototype, {
+        /**
+         * Gets the terrain offset property
+         * @type {TerrainOffsetProperty}
+         * @memberof BoxGeometryUpdater.prototype
+         * @readonly
+         */
+        terrainOffsetProperty: {
+            get: function() {
+                return this._terrainOffsetProperty;
+            }
+        }
+    });
+
     /**
      * Creates the geometry instance which represents the fill of the geometry.
      *
@@ -93,12 +121,16 @@ define([
         var entity = this._entity;
         var isAvailable = entity.isAvailable(time);
 
-        var attributes;
-
-        var color;
         var show = new ShowGeometryInstanceAttribute(isAvailable && entity.isShowing && this._showProperty.getValue(time) && this._fillProperty.getValue(time));
         var distanceDisplayCondition = this._distanceDisplayConditionProperty.getValue(time);
         var distanceDisplayConditionAttribute = DistanceDisplayConditionGeometryInstanceAttribute.fromDistanceDisplayCondition(distanceDisplayCondition);
+
+        var attributes = {
+            show : show,
+            distanceDisplayCondition : distanceDisplayConditionAttribute,
+            color : undefined,
+            offset: undefined
+        };
         if (this._materialProperty instanceof ColorMaterialProperty) {
             var currentColor;
             if (defined(this._materialProperty.color) && (this._materialProperty.color.isConstant || isAvailable)) {
@@ -107,23 +139,16 @@ define([
             if (!defined(currentColor)) {
                 currentColor = Color.WHITE;
             }
-            color = ColorGeometryInstanceAttribute.fromColor(currentColor);
-            attributes = {
-                show : show,
-                distanceDisplayCondition : distanceDisplayConditionAttribute,
-                color : color
-            };
-        } else {
-            attributes = {
-                show : show,
-                distanceDisplayCondition : distanceDisplayConditionAttribute
-            };
+            attributes.color = ColorGeometryInstanceAttribute.fromColor(currentColor);
+        }
+        if (defined(this._options.offsetAttribute)) {
+            attributes.offset = OffsetGeometryInstanceAttribute.fromCartesian3(Property.getValueOrDefault(this._terrainOffsetProperty, time, defaultOffset, offsetScratch));
         }
 
         return new GeometryInstance({
             id : entity,
             geometry : BoxGeometry.fromDimensions(this._options),
-            modelMatrix : entity.computeModelMatrix(time),
+            modelMatrix : entity.computeModelMatrixForHeightReference(time, entity.box.heightReference, this._options.dimensions.z * 0.5, this._scene.mapProjection.ellipsoid),
             attributes : attributes
         });
     };
@@ -150,16 +175,26 @@ define([
         var outlineColor = Property.getValueOrDefault(this._outlineColorProperty, time, Color.BLACK, scratchColor);
         var distanceDisplayCondition = this._distanceDisplayConditionProperty.getValue(time);
 
+        var attributes = {
+            show : new ShowGeometryInstanceAttribute(isAvailable && entity.isShowing && this._showProperty.getValue(time) && this._showOutlineProperty.getValue(time)),
+            color : ColorGeometryInstanceAttribute.fromColor(outlineColor),
+            distanceDisplayCondition : DistanceDisplayConditionGeometryInstanceAttribute.fromDistanceDisplayCondition(distanceDisplayCondition),
+            offset : undefined
+        };
+        if (defined(this._options.offsetAttribute)) {
+            attributes.offset = OffsetGeometryInstanceAttribute.fromCartesian3(Property.getValueOrDefault(this._terrainOffsetProperty, time, defaultOffset, offsetScratch));
+        }
+
         return new GeometryInstance({
             id : entity,
             geometry : BoxOutlineGeometry.fromDimensions(this._options),
-            modelMatrix : entity.computeModelMatrix(time),
-            attributes : {
-                show : new ShowGeometryInstanceAttribute(isAvailable && entity.isShowing && this._showProperty.getValue(time) && this._showOutlineProperty.getValue(time)),
-                color : ColorGeometryInstanceAttribute.fromColor(outlineColor),
-                distanceDisplayCondition : DistanceDisplayConditionGeometryInstanceAttribute.fromDistanceDisplayCondition(distanceDisplayCondition)
-            }
+            modelMatrix : entity.computeModelMatrixForHeightReference(time, entity.box.heightReference, this._options.dimensions.z * 0.5, this._scene.mapProjection.ellipsoid),
+            attributes : attributes
         });
+    };
+
+    BoxGeometryUpdater.prototype._computeCenter = function(time, result) {
+        return Property.getValueOrUndefined(this._entity.position, time, result);
     };
 
     BoxGeometryUpdater.prototype._isHidden = function(entity, box) {
@@ -171,12 +206,15 @@ define([
     };
 
     BoxGeometryUpdater.prototype._setStaticOptions = function(entity, box) {
-        var isColorMaterial = this._materialProperty instanceof ColorMaterialProperty;
+        var heightReference = Property.getValueOrDefault(box.heightReference, Iso8601.MINIMUM_VALUE, HeightReference.NONE);
 
         var options = this._options;
-        options.vertexFormat = isColorMaterial ? PerInstanceColorAppearance.VERTEX_FORMAT : MaterialAppearance.MaterialSupport.TEXTURED.vertexFormat;
+        options.vertexFormat = this._materialProperty instanceof ColorMaterialProperty ? PerInstanceColorAppearance.VERTEX_FORMAT : MaterialAppearance.MaterialSupport.TEXTURED.vertexFormat;
         options.dimensions = box.dimensions.getValue(Iso8601.MINIMUM_VALUE, options.dimensions);
+        options.offsetAttribute = heightReference !== HeightReference.NONE ? GeometryOffsetAttribute.ALL : undefined;
     };
+
+    BoxGeometryUpdater.prototype._onEntityPropertyChanged = heightReferenceOnEntityPropertyChanged;
 
     BoxGeometryUpdater.DynamicGeometryUpdater = DynamicBoxGeometryUpdater;
 
@@ -199,7 +237,10 @@ define([
     };
 
     DynamicBoxGeometryUpdater.prototype._setOptions = function(entity, box, time) {
-        this._options.dimensions = Property.getValueOrUndefined(box.dimensions, time, this._options.dimensions);
+        var heightReference = Property.getValueOrDefault(box.heightReference, time, HeightReference.NONE);
+        var options = this._options;
+        options.dimensions = Property.getValueOrUndefined(box.dimensions, time, options.dimensions);
+        options.offsetAttribute = heightReference !== HeightReference.NONE ? GeometryOffsetAttribute.ALL : undefined;
     };
 
     return BoxGeometryUpdater;

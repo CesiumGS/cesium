@@ -5,18 +5,23 @@ define([
         '../Core/ColorGeometryInstanceAttribute',
         '../Core/defaultValue',
         '../Core/defined',
+        '../Core/defineProperties',
         '../Core/DistanceDisplayCondition',
         '../Core/DistanceDisplayConditionGeometryInstanceAttribute',
         '../Core/EllipsoidGeometry',
         '../Core/EllipsoidOutlineGeometry',
         '../Core/GeometryInstance',
+        '../Core/GeometryOffsetAttribute',
         '../Core/Iso8601',
+        '../Core/OffsetGeometryInstanceAttribute',
         '../Core/Matrix4',
         '../Core/ShowGeometryInstanceAttribute',
+        '../Scene/HeightReference',
         '../Scene/MaterialAppearance',
         '../Scene/PerInstanceColorAppearance',
         '../Scene/Primitive',
         '../Scene/SceneMode',
+        './heightReferenceOnEntityPropertyChanged',
         './ColorMaterialProperty',
         './DynamicGeometryUpdater',
         './GeometryUpdater',
@@ -29,18 +34,23 @@ define([
         ColorGeometryInstanceAttribute,
         defaultValue,
         defined,
+        defineProperties,
         DistanceDisplayCondition,
         DistanceDisplayConditionGeometryInstanceAttribute,
         EllipsoidGeometry,
         EllipsoidOutlineGeometry,
         GeometryInstance,
+        GeometryOffsetAttribute,
         Iso8601,
+        OffsetGeometryInstanceAttribute,
         Matrix4,
         ShowGeometryInstanceAttribute,
+        HeightReference,
         MaterialAppearance,
         PerInstanceColorAppearance,
         Primitive,
         SceneMode,
+        heightReferenceOnEntityPropertyChanged,
         ColorMaterialProperty,
         DynamicGeometryUpdater,
         GeometryUpdater,
@@ -49,7 +59,9 @@ define([
     'use strict';
 
     var defaultMaterial = new ColorMaterialProperty(Color.WHITE);
+    var defaultOffset = Cartesian3.ZERO;
 
+    var offsetScratch = new Cartesian3();
     var radiiScratch = new Cartesian3();
     var scratchColor = new Color();
     var unitSphere = new Cartesian3(1, 1, 1);
@@ -61,6 +73,7 @@ define([
         this.stackPartitions = undefined;
         this.slicePartitions = undefined;
         this.subdivisions = undefined;
+        this.offsetAttribute = undefined;
     }
 
     /**
@@ -89,6 +102,20 @@ define([
         EllipsoidGeometryUpdater.prototype.constructor = EllipsoidGeometryUpdater;
     }
 
+    defineProperties(EllipsoidGeometryUpdater.prototype, {
+        /**
+         * Gets the terrain offset property
+         * @type {TerrainOffsetProperty}
+         * @memberof EllipsoidGeometryUpdater.prototype
+         * @readonly
+         */
+        terrainOffsetProperty: {
+            get: function() {
+                return this._terrainOffsetProperty;
+            }
+        }
+    });
+
     /**
      * Creates the geometry instance which represents the fill of the geometry.
      *
@@ -107,12 +134,18 @@ define([
         var entity = this._entity;
         var isAvailable = entity.isAvailable(time);
 
-        var attributes;
-
         var color;
         var show = new ShowGeometryInstanceAttribute(isAvailable && entity.isShowing && this._showProperty.getValue(time) && this._fillProperty.getValue(time));
         var distanceDisplayCondition = this._distanceDisplayConditionProperty.getValue(time);
         var distanceDisplayConditionAttribute = DistanceDisplayConditionGeometryInstanceAttribute.fromDistanceDisplayCondition(distanceDisplayCondition);
+
+        var attributes = {
+            show : show,
+            distanceDisplayCondition : distanceDisplayConditionAttribute,
+            color : undefined,
+            offset: undefined
+        };
+
         if (this._materialProperty instanceof ColorMaterialProperty) {
             var currentColor;
             if (defined(this._materialProperty.color) && (this._materialProperty.color.isConstant || isAvailable)) {
@@ -122,22 +155,16 @@ define([
                 currentColor = Color.WHITE;
             }
             color = ColorGeometryInstanceAttribute.fromColor(currentColor);
-            attributes = {
-                show : show,
-                distanceDisplayCondition : distanceDisplayConditionAttribute,
-                color : color
-            };
-        } else {
-            attributes = {
-                show : show,
-                distanceDisplayCondition : distanceDisplayConditionAttribute
-            };
+            attributes.color = color;
+        }
+        if (defined(this._options.offsetAttribute)) {
+            attributes.offset = OffsetGeometryInstanceAttribute.fromCartesian3(Property.getValueOrDefault(this._terrainOffsetProperty, time, defaultOffset, offsetScratch));
         }
 
         return new GeometryInstance({
             id : entity,
             geometry : new EllipsoidGeometry(this._options),
-            modelMatrix : skipModelMatrix ? undefined : entity.computeModelMatrix(time, modelMatrixResult),
+            modelMatrix : skipModelMatrix ? undefined : entity.computeModelMatrixForHeightReference(time, entity.ellipsoid.heightReference, this._options.radii.z * 0.5, this._scene.mapProjection.ellipsoid, modelMatrixResult),
             attributes : attributes
         });
     };
@@ -163,16 +190,26 @@ define([
         var outlineColor = Property.getValueOrDefault(this._outlineColorProperty, time, Color.BLACK, scratchColor);
         var distanceDisplayCondition = this._distanceDisplayConditionProperty.getValue(time);
 
+        var attributes = {
+            show : new ShowGeometryInstanceAttribute(isAvailable && entity.isShowing && this._showProperty.getValue(time) && this._showOutlineProperty.getValue(time)),
+            color : ColorGeometryInstanceAttribute.fromColor(outlineColor),
+            distanceDisplayCondition : DistanceDisplayConditionGeometryInstanceAttribute.fromDistanceDisplayCondition(distanceDisplayCondition),
+            offset : undefined
+        };
+        if (defined(this._options.offsetAttribute)) {
+            attributes.offset = OffsetGeometryInstanceAttribute.fromCartesian3(Property.getValueOrDefault(this._terrainOffsetProperty, time, defaultOffset, offsetScratch));
+        }
+
         return new GeometryInstance({
             id : entity,
             geometry : new EllipsoidOutlineGeometry(this._options),
-            modelMatrix : skipModelMatrix ? undefined : entity.computeModelMatrix(time, modelMatrixResult),
-            attributes : {
-                show : new ShowGeometryInstanceAttribute(isAvailable && entity.isShowing && this._showProperty.getValue(time) && this._showOutlineProperty.getValue(time)),
-                color : ColorGeometryInstanceAttribute.fromColor(outlineColor),
-                distanceDisplayCondition : DistanceDisplayConditionGeometryInstanceAttribute.fromDistanceDisplayCondition(distanceDisplayCondition)
-            }
+            modelMatrix : skipModelMatrix ? undefined : entity.computeModelMatrixForHeightReference(time, entity.ellipsoid.heightReference, this._options.radii.z * 0.5, this._scene.mapProjection.ellipsoid, modelMatrixResult),
+            attributes : attributes
         });
+    };
+
+    EllipsoidGeometryUpdater.prototype._computeCenter = function(time, result) {
+        return Property.getValueOrUndefined(this._entity.position, time, result);
     };
 
     EllipsoidGeometryUpdater.prototype._isHidden = function(entity, ellipsoid) {
@@ -190,18 +227,17 @@ define([
     };
 
     EllipsoidGeometryUpdater.prototype._setStaticOptions = function(entity, ellipsoid) {
-        var stackPartitions = ellipsoid.stackPartitions;
-        var slicePartitions = ellipsoid.slicePartitions;
-        var subdivisions = ellipsoid.subdivisions;
-        var isColorMaterial = this._materialProperty instanceof ColorMaterialProperty;
-
+        var heightReference = Property.getValueOrDefault(ellipsoid.heightReference, Iso8601.MINIMUM_VALUE, HeightReference.NONE);
         var options = this._options;
-        options.vertexFormat = isColorMaterial ? PerInstanceColorAppearance.VERTEX_FORMAT : MaterialAppearance.MaterialSupport.TEXTURED.vertexFormat;
+        options.vertexFormat = this._materialProperty instanceof ColorMaterialProperty ? PerInstanceColorAppearance.VERTEX_FORMAT : MaterialAppearance.MaterialSupport.TEXTURED.vertexFormat;
         options.radii = ellipsoid.radii.getValue(Iso8601.MINIMUM_VALUE, options.radii);
-        options.stackPartitions = defined(stackPartitions) ? stackPartitions.getValue(Iso8601.MINIMUM_VALUE) : undefined;
-        options.slicePartitions = defined(slicePartitions) ? slicePartitions.getValue(Iso8601.MINIMUM_VALUE) : undefined;
-        options.subdivisions = defined(subdivisions) ? subdivisions.getValue(Iso8601.MINIMUM_VALUE) : undefined;
+        options.stackPartitions = Property.getValueOrUndefined(ellipsoid.stackPartitions, Iso8601.MINIMUM_VALUE);
+        options.slicePartitions = Property.getValueOrUndefined(ellipsoid.slicePartitions, Iso8601.MINIMUM_VALUE);
+        options.subdivisions = Property.getValueOrUndefined(ellipsoid.subdivisions, Iso8601.MINIMUM_VALUE);
+        options.offsetAttribute = heightReference !== HeightReference.NONE ? GeometryOffsetAttribute.ALL : undefined;
     };
+
+    EllipsoidGeometryUpdater.prototype._onEntityPropertyChanged = heightReferenceOnEntityPropertyChanged;
 
     EllipsoidGeometryUpdater.DynamicGeometryUpdater = DynamicEllipsoidGeometryUpdater;
 
@@ -220,6 +256,7 @@ define([
         this._lastOutlineShow = undefined;
         this._lastOutlineWidth = undefined;
         this._lastOutlineColor = undefined;
+        this._lastOffset = new Cartesian3();
         this._material = {};
     }
 
@@ -247,7 +284,7 @@ define([
         }
 
         var radii = Property.getValueOrUndefined(ellipsoid.radii, time, radiiScratch);
-        var modelMatrix = entity.computeModelMatrix(time, this._modelMatrix);
+        var modelMatrix = defined(radii) ? entity.computeModelMatrixForHeightReference(time, ellipsoid.heightReference, radii.z * 0.5, this._scene.mapProjection.ellipsoid, this._modelMatrix) : undefined;
         if (!defined(modelMatrix) || !defined(radii)) {
             if (defined(this._primitive)) {
                 this._primitive.show = false;
@@ -270,10 +307,13 @@ define([
         var slicePartitions = Property.getValueOrUndefined(ellipsoid.slicePartitions, time);
         var subdivisions = Property.getValueOrUndefined(ellipsoid.subdivisions, time);
         var outlineWidth = Property.getValueOrDefault(ellipsoid.outlineWidth, time, 1.0);
+        var heightReference = Property.getValueOrDefault(ellipsoid.heightReference, time, HeightReference.NONE);
+        var offsetAttribute = heightReference !== HeightReference.NONE ? GeometryOffsetAttribute.ALL : undefined;
 
         //In 3D we use a fast path by modifying Primitive.modelMatrix instead of regenerating the primitive every frame.
+        //Also check for height reference because this method doesn't work when the height is relative to terrain.
         var sceneMode = this._scene.mode;
-        var in3D = sceneMode === SceneMode.SCENE3D;
+        var in3D = sceneMode === SceneMode.SCENE3D && heightReference === HeightReference.NONE;
 
         var options = this._options;
 
@@ -282,11 +322,13 @@ define([
         var distanceDisplayConditionProperty = this._geometryUpdater.distanceDisplayConditionProperty;
         var distanceDisplayCondition = distanceDisplayConditionProperty.getValue(time);
 
+        var offset = Property.getValueOrDefault(this._geometryUpdater.terrainOffsetProperty, time, defaultOffset, offsetScratch);
+
         //We only rebuild the primitive if something other than the radii has changed
         //For the radii, we use unit sphere and then deform it with a scale matrix.
         var rebuildPrimitives = !in3D || this._lastSceneMode !== sceneMode || !defined(this._primitive) || //
                                 options.stackPartitions !== stackPartitions || options.slicePartitions !== slicePartitions || //
-                                options.subdivisions !== subdivisions || this._lastOutlineWidth !== outlineWidth;
+                                options.subdivisions !== subdivisions || this._lastOutlineWidth !== outlineWidth || options.offsetAttribute !== offsetAttribute;
 
         if (rebuildPrimitives) {
             var primitives = this._primitives;
@@ -300,6 +342,7 @@ define([
             options.stackPartitions = stackPartitions;
             options.slicePartitions = slicePartitions;
             options.subdivisions = subdivisions;
+            options.offsetAttribute = offsetAttribute;
             options.radii = in3D ? unitSphere : radii;
 
             var appearance = new MaterialAppearance({
@@ -336,6 +379,7 @@ define([
             this._lastOutlineShow = showOutline;
             this._lastOutlineColor = Color.clone(outlineColor, this._lastOutlineColor);
             this._lastDistanceDisplayCondition = distanceDisplayCondition;
+            this._lastOffset = Cartesian3.clone(offset, this._lastOffset);
         } else if (this._primitive.ready) {
             //Update attributes only.
             var primitive = this._primitive;
@@ -376,6 +420,12 @@ define([
                 attributes.distanceDisplayCondition = DistanceDisplayConditionGeometryInstanceAttribute.toValue(distanceDisplayCondition, attributes.distanceDisplayCondition);
                 outlineAttributes.distanceDisplayCondition = DistanceDisplayConditionGeometryInstanceAttribute.toValue(distanceDisplayCondition, outlineAttributes.distanceDisplayCondition);
                 DistanceDisplayCondition.clone(distanceDisplayCondition, this._lastDistanceDisplayCondition);
+            }
+
+            if (!Cartesian3.equals(offset, this._lastOffset)) {
+                attributes.offset = OffsetGeometryInstanceAttribute.toValue(offset, attributes.offset);
+                outlineAttributes.offset  = OffsetGeometryInstanceAttribute.toValue(offset, attributes.offset);
+                Cartesian3.clone(offset, this._lastOffset);
             }
         }
 
