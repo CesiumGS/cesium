@@ -309,7 +309,79 @@ define([
      */
     PolylinePipeline.generateCartesianArc = function(options) {
         var numberArray = PolylinePipeline.generateArc(options);
-        var size = numberArray.length/3;
+        var size = numberArray.length / 3;
+        var newPositions = new Array(size);
+        for (var i = 0; i < size; i++) {
+            newPositions[i] = Cartesian3.unpack(numberArray, i*3);
+        }
+        return newPositions;
+    };
+
+    var distanceScratch = new Cartesian3();
+    function getPointAtDistance(p0, p1, distance, length) {
+        Cartesian3.subtract(p1, p0, distanceScratch);
+        Cartesian3.multiplyByScalar(distanceScratch, distance / length, distanceScratch);
+        Cartesian3.add(p0, distanceScratch, distanceScratch);
+        return [distanceScratch.x, distanceScratch.y, distanceScratch.z];
+    }
+
+    PolylinePipeline.subdivideLineSegmentCount = function(p0, p1, minDistance) {
+        var distance = Cartesian3.distance(p0, p1);
+        var n = distance / minDistance;
+        var countDivide = Math.max(0, Math.ceil(Math.log(n) / Math.log(2)));
+        return Math.pow(2, countDivide);
+    };
+
+    PolylinePipeline.subdivideLineSegment = function(p0, p1, minDistance, result, offset) {
+        var numVertices = PolylinePipeline.subdivideLineSegmentCount(p0, p1, minDistance);
+        var length = Cartesian3.distance(p0, p1);
+        var distanceBetweenVertices = length / numVertices;
+
+        if (!defined(result)) {
+            result = [];
+        }
+        offset = defaultValue(offset, 0);
+
+        var positions = result;
+        positions.length = numVertices * 3;
+
+        var index = offset;
+        for ( var i = 0; i < numVertices; i++) {
+            var p = getPointAtDistance(p0, p1, i * distanceBetweenVertices, length);
+            positions[index++] = p[0];
+            positions[index++] = p[1];
+            positions[index++] = p[2];
+        }
+
+        return positions;
+    };
+
+    PolylinePipeline.subdivideLine = function(positions, minDistance) {
+        var i;
+        var length = positions.length;
+
+        var count = 0;
+        for (i = 0; i < length - 1; ++i) {
+            count += PolylinePipeline.subdivideLineSegmentCount(positions[i], positions[i + 1], minDistance);
+        }
+
+        var results = new Array(count * 3 + 3);
+        var offset = 0;
+        for (i = 0; i < length - 1; ++i) {
+            var p0 = positions[i];
+            var p1 = positions[i + 1];
+            PolylinePipeline.subdivideLineSegment(p0, p1, minDistance, results, offset);
+            offset += PolylinePipeline.subdivideLineSegmentCount(p0, p1, minDistance);
+        }
+
+        Cartesian3.pack(positions[length - 1], results, count * 3);
+
+        return results;
+    };
+
+    PolylinePipeline.subdivideCartesianLine = function(positions, minDistance) {
+        var numberArray = PolylinePipeline.subdivideLine(positions, minDistance);
+        var size = numberArray.length / 3;
         var newPositions = new Array(size);
         for (var i = 0; i < size; i++) {
             newPositions[i] = Cartesian3.unpack(numberArray, i*3);

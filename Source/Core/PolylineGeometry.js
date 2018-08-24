@@ -306,6 +306,7 @@ define([
         var i;
         var j;
         var k;
+        var minDistance;
 
         var positions = arrayRemoveDuplicates(polylineGeometry._positions, Cartesian3.equalsEpsilon);
         var positionsLength = positions.length;
@@ -317,8 +318,8 @@ define([
         }
 
         if (followSurface) {
+            minDistance = CesiumMath.chordLength(granularity, ellipsoid.maximumRadius);
             var heights = PolylinePipeline.extractHeights(positions, ellipsoid);
-            var minDistance = CesiumMath.chordLength(granularity, ellipsoid.maximumRadius);
 
             if (defined(colors)) {
                 var colorLength = 1;
@@ -361,6 +362,9 @@ define([
                 ellipsoid: ellipsoid,
                 height: heights
             });
+        } else {
+            minDistance = CesiumMath.chordLength(granularity * 10.0, ellipsoid.maximumRadius);
+            positions = PolylinePipeline.subdivideCartesianLine(positions, minDistance);
         }
 
         positionsLength = positions.length;
