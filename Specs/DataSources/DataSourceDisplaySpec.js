@@ -42,10 +42,6 @@ defineSuite([
         scene.destroyForSpecs();
 
         // Leave ground primitive uninitialized
-        GroundPrimitive._initialized = false;
-        GroundPrimitive._initPromise = undefined;
-        GroundPolylinePrimitive._initialized = false;
-        GroundPolylinePrimitive._initPromise = undefined;
         ApproximateTerrainHeights._initPromise = undefined;
         ApproximateTerrainHeights._terrainHeights = undefined;
     });
@@ -365,8 +361,6 @@ defineSuite([
     });
 
     it('verify update returns false till terrain heights are initialized', function() {
-        GroundPrimitive._initialized = false;
-        GroundPrimitive._initPromise = undefined;
         ApproximateTerrainHeights._initPromise = undefined;
         ApproximateTerrainHeights._terrainHeights = undefined;
 

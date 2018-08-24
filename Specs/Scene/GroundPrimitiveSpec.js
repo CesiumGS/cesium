@@ -77,9 +77,6 @@ defineSuite([
         scene.destroyForSpecs();
 
         // Leave ground primitive uninitialized
-        GroundPrimitive._initialized = false;
-        GroundPrimitive._initPromise = undefined;
-
         ApproximateTerrainHeights._initPromise = undefined;
         ApproximateTerrainHeights._terrainHeights = undefined;
     });
@@ -1260,9 +1257,10 @@ defineSuite([
 
     it('creating a synchronous primitive throws if initializeTerrainHeights wasn\'t called', function() {
         // Make it seem like initializeTerrainHeights was never called
-        var initPromise = GroundPrimitive._initPromise;
-        GroundPrimitive._initPromise = undefined;
-        GroundPrimitive._initialized = false;
+        var initPromise = ApproximateTerrainHeights._initPromise;
+        var terrainHeights = ApproximateTerrainHeights._terrainHeights;
+        ApproximateTerrainHeights._initPromise = undefined;
+        ApproximateTerrainHeights._terrainHeights = undefined;
 
         primitive = new GroundPrimitive({
             geometryInstances : rectangleInstance,
@@ -1276,7 +1274,7 @@ defineSuite([
         }
 
         // Set back to initialized state
-        GroundPrimitive._initPromise = initPromise;
-        GroundPrimitive._initialized = true;
+        ApproximateTerrainHeights._initPromise = initPromise;
+        ApproximateTerrainHeights._terrainHeights = terrainHeights;
     });
 }, 'WebGL');
