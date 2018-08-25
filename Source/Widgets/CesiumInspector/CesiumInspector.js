@@ -95,7 +95,7 @@ define([
         frustumStatistics.setAttribute('data-bind', 'css: {"cesium-cesiumInspector-show" : frustums, "cesium-cesiumInspector-hide" :  !frustums}, html: frustumStatisticText');
         debugShowFrustums.appendChild(frustumStatistics);
         generalSection.appendChild(debugShowFrustums);
-        
+
         generalSection.appendChild(createCheckBox('checked: frustumPlanes', 'Show Frustum Planes'));
         generalSection.appendChild(createCheckBox('checked: performance', 'Performance Display'));
 
