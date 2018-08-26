@@ -444,8 +444,8 @@ define([
         }
     };
 
-    Batched3DModel3DTileContent.prototype.applyStyle = function(frameState, style) {
-        this._batchTable.applyStyle(frameState, style);
+    Batched3DModel3DTileContent.prototype.applyStyle = function(style) {
+        this._batchTable.applyStyle(style);
     };
 
     Batched3DModel3DTileContent.prototype.update = function(tileset, frameState) {
@@ -482,8 +482,7 @@ define([
         // If any commands were pushed, add derived commands
         var commandEnd = frameState.commandList.length;
         if ((commandStart < commandEnd) && (frameState.passes.render || frameState.passes.pick) && !defined(tileset.classificationType)) {
-            var finalResolution = this._tile._finalResolution;
-            this._batchTable.addDerivedCommands(frameState, commandStart, finalResolution);
+            this._batchTable.addDerivedCommands(frameState, commandStart);
         }
    };
 
