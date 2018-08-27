@@ -90,6 +90,7 @@ defineSuite([
     var texturedBoxKhrBinaryUrl = './Data/Models/Box-Textured-Binary/CesiumTexturedBoxTest.glb';
     var boxRtcUrl = './Data/Models/Box-RTC/Box.gltf';
     var boxEcefUrl = './Data/Models/Box-ECEF/ecef.gltf';
+    var boxWithUnusedMaterial = './Data/Models/BoxWithUnusedMaterial/Box.gltf';
 
     var cesiumAirUrl = './Data/Models/CesiumAir/Cesium_Air.gltf';
     var cesiumAir_0_8Url = './Data/Models/CesiumAir/Cesium_Air_0_8.gltf';
@@ -526,46 +527,21 @@ defineSuite([
         // Simulate using procedural glTF as opposed to loading it from a file
         return loadModelJson(texturedBoxModel.gltf).then(function(model) {
             var rs = {
-                frontFace : WebGLConstants.CCW,
                 cull : {
-                    enabled : true,
-                    face : WebGLConstants.BACK
-                },
-                lineWidth : 1.0,
-                polygonOffset : {
-                    enabled : false,
-                    factor : 0.0,
-                    units : 0.0
-                },
-                depthRange : {
-                    near : 0.0,
-                    far : 1.0
+                    enabled : true
                 },
                 depthTest : {
-                    enabled : true,
-                    func : WebGLConstants.LESS
-                },
-                colorMask : {
-                    red : true,
-                    green : true,
-                    blue : true,
-                    alpha : true
+                    enabled : true
                 },
                 depthMask : true,
                 blending : {
                     enabled : false,
-                    color : {
-                        red : 0.0,
-                        green : 0.0,
-                        blue : 0.0,
-                        alpha : 0.0
-                    },
                     equationRgb : WebGLConstants.FUNC_ADD,
                     equationAlpha : WebGLConstants.FUNC_ADD,
                     functionSourceRgb : WebGLConstants.ONE,
                     functionSourceAlpha : WebGLConstants.ONE,
-                    functionDestinationRgb : WebGLConstants.ZERO,
-                    functionDestinationAlpha : WebGLConstants.ZERO
+                    functionDestinationRgb : WebGLConstants.ONE_MINUS_SRC_ALPHA,
+                    functionDestinationAlpha : WebGLConstants.ONE_MINUS_SRC_ALPHA
                 }
             };
 
@@ -732,13 +708,13 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('ModelMaterial.setValue sets a scalar parameter', function() {
+    it('ModelMaterial.setValue sets a scalar uniform value', function() {
         var material = texturedBoxModel.getMaterial('Texture');
         material.setValue('shininess', 12.34);
         expect(material.getValue('shininess')).toEqual(12.34);
     });
 
-    it('ModelMaterial.setValue sets a Cartesian4 parameter', function() {
+    it('ModelMaterial.setValue sets a Cartesian4 uniform value', function() {
         var material = texturedBoxModel.getMaterial('Texture');
         var specular = new Cartesian4(0.25, 0.5, 0.75, 1.0);
         material.setValue('specular', specular);
@@ -752,7 +728,7 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('ModelMaterial.getValue returns undefined when parameter does not exist', function() {
+    it('ModelMaterial.getValue returns undefined when uniform value does not exist', function() {
         var material = texturedBoxModel.getMaterial('Texture');
         expect(material.getValue('name-of-parameter-that-does-not-exist')).not.toBeDefined();
     });
@@ -947,9 +923,16 @@ defineSuite([
 
             // Verify that rotation is converted from
             // Axis-Angle (1,0,0,0) to Quaternion (0,0,0,1)
-            var rotation = m.gltf.nodes[3].rotation;
+            var rotation = m.gltf.nodes[2].rotation;
             expect(rotation).toEqual([0.0, 0.0, 0.0, 1.0]);
 
+            verifyRender(m);
+            primitives.remove(m);
+        });
+    });
+
+    it('loads a glTF model with unused material', function() {
+        return loadModel(boxWithUnusedMaterial).then(function(m) {
             verifyRender(m);
             primitives.remove(m);
         });
@@ -1007,7 +990,7 @@ defineSuite([
             return new Model({
                 gltf : arrayBuffer
             });
-        }).toThrowDeveloperError();
+        }).toThrowRuntimeError();
     });
 
     it('Throws because of an invalid Binary glTF header - version', function() {
@@ -1022,7 +1005,7 @@ defineSuite([
             return new Model({
                 gltf : arrayBuffer
             });
-        }).toThrowDeveloperError();
+        }).toThrowRuntimeError();
     });
 
     it('renders a model with the CESIUM_RTC extension', function() {
@@ -2060,7 +2043,7 @@ defineSuite([
             expect(scene).toRender([0, 0, 0, 255]);
             m.show = true;
             m.zoomTo();
-            expect(scene).toRender([0, 0, 0, 255]);
+            expect(scene).toRender([51, 51, 51, 255]); // Cesium has minimum lighting
             m.show = false;
 
             primitives.remove(m);

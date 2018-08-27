@@ -84,7 +84,8 @@ define([
         }
         //>>includeEnd('debug');
 
-        var v = this._uniformMap.values[name];
+        var uniformName = 'u_' + name;
+        var v = this._uniformMap.values[uniformName];
 
         //>>includeStart('debug', pragmas.debug);
         if (!defined(v)) {
@@ -110,7 +111,8 @@ define([
         }
         //>>includeEnd('debug');
 
-        var v = this._uniformMap.values[name];
+        var uniformName = 'u_' + name;
+        var v = this._uniformMap.values[uniformName];
 
         if (!defined(v)) {
             return undefined;

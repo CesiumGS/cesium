@@ -607,6 +607,7 @@ define([
             buffers : {},
             vertexArrays : {},
             programs : {},
+            sourceShaders : {},
             silhouettePrograms : {},
             textures : {},
             samplers : {},
@@ -628,7 +629,7 @@ define([
         // Hold references for shader reconstruction.
         // Hold these separately because _cachedGltf may get released (this.releaseGltfJson)
         this._sourceTechniques = {};
-        this._sourceShaders = {};
+        this._sourcePrograms = {};
         this._quantizedVertexShaders = {};
 
         this._nodeCommands = [];
@@ -1355,6 +1356,27 @@ define([
         });
     }
 
+    function parseTechniques(model) {
+        // retain references to gltf techniques
+        var gltf = model.gltf;
+        if (!hasExtension(gltf, 'KHR_techniques_webgl')) {
+            return;
+        }
+
+        var sourcePrograms = model._sourcePrograms;
+        var sourceTechniques = model._sourceTechniques;
+        var programs = gltf.extensions.KHR_techniques_webgl.programs;
+
+        ForEach.technique(gltf, function(technique, techniqueId) {
+            sourceTechniques[techniqueId] = clone(technique);
+
+            var programId = technique.program;
+            if (!defined(sourcePrograms[programId])) {
+                sourcePrograms[programId] = clone(programs[programId]);
+            }
+        });
+    }
+
     function shaderLoad(model, type, id) {
         return function(source) {
             var loadResources = model._loadResources;
@@ -1364,7 +1386,7 @@ define([
                 bufferView : undefined
             };
             --loadResources.pendingShaderLoads;
-            model._sourceShaders[id] = source;
+            model._rendererResources.sourceShaders[id] = source;
         };
     }
 
@@ -1372,10 +1394,8 @@ define([
         var gltf = model.gltf;
         var buffers = gltf.buffers;
         var bufferViews = gltf.bufferViews;
+        var sourceShaders = model._rendererResources.sourceShaders;
         ForEach.shader(gltf, function(shader, id) {
-            // retain reference to source shader text
-            var sourceShader = model._sourceShaders[id] = clone(shader.extras._pipeline.source);
-
             // Shader references either uri (external or base64-encoded) or bufferView
             if (defined(shader.bufferView)) {
                 var bufferViewId = shader.bufferView;
@@ -1383,16 +1403,17 @@ define([
                 var bufferId = bufferView.buffer;
                 var buffer = buffers[bufferId];
                 var source = getStringFromTypedArray(buffer.extras._pipeline.source, bufferView.byteOffset, bufferView.byteLength);
-                model._loadResources.shaders[id] = {
-                    source : source,
-                    bufferView : undefined
-                };
-                model._sourceShaders[id] = source;
-            } else if (defined(sourceShader)) {
-                model._loadResources.shaders[id] = {
-                    source: sourceShader,
-                    bufferView : undefined
-                };
+                // model._loadResources.shaders[id] = {
+                //     source : source,
+                //     bufferView : undefined
+                // };
+                sourceShaders[id] = source;
+            } else if (defined(shader.extras._pipeline.source)) {
+                // model._loadResources.shaders[id] = {
+                //     source: shader.extras._pipeline.source,
+                //     bufferView : undefined
+                // };
+                sourceShaders[id] = shader.extras._pipeline.source;
             } else {
                 ++model._loadResources.pendingShaderLoads;
 
@@ -1408,24 +1429,16 @@ define([
     }
 
     function parsePrograms(model) {
-        var sourcePrograms = model._sourcePrograms = {};
-        var gltf = model.gltf;
-
-        if (!hasExtension(gltf, 'KHR_techniques_webgl')) {
-            return;
-        }
-
-        var programs = gltf.extensions.KHR_techniques_webgl.programs;
-        ForEach.technique(model.gltf, function(technique, techniqueId) {
-            var programId = technique.program;
-            if (!defined(sourcePrograms[programId])) {
-                sourcePrograms[programId] = clone(programs[programId]);
+        var sourceTechniques = model._sourceTechniques;
+        for (var techniqueId in sourceTechniques) {
+            if (sourceTechniques.hasOwnProperty(techniqueId)) {
+                var technique = sourceTechniques[techniqueId];
                 model._loadResources.programsToCreate.enqueue({
-                    programId : programId,
-                    techniqueId : techniqueId
+                    programId: technique.program,
+                    techniqueId: techniqueId
                 });
             }
-        });
+        }
     }
 
     function imageLoad(model, textureId) {
@@ -1588,10 +1601,6 @@ define([
     function parseMaterials(model) {
         var gltf = model.gltf;
         var techniques = model._sourceTechniques;
-
-        ForEach.technique(model.gltf, function(technique, index) {
-            techniques[index] = clone(technique);
-        });
 
         var runtimeMaterialsByName = {};
         var runtimeMaterialsById = {};
@@ -1873,7 +1882,7 @@ define([
         var programId = programToCreate.programId;
         var techniqueId = programToCreate.techniqueId;
         var program = model._sourcePrograms[programId];
-        var shaders = model._sourceShaders;
+        var shaders = model._rendererResources.sourceShaders;
 
         var vs = shaders[program.vertexShader];
         var fs = shaders[program.fragmentShader];
@@ -1912,7 +1921,7 @@ define([
         var programId = programToCreate.programId;
         var techniqueId = programToCreate.techniqueId;
         var program = model._sourcePrograms[programId];
-        var shaders = model._sourceShaders;
+        var shaders = model._rendererResources.sourceShaders;
 
         var quantizedVertexShaders = model._quantizedVertexShaders;
         var toClipCoordinatesGLSL = model._toClipCoordinatesGLSL[programId];
@@ -2656,7 +2665,7 @@ define([
             // https://github.com/KhronosGroup/glTF/issues/142
 
             var uv;
-            if (defined(instanceValues[uniformName])) {
+            if (defined(instanceValues) && defined(instanceValues[uniformName])) {
                 // Parameter overrides by the instance technique
                 uv = ModelUtility.createUniformFunction(uniform.type, instanceValues[uniformName], textures, defaultTexture);
                 uniformMap[uniformName] = uv.func;
@@ -3133,15 +3142,20 @@ define([
     function createResources(model, frameState) {
         var context = frameState.context;
         var scene3DOnly = frameState.scene3DOnly;
-
-        // Retain references to updated source shaders for rebuilding as needed
-        var shaders = model._sourceShaders;
-
         var quantizedVertexShaders = model._quantizedVertexShaders;
         var toClipCoordinates = model._toClipCoordinatesGLSL = {};
+        var techniques = model._sourceTechniques;
         var programs = model._sourcePrograms;
-        for (var programId in programs) {
-            if (programs.hasOwnProperty(programId)) {
+
+        var resources = model._rendererResources;
+        var shaders = resources.sourceShaders;
+        if (model._loadRendererResourcesFromCache) {
+            shaders = resources.sourceShaders = model._cachedRendererResources.sourceShaders;
+        }
+
+        for (var techniqueId in techniques) {
+            if (techniques.hasOwnProperty(techniqueId)) {
+                var programId = techniques[techniqueId].program;
                 var program = programs[programId];
                 var shader = shaders[program.vertexShader];
 
@@ -3162,7 +3176,6 @@ define([
         }
 
         if (model._loadRendererResourcesFromCache) {
-            var resources = model._rendererResources;
             var cachedResources = model._cachedRendererResources;
 
             resources.buffers = cachedResources.buffers;
@@ -3802,6 +3815,7 @@ define([
         this.buffers = undefined;
         this.vertexArrays = undefined;
         this.programs = undefined;
+        this.sourceShaders = undefined;
         this.silhouettePrograms = undefined;
         this.textures = undefined;
         this.samplers = undefined;
@@ -4032,25 +4046,26 @@ define([
                     frameState.brdfLutGenerator.update(frameState);
 
                     ModelUtility.checkSupportedExtensions(this.extensionsRequired);
+                    ModelUtility.updateForwardAxis(this);
 
-                    // glTF pipeline updates
-                    updateVersion(this.gltf);
-                    if (this.gltf.extras._pipeline.gltf_pipeline_upgrade_10to20) {
-                        this._forwardAxis = Axis.X;
+                    // glTF pipeline updates, not needed if loading from cache
+                    if (!this._loadRendererResourcesFromCache) {
+                        updateVersion(this.gltf);
+                        addDefaults(this.gltf);
+
+                        var options = {
+                            addBatchIdToGeneratedShaders: this._addBatchIdToGeneratedShaders
+                        };
+                        processModelMaterialsCommon(this.gltf, options);
+                        processPbrMetallicRoughness(this.gltf, options);
                     }
-                    addDefaults(this.gltf);
-
-                    var options = {
-                        addBatchIdToGeneratedShaders: this._addBatchIdToGeneratedShaders
-                    };
-                    processModelMaterialsCommon(this.gltf, options);
-                    processPbrMetallicRoughness(this.gltf, options);
 
                     // Skip dequantizing in the shader if not encoded
                     this._dequantizeInShader = this._dequantizeInShader && DracoLoader.hasExtension(this);
 
                     // We do this after to make sure that the ids don't change
                     addBuffersToLoadResources(this);
+                    parseTechniques(this);
                     if (!this._loadRendererResourcesFromCache) {
                         parseBufferViews(this);
                         parseShaders(this);
@@ -4111,6 +4126,7 @@ define([
                 cachedResources.buffers = resources.buffers;
                 cachedResources.vertexArrays = resources.vertexArrays;
                 cachedResources.programs = resources.programs;
+                cachedResources.sourceShaders = resources.sourceShaders;
                 cachedResources.silhouettePrograms = resources.silhouettePrograms;
                 cachedResources.textures = resources.textures;
                 cachedResources.samplers = resources.samplers;
@@ -4430,7 +4446,6 @@ define([
         }
 
         releaseCachedGltf(this);
-        this._sourceShaders = undefined;
         this._quantizedVertexShaders = undefined;
 
         // Only destroy the ClippingPlaneCollection if this is the owner - if this model is part of a Cesium3DTileset,

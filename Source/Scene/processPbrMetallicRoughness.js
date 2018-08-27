@@ -45,7 +45,13 @@ define([
 
         if (!defined(gltf.extensions)) {
             gltf.extensions = {};
+        }
+
+        if (!defined(gltf.extensionsUsed)) {
             gltf.extensionsUsed = [];
+        }
+
+        if (!defined(gltf.extensionsRequired)) {
             gltf.extensionsRequired = [];
         }
 

@@ -34,7 +34,11 @@ define([
             return;
         }
 
-        if (!hasExtension('KHR_techniques_webgl')) {
+        if (!hasExtension(gltf, 'KHR_techniques_webgl')) {
+            if (!defined(gltf.extensions)) {
+                gltf.extensions = {};
+            }
+
             gltf.extensions.KHR_techniques_webgl = {
                 programs : [],
                 shaders : [],
@@ -50,9 +54,10 @@ define([
 
         var lightParameters = generateLightParameters(gltf);
 
-       var primitiveByMaterial = ModelUtility.splitIncompatibleMaterials(gltf);
+        var primitiveByMaterial = ModelUtility.splitIncompatibleMaterials(gltf);
 
         var techniques = {};
+        var generatedTechniques = false;
         ForEach.material(gltf, function(material, materialIndex) {
             if (defined(material.extensions) && defined(material.extensions.KHR_materials_common)) {
                 var khrMaterialsCommon = material.extensions.KHR_materials_common;
@@ -64,6 +69,7 @@ define([
                 if (!defined(technique)) {
                     technique = generateTechnique(gltf, techniquesWebgl, primitiveInfo, khrMaterialsCommon, lightParameters, options.addBatchIdToGeneratedShaders);
                     techniques[techniqueKey] = technique;
+                    generatedTechniques = true;
                 }
 
                 var materialValues = {};
@@ -91,6 +97,10 @@ define([
                 }
             }
         });
+
+        if (!generatedTechniques) {
+            return gltf;
+        }
 
         // If any primitives have semantics that aren't declared in the generated
         // shaders, we want to preserve them.
@@ -214,13 +224,20 @@ define([
     }
 
     function generateTechnique(gltf, techniquesWebgl, primitiveInfo, khrMaterialsCommon, lightParameters, addBatchIdToGeneratedShaders) {
+        if (!defined(khrMaterialsCommon)) {
+            khrMaterialsCommon = {};
+        }
+
         addBatchIdToGeneratedShaders = defaultValue(addBatchIdToGeneratedShaders, false);
 
         var techniques = techniquesWebgl.techniques;
         var shaders = techniquesWebgl.shaders;
         var programs = techniquesWebgl.programs;
         var lightingModel = khrMaterialsCommon.technique.toUpperCase();
-        var lights = gltf.extensions.KHR_materials_common.lights;
+        var lights;
+        if (defined(gltf.extensions) && defined(gltf.extensions.KHR_materials_common)) {
+            lights = gltf.extensions.KHR_materials_common.lights;
+        }
 
         var parameterValues = khrMaterialsCommon.values;
         var jointCount = defaultValue(khrMaterialsCommon.jointCount, 0);
@@ -715,10 +732,10 @@ define([
 
     function lightDefaults(gltf) {
         var khrMaterialsCommon = gltf.extensions.KHR_materials_common;
-
-        if (!defined(khrMaterialsCommon.lights)) {
-            khrMaterialsCommon.lights = {};
+        if (!defined(khrMaterialsCommon) || !defined(khrMaterialsCommon.lights)) {
+            return;
         }
+
         var lights = khrMaterialsCommon.lights;
 
         var lightsLength = lights.length;

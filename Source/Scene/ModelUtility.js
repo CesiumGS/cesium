@@ -88,6 +88,17 @@ define([
     };
 
     /**
+     * Updates the model's forward axis if the model is not a 2.0 model.
+     *
+     * @param {Object} model The model to update.
+     */
+    ModelUtility.updateForwardAxis = function(model) {
+        if (model.gltf.asset.version !== '2.0') {
+            model._forwardAxis = Axis.X;
+        }
+    };
+
+    /**
      * Splits primitive materials with values incompatible for generating techniques.
      *
      * @param {Object} gltf A javascript object containing a glTF asset.
