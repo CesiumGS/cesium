@@ -40,6 +40,7 @@ Change Log
 * Fixed an issue where color wasn't updated propertly for polylines clamped to ground [#6927](https://github.com/AnalyticalGraphicsInc/cesium/pull/6927)
 * Fixed an issue where switching from 2D to 3D could cause a crash. [#6929](https://github.com/AnalyticalGraphicsInc/cesium/issues/6929)
 * Fixed an issue where point primitives behind the camera would appear in view. [#6904](https://github.com/AnalyticalGraphicsInc/cesium/issues/6904)
+* The `createGroundPolylineGeometry` web worker no longer depends on `GroundPolylinePrimitive`, making the worker smaller and potentially avoiding a hanging build in some webpack configurations.
 
 ### 1.48 - 2018-08-01
 
