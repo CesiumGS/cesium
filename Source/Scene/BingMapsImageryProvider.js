@@ -52,11 +52,7 @@ define([
      * @param {Resource|String} options.url The url of the Bing Maps server hosting the imagery.
      * @param {String} [options.key] The Bing Maps key for your application, which can be
      *        created at {@link https://www.bingmapsportal.com/}.
-     *        If this parameter is not provided, {@link BingMapsApi.defaultKey} is used.
-     *        If {@link BingMapsApi.defaultKey} is undefined as well, a message is
-     *        written to the console reminding you that you must create and supply a Bing Maps
-     *        key as soon as possible.  Please do not deploy an application that uses
-     *        Bing Maps imagery without creating a separate key for your application.
+     *        If this parameter is not provided, {@link BingMapsApi.defaultKey} is used, which is undefined by default.
      * @param {String} [options.tileProtocol] The protocol to use when loading tiles, e.g. 'http:' or 'https:'.
      *        By default, tiles are loaded using the same protocol as the page.
      * @param {BingMapsStyle} [options.mapStyle=BingMapsStyle.AERIAL] The type of Bing Maps imagery to load.
