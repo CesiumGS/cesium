@@ -265,6 +265,7 @@ defineSuite([
         expect(texturedBoxModel.ready).toEqual(true);
         expect(texturedBoxModel.asynchronous).toEqual(true);
         expect(texturedBoxModel.releaseGltfJson).toEqual(false);
+        expect(texturedBoxModel.cacheKey).toBeDefined();
         expect(texturedBoxModel.cacheKey).not.toContain('Data/Models/Box-Textured/CesiumTexturedBoxTest.gltf');
         expect(texturedBoxModel.debugShowBoundingVolume).toEqual(false);
         expect(texturedBoxModel.debugWireframe).toEqual(false);

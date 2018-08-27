@@ -1213,9 +1213,9 @@ define([
 
         // If no cache key is provided, use a GUID.
         // Check using a URI to GUID dictionary that we have not already added this model.
-        var cacheKey = defaultValue(options.cacheKey, defaultValue(uriToGuid[getAbsoluteUri(modelResource.url)], createGuid()));
-        var guidFromUri = uriToGuid[getAbsoluteUri(modelResource.url)];
-        if(!defined(guidFromUri)){
+        var cacheKey = defaultValue(options.cacheKey, uriToGuid[getAbsoluteUri(modelResource.url)]);
+        if (!defined(cacheKey)) {
+            cacheKey = createGuid();
             uriToGuid[getAbsoluteUri(modelResource.url)] = cacheKey;
         }
 
