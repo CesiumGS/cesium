@@ -2205,7 +2205,6 @@ define([
         var camera = scene._camera;
         var context = scene.context;
         var us = context.uniformState;
-        var frameState = scene._frameState;
 
         us.updateCamera(camera);
 
