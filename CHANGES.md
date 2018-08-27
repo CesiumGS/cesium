@@ -1,7 +1,7 @@
 Change Log
 ==========
 
-### 1.49 - 2018-09-03
+### 1.49 - 2018-09-04
 
 ##### Breaking Changes :mega:
 * Removed `ClippingPlaneCollection.clone` [#6872](https://github.com/AnalyticalGraphicsInc/cesium/pull/6872)
@@ -33,6 +33,7 @@ Change Log
 * Improved `Plane` entities so they are better aligned with the globe surface [#6887](https://github.com/AnalyticalGraphicsInc/cesium/pull/6887)
 * Fixed crash when rendering translucent objects when all shadow maps in the scene set `fromLightSource` to false. [#6883](https://github.com/AnalyticalGraphicsInc/cesium/pull/6883)
 * Fixed night shading in 2D and Columbus view. [#4122](https://github.com/AnalyticalGraphicsInc/cesium/issues/4122)
+* Fixed model loading failure when a glTF 2.0 primitive does not have a material. [6906](https://github.com/AnalyticalGraphicsInc/cesium/pull/6906)
 * Fixed a crash when setting show to `false` on a polyline clamped to the ground. [#6912](https://github.com/AnalyticalGraphicsInc/cesium/issues/6912)
 * Fixed a bug where `Cesium3DTileset` wasn't using the correct tilesetVersion [#6933](https://github.com/AnalyticalGraphicsInc/cesium/pull/6933)
 * Fixed crash that happened when calling `scene.pick` after setting a new terrain provider [#6918](https://github.com/AnalyticalGraphicsInc/cesium/pull/6918)
