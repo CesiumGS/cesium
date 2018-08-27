@@ -93,8 +93,8 @@ define([
      *
      * @private
      *
-     * @param {Object} [options] Object with the following properties:
-     * @param {ArrayBuffer|Uint8Array} [options.gltf] A binary glTF buffer.
+     * @param {Object} options Object with the following properties:
+     * @param {ArrayBuffer|Uint8Array} options.gltf A binary glTF buffer.
      * @param {Boolean} [options.show=true] Determines if the model primitive will be shown.
      * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The 4x4 transformation matrix that transforms the model from model to world coordinates.
      * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Draws the bounding sphere for each draw command in the model.

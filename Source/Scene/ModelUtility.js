@@ -63,31 +63,6 @@ define([
     }
 
     /**
-     * Removes empty extra._pipeline object from each object that can have extras in the glTF asset.
-     *
-     * @param {Object} gltf A javascript object containing a glTF asset.
-     * @returns {Object} The glTF asset with the added pipeline extras.
-     */
-    ModelUtility.removePipelineExtras = function(gltf) {
-        ForEach.shader(gltf, function(shader) {
-            removeExtrasIfEmpty(shader);
-        });
-        ForEach.buffer(gltf, function(buffer) {
-            removeExtrasIfEmpty(buffer);
-        });
-        ForEach.image(gltf, function(image) {
-            removeExtrasIfEmpty(image);
-            ForEach.compressedImage(image, function(compressedImage) {
-                removeExtrasIfEmpty(compressedImage);
-            });
-        });
-
-        removeExtrasIfEmpty(gltf);
-
-        return gltf;
-    };
-
-    /**
      * Updates the model's forward axis if the model is not a 2.0 model.
      *
      * @param {Object} model The model to update.

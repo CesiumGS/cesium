@@ -48,6 +48,7 @@ define([
         '../ThirdParty/GltfPipeline/hasExtension',
         '../ThirdParty/GltfPipeline/numberOfComponentsForType',
         '../ThirdParty/GltfPipeline/parseGlb',
+        '../ThirdParty/GltfPipeline/removePipelineExtras',
         '../ThirdParty/GltfPipeline/updateVersion',
         '../ThirdParty/when',
         './Axis',
@@ -120,6 +121,7 @@ define([
         hasExtension,
         numberOfComponentsForType,
         parseGlb,
+        removePipelineExtras,
         updateVersion,
         when,
         Axis,
@@ -225,6 +227,8 @@ define([
      * Cesium supports glTF assets with the following extensions:
      * <ul>
      * <li>
+     * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/1.0/Khronos/KHR_binary_glTF/README.md|KHR_binary_glTF}
+     * </li><li>
      * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/1.0/Khronos/KHR_materials_common/README.md|KHR_materials_common}
      * </li><li>
      * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/1.0/Vendor/WEB3D_quantized_attributes/README.md|WEB3D_quantized_attributes}
@@ -1097,6 +1101,8 @@ define([
      * Cesium supports glTF assets with the following extensions:
      * <ul>
      * <li>
+     * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/1.0/Khronos/KHR_binary_glTF/README.md|KHR_binary_glTF}
+     * </li><li>
      * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/1.0/Khronos/KHR_materials_common/README.md|KHR_materials_common}
      * </li><li>
      * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/1.0/Vendor/WEB3D_quantized_attributes/README.md|WEB3D_quantized_attributes}
@@ -2521,7 +2527,7 @@ define([
         }
 
         var enableCulling = !material.doubleSided;
-        var blendingEnabled = (material.alphaMode !== 'OPAQUE');
+        var blendingEnabled = (material.alphaMode === 'BLEND');
         rendererRenderStates[materialId] = RenderState.fromCache({
             cull : {
                 enabled : enableCulling
@@ -4116,7 +4122,7 @@ define([
             }
 
             if (loadResources.finished()) {
-                ModelUtility.removePipelineExtras(this.gltf);
+                removePipelineExtras(this.gltf);
 
                 this._loadResources = undefined;  // Clear CPU memory since WebGL resources were created.
 
