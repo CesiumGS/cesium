@@ -10,6 +10,7 @@ define([
      * partially inside the frustum and partially outside (INTERSECTING), or somwhere entirely
      * outside of the frustum's 6 planes (OUTSIDE).
      *
+     * @exports Intersect
      * @typedef Intersect
      * @type {Object}
      * @property {Number} OUTSIDE Represents that an object is not contained within the frustum.
