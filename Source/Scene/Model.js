@@ -2528,7 +2528,6 @@ define([
 
         var enableCulling = !material.doubleSided;
         var blendingEnabled = (material.alphaMode === 'BLEND');
-        var alphaMask = (material.alphaMode === 'MASK');
         rendererRenderStates[materialId] = RenderState.fromCache({
             cull : {
                 enabled : enableCulling
@@ -2538,7 +2537,7 @@ define([
             },
             depthMask : !blendingEnabled,
             blending : {
-                enabled : blendingEnabled || alphaMask,
+                enabled : blendingEnabled,
                 equationRgb : blendEquationSeparate[0],
                 equationAlpha : blendEquationSeparate[1],
                 functionSourceRgb : blendFuncSeparate[0],

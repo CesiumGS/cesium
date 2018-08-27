@@ -646,7 +646,10 @@ define([
         fragmentShader += '    color = LINEARtoSRGB(color);\n';
         if (defined(alphaMode)) {
             if (alphaMode === 'MASK') {
-                fragmentShader += '    gl_FragColor = vec4(color, int(baseColorWithAlpha.a >= u_alphaCutoff));\n';
+                fragmentShader += '    if (baseColorWithAlpha.a < u_alphaCutoff) {\n';
+                fragmentShader += '        discard;\n';
+                fragmentShader += '    }\n';
+                fragmentShader += '    gl_FragColor = vec4(color, 1.0);\n';
             } else if (alphaMode === 'BLEND') {
                 fragmentShader += '    gl_FragColor = vec4(color, baseColorWithAlpha.a);\n';
             } else {
