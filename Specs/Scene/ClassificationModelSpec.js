@@ -75,8 +75,6 @@ defineSuite([
 
     beforeAll(function() {
         scene = createScene();
-
-        
     });
 
     afterAll(function() {
