@@ -200,10 +200,6 @@ define([
                 contentHeaderUri = contentHeader.url;
             }
 
-            if (tileset._brokenUrlWorkaround && contentHeaderUri.length > 0 && (contentHeaderUri[0] === '/')) {
-                contentHeaderUri = contentHeader.uri = contentHeaderUri.substring(1);
-            }
-
             hasEmptyContent = false;
             contentState = Cesium3DTileContentState.UNLOADED;
             contentResource = baseResource.getDerivedResource({
