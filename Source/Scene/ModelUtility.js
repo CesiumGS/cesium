@@ -47,21 +47,6 @@ define([
      */
     var ModelUtility = {};
 
-    function removeExtrasIfEmpty(object) {
-        if (!defined(object.extras)) {
-            return;
-        }
-
-        var pipeline = object.extras._pipeline;
-        if (!defined(pipeline)) {
-            return;
-        }
-
-        if (Object.keys(pipeline).length === 0) {
-            delete object.extras;
-        }
-    }
-
     /**
      * Updates the model's forward axis if the model is not a 2.0 model.
      *
