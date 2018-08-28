@@ -59,7 +59,7 @@ function computeCirclularFlight(lon, lat, radius) {
         var radians = Cesium.Math.toRadians(i);
         var timeIncrement = i - startAngle;
         var time = Cesium.JulianDate.addSeconds(start, timeIncrement, new Cesium.JulianDate());
-        var position = Cesium.Cartesian3.fromDegrees(lon + (radius * 1.5 * Math.cos(radians)), lat + (radius * Math.sin(radians)), Cesium.Math.nextRandomNumber() * 500 + 1750);
+        var position = Cesium.Cartesian3.fromDegrees(lon + (radius * 1.5 * Math.cos(radians)), lat + (radius * Math.sin(radians)), Cesium.Math.nextRandomNumber() * 500 + 1800);
         property.addSample(time, position);
     }
     return property;
