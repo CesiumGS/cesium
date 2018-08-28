@@ -36,6 +36,7 @@ Change Log
 * Fixed crash that happened when calling `scene.pick` after setting a new terrain provider [#6918](https://github.com/AnalyticalGraphicsInc/cesium/pull/6918)
 * Fixed an issue that caused the browser to hang when using `drillPick` on a polyline clamped to the ground. [6907](https://github.com/AnalyticalGraphicsInc/cesium/issues/6907)
 * Fixed an issue where color wasn't updated propertly for polylines clamped to ground [#6927](https://github.com/AnalyticalGraphicsInc/cesium/pull/6927)
+* Fixed an excessive memory use bug that occurred when a data URI was used to specify a glTF model. [#6928](https://github.com/AnalyticalGraphicsInc/cesium/issues/6928)
 
 ### 1.48 - 2018-08-01
 
