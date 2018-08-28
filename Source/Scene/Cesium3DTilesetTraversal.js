@@ -68,7 +68,7 @@ define([
         tileset._emptyTiles.length = 0;
         tileset._hasMixedContent = false;
 
-        var root = tileset._root;
+        var root = tileset.root;
         updateTile(tileset, root, frameState);
 
         // The root tile is not visible
@@ -216,7 +216,7 @@ define([
         var parent = tile.parent;
         var useParentScreenSpaceError = defined(parent) && (!skipLevelOfDetail(tileset) || (tile._screenSpaceError === 0.0));
         var screenSpaceError = useParentScreenSpaceError ? parent._screenSpaceError : tile._screenSpaceError;
-        var rootScreenSpaceError = tileset._root._screenSpaceError;
+        var rootScreenSpaceError = tileset.root._screenSpaceError;
         return rootScreenSpaceError - screenSpaceError; // Map higher SSE to lower values (e.g. root tile is highest priority)
     }
 
