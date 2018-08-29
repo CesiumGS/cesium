@@ -132,6 +132,8 @@ defineSuite([
     var pointCloudUrl = 'Data/Cesium3DTiles/PointCloud/PointCloudRGB/tileset.json';
     var pointCloudBatchedUrl = 'Data/Cesium3DTiles/PointCloud/PointCloudBatched/tileset.json';
 
+    var tilesetWithExtras = 'Data/Cesium3DTiles/Tilesets/TilesetWithExtras/tileset.json';
+
     beforeAll(function() {
         scene = createScene();
     });
@@ -353,6 +355,16 @@ defineSuite([
             expect(tileset._geometricError).toEqual(240.0);
             expect(tileset.root).toBeDefined();
             expect(tileset.url).toEqual(tilesetUrl);
+        });
+    });
+
+    fit('loads tileset with extras', function() {
+        return Cesium3DTilesTester.loadTileset(scene, tilesetWithExtras).then(function(tileset) {
+            expect(tileset.extras).toBeDefined();
+            expect(tileset.extras).toEqual({'key': 'value'});
+
+            expect(tileset.root.extras).toBeDefined();
+            expect(tileset.root.extras).toEqual({'key': 'value'});
         });
     });
 

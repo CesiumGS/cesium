@@ -3,7 +3,6 @@
     "version": "1.0",
     "tilesetVersion": "1.2.3"
   },
-  "extras": { "hey":12 },
   "properties": {
     "id": {
       "minimum": 0,
@@ -23,6 +22,9 @@
     }
   },
   "geometricError": 240,
+  "extras": {
+      "key": "value"
+    },
   "root": {
     "boundingVolume": {
       "region": [
@@ -35,6 +37,9 @@
       ]
     },
     "geometricError": 70,
+    "extras": {
+        "key": "value"
+    },
     "refine": "ADD",
     "content": {
       "uri": "parent.b3dm",
@@ -62,7 +67,6 @@
           ]
         },
         "geometricError": 0,
-	"extras": { "special": true },
         "content": {
           "uri": "ll.b3dm"
         }
