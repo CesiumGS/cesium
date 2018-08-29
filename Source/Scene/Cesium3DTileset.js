@@ -54,7 +54,6 @@ define([
         DoublyLinkedList,
         Ellipsoid,
         Event,
-        getMagic,
         JulianDate,
         ManagedArray,
         CesiumMath,
