@@ -181,6 +181,7 @@ define([
         this._selectedTilesToStyle = [];
         this._loadTimestamp = undefined;
         this._timeSinceLoad = 0.0;
+        this._extras = {};
 
         this._cullWithChildrenBounds = defaultValue(options.cullWithChildrenBounds, true);
         this._allTilesAdditive = true;
@@ -710,6 +711,7 @@ define([
                 that._geometricError = tilesetJson.geometricError;
                 that._extensionsUsed = tilesetJson.extensionsUsed;
                 that._gltfUpAxis = gltfUpAxis;
+                this._extras = tilesetJson.extras;
                 that._readyPromise.resolve(that);
             }).otherwise(function(error) {
                 that._readyPromise.reject(error);
@@ -1237,7 +1239,25 @@ define([
             get : function() {
                 return this._ellipsoid;
             }
-        }
+        },
+
+        /**
+         * Application specific metadata.
+         *
+         * @memberof Cesium3DTileset.prototype
+         *
+         * @type {Object}
+         *
+         * @see {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/specification#specifying-extensions-and-application-specific-extras|Extras and extensions in the 3D Tiles specification.}
+         */
+        extras : {
+            get : function() {
+                return this._extras;
+            },
+            set : function(value) {
+                this._extras = value;
+            }
+        },
     });
 
     /**
