@@ -282,7 +282,6 @@ define([
         this._textureFloat = !!getExtension(gl, ['OES_texture_float']);
         this._textureHalfFloat = !!getExtension(gl, ['OES_texture_half_float']);
 
-
         this._textureFloatLinear = !!getExtension(gl, ['OES_texture_float_linear']);
         this._textureHalfFloatLinear = !!getExtension(gl, ['OES_texture_half_float_linear']);
 

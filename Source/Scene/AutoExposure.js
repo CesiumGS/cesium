@@ -30,6 +30,14 @@ define([
         TextureWrap) {
     'use strict';
 
+    /**
+     * A post process stage that will get the luminance value at each pixel and
+     * uses parallel reduction to get the average luminance in a 1x1 texture.
+     * This texture can be used as input for tone mapping.
+     *
+     * @constructor
+     * @private
+     */
     function AutoExposure() {
         this._uniformMap = undefined;
         this._command = undefined;
@@ -48,11 +56,13 @@ define([
         this._previousLuminance = undefined;
 
         this._commands = undefined;
-        this._clearCommand = new ClearCommand({
-            color : new Color(0.0, 0.0, 0.0, 0.0),
-            framebuffer : undefined
-        });
+        this._clearCommand = undefined;
 
+        /**
+         * Whether or not to execute this post-process stage when ready.
+         *
+         * @type {Boolean}
+         */
         this.enabled = true;
         this._enabled = true;
 
@@ -61,16 +71,41 @@ define([
     }
 
     defineProperties(AutoExposure.prototype, {
+        /**
+         * Determines if this post-process stage is ready to be executed. A stage is only executed when both <code>ready</code>
+         * and {@link AutoExposure#enabled} are <code>true</code>. A stage will not be ready while it is waiting on textures
+         * to load.
+         *
+         * @memberof AutoExposure.prototype
+         * @type {Boolean}
+         * @readonly
+         */
         ready : {
             get : function() {
                 return this._ready;
             }
         },
+        /**
+         * The unique name of this post-process stage for reference by other stages.
+         *
+         * @memberof AutoExposure.prototype
+         * @type {String}
+         * @readonly
+         */
         name : {
             get : function() {
                 return this._name;
             }
         },
+
+        /**
+         * A reference to the texture written to when executing this post process stage.
+         *
+         * @memberof AutoExposure.prototype
+         * @type {Texture}
+         * @readonly
+         * @private
+         */
         outputTexture : {
             get : function() {
                 var framebuffers = this._framebuffers;
@@ -269,6 +304,11 @@ define([
         autoexposure._commands = commands;
     }
 
+    /**
+     * A function that will be called before execute. Used to clear any textures attached to framebuffers.
+     * @param {Context} context The context.
+     * @private
+     */
     AutoExposure.prototype.clear = function(context) {
         var framebuffers = this._framebuffers;
         if (!defined(framebuffers)) {
@@ -276,6 +316,13 @@ define([
         }
 
         var clearCommand = this._clearCommand;
+        if (!defined(clearCommand)) {
+            clearCommand = this._clearCommand = new ClearCommand({
+                color : new Color(0.0, 0.0, 0.0, 0.0),
+                framebuffer : undefined
+            });
+        }
+
         var length = framebuffers.length;
         for (var i = 0; i < length; ++i) {
             clearCommand.framebuffer = framebuffers[i];
@@ -283,7 +330,12 @@ define([
         }
     };
 
-    AutoExposure.prototype.update = function(context, useLogDepth) {
+    /**
+     * A function that will be called before execute. Used to create WebGL resources and load any textures.
+     * @param {Context} context The context.
+     * @private
+     */
+    AutoExposure.prototype.update = function(context) {
         var width = context.drawingBufferWidth;
         var height = context.drawingBufferHeight;
 
@@ -306,7 +358,13 @@ define([
         this._previousLuminance = temp;
     };
 
-    AutoExposure.prototype.execute = function(context, colorTexture, depthTexture, idTexture) {
+    /**
+     * Executes the post-process stage. The color texture is the texture rendered to by the scene or from the previous stage.
+     * @param {Context} context The context.
+     * @param {Texture} colorTexture The input color texture.
+     * @private
+     */
+    AutoExposure.prototype.execute = function(context, colorTexture) {
         this._colorTexture = colorTexture;
 
         var commands = this._commands;
@@ -320,10 +378,34 @@ define([
         }
     };
 
+    /**
+     * Returns true if this object was destroyed; otherwise, false.
+     * <p>
+     * If this object was destroyed, it should not be used; calling any function other than
+     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
+     * </p>
+     *
+     * @returns {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
+     *
+     * @see AutoExposure#destroy
+     */
     AutoExposure.prototype.isDestroyed = function() {
         return false;
     };
 
+    /**
+     * Destroys the WebGL resources held by this object.  Destroying an object allows for deterministic
+     * release of WebGL resources, instead of relying on the garbage collector to destroy this object.
+     * <p>
+     * Once an object is destroyed, it should not be used; calling any function other than
+     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
+     * assign the return value (<code>undefined</code>) to the object as done in the example.
+     * </p>
+     *
+     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
+     *
+     * @see AutoExposure#isDestroyed
+     */
     AutoExposure.prototype.destroy = function() {
         destroyFramebuffers(this);
         destroyCommands(this);

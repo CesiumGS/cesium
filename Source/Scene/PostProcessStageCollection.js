@@ -15,7 +15,8 @@ define([
         '../Renderer/TextureWrap',
         '../Shaders/PostProcessStages/PassThrough',
         './PostProcessStageLibrary',
-        './PostProcessStageTextureCache'
+        './PostProcessStageTextureCache',
+        './Tonemapper'
     ], function(
         arraySlice,
         Check,
@@ -33,7 +34,8 @@ define([
         TextureWrap,
         PassThrough,
         PostProcessStageLibrary,
-        PostProcessStageTextureCache) {
+        PostProcessStageTextureCache,
+        Tonemapper) {
     'use strict';
 
     var stackScratch = [];
@@ -59,19 +61,17 @@ define([
         var ao = PostProcessStageLibrary.createAmbientOcclusionStage();
         var bloom = PostProcessStageLibrary.createBloomStage();
 
-        var useAutoExposure = false;
-        //var tonemapping = PostProcessStageLibrary.createReinhardTonemappingStage(useAutoExposure);
-        //var tonemapping = PostProcessStageLibrary.createModifiedReinhardTonemappingStage(useAutoExposure);
-        //var tonemapping = PostProcessStageLibrary.createFilmicTonemappingStage(useAutoExposure);
-        var tonemapping = PostProcessStageLibrary.createACESTonemappingStage(useAutoExposure);
+        // Auto-exposure is currently disabled because most shaders output a value in [0.0, 1.0].
+        // Some shaders, such as the atmosphere and ground atmosphere, output values slightly over 1.0.
+        this._autoExposureEnabled = false;
+        this._autoExposure = PostProcessStageLibrary.createAutoExposureStage();
+        this._tonemapping = undefined;
+        this._tonemapper = undefined;
 
-        var autoexposure = PostProcessStageLibrary.createAutoExposureStage();
+        // set tonemapper and tonemapping
+        this.tonemapper = Tonemapper.ACES;
 
-        if (useAutoExposure) {
-            tonemapping.uniforms.autoExposure = function() {
-                return autoexposure.outputTexture;
-            };
-        }
+        var tonemapping = this._tonemapping;
 
         ao.enabled = false;
         bloom.enabled = false; // TODO HDR
@@ -112,8 +112,6 @@ define([
 
         this._ao = ao;
         this._bloom = bloom;
-        this._autoExposure = autoexposure;
-        this._tonemapping = tonemapping;
         this._fxaa = fxaa;
 
         this._lastLength = undefined;
@@ -334,6 +332,56 @@ define([
                     }
                 }
                 return false;
+            }
+        },
+        /**
+         * Gets and sets the tonemapping algorithm used when rendering with high dynamic range.
+         *
+         * @memberof PostProcessStageCollection.prototype
+         * @type {Tonemapper}
+         * @private
+         */
+        tonemapper : {
+            get : function() {
+                return this._tonemapper;
+            },
+            set : function(value) {
+                if (this._tonemapper === value) {
+                    return;
+                }
+                //>>includeStart('debug', pragmas.debug);
+                if (!Tonemapper.validate(value)) {
+                    throw new DeveloperError('tonemapper was set to an invalid value.');
+                }
+                //>>includeEnd('debug');
+
+                var useAutoExposure = this._autoExposureEnabled;
+                var tonemapper;
+
+                switch(value) {
+                    case Tonemapper.REINHARD:
+                        tonemapper = PostProcessStageLibrary.createReinhardTonemappingStage(useAutoExposure);
+                        break;
+                    case Tonemapper.MODIFIED_REINHARD:
+                        tonemapper = PostProcessStageLibrary.createModifiedReinhardTonemappingStage(useAutoExposure);
+                        break;
+                    case Tonemapper.FILMIC:
+                        tonemapper = PostProcessStageLibrary.createFilmicTonemappingStage(useAutoExposure);
+                        break;
+                    default:
+                        tonemapper = PostProcessStageLibrary.createACESTonemappingStage(useAutoExposure);
+                        break;
+                }
+
+                if (useAutoExposure) {
+                    var autoexposure = this._autoExposure;
+                    tonemapper.uniforms.autoExposure = function() {
+                        return autoexposure.outputTexture;
+                    };
+                }
+
+                this._tonemapper = value;
+                this._tonemapping = tonemapper;
             }
         }
     });
