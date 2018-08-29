@@ -1242,11 +1242,12 @@ define([
         },
 
         /**
-         * Application specific metadata.
+         * Returns the `extras` property at the top-level of the tileset JSON, which contains application specific metadata.
+         * Returns `undefined` if `extras` does not exist.
          *
          * @memberof Cesium3DTileset.prototype
          *
-         * @type {Object}
+         * @type {*}
          * @readonly
          *
          * @see {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/specification#specifying-extensions-and-application-specific-extras|Extras in the 3D Tiles specification.}
