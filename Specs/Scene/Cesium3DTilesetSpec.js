@@ -2,6 +2,7 @@ defineSuite([
         'Scene/Cesium3DTileset',
         'Core/Cartesian3',
         'Core/Color',
+        'Core/defined',
         'Core/CullingVolume',
         'Core/getAbsoluteUri',
         'Core/getStringFromTypedArray',
@@ -32,6 +33,7 @@ defineSuite([
         Cesium3DTileset,
         Cartesian3,
         Color,
+        defined,
         CullingVolume,
         getAbsoluteUri,
         getStringFromTypedArray,
@@ -131,8 +133,6 @@ defineSuite([
 
     var pointCloudUrl = 'Data/Cesium3DTiles/PointCloud/PointCloudRGB/tileset.json';
     var pointCloudBatchedUrl = 'Data/Cesium3DTiles/PointCloud/PointCloudBatched/tileset.json';
-
-    var tilesetWithExtras = 'Data/Cesium3DTiles/Tilesets/TilesetWithExtras/tileset.json';
 
     beforeAll(function() {
         scene = createScene();
@@ -358,13 +358,19 @@ defineSuite([
         });
     });
 
-    fit('loads tileset with extras', function() {
-        return Cesium3DTilesTester.loadTileset(scene, tilesetWithExtras).then(function(tileset) {
+    it('loads tileset with extras', function() {
+        return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function(tileset) {
             expect(tileset.extras).toBeDefined();
-            expect(tileset.extras).toEqual({'key': 'value'});
+            expect(tileset.root.extras).not.toBeDefined();
 
-            expect(tileset.root.extras).toBeDefined();
-            expect(tileset.root.extras).toEqual({'key': 'value'});
+            var taggedChildren = 0;
+            for(var i = 0;i < tileset.root.children.length; i++) {
+                if (defined(tileset.root.children[i].extras)) {
+                    taggedChildren ++;
+                }
+            }
+
+            expect(taggedChildren).toEqual(1);
         });
     });
 
