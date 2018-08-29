@@ -140,7 +140,7 @@ define([
         var height = autoexposure._height;
 
         var pixelFormat = PixelFormat.RGBA;
-        var pixelDatatype = PixelDatatype.FLOAT;
+        var pixelDatatype = PixelDatatype.HALF_FLOAT;
         var sampler = new Sampler({
             wrapS : TextureWrap.CLAMP_TO_EDGE,
             wrapT : TextureWrap.CLAMP_TO_EDGE,
