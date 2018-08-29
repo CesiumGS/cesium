@@ -99,8 +99,6 @@ define([
         var parentInitialTransform = defined(parent) ? parent._initialTransform : Matrix4.IDENTITY;
         this._initialTransform = Matrix4.multiply(parentInitialTransform, this.transform, new Matrix4());
 
-        this._extras = header.extras;
-
         /**
          * The final computed transform of this tile.
          * @type {Matrix4}
@@ -442,7 +440,7 @@ define([
          */
         extras : {
             get : function() {
-                return this._extras;
+                return this._header.extras;
             }
         },
 
