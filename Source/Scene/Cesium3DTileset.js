@@ -1255,7 +1255,7 @@ define([
             get : function() {
                 return this._extras;
             }
-        },
+        }
     });
 
     /**
