@@ -614,9 +614,6 @@ define([
         }
     }
 
-    GroundPrimitive._initialized = false;
-    GroundPrimitive._initPromise = undefined;
-
     /**
      * Initializes the minimum and maximum terrain heights. This only needs to be called if you are creating the
      * GroundPrimitive synchronously.
@@ -625,17 +622,7 @@ define([
      *
      */
     GroundPrimitive.initializeTerrainHeights = function() {
-        var initPromise = GroundPrimitive._initPromise;
-        if (defined(initPromise)) {
-            return initPromise;
-        }
-
-        GroundPrimitive._initPromise = ApproximateTerrainHeights.initialize()
-            .then(function() {
-                GroundPrimitive._initialized = true;
-            });
-
-        return GroundPrimitive._initPromise;
+        return ApproximateTerrainHeights.initialize();
     };
 
     /**
@@ -655,7 +642,7 @@ define([
             return;
         }
 
-        if (!GroundPrimitive._initialized) {
+        if (!ApproximateTerrainHeights.initialized) {
             //>>includeStart('debug', pragmas.debug);
             if (!this.asynchronous) {
                 throw new DeveloperError('For synchronous GroundPrimitives, you must call GroundPrimitive.initializeTerrainHeights() and wait for the returned promise to resolve.');

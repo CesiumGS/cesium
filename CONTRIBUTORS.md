@@ -49,6 +49,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
    * [Josh Lawrence](https://github.com/loshjawrence)
    * [Omar Shehata](https://github.com/OmarShehata)
    * [Matt Petry](https://github.com/MattPetry)
+   * [Michael Squires](https://github.com/mksquires)
 * [NICTA](http://www.nicta.com.au/)
    * [Chris Cooper](https://github.com/chris-cooper)
    * [Kevin Ring](https://github.com/kring)

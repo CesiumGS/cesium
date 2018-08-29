@@ -636,13 +636,27 @@ define([
         // rectangle cartographic coords !== spherical because it's on an ellipsoid
         var southWestExtents = latLongToSpherical(boundingRectangle.south, boundingRectangle.west, ellipsoid, sphericalScratch);
 
-        // Slightly pad extents to avoid floating point error when fragment culling at edges.
-        var south = southWestExtents.x - CesiumMath.EPSILON5;
-        var west = southWestExtents.y - CesiumMath.EPSILON5;
+        var south = southWestExtents.x;
+        var west = southWestExtents.y;
 
         var northEastExtents = latLongToSpherical(boundingRectangle.north, boundingRectangle.east, ellipsoid, sphericalScratch);
-        var north = northEastExtents.x + CesiumMath.EPSILON5;
-        var east = northEastExtents.y + CesiumMath.EPSILON5;
+        var north = northEastExtents.x;
+        var east = northEastExtents.y;
+
+        // If the bounding rectangle crosses the IDL, rotate the spherical extents so the cross no longer happens.
+        // This rotation must happen in the shader too.
+        var rotationRadians = 0.0;
+        if (west > east) {
+            rotationRadians = CesiumMath.PI - west;
+            west = -CesiumMath.PI;
+            east += rotationRadians;
+        }
+
+        // Slightly pad extents to avoid floating point error when fragment culling at edges.
+        south -= CesiumMath.EPSILON5;
+        west -= CesiumMath.EPSILON5;
+        north += CesiumMath.EPSILON5;
+        east += CesiumMath.EPSILON5;
 
         var longitudeRangeInverse = 1.0 / (east - west);
         var latitudeRangeInverse = 1.0 / (north - south);
@@ -653,6 +667,12 @@ define([
                 componentsPerAttribute: 4,
                 normalize: false,
                 value : [south, west, latitudeRangeInverse, longitudeRangeInverse]
+            }),
+            longitudeRotation : new GeometryInstanceAttribute({
+                componentDatatype: ComponentDatatype.FLOAT,
+                componentsPerAttribute: 1,
+                normalize: false,
+                value : [rotationRadians]
             })
         };
 
@@ -669,7 +689,7 @@ define([
     };
 
     ShadowVolumeAppearance.hasAttributesForSphericalExtents = function(attributes) {
-        return defined(attributes.sphericalExtents) &&
+        return defined(attributes.sphericalExtents) && defined(attributes.longitudeRotation) &&
         defined(attributes.planes2D_HIGH) && defined(attributes.planes2D_LOW) &&
         defined(attributes.uMaxVmax) && defined(attributes.uvMinAndExtents);
     };
