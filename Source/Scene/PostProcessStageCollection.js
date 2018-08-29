@@ -637,8 +637,11 @@ define([
         fxaa.update(context, useLogDepth);
         ao.update(context, useLogDepth);
         bloom.update(context, useLogDepth);
-        autoexposure.update(context, useLogDepth);
         tonemapping.update(context, useLogDepth);
+
+        if (this._autoExposureEnabled) {
+            autoexposure.update(context, useLogDepth);
+        }
 
         length = stages.length;
         for (i = 0; i < length; ++i) {
@@ -655,7 +658,10 @@ define([
      */
     PostProcessStageCollection.prototype.clear = function(context) {
         this._textureCache.clear(context);
-        this._autoExposure.clear(context);
+
+        if (this._autoExposureEnabled) {
+            this._autoExposure.clear(context);
+        }
     };
 
     function getOutputTexture(stage) {
@@ -723,6 +729,7 @@ define([
 
         var aoEnabled = ao.enabled && ao._isSupported(context);
         var bloomEnabled = bloom.enabled && bloom._isSupported(context);
+        var autoExposureEnabled = this._autoExposureEnabled;
         var tonemappingEnabled = tonemapping.enabled && tonemapping._isSupported(context);
         var fxaaEnabled = fxaa.enabled && fxaa._isSupported(context);
 
@@ -739,7 +746,7 @@ define([
             execute(bloom, context, initialTexture, depthTexture, idTexture);
             initialTexture = getOutputTexture(bloom);
         }
-        if (/*autoexposureEnabled &&*/ autoexposure.ready) {
+        if (autoExposureEnabled && autoexposure.ready) {
             execute(autoexposure, context, initialTexture, depthTexture, idTexture);
         }
         if (tonemappingEnabled && tonemapping.ready) {
