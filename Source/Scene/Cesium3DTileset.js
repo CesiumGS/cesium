@@ -12,7 +12,6 @@ define([
         '../Core/DoublyLinkedList',
         '../Core/Ellipsoid',
         '../Core/Event',
-        '../Core/getMagic',
         '../Core/JulianDate',
         '../Core/ManagedArray',
         '../Core/Math',
