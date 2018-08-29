@@ -88,7 +88,7 @@ define([
         var contentHeader = header.content;
 
         /**
-         * The local transform of this tile
+         * The local transform of this tile.
          * @type {Matrix4}
          */
         this.transform = defined(header.transform) ? Matrix4.unpack(header.transform) : Matrix4.clone(Matrix4.IDENTITY);
@@ -99,8 +99,10 @@ define([
         var parentInitialTransform = defined(parent) ? parent._initialTransform : Matrix4.IDENTITY;
         this._initialTransform = Matrix4.multiply(parentInitialTransform, this.transform, new Matrix4());
 
+        this._extras = header.extras;
+
         /**
-         * The final computed transform of this tile
+         * The final computed transform of this tile.
          * @type {Matrix4}
          * @readonly
          */
@@ -426,6 +428,21 @@ define([
         boundingSphere : {
             get : function() {
                 return this._boundingVolume.boundingSphere;
+            }
+        },
+
+        /**
+         * Application specific metadata.
+         *
+         * @memberof Cesium3DTile.prototype
+         *
+         * @type {Object}
+         * @readonly
+         * @see {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/specification#specifying-extensions-and-application-specific-extras|Extras in the 3D Tiles specification.}
+         */
+        extras : {
+            get : function() {
+                return this._extras;
             }
         },
 
