@@ -74,9 +74,8 @@ define([
         var tonemapping = this._tonemapping;
 
         ao.enabled = false;
-        bloom.enabled = false; // TODO HDR
-        //bloom.enabled = true;
-        tonemapping.enabled = false;
+        bloom.enabled = false;
+        tonemapping.enabled = false; // will be enabled if necessary in update
 
         // TODO HDR
         fxaa.enabled = false;
