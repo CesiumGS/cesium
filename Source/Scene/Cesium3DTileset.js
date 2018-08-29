@@ -1060,6 +1060,28 @@ define([
         },
 
         /**
+         * The root tile.
+         *
+         * @memberOf Cesium3DTileset.prototype
+         *
+         * @type {Cesium3DTile}
+         * @readonly
+         *
+         * @exception {DeveloperError} The tileset is not loaded.  Use Cesium3DTileset.readyPromise or wait for Cesium3DTileset.ready to be true.
+         */
+        root : {
+            get : function() {
+                //>>includeStart('debug', pragmas.debug);
+                if (!this.ready) {
+                    throw new DeveloperError('The tileset is not loaded.  Use Cesium3DTileset.readyPromise or wait for Cesium3DTileset.ready to be true.');
+                }
+                //>>includeEnd('debug');
+
+                return this._root;
+            }
+        },
+
+        /**
          * The tileset's bounding sphere.
          *
          * @memberof Cesium3DTileset.prototype
@@ -1522,7 +1544,7 @@ define([
     }
 
     function computeTileLabelPosition(tile) {
-        var boundingVolume = tile._boundingVolume.boundingVolume;
+        var boundingVolume = tile.boundingVolume.boundingVolume;
         var halfAxes = boundingVolume.halfAxes;
         var radius = boundingVolume.radius;
 

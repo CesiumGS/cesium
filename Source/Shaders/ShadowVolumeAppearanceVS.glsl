@@ -20,7 +20,7 @@ varying vec2 v_inversePlaneExtents;
 varying vec4 v_westPlane;
 varying vec4 v_southPlane;
 #endif // SPHERICAL
-varying vec2 v_uvMin;
+varying vec3 v_uvMinAndSphericalLongitudeRotation;
 varying vec3 v_uMaxAndInverseDistance;
 varying vec3 v_vMaxAndInverseDistance;
 #endif // TEXTURE_COORDINATES
@@ -40,6 +40,7 @@ void main()
 #ifdef TEXTURE_COORDINATES
 #ifdef SPHERICAL
     v_sphericalExtents = czm_batchTable_sphericalExtents(batchId);
+    v_uvMinAndSphericalLongitudeRotation.z = czm_batchTable_longitudeRotation(batchId);
 #else // SPHERICAL
 #ifdef COLUMBUS_VIEW_2D
     vec4 planes2D_high = czm_batchTable_planes2D_HIGH(batchId);
@@ -71,7 +72,7 @@ void main()
 
     v_uMaxAndInverseDistance = vec3(uMaxVmax.xy, uvMinAndExtents.z);
     v_vMaxAndInverseDistance = vec3(uMaxVmax.zw, uvMinAndExtents.w);
-    v_uvMin = uvMinAndExtents.xy;
+    v_uvMinAndSphericalLongitudeRotation.xy = uvMinAndExtents.xy;
 #endif // TEXTURE_COORDINATES
 
 #ifdef PER_INSTANCE_COLOR

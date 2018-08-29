@@ -1181,7 +1181,7 @@ define([
     };
 
     function getColorBlend(batchTable) {
-        var tileset = batchTable._content._tileset;
+        var tileset = batchTable._content.tileset;
         var colorBlendMode = tileset.colorBlendMode;
         var colorBlendAmount = tileset.colorBlendAmount;
         if (colorBlendMode === Cesium3DTileColorBlendMode.HIGHLIGHT) {
@@ -1246,7 +1246,7 @@ define([
         var commandEnd = commandList.length;
         var tile = this._content._tile;
         var finalResolution = tile._finalResolution;
-        var tileset = tile._tileset;
+        var tileset = tile.tileset;
         var bivariateVisibilityTest = tileset._skipLevelOfDetail && tileset._hasMixedContent && frameState.context.stencilBuffer;
         var styleCommandsNeeded = getStyleCommandsNeeded(this);
 
@@ -1483,7 +1483,7 @@ define([
             }
 
             batchTable._pickTexture = createTexture(batchTable, context, bytes);
-            content._tileset._statistics.batchTableByteLength += batchTable._pickTexture.sizeInBytes;
+            content.tileset._statistics.batchTableByteLength += batchTable._pickTexture.sizeInBytes;
         }
     }
 
