@@ -42,7 +42,7 @@ defineSuite([
 
     it('gets properties', function() {
         return Cesium3DTilesTester.loadTileset(scene, tilesetOfTilesetsUrl).then(function(tileset) {
-            var tile = tileset._root;
+            var tile = tileset.root;
             var content = tile.content;
             expect(content.featuresLength).toBe(0);
             expect(content.pointsLength).toBe(0);

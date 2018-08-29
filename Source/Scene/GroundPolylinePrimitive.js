@@ -343,9 +343,6 @@ define([
         }
     });
 
-    GroundPolylinePrimitive._initialized = false;
-    GroundPolylinePrimitive._initPromise = undefined;
-
     /**
      * Initializes the minimum and maximum terrain heights. This only needs to be called if you are creating the
      * GroundPolylinePrimitive synchronously.
@@ -353,17 +350,7 @@ define([
      * @returns {Promise} A promise that will resolve once the terrain heights have been loaded.
      */
     GroundPolylinePrimitive.initializeTerrainHeights = function() {
-        var initPromise = GroundPolylinePrimitive._initPromise;
-        if (defined(initPromise)) {
-            return initPromise;
-        }
-
-        GroundPolylinePrimitive._initPromise = ApproximateTerrainHeights.initialize()
-            .then(function() {
-                GroundPolylinePrimitive._initialized = true;
-            });
-
-        return GroundPolylinePrimitive._initPromise;
+        return ApproximateTerrainHeights.initialize();
     };
 
     function createShaderProgram(groundPolylinePrimitive, frameState, appearance) {
@@ -582,7 +569,7 @@ define([
             return;
         }
 
-        if (!GroundPolylinePrimitive._initialized) {
+        if (!ApproximateTerrainHeights.initialized) {
             //>>includeStart('debug', pragmas.debug);
             if (!this.asynchronous) {
                 throw new DeveloperError('For synchronous GroundPolylinePrimitives, you must call GroundPolylinePrimitives.initializeTerrainHeights() and wait for the returned promise to resolve.');

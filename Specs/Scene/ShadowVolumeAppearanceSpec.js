@@ -81,6 +81,13 @@ defineSuite([
         expect(value[1]).toEqualEpsilon(-CesiumMath.PI_OVER_FOUR, CesiumMath.EPSILON4);
         expect(value[2]).toEqualEpsilon(1.0 / CesiumMath.PI_OVER_TWO, CesiumMath.EPSILON4);
         expect(value[3]).toEqualEpsilon(1.0 / CesiumMath.PI_OVER_TWO, CesiumMath.EPSILON4);
+
+        var longitudeRotation = attributes.longitudeRotation;
+        expect(longitudeRotation.componentDatatype).toEqual(ComponentDatatype.FLOAT);
+        expect(longitudeRotation.componentsPerAttribute).toEqual(1);
+        expect(longitudeRotation.normalize).toEqual(false);
+        value = longitudeRotation.value;
+        expect(value[0]).toEqualEpsilon(0.0, CesiumMath.EPSILON4);
     });
 
     function checkGeometryInstanceAttributeVec3(attribute) {

@@ -3981,26 +3981,22 @@ define([
         this.sun = this.sun && this.sun.destroy();
         this._sunPostProcess = this._sunPostProcess && this._sunPostProcess.destroy();
         this._depthPlane = this._depthPlane && this._depthPlane.destroy();
-        this._transitioner.destroy();
+        this._transitioner = this._transitioner && this._transitioner.destroy();
         this._debugFrustumPlanes = this._debugFrustumPlanes && this._debugFrustumPlanes.destroy();
         this._brdfLutGenerator = this._brdfLutGenerator && this._brdfLutGenerator.destroy();
+        this._globeDepth = this._globeDepth && this._globeDepth.destroy();
+        this._oit = this._oit && this._oit.destroy();
 
-        if (defined(this._globeDepth)) {
-            this._globeDepth.destroy();
-        }
         if (this._removeCreditContainer) {
             this._canvas.parentNode.removeChild(this._creditContainer);
-        }
-
-        if (defined(this._oit)) {
-            this._oit.destroy();
         }
 
         this._sceneFramebuffer = this._sceneFramebuffer && this._sceneFramebuffer.destroy();
         this.postProcessStages = this.postProcessStages && this.postProcessStages.destroy();
 
         this._context = this._context && this._context.destroy();
-        this._frameState.creditDisplay.destroy();
+        this._frameState.creditDisplay = this._frameState.creditDisplay && this._frameState.creditDisplay.destroy();
+
         if (defined(this._performanceDisplay)){
             this._performanceDisplay = this._performanceDisplay && this._performanceDisplay.destroy();
             this._performanceContainer.parentNode.removeChild(this._performanceContainer);
