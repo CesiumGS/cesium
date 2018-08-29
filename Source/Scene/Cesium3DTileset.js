@@ -1247,15 +1247,13 @@ define([
          * @memberof Cesium3DTileset.prototype
          *
          * @type {Object}
+         * @readonly
          *
          * @see {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/specification#specifying-extensions-and-application-specific-extras|Extras and extensions in the 3D Tiles specification.}
          */
         extras : {
             get : function() {
                 return this._extras;
-            },
-            set : function(value) {
-                this._extras = value;
             }
         },
     });
