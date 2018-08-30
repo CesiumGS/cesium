@@ -58,7 +58,7 @@ defineSuite([
 
     beforeAll(function() {
         scene = createScene();
-        scene.fxaa = false;
+        scene.postProcessStages.fxaa.enabled = false;
 
         ellipsoid = Ellipsoid.WGS84;
     });
