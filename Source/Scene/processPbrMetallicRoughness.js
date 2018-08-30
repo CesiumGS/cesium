@@ -181,6 +181,11 @@ define([
             }
         };
 
+        if (defined(material.extensions) && defined(material.extensions.KHR_materials_unlit)) {
+            hasNormals = false;
+            hasTangents = false;
+        }
+
         if (hasNormals) {
             techniqueUniforms.u_normalMatrix = {
                 semantic : 'MODELVIEWINVERSETRANSPOSE',
