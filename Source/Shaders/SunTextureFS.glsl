@@ -1,4 +1,3 @@
-uniform float u_glowLengthTS;
 uniform float u_radiusTS;
 
 varying vec2 v_textureCoordinates;
@@ -8,10 +7,12 @@ vec2 rotate(vec2 p, vec2 direction)
     return vec2(p.x * direction.x - p.y * direction.y, p.x * direction.y + p.y * direction.x);
 }
 
+const float lengthScalar = 2.0 / sqrt(2.0);
+
 vec4 addBurst(vec2 position, vec2 direction)
 {
     vec2 rotatedPosition = rotate(position, direction) * vec2(25.0, 0.75);
-    float radius = length(rotatedPosition);
+    float radius = length(rotatedPosition) * lengthScalar;
     float burst = 1.0 - smoothstep(0.0, 0.55, radius);
 
     return vec4(burst);
@@ -20,7 +21,7 @@ vec4 addBurst(vec2 position, vec2 direction)
 void main()
 {
     vec2 position = v_textureCoordinates - vec2(0.5);
-    float radius = length(position);
+    float radius = length(position) * lengthScalar;
     float surface = step(radius, u_radiusTS);
     vec4 color = vec4(vec2(1.0), surface + 0.2, surface);
 

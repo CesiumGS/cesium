@@ -180,8 +180,7 @@ define([
                 width : size,
                 height : size,
                 pixelFormat : PixelFormat.RGBA,
-                //pixelDatatype : useHDR ? PixelDatatype.HALF_FLOAT : PixelFormat.UNSIGNED_BYTE
-                pixelDatatype : useHDR ? PixelDatatype.FLOAT : PixelFormat.UNSIGNED_BYTE
+                pixelDatatype : useHDR ? PixelDatatype.HALF_FLOAT : PixelFormat.UNSIGNED_BYTE
             });
 
             this._glowLengthTS = this._glowFactor * 5.0;
@@ -189,9 +188,6 @@ define([
 
             var that = this;
             var uniformMap = {
-                u_glowLengthTS : function() {
-                    return that._glowLengthTS;
-                },
                 u_radiusTS : function() {
                     return that._radiusTS;
                 }
