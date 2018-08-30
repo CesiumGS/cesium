@@ -3,10 +3,7 @@ define([
         '../Core/ComponentDatatype',
         '../Core/defined',
         '../Core/FeatureDetection',
-        '../Core/RuntimeError',
         '../Core/TaskProcessor',
-        '../Renderer/Buffer',
-        '../Renderer/BufferUsage',
         '../ThirdParty/GltfPipeline/ForEach',
         '../ThirdParty/when'
     ], function(
@@ -14,10 +11,7 @@ define([
         ComponentDatatype,
         defined,
         FeatureDetection,
-        RuntimeError,
         TaskProcessor,
-        Buffer,
-        BufferUsage,
         ForEach,
         when) {
     'use strict';
@@ -32,9 +26,18 @@ define([
 
     // Exposed for testing purposes
     DracoLoader._decoderTaskProcessor = undefined;
+    DracoLoader._taskProcessorReady = false;
     DracoLoader._getDecoderTaskProcessor = function () {
         if (!defined(DracoLoader._decoderTaskProcessor)) {
-            DracoLoader._decoderTaskProcessor = new TaskProcessor('decodeDraco', DracoLoader._maxDecodingConcurrency);
+            var processor = new TaskProcessor('decodeDraco', DracoLoader._maxDecodingConcurrency);
+            processor.initWebAssemblyModule({
+                modulePath : 'ThirdParty/Workers/draco_wasm_wrapper.js',
+                wasmBinaryFile : 'ThirdParty/draco_decoder.wasm',
+                fallbackModulePath : 'ThirdParty/Workers/draco_decoder.js'
+            }).then(function () {
+                DracoLoader._taskProcessorReady = true;
+            });
+            DracoLoader._decoderTaskProcessor = processor;
         }
 
         return DracoLoader._decoderTaskProcessor;
@@ -89,6 +92,11 @@ define([
     }
 
     function scheduleDecodingTask(decoderTaskProcessor, model, loadResources, context) {
+        if (!DracoLoader._taskProcessorReady) {
+            // The task processor is not ready to schedule tasks
+            return;
+        }
+
         var taskData = loadResources.primitivesToDecode.peek();
         if (!defined(taskData)) {
             // All primitives are processing
@@ -131,18 +139,39 @@ define([
         });
     }
 
+    DracoLoader._decodedModelResourceCache = undefined;
+
     /**
      * Parses draco extension on model primitives and
      * adds the decoding data to the model's load resources.
      *
      * @private
      */
-    DracoLoader.parse = function(model) {
+    DracoLoader.parse = function(model, context) {
         if (!DracoLoader.hasExtension(model)) {
             return;
         }
 
         var loadResources = model._loadResources;
+        var cacheKey = model.cacheKey;
+        if (defined(cacheKey)) {
+            if (!defined(DracoLoader._decodedModelResourceCache)) {
+                if (!defined(context.cache.modelDecodingCache)) {
+                    context.cache.modelDecodingCache = {};
+                }
+
+                DracoLoader._decodedModelResourceCache = context.cache.modelDecodingCache;
+            }
+
+            // Decoded data for model will be loaded from cache
+            var cachedData = DracoLoader._decodedModelResourceCache[cacheKey];
+            if (defined(cachedData)) {
+                cachedData.count++;
+                loadResources.pendingDecodingCache = true;
+                return;
+            }
+        }
+
         var dequantizeInShader = model._dequantizeInShader;
         var gltf = model.gltf;
         ForEach.mesh(gltf, function(mesh, meshId) {
@@ -174,16 +203,31 @@ define([
      * Schedules decoding tasks available this frame.
      * @private
      */
-    DracoLoader.decode = function(model, context) {
+    DracoLoader.decodeModel = function(model, context) {
         if (!DracoLoader.hasExtension(model)) {
             return when.resolve();
         }
 
-        if (FeatureDetection.isInternetExplorer()) {
-            return when.reject(new RuntimeError('Draco decoding is not currently supported in Internet Explorer.'));
+        var loadResources = model._loadResources;
+        var cacheKey = model.cacheKey;
+        if (defined(cacheKey) && defined(DracoLoader._decodedModelResourceCache)) {
+            var cachedData = DracoLoader._decodedModelResourceCache[cacheKey];
+            // Load decoded data for model when cache is ready
+            if (defined(cachedData) && loadResources.pendingDecodingCache) {
+                return when(cachedData.ready, function () {
+                    model._decodedData = cachedData.data;
+                    loadResources.pendingDecodingCache = false;
+                });
+            }
+
+            // Decoded data for model should be cached when ready
+            DracoLoader._decodedModelResourceCache[cacheKey] = {
+                ready : false,
+                count : 1,
+                data : undefined
+            };
         }
 
-        var loadResources = model._loadResources;
         if (loadResources.primitivesToDecode.length === 0) {
             // No more tasks to schedule
             return when.resolve();
@@ -199,6 +243,48 @@ define([
         }
 
         return when.all(decodingPromises);
+    };
+
+    /**
+     * Decodes a compressed point cloud. Returns undefined if the task cannot be scheduled.
+     * @private
+     */
+    DracoLoader.decodePointCloud = function(parameters) {
+        var decoderTaskProcessor = DracoLoader._getDecoderTaskProcessor();
+        if (!DracoLoader._taskProcessorReady) {
+            // The task processor is not ready to schedule tasks
+            return;
+        }
+        return decoderTaskProcessor.scheduleTask(parameters, [parameters.buffer.buffer]);
+    };
+
+    /**
+     * Caches a models decoded data so it doesn't need to decode more than once.
+     * @private
+     */
+    DracoLoader.cacheDataForModel = function(model) {
+        var cacheKey = model.cacheKey;
+        if (defined(cacheKey) && defined(DracoLoader._decodedModelResourceCache)) {
+            var cachedData = DracoLoader._decodedModelResourceCache[cacheKey];
+            if (defined(cachedData)) {
+                cachedData.ready = true;
+                cachedData.data = model._decodedData;
+            }
+        }
+    };
+
+    /**
+     * Destroys the cached data that this model references if it is no longer in use.
+     * @private
+     */
+    DracoLoader.destroyCachedDataForModel = function(model) {
+        var cacheKey = model.cacheKey;
+        if (defined(cacheKey) && defined(DracoLoader._decodedModelResourceCache)) {
+            var cachedData = DracoLoader._decodedModelResourceCache[cacheKey];
+            if (defined(cachedData) && --cachedData.count === 0) {
+                delete DracoLoader._decodedModelResourceCache[cacheKey];
+            }
+        }
     };
 
     return DracoLoader;

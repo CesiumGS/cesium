@@ -662,8 +662,8 @@ defineSuite([
         return updateUntilDone(scene.globe).then(function() {
             var creditDisplay = scene.frameState.creditDisplay;
             creditDisplay.showLightbox();
-            expect(creditDisplay._currentFrameCredits.lightboxCredits).toContain(imageryCredit);
-            expect(creditDisplay._currentFrameCredits.lightboxCredits).toContain(terrainCredit);
+            expect(creditDisplay._currentFrameCredits.lightboxCredits.values).toContain(imageryCredit);
+            expect(creditDisplay._currentFrameCredits.lightboxCredits.values).toContain(terrainCredit);
             creditDisplay.hideLightbox();
         });
     });
@@ -674,12 +674,14 @@ defineSuite([
                 var surface = scene.globe._surface;
                 var replacementQueue = surface._tileReplacementQueue;
                 expect(replacementQueue.count).toBeGreaterThan(0);
+                var oldTile = replacementQueue.head;
 
                 surface.tileProvider.terrainProvider = new EllipsoidTerrainProvider();
 
                 scene.renderForSpecs();
 
-                expect(replacementQueue.count).toBe(0);
+                expect(replacementQueue.count).toBeGreaterThan(0);
+                expect(replacementQueue.head).not.toBe(oldTile);
             });
         });
 

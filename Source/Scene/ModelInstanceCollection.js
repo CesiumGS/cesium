@@ -132,7 +132,6 @@ define([
         this._instancedUniformsByProgram = undefined;
 
         this._drawCommands = [];
-        this._pickCommands = [];
         this._modelCommands = undefined;
 
         this._boundingSphere = createBoundingSphere(this);
@@ -153,9 +152,12 @@ define([
         this._asynchronous = options.asynchronous;
         this._incrementallyLoadTextures = options.incrementallyLoadTextures;
         this._upAxis = options.upAxis; // Undocumented option
+        this._forwardAxis = options.forwardAxis; // Undocumented option
 
         this.shadows = defaultValue(options.shadows, ShadowMode.ENABLED);
         this._shadows = this.shadows;
+
+        this._pickIdLoaded = options.pickIdLoaded;
 
         this.debugShowBoundingVolume = defaultValue(options.debugShowBoundingVolume, false);
         this._debugShowBoundingVolume = false;
@@ -273,8 +275,6 @@ define([
         return instancedUniformsByProgram[programId];
     }
 
-    var vertexShaderCached;
-
     function getVertexShaderCallback(collection) {
         return function(vs, programId) {
             var instancedUniforms = getInstancedUniforms(collection, programId);
@@ -317,7 +317,20 @@ define([
                 'uniform mat4 czm_instanced_modifiedModelView;\n' +
                 'uniform mat4 czm_instanced_nodeTransform;\n';
 
-            var batchIdAttribute = usesBatchTable ? 'attribute float a_batchId;\n' : '';
+            var batchIdAttribute;
+            var pickAttribute;
+            var pickVarying;
+
+            if (usesBatchTable) {
+                batchIdAttribute = 'attribute float a_batchId;\n';
+                pickAttribute = '';
+                pickVarying = '';
+            } else {
+                batchIdAttribute = '';
+                pickAttribute = 'attribute vec4 pickColor;\n' +
+                                'varying vec4 v_pickColor;\n';
+                pickVarying = '    v_pickColor = pickColor;\n';
+            }
 
             var instancedSource =
                 uniforms +
@@ -327,6 +340,7 @@ define([
                 'attribute vec4 czm_modelMatrixRow1;\n' +
                 'attribute vec4 czm_modelMatrixRow2;\n' +
                 batchIdAttribute +
+                pickAttribute +
                 renamedSource +
                 'void main()\n' +
                 '{\n' +
@@ -334,9 +348,8 @@ define([
                 '    czm_instanced_modelView = czm_instanced_modifiedModelView * czm_instanced_model * czm_instanced_nodeTransform;\n' +
                      globalVarsMain +
                 '    czm_instancing_main();\n' +
-                '}';
-
-            vertexShaderCached = instancedSource;
+                     pickVarying +
+                '}\n';
 
             if (usesBatchTable) {
                 var gltf = collection._model.gltf;
@@ -355,34 +368,8 @@ define([
                 var gltf = collection._model.gltf;
                 var diffuseAttributeOrUniformName = ModelUtility.getDiffuseAttributeOrUniform(gltf, programId);
                 fs = batchTable.getFragmentShaderCallback(true, diffuseAttributeOrUniformName)(fs);
-            }
-            return fs;
-        };
-    }
-
-    function getPickVertexShaderCallback(collection) {
-        return function (vs) {
-            // Use the vertex shader that was generated earlier
-            vs = vertexShaderCached;
-            var usesBatchTable = defined(collection._batchTable);
-            var allowPicking = collection._allowPicking;
-            if (usesBatchTable) {
-                vs = collection._batchTable.getPickVertexShaderCallback('a_batchId')(vs);
-            } else if (allowPicking) {
-                vs = ShaderSource.createPickVertexShaderSource(vs);
-            }
-            return vs;
-        };
-    }
-
-    function getPickFragmentShaderCallback(collection) {
-        return function(fs) {
-            var usesBatchTable = defined(collection._batchTable);
-            var allowPicking = collection._allowPicking;
-            if (usesBatchTable) {
-                fs = collection._batchTable.getPickFragmentShaderCallback()(fs);
-            } else if (allowPicking) {
-                fs = ShaderSource.createPickFragmentShaderSource(fs, 'varying');
+            } else {
+                fs = 'varying vec4 v_pickColor;\n' + fs;
             }
             return fs;
         };
@@ -422,16 +409,6 @@ define([
         };
     }
 
-    function getPickUniformMapCallback(collection) {
-        return function(uniformMap) {
-            // Uses the uniform map generated from getUniformMapCallback
-            if (defined(collection._batchTable)) {
-                uniformMap = collection._batchTable.getPickUniformMapCallback()(uniformMap);
-            }
-            return uniformMap;
-        };
-    }
-
     function getVertexShaderNonInstancedCallback(collection) {
         return function(vs, programId) {
             if (defined(collection._batchTable)) {
@@ -445,25 +422,15 @@ define([
         };
     }
 
-    function getPickVertexShaderNonInstancedCallback(collection) {
-        return function(vs) {
-            if (defined(collection._batchTable)) {
-                vs = collection._batchTable.getPickVertexShaderCallback('a_batchId')(vs);
-                // Treat a_batchId as a uniform rather than a vertex attribute
-                vs = 'uniform float a_batchId\n;' + vs;
-            }
-            return vs;
-        };
-    }
-
-    function getPickFragmentShaderNonInstancedCallback(collection) {
-        return function(fs) {
-            var usesBatchTable = defined(collection._batchTable);
-            var allowPicking = collection._allowPicking;
-            if (usesBatchTable) {
-                fs = collection._batchTable.getPickFragmentShaderCallback()(fs);
-            } else if (allowPicking) {
-                fs = ShaderSource.createPickFragmentShaderSource(fs, 'uniform');
+    function getFragmentShaderNonInstancedCallback(collection) {
+        return function(fs, programId) {
+            var batchTable = collection._batchTable;
+            if (defined(batchTable)) {
+                var gltf = collection._model.gltf;
+                var diffuseAttributeOrUniformName = ModelUtility.getDiffuseAttributeOrUniform(gltf, programId);
+                fs = batchTable.getFragmentShaderCallback(true, diffuseAttributeOrUniformName)(fs);
+            } else {
+                fs = 'uniform vec4 czm_pickColor;\n' + fs;
             }
             return fs;
         };
@@ -529,7 +496,6 @@ define([
         var instancesLength = collection.length;
         var dynamic = collection._dynamic;
         var usesBatchTable = defined(collection._batchTable);
-        var allowPicking = collection._allowPicking;
 
         if (usesBatchTable) {
             var batchIdBufferData = new Uint16Array(instancesLength);
@@ -543,7 +509,7 @@ define([
             });
         }
 
-        if (allowPicking && !usesBatchTable) {
+        if (!usesBatchTable) {
             var pickIdBuffer = new Uint8Array(instancesLength * 4);
             for (i = 0; i < instancesLength; ++i) {
                 var pickId = collection._pickIds[i];
@@ -604,18 +570,17 @@ define([
             allowPicking : allowPicking,
             incrementallyLoadTextures : collection._incrementallyLoadTextures,
             upAxis : collection._upAxis,
+            forwardAxis : collection._forwardAxis,
             precreatedAttributes : undefined,
             vertexShaderLoaded : undefined,
             fragmentShaderLoaded : undefined,
             uniformMapLoaded : undefined,
-            pickVertexShaderLoaded : undefined,
-            pickFragmentShaderLoaded : undefined,
-            pickUniformMapLoaded : undefined,
+            pickIdLoaded : collection._pickIdLoaded,
             ignoreCommands : true,
             opaquePass : collection._opaquePass
         };
 
-        if (allowPicking && !usesBatchTable) {
+        if (!usesBatchTable) {
             collection._pickIds = createPickIds(collection, context);
         }
 
@@ -672,7 +637,7 @@ define([
                 };
             }
 
-            if (allowPicking && !usesBatchTable) {
+            if (!usesBatchTable) {
                 instancedAttributes.pickColor = {
                     index : 0, // updated in Model
                     vertexBuffer            : collection._pickIdBuffer,
@@ -689,20 +654,14 @@ define([
             modelOptions.vertexShaderLoaded = getVertexShaderCallback(collection);
             modelOptions.fragmentShaderLoaded = getFragmentShaderCallback(collection);
             modelOptions.uniformMapLoaded = getUniformMapCallback(collection, context);
-            modelOptions.pickVertexShaderLoaded = getPickVertexShaderCallback(collection);
-            modelOptions.pickFragmentShaderLoaded = getPickFragmentShaderCallback(collection);
-            modelOptions.pickUniformMapLoaded = getPickUniformMapCallback(collection);
 
             if (defined(collection._url)) {
                 modelOptions.cacheKey = collection._url.getUrlComponent() + '#instanced';
             }
         } else {
             modelOptions.vertexShaderLoaded = getVertexShaderNonInstancedCallback(collection);
-            modelOptions.fragmentShaderLoaded = getFragmentShaderCallback(collection);
+            modelOptions.fragmentShaderLoaded = getFragmentShaderNonInstancedCallback(collection);
             modelOptions.uniformMapLoaded = getUniformMapNonInstancedCallback(collection, context);
-            modelOptions.pickVertexShaderLoaded = getPickVertexShaderNonInstancedCallback(collection);
-            modelOptions.pickFragmentShaderLoaded = getPickFragmentShaderNonInstancedCallback(collection);
-            modelOptions.pickUniformMapLoaded = getPickUniformMapCallback(collection);
         }
 
         if (defined(collection._url)) {
@@ -738,10 +697,9 @@ define([
         }
     }
 
-    function createCommands(collection, drawCommands, pickCommands) {
+    function createCommands(collection, drawCommands) {
         var commandsLength = drawCommands.length;
         var instancesLength = collection.length;
-        var allowPicking = collection.allowPicking;
         var boundingSphere = collection._boundingSphere;
         var cull = collection._cull;
 
@@ -750,15 +708,12 @@ define([
             drawCommand.instanceCount = instancesLength;
             drawCommand.boundingVolume = boundingSphere;
             drawCommand.cull = cull;
-            collection._drawCommands.push(drawCommand);
-
-            if (allowPicking) {
-                var pickCommand = DrawCommand.shallowClone(pickCommands[i]);
-                pickCommand.instanceCount = instancesLength;
-                pickCommand.boundingVolume = boundingSphere;
-                pickCommand.cull = cull;
-                collection._pickCommands.push(pickCommand);
+            if (defined(collection._batchTable)) {
+                drawCommand.pickId = collection._batchTable.getPickId();
+            } else {
+                drawCommand.pickId = 'v_pickColor';
             }
+            collection._drawCommands.push(drawCommand);
         }
     }
 
@@ -774,13 +729,13 @@ define([
         };
     }
 
-    function createCommandsNonInstanced(collection, drawCommands, pickCommands) {
+    function createCommandsNonInstanced(collection, drawCommands) {
         // When instancing is disabled, create commands for every instance.
         var instances = collection._instances;
         var commandsLength = drawCommands.length;
         var instancesLength = collection.length;
-        var allowPicking = collection.allowPicking;
-        var usesBatchTable = defined(collection._batchTable);
+        var batchTable = collection._batchTable;
+        var usesBatchTable = defined(batchTable);
         var cull = collection._cull;
 
         for (var i = 0; i < commandsLength; ++i) {
@@ -792,23 +747,11 @@ define([
                 drawCommand.uniformMap = clone(drawCommand.uniformMap);
                 if (usesBatchTable) {
                     drawCommand.uniformMap.a_batchId = createBatchIdFunction(instances[j]._instanceId);
+                } else {
+                    var pickId = collection._pickIds[j];
+                    drawCommand.uniformMap.czm_pickColor = createPickColorFunction(pickId.color);
                 }
                 collection._drawCommands.push(drawCommand);
-
-                if (allowPicking) {
-                    var pickCommand = DrawCommand.shallowClone(pickCommands[i]);
-                    pickCommand.modelMatrix = new Matrix4(); // Updated in updateCommandsNonInstanced
-                    pickCommand.boundingVolume = new BoundingSphere(); // Updated in updateCommandsNonInstanced
-                    pickCommand.cull = cull;
-                    pickCommand.uniformMap = clone(pickCommand.uniformMap);
-                    if (usesBatchTable) {
-                        pickCommand.uniformMap.a_batchId = createBatchIdFunction(instances[j]._instanceId);
-                    } else if (allowPicking) {
-                        var pickId = collection._pickIds[j];
-                        pickCommand.uniformMap.czm_pickColor = createPickColorFunction(pickId.color);
-                    }
-                    collection._pickCommands.push(pickCommand);
-                }
             }
         }
     }
@@ -817,7 +760,6 @@ define([
         var modelCommands = collection._modelCommands;
         var commandsLength = modelCommands.length;
         var instancesLength = collection.length;
-        var allowPicking = collection.allowPicking;
         var collectionTransform = collection._rtcTransform;
         var collectionCenter = collection._center;
 
@@ -838,12 +780,6 @@ define([
                 var nodeBoundingSphere = modelCommand.boundingVolume;
                 var boundingSphere = drawCommand.boundingVolume;
                 BoundingSphere.transform(nodeBoundingSphere, instanceMatrix, boundingSphere);
-
-                if (allowPicking) {
-                    var pickCommand = collection._pickCommands[commandIndex];
-                    Matrix4.clone(modelMatrix, pickCommand.modelMatrix);
-                    BoundingSphere.clone(boundingSphere, pickCommand.boundingVolume);
-                }
             }
         }
     }
@@ -853,20 +789,15 @@ define([
         var length = nodeCommands.length;
 
         var drawCommands = [];
-        var pickCommands = [];
 
         for (var i = 0; i < length; ++i) {
             var nc = nodeCommands[i];
             if (nc.show) {
                 drawCommands.push(nc.command);
-                pickCommands.push(nc.pickCommand);
             }
         }
 
-        return {
-            draw: drawCommands,
-            pick: pickCommands
-        };
+        return drawCommands;
     }
 
     function commandsDirty(model) {
@@ -884,13 +815,12 @@ define([
 
     function generateModelCommands(modelInstanceCollection, instancingSupported) {
         modelInstanceCollection._drawCommands = [];
-        modelInstanceCollection._pickCommands = [];
 
         var modelCommands = getModelCommands(modelInstanceCollection._model);
         if (instancingSupported) {
-            createCommands(modelInstanceCollection, modelCommands.draw, modelCommands.pick);
+            createCommands(modelInstanceCollection, modelCommands);
         } else {
-            createCommandsNonInstanced(modelInstanceCollection, modelCommands.draw, modelCommands.pick);
+            createCommandsNonInstanced(modelInstanceCollection, modelCommands);
             updateCommandsNonInstanced(modelInstanceCollection);
         }
     }
@@ -950,9 +880,7 @@ define([
             // Expand bounding volume to fit the radius of the loaded model including the model's offset from the center
             var modelRadius = model.boundingSphere.radius + Cartesian3.magnitude(model.boundingSphere.center);
             this._boundingSphere.radius += modelRadius;
-
-            var modelCommands = getModelCommands(model);
-            this._modelCommands = modelCommands.draw;
+            this._modelCommands = getModelCommands(model);
 
             generateModelCommands(this, instancingSupported);
 
@@ -1004,8 +932,12 @@ define([
         updateShowBoundingVolume(this);
 
         var passes = frameState.passes;
+        if (!passes.render && !passes.pick) {
+            return;
+        }
+
         var commandList = frameState.commandList;
-        var commands = passes.render ? this._drawCommands : this._pickCommands;
+        var commands = this._drawCommands;
         var commandsLength = commands.length;
 
         for (var i = 0; i < commandsLength; ++i) {

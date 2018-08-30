@@ -18,12 +18,19 @@ defineSuite([
         DomEventSimulator) {
     'use strict';
 
-    var usePointerEvents = FeatureDetection.supportsPointerEvents();
+    var usePointerEvents;
     var canvas;
     var handler;
     var handler2;
 
     beforeAll(function() {
+        usePointerEvents = FeatureDetection.supportsPointerEvents();
+
+        //See https://github.com/AnalyticalGraphicsInc/cesium/issues/6539
+        if (FeatureDetection.isFirefox()) {
+            usePointerEvents = false;
+            spyOn(FeatureDetection, 'supportsPointerEvents').and.returnValue(false);
+        }
         canvas = createCanvas(1024, 768);
     });
 

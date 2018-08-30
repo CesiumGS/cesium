@@ -49,7 +49,7 @@ define([
     /**
      * Represents the contents of a
      * {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/3d-tiles-next/TileFormats/VectorData|Vector}
-     * tile in a {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/blob/master/README.md|3D Tiles} tileset.
+     * tile in a {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/specification|3D Tiles} tileset.
      * <p>
      * Implements the {@link Cesium3DTileContent} interface.
      * </p>
@@ -83,18 +83,12 @@ define([
     }
 
     defineProperties(Vector3DTileContent.prototype, {
-        /**
-         * @inheritdoc Cesium3DTileContent#featuresLength
-         */
         featuresLength : {
             get : function() {
                 return defined(this._batchTable) ? this._batchTable.featuresLength : 0;
             }
         },
 
-        /**
-         * @inheritdoc Cesium3DTileContent#pointsLength
-         */
         pointsLength : {
             get : function() {
                 if (defined(this._points)) {
@@ -104,9 +98,6 @@ define([
             }
         },
 
-        /**
-         * @inheritdoc Cesium3DTileContent#trianglesLength
-         */
         trianglesLength : {
             get : function() {
                 var trianglesLength = 0;
@@ -120,9 +111,6 @@ define([
             }
         },
 
-        /**
-         * @inheritdoc Cesium3DTileContent#geometryByteLength
-         */
         geometryByteLength : {
             get : function() {
                 var geometryByteLength = 0;
@@ -136,9 +124,6 @@ define([
             }
         },
 
-        /**
-         * @inheritdoc Cesium3DTileContent#texturesByteLength
-         */
         texturesByteLength : {
             get : function() {
                 if (defined(this._points)) {
@@ -148,63 +133,42 @@ define([
             }
         },
 
-        /**
-         * @inheritdoc Cesium3DTileContent#batchTableByteLength
-         */
         batchTableByteLength : {
             get : function() {
                 return defined(this._batchTable) ? this._batchTable.memorySizeInBytes : 0;
             }
         },
 
-        /**
-         * @inheritdoc Cesium3DTileContent#innerContents
-         */
         innerContents : {
             get : function() {
                 return undefined;
             }
         },
 
-        /**
-         * @inheritdoc Cesium3DTileContent#readyPromise
-         */
         readyPromise : {
             get : function() {
                 return this._readyPromise.promise;
             }
         },
 
-        /**
-         * @inheritdoc Cesium3DTileContent#tileset
-         */
         tileset : {
             get : function() {
                 return this._tileset;
             }
         },
 
-        /**
-         * @inheritdoc Cesium3DTileContent#tile
-         */
         tile : {
             get : function() {
                 return this._tile;
             }
         },
 
-        /**
-         * @inheritdoc Cesium3DTileContent#url
-         */
         url : {
             get : function() {
                 return this._resource.getUrlComponent(true);
             }
         },
 
-        /**
-         * @inheritdoc Cesium3DTileContent#batchTable
-         */
         batchTable : {
             get : function() {
                 return this._batchTable;
@@ -432,7 +396,7 @@ define([
                 polygonMaximumHeights : polygonMaximumHeights,
                 center : center,
                 rectangle : rectangle,
-                boundingVolume : content._tile._boundingVolume.boundingVolume,
+                boundingVolume : content.tile.boundingVolume.boundingVolume,
                 batchTable : batchTable,
                 batchIds : batchIds.polygons,
                 modelMatrix : modelMatrix
@@ -466,7 +430,7 @@ define([
                 maximumHeight : maxHeight,
                 center : center,
                 rectangle : rectangle,
-                boundingVolume : content._tile._boundingVolume.boundingVolume,
+                boundingVolume : content.tile.boundingVolume.boundingVolume,
                 batchTable : batchTable
             });
         }
@@ -502,16 +466,10 @@ define([
         }
     }
 
-    /**
-     * @inheritdoc Cesium3DTileContent#hasProperty
-     */
     Vector3DTileContent.prototype.hasProperty = function(batchId, name) {
         return this._batchTable.hasProperty(batchId, name);
     };
 
-    /**
-     * @inheritdoc Cesium3DTileContent#getFeature
-     */
     Vector3DTileContent.prototype.getFeature = function(batchId) {
         //>>includeStart('debug', pragmas.debug);
         var featuresLength = this.featuresLength;
@@ -524,9 +482,6 @@ define([
         return this._features[batchId];
     };
 
-    /**
-     * @inheritdoc Cesium3DTileContent#applyDebugSettings
-     */
     Vector3DTileContent.prototype.applyDebugSettings = function(enabled, color) {
         if (defined(this._polygons)) {
             this._polygons.applyDebugSettings(enabled, color);
@@ -539,38 +494,36 @@ define([
         }
     };
 
-    /**
-     * @inheritdoc Cesium3DTileContent#applyStyle
-     */
-    Vector3DTileContent.prototype.applyStyle = function(frameState, style) {
+    Vector3DTileContent.prototype.applyStyle = function(style) {
         createFeatures(this);
         if (defined(this._polygons)) {
-            this._polygons.applyStyle(frameState, style, this._features);
+            this._polygons.applyStyle(style, this._features);
         }
         if (defined(this._polylines)) {
-            this._polylines.applyStyle(frameState, style, this._features);
+            this._polylines.applyStyle(style, this._features);
         }
         if (defined(this._points)) {
-            this._points.applyStyle(frameState, style, this._features);
+            this._points.applyStyle(style, this._features);
         }
     };
 
-    /**
-     * @inheritdoc Cesium3DTileContent#update
-     */
     Vector3DTileContent.prototype.update = function(tileset, frameState) {
-        if (defined(this._batchTable)) {
-            this._batchTable.update(tileset, frameState);
-        }
+        var ready = true;
         if (defined(this._polygons)) {
             this._polygons.classificationType = this._tileset.classificationType;
             this._polygons.update(frameState);
+            ready = ready && this._polygons._ready;
         }
         if (defined(this._polylines)) {
             this._polylines.update(frameState);
+            ready = ready && this._polylines._ready;
         }
         if (defined(this._points)) {
             this._points.update(frameState);
+            ready = ready && this._points._ready;
+        }
+        if (defined(this._batchTable) && ready) {
+            this._batchTable.update(tileset, frameState);
         }
 
         if (!defined(this._contentReadyPromise)) {
@@ -585,16 +538,10 @@ define([
         }
     };
 
-    /**
-     * @inheritdoc Cesium3DTileContent#isDestroyed
-     */
     Vector3DTileContent.prototype.isDestroyed = function() {
         return false;
     };
 
-    /**
-     * @inheritdoc Cesium3DTileContent#destroy
-     */
     Vector3DTileContent.prototype.destroy = function() {
         this._polygons = this._polygons && this._polygons.destroy();
         this._polylines = this._polylines && this._polylines.destroy();

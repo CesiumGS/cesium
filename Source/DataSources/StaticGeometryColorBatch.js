@@ -1,10 +1,12 @@
 define([
         '../Core/AssociativeArray',
+        '../Core/Cartesian3',
         '../Core/Color',
         '../Core/ColorGeometryInstanceAttribute',
         '../Core/defined',
         '../Core/DistanceDisplayCondition',
         '../Core/DistanceDisplayConditionGeometryInstanceAttribute',
+        '../Core/OffsetGeometryInstanceAttribute',
         '../Core/ShowGeometryInstanceAttribute',
         '../Scene/Primitive',
         './BoundingSphereState',
@@ -13,11 +15,13 @@ define([
         './Property'
     ], function(
         AssociativeArray,
+        Cartesian3,
         Color,
         ColorGeometryInstanceAttribute,
         defined,
         DistanceDisplayCondition,
         DistanceDisplayConditionGeometryInstanceAttribute,
+        OffsetGeometryInstanceAttribute,
         ShowGeometryInstanceAttribute,
         Primitive,
         BoundingSphereState,
@@ -29,6 +33,8 @@ define([
     var colorScratch = new Color();
     var distanceDisplayConditionScratch = new DistanceDisplayCondition();
     var defaultDistanceDisplayCondition = new DistanceDisplayCondition();
+    var defaultOffset = Cartesian3.ZERO;
+    var offsetScratch = new Cartesian3();
 
     function Batch(primitives, translucent, appearanceType, depthFailAppearanceType, depthFailMaterialProperty, closed, shadows) {
         this.translucent = translucent;
@@ -80,7 +86,7 @@ define([
         this.createPrimitive = true;
         this.geometry.set(id, instance);
         this.updaters.set(id, updater);
-        if (!updater.hasConstantFill || !updater.fillMaterialProperty.isConstant || !Property.isConstant(updater.distanceDisplayConditionProperty)) {
+        if (!updater.hasConstantFill || !updater.fillMaterialProperty.isConstant || !Property.isConstant(updater.distanceDisplayConditionProperty) || !Property.isConstant(updater.terrainOffsetProperty)) {
             this.updatersWithAttributes.set(id, updater);
         } else {
             var that = this;
@@ -101,6 +107,7 @@ define([
             if (defined(unsubscribe)) {
                 unsubscribe();
                 this.subscriptions.remove(id);
+                this.showsUpdated.remove(id);
             }
         }
     };
@@ -132,13 +139,13 @@ define([
 
                     if (defined(attributes)) {
                         if (defined(originalAttributes.show)) {
-                            originalAttributes.show.value = attributes.show;
+                            attributes.show = originalAttributes.show.value;
                         }
                         if (defined(originalAttributes.color)) {
-                            originalAttributes.color.value = attributes.color;
+                            attributes.color = originalAttributes.color.value;
                         }
                         if (defined(originalAttributes.depthFailColor)) {
-                            originalAttributes.depthFailColor.value = attributes.depthFailColor;
+                            attributes.depthFailColor = originalAttributes.depthFailColor.value;
                         }
                     }
                 }
@@ -156,6 +163,7 @@ define([
                 }
 
                 primitive = new Primitive({
+                    show : false,
                     asynchronous : true,
                     geometryInstances : geometries,
                     appearance : new this.appearanceType({
@@ -184,6 +192,7 @@ define([
             this.createPrimitive = false;
             this.waitingOnCreate = true;
         } else if (defined(primitive) && primitive.ready) {
+            primitive.show = true;
             if (defined(this.oldPrimitive)) {
                 primitives.remove(this.oldPrimitive);
                 this.oldPrimitive = undefined;
@@ -242,6 +251,15 @@ define([
                         attributes.distanceDisplayCondition = DistanceDisplayConditionGeometryInstanceAttribute.toValue(distanceDisplayCondition, attributes.distanceDisplayCondition);
                     }
                 }
+
+                var offsetProperty = updater.terrainOffsetProperty;
+                if (!Property.isConstant(offsetProperty)) {
+                    var offset = Property.getValueOrDefault(offsetProperty, time, defaultOffset, offsetScratch);
+                    if (!Cartesian3.equals(offset, attributes._lastOffset)) {
+                        attributes._lastOffset = Cartesian3.clone(offset, attributes._lastOffset);
+                        attributes.offset = OffsetGeometryInstanceAttribute.toValue(offset, attributes.offset);
+                    }
+                }
             }
 
             this.updateShows(primitive);
@@ -293,24 +311,6 @@ define([
         return BoundingSphereState.DONE;
     };
 
-    Batch.prototype.removeAllPrimitives = function() {
-        var primitives = this.primitives;
-
-        var primitive = this.primitive;
-        if (defined(primitive)) {
-            primitives.remove(primitive);
-            this.primitive = undefined;
-            this.geometry.removeAll();
-            this.updaters.removeAll();
-        }
-
-        var oldPrimitive = this.oldPrimitive;
-        if (defined(oldPrimitive)) {
-            primitives.remove(oldPrimitive);
-            this.oldPrimitive = undefined;
-        }
-    };
-
     Batch.prototype.destroy = function() {
         var primitive = this.primitive;
         var primitives = this.primitives;
@@ -321,7 +321,7 @@ define([
         if (defined(oldPrimitive)) {
             primitives.remove(oldPrimitive);
         }
-        if(defined(this.removeMaterialSubscription)) {
+        if (defined(this.removeMaterialSubscription)) {
             this.removeMaterialSubscription();
         }
     };
@@ -450,7 +450,7 @@ define([
         var length = items.length;
         for (var i = 0; i < length; i++) {
             var item = items[i];
-            if(item.contains(updater)){
+            if (item.contains(updater)){
                 return item.getBoundingSphere(updater, result);
             }
         }

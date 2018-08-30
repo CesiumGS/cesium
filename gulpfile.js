@@ -24,7 +24,7 @@ var gulpRename = require('gulp-rename');
 var gulpReplace = require('gulp-replace');
 var Promise = require('bluebird');
 var requirejs = require('requirejs');
-var karma = require('karma').Server;
+var Karma = require('karma').Server;
 var yargs = require('yargs');
 var aws = require('aws-sdk');
 var mime = require('mime');
@@ -61,7 +61,6 @@ var sourceFiles = ['Source/**/*.js',
                    '!Source/*.js',
                    '!Source/Workers/**',
                    '!Source/ThirdParty/Workers/**',
-                   '!Source/ThirdParty/draco-decoder-gltf.js',
                    '!Source/ThirdParty/pako_inflate.js',
                    '!Source/ThirdParty/crunch.js',
                    'Source/Workers/createTaskProcessorWorker.js'];
@@ -459,25 +458,35 @@ function deployCesium(bucketName, uploadDirectory, cacheControl, done) {
                 return;
             }
 
-            var objectToDelete = [];
+            var objectsToDelete = [];
             existingBlobs.forEach(function(file) {
                 //Don't delete generate zip files.
                 if (!/\.(zip|tgz)$/.test(file)) {
-                    objectToDelete.push({Key : file});
+                    objectsToDelete.push({Key : file});
                 }
             });
 
-            if (objectToDelete.length > 0) {
-                console.log('Cleaning up old files...');
-                return s3.deleteObjectsAsync({
-                                                 Bucket : bucketName,
-                                                 Delete : {
-                                                     Objects : objectToDelete
-                                                 }
-                                             })
+            if (objectsToDelete.length > 0) {
+                console.log('Cleaning ' + objectsToDelete.length + ' files...');
+
+                // If more than 1000 files, we must issue multiple requests
+                var batches = [];
+                while (objectsToDelete.length > 1000) {
+                    batches.push(objectsToDelete.splice(0, 1000));
+                }
+                batches.push(objectsToDelete);
+
+                return Promise.map(batches, function(objects) {
+                    return s3.deleteObjectsAsync({
+                        Bucket : bucketName,
+                        Delete : {
+                            Objects : objects
+                        }
+                    })
                     .then(function() {
-                        console.log('Cleaned ' + existingBlobs.length + ' files.');
+                        console.log('Cleaned ' + objects.length + ' files.');
                     });
+                }, {concurrency : concurrency});
             }
         })
         .catch(function(error) {
@@ -625,16 +634,16 @@ gulp.task('test', function(done) {
         files.push({pattern : 'Build/**', included : false});
     }
 
-    karma.start({
+    var karma = new Karma({
         configFile: karmaConfigFile,
-        browsers : browsers,
+        browsers: browsers,
         specReporter: {
             suppressErrorSummary: false,
             suppressFailed: false,
             suppressPassed: suppressPassed,
             suppressSkipped: true
         },
-        detectBrowsers : {
+        detectBrowsers: {
             enabled: enableAllBrowsers
         },
         files: files,
@@ -644,6 +653,7 @@ gulp.task('test', function(done) {
     }, function(e) {
         return done(failTaskOnError ? e : undefined);
     });
+    karma.start();
 });
 
 gulp.task('generateStubs', ['build'], function(done) {
@@ -667,7 +677,7 @@ define(\'' + moduleId + '\', function() {\n\
         modulePathMappings.push('        \'' + moduleId + '\' : \'../Stubs/Cesium\'');
     });
 
-    contents += '})();';
+    contents += '})();\n';
 
     var paths = '\
 define(function() {\n\
@@ -822,9 +832,20 @@ function combineCesium(debug, optimizer, combineOutput) {
 
 function combineWorkers(debug, optimizer, combineOutput) {
     //This is done waterfall style for concurrency reasons.
-    return globby(['Source/Workers/cesiumWorkerBootstrapper.js',
-                   'Source/Workers/transferTypedArrayTest.js',
-                   'Source/ThirdParty/Workers/*.js'])
+    // Copy files that are already minified
+    return globby(['Source/ThirdParty/Workers/draco*.js'])
+        .then(function(files) {
+            var stream = gulp.src(files, { base: 'Source' })
+                .pipe(gulp.dest(combineOutput));
+            return streamToPromise(stream);
+        })
+        .then(function () {
+            return globby(['Source/Workers/cesiumWorkerBootstrapper.js',
+                'Source/Workers/transferTypedArrayTest.js',
+                'Source/ThirdParty/Workers/*.js',
+                // Files are already minified, don't optimize
+                '!Source/ThirdParty/Workers/draco*.js']);
+        })
         .then(function(files) {
             return Promise.map(files, function(file) {
                 return requirejsOptimize(file, {
@@ -914,7 +935,7 @@ function combineJavaScript(options) {
             everythingElse.push('!**/*.css');
         }
 
-        stream = gulp.src(everythingElse).pipe(gulp.dest(outputDirectory));
+        stream = gulp.src(everythingElse, { nodir: true }).pipe(gulp.dest(outputDirectory));
         promises.push(streamToPromise(stream));
 
         return Promise.all(promises).then(function() {
@@ -1070,7 +1091,7 @@ define([' + moduleIds.join(', ') + '], function(' + parameters.join(', ') + ') {
   };\n\
   ' + assignments.join('\n  ') + '\n\
   return Cesium;\n\
-});';
+});\n';
 
     fs.writeFileSync('Source/Cesium.js', contents);
 }
@@ -1083,7 +1104,7 @@ function createSpecList() {
         specs.push("'" + filePathToModuleId(file) + "'");
     });
 
-    var contents = '/*eslint-disable no-unused-vars*/\n/*eslint-disable no-implicit-globals*/\nvar specs = [' + specs.join(',') + '];';
+    var contents = '/*eslint-disable no-unused-vars*/\n/*eslint-disable no-implicit-globals*/\nvar specs = [' + specs.join(',') + '];\n';
     fs.writeFileSync(path.join('Specs', 'SpecList.js'), contents);
 }
 
@@ -1153,7 +1174,7 @@ function createGalleryList() {
 // This file is automatically rebuilt by the Cesium build process.\n\
 var hello_world_index = ' + helloWorldIndex + ';\n\
 var gallery_demos = [' + demoJSONs.join(', ') + '];\n\
-var has_new_gallery_demos = ' + (newDemos.length > 0 ? 'true;' : 'false;');
+var has_new_gallery_demos = ' + (newDemos.length > 0 ? 'true;' : 'false;') + '\n';
 
     fs.writeFileSync(output, contents);
 }
@@ -1167,7 +1188,7 @@ function createJsHintOptions() {
 
     var contents = '\
 // This file is automatically rebuilt by the Cesium build process.\n\
-var sandcastleJsHintOptions = ' + JSON.stringify(primary, null, 4) + ';';
+var sandcastleJsHintOptions = ' + JSON.stringify(primary, null, 4) + ';\n';
 
     fs.writeFileSync(path.join('Apps', 'Sandcastle', 'jsHintOptions.js'), contents);
 }
@@ -1261,7 +1282,8 @@ function buildCesiumViewer() {
                       'Build/Cesium/Widgets/**',
                       '!Build/Cesium/Widgets/**/*.css'],
                 {
-                    base : 'Build/Cesium'
+                    base : 'Build/Cesium',
+                    nodir : true
                 }),
 
             gulp.src(['Build/Cesium/Widgets/InfoBox/InfoBoxDescription.css'], {

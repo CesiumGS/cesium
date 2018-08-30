@@ -8,7 +8,6 @@ define([
         '../Core/destroyObject',
         '../Core/Ellipsoid',
         '../Core/IndexDatatype',
-        '../Core/Matrix4',
         '../Core/OrientedBoundingBox',
         '../Core/Rectangle',
         '../Core/TaskProcessor',
@@ -26,7 +25,6 @@ define([
         destroyObject,
         Ellipsoid,
         IndexDatatype,
-        Matrix4,
         OrientedBoundingBox,
         Rectangle,
         TaskProcessor,
@@ -386,12 +384,11 @@ define([
     /**
      * Apply a style to the content.
      *
-     * @param {FrameState} frameState The frame state.
      * @param {Cesium3DTileStyle} style The style.
      * @param {Cesium3DTileFeature[]} features The array of features.
      */
-    Vector3DTilePolygons.prototype.applyStyle = function(frameState, style, features) {
-        this._primitive.applyStyle(frameState, style, features);
+    Vector3DTilePolygons.prototype.applyStyle = function(style, features) {
+        this._primitive.applyStyle(style, features);
     };
 
     /**

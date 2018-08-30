@@ -14,7 +14,7 @@ attribute vec4 texCoordExpandAndBatchIndex;
 
 varying vec2  v_st;
 varying float v_width;
-varying vec4  czm_pickColor;
+varying vec4 v_pickColor;
 varying float v_polylineAngle;
 
 void main()
@@ -95,5 +95,9 @@ void main()
 
     v_st = vec2(texCoord, clamp(expandDir, 0.0, 1.0));
     v_width = width;
-    czm_pickColor = pickColor;
+    v_pickColor = pickColor;
+
+#ifdef LOG_DEPTH
+    czm_vertexLogDepth(czm_modelViewProjectionRelativeToEye * p);
+#endif
 }

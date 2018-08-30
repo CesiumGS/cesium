@@ -1,21 +1,25 @@
 define([
         '../Core/Check',
         '../Core/defaultValue',
+        '../Core/defined',
         '../Core/defineProperties',
         '../Core/DeveloperError',
+        '../Core/PixelFormat',
         './PixelDatatype'
     ], function(
         Check,
         defaultValue,
+        defined,
         defineProperties,
         DeveloperError,
+        PixelFormat,
         PixelDatatype) {
     'use strict';
 
     /**
      * @private
      */
-    function CubeMapFace(gl, texture, textureTarget, targetFace, pixelFormat, pixelDatatype, size, preMultiplyAlpha, flipY) {
+    function CubeMapFace(gl, texture, textureTarget, targetFace, pixelFormat, pixelDatatype, size, preMultiplyAlpha, flipY, initialized) {
         this._gl = gl;
         this._texture = texture;
         this._textureTarget = textureTarget;
@@ -25,6 +29,7 @@ define([
         this._size = size;
         this._preMultiplyAlpha = preMultiplyAlpha;
         this._flipY = flipY;
+        this._initialized = initialized;
     }
 
     defineProperties(CubeMapFace.prototype, {
@@ -89,17 +94,72 @@ define([
 
         var gl = this._gl;
         var target = this._textureTarget;
+        var targetFace = this._targetFace;
 
         // TODO: gl.pixelStorei(gl._UNPACK_ALIGNMENT, 4);
-        gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, this._preMultiplyAlpha);
-        gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, this._flipY);
+
         gl.activeTexture(gl.TEXTURE0);
         gl.bindTexture(target, this._texture);
 
-        if (source.arrayBufferView) {
-            gl.texSubImage2D(this._targetFace, 0, xOffset, yOffset, source.width, source.height, this._pixelFormat, this._pixelDatatype, source.arrayBufferView);
-        } else {
-            gl.texSubImage2D(this._targetFace, 0, xOffset, yOffset, this._pixelFormat, this._pixelDatatype, source);
+        var width = source.width;
+        var height = source.height;
+        var arrayBufferView = source.arrayBufferView;
+
+        var size = this._size;
+        var pixelFormat = this._pixelFormat;
+        var pixelDatatype = this._pixelDatatype;
+
+        var preMultiplyAlpha = this._preMultiplyAlpha;
+        var flipY = this._flipY;
+
+        var uploaded = false;
+        if (!this._initialized) {
+            if (xOffset === 0 && yOffset === 0 && width === size && height === size) {
+                // initialize the entire texture
+                if (defined(arrayBufferView)) {
+                    gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
+                    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
+
+                    if (flipY) {
+                        arrayBufferView = PixelFormat.flipY(arrayBufferView, pixelFormat, pixelDatatype, size, size);
+                    }
+                    gl.texImage2D(targetFace, 0, pixelFormat, size, size, 0, pixelFormat, pixelDatatype, arrayBufferView);
+                } else {
+                    // Only valid for DOM-Element uploads
+                    gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, preMultiplyAlpha);
+                    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, flipY);
+
+                    gl.texImage2D(targetFace, 0, pixelFormat, pixelFormat, pixelDatatype, source);
+                }
+                uploaded = true;
+            } else {
+                gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
+                gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
+
+                // initialize the entire texture to zero
+                var bufferView = PixelFormat.createTypedArray(pixelFormat, pixelDatatype, size, size);
+                gl.texImage2D(targetFace, 0, pixelFormat, size, size, 0, pixelFormat, pixelDatatype, bufferView);
+            }
+            this._initialized = true;
+        }
+
+        if (!uploaded) {
+            if (arrayBufferView) {
+                gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
+                gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
+
+                if (flipY) {
+                    arrayBufferView = PixelFormat.flipY(arrayBufferView, pixelFormat, pixelDatatype, width, height);
+                }
+                gl.texSubImage2D(targetFace, 0, xOffset, yOffset, width, height, pixelFormat, pixelDatatype, arrayBufferView);
+            } else {
+                // Only valid for DOM-Element uploads
+                gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, preMultiplyAlpha);
+                gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, flipY);
+
+                // Source: ImageData, HTMLImageElement, HTMLCanvasElement, or HTMLVideoElement
+                gl.texSubImage2D(targetFace, 0, xOffset, yOffset, pixelFormat, pixelDatatype, source);
+            }
         }
 
         gl.bindTexture(target, null);
@@ -116,6 +176,7 @@ define([
      * @param {Number} [height=CubeMap's height] The height of the subimage to copy.
      *
      * @exception {DeveloperError} Cannot call copyFromFramebuffer when the texture pixel data type is FLOAT.
+     * @exception {DeveloperError} Cannot call copyFromFramebuffer when the texture pixel data type is HALF_FLOAT.
      * @exception {DeveloperError} This CubeMap was destroyed, i.e., destroy() was called.
      * @exception {DeveloperError} xOffset must be greater than or equal to zero.
      * @exception {DeveloperError} yOffset must be greater than or equal to zero.
@@ -151,6 +212,9 @@ define([
         if (this._pixelDatatype === PixelDatatype.FLOAT) {
             throw new DeveloperError('Cannot call copyFromFramebuffer when the texture pixel data type is FLOAT.');
         }
+        if (this._pixelDatatype === PixelDatatype.HALF_FLOAT) {
+            throw new DeveloperError('Cannot call copyFromFramebuffer when the texture pixel data type is HALF_FLOAT.');
+        }
         //>>includeEnd('debug');
 
         var gl = this._gl;
@@ -160,6 +224,7 @@ define([
         gl.bindTexture(target, this._texture);
         gl.copyTexSubImage2D(this._targetFace, 0, xOffset, yOffset, framebufferXOffset, framebufferYOffset, width, height);
         gl.bindTexture(target, null);
+        this._initialized = true;
     };
 
     return CubeMapFace;

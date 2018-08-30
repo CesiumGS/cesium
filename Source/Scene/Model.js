@@ -7,6 +7,7 @@ define([
         '../Core/clone',
         '../Core/Color',
         '../Core/combine',
+        '../Core/createGuid',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
@@ -85,6 +86,7 @@ define([
         clone,
         Color,
         combine,
+        createGuid,
         defaultValue,
         defined,
         defineProperties,
@@ -221,7 +223,7 @@ define([
     };
 
     var gltfCache = {};
-
+    var uriToGuid = {};
     ///////////////////////////////////////////////////////////////////////////
 
     /**
@@ -248,7 +250,7 @@ define([
      * </li><li>
      * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/1.0/Vendor/WEB3D_quantized_attributes/README.md|WEB3D_quantized_attributes}
      * </li><li>
-     * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/2.0/Khronos/KHR_draco_mesh_compression/README.md|KHR_draco_mesh_compression} (Not supported in Internet Explorer)
+     * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/2.0/Khronos/KHR_draco_mesh_compression/README.md|KHR_draco_mesh_compression}
      * </li>
      * </ul>
      * </p>
@@ -573,12 +575,11 @@ define([
         this._vertexShaderLoaded = options.vertexShaderLoaded;
         this._fragmentShaderLoaded = options.fragmentShaderLoaded;
         this._uniformMapLoaded = options.uniformMapLoaded;
-        this._pickVertexShaderLoaded = options.pickVertexShaderLoaded;
-        this._pickFragmentShaderLoaded = options.pickFragmentShaderLoaded;
-        this._pickUniformMapLoaded = options.pickUniformMapLoaded;
+        this._pickIdLoaded = options.pickIdLoaded;
         this._ignoreCommands = defaultValue(options.ignoreCommands, false);
         this._requestType = options.requestType;
         this._upAxis = defaultValue(options.upAxis, Axis.Y);
+        this._forwardAxis = defaultValue(options.forwardAxis, Axis.Z);
 
         /**
          * @private
@@ -627,7 +628,6 @@ define([
             buffers : {},
             vertexArrays : {},
             programs : {},
-            pickPrograms : {},
             silhouettePrograms : {},
             textures : {},
             samplers : {},
@@ -974,6 +974,25 @@ define([
         },
 
         /**
+         * Gets the model's forward axis.
+         * By default, glTF 2.0 models are z-forward according to the glTF spec, however older
+         * glTF (1.0, 0.8) models used x-forward.  Note that only Axis.X and Axis.Z are supported.
+         *
+         * @memberof Model.prototype
+         *
+         * @type {Number}
+         * @default Axis.Z
+         * @readonly
+         *
+         * @private
+         */
+        forwardAxis : {
+            get : function() {
+                return this._forwardAxis;
+            }
+        },
+
+        /**
          * Gets the model's triangle count.
          *
          * @private
@@ -1046,6 +1065,15 @@ define([
                 // Handle destroying, checking of unknown, checking for existing ownership
                 ClippingPlaneCollection.setOwner(value, this, '_clippingPlanes');
             }
+        },
+
+        /**
+         * @private
+         */
+        pickIds : {
+            get : function() {
+                return this._pickIds;
+            }
         }
     });
 
@@ -1096,7 +1124,7 @@ define([
      * </li><li>
      * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/1.0/Vendor/WEB3D_quantized_attributes/README.md|WEB3D_quantized_attributes}
      * </li><li>
-     * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/2.0/Khronos/KHR_draco_mesh_compression/README.md|KHR_draco_mesh_compression} (Not supported in Internet Explorer)
+     * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/2.0/Khronos/KHR_draco_mesh_compression/README.md|KHR_draco_mesh_compression}
      * </li>
      * </ul>
      * </p>
@@ -1183,9 +1211,14 @@ define([
         var basePath = defaultValue(options.basePath, modelResource.clone());
         var resource = Resource.createIfNeeded(basePath);
 
-        // If no cache key is provided, use the absolute URL, since two URLs with
-        // different relative paths could point to the same model.
-        var cacheKey = defaultValue(options.cacheKey, getAbsoluteUri(modelResource.url));
+        // If no cache key is provided, use a GUID.
+        // Check using a URI to GUID dictionary that we have not already added this model.
+        var cacheKey = defaultValue(options.cacheKey, uriToGuid[getAbsoluteUri(modelResource.url)]);
+        if (!defined(cacheKey)) {
+            cacheKey = createGuid();
+            uriToGuid[getAbsoluteUri(modelResource.url)] = cacheKey;
+        }
+
         if (defined(options.basePath) && !defined(options.cacheKey)) {
             cacheKey += resource.url;
         }
@@ -1356,6 +1389,10 @@ define([
         }
 
         var boundingSphere = BoundingSphere.fromCornerPoints(min, max);
+        if (model._forwardAxis === Axis.Z) {
+            // glTF 2.0 has a Z-forward convention that must be adapted here to X-forward.
+            BoundingSphere.transformWithoutScale(boundingSphere, Axis.Z_UP_TO_X_UP, boundingSphere);
+        }
         if (model._upAxis === Axis.Y) {
             BoundingSphere.transformWithoutScale(boundingSphere, Axis.Y_UP_TO_Z_UP, boundingSphere);
         } else if (model._upAxis === Axis.X) {
@@ -1973,11 +2010,12 @@ define([
     ///////////////////////////////////////////////////////////////////////////
 
     // When building programs for the first time, do not include modifiers for clipping planes and color
-    // since this is the version of the program that will be cached.
+    // since this is the version of the program that will be cached for use with other Models.
     function createProgram(id, model, context) {
         var program = model._sourcePrograms[id];
         var shaders = model._sourceShaders;
         var quantizedVertexShaders = model._quantizedVertexShaders;
+        var toClipCoordinatesGLSL = model._toClipCoordinatesGLSL[id];
 
         var vs = shaders[program.vertexShader].extras._pipeline.source;
         var fs = shaders[program.fragmentShader].extras._pipeline.source;
@@ -1994,23 +2032,26 @@ define([
         var drawVS = modifyShader(vs, id, model._vertexShaderLoaded);
         var drawFS = modifyShader(fs, id, model._fragmentShaderLoaded);
 
-        var pickFS, pickVS;
-        if (model.allowPicking) {
-            // PERFORMANCE_IDEA: Can optimize this shader with a glTF hint. https://github.com/KhronosGroup/glTF/issues/181
-            pickVS = modifyShader(vs, id, model._pickVertexShaderLoaded);
-            pickFS = modifyShader(fs, id, model._pickFragmentShaderLoaded);
-
-            if (!model._pickFragmentShaderLoaded) {
-                pickFS = ShaderSource.createPickFragmentShaderSource(fs, 'uniform');
-            }
+        // Internet Explorer seems to have problems with discard (for clipping planes) after too many levels of indirection:
+        // https://github.com/AnalyticalGraphicsInc/cesium/issues/6575.
+        // For IE log depth code is defined out anyway due to unsupported WebGL extensions, so the wrappers can be omitted.
+        if (!FeatureDetection.isInternetExplorer()) {
+            drawVS = ModelUtility.modifyVertexShaderForLogDepth(drawVS, toClipCoordinatesGLSL);
+            drawFS = ModelUtility.modifyFragmentShaderForLogDepth(drawFS);
         }
-        createAttributesAndProgram(id, drawFS, drawVS, pickFS, pickVS, model, context);
+
+        if (!defined(model._uniformMapLoaded)) {
+            drawFS = 'uniform vec4 czm_pickColor;\n' + drawFS;
+        }
+
+        createAttributesAndProgram(id, drawFS, drawVS, model, context);
     }
 
     function recreateProgram(id, model, context) {
         var program = model._sourcePrograms[id];
         var shaders = model._sourceShaders;
         var quantizedVertexShaders = model._quantizedVertexShaders;
+        var toClipCoordinatesGLSL = model._toClipCoordinatesGLSL[id];
 
         var clippingPlaneCollection = model.clippingPlanes;
         var addClippingPlaneCode = isClippingEnabled(model);
@@ -2027,30 +2068,25 @@ define([
             finalFS = Model._modifyShaderForColor(finalFS, model._hasPremultipliedAlpha);
         }
         if (addClippingPlaneCode) {
-            finalFS = modifyShaderForClippingPlanes(finalFS, clippingPlaneCollection);
+            finalFS = modifyShaderForClippingPlanes(finalFS, clippingPlaneCollection, context);
         }
 
         var drawVS = modifyShader(vs, id, model._vertexShaderLoaded);
         var drawFS = modifyShader(finalFS, id, model._fragmentShaderLoaded);
 
-        var pickFS, pickVS;
-        if (model.allowPicking) {
-            // PERFORMANCE_IDEA: Can optimize this shader with a glTF hint. https://github.com/KhronosGroup/glTF/issues/181
-            pickVS = modifyShader(vs, id, model._pickVertexShaderLoaded);
-            pickFS = modifyShader(fs, id, model._pickFragmentShaderLoaded);
-
-            if (!model._pickFragmentShaderLoaded) {
-                pickFS = ShaderSource.createPickFragmentShaderSource(fs, 'uniform');
-            }
-
-            if (addClippingPlaneCode) {
-                pickFS = modifyShaderForClippingPlanes(pickFS, clippingPlaneCollection);
-            }
+        if (!FeatureDetection.isInternetExplorer()) {
+            drawVS = ModelUtility.modifyVertexShaderForLogDepth(drawVS, toClipCoordinatesGLSL);
+            drawFS = ModelUtility.modifyFragmentShaderForLogDepth(drawFS);
         }
-        createAttributesAndProgram(id, drawFS, drawVS, pickFS, pickVS, model, context);
+
+        if (!defined(model._uniformMapLoaded)) {
+            drawFS = 'uniform vec4 czm_pickColor;\n' + drawFS;
+        }
+
+        createAttributesAndProgram(id, drawFS, drawVS, model, context);
     }
 
-    function createAttributesAndProgram(id, drawFS, drawVS, pickFS, pickVS, model, context) {
+    function createAttributesAndProgram(id, drawFS, drawVS, model, context) {
         var program = model._sourcePrograms[id];
         var attributeLocations = createAttributeLocations(model, program.attributes);
 
@@ -2071,15 +2107,6 @@ define([
             fragmentShaderSource : drawFS,
             attributeLocations : attributeLocations
         });
-
-        if (model.allowPicking) {
-            model._rendererResources.pickPrograms[id] = ShaderProgram.fromCache({
-                context : context,
-                vertexShaderSource : pickVS,
-                fragmentShaderSource : pickFS,
-                attributeLocations : attributeLocations
-            });
-        }
     }
 
     var scratchCreateProgramJob = new CreateProgramJob();
@@ -3033,7 +3060,6 @@ define([
         var resources = model._rendererResources;
         var rendererVertexArrays = resources.vertexArrays;
         var rendererPrograms = resources.programs;
-        var rendererPickPrograms = resources.pickPrograms;
         var rendererRenderStates = resources.renderStates;
         var uniformMaps = model._uniformMaps;
 
@@ -3145,6 +3171,24 @@ define([
             var castShadows = ShadowMode.castShadows(model._shadows);
             var receiveShadows = ShadowMode.receiveShadows(model._shadows);
 
+            var pickId;
+            if (allowPicking && !defined(model._uniformMapLoaded)) {
+                pickId = context.createPickId(owner);
+                pickIds.push(pickId);
+                var pickUniforms = {
+                    czm_pickColor : createPickColorFunction(pickId.color)
+                };
+                uniformMap = combine(uniformMap, pickUniforms);
+            }
+
+            if (allowPicking) {
+                if (defined(model._pickIdLoaded) && defined(model._uniformMapLoaded)) {
+                    pickId = model._pickIdLoaded();
+                } else {
+                    pickId = 'czm_pickColor';
+                }
+            }
+
             var command = new DrawCommand({
                 boundingVolume : new BoundingSphere(), // updated in update()
                 cull : model.cull,
@@ -3159,70 +3203,22 @@ define([
                 uniformMap : uniformMap,
                 renderState : rs,
                 owner : owner,
-                pass : isTranslucent ? Pass.TRANSLUCENT : model.opaquePass
+                pass : isTranslucent ? Pass.TRANSLUCENT : model.opaquePass,
+                pickId : pickId
             });
 
-            var pickCommand;
-
-            if (allowPicking) {
-                var pickUniformMap;
-
-                // Callback to override default model picking
-                if (defined(model._pickFragmentShaderLoaded)) {
-                    if (defined(model._pickUniformMapLoaded)) {
-                        pickUniformMap = model._pickUniformMapLoaded(uniformMap);
-                    } else {
-                        // This is unlikely, but could happen if the override shader does not
-                        // need new uniforms since, for example, its pick ids are coming from
-                        // a vertex attribute or are baked into the shader source.
-                        pickUniformMap = combine(uniformMap);
-                    }
-                } else {
-                    var pickId = context.createPickId(owner);
-                    pickIds.push(pickId);
-                    var pickUniforms = {
-                        czm_pickColor : createPickColorFunction(pickId.color)
-                    };
-                    pickUniformMap = combine(uniformMap, pickUniforms);
-                }
-
-                pickCommand = new DrawCommand({
-                    boundingVolume : new BoundingSphere(), // updated in update()
-                    cull : model.cull,
-                    modelMatrix : new Matrix4(),           // computed in update()
-                    primitiveType : primitive.mode,
-                    vertexArray : vertexArray,
-                    count : count,
-                    offset : offset,
-                    shaderProgram : rendererPickPrograms[programId],
-                    uniformMap : pickUniformMap,
-                    renderState : rs,
-                    owner : owner,
-                    pass : isTranslucent ? Pass.TRANSLUCENT : model.opaquePass
-                });
-            }
-
             var command2D;
-            var pickCommand2D;
             if (!scene3DOnly) {
                 command2D = DrawCommand.shallowClone(command);
                 command2D.boundingVolume = new BoundingSphere(); // updated in update()
                 command2D.modelMatrix = new Matrix4();           // updated in update()
-
-                if (allowPicking) {
-                    pickCommand2D = DrawCommand.shallowClone(pickCommand);
-                    pickCommand2D.boundingVolume = new BoundingSphere(); // updated in update()
-                    pickCommand2D.modelMatrix = new Matrix4();           // updated in update()
-                }
             }
 
             var nodeCommand = {
                 show : true,
                 boundingSphere : boundingSphere,
                 command : command,
-                pickCommand : pickCommand,
                 command2D : command2D,
-                pickCommand2D : pickCommand2D,
                 // Generated on demand when silhouette size is greater than 0.0 and silhouette alpha is greater than 0.0
                 silhouetteModelCommand : undefined,
                 silhouetteModelCommand2D : undefined,
@@ -3366,9 +3362,29 @@ define([
         var scene3DOnly = frameState.scene3DOnly;
 
         // Retain references to updated source shaders and programs for rebuilding as needed
-        model._sourcePrograms = model.gltf.programs;
-        model._sourceShaders = model.gltf.shaders;
+        var programs = model._sourcePrograms = model.gltf.programs;
+        var shaders = model._sourceShaders = model.gltf.shaders;
         model._hasPremultipliedAlpha = hasPremultipliedAlpha(model);
+
+        var quantizedVertexShaders = model._quantizedVertexShaders;
+        var toClipCoordinates = model._toClipCoordinatesGLSL = {};
+        for (var id in programs) {
+            if (programs.hasOwnProperty(id)) {
+                var program = programs[id];
+                var shader = shaders[program.vertexShader].extras._pipeline.source;
+                if (model.extensionsUsed.WEB3D_quantized_attributes || model._dequantizeInShader) {
+                    var quantizedVS = quantizedVertexShaders[id];
+                    if (!defined(quantizedVS)) {
+                        quantizedVS = modifyShaderForQuantizedAttributes(shader, id, model);
+                        quantizedVertexShaders[id] = quantizedVS;
+                    }
+                    shader = quantizedVS;
+                }
+
+                shader = modifyShader(shader, id, model._vertexShaderLoaded);
+                toClipCoordinates[id] = ModelUtility.toClipCoordinatesGLSL(model.gltf, shader);
+            }
+        }
 
         ModelUtility.checkSupportedGlExtensions(model.gltf.glExtensionsUsed, context);
         if (model._loadRendererResourcesFromCache) {
@@ -3378,7 +3394,6 @@ define([
             resources.buffers = cachedResources.buffers;
             resources.vertexArrays = cachedResources.vertexArrays;
             resources.programs = cachedResources.programs;
-            resources.pickPrograms = cachedResources.pickPrograms;
             resources.silhouettePrograms = cachedResources.silhouettePrograms;
             resources.textures = cachedResources.textures;
             resources.samplers = cachedResources.samplers;
@@ -3438,7 +3453,6 @@ define([
 
     function updateNodeHierarchyModelMatrix(model, modelTransformChanged, justLoaded, projection) {
         var maxDirtyNumber = model._maxDirtyNumber;
-        var allowPicking = model.allowPicking;
 
         var rootNodes = model._runtime.rootNodes;
         var length = rootNodes.length;
@@ -3491,12 +3505,6 @@ define([
                                 Cartesian3.add(model._rtcCenter, command.boundingVolume.center, command.boundingVolume.center);
                             }
 
-                            if (allowPicking) {
-                                var pickCommand = primitiveCommand.pickCommand;
-                                Matrix4.clone(command.modelMatrix, pickCommand.modelMatrix);
-                                BoundingSphere.clone(command.boundingVolume, pickCommand.boundingVolume);
-                            }
-
                             // If the model crosses the IDL in 2D, it will be drawn in one viewport, but part of it
                             // will be clipped by the viewport. We create a second command that translates the model
                             // model matrix to the opposite side of the map so the part that was clipped in one viewport
@@ -3506,12 +3514,6 @@ define([
                                 Matrix4.clone(nodeMatrix, command.modelMatrix);
                                 command.modelMatrix[13] -= CesiumMath.sign(command.modelMatrix[13]) * 2.0 * CesiumMath.PI * projection.ellipsoid.maximumRadius;
                                 BoundingSphere.transform(primitiveCommand.boundingSphere, command.modelMatrix, command.boundingVolume);
-
-                                if (allowPicking) {
-                                    var pickCommand2D = primitiveCommand.pickCommand2D;
-                                    Matrix4.clone(command.modelMatrix, pickCommand2D.modelMatrix);
-                                    BoundingSphere.clone(command.boundingVolume, pickCommand2D.boundingVolume);
-                                }
                             }
                         }
                     }
@@ -3913,9 +3915,9 @@ define([
         }
     }
 
-    function modifyShaderForClippingPlanes(shader, clippingPlaneCollection) {
+    function modifyShaderForClippingPlanes(shader, clippingPlaneCollection, context) {
         shader = ShaderSource.replaceMain(shader, 'gltf_clip_main');
-        shader += Model._getClippingFunction(clippingPlaneCollection) + '\n';
+        shader += Model._getClippingFunction(clippingPlaneCollection, context) + '\n';
         shader +=
             'uniform sampler2D gltf_clippingPlanes; \n' +
             'uniform mat4 gltf_clippingPlanesMatrix; \n' +
@@ -4022,7 +4024,6 @@ define([
         this.buffers = undefined;
         this.vertexArrays = undefined;
         this.programs = undefined;
-        this.pickPrograms = undefined;
         this.silhouettePrograms = undefined;
         this.textures = undefined;
         this.samplers = undefined;
@@ -4046,7 +4047,6 @@ define([
         destroy(resources.buffers);
         destroy(resources.vertexArrays);
         destroy(resources.programs);
-        destroy(resources.pickPrograms);
         destroy(resources.silhouettePrograms);
         destroy(resources.textures);
     }
@@ -4256,6 +4256,10 @@ define([
                     };
                     frameState.brdfLutGenerator.update(frameState);
                     updateVersion(this.gltf);
+                    if (defined(this.gltf.asset) && defined(this.gltf.asset.extras) &&
+                        this.gltf.asset.extras.gltf_pipeline_upgrade_10to20) {
+                            this._forwardAxis = Axis.X;
+                    }
                     ModelUtility.checkSupportedExtensions(this.extensionsRequired);
                     addPipelineExtras(this.gltf);
                     addDefaults(this.gltf);
@@ -4278,19 +4282,21 @@ define([
                     parseNodes(this);
 
                     // Start draco decoding
-                    DracoLoader.parse(this);
+                    DracoLoader.parse(this, context);
 
                     loadResources.initialized = true;
                 }
 
                 if (!loadResources.finishedDecoding()) {
-                    DracoLoader.decode(this, context)
+                    DracoLoader.decodeModel(this, context)
                         .otherwise(getFailedLoadFunction(this, 'model', this.basePath));
                 }
 
                 if (loadResources.finishedDecoding() && !loadResources.resourcesParsed) {
                     this._boundingSphere = computeBoundingSphere(this);
                     this._initialRadius = this._boundingSphere.radius;
+
+                    DracoLoader.cacheDataForModel(this);
 
                     loadResources.resourcesParsed = true;
                 }
@@ -4323,7 +4329,6 @@ define([
                 cachedResources.buffers = resources.buffers;
                 cachedResources.vertexArrays = resources.vertexArrays;
                 cachedResources.programs = resources.programs;
-                cachedResources.pickPrograms = resources.pickPrograms;
                 cachedResources.silhouettePrograms = resources.silhouettePrograms;
                 cachedResources.textures = resources.textures;
                 cachedResources.samplers = resources.samplers;
@@ -4389,6 +4394,10 @@ define([
                     Matrix4.multiplyTransformation(computedModelMatrix, Axis.Y_UP_TO_Z_UP, computedModelMatrix);
                 } else if (this._upAxis === Axis.X) {
                     Matrix4.multiplyTransformation(computedModelMatrix, Axis.X_UP_TO_Z_UP, computedModelMatrix);
+                }
+                if (this._forwardAxis === Axis.Z) {
+                    // glTF 2.0 has a Z-forward convention that must be adapted here to X-forward.
+                    Matrix4.multiplyTransformation(computedModelMatrix, Axis.Z_UP_TO_X_UP, computedModelMatrix);
                 }
             }
 
@@ -4464,7 +4473,7 @@ define([
             var idl2D = frameState.mapProjection.ellipsoid.maximumRadius * CesiumMath.PI;
             var boundingVolume;
 
-            if (passes.render) {
+            if (passes.render || (passes.pick && this.allowPicking)) {
                 for (i = 0; i < length; ++i) {
                     nc = nodeCommands[i];
                     if (nc.show) {
@@ -4481,7 +4490,7 @@ define([
                     }
                 }
 
-                if (silhouette) {
+                if (silhouette && !passes.pick) {
                     // Render second silhouette pass
                     for (i = 0; i < length; ++i) {
                         nc = nodeCommands[i];
@@ -4496,31 +4505,12 @@ define([
                     }
                 }
             }
-
-            if (passes.pick && this.allowPicking) {
-                for (i = 0; i < length; ++i) {
-                    nc = nodeCommands[i];
-                    if (nc.show) {
-                        var pickCommand = nc.pickCommand;
-                        commandList.push(pickCommand);
-
-                        boundingVolume = pickCommand.boundingVolume;
-                        if (frameState.mode === SceneMode.SCENE2D &&
-                            (boundingVolume.center.y + boundingVolume.radius > idl2D || boundingVolume.center.y - boundingVolume.radius < idl2D)) {
-                            commandList.push(nc.pickCommand2D);
-                        }
-                    }
-                }
-            }
         }
     };
 
     function destroyIfNotCached(rendererResources, cachedRendererResources) {
         if (rendererResources.programs !== cachedRendererResources.programs) {
             destroy(rendererResources.programs);
-        }
-        if (rendererResources.pickPrograms !== cachedRendererResources.pickPrograms) {
-            destroy(rendererResources.pickPrograms);
         }
         if (rendererResources.silhouettePrograms !== cachedRendererResources.silhouettePrograms) {
             destroy(rendererResources.silhouettePrograms);
@@ -4550,7 +4540,6 @@ define([
 
         if (isClippingEnabled(model) || isColorShadingEnabled(model)) {
             rendererResources.programs = {};
-            rendererResources.pickPrograms = {};
             rendererResources.silhouettePrograms = {};
 
             var sourcePrograms = model._sourcePrograms;
@@ -4560,13 +4549,11 @@ define([
             });
         } else {
             rendererResources.programs = cachedRendererResources.programs;
-            rendererResources.pickPrograms = cachedRendererResources.pickPrograms;
             rendererResources.silhouettePrograms = cachedRendererResources.silhouettePrograms;
         }
 
         // Fix all the commands, marking them as dirty so everything that derives will re-derive
         var rendererPrograms = rendererResources.programs;
-        var rendererPickPrograms = rendererResources.pickPrograms;
 
         var nodeCommands = model._nodeCommands;
         var commandCount = nodeCommands.length;
@@ -4575,15 +4562,9 @@ define([
             var programId = nodeCommand.programId;
 
             var renderProgram = rendererPrograms[programId];
-            var pickProgram = rendererPickPrograms[programId];
-
             nodeCommand.command.shaderProgram = renderProgram;
-            nodeCommand.pickCommand.shaderProgram = pickProgram;
             if (defined(nodeCommand.command2D)) {
                 nodeCommand.command2D.shaderProgram = renderProgram;
-            }
-            if (defined(nodeCommand.pickCommand2D)) {
-                nodeCommand.pickCommand2D.shaderProgram = pickProgram;
             }
         }
 
@@ -4645,6 +4626,7 @@ define([
 
         this._rendererResources = undefined;
         this._cachedRendererResources = this._cachedRendererResources && this._cachedRendererResources.release();
+        DracoLoader.destroyCachedDataForModel(this);
 
         var pickIds = this._pickIds;
         var length = pickIds.length;

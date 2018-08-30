@@ -6,6 +6,7 @@ define([
         './defined',
         './defineProperties',
         './DeveloperError',
+        './Math',
         './Matrix4'
     ], function(
         Cartesian3,
@@ -15,6 +16,7 @@ define([
         defined,
         defineProperties,
         DeveloperError,
+        CesiumMath,
         Matrix4) {
     'use strict';
 
@@ -361,13 +363,35 @@ define([
      * @returns {Boolean} <code>true</code> if they are equal, <code>false</code> otherwise.
      */
     OrthographicOffCenterFrustum.prototype.equals = function(other) {
-        return (defined(other) &&
+        return (defined(other) && other instanceof OrthographicOffCenterFrustum &&
                 this.right === other.right &&
                 this.left === other.left &&
                 this.top === other.top &&
                 this.bottom === other.bottom &&
                 this.near === other.near &&
                 this.far === other.far);
+    };
+
+    /**
+     * Compares the provided OrthographicOffCenterFrustum componentwise and returns
+     * <code>true</code> if they pass an absolute or relative tolerance test,
+     * <code>false</code> otherwise.
+     *
+     * @param {OrthographicOffCenterFrustum} other The right hand side OrthographicOffCenterFrustum.
+     * @param {Number} relativeEpsilon The relative epsilon tolerance to use for equality testing.
+     * @param {Number} [absoluteEpsilon=relativeEpsilon] The absolute epsilon tolerance to use for equality testing.
+     * @returns {Boolean} <code>true</code> if this and other are within the provided epsilon, <code>false</code> otherwise.
+     */
+    OrthographicOffCenterFrustum.prototype.equalsEpsilon = function(other, relativeEpsilon, absoluteEpsilon) {
+        return (other === this) ||
+               (defined(other) &&
+                other instanceof OrthographicOffCenterFrustum &&
+                CesiumMath.equalsEpsilon(this.right, other.right, relativeEpsilon, absoluteEpsilon) &&
+                CesiumMath.equalsEpsilon(this.left, other.left, relativeEpsilon, absoluteEpsilon) &&
+                CesiumMath.equalsEpsilon(this.top, other.top, relativeEpsilon, absoluteEpsilon) &&
+                CesiumMath.equalsEpsilon(this.bottom, other.bottom, relativeEpsilon, absoluteEpsilon) &&
+                CesiumMath.equalsEpsilon(this.near, other.near, relativeEpsilon, absoluteEpsilon) &&
+                CesiumMath.equalsEpsilon(this.far, other.far, relativeEpsilon, absoluteEpsilon));
     };
 
     return OrthographicOffCenterFrustum;

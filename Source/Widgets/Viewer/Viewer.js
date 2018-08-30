@@ -1,7 +1,7 @@
 define([
         '../../Core/BoundingSphere',
         '../../Core/Cartesian3',
-        '../../Core/Check',
+        '../../Core/Cartographic',
         '../../Core/Clock',
         '../../Core/defaultValue',
         '../../Core/defined',
@@ -23,8 +23,10 @@ define([
         '../../DataSources/EntityView',
         '../../DataSources/Property',
         '../../Scene/Cesium3DTileset',
+        '../../Scene/computeFlyToLocationForRectangle',
         '../../Scene/ImageryLayer',
         '../../Scene/SceneMode',
+        '../../Scene/TimeDynamicPointCloud',
         '../../ThirdParty/knockout',
         '../../ThirdParty/when',
         '../Animation/Animation',
@@ -49,7 +51,7 @@ define([
     ], function(
         BoundingSphere,
         Cartesian3,
-        Check,
+        Cartographic,
         Clock,
         defaultValue,
         defined,
@@ -71,8 +73,10 @@ define([
         EntityView,
         Property,
         Cesium3DTileset,
+        computeFlyToLocationForRectangle,
         ImageryLayer,
         SceneMode,
+        TimeDynamicPointCloud,
         knockout,
         when,
         Animation,
@@ -257,7 +261,7 @@ define([
      * @param {Boolean} [options.baseLayerPicker=true] If set to false, the BaseLayerPicker widget will not be created.
      * @param {Boolean} [options.fullscreenButton=true] If set to false, the FullscreenButton widget will not be created.
      * @param {Boolean} [options.vrButton=false] If set to true, the VRButton widget will be created.
-     * @param {Boolean} [options.geocoder=true] If set to false, the Geocoder widget will not be created.
+     * @param {Boolean|GeocoderService[]} [options.geocoder=true] If set to false, the Geocoder widget will not be created.
      * @param {Boolean} [options.homeButton=true] If set to false, the HomeButton widget will not be created.
      * @param {Boolean} [options.infoBox=true] If set to false, the InfoBox widget will not be created.
      * @param {Boolean} [options.sceneModePicker=true] If set to false, the SceneModePicker widget will not be created.
@@ -272,7 +276,7 @@ define([
      * @param {ProviderViewModel[]} [options.imageryProviderViewModels=createDefaultImageryProviderViewModels()] The array of ProviderViewModels to be selectable from the BaseLayerPicker.  This value is only valid if options.baseLayerPicker is set to true.
      * @param {ProviderViewModel} [options.selectedTerrainProviderViewModel] The view model for the current base terrain layer, if not supplied the first available base layer is used.  This value is only valid if options.baseLayerPicker is set to true.
      * @param {ProviderViewModel[]} [options.terrainProviderViewModels=createDefaultTerrainProviderViewModels()] The array of ProviderViewModels to be selectable from the BaseLayerPicker.  This value is only valid if options.baseLayerPicker is set to true.
-     * @param {ImageryProvider} [options.imageryProvider=new BingMapsImageryProvider()] The imagery provider to use.  This value is only valid if options.baseLayerPicker is set to false.
+     * @param {ImageryProvider} [options.imageryProvider=createWorldImagery()] The imagery provider to use.  This value is only valid if options.baseLayerPicker is set to false.
      * @param {TerrainProvider} [options.terrainProvider=new EllipsoidTerrainProvider()] The terrain provider to use
      * @param {SkyBox} [options.skyBox] The skybox used to render the stars.  When <code>undefined</code>, the default stars are used.
      * @param {SkyAtmosphere} [options.skyAtmosphere] Blue sky, and the glow around the Earth's limb.  Set to <code>false</code> to turn it off.
@@ -489,9 +493,13 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
             var geocoderContainer = document.createElement('div');
             geocoderContainer.className = 'cesium-viewer-geocoderContainer';
             toolbar.appendChild(geocoderContainer);
+            var geocoderService;
+            if (defined(options.geocoder) && typeof options.geocoder !== 'boolean') {
+                geocoderService = isArray(options.geocoder) ? options.geocoder : [options.geocoder];
+            }
             geocoder = new Geocoder({
                 container : geocoderContainer,
-                geocoderServices : defined(options.geocoder) ? (isArray(options.geocoder) ? options.geocoder : [options.geocoder]) : undefined,
+                geocoderServices : geocoderService,
                 scene : scene
             });
             // Subscribe to search so that we can clear the trackedEntity when it is clicked.
@@ -985,18 +993,6 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         },
 
         /**
-         * Gets the Cesium logo element.
-         * @memberof Viewer.prototype
-         * @type {Element}
-         * @readonly
-         */
-        cesiumLogo : {
-            get : function() {
-                return this._cesiumWidget.cesiumLogo;
-            }
-        },
-
-        /**
          * Gets the scene.
          * @memberof Viewer.prototype
          * @type {Scene}
@@ -1086,6 +1082,19 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         camera : {
             get : function() {
                 return this.scene.camera;
+            }
+        },
+
+        /**
+         * Gets the post-process stages.
+         * @memberof Viewer.prototype
+         *
+         * @type {PostProcessStageCollection}
+         * @readonly
+         */
+        postProcessStages : {
+            get : function() {
+                return this.scene.postProcessStages;
             }
         },
 
@@ -1741,7 +1750,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
      * target will be the range. The heading will be determined from the offset. If the heading cannot be
      * determined from the offset, the heading will be north.</p>
      *
-     * @param {Entity|Entity[]|EntityCollection|DataSource|ImageryLayer|Cesium3DTileset|Promise.<Entity|Entity[]|EntityCollection|DataSource|ImageryLayer|Cesium3DTileset>} target The entity, array of entities, entity collection, data source, Cesium#DTileset, or imagery layer to view. You can also pass a promise that resolves to one of the previously mentioned types.
+     * @param {Entity|Entity[]|EntityCollection|DataSource|ImageryLayer|Cesium3DTileset|TimeDynamicPointCloud|Promise.<Entity|Entity[]|EntityCollection|DataSource|ImageryLayer|Cesium3DTileset|TimeDynamicPointCloud>} target The entity, array of entities, entity collection, data source, Cesium3DTileset, point cloud, or imagery layer to view. You can also pass a promise that resolves to one of the previously mentioned types.
      * @param {HeadingPitchRange} [offset] The offset from the center of the entity in the local east-north-up reference frame.
      * @returns {Promise.<Boolean>} A Promise that resolves to true if the zoom was successful or false if the target is not currently visualized in the scene or the zoom was cancelled.
      */
@@ -1767,7 +1776,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
      * target will be the range. The heading will be determined from the offset. If the heading cannot be
      * determined from the offset, the heading will be north.</p>
      *
-     * @param {Entity|Entity[]|EntityCollection|DataSource|ImageryLayer|Cesium3DTileset|Promise.<Entity|Entity[]|EntityCollection|DataSource|ImageryLayer|Cesium3DTileset>} target The entity, array of entities, entity collection, data source, Cesium3DTileset, or imagery layer to view. You can also pass a promise that resolves to one of the previously mentioned types.
+     * @param {Entity|Entity[]|EntityCollection|DataSource|ImageryLayer|Cesium3DTileset|TimeDynamicPointCloud|Promise.<Entity|Entity[]|EntityCollection|DataSource|ImageryLayer|Cesium3DTileset|TimeDynamicPointCloud>} target The entity, array of entities, entity collection, data source, Cesium3DTileset, point cloud, or imagery layer to view. You can also pass a promise that resolves to one of the previously mentioned types.
      * @param {Object} [options] Object with the following properties:
      * @param {Number} [options.duration=3.0] The duration of the flight in seconds.
      * @param {Number} [options.maximumHeight] The maximum height at the peak of the flight.
@@ -1805,9 +1814,11 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
             //If the zoom target is a rectangular imagery in an ImageLayer
             if (zoomTarget instanceof ImageryLayer) {
                 zoomTarget.getViewableRectangle().then(function(rectangle) {
+                    return computeFlyToLocationForRectangle(rectangle, that.scene);
+                }).then(function(position) {
                     //Only perform the zoom if it wasn't cancelled before the promise was resolved
                     if (that._zoomPromise === zoomPromise) {
-                        that._zoomTarget = rectangle;
+                        that._zoomTarget = position;
                     }
                 });
                 return;
@@ -1815,6 +1826,12 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
 
             //If the zoom target is a Cesium3DTileset
             if (zoomTarget instanceof Cesium3DTileset) {
+                that._zoomTarget = zoomTarget;
+                return;
+            }
+
+            //If the zoom target is a TimeDynamicPointCloud
+            if (zoomTarget instanceof TimeDynamicPointCloud) {
                 that._zoomTarget = zoomTarget;
                 return;
             }
@@ -1892,12 +1909,13 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         var zoomPromise = viewer._zoomPromise;
         var zoomOptions = defaultValue(viewer._zoomOptions, {});
         var options;
+        var boundingSphere;
 
         // If zoomTarget was Cesium3DTileset
         if (target instanceof Cesium3DTileset) {
             return target.readyPromise.then(function() {
                 var boundingSphere = target.boundingSphere;
-                // if offset was originally undefined then give it base value instead of empty object
+                // If offset was originally undefined then give it base value instead of empty object
                 if (!defined(zoomOptions.offset)) {
                     zoomOptions.offset = new HeadingPitchRange(0.0, -0.5, boundingSphere.radius);
                 }
@@ -1920,7 +1938,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
                     camera.viewBoundingSphere(boundingSphere, zoomOptions.offset);
                     camera.lookAtTransform(Matrix4.IDENTITY);
 
-                    // finish the promise
+                    // Finish the promise
                     zoomPromise.resolve(true);
                 }
 
@@ -1928,10 +1946,50 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
             });
         }
 
-        //If zoomTarget was an ImageryLayer
-        if (target instanceof Rectangle) {
+        // If zoomTarget was TimeDynamicPointCloud
+        if (target instanceof TimeDynamicPointCloud) {
+            return target.readyPromise.then(function() {
+                var boundingSphere = target.boundingSphere;
+                // If offset was originally undefined then give it base value instead of empty object
+                if (!defined(zoomOptions.offset)) {
+                    zoomOptions.offset = new HeadingPitchRange(0.0, -0.5, boundingSphere.radius);
+                }
+
+                options = {
+                    offset : zoomOptions.offset,
+                    duration : zoomOptions.duration,
+                    maximumHeight : zoomOptions.maximumHeight,
+                    complete : function() {
+                        zoomPromise.resolve(true);
+                    },
+                    cancel : function() {
+                        zoomPromise.resolve(false);
+                    }
+                };
+
+                if (viewer._zoomIsFlight) {
+                    camera.flyToBoundingSphere(boundingSphere, options);
+                } else {
+                    camera.viewBoundingSphere(boundingSphere, zoomOptions.offset);
+                    camera.lookAtTransform(Matrix4.IDENTITY);
+
+                    // Finish the promise
+                    zoomPromise.resolve(true);
+                }
+
+                clearZoom(viewer);
+            });
+        }
+
+        // If zoomTarget was an ImageryLayer
+        var isCartographic = target instanceof Cartographic;
+        if (target instanceof Rectangle || isCartographic) {
+            var destination = target;
+            if (isCartographic) {
+                destination = scene.mapProjection.ellipsoid.cartographicToCartesian(destination);
+            }
             options = {
-                destination : target,
+                destination : destination,
                 duration : zoomOptions.duration,
                 maximumHeight : zoomOptions.maximumHeight,
                 complete : function() {
@@ -1973,10 +2031,10 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         //Stop tracking the current entity.
         viewer.trackedEntity = undefined;
 
-        var boundingSphere = BoundingSphere.fromBoundingSpheres(boundingSpheres);
+        boundingSphere = BoundingSphere.fromBoundingSpheres(boundingSpheres);
 
         if (!viewer._zoomIsFlight) {
-            camera.viewBoundingSphere(boundingSphere, viewer._zoomOptions.offset);
+            camera.viewBoundingSphere(boundingSphere, zoomOptions.offset);
             camera.lookAtTransform(Matrix4.IDENTITY);
             clearZoom(viewer);
             zoomPromise.resolve(true);

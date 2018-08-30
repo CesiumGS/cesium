@@ -19,9 +19,9 @@ defineSuite([
 
     it('constructor sets expected properties', function() {
         var clock = new Clock();
-        clock.startTime = JulianDate.fromIso8601("2012-01-01T00:00:00");
-        clock.stopTime = JulianDate.fromIso8601("2012-01-02T00:00:00");
-        clock.currentTime = JulianDate.fromIso8601("2012-01-01T12:00:00");
+        clock.startTime = JulianDate.fromIso8601('2012-01-01T00:00:00');
+        clock.stopTime = JulianDate.fromIso8601('2012-01-02T00:00:00');
+        clock.currentTime = JulianDate.fromIso8601('2012-01-01T12:00:00');
         clock.multiplier = 1;
         clock.clockStep = ClockStep.TICK_DEPENDENT;
         clock.clockRange = ClockRange.UNBOUNDED;
@@ -41,9 +41,9 @@ defineSuite([
 
     it('observables are updated from the clock', function() {
         var clock = new Clock();
-        clock.startTime = JulianDate.fromIso8601("2012-01-01T00:00:00");
-        clock.stopTime = JulianDate.fromIso8601("2012-01-02T00:00:00");
-        clock.currentTime = JulianDate.fromIso8601("2012-01-01T12:00:00");
+        clock.startTime = JulianDate.fromIso8601('2012-01-01T00:00:00');
+        clock.stopTime = JulianDate.fromIso8601('2012-01-02T00:00:00');
+        clock.currentTime = JulianDate.fromIso8601('2012-01-01T12:00:00');
         clock.multiplier = 1;
         clock.clockStep = ClockStep.TICK_DEPENDENT;
         clock.clockRange = ClockRange.UNBOUNDED;
@@ -60,9 +60,9 @@ defineSuite([
         expect(clockViewModel.shouldAnimate).toEqual(clock.shouldAnimate);
         expect(clockViewModel.systemTime).toBeDefined();
 
-        clock.startTime = JulianDate.fromIso8601("2013-01-01T00:00:00");
-        clock.stopTime = JulianDate.fromIso8601("2013-01-02T00:00:00");
-        clock.currentTime = JulianDate.fromIso8601("2013-01-01T12:00:00");
+        clock.startTime = JulianDate.fromIso8601('2013-01-01T00:00:00');
+        clock.stopTime = JulianDate.fromIso8601('2013-01-02T00:00:00');
+        clock.currentTime = JulianDate.fromIso8601('2013-01-01T12:00:00');
         clock.multiplier = 2;
         clock.clockStep = ClockStep.SYSTEM_CLOCK_MULTIPLIER;
         clock.clockRange = ClockRange.CLAMPED;

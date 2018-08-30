@@ -6,6 +6,7 @@ defineSuite([
         'Core/CircleGeometry',
         'Core/Color',
         'Core/ColorGeometryInstanceAttribute',
+        'Core/CoplanarPolygonGeometry',
         'Core/ComponentDatatype',
         'Core/CornerType',
         'Core/CorridorGeometry',
@@ -46,6 +47,7 @@ defineSuite([
         CircleGeometry,
         Color,
         ColorGeometryInstanceAttribute,
+        CoplanarPolygonGeometry,
         ComponentDatatype,
         CornerType,
         CorridorGeometry,
@@ -331,6 +333,49 @@ defineSuite([
             return renderAsync(instance);
         });
     }, 'WebGL');
+
+    describe('CoplanarPolygonGeometry', function() {
+        var instance;
+        beforeAll(function() {
+            instance = new GeometryInstance({
+                geometry : CoplanarPolygonGeometry.fromPositions({
+                    positions : Cartesian3.fromDegreesArrayHeights([
+                        71.0, -10.0, 0.0,
+                        70.0, 0.0, 20000.0,
+                        69.0, 0.0, 20000.0,
+                        68.0, -10.0, 0.0
+                    ]),
+                    vertexFormat : PerInstanceColorAppearance.FLAT_VERTEX_FORMAT
+                }),
+                id: 'coplanar polygon',
+                attributes : {
+                    color : new ColorGeometryInstanceAttribute(Math.random(), Math.random(), Math.random(), 0.5)
+                }
+            });
+            geometry = CoplanarPolygonGeometry.createGeometry(instance.geometry);
+            geometry.boundingSphereWC = BoundingSphere.transform(geometry.boundingSphere, instance.modelMatrix);
+        });
+
+        it('3D', function() {
+            render3D(instance);
+        });
+
+        it('Columbus view', function() {
+            renderCV(instance);
+        });
+
+        it('2D', function() {
+            render2D(instance);
+        });
+
+        it('pick', function() {
+            pickGeometry(instance);
+        });
+
+        it('async', function() {
+            return renderAsync(instance);
+        });
+    });
 
     describe('CylinderGeometry', function() {
         var instance;

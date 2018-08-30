@@ -251,6 +251,9 @@ defineSuite([
     });
 
     it('debugCommandFilter does not filter commands', function() {
+        var originalLogDepth = scene.logarithmicDepthBuffer;
+        scene.logarithmicDepthBuffer = false;
+
         var c = new DrawCommand({
             shaderProgram : simpleShaderProgram,
             renderState : simpleRenderState,
@@ -264,9 +267,14 @@ defineSuite([
         expect(scene.debugCommandFilter).toBeUndefined();
         scene.renderForSpecs();
         expect(c.execute).toHaveBeenCalled();
+
+        scene.logarithmicDepthBuffer = originalLogDepth;
     });
 
     it('debugShowBoundingVolume draws a bounding sphere', function() {
+        var originalLogDepth = scene.logarithmicDepthBuffer;
+        scene.logarithmicDepthBuffer = false;
+
         var radius = 10.0;
         var center = Cartesian3.add(scene.camera.position, scene.camera.direction, new Cartesian3());
 
@@ -285,9 +293,14 @@ defineSuite([
         expect(scene).toRenderAndCall(function(rgba) {
             expect(rgba[0]).not.toEqual(0);  // Red bounding sphere
         });
+
+        scene.logarithmicDepthBuffer = originalLogDepth;
     });
 
     it('debugShowCommands tints commands', function() {
+        var originalLogDepth = scene.logarithmicDepthBuffer;
+        scene.logarithmicDepthBuffer = false;
+
         var c = new DrawCommand({
             shaderProgram : simpleShaderProgram,
             renderState : simpleRenderState,
@@ -308,6 +321,8 @@ defineSuite([
         scene.renderForSpecs();
         expect(c._debugColor).toBeDefined();
         scene.debugShowCommands = false;
+
+        scene.logarithmicDepthBuffer = originalLogDepth;
     });
 
     it('debugShowFramesPerSecond', function() {
@@ -332,7 +347,7 @@ defineSuite([
         expect(scene).toRender([255, 0, 0, 255]);
 
         scene.debugShowGlobeDepth = true;
-        expect(scene).toRender([0, 0, 0, 255]);
+        expect(scene).notToRender([255, 0, 0, 255]);
 
         scene.debugShowGlobeDepth = false;
     });
@@ -701,11 +716,6 @@ defineSuite([
             var uniformState = scene.context.uniformState;
 
             expect(scene).toRenderAndCall(function(rgba) {
-                expect(uniformState.globeDepthTexture).not.toBeDefined();
-            });
-
-            scene.copyGlobeDepth = true;
-            expect(scene).toRenderAndCall(function(rgba) {
                 expect(uniformState.globeDepthTexture).toBeDefined();
             });
         }
@@ -713,15 +723,12 @@ defineSuite([
         scene.destroyForSpecs();
     });
 
-    var pickedPosition3D = new Cartesian3(-455845.46867895435, -5210337.548977215, 3637549.8562320103);
-    var pickedPosition2D = new Cartesian3(-455861.7055871038, -5210523.137686572, 3637866.6638769475);
-
     it('pickPosition', function() {
         if (!scene.pickPositionSupported) {
             return;
         }
 
-        var rectangle = Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0);
+        var rectangle = Rectangle.fromDegrees(-0.0001, -0.0001, 0.0001, 0.0001);
         scene.camera.setView({ destination : rectangle });
 
         var canvas = scene.canvas;
@@ -740,7 +747,9 @@ defineSuite([
 
         expect(scene).toRenderAndCall(function() {
             var position = scene.pickPosition(windowPosition);
-            expect(position).toEqualEpsilon(pickedPosition3D, CesiumMath.EPSILON6);
+            expect(position.x).toBeGreaterThan(Ellipsoid.WGS84.minimumRadius);
+            expect(position.y).toEqualEpsilon(0.0, CesiumMath.EPSILON5);
+            expect(position.z).toEqualEpsilon(0.0, CesiumMath.EPSILON5);
         });
     });
 
@@ -751,7 +760,7 @@ defineSuite([
 
         scene.morphToColumbusView(0.0);
 
-        var rectangle = Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0);
+        var rectangle = Rectangle.fromDegrees(-0.0001, -0.0001, 0.0001, 0.0001);
         scene.camera.setView({ destination : rectangle });
 
         var canvas = scene.canvas;
@@ -770,7 +779,9 @@ defineSuite([
 
         expect(scene).toRenderAndCall(function() {
             var position = scene.pickPosition(windowPosition);
-            expect(position).toEqualEpsilon(pickedPosition2D, CesiumMath.EPSILON6);
+            expect(position.x).toBeGreaterThan(Ellipsoid.WGS84.minimumRadius);
+            expect(position.y).toEqualEpsilon(0.0, CesiumMath.EPSILON5);
+            expect(position.z).toEqualEpsilon(0.0, CesiumMath.EPSILON5);
         });
     });
 
@@ -781,7 +792,7 @@ defineSuite([
 
         scene.morphTo2D(0.0);
 
-        var rectangle = Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0);
+        var rectangle = Rectangle.fromDegrees(-0.0001, -0.0001, 0.0001, 0.0001);
         scene.camera.setView({ destination : rectangle });
 
         var canvas = scene.canvas;
@@ -800,7 +811,9 @@ defineSuite([
 
         expect(scene).toRenderAndCall(function() {
             var position = scene.pickPosition(windowPosition);
-            expect(position).toEqualEpsilon(pickedPosition2D, CesiumMath.EPSILON6);
+            expect(position.x).toBeGreaterThan(Ellipsoid.WGS84.minimumRadius);
+            expect(position.y).toEqualEpsilon(0.0, CesiumMath.EPSILON5);
+            expect(position.z).toEqualEpsilon(0.0, CesiumMath.EPSILON5);
         });
     });
 
@@ -849,11 +862,8 @@ defineSuite([
         var canvas = scene.canvas;
         var windowPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 2);
 
-        var rectanglePrimitive = createRectangle(rectangle);
+        var rectanglePrimitive = scene.primitives.add(createRectangle(rectangle));
         rectanglePrimitive.appearance.material.uniforms.color = new Color(1.0, 0.0, 0.0, 0.5);
-
-        var primitives = scene.primitives;
-        primitives.add(rectanglePrimitive);
 
         scene.useDepthPicking = true;
         scene.pickTranslucentDepth = false;
@@ -866,33 +876,6 @@ defineSuite([
         expect(scene).toRenderAndCall(function() {
             var position = scene.pickPosition(windowPosition);
             expect(position).toBeDefined();
-        });
-
-        var rectanglePrimitive2 = createRectangle(rectangle);
-        rectanglePrimitive2.appearance.material.uniforms.color = new Color(0.0, 1.0, 0.0, 0.5);
-        primitives.add(rectanglePrimitive2);
-
-        expect(scene).toRenderAndCall(function() {
-            var position = scene.pickPosition(windowPosition);
-            expect(position).toBeDefined();
-
-            var commandList = scene.frameState.commandList;
-            expect(commandList.length).toEqual(2);
-
-            var command1 = commandList[0];
-            var command2 = commandList[1];
-
-            expect(command1.derivedCommands).toBeDefined();
-            expect(command2.derivedCommands).toBeDefined();
-
-            expect(command1.derivedCommands.depth).toBeDefined();
-            expect(command2.derivedCommands.depth).toBeDefined();
-
-            expect(command1.derivedCommands.depth.depthOnlyCommand).toBeDefined();
-            expect(command2.derivedCommands.depth.depthOnlyCommand).toBeDefined();
-
-            expect(command1.derivedCommands.depth.depthOnlyCommand.shaderProgram).toEqual(command2.derivedCommands.depth.depthOnlyCommand.shaderProgram);
-            expect(command1.derivedCommands.depth.depthOnlyCommand.renderState).toEqual(command2.derivedCommands.depth.depthOnlyCommand.renderState);
         });
     });
 
@@ -1370,6 +1353,32 @@ defineSuite([
 
         scene.renderForSpecs();
         expect(scene.lastRenderTime).not.toEqual(lastRenderTime);
+
+        scene.destroyForSpecs();
+    });
+
+    it('changing the camera frustum does not cause continuous rendering in requestRenderMode', function() {
+        var scene = createScene();
+
+        scene.renderForSpecs();
+
+        var lastRenderTime = JulianDate.clone(scene.lastRenderTime, scratchTime);
+        expect(lastRenderTime).toBeDefined();
+        expect(scene._renderRequested).toBe(false);
+
+        scene.requestRenderMode = true;
+        scene.maximumRenderTimeChange = undefined;
+
+        scene.camera.frustum.near *= 1.1;
+
+        // Render once properly
+        scene.renderForSpecs();
+        expect(scene.lastRenderTime).not.toEqual(lastRenderTime);
+
+        // Render again - but this time nothing should happen.
+        lastRenderTime = JulianDate.clone(scene.lastRenderTime, scratchTime);
+        scene.renderForSpecs();
+        expect(scene.lastRenderTime).toEqual(lastRenderTime);
 
         scene.destroyForSpecs();
     });

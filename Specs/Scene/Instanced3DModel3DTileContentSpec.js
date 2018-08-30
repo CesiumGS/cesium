@@ -28,22 +28,20 @@ defineSuite([
     var centerLongitude = -1.31968;
     var centerLatitude = 0.698874;
 
-    var gltfExternalUrl = './Data/Cesium3DTiles/Instanced/InstancedGltfExternal/';
-    var withBatchTableUrl = './Data/Cesium3DTiles/Instanced/InstancedWithBatchTable/';
-    var withBatchTableBinaryUrl = './Data/Cesium3DTiles/Instanced/InstancedWithBatchTableBinary/';
-    var withoutBatchTableUrl = './Data/Cesium3DTiles/Instanced/InstancedWithoutBatchTable/';
-    var orientationUrl = './Data/Cesium3DTiles/Instanced/InstancedOrientation/';
-    var oct16POrientationUrl = './Data/Cesium3DTiles/Instanced/InstancedOct32POrientation/';
-    var scaleUrl = './Data/Cesium3DTiles/Instanced/InstancedScale/';
-    var scaleNonUniformUrl = './Data/Cesium3DTiles/Instanced/InstancedScaleNonUniform/';
-    var rtcUrl = './Data/Cesium3DTiles/Instanced/InstancedRTC';
-    var quantizedUrl = './Data/Cesium3DTiles/Instanced/InstancedQuantized/';
-    var quantizedOct32POrientationUrl = './Data/Cesium3DTiles/Instanced/InstancedQuantizedOct32POrientation/';
-    var withTransformUrl = './Data/Cesium3DTiles/Instanced/InstancedWithTransform/';
-    var withBatchIdsUrl = './Data/Cesium3DTiles/Instanced/InstancedWithBatchIds/';
-    var texturedUrl = './Data/Cesium3DTiles/Instanced/InstancedTextured/';
-    var compressedTexturesUrl = './Data/Cesium3DTiles/Instanced/InstancedCompressedTextures/';
-    var gltfZUpUrl = './Data/Cesium3DTiles/Instanced/InstancedGltfZUp';
+    var gltfExternalUrl = './Data/Cesium3DTiles/Instanced/InstancedGltfExternal/tileset.json';
+    var withBatchTableUrl = './Data/Cesium3DTiles/Instanced/InstancedWithBatchTable/tileset.json';
+    var withBatchTableBinaryUrl = './Data/Cesium3DTiles/Instanced/InstancedWithBatchTableBinary/tileset.json';
+    var withoutBatchTableUrl = './Data/Cesium3DTiles/Instanced/InstancedWithoutBatchTable/tileset.json';
+    var orientationUrl = './Data/Cesium3DTiles/Instanced/InstancedOrientation/tileset.json';
+    var oct16POrientationUrl = './Data/Cesium3DTiles/Instanced/InstancedOct32POrientation/tileset.json';
+    var scaleUrl = './Data/Cesium3DTiles/Instanced/InstancedScale/tileset.json';
+    var scaleNonUniformUrl = './Data/Cesium3DTiles/Instanced/InstancedScaleNonUniform/tileset.json';
+    var rtcUrl = './Data/Cesium3DTiles/Instanced/InstancedRTC/tileset.json';
+    var quantizedUrl = './Data/Cesium3DTiles/Instanced/InstancedQuantized/tileset.json';
+    var quantizedOct32POrientationUrl = './Data/Cesium3DTiles/Instanced/InstancedQuantizedOct32POrientation/tileset.json';
+    var withTransformUrl = './Data/Cesium3DTiles/Instanced/InstancedWithTransform/tileset.json';
+    var withBatchIdsUrl = './Data/Cesium3DTiles/Instanced/InstancedWithBatchIds/tileset.json';
+    var texturedUrl = './Data/Cesium3DTiles/Instanced/InstancedTextured/tileset.json';
 
     function setCamera(longitude, latitude) {
         // One instance is located at the center, point the camera there
@@ -175,12 +173,6 @@ defineSuite([
         });
     });
 
-    it('renders with a gltf z-up axis', function() {
-        return Cesium3DTilesTester.loadTileset(scene, gltfZUpUrl).then(function(tileset) {
-            Cesium3DTilesTester.expectRenderTileset(scene, tileset);
-        });
-    });
-
     it('renders with tile transform', function() {
         return Cesium3DTilesTester.loadTileset(scene, withTransformUrl).then(function(tileset) {
             Cesium3DTilesTester.expectRenderTileset(scene, tileset);
@@ -191,7 +183,7 @@ defineSuite([
             var newTransform = Transforms.headingPitchRollToFixedFrame(newCenter, new HeadingPitchRoll());
 
             // Update tile transform
-            tileset._root.transform = newTransform;
+            tileset.root.transform = newTransform;
 
             // Move the camera to the new location
             setCamera(newLongitude, newLatitude);
@@ -201,12 +193,6 @@ defineSuite([
 
     it('renders with textures', function() {
         return Cesium3DTilesTester.loadTileset(scene, texturedUrl).then(function(tileset) {
-            Cesium3DTilesTester.expectRenderTileset(scene, tileset);
-        });
-    });
-
-    it('renders with compressed textures', function() {
-        return Cesium3DTilesTester.loadTileset(scene, compressedTexturesUrl).then(function(tileset) {
             Cesium3DTilesTester.expectRenderTileset(scene, tileset);
         });
     });
@@ -259,7 +245,7 @@ defineSuite([
 
     it('throws when calling getFeature with invalid index', function() {
         return Cesium3DTilesTester.loadTileset(scene, withoutBatchTableUrl).then(function(tileset) {
-            var content = tileset._root.content;
+            var content = tileset.root.content;
             expect(function(){
                 content.getFeature(-1);
             }).toThrowDeveloperError();
@@ -274,14 +260,14 @@ defineSuite([
 
     it('gets memory usage', function() {
         return Cesium3DTilesTester.loadTileset(scene, texturedUrl).then(function(tileset) {
-            var content = tileset._root.content;
+            var content = tileset.root.content;
 
-            // Box model - 32 ushort indices and 24 vertices per building, 8 float components (position, normal, uv) per vertex.
+            // Box model - 36 ushort indices and 24 vertices per building, 8 float components (position, normal, uv) per vertex.
             // (24 * 8 * 4) + (36 * 2) = 840
             var geometryByteLength = 840;
 
-            // Texture is 211x211 RGBA bytes, but upsampled to 256x256 because the wrap mode is REPEAT
-            var texturesByteLength = 262144;
+            // Texture is 128x128 RGBA bytes, not mipmapped
+            var texturesByteLength = 65536;
 
             // One RGBA byte pixel per feature
             var batchTexturesByteLength = content.featuresLength * 4;
@@ -309,7 +295,7 @@ defineSuite([
 
     it('Links model to tileset clipping planes based on bounding volume clipping', function() {
         return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl).then(function(tileset) {
-            var tile = tileset._root;
+            var tile = tileset.root;
             var content = tile.content;
             var model = content._modelInstanceCollection._model;
 
@@ -334,13 +320,45 @@ defineSuite([
         });
     });
 
+    it('Links model to tileset clipping planes if tileset clipping planes are reassigned', function() {
+        return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl).then(function(tileset) {
+            var tile = tileset.root;
+            var model = tile.content._modelInstanceCollection._model;
+
+            expect(model.clippingPlanes).toBeUndefined();
+
+            var clippingPlaneCollection = new ClippingPlaneCollection({
+                planes : [
+                    new ClippingPlane(Cartesian3.UNIT_X, 0.0)
+                ]
+            });
+            tileset.clippingPlanes = clippingPlaneCollection;
+            clippingPlaneCollection.update(scene.frameState);
+            tile.update(tileset, scene.frameState);
+
+            expect(model.clippingPlanes).toBeDefined();
+            expect(model.clippingPlanes).toBe(tileset.clippingPlanes);
+
+            var newClippingPlaneCollection = new ClippingPlaneCollection({
+                planes : [
+                    new ClippingPlane(Cartesian3.UNIT_X, 0.0)
+                ]
+            });
+            tileset.clippingPlanes = newClippingPlaneCollection;
+            newClippingPlaneCollection.update(scene.frameState);
+            expect(model.clippingPlanes).not.toBe(tileset.clippingPlanes);
+
+            tile.update(tileset, scene.frameState);
+            expect(model.clippingPlanes).toBe(tileset.clippingPlanes);
+        });
+    });
+
     it('rebuilds Model shaders when clipping planes change', function() {
         spyOn(Model, '_getClippingFunction').and.callThrough();
 
         return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl).then(function(tileset) {
-            var tile = tileset._root;
+            var tile = tileset.root;
             var content = tile.content;
-
             var clippingPlaneCollection = new ClippingPlaneCollection({
                 planes : [
                     new ClippingPlane(Cartesian3.UNIT_X, 0.0)
@@ -351,7 +369,7 @@ defineSuite([
             content.clippingPlanesDirty = true;
             tile.update(tileset, scene.frameState);
 
-            expect(Model._getClippingFunction.calls.count()).toEqual(2);
+            expect(Model._getClippingFunction.calls.count()).toEqual(1);
         });
     });
 

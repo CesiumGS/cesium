@@ -1,32 +1,24 @@
 define([
-        '../Core/combine',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/freezeObject',
         '../Core/GeographicTilingScheme',
-        '../Core/objectToQuery',
-        '../Core/queryToObject',
         '../Core/Resource',
-        '../Core/WebMercatorTilingScheme',
-        '../ThirdParty/Uri',
+        '../Core/WebMercatorProjection',
         './GetFeatureInfoFormat',
         './TimeDynamicImagery',
         './UrlTemplateImageryProvider'
     ], function(
-        combine,
         defaultValue,
         defined,
         defineProperties,
         DeveloperError,
         freezeObject,
         GeographicTilingScheme,
-        objectToQuery,
-        queryToObject,
         Resource,
-        WebMercatorTilingScheme,
-        Uri,
+        WebMercatorProjection,
         GetFeatureInfoFormat,
         TimeDynamicImagery,
         UrlTemplateImageryProvider) {
@@ -152,10 +144,10 @@ define([
             // Use CRS with 1.3.0 and going forward.
             // For GeographicTilingScheme, use CRS:84 vice EPSG:4326 to specify lon, lat (x, y) ordering for
             // bbox requests.
-            parameters.crs = defaultValue(options.crs, options.tilingScheme instanceof WebMercatorTilingScheme ? 'EPSG:3857' : 'CRS:84');
+            parameters.crs = defaultValue(options.crs, options.tilingScheme && options.tilingScheme.projection instanceof WebMercatorProjection ? 'EPSG:3857' : 'CRS:84');
         } else {
             // SRS for WMS 1.1.0 or 1.1.1.
-            parameters.srs = defaultValue(options.srs, options.tilingScheme instanceof WebMercatorTilingScheme ? 'EPSG:3857' : 'EPSG:4326');
+            parameters.srs = defaultValue(options.srs, options.tilingScheme && options.tilingScheme.projection instanceof WebMercatorProjection ? 'EPSG:3857' : 'EPSG:4326');
         }
 
         resource.setQueryParameters(parameters, true);
@@ -534,6 +526,7 @@ define([
      *    format=image/jpeg
      *
      * @constant
+     * @type {Object}
      */
     WebMapServiceImageryProvider.DefaultParameters = freezeObject({
         service : 'WMS',
@@ -550,6 +543,7 @@ define([
      *     request=GetFeatureInfo
      *
      * @constant
+     * @type {Object}
      */
     WebMapServiceImageryProvider.GetFeatureInfoDefaultParameters = freezeObject({
         service : 'WMS',

@@ -1,10 +1,12 @@
 define([
         '../Core/AssociativeArray',
+        '../Core/Cartesian3',
         '../Core/Color',
         '../Core/ColorGeometryInstanceAttribute',
         '../Core/defined',
         '../Core/DistanceDisplayCondition',
         '../Core/DistanceDisplayConditionGeometryInstanceAttribute',
+        '../Core/OffsetGeometryInstanceAttribute',
         '../Core/ShowGeometryInstanceAttribute',
         '../Scene/PerInstanceColorAppearance',
         '../Scene/Primitive',
@@ -12,11 +14,13 @@ define([
         './Property'
     ], function(
         AssociativeArray,
+        Cartesian3,
         Color,
         ColorGeometryInstanceAttribute,
         defined,
         DistanceDisplayCondition,
         DistanceDisplayConditionGeometryInstanceAttribute,
+        OffsetGeometryInstanceAttribute,
         ShowGeometryInstanceAttribute,
         PerInstanceColorAppearance,
         Primitive,
@@ -27,6 +31,8 @@ define([
     var colorScratch = new Color();
     var distanceDisplayConditionScratch = new DistanceDisplayCondition();
     var defaultDistanceDisplayCondition = new DistanceDisplayCondition();
+    var defaultOffset = Cartesian3.ZERO;
+    var offsetScratch = new Cartesian3();
 
     function Batch(primitives, translucent, width, shadows) {
         this.translucent = translucent;
@@ -50,7 +56,7 @@ define([
         this.createPrimitive = true;
         this.geometry.set(id, instance);
         this.updaters.set(id, updater);
-        if (!updater.hasConstantOutline || !updater.outlineColorProperty.isConstant || !Property.isConstant(updater.distanceDisplayConditionProperty)) {
+        if (!updater.hasConstantOutline || !updater.outlineColorProperty.isConstant || !Property.isConstant(updater.distanceDisplayConditionProperty) || !Property.isConstant(updater.terrainOffsetProperty)) {
             this.updatersWithAttributes.set(id, updater);
         } else {
             var that = this;
@@ -71,6 +77,7 @@ define([
             if (defined(unsubscribe)) {
                 unsubscribe();
                 this.subscriptions.remove(id);
+                this.showsUpdated.remove(id);
             }
         }
     };
@@ -102,15 +109,16 @@ define([
 
                     if (defined(attributes)) {
                         if (defined(originalAttributes.show)) {
-                            originalAttributes.show.value = attributes.show;
+                            attributes.show = originalAttributes.show.value;
                         }
                         if (defined(originalAttributes.color)) {
-                            originalAttributes.color.value = attributes.color;
+                            attributes.color = originalAttributes.color.value;
                         }
                     }
                 }
 
                 primitive = new Primitive({
+                    show : false,
                     asynchronous : true,
                     geometryInstances : geometries,
                     appearance : new PerInstanceColorAppearance({
@@ -142,6 +150,7 @@ define([
             this.createPrimitive = false;
             this.waitingOnCreate = true;
         } else if (defined(primitive) && primitive.ready) {
+            primitive.show = true;
             if (defined(this.oldPrimitive)) {
                 primitives.remove(this.oldPrimitive);
                 this.oldPrimitive = undefined;
@@ -184,6 +193,15 @@ define([
                     if (!DistanceDisplayCondition.equals(distanceDisplayCondition, attributes._lastDistanceDisplayCondition)) {
                         attributes._lastDistanceDisplayCondition = DistanceDisplayCondition.clone(distanceDisplayCondition, attributes._lastDistanceDisplayCondition);
                         attributes.distanceDisplayCondition = DistanceDisplayConditionGeometryInstanceAttribute.toValue(distanceDisplayCondition, attributes.distanceDisplayCondition);
+                    }
+                }
+
+                var offsetProperty = updater.terrainOffsetProperty;
+                if (!Property.isConstant(offsetProperty)) {
+                    var offset = Property.getValueOrDefault(offsetProperty, time, defaultOffset, offsetScratch);
+                    if (!Cartesian3.equals(offset, attributes._lastOffset)) {
+                        attributes._lastOffset = Cartesian3.clone(offset, attributes._lastOffset);
+                        attributes.offset = OffsetGeometryInstanceAttribute.toValue(offset, attributes.offset);
                     }
                 }
             }
@@ -373,7 +391,7 @@ define([
         var solidBatchesLength = solidBatches.length;
         for (i = 0; i < solidBatchesLength; i++) {
             var solidBatch = solidBatches[i];
-            if(solidBatch.contains(updater)){
+            if (solidBatch.contains(updater)){
                 return solidBatch.getBoundingSphere(updater, result);
             }
         }
@@ -382,7 +400,7 @@ define([
         var translucentBatchesLength = translucentBatches.length;
         for (i = 0; i < translucentBatchesLength; i++) {
             var translucentBatch = translucentBatches[i];
-            if(translucentBatch.contains(updater)){
+            if (translucentBatch.contains(updater)){
                 return translucentBatch.getBoundingSphere(updater, result);
             }
         }

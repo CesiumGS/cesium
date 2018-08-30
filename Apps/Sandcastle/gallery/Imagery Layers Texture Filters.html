@@ -55,11 +55,11 @@ var layers = viewer.imageryLayers;
 layers.removeAll();
 
 var layerLinear = layers.addImageryProvider(Cesium.createTileMapServiceImageryProvider({
-    url : require.toUrl('Assets/Textures/NaturalEarthII')
+    url : Cesium.buildModuleUrl('Assets/Textures/NaturalEarthII')
 }));
 
 var layerNearest = layers.addImageryProvider(Cesium.createTileMapServiceImageryProvider({
-    url : require.toUrl('Assets/Textures/NaturalEarthII')
+    url : Cesium.buildModuleUrl('Assets/Textures/NaturalEarthII')
 }));
 
 // Set the texture minification and magnification filters of layerNearest. Default is LINEAR.
@@ -91,17 +91,17 @@ function mouseDown(e) {
 function sliderMove(e) {
     var slider = document.getElementById('slider');
     var splitPosition = (e.clientX - dragStartX) / slider.parentElement.offsetWidth;
-    slider.style.left = 100.0 * splitPosition + "%";
+    slider.style.left = 100.0 * splitPosition + '%';
     viewer.scene.imagerySplitPosition = splitPosition;
 }
 //Sandcastle_End
 
     Sandcastle.finishedLoading();
 }
-if (typeof Cesium !== "undefined") {
+if (typeof Cesium !== 'undefined') {
     startup(Cesium);
-} else if (typeof require === "function") {
-    require(["Cesium"], startup);
+} else if (typeof require === 'function') {
+    require(['Cesium'], startup);
 }
 </script>
 

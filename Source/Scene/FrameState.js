@@ -151,7 +151,14 @@ define([
              * @type {Boolean}
              * @default false
              */
-            depth : false
+            depth : false,
+
+            /**
+             * <code>true</code> if the primitive should update for a per-feature post-process pass, <code>false</code> otherwise.
+             * @type {Boolean}
+             * @default false
+             */
+            postProcess : false
         };
 
         /**
@@ -231,6 +238,12 @@ define([
              * @type {Boolean}
              */
             shadowsEnabled : true,
+
+            /**
+             * Whether there are any active shadow maps that originate from light sources. Does not
+             * include shadow maps that are used for analytical purposes.
+             */
+            lightShadowsEnabled : true,
 
             /**
              * All shadow maps that are enabled this frame.

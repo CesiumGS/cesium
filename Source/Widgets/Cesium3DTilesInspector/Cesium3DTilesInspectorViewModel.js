@@ -50,7 +50,7 @@ define([
             viewModel._eventHandler.removeInputAction(ScreenSpaceEventType.MOUSE_MOVE);
 
             // Restore hover-over selection to its current value
-            viewModel.picking = viewModel.picking;
+            viewModel.picking = viewModel.picking; // eslint-disable-line no-self-assign
         }
     }
 
@@ -71,7 +71,7 @@ define([
             return '';
         }
 
-        var statistics = tileset.statistics;
+        var statistics = isPick ? tileset._statisticsLastPick : tileset._statisticsLastColor;
 
         // Since the pick pass uses a smaller frustum around the pixel of interest,
         // the statistics will be different than the normal render pass.
@@ -81,7 +81,7 @@ define([
             '<li><strong>Visited: </strong>' + statistics.visited.toLocaleString() + '</li>' +
             // Number of commands returned is likely to be higher than the number of tiles selected
             // because of tiles that create multiple commands.
-            '<li><strong>Selected: </strong>' + tileset._selectedTiles.length.toLocaleString() + '</li>' +
+            '<li><strong>Selected: </strong>' + statistics.selected.toLocaleString() + '</li>' +
             // Number of commands executed is likely to be higher because of commands overlapping
             // multiple frustums.
             '<li><strong>Commands: </strong>' + statistics.numberOfCommands.toLocaleString() + '</li>';
@@ -95,7 +95,7 @@ define([
                 '<li><strong>Processing: </strong>' + statistics.numberOfTilesProcessing.toLocaleString() + '</li>' +
                 '<li><strong>Content Ready: </strong>' + statistics.numberOfTilesWithContentReady.toLocaleString() + '</li>' +
                 // Total number of tiles includes tiles without content, so "Ready" may never reach
-                // "Total."  Total also will increase when a tile with a tileset.json content is loaded.
+                // "Total."  Total also will increase when a tile with a tileset JSON content is loaded.
                 '<li><strong>Total: </strong>' + statistics.numberOfTilesTotal.toLocaleString() + '</li>';
             s += '</ul>';
             s += '<ul class="cesium-cesiumInspector-statistics">';
@@ -998,7 +998,7 @@ define([
         var loadSiblings = knockout.observable();
         knockout.defineProperty(this, 'loadSiblings', {
             get : function() {
-                loadSiblings();
+                return loadSiblings();
             },
             set : function(value) {
                 loadSiblings(value);
@@ -1193,9 +1193,8 @@ define([
                 var currentFeature = this._feature;
                 if (defined(currentFeature) && !currentFeature.content.isDestroyed()) {
                     // Restore original color to feature that is no longer selected
-                    var frameState = this._scene.frameState;
                     if (!this.colorize && defined(this._style)) {
-                        currentFeature.color = defined(this._style.color) ? this._style.color.evaluateColor(frameState, currentFeature, scratchColor) : Color.WHITE;
+                        currentFeature.color = defined(this._style.color) ? this._style.color.evaluateColor(currentFeature, scratchColor) : Color.WHITE;
                     } else {
                         currentFeature.color = oldColor;
                     }

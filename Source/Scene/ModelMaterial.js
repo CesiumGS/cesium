@@ -19,6 +19,7 @@ define([
      *
      * @alias ModelMaterial
      * @internalConstructor
+     * @class
      *
      * @see Model#getMaterial
      */
@@ -70,7 +71,7 @@ define([
      * number, Cartesian, or matrix.
      *
      * @param {String} name The name of the parameter.
-     * @param {Object} [value] The value to assign to the parameter.
+     * @param {*} [value] The value to assign to the parameter.
      *
      * @exception {DeveloperError} name must match a parameter name in the material's technique that is targetable and not optimized out.
      *
@@ -102,7 +103,7 @@ define([
      * number, Cartesian, or matrix.
      *
      * @param {String} name The name of the parameter.
-     * @returns {Object} The value of the parameter or <code>undefined</code> if the parameter does not exist.
+     * @returns {*} The value of the parameter or <code>undefined</code> if the parameter does not exist.
      */
     ModelMaterial.prototype.getValue = function(name) {
         //>>includeStart('debug', pragmas.debug);

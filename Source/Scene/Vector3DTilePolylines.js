@@ -96,10 +96,6 @@ define([
         this._uniformMap = undefined;
         this._command = undefined;
 
-        this._spPick = undefined;
-        this._rsPick = undefined;
-        this._pickCommand = undefined;
-
         this._transferrableBatchIds = undefined;
         this._packedBuffer = undefined;
 
@@ -394,14 +390,6 @@ define([
             },
             polygonOffset : polygonOffset
         });
-
-        primitive._rsPick = RenderState.fromCache({
-            depthMask : false,
-            depthTest : {
-                enabled : true
-            },
-            polygonOffset : polygonOffset
-        });
     }
 
     var PolylineFS =
@@ -436,24 +424,6 @@ define([
             fragmentShaderSource : fs,
             attributeLocations : attributeLocations
         });
-
-        vsSource = batchTable.getPickVertexShaderCallback('a_batchId')(Vector3DTilePolylinesVS);
-        fsSource = batchTable.getPickFragmentShaderCallback()(PolylineFS, false, undefined);
-
-        var pickVS = new ShaderSource({
-            defines : ['VECTOR_TILE'],
-            sources : [PolylineCommon, vsSource]
-        });
-        var pickFS = new ShaderSource({
-            defines : ['VECTOR_TILE'],
-            sources : [fsSource]
-        });
-        primitive._spPick = ShaderProgram.fromCache({
-            context : context,
-            vertexShaderSource : pickVS,
-            fragmentShaderSource : pickFS,
-            attributeLocations : attributeLocations
-        });
     }
 
     function queueCommands(primitive, frameState) {
@@ -466,28 +436,12 @@ define([
                 shaderProgram : primitive._sp,
                 uniformMap : uniformMap,
                 boundingVolume : primitive._boundingVolume,
-                pass : Pass.TRANSLUCENT
+                pass : Pass.TRANSLUCENT,
+                pickId : primitive._batchTable.getPickId()
             });
         }
 
         frameState.commandList.push(primitive._command);
-    }
-
-    function queuePickCommands(primitive, frameState) {
-        if (!defined(primitive._pickCommand)) {
-            var uniformMap = primitive._batchTable.getPickUniformMapCallback()(primitive._uniformMap);
-            primitive._pickCommand = new DrawCommand({
-                owner : primitive,
-                vertexArray : primitive._va,
-                renderState : primitive._rsPick,
-                shaderProgram : primitive._spPick,
-                uniformMap : uniformMap,
-                boundingVolume : primitive._boundingVolume,
-                pass : Pass.TRANSLUCENT
-            });
-        }
-
-        frameState.commandList.push(primitive._pickCommand);
     }
 
     /**
@@ -535,11 +489,10 @@ define([
     /**
      * Apply a style to the content.
      *
-     * @param {FrameState} frameState The frame state.
      * @param {Cesium3DTileStyle} style The style.
      * @param {Cesium3DTileFeature[]} features The array of features.
      */
-    Vector3DTilePolylines.prototype.applyStyle = function(frameState, style, features) {
+    Vector3DTilePolylines.prototype.applyStyle = function(style, features) {
         if (!defined(style)) {
             clearStyle(this, features);
             return;
@@ -551,8 +504,8 @@ define([
             var batchId = batchIds[i];
             var feature = features[batchId];
 
-            feature.color = defined(style.color) ? style.color.evaluateColor(frameState, feature, scratchColor) : DEFAULT_COLOR_VALUE;
-            feature.show = defined(style.show) ? style.show.evaluate(frameState, feature) : DEFAULT_SHOW_VALUE;
+            feature.color = defined(style.color) ? style.color.evaluateColor(feature, scratchColor) : DEFAULT_COLOR_VALUE;
+            feature.show = defined(style.show) ? style.show.evaluate(feature) : DEFAULT_SHOW_VALUE;
         }
     };
 
@@ -574,12 +527,8 @@ define([
         }
 
         var passes = frameState.passes;
-        if (passes.render) {
+        if (passes.render || passes.pick) {
             queueCommands(this, frameState);
-        }
-
-        if (passes.pick) {
-            queuePickCommands(this, frameState);
         }
     };
 
@@ -610,7 +559,6 @@ define([
     Vector3DTilePolylines.prototype.destroy = function() {
         this._va = this._va && this._va.destroy();
         this._sp = this._sp && this._sp.destroy();
-        this._spPick = this._spPick && this._spPick.destroy();
         return destroyObject(this);
     };
 

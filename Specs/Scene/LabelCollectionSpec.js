@@ -94,12 +94,12 @@ defineSuite([
         expect(label.horizontalOrigin).toEqual(HorizontalOrigin.LEFT);
         expect(label.verticalOrigin).toEqual(VerticalOrigin.BASELINE);
         expect(label.scale).toEqual(1.0);
-        expect(label.id).not.toBeDefined();
-        expect(label.translucencyByDistance).not.toBeDefined();
-        expect(label.pixelOffsetScaleByDistance).not.toBeDefined();
-        expect(label.scaleByDistance).not.toBeDefined();
-        expect(label.distanceDisplayCondition).not.toBeDefined();
-        expect(label.disableDepthTestDistance).toEqual(0.0);
+        expect(label.id).toBeUndefined();
+        expect(label.translucencyByDistance).toBeUndefined();
+        expect(label.pixelOffsetScaleByDistance).toBeUndefined();
+        expect(label.scaleByDistance).toBeUndefined();
+        expect(label.distanceDisplayCondition).toBeUndefined();
+        expect(label.disableDepthTestDistance).toBeUndefined();
     });
 
     it('can add a label with specified values', function() {
@@ -554,15 +554,20 @@ defineSuite([
 
     it('does not render labels that are behind the viewer', function() {
         var label = labels.add({
-            position : new Cartesian3(20.0, 0.0, 0.0), // Behind camera
+            position : Cartesian3.ZERO, // in front of the camera
             text : 'x',
             horizontalOrigin : HorizontalOrigin.CENTER,
             verticalOrigin : VerticalOrigin.CENTER
         });
 
+        expect(scene).toRenderAndCall(function(rgba) {
+            expect(rgba[0]).toBeGreaterThan(10);
+        });
+
+        label.position = new Cartesian3(20.0, 0.0, 0.0); // Behind camera
         expect(scene).toRender([0, 0, 0, 255]);
 
-        label.position = Cartesian3.ZERO; // Back in front of camera
+        label.position = new Cartesian3(1.0, 0.0, 0.0);  // Back in front of camera
         expect(scene).toRenderAndCall(function(rgba) {
             expect(rgba[0]).toBeGreaterThan(10);
         });
@@ -2000,7 +2005,6 @@ defineSuite([
     });
 
     it('computes bounding sphere in Columbus view', function() {
-
         // Disable collision detection to allow controlled camera position,
         // hence predictable bounding sphere size
         var originalEnableCollisionDetection = scene.screenSpaceCameraController.enableCollisionDetection;
@@ -2030,7 +2034,7 @@ defineSuite([
         var expected = BoundingSphere.fromPoints(projectedPositions);
         expected.center = new Cartesian3(0.0, expected.center.x, expected.center.y);
         expect(actual.center).toEqualEpsilon(expected.center, CesiumMath.EPSILON8);
-        expect(actual.radius).toBeGreaterThan(expected.radius);
+        expect(actual.radius).toBeGreaterThanOrEqualTo(expected.radius);
         scene.screenSpaceCameraController.enableCollisionDetection = originalEnableCollisionDetection;
     });
 
@@ -2267,7 +2271,7 @@ defineSuite([
         it('explicitly constructs a label with height reference', function() {
             scene.globe = createGlobe();
             var l = labelsWithHeight.add({
-                text : "test",
+                text : 'test',
                 heightReference : HeightReference.CLAMP_TO_GROUND
             });
 
@@ -2277,7 +2281,7 @@ defineSuite([
         it('set label height reference property', function() {
             scene.globe = createGlobe();
             var l = labelsWithHeight.add({
-                text : "test"
+                text : 'test'
             });
             l.heightReference = HeightReference.CLAMP_TO_GROUND;
 
@@ -2317,7 +2321,7 @@ defineSuite([
             scene.globe.removedCallback = false;
             l.heightReference = HeightReference.NONE;
             expect(scene.globe.removedCallback).toEqual(true);
-            expect(scene.globe.callback).not.toBeDefined();
+            expect(scene.globe.callback).toBeUndefined();
         });
 
         it('changing the position updates the callback', function() {
@@ -2380,7 +2384,7 @@ defineSuite([
             var spy = spyOn(billboard, '_removeCallbackFunc');
             labelsWithHeight.remove(l);
             expect(spy).toHaveBeenCalled();
-            expect(labelsWithHeight._spareBillboards[0]._removeCallbackFunc).not.toBeDefined();
+            expect(labelsWithHeight._spareBillboards[0]._removeCallbackFunc).toBeUndefined();
         });
     });
 

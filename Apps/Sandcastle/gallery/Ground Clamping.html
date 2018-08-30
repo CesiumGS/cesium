@@ -121,6 +121,30 @@ Sandcastle.addDefaultToolbarMenu([{
         viewer.zoomTo(e);
     }
 }, {
+    text : 'Draw Textured Polygon',
+    onselect : function() {
+        if (!Cesium.Entity.supportsMaterialsforEntitiesOnTerrain(viewer.scene)) {
+            window.alert('Terrain Entity materials are not supported on this platform');
+            return;
+        }
+
+        var e = viewer.entities.add({
+            polygon : {
+                hierarchy : {
+                    positions : [new Cesium.Cartesian3(-2358138.847340281, -3744072.459541374, 4581158.5714175375),
+                                 new Cesium.Cartesian3(-2357231.4925370603, -3745103.7886602185, 4580702.9757762635),
+                                 new Cesium.Cartesian3(-2355912.902205431, -3744249.029778454, 4582402.154378103),
+                                 new Cesium.Cartesian3(-2357208.0209552636, -3743553.4420488174, 4581961.863286629)]
+                },
+                material : '../images/Cesium_Logo_Color.jpg',
+                classificationType : Cesium.ClassificationType.TERRAIN,
+                stRotation : Cesium.Math.toRadians(45)
+            }
+        });
+
+        viewer.zoomTo(e);
+    }
+}, {
     text : 'Draw Rectangle',
     onselect : function() {
         var e = viewer.entities.add({
@@ -194,6 +218,36 @@ Sandcastle.addDefaultToolbarMenu([{
             viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
         });
     }
+}, {
+    text : 'Draw polyline on terrain',
+    onselect : function() {
+
+        if (!Cesium.Entity.supportsPolylinesOnTerrain(viewer.scene)) {
+            console.log('Polylines on terrain are not supported on this platform');
+        }
+
+        viewer.entities.add({
+            polyline : {
+                positions : Cesium.Cartesian3.fromDegreesArray([
+                    86.953793, 27.928257,
+                    86.953793, 27.988257,
+                    86.896497, 27.988257
+                ]),
+                clampToGround : true,
+                width : 5,
+                material : new Cesium.PolylineOutlineMaterialProperty({
+                    color : Cesium.Color.ORANGE,
+                    outlineWidth : 2,
+                    outlineColor : Cesium.Color.BLACK
+                })
+            }
+        });
+
+        var target = new Cesium.Cartesian3(300770.50872389384, 5634912.131394585, 2978152.2865545116);
+        var offset = new Cesium.Cartesian3(6344.974098678562, -793.3419798081741, 2499.9508860763162);
+        viewer.camera.lookAt(target, offset);
+        viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
+    }
 }], 'zoomButtons');
 
 Sandcastle.reset = function () {
@@ -203,10 +257,10 @@ Sandcastle.reset = function () {
 //Sandcastle_End
     Sandcastle.finishedLoading();
 }
-if (typeof Cesium !== "undefined") {
+if (typeof Cesium !== 'undefined') {
     startup(Cesium);
-} else if (typeof require === "function") {
-    require(["Cesium"], startup);
+} else if (typeof require === 'function') {
+    require(['Cesium'], startup);
 }
 </script>
 </body>
