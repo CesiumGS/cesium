@@ -194,6 +194,17 @@ define([
         return tileProvider.requestImage(col, row, level, request);
     }
 
+    function pickFeatures(imageryProvider, x, y, level, longitude, latitude, interval) {
+        var dynamicIntervalData = defined(interval) ? interval.data : undefined;
+        var tileProvider = imageryProvider._tileProvider;
+
+        if (defined(dynamicIntervalData)) {
+            // We set the query parameters within the tile provider, because it is managing the query.
+            tileProvider._pickFeaturesResource.setQueryParameters(dynamicIntervalData);
+        }
+        return tileProvider.pickFeatures(x, y, level, longitude, latitude);
+    }
+
     defineProperties(WebMapServiceImageryProvider.prototype, {
         /**
          * Gets the URL of the WMS server.
@@ -474,10 +485,6 @@ define([
         var timeDynamicImagery = this._timeDynamicImagery;
         var currentInterval;
 
-        if (!defined(timeDynamicImagery)){
-            return this._tileProvider.requestImage(x, y, level, request);
-        }
-
         // Try and load from cache
         if (defined(timeDynamicImagery)) {
             currentInterval = timeDynamicImagery.currentInterval;
@@ -514,7 +521,10 @@ define([
      * @exception {DeveloperError} <code>pickFeatures</code> must not be called before the imagery provider is ready.
      */
     WebMapServiceImageryProvider.prototype.pickFeatures = function(x, y, level, longitude, latitude) {
-        return this._tileProvider.pickFeatures(x, y, level, longitude, latitude);
+        var timeDynamicImagery = this._timeDynamicImagery;
+        var currentInterval = defined(timeDynamicImagery) ? timeDynamicImagery.currentInterval : undefined;
+
+        return pickFeatures(this, x, y, level, longitude, latitude, currentInterval);
     };
 
     /**
