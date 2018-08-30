@@ -77,9 +77,6 @@ define([
         bloom.enabled = false;
         tonemapping.enabled = false; // will be enabled if necessary in update
 
-        // TODO HDR
-        fxaa.enabled = false;
-
         var textureCache = new PostProcessStageTextureCache(this);
 
         var stageNames = {};

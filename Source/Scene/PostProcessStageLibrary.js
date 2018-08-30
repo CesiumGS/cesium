@@ -7,14 +7,12 @@ define([
         '../Core/deprecationWarning',
         '../Core/destroyObject',
         '../Core/Ellipsoid',
-        '../Renderer/PixelDatatype',
         '../Shaders/PostProcessStages/ACESTonemapping',
         '../Shaders/PostProcessStages/AmbientOcclusionGenerate',
         '../Shaders/PostProcessStages/AmbientOcclusionModulate',
         '../Shaders/PostProcessStages/BlackAndWhite',
         '../Shaders/PostProcessStages/BloomComposite',
         '../Shaders/PostProcessStages/Brightness',
-        '../Shaders/PostProcessStages/BrightPass',
         '../Shaders/PostProcessStages/ContrastBias',
         '../Shaders/PostProcessStages/DepthOfField',
         '../Shaders/PostProcessStages/DepthView',
@@ -41,14 +39,12 @@ define([
         deprecationWarning,
         destroyObject,
         Ellipsoid,
-        PixelDatatype,
         ACESTonemapping,
         AmbientOcclusionGenerate,
         AmbientOcclusionModulate,
         BlackAndWhite,
         BloomComposite,
         Brightness,
-        BrightPass,
         ContrastBias,
         DepthOfField,
         DepthView,
@@ -699,6 +695,12 @@ define([
         });
     };
 
+    /**
+     * Creates a post-process stage that applies ACES tonemapping operator.
+     * @param {Boolean} useAutoExposure Whether or not to use auto-exposure.
+     * @return {PostProcessStage} A post-process stage that applies ACES tonemapping operator.
+     * @private
+     */
     PostProcessStageLibrary.createACESTonemappingStage = function(useAutoExposure) {
         var fs = useAutoExposure ? '#define AUTO_EXPOSURE\n' : '';
         fs += ACESTonemapping;
@@ -711,6 +713,12 @@ define([
         });
     };
 
+    /**
+     * Creates a post-process stage that applies filmic tonemapping operator.
+     * @param {Boolean} useAutoExposure Whether or not to use auto-exposure.
+     * @return {PostProcessStage} A post-process stage that applies filmic tonemapping operator.
+     * @private
+     */
     PostProcessStageLibrary.createFilmicTonemappingStage = function(useAutoExposure) {
         var fs = useAutoExposure ? '#define AUTO_EXPOSURE\n' : '';
         fs += FilmicTonemapping;
@@ -723,6 +731,12 @@ define([
         });
     };
 
+    /**
+     * Creates a post-process stage that applies Reinhard tonemapping operator.
+     * @param {Boolean} useAutoExposure Whether or not to use auto-exposure.
+     * @return {PostProcessStage} A post-process stage that applies Reinhard tonemapping operator.
+     * @private
+     */
     PostProcessStageLibrary.createReinhardTonemappingStage = function(useAutoExposure) {
         var fs = useAutoExposure ? '#define AUTO_EXPOSURE\n' : '';
         fs += ReinhardTonemapping;
@@ -735,6 +749,12 @@ define([
         });
     };
 
+    /**
+     * Creates a post-process stage that applies modified Reinhard tonemapping operator.
+     * @param {Boolean} useAutoExposure Whether or not to use auto-exposure.
+     * @return {PostProcessStage} A post-process stage that applies modified Reinhard tonemapping operator.
+     * @private
+     */
     PostProcessStageLibrary.createModifiedReinhardTonemappingStage = function(useAutoExposure) {
         var fs = useAutoExposure ? '#define AUTO_EXPOSURE\n' : '';
         fs += ModifiedReinhardTonemapping;
@@ -748,6 +768,11 @@ define([
         });
     };
 
+    /**
+     * Creates a post-process stage that finds the average luminance of the input texture.
+     * @return {PostProcessStage} A post-process stage that finds the average luminance of the input texture.
+     * @private
+     */
     PostProcessStageLibrary.createAutoExposureStage = function() {
         return new AutoExposure();
     };

@@ -433,8 +433,7 @@ define([
          * @type {Boolean}
          * @default true
          */
-        this.sunBloom = !this._hdr; // TODO HDR
-        //this.sunBloom = true;
+        this.sunBloom = true;
         this._sunBloom = undefined;
 
         /**
@@ -1455,6 +1454,12 @@ define([
             }
         },
 
+        /**
+         * The value used for gamma correction.
+         * @memberof Scene.prototype
+         * @type {Number}
+         * @default 2.4
+         */
         gamma : {
             get : function() {
                 return this._context.uniformState.gamma;
