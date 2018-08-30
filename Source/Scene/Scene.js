@@ -325,8 +325,6 @@ define([
         this._oit = oit;
         this._sceneFramebuffer = new SceneFramebuffer();
 
-        this._hdr = context.depthTexture && (context.colorBufferFloat || context.colorBufferHalfFloat);
-
         this._clearColorCommand = new ClearCommand({
             color : new Color(),
             stencil : 0,
@@ -803,6 +801,8 @@ define([
         this._removeTaskProcessorListenerCallback = TaskProcessor.taskCompletedEvent.addEventListener(requestRenderAfterFrame(this));
         this._removeGlobeCallbacks = [];
 
+        this._hdr = undefined;
+        this.hdr = true;
         this.gamma = 2.4;
         this._sunColor = new Color(0.8, 0.85, 1.0, 1.0);
 
@@ -1447,6 +1447,22 @@ define([
             },
             set : function(value) {
                 this._context.uniformState.gamma = value;
+            }
+        },
+
+        /**
+         * Whether or not to use high dynamic range rendering.
+         * @memberof Scene.prototype
+         * @type {Boolean}
+         * @default true
+         */
+        highDynamicRange : {
+            get : function() {
+                return this._hdr;
+            },
+            set : function(value) {
+                var context = this._context;
+                this._hdr = value && context.depthTexture && (context.colorBufferFloat || context.colorBufferHalfFloat);
             }
         },
 

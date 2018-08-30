@@ -101,6 +101,8 @@ define([
         this.glowFactor = 1.0;
         this._glowFactorDirty = false;
 
+        this._useHDR = undefined;
+
         var that = this;
         this._uniformMap = {
             u_texture : function() {
@@ -161,11 +163,13 @@ define([
         if (!defined(this._texture) ||
                 drawingBufferWidth !== this._drawingBufferWidth ||
                 drawingBufferHeight !== this._drawingBufferHeight ||
-                this._glowFactorDirty) {
+                this._glowFactorDirty ||
+                useHDR !== this._useHDR) {
             this._texture = this._texture && this._texture.destroy();
             this._drawingBufferWidth = drawingBufferWidth;
             this._drawingBufferHeight = drawingBufferHeight;
             this._glowFactorDirty = false;
+            this._useHDR = useHDR;
 
             var size = Math.max(drawingBufferWidth, drawingBufferHeight);
             size = Math.pow(2.0, Math.ceil(Math.log(size) / Math.log(2.0)) - 2.0);

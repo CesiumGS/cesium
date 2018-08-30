@@ -1,3 +1,12 @@
-vec3 czm_gammaCorrect(vec3 rgb) {
-    return pow(rgb, vec3(czm_gamma));
+/**
+ * Converts a color from RGB space to linear space.
+ *
+ * @name czm_gammaCorrect
+ * @glslFunction
+ *
+ * @param {vec3} color The color in RGB space.
+ * @returns {vec3} The color in linear space.
+ */
+vec3 czm_gammaCorrect(vec3 color) {
+    return pow(color, vec3(czm_gamma));
 }

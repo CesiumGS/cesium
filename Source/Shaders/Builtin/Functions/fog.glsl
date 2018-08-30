@@ -14,7 +14,6 @@ vec3 czm_fog(float distanceToCamera, vec3 color, vec3 fogColor)
 {
     float scalar = distanceToCamera * czm_fogDensity;
     float fog = 1.0 - exp(-(scalar * scalar));
-
     return mix(color, fogColor, fog);
 }
 
@@ -35,6 +34,5 @@ vec3 czm_fog(float distanceToCamera, vec3 color, vec3 fogColor, float fogModifie
 {
     float scalar = distanceToCamera * czm_fogDensity;
     float fog = 1.0 - exp(-((fogModifierConstant * scalar + fogModifierConstant) * (scalar * (1.0 + fogModifierConstant))));
-
     return mix(color, fogColor, fog);
 }
