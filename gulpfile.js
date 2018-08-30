@@ -438,8 +438,8 @@ function deployCesium(bucketName, uploadDirectory, cacheControl, done) {
                         CacheControl : cacheControl
                     };
 
-                    return s3.putObject(params)
-                        .promise().then(function() {
+                    return s3.putObject(params).promise()
+                        .then(function() {
                             uploaded++;
                         })
                         .catch(function(error) {
@@ -521,13 +521,12 @@ function getMimeType(filename) {
 
 // get all files currently in bucket asynchronously
 function listAll(s3, bucketName, prefix, files, marker) {
-    return s3.listObjects.promise({
-        Bucket : bucketName,
-        MaxKeys : 1000,
-        Prefix : prefix,
-        Marker : marker
-    })
-    .then(function(data) {
+    return s3.listObjects({
+        Bucket: bucketName,
+        MaxKeys: 1000,
+        Prefix: prefix,
+        Marker: marker
+    }).promise().then(function(data) {
         var items = data.Contents;
         for (var i = 0; i < items.length; i++) {
             files.push(items[i].Key);
