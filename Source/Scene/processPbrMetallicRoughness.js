@@ -143,6 +143,7 @@ define([
         var hasNormals = false;
         var hasTangents = false;
         var hasTexCoords = false;
+        var isUnlit = false;
 
         if (defined(primitiveInfo)) {
             skinningInfo = primitiveInfo.skinning;
@@ -182,6 +183,7 @@ define([
         };
 
         if (defined(material.extensions) && defined(material.extensions.KHR_materials_unlit)) {
+            isUnlit = true;
             hasNormals = false;
             hasTangents = false;
         }
@@ -633,19 +635,22 @@ define([
             fragmentShader += '    vec3 color = baseColor;\n';
         }
 
-        if (defined(generatedMaterialValues.u_occlusionTexture)) {
-            fragmentShader += '    color *= texture2D(u_occlusionTexture, ' + v_texcoord + ').r;\n';
-        }
-        if (defined(generatedMaterialValues.u_emissiveTexture)) {
-            fragmentShader += '    vec3 emissive = SRGBtoLINEAR3(texture2D(u_emissiveTexture, ' + v_texcoord + ').rgb);\n';
-            if (defined(generatedMaterialValues.u_emissiveFactor)) {
-                fragmentShader += '    emissive *= u_emissiveFactor;\n';
+        // Ignore occlusion and emissive when unlit
+        if (!isUnlit) {
+            if (defined(generatedMaterialValues.u_occlusionTexture)) {
+                fragmentShader += '    color *= texture2D(u_occlusionTexture, ' + v_texcoord + ').r;\n';
             }
-            fragmentShader += '    color += emissive;\n';
-        }
-        else if (defined(generatedMaterialValues.u_emissiveFactor)) {
-                fragmentShader += '    color += u_emissiveFactor;\n';
+            if (defined(generatedMaterialValues.u_emissiveTexture)) {
+                fragmentShader += '    vec3 emissive = SRGBtoLINEAR3(texture2D(u_emissiveTexture, ' + v_texcoord + ').rgb);\n';
+                if (defined(generatedMaterialValues.u_emissiveFactor)) {
+                    fragmentShader += '    emissive *= u_emissiveFactor;\n';
+                }
+                fragmentShader += '    color += emissive;\n';
             }
+            else if (defined(generatedMaterialValues.u_emissiveFactor)) {
+                    fragmentShader += '    color += u_emissiveFactor;\n';
+                }
+        }
 
         // Final color
         fragmentShader += '    color = LINEARtoSRGB(color);\n';
@@ -664,6 +669,8 @@ define([
             fragmentShader += '    gl_FragColor = vec4(color, 1.0);\n';
         }
         fragmentShader += '}\n';
+
+        console.log(fragmentShader);
 
         // Add shaders
         var vertexShaderId = addToArray(shaders, {
