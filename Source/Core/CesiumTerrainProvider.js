@@ -156,11 +156,11 @@ define([
 
                 var uri = new Uri(metadataResource.url);
                 if (uri.authority === 'assets.agi.com') {
-                    var deprecationText = 'The STK World Terrain tileset is deprecated and will be available until September 1, 2018.';
-                    var deprecationLinkText = 'Check out the new high-resolution Cesium World Terrain';
+                    var deprecationText = 'The STK World Terrain tileset is end-of-life and will shut down on October 1, 2018.';
+                    var deprecationLinkText = 'Check out the new high-resolution Cesium World Terrain for migration instructions.';
                     var deprecationLink = 'https://cesium.com/blog/2018/03/01/introducing-cesium-world-terrain/';
                     that._tileCredits = [
-                        new Credit('<span>' + deprecationText + '</span> <a href="' + deprecationLink + '">' + deprecationLinkText + '</a>', true)
+                        new Credit('<span><b>' + deprecationText + '</b></span> <a href="' + deprecationLink + '">' + deprecationLinkText + '</a>', true)
                     ];
                     deprecationWarning('assets.agi.com', deprecationText + ' ' + deprecationLinkText + ' ' + deprecationLink);
                 } else {
