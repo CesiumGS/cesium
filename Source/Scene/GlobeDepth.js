@@ -112,12 +112,13 @@ define([
     }
 
     function createTextures(globeDepth, context, width, height, hdr) {
+        var pixelDatatype = hdr ? (context.halfFloatingPointTexture ? PixelDatatype.HALF_FLOAT : PixelDatatype.FLOAT) : PixelDatatype.UNSIGNED_BYTE;
         globeDepth._colorTexture = new Texture({
             context : context,
             width : width,
             height : height,
             pixelFormat : PixelFormat.RGBA,
-            pixelDatatype : hdr ? PixelDatatype.HALF_FLOAT : PixelDatatype.UNSIGNED_BYTE,
+            pixelDatatype : pixelDatatype,
             sampler : new Sampler({
                 wrapS : TextureWrap.CLAMP_TO_EDGE,
                 wrapT : TextureWrap.CLAMP_TO_EDGE,

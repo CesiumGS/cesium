@@ -175,12 +175,13 @@ define([
             // errors in the tests.
             size = Math.max(1.0, size);
 
+            var pixelDatatype = useHDR ? (context.halfFloatingPointTexture ? PixelDatatype.HALF_FLOAT : PixelDatatype.FLOAT) : PixelDatatype.UNSIGNED_BYTE;
             this._texture = new Texture({
                 context : context,
                 width : size,
                 height : size,
                 pixelFormat : PixelFormat.RGBA,
-                pixelDatatype : useHDR ? PixelDatatype.HALF_FLOAT : PixelFormat.UNSIGNED_BYTE
+                pixelDatatype : pixelDatatype
             });
 
             this._glowLengthTS = this._glowFactor * 5.0;
