@@ -65,7 +65,7 @@ defineSuite([
 
     beforeAll(function() {
         scene = createScene();
-        scene.fxaa = false;
+        scene.postProcessStages.fxaa.enabled = false;
 
         context = scene.context;
 
@@ -467,7 +467,7 @@ defineSuite([
         });
         largeScene.render();
 
-        largeScene.fxaa = false;
+        largeScene.postProcessStages.fxaa.enabled = false;
         largeScene.camera.setView({ destination : destination });
 
         var largeSceneDepthPrimitive = new MockGlobePrimitive(new Primitive({

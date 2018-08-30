@@ -236,15 +236,17 @@ define([
             var tangentIndex = 0;
             var bitangentIndex = 0;
 
+            var theta = Math.atan2(bottomRadius - topRadius, length);
             var normal = normalScratch;
-            normal.z = 0;
+            normal.z = Math.sin(theta);
+            var normalScale = Math.cos(theta);
             var tangent = tangentScratch;
             var bitangent = bitangentScratch;
 
             for (i = 0; i < slices; i++) {
                 var angle = i / slices * CesiumMath.TWO_PI;
-                var x = Math.cos(angle);
-                var y = Math.sin(angle);
+                var x = normalScale * Math.cos(angle);
+                var y = normalScale * Math.sin(angle);
                 if (computeNormal) {
                     normal.x = x;
                     normal.y = y;
@@ -254,12 +256,12 @@ define([
                     }
 
                     if (vertexFormat.normal) {
-                        normals[normalIndex++] = x;
-                        normals[normalIndex++] = y;
-                        normals[normalIndex++] = 0;
-                        normals[normalIndex++] = x;
-                        normals[normalIndex++] = y;
-                        normals[normalIndex++] = 0;
+                        normals[normalIndex++] = normal.x;
+                        normals[normalIndex++] = normal.y;
+                        normals[normalIndex++] = normal.z;
+                        normals[normalIndex++] = normal.x;
+                        normals[normalIndex++] = normal.y;
+                        normals[normalIndex++] = normal.z;
                     }
 
                     if (vertexFormat.tangent) {

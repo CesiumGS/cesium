@@ -187,3 +187,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 * [Jonathan Puckey](https://github.com/puckey)
 * [Mark Erikson](https://github.com/markerikson)
 * [Hannah Bollar](https://github.com/hanbollar)
+* [Felix Palmer](https://github.com/felixpalmer)

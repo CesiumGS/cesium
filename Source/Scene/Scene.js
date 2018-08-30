@@ -1436,25 +1436,6 @@ define([
         },
 
         /**
-         * When <code>true</code>, enables Fast Approximate Anti-aliasing even when order independent translucency
-         * is unsupported.
-         * @memberof Scene.prototype
-         * @type {Boolean}
-         * @default true
-         * @deprecated
-         */
-        fxaa : {
-            get : function() {
-                deprecationWarning('Scene.fxaa', 'The Scene.fxaa property has been deprecated. Use Scene.postProcessStages.fxaa.');
-                return this.postProcessStages.fxaa.enabled;
-            },
-            set : function(value) {
-                deprecationWarning('Scene.fxaa', 'The Scene.fxaa property has been deprecated. Use Scene.postProcessStages.fxaa.');
-                this.postProcessStages.fxaa.enabled = value;
-            }
-        },
-
-        /**
          * The value used for gamma correction.
          * @memberof Scene.prototype
          * @type {Number}
