@@ -323,5 +323,85 @@ define([
         return result;
     };
 
+    function getHDRShaderProgram(context, useHDR, shaderProgram) {
+        var shader;
+        var attributeLocations;
+        var vs;
+        var fs;
+
+        if (useHDR) {
+            shader = context.shaderCache.getDerivedShaderProgram(shaderProgram, 'HDR');
+            if (!defined(shader)) {
+                attributeLocations = shaderProgram._attributeLocations;
+                vs = shaderProgram.vertexShaderSource.clone();
+                fs = shaderProgram.fragmentShaderSource.clone();
+
+                vs.defines = defined(vs.defines) ? vs.defines.slice(0) : [];
+                vs.defines.push('HDR');
+                fs.defines = defined(fs.defines) ? fs.defines.slice(0) : [];
+                fs.defines.push('HDR');
+
+                shader = context.shaderCache.createDerivedShaderProgram(shaderProgram, 'HDR', {
+                    vertexShaderSource : vs,
+                    fragmentShaderSource : fs,
+                    attributeLocations : attributeLocations
+                });
+            }
+
+            return shader;
+        }
+
+        shader = context.shaderCache.getDerivedShaderProgram(shaderProgram, 'gammaCorrect');
+        if (!defined(shader)) {
+            attributeLocations = shaderProgram._attributeLocations;
+            vs = shaderProgram.vertexShaderSource.clone();
+            fs = shaderProgram.fragmentShaderSource.clone();
+
+            var sources = fs.sources;
+            var length = sources.length;
+            for (var i = 0; i < length; ++i) {
+                sources[i] = ShaderSource.replaceMain(sources[i], 'czm_non_gamma_main');
+            }
+
+            var main =
+                '\n\n' +
+                'void main() \n' +
+                '{ \n' +
+                '    czm_non_gamma_main(); \n' +
+                '    gl_FragColor.rgb = czm_inverseGamma(gl_FragColor.rgb); \n' +
+                '} \n';
+            sources.push(main);
+
+            shader = context.shaderCache.createDerivedShaderProgram(shaderProgram, 'HDR', {
+                vertexShaderSource : vs,
+                fragmentShaderSource : fs,
+                attributeLocations : attributeLocations
+            });
+        }
+        return shader;
+    }
+
+    DerivedCommand.createHDRCommand = function(command, context, useHDR, result) {
+        if (!defined(result)) {
+            result = {};
+        }
+
+        var shader;
+        if (defined(result.command)) {
+            shader = result.command.shaderProgram;
+        }
+
+        result.command = DrawCommand.shallowClone(command, result.command);
+
+        if (!defined(shader) || result.shaderProgramId !== command.shaderProgram.id) {
+            result.command.shaderProgram = getHDRShaderProgram(context, useHDR, command.shaderProgram);
+            result.shaderProgramId = command.shaderProgram.id;
+        } else {
+            result.command.shaderProgram = shader;
+        }
+
+        return result;
+    };
+
     return DerivedCommand;
 });

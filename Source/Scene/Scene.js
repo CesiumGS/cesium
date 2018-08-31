@@ -802,7 +802,8 @@ define([
         this._removeGlobeCallbacks = [];
 
         this._hdr = undefined;
-        this.hdr = true;
+        this._hdrDirty = undefined;
+        this.highDynamicRange = true;
         this.gamma = 2.4;
         this._sunColor = new Color(0.8, 0.85, 1.0, 1.0);
 
@@ -1462,7 +1463,9 @@ define([
             },
             set : function(value) {
                 var context = this._context;
-                this._hdr = value && context.depthTexture && (context.colorBufferFloat || context.colorBufferHalfFloat);
+                var hdr = value && context.depthTexture && (context.colorBufferFloat || context.colorBufferHalfFloat);
+                this._hdrDirty = hdr !== this._hdr;
+                this._hdr = hdr;
             }
         },
 
@@ -1543,7 +1546,7 @@ define([
         }
 
         var derivedCommands = command.derivedCommands;
-        if ((scene._logDepthBufferDirty || scene._frustumChanged || command.dirty) && defined(derivedCommands)) {
+        if ((scene._hdrDirty || scene._logDepthBufferDirty || scene._frustumChanged || command.dirty) && defined(derivedCommands)) {
             command.dirty = false;
 
             var frustum = scene.camera.frustum;
@@ -1573,6 +1576,9 @@ define([
             if (defined(command.pickId)) {
                 derivedCommands.picking = DerivedCommand.createPickDerivedCommand(scene, command, context, derivedCommands.picking);
             }
+
+            derivedCommands.hdr = DerivedCommand.createHDRCommand(command, context, scene._hdr, derivedCommands.hdr);
+            command = derivedCommands.hdr.command;
 
             var oit = scene._oit;
             if (command.pass === Pass.TRANSLUCENT && defined(oit) && oit.isSupported()) {
@@ -2096,6 +2102,10 @@ define([
 
         if (scene._logDepthBuffer && defined(command.derivedCommands.logDepth)) {
             command = command.derivedCommands.logDepth.command;
+        }
+
+        if (defined(command.derivedCommands) && defined(command.derivedCommands.hdr)) {
+            command = command.derivedCommands.hdr.command;
         }
 
         var passes = frameState.passes;
@@ -3360,6 +3370,7 @@ define([
             this._lastRenderTime = JulianDate.clone(time, this._lastRenderTime);
             this._renderRequested = false;
             this._logDepthBufferDirty = false;
+            this._hdrDirty = false;
 
             // Render
             this._preRender.raiseEvent(this, time);
