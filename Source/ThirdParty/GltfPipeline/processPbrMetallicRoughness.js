@@ -460,11 +460,13 @@ define([
             '    return vec4(linearOut, srgbIn.a);\n' +
             '}\n\n';
 
-        // TODO HDR
         fragmentShader += 'vec3 LINEARtoSRGB(vec3 linearIn) \n' +
             '{\n' +
-            //'    return pow(linearIn, vec3(1.0/2.2));\n' +
+            '#ifndef HDR \n' +
+            '    return pow(linearIn, vec3(1.0/2.2));\n' +
+            '#else \n' +
             '    return linearIn;\n' +
+            '#endif \n' +
             '}\n\n';
 
         fragmentShader += 'void main(void) \n{\n';

@@ -120,6 +120,10 @@ vec4 sampleAndBlend(
     vec3 color = value.rgb;
     float alpha = value.a;
 
+#ifdef APPLY_GAMMA
+    color = pow(color, vec3(textureOneOverGamma));
+#endif
+
     color = czm_gammaCorrect(color);
 
 #ifdef APPLY_SPLIT
@@ -150,10 +154,6 @@ vec4 sampleAndBlend(
     color = czm_saturation(color, textureSaturation);
 #endif
 
-//#ifdef APPLY_GAMMA
-//    color = pow(color, vec3(textureOneOverGamma));
-//#endif
-
     float sourceAlpha = alpha * textureAlpha;
     float outAlpha = mix(previousColor.a, 1.0, sourceAlpha);
     vec3 outColor = mix(previousColor.rgb * previousColor.a, color, sourceAlpha) / outAlpha;
@@ -183,10 +183,10 @@ void main()
     }
 #endif
 
-//#if defined(SHOW_REFLECTIVE_OCEAN) || defined(ENABLE_DAYNIGHT_SHADING)
+#if defined(SHOW_REFLECTIVE_OCEAN) || defined(ENABLE_DAYNIGHT_SHADING) || defined(HDR)
     vec3 normalMC = czm_geodeticSurfaceNormal(v_positionMC, vec3(0.0), vec3(1.0));   // normalized surface normal in model coordinates
     vec3 normalEC = czm_normal3D * normalMC;                                         // normalized surface normal in eye coordiantes
-//#endif
+#endif
 
 #ifdef SHOW_REFLECTIVE_OCEAN
     vec2 waterMaskTranslation = u_waterMaskTranslationAndScale.xy;
@@ -244,7 +244,13 @@ void main()
     float fade = clamp((cameraDist - fadeOutDist) / (fadeInDist - fadeOutDist), 0.0, 1.0);
 #endif
 
-#if defined(ENABLE_VERTEX_LIGHTING) && !defined(GROUND_ATMOSPHERE)
+#ifdef HDR
+    czm_material material;
+    material.diffuse = color.rgb;
+    material.alpha = color.a;
+    material.normal = normalEC;
+    vec4 finalColor = czm_phong(normalize(-v_positionEC), material);
+#elif defined(ENABLE_VERTEX_LIGHTING) && !defined(GROUND_ATMOSPHERE)
     float diffuseIntensity = clamp(czm_getLambertDiffuse(czm_sunDirectionEC, normalize(v_normalEC)) * 0.9 + 0.3, 0.0, 1.0);
     vec4 finalColor = vec4(color.rgb * diffuseIntensity, color.a);
 #elif defined(ENABLE_DAYNIGHT_SHADING) && !defined(GROUND_ATMOSPHERE)
@@ -255,19 +261,7 @@ void main()
     vec4 finalColor = color;
 #endif
 
-//#ifdef ENABLE_VERTEX_LIGHTING
-    czm_material material;
-    material.diffuse = color.rgb;
-    material.alpha = color.a;
-    material.normal = normalEC;
-    //vec4 finalColor = czm_phong(normalize(-v_positionEC), material);
-    finalColor = czm_phong(normalize(-v_positionEC), material);
-//#else
-//    vec4 finalColor = color;
-//#endif
 
-    //gl_FragColor = finalColor;
-    //return;
 
 #ifdef ENABLE_CLIPPING_PLANES
     vec4 clippingPlanesEdgeColor = vec4(1.0);
@@ -283,8 +277,9 @@ void main()
 #if defined(FOG) || defined(GROUND_ATMOSPHERE)
     const float fExposure = 1.3;
     vec3 fogColor = v_fogMieColor + finalColor.rgb * v_fogRayleighColor;
-    // TODO: disable exposure if using HDR
-    //fogColor = vec3(1.0) - exp(-fExposure * fogColor);
+#ifndef HDR
+    fogColor = vec3(1.0) - exp(-fExposure * fogColor);
+#endif
 #endif
 
 #ifdef FOG
@@ -293,9 +288,12 @@ void main()
     fogColor *= darken;
 #endif
 
-    // TODO: Only use modified fog function if HDR
+#ifdef HDR
     const float modifier = 0.15;
     finalColor = vec4(czm_fog(v_distance, finalColor.rgb, fogColor, modifier), finalColor.a);
+#else
+    finalColor = vec4(czm_fog(v_distance, finalColor.rgb, fogColor), finalColor.a);
+#endif
 #endif
 
 #ifdef GROUND_ATMOSPHERE
@@ -423,15 +421,21 @@ vec4 computeWaterColor(vec3 positionEyeCoordinates, vec2 textureCoordinates, mat
     // Add specular highlights in 3D, and in all modes when zoomed in.
     float specularIntensity = czm_getSpecular(czm_sunDirectionEC, normalizedpositionToEyeEC, normalEC, 10.0) + 0.25 * czm_getSpecular(czm_moonDirectionEC, normalizedpositionToEyeEC, normalEC, 10.0);
     float surfaceReflectance = mix(0.0, mix(u_zoomedOutOceanSpecularIntensity, oceanSpecularIntensity, waveIntensity), maskValue);
-    float specular = specularIntensity * surfaceReflectance * 1.4;
+    float specular = specularIntensity * surfaceReflectance;
+
+#ifdef HDR
+    specular *= 1.4;
 
     float e = 0.2;
     float d = 3.3;
     float c = 1.7;
 
-    return vec4(imageryColor.rgb + (c * (vec3(e) + imageryColor.rgb * d) * (diffuseHighlight + nonDiffuseHighlight + specular)), imageryColor.a);
-    //return vec4(0.0, 0.0, 1.0, 1.0);
-    //return vec4(imageryColor.rgb + diffuseHighlight + nonDiffuseHighlight + specular, imageryColor.a);
+    vec3 color = imageryColor.rgb + (c * (vec3(e) + imageryColor.rgb * d) * (diffuseHighlight + nonDiffuseHighlight + specular));
+#else
+    vec3 color = imageryColor.rgb + diffuseHighlight + nonDiffuseHighlight + specular;
+#endif
+
+    return vec4(color, imageryColor.a);
 }
 
 #endif // #ifdef SHOW_REFLECTIVE_OCEAN
