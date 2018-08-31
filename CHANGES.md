@@ -46,7 +46,7 @@ Change Log
 * Fixed an issue where switching from 2D to 3D could cause a crash. [#6929](https://github.com/AnalyticalGraphicsInc/cesium/issues/6929)
 * Fixed an issue where point primitives behind the camera would appear in view. [#6904](https://github.com/AnalyticalGraphicsInc/cesium/issues/6904)
 * The `createGroundPolylineGeometry` web worker no longer depends on `GroundPolylinePrimitive`, making the worker smaller and potentially avoiding a hanging build in some webpack configurations.
-* Fixed an issue that cause terrain entities (entities with unspecified `height`) and `GroundPrimitives` to fail when crossing the international date line in 3D. [#6951](https://github.com/AnalyticalGraphicsInc/cesium/issues/6951)
+* Fixed an issue that cause terrain entities (entities with unspecified `height`) and `GroundPrimitives` to fail when crossing the international date line. [#6951](https://github.com/AnalyticalGraphicsInc/cesium/issues/6951)
 * Fixed normal calculation for `CylinderGeometry` when the top radius is not equal to the bottom radius [#6863](https://github.com/AnalyticalGraphicsInc/cesium/pull/6863)
 
 ### 1.48 - 2018-08-01

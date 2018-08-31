@@ -36,6 +36,13 @@ define([
         ShadowVolumeAppearanceFS) {
     'use strict';
 
+    var projectionExtentDefines = {
+        eastMostYhighDefine : '',
+        eastMostYlowDefine : '',
+        westMostYhighDefine : '',
+        westMostYlowDefine : ''
+    };
+
     /**
      * Creates shaders for a ClassificationPrimitive to use a given Appearance, as well as for picking.
      *
@@ -183,15 +190,17 @@ define([
      * @param {String[]} defines External defines to pass to the vertex shader.
      * @param {String} vertexShaderSource ShadowVolumeAppearanceVS with any required modifications for computing position.
      * @param {Boolean} columbusView2D Whether the shader will be used for Columbus View or 2D.
+     * @param {MapProjection} mapProjection Current scene's map projection.
      * @returns {String} Shader source for the vertex shader.
      */
-    ShadowVolumeAppearance.prototype.createVertexShader = function(defines, vertexShaderSource, columbusView2D) {
+    ShadowVolumeAppearance.prototype.createVertexShader = function(defines, vertexShaderSource, columbusView2D, mapProjection) {
         //>>includeStart('debug', pragmas.debug);
         Check.defined('defines', defines);
         Check.typeOf.string('vertexShaderSource', vertexShaderSource);
         Check.typeOf.bool('columbusView2D', columbusView2D);
+        Check.defined('mapProjection', mapProjection);
         //>>includeEnd('debug');
-        return createShadowVolumeAppearanceVS(this._colorShaderDependencies, this._planarExtents, columbusView2D, defines, vertexShaderSource, this._appearance);
+        return createShadowVolumeAppearanceVS(this._colorShaderDependencies, this._planarExtents, columbusView2D, defines, vertexShaderSource, this._appearance, mapProjection);
     };
 
     /**
@@ -200,19 +209,54 @@ define([
      * @param {String[]} defines External defines to pass to the vertex shader.
      * @param {String} vertexShaderSource ShadowVolumeAppearanceVS with any required modifications for computing position and picking.
      * @param {Boolean} columbusView2D Whether the shader will be used for Columbus View or 2D.
+     * @param {MapProjection} mapProjection Current scene's map projection.
      * @returns {String} Shader source for the vertex shader.
      */
-    ShadowVolumeAppearance.prototype.createPickVertexShader = function(defines, vertexShaderSource, columbusView2D) {
+    ShadowVolumeAppearance.prototype.createPickVertexShader = function(defines, vertexShaderSource, columbusView2D, mapProjection) {
         //>>includeStart('debug', pragmas.debug);
         Check.defined('defines', defines);
         Check.typeOf.string('vertexShaderSource', vertexShaderSource);
         Check.typeOf.bool('columbusView2D', columbusView2D);
+        Check.defined('mapProjection', mapProjection);
         //>>includeEnd('debug');
-        return createShadowVolumeAppearanceVS(this._pickShaderDependencies, this._planarExtents, columbusView2D, defines, vertexShaderSource);
+        return createShadowVolumeAppearanceVS(this._pickShaderDependencies, this._planarExtents, columbusView2D, defines, vertexShaderSource, undefined, mapProjection);
     };
 
-    function createShadowVolumeAppearanceVS(shaderDependencies, planarExtents, columbusView2D, defines, vertexShaderSource, appearance) {
+    var longitudeExtentsCartesianScratch = new Cartesian3();
+    var longitudeExtentsCartographicScratch = new Cartographic();
+    var longitudeExtentsEncodeScratch = {
+        high : 0.0,
+        low : 0.0
+    };
+    function createShadowVolumeAppearanceVS(shaderDependencies, planarExtents, columbusView2D, defines, vertexShaderSource, appearance, mapProjection) {
         var allDefines = defines.slice();
+
+        if (projectionExtentDefines.eastMostYhighDefine === '') {
+            var eastMostCartographic = longitudeExtentsCartographicScratch;
+            eastMostCartographic.longitude = CesiumMath.PI;
+            eastMostCartographic.latitude = 0.0;
+            eastMostCartographic.height = 0.0;
+            var eastMostCartesian = mapProjection.project(eastMostCartographic, longitudeExtentsCartesianScratch);
+            var encoded = EncodedCartesian3.encode(eastMostCartesian.x, longitudeExtentsEncodeScratch);
+            projectionExtentDefines.eastMostYhighDefine = 'EAST_MOST_X_HIGH ' + encoded.high.toFixed((encoded.high + '').length + 1);
+            projectionExtentDefines.eastMostYlowDefine = 'EAST_MOST_X_LOW ' + encoded.low.toFixed((encoded.low + '').length + 1);
+
+            var westMostCartographic = longitudeExtentsCartographicScratch;
+            westMostCartographic.longitude = -CesiumMath.PI;
+            westMostCartographic.latitude = 0.0;
+            westMostCartographic.height = 0.0;
+            var westMostCartesian = mapProjection.project(westMostCartographic, longitudeExtentsCartesianScratch);
+            encoded = EncodedCartesian3.encode(westMostCartesian.x, longitudeExtentsEncodeScratch);
+            projectionExtentDefines.westMostYhighDefine = 'WEST_MOST_X_HIGH ' + encoded.high.toFixed((encoded.high + '').length + 1);
+            projectionExtentDefines.westMostYlowDefine = 'WEST_MOST_X_LOW ' + encoded.low.toFixed((encoded.low + '').length + 1);
+        }
+
+        if (columbusView2D) {
+            allDefines.push(projectionExtentDefines.eastMostYhighDefine);
+            allDefines.push(projectionExtentDefines.eastMostYlowDefine);
+            allDefines.push(projectionExtentDefines.westMostYhighDefine);
+            allDefines.push(projectionExtentDefines.westMostYlowDefine);
+        }
 
         if (defined(appearance) && appearance instanceof PerInstanceColorAppearance) {
             allDefines.push('PER_INSTANCE_COLOR');
