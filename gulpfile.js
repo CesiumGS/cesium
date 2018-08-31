@@ -26,7 +26,7 @@ var Promise = require('bluebird');
 var requirejs = require('requirejs');
 var Karma = require('karma').Server;
 var yargs = require('yargs');
-var S3 = require('aws-sdk/clients/s3');
+var AWS = require('aws-sdk');
 var mime = require('mime');
 var compressible = require('compressible');
 
@@ -340,7 +340,7 @@ function deployCesium(bucketName, uploadDirectory, cacheControl, done) {
     var gzip = Promise.promisify(zlib.gzip);
     var concurrencyLimit = 2000;
 
-    var s3 = new S3({
+    var s3 = new AWS.S3({
         maxRetries : 10,
         retryDelayOptions : {
             base : 500
