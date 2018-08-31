@@ -361,7 +361,7 @@ defineSuite([
     it('loads tileset with extras', function() {
         return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function(tileset) {
             expect(tileset.extras).toEqual({ 'name': 'Sample Tileset' });
-            expect(tileset.root.extras).not.toBeDefined();
+            expect(tileset.root.extras).toBeUndefined();
 
             var length = tileset.root.children.length;
             var taggedChildren = 0;
@@ -440,6 +440,15 @@ defineSuite([
         });
         expect(function() {
             return tileset.properties;
+        }).toThrowDeveloperError();
+    });
+
+    it('throws when getting extras and tileset is not ready', function() {
+        var tileset = new Cesium3DTileset({
+            url : tilesetUrl
+        });
+        expect(function() {
+            return tileset.extras;
         }).toThrowDeveloperError();
     });
 
