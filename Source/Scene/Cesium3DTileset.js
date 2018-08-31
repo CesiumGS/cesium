@@ -1247,6 +1247,8 @@ define([
          *
          * @memberof Cesium3DTileset.prototype
          *
+         * @exception {DeveloperError} The tileset is not loaded.  Use Cesium3DTileset.readyPromise or wait for Cesium3DTileset.ready to be true.
+         *
          * @type {*}
          * @readonly
          *
@@ -1254,6 +1256,12 @@ define([
          */
         extras : {
             get : function() {
+                //>>includeStart('debug', pragmas.debug);
+                if (!this.ready) {
+                    throw new DeveloperError('The tileset is not loaded.  Use Cesium3DTileset.readyPromise or wait for Cesium3DTileset.ready to be true.');
+                }
+                //>>includeEnd('debug');
+
                 return this._extras;
             }
         }
