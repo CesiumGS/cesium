@@ -360,17 +360,15 @@ defineSuite([
 
     it('loads tileset with extras', function() {
         return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function(tileset) {
-            expect(tileset.extras).toBeDefined();
+            expect(tileset.extras).toEqual({ 'name': 'Sample Tileset' });
             expect(tileset.root.extras).not.toBeDefined();
 
-            var taggedChildren = 0;
-            for(var i = 0;i < tileset.root.children.length; i++) {
+            var length = tileset.root.children.length;
+            for (var i = 0; i < length; ++i) {
                 if (defined(tileset.root.children[i].extras)) {
-                    taggedChildren ++;
+                    expect(tileset.root.children[i].extras).toEqual({ 'id': 'Special Tile' })
                 }
             }
-
-            expect(taggedChildren).toEqual(1);
         });
     });
 
