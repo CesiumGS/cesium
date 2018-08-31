@@ -430,8 +430,8 @@ define([
         },
 
         /**
-         * Returns the `extras` property in the tileset JSON for this tile, which contains application specific metadata.
-         * Returns `undefined` if `extras` does not exist.
+         * Returns the <code>extras</code> property in the tileset JSON for this tile, which contains application specific metadata.
+         * Returns <code>undefined</code> if <code>extras</code> does not exist.
          *
          * @memberof Cesium3DTile.prototype
          *
