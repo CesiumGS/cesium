@@ -646,10 +646,9 @@ define([
                     fragmentShader += '    emissive *= u_emissiveFactor;\n';
                 }
                 fragmentShader += '    color += emissive;\n';
+            } else if (defined(generatedMaterialValues.u_emissiveFactor)) {
+                fragmentShader += '    color += u_emissiveFactor;\n';
             }
-            else if (defined(generatedMaterialValues.u_emissiveFactor)) {
-                    fragmentShader += '    color += u_emissiveFactor;\n';
-                }
         }
 
         // Final color
@@ -669,8 +668,6 @@ define([
             fragmentShader += '    gl_FragColor = vec4(color, 1.0);\n';
         }
         fragmentShader += '}\n';
-
-        console.log(fragmentShader);
 
         // Add shaders
         var vertexShaderId = addToArray(shaders, {
