@@ -364,11 +364,15 @@ defineSuite([
             expect(tileset.root.extras).not.toBeDefined();
 
             var length = tileset.root.children.length;
+            var taggedChildren = 0;
             for (var i = 0; i < length; ++i) {
                 if (defined(tileset.root.children[i].extras)) {
-                    expect(tileset.root.children[i].extras).toEqual({ 'id': 'Special Tile' })
+                    expect(tileset.root.children[i].extras).toEqual({ 'id': 'Special Tile' });
+                    ++taggedChildren;
                 }
             }
+
+            expect(taggedChildren).toEqual(1);
         });
     });
 
