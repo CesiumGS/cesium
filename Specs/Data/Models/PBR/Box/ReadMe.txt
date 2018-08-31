@@ -1,0 +1,1 @@
+Box-Unlit.gltf is a modified glTF with the KHR_materials_unlit extension.
