@@ -120,7 +120,7 @@ defineSuite([
 
     var boomBoxUrl = './Data/Models/PBR/BoomBox/BoomBox.gltf';
     var boxPbrUrl = './Data/Models/PBR/Box/Box.gltf';
-    var boxPbrUnlitUrl = './Data/Models/PBR/Box/Box-Unlit.gltf';
+    var boxPbrUnlitUrl = './Data/Models/PBR/BoxUnlit/BoxUnlit.gltf';
     var boxAnimatedPbrUrl = './Data/Models/PBR/BoxAnimated/BoxAnimated.gltf';
     var boxInterleavedPbrUrl = './Data/Models/PBR/BoxInterleaved/BoxInterleaved.gltf';
     var riggedSimplePbrUrl = './Data/Models/PBR/RiggedSimple/RiggedSimple.gltf';
@@ -2693,7 +2693,7 @@ defineSuite([
         });
     });
 
-    fit('renders with the unlit extension', function() {
+    it('renders with the unlit extension', function() {
         return loadModel(boxPbrUnlitUrl).then(function(model) {
             model.show = true;
             model.zoomTo();
