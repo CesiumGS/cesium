@@ -49,6 +49,21 @@ define([
             get : function() {
                 return this._ellipsoid;
             }
+        },
+        /**
+         * Gets whether or not the projection is cylindrical about the equator.
+         * The Web Mercator projection is cylindrical about the equator.
+         *
+         * @memberof WebMercatorProjection.prototype
+         *
+         * @type {Boolean}
+         * @readonly
+         * @private
+         */
+        isEquatorialCylindrical : {
+            get : function() {
+                return true;
+            }
         }
     });
 

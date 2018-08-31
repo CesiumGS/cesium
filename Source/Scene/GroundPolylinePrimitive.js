@@ -621,7 +621,7 @@ define([
 
                 // Update each geometry for framestate.scene3DOnly = true and projection
                 geometryInstance.geometry._scene3DOnly = frameState.scene3DOnly;
-                GroundPolylineGeometry.setProjectionAndEllipsoid(geometryInstance.geometry, frameState.mapProjection);
+                GroundPolylineGeometry.setProjection(geometryInstance.geometry, frameState.mapProjection);
 
                 groundInstances[i] = new GeometryInstance({
                     geometry : geometryInstance.geometry,

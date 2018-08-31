@@ -84,6 +84,13 @@ define([
             vertexLogDepthDefine = 'DISABLE_GL_POSITION_LOG_DEPTH';
         }
 
+        var positions2d = 0;
+        var positions2dDefine = '';
+        if (!frameState.mapProjection.isEquatorialCylindrical) {
+            positions2d = 1;
+            positions2dDefine = 'POSITIONS_2D';
+        }
+
         var sceneMode = frameState.mode;
         var flags = sceneMode |
                     (applyBrightness << 2) |
@@ -101,7 +108,8 @@ define([
                     (quantization << 14) |
                     (applySplit << 15) |
                     (enableClippingPlanes << 16) |
-                    (vertexLogDepth << 17);
+                    (vertexLogDepth << 17) |
+                    (positions2d << 18);
 
         var currentClippingShaderState = 0;
         if (defined(clippingPlanes)) {
@@ -133,7 +141,7 @@ define([
                 fs.sources.unshift(getClippingFunction(clippingPlanes, frameState.context)); // Need to go before GlobeFS
             }
 
-            vs.defines.push(quantizationDefine, vertexLogDepthDefine);
+            vs.defines.push(quantizationDefine, vertexLogDepthDefine, positions2dDefine);
             fs.defines.push('TEXTURE_UNITS ' + numberOfDayTextures);
 
             if (applyBrightness) {

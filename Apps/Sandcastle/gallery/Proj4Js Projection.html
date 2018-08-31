@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <meta name="description" content="Demonstration of Proj4JS projections.">
+    <meta name="cesium-sandcastle-labels" content="Showcases">
+    <title>Cesium Demo</title>
+    <script type="text/javascript" src="../Sandcastle-header.js"></script>
+    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
+    <script type="text/javascript">
+        if(typeof require === "function") {
+            require.config({
+                baseUrl : '../../../Source',
+                waitSeconds : 120
+            });
+        }
+    </script>
+</head>
+<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
+<style>
+    @import url(../templates/bucket.css);
+</style>
+<div id="cesiumContainer" class="fullSize"></div>
+<div id="loadingOverlay"><h1>Loading...</h1></div>
+<div id="toolbar"></div>
+<script id="cesium_sandcastle_script">
+function startup(Cesium) {
+    'use strict';
+//Sandcastle_Begin
+var viewer = new Cesium.Viewer('cesiumContainer', {
+    sceneMode : Cesium.SceneMode.COLUMBUS_VIEW,
+    mapProjection : new Cesium.Proj4Projection('+proj=moll +lon_0=0 +x_0=0 +y_0=0 +a=6371000 +b=6371000 +units=m +no_defs')
+});
+
+var pointEntities = [];
+function addPoint(longitude, latitude) {
+    pointEntities.push(viewer.entities.add({
+        position : Cesium.Cartesian3.fromDegrees(longitude, latitude),
+        point : {
+            pixelSize : 5,
+            color : Cesium.Color.PURPLE,
+            disableDepthTestDistance : Number.POSITIVE_INFINITY
+        },
+        id : 'longitude: ' + longitude + ' latitude: ' + latitude
+    }));
+}
+
+// Add lat/long points
+for (var x = -175; x < 180; x += 10) {
+    for (var y = -85; y < 90; y += 10) {
+        addPoint(x, y);
+    }
+}
+
+Sandcastle.addToolbarButton('Show/Hide Points', function() {
+    for (var i = 0; i < pointEntities.length; i++) {
+        pointEntities[i].show = !pointEntities[i].show;
+    }
+});
+
+//Sandcastle_End
+    Sandcastle.finishedLoading();
+}
+if (typeof Cesium !== "undefined") {
+    startup(Cesium);
+} else if (typeof require === "function") {
+    require(["Cesium"], startup);
+}
+</script>
+</body>
+</html>

@@ -3,9 +3,11 @@ defineSuite([
         'Core/Cartesian3',
         'Core/Cartographic',
         'Core/Ellipsoid',
+        'Core/GeographicProjection',
         'Core/GeographicTilingScheme',
         'Core/Math',
         'Core/Rectangle',
+        'Core/SerializedMapProjection',
         'Core/TerrainData',
         'Core/TerrainMesh',
         'ThirdParty/when'
@@ -14,9 +16,11 @@ defineSuite([
         Cartesian3,
         Cartographic,
         Ellipsoid,
+        GeographicProjection,
         GeographicTilingScheme,
         CesiumMath,
         Rectangle,
+        SerializedMapProjection,
         TerrainData,
         TerrainMesh,
         when) {
@@ -154,7 +158,9 @@ defineSuite([
                 tilingScheme.tileXYToRectangle(1, 1, 1)
             ];
 
-            return when(data.createMesh(tilingScheme, 0, 0, 0, 1)).then(function() {
+            var serializedMapProjection = new SerializedMapProjection(new GeographicProjection());
+
+            return when(data.createMesh(tilingScheme, 0, 0, 0, serializedMapProjection, 1)).then(function() {
                 var swPromise = data.upsample(tilingScheme, 0, 0, 0, 0, 0, 1);
                 var sePromise = data.upsample(tilingScheme, 0, 0, 0, 1, 0, 1);
                 var nwPromise = data.upsample(tilingScheme, 0, 0, 0, 0, 1, 1);
@@ -220,6 +226,7 @@ defineSuite([
         var data;
         var tilingScheme;
         var buffer;
+        var serializedMapProjection = new SerializedMapProjection(new GeographicProjection());
 
         beforeEach(function() {
             tilingScheme = new GeographicTilingScheme();
@@ -234,25 +241,31 @@ defineSuite([
 
         it('requires tilingScheme', function() {
             expect(function() {
-                data.createMesh(undefined, 0, 0, 0);
+                data.createMesh(undefined, 0, 0, 0, serializedMapProjection);
             }).toThrowDeveloperError();
         });
 
         it('requires x', function() {
             expect(function() {
-                data.createMesh(tilingScheme, undefined, 0, 0);
+                data.createMesh(tilingScheme, undefined, 0, 0, serializedMapProjection);
             }).toThrowDeveloperError();
         });
 
         it('requires y', function() {
             expect(function() {
-                data.createMesh(tilingScheme, 0, undefined, 0);
+                data.createMesh(tilingScheme, 0, undefined, 0, serializedMapProjection);
             }).toThrowDeveloperError();
         });
 
         it('requires level', function() {
             expect(function() {
-                data.createMesh(tilingScheme, 0, 0, undefined);
+                data.createMesh(tilingScheme, 0, 0, undefined, serializedMapProjection);
+            }).toThrowDeveloperError();
+        });
+
+        it('requires serializedMapProjection', function() {
+            expect(function() {
+                data.createMesh(tilingScheme, 0, 0, 0, undefined);
             }).toThrowDeveloperError();
         });
 
@@ -260,7 +273,7 @@ defineSuite([
             var rectangle = tilingScheme.tileXYToRectangle(0, 0, 0);
 
             var wgs84 = Ellipsoid.WGS84;
-            return data.createMesh(tilingScheme, 0, 0, 0).then(function(mesh) {
+            return data.createMesh(tilingScheme, 0, 0, 0, serializedMapProjection).then(function(mesh) {
                 expect(mesh).toBeInstanceOf(TerrainMesh);
                 expect(mesh.vertices.length).toBe(17 * mesh.encoding.getStride()); // 9 regular + 8 skirt vertices
                 expect(mesh.indices.length).toBe(4 * 6 * 3); // 2 regular + 4 skirt triangles per quad
@@ -289,7 +302,7 @@ defineSuite([
         });
 
         it('exaggerates mesh', function() {
-            return data.createMesh(tilingScheme, 0, 0, 0, 2).then(function(mesh) {
+            return data.createMesh(tilingScheme, 0, 0, 0, serializedMapProjection, 2).then(function(mesh) {
                 expect(mesh).toBeInstanceOf(TerrainMesh);
                 expect(mesh.vertices.length).toBe(17 * mesh.encoding.getStride()); // 9 regular + 8 skirt vertices
                 expect(mesh.indices.length).toBe(4 * 6 * 3); // 2 regular + 4 skirt triangles per quad

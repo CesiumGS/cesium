@@ -6,7 +6,6 @@ define([
         '../Core/DeveloperError',
         '../Core/Ellipsoid',
         '../Core/FeatureDetection',
-        '../Core/GeographicProjection',
         '../Core/Geometry',
         '../Core/GeometryAttribute',
         '../Core/GeometryAttributes',
@@ -14,7 +13,7 @@ define([
         '../Core/IndexDatatype',
         '../Core/Matrix4',
         '../Core/OffsetGeometryInstanceAttribute',
-        '../Core/WebMercatorProjection'
+        '../Core/SerializedMapProjection'
     ], function(
         BoundingSphere,
         ComponentDatatype,
@@ -23,7 +22,6 @@ define([
         DeveloperError,
         Ellipsoid,
         FeatureDetection,
-        GeographicProjection,
         Geometry,
         GeometryAttribute,
         GeometryAttributes,
@@ -31,7 +29,7 @@ define([
         IndexDatatype,
         Matrix4,
         OffsetGeometryInstanceAttribute,
-        WebMercatorProjection) {
+        SerializedMapProjection) {
     'use strict';
 
     // Bail out if the browser doesn't support typed arrays, to prevent the setup function
@@ -620,13 +618,13 @@ define([
             createGeometryResults : parameters.createGeometryResults,
             packedInstances : packInstancesForCombine(parameters.instances, transferableObjects),
             ellipsoid : parameters.ellipsoid,
-            isGeographic : parameters.projection instanceof GeographicProjection,
             elementIndexUintSupported : parameters.elementIndexUintSupported,
             scene3DOnly : parameters.scene3DOnly,
             vertexCacheOptimize : parameters.vertexCacheOptimize,
             compressVertices : parameters.compressVertices,
             modelMatrix : parameters.modelMatrix,
-            createPickOffsets : parameters.createPickOffsets
+            createPickOffsets : parameters.createPickOffsets,
+            serializedMapProjection : parameters.serializedMapProjection
         };
     };
 
@@ -651,19 +649,20 @@ define([
         }
 
         var ellipsoid = Ellipsoid.clone(packedParameters.ellipsoid);
-        var projection = packedParameters.isGeographic ? new GeographicProjection(ellipsoid) : new WebMercatorProjection(ellipsoid);
 
-        return {
-            instances : instances,
-            ellipsoid : ellipsoid,
-            projection : projection,
-            elementIndexUintSupported : packedParameters.elementIndexUintSupported,
-            scene3DOnly : packedParameters.scene3DOnly,
-            vertexCacheOptimize : packedParameters.vertexCacheOptimize,
-            compressVertices : packedParameters.compressVertices,
-            modelMatrix : Matrix4.clone(packedParameters.modelMatrix),
-            createPickOffsets : packedParameters.createPickOffsets
-        };
+        return SerializedMapProjection.deserialize(packedParameters.serializedMapProjection).then(function(projection) {
+            return {
+                instances : instances,
+                ellipsoid : ellipsoid,
+                projection : projection,
+                elementIndexUintSupported : packedParameters.elementIndexUintSupported,
+                scene3DOnly : packedParameters.scene3DOnly,
+                vertexCacheOptimize : packedParameters.vertexCacheOptimize,
+                compressVertices : packedParameters.compressVertices,
+                modelMatrix : Matrix4.clone(packedParameters.modelMatrix),
+                createPickOffsets : packedParameters.createPickOffsets
+            };
+        });
     };
 
     function packBoundingSpheres(boundingSpheres) {
