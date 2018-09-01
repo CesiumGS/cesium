@@ -528,13 +528,14 @@ function listAll(s3, bucketName, prefix, files, marker) {
     });
 }
 
-gulp.task('deploy-set-version', function() {
+gulp.task('deploy-set-version', function(done) {
     var buildVersion = yargs.argv.buildVersion;
     if (buildVersion) {
         // NPM versions can only contain alphanumeric and hyphen characters
         packageJson.version += '-' + buildVersion.replace(/[^[0-9A-Za-z-]/g, '');
         fs.writeFileSync('package.json', JSON.stringify(packageJson, undefined, 2));
     }
+	done();
 });
 
 gulp.task('deploy-status', function(done) {
