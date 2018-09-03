@@ -52,7 +52,7 @@ define([
             return checkboxContainer;
         }
 
-        function addSection(headerText, sectionVisibleDataBinding, sectionVisibilityToogleClickEvent) {
+        function addSection(panel, headerText, sectionVisibleDataBinding, sectionVisibilityToogleClickEvent) {
             var section = document.createElement('div');
             section.className = 'cesium-cesiumInspector-section';
             section.setAttribute('data-bind', 'css: { "cesium-cesiumInspector-section-collapsed": !' + sectionVisibleDataBinding + ' }');
@@ -93,7 +93,7 @@ define([
         element.appendChild(panel);
 
         // General
-        var generalSection = addSection('General', 'generalVisible', 'toggleGeneral');
+        var generalSection = addSection(panel, 'General', 'generalVisible', 'toggleGeneral');
 
         var debugShowFrustums = createCheckBox('checked: frustums', 'Show Frustums');
         var frustumStatistics = document.createElement('div');
@@ -148,7 +148,7 @@ define([
         depthFrustum.appendChild(gPlusButton);
 
         // Primitives
-        var primSection = addSection('Primitives', 'primitivesVisible', 'togglePrimitives');
+        var primSection = addSection(panel, 'Primitives', 'primitivesVisible', 'togglePrimitives');
         var pickPrimRequired = document.createElement('div');
         pickPrimRequired.className = 'cesium-cesiumInspector-pickSection';
         primSection.appendChild(pickPrimRequired);
@@ -170,7 +170,7 @@ define([
         pickPrimRequired.appendChild(this._primitiveOnly);
 
         // Terrain
-        var terrainSection = addSection('Terrain', 'terrainVisible', 'toggleTerrain');
+        var terrainSection = addSection(panel, 'Terrain', 'terrainVisible', 'toggleTerrain');
         var pickTileRequired = document.createElement('div');
         pickTileRequired.className = 'cesium-cesiumInspector-pickSection';
         terrainSection.appendChild(pickTileRequired);
