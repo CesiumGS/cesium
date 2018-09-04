@@ -99,6 +99,11 @@ define([
                defined(material.doubleSided);
     }
 
+    function isSpecularGlossinessMaterial(material) {
+        return defined(material.extensions) &&
+               defined(material.extensions.KHR_materials_pbrSpecularGlossiness);
+    }
+
     function generateTechnique(gltf, material, materialIndex, generatedMaterialValues, primitiveByMaterial, options) {
         var addBatchIdToGeneratedShaders = defaultValue(options.addBatchIdToGeneratedShaders, false);
 
@@ -107,9 +112,11 @@ define([
         var shaders = techniquesWebgl.shaders;
         var programs = techniquesWebgl.programs;
 
+        var useSpecGloss = isSpecularGlossinessMaterial(material);
+
         var uniformName;
         var pbrMetallicRoughness = material.pbrMetallicRoughness;
-        if (defined(pbrMetallicRoughness)) {
+        if (defined(pbrMetallicRoughness) && !useSpecGloss) {
             for (var parameterName in pbrMetallicRoughness) {
                 if (pbrMetallicRoughness.hasOwnProperty(parameterName)) {
                     uniformName = 'u_' + parameterName;
@@ -117,6 +124,17 @@ define([
                 }
             }
         }
+
+        if (useSpecGloss) {
+            var pbrSpecularGlossiness = material.extensions.KHR_materials_pbrSpecularGlossiness;
+            for (var parameterName in pbrSpecularGlossiness) {
+                if (pbrSpecularGlossiness.hasOwnProperty(parameterName)) {
+                    uniformName = 'u_' + parameterName;
+                    generatedMaterialValues[uniformName] = pbrSpecularGlossiness[parameterName];
+                }
+            }
+        }
+
         for (var additional in material) {
             if (material.hasOwnProperty(additional) && ((additional.indexOf('Texture') >= 0) || additional.indexOf('Factor') >= 0)) {
                 uniformName = 'u_' + additional;
@@ -531,29 +549,67 @@ define([
         fragmentShader += '    vec3 baseColor = baseColorWithAlpha.rgb;\n';
 
         if (hasNormals) {
-            // Add metallic-roughness to fragment shader
-            if (defined(generatedMaterialValues.u_metallicRoughnessTexture)) {
-                fragmentShader += '    vec3 metallicRoughness = texture2D(u_metallicRoughnessTexture, ' + v_texcoord + ').rgb;\n';
-                fragmentShader += '    float metalness = clamp(metallicRoughness.b, 0.0, 1.0);\n';
-                fragmentShader += '    float roughness = clamp(metallicRoughness.g, 0.04, 1.0);\n';
-                if (defined(generatedMaterialValues.u_metallicFactor)) {
-                    fragmentShader += '    metalness *= u_metallicFactor;\n';
+            if (useSpecGloss) {
+                if (defined(generatedMaterialValues.u_specularGlossinessTexture)) {
+                    fragmentShader += '    vec4 specularGlossiness = SRGBtoLINEAR4(texture2D(u_specularGlossinessTexture, ' + v_texcoord + '));\n';
+                    fragmentShader += '    vec3 specular = specularGlossiness.rgb;\n';
+                    fragmentShader += '    float glossiness = specularGlossiness.a;\n';
+                    if (defined(generatedMaterialValues.u_specularFactor)) {
+                        fragmentShader += '    specular *= u_specularFactor;\n';
+                    }
+                    if (defined(generatedMaterialValues.u_glossinessFactor)) {
+                        fragmentShader += '    glossiness *= u_glossinessFactor;\n';
+                    }
+                } else {
+                    if (defined(generatedMaterialValues.u_specularFactor)) {
+                        fragmentShader += '    vec3 specular = clamp(u_specularFactor, vec3(0.0), vec3(1.0));\n';
+                    } else {
+                        fragmentShader += '    vec3 specular = vec3(1.0);\n';
+                    }
+                    if (defined(generatedMaterialValues.u_glossinessFactor)) {
+                        fragmentShader += '    float glossiness *= clamp(u_glossinessFactor, 0.0, 1.0);\n';
+                    } else {
+                        fragmentShader += '    float glossiness = 1.0;\n';
+                    }
                 }
-                if (defined(generatedMaterialValues.u_roughnessFactor)) {
-                    fragmentShader += '    roughness *= u_roughnessFactor;\n';
+                if (defined(generatedMaterialValues.u_diffuseTexture)) {
+                    fragmentShader += '    vec4 diffuse = SRGBtoLINEAR4(texture2D(u_diffuseTexture, ' + v_texcoord + '));\n';
+                    if (defined(generatedMaterialValues.u_diffuseFactor)) {
+                        fragmentShader += '    diffuse *= u_diffuseFactor;\n';
+                    }
+                } else {
+                    if (defined(generatedMaterialValues.u_diffuseFactor)) {
+                        fragmentShader += '    vec4 diffuse = clamp(u_diffuseFactor, vec4(0.0), vec4(1.0));\n';
+                    } else {
+                        fragmentShader += '    vec4 diffuse = vec4(1.0);\n';
+                    }
                 }
             } else {
-                if (defined(generatedMaterialValues.u_metallicFactor)) {
-                    fragmentShader += '    float metalness = clamp(u_metallicFactor, 0.0, 1.0);\n';
+                // Add metallic-roughness to fragment shader
+                if (defined(generatedMaterialValues.u_metallicRoughnessTexture)) {
+                    fragmentShader += '    vec3 metallicRoughness = texture2D(u_metallicRoughnessTexture, ' + v_texcoord + ').rgb;\n';
+                    fragmentShader += '    float metalness = clamp(metallicRoughness.b, 0.0, 1.0);\n';
+                    fragmentShader += '    float roughness = clamp(metallicRoughness.g, 0.04, 1.0);\n';
+                    if (defined(generatedMaterialValues.u_metallicFactor)) {
+                        fragmentShader += '    metalness *= u_metallicFactor;\n';
+                    }
+                    if (defined(generatedMaterialValues.u_roughnessFactor)) {
+                        fragmentShader += '    roughness *= u_roughnessFactor;\n';
+                    }
                 } else {
-                    fragmentShader += '    float metalness = 1.0;\n';
-                }
-                if (defined(generatedMaterialValues.u_roughnessFactor)) {
-                    fragmentShader += '    float roughness = clamp(u_roughnessFactor, 0.04, 1.0);\n';
-                } else {
-                    fragmentShader += '    float roughness = 1.0;\n';
+                    if (defined(generatedMaterialValues.u_metallicFactor)) {
+                        fragmentShader += '    float metalness = clamp(u_metallicFactor, 0.0, 1.0);\n';
+                    } else {
+                        fragmentShader += '    float metalness = 1.0;\n';
+                    }
+                    if (defined(generatedMaterialValues.u_roughnessFactor)) {
+                        fragmentShader += '    float roughness = clamp(u_roughnessFactor, 0.04, 1.0);\n';
+                    } else {
+                        fragmentShader += '    float roughness = 1.0;\n';
+                    }
                 }
             }
+
             fragmentShader += '    vec3 v = -normalize(v_positionEC);\n';
 
             // Generate fragment shader's lighting block
@@ -578,9 +634,17 @@ define([
             fragmentShader += '    float VdotH = clamp(dot(v, h), 0.0, 1.0);\n';
 
             fragmentShader += '    vec3 f0 = vec3(0.04);\n';
-            fragmentShader += '    float alpha = roughness * roughness;\n';
-            fragmentShader += '    vec3 diffuseColor = baseColor * (1.0 - metalness) * (1.0 - f0);\n';
-            fragmentShader += '    vec3 specularColor = mix(f0, baseColor, metalness);\n';
+            if (useSpecGloss) {
+                fragmentShader += '    float alpha = pow((1.0 - glossiness), 2.0);\n';
+                fragmentShader += '    vec3 diffuseColor = diffuse.rgb * (1.0 - max(max(specular.r, specular.g), specular.b));\n';
+                fragmentShader += '    vec3 specularColor = specular;\n';
+                fragmentShader += '    float roughness = 1.0 - glossiness;\n';
+            } else {
+                fragmentShader += '    float alpha = roughness * roughness;\n';
+                fragmentShader += '    vec3 diffuseColor = baseColor * (1.0 - metalness) * (1.0 - f0);\n';
+                fragmentShader += '    vec3 specularColor = mix(f0, baseColor, metalness);\n';
+            }
+
             fragmentShader += '    float reflectance = max(max(specularColor.r, specularColor.g), specularColor.b);\n';
             fragmentShader += '    vec3 r90 = vec3(clamp(reflectance * 25.0, 0.0, 1.0));\n';
             fragmentShader += '    vec3 r0 = specularColor.rgb;\n';
@@ -716,6 +780,17 @@ define([
                 return WebGLConstants.SAMPLER_2D;
             case 'u_emissiveFactor':
                 return WebGLConstants.FLOAT_VEC3;
+            // Specular Glossiness Types
+            case 'u_diffuseFactor':
+                return WebGLConstants.FLOAT_VEC4;
+            case 'u_specularFactor':
+                return WebGLConstants.FLOAT_VEC3;
+            case 'u_glossinessFactor':
+                return WebGLConstants.FLOAT;
+            case 'u_diffuseTexture':
+                return WebGLConstants.SAMPLER_2D;
+            case 'u_specularGlossinessTexture':
+                return WebGLConstants.SAMPLER_2D;
         }
     }
 
