@@ -739,6 +739,7 @@ define([
 
                 // Refresh style for expired content
                 that._selectedFrame = 0;
+                that.lastStyleTime = 0;
 
                 that._contentState = Cesium3DTileContentState.READY;
                 that._contentReadyPromise.resolve(content);
