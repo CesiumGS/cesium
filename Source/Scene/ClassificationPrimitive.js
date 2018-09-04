@@ -802,7 +802,8 @@ define([
             if (!defined(command)) {
                 command = pickCommands[j] = new DrawCommand({
                     owner : classificationPrimitive,
-                    primitiveType : primitive._primitiveType
+                    primitiveType : primitive._primitiveType,
+                    pickOnly : true
                 });
             }
 
@@ -820,7 +821,8 @@ define([
             if (!defined(command)) {
                 command = pickCommands[j + 1] = new DrawCommand({
                     owner : classificationPrimitive,
-                    primitiveType : primitive._primitiveType
+                    primitiveType : primitive._primitiveType,
+                    pickOnly : true
                 });
             }
 
@@ -838,7 +840,8 @@ define([
             if (!defined(command)) {
                 command = pickCommands[j + 2] = new DrawCommand({
                     owner : classificationPrimitive,
-                    primitiveType : primitive._primitiveType
+                    primitiveType : primitive._primitiveType,
+                    pickOnly : true
                 });
             }
 

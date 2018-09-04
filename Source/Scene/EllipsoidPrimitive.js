@@ -209,7 +209,8 @@ define([
             owner : defaultValue(options._owner, this)
         });
         this._pickCommand = new DrawCommand({
-            owner : defaultValue(options._owner, this)
+            owner : defaultValue(options._owner, this),
+            pickOnly : true
         });
 
         var that = this;

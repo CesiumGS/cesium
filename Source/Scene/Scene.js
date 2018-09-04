@@ -1518,11 +1518,9 @@ define([
                 }
             }
 
-            if (frameState.passes.pick && !defined(command.pickId)) {
-                return;
+            if (!command.pickOnly) {
+                derivedCommands.depth = DerivedCommand.createDepthOnlyDerivedCommand(this, command, context, derivedCommands.depth);
             }
-
-            derivedCommands.depth = DerivedCommand.createDepthOnlyDerivedCommand(this, command, context, derivedCommands.depth);
         }
     };
 
