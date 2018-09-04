@@ -1120,6 +1120,16 @@ function createGalleryList() {
         console.log('Failed to retrieve list of new Sandcastle demos from Git.');
     }
 
+    if (noDevelopmentGallery) {
+        // Remove demos with development in their path
+        var length = newDemos.length;
+        for (var i = length; i--; i >= 0) {
+            if (newDemos[i].indexOf('development') > -1) {
+                newDemos.splice(i, 1);
+            }
+        }
+    }
+
     var helloWorld;
     globby.sync(fileList).forEach(function(file) {
         var demo = filePathToModuleId(path.relative('Apps/Sandcastle/gallery', file));
