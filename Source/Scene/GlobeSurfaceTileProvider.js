@@ -1161,7 +1161,7 @@ define([
                     rtc.y = (tileRectangle.z + tileRectangle.x) * 0.5;
                     rtc.z = (tileRectangle.w + tileRectangle.y) * 0.5;
                 } else {
-                    rtc.x = 0.0;
+                    rtc.x = surfaceTile.center2D.z;
                     rtc.y = surfaceTile.center2D.x;
                     rtc.z = surfaceTile.center2D.y;
                 }

@@ -67,7 +67,7 @@ define([
     var maximumScratch = new Cartesian3();
 
     var cartographicScratch = new Cartographic();
-    var relativeToCenter2dScratch = new Cartesian2();
+    var relativeToCenter2dScratch = new Cartesian3();
     var projectedCartesian3Scratch = new Cartesian3();
 
     /**
@@ -214,13 +214,10 @@ define([
         if (nonEquatorialCylindricalProjection) {
             if (hasRelativeToCenter) {
                 var cartographicRTC = ellipsoid.cartesianToCartographic(relativeToCenter, cartographicScratch);
-                cartographicRTC.height = 0.0;
                 var projectedRTC = mapProjection.project(cartographicRTC, projectedCartesian3Scratch);
-                relativeToCenter2D = relativeToCenter2dScratch;
-                relativeToCenter2D.x = projectedRTC.x;
-                relativeToCenter2D.y = projectedRTC.y;
+                relativeToCenter2D = Cartesian3.clone(projectedRTC, relativeToCenter2dScratch);
             } else {
-                relativeToCenter2D = Cartesian2.clone(Cartesian2.ZERO, relativeToCenter2dScratch);
+                relativeToCenter2D = Cartesian3.clone(Cartesian3.ZERO, relativeToCenter2dScratch);
             }
         }
 
@@ -420,9 +417,7 @@ define([
                     cartographic.height = 0.0;
                     cartographic.longitude = longitude;
                     cartographic.latitude = latitude;
-                    var projectedPosition = mapProjection.project(cartographic, projectedCartesian3Scratch);
-                    var position2D = new Cartesian2(projectedPosition.x, projectedPosition.y);
-                    positions2D[index] = position2D;
+                    positions2D[index] = mapProjection.project(cartographic);
                 }
 
                 if (includeWebMercatorT) {

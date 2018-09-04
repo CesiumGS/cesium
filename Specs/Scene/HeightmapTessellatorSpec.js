@@ -367,7 +367,7 @@ defineSuite([
 
                 var expectedVertexPosition2d = projection.project(new Cartographic(longitude, latitude));
 
-                var index = (j * width + i) * 8 + 6;
+                var index = (j * width + i) * 9 + 6;
                 var vertexPosition2d = new Cartesian3(vertices[index], vertices[index + 1], 0.0);
 
                 expect(Cartesian3.equalsEpsilon(vertexPosition2d, expectedVertexPosition2d, CesiumMath.EPSILON7)).toBe(true);
@@ -411,7 +411,7 @@ defineSuite([
 
                 var expectedVertexPosition2d = projection.project(new Cartographic(longitude, latitude));
 
-                var index = (j * width + i) * 8 + 6;
+                var index = (j * width + i) * 9 + 6;
                 var vertexPosition2d = new Cartesian3(vertices[index], vertices[index + 1], 0.0);
                 vertexPosition2d.x += center2D.x;
                 vertexPosition2d.y += center2D.y;

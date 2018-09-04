@@ -41,7 +41,7 @@ define([
      * @param {Matrix4} fromENU The east-north-up to fixed frame matrix at the center of the terrain mesh.
      * @param {Boolean} hasVertexNormals If the mesh has vertex normals.
      * @param {Boolean} [hasWebMercatorT=false] true if the terrain data includes a Web Mercator texture coordinate; otherwise, false.
-     * @param {Cartesian2} [center2D] Center in the projected space.
+     * @param {Cartesian3} [center2D] Center in the projected space.
      *
      * @private
      */
@@ -146,10 +146,10 @@ define([
         this.hasWebMercatorT = defaultValue(hasWebMercatorT, false);
 
         /**
-         * Center of the 2D projected space. If defined, it is assumed that the projection requires 2D vertex attributes.
-         * @type {Cartesian2}
+         * Center of the 2.5D projected space. If defined, it is assumed that the projection requires 2D vertex attributes.
+         * @type {Cartesian3}
          */
-        this.center2D = Cartesian2.clone(center2D);
+        this.center2D = Cartesian3.clone(center2D);
 
         /**
          * The terrain mesh should contain projected positions for 2D space.
@@ -211,9 +211,10 @@ define([
 
         // Don't quantize 2D positions in custom projections
         if (this.has2dPositions) {
-            Cartesian2.subtract(position2D, this.center2D, cartesian2Scratch);
-            vertexBuffer[bufferIndex++] = cartesian2Scratch.x;
-            vertexBuffer[bufferIndex++] = cartesian2Scratch.y;
+            Cartesian3.subtract(position2D, this.center2D, cartesian3Scratch);
+            vertexBuffer[bufferIndex++] = cartesian3Scratch.x;
+            vertexBuffer[bufferIndex++] = cartesian3Scratch.y;
+            vertexBuffer[bufferIndex++] = cartesian3Scratch.z;
         }
 
         return bufferIndex;
@@ -299,7 +300,7 @@ define([
         }
 
         if (this.has2dPositions) {
-            vertexStride += 2;
+            vertexStride += 3;
         }
 
         return vertexStride;
@@ -329,7 +330,7 @@ define([
         var sizeInBytes = ComponentDatatype.getSizeInBytes(datatype);
         var stride;
         var terrainAttributes;
-        var num2DComponents = this.has2dPositions ? 2 : 0;
+        var num2DComponents = this.has2dPositions ? 3 : 0;
 
         if (this.quantization === TerrainQuantization.NONE) {
             var position3DAndHeightLength = 4;
@@ -469,7 +470,7 @@ define([
         result.hasVertexNormals = encoding.hasVertexNormals;
         result.hasWebMercatorT = encoding.hasWebMercatorT;
         result.has2dPositions = encoding.has2dPositions;
-        result.center2D = Cartesian2.clone(encoding.center2D);
+        result.center2D = Cartesian3.clone(encoding.center2D);
         return result;
     };
 

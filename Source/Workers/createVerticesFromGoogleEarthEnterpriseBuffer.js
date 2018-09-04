@@ -94,7 +94,7 @@ define([
     var maximumScratch = new Cartesian3();
     var matrix4Scratch = new Matrix4();
     var projectedCartesian3Scratch = new Cartesian3();
-    var relativeToCenter2dScratch = new Cartesian2();
+    var relativeToCenter2dScratch = new Cartesian3();
     function processBuffer(buffer, relativeToCenter, ellipsoid, rectangle, nativeRectangle, exaggeration, skirtHeight, includeWebMercatorT, negativeAltitudeExponentBias, negativeElevationThreshold, mapProjection) {
         var geographicWest;
         var geographicSouth;
@@ -130,11 +130,7 @@ define([
         var relativeToCenter2D;
         if (hasCustomProjection) {
             var cartographicRTC = ellipsoid.cartesianToCartographic(relativeToCenter, scratchCartographic);
-            cartographicRTC.height = 0.0;
-            var projectedRTC = mapProjection.project(cartographicRTC, projectedCartesian3Scratch);
-            relativeToCenter2D = relativeToCenter2dScratch;
-            relativeToCenter2D.x = projectedRTC.x;
-            relativeToCenter2D.y = projectedRTC.y;
+            relativeToCenter2D = mapProjection.project(cartographicRTC, relativeToCenter2dScratch);
         }
 
         var southMercatorY;
@@ -313,8 +309,7 @@ define([
                 positions[pointOffset] = pos;
 
                 if (hasCustomProjection) {
-                    var pos2D = mapProjection.project(scratchCartographic, projectedCartesian3Scratch);
-                    positions2D[pointOffset] = new Cartesian2(pos2D.x, pos2D.y);
+                    positions2D[pointOffset] = mapProjection.project(scratchCartographic);
                 }
 
                 if (includeWebMercatorT) {

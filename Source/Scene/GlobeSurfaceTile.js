@@ -87,7 +87,7 @@ define([
         /**
          * Only for use with custom projections.
          */
-        this.center2D = new Cartesian2();
+        this.center2D = new Cartesian3();
     }
 
     defineProperties(GlobeSurfaceTile.prototype, {

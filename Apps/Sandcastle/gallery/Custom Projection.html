@@ -32,13 +32,15 @@ function startup(Cesium) {
 
 var projectionText =
     'function projectionFactory(callback) {\n' +
-    '     function project(longitude, latitude, result) {\n' +
+    '     function project(longitude, latitude, height, result) {\n' +
     '          result[0] = longitude * 6378137.0;\n' +
     '          result[1] = latitude * 2.0 * 6378137.0;\n' +
+    '          result[2] = height + Math.abs(longitude * longitude * 1000000.0);\n' +
     '     }\n' +
-    '     function unproject(x, y, result) {\n' +
+    '     function unproject(x, y, z, result) {\n' +
     '          result[0] = x / 6378137.0;\n' +
     '          result[1] = y / (2.0 * 6378137.0);\n' +
+    '          result[2] = z - Math.abs(result[0] * result[0] * 1000000.0);\n' +
     '     }\n' +
     '     callback(project, unproject);\n' +
     ' }\n';

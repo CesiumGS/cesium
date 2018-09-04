@@ -7,9 +7,9 @@ attribute vec4 textureCoordAndEncodedNormals;
 #endif
 
 #ifdef POSITIONS_2D
-attribute vec2 position2D;
+attribute vec3 position2D;
 
-uniform vec2 u_center2D;
+uniform vec3 u_center2D;
 #endif
 
 uniform vec3 u_center3D;
@@ -79,7 +79,7 @@ float get2DGeographicYPositionFraction(vec2 textureCoordinates)
 vec4 getPositionPlanarEarth(vec3 position, float height, vec2 textureCoordinates)
 {
 #ifdef POSITIONS_2D
-    return u_modifiedModelViewProjection * vec4(height, position2D, 1.0);
+    return u_modifiedModelViewProjection * vec4(position2D.zxy, 1.0);
 #else
     float yPositionFraction = get2DYPositionFraction(textureCoordinates);
     vec4 rtcPosition2D = vec4(height, mix(u_tileRectangle.st, u_tileRectangle.pq, vec2(textureCoordinates.x, yPositionFraction)), 1.0);
@@ -105,7 +105,7 @@ vec4 getPositionMorphingMode(vec3 position, float height, vec2 textureCoordinate
     float yPositionFraction = get2DYPositionFraction(textureCoordinates);
 
 #ifdef POSITIONS_2D
-    vec4 position2DWC = vec4(height, position2D + u_center2D, 1.0);
+    vec4 position2DWC = vec4(position2D.zxy + u_center2D.zxy, 1.0);
 #else
     vec4 position2DWC = vec4(height, mix(u_tileRectangle.st, u_tileRectangle.pq, vec2(textureCoordinates.x, yPositionFraction)), 1.0);
 #endif

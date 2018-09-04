@@ -46,7 +46,7 @@ define([
         this._project = undefined;
         this._unproject = undefined;
 
-        this._resultArray = [0.0, 0.0];
+        this._resultArray = [0.0, 0.0, 0.0];
 
         this._functionName = functionName;
 
@@ -158,11 +158,11 @@ define([
         }
 
         var resultArray = this._resultArray;
-        this._project(cartographic.longitude, cartographic.latitude, resultArray);
+        this._project(cartographic.longitude, cartographic.latitude, cartographic.height, resultArray);
 
         result.x = resultArray[0];
         result.y = resultArray[1];
-        result.z = cartographic.height;
+        result.z = resultArray[2];
         return result;
     };
 
@@ -190,11 +190,11 @@ define([
         }
 
         var resultArray = this._resultArray;
-        this._unproject(cartesian.x, cartesian.y, resultArray);
+        this._unproject(cartesian.x, cartesian.y, cartesian.z, resultArray);
 
         result.longitude = resultArray[0];
         result.latitude = resultArray[1];
-        result.height = cartesian.z;
+        result.height = resultArray[2];
 
         return result;
     };
@@ -227,14 +227,16 @@ define([
      * @param {Function} callback A callback that takes <code>CustomProjection~project</code> and <code>CustomProjection~unproject</code> functions as arguments.
      * @example
      * function simpleProjection(callback) {
-     *     function project(longitude, latitude, result) {
+     *     function project(longitude, latitude, height, result) {
      *          result[0] = longitude * 6378137.0;
      *          result[1] = latitude * 6378137.0;
+     *          result[2] = height;
      *     }
      *
-     *     function unproject(x, y, result) {
+     *     function unproject(x, y, z, result) {
      *          result[0] = x / 6378137.0;
      *          result[1] = y / 6378137.0;
+     *          result[2] = z;
      *     }
      *
      *     callback(project, unproject);
@@ -242,30 +244,34 @@ define([
      */
 
     /**
-     * A function that projects longitude and latitude in radians to x/y coordinates in 2D space.
+     * A function that projects longitude and latitude in radians to x/y/z coordinates in 2.5D space.
      * @callback CustomProjection~project
      *
      * @param {Number} longitude The longitude in radians to be projected.
      * @param {Number} latitude The latitude in radians to be projected.
-     * @param {Number[]} result An array into which projected x and y coordinates should be placed, [x, y]
+     * @param {Number} height The height in meters to be projected.
+     * @param {Number[]} result An array into which projected x, y, and z coordinates should be placed, [x, y, z]
      * @example
-     * function project(longitude, latitude, result) {
+     * function project(longitude, latitude, height, result) {
      *      result[0] = longitude * 6378137.0;
      *      result[1] = latitude * 6378137.0;
+     *      result[2] = height;
      * }
      */
 
     /**
-     * A function that unprojects x and y coordinates in 2D space to longitude and latitude in radians.
+     * A function that unprojects x and y coordinates in 2.5D space to longitude and latitude in radians and height in meters.
      * @callback CustomProjection~unproject
      *
-     * @param {Number} x A x coordinate in 2D space.
-     * @param {Number} y A y coordinate in 2D space.
-     * @param {Number[]} result An array into which unprojected longitude and latitude coordinates should be placed, [longitude, latitude]
+     * @param {Number} x A x coordinate in 2.5D space.
+     * @param {Number} y A y coordinate in 2.5D space.
+     * @param {Number} z A z coordinate in 2.5D space.
+     * @param {Number[]} result An array into which unprojected longitude, latitude, and height coordinates should be placed, [longitude, latitude, height]
      * @example
-     * function unproject(x, y, result) {
+     * function unproject(x, y, z, result) {
      *      result[0] = x / 6378137.0;
      *      result[1] = y / 6378137.0;
+     *      result[2] = z;
      * }
      */
 

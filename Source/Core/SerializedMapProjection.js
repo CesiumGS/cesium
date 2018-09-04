@@ -36,6 +36,7 @@ define([
         this.isMercator = mapProjection instanceof WebMercatorProjection;
         this.isGeographic = mapProjection instanceof GeographicProjection;
         this.wellKnownText = mapProjection.wellKnownText;
+        this.heightScale = mapProjection.heightScale;
         this.url = mapProjection.url;
         this.functionName = mapProjection.functionName;
 
@@ -68,7 +69,7 @@ define([
             projection = new GeographicProjection(ellipsoid);
         }
         if (defined(serializedMapProjection.wellKnownText)) {
-            projection = new Proj4Projection(serializedMapProjection.wellKnownText);
+            projection = new Proj4Projection(serializedMapProjection.wellKnownText, serializedMapProjection.heightScale);
         }
         if (defined(projection)) {
             return when.resolve(projection);

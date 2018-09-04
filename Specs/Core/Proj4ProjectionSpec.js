@@ -98,6 +98,25 @@ defineSuite([
         expect(result).toEqualEpsilon(cartographic, CesiumMath.EPSILON14);
     });
 
+    it('scales height', function() {
+        var ellipsoid = Ellipsoid.WGS84;
+        var cartographic = new Cartographic(Math.PI, CesiumMath.PI_OVER_FOUR, 1.0);
+
+        // expected equations from Wolfram MathWorld:
+        // http://mathworld.wolfram.com/MercatorProjection.html
+        var expected = new Cartesian3(
+                ellipsoid.maximumRadius * cartographic.longitude,
+                ellipsoid.maximumRadius * Math.log(Math.tan(Math.PI / 4.0 + cartographic.latitude / 2.0)),
+                0.5);
+
+        var projection = new Proj4Projection('EPSG:3857', 0.5);
+        var returnValue = projection.project(cartographic);
+        expect(returnValue).toEqualEpsilon(expected, CesiumMath.EPSILON8);
+
+        var unprojected = projection.unproject(returnValue);
+        expect(unprojected).toEqualEpsilon(cartographic, CesiumMath.EPSILON8);
+    });
+
     it('project throws without cartesian', function() {
         var projection = new Proj4Projection();
         expect(function() {

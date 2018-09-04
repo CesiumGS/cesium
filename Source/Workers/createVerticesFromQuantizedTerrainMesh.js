@@ -54,7 +54,7 @@ define([
     var scratchFromENU = new Matrix4();
     var projectedCartesian3Scratch = new Cartesian3();
     var projectedCartographicScratch = new Cartographic();
-    var relativeToCenter2dScratch = new Cartesian2();
+    var relativeToCenter2dScratch = new Cartesian3();
     function implementation(parameters, transferableObjects, mapProjection) {
         var quantizedVertices = parameters.quantizedVertices;
         var quantizedVertexCount = quantizedVertices.length / 3;
@@ -105,11 +105,7 @@ define([
         var relativeToCenter2D;
         if (hasCustomProjection) {
             var cartographicRTC = ellipsoid.cartesianToCartographic(center, projectedCartographicScratch);
-            cartographicRTC.height = 0.0;
-            var projectedRTC = mapProjection.project(cartographicRTC, projectedCartesian3Scratch);
-            relativeToCenter2D = relativeToCenter2dScratch;
-            relativeToCenter2D.x = projectedRTC.x;
-            relativeToCenter2D.y = projectedRTC.y;
+            relativeToCenter2D = mapProjection.project(cartographicRTC, relativeToCenter2dScratch);
         }
 
         var minimum = scratchMinimum;
@@ -147,12 +143,7 @@ define([
             heights[i] = height;
             positions[i] = position;
             if (hasCustomProjection) {
-                var heightlessCartographic = projectedCartographicScratch;
-                heightlessCartographic.longitude = cartographicScratch.longitude;
-                heightlessCartographic.latitude = cartographicScratch.latitude;
-                heightlessCartographic.height = 0.0;
-                var projectedPosition = mapProjection.project(heightlessCartographic, projectedCartesian3Scratch);
-                positions2D[i] = new Cartesian2(projectedPosition.x, projectedPosition.y);
+                positions2D[i] = mapProjection.project(cartographicScratch);
             }
 
             if (includeWebMercatorT) {

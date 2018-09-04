@@ -1,12 +1,14 @@
 function projectionFactory(callback) {
-    function project(longitude, latitude, result) {
+    function project(longitude, latitude, height, result) {
             result[0] = longitude * 6378137.0;
             result[1] = latitude * 6378137.0;
+            result[2] = height;
     }
 
-    function unproject(x, y, result) {
+    function unproject(x, y, z, result) {
             result[0] = x / 6378137.0;
             result[1] = y / 6378137.0;
+            result[2] = z;
     }
     callback(project, unproject);
 }

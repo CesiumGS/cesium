@@ -231,14 +231,14 @@ defineSuite([
     });
 
     it('encodes with 2D positions', function() {
-        var center2D = new Cartesian2(center.x, center.y);
+        var center2D = new Cartesian3(center.x, center.y, 0.0);
         var encoding = new TerrainEncoding(aabox, minimumHeight, maximumHeight, fromENU, false, false, center2D);
 
         var buffer = [];
         var height = (maximumHeight + minimumHeight) * 0.5;
         encoding.encode(buffer, 0, center, Cartesian2.ZERO, height, Cartesian3.UNIT_X, 0.0, center2D);
 
-        expect(encoding.getStride()).toEqual(5);
+        expect(encoding.getStride()).toEqual(6);
         expect(buffer.length).toEqual(encoding.getStride());
 
         expect(buffer[3]).toEqual(0.0);
@@ -306,7 +306,7 @@ defineSuite([
     it('gets attributes with 2D positions', function() {
         // without quantization
         var center = Cartesian3.fromDegrees(0.0, 0.0);
-        var center2D = new Cartesian2(center.x, center.y);
+        var center2D = new Cartesian3(center.x, center.y, 0.0);
         var maximum = new Cartesian3(1.0e6, 1.0e6, 1.0e6);
         var minimum = Cartesian3.negate(maximum, new Cartesian3());
         var aabox = new AxisAlignedBoundingBox(minimum, maximum, center);
@@ -368,7 +368,7 @@ defineSuite([
 
     it('gets attribute locations with 2D positions', function() {
         var center = Cartesian3.fromDegrees(0.0, 0.0);
-        var center2D = new Cartesian2(center.x, center.y);
+        var center2D = new Cartesian3(center.x, center.y);
 
         var maximum = new Cartesian3(1.0e6, 1.0e6, 1.0e6);
         var minimum = Cartesian3.negate(maximum, new Cartesian3());

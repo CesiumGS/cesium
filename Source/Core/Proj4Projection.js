@@ -31,8 +31,9 @@ define([
      * @constructor
      *
      * @param {String} [wellKnownText] proj4js well known text specifying the projection. Defaults to EPSG:3857, web mercator.
+     * @param {Number} [heightScale=1.0] Scale to convert from heights in meters to the projection's units.
      */
-    function Proj4Projection(wellKnownText) {
+    function Proj4Projection(wellKnownText, heightScale) {
         this.ellipsoid = Ellipsoid.WGS84;
 
         var wkt = defaultValue(wellKnownText, 'EPSG:3857'); // web mercator
@@ -40,6 +41,10 @@ define([
         this._projection = proj4(wkt);
         this._forwardFailed = false;
         this._inverseFailed = false;
+
+        heightScale = defaultValue(heightScale, 1.0);
+        this._heightScale = heightScale;
+        this._inverseHeightScale = 1.0 / heightScale;
     }
 
     defineProperties(Proj4Projection.prototype, {
@@ -52,6 +57,14 @@ define([
         wellKnownText: {
             get: function() {
                 return this._wkt;
+            }
+        },
+        /**
+         * The scale for converting from heights in meters to the projection's units.
+         */
+        heightScale: {
+            get: function() {
+                return this._heightScale;
             }
         },
         /**
@@ -110,7 +123,7 @@ define([
 
         result.x = projected[0];
         result.y = projected[1];
-        result.z = cartographic.height;
+        result.z = cartographic.height * this._heightScale;
 
         return result;
     };
@@ -151,7 +164,7 @@ define([
 
         result.longitude = CesiumMath.toRadians(projected[0]);
         result.latitude = CesiumMath.toRadians(projected[1]);
-        result.height = cartesian.z;
+        result.height = cartesian.z * this._inverseHeightScale;
 
         return result;
     };
