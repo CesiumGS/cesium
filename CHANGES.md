@@ -20,6 +20,7 @@ Change Log
 * Added `heightReference` to `BoxGraphics`, `CylinderGraphics` and `EllipsoidGraphics`, which can be used to clamp these entity types to terrain [#6932](https://github.com/AnalyticalGraphicsInc/cesium/pull/6932)
 
 ##### Fixes :wrench:
+* Fixed Firefox camera control issues with mouse and touch events. [#6372](https://github.com/AnalyticalGraphicsInc/cesium/issues/6372)
 * Several performance improvements and fixes to the 3D Tiles traversal code. [#6390](https://github.com/AnalyticalGraphicsInc/cesium/pull/6390)
     * Improved load performance when `skipLevelOfDetail` is false.
     * Fixed a bug that caused some skipped tiles to load when `skipLevelOfDetail` is true.
