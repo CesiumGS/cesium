@@ -367,7 +367,7 @@ defineSuite([
         it('update creates a float texture with no filtering or wrapping to house packed clipping planes', function() {
             var scene = createScene();
 
-            if (!ClippingPlaneCollection.useFloatTexture(scene._context)) {
+            if (!ClippingPlaneCollection.useFloatTexture(scene.context)) {
                 // Don't fail just because float textures aren't supported
                 scene.destroyForSpecs();
                 return;
@@ -402,7 +402,7 @@ defineSuite([
         it('update fills the clipping plane texture with packed planes', function() {
             var scene = createScene();
 
-            if (!ClippingPlaneCollection.useFloatTexture(scene._context)) {
+            if (!ClippingPlaneCollection.useFloatTexture(scene.context)) {
                 // Don't fail just because float textures aren't supported
                 scene.destroyForSpecs();
                 return;
@@ -444,7 +444,7 @@ defineSuite([
         it('reallocates textures when above capacity or below 1/4 capacity', function() {
             var scene = createScene();
 
-            if (!ClippingPlaneCollection.useFloatTexture(scene._context)) {
+            if (!ClippingPlaneCollection.useFloatTexture(scene.context)) {
                 // Don't fail just because float textures aren't supported
                 scene.destroyForSpecs();
                 return;
@@ -502,7 +502,7 @@ defineSuite([
         it('performs partial updates when only a single plane has changed and full texture updates otherwise', function() {
             var scene = createScene();
 
-            if (!ClippingPlaneCollection.useFloatTexture(scene._context)) {
+            if (!ClippingPlaneCollection.useFloatTexture(scene.context)) {
                 // Don't fail just because float textures aren't supported
                 scene.destroyForSpecs();
                 return;

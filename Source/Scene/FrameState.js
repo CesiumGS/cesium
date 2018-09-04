@@ -138,6 +138,7 @@ define([
              * @default false
              */
             render : false,
+
             /**
              * <code>true</code> if the primitive should update for a picking pass, <code>false</code> otherwise.
              *
