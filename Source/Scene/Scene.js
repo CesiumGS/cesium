@@ -1446,6 +1446,41 @@ define([
                ((format === 'WEBGL_compressed_texture_etc1' || format === 'etc1') && context.etc1);
     };
 
+    function updateDerivedCommands(scene, command, shadowsDirty) {
+        var frameState = scene._frameState;
+        var context = scene._context;
+        var oit = scene._view.oit;
+        var shadowsEnabled = frameState.shadowState.shadowsEnabled;
+        var shadowMaps = frameState.shadowState.shadowMaps;
+        var lightShadowMaps = frameState.shadowState.lightShadowMaps;
+        var lightShadowsEnabled = frameState.shadowState.lightShadowsEnabled;
+
+        var derivedCommands = command.derivedCommands;
+
+        if (shadowsEnabled && (command.receiveShadows || command.castShadows)) {
+            derivedCommands.shadows = ShadowMap.createDerivedCommands(shadowMaps, lightShadowMaps, command, shadowsDirty, context, derivedCommands.shadows);
+        }
+
+        if (defined(command.pickId)) {
+            derivedCommands.picking = DerivedCommand.createPickDerivedCommand(scene, command, context, derivedCommands.picking);
+        }
+
+        if (command.pass === Pass.TRANSLUCENT && defined(oit) && oit.isSupported()) {
+            if (lightShadowsEnabled && command.receiveShadows) {
+                derivedCommands.oit = defined(derivedCommands.oit) ? derivedCommands.oit : {};
+                derivedCommands.oit.shadows = oit.createDerivedCommands(derivedCommands.shadows.receiveCommand, context, derivedCommands.oit.shadows);
+            } else {
+                derivedCommands.oit = oit.createDerivedCommands(command, context, derivedCommands.oit);
+            }
+        }
+
+        if (!command.pickOnly) {
+            derivedCommands.depth = DerivedCommand.createDepthOnlyDerivedCommand(scene, command, context, derivedCommands.depth);
+        }
+
+        derivedCommands.originalCommand = command;
+    }
+
     /**
      * @private
      */
@@ -1456,12 +1491,7 @@ define([
         }
 
         var frameState = this._frameState;
-        var view = this._view;
         var context = this._context;
-        var shadowsEnabled = frameState.shadowState.shadowsEnabled;
-        var shadowMaps = frameState.shadowState.shadowMaps;
-        var lightShadowMaps = frameState.shadowState.lightShadowMaps;
-        var lightShadowsEnabled = frameState.shadowState.lightShadowsEnabled;
 
         // Update derived commands when any shadow maps become dirty
         var shadowsDirty = false;
@@ -1474,52 +1504,21 @@ define([
 
         var useLogDepth = frameState.useLogDepth;
         var derivedCommands = command.derivedCommands;
-
-        if (frameState.useLogDepthDirty && !command.dirty) {
-            var needsLogDepthDerivedCommands = useLogDepth && !defined(derivedCommands.logDepth);
-            var needsDerivedCommands = !useLogDepth && !defined(derivedCommands.depth);
-            command.dirty = needsLogDepthDerivedCommands || needsDerivedCommands;
-        }
+        var hasLogDepthDerivedCommands = defined(derivedCommands.logDepth);
+        var hasDerivedCommands = defined(derivedCommands.originalCommand);
+        var needsLogDepthDerivedCommands = useLogDepth && !hasLogDepthDerivedCommands;
+        var needsDerivedCommands = !useLogDepth && !hasDerivedCommands;
+        command.dirty = command.dirty || needsLogDepthDerivedCommands || needsDerivedCommands;
 
         if (command.dirty) {
             command.dirty = false;
 
-            var logDepthCommand;
-            var logDepthDerivedCommands;
-            if (useLogDepth) {
+            if (hasLogDepthDerivedCommands || needsLogDepthDerivedCommands) {
                 derivedCommands.logDepth = DerivedCommand.createLogDepthCommand(command, context, derivedCommands.logDepth);
-                logDepthCommand = derivedCommands.logDepth.command;
-                logDepthDerivedCommands = logDepthCommand.derivedCommands;
+                updateDerivedCommands(this, derivedCommands.logDepth.command, shadowsDirty);
             }
-
-            if (shadowsEnabled && (command.receiveShadows || command.castShadows)) {
-                derivedCommands.shadows = ShadowMap.createDerivedCommands(shadowMaps, lightShadowMaps, command, shadowsDirty, context, derivedCommands.shadows);
-                if (useLogDepth) {
-                    logDepthDerivedCommands.shadows = ShadowMap.createDerivedCommands(shadowMaps, lightShadowMaps, logDepthCommand, shadowsDirty, context, logDepthDerivedCommands.shadows);
-                }
-            }
-
-            if (useLogDepth) {
-                command = logDepthCommand;
-                derivedCommands = logDepthDerivedCommands;
-            }
-
-            if (defined(command.pickId)) {
-                derivedCommands.picking = DerivedCommand.createPickDerivedCommand(this, command, context, derivedCommands.picking);
-            }
-
-            var oit = view.oit;
-            if (command.pass === Pass.TRANSLUCENT && defined(oit) && oit.isSupported()) {
-                if (lightShadowsEnabled && command.receiveShadows) {
-                    derivedCommands.oit = defined(derivedCommands.oit) ? derivedCommands.oit : {};
-                    derivedCommands.oit.shadows = oit.createDerivedCommands(derivedCommands.shadows.receiveCommand, context, derivedCommands.oit.shadows);
-                } else {
-                    derivedCommands.oit = oit.createDerivedCommands(command, context, derivedCommands.oit);
-                }
-            }
-
-            if (!command.pickOnly) {
-                derivedCommands.depth = DerivedCommand.createDepthOnlyDerivedCommand(this, command, context, derivedCommands.depth);
+            if (hasDerivedCommands || needsDerivedCommands) {
+                updateDerivedCommands(this, command, shadowsDirty);
             }
         }
     };
