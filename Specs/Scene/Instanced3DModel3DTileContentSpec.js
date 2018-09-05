@@ -183,7 +183,7 @@ defineSuite([
             var newTransform = Transforms.headingPitchRollToFixedFrame(newCenter, new HeadingPitchRoll());
 
             // Update tile transform
-            tileset._root.transform = newTransform;
+            tileset.root.transform = newTransform;
 
             // Move the camera to the new location
             setCamera(newLongitude, newLatitude);
@@ -245,7 +245,7 @@ defineSuite([
 
     it('throws when calling getFeature with invalid index', function() {
         return Cesium3DTilesTester.loadTileset(scene, withoutBatchTableUrl).then(function(tileset) {
-            var content = tileset._root.content;
+            var content = tileset.root.content;
             expect(function(){
                 content.getFeature(-1);
             }).toThrowDeveloperError();
@@ -260,7 +260,7 @@ defineSuite([
 
     it('gets memory usage', function() {
         return Cesium3DTilesTester.loadTileset(scene, texturedUrl).then(function(tileset) {
-            var content = tileset._root.content;
+            var content = tileset.root.content;
 
             // Box model - 36 ushort indices and 24 vertices per building, 8 float components (position, normal, uv) per vertex.
             // (24 * 8 * 4) + (36 * 2) = 840
@@ -295,7 +295,7 @@ defineSuite([
 
     it('Links model to tileset clipping planes based on bounding volume clipping', function() {
         return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl).then(function(tileset) {
-            var tile = tileset._root;
+            var tile = tileset.root;
             var content = tile.content;
             var model = content._modelInstanceCollection._model;
 
@@ -322,7 +322,7 @@ defineSuite([
 
     it('Links model to tileset clipping planes if tileset clipping planes are reassigned', function() {
         return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl).then(function(tileset) {
-            var tile = tileset._root;
+            var tile = tileset.root;
             var model = tile.content._modelInstanceCollection._model;
 
             expect(model.clippingPlanes).toBeUndefined();
@@ -357,7 +357,7 @@ defineSuite([
         spyOn(Model, '_getClippingFunction').and.callThrough();
 
         return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl).then(function(tileset) {
-            var tile = tileset._root;
+            var tile = tileset.root;
             var content = tile.content;
             var clippingPlaneCollection = new ClippingPlaneCollection({
                 planes : [

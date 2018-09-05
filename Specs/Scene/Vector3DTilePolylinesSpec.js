@@ -46,7 +46,7 @@ defineSuite([
         _statistics : {
             texturesByteLength : 0
         },
-        _tileset : {
+        tileset : {
             _statistics : {
                 batchTableByteLength : 0
             },

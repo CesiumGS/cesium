@@ -776,18 +776,5 @@ define([
         });
     };
 
-    /**
-     * Renaming createLensFlarStage to createLensFlareStage would lead to breaking change
-     * @deprecated
-     * @private
-     */
-    PostProcessStageLibrary.createLensFlarStage = function() {
-        deprecationWarning(
-            'PostProcessStageLibrary.createLensFlarStage',
-            'createLensFlarStage has been deprecated and will be removed in Cesium 1.49. Use createLensFlareStage instead'
-        );
-        return PostProcessStageLibrary.createLensFlareStage();
-    };
-
     return PostProcessStageLibrary;
 });
