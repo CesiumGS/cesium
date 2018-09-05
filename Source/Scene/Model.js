@@ -2103,7 +2103,7 @@ define([
                 '\n' +
                 'void main() { \n' +
                 '    non_gamma_corrected_main(); \n' +
-                '    gl_FragColor.rgb = gl_FragColor.rgb(gl_FragColor.rgb); \n' +
+                '    gl_FragColor.rgb = czm_gammaCorrect(gl_FragColor.rgb); \n' +
                 '} \n';
         }
 
