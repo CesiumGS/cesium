@@ -1450,15 +1450,13 @@ define([
         var frameState = scene._frameState;
         var context = scene._context;
         var oit = scene._view.oit;
-        var shadowsEnabled = frameState.shadowState.shadowsEnabled;
-        var shadowMaps = frameState.shadowState.shadowMaps;
         var lightShadowMaps = frameState.shadowState.lightShadowMaps;
         var lightShadowsEnabled = frameState.shadowState.lightShadowsEnabled;
 
         var derivedCommands = command.derivedCommands;
 
-        if (shadowsEnabled && (command.receiveShadows || command.castShadows)) {
-            derivedCommands.shadows = ShadowMap.createDerivedCommands(shadowMaps, lightShadowMaps, command, shadowsDirty, context, derivedCommands.shadows);
+        if (lightShadowsEnabled && command.receiveShadows) {
+            derivedCommands.shadows = ShadowMap.createReceiveDerivedCommand(lightShadowMaps, command, shadowsDirty, context, derivedCommands.shadows);
         }
 
         if (defined(command.pickId)) {
@@ -1512,6 +1510,12 @@ define([
 
         if (command.dirty) {
             command.dirty = false;
+
+            var shadowMaps = frameState.shadowState.shadowMaps;
+            var shadowsEnabled = frameState.shadowState.shadowsEnabled;
+            if (shadowsEnabled && command.castShadows) {
+                derivedCommands.shadows = ShadowMap.createCastDerivedCommand(shadowMaps, command, shadowsDirty, context, derivedCommands.shadows);
+            }
 
             if (hasLogDepthDerivedCommands || needsLogDepthDerivedCommands) {
                 derivedCommands.logDepth = DerivedCommand.createLogDepthCommand(command, context, derivedCommands.logDepth);

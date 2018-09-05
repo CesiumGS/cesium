@@ -1528,7 +1528,7 @@ define([
         return result;
     }
 
-    ShadowMap.createDerivedCommands = function(shadowMaps, lightShadowMaps, command, shadowsDirty, context, result) {
+    ShadowMap.createReceiveDerivedCommand = function(lightShadowMaps, command, shadowsDirty, context, result) {
         if (!defined(result)) {
             result = {};
         }
@@ -1542,24 +1542,6 @@ define([
         var hasTerrainNormal = false;
         if (isTerrain) {
             hasTerrainNormal = command.owner.data.pickTerrain.mesh.encoding.hasVertexNormals;
-        }
-
-        if (command.castShadows) {
-            var castCommands = result.castCommands;
-            if (!defined(castCommands)) {
-                castCommands = result.castCommands = [];
-            }
-
-            var oldShaderId = result.castShaderProgramId;
-
-            var shadowMapLength = shadowMaps.length;
-            castCommands.length = shadowMapLength;
-
-            for (var i = 0; i < shadowMapLength; ++i) {
-                castCommands[i] = createCastDerivedCommand(shadowMaps[i], shadowsDirty, command, context, oldShaderId, castCommands[i]);
-            }
-
-            result.castShaderProgramId = command.shaderProgram.id;
         }
 
         if (command.receiveShadows && lightShadowMapsEnabled) {
@@ -1601,6 +1583,32 @@ define([
             result.receiveCommand.uniformMap = receiveUniformMap;
             result.receiveShaderProgramId = command.shaderProgram.id;
             result.receiveShaderCastShadows = command.castShadows;
+        }
+
+        return result;
+    };
+
+    ShadowMap.createCastDerivedCommand = function(shadowMaps, command, shadowsDirty, context, result) {
+        if (!defined(result)) {
+            result = {};
+        }
+
+        if (command.castShadows) {
+            var castCommands = result.castCommands;
+            if (!defined(castCommands)) {
+                castCommands = result.castCommands = [];
+            }
+
+            var oldShaderId = result.castShaderProgramId;
+
+            var shadowMapLength = shadowMaps.length;
+            castCommands.length = shadowMapLength;
+
+            for (var i = 0; i < shadowMapLength; ++i) {
+                castCommands[i] = createCastDerivedCommand(shadowMaps[i], shadowsDirty, command, context, oldShaderId, castCommands[i]);
+            }
+
+            result.castShaderProgramId = command.shaderProgram.id;
         }
 
         return result;
