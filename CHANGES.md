@@ -1,6 +1,11 @@
 Change Log
 ==========
 
+### 1.50 - 2018-10-01
+
+##### Additions :tada:
+* Added support for glTF extension [KHR_materials_pbrSpecularGlossiness](https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Khronos/KHR_materials_pbrSpecularGlossiness) [#7006](https://github.com/AnalyticalGraphicsInc/cesium/pull/7006).
+
 ### 1.48 - 2018-08-01
 
 ##### Additions :tada:
