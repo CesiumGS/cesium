@@ -111,7 +111,7 @@ defineSuite([
     afterEach(function() {
         scene.backgroundColor = new Color(0.0, 0.0, 0.0, 0.0);
         scene.debugCommandFilter = undefined;
-        scene.fxaa = false;
+        scene.postProcessStages.fxaa.enabled = false;
         scene.primitives.removeAll();
         scene.morphTo3D(0.0);
 
@@ -418,7 +418,7 @@ defineSuite([
         primitives.add(rectanglePrimitive);
 
         scene.camera.setView({ destination : rectangle });
-        scene.fxaa = false;
+        scene.postProcessStages.fxaa.enabled = false;
         expect(scene).toRenderAndCall(function(rgba) {
             expect(rgba[0]).not.toEqual(0);
             expect(rgba[1]).toEqual(0);
@@ -465,7 +465,7 @@ defineSuite([
             s._oit._translucentMultipassSupport = false;
         }
 
-        s.fxaa = true;
+        s.postProcessStages.fxaa.enabled = false;
 
         var rectangle = Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0);
 

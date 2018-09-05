@@ -1406,25 +1406,6 @@ define([
         },
 
         /**
-         * When <code>true</code>, enables Fast Approximate Anti-aliasing even when order independent translucency
-         * is unsupported.
-         * @memberof Scene.prototype
-         * @type {Boolean}
-         * @default true
-         * @deprecated
-         */
-        fxaa : {
-            get : function() {
-                deprecationWarning('Scene.fxaa', 'The Scene.fxaa property has been deprecated. Use Scene.postProcessStages.fxaa.');
-                return this.postProcessStages.fxaa.enabled;
-            },
-            set : function(value) {
-                deprecationWarning('Scene.fxaa', 'The Scene.fxaa property has been deprecated. Use Scene.postProcessStages.fxaa.');
-                this.postProcessStages.fxaa.enabled = value;
-            }
-        },
-
-        /**
          * @private
          */
         opaqueFrustumNearOffset : {
@@ -3691,7 +3672,7 @@ define([
         this.sun = this.sun && this.sun.destroy();
         this._sunPostProcess = this._sunPostProcess && this._sunPostProcess.destroy();
         this._depthPlane = this._depthPlane && this._depthPlane.destroy();
-        this._transitioner.destroy();
+        this._transitioner = this._transitioner && this._transitioner.destroy();
         this._debugFrustumPlanes = this._debugFrustumPlanes && this._debugFrustumPlanes.destroy();
         this._brdfLutGenerator = this._brdfLutGenerator && this._brdfLutGenerator.destroy();
 
@@ -3705,7 +3686,8 @@ define([
         this.postProcessStages = this.postProcessStages && this.postProcessStages.destroy();
 
         this._context = this._context && this._context.destroy();
-        this._frameState.creditDisplay.destroy();
+        this._frameState.creditDisplay = this._frameState.creditDisplay && this._frameState.creditDisplay.destroy();
+
         if (defined(this._performanceDisplay)){
             this._performanceDisplay = this._performanceDisplay && this._performanceDisplay.destroy();
             this._performanceContainer.parentNode.removeChild(this._performanceContainer);

@@ -285,6 +285,7 @@ define([
 
             var completeMorph = function() {
                 transitioner._morphCancelled = true;
+                transitioner._scene.camera.cancelFlight();
                 completeMorphFunction(transitioner);
             };
             transitioner._completeMorph = completeMorph;
