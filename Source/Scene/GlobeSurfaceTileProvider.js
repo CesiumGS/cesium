@@ -53,7 +53,8 @@ define([
         './ImageryLayer',
         './QuadtreeTileLoadState',
         './SceneMode',
-        './ShadowMode'
+        './ShadowMode',
+        './TerrainFillMesh'
     ], function(
         AttributeCompression,
         BoundingSphere,
@@ -109,7 +110,8 @@ define([
         ImageryLayer,
         QuadtreeTileLoadState,
         SceneMode,
-        ShadowMode) {
+        ShadowMode,
+        TerrainFillMesh) {
     'use strict';
 
     /**
@@ -224,6 +226,9 @@ define([
          * @private
          */
         this._clippingPlanes = undefined;
+
+        this._hasLoadedTilesThisFrame = false;
+        this._hasFillTilesThisFrame = false;
     }
 
     defineProperties(GlobeSurfaceTileProvider.prototype, {
@@ -468,6 +473,9 @@ define([
             clippingPlanes.update(frameState);
         }
         this._usedDrawCommands = 0;
+
+        this._hasLoadedTilesThisFrame = false;
+        this._hasFillTilesThisFrame = false;
     };
 
     /**
@@ -498,6 +506,12 @@ define([
                 },
                 blending : BlendingState.ALPHA_BLEND
             });
+        }
+
+        // If this frame has a mix of loaded and fill tiles, we need to propagate
+        // loaded heights to the fill tiles.
+        if (this._hasFillTilesThisFrame && this._hasLoadedTilesThisFrame) {
+            TerrainFillMesh.updateFillTiles(this, this._quadtree._tilesToRender, frameState);
         }
 
         // Add the tile render commands to the command list, sorted by texture count.
@@ -723,6 +737,8 @@ define([
 
         var surfaceTile = tile.data;
         if (nearestRenderableTile !== undefined && nearestRenderableTile !== tile) {
+            this._hasFillTilesThisFrame = true;
+
             surfaceTile.renderableTile = nearestRenderableTile;
 
             // The renderable tile may have previously deferred to an ancestor.
@@ -738,6 +754,7 @@ define([
             ancestorSubset.z = (myRectangle.east - ancestorRectangle.west) / (ancestorRectangle.east - ancestorRectangle.west);
             ancestorSubset.w = (myRectangle.north - ancestorRectangle.south) / (ancestorRectangle.north - ancestorRectangle.south);
         } else {
+            this._hasLoadedTilesThisFrame = true;
             surfaceTile.renderableTile = undefined;
         }
 
@@ -1270,9 +1287,9 @@ define([
         if (surfaceTile.vertexArray !== undefined) {
             mesh = surfaceTile.mesh;
             vertexArray = surfaceTile.vertexArray;
-        } else if (surfaceTile.fillVertexArray !== undefined) {
-            mesh = surfaceTile.fillMesh;
-            vertexArray = surfaceTile.fillVertexArray;
+        } else if (surfaceTile.fill !== undefined && surfaceTile.fill.vertexArray !== undefined) {
+            mesh = surfaceTile.fill.mesh;
+            vertexArray = surfaceTile.fill.vertexArray;
         }
 
         if (!defined(mesh) || !defined(vertexArray)) {
@@ -1843,7 +1860,37 @@ define([
                 addDrawCommandsForTile(tileProvider, surfaceTile.renderableTile, frameState, surfaceTile.renderableTileSubset);
                 return;
             } else if (missingTileStrategy === MissingTileStrategy.CREATE_FILL_TILE) {
-                createFillTile(tileProvider, tile, frameState);
+                // if (surfaceTile.fillMesh === undefined) {
+                //     if (tile.renderable) {
+                //         console.log(`Frame ${frameState.frameNumber} L${tile.level}X${tile.x}Y${tile.y} renderable`);
+                //     } else {
+                //         console.log(`Frame ${frameState.frameNumber} L${tile.level}X${tile.x}Y${tile.y} no mesh`);
+                //     }
+
+                //     for (var i = 0; i < tileProvider._quadtree._tilesToRender.length; ++i) {
+                //         var foo = tileProvider._quadtree._tilesToRender[i];
+                //         if (foo.data && foo.data.fillMesh) {
+                //             foo.data.fillMesh.visitedFrame = undefined;
+                //         }
+                //     }
+
+                //     TerrainFillMesh.updateFillTiles(tileProvider, tileProvider._quadtree._tilesToRender, frameState);
+                // } else if (surfaceTile.fillMesh.changedThisFrame) {
+                //     console.log(`Frame ${frameState.frameNumber} L${tile.level}X${tile.x}Y${tile.y} changed`);
+                // }
+                if (surfaceTile.fill == undefined) {
+                    // No fill was created for this tile, probably because this tile is not connected to
+                    // any renderable tiles. So create a simple tile in the middle of the tile's possible
+                    // height range.
+                    surfaceTile.fill = new TerrainFillMesh();
+                    surfaceTile.fill.tile = tile;
+                    return; // TODO
+                }
+                surfaceTile.fill.update(tileProvider, frameState);
+                //return;
+                //createFillTile(tileProvider, tile, frameState);
+            } else {
+                return;
             }
         }
 
@@ -1882,7 +1929,7 @@ define([
             --maxTextures;
         }
 
-        var mesh = surfaceTile.vertexArray ? surfaceTile.mesh : surfaceTile.fillMesh;
+        var mesh = surfaceTile.vertexArray ? surfaceTile.mesh : surfaceTile.fill.mesh;
         var rtc = mesh.center;
         var encoding = mesh.encoding;
 
@@ -2127,7 +2174,7 @@ define([
             command.receiveShadows = receiveShadows;
             command.renderState = renderState;
             command.primitiveType = PrimitiveType.TRIANGLES;
-            command.vertexArray = surfaceTile.vertexArray || surfaceTile.fillVertexArray;
+            command.vertexArray = surfaceTile.vertexArray || surfaceTile.fill.vertexArray;
             command.uniformMap = uniformMap;
             command.pass = Pass.GLOBE;
 

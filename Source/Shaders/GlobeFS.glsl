@@ -252,7 +252,7 @@ void main()
 
     if (u_isFill)
     {
-        finalColor = vec4(mix(vec3(1.0, 0.0, 0.0), finalColor.rgb, 0.25), finalColor.a);
+        finalColor = vec4(mix(vec3(0.0), finalColor.rgb, 0.25), finalColor.a);
     }
 
 #ifdef FOG

@@ -149,11 +149,17 @@ define([
         /**
          * Gets or sets a value indicating whether the ancestors of rendered tiles should be preloaded.
          * Setting this to true optimizes the zoom-out experience and provides more detail in
-         * newly-exposed areas when panning. The down side is that is requires loading more tiles.
+         * newly-exposed areas when panning. The down side is that it requires loading more tiles.
          * @type {Boolean}
          * @default false
          */
         this.preloadAncestors = false;
+
+        /**
+         * Gets or sets a value indicating whether the siblings of rendered tiles should be preloaded.
+         * Setting this to true
+         */
+        this.preloadSiblings = false;
 
         this._occluders = new QuadtreeOccluders({
             ellipsoid : ellipsoid
@@ -819,14 +825,14 @@ define([
 
                     // EXCEPT if we're waiting on heaps of descendants, the above will take too long. So in that case,
                     // load this tile INSTEAD of loading any of the descendants, and tell the up-level we're only waiting
-                    // on this tile.
+                    // on this tile. Keep doing this until we actually manage to render this tile.
                     var wasRenderedLastFrame = tile._frameRendered === primitive._lastSelectionFrameNumber;
                     if (!wasRenderedLastFrame && notYetRenderableCount > primitive.loadingDescendantLimit) {
                         primitive._tileLoadQueueLow.length = loadIndexLow;
                         primitive._tileLoadQueueMedium.length = loadIndexMedium;
                         primitive._tileLoadQueueHigh.length = loadIndexHigh;
                         queueTileLoad(primitive, primitive._tileLoadQueueMedium, tile, frameState);
-                        traversalDetails.notYetRenderableCount = 1;
+                        traversalDetails.notYetRenderableCount = tile.renderable ? 0 : 1;
                     }
 
                     traversalDetails.anyAreRenderable = tile.renderable;
@@ -921,6 +927,10 @@ define([
         traversalDetails.allAreRenderable = true;
         traversalDetails.anyWereRenderedLastFrame = false;
         traversalDetails.notYetRenderableCount = 0;
+
+        if (primitive.preloadSiblings) {
+            queueTileLoad(primitive, primitive._tileLoadQueueLow, tile, frameState);
+        }
     }
 
     function screenSpaceError(primitive, frameState, tile) {

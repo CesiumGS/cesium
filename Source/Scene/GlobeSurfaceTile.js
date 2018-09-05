@@ -98,9 +98,8 @@ define([
 
         this.terrainState = TerrainState.UNLOADED;
         this.mesh = undefined;
-        this.fillMesh = undefined;
+        this.fill = undefined;
         this.vertexArray = undefined;
-        this.fillVertexArray = undefined;
 
         // TODO: probably better to have a bounding sphere for 2D rather than one for picking.
         this.pickBoundingSphere = new BoundingSphere();
@@ -182,7 +181,7 @@ define([
     var scratchResult = new Cartesian3();
 
     GlobeSurfaceTile.prototype.pick = function(ray, mode, projection, cullBackFaces, result) {
-        var mesh = this.mesh || this.fillMesh;
+        var mesh = this.mesh || this.fill.mesh;
         if (!defined(mesh)) {
             return undefined;
         }
@@ -223,7 +222,7 @@ define([
 
         this.terrainState = TerrainState.UNLOADED;
         this.mesh = undefined;
-        this.fillMesh = undefined;
+        this.fill = this.fill && this.fill.destroy();
 
         var imageryList = this.imagery;
         for (var i = 0, len = imageryList.length; i < len; ++i) {
@@ -248,11 +247,6 @@ define([
                     indexBuffer.destroy();
                 }
             }
-        }
-
-        if (defined(this.fillVertexArray)) {
-            this.fillVertexArray.destroy();
-            this.fillVertexArray = undefined;
         }
 
         if (defined(this.wireframeVertexArray)) {
