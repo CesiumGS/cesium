@@ -223,6 +223,7 @@ Change Log
 * Added ability to invoke `sampleTerrain` from node.js to enable offline terrain sampling
 * Added more ParticleSystem Sandcastle examples for rocket and comet tails and weather. [#6375](https://github.com/AnalyticalGraphicsInc/cesium/pull/6375)
 * Added color and scale attributes to the `ParticleSystem` class constructor. When defined the variables override startColor and endColor and startScale and endScale. [#6429](https://github.com/AnalyticalGraphicsInc/cesium/pull/6429)
+* Added `OpenCageGeocoderService`, which provides geocoding via [OpenCage](https://opencagedata.com/).
 
 ##### Fixes :wrench:
 * Fixed bugs in `TimeIntervalCollection.removeInterval`. [#6418](https://github.com/AnalyticalGraphicsInc/cesium/pull/6418).

@@ -112,6 +112,8 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
    * [Jeremy Marzano](https://github.com/JeremyMarzano-ISPA/)
 * [Orbit Logic](http://www.orbitlogic.com)
    * [Roderick Green](https://github.com/roderickgreen/)
+* [Hexastack](https://www.hexastack.com)
+  * [Mohamed Marrouchi](https://github.com/marrouchi/)
 
 ## [Individual CLA](Documentation/Contributors/CLAs/individual-cla-agi-v1.0.txt)
 * [Victor Berchet](https://github.com/vicb)
@@ -123,7 +125,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 * [Ayudh Das](https://github.com/ayudhDas)
 * [You Lu](https://github.com/YouLu)
 * [David Hite](https://github.com/dav3hit3)
-* [Kevin Ring](https://github.com/kring)
+* [Kevin Ring](https://gOpenCageithub.com/kring)
 * [M.Eng. René Schwarz](https://github.com/DigNative)
 * [Gilles Cébélieu (IGN France)](https://github.com/gcebelieu)
 * [Guillaume Beraudo](https://github.com/gberaudo)
