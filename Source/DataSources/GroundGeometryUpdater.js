@@ -72,6 +72,12 @@ define([
             }
         },
 
+        /**
+         * Gets the terrain offset property
+         * @type {TerrainOffsetProperty}
+         * @memberof GroundGeometryUpdater.prototype
+         * @readonly
+         */
         terrainOffsetProperty: {
             get: function() {
                 return this._terrainOffsetProperty;
@@ -107,7 +113,7 @@ define([
 
         if (defined(heightReferenceProperty) || defined(extrudedHeightReferenceProperty)) {
             var centerPosition = new CallbackProperty(this._computeCenter.bind(this), !this._dynamic);
-            this._terrainOffsetProperty = new TerrainOffsetProperty(this._scene, heightReferenceProperty, extrudedHeightReferenceProperty, centerPosition);
+            this._terrainOffsetProperty = new TerrainOffsetProperty(this._scene, centerPosition, heightReferenceProperty, extrudedHeightReferenceProperty);
         }
     };
 

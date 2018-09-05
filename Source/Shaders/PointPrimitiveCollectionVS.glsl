@@ -140,12 +140,8 @@ void main()
     }
 #endif
 
-#ifdef LOG_DEPTH
-    czm_vertexLogDepth(czm_projection * positionEC);
-#endif
-
-    vec4 positionWC = czm_eyeToWindowCoordinates(positionEC);
-    gl_Position = czm_viewportOrthographic * vec4(positionWC.xy, -positionWC.z, 1.0);
+    gl_Position = czm_projection * positionEC;
+    czm_vertexLogDepth();
 
 #ifdef DISABLE_DEPTH_DISTANCE
     float disableDepthTestDistance = distanceDisplayConditionAndDisableDepth.z;

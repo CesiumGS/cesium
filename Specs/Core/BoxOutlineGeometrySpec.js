@@ -1,12 +1,16 @@
 defineSuite([
         'Core/BoxOutlineGeometry',
+        'Core/arrayFill',
         'Core/AxisAlignedBoundingBox',
         'Core/Cartesian3',
+        'Core/GeometryOffsetAttribute',
         'Specs/createPackableSpecs'
     ], function(
         BoxOutlineGeometry,
+        arrayFill,
         AxisAlignedBoundingBox,
         Cartesian3,
+        GeometryOffsetAttribute,
         createPackableSpecs) {
     'use strict';
 
@@ -34,6 +38,23 @@ defineSuite([
 
         expect(m.attributes.position.values.length).toEqual(8 * 3);
         expect(m.indices.length).toEqual(12 * 2);
+    });
+
+    it('computes offset attribute', function() {
+        var m = BoxOutlineGeometry.createGeometry(new BoxOutlineGeometry({
+            minimum : new Cartesian3(-1, -2, -3),
+            maximum : new Cartesian3(1, 2, 3),
+            offsetAttribute: GeometryOffsetAttribute.ALL
+        }));
+
+        var numVertices = 8;
+        expect(m.attributes.position.values.length).toEqual(numVertices * 3);
+
+        var offset = m.attributes.applyOffset.values;
+        expect(offset.length).toEqual(numVertices);
+        var expected = new Array(offset.length);
+        expected = arrayFill(expected, 1);
+        expect(offset).toEqual(expected);
     });
 
     it('fromDimensions throws without dimensions', function() {
@@ -87,5 +108,5 @@ defineSuite([
     createPackableSpecs(BoxOutlineGeometry, new BoxOutlineGeometry({
         minimum : new Cartesian3(1.0, 2.0, 3.0),
         maximum : new Cartesian3(4.0, 5.0, 6.0)
-    }), [1.0, 2.0, 3.0, 4.0, 5.0, 6.0]);
+    }), [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, -1.0]);
 });
