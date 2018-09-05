@@ -120,6 +120,7 @@ defineSuite([
 
     var boomBoxUrl = './Data/Models/PBR/BoomBox/BoomBox.gltf';
     var boxPbrUrl = './Data/Models/PBR/Box/Box.gltf';
+    var boxPbrUnlitUrl = './Data/Models/PBR/BoxUnlit/BoxUnlit.gltf';
     var boxAnimatedPbrUrl = './Data/Models/PBR/BoxAnimated/BoxAnimated.gltf';
     var boxInterleavedPbrUrl = './Data/Models/PBR/BoxInterleaved/BoxInterleaved.gltf';
     var riggedSimplePbrUrl = './Data/Models/PBR/RiggedSimple/RiggedSimple.gltf';
@@ -2688,6 +2689,21 @@ defineSuite([
             scene.renderForSpecs();
             var commands = scene.frameState.commandList;
             expect(commands.length).toBe(0);
+
+            primitives.remove(model);
+        });
+    });
+
+    it('renders with the unlit extension', function() {
+        return loadModel(boxPbrUnlitUrl).then(function(model) {
+            model.show = true;
+            model.zoomTo();
+            // We expect to see the base color when unlit
+            expect(scene).toRenderAndCall(function(rgba) {
+                expect(rgba[0]).toEqual(0);
+                expect(rgba[1]).toEqual(255);
+                expect(rgba[2]).toEqual(0);
+            });
 
             primitives.remove(model);
         });

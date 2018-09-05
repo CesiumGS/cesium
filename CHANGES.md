@@ -1,6 +1,11 @@
 Change Log
 ==========
 
+### 1.50 - 2018-10-01
+
+##### Additions :tada:
+* Added support for glTF extension [KHR_materials_unlit](https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Khronos/KHR_materials_unlit) [#6977](https://github.com/AnalyticalGraphicsInc/cesium/pull/6977).
+
 ### 1.49 - 2018-09-04
 
 ##### Breaking Changes :mega:
@@ -15,7 +20,6 @@ Change Log
 * Added `GeocoderViewModel.destinationFound` for specifying a function that is called upon a successful geocode.  The default behavior is to fly to the destination found by the geocoder. [#6915](https://github.com/AnalyticalGraphicsInc/cesium/pull/6915
 * Added `ClippingPlaneCollection.planeAdded` and `ClippingPlaneCollection.planeRemoved` events.  `planeAdded` is raised when a new plane is added to the collection and `planeRemoved` is raised when a plane is removed. [#6875](https://github.com/AnalyticalGraphicsInc/cesium/pull/6875)
 * Added `Matrix4.setScale` for setting the scale on an affine transformation matrix [#6888](https://github.com/AnalyticalGraphicsInc/cesium/pull/6888)
-)
 * Added optional `width` and `height` to `Scene.drillPick` for specifying a search area. [#6922](https://github.com/AnalyticalGraphicsInc/cesium/pull/6922)
 * Added `Cesium3DTileset.root` for getting the root tile of a tileset. [#6944](https://github.com/AnalyticalGraphicsInc/cesium/pull/6944)
 * Added `Cesium3DTileset.extras` and `Cesium3DTile.extras` for getting application specific metadata from 3D Tiles. [#6974](https://github.com/AnalyticalGraphicsInc/cesium/pull/6974)
