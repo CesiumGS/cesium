@@ -23,7 +23,6 @@ define([
         './CubeMap',
         './DrawCommand',
         './PassState',
-        './PickFramebuffer',
         './PixelDatatype',
         './RenderState',
         './ShaderCache',
@@ -56,7 +55,6 @@ define([
         CubeMap,
         DrawCommand,
         PassState,
-        PickFramebuffer,
         PixelDatatype,
         RenderState,
         ShaderCache,
@@ -824,7 +822,7 @@ define([
         /**
          * Gets an object representing the currently bound framebuffer.  While this instance is not an actual
          * {@link Framebuffer}, it is used to represent the default framebuffer in calls to
-         * {@link Texture.FromFramebuffer}.
+         * {@link Texture.fromFramebuffer}.
          * @memberof Context.prototype
          * @type {Object}
          */
@@ -1156,10 +1154,6 @@ define([
             framebuffer : overrides.framebuffer,
             pass : overrides.pass
         });
-    };
-
-    Context.prototype.createPickFramebuffer = function() {
-        return new PickFramebuffer(this);
     };
 
     /**
