@@ -589,7 +589,7 @@ define([
             vsPick = Primitive._updatePickColorAttribute(vsPick);
 
             var pickFS3D = shadowVolumeAppearance.createPickFragmentShader(false);
-            var pickVS3D = shadowVolumeAppearance.createPickVertexShader([extrudedDefine, disableGlPositionLogDepth], vsPick, false);
+            var pickVS3D = shadowVolumeAppearance.createPickVertexShader([extrudedDefine, disableGlPositionLogDepth], vsPick, false, frameState.mapProjection);
 
             classificationPrimitive._spPick = ShaderProgram.replaceCache({
                 context : context,
@@ -605,7 +605,7 @@ define([
                 var pickProgram2D = context.shaderCache.getDerivedShaderProgram(classificationPrimitive._spPick, '2dPick');
                 if (!defined(pickProgram2D)) {
                     var pickFS2D = shadowVolumeAppearance.createPickFragmentShader(true);
-                    var pickVS2D = shadowVolumeAppearance.createPickVertexShader([extrudedDefine, disableGlPositionLogDepth], vsPick, true);
+                    var pickVS2D = shadowVolumeAppearance.createPickVertexShader([extrudedDefine, disableGlPositionLogDepth], vsPick, true, frameState.mapProjection);
 
                     pickProgram2D = context.shaderCache.createDerivedShaderProgram(classificationPrimitive._spPick, '2dPick', {
                         vertexShaderSource : pickVS2D,
@@ -640,7 +640,7 @@ define([
 
         // Create a fragment shader that computes only required material hookups using screen space techniques
         var fsColorSource = shadowVolumeAppearance.createFragmentShader(false);
-        var vsColorSource = shadowVolumeAppearance.createVertexShader([extrudedDefine, disableGlPositionLogDepth], vs, false);
+        var vsColorSource = shadowVolumeAppearance.createVertexShader([extrudedDefine, disableGlPositionLogDepth], vs, false, frameState.mapProjection);
 
         classificationPrimitive._spColor = ShaderProgram.replaceCache({
             context : context,
@@ -657,7 +657,7 @@ define([
             var colorProgram2D = context.shaderCache.getDerivedShaderProgram(classificationPrimitive._spColor, '2dColor');
             if (!defined(colorProgram2D)) {
                 var fsColorSource2D = shadowVolumeAppearance.createFragmentShader(true);
-                var vsColorSource2D = shadowVolumeAppearance.createVertexShader([extrudedDefine, disableGlPositionLogDepth], vs, true);
+                var vsColorSource2D = shadowVolumeAppearance.createVertexShader([extrudedDefine, disableGlPositionLogDepth], vs, true, frameState.mapProjection);
 
                 colorProgram2D = context.shaderCache.createDerivedShaderProgram(classificationPrimitive._spColor, '2dColor', {
                     vertexShaderSource : vsColorSource2D,

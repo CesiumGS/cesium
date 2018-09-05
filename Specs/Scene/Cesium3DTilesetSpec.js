@@ -2,6 +2,7 @@ defineSuite([
         'Scene/Cesium3DTileset',
         'Core/Cartesian3',
         'Core/Color',
+        'Core/defined',
         'Core/CullingVolume',
         'Core/getAbsoluteUri',
         'Core/getStringFromTypedArray',
@@ -32,6 +33,7 @@ defineSuite([
         Cesium3DTileset,
         Cartesian3,
         Color,
+        defined,
         CullingVolume,
         getAbsoluteUri,
         getStringFromTypedArray,
@@ -356,6 +358,24 @@ defineSuite([
         });
     });
 
+    it('loads tileset with extras', function() {
+        return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function(tileset) {
+            expect(tileset.extras).toEqual({ 'name': 'Sample Tileset' });
+            expect(tileset.root.extras).toBeUndefined();
+
+            var length = tileset.root.children.length;
+            var taggedChildren = 0;
+            for (var i = 0; i < length; ++i) {
+                if (defined(tileset.root.children[i].extras)) {
+                    expect(tileset.root.children[i].extras).toEqual({ 'id': 'Special Tile' });
+                    ++taggedChildren;
+                }
+            }
+
+            expect(taggedChildren).toEqual(1);
+        });
+    });
+
     it('gets root tile', function() {
         var tileset = scene.primitives.add(new Cesium3DTileset({
             url : tilesetUrl
@@ -420,6 +440,15 @@ defineSuite([
         });
         expect(function() {
             return tileset.properties;
+        }).toThrowDeveloperError();
+    });
+
+    it('throws when getting extras and tileset is not ready', function() {
+        var tileset = new Cesium3DTileset({
+            url : tilesetUrl
+        });
+        expect(function() {
+            return tileset.extras;
         }).toThrowDeveloperError();
     });
 
@@ -1947,6 +1976,48 @@ defineSuite([
                 feature.setProperty('id', feature.getProperty('id') - 10);
             }
             expect(scene).notToRender([0, 0, 0, 255]);
+        });
+    });
+
+    it('applies style when tile is selected after new style is applied', function() {
+        return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl).then(function(tileset) {
+            var feature = tileset.root.content.getFeature(0);
+            tileset.style = new Cesium3DTileStyle({color: 'color("red")'});
+            scene.renderForSpecs();
+            expect(feature.color).toEqual(Color.RED);
+
+            tileset.style = new Cesium3DTileStyle({color: 'color("blue")'});
+            scene.renderForSpecs();
+            expect(feature.color).toEqual(Color.BLUE);
+
+            viewNothing();
+            tileset.style = new Cesium3DTileStyle({color: 'color("lime")'});
+            scene.renderForSpecs();
+            expect(feature.color).toEqual(Color.BLUE); // Hasn't been selected yet
+
+            viewAllTiles();
+            scene.renderForSpecs();
+            expect(feature.color).toEqual(Color.LIME);
+
+            // Feature's show property is preserved if the style hasn't changed and the feature is newly selected
+            feature.show = false;
+            scene.renderForSpecs();
+            expect(feature.show).toBe(false);
+            viewNothing();
+            scene.renderForSpecs();
+            expect(feature.show).toBe(false);
+            viewAllTiles();
+            expect(feature.show).toBe(false);
+        });
+    });
+
+    it('does not reapply style during pick pass', function() {
+        return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl).then(function(tileset) {
+            tileset.style = new Cesium3DTileStyle({color: 'color("red")'});
+            scene.renderForSpecs();
+            expect(tileset.statistics.numberOfTilesStyled).toBe(1);
+            scene.pickForSpecs();
+            expect(tileset.statistics.numberOfTilesStyled).toBe(0);
         });
     });
 

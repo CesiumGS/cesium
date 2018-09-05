@@ -137,9 +137,8 @@ define([
                 tileContent.featurePropertiesDirty = false;
                 tile.lastStyleTime = 0; // Force applying the style to this tile
                 tileset._selectedTilesToStyle.push(tile);
-            } else if ((tile._selectedFrame !== frameState.frameNumber - 1)) {
+            } else if ((tile._selectedFrame < frameState.frameNumber - 1)) {
                 // Tile is newly selected; it is selected this frame, but was not selected last frame.
-                tile.lastStyleTime = 0; // Force applying the style to this tile
                 tileset._selectedTilesToStyle.push(tile);
             }
             tile._selectedFrame = frameState.frameNumber;
