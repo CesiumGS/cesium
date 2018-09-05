@@ -1,6 +1,11 @@
 Change Log
 ==========
 
+### 1.50 - 2018-10-01
+
+##### Additions :tada:
+* Added ground atmosphere lighting in 3D. This can be toggled with `Globe.showGroundAtmosphere`. [6877](https://github.com/AnalyticalGraphicsInc/cesium/pull/6877)
+
 ### 1.49 - 2018-09-04
 
 ##### Breaking Changes :mega:
