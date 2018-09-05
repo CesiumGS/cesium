@@ -8,5 +8,8 @@
  * @returns {vec3} The color in linear space.
  */
 vec3 czm_gammaCorrect(vec3 color) {
-    return pow(color, vec3(czm_gamma));
+#ifdef HDR
+    color = pow(color, vec3(czm_gamma));
+#endif
+    return color;
 }

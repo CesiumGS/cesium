@@ -804,7 +804,7 @@ define([
         this._hdr = undefined;
         this._hdrDirty = undefined;
         this.highDynamicRange = true;
-        this.gamma = 2.4;
+        this.gamma = 2.2;
         this._sunColor = new Color(0.8, 0.85, 1.0, 1.0);
 
         // initial guess at frustums.
@@ -1577,8 +1577,10 @@ define([
                 derivedCommands.picking = DerivedCommand.createPickDerivedCommand(scene, command, context, derivedCommands.picking);
             }
 
-            derivedCommands.hdr = DerivedCommand.createHDRCommand(command, context, scene._hdr, derivedCommands.hdr);
-            command = derivedCommands.hdr.command;
+            if (scene._hdr) {
+                derivedCommands.hdr = DerivedCommand.createHDRCommand(command, context, derivedCommands.hdr);
+                command = derivedCommands.hdr.command;
+            }
 
             var oit = scene._oit;
             if (command.pass === Pass.TRANSLUCENT && defined(oit) && oit.isSupported()) {
@@ -2916,7 +2918,7 @@ define([
                 environmentState.isReadyForAtmosphere = environmentState.isReadyForAtmosphere || globe._surface._tilesToRender.length > 0;
             }
             environmentState.skyAtmosphereCommand = defined(skyAtmosphere) ? skyAtmosphere.update(frameState) : undefined;
-            environmentState.skyBoxCommand = defined(scene.skyBox) ? scene.skyBox.update(frameState) : undefined;
+            environmentState.skyBoxCommand = defined(scene.skyBox) ? scene.skyBox.update(frameState, scene._hdr) : undefined;
             var sunCommands = defined(scene.sun) ? scene.sun.update(frameState, passState, scene._hdr) : undefined;
             environmentState.sunDrawCommand = defined(sunCommands) ? sunCommands.drawCommand : undefined;
             environmentState.sunComputeCommand = defined(sunCommands) ? sunCommands.computeCommand : undefined;

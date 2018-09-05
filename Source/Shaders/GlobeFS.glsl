@@ -275,9 +275,9 @@ void main()
 #endif
 
 #if defined(FOG) || defined(GROUND_ATMOSPHERE)
-    const float fExposure = 1.3;
     vec3 fogColor = v_fogMieColor + finalColor.rgb * v_fogRayleighColor;
 #ifndef HDR
+    const float fExposure = 2.0;
     fogColor = vec3(1.0) - exp(-fExposure * fogColor);
 #endif
 #endif
@@ -320,7 +320,9 @@ void main()
     AtmosphereColor atmosColor = computeGroundAtmosphereFromSpace(ellipsoidPosition, true);
 
     vec3 groundAtmosphereColor = atmosColor.mie + finalColor.rgb * atmosColor.rayleigh;
+#ifndef HDR
     groundAtmosphereColor = vec3(1.0) - exp(-fExposure * groundAtmosphereColor);
+#endif
 
     fadeInDist = u_nightFadeDistance.x;
     fadeOutDist = u_nightFadeDistance.y;
