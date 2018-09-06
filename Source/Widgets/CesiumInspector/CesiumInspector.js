@@ -113,13 +113,14 @@ define([
         shaderCacheDisplay.setAttribute('data-bind', 'html: shaderCacheText');
         generalSection.appendChild(shaderCacheDisplay);
 
-        var globeDepth = createCheckBox('checked: globeDepth', 'Show globe depth');
-        generalSection.appendChild(globeDepth);
-
-        var globeDepthFrustum = document.createElement('div');
-        globeDepth.appendChild(globeDepthFrustum);
-
-        generalSection.appendChild(createCheckBox('checked: pickDepth', 'Show pick depth'));
+        // https://github.com/AnalyticalGraphicsInc/cesium/issues/6763
+        // var globeDepth = createCheckBox('checked: globeDepth', 'Show globe depth');
+        // generalSection.appendChild(globeDepth);
+        //
+        // var globeDepthFrustum = document.createElement('div');
+        // globeDepth.appendChild(globeDepthFrustum);
+        //
+        // generalSection.appendChild(createCheckBox('checked: pickDepth', 'Show pick depth'));
 
         var depthFrustum = document.createElement('div');
         generalSection.appendChild(depthFrustum);
