@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <meta name="description" content="Pick from ray">
+    <meta name="cesium-sandcastle-labels" content="Development">
+    <title>Cesium Demo</title>
+    <script type="text/javascript" src="../Sandcastle-header.js"></script>
+    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
+    <script type="text/javascript">
+        if(typeof require === 'function') {
+            require.config({
+                baseUrl : '../../../Source',
+                waitSeconds : 120
+            });
+        }
+    </script>
+</head>
+<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
+<style>
+    @import url(../templates/bucket.css);
+</style>
+<div id="cesiumContainer" class="fullSize"></div>
+<div id="loadingOverlay"><h1>Loading...</h1></div>
+<div id="toolbar"></div>
+<script id="cesium_sandcastle_script">
+function startup(Cesium) {
+    'use strict';
+//Sandcastle_Begin
+var viewer = new Cesium.Viewer('cesiumContainer');
+var scene = viewer.scene;
+scene.globe.depthTestAgainstTerrain = true;
+
+var i;
+var drillPick = false;
+var limit = 10;
+var pickedFeatures = [];
+
+Sandcastle.addToggleButton('Drill pick', false, function(checked) {
+    drillPick = checked;
+});
+
+var tileset = viewer.scene.primitives.add(new Cesium.Cesium3DTileset({
+    url: '../../SampleData/Cesium3DTiles/Tilesets/Tileset/tileset.json'
+}));
+
+viewer.zoomTo(tileset);
+
+var blueCartographic = new Cesium.Cartographic(-1.3196863177294136, 0.6988508714746624, 30.0);
+var redCartographic = new Cesium.Cartographic(-1.319681841889412, 0.6989153500784591, 30.0);
+
+var blueSphere = viewer.entities.add({
+    position : Cesium.Cartographic.toCartesian(blueCartographic),
+    ellipsoid : {
+        radii : new Cesium.Cartesian3(10.0, 10.0, 10.0),
+        material : Cesium.Color.BLUE
+    }
+});
+
+var redSphere = viewer.entities.add({
+    position : Cesium.Cartographic.toCartesian(redCartographic),
+    ellipsoid : {
+        radii : new Cesium.Cartesian3(10.0, 10.0, 10.0),
+        material : Cesium.Color.RED
+    }
+});
+
+var arrowPositions = [
+    Cesium.Cartographic.toCartesian(blueCartographic),
+    Cesium.Cartographic.toCartesian(redCartographic)
+];
+
+var arrow = viewer.entities.add({
+    polyline : {
+        positions : arrowPositions,
+        width : 10,
+        followSurface : false,
+        material : new Cesium.PolylineArrowMaterialProperty(Cesium.Color.YELLOW)
+    }
+});
+
+var hitSpheres = new Array(limit);
+for (i = 0; i < limit; ++i) {
+    hitSpheres[i] = viewer.entities.add({
+        show : false,
+        position : Cesium.Cartographic.toCartesian(redCartographic),
+        ellipsoid : {
+            radii : new Cesium.Cartesian3(3.0, 3.0, 3.0),
+            material : Cesium.Color.RED
+        }
+    });
+}
+
+function hideAll() {
+    for (i = 0; i < pickedFeatures.length; ++i) {
+        pickedFeatures[i].color = Cesium.Color.WHITE;
+    }
+    for (i = 0; i < limit; ++i) {
+        hitSpheres[i].show = false;
+    }
+    arrow.show = false;
+    blueSphere.show = false;
+    redSphere.show = false;
+}
+
+function showAll(positions) {
+    if (Cesium.defined(positions)) {
+        for (i = 0; i < positions.length; ++i) {
+            hitSpheres[i].show = true;
+        }
+    }
+    arrow.show = true;
+    blueSphere.show = true;
+    redSphere.show = true;
+}
+
+function pickFromRay() {
+    var origin = Cesium.Cartographic.toCartesian(blueCartographic);
+    var end = Cesium.Cartographic.toCartesian(redCartographic);
+    var direction = Cesium.Cartesian3.normalize(Cesium.Cartesian3.subtract(end, origin, new Cesium.Cartesian3()), new Cesium.Cartesian3());
+    var ray = new Cesium.Ray(origin, direction);
+
+    var positions = [];
+    var objects = [];
+
+    if (drillPick) {
+        positions = scene.drillPickPositionFromRay(ray, limit);
+        objects = scene.drillPickFromRay(ray, limit);
+    } else {
+        var position = scene.pickPositionFromRay(ray);
+        var object = scene.pickFromRay(ray);
+        if (Cesium.defined(position)) {
+            positions = [position];
+        }
+        if (Cesium.defined(object)) {
+            objects = [object];
+        }
+    }
+
+    pickedFeatures.length = 0;
+
+    for (i = 0; i < objects.length; ++i) {
+        if (objects[i] instanceof Cesium.Cesium3DTileFeature) {
+            pickedFeatures.push(objects[i]);
+            objects[i].color = Cesium.Color.YELLOW;
+        }
+    }
+    for (i = 0; i < positions.length; ++i) {
+        hitSpheres[i].position = positions[i];
+    }
+    redSphere.position = Cesium.Cartographic.toCartesian(redCartographic);
+    arrow.polyline.positions = [
+        Cesium.Cartographic.toCartesian(blueCartographic),
+        Cesium.Cartographic.toCartesian(redCartographic)
+    ];
+    return positions;
+}
+
+function runAfterRender(callback) {
+    var afterRenderFunction = function() {
+        callback();
+        scene.postRender.removeEventListener(afterRenderFunction);
+    };
+    scene.postRender.addEventListener(afterRenderFunction);
+}
+
+var handler = new Cesium.ScreenSpaceEventHandler(viewer.canvas);
+handler.setInputAction(function(movement) {
+    hideAll();
+    runAfterRender(function() {
+        var redPosition = scene.pickPosition(movement.position);
+        redCartographic = Cesium.Cartographic.fromCartesian(redPosition);
+        redCartographic.height = 30.0;
+        var positions = pickFromRay();
+        runAfterRender(function() {
+            showAll(positions);
+        });
+    });
+}, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+
+//Sandcastle_End
+    Sandcastle.finishedLoading();
+}
+if (typeof Cesium !== 'undefined') {
+    startup(Cesium);
+} else if (typeof require === 'function') {
+    require(['Cesium'], startup);
+}
+</script>
+</body>
+</html>
