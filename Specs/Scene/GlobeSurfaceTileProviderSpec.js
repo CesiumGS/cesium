@@ -973,4 +973,17 @@ defineSuite([
             });
     });
 
+    it('geographicLimitRectangle may cross the antimeridian', function() {
+        switchViewMode(SceneMode.SCENE2D, new GeographicProjection(Ellipsoid.WGS84));
+         var unculledCommandCount;
+        return updateUntilDone(scene.globe).then(function() {
+            unculledCommandCount = scene.frameState.commandList.length;
+             scene.globe.geographicLimitRectangle = Rectangle.fromDegrees(179, -2, -179, -1);
+             return updateUntilDone(scene.globe);
+        })
+            .then(function() {
+                expect(unculledCommandCount).toBeGreaterThan(scene.frameState.commandList.length);
+            });
+    });
+
 }, 'WebGL');

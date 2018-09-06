@@ -4,6 +4,7 @@ define([
         '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Cartesian4',
+        '../Core/Cartographic',
         '../Core/Color',
         '../Core/ColorGeometryInstanceAttribute',
         '../Core/combine',
@@ -50,6 +51,7 @@ define([
         Cartesian2,
         Cartesian3,
         Cartesian4,
+        Cartographic,
         Color,
         ColorGeometryInstanceAttribute,
         combine,
@@ -517,6 +519,23 @@ define([
 
     var boundingSphereScratch = new BoundingSphere();
     var rectangleIntersectionScratch = new Rectangle();
+    var splitGeographicLimitRectangleScratch = new Rectangle();
+    var rectangleCenterScratch = new Cartographic();
+
+    // geographicLimitRectangle may span the IDL, but tiles never will.
+    function clipRectangleAntimeridian(tileRectangle, geographicLimitRectangle) {
+        if (geographicLimitRectangle.west < geographicLimitRectangle.east) {
+            return geographicLimitRectangle;
+        }
+        var splitRectangle = Rectangle.clone(geographicLimitRectangle, splitGeographicLimitRectangleScratch);
+        var tileCenter = Rectangle.center(tileRectangle, rectangleCenterScratch);
+        if (tileCenter.longitude > 0.0) {
+            splitRectangle.east = CesiumMath.PI;
+        } else {
+            splitRectangle.west = -CesiumMath.PI;
+        }
+        return splitRectangle;
+    }
 
     /**
      * Determines the visibility of a given tile.  The tile may be fully visible, partially visible, or not
@@ -546,7 +565,8 @@ define([
 
         // Check if the tile is outside the limit area in cartographic space
         surfaceTile.clippedByBoundaries = false;
-        var areaLimitIntersection = Rectangle.simpleIntersection(this.geographicLimitRectangle, tile.rectangle, rectangleIntersectionScratch);
+        var clippedGeographicLimitRectangle = clipRectangleAntimeridian(tile.rectangle, this.geographicLimitRectangle);
+        var areaLimitIntersection = Rectangle.simpleIntersection(clippedGeographicLimitRectangle, tile.rectangle, rectangleIntersectionScratch);
         if (!defined(areaLimitIntersection)) {
             return Visibility.NONE;
         }
@@ -1281,7 +1301,7 @@ define([
 
             // Convert tile limiter rectangle from cartographic to texture space using the tileRectangle.
             var localizedGeographicLimitRectangle = localizedGeographicLimitRectangleScratch;
-            var geographicLimitRectangle = tileProvider.geographicLimitRectangle;
+            var geographicLimitRectangle = clipRectangleAntimeridian(tile.rectangle, tileProvider.geographicLimitRectangle);
 
             var cartographicTileRectangle = tile.rectangle;
             var inverseTileWidth = 1.0 / cartographicTileRectangle.width;
