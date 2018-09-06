@@ -1499,6 +1499,7 @@ define([
             derivedCommands.picking = DerivedCommand.createPickDerivedCommand(scene, command, context, derivedCommands.picking);
         }
 
+        // TODO HDR
         if (scene._hdr) {
             derivedCommands.hdr = DerivedCommand.createHDRCommand(command, context, derivedCommands.hdr);
             command = derivedCommands.hdr.command;
@@ -1547,7 +1548,7 @@ define([
         var hasDerivedCommands = defined(derivedCommands.originalCommand);
         var needsLogDepthDerivedCommands = useLogDepth && !hasLogDepthDerivedCommands;
         var needsDerivedCommands = !useLogDepth && !hasDerivedCommands;
-        command.dirty = command.dirty || needsLogDepthDerivedCommands || needsDerivedCommands || scene._hdrDirty; // HDR_TODO
+        command.dirty = command.dirty || needsLogDepthDerivedCommands || needsDerivedCommands || this._hdrDirty; // TODO HDR
 
         if (command.dirty) {
             command.dirty = false;
@@ -2102,7 +2103,6 @@ define([
             }
 
             if (defined(globeDepth) && environmentState.useGlobeDepthFramebuffer) {
-                globeDepth.update(context, passState, view.viewport);
                 globeDepth.executeCopyDepth(context, passState);
             }
 
@@ -2860,7 +2860,7 @@ define([
         var usePostProcess = environmentState.usePostProcess = !picking && (scene._hdr || postProcess.length > 0 || postProcess.ambientOcclusion.enabled || postProcess.fxaa.enabled || postProcess.bloom.enabled);
         environmentState.usePostProcessSelected = false;
         if (usePostProcess) {
-            view.sceneFramebuffer.update(context, view.viewport);
+            view.sceneFramebuffer.update(context, view.viewport, scene._hdr);
             view.sceneFramebuffer.clear(context, passState, clearColor);
 
             postProcess.update(context, frameState.useLogDepth, scene._hdr);

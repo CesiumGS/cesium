@@ -83,6 +83,7 @@ define([
         }
 
         destroyResources(this);
+        this._useHDR = hdr;
 
         var pixelDatatype = hdr ? (context.halfFloatingPointTexture ? PixelDatatype.HALF_FLOAT : PixelDatatype.FLOAT) : PixelDatatype.UNSIGNED_BYTE;
         this._colorTexture = new Texture({
