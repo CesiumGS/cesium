@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <meta name="description" content="Clamp a model to a 3D Tileset using the sampleHeight function.">
+    <meta name="cesium-sandcastle-labels" content="Showcases">
+    <title>Cesium Demo</title>
+    <script type="text/javascript" src="../Sandcastle-header.js"></script>
+    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
+    <script type="text/javascript">
+        if(typeof require === 'function') {
+            require.config({
+                baseUrl : '../../../Source',
+                waitSeconds : 120
+            });
+        }
+    </script>
+</head>
+<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
+<style>
+    @import url(../templates/bucket.css);
+</style>
+<div id="cesiumContainer" class="fullSize"></div>
+<div id="loadingOverlay"><h1>Loading...</h1></div>
+<div id="toolbar"></div>
+<script id="cesium_sandcastle_script">
+function startup(Cesium) {
+    'use strict';
+//Sandcastle_Begin
+var viewer = new Cesium.Viewer('cesiumContainer', {
+    terrainProvider : Cesium.createWorldTerrain()
+});
+var scene = viewer.scene;
+
+var start = Cesium.JulianDate.fromIso8601('2018-07-19T15:18:00Z');
+var stop = Cesium.JulianDate.fromIso8601('2018-07-19T15:18:30Z');
+var duration = Cesium.JulianDate.secondsDifference(stop, start);
+
+viewer.timeline.zoomTo(start, stop);
+
+var clock = viewer.clock;
+clock.startTime = start;
+clock.currentTime = start;
+clock.stopTime = stop;
+clock.multiplier = 5.0;
+clock.clockRange = Cesium.ClockRange.LOOP_STOP;
+
+var tileset = viewer.scene.primitives.add(
+    new Cesium.Cesium3DTileset({
+        url: Cesium.IonResource.fromAssetId(6074)
+    })
+);
+
+viewer.camera.setView({
+    destination: new Cesium.Cartesian3(1216403.8845586285, -4736357.493351395, 4081299.715698949),
+    orientation: new Cesium.HeadingPitchRoll(4.2892217081808806, -0.4799070147502502, 6.279789177843313),
+    endTransform : Cesium.Matrix4.IDENTITY
+});
+
+var startCartographic = Cesium.Cartographic.fromRadians(-1.3194173278580692, 0.6987983245671457, 79.48429974087243);
+var stopCartographic = Cesium.Cartographic.fromRadians(-1.319414626509859, 0.6987897506061312, 76.52729244635204);
+var startPosition = Cesium.Cartographic.toCartesian(startCartographic);
+var endPosition = Cesium.Cartographic.toCartesian(stopCartographic);
+
+var velocity = Cesium.Cartesian3.normalize(Cesium.Cartesian3.subtract(endPosition, startPosition, new Cesium.Cartesian3()), new Cesium.Cartesian3());
+var rotationMatrix = Cesium.Transforms.rotationMatrixFromPositionVelocity(startPosition, velocity);
+var orientation = Cesium.Quaternion.fromRotationMatrix(rotationMatrix, new Cesium.Quaternion());
+
+var entity = viewer.entities.add({
+    position : startPosition,
+    orientation : orientation,
+    model : {
+        uri : '../../SampleData/models/CesiumMilkTruck/CesiumMilkTruck.glb'
+    }
+});
+
+function toggleShow(show) {
+    // Toggle show for everything except the tileset
+    var primitives = scene.primitives;
+    var length = primitives.length;
+    for (var i = 0; i < length; ++i) {
+        var primitive = primitives.get(i);
+        if (primitive !== tileset) {
+            primitive.show = show;
+        }
+    }
+}
+
+function calculatePosition(offset) {
+    var currentPosition = Cesium.Cartesian3.lerp(startPosition, endPosition, offset, new Cesium.Cartesian3());
+    var currentCartographic = Cesium.Cartographic.fromCartesian(currentPosition);
+    toggleShow(false);
+    var height = scene.sampleHeight(currentCartographic);
+    toggleShow(true);
+    if (Cesium.defined(height)) {
+        currentCartographic.height = height;
+        currentPosition = Cesium.Cartographic.toCartesian(currentCartographic);
+        return currentPosition;
+    }
+}
+
+function initialViewReady(tileset, callback) {
+    var allTilesLoadedFunction = function() {
+        callback();
+        tileset.allTilesLoaded.removeEventListener(allTilesLoadedFunction);
+    };
+    tileset.allTilesLoaded.addEventListener(allTilesLoadedFunction);
+}
+
+initialViewReady(tileset, function() {
+    viewer.clock.shouldAnimate = true;
+    scene.postRender.addEventListener(function() {
+        var timer = Cesium.JulianDate.secondsDifference(viewer.clock.currentTime, start);
+        var offset = Cesium.Math.clamp(timer / duration, 0.0, 1.0);
+        entity.position = calculatePosition(offset);
+    });
+});
+//Sandcastle_End
+    Sandcastle.finishedLoading();
+}
+if (typeof Cesium !== 'undefined') {
+    startup(Cesium);
+} else if (typeof require === 'function') {
+    require(['Cesium'], startup);
+}
+</script>
+</body>
+</html>
