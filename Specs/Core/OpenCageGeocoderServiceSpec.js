@@ -21,6 +21,12 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
+    it('constructor throws without API Key', function() {
+        expect(function() {
+            return new OpenCageGeocoderService(endpoint, undefined);
+        }).toThrowDeveloperError();
+    });
+
     it('returns geocoder results', function () {
         var service = new OpenCageGeocoderService(endpoint, apiKey);
 
@@ -50,7 +56,7 @@ defineSuite([
             .then(function(results) {
                 expect(results.length).toEqual(1);
                 expect(results[0].displayName).toEqual(data.results[0].formatted);
-                expect(results[0].destination).toBeInstanceOf(Cartesian3);
+                expect(results[0].destination).toBeDefined();
             });
     });
 

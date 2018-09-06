@@ -125,7 +125,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 * [Ayudh Das](https://github.com/ayudhDas)
 * [You Lu](https://github.com/YouLu)
 * [David Hite](https://github.com/dav3hit3)
-* [Kevin Ring](https://gOpenCageithub.com/kring)
+* [Kevin Ring](https://github.com/kring)
 * [M.Eng. René Schwarz](https://github.com/DigNative)
 * [Gilles Cébélieu (IGN France)](https://github.com/gcebelieu)
 * [Guillaume Beraudo](https://github.com/gberaudo)
