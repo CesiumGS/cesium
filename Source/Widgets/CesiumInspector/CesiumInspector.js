@@ -112,15 +112,16 @@ define([
         shaderCacheDisplay.className = 'cesium-cesiumInspector-shaderCache';
         shaderCacheDisplay.setAttribute('data-bind', 'html: shaderCacheText');
         generalSection.appendChild(shaderCacheDisplay);
-/*
-        var globeDepth = createCheckBox('checked: globeDepth', 'Show globe depth');
-        generalSection.appendChild(globeDepth);
 
-        var globeDepthFrustum = document.createElement('div');
-        globeDepth.appendChild(globeDepthFrustum);
+        // https://github.com/AnalyticalGraphicsInc/cesium/issues/6763
+        // var globeDepth = createCheckBox('checked: globeDepth', 'Show globe depth');
+        // generalSection.appendChild(globeDepth);
+        //
+        // var globeDepthFrustum = document.createElement('div');
+        // globeDepth.appendChild(globeDepthFrustum);
+        //
+        // generalSection.appendChild(createCheckBox('checked: pickDepth', 'Show pick depth'));
 
-        generalSection.appendChild(createCheckBox('checked: pickDepth', 'Show pick depth'));
-*/
         var depthFrustum = document.createElement('div');
         generalSection.appendChild(depthFrustum);
 
