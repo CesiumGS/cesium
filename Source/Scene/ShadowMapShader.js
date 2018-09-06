@@ -20,7 +20,7 @@ define([
         var defines = vs.defines.slice(0);
         var sources = vs.sources.slice(0);
 
-        vs.defines.push('SHADOW_MAP');
+        defines.push('SHADOW_MAP');
 
         if (isTerrain) {
             defines.push('GENERATE_POSITION');
@@ -132,7 +132,7 @@ define([
         var defines = vs.defines.slice(0);
         var sources = vs.sources.slice(0);
 
-        vs.defines.push('SHADOW_MAP');
+        defines.push('SHADOW_MAP');
 
         if (isTerrain) {
             if (hasTerrainNormal) {
