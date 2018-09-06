@@ -540,7 +540,7 @@ define([
         var framebuffer = passState.framebuffer;
         var length = commands.length;
 
-        var lightShadowsEnabled = scene.frameState.shadowHints.lightShadowsEnabled;
+        var lightShadowsEnabled = scene.frameState.shadowState.lightShadowsEnabled;
 
         passState.framebuffer = oit._adjustTranslucentFBO;
         oit._adjustTranslucentCommand.execute(context, passState);
@@ -588,7 +588,7 @@ define([
         var framebuffer = passState.framebuffer;
         var length = commands.length;
 
-        var lightShadowsEnabled = scene.frameState.shadowHints.lightShadowsEnabled;
+        var lightShadowsEnabled = scene.frameState.shadowState.lightShadowsEnabled;
 
         passState.framebuffer = oit._adjustTranslucentFBO;
         oit._adjustTranslucentCommand.execute(context, passState);

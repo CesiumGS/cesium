@@ -1006,7 +1006,7 @@ define([
         }
 
         var scene = this._scene;
-        var globe = scene._globe;
+        var globe = scene.globe;
         var rayIntersection;
         var depthIntersection;
 

@@ -517,10 +517,10 @@ defineSuite([
             cull : true
         }).then(function(collection) {
             scene.renderForSpecs();
-            expect(scene._frustumCommandsList.length).not.toEqual(0);
+            expect(scene.frustumCommandsList.length).not.toEqual(0);
             scene.camera.lookAt(new Cartesian3(100000.0, 0.0, 0.0), new HeadingPitchRange(0.0, 0.0, 10.0));
             scene.renderForSpecs();
-            expect(scene._frustumCommandsList.length).toEqual(0);
+            expect(scene.frustumCommandsList.length).toEqual(0);
         });
     });
 
@@ -531,10 +531,10 @@ defineSuite([
             cull : false
         }).then(function(collection) {
             scene.renderForSpecs();
-            expect(scene._frustumCommandsList.length).not.toEqual(0);
+            expect(scene.frustumCommandsList.length).not.toEqual(0);
             scene.camera.lookAt(new Cartesian3(100000.0, 0.0, 0.0), new HeadingPitchRange(0.0, 0.0, 10.0));
             scene.renderForSpecs();
-            expect(scene._frustumCommandsList.length).not.toEqual(0);
+            expect(scene.frustumCommandsList.length).not.toEqual(0);
         });
     });
 

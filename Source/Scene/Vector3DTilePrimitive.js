@@ -819,7 +819,8 @@ define([
             var stencilPreloadCommand = pickCommands[j * 3];
             if (!defined(stencilPreloadCommand)) {
                 stencilPreloadCommand = pickCommands[j * 3] = new DrawCommand({
-                    owner : primitive
+                    owner : primitive,
+                    pickOnly : true
                 });
             }
 
@@ -835,7 +836,8 @@ define([
             var stencilDepthCommand = pickCommands[j * 3 + 1];
             if (!defined(stencilDepthCommand)) {
                 stencilDepthCommand = pickCommands[j * 3 + 1] = new DrawCommand({
-                    owner : primitive
+                    owner : primitive,
+                    pickOnly : true
                 });
             }
 
@@ -851,7 +853,8 @@ define([
             var colorCommand = pickCommands[j * 3 + 2];
             if (!defined(colorCommand)) {
                 colorCommand = pickCommands[j * 3 + 2] = new DrawCommand({
-                    owner : primitive
+                    owner : primitive,
+                    pickOnly : true
                 });
             }
 
