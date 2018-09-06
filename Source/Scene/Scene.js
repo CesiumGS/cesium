@@ -1491,18 +1491,23 @@ define([
 
         var derivedCommands = command.derivedCommands;
 
-        if (lightShadowsEnabled && command.receiveShadows) {
-            derivedCommands.shadows = ShadowMap.createReceiveDerivedCommand(lightShadowMaps, command, shadowsDirty, context, derivedCommands.shadows);
-        }
-
         if (defined(command.pickId)) {
             derivedCommands.picking = DerivedCommand.createPickDerivedCommand(scene, command, context, derivedCommands.picking);
         }
 
-        // TODO HDR
+        if (!command.pickOnly) {
+            derivedCommands.depth = DerivedCommand.createDepthOnlyDerivedCommand(scene, command, context, derivedCommands.depth);
+        }
+
+        derivedCommands.originalCommand = command;
+
         if (scene._hdr) {
             derivedCommands.hdr = DerivedCommand.createHDRCommand(command, context, derivedCommands.hdr);
             command = derivedCommands.hdr.command;
+        }
+
+        if (lightShadowsEnabled && command.receiveShadows) {
+            derivedCommands.shadows = ShadowMap.createReceiveDerivedCommand(lightShadowMaps, command, shadowsDirty, context, derivedCommands.shadows);
         }
 
         if (command.pass === Pass.TRANSLUCENT && defined(oit) && oit.isSupported()) {
@@ -1513,12 +1518,6 @@ define([
                 derivedCommands.oit = oit.createDerivedCommands(command, context, derivedCommands.oit);
             }
         }
-
-        if (!command.pickOnly) {
-            derivedCommands.depth = DerivedCommand.createDepthOnlyDerivedCommand(scene, command, context, derivedCommands.depth);
-        }
-
-        derivedCommands.originalCommand = command;
     }
 
     /**
