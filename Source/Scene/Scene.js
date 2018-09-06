@@ -1542,12 +1542,15 @@ define([
         }
 
         var useLogDepth = frameState.useLogDepth;
+        var useHDR = this._hdr;
         var derivedCommands = command.derivedCommands;
         var hasLogDepthDerivedCommands = defined(derivedCommands.logDepth);
+        var hasHDRCommands = defined(derivedCommands.hdr);
         var hasDerivedCommands = defined(derivedCommands.originalCommand);
         var needsLogDepthDerivedCommands = useLogDepth && !hasLogDepthDerivedCommands;
-        var needsDerivedCommands = !useLogDepth && !hasDerivedCommands;
-        command.dirty = command.dirty || needsLogDepthDerivedCommands || needsDerivedCommands || this._hdrDirty; // TODO HDR
+        var needsHDRCommands = useHDR && !hasHDRCommands;
+        var needsDerivedCommands = (!useLogDepth || !useHDR) && !hasDerivedCommands;
+        command.dirty = command.dirty || needsLogDepthDerivedCommands || needsHDRCommands || needsDerivedCommands;
 
         if (command.dirty) {
             command.dirty = false;
@@ -3122,7 +3125,7 @@ define([
         this._postUpdate.raiseEvent(this, time);
 
         var cameraChanged = this._view.checkForCameraUpdates(this);
-        var shouldRender = !this.requestRenderMode || this._renderRequested || cameraChanged || this._logDepthBufferDirty || (this.mode === SceneMode.MORPHING);
+        var shouldRender = !this.requestRenderMode || this._renderRequested || cameraChanged || this._logDepthBufferDirty || this._hdrDirty || (this.mode === SceneMode.MORPHING);
         if (!shouldRender && defined(this.maximumRenderTimeChange) && defined(this._lastRenderTime)) {
             var difference = Math.abs(JulianDate.secondsDifference(this._lastRenderTime, time));
             shouldRender = shouldRender || difference > this.maximumRenderTimeChange;
