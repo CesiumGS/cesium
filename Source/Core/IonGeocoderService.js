@@ -44,7 +44,7 @@ define([
 
         var defaultTokenCredit = Ion.getDefaultTokenCredit(accessToken);
         if (defined(defaultTokenCredit)) {
-            options.scene._frameState.creditDisplay.addDefaultCredit(defaultTokenCredit);
+            options.scene.frameState.creditDisplay.addDefaultCredit(defaultTokenCredit);
         }
 
         var searchEndpoint = server.getDerivedResource({
