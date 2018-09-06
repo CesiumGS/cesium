@@ -112,7 +112,7 @@ define([
         shaderCacheDisplay.className = 'cesium-cesiumInspector-shaderCache';
         shaderCacheDisplay.setAttribute('data-bind', 'html: shaderCacheText');
         generalSection.appendChild(shaderCacheDisplay);
-
+/*
         var globeDepth = createCheckBox('checked: globeDepth', 'Show globe depth');
         generalSection.appendChild(globeDepth);
 
@@ -120,7 +120,7 @@ define([
         globeDepth.appendChild(globeDepthFrustum);
 
         generalSection.appendChild(createCheckBox('checked: pickDepth', 'Show pick depth'));
-
+*/
         var depthFrustum = document.createElement('div');
         generalSection.appendChild(depthFrustum);
 
