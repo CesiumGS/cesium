@@ -171,12 +171,12 @@ defineSuite([
         var s = createScene();
         s.context._depthTexture = false;
 
-        if (defined(s._globeDepth)) {
-            s._globeDepth.destroy();
-            s._globeDepth = undefined;
-            if (defined(s._oit)) {
-                s._oit.destroy();
-                s._oit = undefined;
+        if (defined(s._view.globeDepth)) {
+            s._view.globeDepth.destroy();
+            s._view.globeDepth = undefined;
+            if (defined(s._view.oit)) {
+                s._view.oit.destroy();
+                s._view.oit = undefined;
             }
         }
 
