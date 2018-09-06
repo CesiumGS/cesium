@@ -1,6 +1,12 @@
 Change Log
 ==========
 
+### 1.50 - 2018-10-01
+
+##### Fixes :wrench:
+
+* Fixed an issue in the 3D Tiles traversal where empty tiles would be selected instead of their nearest loaded ancestors. [#7011](https://github.com/AnalyticalGraphicsInc/cesium/pull/7011)
+
 ### 1.49 - 2018-09-04
 
 ##### Breaking Changes :mega:
