@@ -6,6 +6,7 @@ define([
         '../Core/clone',
         '../Core/Color',
         '../Core/combine',
+        '../Core/createGuid',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
@@ -79,6 +80,7 @@ define([
         clone,
         Color,
         combine,
+        createGuid,
         defaultValue,
         defined,
         defineProperties,
@@ -206,7 +208,7 @@ define([
     };
 
     var gltfCache = {};
-
+    var uriToGuid = {};
     ///////////////////////////////////////////////////////////////////////////
 
     /**
@@ -1195,9 +1197,14 @@ define([
         var basePath = defaultValue(options.basePath, modelResource.clone());
         var resource = Resource.createIfNeeded(basePath);
 
-        // If no cache key is provided, use the absolute URL, since two URLs with
-        // different relative paths could point to the same model.
-        var cacheKey = defaultValue(options.cacheKey, getAbsoluteUri(modelResource.url));
+        // If no cache key is provided, use a GUID.
+        // Check using a URI to GUID dictionary that we have not already added this model.
+        var cacheKey = defaultValue(options.cacheKey, uriToGuid[getAbsoluteUri(modelResource.url)]);
+        if (!defined(cacheKey)) {
+            cacheKey = createGuid();
+            uriToGuid[getAbsoluteUri(modelResource.url)] = cacheKey;
+        }
+
         if (defined(options.basePath) && !defined(options.cacheKey)) {
             cacheKey += resource.url;
         }

@@ -512,7 +512,12 @@ define([
             object._zoomMouseStart = Cartesian2.clone(startPosition, object._zoomMouseStart);
 
             if (defined(object._globe)) {
-                pickedPosition = mode !== SceneMode.SCENE2D ? pickGlobe(object, startPosition, scratchPickCartesian) : camera.getPickRay(startPosition, scratchZoomPickRay).origin;
+                if (mode === SceneMode.SCENE2D) {
+                    pickedPosition = camera.getPickRay(startPosition, scratchZoomPickRay).origin;
+                    pickedPosition = Cartesian3.fromElements(pickedPosition.y, pickedPosition.z, pickedPosition.x);
+                } else {
+                    pickedPosition = pickGlobe(object, startPosition, scratchPickCartesian);
+                }
             }
             if (defined(pickedPosition)) {
                 object._useZoomWorldPosition = true;
@@ -552,6 +557,7 @@ define([
 
                     if ((camera.position.x < 0.0 && savedX > 0.0) || (camera.position.x > 0.0 && savedX < 0.0)) {
                         pickedPosition = camera.getPickRay(startPosition, scratchZoomPickRay).origin;
+                        pickedPosition = Cartesian3.fromElements(pickedPosition.y, pickedPosition.z, pickedPosition.x);
                         object._zoomWorldPosition = Cartesian3.clone(pickedPosition, object._zoomWorldPosition);
                     }
                 }
@@ -692,7 +698,7 @@ define([
             }
 
             var rayDirection = ray.direction;
-            if (mode === SceneMode.COLUMBUS_VIEW) {
+            if (mode === SceneMode.COLUMBUS_VIEW || mode === SceneMode.SCENE2D) {
                 Cartesian3.fromElements(rayDirection.y, rayDirection.z, rayDirection.x, rayDirection);
             }
 
@@ -715,6 +721,9 @@ define([
         var camera = scene.camera;
         var start = camera.getPickRay(movement.startPosition, translate2DStart).origin;
         var end = camera.getPickRay(movement.endPosition, translate2DEnd).origin;
+
+        start = Cartesian3.fromElements(start.y, start.z, start.x, start);
+        end = Cartesian3.fromElements(end.y, end.z, end.x, end);
 
         var direction = Cartesian3.subtract(start, end, scratchTranslateP0);
         var distance = Cartesian3.magnitude(direction);
@@ -832,7 +841,7 @@ define([
         }
 
         var ray = camera.getPickRay(mousePosition, pickGlobeScratchRay);
-        var rayIntersection = globe.pick(ray, scene, scratchRayIntersection);
+        var rayIntersection = globe.pickWorldCoordinates(ray, scene, scratchRayIntersection);
 
         var pickDistance = defined(depthIntersection) ? Cartesian3.distance(depthIntersection, camera.positionWC) : Number.POSITIVE_INFINITY;
         var rayDistance = defined(rayIntersection) ? Cartesian3.distance(rayIntersection, camera.positionWC) : Number.POSITIVE_INFINITY;

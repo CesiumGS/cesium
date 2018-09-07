@@ -476,6 +476,19 @@ defineSuite([
         expect(result).toEqual(expected);
     });
 
+    it('setScale works', function() {
+        var matrix = Matrix4.clone(Matrix4.IDENTITY);
+        var result = new Matrix4();
+        var newScale = new Cartesian3(1.0, 2.0, 3.0);
+
+        expect(Matrix4.getScale(matrix, new Cartesian3())).toEqual(new Cartesian3(1.0, 1.0, 1.0));
+
+        var returnedResult = Matrix4.setScale(matrix, newScale, result);
+
+        expect(Matrix4.getScale(returnedResult, new Cartesian3())).toEqual(newScale);
+        expect(result).toBe(returnedResult);
+    });
+
     it('getRow works for each row', function() {
         var matrix = new Matrix4(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0);
         var expectedRow0 = new Cartesian4(1.0, 2.0, 3.0, 4.0);

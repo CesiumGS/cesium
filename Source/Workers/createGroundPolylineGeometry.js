@@ -1,15 +1,15 @@
 define([
+        '../Core/ApproximateTerrainHeights',
         '../Core/defined',
-        '../Core/GroundPolylineGeometry',
-        '../Scene/GroundPolylinePrimitive'
+        '../Core/GroundPolylineGeometry'
     ], function(
+        ApproximateTerrainHeights,
         defined,
-        GroundPolylineGeometry,
-        GroundPolylinePrimitive) {
+        GroundPolylineGeometry) {
     'use strict';
 
     function createGroundPolylineGeometry(groundPolylineGeometry, offset) {
-        return GroundPolylinePrimitive.initializeTerrainHeights()
+        return ApproximateTerrainHeights.initialize()
             .then(function() {
                 if (defined(offset)) {
                     groundPolylineGeometry = GroundPolylineGeometry.unpack(groundPolylineGeometry, offset);

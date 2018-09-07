@@ -2,6 +2,7 @@ define([
         '../Core/BoundingSphere',
         '../Core/Cartesian3',
         '../Core/Color',
+        '../Core/ColorGeometryInstanceAttribute',
         '../Core/CullingVolume',
         '../Core/defaultValue',
         '../Core/defined',
@@ -24,7 +25,6 @@ define([
         '../Core/Resource',
         '../Core/RuntimeError',
         '../ThirdParty/when',
-        './Cesium3DTileChildrenVisibility',
         './Cesium3DTileContentFactory',
         './Cesium3DTileContentState',
         './Cesium3DTileOptimizationHint',
@@ -38,6 +38,7 @@ define([
         BoundingSphere,
         Cartesian3,
         Color,
+        ColorGeometryInstanceAttribute,
         CullingVolume,
         defaultValue,
         defined,
@@ -60,7 +61,6 @@ define([
         Resource,
         RuntimeError,
         when,
-        Cesium3DTileChildrenVisibility,
         Cesium3DTileContentFactory,
         Cesium3DTileContentState,
         Cesium3DTileOptimizationHint,
@@ -88,7 +88,7 @@ define([
         var contentHeader = header.content;
 
         /**
-         * The local transform of this tile
+         * The local transform of this tile.
          * @type {Matrix4}
          */
         this.transform = defined(header.transform) ? Matrix4.unpack(header.transform) : Matrix4.clone(Matrix4.IDENTITY);
@@ -100,7 +100,7 @@ define([
         this._initialTransform = Matrix4.multiply(parentInitialTransform, this.transform, new Matrix4());
 
         /**
-         * The final computed transform of this tile
+         * The final computed transform of this tile.
          * @type {Matrix4}
          * @readonly
          */
@@ -200,10 +200,6 @@ define([
                 contentHeaderUri = contentHeader.url;
             }
 
-            if (tileset._brokenUrlWorkaround && contentHeaderUri.length > 0 && (contentHeaderUri[0] === '/')) {
-                contentHeaderUri = contentHeader.uri = contentHeaderUri.substring(1);
-            }
-
             hasEmptyContent = false;
             contentState = Cesium3DTileContentState.UNLOADED;
             contentResource = baseResource.getDerivedResource({
@@ -236,19 +232,6 @@ define([
         this.hasEmptyContent = hasEmptyContent;
 
         /**
-         * When <code>true</code>, the tile's content is renderable.
-         * <p>
-         * This is <code>false</code> until the tile's content is loaded.
-         * </p>
-         *
-         * @type {Boolean}
-         * @readonly
-         *
-         * @private
-         */
-        this.hasRenderableContent = false;
-
-        /**
          * When <code>true</code>, the tile's content points to an external tileset.
          * <p>
          * This is <code>false</code> until the tile's content is loaded.
@@ -262,14 +245,16 @@ define([
         this.hasTilesetContent = false;
 
         /**
-         * The corresponding node in the cache replacement list.
+         * The node in the tileset's LRU cache, used to determine when to unload a tile's content.
+         *
+         * See {@link Cesium3DTilesetCache}
          *
          * @type {DoublyLinkedListNode}
          * @readonly
          *
          * @private
          */
-        this.replacementNode = undefined;
+        this.cacheNode = undefined;
 
         var expire = header.expire;
         var expireDuration;
@@ -294,15 +279,6 @@ define([
          * @type {JulianDate}
          */
         this.expireDate = expireDate;
-
-        /**
-         * Marks if the tile is selected this frame.
-         *
-         * @type {Boolean}
-         *
-         * @private
-         */
-        this.selected = false;
 
         /**
          * The time when a style was last applied to this tile.
@@ -334,22 +310,27 @@ define([
 
         // Members that are updated every frame for tree traversal and rendering optimizations:
         this._distanceToCamera = 0;
-        this._visibilityPlaneMask = 0;
-        this._childrenVisibility = Cesium3DTileChildrenVisibility.VISIBLE;
-        this._lastSelectedFrameNumber = -1;
+        this._centerZDepth = 0;
         this._screenSpaceError = 0;
-        this._screenSpaceErrorComputedFrame = -1;
+        this._visibilityPlaneMask = 0;
+        this._visible = false;
+        this._inRequestVolume = false;
+
         this._finalResolution = true;
         this._depth = 0;
-        this._centerZDepth = 0;
         this._stackLength = 0;
-        this._selectedFrame = -1;
         this._selectionDepth = 0;
-        this._lastSelectionDepth = undefined;
-        this._requestedFrame = undefined;
-        this._lastVisitedFrame = undefined;
+
+        this._updatedVisibilityFrame = 0;
+        this._touchedFrame = 0;
+        this._visitedFrame = 0;
+        this._selectedFrame = 0;
+        this._requestedFrame = 0;
         this._ancestorWithContent = undefined;
-        this._ancestorWithLoadedContent = undefined;
+        this._ancestorWithContentAvailable = undefined;
+        this._refines = false;
+        this._shouldSelect = false;
+        this._priority = 0.0;
         this._isClipped = true;
         this._clippingPlanesState = 0; // encapsulates (_isClipped, clippingPlanes.enabled) and number/function
 
@@ -399,6 +380,21 @@ define([
         },
 
         /**
+         * Get the tile's bounding volume.
+         *
+         * @memberof Cesium3DTile.prototype
+         *
+         * @type {TileBoundingVolume}
+         * @readonly
+         * @private
+         */
+        boundingVolume : {
+            get : function() {
+                return this._boundingVolume;
+            }
+        },
+
+        /**
          * Get the bounding volume of the tile's contents.  This defaults to the
          * tile's bounding volume when the content's bounding volume is
          * <code>undefined</code>.
@@ -426,6 +422,22 @@ define([
         boundingSphere : {
             get : function() {
                 return this._boundingVolume.boundingSphere;
+            }
+        },
+
+        /**
+         * Returns the <code>extras</code> property in the tileset JSON for this tile, which contains application specific metadata.
+         * Returns <code>undefined</code> if <code>extras</code> does not exist.
+         *
+         * @memberof Cesium3DTile.prototype
+         *
+         * @type {*}
+         * @readonly
+         * @see {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/specification#specifying-extensions-and-application-specific-extras|Extras in the 3D Tiles specification.}
+         */
+        extras : {
+            get : function() {
+                return this._header.extras;
             }
         },
 
@@ -467,13 +479,13 @@ define([
          */
         contentAvailable : {
             get : function() {
-                return this.contentReady || (defined(this._expiredContent) && this._contentState !== Cesium3DTileContentState.FAILED);
+                return (this.contentReady && !this.hasEmptyContent && !this.hasTilesetContent) || (defined(this._expiredContent) && !this.contentFailed);
             }
         },
 
         /**
-         * Determines if the tile is ready to render. <code>true</code> if the tile
-         * is ready to render; otherwise, <code>false</code>.
+         * Determines if the tile's content is ready. This is automatically <code>true</code> for
+         * tile's with empty content.
          *
          * @memberof Cesium3DTile.prototype
          *
@@ -519,6 +531,23 @@ define([
         contentExpired : {
             get : function() {
                 return this._contentState === Cesium3DTileContentState.EXPIRED;
+            }
+        },
+
+        /**
+         * Determines if the tile's content failed to load.  <code>true</code> if the tile's
+         * content failed to load; otherwise, <code>false</code>.
+         *
+         * @memberof Cesium3DTile.prototype
+         *
+         * @type {Boolean}
+         * @readonly
+         *
+         * @private
+         */
+        contentFailed : {
+            get : function() {
+                return this._contentState === Cesium3DTileContentState.FAILED;
             }
         },
 
@@ -618,7 +647,7 @@ define([
 
     function createPriorityFunction(tile) {
         return function() {
-            return tile._distanceToCamera;
+            return tile._priority;
         };
     }
 
@@ -690,7 +719,6 @@ define([
 
             if (defined(contentFactory)) {
                 content = contentFactory(tileset, that, that._contentResource, arrayBuffer, 0);
-                that.hasRenderableContent = true;
             } else {
                 // The content may be json instead
                 content = Cesium3DTileContentFactory.json(tileset, that, that._contentResource, arrayBuffer, 0);
@@ -710,6 +738,7 @@ define([
                 updateExpireDate(that);
 
                 // Refresh style for expired content
+                that._selectedFrame = 0;
                 that.lastStyleTime = 0;
 
                 that._contentState = Cesium3DTileContentState.READY;
@@ -735,7 +764,7 @@ define([
      * @private
      */
     Cesium3DTile.prototype.unloadContent = function() {
-        if (!this.hasRenderableContent) {
+        if (this.hasEmptyContent || this.hasTilesetContent) {
             return;
         }
 
@@ -743,8 +772,6 @@ define([
         this._contentState = Cesium3DTileContentState.UNLOADED;
         this._contentReadyToProcessPromise = undefined;
         this._contentReadyPromise = undefined;
-
-        this.replacementNode = undefined;
 
         this.lastStyleTime = 0;
         this.clippingPlanesDirty = (this._clippingPlanesState === 0);
@@ -794,7 +821,7 @@ define([
         var tileset = this._tileset;
         var clippingPlanes = tileset.clippingPlanes;
         if (defined(clippingPlanes) && clippingPlanes.enabled) {
-            var tileTransform = tileset._root.computedTransform;
+            var tileTransform = tileset.root.computedTransform;
             var intersection = clippingPlanes.computeIntersectionWithBoundingVolume(boundingVolume, tileTransform);
             this._isClipped = intersection !== Intersect.INSIDE;
             if (intersection === Intersect.OUTSIDE) {
@@ -829,7 +856,7 @@ define([
         var tileset = this._tileset;
         var clippingPlanes = tileset.clippingPlanes;
         if (defined(clippingPlanes) && clippingPlanes.enabled) {
-            var tileTransform = tileset._root.computedTransform;
+            var tileTransform = tileset.root.computedTransform;
             var intersection = clippingPlanes.computeIntersectionWithBoundingVolume(boundingVolume, tileTransform);
             this._isClipped = intersection !== Intersect.INSIDE;
             if (intersection === Intersect.OUTSIDE) {
@@ -859,7 +886,7 @@ define([
      * Computes the distance from the center of the tile's bounding volume to the camera.
      *
      * @param {FrameState} frameState The frame state.
-     * @returns {Number} The distance, in meters, or zero if the camera is inside the bounding volume.
+     * @returns {Number} The distance, in meters.
      *
      * @private
      */
@@ -1032,14 +1059,24 @@ define([
 
     function applyDebugSettings(tile, tileset, frameState) {
         var hasContentBoundingVolume = defined(tile._header.content) && defined(tile._header.content.boundingVolume);
+        var empty = tile.hasEmptyContent || tile.hasTilesetContent;
 
         var showVolume = tileset.debugShowBoundingVolume || (tileset.debugShowContentBoundingVolume && !hasContentBoundingVolume);
         if (showVolume) {
+            var color;
+            if (!tile._finalResolution) {
+                color = Color.YELLOW;
+            } else if (empty) {
+                color = Color.DARKGRAY;
+            } else {
+                color = Color.WHITE;
+            }
             if (!defined(tile._debugBoundingVolume)) {
-                var color = tile._finalResolution ? (hasContentBoundingVolume ? Color.WHITE : Color.RED) : Color.YELLOW;
                 tile._debugBoundingVolume = tile._boundingVolume.createDebugVolume(color);
             }
             tile._debugBoundingVolume.update(frameState);
+            var attributes = tile._debugBoundingVolume.getGeometryInstanceAttributes('outline');
+            attributes.color = ColorGeometryInstanceAttribute.toValue(color, attributes.color);
         } else if (!showVolume && defined(tile._debugBoundingVolume)) {
             tile._debugBoundingVolume = tile._debugBoundingVolume.destroy();
         }

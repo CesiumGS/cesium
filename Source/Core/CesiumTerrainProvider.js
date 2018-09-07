@@ -61,8 +61,7 @@ define([
 
     /**
      * A {@link TerrainProvider} that accesses terrain data in a Cesium terrain format.
-     * The format is described on the
-     * {@link https://github.com/AnalyticalGraphicsInc/cesium/wiki/Cesium-Terrain-Server|Cesium wiki}.
+     * The supported formats are described on the {@link https://cesiumjs.org/data-and-assets/terrain/formats/|Terrain Formats page}.
      *
      * @alias CesiumTerrainProvider
      * @constructor
@@ -81,7 +80,7 @@ define([
      *     terrainProvider : new Cesium.CesiumTerrainProvider({
      *         url : Cesium.IonResource.fromAssetId(3956),
      *         requestVertexNormals : true
-     *     });
+     *     })
      * });
      *
      * @see createWorldTerrain
@@ -157,11 +156,11 @@ define([
 
                 var uri = new Uri(metadataResource.url);
                 if (uri.authority === 'assets.agi.com') {
-                    var deprecationText = 'The STK World Terrain tileset is deprecated and will be available until September 1, 2018.';
-                    var deprecationLinkText = 'Check out the new high-resolution Cesium World Terrain';
+                    var deprecationText = 'The STK World Terrain tileset is end-of-life and will shut down on October 1, 2018.';
+                    var deprecationLinkText = 'Check out the new high-resolution Cesium World Terrain for migration instructions.';
                     var deprecationLink = 'https://cesium.com/blog/2018/03/01/introducing-cesium-world-terrain/';
                     that._tileCredits = [
-                        new Credit('<span>' + deprecationText + '</span> <a href="' + deprecationLink + '">' + deprecationLinkText + '</a>', true)
+                        new Credit('<span><b>' + deprecationText + '</b></span> <a href="' + deprecationLink + '">' + deprecationLinkText + '</a>', true)
                     ];
                     deprecationWarning('assets.agi.com', deprecationText + ' ' + deprecationLinkText + ' ' + deprecationLink);
                 } else {
@@ -320,12 +319,14 @@ define([
                         }
                     }
 
-                    var layerJsonCredit = new Credit(attribution);
+                    if (attribution.length > 0) {
+                        var layerJsonCredit = new Credit(attribution);
 
-                    if (defined(that._tileCredits)) {
-                        that._tileCredits.push(layerJsonCredit);
-                    } else {
-                        that._tileCredits = [layerJsonCredit];
+                        if (defined(that._tileCredits)) {
+                            that._tileCredits.push(layerJsonCredit);
+                        } else {
+                            that._tileCredits = [layerJsonCredit];
+                        }
                     }
 
                     that._ready = true;

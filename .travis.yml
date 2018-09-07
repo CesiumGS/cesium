@@ -4,6 +4,7 @@ node_js:
 sudo: false
 addons:
   chrome: stable
+  firefox: latest
 before_script:
   - export DISPLAY=:99.0
   - sh -e /etc/init.d/xvfb start
@@ -19,7 +20,7 @@ script:
 
   - echo 'test webgl-stub' && echo -en 'travis_fold:start:script.test\\r'
   - npm run build
-  - npm run test -- --browsers ChromeCI --webgl-stub --failTaskOnError --suppressPassed
+  - npm run test -- --browsers FirefoxHeadless --webgl-stub --failTaskOnError --suppressPassed
   - echo -en 'travis_fold:end:script.test\\r'
 
   - echo 'makeZipFile' && echo -en 'travis_fold:start:script.makeZipFile\\r'
