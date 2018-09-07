@@ -473,7 +473,7 @@ define([
         'KHR_draco_mesh_compression' : true,
         'KHR_materials_common' : true,
         'KHR_techniques_webgl' : true,
-        'KHR_materials_unlit' : true
+        'KHR_materials_unlit' : true,
         'KHR_materials_pbrSpecularGlossiness' : true,
         'WEB3D_quantized_attributes' : true
     };

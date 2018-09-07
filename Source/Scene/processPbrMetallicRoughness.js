@@ -116,8 +116,9 @@ define([
 
         var uniformName;
         var pbrMetallicRoughness = material.pbrMetallicRoughness;
+        var parameterName;
         if (defined(pbrMetallicRoughness) && !useSpecGloss) {
-            for (var parameterName in pbrMetallicRoughness) {
+            for (parameterName in pbrMetallicRoughness) {
                 if (pbrMetallicRoughness.hasOwnProperty(parameterName)) {
                     uniformName = 'u_' + parameterName;
                     generatedMaterialValues[uniformName] = pbrMetallicRoughness[parameterName];
@@ -127,7 +128,7 @@ define([
 
         if (useSpecGloss) {
             var pbrSpecularGlossiness = material.extensions.KHR_materials_pbrSpecularGlossiness;
-            for (var parameterName in pbrSpecularGlossiness) {
+            for (parameterName in pbrSpecularGlossiness) {
                 if (pbrSpecularGlossiness.hasOwnProperty(parameterName)) {
                     uniformName = 'u_' + parameterName;
                     generatedMaterialValues[uniformName] = pbrSpecularGlossiness[parameterName];
@@ -584,36 +585,31 @@ define([
                     if (defined(generatedMaterialValues.u_diffuseFactor)) {
                         fragmentShader += '    diffuse *= u_diffuseFactor;\n';
                     }
+                } else if (defined(generatedMaterialValues.u_diffuseFactor)) {
+                    fragmentShader += '    vec4 diffuse = clamp(u_diffuseFactor, vec4(0.0), vec4(1.0));\n';
                 } else {
-                    if (defined(generatedMaterialValues.u_diffuseFactor)) {
-                        fragmentShader += '    vec4 diffuse = clamp(u_diffuseFactor, vec4(0.0), vec4(1.0));\n';
-                    } else {
-                        fragmentShader += '    vec4 diffuse = vec4(1.0);\n';
-                    }
+                    fragmentShader += '    vec4 diffuse = vec4(1.0);\n';
+                }
+            } else if (defined(generatedMaterialValues.u_metallicRoughnessTexture)) {
+                fragmentShader += '    vec3 metallicRoughness = texture2D(u_metallicRoughnessTexture, ' + v_texcoord + ').rgb;\n';
+                fragmentShader += '    float metalness = clamp(metallicRoughness.b, 0.0, 1.0);\n';
+                fragmentShader += '    float roughness = clamp(metallicRoughness.g, 0.04, 1.0);\n';
+                if (defined(generatedMaterialValues.u_metallicFactor)) {
+                    fragmentShader += '    metalness *= u_metallicFactor;\n';
+                }
+                if (defined(generatedMaterialValues.u_roughnessFactor)) {
+                    fragmentShader += '    roughness *= u_roughnessFactor;\n';
                 }
             } else {
-                // Add metallic-roughness to fragment shader
-                if (defined(generatedMaterialValues.u_metallicRoughnessTexture)) {
-                    fragmentShader += '    vec3 metallicRoughness = texture2D(u_metallicRoughnessTexture, ' + v_texcoord + ').rgb;\n';
-                    fragmentShader += '    float metalness = clamp(metallicRoughness.b, 0.0, 1.0);\n';
-                    fragmentShader += '    float roughness = clamp(metallicRoughness.g, 0.04, 1.0);\n';
-                    if (defined(generatedMaterialValues.u_metallicFactor)) {
-                        fragmentShader += '    metalness *= u_metallicFactor;\n';
-                    }
-                    if (defined(generatedMaterialValues.u_roughnessFactor)) {
-                        fragmentShader += '    roughness *= u_roughnessFactor;\n';
-                    }
+                if (defined(generatedMaterialValues.u_metallicFactor)) {
+                    fragmentShader += '    float metalness = clamp(u_metallicFactor, 0.0, 1.0);\n';
                 } else {
-                    if (defined(generatedMaterialValues.u_metallicFactor)) {
-                        fragmentShader += '    float metalness = clamp(u_metallicFactor, 0.0, 1.0);\n';
-                    } else {
-                        fragmentShader += '    float metalness = 1.0;\n';
-                    }
-                    if (defined(generatedMaterialValues.u_roughnessFactor)) {
-                        fragmentShader += '    float roughness = clamp(u_roughnessFactor, 0.04, 1.0);\n';
-                    } else {
-                        fragmentShader += '    float roughness = 1.0;\n';
-                    }
+                    fragmentShader += '    float metalness = 1.0;\n';
+                }
+                if (defined(generatedMaterialValues.u_roughnessFactor)) {
+                    fragmentShader += '    float roughness = clamp(u_roughnessFactor, 0.04, 1.0);\n';
+                } else {
+                    fragmentShader += '    float roughness = 1.0;\n';
                 }
             }
 
