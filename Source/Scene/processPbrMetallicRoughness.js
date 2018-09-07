@@ -575,7 +575,7 @@ define([
                         fragmentShader += '    vec3 specular = vec3(1.0);\n';
                     }
                     if (defined(generatedMaterialValues.u_glossinessFactor)) {
-                        fragmentShader += '    float glossiness *= clamp(u_glossinessFactor, 0.0, 1.0);\n';
+                        fragmentShader += '    float glossiness = clamp(u_glossinessFactor, 0.0, 1.0);\n';
                     } else {
                         fragmentShader += '    float glossiness = 1.0;\n';
                     }
@@ -635,19 +635,18 @@ define([
             fragmentShader += '    float NdotH = clamp(dot(n, h), 0.0, 1.0);\n';
             fragmentShader += '    float LdotH = clamp(dot(l, h), 0.0, 1.0);\n';
             fragmentShader += '    float VdotH = clamp(dot(v, h), 0.0, 1.0);\n';
-
             fragmentShader += '    vec3 f0 = vec3(0.04);\n';
+
             if (useSpecGloss) {
-                fragmentShader += '    float alpha = pow((1.0 - glossiness), 2.0);\n';
+                fragmentShader += '    float roughness = 1.0 - glossiness;\n';
                 fragmentShader += '    vec3 diffuseColor = diffuse.rgb * (1.0 - max(max(specular.r, specular.g), specular.b));\n';
                 fragmentShader += '    vec3 specularColor = specular;\n';
-                fragmentShader += '    float roughness = 1.0 - glossiness;\n';
             } else {
-                fragmentShader += '    float alpha = roughness * roughness;\n';
                 fragmentShader += '    vec3 diffuseColor = baseColor * (1.0 - metalness) * (1.0 - f0);\n';
                 fragmentShader += '    vec3 specularColor = mix(f0, baseColor, metalness);\n';
             }
 
+            fragmentShader += '    float alpha = roughness * roughness;\n';
             fragmentShader += '    float reflectance = max(max(specularColor.r, specularColor.g), specularColor.b);\n';
             fragmentShader += '    vec3 r90 = vec3(clamp(reflectance * 25.0, 0.0, 1.0));\n';
             fragmentShader += '    vec3 r0 = specularColor.rgb;\n';
