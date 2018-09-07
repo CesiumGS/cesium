@@ -2694,7 +2694,7 @@ defineSuite([
         });
     });
 
-    it('renders with the unlit extension', function() {
+    it('renders with the KHR_materials_unlit extension', function() {
         return loadModel(boxPbrUnlitUrl).then(function(model) {
             model.show = true;
             model.zoomTo();

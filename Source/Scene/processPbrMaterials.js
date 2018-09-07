@@ -23,12 +23,12 @@ define([
     /**
      * @private
      */
-    function processPbrMetallicRoughness(gltf, options) {
+    function processPbrMaterials(gltf, options) {
         options = defaultValue(options, {});
 
         var hasPbrMetallicRoughness = false;
         ForEach.material(gltf, function(material) {
-            if (isPbrMaterial(material)) {
+            if (isMetallicRoughnessMaterial(material)) {
                 hasPbrMetallicRoughness = true;
             }
         });
@@ -66,7 +66,7 @@ define([
         var primitiveByMaterial = ModelUtility.splitIncompatibleMaterials(gltf);
 
         ForEach.material(gltf, function(material, materialIndex) {
-            if (isPbrMaterial(material)) {
+            if (isMetallicRoughnessMaterial(material)) {
                 var generatedMaterialValues = {};
                 var technique = generateTechnique(gltf, material, materialIndex, generatedMaterialValues, primitiveByMaterial, options);
 
@@ -88,7 +88,7 @@ define([
         return gltf;
     }
 
-    function isPbrMaterial(material) {
+    function isMetallicRoughnessMaterial(material) {
         return defined(material.pbrMetallicRoughness) ||
                defined(material.normalTexture) ||
                defined(material.occlusionTexture) ||
@@ -636,7 +636,8 @@ define([
             fragmentShader += '    float LdotH = clamp(dot(l, h), 0.0, 1.0);\n';
             fragmentShader += '    float VdotH = clamp(dot(v, h), 0.0, 1.0);\n';
             fragmentShader += '    vec3 f0 = vec3(0.04);\n';
-
+            // Whether the material uses metallic-roughness or specular-glossiness changes how the BRDF inputs are computed.
+            // It does not change the implementation of the BRDF itself.
             if (useSpecGloss) {
                 fragmentShader += '    float roughness = 1.0 - glossiness;\n';
                 fragmentShader += '    vec3 diffuseColor = diffuse.rgb * (1.0 - max(max(specular.r, specular.g), specular.b));\n';
@@ -798,5 +799,5 @@ define([
         }
     }
 
-    return processPbrMetallicRoughness;
+    return processPbrMaterials;
 });
