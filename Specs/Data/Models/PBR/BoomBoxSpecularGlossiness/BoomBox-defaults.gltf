@@ -182,17 +182,7 @@
       },
       "name": "BoomBox_Mat",
       "extensions": {
-        "KHR_materials_pbrSpecularGlossiness": {
-          "diffuseTexture": {
-            "index": 5
-          },
-          "specularGlossinessTexture": {
-            "index": 6
-          },
-          "specularFactor": [1.0, 1.0, 1.0],
-          "diffuseFactor": [1.0, 1.0, 1.0, 1.0],
-          "glossinessFactor": 0.5
-        }
+        "KHR_materials_pbrSpecularGlossiness": {}
       }
     }
   ],

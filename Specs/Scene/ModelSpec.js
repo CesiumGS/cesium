@@ -119,6 +119,8 @@ defineSuite([
     var CesiumManUrl = './Data/Models/MaterialsCommon/Cesium_Man.gltf';
 
     var boomBoxUrl = './Data/Models/PBR/BoomBox/BoomBox.gltf';
+    var boomBoxPbrSpecularGlossinessUrl = './Data/Models/PBR/BoomBoxSpecularGlossiness/BoomBox.gltf';
+    var boomBoxPbrSpecularGlossinessDefaultsUrl = './Data/Models/PBR/BoomBoxSpecularGlossiness/BoomBox-defaults.gltf';
     var boxPbrUrl = './Data/Models/PBR/Box/Box.gltf';
     var boxPbrUnlitUrl = './Data/Models/PBR/BoxUnlit/BoxUnlit.gltf';
     var boxAnimatedPbrUrl = './Data/Models/PBR/BoxAnimated/BoxAnimated.gltf';
@@ -2706,6 +2708,24 @@ defineSuite([
             });
 
             primitives.remove(model);
+        });
+    });
+
+    it('renders with the KHR_materials_pbrSpecularGlossiness extension', function() {
+        return loadModel(boomBoxPbrSpecularGlossinessUrl).then(function(model) {
+            model.show = true;
+            model.zoomTo();
+
+            scene.renderForSpecs();
+        });
+    });
+
+    it('renders with the KHR_materials_pbrSpecularGlossiness extension with defaults', function() {
+        return loadModel(boomBoxPbrSpecularGlossinessDefaultsUrl).then(function(model) {
+            model.show = true;
+            model.zoomTo();
+
+            scene.renderForSpecs();
         });
     });
 
