@@ -172,8 +172,7 @@ define([
         this._clippingPlanes = undefined;
 
         /**
-         * A property specifying a {@link Rectangle} used to selectively prevent tiles outside a region from loading.
-         * For limiting terrain in scenes that use custom projections or Proj4JS projections that cause overlapping tiles.
+         * A property specifying a {@link Rectangle} used to selectively limit terrain and imagery rendering.
          * @type {Rectangle}
          */
         this.geographicLimitRectangle = Rectangle.clone(Rectangle.MAX_VALUE);

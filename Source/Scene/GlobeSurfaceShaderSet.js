@@ -86,7 +86,7 @@ define([
 
         var geographicLimitRectangleFlag = 0;
         var geographicLimitRectangleDefine = '';
-        if (clippedByBoundaries) {//} && frameState.mode !== SceneMode.SCENE3D) {
+        if (clippedByBoundaries) {
             geographicLimitRectangleFlag = 1;
             geographicLimitRectangleDefine = 'TILE_LIMIT_RECTANGLE';
         }

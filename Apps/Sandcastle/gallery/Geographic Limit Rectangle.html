@@ -44,7 +44,6 @@ var rectangles = [];
 
 for (var i = 0; i < 10; i++) {
     rectangles.push(viewer.entities.add({
-        name : 'EPSG 2093 bounds',
         rectangle : {
             coordinates : coffeeBeltRectangle,
             material : Cesium.Color.WHITE.withAlpha(0.0),
@@ -65,7 +64,7 @@ Sandcastle.addToolbarButton('Show/Hide Bounds', function() {
 });
 
 var limited = true;
-Sandcastle.addToolbarButton('enable/disable limiter', function() {
+Sandcastle.addToolbarButton('Enable/Disable Limiter', function() {
     if (limited) {
         viewer.scene.globe.geographicLimitRectangle = Cesium.Rectangle.MAX_VALUE;
         limited = false;
