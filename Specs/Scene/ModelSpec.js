@@ -120,7 +120,8 @@ defineSuite([
 
     var boomBoxUrl = './Data/Models/PBR/BoomBox/BoomBox.gltf';
     var boomBoxPbrSpecularGlossinessUrl = './Data/Models/PBR/BoomBoxSpecularGlossiness/BoomBox.gltf';
-    var boomBoxPbrSpecularGlossinessDefaultsUrl = './Data/Models/PBR/BoomBoxSpecularGlossiness/BoomBox-defaults.gltf';
+    var boomBoxPbrSpecularGlossinessDefaultsUrl = './Data/Models/PBR/BoomBoxSpecularGlossiness/BoomBox-Default.gltf';
+    var boomBoxPbrSpecularGlossinessNoTextureUrl = './Data/Models/PBR/BoomBoxSpecularGlossiness/BoomBox-NoTexture.gltf';
     var boxPbrUrl = './Data/Models/PBR/Box/Box.gltf';
     var boxPbrUnlitUrl = './Data/Models/PBR/BoxUnlit/BoxUnlit.gltf';
     var boxAnimatedPbrUrl = './Data/Models/PBR/BoxAnimated/BoxAnimated.gltf';
@@ -2722,6 +2723,15 @@ defineSuite([
 
     it('renders with the KHR_materials_pbrSpecularGlossiness extension with defaults', function() {
         return loadModel(boomBoxPbrSpecularGlossinessDefaultsUrl).then(function(model) {
+            model.show = true;
+            model.zoomTo();
+
+            scene.renderForSpecs();
+        });
+    });
+
+    it('renders with the KHR_materials_pbrSpecularGlossiness extension when no textures are found', function() {
+        return loadModel(boomBoxPbrSpecularGlossinessNoTextureUrl).then(function(model) {
             model.show = true;
             model.zoomTo();
 
