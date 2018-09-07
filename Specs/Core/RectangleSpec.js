@@ -3,6 +3,7 @@ defineSuite([
         'Core/Cartesian3',
         'Core/Cartographic',
         'Core/Ellipsoid',
+        'Core/GeographicProjection',
         'Core/Math',
         'Specs/createPackableSpecs'
     ], function(
@@ -10,6 +11,7 @@ defineSuite([
         Cartesian3,
         Cartographic,
         Ellipsoid,
+        GeographicProjection,
         CesiumMath,
         createPackableSpecs) {
     'use strict';
@@ -871,6 +873,38 @@ defineSuite([
         expect(function() {
             Rectangle.contains(rectangle, undefined);
         }).toThrowDeveloperError();
+    });
+
+    it('provides a function for getting the unprojected bounds of a projected rectangle', function() {
+        var geographicProjection = new GeographicProjection();
+
+        var projectedSouthWest = geographicProjection.project(new Cartographic(-90, -45));
+        var projectedNorthEast = geographicProjection.project(new Cartographic(90, 45));
+
+        var projectedRectangle = new Rectangle(projectedSouthWest.x, projectedSouthWest.y, projectedNorthEast.x, projectedNorthEast.y);
+
+        var unprojectedRectangle = Rectangle.unproject(projectedRectangle, geographicProjection);
+
+        expect(unprojectedRectangle.west).toEqualEpsilon(-90, CesiumMath.EPSILON11);
+        expect(unprojectedRectangle.east).toEqualEpsilon(90, CesiumMath.EPSILON11);
+        expect(unprojectedRectangle.south).toEqualEpsilon(-45, CesiumMath.EPSILON11);
+        expect(unprojectedRectangle.north).toEqualEpsilon(45, CesiumMath.EPSILON11);
+    });
+
+    it('provides a function for getting the projected bounds of an unprojected rectangle', function() {
+        var geographicProjection = new GeographicProjection();
+
+        var projectedSouthWest = geographicProjection.project(new Cartographic(-90, -45));
+        var projectedNorthEast = geographicProjection.project(new Cartographic(90, 45));
+
+        var unprojectedRectangle = new Rectangle(-90, -45, 90, 45);
+
+        var projectedRectangle = Rectangle.project(unprojectedRectangle, geographicProjection);
+
+        expect(projectedRectangle.west).toEqualEpsilon(projectedSouthWest.x, CesiumMath.EPSILON11);
+        expect(projectedRectangle.east).toEqualEpsilon(projectedNorthEast.x, CesiumMath.EPSILON11);
+        expect(projectedRectangle.south).toEqualEpsilon(projectedSouthWest.y, CesiumMath.EPSILON11);
+        expect(projectedRectangle.north).toEqualEpsilon(projectedNorthEast.y, CesiumMath.EPSILON11);
     });
 
     var rectangle = new Rectangle(west, south, east, north);

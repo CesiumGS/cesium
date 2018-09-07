@@ -29,9 +29,26 @@
 function startup(Cesium) {
     'use strict';
 //Sandcastle_Begin
+var projection = new Cesium.Proj4Projection('+proj=moll +lon_0=0 +x_0=0 +y_0=0 +a=6371000 +b=6371000 +units=m +no_defs');
+
+console.log('projected extents:');
+console.log('west: ' + projection.project(new Cesium.Cartographic(-Cesium.Math.PI)).x);
+console.log('east: ' + projection.project(new Cesium.Cartographic(Cesium.Math.PI)).x);
+console.log('north: ' + projection.project(new Cesium.Cartographic(0.0, Cesium.Math.PI_OVER_TWO)).y);
+console.log('south: ' + projection.project(new Cesium.Cartographic(0.0, -Cesium.Math.PI_OVER_TWO)).y);
+
+console.log('brazil extents unprojected:');
+var extent1 = projection.unproject(new Cesium.Cartesian3(-8309084.8709259927272797, -6474832.4202510649338365));
+var extent2 = projection.unproject(new Cesium.Cartesian3(-2331162.9914685478433967, 1661637.9380288750398904));
+
+console.log(Cesium.Math.toDegrees(extent1.longitude));
+console.log(Cesium.Math.toDegrees(extent1.latitude));
+console.log(Cesium.Math.toDegrees(extent2.longitude));
+console.log(Cesium.Math.toDegrees(extent2.latitude));
+
 var viewer = new Cesium.Viewer('cesiumContainer', {
     sceneMode : Cesium.SceneMode.COLUMBUS_VIEW,
-    mapProjection : new Cesium.Proj4Projection('+proj=moll +lon_0=0 +x_0=0 +y_0=0 +a=6371000 +b=6371000 +units=m +no_defs')
+    mapProjection : projection
 });
 
 var pointEntities = [];
@@ -59,6 +76,17 @@ Sandcastle.addToolbarButton('Show/Hide Points', function() {
         pointEntities[i].show = !pointEntities[i].show;
     }
 });
+
+var handler = new Cesium.ScreenSpaceEventHandler(viewer.canvas);
+handler.setInputAction(function(event) {
+    // We use `viewer.scene.pickPosition` here instead of `viewer.camera.pickEllipsoid` so that
+    // we get the correct point when mousing over terrain.
+    var earthPosition = viewer.scene.pickPosition(event.position);
+    // `earthPosition` will be undefined if our mouse is not over the globe.
+    if (Cesium.defined(earthPosition)) {
+        console.log(earthPosition);
+    }
+}, Cesium.ScreenSpaceEventType.LEFT_CLICK);
 
 //Sandcastle_End
     Sandcastle.finishedLoading();
