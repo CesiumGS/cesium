@@ -148,7 +148,7 @@ define([
     CustomProjection.prototype.project = function(cartographic, result) {
         //>>includeStart('debug', pragmas.debug);
         if (!this._ready) {
-            throw new DeveloperError('CustomProjection is not loaded. User CustomProjection.readyPromise or waith for CustomProjection.ready to be true.');
+            throw new DeveloperError('CustomProjection is not loaded. User CustomProjection.readyPromise or wait for CustomProjection.ready to be true.');
         }
         Check.defined('cartographic', cartographic);
         //>>includeEnd('debug');
@@ -180,7 +180,7 @@ define([
     CustomProjection.prototype.unproject = function(cartesian, result) {
         //>>includeStart('debug', pragmas.debug);
         if (!this._ready) {
-            throw new DeveloperError('CustomProjection is not loaded. User CustomProjection.readyPromise or waith for CustomProjection.ready to be true.');
+            throw new DeveloperError('CustomProjection is not loaded. User CustomProjection.readyPromise or wait for CustomProjection.ready to be true.');
         }
         Check.defined('cartesian', cartesian);
         //>>includeEnd('debug');

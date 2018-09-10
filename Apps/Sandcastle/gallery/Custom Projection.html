@@ -68,10 +68,9 @@ customProjection.readyPromise
         }));
     }
 
-    // Add lat/long points
-    for (var x = -175; x < 180; x += 10) {
-        for (var y = -85; y < 90; y += 10) {
-            addPoint(x, y);
+    for (var longitude = -175; longitude < 180; longitude += 10) {
+        for (var latitude = -85; latitude < 90; latitude += 10) {
+            addPoint(longitude, latitude);
         }
     }
 

@@ -83,7 +83,7 @@ define([
 
         var mesh = this.mesh;
         Cartesian3.clone(mesh.center, surfaceTile.center);
-        if (mesh.encoding.has2dPositions) {
+        if (mesh.encoding.hasPositions2D) {
             Cartesian3.clone(mesh.encoding.center2D, surfaceTile.center2D);
         }
         surfaceTile.minimumHeight = mesh.minimumHeight;

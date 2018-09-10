@@ -155,7 +155,7 @@ define([
          * The terrain mesh should contain projected positions for 2D space.
          * @type {Boolean}
          */
-        this.has2dPositions = defined(center2D);
+        this.hasPositions2D = defined(center2D);
     }
 
     TerrainEncoding.prototype.encode = function(vertexBuffer, bufferIndex, position, uv, height, normalToPack, webMercatorT, position2D) {
@@ -210,7 +210,7 @@ define([
         }
 
         // Don't quantize 2D positions in custom projections
-        if (this.has2dPositions) {
+        if (this.hasPositions2D) {
             Cartesian3.subtract(position2D, this.center2D, cartesian3Scratch);
             vertexBuffer[bufferIndex++] = cartesian3Scratch.x;
             vertexBuffer[bufferIndex++] = cartesian3Scratch.y;
@@ -271,7 +271,7 @@ define([
 
     TerrainEncoding.prototype.getOctEncodedNormal = function(buffer, index, result) {
         var stride = this.getStride();
-        index = (index + 1) * stride - (this.has2dPositions ? 3 : 1);
+        index = (index + 1) * stride - (this.hasPositions2D ? 3 : 1);
 
         var temp = buffer[index] / 256.0;
         var x = Math.floor(temp);
@@ -299,7 +299,7 @@ define([
             ++vertexStride;
         }
 
-        if (this.has2dPositions) {
+        if (this.hasPositions2D) {
             vertexStride += 3;
         }
 
@@ -330,7 +330,7 @@ define([
         var sizeInBytes = ComponentDatatype.getSizeInBytes(datatype);
         var stride;
         var terrainAttributes;
-        var num2DComponents = this.has2dPositions ? 3 : 0;
+        var num2DComponents = this.hasPositions2D ? 3 : 0;
 
         if (this.quantization === TerrainQuantization.NONE) {
             var position3DAndHeightLength = 4;
@@ -361,7 +361,7 @@ define([
                 offsetInBytes : position3DAndHeightLength * sizeInBytes,
                 strideInBytes : stride
             }];
-            if (this.has2dPositions) {
+            if (this.hasPositions2D) {
                 terrainAttributes.push({
                     index : attributesNoneAnd2D.position2D,
                     vertexBuffer : buffer,
@@ -402,7 +402,7 @@ define([
                 strideInBytes : stride
             }];
 
-            if (this.has2dPositions) {
+            if (this.hasPositions2D) {
                 terrainAttributes.push({
                     index : attributesAnd2D.position2D,
                     vertexBuffer : buffer,
@@ -416,7 +416,7 @@ define([
             return terrainAttributes;
         }
 
-        if (this.has2dPositions) {
+        if (this.hasPositions2D) {
             stride = (numCompressed0 + num2DComponents) * sizeInBytes;
             return [{
                 index : attributes.compressed0,
@@ -443,7 +443,7 @@ define([
     };
 
     TerrainEncoding.prototype.getAttributeLocations = function() {
-        if (this.has2dPositions) {
+        if (this.hasPositions2D) {
             if (this.quantization === TerrainQuantization.NONE) {
                 return attributesNoneAnd2D;
             }
@@ -469,7 +469,7 @@ define([
         result.matrix = Matrix4.clone(encoding.matrix);
         result.hasVertexNormals = encoding.hasVertexNormals;
         result.hasWebMercatorT = encoding.hasWebMercatorT;
-        result.has2dPositions = encoding.has2dPositions;
+        result.hasPositions2D = encoding.hasPositions2D;
         result.center2D = Cartesian3.clone(encoding.center2D);
         return result;
     };

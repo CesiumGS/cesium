@@ -5,6 +5,7 @@ define([
         './defined',
         './DeveloperError',
         './Ellipsoid',
+        './freezeObject',
         './GeographicProjection',
         './Proj4Projection',
         './WebMercatorProjection'
@@ -15,10 +16,18 @@ define([
         defined,
         DeveloperError,
         Ellipsoid,
+        freezeObject,
         GeographicProjection,
         Proj4Projection,
         WebMercatorProjection) {
     'use strict';
+
+    var ProjectionType = freezeObject({
+        GEOGRAPHIC : 0,
+        WEBMERCATOR : 1,
+        PROJ4JS : 2,
+        CUSTOM : 3
+    });
 
     /**
      * Serializes and Deserializes MapProjections.
@@ -33,12 +42,28 @@ define([
         Check.defined('mapProjection', mapProjection);
         //>>includeEnd('debug');
 
-        this.isMercator = mapProjection instanceof WebMercatorProjection;
-        this.isGeographic = mapProjection instanceof GeographicProjection;
-        this.wellKnownText = mapProjection.wellKnownText;
-        this.heightScale = mapProjection.heightScale;
-        this.url = mapProjection.url;
-        this.functionName = mapProjection.functionName;
+        var projectionType = ProjectionType.GEOGRAPHIC;
+        var wellKnownText;
+        var heightScale;
+        var url;
+        var functionName;
+        if (mapProjection instanceof WebMercatorProjection) {
+            projectionType = ProjectionType.WEBMERCATOR;
+        } else if (mapProjection instanceof Proj4Projection) {
+            projectionType = ProjectionType.PROJ4JS;
+            wellKnownText = mapProjection.wellKnownText;
+            heightScale = mapProjection.heightScale;
+        } else if (mapProjection instanceof CustomProjection) {
+            projectionType = ProjectionType.CUSTOM;
+            url = mapProjection.url;
+            functionName = mapProjection.functionName;
+        }
+
+        this.projectionType = projectionType;
+        this.wellKnownText = wellKnownText;
+        this.heightScale = heightScale;
+        this.url = url;
+        this.functionName = functionName;
 
         this.packedEllipsoid = Ellipsoid.pack(mapProjection.ellipsoid, new Array(Ellipsoid.packedLength));
     }
@@ -56,21 +81,19 @@ define([
 
         var ellipsoid = Ellipsoid.unpack(serializedMapProjection.packedEllipsoid);
         var projection;
+        var projectionType = serializedMapProjection.projectionType;
 
-        if (defined(serializedMapProjection.url) && defined(serializedMapProjection.url)) {
+        if (projectionType === ProjectionType.GEOGRAPHIC) {
+            projection = new GeographicProjection(ellipsoid);
+        } else if (projectionType === ProjectionType.WEBMERCATOR) {
+            projection = new WebMercatorProjection(ellipsoid);
+        } else if (projectionType === ProjectionType.PROJ4JS) {
+            projection = new Proj4Projection(serializedMapProjection.wellKnownText, serializedMapProjection.heightScale);
+        } else if (projectionType === ProjectionType.CUSTOM) {
             projection = new CustomProjection(serializedMapProjection.url, serializedMapProjection.functionName, ellipsoid);
             return projection.readyPromise;
         }
 
-        if (serializedMapProjection.isMercator) {
-            projection = new WebMercatorProjection(ellipsoid);
-        }
-        if (serializedMapProjection.isGeographic) {
-            projection = new GeographicProjection(ellipsoid);
-        }
-        if (defined(serializedMapProjection.wellKnownText)) {
-            projection = new Proj4Projection(serializedMapProjection.wellKnownText, serializedMapProjection.heightScale);
-        }
         if (defined(projection)) {
             return when.resolve(projection);
         }
