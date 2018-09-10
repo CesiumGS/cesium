@@ -1058,8 +1058,8 @@ define([
         var textureWidth = texture.width;
         var textureHeight = texture.height;
 
-        var verticesWidth = Math.min(texture.width, 128); // should be higher?
-        var verticesHeight = Math.min(texture.height, 128);
+        var verticesWidth = Math.min(texture.width, 255); // should be higher?
+        var verticesHeight = Math.min(texture.height, 255);
 
         var positions = new Float32Array(verticesWidth * verticesHeight * 2);
         var index = 0;
@@ -1098,10 +1098,6 @@ define([
                 geographicCartographic.latitude = south + h * unprojectedHeightIncrement;
 
                 projection.project(geographicCartographic, projected);
-
-                if ((projected.x - projectedWest) / rectangleInProjection.width > 1.0) {
-                    //debugger;
-                }
 
                 texcoords[index++] = (projected.x - projectedWest) / rectangleInProjection.width;
                 texcoords[index++] = (projected.y - projectedSouth) / rectangleInProjection.height;

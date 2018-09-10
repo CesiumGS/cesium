@@ -43,20 +43,49 @@ var viewer = new Cesium.Viewer('cesiumContainer', {
 var layers = viewer.imageryLayers;
 
 var geographicLayer = layers.addImageryProvider(new Cesium.SingleTileImageryProvider({
-    url : '../../SampleData/test_espg4326_grid.png',
+    url : '../../SampleData/Brazil_elevation_EPSG4326.png',
     rectangle : Cesium.Rectangle.fromDegrees(-83.0049972999999994,-55.9523302142549284,-33.4586659819903787,13.5018063000000001)
 }));
 
 geographicLayer.show = false;
+
+Sandcastle.addToolbarButton('Toggle geographic layer', function() {
+    geographicLayer.show = !geographicLayer.show;
+});
+
 var mollweideLayer = layers.addImageryProvider(new Cesium.SingleTileProjectedImageryProvider({
-    url : '../../SampleData/test_esri53009_grid.png',
+    url : '../../SampleData/Brazil_elevation_ESRI53009.png',
     // bounds copied out of QGIS
     rectangle : new Cesium.Rectangle(-8309084.8709259927272797,-6474832.4202510649338365,-2331162.9914685478433967,1661637.9380288750398904),
     projection : mollweide
 }));
 
-Sandcastle.addToolbarButton('Toggle geographic layer', function() {
-    geographicLayer.show = !geographicLayer.show;
+Sandcastle.addToolbarButton('Toggle mollweide layer', function() {
+    mollweideLayer.show = !mollweideLayer.show;
+});
+
+var geographicLayerDebug = layers.addImageryProvider(new Cesium.SingleTileImageryProvider({
+    url : '../../SampleData/Brazil_grid_EPSG4326.png',
+    rectangle : Cesium.Rectangle.fromDegrees(-83.0049972999999994,-55.9523302142549284,-33.4586659819903787,13.5018063000000001)
+}));
+
+geographicLayerDebug.show = false;
+
+Sandcastle.addToolbarButton('Toggle geographic debug', function() {
+    geographicLayerDebug.show = !geographicLayerDebug.show;
+});
+
+var mollweideLayerDebug = layers.addImageryProvider(new Cesium.SingleTileProjectedImageryProvider({
+    url : '../../SampleData/Brazil_grid_ESRI53009.png',
+    // bounds copied out of QGIS
+    rectangle : new Cesium.Rectangle(-8309084.8709259927272797,-6474832.4202510649338365,-2331162.9914685478433967,1661637.9380288750398904),
+    projection : mollweide
+}));
+
+mollweideLayerDebug.show = false;
+
+Sandcastle.addToolbarButton('Toggle mollweide debug', function() {
+    mollweideLayerDebug.show = !mollweideLayerDebug.show;
 });
 
 viewer.entities.add({
@@ -68,10 +97,6 @@ viewer.entities.add({
         outline : true,
         outlineColor : Cesium.Color.RED
     }
-});
-
-Sandcastle.addToolbarButton('Toggle mollweide layer', function() {
-    mollweideLayer.show = !mollweideLayer.show;
 });
 
 //Sandcastle_End
