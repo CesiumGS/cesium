@@ -560,7 +560,6 @@ define([
 
         if (defined(invertClassification)) {
             command = invertClassification.unclassifiedCommand;
-            command = useLogDepth ? command.derivedCommands.logDepth.command : command;
             derivedCommand = (lightShadowsEnabled && command.receiveShadows) ? command.derivedCommands.oit.shadows.translucentCommand : command.derivedCommands.oit.translucentCommand;
             executeFunction(derivedCommand, scene, context, passState, debugFramebuffer);
         }
@@ -576,7 +575,6 @@ define([
 
         if (defined(invertClassification)) {
             command = invertClassification.unclassifiedCommand;
-            command = useLogDepth ? command.derivedCommands.logDepth.command : command;
             derivedCommand = (lightShadowsEnabled && command.receiveShadows) ? command.derivedCommands.oit.shadows.alphaCommand : command.derivedCommands.oit.alphaCommand;
             executeFunction(derivedCommand, scene, context, passState, debugFramebuffer);
         }
@@ -610,7 +608,6 @@ define([
 
         if (defined(invertClassification)) {
             command = invertClassification.unclassifiedCommand;
-            command = useLogDepth ? command.derivedCommands.logDepth.command : command;
             derivedCommand = (lightShadowsEnabled && command.receiveShadows) ? command.derivedCommands.oit.shadows.translucentCommand : command.derivedCommands.oit.translucentCommand;
             executeFunction(derivedCommand, scene, context, passState, debugFramebuffer);
         }
