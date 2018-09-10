@@ -660,6 +660,10 @@ define([
         this._rtcCenterEye = undefined; // in eye coordinates
         this._rtcCenter3D = undefined;  // in world coordinates
         this._rtcCenter2D = undefined;  // in projected world coordinates
+
+        this._iblFactor = 1.0;
+        this._lightColor = undefined;
+        this._regenerateShaders = false;
     }
 
     defineProperties(Model.prototype, {
@@ -1073,6 +1077,26 @@ define([
         pickIds : {
             get : function() {
                 return this._pickIds;
+            }
+        },
+
+        iblFactor : {
+            get : function() {
+                return this._iblFactor;
+            },
+            set : function(value) {
+                this._regenerateShaders = this._regenerateShaders || (this._iblFactor > 0.0 && value === 0.0) || (this._iblFactor === 0.0 && value > 0.0);
+                this._iblFactor = value;
+            }
+        },
+
+        lightColor : {
+            get : function() {
+                return this._lightColor;
+            },
+            set : function(value) {
+                this._regenerateShaders = this._regenerateShaders || (defined(this._lightColor) && !defined(value)) || (defined(value) && !defined(this._lightColor));
+                this._lightColor = Color.clone(value, this._lightColor);
             }
         }
     });
@@ -2044,6 +2068,14 @@ define([
             drawFS = 'uniform vec4 czm_pickColor;\n' + drawFS;
         }
 
+        if (model._iblFactor > 0.0) {
+            drawFS = '#define USE_IBL_LIGHTING \n\n' + drawFS;
+        }
+
+        if (defined(model._lightColor)) {
+            drawFS = '#define USE_CUSTOM_LIGHT_COLOR \n\n' + drawFS;
+        }
+
         createAttributesAndProgram(id, drawFS, drawVS, model, context);
     }
 
@@ -2081,6 +2113,14 @@ define([
 
         if (!defined(model._uniformMapLoaded)) {
             drawFS = 'uniform vec4 czm_pickColor;\n' + drawFS;
+        }
+
+        if (model._iblFactor > 0.0) {
+            drawFS = '#define USE_IBL_LIGHTING \n\n' + drawFS;
+        }
+
+        if (defined(model._lightColor)) {
+            drawFS = '#define USE_CUSTOM_LIGHT_COLOR \n\n' + drawFS;
         }
 
         createAttributesAndProgram(id, drawFS, drawVS, model, context);
@@ -3039,6 +3079,18 @@ define([
         };
     }
 
+    function createIBLFactorFunction(model) {
+        return function() {
+            return model._iblFactor;
+        };
+    }
+
+    function createLightColorFunction(model) {
+        return function() {
+            return model._lightColor;
+        };
+    }
+
     function triangleCountFromPrimitiveIndices(primitive, indicesCount) {
         switch (primitive.mode) {
             case PrimitiveType.TRIANGLES:
@@ -3136,7 +3188,9 @@ define([
                 gltf_colorBlend : createColorBlendFunction(model),
                 gltf_clippingPlanes: createClippingPlanesFunction(model),
                 gltf_clippingPlanesEdgeStyle: createClippingPlanesEdgeStyleFunction(model),
-                gltf_clippingPlanesMatrix: createClippingPlanesMatrixFunction(model)
+                gltf_clippingPlanesMatrix: createClippingPlanesMatrixFunction(model),
+                gltf_iblFactor : createIBLFactorFunction(model),
+                gltf_lightColor : createLightColorFunction(model)
             });
 
             // Allow callback to modify the uniformMap
@@ -4430,7 +4484,7 @@ define([
                 currentClippingPlanesState = clippingPlanes.clippingPlanesState;
             }
 
-            var shouldRegenerateShaders = this._clippingPlanesState !== currentClippingPlanesState;
+            var shouldRegenerateShaders = this._clippingPlanesState !== currentClippingPlanesState || this._regenerateShaders;
             this._clippingPlanesState = currentClippingPlanesState;
 
             // Regenerate shaders if color shading changed from last update
@@ -4446,6 +4500,8 @@ define([
                 updateColor(this, frameState, false);
                 updateSilhouette(this, frameState, false);
             }
+
+            this._regenerateShaders = false;
         }
 
         if (justLoaded) {

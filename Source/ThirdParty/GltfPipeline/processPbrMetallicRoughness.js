@@ -465,6 +465,16 @@ define([
             '    return pow(linearIn, vec3(1.0/2.2));\n' +
             '}\n\n';
 
+        if (optimizeForCesium) {
+            fragmentShader += '#ifdef USE_IBL_LIGHTING \n';
+            fragmentShader += 'uniform float gltf_iblFactor; \n';
+            fragmentShader += '#endif \n';
+
+            fragmentShader += '#ifdef USE_CUSTOM_LIGHT_COLOR \n';
+            fragmentShader += 'uniform vec3 gltf_lightColor; \n';
+            fragmentShader += '#endif \n';
+        }
+
         fragmentShader += 'void main(void) \n{\n';
 
         // Add normal mapping to fragment shader
@@ -560,7 +570,11 @@ define([
             // Generate fragment shader's lighting block
             if (optimizeForCesium) {
                 // The Sun is brighter than your average light source, and has a yellowish tint balanced by the Earth's ambient blue.
+                fragmentShader += '#ifdef USE_CUSTOM_LIGHT_COLOR \n';
+                fragmentShader += '    vec3 lightColor = gltf_lightColor;\n';
+                fragmentShader += '#else \n';
                 fragmentShader += '    vec3 lightColor = vec3(1.5, 1.4, 1.2);\n';
+                fragmentShader += '#endif \n';
                 fragmentShader += '    vec3 l = normalize(czm_sunDirectionEC);\n';
             } else {
                 fragmentShader += '    vec3 lightColor = vec3(1.0, 1.0, 1.0);\n';
@@ -604,6 +618,7 @@ define([
             fragmentShader += '    vec3 color = NdotL * lightColor * (diffuseContribution + specularContribution);\n';
 
             if (optimizeForCesium) {
+                fragmentShader += '#ifdef USE_IBL_LIGHTING \n';
                 fragmentShader += '    float inverseRoughness = 1.04 - roughness;\n';
                 fragmentShader += '    inverseRoughness *= inverseRoughness;\n';
                 fragmentShader += '    vec3 sceneSkyBox = textureCube(czm_environmentMap, r).rgb * inverseRoughness;\n';
@@ -634,7 +649,8 @@ define([
 
                 fragmentShader += '    vec2 brdfLut = texture2D(czm_brdfLut, vec2(NdotV, 1.0 - roughness)).rg;\n';
                 fragmentShader += '    vec3 IBLColor = (diffuseIrradiance * diffuseColor) + (specularIrradiance * SRGBtoLINEAR3(specularColor * brdfLut.x + brdfLut.y));\n';
-                fragmentShader += '    color += IBLColor;\n';
+                fragmentShader += '    color += IBLColor * gltf_iblFactor;\n';
+                fragmentShader += '#endif \n';
             }
         } else {
             fragmentShader += '    vec3 color = baseColor;\n';
