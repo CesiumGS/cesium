@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
-    <meta name="description" content="Use Viewer to start building new applications or easily embed Cesium into existing applications.">
+    <meta name="description" content="Limit terrain and imagery to a cartographic Rectangle area.">
     <meta name="cesium-sandcastle-labels" content="Showcases">
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
@@ -34,9 +34,9 @@ var viewer = new Cesium.Viewer('cesiumContainer', {
 });
 
 // Tropics of Cancer and Capricorn
-var coffeeBeltRectangle = Cesium.Rectangle.fromDegrees(-180, -23.43687, 180, 23.43687);
+var coffeeBeltRectangle = Cesium.Rectangle.fromDegrees(-180.0, -23.43687, 180.0, 23.43687);
 
-viewer.scene.globe.geographicLimitRectangle = coffeeBeltRectangle;
+viewer.scene.globe.cartographicLimitRectangle = coffeeBeltRectangle;
 viewer.scene.skyAtmosphere.show = false;
 
 // Add rectangles to show bounds
@@ -66,10 +66,10 @@ Sandcastle.addToolbarButton('Show/Hide Bounds', function() {
 var limited = true;
 Sandcastle.addToolbarButton('Enable/Disable Limiter', function() {
     if (limited) {
-        viewer.scene.globe.geographicLimitRectangle = Cesium.Rectangle.MAX_VALUE;
+        viewer.scene.globe.cartographicLimitRectangle = Cesium.Rectangle.MAX_VALUE;
         limited = false;
     } else {
-        viewer.scene.globe.geographicLimitRectangle = coffeeBeltRectangle;
+        viewer.scene.globe.cartographicLimitRectangle = coffeeBeltRectangle;
         limited = true;
     }
 });

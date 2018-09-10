@@ -277,12 +277,12 @@ define([
                 this._surface.tileProvider.clippingPlanes = value;
             }
         },
-        geographicLimitRectangle : {
+        cartographicLimitRectangle : {
             get : function() {
-                return this._surface.tileProvider.geographicLimitRectangle;
+                return this._surface.tileProvider.cartographicLimitRectangle;
             },
             set : function(value) {
-                this._surface.tileProvider.geographicLimitRectangle = value;
+                this._surface.tileProvider.cartographicLimitRectangle = value;
             }
         },
         /**

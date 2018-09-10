@@ -938,7 +938,7 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('geographicLimitRectangle selectively enables rendering globe surface', function() {
+    it('cartographicLimitRectangle selectively enables rendering globe surface', function() {
         expect(scene).toRender([0, 0, 0, 255]);
          switchViewMode(SceneMode.COLUMBUS_VIEW, new GeographicProjection(Ellipsoid.WGS84));
         var result;
@@ -948,10 +948,10 @@ defineSuite([
                 result = rgba;
                 expect(rgba).not.toEqual([0, 0, 0, 255]);
             });
-             scene.globe.geographicLimitRectangle = Rectangle.fromDegrees(-2, -2, -1, -1);
+             scene.globe.cartographicLimitRectangle = Rectangle.fromDegrees(-2, -2, -1, -1);
              expect(scene).notToRender(result);
              scene.camera.setView({
-                destination : scene.globe.geographicLimitRectangle
+                destination : scene.globe.cartographicLimitRectangle
             });
              return updateUntilDone(scene.globe);
         })
@@ -960,12 +960,12 @@ defineSuite([
             });
     });
 
-    it('geographicLimitRectangle culls tiles outside the region', function() {
+    it('cartographicLimitRectangle culls tiles outside the region', function() {
         switchViewMode(SceneMode.COLUMBUS_VIEW, new GeographicProjection(Ellipsoid.WGS84));
          var unculledCommandCount;
         return updateUntilDone(scene.globe).then(function() {
             unculledCommandCount = scene.frameState.commandList.length;
-             scene.globe.geographicLimitRectangle = Rectangle.fromDegrees(-2, -2, -1, -1);
+             scene.globe.cartographicLimitRectangle = Rectangle.fromDegrees(-2, -2, -1, -1);
              return updateUntilDone(scene.globe);
         })
             .then(function() {
@@ -973,12 +973,12 @@ defineSuite([
             });
     });
 
-    it('geographicLimitRectangle may cross the antimeridian', function() {
+    it('cartographicLimitRectangle may cross the antimeridian', function() {
         switchViewMode(SceneMode.SCENE2D, new GeographicProjection(Ellipsoid.WGS84));
          var unculledCommandCount;
         return updateUntilDone(scene.globe).then(function() {
             unculledCommandCount = scene.frameState.commandList.length;
-             scene.globe.geographicLimitRectangle = Rectangle.fromDegrees(179, -2, -179, -1);
+             scene.globe.cartographicLimitRectangle = Rectangle.fromDegrees(179, -2, -179, -1);
              return updateUntilDone(scene.globe);
         })
             .then(function() {

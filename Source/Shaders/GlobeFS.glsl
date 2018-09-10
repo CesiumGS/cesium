@@ -52,7 +52,7 @@ uniform vec2 u_lightingFadeDistance;
 #endif
 
 #ifdef TILE_LIMIT_RECTANGLE
-uniform vec4 u_geographicLimitRectangle;
+uniform vec4 u_cartographicLimitRectangle;
 #endif
 
 #ifdef ENABLE_CLIPPING_PLANES
@@ -161,8 +161,8 @@ void main()
 {
 
 #ifdef TILE_LIMIT_RECTANGLE
-    if (v_textureCoordinates.x < u_geographicLimitRectangle.x || u_geographicLimitRectangle.z < v_textureCoordinates.x ||
-        v_textureCoordinates.y < u_geographicLimitRectangle.y || u_geographicLimitRectangle.w < v_textureCoordinates.y)
+    if (v_textureCoordinates.x < u_cartographicLimitRectangle.x || u_cartographicLimitRectangle.z < v_textureCoordinates.x ||
+        v_textureCoordinates.y < u_cartographicLimitRectangle.y || u_cartographicLimitRectangle.w < v_textureCoordinates.y)
         {
             discard;
         }

@@ -84,11 +84,11 @@ define([
             vertexLogDepthDefine = 'DISABLE_GL_POSITION_LOG_DEPTH';
         }
 
-        var geographicLimitRectangleFlag = 0;
-        var geographicLimitRectangleDefine = '';
+        var cartographicLimitRectangleFlag = 0;
+        var cartographicLimitRectangleDefine = '';
         if (clippedByBoundaries) {
-            geographicLimitRectangleFlag = 1;
-            geographicLimitRectangleDefine = 'TILE_LIMIT_RECTANGLE';
+            cartographicLimitRectangleFlag = 1;
+            cartographicLimitRectangleDefine = 'TILE_LIMIT_RECTANGLE';
         }
 
         var sceneMode = frameState.mode;
@@ -109,7 +109,7 @@ define([
                     (applySplit << 15) |
                     (enableClippingPlanes << 16) |
                     (vertexLogDepth << 17) |
-                    (geographicLimitRectangleFlag << 18);
+                    (cartographicLimitRectangleFlag << 18);
 
         var currentClippingShaderState = 0;
         if (defined(clippingPlanes)) {
@@ -142,7 +142,7 @@ define([
             }
 
             vs.defines.push(quantizationDefine, vertexLogDepthDefine);
-            fs.defines.push('TEXTURE_UNITS ' + numberOfDayTextures, geographicLimitRectangleDefine);
+            fs.defines.push('TEXTURE_UNITS ' + numberOfDayTextures, cartographicLimitRectangleDefine);
 
             if (applyBrightness) {
                 fs.defines.push('APPLY_BRIGHTNESS');
