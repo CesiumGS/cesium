@@ -494,15 +494,13 @@ define([
                     if (stoppedRefining) {
                         selectDesiredTile(tileset, tile, frameState);
                     }
-                } else {
-                    // Load tiles that are not skipped or can't refine further. In practice roughly half the tiles stay unloaded.
-                    // Select tiles that can't refine further. If the tile doesn't have loaded content it will try to select an ancestor with loaded content instead.
-                    if (stoppedRefining) { // eslint-disable-line
-                        selectDesiredTile(tileset, tile, frameState);
-                        loadTile(tileset, tile, frameState);
-                    } else if (reachedSkippingThreshold(tileset, tile)) {
-                        loadTile(tileset, tile, frameState);
-                    }
+                } else if (stoppedRefining) {
+                    // In skip traversal, load and select tiles that can't refine further
+                    selectDesiredTile(tileset, tile, frameState);
+                    loadTile(tileset, tile, frameState);
+                } else if (reachedSkippingThreshold(tileset, tile)) {
+                    // In skip traversal, load tiles that aren't skipped. In practice roughly half the tiles stay unloaded.
+                    loadTile(tileset, tile, frameState);
                 }
             }
 
