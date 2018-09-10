@@ -289,6 +289,8 @@ define([
      * @param {Number} [options.silhouetteSize=0.0] The size of the silhouette in pixels.
      * @param {ClippingPlaneCollection} [options.clippingPlanes] The {@link ClippingPlaneCollection} used to selectively disable rendering the model.
      * @param {Boolean} [options.dequantizeInShader=true] Determines if a {@link https://github.com/google/draco|Draco} encoded model is dequantized on the GPU. This decreases total memory usage for encoded models.
+     * @param {Number} [options.iblFactor=1.0] Scales the IBL lighting from the earth, sky, atmosphere and star skybox.
+     * @param {Color} [options.lightColor] The color and intensity of the sunlight used to shade the model.
      *
      * @exception {DeveloperError} bgltf is not a valid Binary glTF file.
      * @exception {DeveloperError} Only glTF Binary version 1 is supported.
@@ -661,8 +663,8 @@ define([
         this._rtcCenter3D = undefined;  // in world coordinates
         this._rtcCenter2D = undefined;  // in projected world coordinates
 
-        this._iblFactor = 1.0;
-        this._lightColor = undefined;
+        this._iblFactor = defaultValue(options.iblFactor, 1.0);
+        this._lightColor = Color.clone(options.lightColor);
         this._regenerateShaders = false;
     }
 
@@ -1080,6 +1082,15 @@ define([
             }
         },
 
+        /**
+         * Cesium adds lighting from the earth, sky, atmosphere, and star skybox. This number is used to scale the final
+         * lighting contribution from those sources to the final color. A value of 0.0 will disable those light sources.
+         *
+         * @memberof Model.prototype
+         *
+         * @type {Number}
+         * @default 1.0
+         */
         iblFactor : {
             get : function() {
                 return this._iblFactor;
@@ -1090,13 +1101,29 @@ define([
             }
         },
 
+        /**
+         * The color and intensity of the sunlight used to shade the model.
+         * <p>
+         * For example, disabling additional light sources by setting <code>model.iblFactor = 0.0</code> will make the
+         * model much darker. Here, increasing the intensity of the light source will make the model brighter.
+         * </p>
+         *
+         * @memberof Model.prototype
+         *
+         * @type {Color}
+         * @default undefined
+         */
         lightColor : {
             get : function() {
                 return this._lightColor;
             },
             set : function(value) {
-                this._regenerateShaders = this._regenerateShaders || (defined(this._lightColor) && !defined(value)) || (defined(value) && !defined(this._lightColor));
-                this._lightColor = Color.clone(value, this._lightColor);
+                var lightColor = this._lightColor;
+                if (value === lightColor || Color.equals(value, lightColor)) {
+                    return;
+                }
+                this._regenerateShaders = this._regenerateShaders || (defined(lightColor) && !defined(value)) || (defined(value) && !defined(lightColor));
+                this._lightColor = Color.clone(value, lightColor);
             }
         }
     });

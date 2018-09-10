@@ -164,6 +164,9 @@ define([
 
         this.debugWireframe = defaultValue(options.debugWireframe, false);
         this._debugWireframe = false;
+
+        this.iblFactor = defaultValue(options.iblFactor, 1.0);
+        this.lightColor = options.lightColor;
     }
 
     defineProperties(ModelInstanceCollection.prototype, {
@@ -577,7 +580,9 @@ define([
             uniformMapLoaded : undefined,
             pickIdLoaded : collection._pickIdLoaded,
             ignoreCommands : true,
-            opaquePass : collection._opaquePass
+            opaquePass : collection._opaquePass,
+            iblFactor : collection.iblFactor,
+            lightColor : collection.lightColor
         };
 
         if (!usesBatchTable) {
@@ -870,6 +875,9 @@ define([
 
         var instancingSupported = this._instancingSupported;
         var model = this._model;
+
+        model.iblFactor = this.iblFactor;
+        model.lightColor = this.lightColor;
 
         model.update(frameState);
 
