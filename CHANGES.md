@@ -1,6 +1,11 @@
 Change Log
 ==========
 
+### 1.50 - 2018-10-01
+
+##### Additions :tada:
+* Added `cartographicLimitRectangle` to `Globe`. Use this to limit terrain and imagery to a specific `Rectangle` area. [#6987](https://github.com/AnalyticalGraphicsInc/cesium/pull/6987)
+
 ### 1.49 - 2018-09-04
 
 ##### Breaking Changes :mega:
