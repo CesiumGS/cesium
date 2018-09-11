@@ -3780,58 +3780,31 @@ define([
     var scratchRay = new Ray();
     var scratchPickPosition = new Cartesian3();
     var scratchPickCartographic = new Cartographic();
-    var scratchShowArray = [];
-
-    function getShowArray(primitivesToExclude) {
-        if (!defined(primitivesToExclude)) {
-            return undefined;
-        }
-        var length = primitivesToExclude.length;
-        scratchShowArray.length = length;
-        for (var i = 0; i < length; ++i) {
-            scratchShowArray[i] = primitivesToExclude[i].show;
-        }
-        return scratchShowArray;
-    }
-
-    function showPrimitives(primitives, showArray) {
-        if (!defined(primitives)) {
-            return undefined;
-        }
-        var length = primitives.length;
-        for (var i = 0; i < length; ++i) {
-            primitives[i].show = showArray[i];
-        }
-    }
-
-    function hidePrimitives(primitives) {
-        if (!defined(primitives)) {
-            return undefined;
-        }
-        var length = primitives.length;
-        for (var i = 0; i < length; ++i) {
-            primitives[i].show = false;
-        }
-    }
 
     /**
      * Returns the height of scene geometry at the given cartographic position. May be used to clamp objects
      * to the globe, 3D Tiles, or primitives in the scene.
      * <p>
-     * This function only samples height from globe tiles and 3D Tiles that are rendered in the current view. All other
-     * primitives are sampled regardless of visibility.
+     * This function only samples height from globe tiles and 3D Tiles that are rendered in the current view. Samples height
+     * from all other primitives regardless of their visibility.
      * </p>
      *
      * @param {Cartographic} position The position to sample from.
-     * @param {Object[]} primitivesToExclude A list of primitives and/or entities to exclude from the sample height calculation.
+     * @param {Object[]} objectsToExclude A list of primitives and/or entities to exclude from the sample height calculation.
      * @returns {Number} The height. This may be <code>undefined</code> if there is nothing to sample height from.
      *
      * @see sampleTerrain
      * @see sampleTerrainMostDetailed
+     * @see Scene#clampPosition
+     *
+     * @exception {DeveloperError} Picking from the depth buffer is not supported. Check pickPositionSupported.
      */
-    Scene.prototype.sampleHeight = function(position, primitivesToExclude) {
+    Scene.prototype.sampleHeight = function(position, objectsToExclude) {
         //>>includeStart('debug', pragmas.debug);
         Check.defined('position', position);
+        if (!this.pickPositionSupported) {
+            throw new DeveloperError('Picking from the depth buffer is not supported. Check pickPositionSupported.');
+        }
         //>>includeEnd('debug');
         var globe = this.globe;
         var ellipsoid = defined(globe) ? globe.ellipsoid : this.mapProjection.ellipsoid;
@@ -3844,10 +3817,32 @@ define([
         var ray = scratchRay;
         Ray.getPoint(surfaceRay, height, ray.origin);
         Cartesian3.negate(surfaceNormal, ray.direction);
-        var showArray = getShowArray(primitivesToExclude);
-        hidePrimitives(primitivesToExclude);
-        var pickPosition = this.pickPositionFromRay(ray, scratchPickPosition);
-        showPrimitives(primitivesToExclude, showArray);
+
+        var pickPosition;
+
+        if (defined(objectsToExclude) && objectsToExclude.length > 0) {
+            var that = this;
+            var pickCallback = function() {
+                return pickFromRay(that, ray, true, true);
+            };
+            var results = drillPick(undefined, pickCallback);
+            var length = results.length;
+            for (var i = 0; i < length; ++i) {
+                var object = results[i].object;
+                var primitive = object.primitive;
+                var id = object.id;
+
+                if ((objectsToExclude.indexOf(object) === -1) &&
+                    (objectsToExclude.indexOf(primitive) === -1) &&
+                    (objectsToExclude.indexOf(id) === -1)) {
+                    pickPosition = results[i].position;
+                    break;
+                }
+            }
+        } else {
+            pickPosition = this.pickPositionFromRay(ray, scratchPickPosition);
+        }
+
         if (defined(pickPosition)) {
             var pickCartographic = Cartographic.fromCartesian(pickPosition, ellipsoid, scratchPickCartographic);
             return pickCartographic.height;
@@ -3858,20 +3853,24 @@ define([
      * Clamps the given Cartesian position to the scene geometry along the geodetic surface normal.
      * May be used to clamp objects to the globe, 3D Tiles, or primitives in the scene.
      * <p>
-     * This function only samples height from globe tiles and 3D Tiles that are rendered in the current view. All other
-     * primitives are sampled regardless of visibility.
+     * This function only clamps to globe tiles and 3D Tiles that are rendered in the current view. Clamps to
+     * all other primitives regardless of their visibility.
      * </p>
      *
      * @param {Cartesian3} cartesian The Cartesian position.
-     * @param {Object[]} primitivesToExclude A list of primitives and/or entities to exclude when clamping.
+     * @param {Object[]} objectsToExclude A list of primitives and/or entities to exclude when clamping.
      * @param {Cartesian3} [result] An optional object to return the clamped position.
-     * @returns {Cartesian3} The modified result parameter or a new Cartesian3 instance if one was not provided.  This may be <code>undefined</code> if there is nothing to clamp to.
+     * @returns {Cartesian3} The modified result parameter or a new Cartesian3 instance if one was not provided.  This may be <code>undefined</code> if the position could not be clamped.
+     *
+     * @see Scene#sampleHeight
+     *
+     * @exception {DeveloperError} Picking from the depth buffer is not supported. Check pickPositionSupported.
      */
-    Scene.prototype.clampToHeight = function(cartesian, primitivesToExclude, result) {
+    Scene.prototype.clampPosition = function(cartesian, objectsToExclude, result) {
         var globe = this.globe;
         var ellipsoid = defined(globe) ? globe.ellipsoid : this.mapProjection.ellipsoid;
         var cartographic = Cartographic.fromCartesian(cartesian, ellipsoid, scratchPickCartographic);
-        var height = this.sampleHeight(cartographic, primitivesToExclude);
+        var height = this.sampleHeight(cartographic, objectsToExclude);
         if (defined(height)) {
             cartographic.height = height;
             return Cartographic.toCartesian(cartographic, ellipsoid, result);

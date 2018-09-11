@@ -169,7 +169,7 @@ function runAfterRender(callback) {
 var handler = new Cesium.ScreenSpaceEventHandler(viewer.canvas);
 handler.setInputAction(function(movement) {
     hideAll();
-    runAfterRender(function() {
+    runAfterRender(function() { // Entity show changes are only reflected after the next render
         var redPosition = scene.pickPosition(movement.position);
         redCartographic = Cesium.Cartographic.fromCartesian(redPosition);
         redCartographic.height = 30.0;

@@ -59,10 +59,8 @@ viewer.camera.setView({
     endTransform : Cesium.Matrix4.IDENTITY
 });
 
-var startCartographic = Cesium.Cartographic.fromRadians(-1.3194173278580692, 0.6987983245671457, 79.48429974087243);
-var stopCartographic = Cesium.Cartographic.fromRadians(-1.319414626509859, 0.6987897506061312, 76.52729244635204);
-var startPosition = Cesium.Cartographic.toCartesian(startCartographic);
-var endPosition = Cesium.Cartographic.toCartesian(stopCartographic);
+var startPosition = new Cesium.Cartesian3(1216348.1632364073, -4736348.958775471, 4081284.5528982095);
+var endPosition = new Cesium.Cartesian3(1216369.1229444197, -4736377.467107148, 4081240.888485707);
 
 var velocity = Cesium.Cartesian3.normalize(Cesium.Cartesian3.subtract(endPosition, startPosition, new Cesium.Cartesian3()), new Cesium.Cartesian3());
 var rotationMatrix = Cesium.Transforms.rotationMatrixFromPositionVelocity(startPosition, velocity);
@@ -76,32 +74,6 @@ var entity = viewer.entities.add({
     }
 });
 
-// TODO : remove this once https://github.com/AnalyticalGraphicsInc/cesium/issues/7024 is fixed and scene.sampleHeight(currentCartographic, [entity]); works
-function toggleShow(show) {
-    // Toggle show for everything except the tileset
-    var primitives = scene.primitives;
-    var length = primitives.length;
-    for (var i = 0; i < length; ++i) {
-        var primitive = primitives.get(i);
-        if (primitive !== tileset) {
-            primitive.show = show;
-        }
-    }
-}
-
-function calculatePosition(offset) {
-    var currentPosition = Cesium.Cartesian3.lerp(startPosition, endPosition, offset, new Cesium.Cartesian3());
-    var currentCartographic = Cesium.Cartographic.fromCartesian(currentPosition);
-    toggleShow(false);
-    var height = scene.sampleHeight(currentCartographic);
-    toggleShow(true);
-    if (Cesium.defined(height)) {
-        currentCartographic.height = height;
-        currentPosition = Cesium.Cartographic.toCartesian(currentCartographic);
-        return currentPosition;
-    }
-}
-
 function initialViewReady(tileset, callback) {
     var allTilesLoadedFunction = function() {
         callback();
@@ -110,12 +82,15 @@ function initialViewReady(tileset, callback) {
     tileset.allTilesLoaded.addEventListener(allTilesLoadedFunction);
 }
 
+var objectsToExclude = [entity];
+
 initialViewReady(tileset, function() {
     viewer.clock.shouldAnimate = true;
     scene.postRender.addEventListener(function() {
         var timer = Cesium.JulianDate.secondsDifference(viewer.clock.currentTime, start);
         var offset = Cesium.Math.clamp(timer / duration, 0.0, 1.0);
-        entity.position = calculatePosition(offset);
+        var position = Cesium.Cartesian3.lerp(startPosition, endPosition, offset, new Cesium.Cartesian3());
+        entity.position = scene.clampPosition(position, objectsToExclude);
     });
 });
 //Sandcastle_End
