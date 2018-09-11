@@ -1140,6 +1140,29 @@ define([
     })();
 
     var otherPassesInitialColor = new Cartesian4(0.0, 0.0, 0.0, 0.0);
+    var surfaceShaderSetOptionsScratch = {
+        frameState : undefined,
+        surfaceTile : undefined,
+        numberOfDayTextures : undefined,
+        applyBrightness : undefined,
+        applyContrast : undefined,
+        applyHue : undefined,
+        applySaturation : undefined,
+        applyGamma : undefined,
+        applyAlpha : undefined,
+        applySplit : undefined,
+        showReflectiveOcean : undefined,
+        showOceanWaves : undefined,
+        enableLighting : undefined,
+        showGroundAtmosphere : undefined,
+        perFragmentGroundAtmosphere : undefined,
+        hasVertexNormals : undefined,
+        useWebMercatorProjection : undefined,
+        enableFog : undefined,
+        enableClippingPlanes : undefined,
+        clippingPlanes : undefined,
+        clippedByBoundaries : undefined
+    };
 
     function addDrawCommandsForTile(tileProvider, tile, frameState) {
         var surfaceTile = tile.data;
@@ -1251,6 +1274,18 @@ define([
                 useWebMercatorProjection = true;
             }
         }
+
+        var surfaceShaderSetOptions = surfaceShaderSetOptionsScratch;
+        surfaceShaderSetOptions.frameState = frameState;
+        surfaceShaderSetOptions.surfaceTile = surfaceTile;
+        surfaceShaderSetOptions.showReflectiveOcean = showReflectiveOcean;
+        surfaceShaderSetOptions.showOceanWaves = showOceanWaves;
+        surfaceShaderSetOptions.enableLighting = tileProvider.enableLighting;
+        surfaceShaderSetOptions.showGroundAtmosphere = showGroundAtmosphere;
+        surfaceShaderSetOptions.perFragmentGroundAtmosphere = perFragmentGroundAtmosphere;
+        surfaceShaderSetOptions.hasVertexNormals = hasVertexNormals;
+        surfaceShaderSetOptions.useWebMercatorProjection = useWebMercatorProjection;
+        surfaceShaderSetOptions.clippedByBoundaries = surfaceTile.clippedByBoundaries;
 
         var tileImageryCollection = surfaceTile.imagery;
         var imageryIndex = 0;
@@ -1439,7 +1474,19 @@ define([
                 uniformMap = combine(uniformMap, tileProvider.uniformMap);
             }
 
-            command.shaderProgram = tileProvider._surfaceShaderSet.getShaderProgram(frameState, surfaceTile, numberOfDayTextures, applyBrightness, applyContrast, applyHue, applySaturation, applyGamma, applyAlpha, applySplit, showReflectiveOcean, showOceanWaves, tileProvider.enableLighting, showGroundAtmosphere, perFragmentGroundAtmosphere, hasVertexNormals, useWebMercatorProjection, applyFog, clippingPlanesEnabled, clippingPlanes, surfaceTile.clippedByBoundaries);
+            surfaceShaderSetOptions.numberOfDayTextures = numberOfDayTextures;
+            surfaceShaderSetOptions.applyBrightness = applyBrightness;
+            surfaceShaderSetOptions.applyContrast = applyContrast;
+            surfaceShaderSetOptions.applyHue = applyHue;
+            surfaceShaderSetOptions.applySaturation = applySaturation;
+            surfaceShaderSetOptions.applyGamma = applyGamma;
+            surfaceShaderSetOptions.applyAlpha = applyAlpha;
+            surfaceShaderSetOptions.applySplit = applySplit;
+            surfaceShaderSetOptions.applyFog = applyFog;
+            surfaceShaderSetOptions.enableClippingPlanes = clippingPlanesEnabled;
+            surfaceShaderSetOptions.clippingPlanes = clippingPlanes;
+
+            command.shaderProgram = tileProvider._surfaceShaderSet.getShaderProgram(surfaceShaderSetOptions);
             command.castShadows = castShadows;
             command.receiveShadows = receiveShadows;
             command.renderState = renderState;

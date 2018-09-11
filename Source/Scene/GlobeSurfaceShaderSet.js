@@ -66,7 +66,29 @@ define([
         return useWebMercatorProjection ? get2DYPositionFractionMercatorProjection : get2DYPositionFractionGeographicProjection;
     }
 
-    GlobeSurfaceShaderSet.prototype.getShaderProgram = function(frameState, surfaceTile, numberOfDayTextures, applyBrightness, applyContrast, applyHue, applySaturation, applyGamma, applyAlpha, applySplit, showReflectiveOcean, showOceanWaves, enableLighting, showGroundAtmosphere, perFragmentGroundAtmosphere, hasVertexNormals, useWebMercatorProjection, enableFog, enableClippingPlanes, clippingPlanes, clippedByBoundaries) {
+    GlobeSurfaceShaderSet.prototype.getShaderProgram = function(options) {
+        var frameState = options.frameState;
+        var surfaceTile = options.surfaceTile;
+        var numberOfDayTextures = options.numberOfDayTextures;
+        var applyBrightness = options.applyBrightness;
+        var applyContrast = options.applyContrast;
+        var applyHue = options.applyHue;
+        var applySaturation = options.applySaturation;
+        var applyGamma = options.applyGamma;
+        var applyAlpha = options.applyAlpha;
+        var applySplit = options.applySplit;
+        var showReflectiveOcean = options.showReflectiveOcean;
+        var showOceanWaves = options.showOceanWaves;
+        var enableLighting = options.enableLighting;
+        var showGroundAtmosphere = options.showGroundAtmosphere;
+        var perFragmentGroundAtmosphere = options.perFragmentGroundAtmosphere;
+        var hasVertexNormals = options.hasVertexNormals;
+        var useWebMercatorProjection = options.useWebMercatorProjection;
+        var enableFog = options.enableFog;
+        var enableClippingPlanes = options.enableClippingPlanes;
+        var clippingPlanes = options.clippingPlanes;
+        var clippedByBoundaries = options.clippedByBoundaries;
+
         var quantization = 0;
         var quantizationDefine = '';
 
