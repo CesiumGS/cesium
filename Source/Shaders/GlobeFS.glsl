@@ -255,10 +255,10 @@ void main()
     float fade = clamp((cameraDist - fadeOutDist) / (fadeInDist - fadeOutDist), 0.0, 1.0);
 #endif
 
-#if defined(ENABLE_VERTEX_LIGHTING) && !defined(GROUND_ATMOSPHERE)
+#if defined(ENABLE_VERTEX_LIGHTING)
     float diffuseIntensity = clamp(czm_getLambertDiffuse(czm_sunDirectionEC, normalize(v_normalEC)) * 0.9 + 0.3, 0.0, 1.0);
     vec4 finalColor = vec4(color.rgb * diffuseIntensity, color.a);
-#elif defined(ENABLE_DAYNIGHT_SHADING) && !defined(GROUND_ATMOSPHERE)
+#elif defined(ENABLE_DAYNIGHT_SHADING)
     float diffuseIntensity = clamp(czm_getLambertDiffuse(czm_sunDirectionEC, normalEC) * 5.0 + 0.3, 0.0, 1.0);
     diffuseIntensity = mix(1.0, diffuseIntensity, fade);
     vec4 finalColor = vec4(color.rgb * diffuseIntensity, color.a);
