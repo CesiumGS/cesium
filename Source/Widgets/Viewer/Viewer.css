@@ -102,7 +102,7 @@
     top: 50px;
     right: 10px;
     max-height: 100%;
-    padding-bottom: 70px;
+    bottom: 70px;
     box-sizing: border-box;
     overflow: auto;
 }

@@ -16,6 +16,36 @@ define([
         CesiumInspectorViewModel) {
     'use strict';
 
+    function createCheckBox(checkboxBinding, labelText) {
+        var checkboxContainer = document.createElement('div');
+        var checkboxLabel = document.createElement('label');
+        var checkboxInput = document.createElement('input');
+        checkboxInput.type = 'checkbox';
+        checkboxInput.setAttribute('data-bind', checkboxBinding);
+        checkboxLabel.appendChild(checkboxInput);
+        checkboxLabel.appendChild(document.createTextNode(labelText));
+        checkboxContainer.appendChild(checkboxLabel);
+        return checkboxContainer;
+    }
+
+    function addSection(panel, headerText, sectionVisibleDataBinding, sectionVisibilityToggleClickEvent) {
+        var section = document.createElement('div');
+        section.className = 'cesium-cesiumInspector-section';
+        section.setAttribute('data-bind', 'css: { "cesium-cesiumInspector-section-collapsed": !' + sectionVisibleDataBinding + ' }');
+        panel.appendChild(section);
+
+        var sectionHeader = document.createElement('h3');
+        sectionHeader.className = 'cesium-cesiumInspector-sectionHeader';
+        sectionHeader.appendChild(document.createTextNode(headerText));
+        sectionHeader.setAttribute('data-bind', 'click: ' + sectionVisibilityToggleClickEvent);
+        section.appendChild(sectionHeader);
+
+        var sectionContent = document.createElement('div');
+        sectionContent.className = 'cesium-cesiumInspector-sectionContent';
+        section.appendChild(sectionContent);
+        return sectionContent;
+    }
+
     /**
      * Inspector widget to aid in debugging
      *
@@ -39,36 +69,6 @@ define([
         //>>includeEnd('debug');
 
         container = getElement(container);
-
-        function createCheckBox(checkboxBinding, labelText) {
-            var checkboxContainer = document.createElement('div');
-            var checkboxLabel = document.createElement('label');
-            var checkboxInput = document.createElement('input');
-            checkboxInput.type = 'checkbox';
-            checkboxInput.setAttribute('data-bind', checkboxBinding);
-            checkboxLabel.appendChild(checkboxInput);
-            checkboxLabel.appendChild(document.createTextNode(labelText));
-            checkboxContainer.appendChild(checkboxLabel);
-            return checkboxContainer;
-        }
-
-        function addSection(panel, headerText, sectionVisibleDataBinding, sectionVisibilityToogleClickEvent) {
-            var section = document.createElement('div');
-            section.className = 'cesium-cesiumInspector-section';
-            section.setAttribute('data-bind', 'css: { "cesium-cesiumInspector-section-collapsed": !' + sectionVisibleDataBinding + ' }');
-            panel.appendChild(section);
-
-            var sectionHeader = document.createElement('h3');
-            sectionHeader.className = 'cesium-cesiumInspector-sectionHeader';
-            sectionHeader.appendChild(document.createTextNode(headerText));
-            sectionHeader.setAttribute('data-bind', 'click: ' + sectionVisibilityToogleClickEvent);
-            section.appendChild(sectionHeader);
-
-            var sectionContent = document.createElement('div');
-            sectionContent.className = 'cesium-cesiumInspector-sectionContent';
-            section.appendChild(sectionContent);
-            return sectionContent;
-        }
 
         var performanceContainer = document.createElement('div');
 

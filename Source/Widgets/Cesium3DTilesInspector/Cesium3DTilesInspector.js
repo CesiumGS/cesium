@@ -52,13 +52,25 @@ define([
         element.setAttribute('data-bind', 'css: { "cesium-cesiumInspector-visible" : inspectorVisible, "cesium-cesiumInspector-hidden" : !inspectorVisible}');
         container.appendChild(element);
 
+        var panel = document.createElement('div');
+        this._panel = panel;
+        panel.className = 'cesium-cesiumInspector-dropDown';
+        element.appendChild(panel);
+
         var tilesetPanelContents = document.createElement('div');
+        tilesetPanelContents.className = 'cesium-cesiumInspector-sectionContent';
         var displayPanelContents = document.createElement('div');
+        displayPanelContents.className = 'cesium-cesiumInspector-sectionContent';
         var updatePanelContents = document.createElement('div');
+        updatePanelContents.className = 'cesium-cesiumInspector-sectionContent';
         var loggingPanelContents = document.createElement('div');
+        loggingPanelContents.className = 'cesium-cesiumInspector-sectionContent';
         var tileDebugLabelsPanelContents = document.createElement('div');
+        tileDebugLabelsPanelContents.className = 'cesium-cesiumInspector-sectionContent';
         var stylePanelContents = document.createElement('div');
+        stylePanelContents.className = 'cesium-cesiumInspector-sectionContent';
         var optimizationPanelContents = document.createElement('div');
+        optimizationPanelContents.className = 'cesium-cesiumInspector-sectionContent';
 
         var properties = document.createElement('div');
         properties.className = 'field-group';
@@ -119,23 +131,25 @@ define([
         pickStatistics.setAttribute('data-bind', 'html: pickStatisticsText, visible: showPickStatistics');
         loggingPanelContents.appendChild(pickStatistics);
 
-        stylePanelContents.appendChild(document.createTextNode('Color Blend Mode: '));
+        var stylePanelEditor = document.createElement('div');
+        stylePanelContents.appendChild(stylePanelEditor);
+        stylePanelEditor.appendChild(document.createTextNode('Color Blend Mode: '));
         var blendDropdown = document.createElement('select');
         blendDropdown.setAttribute('data-bind', 'options: colorBlendModes, ' +
                                                 'optionsText: "text", ' +
                                                 'optionsValue: "value", ' +
                                                 'value: colorBlendMode');
-        stylePanelContents.appendChild(blendDropdown);
+        stylePanelEditor.appendChild(blendDropdown);
         var styleEditor = document.createElement('textarea');
         styleEditor.setAttribute('data-bind', 'textInput: styleString, event: { keydown: styleEditorKeyPress }');
-        stylePanelContents.className = 'cesium-cesiumInspector-styleEditor';
-        stylePanelContents.appendChild(styleEditor);
+        stylePanelEditor.className = 'cesium-cesiumInspector-styleEditor';
+        stylePanelEditor.appendChild(styleEditor);
         var closeStylesBtn = makeButton('compileStyle', 'Compile (Ctrl+Enter)');
-        stylePanelContents.appendChild(closeStylesBtn);
+        stylePanelEditor.appendChild(closeStylesBtn);
         var errorBox = document.createElement('div');
         errorBox.className = 'cesium-cesiumInspector-error';
         errorBox.setAttribute('data-bind', 'text: editorError');
-        stylePanelContents.appendChild(errorBox);
+        stylePanelEditor.appendChild(errorBox);
 
         tileDebugLabelsPanelContents.appendChild(makeCheckbox('showOnlyPickedTileDebugLabel', 'Show Picked Only'));
         tileDebugLabelsPanelContents.appendChild(makeCheckbox('showGeometricError', 'Geometric Error'));
@@ -156,22 +170,12 @@ define([
         optimizationPanelContents.appendChild(makeCheckbox('immediatelyLoadDesiredLevelOfDetail', 'Load only tiles that meet the max. SSE.'));
         optimizationPanelContents.appendChild(makeCheckbox('loadSiblings', 'Load siblings of visible tiles.'));
 
-        var tilesetPanel = makeSection('Tileset', 'tilesetVisible', 'toggleTileset', tilesetPanelContents);
-        var displayPanel = makeSection('Display', 'displayVisible', 'toggleDisplay', displayPanelContents);
-        var updatePanel = makeSection('Update', 'updateVisible', 'toggleUpdate', updatePanelContents);
-        var loggingPanel = makeSection('Logging', 'loggingVisible', 'toggleLogging', loggingPanelContents);
-        var tileDebugLabelsPanel = makeSection('Tile Debug Labels', 'tileDebugLabelsVisible', 'toggleTileDebugLabels', tileDebugLabelsPanelContents);
-        var stylePanel = makeSection('Style', 'styleVisible', 'toggleStyle', stylePanelContents);
-        var optimizationPanel = makeSection('Optimization', 'optimizationVisible', 'toggleOptimization', optimizationPanelContents);
-
-        // first add and bind all the toggleable panels
-        element.appendChild(tilesetPanel);
-        element.appendChild(displayPanel);
-        element.appendChild(updatePanel);
-        element.appendChild(loggingPanel);
-        element.appendChild(tileDebugLabelsPanel);
-        element.appendChild(stylePanel);
-        element.appendChild(optimizationPanel);
+        makeSection(panel, 'Tileset', 'tilesetVisible', 'toggleTileset', tilesetPanelContents);
+        makeSection(panel, 'Display', 'displayVisible', 'toggleDisplay', displayPanelContents);
+        makeSection(panel, 'Logging', 'loggingVisible', 'toggleLogging', loggingPanelContents);
+        makeSection(panel, 'Tile Debug Labels', 'tileDebugLabelsVisible', 'toggleTileDebugLabels', tileDebugLabelsPanelContents);
+        makeSection(panel, 'Style', 'styleVisible', 'toggleStyle', stylePanelContents);
+        makeSection(panel, 'Optimization', 'optimizationVisible', 'toggleOptimization', optimizationPanelContents);
 
         knockout.applyBindings(viewModel, element);
     }
@@ -221,27 +225,19 @@ define([
         return destroyObject(this);
     };
 
-    function makeSection(name, visibleProp, toggleProp, contents) {
-        var toggle = document.createElement('span');
-        toggle.className = 'cesium-cesiumInspector-toggleSwitch';
-        toggle.setAttribute('data-bind', 'text: ' + visibleProp + ' ? "-" : "+", click: ' + toggleProp);
-
+    function makeSection(panel, name, visibleProp, toggleProp, contents) {
         var header = document.createElement('div');
         header.className = 'cesium-cesiumInspector-sectionHeader';
-        header.appendChild(toggle);
+        header.setAttribute('data-bind', 'click: ' + toggleProp);
         header.appendChild(document.createTextNode(name));
 
         var section = document.createElement('div');
         section.className = 'cesium-cesiumInspector-section';
-        section.setAttribute('data-bind', 'css: {"cesium-cesiumInspector-show" : ' + visibleProp + ', "cesium-cesiumInspector-hide" : !' + visibleProp + '}');
+        section.setAttribute('data-bind', 'css: {"cesium-cesiumInspector-section-collapsed" : !' + visibleProp + '}');
+        section.appendChild(header);
         section.appendChild(contents);
 
-        var panel = document.createElement('div');
-        panel.className = 'cesium-cesiumInspector-dropDown';
-        panel.appendChild(header);
         panel.appendChild(section);
-
-        return panel;
     }
 
     function makeCheckbox(property, text) {
