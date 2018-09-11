@@ -465,6 +465,8 @@ define([
         // Update clipping planes
         var tilesetClippingPlanes = this._tileset.clippingPlanes;
         if (this._tile.clippingPlanesDirty && defined(tilesetClippingPlanes)) {
+            // Use the root tile's transform.
+            this._model._clippingPlaneOffsetMatrix = this._tileset._root.computedTransform;
             // Dereference the clipping planes from the model if they are irrelevant.
             // Link/Dereference directly to avoid ownership checks.
             // This will also trigger synchronous shader regeneration to remove or add the clipping plane and color blending code.

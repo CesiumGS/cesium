@@ -539,6 +539,9 @@ define([
         this.clippingPlanes = options.clippingPlanes;
         // Used for checking if shaders need to be regenerated due to clipping plane changes.
         this._clippingPlanesState = 0;
+        // If defined, it's used to position the clipping planes instead of the modelMatrix.
+        // Used for RTC coordinates or if this model is part of a tileset.
+        this._clippingPlaneOffsetMatrix = Matrix4.IDENTITY;
 
         /**
          * This property is for debugging only; it is not for production use nor is it optimized.
@@ -4426,7 +4429,12 @@ define([
             var clippingPlanes = this._clippingPlanes;
             var currentClippingPlanesState = 0;
             if (defined(clippingPlanes) && clippingPlanes.enabled) {
-                Matrix4.multiply(context.uniformState.view3D, modelMatrix, this._modelViewMatrix);
+                if (Matrix4.equals(this._clippingPlaneOffsetMatrix, Matrix4.IDENTITY)) {
+                    Matrix4.multiply(context.uniformState.view3D, modelMatrix, this._modelViewMatrix);
+                } else {
+                    Matrix4.multiply(context.uniformState.view3D, this._clippingPlaneOffsetMatrix, this._modelViewMatrix);
+                }
+
                 currentClippingPlanesState = clippingPlanes.clippingPlanesState;
             }
 
