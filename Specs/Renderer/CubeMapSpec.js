@@ -482,6 +482,75 @@ defineSuite([
         var negativeZFloats = [14541, 12902, 13926, 15360];
 
         var positiveXColor = new Color(0.2, 0.4, 0.6, 1.0);
+        var negativeXColor = new Color(0.4, 0.2, 0.6, 1.0);
+        var positiveYColor = new Color(0.6, 0.4, 0.2, 1.0);
+        var negativeYColor = new Color(0.2, 0.6, 0.4, 1.0);
+        var positiveZColor = new Color(0.4, 0.6, 0.2, 1.0);
+        var negativeZColor = new Color(0.6, 0.2, 0.4, 1.0);
+
+        cubeMap = new CubeMap({
+            context : context,
+            source : {
+                positiveX : {
+                    width : 1,
+                    height : 1,
+                    arrayBufferView : new Uint16Array(positiveXFloats)
+                },
+                negativeX : {
+                    width : 1,
+                    height : 1,
+                    arrayBufferView : new Uint16Array(negativeXFloats)
+                },
+                positiveY : {
+                    width : 1,
+                    height : 1,
+                    arrayBufferView : new Uint16Array(positiveYFloats)
+                },
+                negativeY : {
+                    width : 1,
+                    height : 1,
+                    arrayBufferView : new Uint16Array(negativeYFloats)
+                },
+                positiveZ : {
+                    width : 1,
+                    height : 1,
+                    arrayBufferView : new Uint16Array(positiveZFloats)
+                },
+                negativeZ : {
+                    width : 1,
+                    height : 1,
+                    arrayBufferView : new Uint16Array(negativeZFloats)
+                }
+            },
+            pixelDatatype : PixelDatatype.HALF_FLOAT
+        });
+
+        expectCubeMapFaces({
+            cubeMap : cubeMap,
+            expectedColors : [
+                positiveXColor.toBytes(),
+                negativeXColor.toBytes(),
+                positiveYColor.toBytes(),
+                negativeYColor.toBytes(),
+                positiveZColor.toBytes(),
+                negativeZColor.toBytes()
+            ]
+        });
+    });
+
+    it('creates a cube map with half floating-point textures and linear filtering', function() {
+        if (!context.halfFloatingPointTexture) {
+            return;
+        }
+
+        var positiveXFloats = [12902, 13926, 14541, 15360];
+        var negativeXFloats = [13926, 12902, 14541, 15360];
+        var positiveYFloats = [14541, 13926, 12902, 15360];
+        var negativeYFloats = [12902, 14541, 13926, 15360];
+        var positiveZFloats = [13926, 14541, 12902, 15360];
+        var negativeZFloats = [14541, 12902, 13926, 15360];
+
+        var positiveXColor = new Color(0.2, 0.4, 0.6, 1.0);
         var positiveYColor = new Color(0.6, 0.4, 0.2, 1.0);
 
         cubeMap = new CubeMap({
@@ -537,7 +606,7 @@ defineSuite([
             }
         };
 
-        if (!context.textureFloatLinear) {
+        if (!context.textureHalfFloatLinear) {
             expect({
                 context : context,
                 fragmentShader : fs,
@@ -555,75 +624,6 @@ defineSuite([
                 epsilon : 1
             }).contextToRender(color.toBytes());
         }
-    });
-
-    it('creates a cube map with half floating-point textures and linear filtering', function() {
-        if (!context.halfFloatingPointTexture) {
-            return;
-        }
-
-        var positiveXFloats = [12902, 13926, 14541, 15360];
-        var negativeXFloats = [13926, 12902, 14541, 15360];
-        var positiveYFloats = [14541, 13926, 12902, 15360];
-        var negativeYFloats = [12902, 14541, 13926, 15360];
-        var positiveZFloats = [13926, 14541, 12902, 15360];
-        var negativeZFloats = [14541, 12902, 13926, 15360];
-
-        var positiveXColor = new Color(0.2, 0.4, 0.6, 1.0);
-        var negativeXColor = new Color(0.4, 0.2, 0.6, 1.0);
-        var positiveYColor = new Color(0.6, 0.4, 0.2, 1.0);
-        var negativeYColor = new Color(0.2, 0.6, 0.4, 1.0);
-        var positiveZColor = new Color(0.4, 0.6, 0.2, 1.0);
-        var negativeZColor = new Color(0.6, 0.2, 0.4, 1.0);
-
-        cubeMap = new CubeMap({
-            context : context,
-            source : {
-                positiveX : {
-                    width : 1,
-                    height : 1,
-                    arrayBufferView : new Uint16Array(positiveXFloats)
-                },
-                negativeX : {
-                    width : 1,
-                    height : 1,
-                    arrayBufferView : new Uint16Array(negativeXFloats)
-                },
-                positiveY : {
-                    width : 1,
-                    height : 1,
-                    arrayBufferView : new Uint16Array(positiveYFloats)
-                },
-                negativeY : {
-                    width : 1,
-                    height : 1,
-                    arrayBufferView : new Uint16Array(negativeYFloats)
-                },
-                positiveZ : {
-                    width : 1,
-                    height : 1,
-                    arrayBufferView : new Uint16Array(positiveZFloats)
-                },
-                negativeZ : {
-                    width : 1,
-                    height : 1,
-                    arrayBufferView : new Uint16Array(negativeZFloats)
-                }
-            },
-            pixelDatatype : PixelDatatype.HALF_FLOAT
-        });
-
-        expectCubeMapFaces({
-            cubeMap : cubeMap,
-            expectedColors : [
-                positiveXColor.toBytes(),
-                negativeXColor.toBytes(),
-                positiveYColor.toBytes(),
-                negativeYColor.toBytes(),
-                positiveZColor.toBytes(),
-                negativeZColor.toBytes()
-            ]
-        });
     });
 
     it('creates a cube map with typed arrays and images', function() {
