@@ -8,7 +8,6 @@ defineSuite([
         'Core/Ellipsoid',
         'Core/EllipsoidTerrainProvider',
         'Core/GeographicProjection',
-        'Core/Intersect',
         'Core/Rectangle',
         'Core/WebMercatorProjection',
         'Renderer/ContextLimits',
@@ -39,7 +38,6 @@ defineSuite([
         Ellipsoid,
         EllipsoidTerrainProvider,
         GeographicProjection,
-        Intersect,
         Rectangle,
         WebMercatorProjection,
         ContextLimits,
@@ -116,6 +114,7 @@ defineSuite([
 
     afterEach(function() {
         scene.imageryLayers.removeAll();
+        scene.primitives.removeAll();
     });
 
     it('conforms to QuadtreeTileProvider interface', function() {
@@ -937,6 +936,54 @@ defineSuite([
         expect(function() {
             globe.clippingPlanes = clippingPlanes;
         }).toThrowDeveloperError();
+    });
+
+    it('cartographicLimitRectangle selectively enables rendering globe surface', function() {
+        expect(scene).toRender([0, 0, 0, 255]);
+         switchViewMode(SceneMode.COLUMBUS_VIEW, new GeographicProjection(Ellipsoid.WGS84));
+        var result;
+         return updateUntilDone(scene.globe).then(function() {
+            expect(scene).notToRender([0, 0, 0, 255]);
+            expect(scene).toRenderAndCall(function(rgba) {
+                result = rgba;
+                expect(rgba).not.toEqual([0, 0, 0, 255]);
+            });
+             scene.globe.cartographicLimitRectangle = Rectangle.fromDegrees(-2, -2, -1, -1);
+             expect(scene).notToRender(result);
+             scene.camera.setView({
+                destination : scene.globe.cartographicLimitRectangle
+            });
+             return updateUntilDone(scene.globe);
+        })
+            .then(function() {
+                expect(scene).toRender(result);
+            });
+    });
+
+    it('cartographicLimitRectangle culls tiles outside the region', function() {
+        switchViewMode(SceneMode.COLUMBUS_VIEW, new GeographicProjection(Ellipsoid.WGS84));
+         var unculledCommandCount;
+        return updateUntilDone(scene.globe).then(function() {
+            unculledCommandCount = scene.frameState.commandList.length;
+             scene.globe.cartographicLimitRectangle = Rectangle.fromDegrees(-2, -2, -1, -1);
+             return updateUntilDone(scene.globe);
+        })
+            .then(function() {
+                expect(unculledCommandCount).toBeGreaterThan(scene.frameState.commandList.length);
+            });
+    });
+
+    it('cartographicLimitRectangle may cross the antimeridian', function() {
+        switchViewMode(SceneMode.SCENE2D, new GeographicProjection(Ellipsoid.WGS84));
+         var unculledCommandCount;
+        return updateUntilDone(scene.globe).then(function() {
+            unculledCommandCount = scene.frameState.commandList.length;
+             scene.globe.cartographicLimitRectangle = Rectangle.fromDegrees(179, -2, -179, -1);
+             return updateUntilDone(scene.globe);
+        })
+            .then(function() {
+                expect(unculledCommandCount).toBeGreaterThan(scene.frameState.commandList.length);
+            });
     });
 
 }, 'WebGL');

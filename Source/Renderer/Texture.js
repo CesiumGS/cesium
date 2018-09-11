@@ -385,13 +385,16 @@ define([
                     (minificationFilter === TextureMinificationFilter.LINEAR_MIPMAP_NEAREST) ||
                     (minificationFilter === TextureMinificationFilter.LINEAR_MIPMAP_LINEAR);
 
-                // float textures only support nearest filtering, so override the sampler's settings
-                if (this._pixelDatatype === PixelDatatype.FLOAT || this._pixelDatatype === PixelDatatype.HALF_FLOAT) {
+                var context = this._context;
+                var pixelDatatype = this._pixelDatatype;
+
+                // float textures only support nearest filtering unless the linear extensions are supported, so override the sampler's settings
+                if ((pixelDatatype === PixelDatatype.FLOAT && !context.textureFloatLinear) || (pixelDatatype === PixelDatatype.HALF_FLOAT && !context.textureHalfFloatLinear)) {
                     minificationFilter = mipmap ? TextureMinificationFilter.NEAREST_MIPMAP_NEAREST : TextureMinificationFilter.NEAREST;
                     magnificationFilter = TextureMagnificationFilter.NEAREST;
                 }
 
-                var gl = this._context._gl;
+                var gl = context._gl;
                 var target = this._textureTarget;
 
                 gl.activeTexture(gl.TEXTURE0);
