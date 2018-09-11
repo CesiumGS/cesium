@@ -25,47 +25,6 @@ define([
      *
      * @param {Resource|String} url The endpoint to the OpenCage server.
      * @param {String} apiKey The OpenCage API Key.
-     *
-     * @example
-     * // Configure a Viewer to use the OpenCage server hosted by https://geocode.earth/
-     * var viewer = new Cesium.Viewer('cesiumContainer', {
-     *   geocoder: new Cesium.OpenCageGeocoderService(new Cesium.Resource({
-     *     url: 'https://api.opencagedata.com/geocode/v1/',
-     *       queryParameters: {
-     *         key: '<Your OpenCage API key>'
-     *     }
-     *   }))
-     * });
-     */
-    function OpenCageGeocoderService(url, apiKey) {
-        //>>includeStart('debug', pragmas.debug);
-        Check.defined('url', url);
-        Check.defined('apiKey', apiKey);
-        //>>includeEnd('debug');
-
-        this._url = Resource.createIfNeeded(url);
-        this._url.appendForwardSlash();
-        this._url.setQueryParameters({key: apiKey});
-    }
-
-    defineProperties(OpenCageGeocoderService.prototype, {
-        /**
-         * The Resource used to access the OpenCage endpoint.
-         * @type {Resource}
-         * @memberof {OpenCageGeocoderService.prototype}
-         * @readonly
-         */
-        url: {
-            get: function () {
-                return this._url;
-            }
-        }
-    });
-
-    /**
-     * @function
-     *
-     * @param {String} query The query to be sent to the geocoder service
      * @param {Object} [params] An object with the following properties (See https://opencagedata.com/api#forward-opt):
      * @param {Number} [params.abbrv] When set to 1 we attempt to abbreviate and shorten the formatted string we return.
      * @param {Number} [options.add_request] When set to 1 the various request parameters are added to the response for ease of debugging.
@@ -80,19 +39,68 @@ define([
      * @param {Number} [options.no_record] When set to 1 the query contents are not logged.
      * @param {Number} [options.pretty] When set to 1 results are 'pretty' printed for easier reading. Useful for debugging.
      * @param {String} [options.proximity] Provides the geocoder with a hint to bias results in favour of those closer to the specified location (For example: 41.40139,2.12870).
+     *
+     * @example
+     * // Configure a Viewer to use the OpenCage Geocoder
+     * var viewer = new Cesium.Viewer('cesiumContainer', {
+     *   geocoder: new Cesium.OpenCageGeocoderService('https://api.opencagedata.com/geocode/v1/', '<API key>')
+     * });
+     */
+    function OpenCageGeocoderService(url, apiKey, params) {
+        //>>includeStart('debug', pragmas.debug);
+        Check.defined('url', url);
+        Check.defined('apiKey', apiKey);
+        if (defined(params)) {
+          Check.typeOf.object('params', params);
+        }
+        //>>includeEnd('debug');
+
+        url = Resource.createIfNeeded(url);
+        url.appendForwardSlash();
+        url.setQueryParameters({key: apiKey});
+        this._url = url;
+        this._params = defaultValue(params, {});
+    }
+
+    defineProperties(OpenCageGeocoderService.prototype, {
+        /**
+         * The Resource used to access the OpenCage endpoint.
+         * @type {Resource}
+         * @memberof {OpenCageGeocoderService.prototype}
+         * @readonly
+         */
+        url: {
+            get: function () {
+                return this._url;
+            }
+        },
+        /**
+         * Optional params passed to OpenCage in order to customize geocoding
+         * @type {Object}
+         * @memberof {OpenCageGeocoderService.prototype}
+         * @readonly
+         */
+        params: {
+            get: function () {
+                return this._params;
+            }
+        }
+    });
+
+    /**
+     * @function
+     *
+     * @param {String} query The query to be sent to the geocoder service
      * @returns {Promise<GeocoderService~Result[]>}
      */
-    OpenCageGeocoderService.prototype.geocode = function(query, params) {
+    OpenCageGeocoderService.prototype.geocode = function(query) {
         //>>includeStart('debug', pragmas.debug);
         Check.typeOf.string('query', query);
-        if (defined(params)) {
-          Check.typeOf.object('value', params);
-        }
         //>>includeEnd('debug');
 
         var resource = this._url.getDerivedResource({
             url: 'json',
-            queryParameters: Object.assign(defaultValue(params, {}), {q: query})
+            queryParameters: Object.assign(this._params, {q: query})
         });
         return resource.fetchJson()
             .then(function (response) {
