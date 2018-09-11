@@ -299,7 +299,7 @@ void main()
         return;
     }
 
-#ifdef PER_FRAGMENT_GROUND_ATMOSPHERE
+#if defined(PER_FRAGMENT_GROUND_ATMOSPHERE) && (defined(ENABLE_DAYNIGHT_SHADING) || defined(ENABLE_VERTEX_LIGHTING))
     czm_ellipsoid ellipsoid = czm_getWgs84EllipsoidEC();
 
     float mpp = czm_metersPerPixel(vec4(0.0, 0.0, -czm_currentFrustum.x, 1.0));

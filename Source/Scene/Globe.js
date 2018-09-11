@@ -133,7 +133,7 @@ define([
          * @type {Boolean}
          * @default true
          */
-        this.enableLighting = true;
+        this.enableLighting = false;
 
         /**
          * Enable the ground atmosphere.
@@ -150,7 +150,7 @@ define([
          * @type {Number}
          * @default 6500000.0
          */
-        this.lightingFadeOutDistance = 6500000.0;
+        this.lightingFadeOutDistance = 9.0e6;
 
         /**
          * The distance where lighting resumes. This only takes effect
@@ -159,7 +159,7 @@ define([
          * @type {Number}
          * @default 9000000.0
          */
-        this.lightingFadeInDistance = 9000000.0;
+        this.lightingFadeInDistance = 1.0e7;
 
         /**
          * The distance where the darkness of night from the ground atmosphere fades out to a lit ground atmosphere.
@@ -168,7 +168,7 @@ define([
          * @type {Number}
          * @default 10000000.0
          */
-        this.nightFadeOutDistance = 10000000.0;
+        this.nightFadeOutDistance = 9.0e6;
 
         /**
          * The distance where the darkness of night from the ground atmosphere fades in to an unlit ground atmosphere.
@@ -177,7 +177,7 @@ define([
          * @type {Number}
          * @default 40000000.0
          */
-        this.nightFadeInDistance = 40000000.0;
+        this.nightFadeInDistance = 4.0e7;
 
         /**
          * True if an animated wave effect should be shown in areas of the globe
