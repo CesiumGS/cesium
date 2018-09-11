@@ -111,7 +111,7 @@ defineSuite([
     afterEach(function() {
         scene.backgroundColor = new Color(0.0, 0.0, 0.0, 0.0);
         scene.debugCommandFilter = undefined;
-        scene.fxaa = false;
+        scene.postProcessStages.fxaa.enabled = false;
         scene.primitives.removeAll();
         scene.morphTo3D(0.0);
 
@@ -333,7 +333,7 @@ defineSuite([
     });
 
     it('debugShowGlobeDepth', function() {
-        if(!defined(scene._globeDepth)){
+        if (!scene.context.depthTexture) {
             return;
         }
 
@@ -418,7 +418,7 @@ defineSuite([
         primitives.add(rectanglePrimitive);
 
         scene.camera.setView({ destination : rectangle });
-        scene.fxaa = false;
+        scene.postProcessStages.fxaa.enabled = false;
         expect(scene).toRenderAndCall(function(rgba) {
             expect(rgba[0]).not.toEqual(0);
             expect(rgba[1]).toEqual(0);
@@ -465,7 +465,7 @@ defineSuite([
             s._oit._translucentMultipassSupport = false;
         }
 
-        s.fxaa = true;
+        s.postProcessStages.fxaa.enabled = false;
 
         var rectangle = Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0);
 
@@ -702,7 +702,7 @@ defineSuite([
 
     it('copies the globe depth', function() {
         var scene = createScene();
-        if (defined(scene._globeDepth)) {
+        if (scene.context.depthTexture) {
             var rectangle = Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0);
 
             var rectanglePrimitive = createRectangle(rectangle, 1000.0);
@@ -1657,7 +1657,7 @@ defineSuite([
 
     function getFrustumCommandsLength(scene) {
         var commandsLength = 0;
-        var frustumCommandsList = scene._frustumCommandsList;
+        var frustumCommandsList = scene.frustumCommandsList;
         var frustumsLength = frustumCommandsList.length;
         for (var i = 0; i < frustumsLength; ++i) {
             var frustumCommands = frustumCommandsList[i];

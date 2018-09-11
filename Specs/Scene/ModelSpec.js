@@ -265,7 +265,8 @@ defineSuite([
         expect(texturedBoxModel.ready).toEqual(true);
         expect(texturedBoxModel.asynchronous).toEqual(true);
         expect(texturedBoxModel.releaseGltfJson).toEqual(false);
-        expect(texturedBoxModel.cacheKey).toEndWith('Data/Models/Box-Textured/CesiumTexturedBoxTest.gltf');
+        expect(texturedBoxModel.cacheKey).toBeDefined();
+        expect(texturedBoxModel.cacheKey).not.toContain('Data/Models/Box-Textured/CesiumTexturedBoxTest.gltf');
         expect(texturedBoxModel.debugShowBoundingVolume).toEqual(false);
         expect(texturedBoxModel.debugWireframe).toEqual(false);
         expect(texturedBoxModel.distanceDisplayCondition).toBeUndefined();
@@ -2606,12 +2607,12 @@ defineSuite([
             // Look at the model
             m.zoomTo();
             scene.renderForSpecs();
-            expect(scene._frustumCommandsList.length).not.toEqual(0);
+            expect(scene.frustumCommandsList.length).not.toEqual(0);
 
             // Move the model out of view
             m.modelMatrix = Matrix4.fromTranslation(new Cartesian3(100000.0, 0.0, 0.0));
             scene.renderForSpecs();
-            expect(scene._frustumCommandsList.length).toEqual(0);
+            expect(scene.frustumCommandsList.length).toEqual(0);
 
             m.show = false;
             primitives.remove(m);
@@ -2628,12 +2629,12 @@ defineSuite([
             // Look at the model
             m.zoomTo();
             scene.renderForSpecs();
-            expect(scene._frustumCommandsList.length).not.toEqual(0);
+            expect(scene.frustumCommandsList.length).not.toEqual(0);
 
             // Move the model out of view
             m.modelMatrix = Matrix4.fromTranslation(new Cartesian3(10000000000.0, 0.0, 0.0));
             scene.renderForSpecs();
-            expect(scene._frustumCommandsList.length).not.toEqual(0);
+            expect(scene.frustumCommandsList.length).not.toEqual(0);
 
             m.show = false;
             primitives.remove(m);

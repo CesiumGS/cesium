@@ -285,6 +285,7 @@ define([
 
             var completeMorph = function() {
                 transitioner._morphCancelled = true;
+                transitioner._scene.camera.cancelFlight();
                 completeMorphFunction(transitioner);
             };
             transitioner._completeMorph = completeMorph;
@@ -837,7 +838,7 @@ define([
             }
 
             var frustum = camera.frustum;
-            if (scene._logDepthBuffer && !(frustum instanceof OrthographicFrustum || frustum instanceof OrthographicOffCenterFrustum)) {
+            if (scene.frameState.useLogDepth) {
                 frustum.near = 0.1;
                 frustum.far = 10000000000.0;
             }
@@ -894,7 +895,7 @@ define([
             }
 
             var frustum = camera.frustum;
-            if (scene._logDepthBuffer && !(frustum instanceof OrthographicFrustum || frustum instanceof OrthographicOffCenterFrustum)) {
+            if (scene.frameState.useLogDepth) {
                 frustum.near = 0.1;
                 frustum.far = 10000000000.0;
             }

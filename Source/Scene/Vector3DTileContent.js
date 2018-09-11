@@ -396,7 +396,7 @@ define([
                 polygonMaximumHeights : polygonMaximumHeights,
                 center : center,
                 rectangle : rectangle,
-                boundingVolume : content._tile._boundingVolume.boundingVolume,
+                boundingVolume : content.tile.boundingVolume.boundingVolume,
                 batchTable : batchTable,
                 batchIds : batchIds.polygons,
                 modelMatrix : modelMatrix
@@ -430,7 +430,7 @@ define([
                 maximumHeight : maxHeight,
                 center : center,
                 rectangle : rectangle,
-                boundingVolume : content._tile._boundingVolume.boundingVolume,
+                boundingVolume : content.tile.boundingVolume.boundingVolume,
                 batchTable : batchTable
             });
         }

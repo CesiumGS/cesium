@@ -68,7 +68,7 @@ define([
         tileset._emptyTiles.length = 0;
         tileset._hasMixedContent = false;
 
-        var root = tileset._root;
+        var root = tileset.root;
         updateTile(tileset, root, frameState);
 
         // The root tile is not visible
@@ -137,9 +137,8 @@ define([
                 tileContent.featurePropertiesDirty = false;
                 tile.lastStyleTime = 0; // Force applying the style to this tile
                 tileset._selectedTilesToStyle.push(tile);
-            } else if ((tile._selectedFrame !== frameState.frameNumber - 1)) {
+            } else if ((tile._selectedFrame < frameState.frameNumber - 1)) {
                 // Tile is newly selected; it is selected this frame, but was not selected last frame.
-                tile.lastStyleTime = 0; // Force applying the style to this tile
                 tileset._selectedTilesToStyle.push(tile);
             }
             tile._selectedFrame = frameState.frameNumber;
@@ -157,13 +156,15 @@ define([
             var childrenLength = children.length;
             for (var i = 0; i < childrenLength; ++i) {
                 var child = children[i];
-                if (child.contentAvailable) {
-                    updateTile(tileset, child, frameState);
-                    touchTile(tileset, child, frameState);
-                    selectTile(tileset, child, frameState);
-                } else if (child._depth - root._depth < descendantSelectionDepth) {
-                    // Continue traversing, but not too far
-                    stack.push(child);
+                if (isVisible(child)) {
+                    if (child.contentAvailable) {
+                        updateTile(tileset, child, frameState);
+                        touchTile(tileset, child, frameState);
+                        selectTile(tileset, child, frameState);
+                    } else if (child._depth - root._depth < descendantSelectionDepth) {
+                        // Continue traversing, but not too far
+                        stack.push(child);
+                    }
                 }
             }
         }
@@ -216,7 +217,7 @@ define([
         var parent = tile.parent;
         var useParentScreenSpaceError = defined(parent) && (!skipLevelOfDetail(tileset) || (tile._screenSpaceError === 0.0));
         var screenSpaceError = useParentScreenSpaceError ? parent._screenSpaceError : tile._screenSpaceError;
-        var rootScreenSpaceError = tileset._root._screenSpaceError;
+        var rootScreenSpaceError = tileset.root._screenSpaceError;
         return rootScreenSpaceError - screenSpaceError; // Map higher SSE to lower values (e.g. root tile is highest priority)
     }
 
@@ -470,11 +471,17 @@ define([
                 refines = updateAndPushChildren(tileset, tile, stack, frameState) && parentRefines;
             }
 
+            var stoppedRefining = !refines && parentRefines;
+
             if (hasEmptyContent(tile)) {
                 // Add empty tile just to show its debug bounding volume
                 // If the tile has tileset content load the external tileset
+                // If the tile cannot refine further select its nearest loaded ancestor
                 addEmptyTile(tileset, tile, frameState);
                 loadTile(tileset, tile, frameState);
+                if (stoppedRefining) {
+                    selectDesiredTile(tileset, tile, frameState);
+                }
             } else if (add) {
                 // Additive tiles are always loaded and selected
                 selectDesiredTile(tileset, tile, frameState);
@@ -484,18 +491,16 @@ define([
                     // Always load tiles in the base traversal
                     // Select tiles that can't refine further
                     loadTile(tileset, tile, frameState);
-                    if (!refines && parentRefines) {
+                    if (stoppedRefining) {
                         selectDesiredTile(tileset, tile, frameState);
                     }
-                } else {
-                    // Load tiles that are not skipped or can't refine further. In practice roughly half the tiles stay unloaded.
-                    // Select tiles that can't refine further. If the tile doesn't have loaded content it will try to select an ancestor with loaded content instead.
-                    if (!refines) { // eslint-disable-line
-                        selectDesiredTile(tileset, tile, frameState);
-                        loadTile(tileset, tile, frameState);
-                    } else if (reachedSkippingThreshold(tileset, tile)) {
-                        loadTile(tileset, tile, frameState);
-                    }
+                } else if (stoppedRefining) {
+                    // In skip traversal, load and select tiles that can't refine further
+                    selectDesiredTile(tileset, tile, frameState);
+                    loadTile(tileset, tile, frameState);
+                } else if (reachedSkippingThreshold(tileset, tile)) {
+                    // In skip traversal, load tiles that aren't skipped. In practice roughly half the tiles stay unloaded.
+                    loadTile(tileset, tile, frameState);
                 }
             }
 

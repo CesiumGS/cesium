@@ -2,6 +2,7 @@ define([
         './buildModuleUrl',
         './defaultValue',
         './defined',
+        './defineProperties',
         './BoundingSphere',
         './Cartesian2',
         './Cartesian3',
@@ -16,6 +17,7 @@ define([
         buildModuleUrl,
         defaultValue,
         defined,
+        defineProperties,
         BoundingSphere,
         Cartesian2,
         Cartesian3,
@@ -66,7 +68,7 @@ define([
 
     /**
      * Computes the minimum and maximum terrain heights for a given rectangle
-     * @param {Rectangle} rectangle THe bounding rectangle
+     * @param {Rectangle} rectangle The bounding rectangle
      * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid
      * @return {{minimumTerrainHeight: Number, maximumTerrainHeight: Number}}
      */
@@ -198,6 +200,21 @@ define([
     ApproximateTerrainHeights._defaultMinTerrainHeight = -100000.0;
     ApproximateTerrainHeights._terrainHeights = undefined;
     ApproximateTerrainHeights._initPromise = undefined;
+
+    defineProperties(ApproximateTerrainHeights, {
+        /**
+         * Determines if the terrain heights are initialized and ready to use. To initialize the terrain heights,
+         * call {@link ApproximateTerrainHeights#initialize} and wait for the returned promise to resolve.
+         * @type {Boolean}
+         * @readonly
+         * @memberof ApproximateTerrainHeights
+         */
+        initialized: {
+            get: function() {
+                return defined(ApproximateTerrainHeights._terrainHeights);
+            }
+        }
+    });
 
     return ApproximateTerrainHeights;
 });

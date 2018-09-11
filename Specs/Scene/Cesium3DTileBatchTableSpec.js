@@ -550,7 +550,7 @@ defineSuite([
 
     it('renders tileset with batch table', function() {
         return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl).then(function(tileset) {
-            var content = tileset._root.content;
+            var content = tileset.root.content;
 
             // Each feature in the b3dm file has an id property from 0 to 9,
             // check that the 2nd resource has an id of 2
@@ -568,7 +568,7 @@ defineSuite([
 
     it('renders tileset without batch table', function() {
         return Cesium3DTilesTester.loadTileset(scene, withoutBatchTableUrl).then(function(tileset) {
-            var content = tileset._root.content;
+            var content = tileset.root.content;
 
             expect(content.getFeature(2).getProperty('id')).toBeUndefined();
 
@@ -595,7 +595,7 @@ defineSuite([
         ContextLimits._maximumTextureSize = 4;
 
         return Cesium3DTilesTester.loadTileset(scene, withoutBatchTableUrl).then(function(tileset) {
-            var content = tileset._root.content;
+            var content = tileset.root.content;
             expect(content.featuresLength).toBeGreaterThan(ContextLimits._maximumTextureSize);
             Cesium3DTilesTester.expectRenderTileset(scene, tileset);
 
@@ -616,7 +616,7 @@ defineSuite([
     });
 
     function expectRenderTranslucent(tileset) {
-        var batchTable = tileset._root.content.batchTable;
+        var batchTable = tileset.root.content.batchTable;
 
         // Get initial color
         var opaqueColor;
@@ -799,7 +799,7 @@ defineSuite([
 
     function checkHierarchyProperties(tileset, multipleParents) {
         // Check isExactClass, isClass, and getExactClassName in Cesium3DTileFeature
-        var content = tileset._root.content;
+        var content = tileset.root.content;
         var batchTable = content.batchTable;
         var hierarchy = batchTable._batchTableHierarchy;
 
@@ -861,7 +861,7 @@ defineSuite([
 
     function checkHierarchyPropertiesNoParents(tileset) {
         // Check isExactClass, isClass, and getExactClassName in Cesium3DTileFeature
-        var content = tileset._root.content;
+        var content = tileset.root.content;
         var doorFeature = content.getFeature(4);
         expect(doorFeature.isExactClass('door')).toBe(true);
         expect(doorFeature.isExactClass('doorknob')).toBe(false);
@@ -1111,7 +1111,7 @@ defineSuite([
 
     it('destroys', function() {
         return Cesium3DTilesTester.loadTileset(scene, withoutBatchTableUrl).then(function(tileset) {
-            var content = tileset._root.content;
+            var content = tileset.root.content;
             var batchTable = content.batchTable;
             expect(batchTable.isDestroyed()).toEqual(false);
             scene.primitives.remove(tileset);
