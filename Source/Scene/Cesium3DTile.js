@@ -817,8 +817,9 @@ define([
     Cesium3DTile.prototype.visibility = function(frameState, parentVisibilityPlaneMask) {
         var cullingVolume = frameState.cullingVolume;
         var boundingVolume = getBoundingVolume(this, frameState);
+        return CullingVolume.MASK_INSIDE;
 
-        var tileset = this._tileset;
+        var tileset = this._tileset; // eslint-disable-line no-unreachable
         var clippingPlanes = tileset.clippingPlanes;
         if (defined(clippingPlanes) && clippingPlanes.enabled) {
             var tileTransform = tileset.root.computedTransform;

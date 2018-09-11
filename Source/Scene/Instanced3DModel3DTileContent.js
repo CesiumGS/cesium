@@ -417,6 +417,12 @@ define([
         }
 
         content._modelInstanceCollection = new ModelInstanceCollection(collectionOptions);
+        content._modelInstanceCollection._useBoundingSphereForClipping = !defined(rtcCenter) && !defined(content._tileset.root._header.transform);
+
+        if (defined(rtcCenter)) {
+            content._modelInstanceCollection._rtcCenterTransform = Matrix4.fromTranslation(Cartesian3.fromArray(rtcCenterArray));
+        }
+
     }
 
     function createFeatures(content) {
@@ -467,13 +473,20 @@ define([
         this._modelInstanceCollection.debugWireframe = this._tileset.debugWireframe;
 
         var model = this._modelInstanceCollection._model;
+        var useBoundingSphereForClipping = this._modelInstanceCollection._useBoundingSphereForClipping;
+        var rtcCenterTransform = this._modelInstanceCollection._rtcCenterTransform;
 
         if (defined(model)) {
             // Update for clipping planes
             var tilesetClippingPlanes = this._tileset.clippingPlanes;
             if (this._tile.clippingPlanesDirty && defined(tilesetClippingPlanes)) {
                 // Use the root tile's transform.
-                model._clippingPlaneOffsetMatrix = this._tileset._root.computedTransform;
+                if (!useBoundingSphereForClipping) {
+                    model._clippingPlaneOffsetMatrix = Matrix4.multiply(rtcCenterTransform, this._tileset.root.computedTransform, new Matrix4());
+                } else if (this._tileset.ready) {
+                    model._clippingPlaneOffsetMatrix = Transforms.eastNorthUpToFixedFrame(this._tileset.boundingSphere.center);
+                }
+
                 // Dereference the clipping planes from the model if they are irrelevant - saves on shading
                 // Link/Dereference directly to avoid ownership checks.
                 model._clippingPlanes = (tilesetClippingPlanes.enabled && this._tile._isClipped) ? tilesetClippingPlanes : undefined;

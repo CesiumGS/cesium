@@ -9,11 +9,11 @@ define([
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/FeatureDetection',
-        '../Core/getBaseUri',
         '../Core/getStringFromTypedArray',
         '../Core/Matrix4',
         '../Core/RequestType',
         '../Core/RuntimeError',
+        '../Core/Transforms',
         '../Renderer/Pass',
         './Axis',
         './Cesium3DTileBatchTable',
@@ -33,11 +33,11 @@ define([
         destroyObject,
         DeveloperError,
         FeatureDetection,
-        getBaseUri,
         getStringFromTypedArray,
         Matrix4,
         RequestType,
         RuntimeError,
+        Transforms,
         Pass,
         Axis,
         Cesium3DTileBatchTable,
@@ -361,7 +361,10 @@ define([
             content._rtcCenterTransform = Matrix4.fromTranslation(Cartesian3.fromArray(rtcCenter), content._rtcCenterTransform);
         }
 
+        tile._useBoundingSphereForClipping = !defined(rtcCenter) && !defined(tileset.root._header.transform);
+
         content._contentModelMatrix = Matrix4.multiply(tile.computedTransform, content._rtcCenterTransform, new Matrix4());
+        tile._contentModelMatrix = content._contentModelMatrix;
 
         if (!defined(tileset.classificationType)) {
             // PERFORMANCE_IDEA: patch the shader on demand, e.g., the first time show/color changes.
@@ -465,8 +468,14 @@ define([
         // Update clipping planes
         var tilesetClippingPlanes = this._tileset.clippingPlanes;
         if (this._tile.clippingPlanesDirty && defined(tilesetClippingPlanes)) {
-            // Use the root tile's transform.
-            this._model._clippingPlaneOffsetMatrix = this._tileset._root.computedTransform;
+            // Use the root tile's transform
+            if (!this._tile._useBoundingSphereForClipping) {
+                this._model._clippingPlaneOffsetMatrix = this._tileset.root._contentModelMatrix;
+            } else if (this._tileset.ready) {
+                // If no RTC or transform for root tile, just use the bounding sphere as a fallback
+                this._model._clippingPlaneOffsetMatrix = Transforms.eastNorthUpToFixedFrame(this._tileset.boundingSphere.center);
+            }
+
             // Dereference the clipping planes from the model if they are irrelevant.
             // Link/Dereference directly to avoid ownership checks.
             // This will also trigger synchronous shader regeneration to remove or add the clipping plane and color blending code.
