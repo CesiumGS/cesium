@@ -2,16 +2,12 @@ define([
         '../Core/defined',
         '../Core/destroyObject',
         '../Core/DeveloperError',
-        '../Core/Math',
-        '../Core/Matrix3',
-        '../Core/Quaternion'
+        '../Core/Math'
     ], function(
         defined,
         destroyObject,
         DeveloperError,
-        CesiumMath,
-        Matrix3,
-        Quaternion) {
+        Math) {
     'use strict';
 
     /**
@@ -26,80 +22,129 @@ define([
 
         this._scene = scene;
 
-        this._lastAlpha = undefined;
-        this._lastBeta = undefined;
-        this._lastGamma = undefined;
+        this._flipPitchRoll = false;
+        this._invertPitchFactor = 1;
+        this._invertRollFactor = 1;
+        this._orientationAngle = 0;
 
-        this._alpha = undefined;
-        this._beta = undefined;
-        this._gamma = undefined;
+        this._pitch = undefined;
+        this._roll = undefined;
+        this._heading = undefined;
 
         var that = this;
 
-        function callback(e) {
-            var alpha = e.alpha;
-            if (!defined(alpha)) {
-                that._alpha = undefined;
-                that._beta = undefined;
-                that._gamma = undefined;
-                return;
+        function handleChangedOrientationAngle()
+        {
+            switch(that._orientationAngle) {
+                case 0:
+                    that._flipPitchRoll = false;
+                    that._invertPitchFactor = 1;
+                    that._invertRollFactor = 1;
+                    break;
+                case 90:
+                    that._flipPitchRoll = true;
+                    that._invertPitchFactor = -1;
+                    that._invertRollFactor = 1;
+                    break;
+                case 180:
+                    that._flipPitchRoll = false;
+                    that._invertPitchFactor = -1;
+                    that._invertRollFactor = -1;
+                    break;
+                case -90:
+                case 270:
+                    that._flipPitchRoll = true;
+                    that._invertPitchFactor = 1;
+                    that._invertRollFactor = -1;
+                    break;
             }
-
-            that._alpha = CesiumMath.toRadians(alpha);
-            that._beta = CesiumMath.toRadians(e.beta);
-            that._gamma = CesiumMath.toRadians(e.gamma);
         }
 
-        window.addEventListener('deviceorientation', callback, false);
+        function screenOrientationChanged()
+        {
+            if ('orientation' in screen) {
+                that._orientationAngle = screen.orientation.angle;
+            } else {
+                that._orientationAngle = window.orientation;
+            }
+            handleChangedOrientationAngle();
+        }
 
-        this._removeListener = function() {
-            window.removeEventListener('deviceorientation', callback, false);
-        };
-    }
+        function msScreenOrientationChanged()
+        {
+            switch(screen.msOrientation) {
+                case 'landscape-primary':
+                    that._orientationAngle = 0;
+                    break;
+                case 'portrait-secondary':
+                    that._orientationAngle = 90;
+                    break;
+                case 'landscape-secondary':
+                    that._orientationAngle = 180;
+                    break;
+                case 'portrait-primary':
+                    that._orientationAngle = 270;
+                    break;
+            }
+            handleChangedOrientationAngle();
+        }
 
-    var scratchQuaternion1 = new Quaternion();
-    var scratchQuaternion2 = new Quaternion();
-    var scratchMatrix3 = new Matrix3();
+        function updateDeviceOrientation(e) {
+            that._pitch = Math.toRadians(e.beta);
+            that._roll = Math.toRadians(e.gamma);
+            that._heading = Math.toRadians(e.alpha);
+        }
 
-    function rotate(camera, alpha, beta, gamma) {
-        var direction = camera.direction;
-        var right = camera.right;
-        var up = camera.up;
+        this._enableDeviceOrientation = function(enable) {
+            if (enable) {
+                if ('orientation' in screen) {
+                    screenOrientationChanged();
+                    screen.orientation.addEventListener('change', screenOrientationChanged, false);
+                } else if ('onmsorientationchange' in screen) {
+                    msScreenOrientationChanged();
+                    screen.addEventListener('MSOrientationChange', msScreenOrientationChanged, false);
+                } else if ('orientation' in window) {
+                    screenOrientationChanged();
+                    window.addEventListener('orientationchange', screenOrientationChanged, false);
+                }
 
-        var bQuat = Quaternion.fromAxisAngle(direction, beta, scratchQuaternion2);
-        var gQuat = Quaternion.fromAxisAngle(right, gamma, scratchQuaternion1);
+                if ('ondeviceorientationabsolute' in window) { //Chrome 50+
+                    window.addEventListener('deviceorientationabsolute', updateDeviceOrientation, false);
+                } else if ('ondeviceorientation' in window) {
+                    window.addEventListener('deviceorientation', updateDeviceOrientation, false);
+                }
+            } else {
+                if ('orientation' in screen) {
+                    screen.orientation.removeEventListener('change', screenOrientationChanged, false);
+                } else if ('onmsorientationchange' in screen) {
+                     screen.removeEventListener('MSOrientationChange', msScreenOrientationChanged, false);
+                } else if ('orientation' in window) {
+                    window.addEventListener('orientationchange', screenOrientationChanged, false);
+                }
 
-        var rotQuat = Quaternion.multiply(gQuat, bQuat, gQuat);
+                if ('ondeviceorientationabsolute' in window) { //Chrome 50+
+                    window.removeEventListener('deviceorientationabsolute', updateDeviceOrientation, false);
+                } else if ('ondeviceorientation' in window) {
+                    window.removeEventListener('deviceorientation', updateDeviceOrientation, false);
+                }
+            }
+        }
 
-        var aQuat = Quaternion.fromAxisAngle(up, alpha, scratchQuaternion2);
-        Quaternion.multiply(aQuat, rotQuat, rotQuat);
-
-        var matrix = Matrix3.fromQuaternion(rotQuat, scratchMatrix3);
-        Matrix3.multiplyByVector(matrix, right, right);
-        Matrix3.multiplyByVector(matrix, up, up);
-        Matrix3.multiplyByVector(matrix, direction, direction);
+        this._enableDeviceOrientation(true);
     }
 
     DeviceOrientationCameraController.prototype.update = function() {
-        if (!defined(this._alpha)) {
+        if (!defined(this._pitch)) {
             return;
         }
 
-        if (!defined(this._lastAlpha)) {
-            this._lastAlpha = this._alpha;
-            this._lastBeta = this._beta;
-            this._lastGamma = this._gamma;
-        }
-
-        var a = this._lastAlpha - this._alpha;
-        var b = this._lastBeta - this._beta;
-        var g = this._lastGamma - this._gamma;
-
-        rotate(this._scene.camera, -a, b, g);
-
-        this._lastAlpha = this._alpha;
-        this._lastBeta = this._beta;
-        this._lastGamma = this._gamma;
+        this._scene.camera.setView({
+            orientation: {
+                heading : Math.toRadians(this._orientationAngle + 180) - this._heading,
+                pitch : (this._flipPitchRoll ? this._roll : this._pitch) * this._invertPitchFactor - Math.toRadians(90),
+                roll : (this._flipPitchRoll ? this._pitch : this._roll) * this._invertRollFactor
+            }
+        });
     };
 
     /**
@@ -123,7 +168,7 @@ define([
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      */
     DeviceOrientationCameraController.prototype.destroy = function() {
-        this._removeListener();
+        this._enableDeviceOrientation(false);
         return destroyObject(this);
     };
 
