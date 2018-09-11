@@ -213,7 +213,7 @@ define([
         this.shadows = ShadowMode.RECEIVE_ONLY;
 
         this._oceanNormalMap = undefined;
-        this._zoomedOutOceanSpecularIntensity = 0.5;
+        this._zoomedOutOceanSpecularIntensity = undefined;
     }
 
     defineProperties(Globe.prototype, {
@@ -666,11 +666,10 @@ define([
         var mode = frameState.mode;
 
         if (pass.render) {
-            // Don't show the ocean specular highlights when zoomed out in 2D and Columbus View.
-            if (mode === SceneMode.SCENE3D) {
-                this._zoomedOutOceanSpecularIntensity = 0.5;
+            if (this.showGroundAtmosphere) {
+                this._zoomedOutOceanSpecularIntensity = 0.1;
             } else {
-                this._zoomedOutOceanSpecularIntensity = 0.0;
+                this._zoomedOutOceanSpecularIntensity = 0.5;
             }
 
             surface.maximumScreenSpaceError = this.maximumScreenSpaceError;
@@ -681,7 +680,7 @@ define([
             tileProvider.lightingFadeInDistance = this.lightingFadeInDistance;
             tileProvider.nightFadeOutDistance = this.nightFadeOutDistance;
             tileProvider.nightFadeInDistance = this.nightFadeInDistance;
-            tileProvider.zoomedOutOceanSpecularIntensity = this._zoomedOutOceanSpecularIntensity;
+            tileProvider.zoomedOutOceanSpecularIntensity = mode === SceneMode.SCENE3D ? this._zoomedOutOceanSpecularIntensity : 0.0;
             tileProvider.hasWaterMask = hasWaterMask;
             tileProvider.oceanNormalMap = this._oceanNormalMap;
             tileProvider.enableLighting = this.enableLighting;
