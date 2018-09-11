@@ -4,7 +4,11 @@ Change Log
 ### 1.50 - 2018-10-01
 
 ##### Additions :tada:
+* Added `cartographicLimitRectangle` to `Globe`. Use this to limit terrain and imagery to a specific `Rectangle` area. [#6987](https://github.com/AnalyticalGraphicsInc/cesium/pull/6987)
 * Added ground atmosphere lighting in 3D. This can be toggled with `Globe.showGroundAtmosphere`. [6877](https://github.com/AnalyticalGraphicsInc/cesium/pull/6877)
+
+##### Fixes :wrench:
+* Fixed an issue in the 3D Tiles traversal where empty tiles would be selected instead of their nearest loaded ancestors. [#7011](https://github.com/AnalyticalGraphicsInc/cesium/pull/7011)
 
 ### 1.49 - 2018-09-04
 
