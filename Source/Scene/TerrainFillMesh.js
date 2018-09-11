@@ -1,5 +1,6 @@
 define([
         '../Core/AttributeCompression',
+        '../Core/binarySearch',
         '../Core/BoundingSphere',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
@@ -22,6 +23,7 @@ define([
         './TileSelectionResult'
     ], function(
         AttributeCompression,
+        binarySearch,
         BoundingSphere,
         Cartesian2,
         Cartesian3,
@@ -138,8 +140,9 @@ define([
         }
 
         var tile = startTile;
-        while (tile && (tile._lastSelectionResultFrame !== currentFrameNumber || tile._lastSelectionResult === TileSelectionResult.KICKED)) {
+        while (tile && (tile._lastSelectionResultFrame !== currentFrameNumber || tile._lastSelectionResult === TileSelectionResult.KICKED || tile._lastSelectionResult === TileSelectionResult.CULLED)) {
             // This wasn't visited or it was visited and then kicked, so walk up to find the closest ancestor that was rendered.
+            // We also walk up if the tile was culled, because if siblings were kicked an ancestor may have been rendered.
             if (downOnly) {
                 return;
             }
@@ -248,8 +251,8 @@ define([
             if (sourceFill.changedThisFrame) {
                 createFillMesh(tileProvider, frameState, sourceTile);
                 sourceTile.data.fill.changedThisFrame = false;
-                sourceMesh = sourceTile.data.fill.mesh;
             }
+            sourceMesh = sourceTile.data.fill.mesh;
         }
 
         var edgeMeshes;
@@ -430,69 +433,95 @@ define([
         var quadtree = tileProvider._quadtree;
         var lastSelectionFrameNumber = quadtree._lastSelectionFrameNumber;
 
-        var west = getEdgeVertices(tile, fill.westTiles, fill.westMeshes, lastSelectionFrameNumber, TileEdge.EAST, westScratch);
-        var south = getEdgeVertices(tile, fill.southTiles, fill.southMeshes, lastSelectionFrameNumber, TileEdge.NORTH, southScratch);
-        var east = getEdgeVertices(tile, fill.eastTiles, fill.eastMeshes, lastSelectionFrameNumber, TileEdge.WEST, eastScratch);
-        var north = getEdgeVertices(tile, fill.northTiles, fill.northMeshes, lastSelectionFrameNumber, TileEdge.SOUTH, northScratch);
-
-        var hasVertexNormals = tileProvider.terrainProvider.hasVertexNormals;
-        var hasWebMercatorT = true; // TODO
-        var stride = 6 + (hasWebMercatorT ? 1 : 0) + (hasVertexNormals ? 2 : 0);
-
-        var minimumHeight = Number.MAX_VALUE;
-        var maximumHeight = -Number.MAX_VALUE;
-        var hasAnyVertices = false;
-
-        if (west.vertices.length > 0) {
-            minimumHeight = Math.min(minimumHeight, west.minimumHeight);
-            maximumHeight = Math.max(maximumHeight, west.maximumHeight);
-            hasAnyVertices = true;
-        }
-
-        if (south.vertices.length > 0) {
-            minimumHeight = Math.min(minimumHeight, south.minimumHeight);
-            maximumHeight = Math.max(maximumHeight, south.maximumHeight);
-            hasAnyVertices = true;
-        }
-
-        if (east.vertices.length > 0) {
-            minimumHeight = Math.min(minimumHeight, east.minimumHeight);
-            maximumHeight = Math.max(maximumHeight, east.maximumHeight);
-            hasAnyVertices = true;
-        }
-
-        if (north.vertices.length > 0) {
-            minimumHeight = Math.min(minimumHeight, north.minimumHeight);
-            maximumHeight = Math.max(maximumHeight, north.maximumHeight);
-            hasAnyVertices = true;
-        }
-
-        if (!hasAnyVertices) {
-            var tileBoundingRegion = surfaceTile.tileBoundingRegion;
-            minimumHeight = tileBoundingRegion.minimumHeight;
-            maximumHeight = tileBoundingRegion.maximumHeight;
-        }
-
-        var middleHeight = (minimumHeight + maximumHeight) * 0.5;
-
         var tileVertices = tileVerticesScratch;
         tileVertices.length = 0;
 
         var ellipsoid = tile.tilingScheme.ellipsoid;
-        var rectangle = tile.rectangle;
+        var hasVertexNormals = tileProvider.terrainProvider.hasVertexNormals;
+        var hasWebMercatorT = true; // TODO
+        var stride = 6 + (hasWebMercatorT ? 1 : 0) + (hasVertexNormals ? 2 : 0);
 
         var northwestIndex = 0;
-        addCornerVertexIfNecessary(ellipsoid, 0.0, 1.0, rectangle.west, rectangle.north, middleHeight, west, north, hasVertexNormals, hasWebMercatorT, tileVertices);
-        addVerticesToFillTile(west, stride, tileVertices);
-        var southwestIndex = tileVertices.length / stride;
-        addCornerVertexIfNecessary(ellipsoid, 0.0, 0.0, rectangle.west, rectangle.south, middleHeight, south, west, hasVertexNormals, hasWebMercatorT, tileVertices);
-        addVerticesToFillTile(south, stride, tileVertices);
-        var southeastIndex = tileVertices.length / stride;
-        addCornerVertexIfNecessary(ellipsoid, 1.0, 0.0, rectangle.east, rectangle.south, middleHeight, east, south, hasVertexNormals, hasWebMercatorT, tileVertices);
-        addVerticesToFillTile(east, stride, tileVertices);
-        var northeastIndex = tileVertices.length / stride;
-        addCornerVertexIfNecessary(ellipsoid, 1.0, 1.0, rectangle.east, rectangle.north, middleHeight, north, east, hasVertexNormals, hasWebMercatorT, tileVertices);
-        addVerticesToFillTile(north, stride, tileVertices);
+        addCorner(fill, ellipsoid, 0.0, 1.0, fill.northwestTile, fill.northwestMesh, fill.westTiles, fill.westMeshes, fill.northTiles, fill.northMeshes, hasVertexNormals, hasWebMercatorT, tileVertices);
+        var southwestIndex = 1;
+        addCorner(fill, ellipsoid, 0.0, 0.0, fill.southwestTile, fill.southwestMesh, fill.southTiles, fill.southMeshes, fill.westTiles, fill.westMeshes, hasVertexNormals, hasWebMercatorT, tileVertices);
+        var southeastIndex = 2;
+        addCorner(fill, ellipsoid, 1.0, 0.0, fill.southeastTile, fill.southeastMesh, fill.eastTiles, fill.eastMeshes, fill.southTiles, fill.southMeshes, hasVertexNormals, hasWebMercatorT, tileVertices);
+        var northeastIndex = 3;
+        addCorner(fill, ellipsoid, 1.0, 1.0, fill.northeastTile, fill.northeastMesh, fill.northTiles, fill.northMeshes, fill.eastTiles, fill.eastMeshes, hasVertexNormals, hasWebMercatorT, tileVertices);
+
+        // TODO: slight optimization: track min/max as we're adding vertices.
+        var southwestHeight = tileVertices[southwestIndex * stride + 3];
+        var southeastHeight = tileVertices[southeastIndex * stride + 3];
+        var northwestHeight = tileVertices[northwestIndex * stride + 3];
+        var northeastHeight = tileVertices[northeastIndex * stride + 3];
+
+        var minimumHeight = Math.min(southwestHeight, southeastHeight, northwestHeight, northeastHeight);
+        var maximumHeight = Math.max(southwestHeight, southeastHeight, northwestHeight, northeastHeight);
+
+        // var west = getEdgeVertices(tile, fill.westTiles, fill.westMeshes, lastSelectionFrameNumber, TileEdge.EAST, westScratch);
+        // var south = getEdgeVertices(tile, fill.southTiles, fill.southMeshes, lastSelectionFrameNumber, TileEdge.NORTH, southScratch);
+        // var east = getEdgeVertices(tile, fill.eastTiles, fill.eastMeshes, lastSelectionFrameNumber, TileEdge.WEST, eastScratch);
+        // var north = getEdgeVertices(tile, fill.northTiles, fill.northMeshes, lastSelectionFrameNumber, TileEdge.SOUTH, northScratch);
+
+        // var hasVertexNormals = tileProvider.terrainProvider.hasVertexNormals;
+        // var hasWebMercatorT = true; // TODO
+        // var stride = 6 + (hasWebMercatorT ? 1 : 0) + (hasVertexNormals ? 2 : 0);
+
+        // var minimumHeight = Number.MAX_VALUE;
+        // var maximumHeight = -Number.MAX_VALUE;
+        // var hasAnyVertices = false;
+
+        // if (west.vertices.length > 0) {
+        //     minimumHeight = Math.min(minimumHeight, west.minimumHeight);
+        //     maximumHeight = Math.max(maximumHeight, west.maximumHeight);
+        //     hasAnyVertices = true;
+        // }
+
+        // if (south.vertices.length > 0) {
+        //     minimumHeight = Math.min(minimumHeight, south.minimumHeight);
+        //     maximumHeight = Math.max(maximumHeight, south.maximumHeight);
+        //     hasAnyVertices = true;
+        // }
+
+        // if (east.vertices.length > 0) {
+        //     minimumHeight = Math.min(minimumHeight, east.minimumHeight);
+        //     maximumHeight = Math.max(maximumHeight, east.maximumHeight);
+        //     hasAnyVertices = true;
+        // }
+
+        // if (north.vertices.length > 0) {
+        //     minimumHeight = Math.min(minimumHeight, north.minimumHeight);
+        //     maximumHeight = Math.max(maximumHeight, north.maximumHeight);
+        //     hasAnyVertices = true;
+        // }
+
+        // if (!hasAnyVertices) {
+        //     var tileBoundingRegion = surfaceTile.tileBoundingRegion;
+        //     minimumHeight = tileBoundingRegion.minimumHeight;
+        //     maximumHeight = tileBoundingRegion.maximumHeight;
+        // }
+
+        var middleHeight = (minimumHeight + maximumHeight) * 0.5;
+
+        // var tileVertices = tileVerticesScratch;
+        // tileVertices.length = 0;
+
+        // var ellipsoid = tile.tilingScheme.ellipsoid;
+        // var rectangle = tile.rectangle;
+
+        // var northwestIndex = 0;
+        // addCornerVertexIfNecessary(ellipsoid, 0.0, 1.0, rectangle.west, rectangle.north, middleHeight, west, north, hasVertexNormals, hasWebMercatorT, tileVertices);
+        // addVerticesToFillTile(west, stride, tileVertices);
+        // var southwestIndex = tileVertices.length / stride;
+        // addCornerVertexIfNecessary(ellipsoid, 0.0, 0.0, rectangle.west, rectangle.south, middleHeight, south, west, hasVertexNormals, hasWebMercatorT, tileVertices);
+        // addVerticesToFillTile(south, stride, tileVertices);
+        // var southeastIndex = tileVertices.length / stride;
+        // addCornerVertexIfNecessary(ellipsoid, 1.0, 0.0, rectangle.east, rectangle.south, middleHeight, east, south, hasVertexNormals, hasWebMercatorT, tileVertices);
+        // addVerticesToFillTile(east, stride, tileVertices);
+        // var northeastIndex = tileVertices.length / stride;
+        // addCornerVertexIfNecessary(ellipsoid, 1.0, 1.0, rectangle.east, rectangle.north, middleHeight, north, east, hasVertexNormals, hasWebMercatorT, tileVertices);
+        // addVerticesToFillTile(north, stride, tileVertices);
 
         // Add a single vertex at the center of the tile.
         var obb = OrientedBoundingBox.fromRectangle(tile.rectangle, minimumHeight, maximumHeight, tile.tilingScheme.ellipsoid);
@@ -502,6 +531,7 @@ define([
         cartographicScratch.height = middleHeight;
         var centerVertexPosition = ellipsoid.cartographicToCartesian(cartographicScratch, cartesianScratch);
 
+        var rectangle = tile.rectangle;
         tileVertices.push(centerVertexPosition.x, centerVertexPosition.y, centerVertexPosition.z, middleHeight);
         tileVertices.push((cartographicScratch.longitude - rectangle.west) / (rectangle.east - rectangle.west));
         tileVertices.push((cartographicScratch.latitude - rectangle.south) / (rectangle.north - rectangle.south));
@@ -671,6 +701,15 @@ define([
 
         result.clear();
 
+        // TODO: add first corner vertex if it exists.
+        // TODO: if a corner is missing, fill it in. When we add a corner, we create an edge
+        //       (or two) that didn't exist before. We need to propagate that edge to adjacent tile(s)
+        //       but be careful not to trigger regeneration of those adjacent tiles. We can do
+        //       that by updating the adjacent tile's list of edge meshes without setting the
+        //       changed flag.
+        // When creating a new fill mesh, immediately adjust all adjacent fill tiles to know they're in sync
+        // with that new mesh (because the new mesh was purposely created to be in sync!).
+
         for (var i = 0; i < edgeMeshes.length; ++i) {
             var edgeTile = edgeTiles[i];
             var surfaceTile = edgeTile.data;
@@ -690,7 +729,407 @@ define([
             }
         }
 
+        // TODO: add last corner vertex if it exists
+
         return result;
+    }
+
+    function transformTextureCoordinate(toMin, toMax, fromValue) {
+        return (fromValue - toMin) / (toMax - toMin);
+    }
+
+    function transformTextureCoordinates(sourceRectangle, targetRectangle, coordinates, result) {
+        var sourceWidth = sourceRectangle.east - sourceRectangle.west;
+        var umin = (targetRectangle.west - sourceRectangle.west) / sourceWidth;
+        var umax = (targetRectangle.east - sourceRectangle.west) / sourceWidth;
+
+        var sourceHeight = sourceRectangle.north - sourceRectangle.south;
+        var vmin = (targetRectangle.south - sourceRectangle.south) / sourceHeight;
+        var vmax = (targetRectangle.north - sourceRectangle.south) / sourceHeight;
+
+        var u = (coordinates.x - umin) / (umax - umin);
+        var v = (coordinates.y - vmin) / (vmax - vmin);
+
+        // Ensure that coordinates very near the corners are at the corners.
+        if (Math.abs(u) < Math.EPSILON8) {
+            u = 0.0;
+        } else if (Math.abs(u - 1.0) < Math.EPSILON8) {
+            u = 1.0;
+        }
+
+        if (Math.abs(v) < Math.EPSILON8) {
+            v = 0.0;
+        } else if (Math.abs(v - 1.0) < Math.EPSILON8) {
+            v = 1.0;
+        }
+
+        if (!defined(result)) {
+            return new Cartesian2(u, v);
+        }
+
+        result.x = u;
+        result.y = v;
+        return result;
+    }
+
+    var positionScratch = new Cartesian3();
+    var encodedNormalScratch = new Cartesian2();
+    var uvScratch = new Cartesian2();
+
+    function addVertexFromTileAtCorner(sourceMesh, sourceIndex, u, v, tileVertices) {
+        var sourceEncoding = sourceMesh.encoding;
+        var sourceVertices = sourceMesh.vertices;
+
+        sourceEncoding.decodePosition(sourceVertices, sourceIndex, positionScratch);
+        tileVertices.push(positionScratch.x, positionScratch.y, positionScratch.z);
+
+        tileVertices.push(sourceEncoding.decodeHeight(sourceVertices, sourceIndex), u, v);
+
+        if (sourceEncoding.hasWebMercatorT) {
+            // At the corners, the geographic and web mercator vertical texture coordinate
+            // is the same: either 0.0 or 1.0;
+            tileVertices.push(v);
+        }
+
+        if (sourceEncoding.hasVertexNormals) {
+            sourceEncoding.getOctEncodedNormal(sourceVertices, sourceIndex, encodedNormalScratch);
+            tileVertices.push(encodedNormalScratch.x, encodedNormalScratch.y);
+        }
+    }
+
+    var uvScratch2 = new Cartesian2();
+    var encodedNormalScratch2 = new Cartesian2();
+    var cartesianScratch2 = new Cartesian3();
+
+    function addInterpolatedVertexAtCorner(ellipsoid, sourceRectangle, targetRectangle, sourceMesh, previousIndex, nextIndex, u, v, interpolateU, tileVertices) {
+        var sourceEncoding = sourceMesh.encoding;
+        var sourceVertices = sourceMesh.vertices;
+
+        var previousUv = transformTextureCoordinates(sourceRectangle, targetRectangle, sourceEncoding.decodeTextureCoordinates(sourceVertices, previousIndex, uvScratch), uvScratch);
+        var nextUv = transformTextureCoordinates(sourceRectangle, targetRectangle, sourceEncoding.decodeTextureCoordinates(sourceVertices, previousIndex, uvScratch2), uvScratch2);
+
+        var ratio;
+        if (interpolateU) {
+            ratio = (u - previousUv.x) / (nextUv.x - previousUv.x);
+        } else {
+            ratio = (v - previousUv.y) / (nextUv.y - previousUv.y);
+        }
+
+        var height1 = sourceEncoding.decodeHeight(sourceVertices, previousIndex);
+        var height2 = sourceEncoding.decodeHeight(sourceVertices, nextIndex);
+
+        cartographicScratch.longitude = CesiumMath.lerp(targetRectangle.west, targetRectangle.east, u);
+        cartographicScratch.latitude = CesiumMath.lerp(targetRectangle.south, targetRectangle.north, v);
+        cartographicScratch.height = CesiumMath.lerp(height1, height2, ratio);
+        var position = ellipsoid.cartographicToCartesian(cartographicScratch, cartesianScratch);
+
+        tileVertices.push(position.x, position.y, position.z);
+        tileVertices.push(cartographicScratch.height, u, v);
+
+        if (sourceEncoding.hasWebMercatorT) {
+            // At the corners, the geographic and web mercator vertical texture coordinate
+            // is the same: either 0.0 or 1.0;
+            tileVertices.push(v);
+        }
+
+        if (sourceEncoding.hasVertexNormals) {
+            var encodedNormal1 = sourceEncoding.getOctEncodedNormal(sourceVertices, previousIndex, encodedNormalScratch);
+            var encodedNormal2 = sourceEncoding.getOctEncodedNormal(sourceVertices, nextIndex, encodedNormalScratch2);
+            var normal1 = AttributeCompression.octDecode(encodedNormal1.x, encodedNormal1.y, cartesianScratch);
+            var normal2 = AttributeCompression.octDecode(encodedNormal2.x, encodedNormal2.y, cartesianScratch2);
+            var normal = Cartesian3.lerp(normal1, normal2, ratio, cartesianScratch);
+            Cartesian3.normalize(normal, normal);
+            var encodedNormal = AttributeCompression.octEncode(normal, encodedNormalScratch);
+            tileVertices.push(encodedNormal.x, encodedNormal.y);
+        }
+    }
+
+    function addVertexWithHeightAtCorner(terrainFillMesh, ellipsoid, u, v, height, hasVertexNormals, hasWebMercatorT, tileVertices) {
+        var rectangle = terrainFillMesh.tile.rectangle;
+
+        cartographicScratch.longitude = CesiumMath.lerp(rectangle.west, rectangle.east, u);
+        cartographicScratch.latitude = CesiumMath.lerp(rectangle.south, rectangle.north, v);
+        cartographicScratch.height = height;
+        var position = ellipsoid.cartographicToCartesian(cartographicScratch, cartesianScratch);
+
+        tileVertices.push(position.x, position.y, position.z);
+        tileVertices.push(height, u, v);
+
+        if (hasWebMercatorT) {
+            // At the corners, the geographic and web mercator vertical texture coordinate
+            // is the same: either 0.0 or 1.0;
+            tileVertices.push(v);
+        }
+
+        if (hasVertexNormals) {
+            var normal = ellipsoid.geodeticSurfaceNormalCartographic(cartographicScratch, cartesianScratch);
+            var encodedNormal = AttributeCompression.octEncode(normal, encodedNormalScratch);
+            tileVertices.push(encodedNormal.x, encodedNormal.y);
+        }
+    }
+
+    function addCorner(
+        terrainFillMesh,
+        ellipsoid,
+        u, v,
+        cornerTile, cornerMesh,
+        previousEdgeTiles, previousEdgeMeshes,
+        nextEdgeTiles, nextEdgeMeshes,
+        hasVertexNormals, hasWebMercatorT,
+        tileVertices
+    ) {
+        var vertexIndex;
+
+        if (cornerMesh !== undefined && !cornerMesh.changedThisFrame) {
+            // Corner mesh is valid, copy its corner vertex to this mesh.
+            var cornerTerrainMesh = cornerMesh.mesh === undefined ? cornerMesh : cornerMesh.mesh;
+            if (u === 0.0) {
+                if (v === 0.0) {
+                    // southwest destination, northeast source
+                    vertexIndex = cornerTerrainMesh.eastIndicesNorthToSouth[0];
+                } else {
+                    // northwest destination, southeast source
+                    vertexIndex = cornerTerrainMesh.southIndicesEastToWest[0];
+                }
+            } else if (v === 0.0) {
+                // southeast destination, northwest source
+                vertexIndex = cornerTerrainMesh.northIndicesWestToEast[0];
+            } else {
+                // northeast destination, southwest source
+                vertexIndex = cornerTerrainMesh.westIndicesSouthToNorth[0];
+            }
+            addVertexFromTileAtCorner(cornerTerrainMesh, vertexIndex, u, v, tileVertices);
+            return;
+        }
+
+        var gotCorner =
+            addCornerFromEdge(terrainFillMesh, ellipsoid, previousEdgeMeshes, previousEdgeTiles, false, u, v, tileVertices) ||
+            addCornerFromEdge(terrainFillMesh, ellipsoid, nextEdgeMeshes, nextEdgeTiles, true, u, v, tileVertices);
+        if (gotCorner) {
+            return;
+        }
+
+        // There is no precise vertex available from the corner or from either adjacent edge.
+        // So use the height from the closest vertex anywhere on the perimeter of this tile.
+        // TODO: would be better to find the closest height rather than favoring a side.
+        // TODO: We'll do the wrong thing if the height is exactly 0.0 because that's falsy.
+        var height;
+        if (u === 0.0) {
+            if (v === 0.0) {
+                // southwest
+                height =
+                    getNearestHeightOnEdge(terrainFillMesh.southMeshes, terrainFillMesh.southTiles, false, TileEdge.NORTH, u, v) ||
+                    getNearestHeightOnEdge(terrainFillMesh.westMeshes, terrainFillMesh.westTiles, true, TileEdge.EAST, u, v) ||
+                    getHeightAtCorner(terrainFillMesh.southeastMesh, terrainFillMesh.southeastTile, TileEdge.NORTHWEST, u, v) ||
+                    getHeightAtCorner(terrainFillMesh.northwestMesh, terrainFillMesh.northwestTile, TileEdge.SOUTHEAST, u, v) ||
+                    getNearestHeightOnEdge(terrainFillMesh.eastMeshes, terrainFillMesh.eastTiles, false, TileEdge.WEST, u, v) ||
+                    getNearestHeightOnEdge(terrainFillMesh.northMeshes, terrainFillMesh.northTiles, true, TileEdge.SOUTH, u, v) ||
+                    getHeightAtCorner(terrainFillMesh.northeastMesh, terrainFillMesh.northeastTile, TileEdge.SOUTHWEST, u, v);
+            } else {
+                // northwest
+                height =
+                    getNearestHeightOnEdge(terrainFillMesh.northMeshes, terrainFillMesh.northTiles, false, TileEdge.SOUTH, u, v) ||
+                    getNearestHeightOnEdge(terrainFillMesh.westMeshes, terrainFillMesh.westTiles, true, TileEdge.EAST, u, v) ||
+                    getHeightAtCorner(terrainFillMesh.southwestMesh, terrainFillMesh.southwestTile, TileEdge.NORTHEAST, u, v) ||
+                    getHeightAtCorner(terrainFillMesh.northeastMesh, terrainFillMesh.northeastTile, TileEdge.SOUTHWEST, u, v) ||
+                    getNearestHeightOnEdge(terrainFillMesh.eastMeshes, terrainFillMesh.eastTiles, false, TileEdge.WEST, u, v) ||
+                    getNearestHeightOnEdge(terrainFillMesh.southMeshes, terrainFillMesh.southTiles, true, TileEdge.NORTH, u, v) ||
+                    getHeightAtCorner(terrainFillMesh.southeastMesh, terrainFillMesh.southeastTile, TileEdge.NORTHWEST, u, v);
+            }
+        } else if (v === 0.0) {
+            // southeast
+            height =
+                getNearestHeightOnEdge(terrainFillMesh.southMeshes, terrainFillMesh.southTiles, false, TileEdge.NORTH, u, v) ||
+                getNearestHeightOnEdge(terrainFillMesh.eastMeshes, terrainFillMesh.eastTiles, true, TileEdge.WEST, u, v) ||
+                getHeightAtCorner(terrainFillMesh.southwestMesh, terrainFillMesh.southwestTile, TileEdge.NORTHEAST, u, v) ||
+                getHeightAtCorner(terrainFillMesh.northeastMesh, terrainFillMesh.northeastTile, TileEdge.SOUTHWEST, u, v) ||
+                getNearestHeightOnEdge(terrainFillMesh.westMeshes, terrainFillMesh.westTiles, false, TileEdge.EAST, u, v) ||
+                getNearestHeightOnEdge(terrainFillMesh.northMeshes, terrainFillMesh.northTiles, true, TileEdge.SOUTH, u, v) ||
+                getHeightAtCorner(terrainFillMesh.northwestMesh, terrainFillMesh.northwestTile, TileEdge.SOUTHEAST, u, v);
+        } else {
+            // northeast
+            height =
+                getNearestHeightOnEdge(terrainFillMesh.northMeshes, terrainFillMesh.northTiles, false, TileEdge.SOUTH, u, v) ||
+                getNearestHeightOnEdge(terrainFillMesh.eastMeshes, terrainFillMesh.eastTiles, true, TileEdge.WEST, u, v) ||
+                getHeightAtCorner(terrainFillMesh.southeastMesh, terrainFillMesh.southeastTile, TileEdge.NORTHWEST, u, v) ||
+                getHeightAtCorner(terrainFillMesh.northwestMesh, terrainFillMesh.northwestTile, TileEdge.SOUTHEAST, u, v) ||
+                getNearestHeightOnEdge(terrainFillMesh.westMeshes, terrainFillMesh.westTiles, false, TileEdge.EAST, u, v) ||
+                getNearestHeightOnEdge(terrainFillMesh.southMeshes, terrainFillMesh.southTiles, true, TileEdge.NORTH, u, v) ||
+                getHeightAtCorner(terrainFillMesh.southwestMesh, terrainFillMesh.southwestTile, TileEdge.NORTHEAST, u, v);
+        }
+
+        if (!defined(height)) {
+            // No heights available whatsoever, so use the average of this tile's minimum and maximum height.
+            var surfaceTile = terrainFillMesh.tile.data;
+            var tileBoundingRegion = surfaceTile.tileBoundingRegion;
+            var minimumHeight = tileBoundingRegion.minimumHeight;
+            var maximumHeight = tileBoundingRegion.maximumHeight;
+            height = (minimumHeight + maximumHeight) * 0.5;
+        }
+
+        addVertexWithHeightAtCorner(terrainFillMesh, ellipsoid, u, v, height, hasVertexNormals, hasWebMercatorT, tileVertices);
+    }
+
+    function getNearestHeightOnEdge(meshes, tiles, isNext, edge, u, v) {
+        var meshStart;
+        var meshEnd;
+        var meshStep;
+
+        if (isNext) {
+            meshStart = 0;
+            meshEnd = meshes.length;
+            meshStep = 1;
+        } else {
+            meshStart = meshes.length - 1;
+            meshEnd = -1;
+            meshStep = -1;
+        }
+
+        for (var meshIndex = meshStart; meshIndex !== meshEnd; meshIndex += meshStep) {
+            var mesh = meshes[meshIndex];
+            if (!defined(mesh) || mesh.changedThisFrame) {
+                continue;
+            }
+
+            var terrainMesh = mesh.mesh ? mesh.mesh : mesh;
+
+            var indices;
+            switch (edge) {
+                case TileEdge.WEST:
+                    indices = terrainMesh.westIndicesSouthToNorth;
+                    break;
+                case TileEdge.SOUTH:
+                    indices = terrainMesh.southIndicesEastToWest;
+                    break;
+                case TileEdge.EAST:
+                    indices = terrainMesh.eastIndicesNorthToSouth;
+                    break;
+                case TileEdge.NORTH:
+                    indices = terrainMesh.northIndicesWestToEast;
+                    break;
+            }
+
+            var index = indices[isNext ? 0 : indices.length - 1];
+            if (defined(index)) {
+                return mesh.encoding.decodeHeight(terrainMesh.vertices, index);
+            }
+        }
+
+        return undefined;
+    }
+
+    function getHeightAtCorner(mesh, tile, edge, u, v) {
+        if (!defined(mesh) || mesh.changedThisFrame) {
+            return undefined;
+        }
+
+        var terrainMesh = mesh.mesh ? mesh.mesh : mesh;
+
+        var indices;
+        switch (edge) {
+            case TileEdge.SOUTHWEST:
+                indices = terrainMesh.westIndicesSouthToNorth;
+                break;
+            case TileEdge.SOUTHEAST:
+                indices = terrainMesh.southIndicesEastToWest;
+                break;
+            case TileEdge.NORTHEAST:
+                indices = terrainMesh.eastIndicesNorthToSouth;
+                break;
+            case TileEdge.NORTHWEST:
+                indices = terrainMesh.northIndicesWestToEast;
+                break;
+        }
+
+        var index = indices[0];
+        if (defined(index)) {
+            return mesh.encoding.decodeHeight(terrainMesh.vertices, index);
+        }
+
+        return undefined;
+    }
+
+    function addCornerFromEdge(terrainFillMesh, ellipsoid, edgeMeshes, edgeTiles, isNext, u, v, tileVertices) {
+        var edgeVertices;
+        var compareU;
+        var increasing;
+        var vertexIndexIndex;
+        var vertexIndex;
+        var sourceMesh = edgeMeshes[isNext ? 0 : edgeMeshes.length - 1];
+
+        if (sourceMesh !== undefined && !sourceMesh.changedThisFrame) {
+            // Previous mesh is valid, but we don't know yet if it covers this corner.
+            var sourceTerrainMesh = sourceMesh.mesh === undefined ? sourceMesh : sourceMesh.mesh;
+
+            if (u === 0.0) {
+                if (v === 0.0) {
+                    // southwest
+                    edgeVertices = isNext ? sourceTerrainMesh.eastIndicesNorthToSouth : sourceTerrainMesh.northIndicesWestToEast;
+                    compareU = !isNext;
+                    increasing = !isNext;
+                } else {
+                    // northwest
+                    edgeVertices = isNext ? sourceTerrainMesh.southIndicesEastToWest : sourceTerrainMesh.eastIndicesNorthToSouth;
+                    compareU = isNext;
+                    increasing = false;
+                }
+            } else if (v === 0.0) {
+                // southeast
+                edgeVertices = isNext ? sourceTerrainMesh.northIndicesWestToEast : sourceTerrainMesh.westIndicesSouthToNorth;
+                compareU = isNext;
+                increasing = true;
+            } else {
+                // northeast
+                edgeVertices = isNext ? sourceTerrainMesh.westIndicesSouthToNorth : sourceTerrainMesh.southIndicesEastToWest;
+                compareU = !isNext;
+                increasing = isNext;
+            }
+
+            if (edgeVertices.length > 0) {
+                // The vertex we want will very often be the first/last vertex so check that first.
+                var sourceTile = edgeTiles[isNext ? 0 : edgeTiles.length - 1];
+                vertexIndexIndex = isNext ? edgeVertices.length - 1 : 0;
+                vertexIndex = edgeVertices[vertexIndexIndex];
+                sourceTerrainMesh.encoding.decodeTextureCoordinates(sourceTerrainMesh.vertices, vertexIndex, uvScratch);
+                var targetUv = transformTextureCoordinates(sourceTile.rectangle, terrainFillMesh.tile.rectangle, uvScratch, uvScratch);
+                if (targetUv.x === u && targetUv.y === v) {
+                    // Vertex is good!
+                    addVertexFromTileAtCorner(sourceTerrainMesh, vertexIndex, u, v, tileVertices);
+                    return true;
+                }
+
+                // The last vertex is not the one we need, try binary searching for the right one.
+                vertexIndexIndex = binarySearch(edgeVertices, compareU ? u : v, function(vertexIndex, textureCoordinate) {
+                    sourceTerrainMesh.encoding.decodeTextureCoordinates(sourceTerrainMesh.vertices, vertexIndex, uvScratch);
+                    var targetUv = transformTextureCoordinates(sourceTile.rectangle, terrainFillMesh.tile.rectangle, uvScratch, uvScratch);
+                    if (increasing) {
+                        if (compareU) {
+                            return u - targetUv.x;
+                        }
+                        return v - targetUv.y;
+                    } else if (compareU) {
+                        return targetUv.x - u;
+                    }
+                    return targetUv.y - v;
+                });
+
+                if (vertexIndexIndex < 0) {
+                    vertexIndexIndex = ~vertexIndexIndex;
+
+                    if (vertexIndexIndex > 0 && vertexIndexIndex < edgeVertices.length) {
+                        // The corner falls between two vertices, so interpolate between them.
+                        addInterpolatedVertexAtCorner(ellipsoid, sourceTile.rectangle, terrainFillMesh.tile.rectangle, sourceTerrainMesh, edgeVertices[vertexIndexIndex - 1], edgeVertices[vertexIndexIndex], u, v, compareU, tileVertices);
+                        return true;
+                    }
+                } else {
+                    // Found a vertex that fits in the corner exactly.
+                    addVertexFromTileAtCorner(sourceTerrainMesh, edgeVertices[vertexIndexIndex], u, v, tileVertices);
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 
     function addCornerVertexIfNecessary(ellipsoid, u, v, longitude, latitude, height, edgeDetails, previousEdgeDetails, hasVertexNormals, hasWebMercatorT, tileVertices) {

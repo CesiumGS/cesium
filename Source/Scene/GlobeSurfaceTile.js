@@ -181,7 +181,7 @@ define([
     var scratchResult = new Cartesian3();
 
     GlobeSurfaceTile.prototype.pick = function(ray, mode, projection, cullBackFaces, result) {
-        var mesh = this.mesh || this.fill.mesh;
+        var mesh = this.mesh || (this.fill && this.fill.mesh);
         if (!defined(mesh)) {
             return undefined;
         }

@@ -36,10 +36,11 @@ var globe = scene.globe;
 var statistics = Cesium.RequestScheduler.statistics;
 
 // var cesiumTerrainProviderMeshes = new Cesium.CesiumTerrainProvider({
-//     url : 'http://localhost:8081/2018-07-11b',
+//     url : 'http://localhost:8001/2018-07-11b',
 //     requestWaterMask : true,
 //     requestVertexNormals : true
 // });
+// viewer.terrainProvider = cesiumTerrainProviderMeshes;
 viewer.terrainProvider = Cesium.createWorldTerrain();
 
 var startTime;

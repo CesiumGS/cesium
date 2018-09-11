@@ -510,7 +510,7 @@ define([
 
         // If this frame has a mix of loaded and fill tiles, we need to propagate
         // loaded heights to the fill tiles.
-        if (this._hasFillTilesThisFrame && this._hasLoadedTilesThisFrame) {
+        if (this.missingTileStrategy === MissingTileStrategy.CREATE_FILL_TILE && this._hasFillTilesThisFrame && this._hasLoadedTilesThisFrame) {
             TerrainFillMesh.updateFillTiles(this, this._quadtree._tilesToRender, frameState);
         }
 
