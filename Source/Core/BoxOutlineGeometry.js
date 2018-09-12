@@ -10,8 +10,10 @@ define([
         './Geometry',
         './GeometryAttribute',
         './GeometryAttributes',
+        './GeometryInstance',
         './GeometryOffsetAttribute',
-        './PrimitiveType'
+        './GeometryPipeline',
+        './PolylineGeometry'
     ], function(
         arrayFill,
         BoundingSphere,
@@ -24,11 +26,11 @@ define([
         Geometry,
         GeometryAttribute,
         GeometryAttributes,
+        GeometryInstance,
         GeometryOffsetAttribute,
-        PrimitiveType) {
+        GeometryPipeline,
+        PolylineGeometry) {
     'use strict';
-
-    var diffScratch = new Cartesian3();
 
     /**
      * A description of the outline of a cube centered at the origin.
@@ -39,6 +41,7 @@ define([
      * @param {Object} options Object with the following properties:
      * @param {Cartesian3} options.minimum The minimum x, y, and z coordinates of the box.
      * @param {Cartesian3} options.maximum The maximum x, y, and z coordinates of the box.
+     * @param {Number} [options.width=2] The width of the outline in pixels.
      *
      * @see BoxOutlineGeometry.fromDimensions
      * @see BoxOutlineGeometry.createGeometry
@@ -68,6 +71,7 @@ define([
         this._min = Cartesian3.clone(min);
         this._max = Cartesian3.clone(max);
         this._offsetAttribute = options.offsetAttribute;
+        this._width = defaultValue(options.width, 2.0);
         this._workerName = 'createBoxOutlineGeometry';
     }
 
@@ -76,6 +80,7 @@ define([
      *
      * @param {Object} options Object with the following properties:
      * @param {Cartesian3} options.dimensions The width, depth, and height of the box stored in the x, y, and z coordinates of the <code>Cartesian3</code>, respectively.
+     * @param {Number} [options.width=2] The width of the outline in pixels.
      * @returns {BoxOutlineGeometry}
      *
      * @exception {DeveloperError} All dimensions components must be greater than or equal to zero.
@@ -105,7 +110,8 @@ define([
         return new BoxOutlineGeometry({
             minimum : Cartesian3.negate(corner, new Cartesian3()),
             maximum : corner,
-            offsetAttribute: options.offsetAttribute
+            offsetAttribute: options.offsetAttribute,
+            width : options.width
         });
     };
 
@@ -113,6 +119,7 @@ define([
      * Creates an outline of a cube from the dimensions of an AxisAlignedBoundingBox.
      *
      * @param {AxisAlignedBoundingBox} boundingBox A description of the AxisAlignedBoundingBox.
+     * @param {Number} [options.width=2] The width of the outline in pixels.
      * @returns {BoxOutlineGeometry}
      *
      *
@@ -144,7 +151,7 @@ define([
      * The number of elements used to pack the object into an array.
      * @type {Number}
      */
-    BoxOutlineGeometry.packedLength = 2 * Cartesian3.packedLength + 1;
+    BoxOutlineGeometry.packedLength = 2 * Cartesian3.packedLength + 2;
 
     /**
      * Stores the provided instance into the provided array.
@@ -164,8 +171,13 @@ define([
         startingIndex = defaultValue(startingIndex, 0);
 
         Cartesian3.pack(value._min, array, startingIndex);
-        Cartesian3.pack(value._max, array, startingIndex + Cartesian3.packedLength);
-        array[startingIndex + (Cartesian3.packedLength * 2)] = defaultValue(value._offsetAttribute, -1);
+        startingIndex += Cartesian3.packedLength;
+
+        Cartesian3.pack(value._max, array, startingIndex);
+        startingIndex += Cartesian3.packedLength;
+
+        array[startingIndex++] = defaultValue(value._offsetAttribute, -1);
+        array[startingIndex] = value._width;
 
         return array;
     };
@@ -175,7 +187,8 @@ define([
     var scratchOptions = {
         minimum : scratchMin,
         maximum : scratchMax,
-        offsetAttribute : undefined
+        offsetAttribute : undefined,
+        width : undefined
     };
 
     /**
@@ -194,20 +207,28 @@ define([
         startingIndex = defaultValue(startingIndex, 0);
 
         var min = Cartesian3.unpack(array, startingIndex, scratchMin);
-        var max = Cartesian3.unpack(array, startingIndex + Cartesian3.packedLength, scratchMax);
-        var offsetAttribute = array[startingIndex + Cartesian3.packedLength * 2];
+        startingIndex += Cartesian3.packedLength;
+        var max = Cartesian3.unpack(array, startingIndex, scratchMax);
+        startingIndex += Cartesian3.packedLength;
+        var offsetAttribute = array[startingIndex++];
+        var width = array[startingIndex];
 
         if (!defined(result)) {
             scratchOptions.offsetAttribute = offsetAttribute === -1 ? undefined : offsetAttribute;
+            scratchOptions.width = width;
             return new BoxOutlineGeometry(scratchOptions);
         }
 
         result._min = Cartesian3.clone(min, result._min);
         result._max = Cartesian3.clone(max, result._max);
         result._offsetAttribute = offsetAttribute === -1 ? undefined : offsetAttribute;
+        result._width = width;
 
         return result;
     };
+
+    var facePositionsScratch = [new Cartesian3(), new Cartesian3(), new Cartesian3(), new Cartesian3(), new Cartesian3()];
+    var cornersScratch = [new Cartesian3(), new Cartesian3()];
 
     /**
      * Computes the geometric representation of an outline of a box, including its vertices, indices, and a bounding sphere.
@@ -218,101 +239,100 @@ define([
     BoxOutlineGeometry.createGeometry = function(boxGeometry) {
         var min = boxGeometry._min;
         var max = boxGeometry._max;
+        var width = boxGeometry._width;
 
         if (Cartesian3.equals(min, max)) {
             return;
         }
 
-        var attributes = new GeometryAttributes();
-        var indices = new Uint16Array(12 * 2);
-        var positions = new Float64Array(8 * 3);
+        var instances = new Array(6);
 
-        positions[0] = min.x;
-        positions[1] = min.y;
-        positions[2] = min.z;
-        positions[3] = max.x;
-        positions[4] = min.y;
-        positions[5] = min.z;
-        positions[6] = max.x;
-        positions[7] = max.y;
-        positions[8] = min.z;
-        positions[9] = min.x;
-        positions[10] = max.y;
-        positions[11] = min.z;
+        var top = facePositionsScratch;
+        Cartesian3.fromElements(min.x, min.y, min.z, top[0]);
+        Cartesian3.fromElements(max.x, min.y, min.z, top[1]);
+        Cartesian3.fromElements(max.x, max.y, min.z, top[2]);
+        Cartesian3.fromElements(min.x, max.y, min.z, top[3]);
+        Cartesian3.clone(top[0], top[4]);
 
-        positions[12] = min.x;
-        positions[13] = min.y;
-        positions[14] = max.z;
-        positions[15] = max.x;
-        positions[16] = min.y;
-        positions[17] = max.z;
-        positions[18] = max.x;
-        positions[19] = max.y;
-        positions[20] = max.z;
-        positions[21] = min.x;
-        positions[22] = max.y;
-        positions[23] = max.z;
-
-        attributes.position = new GeometryAttribute({
-            componentDatatype : ComponentDatatype.DOUBLE,
-            componentsPerAttribute : 3,
-            values : positions
+        instances[0] = new GeometryInstance({
+            geometry : PolylineGeometry.createGeometry(new PolylineGeometry({
+                positions : top,
+                width : width,
+                followSurface : false
+            }))
         });
 
-        // top
-        indices[0] = 4;
-        indices[1] = 5;
-        indices[2] = 5;
-        indices[3] = 6;
-        indices[4] = 6;
-        indices[5] = 7;
-        indices[6] = 7;
-        indices[7] = 4;
+        var bottom = facePositionsScratch;
+        Cartesian3.fromElements(min.x, min.y, max.z, bottom[0]);
+        Cartesian3.fromElements(max.x, min.y, max.z, bottom[1]);
+        Cartesian3.fromElements(max.x, max.y, max.z, bottom[2]);
+        Cartesian3.fromElements(min.x, max.y, max.z, bottom[3]);
+        Cartesian3.clone(bottom[0], bottom[4]);
 
-        // bottom
-        indices[8] = 0;
-        indices[9] = 1;
-        indices[10] = 1;
-        indices[11] = 2;
-        indices[12] = 2;
-        indices[13] = 3;
-        indices[14] = 3;
-        indices[15] = 0;
+        instances[1] = new GeometryInstance({
+            geometry : PolylineGeometry.createGeometry(new PolylineGeometry({
+                positions : top,
+                width : width,
+                followSurface : false
+            }))
+        });
 
-        // left
-        indices[16] = 0;
-        indices[17] = 4;
-        indices[18] = 1;
-        indices[19] = 5;
+        var corners = cornersScratch;
+        Cartesian3.fromElements(min.x, min.x, min.z, corners[0]);
+        Cartesian3.fromElements(min.x, min.y, max.z, corners[1]);
+        instances[2] = new GeometryInstance({
+            geometry : PolylineGeometry.createGeometry(new PolylineGeometry({
+                positions : corners,
+                width : width,
+                followSurface : false
+            }))
+        });
 
-        //right
-        indices[20] = 2;
-        indices[21] = 6;
-        indices[22] = 3;
-        indices[23] = 7;
+        Cartesian3.fromElements(max.x, min.x, min.z, corners[0]);
+        Cartesian3.fromElements(max.x, min.y, max.z, corners[1]);
+        instances[3] = new GeometryInstance({
+            geometry : PolylineGeometry.createGeometry(new PolylineGeometry({
+                positions : corners,
+                width : width,
+                followSurface : false
+            }))
+        });
 
-        var diff = Cartesian3.subtract(max, min, diffScratch);
-        var radius = Cartesian3.magnitude(diff) * 0.5;
+        Cartesian3.fromElements(max.x, max.x, min.z, corners[0]);
+        Cartesian3.fromElements(max.x, max.y, max.z, corners[1]);
+        instances[4] = new GeometryInstance({
+            geometry : PolylineGeometry.createGeometry(new PolylineGeometry({
+                positions : corners,
+                width : width,
+                followSurface : false
+            }))
+        });
+
+        Cartesian3.fromElements(min.x, max.x, min.z, corners[0]);
+        Cartesian3.fromElements(min.x, max.y, max.z, corners[1]);
+        instances[5] = new GeometryInstance({
+            geometry : PolylineGeometry.createGeometry(new PolylineGeometry({
+                positions : corners,
+                width : width,
+                followSurface : false
+            }))
+        });
+
+        var geometry = GeometryPipeline.combineInstances(instances)[0];
 
         if (defined(boxGeometry._offsetAttribute)) {
-            var length = positions.length;
+            var length = geometry.attributes.position.values.length;
             var applyOffset = new Uint8Array(length / 3);
             var offsetValue = boxGeometry._offsetAttribute === GeometryOffsetAttribute.NONE ? 0 : 1;
             arrayFill(applyOffset, offsetValue);
-            attributes.applyOffset = new GeometryAttribute({
+            geometry.attributes.applyOffset = new GeometryAttribute({
                 componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
                 componentsPerAttribute : 1,
                 values: applyOffset
             });
         }
 
-        return new Geometry({
-            attributes : attributes,
-            indices : indices,
-            primitiveType : PrimitiveType.LINES,
-            boundingSphere : new BoundingSphere(Cartesian3.ZERO, radius),
-            offsetAttribute : boxGeometry._offsetAttribute
-        });
+        return geometry;
     };
 
     return BoxOutlineGeometry;
