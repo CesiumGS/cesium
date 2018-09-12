@@ -8,6 +8,7 @@ Change Log
 
 ##### Fixes :wrench:
 * Fixed an issue in the 3D Tiles traversal where empty tiles would be selected instead of their nearest loaded ancestors. [#7011](https://github.com/AnalyticalGraphicsInc/cesium/pull/7011)
+* Fixed an issue where scaling near zero could cause rendering to stop. [#6954](https://github.com/AnalyticalGraphicsInc/cesium/pull/6954)
 
 ### 1.49 - 2018-09-04
 
