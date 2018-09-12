@@ -20,6 +20,7 @@ define([
         './Math',
         './PolygonGeometryLibrary',
         './PolygonPipeline',
+        './PolylineGeometry',
         './PrimitiveType',
         './Queue',
         './WindingOrder'
@@ -45,14 +46,34 @@ define([
         CesiumMath,
         PolygonGeometryLibrary,
         PolygonPipeline,
+        PolylineGeometry,
         PrimitiveType,
         Queue,
         WindingOrder) {
     'use strict';
+
     var createGeometryFromPositionsPositions = [];
     var createGeometryFromPositionsSubdivided = [];
+    var scratchSurfacNormal = new Cartesian3();
 
-    function createGeometryFromPositions(ellipsoid, positions, minDistance, perPositionHeight) {
+    function scalePosition(position, ellipsoid, perPositionHeight, height) {
+        var n = scratchSurfacNormal;
+        var scaleToSurface = !perPositionHeight;
+        var p = position;
+
+        if (scaleToSurface) {
+            p = ellipsoid.scaleToGeodeticSurface(p, p);
+        }
+
+        if (height !== 0) {
+            n = ellipsoid.geodeticSurfaceNormal(p, n);
+
+            Cartesian3.multiplyByScalar(n, height, n);
+            Cartesian3.add(p, n, p);
+        }
+    }
+
+    function createGeometryFromPositions(ellipsoid, positions, width, minDistance, perPositionHeight, height) {
         var tangentPlane = EllipsoidTangentPlane.fromPoints(positions, ellipsoid);
         var positions2D = tangentPlane.projectPointsOntoPlane(positions, createGeometryFromPositionsPositions);
 
@@ -73,134 +94,81 @@ define([
             for (i = 0; i < length; i++) {
                 numVertices += PolygonGeometryLibrary.subdivideLineCount(positions[i], positions[(i + 1) % length], minDistance);
             }
-            subdividedPositions = new Float64Array(numVertices * 3);
+            subdividedPositions = new Array(numVertices);
             for (i = 0; i < length; i++) {
                 var tempPositions = PolygonGeometryLibrary.subdivideLine(positions[i], positions[(i + 1) % length], minDistance, createGeometryFromPositionsSubdivided);
                 var tempPositionsLength = tempPositions.length;
-                for (var j = 0; j < tempPositionsLength; ++j) {
-                    subdividedPositions[index++] = tempPositions[j];
+                for (var j = 0; j < tempPositionsLength; j += 3) {
+                    subdividedPositions[index++] = Cartesian3.fromArray(tempPositions, j);
                 }
             }
         } else {
-            subdividedPositions = new Float64Array(length * 2 * 3);
-            for (i = 0; i < length; i++) {
-                var p0 = positions[i];
-                var p1 = positions[(i + 1) % length];
-                subdividedPositions[index++] = p0.x;
-                subdividedPositions[index++] = p0.y;
-                subdividedPositions[index++] = p0.z;
-                subdividedPositions[index++] = p1.x;
-                subdividedPositions[index++] = p1.y;
-                subdividedPositions[index++] = p1.z;
-            }
+            subdividedPositions = positions;
         }
 
-        length = subdividedPositions.length / 3;
-        var indicesSize = length * 2;
-        var indices = IndexDatatype.createTypedArray(length, indicesSize);
-        index = 0;
-        for (i = 0; i < length - 1; i++) {
-            indices[index++] = i;
-            indices[index++] = i + 1;
+        subdividedPositions.push(subdividedPositions[0]);
+
+        length = subdividedPositions.length;
+        for (i = 0; i < length; ++i) {
+            scalePosition(subdividedPositions[i], ellipsoid, perPositionHeight, height);
         }
-        indices[index++] = length - 1;
-        indices[index++] = 0;
 
         return new GeometryInstance({
-            geometry : new Geometry({
-                attributes : new GeometryAttributes({
-                    position : new GeometryAttribute({
-                        componentDatatype : ComponentDatatype.DOUBLE,
-                        componentsPerAttribute : 3,
-                        values : subdividedPositions
-                    })
-                }),
-                indices : indices,
-                primitiveType : PrimitiveType.LINES
-            })
+            geometry : PolylineGeometry.createGeometry(new PolylineGeometry({
+                positions : subdividedPositions,
+                width : width,
+                followSurface : false
+            }))
         });
     }
 
-    function createGeometryFromPositionsExtruded(ellipsoid, positions, minDistance, perPositionHeight) {
-        var tangentPlane = EllipsoidTangentPlane.fromPoints(positions, ellipsoid);
-        var positions2D = tangentPlane.projectPointsOntoPlane(positions, createGeometryFromPositionsPositions);
+    var cornerPositionsScratch = [new Cartesian3(), new Cartesian3()];
 
-        var originalWindingOrder = PolygonPipeline.computeWindingOrder2D(positions2D);
-        if (originalWindingOrder === WindingOrder.CLOCKWISE) {
-            positions2D.reverse();
-            positions = positions.slice().reverse();
-        }
+    function createExtrudedCornerLine(ellipsoid, position, width, perPositionHeight, height, extrudedHeight) {
+        var cornerPositions = cornerPositionsScratch;
+        Cartesian3.clone(position, cornerPositions[0]);
+        Cartesian3.clone(position, cornerPositions[1]);
 
-        var subdividedPositions;
-        var i;
-
-        var length = positions.length;
-        var corners = new Array(length);
-        var index = 0;
-
-        if (!perPositionHeight) {
-            var numVertices = 0;
-            for (i = 0; i < length; i++) {
-                numVertices += PolygonGeometryLibrary.subdivideLineCount(positions[i], positions[(i + 1) % length], minDistance);
-            }
-
-            subdividedPositions = new Float64Array(numVertices * 3 * 2);
-            for (i = 0; i < length; ++i) {
-                corners[i] = index / 3;
-                var tempPositions = PolygonGeometryLibrary.subdivideLine(positions[i], positions[(i + 1) % length], minDistance, createGeometryFromPositionsSubdivided);
-                var tempPositionsLength = tempPositions.length;
-                for (var j = 0; j < tempPositionsLength; ++j) {
-                    subdividedPositions[index++] = tempPositions[j];
-                }
-            }
-        } else {
-            subdividedPositions = new Float64Array(length * 2 * 3 * 2);
-            for (i = 0; i < length; ++i) {
-                corners[i] = index / 3;
-                var p0 = positions[i];
-                var p1 = positions[(i + 1) % length];
-
-                subdividedPositions[index++] = p0.x;
-                subdividedPositions[index++] = p0.y;
-                subdividedPositions[index++] = p0.z;
-                subdividedPositions[index++] = p1.x;
-                subdividedPositions[index++] = p1.y;
-                subdividedPositions[index++] = p1.z;
-            }
-        }
-
-        length = subdividedPositions.length / (3 * 2);
-        var cornersLength = corners.length;
-
-        var indicesSize = ((length * 2) + cornersLength) * 2;
-        var indices = IndexDatatype.createTypedArray(length, indicesSize);
-
-        index = 0;
-        for (i = 0; i < length; ++i) {
-            indices[index++] = i;
-            indices[index++] = (i + 1) % length;
-            indices[index++] = i + length;
-            indices[index++] = ((i + 1) % length) + length;
-        }
-
-        for (i = 0; i < cornersLength; i++) {
-            var corner = corners[i];
-            indices[index++] = corner;
-            indices[index++] = corner + length;
-        }
+        scalePosition(cornerPositions[0], ellipsoid, perPositionHeight, height);
+        scalePosition(cornerPositions[1], ellipsoid, perPositionHeight, extrudedHeight);
 
         return new GeometryInstance({
-            geometry : new Geometry({
-                attributes : new GeometryAttributes({
-                    position : new GeometryAttribute({
-                        componentDatatype : ComponentDatatype.DOUBLE,
-                        componentsPerAttribute : 3,
-                        values : subdividedPositions
-                    })
-                }),
-                indices : indices,
-                primitiveType : PrimitiveType.LINES
-            })
+            geometry : PolylineGeometry.createGeometry(new PolylineGeometry({
+                positions : cornerPositions,
+                width : width,
+                followSurface : false
+            }))
+        });
+    }
+
+    function addOffset(polygonGeometry, instance, value) {
+        if (!defined(polygonGeometry._offsetAttribute)) {
+            return;
+        }
+
+        var size = instance.geometry.attributes.position.values.length / 3;
+        var offsetAttribute = new Uint8Array(size);
+        offsetAttribute = arrayFill(offsetAttribute, value);
+        instance.geometry.attributes.applyOffset = new GeometryAttribute({
+            componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
+            componentsPerAttribute : 1,
+            values : offsetAttribute
+        });
+    }
+
+    function addCornerOffset(polygonGeometry, instance, topValue, bottomValue) {
+        if (!defined(polygonGeometry._offsetAttribute)) {
+            return;
+        }
+
+        var size = instance.geometry.attributes.position.values.length / 3;
+        var offsetAttribute = new Uint8Array(size);
+        offsetAttribute = arrayFill(offsetAttribute, topValue, 0, size / 2);
+        offsetAttribute = arrayFill(offsetAttribute, bottomValue, size / 2);
+        instance.geometry.attributes.applyOffset = new GeometryAttribute({
+            componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
+            componentsPerAttribute : 1,
+            values : offsetAttribute
         });
     }
 
@@ -218,6 +186,7 @@ define([
      * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid to be used as a reference.
      * @param {Number} [options.granularity=CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
      * @param {Boolean} [options.perPositionHeight=false] Use the height of options.positions for each position instead of using options.height to determine the height.
+     * @param {Number} [options.width=2] The width of the outline in pixels.
      *
      * @see PolygonOutlineGeometry#createGeometry
      * @see PolygonOutlineGeometry#fromPositions
@@ -304,6 +273,7 @@ define([
         var granularity = defaultValue(options.granularity, CesiumMath.RADIANS_PER_DEGREE);
         var perPositionHeight = defaultValue(options.perPositionHeight, false);
         var perPositionHeightExtrude = perPositionHeight && defined(options.extrudedHeight);
+        var width = defaultValue(options.width, 2.0);
 
         var height = defaultValue(options.height, 0.0);
         var extrudedHeight = defaultValue(options.extrudedHeight, height);
@@ -322,13 +292,14 @@ define([
         this._perPositionHeight = perPositionHeight;
         this._perPositionHeightExtrude = perPositionHeightExtrude;
         this._offsetAttribute = options.offsetAttribute;
+        this._width = width;
         this._workerName = 'createPolygonOutlineGeometry';
 
         /**
          * The number of elements used to pack the object into an array.
          * @type {Number}
          */
-        this.packedLength = PolygonGeometryLibrary.computeHierarchyPackedLength(polygonHierarchy) + Ellipsoid.packedLength + 7;
+        this.packedLength = PolygonGeometryLibrary.computeHierarchyPackedLength(polygonHierarchy) + Ellipsoid.packedLength + 8;
     }
 
     /**
@@ -359,6 +330,7 @@ define([
         array[startingIndex++] = value._perPositionHeightExtrude ? 1.0 : 0.0;
         array[startingIndex++] = value._perPositionHeight ? 1.0 : 0.0;
         array[startingIndex++] = defaultValue(value._offsetAttribute, -1);
+        array[startingIndex++] = value._width;
         array[startingIndex] = value.packedLength;
 
         return array;
@@ -397,6 +369,7 @@ define([
         var perPositionHeightExtrude = array[startingIndex++] === 1.0;
         var perPositionHeight = array[startingIndex++] === 1.0;
         var offsetAttribute = array[startingIndex++];
+        var width = array[startingIndex++];
         var packedLength = array[startingIndex];
 
         if (!defined(result)) {
@@ -411,6 +384,7 @@ define([
         result._perPositionHeight = perPositionHeight;
         result._perPositionHeightExtrude = perPositionHeightExtrude;
         result._offsetAttribute = offsetAttribute === -1 ? undefined : offsetAttribute;
+        result._width = width;
         result.packedLength = packedLength;
 
         return result;
@@ -426,6 +400,7 @@ define([
      * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid to be used as a reference.
      * @param {Number} [options.granularity=CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
      * @param {Boolean} [options.perPositionHeight=false] Use the height of options.positions for each position instead of using options.height to determine the height.
+     * @param {Number} [options.width=2] The width of the outline in pixels.
      * @returns {PolygonOutlineGeometry}
      *
      *
@@ -460,7 +435,8 @@ define([
             ellipsoid : options.ellipsoid,
             granularity : options.granularity,
             perPositionHeight : options.perPositionHeight,
-            offsetAttribute : options.offsetAttribute
+            offsetAttribute : options.offsetAttribute,
+            width : options.width
         };
         return new PolygonOutlineGeometry(newOptions);
     };
@@ -476,6 +452,7 @@ define([
         var granularity = polygonGeometry._granularity;
         var polygonHierarchy = polygonGeometry._polygonHierarchy;
         var perPositionHeight = polygonGeometry._perPositionHeight;
+        var width = polygonGeometry._width;
 
         var polygons = PolygonGeometryLibrary.polygonOutlinesFromHierarchy(polygonHierarchy, !perPositionHeight, ellipsoid);
 
@@ -483,68 +460,48 @@ define([
             return undefined;
         }
 
-        var geometryInstance;
-        var geometries = [];
+        var instances = [];
         var minDistance = CesiumMath.chordLength(granularity, ellipsoid.maximumRadius);
 
         var height = polygonGeometry._height;
         var extrudedHeight = polygonGeometry._extrudedHeight;
         var extrude = polygonGeometry._perPositionHeightExtrude || !CesiumMath.equalsEpsilon(height, extrudedHeight, 0, CesiumMath.EPSILON2);
-        var offsetValue;
-        var i;
-        if (extrude) {
-            for (i = 0; i < polygons.length; i++) {
-                geometryInstance = createGeometryFromPositionsExtruded(ellipsoid, polygons[i], minDistance, perPositionHeight);
-                geometryInstance.geometry = PolygonGeometryLibrary.scaleToGeodeticHeightExtruded(geometryInstance.geometry, height, extrudedHeight, ellipsoid, perPositionHeight);
-                if (defined(polygonGeometry._offsetAttribute)) {
-                    var size = geometryInstance.geometry.attributes.position.values.length / 3;
-                    var offsetAttribute = new Uint8Array(size);
-                    if (polygonGeometry._offsetAttribute === GeometryOffsetAttribute.TOP) {
-                        offsetAttribute = arrayFill(offsetAttribute, 1, 0, size / 2);
-                    } else {
-                        offsetValue = polygonGeometry._offsetAttribute === GeometryOffsetAttribute.NONE ? 0 : 1;
-                        offsetAttribute = arrayFill(offsetAttribute, offsetValue);
-                    }
 
-                    geometryInstance.geometry.attributes.applyOffset = new GeometryAttribute({
-                        componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
-                        componentsPerAttribute : 1,
-                        values : offsetAttribute
-                    });
+        var instance;
+        var i;
+
+        if (extrude) {
+            var bottomValue = polygonGeometry._offsetAttribute === GeometryOffsetAttribute.NONE ? 0 : 1;
+            var topValue = polygonGeometry._offsetAttribute === GeometryOffsetAttribute.TOP ? 1 : bottomValue;
+
+            for (i = 0; i < polygons.length; i++) {
+                var polygon = polygons[i];
+
+                instance = createGeometryFromPositions(ellipsoid, polygon, width, minDistance, perPositionHeight, height);
+                addOffset(polygonGeometry, instance, topValue);
+                instances.push(instance);
+
+                instance = createGeometryFromPositions(ellipsoid, polygon, width, minDistance, perPositionHeight, extrudedHeight);
+                addOffset(polygonGeometry, instance, bottomValue);
+                instances.push(instance);
+
+                var polygonLength = polygon.length;
+                for (var j = 0; j < polygonLength; ++j) {
+                    instance = createExtrudedCornerLine(ellipsoid, polygon[j], width, perPositionHeight, height, extrudedHeight);
+                    addCornerOffset(polygonGeometry, instance, topValue, bottomValue);
+                    instances.push(instance);
                 }
-                geometries.push(geometryInstance);
             }
         } else {
+            var offsetValue = polygonGeometry._offsetAttribute === GeometryOffsetAttribute.NONE ? 0 : 1;
             for (i = 0; i < polygons.length; i++) {
-                geometryInstance = createGeometryFromPositions(ellipsoid, polygons[i], minDistance, perPositionHeight);
-                geometryInstance.geometry.attributes.position.values = PolygonPipeline.scaleToGeodeticHeight(geometryInstance.geometry.attributes.position.values, height, ellipsoid, !perPositionHeight);
-
-                if (defined(polygonGeometry._offsetAttribute)) {
-                    var length = geometryInstance.geometry.attributes.position.values.length;
-                    var applyOffset = new Uint8Array(length / 3);
-                    offsetValue = polygonGeometry._offsetAttribute === GeometryOffsetAttribute.NONE ? 0 : 1;
-                    arrayFill(applyOffset, offsetValue);
-                    geometryInstance.geometry.attributes.applyOffset = new GeometryAttribute({
-                        componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
-                        componentsPerAttribute : 1,
-                        values: applyOffset
-                    });
-                }
-
-                geometries.push(geometryInstance);
+                instance = createGeometryFromPositions(ellipsoid, polygons[i], width, minDistance, perPositionHeight, height);
+                addOffset(polygonGeometry, instance, offsetValue);
+                instances.push(instance);
             }
         }
 
-        var geometry = GeometryPipeline.combineInstances(geometries)[0];
-        var boundingSphere = BoundingSphere.fromVertices(geometry.attributes.position.values);
-
-        return new Geometry({
-            attributes : geometry.attributes,
-            indices : geometry.indices,
-            primitiveType : geometry.primitiveType,
-            boundingSphere : boundingSphere,
-            offsetAttribute : polygonGeometry._offsetAttribute
-        });
+        return GeometryPipeline.combineInstances(instances)[0];
     };
 
     return PolygonOutlineGeometry;

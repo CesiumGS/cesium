@@ -102,12 +102,7 @@ var perPositionPolygonOutlineInstance = new Cesium.GeometryInstance({
 // Add all polyline outlines instances to primitives.
 scene.primitives.add(new Cesium.Primitive({
     geometryInstances : [polygonOutlineInstance, extrudedPolygonOutlineInstance, perPositionPolygonOutlineInstance],
-    appearance : new Cesium.PerInstanceColorAppearance({
-        flat : true,
-        renderState : {
-            lineWidth : Math.min(2.0, scene.maximumAliasedLineWidth)
-        }
-    })
+    appearance : new Cesium.PolylineColorAppearance()
 }));
    //Sandcastle_End
     Sandcastle.finishedLoading();
