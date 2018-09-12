@@ -11,10 +11,12 @@ define([
         './Geometry',
         './GeometryAttribute',
         './GeometryAttributes',
+        './GeometryInstance',
         './GeometryOffsetAttribute',
+        './GeometryPipeline',
         './IndexDatatype',
         './Math',
-        './PrimitiveType'
+        './PolylineGeometry'
     ], function(
         arrayFill,
         BoundingSphere,
@@ -28,120 +30,67 @@ define([
         Geometry,
         GeometryAttribute,
         GeometryAttributes,
+        GeometryInstance,
         GeometryOffsetAttribute,
+        GeometryPipeline,
         IndexDatatype,
         CesiumMath,
-        PrimitiveType) {
+        PolylineGeometry) {
     'use strict';
 
-    var scratchCartesian1 = new Cartesian3();
-    var boundingSphereCenter = new Cartesian3();
-
-    function computeEllipse(options) {
-        var center = options.center;
-        boundingSphereCenter = Cartesian3.multiplyByScalar(options.ellipsoid.geodeticSurfaceNormal(center, boundingSphereCenter), options.height, boundingSphereCenter);
-        boundingSphereCenter = Cartesian3.add(center, boundingSphereCenter, boundingSphereCenter);
-        var boundingSphere = new BoundingSphere(boundingSphereCenter, options.semiMajorAxis);
-        var positions = EllipseGeometryLibrary.computeEllipsePositions(options, false, true).outerPositions;
-
-        var attributes = new GeometryAttributes({
-            position: new GeometryAttribute({
-                componentDatatype : ComponentDatatype.DOUBLE,
-                componentsPerAttribute : 3,
-                values : EllipseGeometryLibrary.raisePositionsToHeight(positions, options, false)
-            })
-        });
-
-        var length = positions.length / 3;
-        var indices = IndexDatatype.createTypedArray(length, length * 2);
-        var index = 0;
-        for ( var i = 0; i < length; ++i) {
-            indices[index++] = i;
-            indices[index++] = (i + 1) % length;
-        }
-
-        return {
-            boundingSphere : boundingSphere,
-            attributes : attributes,
-            indices : indices
-        };
+    function computeEllipsePositions(options) {
+        return EllipseGeometryLibrary.computeEllipsePositions(options, false, true).outerPositions;
     }
 
-    var topBoundingSphere = new BoundingSphere();
-    var bottomBoundingSphere = new BoundingSphere();
-    function computeExtrudedEllipse(options) {
-        var center = options.center;
-        var ellipsoid = options.ellipsoid;
-        var semiMajorAxis = options.semiMajorAxis;
-        var scaledNormal = Cartesian3.multiplyByScalar(ellipsoid.geodeticSurfaceNormal(center, scratchCartesian1), options.height, scratchCartesian1);
-        topBoundingSphere.center = Cartesian3.add(center, scaledNormal, topBoundingSphere.center);
-        topBoundingSphere.radius = semiMajorAxis;
+    function computeEllipse(options, positions, height) {
+        options.height = height;
+        positions = EllipseGeometryLibrary.raisePositionsToHeight(positions, options, false);
 
-        scaledNormal = Cartesian3.multiplyByScalar(ellipsoid.geodeticSurfaceNormal(center, scaledNormal), options.extrudedHeight, scaledNormal);
-        bottomBoundingSphere.center = Cartesian3.add(center, scaledNormal, bottomBoundingSphere.center);
-        bottomBoundingSphere.radius = semiMajorAxis;
+        var length = positions.length / 3;
+        var cartesianPositions = new Array(length + 1);
+        for (var i = 0; i < length; ++i) {
+            cartesianPositions[i] = Cartesian3.unpack(positions, i * 3);
+        }
+        cartesianPositions[length] =  Cartesian3.clone(cartesianPositions[0]);
 
-        var positions = EllipseGeometryLibrary.computeEllipsePositions(options, false, true).outerPositions;
-        var attributes = new GeometryAttributes({
-            position: new GeometryAttribute({
-                componentDatatype : ComponentDatatype.DOUBLE,
-                componentsPerAttribute : 3,
-                values : EllipseGeometryLibrary.raisePositionsToHeight(positions, options, true)
-            })
+        return new GeometryInstance({
+            geometry : PolylineGeometry.createGeometry(new PolylineGeometry({
+                positions : cartesianPositions,
+                followSurface : false,
+                width : options.width
+            }))
         });
+    }
 
-        positions = attributes.position.values;
-        var boundingSphere = BoundingSphere.union(topBoundingSphere, bottomBoundingSphere);
-        var length = positions.length/3;
-
-        if (defined(options.offsetAttribute)) {
-            var applyOffset = new Uint8Array(length);
-            if (options.offsetAttribute === GeometryOffsetAttribute.TOP) {
-                applyOffset = arrayFill(applyOffset, 1, 0, length / 2);
-            } else {
-                var offsetValue = options.offsetAttribute === GeometryOffsetAttribute.NONE ? 0 : 1;
-                applyOffset = arrayFill(applyOffset, offsetValue);
-            }
-
-            attributes.applyOffset = new GeometryAttribute({
-                componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
-                componentsPerAttribute : 1,
-                values: applyOffset
-            });
+    function addOffset(ellipseGeometry, instance, value) {
+        if (!defined(ellipseGeometry._offsetAttribute)) {
+            return;
         }
 
-        var numberOfVerticalLines = defaultValue(options.numberOfVerticalLines, 16);
-        numberOfVerticalLines = CesiumMath.clamp(numberOfVerticalLines, 0, length/2);
+        var size = instance.geometry.attributes.position.values.length / 3;
+        var offsetAttribute = new Uint8Array(size);
+        offsetAttribute = arrayFill(offsetAttribute, value);
+        instance.geometry.attributes.applyOffset = new GeometryAttribute({
+            componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
+            componentsPerAttribute : 1,
+            values : offsetAttribute
+        });
+    }
 
-        var indices = IndexDatatype.createTypedArray(length, length * 2 + numberOfVerticalLines * 2);
-
-        length /= 2;
-        var index = 0;
-        var i;
-        for (i = 0; i < length; ++i) {
-            indices[index++] = i;
-            indices[index++] = (i + 1) % length;
-            indices[index++] = i + length;
-            indices[index++] = ((i + 1) % length) + length;
+    function addCornerOffset(ellipseGeometry, instance, topValue, bottomValue) {
+        if (!defined(ellipseGeometry._offsetAttribute)) {
+            return;
         }
 
-        var numSide;
-        if (numberOfVerticalLines > 0) {
-            var numSideLines = Math.min(numberOfVerticalLines, length);
-            numSide = Math.round(length / numSideLines);
-
-            var maxI = Math.min(numSide * numberOfVerticalLines, length);
-            for (i = 0; i < maxI; i += numSide) {
-                indices[index++] = i;
-                indices[index++] = i + length;
-            }
-        }
-
-        return {
-            boundingSphere : boundingSphere,
-            attributes : attributes,
-            indices : indices
-        };
+        var size = instance.geometry.attributes.position.values.length / 3;
+        var offsetAttribute = new Uint8Array(size);
+        offsetAttribute = arrayFill(offsetAttribute, topValue, 0, size / 2);
+        offsetAttribute = arrayFill(offsetAttribute, bottomValue, size / 2);
+        instance.geometry.attributes.applyOffset = new GeometryAttribute({
+            componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
+            componentsPerAttribute : 1,
+            values : offsetAttribute
+        });
     }
 
     /**
@@ -160,6 +109,7 @@ define([
      * @param {Number} [options.rotation=0.0] The angle from north (counter-clockwise) in radians.
      * @param {Number} [options.granularity=0.02] The angular distance between points on the ellipse in radians.
      * @param {Number} [options.numberOfVerticalLines=16] Number of lines to draw between the top and bottom surface of an extruded ellipse.
+     * @param {Number} [options.width=2] The width of the outline in pixels.
      *
      * @exception {DeveloperError} semiMajorAxis and semiMinorAxis must be greater than zero.
      * @exception {DeveloperError} semiMajorAxis must be greater than or equal to the semiMinorAxis.
@@ -184,6 +134,7 @@ define([
         var semiMajorAxis = options.semiMajorAxis;
         var semiMinorAxis = options.semiMinorAxis;
         var granularity = defaultValue(options.granularity, CesiumMath.RADIANS_PER_DEGREE);
+        var width = defaultValue(options.width, 2.0);
 
         //>>includeStart('debug', pragmas.debug);
         if (!defined(center)) {
@@ -216,6 +167,7 @@ define([
         this._extrudedHeight = Math.min(extrudedHeight, height);
         this._numberOfVerticalLines = Math.max(defaultValue(options.numberOfVerticalLines, 16), 0);
         this._offsetAttribute = options.offsetAttribute;
+        this._width = width;
         this._workerName = 'createEllipseOutlineGeometry';
     }
 
@@ -223,7 +175,7 @@ define([
      * The number of elements used to pack the object into an array.
      * @type {Number}
      */
-    EllipseOutlineGeometry.packedLength = Cartesian3.packedLength + Ellipsoid.packedLength + 8;
+    EllipseOutlineGeometry.packedLength = Cartesian3.packedLength + Ellipsoid.packedLength + 9;
 
     /**
      * Stores the provided instance into the provided array.
@@ -258,7 +210,8 @@ define([
         array[startingIndex++] = value._height;
         array[startingIndex++] = value._granularity;
         array[startingIndex++] = value._extrudedHeight;
-        array[startingIndex++]   = value._numberOfVerticalLines;
+        array[startingIndex++] = value._numberOfVerticalLines;
+        array[startingIndex++] = value._width;
         array[startingIndex] = defaultValue(value._offsetAttribute, -1);
 
         return array;
@@ -276,7 +229,8 @@ define([
         granularity : undefined,
         extrudedHeight : undefined,
         numberOfVerticalLines : undefined,
-        offsetAttribute: undefined
+        offsetAttribute: undefined,
+        width : undefined
     };
 
     /**
@@ -309,6 +263,7 @@ define([
         var granularity = array[startingIndex++];
         var extrudedHeight = array[startingIndex++];
         var numberOfVerticalLines = array[startingIndex++];
+        var width = array[startingIndex++];
         var offsetAttribute = array[startingIndex];
 
         if (!defined(result)) {
@@ -320,6 +275,7 @@ define([
             scratchOptions.semiMinorAxis = semiMinorAxis;
             scratchOptions.numberOfVerticalLines = numberOfVerticalLines;
             scratchOptions.offsetAttribute = offsetAttribute === -1 ? undefined : offsetAttribute;
+            scratchOptions.width = width;
 
             return new EllipseOutlineGeometry(scratchOptions);
         }
@@ -334,9 +290,14 @@ define([
         result._extrudedHeight = extrudedHeight;
         result._numberOfVerticalLines = numberOfVerticalLines;
         result._offsetAttribute = offsetAttribute === -1 ? undefined : offsetAttribute;
+        result._width = width;
 
         return result;
     };
+
+    var verticalLineScratch = [new Cartesian3(), new Cartesian3()];
+    var scratchNormal = new Cartesian3();
+    var scratchCartesian3 = new Cartesian3();
 
     /**
      * Computes the geometric representation of an outline of an ellipse on an ellipsoid, including its vertices, indices, and a bounding sphere.
@@ -352,46 +313,78 @@ define([
         var height = ellipseGeometry._height;
         var extrudedHeight = ellipseGeometry._extrudedHeight;
         var extrude = !CesiumMath.equalsEpsilon(height, extrudedHeight, 0, CesiumMath.EPSILON2);
+        var width = ellipseGeometry._width;
+        var ellipsoid = ellipseGeometry._ellipsoid;
 
         ellipseGeometry._center = ellipseGeometry._ellipsoid.scaleToGeodeticSurface(ellipseGeometry._center, ellipseGeometry._center);
         var options = {
             center : ellipseGeometry._center,
             semiMajorAxis : ellipseGeometry._semiMajorAxis,
             semiMinorAxis : ellipseGeometry._semiMinorAxis,
-            ellipsoid : ellipseGeometry._ellipsoid,
+            ellipsoid : ellipsoid,
             rotation : ellipseGeometry._rotation,
             height : height,
             granularity : ellipseGeometry._granularity,
-            numberOfVerticalLines : ellipseGeometry._numberOfVerticalLines
+            numberOfVerticalLines : ellipseGeometry._numberOfVerticalLines,
+            width : width
         };
-        var geometry;
-        if (extrude) {
-            options.extrudedHeight = extrudedHeight;
-            options.offsetAttribute = ellipseGeometry._offsetAttribute;
-            geometry = computeExtrudedEllipse(options);
-        } else {
-            geometry = computeEllipse(options);
+        var positions = computeEllipsePositions(options);
 
-            if (defined(ellipseGeometry._offsetAttribute)) {
-                var length = geometry.attributes.position.values.length;
-                var applyOffset = new Uint8Array(length / 3);
-                var offsetValue = ellipseGeometry._offsetAttribute === GeometryOffsetAttribute.NONE ? 0 : 1;
-                arrayFill(applyOffset, offsetValue);
-                geometry.attributes.applyOffset = new GeometryAttribute({
-                    componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
-                    componentsPerAttribute : 1,
-                    values: applyOffset
-                });
+        var instance;
+        var instances = [];
+
+        if (extrude) {
+            var bottomValue = ellipseGeometry._offsetAttribute === GeometryOffsetAttribute.NONE ? 0 : 1;
+            var topValue = ellipseGeometry._offsetAttribute === GeometryOffsetAttribute.TOP ? 1 : bottomValue;
+
+            var top = computeEllipse(options, positions, height);
+            var bottom = computeEllipse(options, positions, extrudedHeight);
+
+            addOffset(ellipseGeometry, top, topValue);
+            addOffset(ellipseGeometry, bottom, bottomValue);
+            instances.push(top, bottom);
+
+            var length = positions.length / 3;
+            var numberOfVerticalLines = defaultValue(options.numberOfVerticalLines, 16);
+            numberOfVerticalLines = CesiumMath.clamp(numberOfVerticalLines, 0, length);
+
+            if (numberOfVerticalLines > 0) {
+                var numSideLines = Math.min(numberOfVerticalLines, length);
+                var numSide = Math.round(length / numSideLines);
+
+                var maxI = Math.min(numSide * numberOfVerticalLines, length);
+                var verticalLine = verticalLineScratch;
+                for (var i = 0; i < maxI; i += numSide) {
+                    var position = Cartesian3.fromArray(positions, i * 3, verticalLine[0]);
+                    ellipsoid.scaleToGeodeticSurface(position, position);
+
+                    var extrudedPosition = Cartesian3.clone(position, verticalLine[1]);
+                    var normal = ellipsoid.geodeticSurfaceNormal(position, scratchNormal);
+                    var scaledNormal = Cartesian3.multiplyByScalar(normal, height, scratchCartesian3);
+                    Cartesian3.add(position, scaledNormal, position);
+
+                    Cartesian3.multiplyByScalar(normal, extrudedHeight, scaledNormal);
+                    Cartesian3.add(extrudedPosition, scaledNormal, extrudedPosition);
+
+                    instance =new GeometryInstance({
+                        geometry : PolylineGeometry.createGeometry(new PolylineGeometry({
+                            positions : verticalLine,
+                            followSurface : false,
+                            width : width
+                        }))
+                    });
+                    addCornerOffset(ellipseGeometry, instance, topValue, bottomValue);
+                    instances.push(instance);
+                }
             }
+        } else {
+            instance = computeEllipse(options, positions, height);
+            var offsetValue = ellipseGeometry._offsetAttribute === GeometryOffsetAttribute.NONE ? 0 : 1;
+            addOffset(ellipseGeometry, instance, offsetValue);
+            instances.push(instance);
         }
 
-        return new Geometry({
-            attributes : geometry.attributes,
-            indices : geometry.indices,
-            primitiveType : PrimitiveType.LINES,
-            boundingSphere : geometry.boundingSphere,
-            offsetAttribute : ellipseGeometry._offsetAttribute
-        });
+        return GeometryPipeline.combineInstances(instances)[0];
     };
 
     return EllipseOutlineGeometry;

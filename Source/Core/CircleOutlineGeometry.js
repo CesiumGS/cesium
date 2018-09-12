@@ -28,6 +28,7 @@ define([
      * @param {Number} [options.granularity=0.02] The angular distance between points on the circle in radians.
      * @param {Number} [options.extrudedHeight=0.0] The distance in meters between the circle's extruded face and the ellipsoid surface.
      * @param {Number} [options.numberOfVerticalLines=16] Number of lines to draw between the top and bottom of an extruded circle.
+     * @param {Number} [options.width=2] The width of the outline in pixels.
      *
      * @exception {DeveloperError} radius must be greater than zero.
      * @exception {DeveloperError} granularity must be greater than zero.
@@ -59,7 +60,8 @@ define([
             height : options.height,
             extrudedHeight : options.extrudedHeight,
             granularity : options.granularity,
-            numberOfVerticalLines : options.numberOfVerticalLines
+            numberOfVerticalLines : options.numberOfVerticalLines,
+            width : options.width
         };
         this._ellipseGeometry = new EllipseOutlineGeometry(ellipseGeometryOptions);
         this._workerName = 'createCircleOutlineGeometry';
@@ -101,7 +103,8 @@ define([
         granularity : undefined,
         numberOfVerticalLines : undefined,
         semiMajorAxis : undefined,
-        semiMinorAxis : undefined
+        semiMinorAxis : undefined,
+        width : undefined
     };
 
     /**
@@ -120,6 +123,7 @@ define([
         scratchOptions.extrudedHeight = ellipseGeometry._extrudedHeight;
         scratchOptions.granularity = ellipseGeometry._granularity;
         scratchOptions.numberOfVerticalLines = ellipseGeometry._numberOfVerticalLines;
+        scratchOptions.width = ellipseGeometry._width;
 
         if (!defined(result)) {
             scratchOptions.radius = ellipseGeometry._semiMajorAxis;

@@ -254,14 +254,14 @@ define([
         if (addFillPositions) {
             positions[positionIndex++] = position.x;
             positions[positionIndex++] = position.y;
-            positions[positionIndex++] = position.z;
+            positions[positionIndex] = position.z;
             r.positions = positions;
             r.numPts = numPts;
         }
         if (addEdgePositions) {
             outerPositions[outerRightIndex--] = position.z;
             outerPositions[outerRightIndex--] = position.y;
-            outerPositions[outerRightIndex--] = position.x;
+            outerPositions[outerRightIndex] = position.x;
             r.outerPositions = outerPositions;
         }
 
