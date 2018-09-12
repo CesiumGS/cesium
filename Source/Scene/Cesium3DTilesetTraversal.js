@@ -298,6 +298,17 @@ define([
         return anyVisible;
     }
 
+    function meetsScreenSpaceErrorEarly(tileset, tile, frameState) {
+        var parent = tile.parent;
+        if (!defined(parent) || parent.hasTilesetContent || (parent.refine !== Cesium3DTileRefine.ADD)) {
+            return false;
+        }
+
+        // Use parent's geometric error with child's box to see if the tile already meet the SSE
+        var sse = getScreenSpaceError(tileset, parent.geometricError, tile, frameState);
+        return sse <= tileset._maximumScreenSpaceError;
+    }
+
     function updateTileVisibility(tileset, tile, frameState) {
         updateVisibility(tileset, tile, frameState);
 
@@ -305,9 +316,7 @@ define([
             return;
         }
 
-        // Use parent's geometric error with child's box to see if the tile already meet the SSE
-        var parent = tile.parent;
-        if (defined(parent) && !parent.hasTilesetContent && (parent.refine === Cesium3DTileRefine.ADD) && getScreenSpaceError(tileset, parent.geometricError, tile, frameState) <= tileset._maximumScreenSpaceError) {
+        if (meetsScreenSpaceErrorEarly(tileset, tile, frameState)) {
             tile._visible = false;
             return;
         }
