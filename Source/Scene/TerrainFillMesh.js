@@ -103,7 +103,7 @@ define([
 
         for (var i = 0; i < renderedTiles.length; ++i) {
             var renderedTile = renderedTiles[i];
-            if (renderedTile.renderable) {
+            if (defined(renderedTile.data.vertexArray)) {
                 traversalQueue.enqueue(renderedTiles[i]);
             }
         }
@@ -220,7 +220,7 @@ define([
     }
 
     function visitTile(tileProvider, frameState, sourceTile, destinationTile, tileEdge, frameNumber, traversalQueue) {
-        if (destinationTile.renderable) {
+        if (defined(destinationTile.data.vertexArray)) {
             // No further processing necessary for renderable tiles.
             return;
         }
@@ -810,7 +810,7 @@ define([
         var sourceVertices = sourceMesh.vertices;
 
         var previousUv = transformTextureCoordinates(sourceRectangle, targetRectangle, sourceEncoding.decodeTextureCoordinates(sourceVertices, previousIndex, uvScratch), uvScratch);
-        var nextUv = transformTextureCoordinates(sourceRectangle, targetRectangle, sourceEncoding.decodeTextureCoordinates(sourceVertices, previousIndex, uvScratch2), uvScratch2);
+        var nextUv = transformTextureCoordinates(sourceRectangle, targetRectangle, sourceEncoding.decodeTextureCoordinates(sourceVertices, nextIndex, uvScratch2), uvScratch2);
 
         var ratio;
         if (interpolateU) {
