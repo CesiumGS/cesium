@@ -1,74 +1,39 @@
 /*global define*/
 define([
-    './arrayRemoveDuplicates',
-    './BoundingSphere',
-    './Cartesian3',
-    './Check',
-    './ComponentDatatype',
-    './CoplanarPolygonGeometryLibrary',
-    './defaultValue',
-    './defined',
-    './Geometry',
-    './GeometryAttribute',
-    './GeometryAttributes',
-    './GeometryInstance',
-    './GeometryPipeline',
-    './IndexDatatype',
-    './PolygonGeometryLibrary',
-    './PolygonPipeline',
-    './PrimitiveType'
-], function(
-    arrayRemoveDuplicates,
-    BoundingSphere,
-    Cartesian3,
-    Check,
-    ComponentDatatype,
-    CoplanarPolygonGeometryLibrary,
-    defaultValue,
-    defined,
-    Geometry,
-    GeometryAttribute,
-    GeometryAttributes,
-    GeometryInstance,
-    GeometryPipeline,
-    IndexDatatype,
-    PolygonGeometryLibrary,
-    PolygonPipeline,
-    PrimitiveType) {
+        './arrayRemoveDuplicates',
+        './BoundingSphere',
+        './Cartesian3',
+        './Check',
+        './ComponentDatatype',
+        './CoplanarPolygonGeometryLibrary',
+        './defaultValue',
+        './defined',
+        './Geometry',
+        './GeometryAttribute',
+        './GeometryAttributes',
+        './GeometryInstance',
+        './GeometryPipeline',
+        './IndexDatatype',
+        './PolygonGeometryLibrary',
+        './PolylineGeometry'
+    ], function(
+        arrayRemoveDuplicates,
+        BoundingSphere,
+        Cartesian3,
+        Check,
+        ComponentDatatype,
+        CoplanarPolygonGeometryLibrary,
+        defaultValue,
+        defined,
+        Geometry,
+        GeometryAttribute,
+        GeometryAttributes,
+        GeometryInstance,
+        GeometryPipeline,
+        IndexDatatype,
+        PolygonGeometryLibrary,
+        PolylineGeometry) {
     'use strict';
-
-    function createGeometryFromPositions(positions){
-        var length = positions.length;
-        var flatPositions = new Float64Array(length * 3);
-        var indices = IndexDatatype.createTypedArray(length, length * 2);
-
-        var positionIndex = 0;
-        var index = 0;
-
-        for (var i = 0; i < length; i++) {
-            var position = positions[i];
-            flatPositions[positionIndex++] = position.x;
-            flatPositions[positionIndex++] = position.y;
-            flatPositions[positionIndex++] = position.z;
-
-            indices[index++] = i;
-            indices[index++] = (i + 1) % length;
-        }
-
-        var attributes = new GeometryAttributes({
-            position: new GeometryAttribute({
-                componentDatatype : ComponentDatatype.DOUBLE,
-                componentsPerAttribute : 3,
-                values : flatPositions
-            })
-        });
-
-        return new Geometry({
-            attributes : attributes,
-            indices : indices,
-            primitiveType : PrimitiveType.LINES
-        });
-    }
 
     /**
      * A description of the outline of a polygon composed of arbitrary coplanar positions.
@@ -78,6 +43,7 @@ define([
      *
      * @param {Object} options Object with the following properties:
      * @param {PolygonHierarchy} options.polygonHierarchy A polygon hierarchy that can include holes.
+     * @param {Number} [options.width=2] The width of the outline in pixels.
      *
      * @see CoplanarPolygonOutlineGeometry.createGeometry
      *
@@ -100,13 +66,14 @@ define([
         //>>includeEnd('debug');
 
         this._polygonHierarchy = polygonHierarchy;
+        this._width = defaultValue(options.width, 2.0);
         this._workerName = 'createCoplanarPolygonOutlineGeometry';
 
         /**
          * The number of elements used to pack the object into an array.
          * @type {Number}
          */
-        this.packedLength = PolygonGeometryLibrary.computeHierarchyPackedLength(polygonHierarchy) + 1;
+        this.packedLength = PolygonGeometryLibrary.computeHierarchyPackedLength(polygonHierarchy) + 2;
     }
 
     /**
@@ -114,6 +81,7 @@ define([
      *
      * @param {Object} options Object with the following properties:
      * @param {Cartesian3[]} options.positions An array of positions that defined the corner points of the polygon.
+     * @param {Number} [options.width=2] The width of the outline in pixels.
      * @returns {CoplanarPolygonOutlineGeometry}
      */
     CoplanarPolygonOutlineGeometry.fromPositions = function(options) {
@@ -126,7 +94,8 @@ define([
         var newOptions = {
             polygonHierarchy : {
                 positions : options.positions
-            }
+            },
+            width : options.width
         };
         return new CoplanarPolygonOutlineGeometry(newOptions);
     };
@@ -150,6 +119,7 @@ define([
 
         startingIndex = PolygonGeometryLibrary.packPolygonHierarchy(value._polygonHierarchy, array, startingIndex);
 
+        array[startingIndex++] = value._width;
         array[startingIndex] = value.packedLength;
 
         return array;
@@ -158,6 +128,7 @@ define([
     var scratchOptions = {
         polygonHierarchy : {}
     };
+
     /**
      * Retrieves an instance from a packed array.
      *
@@ -176,6 +147,7 @@ define([
         var polygonHierarchy = PolygonGeometryLibrary.unpackPolygonHierarchy(array, startingIndex);
         startingIndex = polygonHierarchy.startingIndex;
         delete polygonHierarchy.startingIndex;
+        var width = array[startingIndex++];
         var packedLength = array[startingIndex];
 
         if (!defined(result)) {
@@ -183,6 +155,7 @@ define([
         }
 
         result._polygonHierarchy = polygonHierarchy;
+        result._width = width;
         result.packedLength = packedLength;
 
         return result;
@@ -196,6 +169,7 @@ define([
      */
     CoplanarPolygonOutlineGeometry.createGeometry = function(polygonGeometry) {
         var polygonHierarchy = polygonGeometry._polygonHierarchy;
+        var width = polygonGeometry._width;
 
         var outerPositions = polygonHierarchy.positions;
         outerPositions = arrayRemoveDuplicates(outerPositions, Cartesian3.equalsEpsilon, true);
@@ -216,21 +190,19 @@ define([
         var geometries = [];
 
         for (var i = 0; i < polygons.length; i++) {
+            var polygon = polygons[i].slice();
+            polygon.push(polygon[0]);
             var geometryInstance = new GeometryInstance({
-                geometry : createGeometryFromPositions(polygons[i])
+                geometry : PolylineGeometry.createGeometry(new PolylineGeometry({
+                    positions : polygon,
+                    followSurface : false,
+                    width : width
+                }))
             });
             geometries.push(geometryInstance);
         }
 
-        var geometry = GeometryPipeline.combineInstances(geometries)[0];
-        var boundingSphere = BoundingSphere.fromPoints(polygonHierarchy.positions);
-
-        return new Geometry({
-            attributes : geometry.attributes,
-            indices : geometry.indices,
-            primitiveType : geometry.primitiveType,
-            boundingSphere : boundingSphere
-        });
+        return GeometryPipeline.combineInstances(geometries)[0];
     };
 
     return CoplanarPolygonOutlineGeometry;

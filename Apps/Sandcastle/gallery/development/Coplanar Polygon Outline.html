@@ -78,12 +78,7 @@ var polygonOutline2 = new Cesium.GeometryInstance({
 
 scene.primitives.add(new Cesium.Primitive({
     geometryInstances : [polygonOutline1, polygonOutline2],
-    appearance : new Cesium.PerInstanceColorAppearance({
-        flat : true,
-        renderState : {
-            lineWidth : Math.min(2.0, scene.maximumAliasedLineWidth)
-        }
-    })
+    appearance : new Cesium.PolylineColorAppearance()
 }));
 //Sandcastle_End
     Sandcastle.finishedLoading();
