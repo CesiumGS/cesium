@@ -1884,7 +1884,7 @@ define([
                     // height range.
                     surfaceTile.fill = new TerrainFillMesh();
                     surfaceTile.fill.tile = tile;
-                    return; // TODO
+                    surfaceTile.fill.changedThisFrame = true;
                 }
                 surfaceTile.fill.update(tileProvider, frameState);
                 //return;
