@@ -1079,8 +1079,7 @@ defineSuite([
         //
         return Cesium3DTilesTester.loadTileset(scene, tilesetReplacement1Url).then(function(tileset) {
             tileset.root.geometricError = 90;
-            viewRootOnly();
-            scene.camera.zoomIn(20);
+            setZoom(80);
             scene.renderForSpecs();
 
             var statistics = tileset._statistics;
@@ -1361,6 +1360,15 @@ defineSuite([
             var statistics = tileset._statistics;
             expect(statistics.visited).toEqual(7); // Visits two tiles with tileset content, five tiles with b3dm content
             expect(statistics.numberOfCommands).toEqual(5); // Render the five tiles with b3dm content
+        });
+    });
+
+    it('always visits external tileset root', function() {
+        viewRootOnly();
+        return Cesium3DTilesTester.loadTileset(scene, tilesetOfTilesetsUrl).then(function(tileset) {
+            var statistics = tileset._statistics;
+            expect(statistics.visited).toEqual(2); // Visits external tileset tile, and external tileset root
+            expect(statistics.numberOfCommands).toEqual(1); // Renders external tileset root
         });
     });
 

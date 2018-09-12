@@ -443,12 +443,9 @@ define([
             return false;
         }
         if (tile.hasTilesetContent) {
-            // Traverse external tileset to visit its root tile.
+            // Traverse external tileset to visit its root tile
             // Don't traverse if the subtree is expired because it will be destroyed
             return !tile.contentExpired;
-        }
-        if (tile.hasTilesetContent) {
-            return true;
         }
         return tile._screenSpaceError > tileset._maximumScreenSpaceError;
     }
