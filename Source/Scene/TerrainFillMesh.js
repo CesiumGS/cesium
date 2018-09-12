@@ -49,13 +49,13 @@ define([
     function TerrainFillMesh() {
         this.tile = undefined;
         this.frameLastUpdated = undefined;
-        this.westMeshes = [];
+        this.westMeshes = []; // north to south (CCW)
         this.westTiles = [];
-        this.southMeshes = [];
+        this.southMeshes = []; // west to east (CCW)
         this.southTiles = [];
-        this.eastMeshes = [];
+        this.eastMeshes = []; // south to north (CCW)
         this.eastTiles = [];
-        this.northMeshes = [];
+        this.northMeshes = []; // east to west (CCW)
         this.northTiles = [];
         this.southwestMesh = undefined;
         this.southwestTile = undefined;
@@ -442,13 +442,17 @@ define([
         var stride = 6 + (hasWebMercatorT ? 1 : 0) + (hasVertexNormals ? 2 : 0);
 
         var northwestIndex = 0;
-        addCorner(fill, ellipsoid, 0.0, 1.0, fill.northwestTile, fill.northwestMesh, fill.westTiles, fill.westMeshes, fill.northTiles, fill.northMeshes, hasVertexNormals, hasWebMercatorT, tileVertices);
-        var southwestIndex = 1;
-        addCorner(fill, ellipsoid, 0.0, 0.0, fill.southwestTile, fill.southwestMesh, fill.southTiles, fill.southMeshes, fill.westTiles, fill.westMeshes, hasVertexNormals, hasWebMercatorT, tileVertices);
-        var southeastIndex = 2;
-        addCorner(fill, ellipsoid, 1.0, 0.0, fill.southeastTile, fill.southeastMesh, fill.eastTiles, fill.eastMeshes, fill.southTiles, fill.southMeshes, hasVertexNormals, hasWebMercatorT, tileVertices);
-        var northeastIndex = 3;
-        addCorner(fill, ellipsoid, 1.0, 1.0, fill.northeastTile, fill.northeastMesh, fill.northTiles, fill.northMeshes, fill.eastTiles, fill.eastMeshes, hasVertexNormals, hasWebMercatorT, tileVertices);
+        addCorner(fill, ellipsoid, 0.0, 1.0, fill.northwestTile, fill.northwestMesh, fill.northTiles, fill.northMeshes, fill.westTiles, fill.westMeshes, hasVertexNormals, hasWebMercatorT, tileVertices);
+        addEdge(fill, ellipsoid, fill.westTiles, fill.westMeshes, TileEdge.EAST, stride, tileVertices);
+        var southwestIndex = tileVertices.length / stride;
+        addCorner(fill, ellipsoid, 0.0, 0.0, fill.southwestTile, fill.southwestMesh, fill.westTiles, fill.westMeshes, fill.southTiles, fill.southMeshes, hasVertexNormals, hasWebMercatorT, tileVertices);
+        addEdge(fill, ellipsoid, fill.southTiles, fill.southMeshes, TileEdge.NORTH, stride, tileVertices);
+        var southeastIndex = tileVertices.length / stride;
+        addCorner(fill, ellipsoid, 1.0, 0.0, fill.southeastTile, fill.southeastMesh, fill.southTiles, fill.southMeshes, fill.eastTiles, fill.eastMeshes, hasVertexNormals, hasWebMercatorT, tileVertices);
+        addEdge(fill, ellipsoid, fill.eastTiles, fill.eastMeshes, TileEdge.WEST, stride, tileVertices);
+        var northeastIndex = tileVertices.length / stride;
+        addCorner(fill, ellipsoid, 1.0, 1.0, fill.northeastTile, fill.northeastMesh, fill.eastTiles, fill.eastMeshes, fill.northTiles, fill.northMeshes, hasVertexNormals, hasWebMercatorT, tileVertices);
+        addEdge(fill, ellipsoid, fill.northTiles, fill.northMeshes, TileEdge.SOUTH, stride, tileVertices);
 
         // TODO: slight optimization: track min/max as we're adding vertices.
         var southwestHeight = tileVertices[southwestIndex * stride + 3];
@@ -970,6 +974,64 @@ define([
         addVertexWithHeightAtCorner(terrainFillMesh, ellipsoid, u, v, height, hasVertexNormals, hasWebMercatorT, tileVertices);
     }
 
+    function addEdge(terrainFillMesh, ellipsoid, edgeTiles, edgeMeshes, tileEdge, stride, tileVertices) {
+        for (var i = 0; i < edgeTiles.length; ++i) {
+            addEdgeMesh(terrainFillMesh, ellipsoid, edgeTiles[i], edgeMeshes[i], tileEdge, stride, tileVertices);
+        }
+    }
+
+    var edgeDetailsScratch = new TerrainTileEdgeDetails();
+
+    function addEdgeMesh(terrainFillMesh, ellipsoid, edgeTile, edgeMesh, tileEdge, stride, tileVertices) {
+        var terrainMesh = edgeMesh.mesh ? edgeMesh.mesh : edgeMesh;
+
+        edgeDetailsScratch.clear();
+        var edgeDetails = terrainMesh.getEdgeVertices(tileEdge, edgeTile.rectangle, terrainFillMesh.tile.rectangle, ellipsoid, edgeDetailsScratch);
+
+        var vertices = edgeDetails.vertices;
+
+        var previousVertexIndex = tileVertices.length - stride;
+
+        // Copy all but the last vertex.
+        var i;
+        var u;
+        var v;
+        var lastU = tileVertices[previousVertexIndex + 4];
+        var lastV = tileVertices[previousVertexIndex + 5];
+        for (i = 0; i < vertices.length - stride; i += stride) {
+            u = vertices[i + 4];
+            v = vertices[i + 5];
+            if (Math.abs(u - lastU) < CesiumMath.EPSILON4 && Math.abs(v - lastV) < CesiumMath.EPSILON4) {
+                // Vertex is very close to the previous one, so skip it.
+                continue;
+            }
+
+            var end = i + stride;
+            for (var j = i; j < end; ++j) {
+                tileVertices.push(vertices[j]);
+            }
+
+            lastU = u;
+            lastV = v;
+        }
+
+        // Copy the last vertex too if it's _not_ a corner vertex.
+        var lastVertexStart = i;
+        u = vertices[lastVertexStart + 4];
+        v = vertices[lastVertexStart + 5];
+
+        if (lastVertexStart < vertices.length && ((u !== 0.0 && u !== 1.0) || (v !== 0.0 && v !== 1.0))) {
+            if (Math.abs(u - lastU) < CesiumMath.EPSILON4 && Math.abs(v - lastV) < CesiumMath.EPSILON4) {
+                // Overwrite the previous vertex because it's very close to the last one.
+                tileVertices.length -= stride;
+            }
+
+            for (; i < vertices.length; ++i) {
+                tileVertices.push(vertices[i]);
+            }
+        }
+    }
+
     function getNearestHeightOnEdge(meshes, tiles, isNext, edge, u, v) {
         var meshStart;
         var meshEnd;
@@ -1064,31 +1126,31 @@ define([
             if (u === 0.0) {
                 if (v === 0.0) {
                     // southwest
-                    edgeVertices = isNext ? sourceTerrainMesh.eastIndicesNorthToSouth : sourceTerrainMesh.northIndicesWestToEast;
-                    compareU = !isNext;
-                    increasing = !isNext;
+                    edgeVertices = isNext ? sourceTerrainMesh.northIndicesWestToEast : sourceTerrainMesh.eastIndicesNorthToSouth;
+                    compareU = isNext;
+                    increasing = isNext;
                 } else {
                     // northwest
-                    edgeVertices = isNext ? sourceTerrainMesh.southIndicesEastToWest : sourceTerrainMesh.eastIndicesNorthToSouth;
-                    compareU = isNext;
+                    edgeVertices = isNext ? sourceTerrainMesh.eastIndicesNorthToSouth : sourceTerrainMesh.southIndicesEastToWest;
+                    compareU = !isNext;
                     increasing = false;
                 }
             } else if (v === 0.0) {
                 // southeast
-                edgeVertices = isNext ? sourceTerrainMesh.northIndicesWestToEast : sourceTerrainMesh.westIndicesSouthToNorth;
-                compareU = isNext;
+                edgeVertices = isNext ? sourceTerrainMesh.westIndicesSouthToNorth : sourceTerrainMesh.northIndicesWestToEast;
+                compareU = !isNext;
                 increasing = true;
             } else {
                 // northeast
-                edgeVertices = isNext ? sourceTerrainMesh.westIndicesSouthToNorth : sourceTerrainMesh.southIndicesEastToWest;
-                compareU = !isNext;
-                increasing = isNext;
+                edgeVertices = isNext ? sourceTerrainMesh.southIndicesEastToWest : sourceTerrainMesh.westIndicesSouthToNorth;
+                compareU = isNext;
+                increasing = !isNext;
             }
 
             if (edgeVertices.length > 0) {
                 // The vertex we want will very often be the first/last vertex so check that first.
                 var sourceTile = edgeTiles[isNext ? 0 : edgeTiles.length - 1];
-                vertexIndexIndex = isNext ? edgeVertices.length - 1 : 0;
+                vertexIndexIndex = isNext ? 0 : edgeVertices.length - 1;
                 vertexIndex = edgeVertices[vertexIndexIndex];
                 sourceTerrainMesh.encoding.decodeTextureCoordinates(sourceTerrainMesh.vertices, vertexIndex, uvScratch);
                 var targetUv = transformTextureCoordinates(sourceTile.rectangle, terrainFillMesh.tile.rectangle, uvScratch, uvScratch);
