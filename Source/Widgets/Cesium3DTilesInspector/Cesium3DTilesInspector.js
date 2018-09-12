@@ -6,6 +6,7 @@ define([
         '../../Core/destroyObject',
         '../../ThirdParty/knockout',
         '../getElement',
+        '../InspectorShared',
         './Cesium3DTilesInspectorViewModel'
     ], function(
         Check,
@@ -15,6 +16,7 @@ define([
         destroyObject,
         knockout,
         getElement,
+        InspectorShared,
         Cesium3DTilesInspectorViewModel) {
     'use strict';
 
@@ -36,7 +38,7 @@ define([
         container = getElement(container);
         var element = document.createElement('div');
         var performanceContainer = document.createElement('div');
-        performanceContainer.setAttribute('data-bind', 'css: {"cesium-cesiumInspector-show" : performance, "cesium-cesiumInspector-hide" : !performance}');
+        performanceContainer.setAttribute('data-bind', 'visible: performance');
         var viewModel = new Cesium3DTilesInspectorViewModel(scene, performanceContainer);
 
         this._viewModel = viewModel;
@@ -57,20 +59,16 @@ define([
         panel.className = 'cesium-cesiumInspector-dropDown';
         element.appendChild(panel);
 
-        var tilesetPanelContents = document.createElement('div');
-        tilesetPanelContents.className = 'cesium-cesiumInspector-sectionContent';
-        var displayPanelContents = document.createElement('div');
-        displayPanelContents.className = 'cesium-cesiumInspector-sectionContent';
-        var updatePanelContents = document.createElement('div');
-        updatePanelContents.className = 'cesium-cesiumInspector-sectionContent';
-        var loggingPanelContents = document.createElement('div');
-        loggingPanelContents.className = 'cesium-cesiumInspector-sectionContent';
-        var tileDebugLabelsPanelContents = document.createElement('div');
-        tileDebugLabelsPanelContents.className = 'cesium-cesiumInspector-sectionContent';
-        var stylePanelContents = document.createElement('div');
-        stylePanelContents.className = 'cesium-cesiumInspector-sectionContent';
-        var optimizationPanelContents = document.createElement('div');
-        optimizationPanelContents.className = 'cesium-cesiumInspector-sectionContent';
+        var createSection = InspectorShared.createSection;
+        var createCheckbox = InspectorShared.createCheckbox;
+
+        var tilesetPanelContents = createSection(panel, 'Tileset', 'tilesetVisible', 'toggleTileset');
+        var displayPanelContents = createSection(panel, 'Display', 'displayVisible', 'toggleDisplay');
+        var updatePanelContents = createSection(panel, 'Update', 'updateVisible', 'toggleUpdate');
+        var loggingPanelContents = createSection(panel, 'Logging', 'loggingVisible', 'toggleLogging');
+        var tileDebugLabelsPanelContents = createSection(panel, 'Tile Debug Labels', 'tileDebugLabelsVisible', 'toggleTileDebugLabels');
+        var stylePanelContents = createSection(panel, 'Style', 'styleVisible', 'toggleStyle');
+        var optimizationPanelContents = createSection(panel, 'Optimization', 'optimizationVisible', 'toggleOptimization');
 
         var properties = document.createElement('div');
         properties.className = 'field-group';
@@ -84,48 +82,48 @@ define([
         tilesetPanelContents.appendChild(properties);
         tilesetPanelContents.appendChild(makeButton('togglePickTileset', 'Pick Tileset', 'pickActive'));
         tilesetPanelContents.appendChild(makeButton('trimTilesCache', 'Trim Tiles Cache'));
-        tilesetPanelContents.appendChild(makeCheckbox('picking', 'Enable Picking'));
+        tilesetPanelContents.appendChild(createCheckbox('Enable Picking', 'picking'));
 
-        displayPanelContents.appendChild(makeCheckbox('colorize', 'Colorize'));
-        displayPanelContents.appendChild(makeCheckbox('wireframe', 'Wireframe'));
-        displayPanelContents.appendChild(makeCheckbox('showBoundingVolumes', 'Bounding Volumes'));
-        displayPanelContents.appendChild(makeCheckbox('showContentBoundingVolumes', 'Content Volumes'));
-        displayPanelContents.appendChild(makeCheckbox('showRequestVolumes', 'Request Volumes'));
+        displayPanelContents.appendChild(createCheckbox('Colorize', 'colorize'));
+        displayPanelContents.appendChild(createCheckbox('Wireframe', 'wireframe'));
+        displayPanelContents.appendChild(createCheckbox('Bounding Volumes', 'showBoundingVolumes'));
+        displayPanelContents.appendChild(createCheckbox('Content Volumes', 'showContentBoundingVolumes'));
+        displayPanelContents.appendChild(createCheckbox('Request Volumes', 'showRequestVolumes'));
 
-        displayPanelContents.appendChild(makeCheckbox('pointCloudShading', 'Point Cloud Shading'));
+        displayPanelContents.appendChild(createCheckbox('Point Cloud Shading', 'pointCloudShading'));
         var pointCloudShadingContainer = document.createElement('div');
-        pointCloudShadingContainer.setAttribute('data-bind', 'css: {"cesium-cesiumInspector-show" : pointCloudShading, "cesium-cesiumInspector-hide" : !pointCloudShading}');
+        pointCloudShadingContainer.setAttribute('data-bind', 'visible: pointCloudShading');
         pointCloudShadingContainer.appendChild(makeRangeInput('geometricErrorScale', 0, 2, 0.01, 'Geometric Error Scale'));
         pointCloudShadingContainer.appendChild(makeRangeInput('maximumAttenuation', 0, 32, 1, 'Maximum Attenuation'));
         pointCloudShadingContainer.appendChild(makeRangeInput('baseResolution', 0, 1, 0.01, 'Base Resolution'));
-        pointCloudShadingContainer.appendChild(makeCheckbox('eyeDomeLighting', 'Eye Dome Lighting (EDL)'));
+        pointCloudShadingContainer.appendChild(createCheckbox('Eye Dome Lighting (EDL)', 'eyeDomeLighting'));
         displayPanelContents.appendChild(pointCloudShadingContainer);
 
         var edlContainer = document.createElement('div');
-        edlContainer.setAttribute('data-bind', 'css: {"cesium-cesiumInspector-show" : eyeDomeLighting, "cesium-cesiumInspector-hide" : !eyeDomeLighting}');
+        edlContainer.setAttribute('data-bind', 'visible: eyeDomeLighting');
         edlContainer.appendChild(makeRangeInput('eyeDomeLightingStrength', 0, 2.0, 0.1, 'EDL Strength'));
         edlContainer.appendChild(makeRangeInput('eyeDomeLightingRadius', 0, 4.0, 0.1, 'EDL Radius'));
         pointCloudShadingContainer.appendChild(edlContainer);
 
-        updatePanelContents.appendChild(makeCheckbox('freezeFrame', 'Freeze Frame'));
-        updatePanelContents.appendChild(makeCheckbox('dynamicScreenSpaceError', 'Dynamic Screen Space Error'));
+        updatePanelContents.appendChild(createCheckbox('Freeze Frame', 'freezeFrame'));
+        updatePanelContents.appendChild(createCheckbox('Dynamic Screen Space Error', 'dynamicScreenSpaceError'));
         var sseContainer = document.createElement('div');
         sseContainer.appendChild(makeRangeInput('maximumScreenSpaceError', 0, 128, 1, 'Maximum Screen Space Error'));
         updatePanelContents.appendChild(sseContainer);
         var dynamicScreenSpaceErrorContainer = document.createElement('div');
-        dynamicScreenSpaceErrorContainer.setAttribute('data-bind', 'css: {"cesium-cesiumInspector-show" : dynamicScreenSpaceError, "cesium-cesiumInspector-hide" : !dynamicScreenSpaceError}');
+        dynamicScreenSpaceErrorContainer.setAttribute('data-bind', 'visible: dynamicScreenSpaceError');
         dynamicScreenSpaceErrorContainer.appendChild(makeRangeInput('dynamicScreenSpaceErrorDensitySliderValue', 0, 1, 0.005, 'Screen Space Error Density', 'dynamicScreenSpaceErrorDensity'));
         dynamicScreenSpaceErrorContainer.appendChild(makeRangeInput('dynamicScreenSpaceErrorFactor', 1, 10, 0.1, 'Screen Space Error Factor'));
         updatePanelContents.appendChild(dynamicScreenSpaceErrorContainer);
 
-        loggingPanelContents.appendChild(makeCheckbox('performance', 'Performance'));
+        loggingPanelContents.appendChild(createCheckbox('Performance', 'performance'));
         loggingPanelContents.appendChild(performanceContainer);
-        loggingPanelContents.appendChild(makeCheckbox('showStatistics', 'Statistics'));
+        loggingPanelContents.appendChild(createCheckbox('Statistics', 'showStatistics'));
         var statistics = document.createElement('div');
         statistics.className = 'cesium-3dTilesInspector-statistics';
         statistics.setAttribute('data-bind', 'html: statisticsText, visible: showStatistics');
         loggingPanelContents.appendChild(statistics);
-        loggingPanelContents.appendChild(makeCheckbox('showPickStatistics', 'Pick Statistics'));
+        loggingPanelContents.appendChild(createCheckbox('Pick Statistics', 'showPickStatistics'));
         var pickStatistics = document.createElement('div');
         pickStatistics.className = 'cesium-3dTilesInspector-statistics';
         pickStatistics.setAttribute('data-bind', 'html: pickStatisticsText, visible: showPickStatistics');
@@ -151,13 +149,13 @@ define([
         errorBox.setAttribute('data-bind', 'text: editorError');
         stylePanelEditor.appendChild(errorBox);
 
-        tileDebugLabelsPanelContents.appendChild(makeCheckbox('showOnlyPickedTileDebugLabel', 'Show Picked Only'));
-        tileDebugLabelsPanelContents.appendChild(makeCheckbox('showGeometricError', 'Geometric Error'));
-        tileDebugLabelsPanelContents.appendChild(makeCheckbox('showRenderingStatistics', 'Rendering Statistics'));
-        tileDebugLabelsPanelContents.appendChild(makeCheckbox('showMemoryUsage', 'Memory Usage (MB)'));
-        tileDebugLabelsPanelContents.appendChild(makeCheckbox('showUrl', 'Url'));
+        tileDebugLabelsPanelContents.appendChild(createCheckbox('Show Picked Only', 'showOnlyPickedTileDebugLabel'));
+        tileDebugLabelsPanelContents.appendChild(createCheckbox('Geometric Error', 'showGeometricError'));
+        tileDebugLabelsPanelContents.appendChild(createCheckbox('Rendering Statistics', 'showRenderingStatistics'));
+        tileDebugLabelsPanelContents.appendChild(createCheckbox('Memory Usage (MB)', 'showMemoryUsage'));
+        tileDebugLabelsPanelContents.appendChild(createCheckbox('Url', 'showUrl'));
 
-        optimizationPanelContents.appendChild(makeCheckbox('skipLevelOfDetail', 'Skip Tile LODs'));
+        optimizationPanelContents.appendChild(createCheckbox('Skip Tile LODs', 'skipLevelOfDetail'));
         var skipScreenSpaceErrorFactorContainer = document.createElement('div');
         skipScreenSpaceErrorFactorContainer.appendChild(makeRangeInput('skipScreenSpaceErrorFactor', 1, 50, 1, 'Skip SSE Factor'));
         optimizationPanelContents.appendChild(skipScreenSpaceErrorFactorContainer);
@@ -167,15 +165,8 @@ define([
         var skipLevelsContainer = document.createElement('div');
         skipLevelsContainer.appendChild(makeRangeInput('skipLevels', 0, 10, 1, 'Min. levels to skip'));
         optimizationPanelContents.appendChild(skipLevelsContainer);
-        optimizationPanelContents.appendChild(makeCheckbox('immediatelyLoadDesiredLevelOfDetail', 'Load only tiles that meet the max. SSE.'));
-        optimizationPanelContents.appendChild(makeCheckbox('loadSiblings', 'Load siblings of visible tiles.'));
-
-        makeSection(panel, 'Tileset', 'tilesetVisible', 'toggleTileset', tilesetPanelContents);
-        makeSection(panel, 'Display', 'displayVisible', 'toggleDisplay', displayPanelContents);
-        makeSection(panel, 'Logging', 'loggingVisible', 'toggleLogging', loggingPanelContents);
-        makeSection(panel, 'Tile Debug Labels', 'tileDebugLabelsVisible', 'toggleTileDebugLabels', tileDebugLabelsPanelContents);
-        makeSection(panel, 'Style', 'styleVisible', 'toggleStyle', stylePanelContents);
-        makeSection(panel, 'Optimization', 'optimizationVisible', 'toggleOptimization', optimizationPanelContents);
+        optimizationPanelContents.appendChild(createCheckbox('Load only tiles that meet the max SSE.', 'immediatelyLoadDesiredLevelOfDetail'));
+        optimizationPanelContents.appendChild(createCheckbox('Load siblings of visible tiles', 'loadSiblings'));
 
         knockout.applyBindings(viewModel, element);
     }
@@ -224,33 +215,6 @@ define([
 
         return destroyObject(this);
     };
-
-    function makeSection(panel, name, visibleProp, toggleProp, contents) {
-        var header = document.createElement('div');
-        header.className = 'cesium-cesiumInspector-sectionHeader';
-        header.setAttribute('data-bind', 'click: ' + toggleProp);
-        header.appendChild(document.createTextNode(name));
-
-        var section = document.createElement('div');
-        section.className = 'cesium-cesiumInspector-section';
-        section.setAttribute('data-bind', 'css: {"cesium-cesiumInspector-section-collapsed" : !' + visibleProp + '}');
-        section.appendChild(header);
-        section.appendChild(contents);
-
-        panel.appendChild(section);
-    }
-
-    function makeCheckbox(property, text) {
-        var checkbox = document.createElement('input');
-        checkbox.type = 'checkbox';
-        checkbox.setAttribute('data-bind', 'checked: ' + property);
-
-        var container = document.createElement('div');
-        container.appendChild(checkbox);
-        container.appendChild(document.createTextNode(text));
-
-        return container;
-    }
 
     function makeRangeInput(property, min, max, step, text, displayProperty) {
         displayProperty = defaultValue(displayProperty, property);
