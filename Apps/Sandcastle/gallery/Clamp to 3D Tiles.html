@@ -90,7 +90,7 @@ initialViewReady(tileset, function() {
         var timer = Cesium.JulianDate.secondsDifference(viewer.clock.currentTime, start);
         var offset = Cesium.Math.clamp(timer / duration, 0.0, 1.0);
         var position = Cesium.Cartesian3.lerp(startPosition, endPosition, offset, new Cesium.Cartesian3());
-        entity.position = scene.clampPosition(position, objectsToExclude);
+        entity.position = scene.clampToHeight(position, objectsToExclude);
     });
 });
 //Sandcastle_End

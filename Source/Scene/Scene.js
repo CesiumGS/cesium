@@ -3795,7 +3795,7 @@ define([
      *
      * @see sampleTerrain
      * @see sampleTerrainMostDetailed
-     * @see Scene#clampPosition
+     * @see Scene#clampToHeight
      *
      * @exception {DeveloperError} Picking from the depth buffer is not supported. Check pickPositionSupported.
      */
@@ -3866,7 +3866,7 @@ define([
      *
      * @exception {DeveloperError} Picking from the depth buffer is not supported. Check pickPositionSupported.
      */
-    Scene.prototype.clampPosition = function(cartesian, objectsToExclude, result) {
+    Scene.prototype.clampToHeight = function(cartesian, objectsToExclude, result) {
         var globe = this.globe;
         var ellipsoid = defined(globe) ? globe.ellipsoid : this.mapProjection.ellipsoid;
         var cartographic = Cartographic.fromCartesian(cartesian, ellipsoid, scratchPickCartographic);
