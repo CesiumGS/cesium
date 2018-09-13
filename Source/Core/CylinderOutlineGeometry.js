@@ -13,9 +13,10 @@ define([
         './Geometry',
         './GeometryAttribute',
         './GeometryAttributes',
+        './GeometryInstance',
         './GeometryOffsetAttribute',
-        './IndexDatatype',
-        './PrimitiveType'
+        './GeometryPipeline',
+        './PolylineGeometry'
     ], function(
         arrayFill,
         BoundingSphere,
@@ -30,12 +31,11 @@ define([
         Geometry,
         GeometryAttribute,
         GeometryAttributes,
+        GeometryInstance,
         GeometryOffsetAttribute,
-        IndexDatatype,
-        PrimitiveType) {
+        GeometryPipeline,
+        PolylineGeometry) {
     'use strict';
-
-    var radiusScratch = new Cartesian2();
 
     /**
      * A description of the outline of a cylinder.
@@ -49,6 +49,7 @@ define([
      * @param {Number} options.bottomRadius The radius of the bottom of the cylinder.
      * @param {Number} [options.slices=128] The number of edges around the perimeter of the cylinder.
      * @param {Number} [options.numberOfVerticalLines=16] Number of lines to draw between the top and bottom surfaces of the cylinder.
+     * @param {Number} [options.width=2] The width of the outline in pixels.
      *
      * @exception {DeveloperError} options.length must be greater than 0.
      * @exception {DeveloperError} options.topRadius must be greater than 0.
@@ -75,6 +76,7 @@ define([
         var bottomRadius = options.bottomRadius;
         var slices = defaultValue(options.slices, 128);
         var numberOfVerticalLines = Math.max(defaultValue(options.numberOfVerticalLines, 16), 0);
+        var width = defaultValue(options.width, 2.0);
 
         //>>includeStart('debug', pragmas.debug);
         Check.typeOf.number('options.positions', length);
@@ -92,6 +94,7 @@ define([
         this._slices = slices;
         this._numberOfVerticalLines = numberOfVerticalLines;
         this._offsetAttribute = options.offsetAttribute;
+        this._width = width;
         this._workerName = 'createCylinderOutlineGeometry';
     }
 
@@ -99,7 +102,7 @@ define([
      * The number of elements used to pack the object into an array.
      * @type {Number}
      */
-    CylinderOutlineGeometry.packedLength = 6;
+    CylinderOutlineGeometry.packedLength = 7;
 
     /**
      * Stores the provided instance into the provided array.
@@ -123,7 +126,8 @@ define([
         array[startingIndex++] = value._bottomRadius;
         array[startingIndex++] = value._slices;
         array[startingIndex++] = value._numberOfVerticalLines;
-        array[startingIndex] = defaultValue(value._offsetAttribute, -1);
+        array[startingIndex++] = defaultValue(value._offsetAttribute, -1);
+        array[startingIndex] = value._width;
 
         return array;
     };
@@ -157,7 +161,8 @@ define([
         var bottomRadius = array[startingIndex++];
         var slices = array[startingIndex++];
         var numberOfVerticalLines = array[startingIndex++];
-        var offsetAttribute = array[startingIndex];
+        var offsetAttribute = array[startingIndex++];
+        var width = array[startingIndex];
 
         if (!defined(result)) {
             scratchOptions.length = length;
@@ -166,6 +171,7 @@ define([
             scratchOptions.slices = slices;
             scratchOptions.numberOfVerticalLines = numberOfVerticalLines;
             scratchOptions.offsetAttribute = offsetAttribute === -1 ? undefined : offsetAttribute;
+            scratchOptions.width = width;
             return new CylinderOutlineGeometry(scratchOptions);
         }
 
@@ -175,9 +181,12 @@ define([
         result._slices = slices;
         result._numberOfVerticalLines = numberOfVerticalLines;
         result._offsetAttribute = offsetAttribute === -1 ? undefined : offsetAttribute;
+        result._width = width;
 
         return result;
     };
+
+    var scratchVerticalLines = [new Cartesian3(), new Cartesian3()];
 
     /**
      * Computes the geometric representation of an outline of a cylinder, including its vertices, indices, and a bounding sphere.
@@ -191,75 +200,64 @@ define([
         var bottomRadius = cylinderGeometry._bottomRadius;
         var slices = cylinderGeometry._slices;
         var numberOfVerticalLines = cylinderGeometry._numberOfVerticalLines;
+        var width = cylinderGeometry._width;
 
         if ((length <= 0) || (topRadius < 0) || (bottomRadius < 0) || ((topRadius === 0) && (bottomRadius === 0))) {
             return;
         }
 
-        var numVertices = slices * 2;
-
         var positions = CylinderGeometryLibrary.computePositions(length, topRadius, bottomRadius, slices, false);
-        var numIndices = slices * 2;
+
+        length = positions.length / (3 * 2);
+        var topPositions = new Array(length + 1);
+        var bottomPositions = new Array(length + 1);
+
+        var i;
+        for (i = 0; i < length; ++i) {
+            topPositions[i] = Cartesian3.unpack(positions, i * 3);
+            bottomPositions[i] = Cartesian3.unpack(positions, (i + slices) * 3);
+        }
+
+        topPositions[length] = topPositions[0];
+        bottomPositions[length] = bottomPositions[0];
+
+        var instances = [];
+        instances.push(new GeometryInstance({
+            geometry : PolylineGeometry.createGeometry(new PolylineGeometry({
+                positions : topPositions,
+                followSurface : false,
+                width : width
+            }))
+        }));
+        instances.push(new GeometryInstance({
+            geometry : PolylineGeometry.createGeometry(new PolylineGeometry({
+                positions : bottomPositions,
+                followSurface : false,
+                width : width
+            }))
+        }));
+
         var numSide;
         if (numberOfVerticalLines > 0) {
             var numSideLines = Math.min(numberOfVerticalLines, slices);
             numSide = Math.round(slices / numSideLines);
-            numIndices += numSideLines;
-        }
 
-        var indices = IndexDatatype.createTypedArray(numVertices, numIndices * 2);
-        var index = 0;
-        var i;
-        for (i = 0; i < slices - 1; i++) {
-            indices[index++] = i;
-            indices[index++] = i + 1;
-            indices[index++] = i + slices;
-            indices[index++] = i + 1 + slices;
-        }
-
-        indices[index++] = slices - 1;
-        indices[index++] = 0;
-        indices[index++] = slices + slices - 1;
-        indices[index++] = slices;
-
-        if (numberOfVerticalLines > 0) {
             for (i = 0; i < slices; i += numSide) {
-                indices[index++] = i;
-                indices[index++] = i + slices;
+                var verticalLines = scratchVerticalLines;
+                Cartesian3.unpack(positions, i * 3, verticalLines[0]);
+                Cartesian3.unpack(positions, (i + slices) * 3, verticalLines[1]);
+
+                instances.push(new GeometryInstance({
+                    geometry : PolylineGeometry.createGeometry(new PolylineGeometry({
+                        positions : verticalLines,
+                        followSurface : false,
+                        width : width
+                    }))
+                }));
             }
         }
 
-        var attributes = new GeometryAttributes();
-        attributes.position = new GeometryAttribute({
-            componentDatatype : ComponentDatatype.DOUBLE,
-            componentsPerAttribute : 3,
-            values : positions
-        });
-
-        radiusScratch.x = length * 0.5;
-        radiusScratch.y = Math.max(bottomRadius, topRadius);
-
-        var boundingSphere = new BoundingSphere(Cartesian3.ZERO, Cartesian2.magnitude(radiusScratch));
-
-        if (defined(cylinderGeometry._offsetAttribute)) {
-            length = positions.length;
-            var applyOffset = new Uint8Array(length / 3);
-            var offsetValue = cylinderGeometry._offsetAttribute === GeometryOffsetAttribute.NONE ? 0 : 1;
-            arrayFill(applyOffset, offsetValue);
-            attributes.applyOffset = new GeometryAttribute({
-                componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
-                componentsPerAttribute : 1,
-                values: applyOffset
-            });
-        }
-
-        return new Geometry({
-            attributes : attributes,
-            indices : indices,
-            primitiveType : PrimitiveType.LINES,
-            boundingSphere : boundingSphere,
-            offsetAttribute : cylinderGeometry._offsetAttribute
-        });
+        return GeometryPipeline.combineInstances(instances)[0];
     };
 
     return CylinderOutlineGeometry;

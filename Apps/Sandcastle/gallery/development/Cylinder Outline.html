@@ -61,12 +61,7 @@ var cylinderOutline = new Cesium.GeometryInstance({
 // Add the instance to primitives.
 scene.primitives.add(new Cesium.Primitive({
     geometryInstances : [cylinderOutline],
-    appearance : new Cesium.PerInstanceColorAppearance({
-        flat : true,
-        renderState : {
-            lineWidth : Math.min(2.0, scene.maximumAliasedLineWidth)
-        }
-    })
+    appearance : new Cesium.PolylineColorAppearance()
 }));
 //Sandcastle_End
     Sandcastle.finishedLoading();
