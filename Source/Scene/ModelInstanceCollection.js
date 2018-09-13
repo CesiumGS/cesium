@@ -256,9 +256,9 @@ define([
         var supportedSemantics = ['MODELVIEW', 'CESIUM_RTC_MODELVIEW', 'MODELVIEWPROJECTION', 'MODELVIEWINVERSETRANSPOSE'];
 
         var techniques = collection._model._sourceTechniques;
-        for (var techniqueName in techniques) {
-            if (techniques.hasOwnProperty(techniqueName)) {
-                var technique = techniques[techniqueName];
+        for (var techniqueId in techniques) {
+            if (techniques.hasOwnProperty(techniqueId)) {
+                var technique = techniques[techniqueId];
                 var program = technique.program;
 
                 // Different techniques may share the same program, skip if already processed.

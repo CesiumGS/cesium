@@ -564,7 +564,8 @@ define([
         this._ignoreCommands = defaultValue(options.ignoreCommands, false);
         this._requestType = options.requestType;
         this._upAxis = defaultValue(options.upAxis, Axis.Y);
-        this._forwardAxis = defaultValue(options.forwardAxis, Axis.Z);
+        this._gltfForwardAxis = Axis.Z;
+        this._forwardAxis = options.forwardAxis;
 
         /**
          * @private
@@ -973,7 +974,10 @@ define([
          */
         forwardAxis : {
             get : function() {
-                return this._forwardAxis;
+                if (defined(this._forwardAxis)) {
+                    return this._forwardAxis;
+                }
+                return this._gltfForwardAxis;
             }
         },
 
@@ -4200,7 +4204,7 @@ define([
                 } else if (this._upAxis === Axis.X) {
                     Matrix4.multiplyTransformation(computedModelMatrix, Axis.X_UP_TO_Z_UP, computedModelMatrix);
                 }
-                if (this._forwardAxis === Axis.Z) {
+                if (this.forwardAxis === Axis.Z) {
                     // glTF 2.0 has a Z-forward convention that must be adapted here to X-forward.
                     Matrix4.multiplyTransformation(computedModelMatrix, Axis.Z_UP_TO_X_UP, computedModelMatrix);
                 }

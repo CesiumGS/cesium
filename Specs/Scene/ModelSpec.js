@@ -448,7 +448,7 @@ defineSuite([
     });
 
     it('renders x-forward model', function() {
-        return Resource.fetchJson(boxEcefUrl).then(function(gltf) {
+        return Resource.fetchJson(boxPbrUrl).then(function(gltf) {
             return loadModelJson(gltf, {
                 forwardAxis : Axis.X
             }).then(function(m) {
@@ -460,7 +460,7 @@ defineSuite([
     });
 
     it('renders z-forward model', function() {
-        return Resource.fetchJson(boxPbrUrl).then(function(gltf) {
+        return Resource.fetchJson(boxEcefUrl).then(function(gltf) {
             return loadModelJson(gltf, {
                 forwardAxis : Axis.Z
             }).then(function(m) {

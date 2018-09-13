@@ -4,7 +4,6 @@ define([
         '../Core/Cartesian3',
         '../Core/Cartesian4',
         '../Core/clone',
-        '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/Matrix2',
@@ -25,7 +24,6 @@ define([
         Cartesian3,
         Cartesian4,
         clone,
-        defaultValue,
         defined,
         defineProperties,
         Matrix2,
@@ -55,7 +53,7 @@ define([
     ModelUtility.updateForwardAxis = function(model) {
         var cachedSourceVersion = model.gltf.extras.sourceVersion;
         if ((defined(cachedSourceVersion) && cachedSourceVersion !== '2.0')
-                || model.gltf.asset !== '2.0') {
+                || model.gltf.asset.version !== '2.0') {
             model._gltfForwardAxis = Axis.X;
         }
     };
