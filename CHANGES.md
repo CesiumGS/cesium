@@ -5,9 +5,11 @@ Change Log
 
 ##### Additions :tada:
 * Added `cartographicLimitRectangle` to `Globe`. Use this to limit terrain and imagery to a specific `Rectangle` area. [#6987](https://github.com/AnalyticalGraphicsInc/cesium/pull/6987)
+* Added `OpenCageGeocoderService`, which provides geocoding via [OpenCage](https://opencagedata.com/). [#7015](https://github.com/AnalyticalGraphicsInc/cesium/pull/7015)
 
 ##### Fixes :wrench:
 * Fixed an issue in the 3D Tiles traversal where empty tiles would be selected instead of their nearest loaded ancestors. [#7011](https://github.com/AnalyticalGraphicsInc/cesium/pull/7011)
+* Fixed bug where credits weren't displaying correctly if more than one viewer was initialized [#6965](expect(https://github.com/AnalyticalGraphicsInc/cesium/issues/6965)
 
 ### 1.49 - 2018-09-04
 
