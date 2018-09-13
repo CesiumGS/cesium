@@ -882,6 +882,13 @@ define([
         hasVertexNormals, hasWebMercatorT,
         tileVertices
     ) {
+        var gotCorner =
+            addCornerFromEdge(terrainFillMesh, ellipsoid, previousEdgeMeshes, previousEdgeTiles, false, u, v, tileVertices) ||
+            addCornerFromEdge(terrainFillMesh, ellipsoid, nextEdgeMeshes, nextEdgeTiles, true, u, v, tileVertices);
+        if (gotCorner) {
+            return;
+        }
+
         var vertexIndex;
 
         if (cornerMesh !== undefined && !cornerMesh.changedThisFrame) {
@@ -903,13 +910,6 @@ define([
                 vertexIndex = cornerTerrainMesh.westIndicesSouthToNorth[0];
             }
             addVertexFromTileAtCorner(cornerTerrainMesh, vertexIndex, u, v, tileVertices);
-            return;
-        }
-
-        var gotCorner =
-            addCornerFromEdge(terrainFillMesh, ellipsoid, previousEdgeMeshes, previousEdgeTiles, false, u, v, tileVertices) ||
-            addCornerFromEdge(terrainFillMesh, ellipsoid, nextEdgeMeshes, nextEdgeTiles, true, u, v, tileVertices);
-        if (gotCorner) {
             return;
         }
 
