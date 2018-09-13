@@ -38,13 +38,11 @@
     height: 17px;
 }
 
-.cesium-cesiumInspector-sectionContent,
-.cesium-cesiumInspector-show {
+.cesium-cesiumInspector-sectionContent {
     max-height: 500px;
 }
 
-.cesium-cesiumInspector-section-collapsed .cesium-cesiumInspector-sectionContent,
-.cesium-cesiumInspector-hide {
+.cesium-cesiumInspector-section-collapsed .cesium-cesiumInspector-sectionContent {
     max-height: 0;
     padding: 0 !important;
     overflow: hidden;
@@ -122,11 +120,11 @@
 
 .cesium-cesiumInspector-sectionHeader::before {
     margin-right: 5px;
-    content: '+';
+    content: '-';
     width: 1ch;
     display: inline-block;
 }
 
 .cesium-cesiumInspector-section-collapsed .cesium-cesiumInspector-sectionHeader::before {
-    content: '-';
+    content: '+';
 }

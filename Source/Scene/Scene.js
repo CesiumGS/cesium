@@ -608,7 +608,7 @@ define([
          *          return;
          *      }
          *      viewer.scene.render();
-         *      var worldPosition = viewer.scene.pickPosition(movement.position));
+         *      var worldPosition = viewer.scene.pickPosition(movement.position);
          * }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
          *
          * @type {Boolean}

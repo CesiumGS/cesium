@@ -1070,6 +1070,26 @@ defineSuite([
         });
     });
 
+    it('replacement refinement - selects upwards when traversal stops at empty tile', function() {
+        // No children have content, but all grandchildren have content
+        //
+        //          C
+        //      E       E
+        //    C   C   C   C
+        //
+        return Cesium3DTilesTester.loadTileset(scene, tilesetReplacement1Url).then(function(tileset) {
+            tileset.root.geometricError = 90;
+            viewRootOnly();
+            scene.camera.zoomIn(20);
+            scene.renderForSpecs();
+
+            var statistics = tileset._statistics;
+            expect(statistics.selected).toEqual(1);
+            expect(statistics.visited).toEqual(3);
+            expect(isSelected(tileset, tileset.root)).toBe(true);
+        });
+    });
+
     it('replacement refinement - selects root when sse is not met and subtree is not refinable (1)', function() {
         // No children have content, but all grandchildren have content
         //
