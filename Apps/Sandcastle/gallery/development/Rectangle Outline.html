@@ -46,12 +46,7 @@ var instance = new Cesium.GeometryInstance({
 // Add the rectangle outline instance to primitives.
 scene.primitives.add(new Cesium.Primitive({
     geometryInstances : instance,
-    appearance : new Cesium.PerInstanceColorAppearance({
-        flat : true,
-        renderState : {
-            lineWidth : Math.min(2.0, scene.maximumAliasedLineWidth)
-        }
-    })
+    appearance : new Cesium.PolylineColorAppearance()
 }));
 //Sandcastle_End
     Sandcastle.finishedLoading();

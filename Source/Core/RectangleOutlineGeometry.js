@@ -11,10 +11,13 @@ define([
         './Geometry',
         './GeometryAttribute',
         './GeometryAttributes',
+        './GeometryInstance',
         './GeometryOffsetAttribute',
+        './GeometryPipeline',
         './IndexDatatype',
         './Math',
         './PolygonPipeline',
+        './PolylineGeometry',
         './PrimitiveType',
         './Rectangle',
         './RectangleGeometryLibrary'
@@ -31,26 +34,41 @@ define([
         Geometry,
         GeometryAttribute,
         GeometryAttributes,
+        GeometryInstance,
         GeometryOffsetAttribute,
+        GeometryPipeline,
         IndexDatatype,
         CesiumMath,
         PolygonPipeline,
+        PolylineGeometry,
         PrimitiveType,
         Rectangle,
         RectangleGeometryLibrary) {
     'use strict';
 
-    var bottomBoundingSphere = new BoundingSphere();
-    var topBoundingSphere = new BoundingSphere();
-    var positionScratch = new Cartesian3();
-    var rectangleScratch = new Rectangle();
+    var scratchNormal = new Cartesian3();
 
-    function constructRectangle(geometry, computedOptions) {
+    function scaleToHeight(position, ellipsoid, height) {
+        if (height === 0) {
+            return;
+        }
+
+        var n = scratchNormal;
+        var p = position;
+
+        n = ellipsoid.geodeticSurfaceNormal(p, n);
+        Cartesian3.multiplyByScalar(n, height, n);
+        Cartesian3.add(p, n, p);
+    }
+
+    var positionScratch = new Cartesian3();
+
+    function constructRectangle(geometry, computedOptions, rectangleHeight) {
         var ellipsoid = geometry._ellipsoid;
         var size = computedOptions.size;
         var height = computedOptions.height;
         var width = computedOptions.width;
-        var positions = new Float64Array(size * 3);
+        var positions = new Array(size + 1);
 
         var posIndex = 0;
         var row = 0;
@@ -58,107 +76,71 @@ define([
         var position = positionScratch;
         for (col = 0; col < width; col++) {
             RectangleGeometryLibrary.computePosition(computedOptions, ellipsoid, false, row, col, position);
-            positions[posIndex++] = position.x;
-            positions[posIndex++] = position.y;
-            positions[posIndex++] = position.z;
+            scaleToHeight(position, ellipsoid, rectangleHeight);
+            positions[posIndex++] = Cartesian3.clone(position);
         }
 
         col = width - 1;
         for (row = 1; row < height; row++) {
             RectangleGeometryLibrary.computePosition(computedOptions, ellipsoid, false, row, col, position);
-            positions[posIndex++] = position.x;
-            positions[posIndex++] = position.y;
-            positions[posIndex++] = position.z;
+            scaleToHeight(position, ellipsoid, rectangleHeight);
+            positions[posIndex++] = Cartesian3.clone(position);
         }
 
         row = height - 1;
-        for (col = width-2; col >=0; col--){
+        for (col = width-2; col >=0; col--) {
             RectangleGeometryLibrary.computePosition(computedOptions, ellipsoid, false, row, col, position);
-            positions[posIndex++] = position.x;
-            positions[posIndex++] = position.y;
-            positions[posIndex++] = position.z;
+            scaleToHeight(position, ellipsoid, rectangleHeight);
+            positions[posIndex++] = Cartesian3.clone(position);
         }
 
         col = 0;
         for (row = height - 2; row > 0; row--) {
             RectangleGeometryLibrary.computePosition(computedOptions, ellipsoid, false, row, col, position);
-            positions[posIndex++] = position.x;
-            positions[posIndex++] = position.y;
-            positions[posIndex++] = position.z;
+            scaleToHeight(position, ellipsoid, rectangleHeight);
+            positions[posIndex++] = Cartesian3.clone(position);
         }
 
-        var indicesSize = positions.length/3 * 2;
-        var indices = IndexDatatype.createTypedArray(positions.length / 3, indicesSize);
+        positions[size] = positions[0];
 
-        var index = 0;
-        for(var i = 0; i < (positions.length/3)-1; i++) {
-            indices[index++] = i;
-            indices[index++] = i+1;
-        }
-        indices[index++] = (positions.length/3)-1;
-        indices[index++] = 0;
-
-        var geo = new Geometry({
-            attributes : new GeometryAttributes(),
-            primitiveType : PrimitiveType.LINES
+        return new GeometryInstance({
+            geometry : PolylineGeometry.createGeometry(new PolylineGeometry({
+                positions : positions,
+                followSurface : false,
+                width : geometry._width
+            }))
         });
-
-        geo.attributes.position = new GeometryAttribute({
-            componentDatatype : ComponentDatatype.DOUBLE,
-            componentsPerAttribute : 3,
-            values : positions
-        });
-        geo.indices = indices;
-
-        return geo;
     }
 
-    function constructExtrudedRectangle(rectangleGeometry, computedOptions) {
-        var surfaceHeight = rectangleGeometry._surfaceHeight;
-        var extrudedHeight = rectangleGeometry._extrudedHeight;
-        var ellipsoid = rectangleGeometry._ellipsoid;
-        var minHeight = extrudedHeight;
-        var maxHeight = surfaceHeight;
-        var geo = constructRectangle(rectangleGeometry, computedOptions);
-
-        var height = computedOptions.height;
-        var width = computedOptions.width;
-
-        var topPositions = PolygonPipeline.scaleToGeodeticHeight(geo.attributes.position.values, maxHeight, ellipsoid, false);
-        var length = topPositions.length;
-        var positions = new Float64Array(length*2);
-        positions.set(topPositions);
-        var bottomPositions = PolygonPipeline.scaleToGeodeticHeight(geo.attributes.position.values, minHeight, ellipsoid);
-        positions.set(bottomPositions, length);
-        geo.attributes.position.values = positions;
-
-        var indicesSize = positions.length/3 * 2 + 8;
-        var indices = IndexDatatype.createTypedArray(positions.length / 3, indicesSize);
-        length = positions.length/6;
-        var index = 0;
-        for (var i = 0; i < length - 1; i++) {
-            indices[index++] = i;
-            indices[index++] =i+1;
-            indices[index++] = i + length;
-            indices[index++] = i + length + 1;
+    function addOffset(polygonGeometry, instance, value) {
+        if (!defined(polygonGeometry._offsetAttribute)) {
+            return;
         }
-        indices[index++] = length - 1;
-        indices[index++] = 0;
-        indices[index++] = length + length - 1;
-        indices[index++] = length;
 
-        indices[index++] = 0;
-        indices[index++] = length;
-        indices[index++] = width-1;
-        indices[index++] = length + width-1;
-        indices[index++] = width + height - 2;
-        indices[index++] = width + height - 2 + length;
-        indices[index++] =  2*width + height - 3;
-        indices[index++] = 2*width + height - 3 + length;
+        var size = instance.geometry.attributes.position.values.length / 3;
+        var offsetAttribute = new Uint8Array(size);
+        offsetAttribute = arrayFill(offsetAttribute, value);
+        instance.geometry.attributes.applyOffset = new GeometryAttribute({
+            componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
+            componentsPerAttribute : 1,
+            values : offsetAttribute
+        });
+    }
 
-        geo.indices = indices;
+    function addCornerOffset(polygonGeometry, instance, topValue, bottomValue) {
+        if (!defined(polygonGeometry._offsetAttribute)) {
+            return;
+        }
 
-        return geo;
+        var size = instance.geometry.attributes.position.values.length / 3;
+        var offsetAttribute = new Uint8Array(size);
+        offsetAttribute = arrayFill(offsetAttribute, topValue, 0, size / 2);
+        offsetAttribute = arrayFill(offsetAttribute, bottomValue, size / 2);
+        instance.geometry.attributes.applyOffset = new GeometryAttribute({
+            componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
+            componentsPerAttribute : 1,
+            values : offsetAttribute
+        });
     }
 
     /**
@@ -174,6 +156,7 @@ define([
      * @param {Number} [options.height=0.0] The distance in meters between the rectangle and the ellipsoid surface.
      * @param {Number} [options.rotation=0.0] The rotation of the rectangle, in radians. A positive rotation is counter-clockwise.
      * @param {Number} [options.extrudedHeight] The distance in meters between the rectangle's extruded face and the ellipsoid surface.
+     * @param {Number} [options.width=2] The outline width in pixels.
      *
      * @exception {DeveloperError} <code>options.rectangle.north</code> must be in the interval [<code>-Pi/2</code>, <code>Pi/2</code>].
      * @exception {DeveloperError} <code>options.rectangle.south</code> must be in the interval [<code>-Pi/2</code>, <code>Pi/2</code>].
@@ -198,6 +181,7 @@ define([
         var granularity = defaultValue(options.granularity, CesiumMath.RADIANS_PER_DEGREE);
         var ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
         var rotation = defaultValue(options.rotation, 0.0);
+        var width = defaultValue(options.width, 2.0);
 
         //>>includeStart('debug', pragmas.debug);
         if (!defined(rectangle)) {
@@ -219,6 +203,7 @@ define([
         this._rotation = rotation;
         this._extrudedHeight = Math.min(height, extrudedHeight);
         this._offsetAttribute = options.offsetAttribute;
+        this._width = width;
         this._workerName = 'createRectangleOutlineGeometry';
     }
 
@@ -260,7 +245,8 @@ define([
         array[startingIndex++] = value._surfaceHeight;
         array[startingIndex++] = value._rotation;
         array[startingIndex++] = value._extrudedHeight;
-        array[startingIndex] = defaultValue(value._offsetAttribute, -1);
+        array[startingIndex++] = defaultValue(value._offsetAttribute, -1);
+        array[startingIndex] = value._width;
 
         return array;
     };
@@ -274,7 +260,8 @@ define([
         height : undefined,
         rotation : undefined,
         extrudedHeight : undefined,
-        offsetAttribute: undefined
+        offsetAttribute: undefined,
+        width : undefined
     };
 
     /**
@@ -304,7 +291,8 @@ define([
         var height = array[startingIndex++];
         var rotation = array[startingIndex++];
         var extrudedHeight = array[startingIndex++];
-        var offsetAttribute = array[startingIndex];
+        var offsetAttribute = array[startingIndex++];
+        var width = array[startingIndex];
 
         if (!defined(result)) {
             scratchOptions.granularity = granularity;
@@ -312,6 +300,7 @@ define([
             scratchOptions.rotation = rotation;
             scratchOptions.extrudedHeight = extrudedHeight;
             scratchOptions.offsetAttribute = offsetAttribute === -1 ? undefined : offsetAttribute;
+            scratchOptions.width = width;
 
             return new RectangleOutlineGeometry(scratchOptions);
         }
@@ -322,11 +311,15 @@ define([
         result._rotation = rotation;
         result._extrudedHeight = extrudedHeight;
         result._offsetAttribute = offsetAttribute === -1 ? undefined : offsetAttribute;
+        result._width = width;
 
         return result;
     };
 
+    var rectangleScratch = new Rectangle();
     var nwScratch = new Cartographic();
+    var verticalLineScratch = [new Cartesian3(), new Cartesian3()];
+
     /**
      * Computes the geometric representation of an outline of a rectangle, including its vertices, indices, and a bounding sphere.
      *
@@ -337,12 +330,8 @@ define([
      */
     RectangleOutlineGeometry.createGeometry = function(rectangleGeometry) {
         var rectangle = rectangleGeometry._rectangle;
-        var ellipsoid = rectangleGeometry._ellipsoid;
         var computedOptions = RectangleGeometryLibrary.computeOptions(rectangle, rectangleGeometry._granularity, rectangleGeometry._rotation, 0, rectangleScratch, nwScratch);
         computedOptions.size =  2 * computedOptions.width + 2 * computedOptions.height - 4;
-
-        var geometry;
-        var boundingSphere;
 
         if ((CesiumMath.equalsEpsilon(rectangle.north, rectangle.south, CesiumMath.EPSILON10) ||
              (CesiumMath.equalsEpsilon(rectangle.east, rectangle.west, CesiumMath.EPSILON10)))) {
@@ -352,54 +341,51 @@ define([
         var surfaceHeight = rectangleGeometry._surfaceHeight;
         var extrudedHeight = rectangleGeometry._extrudedHeight;
         var extrude = !CesiumMath.equalsEpsilon(surfaceHeight, extrudedHeight, 0, CesiumMath.EPSILON2);
-        var offsetValue;
+        var instances = [];
+        var instance;
+
         if (extrude) {
-            geometry = constructExtrudedRectangle(rectangleGeometry, computedOptions);
-            if (defined(rectangleGeometry._offsetAttribute)) {
-                var size = geometry.attributes.position.values.length / 3;
-                var offsetAttribute = new Uint8Array(size);
-                if (rectangleGeometry._offsetAttribute === GeometryOffsetAttribute.TOP) {
-                    offsetAttribute = arrayFill(offsetAttribute, 1, 0, size / 2);
-                } else {
-                    offsetValue = rectangleGeometry._offsetAttribute === GeometryOffsetAttribute.NONE ? 0 : 1;
-                    offsetAttribute = arrayFill(offsetAttribute, offsetValue);
-                }
+            var bottomValue = rectangleGeometry._offsetAttribute === GeometryOffsetAttribute.NONE ? 0 : 1;
+            var topValue = rectangleGeometry._offsetAttribute === GeometryOffsetAttribute.TOP ? 1 : bottomValue;
 
-                geometry.attributes.applyOffset = new GeometryAttribute({
-                    componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
-                    componentsPerAttribute : 1,
-                    values : offsetAttribute
+            var bottom = constructRectangle(rectangleGeometry, computedOptions, extrudedHeight);
+            addOffset(rectangleGeometry, bottom, bottomValue);
+
+            var top = constructRectangle(rectangleGeometry, computedOptions, surfaceHeight);
+            addOffset(rectangleGeometry, top, topValue);
+
+            instances.push(top, bottom);
+
+            var verticalLines = verticalLineScratch;
+            var cols = [0, 0, computedOptions.width - 1, computedOptions.width - 1];
+            var rows = [0, computedOptions.height - 1, 0, computedOptions.height - 1];
+
+            var ellipsoid = rectangleGeometry._ellipsoid;
+            var width = rectangleGeometry._width;
+
+            for (var j = 0; j < 4; ++j) {
+                RectangleGeometryLibrary.computePosition(computedOptions, ellipsoid, false, rows[j], cols[j], verticalLines[0]);
+                Cartesian3.clone(verticalLines[0], verticalLines[1]);
+                scaleToHeight(verticalLines[0], ellipsoid, surfaceHeight);
+
+                instance = new GeometryInstance({
+                    geometry : PolylineGeometry.createGeometry(new PolylineGeometry({
+                        positions : verticalLines,
+                        followSurface : false,
+                        width : width
+                    }))
                 });
+                addCornerOffset(rectangleGeometry, instance, topValue, bottomValue);
+                instances.push(instance);
             }
-            var topBS = BoundingSphere.fromRectangle3D(rectangle, ellipsoid, surfaceHeight, topBoundingSphere);
-            var bottomBS = BoundingSphere.fromRectangle3D(rectangle, ellipsoid, extrudedHeight, bottomBoundingSphere);
-            boundingSphere = BoundingSphere.union(topBS, bottomBS);
         } else {
-            geometry = constructRectangle(rectangleGeometry, computedOptions);
-            geometry.attributes.position.values = PolygonPipeline.scaleToGeodeticHeight(geometry.attributes.position.values, surfaceHeight, ellipsoid, false);
-
-            if (defined(rectangleGeometry._offsetAttribute)) {
-                var length = geometry.attributes.position.values.length;
-                var applyOffset = new Uint8Array(length / 3);
-                offsetValue = rectangleGeometry._offsetAttribute === GeometryOffsetAttribute.NONE ? 0 : 1;
-                arrayFill(applyOffset, offsetValue);
-                geometry.attributes.applyOffset = new GeometryAttribute({
-                    componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
-                    componentsPerAttribute : 1,
-                    values: applyOffset
-                });
-            }
-
-            boundingSphere = BoundingSphere.fromRectangle3D(rectangle, ellipsoid, surfaceHeight);
+            var offsetValue = rectangleGeometry._offsetAttribute === GeometryOffsetAttribute.NONE ? 0 : 1;
+            instance = constructRectangle(rectangleGeometry, computedOptions, surfaceHeight);
+            addOffset(rectangleGeometry, instance, offsetValue);
+            instances.push(instance);
         }
 
-        return new Geometry({
-            attributes : geometry.attributes,
-            indices : geometry.indices,
-            primitiveType : PrimitiveType.LINES,
-            boundingSphere : boundingSphere,
-            offsetAttribute : rectangleGeometry._offsetAttribute
-        });
+        return GeometryPipeline.combineInstances(instances)[0];
     };
 
     return RectangleOutlineGeometry;
