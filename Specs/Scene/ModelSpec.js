@@ -134,6 +134,9 @@ defineSuite([
     var dracoCompressedModelUrl = './Data/Models/DracoCompression/CesiumMilkTruck/CesiumMilkTruck.gltf';
     var dracoCompressedModelWithAnimationUrl = './Data/Models/DracoCompression/CesiumMan/CesiumMan.gltf';
 
+    var boxGltf2Url = './Data/Models/Box-Gltf-2/Box.glb';
+    var boxGltf2WithTechniquesUrl = './Data/Models/Box-Gltf-2-Techniques/Box.gltf';
+
     var texturedBoxModel;
     var cesiumAirModel;
     var animBoxesModel;
@@ -451,7 +454,7 @@ defineSuite([
     });
 
     it('renders x-forward model', function() {
-        return Resource.fetchJson(boxEcefUrl).then(function(gltf) {
+        return Resource.fetchJson(boxPbrUrl).then(function(gltf) {
             return loadModelJson(gltf, {
                 forwardAxis : Axis.X
             }).then(function(m) {
@@ -463,7 +466,7 @@ defineSuite([
     });
 
     it('renders z-forward model', function() {
-        return Resource.fetchJson(boxPbrUrl).then(function(gltf) {
+        return Resource.fetchJson(boxEcefUrl).then(function(gltf) {
             return loadModelJson(gltf, {
                 forwardAxis : Axis.Z
             }).then(function(m) {
@@ -932,6 +935,24 @@ defineSuite([
             expect(rotation).toEqual([0.0, 0.0, 0.0, 1.0]);
 
             verifyRender(m);
+            primitives.remove(m);
+        });
+    });
+
+    it('loads a glTF 2.0 model', function() {
+        return loadModel(boxGltf2Url).then(function(m) {
+            verifyRender(m);
+            m.show = true;
+            expect(scene).toRender([169, 3, 3, 255]); // Red
+            primitives.remove(m);
+        });
+    });
+
+    it('loads a glTF 2.0 model with techniques_webgl extension', function() {
+        return loadModel(boxGltf2WithTechniquesUrl).then(function(m) {
+            verifyRender(m);
+            m.show = true;
+            expect(scene).toRender([204, 0, 0, 255]); // Red
             primitives.remove(m);
         });
     });
