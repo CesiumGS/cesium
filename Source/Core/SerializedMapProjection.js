@@ -46,7 +46,7 @@ define([
         var wellKnownText;
         var heightScale;
         var url;
-        var functionName;
+        var projectionName;
         if (mapProjection instanceof WebMercatorProjection) {
             projectionType = ProjectionType.WEBMERCATOR;
         } else if (mapProjection instanceof Proj4Projection) {
@@ -56,14 +56,14 @@ define([
         } else if (mapProjection instanceof CustomProjection) {
             projectionType = ProjectionType.CUSTOM;
             url = mapProjection.url;
-            functionName = mapProjection.functionName;
+            projectionName = mapProjection.projectionName;
         }
 
         this.projectionType = projectionType;
         this.wellKnownText = wellKnownText;
         this.heightScale = heightScale;
         this.url = url;
-        this.functionName = functionName;
+        this.projectionName = projectionName;
 
         this.packedEllipsoid = Ellipsoid.pack(mapProjection.ellipsoid, new Array(Ellipsoid.packedLength));
     }
@@ -90,7 +90,7 @@ define([
         } else if (projectionType === ProjectionType.PROJ4JS) {
             projection = new Proj4Projection(serializedMapProjection.wellKnownText, serializedMapProjection.heightScale);
         } else if (projectionType === ProjectionType.CUSTOM) {
-            projection = new CustomProjection(serializedMapProjection.url, serializedMapProjection.functionName, ellipsoid);
+            projection = new CustomProjection(serializedMapProjection.url, serializedMapProjection.projectionName, ellipsoid);
             return projection.readyPromise;
         }
 

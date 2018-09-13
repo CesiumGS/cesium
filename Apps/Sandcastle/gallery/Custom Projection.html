@@ -31,7 +31,7 @@ function startup(Cesium) {
 //Sandcastle_Begin
 
 var projectionText =
-    'function projectionFactory(callback) {\n' +
+    'function createProjectionFunctions(callback) {\n' +
     '     function project(cartographic, result) {\n' +
     '          result.x = cartographic.longitude * 6378137.0;\n' +
     '          result.y = cartographic.latitude * 2.0 * 6378137.0;\n' +
@@ -46,7 +46,11 @@ var projectionText =
     ' }\n';
 var projectionTextUrl = 'data:text/plain;base64,' + window.btoa(projectionText);
 
-var customProjection = new Cesium.CustomProjection(projectionTextUrl, 'projectionFactory');
+if (Cesium.FeatureDetection.isInternetExplorer()) {
+    projectionTextUrl = '../../SampleData/SampleProjection.txt';
+}
+
+var customProjection = new Cesium.CustomProjection(projectionTextUrl, 'sample projection');
 customProjection.readyPromise
     .then(function(projection) {
 

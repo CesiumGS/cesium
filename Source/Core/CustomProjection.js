@@ -24,35 +24,38 @@ define([
         when) {
     'use strict';
 
+    var loadedProjectionFunctions = {};
+
     /**
      * MapProjection that uses custom project and unproject functions defined in an external file.
      *
-     * The external file must contain a function that implements the <code>CustomProjection~factory</code> interface to provide
-     * <code>CustomProjection~project</code> and <code>CustomProjection~unproject</code> functions to a callback.
+     * The external file must contain a function named <code>createProjectionFunctions</code> that implements the
+     * <code>CustomProjection~factory</code> interface to provide <code>CustomProjection~project</code> and
+     * <code>CustomProjection~unproject</code> functions to a callback.
      *
      * @alias CustomProjection
      * @constructor
      *
      * @param {String} options.url The url of the external file.
-     * @param {String} options.functionName The name of the function that implements <code>CustomProjection~factory</code> in the external file.
+     * @param {String} options.projectionName A name for this projection.
      * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The MapProjection's ellipsoid.
      */
-    function CustomProjection(url, functionName, ellipsoid) {
+    function CustomProjection(url, projectionName, ellipsoid) {
         Check.typeOf.string('url', url);
-        Check.typeOf.string('functionName', functionName);
+        Check.typeOf.string('projectionName', projectionName);
 
         this._ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
 
         this._project = undefined;
         this._unproject = undefined;
 
-        this._functionName = functionName;
+        this._projectionName = projectionName;
 
         var absoluteUrl = getAbsoluteUri(url);
         this._url = absoluteUrl;
 
         this._ready = false;
-        this._readyPromise = buildCustomProjection(this, absoluteUrl, functionName);
+        this._readyPromise = buildCustomProjection(this, absoluteUrl, projectionName);
     }
 
     defineProperties(CustomProjection.prototype, {
@@ -118,16 +121,16 @@ define([
             }
         },
         /**
-         * Gets the function name for factory function in the file that the CustomProjection is loading.
+         * Gets the name for this projection.
          *
          * @memberOf CustomProjection.prototype
          *
          * @type {String}
          * @readonly
          */
-        functionName : {
+        projectionName : {
             get : function() {
-                return this._functionName;
+                return this._projectionName;
             }
         }
     });
@@ -186,29 +189,52 @@ define([
         return result;
     };
 
-    function buildCustomProjection(customProjection, url, functionName) {
-        return Resource.fetchText(url)
-            .then(function(scriptText) {
-                var deferred = when.defer();
-                var buildPlugin;
-                (function() {
-                    eval(scriptText + 'buildPlugin = ' + functionName + ';');
-                })();
-                buildPlugin(function(project, unproject) {
+    function buildCustomProjection(customProjection, url, projectionName) {
+        var fetch;
+        var deferred = when.defer();
+        if (defined(loadedProjectionFunctions[projectionName])) {
+            loadedProjectionFunctions[projectionName](function(project, unproject) {
+                customProjection._project = project;
+                customProjection._unproject = unproject;
+                customProjection._ready = true;
+                deferred.resolve(customProjection);
+            });
+
+            return deferred;
+        }
+
+        if (typeof WorkerGlobalScope !== 'undefined' && self instanceof WorkerGlobalScope) { // eslint-disable-line no-undef
+            importScripts(url); // eslint-disable-line no-undef
+            fetch = when.resolve();
+        } else {
+            fetch = Resource.fetchJsonp({
+                    url : url
+            });
+        }
+
+        fetch = fetch
+            .then(function() {
+                var localCreateProjectionFunctions = createProjectionFunctions; // eslint-disable-line no-undef
+                loadedProjectionFunctions[projectionName] = localCreateProjectionFunctions;
+                localCreateProjectionFunctions(function(project, unproject) {
                     customProjection._project = project;
                     customProjection._unproject = unproject;
                     customProjection._ready = true;
                     deferred.resolve();
                 });
-                return deferred;
+
+                return deferred.promise;
             })
             .then(function() {
                 return customProjection;
             });
+
+        return fetch;
     }
 
     /**
      * A function used to generate functions for a custom MapProjection.
+     * This function must be named <code>createProjectionFunctions</code>.
      * @callback CustomProjection~factory
      *
      * @param {Function} callback A callback that takes <code>CustomProjection~project</code> and <code>CustomProjection~unproject</code> functions as arguments.

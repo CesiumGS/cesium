@@ -1942,6 +1942,7 @@ define([
         script.onload = function() {
             script.onload = undefined;
             head.removeChild(script);
+            deferred.resolve();
         };
         script.onerror = function(e) {
             deferred.reject(e);
