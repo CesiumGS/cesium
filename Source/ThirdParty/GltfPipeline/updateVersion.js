@@ -808,7 +808,8 @@ define([
                     var accessorByteLength = accessor.count * accessorByteStride;
                     delete accessor.byteStride;
 
-                    var nextAccessorByteStride = (i < accessorsLength - 1) ? computeAccessorByteStride(gltf, accessors[i + 1]) : undefined;
+                    var hasNextAccessor = (i < accessorsLength - 1);
+                    var nextAccessorByteStride = hasNextAccessor ? computeAccessorByteStride(gltf, accessors[i + 1]) : undefined;
                     if (accessorByteStride !== nextAccessorByteStride) {
                         var newBufferView = clone(bufferView, true);
                         if (bufferViewHasVertexAttributes[bufferViewId]) {
@@ -822,7 +823,8 @@ define([
                             accessor.bufferView = newBufferViewId;
                             accessor.byteOffset = accessor.byteOffset - currentByteOffset;
                         }
-                        currentByteOffset = accessorByteOffset + accessorByteLength;
+                        // Set current byte offset to next accessor's byte offset
+                        currentByteOffset = hasNextAccessor ? accessors[i + 1].byteOffset : undefined;
                         currentIndex = i + 1;
                     }
                 }

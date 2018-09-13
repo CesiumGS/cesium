@@ -34,9 +34,14 @@ define([
     }
 
     function removeExtras(object) {
-        if (defined(object.extras) && defined(object.extras._pipeline)) {
+        if (!defined(object.extras)) {
+            return;
+        }
+
+        if (defined(object.extras._pipeline)) {
             delete object.extras._pipeline;
         }
+
         if (Object.keys(object.extras).length === 0) {
             delete object.extras;
         }
