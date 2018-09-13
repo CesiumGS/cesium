@@ -636,6 +636,8 @@ define([
         });
 
         surfaceTile.terrainState = TerrainState.READY;
+
+        surfaceTile.fill = surfaceTile.fill && surfaceTile.fill.destroy();
     }
 
     function getContextWaterMaskData(context) {

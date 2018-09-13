@@ -80,6 +80,7 @@ define([
 
     TerrainFillMesh.prototype.destroy = function() {
         this.vertexArray = this.vertexArray && this.vertexArray.destroy();
+        return undefined;
     };
 
     TerrainFillMesh.updateFillTiles = function(tileProvider, renderedTiles, frameState) {
@@ -333,67 +334,106 @@ define([
         var startIndex, endIndex, existingTile, existingRectangle;
         var sourceRectangle = sourceTile.rectangle;
 
+        function firstIsLessThanSecond(a, b, epsilon) {
+            if (Math.abs(a - b) < epsilon) {
+                return false;
+            }
+            return a < b;
+        }
+
+        function firstIsLessThanOrEqualToSecond(a, b, epsilon) {
+            if (Math.abs(a - b) < epsilon) {
+                return true;
+            }
+            return a < b;
+        }
+
+        function firstIsGreaterThanSecond(a, b, epsilon) {
+            if (Math.abs(a - b) < epsilon) {
+                return false;
+            }
+            return a > b;
+        }
+
+        function firstIsGreaterThanOrEqualToSecond(a, b, epsilon) {
+            if (Math.abs(a - b) < epsilon) {
+                return true;
+            }
+            return a > b;
+        }
+
+        var epsilon;
+        var destinationRectangle = destinationTile.rectangle;
+
         switch (tileEdge) {
             case TileEdge.WEST:
+                epsilon = (destinationRectangle.north - destinationRectangle.south) * CesiumMath.EPSILON5;
+
                 for (startIndex = 0; startIndex < edgeTiles.length; ++startIndex) {
                     existingTile = edgeTiles[startIndex];
                     existingRectangle = existingTile.rectangle;
-                    if (existingRectangle.north <= sourceRectangle.north) {
+                    if (firstIsGreaterThanSecond(sourceRectangle.north, existingRectangle.south, epsilon)) {
                         break;
                     }
                 }
                 for (endIndex = startIndex; endIndex < edgeTiles.length; ++endIndex) {
                     existingTile = edgeTiles[endIndex];
                     existingRectangle = existingTile.rectangle;
-                    if (existingRectangle.south < sourceRectangle.south) {
+                    if (firstIsGreaterThanOrEqualToSecond(sourceRectangle.south, existingRectangle.north, epsilon)) {
                         break;
                     }
                 }
                 break;
             case TileEdge.SOUTH:
+                epsilon = (destinationRectangle.east - destinationRectangle.west) * CesiumMath.EPSILON5;
+
                 for (startIndex = 0; startIndex < edgeTiles.length; ++startIndex) {
                     existingTile = edgeTiles[startIndex];
                     existingRectangle = existingTile.rectangle;
-                    if (existingRectangle.west >= sourceRectangle.west) {
+                    if (firstIsLessThanSecond(sourceRectangle.west, existingRectangle.east, epsilon)) {
                         break;
                     }
                 }
                 for (endIndex = startIndex; endIndex < edgeTiles.length; ++endIndex) {
                     existingTile = edgeTiles[endIndex];
                     existingRectangle = existingTile.rectangle;
-                    if (existingRectangle.east > sourceRectangle.east) {
+                    if (firstIsLessThanOrEqualToSecond(sourceRectangle.east, existingRectangle.west, epsilon)) {
                         break;
                     }
                 }
                 break;
             case TileEdge.EAST:
+                epsilon = (destinationRectangle.north - destinationRectangle.south) * CesiumMath.EPSILON5;
+
                 for (startIndex = 0; startIndex < edgeTiles.length; ++startIndex) {
                     existingTile = edgeTiles[startIndex];
                     existingRectangle = existingTile.rectangle;
-                    if (existingRectangle.south >= sourceRectangle.south) {
+                    if (firstIsLessThanSecond(sourceRectangle.south, existingRectangle.north, epsilon)) {
                         break;
                     }
                 }
                 for (endIndex = startIndex; endIndex < edgeTiles.length; ++endIndex) {
                     existingTile = edgeTiles[endIndex];
                     existingRectangle = existingTile.rectangle;
-                    if (existingRectangle.north > sourceRectangle.north) {
+                    if (firstIsLessThanOrEqualToSecond(sourceRectangle.north, existingRectangle.south, epsilon)) {
                         break;
                     }
                 }
                 break;
             case TileEdge.NORTH:
+                epsilon = (destinationRectangle.east - destinationRectangle.west) * CesiumMath.EPSILON5;
+
                 for (startIndex = 0; startIndex < edgeTiles.length; ++startIndex) {
                     existingTile = edgeTiles[startIndex];
                     existingRectangle = existingTile.rectangle;
-                    if (existingRectangle.east <= sourceRectangle.east) {
+                    if (firstIsGreaterThanSecond(sourceRectangle.east, existingRectangle.west, epsilon)) {
                         break;
                     }
                 }
                 for (endIndex = startIndex; endIndex < edgeTiles.length; ++endIndex) {
                     existingTile = edgeTiles[endIndex];
                     existingRectangle = existingTile.rectangle;
-                    if (existingRectangle.west < sourceRectangle.west) {
+                    if (firstIsGreaterThanOrEqualToSecond(sourceRectangle.west, existingRectangle.east, epsilon)) {
                         break;
                     }
                 }
@@ -425,6 +465,7 @@ define([
     var cartesianScratch = new Cartesian3();
     var normalScratch = new Cartesian3();
     var octEncodedNormalScratch = new Cartesian2();
+    var highestFillTileVertexCount = 0;
 
     function createFillMesh(tileProvider, frameState, tile) {
         var surfaceTile = tile.data;
@@ -614,6 +655,82 @@ define([
         var encoding = new TerrainEncoding(undefined, minimumHeight, maximumHeight, undefined, hasVertexNormals, hasWebMercatorT);
         encoding.center = center;
 
+        if (vertexCount > highestFillTileVertexCount) {
+            highestFillTileVertexCount = vertexCount;
+            console.log('New highest vertex count: ', highestFillTileVertexCount, ' from L', tile.level, 'X', tile.x, 'Y', tile.y);
+        }
+
+        var q1, q2, s;
+        var previousU, previousV, currentU, currentV;
+
+        for (s = 1; s < eastIndicesNorthToSouth.length; ++s) {
+            q1 = eastIndicesNorthToSouth[s - 1];
+            q2 = eastIndicesNorthToSouth[s];
+            previousU = tileVertices[q1 * stride + 4];
+            previousV = tileVertices[q1 * stride + 5];
+            currentU = tileVertices[q2 * stride + 4];
+            currentV = tileVertices[q2 * stride + 5];
+
+            if (previousU !== 1.0 || currentU !== 1.0) {
+                console.log('not east?!');
+            }
+
+            if (currentV >= previousV) {
+                console.log('not descending?!');
+            }
+        }
+
+        for (s = 1; s < westIndicesSouthToNorth.length; ++s) {
+            q1 = westIndicesSouthToNorth[s - 1];
+            q2 = westIndicesSouthToNorth[s];
+            previousU = tileVertices[q1 * stride + 4];
+            previousV = tileVertices[q1 * stride + 5];
+            currentU = tileVertices[q2 * stride + 4];
+            currentV = tileVertices[q2 * stride + 5];
+
+            if (previousU !== 0.0 || currentU !== 0.0) {
+                console.log('not west?!');
+            }
+
+            if (currentV <= previousV) {
+                console.log('not ascending?!');
+            }
+        }
+
+        for (s = 1; s < southIndicesEastToWest.length; ++s) {
+            q1 = southIndicesEastToWest[s - 1];
+            q2 = southIndicesEastToWest[s];
+            previousU = tileVertices[q1 * stride + 4];
+            previousV = tileVertices[q1 * stride + 5];
+            currentU = tileVertices[q2 * stride + 4];
+            currentV = tileVertices[q2 * stride + 5];
+
+            if (previousV !== 0.0 || currentV !== 0.0) {
+                console.log('not south?!');
+            }
+
+            if (currentU >= previousU) {
+                console.log('not descending?!');
+            }
+        }
+
+        for (s = 1; s < northIndicesWestToEast.length; ++s) {
+            q1 = northIndicesWestToEast[s - 1];
+            q2 = northIndicesWestToEast[s];
+            previousU = tileVertices[q1 * stride + 4];
+            previousV = tileVertices[q1 * stride + 5];
+            currentU = tileVertices[q2 * stride + 4];
+            currentV = tileVertices[q2 * stride + 5];
+
+            if (previousV !== 1.0 || currentV !== 1.0) {
+                console.log('not north?!');
+            }
+
+            if (currentU <= previousU) {
+                console.log('not ascending?!');
+            }
+        }
+
         var mesh = new TerrainMesh(
             obb.center,
             typedArray,
@@ -755,15 +872,15 @@ define([
         var v = (coordinates.y - vmin) / (vmax - vmin);
 
         // Ensure that coordinates very near the corners are at the corners.
-        if (Math.abs(u) < Math.EPSILON8) {
+        if (Math.abs(u) < Math.EPSILON5) {
             u = 0.0;
-        } else if (Math.abs(u - 1.0) < Math.EPSILON8) {
+        } else if (Math.abs(u - 1.0) < Math.EPSILON5) {
             u = 1.0;
         }
 
-        if (Math.abs(v) < Math.EPSILON8) {
+        if (Math.abs(v) < Math.EPSILON5) {
             v = 0.0;
-        } else if (Math.abs(v - 1.0) < Math.EPSILON8) {
+        } else if (Math.abs(v - 1.0) < Math.EPSILON5) {
             v = 1.0;
         }
 
@@ -992,17 +1109,25 @@ define([
 
         var previousVertexIndex = tileVertices.length - stride;
 
-        // Copy all but the last vertex.
+        // Copy all except the corner vertices.
         var i;
         var u;
         var v;
         var lastU = tileVertices[previousVertexIndex + 4];
         var lastV = tileVertices[previousVertexIndex + 5];
-        for (i = 0; i < vertices.length - stride; i += stride) {
+        for (i = 0; i < vertices.length; i += stride) {
             u = vertices[i + 4];
             v = vertices[i + 5];
-            if (Math.abs(u - lastU) < CesiumMath.EPSILON4 && Math.abs(v - lastV) < CesiumMath.EPSILON4) {
+            if (Math.abs(u - lastU) < CesiumMath.EPSILON5 && Math.abs(v - lastV) < CesiumMath.EPSILON5) {
                 // Vertex is very close to the previous one, so skip it.
+                continue;
+            }
+
+            var nearlyEdgeU = Math.abs(u) < CesiumMath.EPSILON5 || Math.abs(u - 1.0) < CesiumMath.EPSILON5;
+            var nearlyEdgeV = Math.abs(v) < CesiumMath.EPSILON5 || Math.abs(v - 1.0) < CesiumMath.EPSILON5;
+
+            if (nearlyEdgeU && nearlyEdgeV) {
+                // Corner vertex - skip it.
                 continue;
             }
 
@@ -1013,22 +1138,6 @@ define([
 
             lastU = u;
             lastV = v;
-        }
-
-        // Copy the last vertex too if it's _not_ a corner vertex.
-        var lastVertexStart = i;
-        u = vertices[lastVertexStart + 4];
-        v = vertices[lastVertexStart + 5];
-
-        if (lastVertexStart < vertices.length && ((u !== 0.0 && u !== 1.0) || (v !== 0.0 && v !== 1.0))) {
-            if (Math.abs(u - lastU) < CesiumMath.EPSILON4 && Math.abs(v - lastV) < CesiumMath.EPSILON4) {
-                // Overwrite the previous vertex because it's very close to the last one.
-                tileVertices.length -= stride;
-            }
-
-            for (; i < vertices.length; ++i) {
-                tileVertices.push(vertices[i]);
-            }
         }
     }
 
@@ -1233,49 +1342,6 @@ define([
             AttributeCompression.octEncode(normalScratch, octEncodedNormalScratch);
             tileVertices.push(octEncodedNormalScratch.x, octEncodedNormalScratch.y);
             //tileVertices.push(AttributeCompression.octPackFloat(octEncodedNormalScratch));
-        }
-    }
-
-    function addVerticesToFillTile(edgeDetails, stride, tileVertices) {
-        var vertices = edgeDetails.vertices;
-
-        // Copy all but the last vertex.
-        var i;
-        var u;
-        var v;
-        var lastU;
-        var lastV;
-        for (i = 0; i < vertices.length - stride; i += stride) {
-            u = vertices[i + 4];
-            v = vertices[i + 5];
-            if (Math.abs(u - lastU) < CesiumMath.EPSILON4 && Math.abs(v - lastV) < CesiumMath.EPSILON4) {
-                // Vertex is very close to the previous one, so skip it.
-                continue;
-            }
-
-            var end = i + stride;
-            for (var j = i; j < end; ++j) {
-                tileVertices.push(vertices[j]);
-            }
-
-            lastU = u;
-            lastV = v;
-        }
-
-        // Copy the last vertex too if it's _not_ a corner vertex.
-        var lastVertexStart = i;
-        u = vertices[lastVertexStart + 4];
-        v = vertices[lastVertexStart + 5];
-
-        if (lastVertexStart < vertices.length && ((u !== 0.0 && u !== 1.0) || (v !== 0.0 && v !== 1.0))) {
-            if (Math.abs(u - lastU) < CesiumMath.EPSILON4 && Math.abs(v - lastV) < CesiumMath.EPSILON4) {
-                // Overwrite the previous vertex because it's very close to the last one.
-                tileVertices.length -= stride;
-            }
-
-            for (; i < vertices.length; ++i) {
-                tileVertices.push(vertices[i]);
-            }
         }
     }
 
