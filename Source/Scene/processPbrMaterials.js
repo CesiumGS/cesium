@@ -26,20 +26,20 @@ define([
     function processPbrMaterials(gltf, options) {
         options = defaultValue(options, {});
 
-        var hasPbrMetallicRoughness = false;
-        ForEach.material(gltf, function(material) {
-            if (isMetallicRoughnessMaterial(material)) {
-                hasPbrMetallicRoughness = true;
-            }
-        });
-
-        if (!hasPbrMetallicRoughness) {
-            return gltf;
-        }
-
         // No need to create new techniques if they already exist,
         // the shader should handle these values
         if (hasExtension(gltf, 'KHR_techniques_webgl')) {
+            return gltf;
+        }
+
+        var hasPbrMaterial = false;
+        ForEach.material(gltf, function(material) {
+            // All materials in glTF are PBR by default,
+            // so if any material is found, we should apply PBR.
+            hasPbrMaterial = true; 
+        });
+
+        if (!hasPbrMaterial) {
             return gltf;
         }
 
@@ -60,25 +60,24 @@ define([
             shaders: [],
             techniques: []
         };
+
         gltf.extensionsUsed.push('KHR_techniques_webgl');
         gltf.extensionsRequired.push('KHR_techniques_webgl');
 
         var primitiveByMaterial = ModelUtility.splitIncompatibleMaterials(gltf);
 
         ForEach.material(gltf, function(material, materialIndex) {
-            if (isMetallicRoughnessMaterial(material)) {
-                var generatedMaterialValues = {};
-                var technique = generateTechnique(gltf, material, materialIndex, generatedMaterialValues, primitiveByMaterial, options);
+            var generatedMaterialValues = {};
+            var technique = generateTechnique(gltf, material, materialIndex, generatedMaterialValues, primitiveByMaterial, options);
 
-                if (!defined(material.extensions)) {
-                    material.extensions = {};
-                }
-
-                material.extensions.KHR_techniques_webgl = {
-                    values : generatedMaterialValues,
-                    technique : technique
-                };
+            if (!defined(material.extensions)) {
+                material.extensions = {};
             }
+
+            material.extensions.KHR_techniques_webgl = {
+                values : generatedMaterialValues,
+                technique : technique
+            };
         });
 
         // If any primitives have semantics that aren't declared in the generated
@@ -86,17 +85,6 @@ define([
         ModelUtility.ensureSemanticExistence(gltf);
 
         return gltf;
-    }
-
-    function isMetallicRoughnessMaterial(material) {
-        return defined(material.pbrMetallicRoughness) ||
-               defined(material.normalTexture) ||
-               defined(material.occlusionTexture) ||
-               defined(material.emissiveTexture) ||
-               defined(material.emissiveFactor) ||
-               defined(material.alphaMode) ||
-               defined(material.alphaCutoff) ||
-               defined(material.doubleSided);
     }
 
     function isSpecularGlossinessMaterial(material) {
@@ -115,8 +103,8 @@ define([
         var useSpecGloss = isSpecularGlossinessMaterial(material);
 
         var uniformName;
-        var pbrMetallicRoughness = material.pbrMetallicRoughness;
         var parameterName;
+        var pbrMetallicRoughness = material.pbrMetallicRoughness;
         if (defined(pbrMetallicRoughness) && !useSpecGloss) {
             for (parameterName in pbrMetallicRoughness) {
                 if (pbrMetallicRoughness.hasOwnProperty(parameterName)) {
