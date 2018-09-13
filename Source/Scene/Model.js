@@ -4069,7 +4069,7 @@ define([
                         };
 
                         processModelMaterialsCommon(gltf, options);
-                        processPbrMetallicRoughness(gltf, options);
+                        processPbrMaterials(gltf, options);
                     }
 
                     // Skip dequantizing in the shader if not encoded

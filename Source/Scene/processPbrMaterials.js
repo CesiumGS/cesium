@@ -36,7 +36,7 @@ define([
         ForEach.material(gltf, function(material) {
             // All materials in glTF are PBR by default,
             // so if any material is found, we should apply PBR.
-            hasPbrMaterial = true; 
+            hasPbrMaterial = true;
         });
 
         if (!hasPbrMaterial) {
