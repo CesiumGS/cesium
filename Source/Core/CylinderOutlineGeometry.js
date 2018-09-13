@@ -257,7 +257,21 @@ define([
             }
         }
 
-        return GeometryPipeline.combineInstances(instances)[0];
+        var geometry = GeometryPipeline.combineInstances(instances)[0];
+
+        if (defined(cylinderGeometry._offsetAttribute)) {
+            length = geometry.attributes.position.values.length / 3;
+            var applyOffset = new Uint8Array(length);
+            var offsetValue = cylinderGeometry._offsetAttribute === GeometryOffsetAttribute.NONE ? 0 : 1;
+            arrayFill(applyOffset, offsetValue);
+            geometry.attributes.applyOffset = new GeometryAttribute({
+                componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
+                componentsPerAttribute : 1,
+                values: applyOffset
+            });
+        }
+
+        return geometry;
     };
 
     return CylinderOutlineGeometry;

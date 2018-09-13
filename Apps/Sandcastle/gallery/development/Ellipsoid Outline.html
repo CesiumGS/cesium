@@ -58,12 +58,7 @@ var ellipseOutlineInstance = new Cesium.GeometryInstance({
 // Add the geometry instance to primitives.
 scene.primitives.add(new Cesium.Primitive({
     geometryInstances : ellipseOutlineInstance,
-    appearance : new Cesium.PerInstanceColorAppearance({
-        flat : true,
-        renderState : {
-            lineWidth : Math.min(2.0, scene.maximumAliasedLineWidth)
-        }
-    })
+    appearance : new Cesium.PolylineColorAppearance()
 }));
 //Sandcastle_End
     Sandcastle.finishedLoading();
