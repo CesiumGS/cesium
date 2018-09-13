@@ -3228,7 +3228,7 @@ define([
     /**
      * Returns an object with a `primitive` property that contains the first (top) primitive in the scene
      * at a particular window coordinate or undefined if nothing is at the location. Other properties may
-     * potentially be set depending on the type of primitive.
+     * potentially be set depending on the type of primitive and may be used to further identify the picked object.
      * <p>
      * When a feature of a 3D Tiles tileset is picked, <code>pick</code> returns a {@link Cesium3DTileFeature} object.
      * </p>
@@ -3634,7 +3634,8 @@ define([
 
     /**
      * Returns an object with a `primitive` property that contains the first (top) primitive in the scene
-     * hit by the ray or undefined if nothing is hit. Other properties may potentially be set depending on the type of primitive.
+     * hit by the ray or undefined if nothing is hit. Other properties may potentially be set depending on the type
+     * of primitive and may be used to further identify the picked object.
      * <p>
      * When a feature of a 3D Tiles tileset is picked, <code>pick</code> returns a {@link Cesium3DTileFeature} object.
      * </p>
@@ -3682,7 +3683,8 @@ define([
 
     /**
      * Returns a list of objects, each containing a `primitive` property, for all primitives hit
-     * by the ray. Other properties may also be set depending on the type of primitive.
+     * by the ray. Other properties may also be set depending on the type of primitive and may be
+     * used to further identify the picked object.
      * The primitives in the list are ordered by their visual order in the scene (front to back).
      *
      * @private
