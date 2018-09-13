@@ -995,7 +995,7 @@ defineSuite([
     });
 
     it('clipping planes union regions (Float)', function() {
-        if (!ClippingPlaneCollection.useFloatTexture(scene._context)) {
+        if (!ClippingPlaneCollection.useFloatTexture(scene.context)) {
             // This configuration for the test fails in uint8 mode due to the small context
             return;
         }

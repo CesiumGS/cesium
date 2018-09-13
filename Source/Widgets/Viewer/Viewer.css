@@ -101,8 +101,8 @@
     position: absolute;
     top: 50px;
     right: 10px;
-    max-height: 100%;
-    padding-bottom: 70px;
+    max-height: calc(100% - 120px);
     box-sizing: border-box;
-    overflow: auto;
+    overflow-y: auto;
+    overflow-x: hidden;
 }
