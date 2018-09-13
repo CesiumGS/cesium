@@ -46,9 +46,9 @@ var projectionText =
     ' }\n';
 var projectionTextUrl = 'data:text/plain;base64,' + window.btoa(projectionText);
 
-if (Cesium.FeatureDetection.isInternetExplorer()) {
+//if (Cesium.FeatureDetection.isInternetExplorer()) {
     projectionTextUrl = '../../SampleData/SampleProjection.txt';
-}
+//}
 
 var customProjection = new Cesium.CustomProjection(projectionTextUrl, 'sample projection');
 customProjection.readyPromise
