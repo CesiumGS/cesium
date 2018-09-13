@@ -1,6 +1,8 @@
 define([
         '../Core/Cartesian2',
+        '../Core/Cartesian3',
         '../Core/Cartesian4',
+        '../Core/Cartographic',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
@@ -35,14 +37,18 @@ define([
         '../Renderer/VertexArray',
         '../Shaders/ReprojectWebMercatorFS',
         '../Shaders/ReprojectWebMercatorVS',
+        '../Shaders/ReprojectArbitraryVS',
         '../ThirdParty/when',
         './Imagery',
         './ImagerySplitDirection',
         './ImageryState',
-        './TileImagery'
+        './TileImagery',
+        './SingleTileProjectedImageryProvider'
     ], function(
         Cartesian2,
+        Cartesian3,
         Cartesian4,
+        Cartographic,
         defaultValue,
         defined,
         defineProperties,
@@ -77,11 +83,13 @@ define([
         VertexArray,
         ReprojectWebMercatorFS,
         ReprojectWebMercatorVS,
+        ReprojectArbitraryVS,
         when,
         Imagery,
         ImagerySplitDirection,
         ImageryState,
-        TileImagery) {
+        TileImagery,
+        SingleTileProjectedImageryProvider) {
     'use strict';
 
     /**
@@ -938,13 +946,19 @@ define([
             rectangle.width / texture.width > 1e-5) {
                 var that = this;
                 imagery.addReference();
+
                 var computeCommand = new ComputeCommand({
                     persists : true,
                     owner : this,
                     // Update render resources right before execution instead of now.
                     // This allows different ImageryLayers to share the same vao and buffers.
                     preExecute : function(command) {
-                        reprojectToGeographic(command, context, texture, imagery.rectangle);
+                        if (that._imageryProvider instanceof SingleTileProjectedImageryProvider) {
+                            var projection = that._imageryProvider.tilingScheme.projection;
+                            reprojectFromArbitrary(command, context, texture, that._imageryProvider.tilingScheme.tileXYToNativeRectangle(0, 0, 0), projection);
+                        } else {
+                            reprojectToGeographic(command, context, texture, imagery.rectangle);
+                        }
                     },
                     postExecute : function(outputTexture) {
                         imagery.texture = outputTexture;
@@ -1019,6 +1033,156 @@ define([
         textureDimensions : new Cartesian2(),
         texture : undefined
     };
+
+    var unprojectedRectangleScratch = new Rectangle();
+    var geographicCartographicScratch = new Cartographic();
+    var projectedScratch = new Cartesian3();
+    function reprojectFromArbitrary(command, context, texture, rectangleInProjection, projection) {
+        var reproject = {
+            vertexArray : undefined,
+            shaderProgram : undefined,
+            sampler : undefined,
+            destroy : function() {
+                if (defined(this.framebuffer)) {
+                    this.framebuffer.destroy();
+                }
+                if (defined(this.vertexArray)) {
+                    this.vertexArray.destroy();
+                }
+                if (defined(this.shaderProgram)) {
+                    this.shaderProgram.destroy();
+                }
+            }
+        };
+
+        var textureWidth = texture.width;
+        var textureHeight = texture.height;
+
+        var verticesWidth = Math.min(texture.width, 255); // should be higher?
+        var verticesHeight = Math.min(texture.height, 255);
+
+        var positions = new Float32Array(verticesWidth * verticesHeight * 2);
+        var index = 0;
+        var widthIncrement = 1.0 / (verticesWidth - 1);
+        var heightIncrement = 1.0 / (verticesHeight - 1);
+        var w;
+        var h;
+        for (w = 0; w < verticesWidth; w++) {
+            for (h = 0; h < verticesHeight; h++) {
+                positions[index++] = w * widthIncrement;
+                positions[index++] = h * heightIncrement;
+            }
+        }
+
+        // For each vertex in the target grid, project into the projection
+        var unprojectedRectangle = Rectangle.unproject(rectangleInProjection, projection, unprojectedRectangleScratch);
+
+        //var reprojected = Rectangle.project(unprojectedRectangle, projection);
+
+        var south = unprojectedRectangle.south;
+        var west = unprojectedRectangle.west;
+
+        var unprojectedWidthIncrement = unprojectedRectangle.width / (verticesWidth - 1);
+        var unprojectedHeightIncrement = unprojectedRectangle.height / (verticesHeight - 1);
+        var geographicCartographic = geographicCartographicScratch;
+        var projected = projectedScratch;
+
+        var projectedSouth = rectangleInProjection.south;
+        var projectedWest = rectangleInProjection.west;
+
+        var texcoords = new Float32Array(verticesWidth * verticesHeight * 2);
+        index = 0;
+        for (w = 0; w < verticesWidth; w++) {
+            for (h = 0; h < verticesHeight; h++) {
+                geographicCartographic.longitude = west + w * unprojectedWidthIncrement;
+                geographicCartographic.latitude = south + h * unprojectedHeightIncrement;
+
+                projection.project(geographicCartographic, projected);
+
+                texcoords[index++] = (projected.x - projectedWest) / rectangleInProjection.width;
+                texcoords[index++] = (projected.y - projectedSouth) / rectangleInProjection.height;
+            }
+        }
+
+        var reprojectAttributeIndices = {
+            position : 0,
+            textureCoordinates : 1
+        };
+
+        var indices = TerrainProvider.getRegularGridIndices(verticesWidth, verticesHeight);
+        var indexBuffer = Buffer.createIndexBuffer({
+            context : context,
+            typedArray : indices,
+            usage : BufferUsage.STATIC_DRAW,
+            indexDatatype : IndexDatatype.UNSIGNED_SHORT
+        });
+
+        reproject.vertexArray = new VertexArray({
+            context : context,
+            attributes : [{
+                index : reprojectAttributeIndices.position,
+                vertexBuffer : Buffer.createVertexBuffer({
+                    context : context,
+                    typedArray : positions,
+                    usage : BufferUsage.STATIC_DRAW
+                }),
+                componentsPerAttribute : 2
+            },{
+                index : reprojectAttributeIndices.textureCoordinates,
+                vertexBuffer : Buffer.createVertexBuffer({
+                    context : context,
+                    typedArray : texcoords,
+                    usage : BufferUsage.STATIC_DRAW
+                }),
+                componentsPerAttribute : 2
+            }],
+            indexBuffer : indexBuffer
+        });
+
+        var vs = new ShaderSource({
+            sources : [ReprojectArbitraryVS]
+        });
+
+        reproject.shaderProgram = ShaderProgram.fromCache({
+            context : context,
+            vertexShaderSource : vs,
+            fragmentShaderSource : ReprojectWebMercatorFS,
+            attributeLocations : reprojectAttributeIndices
+        });
+
+        reproject.sampler = new Sampler({
+            wrapS : TextureWrap.CLAMP_TO_EDGE,
+            wrapT : TextureWrap.CLAMP_TO_EDGE,
+            minificationFilter : TextureMinificationFilter.LINEAR,
+            magnificationFilter : TextureMagnificationFilter.LINEAR
+        });
+
+        uniformMap.textureDimensions.x = textureWidth;
+        uniformMap.textureDimensions.y = textureHeight;
+        uniformMap.texture = texture;
+
+        var outputTexture = new Texture({
+            context : context,
+            width : textureWidth,
+            height : textureHeight,
+            pixelFormat : texture.pixelFormat,
+            pixelDatatype : texture.pixelDatatype,
+            preMultiplyAlpha : texture.preMultiplyAlpha
+        });
+
+        // Allocate memory for the mipmaps.  Failure to do this before rendering
+        // to the texture via the FBO, and calling generateMipmap later,
+        // will result in the texture appearing blank.  I can't pretend to
+        // understand exactly why this is.
+        if (CesiumMath.isPowerOfTwo(textureWidth) && CesiumMath.isPowerOfTwo(textureHeight)) {
+            outputTexture.generateMipmap(MipmapHint.NICEST);
+        }
+
+        command.shaderProgram = reproject.shaderProgram;
+        command.outputTexture = outputTexture;
+        command.uniformMap = uniformMap;
+        command.vertexArray = reproject.vertexArray;
+    }
 
     var float32ArrayScratch = FeatureDetection.supportsTypedArrays() ? new Float32Array(2 * 64) : undefined;
 

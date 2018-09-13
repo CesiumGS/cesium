@@ -1,5 +1,6 @@
 define([
         './Cartographic',
+        './Cartesian3',
         './Check',
         './defaultValue',
         './defined',
@@ -9,6 +10,7 @@ define([
         './Math'
     ], function(
         Cartographic,
+        Cartesian3,
         Check,
         defaultValue,
         defined,
@@ -869,6 +871,73 @@ define([
             length++;
         }
         result.length = length;
+        return result;
+    };
+
+    var cornerScratch = new Cartographic();
+    var unprojectedScratch = new Cartographic();
+    var projectedScratch = new Cartesian3();
+    var steps = 30; // TODO: maybe make this an arg?
+
+    //Gets extents of the rectangle in Wgs84
+    Rectangle.unproject = function(projectedRectangle, projection, result) {
+        result = defaultValue(result, new Rectangle());
+        result.west = Number.MAX_VALUE;
+        result.east = -Number.MAX_VALUE;
+        result.south = Number.MAX_VALUE;
+        result.north = -Number.MAX_VALUE;
+
+        var projectedCorner = Rectangle.southwest(projectedRectangle, cornerScratch);
+        var projectedWidthStep = projectedRectangle.width / (steps - 1);
+        var projectedHeightStep = projectedRectangle.height / (steps - 1);
+
+        var projected = projectedScratch;
+        var unprojected = unprojectedScratch;
+        for (var longIndex = 0; longIndex < steps; longIndex++) {
+            for (var latIndex = 0; latIndex < steps; latIndex++) {
+                projected.x = projectedCorner.longitude + projectedWidthStep * longIndex;
+                projected.y = projectedCorner.latitude + projectedHeightStep * latIndex;
+
+                projection.unproject(projected, unprojected);
+
+                result.west = Math.min(result.west, unprojected.longitude);
+                result.east = Math.max(result.east, unprojected.longitude);
+                result.south = Math.min(result.south, unprojected.latitude);
+                result.north = Math.max(result.north, unprojected.latitude);
+            }
+        }
+
+        return result;
+    };
+
+    // Gets the extents of the rectangle in the projection
+    Rectangle.project = function(rectangle, projection, result) {
+        result = defaultValue(result, new Rectangle());
+        result.west = Number.MAX_VALUE;
+        result.east = -Number.MAX_VALUE;
+        result.south = Number.MAX_VALUE;
+        result.north = -Number.MAX_VALUE;
+
+        var projectedCorner = Rectangle.southwest(rectangle, cornerScratch);
+        var projectedWidthStep = rectangle.width / (steps - 1);
+        var projectedHeightStep = rectangle.height / (steps - 1);
+
+        var projected = projectedScratch;
+        var unprojected = unprojectedScratch;
+        for (var longIndex = 0; longIndex < steps; longIndex++) {
+            for (var latIndex = 0; latIndex < steps; latIndex++) {
+                unprojected.longitude = projectedCorner.longitude + projectedWidthStep * longIndex;
+                unprojected.latitude = projectedCorner.latitude + projectedHeightStep * latIndex;
+
+                projection.project(unprojected, projected);
+
+                result.west = Math.min(result.west, projected.x);
+                result.east = Math.max(result.east, projected.x);
+                result.south = Math.min(result.south, projected.y);
+                result.north = Math.max(result.north, projected.y);
+            }
+        }
+
         return result;
     };
 
