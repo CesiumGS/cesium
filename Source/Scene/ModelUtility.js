@@ -53,8 +53,10 @@ define([
      * @param {Object} model The model to update.
      */
     ModelUtility.updateForwardAxis = function(model) {
-        if (model.gltf.asset.version !== '2.0') {
-            model._forwardAxis = Axis.X;
+        var cachedSourceVersion = model.gltf.extras.sourceVersion;
+        if ((defined(cachedSourceVersion) && cachedSourceVersion !== '2.0')
+                || model.gltf.asset !== '2.0') {
+            model._gltfForwardAxis = Axis.X;
         }
     };
 

@@ -621,7 +621,6 @@ define([
         };
         this._cachedRendererResources = undefined;
         this._loadRendererResourcesFromCache = false;
-        this._updatedGltfVersion = false;
 
         this._dequantizeInShader = defaultValue(options.dequantizeInShader, true);
         this._decodedData = {};
@@ -1416,16 +1415,8 @@ define([
                 var bufferId = bufferView.buffer;
                 var buffer = buffers[bufferId];
                 var source = getStringFromTypedArray(buffer.extras._pipeline.source, bufferView.byteOffset, bufferView.byteLength);
-                // model._loadResources.shaders[id] = {
-                //     source : source,
-                //     bufferView : undefined
-                // };
                 sourceShaders[id] = source;
             } else if (defined(shader.extras._pipeline.source)) {
-                // model._loadResources.shaders[id] = {
-                //     source: shader.extras._pipeline.source,
-                //     bufferView : undefined
-                // };
                 sourceShaders[id] = shader.extras._pipeline.source;
             } else {
                 ++model._loadResources.pendingShaderLoads;
@@ -2901,8 +2892,7 @@ define([
                 }
 
                 offset = (ix.byteOffset / IndexDatatype.getSizeInBytes(ix.componentType));  // glTF has offset in bytes.  Cesium has offsets in indices
-            }
-            else {
+            } else {
                 var positions = accessors[primitive.attributes.POSITION];
                 count = positions.count;
                 offset = 0;
@@ -4063,14 +4053,18 @@ define([
 
                     // glTF pipeline updates, not needed if loading from cache
                     if (!this._loadRendererResourcesFromCache) {
-                        updateVersion(this.gltf);
-                        addDefaults(this.gltf);
+                        var gltf = this.gltf;
+                        // Add the original version so it remains cached
+                        gltf.extras.sourceVersion = gltf.asset.version;
+
+                        updateVersion(gltf);
+                        addDefaults(gltf);
 
                         var options = {
                             addBatchIdToGeneratedShaders: this._addBatchIdToGeneratedShaders
                         };
-                        processModelMaterialsCommon(this.gltf, options);
-                        processPbrMetallicRoughness(this.gltf, options);
+                        processModelMaterialsCommon(gltf, options);
+                        processPbrMetallicRoughness(gltf, options);
                     }
 
                     // Skip dequantizing in the shader if not encoded
