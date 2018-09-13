@@ -22,7 +22,8 @@ define([
      * @param {Number} [options.radius=1.0] The radius of the sphere.
      * @param {Number} [options.stackPartitions=10] The count of stacks for the sphere (1 greater than the number of parallel lines).
      * @param {Number} [options.slicePartitions=8] The count of slices for the sphere (Equal to the number of radial lines).
-     * @param {Number} [options.subdivisions=200] The number of points per line, determining the granularity of the curvature .
+     * @param {Number} [options.subdivisions=200] The number of points per line, determining the granularity of the curvature.
+     * @param {Number} [options.width=2] The outline width in pixels.
      *
      * @exception {DeveloperError} options.stackPartitions must be greater than or equal to one.
      * @exception {DeveloperError} options.slicePartitions must be greater than or equal to zero.
@@ -40,10 +41,11 @@ define([
         var radius = defaultValue(options.radius, 1.0);
         var radii = new Cartesian3(radius, radius, radius);
         var ellipsoidOptions = {
-                radii: radii,
-                stackPartitions: options.stackPartitions,
-                slicePartitions: options.slicePartitions,
-                subdivisions: options.subdivisions
+            radii: radii,
+            stackPartitions: options.stackPartitions,
+            slicePartitions: options.slicePartitions,
+            subdivisions: options.subdivisions,
+            width : options.width
         };
 
         this._ellipsoidGeometry = new EllipsoidOutlineGeometry(ellipsoidOptions);
@@ -79,7 +81,8 @@ define([
         radii : new Cartesian3(),
         stackPartitions : undefined,
         slicePartitions : undefined,
-        subdivisions : undefined
+        subdivisions : undefined,
+        width : undefined
     };
 
     /**
@@ -95,6 +98,7 @@ define([
         scratchOptions.stackPartitions = ellipsoidGeometry._stackPartitions;
         scratchOptions.slicePartitions = ellipsoidGeometry._slicePartitions;
         scratchOptions.subdivisions = ellipsoidGeometry._subdivisions;
+        scratchOptions.width = ellipsoidGeometry._width;
 
         if (!defined(result)) {
             scratchOptions.radius = ellipsoidGeometry._radii.x;

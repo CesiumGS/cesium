@@ -9,8 +9,11 @@ define([
         './Geometry',
         './GeometryAttribute',
         './GeometryAttributes',
+        './GeometryInstance',
+        './GeometryPipeline',
         './OrthographicFrustum',
         './PerspectiveFrustum',
+        './PolylineGeometry',
         './PrimitiveType',
         './Quaternion'
     ], function(
@@ -24,8 +27,11 @@ define([
         Geometry,
         GeometryAttribute,
         GeometryAttributes,
+        GeometryInstance,
+        GeometryPipeline,
         OrthographicFrustum,
         PerspectiveFrustum,
+        PolylineGeometry,
         PrimitiveType,
         Quaternion) {
     'use strict';
@@ -43,6 +49,7 @@ define([
      * @param {PerspectiveFrustum|OrthographicFrustum} options.frustum The frustum.
      * @param {Cartesian3} options.origin The origin of the frustum.
      * @param {Quaternion} options.orientation The orientation of the frustum.
+     * @param {Number} [options.width=2] The outline width in pixels.
      */
     function FrustumOutlineGeometry(options) {
         //>>includeStart('debug', pragmas.debug);
@@ -55,6 +62,7 @@ define([
         var frustum = options.frustum;
         var orientation = options.orientation;
         var origin = options.origin;
+        var width = defaultValue(options.width, 2.0);
 
         // This is private because it is used by DebugCameraPrimitive to draw a multi-frustum by
         // creating multiple FrustumOutlineGeometrys. This way the near plane of one frustum doesn't overlap
@@ -76,13 +84,14 @@ define([
         this._origin = Cartesian3.clone(origin);
         this._orientation = Quaternion.clone(orientation);
         this._drawNearPlane = drawNearPlane;
+        this._width = width;
         this._workerName = 'createFrustumOutlineGeometry';
 
         /**
          * The number of elements used to pack the object into an array.
          * @type {Number}
          */
-        this.packedLength = 2 + frustumPackedLength + Cartesian3.packedLength + Quaternion.packedLength;
+        this.packedLength = 3 + frustumPackedLength + Cartesian3.packedLength + Quaternion.packedLength;
     }
 
     /**
@@ -119,7 +128,8 @@ define([
         startingIndex += Cartesian3.packedLength;
         Quaternion.pack(value._orientation, array, startingIndex);
         startingIndex += Quaternion.packedLength;
-        array[startingIndex] = value._drawNearPlane ? 1.0 : 0.0;
+        array[startingIndex++] = value._drawNearPlane ? 1.0 : 0.0;
+        array[startingIndex] = value._width;
 
         return array;
     };
@@ -158,14 +168,16 @@ define([
         startingIndex += Cartesian3.packedLength;
         var orientation = Quaternion.unpack(array, startingIndex, scratchPackQuaternion);
         startingIndex += Quaternion.packedLength;
-        var drawNearPlane = array[startingIndex] === 1.0;
+        var drawNearPlane = array[startingIndex++] === 1.0;
+        var width = array[startingIndex];
 
         if (!defined(result)) {
             return new FrustumOutlineGeometry({
                 frustum : frustum,
                 origin : origin,
                 orientation : orientation,
-                _drawNearPlane : drawNearPlane
+                _drawNearPlane : drawNearPlane,
+                width : width
             });
         }
 
@@ -176,9 +188,13 @@ define([
         result._origin = Cartesian3.clone(origin, result._origin);
         result._orientation = Quaternion.clone(orientation, result._orientation);
         result._drawNearPlane = drawNearPlane;
+        result._width = width;
 
         return result;
     };
+
+    var nearFarScratch = new Array(5);
+    var sidesScratch = new Array(2);
 
     /**
      * Computes the geometric representation of a frustum outline, including its vertices, indices, and a bounding sphere.
@@ -192,61 +208,51 @@ define([
         var origin = frustumGeometry._origin;
         var orientation = frustumGeometry._orientation;
         var drawNearPlane = frustumGeometry._drawNearPlane;
+        var width = frustumGeometry._width;
 
         var positions = new Float64Array(3 * 4 * 2);
         FrustumGeometry._computeNearFarPlanes(origin, orientation, frustumType, frustum, positions);
 
-        var attributes = new GeometryAttributes({
-            position : new GeometryAttribute({
-                componentDatatype : ComponentDatatype.DOUBLE,
-                componentsPerAttribute : 3,
-                values : positions
-            })
-        });
-
-        var offset;
         var index;
-
-        var numberOfPlanes = drawNearPlane ? 2 : 1;
-        var indices = new Uint16Array(8 * (numberOfPlanes + 1));
+        var instances = [];
 
         // Build the near/far planes
         var i = drawNearPlane ? 0 : 1;
         for (; i < 2; ++i) {
-            offset = drawNearPlane ? i * 8 : 0;
             index = i * 4;
 
-            indices[offset] = index;
-            indices[offset + 1] = index + 1;
-            indices[offset + 2] = index + 1;
-            indices[offset + 3] = index + 2;
-            indices[offset + 4] = index + 2;
-            indices[offset + 5] = index + 3;
-            indices[offset + 6] = index + 3;
-            indices[offset + 7] = index;
+            var nearFarPositions = nearFarScratch;
+            nearFarPositions[0] = Cartesian3.unpack(positions, index * 3, nearFarPositions[0]);
+            nearFarPositions[1] = Cartesian3.unpack(positions, (index + 1) * 3, nearFarPositions[1]);
+            nearFarPositions[2] = Cartesian3.unpack(positions, (index + 2) * 3, nearFarPositions[2]);
+            nearFarPositions[3] = Cartesian3.unpack(positions, (index + 3) * 3, nearFarPositions[3]);
+            nearFarPositions[4] = Cartesian3.unpack(positions, index * 3, nearFarPositions[4]);
+
+            instances.push(new GeometryInstance({
+                geometry : PolylineGeometry.createGeometry(new PolylineGeometry({
+                    positions : nearFarPositions,
+                    followSurface : false,
+                    width : width
+                }))
+            }));
         }
 
         // Build the sides of the frustums
-        for (i = 0; i < 2; ++i) {
-            offset = (numberOfPlanes + i) * 8;
-            index = i * 4;
+        for (i = 0; i < 4; ++i) {
+            var sidePositions = sidesScratch;
+            sidePositions[0] = Cartesian3.unpack(positions, i * 3, sidePositions[0]);
+            sidePositions[1] = Cartesian3.unpack(positions, (i + 4) * 3, sidePositions[1]);
 
-            indices[offset] = index;
-            indices[offset + 1] = index + 4;
-            indices[offset + 2] = index + 1;
-            indices[offset + 3] = index + 5;
-            indices[offset + 4] = index + 2;
-            indices[offset + 5] = index + 6;
-            indices[offset + 6] = index + 3;
-            indices[offset + 7] = index + 7;
+            instances.push(new GeometryInstance({
+                geometry : PolylineGeometry.createGeometry(new PolylineGeometry({
+                    positions : sidePositions,
+                    followSurface : false,
+                    width : width
+                }))
+            }));
         }
 
-        return new Geometry({
-            attributes : attributes,
-            indices : indices,
-            primitiveType : PrimitiveType.LINES,
-            boundingSphere : BoundingSphere.fromVertices(positions)
-        });
+        return GeometryPipeline.combineInstances(instances)[0];
     };
 
     return FrustumOutlineGeometry;

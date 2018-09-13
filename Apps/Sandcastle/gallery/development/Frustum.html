@@ -78,9 +78,7 @@ scene.primitives.add(new Cesium.Primitive({
             color : Cesium.ColorGeometryInstanceAttribute.fromColor(new Cesium.Color(0.0, 0.0, 0.0, 1.0))
         }
     }),
-    appearance : new Cesium.PerInstanceColorAppearance({
-        flat : true
-    })
+    appearance : new Cesium.PolylineColorAppearance()
 }));
 
 frustumPrimitive.readyPromise.then(function(primitive) {
