@@ -1100,7 +1100,7 @@ define([
     var edgeDetailsScratch = new TerrainTileEdgeDetails();
 
     function addEdgeMesh(terrainFillMesh, ellipsoid, edgeTile, edgeMesh, tileEdge, stride, tileVertices) {
-        var terrainMesh = edgeMesh.mesh ? edgeMesh.mesh : edgeMesh;
+        var terrainMesh = edgeMesh;
 
         edgeDetailsScratch.clear();
         var edgeDetails = terrainMesh.getEdgeVertices(tileEdge, edgeTile.rectangle, terrainFillMesh.tile.rectangle, ellipsoid, edgeDetailsScratch);
@@ -1162,7 +1162,7 @@ define([
                 continue;
             }
 
-            var terrainMesh = mesh.mesh ? mesh.mesh : mesh;
+            var terrainMesh = mesh;
 
             var indices;
             switch (edge) {
@@ -1194,7 +1194,7 @@ define([
             return undefined;
         }
 
-        var terrainMesh = mesh.mesh ? mesh.mesh : mesh;
+        var terrainMesh = mesh;
 
         var indices;
         switch (edge) {

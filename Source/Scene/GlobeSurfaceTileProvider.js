@@ -2048,7 +2048,7 @@ define([
 
             var uniformMapProperties = uniformMap.properties;
             Cartesian4.clone(initialColor, uniformMapProperties.initialColor);
-            uniformMapProperties.isFill = surfaceTile.vertexArray === undefined;
+            //uniformMapProperties.isFill = surfaceTile.vertexArray === undefined;
             uniformMapProperties.oceanNormalMap = oceanNormalMap;
             uniformMapProperties.lightingFadeDistance.x = tileProvider.lightingFadeOutDistance;
             uniformMapProperties.lightingFadeDistance.y = tileProvider.lightingFadeInDistance;
