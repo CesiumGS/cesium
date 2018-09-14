@@ -421,7 +421,7 @@ define([
 
         content._modelInstanceCollection._rtcCenterTransform = Matrix4.IDENTITY;
         if (defined(rtcCenter)) {
-            content._modelInstanceCollection._rtcCenterTransform = Matrix4.fromTranslation(Cartesian3.fromArray(rtcCenterArray));
+            content._modelInstanceCollection._rtcCenterTransform = Transforms.eastNorthUpToFixedFrame(Cartesian3.fromArray(rtcCenterArray));
         }
 
     }
