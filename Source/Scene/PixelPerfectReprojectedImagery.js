@@ -1,33 +1,25 @@
 define([
         '../Core/Check',
-        '../Core/Color',
-        '../Core/ColorGeometryInstanceAttribute',
         '../Core/Credit',
         '../Core/defined',
         '../Core/FeatureDetection',
-        '../Core/GeometryInstance',
         '../Core/getAbsoluteUri',
         '../Core/Rectangle',
-        '../Core/RectangleGeometry',
         '../Core/Resource',
         '../Core/TaskProcessor',
-        './PerInstanceColorAppearance',
-        './Primitive'
+        '../Core/SerializedMapProjection',
+        './BitmapImageryProvider'
     ], function(
         Check,
-        Color,
-        ColorGeometryInstanceAttribute,
         Credit,
         defined,
         FeatureDetection,
-        GeometryInstance,
         getAbsoluteUri,
         Rectangle,
-        RectangleGeometry,
         Resource,
         TaskProcessor,
-        PerInstanceColorAppearance,
-        Primitive) {
+        SerializedMapProjection,
+        BitmapImageryProvider) {
     'use strict';
 
     /**
@@ -72,9 +64,11 @@ define([
         this._renderingBoundsScratch = new Rectangle();
         this._visibleRenderingBounds = new Rectangle();
 
-        // Primitives for debugging plumbing
-        this._visiblePrimitive;
-        this._standbyPrimitive;
+        this._visibleImageryLayer = undefined;
+        this._reprojectionPromise = undefined;
+        this._iteration = 0;
+
+        this._serializedMapProjection = new SerializedMapProjection(options.projection);
 
         var that = this;
 
@@ -109,6 +103,8 @@ define([
     PixelPerfectReprojectedImagery.prototype.uploadImageToWorker = function(image) {
         // Read pixels and upload to web worker
         var canvas = document.createElement('canvas');
+        canvas.width = image.width;
+        canvas.height = image.height;
         var context = canvas.getContext('2d');
         context.drawImage(image, 0, 0);
         var imagedata = context.getImageData(0, 0, image.width, image.height);
@@ -153,50 +149,39 @@ define([
             return;
         }
 
-        if (defined(this._visiblePrimitive) && Rectangle.equals(renderingBounds, this._visibleRenderingBounds)) {
+        if (defined(this._visibleImageryLayer) && Rectangle.equals(renderingBounds, this._visibleRenderingBounds)) {
             return;
         }
 
-        // DEBUG: Create a primitive
-        var redRectangleInstance = new GeometryInstance({
-            geometry : new RectangleGeometry({
-                rectangle : renderingBounds,
-                vertexFormat : PerInstanceColorAppearance.VERTEX_FORMAT
-            }),
-            attributes: {
-                color: ColorGeometryInstanceAttribute.fromColor(new Color(1.0, 0.0, 0.0, 0.5))
-            }
-        });
-        var standbyPrimitive = new Primitive({
-            geometryInstances : [redRectangleInstance],
-            appearance : new PerInstanceColorAppearance({
-                closed : true
-            }),
-            show : false
-        });
-
-        if (defined(this._standbyPrimitive)) {
-            scene.primitives.remove(this._standbyPrimitive);
-        }
-        this._standbyPrimitive = standbyPrimitive;
-        scene.primitives.add(standbyPrimitive);
-
         var that = this;
-        standbyPrimitive.readyPromise
-            .then(function() {
-                if (defined(that._visiblePrimitive)) {
-                    scene.primitives.remove(that._visiblePrimitive);
-                }
-
-                that._visiblePrimitive = standbyPrimitive;
-                that._visibleRenderingBounds = Rectangle.clone(renderingBounds, that._visibleRenderingBounds);
-                standbyPrimitive.show = true;
-                that._standbyPrimitive = undefined;
-            })
-            .otherwise(function(e) {
-                console.log(e);
-                debugger;
-            });
+        this._iteration++;
+        var iteration = this._iteration;
+        this._taskProcessor.scheduleTask({
+            reproject : true,
+            width : 1024,
+            height : 1024,
+            url : this._url,
+            serializedMapProjection : this._serializedMapProjection,
+            rectangle : renderingBounds,
+            projectedRectangle : this._projectedRectangle
+        })
+        .then(function(reprojectedBitmap) {
+            if (that._iteration !== iteration) {
+                return;
+            }
+            if (defined(that._visibleImageryLayer)) {
+                scene.imageryLayers.remove(that._visibleImageryLayer);
+            }
+            that._visibleImageryLayer = scene.imageryLayers.addImageryProvider(new BitmapImageryProvider({
+                bitmap : reprojectedBitmap,
+                rectangle : renderingBounds,
+                credit : that._credit
+            }));
+            that._visibleRenderingBounds = Rectangle.clone(renderingBounds, that._visibleRenderingBounds);
+        })
+        .otherwise(function(e) {
+            console.log(e); // TODO: handle or throw?
+        });
     };
 
     return PixelPerfectReprojectedImagery;

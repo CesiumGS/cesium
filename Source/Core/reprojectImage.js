@@ -33,15 +33,15 @@ define([
         var targetWidth = target.width;
         var targetHeight = target.height;
 
-        var cartographicWidth = Rectangle.width(rectangle);
-        var cartographicHeight = Rectangle.height(rectangle);
+        var cartographicWidth = Rectangle.computeWidth(rectangle);
+        var cartographicHeight = Rectangle.computeHeight(rectangle);
         var longitudeStep = cartographicWidth / targetWidth;
         var latitudeStep = cartographicHeight / targetHeight;
         var west = rectangle.west;
-        var south = rectangle.south;
+        var north = rectangle.north;
 
-        var inverseProjectedWidth = 1.0 / Rectangle.width(projectedRectangle);
-        var inverseProjectedHeight = 1.0 / Rectangle.height(projectedRectangle);
+        var inverseProjectedWidth = 1.0 / Rectangle.computeWidth(projectedRectangle);
+        var inverseProjectedHeight = 1.0 / Rectangle.computeHeight(projectedRectangle);
         var projectedWidthOrigin = projectedRectangle.west;
         var projectedHeightOrigin = projectedRectangle.south;
 
@@ -52,8 +52,8 @@ define([
 
         for (var y = 0; y < targetHeight; y++) {
             for (var x = 0; x < targetWidth; x++) {
-                cartographic.longitude = x * longitudeStep + west;
-                cartographic.latitudeStep = y * latitudeStep + south;
+                cartographic.longitude = (x + 0.5) * longitudeStep + west;
+                cartographic.latitude = north - (y + 0.5) * latitudeStep;
 
                 targetPixcoord.x = x;
                 targetPixcoord.y = y;
@@ -67,7 +67,7 @@ define([
                 }
 
                 sourceTexcoord.x = (projected.x - projectedWidthOrigin) * inverseProjectedWidth;
-                sourceTexcoord.y = (projected.y - projectedHeightOrigin) * inverseProjectedHeight;
+                sourceTexcoord.y = 1.0 - (projected.y - projectedHeightOrigin) * inverseProjectedHeight;
 
                 source.texture2D(sourceTexcoord, color);
                 target.writePixel(targetPixcoord, color);

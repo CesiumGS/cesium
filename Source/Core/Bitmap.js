@@ -25,7 +25,7 @@ define([], function() {
         result.red = data[index];
         result.green = data[index + 1];
         result.blue = data[index + 2];
-        result.alpha = channelCount === 4 ? data[index] : 255;
+        result.alpha = channelCount === 4 ? data[index + 3] : 255;
 
         return result;
     };
@@ -44,7 +44,7 @@ define([], function() {
         if (channelCount === 4) {
             data[index + 3] = color.alpha;
         }
-    }
+    };
 
     Bitmap.prototype.clear = function() {
         this.data.fill(0);
