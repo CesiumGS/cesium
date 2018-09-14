@@ -13,9 +13,12 @@ define([
         './Geometry',
         './GeometryAttribute',
         './GeometryAttributes',
+        './GeometryInstance',
+        './GeometryPipeline',
         './IndexDatatype',
         './Math',
         './PolygonPipeline',
+        './PolylineGeometry',
         './PolylineVolumeGeometryLibrary',
         './PrimitiveType',
         './WindingOrder'
@@ -34,64 +37,73 @@ define([
         Geometry,
         GeometryAttribute,
         GeometryAttributes,
+        GeometryInstance,
+        GeometryPipeline,
         IndexDatatype,
         CesiumMath,
         PolygonPipeline,
+        PolylineGeometry,
         PolylineVolumeGeometryLibrary,
         PrimitiveType,
         WindingOrder) {
     'use strict';
 
-    function computeAttributes(positions, shape) {
-        var attributes = new GeometryAttributes();
-        attributes.position = new GeometryAttribute({
-            componentDatatype : ComponentDatatype.DOUBLE,
-            componentsPerAttribute : 3,
-            values : positions
-        });
+    var singleLinesScratch = [new Cartesian3(), new Cartesian3()];
 
+    function computeAttributes(positions, shape, width) {
         var shapeLength = shape.length;
-        var vertexCount = attributes.position.values.length / 3;
-        var positionLength = positions.length / 3;
-        var shapeCount = positionLength / shapeLength;
-        var indices = IndexDatatype.createTypedArray(vertexCount, 2 * shapeLength * (shapeCount + 1));
-        var i, j;
-        var index = 0;
-        i = 0;
-        var offset = i * shapeLength;
-        for (j = 0; j < shapeLength - 1; j++) {
-            indices[index++] = j + offset;
-            indices[index++] = j + offset + 1;
-        }
-        indices[index++] = shapeLength - 1 + offset;
-        indices[index++] = offset;
+        var shapeCount = positions.length / (3 * shapeLength);
 
-        i = shapeCount - 1;
-        offset = i * shapeLength;
-        for (j = 0; j < shapeLength - 1; j++) {
-            indices[index++] = j + offset;
-            indices[index++] = j + offset + 1;
-        }
-        indices[index++] = shapeLength - 1 + offset;
-        indices[index++] = offset;
+        var j;
+        var offset = shapeLength;
+        var linePositions = [];
 
-        for (i = 0; i < shapeCount - 1; i++) {
+        for (j = 0; j < shapeLength; j++) {
+            linePositions.push(Cartesian3.fromArray(positions, (j + offset) * 3));
+        }
+        linePositions.push(linePositions[0]);
+
+        var instances = [];
+        instances.push(new GeometryInstance({
+            geometry : PolylineGeometry.createGeometry(new PolylineGeometry({
+                positions : linePositions,
+                followSurface : false,
+                width : width
+            }))
+        }));
+
+        offset = (shapeCount - 1) * shapeLength;
+        for (j = 0; j < shapeLength; j++) {
+            Cartesian3.fromArray(positions, (j + offset) * 3, linePositions[j]);
+        }
+        linePositions[shapeLength] = linePositions[0];
+
+        instances.push(new GeometryInstance({
+            geometry : PolylineGeometry.createGeometry(new PolylineGeometry({
+                positions : linePositions,
+                followSurface : false,
+                width : width
+            }))
+        }));
+
+        for (var i = 1; i < shapeCount - 1; i++) {
             var firstOffset = shapeLength * i;
             var secondOffset = firstOffset + shapeLength;
             for (j = 0; j < shapeLength; j++) {
-                indices[index++] = j + firstOffset;
-                indices[index++] = j + secondOffset;
+                var singleLine = singleLinesScratch;
+                Cartesian3.fromArray(positions, (j + firstOffset) * 3, singleLine[0]);
+                Cartesian3.fromArray(positions, (j + secondOffset) * 3, singleLine[1]);
+                instances.push(new GeometryInstance({
+                    geometry : PolylineGeometry.createGeometry(new PolylineGeometry({
+                        positions : singleLine,
+                        followSurface : false,
+                        width : width
+                    }))
+                }));
             }
         }
 
-        var geometry = new Geometry({
-            attributes : attributes,
-            indices : IndexDatatype.createTypedArray(vertexCount, indices),
-            boundingSphere : BoundingSphere.fromVertices(positions),
-            primitiveType : PrimitiveType.LINES
-        });
-
-        return geometry;
+        return GeometryPipeline.combineInstances(instances)[0];
     }
 
     /**
@@ -106,6 +118,7 @@ define([
      * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid to be used as a reference.
      * @param {Number} [options.granularity=CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
      * @param {CornerType} [options.cornerType=CornerType.ROUNDED] Determines the style of the corners.
+     * @param {Number} [options.width=2] The outline width in pixels.
      *
      * @see PolylineVolumeOutlineGeometry#createGeometry
      *
@@ -131,6 +144,7 @@ define([
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
         var positions = options.polylinePositions;
         var shape = options.shapePositions;
+        var width = defaultValue(options.width, 2.0);
 
         //>>includeStart('debug', pragmas.debug);
         if (!defined(positions)) {
@@ -146,6 +160,7 @@ define([
         this._ellipsoid = Ellipsoid.clone(defaultValue(options.ellipsoid, Ellipsoid.WGS84));
         this._cornerType = defaultValue(options.cornerType, CornerType.ROUNDED);
         this._granularity = defaultValue(options.granularity, CesiumMath.RADIANS_PER_DEGREE);
+        this._width = width;
         this._workerName = 'createPolylineVolumeOutlineGeometry';
 
         var numComponents = 1 + positions.length * Cartesian3.packedLength;
@@ -155,7 +170,7 @@ define([
          * The number of elements used to pack the object into an array.
          * @type {Number}
          */
-        this.packedLength = numComponents + Ellipsoid.packedLength + 2;
+        this.packedLength = numComponents + Ellipsoid.packedLength + 3;
     }
 
     /**
@@ -201,7 +216,8 @@ define([
         startingIndex += Ellipsoid.packedLength;
 
         array[startingIndex++] = value._cornerType;
-        array[startingIndex]   = value._granularity;
+        array[startingIndex++] = value._granularity;
+        array[startingIndex] = value._width;
 
         return array;
     };
@@ -213,7 +229,8 @@ define([
         ellipsoid : scratchEllipsoid,
         height : undefined,
         cornerType : undefined,
-        granularity : undefined
+        granularity : undefined,
+        width : undefined
     };
 
     /**
@@ -253,13 +270,15 @@ define([
         startingIndex += Ellipsoid.packedLength;
 
         var cornerType = array[startingIndex++];
-        var granularity = array[startingIndex];
+        var granularity = array[startingIndex++];
+        var width = array[startingIndex];
 
         if (!defined(result)) {
             scratchOptions.polylinePositions = positions;
             scratchOptions.shapePositions = shape;
             scratchOptions.cornerType = cornerType;
             scratchOptions.granularity = granularity;
+            scratchOptions.width = width;
             return new PolylineVolumeOutlineGeometry(scratchOptions);
         }
 
@@ -268,6 +287,7 @@ define([
         result._ellipsoid = Ellipsoid.clone(ellipsoid, result._ellipsoid);
         result._cornerType = cornerType;
         result._granularity = granularity;
+        result._width = width;
 
         return result;
     };
@@ -296,7 +316,7 @@ define([
         var boundingRectangle = BoundingRectangle.fromPoints(shape2D, brScratch);
 
         var computedPositions = PolylineVolumeGeometryLibrary.computePositions(cleanPositions, shape2D, boundingRectangle, polylineVolumeOutlineGeometry, false);
-        return computeAttributes(computedPositions, shape2D);
+        return computeAttributes(computedPositions, shape2D, polylineVolumeOutlineGeometry._width);
     };
 
     return PolylineVolumeOutlineGeometry;

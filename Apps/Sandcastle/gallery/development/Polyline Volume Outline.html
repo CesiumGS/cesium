@@ -90,12 +90,7 @@ var starOutline = new Cesium.GeometryInstance({
 // Add all instances to primitives.
 scene.primitives.add(new Cesium.Primitive({
     geometryInstances : [boxOutline, starOutline],
-    appearance : new Cesium.PerInstanceColorAppearance({
-        flat : true,
-        renderState : {
-            lineWidth : Math.min(2.0, scene.maximumAliasedLineWidth)
-        }
-    })
+    appearance : new Cesium.PolylineColorAppearance()
 }));
 //Sandcastle_End
     Sandcastle.finishedLoading();
