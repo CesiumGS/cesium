@@ -4,6 +4,7 @@ define([
         '../Core/ColorGeometryInstanceAttribute',
         '../Core/Credit',
         '../Core/defined',
+        '../Core/FeatureDetection',
         '../Core/GeometryInstance',
         '../Core/getAbsoluteUri',
         '../Core/Rectangle',
@@ -18,6 +19,7 @@ define([
         ColorGeometryInstanceAttribute,
         Credit,
         defined,
+        FeatureDetection,
         GeometryInstance,
         getAbsoluteUri,
         Rectangle,
@@ -75,11 +77,21 @@ define([
         this._standbyPrimitive;
 
         var that = this;
-        var resource = Resource.createIfNeeded(absoluteUrl);
-        resource.fetchImage()
-            .then(function(image) {
-                return that.uploadImageToWorker(image);
-            })
+
+        var startupPromise;
+        if (FeatureDetection.isChrome() && FeatureDetection.chromeVersion()[0] >= 69) {
+            startupPromise = taskProcessor.scheduleTask({
+                load : true,
+                url : absoluteUrl
+            }); // TODO: check for errors?
+        } else {
+            var resource = Resource.createIfNeeded(absoluteUrl);
+            startupPromise = resource.fetchImage()
+                .then(function(image) {
+                    return that.uploadImageToWorker(image);
+                });
+        }
+        startupPromise
             .then(function() {
                 // Listen for camera changes
                 scene.camera.moveEnd.addEventListener(function() {
@@ -102,7 +114,7 @@ define([
         var imagedata = context.getImageData(0, 0, image.width, image.height);
 
         return this._taskProcessor.scheduleTask({
-            load : true,
+            upload : true,
             url : this._url,
             imageData : imagedata
         });
