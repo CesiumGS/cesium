@@ -123,10 +123,11 @@ define([
      * @exception {DeveloperError} distanceDisplayCondition.far must be greater than distanceDisplayCondition.near
      *
      * @example
+     * var distanceDisplayCondition = new Cesium.DistanceDisplayCondition(100.0, 10000.0);
      * var instance = new Cesium.GeometryInstance({
      *   geometry : geometry,
      *   attributes : {
-     *     color : Cesium.DistanceDisplayConditionGeometryInstanceAttribute.fromDistanceDisplayCondition(distanceDisplayCondition),
+     *     distanceDisplayCondition : Cesium.DistanceDisplayConditionGeometryInstanceAttribute.fromDistanceDisplayCondition(distanceDisplayCondition)
      *   }
      * });
      */
