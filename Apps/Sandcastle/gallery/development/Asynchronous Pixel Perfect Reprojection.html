@@ -36,7 +36,6 @@ var viewer = new Cesium.Viewer('cesiumContainer', {
     imageryProvider : Cesium.createTileMapServiceImageryProvider({
         url : Cesium.buildModuleUrl('Assets/Textures/NaturalEarthII')
     }),
-    //mapProjection : mollweide,
     sceneMode : Cesium.SceneMode.SCENE2D
 });
 
@@ -70,6 +69,32 @@ var pixelPerfectReprojection = new Cesium.PixelPerfectReprojectedImagery({
     projectedRectangle : new Cesium.Rectangle(-8309084.8709259927272797,-6474832.4202510649338365,-2331162.9914685478433967,1661637.9380288750398904),
     projection : new Cesium.Proj4Projection('+proj=moll +lon_0=0 +x_0=0 +y_0=0 +a=6371000 +b=6371000 +units=m +no_defs'),
     scene : viewer.scene
+});
+
+var mollweideLayer = layers.addImageryProvider(new Cesium.SingleTileProjectedImageryProvider({
+    url : '../../SampleData/Brazil_elevation_ESRI53009.png',
+    // bounds copied out of QGIS
+    rectangle : new Cesium.Rectangle(-8309084.8709259927272797,-6474832.4202510649338365,-2331162.9914685478433967,1661637.9380288750398904),
+    projection : mollweide
+}));
+
+mollweideLayer.show = false;
+
+Sandcastle.addToolbarButton('Toggle vertex warp mollweide layer', function() {
+    mollweideLayer.show = !mollweideLayer.show;
+});
+
+var mollweideLayerDebug = layers.addImageryProvider(new Cesium.SingleTileProjectedImageryProvider({
+    url : '../../SampleData/Brazil_grid_ESRI53009.png',
+    // bounds copied out of QGIS
+    rectangle : new Cesium.Rectangle(-8309084.8709259927272797,-6474832.4202510649338365,-2331162.9914685478433967,1661637.9380288750398904),
+    projection : mollweide
+}));
+
+mollweideLayerDebug.show = false;
+
+Sandcastle.addToolbarButton('Toggle mollweide debug', function() {
+    mollweideLayerDebug.show = !mollweideLayerDebug.show;
 });
 
 //Sandcastle_End

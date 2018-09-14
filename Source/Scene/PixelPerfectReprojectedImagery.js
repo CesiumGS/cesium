@@ -62,9 +62,10 @@ define([
         this._taskProcessor = taskProcessor;
 
         this._renderingBoundsScratch = new Rectangle();
-        this._visibleRenderingBounds = new Rectangle();
+        this._localRenderingBounds = new Rectangle();
 
-        this._visibleImageryLayer = undefined;
+        this._fullCoverageImageryLayer = undefined;
+        this._localImageryLayer = undefined;
         this._reprojectionPromise = undefined;
         this._iteration = 0;
 
@@ -87,9 +88,32 @@ define([
         }
         startupPromise
             .then(function() {
+                // Create the full-coverage version
+                return taskProcessor.scheduleTask({
+                    reproject : true,
+                    width : 1024,
+                    height : 1024,
+                    url : that._url,
+                    serializedMapProjection : that._serializedMapProjection,
+                    rectangle : that._rectangle,
+                    projectedRectangle : that._projectedRectangle
+                });
+            })
+            .then(function(reprojectedBitmap) {
+                that._fullCoverageImageryLayer = scene.imageryLayers.addImageryProvider(new BitmapImageryProvider({
+                    bitmap : reprojectedBitmap,
+                    rectangle : that._rectangle,
+                    credit : that._credit
+                }));
+            })
+            .then(function() {
                 // Listen for camera changes
                 scene.camera.moveEnd.addEventListener(function() {
                     that.refresh(scene);
+                });
+
+                scene.camera.moveStart.addEventListener(function() {
+                    that.showApproximation();
                 });
 
                 // Refresh now that we're loaded
@@ -114,6 +138,13 @@ define([
             url : this._url,
             imageData : imagedata
         });
+    };
+
+    PixelPerfectReprojectedImagery.prototype.showApproximation = function() {
+        this._fullCoverageImageryLayer.show = true;
+        if (defined(this._localImageryLayer)) {
+            this._localImageryLayer.show = false;
+        }
     };
 
     PixelPerfectReprojectedImagery.prototype.refresh = function(scene) {
@@ -145,11 +176,21 @@ define([
         renderingBounds.south = Math.max(renderingBounds.south, imageryBounds.south);
         renderingBounds.north = Math.min(renderingBounds.north, imageryBounds.north);
 
+        // Don't bother projecting if the view is out-of-bounds
         if (renderingBounds.north < renderingBounds.south || renderingBounds.east < renderingBounds.west) {
             return;
         }
 
-        if (defined(this._visibleImageryLayer) && Rectangle.equals(renderingBounds, this._visibleRenderingBounds)) {
+        // Don't bother projecting if we're looking at the whole thing, just show the approximation
+        if (Rectangle.equals(renderingBounds, this._rectangle)) {
+            this.showApproximation();
+            return;
+        }
+
+        // Don't bother projecting if bounds haven't changed
+        if (defined(this._localImageryLayer) && Rectangle.equals(renderingBounds, this._localRenderingBounds)) {
+            this._fullCoverageImageryLayer.show = false;
+            this._localImageryLayer.show = true;
             return;
         }
 
@@ -169,15 +210,16 @@ define([
             if (that._iteration !== iteration) {
                 return;
             }
-            if (defined(that._visibleImageryLayer)) {
-                scene.imageryLayers.remove(that._visibleImageryLayer);
+            if (defined(that._localImageryLayer)) {
+                scene.imageryLayers.remove(that._localImageryLayer);
             }
-            that._visibleImageryLayer = scene.imageryLayers.addImageryProvider(new BitmapImageryProvider({
+            that._localImageryLayer = scene.imageryLayers.addImageryProvider(new BitmapImageryProvider({
                 bitmap : reprojectedBitmap,
                 rectangle : renderingBounds,
                 credit : that._credit
             }));
-            that._visibleRenderingBounds = Rectangle.clone(renderingBounds, that._visibleRenderingBounds);
+            that._fullCoverageImageryLayer.show = false;
+            that._localRenderingBounds = Rectangle.clone(renderingBounds, that._localRenderingBounds);
         })
         .otherwise(function(e) {
             console.log(e); // TODO: handle or throw?
