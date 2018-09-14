@@ -2,6 +2,7 @@ define([
         '../Core/Check',
         '../Core/Credit',
         '../Core/defined',
+        '../Core/defineProperties',
         '../Core/FeatureDetection',
         '../Core/getAbsoluteUri',
         '../Core/Rectangle',
@@ -13,6 +14,7 @@ define([
         Check,
         Credit,
         defined,
+        defineProperties,
         FeatureDetection,
         getAbsoluteUri,
         Rectangle,
@@ -71,6 +73,10 @@ define([
 
         this._serializedMapProjection = new SerializedMapProjection(options.projection);
 
+        this._freeze = false;
+
+        this._scene = scene;
+
         var that = this;
 
         var startupPromise;
@@ -109,10 +115,16 @@ define([
             .then(function() {
                 // Listen for camera changes
                 scene.camera.moveEnd.addEventListener(function() {
+                    if (that._freeze) {
+                        return;
+                    }
                     that.refresh(scene);
                 });
 
                 scene.camera.moveStart.addEventListener(function() {
+                    if (that._freeze) {
+                        return;
+                    }
                     that.showApproximation();
                 });
 
@@ -123,6 +135,21 @@ define([
                 console.log(error);
             });
         }
+
+    defineProperties(PixelPerfectReprojectedImagery.prototype, {
+        freeze : {
+            get: function() {
+                return this._freeze;
+            },
+            set: function(value) {
+                this._freeze = value;
+                if (value === false) {
+                    this.showApproximation();
+                    this.refresh(this._scene);
+                }
+            }
+        }
+    });
 
     PixelPerfectReprojectedImagery.prototype.uploadImageToWorker = function(image) {
         // Read pixels and upload to web worker
