@@ -419,6 +419,7 @@ define([
         content._modelInstanceCollection = new ModelInstanceCollection(collectionOptions);
         content._modelInstanceCollection._useBoundingSphereForClipping = !defined(rtcCenter) && !defined(content._tileset.root._header.transform);
 
+        content._modelInstanceCollection._rtcCenterTransform = Matrix4.IDENTITY;
         if (defined(rtcCenter)) {
             content._modelInstanceCollection._rtcCenterTransform = Matrix4.fromTranslation(Cartesian3.fromArray(rtcCenterArray));
         }

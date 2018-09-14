@@ -359,10 +359,13 @@ define([
         var rtcCenter = featureTable.getGlobalProperty('RTC_CENTER', ComponentDatatype.FLOAT, 3);
         if (defined(rtcCenter)) {
             content._rtcCenterTransform = Matrix4.fromTranslation(Cartesian3.fromArray(rtcCenter), content._rtcCenterTransform);
+            tile._hasRTC = true;
         }
 
-        tile._useBoundingSphereForClipping = !defined(rtcCenter) && !defined(tileset.root._header.transform);
-
+        // Use the boundingSphere fallback if the root tile has neither a defined transform nor an RTC property. 
+        // If the root tile hasn't loaded yet, we don't know if it has RTC, so we assume it does not.
+        tile._useBoundingSphereForClipping = !defined(tileset.root._header.transform) && !defined(tileset.root._hasRTC);
+        
         content._contentModelMatrix = Matrix4.multiply(tile.computedTransform, content._rtcCenterTransform, new Matrix4());
         tile._contentModelMatrix = content._contentModelMatrix;
 
@@ -468,11 +471,16 @@ define([
         // Update clipping planes
         var tilesetClippingPlanes = this._tileset.clippingPlanes;
         if (this._tile.clippingPlanesDirty && defined(tilesetClippingPlanes)) {
-            // Use the root tile's transform
+            // Use the root tile's transform.
             if (!this._tile._useBoundingSphereForClipping) {
-                this._model._clippingPlaneOffsetMatrix = this._tileset.root._contentModelMatrix;
+                if (defined(this._tileset.root._contentModelMatrix)) {
+                    this._model._clippingPlaneOffsetMatrix = this._tileset.root._contentModelMatrix;
+                } else {
+                    // If the root tile isn't loaded yet, just use its transform directly from the header.
+                    this._model._clippingPlaneOffsetMatrix = Matrix4.multiply(this._tileset.root._header.transform, this._tileset.modelMatrix, new Matrix4());
+                }
             } else if (this._tileset.ready) {
-                // If no RTC or transform for root tile, just use the bounding sphere as a fallback
+                // If no RTC or transform for root tile, just use the bounding sphere as a fallback.
                 this._model._clippingPlaneOffsetMatrix = Transforms.eastNorthUpToFixedFrame(this._tileset.boundingSphere.center);
             }
 
