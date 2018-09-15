@@ -1841,14 +1841,34 @@ define([
         }
     }
 
-    function translucentCompare(a, b, position) {
+    function backToFront(a, b, position) {
         return b.boundingVolume.distanceSquaredTo(position) - a.boundingVolume.distanceSquaredTo(position);
     }
 
-    function executeTranslucentCommandsSorted(scene, executeFunction, passState, commands, invertClassification) {
+    function frontToBack(a, b, position) {
+        // When distances are equal equal favor sorting b before a. This gives render priority to commands later in the list.
+        return a.boundingVolume.distanceSquaredTo(position) - b.boundingVolume.distanceSquaredTo(position) + CesiumMath.EPSILON12;
+    }
+
+    function executeTranslucentCommandsBackToFront(scene, executeFunction, passState, commands, invertClassification) {
         var context = scene.context;
 
-        mergeSort(commands, translucentCompare, scene.camera.positionWC);
+        mergeSort(commands, backToFront, scene.camera.positionWC);
+
+        if (defined(invertClassification)) {
+            executeFunction(invertClassification.unclassifiedCommand, scene, context, passState);
+        }
+
+        var length = commands.length;
+        for (var i = 0; i < length; ++i) {
+            executeFunction(commands[i], scene, context, passState);
+        }
+    }
+
+    function executeTranslucentCommandsFrontToBack(scene, executeFunction, passState, commands, invertClassification) {
+        var context = scene.context;
+
+        mergeSort(commands, frontToBack, scene.camera.positionWC);
 
         if (defined(invertClassification)) {
             executeFunction(invertClassification.unclassifiedCommand, scene, context, passState);
@@ -1961,8 +1981,10 @@ define([
                 };
             }
             executeTranslucentCommands = scene._executeOITFunction;
+        } else if (passes.render) {
+            executeTranslucentCommands = executeTranslucentCommandsBackToFront;
         } else {
-            executeTranslucentCommands = executeTranslucentCommandsSorted;
+            executeTranslucentCommands = executeTranslucentCommandsFrontToBack
         }
 
         var clearGlobeDepth = environmentState.clearGlobeDepth;
