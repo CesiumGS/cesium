@@ -2028,7 +2028,7 @@ define([
         } else if (passes.render) {
             executeTranslucentCommands = executeTranslucentCommandsBackToFront;
         } else {
-            executeTranslucentCommands = executeTranslucentCommandsFrontToBack
+            executeTranslucentCommands = executeTranslucentCommandsFrontToBack;
         }
 
         var clearGlobeDepth = environmentState.clearGlobeDepth;
@@ -3516,7 +3516,6 @@ define([
                (objectsToExclude.indexOf(object.primitive) > -1) ||
                (objectsToExclude.indexOf(object.id) > -1);
     }
-
 
     function drillPick(limit, pickCallback, objectsToExclude) {
         // PERFORMANCE_IDEA: This function calls each primitive's update for each pass. Instead
