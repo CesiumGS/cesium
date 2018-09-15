@@ -1860,19 +1860,6 @@ define([
         }
     }
 
-    function executeTranslucentCommandsUnsorted(scene, executeFunction, passState, commands, invertClassification) {
-        var context = scene.context;
-
-        if (defined(invertClassification)) {
-            executeFunction(invertClassification.unclassifiedCommand, scene, context, passState);
-        }
-
-        var length = commands.length;
-        for (var i = 0; i < length; ++i) {
-            executeFunction(commands[i], scene, context, passState);
-        }
-    }
-
     function getDebugGlobeDepth(scene, index) {
         var globeDepths = scene._view.debugGlobeDepths;
         var globeDepth = globeDepths[index];
@@ -1974,10 +1961,8 @@ define([
                 };
             }
             executeTranslucentCommands = scene._executeOITFunction;
-        } else if (passes.render) {
-            executeTranslucentCommands = executeTranslucentCommandsSorted;
         } else {
-            executeTranslucentCommands = executeTranslucentCommandsUnsorted;
+            executeTranslucentCommands = executeTranslucentCommandsSorted;
         }
 
         var clearGlobeDepth = environmentState.clearGlobeDepth;
