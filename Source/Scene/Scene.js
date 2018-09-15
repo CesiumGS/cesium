@@ -1984,7 +1984,7 @@ define([
         } else if (passes.render) {
             executeTranslucentCommands = executeTranslucentCommandsBackToFront;
         } else {
-            executeTranslucentCommands = executeTranslucentCommandsFrontToBack
+            executeTranslucentCommands = executeTranslucentCommandsFrontToBack;
         }
 
         var clearGlobeDepth = environmentState.clearGlobeDepth;
