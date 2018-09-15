@@ -34,6 +34,10 @@ var viewer = new Cesium.Viewer('cesiumContainer', {
 });
 var scene = viewer.scene;
 
+if (!scene.clampToHeightSupported) {
+    console.log('This browser does not support clampToHeight.');
+}
+
 var start = Cesium.JulianDate.fromIso8601('2018-07-19T15:18:00Z');
 var stop = Cesium.JulianDate.fromIso8601('2018-07-19T15:18:30Z');
 var duration = Cesium.JulianDate.secondsDifference(stop, start);
@@ -84,15 +88,17 @@ function initialViewReady(tileset, callback) {
 
 var objectsToExclude = [entity];
 
-initialViewReady(tileset, function() {
-    viewer.clock.shouldAnimate = true;
-    scene.postRender.addEventListener(function() {
-        var timer = Cesium.JulianDate.secondsDifference(viewer.clock.currentTime, start);
-        var offset = Cesium.Math.clamp(timer / duration, 0.0, 1.0);
-        var position = Cesium.Cartesian3.lerp(startPosition, endPosition, offset, new Cesium.Cartesian3());
-        entity.position = scene.clampToHeight(position, objectsToExclude);
+if (scene.clampToHeightSupported) {
+    initialViewReady(tileset, function() {
+        viewer.clock.shouldAnimate = true;
+        scene.postRender.addEventListener(function() {
+            var timer = Cesium.JulianDate.secondsDifference(viewer.clock.currentTime, start);
+            var offset = Cesium.Math.clamp(timer / duration, 0.0, 1.0);
+            var position = Cesium.Cartesian3.lerp(startPosition, endPosition, offset, new Cesium.Cartesian3());
+            entity.position = scene.clampToHeight(position, objectsToExclude);
+        });
     });
-});
+}
 //Sandcastle_End
     Sandcastle.finishedLoading();
 }
