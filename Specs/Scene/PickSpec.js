@@ -51,9 +51,9 @@ defineSuite([
     var camera;
     var largeRectangle = Rectangle.fromDegrees(-1.0, -1.0, 1.0, 1.0);
     var smallRectangle = Rectangle.fromDegrees(-0.0001, -0.0001, 0.0001, 0.0001);
-    var otherRectangle = Rectangle.fromDegrees(-45.0, -1.0, -43.0, 1.0);
+    var offscreenRectangle = Rectangle.fromDegrees(-45.0, -1.0, -43.0, 1.0);
     var primitiveRay;
-    var otherRay;
+    var offscreenRay;
 
     beforeAll(function() {
         scene = createScene({
@@ -68,9 +68,9 @@ defineSuite([
         primitiveRay = new Ray(camera.positionWC, camera.directionWC);
 
         camera.setView({
-            destination : otherRectangle
+            destination : offscreenRectangle
         });
-        otherRay = new Ray(camera.positionWC, camera.directionWC);
+        offscreenRay = new Ray(camera.positionWC, camera.directionWC);
     });
 
     afterAll(function() {
@@ -468,7 +468,7 @@ defineSuite([
             createLargeRectangle(0.0);
             expect(scene).toPickFromRayAndCall(function(result) {
                 expect(result).toBeUndefined();
-            }, otherRay);
+            }, offscreenRay);
         });
 
         it('does not pick primitives when show is false', function() {
@@ -592,7 +592,7 @@ defineSuite([
             createLargeRectangle(1.0);
             expect(scene).toDrillPickFromRayAndCall(function(results) {
                 expect(results.length).toEqual(0);
-            }, otherRay);
+            }, offscreenRay);
         });
 
         it('can drill pick batched Primitives with show attribute', function() {
