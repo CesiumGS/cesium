@@ -7,7 +7,7 @@ define([
         defined,
         destroyObject,
         DeveloperError,
-        Math) {
+        CesiumMath) {
     'use strict';
 
     /**
@@ -90,9 +90,9 @@ define([
         }
 
         function updateDeviceOrientation(e) {
-            that._pitch = Math.toRadians(e.beta);
-            that._roll = Math.toRadians(e.gamma);
-            that._heading = Math.toRadians(e.alpha);
+            that._pitch = CesiumMath.toRadians(e.beta);
+            that._roll = CesiumMath.toRadians(e.gamma);
+            that._heading = CesiumMath.toRadians(e.alpha);
         }
 
         this._enableDeviceOrientation = function(enable) {
@@ -103,7 +103,7 @@ define([
                 } else if ('onmsorientationchange' in screen) {
                     msScreenOrientationChanged();
                     screen.addEventListener('MSOrientationChange', msScreenOrientationChanged, false);
-                } else if ('orientation' in window) {
+                } else if ('orientation' in window) { //Safari
                     screenOrientationChanged();
                     window.addEventListener('orientationchange', screenOrientationChanged, false);
                 }
@@ -140,8 +140,8 @@ define([
 
         this._scene.camera.setView({
             orientation: {
-                heading : Math.toRadians(this._orientationAngle + 180) - this._heading,
-                pitch : (this._flipPitchRoll ? this._roll : this._pitch) * this._invertPitchFactor - Math.toRadians(90),
+                heading : CesiumMath.toRadians(this._orientationAngle + 180) - this._heading,
+                pitch : (this._flipPitchRoll ? this._roll : this._pitch) * this._invertPitchFactor - CesiumMath.toRadians(90),
                 roll : (this._flipPitchRoll ? this._pitch : this._roll) * this._invertRollFactor
             }
         });
