@@ -3,6 +3,10 @@ Change Log
 
 ### 1.50 - 2018-10-01
 
+##### Breaking Changes :mega:
+// TODO : fix any links that may exist
+* Renamed Ground Clamping Sandcastle example to [Clamp to Terrain](https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Clamp%20to%20Terrain.html).
+
 ##### Additions :tada:
 * Added `Cesium3DTileset.initialTilesLoaded` to indicate that all tiles in the initial view are loaded. [#6934](https://github.com/AnalyticalGraphicsInc/cesium/pull/6934)
 * Added `cartographicLimitRectangle` to `Globe`. Use this to limit terrain and imagery to a specific `Rectangle` area. [#6987](https://github.com/AnalyticalGraphicsInc/cesium/pull/6987)
