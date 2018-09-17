@@ -529,7 +529,7 @@ define([
      *
      * @example
      * scene.postUpdate.addEventListener(function(scene, time) {
-     *   // View in ICRF. 
+     *   // View in ICRF.
      *   var icrfToFixed = Cesium.Transforms.computeIcrfToFixedMatrix(time);
      *   if (Cesium.defined(icrfToFixed)) {
      *     var offset = Cesium.Cartesian3.clone(camera.position);
