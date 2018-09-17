@@ -4,7 +4,6 @@ define([
         '../Core/defaultValue',
         '../Core/WebGLConstants',
         '../Core/webGLConstantToGlslType',
-        '../Core/isArray',
         '../ThirdParty/GltfPipeline/addToArray',
         '../ThirdParty/GltfPipeline/ForEach',
         '../ThirdParty/GltfPipeline/hasExtension',
@@ -15,7 +14,6 @@ define([
         defaultValue,
         WebGLConstants,
         webGLConstantToGlslType,
-        isArray,
         addToArray,
         ForEach,
         hasExtension,
@@ -36,7 +34,7 @@ define([
 
         // All materials in glTF are PBR by default,
         // so we should apply PBR unless no materials are found.
-        if ((isArray(gltf.materials) && gltf.materials.length === 0) || Object.keys(gltf.materials).length === 0) {
+        if (gltf.materials.length === 0) {
             return gltf;
         }
 
