@@ -463,16 +463,6 @@ define([
         this.nearToFarDistance2D = 1.75e6;
 
         /**
-         * Determines the uniform depth size in meters of each frustum of the multifrustum in orthographic. If a primitive or model
-         * shows z-fighting, decreasing this will eliminate the artifact, but decrease performance. On the other hand, increasing
-         * this will increase performance but may cause z-fighting among primitives.
-         *
-         * @type {Number}
-         * @default 1.75e6
-         */
-        this.nearToFarDistanceOrthographic = 1.75e6;
-
-        /**
          * This property is for debugging only; it is not for production use.
          * <p>
          * A function that determines what commands are executed.  As shown in the examples below,
