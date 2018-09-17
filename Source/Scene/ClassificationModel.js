@@ -30,7 +30,7 @@ define([
         './ModelLoadResources',
         './ModelUtility',
         './processModelMaterialsCommon',
-        './processPbrMetallicRoughness',
+        './processPbrMaterials',
         './SceneMode',
         './Vector3DTileBatch',
         './Vector3DTilePrimitive'
@@ -66,7 +66,7 @@ define([
         ModelLoadResources,
         ModelUtility,
         processModelMaterialsCommon,
-        processPbrMetallicRoughness,
+        processPbrMaterials,
         SceneMode,
         Vector3DTileBatch,
         Vector3DTilePrimitive) {
@@ -123,7 +123,7 @@ define([
             updateVersion(gltf);
             addDefaults(gltf);
             processModelMaterialsCommon(gltf);
-            processPbrMetallicRoughness(gltf);
+            processPbrMaterials(gltf);
         } else {
             throw new RuntimeError('Only binary glTF is supported as a classifier.');
         }

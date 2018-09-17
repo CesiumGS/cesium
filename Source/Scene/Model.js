@@ -69,7 +69,7 @@ define([
         './ModelNode',
         './ModelUtility',
         './processModelMaterialsCommon',
-        './processPbrMetallicRoughness',
+        './processPbrMaterials',
         './SceneMode',
         './ShadowMode'
     ], function(
@@ -143,7 +143,7 @@ define([
         ModelNode,
         ModelUtility,
         processModelMaterialsCommon,
-        processPbrMetallicRoughness,
+        processPbrMaterials,
         SceneMode,
         ShadowMode) {
     'use strict';
@@ -4067,8 +4067,9 @@ define([
                         var options = {
                             addBatchIdToGeneratedShaders: this._addBatchIdToGeneratedShaders
                         };
+
                         processModelMaterialsCommon(gltf, options);
-                        processPbrMetallicRoughness(gltf, options);
+                        processPbrMaterials(gltf, options);
                     }
 
                     // Skip dequantizing in the shader if not encoded
