@@ -529,8 +529,7 @@ define([
      *
      * @example
      * scene.postUpdate.addEventListener(function(scene, time) {
-     *   // By default, the camera automatically rotates with the globe.
-     *   // This example fixes the camera to its current position.
+     *   // View in ICRF. 
      *   var icrfToFixed = Cesium.Transforms.computeIcrfToFixedMatrix(time);
      *   if (Cesium.defined(icrfToFixed)) {
      *     var offset = Cesium.Cartesian3.clone(camera.position);
