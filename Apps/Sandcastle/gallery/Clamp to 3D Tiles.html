@@ -33,25 +33,22 @@ var viewer = new Cesium.Viewer('cesiumContainer', {
     terrainProvider : Cesium.createWorldTerrain()
 });
 var scene = viewer.scene;
+var clock = viewer.clock;
 
 if (!scene.clampToHeightSupported) {
     console.log('This browser does not support clampToHeight.');
+    return;
 }
 
-var start = Cesium.JulianDate.fromIso8601('2018-07-19T15:18:00Z');
-var stop = Cesium.JulianDate.fromIso8601('2018-07-19T15:18:30Z');
-var duration = Cesium.JulianDate.secondsDifference(stop, start);
+var entity;
+var positionProperty;
+var dataSourcePromise = Cesium.CzmlDataSource.load('../../SampleData/ClampToGround.czml');
+viewer.dataSources.add(dataSourcePromise).then(function(dataSource) {
+    entity = dataSource.entities.getById('CesiumMilkTruck');
+    positionProperty = entity.position;
+});
 
-viewer.timeline.zoomTo(start, stop);
-
-var clock = viewer.clock;
-clock.startTime = start;
-clock.currentTime = start;
-clock.stopTime = stop;
-clock.multiplier = 5.0;
-clock.clockRange = Cesium.ClockRange.LOOP_STOP;
-
-var tileset = viewer.scene.primitives.add(
+var tileset = scene.primitives.add(
     new Cesium.Cesium3DTileset({
         url: Cesium.IonResource.fromAssetId(6074)
     })
@@ -63,40 +60,14 @@ viewer.camera.setView({
     endTransform : Cesium.Matrix4.IDENTITY
 });
 
-var startPosition = new Cesium.Cartesian3(1216348.1632364073, -4736348.958775471, 4081284.5528982095);
-var endPosition = new Cesium.Cartesian3(1216369.1229444197, -4736377.467107148, 4081240.888485707);
+tileset.initialTilesLoaded.addEventListener(start);
 
-var velocity = Cesium.Cartesian3.normalize(Cesium.Cartesian3.subtract(endPosition, startPosition, new Cesium.Cartesian3()), new Cesium.Cartesian3());
-var rotationMatrix = Cesium.Transforms.rotationMatrixFromPositionVelocity(startPosition, velocity);
-var orientation = Cesium.Quaternion.fromRotationMatrix(rotationMatrix, new Cesium.Quaternion());
-
-var entity = viewer.entities.add({
-    position : startPosition,
-    orientation : orientation,
-    model : {
-        uri : '../../SampleData/models/CesiumMilkTruck/CesiumMilkTruck.glb'
-    }
-});
-
-function initialViewReady(tileset, callback) {
-    var allTilesLoadedFunction = function() {
-        callback();
-        tileset.allTilesLoaded.removeEventListener(allTilesLoadedFunction);
-    };
-    tileset.allTilesLoaded.addEventListener(allTilesLoadedFunction);
-}
-
-var objectsToExclude = [entity];
-
-if (scene.clampToHeightSupported) {
-    initialViewReady(tileset, function() {
-        viewer.clock.shouldAnimate = true;
-        scene.postRender.addEventListener(function() {
-            var timer = Cesium.JulianDate.secondsDifference(viewer.clock.currentTime, start);
-            var offset = Cesium.Math.clamp(timer / duration, 0.0, 1.0);
-            var position = Cesium.Cartesian3.lerp(startPosition, endPosition, offset, new Cesium.Cartesian3());
-            entity.position = scene.clampToHeight(position, objectsToExclude);
-        });
+function start() {
+    clock.shouldAnimate = true;
+    var objectsToExclude = [entity];
+    scene.postRender.addEventListener(function() {
+        var position = positionProperty.getValue(clock.currentTime);
+        entity.position = scene.clampToHeight(position, objectsToExclude);
     });
 }
 //Sandcastle_End
