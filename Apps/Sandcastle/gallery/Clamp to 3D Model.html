@@ -52,7 +52,17 @@ var point = viewer.entities.add({
     position : new Cesium.CallbackProperty(updatePosition, false),
     point : {
         pixelSize : 10,
-        color : Cesium.Color.YELLOW
+        color : Cesium.Color.YELLOW,
+        disableDepthTestDistance : Number.POSITIVE_INFINITY
+    },
+    label : {
+        show : false,
+        showBackground : true,
+        font : '14px monospace',
+        horizontalOrigin : Cesium.HorizontalOrigin.LEFT,
+        verticalOrigin : Cesium.VerticalOrigin.BOTTOM,
+        pixelOffset : new Cesium.Cartesian2(5, 5),
+        disableDepthTestDistance : Number.POSITIVE_INFINITY
     }
 });
 
@@ -65,6 +75,14 @@ function updatePosition(time, result) {
     cartographic.latitude = latitude;
 
     var height = viewer.scene.sampleHeight(cartographic, objectsToExclude);
+
+    if (Cesium.defined(height)) {
+        point.label.text = height.toFixed(2).toString() + ' m';
+        point.label.show = true;
+    } else {
+        point.label.show = false;
+    }
+
     cartographic.height = Cesium.defaultValue(height, 0.0);
 
     return Cesium.Cartographic.toCartesian(cartographic, Cesium.Ellipsoid.WGS84, result);
