@@ -1,43 +1,28 @@
 define([
-        './BoundingSphere',
         './Cartesian3',
-        './ComponentDatatype',
+        './Check',
         './defaultValue',
         './defined',
         './DeveloperError',
         './Ellipsoid',
-        './Geometry',
-        './GeometryAttribute',
-        './GeometryAttributes',
         './GeometryInstance',
         './GeometryPipeline',
-        './IndexDatatype',
         './Math',
         './PolylineGeometry',
-        './PrimitiveType',
         './WallGeometryLibrary'
     ], function(
-        BoundingSphere,
         Cartesian3,
-        ComponentDatatype,
+        Check,
         defaultValue,
         defined,
         DeveloperError,
         Ellipsoid,
-        Geometry,
-        GeometryAttribute,
-        GeometryAttributes,
         GeometryInstance,
         GeometryPipeline,
-        IndexDatatype,
         CesiumMath,
         PolylineGeometry,
-        PrimitiveType,
         WallGeometryLibrary) {
     'use strict';
-
-    //var scratchCartesian3Position1 = new Cartesian3();
-    //var scratchCartesian3Position2 = new Cartesian3();
 
     /**
      * A description of a wall outline. A wall is defined by a series of points,
@@ -59,9 +44,10 @@ define([
      * @exception {DeveloperError} positions length must be greater than or equal to 2.
      * @exception {DeveloperError} positions and maximumHeights must have the same length.
      * @exception {DeveloperError} positions and minimumHeights must have the same length.
+     * @exception {DeveloperError} width must be greater than or equal to 1.0.
      *
      * @see WallGeometry#createGeometry
-     * @see WallGeometry#fromConstantHeight
+     * @see WallGeometry#fromConstantHeights
      *
      * @example
      * // create a wall outline that spans from ground level to 10000 meters
@@ -85,9 +71,8 @@ define([
         var width = defaultValue(options.width, 2.0);
 
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(wallPositions)) {
-            throw new DeveloperError('options.positions is required.');
-        }
+        Check.defined('positions', wallPositions);
+        Check.typeOf.number.greaterThanOrEquals('width', width, 1.0);
         if (defined(maximumHeights) && maximumHeights.length !== wallPositions.length) {
             throw new DeveloperError('options.positions and options.maximumHeights must have the same length.');
         }
@@ -277,6 +262,7 @@ define([
      * @param {Number} [options.width=2] The outline width in pixels.
      * @returns {WallOutlineGeometry}
      *
+     * @exception {DeveloperError} width must be greater than or equal to 1.0.
      *
      * @example
      * // create a wall that spans from 10000 meters to 20000 meters

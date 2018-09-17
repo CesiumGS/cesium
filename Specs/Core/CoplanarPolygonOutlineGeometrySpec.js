@@ -1,15 +1,15 @@
 defineSuite([
-    'Core/CoplanarPolygonOutlineGeometry',
-    'Core/Cartesian3',
-    'Core/Ellipsoid',
-    'Core/Math',
-    'Specs/createPackableSpecs'
-], function(
-    CoplanarPolygonOutlineGeometry,
-    Cartesian3,
-    Ellipsoid,
-    CesiumMath,
-    createPackableSpecs) {
+        'Core/CoplanarPolygonOutlineGeometry',
+        'Core/Cartesian3',
+        'Core/Ellipsoid',
+        'Core/Math',
+        'Specs/createPackableSpecs'
+    ], function(
+        CoplanarPolygonOutlineGeometry,
+        Cartesian3,
+        Ellipsoid,
+        CesiumMath,
+        createPackableSpecs) {
     'use strict';
 
     it('throws with no hierarchy', function() {
@@ -18,9 +18,27 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
+    it('throws with width < 1.0', function() {
+        expect(function() {
+            return new CoplanarPolygonOutlineGeometry({
+                polygonHierarchy : {},
+                width : -1.0
+            });
+        }).toThrowDeveloperError();
+    });
+
     it('fromPositions throws without positions', function() {
         expect(function() {
             return CoplanarPolygonOutlineGeometry.fromPositions();
+        }).toThrowDeveloperError();
+    });
+
+    it('fromPositions throws with width < 1.0', function() {
+        expect(function() {
+            return CoplanarPolygonOutlineGeometry.fromPositions({
+                positions : [],
+                width : -1.0
+            });
         }).toThrowDeveloperError();
     });
 
@@ -77,8 +95,8 @@ defineSuite([
             ])
         }));
 
-        expect(geometry.attributes.position.values.length).toEqual(4 * 3);
-        expect(geometry.indices.length).toEqual(4 * 2);
+        expect(geometry.attributes.position.values.length).toBeGreaterThanOrEqualTo(0);
+        expect(geometry.indices.length).toBeGreaterThanOrEqualTo(0);
     });
 
     var positions = Cartesian3.fromDegreesArray([
@@ -107,7 +125,8 @@ defineSuite([
         }]
     };
     var polygon = new CoplanarPolygonOutlineGeometry({
-        polygonHierarchy : hierarchy
+        polygonHierarchy : hierarchy,
+        width : 5.0
     });
     function addPositions(array, positions) {
         for (var i = 0; i < positions.length; ++i) {
@@ -120,7 +139,7 @@ defineSuite([
     addPositions(packedInstance, holePositions0);
     packedInstance.push(3.0, 0.0);
     addPositions(packedInstance, holePositions1);
-    packedInstance.push(34);
+    packedInstance.push(5.0, 35);
 
     createPackableSpecs(CoplanarPolygonOutlineGeometry, polygon, packedInstance);
 });

@@ -1,7 +1,6 @@
 define([
         './arrayFill',
         './arrayRemoveDuplicates',
-        './BoundingSphere',
         './Cartesian3',
         './Check',
         './ComponentDatatype',
@@ -10,24 +9,18 @@ define([
         './DeveloperError',
         './Ellipsoid',
         './EllipsoidTangentPlane',
-        './Geometry',
         './GeometryAttribute',
-        './GeometryAttributes',
         './GeometryInstance',
         './GeometryOffsetAttribute',
         './GeometryPipeline',
-        './IndexDatatype',
         './Math',
         './PolygonGeometryLibrary',
         './PolygonPipeline',
         './PolylineGeometry',
-        './PrimitiveType',
-        './Queue',
         './WindingOrder'
     ], function(
         arrayFill,
         arrayRemoveDuplicates,
-        BoundingSphere,
         Cartesian3,
         Check,
         ComponentDatatype,
@@ -36,19 +29,14 @@ define([
         DeveloperError,
         Ellipsoid,
         EllipsoidTangentPlane,
-        Geometry,
         GeometryAttribute,
-        GeometryAttributes,
         GeometryInstance,
         GeometryOffsetAttribute,
         GeometryPipeline,
-        IndexDatatype,
         CesiumMath,
         PolygonGeometryLibrary,
         PolygonPipeline,
         PolylineGeometry,
-        PrimitiveType,
-        Queue,
         WindingOrder) {
     'use strict';
 
@@ -188,6 +176,8 @@ define([
      * @param {Boolean} [options.perPositionHeight=false] Use the height of options.positions for each position instead of using options.height to determine the height.
      * @param {Number} [options.width=2] The width of the outline in pixels.
      *
+     * @exception {DeveloperError} width must be greater than or equal to 1.0.
+     *
      * @see PolygonOutlineGeometry#createGeometry
      * @see PolygonOutlineGeometry#fromPositions
      *
@@ -259,14 +249,7 @@ define([
      * var geometry = Cesium.PolygonOutlineGeometry.createGeometry(extrudedPolygon);
      */
     function PolygonOutlineGeometry(options) {
-        //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.object('options', options);
-        Check.typeOf.object('options.polygonHierarchy', options.polygonHierarchy);
-
-        if (options.perPositionHeight && defined(options.height)) {
-            throw new DeveloperError('Cannot use both options.perPositionHeight and options.height');
-        }
-        //>>includeEnd('debug');
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         var polygonHierarchy = options.polygonHierarchy;
         var ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
@@ -274,9 +257,17 @@ define([
         var perPositionHeight = defaultValue(options.perPositionHeight, false);
         var perPositionHeightExtrude = perPositionHeight && defined(options.extrudedHeight);
         var width = defaultValue(options.width, 2.0);
-
         var height = defaultValue(options.height, 0.0);
         var extrudedHeight = defaultValue(options.extrudedHeight, height);
+
+        //>>includeStart('debug', pragmas.debug);
+        Check.typeOf.object('options.polygonHierarchy', polygonHierarchy);
+        Check.typeOf.number.greaterThanOrEquals('options.width', width, 1.0);
+
+        if (options.perPositionHeight && defined(options.height)) {
+            throw new DeveloperError('Cannot use both options.perPositionHeight and options.height');
+        }
+        //>>includeEnd('debug');
 
         if (!perPositionHeightExtrude) {
             var h = Math.max(height, extrudedHeight);
@@ -403,6 +394,7 @@ define([
      * @param {Number} [options.width=2] The width of the outline in pixels.
      * @returns {PolygonOutlineGeometry}
      *
+     * @exception {DeveloperError} width must be greater than or equal to 1.0.
      *
      * @example
      * // create a polygon from points
@@ -471,8 +463,15 @@ define([
         var i;
 
         if (extrude) {
-            var bottomValue = polygonGeometry._offsetAttribute === GeometryOffsetAttribute.NONE ? 0 : 1;
-            var topValue = polygonGeometry._offsetAttribute === GeometryOffsetAttribute.TOP ? 1 : bottomValue;
+            var bottomValue;
+            var topValue;
+            if (polygonGeometry._offsetAttribute === GeometryOffsetAttribute.TOP) {
+                topValue = 1;
+                bottomValue = 0;
+            } else {
+                bottomValue = polygonGeometry._offsetAttribute === GeometryOffsetAttribute.NONE ? 0 : 1;
+                topValue = bottomValue;
+            }
 
             for (i = 0; i < polygons.length; i++) {
                 var polygon = polygons[i];

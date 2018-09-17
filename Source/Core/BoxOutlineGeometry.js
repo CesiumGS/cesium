@@ -1,31 +1,25 @@
 define([
         './arrayFill',
-        './BoundingSphere',
         './Cartesian3',
         './Check',
         './ComponentDatatype',
         './defaultValue',
         './defined',
         './DeveloperError',
-        './Geometry',
         './GeometryAttribute',
-        './GeometryAttributes',
         './GeometryInstance',
         './GeometryOffsetAttribute',
         './GeometryPipeline',
         './PolylineGeometry'
     ], function(
         arrayFill,
-        BoundingSphere,
         Cartesian3,
         Check,
         ComponentDatatype,
         defaultValue,
         defined,
         DeveloperError,
-        Geometry,
         GeometryAttribute,
-        GeometryAttributes,
         GeometryInstance,
         GeometryOffsetAttribute,
         GeometryPipeline,
@@ -43,6 +37,8 @@ define([
      * @param {Cartesian3} options.maximum The maximum x, y, and z coordinates of the box.
      * @param {Number} [options.width=2] The width of the outline in pixels.
      *
+     * @exception {DeveloperError} width must be greater than or equal to 1.0.
+     *
      * @see BoxOutlineGeometry.fromDimensions
      * @see BoxOutlineGeometry.createGeometry
      * @see Packable
@@ -59,10 +55,12 @@ define([
 
         var min = options.minimum;
         var max = options.maximum;
+        var width = defaultValue(options.width, 2.0);
 
         //>>includeStart('debug', pragmas.debug);
         Check.typeOf.object('min', min);
         Check.typeOf.object('max', max);
+        Check.typeOf.number.greaterThanOrEquals('width', width, 1.0);
         if (defined(options.offsetAttribute) && options.offsetAttribute === GeometryOffsetAttribute.TOP) {
             throw new DeveloperError('GeometryOffsetAttribute.TOP is not a supported options.offsetAttribute for this geometry.');
         }
@@ -71,7 +69,7 @@ define([
         this._min = Cartesian3.clone(min);
         this._max = Cartesian3.clone(max);
         this._offsetAttribute = options.offsetAttribute;
-        this._width = defaultValue(options.width, 2.0);
+        this._width = width;
         this._workerName = 'createBoxOutlineGeometry';
     }
 
@@ -84,7 +82,7 @@ define([
      * @returns {BoxOutlineGeometry}
      *
      * @exception {DeveloperError} All dimensions components must be greater than or equal to zero.
-     *
+     * @exception {DeveloperError} width must be greater than or equal to 1.0.
      *
      * @example
      * var box = Cesium.BoxOutlineGeometry.fromDimensions({
@@ -121,8 +119,6 @@ define([
      * @param {AxisAlignedBoundingBox} boundingBox A description of the AxisAlignedBoundingBox.
      * @param {Number} [options.width=2] The width of the outline in pixels.
      * @returns {BoxOutlineGeometry}
-     *
-     *
      *
      * @example
      * var aabb = Cesium.AxisAlignedBoundingBox.fromPoints(Cesium.Cartesian3.fromDegreesArray([

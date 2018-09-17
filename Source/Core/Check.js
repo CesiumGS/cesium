@@ -134,7 +134,7 @@ define([
     Check.typeOf.number.greaterThanOrEquals = function (name, test, limit) {
         Check.typeOf.number(name, test);
         if (test < limit) {
-            throw new DeveloperError('Expected ' + name + ' to be greater than or equal to' + limit + ', actual value was ' + test);
+            throw new DeveloperError('Expected ' + name + ' to be greater than or equal to ' + limit + ', actual value was ' + test);
         }
     };
 

@@ -1,47 +1,39 @@
 define([
         './arrayFill',
-        './BoundingSphere',
         './Cartesian3',
         './Cartographic',
+        './Check',
         './ComponentDatatype',
         './defaultValue',
         './defined',
         './DeveloperError',
         './Ellipsoid',
-        './Geometry',
         './GeometryAttribute',
-        './GeometryAttributes',
         './GeometryInstance',
         './GeometryOffsetAttribute',
         './GeometryPipeline',
-        './IndexDatatype',
         './Math',
         './PolygonPipeline',
         './PolylineGeometry',
-        './PrimitiveType',
         './Rectangle',
         './RectangleGeometryLibrary'
     ], function(
         arrayFill,
-        BoundingSphere,
         Cartesian3,
         Cartographic,
+        Check,
         ComponentDatatype,
         defaultValue,
         defined,
         DeveloperError,
         Ellipsoid,
-        Geometry,
         GeometryAttribute,
-        GeometryAttributes,
         GeometryInstance,
         GeometryOffsetAttribute,
         GeometryPipeline,
-        IndexDatatype,
         CesiumMath,
         PolygonPipeline,
         PolylineGeometry,
-        PrimitiveType,
         Rectangle,
         RectangleGeometryLibrary) {
     'use strict';
@@ -163,6 +155,7 @@ define([
      * @exception {DeveloperError} <code>options.rectangle.east</code> must be in the interval [<code>-Pi</code>, <code>Pi</code>].
      * @exception {DeveloperError} <code>options.rectangle.west</code> must be in the interval [<code>-Pi</code>, <code>Pi</code>].
      * @exception {DeveloperError} <code>options.rectangle.north</code> must be greater than <code>rectangle.south</code>.
+     * @exception {DeveloperError} <code>options.width</code> must be greater than or equal to 1.0.
      *
      * @see RectangleOutlineGeometry#createGeometry
      *
@@ -184,9 +177,8 @@ define([
         var width = defaultValue(options.width, 2.0);
 
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(rectangle)) {
-            throw new DeveloperError('rectangle is required.');
-        }
+        Check.defined('rectangle', rectangle);
+        Check.typeOf.number.greaterThanOrEquals('width', width, 1.0);
         Rectangle.validate(rectangle);
         if (rectangle.north < rectangle.south) {
             throw new DeveloperError('options.rectangle.north must be greater than options.rectangle.south');
@@ -345,8 +337,15 @@ define([
         var instance;
 
         if (extrude) {
-            var bottomValue = rectangleGeometry._offsetAttribute === GeometryOffsetAttribute.NONE ? 0 : 1;
-            var topValue = rectangleGeometry._offsetAttribute === GeometryOffsetAttribute.TOP ? 1 : bottomValue;
+            var bottomValue;
+            var topValue;
+            if (rectangleGeometry._offsetAttribute === GeometryOffsetAttribute.TOP) {
+                topValue = 1;
+                bottomValue = 0;
+            } else {
+                bottomValue = rectangleGeometry._offsetAttribute === GeometryOffsetAttribute.NONE ? 0 : 1;
+                topValue = bottomValue;
+            }
 
             var bottom = constructRectangle(rectangleGeometry, computedOptions, extrudedHeight);
             addOffset(rectangleGeometry, bottom, bottomValue);

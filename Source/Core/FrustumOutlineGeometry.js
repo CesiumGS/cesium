@@ -1,38 +1,26 @@
 define([
-        './BoundingSphere',
         './Cartesian3',
         './Check',
-        './ComponentDatatype',
         './defaultValue',
         './defined',
         './FrustumGeometry',
-        './Geometry',
-        './GeometryAttribute',
-        './GeometryAttributes',
         './GeometryInstance',
         './GeometryPipeline',
         './OrthographicFrustum',
         './PerspectiveFrustum',
         './PolylineGeometry',
-        './PrimitiveType',
         './Quaternion'
     ], function(
-        BoundingSphere,
         Cartesian3,
         Check,
-        ComponentDatatype,
         defaultValue,
         defined,
         FrustumGeometry,
-        Geometry,
-        GeometryAttribute,
-        GeometryAttributes,
         GeometryInstance,
         GeometryPipeline,
         OrthographicFrustum,
         PerspectiveFrustum,
         PolylineGeometry,
-        PrimitiveType,
         Quaternion) {
     'use strict';
 
@@ -50,19 +38,22 @@ define([
      * @param {Cartesian3} options.origin The origin of the frustum.
      * @param {Quaternion} options.orientation The orientation of the frustum.
      * @param {Number} [options.width=2] The outline width in pixels.
+     *
+     * @exception {DeveloperError} width must be greater than or equal to 1.0.
      */
     function FrustumOutlineGeometry(options) {
-        //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.object('options', options);
-        Check.typeOf.object('options.frustum', options.frustum);
-        Check.typeOf.object('options.origin', options.origin);
-        Check.typeOf.object('options.orientation', options.orientation);
-        //>>includeEnd('debug');
-
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
         var frustum = options.frustum;
         var orientation = options.orientation;
         var origin = options.origin;
         var width = defaultValue(options.width, 2.0);
+
+        //>>includeStart('debug', pragmas.debug);
+        Check.typeOf.object('options.frustum', frustum);
+        Check.typeOf.object('options.origin', origin);
+        Check.typeOf.object('options.orientation', orientation);
+        Check.typeOf.number.greaterThanOrEquals('options.width', width, 1.0);
+        //>>includeEnd('debug');
 
         // This is private because it is used by DebugCameraPrimitive to draw a multi-frustum by
         // creating multiple FrustumOutlineGeometrys. This way the near plane of one frustum doesn't overlap

@@ -12,7 +12,7 @@ defineSuite([
         createPackableSpecs) {
     'use strict';
 
-    it('constructor throws if stackPartitions less than 1', function() {
+    it('constructor throws if stackPartitions is less than 1', function() {
         expect(function() {
             return new EllipsoidOutlineGeometry({
                 stackPartitions: 0
@@ -20,7 +20,7 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('constructor throws if slicePartitions less than 0', function() {
+    it('constructor throws if slicePartitions is less than 0', function() {
         expect(function() {
             return new EllipsoidOutlineGeometry({
                 slicePartitions: -1
@@ -28,10 +28,21 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('constructor throws if subdivisions less than 0', function() {
+    it('constructor throws if subdivisions is less than 0', function() {
         expect(function() {
             return new EllipsoidOutlineGeometry({
                 subdivisions: -2
+            });
+        }).toThrowDeveloperError();
+    });
+
+    it('constructor throws if width is less than 1', function() {
+        expect(function() {
+            return new EllipsoidOutlineGeometry({
+                slicePartitions: 3,
+                stackPartitions: 3,
+                subdivisions: 3,
+                width : -1.0
             });
         }).toThrowDeveloperError();
     });
@@ -70,9 +81,9 @@ defineSuite([
             subdivisions: 3
         }));
 
-        expect(m.attributes.position.values.length).toEqual(14 * 3);
-        expect(m.indices.length).toEqual(15 * 2);
-        expect(m.boundingSphere.radius).toEqual(1);
+        expect(m.attributes.position.values.length).toBeGreaterThan(0);
+        expect(m.indices.length).toBeGreaterThan(0);
+        expect(m.boundingSphere.radius).toBeLessThan(2.0);
     });
 
     it('computes offset attribute', function() {
@@ -83,8 +94,8 @@ defineSuite([
             offsetAttribute: GeometryOffsetAttribute.ALL
         }));
 
-        var numVertices = 14;
-        expect(m.attributes.position.values.length).toEqual(numVertices * 3);
+        var numVertices = m.attributes.position.values.length / 3;
+        expect(numVertices).toBeGreaterThan(0);
 
         var offset = m.attributes.applyOffset.values;
         expect(offset.length).toEqual(numVertices);
@@ -132,8 +143,9 @@ defineSuite([
         radii : new Cartesian3(1.0, 2.0, 3.0),
         slicePartitions: 3,
         stackPartitions: 3,
-        subdivisions: 3
+        subdivisions: 3,
+        width : 5.0
     });
-    var packedInstance = [1.0, 2.0, 3.0, 3.0, 3.0, 3.0, -1.0];
+    var packedInstance = [1.0, 2.0, 3.0, 3.0, 3.0, 3.0, -1.0, 5.0];
     createPackableSpecs(EllipsoidOutlineGeometry, ellipsoidgeometry, packedInstance);
 });

@@ -32,6 +32,7 @@ define([
      *
      * @exception {DeveloperError} radius must be greater than zero.
      * @exception {DeveloperError} granularity must be greater than zero.
+     * @exception {DeveloperError} width must be greater than or equal to 1.0.
      *
      * @see CircleOutlineGeometry.createGeometry
      * @see Packable

@@ -38,6 +38,15 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
+    it('throws when width < 1.0', function() {
+        expect(function() {
+            return new WallOutlineGeometry({
+                positions : new Array(2),
+                width : -1.0
+            });
+        }).toThrowDeveloperError();
+    });
+
     it('returns undefined with less than 2 unique positions', function() {
         var geometry = WallOutlineGeometry.createGeometry(new WallOutlineGeometry({
             positions : Cartesian3.fromDegreesArrayHeights([
@@ -80,14 +89,14 @@ defineSuite([
         }));
 
         var positions = w.attributes.position.values;
-        expect(positions.length).toEqual(4 * 3);
-        expect(w.indices.length).toEqual(4 * 2);
+        expect(positions.length).toBeGreaterThan(0);
+        expect(w.indices.length).toBeGreaterThan(0);
 
         var cartographic = ellipsoid.cartesianToCartographic(Cartesian3.fromArray(positions, 0));
-        expect(cartographic.height).toEqualEpsilon(0.0, CesiumMath.EPSILON8);
-
-        cartographic = ellipsoid.cartesianToCartographic(Cartesian3.fromArray(positions, 3));
         expect(cartographic.height).toEqualEpsilon(1000.0, CesiumMath.EPSILON8);
+
+        cartographic = ellipsoid.cartesianToCartographic(Cartesian3.fromArray(positions, 6));
+        expect(cartographic.height).toEqualEpsilon(0.0, CesiumMath.EPSILON8);
     });
 
     it('creates positions with minimum and maximum heights', function() {
@@ -102,20 +111,20 @@ defineSuite([
         }));
 
         var positions = w.attributes.position.values;
-        expect(positions.length).toEqual(4 * 3);
-        expect(w.indices.length).toEqual(4 * 2);
+        expect(positions.length).toBeGreaterThan(0);
+        expect(w.indices.length).toBeGreaterThan(0);
 
         var cartographic = ellipsoid.cartesianToCartographic(Cartesian3.fromArray(positions, 0));
-        expect(cartographic.height).toEqualEpsilon(1000.0, CesiumMath.EPSILON8);
-
-        cartographic = ellipsoid.cartesianToCartographic(Cartesian3.fromArray(positions, 3));
         expect(cartographic.height).toEqualEpsilon(3000.0, CesiumMath.EPSILON8);
 
         cartographic = ellipsoid.cartesianToCartographic(Cartesian3.fromArray(positions, 6));
-        expect(cartographic.height).toEqualEpsilon(2000.0, CesiumMath.EPSILON8);
+        expect(cartographic.height).toEqualEpsilon(1000.0, CesiumMath.EPSILON8);
 
-        cartographic = ellipsoid.cartesianToCartographic(Cartesian3.fromArray(positions, 9));
+        cartographic = ellipsoid.cartesianToCartographic(Cartesian3.fromArray(positions, 12));
         expect(cartographic.height).toEqualEpsilon(4000.0, CesiumMath.EPSILON8);
+
+        cartographic = ellipsoid.cartesianToCartographic(Cartesian3.fromArray(positions, 18));
+        expect(cartographic.height).toEqualEpsilon(2000.0, CesiumMath.EPSILON8);
     });
 
     it('cleans positions with duplicates', function() {
@@ -132,14 +141,14 @@ defineSuite([
         }));
 
         var positions = w.attributes.position.values;
-        expect(positions.length).toEqual(6 * 3);
-        expect(w.indices.length).toEqual(7 * 2); //3 vertical + 4 horizontal
+        expect(positions.length).toBeGreaterThan(0);
+        expect(w.indices.length).toBeGreaterThan(0);
 
         var cartographic = ellipsoid.cartesianToCartographic(Cartesian3.fromArray(positions, 0));
-        expect(cartographic.height).toEqualEpsilon(0.0, CesiumMath.EPSILON8);
-
-        cartographic = ellipsoid.cartesianToCartographic(Cartesian3.fromArray(positions, 3));
         expect(cartographic.height).toEqualEpsilon(2000.0, CesiumMath.EPSILON8);
+
+        cartographic = ellipsoid.cartesianToCartographic(Cartesian3.fromArray(positions, 6));
+        expect(cartographic.height).toEqualEpsilon(0.0, CesiumMath.EPSILON8);
     });
 
     it('fromConstantHeights throws without positions', function() {
@@ -162,28 +171,29 @@ defineSuite([
         }));
 
         var positions = w.attributes.position.values;
-        expect(positions.length).toEqual(4 * 3);
-        expect(w.indices.length).toEqual(4 * 2);
+        expect(positions.length).toBeGreaterThan(0);
+        expect(w.indices.length).toBeGreaterThan(0);
 
         var cartographic = ellipsoid.cartesianToCartographic(Cartesian3.fromArray(positions, 0));
-        expect(cartographic.height).toEqualEpsilon(min, CesiumMath.EPSILON8);
-
-        cartographic = ellipsoid.cartesianToCartographic(Cartesian3.fromArray(positions, 3));
         expect(cartographic.height).toEqualEpsilon(max, CesiumMath.EPSILON8);
 
         cartographic = ellipsoid.cartesianToCartographic(Cartesian3.fromArray(positions, 6));
         expect(cartographic.height).toEqualEpsilon(min, CesiumMath.EPSILON8);
 
-        cartographic = ellipsoid.cartesianToCartographic(Cartesian3.fromArray(positions, 9));
+        cartographic = ellipsoid.cartesianToCartographic(Cartesian3.fromArray(positions, 12));
         expect(cartographic.height).toEqualEpsilon(max, CesiumMath.EPSILON8);
+
+        cartographic = ellipsoid.cartesianToCartographic(Cartesian3.fromArray(positions, 18));
+        expect(cartographic.height).toEqualEpsilon(min, CesiumMath.EPSILON8);
     });
 
     var positions = [new Cartesian3(1.0, 0.0, 0.0), new Cartesian3(0.0, 1.0, 0.0), new Cartesian3(0.0, 0.0, 1.0)];
     var wall = new WallOutlineGeometry({
         positions : positions,
         granularity : 0.01,
-        ellipsoid: Ellipsoid.UNIT_SPHERE
+        ellipsoid: Ellipsoid.UNIT_SPHERE,
+        width : 5.0
     });
-    var packedInstance = [3.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0, 0.01];
+    var packedInstance = [3.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0, 0.01, 5.0];
     createPackableSpecs(WallOutlineGeometry, wall, packedInstance);
 });

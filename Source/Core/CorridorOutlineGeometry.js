@@ -1,7 +1,6 @@
 define([
         './arrayFill',
         './arrayRemoveDuplicates',
-        './BoundingSphere',
         './Cartesian3',
         './Check',
         './ComponentDatatype',
@@ -10,21 +9,15 @@ define([
         './defaultValue',
         './defined',
         './Ellipsoid',
-        './Geometry',
         './GeometryAttribute',
-        './GeometryAttributes',
         './GeometryInstance',
         './GeometryOffsetAttribute',
         './GeometryPipeline',
-        './IndexDatatype',
         './Math',
-        './PolygonPipeline',
-        './PolylineGeometry',
-        './PrimitiveType'
+        './PolylineGeometry'
     ], function(
         arrayFill,
         arrayRemoveDuplicates,
-        BoundingSphere,
         Cartesian3,
         Check,
         ComponentDatatype,
@@ -33,17 +26,12 @@ define([
         defaultValue,
         defined,
         Ellipsoid,
-        Geometry,
         GeometryAttribute,
-        GeometryAttributes,
         GeometryInstance,
         GeometryOffsetAttribute,
         GeometryPipeline,
-        IndexDatatype,
         CesiumMath,
-        PolygonPipeline,
-        PolylineGeometry,
-        PrimitiveType) {
+        PolylineGeometry) {
     'use strict';
 
     function scaleToSurface(positions, ellipsoid) {
@@ -340,6 +328,8 @@ define([
      * @param {CornerType} [options.cornerType=CornerType.ROUNDED] Determines the style of the corners.
      * @param {Number} [options.outlineWidth=2] The outline width in pixels.
      *
+     * @exception {DeveloperError} width must be greater than or equal to 1.0.
+     *
      * @see CorridorOutlineGeometry.createGeometry
      *
      * @example
@@ -357,6 +347,7 @@ define([
         //>>includeStart('debug', pragmas.debug);
         Check.typeOf.object('options.positions', positions);
         Check.typeOf.number('options.width', width);
+        Check.typeOf.number.greaterThanOrEquals('outlineWidth', outlineWidth, 1.0);
         //>>includeEnd('debug');
 
         var height = defaultValue(options.height, 0.0);
@@ -524,8 +515,15 @@ define([
         var computedPositions = CorridorGeometryLibrary.computePositions(params);
         var instances = [];
         if (extrude) {
-            var bottomValue = corridorOutlineGeometry._offsetAttribute === GeometryOffsetAttribute.NONE ? 0 : 1;
-            var topValue = corridorOutlineGeometry._offsetAttribute === GeometryOffsetAttribute.TOP ? 1 : bottomValue;
+            var bottomValue;
+            var topValue;
+            if (corridorOutlineGeometry._offsetAttribute === GeometryOffsetAttribute.TOP) {
+                topValue = 1;
+                bottomValue = 0;
+            } else {
+                bottomValue = corridorOutlineGeometry._offsetAttribute === GeometryOffsetAttribute.NONE ? 0 : 1;
+                topValue = bottomValue;
+            }
 
             var topInstance = combine(computedPositions, ellipsoid, height, outlineWidth);
             addOffset(corridorOutlineGeometry, topInstance, topValue);

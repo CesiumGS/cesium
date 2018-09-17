@@ -1,8 +1,6 @@
 
 define([
         './arrayFill',
-        './BoundingSphere',
-        './Cartesian2',
         './Cartesian3',
         './Check',
         './ComponentDatatype',
@@ -10,17 +8,13 @@ define([
         './defaultValue',
         './defined',
         './DeveloperError',
-        './Geometry',
         './GeometryAttribute',
-        './GeometryAttributes',
         './GeometryInstance',
         './GeometryOffsetAttribute',
         './GeometryPipeline',
         './PolylineGeometry'
     ], function(
         arrayFill,
-        BoundingSphere,
-        Cartesian2,
         Cartesian3,
         Check,
         ComponentDatatype,
@@ -28,9 +22,7 @@ define([
         defaultValue,
         defined,
         DeveloperError,
-        Geometry,
         GeometryAttribute,
-        GeometryAttributes,
         GeometryInstance,
         GeometryOffsetAttribute,
         GeometryPipeline,
@@ -56,6 +48,7 @@ define([
      * @exception {DeveloperError} options.bottomRadius must be greater than 0.
      * @exception {DeveloperError} bottomRadius and topRadius cannot both equal 0.
      * @exception {DeveloperError} options.slices must be greater than or equal to 3.
+     * @exception {DeveloperError} options.width must be greater than or equal to 1.
      *
      * @see CylinderOutlineGeometry.createGeometry
      *
@@ -83,6 +76,7 @@ define([
         Check.typeOf.number('options.topRadius', topRadius);
         Check.typeOf.number('options.bottomRadius', bottomRadius);
         Check.typeOf.number.greaterThanOrEquals('options.slices', slices, 3);
+        Check.typeOf.number.greaterThanOrEquals('options.width', width, 1);
         if (defined(options.offsetAttribute) && options.offsetAttribute === GeometryOffsetAttribute.TOP) {
             throw new DeveloperError('GeometryOffsetAttribute.TOP is not a supported options.offsetAttribute for this geometry.');
         }

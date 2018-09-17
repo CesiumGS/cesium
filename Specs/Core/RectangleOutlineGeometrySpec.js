@@ -32,8 +32,8 @@ defineSuite([
         }));
         var positions = m.attributes.position.values;
 
-        expect(positions.length).toEqual(8 * 3);
-        expect(m.indices.length).toEqual(8 * 2);
+        expect(positions.length).toBeGreaterThan(0);
+        expect(m.indices.length).toBeGreaterThan(0);
 
         var expectedNWCorner = Ellipsoid.WGS84.cartographicToCartesian(Rectangle.northwest(rectangle));
         expect(new Cartesian3(positions[0], positions[1], positions[2])).toEqualEpsilon(expectedNWCorner, CesiumMath.EPSILON9);
@@ -46,8 +46,8 @@ defineSuite([
         }));
         var positions = m.attributes.position.values;
 
-        expect(positions.length).toEqual(8 * 3);
-        expect(m.indices.length).toEqual(8 * 2);
+        expect(positions.length).toBeGreaterThan(0);
+        expect(m.indices.length).toBeGreaterThan(0);
 
         var expectedNWCorner = Ellipsoid.WGS84.cartographicToCartesian(Rectangle.northwest(rectangle));
         expect(new Cartesian3(positions[0], positions[1], positions[2])).toEqualEpsilon(expectedNWCorner, CesiumMath.EPSILON9);
@@ -63,8 +63,8 @@ defineSuite([
         }));
         var positions = m.attributes.position.values;
 
-        expect(positions.length).toEqual(8 * 3);
-        expect(m.indices.length).toEqual(8 * 2);
+        expect(positions.length).toBeGreaterThan(0);
+        expect(m.indices.length).toBeGreaterThan(0);
 
         var unrotatedNWCorner = Rectangle.northwest(rectangle);
         var projection = new GeographicProjection();
@@ -99,6 +99,15 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
+    it('throws if width < 1.0', function() {
+        expect(function() {
+            return new RectangleOutlineGeometry({
+                rectangle : new Rectangle(-2.0, -1.0, 0.0, 1.0),
+                width : -1.0
+            });
+        }).toThrowDeveloperError();
+    });
+
     it('computes positions extruded', function() {
         var rectangle = new Rectangle(-2.0, -1.0, 0.0, 1.0);
         var m = RectangleOutlineGeometry.createGeometry(new RectangleOutlineGeometry({
@@ -108,8 +117,8 @@ defineSuite([
         }));
         var positions = m.attributes.position.values;
 
-        expect(positions.length).toEqual(16 * 3); // 8 top + 8 bottom
-        expect(m.indices.length).toEqual(20 * 2); // 8 top + 8 bottom + 4 edges
+        expect(positions.length).toBeGreaterThan(0);
+        expect(m.indices.length).toBeGreaterThan(0);
     });
 
     it('compute positions with rotation extruded', function() {
@@ -123,8 +132,8 @@ defineSuite([
         }));
         var positions = m.attributes.position.values;
 
-        expect(positions.length).toEqual(16 * 3);
-        expect(m.indices.length).toEqual(20 * 2);
+        expect(positions.length).toBeGreaterThan(0);
+        expect(m.indices.length).toBeGreaterThan(0);
 
         var unrotatedNWCorner = Rectangle.northwest(rectangle);
         var projection = new GeographicProjection();
@@ -146,8 +155,8 @@ defineSuite([
         }));
         var positions = m.attributes.position.values;
 
-        expect(positions.length).toEqual(8 * 3);
-        expect(m.indices.length).toEqual(8 * 2);
+        expect(positions.length).toBeGreaterThan(0);
+        expect(m.indices.length).toBeGreaterThan(0);
     });
 
     it('undefined is returned if any side are of length zero', function() {
@@ -177,10 +186,9 @@ defineSuite([
             granularity : 1.0,
             offsetAttribute : GeometryOffsetAttribute.TOP
         }));
-        var positions = m.attributes.position.values;
 
-        var numVertices = 8;
-        expect(positions.length).toEqual(numVertices * 3);
+        var numVertices = m.attributes.position.values.length / 3;
+        expect(numVertices).toBeGreaterThan(0);
 
         var offset = m.attributes.applyOffset.values;
         expect(offset.length).toEqual(numVertices);
@@ -197,17 +205,24 @@ defineSuite([
             extrudedHeight : 2,
             offsetAttribute : GeometryOffsetAttribute.TOP
         }));
-        var positions = m.attributes.position.values;
 
-        var numVertices = 16;
-        expect(positions.length).toEqual(numVertices * 3);
+        var numVertices = m.attributes.position.values.length / 3;
+        expect(numVertices).toBeGreaterThan(0);
 
         var offset = m.attributes.applyOffset.values;
         expect(offset.length).toEqual(numVertices);
-        var expected = new Array(offset.length);
-        expected = arrayFill(expected, 0);
-        expected = arrayFill(expected, 1, 0, 8);
-        expect(offset).toEqual(expected);
+
+        var seenZero = false;
+        var seenOne = false;
+        var seenOther = false;
+        for (var i = 0; i < offset.length; ++i) {
+            seenZero = seenZero || offset[i] === 0.0;
+            seenOne = seenOne || offset[i] === 1.0;
+            seenOther = seenOther || (offset[i] !== 0.0 && offset[i] !== 1.0);
+        }
+        expect(seenZero).toEqual(true);
+        expect(seenOne).toEqual(true);
+        expect(seenOther).toEqual(false);
     });
 
     it('computes offset attribute extruded for all vertices', function() {
@@ -218,10 +233,9 @@ defineSuite([
             extrudedHeight : 2,
             offsetAttribute : GeometryOffsetAttribute.ALL
         }));
-        var positions = m.attributes.position.values;
 
-        var numVertices = 16;
-        expect(positions.length).toEqual(numVertices * 3);
+        var numVertices = m.attributes.position.values.length / 3;
+        expect(numVertices).toBeGreaterThan(0);
 
         var offset = m.attributes.applyOffset.values;
         expect(offset.length).toEqual(numVertices);
@@ -236,9 +250,10 @@ defineSuite([
         granularity : 8,
         height : 9,
         rotation : 10,
-        extrudedHeight : 11
+        extrudedHeight : 11,
+        width : 12.0
     });
-    var packedInstance = [0.1, 0.2, 0.3, 0.4, 5, 6, 7, 8, 11, 10, 9, -1];
+    var packedInstance = [0.1, 0.2, 0.3, 0.4, 5, 6, 7, 8, 11, 10, 9, -1, 12.0];
     createPackableSpecs(RectangleOutlineGeometry, rectangle, packedInstance, 'extruded');
 
     rectangle = new RectangleOutlineGeometry({
@@ -246,9 +261,10 @@ defineSuite([
         ellipsoid : new Ellipsoid(5, 6, 7),
         granularity : 8,
         height : 9,
-        rotation : 10
+        rotation : 10,
+        width : 11
     });
-    packedInstance = [0.1, 0.2, 0.3, 0.4, 5, 6, 7, 8, 9, 10, 9, -1];
+    packedInstance = [0.1, 0.2, 0.3, 0.4, 5, 6, 7, 8, 9, 10, 9, -1, 11.0];
     createPackableSpecs(RectangleOutlineGeometry, rectangle, packedInstance, 'at height');
 
 });

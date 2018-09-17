@@ -1,50 +1,38 @@
 define([
         './arrayRemoveDuplicates',
         './BoundingRectangle',
-        './BoundingSphere',
         './Cartesian2',
         './Cartesian3',
-        './ComponentDatatype',
+        './Check',
         './CornerType',
         './defaultValue',
         './defined',
         './DeveloperError',
         './Ellipsoid',
-        './Geometry',
-        './GeometryAttribute',
-        './GeometryAttributes',
         './GeometryInstance',
         './GeometryPipeline',
-        './IndexDatatype',
         './Math',
         './PolygonPipeline',
         './PolylineGeometry',
         './PolylineVolumeGeometryLibrary',
-        './PrimitiveType',
         './WindingOrder'
     ], function(
         arrayRemoveDuplicates,
         BoundingRectangle,
-        BoundingSphere,
         Cartesian2,
         Cartesian3,
-        ComponentDatatype,
+        Check,
         CornerType,
         defaultValue,
         defined,
         DeveloperError,
         Ellipsoid,
-        Geometry,
-        GeometryAttribute,
-        GeometryAttributes,
         GeometryInstance,
         GeometryPipeline,
-        IndexDatatype,
         CesiumMath,
         PolygonPipeline,
         PolylineGeometry,
         PolylineVolumeGeometryLibrary,
-        PrimitiveType,
         WindingOrder) {
     'use strict';
 
@@ -120,6 +108,8 @@ define([
      * @param {CornerType} [options.cornerType=CornerType.ROUNDED] Determines the style of the corners.
      * @param {Number} [options.width=2] The outline width in pixels.
      *
+     * @exception {DeveloperError} width must be greater than or equal to 1.0.
+     *
      * @see PolylineVolumeOutlineGeometry#createGeometry
      *
      * @example
@@ -147,12 +137,9 @@ define([
         var width = defaultValue(options.width, 2.0);
 
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(positions)) {
-            throw new DeveloperError('options.polylinePositions is required.');
-        }
-        if (!defined(shape)) {
-            throw new DeveloperError('options.shapePositions is required.');
-        }
+        Check.defined('options.polylinePositions', positions);
+        Check.defined('options.shapePositions', shape);
+        Check.typeOf.number.greaterThanOrEquals('options.width', width, 1.0);
         //>>includeEnd('debug');
 
         this._positions = positions;

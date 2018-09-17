@@ -1,36 +1,24 @@
 /*global define*/
 define([
         './arrayRemoveDuplicates',
-        './BoundingSphere',
         './Cartesian3',
         './Check',
-        './ComponentDatatype',
         './CoplanarPolygonGeometryLibrary',
         './defaultValue',
         './defined',
-        './Geometry',
-        './GeometryAttribute',
-        './GeometryAttributes',
         './GeometryInstance',
         './GeometryPipeline',
-        './IndexDatatype',
         './PolygonGeometryLibrary',
         './PolylineGeometry'
     ], function(
         arrayRemoveDuplicates,
-        BoundingSphere,
         Cartesian3,
         Check,
-        ComponentDatatype,
         CoplanarPolygonGeometryLibrary,
         defaultValue,
         defined,
-        Geometry,
-        GeometryAttribute,
-        GeometryAttributes,
         GeometryInstance,
         GeometryPipeline,
-        IndexDatatype,
         PolygonGeometryLibrary,
         PolylineGeometry) {
     'use strict';
@@ -44,6 +32,8 @@ define([
      * @param {Object} options Object with the following properties:
      * @param {PolygonHierarchy} options.polygonHierarchy A polygon hierarchy that can include holes.
      * @param {Number} [options.width=2] The width of the outline in pixels.
+     *
+     * @exception {DeveloperError} width must be greater than or equal to 1.0.
      *
      * @see CoplanarPolygonOutlineGeometry.createGeometry
      *
@@ -61,12 +51,14 @@ define([
     function CoplanarPolygonOutlineGeometry(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
         var polygonHierarchy = options.polygonHierarchy;
+        var width = defaultValue(options.width, 2.0);
         //>>includeStart('debug', pragmas.debug);
         Check.defined('options.polygonHierarchy', polygonHierarchy);
+        Check.typeOf.number.greaterThanOrEquals('options.width', width, 1.0);
         //>>includeEnd('debug');
 
         this._polygonHierarchy = polygonHierarchy;
-        this._width = defaultValue(options.width, 2.0);
+        this._width = width;
         this._workerName = 'createCoplanarPolygonOutlineGeometry';
 
         /**
@@ -83,6 +75,8 @@ define([
      * @param {Cartesian3[]} options.positions An array of positions that defined the corner points of the polygon.
      * @param {Number} [options.width=2] The width of the outline in pixels.
      * @returns {CoplanarPolygonOutlineGeometry}
+     *
+     * @exception {DeveloperError} width must be greater than or equal to 1.0.
      */
     CoplanarPolygonOutlineGeometry.fromPositions = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);

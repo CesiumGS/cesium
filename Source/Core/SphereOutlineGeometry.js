@@ -28,6 +28,7 @@ define([
      * @exception {DeveloperError} options.stackPartitions must be greater than or equal to one.
      * @exception {DeveloperError} options.slicePartitions must be greater than or equal to zero.
      * @exception {DeveloperError} options.subdivisions must be greater than or equal to zero.
+     * @exception {DeveloperError} options.width must be greater than or equal to one.
      *
      * @example
      * var sphere = new Cesium.SphereOutlineGeometry({

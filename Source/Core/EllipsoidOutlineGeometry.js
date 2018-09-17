@@ -1,37 +1,29 @@
 define([
         './arrayFill',
-        './BoundingSphere',
         './Cartesian3',
+        './Check',
         './ComponentDatatype',
         './defaultValue',
         './defined',
         './DeveloperError',
-        './Ellipsoid',
-        './Geometry',
         './GeometryAttribute',
-        './GeometryAttributes',
         './GeometryInstance',
         './GeometryOffsetAttribute',
         './GeometryPipeline',
-        './IndexDatatype',
         './Math',
         './PolylineGeometry'
     ], function(
         arrayFill,
-        BoundingSphere,
         Cartesian3,
+        Check,
         ComponentDatatype,
         defaultValue,
         defined,
         DeveloperError,
-        Ellipsoid,
-        Geometry,
         GeometryAttribute,
-        GeometryAttributes,
         GeometryInstance,
         GeometryOffsetAttribute,
         GeometryPipeline,
-        IndexDatatype,
         CesiumMath,
         PolylineGeometry) {
     'use strict';
@@ -56,6 +48,7 @@ define([
      * @exception {DeveloperError} options.stackPartitions must be greater than or equal to one.
      * @exception {DeveloperError} options.slicePartitions must be greater than or equal to zero.
      * @exception {DeveloperError} options.subdivisions must be greater than or equal to zero.
+     * @exception {DeveloperError} options.width must be greater than or equal to one.
      *
      * @example
      * var ellipsoid = new Cesium.EllipsoidOutlineGeometry({
@@ -75,15 +68,10 @@ define([
         var width = defaultValue(options.width, 2.0);
 
         //>>includeStart('debug', pragmas.debug);
-        if (stackPartitions < 1) {
-            throw new DeveloperError('options.stackPartitions cannot be less than 1');
-        }
-        if (slicePartitions < 0) {
-            throw new DeveloperError('options.slicePartitions cannot be less than 0');
-        }
-        if (subdivisions < 0) {
-            throw new DeveloperError('options.subdivisions must be greater than or equal to zero.');
-        }
+        Check.typeOf.number.greaterThanOrEquals('stackPartitions', stackPartitions, 1.0);
+        Check.typeOf.number.greaterThanOrEquals('slicePartitions', slicePartitions, 0.0);
+        Check.typeOf.number.greaterThanOrEquals('subdivisions', subdivisions, 0.0);
+        Check.typeOf.number.greaterThanOrEquals('width', width, 1.0);
         if (defined(options.offsetAttribute) && options.offsetAttribute === GeometryOffsetAttribute.TOP) {
             throw new DeveloperError('GeometryOffsetAttribute.TOP is not a supported options.offsetAttribute for this geometry.');
         }
@@ -289,7 +277,7 @@ define([
         var geometry = GeometryPipeline.combineInstances(instances)[0];
 
         if (defined(ellipsoidGeometry._offsetAttribute)) {
-            var length = geometry.attributes.position.length / 3;
+            var length = geometry.attributes.position.values.length / 3;
             var applyOffset = new Uint8Array(length);
             var offsetValue = ellipsoidGeometry._offsetAttribute === GeometryOffsetAttribute.NONE ? 0 : 1;
             arrayFill(applyOffset, offsetValue);

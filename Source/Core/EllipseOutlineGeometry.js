@@ -1,39 +1,33 @@
 define([
         './arrayFill',
-        './BoundingSphere',
         './Cartesian3',
+        './Check',
         './ComponentDatatype',
         './defaultValue',
         './defined',
         './DeveloperError',
         './EllipseGeometryLibrary',
         './Ellipsoid',
-        './Geometry',
         './GeometryAttribute',
-        './GeometryAttributes',
         './GeometryInstance',
         './GeometryOffsetAttribute',
         './GeometryPipeline',
-        './IndexDatatype',
         './Math',
         './PolylineGeometry'
     ], function(
         arrayFill,
-        BoundingSphere,
         Cartesian3,
+        Check,
         ComponentDatatype,
         defaultValue,
         defined,
         DeveloperError,
         EllipseGeometryLibrary,
         Ellipsoid,
-        Geometry,
         GeometryAttribute,
-        GeometryAttributes,
         GeometryInstance,
         GeometryOffsetAttribute,
         GeometryPipeline,
-        IndexDatatype,
         CesiumMath,
         PolylineGeometry) {
     'use strict';
@@ -114,6 +108,7 @@ define([
      * @exception {DeveloperError} semiMajorAxis and semiMinorAxis must be greater than zero.
      * @exception {DeveloperError} semiMajorAxis must be greater than or equal to the semiMinorAxis.
      * @exception {DeveloperError} granularity must be greater than zero.
+     * @exception {DeveloperError} width must be greater than or equal to 1.0.
      *
      * @see EllipseOutlineGeometry.createGeometry
      *
@@ -137,20 +132,14 @@ define([
         var width = defaultValue(options.width, 2.0);
 
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(center)) {
-            throw new DeveloperError('center is required.');
-        }
-        if (!defined(semiMajorAxis)) {
-            throw new DeveloperError('semiMajorAxis is required.');
-        }
-        if (!defined(semiMinorAxis)) {
-            throw new DeveloperError('semiMinorAxis is required.');
-        }
+        Check.defined('center', center);
+        Check.typeOf.number('semiMajorAxis', semiMajorAxis);
+        Check.typeOf.number('semiMinorAxis', semiMinorAxis);
+        Check.typeOf.number('semiMinorAxis', semiMinorAxis);
+        Check.typeOf.number.greaterThanOrEquals('granularity', granularity, 0.0);
+        Check.typeOf.number.greaterThanOrEquals('width', width, 1.0);
         if (semiMajorAxis < semiMinorAxis) {
             throw new DeveloperError('semiMajorAxis must be greater than or equal to the semiMinorAxis.');
-        }
-        if (granularity <= 0.0) {
-            throw new DeveloperError('granularity must be greater than zero.');
         }
         //>>includeEnd('debug');
 
@@ -334,8 +323,15 @@ define([
         var instances = [];
 
         if (extrude) {
-            var bottomValue = ellipseGeometry._offsetAttribute === GeometryOffsetAttribute.NONE ? 0 : 1;
-            var topValue = ellipseGeometry._offsetAttribute === GeometryOffsetAttribute.TOP ? 1 : bottomValue;
+            var bottomValue;
+            var topValue;
+            if (ellipseGeometry._offsetAttribute === GeometryOffsetAttribute.TOP) {
+                topValue = 1;
+                bottomValue = 0;
+            } else {
+                bottomValue = ellipseGeometry._offsetAttribute === GeometryOffsetAttribute.NONE ? 0 : 1;
+                topValue = bottomValue;
+            }
 
             var top = computeEllipse(options, positions, height);
             var bottom = computeEllipse(options, positions, extrudedHeight);
