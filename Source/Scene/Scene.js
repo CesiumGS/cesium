@@ -879,11 +879,13 @@ define([
         },
 
         /**
-         * Returns true if the pickPosition function is supported.
+         * Returns <code>true</code> if the pickPosition function is supported.
          * @memberof Scene.prototype
          *
          * @type {Boolean}
          * @readonly
+         *
+         * @see Scene#pickPosition
          */
         pickPositionSupported : {
             get : function() {
@@ -892,11 +894,13 @@ define([
         },
 
         /**
-         * Returns true if the sampleHeight function is supported.
+         * Returns <code>true</code> if the sampleHeight function is supported.
          * @memberof Scene.prototype
          *
          * @type {Boolean}
          * @readonly
+         *
+         * @see Scene#sampleHeight
          */
         sampleHeightSupported : {
             get : function() {
@@ -905,11 +909,13 @@ define([
         },
 
         /**
-         * Returns true if the clampToHeight function is supported.
+         * Returns <code>true</code> if the clampToHeight function is supported.
          * @memberof Scene.prototype
          *
          * @type {Boolean}
          * @readonly
+         *
+         * @see Scene#clampToHeight
          */
         clampToHeightSupported : {
             get : function() {
@@ -3607,7 +3613,6 @@ define([
      * var pickedObjects = scene.drillPick(new Cesium.Cartesian2(100.0, 200.0));
      *
      * @see Scene#pick
-     *
      */
     Scene.prototype.drillPick = function(windowPosition, limit, width, height) {
         var that = this;
