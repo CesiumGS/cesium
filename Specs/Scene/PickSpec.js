@@ -1,6 +1,7 @@
 defineSuite([
         'Core/Cartesian3',
         'Core/Cartographic',
+        'Core/Ellipsoid',
         'Core/FeatureDetection',
         'Core/GeometryInstance',
         'Core/Math',
@@ -15,15 +16,19 @@ defineSuite([
         'Scene/Cesium3DTileset',
         'Scene/Cesium3DTileStyle',
         'Scene/EllipsoidSurfaceAppearance',
+        'Scene/Globe',
         'Scene/Primitive',
         'Scene/Scene',
         'Scene/SceneMode',
+        'Scene/SingleTileImageryProvider',
         'Specs/Cesium3DTilesTester',
         'Specs/createCanvas',
-        'Specs/createScene'
+        'Specs/createScene',
+        'Specs/pollToPromise'
     ], 'Scene/Pick', function(
         Cartesian3,
         Cartographic,
+        Ellipsoid,
         FeatureDetection,
         GeometryInstance,
         CesiumMath,
@@ -38,12 +43,15 @@ defineSuite([
         Cesium3DTileset,
         Cesium3DTileStyle,
         EllipsoidSurfaceAppearance,
+        Globe,
         Primitive,
         Scene,
         SceneMode,
+        SingleTileImageryProvider,
         Cesium3DTilesTester,
         createCanvas,
-        createScene) {
+        createScene,
+        pollToPromise) {
     'use strict';
 
     var scene;
@@ -92,6 +100,7 @@ defineSuite([
 
     afterEach(function() {
         primitives.removeAll();
+        scene.globe = undefined;
     });
 
     function createRectangle(height, rectangle) {
@@ -134,6 +143,19 @@ defineSuite([
             tileset.root.transform = Matrix4.IDENTITY;
             tileset.modelMatrix = Transforms.eastNorthUpToFixedFrame(cartesian);
             return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset);
+        });
+    }
+
+    function createGlobe() {
+        var globe = new Globe();
+        scene.globe = globe;
+        var layerCollection = globe.imageryLayers;
+        layerCollection.removeAll();
+        layerCollection.addImageryProvider(new SingleTileImageryProvider({url : 'Data/Images/Red16x16.png'}));
+        globe.depthTestAgainstTerrain = true;
+        return pollToPromise(function() {
+            scene.render();
+            return globe.tilesLoaded;
         });
     }
 
@@ -447,6 +469,18 @@ defineSuite([
                 color : 'color("white", 0.5)'
             });
             return picksFromRayTileset(style);
+        });
+
+        it('picks the globe', function() {
+            return createGlobe().then(function() {
+                expect(scene).toPickFromRayAndCall(function(result) {
+                    expect(result.object).toBeUndefined();
+                    expect(result.position).toBeDefined();
+                    expect(result.position.x).toBeGreaterThan(Ellipsoid.WGS84.minimumRadius);
+                    expect(result.position.y).toEqualEpsilon(0.0, CesiumMath.EPSILON5);
+                    expect(result.position.z).toEqualEpsilon(0.0, CesiumMath.EPSILON5);
+                }, primitiveRay);
+            });
         });
 
         it('picks a primitive', function() {
@@ -788,6 +822,15 @@ defineSuite([
             });
         });
 
+        it('samples height from the globe', function() {
+            var cartographic = new Cartographic(0.0, 0.0);
+            return createGlobe().then(function() {
+                expect(scene).toSampleHeightAndCall(function(height) {
+                    expect(height).toBeDefined();
+                }, cartographic);
+            });
+        });
+
         it('samples height from primitive', function() {
             if (!scene.sampleHeightSupported) {
                 return;
@@ -906,6 +949,15 @@ defineSuite([
                     expect(position.x).toBeLessThan(maximumHeight);
                     expect(position.y).toEqualEpsilon(0.0, CesiumMath.EPSILON5);
                     expect(position.z).toEqualEpsilon(0.0, CesiumMath.EPSILON5);
+                }, cartesian);
+            });
+        });
+
+        it('clamps to the globe', function() {
+            var cartesian = Cartesian3.fromRadians(0.0, 0.0, 100000.0);
+            return createGlobe().then(function() {
+                expect(scene).toClampToHeightAndCall(function(position) {
+                    expect(position).toBeDefined();
                 }, cartesian);
             });
         });

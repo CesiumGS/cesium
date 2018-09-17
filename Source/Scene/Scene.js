@@ -3528,9 +3528,18 @@ define([
         }
 
         var pickedResult = pickCallback();
-        while (defined(pickedResult) && defined(pickedResult.object) && defined(pickedResult.object.primitive)) {
+        while (defined(pickedResult)) {
             var object = pickedResult.object;
-            var primitive = object.primitive;
+            var position = pickedResult.position;
+
+            if (defined(position) && !defined(object)) {
+                result.push(pickedResult);
+                break;
+            }
+
+            if (!defined(object) || !defined(object.primitive)) {
+                break;
+            }
 
             if (!isExcluded(object, objectsToExclude)) {
                 result.push(pickedResult);
@@ -3539,6 +3548,7 @@ define([
                 }
             }
 
+            var primitive = object.primitive;
             var hasShowAttribute = false;
 
             // If the picked object has a show attribute, use it.
@@ -3677,23 +3687,13 @@ define([
                     break;
                 }
             }
-
-            if (defined(position) && (scene.mode !== SceneMode.SCENE3D)) {
-                Cartesian3.fromElements(position.y, position.z, position.x, position);
-
-                var projection = scene.mapProjection;
-                var ellipsoid = projection.ellipsoid;
-
-                var cartographic = projection.unproject(position, scratchPickPositionCartographic);
-                ellipsoid.cartographicToCartesian(cartographic, position);
-            }
         }
 
         scene._view = scene._defaultView;
         context.endFrame();
         callAfterRenderFunctions(scene);
 
-        if (defined(object)) {
+        if (defined(object) || defined(position)) {
             return {
                 object : object,
                 position : position
