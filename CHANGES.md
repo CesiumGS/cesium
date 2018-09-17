@@ -4,10 +4,13 @@ Change Log
 ### 1.50 - 2018-10-01
 
 ##### Breaking Changes :mega:
-// TODO : fix any links that may exist
 * Renamed Ground Clamping Sandcastle example to [Clamp to Terrain](https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Clamp%20to%20Terrain.html).
 
 ##### Additions :tada:
+* Initial support for clamping to 3D Tiles. [#6934](https://github.com/AnalyticalGraphicsInc/cesium/pull/6934)
+    * Added `Scene.sampleHeight` to get the height of geometry in the scene. May be used to clamp objects to the globe, 3D Tiles, or primitives in the scene.
+    * Added `Scene.clampToHeight` to clamp a cartesian position to the scene geometry.
+    * Requires depth texture support (`WEBGL_depth_texture` or `WEBKIT_WEBGL_depth_texture`). Added `Scene.sampleHeightSupported` and `Scene.clampToHeightSupported` functions for checking if height sampling is supported.
 * Added `Cesium3DTileset.initialTilesLoaded` to indicate that all tiles in the initial view are loaded. [#6934](https://github.com/AnalyticalGraphicsInc/cesium/pull/6934)
 * Added `cartographicLimitRectangle` to `Globe`. Use this to limit terrain and imagery to a specific `Rectangle` area. [#6987](https://github.com/AnalyticalGraphicsInc/cesium/pull/6987)
 * Added `OpenCageGeocoderService`, which provides geocoding via [OpenCage](https://opencagedata.com/). [#7015](https://github.com/AnalyticalGraphicsInc/cesium/pull/7015)
