@@ -2283,7 +2283,7 @@ define([
         // calculate determinant
         var det = src0 * dst0 + src1 * dst1 + src2 * dst2 + src3 * dst3;
 
-        if (Math.abs(det) < 1e-21) {
+        if (Math.abs(det) < CesiumMath.EPSILON21) {
                 // Special case for a zero scale matrix that can occur, for example,
                 // when a model's node has a [0, 0, 0] scale.
                 if (Matrix3.equalsEpsilon(Matrix4.getRotation(matrix, scratchInverseRotation), scratchMatrix3Zero, CesiumMath.EPSILON7) &&
