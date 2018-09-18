@@ -3122,7 +3122,9 @@ defineSuite([
 
             tileset.update(scene.frameState);
 
-            var plane = new ClippingPlane(Cartesian3.UNIT_Z, 0.0);
+            var radius = 287.0736139905632;
+
+            var plane = new ClippingPlane(Cartesian3.UNIT_X, radius);
             tileset.clippingPlanes = new ClippingPlaneCollection({
                 planes : [
                     plane
@@ -3135,7 +3137,7 @@ defineSuite([
             expect(statistics.numberOfCommands).toEqual(5);
             expect(root._isClipped).toBe(false);
 
-            plane.distance = -4081630.311150717; // center
+            plane.distance = -1;
 
             tileset.update(scene.frameState);
             scene.renderForSpecs();
@@ -3143,7 +3145,7 @@ defineSuite([
             expect(statistics.numberOfCommands).toEqual(3);
             expect(root._isClipped).toBe(true);
 
-            plane.distance = -4081630.31115071 - 287.0736139905632; // center + radius
+            plane.distance = -radius;
 
             tileset.update(scene.frameState);
             scene.renderForSpecs();
@@ -3164,7 +3166,9 @@ defineSuite([
 
             tileset.update(scene.frameState);
 
-            var plane = new ClippingPlane(Cartesian3.UNIT_Z, 0.0);
+            var radius = 142.19001637409772;
+
+            var plane = new ClippingPlane(Cartesian3.UNIT_Z, radius);
             tileset.clippingPlanes = new ClippingPlaneCollection({
                 planes : [
                     plane
@@ -3177,7 +3181,7 @@ defineSuite([
             expect(statistics.numberOfCommands).toEqual(6);
             expect(root._isClipped).toBe(false);
 
-            plane.distance = -4081608.4377916814; // center
+            plane.distance = 0;
 
             tileset.update(scene.frameState);
             scene.renderForSpecs();
@@ -3185,7 +3189,7 @@ defineSuite([
             expect(statistics.numberOfCommands).toEqual(6);
             expect(root._isClipped).toBe(true);
 
-            plane.distance = -4081608.4377916814 - 142.19001637409772; // center + radius
+            plane.distance = -radius;
 
             tileset.update(scene.frameState);
             scene.renderForSpecs();
