@@ -52,10 +52,26 @@ define([
      */
     ModelUtility.updateForwardAxis = function(model) {
         var cachedSourceVersion = model.gltf.extras.sourceVersion;
+
         if ((defined(cachedSourceVersion) && cachedSourceVersion !== '2.0')
-                || model.gltf.asset.version !== '2.0') {
+                || ModelUtility.getAssetVersion(model.gltf) !== '2.0') {
             model._gltfForwardAxis = Axis.X;
         }
+    };
+
+    /**
+     *  Gets the string representing the glTF asset version.
+     *
+     *  @param {Object} gltf A javascript object containing a glTF asset.
+     *  @returns {String} The glTF asset version string.
+     */
+    ModelUtility.getAssetVersion = function(gltf) {
+        // In glTF 1.0 it was valid to omit the version number.
+        if (!defined(gltf.asset) || !defined(gltf.gltfAssetVersion)) {
+            return '1.0';
+        }
+
+        return gltf.asset.version;
     };
 
     /**

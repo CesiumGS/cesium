@@ -240,6 +240,10 @@ define([
      * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/2.0/Khronos/KHR_techniques_webgl/README.md|KHR_techniques_webgl}
      * </li><li>
      * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/2.0/Khronos/KHR_blend/README.md|KHR_blend}
+     * </li><li>
+     * {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Khronos/KHR_materials_unlit/README.md|KHR_materials_unlit}
+     * </li><li>
+     * {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Khronos/KHR_materials_pbrSpecularGlossiness/README.md|KHR_materials_pbrSpecularGlossiness}
      * </li>
      * </ul>
      * </p>
@@ -1117,6 +1121,10 @@ define([
      * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/2.0/Khronos/KHR_techniques_webgl/README.md|KHR_techniques_webgl}
      * </li><li>
      * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/2.0/Khronos/KHR_blend/README.md|KHR_blend}
+     * </li><li>
+     * {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Khronos/KHR_materials_unlit/README.md|KHR_materials_unlit}
+     * </li><li>
+     * {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Khronos/KHR_materials_pbrSpecularGlossiness/README.md|KHR_materials_pbrSpecularGlossiness}
      * </li>
      * </ul>
      * </p>
@@ -4059,7 +4067,7 @@ define([
                     if (!this._loadRendererResourcesFromCache) {
                         var gltf = this.gltf;
                         // Add the original version so it remains cached
-                        gltf.extras.sourceVersion = gltf.asset.version;
+                        gltf.extras.sourceVersion = ModelUtility.getAssetVersion(gltf);
 
                         updateVersion(gltf);
                         addDefaults(gltf);

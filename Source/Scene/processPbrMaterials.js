@@ -34,7 +34,7 @@ define([
 
         // All materials in glTF are PBR by default,
         // so we should apply PBR unless no materials are found.
-        if (gltf.materials.length === 0) {
+        if (!defined(gltf.materials) || gltf.materials.length === 0) {
             return gltf;
         }
 
