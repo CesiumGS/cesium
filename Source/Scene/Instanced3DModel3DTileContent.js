@@ -417,13 +417,6 @@ define([
         }
 
         content._modelInstanceCollection = new ModelInstanceCollection(collectionOptions);
-        content._modelInstanceCollection._useBoundingSphereForClipping = !defined(rtcCenter) && !defined(content._tileset.root._header.transform);
-
-        content._modelInstanceCollection._rtcCenterTransform = Matrix4.IDENTITY;
-        if (defined(rtcCenter)) {
-            content._modelInstanceCollection._rtcCenterTransform = Transforms.eastNorthUpToFixedFrame(Cartesian3.fromArray(rtcCenterArray));
-        }
-
     }
 
     function createFeatures(content) {
@@ -474,8 +467,6 @@ define([
         this._modelInstanceCollection.debugWireframe = this._tileset.debugWireframe;
 
         var model = this._modelInstanceCollection._model;
-        var useBoundingSphereForClipping = this._modelInstanceCollection._useBoundingSphereForClipping;
-        var rtcCenterTransform = this._modelInstanceCollection._rtcCenterTransform;
 
         if (defined(model)) {
             // Update for clipping planes

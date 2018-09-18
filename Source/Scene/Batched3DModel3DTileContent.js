@@ -360,7 +360,7 @@ define([
         if (defined(rtcCenter)) {
             content._rtcCenterTransform = Matrix4.fromTranslation(Cartesian3.fromArray(rtcCenter));
         }
-        
+
         content._contentModelMatrix = Matrix4.multiply(tile.computedTransform, content._rtcCenterTransform, new Matrix4());
 
         if (!defined(tileset.classificationType)) {

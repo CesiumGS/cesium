@@ -307,7 +307,7 @@ define([
          *
          * @private
          */
-        this.clippingPlanesDirty = true;
+        this.clippingPlanesDirty = false;
 
         // Members that are updated every frame for tree traversal and rendering optimizations:
         this._distanceToCamera = 0;
@@ -335,7 +335,7 @@ define([
         this._isClipped = true;
         this._clippingPlanesState = 0; // encapsulates (_isClipped, clippingPlanes.enabled) and number/function
         this._useBoundingSphereForClipping = false;
-        // If this is the root tile, and it doesn't have a defined transform, fall back to bounding sphere. 
+        // If this is the root tile, and it doesn't have a defined transform, fall back to bounding sphere.
         if (!defined(this.parent) && !defined(this._header.transform)) {
             this._clippingPlaneOffsetMatrix = Transforms.eastNorthUpToFixedFrame(this.boundingSphere.center);
             this._useBoundingSphereForClipping = true;
@@ -826,7 +826,6 @@ define([
 
         var tileset = this._tileset;
         var clippingPlanes = tileset.clippingPlanes;
-        // Don't run the clipping plane visibility check until the content has at least been initialized.
         if (defined(clippingPlanes) && clippingPlanes.enabled) {
             var tileTransform = tileset.root.computedTransform;
             if(defined(tileset.root._clippingPlaneOffsetMatrix)) {
@@ -1067,7 +1066,6 @@ define([
         if (this._useBoundingSphereForClipping) {
             this._clippingPlaneOffsetMatrix = Transforms.eastNorthUpToFixedFrame(this.boundingSphere.center);
         }
-
         // Destroy the debug bounding volumes. They will be generated fresh.
         this._debugBoundingVolume = this._debugBoundingVolume && this._debugBoundingVolume.destroy();
         this._debugContentBoundingVolume = this._debugContentBoundingVolume && this._debugContentBoundingVolume.destroy();

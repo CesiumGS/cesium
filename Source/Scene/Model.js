@@ -540,7 +540,8 @@ define([
         // Used for checking if shaders need to be regenerated due to clipping plane changes.
         this._clippingPlanesState = 0;
         // If defined, it's used to position the clipping planes instead of the modelMatrix.
-        // This is so that when models are part of a tileset they all share the same matrix.
+        // This is so that when models are part of a tileset they all get clipped relative
+        // to the root tile.
         this._clippingPlaneOffsetMatrix = undefined;
 
         /**
