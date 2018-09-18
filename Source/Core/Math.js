@@ -161,6 +161,13 @@ define([
     CesiumMath.EPSILON20 = 0.00000000000000000001;
 
     /**
+     * 0.000000000000000000001
+     * @type {Number}
+     * @constant
+     */
+    CesiumMath.EPSILON21 = 0.000000000000000000001;
+
+    /**
      * The gravitational parameter of the Earth in meters cubed
      * per second squared as defined by the WGS84 model: 3.986004418e14
      * @type {Number}
