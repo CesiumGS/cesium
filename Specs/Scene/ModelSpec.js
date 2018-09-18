@@ -134,7 +134,7 @@ defineSuite([
     var dracoCompressedModelUrl = './Data/Models/DracoCompression/CesiumMilkTruck/CesiumMilkTruck.gltf';
     var dracoCompressedModelWithAnimationUrl = './Data/Models/DracoCompression/CesiumMan/CesiumMan.gltf';
 
-    var boxGltf2Url = './Data/Models/Box-Gltf-2/Box.glb';
+    var boxGltf2Url = './Data/Models/Box-Gltf-2/Box.gltf';
     var boxGltf2WithTechniquesUrl = './Data/Models/Box-Gltf-2-Techniques/Box.gltf';
 
     var texturedBoxModel;

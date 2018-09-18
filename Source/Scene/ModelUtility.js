@@ -67,7 +67,7 @@ define([
      */
     ModelUtility.getAssetVersion = function(gltf) {
         // In glTF 1.0 it was valid to omit the version number.
-        if (!defined(gltf.asset) || !defined(gltf.gltfAssetVersion)) {
+        if (!defined(gltf.asset) || !defined(gltf.asset.version)) {
             return '1.0';
         }
 
