@@ -347,7 +347,7 @@ define([
         }
 
         var isUpdated = true;
-        for (i = 0; i < length; i++) {
+        for (i = 0; i < items.length; i++) {
             isUpdated = items[i].update(time) && isUpdated;
         }
         return isUpdated;
