@@ -55,6 +55,13 @@ define([
     /**
      * Specifies a set of clipping planes. Clipping planes selectively disable rendering in a region on the
      * outside of the specified list of {@link ClippingPlane} objects for a single gltf model, 3D Tileset, or the globe.
+     * <p>
+     * In general the clipping planes' coordinates are relative to the object they're attached to, so a plane with distance set to 0 will clip 
+     * through the center of the object. 
+     * </p>
+     * <p>
+     * For 3D Tiles, the root tile's transform is used to position the clipping planes. If a transform is not defined, the root tile's {@link Cesium3DTile#boundingSphere} is used instead.
+     * </p>
      *
      * @alias ClippingPlaneCollection
      * @constructor
@@ -66,6 +73,30 @@ define([
      * @param {Boolean} [options.unionClippingRegions=false] If true, a region will be clipped if included in any plane in the collection. Otherwise, the region to be clipped must intersect the regions defined by all planes in this collection.
      * @param {Color} [options.edgeColor=Color.WHITE] The color applied to highlight the edge along which an object is clipped.
      * @param {Number} [options.edgeWidth=0.0] The width, in pixels, of the highlight applied to the edge along which an object is clipped.
+     *
+     * @demo {@link https://cesiumjs.org/Cesium/Build/Apps/Sandcastle/?src=3D%20Tiles%20Clipping%20Planes.html|Clipping 3D Tiles and glTF models.}
+     * @demo {@link https://cesiumjs.org/Cesium/Build/Apps/Sandcastle/?src=Terrain%20Clipping%20Planes.html|Clipping the Globe.}
+     *
+     * @example
+     * // This clipping plane's distance is positive, which means its normal
+     * // is facing the origin. This will clip everything that is behind 
+     * // the plane, which is all pixels with y > 5.
+     * var clippingPlanes = new Cesium.ClippingPlaneCollection({
+     *     planes : [
+     *         new Cesium.ClippingPlane(new Cesium.Cartesian3(0.0, 1.0, 0.0), 5.0)
+     *     ],
+     * });
+     * // Create an entity and attach the ClippingPlaneCollection to the model.
+     * var entity = viewer.entities.add({
+     *     position : Cesium.Cartesian3.fromDegrees(-123.0744619, 44.0503706, 10000),
+     *     model : {
+     *         uri : '../../../../Apps/SampleData/models/CesiumAir/Cesium_Air.glb',
+     *         minimumPixelSize : 128,
+     *         maximumScale : 20000,
+     *         clippingPlanes : clippingPlanes
+     *     }
+     * });
+     * viewer.zoomTo(entity);
      */
     function ClippingPlaneCollection(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
