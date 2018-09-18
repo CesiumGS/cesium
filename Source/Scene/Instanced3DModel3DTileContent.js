@@ -482,13 +482,11 @@ define([
             var tilesetClippingPlanes = this._tileset.clippingPlanes;
             if (this._tile.clippingPlanesDirty && defined(tilesetClippingPlanes)) {
                 // Use the root tile's transform.
-                if (!useBoundingSphereForClipping) {
-                    model._clippingPlaneOffsetMatrix = Matrix4.multiply(rtcCenterTransform, this._tileset.root.computedTransform, new Matrix4());
+                if (!this._tileset.root._useBoundingSphereForClipping) {
+                    model._clippingPlaneOffsetMatrix = this._tileset.root.computedTransform;
                 } else if (this._tileset.ready) {
-                    model._clippingPlaneOffsetMatrix = Transforms.eastNorthUpToFixedFrame(this._tileset.boundingSphere.center);
+                    model._clippingPlaneOffsetMatrix = this._tileset.root._clippingPlaneOffsetMatrix;
                 }
-                tileset._clippingPlaneOffsetMatrix = model._clippingPlaneOffsetMatrix;
-
                 // Dereference the clipping planes from the model if they are irrelevant - saves on shading
                 // Link/Dereference directly to avoid ownership checks.
                 model._clippingPlanes = (tilesetClippingPlanes.enabled && this._tile._isClipped) ? tilesetClippingPlanes : undefined;

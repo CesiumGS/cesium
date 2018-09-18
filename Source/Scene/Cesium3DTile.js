@@ -201,7 +201,6 @@ define([
                 Cesium3DTile._deprecationWarning('contentUrl', 'This tileset JSON uses the "content.url" property which has been deprecated. Use "content.uri" instead.');
                 contentHeaderUri = contentHeader.url;
             }
-
             hasEmptyContent = false;
             contentState = Cesium3DTileContentState.UNLOADED;
             contentResource = baseResource.getDerivedResource({
@@ -335,6 +334,12 @@ define([
         this._priority = 0.0;
         this._isClipped = true;
         this._clippingPlanesState = 0; // encapsulates (_isClipped, clippingPlanes.enabled) and number/function
+        this._useBoundingSphereForClipping = false;
+        // If this is the root tile, and it doesn't have a defined transform, fall back to bounding sphere. 
+        if (!defined(this.parent) && !defined(this._header.transform)) {
+            this._clippingPlaneOffsetMatrix = Transforms.eastNorthUpToFixedFrame(this.boundingSphere.center);
+            this._useBoundingSphereForClipping = true;
+        }
 
         this._debugBoundingVolume = undefined;
         this._debugContentBoundingVolume = undefined;
@@ -822,10 +827,10 @@ define([
         var tileset = this._tileset;
         var clippingPlanes = tileset.clippingPlanes;
         // Don't run the clipping plane visibility check until the content has at least been initialized.
-        if (defined(clippingPlanes) && clippingPlanes.enabled && defined(this._content)) {
+        if (defined(clippingPlanes) && clippingPlanes.enabled) {
             var tileTransform = tileset.root.computedTransform;
-            if(tileset._clippingPlaneOffsetMatrix) {
-                tileTransform = tileset._clippingPlaneOffsetMatrix;
+            if(defined(tileset.root._clippingPlaneOffsetMatrix)) {
+                tileTransform = tileset.root._clippingPlaneOffsetMatrix;
             }
             var intersection = clippingPlanes.computeIntersectionWithBoundingVolume(boundingVolume, tileTransform);
             this._isClipped = intersection !== Intersect.INSIDE;
@@ -862,7 +867,9 @@ define([
         var clippingPlanes = tileset.clippingPlanes;
         if (defined(clippingPlanes) && clippingPlanes.enabled) {
             var tileTransform = tileset.root.computedTransform;
-            // TODO: When does this run? Should the transform be updated here too?
+            if(defined(tileset.root._clippingPlaneOffsetMatrix)) {
+                tileTransform = tileset.root._clippingPlaneOffsetMatrix;
+            }
             var intersection = clippingPlanes.computeIntersectionWithBoundingVolume(boundingVolume, tileTransform);
             this._isClipped = intersection !== Intersect.INSIDE;
             if (intersection === Intersect.OUTSIDE) {
@@ -1055,6 +1062,10 @@ define([
         }
         if (defined(this._viewerRequestVolume)) {
             this._viewerRequestVolume = this.createBoundingVolume(header.viewerRequestVolume, this.computedTransform, this._viewerRequestVolume);
+        }
+
+        if (this._useBoundingSphereForClipping) {
+            this._clippingPlaneOffsetMatrix = Transforms.eastNorthUpToFixedFrame(this.boundingSphere.center);
         }
 
         // Destroy the debug bounding volumes. They will be generated fresh.
