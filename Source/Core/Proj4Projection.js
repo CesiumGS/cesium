@@ -1,5 +1,4 @@
 define([
-        '../ThirdParty/proj4',
         './Cartesian3',
         './Cartographic',
         './Math',
@@ -8,9 +7,9 @@ define([
         './defined',
         './defineProperties',
         './Ellipsoid',
+        './getAbsoluteUri',
         './oneTimeWarning'
     ], function(
-        proj4,
         Cartesian3,
         Cartographic,
         CesiumMath,
@@ -19,6 +18,7 @@ define([
         defined,
         defineProperties,
         Ellipsoid,
+        getAbsoluteUri,
         oneTimeWarning) {
     'use strict';
 
@@ -30,15 +30,24 @@ define([
      * @alias Proj4Projection
      * @constructor
      *
+     * @param {String} proj4Uri URI to the proj4.js matching the input module.
+     * @param {Function} proj4Function proj4 module matching the version located at the given URI.
      * @param {String} [wellKnownText] proj4js well known text specifying the projection. Defaults to EPSG:3857, web mercator.
      * @param {Number} [heightScale=1.0] Scale to convert from heights in meters to the projection's units.
      */
-    function Proj4Projection(wellKnownText, heightScale) {
+    function Proj4Projection(proj4Uri, proj4Function, wellKnownText, heightScale) {
+        //>>includeStart('debug', pragmas.debug);
+        Check.typeOf.string('proj4Uri', proj4Uri);
+        Check.defined('proj4Function', proj4Function);
+        //>>includeEnd('debug');
+
         this.ellipsoid = Ellipsoid.WGS84;
 
         var wkt = defaultValue(wellKnownText, 'EPSG:3857'); // web mercator
+
+        this._projection = proj4Function(wkt);
+        this._proj4Uri = getAbsoluteUri(proj4Uri);
         this._wkt = wkt;
-        this._projection = proj4(wkt);
 
         heightScale = defaultValue(heightScale, 1.0);
         this._heightScale = heightScale;
@@ -46,6 +55,17 @@ define([
     }
 
     defineProperties(Proj4Projection.prototype, {
+        /**
+         * The URI used to access this Proj4Projection's version of proj4.js.
+         * @memberof Proj4Projection.prototype
+         * @type {String}
+         * @readonly
+         */
+        proj4Uri: {
+            get: function() {
+                return this._proj4Uri;
+            }
+        },
         /**
          * The well-known-text string used to initialize proj4js.
          * @memberof Proj4Projection.prototype

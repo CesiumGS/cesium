@@ -3,10 +3,10 @@ defineSuite([
         'Core/Cartesian2',
         'Core/Cartesian3',
         'Core/Cartographic',
+        'Core/CustomProjection',
         'Core/Ellipsoid',
         'Core/GeographicProjection',
         'Core/Math',
-        'Core/Proj4Projection',
         'Core/Rectangle',
         'Core/WebMercatorProjection'
     ], function(
@@ -14,10 +14,10 @@ defineSuite([
         Cartesian2,
         Cartesian3,
         Cartographic,
+        CustomProjection,
         Ellipsoid,
         GeographicProjection,
         CesiumMath,
-        Proj4Projection,
         Rectangle,
         WebMercatorProjection) {
     'use strict';
@@ -336,7 +336,7 @@ defineSuite([
     it('generates 2D position attributes for projections other than Geographic and Web Mercator', function() {
         var width = 3;
         var height = 3;
-        var projection = new Proj4Projection('+proj=moll +lon_0=0 +x_0=0 +y_0=0 +a=6371000 +b=6371000 +units=m +no_defs');
+        var projection = new CustomProjection('Data/UserGeographic.txt', 'testProjection');
 
         var options = {
             heightmap : [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0],
@@ -378,7 +378,7 @@ defineSuite([
     it('generates 2D position attributes with relative-to-center', function() {
         var width = 3;
         var height = 3;
-        var projection = new Proj4Projection('+proj=moll +lon_0=0 +x_0=0 +y_0=0 +a=6371000 +b=6371000 +units=m +no_defs');
+        var projection = new CustomProjection('Data/UserGeographic.txt', 'testProjection');
 
         var rectangle = new Rectangle(
             CesiumMath.toRadians(10.0),

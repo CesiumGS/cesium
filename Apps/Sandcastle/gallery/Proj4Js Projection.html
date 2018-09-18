@@ -8,6 +8,7 @@
     <meta name="cesium-sandcastle-labels" content="Showcases">
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
+    <script type="text/javascript" src="../../../ThirdParty/proj4js-2.5.0/proj4.js"></script>
     <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
     <script type="text/javascript">
         if(typeof require === "function") {
@@ -18,7 +19,7 @@
         }
     </script>
 </head>
-<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
+<body class="sandcastle-loading" data-sandcastle-bucket="bucket-proj4-requirejs.html">
 <style>
     @import url(../templates/bucket.css);
 </style>
@@ -29,9 +30,16 @@
 function startup(Cesium) {
     'use strict';
 //Sandcastle_Begin
+
+var wkt = '+proj=moll +lon_0=0 +x_0=0 +y_0=0 +a=6371000 +b=6371000 +units=m +no_defs';
+var proj4Path = '../../../ThirdParty/proj4js-2.5.0/proj4.js';
+
+// proj4 imported in Sandcastle <head> HTML
+var mollweideProjection = new Cesium.Proj4Projection(proj4Path, proj4, wkt); // eslint-disable-line no-undef
+
 var viewer = new Cesium.Viewer('cesiumContainer', {
     sceneMode : Cesium.SceneMode.COLUMBUS_VIEW,
-    mapProjection : new Cesium.Proj4Projection('+proj=moll +lon_0=0 +x_0=0 +y_0=0 +a=6371000 +b=6371000 +units=m +no_defs')
+    mapProjection : mollweideProjection
 });
 
 var pointEntities = [];

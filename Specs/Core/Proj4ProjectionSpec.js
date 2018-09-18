@@ -3,25 +3,28 @@ defineSuite([
     'Core/Cartesian3',
     'Core/Cartographic',
     'Core/Ellipsoid',
-    'Core/Math'
+    'Core/Math',
+    '../../../ThirdParty/proj4js-2.5.0/proj4'
 ], function(
     Proj4Projection,
     Cartesian3,
     Cartographic,
     Ellipsoid,
-    CesiumMath) {
+    CesiumMath,
+    proj4) {
     'use strict';
 
     var mollweideWellKnownText = '+proj=moll +lon_0=0 +x_0=0 +y_0=0 +a=6371000 +b=6371000 +units=m +no_defs';
+    var proj4Uri = 'ThirdParty/proj4js-2.5.0/proj4.js';
 
     it('construct0', function() {
-        var projection = new Proj4Projection();
+        var projection = new Proj4Projection(proj4Uri, proj4);
         expect(projection.wellKnownText).toEqual('EPSG:3857');
         expect(projection.ellipsoid).toEqual(Ellipsoid.WGS84);
     });
 
     it('construct1', function() {
-        var projection = new Proj4Projection(mollweideWellKnownText);
+        var projection = new Proj4Projection(proj4Uri, proj4, mollweideWellKnownText);
         expect(projection.wellKnownText).toEqual(mollweideWellKnownText);
         expect(projection.ellipsoid).toEqual(Ellipsoid.WGS84);
     });
@@ -29,7 +32,7 @@ defineSuite([
     it('project0', function() {
         var height = 10.0;
         var cartographic = new Cartographic(0.0, 0.0, height);
-        var projection = new Proj4Projection(mollweideWellKnownText);
+        var projection = new Proj4Projection(proj4Uri, proj4, mollweideWellKnownText);
         expect(projection.project(cartographic)).toEqual(new Cartesian3(0.0, 0.0, height));
     });
 
@@ -44,7 +47,7 @@ defineSuite([
                 ellipsoid.maximumRadius * Math.log(Math.tan(Math.PI / 4.0 + cartographic.latitude / 2.0)),
                 0.0);
 
-        var projection = new Proj4Projection('EPSG:3857');
+        var projection = new Proj4Projection(proj4Uri, proj4, 'EPSG:3857');
         expect(projection.project(cartographic)).toEqualEpsilon(expected, CesiumMath.EPSILON8);
     });
 
@@ -59,7 +62,7 @@ defineSuite([
                 ellipsoid.maximumRadius * Math.log(Math.tan(Math.PI / 4.0 + cartographic.latitude / 2.0)),
                 0.0);
 
-        var projection = new Proj4Projection('EPSG:3857');
+        var projection = new Proj4Projection(proj4Uri, proj4, 'EPSG:3857');
         expect(projection.project(cartographic)).toEqualEpsilon(expected, CesiumMath.EPSILON8);
     });
 
@@ -74,7 +77,7 @@ defineSuite([
                 ellipsoid.maximumRadius * Math.log(Math.tan(Math.PI / 4.0 + cartographic.latitude / 2.0)),
                 0.0);
 
-        var projection = new Proj4Projection('EPSG:3857');
+        var projection = new Proj4Projection(proj4Uri, proj4, 'EPSG:3857');
         var result = new Cartesian3(0.0, 0.0, 0.0);
         var returnValue = projection.project(cartographic, result);
         expect(result).toEqual(returnValue);
@@ -83,14 +86,14 @@ defineSuite([
 
     it('unproject0', function() {
         var cartographic = new Cartographic(CesiumMath.PI_OVER_TWO, CesiumMath.PI_OVER_FOUR, 12.0);
-        var projection = new Proj4Projection('EPSG:3857');
+        var projection = new Proj4Projection(proj4Uri, proj4, 'EPSG:3857');
         var projected = projection.project(cartographic);
         expect(projection.unproject(projected)).toEqualEpsilon(cartographic, CesiumMath.EPSILON14);
     });
 
     it('unproject1', function() {
         var cartographic = new Cartographic(CesiumMath.PI_OVER_TWO, CesiumMath.PI_OVER_FOUR, 12.0);
-        var projection = new Proj4Projection('EPSG:3857');
+        var projection = new Proj4Projection(proj4Uri, proj4, 'EPSG:3857');
         var projected = projection.project(cartographic);
         var result = new Cartographic(0.0, 0.0, 0.0);
         var returnValue = projection.unproject(projected, result);
@@ -109,7 +112,7 @@ defineSuite([
                 ellipsoid.maximumRadius * Math.log(Math.tan(Math.PI / 4.0 + cartographic.latitude / 2.0)),
                 0.5);
 
-        var projection = new Proj4Projection('EPSG:3857', 0.5);
+        var projection = new Proj4Projection(proj4Uri, proj4, 'EPSG:3857', 0.5);
         var returnValue = projection.project(cartographic);
         expect(returnValue).toEqualEpsilon(expected, CesiumMath.EPSILON8);
 
@@ -118,7 +121,7 @@ defineSuite([
     });
 
     it('project throws without cartesian', function() {
-        var projection = new Proj4Projection();
+        var projection = new Proj4Projection(proj4Uri, proj4);
         expect(function() {
             return projection.unproject();
         }).toThrowDeveloperError();

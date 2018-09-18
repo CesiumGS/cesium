@@ -29,6 +29,8 @@ define([
         CUSTOM : 3
     });
 
+    var proj4Versions = {};
+
     /**
      * Serializes and Deserializes MapProjections.
      *
@@ -43,6 +45,7 @@ define([
         //>>includeEnd('debug');
 
         var projectionType = ProjectionType.GEOGRAPHIC;
+        var proj4Uri;
         var wellKnownText;
         var heightScale;
         var url;
@@ -51,6 +54,7 @@ define([
             projectionType = ProjectionType.WEBMERCATOR;
         } else if (mapProjection instanceof Proj4Projection) {
             projectionType = ProjectionType.PROJ4JS;
+            proj4Uri = mapProjection.proj4Uri;
             wellKnownText = mapProjection.wellKnownText;
             heightScale = mapProjection.heightScale;
         } else if (mapProjection instanceof CustomProjection) {
@@ -60,6 +64,7 @@ define([
         }
 
         this.projectionType = projectionType;
+        this.proj4Uri = proj4Uri;
         this.wellKnownText = wellKnownText;
         this.heightScale = heightScale;
         this.url = url;
@@ -69,7 +74,7 @@ define([
     }
 
     /**
-     * Unpacks the given SerializedMapProjection.
+     * Unpacks the given SerializedMapProjection on a web worker.
      *
      * @param {Object} serializedMapProjection A SerializedMapProjection object.
      * @returns {Promise.<CustomProjection>} A Promise that resolves to a MapProjection, or rejects if the SerializedMapProjection is malformed.
@@ -88,7 +93,17 @@ define([
         } else if (projectionType === ProjectionType.WEBMERCATOR) {
             projection = new WebMercatorProjection(ellipsoid);
         } else if (projectionType === ProjectionType.PROJ4JS) {
-            projection = new Proj4Projection(serializedMapProjection.wellKnownText, serializedMapProjection.heightScale);
+            var proj4Uri = serializedMapProjection.proj4Uri;
+            var proj4Version = proj4Versions[proj4Uri];
+            if (defined(proj4Version)) {
+                projection = new Proj4Projection(proj4Uri, proj4Version, serializedMapProjection.wellKnownText, serializedMapProjection.heightScale);
+                return when.resolve(projection);
+            }
+            return SerializedMapProjection._getProj4(proj4Uri)
+                .then(function(proj4Version) {
+                    proj4Versions[proj4Uri] = proj4Version;
+                    return new Proj4Projection(proj4Uri, proj4Version, serializedMapProjection.wellKnownText, serializedMapProjection.heightScale);
+                });
         } else if (projectionType === ProjectionType.CUSTOM) {
             projection = new CustomProjection(serializedMapProjection.url, serializedMapProjection.projectionName, ellipsoid);
             return projection.readyPromise;
@@ -100,6 +115,24 @@ define([
 
         return when.reject(new DeveloperError('unknown projection'));
     };
+
+    var contexts = 0;
+    function getProj4(proj4Uri) {
+        var deferred = when.defer();
+        var requireContext = require.config({
+            context: contexts++
+        });
+        try {
+            requireContext([proj4Uri], function(proj) {
+                deferred.resolve(proj);
+            });
+        } catch (error) {
+            deferred.reject(error);
+        }
+        return deferred.promise;
+    }
+
+    SerializedMapProjection._getProj4 = getProj4;
 
     return SerializedMapProjection;
 });

@@ -4,14 +4,18 @@ defineSuite([
         'Core/Ellipsoid',
         'Core/GeographicProjection',
         'Core/Proj4Projection',
-        'Core/WebMercatorProjection'
+        'Core/WebMercatorProjection',
+        'ThirdParty/when',
+        '../../../ThirdParty/proj4js-2.5.0/proj4'
     ], function(
         SerializedMapProjection,
         CustomProjection,
         Ellipsoid,
         GeographicProjection,
         Proj4Projection,
-        WebMercatorProjection) {
+        WebMercatorProjection,
+        when,
+        proj4) {
     'use strict';
 
     it('serializes and de-serializes WebMercatorProjection', function() {
@@ -50,8 +54,11 @@ defineSuite([
     });
 
     it('serializes and de-serializes Proj4Projection', function() {
-        var projection = new Proj4Projection('+proj=moll +lon_0=0 +x_0=0 +y_0=0 +a=6371000 +b=6371000 +units=m +no_defs', 0.5);
+        var proj4Uri = '../../../ThirdParty/proj4js-2.5.0/proj4.js';
+        var projection = new Proj4Projection(proj4Uri, proj4, '+proj=moll +lon_0=0 +x_0=0 +y_0=0 +a=6371000 +b=6371000 +units=m +no_defs', 0.5);
         var serialized = new SerializedMapProjection(projection);
+
+        spyOn(SerializedMapProjection, '_getProj4').and.returnValue(when.resolve(proj4));
 
         return SerializedMapProjection.deserialize(serialized)
             .then(function(deserializedProjection) {

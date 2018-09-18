@@ -28,11 +28,13 @@ module.exports = function(config) {
         files : [
             'Specs/karma-main.js',
             {pattern : 'Source/**', included : false},
-            {pattern : 'Specs/**', included : false}
+            {pattern : 'Specs/**', included : false},
+            {pattern : 'ThirdParty/proj4js-2.5.0/proj4.js', included : false}
         ],
 
         proxies : {
-            '/Data' : '/base/Specs/Data'
+            '/Data' : '/base/Specs/Data',
+            '/ThirdParty' : '/base/ThirdParty'
         },
 
         // list of files to exclude
