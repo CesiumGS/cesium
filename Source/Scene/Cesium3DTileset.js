@@ -1478,7 +1478,6 @@ define([
         filterProcessingQueue(tileset);
         var tiles = tileset._processingQueue;
         var length = tiles.length;
-
         // Process tiles in the PROCESSING state so they will eventually move to the READY state.
         for (var i = 0; i < length; ++i) {
             tiles[i].process(tileset, frameState);

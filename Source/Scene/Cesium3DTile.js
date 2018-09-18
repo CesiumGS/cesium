@@ -24,6 +24,7 @@ define([
         '../Core/RequestType',
         '../Core/Resource',
         '../Core/RuntimeError',
+        '../Core/Transforms',
         '../ThirdParty/when',
         './Cesium3DTileContentFactory',
         './Cesium3DTileContentState',
@@ -60,6 +61,7 @@ define([
         RequestType,
         Resource,
         RuntimeError,
+        Transforms,
         when,
         Cesium3DTileContentFactory,
         Cesium3DTileContentState,
@@ -306,7 +308,7 @@ define([
          *
          * @private
          */
-        this.clippingPlanesDirty = false;
+        this.clippingPlanesDirty = true;
 
         // Members that are updated every frame for tree traversal and rendering optimizations:
         this._distanceToCamera = 0;
@@ -702,7 +704,6 @@ define([
         }
 
         var contentFailedFunction = getContentFailedFunction(this);
-
         promise.then(function(arrayBuffer) {
             if (that.isDestroyed()) {
                 // Tile is unloaded before the content finishes loading
@@ -817,12 +818,15 @@ define([
     Cesium3DTile.prototype.visibility = function(frameState, parentVisibilityPlaneMask) {
         var cullingVolume = frameState.cullingVolume;
         var boundingVolume = getBoundingVolume(this, frameState);
-        return CullingVolume.MASK_INSIDE;
 
-        var tileset = this._tileset; // eslint-disable-line no-unreachable
+        var tileset = this._tileset;
         var clippingPlanes = tileset.clippingPlanes;
-        if (defined(clippingPlanes) && clippingPlanes.enabled) {
+        // Don't run the clipping plane visibility check until the content has at least been initialized.
+        if (defined(clippingPlanes) && clippingPlanes.enabled && defined(this._content)) {
             var tileTransform = tileset.root.computedTransform;
+            if(tileset._clippingPlaneOffsetMatrix) {
+                tileTransform = tileset._clippingPlaneOffsetMatrix;
+            }
             var intersection = clippingPlanes.computeIntersectionWithBoundingVolume(boundingVolume, tileTransform);
             this._isClipped = intersection !== Intersect.INSIDE;
             if (intersection === Intersect.OUTSIDE) {
@@ -858,6 +862,7 @@ define([
         var clippingPlanes = tileset.clippingPlanes;
         if (defined(clippingPlanes) && clippingPlanes.enabled) {
             var tileTransform = tileset.root.computedTransform;
+            // TODO: When does this run? Should the transform be updated here too?
             var intersection = clippingPlanes.computeIntersectionWithBoundingVolume(boundingVolume, tileTransform);
             this._isClipped = intersection !== Intersect.INSIDE;
             if (intersection === Intersect.OUTSIDE) {

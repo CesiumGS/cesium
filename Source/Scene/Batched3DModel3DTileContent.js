@@ -483,6 +483,7 @@ define([
                 // If no RTC or transform for root tile, just use the bounding sphere as a fallback.
                 this._model._clippingPlaneOffsetMatrix = Transforms.eastNorthUpToFixedFrame(this._tileset.boundingSphere.center);
             }
+            this._tileset._clippingPlaneOffsetMatrix = this._model._clippingPlaneOffsetMatrix;
 
             // Dereference the clipping planes from the model if they are irrelevant.
             // Link/Dereference directly to avoid ownership checks.

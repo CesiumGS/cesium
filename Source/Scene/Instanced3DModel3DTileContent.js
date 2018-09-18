@@ -487,6 +487,7 @@ define([
                 } else if (this._tileset.ready) {
                     model._clippingPlaneOffsetMatrix = Transforms.eastNorthUpToFixedFrame(this._tileset.boundingSphere.center);
                 }
+                tileset._clippingPlaneOffsetMatrix = model._clippingPlaneOffsetMatrix;
 
                 // Dereference the clipping planes from the model if they are irrelevant - saves on shading
                 // Link/Dereference directly to avoid ownership checks.

@@ -587,7 +587,7 @@ define([
 
         var modelMatrix = this.modelMatrix;
         if (defined(transform)) {
-            modelMatrix = Matrix4.multiply(modelMatrix, transform, scratchMatrix);
+            modelMatrix = Matrix4.multiply(transform, modelMatrix, scratchMatrix);
         }
 
         // If the collection is not set to union the clipping regions, the volume must be outside of all planes to be
