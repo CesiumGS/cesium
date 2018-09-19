@@ -187,9 +187,8 @@ defineSuite([
 
     function addZoomTo(model) {
         model.zoomTo = function(zoom) {
-            if (!defined(zoom)) {
-                zoom = 4.0;
-            }
+            zoom = defaultValue(zoom, 4.0);
+
             var camera = scene.camera;
             var center = Matrix4.multiplyByPoint(model.modelMatrix, model.boundingSphere.center, new Cartesian3());
             var r = zoom * Math.max(model.boundingSphere.radius, camera.frustum.near);
