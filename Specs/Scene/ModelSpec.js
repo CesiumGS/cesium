@@ -186,10 +186,13 @@ defineSuite([
     });
 
     function addZoomTo(model) {
-        model.zoomTo = function() {
+        model.zoomTo = function(zoom) {
+            if (!defined(zoom)) {
+                zoom = 4.0;
+            }
             var camera = scene.camera;
             var center = Matrix4.multiplyByPoint(model.modelMatrix, model.boundingSphere.center, new Cartesian3());
-            var r = 4.0 * Math.max(model.boundingSphere.radius, camera.frustum.near);
+            var r = zoom * Math.max(model.boundingSphere.radius, camera.frustum.near);
             camera.lookAt(center, new HeadingPitchRange(0.0, 0.0, r));
         };
     }
@@ -2735,10 +2738,19 @@ defineSuite([
 
     it('renders with the KHR_materials_pbrSpecularGlossiness extension', function() {
         return loadModel(boomBoxPbrSpecularGlossinessUrl).then(function(model) {
-            model.show = true;
-            model.zoomTo();
+            model.show = false;
+            model.zoomTo(2);
 
-            scene.renderForSpecs();
+            var originalColor;
+            expect(scene).toRenderAndCall(function(rgba) {
+                originalColor = rgba;
+            });
+
+            model.show = true;
+
+            expect(scene).toRenderAndCall(function(rgba) {
+                expect(rgba).not.toEqual(originalColor);
+            });
 
             primitives.remove(model);
         });
@@ -2746,10 +2758,19 @@ defineSuite([
 
     it('renders with the KHR_materials_pbrSpecularGlossiness extension with defaults', function() {
         return loadModel(boomBoxPbrSpecularGlossinessDefaultsUrl).then(function(model) {
-            model.show = true;
-            model.zoomTo();
+            model.show = false;
+            model.zoomTo(2);
 
-            scene.renderForSpecs();
+            var originalColor;
+            expect(scene).toRenderAndCall(function(rgba) {
+                originalColor = rgba;
+            });
+
+            model.show = true;
+
+            expect(scene).toRenderAndCall(function(rgba) {
+                expect(rgba).not.toEqual(originalColor);
+            });
 
             primitives.remove(model);
         });
@@ -2757,10 +2778,19 @@ defineSuite([
 
     it('renders with the KHR_materials_pbrSpecularGlossiness extension when no textures are found', function() {
         return loadModel(boomBoxPbrSpecularGlossinessNoTextureUrl).then(function(model) {
-            model.show = true;
-            model.zoomTo();
+            model.show = false;
+            model.zoomTo(2);
 
-            scene.renderForSpecs();
+            var originalColor;
+            expect(scene).toRenderAndCall(function(rgba) {
+                originalColor = rgba;
+            });
+
+            model.show = true;
+
+            expect(scene).toRenderAndCall(function(rgba) {
+                expect(rgba).not.toEqual(originalColor);
+            });
 
             primitives.remove(model);
         });
