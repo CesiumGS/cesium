@@ -278,7 +278,7 @@ define([
         fireDeviceOrientation : function(element, options) {
             element.dispatchEvent(createDeviceOrientationEvent('deviceorientation', options));
         },
-        fireDeviceOrientation : function(element, options) {
+        fireDeviceOrientationAbsolute : function(element, options) {
             element.dispatchEvent(createDeviceOrientationEvent('deviceorientationabsolute', options));
         },
         fireMockEvent : function(eventHandler, event) {
