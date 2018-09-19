@@ -2739,6 +2739,8 @@ defineSuite([
             model.zoomTo();
 
             scene.renderForSpecs();
+
+            primitives.remove(model);
         });
     });
 
@@ -2748,6 +2750,8 @@ defineSuite([
             model.zoomTo();
 
             scene.renderForSpecs();
+
+            primitives.remove(model);
         });
     });
 
@@ -2757,6 +2761,8 @@ defineSuite([
             model.zoomTo();
 
             scene.renderForSpecs();
+
+            primitives.remove(model);
         });
     });
 
