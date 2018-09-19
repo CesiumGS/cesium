@@ -97,10 +97,10 @@ define([
 
         this._enableDeviceOrientation = function(enable) {
             if (enable) {
-                if ('orientation' in screen) {
+                if ('orientation' in screen) { //current w3c standard
                     screenOrientationChanged();
                     screen.orientation.addEventListener('change', screenOrientationChanged, false);
-                } else if ('onmsorientationchange' in screen) {
+                } else if ('onmsorientationchange' in screen) { //IE11/Edge
                     msScreenOrientationChanged();
                     screen.addEventListener('MSOrientationChange', msScreenOrientationChanged, false);
                 } else if ('orientation' in window) { //Safari

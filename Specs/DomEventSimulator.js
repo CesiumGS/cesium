@@ -219,7 +219,7 @@ define([
         if (typeof event.initDeviceOrientationEvent === 'function') {
             event.initDeviceOrientationEvent(type, canBubble, cancelable, alpha, beta, gamma, absolute);
         } else {
-            event = new DeviceOrientationEvent('deviceorientation', {
+            event = new DeviceOrientationEvent(type, {
                 alpha : alpha,
                 beta : beta,
                 gamma : gamma,
@@ -277,6 +277,9 @@ define([
         },
         fireDeviceOrientation : function(element, options) {
             element.dispatchEvent(createDeviceOrientationEvent('deviceorientation', options));
+        },
+        fireDeviceOrientation : function(element, options) {
+            element.dispatchEvent(createDeviceOrientationEvent('deviceorientationabsolute', options));
         },
         fireMockEvent : function(eventHandler, event) {
             eventHandler.call(window, event);
