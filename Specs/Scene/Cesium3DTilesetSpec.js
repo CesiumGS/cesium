@@ -2050,9 +2050,9 @@ defineSuite([
         return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl).then(function(tileset) {
             tileset.style = new Cesium3DTileStyle({color: 'color("red")'});
             scene.renderForSpecs();
-            expect(tileset.statistics.numberOfTilesStyled).toBe(1);
+            expect(tileset._statistics.numberOfTilesStyled).toBe(1);
             scene.pickForSpecs();
-            expect(tileset.statistics.numberOfTilesStyled).toBe(0);
+            expect(tileset._statisticsPick.numberOfTilesStyled).toBe(0);
         });
     });
 

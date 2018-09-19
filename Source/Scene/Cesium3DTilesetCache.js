@@ -39,7 +39,7 @@ define([
         }
     };
 
-    Cesium3DTilesetCache.prototype.unloadTile = function(tileset, tile, unloadCallback) {
+    Cesium3DTilesetCache.prototype.unloadTile = function(tileset, tile, statistics, unloadCallback) {
         var node = tile.cacheNode;
         if (!defined(node)) {
             return;
@@ -47,10 +47,10 @@ define([
 
         this._list.remove(node);
         tile.cacheNode = undefined;
-        unloadCallback(tileset, tile);
+        unloadCallback(tileset, tile, statistics);
     };
 
-    Cesium3DTilesetCache.prototype.unloadTiles = function(tileset, unloadCallback) {
+    Cesium3DTilesetCache.prototype.unloadTiles = function(tileset, statistics, unloadCallback) {
         var trimTiles = this._trimTiles;
         this._trimTiles = false;
 
@@ -67,7 +67,7 @@ define([
         while ((node !== sentinel) && ((tileset.totalMemoryUsageInBytes > maximumMemoryUsageInBytes) || trimTiles)) {
             var tile = node.item;
             node = node.next;
-            this.unloadTile(tileset, tile, unloadCallback);
+            this.unloadTile(tileset, tile, statistics, unloadCallback);
         }
     };
 
