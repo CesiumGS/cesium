@@ -2858,9 +2858,9 @@ defineSuite([
 
             model.update(scene.frameState);
             scene.renderForSpecs();
-            // When clipping planes are created, we expect two calls to texImage2D 
-            // (one for initial creation, and one for copying the data in) 
-            // because clipping planes is stored inside a texture. 
+            // When clipping planes are created, we expect two calls to texImage2D
+            // (one for initial creation, and one for copying the data in)
+            // because clipping planes is stored inside a texture.
             expect(gl.texImage2D.calls.count() - callsBeforeClipping).toEqual(2);
 
             primitives.remove(model);
