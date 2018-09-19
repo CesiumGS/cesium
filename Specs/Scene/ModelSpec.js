@@ -2738,7 +2738,7 @@ defineSuite([
     it('renders with the KHR_materials_pbrSpecularGlossiness extension', function() {
         return loadModel(boomBoxPbrSpecularGlossinessUrl).then(function(model) {
             model.show = false;
-            model.zoomTo(2);
+            model.zoomTo(2.0);
 
             var originalColor;
             expect(scene).toRenderAndCall(function(rgba) {
@@ -2758,7 +2758,7 @@ defineSuite([
     it('renders with the KHR_materials_pbrSpecularGlossiness extension with defaults', function() {
         return loadModel(boomBoxPbrSpecularGlossinessDefaultsUrl).then(function(model) {
             model.show = false;
-            model.zoomTo(2);
+            model.zoomTo(2.0);
 
             var originalColor;
             expect(scene).toRenderAndCall(function(rgba) {
@@ -2778,7 +2778,7 @@ defineSuite([
     it('renders with the KHR_materials_pbrSpecularGlossiness extension when no textures are found', function() {
         return loadModel(boomBoxPbrSpecularGlossinessNoTextureUrl).then(function(model) {
             model.show = false;
-            model.zoomTo(2);
+            model.zoomTo(2.0);
 
             var originalColor;
             expect(scene).toRenderAndCall(function(rgba) {
