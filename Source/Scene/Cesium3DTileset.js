@@ -702,6 +702,10 @@ define([
                 that._extensionsUsed = tilesetJson.extensionsUsed;
                 that._gltfUpAxis = gltfUpAxis;
                 that._extras = tilesetJson.extras;
+                if (!defined(tilesetJson.root.transform)) {
+                    that._useBoundingSphereForClipping = true;
+                    that.clippingPlaneOffsetMatrix = Transforms.eastNorthUpToFixedFrame(that.boundingSphere.center);
+                }
                 that._readyPromise.resolve(that);
             }).otherwise(function(error) {
                 that._readyPromise.reject(error);
@@ -1295,11 +1299,6 @@ define([
             if (this._cullWithChildrenBounds) {
                 Cesium3DTileOptimizations.checkChildrenWithinParent(tile);
             }
-        }
-
-        if (!defined(rootTile._header.transform)) {
-            this._useBoundingSphereForClipping = true;
-            this.clippingPlaneOffsetMatrix = Transforms.eastNorthUpToFixedFrame(rootTile.boundingSphere.center);
         }
 
         return rootTile;

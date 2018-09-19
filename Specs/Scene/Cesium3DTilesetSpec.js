@@ -3203,22 +3203,23 @@ defineSuite([
 
     it('uses bounding sphere for clipping only if root has no transforms', function() {
         return Cesium3DTilesTester.loadTileset(scene, tilesetOfTilesetsUrl).then(function(tileset) {
-            expect(tileset.root._useBoundingSphereForClipping).toBe(true);
+            expect(tileset._useBoundingSphereForClipping).toBe(true);
 
             return Cesium3DTilesTester.loadTileset(scene, withTransformBoxUrl).then(function(tileset) {
-                expect(tileset.root._useBoundingSphereForClipping).toBe(false);
+                expect(tileset._useBoundingSphereForClipping).toBe(false);
             });
         });
     });
 
     it('correctly computes clippingPlaneOffsetMatrix', function() {
         return Cesium3DTilesTester.loadTileset(scene, tilesetOfTilesetsUrl).then(function(tileset) {
-            var offsetMatrix = tileset.root._clippingPlaneOffsetMatrix;
+            var offsetMatrix = tileset.clippingPlaneOffsetMatrix;
             var boundingSphereMatrix = Transforms.eastNorthUpToFixedFrame(tileset.root.boundingSphere.center);
             expect(Matrix4.equals(offsetMatrix,boundingSphereMatrix)).toBe(true);
 
             return Cesium3DTilesTester.loadTileset(scene, withTransformBoxUrl).then(function(tileset) {
-                expect(tileset.root._clippingPlaneOffsetMatrix).toBeUndefined();
+                offsetMatrix = tileset.clippingPlaneOffsetMatrix;
+                expect(Matrix4.equals(offsetMatrix,tileset.root.computedTransform)).toBe(true);
             });
         });
     });
