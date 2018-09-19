@@ -829,7 +829,8 @@ define([
                 } else {
                     Matrix4.multiply(context.uniformState.view3D, pointCloud._clippingPlaneOffsetMatrix, scratchClippingPlaneMatrix);
                 }
-                return scratchClippingPlaneMatrix;
+                
+                return Matrix4.multiply(scratchClippingPlaneMatrix, clippingPlanes.modelMatrix, scratchClippingPlaneMatrix);;
             }
         };
 
