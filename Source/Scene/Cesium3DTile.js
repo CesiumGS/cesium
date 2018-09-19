@@ -828,7 +828,7 @@ define([
         var clippingPlanes = tileset.clippingPlanes;
         if (defined(clippingPlanes) && clippingPlanes.enabled) {
             var tileTransform = tileset.root.computedTransform;
-            if(defined(tileset.root._clippingPlaneOffsetMatrix)) {
+            if (defined(tileset.root._clippingPlaneOffsetMatrix)) {
                 tileTransform = tileset.root._clippingPlaneOffsetMatrix;
             }
             var intersection = clippingPlanes.computeIntersectionWithBoundingVolume(boundingVolume, tileTransform);
@@ -866,7 +866,7 @@ define([
         var clippingPlanes = tileset.clippingPlanes;
         if (defined(clippingPlanes) && clippingPlanes.enabled) {
             var tileTransform = tileset.root.computedTransform;
-            if(defined(tileset.root._clippingPlaneOffsetMatrix)) {
+            if (defined(tileset.root._clippingPlaneOffsetMatrix)) {
                 tileTransform = tileset.root._clippingPlaneOffsetMatrix;
             }
             var intersection = clippingPlanes.computeIntersectionWithBoundingVolume(boundingVolume, tileTransform);

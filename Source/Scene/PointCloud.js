@@ -185,7 +185,7 @@ define([
         this.clippingPlanes = undefined;
         this.isClipped = false;
         this.clippingPlanesDirty = false;
-        // If defined, it's used to position the clipping planes instead of the modelMatrix.
+        // If defined, use this matrix to position the clipping planes instead of the modelMatrix.
         // This is so that when point clouds are part of a tileset they all get clipped relative
         // to the root tile.
         this._clippingPlaneOffsetMatrix = undefined;

@@ -539,7 +539,7 @@ define([
         this.clippingPlanes = options.clippingPlanes;
         // Used for checking if shaders need to be regenerated due to clipping plane changes.
         this._clippingPlanesState = 0;
-        // If defined, it's used to position the clipping planes instead of the modelMatrix.
+        // If defined, use this matrix to position the clipping planes instead of the modelMatrix.
         // This is so that when models are part of a tileset they all get clipped relative
         // to the root tile.
         this._clippingPlaneOffsetMatrix = undefined;
@@ -598,7 +598,7 @@ define([
         this.opaquePass = defaultValue(options.opaquePass, Pass.OPAQUE);
 
         this._computedModelMatrix = new Matrix4(); // Derived from modelMatrix and scale
-        this._modelViewMatrix = Matrix4.clone(Matrix4.IDENTITY); // Derived from modelMatrix, scale, and the current view matrix
+        this._clippingPlaneModelViewMatrix = Matrix4.clone(Matrix4.IDENTITY); // Derived from modelMatrix, scale, and the current view matrix
         this._initialRadius = undefined;           // Radius without model's scale property, model-matrix scale, animations, or skins
         this._boundingSphere = undefined;
         this._scaledBoundingSphere = new BoundingSphere();
@@ -3013,7 +3013,7 @@ define([
             if (!defined(clippingPlanes)) {
                 return Matrix4.IDENTITY;
             }
-            return Matrix4.multiply(model._modelViewMatrix, clippingPlanes.modelMatrix, scratchClippingPlaneMatrix);
+            return Matrix4.multiply(model._clippingPlaneModelViewMatrix, clippingPlanes.modelMatrix, scratchClippingPlaneMatrix);
         };
     }
 
@@ -4430,11 +4430,8 @@ define([
             var clippingPlanes = this._clippingPlanes;
             var currentClippingPlanesState = 0;
             if (defined(clippingPlanes) && clippingPlanes.enabled) {
-                if (!defined(this._clippingPlaneOffsetMatrix)) {
-                    Matrix4.multiply(context.uniformState.view3D, modelMatrix, this._modelViewMatrix);
-                } else {
-                    Matrix4.multiply(context.uniformState.view3D, this._clippingPlaneOffsetMatrix, this._modelViewMatrix);
-                }
+                var clippingPlaneOffsetMatrix = defaultValue(this._clippingPlaneOffsetMatrix, modelMatrix);
+                Matrix4.multiply(context.uniformState.view3D, clippingPlaneOffsetMatrix, this._modelViewMatrix);
                 currentClippingPlanesState = clippingPlanes.clippingPlanesState;
             }
 
