@@ -395,7 +395,7 @@ define([
      * @returns {Matrix3} The modified result parameter or a new Matrix3 instance if none was provided.
      *
      * @example
-     * //Set the view to in the inertial frame.
+     * //Set the view to the inertial frame.
      * scene.postUpdate.addEventListener(function(scene, time) {
      *    var now = Cesium.JulianDate.now();
      *    var offset = Cesium.Matrix4.multiplyByPoint(camera.transform, camera.position, new Cesium.Cartesian3());
@@ -529,12 +529,11 @@ define([
      *
      * @example
      * scene.postUpdate.addEventListener(function(scene, time) {
+     *   // View in ICRF.
      *   var icrfToFixed = Cesium.Transforms.computeIcrfToFixedMatrix(time);
      *   if (Cesium.defined(icrfToFixed)) {
-     *     var offset = Cesium.Matrix4.multiplyByPoint(camera.transform, camera.position, new Cesium.Cartesian3());
-     *     var transform = Cesium.Matrix4.fromRotationTranslation(icrfToFixed)
-     *     var inverseTransform = Cesium.Matrix4.inverseTransformation(transform, new Cesium.Matrix4());
-     *     Cesium.Matrix4.multiplyByPoint(inverseTransform, offset, offset);
+     *     var offset = Cesium.Cartesian3.clone(camera.position);
+     *     var transform = Cesium.Matrix4.fromRotationTranslation(icrfToFixed);
      *     camera.lookAtTransform(transform, offset);
      *   }
      * });
