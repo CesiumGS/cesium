@@ -4431,7 +4431,7 @@ define([
             var currentClippingPlanesState = 0;
             if (defined(clippingPlanes) && clippingPlanes.enabled) {
                 var clippingPlaneOffsetMatrix = defaultValue(this._clippingPlaneOffsetMatrix, modelMatrix);
-                Matrix4.multiply(context.uniformState.view3D, clippingPlaneOffsetMatrix, this._modelViewMatrix);
+                Matrix4.multiply(context.uniformState.view3D, clippingPlaneOffsetMatrix, this._clippingPlaneModelViewMatrix);
                 currentClippingPlanesState = clippingPlanes.clippingPlanesState;
             }
 

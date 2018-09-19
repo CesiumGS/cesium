@@ -297,11 +297,7 @@ define([
         var styleDirty = this._styleDirty;
         this._styleDirty = false;
 
-        if (!tileset.root._useBoundingSphereForClipping) {
-            pointCloud._clippingPlaneOffsetMatrix = tileset.root.computedTransform;
-        } else {
-            pointCloud._clippingPlaneOffsetMatrix = tileset.root._clippingPlaneOffsetMatrix;
-        }
+        pointCloud._clippingPlaneOffsetMatrix = tileset.clippingPlaneOffsetMatrix;
 
         pointCloud.style = defined(batchTable) ? undefined : tileset.style;
         pointCloud.styleDirty = styleDirty;

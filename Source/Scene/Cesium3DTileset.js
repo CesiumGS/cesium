@@ -18,6 +18,7 @@ define([
         '../Core/Matrix4',
         '../Core/Resource',
         '../Core/RuntimeError',
+        '../Core/Transforms',
         '../Renderer/ClearCommand',
         '../Renderer/Pass',
         '../ThirdParty/when',
@@ -60,6 +61,7 @@ define([
         Matrix4,
         Resource,
         RuntimeError,
+        Transforms,
         ClearCommand,
         Pass,
         when,
@@ -208,6 +210,9 @@ define([
         this._classificationType = options.classificationType;
 
         this._ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
+
+        this._useBoundingSphereForClipping = false;
+        this._clippingPlaneOffsetMatrix = undefined;
 
         /**
          * Optimization option. Whether the tileset should refine based on a dynamic screen space error. Tiles that are further
@@ -1110,6 +1115,21 @@ define([
         /**
          * @private
          */
+        clippingPlaneOffsetMatrix : {
+            get : function() {
+                if (this._useBoundingSphereForClipping) {
+                    return this._clippingPlaneOffsetMatrix;
+                }
+                return this.root.computedTransform;
+            },
+            set : function(value) {
+                this._clippingPlaneOffsetMatrix = Matrix4.clone(value, this._clippingPlaneOffsetMatrix);
+            }
+        },
+
+        /**
+         * @private
+         */
         styleEngine : {
             get : function() {
                 return this._styleEngine;
@@ -1275,6 +1295,11 @@ define([
             if (this._cullWithChildrenBounds) {
                 Cesium3DTileOptimizations.checkChildrenWithinParent(tile);
             }
+        }
+
+        if (!defined(rootTile._header.transform)) {
+            this._useBoundingSphereForClipping = true;
+            this.clippingPlaneOffsetMatrix = Transforms.eastNorthUpToFixedFrame(rootTile.boundingSphere.center);
         }
 
         return rootTile;

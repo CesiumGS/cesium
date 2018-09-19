@@ -56,8 +56,8 @@ define([
      * Specifies a set of clipping planes. Clipping planes selectively disable rendering in a region on the
      * outside of the specified list of {@link ClippingPlane} objects for a single gltf model, 3D Tileset, or the globe.
      * <p>
-     * In general the clipping planes' coordinates are relative to the object they're attached to, so a plane with distance set to 0 will clip 
-     * through the center of the object. 
+     * In general the clipping planes' coordinates are relative to the object they're attached to, so a plane with distance set to 0 will clip
+     * through the center of the object.
      * </p>
      * <p>
      * For 3D Tiles, the root tile's transform is used to position the clipping planes. If a transform is not defined, the root tile's {@link Cesium3DTile#boundingSphere} is used instead.
@@ -79,7 +79,7 @@ define([
      *
      * @example
      * // This clipping plane's distance is positive, which means its normal
-     * // is facing the origin. This will clip everything that is behind 
+     * // is facing the origin. This will clip everything that is behind
      * // the plane, which is anything with y coordinate > 5.
      * var clippingPlanes = new Cesium.ClippingPlaneCollection({
      *     planes : [

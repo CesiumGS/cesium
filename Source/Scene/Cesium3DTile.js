@@ -334,13 +334,6 @@ define([
         this._priority = 0.0;
         this._isClipped = true;
         this._clippingPlanesState = 0; // encapsulates (_isClipped, clippingPlanes.enabled) and number/function
-        this._useBoundingSphereForClipping = false;
-        // If this is the root tile, and it doesn't have a defined transform, fall back to bounding sphere.
-        if (!defined(this.parent) && !defined(this._header.transform)) {
-            this._clippingPlaneOffsetMatrix = Transforms.eastNorthUpToFixedFrame(this.boundingSphere.center);
-            this._useBoundingSphereForClipping = true;
-        }
-
         this._debugBoundingVolume = undefined;
         this._debugContentBoundingVolume = undefined;
         this._debugViewerRequestVolume = undefined;
@@ -827,11 +820,7 @@ define([
         var tileset = this._tileset;
         var clippingPlanes = tileset.clippingPlanes;
         if (defined(clippingPlanes) && clippingPlanes.enabled) {
-            var tileTransform = tileset.root.computedTransform;
-            if (defined(tileset.root._clippingPlaneOffsetMatrix)) {
-                tileTransform = tileset.root._clippingPlaneOffsetMatrix;
-            }
-            var intersection = clippingPlanes.computeIntersectionWithBoundingVolume(boundingVolume, tileTransform);
+            var intersection = clippingPlanes.computeIntersectionWithBoundingVolume(boundingVolume, tileset.clippingPlaneOffsetMatrix);
             this._isClipped = intersection !== Intersect.INSIDE;
             if (intersection === Intersect.OUTSIDE) {
                 return CullingVolume.MASK_OUTSIDE;
@@ -865,11 +854,7 @@ define([
         var tileset = this._tileset;
         var clippingPlanes = tileset.clippingPlanes;
         if (defined(clippingPlanes) && clippingPlanes.enabled) {
-            var tileTransform = tileset.root.computedTransform;
-            if (defined(tileset.root._clippingPlaneOffsetMatrix)) {
-                tileTransform = tileset.root._clippingPlaneOffsetMatrix;
-            }
-            var intersection = clippingPlanes.computeIntersectionWithBoundingVolume(boundingVolume, tileTransform);
+            var intersection = clippingPlanes.computeIntersectionWithBoundingVolume(boundingVolume, tileset.clippingPlaneOffsetMatrix);
             this._isClipped = intersection !== Intersect.INSIDE;
             if (intersection === Intersect.OUTSIDE) {
                 return Intersect.OUTSIDE;
@@ -1063,8 +1048,8 @@ define([
             this._viewerRequestVolume = this.createBoundingVolume(header.viewerRequestVolume, this.computedTransform, this._viewerRequestVolume);
         }
 
-        if (this._useBoundingSphereForClipping) {
-            this._clippingPlaneOffsetMatrix = Transforms.eastNorthUpToFixedFrame(this.boundingSphere.center);
+        if (this._tileset._useBoundingSphereForClipping && !defined(this.parent)) {
+            this._tileset.clippingPlaneOffsetMatrix = Transforms.eastNorthUpToFixedFrame(this.boundingSphere.center);
         }
         // Destroy the debug bounding volumes. They will be generated fresh.
         this._debugBoundingVolume = this._debugBoundingVolume && this._debugBoundingVolume.destroy();
