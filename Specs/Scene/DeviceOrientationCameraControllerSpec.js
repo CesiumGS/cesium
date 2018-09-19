@@ -47,9 +47,9 @@ defineSuite([
 
     function fireDeviceOrientationEvent(options) {
         if ('ondeviceorientationabsolute' in window) {
-            DomEventSimulator.fireDeviceOrientation(window, options);
-        } else {
             DomEventSimulator.fireDeviceOrientationAbsolute(window, options);
+        } else {
+            DomEventSimulator.fireDeviceOrientation(window, options);
         }
 
         controller.update();
