@@ -163,7 +163,7 @@ vec4 sampleAndBlend(
 }
 
 vec4 computeDayColor(vec4 initialColor, vec3 textureCoordinates);
-vec4 computeWaterColor(vec3 positionEyeCoordinates, vec2 textureCoordinates, mat3 enuToEye, vec4 imageryColor, float specularMapValue);
+vec4 computeWaterColor(vec3 positionEyeCoordinates, vec2 textureCoordinates, mat3 enuToEye, vec4 imageryColor, float specularMapValue, float fade);
 
 void main()
 {
@@ -199,37 +199,6 @@ void main()
     vec3 normalEC = czm_normal3D * normalMC;                                         // normalized surface normal in eye coordiantes
 #endif
 
-#ifdef SHOW_REFLECTIVE_OCEAN
-    vec2 waterMaskTranslation = u_waterMaskTranslationAndScale.xy;
-    vec2 waterMaskScale = u_waterMaskTranslationAndScale.zw;
-    vec2 waterMaskTextureCoordinates = v_textureCoordinates.xy * waterMaskScale + waterMaskTranslation;
-    waterMaskTextureCoordinates.y = 1.0 - waterMaskTextureCoordinates.y;
-
-    float mask = texture2D(u_waterMask, waterMaskTextureCoordinates).r;
-
-    if (mask > 0.0)
-    {
-        mat3 enuToEye = czm_eastNorthUpToEyeCoordinates(v_positionMC, normalEC);
-
-        vec2 ellipsoidTextureCoordinates = czm_ellipsoidWgs84TextureCoordinates(normalMC);
-        vec2 ellipsoidFlippedTextureCoordinates = czm_ellipsoidWgs84TextureCoordinates(normalMC.zyx);
-
-        vec2 textureCoordinates = mix(ellipsoidTextureCoordinates, ellipsoidFlippedTextureCoordinates, czm_morphTime * smoothstep(0.9, 0.95, normalMC.z));
-
-        color = computeWaterColor(v_positionEC, textureCoordinates, enuToEye, color, mask);
-    }
-#endif
-
-#ifdef APPLY_MATERIAL
-    czm_materialInput materialInput;
-    materialInput.st = v_textureCoordinates.st;
-    materialInput.normalEC = normalize(v_normalEC);
-    materialInput.slope = v_slope;
-    materialInput.height = v_height;
-    czm_material material = czm_getMaterial(materialInput);
-    color.xyz = mix(color.xyz, material.diffuse, material.alpha);
-#endif
-
 #if defined(ENABLE_DAYNIGHT_SHADING) || defined(GROUND_ATMOSPHERE)
     float cameraDist;
     if (czm_sceneMode == czm_sceneMode2D)
@@ -253,6 +222,39 @@ void main()
         fadeInDist -= maxRadii;
     }
     float fade = clamp((cameraDist - fadeOutDist) / (fadeInDist - fadeOutDist), 0.0, 1.0);
+#else
+    float fade = 1.0;
+#endif
+
+#ifdef SHOW_REFLECTIVE_OCEAN
+    vec2 waterMaskTranslation = u_waterMaskTranslationAndScale.xy;
+    vec2 waterMaskScale = u_waterMaskTranslationAndScale.zw;
+    vec2 waterMaskTextureCoordinates = v_textureCoordinates.xy * waterMaskScale + waterMaskTranslation;
+    waterMaskTextureCoordinates.y = 1.0 - waterMaskTextureCoordinates.y;
+
+    float mask = texture2D(u_waterMask, waterMaskTextureCoordinates).r;
+
+    if (mask > 0.0)
+    {
+        mat3 enuToEye = czm_eastNorthUpToEyeCoordinates(v_positionMC, normalEC);
+
+        vec2 ellipsoidTextureCoordinates = czm_ellipsoidWgs84TextureCoordinates(normalMC);
+        vec2 ellipsoidFlippedTextureCoordinates = czm_ellipsoidWgs84TextureCoordinates(normalMC.zyx);
+
+        vec2 textureCoordinates = mix(ellipsoidTextureCoordinates, ellipsoidFlippedTextureCoordinates, czm_morphTime * smoothstep(0.9, 0.95, normalMC.z));
+
+        color = computeWaterColor(v_positionEC, textureCoordinates, enuToEye, color, mask, fade);
+    }
+#endif
+
+#ifdef APPLY_MATERIAL
+    czm_materialInput materialInput;
+    materialInput.st = v_textureCoordinates.st;
+    materialInput.normalEC = normalize(v_normalEC);
+    materialInput.slope = v_slope;
+    materialInput.height = v_height;
+    czm_material material = czm_getMaterial(materialInput);
+    color.xyz = mix(color.xyz, material.diffuse, material.alpha);
 #endif
 
 #if defined(ENABLE_VERTEX_LIGHTING)
@@ -360,7 +362,7 @@ const float oceanFrequencyHighAltitude = 125000.0;
 const float oceanAnimationSpeedHighAltitude = 0.008;
 const float oceanOneOverAmplitudeHighAltitude = 1.0 / 2.0;
 
-vec4 computeWaterColor(vec3 positionEyeCoordinates, vec2 textureCoordinates, mat3 enuToEye, vec4 imageryColor, float maskValue)
+vec4 computeWaterColor(vec3 positionEyeCoordinates, vec2 textureCoordinates, mat3 enuToEye, vec4 imageryColor, float maskValue, float fade)
 {
     vec3 positionToEyeEC = -positionEyeCoordinates;
     float positionToEyeECLength = length(positionToEyeEC);
@@ -403,7 +405,7 @@ vec4 computeWaterColor(vec3 positionEyeCoordinates, vec2 textureCoordinates, mat
 
     // Use diffuse light to highlight the waves
     float diffuseIntensity = czm_getLambertDiffuse(czm_sunDirectionEC, normalEC) * maskValue;
-    vec3 diffuseHighlight = waveHighlightColor * diffuseIntensity;
+    vec3 diffuseHighlight = waveHighlightColor * diffuseIntensity * (1.0 - fade);
 
 #ifdef SHOW_OCEAN_WAVES
     // Where diffuse light is low or non-existent, use wave highlights based solely on
