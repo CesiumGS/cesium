@@ -1832,6 +1832,9 @@ define([
         var clippingPlanes = this._clippingPlanes;
         if (defined(clippingPlanes) && clippingPlanes.enabled) {
             clippingPlanes.update(frameState);
+            if (this._useBoundingSphereForClipping) {
+                this.clippingPlaneOffsetMatrix = Transforms.eastNorthUpToFixedFrame(this.boundingSphere.center);
+            }
         }
 
         this._timeSinceLoad = Math.max(JulianDate.secondsDifference(frameState.time, this._loadTimestamp) * 1000, 0.0);

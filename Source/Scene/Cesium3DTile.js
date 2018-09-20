@@ -1048,9 +1048,6 @@ define([
             this._viewerRequestVolume = this.createBoundingVolume(header.viewerRequestVolume, this.computedTransform, this._viewerRequestVolume);
         }
 
-        if (this._tileset._useBoundingSphereForClipping && !defined(this.parent)) {
-            this._tileset.clippingPlaneOffsetMatrix = Transforms.eastNorthUpToFixedFrame(this.boundingSphere.center);
-        }
         // Destroy the debug bounding volumes. They will be generated fresh.
         this._debugBoundingVolume = this._debugBoundingVolume && this._debugBoundingVolume.destroy();
         this._debugContentBoundingVolume = this._debugContentBoundingVolume && this._debugContentBoundingVolume.destroy();
