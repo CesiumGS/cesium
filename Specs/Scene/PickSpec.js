@@ -62,13 +62,14 @@ defineSuite([
         primitives.removeAll();
     });
 
-    function createRectangle() {
+    function createRectangle(height) {
         var e = new Primitive({
             geometryInstances: new GeometryInstance({
                 geometry: new RectangleGeometry({
                     rectangle: primitiveRectangle,
                     vertexFormat: EllipsoidSurfaceAppearance.VERTEX_FORMAT,
-                    granularity: CesiumMath.toRadians(20.0)
+                    granularity: CesiumMath.toRadians(20.0),
+                    height : height
                 })
             }),
             appearance: new EllipsoidSurfaceAppearance({
@@ -94,7 +95,7 @@ defineSuite([
             return;
         }
 
-        var rectangle = createRectangle();
+        var rectangle = createRectangle(0.0);
         expect(scene).toPickPrimitive(rectangle);
     });
 
@@ -108,7 +109,7 @@ defineSuite([
             destination : Rectangle.fromDegrees(-10.0, -10.0, 10.0, 10.0)
         });
 
-        var rectangle = createRectangle();
+        var rectangle = createRectangle(0.0);
 
         expect(scene).toPickPrimitive(rectangle, 7, 7, 5);
         expect(scene).notToPick(7, 7, 3);
@@ -124,30 +125,29 @@ defineSuite([
             destination : Rectangle.fromDegrees(-10.0, -10.0, 10.0, 10.0)
         });
 
-        var rectangle = createRectangle();
+        var rectangle = createRectangle(0.0);
 
         expect(scene).toDrillPickPrimitive(rectangle, 7, 7, 5);
         expect(scene).notToDrillPick(7, 7, 3);
     });
 
     it('does not pick primitives when show is false', function() {
-        var rectangle = createRectangle();
+        var rectangle = createRectangle(0.0);
         rectangle.show = false;
 
         expect(scene).notToPick();
     });
 
     it('does not pick primitives when alpha is zero', function() {
-        var rectangle = createRectangle();
+        var rectangle = createRectangle(0.0);
         rectangle.appearance.material.uniforms.color.alpha = 0.0;
 
         expect(scene).notToPick();
     });
 
     it('picks the top primitive', function() {
-        createRectangle();
-        var rectangle2 = createRectangle();
-        rectangle2.height = 0.01;
+        createRectangle(0.0);
+        var rectangle2 = createRectangle(1.0);
 
         expect(scene).toPickPrimitive(rectangle2);
     });
@@ -159,9 +159,8 @@ defineSuite([
     });
 
     it('drill picks multiple objects', function() {
-        var rectangle1 = createRectangle();
-        var rectangle2 = createRectangle();
-        rectangle2.height = 0.01;
+        var rectangle1 = createRectangle(0.0);
+        var rectangle2 = createRectangle(1.0);
 
         expect(scene).toDrillPickAndCall(function(pickedObjects) {
             expect(pickedObjects.length).toEqual(2);
@@ -171,9 +170,8 @@ defineSuite([
     });
 
     it('does not drill pick when show is false', function() {
-        var rectangle1 = createRectangle();
-        var rectangle2 = createRectangle();
-        rectangle2.height = 0.01;
+        var rectangle1 = createRectangle(0.0);
+        var rectangle2 = createRectangle(1.0);
         rectangle2.show = false;
 
         expect(scene).toDrillPickAndCall(function(pickedObjects) {
@@ -183,9 +181,8 @@ defineSuite([
     });
 
     it('does not drill pick when alpha is zero', function() {
-        var rectangle1 = createRectangle();
-        var rectangle2 = createRectangle();
-        rectangle2.height = 0.01;
+        var rectangle1 = createRectangle(0.0);
+        var rectangle2 = createRectangle(1.0);
         rectangle2.appearance.material.uniforms.color.alpha = 0.0;
 
         expect(scene).toDrillPickAndCall(function(pickedObjects) {
@@ -198,14 +195,15 @@ defineSuite([
         var geometry = new RectangleGeometry({
             rectangle : Rectangle.fromDegrees(-50.0, -50.0, 50.0, 50.0),
             granularity : CesiumMath.toRadians(20.0),
-            vertexFormat : EllipsoidSurfaceAppearance.VERTEX_FORMAT
+            vertexFormat : EllipsoidSurfaceAppearance.VERTEX_FORMAT,
+            height : 0.0
         });
 
         var geometryWithHeight = new RectangleGeometry({
             rectangle : Rectangle.fromDegrees(-50.0, -50.0, 50.0, 50.0),
             granularity : CesiumMath.toRadians(20.0),
             vertexFormat : EllipsoidSurfaceAppearance.VERTEX_FORMAT,
-            height : 0.01
+            height : 1.0
         });
 
         var instance1 = new GeometryInstance({
@@ -284,14 +282,15 @@ defineSuite([
         var geometry = new RectangleGeometry({
             rectangle : Rectangle.fromDegrees(-50.0, -50.0, 50.0, 50.0),
             granularity : CesiumMath.toRadians(20.0),
-            vertexFormat : EllipsoidSurfaceAppearance.VERTEX_FORMAT
+            vertexFormat : EllipsoidSurfaceAppearance.VERTEX_FORMAT,
+            height : 0.0
         });
 
         var geometryWithHeight = new RectangleGeometry({
             rectangle : Rectangle.fromDegrees(-50.0, -50.0, 50.0, 50.0),
             granularity : CesiumMath.toRadians(20.0),
             vertexFormat : EllipsoidSurfaceAppearance.VERTEX_FORMAT,
-            height : 0.01
+            height : 1.0
         });
 
         var instance1 = new GeometryInstance({
@@ -323,12 +322,9 @@ defineSuite([
     });
 
     it('stops drill picking when the limit is reached.', function() {
-        var rectangle2 = createRectangle();
-        var rectangle3 = createRectangle();
-        var rectangle4 = createRectangle();
-        rectangle2.height = 0.01;
-        rectangle3.height = 0.02;
-        rectangle4.height = 0.03;
+        var rectangle2 = createRectangle(1.0);
+        var rectangle3 = createRectangle(2.0);
+        var rectangle4 = createRectangle(3.0);
 
         expect(scene).toDrillPickAndCall(function(pickedObjects) {
             expect(pickedObjects.length).toEqual(3);
@@ -341,7 +337,7 @@ defineSuite([
     it('picks in 2D', function() {
         scene.morphTo2D(0.0);
         camera.setView({ destination : primitiveRectangle });
-        var rectangle = createRectangle();
+        var rectangle = createRectangle(0.0);
         scene.initializeFrame();
         expect(scene).toPickPrimitive(rectangle);
     });
@@ -356,7 +352,7 @@ defineSuite([
         expect(frustum.projectionMatrix).toBeDefined();
 
         camera.setView({ destination : primitiveRectangle });
-        var rectangle = createRectangle();
+        var rectangle = createRectangle(0.0);
         scene.initializeFrame();
         expect(scene).toPickPrimitive(rectangle);
     });
