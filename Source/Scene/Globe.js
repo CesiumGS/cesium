@@ -148,18 +148,18 @@ define([
          * when <code>enableLighting</code> is <code>true</code>.
          *
          * @type {Number}
-         * @default 6500000.0
+         * @default 10000000.0
          */
-        this.lightingFadeOutDistance = 9.0e6;
+        this.lightingFadeOutDistance = 1.0e7;
 
         /**
          * The distance where lighting resumes. This only takes effect
          * when <code>enableLighting</code> is <code>true</code>.
          *
          * @type {Number}
-         * @default 9000000.0
+         * @default 20000000.0
          */
-        this.lightingFadeInDistance = 1.0e7;
+        this.lightingFadeInDistance = 2.0e7;
 
         /**
          * The distance where the darkness of night from the ground atmosphere fades out to a lit ground atmosphere.
@@ -168,16 +168,16 @@ define([
          * @type {Number}
          * @default 10000000.0
          */
-        this.nightFadeOutDistance = 9.0e6;
+        this.nightFadeOutDistance = 1.0e7;
 
         /**
          * The distance where the darkness of night from the ground atmosphere fades in to an unlit ground atmosphere.
          * This only takes effect when <code>showGroundAtmosphere</code> is <code>true</code>.
          *
          * @type {Number}
-         * @default 40000000.0
+         * @default 30000000.0
          */
-        this.nightFadeInDistance = 4.0e7;
+        this.nightFadeInDistance = 3.0e7;
 
         /**
          * True if an animated wave effect should be shown in areas of the globe
