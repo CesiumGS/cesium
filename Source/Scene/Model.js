@@ -542,7 +542,7 @@ define([
         // If defined, use this matrix to position the clipping planes instead of the modelMatrix.
         // This is so that when models are part of a tileset they all get clipped relative
         // to the root tile.
-        this._clippingPlaneOffsetMatrix = undefined;
+        this.clippingPlaneOffsetMatrix = undefined;
 
         /**
          * This property is for debugging only; it is not for production use nor is it optimized.
@@ -4430,7 +4430,7 @@ define([
             var clippingPlanes = this._clippingPlanes;
             var currentClippingPlanesState = 0;
             if (defined(clippingPlanes) && clippingPlanes.enabled) {
-                var clippingPlaneOffsetMatrix = defaultValue(this._clippingPlaneOffsetMatrix, modelMatrix);
+                var clippingPlaneOffsetMatrix = defaultValue(this.clippingPlaneOffsetMatrix, modelMatrix);
                 Matrix4.multiply(context.uniformState.view3D, clippingPlaneOffsetMatrix, this._clippingPlaneModelViewMatrix);
                 currentClippingPlanesState = clippingPlanes.clippingPlanesState;
             }
