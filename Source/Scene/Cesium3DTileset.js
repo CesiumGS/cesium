@@ -704,7 +704,7 @@ define([
                 that._extras = tilesetJson.extras;
                 if (!defined(tilesetJson.root.transform)) {
                     that._useBoundingSphereForClipping = true;
-                    that.clippingPlaneOffsetMatrix = Transforms.eastNorthUpToFixedFrame(that.boundingSphere.center);
+                    that._clippingPlaneOffsetMatrix = Transforms.eastNorthUpToFixedFrame(that.boundingSphere.center);
                 }
                 that._readyPromise.resolve(that);
             }).otherwise(function(error) {
@@ -1125,9 +1125,6 @@ define([
                     return this._clippingPlaneOffsetMatrix;
                 }
                 return this.root.computedTransform;
-            },
-            set : function(value) {
-                this._clippingPlaneOffsetMatrix = Matrix4.clone(value, this._clippingPlaneOffsetMatrix);
             }
         },
 
@@ -1833,7 +1830,7 @@ define([
         if (defined(clippingPlanes) && clippingPlanes.enabled) {
             clippingPlanes.update(frameState);
             if (this._useBoundingSphereForClipping) {
-                this.clippingPlaneOffsetMatrix = Transforms.eastNorthUpToFixedFrame(this.boundingSphere.center);
+                this._clippingPlaneOffsetMatrix = Transforms.eastNorthUpToFixedFrame(this.boundingSphere.center);
             }
         }
 
