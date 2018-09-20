@@ -3,6 +3,14 @@ Change Log
 
 ### 1.50 - 2018-10-01
 
+##### Breaking Changes :mega:
+* Clipping planes on tilesets now use the root tile's transform, or the root tile's bounding sphere if a transform is not defined. [#7034](https://github.com/AnalyticalGraphicsInc/cesium/pull/7034)
+    * This is to make clipping planes' coordinates always relative to the object they're attached to. So if you were positioning the clipping planes as in the example below, this is no longer necessary:
+    ```javascript
+    clippingPlanes.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(tileset.boundingSphere.center);
+    ```
+    * This also fixes several issues with clipping planes not using the correct transform for tilesets with children.
+
 ##### Additions :tada:
 * Added `cartographicLimitRectangle` to `Globe`. Use this to limit terrain and imagery to a specific `Rectangle` area. [#6987](https://github.com/AnalyticalGraphicsInc/cesium/pull/6987)
 
