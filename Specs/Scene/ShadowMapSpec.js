@@ -1071,7 +1071,8 @@ defineSuite([
     });
 
     it('model updates derived commands when the shadow map is dirty', function() {
-        var spy = spyOn(ShadowMap, 'createDerivedCommands').and.callThrough();
+        var spy1 = spyOn(ShadowMap, 'createReceiveDerivedCommand').and.callThrough();
+        var spy2 = spyOn(ShadowMap, 'createCastDerivedCommand').and.callThrough();
 
         box.show = true;
         floor.show = true;
@@ -1117,18 +1118,10 @@ defineSuite([
             scene.render();
         }
 
-        var callCount;
-        if (!scene.logarithmicDepthBuffer) {
-            // Expect derived commands to be updated twice for both the floor and box,
-            // once on the first frame and again when the shadow map is dirty
-            callCount = 4;
-        } else {
-            // Same as without log z, but doubled. The derived cast commands do not write log z, but
-            // the derived receive commands do.
-            callCount = 8;
-        }
-
-        expect(spy.calls.count()).toEqual(callCount);
+        // Expect derived commands to be updated twice for both the floor and box,
+        // once on the first frame and again when the shadow map is dirty
+        expect(spy1.calls.count()).toEqual(4);
+        expect(spy2.calls.count()).toEqual(4);
 
         box.show = false;
         floor.show = false;

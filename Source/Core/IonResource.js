@@ -143,7 +143,7 @@ define([
         var credits = endpoint.attributions.map(Credit.getIonCredit);
         var defaultTokenCredit = Ion.getDefaultTokenCredit(endpointResource.queryParameters.access_token);
         if (defined(defaultTokenCredit)) {
-            credits.push(defaultTokenCredit);
+            credits.push(Credit.clone(defaultTokenCredit));
         }
         return credits;
     };

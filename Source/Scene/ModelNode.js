@@ -42,10 +42,7 @@ define([
 
     defineProperties(ModelNode.prototype, {
         /**
-         * The value of the <code>name</code> property of this node.  This is the
-         * name assigned by the artist when the asset is created.  This can be
-         * different than the name of the node property ({@link ModelNode#id}),
-         * which is internal to glTF.
+         * The value of the <code>name</code> property of this node.
          *
          * @memberof ModelNode.prototype
          *
@@ -59,10 +56,7 @@ define([
         },
 
         /**
-         * The name of the glTF JSON property for this node.  This is guaranteed
-         * to be unique among all nodes.  It may not match the node's <code>
-         * name</code> property (@link ModelNode#name), which is assigned by
-         * the artist when the asset is created.
+         * The index of the node.
          *
          * @memberof ModelNode.prototype
          *

@@ -289,6 +289,7 @@ define([
         if (!defined(pickState)) {
             var rs = RenderState.getState(renderState);
             rs.blending.enabled = false;
+            rs.depthMask = true;
 
             pickState = RenderState.fromCache(rs);
             cache[renderState.id] = pickState;

@@ -38,11 +38,11 @@
     height: 17px;
 }
 
-.cesium-cesiumInspector-show {
+.cesium-cesiumInspector-sectionContent {
     max-height: 500px;
 }
 
-.cesium-cesiumInspector-hide {
+.cesium-cesiumInspector-section-collapsed .cesium-cesiumInspector-sectionContent {
     max-height: 0;
     padding: 0 !important;
     overflow: hidden;
@@ -92,6 +92,9 @@
 
 .cesium-cesiumInspector-sectionHeader {
     font-weight: bold;
+    font-size: 10pt;
+    margin: 0;
+    cursor: pointer;
 }
 
 .cesium-cesiumInspector-pickSection {
@@ -101,14 +104,9 @@
     margin-bottom: 5px;
 }
 
-.cesium-cesiumInspector-section {
+.cesium-cesiumInspector-sectionContent {
     margin-bottom: 10px;
     transition: max-height 0.25s;
-}
-
-.cesium-cesiumInspector-toggleSwitch {
-    padding: 3px;
-    cursor: pointer;
 }
 
 .cesium-cesiumInspector-tileText {
@@ -118,4 +116,15 @@
 
 .cesium-cesiumInspector-relativeText {
     padding-top: 10px;
+}
+
+.cesium-cesiumInspector-sectionHeader::before {
+    margin-right: 5px;
+    content: '-';
+    width: 1ch;
+    display: inline-block;
+}
+
+.cesium-cesiumInspector-section-collapsed .cesium-cesiumInspector-sectionHeader::before {
+    content: '+';
 }
