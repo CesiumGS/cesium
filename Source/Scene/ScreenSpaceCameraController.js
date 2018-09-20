@@ -1363,12 +1363,12 @@ define([
 
         if (defined(globe) && height < controller._minimumPickingTerrainHeight) {
             if (defined(mousePos)) {
-                if (Cartesian3.magnitude(camera.position) < Cartesian3.magnitude(mousePos)) {
+                //if (Cartesian3.magnitude(camera.position) < Cartesian3.magnitude(mousePos)) {
                     Cartesian3.clone(mousePos, controller._strafeStartPosition);
 
                     controller._strafing = true;
                     strafe(controller, startPosition, movement);
-                } else {
+                /*} else {
                     magnitude = Cartesian3.magnitude(mousePos);
                     radii = scratchRadii;
                     radii.x = radii.y = radii.z = magnitude;
@@ -1376,7 +1376,7 @@ define([
                     pan3D(controller, startPosition, movement, ellipsoid);
 
                     Cartesian3.clone(mousePos, controller._rotateStartPosition);
-                }
+                }*/
             } else {
                 controller._looking = true;
                 look3D(controller, startPosition, movement, up);
