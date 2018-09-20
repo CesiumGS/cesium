@@ -239,9 +239,9 @@ define([
         executeDebugGlobeDepth(this, context, passState, useLogDepth);
     };
 
-    GlobeDepth.prototype.update = function(context, passState) {
-        var width = context.drawingBufferWidth;
-        var height = context.drawingBufferHeight;
+    GlobeDepth.prototype.update = function(context, passState, viewport) {
+        var width = viewport.width;
+        var height = viewport.height;
 
         updateFramebuffers(this, context, width, height);
         updateCopyCommands(this, context, width, height, passState);

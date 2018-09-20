@@ -68,7 +68,7 @@ define([
 
     /**
      * Computes the minimum and maximum terrain heights for a given rectangle
-     * @param {Rectangle} rectangle THe bounding rectangle
+     * @param {Rectangle} rectangle The bounding rectangle
      * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid
      * @return {{minimumTerrainHeight: Number, maximumTerrainHeight: Number}}
      */

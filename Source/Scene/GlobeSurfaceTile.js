@@ -88,6 +88,7 @@ define([
          * Only for use with custom projections.
          */
         this.center2D = new Cartesian3();
+        this.clippedByBoundaries = false;
     }
 
     defineProperties(GlobeSurfaceTile.prototype, {

@@ -33,7 +33,7 @@
         88
       ]
     },
-    "geometricError": 240,
+    "geometricError": 70,
     "refine": "ADD",
     "content": {
       "uri": "tileset2.json"
