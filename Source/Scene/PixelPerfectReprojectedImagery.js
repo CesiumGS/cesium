@@ -24,6 +24,8 @@ define([
         BitmapImageryProvider) {
     'use strict';
 
+    var insetWaitFrames = 3;
+
     /**
      * Manages imagery layers for asynchronous pixel-perfect imagery reprojection.
      *
@@ -77,6 +79,8 @@ define([
 
         this._scene = scene;
 
+        this._waitedFrames = 0;
+
         var that = this;
 
         var startupPromise;
@@ -121,11 +125,13 @@ define([
                     that.refresh(scene);
                 });
 
-                scene.camera.moveStart.addEventListener(function() {
-                    if (that._freeze) {
-                        return;
+                scene.postRender.addEventListener(function() {
+                    if (that._waitedFrames < insetWaitFrames) {
+                        that._waitedFrames++;
+                        if (that._waitedFrames === insetWaitFrames) {
+                            that._fullCoverageImageryLayer.cutoutRectangle = that._localRenderingBounds;
+                        }
                     }
-                    that.showApproximation();
                 });
 
                 // Refresh now that we're loaded
@@ -144,7 +150,6 @@ define([
             set: function(value) {
                 this._freeze = value;
                 if (value === false) {
-                    this.showApproximation();
                     this.refresh(this._scene);
                 }
             }
@@ -165,13 +170,6 @@ define([
             url : this._url,
             imageData : imagedata
         });
-    };
-
-    PixelPerfectReprojectedImagery.prototype.showApproximation = function() {
-        this._fullCoverageImageryLayer.show = true;
-        if (defined(this._localImageryLayer)) {
-            this._localImageryLayer.show = false;
-        }
     };
 
     PixelPerfectReprojectedImagery.prototype.refresh = function(scene) {
@@ -208,16 +206,13 @@ define([
             return;
         }
 
-        // Don't bother projecting if we're looking at the whole thing, just show the approximation
+        // Don't bother projecting if we're looking at the whole thing
         if (Rectangle.equals(renderingBounds, this._rectangle)) {
-            this.showApproximation();
             return;
         }
 
         // Don't bother projecting if bounds haven't changed
         if (defined(this._localImageryLayer) && Rectangle.equals(renderingBounds, this._localRenderingBounds)) {
-            this._fullCoverageImageryLayer.show = false;
-            this._localImageryLayer.show = true;
             return;
         }
 
@@ -237,16 +232,18 @@ define([
             if (that._iteration !== iteration) {
                 return;
             }
-            if (defined(that._localImageryLayer)) {
-                scene.imageryLayers.remove(that._localImageryLayer);
-            }
-            that._localImageryLayer = scene.imageryLayers.addImageryProvider(new BitmapImageryProvider({
+            var newLocalImageryLayer = scene.imageryLayers.addImageryProvider(new BitmapImageryProvider({
                 bitmap : reprojectedBitmap,
                 rectangle : renderingBounds,
                 credit : that._credit
             }));
-            that._fullCoverageImageryLayer.show = false;
+            if (defined(that._localImageryLayer)) {
+                scene.imageryLayers.remove(that._localImageryLayer);
+            }
+            that._localImageryLayer = newLocalImageryLayer;
             that._localRenderingBounds = Rectangle.clone(renderingBounds, that._localRenderingBounds);
+            that._fullCoverageImageryLayer.cutoutRectangle = undefined;
+            that._waitedFrames = 0;
         })
         .otherwise(function(e) {
             console.log(e); // TODO: handle or throw?
