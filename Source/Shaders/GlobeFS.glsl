@@ -223,7 +223,7 @@ void main()
     }
     float fade = clamp((cameraDist - fadeOutDist) / (fadeInDist - fadeOutDist), 0.0, 1.0);
 #else
-    float fade = 1.0;
+    float fade = 0.0;
 #endif
 
 #ifdef SHOW_REFLECTIVE_OCEAN
