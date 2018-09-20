@@ -49,7 +49,7 @@ define([
     /**
      * Represents the contents of a
      * {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/3d-tiles-next/TileFormats/VectorData|Vector}
-     * tile in a {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/blob/master/README.md|3D Tiles} tileset.
+     * tile in a {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/specification|3D Tiles} tileset.
      * <p>
      * Implements the {@link Cesium3DTileContent} interface.
      * </p>
@@ -396,7 +396,7 @@ define([
                 polygonMaximumHeights : polygonMaximumHeights,
                 center : center,
                 rectangle : rectangle,
-                boundingVolume : content._tile._boundingVolume.boundingVolume,
+                boundingVolume : content.tile.boundingVolume.boundingVolume,
                 batchTable : batchTable,
                 batchIds : batchIds.polygons,
                 modelMatrix : modelMatrix
@@ -430,7 +430,7 @@ define([
                 maximumHeight : maxHeight,
                 center : center,
                 rectangle : rectangle,
-                boundingVolume : content._tile._boundingVolume.boundingVolume,
+                boundingVolume : content.tile.boundingVolume.boundingVolume,
                 batchTable : batchTable
             });
         }
@@ -494,16 +494,16 @@ define([
         }
     };
 
-    Vector3DTileContent.prototype.applyStyle = function(frameState, style) {
+    Vector3DTileContent.prototype.applyStyle = function(style) {
         createFeatures(this);
         if (defined(this._polygons)) {
-            this._polygons.applyStyle(frameState, style, this._features);
+            this._polygons.applyStyle(style, this._features);
         }
         if (defined(this._polylines)) {
-            this._polylines.applyStyle(frameState, style, this._features);
+            this._polylines.applyStyle(style, this._features);
         }
         if (defined(this._points)) {
-            this._points.applyStyle(frameState, style, this._features);
+            this._points.applyStyle(style, this._features);
         }
     };
 

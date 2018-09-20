@@ -1,4 +1,5 @@
 define([
+        '../Core/ApproximateTerrainHeights',
         '../Core/BoundingSphere',
         '../Core/Check',
         '../Core/createGuid',
@@ -21,6 +22,7 @@ define([
         './PointVisualizer',
         './PolylineVisualizer'
     ], function(
+        ApproximateTerrainHeights,
         BoundingSphere,
         Check,
         createGuid,
@@ -249,7 +251,7 @@ define([
         Check.defined('time', time);
         //>>includeEnd('debug');
 
-        if (!GroundPrimitive._initialized) {
+        if (!ApproximateTerrainHeights.initialized) {
             this._ready = false;
             return false;
         }

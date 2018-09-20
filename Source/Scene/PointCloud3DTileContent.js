@@ -34,8 +34,8 @@ define([
 
     /**
      * Represents the contents of a
-     * {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/blob/master/TileFormats/PointCloud/README.md|Point Cloud}
-     * tile in a {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/blob/master/README.md|3D Tiles} tileset.
+     * {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/specification/TileFormats/PointCloud|Point Cloud}
+     * tile in a {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/specification|3D Tiles} tileset.
      * <p>
      * Implements the {@link Cesium3DTileContent} interface.
      * </p>
@@ -260,9 +260,9 @@ define([
         this._pointCloud.color = enabled ? color : Color.WHITE;
     };
 
-    PointCloud3DTileContent.prototype.applyStyle = function(frameState, style) {
+    PointCloud3DTileContent.prototype.applyStyle = function(style) {
         if (defined(this._batchTable)) {
-            this._batchTable.applyStyle(frameState, style);
+            this._batchTable.applyStyle(style);
         } else {
             this._styleDirty = true;
         }
