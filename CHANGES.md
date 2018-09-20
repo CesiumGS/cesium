@@ -6,6 +6,7 @@ Change Log
 ##### Additions :tada:
 * Added `cartographicLimitRectangle` to `Globe`. Use this to limit terrain and imagery to a specific `Rectangle` area. [#6987](https://github.com/AnalyticalGraphicsInc/cesium/pull/6987)
 * Added `OpenCageGeocoderService`, which provides geocoding via [OpenCage](https://opencagedata.com/). [#7015](https://github.com/AnalyticalGraphicsInc/cesium/pull/7015)
+* Added `cutoutRectangle` to `ImageryLayer`, which allows cutting out rectangular areas in imagery layers to reveal underlying imagery. [#7056](https://github.com/AnalyticalGraphicsInc/cesium/pull/7056)
 
 ##### Fixes :wrench:
 * Fixed picking for overlapping translucent primitives. [#7039](https://github.com/AnalyticalGraphicsInc/cesium/pull/7039)
