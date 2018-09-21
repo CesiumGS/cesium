@@ -364,6 +364,7 @@ define([
         });
         var instance = new GeometryInstance({
             geometry : geometry,
+            id : 'outline',
             modelMatrix : modelMatrix,
             attributes : {
                 color : ColorGeometryInstanceAttribute.fromColor(color)

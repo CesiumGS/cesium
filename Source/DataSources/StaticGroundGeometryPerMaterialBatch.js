@@ -140,10 +140,10 @@ define([
 
                     if (defined(attributes)) {
                         if (defined(originalAttributes.show)) {
-                            originalAttributes.show.value = attributes.show;
+                            attributes.show = originalAttributes.show.value;
                         }
                         if (defined(originalAttributes.color)) {
-                            originalAttributes.color.value = attributes.color;
+                            attributes.color = originalAttributes.color.value;
                         }
                     }
                 }

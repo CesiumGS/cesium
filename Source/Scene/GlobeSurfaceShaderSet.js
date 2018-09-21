@@ -66,7 +66,7 @@ define([
         return useWebMercatorProjection ? get2DYPositionFractionMercatorProjection : get2DYPositionFractionGeographicProjection;
     }
 
-    GlobeSurfaceShaderSet.prototype.getShaderProgram = function(frameState, surfaceTile, numberOfDayTextures, applyBrightness, applyContrast, applyHue, applySaturation, applyGamma, applyAlpha, applySplit, showReflectiveOcean, showOceanWaves, enableLighting, hasVertexNormals, useWebMercatorProjection, enableFog, enableClippingPlanes, clippingPlanes, renderPartialTile) {
+    GlobeSurfaceShaderSet.prototype.getShaderProgram = function(frameState, surfaceTile, numberOfDayTextures, applyBrightness, applyContrast, applyHue, applySaturation, applyGamma, applyAlpha, applySplit, showReflectiveOcean, showOceanWaves, enableLighting, hasVertexNormals, useWebMercatorProjection, enableFog, enableClippingPlanes, clippingPlanes, clippedByBoundaries, renderPartialTile) {
         var quantization = 0;
         var quantizationDefine = '';
 
@@ -83,6 +83,13 @@ define([
         if (surfaceTile.terrainData === undefined || surfaceTile.terrainData._createdByUpsampling) {
             vertexLogDepth = 1;
             vertexLogDepthDefine = 'DISABLE_GL_POSITION_LOG_DEPTH';
+        }
+
+        var cartographicLimitRectangleFlag = 0;
+        var cartographicLimitRectangleDefine = '';
+        if (clippedByBoundaries) {
+            cartographicLimitRectangleFlag = 1;
+            cartographicLimitRectangleDefine = 'TILE_LIMIT_RECTANGLE';
         }
 
         var sceneMode = frameState.mode;
@@ -103,7 +110,8 @@ define([
                     (applySplit << 15) |
                     (enableClippingPlanes << 16) |
                     (vertexLogDepth << 17) |
-                    (renderPartialTile << 18);
+                    (cartographicLimitRectangleFlag << 18) |
+                    (renderPartialTile << 19);
 
         var currentClippingShaderState = 0;
         if (defined(clippingPlanes)) {
@@ -136,7 +144,7 @@ define([
             }
 
             vs.defines.push(quantizationDefine, vertexLogDepthDefine);
-            fs.defines.push('TEXTURE_UNITS ' + numberOfDayTextures);
+            fs.defines.push('TEXTURE_UNITS ' + numberOfDayTextures, cartographicLimitRectangleDefine);
 
             if (applyBrightness) {
                 fs.defines.push('APPLY_BRIGHTNESS');

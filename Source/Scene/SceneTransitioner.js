@@ -285,6 +285,7 @@ define([
 
             var completeMorph = function() {
                 transitioner._morphCancelled = true;
+                transitioner._scene.camera.cancelFlight();
                 completeMorphFunction(transitioner);
             };
             transitioner._completeMorph = completeMorph;
@@ -530,7 +531,7 @@ define([
 
             var globe = scene.globe;
             if (defined(globe)) {
-                var pickPos = globe.pick(ray, scene, scratchCVTo2DPickPos);
+                var pickPos = globe.pickWorldCoordinates(ray, scene, scratchCVTo2DPickPos);
                 if (defined(pickPos)) {
                     Matrix4.multiplyByPoint(Camera.TRANSFORM_2D_INVERSE, pickPos, endPos);
                     endPos.z += Cartesian3.distance(startPos, endPos);
@@ -634,7 +635,7 @@ define([
 
             var globe = scene.globe;
             if (defined(globe)) {
-                var pickedPos = globe.pick(ray, scene, scratch3DTo2DPickPosition);
+                var pickedPos = globe.pickWorldCoordinates(ray, scene, scratch3DTo2DPickPosition);
                 if (defined(pickedPos)) {
                     var height = Cartesian3.distance(camera2D.position2D, pickedPos);
                     pickedPos.x += height;
@@ -837,7 +838,7 @@ define([
             }
 
             var frustum = camera.frustum;
-            if (scene._logDepthBuffer && !(frustum instanceof OrthographicFrustum || frustum instanceof OrthographicOffCenterFrustum)) {
+            if (scene.frameState.useLogDepth) {
                 frustum.near = 0.1;
                 frustum.far = 10000000000.0;
             }
@@ -894,7 +895,7 @@ define([
             }
 
             var frustum = camera.frustum;
-            if (scene._logDepthBuffer && !(frustum instanceof OrthographicFrustum || frustum instanceof OrthographicOffCenterFrustum)) {
+            if (scene.frameState.useLogDepth) {
                 frustum.near = 0.1;
                 frustum.far = 10000000000.0;
             }

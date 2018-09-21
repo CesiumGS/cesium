@@ -280,33 +280,6 @@ define([
          */
         this.depthFrustumText = '';
 
-        /**
-         * Gets the text on the general section expand button.  This property is computed.
-         * @type {String}
-         * @default '-'
-         */
-        this.generalSwitchText = knockout.pureComputed(function() {
-            return that.generalVisible ? '-' : '+';
-        });
-
-        /**
-         * Gets the text on the primitives section expand button.  This property is computed.
-         * @type {String}
-         * @default '+'
-         */
-        this.primitivesSwitchText = knockout.pureComputed(function() {
-            return that.primitivesVisible ? '-' : '+';
-        });
-
-        /**
-         * Gets the text on the terrain section expand button.  This property is computed.
-         * @type {String}
-         * @default '+'
-         */
-        this.terrainSwitchText = knockout.pureComputed(function() {
-            return that.terrainVisible ? '-' : '+';
-        });
-
         knockout.track(this, [
             'frustums',
             'frustumPlanes',

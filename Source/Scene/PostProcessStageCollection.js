@@ -160,7 +160,7 @@ define([
          * <p>
          * The uniforms have the following properties: <code>intensity</code>, <code>bias</code>, <code>lengthCap</code>,
          * <code>stepSize</code>, <code>frustumLength</code>, <code>ambientOcclusionOnly</code>,
-         * <code>delta</code>, <code>sigma</code>, and <code>kernelSize</code>.
+         * <code>delta</code>, <code>sigma</code>, and <code>blurStepSize</code>.
          * </p>
          * <ul>
          * <li><code>intensity</code> is a scalar value used to lighten or darken the shadows exponentially. Higher values make the shadows darker. The default value is <code>3.0</code>.</li>
@@ -180,7 +180,7 @@ define([
          * with the ambient occlusion. This is a useful debug option for seeing the effects of changing the uniform values. The default value is <code>false</code>.</li>
          * </ul>
          * <p>
-         * <code>delta</code>, <code>sigma</code>, and <code>kernelSize</code> are the same properties as {@link PostProcessStageLibrary#createBlurStage}.
+         * <code>delta</code>, <code>sigma</code>, and <code>blurStepSize</code> are the same properties as {@link PostProcessStageLibrary#createBlurStage}.
          * The blur is applied to the shadows generated from the image to make them smoother.
          * </p>
          * <p>
@@ -203,7 +203,7 @@ define([
          * </p>
          * <p>
          * This stage has the following uniforms: <code>contrast</code>, <code>brightness</code>, <code>glowOnly</code>,
-         * <code>delta</code>, <code>sigma</code>, and <code>kernelSize</code>.
+         * <code>delta</code>, <code>sigma</code>, and <code>stepSize</code>.
          * </p>
          * <ul>
          * <li><code>contrast</code> is a scalar value in the range [-255.0, 255.0] and affects the contract of the effect. The default value is <code>128.0</code>.</li>
@@ -215,7 +215,7 @@ define([
          * The default value is <code>false</code>. This is a debug option for viewing the effects when changing the other uniform values.</li>
          * </ul>
          * <p>
-         * <code>delta</code>, <code>sigma</code>, and <code>kernelSize</code> are the same properties as {@link PostProcessStageLibrary#createBlurStage}.
+         * <code>delta</code>, <code>sigma</code>, and <code>stepSize</code> are the same properties as {@link PostProcessStageLibrary#createBlurStage}.
          * The blur is applied to the shadows generated from the image to make them smoother.
          * </p>
          * <p>
@@ -464,6 +464,7 @@ define([
      * Called before the post-process stages in the collection are executed. Calls update for each stage and creates WebGL resources.
      *
      * @param {Context} context The context.
+     * @param {Boolean} useLogDepth Whether the scene uses a logarithmic depth buffer.
      *
      * @private
      */
@@ -621,6 +622,7 @@ define([
      * @param {Context} context The context.
      * @param {Texture} colorTexture The color texture rendered to by the scene.
      * @param {Texture} depthTexture The depth texture written to by the scene.
+     * @param {Texture} idTexture The id texture written to by the scene.
      *
      * @private
      */

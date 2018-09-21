@@ -34,7 +34,7 @@ define([
      *     Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883)), new Cesium.Cartesian3(0.0, 0.0, 1000000.0), new Cesium.Matrix4()),
      *   id : 'box',
      *   attributes : {
-     *     show : new Cesium.DistanceDisplayConditionGeometryInstanceAttribute(100.0, 10000.0)
+     *     distanceDisplayCondition : new Cesium.DistanceDisplayConditionGeometryInstanceAttribute(100.0, 10000.0)
      *   }
      * });
      *
@@ -123,10 +123,11 @@ define([
      * @exception {DeveloperError} distanceDisplayCondition.far must be greater than distanceDisplayCondition.near
      *
      * @example
+     * var distanceDisplayCondition = new Cesium.DistanceDisplayCondition(100.0, 10000.0);
      * var instance = new Cesium.GeometryInstance({
      *   geometry : geometry,
      *   attributes : {
-     *     color : Cesium.DistanceDisplayConditionGeometryInstanceAttribute.fromDistanceDisplayCondition(distanceDisplayCondition),
+     *     distanceDisplayCondition : Cesium.DistanceDisplayConditionGeometryInstanceAttribute.fromDistanceDisplayCondition(distanceDisplayCondition)
      *   }
      * });
      */

@@ -1,13 +1,105 @@
 Change Log
 ==========
 
+### 1.50 - 2018-10-01
+
+##### Additions :tada:
+* Added support for glTF extension [KHR_materials_pbrSpecularGlossiness](https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Khronos/KHR_materials_pbrSpecularGlossiness) [#7006](https://github.com/AnalyticalGraphicsInc/cesium/pull/7006).
+* Added support for glTF extension [KHR_materials_unlit](https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Khronos/KHR_materials_unlit) [#6977](https://github.com/AnalyticalGraphicsInc/cesium/pull/6977).
+* Added support for glTF extensions [KHR_techniques_webgl](https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Khronos/KHR_techniques_webgl) and [KHR_blend](https://github.com/KhronosGroup/glTF/pull/1302). [#6805](https://github.com/AnalyticalGraphicsInc/cesium/pull/6805)
+* Update [gltf-pipeline](https://github.com/AnalyticalGraphicsInc/gltf-pipeline/) to 2.0. [#6805](https://github.com/AnalyticalGraphicsInc/cesium/pull/6805)
+* Added `cartographicLimitRectangle` to `Globe`. Use this to limit terrain and imagery to a specific `Rectangle` area. [#6987](https://github.com/AnalyticalGraphicsInc/cesium/pull/6987)
+* Added `OpenCageGeocoderService`, which provides geocoding via [OpenCage](https://opencagedata.com/). [#7015](https://github.com/AnalyticalGraphicsInc/cesium/pull/7015)
+
+##### Fixes :wrench:
+* Fixed picking for overlapping translucent primitives. [#7039](https://github.com/AnalyticalGraphicsInc/cesium/pull/7039)
+* Fixed an issue in the 3D Tiles traversal where external tilesets would not always traverse to their root tile. [#7035](https://github.com/AnalyticalGraphicsInc/cesium/pull/7035)
+* Fixed an issue in the 3D Tiles traversal where empty tiles would be selected instead of their nearest loaded ancestors. [#7011](https://github.com/AnalyticalGraphicsInc/cesium/pull/7011)
+* Fixed an issue where scaling near zero with an model animation could cause rendering to stop. [#6954](https://github.com/AnalyticalGraphicsInc/cesium/pull/6954)
+* Fixed bug where credits weren't displaying correctly if more than one viewer was initialized [#6965](expect(https://github.com/AnalyticalGraphicsInc/cesium/issues/6965)
+* Fixed a bug where polylines on terrain covering very large portions of the globe would cull incorrectly in 3d-only scenes. [#7043](https://github.com/AnalyticalGraphicsInc/cesium/issues/7043)
+
+### 1.49 - 2018-09-04
+
+##### Breaking Changes :mega:
+* Removed `ClippingPlaneCollection.clone`. [#6872](https://github.com/AnalyticalGraphicsInc/cesium/pull/6872)
+* Changed `Globe.pick` to return a position in ECEF coordinates regardless of the current scene mode.  This will only effect you if you were working around a bug to make `Globe.pick` work in 2D and Columbus View.  Use `Globe.pickWorldCoordinates` to get the position in world coordinates that correlate to the current scene mode. [#6859](https://github.com/AnalyticalGraphicsInc/cesium/pull/6859)
+* Removed the unused `frameState` parameter in `evaluate` and `evaluateColor` functions in `Expression`, `StyleExpression`, `ConditionsExpression` and all other places that call the functions. [#6890](https://github.com/AnalyticalGraphicsInc/cesium/pull/6890)
+* Removed `PostProcessStageLibrary.createLensFlarStage`. Use `PostProcessStageLibrary.createLensFlareStage` instead. [#6972](https://github.com/AnalyticalGraphicsInc/cesium/pull/6972)
+* Removed `Scene.fxaa`. Use `Scene.postProcessStages.fxaa.enabled` instead. [#6980](https://github.com/AnalyticalGraphicsInc/cesium/pull/6980)
+
+##### Additions :tada:
+* Added `heightReference` to `BoxGraphics`, `CylinderGraphics` and `EllipsoidGraphics`, which can be used to clamp these entity types to terrain. [#6932](https://github.com/AnalyticalGraphicsInc/cesium/pull/6932)
+* Added `GeocoderViewModel.destinationFound` for specifying a function that is called upon a successful geocode.  The default behavior is to fly to the destination found by the geocoder. [#6915](https://github.com/AnalyticalGraphicsInc/cesium/pull/6915
+* Added `ClippingPlaneCollection.planeAdded` and `ClippingPlaneCollection.planeRemoved` events.  `planeAdded` is raised when a new plane is added to the collection and `planeRemoved` is raised when a plane is removed. [#6875](https://github.com/AnalyticalGraphicsInc/cesium/pull/6875)
+* Added `Matrix4.setScale` for setting the scale on an affine transformation matrix [#6888](https://github.com/AnalyticalGraphicsInc/cesium/pull/6888)
+* Added optional `width` and `height` to `Scene.drillPick` for specifying a search area. [#6922](https://github.com/AnalyticalGraphicsInc/cesium/pull/6922)
+* Added `Cesium3DTileset.root` for getting the root tile of a tileset. [#6944](https://github.com/AnalyticalGraphicsInc/cesium/pull/6944)
+* Added `Cesium3DTileset.extras` and `Cesium3DTile.extras` for getting application specific metadata from 3D Tiles. [#6974](https://github.com/AnalyticalGraphicsInc/cesium/pull/6974)
+
+##### Fixes :wrench:
+* Several performance improvements and fixes to the 3D Tiles traversal code. [#6390](https://github.com/AnalyticalGraphicsInc/cesium/pull/6390)
+    * Improved load performance when `skipLevelOfDetail` is false.
+    * Fixed a bug that caused some skipped tiles to load when `skipLevelOfDetail` is true.
+    * Fixed pick statistics in the 3D Tiles Inspector.
+    * Fixed drawing of debug labels for external tilesets.
+    * Fixed drawing of debug outlines for empty tiles.
+* The Geocoder widget now takes terrain altitude into account when calculating its final destination. [#6876](https://github.com/AnalyticalGraphicsInc/cesium/pull/6876)
+* The Viewer widget now takes terrain altitude into account when zooming or flying to imagery layers. [#6895](https://github.com/AnalyticalGraphicsInc/cesium/pull/6895)
+* Fixed Firefox camera control issues with mouse and touch events. [#6372](https://github.com/AnalyticalGraphicsInc/cesium/issues/6372)
+* Fixed `getPickRay` in 2D. [#2480](https://github.com/AnalyticalGraphicsInc/cesium/issues/2480)
+* Fixed `Globe.pick` for 2D and Columbus View. [#6859](https://github.com/AnalyticalGraphicsInc/cesium/pull/6859)
+* Fixed imagery layer feature picking in 2D and Columbus view. [#6859](https://github.com/AnalyticalGraphicsInc/cesium/pull/6859)
+* Fixed intermittent ground clamping issues for all entity types that use a height reference. [#6930](https://github.com/AnalyticalGraphicsInc/cesium/pull/6930)
+* Fixed bug that caused a new `ClippingPlaneCollection` to be created every frame when used with a model entity. [#6872](https://github.com/AnalyticalGraphicsInc/cesium/pull/6872)
+* Improved `Plane` entities so they are better aligned with the globe surface. [#6887](https://github.com/AnalyticalGraphicsInc/cesium/pull/6887)
+* Fixed crash when rendering translucent objects when all shadow maps in the scene set `fromLightSource` to false. [#6883](https://github.com/AnalyticalGraphicsInc/cesium/pull/6883)
+* Fixed night shading in 2D and Columbus view. [#4122](https://github.com/AnalyticalGraphicsInc/cesium/issues/4122)
+* Fixed model loading failure when a glTF 2.0 primitive does not have a material. [6906](https://github.com/AnalyticalGraphicsInc/cesium/pull/6906)
+* Fixed a crash when setting show to `false` on a polyline clamped to the ground. [#6912](https://github.com/AnalyticalGraphicsInc/cesium/issues/6912)
+* Fixed a bug where `Cesium3DTileset` wasn't using the correct `tilesetVersion`. [#6933](https://github.com/AnalyticalGraphicsInc/cesium/pull/6933)
+* Fixed crash that happened when calling `scene.pick` after setting a new terrain provider. [#6918](https://github.com/AnalyticalGraphicsInc/cesium/pull/6918)
+* Fixed an issue that caused the browser to hang when using `drillPick` on a polyline clamped to the ground. [6907](https://github.com/AnalyticalGraphicsInc/cesium/issues/6907)
+* Fixed an issue where color wasn't updated properly for polylines clamped to ground. [#6927](https://github.com/AnalyticalGraphicsInc/cesium/pull/6927)
+* Fixed an excessive memory use bug that occurred when a data URI was used to specify a glTF model. [#6928](https://github.com/AnalyticalGraphicsInc/cesium/issues/6928)
+* Fixed an issue where switching from 2D to 3D could cause a crash. [#6929](https://github.com/AnalyticalGraphicsInc/cesium/issues/6929)
+* Fixed an issue where point primitives behind the camera would appear in view. [#6904](https://github.com/AnalyticalGraphicsInc/cesium/issues/6904)
+* The `createGroundPolylineGeometry` web worker no longer depends on `GroundPolylinePrimitive`, making the worker smaller and potentially avoiding a hanging build in some webpack configurations. [#6946](https://github.com/AnalyticalGraphicsInc/cesium/pull/6946)
+* Fixed an issue that cause terrain entities (entities with unspecified `height`) and `GroundPrimitives` to fail when crossing the international date line. [#6951](https://github.com/AnalyticalGraphicsInc/cesium/issues/6951)
+* Fixed normal calculation for `CylinderGeometry` when the top radius is not equal to the bottom radius [#6863](https://github.com/AnalyticalGraphicsInc/cesium/pull/6863)
+
 ### 1.48 - 2018-08-01
 
-#### Deprecated :hourglass_flowing_sand:
-* Support for 3D Tiles `content.url` is deprecated to reflect updates to the [3D Tiles spec](https://github.com/AnalyticalGraphicsInc/3d-tiles/pull/301). Use `content.uri instead`. Support for `content.url` will remain for backwards compatibility. [#6744](https://github.com/AnalyticalGraphicsInc/cesium/pull/6744)
+##### Additions :tada:
+* Added support for loading Draco compressed Point Cloud tiles for 2-3x better compression. [#6559](https://github.com/AnalyticalGraphicsInc/cesium/pull/6559)
+* Added `TimeDynamicPointCloud` for playback of time-dynamic point cloud data, where each frame is a 3D Tiles Point Cloud tile. [#6721](https://github.com/AnalyticalGraphicsInc/cesium/pull/6721)
+* Added `CoplanarPolygonGeometry` and `CoplanarPolygonGeometryOutline` for drawing polygons composed of coplanar positions that are not necessarily on the ellipsoid surface. [#6769](https://github.com/AnalyticalGraphicsInc/cesium/pull/6769)
+* Improved support for polygon entities using `perPositionHeight`, including supporting vertical polygons.  This also improves KML compatibility. [#6791](https://github.com/AnalyticalGraphicsInc/cesium/pull/6791)
+* Added `Cartesian3.midpoint` to compute the midpoint between two `Cartesian3` positions [#6836](https://github.com/AnalyticalGraphicsInc/cesium/pull/6836)
+* Added `equalsEpsilon` methods to `OrthographicFrustum`, `PerspectiveFrustum`, `OrthographicOffCenterFrustum` and `PerspectiveOffCenterFrustum`.
 
-#### Fixes :wrench:
+##### Deprecated :hourglass_flowing_sand:
+* Support for 3D Tiles `content.url` is deprecated to reflect updates to the [3D Tiles spec](https://github.com/AnalyticalGraphicsInc/3d-tiles/pull/301). Use `content.uri instead`. Support for `content.url` will remain for backwards compatibility. [#6744](https://github.com/AnalyticalGraphicsInc/cesium/pull/6744)
+* Support for the 3D Tiles pre-version 1.0 Batch Table Hierarchy is deprecated to reflect updates to the [3D Tiles spec](https://github.com/AnalyticalGraphicsInc/3d-tiles/pull/301). Use the [`3DTILES_batch_table_hierarchy`](https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/extensions/3DTILES_batch_table_hierarchy) extension instead. Support for the deprecated batch table hierarchy will remain for backwards compatibility. [#6780](https://github.com/AnalyticalGraphicsInc/cesium/pull/6780)
+* `PostProcessStageLibrary.createLensFlarStage` is deprecated due to misspelling and will be removed in Cesium 1.49. Use `PostProcessStageLibrary.createLensFlareStage` instead.
+
+##### Fixes :wrench:
+* Fixed a bug where 3D Tilesets using the `region` bounding volume don't get transformed when the tileset's `modelMatrix` changes. [#6755](https://github.com/AnalyticalGraphicsInc/cesium/pull/6755)
+* Fixed a bug that caused eye dome lighting for point clouds to fail in Safari on macOS and Edge on Windows by removing the dependency on floating point color textures. [#6792](https://github.com/AnalyticalGraphicsInc/cesium/issues/6792)
+* Fixed a bug that caused polylines on terrain to render incorrectly in 2D and Columbus View with a `WebMercatorProjection`. [#6809](https://github.com/AnalyticalGraphicsInc/cesium/issues/6809)
 * Fixed bug causing billboards and labels to appear the wrong size when switching scene modes [#6745](https://github.com/AnalyticalGraphicsInc/cesium/issues/6745)
+* Fixed `PolygonGeometry` when using `VertexFormat.POSITION_ONLY`, `perPositionHeight` and `extrudedHeight` [#6790](expect(https://github.com/AnalyticalGraphicsInc/cesium/pull/6790)
+* Fixed an issue where tiles were missing in VR mode. [#6612](https://github.com/AnalyticalGraphicsInc/cesium/issues/6612)
+* Fixed issues related to updating entity show and geometry color [#6835](https://github.com/AnalyticalGraphicsInc/cesium/pull/6835)
+* Fixed `PolygonGeometry` and `EllipseGeometry` tangent and bitangent attributes when a texture rotation is used [#6788](https://github.com/AnalyticalGraphicsInc/cesium/pull/6788)
+* Fixed bug where entities with a height reference weren't being updated correctly when the terrain provider was changed. [#6820](https://github.com/AnalyticalGraphicsInc/cesium/pull/6820)
+* Fixed an issue where glTF 2.0 models sometimes wouldn't be centered in the view after putting the camera on them. [#6784](https://github.com/AnalyticalGraphicsInc/cesium/issues/6784)
+* Fixed the geocoder when `Viewer` is passed the option `geocoder: true` [#6833](https://github.com/AnalyticalGraphicsInc/cesium/pull/6833)
+* Improved performance for billboards and labels clamped to terrain [#6781](https://github.com/AnalyticalGraphicsInc/cesium/pull/6781) [#6844](https://github.com/AnalyticalGraphicsInc/cesium/pull/6844)
+* Fixed a bug that caused billboard positions to be set incorrectly when using a `CallbackProperty`. [#6815](https://github.com/AnalyticalGraphicsInc/cesium/pull/6815)
+* Improved support for generating a TypeScript typings file using `tsd-jsdoc` [#6767](https://github.com/AnalyticalGraphicsInc/cesium/pull/6767)
+* Updated viewBoundingSphere to use correct zoomOptions [#6848](https://github.com/AnalyticalGraphicsInc/cesium/issues/6848)
+* Fixed a bug that caused the scene to continuously render after resizing the viewer when `requestRenderMode` was enabled. [#6812](https://github.com/AnalyticalGraphicsInc/cesium/issues/6812)
 
 ### 1.47 - 2018-07-02
 

@@ -102,6 +102,6 @@ defineSuite([
         stackPartitions : 3,
         slicePartitions: 3
     });
-    var packedInstance = [1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 3.0, 3.0];
+    var packedInstance = [1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 3.0, 3.0, -1.0];
     createPackableSpecs(SphereGeometry, sphere, packedInstance);
 });

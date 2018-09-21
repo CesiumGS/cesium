@@ -23,7 +23,6 @@ define([
         './CubeMap',
         './DrawCommand',
         './PassState',
-        './PickFramebuffer',
         './PixelDatatype',
         './RenderState',
         './ShaderCache',
@@ -56,7 +55,6 @@ define([
         CubeMap,
         DrawCommand,
         PassState,
-        PickFramebuffer,
         PixelDatatype,
         RenderState,
         ShaderCache,
@@ -276,10 +274,14 @@ define([
         this._blendMinmax = !!getExtension(gl, ['EXT_blend_minmax']);
         this._elementIndexUint = !!getExtension(gl, ['OES_element_index_uint']);
         this._depthTexture = !!getExtension(gl, ['WEBGL_depth_texture', 'WEBKIT_WEBGL_depth_texture']);
-        this._textureFloat = !!getExtension(gl, ['OES_texture_float']);
-        this._textureHalfFloat = !!getExtension(gl, ['OES_texture_half_float']);
         this._fragDepth = !!getExtension(gl, ['EXT_frag_depth']);
         this._debugShaders = getExtension(gl, ['WEBGL_debug_shaders']);
+
+        this._textureFloat = !!getExtension(gl, ['OES_texture_float']);
+        this._textureHalfFloat = !!getExtension(gl, ['OES_texture_half_float']);
+
+        this._textureFloatLinear = !!getExtension(gl, ['OES_texture_float_linear']);
+        this._textureHalfFloatLinear = !!getExtension(gl, ['OES_texture_half_float_linear']);
 
         this._colorBufferFloat = !!getExtension(gl, ['EXT_color_buffer_float', 'WEBGL_color_buffer_float']);
         this._colorBufferHalfFloat = !!getExtension(gl, ['EXT_color_buffer_half_float']);
@@ -566,7 +568,7 @@ define([
         },
 
         /**
-         * <code>true</code> if OES_texture_float is supported.  This extension provides
+         * <code>true</code> if OES_texture_float is supported. This extension provides
          * access to floating point textures that, for example, can be attached to framebuffers for high dynamic range.
          * @memberof Context.prototype
          * @type {Boolean}
@@ -579,7 +581,7 @@ define([
         },
 
         /**
-         * <code>true</code> if OES_texture_half_float is supported.  This extension provides
+         * <code>true</code> if OES_texture_half_float is supported. This extension provides
          * access to floating point textures that, for example, can be attached to framebuffers for high dynamic range.
          * @memberof Context.prototype
          * @type {Boolean}
@@ -591,6 +593,39 @@ define([
             }
         },
 
+        /**
+         * <code>true</code> if OES_texture_float_linear is supported. This extension provides
+         * access to linear sampling methods for minification and magnification filters of floating-point textures.
+         * @memberof Context.prototype
+         * @type {Boolean}
+         * @see {@link https://www.khronos.org/registry/webgl/extensions/OES_texture_float_linear/}
+         */
+        textureFloatLinear : {
+            get : function() {
+                return this._textureFloatLinear;
+            }
+        },
+
+        /**
+         * <code>true</code> if OES_texture_half_float_linear is supported. This extension provides
+         * access to linear sampling methods for minification and magnification filters of half floating-point textures.
+         * @memberof Context.prototype
+         * @type {Boolean}
+         * @see {@link https://www.khronos.org/registry/webgl/extensions/OES_texture_half_float_linear/}
+         */
+        textureHalfFloatLinear : {
+            get : function() {
+                return (this._webgl2 && this._textureFloatLinear) || (!this._webgl2 && this._textureHalfFloatLinear);
+            }
+        },
+
+        /**
+         * <code>true</code> if EXT_texture_filter_anisotropic is supported. This extension provides
+         * access to anisotropic filtering for textured surfaces at an oblique angle from the viewer.
+         * @memberof Context.prototype
+         * @type {Boolean}
+         * @see {@link https://www.khronos.org/registry/webgl/extensions/EXT_texture_filter_anisotropic/}
+         */
         textureFilterAnisotropic : {
             get : function() {
                 return !!this._textureFilterAnisotropic;
@@ -824,7 +859,7 @@ define([
         /**
          * Gets an object representing the currently bound framebuffer.  While this instance is not an actual
          * {@link Framebuffer}, it is used to represent the default framebuffer in calls to
-         * {@link Texture.FromFramebuffer}.
+         * {@link Texture.fromFramebuffer}.
          * @memberof Context.prototype
          * @type {Object}
          */
@@ -1156,10 +1191,6 @@ define([
             framebuffer : overrides.framebuffer,
             pass : overrides.pass
         });
-    };
-
-    Context.prototype.createPickFramebuffer = function() {
-        return new PickFramebuffer(this);
     };
 
     /**

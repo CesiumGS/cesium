@@ -533,14 +533,14 @@ defineSuite([
 
     it('can handle aligned axis expressed as a velocity reference', function() {
         var packet = {
-            "position" : {
-                "epoch" : "2016-06-17T12:00:00Z",
-                "cartesian" : [0, 1, 2, 3,
+            'position' : {
+                'epoch' : '2016-06-17T12:00:00Z',
+                'cartesian' : [0, 1, 2, 3,
                                60, 61, 122, 183]
             },
-            "billboard" : {
-                "alignedAxis" : {
-                    "velocityReference" : "#position"
+            'billboard' : {
+                'alignedAxis' : {
+                    'velocityReference' : '#position'
                 }
             }
         };
@@ -560,24 +560,24 @@ defineSuite([
 
     it('can handle aligned axis expressed as a velocity reference within an interval', function() {
         var packet = {
-            "position": {
-                "epoch": "2016-06-17T12:00:00Z",
-                "cartesian": [0, 1, 2, 3,
+            'position': {
+                'epoch': '2016-06-17T12:00:00Z',
+                'cartesian': [0, 1, 2, 3,
                               60, 61, 122, 183]
             },
-            "billboard": {
-                "alignedAxis": [
+            'billboard': {
+                'alignedAxis': [
                     {
-                        "interval": "2016-06-17T12:00:00Z/2016-06-17T12:00:30Z",
-                        "unitCartesian": [
+                        'interval': '2016-06-17T12:00:00Z/2016-06-17T12:00:30Z',
+                        'unitCartesian': [
                             0,
                             1,
                             0
                         ]
                     },
                     {
-                        "interval": "2016-06-17T12:00:30Z/2016-06-17T12:01:00Z",
-                        "velocityReference": "#position"
+                        'interval': '2016-06-17T12:00:30Z/2016-06-17T12:01:00Z',
+                        'velocityReference': '#position'
                     }
                 ]
             }
@@ -1470,13 +1470,13 @@ defineSuite([
 
     it('can handle orientation expressed as a velocity reference', function() {
         var packet = {
-            "position" : {
-                "epoch" : "2016-06-17T12:00:00Z",
-                "cartesian" : [0, 1, 2, 3,
+            'position' : {
+                'epoch' : '2016-06-17T12:00:00Z',
+                'cartesian' : [0, 1, 2, 3,
                                60, 61, 122, 183]
             },
-            "orientation": {
-                "velocityReference": "#position"
+            'orientation': {
+                'velocityReference': '#position'
             }
         };
 
@@ -3205,7 +3205,7 @@ defineSuite([
                 positions : {
                     cartesian : [expectedResult[0].x, expectedResult[0].y, expectedResult[0].z, expectedResult[1].x, expectedResult[1].y, expectedResult[1].z]
                 },
-                cornerType : "MITERED",
+                cornerType : 'MITERED',
                 extrudedHeight : 2,
                 granularity : 3,
                 height : 4,
@@ -3520,17 +3520,17 @@ defineSuite([
         var packet = {
             id : 'point',
             position : {
-                forwardExtrapolationType : "HOLD",
+                forwardExtrapolationType : 'HOLD',
                 forwardExtrapolationDuration : 2.0,
-                backwardExtrapolationType : "NONE",
+                backwardExtrapolationType : 'NONE',
                 backwardExtrapolationDuration : 1.0,
                 cartesian : ['2012', 0, 0, 0]
             },
             point : {
                 color : {
-                    forwardExtrapolationType : "NONE",
+                    forwardExtrapolationType : 'NONE',
                     forwardExtrapolationDuration : 1.0,
-                    backwardExtrapolationType : "HOLD",
+                    backwardExtrapolationType : 'HOLD',
                     backwardExtrapolationDuration : 2.0,
                     rgbaf : ['2012', 0.1, 0.2, 0.3, 0.4]
                 }

@@ -28,18 +28,21 @@ function startup(Cesium) {
     'use strict';
 //Sandcastle_Begin
 // An example of using a b3dm tilset to classify another b3dm tileset.
-var viewer = new Cesium.Viewer('cesiumContainer');
+var viewer = new Cesium.Viewer('cesiumContainer', {
+    terrainProvider: Cesium.createWorldTerrain()
+});
 
 // A normal b3dm tileset of photogrammetry
 var tileset = new Cesium.Cesium3DTileset({
-    url: Cesium.IonResource.fromAssetId(3836)
+    url: Cesium.IonResource.fromAssetId(6074)
 });
 viewer.scene.primitives.add(tileset);
 viewer.zoomTo(tileset);
 
+var classifcationTilesetUrl = '../../SampleData/Cesium3DTiles/Classification/Photogrammetry/tileset.json';
 // A b3dm tileset used to classify the photogrammetry tileset
 var classificationTileset = new Cesium.Cesium3DTileset({
-    url: Cesium.IonResource.fromAssetId(3843),
+    url: classifcationTilesetUrl,
     classificationType: Cesium.ClassificationType.CESIUM_3D_TILE
 });
 classificationTileset.style = new Cesium.Cesium3DTileStyle({
@@ -49,7 +52,7 @@ viewer.scene.primitives.add(classificationTileset);
 
 // The same b3dm tileset used for classification, but rendered normally for comparison.
 var nonClassificationTileset = new Cesium.Cesium3DTileset({
-    url: Cesium.IonResource.fromAssetId(3843),
+    url: classifcationTilesetUrl,
     show: false
 });
 nonClassificationTileset.style = new Cesium.Cesium3DTileStyle({
@@ -64,10 +67,10 @@ Sandcastle.addToggleButton('Show classification', true, function(checked) {
 //Sandcastle_End
 Sandcastle.finishedLoading();
 }
-if (typeof Cesium !== "undefined") {
+if (typeof Cesium !== 'undefined') {
     startup(Cesium);
-} else if (typeof require === "function") {
-    require(["Cesium"], startup);
+} else if (typeof require === 'function') {
+    require(['Cesium'], startup);
 }
 </script>
 </body>

@@ -90,6 +90,7 @@ defineSuite([
     var texturedBoxKhrBinaryUrl = './Data/Models/Box-Textured-Binary/CesiumTexturedBoxTest.glb';
     var boxRtcUrl = './Data/Models/Box-RTC/Box.gltf';
     var boxEcefUrl = './Data/Models/Box-ECEF/ecef.gltf';
+    var boxWithUnusedMaterial = './Data/Models/BoxWithUnusedMaterial/Box.gltf';
 
     var cesiumAirUrl = './Data/Models/CesiumAir/Cesium_Air.gltf';
     var cesiumAir_0_8Url = './Data/Models/CesiumAir/Cesium_Air_0_8.gltf';
@@ -118,7 +119,11 @@ defineSuite([
     var CesiumManUrl = './Data/Models/MaterialsCommon/Cesium_Man.gltf';
 
     var boomBoxUrl = './Data/Models/PBR/BoomBox/BoomBox.gltf';
+    var boomBoxPbrSpecularGlossinessUrl = './Data/Models/PBR/BoomBoxSpecularGlossiness/BoomBox.gltf';
+    var boomBoxPbrSpecularGlossinessDefaultsUrl = './Data/Models/PBR/BoomBoxSpecularGlossiness/BoomBox-Default.gltf';
+    var boomBoxPbrSpecularGlossinessNoTextureUrl = './Data/Models/PBR/BoomBoxSpecularGlossiness/BoomBox-NoTexture.gltf';
     var boxPbrUrl = './Data/Models/PBR/Box/Box.gltf';
+    var boxPbrUnlitUrl = './Data/Models/PBR/BoxUnlit/BoxUnlit.gltf';
     var boxAnimatedPbrUrl = './Data/Models/PBR/BoxAnimated/BoxAnimated.gltf';
     var boxInterleavedPbrUrl = './Data/Models/PBR/BoxInterleaved/BoxInterleaved.gltf';
     var riggedSimplePbrUrl = './Data/Models/PBR/RiggedSimple/RiggedSimple.gltf';
@@ -128,6 +133,9 @@ defineSuite([
     var emissiveUrl = './Data/Models/PBR/BoxEmissive/BoxEmissive.gltf';
     var dracoCompressedModelUrl = './Data/Models/DracoCompression/CesiumMilkTruck/CesiumMilkTruck.gltf';
     var dracoCompressedModelWithAnimationUrl = './Data/Models/DracoCompression/CesiumMan/CesiumMan.gltf';
+
+    var boxGltf2Url = './Data/Models/Box-Gltf-2/Box.gltf';
+    var boxGltf2WithTechniquesUrl = './Data/Models/Box-Gltf-2-Techniques/Box.gltf';
 
     var texturedBoxModel;
     var cesiumAirModel;
@@ -178,10 +186,12 @@ defineSuite([
     });
 
     function addZoomTo(model) {
-        model.zoomTo = function() {
+        model.zoomTo = function(zoom) {
+            zoom = defaultValue(zoom, 4.0);
+
             var camera = scene.camera;
             var center = Matrix4.multiplyByPoint(model.modelMatrix, model.boundingSphere.center, new Cartesian3());
-            var r = 4.0 * Math.max(model.boundingSphere.radius, camera.frustum.near);
+            var r = zoom * Math.max(model.boundingSphere.radius, camera.frustum.near);
             camera.lookAt(center, new HeadingPitchRange(0.0, 0.0, r));
         };
     }
@@ -265,7 +275,8 @@ defineSuite([
         expect(texturedBoxModel.ready).toEqual(true);
         expect(texturedBoxModel.asynchronous).toEqual(true);
         expect(texturedBoxModel.releaseGltfJson).toEqual(false);
-        expect(texturedBoxModel.cacheKey).toEndWith('Data/Models/Box-Textured/CesiumTexturedBoxTest.gltf');
+        expect(texturedBoxModel.cacheKey).toBeDefined();
+        expect(texturedBoxModel.cacheKey).not.toContain('Data/Models/Box-Textured/CesiumTexturedBoxTest.gltf');
         expect(texturedBoxModel.debugShowBoundingVolume).toEqual(false);
         expect(texturedBoxModel.debugWireframe).toEqual(false);
         expect(texturedBoxModel.distanceDisplayCondition).toBeUndefined();
@@ -445,7 +456,7 @@ defineSuite([
     });
 
     it('renders x-forward model', function() {
-        return Resource.fetchJson(boxEcefUrl).then(function(gltf) {
+        return Resource.fetchJson(boxPbrUrl).then(function(gltf) {
             return loadModelJson(gltf, {
                 forwardAxis : Axis.X
             }).then(function(m) {
@@ -457,7 +468,7 @@ defineSuite([
     });
 
     it('renders z-forward model', function() {
-        return Resource.fetchJson(boxPbrUrl).then(function(gltf) {
+        return Resource.fetchJson(boxEcefUrl).then(function(gltf) {
             return loadModelJson(gltf, {
                 forwardAxis : Axis.Z
             }).then(function(m) {
@@ -526,46 +537,21 @@ defineSuite([
         // Simulate using procedural glTF as opposed to loading it from a file
         return loadModelJson(texturedBoxModel.gltf).then(function(model) {
             var rs = {
-                frontFace : WebGLConstants.CCW,
                 cull : {
-                    enabled : true,
-                    face : WebGLConstants.BACK
-                },
-                lineWidth : 1.0,
-                polygonOffset : {
-                    enabled : false,
-                    factor : 0.0,
-                    units : 0.0
-                },
-                depthRange : {
-                    near : 0.0,
-                    far : 1.0
+                    enabled : true
                 },
                 depthTest : {
-                    enabled : true,
-                    func : WebGLConstants.LESS
-                },
-                colorMask : {
-                    red : true,
-                    green : true,
-                    blue : true,
-                    alpha : true
+                    enabled : true
                 },
                 depthMask : true,
                 blending : {
                     enabled : false,
-                    color : {
-                        red : 0.0,
-                        green : 0.0,
-                        blue : 0.0,
-                        alpha : 0.0
-                    },
                     equationRgb : WebGLConstants.FUNC_ADD,
                     equationAlpha : WebGLConstants.FUNC_ADD,
                     functionSourceRgb : WebGLConstants.ONE,
                     functionSourceAlpha : WebGLConstants.ONE,
-                    functionDestinationRgb : WebGLConstants.ZERO,
-                    functionDestinationAlpha : WebGLConstants.ZERO
+                    functionDestinationRgb : WebGLConstants.ONE_MINUS_SRC_ALPHA,
+                    functionDestinationAlpha : WebGLConstants.ONE_MINUS_SRC_ALPHA
                 }
             };
 
@@ -732,13 +718,13 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('ModelMaterial.setValue sets a scalar parameter', function() {
+    it('ModelMaterial.setValue sets a scalar uniform value', function() {
         var material = texturedBoxModel.getMaterial('Texture');
         material.setValue('shininess', 12.34);
         expect(material.getValue('shininess')).toEqual(12.34);
     });
 
-    it('ModelMaterial.setValue sets a Cartesian4 parameter', function() {
+    it('ModelMaterial.setValue sets a Cartesian4 uniform value', function() {
         var material = texturedBoxModel.getMaterial('Texture');
         var specular = new Cartesian4(0.25, 0.5, 0.75, 1.0);
         material.setValue('specular', specular);
@@ -752,7 +738,7 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('ModelMaterial.getValue returns undefined when parameter does not exist', function() {
+    it('ModelMaterial.getValue returns undefined when uniform value does not exist', function() {
         var material = texturedBoxModel.getMaterial('Texture');
         expect(material.getValue('name-of-parameter-that-does-not-exist')).not.toBeDefined();
     });
@@ -947,9 +933,34 @@ defineSuite([
 
             // Verify that rotation is converted from
             // Axis-Angle (1,0,0,0) to Quaternion (0,0,0,1)
-            var rotation = m.gltf.nodes[3].rotation;
+            var rotation = m.gltf.nodes[2].rotation;
             expect(rotation).toEqual([0.0, 0.0, 0.0, 1.0]);
 
+            verifyRender(m);
+            primitives.remove(m);
+        });
+    });
+
+    it('loads a glTF 2.0 model', function() {
+        return loadModel(boxGltf2Url).then(function(m) {
+            verifyRender(m);
+            m.show = true;
+            expect(scene).toRender([169, 3, 3, 255]); // Red
+            primitives.remove(m);
+        });
+    });
+
+    it('loads a glTF 2.0 model with techniques_webgl extension', function() {
+        return loadModel(boxGltf2WithTechniquesUrl).then(function(m) {
+            verifyRender(m);
+            m.show = true;
+            expect(scene).toRender([204, 0, 0, 255]); // Red
+            primitives.remove(m);
+        });
+    });
+
+    it('loads a glTF model with unused material', function() {
+        return loadModel(boxWithUnusedMaterial).then(function(m) {
             verifyRender(m);
             primitives.remove(m);
         });
@@ -1007,7 +1018,7 @@ defineSuite([
             return new Model({
                 gltf : arrayBuffer
             });
-        }).toThrowDeveloperError();
+        }).toThrowRuntimeError();
     });
 
     it('Throws because of an invalid Binary glTF header - version', function() {
@@ -1022,7 +1033,7 @@ defineSuite([
             return new Model({
                 gltf : arrayBuffer
             });
-        }).toThrowDeveloperError();
+        }).toThrowRuntimeError();
     });
 
     it('renders a model with the CESIUM_RTC extension', function() {
@@ -2060,7 +2071,7 @@ defineSuite([
             expect(scene).toRender([0, 0, 0, 255]);
             m.show = true;
             m.zoomTo();
-            expect(scene).toRender([0, 0, 0, 255]);
+            expect(scene).toRender([51, 51, 51, 255]); // Cesium has minimum lighting
             m.show = false;
 
             primitives.remove(m);
@@ -2606,12 +2617,12 @@ defineSuite([
             // Look at the model
             m.zoomTo();
             scene.renderForSpecs();
-            expect(scene._frustumCommandsList.length).not.toEqual(0);
+            expect(scene.frustumCommandsList.length).not.toEqual(0);
 
             // Move the model out of view
             m.modelMatrix = Matrix4.fromTranslation(new Cartesian3(100000.0, 0.0, 0.0));
             scene.renderForSpecs();
-            expect(scene._frustumCommandsList.length).toEqual(0);
+            expect(scene.frustumCommandsList.length).toEqual(0);
 
             m.show = false;
             primitives.remove(m);
@@ -2628,12 +2639,12 @@ defineSuite([
             // Look at the model
             m.zoomTo();
             scene.renderForSpecs();
-            expect(scene._frustumCommandsList.length).not.toEqual(0);
+            expect(scene.frustumCommandsList.length).not.toEqual(0);
 
             // Move the model out of view
             m.modelMatrix = Matrix4.fromTranslation(new Cartesian3(10000000000.0, 0.0, 0.0));
             scene.renderForSpecs();
-            expect(scene._frustumCommandsList.length).not.toEqual(0);
+            expect(scene.frustumCommandsList.length).not.toEqual(0);
 
             m.show = false;
             primitives.remove(m);
@@ -2704,6 +2715,81 @@ defineSuite([
             scene.renderForSpecs();
             var commands = scene.frameState.commandList;
             expect(commands.length).toBe(0);
+
+            primitives.remove(model);
+        });
+    });
+
+    it('renders with the KHR_materials_unlit extension', function() {
+        return loadModel(boxPbrUnlitUrl).then(function(model) {
+            model.show = true;
+            model.zoomTo();
+            // We expect to see the base color when unlit
+            expect(scene).toRenderAndCall(function(rgba) {
+                expect(rgba[0]).toEqual(0);
+                expect(rgba[1]).toEqual(255);
+                expect(rgba[2]).toEqual(0);
+            });
+
+            primitives.remove(model);
+        });
+    });
+
+    it('renders with the KHR_materials_pbrSpecularGlossiness extension', function() {
+        return loadModel(boomBoxPbrSpecularGlossinessUrl).then(function(model) {
+            model.show = false;
+            model.zoomTo(2.0);
+
+            var originalColor;
+            expect(scene).toRenderAndCall(function(rgba) {
+                originalColor = rgba;
+            });
+
+            model.show = true;
+
+            expect(scene).toRenderAndCall(function(rgba) {
+                expect(rgba).not.toEqual(originalColor);
+            });
+
+            primitives.remove(model);
+        });
+    });
+
+    it('renders with the KHR_materials_pbrSpecularGlossiness extension with defaults', function() {
+        return loadModel(boomBoxPbrSpecularGlossinessDefaultsUrl).then(function(model) {
+            model.show = false;
+            model.zoomTo(2.0);
+
+            var originalColor;
+            expect(scene).toRenderAndCall(function(rgba) {
+                originalColor = rgba;
+            });
+
+            model.show = true;
+
+            expect(scene).toRenderAndCall(function(rgba) {
+                expect(rgba).not.toEqual(originalColor);
+            });
+
+            primitives.remove(model);
+        });
+    });
+
+    it('renders with the KHR_materials_pbrSpecularGlossiness extension when no textures are found', function() {
+        return loadModel(boomBoxPbrSpecularGlossinessNoTextureUrl).then(function(model) {
+            model.show = false;
+            model.zoomTo(2.0);
+
+            var originalColor;
+            expect(scene).toRenderAndCall(function(rgba) {
+                originalColor = rgba;
+            });
+
+            model.show = true;
+
+            expect(scene).toRenderAndCall(function(rgba) {
+                expect(rgba).not.toEqual(originalColor);
+            });
 
             primitives.remove(model);
         });

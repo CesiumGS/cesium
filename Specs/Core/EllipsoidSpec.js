@@ -323,7 +323,7 @@ defineSuite([
     });
 
     it('toString produces expected values', function() {
-        var expected = "(1, 2, 3)";
+        var expected = '(1, 2, 3)';
         var ellipsoid = new Ellipsoid(1, 2, 3);
         expect(ellipsoid.toString()).toEqual(expected);
     });

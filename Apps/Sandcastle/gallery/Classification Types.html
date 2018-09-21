@@ -27,9 +27,12 @@
 function startup(Cesium) {
 'use strict';
 //Sandcastle_Begin
-var viewer = new Cesium.Viewer('cesiumContainer');
+var viewer = new Cesium.Viewer('cesiumContainer', {
+    terrainProvider: Cesium.createWorldTerrain()
+});
+viewer.scene.globe.depthTestAgainstTerrain = false;
 
-var tileset = new Cesium.Cesium3DTileset({ url: Cesium.IonResource.fromAssetId(3836) });
+var tileset = new Cesium.Cesium3DTileset({ url: Cesium.IonResource.fromAssetId(6074) });
 viewer.scene.primitives.add(tileset);
 
 tileset.readyPromise.then(function(){
@@ -66,10 +69,10 @@ Sandcastle.addToolbarMenu(options);
 //Sandcastle_End
 Sandcastle.finishedLoading();
 }
-if (typeof Cesium !== "undefined") {
+if (typeof Cesium !== 'undefined') {
     startup(Cesium);
-} else if (typeof require === "function") {
-    require(["Cesium"], startup);
+} else if (typeof require === 'function') {
+    require(['Cesium'], startup);
 }
 </script>
 </body>

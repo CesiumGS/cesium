@@ -23,6 +23,7 @@ define([
      * @constructor
      *
      * @param {Object} [options] Object with the following properties:
+     * @param {Property} [options.heightReference] A Property specifying what the height from the entity position is relative to.
      * @param {Property} [options.dimensions] A {@link Cartesian3} Property specifying the length, width, and height of the box.
      * @param {Property} [options.show=true] A boolean Property specifying the visibility of the box.
      * @param {Property} [options.fill=true] A boolean Property specifying whether the box is filled with the provided material.
@@ -36,6 +37,7 @@ define([
      * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Box.html|Cesium Sandcastle Box Demo}
      */
     function BoxGraphics(options) {
+        this._heightReference = undefined;
         this._dimensions = undefined;
         this._dimensionsSubscription = undefined;
         this._show = undefined;
@@ -71,6 +73,14 @@ define([
                 return this._definitionChanged;
             }
         },
+
+        /**
+         * Gets or sets the Property specifying the {@link HeightReference}.
+         * @memberof BoxGraphics.prototype
+         * @type {Property}
+         * @default HeightReference.NONE
+         */
+        heightReference : createPropertyDescriptor('heightReference'),
 
         /**
          * Gets or sets the boolean Property specifying the visibility of the box.
@@ -154,6 +164,7 @@ define([
         if (!defined(result)) {
             return new BoxGraphics(this);
         }
+        result.heightReference = this.heightReference;
         result.dimensions = this.dimensions;
         result.show = this.show;
         result.material = this.material;
@@ -179,6 +190,7 @@ define([
         }
         //>>includeEnd('debug');
 
+        this.heightReference = defaultValue(this.heightReference, source.heightReference);
         this.dimensions = defaultValue(this.dimensions, source.dimensions);
         this.show = defaultValue(this.show, source.show);
         this.material = defaultValue(this.material, source.material);

@@ -108,6 +108,8 @@ define([
         this.isClipped = true;
 
         this.childTileMask = undefined;
+
+        this.clippedByBoundaries = false;
     }
 
     defineProperties(GlobeSurfaceTile.prototype, {

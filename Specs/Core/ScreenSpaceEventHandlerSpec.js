@@ -20,7 +20,7 @@ defineSuite([
         DomEventSimulator) {
     'use strict';
 
-    var usePointerEvents = FeatureDetection.supportsPointerEvents();
+    var usePointerEvents;
     var element;
     var handler;
 
@@ -62,6 +62,10 @@ defineSuite([
         event.stopPropagation();
         event.preventDefault();
     }
+
+    beforeAll(function(){
+        usePointerEvents = FeatureDetection.supportsPointerEvents();
+    });
 
     beforeEach(function() {
         // ignore events that bubble up to the document.

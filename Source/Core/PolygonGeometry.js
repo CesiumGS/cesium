@@ -60,42 +60,6 @@ define([
         WindingOrder) {
     'use strict';
 
-    var computeBoundingRectangleCartesian2 = new Cartesian2();
-    var computeBoundingRectangleCartesian3 = new Cartesian3();
-    var computeBoundingRectangleQuaternion = new Quaternion();
-    var computeBoundingRectangleMatrix3 = new Matrix3();
-
-    function computeBoundingRectangle(tangentPlane, positions, angle, result) {
-        var rotation = Quaternion.fromAxisAngle(tangentPlane._plane.normal, angle, computeBoundingRectangleQuaternion);
-        var textureMatrix = Matrix3.fromQuaternion(rotation, computeBoundingRectangleMatrix3);
-
-        var minX = Number.POSITIVE_INFINITY;
-        var maxX = Number.NEGATIVE_INFINITY;
-        var minY = Number.POSITIVE_INFINITY;
-        var maxY = Number.NEGATIVE_INFINITY;
-
-        var length = positions.length;
-        for ( var i = 0; i < length; ++i) {
-            var p = Cartesian3.clone(positions[i], computeBoundingRectangleCartesian3);
-            Matrix3.multiplyByVector(textureMatrix, p, p);
-            var st = tangentPlane.projectPointOntoPlane(p, computeBoundingRectangleCartesian2);
-
-            if (defined(st)) {
-                minX = Math.min(minX, st.x);
-                maxX = Math.max(maxX, st.x);
-
-                minY = Math.min(minY, st.y);
-                maxY = Math.max(maxY, st.y);
-            }
-        }
-
-        result.x = minX;
-        result.y = minY;
-        result.width = maxX - minX;
-        result.height = maxY - minY;
-        return result;
-    }
-
     var scratchCarto1 = new Cartographic();
     var scratchCarto2 = new Cartographic();
     function adjustPosHeightsForNormal(position, p1, p2, ellipsoid) {
@@ -126,6 +90,7 @@ define([
     var appendTextureCoordinatesCartesian3 = new Cartesian3();
     var appendTextureCoordinatesQuaternion = new Quaternion();
     var appendTextureCoordinatesMatrix3 = new Matrix3();
+    var tangentMatrixScratch = new Matrix3();
 
     function computeAttributes(options) {
         var vertexFormat = options.vertexFormat;
@@ -170,8 +135,18 @@ define([
             var bitangent = scratchBitangent;
             var recomputeNormal = true;
 
-            var rotation = Quaternion.fromAxisAngle(tangentPlane._plane.normal, stRotation, appendTextureCoordinatesQuaternion);
-            var textureMatrix = Matrix3.fromQuaternion(rotation, appendTextureCoordinatesMatrix3);
+            var textureMatrix = appendTextureCoordinatesMatrix3;
+            var tangentRotationMatrix = tangentMatrixScratch;
+            if (stRotation !== 0.0) {
+                var rotation = Quaternion.fromAxisAngle(tangentPlane._plane.normal, stRotation, appendTextureCoordinatesQuaternion);
+                textureMatrix = Matrix3.fromQuaternion(rotation, textureMatrix);
+
+                rotation = Quaternion.fromAxisAngle(tangentPlane._plane.normal, -stRotation, appendTextureCoordinatesQuaternion);
+                tangentRotationMatrix = Matrix3.fromQuaternion(rotation, tangentRotationMatrix);
+            } else {
+                textureMatrix = Matrix3.clone(Matrix3.IDENTITY, textureMatrix);
+                tangentRotationMatrix = Matrix3.clone(Matrix3.IDENTITY, tangentRotationMatrix);
+            }
 
             var bottomOffset = 0;
             var bottomOffset2 = 0;
@@ -242,14 +217,14 @@ define([
                             if (perPositionHeight) {
                                 scratchPerPosNormal = Cartesian3.fromArray(normals, attrIndex, scratchPerPosNormal);
                                 scratchPerPosTangent = Cartesian3.cross(Cartesian3.UNIT_Z, scratchPerPosNormal, scratchPerPosTangent);
-                                scratchPerPosTangent = Cartesian3.normalize(Matrix3.multiplyByVector(textureMatrix, scratchPerPosTangent, scratchPerPosTangent), scratchPerPosTangent);
+                                scratchPerPosTangent = Cartesian3.normalize(Matrix3.multiplyByVector(tangentRotationMatrix, scratchPerPosTangent, scratchPerPosTangent), scratchPerPosTangent);
                                 if (vertexFormat.bitangent) {
                                     scratchPerPosBitangent = Cartesian3.normalize(Cartesian3.cross(scratchPerPosNormal, scratchPerPosTangent, scratchPerPosBitangent), scratchPerPosBitangent);
                                 }
                             }
 
                             tangent = Cartesian3.cross(Cartesian3.UNIT_Z, normal, tangent);
-                            tangent = Cartesian3.normalize(Matrix3.multiplyByVector(textureMatrix, tangent, tangent), tangent);
+                            tangent = Cartesian3.normalize(Matrix3.multiplyByVector(tangentRotationMatrix, tangent, tangent), tangent);
                             if (vertexFormat.bitangent) {
                                 bitangent = Cartesian3.normalize(Cartesian3.cross(normal, tangent, bitangent), bitangent);
                             }
@@ -447,7 +422,7 @@ define([
                 }
 
                 topGeo.attributes.position.values = topBottomPositions;
-                if (perPositionHeight) {
+                if (perPositionHeight && vertexFormat.normal) {
                     var normals = topGeo.attributes.normal.values;
                     topGeo.attributes.normal.values = new Float32Array(topBottomPositions.length);
                     topGeo.attributes.normal.values.set(normals);
@@ -853,7 +828,7 @@ define([
 
         var tangentPlane = EllipsoidTangentPlane.fromPoints(outerPositions, ellipsoid);
 
-        var results = PolygonGeometryLibrary.polygonsFromHierarchy(polygonHierarchy, perPositionHeight, tangentPlane, ellipsoid);
+        var results = PolygonGeometryLibrary.polygonsFromHierarchy(polygonHierarchy, tangentPlane.projectPointsOntoPlane.bind(tangentPlane), !perPositionHeight, ellipsoid);
         var hierarchy = results.hierarchy;
         var polygons = results.polygons;
 
@@ -862,7 +837,7 @@ define([
         }
 
         outerPositions = hierarchy[0].outerRing;
-        var boundingRectangle = computeBoundingRectangle(tangentPlane, outerPositions, stRotation, scratchBoundingRectangle);
+        var boundingRectangle = PolygonGeometryLibrary.computeBoundingRectangle(tangentPlane.plane.normal, tangentPlane.projectPointOntoPlane.bind(tangentPlane), outerPositions, stRotation, scratchBoundingRectangle);
 
         var geometries = [];
 

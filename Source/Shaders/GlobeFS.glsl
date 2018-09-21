@@ -52,6 +52,10 @@ uniform sampler2D u_oceanNormalMap;
 uniform vec2 u_lightingFadeDistance;
 #endif
 
+#ifdef TILE_LIMIT_RECTANGLE
+uniform vec4 u_cartographicLimitRectangle;
+#endif
+
 #ifdef ENABLE_CLIPPING_PLANES
 uniform sampler2D u_clippingPlanes;
 uniform mat4 u_clippingPlanesMatrix;
@@ -170,6 +174,15 @@ void main()
     }
 #endif
 
+
+#ifdef TILE_LIMIT_RECTANGLE
+    if (v_textureCoordinates.x < u_cartographicLimitRectangle.x || u_cartographicLimitRectangle.z < v_textureCoordinates.x ||
+        v_textureCoordinates.y < u_cartographicLimitRectangle.y || u_cartographicLimitRectangle.w < v_textureCoordinates.y)
+        {
+            discard;
+        }
+#endif
+
 #ifdef ENABLE_CLIPPING_PLANES
     float clipDistance = clip(gl_FragCoord, u_clippingPlanes, u_clippingPlanesMatrix);
 #endif
@@ -229,9 +242,27 @@ void main()
     vec4 finalColor = vec4(color.rgb * diffuseIntensity, color.a);
 #elif defined(ENABLE_DAYNIGHT_SHADING)
     float diffuseIntensity = clamp(czm_getLambertDiffuse(czm_sunDirectionEC, normalEC) * 5.0 + 0.3, 0.0, 1.0);
-    float cameraDist = length(czm_view[3]);
+    float cameraDist;
+    if (czm_sceneMode == czm_sceneMode2D)
+    {
+        cameraDist = max(czm_frustumPlanes.x - czm_frustumPlanes.y, czm_frustumPlanes.w - czm_frustumPlanes.z) * 0.5;
+    }
+    else if (czm_sceneMode == czm_sceneModeColumbusView)
+    {
+        cameraDist = -czm_view[3].z;
+    }
+    else
+    {
+        cameraDist = length(czm_view[3]);
+    }
     float fadeOutDist = u_lightingFadeDistance.x;
     float fadeInDist = u_lightingFadeDistance.y;
+    if (czm_sceneMode != czm_sceneMode3D) {
+        vec3 radii = czm_getWgs84EllipsoidEC().radii;
+        float maxRadii = max(radii.x, max(radii.y, radii.z));
+        fadeOutDist -= maxRadii;
+        fadeInDist -= maxRadii;
+    }
     float t = clamp((cameraDist - fadeOutDist) / (fadeInDist - fadeOutDist), 0.0, 1.0);
     diffuseIntensity = mix(1.0, diffuseIntensity, t);
     vec4 finalColor = vec4(color.rgb * diffuseIntensity, color.a);
