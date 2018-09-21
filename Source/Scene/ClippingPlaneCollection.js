@@ -199,8 +199,9 @@ define([
         },
 
         /**
-         * If true, a region will be clipped if included in any plane in the collection. Otherwise, the region
-         * to be clipped must intersect the regions defined by all planes in this collection.
+         * If true, a region will be clipped if it is on the outside of any plane in the
+         * collection. Otherwise, a region will only be clipped if it is on the
+         * outside of every plane.
          *
          * @memberof ClippingPlaneCollection.prototype
          * @type {Boolean}
