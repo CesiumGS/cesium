@@ -1591,11 +1591,7 @@ define([
         frameState.terrainExaggeration = scene._terrainExaggeration;
         frameState.minimumDisableDepthTestDistance = scene._minimumDisableDepthTestDistance;
         frameState.invertClassification = scene.invertClassification;
-
-        var useLogDepth = scene._logDepthBuffer && !(scene.camera.frustum instanceof OrthographicFrustum || scene.camera.frustum instanceof OrthographicOffCenterFrustum);
-        var useLogDepthDirty = useLogDepth !== frameState.useLogDepth;
-        frameState.useLogDepth = useLogDepth;
-        frameState.useLogDepthDirty = useLogDepthDirty;
+        frameState.useLogDepth = scene._logDepthBuffer && !(scene.camera.frustum instanceof OrthographicFrustum || scene.camera.frustum instanceof OrthographicOffCenterFrustum);
 
         scene._actualInvertClassificationColor = Color.clone(scene.invertClassificationColor, scene._actualInvertClassificationColor);
         if (!InvertClassification.isTranslucencySupported(scene._context)) {
