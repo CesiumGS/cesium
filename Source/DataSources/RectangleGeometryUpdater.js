@@ -73,6 +73,7 @@ define([
         this.stRotation = undefined;
         this.rotation = undefined;
         this.offsetAttribute = undefined;
+        this.width = undefined;
     }
 
     /**
@@ -234,6 +235,7 @@ define([
         options.rotation = Property.getValueOrUndefined(rectangle.rotation, Iso8601.MINIMUM_VALUE);
         options.offsetAttribute = GroundGeometryUpdater.computeGeometryOffsetAttribute(heightReference, extrudedHeightReference, Iso8601.MINIMUM_VALUE);
         options.height = GroundGeometryUpdater.getGeometryHeight(height, heightReference, Iso8601.MINIMUM_VALUE);
+        options.width = Property.getValueOrUndefined(rectangle.outlineWidth, Iso8601.MINIMUM_VALUE);
 
         var extrudedHeightValue = GroundGeometryUpdater.getGeometryExtrudedHeight(extrudedHeight, extrudedHeightReference, Iso8601.MINIMUM_VALUE);
         if (extrudedHeightValue === GroundGeometryUpdater.CLAMP_TO_GROUND) {
@@ -280,6 +282,7 @@ define([
         options.rotation = Property.getValueOrUndefined(rectangle.rotation, time);
         options.offsetAttribute = GroundGeometryUpdater.computeGeometryOffsetAttribute(heightReference, extrudedHeightReference, time);
         options.height = GroundGeometryUpdater.getGeometryHeight(height, heightReference, time);
+        options.width = Property.getValueOrUndefined(rectangle.outlineWidth, Iso8601.MINIMUM_VALUE);
 
         var extrudedHeightValue = GroundGeometryUpdater.getGeometryExtrudedHeight(extrudedHeight, extrudedHeightReference, time);
         if (extrudedHeightValue === GroundGeometryUpdater.CLAMP_TO_GROUND) {

@@ -35,13 +35,13 @@ define([
         '../Renderer/Pass',
         '../Renderer/RenderState',
         '../Renderer/VertexArray',
-        '../Scene/BlendingState',
-        '../Scene/DepthFunction',
-        '../Scene/PerInstanceColorAppearance',
-        '../Scene/Primitive',
+        './BlendingState',
         './ClippingPlaneCollection',
+        './DepthFunction',
         './GlobeSurfaceTile',
         './ImageryLayer',
+        './PolylineColorAppearance',
+        './Primitive',
         './QuadtreeTileLoadState',
         './SceneMode',
         './ShadowMode'
@@ -83,12 +83,12 @@ define([
         RenderState,
         VertexArray,
         BlendingState,
-        DepthFunction,
-        PerInstanceColorAppearance,
-        Primitive,
         ClippingPlaneCollection,
+        DepthFunction,
         GlobeSurfaceTile,
         ImageryLayer,
+        PolylineColorAppearance,
+        Primitive,
         QuadtreeTileLoadState,
         SceneMode,
         ShadowMode) {
@@ -1084,9 +1084,8 @@ define([
         function createDebugPrimitive(instance) {
             return new Primitive({
                 geometryInstances : instance,
-                appearance : new PerInstanceColorAppearance({
-                    translucent : false,
-                    flat : true
+                appearance : new PolylineColorAppearance({
+                    translucent : false
                 }),
                 asynchronous : false
             });

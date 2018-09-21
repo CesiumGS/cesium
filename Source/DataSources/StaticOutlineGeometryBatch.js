@@ -8,7 +8,7 @@ define([
         '../Core/DistanceDisplayConditionGeometryInstanceAttribute',
         '../Core/OffsetGeometryInstanceAttribute',
         '../Core/ShowGeometryInstanceAttribute',
-        '../Scene/PerInstanceColorAppearance',
+        '../Scene/PolylineColorAppearance',
         '../Scene/Primitive',
         './BoundingSphereState',
         './Property'
@@ -22,7 +22,7 @@ define([
         DistanceDisplayConditionGeometryInstanceAttribute,
         OffsetGeometryInstanceAttribute,
         ShowGeometryInstanceAttribute,
-        PerInstanceColorAppearance,
+        PolylineColorAppearance,
         Primitive,
         BoundingSphereState,
         Property) {
@@ -121,12 +121,8 @@ define([
                     show : false,
                     asynchronous : true,
                     geometryInstances : geometries,
-                    appearance : new PerInstanceColorAppearance({
-                        flat : true,
-                        translucent : this.translucent,
-                        renderState : {
-                            lineWidth : this.width
-                        }
+                    appearance : new PolylineColorAppearance({
+                        translucent : this.translucent
                     }),
                     shadows : this.shadows
                 });
@@ -284,9 +280,10 @@ define([
         this._solidBatches = new AssociativeArray();
         this._translucentBatches = new AssociativeArray();
     }
+
     StaticOutlineGeometryBatch.prototype.add = function(time, updater) {
         var instance = updater.createOutlineGeometryInstance(time);
-        var width = this._scene.clampLineWidth(updater.outlineWidth);
+        var width = updater.outlineWidth;
         var batches;
         var batch;
         if (instance.attributes.color.value[3] === 255) {

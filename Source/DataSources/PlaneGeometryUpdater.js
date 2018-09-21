@@ -56,6 +56,7 @@ define([
         this.vertexFormat = undefined;
         this.plane = undefined;
         this.dimensions = undefined;
+        this.width = undefined;
     }
 
     /**
@@ -218,6 +219,7 @@ define([
         options.vertexFormat = isColorMaterial ? PerInstanceColorAppearance.VERTEX_FORMAT : MaterialAppearance.MaterialSupport.TEXTURED.vertexFormat;
         options.plane = plane.plane.getValue(Iso8601.MINIMUM_VALUE, options.plane);
         options.dimensions = plane.dimensions.getValue(Iso8601.MINIMUM_VALUE, options.dimensions);
+        options.width = Property.getValueOrUndefined(plane.outlineWidth, Iso8601.MINIMUM_VALUE);
     };
 
     PlaneGeometryUpdater.DynamicGeometryUpdater = DynamicPlaneGeometryUpdater;
@@ -244,6 +246,7 @@ define([
         var options = this._options;
         options.plane = Property.getValueOrDefault(plane.plane, time, options.plane);
         options.dimensions = Property.getValueOrUndefined(plane.dimensions, time, options.dimensions);
+        options.width = Property.getValueOrUndefined(plane.outlineWidth, Iso8601.MINIMUM_VALUE);
     };
 
     var scratchAxis = new Cartesian3();

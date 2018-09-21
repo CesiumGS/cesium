@@ -45,6 +45,7 @@ define([
         this.shapePositions = undefined;
         this.cornerType = undefined;
         this.granularity = undefined;
+        this.width = undefined;
     }
 
     /**
@@ -183,6 +184,7 @@ define([
         options.shapePositions = polylineVolume.shape.getValue(Iso8601.MINIMUM_VALUE, options.shape);
         options.granularity = defined(granularity) ? granularity.getValue(Iso8601.MINIMUM_VALUE) : undefined;
         options.cornerType = defined(cornerType) ? cornerType.getValue(Iso8601.MINIMUM_VALUE) : undefined;
+        options.width = Property.getValueOrUndefined(polylineVolume.outlineWidth, Iso8601.MINIMUM_VALUE);
     };
 
     PolylineVolumeGeometryUpdater.DynamicGeometryUpdater = DynamicPolylineVolumeGeometryUpdater;
@@ -210,6 +212,7 @@ define([
         options.shapePositions = Property.getValueOrUndefined(polylineVolume.shape, time);
         options.granularity = Property.getValueOrUndefined(polylineVolume.granularity, time);
         options.cornerType = Property.getValueOrUndefined(polylineVolume.cornerType, time);
+        options.width = Property.getValueOrUndefined(polylineVolume.outlineWidth, Iso8601.MINIMUM_VALUE);
     };
 
     return PolylineVolumeGeometryUpdater;

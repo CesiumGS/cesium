@@ -19,6 +19,7 @@ define([
         '../Scene/HeightReference',
         '../Scene/MaterialAppearance',
         '../Scene/PerInstanceColorAppearance',
+        '../Scene/PolylineColorAppearance',
         '../Scene/Primitive',
         '../Scene/SceneMode',
         './heightReferenceOnEntityPropertyChanged',
@@ -48,6 +49,7 @@ define([
         HeightReference,
         MaterialAppearance,
         PerInstanceColorAppearance,
+        PolylineColorAppearance,
         Primitive,
         SceneMode,
         heightReferenceOnEntityPropertyChanged,
@@ -74,6 +76,7 @@ define([
         this.slicePartitions = undefined;
         this.subdivisions = undefined;
         this.offsetAttribute = undefined;
+        this.width = undefined;
     }
 
     /**
@@ -235,6 +238,7 @@ define([
         options.slicePartitions = Property.getValueOrUndefined(ellipsoid.slicePartitions, Iso8601.MINIMUM_VALUE);
         options.subdivisions = Property.getValueOrUndefined(ellipsoid.subdivisions, Iso8601.MINIMUM_VALUE);
         options.offsetAttribute = heightReference !== HeightReference.NONE ? GeometryOffsetAttribute.ALL : undefined;
+        options.width = Property.getValueOrUndefined(ellipsoid.outlineWidth, Iso8601.MINIMUM_VALUE);
     };
 
     EllipsoidGeometryUpdater.prototype._onEntityPropertyChanged = heightReferenceOnEntityPropertyChanged;
@@ -306,9 +310,9 @@ define([
         var stackPartitions = Property.getValueOrUndefined(ellipsoid.stackPartitions, time);
         var slicePartitions = Property.getValueOrUndefined(ellipsoid.slicePartitions, time);
         var subdivisions = Property.getValueOrUndefined(ellipsoid.subdivisions, time);
-        var outlineWidth = Property.getValueOrDefault(ellipsoid.outlineWidth, time, 1.0);
         var heightReference = Property.getValueOrDefault(ellipsoid.heightReference, time, HeightReference.NONE);
         var offsetAttribute = heightReference !== HeightReference.NONE ? GeometryOffsetAttribute.ALL : undefined;
+        var outlineWidth = Property.getValueOrUndefined(ellipsoid.outlineWidth, Iso8601.MINIMUM_VALUE);
 
         //In 3D we use a fast path by modifying Primitive.modelMatrix instead of regenerating the primitive every frame.
         //Also check for height reference because this method doesn't work when the height is relative to terrain.
@@ -364,12 +368,8 @@ define([
             var outlineInstance = this._geometryUpdater.createOutlineGeometryInstance(time, in3D, this._modelMatrix);
             this._outlinePrimitive = primitives.add(new Primitive({
                 geometryInstances : outlineInstance,
-                appearance : new PerInstanceColorAppearance({
-                    flat : true,
-                    translucent : outlineInstance.attributes.color.value[3] !== 255,
-                    renderState : {
-                        lineWidth : this._geometryUpdater._scene.clampLineWidth(outlineWidth)
-                    }
+                appearance : new PolylineColorAppearance({
+                    translucent : outlineInstance.attributes.color.value[3] !== 255
                 }),
                 asynchronous : false,
                 shadows : shadows

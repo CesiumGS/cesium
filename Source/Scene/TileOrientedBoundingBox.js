@@ -9,7 +9,7 @@ define([
         '../Core/Matrix3',
         '../Core/Matrix4',
         '../Core/OrientedBoundingBox',
-        './PerInstanceColorAppearance',
+        './PolylineColorAppearance',
         './Primitive'
     ], function(
         BoundingSphere,
@@ -22,7 +22,7 @@ define([
         Matrix3,
         Matrix4,
         OrientedBoundingBox,
-        PerInstanceColorAppearance,
+        PolylineColorAppearance,
         Primitive) {
     'use strict';
 
@@ -143,9 +143,8 @@ define([
 
         return new Primitive({
             geometryInstances : instance,
-            appearance : new PerInstanceColorAppearance({
-                translucent : false,
-                flat : true
+            appearance : new PolylineColorAppearance({
+                translucent : false
             }),
             asynchronous : false
         });

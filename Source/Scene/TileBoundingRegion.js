@@ -15,7 +15,7 @@ define([
         '../Core/Ray',
         '../Core/Rectangle',
         '../Core/RectangleOutlineGeometry',
-        './PerInstanceColorAppearance',
+        './PolylineColorAppearance',
         './Primitive',
         './SceneMode'
     ], function(
@@ -35,7 +35,7 @@ define([
         Ray,
         Rectangle,
         RectangleOutlineGeometry,
-        PerInstanceColorAppearance,
+        PolylineColorAppearance,
         Primitive,
         SceneMode) {
     'use strict';
@@ -361,9 +361,8 @@ define([
 
         return new Primitive({
             geometryInstances : instance,
-            appearance : new PerInstanceColorAppearance({
-                translucent : false,
-                flat : true
+            appearance : new PolylineColorAppearance({
+                translucent : false
             }),
             asynchronous : false
         });

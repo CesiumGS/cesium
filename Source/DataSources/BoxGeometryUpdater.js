@@ -59,6 +59,7 @@ define([
         this.vertexFormat = undefined;
         this.dimensions = undefined;
         this.offsetAttribute = undefined;
+        this.width = undefined;
     }
 
     /**
@@ -212,6 +213,7 @@ define([
         options.vertexFormat = this._materialProperty instanceof ColorMaterialProperty ? PerInstanceColorAppearance.VERTEX_FORMAT : MaterialAppearance.MaterialSupport.TEXTURED.vertexFormat;
         options.dimensions = box.dimensions.getValue(Iso8601.MINIMUM_VALUE, options.dimensions);
         options.offsetAttribute = heightReference !== HeightReference.NONE ? GeometryOffsetAttribute.ALL : undefined;
+        options.width = Property.getValueOrUndefined(box.outlineWidth, Iso8601.MINIMUM_VALUE);
     };
 
     BoxGeometryUpdater.prototype._onEntityPropertyChanged = heightReferenceOnEntityPropertyChanged;
@@ -241,6 +243,7 @@ define([
         var options = this._options;
         options.dimensions = Property.getValueOrUndefined(box.dimensions, time, options.dimensions);
         options.offsetAttribute = heightReference !== HeightReference.NONE ? GeometryOffsetAttribute.ALL : undefined;
+        options.width = Property.getValueOrUndefined(box.outlineWidth, Iso8601.MINIMUM_VALUE);
     };
 
     return BoxGeometryUpdater;

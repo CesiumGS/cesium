@@ -67,6 +67,7 @@ define([
         this.extrudedHeight = undefined;
         this.granularity = undefined;
         this.offsetAttribute = undefined;
+        this.outlineWidth = undefined;
     }
 
     /**
@@ -232,6 +233,7 @@ define([
         options.cornerType = Property.getValueOrUndefined(corridor.cornerType, Iso8601.MINIMUM_VALUE);
         options.offsetAttribute = GroundGeometryUpdater.computeGeometryOffsetAttribute(heightReference, extrudedHeightReference, Iso8601.MINIMUM_VALUE);
         options.height = GroundGeometryUpdater.getGeometryHeight(height, heightReference, Iso8601.MINIMUM_VALUE);
+        options.outlineWidth = Property.getValueOrUndefined(corridor.outlineWidth, Iso8601.MINIMUM_VALUE);
 
         var extrudedHeightValue = GroundGeometryUpdater.getGeometryExtrudedHeight(extrudedHeight, extrudedHeightReference, Iso8601.MINIMUM_VALUE);
         if (extrudedHeightValue === GroundGeometryUpdater.CLAMP_TO_GROUND) {
@@ -273,6 +275,7 @@ define([
         options.cornerType = Property.getValueOrUndefined(corridor.cornerType, time);
         options.offsetAttribute = GroundGeometryUpdater.computeGeometryOffsetAttribute(heightReference, extrudedHeightReference, time);
         options.height = GroundGeometryUpdater.getGeometryHeight(height, heightReference, time);
+        options.outlineWidth = Property.getValueOrUndefined(corridor.outlineWidth, Iso8601.MINIMUM_VALUE);
 
         var extrudedHeightValue = GroundGeometryUpdater.getGeometryExtrudedHeight(extrudedHeight, extrudedHeightReference, time);
         if (extrudedHeightValue === GroundGeometryUpdater.CLAMP_TO_GROUND) {

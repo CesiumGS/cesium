@@ -63,6 +63,7 @@ define([
         this.slices = undefined;
         this.numberOfVerticalLines = undefined;
         this.offsetAttribute = undefined;
+        this.width = undefined;
     }
 
     /**
@@ -227,6 +228,7 @@ define([
         options.slices = Property.getValueOrUndefined(cylinder.slices, Iso8601.MINIMUM_VALUE);
         options.numberOfVerticalLines = Property.getValueOrUndefined(cylinder.numberOfVerticalLines, Iso8601.MINIMUM_VALUE);
         options.offsetAttribute = heightReference !== HeightReference.NONE ? GeometryOffsetAttribute.ALL : undefined;
+        options.width = Property.getValueOrUndefined(cylinder.outlineWidth, Iso8601.MINIMUM_VALUE);
     };
 
     CylinderGeometryUpdater.prototype._onEntityPropertyChanged = heightReferenceOnEntityPropertyChanged;
@@ -261,6 +263,7 @@ define([
         options.slices = Property.getValueOrUndefined(cylinder.slices, time);
         options.numberOfVerticalLines = Property.getValueOrUndefined(cylinder.numberOfVerticalLines, time);
         options.offsetAttribute = heightReference !== HeightReference.NONE ? GeometryOffsetAttribute.ALL : undefined;
+        options.width = Property.getValueOrUndefined(cylinder.outlineWidth, Iso8601.MINIMUM_VALUE);
     };
 
     return CylinderGeometryUpdater;

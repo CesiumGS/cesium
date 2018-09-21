@@ -16,6 +16,7 @@ define([
         '../Core/PerspectiveOffCenterFrustum',
         '../Core/Quaternion',
         './PerInstanceColorAppearance',
+        './PolylineColorAppearance',
         './Primitive'
     ], function(
         Cartesian3,
@@ -35,6 +36,7 @@ define([
         PerspectiveOffCenterFrustum,
         Quaternion,
         PerInstanceColorAppearance,
+        PolylineColorAppearance,
         Primitive) {
     'use strict';
 
@@ -206,9 +208,8 @@ define([
                         id : this.id,
                         pickPrimitive : this
                     }),
-                    appearance : new PerInstanceColorAppearance({
-                        translucent : false,
-                        flat : true
+                    appearance : new PolylineColorAppearance({
+                        translucent : false
                     }),
                     asynchronous : false
                 });

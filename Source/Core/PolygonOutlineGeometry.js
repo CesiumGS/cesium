@@ -120,12 +120,16 @@ define([
         scalePosition(cornerPositions[0], ellipsoid, perPositionHeight, height);
         scalePosition(cornerPositions[1], ellipsoid, perPositionHeight, extrudedHeight);
 
+        var geometry = PolylineGeometry.createGeometry(new PolylineGeometry({
+            positions : cornerPositions,
+            width : width,
+            followSurface : false
+        }));
+        if (!defined(geometry)) {
+            return undefined;
+        }
         return new GeometryInstance({
-            geometry : PolylineGeometry.createGeometry(new PolylineGeometry({
-                positions : cornerPositions,
-                width : width,
-                followSurface : false
-            }))
+            geometry : geometry
         });
     }
 
@@ -487,8 +491,10 @@ define([
                 var polygonLength = polygon.length;
                 for (var j = 0; j < polygonLength; ++j) {
                     instance = createExtrudedCornerLine(ellipsoid, polygon[j], width, perPositionHeight, height, extrudedHeight);
-                    addCornerOffset(polygonGeometry, instance, topValue, bottomValue);
-                    instances.push(instance);
+                    if (defined(instance)) {
+                        addCornerOffset(polygonGeometry, instance, topValue, bottomValue);
+                        instances.push(instance);
+                    }
                 }
             }
         } else {

@@ -7,7 +7,7 @@ define([
         '../Core/GeometryInstance',
         '../Core/Matrix4',
         '../Core/SphereOutlineGeometry',
-        './PerInstanceColorAppearance',
+        './PolylineColorAppearance',
         './Primitive'
     ], function(
         BoundingSphere,
@@ -18,7 +18,7 @@ define([
         GeometryInstance,
         Matrix4,
         SphereOutlineGeometry,
-        PerInstanceColorAppearance,
+        PolylineColorAppearance,
         Primitive) {
     'use strict';
 
@@ -160,9 +160,8 @@ define([
 
         return new Primitive({
             geometryInstances : instance,
-            appearance : new PerInstanceColorAppearance({
-                translucent : false,
-                flat : true
+            appearance : new PolylineColorAppearance({
+                translucent : false
             }),
             asynchronous : false
         });

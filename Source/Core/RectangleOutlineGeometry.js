@@ -203,7 +203,7 @@ define([
      * The number of elements used to pack the object into an array.
      * @type {Number}
      */
-    RectangleOutlineGeometry.packedLength = Rectangle.packedLength + Ellipsoid.packedLength + 5;
+    RectangleOutlineGeometry.packedLength = Rectangle.packedLength + Ellipsoid.packedLength + 6;
 
     /**
      * Stores the provided instance into the provided array.

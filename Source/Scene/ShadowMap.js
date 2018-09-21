@@ -46,7 +46,7 @@ define([
         './Camera',
         './CullFace',
         './DebugCameraPrimitive',
-        './PerInstanceColorAppearance',
+        './PolylineColorAppearance',
         './Primitive',
         './ShadowMapShader'
     ], function(
@@ -97,7 +97,7 @@ define([
         Camera,
         CullFace,
         DebugCameraPrimitive,
-        PerInstanceColorAppearance,
+        PolylineColorAppearance,
         Primitive,
         ShadowMapShader) {
     'use strict';
@@ -883,9 +883,8 @@ define([
 
         return new Primitive({
             geometryInstances : [box, sphere],
-            appearance : new PerInstanceColorAppearance({
-                translucent : false,
-                flat : true
+            appearance : new PolylineColorAppearance({
+                translucent : false
             }),
             asynchronous : false,
             modelMatrix : modelMatrix

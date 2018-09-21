@@ -45,6 +45,7 @@ define([
         this.minimumHeights = undefined;
         this.maximumHeights = undefined;
         this.granularity = undefined;
+        this.width = undefined;
     }
 
     /**
@@ -188,6 +189,7 @@ define([
         options.minimumHeights = defined(minimumHeights) ? minimumHeights.getValue(Iso8601.MINIMUM_VALUE, options.minimumHeights) : undefined;
         options.maximumHeights = defined(maximumHeights) ? maximumHeights.getValue(Iso8601.MINIMUM_VALUE, options.maximumHeights) : undefined;
         options.granularity = defined(granularity) ? granularity.getValue(Iso8601.MINIMUM_VALUE) : undefined;
+        options.width = Property.getValueOrUndefined(wall.outlineWidth, Iso8601.MINIMUM_VALUE);
     };
 
     WallGeometryUpdater.DynamicGeometryUpdater = DynamicWallGeometryUpdater;
@@ -214,6 +216,7 @@ define([
         options.minimumHeights = Property.getValueOrUndefined(wall.minimumHeights, time, options.minimumHeights);
         options.maximumHeights = Property.getValueOrUndefined(wall.maximumHeights, time, options.maximumHeights);
         options.granularity = Property.getValueOrUndefined(wall.granularity, time);
+        options.width = Property.getValueOrUndefined(wall.outlineWidth, Iso8601.MINIMUM_VALUE);
     };
 
     return WallGeometryUpdater;

@@ -83,6 +83,7 @@ define([
         this.granularity = undefined;
         this.stRotation = undefined;
         this.offsetAttribute = undefined;
+        this.width = undefined;
     }
 
     /**
@@ -305,6 +306,7 @@ define([
         options.closeBottom = Property.getValueOrDefault(polygon.closeBottom, Iso8601.MINIMUM_VALUE, true);
         options.offsetAttribute = GroundGeometryUpdater.computeGeometryOffsetAttribute(heightReference, extrudedHeightReference, Iso8601.MINIMUM_VALUE);
         options.height = heightValue;
+        options.width = Property.getValueOrUndefined(polygon.outlineWidth, Iso8601.MINIMUM_VALUE);
 
         extrudedHeightValue = GroundGeometryUpdater.getGeometryExtrudedHeight(extrudedHeight, extrudedHeightReference, Iso8601.MINIMUM_VALUE);
         if (extrudedHeightValue === GroundGeometryUpdater.CLAMP_TO_GROUND) {
@@ -368,6 +370,7 @@ define([
         options.closeBottom = Property.getValueOrDefault(polygon.closeBottom, time, true);
         options.offsetAttribute = GroundGeometryUpdater.computeGeometryOffsetAttribute(heightReference, extrudedHeightReference, time);
         options.height = heightValue;
+        options.width = Property.getValueOrUndefined(polygon.outlineWidth, Iso8601.MINIMUM_VALUE);
 
         extrudedHeightValue = GroundGeometryUpdater.getGeometryExtrudedHeight(extrudedHeight, extrudedHeightReference, time);
         if (extrudedHeightValue === GroundGeometryUpdater.CLAMP_TO_GROUND) {

@@ -81,13 +81,16 @@ define([
                 var singleLine = singleLinesScratch;
                 Cartesian3.fromArray(positions, (j + firstOffset) * 3, singleLine[0]);
                 Cartesian3.fromArray(positions, (j + secondOffset) * 3, singleLine[1]);
-                instances.push(new GeometryInstance({
-                    geometry : PolylineGeometry.createGeometry(new PolylineGeometry({
-                        positions : singleLine,
-                        followSurface : false,
-                        width : width
-                    }))
+                var geometry = PolylineGeometry.createGeometry(new PolylineGeometry({
+                    positions : singleLine,
+                    followSurface : false,
+                    width : width
                 }));
+                if (defined(geometry)) {
+                    instances.push(new GeometryInstance({
+                        geometry : geometry
+                    }));
+                }
             }
         }
 
