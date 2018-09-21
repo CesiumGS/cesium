@@ -34,6 +34,7 @@ var viewer = new Cesium.Viewer('cesiumContainer', {
 
 viewer.scene.globe.depthTestAgainstTerrain = true;
 
+/*
 // Set the initial camera view to look at Manhattan
 var initialPosition = Cesium.Cartesian3.fromDegrees(-74.01881302800248, 40.69114333714821, 753);
 var initialOrientation = new Cesium.HeadingPitchRoll.fromDegrees(21.27879878293835, -21.34390550872461, 0.0716951918898415);
@@ -42,11 +43,25 @@ viewer.scene.camera.setView({
     orientation: initialOrientation,
     endTransform: Cesium.Matrix4.IDENTITY
 });
+*/
 
 // Load the NYC buildings tileset
 var tileset = new Cesium.Cesium3DTileset({ url: Cesium.IonResource.fromAssetId(5741) });
 viewer.scene.primitives.add(tileset);
 
+var intensity = 4.0;
+tileset.iblFactor = 0.1;
+tileset.lightColor = new Cesium.Color(intensity, intensity, intensity, 0.0);
+
+var camera = viewer.scene.camera;
+camera.position = new Cesium.Cartesian3(1333768.7332323738, -4651753.931384534, 4142507.8208143124);
+camera.direction = new Cesium.Cartesian3(0.6392970733346274, 0.759392481883525, -0.12092274593541157);
+camera.up = new Cesium.Cartesian3( 0.6100980130977091, -0.40519204903452993, 0.6808816474347262);
+camera.right = Cesium.Cartesian3.cross(camera.direction, camera.up, new Cesium.Cartesian3());
+
+viewer.clock.currentTime = new Cesium.JulianDate(2458384, 12912.72676470589);
+
+/*
 // HTML overlay for showing feature name on mouseover
 var nameOverlay = document.createElement('div');
 viewer.container.appendChild(nameOverlay);
@@ -234,6 +249,7 @@ if (Cesium.PostProcessStageLibrary.isSilhouetteSupported(viewer.scene)) {
                                      '</tbody></table>';
     }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
 }
+*/
 
 //Sandcastle_End
 Sandcastle.finishedLoading();
