@@ -192,3 +192,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 * [Mark Erikson](https://github.com/markerikson)
 * [Hannah Bollar](https://github.com/hanbollar)
 * [Felix Palmer](https://github.com/felixpalmer)
+* [Cedric Le Roux](https://github.com/cleroux)
