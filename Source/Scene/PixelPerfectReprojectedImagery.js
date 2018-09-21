@@ -9,7 +9,8 @@ define([
         '../Core/Resource',
         '../Core/TaskProcessor',
         '../Core/SerializedMapProjection',
-        './BitmapImageryProvider'
+        './BitmapImageryProvider',
+        './ImageryLayer'
     ], function(
         Check,
         Credit,
@@ -21,7 +22,8 @@ define([
         Resource,
         TaskProcessor,
         SerializedMapProjection,
-        BitmapImageryProvider) {
+        BitmapImageryProvider,
+        ImageryLayer) {
     'use strict';
 
     var insetWaitFrames = 3;
@@ -65,7 +67,6 @@ define([
         var taskProcessor = new TaskProcessor('createReprojectedImagery');
         this._taskProcessor = taskProcessor;
 
-        this._renderingBoundsScratch = new Rectangle();
         this._localRenderingBounds = new Rectangle();
 
         this._fullCoverageImageryLayer = undefined;
@@ -110,11 +111,15 @@ define([
                 });
             })
             .then(function(reprojectedBitmap) {
-                that._fullCoverageImageryLayer = scene.imageryLayers.addImageryProvider(new BitmapImageryProvider({
+                var bitmapImageryProvider = new BitmapImageryProvider({
                     bitmap : reprojectedBitmap,
                     rectangle : that._rectangle,
                     credit : that._credit
-                }));
+                });
+                var imageryLayer = new ImageryLayer(bitmapImageryProvider, {rectangle : bitmapImageryProvider.rectangle});
+
+                that._fullCoverageImageryLayer = imageryLayer;
+                scene.imageryLayers.add(imageryLayer);
             })
             .then(function() {
                 // Listen for camera changes
@@ -181,7 +186,7 @@ define([
             return;
         }
 
-        var renderingBounds = this._renderingBoundsScratch;
+        var renderingBounds = new Rectangle(); // Create new to avoid race condition with in-flight refreshes
         renderingBounds.west = Number.POSITIVE_INFINITY;
         renderingBounds.east = Number.NEGATIVE_INFINITY;
         renderingBounds.south = Number.POSITIVE_INFINITY;
@@ -202,7 +207,7 @@ define([
         renderingBounds.north = Math.min(renderingBounds.north, imageryBounds.north);
 
         // Don't bother projecting if the view is out-of-bounds
-        if (renderingBounds.north < renderingBounds.south || renderingBounds.east < renderingBounds.west) {
+        if (renderingBounds.north <= renderingBounds.south || renderingBounds.east <= renderingBounds.west) {
             return;
         }
 
@@ -230,13 +235,19 @@ define([
         })
         .then(function(reprojectedBitmap) {
             if (that._iteration !== iteration) {
+                // cancel
                 return;
             }
-            var newLocalImageryLayer = scene.imageryLayers.addImageryProvider(new BitmapImageryProvider({
+
+            var bitmapImageryProvider = new BitmapImageryProvider({
                 bitmap : reprojectedBitmap,
                 rectangle : renderingBounds,
                 credit : that._credit
-            }));
+            });
+
+            var newLocalImageryLayer = new ImageryLayer(bitmapImageryProvider, {rectangle : bitmapImageryProvider.rectangle});
+            scene.imageryLayers.add(newLocalImageryLayer);
+
             if (defined(that._localImageryLayer)) {
                 scene.imageryLayers.remove(that._localImageryLayer);
             }
