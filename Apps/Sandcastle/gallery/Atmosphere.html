@@ -155,13 +155,10 @@ Sandcastle.addToolbarButton('Reset Fade Distances', function() {
     globe.nightFadeOutDistance = defaultNightFadeOut;
     globe.nightFadeInDistance = defaultNightFadeIn;
 
-    document.getElementById('lightingFadeOutDistanceSlider').value = defaultLightFadeOut;
-    document.getElementById('lightingFadeOutDistanceText').value = defaultLightFadeOut;
-    document.getElementById('lightingFadeInDistanceSlider').value = defaultLightFadeIn;
-    document.getElementById('lightingFadeInDistanceText').value = defaultLightFadeIn;
-    document.getElementById('nightFadeOutDistanceSlider').value = defaultNightFadeOut;
-    document.getElementById('nightFadeOutDistanceText').value = defaultNightFadeOut;
-    document.getElementById('nightFadeInDistanceSlider').value = defaultNightFadeOut;
+    viewModel.lightingFadeOutDistance = defaultLightFadeOut;
+    viewModel.lightingFadeInDistance = defaultLightFadeIn;
+    viewModel.nightFadeOutDistance = defaultNightFadeOut;
+    viewModel.nightFadeInDistance = defaultNightFadeIn;
 });
 
 //Sandcastle_End
