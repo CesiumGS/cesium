@@ -175,9 +175,9 @@ define([
          * This only takes effect when <code>showGroundAtmosphere</code> is <code>true</code>.
          *
          * @type {Number}
-         * @default 30000000.0
+         * @default 50000000.0
          */
-        this.nightFadeInDistance = 3.0e7;
+        this.nightFadeInDistance = 5.0e7;
 
         /**
          * True if an animated wave effect should be shown in areas of the globe
@@ -667,7 +667,7 @@ define([
 
         if (pass.render) {
             if (this.showGroundAtmosphere) {
-                this._zoomedOutOceanSpecularIntensity = 0.1;
+                this._zoomedOutOceanSpecularIntensity = 0.4;
             } else {
                 this._zoomedOutOceanSpecularIntensity = 0.5;
             }
