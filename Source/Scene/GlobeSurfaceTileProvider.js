@@ -1502,7 +1502,7 @@ define([
             surfaceShaderSetOptions.applyGamma = applyGamma;
             surfaceShaderSetOptions.applyAlpha = applyAlpha;
             surfaceShaderSetOptions.applySplit = applySplit;
-            surfaceShaderSetOptions.applyFog = applyFog;
+            surfaceShaderSetOptions.enableFog = applyFog;
             surfaceShaderSetOptions.enableClippingPlanes = clippingPlanesEnabled;
             surfaceShaderSetOptions.clippingPlanes = clippingPlanes;
             surfaceShaderSetOptions.colorCorrect = colorCorrect;

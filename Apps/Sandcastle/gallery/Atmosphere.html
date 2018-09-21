@@ -37,29 +37,29 @@
 <tr>
     <td>Lighting Fade Out Distance</td>
     <td>
-        <input id="lightingFadeOutDistanceSlider" type="range" min="1e6" max="1e8" step="1e6" data-bind="value: lightingFadeOutDistance, valueUpdate: 'input'">
-        <input id="lightingFadeOutDistanceText" type="text" size="10" data-bind="value: lightingFadeOutDistance">
+        <input type="range" min="1e6" max="1e8" step="1e6" data-bind="value: lightingFadeOutDistance, valueUpdate: 'input'">
+        <input type="text" size="10" data-bind="value: lightingFadeOutDistance">
     </td>
 </tr>
 <tr>
     <td>Lighting Fade In Distance</td>
     <td>
-        <input id="lightingFadeInDistanceSlider" type="range" min="1e6" max="1e8" step="1e6" data-bind="value: lightingFadeInDistance, valueUpdate: 'input'">
-        <input id="lightingFadeInDistanceText" type="text" size="10" data-bind="value: lightingFadeInDistance">
+        <input type="range" min="1e6" max="1e8" step="1e6" data-bind="value: lightingFadeInDistance, valueUpdate: 'input'">
+        <input type="text" size="10" data-bind="value: lightingFadeInDistance">
     </td>
 </tr>
 <tr>
     <td>Night Fade Out Distance</td>
     <td>
-        <input id="nightFadeOutDistanceSlider" type="range" min="1e6" max="1e8" step="1e6" data-bind="value: nightFadeOutDistance, valueUpdate: 'input'">
-        <input id="nightFadeOutDistanceText" type="text" size="10" data-bind="value: nightFadeOutDistance">
+        <input type="range" min="1e6" max="1e8" step="1e6" data-bind="value: nightFadeOutDistance, valueUpdate: 'input'">
+        <input type="text" size="10" data-bind="value: nightFadeOutDistance">
     </td>
 </tr>
 <tr>
     <td>Night Fade In Distance</td>
     <td>
-        <input id="nightFadeInDistanceSlider" type="range" min="1e6" max="1e8" step="1e6" data-bind="value: nightFadeInDistance, valueUpdate: 'input'">
-        <input id="nightFadeInDistanceText" type="text" size="10" data-bind="value: nightFadeInDistance">
+        <input type="range" min="1e6" max="1e8" step="1e6" data-bind="value: nightFadeInDistance, valueUpdate: 'input'">
+        <input type="text" size="10" data-bind="value: nightFadeInDistance">
     </td>
 </tr>
 </tbody></table>
@@ -155,13 +155,10 @@ Sandcastle.addToolbarButton('Reset Fade Distances', function() {
     globe.nightFadeOutDistance = defaultNightFadeOut;
     globe.nightFadeInDistance = defaultNightFadeIn;
 
-    document.getElementById('lightingFadeOutDistanceSlider').value = defaultLightFadeOut;
-    document.getElementById('lightingFadeOutDistanceText').value = defaultLightFadeOut;
-    document.getElementById('lightingFadeInDistanceSlider').value = defaultLightFadeIn;
-    document.getElementById('lightingFadeInDistanceText').value = defaultLightFadeIn;
-    document.getElementById('nightFadeOutDistanceSlider').value = defaultNightFadeOut;
-    document.getElementById('nightFadeOutDistanceText').value = defaultNightFadeOut;
-    document.getElementById('nightFadeInDistanceSlider').value = defaultNightFadeOut;
+    viewModel.lightingFadeOutDistance = defaultLightFadeOut;
+    viewModel.lightingFadeInDistance = defaultLightFadeIn;
+    viewModel.nightFadeOutDistance = defaultNightFadeOut;
+    viewModel.nightFadeInDistance = defaultNightFadeIn;
 });
 
 //Sandcastle_End
