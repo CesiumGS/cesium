@@ -179,6 +179,7 @@ define([
         this._selectedTilesToStyle = [];
         this._loadTimestamp = undefined;
         this._timeSinceLoad = 0.0;
+        this._extras = undefined;
 
         this._cullWithChildrenBounds = defaultValue(options.cullWithChildrenBounds, true);
         this._allTilesAdditive = true;
@@ -695,6 +696,7 @@ define([
                 that._geometricError = tilesetJson.geometricError;
                 that._extensionsUsed = tilesetJson.extensionsUsed;
                 that._gltfUpAxis = gltfUpAxis;
+                that._extras = tilesetJson.extras;
                 that._readyPromise.resolve(that);
             }).otherwise(function(error) {
                 that._readyPromise.reject(error);
@@ -1167,6 +1169,31 @@ define([
         ellipsoid : {
             get : function() {
                 return this._ellipsoid;
+            }
+        },
+
+        /**
+         * Returns the <code>extras</code> property at the top-level of the tileset JSON, which contains application specific metadata.
+         * Returns <code>undefined</code> if <code>extras</code> does not exist.
+         *
+         * @memberof Cesium3DTileset.prototype
+         *
+         * @exception {DeveloperError} The tileset is not loaded.  Use Cesium3DTileset.readyPromise or wait for Cesium3DTileset.ready to be true.
+         *
+         * @type {*}
+         * @readonly
+         *
+         * @see {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/specification#specifying-extensions-and-application-specific-extras|Extras in the 3D Tiles specification.}
+         */
+        extras : {
+            get : function() {
+                //>>includeStart('debug', pragmas.debug);
+                if (!this.ready) {
+                    throw new DeveloperError('The tileset is not loaded.  Use Cesium3DTileset.readyPromise or wait for Cesium3DTileset.ready to be true.');
+                }
+                //>>includeEnd('debug');
+
+                return this._extras;
             }
         }
     });

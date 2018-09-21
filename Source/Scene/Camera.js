@@ -958,7 +958,10 @@ define([
         if (this._suspendTerrainAdjustment) {
             this._suspendTerrainAdjustment = !globeFinishedUpdating;
         }
-        this._adjustHeightForTerrain();
+
+        if (globeFinishedUpdating) {
+            this._adjustHeightForTerrain();
+        }
     };
 
     var setTransformPosition = new Cartesian3();
@@ -1003,7 +1006,7 @@ define([
         }
 
         var scene = this._scene;
-        var globe = scene._globe;
+        var globe = scene.globe;
         var rayIntersection;
         var depthIntersection;
 

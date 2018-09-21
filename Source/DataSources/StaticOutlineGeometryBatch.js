@@ -87,7 +87,6 @@ define([
         var removedCount = 0;
         var primitive = this.primitive;
         var primitives = this.primitives;
-        var attributes;
         var i;
 
         if (this.createPrimitive) {
@@ -99,21 +98,6 @@ define([
                         this.oldPrimitive = primitive;
                     } else {
                         primitives.remove(primitive);
-                    }
-                }
-
-                for (i = 0; i < geometriesLength; i++) {
-                    var geometryItem = geometries[i];
-                    var originalAttributes = geometryItem.attributes;
-                    attributes = this.attributes.get(geometryItem.id.id);
-
-                    if (defined(attributes)) {
-                        if (defined(originalAttributes.show)) {
-                            attributes.show = originalAttributes.show.value;
-                        }
-                        if (defined(originalAttributes.color)) {
-                            attributes.color = originalAttributes.color.value;
-                        }
                     }
                 }
 
@@ -163,7 +147,7 @@ define([
                 var updater = updatersWithAttributes[i];
                 var instance = this.geometry.get(updater.id);
 
-                attributes = this.attributes.get(instance.id.id);
+                var attributes = this.attributes.get(instance.id.id);
                 if (!defined(attributes)) {
                     attributes = primitive.getGeometryInstanceAttributes(instance.id);
                     this.attributes.set(instance.id.id, attributes);

@@ -31,7 +31,7 @@
             20
           ]
         },
-        "geometricError": 70,
+        "geometricError": 0,
         "content": {
           "uri": "tileset3/tileset3.json"
         }

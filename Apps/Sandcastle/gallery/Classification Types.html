@@ -32,7 +32,7 @@ var viewer = new Cesium.Viewer('cesiumContainer', {
 });
 viewer.scene.globe.depthTestAgainstTerrain = false;
 
-var tileset = new Cesium.Cesium3DTileset({ url: Cesium.IonResource.fromAssetId(5712) });
+var tileset = new Cesium.Cesium3DTileset({ url: Cesium.IonResource.fromAssetId(6074) });
 viewer.scene.primitives.add(tileset);
 
 tileset.readyPromise.then(function(){

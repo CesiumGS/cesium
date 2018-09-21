@@ -512,7 +512,7 @@ defineSuite([
         noAttenuationPixelCount = scene.logarithmicDepthBuffer ? 20 : 16;
         var center = new Cartesian3.fromRadians(centerLongitude, centerLatitude, 5.0);
         scene.camera.lookAt(center, new HeadingPitchRange(0.0, -1.57, 5.0));
-        scene.fxaa = false;
+        scene.postProcessStages.fxaa.enabled = false;
         scene.camera.zoomIn(6);
 
         return Cesium3DTilesTester.loadTileset(scene, pointCloudNoColorUrl).then(function(tileset) {
@@ -995,7 +995,7 @@ defineSuite([
     });
 
     it('clipping planes union regions (Float)', function() {
-        if (!ClippingPlaneCollection.useFloatTexture(scene._context)) {
+        if (!ClippingPlaneCollection.useFloatTexture(scene.context)) {
             // This configuration for the test fails in uint8 mode due to the small context
             return;
         }
