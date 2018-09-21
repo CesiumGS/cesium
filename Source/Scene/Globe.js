@@ -212,6 +212,10 @@ define([
          */
         this.shadows = ShadowMode.RECEIVE_ONLY;
 
+        this.atmosphereHueShift = 0.0;
+        this.atmosphereSaturationShift = 0.0;
+        this.atmosphereBrightnessShift = 0.0;
+
         this._oceanNormalMap = undefined;
         this._zoomedOutOceanSpecularIntensity = undefined;
     }
@@ -686,6 +690,9 @@ define([
             tileProvider.enableLighting = this.enableLighting;
             tileProvider.showGroundAtmosphere = this.showGroundAtmosphere;
             tileProvider.shadows = this.shadows;
+            tileProvider.hueShift = this.atmosphereHueShift;
+            tileProvider.saturationShift = this.atmosphereSaturationShift;
+            tileProvider.brightnessShift = this.atmosphereBrightnessShift;
 
             surface.beginFrame(frameState);
         }

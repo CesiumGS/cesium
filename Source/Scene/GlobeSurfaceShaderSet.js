@@ -88,6 +88,7 @@ define([
         var enableClippingPlanes = options.enableClippingPlanes;
         var clippingPlanes = options.clippingPlanes;
         var clippedByBoundaries = options.clippedByBoundaries;
+        var colorCorrect = options.colorCorrect;
 
         var quantization = 0;
         var quantizationDefine = '';
@@ -133,7 +134,8 @@ define([
                     (applySplit << 17) |
                     (enableClippingPlanes << 18) |
                     (vertexLogDepth << 19) |
-                    (cartographicLimitRectangleFlag << 20);
+                    (cartographicLimitRectangleFlag << 20) |
+                    (colorCorrect << 21);
 
         var currentClippingShaderState = 0;
         if (defined(clippingPlanes)) {
@@ -226,6 +228,10 @@ define([
 
             if (enableClippingPlanes) {
                 fs.defines.push('ENABLE_CLIPPING_PLANES');
+            }
+
+            if (colorCorrect) {
+                fs.defines.push('COLOR_CORRECT');
             }
 
             var computeDayColor = '\
