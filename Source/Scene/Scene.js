@@ -1591,11 +1591,7 @@ define([
         frameState.terrainExaggeration = scene._terrainExaggeration;
         frameState.minimumDisableDepthTestDistance = scene._minimumDisableDepthTestDistance;
         frameState.invertClassification = scene.invertClassification;
-
-        var useLogDepth = scene._logDepthBuffer && !(scene.camera.frustum instanceof OrthographicFrustum || scene.camera.frustum instanceof OrthographicOffCenterFrustum);
-        var useLogDepthDirty = useLogDepth !== frameState.useLogDepth;
-        frameState.useLogDepth = useLogDepth;
-        frameState.useLogDepthDirty = useLogDepthDirty;
+        frameState.useLogDepth = scene._logDepthBuffer && !(scene.camera.frustum instanceof OrthographicFrustum || scene.camera.frustum instanceof OrthographicOffCenterFrustum);
 
         scene._actualInvertClassificationColor = Color.clone(scene.invertClassificationColor, scene._actualInvertClassificationColor);
         if (!InvertClassification.isTranslucencySupported(scene._context)) {
@@ -3633,6 +3629,17 @@ define([
     var scratchRight = new Cartesian3();
     var scratchUp = new Cartesian3();
 
+    function updateCameraFromRay(ray, camera) {
+        var direction = ray.direction;
+        var orthogonalAxis = Cartesian3.mostOrthogonalAxis(direction, scratchRight);
+        var right = Cartesian3.cross(direction, orthogonalAxis, scratchRight);
+        var up = Cartesian3.cross(direction, right, scratchUp);
+        camera.position = ray.origin;
+        camera.direction = direction;
+        camera.up = up;
+        camera.right = right;
+    }
+
     function getRayIntersection(scene, ray) {
         var context = scene._context;
         var uniformState = context.uniformState;
@@ -3641,16 +3648,7 @@ define([
         var view = scene._pickOffscreenView;
         scene._view = view;
 
-        var direction = ray.direction;
-        var orthogonalAxis = Cartesian3.mostOrthogonalAxis(direction, scratchRight);
-        var right = Cartesian3.cross(direction, orthogonalAxis, scratchRight);
-        var up = Cartesian3.cross(direction, right, scratchUp);
-
-        var pickOffscreenCamera = view.camera;
-        pickOffscreenCamera.position = ray.origin;
-        pickOffscreenCamera.direction = direction;
-        pickOffscreenCamera.up = up;
-        pickOffscreenCamera.right = right;
+        updateCameraFromRay(ray, view.camera);
 
         scratchRectangle = BoundingRectangle.clone(view.viewport, scratchRectangle);
 
@@ -3761,6 +3759,28 @@ define([
     var scratchRay = new Ray();
     var scratchCartographic = new Cartographic();
 
+    function getRayForSampleHeight(scene, cartographic) {
+        var globe = scene.globe;
+        var ellipsoid = defined(globe) ? globe.ellipsoid : scene.mapProjection.ellipsoid;
+        var height = ApproximateTerrainHeights._defaultMaxTerrainHeight;
+        var surfaceNormal = ellipsoid.geodeticSurfaceNormalCartographic(cartographic, scratchSurfaceNormal);
+        var surfacePosition = Cartographic.toCartesian(cartographic, ellipsoid, scratchSurfacePosition);
+        var surfaceRay = scratchSurfaceRay;
+        surfaceRay.origin = surfacePosition;
+        surfaceRay.direction =  surfaceNormal;
+        var ray = new Ray();
+        Ray.getPoint(surfaceRay, height, ray.origin);
+        Cartesian3.negate(surfaceNormal, ray.direction);
+        return ray;
+    }
+
+    function getRayForClampToHeight(scene, cartesian) {
+        var globe = scene.globe;
+        var ellipsoid = defined(globe) ? globe.ellipsoid : scene.mapProjection.ellipsoid;
+        var cartographic = Cartographic.fromCartesian(cartesian, ellipsoid, scratchCartographic);
+        return getRayForSampleHeight(scene, cartographic);
+    }
+
     /**
      * Returns the height of scene geometry at the given cartographic position or <code>undefined</code> if there was no
      * scene geometry to sample height from. May be used to clamp objects to the globe, 3D Tiles, or primitives in the scene.
@@ -3785,21 +3805,12 @@ define([
             throw new DeveloperError('sampleHeight required depth texture support. Check sampleHeightSupported.');
         }
         //>>includeEnd('debug');
-        var globe = this.globe;
-        var ellipsoid = defined(globe) ? globe.ellipsoid : this.mapProjection.ellipsoid;
-        var height = ApproximateTerrainHeights._defaultMaxTerrainHeight;
-        var surfaceNormal = ellipsoid.geodeticSurfaceNormalCartographic(position, scratchSurfaceNormal);
-        var surfacePosition = Cartographic.toCartesian(position, ellipsoid, scratchSurfacePosition);
-        var surfaceRay = scratchSurfaceRay;
-        surfaceRay.origin = surfacePosition;
-        surfaceRay.direction =  surfaceNormal;
-        var ray = scratchRay;
-        Ray.getPoint(surfaceRay, height, ray.origin);
-        Cartesian3.negate(surfaceNormal, ray.direction);
-
-        var result = this.pickFromRay(ray, objectsToExclude);
-        if (defined(result)) {
-            var cartesian = result.position;
+        var ray = getRayForSampleHeight(this, position);
+        var pickResult = this.pickFromRay(ray, objectsToExclude);
+        if (defined(pickResult)) {
+            var cartesian = pickResult.position;
+            var globe = this.globe;
+            var ellipsoid = defined(globe) ? globe.ellipsoid : this.mapProjection.ellipsoid;
             var cartographic = Cartographic.fromCartesian(cartesian, ellipsoid, scratchCartographic);
             return cartographic.height;
         }
@@ -3831,13 +3842,10 @@ define([
             throw new DeveloperError('clampToHeight required depth texture support. Check clampToHeightSupported.');
         }
         //>>includeEnd('debug');
-        var globe = this.globe;
-        var ellipsoid = defined(globe) ? globe.ellipsoid : this.mapProjection.ellipsoid;
-        var cartographic = Cartographic.fromCartesian(cartesian, ellipsoid, scratchCartographic);
-        var height = this.sampleHeight(cartographic, objectsToExclude);
-        if (defined(height)) {
-            cartographic.height = height;
-            return Cartographic.toCartesian(cartographic, ellipsoid, result);
+        var ray = getRayForClampToHeight(this, cartesian);
+        var pickResult = this.pickFromRay(ray, objectsToExclude);
+        if (defined(pickResult)) {
+            return Cartesian3.clone(pickResult.position, result);
         }
     };
 
