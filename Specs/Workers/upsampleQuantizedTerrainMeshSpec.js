@@ -6,7 +6,6 @@ defineSuite([
         createWorldTerrain) {
     'use strict';
 
-
     it('time', function() {
         var worldTerrain = createWorldTerrain({
             requestWaterMask: true,
@@ -59,7 +58,8 @@ defineSuite([
                 }, []);
             }
             var stop = performance.now();
-            alert(stop - start);
+            console.log(stop - start);
+            //alert(stop - start);
         });
     });
 });

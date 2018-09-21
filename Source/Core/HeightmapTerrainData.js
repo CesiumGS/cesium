@@ -169,7 +169,7 @@ define([
                 return this._childTileMask;
             }
         }
-});
+    });
 
     var taskProcessor = new TaskProcessor('createVerticesFromHeightmap');
 
@@ -250,7 +250,11 @@ define([
                     result.numberOfAttributes,
                     result.orientedBoundingBox,
                     TerrainEncoding.clone(result.encoding),
-                    exaggeration);
+                    exaggeration,
+                    result.westIndicesSouthToNorth,
+                    result.southIndicesEastToWest,
+                    result.eastIndicesNorthToSouth,
+                    result.northIndicesWestToEast);
 
             // Free memory received from server after mesh is created.
             that._buffer = undefined;

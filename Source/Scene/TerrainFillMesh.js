@@ -113,7 +113,7 @@ define([
 
         while (tile !== undefined) {
             var tileToWest = tile.findTileToWest(levelZeroTiles);
-            var tileToSouth = tile.findTileToSouth(levelZeroTiles)
+            var tileToSouth = tile.findTileToSouth(levelZeroTiles);
             var tileToEast = tile.findTileToEast(levelZeroTiles);
             var tileToNorth = tile.findTileToNorth(levelZeroTiles);
             visitRenderedTiles(tileProvider, frameState, tile, tileToWest, lastSelectionFrameNumber, TileEdge.EAST, false, traversalQueue);
@@ -456,10 +456,6 @@ define([
         }
     }
 
-    var westScratch = new TerrainTileEdgeDetails();
-    var southScratch = new TerrainTileEdgeDetails();
-    var eastScratch = new TerrainTileEdgeDetails();
-    var northScratch = new TerrainTileEdgeDetails();
     var tileVerticesScratch = [];
     var cartographicScratch = new Cartographic();
     var cartesianScratch = new Cartesian3();
@@ -470,9 +466,6 @@ define([
     function createFillMesh(tileProvider, frameState, tile) {
         var surfaceTile = tile.data;
         var fill = surfaceTile.fill;
-
-        var quadtree = tileProvider._quadtree;
-        var lastSelectionFrameNumber = quadtree._lastSelectionFrameNumber;
 
         var tileVertices = tileVerticesScratch;
         tileVertices.length = 0;
@@ -815,48 +808,6 @@ define([
 
             tileImagery.processStateMachine(tile, frameState, true);
         }
-    }
-
-    function getEdgeVertices(tile, edgeTiles, edgeMeshes, currentFrameNumber, tileEdge, result) {
-        var ellipsoid = tile.tilingScheme.ellipsoid;
-
-        result.clear();
-
-        // TODO: add first corner vertex if it exists.
-        // TODO: if a corner is missing, fill it in. When we add a corner, we create an edge
-        //       (or two) that didn't exist before. We need to propagate that edge to adjacent tile(s)
-        //       but be careful not to trigger regeneration of those adjacent tiles. We can do
-        //       that by updating the adjacent tile's list of edge meshes without setting the
-        //       changed flag.
-        // When creating a new fill mesh, immediately adjust all adjacent fill tiles to know they're in sync
-        // with that new mesh (because the new mesh was purposely created to be in sync!).
-
-        for (var i = 0; i < edgeMeshes.length; ++i) {
-            var edgeTile = edgeTiles[i];
-            var surfaceTile = edgeTile.data;
-            if (surfaceTile === undefined) {
-                continue;
-            }
-
-            var edgeMesh = edgeMeshes[i];
-            if (edgeMesh !== undefined) {
-                var beforeLength = result.vertices.length;
-                edgeMesh.getEdgeVertices(tileEdge, edgeTile.rectangle, tile.rectangle, ellipsoid, result);
-                var afterLength = result.vertices.length;
-                var numberOfVertices = afterLength - beforeLength;
-                if (surfaceTile.mesh === undefined && numberOfVertices > 27) {
-                    //console.log(`${numberOfVertices} from L${edgeTile.level}X${edgeTile.x}Y${edgeTile.y}`);
-                }
-            }
-        }
-
-        // TODO: add last corner vertex if it exists
-
-        return result;
-    }
-
-    function transformTextureCoordinate(toMin, toMax, fromValue) {
-        return (fromValue - toMin) / (toMax - toMin);
     }
 
     function transformTextureCoordinates(sourceRectangle, targetRectangle, coordinates, result) {
@@ -1301,48 +1252,6 @@ define([
         }
 
         return false;
-    }
-
-    function addCornerVertexIfNecessary(ellipsoid, u, v, longitude, latitude, height, edgeDetails, previousEdgeDetails, hasVertexNormals, hasWebMercatorT, tileVertices) {
-        var vertices = edgeDetails.vertices;
-
-        if (u === vertices[4] && v === vertices[5]) {
-            // First vertex is a corner vertex, as expected.
-            return;
-        }
-
-        // Can we use the last vertex of the previous edge as the corner vertex?
-        var stride = 6 + (hasWebMercatorT ? 1 : 0) + (hasVertexNormals ? 2 : 0);
-        var previousVertices = previousEdgeDetails.vertices;
-        var lastVertexStart = previousVertices.length - stride;
-        var lastU = previousVertices[lastVertexStart + 4];
-        var lastV = previousVertices[lastVertexStart + 5];
-
-        if (lastU === u && lastV === v) {
-            for (var i = 0; i < stride; ++i) {
-                tileVertices.push(previousVertices[lastVertexStart + i]);
-            }
-            return;
-        }
-
-        // Previous edge doesn't contain a suitable vertex either, so fabricate one.
-        cartographicScratch.longitude = longitude;
-        cartographicScratch.latitude = latitude;
-        cartographicScratch.height = height;
-        ellipsoid.cartographicToCartesian(cartographicScratch, cartesianScratch);
-        tileVertices.push(cartesianScratch.x, cartesianScratch.y, cartesianScratch.z, height, u, v);
-
-        if (hasWebMercatorT) {
-            // Identical to v at 0.0 and 1.0.
-            tileVertices.push(v);
-        }
-
-        if (hasVertexNormals) {
-            ellipsoid.geodeticSurfaceNormalCartographic(cartographicScratch, normalScratch);
-            AttributeCompression.octEncode(normalScratch, octEncodedNormalScratch);
-            tileVertices.push(octEncodedNormalScratch.x, octEncodedNormalScratch.y);
-            //tileVertices.push(AttributeCompression.octPackFloat(octEncodedNormalScratch));
-        }
     }
 
     var cornerPositionsScratch = [new Cartesian3(), new Cartesian3(), new Cartesian3(), new Cartesian3()];
