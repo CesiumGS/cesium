@@ -126,12 +126,6 @@ define([
         RENDER_NOTHING: 0,
 
         /**
-         * Render a subset of the closest renderable ancestor. This is cheap on the CPU, but can be very expensive in terms
-         * of GPU fill rate. It also leads to cracking due to missing skirts.
-         */
-        RENDER_ANCESTOR_SUBSET: 1,
-
-        /**
          * Create a very simple tile to fill the space by matching the heights of adjacent tiles on the edges. This is
          * cheaper on the CPU than a full upsample and avoids cracks. But it's less representative of the real
          * terrain surface than an upsample from a nearby ancestor.
@@ -1269,9 +1263,6 @@ define([
             u_minimumBrightness : function() {
                 return frameState.fog.minimumBrightness;
             },
-            u_textureCoordinateSubset : function() {
-                return this.properties.textureCoordinateSubset;
-            },
 
             // make a separate object so that changes to the properties are seen on
             // derived commands that combine another uniform map with this one.
@@ -1310,7 +1301,6 @@ define([
                 scaleAndBias : new Matrix4(),
                 clippingPlanesEdgeColor : Color.clone(Color.WHITE),
                 clippingPlanesEdgeWidth : 0.0,
-                textureCoordinateSubset : new Cartesian4(),
 
                 localizedCartographicLimitRectangle : new Cartesian4()
             }
@@ -1453,34 +1443,13 @@ define([
 
     var otherPassesInitialColor = new Cartesian4(0.0, 0.0, 0.0, 0.0);
 
-    function addDrawCommandsForTile(tileProvider, tile, frameState, subset) {
+    function addDrawCommandsForTile(tileProvider, tile, frameState) {
         var surfaceTile = tile.data;
 
         if (surfaceTile.renderableTile !== undefined) {
-            // We can't render this tile yet, so instead render a subset of our closest renderable ancestor.
+            // We can't render this tile yet, so do something else, depending on our missing tile strategy.
             var missingTileStrategy = tileProvider.missingTileStrategy;
-            if (missingTileStrategy === MissingTileStrategy.RENDER_ANCESTOR_SUBSET) {
-                addDrawCommandsForTile(tileProvider, surfaceTile.renderableTile, frameState, surfaceTile.renderableTileSubset);
-                return;
-            } else if (missingTileStrategy === MissingTileStrategy.CREATE_FILL_TILE) {
-                // if (surfaceTile.fillMesh === undefined) {
-                //     if (tile.renderable) {
-                //         console.log(`Frame ${frameState.frameNumber} L${tile.level}X${tile.x}Y${tile.y} renderable`);
-                //     } else {
-                //         console.log(`Frame ${frameState.frameNumber} L${tile.level}X${tile.x}Y${tile.y} no mesh`);
-                //     }
-
-                //     for (var i = 0; i < tileProvider._quadtree._tilesToRender.length; ++i) {
-                //         var foo = tileProvider._quadtree._tilesToRender[i];
-                //         if (foo.data && foo.data.fillMesh) {
-                //             foo.data.fillMesh.visitedFrame = undefined;
-                //         }
-                //     }
-
-                //     TerrainFillMesh.updateFillTiles(tileProvider, tileProvider._quadtree._tilesToRender, frameState);
-                // } else if (surfaceTile.fillMesh.changedThisFrame) {
-                //     console.log(`Frame ${frameState.frameNumber} L${tile.level}X${tile.x}Y${tile.y} changed`);
-                // }
+            if (missingTileStrategy === MissingTileStrategy.CREATE_FILL_TILE) {
                 if (surfaceTile.fill === undefined) {
                     // No fill was created for this tile, probably because this tile is not connected to
                     // any renderable tiles. So create a simple tile in the middle of the tile's possible
@@ -1490,17 +1459,15 @@ define([
                     surfaceTile.fill.changedThisFrame = true;
                 }
                 surfaceTile.fill.update(tileProvider, frameState);
-                //return;
-                //createFillTile(tileProvider, tile, frameState);
             } else {
                 return;
             }
         }
 
         //>>includeStart('debug', pragmas.debug);
-        // if (!tile.renderable) {
-        //     throw new DeveloperError('A rendered tile is not renderable, this should not be possible.');
-        // }
+        if (!tile.renderable) {
+            throw new DeveloperError('A rendered tile is not renderable, this should not be possible.');
+        }
         //>>includeEnd('debug');
 
         var creditDisplay = frameState.creditDisplay;
@@ -1666,10 +1633,6 @@ define([
             uniformMapProperties.southMercatorYAndOneOverHeight.x = southMercatorY;
             uniformMapProperties.southMercatorYAndOneOverHeight.y = oneOverMercatorHeight;
 
-            if (subset !== undefined) {
-                Cartesian4.clone(subset, uniformMapProperties.textureCoordinateSubset);
-            }
-
             // Convert tile limiter rectangle from cartographic to texture space using the tileRectangle.
             var localizedCartographicLimitRectangle = localizedCartographicLimitRectangleScratch;
             var cartographicLimitRectangle = clipRectangleAntimeridian(tile.rectangle, tileProvider.cartographicLimitRectangle);
@@ -1786,7 +1749,7 @@ define([
                 uniformMap = combine(uniformMap, tileProvider.uniformMap);
             }
 
-            command.shaderProgram = tileProvider._surfaceShaderSet.getShaderProgram(frameState, surfaceTile, numberOfDayTextures, applyBrightness, applyContrast, applyHue, applySaturation, applyGamma, applyAlpha, applySplit, showReflectiveOcean, showOceanWaves, tileProvider.enableLighting, hasVertexNormals, useWebMercatorProjection, applyFog, clippingPlanesEnabled, clippingPlanes, surfaceTile.clippedByBoundaries, subset !== undefined);
+            command.shaderProgram = tileProvider._surfaceShaderSet.getShaderProgram(frameState, surfaceTile, numberOfDayTextures, applyBrightness, applyContrast, applyHue, applySaturation, applyGamma, applyAlpha, applySplit, showReflectiveOcean, showOceanWaves, tileProvider.enableLighting, hasVertexNormals, useWebMercatorProjection, applyFog, clippingPlanesEnabled, clippingPlanes, surfaceTile.clippedByBoundaries);
             command.castShadows = castShadows;
             command.receiveShadows = receiveShadows;
             command.renderState = renderState;

@@ -66,10 +66,6 @@ uniform vec4 u_clippingPlanesEdgeStyle;
 uniform float u_minimumBrightness;
 #endif
 
-#ifdef RENDER_PARTIAL_TILE
-uniform vec4 u_textureCoordinateSubset;
-#endif
-
 varying vec3 v_positionMC;
 varying vec3 v_positionEC;
 varying vec3 v_textureCoordinates;
@@ -164,17 +160,6 @@ vec4 computeWaterColor(vec3 positionEyeCoordinates, vec2 textureCoordinates, mat
 
 void main()
 {
-#ifdef RENDER_PARTIAL_TILE
-    if (v_textureCoordinates.x < u_textureCoordinateSubset.x ||
-        v_textureCoordinates.y < u_textureCoordinateSubset.y ||
-        v_textureCoordinates.x > u_textureCoordinateSubset.z ||
-        v_textureCoordinates.y > u_textureCoordinateSubset.w)
-    {
-        discard;
-    }
-#endif
-
-
 #ifdef TILE_LIMIT_RECTANGLE
     if (v_textureCoordinates.x < u_cartographicLimitRectangle.x || u_cartographicLimitRectangle.z < v_textureCoordinates.x ||
         v_textureCoordinates.y < u_cartographicLimitRectangle.y || u_cartographicLimitRectangle.w < v_textureCoordinates.y)
