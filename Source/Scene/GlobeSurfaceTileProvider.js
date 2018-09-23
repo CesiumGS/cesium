@@ -1464,12 +1464,6 @@ define([
             }
         }
 
-        //>>includeStart('debug', pragmas.debug);
-        if (!tile.renderable) {
-            throw new DeveloperError('A rendered tile is not renderable, this should not be possible.');
-        }
-        //>>includeEnd('debug');
-
         var creditDisplay = frameState.creditDisplay;
 
         var terrainData = surfaceTile.terrainData;
