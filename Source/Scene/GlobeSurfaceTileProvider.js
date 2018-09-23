@@ -179,6 +179,13 @@ define([
          */
         this.missingTileStrategy = MissingTileStrategy.CREATE_FILL_TILE;
 
+        /**
+         * The color to use to highlight fill tiles. If undefined, fill tiles are not
+         * highlighted at all. The alpha value is used to alpha blend with the tile's
+         * actual color.
+         */
+        this.fillHighlightColor = undefined;
+
         this._quadtree = undefined;
         this._terrainProvider = options.terrainProvider;
         this._imageryLayers = options.imageryLayers;
@@ -1154,8 +1161,8 @@ define([
             u_initialColor : function() {
                 return this.properties.initialColor;
             },
-            u_isFill : function() {
-                return this.properties.isFill;
+            u_fillHighlightColor : function() {
+                return this.properties.fillHighlightColor;
             },
             u_zoomedOutOceanSpecularIntensity : function() {
                 return this.properties.zoomedOutOceanSpecularIntensity;
@@ -1268,7 +1275,7 @@ define([
             // derived commands that combine another uniform map with this one.
             properties : {
                 initialColor : new Cartesian4(0.0, 0.0, 0.5, 1.0),
-                isFill : false,
+                fillHighlightColor : new Color(0.0, 0.0, 0.0, 0.0),
                 zoomedOutOceanSpecularIntensity : 0.5,
                 oceanNormalMap : undefined,
                 lightingFadeDistance : new Cartesian2(6500000.0, 9000000.0),
@@ -1612,11 +1619,15 @@ define([
 
             var uniformMapProperties = uniformMap.properties;
             Cartesian4.clone(initialColor, uniformMapProperties.initialColor);
-            //uniformMapProperties.isFill = surfaceTile.vertexArray === undefined;
             uniformMapProperties.oceanNormalMap = oceanNormalMap;
             uniformMapProperties.lightingFadeDistance.x = tileProvider.lightingFadeOutDistance;
             uniformMapProperties.lightingFadeDistance.y = tileProvider.lightingFadeInDistance;
             uniformMapProperties.zoomedOutOceanSpecularIntensity = tileProvider.zoomedOutOceanSpecularIntensity;
+
+            var highlightFillTile = !defined(surfaceTile.vertexArray) && defined(tileProvider.fillHighlightColor) && tileProvider.fillHighlightColor.alpha > 0.0;
+            if (highlightFillTile) {
+                Color.clone(tileProvider.fillHighlightColor, uniformMapProperties.fillHighlightColor);
+            }
 
             uniformMapProperties.center3D = mesh.center;
             Cartesian3.clone(rtc, uniformMapProperties.rtc);
@@ -1743,7 +1754,7 @@ define([
                 uniformMap = combine(uniformMap, tileProvider.uniformMap);
             }
 
-            command.shaderProgram = tileProvider._surfaceShaderSet.getShaderProgram(frameState, surfaceTile, numberOfDayTextures, applyBrightness, applyContrast, applyHue, applySaturation, applyGamma, applyAlpha, applySplit, showReflectiveOcean, showOceanWaves, tileProvider.enableLighting, hasVertexNormals, useWebMercatorProjection, applyFog, clippingPlanesEnabled, clippingPlanes, surfaceTile.clippedByBoundaries);
+            command.shaderProgram = tileProvider._surfaceShaderSet.getShaderProgram(frameState, surfaceTile, numberOfDayTextures, applyBrightness, applyContrast, applyHue, applySaturation, applyGamma, applyAlpha, applySplit, showReflectiveOcean, showOceanWaves, tileProvider.enableLighting, hasVertexNormals, useWebMercatorProjection, applyFog, clippingPlanesEnabled, clippingPlanes, surfaceTile.clippedByBoundaries, highlightFillTile);
             command.castShadows = castShadows;
             command.receiveShadows = receiveShadows;
             command.renderState = renderState;

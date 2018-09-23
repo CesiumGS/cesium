@@ -1,6 +1,5 @@
 //#define SHOW_TILE_BOUNDARIES
 uniform vec4 u_initialColor;
-uniform bool u_isFill;
 
 #if TEXTURE_UNITS > 0
 uniform sampler2D u_dayTextures[TEXTURE_UNITS];
@@ -64,6 +63,10 @@ uniform vec4 u_clippingPlanesEdgeStyle;
 
 #if defined(FOG) && (defined(ENABLE_VERTEX_LIGHTING) || defined(ENABLE_DAYNIGHT_SHADING))
 uniform float u_minimumBrightness;
+#endif
+
+#ifdef HIGHLIGHT_FILL_TILE
+uniform vec4 u_fillHighlightColor;
 #endif
 
 varying vec3 v_positionMC;
@@ -266,10 +269,9 @@ void main()
     }
 #endif
 
-    if (u_isFill)
-    {
-        finalColor = vec4(mix(vec3(0.0), finalColor.rgb, 0.25), finalColor.a);
-    }
+#ifdef HIGHLIGHT_FILL_TILE
+    finalColor = vec4(mix(finalColor.rgb, u_fillHighlightColor.rgb, u_fillHighlightColor.a), finalColor.a);
+#endif
 
 #ifdef FOG
     const float fExposure = 2.0;

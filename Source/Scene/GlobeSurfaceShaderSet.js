@@ -66,7 +66,7 @@ define([
         return useWebMercatorProjection ? get2DYPositionFractionMercatorProjection : get2DYPositionFractionGeographicProjection;
     }
 
-    GlobeSurfaceShaderSet.prototype.getShaderProgram = function(frameState, surfaceTile, numberOfDayTextures, applyBrightness, applyContrast, applyHue, applySaturation, applyGamma, applyAlpha, applySplit, showReflectiveOcean, showOceanWaves, enableLighting, hasVertexNormals, useWebMercatorProjection, enableFog, enableClippingPlanes, clippingPlanes, clippedByBoundaries) {
+    GlobeSurfaceShaderSet.prototype.getShaderProgram = function(frameState, surfaceTile, numberOfDayTextures, applyBrightness, applyContrast, applyHue, applySaturation, applyGamma, applyAlpha, applySplit, showReflectiveOcean, showOceanWaves, enableLighting, hasVertexNormals, useWebMercatorProjection, enableFog, enableClippingPlanes, clippingPlanes, clippedByBoundaries, highlightFillTile) {
         var quantization = 0;
         var quantizationDefine = '';
 
@@ -110,7 +110,8 @@ define([
                     (applySplit << 15) |
                     (enableClippingPlanes << 16) |
                     (vertexLogDepth << 17) |
-                    (cartographicLimitRectangleFlag << 18);
+                    (cartographicLimitRectangleFlag << 18) |
+                    (highlightFillTile << 19);
 
         var currentClippingShaderState = 0;
         if (defined(clippingPlanes)) {
@@ -195,6 +196,10 @@ define([
 
             if (enableClippingPlanes) {
                 fs.defines.push('ENABLE_CLIPPING_PLANES');
+            }
+
+            if (highlightFillTile) {
+                fs.defines.push('HIGHLIGHT_FILL_TILE');
             }
 
             var computeDayColor = '\
