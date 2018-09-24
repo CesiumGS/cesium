@@ -163,7 +163,7 @@ define([
 
         /**
          * The distance where the darkness of night from the ground atmosphere fades out to a lit ground atmosphere.
-         * This only takes effect when <code>showGroundAtmosphere</code> is <code>true</code>.
+         * This only takes effect when <code>showGroundAtmosphere</code> and <code>enableLighting</code> are <code>true</code>.
          *
          * @type {Number}
          * @default 10000000.0
@@ -172,7 +172,7 @@ define([
 
         /**
          * The distance where the darkness of night from the ground atmosphere fades in to an unlit ground atmosphere.
-         * This only takes effect when <code>showGroundAtmosphere</code> is <code>true</code>.
+         * This only takes effect when <code>showGroundAtmosphere</code> and <code>enableLighting</code> are <code>true</code>.
          *
          * @type {Number}
          * @default 50000000.0
