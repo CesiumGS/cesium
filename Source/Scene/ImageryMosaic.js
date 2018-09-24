@@ -6,7 +6,6 @@ define([
         '../Core/FeatureDetection',
         '../Core/getAbsoluteUri',
         '../Core/Rectangle',
-        '../Core/Resource',
         '../Core/TaskProcessor',
         '../Core/SerializedMapProjection',
         './BitmapImageryProvider',
@@ -19,7 +18,6 @@ define([
         FeatureDetection,
         getAbsoluteUri,
         Rectangle,
-        Resource,
         TaskProcessor,
         SerializedMapProjection,
         BitmapImageryProvider,
@@ -27,42 +25,56 @@ define([
     'use strict';
 
     var insetWaitFrames = 3;
-
     /**
      * Manages imagery layers for asynchronous pixel-perfect imagery reprojection.
+     * TODO: only available in Chrome 69+, support coming for Firefox: https://bugzilla.mozilla.org/show_bug.cgi?id=801176
      *
-     * @alias PixelPerfectReprojectedImagery
+     * @alias ImageryMosaic
      * @constructor
      *
-     * @param {Object} options Object with the following properties: TODO: a bunch of these options should become arrs
-     * @param {String} options.url the url for the imagery source.
-     * @param {Rectangle} options.projectedRectangle The rectangle covered by the image in the source SRS.
-     * @param {MapProjection} options.projection The map projection for the source SRS.
-     * @param {Credit|String} [options.credit] A credit for the data source, which is displayed on the canvas.
+     * @param {Object} options Object with the following properties:
+     * @param {String[]} options.urls the url for the imagery sources.
+     * // TODO: add optional parallel list of IDs for Z order and show/hide
+     * @param {Rectangle[]} options.projectedRectangles The rectangles covered by the images in their source Spatial Reference Systems
+     * @param {MapProjection[]} options.projections The map projections for each image.
+     * @param {Credit|String} [options.credit] A credit for all the images, which is displayed on the canvas.
      * @param {Scene} options.scene The current Cesium scene.
      */
-    function PixelPerfectReprojectedImagery(options) {
+    function ImageryMosaic(options, viewer) {
         //>>includeStart('debug', pragmas.debug);
         Check.defined('options', options);
-        Check.typeOf.string('options.url', options.url);
-        Check.defined('options.projectedRectangle', options.projectedRectangle);
-        Check.defined('options.projection', options.projection);
+        Check.defined('options.urls', options.urls);
+        Check.defined('options.projectedRectangles', options.projectedRectangles);
+        Check.defined('options.projections', options.projections);
         Check.defined('options.scene', options.scene);
         //>>includeEnd('debug');
 
-        this._projectedRectangle = Rectangle.clone(options.projectedRectangle);
-        this._rectangle = Rectangle.unproject(options.projectedRectangle, options.projection);
-        this._projection = options.projection;
+        var urls = options.urls;
+        var projectedRectangles = options.projectedRectangles;
+        var projections = options.projections;
+
+        var imagesLength = urls.length;
+
+        // Make URLs absolute, serialize projections
+        var absoluteUrls = new Array(imagesLength);
+        var serializedMapProjections = new Array(imagesLength);
+        for (var i = 0; i < imagesLength; i++) {
+            absoluteUrls[i] = getAbsoluteUri(urls[i]);
+            serializedMapProjections[i] = new SerializedMapProjection(projections[i]);
+        }
+
+        this._projectedRectangles = projectedRectangles;
+        this._projections = projections;
+        this._urls = absoluteUrls;
+
         var credit = options.credit;
         var scene = options.scene;
-
-        var absoluteUrl = getAbsoluteUri(options.url);
-        this._url = absoluteUrl;
 
         if (typeof credit === 'string') {
             credit = new Credit(credit);
         }
         this._credit = credit;
+        this._rectangle = new Rectangle();
 
         var taskProcessor = new TaskProcessor('createReprojectedImagery');
         this._taskProcessor = taskProcessor;
@@ -73,8 +85,6 @@ define([
         this._localImageryLayer = undefined;
         this._reprojectionPromise = undefined;
         this._iteration = 0;
-
-        this._serializedMapProjection = new SerializedMapProjection(options.projection);
 
         this._freeze = false;
 
@@ -87,27 +97,22 @@ define([
         var startupPromise;
         if (FeatureDetection.isChrome() && FeatureDetection.chromeVersion()[0] >= 69) {
             startupPromise = taskProcessor.scheduleTask({
-                load : true,
-                url : absoluteUrl
+                initialize : true,
+                urls : absoluteUrls,
+                serializedMapProjections : serializedMapProjections,
+                projectedRectangles : projectedRectangles
             }); // TODO: check for errors?
-        } else {
-            var resource = Resource.createIfNeeded(absoluteUrl);
-            startupPromise = resource.fetchImage()
-                .then(function(image) {
-                    return that.uploadImageToWorker(image);
-                });
         }
         startupPromise
-            .then(function() {
+            .then(function(rectangle) {
+                Rectangle.clone(rectangle, that._rectangle);
+
                 // Create the full-coverage version
                 return taskProcessor.scheduleTask({
                     reproject : true,
                     width : 1024,
                     height : 1024,
-                    url : that._url,
-                    serializedMapProjection : that._serializedMapProjection,
-                    rectangle : that._rectangle,
-                    projectedRectangle : that._projectedRectangle
+                    rectangle : that._rectangle
                 });
             })
             .then(function(reprojectedBitmap) {
@@ -147,7 +152,7 @@ define([
             });
         }
 
-    defineProperties(PixelPerfectReprojectedImagery.prototype, {
+    defineProperties(ImageryMosaic.prototype, {
         freeze : {
             get: function() {
                 return this._freeze;
@@ -161,7 +166,7 @@ define([
         }
     });
 
-    PixelPerfectReprojectedImagery.prototype.uploadImageToWorker = function(image) {
+    ImageryMosaic.prototype.uploadImageToWorker = function(image) {
         // Read pixels and upload to web worker
         var canvas = document.createElement('canvas');
         canvas.width = image.width;
@@ -177,7 +182,7 @@ define([
         });
     };
 
-    PixelPerfectReprojectedImagery.prototype.refresh = function(scene) {
+    ImageryMosaic.prototype.refresh = function(scene) {
         // Compute an approximate geographic rectangle that we're rendering
         var quadtreePrimitive = scene.globe._surface;
         var quadtreeTilesToRender = quadtreePrimitive._tilesToRender;
@@ -228,10 +233,7 @@ define([
             reproject : true,
             width : 1024,
             height : 1024,
-            url : this._url,
-            serializedMapProjection : this._serializedMapProjection,
-            rectangle : renderingBounds,
-            projectedRectangle : this._projectedRectangle
+            rectangle : renderingBounds
         })
         .then(function(reprojectedBitmap) {
             if (that._iteration !== iteration) {
@@ -261,5 +263,5 @@ define([
         });
     };
 
-    return PixelPerfectReprojectedImagery;
+    return ImageryMosaic;
 });

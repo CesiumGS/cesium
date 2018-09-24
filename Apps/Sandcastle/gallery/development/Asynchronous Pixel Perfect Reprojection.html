@@ -39,11 +39,11 @@ var viewer = new Cesium.Viewer('cesiumContainer', {
     sceneMode : Cesium.SceneMode.SCENE2D
 });
 
-var pixelPerfectReprojection = new Cesium.PixelPerfectReprojectedImagery({
-    url : '../../SampleData/Brazil_elevation_ESRI53009.png',
+var pixelPerfectReprojection = new Cesium.ImageryMosaic({
+    urls : ['../../SampleData/Brazil_elevation_ESRI53009.png'],
     // bounds copied out of QGIS
-    projectedRectangle : new Cesium.Rectangle(-8309084.8709259927272797,-6474832.4202510649338365,-2331162.9914685478433967,1661637.9380288750398904),
-    projection : new Cesium.Proj4Projection('+proj=moll +lon_0=0 +x_0=0 +y_0=0 +a=6371000 +b=6371000 +units=m +no_defs'),
+    projectedRectangles : [new Cesium.Rectangle(-8309084.8709259927272797,-6474832.4202510649338365,-2331162.9914685478433967,1661637.9380288750398904)],
+    projections : [new Cesium.Proj4Projection('+proj=moll +lon_0=0 +x_0=0 +y_0=0 +a=6371000 +b=6371000 +units=m +no_defs')],
     scene : viewer.scene
 });
 

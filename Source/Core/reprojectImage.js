@@ -27,9 +27,7 @@ define([
      * @param {Rectangle} projectedRectangle
      * @param {MapProjection} projection
      */
-    function reprojectImage(target, source, rectangle, projectedRectangle, projection) {
-        target.clear();
-
+    function reprojectImage(target, source, rectangle, projectedRectangle, projection) { // TODO: take the image's unprojected rectangle, use to reduce reprojections
         var targetWidth = target.width;
         var targetHeight = target.height;
 

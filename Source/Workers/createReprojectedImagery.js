@@ -6,8 +6,10 @@ define([
         createTaskProcessorWorker) {
     'use strict';
 
+    var asynchronousReprojectionWorker = new AsynchronousReprojectionWorker();
+
     function createVerticesFromHeightmap(parameters, transferableObjects) {
-        return AsynchronousReprojectionWorker.runTask(parameters, transferableObjects);
+        return asynchronousReprojectionWorker.runTask(parameters, transferableObjects);
     }
 
     return createTaskProcessorWorker(createVerticesFromHeightmap);
