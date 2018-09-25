@@ -35,9 +35,7 @@
   "dependencies": {
     "deamdify": "^0.1.1",
     "dompurify": "^1.0.2",
-    "requirejs": "^2.3.2"
-  },
-  "devDependencies": {
+    "requirejs": "^2.3.2",
     "almond": "^0.3.3",
     "aws-sdk": "^2.18.0",
     "bluebird": "^3.4.6",
