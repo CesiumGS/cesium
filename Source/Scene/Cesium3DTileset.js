@@ -18,6 +18,7 @@ define([
         '../Core/Matrix4',
         '../Core/Resource',
         '../Core/RuntimeError',
+        '../Core/Transforms',
         '../Renderer/ClearCommand',
         '../Renderer/Pass',
         '../ThirdParty/when',
@@ -60,6 +61,7 @@ define([
         Matrix4,
         Resource,
         RuntimeError,
+        Transforms,
         ClearCommand,
         Pass,
         when,
@@ -208,6 +210,9 @@ define([
         this._classificationType = options.classificationType;
 
         this._ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
+
+        this._useBoundingSphereForClipping = false;
+        this._clippingPlaneOffsetMatrix = undefined;
 
         /**
          * Optimization option. Whether the tileset should refine based on a dynamic screen space error. Tiles that are further
@@ -697,6 +702,10 @@ define([
                 that._extensionsUsed = tilesetJson.extensionsUsed;
                 that._gltfUpAxis = gltfUpAxis;
                 that._extras = tilesetJson.extras;
+                if (!defined(tilesetJson.root.transform)) {
+                    that._useBoundingSphereForClipping = true;
+                    that._clippingPlaneOffsetMatrix = Transforms.eastNorthUpToFixedFrame(that.boundingSphere.center);
+                }
                 that._readyPromise.resolve(that);
             }).otherwise(function(error) {
                 that._readyPromise.reject(error);
@@ -1110,6 +1119,18 @@ define([
         /**
          * @private
          */
+        clippingPlaneOffsetMatrix : {
+            get : function() {
+                if (this._useBoundingSphereForClipping) {
+                    return this._clippingPlaneOffsetMatrix;
+                }
+                return this.root.computedTransform;
+            }
+        },
+
+        /**
+         * @private
+         */
         styleEngine : {
             get : function() {
                 return this._styleEngine;
@@ -1478,7 +1499,6 @@ define([
         filterProcessingQueue(tileset);
         var tiles = tileset._processingQueue;
         var length = tiles.length;
-
         // Process tiles in the PROCESSING state so they will eventually move to the READY state.
         for (var i = 0; i < length; ++i) {
             tiles[i].process(tileset, frameState);
@@ -1809,6 +1829,9 @@ define([
         var clippingPlanes = this._clippingPlanes;
         if (defined(clippingPlanes) && clippingPlanes.enabled) {
             clippingPlanes.update(frameState);
+            if (this._useBoundingSphereForClipping) {
+                this._clippingPlaneOffsetMatrix = Transforms.eastNorthUpToFixedFrame(this.boundingSphere.center);
+            }
         }
 
         this._timeSinceLoad = Math.max(JulianDate.secondsDifference(frameState.time, this._loadTimestamp) * 1000, 0.0);
