@@ -159,6 +159,9 @@ define([
         return worker;
     }
 
+    var requireWasmWrapper = require.context('../ThirdParty/Workers', false, /.*wasm_wrapper\.js$/);
+    var requireWasm = require.context('../ThirdParty', false, /\.wasm$/);
+
     function getWebAssemblyLoaderConfig(processor, wasmOptions) {
         var config = {
             modulePath : undefined,
@@ -176,8 +179,17 @@ define([
             return when.resolve(config);
         }
 
-        config.modulePath = buildModuleUrl(wasmOptions.modulePath);
-        config.wasmBinaryFile = buildModuleUrl(wasmOptions.wasmBinaryFile);
+        var modulePath = wasmOptions.modulePath;
+        if (modulePath.indexOf('ThirdParty/Workers/') === 0) {
+            modulePath = modulePath.substring('ThirdParty/Workers/'.length);
+        }
+        config.modulePath = requireWasmWrapper('./' + modulePath);
+
+        var wasmBinaryFile = wasmOptions.wasmBinaryFile;
+        if (wasmBinaryFile.indexOf('ThirdParty/') === 0) {
+            wasmBinaryFile = wasmBinaryFile.substring('ThirdParty/'.length);
+        }
+        config.wasmBinaryFile = requireWasm('./' + wasmBinaryFile);
 
         return Resource.fetchArrayBuffer({
             url: config.wasmBinaryFile
@@ -306,7 +318,10 @@ define([
                     deferred.resolve(event.data);
                 };
 
-                worker.postMessage({ webAssemblyConfig : wasmConfig }, transferableObjects);
+                worker.postMessage({ webAssemblyConfig : {
+                    wasmBinary: wasmConfig.wasmBinary,
+                    wasmBinaryFile: wasmConfig.wasmBinaryFile
+                } }, transferableObjects);
             });
         });
 
