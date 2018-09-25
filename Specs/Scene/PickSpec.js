@@ -20,7 +20,6 @@ defineSuite([
         'Scene/Primitive',
         'Scene/Scene',
         'Scene/SceneMode',
-        'Scene/SingleTileImageryProvider',
         'Specs/Cesium3DTilesTester',
         'Specs/createCanvas',
         'Specs/createScene',
@@ -47,7 +46,6 @@ defineSuite([
         Primitive,
         Scene,
         SceneMode,
-        SingleTileImageryProvider,
         Cesium3DTilesTester,
         createCanvas,
         createScene,
@@ -149,9 +147,6 @@ defineSuite([
     function createGlobe() {
         var globe = new Globe();
         scene.globe = globe;
-        var layerCollection = globe.imageryLayers;
-        layerCollection.removeAll();
-        layerCollection.addImageryProvider(new SingleTileImageryProvider({url : 'Data/Images/Red16x16.png'}));
         globe.depthTestAgainstTerrain = true;
         return pollToPromise(function() {
             scene.render();
@@ -823,6 +818,10 @@ defineSuite([
         });
 
         it('samples height from the globe', function() {
+            if (!scene.sampleHeightSupported) {
+                return;
+            }
+
             var cartographic = new Cartographic(0.0, 0.0);
             return createGlobe().then(function() {
                 expect(scene).toSampleHeightAndCall(function(height) {
@@ -954,6 +953,10 @@ defineSuite([
         });
 
         it('clamps to the globe', function() {
+            if (!scene.sampleHeightSupported) {
+                return;
+            }
+
             var cartesian = Cartesian3.fromRadians(0.0, 0.0, 100000.0);
             return createGlobe().then(function() {
                 expect(scene).toClampToHeightAndCall(function(position) {
