@@ -353,6 +353,11 @@ define([
         this._isClipped = true;
         this._clippingPlanesState = 0; // encapsulates (_isClipped, clippingPlanes.enabled) and number/function
 
+        // Additive attenuation
+        this._leafDescendants = undefined;
+        this._accumulatedGeometricError = undefined;
+        this._descendantGeometricError = undefined;
+
         this._debugBoundingVolume = undefined;
         this._debugContentBoundingVolume = undefined;
         this._debugViewerRequestVolume = undefined;

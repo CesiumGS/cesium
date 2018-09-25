@@ -122,7 +122,7 @@ define([
         this._styleTranslucent = false;
         this._constantColor = Color.clone(Color.DARKGRAY);
         this._highlightColor = Color.clone(Color.WHITE);
-        this._pointSize = 1.0;
+        this._pointSize = 5.0;
 
         this._rtcCenter = undefined;
         this._quantizedVolumeScale = undefined;

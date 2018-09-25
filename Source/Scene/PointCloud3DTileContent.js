@@ -200,13 +200,13 @@ define([
         var pointCloudShading = content._tileset.pointCloudShading;
         var sphereVolume = content._tile.contentBoundingVolume.boundingSphere.volume();
         var baseResolutionApproximation = CesiumMath.cbrt(sphereVolume / content.pointsLength);
+        var baseResolution = pointCloudShading.baseResolution;
 
-        var geometricError = content._tile.geometricError;
-        if (geometricError === 0) {
-            if (defined(pointCloudShading) && defined(pointCloudShading.baseResolution)) {
-                geometricError = pointCloudShading.baseResolution;
-            } else {
-                geometricError = baseResolutionApproximation;
+        var geometricError = content._tile._descendantGeometricError; // additive
+        if (!defined(geometricError)) {
+            geometricError = content.tile.geometricError;
+            if (geometricError === 0) {
+                geometricError = defined(baseResolution) ? baseResolution : baseResolutionApproximation;
             }
         }
         return geometricError;
