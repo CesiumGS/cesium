@@ -99,7 +99,7 @@ define([
             modelMatrix : Matrix4.clone(Matrix4.IDENTITY),
             owner : this
         });
-        this._cubeMap = undefined;
+        this._cubeMap = options.cubeMap;
 
         this._attributeLocations = undefined;
         this._useHDR = undefined;
@@ -135,7 +135,7 @@ define([
 
         var context = frameState.context;
 
-        if (this._sources !== this.sources) {
+        if (defined(this.sources) && this._sources !== this.sources) {
             this._sources = this.sources;
             var sources = this.sources;
 
