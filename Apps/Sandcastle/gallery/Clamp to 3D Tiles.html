@@ -35,11 +35,6 @@ var viewer = new Cesium.Viewer('cesiumContainer', {
 var scene = viewer.scene;
 var clock = viewer.clock;
 
-if (!scene.clampToHeightSupported) {
-    console.log('This browser does not support clampToHeight.');
-    return;
-}
-
 var entity;
 var positionProperty;
 var dataSourcePromise = Cesium.CzmlDataSource.load('../../SampleData/ClampToGround.czml');
@@ -60,7 +55,11 @@ viewer.camera.setView({
     endTransform : Cesium.Matrix4.IDENTITY
 });
 
-tileset.initialTilesLoaded.addEventListener(start);
+if (scene.clampToHeightSupported) {
+    tileset.initialTilesLoaded.addEventListener(start);
+} else {
+    console.log('This browser does not support clampToHeight.');
+}
 
 function start() {
     clock.shouldAnimate = true;
