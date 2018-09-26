@@ -1,13 +1,17 @@
 defineSuite([
         'Core/BoxGeometry',
+        'Core/arrayFill',
         'Core/AxisAlignedBoundingBox',
         'Core/Cartesian3',
+        'Core/GeometryOffsetAttribute',
         'Core/VertexFormat',
         'Specs/createPackableSpecs'
     ], function(
         BoxGeometry,
+        arrayFill,
         AxisAlignedBoundingBox,
         Cartesian3,
+        GeometryOffsetAttribute,
         VertexFormat,
         createPackableSpecs) {
     'use strict';
@@ -60,6 +64,24 @@ defineSuite([
 
         expect(m.boundingSphere.center).toEqual(Cartesian3.ZERO);
         expect(m.boundingSphere.radius).toEqual(Cartesian3.magnitude(maximumCorner) * 0.5);
+    });
+
+    it('computes offset attribute', function() {
+        var m = BoxGeometry.createGeometry(new BoxGeometry({
+            minimum : new Cartesian3(-1, -2, -3),
+            maximum : new Cartesian3(1, 2, 3),
+            vertexFormat : VertexFormat.POSITION_ONLY,
+            offsetAttribute: GeometryOffsetAttribute.ALL
+        }));
+
+        var numVertices = 8;
+        expect(m.attributes.position.values.length).toEqual(numVertices * 3);
+
+        var offset = m.attributes.applyOffset.values;
+        expect(offset.length).toEqual(numVertices);
+        var expected = new Array(offset.length);
+        expected = arrayFill(expected, 1);
+        expect(offset).toEqual(expected);
     });
 
     it('fromDimensions throws without dimensions', function() {
@@ -116,5 +138,5 @@ defineSuite([
         minimum : new Cartesian3(1.0, 2.0, 3.0),
         maximum : new Cartesian3(4.0, 5.0, 6.0),
         vertexFormat : VertexFormat.POSITION_AND_NORMAL
-    }), [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0]);
+    }), [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, -1.0]);
 });

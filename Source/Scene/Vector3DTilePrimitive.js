@@ -929,11 +929,10 @@ define([
     /**
      * Apply a style to the content.
      *
-     * @param {FrameState} frameState The frame state.
      * @param {Cesium3DTileStyle} style The style.
      * @param {Cesium3DTileFeature[]} features The array of features.
      */
-    Vector3DTilePrimitive.prototype.applyStyle = function(frameState, style, features) {
+    Vector3DTilePrimitive.prototype.applyStyle = function(style, features) {
         if (!defined(style)) {
             clearStyle(this, features);
             return;
@@ -951,8 +950,8 @@ define([
             var batchId = batchIds[i];
             var feature = features[batchId];
 
-            feature.color = defined(style.color) ? style.color.evaluateColor(frameState, feature, scratchColor) : DEFAULT_COLOR_VALUE;
-            feature.show = defined(style.show) ? style.show.evaluate(frameState, feature) : DEFAULT_SHOW_VALUE;
+            feature.color = defined(style.color) ? style.color.evaluateColor(feature, scratchColor) : DEFAULT_COLOR_VALUE;
+            feature.show = defined(style.show) ? style.show.evaluate(feature) : DEFAULT_SHOW_VALUE;
         }
 
         if (isSimpleStyle) {

@@ -51,7 +51,7 @@ define([
             return;
         }
 
-        if (updater.clampToGround) { // Also checks for support
+        if (updater.clampToGround && updater.fillEnabled) { // Also checks for support
             that._groundBatch.add(time, updater);
             return;
         }

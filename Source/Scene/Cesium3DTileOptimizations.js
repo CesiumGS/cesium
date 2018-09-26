@@ -44,7 +44,7 @@ define([
         var length = children.length;
 
         // Check if the parent has an oriented bounding box.
-        var boundingVolume = tile._boundingVolume;
+        var boundingVolume = tile.boundingVolume;
         if (boundingVolume instanceof TileOrientedBoundingBox || boundingVolume instanceof TileBoundingRegion) {
             var orientedBoundingBox = boundingVolume._orientedBoundingBox;
             tile._optimChildrenWithinParent = Cesium3DTileOptimizationHint.USE_OPTIMIZATION;
@@ -52,7 +52,7 @@ define([
                 var child = children[i];
 
                 // Check if the child has an oriented bounding box.
-                var childBoundingVolume = child._boundingVolume;
+                var childBoundingVolume = child.boundingVolume;
                 if (!(childBoundingVolume instanceof TileOrientedBoundingBox || childBoundingVolume instanceof TileBoundingRegion)) {
                     // Do not support if the parent and child both do not have oriented bounding boxes.
                     tile._optimChildrenWithinParent = Cesium3DTileOptimizationHint.SKIP_OPTIMIZATION;

@@ -552,7 +552,7 @@ defineSuite([
             url : geometryBoxesWithBatchTable
         }));
         return loadTileset(tileset).then(function(tileset) {
-            var content = tileset._root.content;
+            var content = tileset.root.content;
             expect(content.featuresLength).toBe(1);
             expect(content.innerContents).toBeUndefined();
             expect(content.hasProperty(0, 'name')).toBe(true);
@@ -565,7 +565,7 @@ defineSuite([
             url : geometryBoxesWithBatchTable
         }));
         return loadTileset(tileset).then(function(tileset) {
-            var content = tileset._root.content;
+            var content = tileset.root.content;
             expect(function(){
                 content.getFeature(-1);
             }).toThrowDeveloperError();
