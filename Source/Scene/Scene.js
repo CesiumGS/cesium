@@ -3504,16 +3504,7 @@ define([
         return result;
     };
 
-    function isExcluded(object, objectsToExclude) {
-        if (!defined(objectsToExclude) || objectsToExclude.length === 0) {
-            return false;
-        }
-        return (objectsToExclude.indexOf(object) > -1) ||
-               (objectsToExclude.indexOf(object.primitive) > -1) ||
-               (objectsToExclude.indexOf(object.id) > -1);
-    }
-
-    function drillPick(limit, pickCallback, objectsToExclude) {
+    function drillPick(limit, pickCallback) {
         // PERFORMANCE_IDEA: This function calls each primitive's update for each pass. Instead
         // we could update the primitive once, and then just execute their commands for each pass,
         // and cull commands for picked primitives.  e.g., base on the command's owner.
@@ -3541,11 +3532,9 @@ define([
                 break;
             }
 
-            if (!isExcluded(object, objectsToExclude)) {
-                result.push(pickedResult);
-                if (0 >= --limit) {
-                    break;
-                }
+            result.push(pickedResult);
+            if (0 >= --limit) {
+                break;
             }
 
             var primitive = object.primitive;
@@ -3649,6 +3638,10 @@ define([
         var uniformState = context.uniformState;
         var frameState = scene._frameState;
 
+        // Update with previous frame's time, assuming that render is called before ray intersection.
+        scene._preUpdate.raiseEvent(scene, frameState.time);
+        scene._postUpdate.raiseEvent(scene, frameState.time);
+
         var view = scene._pickOffscreenView;
         scene._view = view;
 
@@ -3660,7 +3653,7 @@ define([
 
         scene._jobScheduler.disableThisFrame();
 
-        // Update with previous frame's number and time, assuming that render is called before picking.
+        // Update with previous frame's number and time, assuming that render is called before ray intersection.
         updateFrameState(scene, frameState.frameNumber, frameState.time);
         frameState.invertClassification = false;
         frameState.passes.pick = true;
@@ -3703,6 +3696,33 @@ define([
         }
     }
 
+    var hiddenObjectsScratch = [];
+
+    function hideObjects(objects) {
+        hiddenObjectsScratch.length = 0;
+
+        if (!defined(objects) || objects.length === 0) {
+            return hiddenObjectsScratch;
+        }
+
+        var length = objects.length;
+        for (var i = 0; i < length; ++i) {
+            var object = objects[i];
+            if (object.show) {
+                object.show = false;
+                hiddenObjectsScratch.push(object);
+            }
+        }
+        return hiddenObjectsScratch;
+    }
+
+    function showObjects(objects) {
+        var length = objects.length;
+        for (var i = 0; i < length; ++i) {
+            objects[i].show = true;
+        }
+    }
+
     function getRayIntersections(scene, ray, limit, objectsToExclude) {
         //>>includeStart('debug', pragmas.debug);
         Check.defined('ray', ray);
@@ -3710,10 +3730,13 @@ define([
             throw new DeveloperError('Ray intersections are only supported in 3D mode.');
         }
         //>>includeEnd('debug');
+        var hiddenObjects = hideObjects(objectsToExclude);
         var pickCallback = function() {
             return getRayIntersection(scene, ray);
         };
-        return drillPick(limit, pickCallback, objectsToExclude);
+        var result = drillPick(limit, pickCallback);
+        showObjects(hiddenObjects);
+        return result;
     }
 
     /**
