@@ -34,7 +34,16 @@ function startup(Cesium) {
     scene.moon = undefined;
     scene.globe = undefined;
 
-    scene.context.throwOnWebGLError = true;
+    //scene.context.throwOnWebGLError = true;
+
+    var height = 5000000.0;
+    var heading = 0.0;
+    var pitch = 0.0;
+    var roll = 0.0;
+    var hpr = new Cesium.HeadingPitchRoll(heading, pitch, roll);
+
+    var origin = Cesium.Cartesian3.fromDegrees(-123.0744619, 44.0503706, height);
+    var modelMatrix = Cesium.Transforms.headingPitchRollToFixedFrame(origin, hpr);
 
     //var envMapURL = '../../SampleData/models/EnvMap/rustig_koppie_envDiffuseHDR.dds';
     var envMapURL = '../../SampleData/models/EnvMap/rustig_koppie_envSpecularHDR.dds';
@@ -44,8 +53,8 @@ function startup(Cesium) {
     }).then(function(buffer) {
         var mipLevel = 0;
         var dds = parseDDS(buffer, true);
-        var width = dds.mipmaps[0].width;
-        var height = dds.mipmaps[0].height;
+        var width = dds.mipmaps[mipLevel].width;
+        var height = dds.mipmaps[mipLevel].height;
         var mipmapCount = dds.mipmapCount;
         var sources = {
             positiveX : { arrayBufferView : dds.mipmaps[mipLevel].data, width : width, height : height },
@@ -58,6 +67,8 @@ function startup(Cesium) {
         var mipLevels = new Array(mipmapCount - 1);
         for (var i = 0; i < mipmapCount - 1; ++i) {
             mipLevel = i + 1;
+            width = dds.mipmaps[mipLevel].width;
+            height = dds.mipmaps[mipLevel].height;
             mipLevels[i] = {
                 positiveX : { arrayBufferView : dds.mipmaps[mipLevel].data, width : width, height : height },
                 negativeX : { arrayBufferView : dds.mipmaps[mipLevel + mipmapCount].data, width : width, height : height },
@@ -67,25 +78,81 @@ function startup(Cesium) {
                 negativeZ : { arrayBufferView : dds.mipmaps[mipLevel + 5 * mipmapCount].data, width : width, height : height }
             };
         }
-        scene.skyBox = new Cesium.SkyBox({
-            cubeMap : new Cesium.CubeMap({
-                context : scene.context,
-                source : sources,
-                mipLevels : mipLevels,
-                pixelDatatype : Cesium.PixelDatatype.FLOAT
+
+        var cubeMap = new Cesium.CubeMap({
+            context : scene.context,
+            source : sources,
+            mipLevels : mipLevels,
+            pixelDatatype : Cesium.PixelDatatype.FLOAT,
+            sampler : new Cesium.Sampler({
+                minificationFilter : Cesium.TextureMinificationFilter.LINEAR_MIPMAP_LINEAR
             })
         });
+
+        var boxGeometryInstance = new Cesium.GeometryInstance({
+            geometry : Cesium.BoxGeometry.fromDimensions({
+                vertexFormat : Cesium.VertexFormat.POSITION_NORMAL_AND_ST,
+                dimensions : new Cesium.Cartesian3(500000.0, 500000.0, 500000.0)
+            })
+        });
+
+        var customAppearance = {};
+        customAppearance.vertexShaderSource =
+            'attribute vec3 position3DHigh;\n' +
+            'attribute vec3 position3DLow;\n' +
+            'attribute vec3 normal;\n' +
+            'attribute vec2 st;\n' +
+            'attribute float batchId;\n' +
+            '\n' +
+            'varying vec3 v_positionEC;\n' +
+            'varying vec3 v_normalEC;\n' +
+            '\n' +
+            'void main()\n' +
+            '{\n' +
+            '    vec4 p = czm_computePosition();\n' +
+            '\n' +
+            '    v_positionEC = (czm_modelViewRelativeToEye * p).xyz;\n' +
+            '    v_normalEC = czm_normal * normal;\n' +
+            '\n' +
+            '    gl_Position = czm_modelViewProjectionRelativeToEye * p;\n' +
+            '}';
+        customAppearance.fragmentShaderSource =
+            'uniform samplerCube u_cubeMap;\n' +
+            'varying vec3 v_positionEC;\n' +
+            'varying vec3 v_normalEC;\n' +
+            //'varying vec2 v_st;\n' +
+            //'\n' +
+            'void main()\n' +
+            '{\n' +
+            '    gl_FragColor = textureLod(u_cubeMap, normalize((czm_inverseModelView * vec4(v_positionEC, 1.0)).xyz), 5.0);\n' +
+            '}\n';
+        customAppearance.isTranslucent = function() { return false; };
+        customAppearance.getRenderState = function() {
+            return {
+                depthTest : {
+                    enabled : true
+                }
+            };
+        };
+        customAppearance.getVertexShaderSource = function() { return this.vertexShaderSource; };
+        customAppearance.getFragmentShaderSource = function() { return this.fragmentShaderSource; };
+        customAppearance.material = {
+            update : function() {},
+            _uniforms : {
+                u_cubeMap : function() {
+                    return cubeMap;
+                }
+            }
+        };
+        scene.primitives.add(new Cesium.Primitive({
+            geometryInstances : boxGeometryInstance,
+            appearance : customAppearance,
+            asynchronous : false,
+            modelMatrix : modelMatrix
+        }));
     });
 
     var modelURL = '../../SampleData/models/Spheres/MetalRoughSpheres.glb';
-    var height = 5000000.0;
-    var heading = 0.0;
-    var pitch = 0.0;
-    var roll = 0.0;
-    var hpr = new Cesium.HeadingPitchRoll(heading, pitch, roll);
-
-    var origin = Cesium.Cartesian3.fromDegrees(-123.0744619, 44.0503706, height);
-    var modelMatrix = Cesium.Transforms.headingPitchRollToFixedFrame(origin, hpr);
 
     var model = scene.primitives.add(Cesium.Model.fromGltf({
         url : modelURL,
@@ -178,11 +245,19 @@ function startup(Cesium) {
             var src = 0;
             for (var y = 0; y < height; y++) {
                 for (var x = 0; x < width; x++) {
+                    /*
                     var b = srcBuffer[src];
                     src++;
                     var g = srcBuffer[src];
                     src++;
                     var r = srcBuffer[src];
+                    src++;
+                    */
+                    var r = srcBuffer[src];
+                    src++;
+                    var g = srcBuffer[src];
+                    src++;
+                    var b = srcBuffer[src];
                     src++;
                     var a = srcBuffer[src];
                     src++;

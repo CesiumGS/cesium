@@ -194,8 +194,8 @@ define([
 
             var mipLevels = options.mipLevels;
             if (defined(mipLevels)) {
-                gl.generateMipmap(textureTarget);
                 var mipLevelsLength = mipLevels.length;
+                gl.generateMipmap(textureTarget);
                 for (var j = 0; j < mipLevelsLength; ++j) {
                     createFace(gl.TEXTURE_CUBE_MAP_POSITIVE_X, mipLevels[j].positiveX, j + 1, preMultiplyAlpha, flipY);
                     createFace(gl.TEXTURE_CUBE_MAP_NEGATIVE_X, mipLevels[j].negativeX, j + 1, preMultiplyAlpha, flipY);
@@ -204,6 +204,7 @@ define([
                     createFace(gl.TEXTURE_CUBE_MAP_POSITIVE_Z, mipLevels[j].positiveZ, j + 1, preMultiplyAlpha, flipY);
                     createFace(gl.TEXTURE_CUBE_MAP_NEGATIVE_Z, mipLevels[j].negativeZ, j + 1, preMultiplyAlpha, flipY);
                 }
+                this._hasMipmap = true;
             }
         } else {
             gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_X, 0, pixelFormat, size, size, 0, pixelFormat, pixelDatatype, null);
@@ -375,6 +376,9 @@ define([
      * });
      */
     CubeMap.prototype.generateMipmap = function(hint) {
+        if (this._hasMipmap) {
+            return;
+        }
         hint = defaultValue(hint, MipmapHint.DONT_CARE);
 
         //>>includeStart('debug', pragmas.debug);
