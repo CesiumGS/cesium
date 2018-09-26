@@ -3249,6 +3249,10 @@ define([
         var us = context.uniformState;
         var frameState = this._frameState;
 
+        // Update with previous frame's time, assuming that render is called before picking.
+        this._preUpdate.raiseEvent(this, frameState.time);
+        this._postUpdate.raiseEvent(this, frameState.time);
+
         var view = this._defaultView;
         this._view = view;
 
