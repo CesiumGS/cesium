@@ -461,10 +461,7 @@ defineSuite([
     });
 
     // Screen space techniques may produce unexpected results with 1x1 canvasses
-    function verifyLargerScene(groundPrimitive, expectedColor, destination) {
-        var largeScene = createScene({
-            canvas : createCanvas(2, 2)
-        });
+    function verifyLargerScene(largeScene, groundPrimitive, expectedColor, destination) {
         largeScene.render();
 
         largeScene.postProcessStages.fxaa.enabled = false;
@@ -498,7 +495,6 @@ defineSuite([
         expect(largeScene).toRenderAndCall(function(rgba) {
             expect(rgba.slice(0, 4)).toEqual(expectedColor);
         });
-        largeScene.destroyForSpecs();
     }
 
     it('renders batched instances', function() {
@@ -533,7 +529,11 @@ defineSuite([
             asynchronous : false
         });
 
-        verifyLargerScene(batchedPrimitive, [0, 255, 255, 255], rectangle);
+        var largeScene = createScene({
+            canvas : createCanvas(2, 2)
+        });
+        verifyLargerScene(largeScene, batchedPrimitive, [0, 255, 255, 255], rectangle);
+        largeScene.destroyForSpecs();
     });
 
     it('renders small GeometryInstances with texture classifying terrain', function() {
@@ -565,7 +565,11 @@ defineSuite([
             classificationType : ClassificationType.TERRAIN
         });
 
-        verifyLargerScene(smallRectanglePrimitive, [255, 255, 255, 255], smallRectangle);
+        var largeScene = createScene({
+            canvas : createCanvas(2, 2)
+        });
+        verifyLargerScene(largeScene, smallRectanglePrimitive, [255, 255, 255, 255], smallRectangle);
+        largeScene.destroyForSpecs();
     });
 
     it('renders large GeometryInstances with texture classifying terrain', function() {
@@ -597,7 +601,11 @@ defineSuite([
             classificationType : ClassificationType.TERRAIN
         });
 
-        verifyLargerScene(largeRectanglePrimitive, [255, 255, 255, 255], largeRectangle);
+        var largeScene = createScene({
+            canvas : createCanvas(2, 2)
+        });
+        verifyLargerScene(largeScene, largeRectanglePrimitive, [255, 255, 255, 255], largeRectangle);
+        largeScene.destroyForSpecs();
     });
 
     it('renders GeometryInstances with texture classifying terrain across the IDL', function() {
@@ -626,8 +634,11 @@ defineSuite([
             classificationType : ClassificationType.TERRAIN
         });
 
-        scene.morphToColumbusView(0);
-        verifyLargerScene(largeRectanglePrimitive, [255, 255, 255, 255], largeRectangle);
+        var largeScene = createScene({
+            canvas : createCanvas(2, 2)
+        });
+        verifyLargerScene(largeScene, largeRectanglePrimitive, [255, 255, 255, 255], largeRectangle);
+        largeScene.destroyForSpecs();
     });
 
     it('renders with invert classification and an opaque color', function() {
@@ -1186,9 +1197,13 @@ defineSuite([
             classificationType : ClassificationType.BOTH
         });
 
+        var largeScene = createScene({
+            canvas : createCanvas(2, 2)
+        });
         expect(function() {
-            verifyLargerScene(smallRectanglePrimitive, [255, 255, 255, 255], smallRectangle);
+            verifyLargerScene(largeScene, smallRectanglePrimitive, [255, 255, 255, 255], smallRectangle);
         }).toThrowDeveloperError();
+        largeScene.destroyForSpecs();
     });
 
     it('update throws when one batched instance color is undefined', function() {
