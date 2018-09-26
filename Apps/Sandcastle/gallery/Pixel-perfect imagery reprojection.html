@@ -29,16 +29,20 @@ function startup(Cesium) {
 //Sandcastle_Begin
 
 var mollweideProjection = new Cesium.Proj4Projection('+proj=moll +lon_0=0 +x_0=0 +y_0=0 +a=6371000 +b=6371000 +units=m +no_defs');
+var geographicProjection = new Cesium.GeographicProjection();
 
 var viewer = new Cesium.Viewer('cesiumContainer', {
     sceneMode : Cesium.SceneMode.SCENE2D,
-    mapProjection : new Cesium.GeographicProjection()
+    imageryProvider : Cesium.createTileMapServiceImageryProvider({
+        url : Cesium.buildModuleUrl('Assets/Textures/NaturalEarthII')
+    }),
+    mapProjection : geographicProjection
 });
 
-var pixelPerfectReprojection = new Cesium.PixelPerfectReprojectedImagery({
-    url : '../../SampleData/Brazil_elevation_ESRI53009.png',
-    projectedRectangle : new Cesium.Rectangle(-8309084.8709259927272797,-6474832.4202510649338365,-2331162.9914685478433967,1661637.9380288750398904),
-    projection : mollweideProjection,
+var pixelPerfectReprojection = new Cesium.ImageryMosaic({
+    urls : ['../../SampleData/Brazil_elevation_ESRI53009.png'],
+    projectedRectangles : [new Cesium.Rectangle(-8309084.8709259927272797,-6474832.4202510649338365,-2331162.9914685478433967,1661637.9380288750398904)],
+    projections : [mollweideProjection],
     scene : viewer.scene
 });
 

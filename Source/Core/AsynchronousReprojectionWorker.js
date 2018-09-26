@@ -183,11 +183,12 @@ define([
         }
         var imageIndex = intersectImageIndices[index];
         return workerClass.load(workerClass.urls[imageIndex])
-            .then(function(bitmap) {
+            .then(function(sourceBitmap) {
                 var targetBitmap = workerClass.targetBitmap;
-                var projectedRectangle = workerClass.projectedRectangles[imageIndex];
+                var sourceRectangle = workerClass.unprojectedRectangles[imageIndex];
+                var sourceProjectedRectangle = workerClass.projectedRectangles[imageIndex];
                 var projection = workerClass.projections[imageIndex];
-                reprojectImage(targetBitmap, bitmap, requestRectangle, projectedRectangle, projection);
+                reprojectImage(targetBitmap, requestRectangle, sourceBitmap, sourceRectangle, sourceProjectedRectangle, projection);
 
                 return projectEach(requestRectangle, intersectImageIndices, workerClass, index + 1);
             });

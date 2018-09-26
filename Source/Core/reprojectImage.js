@@ -20,36 +20,57 @@ define([
     var targetPixcoordScratch = new Cartesian2();
 
     /**
+     * Create an unprojected version of the source imagery that covers the given rectangle.
      *
-     * @param {Bitmap} target
-     * @param {Bitmap} source
-     * @param {Rectangle} rectangle
-     * @param {Rectangle} projectedRectangle
-     * @param {MapProjection} projection
+     * @param {Bitmap} target Target bitmap for unprojection.
+     * @param {Rectangle} targetRectangle Rectangle that the target bitmap should cover in geographic coordinates
+     * @param {Bitmap} source Source bitmap in some MapProjection
+     * @param {Rectangle} sourceRectangle Rectangle that the source bitmap covers in geographic coordinates
+     * @param {Rectangle} sourceProjectedRectangle Rectangle that the source bitmap covers in its own coordinate system
+     * @param {MapProjection} projection Projection for the source image's coordinate system
      */
-    function reprojectImage(target, source, rectangle, projectedRectangle, projection) { // TODO: take the image's unprojected rectangle, use to reduce reprojections
+    function reprojectImage(target, targetRectangle, source, sourceRectangle, sourceProjectedRectangle, projection) {
         var targetWidth = target.width;
         var targetHeight = target.height;
 
-        var cartographicWidth = Rectangle.computeWidth(rectangle);
-        var cartographicHeight = Rectangle.computeHeight(rectangle);
+        var cartographicWidth = Rectangle.computeWidth(targetRectangle);
+        var cartographicHeight = Rectangle.computeHeight(targetRectangle);
         var longitudeStep = cartographicWidth / targetWidth;
         var latitudeStep = cartographicHeight / targetHeight;
-        var west = rectangle.west;
-        var north = rectangle.north;
+        var west = targetRectangle.west;
+        var north = targetRectangle.north;
 
-        var inverseProjectedWidth = 1.0 / Rectangle.computeWidth(projectedRectangle);
-        var inverseProjectedHeight = 1.0 / Rectangle.computeHeight(projectedRectangle);
-        var projectedWidthOrigin = projectedRectangle.west;
-        var projectedHeightOrigin = projectedRectangle.south;
+        var inverseProjectedWidth = 1.0 / Rectangle.computeWidth(sourceProjectedRectangle);
+        var inverseProjectedHeight = 1.0 / Rectangle.computeHeight(sourceProjectedRectangle);
+        var projectedWidthOrigin = sourceProjectedRectangle.west;
+        var projectedHeightOrigin = sourceProjectedRectangle.south;
 
         var cartographic = cartographicScratch;
         var color = colorScratch;
         var sourceTexcoord = sourceTexcoordScratch;
         var targetPixcoord = targetPixcoordScratch;
 
-        for (var y = 0; y < targetHeight; y++) {
-            for (var x = 0; x < targetWidth; x++) {
+        // Trim reprojection area to intersection of targetRectangle and source image's coverage in geographic.
+        var startX = 0;
+        var startY = 0;
+        var endX = targetHeight;
+        var endY = targetWidth;
+
+        if (sourceRectangle.west > targetRectangle.west) {
+            startX = Math.floor((sourceRectangle.west - targetRectangle.west) / longitudeStep);
+        }
+        if (sourceRectangle.east < targetRectangle.east) {
+            endX = Math.floor((sourceRectangle.east - targetRectangle.west) / longitudeStep);
+        }
+        if (sourceRectangle.north < targetRectangle.north) {
+            startY = Math.floor((targetRectangle.north - sourceRectangle.north) / latitudeStep);
+        }
+        if (sourceRectangle.south > targetRectangle.south) {
+            endY = Math.floor((targetRectangle.north - sourceRectangle.south) / latitudeStep);
+        }
+
+        for (var y = startY; y < endY; y++) {
+            for (var x = startX; x < endX; x++) {
                 cartographic.longitude = (x + 0.5) * longitudeStep + west;
                 cartographic.latitude = north - (y + 0.5) * latitudeStep;
 
@@ -60,7 +81,7 @@ define([
 
                 cartographic.longitude = projected.x;
                 cartographic.latitude = projected.y;
-                if (!Rectangle.contains(projectedRectangle, cartographic)) {
+                if (!Rectangle.contains(sourceProjectedRectangle, cartographic)) {
                     continue;
                 }
 
