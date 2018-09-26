@@ -674,12 +674,14 @@ defineSuite([
                 var surface = scene.globe._surface;
                 var replacementQueue = surface._tileReplacementQueue;
                 expect(replacementQueue.count).toBeGreaterThan(0);
+                var oldTile = replacementQueue.head;
 
                 surface.tileProvider.terrainProvider = new EllipsoidTerrainProvider();
 
                 scene.renderForSpecs();
 
-                expect(replacementQueue.count).toBe(0);
+                expect(replacementQueue.count).toBeGreaterThan(0);
+                expect(replacementQueue.head).not.toBe(oldTile);
             });
         });
 

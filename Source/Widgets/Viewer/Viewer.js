@@ -1,6 +1,7 @@
 define([
         '../../Core/BoundingSphere',
         '../../Core/Cartesian3',
+        '../../Core/Cartographic',
         '../../Core/Clock',
         '../../Core/defaultValue',
         '../../Core/defined',
@@ -22,6 +23,7 @@ define([
         '../../DataSources/EntityView',
         '../../DataSources/Property',
         '../../Scene/Cesium3DTileset',
+        '../../Scene/computeFlyToLocationForRectangle',
         '../../Scene/ImageryLayer',
         '../../Scene/SceneMode',
         '../../Scene/TimeDynamicPointCloud',
@@ -49,6 +51,7 @@ define([
     ], function(
         BoundingSphere,
         Cartesian3,
+        Cartographic,
         Clock,
         defaultValue,
         defined,
@@ -70,6 +73,7 @@ define([
         EntityView,
         Property,
         Cesium3DTileset,
+        computeFlyToLocationForRectangle,
         ImageryLayer,
         SceneMode,
         TimeDynamicPointCloud,
@@ -1810,9 +1814,11 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
             //If the zoom target is a rectangular imagery in an ImageLayer
             if (zoomTarget instanceof ImageryLayer) {
                 zoomTarget.getViewableRectangle().then(function(rectangle) {
+                    return computeFlyToLocationForRectangle(rectangle, that.scene);
+                }).then(function(position) {
                     //Only perform the zoom if it wasn't cancelled before the promise was resolved
                     if (that._zoomPromise === zoomPromise) {
-                        that._zoomTarget = rectangle;
+                        that._zoomTarget = position;
                     }
                 });
                 return;
@@ -1976,9 +1982,14 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         }
 
         // If zoomTarget was an ImageryLayer
-        if (target instanceof Rectangle) {
+        var isCartographic = target instanceof Cartographic;
+        if (target instanceof Rectangle || isCartographic) {
+            var destination = target;
+            if (isCartographic) {
+                destination = scene.mapProjection.ellipsoid.cartographicToCartesian(destination);
+            }
             options = {
-                destination : target,
+                destination : destination,
                 duration : zoomOptions.duration,
                 maximumHeight : zoomOptions.maximumHeight,
                 complete : function() {

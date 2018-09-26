@@ -64,8 +64,8 @@ define([
 
     /**
      * Represents the contents of a
-     * {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/blob/master/TileFormats/Instanced3DModel/README.md|Instanced 3D Model}
-     * tile in a {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/blob/master/README.md|3D Tiles} tileset.
+     * {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/specification/TileFormats/Instanced3DModel|Instanced 3D Model}
+     * tile in a {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/specification|3D Tiles} tileset.
      * <p>
      * Implements the {@link Cesium3DTileContent} interface.
      * </p>
@@ -451,8 +451,8 @@ define([
         this._batchTable.setAllColor(color);
     };
 
-    Instanced3DModel3DTileContent.prototype.applyStyle = function(frameState, style) {
-        this._batchTable.applyStyle(frameState, style);
+    Instanced3DModel3DTileContent.prototype.applyStyle = function(style) {
+        this._batchTable.applyStyle(style);
     };
 
     Instanced3DModel3DTileContent.prototype.update = function(tileset, frameState) {

@@ -407,14 +407,11 @@ define([
      * @param {Ray} ray The ray to test for intersection.
      * @param {Scene} scene The scene.
      * @param {Cartesian3} [result] The object onto which to store the result.
-     * @returns {Cartesian3|undefined} The intersection or <code>undefined</code> if none was found.
+     * @returns {Cartesian3|undefined} The intersection or <code>undefined</code> if none was found.  The returned position is in projected coordinates for 2D and Columbus View.
      *
-     * @example
-     * // find intersection of ray through a pixel and the globe
-     * var ray = viewer.camera.getPickRay(windowCoordinates);
-     * var intersection = globe.pick(ray, scene);
+     * @private
      */
-    Globe.prototype.pick = function(ray, scene, result) {
+    Globe.prototype.pickWorldCoordinates = function(ray, scene, result) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(ray)) {
             throw new DeveloperError('ray is required');
@@ -470,6 +467,31 @@ define([
         }
 
         return intersection;
+    };
+
+    var cartoScratch = new Cartographic();
+    /**
+     * Find an intersection between a ray and the globe surface that was rendered. The ray must be given in world coordinates.
+     *
+     * @param {Ray} ray The ray to test for intersection.
+     * @param {Scene} scene The scene.
+     * @param {Cartesian3} [result] The object onto which to store the result.
+     * @returns {Cartesian3|undefined} The intersection or <code>undefined</code> if none was found.
+     *
+     * @example
+     * // find intersection of ray through a pixel and the globe
+     * var ray = viewer.camera.getPickRay(windowCoordinates);
+     * var intersection = globe.pick(ray, scene);
+     */
+    Globe.prototype.pick = function(ray, scene, result) {
+        result = this.pickWorldCoordinates(ray, scene, result);
+        if (defined(result) && scene.mode !== SceneMode.SCENE3D) {
+            result = Cartesian3.fromElements(result.y, result.z, result.x, result);
+            var carto = scene.mapProjection.unproject(result, cartoScratch);
+            result = scene.globe.ellipsoid.cartographicToCartesian(carto, result);
+        }
+
+        return result;
     };
 
     var scratchGetHeightCartesian = new Cartesian3();
