@@ -133,6 +133,9 @@ define([
      * @private
      */
     GroundGeometryUpdater.getGeometryHeight = function(height, heightReference) {
+        //>>includeStart('debug', pragmas.debug);
+        Check.defined('heightReference', heightReference);
+        //>>includeEnd('debug');
         if (!defined(height)) {
             if (heightReference !== HeightReference.NONE) {
                 oneTimeWarning(oneTimeWarning.geometryHeightReference);
@@ -150,6 +153,9 @@ define([
      * @private
      */
     GroundGeometryUpdater.getGeometryExtrudedHeight = function(extrudedHeight, extrudedHeightReference) {
+        //>>includeStart('debug', pragmas.debug);
+        Check.defined('extrudedHeightReference', extrudedHeightReference);
+        //>>includeEnd('debug');
         if (!defined(extrudedHeight)) {
             if (extrudedHeightReference !== HeightReference.NONE) {
                 oneTimeWarning(oneTimeWarning.geometryExtrudedHeightReference);
