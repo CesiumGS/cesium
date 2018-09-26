@@ -528,9 +528,17 @@ defineSuite([
             var rectangle1 = createLargeRectangle(0.0);
             var rectangle2 = createLargeRectangle(1.0);
             var rectangle3 = createLargeRectangle(2.0);
+            var rectangle4 = createLargeRectangle(3.0);
+            rectangle4.show = false;
+
             expect(scene).toPickFromRayAndCall(function(result) {
                 expect(result.object.primitive).toBe(rectangle1);
-            }, primitiveRay, [rectangle3, rectangle2]);
+            }, primitiveRay, [rectangle2, rectangle3, rectangle4]);
+
+            // Tests that rectangle4 does not get un-hidden
+            expect(scene).toPickFromRayAndCall(function(result) {
+                expect(result.object.primitive).toBe(rectangle3);
+            }, primitiveRay);
         });
 
         it('throws if ray is undefined', function() {
