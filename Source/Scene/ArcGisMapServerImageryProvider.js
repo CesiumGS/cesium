@@ -281,13 +281,13 @@ define([
             var nativeRectangle = imageryProvider._tilingScheme.tileXYToNativeRectangle(x, y, level);
             var bbox = nativeRectangle.west + ',' + nativeRectangle.south + ',' + nativeRectangle.east + ',' + nativeRectangle.north;
 
-            var query = {
+            var query = combine(imageryProvider.parameters, {
                 bbox: bbox,
                 size: imageryProvider._tileWidth + ',' + imageryProvider._tileHeight,
                 format: 'png',
                 transparent: true,
                 f: 'image'
-            };
+            });
 
             if (imageryProvider._tilingScheme.projection instanceof GeographicProjection) {
                 query.bboxSR = 4326;
@@ -680,7 +680,7 @@ define([
             layers += ':' + this._layers;
         }
 
-        var query = {
+        var query = combine(this.parameters, {
             f: 'json',
             tolerance: 2,
             geometryType: 'esriGeometryPoint',
@@ -689,7 +689,7 @@ define([
             imageDisplay: this._tileWidth + ',' + this._tileHeight + ',96',
             sr: sr,
             layers: layers
-        };
+        });
 
         var resource = this._resource.getDerivedResource({
             url: 'identify',
