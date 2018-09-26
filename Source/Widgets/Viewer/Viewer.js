@@ -457,7 +457,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
 
         var eventHelper = new EventHelper();
 
-        eventHelper.add(clock.onTick, Viewer.prototype._onTick, this);
+        eventHelper.add(scene.preUpdate, Viewer.prototype._onPreUpdate, this);
         eventHelper.add(scene.morphStart, Viewer.prototype._clearTrackedObject, this);
 
         // Selection Indicator
@@ -1285,7 +1285,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
             }
         },
         /**
-         * Gets the event that is raised when the selected entity chages
+         * Gets the event that is raised when the selected entity changes.
          * @memberof Viewer.prototype
          * @type {Event}
          * @readonly
@@ -1296,7 +1296,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
             }
         },
         /**
-         * Gets the event that is raised when the tracked entity chages
+         * Gets the event that is raised when the tracked entity changes.
          * @memberof Viewer.prototype
          * @type {Event}
          * @readonly
@@ -1586,9 +1586,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
     /**
      * @private
      */
-    Viewer.prototype._onTick = function(clock) {
-        var time = clock.currentTime;
-
+    Viewer.prototype._onPreUpdate = function(scene, time) {
         var isUpdated = this._dataSourceDisplay.update(time);
         if (this._allowDataSourcesToSuspendAnimation) {
             this._clockViewModel.canAnimate = isUpdated;

@@ -934,8 +934,7 @@ defineSuite([
             tileset.clippingPlanes = new ClippingPlaneCollection({
                 planes : [
                     clipPlane
-                ],
-                modelMatrix : Transforms.eastNorthUpToFixedFrame(tileset.boundingSphere.center)
+                ]
             });
 
             expect(scene).notToRender(color);
