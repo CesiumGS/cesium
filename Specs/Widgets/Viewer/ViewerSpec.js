@@ -973,7 +973,7 @@ defineSuite([
 
         viewer.selectedEntity = entity;
 
-        viewer.clock.tick();
+        viewer.render();
         expect(viewModel.showInfo).toBe(true);
         expect(viewModel.titleText).toEqual(entity.id);
         expect(viewModel.description).toEqual('');
@@ -981,14 +981,14 @@ defineSuite([
         entity.name = 'Yes, this is name.';
         entity.description = 'tubelcane';
 
-        viewer.clock.tick();
+        viewer.render();
         expect(viewModel.showInfo).toBe(true);
         expect(viewModel.titleText).toEqual(entity.name);
         expect(viewModel.description).toEqual(entity.description.getValue());
 
         viewer.selectedEntity = undefined;
 
-        viewer.clock.tick();
+        viewer.render();
         expect(viewModel.showInfo).toBe(false);
         expect(viewModel.titleText).toEqual('');
         expect(viewModel.description).toEqual('');
