@@ -247,6 +247,14 @@ defineSuite([
         model.show = false;
     }
 
+    function colorsEqualEpsilon(rgba1, rgba2, epsilon) {
+        epsilon = defaultValue(epsilon, 5);
+        return Math.abs(rgba1[0] - rgba2[0]) <= epsilon &&
+                Math.abs(rgba1[1] - rgba2[1]) <= epsilon &&
+                Math.abs(rgba1[2] - rgba2[2]) <= epsilon &&
+                Math.abs(rgba1[3] - rgba2[3]) <= epsilon;
+    }
+
     it('fromGltf throws without options', function() {
         expect(function() {
             Model.fromGltf();
@@ -945,8 +953,12 @@ defineSuite([
         return loadModel(boxGltf2Url).then(function(m) {
             verifyRender(m);
             m.show = true;
-            expect(scene).toRender([169, 3, 3, 255]); // Red
-            primitives.remove(m);
+
+            expect(scene).toRenderAndCall(function(rgba) {
+                // Expect a red color.
+                expect(colorsEqualEpsilon([169, 3, 3, 255], rgba)).toBe(true);
+                primitives.remove(m);
+            });
         });
     });
 
