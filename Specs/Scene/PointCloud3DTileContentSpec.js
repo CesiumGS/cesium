@@ -20,7 +20,8 @@ defineSuite([
         'Specs/createCanvas',
         'Specs/createScene',
         'Specs/pollToPromise',
-        'ThirdParty/when'
+        'ThirdParty/when',
+        'Scene/Cesium3DTileRefine'
     ], function(
         PointCloud3DTileContent,
         Cartesian3,
@@ -43,7 +44,8 @@ defineSuite([
         createCanvas,
         createScene,
         pollToPromise,
-        when) {
+        when,
+        Cesium3DTileRefine) {
     'use strict';
 
     var scene;
@@ -517,6 +519,7 @@ defineSuite([
 
         return Cesium3DTilesTester.loadTileset(scene, pointCloudNoColorUrl).then(function(tileset) {
             tileset.pointCloudShading.eyeDomeLighting = false;
+            tileset.refine = Cesium3DTileRefine.REPLACE;
             postLoadCallback(scene, tileset);
             scene.destroyForSpecs();
         });
