@@ -311,8 +311,13 @@ define([
         pointCloud.attenuation = defined(pointCloudShading) ? pointCloudShading.attenuation : false;
         pointCloud.geometricError = getGeometricError(this);
         pointCloud.geometricErrorScale = defined(pointCloudShading) ? pointCloudShading.geometricErrorScale : 1.0;
-        pointCloud.maximumAttenuation = (defined(pointCloudShading) && defined(pointCloudShading.maximumAttenuation)) ? pointCloudShading.maximumAttenuation : tileset.maximumScreenSpaceError;
-        pointCloud.maximumAttenuation = (defined(tile.refine) && tile.refine === Cesium3DTileRefine.ADD) ? 5.0 : pointCloud.maximumAttenuation;
+        if (defined(pointCloudShading) && defined(pointCloudShading.maximumAttenuation)) {
+            pointCloud.maximumAttenuation = pointCloudShading.maximumAttenuation;
+        } else if (tile.refine === Cesium3DTileRefine.ADD) {
+            pointCloud.maximumAttenuation = 5.0;
+        } else {
+            pointCloud.maximumAttenuation = tileset.maximumScreenSpaceError;
+        }
 
         pointCloud.update(frameState);
     };
