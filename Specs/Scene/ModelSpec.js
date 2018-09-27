@@ -948,8 +948,9 @@ defineSuite([
 
             expect(scene).toRenderAndCall(function(rgba) {
                 expect(rgba).toEqualEpsilon([169, 3, 3, 255], 5); // Red
-                primitives.remove(m);
             });
+
+            primitives.remove(m);
         });
     });
 
