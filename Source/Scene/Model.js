@@ -662,6 +662,11 @@ define([
         this._rtcCenterEye = undefined; // in eye coordinates
         this._rtcCenter3D = undefined;  // in world coordinates
         this._rtcCenter2D = undefined;  // in projected world coordinates
+
+        this.diffuseIrradiance = undefined;
+        this._diffuseIrradiance = undefined;
+        this.specularEnvironmentMap = undefined;
+        this._specularEnvironmentMap = undefined;
     }
 
     defineProperties(Model.prototype, {
@@ -2057,6 +2062,13 @@ define([
                 '} \n';
         }
 
+        if (defined(model._diffuseIrradiance)) {
+            drawFS = '#define DIFFUSE_IBL \n' + 'uniform samplerCube gltf_diffuseIrradiance; \n' + drawFS;
+        }
+        if (defined(model._specularEnvironmentMap)) {
+            drawFS = '#define SPECULAR_IBL \n' + 'uniform samplerCube gltf_specularMap; \n' + 'uniform float gltf_maxSpecularLOD; \n' + drawFS;
+        }
+
         createAttributesAndProgram(id, drawFS, drawVS, model, context);
     }
 
@@ -2105,6 +2117,13 @@ define([
                 '    non_gamma_corrected_main(); \n' +
                 '    gl_FragColor.rgb = czm_gammaCorrect(gl_FragColor.rgb); \n' +
                 '} \n';
+        }
+
+        if (defined(model._diffuseIrradiance)) {
+            drawFS = '#define DIFFUSE_IBL \n' + 'uniform samplerCube gltf_diffuseIrradiance; \n' + drawFS;
+        }
+        if (defined(model._specularEnvironmentMap)) {
+            drawFS = '#define SPECULAR_IBL \n' + 'uniform samplerCube gltf_specularMap; \n' + 'uniform float gltf_maxSpecularLOD; \n' + drawFS;
         }
 
         createAttributesAndProgram(id, drawFS, drawVS, model, context);
@@ -3063,6 +3082,24 @@ define([
         };
     }
 
+    function createDiffuseIrradianceFunction(model) {
+        return function() {
+            return model._diffuseIrradiance;
+        };
+    }
+
+    function createSpecularEnvironmentMapFunction(model) {
+        return function() {
+            return model._specularEnvironmentMap;
+        };
+    }
+
+    function createSpecularEnvironmentMapLOD(model) {
+        return function() {
+            return Math.floor(Math.log2(model._specularEnvironmentMap.width)) - 3.0;
+        };
+    }
+
     function triangleCountFromPrimitiveIndices(primitive, indicesCount) {
         switch (primitive.mode) {
             case PrimitiveType.TRIANGLES:
@@ -3158,9 +3195,12 @@ define([
             uniformMap = combine(uniformMap, {
                 gltf_color : createColorFunction(model),
                 gltf_colorBlend : createColorBlendFunction(model),
-                gltf_clippingPlanes: createClippingPlanesFunction(model),
-                gltf_clippingPlanesEdgeStyle: createClippingPlanesEdgeStyleFunction(model),
-                gltf_clippingPlanesMatrix: createClippingPlanesMatrixFunction(model)
+                gltf_clippingPlanes : createClippingPlanesFunction(model),
+                gltf_clippingPlanesEdgeStyle : createClippingPlanesEdgeStyleFunction(model),
+                gltf_clippingPlanesMatrix : createClippingPlanesMatrixFunction(model),
+                gltf_diffuseIrradiance : createDiffuseIrradianceFunction(model),
+                gltf_specularMap : createSpecularEnvironmentMapFunction(model),
+                gltf_maxSpecularLOD : createSpecularEnvironmentMapLOD(model)
             });
 
             // Allow callback to modify the uniformMap
@@ -4457,7 +4497,7 @@ define([
                 currentClippingPlanesState = clippingPlanes.clippingPlanesState;
             }
 
-            var shouldRegenerateShaders = this._clippingPlanesState !== currentClippingPlanesState;
+            var shouldRegenerateShaders = this._clippingPlanesState !== currentClippingPlanesState || this._diffuseIrradiance !== this.diffuseIrradiance || this._specularEnvironmentMap !== this.specularEnvironmentMap;
             this._clippingPlanesState = currentClippingPlanesState;
 
             // Regenerate shaders if color shading changed from last update
@@ -4565,7 +4605,10 @@ define([
         var cachedRendererResources = model._cachedRendererResources;
         destroyIfNotCached(rendererResources, cachedRendererResources);
 
-        if (isClippingEnabled(model) || isColorShadingEnabled(model)) {
+        if (isClippingEnabled(model) || isColorShadingEnabled(model) || model.diffuseIrradiance !== model._diffuseIrradiance || model.specularEnvironmentMap !== model._specularEnvironmentMap) {
+            model._diffuseIrradiance = model.diffuseIrradiance;
+            model._specularEnvironmentMap = model.specularEnvironmentMap;
+
             rendererResources.programs = {};
             rendererResources.silhouettePrograms = {};
 

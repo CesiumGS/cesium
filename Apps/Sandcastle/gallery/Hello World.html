@@ -45,50 +45,141 @@ function startup(Cesium) {
     var origin = Cesium.Cartesian3.fromDegrees(-123.0744619, 44.0503706, height);
     var modelMatrix = Cesium.Transforms.headingPitchRollToFixedFrame(origin, hpr);
 
-    //var envMapURL = '../../SampleData/models/EnvMap/rustig_koppie_envDiffuseHDR.dds';
-    var envMapURL = '../../SampleData/models/EnvMap/rustig_koppie_envSpecularHDR.dds';
+    //var diffuseEnvMapURL = '../../SampleData/models/EnvMap/rustig_koppie_envDiffuseHDR.dds';
+    //var specularEnvMapURL = '../../SampleData/models/EnvMap/rustig_koppie_envSpecularHDR.dds';
+    var diffuseEnvMapURL = '../../SampleData/models/EnvMap/gold_roomDiffuseHDR.dds';
+    var specularEnvMapURL = '../../SampleData/models/EnvMap/gold_roomSpecularHDR.dds';
+    var origEnvMapURL = '../../SampleData/models/EnvMap/gold_roomEnvHDR.dds';
+    var modelURL = '../../SampleData/models/Spheres/MetalRoughSpheres.glb';
 
-    Cesium.Resource.fetchArrayBuffer({
-        url : envMapURL
-    }).then(function(buffer) {
-        var mipLevel = 0;
-        var dds = parseDDS(buffer, true);
-        var width = dds.mipmaps[mipLevel].width;
-        var height = dds.mipmaps[mipLevel].height;
-        var mipmapCount = dds.mipmapCount;
-        var sources = {
-            positiveX : { arrayBufferView : dds.mipmaps[mipLevel].data, width : width, height : height },
-            negativeX : { arrayBufferView : dds.mipmaps[mipLevel + mipmapCount].data, width : width, height : height },
-            positiveY : { arrayBufferView : dds.mipmaps[mipLevel + 2 * mipmapCount].data, width : width, height : height },
-            negativeY : { arrayBufferView : dds.mipmaps[mipLevel + 3 * mipmapCount].data, width : width, height : height },
-            positiveZ : { arrayBufferView : dds.mipmaps[mipLevel + 4 * mipmapCount].data, width : width, height : height },
-            negativeZ : { arrayBufferView : dds.mipmaps[mipLevel + 5 * mipmapCount].data, width : width, height : height }
-        };
-        var mipLevels = new Array(mipmapCount - 1);
-        for (var i = 0; i < mipmapCount - 1; ++i) {
-            mipLevel = i + 1;
-            width = dds.mipmaps[mipLevel].width;
-            height = dds.mipmaps[mipLevel].height;
-            mipLevels[i] = {
-                positiveX : { arrayBufferView : dds.mipmaps[mipLevel].data, width : width, height : height },
-                negativeX : { arrayBufferView : dds.mipmaps[mipLevel + mipmapCount].data, width : width, height : height },
-                positiveY : { arrayBufferView : dds.mipmaps[mipLevel + 2 * mipmapCount].data, width : width, height : height },
-                negativeY : { arrayBufferView : dds.mipmaps[mipLevel + 3 * mipmapCount].data, width : width, height : height },
-                positiveZ : { arrayBufferView : dds.mipmaps[mipLevel + 4 * mipmapCount].data, width : width, height : height },
-                negativeZ : { arrayBufferView : dds.mipmaps[mipLevel + 5 * mipmapCount].data, width : width, height : height }
-            };
-        }
+    var model = scene.primitives.add(Cesium.Model.fromGltf({
+        url : modelURL,
+        modelMatrix : modelMatrix,
+        minimumPixelSize : 128
+    }));
 
-        var cubeMap = new Cesium.CubeMap({
-            context : scene.context,
-            source : sources,
-            mipLevels : mipLevels,
-            pixelDatatype : Cesium.PixelDatatype.FLOAT,
-            sampler : new Cesium.Sampler({
-                minificationFilter : Cesium.TextureMinificationFilter.LINEAR_MIPMAP_LINEAR
-            })
+    model.readyPromise.then(function(model) {
+        var camera = viewer.camera;
+
+        // Zoom to model
+        var controller = scene.screenSpaceCameraController;
+        var r = 2.0 * Math.max(model.boundingSphere.radius, camera.frustum.near);
+        controller.minimumZoomDistance = r * 0.5;
+
+        var center = Cesium.Matrix4.multiplyByPoint(model.modelMatrix, model.boundingSphere.center, new Cesium.Cartesian3());
+        var heading = Cesium.Math.toRadians(230.0);
+        var pitch = Cesium.Math.toRadians(-20.0);
+        camera.lookAt(center, new Cesium.HeadingPitchRange(heading, pitch, r * 2.0));
+
+        loadEnvMap(diffuseEnvMapURL).then(function(cubeMap) {
+            model.diffuseIrradiance = cubeMap;
+            //viewCubeMap(cubeMap);
         });
+        loadEnvMap(specularEnvMapURL).then(function(cubeMap) {
+            model.specularEnvironmentMap = cubeMap;
+            //viewCubeMap(cubeMap, 2.0);
+        });
+        loadEnvMap(origEnvMapURL).then(function(cubeMap) {
+            viewCubeMap(cubeMap);
+        });
+    }).otherwise(function(error){
+        window.alert(error);
+    });
 
+    function loadEnvMap(url) {
+        return Cesium.Resource.fetchArrayBuffer({
+            url : url
+        }).then(function(buffer) {
+            var mipLevel = 0;
+            var dds = parseDDS(buffer, true);
+            var width = dds.mipmaps[mipLevel].width;
+            var height = dds.mipmaps[mipLevel].height;
+            var mipmapCount = dds.mipmapCount;
+            var sources = {
+                positiveX : {
+                    arrayBufferView : dds.mipmaps[mipLevel].data,
+                    width : width,
+                    height : height
+                },
+                negativeX : {
+                    arrayBufferView : dds.mipmaps[mipLevel + mipmapCount].data,
+                    width : width,
+                    height : height
+                },
+                positiveY : {
+                    arrayBufferView : dds.mipmaps[mipLevel + 2 * mipmapCount].data,
+                    width : width,
+                    height : height
+                },
+                negativeY : {
+                    arrayBufferView : dds.mipmaps[mipLevel + 3 * mipmapCount].data,
+                    width : width,
+                    height : height
+                },
+                positiveZ : {
+                    arrayBufferView : dds.mipmaps[mipLevel + 4 * mipmapCount].data,
+                    width : width,
+                    height : height
+                },
+                negativeZ : {
+                    arrayBufferView : dds.mipmaps[mipLevel + 5 * mipmapCount].data,
+                    width : width,
+                    height : height
+                }
+            };
+            var mipLevels = new Array(mipmapCount - 1);
+            for (var i = 0; i < mipmapCount - 1; ++i) {
+                mipLevel = i + 1;
+                width = dds.mipmaps[mipLevel].width;
+                height = dds.mipmaps[mipLevel].height;
+                mipLevels[i] = {
+                    positiveX : {
+                        arrayBufferView : dds.mipmaps[mipLevel].data,
+                        width : width,
+                        height : height
+                    },
+                    negativeX : {
+                        arrayBufferView : dds.mipmaps[mipLevel + mipmapCount].data,
+                        width : width,
+                        height : height
+                    },
+                    positiveY : {
+                        arrayBufferView : dds.mipmaps[mipLevel + 2 * mipmapCount].data,
+                        width : width,
+                        height : height
+                    },
+                    negativeY : {
+                        arrayBufferView : dds.mipmaps[mipLevel + 3 * mipmapCount].data,
+                        width : width,
+                        height : height
+                    },
+                    positiveZ : {
+                        arrayBufferView : dds.mipmaps[mipLevel + 4 * mipmapCount].data,
+                        width : width,
+                        height : height
+                    },
+                    negativeZ : {
+                        arrayBufferView : dds.mipmaps[mipLevel + 5 * mipmapCount].data,
+                        width : width,
+                        height : height
+                    }
+                };
+            }
+
+            return new Cesium.CubeMap({
+                context : scene.context,
+                source : sources,
+                mipLevels : mipLevels,
+                pixelDatatype : Cesium.PixelDatatype.FLOAT,
+                sampler : new Cesium.Sampler({
+                    minificationFilter : Cesium.TextureMinificationFilter.LINEAR_MIPMAP_LINEAR
+                })
+            });
+        });
+    }
+
+    function viewCubeMap(cubeMap, lod) {
+        lod = Cesium.defaultValue(lod, 0.0);
         var boxGeometryInstance = new Cesium.GeometryInstance({
             geometry : Cesium.BoxGeometry.fromDimensions({
                 vertexFormat : Cesium.VertexFormat.POSITION_NORMAL_AND_ST,
@@ -120,13 +211,14 @@ function startup(Cesium) {
             'uniform samplerCube u_cubeMap;\n' +
             'varying vec3 v_positionEC;\n' +
             'varying vec3 v_normalEC;\n' +
-            //'varying vec2 v_st;\n' +
-            //'\n' +
             'void main()\n' +
             '{\n' +
-            '    gl_FragColor = textureLod(u_cubeMap, normalize((czm_inverseModelView * vec4(v_positionEC, 1.0)).xyz), 5.0);\n' +
+            '    vec3 color = textureLod(u_cubeMap, normalize((czm_inverseModelView * vec4(v_positionEC, 1.0)).xyz), float(' + lod + ')).rgb;\n' +
+            '    gl_FragColor = vec4(color, 1.0);\n' +
             '}\n';
-        customAppearance.isTranslucent = function() { return false; };
+        customAppearance.isTranslucent = function() {
+            return false;
+        };
         customAppearance.getRenderState = function() {
             return {
                 depthTest : {
@@ -134,10 +226,15 @@ function startup(Cesium) {
                 }
             };
         };
-        customAppearance.getVertexShaderSource = function() { return this.vertexShaderSource; };
-        customAppearance.getFragmentShaderSource = function() { return this.fragmentShaderSource; };
+        customAppearance.getVertexShaderSource = function() {
+            return this.vertexShaderSource;
+        };
+        customAppearance.getFragmentShaderSource = function() {
+            return this.fragmentShaderSource;
+        };
         customAppearance.material = {
-            update : function() {},
+            update : function() {
+            },
             _uniforms : {
                 u_cubeMap : function() {
                     return cubeMap;
@@ -150,31 +247,7 @@ function startup(Cesium) {
             asynchronous : false,
             modelMatrix : modelMatrix
         }));
-    });
-
-    var modelURL = '../../SampleData/models/Spheres/MetalRoughSpheres.glb';
-
-    var model = scene.primitives.add(Cesium.Model.fromGltf({
-        url : modelURL,
-        modelMatrix : modelMatrix,
-        minimumPixelSize : 128
-    }));
-
-    model.readyPromise.then(function(model) {
-        var camera = viewer.camera;
-
-        // Zoom to model
-        var controller = scene.screenSpaceCameraController;
-        var r = 2.0 * Math.max(model.boundingSphere.radius, camera.frustum.near);
-        controller.minimumZoomDistance = r * 0.5;
-
-        var center = Cesium.Matrix4.multiplyByPoint(model.modelMatrix, model.boundingSphere.center, new Cesium.Cartesian3());
-        var heading = Cesium.Math.toRadians(230.0);
-        var pitch = Cesium.Math.toRadians(-20.0);
-        camera.lookAt(center, new Cesium.HeadingPitchRange(heading, pitch, r * 2.0));
-    }).otherwise(function(error){
-        window.alert(error);
-    });
+    }
 
     // Temporary code to parse DDS files for loading environment maps adapted from threejs:
     //    https://github.com/mrdoob/three.js/blob/dev/examples/js/loaders/DDSLoader.js
