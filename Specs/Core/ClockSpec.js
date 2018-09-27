@@ -432,7 +432,6 @@ defineSuite([
         clock.onStop.addEventListener(onStopSpy);
         clock.tick();
         expect(onStopSpy).toHaveBeenCalled();
-
     });
 
     describe('SYSTEM_CLOCK modes', function() {
