@@ -2899,15 +2899,14 @@ define([
             var vertexArray = rendererVertexArrays[id + '.primitive.' + i];
             var offset;
             var count;
-            if (defined(ix)) {
+
+            // Use indices of the previously decoded Draco geometry.
+            if (defined(decodedData)) {
+                count = decodedData.numberOfIndices;
+                offset = 0;
+            } else if (defined(ix)) {
                 count = ix.count;
-
-                // Use indices of the previously decoded Draco geometry.
-                if (defined(decodedData)) {
-                    count = decodedData.numberOfIndices;
-                }
-
-                offset = (ix.byteOffset / IndexDatatype.getSizeInBytes(ix.componentType));  // glTF has offset in bytes.  Cesium has offsets in indices
+                offset = (ix.byteOffset / IndexDatatype.getSizeInBytes(ix.componentType)); // glTF has offset in bytes.  Cesium has offsets in indices
             } else {
                 var positions = accessors[primitive.attributes.POSITION];
                 count = positions.count;
