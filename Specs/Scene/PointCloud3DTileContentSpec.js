@@ -11,6 +11,7 @@ defineSuite([
         'Core/PerspectiveFrustum',
         'Core/Transforms',
         'Renderer/Pass',
+        'Scene/Cesium3DTileRefine',
         'Scene/Cesium3DTileStyle',
         'Scene/ClippingPlane',
         'Scene/ClippingPlaneCollection',
@@ -20,8 +21,7 @@ defineSuite([
         'Specs/createCanvas',
         'Specs/createScene',
         'Specs/pollToPromise',
-        'ThirdParty/when',
-        'Scene/Cesium3DTileRefine'
+        'ThirdParty/when'
     ], function(
         PointCloud3DTileContent,
         Cartesian3,
@@ -35,6 +35,7 @@ defineSuite([
         PerspectiveFrustum,
         Transforms,
         Pass,
+        Cesium3DTileRefine,
         Cesium3DTileStyle,
         ClippingPlane,
         ClippingPlaneCollection,
@@ -44,8 +45,7 @@ defineSuite([
         createCanvas,
         createScene,
         pollToPromise,
-        when,
-        Cesium3DTileRefine) {
+        when) {
     'use strict';
 
     var scene;
@@ -519,7 +519,7 @@ defineSuite([
 
         return Cesium3DTilesTester.loadTileset(scene, pointCloudNoColorUrl).then(function(tileset) {
             tileset.pointCloudShading.eyeDomeLighting = false;
-            tileset.refine = Cesium3DTileRefine.REPLACE;
+            tileset.root.refine = Cesium3DTileRefine.REPLACE;
             postLoadCallback(scene, tileset);
             scene.destroyForSpecs();
         });
