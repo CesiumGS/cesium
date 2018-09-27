@@ -20,6 +20,7 @@ Change Log
 * Added `OpenCageGeocoderService`, which provides geocoding via [OpenCage](https://opencagedata.com/). [#7015](https://github.com/AnalyticalGraphicsInc/cesium/pull/7015)
 * Added ground atmosphere lighting in 3D. This can be toggled with `Globe.showGroundAtmosphere`. [6877](https://github.com/AnalyticalGraphicsInc/cesium/pull/6877)
     * Added `Globe.nightFadeOutDistance` and `Globe.nightFadeInDistance` to configure when ground atmosphere night lighting fades in and out. [6877](https://github.com/AnalyticalGraphicsInc/cesium/pull/6877)
+* Added `onStop` event to `Clock` that fires each time stopTime is reached. [#7066](https://github.com/AnalyticalGraphicsInc/cesium/pull/7066)
 
 ##### Fixes :wrench:
 * Fixed picking for overlapping translucent primitives. [#7039](https://github.com/AnalyticalGraphicsInc/cesium/pull/7039)
