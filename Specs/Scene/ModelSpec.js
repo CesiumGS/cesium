@@ -945,7 +945,11 @@ defineSuite([
         return loadModel(boxGltf2Url).then(function(m) {
             verifyRender(m);
             m.show = true;
-            expect(scene).toRender([169, 3, 3, 255]); // Red
+
+            expect(scene).toRenderAndCall(function(rgba) {
+                expect(rgba).toEqualEpsilon([169, 3, 3, 255], 5); // Red
+            });
+
             primitives.remove(m);
         });
     });
