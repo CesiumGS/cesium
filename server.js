@@ -6,6 +6,9 @@
     var fs = require('fs');
     var url = require('url');
     var request = require('request');
+    var Liquid = require('liquidjs');
+    var atob = require('atob');
+    var pako = require('pako');
 
     var gzipHeader = Buffer.from('1F8B08', 'hex');
 
@@ -80,6 +83,30 @@
     app.get(knownTilesetFormats, checkGzipAndNext);
 
     app.use(express.static(__dirname));
+
+    // register liquid engine
+    var templateEngine = Liquid(); // eslint-disable-line new-cap
+    app.engine('liquid', templateEngine.express());
+    app.set('views', './Apps/Sandcastle/views');
+    app.set('view engine', 'liquid');
+
+    app.get('/Apps/Sandcastle/Standalone', function(req, res) {
+        var base64String = req.url.substr(req.url.indexOf('?c=')+3);
+
+        // restore padding
+        while (base64String.length % 4 !== 0) {
+            base64String += '=';
+        }
+
+        var jsonString = pako.inflate(atob(base64String), { raw: true, to: 'string' });
+        jsonString = '["' + jsonString + '"]';
+        var json = JSON.parse(jsonString);
+
+        var code = json[0];
+        var html = json[1];
+
+        res.render('SandcastleStandalone', { code : code, html: html });
+    });
 
     function getRemoteUrlFromParam(req) {
         var remoteUrl = req.params[0];

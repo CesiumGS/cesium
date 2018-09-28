@@ -931,7 +931,7 @@ require({
         return location.protocol + '//' + location.host + location.pathname;
     }
 
-    registry.byId('buttonShareDrop').on('click', function() {
+    function makeCompressedBase64String() {
         var code = jsEditor.getValue();
         var html = htmlEditor.getValue();
 
@@ -942,6 +942,12 @@ require({
         jsonString = jsonString.substr(2, jsonString.length - 4);
         var base64String = btoa(pako.deflate(jsonString, { raw: true, to: 'string', level: 9 }));
         base64String = base64String.replace(/\=+$/, ''); // remove padding
+
+        return base64String;
+    }
+
+    registry.byId('buttonShareDrop').on('click', function() {
+        var base64String = makeCompressedBase64String();
 
         var shareUrlBox = document.getElementById('shareUrl');
         shareUrlBox.value = getBaseUrl() + '#c=' + base64String;
@@ -1022,25 +1028,10 @@ require({
     });
 
     registry.byId('buttonNewWindow').on('click', function() {
-        var baseHref = window.location.href;
+        var data = makeCompressedBase64String();
+        var url = '/Apps/Sandcastle/Standalone/?c=' + data;
 
-        //Handle case where demo is in a sub-directory.
-        var searchLen = window.location.search.length;
-        if (searchLen > 0) {
-            baseHref = baseHref.substring(0, baseHref.length - searchLen);
-        }
-
-        var pos = baseHref.lastIndexOf('/');
-        baseHref = baseHref.substring(0, pos) + '/gallery/';
-
-        var html = getDemoHtml();
-        html = html.replace('<head>', '<head>\n    <base href="' + baseHref + '">');
-        var htmlBlob = new Blob([html], {
-            'type' : 'text/html;charset=utf-8',
-            'endings' : 'native'
-        });
-        var htmlBlobURL = URL.createObjectURL(htmlBlob);
-        window.open(htmlBlobURL, '_blank');
+        window.open(url, '_blank');
         window.focus();
     });
 

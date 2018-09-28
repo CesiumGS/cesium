@@ -30,6 +30,9 @@
     "email": "cesium-dev@googlegroups.com"
   },
   "dependencies": {
+    "atob": "^2.1.2",
+    "liquidjs": "^6.0.0",
+    "pako": "^1.0.6",
     "requirejs": "^2.3.2"
   },
   "devDependencies": {
