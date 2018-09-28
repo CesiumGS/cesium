@@ -35,8 +35,7 @@ var viewer = new Cesium.Viewer('cesiumContainer', {
     shadows : true,
     shouldAnimate : true
 });
-var scene = viewer.scene;
-scene.globe.depthTestAgainstTerrain = true;
+viewer.scene.globe.depthTestAgainstTerrain = true;
 
 var longitude = -2.1480545852753163;
 var latitude = 0.7688240036937101;
@@ -50,9 +49,8 @@ var entity = viewer.entities.add({
     }
 });
 
-viewer.trackedEntity = entity;
-
 var point = viewer.entities.add({
+    position : new Cesium.CallbackProperty(updatePosition, false),
     point : {
         pixelSize : 10,
         color : Cesium.Color.YELLOW,
@@ -72,18 +70,12 @@ var point = viewer.entities.add({
 var objectsToExclude = [point];
 var cartographic = new Cesium.Cartographic();
 
-if (scene.sampleHeightSupported) {
-    scene.postRender.addEventListener(updatePosition);
-} else {
-    console.log('This browser does not support sampleHeight.');
-}
-
-function updatePosition(scene, time) {
+function updatePosition(time, result) {
     var offset = (time.secondsOfDay % duration) / duration;
     cartographic.longitude = longitude - range + offset * range * 2.0;
     cartographic.latitude = latitude;
 
-    var height = scene.sampleHeight(cartographic, objectsToExclude);
+    var height = viewer.scene.sampleHeight(cartographic, objectsToExclude);
 
     if (Cesium.defined(height)) {
         cartographic.height = height;
@@ -94,8 +86,9 @@ function updatePosition(scene, time) {
         point.label.show = false;
     }
 
-    point.position = Cesium.Cartographic.toCartesian(cartographic, Cesium.Ellipsoid.WGS84);
+    return Cesium.Cartographic.toCartesian(cartographic, Cesium.Ellipsoid.WGS84, result);
 }
+viewer.trackedEntity = entity;
 //Sandcastle_End
     Sandcastle.finishedLoading();
 }
