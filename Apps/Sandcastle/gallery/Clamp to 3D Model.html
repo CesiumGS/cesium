@@ -35,7 +35,12 @@ var viewer = new Cesium.Viewer('cesiumContainer', {
     shadows : true,
     shouldAnimate : true
 });
-viewer.scene.globe.depthTestAgainstTerrain = true;
+var scene = viewer.scene;
+scene.globe.depthTestAgainstTerrain = true;
+
+if (!scene.sampleHeightSupported) {
+    console.log('This browser does not support sampleHeight.');
+}
 
 var longitude = -2.1480545852753163;
 var latitude = 0.7688240036937101;
@@ -75,7 +80,10 @@ function updatePosition(time, result) {
     cartographic.longitude = longitude - range + offset * range * 2.0;
     cartographic.latitude = latitude;
 
-    var height = viewer.scene.sampleHeight(cartographic, objectsToExclude);
+    var height;
+    if (scene.sampleHeightSupported) {
+        height = scene.sampleHeight(cartographic, objectsToExclude);
+    }
 
     if (Cesium.defined(height)) {
         cartographic.height = height;
