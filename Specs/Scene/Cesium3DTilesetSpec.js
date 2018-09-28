@@ -1770,16 +1770,19 @@ defineSuite([
     it('all tiles loaded event is raised', function() {
         // Called first when only the root is visible and it becomes loaded, and then again when
         // the rest of the tileset is visible and all tiles are loaded.
-        var spyUpdate = jasmine.createSpy('listener');
+        var spyUpdate1 = jasmine.createSpy('listener');
+        var spyUpdate2 = jasmine.createSpy('listener');
         viewRootOnly();
         var tileset = scene.primitives.add(new Cesium3DTileset({
             url : tilesetUrl
         }));
-        tileset.allTilesLoaded.addEventListener(spyUpdate);
+        tileset.allTilesLoaded.addEventListener(spyUpdate1);
+        tileset.initialTilesLoaded.addEventListener(spyUpdate2);
         return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset).then(function() {
             viewAllTiles();
             return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset).then(function() {
-                expect(spyUpdate.calls.count()).toEqual(2);
+                expect(spyUpdate1.calls.count()).toEqual(2);
+                expect(spyUpdate2.calls.count()).toEqual(1);
             });
         });
     });

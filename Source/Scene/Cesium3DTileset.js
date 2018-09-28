@@ -202,6 +202,7 @@ define([
         this._statisticsLastPick = new Cesium3DTilesetStatistics();
 
         this._tilesLoaded = false;
+        this._initialTilesLoaded = false;
 
         this._tileDebugLabels = undefined;
 
@@ -364,6 +365,25 @@ define([
          * @see Cesium3DTileset#tilesLoaded
          */
         this.allTilesLoaded = new Event();
+
+        /**
+         * The event fired to indicate that all tiles that meet the screen space error this frame are loaded. This event
+         * is fired once when all tiles in the initial view are loaded.
+         * <p>
+         * This event is fired at the end of the frame after the scene is rendered.
+         * </p>
+         *
+         * @type {Event}
+         * @default new Event()
+         *
+         * @example
+         * tileset.initialTilesLoaded.addEventListener(function() {
+         *     console.log('Initial tiles are loaded');
+         * });
+         *
+         * @see Cesium3DTileset#allTilesLoaded
+         */
+        this.initialTilesLoaded = new Event();
 
         /**
          * The event fired to indicate that a tile's content was loaded.
@@ -1804,6 +1824,12 @@ define([
             frameState.afterRender.push(function() {
                 tileset.allTilesLoaded.raiseEvent();
             });
+            if (!tileset._initialTilesLoaded) {
+                tileset._initialTilesLoaded = true;
+                frameState.afterRender.push(function() {
+                    tileset.initialTilesLoaded.raiseEvent();
+                });
+            }
         }
     }
 
