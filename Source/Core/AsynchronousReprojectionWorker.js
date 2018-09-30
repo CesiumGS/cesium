@@ -5,6 +5,7 @@ define([
         './Rectangle',
         './Resource',
         './SerializedMapProjection',
+        '../ThirdParty/lru',
         '../ThirdParty/when'
     ], function(
         Bitmap,
@@ -13,6 +14,7 @@ define([
         Rectangle,
         Resource,
         SerializedMapProjection,
+        LRUMap,
         when
     ) {
     'use strict';
@@ -22,7 +24,7 @@ define([
         this.urls = [];
         this.projectedRectangles = [];
         this.unprojectedRectangles = [];
-        this.cachedBitmaps = {};
+        this.cachedBuffers = undefined;
         this.targetBitmap = new Bitmap({
             data : new Uint8ClampedArray(1024 * 1024 * 4),
             width : 1024,
@@ -43,6 +45,7 @@ define([
     /**
      *
      * @param {Object} parameters
+     * @param {Number} parameters.entries
      * @param {String[]} parameters.urls
      * @param {SerializedMapProjection[]} parameters.serializedMapProjections
      * @param {Rectangle[]} parameters.projectedRectangles
@@ -58,6 +61,8 @@ define([
 
         this.urls = parameters.urls;
         var that = this;
+
+        this.cachedBuffers = new LRUMap(parameters.imageCacheSize);
 
         return getProjections(projections, serializedMapProjections)
             .then(function() {
@@ -83,17 +88,23 @@ define([
             });
     };
 
-    // TODO: LRU
+    // TODO: investigate other LRUs? memory based LRU?
     AsynchronousReprojectionWorker.prototype.load = function(url) {
-        var cached = this.cachedBitmaps[url];
-        if (defined(cached)) {
-            return when.resolve(cached);
+        var cachedBufferPromise;
+        var cachedBuffers = this.cachedBuffers;
+        var wasCached = cachedBuffers.has(url);
+        if (wasCached) {
+            cachedBufferPromise = when.resolve(cachedBuffers.get(url));
+        } else {
+            var resource = Resource.createIfNeeded(url);
+            cachedBufferPromise = resource.fetchBlob();
         }
 
-        var resource = Resource.createIfNeeded(url);
-        var that = this;
-        return resource.fetchBlob()
+        return cachedBufferPromise
             .then(function(imageBlob) {
+                if (wasCached) {
+                    cachedBuffers.set(url, imageBlob);
+                }
                 return createImageBitmap(imageBlob);
             })
             .then(function(imageBitmap) {
@@ -101,9 +112,7 @@ define([
                 var context = canvas.getContext('2d');
                 context.drawImage(imageBitmap, 0, 0);
                 var imagedata = context.getImageData(0, 0, imageBitmap.width, imageBitmap.height);
-                that.cachedBitmaps[url] = new Bitmap(imagedata);
-
-                return that.cachedBitmaps[url];
+                return new Bitmap(imagedata);
             })
             .otherwise(function(error) {
                 return error;

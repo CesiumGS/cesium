@@ -1,6 +1,7 @@
 define([
         '../Core/Check',
         '../Core/Credit',
+        '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/FeatureDetection',
@@ -13,6 +14,7 @@ define([
     ], function(
         Check,
         Credit,
+        defaultValue,
         defined,
         defineProperties,
         FeatureDetection,
@@ -39,6 +41,8 @@ define([
      * @param {MapProjection[]} options.projections The map projections for each image.
      * @param {Credit|String} [options.credit] A credit for all the images, which is displayed on the canvas.
      * @param {Scene} options.scene The current Cesium scene.
+     * @param {Number} [options.concurrency=4] The number of web workers across which the load should be distributed.
+     * @param {Number} [options.imageCacheSize=100] Number of cached images to hold in memory at once
      */
     function ImageryMosaic(options, viewer) {
         //>>includeStart('debug', pragmas.debug);
@@ -100,7 +104,8 @@ define([
                 initialize : true,
                 urls : absoluteUrls,
                 serializedMapProjections : serializedMapProjections,
-                projectedRectangles : projectedRectangles
+                projectedRectangles : projectedRectangles,
+                imageCacheSize : defaultValue(options.imageCacheSize, 100)
             }); // TODO: check for errors?
         }
         startupPromise
