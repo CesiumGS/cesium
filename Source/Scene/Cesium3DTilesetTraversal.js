@@ -316,6 +316,13 @@ define([
             return;
         }
 
+        if (tile.hasTilesetContent && tile.children.length > 0) {
+            var child = tile.children[0];
+            updateTileVisibility(tileset, child, frameState);
+            tile._visible = child._visible;
+            return;
+        }
+
         if (meetsScreenSpaceErrorEarly(tileset, tile, frameState)) {
             tile._visible = false;
             return;
