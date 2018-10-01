@@ -1,27 +1,33 @@
 define([
+        '../Core/Bitmap',
         '../Core/Check',
         '../Core/Credit',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
+        '../Core/DeveloperError',
         '../Core/FeatureDetection',
         '../Core/getAbsoluteUri',
         '../Core/Rectangle',
         '../Core/TaskProcessor',
         '../Core/SerializedMapProjection',
+        '../ThirdParty/when',
         './BitmapImageryProvider',
         './ImageryLayer'
     ], function(
+        Bitmap,
         Check,
         Credit,
         defaultValue,
         defined,
         defineProperties,
+        DeveloperError,
         FeatureDetection,
         getAbsoluteUri,
         Rectangle,
         TaskProcessor,
         SerializedMapProjection,
+        when,
         BitmapImageryProvider,
         ImageryLayer) {
     'use strict';
@@ -45,6 +51,10 @@ define([
      * @param {Number} [options.imageCacheSize=100] Number of cached images to hold in memory at once
      */
     function ImageryMosaic(options, viewer) {
+        if (!FeatureDetection.isChrome() || FeatureDetection.chromeVersion()[0] < 69) {
+            throw new DeveloperError('ImageryMosaic is only supported in Chrome version 69 or later.');
+        }
+
         //>>includeStart('debug', pragmas.debug);
         Check.defined('options', options);
         Check.defined('options.urls', options.urls);
@@ -62,7 +72,8 @@ define([
         // Make URLs absolute, serialize projections
         var absoluteUrls = new Array(imagesLength);
         var serializedMapProjections = new Array(imagesLength);
-        for (var i = 0; i < imagesLength; i++) {
+        var i;
+        for (i = 0; i < imagesLength; i++) {
             absoluteUrls[i] = getAbsoluteUri(urls[i]);
             serializedMapProjections[i] = new SerializedMapProjection(projections[i]);
         }
@@ -80,8 +91,12 @@ define([
         this._credit = credit;
         this._rectangle = new Rectangle();
 
-        var taskProcessor = new TaskProcessor('createReprojectedImagery');
-        this._taskProcessor = taskProcessor;
+        var concurrency = defaultValue(options.concurrency, 2);
+        var taskProcessors = new Array(concurrency);
+        for (i = 0; i < concurrency; i++) {
+            taskProcessors[i] = new TaskProcessor('createReprojectedImagery');
+        }
+        this._taskProcessors = taskProcessors;
 
         this._localRenderingBounds = new Rectangle();
 
@@ -98,27 +113,49 @@ define([
 
         var that = this;
 
-        var startupPromise;
-        if (FeatureDetection.isChrome() && FeatureDetection.chromeVersion()[0] >= 69) {
-            startupPromise = taskProcessor.scheduleTask({
-                initialize : true,
-                urls : absoluteUrls,
-                serializedMapProjections : serializedMapProjections,
-                projectedRectangles : projectedRectangles,
-                imageCacheSize : defaultValue(options.imageCacheSize, 100)
-            }); // TODO: check for errors?
+        var urlGroups = new Array(concurrency);
+        var serializedProjectionGroups = new Array(concurrency);
+        var projectedRectangleGroups = new Array(concurrency);
+
+        for (i = 0; i < concurrency; i++) {
+            urlGroups[i] = [];
+            serializedProjectionGroups[i] = [];
+            projectedRectangleGroups[i] = [];
         }
-        startupPromise
-            .then(function(rectangle) {
-                Rectangle.clone(rectangle, that._rectangle);
+
+        for (i = 0; i < imagesLength; i++) {
+            var index = i % concurrency;
+            urlGroups[index].push(absoluteUrls[i]);
+            serializedProjectionGroups[index].push(serializedMapProjections[i]);
+            projectedRectangleGroups[index].push(projectedRectangles[i]);
+        }
+
+        var initializationPromises = new Array(concurrency);
+        for (i = 0; i < concurrency; i++) {
+            initializationPromises[i] = taskProcessors[i].scheduleTask({
+                initialize : true,
+                urls : urlGroups[i],
+                serializedMapProjections : serializedProjectionGroups[i],
+                projectedRectangles : projectedRectangleGroups[i],
+                imageCacheSize : defaultValue(options.imageCacheSize, 100)
+            });
+        }
+
+        when.all(initializationPromises)
+            .then(function(rectangles) {
+                // Merge rectangles
+                var thatRectangle = Rectangle.clone(rectangles[0], that._rectangle);
+                for (var i = 1; i < concurrency; i++) {
+                    var rectangle = rectangles[i];
+                    thatRectangle.east = Math.max(thatRectangle.east, rectangle.east);
+                    thatRectangle.west = Math.min(thatRectangle.west, rectangle.west);
+                    thatRectangle.north = Math.max(thatRectangle.north, rectangle.north);
+                    thatRectangle.south = Math.min(thatRectangle.south, rectangle.south);
+                }
+                that._rectangle = thatRectangle;
 
                 // Create the full-coverage version
-                return taskProcessor.scheduleTask({
-                    reproject : true,
-                    width : 1024,
-                    height : 1024,
-                    rectangle : that._rectangle
-                });
+                return requestProjection(taskProcessors, 1024, 1024, thatRectangle);
             })
             .then(function(reprojectedBitmap) {
                 var bitmapImageryProvider = new BitmapImageryProvider({
@@ -155,7 +192,7 @@ define([
             .otherwise(function(error) {
                 console.log(error);
             });
-        }
+    }
 
     defineProperties(ImageryMosaic.prototype, {
         freeze : {
@@ -234,39 +271,68 @@ define([
         var that = this;
         this._iteration++;
         var iteration = this._iteration;
-        this._taskProcessor.scheduleTask({
-            reproject : true,
-            width : 1024,
-            height : 1024,
-            rectangle : renderingBounds
-        })
-        .then(function(reprojectedBitmap) {
-            if (that._iteration !== iteration) {
-                // cancel
-                return;
-            }
+        requestProjection(this._taskProcessors, 1024, 1024, renderingBounds)
+            .then(function(reprojectedBitmap) {
+                if (that._iteration !== iteration) {
+                    // cancel
+                    return;
+                }
 
-            var bitmapImageryProvider = new BitmapImageryProvider({
-                bitmap : reprojectedBitmap,
-                rectangle : renderingBounds,
-                credit : that._credit
+                var bitmapImageryProvider = new BitmapImageryProvider({
+                    bitmap : reprojectedBitmap,
+                    rectangle : renderingBounds,
+                    credit : that._credit
+                });
+
+                var newLocalImageryLayer = new ImageryLayer(bitmapImageryProvider, {rectangle : bitmapImageryProvider.rectangle});
+                scene.imageryLayers.add(newLocalImageryLayer);
+
+                if (defined(that._localImageryLayer)) {
+                    scene.imageryLayers.remove(that._localImageryLayer);
+                }
+                that._localImageryLayer = newLocalImageryLayer;
+                that._localRenderingBounds = Rectangle.clone(renderingBounds, that._localRenderingBounds);
+                that._fullCoverageImageryLayer.cutoutRectangle = undefined;
+                that._waitedFrames = 0;
+            })
+            .otherwise(function(e) {
+                console.log(e); // TODO: handle or throw?
             });
-
-            var newLocalImageryLayer = new ImageryLayer(bitmapImageryProvider, {rectangle : bitmapImageryProvider.rectangle});
-            scene.imageryLayers.add(newLocalImageryLayer);
-
-            if (defined(that._localImageryLayer)) {
-                scene.imageryLayers.remove(that._localImageryLayer);
-            }
-            that._localImageryLayer = newLocalImageryLayer;
-            that._localRenderingBounds = Rectangle.clone(renderingBounds, that._localRenderingBounds);
-            that._fullCoverageImageryLayer.cutoutRectangle = undefined;
-            that._waitedFrames = 0;
-        })
-        .otherwise(function(e) {
-            console.log(e); // TODO: handle or throw?
-        });
     };
+
+    function requestProjection(taskProcessors, width, height, rectangle) {
+        var concurrency = taskProcessors.length;
+        var promises = new Array(concurrency);
+        for (var i = 0; i < concurrency; i++) {
+            promises[i] = taskProcessors[i].scheduleTask({
+                reproject : true,
+                width : width,
+                height : height,
+                rectangle : rectangle
+            });
+        }
+        return when.all(promises)
+            .then(function(bitmaps) {
+                // alpha over
+                var targetData = bitmaps[0].data;
+                var pixelCount = width * height;
+                for (var i = 1; i < concurrency; i++) {
+                    var portionData = bitmaps[i].data;
+                    for (var j = 0; j < pixelCount; j++) {
+                        var index = j * 4;
+                        var alpha = portionData[index + 3];
+                        if (alpha > 0) {
+                            targetData[index] = portionData[index];
+                            targetData[index + 1] = portionData[index + 1];
+                            targetData[index + 2] = portionData[index + 2];
+                            targetData[index + 3] = alpha;
+                        }
+                    }
+                }
+
+                return bitmaps[0];
+            });
+    }
 
     return ImageryMosaic;
 });
