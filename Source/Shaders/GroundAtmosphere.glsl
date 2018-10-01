@@ -3,11 +3,11 @@
  *
  * Copyright (c) 2000-2005, Sean O'Neil (s_p_oneil@hotmail.com)
  * All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- * 
+ *
  * * Redistributions of source code must retain the above copyright notice,
  *   this list of conditions and the following disclaimer.
  * * Redistributions in binary form must reproduce the above copyright notice,
@@ -16,7 +16,7 @@
  * * Neither the name of the project nor the names of its contributors may be
  *   used to endorse or promote products derived from this software without
  *   specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -30,7 +30,7 @@
  *
  * Modifications made by Analytical Graphics, Inc.
  */
- 
+
  // Atmosphere:
  //   Code:  http://sponeil.net/
  //   GPU Gems 2 Article:  http://http.developer.nvidia.com/GPUGems2/gpugems2_chapter16.html
@@ -67,7 +67,7 @@ float scale(float fCos)
     return fScaleDepth * exp(-0.00287 + x*(0.459 + x*(3.83 + x*(-6.80 + x*5.25))));
 }
 
-AtmosphereColor computeGroundAtmosphereFromSpace(vec3 v3Pos)
+AtmosphereColor computeGroundAtmosphereFromSpace(vec3 v3Pos, bool useSunLighting)
 {
 	vec3 v3InvWavelength = vec3(1.0 / pow(0.650, 4.0), 1.0 / pow(0.570, 4.0), 1.0 / pow(0.475, 4.0));
 
@@ -75,11 +75,11 @@ AtmosphereColor computeGroundAtmosphereFromSpace(vec3 v3Pos)
     vec3 v3Ray = v3Pos - czm_viewerPositionWC;
     float fFar = length(v3Ray);
     v3Ray /= fFar;
-    
+
     float fCameraHeight = length(czm_viewerPositionWC);
     float fCameraHeight2 = fCameraHeight * fCameraHeight;
 
-    // This next line is an ANGLE workaround. It is equivalent to B = 2.0 * dot(czm_viewerPositionWC, v3Ray), 
+    // This next line is an ANGLE workaround. It is equivalent to B = 2.0 * dot(czm_viewerPositionWC, v3Ray),
     // which is what it should be, but there are problems at the poles.
     float B = 2.0 * length(czm_viewerPositionWC) * dot(normalize(czm_viewerPositionWC), v3Ray);
     float C = fCameraHeight2 - fOuterRadius2;
@@ -90,11 +90,11 @@ AtmosphereColor computeGroundAtmosphereFromSpace(vec3 v3Pos)
     vec3 v3Start = czm_viewerPositionWC + v3Ray * fNear;
     fFar -= fNear;
     float fDepth = exp((fInnerRadius - fOuterRadius) / fScaleDepth);
-    
+
     // The light angle based on the sun position would be:
     //    dot(czm_sunDirectionWC, v3Pos) / length(v3Pos);
-    // We want the atmosphere to be uniform over the globe so it is set to 1.0.
-    float fLightAngle = 1.0;
+    // When we want the atmosphere to be uniform over the globe so it is set to 1.0.
+    float fLightAngle = useSunLighting ? dot(czm_sunDirectionWC, v3Pos) / length(v3Pos) : 1.0;
     float fCameraAngle = dot(-v3Ray, v3Pos) / length(v3Pos);
     float fCameraScale = scale(fCameraAngle);
     float fLightScale = scale(fLightAngle);
@@ -119,11 +119,11 @@ AtmosphereColor computeGroundAtmosphereFromSpace(vec3 v3Pos)
         v3FrontColor += v3Attenuate * (fDepth * fScaledLength);
         v3SamplePoint += v3SampleRay;
     }
-    
+
     AtmosphereColor color;
     color.mie = v3FrontColor * (v3InvWavelength * fKrESun + fKmESun);
     color.rayleigh = v3Attenuate; // Calculate the attenuation factor for the ground
-    
+
     return color;
 }
 

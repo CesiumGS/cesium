@@ -697,7 +697,6 @@ define([
     var normalNudgeScratch = new Cartesian3();
 
     var scratchBoundingSpheres = [new BoundingSphere(), new BoundingSphere()];
-    var boundingSphereCenterCartographicScratch = new Cartographic();
 
     // Winding order is reversed so each segment's volume is inside-out
     var REFERENCE_INDICES = [
@@ -1061,12 +1060,8 @@ define([
         BoundingSphere.fromVertices(topPositionsArray, Cartesian3.ZERO, 3, boundingSpheres[1]);
         var boundingSphere = BoundingSphere.fromBoundingSpheres(boundingSpheres);
 
-        // Adjust bounding sphere height and radius to cover whole volume
-        var midHeight = sumHeights / (segmentCount * 2.0);
-        var boundingSphereCenterCartographic = Cartographic.fromCartesian(boundingSphere.center, ellipsoid, boundingSphereCenterCartographicScratch);
-        boundingSphereCenterCartographic.height = midHeight;
-        boundingSphere.center = Cartographic.toCartesian(boundingSphereCenterCartographic, ellipsoid, boundingSphere.center);
-        boundingSphere.radius = Math.max(boundingSphere.radius, midHeight);
+        // Adjust bounding sphere height and radius to cover more of the volume
+        boundingSphere.radius += sumHeights / (segmentCount * 2.0);
 
         var attributes = {
             position : new GeometryAttribute({

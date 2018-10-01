@@ -1,5 +1,6 @@
 define([
     './Check',
+    './Credit',
     './defaultValue',
     './defined',
     './defineProperties',
@@ -9,6 +10,7 @@ define([
     './Resource'
 ], function (
     Check,
+    Credit,
     defaultValue,
     defined,
     defineProperties,
@@ -43,8 +45,8 @@ define([
         server.appendForwardSlash();
 
         var defaultTokenCredit = Ion.getDefaultTokenCredit(accessToken);
-        if (defined(defaultTokenCredit) && options.scene._frameState.creditDisplay) {
-            options.scene._frameState.creditDisplay.addDefaultCredit(defaultTokenCredit);
+        if (defined(defaultTokenCredit) && options.scene.frameState.creditDisplay) {
+            options.scene.frameState.creditDisplay.addDefaultCredit(Credit.clone(defaultTokenCredit));
         }
 
         var searchEndpoint = server.getDerivedResource({
