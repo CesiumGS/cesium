@@ -1216,6 +1216,23 @@ defineSuite([
             });
         });
 
+        it('does not select external tileset whose root has invisible children', function() {
+            return Cesium3DTilesTester.loadTileset(scene, tilesetOfTilesetsUrl).then(function(tileset) {
+                var center = Cartesian3.fromRadians(centerLongitude, centerLatitude, 50.0);
+                scene.camera.lookAt(center, new HeadingPitchRange(0.0, 1.57, 1.0));
+                var root = tileset.root;
+                var externalRoot = root.children[0];
+                externalRoot.refine = Cesium3DTileRefine.REPLACE;
+                scene.renderForSpecs();
+
+                expect(isSelected(tileset, root)).toBe(false);
+                expect(isSelected(tileset, externalRoot)).toBe(false);
+                expect(root._visible).toBe(false);
+                expect(externalRoot._visible).toBe(false);
+                expect(tileset.statistics.numberOfTilesCulledWithChildrenUnion).toBe(1);
+            });
+        });
+
         it('does not select visible tiles not meeting SSE with visible children', function() {
             return Cesium3DTilesTester.loadTileset(scene, tilesetReplacementWithViewerRequestVolumeUrl).then(function(tileset) {
                 var root = tileset.root;
