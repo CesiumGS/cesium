@@ -499,13 +499,13 @@ defineSuite([
 
             largeScene.groundPrimitives.add(largeSceneDepthPrimitive);
             expect(largeScene).toRenderAndCall(function(rgba) {
-                expect(rgba.slice(0, 4)).not.toEqual([0, 0, 0, 255]);
+                expect(Array.prototype.slice.call(rgba, 0, 4)).not.toEqual([0, 0, 0, 255]);
                 expect(rgba[0]).toEqual(0);
             });
 
             largeScene.groundPrimitives.add(groundPrimitive);
             expect(largeScene).toRenderAndCall(function(rgba) {
-                expect(rgba.slice(0, 4)).toEqual(expectedColor);
+                expect(Array.prototype.slice.call(rgba, 0, 4)).toEqual(expectedColor);
             });
         }
 
