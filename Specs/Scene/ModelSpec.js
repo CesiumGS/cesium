@@ -945,7 +945,11 @@ defineSuite([
         return loadModel(boxGltf2Url).then(function(m) {
             verifyRender(m);
             m.show = true;
-            expect(scene).toRender([169, 3, 3, 255]); // Red
+
+            expect(scene).toRenderAndCall(function(rgba) {
+                expect(rgba).toEqualEpsilon([169, 3, 3, 255], 5); // Red
+            });
+
             primitives.remove(m);
         });
     });
@@ -2933,7 +2937,7 @@ defineSuite([
             scene.renderForSpecs();
             var callsBeforeClipping = gl.texImage2D.calls.count();
 
-            expect(model._modelViewMatrix).toEqual(Matrix4.IDENTITY);
+            expect(model._clippingPlaneModelViewMatrix).toEqual(Matrix4.IDENTITY);
 
             model.clippingPlanes = new ClippingPlaneCollection({
                planes : [
@@ -2943,7 +2947,10 @@ defineSuite([
 
             model.update(scene.frameState);
             scene.renderForSpecs();
-            expect(gl.texImage2D.calls.count() - callsBeforeClipping * 2).toEqual(2);
+            // When clipping planes are created, we expect two calls to texImage2D
+            // (one for initial creation, and one for copying the data in)
+            // because clipping planes is stored inside a texture.
+            expect(gl.texImage2D.calls.count() - callsBeforeClipping).toEqual(2);
 
             primitives.remove(model);
         });

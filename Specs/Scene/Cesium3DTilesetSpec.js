@@ -15,6 +15,7 @@ defineSuite([
         'Core/PrimitiveType',
         'Core/RequestScheduler',
         'Core/Resource',
+        'Core/Transforms',
         'Renderer/ClearCommand',
         'Renderer/ContextLimits',
         'Scene/Cesium3DTile',
@@ -46,6 +47,7 @@ defineSuite([
         PrimitiveType,
         RequestScheduler,
         Resource,
+        Transforms,
         ClearCommand,
         ContextLimits,
         Cesium3DTile,
@@ -3135,7 +3137,9 @@ defineSuite([
 
             tileset.update(scene.frameState);
 
-            var plane = new ClippingPlane(Cartesian3.UNIT_Z, 0.0);
+            var radius = 287.0736139905632;
+
+            var plane = new ClippingPlane(Cartesian3.UNIT_X, radius);
             tileset.clippingPlanes = new ClippingPlaneCollection({
                 planes : [
                     plane
@@ -3148,7 +3152,7 @@ defineSuite([
             expect(statistics.numberOfCommands).toEqual(5);
             expect(root._isClipped).toBe(false);
 
-            plane.distance = -4081630.311150717; // center
+            plane.distance = -1;
 
             tileset.update(scene.frameState);
             scene.renderForSpecs();
@@ -3156,7 +3160,7 @@ defineSuite([
             expect(statistics.numberOfCommands).toEqual(3);
             expect(root._isClipped).toBe(true);
 
-            plane.distance = -4081630.31115071 - 287.0736139905632; // center + radius
+            plane.distance = -radius;
 
             tileset.update(scene.frameState);
             scene.renderForSpecs();
@@ -3177,7 +3181,9 @@ defineSuite([
 
             tileset.update(scene.frameState);
 
-            var plane = new ClippingPlane(Cartesian3.UNIT_Z, 0.0);
+            var radius = 142.19001637409772;
+
+            var plane = new ClippingPlane(Cartesian3.UNIT_Z, radius);
             tileset.clippingPlanes = new ClippingPlaneCollection({
                 planes : [
                     plane
@@ -3190,7 +3196,7 @@ defineSuite([
             expect(statistics.numberOfCommands).toEqual(6);
             expect(root._isClipped).toBe(false);
 
-            plane.distance = -4081608.4377916814; // center
+            plane.distance = 0;
 
             tileset.update(scene.frameState);
             scene.renderForSpecs();
@@ -3198,7 +3204,7 @@ defineSuite([
             expect(statistics.numberOfCommands).toEqual(6);
             expect(root._isClipped).toBe(true);
 
-            plane.distance = -4081608.4377916814 - 142.19001637409772; // center + radius
+            plane.distance = -radius;
 
             tileset.update(scene.frameState);
             scene.renderForSpecs();
@@ -3207,4 +3213,28 @@ defineSuite([
             expect(root._isClipped).toBe(true);
         });
     });
+
+    it('uses bounding sphere for clipping only if root has no transforms', function() {
+        return Cesium3DTilesTester.loadTileset(scene, tilesetOfTilesetsUrl).then(function(tileset) {
+            expect(tileset._useBoundingSphereForClipping).toBe(true);
+
+            return Cesium3DTilesTester.loadTileset(scene, withTransformBoxUrl).then(function(tileset) {
+                expect(tileset._useBoundingSphereForClipping).toBe(false);
+            });
+        });
+    });
+
+    it('correctly computes clippingPlaneOffsetMatrix', function() {
+        return Cesium3DTilesTester.loadTileset(scene, tilesetOfTilesetsUrl).then(function(tileset) {
+            var offsetMatrix = tileset.clippingPlaneOffsetMatrix;
+            var boundingSphereMatrix = Transforms.eastNorthUpToFixedFrame(tileset.root.boundingSphere.center);
+            expect(Matrix4.equals(offsetMatrix,boundingSphereMatrix)).toBe(true);
+
+            return Cesium3DTilesTester.loadTileset(scene, withTransformBoxUrl).then(function(tileset) {
+                offsetMatrix = tileset.clippingPlaneOffsetMatrix;
+                expect(Matrix4.equals(offsetMatrix,tileset.root.computedTransform)).toBe(true);
+            });
+        });
+    });
+
 }, 'WebGL');

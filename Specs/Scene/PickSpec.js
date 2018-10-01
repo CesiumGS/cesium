@@ -20,7 +20,6 @@ defineSuite([
         'Scene/Primitive',
         'Scene/Scene',
         'Scene/SceneMode',
-        'Scene/SingleTileImageryProvider',
         'Specs/Cesium3DTilesTester',
         'Specs/createCanvas',
         'Specs/createScene',
@@ -47,7 +46,6 @@ defineSuite([
         Primitive,
         Scene,
         SceneMode,
-        SingleTileImageryProvider,
         Cesium3DTilesTester,
         createCanvas,
         createScene,
@@ -149,9 +147,6 @@ defineSuite([
     function createGlobe() {
         var globe = new Globe();
         scene.globe = globe;
-        var layerCollection = globe.imageryLayers;
-        layerCollection.removeAll();
-        layerCollection.addImageryProvider(new SingleTileImageryProvider({url : 'Data/Images/Red16x16.png'}));
         globe.depthTestAgainstTerrain = true;
         return pollToPromise(function() {
             scene.render();
@@ -533,9 +528,17 @@ defineSuite([
             var rectangle1 = createLargeRectangle(0.0);
             var rectangle2 = createLargeRectangle(1.0);
             var rectangle3 = createLargeRectangle(2.0);
+            var rectangle4 = createLargeRectangle(3.0);
+            rectangle4.show = false;
+
             expect(scene).toPickFromRayAndCall(function(result) {
                 expect(result.object.primitive).toBe(rectangle1);
-            }, primitiveRay, [rectangle3, rectangle2]);
+            }, primitiveRay, [rectangle2, rectangle3, rectangle4]);
+
+            // Tests that rectangle4 does not get un-hidden
+            expect(scene).toPickFromRayAndCall(function(result) {
+                expect(result.object.primitive).toBe(rectangle3);
+            }, primitiveRay);
         });
 
         it('throws if ray is undefined', function() {
@@ -823,6 +826,10 @@ defineSuite([
         });
 
         it('samples height from the globe', function() {
+            if (!scene.sampleHeightSupported) {
+                return;
+            }
+
             var cartographic = new Cartographic(0.0, 0.0);
             return createGlobe().then(function() {
                 expect(scene).toSampleHeightAndCall(function(height) {
@@ -954,6 +961,10 @@ defineSuite([
         });
 
         it('clamps to the globe', function() {
+            if (!scene.sampleHeightSupported) {
+                return;
+            }
+
             var cartesian = Cartesian3.fromRadians(0.0, 0.0, 100000.0);
             return createGlobe().then(function() {
                 expect(scene).toClampToHeightAndCall(function(position) {

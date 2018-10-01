@@ -3756,7 +3756,6 @@ define([
     var scratchSurfacePosition = new Cartesian3();
     var scratchSurfaceNormal = new Cartesian3();
     var scratchSurfaceRay = new Ray();
-    var scratchRay = new Ray();
     var scratchCartographic = new Cartographic();
 
     function getRayForSampleHeight(scene, cartographic) {
