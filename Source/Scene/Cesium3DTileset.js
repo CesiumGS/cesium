@@ -31,6 +31,7 @@ define([
         './Cesium3DTilesetCache',
         './Cesium3DTilesetStatistics',
         './Cesium3DTilesetTraversal',
+        './Cesium3DTilesetOffscreenTraversal',
         './Cesium3DTileStyleEngine',
         './ClippingPlaneCollection',
         './LabelCollection',
@@ -74,6 +75,7 @@ define([
         Cesium3DTilesetCache,
         Cesium3DTilesetStatistics,
         Cesium3DTilesetTraversal,
+        Cesium3DTilesetOffscreenTraversal,
         Cesium3DTileStyleEngine,
         ClippingPlaneCollection,
         LabelCollection,
@@ -183,6 +185,8 @@ define([
         this._timeSinceLoad = 0.0;
         this._extras = undefined;
 
+        this._offscreenCache = new Cesium3DTilesetCache();
+
         this._cullWithChildrenBounds = defaultValue(options.cullWithChildrenBounds, true);
         this._allTilesAdditive = true;
 
@@ -199,8 +203,10 @@ define([
 
         this._statistics = new Cesium3DTilesetStatistics();
         this._statisticsPick = new Cesium3DTilesetStatistics();
+        this._statisticsAsync = new Cesium3DTilesetStatistics();
         this._statisticsLastRender = new Cesium3DTilesetStatistics();
         this._statisticsLastPick = new Cesium3DTilesetStatistics();
+        this._statisticsLastAsync = new Cesium3DTilesetStatistics();
 
         this._tilesLoaded = false;
         this._initialTilesLoaded = false;
@@ -1435,12 +1441,13 @@ define([
         return a._priority - b._priority;
     }
 
-    function requestTiles(tileset, statistics) {
-        // Sort requests by priority before making any requests.
-        // This makes it less likely that requests will be cancelled after being issued.
-        var requestedTiles = tileset._requestedTiles;
+    function requestTiles(tileset, requestedTiles, sortByPriority, statistics) {
+        if (sortByPriority) {
+            // Sort requests by priority before making any requests.
+            // This makes it less likely that requests will be cancelled after being issued.
+            requestedTiles.sort(sortRequestByPriority);
+        }
         var length = requestedTiles.length;
-        requestedTiles.sort(sortRequestByPriority);
         for (var i = 0; i < length; ++i) {
             requestContent(tileset, requestedTiles[i], statistics);
         }
@@ -1649,6 +1656,7 @@ define([
     function updateTiles(tileset, frameState, statistics) {
         tileset._styleEngine.applyStyle(tileset, frameState);
 
+        var isRender = frameState.passes.render;
         var commandList = frameState.commandList;
         var numberOfInitialCommands = commandList.length;
         var selectedTiles = tileset._selectedTiles;
@@ -1672,7 +1680,9 @@ define([
             tile = selectedTiles[i];
             // Raise the tileVisible event before update in case the tileVisible event
             // handler makes changes that update needs to apply to WebGL resources
-            tileVisible.raiseEvent(tile);
+            if (isRender) {
+                tileVisible.raiseEvent(tile);
+            }
             tile.update(tileset, frameState);
             statistics.incrementSelectionCounts(tile.content);
             ++statistics.selected;
@@ -1738,13 +1748,15 @@ define([
             tileset._pointCloudEyeDomeLighting.update(frameState, numberOfInitialCommands, tileset.pointCloudShading);
         }
 
-        if (tileset.debugShowGeometricError || tileset.debugShowRenderingStatistics || tileset.debugShowMemoryUsage || tileset.debugShowUrl) {
-            if (!defined(tileset._tileDebugLabels)) {
-                tileset._tileDebugLabels = new LabelCollection();
+        if (isRender) {
+            if (tileset.debugShowGeometricError || tileset.debugShowRenderingStatistics || tileset.debugShowMemoryUsage || tileset.debugShowUrl) {
+                if (!defined(tileset._tileDebugLabels)) {
+                    tileset._tileDebugLabels = new LabelCollection();
+                }
+                updateTileDebugLabels(tileset, frameState);
+            } else {
+                tileset._tileDebugLabels = tileset._tileDebugLabels && tileset._tileDebugLabels.destroy();
             }
-            updateTileDebugLabels(tileset, frameState);
-        } else {
-            tileset._tileDebugLabels = tileset._tileDebugLabels && tileset._tileDebugLabels.destroy();
         }
     }
 
@@ -1865,10 +1877,11 @@ define([
         var passes = frameState.passes;
         var isRender = passes.render;
         var isPick = passes.pick;
+        var isAsync = passes.async;
         var outOfCore = isRender;
 
-        var statistics = isPick ? this._statisticsPick : this._statistics;
-        var statisticsLast = isPick ? this._statisticsLastPick : this._statisticsLastRender;
+        var statistics = isAsync ? this._statisticsAsync : (isPick ? this._statisticsPick : this._statistics);
+        var statisticsLast = isAsync ? this._statisticsLastAsync : (isPick ? this._statisticsLastPick : this._statisticsLastRender);
         statistics.clear();
 
         if (this.dynamicScreenSpaceError) {
@@ -1879,15 +1892,23 @@ define([
             this._cache.reset();
         }
 
-        this._requestedTiles.length = 0;
-        Cesium3DTilesetTraversal.selectTiles(this, statistics, frameState);
+        if (isAsync) {
+            Cesium3DTilesetOffscreenTraversal.selectTiles(this, statistics, frameState);
+        } else {
+            Cesium3DTilesetTraversal.selectTiles(this, statistics, frameState);
+        }
 
         if (outOfCore) {
-            requestTiles(this, statistics);
+            requestTiles(this, this._requestedTiles, true, statistics);
             processTiles(this, frameState);
         }
 
         updateTiles(this, frameState, statistics);
+
+        // TODO - remove
+        if (passes.offscreen) {
+            printSelectedTiles(this);
+        }
 
         if (outOfCore) {
             unloadTiles(this, statistics);
@@ -1910,6 +1931,36 @@ define([
                 }
             }
         }
+    };
+
+    // TODO : remove
+    function printSelectedTiles(tileset) {
+        // console.log('Printing selected tiles:');
+        // var selectedTiles = tileset._selectedTiles;
+        // var length = selectedTiles.length;
+        // for (var i = 0; i < length; ++i) {
+        //     var tile = selectedTiles[i];
+        //     console.log(tile._header.content.uri);
+        // }
+    }
+
+    /**
+     * TODO private - who calls this?
+     * @param {FrameState} frameState The ray.
+     * @returns {Boolean} true when the primitive is ready
+     *
+     * @private
+     */
+    Cesium3DTileset.prototype.updateAsync = function(frameState) {
+        var statistics = this._statisticsAsync;
+        var ready = Cesium3DTilesetOffscreenTraversal.selectTiles(this, statistics, frameState);
+
+        // TODO - remove
+        if (ready) {
+            printSelectedTiles(this);
+        }
+        requestTiles(this, this._requestedTiles, false, statistics); // Tiles are requested now but processed in main update
+        return ready;
     };
 
     /**

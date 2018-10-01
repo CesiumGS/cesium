@@ -47,6 +47,8 @@ define([
     var descendantSelectionDepth = 2;
 
     Cesium3DTilesetTraversal.selectTiles = function(tileset, statistics, frameState) {
+        tileset._requestedTiles.length = 0;
+
         if (tileset.debugFreezeFrame) {
             return;
         }
@@ -58,6 +60,7 @@ define([
 
         var root = tileset.root;
         updateTile(tileset, root, statistics, frameState);
+        postUpdateTile(root);
 
         // The root tile is not visible
         if (!isVisible(root)) {
@@ -290,6 +293,11 @@ define([
         }
     }
 
+    function postUpdateTile(tile) {
+        // Reset so visibility is checked during the next pass which may use a different camera
+        tile._updatedVisibilityFrame = 0;
+    }
+
     function hasEmptyContent(tile) {
         return tile.hasEmptyContent || tile.hasTilesetContent;
     }
@@ -456,7 +464,7 @@ define([
             visitTile(tileset, tile, statistics, frameState);
             touchTile(tileset, tile, frameState);
             tile._refines = refines;
-            tile._updatedVisibilityFrame = 0; // Reset so visibility is checked during the next pass
+            postUpdateTile(tile);
         }
     }
 

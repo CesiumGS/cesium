@@ -1126,6 +1126,10 @@ define([
     };
 
     function applyDebugSettings(tile, tileset, frameState) {
+        if (!frameState.passes.render) {
+            return;
+        }
+
         var hasContentBoundingVolume = defined(tile._header.content) && defined(tile._header.content.boundingVolume);
         var empty = tile.hasEmptyContent || tile.hasTilesetContent;
 

@@ -1,6 +1,11 @@
 Change Log
 ==========
 
+### 1.51 - 2018-11-01
+
+##### Additions :tada:
+* Added `Ray.clone`. [#TODO](TODO)
+
 ### 1.50 - 2018-10-01
 
 ##### Breaking Changes :mega:

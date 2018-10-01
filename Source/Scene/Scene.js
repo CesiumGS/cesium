@@ -23,6 +23,7 @@ define([
         '../Core/GeometryInstance',
         '../Core/GeometryPipeline',
         '../Core/Intersect',
+        '../Core/isArray',
         '../Core/JulianDate',
         '../Core/Math',
         '../Core/Matrix4',
@@ -49,9 +50,11 @@ define([
         '../Renderer/ShaderProgram',
         '../Renderer/ShaderSource',
         '../Renderer/Texture',
+        '../ThirdParty/when',
         './BrdfLutGenerator',
         './Camera',
         './Cesium3DTileFeature',
+        './Cesium3DTileset',
         './CreditDisplay',
         './DebugCameraPrimitive',
         './DepthPlane',
@@ -102,6 +105,7 @@ define([
         GeometryInstance,
         GeometryPipeline,
         Intersect,
+        isArray,
         JulianDate,
         CesiumMath,
         Matrix4,
@@ -128,9 +132,11 @@ define([
         ShaderProgram,
         ShaderSource,
         Texture,
+        when,
         BrdfLutGenerator,
         Camera,
         Cesium3DTileFeature,
+        Cesium3DTileset,
         CreditDisplay,
         DebugCameraPrimitive,
         DepthPlane,
@@ -165,6 +171,14 @@ define([
             });
         };
     };
+
+    function AsyncLoader(ray, primitives) {
+        this.ray = ray;
+        this.primitives = primitives;
+        this.ready = false;
+        this.deferred = when.defer();
+        this.promise = this.deferred.promise;
+    }
 
     /**
      * The container for all 3D graphical objects and state in a Cesium virtual scene.  Generally,
@@ -278,6 +292,8 @@ define([
         this._globe = undefined;
         this._primitives = new PrimitiveCollection();
         this._groundPrimitives = new PrimitiveCollection();
+
+        this._asyncLoaders = [];
 
         this._logDepthBuffer = context.fragmentDepth;
         this._logDepthBufferDirty = true;
@@ -869,7 +885,7 @@ define([
         },
 
         /**
-         * Returns <code>true</code> if the pickPosition function is supported.
+         * Returns <code>true</code> if the {@link Scene#pickPosition} function is supported.
          * @memberof Scene.prototype
          *
          * @type {Boolean}
@@ -884,13 +900,14 @@ define([
         },
 
         /**
-         * Returns <code>true</code> if the sampleHeight function is supported.
+         * Returns <code>true</code> if the {@link Scene#sampleHeight} and {@link Scene#sampleHeightMostDetailed} functions are supported.
          * @memberof Scene.prototype
          *
          * @type {Boolean}
          * @readonly
          *
          * @see Scene#sampleHeight
+         * @see Scene#sampleHeightMostDetailed
          */
         sampleHeightSupported : {
             get : function() {
@@ -899,13 +916,14 @@ define([
         },
 
         /**
-         * Returns <code>true</code> if the clampToHeight function is supported.
+         * Returns <code>true</code> if the {@link clampToHeight} and {@link Scene#clampToHeightMostDetailed} functions are supported.
          * @memberof Scene.prototype
          *
          * @type {Boolean}
          * @readonly
          *
          * @see Scene#clampToHeight
+         * @see Scene#clampToHeightMostDetailed
          */
         clampToHeightSupported : {
             get : function() {
@@ -1570,6 +1588,7 @@ define([
         passes.depth = false;
         passes.postProcess = false;
         passes.offscreen = false;
+        passes.async = false;
     }
 
     function updateFrameState(scene, frameNumber, time) {
@@ -2999,6 +3018,8 @@ define([
             scene.globe.update(frameState);
         }
 
+        updateAsyncLoaders(scene);
+
         frameState.creditDisplay.update();
     }
 
@@ -3323,7 +3344,6 @@ define([
 
         var object = view.pickFramebuffer.end(scratchRectangle);
         context.endFrame();
-        callAfterRenderFunctions(this);
         return object;
     };
 
@@ -3634,13 +3654,88 @@ define([
         var orthogonalAxis = Cartesian3.mostOrthogonalAxis(direction, scratchRight);
         var right = Cartesian3.cross(direction, orthogonalAxis, scratchRight);
         var up = Cartesian3.cross(direction, right, scratchUp);
+
         camera.position = ray.origin;
         camera.direction = direction;
         camera.up = up;
         camera.right = right;
     }
 
-    function getRayIntersection(scene, ray) {
+    function updateAsyncLoader(scene, asyncLoader) {
+        var context = scene._context;
+        var uniformState = context.uniformState;
+        var frameState = scene._frameState;
+
+        var view = scene._pickOffscreenView;
+        scene._view = view;
+
+        var ray = asyncLoader.ray;
+        var primitives = asyncLoader.primitives;
+
+        updateCameraFromRay(ray, view.camera);
+
+        // Update with previous frame's number and time, assuming that render is called first.
+        updateFrameState(scene, frameState.frameNumber, frameState.time);
+        frameState.passes.offscreen = true;
+        frameState.passes.async = true;
+
+        uniformState.update(frameState);
+
+        var ready = true;
+        var primitivesLength = primitives.length;
+        for (var i = 0; i < primitivesLength; ++i) {
+            var primitive = primitives[i];
+            if (scene.primitives.contains(primitive)) {
+                // Only update primitives that are still contained in the scene's primitive collection
+                ready = primitive.updateAsync(frameState) && ready;
+            }
+        }
+
+        scene._view = scene._defaultView;
+
+        if (ready) {
+            frameState.afterRender.push(function() {
+                asyncLoader.deferred.resolve();
+            });
+        }
+
+        return ready;
+    }
+
+    function updateAsyncLoaders(scene) {
+        var asyncLoaders = scene._asyncLoaders;
+        for (var i = 0; i < asyncLoaders.length; ++i) {
+            var ready = updateAsyncLoader(scene, asyncLoaders[i]);
+            if (ready) {
+                asyncLoaders.splice(i--, 1);
+            }
+        }
+    }
+
+    function launchAsyncLoader(scene, ray, objectsToExclude, callback) {
+        var asyncPrimitives = [];
+        var primitives = scene.primitives;
+        var length = primitives.length;
+        for (var i = 0; i < length; ++i) {
+            var primitive = primitives.get(i);
+            if (primitive instanceof Cesium3DTileset) {
+                if (!defined(objectsToExclude) || objectsToExclude.indexOf(primitive) === -1) {
+                    asyncPrimitives.push(primitive);
+                }
+            }
+        }
+        if (asyncPrimitives.length === 0) {
+            return when.resolve(callback());
+        }
+
+        var asyncLoader = new AsyncLoader(ray, asyncPrimitives);
+        scene._asyncLoaders.push(asyncLoader);
+        return asyncLoader.promise.then(function() {
+            return callback();
+        });
+    }
+
+    function getRayIntersection(scene, ray, async) {
         var context = scene._context;
         var uniformState = context.uniformState;
         var frameState = scene._frameState;
@@ -3661,6 +3756,7 @@ define([
         frameState.invertClassification = false;
         frameState.passes.pick = true;
         frameState.passes.offscreen = true;
+        frameState.passes.async = async;
 
         uniformState.update(frameState);
 
@@ -3689,7 +3785,6 @@ define([
 
         scene._view = scene._defaultView;
         context.endFrame();
-        callAfterRenderFunctions(scene);
 
         if (defined(object) || defined(position)) {
             return {
@@ -3699,7 +3794,7 @@ define([
         }
     }
 
-    function getRayIntersections(scene, ray, limit, objectsToExclude) {
+    function getRayIntersections(scene, ray, limit, objectsToExclude, async) {
         //>>includeStart('debug', pragmas.debug);
         Check.defined('ray', ray);
         if (scene._mode !== SceneMode.SCENE3D) {
@@ -3707,9 +3802,20 @@ define([
         }
         //>>includeEnd('debug');
         var pickCallback = function() {
-            return getRayIntersection(scene, ray);
+            return getRayIntersection(scene, ray, async);
         };
         return drillPick(limit, pickCallback, objectsToExclude);
+    }
+
+    function pickFromRay(scene, ray, objectsToExclude, async) {
+        var results = getRayIntersections(scene, ray, 1, objectsToExclude, async);
+        if (results.length > 0) {
+            return results[0];
+        }
+    }
+
+    function drillPickFromRay(scene, ray, limit, objectsToExclude, async) {
+        return getRayIntersections(scene, ray, limit, objectsToExclude, async);
     }
 
     /**
@@ -3727,10 +3833,7 @@ define([
      * @exception {DeveloperError} Ray intersections are only supported in 3D mode.
      */
     Scene.prototype.pickFromRay = function(ray, objectsToExclude) {
-        var results = getRayIntersections(this, ray, 1, objectsToExclude);
-        if (results.length > 0) {
-            return results[0];
-        }
+        return pickFromRay(this, ray, objectsToExclude, false);
     };
 
     /**
@@ -3750,7 +3853,50 @@ define([
      * @exception {DeveloperError} Ray intersections are only supported in 3D mode.
      */
     Scene.prototype.drillPickFromRay = function(ray, limit, objectsToExclude) {
-        return getRayIntersections(this, ray, limit, objectsToExclude);
+        return drillPickFromRay(this, ray, limit, objectsToExclude, false);
+    };
+
+    /**
+     * Initiates an asynchronous {@link Scene#pickFromRay} request using the maximum level of detail for 3D Tilesets
+     * regardless of visibility.
+     *
+     * @private
+     *
+     * @param {Ray} ray The ray.
+     * @param {Object[]} [objectsToExclude] A list of primitives, entities, or features to exclude from the ray intersection.
+     * @returns {Promise.<Object>} A promise that resolves to an object containing the object and position of the first intersection.
+     *
+     * @exception {DeveloperError} Ray intersections are only supported in 3D mode.
+     */
+    Scene.prototype.pickFromRayMostDetailed = function(ray, objectsToExclude) {
+        var that = this;
+        ray = Ray.clone(ray);
+        objectsToExclude = objectsToExclude.slice();
+        return launchAsyncLoader(this, ray, objectsToExclude, function() {
+            return pickFromRay(that, ray, objectsToExclude, true);
+        });
+    };
+
+    /**
+     * Initiates an asynchronous {@link Scene#drillPickFromRay} request using the maximum level of detail for 3D Tilesets
+     * regardless of visibility.
+     *
+     * @private
+     *
+     * @param {Ray} ray The ray.
+     * @param {Number} [limit=Number.MAX_VALUE] If supplied, stop finding intersections after this many intersections.
+     * @param {Object[]} [objectsToExclude] A list of primitives, entities, or features to exclude from the ray intersection.
+     * @returns {Promise.<Object[]>} A promise that resolves to a list of objects containing the object and position of each intersection.
+     *
+     * @exception {DeveloperError} Ray intersections are only supported in 3D mode.
+     */
+    Scene.prototype.drillPickFromRayMostDetailed = function(ray, limit, objectsToExclude) {
+        var that = this;
+        ray = Ray.clone(ray);
+        objectsToExclude = objectsToExclude.slice();
+        return launchAsyncLoader(this, ray, objectsToExclude, function() {
+            return drillPickFromRay(that, ray, limit, objectsToExclude, true);
+        });
     };
 
     var scratchSurfacePosition = new Cartesian3();
@@ -3780,6 +3926,33 @@ define([
         return getRayForSampleHeight(scene, cartographic);
     }
 
+    function getHeightFromCartesian(scene, cartesian) {
+        var globe = scene.globe;
+        var ellipsoid = defined(globe) ? globe.ellipsoid : scene.mapProjection.ellipsoid;
+        var cartographic = Cartographic.fromCartesian(cartesian, ellipsoid, scratchCartographic);
+        return cartographic.height;
+    }
+
+    function sampleHeightMostDetailed(scene, position, objectsToExclude) {
+        var ray = getRayForSampleHeight(scene, position);
+        return launchAsyncLoader(scene, ray, objectsToExclude, function() {
+            var pickResult = pickFromRay(scene, ray, objectsToExclude, true);
+            if (defined(pickResult)) {
+                return getHeightFromCartesian(scene, pickResult.position);
+            }
+        });
+    }
+
+    function clampToHeightMostDetailed(scene, cartesian, objectsToExclude) {
+        var ray = getRayForClampToHeight(scene, cartesian);
+        return launchAsyncLoader(scene, ray, objectsToExclude, function() {
+            var pickResult = pickFromRay(scene, ray, objectsToExclude, true);
+            if (defined(pickResult)) {
+                return pickResult.position;
+            }
+        });
+    }
+
     /**
      * Returns the height of scene geometry at the given cartographic position or <code>undefined</code> if there was no
      * scene geometry to sample height from. May be used to clamp objects to the globe, 3D Tiles, or primitives in the scene.
@@ -3793,6 +3966,8 @@ define([
      * @returns {Number} The height. This may be <code>undefined</code> if there was no scene geometry to sample height from.
      *
      * @see Scene#clampToHeight
+     * @see Scene#clampToHeightMostDetailed
+     * @see Scene#sampleHeightMostDetailed
      *
      * @exception {DeveloperError} Ray intersections are only supported in 3D mode.
      * @exception {DeveloperError} sampleHeight required depth texture support. Check sampleHeightSupported.
@@ -3805,13 +3980,9 @@ define([
         }
         //>>includeEnd('debug');
         var ray = getRayForSampleHeight(this, position);
-        var pickResult = this.pickFromRay(ray, objectsToExclude);
+        var pickResult = pickFromRay(this, ray, objectsToExclude, false);
         if (defined(pickResult)) {
-            var cartesian = pickResult.position;
-            var globe = this.globe;
-            var ellipsoid = defined(globe) ? globe.ellipsoid : this.mapProjection.ellipsoid;
-            var cartographic = Cartographic.fromCartesian(cartesian, ellipsoid, scratchCartographic);
-            return cartographic.height;
+            return getHeightFromCartesian(this, pickResult.position);
         }
     };
 
@@ -3830,6 +4001,8 @@ define([
      * @returns {Cartesian3} The modified result parameter or a new Cartesian3 instance if one was not provided. This may be <code>undefined</code> if there was no scene geometry to clamp to.
      *
      * @see Scene#sampleHeight
+     * @see Scene#sampleHeightMostDetailed
+     * @see Scene#clampToHeightMostDetailed
      *
      * @exception {DeveloperError} Ray intersections are only supported in 3D mode.
      * @exception {DeveloperError} clampToHeight required depth texture support. Check clampToHeightSupported.
@@ -3842,10 +4015,74 @@ define([
         }
         //>>includeEnd('debug');
         var ray = getRayForClampToHeight(this, cartesian);
-        var pickResult = this.pickFromRay(ray, objectsToExclude);
+        var pickResult = pickFromRay(this, ray, objectsToExclude, false);
         if (defined(pickResult)) {
             return Cartesian3.clone(pickResult.position, result);
         }
+    };
+
+    /**
+     * Initiates an asynchronous {@link Scene#sampleHeight} request using the maximum level of detail for 3D Tilesets
+     * regardless of visibility.
+     *
+     * @param {Cartographic|Cartographic[]} positions The cartographic position(s) to sample height from.
+     * @param {Object[]} [objectsToExclude] A list of primitives, entities, or features to not sample height from.
+     * @returns {Promise.<Number|Number[]>} A promise that resolves to the height(s), or <code>undefined</code> if there was no scene geometry to sample height from.
+     *
+     * @see Scene#sampleHeight
+     *
+     * @exception {DeveloperError} Ray intersections are only supported in 3D mode.
+     * @exception {DeveloperError} sampleHeightMostDetailed required depth texture support. Check sampleHeightSupported.
+     */
+    Scene.prototype.sampleHeightMostDetailed = function(positions, objectsToExclude) {
+        //>>includeStart('debug', pragmas.debug);
+        Check.defined('positions', positions);
+        if (!this.sampleHeightSupported) {
+            throw new DeveloperError('sampleHeightMostDetailed required depth texture support. Check sampleHeightSupported.');
+        }
+        //>>includeEnd('debug');
+        objectsToExclude = defined(objectsToExclude) ? objectsToExclude.slice() : objectsToExclude;
+        positions = isArray(positions) ? positions : [positions];
+        var length = positions.length;
+        var promises = new Array(length);
+        for (var i = 0; i < length; ++i) {
+            promises[i] = sampleHeightMostDetailed(this, positions[i], objectsToExclude);
+        }
+        return when.all(promises).then(function(heights) {
+            return (length === 1) ? heights[0] : heights;
+        });
+    };
+
+    /**
+     * Initiates an asynchronous {@link Scene#clampToHeight} request using the maximum level of detail for 3D Tilesets
+     * regardless of visibility.
+     *
+     * @param {Cartesian3} cartesians The cartesian positions.
+     * @param {Object[]} [objectsToExclude] A list of primitives, entities, or features to not clamp to.
+     * @returns {Promise.<Cartesian3|Cartesian3[]>} A promise that resolves to the clamped cartesian position(s), or <code>undefined</code> if there was no scene geometry to clamp to.
+     *
+     * @see Scene#clampToHeight
+     *
+     * @exception {DeveloperError} Ray intersections are only supported in 3D mode.
+     * @exception {DeveloperError} clampToHeightMostDetailed required depth texture support. Check clampToHeightSupported.
+     */
+    Scene.prototype.clampToHeightMostDetailed = function(cartesians, objectsToExclude) {
+        //>>includeStart('debug', pragmas.debug);
+        Check.defined('cartesian', cartesians);
+        if (!this.clampToHeightSupported) {
+            throw new DeveloperError('clampToHeightMostDetailed required depth texture support. Check clampToHeightSupported.');
+        }
+        //>>includeEnd('debug');
+        objectsToExclude = defined(objectsToExclude) ? objectsToExclude.slice() : objectsToExclude;
+        cartesians = isArray(cartesians) ? cartesians : [cartesians];
+        var length = cartesians.length;
+        var promises = new Array(length);
+        for (var i = 0; i < length; ++i) {
+            promises[i] = clampToHeightMostDetailed(this, cartesians[i], objectsToExclude);
+        }
+        return when.all(promises).then(function(cartesians) {
+            return (length === 1) ? cartesians[0] : cartesians;
+        });
     };
 
     /**
