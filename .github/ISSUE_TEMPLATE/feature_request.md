@@ -1,12 +1,14 @@
 ---
 name: Request a feature
-about: New ideas & improvements to Cesium are welcome.
+about: New ideas & improvements to Cesium are always welcome.
 ---
 
 <!-- 
 	Thanks for helping make Cesium better! 
 
-	When suggesting an idea, give examples of the intended use case.
+	When suggesting an idea, give examples of the intended use case. Features that benefit the wider community are more likely to be prioritized. 
 
-	If you're interested in seeing this feature in Cesium and want to work on it yourself,  we absolutely appreciate contributions! Check out the contributor's guide (https://github.com/AnalyticalGraphicsInc/cesium/blob/master/CONTRIBUTING.md). We're happy to provide advice and feedback. 
+	The best way to get your ideas into Cesium is to help us! We love contributions and are always happy to be provide feedback and advice. Check out the contributor guide to get started: 
+
+	https://github.com/AnalyticalGraphicsInc/cesium/blob/master/CONTRIBUTING.md
 --> 

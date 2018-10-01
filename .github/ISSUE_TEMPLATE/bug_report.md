@@ -6,10 +6,10 @@ about: Let us know so we can fix it!
 <!--
 	Thanks for helping us improve Cesium! Please describe what the expected behavior is vs what actually happens. 
 
-	Creating a Sandcastle example (https://cesiumjs.org/Cesium/Build/Apps/Sandcastle/) that reproduces the issue helps us a lot in tracking down bugs. 
+	Creating a Sandcastle example (https://cesiumjs.org/Cesium/Build/Apps/Sandcastle/) that reproduces the issue helps us a lot in tracking down bugs. Paste the link you get from the "Share" button below.
 --> 
 
-Sandcastle example reproducing the issue: 
+Sandcastle example: 
 
 Browser:
 
