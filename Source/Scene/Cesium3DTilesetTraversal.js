@@ -316,7 +316,11 @@ define([
             return;
         }
 
-        if (tile.hasTilesetContent && tile.children.length > 0) {
+        var hasChildren = tile.children.length > 0;
+        if (tile.hasTilesetContent && hasChildren) {
+            // Use the root tile's visibility instead of this tile's visibility.
+            // The root tile may be culled by the children bounds optimization in which
+            // case this tile should also be culled.
             var child = tile.children[0];
             updateTileVisibility(tileset, child, frameState);
             tile._visible = child._visible;
@@ -331,7 +335,6 @@ define([
         // Optimization - if none of the tile's children are visible then this tile isn't visible
         var replace = tile.refine === Cesium3DTileRefine.REPLACE;
         var useOptimization = tile._optimChildrenWithinParent === Cesium3DTileOptimizationHint.USE_OPTIMIZATION;
-        var hasChildren = tile.children.length > 0;
         if (replace && useOptimization && hasChildren) {
             if (!anyChildrenVisible(tileset, tile, frameState)) {
                 ++tileset._statistics.numberOfTilesCulledWithChildrenUnion;
