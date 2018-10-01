@@ -132,7 +132,8 @@ define([
         var tileset = {
             _statistics : {
                 batchTableByteLength : 0
-            }
+            },
+            root : {}
         };
         var url = Resource.createIfNeeded('');
         var content = Cesium3DTileContentFactory[type](tileset, mockTile, url, arrayBuffer, 0);

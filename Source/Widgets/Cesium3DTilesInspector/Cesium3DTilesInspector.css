@@ -35,41 +35,6 @@ ul.cesium-cesiumInspector-statistics + ul.cesium-cesiumInspector-statistics {
 .cesium-cesiumInspector-slider input[type=range] {
     margin-left: 5px;
     vertical-align: middle;
-    -webkit-appearance: none;
-    background: #ddd;
-    height: 3px;
-}
-
-input[type=range]:focus {
-    outline: none;
-}
-
-.cesium-cesiumInspector-slider input[type=range]::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    border: 1px solid #000000;
-    height: 10px;
-    width: 10px;
-    border-radius: 5px;
-    background: #ffffff;
-    cursor: pointer;
-}
-
-.cesium-cesiumInspector-slider input[type=range]::-moz-range-thumb {
-    border: 1px solid #000000;
-    height: 10px;
-    width: 10px;
-    border-radius: 5px;
-    background: #ffffff;
-    cursor: pointer;
-}
-
-.cesium-cesiumInspector-slider input[type=range]::-moz-range-thumb {
-    border: 1px solid #000000;
-    height: 10px;
-    width: 10px;
-    border-radius: 5px;
-    background: #ffffff;
-    cursor: pointer;
 }
 
 .cesium-cesiumInspector-hide .cesium-cesiumInspector-styleEditor {

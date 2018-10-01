@@ -11,6 +11,7 @@ defineSuite([
         'Core/PerspectiveFrustum',
         'Core/Transforms',
         'Renderer/Pass',
+        'Scene/Cesium3DTileRefine',
         'Scene/Cesium3DTileStyle',
         'Scene/ClippingPlane',
         'Scene/ClippingPlaneCollection',
@@ -34,6 +35,7 @@ defineSuite([
         PerspectiveFrustum,
         Transforms,
         Pass,
+        Cesium3DTileRefine,
         Cesium3DTileStyle,
         ClippingPlane,
         ClippingPlaneCollection,
@@ -517,6 +519,7 @@ defineSuite([
 
         return Cesium3DTilesTester.loadTileset(scene, pointCloudNoColorUrl).then(function(tileset) {
             tileset.pointCloudShading.eyeDomeLighting = false;
+            tileset.root.refine = Cesium3DTileRefine.REPLACE;
             postLoadCallback(scene, tileset);
             scene.destroyForSpecs();
         });
@@ -934,8 +937,7 @@ defineSuite([
             tileset.clippingPlanes = new ClippingPlaneCollection({
                 planes : [
                     clipPlane
-                ],
-                modelMatrix : Transforms.eastNorthUpToFixedFrame(tileset.boundingSphere.center)
+                ]
             });
 
             expect(scene).notToRender(color);
@@ -995,7 +997,7 @@ defineSuite([
     });
 
     it('clipping planes union regions (Float)', function() {
-        if (!ClippingPlaneCollection.useFloatTexture(scene._context)) {
+        if (!ClippingPlaneCollection.useFloatTexture(scene.context)) {
             // This configuration for the test fails in uint8 mode due to the small context
             return;
         }

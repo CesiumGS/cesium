@@ -41,7 +41,7 @@ defineSuite([
     beforeEach(function() {
         polylines = new PolylineCollection();
         scene.mode = SceneMode.SCENE3D;
-        scene._camera = new Camera(scene);
+        scene.camera = new Camera(scene);
     });
 
     afterEach(function() {

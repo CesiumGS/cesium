@@ -52,7 +52,7 @@ var viewer = new Cesium.Viewer('cesiumContainer', {
 });
 var globe = viewer.scene.globe;
 
-var exampleTypes = ['Cesium Man', 'St. Helens'];
+var exampleTypes = ['Cesium Man', 'St. Helens', 'Grand Canyon Isolated'];
 var viewModel = {
     exampleTypes : exampleTypes,
     currentExampleType : exampleTypes[0],
@@ -191,6 +191,27 @@ function loadStHelens() {
     });
 }
 
+function loadGrandCanyon(){
+    // Pick a position at the Grand Canyon
+    var position = Cesium.Cartographic.toCartesian(new Cesium.Cartographic.fromDegrees(-113.2665534, 36.0939345, 100));
+    var distance = 3000.0;
+    var boundingSphere = new Cesium.BoundingSphere(position, distance);
+
+    globe.clippingPlanes = new Cesium.ClippingPlaneCollection({
+        modelMatrix : Cesium.Transforms.eastNorthUpToFixedFrame(position),
+        planes : [
+            new Cesium.ClippingPlane(new Cesium.Cartesian3( 1.0,  0.0, 0.0), distance),
+            new Cesium.ClippingPlane(new Cesium.Cartesian3(-1.0,  0.0, 0.0), distance),
+            new Cesium.ClippingPlane(new Cesium.Cartesian3( 0.0,  1.0, 0.0), distance),
+            new Cesium.ClippingPlane(new Cesium.Cartesian3( 0.0, -1.0, 0.0), distance)
+        ],
+        unionClippingRegions : true
+    });
+
+    viewer.camera.viewBoundingSphere(boundingSphere, new Cesium.HeadingPitchRange(0.5, -0.5, boundingSphere.radius * 5.0));
+    viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
+}
+
 Cesium.knockout.getObservable(viewModel, 'clippingPlanesEnabled').subscribe(function(value) {
     globe.clippingPlanes.enabled = value;
     clippingPlanesEnabled = value;
@@ -207,6 +228,8 @@ Cesium.knockout.getObservable(viewModel, 'currentExampleType').subscribe(functio
         loadCesiumMan();
     } else if (newValue === exampleTypes[1]) {
         loadStHelens();
+    } else if (newValue === exampleTypes[2]) {
+        loadGrandCanyon();
     }
 });
 

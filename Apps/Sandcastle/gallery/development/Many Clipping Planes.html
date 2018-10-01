@@ -226,9 +226,7 @@ Cesium.knockout.getObservable(viewModel, 'currentExampleType').subscribe(functio
         });
     } else if (newValue === clipObjects[3]) {
         // i3dm
-        loadTileset(instancedUrl, 100.0).then(function() {
-            tileset.clippingPlanes.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(tileset.boundingSphere.center);
-        });
+        loadTileset(instancedUrl, 100.0);
     } else if (newValue === clipObjects[4]) {
         // Terrain
         var position = Cesium.Cartesian3.fromRadians(-2.0872979473351286, 0.6596620013036164, 2380.0);

@@ -156,13 +156,15 @@ define([
             var childrenLength = children.length;
             for (var i = 0; i < childrenLength; ++i) {
                 var child = children[i];
-                if (child.contentAvailable) {
-                    updateTile(tileset, child, frameState);
-                    touchTile(tileset, child, frameState);
-                    selectTile(tileset, child, frameState);
-                } else if (child._depth - root._depth < descendantSelectionDepth) {
-                    // Continue traversing, but not too far
-                    stack.push(child);
+                if (isVisible(child)) {
+                    if (child.contentAvailable) {
+                        updateTile(tileset, child, frameState);
+                        touchTile(tileset, child, frameState);
+                        selectTile(tileset, child, frameState);
+                    } else if (child._depth - root._depth < descendantSelectionDepth) {
+                        // Continue traversing, but not too far
+                        stack.push(child);
+                    }
                 }
             }
         }
@@ -213,7 +215,7 @@ define([
             return tile._distanceToCamera;
         }
         var parent = tile.parent;
-        var useParentScreenSpaceError = defined(parent) && (!skipLevelOfDetail(tileset) || (tile._screenSpaceError === 0.0));
+        var useParentScreenSpaceError = defined(parent) && (!skipLevelOfDetail(tileset) || (tile._screenSpaceError === 0.0) || parent.hasTilesetContent);
         var screenSpaceError = useParentScreenSpaceError ? parent._screenSpaceError : tile._screenSpaceError;
         var rootScreenSpaceError = tileset.root._screenSpaceError;
         return rootScreenSpaceError - screenSpaceError; // Map higher SSE to lower values (e.g. root tile is highest priority)
@@ -296,6 +298,17 @@ define([
         return anyVisible;
     }
 
+    function meetsScreenSpaceErrorEarly(tileset, tile, frameState) {
+        var parent = tile.parent;
+        if (!defined(parent) || parent.hasTilesetContent || (parent.refine !== Cesium3DTileRefine.ADD)) {
+            return false;
+        }
+
+        // Use parent's geometric error with child's box to see if the tile already meet the SSE
+        var sse = getScreenSpaceError(tileset, parent.geometricError, tile, frameState);
+        return sse <= tileset._maximumScreenSpaceError;
+    }
+
     function updateTileVisibility(tileset, tile, frameState) {
         updateVisibility(tileset, tile, frameState);
 
@@ -303,9 +316,18 @@ define([
             return;
         }
 
-        // Use parent's geometric error with child's box to see if the tile already meet the SSE
-        var parent = tile.parent;
-        if (defined(parent) && (parent.refine === Cesium3DTileRefine.ADD) && getScreenSpaceError(tileset, parent.geometricError, tile, frameState) <= tileset._maximumScreenSpaceError) {
+        var hasChildren = tile.children.length > 0;
+        if (tile.hasTilesetContent && hasChildren) {
+            // Use the root tile's visibility instead of this tile's visibility.
+            // The root tile may be culled by the children bounds optimization in which
+            // case this tile should also be culled.
+            var child = tile.children[0];
+            updateTileVisibility(tileset, child, frameState);
+            tile._visible = child._visible;
+            return;
+        }
+
+        if (meetsScreenSpaceErrorEarly(tileset, tile, frameState)) {
             tile._visible = false;
             return;
         }
@@ -313,7 +335,6 @@ define([
         // Optimization - if none of the tile's children are visible then this tile isn't visible
         var replace = tile.refine === Cesium3DTileRefine.REPLACE;
         var useOptimization = tile._optimChildrenWithinParent === Cesium3DTileOptimizationHint.USE_OPTIMIZATION;
-        var hasChildren = tile.children.length > 0;
         if (replace && useOptimization && hasChildren) {
             if (!anyChildrenVisible(tileset, tile, frameState)) {
                 ++tileset._statistics.numberOfTilesCulledWithChildrenUnion;
@@ -436,6 +457,18 @@ define([
         return tile._screenSpaceError > baseScreenSpaceError;
     }
 
+    function canTraverse(tileset, tile) {
+        if (tile.children.length === 0) {
+            return false;
+        }
+        if (tile.hasTilesetContent) {
+            // Traverse external tileset to visit its root tile
+            // Don't traverse if the subtree is expired because it will be destroyed
+            return !tile.contentExpired;
+        }
+        return tile._screenSpaceError > tileset._maximumScreenSpaceError;
+    }
+
     function executeTraversal(tileset, root, baseScreenSpaceError, maximumScreenSpaceError, frameState) {
         // Depth-first traversal that traverses all visible tiles and marks tiles for selection.
         // If skipLevelOfDetail is off then a tile does not refine until all children are loaded.
@@ -453,27 +486,25 @@ define([
             var baseTraversal = inBaseTraversal(tileset, tile, baseScreenSpaceError);
             var add = tile.refine === Cesium3DTileRefine.ADD;
             var replace = tile.refine === Cesium3DTileRefine.REPLACE;
-            var children = tile.children;
-            var childrenLength = children.length;
             var parent = tile.parent;
             var parentRefines = !defined(parent) || parent._refines;
-            var traverse = (childrenLength > 0) && (tile._screenSpaceError > maximumScreenSpaceError);
             var refines = false;
 
-            if (tile.hasTilesetContent && tile.contentExpired) {
-                // Don't traverse expired subtree because it will be destroyed
-                traverse = false;
-            }
-
-            if (traverse) {
+            if (canTraverse(tileset, tile)) {
                 refines = updateAndPushChildren(tileset, tile, stack, frameState) && parentRefines;
             }
+
+            var stoppedRefining = !refines && parentRefines;
 
             if (hasEmptyContent(tile)) {
                 // Add empty tile just to show its debug bounding volume
                 // If the tile has tileset content load the external tileset
+                // If the tile cannot refine further select its nearest loaded ancestor
                 addEmptyTile(tileset, tile, frameState);
                 loadTile(tileset, tile, frameState);
+                if (stoppedRefining) {
+                    selectDesiredTile(tileset, tile, frameState);
+                }
             } else if (add) {
                 // Additive tiles are always loaded and selected
                 selectDesiredTile(tileset, tile, frameState);
@@ -483,18 +514,16 @@ define([
                     // Always load tiles in the base traversal
                     // Select tiles that can't refine further
                     loadTile(tileset, tile, frameState);
-                    if (!refines && parentRefines) {
+                    if (stoppedRefining) {
                         selectDesiredTile(tileset, tile, frameState);
                     }
-                } else {
-                    // Load tiles that are not skipped or can't refine further. In practice roughly half the tiles stay unloaded.
-                    // Select tiles that can't refine further. If the tile doesn't have loaded content it will try to select an ancestor with loaded content instead.
-                    if (!refines) { // eslint-disable-line
-                        selectDesiredTile(tileset, tile, frameState);
-                        loadTile(tileset, tile, frameState);
-                    } else if (reachedSkippingThreshold(tileset, tile)) {
-                        loadTile(tileset, tile, frameState);
-                    }
+                } else if (stoppedRefining) {
+                    // In skip traversal, load and select tiles that can't refine further
+                    selectDesiredTile(tileset, tile, frameState);
+                    loadTile(tileset, tile, frameState);
+                } else if (reachedSkippingThreshold(tileset, tile)) {
+                    // In skip traversal, load tiles that aren't skipped. In practice roughly half the tiles stay unloaded.
+                    loadTile(tileset, tile, frameState);
                 }
             }
 
@@ -508,7 +537,6 @@ define([
     function executeEmptyTraversal(tileset, root, frameState) {
         // Depth-first traversal that checks if all nearest descendants with content are loaded. Ignores visibility.
         var allDescendantsLoaded = true;
-        var maximumScreenSpaceError = tileset._maximumScreenSpaceError;
         var stack = emptyTraversal.stack;
         stack.push(root);
 
@@ -520,7 +548,7 @@ define([
             var childrenLength = children.length;
 
             // Only traverse if the tile is empty - traversal stop at descendants with content
-            var traverse = hasEmptyContent(tile) && (childrenLength > 0) && (tile._screenSpaceError > maximumScreenSpaceError);
+            var traverse = hasEmptyContent(tile) && canTraverse(tileset, tile);
 
             // Traversal stops but the tile does not have content yet.
             // There will be holes if the parent tries to refine to its children, so don't refine.
@@ -567,7 +595,6 @@ define([
      * selected tiles must be no deeper than 15. This is still very unlikely.
      */
     function traverseAndSelect(tileset, root, frameState) {
-        var maximumScreenSpaceError = tileset._maximumScreenSpaceError;
         var stack = selectionTraversal.stack;
         var ancestorStack = selectionTraversal.ancestorStack;
         var lastAncestor;
@@ -600,7 +627,7 @@ define([
             var shouldSelect = tile._shouldSelect;
             var children = tile.children;
             var childrenLength = children.length;
-            var traverse = (childrenLength > 0) && (tile._screenSpaceError > maximumScreenSpaceError);
+            var traverse = canTraverse(tileset, tile);
 
             if (shouldSelect) {
                 if (add) {
