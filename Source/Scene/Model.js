@@ -654,6 +654,8 @@ define([
         this._rtcCenterEye = undefined; // in eye coordinates
         this._rtcCenter3D = undefined;  // in world coordinates
         this._rtcCenter2D = undefined;  // in projected world coordinates
+
+        this._keepPipelineExtras = options.keepPipelineExtras; // keep the buffers in memory for use in other applications
     }
 
     defineProperties(Model.prototype, {
@@ -1676,7 +1678,7 @@ define([
                     }
                     programPrimitives[meshId + '.primitive.' + primitiveId] = primitive;
                 });
-                }
+            }
         });
 
         model._runtime.meshesByName = runtimeMeshesByName;
@@ -4139,7 +4141,9 @@ define([
             }
 
             if (loadResources.finished()) {
-                removePipelineExtras(this.gltf);
+                if (!this._keepPipelineExtras) {
+                    removePipelineExtras(this.gltf);
+                }
 
                 this._loadResources = undefined;  // Clear CPU memory since WebGL resources were created.
 
