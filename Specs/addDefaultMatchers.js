@@ -291,7 +291,7 @@ define([
 
             notToPick : function(util, customEqualityTesters) {
                 return {
-                    compare : function(actual, expected, x, y, width, height) {
+                    compare : function(actual, x, y, width, height) {
                         return pickPrimitiveEquals(actual, undefined, x, y, width, height);
                     }
                 };
@@ -307,7 +307,7 @@ define([
 
             notToDrillPick : function(util, customEqualityTesters) {
                 return {
-                    compare : function(actual, expected, x, y, width, height) {
+                    compare : function(actual, x, y, width, height) {
                         return drillPickPrimitiveEquals(actual, 0, x, y, width, height);
                     }
                 };
@@ -336,9 +336,9 @@ define([
 
             toDrillPickAndCall : function(util, customEqualityTesters) {
                 return {
-                    compare : function(actual, expected) {
+                    compare : function(actual, expected, limit) {
                         var scene = actual;
-                        var pickedObjects = scene.drillPick(new Cartesian2(0, 0));
+                        var pickedObjects = scene.drillPick(new Cartesian2(0, 0), limit);
 
                         var webglStub = !!window.webglStub;
                         if (!webglStub) {
@@ -346,6 +346,90 @@ define([
                             // spec fail, as we desired, even though this matcher sets pass to true.
                             var callback = expected;
                             callback(pickedObjects);
+                        }
+
+                        return {
+                            pass : true
+                        };
+                    }
+                };
+            },
+
+            toPickFromRayAndCall : function(util, customEqualityTesters) {
+                return {
+                    compare : function(actual, expected, ray, objectsToExclude) {
+                        var scene = actual;
+                        var result = scene.pickFromRay(ray, objectsToExclude);
+
+                        var webglStub = !!window.webglStub;
+                        if (!webglStub) {
+                            // The callback may have expectations that fail, which still makes the
+                            // spec fail, as we desired, even though this matcher sets pass to true.
+                            var callback = expected;
+                            callback(result);
+                        }
+
+                        return {
+                            pass : true
+                        };
+                    }
+                };
+            },
+
+            toDrillPickFromRayAndCall : function(util, customEqualityTesters) {
+                return {
+                    compare : function(actual, expected, ray, limit, objectsToExclude) {
+                        var scene = actual;
+                        var results = scene.drillPickFromRay(ray, limit, objectsToExclude);
+
+                        var webglStub = !!window.webglStub;
+                        if (!webglStub) {
+                            // The callback may have expectations that fail, which still makes the
+                            // spec fail, as we desired, even though this matcher sets pass to true.
+                            var callback = expected;
+                            callback(results);
+                        }
+
+                        return {
+                            pass : true
+                        };
+                    }
+                };
+            },
+
+            toSampleHeightAndCall : function(util, customEqualityTesters) {
+                return {
+                    compare : function(actual, expected, position, objectsToExclude) {
+                        var scene = actual;
+                        var results = scene.sampleHeight(position, objectsToExclude);
+
+                        var webglStub = !!window.webglStub;
+                        if (!webglStub) {
+                            // The callback may have expectations that fail, which still makes the
+                            // spec fail, as we desired, even though this matcher sets pass to true.
+                            var callback = expected;
+                            callback(results);
+                        }
+
+                        return {
+                            pass : true
+                        };
+                    }
+                };
+            },
+
+            toClampToHeightAndCall : function(util, customEqualityTesters) {
+                return {
+                    compare : function(actual, expected, cartesian, objectsToExclude) {
+                        var scene = actual;
+                        var results = scene.clampToHeight(cartesian, objectsToExclude);
+
+                        var webglStub = !!window.webglStub;
+                        if (!webglStub) {
+                            // The callback may have expectations that fail, which still makes the
+                            // spec fail, as we desired, even though this matcher sets pass to true.
+                            var callback = expected;
+                            callback(results);
                         }
 
                         return {

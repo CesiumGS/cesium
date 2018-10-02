@@ -472,6 +472,7 @@ define([
             // Update for clipping planes
             var tilesetClippingPlanes = this._tileset.clippingPlanes;
             if (this._tile.clippingPlanesDirty && defined(tilesetClippingPlanes)) {
+                model.clippingPlaneOffsetMatrix = this._tileset.clippingPlaneOffsetMatrix;
                 // Dereference the clipping planes from the model if they are irrelevant - saves on shading
                 // Link/Dereference directly to avoid ownership checks.
                 model._clippingPlanes = (tilesetClippingPlanes.enabled && this._tile._isClipped) ? tilesetClippingPlanes : undefined;

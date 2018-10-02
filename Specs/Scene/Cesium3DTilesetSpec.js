@@ -15,6 +15,7 @@ defineSuite([
         'Core/PrimitiveType',
         'Core/RequestScheduler',
         'Core/Resource',
+        'Core/Transforms',
         'Renderer/ClearCommand',
         'Renderer/ContextLimits',
         'Scene/Cesium3DTile',
@@ -46,6 +47,7 @@ defineSuite([
         PrimitiveType,
         RequestScheduler,
         Resource,
+        Transforms,
         ClearCommand,
         ContextLimits,
         Cesium3DTile,
@@ -1214,6 +1216,23 @@ defineSuite([
             });
         });
 
+        it('does not select external tileset whose root has invisible children', function() {
+            return Cesium3DTilesTester.loadTileset(scene, tilesetOfTilesetsUrl).then(function(tileset) {
+                var center = Cartesian3.fromRadians(centerLongitude, centerLatitude, 50.0);
+                scene.camera.lookAt(center, new HeadingPitchRange(0.0, 1.57, 1.0));
+                var root = tileset.root;
+                var externalRoot = root.children[0];
+                externalRoot.refine = Cesium3DTileRefine.REPLACE;
+                scene.renderForSpecs();
+
+                expect(isSelected(tileset, root)).toBe(false);
+                expect(isSelected(tileset, externalRoot)).toBe(false);
+                expect(root._visible).toBe(false);
+                expect(externalRoot._visible).toBe(false);
+                expect(tileset.statistics.numberOfTilesCulledWithChildrenUnion).toBe(1);
+            });
+        });
+
         it('does not select visible tiles not meeting SSE with visible children', function() {
             return Cesium3DTilesTester.loadTileset(scene, tilesetReplacementWithViewerRequestVolumeUrl).then(function(tileset) {
                 var root = tileset.root;
@@ -1768,16 +1787,19 @@ defineSuite([
     it('all tiles loaded event is raised', function() {
         // Called first when only the root is visible and it becomes loaded, and then again when
         // the rest of the tileset is visible and all tiles are loaded.
-        var spyUpdate = jasmine.createSpy('listener');
+        var spyUpdate1 = jasmine.createSpy('listener');
+        var spyUpdate2 = jasmine.createSpy('listener');
         viewRootOnly();
         var tileset = scene.primitives.add(new Cesium3DTileset({
             url : tilesetUrl
         }));
-        tileset.allTilesLoaded.addEventListener(spyUpdate);
+        tileset.allTilesLoaded.addEventListener(spyUpdate1);
+        tileset.initialTilesLoaded.addEventListener(spyUpdate2);
         return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset).then(function() {
             viewAllTiles();
             return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset).then(function() {
-                expect(spyUpdate.calls.count()).toEqual(2);
+                expect(spyUpdate1.calls.count()).toEqual(2);
+                expect(spyUpdate2.calls.count()).toEqual(1);
             });
         });
     });
@@ -3132,7 +3154,9 @@ defineSuite([
 
             tileset.update(scene.frameState);
 
-            var plane = new ClippingPlane(Cartesian3.UNIT_Z, 0.0);
+            var radius = 287.0736139905632;
+
+            var plane = new ClippingPlane(Cartesian3.UNIT_X, radius);
             tileset.clippingPlanes = new ClippingPlaneCollection({
                 planes : [
                     plane
@@ -3145,7 +3169,7 @@ defineSuite([
             expect(statistics.numberOfCommands).toEqual(5);
             expect(root._isClipped).toBe(false);
 
-            plane.distance = -4081630.311150717; // center
+            plane.distance = -1;
 
             tileset.update(scene.frameState);
             scene.renderForSpecs();
@@ -3153,7 +3177,7 @@ defineSuite([
             expect(statistics.numberOfCommands).toEqual(3);
             expect(root._isClipped).toBe(true);
 
-            plane.distance = -4081630.31115071 - 287.0736139905632; // center + radius
+            plane.distance = -radius;
 
             tileset.update(scene.frameState);
             scene.renderForSpecs();
@@ -3174,7 +3198,9 @@ defineSuite([
 
             tileset.update(scene.frameState);
 
-            var plane = new ClippingPlane(Cartesian3.UNIT_Z, 0.0);
+            var radius = 142.19001637409772;
+
+            var plane = new ClippingPlane(Cartesian3.UNIT_Z, radius);
             tileset.clippingPlanes = new ClippingPlaneCollection({
                 planes : [
                     plane
@@ -3187,7 +3213,7 @@ defineSuite([
             expect(statistics.numberOfCommands).toEqual(6);
             expect(root._isClipped).toBe(false);
 
-            plane.distance = -4081608.4377916814; // center
+            plane.distance = 0;
 
             tileset.update(scene.frameState);
             scene.renderForSpecs();
@@ -3195,7 +3221,7 @@ defineSuite([
             expect(statistics.numberOfCommands).toEqual(6);
             expect(root._isClipped).toBe(true);
 
-            plane.distance = -4081608.4377916814 - 142.19001637409772; // center + radius
+            plane.distance = -radius;
 
             tileset.update(scene.frameState);
             scene.renderForSpecs();
@@ -3204,4 +3230,28 @@ defineSuite([
             expect(root._isClipped).toBe(true);
         });
     });
+
+    it('uses bounding sphere for clipping only if root has no transforms', function() {
+        return Cesium3DTilesTester.loadTileset(scene, tilesetOfTilesetsUrl).then(function(tileset) {
+            expect(tileset._useBoundingSphereForClipping).toBe(true);
+
+            return Cesium3DTilesTester.loadTileset(scene, withTransformBoxUrl).then(function(tileset) {
+                expect(tileset._useBoundingSphereForClipping).toBe(false);
+            });
+        });
+    });
+
+    it('correctly computes clippingPlaneOffsetMatrix', function() {
+        return Cesium3DTilesTester.loadTileset(scene, tilesetOfTilesetsUrl).then(function(tileset) {
+            var offsetMatrix = tileset.clippingPlaneOffsetMatrix;
+            var boundingSphereMatrix = Transforms.eastNorthUpToFixedFrame(tileset.root.boundingSphere.center);
+            expect(Matrix4.equals(offsetMatrix,boundingSphereMatrix)).toBe(true);
+
+            return Cesium3DTilesTester.loadTileset(scene, withTransformBoxUrl).then(function(tileset) {
+                offsetMatrix = tileset.clippingPlaneOffsetMatrix;
+                expect(Matrix4.equals(offsetMatrix,tileset.root.computedTransform)).toBe(true);
+            });
+        });
+    });
+
 }, 'WebGL');
