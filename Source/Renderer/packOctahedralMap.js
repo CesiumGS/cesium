@@ -45,15 +45,10 @@ define([
      * @returns {Texture} A texture containing all the packed convolutions. 
      *
      */
-    function packOctahedralMap(cubeMaps, context) {        
+    function packOctahedralMap(cubeMaps, context) { 
         //>>includeStart('debug', pragmas.debug);
         if (!defined(context)) {
             throw new DeveloperError('context is required.');
-        }
-        for (var i = 1; i < cubeMaps.length; i++) {
-            if (cubeMaps[i]._size !== cubeMaps[0]._size) {
-                throw new DeveloperError('All provided cube maps must have the same size.');
-            }
         }
         //>>includeEnd('debug');
         var size = cubeMaps[0]._size;
@@ -61,7 +56,9 @@ define([
         var texture = new Texture({
             context : context, 
             width : size * cubeMaps.length, 
-            height : size
+            height : size,
+            pixelDataType : cubeMaps[0]._pixelDatatype,
+            pixelFormat : cubeMaps[0]._pixelFormat
         });
 
         var framebuffer = new Framebuffer({
@@ -93,7 +90,7 @@ define([
                 }),
                 shaderProgram : shaderProgram,
                 uniformMap : {
-                    environmentMap : function() {
+                    cubeMap : function() {
                         return cubeMaps[i];
                     }
                 },
@@ -203,11 +200,11 @@ define([
     function getOctahedralProjectionFS() {
         return `
     varying vec3 v_cubeMapCoordinates;
-    uniform samplerCube environmentMap;
+    uniform samplerCube cubeMap;
 
     void main()
         {
-            gl_FragColor = textureCube(environmentMap, v_cubeMapCoordinates);
+            gl_FragColor = textureCube(cubeMap, v_cubeMapCoordinates);
         }
     `;
     }
