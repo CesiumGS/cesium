@@ -1,5 +1,7 @@
 define([
         '../Core/AssociativeArray',
+        '../Core/Color',
+        '../Core/ColorGeometryInstanceAttribute',
         '../Core/defined',
         '../Core/DistanceDisplayCondition',
         '../Core/DistanceDisplayConditionGeometryInstanceAttribute',
@@ -13,6 +15,8 @@ define([
         './Property'
     ], function(
         AssociativeArray,
+        Color,
+        ColorGeometryInstanceAttribute,
         defined,
         DistanceDisplayCondition,
         DistanceDisplayConditionGeometryInstanceAttribute,
@@ -26,6 +30,7 @@ define([
         Property) {
     'use strict';
 
+    var scratchColor = new Color();
     var distanceDisplayConditionScratch = new DistanceDisplayCondition();
     var defaultDistanceDisplayCondition = new DistanceDisplayCondition();
 
@@ -111,7 +116,6 @@ define([
         var primitive = this.primitive;
         var orderedGroundPrimitives = this.orderedGroundPrimitives;
         var geometries = this.geometry.values;
-        var attributes;
         var i;
 
         if (this.createPrimitive) {
@@ -124,21 +128,6 @@ define([
                     } else {
                         // For if the new primitive changes again before it is ready.
                         orderedGroundPrimitives.remove(primitive);
-                    }
-                }
-
-                for (i = 0; i < geometriesLength; i++) {
-                    var geometry = geometries[i];
-                    var originalAttributes = geometry.attributes;
-                    attributes = this.attributes.get(geometry.id.id);
-
-                    if (defined(attributes)) {
-                        if (defined(originalAttributes.show)) {
-                            attributes.show = originalAttributes.show.value;
-                        }
-                        if (defined(originalAttributes.color)) {
-                            attributes.color = originalAttributes.color.value;
-                        }
                     }
                 }
 
@@ -189,10 +178,19 @@ define([
                 var entity = updater.entity;
                 var instance = this.geometry.get(updater.id);
 
-                attributes = this.attributes.get(instance.id.id);
+                var attributes = this.attributes.get(instance.id.id);
                 if (!defined(attributes)) {
                     attributes = primitive.getGeometryInstanceAttributes(instance.id);
                     this.attributes.set(instance.id.id, attributes);
+                }
+
+                if (!updater.fillMaterialProperty.isConstant) {
+                    var colorProperty = updater.fillMaterialProperty.color;
+                    var resultColor = Property.getValueOrDefault(colorProperty, time, Color.WHITE, scratchColor);
+                    if (!Color.equals(attributes._lastColor, resultColor)) {
+                        attributes._lastColor = Color.clone(resultColor, attributes._lastColor);
+                        attributes.color = ColorGeometryInstanceAttribute.toValue(resultColor, attributes.color);
+                    }
                 }
 
                 var show = entity.isShowing && (updater.hasConstantFill || updater.isFilled(time));
@@ -334,7 +332,7 @@ define([
         }
 
         var isUpdated = true;
-        for (i = 0; i < length; i++) {
+        for (i = 0; i < items.length; i++) {
             isUpdated = items[i].update(time) && isUpdated;
         }
         return isUpdated;

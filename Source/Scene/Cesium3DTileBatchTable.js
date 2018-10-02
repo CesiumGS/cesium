@@ -544,7 +544,7 @@ define([
 
     var scratchColor = new Color();
 
-    Cesium3DTileBatchTable.prototype.applyStyle = function(frameState, style) {
+    Cesium3DTileBatchTable.prototype.applyStyle = function(style) {
         if (!defined(style)) {
             this.setAllColor(DEFAULT_COLOR_VALUE);
             this.setAllShow(true);
@@ -555,8 +555,8 @@ define([
         var length = this.featuresLength;
         for (var i = 0; i < length; ++i) {
             var feature = content.getFeature(i);
-            var color = defined(style.color) ? style.color.evaluateColor(frameState, feature, scratchColor) : DEFAULT_COLOR_VALUE;
-            var show = defined(style.show) ? style.show.evaluate(frameState, feature) : DEFAULT_SHOW_VALUE;
+            var color = defined(style.color) ? style.color.evaluateColor(feature, scratchColor) : DEFAULT_COLOR_VALUE;
+            var show = defined(style.show) ? style.show.evaluate(feature) : DEFAULT_SHOW_VALUE;
             this.setColor(i, color);
             this.setShow(i, show);
         }
@@ -1181,7 +1181,7 @@ define([
     };
 
     function getColorBlend(batchTable) {
-        var tileset = batchTable._content._tileset;
+        var tileset = batchTable._content.tileset;
         var colorBlendMode = tileset.colorBlendMode;
         var colorBlendAmount = tileset.colorBlendAmount;
         if (colorBlendMode === Cesium3DTileColorBlendMode.HIGHLIGHT) {
@@ -1241,18 +1241,18 @@ define([
         OPAQUE_AND_TRANSLUCENT : 2
     };
 
-    Cesium3DTileBatchTable.prototype.addDerivedCommands = function(frameState, commandStart, finalResolution) {
+    Cesium3DTileBatchTable.prototype.addDerivedCommands = function(frameState, commandStart) {
         var commandList = frameState.commandList;
         var commandEnd = commandList.length;
         var tile = this._content._tile;
-        var tileset = tile._tileset;
+        var finalResolution = tile._finalResolution;
+        var tileset = tile.tileset;
         var bivariateVisibilityTest = tileset._skipLevelOfDetail && tileset._hasMixedContent && frameState.context.stencilBuffer;
         var styleCommandsNeeded = getStyleCommandsNeeded(this);
 
         for (var i = commandStart; i < commandEnd; ++i) {
             var command = commandList[i];
             var derivedCommands = command.derivedCommands.tileset;
-            // Command may be marked dirty from Model shader recompilation for clipping planes
             if (!defined(derivedCommands) || command.dirty) {
                 derivedCommands = {};
                 command.derivedCommands.tileset = derivedCommands;
@@ -1260,13 +1260,10 @@ define([
                 command.dirty = false;
             }
 
-            updateDerivedCommand(derivedCommands.originalCommand, command);
-
             if (styleCommandsNeeded !== StyleCommandsNeeded.ALL_OPAQUE) {
                 if (!defined(derivedCommands.translucent)) {
                     derivedCommands.translucent = deriveTranslucentCommand(derivedCommands.originalCommand);
                 }
-                updateDerivedCommand(derivedCommands.translucent, command);
             }
 
             if (bivariateVisibilityTest) {
@@ -1276,11 +1273,9 @@ define([
                     }
                     tileset._backfaceCommands.push(derivedCommands.zback);
                 }
-                if (!defined(derivedCommands.stencil) || tile._selectionDepth !== tile._lastSelectionDepth) {
+                if (!defined(derivedCommands.stencil) || tile._selectionDepth !== getLastSelectionDepth(derivedCommands.stencil)) {
                     derivedCommands.stencil = deriveStencilCommand(derivedCommands.originalCommand, tile._selectionDepth);
-                    tile._lastSelectionDepth = tile._selectionDepth;
                 }
-                updateDerivedCommand(derivedCommands.stencil, command);
             }
 
             var opaqueCommand = bivariateVisibilityTest ? derivedCommands.stencil : derivedCommands.originalCommand;
@@ -1315,12 +1310,6 @@ define([
             }
         }
     };
-
-    function updateDerivedCommand(derivedCommand, command) {
-        derivedCommand.castShadows = command.castShadows;
-        derivedCommand.receiveShadows = command.receiveShadows;
-        derivedCommand.primitiveType = command.primitiveType;
-    }
 
     function getStyleCommandsNeeded(batchTable) {
         var translucentFeaturesLength = batchTable._translucentFeaturesLength;
@@ -1423,6 +1412,10 @@ define([
         return derivedCommand;
     }
 
+    function getLastSelectionDepth(stencilCommand) {
+        return stencilCommand.renderState.stencilTest.reference >>> 4;
+    }
+
     function getTranslucentRenderState(renderState) {
         var rs = clone(renderState, true);
         rs.cull.enabled = false;
@@ -1479,7 +1472,7 @@ define([
             }
 
             batchTable._pickTexture = createTexture(batchTable, context, bytes);
-            content._tileset._statistics.batchTableByteLength += batchTable._pickTexture.sizeInBytes;
+            content.tileset._statistics.batchTableByteLength += batchTable._pickTexture.sizeInBytes;
         }
     }
 

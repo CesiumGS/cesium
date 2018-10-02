@@ -131,27 +131,53 @@ define([
          * Enable lighting the globe with the sun as a light source.
          *
          * @type {Boolean}
-         * @default false
+         * @default true
          */
         this.enableLighting = false;
+
+        /**
+         * Enable the ground atmosphere.
+         *
+         * @type {Boolean}
+         * @default true
+         */
+        this.showGroundAtmosphere = true;
 
         /**
          * The distance where everything becomes lit. This only takes effect
          * when <code>enableLighting</code> is <code>true</code>.
          *
          * @type {Number}
-         * @default 6500000.0
+         * @default 10000000.0
          */
-        this.lightingFadeOutDistance = 6500000.0;
+        this.lightingFadeOutDistance = 1.0e7;
 
         /**
          * The distance where lighting resumes. This only takes effect
          * when <code>enableLighting</code> is <code>true</code>.
          *
          * @type {Number}
-         * @default 9000000.0
+         * @default 20000000.0
          */
-        this.lightingFadeInDistance = 9000000.0;
+        this.lightingFadeInDistance = 2.0e7;
+
+        /**
+         * The distance where the darkness of night from the ground atmosphere fades out to a lit ground atmosphere.
+         * This only takes effect when <code>showGroundAtmosphere</code> and <code>enableLighting</code> are <code>true</code>.
+         *
+         * @type {Number}
+         * @default 10000000.0
+         */
+        this.nightFadeOutDistance = 1.0e7;
+
+        /**
+         * The distance where the darkness of night from the ground atmosphere fades in to an unlit ground atmosphere.
+         * This only takes effect when <code>showGroundAtmosphere</code> and <code>enableLighting</code> are <code>true</code>.
+         *
+         * @type {Number}
+         * @default 50000000.0
+         */
+        this.nightFadeInDistance = 5.0e7;
 
         /**
          * True if an animated wave effect should be shown in areas of the globe
@@ -187,7 +213,7 @@ define([
         this.shadows = ShadowMode.RECEIVE_ONLY;
 
         this._oceanNormalMap = undefined;
-        this._zoomedOutOceanSpecularIntensity = 0.5;
+        this._zoomedOutOceanSpecularIntensity = undefined;
     }
 
     defineProperties(Globe.prototype, {
@@ -277,6 +303,14 @@ define([
                 this._surface.tileProvider.clippingPlanes = value;
             }
         },
+        cartographicLimitRectangle : {
+            get : function() {
+                return this._surface.tileProvider.cartographicLimitRectangle;
+            },
+            set : function(value) {
+                this._surface.tileProvider.cartographicLimitRectangle = value;
+            }
+        },
         /**
          * The normal map to use for rendering waves in the ocean.  Setting this property will
          * only have an effect if the configured terrain provider includes a water mask.
@@ -364,7 +398,7 @@ define([
 
         var requireNormals = defined(globe._material) && (globe._material.shaderSource.match(/slope/) || globe._material.shaderSource.match('normalEC'));
 
-        var fragmentSources = [];
+        var fragmentSources = [GroundAtmosphere];
         if (defined(globe._material) && (!requireNormals || globe._terrainProvider.requestVertexNormals)) {
             fragmentSources.push(globe._material.shaderSource);
             defines.push('APPLY_MATERIAL');
@@ -407,14 +441,11 @@ define([
      * @param {Ray} ray The ray to test for intersection.
      * @param {Scene} scene The scene.
      * @param {Cartesian3} [result] The object onto which to store the result.
-     * @returns {Cartesian3|undefined} The intersection or <code>undefined</code> if none was found.
+     * @returns {Cartesian3|undefined} The intersection or <code>undefined</code> if none was found.  The returned position is in projected coordinates for 2D and Columbus View.
      *
-     * @example
-     * // find intersection of ray through a pixel and the globe
-     * var ray = viewer.camera.getPickRay(windowCoordinates);
-     * var intersection = globe.pick(ray, scene);
+     * @private
      */
-    Globe.prototype.pick = function(ray, scene, result) {
+    Globe.prototype.pickWorldCoordinates = function(ray, scene, result) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(ray)) {
             throw new DeveloperError('ray is required');
@@ -542,6 +573,31 @@ define([
         }
 
         return intersection;
+    };
+
+    var cartoScratch = new Cartographic();
+    /**
+     * Find an intersection between a ray and the globe surface that was rendered. The ray must be given in world coordinates.
+     *
+     * @param {Ray} ray The ray to test for intersection.
+     * @param {Scene} scene The scene.
+     * @param {Cartesian3} [result] The object onto which to store the result.
+     * @returns {Cartesian3|undefined} The intersection or <code>undefined</code> if none was found.
+     *
+     * @example
+     * // find intersection of ray through a pixel and the globe
+     * var ray = viewer.camera.getPickRay(windowCoordinates);
+     * var intersection = globe.pick(ray, scene);
+     */
+    Globe.prototype.pick = function(ray, scene, result) {
+        result = this.pickWorldCoordinates(ray, scene, result);
+        if (defined(result) && scene.mode !== SceneMode.SCENE3D) {
+            result = Cartesian3.fromElements(result.y, result.z, result.x, result);
+            var carto = scene.mapProjection.unproject(result, cartoScratch);
+            result = scene.globe.ellipsoid.cartographicToCartesian(carto, result);
+        }
+
+        return result;
     };
 
     var scratchGetHeightCartesian = new Cartesian3();
@@ -682,11 +738,10 @@ define([
         var mode = frameState.mode;
 
         if (pass.render) {
-            // Don't show the ocean specular highlights when zoomed out in 2D and Columbus View.
-            if (mode === SceneMode.SCENE3D) {
-                this._zoomedOutOceanSpecularIntensity = 0.5;
+            if (this.showGroundAtmosphere) {
+                this._zoomedOutOceanSpecularIntensity = 0.4;
             } else {
-                this._zoomedOutOceanSpecularIntensity = 0.0;
+                this._zoomedOutOceanSpecularIntensity = 0.5;
             }
 
             surface.maximumScreenSpaceError = this.maximumScreenSpaceError;
@@ -695,10 +750,13 @@ define([
             tileProvider.terrainProvider = this.terrainProvider;
             tileProvider.lightingFadeOutDistance = this.lightingFadeOutDistance;
             tileProvider.lightingFadeInDistance = this.lightingFadeInDistance;
-            tileProvider.zoomedOutOceanSpecularIntensity = this._zoomedOutOceanSpecularIntensity;
+            tileProvider.nightFadeOutDistance = this.nightFadeOutDistance;
+            tileProvider.nightFadeInDistance = this.nightFadeInDistance;
+            tileProvider.zoomedOutOceanSpecularIntensity = mode === SceneMode.SCENE3D ? this._zoomedOutOceanSpecularIntensity : 0.0;
             tileProvider.hasWaterMask = hasWaterMask;
             tileProvider.oceanNormalMap = this._oceanNormalMap;
             tileProvider.enableLighting = this.enableLighting;
+            tileProvider.showGroundAtmosphere = this.showGroundAtmosphere;
             tileProvider.shadows = this.shadows;
 
             surface.beginFrame(frameState);

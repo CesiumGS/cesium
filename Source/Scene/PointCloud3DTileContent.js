@@ -12,6 +12,7 @@ define([
         '../Renderer/ShaderSource',
         './Cesium3DTileBatchTable',
         './Cesium3DTileFeature',
+        './Cesium3DTileRefine',
         './PointCloud',
         './SceneMode'
     ], function(
@@ -28,14 +29,15 @@ define([
         ShaderSource,
         Cesium3DTileBatchTable,
         Cesium3DTileFeature,
+        Cesium3DTileRefine,
         PointCloud,
         SceneMode) {
     'use strict';
 
     /**
      * Represents the contents of a
-     * {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/blob/master/TileFormats/PointCloud/README.md|Point Cloud}
-     * tile in a {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/blob/master/README.md|3D Tiles} tileset.
+     * {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/specification/TileFormats/PointCloud|Point Cloud}
+     * tile in a {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/specification|3D Tiles} tileset.
      * <p>
      * Implements the {@link Cesium3DTileContent} interface.
      * </p>
@@ -260,9 +262,9 @@ define([
         this._pointCloud.color = enabled ? color : Color.WHITE;
     };
 
-    PointCloud3DTileContent.prototype.applyStyle = function(frameState, style) {
+    PointCloud3DTileContent.prototype.applyStyle = function(style) {
         if (defined(this._batchTable)) {
-            this._batchTable.applyStyle(frameState, style);
+            this._batchTable.applyStyle(style);
         } else {
             this._styleDirty = true;
         }
@@ -297,6 +299,8 @@ define([
         var styleDirty = this._styleDirty;
         this._styleDirty = false;
 
+        pointCloud.clippingPlaneOffsetMatrix = tileset.clippingPlaneOffsetMatrix;
+
         pointCloud.style = defined(batchTable) ? undefined : tileset.style;
         pointCloud.styleDirty = styleDirty;
         pointCloud.modelMatrix = tile.computedTransform;
@@ -309,7 +313,13 @@ define([
         pointCloud.attenuation = defined(pointCloudShading) ? pointCloudShading.attenuation : false;
         pointCloud.geometricError = getGeometricError(this);
         pointCloud.geometricErrorScale = defined(pointCloudShading) ? pointCloudShading.geometricErrorScale : 1.0;
-        pointCloud.maximumAttenuation = (defined(pointCloudShading) && defined(pointCloudShading.maximumAttenuation)) ? pointCloudShading.maximumAttenuation : tileset.maximumScreenSpaceError;
+        if (defined(pointCloudShading) && defined(pointCloudShading.maximumAttenuation)) {
+            pointCloud.maximumAttenuation = pointCloudShading.maximumAttenuation;
+        } else if (tile.refine === Cesium3DTileRefine.ADD) {
+            pointCloud.maximumAttenuation = 5.0;
+        } else {
+            pointCloud.maximumAttenuation = tileset.maximumScreenSpaceError;
+        }
 
         pointCloud.update(frameState);
     };

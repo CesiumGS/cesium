@@ -117,7 +117,6 @@ define([
         var primitive = this.primitive;
         var primitives = this.primitives;
         var geometries = this.geometry.values;
-        var attributes;
         var i;
 
         if (this.createPrimitive) {
@@ -130,21 +129,6 @@ define([
                     } else {
                         // For if the new primitive changes again before it is ready.
                         primitives.remove(primitive);
-                    }
-                }
-
-                for (i = 0; i < geometriesLength; i++) {
-                    var geometry = geometries[i];
-                    var originalAttributes = geometry.attributes;
-                    attributes = this.attributes.get(geometry.id.id);
-
-                    if (defined(attributes)) {
-                        if (defined(originalAttributes.show)) {
-                            attributes.show = originalAttributes.show.value;
-                        }
-                        if (defined(originalAttributes.color)) {
-                            attributes.color = originalAttributes.color.value;
-                        }
                     }
                 }
 
@@ -195,7 +179,7 @@ define([
                 var entity = updater.entity;
                 var instance = this.geometry.get(updater.id);
 
-                attributes = this.attributes.get(instance.id.id);
+                var attributes = this.attributes.get(instance.id.id);
                 if (!defined(attributes)) {
                     attributes = primitive.getGeometryInstanceAttributes(instance.id);
                     this.attributes.set(instance.id.id, attributes);
@@ -347,7 +331,7 @@ define([
         }
 
         var isUpdated = true;
-        for (i = 0; i < length; i++) {
+        for (i = 0; i < items.length; i++) {
             isUpdated = items[i].update(time) && isUpdated;
         }
         return isUpdated;

@@ -7,7 +7,7 @@ define([
     /**
      * The refinement approach for a tile.
      * <p>
-     * See the {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/blob/master/schema/tile.schema.json|tile schema}
+     * See the {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/specification#refinement|Refinement}
      * in the 3D Tiles spec.
      * </p>
      *

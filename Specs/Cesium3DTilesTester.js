@@ -97,6 +97,7 @@ define([
             scene.renderForSpecs();
             return tileset.tilesLoaded;
         }).then(function() {
+            scene.renderForSpecs();
             return tileset;
         });
     };
@@ -131,7 +132,8 @@ define([
         var tileset = {
             _statistics : {
                 batchTableByteLength : 0
-            }
+            },
+            root : {}
         };
         var url = Resource.createIfNeeded('');
         var content = Cesium3DTileContentFactory[type](tileset, mockTile, url, arrayBuffer, 0);
@@ -162,7 +164,7 @@ define([
 
     Cesium3DTilesTester.resolvesReadyPromise = function(scene, url) {
         return Cesium3DTilesTester.loadTileset(scene, url).then(function(tileset) {
-            var content = tileset._root.content;
+            var content = tileset.root.content;
             return content.readyPromise.then(function(content) {
                 expect(content).toBeDefined();
             });
@@ -171,7 +173,7 @@ define([
 
     Cesium3DTilesTester.tileDestroys = function(scene, url) {
         return Cesium3DTilesTester.loadTileset(scene, url).then(function(tileset) {
-            var content = tileset._root.content;
+            var content = tileset.root.content;
             expect(content.isDestroyed()).toEqual(false);
             scene.primitives.remove(tileset);
             expect(content.isDestroyed()).toEqual(true);

@@ -80,15 +80,5 @@ defineSuite([
             widget.destroy();
             document.body.removeChild(container);
         });
-
-        it('shows performance', function() {
-            var viewModel = widget.viewModel;
-            viewModel.performance = true;
-            expect(viewModel._performanceDisplay._container.className.indexOf('cesium-cesiumInspector-show') !== -1).toBe(true);
-            expect(viewModel._performanceDisplay._container.className.indexOf('cesium-cesiumInspector-hide') === -1).toBe(true);
-            viewModel.performance = false;
-            expect(viewModel._performanceDisplay._container.className.indexOf('cesium-cesiumInspector-show') === -1).toBe(true);
-            expect(viewModel._performanceDisplay._container.className.indexOf('cesium-cesiumInspector-hide') !== -1).toBe(true);
-        });
     });
 }, 'WebGL');
