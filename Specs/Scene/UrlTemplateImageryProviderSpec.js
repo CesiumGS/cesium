@@ -15,7 +15,8 @@ defineSuite([
         'Scene/ImageryProvider',
         'Scene/ImageryState',
         'Specs/pollToPromise',
-        'ThirdParty/when'
+        'ThirdParty/when',
+        'Scene/GetFeatureInfoFormat'
     ], function(
         UrlTemplateImageryProvider,
         DefaultProxy,

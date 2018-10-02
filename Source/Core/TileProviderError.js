@@ -1,11 +1,15 @@
 define([
         './defaultValue',
         './defined',
-        './formatError'
+        './formatError',
+        './RuntimeError',
+        '../ThirdParty/when'
     ], function(
         defaultValue,
         defined,
-        formatError) {
+        formatError,
+        RuntimeError,
+        when) {
     'use strict';
 
     /**
@@ -26,6 +30,8 @@ define([
      * @param {Error} [error] The error or exception that occurred, if any.
      */
     function TileProviderError(provider, message, x, y, level, timesRetried, error) {
+        this.name = 'TileProviderError';
+
         /**
          * The {@link ImageryProvider} or {@link TerrainProvider} that experienced the error.
          * @type {ImageryProvider|TerrainProvider}
@@ -129,7 +135,7 @@ define([
         }
 
         if (error.retry && defined(retryFunction)) {
-            retryFunction();
+            retryFunction(when(error.retry));
         }
 
         return error;
@@ -148,8 +154,15 @@ define([
         }
     };
 
+    if (defined(Object.create)) {
+        TileProviderError.prototype = Object.create(RuntimeError.prototype);
+        TileProviderError.prototype.constructor = TileProviderError;
+    }
+
     /**
      * A function that will be called to retry the operation.
+     * @param {Promise} promise A promise to wait for before retrying the operation. This promise may already
+     *                          be resolved if no waiting is necessary.
      * @callback TileProviderError~RetryFunction
      */
 

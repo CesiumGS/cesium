@@ -205,7 +205,13 @@ define([
         ++statistics.numberOfActiveRequests;
         ++statistics.numberOfActiveRequestsEver;
         ++numberOfActiveRequestsByServer[request.serverKey];
-        request.requestFunction().then(getRequestReceivedFunction(request)).otherwise(getRequestFailedFunction(request));
+
+        try {
+            request.requestFunction().then(getRequestReceivedFunction(request)).otherwise(getRequestFailedFunction(request));
+        } catch (e) {
+            getRequestFailedFunction(request)(e);
+        }
+
         return promise;
     }
 

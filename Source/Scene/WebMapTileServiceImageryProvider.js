@@ -1,4 +1,7 @@
 define([
+        '../Core/Cartesian3',
+        '../Core/Cartographic',
+        '../Core/Math',
         '../Core/combine',
         '../Core/Credit',
         '../Core/defaultValue',
@@ -7,14 +10,22 @@ define([
         '../Core/DeveloperError',
         '../Core/Event',
         '../Core/freezeObject',
+        '../Core/GeographicTilingScheme',
         '../Core/isArray',
+        '../Core/objectToQuery',
+        '../Core/queryToObject',
         '../Core/Rectangle',
         '../Core/Resource',
         '../Core/WebMercatorTilingScheme',
+        '../ThirdParty/Uri',
         '../ThirdParty/when',
+        './GetFeatureInfoFormat',
         './ImageryProvider',
         './TimeDynamicImagery'
     ], function(
+        Cartesian3,
+        Cartographic,
+        CesiumMath,
         combine,
         Credit,
         defaultValue,
@@ -23,11 +34,16 @@ define([
         DeveloperError,
         Event,
         freezeObject,
+        GeographicTilingScheme,
         isArray,
+        objectToQuery,
+        queryToObject,
         Rectangle,
         Resource,
         WebMercatorTilingScheme,
+        Uri,
         when,
+        GetFeatureInfoFormat,
         ImageryProvider,
         TimeDynamicImagery) {
     'use strict';
@@ -66,6 +82,13 @@ define([
      * @param {String|String[]} [options.subdomains='abc'] The subdomains to use for the <code>{s}</code> placeholder in the URL template.
      *                          If this parameter is a single string, each character in the string is a subdomain.  If it is
      *                          an array, each element in the array is a subdomain.
+     * @param {Boolean} [options.enablePickFeatures=true] If true, {@link WebMapTileServiceImageryProvider#pickFeatures} will invoke
+     *        the GetFeatureInfo operation on the WMTS server and return the features included in the response.  If false,
+     *        {@link WebMapTileServiceImageryProvider#pickFeatures} will immediately return undefined (indicating no pickable features)
+     *        without communicating with the server.  Set this property to false if you know your WMTS server does not support
+     *        GetFeatureInfo or if you don't want this provider's features to be pickable.
+     * @param {GetFeatureInfoFormat[]} [options.getFeatureInfoFormats=WebMapTileServiceImageryProvider.DefaultGetFeatureInfoFormats] The formats
+     *        in which to try WMTS GetFeatureInfo requests.
      *
      * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Web%20Map%20Tile%20Service%20with%20Time.html|Cesium Sandcastle Web Map Tile Service with Time Demo}
      *
@@ -202,6 +225,9 @@ define([
                 }
             });
         }
+
+        this._enablePickFeatures = defaultValue(options.enablePickFeatures, true);
+        this._getFeatureInfoFormats = defaultValue(options.getFeatureInfoFormats, WebMapTileServiceImageryProvider.DefaultGetFeatureInfoFormats);
 
         this._readyPromise = when.resolve(true);
 
@@ -582,9 +608,12 @@ define([
         return result;
     };
 
+    var cartographicScratch = new Cartographic();
+    var cartesian3Scratch = new Cartesian3();
+
     /**
-     * Picking features is not currently supported by this imagery provider, so this function simply returns
-     * undefined.
+     * Asynchronously determines what features, if any, are located at a given longitude and latitude within
+     * a tile.  This function should not be called before {@link ImageryProvider#ready} returns true.
      *
      * @param {Number} x The tile X coordinate.
      * @param {Number} y The tile Y coordinate.
@@ -594,11 +623,122 @@ define([
      * @return {Promise.<ImageryLayerFeatureInfo[]>|undefined} A promise for the picked features that will resolve when the asynchronous
      *                   picking completes.  The resolved value is an array of {@link ImageryLayerFeatureInfo}
      *                   instances.  The array may be empty if no features are found at the given location.
-     *                   It may also be undefined if picking is not supported.
+     *
+     * @exception {DeveloperError} <code>pickFeatures</code> must not be called before the imagery provider is ready.
      */
     WebMapTileServiceImageryProvider.prototype.pickFeatures = function(x, y, level, longitude, latitude) {
-        return undefined;
+        if (!this._enablePickFeatures || this._getFeatureInfoFormats.length === 0) {
+            return undefined;
+        }
+
+        var rectangle = this._tilingScheme.tileXYToNativeRectangle(x, y, level);
+
+        var projected;
+        if (this._tilingScheme instanceof GeographicTilingScheme) {
+            projected = cartesian3Scratch;
+            projected.x = CesiumMath.toDegrees(longitude);
+            projected.y = CesiumMath.toDegrees(latitude);
+        } else {
+            var cartographic = cartographicScratch;
+            cartographic.longitude = longitude;
+            cartographic.latitude = latitude;
+
+            projected = this._tilingScheme.projection.project(cartographic, cartesian3Scratch);
+        }
+
+        var i = (this._tileWidth * (projected.x - rectangle.west) / rectangle.width) | 0;
+        var j = (this._tileHeight * (rectangle.north - projected.y) / rectangle.height) | 0;
+
+        var formatIndex = 0;
+
+        var that = this;
+
+        function handleResponse(format, data) {
+            return format.callback(data);
+        }
+
+        function doRequest() {
+            if (formatIndex >= that._getFeatureInfoFormats.length) {
+                // No valid formats, so no features picked.
+                return when([]);
+            }
+
+            var format = that._getFeatureInfoFormats[formatIndex];
+            var url = buildGetFeatureInfoUrl(that, format.format, x, y, level, i, j);
+
+            ++formatIndex;
+
+            if (format.type === 'json') {
+                return Resource.fetchJson(url).then(format.callback).otherwise(doRequest);
+            } else if (format.type === 'xml') {
+                return Resource.fetchXML(url).then(format.callback).otherwise(doRequest);
+            } else if (format.type === 'text' || format.type === 'html') {
+                return Resource.fetchText(url).then(format.callback).otherwise(doRequest);
+            }
+
+            return Resource.fetch({
+                url: url,
+                responseType: format.format
+            }).then(handleResponse.bind(undefined, format)).otherwise(doRequest);
+        }
+
+        return doRequest();
     };
+
+    /**
+     * The default parameters to include in the WMS URL to get feature information.  The values are as follows:
+     *     service=WMS
+     *     version=1.1.1
+     *     request=GetFeatureInfo
+     *
+     * @constant
+     */
+    WebMapTileServiceImageryProvider.GetFeatureInfoDefaultParameters = freezeObject({
+        service : 'WMTS',
+        version : '1.0.0',
+        request : 'GetFeatureInfo'
+    });
+
+    WebMapTileServiceImageryProvider.DefaultGetFeatureInfoFormats = freezeObject([
+        freezeObject(new GetFeatureInfoFormat('json', 'application/json')),
+        freezeObject(new GetFeatureInfoFormat('xml', 'text/xml')),
+        freezeObject(new GetFeatureInfoFormat('text', 'text/html'))
+    ]);
+
+    function buildGetFeatureInfoUrl(imageryProvider, infoFormat, col, row, level, i, j) {
+        var uri = new Uri(imageryProvider._url);
+        var queryOptions = queryToObject(defaultValue(uri.query, ''));
+
+        queryOptions = combine(WebMapTileServiceImageryProvider.GetFeatureInfoDefaultParameters, queryOptions);
+
+        var labels = imageryProvider._tileMatrixLabels;
+        var tileMatrix = defined(labels) ? labels[level] : level.toString();
+
+        queryOptions.tilematrix = tileMatrix;
+        queryOptions.layer = imageryProvider._layer;
+        queryOptions.style = imageryProvider._style;
+        queryOptions.tilerow = row;
+        queryOptions.tilecol = col;
+        queryOptions.tilematrixset = imageryProvider._tileMatrixSetID;
+        queryOptions.format = imageryProvider._format;
+        queryOptions.i = i;
+        queryOptions.j = j;
+
+        if (!defined(queryOptions.infoFormat)) {
+            queryOptions.infoFormat = infoFormat;
+        }
+
+        uri.query = objectToQuery(queryOptions);
+
+        var url = uri.toString();
+
+        var proxy = imageryProvider._proxy;
+        if (defined(proxy)) {
+            url = proxy.getURL(url);
+        }
+
+        return url;
+    }
 
     return WebMapTileServiceImageryProvider;
 });

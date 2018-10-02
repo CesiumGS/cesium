@@ -1,7 +1,7 @@
 {
-  "name": "cesium",
+  "name": "terriajs-cesium",
   "version": "1.50.0",
-  "description": "CesiumJS is a JavaScript library for creating 3D globes and 2D maps in a web browser without a plugin.",
+  "description": "Cesium for TerriaJS.",
   "homepage": "http://cesiumjs.org",
   "license": "Apache-2.0",
   "author": {
@@ -23,13 +23,18 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/AnalyticalGraphicsInc/cesium.git"
+    "url": "https://github.com/TerriaJS/cesium.git"
+  },
+  "directories": {
+    "lib": "Source"
   },
   "bugs": {
     "url": "https://github.com/AnalyticalGraphicsInc/cesium/issues",
     "email": "cesium-dev@googlegroups.com"
   },
   "dependencies": {
+    "deamdify": "^0.1.1",
+    "dompurify": "^1.0.2",
     "requirejs": "^2.3.2"
   },
   "devDependencies": {
@@ -42,6 +47,7 @@
     "eslint": "^5.2.0",
     "eslint-plugin-html": "^4.0.2",
     "event-stream": "^3.3.4",
+    "exorcist": "^0.3.0",
     "express": "^4.15.0",
     "globby": "^7.0.0",
     "glsl-strip-comments": "^1.0.0",
@@ -49,6 +55,8 @@
     "gulp-insert": "^0.5.0",
     "gulp-rename": "^1.2.2",
     "gulp-replace": "^0.6.1",
+    "gulp-sourcemaps": "^1.5.2",
+    "gulp-uglify": "^1.2.0",
     "gulp-tap": "^1.0.1",
     "gulp-zip": "^4.0.0",
     "jasmine-core": "^3.1.0",
@@ -96,8 +104,16 @@
     "test-release": "gulp test --release",
     "generateStubs": "gulp generateStubs",
     "sortRequires": "gulp sortRequires",
+    "prepublish": "bash -c \"if [ ! -d \"./wwwroot/build\" ]; then gulp terria-prepare-cesium; fi\"",
+    "postpublish": "bash -c \"git tag -a terriajs-${npm_package_version} -m \"terriajs-${npm_package_version}\" && git push origin terriajs-${npm_package_version}\"",
+    "postinstall": "bash -c \"if [ ! -d \"./wwwroot/build\" ]; then gulp terria-prepare-cesium; fi\"",
     "deploy-s3": "gulp deploy-s3",
     "deploy-status": "gulp deploy-status",
     "deploy-set-version": "gulp deploy-set-version"
+  },
+  "browserify": {
+    "transform": [
+      "deamdify"
+    ]
   }
 }

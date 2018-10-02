@@ -88,6 +88,10 @@ define([
             featureInfo.configureNameFromProperties(feature.properties);
             featureInfo.configureDescriptionFromProperties(feature.properties);
 
+            if (defined(json.crs) && !defined(feature.crs)) {
+                feature.crs = json.crs;
+            }
+
             // If this is a point feature, use the coordinates of the point.
             if (defined(feature.geometry) && feature.geometry.type === 'Point') {
                 var longitude = feature.geometry.coordinates[0];
@@ -108,13 +112,13 @@ define([
 
     function xmlToFeatureInfo(xml) {
         var documentElement = xml.documentElement;
-        if (documentElement.localName === 'MultiFeatureCollection' && documentElement.namespaceURI === mapInfoMxpNamespace) {
+        if (documentElement.localName === 'MultiFeatureCollection') {
             // This looks like a MapInfo MXP response
             return mapInfoXmlToFeatureInfo(xml);
-        } else if (documentElement.localName === 'FeatureInfoResponse' && documentElement.namespaceURI === esriWmsNamespace) {
+        } else if (documentElement.localName === 'FeatureInfoResponse') {
             // This looks like an Esri WMS response
             return esriXmlToFeatureInfo(xml);
-        } else if (documentElement.localName === 'FeatureCollection' && documentElement.namespaceURI === wfsNamespace) {
+        } else if (documentElement.localName === 'FeatureCollection') {
             // This looks like a WFS/GML response.
             return gmlToFeatureInfo(xml);
         } else if (documentElement.localName === 'ServiceExceptionReport') {

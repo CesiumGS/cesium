@@ -14,16 +14,18 @@ define([
 
     var moduleCache = {};
 
+    var reqWithContext = require.context('./', false, /create.+Geometry/);
+
     function getModule(moduleName) {
         var module = moduleCache[moduleName];
         if (!defined(module)) {
             if (typeof exports === 'object') {
                 // Use CommonJS-style require.
-                moduleCache[module] = module = require('Workers/' + moduleName);
+                moduleCache[module] = module = reqWithContext('./' + moduleName);
             } else {
                 // Use AMD-style require.
                 // in web workers, require is synchronous
-                require(['./' + moduleName], function(f) {
+                reqWithContext(['./' + moduleName], function(f) {
                     module = f;
                     moduleCache[module] = f;
                 });

@@ -267,6 +267,8 @@ define([
         self.postMessage(true);
     }
 
+    //var reqWithContext = require.context('../ThirdParty', false, /.*\.wasm/);
+
     function decodeDraco(event) {
         var data = event.data;
 
@@ -274,7 +276,9 @@ define([
         var wasmConfig = data.webAssemblyConfig;
         if (defined(wasmConfig)) {
             // Require and compile WebAssembly module, or use fallback if not supported
-            return require([wasmConfig.modulePath], function(dracoModule) {
+            //return reqWithContext.ensure(wasmConfig.modulePath, function() {
+                var dracoModule = require('../ThirdParty/Workers/draco_wasm_wrapper')
+
                 if (defined(wasmConfig.wasmBinaryFile)) {
                     if (!defined(dracoModule)) {
                         dracoModule = self.DracoDecoderModule;
@@ -286,7 +290,7 @@ define([
                 } else {
                     initWorker(dracoModule());
                 }
-            });
+            //}, 'Draco-Decode');
         }
     }
 

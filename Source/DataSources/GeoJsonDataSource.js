@@ -330,7 +330,7 @@ define([
     }
 
     function createLineString(dataSource, geoJson, crsFunction, coordinates, options) {
-        var material = options.strokeMaterialProperty;
+        var material = options.polylineStrokeMaterialProperty;
         var widthProperty = options.strokeWidthProperty;
 
         var properties = geoJson.properties;
@@ -383,7 +383,7 @@ define([
             return;
         }
 
-        var outlineColorProperty = options.strokeMaterialProperty.color;
+        var outlineColorProperty = options.polygonStrokeColor;
         var material = options.fillMaterialProperty;
         var widthProperty = options.strokeWidthProperty;
 
@@ -402,7 +402,7 @@ define([
             var opacity = properties['stroke-opacity'];
             if (defined(opacity) && opacity !== 1.0) {
                 if (!defined(color)) {
-                    color = options.strokeMaterialProperty.color.clone();
+                    color = options.polygonStrokeColor.clone();
                 }
                 color.alpha = opacity;
             }
@@ -829,7 +829,8 @@ define([
             markerSymbol : defaultValue(options.markerSymbol, defaultMarkerSymbol),
             markerColor : defaultValue(options.markerColor, defaultMarkerColor),
             strokeWidthProperty : new ConstantProperty(defaultValue(options.strokeWidth, defaultStrokeWidth)),
-            strokeMaterialProperty : new ColorMaterialProperty(defaultValue(options.stroke, defaultStroke)),
+            polylineStrokeMaterialProperty : new ColorMaterialProperty(defaultValue(getColor(options.polylineStroke), defaultValue(getColor(options.stroke), defaultStroke))),
+            polygonStrokeColor : defaultValue(getColor(options.polygonStroke), defaultValue(getColor(options.stroke), defaultStroke)),
             fillMaterialProperty : new ColorMaterialProperty(defaultValue(options.fill, defaultFill)),
             clampToGround : defaultValue(options.clampToGround, defaultClampToGround)
         };
@@ -844,6 +845,14 @@ define([
             return when.reject(error);
         });
     };
+
+    function getColor(color) {
+        if (typeof color === 'string' || color instanceof String) {
+            return Color.fromCssColorString(color);
+        } else {
+            return color;
+        }
+    }
 
     function load(that, geoJson, options, sourceUri) {
         var name;

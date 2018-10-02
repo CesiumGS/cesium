@@ -1,11 +1,11 @@
+var DOMPurify = require('dompurify/dist/purify');
+
 define([
-        '../ThirdParty/purify',
         './defaultValue',
         './defined',
         './defineProperties',
         './Check'
     ], function(
-        DOMPurify,
         defaultValue,
         defined,
         defineProperties,

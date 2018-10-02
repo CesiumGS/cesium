@@ -30,7 +30,7 @@ define([
 
     function canTransferArrayBuffer() {
         if (!defined(TaskProcessor._canTransferArrayBuffer)) {
-            var worker = new Worker(getWorkerUrl('Workers/transferTypedArrayTest.js'));
+            var worker = require('worker-loader!../Workers/transferTypedArrayTest')();
             worker.postMessage = defaultValue(worker.webkitPostMessage, worker.postMessage);
 
             var value = 99;
@@ -128,16 +128,10 @@ define([
         return url;
     }
 
-    var bootstrapperUrlResult;
-    function getBootstrapperUrl() {
-        if (!defined(bootstrapperUrlResult)) {
-            bootstrapperUrlResult = getWorkerUrl('Workers/cesiumWorkerBootstrapper.js');
-        }
-        return bootstrapperUrlResult;
-    }
+
 
     function createWorker(processor) {
-        var worker = new Worker(getBootstrapperUrl());
+        var worker = require('worker-loader?name=cesiumWorkers.js!../Workers/bootstrapper/cesiumWorkerBootstrapper')();
         worker.postMessage = defaultValue(worker.webkitPostMessage, worker.postMessage);
 
         var bootstrapMessage = {
@@ -148,7 +142,7 @@ define([
         if (defined(TaskProcessor._loaderConfig)) {
             bootstrapMessage.loaderConfig = TaskProcessor._loaderConfig;
         } else {
-            if (!(defined(define.amd) && !define.amd.toUrlUndefined && defined(require.toUrl))) {
+            if (!(typeof self.define !== 'undefined' && defined(define.amd) && !define.amd.toUrlUndefined && defined(require.toUrl))) {
                 bootstrapMessage.loaderConfig.paths = {
                     'Workers': buildModuleUrl('Workers')
                 };
@@ -164,6 +158,9 @@ define([
 
         return worker;
     }
+
+    var requireWasmWrapper = require.context('../ThirdParty/Workers', false, /.*wasm_wrapper\.js$/);
+    var requireWasm = require.context('../ThirdParty', false, /\.wasm$/);
 
     function getWebAssemblyLoaderConfig(processor, wasmOptions) {
         var config = {
@@ -182,8 +179,17 @@ define([
             return when.resolve(config);
         }
 
-        config.modulePath = buildModuleUrl(wasmOptions.modulePath);
-        config.wasmBinaryFile = buildModuleUrl(wasmOptions.wasmBinaryFile);
+        var modulePath = wasmOptions.modulePath;
+        if (modulePath.indexOf('ThirdParty/Workers/') === 0) {
+            modulePath = modulePath.substring('ThirdParty/Workers/'.length);
+        }
+        config.modulePath = requireWasmWrapper('./' + modulePath);
+
+        var wasmBinaryFile = wasmOptions.wasmBinaryFile;
+        if (wasmBinaryFile.indexOf('ThirdParty/') === 0) {
+            wasmBinaryFile = wasmBinaryFile.substring('ThirdParty/'.length);
+        }
+        config.wasmBinaryFile = requireWasm('./' + wasmBinaryFile);
 
         return Resource.fetchArrayBuffer({
             url: config.wasmBinaryFile
@@ -312,7 +318,10 @@ define([
                     deferred.resolve(event.data);
                 };
 
-                worker.postMessage({ webAssemblyConfig : wasmConfig }, transferableObjects);
+                worker.postMessage({ webAssemblyConfig : {
+                    wasmBinary: wasmConfig.wasmBinary,
+                    wasmBinaryFile: wasmConfig.wasmBinaryFile
+                } }, transferableObjects);
             });
         });
 

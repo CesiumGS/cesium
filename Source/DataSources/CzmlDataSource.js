@@ -584,6 +584,8 @@ define([
                 return defaultValue(defaultValue(czmlInterval.object, czmlInterval.value), czmlInterval);
             case Quaternion:
                 return unwrapQuaternionInterval(czmlInterval);
+            case Rectangle:
+                return unwrapRectangleInterval(czmlInterval);
             case Rotation:
                 return defaultValue(czmlInterval.number, czmlInterval);
             case ShadowMode:
@@ -592,8 +594,6 @@ define([
                 return defaultValue(czmlInterval.string, czmlInterval);
             case StripeOrientation:
                 return StripeOrientation[defaultValue(czmlInterval.stripeOrientation, czmlInterval)];
-            case Rectangle:
-                return unwrapRectangleInterval(czmlInterval);
             case Uri:
                 return unwrapUriInterval(czmlInterval, sourceUri);
             case VerticalOrigin:

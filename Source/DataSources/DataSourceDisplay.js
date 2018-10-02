@@ -2,6 +2,7 @@ define([
         '../Core/ApproximateTerrainHeights',
         '../Core/BoundingSphere',
         '../Core/Check',
+        '../Core/createGuid',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
@@ -24,6 +25,7 @@ define([
         ApproximateTerrainHeights,
         BoundingSphere,
         Check,
+        createGuid,
         defaultValue,
         defined,
         defineProperties,
@@ -62,6 +64,8 @@ define([
         Check.typeOf.object('options.scene', options.scene);
         Check.typeOf.object('options.dataSourceCollection', options.dataSourceCollection);
         //>>includeEnd('debug');
+
+        this._displayID = createGuid();
 
         GroundPrimitive.initializeTerrainHeights();
         GroundPolylinePrimitive.initializeTerrainHeights();
@@ -266,14 +270,14 @@ define([
                 result = dataSource.update(time) && result;
             }
 
-            visualizers = dataSource._visualizers;
+            visualizers = dataSource._visualizersByDisplayID[this._displayID];
             vLength = visualizers.length;
             for (x = 0; x < vLength; x++) {
                 result = visualizers[x].update(time) && result;
             }
         }
 
-        visualizers = this._defaultDataSource._visualizers;
+        visualizers = this._defaultDataSource._visualizersByDisplayID[this._displayID];
         vLength = visualizers.length;
         for (x = 0; x < vLength; x++) {
             result = visualizers[x].update(time) && result;
@@ -379,7 +383,13 @@ define([
 
         primitives.add(entityCluster);
 
-        dataSource._visualizers = this._visualizersCallback(scene, entityCluster, dataSource);
+        var visualizers = this._visualizersCallback(scene, entityCluster, dataSource);
+
+        dataSource._visualizersByDisplayID = dataSource._visualizersByDisplayID || {};
+        dataSource._visualizersByDisplayID[this._displayID] = visualizers;
+
+        dataSource._visualizers = dataSource._visualizers || [];
+        dataSource._visualizers = dataSource._visualizers.concat(visualizers);
     };
 
     DataSourceDisplay.prototype._onDataSourceRemoved = function(dataSourceCollection, dataSource) {
@@ -392,16 +402,24 @@ define([
         var entityCluster = dataSource.clustering;
         primitives.remove(entityCluster);
 
-        var visualizers = dataSource._visualizers;
+        var visualizers = dataSource._visualizersByDisplayID[this._displayID];
+        if (!defined(visualizers)) {
+            return;
+        }
+
         var length = visualizers.length;
         for (var i = 0; i < length; i++) {
-            visualizers[i].destroy();
+            var visualizer = visualizers[i];
+            visualizer.destroy();
+
+            var index = dataSource._visualizers.indexOf(visualizer);
+            dataSource._visualizers.splice(index, 1);
         }
+
+        delete dataSource._visualizersByDisplayID[this._displayID];
 
         displayPrimitives.remove(primitives);
         displayGroundPrimitives.remove(groundPrimitives);
-
-        dataSource._visualizers = undefined;
     };
 
     DataSourceDisplay.prototype._onDataSourceMoved = function(dataSource, newIndex, oldIndex) {

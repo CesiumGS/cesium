@@ -336,6 +336,10 @@ define([
         this.retryAttempts = defaultValue(options.retryAttempts, 0);
         this._retryCount = 0;
 
+        // True if the URL contains {placeholders}. We need to take care to avoid turning these into %7Bplaceholders%7D.
+        var open = options.url.indexOf('%7B');
+        this._containsPlaceholders = !(open >= 0 && open < options.url.indexOf('%7D'));
+
         var uri = new Uri(options.url);
         parseQuery(uri, this, true, true);
 
@@ -524,7 +528,11 @@ define([
         }
 
         // objectToQuery escapes the placeholders.  Undo that.
-        var url = uri.toString().replace(/%7B/g, '{').replace(/%7D/g, '}');
+        var url = uri.toString();
+
+        if (this._containsPlaceholders) {
+            url = url.replace(/%7B/g, '{').replace(/%7D/g, '}');
+        }
 
         var template = this._templateValues;
         var keys = Object.keys(template);
@@ -715,6 +723,7 @@ define([
         result.retryAttempts = this.retryAttempts;
         result._retryCount = 0;
         result.request = this.request.clone();
+        result._containsPlaceholders = this._containsPlaceholders;
 
         return result;
     };
@@ -1248,9 +1257,10 @@ define([
             var headers = combine(options.headers, resource.headers);
             var overrideMimeType = options.overrideMimeType;
             var method = options.method;
+            var timeout = options.timeout;
             var data = options.data;
             var deferred = when.defer();
-            var xhr = Resource._Implementations.loadWithXhr(resource.url, responseType, method, data, headers, deferred, overrideMimeType);
+            var xhr = Resource._Implementations.loadWithXhr(resource.url, responseType, method, data, headers, deferred, overrideMimeType, timeout);
             if (defined(xhr) && defined(xhr.abort)) {
                 request.cancelFunction = function() {
                     xhr.abort();
@@ -1348,6 +1358,9 @@ define([
      * @param {String} [options.responseType] The type of response.  This controls the type of item returned.
      * @param {Object} [options.headers] Additional HTTP headers to send with the request, if any.
      * @param {String} [options.overrideMimeType] Overrides the MIME type returned by the server.
+     * @param {Number} [options.timeout] The timeout of the request, in milliseconds.  If the request does not complete
+     *                 within this timeout, it is aborted and the promise is rejected with a RequestErrorEvent with the
+     *                 isTimeout property set to true.  If this property is undefined, no client-side timeout applies.
      * @returns {Promise.<Object>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
      *
      *
@@ -1383,6 +1396,9 @@ define([
      * @param {Request} [options.request] A Request object that will be used. Intended for internal use only.
      * @param {String} [options.responseType] The type of response.  This controls the type of item returned.
      * @param {String} [options.overrideMimeType] Overrides the MIME type returned by the server.
+     * @param {Number} [options.timeout] The timeout of the request, in milliseconds.  If the request does not complete
+     *                 within this timeout, it is aborted and the promise is rejected with a RequestErrorEvent with the
+     *                 isTimeout property set to true.  If this property is undefined, no client-side timeout applies.
      * @returns {Promise.<Object>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
      */
     Resource.fetch = function (options) {
@@ -1390,7 +1406,8 @@ define([
         return resource.fetch({
             // Make copy of just the needed fields because headers can be passed to both the constructor and to fetch
             responseType: options.responseType,
-            overrideMimeType: options.overrideMimeType
+            overrideMimeType: options.overrideMimeType,
+            timeout: options.timeout
         });
     };
 
@@ -1404,6 +1421,9 @@ define([
      * @param {String} [options.responseType] The type of response.  This controls the type of item returned.
      * @param {Object} [options.headers] Additional HTTP headers to send with the request, if any.
      * @param {String} [options.overrideMimeType] Overrides the MIME type returned by the server.
+     * @param {Number} [options.timeout] The timeout of the request, in milliseconds.  If the request does not complete
+     *                 within this timeout, it is aborted and the promise is rejected with a RequestErrorEvent with the
+     *                 isTimeout property set to true.  If this property is undefined, no client-side timeout applies.
      * @returns {Promise.<Object>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
      *
      *
@@ -1440,6 +1460,9 @@ define([
      * @param {Request} [options.request] A Request object that will be used. Intended for internal use only.
      * @param {String} [options.responseType] The type of response.  This controls the type of item returned.
      * @param {String} [options.overrideMimeType] Overrides the MIME type returned by the server.
+     * @param {Number} [options.timeout] The timeout of the request, in milliseconds.  If the request does not complete
+     *                 within this timeout, it is aborted and the promise is rejected with a RequestErrorEvent with the
+     *                 isTimeout property set to true.  If this property is undefined, no client-side timeout applies.
      * @returns {Promise.<Object>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
      */
     Resource.delete = function (options) {
@@ -1448,6 +1471,7 @@ define([
             // Make copy of just the needed fields because headers can be passed to both the constructor and to fetch
             responseType: options.responseType,
             overrideMimeType: options.overrideMimeType,
+            timeout: options.timeout,
             data: options.data
         });
     };
@@ -1462,6 +1486,9 @@ define([
      * @param {String} [options.responseType] The type of response.  This controls the type of item returned.
      * @param {Object} [options.headers] Additional HTTP headers to send with the request, if any.
      * @param {String} [options.overrideMimeType] Overrides the MIME type returned by the server.
+     * @param {Number} [options.timeout] The timeout of the request, in milliseconds.  If the request does not complete
+     *                 within this timeout, it is aborted and the promise is rejected with a RequestErrorEvent with the
+     *                 isTimeout property set to true.  If this property is undefined, no client-side timeout applies.
      * @returns {Promise.<Object>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
      *
      *
@@ -1497,6 +1524,9 @@ define([
      * @param {Request} [options.request] A Request object that will be used. Intended for internal use only.
      * @param {String} [options.responseType] The type of response.  This controls the type of item returned.
      * @param {String} [options.overrideMimeType] Overrides the MIME type returned by the server.
+     * @param {Number} [options.timeout] The timeout of the request, in milliseconds.  If the request does not complete
+     *                 within this timeout, it is aborted and the promise is rejected with a RequestErrorEvent with the
+     *                 isTimeout property set to true.  If this property is undefined, no client-side timeout applies.
      * @returns {Promise.<Object>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
      */
     Resource.head = function (options) {
@@ -1504,7 +1534,8 @@ define([
         return resource.head({
             // Make copy of just the needed fields because headers can be passed to both the constructor and to fetch
             responseType: options.responseType,
-            overrideMimeType: options.overrideMimeType
+            overrideMimeType: options.overrideMimeType,
+            timeout: options.timeout
         });
     };
 
@@ -1518,6 +1549,9 @@ define([
      * @param {String} [options.responseType] The type of response.  This controls the type of item returned.
      * @param {Object} [options.headers] Additional HTTP headers to send with the request, if any.
      * @param {String} [options.overrideMimeType] Overrides the MIME type returned by the server.
+     * @param {Number} [options.timeout] The timeout of the request, in milliseconds.  If the request does not complete
+     *                 within this timeout, it is aborted and the promise is rejected with a RequestErrorEvent with the
+     *                 isTimeout property set to true.  If this property is undefined, no client-side timeout applies.
      * @returns {Promise.<Object>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
      *
      *
@@ -1553,6 +1587,9 @@ define([
      * @param {Request} [options.request] A Request object that will be used. Intended for internal use only.
      * @param {String} [options.responseType] The type of response.  This controls the type of item returned.
      * @param {String} [options.overrideMimeType] Overrides the MIME type returned by the server.
+     * @param {Number} [options.timeout] The timeout of the request, in milliseconds.  If the request does not complete
+     *                 within this timeout, it is aborted and the promise is rejected with a RequestErrorEvent with the
+     *                 isTimeout property set to true.  If this property is undefined, no client-side timeout applies.
      * @returns {Promise.<Object>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
      */
     Resource.options = function (options) {
@@ -1560,7 +1597,8 @@ define([
         return resource.options({
             // Make copy of just the needed fields because headers can be passed to both the constructor and to fetch
             responseType: options.responseType,
-            overrideMimeType: options.overrideMimeType
+            overrideMimeType: options.overrideMimeType,
+            timeout: options.timeout
         });
     };
 
@@ -1576,6 +1614,9 @@ define([
      * @param {String} [options.responseType] The type of response.  This controls the type of item returned.
      * @param {Object} [options.headers] Additional HTTP headers to send with the request, if any.
      * @param {String} [options.overrideMimeType] Overrides the MIME type returned by the server.
+     * @param {Number} [options.timeout] The timeout of the request, in milliseconds.  If the request does not complete
+     *                 within this timeout, it is aborted and the promise is rejected with a RequestErrorEvent with the
+     *                 isTimeout property set to true.  If this property is undefined, no client-side timeout applies.
      * @returns {Promise.<Object>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
      *
      *
@@ -1615,6 +1656,9 @@ define([
      * @param {Request} [options.request] A Request object that will be used. Intended for internal use only.
      * @param {String} [options.responseType] The type of response.  This controls the type of item returned.
      * @param {String} [options.overrideMimeType] Overrides the MIME type returned by the server.
+     * @param {Number} [options.timeout] The timeout of the request, in milliseconds.  If the request does not complete
+     *                 within this timeout, it is aborted and the promise is rejected with a RequestErrorEvent with the
+     *                 isTimeout property set to true.  If this property is undefined, no client-side timeout applies.
      * @returns {Promise.<Object>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
      */
     Resource.post = function (options) {
@@ -1622,7 +1666,8 @@ define([
         return resource.post(options.data, {
             // Make copy of just the needed fields because headers can be passed to both the constructor and to post
             responseType: options.responseType,
-            overrideMimeType: options.overrideMimeType
+            overrideMimeType: options.overrideMimeType,
+            timeout: options.timeout
         });
     };
 
@@ -1637,6 +1682,9 @@ define([
      * @param {String} [options.responseType] The type of response.  This controls the type of item returned.
      * @param {Object} [options.headers] Additional HTTP headers to send with the request, if any.
      * @param {String} [options.overrideMimeType] Overrides the MIME type returned by the server.
+     * @param {Number} [options.timeout] The timeout of the request, in milliseconds.  If the request does not complete
+     *                 within this timeout, it is aborted and the promise is rejected with a RequestErrorEvent with the
+     *                 isTimeout property set to true.  If this property is undefined, no client-side timeout applies.
      * @returns {Promise.<Object>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
      *
      *
@@ -1676,6 +1724,9 @@ define([
      * @param {Request} [options.request] A Request object that will be used. Intended for internal use only.
      * @param {String} [options.responseType] The type of response.  This controls the type of item returned.
      * @param {String} [options.overrideMimeType] Overrides the MIME type returned by the server.
+     * @param {Number} [options.timeout] The timeout of the request, in milliseconds.  If the request does not complete
+     *                 within this timeout, it is aborted and the promise is rejected with a RequestErrorEvent with the
+     *                 isTimeout property set to true.  If this property is undefined, no client-side timeout applies.
      * @returns {Promise.<Object>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
      */
     Resource.put = function (options) {
@@ -1683,7 +1734,8 @@ define([
         return resource.put(options.data, {
             // Make copy of just the needed fields because headers can be passed to both the constructor and to post
             responseType: options.responseType,
-            overrideMimeType: options.overrideMimeType
+            overrideMimeType: options.overrideMimeType,
+            timeout: options.timeout
         });
     };
 
@@ -1698,6 +1750,9 @@ define([
      * @param {String} [options.responseType] The type of response.  This controls the type of item returned.
      * @param {Object} [options.headers] Additional HTTP headers to send with the request, if any.
      * @param {String} [options.overrideMimeType] Overrides the MIME type returned by the server.
+     * @param {Number} [options.timeout] The timeout of the request, in milliseconds.  If the request does not complete
+     *                 within this timeout, it is aborted and the promise is rejected with a RequestErrorEvent with the
+     *                 isTimeout property set to true.  If this property is undefined, no client-side timeout applies.
      * @returns {Promise.<Object>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
      *
      *
@@ -1737,6 +1792,9 @@ define([
      * @param {Request} [options.request] A Request object that will be used. Intended for internal use only.
      * @param {String} [options.responseType] The type of response.  This controls the type of item returned.
      * @param {String} [options.overrideMimeType] Overrides the MIME type returned by the server.
+     * @param {Number} [options.timeout] The timeout of the request, in milliseconds.  If the request does not complete
+     *                 within this timeout, it is aborted and the promise is rejected with a RequestErrorEvent with the
+     *                 isTimeout property set to true.  If this property is undefined, no client-side timeout applies.
      * @returns {Promise.<Object>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
      */
     Resource.patch = function (options) {
@@ -1744,7 +1802,8 @@ define([
         return resource.patch(options.data, {
             // Make copy of just the needed fields because headers can be passed to both the constructor and to post
             responseType: options.responseType,
-            overrideMimeType: options.overrideMimeType
+            overrideMimeType: options.overrideMimeType,
+            timeout: options.timeout
         });
     };
 
@@ -1835,7 +1894,7 @@ define([
     }
 
     var noXMLHttpRequest = typeof XMLHttpRequest === 'undefined';
-    Resource._Implementations.loadWithXhr = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+    Resource._Implementations.loadWithXhr = function(url, responseType, method, data, headers, deferred, overrideMimeType, timeout) {
         var dataUriRegexResult = dataUriRegex.exec(url);
         if (dataUriRegexResult !== null) {
             deferred.resolve(decodeDataUri(dataUriRegexResult, responseType));
@@ -1871,6 +1930,10 @@ define([
             xhr.responseType = responseType;
         }
 
+        if (defined(timeout)) {
+            xhr.timeout = timeout;
+        }
+
         // While non-standard, file protocol always returns a status of 0 on success
         var localFile = false;
         if (typeof url === 'string') {
@@ -1883,7 +1946,7 @@ define([
                 return;
             }
 
-            var response = xhr.response;
+            var response = typeof xhr.response !== 'undefined' ? xhr.response : xhr.responseText;
             var browserResponseType = xhr.responseType;
 
             if (method === 'HEAD' || method === 'OPTIONS') {
@@ -1907,7 +1970,7 @@ define([
             if (xhr.status === 204) {
                 // accept no content
                 deferred.resolve();
-            } else if (defined(response) && (!defined(responseType) || (browserResponseType === responseType))) {
+            } else if (defined(xhr.response) && (!defined(responseType) || (browserResponseType === responseType))) {
                 deferred.resolve(response);
             } else if ((responseType === 'json') && typeof response === 'string') {
                 try {
@@ -1915,10 +1978,19 @@ define([
                 } catch (e) {
                     deferred.reject(e);
                 }
+            } else if ((responseType === 'document') && typeof response === 'string') {
+                try {
+                    var parser = new DOMParser();
+                    deferred.resolve(parser.parseFromString(response, 'text/xml'));
+                } catch (e) {
+                    deferred.reject(e);
+                }
             } else if ((browserResponseType === '' || browserResponseType === 'document') && defined(xhr.responseXML) && xhr.responseXML.hasChildNodes()) {
                 deferred.resolve(xhr.responseXML);
             } else if ((browserResponseType === '' || browserResponseType === 'text') && defined(xhr.responseText)) {
                 deferred.resolve(xhr.responseText);
+            } else if (typeof response === 'string') {
+                deferred.resolve(response);
             } else {
                 deferred.reject(new RuntimeError('Invalid XMLHttpRequest response type.'));
             }
@@ -1926,6 +1998,12 @@ define([
 
         xhr.onerror = function(e) {
             deferred.reject(new RequestErrorEvent());
+        };
+
+        xhr.ontimeout = function(e) {
+            var timeout = new RequestErrorEvent();
+            timeout.isTimeout = true;
+            deferred.reject(timeout);
         };
 
         xhr.send(data);

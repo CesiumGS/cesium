@@ -1316,3 +1316,36 @@ function streamToPromise(stream) {
         stream.on('error', reject);
     });
 }
+
+// TerriajS-specific tasks.
+var workerGlob = [
+    './Source/Workers/*.js',
+    '!./Source/Workers/*.profile.js',
+    '!./Source/Workers/cesiumWorkerBootstrapper.js',
+    '!./Source/Workers/transferTypedArrayTest.js',
+    '!./Source/Workers/createTaskProcessorWorker.js'
+];
+
+function createExorcistTransform(name) {
+    return transform(function () { return exorcist('wwwroot/build/Workers/' + name + '.map'); });
+}
+
+gulp.task('terria-prepare-cesium', ['build', 'generateStubs', 'terria-copy-cesium-assets', 'terria-copy-cesiumWorkerBootstrapper']);
+
+gulp.task('terria-copy-cesium-assets', function() {
+    return gulp.src([
+            'Source/Workers/transferTypedArrayTest.js',
+            'Source/ThirdParty/Workers/**',
+            'Source/Assets/**',
+            'Source/Widgets/**/*.css',
+            'Source/Widgets/Images/**'
+        ], { base: 'Source' })
+        .pipe(gulp.dest('wwwroot/build/'));
+});
+
+gulp.task('terria-copy-cesiumWorkerBootstrapper', function() {
+    return gulp.src('Source/Workers/cesiumWorkerBootstrapper.js')
+        .pipe(gulp.dest('wwwroot/build/Workers'));
+});
+
+gulp.task('terria-default', ['terria-prepare-cesium']);
