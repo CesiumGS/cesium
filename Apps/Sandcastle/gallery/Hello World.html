@@ -213,7 +213,10 @@ function startup(Cesium) {
             'varying vec3 v_normalEC;\n' +
             'void main()\n' +
             '{\n' +
-            '    vec3 color = textureLod(u_cubeMap, normalize((czm_inverseModelView * vec4(v_positionEC, 1.0)).xyz), float(' + lod + ')).rgb;\n' +
+            '    vec3 n = normalize((czm_inverseModelView * vec4(v_positionEC, 1.0)).xyz); \n' +
+            '    const mat3 yUpToZUp = mat3(-1.0, 0.0, 0.0, 0.0, 0.0, -1.0, 0.0, 1.0, 0.0); \n' +
+            '    n = yUpToZUp * n; \n' + // TODO
+            '    vec3 color = textureLod(u_cubeMap, n, float(' + lod + ')).rgb;\n' +
             '    gl_FragColor = vec4(color, 1.0);\n' +
             '}\n';
         customAppearance.isTranslucent = function() {

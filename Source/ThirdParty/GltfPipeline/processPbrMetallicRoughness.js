@@ -469,6 +469,33 @@ define([
             '#endif \n' +
             '}\n\n';
 
+        fragmentShader +=
+            '#ifdef SPHERICAL_HARMONICS \n' +
+            'vec3 sphericalHarmonic(vec3 normal, vec3 coeffs[9]) \n' +
+            '{ \n' +
+            '    const float c1 = 0.429043; \n' +
+            '    const float c2 = 0.511664; \n' +
+            '    const float c3 = 0.743125; \n' +
+            '    const float c4 = 0.886227; \n' +
+            '    const float c5 = 0.247708; \n' +
+            '    vec3 L00 = coeffs[0]; \n' +
+            '    vec3 L1_1 = coeffs[1]; \n' +
+            '    vec3 L10 = coeffs[2]; \n' +
+            '    vec3 L11 = coeffs[3]; \n' +
+            '    vec3 L2_2 = coeffs[4]; \n' +
+            '    vec3 L2_1 = coeffs[5]; \n' +
+            '    vec3 L20 = coeffs[6]; \n' +
+            '    vec3 L21 = coeffs[7]; \n' +
+            '    vec3 L22 = coeffs[8]; \n' +
+            '    float x = normal.x; \n' +
+            '    float y = normal.y; \n' +
+            '    float z = normal.z; \n' +
+            '    return c1 * L22 * (x * x - y * y) + c3 * L20 * z * z + c4 * L00 - c5 * L20 + \n' +
+            '           2.0 * c1 * (L2_2 * x * y + L21 * x * z + L2_1 * y * z) + \n' +
+            '           2.0 * c2 * (L11 * x + L1_1 * y + L10 * z); \n' +
+            '} \n' +
+            '#endif \n';
+
         fragmentShader += 'void main(void) \n{\n';
 
         // Add normal mapping to fragment shader
@@ -596,11 +623,6 @@ define([
             fragmentShader += '    float alpha = roughness * roughness;\n';
             fragmentShader += '    vec3 diffuseColor = baseColor * (1.0 - metalness) * (1.0 - f0);\n';
 
-            fragmentShader += '#ifdef DIFFUSE_IBL \n';
-            fragmentShader += '    vec3 irradiance = textureCube(gltf_diffuseIrradiance, normalize(czm_inverseViewRotation * n)).rgb;\n';
-            fragmentShader += '    diffuseColor *= irradiance;\n';
-            fragmentShader += '#endif \n';
-
             fragmentShader += '    vec3 specularColor = mix(f0, baseColor, metalness);\n';
             fragmentShader += '    float reflectance = max(max(specularColor.r, specularColor.g), specularColor.b);\n';
             fragmentShader += '    vec3 r90 = vec3(clamp(reflectance * 25.0, 0.0, 1.0));\n';
@@ -650,15 +672,20 @@ define([
                 fragmentShader += '    color += IBLColor;\n';
                 */
 
+                fragmentShader += '    const mat3 yUpToZUp = mat3(-1.0, 0.0, 0.0, 0.0, 0.0, -1.0, 0.0, 1.0, 0.0); \n';
+                fragmentShader += '    vec3 cubeDir = normalize(czm_inverseViewRotation * n); \n';
+                fragmentShader += '    cubeDir = yUpToZUp * cubeDir; \n'; // TODO
                 fragmentShader += '#ifdef DIFFUSE_IBL \n';
-                fragmentShader += '    vec3 diffuseIrradiance = textureCube(gltf_diffuseIrradiance, normalize(czm_inverseViewRotation * n)).rgb;\n';
+                fragmentShader += '#ifdef SPHERICAL_HARMONICS \n';
+                fragmentShader += '    vec3 diffuseIrradiance = sphericalHarmonics(cubeDir, gltf_sphericalHarmonicCoefficients); \n';
+                fragmentShader += '#endif \n';
+                fragmentShader += '    vec3 diffuseIrradiance = textureCube(gltf_diffuseIrradiance, cubeDir).rgb;\n';
                 fragmentShader += '#else \n';
                 fragmentShader += '    vec3 diffuseIrradiance = vec3(0.0); \n';
                 fragmentShader += '#endif \n';
                 fragmentShader += '#ifdef SPECULAR_IBL \n';
                 fragmentShader += '    vec2 brdfLut = texture2D(czm_brdfLut, vec2(NdotV, roughness)).rg;\n';
-                fragmentShader += '    r = normalize(czm_inverseViewRotation * normalize(reflect(v, n)));\n';
-                fragmentShader += '    vec3 specularIBL = textureLod(gltf_specularMap, r,  roughness * gltf_maxSpecularLOD).rgb;\n';
+                fragmentShader += '    vec3 specularIBL = textureLod(gltf_specularMap, cubeDir,  roughness * gltf_maxSpecularLOD).rgb;\n';
                 fragmentShader += '    specularIBL *= F * brdfLut.x + brdfLut.y;\n';
                 fragmentShader += '#else \n';
                 fragmentShader += '    vec3 specularIBL = vec3(0.0); \n';
