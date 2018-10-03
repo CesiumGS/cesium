@@ -45,18 +45,19 @@ define([
      * @returns {Texture} A texture containing all the packed convolutions. 
      *
      */
+
     function packOctahedralMap(cubeMaps, context) { 
         //>>includeStart('debug', pragmas.debug);
         if (!defined(context)) {
             throw new DeveloperError('context is required.');
         }
         //>>includeEnd('debug');
-        var size = cubeMaps[0]._size;
+        var originalSize = cubeMaps[0]._size * 2;
 
         var texture = new Texture({
             context : context, 
-            width : size * cubeMaps.length, 
-            height : size,
+            width : originalSize * 1.5,
+            height : originalSize,
             pixelDataType : cubeMaps[0]._pixelDatatype,
             pixelFormat : cubeMaps[0]._pixelFormat
         });
@@ -81,12 +82,22 @@ define([
         var length = cubeMaps.length; 
         var command; 
 
-        for (var i = 0;i < length; ++i) {
+        for (var i = 0; i < length; ++i) {
+            var factor = (1/Math.pow(2,i));
+            var size = originalSize * factor;
+            var xOffset = 0; 
+            var yOffset = 0;
+
+            if (i > 0) {
+                xOffset = originalSize + 1;
+                yOffset = (1 - (1/Math.pow(2,i-1))) * originalSize + (i-1);
+            }
+
             command = new DrawCommand({
                 vertexArray : vertexArray,
                 primitiveType : PrimitiveType.TRIANGLES,
                 renderState : RenderState.fromCache({
-                    viewport : new BoundingRectangle(size * i, 0, size, size)
+                    viewport : new BoundingRectangle(xOffset, yOffset, size, size)
                 }),
                 shaderProgram : shaderProgram,
                 uniformMap : {
