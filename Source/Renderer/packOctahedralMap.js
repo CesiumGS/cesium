@@ -57,7 +57,7 @@ define([
         var texture = new Texture({
             context : context, 
             width : originalSize * 1.5,
-            height : originalSize,
+            height : originalSize * 1.5,
             pixelDataType : cubeMaps[0]._pixelDatatype,
             pixelFormat : cubeMaps[0]._pixelFormat
         });
