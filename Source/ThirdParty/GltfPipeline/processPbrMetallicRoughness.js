@@ -471,7 +471,7 @@ define([
 
         fragmentShader +=
             '#ifdef SPHERICAL_HARMONICS \n' +
-            'vec3 sphericalHarmonic(vec3 normal, vec3 coeffs[9]) \n' +
+            'vec3 sphericalHarmonics(vec3 normal, vec3 coeffs[9]) \n' +
             '{ \n' +
             '    const float c1 = 0.429043; \n' +
             '    const float c2 = 0.511664; \n' +
@@ -678,8 +678,9 @@ define([
                 fragmentShader += '#ifdef DIFFUSE_IBL \n';
                 fragmentShader += '#ifdef SPHERICAL_HARMONICS \n';
                 fragmentShader += '    vec3 diffuseIrradiance = sphericalHarmonics(cubeDir, gltf_sphericalHarmonicCoefficients); \n';
-                fragmentShader += '#endif \n';
+                fragmentShader += '#else \n';
                 fragmentShader += '    vec3 diffuseIrradiance = textureCube(gltf_diffuseIrradiance, cubeDir).rgb;\n';
+                fragmentShader += '#endif \n';
                 fragmentShader += '#else \n';
                 fragmentShader += '    vec3 diffuseIrradiance = vec3(0.0); \n';
                 fragmentShader += '#endif \n';

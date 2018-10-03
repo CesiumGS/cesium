@@ -665,6 +665,8 @@ define([
 
         this.diffuseIrradiance = undefined;
         this._diffuseIrradiance = undefined;
+        this.sphericalHarmonicCoefficients = undefined;
+        this._sphericalHarmonicCoefficients = undefined;
         this.specularEnvironmentMap = undefined;
         this._specularEnvironmentMap = undefined;
     }
@@ -2062,7 +2064,9 @@ define([
                 '} \n';
         }
 
-        if (defined(model._diffuseIrradiance)) {
+        if (defined(model._sphericalHarmonicCoefficients)) {
+            drawFS = '#define DIFFUSE_IBL \n' + '#define SPHERICAL_HARMONICS \n' + 'uniform vec3 gltf_sphericalHarmonicCoefficients[9]; \n' + drawFS;
+        } else if (defined(model._diffuseIrradiance)) {
             drawFS = '#define DIFFUSE_IBL \n' + 'uniform samplerCube gltf_diffuseIrradiance; \n' + drawFS;
         }
         if (defined(model._specularEnvironmentMap)) {
@@ -2119,7 +2123,9 @@ define([
                 '} \n';
         }
 
-        if (defined(model._diffuseIrradiance)) {
+        if (defined(model._sphericalHarmonicCoefficients)) {
+            drawFS = '#define DIFFUSE_IBL \n' + '#define SPHERICAL_HARMONICS \n' + 'uniform vec3 gltf_sphericalHarmonicCoefficients[9]; \n' + drawFS;
+        } else if (defined(model._diffuseIrradiance)) {
             drawFS = '#define DIFFUSE_IBL \n' + 'uniform samplerCube gltf_diffuseIrradiance; \n' + drawFS;
         }
         if (defined(model._specularEnvironmentMap)) {
@@ -3082,6 +3088,12 @@ define([
         };
     }
 
+    function createSphericalHarmonicCoefficientsFunction(model) {
+        return function() {
+            return model._sphericalHarmonicCoefficients;
+        };
+    }
+
     function createDiffuseIrradianceFunction(model) {
         return function() {
             return model._diffuseIrradiance;
@@ -3198,6 +3210,7 @@ define([
                 gltf_clippingPlanes : createClippingPlanesFunction(model),
                 gltf_clippingPlanesEdgeStyle : createClippingPlanesEdgeStyleFunction(model),
                 gltf_clippingPlanesMatrix : createClippingPlanesMatrixFunction(model),
+                gltf_sphericalHarmonicCoefficients : createSphericalHarmonicCoefficientsFunction(model),
                 gltf_diffuseIrradiance : createDiffuseIrradianceFunction(model),
                 gltf_specularMap : createSpecularEnvironmentMapFunction(model),
                 gltf_maxSpecularLOD : createSpecularEnvironmentMapLOD(model)
@@ -4497,7 +4510,10 @@ define([
                 currentClippingPlanesState = clippingPlanes.clippingPlanesState;
             }
 
-            var shouldRegenerateShaders = this._clippingPlanesState !== currentClippingPlanesState || this._diffuseIrradiance !== this.diffuseIrradiance || this._specularEnvironmentMap !== this.specularEnvironmentMap;
+            var shouldRegenerateShaders = this._clippingPlanesState !== currentClippingPlanesState;
+            shouldRegenerateShaders = this._diffuseIrradiance !== this.diffuseIrradiance || shouldRegenerateShaders;
+            shouldRegenerateShaders = this._specularEnvironmentMap !== this.specularEnvironmentMap || shouldRegenerateShaders;
+            shouldRegenerateShaders = this._sphericalHarmonicCoefficients !== this.sphericalHarmonicCoefficients || shouldRegenerateShaders;
             this._clippingPlanesState = currentClippingPlanesState;
 
             // Regenerate shaders if color shading changed from last update
@@ -4605,9 +4621,10 @@ define([
         var cachedRendererResources = model._cachedRendererResources;
         destroyIfNotCached(rendererResources, cachedRendererResources);
 
-        if (isClippingEnabled(model) || isColorShadingEnabled(model) || model.diffuseIrradiance !== model._diffuseIrradiance || model.specularEnvironmentMap !== model._specularEnvironmentMap) {
+        if (isClippingEnabled(model) || isColorShadingEnabled(model) || model.diffuseIrradiance !== model._diffuseIrradiance || model.specularEnvironmentMap !== model._specularEnvironmentMap || model.sphericalHarmonicCoefficients !== model._sphericalHarmonicCoefficients) {
             model._diffuseIrradiance = model.diffuseIrradiance;
             model._specularEnvironmentMap = model.specularEnvironmentMap;
+            model._sphericalHarmonicCoefficients = model.sphericalHarmonicCoefficients;
 
             rendererResources.programs = {};
             rendererResources.silhouettePrograms = {};

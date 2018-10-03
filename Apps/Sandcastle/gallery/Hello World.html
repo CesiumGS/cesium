@@ -52,6 +52,17 @@ function startup(Cesium) {
     var origEnvMapURL = '../../SampleData/models/EnvMap/gold_roomEnvHDR.dds';
     var modelURL = '../../SampleData/models/Spheres/MetalRoughSpheres.glb';
 
+    var L00 = new Cesium.Cartesian3(2.4108948993639623, 1.7444228143970444, 1.3962312096928027);
+    var L1_1 = new Cesium.Cartesian3(0.30206984487139293, 0.21130781958192582, 0.08034025578587382);
+    var L2_1 = new Cesium.Cartesian3(-0.006968515815480629, 0.001670748377539517, 0.0034542125301633498);
+    var L2_2 = new Cesium.Cartesian3(0.0520734141053452, 0.04418881627990938, 0.02514089435838303);
+    var L10 = new Cesium.Cartesian3(-0.020676395891920593, -0.05536489337535171, -0.06779604936207571);
+    var L11 = new Cesium.Cartesian3(0.847451085180157, 0.8749389094580956, 0.9179523369893079);
+    var L20 = new Cesium.Cartesian3(-0.05025351054847489, -0.07710863712570756, -0.09897457621404988);
+    var L21 = new Cesium.Cartesian3(-0.025057176482688372, -0.03538691013533702, -0.04824111676529759);
+    var L22 = new Cesium.Cartesian3(0.37242236982153243, 0.3752699462552295, 0.37350843399764855);
+    var coefficients =[L00, L1_1, L10, L11, L2_2, L2_1, L20, L21, L22];
+
     var model = scene.primitives.add(Cesium.Model.fromGltf({
         url : modelURL,
         modelMatrix : modelMatrix,
@@ -70,6 +81,8 @@ function startup(Cesium) {
         var heading = Cesium.Math.toRadians(230.0);
         var pitch = Cesium.Math.toRadians(-20.0);
         camera.lookAt(center, new Cesium.HeadingPitchRange(heading, pitch, r * 2.0));
+
+        //model.sphericalHarmonicCoefficients = coefficients;
 
         loadEnvMap(diffuseEnvMapURL).then(function(cubeMap) {
             model.diffuseIrradiance = cubeMap;
