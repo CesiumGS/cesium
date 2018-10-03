@@ -731,18 +731,26 @@ define([
             TileProviderError.handleSuccess(that._requestImageError);
         }
 
-        function failure(e) {
+        function failureWithoutRetry(e) {
             if (imagery.request.state === RequestState.CANCELLED) {
                 // Cancelled due to low priority - try again later.
                 imagery.state = ImageryState.UNLOADED;
                 imagery.request = undefined;
-                return;
+                return true;
             }
 
             // Initially assume failure.  handleError may retry, in which case the state will
             // change to TRANSITIONING when doRequest is called.
             imagery.state = ImageryState.FAILED;
             imagery.request = undefined;
+
+            return false;
+        }
+
+        function failure(e) {
+            if (failureWithoutRetry(e)) {
+                return;
+            }
 
             var message = 'Failed to obtain image tile X: ' + imagery.x + ' Y: ' + imagery.y + ' Level: ' + imagery.level + '.';
             that._requestImageError = TileProviderError.handleError(
@@ -770,7 +778,7 @@ define([
                 // This promise might be, for example, obtaining a new token that will allow access to the imagery.
                 // We wrap doRequest in a function so that the resolved value of the waitPromise is ignored and
                 // not passed to doRequest.
-                waitPromise.then(function() { doRequest(); }).otherwise(failure);
+                waitPromise.then(function() { doRequest(); }).otherwise(failureWithoutRetry);
                 return;
             }
 
