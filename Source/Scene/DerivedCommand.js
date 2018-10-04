@@ -290,6 +290,13 @@ define([
             var rs = RenderState.getState(renderState);
             rs.blending.enabled = false;
 
+            // Turns on depth writing for opaque and translucent passes
+            // Overlapping translucent geometry on the globe surface may exhibit z-fighting
+            // during the pick pass which may not match the rendered scene. Once
+            // terrain is on by default and ground primitives are used instead
+            // this will become less of a problem.
+            rs.depthMask = true;
+
             pickState = RenderState.fromCache(rs);
             cache[renderState.id] = pickState;
         }

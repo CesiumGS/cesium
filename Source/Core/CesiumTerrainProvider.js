@@ -156,7 +156,7 @@ define([
 
                 var uri = new Uri(metadataResource.url);
                 if (uri.authority === 'assets.agi.com') {
-                    var deprecationText = 'The STK World Terrain tileset is end-of-life and will shut down on October 1, 2018.';
+                    var deprecationText = 'STK World Terrain at assets.agi.com was shut down on October 1, 2018.';
                     var deprecationLinkText = 'Check out the new high-resolution Cesium World Terrain for migration instructions.';
                     var deprecationLink = 'https://cesium.com/blog/2018/03/01/introducing-cesium-world-terrain/';
                     that._tileCredits = [

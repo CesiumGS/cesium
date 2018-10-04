@@ -60,7 +60,7 @@ define([
         var farToNearRatio = scene.logarithmicDepthBuffer ? scene.logarithmicDepthFarToNearRatio : scene.farToNearRatio;
 
         var numFrustums = Math.ceil(Math.log(far / near) / Math.log(farToNearRatio));
-        updateFrustums(near, far, farToNearRatio, numFrustums, scene.logarithmicDepthBuffer, frustumCommandsList, false, undefined, false, undefined);
+        updateFrustums(near, far, farToNearRatio, numFrustums, scene.logarithmicDepthBuffer, frustumCommandsList, false, undefined);
 
         var globeDepth;
         if (context.depthTexture) {
@@ -137,7 +137,7 @@ define([
         return false;
     };
 
-    function updateFrustums(near, far, farToNearRatio, numFrustums, logDepth, frustumCommandsList, is2D, nearToFarDistance2D, isOrthographic, nearToFarDistanceOrthographic) {
+    function updateFrustums(near, far, farToNearRatio, numFrustums, logDepth, frustumCommandsList, is2D, nearToFarDistance2D) {
         frustumCommandsList.length = numFrustums;
         for (var m = 0; m < numFrustums; ++m) {
             var curNear;
@@ -146,9 +146,6 @@ define([
             if (is2D) {
                 curNear = Math.min(far - nearToFarDistance2D, near + m * nearToFarDistance2D);
                 curFar = Math.min(far, curNear + nearToFarDistance2D);
-            } else if (isOrthographic) {
-                curNear = near + nearToFarDistanceOrthographic * m;
-                curFar = Math.min(far, curNear + nearToFarDistanceOrthographic);
             } else  {
                 curNear = Math.max(near, Math.pow(farToNearRatio, m) * near);
                 curFar = farToNearRatio * curNear;
@@ -336,7 +333,6 @@ define([
         // Exploit temporal coherence. If the frustums haven't changed much, use the frustums computed
         // last frame, else compute the new frustums and sort them by frustum again.
         var is2D = scene.mode === SceneMode.SCENE2D;
-        var isOrthographic = (scene.camera.frustum instanceof OrthographicFrustum || scene.camera.frustum instanceof OrthographicOffCenterFrustum);
         var logDepth = frameState.useLogDepth;
         var farToNearRatio = logDepth ? scene.logarithmicDepthFarToNearRatio : scene.farToNearRatio;
         var numFrustums;
@@ -348,9 +344,6 @@ define([
             far = Math.min(far, camera.position.z + scene.nearToFarDistance2D);
             near = Math.min(near, far);
             numFrustums = Math.ceil(Math.max(1.0, far - near) / scene.nearToFarDistance2D);
-        } else if (isOrthographic) {
-            // The multifrustum for orthographic is uniformly distributed.
-            numFrustums = Math.ceil(Math.max(1.0, far - near) / scene.nearToFarDistanceOrthographic);
         } else {
             // The multifrustum for 3D/CV is non-uniformly distributed.
             numFrustums = Math.ceil(Math.log(far / near) / Math.log(farToNearRatio));
@@ -359,7 +352,7 @@ define([
         if (this.updateFrustums || (near !== Number.MAX_VALUE && (numFrustums !== numberOfFrustums || (frustumCommandsList.length !== 0 &&
                 (near < frustumCommandsList[0].near || (far > frustumCommandsList[numberOfFrustums - 1].far && (logDepth || !CesiumMath.equalsEpsilon(far, frustumCommandsList[numberOfFrustums - 1].far, CesiumMath.EPSILON8)))))))) {
             this.updateFrustums = false;
-            updateFrustums(near, far, farToNearRatio, numFrustums, logDepth, frustumCommandsList, is2D, scene.nearToFarDistance2D, isOrthographic, scene.nearToFarDistanceOrthographic);
+            updateFrustums(near, far, farToNearRatio, numFrustums, logDepth, frustumCommandsList, is2D, scene.nearToFarDistance2D);
             this.createPotentiallyVisibleSet(scene);
         }
 

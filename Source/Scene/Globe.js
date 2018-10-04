@@ -133,7 +133,7 @@ define([
          * @type {Boolean}
          * @default true
          */
-        this.enableLighting = true;
+        this.enableLighting = false;
 
         /**
          * Enable the ground atmosphere.
@@ -148,36 +148,36 @@ define([
          * when <code>enableLighting</code> is <code>true</code>.
          *
          * @type {Number}
-         * @default 6500000.0
+         * @default 10000000.0
          */
-        this.lightingFadeOutDistance = 6500000.0;
+        this.lightingFadeOutDistance = 1.0e7;
 
         /**
          * The distance where lighting resumes. This only takes effect
          * when <code>enableLighting</code> is <code>true</code>.
          *
          * @type {Number}
-         * @default 9000000.0
+         * @default 20000000.0
          */
-        this.lightingFadeInDistance = 9000000.0;
+        this.lightingFadeInDistance = 2.0e7;
 
         /**
          * The distance where the darkness of night from the ground atmosphere fades out to a lit ground atmosphere.
-         * This only takes effect when <code>showGroundAtmosphere</code> is <code>true</code>.
+         * This only takes effect when <code>showGroundAtmosphere</code> and <code>enableLighting</code> are <code>true</code>.
          *
          * @type {Number}
          * @default 10000000.0
          */
-        this.nightFadeOutDistance = 10000000.0;
+        this.nightFadeOutDistance = 1.0e7;
 
         /**
          * The distance where the darkness of night from the ground atmosphere fades in to an unlit ground atmosphere.
-         * This only takes effect when <code>showGroundAtmosphere</code> is <code>true</code>.
+         * This only takes effect when <code>showGroundAtmosphere</code> and <code>enableLighting</code> are <code>true</code>.
          *
          * @type {Number}
-         * @default 40000000.0
+         * @default 50000000.0
          */
-        this.nightFadeInDistance = 40000000.0;
+        this.nightFadeInDistance = 5.0e7;
 
         /**
          * True if an animated wave effect should be shown in areas of the globe
@@ -213,7 +213,7 @@ define([
         this.shadows = ShadowMode.RECEIVE_ONLY;
 
         this._oceanNormalMap = undefined;
-        this._zoomedOutOceanSpecularIntensity = 0.5;
+        this._zoomedOutOceanSpecularIntensity = undefined;
     }
 
     defineProperties(Globe.prototype, {
@@ -301,6 +301,14 @@ define([
             },
             set : function(value) {
                 this._surface.tileProvider.clippingPlanes = value;
+            }
+        },
+        cartographicLimitRectangle : {
+            get : function() {
+                return this._surface.tileProvider.cartographicLimitRectangle;
+            },
+            set : function(value) {
+                this._surface.tileProvider.cartographicLimitRectangle = value;
             }
         },
         /**
@@ -658,11 +666,10 @@ define([
         var mode = frameState.mode;
 
         if (pass.render) {
-            // Don't show the ocean specular highlights when zoomed out in 2D and Columbus View.
-            if (mode === SceneMode.SCENE3D) {
-                this._zoomedOutOceanSpecularIntensity = 0.5;
+            if (this.showGroundAtmosphere) {
+                this._zoomedOutOceanSpecularIntensity = 0.4;
             } else {
-                this._zoomedOutOceanSpecularIntensity = 0.0;
+                this._zoomedOutOceanSpecularIntensity = 0.5;
             }
 
             surface.maximumScreenSpaceError = this.maximumScreenSpaceError;
@@ -673,7 +680,7 @@ define([
             tileProvider.lightingFadeInDistance = this.lightingFadeInDistance;
             tileProvider.nightFadeOutDistance = this.nightFadeOutDistance;
             tileProvider.nightFadeInDistance = this.nightFadeInDistance;
-            tileProvider.zoomedOutOceanSpecularIntensity = this._zoomedOutOceanSpecularIntensity;
+            tileProvider.zoomedOutOceanSpecularIntensity = mode === SceneMode.SCENE3D ? this._zoomedOutOceanSpecularIntensity : 0.0;
             tileProvider.hasWaterMask = hasWaterMask;
             tileProvider.oceanNormalMap = this._oceanNormalMap;
             tileProvider.enableLighting = this.enableLighting;

@@ -460,174 +460,216 @@ defineSuite([
         verifyGroundPrimitiveRender(primitive, rectColor);
     });
 
-    // Screen space techniques may produce unexpected results with 1x1 canvasses
-    function verifyLargerScene(groundPrimitive, expectedColor, destination) {
-        var largeScene = createScene({
-            canvas : createCanvas(2, 2)
+    describe('larger scene', function() {
+        var largeScene;
+        beforeEach(function() {
+            largeScene = createScene({
+                canvas : createCanvas(2, 2)
+            });
         });
-        largeScene.render();
 
-        largeScene.postProcessStages.fxaa.enabled = false;
-        largeScene.camera.setView({ destination : destination });
+        afterEach(function() {
+            largeScene.destroyForSpecs();
+        });
 
-        var largeSceneDepthPrimitive = new MockGlobePrimitive(new Primitive({
-            geometryInstances : new GeometryInstance({
+        // Screen space techniques may produce unexpected results with 1x1 canvasses
+        function verifyLargerScene(groundPrimitive, expectedColor, destination) {
+            largeScene.render();
+
+            largeScene.postProcessStages.fxaa.enabled = false;
+            largeScene.camera.setView({destination : destination});
+
+            var largeSceneDepthPrimitive = new MockGlobePrimitive(new Primitive({
+                geometryInstances : new GeometryInstance({
+                    geometry : new RectangleGeometry({
+                        ellipsoid : ellipsoid,
+                        rectangle : Rectangle.fromDegrees(-180 + CesiumMath.EPSILON4, -90 + CesiumMath.EPSILON4, 180 - CesiumMath.EPSILON4, 90 - CesiumMath.EPSILON4)
+                    }),
+                    id : 'depth rectangle',
+                    attributes : {
+                        color : ColorGeometryInstanceAttribute.fromColor(new Color(0.0, 0.0, 1.0, 1.0))
+                    }
+                }),
+                appearance : new PerInstanceColorAppearance({
+                    translucent : false,
+                    flat : true
+                }),
+                asynchronous : false
+            }));
+
+            largeScene.groundPrimitives.add(largeSceneDepthPrimitive);
+            expect(largeScene).toRenderAndCall(function(rgba) {
+                expect(rgba.slice(0, 4)).not.toEqual([0, 0, 0, 255]);
+                expect(rgba[0]).toEqual(0);
+            });
+
+            largeScene.groundPrimitives.add(groundPrimitive);
+            expect(largeScene).toRenderAndCall(function(rgba) {
+                expect(rgba.slice(0, 4)).toEqual(expectedColor);
+            });
+        }
+
+        it('renders batched instances', function() {
+            if (!GroundPrimitive.isSupported(scene)) {
+                return;
+            }
+
+            var rectColorAttribute = ColorGeometryInstanceAttribute.fromColor(new Color(0.0, 1.0, 1.0, 1.0));
+            var rectangleInstance1 = new GeometryInstance({
                 geometry : new RectangleGeometry({
                     ellipsoid : ellipsoid,
-                    rectangle : Rectangle.fromDegrees(-180 + CesiumMath.EPSILON4, -90 + CesiumMath.EPSILON4, 180 - CesiumMath.EPSILON4, 90 - CesiumMath.EPSILON4)
+                    rectangle : new Rectangle(rectangle.west, rectangle.south, rectangle.east, (rectangle.north + rectangle.south) * 0.5)
                 }),
-                id : 'depth rectangle',
+                id : 'rectangle1',
                 attributes : {
-                    color : ColorGeometryInstanceAttribute.fromColor(new Color(0.0, 0.0, 1.0, 1.0))
+                    color : rectColorAttribute
                 }
-            }),
-            appearance : new PerInstanceColorAppearance({
-                translucent : false,
-                flat : true
-            }),
-            asynchronous : false
-        }));
-
-        largeScene.groundPrimitives.add(largeSceneDepthPrimitive);
-        expect(largeScene).toRenderAndCall(function(rgba) {
-            expect(rgba.slice(0, 4)).not.toEqual([0, 0, 0, 255]);
-            expect(rgba[0]).toEqual(0);
-        });
-
-        largeScene.groundPrimitives.add(groundPrimitive);
-        expect(largeScene).toRenderAndCall(function(rgba) {
-            expect(rgba.slice(0, 4)).toEqual(expectedColor);
-        });
-        largeScene.destroyForSpecs();
-    }
-
-    it('renders batched instances', function() {
-        if (!GroundPrimitive.isSupported(scene)) {
-            return;
-        }
-
-        var rectColorAttribute = ColorGeometryInstanceAttribute.fromColor(new Color(0.0, 1.0, 1.0, 1.0));
-        var rectangleInstance1 = new GeometryInstance({
-            geometry : new RectangleGeometry({
-                ellipsoid : ellipsoid,
-                rectangle : new Rectangle(rectangle.west, rectangle.south, rectangle.east, (rectangle.north + rectangle.south) * 0.5)
-            }),
-            id : 'rectangle1',
-            attributes : {
-                color : rectColorAttribute
-            }
-        });
-        var rectangleInstance2 = new GeometryInstance({
-            geometry : new RectangleGeometry({
-                ellipsoid : ellipsoid,
-                rectangle : new Rectangle(rectangle.west, (rectangle.north + rectangle.south) * 0.5, rectangle.east, rectangle.north)
-            }),
-            id : 'rectangle2',
-            attributes : {
-                color : rectColorAttribute
-            }
-        });
-
-        var batchedPrimitive = new GroundPrimitive({
-            geometryInstances : [rectangleInstance1, rectangleInstance2],
-            asynchronous : false
-        });
-
-        verifyLargerScene(batchedPrimitive, [0, 255, 255, 255], rectangle);
-    });
-
-    it('renders small GeometryInstances with texture classifying terrain', function() {
-        if (!GroundPrimitive.isSupported(scene) || !GroundPrimitive.supportsMaterials(scene)) {
-            return;
-        }
-
-        var whiteImageMaterial = Material.fromType(Material.DiffuseMapType);
-        whiteImageMaterial.uniforms.image = './Data/Images/White.png';
-
-        var radians = CesiumMath.toRadians(0.1);
-        var west = rectangle.west;
-        var south = rectangle.south;
-        var smallRectangle = new Rectangle(west, south, west + radians, south + radians);
-        var smallRectanglePrimitive = new GroundPrimitive({
-            geometryInstances : new GeometryInstance({
+            });
+            var rectangleInstance2 = new GeometryInstance({
                 geometry : new RectangleGeometry({
                     ellipsoid : ellipsoid,
-                    rectangle : smallRectangle
+                    rectangle : new Rectangle(rectangle.west, (rectangle.north + rectangle.south) * 0.5, rectangle.east, rectangle.north)
                 }),
-                id : 'smallRectangle'
-            }),
-            appearance : new EllipsoidSurfaceAppearance({
-                aboveGround : false,
-                flat : true,
-                material : whiteImageMaterial
-            }),
-            asynchronous : false,
-            classificationType : ClassificationType.TERRAIN
+                id : 'rectangle2',
+                attributes : {
+                    color : rectColorAttribute
+                }
+            });
+
+            var batchedPrimitive = new GroundPrimitive({
+                geometryInstances : [rectangleInstance1, rectangleInstance2],
+                asynchronous : false
+            });
+
+            verifyLargerScene(batchedPrimitive, [0, 255, 255, 255], rectangle);
         });
 
-        verifyLargerScene(smallRectanglePrimitive, [255, 255, 255, 255], smallRectangle);
-    });
+        it('renders small GeometryInstances with texture classifying terrain', function() {
+            if (!GroundPrimitive.isSupported(scene) || !GroundPrimitive.supportsMaterials(scene)) {
+                return;
+            }
 
-    it('renders large GeometryInstances with texture classifying terrain', function() {
-        if (!GroundPrimitive.isSupported(scene) || !GroundPrimitive.supportsMaterials(scene)) {
-            return;
-        }
+            var whiteImageMaterial = Material.fromType(Material.DiffuseMapType);
+            whiteImageMaterial.uniforms.image = './Data/Images/White.png';
 
-        var whiteImageMaterial = Material.fromType(Material.DiffuseMapType);
-        whiteImageMaterial.uniforms.image = './Data/Images/White.png';
+            var radians = CesiumMath.toRadians(0.1);
+            var west = rectangle.west;
+            var south = rectangle.south;
+            var smallRectangle = new Rectangle(west, south, west + radians, south + radians);
+            var smallRectanglePrimitive = new GroundPrimitive({
+                geometryInstances : new GeometryInstance({
+                    geometry : new RectangleGeometry({
+                        ellipsoid : ellipsoid,
+                        rectangle : smallRectangle
+                    }),
+                    id : 'smallRectangle'
+                }),
+                appearance : new EllipsoidSurfaceAppearance({
+                    aboveGround : false,
+                    flat : true,
+                    material : whiteImageMaterial
+                }),
+                asynchronous : false,
+                classificationType : ClassificationType.TERRAIN
+            });
 
-        var radians = CesiumMath.toRadians(1.1);
-        var west = rectangle.west;
-        var south = rectangle.south;
-        var largeRectangle = new Rectangle(west, south, west + radians, south + radians);
-        var largeRectanglePrimitive = new GroundPrimitive({
-            geometryInstances : new GeometryInstance({
-                geometry : new RectangleGeometry({
-                    ellipsoid : ellipsoid,
-                    rectangle : largeRectangle
-                })
-            }),
-            id : 'largeRectangle',
-            appearance : new EllipsoidSurfaceAppearance({
-                aboveGround : false,
-                flat : true,
-                material : whiteImageMaterial
-            }),
-            asynchronous : false,
-            classificationType : ClassificationType.TERRAIN
+            verifyLargerScene(smallRectanglePrimitive, [255, 255, 255, 255], smallRectangle);
         });
 
-        verifyLargerScene(largeRectanglePrimitive, [255, 255, 255, 255], largeRectangle);
-    });
+        it('renders large GeometryInstances with texture classifying terrain', function() {
+            if (!GroundPrimitive.isSupported(scene) || !GroundPrimitive.supportsMaterials(scene)) {
+                return;
+            }
 
-    it('renders GeometryInstances with texture classifying terrain across the IDL', function() {
-        if (!GroundPrimitive.isSupported(scene) || !GroundPrimitive.supportsMaterials(scene)) {
-            return;
-        }
+            var whiteImageMaterial = Material.fromType(Material.DiffuseMapType);
+            whiteImageMaterial.uniforms.image = './Data/Images/White.png';
 
-        var whiteImageMaterial = Material.fromType(Material.DiffuseMapType);
-        whiteImageMaterial.uniforms.image = './Data/Images/White.png';
+            var radians = CesiumMath.toRadians(1.1);
+            var west = rectangle.west;
+            var south = rectangle.south;
+            var largeRectangle = new Rectangle(west, south, west + radians, south + radians);
+            var largeRectanglePrimitive = new GroundPrimitive({
+                geometryInstances : new GeometryInstance({
+                    geometry : new RectangleGeometry({
+                        ellipsoid : ellipsoid,
+                        rectangle : largeRectangle
+                    })
+                }),
+                id : 'largeRectangle',
+                appearance : new EllipsoidSurfaceAppearance({
+                    aboveGround : false,
+                    flat : true,
+                    material : whiteImageMaterial
+                }),
+                asynchronous : false,
+                classificationType : ClassificationType.TERRAIN
+            });
 
-        var largeRectangle = Rectangle.fromDegrees(179.0, 30.0, -179.0, 31.0);
-        var largeRectanglePrimitive = new GroundPrimitive({
-            geometryInstances : new GeometryInstance({
-                geometry : new RectangleGeometry({
-                    ellipsoid : ellipsoid,
-                    rectangle : largeRectangle
-                })
-            }),
-            id : 'largeRectangle',
-            appearance : new EllipsoidSurfaceAppearance({
-                aboveGround : false,
-                flat : true,
-                material : whiteImageMaterial
-            }),
-            asynchronous : false,
-            classificationType : ClassificationType.TERRAIN
+            verifyLargerScene(largeRectanglePrimitive, [255, 255, 255, 255], largeRectangle);
         });
 
-        scene.morphToColumbusView(0);
-        verifyLargerScene(largeRectanglePrimitive, [255, 255, 255, 255], largeRectangle);
+        it('renders GeometryInstances with texture classifying terrain across the IDL', function() {
+            if (!GroundPrimitive.isSupported(scene) || !GroundPrimitive.supportsMaterials(scene)) {
+                return;
+            }
+
+            var whiteImageMaterial = Material.fromType(Material.DiffuseMapType);
+            whiteImageMaterial.uniforms.image = './Data/Images/White.png';
+
+            var largeRectangle = Rectangle.fromDegrees(179.0, 30.0, -179.0, 31.0);
+            var largeRectanglePrimitive = new GroundPrimitive({
+                geometryInstances : new GeometryInstance({
+                    geometry : new RectangleGeometry({
+                        ellipsoid : ellipsoid,
+                        rectangle : largeRectangle
+                    })
+                }),
+                id : 'largeRectangle',
+                appearance : new EllipsoidSurfaceAppearance({
+                    aboveGround : false,
+                    flat : true,
+                    material : whiteImageMaterial
+                }),
+                asynchronous : false,
+                classificationType : ClassificationType.TERRAIN
+            });
+
+            verifyLargerScene(largeRectanglePrimitive, [255, 255, 255, 255], largeRectangle);
+        });
+
+        it('update throws with texture and ClassificationType that is not TERRAIN', function() {
+            if (!GroundPrimitive.isSupported(scene) || !GroundPrimitive.supportsMaterials(scene)) {
+                return;
+            }
+
+            var whiteImageMaterial = Material.fromType(Material.DiffuseMapType);
+            whiteImageMaterial.uniforms.image = './Data/Images/White.png';
+
+            var radians = CesiumMath.toRadians(0.1);
+            var west = rectangle.west;
+            var south = rectangle.south;
+            var smallRectangle = new Rectangle(west, south, west + radians, south + radians);
+            var smallRectanglePrimitive = new GroundPrimitive({
+                geometryInstances : new GeometryInstance({
+                    geometry : new RectangleGeometry({
+                        ellipsoid : ellipsoid,
+                        rectangle : smallRectangle
+                    }),
+                    id : 'smallRectangle'
+                }),
+                appearance : new EllipsoidSurfaceAppearance({
+                    aboveGround : false,
+                    flat : true,
+                    material : whiteImageMaterial
+                }),
+                asynchronous : false,
+                classificationType : ClassificationType.BOTH
+            });
+
+            expect(function() {
+                verifyLargerScene(smallRectanglePrimitive, [255, 255, 255, 255], smallRectangle);
+            }).toThrowDeveloperError();
+        });
     });
 
     it('renders with invert classification and an opaque color', function() {
@@ -644,7 +686,7 @@ defineSuite([
         primitive = new GroundPrimitive({
             geometryInstances : rectangleInstance,
             asynchronous : false,
-            classificationType: ClassificationType.BOTH
+            classificationType : ClassificationType.BOTH
         });
 
         scene.camera.setView({ destination : rectangle });
@@ -685,13 +727,13 @@ defineSuite([
         primitive = new GroundPrimitive({
             geometryInstances : rectangleInstance,
             asynchronous : false,
-            classificationType: ClassificationType.BOTH
+            classificationType : ClassificationType.BOTH
         });
 
         scene.camera.setView({ destination : rectangle });
 
         var invertedColor = new Array(4);
-        invertedColor[0] = Color.floatToByte(Color.byteToFloat(depthColor[0]) * scene.invertClassificationColor.red  * scene.invertClassificationColor.alpha);
+        invertedColor[0] = Color.floatToByte(Color.byteToFloat(depthColor[0]) * scene.invertClassificationColor.red * scene.invertClassificationColor.alpha);
         invertedColor[1] = Color.floatToByte(Color.byteToFloat(depthColor[1]) * scene.invertClassificationColor.green * scene.invertClassificationColor.alpha);
         invertedColor[2] = Color.floatToByte(Color.byteToFloat(depthColor[2]) * scene.invertClassificationColor.blue * scene.invertClassificationColor.alpha);
         invertedColor[3] = 255;
@@ -1020,8 +1062,8 @@ defineSuite([
                 geometry : PolygonGeometry.fromPositions({
                     positions : []
                 }),
-                attributes: {
-                    color: ColorGeometryInstanceAttribute.fromColor(Color.RED)
+                attributes : {
+                    color : ColorGeometryInstanceAttribute.fromColor(Color.RED)
                 }
             }),
             compressVertices : false
@@ -1053,8 +1095,8 @@ defineSuite([
                 geometry : PolygonGeometry.fromPositions({
                     positions : []
                 }),
-                attributes: {
-                    color: ColorGeometryInstanceAttribute.fromColor(Color.RED)
+                attributes : {
+                    color : ColorGeometryInstanceAttribute.fromColor(Color.RED)
                 }
             }),
             asynchronous : false,
@@ -1154,40 +1196,6 @@ defineSuite([
 
         expect(function() {
             verifyGroundPrimitiveRender(primitive, rectColorAttribute.value);
-        }).toThrowDeveloperError();
-    });
-
-    it('update throws with texture and ClassificationType that is not TERRAIN', function() {
-        if (!GroundPrimitive.isSupported(scene) || !GroundPrimitive.supportsMaterials(scene)) {
-            return;
-        }
-
-        var whiteImageMaterial = Material.fromType(Material.DiffuseMapType);
-        whiteImageMaterial.uniforms.image = './Data/Images/White.png';
-
-        var radians = CesiumMath.toRadians(0.1);
-        var west = rectangle.west;
-        var south = rectangle.south;
-        var smallRectangle = new Rectangle(west, south, west + radians, south + radians);
-        var smallRectanglePrimitive = new GroundPrimitive({
-            geometryInstances : new GeometryInstance({
-                geometry : new RectangleGeometry({
-                    ellipsoid : ellipsoid,
-                    rectangle : smallRectangle
-                }),
-                id : 'smallRectangle'
-            }),
-            appearance : new EllipsoidSurfaceAppearance({
-                aboveGround : false,
-                flat : true,
-                material : whiteImageMaterial
-            }),
-            asynchronous : false,
-            classificationType : ClassificationType.BOTH
-        });
-
-        expect(function() {
-            verifyLargerScene(smallRectanglePrimitive, [255, 255, 255, 255], smallRectangle);
         }).toThrowDeveloperError();
     });
 
