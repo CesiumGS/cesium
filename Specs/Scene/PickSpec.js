@@ -1,6 +1,8 @@
 defineSuite([
+        'Core/Cartesian2',
         'Core/Cartesian3',
         'Core/Cartographic',
+        'Core/Color',
         'Core/Ellipsoid',
         'Core/FeatureDetection',
         'Core/GeometryInstance',
@@ -25,8 +27,10 @@ defineSuite([
         'Specs/createScene',
         'Specs/pollToPromise'
     ], 'Scene/Pick', function(
+        Cartesian2,
         Cartesian3,
         Cartographic,
+        Color,
         Ellipsoid,
         FeatureDetection,
         GeometryInstance,
@@ -57,7 +61,7 @@ defineSuite([
     var camera;
     var largeRectangle = Rectangle.fromDegrees(-1.0, -1.0, 1.0, 1.0);
     var smallRectangle = Rectangle.fromDegrees(-0.0001, -0.0001, 0.0001, 0.0001);
-    var offscreenRectangle = Rectangle.fromDegrees(-45.0, -1.0, -43.0, 1.0);
+    var offscreenRectangle = Rectangle.fromDegrees(-45.0002, -1.0002, -45.0001, -1.0001);
     var primitiveRay;
     var offscreenRay;
 
@@ -1078,4 +1082,69 @@ defineSuite([
             scene.context._depthTexture = depthTexture;
         });
     });
+
+    it('calls multiple picking functions within the same frame', function() {
+        if (!scene.clampToHeightSupported || !scene.pickPositionSupported) {
+            return;
+        }
+
+        createSmallRectangle(0.0);
+        var offscreenRectanglePrimitive = createRectangle(0.0, offscreenRectangle);
+        offscreenRectanglePrimitive.appearance.material.uniforms.color = new Color(1.0, 0.0, 0.0, 1.0);
+
+        scene.camera.setView({ destination : offscreenRectangle });
+
+        // Call render. Lays down depth for the pickPosition call
+        scene.renderForSpecs();
+
+        // Call clampToHeight
+        var cartesian = Cartesian3.fromRadians(0.0, 0.0, 100000.0);
+        expect(scene).toClampToHeightAndCall(function(cartesian) {
+            var expectedCartesian = Cartesian3.fromRadians(0.0, 0.0);
+            expect(cartesian).toEqualEpsilon(expectedCartesian, CesiumMath.EPSILON5);
+        }, cartesian);
+
+        // Call pickPosition
+        expect(scene).toPickPositionAndCall(function(cartesian) {
+            var expectedCartesian = Cartographic.toCartesian(Rectangle.center(offscreenRectangle));
+            expect(cartesian).toEqualEpsilon(expectedCartesian, CesiumMath.EPSILON5);
+        });
+
+        // Call clampToHeight again
+        expect(scene).toClampToHeightAndCall(function(cartesian) {
+            var expectedCartesian = Cartesian3.fromRadians(0.0, 0.0);
+            expect(cartesian).toEqualEpsilon(expectedCartesian, CesiumMath.EPSILON5);
+        }, cartesian);
+
+        // Call pick
+        expect(scene).toPickPrimitive(offscreenRectanglePrimitive);
+
+        // Call clampToHeight again
+        expect(scene).toClampToHeightAndCall(function(cartesian) {
+            var expectedCartesian = Cartesian3.fromRadians(0.0, 0.0);
+            expect(cartesian).toEqualEpsilon(expectedCartesian, CesiumMath.EPSILON5);
+        }, cartesian);
+
+        // Call pickPosition on translucent primitive and returns undefined
+        offscreenRectanglePrimitive.appearance.material.uniforms.color = new Color(1.0, 0.0, 0.0, 0.5);
+        scene.renderForSpecs();
+        expect(scene).toPickPositionAndCall(function(cartesian) {
+            expect(cartesian).toBeUndefined();
+        });
+
+        // Call clampToHeight again
+        expect(scene).toClampToHeightAndCall(function(cartesian) {
+            var expectedCartesian = Cartesian3.fromRadians(0.0, 0.0);
+            expect(cartesian).toEqualEpsilon(expectedCartesian, CesiumMath.EPSILON5);
+        }, cartesian);
+
+        // Call pickPosition on translucent primitive with pickTranslucentDepth
+        scene.pickTranslucentDepth = true;
+        scene.renderForSpecs();
+        expect(scene).toPickPositionAndCall(function(cartesian) {
+            var expectedCartesian = Cartographic.toCartesian(Rectangle.center(offscreenRectangle));
+            expect(cartesian).toEqualEpsilon(expectedCartesian, CesiumMath.EPSILON5);
+        });
+    });
+
 }, 'WebGL');

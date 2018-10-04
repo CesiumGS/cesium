@@ -1,6 +1,11 @@
 Change Log
 ==========
 
+### 1.51 - 2018-11-01
+
+##### Fixes :wrench:
+* Fixed an issue where `pickPosition` would return incorrect results when called after `sampleHeight` or `clampToHeight`. [#7113](https://github.com/AnalyticalGraphicsInc/cesium/pull/7113)
+
 ### 1.50 - 2018-10-01
 
 ##### Breaking Changes :mega:
