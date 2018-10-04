@@ -101,7 +101,7 @@ define([
         this.glowFactor = 1.0;
         this._glowFactorDirty = false;
 
-        this._useHDR = undefined;
+        this._useHdr = undefined;
 
         var that = this;
         this._uniformMap = {
@@ -142,7 +142,7 @@ define([
     /**
      * @private
      */
-    Sun.prototype.update = function(frameState, passState, useHDR) {
+    Sun.prototype.update = function(frameState, passState, useHdr) {
         if (!this.show) {
             return undefined;
         }
@@ -164,12 +164,12 @@ define([
                 drawingBufferWidth !== this._drawingBufferWidth ||
                 drawingBufferHeight !== this._drawingBufferHeight ||
                 this._glowFactorDirty ||
-                useHDR !== this._useHDR) {
+                useHdr !== this._useHdr) {
             this._texture = this._texture && this._texture.destroy();
             this._drawingBufferWidth = drawingBufferWidth;
             this._drawingBufferHeight = drawingBufferHeight;
             this._glowFactorDirty = false;
-            this._useHDR = useHDR;
+            this._useHdr = useHdr;
 
             var size = Math.max(drawingBufferWidth, drawingBufferHeight);
             size = Math.pow(2.0, Math.ceil(Math.log(size) / Math.log(2.0)) - 2.0);
@@ -179,7 +179,7 @@ define([
             // errors in the tests.
             size = Math.max(1.0, size);
 
-            var pixelDatatype = useHDR ? (context.halfFloatingPointTexture ? PixelDatatype.HALF_FLOAT : PixelDatatype.FLOAT) : PixelDatatype.UNSIGNED_BYTE;
+            var pixelDatatype = useHdr ? (context.halfFloatingPointTexture ? PixelDatatype.HALF_FLOAT : PixelDatatype.FLOAT) : PixelDatatype.UNSIGNED_BYTE;
             this._texture = new Texture({
                 context : context,
                 width : size,

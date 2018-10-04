@@ -365,7 +365,7 @@ define([
                         tonemapper = PostProcessStageLibrary.createFilmicTonemappingStage(useAutoExposure);
                         break;
                     default:
-                        tonemapper = PostProcessStageLibrary.createACESTonemappingStage(useAutoExposure);
+                        tonemapper = PostProcessStageLibrary.createAcesTonemappingStage(useAutoExposure);
                         break;
                 }
 
@@ -541,7 +541,7 @@ define([
      *
      * @private
      */
-    PostProcessStageCollection.prototype.update = function(context, useLogDepth, useHDR) {
+    PostProcessStageCollection.prototype.update = function(context, useLogDepth, useHdr) {
         removeStages(this);
 
         var previousActiveStages = this._activeStages;
@@ -578,7 +578,7 @@ define([
         var tonemapping = this._tonemapping;
         var fxaa = this._fxaa;
 
-        tonemapping.enabled = useHDR;
+        tonemapping.enabled = useHdr;
 
         var aoEnabled = ao.enabled && ao._isSupported(context);
         var bloomEnabled = bloom.enabled && bloom._isSupported(context);

@@ -60,7 +60,7 @@ define([
         this._scissorRectangle = undefined;
 
         this._useLogDepth = undefined;
-        this._useHDR = undefined;
+        this._useHdr = undefined;
 
         this._debugGlobeDepthViewportCommand = undefined;
     }
@@ -167,7 +167,7 @@ define([
 
     function updateFramebuffers(globeDepth, context, width, height, hdr) {
         var colorTexture = globeDepth._colorTexture;
-        var textureChanged = !defined(colorTexture) || colorTexture.width !== width || colorTexture.height !== height || hdr !== globeDepth._useHDR;
+        var textureChanged = !defined(colorTexture) || colorTexture.width !== width || colorTexture.height !== height || hdr !== globeDepth._useHdr;
         if (!defined(globeDepth.framebuffer) || textureChanged) {
             destroyTextures(globeDepth);
             destroyFramebuffers(globeDepth);
@@ -249,7 +249,7 @@ define([
         updateCopyCommands(this, context, width, height, passState);
         context.uniformState.globeDepthTexture = undefined;
 
-        this._useHDR = hdr;
+        this._useHdr = hdr;
     };
 
     GlobeDepth.prototype.executeCopyDepth = function(context, passState) {

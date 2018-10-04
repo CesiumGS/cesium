@@ -616,7 +616,7 @@ define([
          */
         textureHalfFloatLinear : {
             get : function() {
-                return this._textureHalfFloatLinear;
+                return (this._webgl2 && this._textureFloatLinear) || (!this._webgl2 && this._textureHalfFloatLinear);
             }
         },
 

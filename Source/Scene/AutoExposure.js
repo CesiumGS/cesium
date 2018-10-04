@@ -1,4 +1,5 @@
 define([
+        '../Core/Cartesian2',
         '../Core/Color',
         '../Core/defaultValue',
         '../Core/defined',
@@ -14,6 +15,7 @@ define([
         '../Renderer/TextureMinificationFilter',
         '../Renderer/TextureWrap'
     ], function(
+        Cartesian2,
         Color,
         defaultValue,
         defined,
@@ -32,7 +34,7 @@ define([
 
     /**
      * A post process stage that will get the luminance value at each pixel and
-     * uses parallel reduction to get the average luminance in a 1x1 texture.
+     * uses parallel reduction to compute the average luminance in a 1x1 texture.
      * This texture can be used as input for tone mapping.
      *
      * @constructor
@@ -58,6 +60,8 @@ define([
         this._commands = undefined;
         this._clearCommand = undefined;
 
+        this._minMaxLuminance = new Cartesian2();
+
         /**
          * Whether or not to execute this post-process stage when ready.
          *
@@ -66,7 +70,20 @@ define([
         this.enabled = true;
         this._enabled = true;
 
+        /**
+         * The minimum value used to clamp the luminance.
+         *
+         * @type {Number}
+         * @default 0.1
+         */
         this.minimumLuminance = 0.1;
+
+        /**
+         * The maximum value used to clamp the luminance.
+         *
+         * @type {Number}
+         * @default 10.0
+         */
         this.maximumLuminance = 10.0;
     }
 
@@ -218,11 +235,8 @@ define([
             };
         }
 
-        uniforms.minimumLuminance = function() {
-            return autoexposure.minimumLuminance;
-        };
-        uniforms.maximumLuminance = function() {
-            return autoexposure.maximumLuminance;
+        uniforms.minMaxLuminance = function() {
+            return autoexposure._minMaxLuminance;
         };
         uniforms.previousLuminance = function() {
             return autoexposure._previousLuminance.getColorTexture(0);
@@ -250,13 +264,12 @@ define([
 
         source +=
             'uniform vec2 colorTextureDimensions; \n' +
-            'uniform float minimumLuminance; \n' +
-            'uniform float maximumLuminance; \n' +
+            'uniform vec2 minMaxLuminance; \n' +
             'uniform sampler2D previousLuminance; \n' +
             'void main() { \n' +
             '    float color = 0.0; \n' +
-            '    float xStep = 1.0 /colorTextureDimensions.x; \n' +
-            '    float yStep = 1.0 /colorTextureDimensions.y; \n' +
+            '    float xStep = 1.0 / colorTextureDimensions.x; \n' +
+            '    float yStep = 1.0 / colorTextureDimensions.y; \n' +
             '    int count = 0; \n' +
             '    for (int i = 0; i < 3; ++i) { \n' +
             '        for (int j = 0; j < 3; ++j) { \n' +
@@ -277,9 +290,9 @@ define([
         if (index === length - 1) {
             source +=
                 '    float previous = texture2D(previousLuminance, vec2(0.5)).r; \n' +
-                '    color = clamp(color, minimumLuminance, maximumLuminance); \n' +
+                '    color = clamp(color, minMaxLuminance.x, minMaxLuminance.y); \n' +
                 '    color = previous + (color - previous) / (60.0 * 1.5); \n' +
-                '    color = clamp(color, minimumLuminance, maximumLuminance); \n';
+                '    color = clamp(color, minMaxLuminance.x, minMaxLuminance.y); \n';
         }
 
         source +=
@@ -350,6 +363,9 @@ define([
                 this._ready = true;
             }
         }
+
+        this._minMaxLuminance.x = this.minimumLuminance;
+        this._minMaxLuminance.y = this.maximumLuminance;
 
         var framebuffers = this._framebuffers;
         var temp = framebuffers[framebuffers.length - 1];

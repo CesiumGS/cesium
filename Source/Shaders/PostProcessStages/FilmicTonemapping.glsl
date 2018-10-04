@@ -30,6 +30,6 @@ void main()
 	vec3 c = ((color * (A * color + C * B) + D * E) / (color * ( A * color + B) + D * F)) - E / F;
 	float w = ((white * (A * white + C * B) + D * E) / (white * ( A * white + B) + D * F)) - E / F;
 
-    c = czm_inverseGamma(c / w);
+	c = czm_inverseGamma(c / w);
 	gl_FragColor = vec4(c, 1.0);
 }
