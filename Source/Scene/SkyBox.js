@@ -102,7 +102,7 @@ define([
         this._cubeMap = undefined;
 
         this._attributeLocations = undefined;
-        this._useHDR = undefined;
+        this._useHdr = undefined;
     }
 
     /**
@@ -116,7 +116,7 @@ define([
      * @exception {DeveloperError} this.sources is required and must have positiveX, negativeX, positiveY, negativeY, positiveZ, and negativeZ properties.
      * @exception {DeveloperError} this.sources properties must all be the same type.
      */
-    SkyBox.prototype.update = function(frameState, useHDR) {
+    SkyBox.prototype.update = function(frameState, useHdr) {
         var that = this;
 
         if (!this.show) {
@@ -200,9 +200,9 @@ define([
             });
         }
 
-        if (!defined(command.shaderProgram) || this._useHDR !== useHDR) {
+        if (!defined(command.shaderProgram) || this._useHdr !== useHdr) {
             var fs = new ShaderSource({
-                defines : [useHDR ? 'HDR' : ''],
+                defines : [useHdr ? 'HDR' : ''],
                 sources : [SkyBoxFS]
             });
             command.shaderProgram = ShaderProgram.fromCache({
@@ -211,7 +211,7 @@ define([
                 fragmentShaderSource : fs,
                 attributeLocations : this._attributeLocations
             });
-            this._useHDR = useHDR;
+            this._useHdr = useHdr;
         }
 
         if (!defined(this._cubeMap)) {

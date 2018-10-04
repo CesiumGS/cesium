@@ -276,7 +276,6 @@ void main()
     vec4 finalColor = color;
 #endif
 
-
 #ifdef ENABLE_CLIPPING_PLANES
     vec4 clippingPlanesEdgeColor = vec4(1.0);
     clippingPlanesEdgeColor.rgb = u_clippingPlanesEdgeStyle.rgb;

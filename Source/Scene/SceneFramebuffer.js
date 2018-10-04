@@ -45,7 +45,7 @@ define([
 
         this._idClearColor = new Color(0.0, 0.0, 0.0, 0.0);
 
-        this._useHDR = undefined;
+        this._useHdr = undefined;
 
         this._clearCommand = new ClearCommand({
             color : new Color(0.0, 0.0, 0.0, 0.0),
@@ -78,12 +78,12 @@ define([
         var width = viewport.width;
         var height = viewport.height;
         var colorTexture = this._colorTexture;
-        if (defined(colorTexture) && colorTexture.width === width && colorTexture.height === height && hdr === this._useHDR) {
+        if (defined(colorTexture) && colorTexture.width === width && colorTexture.height === height && hdr === this._useHdr) {
             return;
         }
 
         destroyResources(this);
-        this._useHDR = hdr;
+        this._useHdr = hdr;
 
         var pixelDatatype = hdr ? (context.halfFloatingPointTexture ? PixelDatatype.HALF_FLOAT : PixelDatatype.FLOAT) : PixelDatatype.UNSIGNED_BYTE;
         this._colorTexture = new Texture({

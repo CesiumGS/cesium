@@ -330,7 +330,7 @@ define([
         return result;
     };
 
-    function getHDRShaderProgram(context, shaderProgram) {
+    function getHdrShaderProgram(context, shaderProgram) {
         var shader = context.shaderCache.getDerivedShaderProgram(shaderProgram, 'HDR');
         if (!defined(shader)) {
             var attributeLocations = shaderProgram._attributeLocations;
@@ -352,7 +352,7 @@ define([
         return shader;
     }
 
-    DerivedCommand.createHDRCommand = function(command, context, result) {
+    DerivedCommand.createHdrCommand = function(command, context, result) {
         if (!defined(result)) {
             result = {};
         }
@@ -365,7 +365,7 @@ define([
         result.command = DrawCommand.shallowClone(command, result.command);
 
         if (!defined(shader) || result.shaderProgramId !== command.shaderProgram.id) {
-            result.command.shaderProgram = getHDRShaderProgram(context, command.shaderProgram);
+            result.command.shaderProgram = getHdrShaderProgram(context, command.shaderProgram);
             result.shaderProgramId = command.shaderProgram.id;
         } else {
             result.command.shaderProgram = shader;

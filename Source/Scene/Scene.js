@@ -1454,7 +1454,7 @@ define([
          * The value used for gamma correction.
          * @memberof Scene.prototype
          * @type {Number}
-         * @default 2.4
+         * @default 2.2
          */
         gamma : {
             get : function() {
@@ -1488,7 +1488,7 @@ define([
          *
          * @memberof Scene.prototype
          * @type {Color}
-         * @default Color(0.8,0.8,0.8)
+         * @default Color(0.8, 0.8, 0.8)
          */
         sunColor: {
             get: function() {
@@ -1541,7 +1541,7 @@ define([
         derivedCommands.originalCommand = command;
 
         if (scene._hdr) {
-            derivedCommands.hdr = DerivedCommand.createHDRCommand(command, context, derivedCommands.hdr);
+            derivedCommands.hdr = DerivedCommand.createHdrCommand(command, context, derivedCommands.hdr);
             command = derivedCommands.hdr.command;
         }
 
@@ -1581,15 +1581,15 @@ define([
         }
 
         var useLogDepth = frameState.useLogDepth;
-        var useHDR = this._hdr;
+        var useHdr = this._hdr;
         var derivedCommands = command.derivedCommands;
         var hasLogDepthDerivedCommands = defined(derivedCommands.logDepth);
-        var hasHDRCommands = defined(derivedCommands.hdr);
+        var hasHdrCommands = defined(derivedCommands.hdr);
         var hasDerivedCommands = defined(derivedCommands.originalCommand);
         var needsLogDepthDerivedCommands = useLogDepth && !hasLogDepthDerivedCommands;
-        var needsHDRCommands = useHDR && !hasHDRCommands;
-        var needsDerivedCommands = (!useLogDepth || !useHDR) && !hasDerivedCommands;
-        command.dirty = command.dirty || needsLogDepthDerivedCommands || needsHDRCommands || needsDerivedCommands;
+        var needsHdrCommands = useHdr && !hasHdrCommands;
+        var needsDerivedCommands = (!useLogDepth || !useHdr) && !hasDerivedCommands;
+        command.dirty = command.dirty || needsLogDepthDerivedCommands || needsHdrCommands || needsDerivedCommands;
 
         if (command.dirty) {
             command.dirty = false;

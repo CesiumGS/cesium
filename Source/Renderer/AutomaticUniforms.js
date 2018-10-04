@@ -1689,7 +1689,7 @@ define([
         }),
 
         /**
-         * An automatic GLSL uniform that will be used for gamma correction.
+         * An automatic GLSL uniform that is used for gamma correction.
          *
          * @alias czm_gamma
          * @glslUniform

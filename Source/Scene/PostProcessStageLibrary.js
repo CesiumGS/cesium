@@ -7,7 +7,7 @@ define([
         '../Core/deprecationWarning',
         '../Core/destroyObject',
         '../Core/Ellipsoid',
-        '../Shaders/PostProcessStages/ACESTonemapping',
+        '../Shaders/PostProcessStages/AcesTonemapping',
         '../Shaders/PostProcessStages/AmbientOcclusionGenerate',
         '../Shaders/PostProcessStages/AmbientOcclusionModulate',
         '../Shaders/PostProcessStages/BlackAndWhite',
@@ -39,7 +39,7 @@ define([
         deprecationWarning,
         destroyObject,
         Ellipsoid,
-        ACESTonemapping,
+        AcesTonemapping,
         AmbientOcclusionGenerate,
         AmbientOcclusionModulate,
         BlackAndWhite,
@@ -701,9 +701,9 @@ define([
      * @return {PostProcessStage} A post-process stage that applies ACES tonemapping operator.
      * @private
      */
-    PostProcessStageLibrary.createACESTonemappingStage = function(useAutoExposure) {
+    PostProcessStageLibrary.createAcesTonemappingStage = function(useAutoExposure) {
         var fs = useAutoExposure ? '#define AUTO_EXPOSURE\n' : '';
-        fs += ACESTonemapping;
+        fs += AcesTonemapping;
         return new PostProcessStage({
             name : 'czm_aces',
             fragmentShader : fs,
