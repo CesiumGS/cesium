@@ -2211,31 +2211,6 @@ define([
         Check.typeOf.object('matrix', matrix);
         Check.typeOf.object('result', result);
         //>>includeEnd('debug');
-
-        // Special case for a zero scale matrix that can occur, for example,
-        // when a model's node has a [0, 0, 0] scale.
-        if (Matrix3.equalsEpsilon(Matrix4.getRotation(matrix, scratchInverseRotation), scratchMatrix3Zero, CesiumMath.EPSILON7) &&
-            Cartesian4.equals(Matrix4.getRow(matrix, 3, scratchBottomRow), scratchExpectedBottomRow)) {
-
-            result[0] = 0.0;
-            result[1] = 0.0;
-            result[2] = 0.0;
-            result[3] = 0.0;
-            result[4] = 0.0;
-            result[5] = 0.0;
-            result[6] = 0.0;
-            result[7] = 0.0;
-            result[8] = 0.0;
-            result[9] = 0.0;
-            result[10] = 0.0;
-            result[11] = 0.0;
-            result[12] = -matrix[12];
-            result[13] = -matrix[13];
-            result[14] = -matrix[14];
-            result[15] = 1.0;
-            return result;
-        }
-
         //
         // Ported from:
         //   ftp://download.intel.com/design/PentiumIII/sml/24504301.pdf
@@ -2308,7 +2283,31 @@ define([
         // calculate determinant
         var det = src0 * dst0 + src1 * dst1 + src2 * dst2 + src3 * dst3;
 
-        if (Math.abs(det) < CesiumMath.EPSILON20) {
+        if (Math.abs(det) < CesiumMath.EPSILON21) {
+                // Special case for a zero scale matrix that can occur, for example,
+                // when a model's node has a [0, 0, 0] scale.
+                if (Matrix3.equalsEpsilon(Matrix4.getRotation(matrix, scratchInverseRotation), scratchMatrix3Zero, CesiumMath.EPSILON7) &&
+                Cartesian4.equals(Matrix4.getRow(matrix, 3, scratchBottomRow), scratchExpectedBottomRow)) {
+
+                result[0] = 0.0;
+                result[1] = 0.0;
+                result[2] = 0.0;
+                result[3] = 0.0;
+                result[4] = 0.0;
+                result[5] = 0.0;
+                result[6] = 0.0;
+                result[7] = 0.0;
+                result[8] = 0.0;
+                result[9] = 0.0;
+                result[10] = 0.0;
+                result[11] = 0.0;
+                result[12] = -matrix[12];
+                result[13] = -matrix[13];
+                result[14] = -matrix[14];
+                result[15] = 1.0;
+                return result;
+            }
+
             throw new RuntimeError('matrix is not invertible because its determinate is zero.');
         }
 

@@ -1,37 +1,51 @@
 define([
-        './addExtensionsRequired',
+        './addExtensionsUsed',
         './addToArray',
+        './findAccessorMinMax',
         './ForEach',
         './getAccessorByteStride',
         './numberOfComponentsForType',
+        './moveTechniqueRenderStates',
+        './moveTechniquesToExtension',
+        './removeUnusedElements',
+        './updateAccessorComponentTypes',
         '../../Core/Cartesian3',
-        '../../Core/Math',
+        '../../Core/Cartesian4',
         '../../Core/clone',
         '../../Core/ComponentDatatype',
         '../../Core/defaultValue',
         '../../Core/defined',
+        '../../Core/isArray',
+        '../../Core/Matrix4',
         '../../Core/Quaternion',
         '../../Core/WebGLConstants'
     ], function(
-        addExtensionsRequired,
+        addExtensionsUsed,
         addToArray,
+        findAccessorMinMax,
         ForEach,
         getAccessorByteStride,
         numberOfComponentsForType,
+        moveTechniqueRenderStates,
+        moveTechniquesToExtension,
+        removeUnusedElements,
+        updateAccessorComponentTypes,
         Cartesian3,
-        CesiumMath,
+        Cartesian4,
         clone,
         ComponentDatatype,
         defaultValue,
         defined,
+        isArray,
+        Matrix4,
         Quaternion,
         WebGLConstants) {
     'use strict';
 
     var updateFunctions = {
-        '0.8' : glTF08to10,
-        '1.0' : glTF10to20,
-        '2.0' : undefined
+        '0.8': glTF08to10,
+        '1.0': glTF10to20,
+        '2.0': undefined
     };
 
     /**
@@ -43,9 +57,11 @@ define([
      * @param {Object} [options] Options for updating the glTF.
      * @param {String} [options.targetVersion] The glTF will be upgraded until it hits the specified version.
      * @returns {Object} The updated glTF asset.
+     *
+     * @private
      */
     function updateVersion(gltf, options) {
-        options = defaultValue(options, {});
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
         var targetVersion = options.targetVersion;
         var version = gltf.version;
 
@@ -53,14 +69,16 @@ define([
             version: '1.0'
         });
 
-        version = defaultValue(version, gltf.asset.version);
-        // invalid version
+        gltf.asset.version = defaultValue(gltf.asset.version, '1.0');
+        version = defaultValue(version, gltf.asset.version).toString();
+
+        // Invalid version
         if (!updateFunctions.hasOwnProperty(version)) {
-            // try truncating trailing version numbers, could be a number as well if it is 0.8
+            // Try truncating trailing version numbers, could be a number as well if it is 0.8
             if (defined(version)) {
-                version = ('' + version).substring(0, 3);
+                version = version.substring(0, 3);
             }
-            // default to 1.0 if it cannot be determined
+            // Default to 1.0 if it cannot be determined
             if (!updateFunctions.hasOwnProperty(version)) {
                 version = '1.0';
             }
@@ -72,7 +90,7 @@ define([
             if (version === targetVersion) {
                 break;
             }
-            updateFunction(gltf);
+            updateFunction(gltf, options);
             version = gltf.asset.version;
             updateFunction = updateFunctions[version];
         }
@@ -102,7 +120,7 @@ define([
                 var primitives = mesh.primitives;
                 if (defined(primitives)) {
                     var primitivesLength = primitives.length;
-                    for (var i = 0; i < primitivesLength; i++) {
+                    for (var i = 0; i < primitivesLength; ++i) {
                         var primitive = primitives[i];
                         var defaultMode = defaultValue(primitive.primitive, WebGLConstants.TRIANGLES);
                         primitive.mode = defaultValue(primitive.mode, defaultMode);
@@ -215,11 +233,18 @@ define([
         }
         var asset = gltf.asset;
         asset.version = '1.0';
-        // profile should be an object, not a string
-        if (!defined(asset.profile) || (typeof asset.profile === 'string')) {
+        // Profile should be an object, not a string
+        if (typeof asset.profile === 'string') {
+            var split = asset.profile.split(' ');
+            asset.profile = {
+                api: split[0],
+                version: split[1]
+            };
+        } else {
             asset.profile = {};
         }
-        // version property should be in asset, not on the root element
+
+        // Version property should be in asset, not on the root element
         if (defined(gltf.version)) {
             delete gltf.version;
         }
@@ -227,13 +252,18 @@ define([
         updateInstanceTechniques(gltf);
         // primitive.primitive should be primitive.mode
         setPrimitiveModes(gltf);
-        // node rotation should be quaternion, not axis-angle
+        // Node rotation should be quaternion, not axis-angle
         // node.instanceSkin is deprecated
         updateNodes(gltf);
-        // animations that target rotations should be quaternion, not axis-angle
+        // Animations that target rotations should be quaternion, not axis-angle
         updateAnimations(gltf);
         // technique.pass and techniques.passes are deprecated
         removeTechniquePasses(gltf);
+        // gltf.allExtensions -> extensionsUsed
+        if (defined(gltf.allExtensions)) {
+            gltf.extensionsUsed = gltf.allExtensions;
+            delete gltf.allExtensions;
+        }
         // gltf.lights -> khrMaterialsCommon.lights
         if (defined(gltf.lights)) {
             var extensions = defaultValue(gltf.extensions, {});
@@ -242,11 +272,7 @@ define([
             extensions.KHR_materials_common = materialsCommon;
             materialsCommon.lights = gltf.lights;
             delete gltf.lights;
-        }
-        // gltf.allExtensions -> extensionsUsed
-        if (defined(gltf.allExtensions)) {
-            gltf.extensionsUsed = gltf.allExtensions;
-            gltf.allExtensions = undefined;
+            addExtensionsUsed(gltf, 'KHR_materials_common');
         }
     }
 
@@ -278,7 +304,7 @@ define([
                 var value = object[id];
                 mapping[id] = array.length;
                 array.push(value);
-                if (!defined(value.name) && typeof(value) === 'object') {
+                if (!defined(value.name)) {
                     value.name = id;
                 }
             }
@@ -291,15 +317,19 @@ define([
         var globalMapping = {
             accessors: {},
             animations: {},
-            bufferViews: {},
             buffers: {},
+            bufferViews: {},
             cameras: {},
+            images: {},
             materials: {},
             meshes: {},
             nodes: {},
             programs: {},
+            samplers: {},
+            scenes: {},
             shaders: {},
             skins: {},
+            textures: {},
             techniques: {}
         };
 
@@ -318,18 +348,11 @@ define([
 
         // Convert top level objects to arrays
         for (var topLevelId in gltf) {
-            if (gltf.hasOwnProperty(topLevelId) && topLevelId !== 'extras' && topLevelId !== 'asset' && topLevelId !== 'extensions') {
+            if (gltf.hasOwnProperty(topLevelId) && defined(globalMapping[topLevelId])) {
                 var objectMapping = {};
                 var object = gltf[topLevelId];
-                if (typeof(object) === 'object' && !Array.isArray(object)) {
-                    gltf[topLevelId] = objectToArray(object, objectMapping);
-                    globalMapping[topLevelId] = objectMapping;
-                    if (topLevelId === 'animations') {
-                        objectMapping = {};
-                        object.samplers = objectToArray(object.samplers, objectMapping);
-                        globalMapping[topLevelId].samplers = objectMapping;
-                    }
-                }
+                gltf[topLevelId] = objectToArray(object, objectMapping);
+                globalMapping[topLevelId] = objectMapping;
             }
         }
 
@@ -384,18 +407,10 @@ define([
                     parameter.node = globalMapping.nodes[parameter.node];
                 }
                 var value = parameter.value;
-                if (defined(value)) {
-                    if (Array.isArray(value)) {
-                        if (value.length === 1) {
-                            var textureId = value[0];
-                            if (typeof textureId === 'string') {
-                                value[0] = globalMapping.textures[textureId];
-                            }
-                        }
-                    }
-                    else if (typeof value === 'string') {
-                        parameter.value = [globalMapping.textures[value]];
-                    }
+                if (typeof value === 'string') {
+                    parameter.value = {
+                        index: globalMapping.textures[value]
+                    };
                 }
             });
         });
@@ -416,7 +431,7 @@ define([
             var children = node.children;
             if (defined(children)) {
                 var childrenLength = children.length;
-                for (i = 0; i < childrenLength; i++) {
+                for (i = 0; i < childrenLength; ++i) {
                     children[i] = globalMapping.nodes[children[i]];
                 }
             }
@@ -426,12 +441,9 @@ define([
                 var meshesLength = meshes.length;
                 if (meshesLength > 0) {
                     node.mesh = globalMapping.meshes[meshes[0]];
-                    for (i = 1; i < meshesLength; i++) {
+                    for (i = 1; i < meshesLength; ++i) {
                         var meshNode = {
-                            mesh: globalMapping.meshes[meshes[i]],
-                            extras: {
-                                _pipeline: {}
-                            }
+                            mesh: globalMapping.meshes[meshes[i]]
                         };
                         var meshNodeId = addToArray(gltf.nodes, meshNode);
                         if (!defined(children)) {
@@ -446,31 +458,32 @@ define([
             if (defined(node.camera)) {
                 node.camera = globalMapping.cameras[node.camera];
             }
+            if (defined(node.skin)) {
+                node.skin = globalMapping.skins[node.skin];
+            }
             if (defined(node.skeletons)) {
                 // Assign skeletons to skins
                 var skeletons = node.skeletons;
                 var skeletonsLength = skeletons.length;
                 if ((skeletonsLength > 0) && defined(node.skin)) {
-                    var skin = gltf.skins[globalMapping.skins[node.skin]];
+                    var skin = gltf.skins[node.skin];
                     skin.skeleton = globalMapping.nodes[skeletons[0]];
                 }
                 delete node.skeletons;
             }
-            if (defined(node.skin)) {
-                node.skin = globalMapping.skins[node.skin];
-            }
             if (defined(node.jointName)) {
-                delete(node.jointName);
+                delete node.jointName;
             }
         });
         ForEach.skin(gltf, function(skin) {
             if (defined(skin.inverseBindMatrices)) {
                 skin.inverseBindMatrices = globalMapping.accessors[skin.inverseBindMatrices];
             }
-            var joints = [];
             var jointNames = skin.jointNames;
             if (defined(jointNames)) {
-                for (i = 0; i < jointNames.length; i++) {
+                var joints = [];
+                var jointNamesLength = jointNames.length;
+                for (i = 0; i < jointNamesLength; ++i) {
                     joints[i] = jointNameToId[jointNames[i]];
                 }
                 skin.joints = joints;
@@ -481,7 +494,7 @@ define([
             var sceneNodes = scene.nodes;
             if (defined(sceneNodes)) {
                 var sceneNodesLength = sceneNodes.length;
-                for (i = 0; i < sceneNodesLength; i++) {
+                for (i = 0; i < sceneNodesLength; ++i) {
                     sceneNodes[i] = globalMapping.nodes[sceneNodes[i]];
                 }
             }
@@ -493,36 +506,23 @@ define([
                 sampler.input = globalMapping.accessors[sampler.input];
                 sampler.output = globalMapping.accessors[sampler.output];
             });
-            var channels = animation.channels;
-            if (defined(channels)) {
-                var channelsLength = channels.length;
-                for (i = 0; i < channelsLength; i++) {
-                    var channel = channels[i];
-                    channel.sampler = samplerMapping[channel.sampler];
-                    var target = channel.target;
-                    if (defined(target)) {
-                        target.node = globalMapping.nodes[target.id];
-                        delete target.id;
-                    }
+            ForEach.animationChannel(animation, function(channel) {
+                channel.sampler = samplerMapping[channel.sampler];
+                var target = channel.target;
+                if (defined(target)) {
+                    target.node = globalMapping.nodes[target.id];
+                    delete target.id;
                 }
-            }
+            });
         });
         ForEach.material(gltf, function(material) {
             if (defined(material.technique)) {
                 material.technique = globalMapping.techniques[material.technique];
             }
             ForEach.materialValue(material, function(value, name) {
-                if (Array.isArray(value)) {
-                    if (value.length === 1) {
-                        var textureId = value[0];
-                        if (typeof textureId === 'string') {
-                            value[0] = globalMapping.textures[textureId];
-                        }
-                    }
-                }
-                else if (typeof value === 'string') {
+                if (typeof value === 'string') {
                     material.values[name] = {
-                        index : globalMapping.textures[value]
+                        index: globalMapping.textures[value]
                     };
                 }
             });
@@ -531,15 +531,7 @@ define([
                 var materialsCommon = extensions.KHR_materials_common;
                 if (defined(materialsCommon)) {
                     ForEach.materialValue(materialsCommon, function(value, name) {
-                        if (Array.isArray(value)) {
-                            if (value.length === 1) {
-                                var textureId = value[0];
-                                if (typeof textureId === 'string') {
-                                    value[0] = globalMapping.textures[textureId];
-                                }
-                            }
-                        }
-                        else if (typeof value === 'string') {
+                        if (typeof value === 'string') {
                             materialsCommon.values[name] = {
                                 index: globalMapping.textures[value]
                             };
@@ -561,26 +553,20 @@ define([
                     delete image.extensions;
                 }
             }
-            if (defined(image.extras)) {
-                var compressedImages = image.extras.compressedImage3DTiles;
-                for (var type in compressedImages) {
-                    if (compressedImages.hasOwnProperty(type)) {
-                        var compressedImage = compressedImages[type];
-                        var compressedExtensions = compressedImage.extensions;
-                        if (defined(compressedExtensions)) {
-                            var compressedBinaryGltf = compressedExtensions.KHR_binary_glTF;
-                            if (defined(compressedBinaryGltf)) {
-                                compressedImage.bufferView = globalMapping.bufferViews[compressedBinaryGltf.bufferView];
-                                compressedImage.mimeType = compressedBinaryGltf.mimeType;
-                                delete compressedExtensions.KHR_binary_glTF;
-                            }
-                            if (Object.keys(compressedExtensions).length === 0) {
-                                delete compressedImage.extensions;
-                            }
-                        }
+            ForEach.compressedImage(image, function(compressedImage) {
+                var compressedExtensions = compressedImage.extensions;
+                if (defined(compressedExtensions)) {
+                    var compressedBinaryGltf = compressedExtensions.KHR_binary_glTF;
+                    if (defined(compressedBinaryGltf)) {
+                        compressedImage.bufferView = globalMapping.bufferViews[compressedBinaryGltf.bufferView];
+                        compressedImage.mimeType = compressedBinaryGltf.mimeType;
+                        delete compressedExtensions.KHR_binary_glTF;
+                    }
+                    if (Object.keys(extensions).length === 0) {
+                        delete compressedImage.extensions;
                     }
                 }
-            }
+            });
         });
         ForEach.texture(gltf, function(texture) {
             if (defined(texture.sampler)) {
@@ -592,22 +578,47 @@ define([
         });
     }
 
-    function stripProfile(gltf) {
+    function removeAnimationSamplerNames(gltf) {
+        ForEach.animation(gltf, function(animation) {
+            ForEach.animationSampler(animation, function(sampler) {
+                delete sampler.name;
+            });
+        });
+    }
+
+    function removeEmptyArrays(gltf) {
+        for (var topLevelId in gltf) {
+            if (gltf.hasOwnProperty(topLevelId)) {
+                var array = gltf[topLevelId];
+                if (isArray(array) && array.length === 0) {
+                    delete gltf[topLevelId];
+                }
+            }
+        }
+        ForEach.node(gltf, function(node) {
+            if (defined(node.children) && node.children.length === 0) {
+                delete node.children;
+            }
+        });
+    }
+
+    function stripAsset(gltf) {
         var asset = gltf.asset;
         delete asset.profile;
+        delete asset.premultipliedAlpha;
     }
 
     var knownExtensions = {
-        CESIUM_RTC : true,
-        KHR_materials_common : true,
-        WEB3D_quantized_attributes : true
+        CESIUM_RTC: true,
+        KHR_materials_common: true,
+        WEB3D_quantized_attributes: true
     };
     function requireKnownExtensions(gltf) {
         var extensionsUsed = gltf.extensionsUsed;
         gltf.extensionsRequired = defaultValue(gltf.extensionsRequired, []);
         if (defined(extensionsUsed)) {
             var extensionsUsedLength = extensionsUsed.length;
-            for (var i = 0; i < extensionsUsedLength; i++) {
+            for (var i = 0; i < extensionsUsedLength; ++i) {
                 var extension = extensionsUsed[i];
                 if (defined(knownExtensions[extension])) {
                     gltf.extensionsRequired.push(extension);
@@ -619,6 +630,15 @@ define([
     function removeBufferType(gltf) {
         ForEach.buffer(gltf, function(buffer) {
             delete buffer.type;
+        });
+    }
+
+    function removeTextureProperties(gltf) {
+        ForEach.texture(gltf, function(texture) {
+            delete texture.format;
+            delete texture.internalFormat;
+            delete texture.target;
+            delete texture.type;
         });
     }
 
@@ -653,25 +673,37 @@ define([
     var knownSemantics = {
         POSITION: true,
         NORMAL: true,
-        TEXCOORD: true,
-        COLOR: true,
-        JOINT: true,
-        WEIGHT: true
+        TANGENT: true
+    };
+    var indexedSemantics = {
+        COLOR: 'COLOR',
+        JOINT : 'JOINTS',
+        JOINTS: 'JOINTS',
+        TEXCOORD: 'TEXCOORD',
+        WEIGHT: 'WEIGHTS',
+        WEIGHTS: 'WEIGHTS'
     };
     function underscoreApplicationSpecificSemantics(gltf) {
         var mappedSemantics = {};
         ForEach.mesh(gltf, function(mesh) {
             ForEach.meshPrimitive(mesh, function(primitive) {
-                /* jshint unused:vars */
+                /*eslint-disable no-unused-vars*/
                 ForEach.meshPrimitiveAttribute(primitive, function(accessorId, semantic) {
                     if (semantic.charAt(0) !== '_') {
                         var setIndex = semantic.search(/_[0-9]+/g);
                         var strippedSemantic = semantic;
+                        var suffix = '_0';
                         if (setIndex >= 0) {
                             strippedSemantic = semantic.substring(0, setIndex);
+                            suffix = semantic.substring(setIndex);
                         }
-                        if (!defined(knownSemantics[strippedSemantic])) {
-                            var newSemantic = '_' + semantic;
+                        var newSemantic;
+                        var indexedSemantic = indexedSemantics[strippedSemantic];
+                        if (defined(indexedSemantic)) {
+                            newSemantic = indexedSemantic + suffix;
+                            mappedSemantics[semantic] = newSemantic;
+                        } else if (!defined(knownSemantics[strippedSemantic])) {
+                            newSemantic = '_' + semantic;
                             mappedSemantics[semantic] = newSemantic;
                         }
                     }
@@ -698,47 +730,6 @@ define([
         });
     }
 
-    function removeScissorFromTechniques(gltf) {
-        ForEach.technique(gltf, function(technique) {
-            var techniqueStates = technique.states;
-            if (defined(techniqueStates)) {
-                var techniqueFunctions = techniqueStates.functions;
-                if (defined(techniqueFunctions)) {
-                    delete techniqueFunctions.scissor;
-                }
-                var enableStates = techniqueStates.enable;
-                if (defined(enableStates)) {
-                    var scissorIndex = enableStates.indexOf(WebGLConstants.SCISSOR_TEST);
-                    if (scissorIndex >= 0) {
-                        enableStates.splice(scissorIndex, 1);
-                    }
-                }
-            }
-        });
-    }
-
-    function clampTechniqueFunctionStates(gltf) {
-        ForEach.technique(gltf, function(technique) {
-            var techniqueStates = technique.states;
-            if (defined(techniqueStates)) {
-                var functions = techniqueStates.functions;
-                if (defined(functions)) {
-                    var blendColor = functions.blendColor;
-                    if (defined(blendColor)) {
-                        for (var i = 0; i < 4; i++) {
-                            blendColor[i] = CesiumMath.clamp(blendColor[i], 0.0, 1.0);
-                        }
-                    }
-                    var depthRange = functions.depthRange;
-                    if (defined(depthRange)) {
-                        depthRange[1] = CesiumMath.clamp(depthRange[1], 0.0, 1.0);
-                        depthRange[0] = CesiumMath.clamp(depthRange[0], 0.0, depthRange[1]);
-                    }
-                }
-            }
-        });
-    }
-
     function clampCameraParameters(gltf) {
         ForEach.camera(gltf, function(camera) {
             var perspective = camera.perspective;
@@ -755,172 +746,215 @@ define([
         });
     }
 
+    function computeAccessorByteStride(gltf, accessor) {
+        return (defined(accessor.byteStride) && accessor.byteStride !== 0) ? accessor.byteStride : getAccessorByteStride(gltf, accessor);
+    }
+
     function requireByteLength(gltf) {
         ForEach.buffer(gltf, function(buffer) {
             if (!defined(buffer.byteLength)) {
                 buffer.byteLength = buffer.extras._pipeline.source.length;
             }
         });
-        ForEach.bufferView(gltf, function(bufferView) {
-            if (!defined(bufferView.byteLength)) {
-                var bufferViewBufferId = bufferView.buffer;
-                var bufferViewBuffer = gltf.buffers[bufferViewBufferId];
-                bufferView.byteLength = bufferViewBuffer.byteLength;
+        ForEach.accessor(gltf, function(accessor) {
+            var bufferViewId = accessor.bufferView;
+            if (defined(bufferViewId)) {
+                var bufferView = gltf.bufferViews[bufferViewId];
+                var accessorByteStride = computeAccessorByteStride(gltf, accessor);
+                var accessorByteEnd = accessor.byteOffset + accessor.count * accessorByteStride;
+                bufferView.byteLength = Math.max(defaultValue(bufferView.byteLength, 0), accessorByteEnd);
             }
         });
     }
 
     function moveByteStrideToBufferView(gltf) {
+        var i;
+        var j;
+        var bufferView;
         var bufferViews = gltf.bufferViews;
-        var bufferViewsToDelete = {};
+
+        var bufferViewHasVertexAttributes = {};
+        ForEach.accessorContainingVertexAttributeData(gltf, function(accessorId) {
+            var accessor = gltf.accessors[accessorId];
+            if (defined(accessor.bufferView)) {
+                bufferViewHasVertexAttributes[accessor.bufferView] = true;
+            }
+        });
+
+        // Map buffer views to a list of accessors
+        var bufferViewMap = {};
         ForEach.accessor(gltf, function(accessor) {
-            var oldBufferViewId = accessor.bufferView;
-            if (defined(oldBufferViewId)) {
-                if (!defined(bufferViewsToDelete[oldBufferViewId])) {
-                    bufferViewsToDelete[oldBufferViewId] = true;
-                }
-                var bufferView = clone(bufferViews[oldBufferViewId]);
-                var accessorByteStride = (defined(accessor.byteStride) && accessor.byteStride !== 0) ? accessor.byteStride : getAccessorByteStride(gltf, accessor);
-                if (defined(accessorByteStride)) {
-                    bufferView.byteStride = accessorByteStride;
-                    if (bufferView.byteStride !== 0) {
-                        bufferView.byteLength = accessor.count * accessorByteStride;
-                    }
-                    bufferView.byteOffset += accessor.byteOffset;
-                    accessor.byteOffset = 0;
+            if (defined(accessor.bufferView)) {
+                bufferViewMap[accessor.bufferView] = defaultValue(bufferViewMap[accessor.bufferView], []);
+                bufferViewMap[accessor.bufferView].push(accessor);
+            }
+        });
+
+        // Split accessors with different byte strides
+        for (var bufferViewId in bufferViewMap) {
+            if (bufferViewMap.hasOwnProperty(bufferViewId)) {
+                bufferView = bufferViews[bufferViewId];
+                var accessors = bufferViewMap[bufferViewId];
+                accessors.sort(function(a, b) {
+                    return a.byteOffset - b.byteOffset;
+                });
+                var currentByteOffset = 0;
+                var currentIndex = 0;
+                var accessorsLength = accessors.length;
+                for (i = 0; i < accessorsLength; ++i) {
+                    var accessor = accessors[i];
+                    var accessorByteStride = computeAccessorByteStride(gltf, accessor);
+                    var accessorByteOffset = accessor.byteOffset;
+                    var accessorByteLength = accessor.count * accessorByteStride;
                     delete accessor.byteStride;
-                }
-                accessor.bufferView = addToArray(bufferViews, bufferView);
-            }
-        });
 
-        var bufferViewShiftMap = {};
-        var bufferViewRemovalCount = 0;
-        /* jshint unused:vars */
-        ForEach.bufferView(gltf, function(bufferView, bufferViewId) {
-            if (defined(bufferViewsToDelete[bufferViewId])) {
-                bufferViewRemovalCount++;
-            } else {
-                bufferViewShiftMap[bufferViewId] = bufferViewId - bufferViewRemovalCount;
-            }
-        });
-
-        var removedCount = 0;
-        for (var bufferViewId in bufferViewsToDelete) {
-            if (defined(bufferViewId)) {
-                var index = parseInt(bufferViewId) - removedCount;
-                bufferViews.splice(index, 1);
-                removedCount++;
-            }
-        }
-
-        ForEach.accessor(gltf, function(accessor) {
-            var accessorBufferView = accessor.bufferView;
-            if (defined(accessorBufferView)) {
-                accessor.bufferView = bufferViewShiftMap[accessorBufferView];
-            }
-        });
-
-        ForEach.shader(gltf, function(shader) {
-            var shaderBufferView = shader.bufferView;
-            if (defined(shaderBufferView)) {
-                shader.bufferView = bufferViewShiftMap[shaderBufferView];
-            }
-        });
-
-        ForEach.image(gltf, function(image) {
-            var imageBufferView = image.bufferView;
-            if (defined(imageBufferView)) {
-                image.bufferView = bufferViewShiftMap[imageBufferView];
-            }
-            if (defined(image.extras)) {
-                var compressedImages = image.extras.compressedImage3DTiles;
-                for (var type in compressedImages) {
-                    if (compressedImages.hasOwnProperty(type)) {
-                        var compressedImage = compressedImages[type];
-                        var compressedImageBufferView = compressedImage.bufferView;
-                        if (defined(compressedImageBufferView)) {
-                            compressedImage.bufferView = bufferViewShiftMap[compressedImageBufferView];
+                    var hasNextAccessor = (i < accessorsLength - 1);
+                    var nextAccessorByteStride = hasNextAccessor ? computeAccessorByteStride(gltf, accessors[i + 1]) : undefined;
+                    if (accessorByteStride !== nextAccessorByteStride) {
+                        var newBufferView = clone(bufferView, true);
+                        if (bufferViewHasVertexAttributes[bufferViewId]) {
+                            newBufferView.byteStride = accessorByteStride;
                         }
+                        newBufferView.byteOffset += currentByteOffset;
+                        newBufferView.byteLength = accessorByteOffset + accessorByteLength - currentByteOffset;
+                        var newBufferViewId = addToArray(bufferViews, newBufferView);
+                        for (j = currentIndex; j <= i; ++j) {
+                            accessor = accessors[j];
+                            accessor.bufferView = newBufferViewId;
+                            accessor.byteOffset = accessor.byteOffset - currentByteOffset;
+                        }
+                        // Set current byte offset to next accessor's byte offset
+                        currentByteOffset = hasNextAccessor ? accessors[i + 1].byteOffset : undefined;
+                        currentIndex = i + 1;
                     }
                 }
+            }
+        }
+
+        // Remove unused buffer views
+        removeUnusedElements(gltf);
+    }
+
+    function requirePositionAccessorMinMax(gltf) {
+        ForEach.accessorWithSemantic(gltf, 'POSITION', function(accessorId) {
+            var accessor = gltf.accessors[accessorId];
+            if (!defined(accessor.min) || !defined(accessor.max)) {
+                var minMax = findAccessorMinMax(gltf, accessor);
+                accessor.min = minMax.min;
+                accessor.max = minMax.max;
             }
         });
     }
 
-    function stripTechniqueAttributeValues(gltf) {
-        ForEach.technique(gltf, function(technique) {
-            ForEach.techniqueAttribute(technique, function(attribute) {
-                var parameter = technique.parameters[attribute];
-                if (defined(parameter.value)) {
-                    delete parameter.value;
-                }
-            });
-        });
+    function isNodeEmpty(node) {
+        return (!defined(node.children) || node.children.length === 0) &&
+            (!defined(node.meshes) || node.meshes.length === 0) &&
+            !defined(node.camera) && !defined(node.skin) && !defined(node.skeletons) && !defined(node.jointName) &&
+            (!defined(node.translation) || Cartesian3.fromArray(node.translation).equals(Cartesian3.ZERO)) &&
+            (!defined(node.scale) || Cartesian3.fromArray(node.scale).equals(new Cartesian3(1.0, 1.0, 1.0))) &&
+            (!defined(node.rotation) || Cartesian4.fromArray(node.rotation).equals(new Cartesian4(0.0, 0.0, 0.0, 1.0))) &&
+            (!defined(node.matrix) || Matrix4.fromColumnMajorArray(node.matrix).equals(Matrix4.IDENTITY));
     }
 
-    function stripTechniqueParameterCount(gltf) {
-        ForEach.technique(gltf, function(technique) {
-            ForEach.techniqueParameter(technique, function(parameter) {
-                if (defined(parameter.count)) {
-                    var semantic = parameter.semantic;
-                    if (!defined(semantic) || (semantic !== 'JOINTMATRIX' && semantic.indexOf('_') !== 0)) {
-                        delete parameter.count;
+    function deleteNode(gltf, nodeId) {
+        // Remove from list of nodes in scene
+        ForEach.scene(gltf, function(scene) {
+            var sceneNodes = scene.nodes;
+            if (defined(sceneNodes)) {
+                var sceneNodesLength = sceneNodes.length;
+                for (var i = sceneNodesLength; i >= 0; --i) {
+                    if (sceneNodes[i] === nodeId) {
+                        sceneNodes.splice(i, 1);
+                        return;
                     }
                 }
-            });
+            }
         });
+
+        // Remove parent node's reference to this node, and delete the parent if also empty
+        ForEach.node(gltf, function(parentNode, parentNodeId) {
+            if (defined(parentNode.children)) {
+                var index = parentNode.children.indexOf(nodeId);
+                if (index > -1) {
+                    parentNode.children.splice(index, 1);
+
+                    if (isNodeEmpty(parentNode)) {
+                        deleteNode(gltf, parentNodeId);
+                    }
+                }
+            }
+        });
+
+        delete gltf.nodes[nodeId];
     }
 
-    function addKHRTechniqueExtension(gltf) {
-        var techniques = gltf.techniques;
-        if (defined(techniques) && techniques.length > 0) {
-            addExtensionsRequired(gltf, 'KHR_technique_webgl');
-        }
+    function removeEmptyNodes(gltf) {
+        ForEach.node(gltf, function(node, nodeId) {
+            if (isNodeEmpty(node)) {
+                deleteNode(gltf, nodeId);
+            }
+        });
+
+        return gltf;
+    }
+
+    function requireAnimationAccessorMinMax(gltf) {
+        ForEach.animation(gltf, function(animation) {
+            ForEach.animationSampler(animation, function(sampler) {
+                var accessor = gltf.accessors[sampler.input];
+                if (!defined(accessor.min) || !defined(accessor.max)) {
+                    var minMax = findAccessorMinMax(gltf, accessor);
+                    accessor.min = minMax.min;
+                    accessor.max = minMax.max;
+                }
+            });
+        });
     }
 
     function glTF10to20(gltf) {
-        if (!defined(gltf.asset)) {
-            gltf.asset = {};
-        }
-        if (!defined(gltf.asset.extras)) {
-            gltf.asset.extras = {};
-        }
-        var asset = gltf.asset;
-        asset.version = '2.0';
-        asset.extras.gltf_pipeline_upgrade_10to20 = true;
+        gltf.asset = defaultValue(gltf.asset, {});
+        gltf.asset.version = '2.0';
         // material.instanceTechnique properties should be directly on the material. instanceTechnique is a gltf 0.8 property but is seen in some 1.0 models.
         updateInstanceTechniques(gltf);
         // animation.samplers now refers directly to accessors and animation.parameters should be removed
         removeAnimationSamplersIndirection(gltf);
-        // top-level objects are now arrays referenced by index instead of id
+        // Remove empty nodes and re-assign referencing indices
+        removeEmptyNodes(gltf);
+        // Top-level objects are now arrays referenced by index instead of id
         objectsToArrays(gltf);
+        // Animation.sampler objects cannot have names
+        removeAnimationSamplerNames(gltf);
         // asset.profile no longer exists
-        stripProfile(gltf);
-        // move known extensions from extensionsUsed to extensionsRequired
+        stripAsset(gltf);
+        // Move known extensions from extensionsUsed to extensionsRequired
         requireKnownExtensions(gltf);
         // bufferView.byteLength and buffer.byteLength are required
         requireByteLength(gltf);
         // byteStride moved from accessor to bufferView
         moveByteStrideToBufferView(gltf);
+        // accessor.min and accessor.max must be defined for accessors containing POSITION attributes
+        requirePositionAccessorMinMax(gltf);
+        // An animation sampler's input accessor must have min and max properties defined
+        requireAnimationAccessorMinMax(gltf);
         // buffer.type is unnecessary and should be removed
         removeBufferType(gltf);
+        // Remove format, internalFormat, target, and type
+        removeTextureProperties(gltf);
         // TEXCOORD and COLOR attributes must be written with a set index (TEXCOORD_#)
         requireAttributeSetIndex(gltf);
         // Add underscores to application-specific parameters
         underscoreApplicationSpecificSemantics(gltf);
-        // remove scissor from techniques
-        removeScissorFromTechniques(gltf);
-        // clamp technique function states to min/max
-        clampTechniqueFunctionStates(gltf);
-        // clamp camera parameters
+        // Accessors referenced by JOINTS_0 and WEIGHTS_0 attributes must have correct component types
+        updateAccessorComponentTypes(gltf);
+        // Clamp camera parameters
         clampCameraParameters(gltf);
-        // a technique parameter specified as an attribute cannot have a value
-        stripTechniqueAttributeValues(gltf);
-        // only techniques with a JOINTMATRIX or application specific semantic may have a defined count property
-        stripTechniqueParameterCount(gltf);
-        // add KHR_technique_webgl extension
-        addKHRTechniqueExtension(gltf);
+        // Move legacy technique render states to material properties and add KHR_blend extension blending functions
+        moveTechniqueRenderStates(gltf);
+        // Add material techniques to KHR_techniques_webgl extension, removing shaders, programs, and techniques
+        moveTechniquesToExtension(gltf);
+        // Remove empty arrays
+        removeEmptyArrays(gltf);
     }
+
     return updateVersion;
 });

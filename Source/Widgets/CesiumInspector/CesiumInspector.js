@@ -5,6 +5,7 @@ define([
         '../../Core/DeveloperError',
         '../../ThirdParty/knockout',
         '../getElement',
+        '../InspectorShared',
         './CesiumInspectorViewModel'
     ], function(
         defined,
@@ -13,6 +14,7 @@ define([
         DeveloperError,
         knockout,
         getElement,
+        InspectorShared,
         CesiumInspectorViewModel) {
     'use strict';
 
@@ -40,18 +42,6 @@ define([
 
         container = getElement(container);
 
-        function createCheckBox(checkboxBinding, labelText) {
-            var checkboxContainer = document.createElement('div');
-            var checkboxLabel = document.createElement('label');
-            var checkboxInput = document.createElement('input');
-            checkboxInput.type = 'checkbox';
-            checkboxInput.setAttribute('data-bind', checkboxBinding);
-            checkboxLabel.appendChild(checkboxInput);
-            checkboxLabel.appendChild(document.createTextNode(labelText));
-            checkboxContainer.appendChild(checkboxLabel);
-            return checkboxContainer;
-        }
-
         var performanceContainer = document.createElement('div');
 
         var viewModel = new CesiumInspectorViewModel(scene, performanceContainer);
@@ -74,30 +64,21 @@ define([
         panel.className = 'cesium-cesiumInspector-dropDown';
         element.appendChild(panel);
 
+        var createSection = InspectorShared.createSection;
+        var createCheckbox = InspectorShared.createCheckbox;
+
         // General
-        var general = document.createElement('div');
-        general.className = 'cesium-cesiumInspector-sectionHeader';
-        var plus = document.createElement('span');
-        plus.className = 'cesium-cesiumInspector-toggleSwitch';
-        plus.setAttribute('data-bind', 'click: toggleGeneral, text: generalSwitchText');
-        general.appendChild(plus);
-        general.appendChild(document.createTextNode('General'));
-        panel.appendChild(general);
+        var generalSection = createSection(panel, 'General', 'generalVisible', 'toggleGeneral');
 
-        var generalSection = document.createElement('div');
-        generalSection.className = 'cesium-cesiumInspector-section';
-        generalSection.setAttribute('data-bind', 'css: {"cesium-cesiumInspector-show" : generalVisible, "cesium-cesiumInspector-hide" : !generalVisible}');
-        panel.appendChild(generalSection);
-
-        var debugShowFrustums = createCheckBox('checked: frustums', 'Show Frustums');
+        var debugShowFrustums = createCheckbox('Show Frustums', 'frustums');
         var frustumStatistics = document.createElement('div');
         frustumStatistics.className = 'cesium-cesiumInspector-frustumStatistics';
-        frustumStatistics.setAttribute('data-bind', 'css: {"cesium-cesiumInspector-show" : frustums, "cesium-cesiumInspector-hide" :  !frustums}, html: frustumStatisticText');
+        frustumStatistics.setAttribute('data-bind', 'visible: frustums, html: frustumStatisticText');
         debugShowFrustums.appendChild(frustumStatistics);
         generalSection.appendChild(debugShowFrustums);
 
-        generalSection.appendChild(createCheckBox('checked: frustumPlanes', 'Show Frustum Planes'));
-        generalSection.appendChild(createCheckBox('checked: performance', 'Performance Display'));
+        generalSection.appendChild(createCheckbox('Show Frustum Planes', 'frustumPlanes'));
+        generalSection.appendChild(createCheckbox('Performance Display', 'performance'));
 
         performanceContainer.className = 'cesium-cesiumInspector-performanceDisplay';
         generalSection.appendChild(performanceContainer);
@@ -107,13 +88,14 @@ define([
         shaderCacheDisplay.setAttribute('data-bind', 'html: shaderCacheText');
         generalSection.appendChild(shaderCacheDisplay);
 
-        var globeDepth = createCheckBox('checked: globeDepth', 'Show globe depth');
-        generalSection.appendChild(globeDepth);
-
-        var globeDepthFrustum = document.createElement('div');
-        globeDepth.appendChild(globeDepthFrustum);
-
-        generalSection.appendChild(createCheckBox('checked: pickDepth', 'Show pick depth'));
+        // https://github.com/AnalyticalGraphicsInc/cesium/issues/6763
+        // var globeDepth = createCheckbox('Show globe depth', 'globeDepth');
+        // generalSection.appendChild(globeDepth);
+        //
+        // var globeDepthFrustum = document.createElement('div');
+        // globeDepth.appendChild(globeDepthFrustum);
+        //
+        // generalSection.appendChild(createCheckbox('Show pick depth', 'pickDepth'));
 
         var depthFrustum = document.createElement('div');
         generalSection.appendChild(depthFrustum);
@@ -142,22 +124,10 @@ define([
         depthFrustum.appendChild(gPlusButton);
 
         // Primitives
-        var prim = document.createElement('div');
-        prim.className = 'cesium-cesiumInspector-sectionHeader';
-        plus = document.createElement('span');
-        plus.className = 'cesium-cesiumInspector-toggleSwitch';
-        plus.setAttribute('data-bind', 'click: togglePrimitives, text: primitivesSwitchText');
-        prim.appendChild(plus);
-        prim.appendChild(document.createTextNode('Primitives'));
-        panel.appendChild(prim);
-
-        var primitivesSection = document.createElement('div');
-        primitivesSection.className = 'cesium-cesiumInspector-section';
-        primitivesSection.setAttribute('data-bind', 'css: {"cesium-cesiumInspector-show" : primitivesVisible, "cesium-cesiumInspector-hide" : !primitivesVisible}');
-        panel.appendChild(primitivesSection);
+        var primSection = createSection(panel, 'Primitives', 'primitivesVisible', 'togglePrimitives');
         var pickPrimRequired = document.createElement('div');
         pickPrimRequired.className = 'cesium-cesiumInspector-pickSection';
-        primitivesSection.appendChild(pickPrimRequired);
+        primSection.appendChild(pickPrimRequired);
 
         var pickPrimitiveButton = document.createElement('input');
         pickPrimitiveButton.type = 'button';
@@ -169,26 +139,14 @@ define([
         buttonWrap.appendChild(pickPrimitiveButton);
         pickPrimRequired.appendChild(buttonWrap);
 
-        pickPrimRequired.appendChild(createCheckBox('checked: primitiveBoundingSphere, enable: hasPickedPrimitive', 'Show bounding sphere'));
-        pickPrimRequired.appendChild(createCheckBox('checked: primitiveReferenceFrame, enable: hasPickedPrimitive', 'Show reference frame'));
+        pickPrimRequired.appendChild(createCheckbox('Show bounding sphere', 'primitiveBoundingSphere', 'hasPickedPrimitive'));
+        pickPrimRequired.appendChild(createCheckbox('Show reference frame', 'primitiveReferenceFrame', 'hasPickedPrimitive'));
 
-        this._primitiveOnly = createCheckBox('checked: filterPrimitive, enable: hasPickedPrimitive', 'Show only selected');
+        this._primitiveOnly = createCheckbox('Show only selected', 'filterPrimitive', 'hasPickedPrimitive');
         pickPrimRequired.appendChild(this._primitiveOnly);
 
         // Terrain
-        var terrain = document.createElement('div');
-        terrain.className = 'cesium-cesiumInspector-sectionHeader';
-        plus = document.createElement('span');
-        plus.className = 'cesium-cesiumInspector-toggleSwitch';
-        plus.setAttribute('data-bind', 'click: toggleTerrain, text: terrainSwitchText');
-        terrain.appendChild(plus);
-        terrain.appendChild(document.createTextNode('Terrain'));
-        panel.appendChild(terrain);
-
-        var terrainSection = document.createElement('div');
-        terrainSection.className = 'cesium-cesiumInspector-section';
-        terrainSection.setAttribute('data-bind', 'css: {"cesium-cesiumInspector-show" : terrainVisible, "cesium-cesiumInspector-hide" :  !terrainVisible}');
-        panel.appendChild(terrainSection);
+        var terrainSection = createSection(panel, 'Terrain', 'terrainVisible', 'toggleTerrain');
         var pickTileRequired = document.createElement('div');
         pickTileRequired.className = 'cesium-cesiumInspector-pickSection';
         terrainSection.appendChild(pickTileRequired);
@@ -233,7 +191,7 @@ define([
         tileText.className = 'cesium-cesiumInspector-tileText';
         tileInfo.className = 'cesium-cesiumInspector-frustumStatistics';
         tileInfo.appendChild(tileText);
-        tileInfo.setAttribute('data-bind', 'css: {"cesium-cesiumInspector-show" : hasPickedTile, "cesium-cesiumInspector-hide" :  !hasPickedTile}');
+        tileInfo.setAttribute('data-bind', 'visible: hasPickedTile');
         tileText.setAttribute('data-bind', 'html: tileText');
 
         var relativeText = document.createElement('div');
@@ -266,12 +224,12 @@ define([
 
         tileInfo.appendChild(table);
 
-        pickTileRequired.appendChild(createCheckBox('checked: tileBoundingSphere, enable: hasPickedTile', 'Show bounding volume'));
-        pickTileRequired.appendChild(createCheckBox('checked: filterTile, enable: hasPickedTile', 'Show only selected'));
+        pickTileRequired.appendChild(createCheckbox('Show bounding volume', 'tileBoundingSphere', 'hasPickedTile'));
+        pickTileRequired.appendChild(createCheckbox('Show only selected', 'filterTile', 'hasPickedTile'));
 
-        terrainSection.appendChild(createCheckBox('checked: wireframe', 'Wireframe'));
-        terrainSection.appendChild(createCheckBox('checked: suspendUpdates', 'Suspend LOD update'));
-        terrainSection.appendChild(createCheckBox('checked: tileCoordinates', 'Show tile coordinates'));
+        terrainSection.appendChild(createCheckbox('Wireframe', 'wireframe'));
+        terrainSection.appendChild(createCheckbox('Suspend LOD update', 'suspendUpdates'));
+        terrainSection.appendChild(createCheckbox('Show tile coordinates', 'tileCoordinates'));
 
         knockout.applyBindings(viewModel, this._element);
     }

@@ -555,6 +555,7 @@ defineSuite([
         var pointsDistance = Cartesian3.distance(positions[0], positions[1]);
 
         expect(boundingSphere.radius > pointsDistance).toBe(true);
+        expect(boundingSphere.radius > 1000.0).toBe(true); // starting top/bottom height
     });
 
     var packedInstance = [positions.length];
