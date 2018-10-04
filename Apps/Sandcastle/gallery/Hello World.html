@@ -82,12 +82,12 @@ function startup(Cesium) {
         var pitch = Cesium.Math.toRadians(-20.0);
         camera.lookAt(center, new Cesium.HeadingPitchRange(heading, pitch, r * 2.0));
 
-        //model.sphericalHarmonicCoefficients = coefficients;
+        model.sphericalHarmonicCoefficients = coefficients;
 
-        loadEnvMap(diffuseEnvMapURL).then(function(cubeMap) {
+        /*loadEnvMap(diffuseEnvMapURL).then(function(cubeMap) {
             model.diffuseIrradiance = cubeMap;
             //viewCubeMap(cubeMap);
-        });
+        });*/
         loadEnvMap(specularEnvMapURL).then(function(cubeMap) {
             model.specularEnvironmentMap = cubeMap;
             //viewCubeMap(cubeMap, 2.0);

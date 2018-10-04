@@ -616,16 +616,6 @@ define([
             fragmentShader += '    vec3 lightColor = vec3(1.5, 1.4, 1.2);\n';
             fragmentShader += '    vec3 l = normalize(czm_sunDirectionEC);\n';
             fragmentShader += '    vec3 h = normalize(v + l);\n';
-            fragmentShader += '    vec3 r = normalize(czm_inverseViewRotation * normalize(reflect(v, n)));\n';
-            // Figure out if the reflection vector hits the ellipsoid
-            fragmentShader += '    czm_ellipsoid ellipsoid = czm_getWgs84EllipsoidEC();\n';
-            fragmentShader += '    float vertexRadius = length(v_positionWC);\n';
-            fragmentShader += '    float horizonDotNadir = 1.0 - min(1.0, ellipsoid.radii.x / vertexRadius);\n';
-            fragmentShader += '    float reflectionDotNadir = dot(r, normalize(v_positionWC));\n';
-            // Flipping the X vector is a cheap way to get the inverse of czm_temeToPseudoFixed, since that's a rotation about Z.
-            fragmentShader += '    r.x = -r.x;\n';
-            fragmentShader += '    r = -normalize(czm_temeToPseudoFixed * r);\n';
-            fragmentShader += '    r.x = -r.x;\n';
             fragmentShader += '    float NdotL = clamp(dot(n, l), 0.001, 1.0);\n';
             fragmentShader += '    float NdotV = abs(dot(n, v)) + 0.001;\n';
             fragmentShader += '    float NdotH = clamp(dot(n, h), 0.0, 1.0);\n';
@@ -655,6 +645,18 @@ define([
             fragmentShader += '    vec3 diffuseContribution = (1.0 - F) * lambertianDiffuse(diffuseColor);\n';
             fragmentShader += '    vec3 specularContribution = F * G * D / (4.0 * NdotL * NdotV);\n';
             fragmentShader += '    vec3 color = NdotL * lightColor * (diffuseContribution + specularContribution);\n';
+
+            /*
+            fragmentShader += '    vec3 r = normalize(czm_inverseViewRotation * normalize(reflect(v, n)));\n';
+            // Figure out if the reflection vector hits the ellipsoid
+            fragmentShader += '    czm_ellipsoid ellipsoid = czm_getWgs84EllipsoidEC();\n';
+            fragmentShader += '    float vertexRadius = length(v_positionWC);\n';
+            fragmentShader += '    float horizonDotNadir = 1.0 - min(1.0, ellipsoid.radii.x / vertexRadius);\n';
+            fragmentShader += '    float reflectionDotNadir = dot(r, normalize(v_positionWC));\n';
+            // Flipping the X vector is a cheap way to get the inverse of czm_temeToPseudoFixed, since that's a rotation about Z.
+            fragmentShader += '    r.x = -r.x;\n';
+            fragmentShader += '    r = -normalize(czm_temeToPseudoFixed * r);\n';
+            fragmentShader += '    r.x = -r.x;\n';
 
             fragmentShader += '    float inverseRoughness = 1.04 - roughness;\n';
             fragmentShader += '    inverseRoughness *= inverseRoughness;\n';
@@ -687,6 +689,28 @@ define([
             fragmentShader += '    vec2 brdfLut = texture2D(czm_brdfLut, vec2(NdotV, 1.0 - roughness)).rg;\n';
             fragmentShader += '    vec3 IBLColor = (diffuseIrradiance * diffuseColor) + (specularIrradiance * SRGBtoLINEAR3(specularColor * brdfLut.x + brdfLut.y));\n';
             fragmentShader += '    color += IBLColor;\n';
+            */
+
+            fragmentShader += '    const mat3 yUpToZUp = mat3(-1.0, 0.0, 0.0, 0.0, 0.0, -1.0, 0.0, 1.0, 0.0); \n';
+            fragmentShader += '    vec3 cubeDir = normalize(czm_inverseViewRotation * n); \n';
+            fragmentShader += '    cubeDir = yUpToZUp * cubeDir; \n'; // TODO
+            fragmentShader += '#ifdef DIFFUSE_IBL \n';
+            fragmentShader += '#ifdef SPHERICAL_HARMONICS \n';
+            fragmentShader += '    vec3 diffuseIrradiance = czm_sphericalHarmonics(cubeDir, gltf_sphericalHarmonicCoefficients); \n';
+            fragmentShader += '#else \n';
+            fragmentShader += '    vec3 diffuseIrradiance = textureCube(gltf_diffuseIrradiance, cubeDir).rgb;\n';
+            fragmentShader += '#endif \n';
+            fragmentShader += '#else \n';
+            fragmentShader += '    vec3 diffuseIrradiance = vec3(0.0); \n';
+            fragmentShader += '#endif \n';
+            fragmentShader += '#ifdef SPECULAR_IBL \n';
+            fragmentShader += '    vec2 brdfLut = texture2D(czm_brdfLut, vec2(NdotV, roughness)).rg;\n';
+            fragmentShader += '    vec3 specularIBL = textureLod(gltf_specularMap, cubeDir,  roughness * gltf_maxSpecularLOD).rgb;\n';
+            fragmentShader += '    specularIBL *= F * brdfLut.x + brdfLut.y;\n';
+            fragmentShader += '#else \n';
+            fragmentShader += '    vec3 specularIBL = vec3(0.0); \n';
+            fragmentShader += '#endif \n';
+            fragmentShader += '    color += diffuseIrradiance * diffuseColor + specularColor * specularIBL;\n';
         } else {
             fragmentShader += '    vec3 color = baseColor;\n';
         }
