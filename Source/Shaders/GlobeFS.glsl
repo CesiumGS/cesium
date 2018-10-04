@@ -259,31 +259,6 @@ void main()
     color.xyz = mix(color.xyz, material.diffuse, material.alpha);
 #endif
 
-#if defined(ENABLE_DAYNIGHT_SHADING) || defined(GROUND_ATMOSPHERE)
-    float cameraDist;
-    if (czm_sceneMode == czm_sceneMode2D)
-    {
-        cameraDist = max(czm_frustumPlanes.x - czm_frustumPlanes.y, czm_frustumPlanes.w - czm_frustumPlanes.z) * 0.5;
-    }
-    else if (czm_sceneMode == czm_sceneModeColumbusView)
-    {
-        cameraDist = -czm_view[3].z;
-    }
-    else
-    {
-        cameraDist = length(czm_view[3]);
-    }
-    float fadeOutDist = u_lightingFadeDistance.x;
-    float fadeInDist = u_lightingFadeDistance.y;
-    if (czm_sceneMode != czm_sceneMode3D) {
-        vec3 radii = czm_getWgs84EllipsoidEC().radii;
-        float maxRadii = max(radii.x, max(radii.y, radii.z));
-        fadeOutDist -= maxRadii;
-        fadeInDist -= maxRadii;
-    }
-    float fade = clamp((cameraDist - fadeOutDist) / (fadeInDist - fadeOutDist), 0.0, 1.0);
-#endif
-
 #ifdef HDR
     czm_material material;
     material.diffuse = color.rgb;
