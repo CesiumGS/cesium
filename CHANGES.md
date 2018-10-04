@@ -317,7 +317,7 @@ Change Log
   * Removed the 6-clipping-plane limit.
   * Added support for Internet Explorer.
   * Added a `ClippingPlane` object to be used with `ClippingPlaneCollection`.
-* Added 3D Tiles use-case to the Terrain Clipping Planes Sandcastle.
+  * Added 3D Tiles use-case to the Terrain Clipping Planes Sandcastle.
 * `Credit` has been modified to take an HTML string as the credit content. [#6331](https://github.com/AnalyticalGraphicsInc/cesium/pull/6331)
 * Sharing Sandcastle examples now works by storing the full example directly in the URL instead of creating GitHub gists, because anonymous gist creation was removed by GitHub. Loading existing gists will still work. [#6342](https://github.com/AnalyticalGraphicsInc/cesium/pull/6342)
 * Updated `WebMapServiceImageryProvider` so it can take an srs or crs string to pass to the resource query parameters based on the WMS version. [#6223](https://github.com/AnalyticalGraphicsInc/cesium/issues/6223)
