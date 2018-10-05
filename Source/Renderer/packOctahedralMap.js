@@ -11,7 +11,10 @@ define([
         './VertexArray',
         './DrawCommand',
         './RenderState',
-        './ShaderProgram'
+        './ShaderProgram',
+        './Sampler',
+        './TextureMinificationFilter',
+        './TextureMagnificationFilter'
     ], function(
         defined,
         DeveloperError,
@@ -25,7 +28,10 @@ define([
         VertexArray,
         DrawCommand,
         RenderState,
-        ShaderProgram) {
+        ShaderProgram,
+        Sampler,
+        TextureMinificationFilter,
+        TextureMagnificationFilter) {
     'use strict';
 
     /**
@@ -52,21 +58,6 @@ define([
             throw new DeveloperError('context is required.');
         }
         //>>includeEnd('debug');
-        var originalSize = cubeMaps[0]._size * 2;
-
-        var texture = new Texture({
-            context : context, 
-            width : originalSize * 1.5,
-            height : originalSize,
-            pixelDataType : cubeMaps[0]._pixelDatatype,
-            pixelFormat : cubeMaps[0]._pixelFormat
-        });
-
-        var framebuffer = new Framebuffer({
-            context : context, 
-            colorTextures : [texture],
-            destroyAttachments : false
-        });
 
         var vertexArray = makeOctahedronVertexArray(context);
         var shaderProgram = ShaderProgram.fromCache({
@@ -79,25 +70,35 @@ define([
                 }
             });
 
-        var length = cubeMaps.length; 
+        // We only need up to 6 mip levels to avoid artifacts. 
+        var length = Math.min(cubeMaps.length,6); 
         var command; 
+        var uniformMap = {};
 
+        // First we project each cubemap onto a flat octahedron, and write that to a texture.
         for (var i = 0; i < length; ++i) {
             var factor = (1/Math.pow(2,i));
-            var size = originalSize * factor;
-            var xOffset = 0; 
-            var yOffset = 0;
+            var size = cubeMaps[i]._size * 2;
 
-            if (i > 0) {
-                xOffset = originalSize + 1;
-                yOffset = (1 - (1/Math.pow(2,i-1))) * originalSize + (i-1);
-            }
+            var mipTexture = new Texture({
+                context : context, 
+                width : size, 
+                height : size,
+                pixelDataType : cubeMaps[i]._pixelDatatype,
+                pixelFormat : cubeMaps[i]._pixelFormat
+            });
+
+            var mipFramebuffer = new Framebuffer({
+                context : context, 
+                colorTextures : [mipTexture],
+                destroyAttachments : false
+            });
 
             command = new DrawCommand({
                 vertexArray : vertexArray,
                 primitiveType : PrimitiveType.TRIANGLES,
                 renderState : RenderState.fromCache({
-                    viewport : new BoundingRectangle(xOffset, yOffset, size, size)
+                    viewport : new BoundingRectangle(0, 0, size, size)
                 }),
                 shaderProgram : shaderProgram,
                 uniformMap : {
@@ -105,11 +106,123 @@ define([
                         return cubeMaps[i];
                     }
                 },
-                framebuffer : framebuffer
+                framebuffer : mipFramebuffer
             });
 
             command.execute(context);
+
+            mipFramebuffer.destroy();
+
+            uniformMap['texture' + i] = (function(capturedTexture){
+                return function(){
+                    return capturedTexture
+                }
+            })(mipTexture);   
+            
+            
         }
+
+        var originalSize = cubeMaps[0]._size * 2;
+
+        var texture = new Texture({
+            context : context, 
+            width : originalSize * 1.5 + 2, // We add a 1 pixel border to avoid linear sampling artifacts.
+            height : originalSize,
+            pixelDataType : cubeMaps[0]._pixelDatatype,
+            pixelFormat : cubeMaps[0]._pixelFormat
+        });
+
+        var framebuffer = new Framebuffer({
+            context : context, 
+            colorTextures : [texture],
+            destroyAttachments : false
+        });
+
+        // Now render all those textures onto an atlas.
+        var fs = `
+            varying vec2 v_textureCoordinates;
+            uniform sampler2D texture0; 
+            uniform sampler2D texture1;
+            uniform sampler2D texture2;
+            uniform sampler2D texture3;
+            uniform sampler2D texture4;
+            uniform sampler2D texture5; 
+
+            void main()
+            {
+                vec2 uv = v_textureCoordinates;
+                vec2 textureSize = vec2(${originalSize * 1.5 + 2}.0, ${originalSize}.0);
+                vec2 pixel = 1.0 / textureSize;
+                
+                float mipLevel = 0.0;
+
+                if (uv.x - pixel.x > (textureSize.y / textureSize.x)) {
+                    mipLevel = 1.0;
+                    if (uv.y - pixel.y > 1.0 - (1.0/pow(2.0, mipLevel)) ) {
+                        mipLevel = 2.0;
+                        if (uv.y - pixel.y * 3.0 > 1.0 - (1.0/pow(2.0, mipLevel)) ) {
+                            mipLevel = 3.0;
+                            if (uv.y - pixel.y * 5.0 > 1.0 - (1.0/pow(2.0, mipLevel)) ) {
+                                mipLevel = 4.0;
+                                if (uv.y - pixel.y * 7.0 > 1.0 - (1.0/pow(2.0, mipLevel)) ) {
+                                    mipLevel = 5.0;
+                                }
+                            }
+                        }
+                    }
+                }
+
+                if (mipLevel > 0.0) {
+                    float scale = pow(2.0, mipLevel);
+
+                    uv.y -= (pixel.y * (mipLevel-1.0) * 2.0);
+                    uv.x *= ((textureSize.x - 2.0) / textureSize.y);
+
+                    uv.x -= 1.0 + pixel.x;
+                    uv.y -= (1.0 - (1.0/pow(2.0, mipLevel-1.0)));
+                    uv *= scale;
+
+                } else {
+                    uv.x *= (textureSize.x / textureSize.y);
+                }
+
+                if(mipLevel == 0.0) {
+                    gl_FragColor = texture2D(texture0, uv);
+                }
+
+                if(mipLevel == 1.0) {
+                    gl_FragColor = texture2D(texture1, uv);
+                }
+
+                if(mipLevel == 2.0) {
+                    gl_FragColor = texture2D(texture2, uv);
+                }
+
+                if(mipLevel == 3.0) {
+                    gl_FragColor = texture2D(texture3, uv);
+                }
+
+                if(mipLevel == 4.0) {
+                    gl_FragColor = texture2D(texture4, uv);
+                }
+
+                if(mipLevel == 5.0) {
+                    gl_FragColor = texture2D(texture5, uv);
+                }
+
+                
+            }
+            `;
+
+        command = context.createViewportQuadCommand(fs, {
+            framebuffer : framebuffer,
+            renderState : RenderState.fromCache({
+                viewport : new BoundingRectangle(0.0, 0.0, originalSize * 1.5 + 2, originalSize)
+            }),
+            uniformMap : uniformMap
+        });
+
+        command.execute(context);
 
         return texture;
     }
@@ -215,6 +328,7 @@ define([
 
     void main()
         {
+            
             gl_FragColor = textureCube(cubeMap, v_cubeMapCoordinates);
         }
     `;
