@@ -1,13 +1,13 @@
 define([
         './Cartesian3',
+        './Check',
         './defaultValue',
-        './defined',
-        './DeveloperError'
+        './defined'
     ], function(
         Cartesian3,
+        Check,
         defaultValue,
-        defined,
-        DeveloperError) {
+        defined) {
     'use strict';
 
     /**
@@ -43,12 +43,13 @@ define([
      *
      * @param {Ray} ray The ray to duplicate.
      * @param {Ray} [result] The object onto which to store the result.
-     * @returns {Ray} The modified result parameter or a new Ray instance if one was not provided. (Returns undefined if ray is undefined)
+     * @returns {Ray} The modified result parameter or a new Ray instance if one was not provided.
      */
     Ray.clone = function(ray, result) {
-        if (!defined(ray)) {
-            return undefined;
-        }
+        //>>includeStart('debug', pragmas.debug);
+        Check.typeOf.object('ray', ray);
+        //>>includeEnd('debug');
+
         if (!defined(result)) {
             return new Ray(ray.origin, ray.direction);
         }
@@ -74,12 +75,8 @@ define([
      */
     Ray.getPoint = function(ray, t, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(ray)){
-            throw new DeveloperError('ray is requred');
-        }
-        if (typeof t !== 'number') {
-            throw new DeveloperError('t is a required number');
-        }
+        Check.typeOf.object('ray', ray);
+        Check.typeOf.number('t', t);
         //>>includeEnd('debug');
 
         if (!defined(result)) {

@@ -4,7 +4,7 @@ Change Log
 ### 1.51 - 2018-11-01
 
 ##### Additions :tada:
-* Added `Ray.clone`. [#TODO](TODO)
+* Added `Ray.clone`. [#7115](https://github.com/AnalyticalGraphicsInc/cesium/pull/7115)
 
 ### 1.50 - 2018-10-01
 
