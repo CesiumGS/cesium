@@ -792,7 +792,8 @@ define([
         this._view = this._defaultView;
 
         // Give frameState, camera, and screen space camera controller initial state before rendering
-        updateFrameState(this, 0.0, JulianDate.now());
+        updateFrameNumber(this, 0.0, JulianDate.now());
+        updateFrameState(this);
         this.initializeFrame();
     }
 
@@ -1591,7 +1592,13 @@ define([
         passes.async = false;
     }
 
-    function updateFrameState(scene, frameNumber, time) {
+    function updateFrameNumber(scene, frameNumber, time) {
+        var frameState = scene._frameState;
+        frameState.frameNumber = frameNumber;
+        frameState.time = JulianDate.clone(time, frameState.time);
+    }
+
+    function updateFrameState(scene) {
         var camera = scene.camera;
 
         var frameState = scene._frameState;
@@ -1602,8 +1609,6 @@ define([
         frameState.mode = scene._mode;
         frameState.morphTime = scene.morphTime;
         frameState.mapProjection = scene.mapProjection;
-        frameState.frameNumber = frameNumber;
-        frameState.time = JulianDate.clone(time, frameState.time);
         frameState.camera = camera;
         frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.positionWC, camera.directionWC, camera.upWC);
         frameState.occluder = getOccluder(scene);
@@ -3023,7 +3028,7 @@ define([
         frameState.creditDisplay.update();
     }
 
-    function render(scene, time) {
+    function render(scene) {
         scene._pickPositionCacheDirty = true;
 
         var context = scene.context;
@@ -3033,8 +3038,7 @@ define([
         var view = scene._defaultView;
         scene._view = view;
 
-        var frameNumber = CesiumMath.incrementWrap(frameState.frameNumber, 15000000.0, 1.0);
-        updateFrameState(scene, frameNumber, time);
+        updateFrameState(scene);
         frameState.passes.render = true;
         frameState.passes.postProcess = scene.postProcessStages.hasSelected;
 
@@ -3092,9 +3096,9 @@ define([
         context.endFrame();
     }
 
-    function tryAndCatchError(scene, time, functionToExecute) {
+    function tryAndCatchError(scene, functionToExecute) {
         try {
-            functionToExecute(scene, time);
+            functionToExecute(scene);
         } catch (error) {
             scene._renderError.raiseEvent(scene, error);
 
@@ -3115,12 +3119,8 @@ define([
             time = JulianDate.now();
         }
 
+        var frameState = this._frameState;
         this._jobScheduler.resetBudgets();
-
-        // Update
-        this._preUpdate.raiseEvent(this, time);
-        tryAndCatchError(this, time, update);
-        this._postUpdate.raiseEvent(this, time);
 
         var cameraChanged = this._view.checkForCameraUpdates(this);
         var shouldRender = !this.requestRenderMode || this._renderRequested || cameraChanged || this._logDepthBufferDirty || (this.mode === SceneMode.MORPHING);
@@ -3133,10 +3133,19 @@ define([
             this._lastRenderTime = JulianDate.clone(time, this._lastRenderTime);
             this._renderRequested = false;
             this._logDepthBufferDirty = false;
+            var frameNumber = CesiumMath.incrementWrap(frameState.frameNumber, 15000000.0, 1.0);
+            updateFrameNumber(this, frameNumber, time);
+        }
 
+        // Update
+        this._preUpdate.raiseEvent(this, time);
+        tryAndCatchError(this, update);
+        this._postUpdate.raiseEvent(this, time);
+
+        if (shouldRender) {
             // Render
             this._preRender.raiseEvent(this, time);
-            tryAndCatchError(this, time, render);
+            tryAndCatchError(this, render);
 
             RequestScheduler.update();
         }
@@ -3324,7 +3333,7 @@ define([
         this._jobScheduler.disableThisFrame();
 
         // Update with previous frame's number and time, assuming that render is called before picking.
-        updateFrameState(this, frameState.frameNumber, frameState.time);
+        updateFrameState(this);
         frameState.cullingVolume = getPickCullingVolume(this, drawingBufferPosition, rectangleWidth, rectangleHeight, viewport);
         frameState.invertClassification = false;
         frameState.passes.pick = true;
@@ -3675,7 +3684,7 @@ define([
         updateCameraFromRay(ray, view.camera);
 
         // Update with previous frame's number and time, assuming that render is called first.
-        updateFrameState(scene, frameState.frameNumber, frameState.time);
+        updateFrameState(scene);
         frameState.passes.offscreen = true;
         frameState.passes.async = true;
 
@@ -3752,7 +3761,7 @@ define([
         scene._jobScheduler.disableThisFrame();
 
         // Update with previous frame's number and time, assuming that render is called before picking.
-        updateFrameState(scene, frameState.frameNumber, frameState.time);
+        updateFrameState(scene);
         frameState.invertClassification = false;
         frameState.passes.pick = true;
         frameState.passes.offscreen = true;

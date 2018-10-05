@@ -60,7 +60,6 @@ define([
 
         var root = tileset.root;
         updateTile(tileset, root, statistics, frameState);
-        postUpdateTile(root);
 
         // The root tile is not visible
         if (!isVisible(root)) {
@@ -293,11 +292,6 @@ define([
         }
     }
 
-    function postUpdateTile(tile) {
-        // Reset so visibility is checked during the next pass which may use a different camera
-        tile._updatedVisibilityFrame = 0;
-    }
-
     function hasEmptyContent(tile) {
         return tile.hasEmptyContent || tile.hasTilesetContent;
     }
@@ -464,7 +458,7 @@ define([
             visitTile(tileset, tile, statistics, frameState);
             touchTile(tileset, tile, frameState);
             tile._refines = refines;
-            postUpdateTile(tile);
+            tile._updatedVisibilityFrame = 0; // Reset so visibility is checked during the next pass which may use a different camera
         }
     }
 
