@@ -88,13 +88,13 @@ function startup(Cesium) {
             model.diffuseIrradiance = cubeMap;
             //viewCubeMap(cubeMap);
         });*/
-        loadEnvMap(specularEnvMapURL).then(function(cubeMap) {
-            model.specularEnvironmentMap = cubeMap;
+        loadEnvMap(specularEnvMapURL).then(function(cubeMaps) {
+            model.specularEnvironmentMaps = cubeMaps;
             //viewCubeMap(cubeMap, 2.0);
         });
-        loadEnvMap(origEnvMapURL).then(function(cubeMap) {
-            viewCubeMap(cubeMap);
-        });
+        //loadEnvMap(origEnvMapURL).then(function(cubeMap) {
+        //    viewCubeMap(cubeMap);
+        //});
     }).otherwise(function(error){
         window.alert(error);
     });
@@ -140,6 +140,16 @@ function startup(Cesium) {
                     height : height
                 }
             };
+
+            var cubeMaps = [];
+            cubeMaps.push(
+                new Cesium.CubeMap({
+                    context : scene.context,
+                    source : sources,
+                    pixelDatatype : Cesium.PixelDatatype.FLOAT
+                })
+            );
+
             var mipLevels = new Array(mipmapCount - 1);
             for (var i = 0; i < mipmapCount - 1; ++i) {
                 mipLevel = i + 1;
@@ -177,17 +187,17 @@ function startup(Cesium) {
                         height : height
                     }
                 };
+
+                cubeMaps.push(
+                    new Cesium.CubeMap({
+                        context : scene.context,
+                        source : sources,
+                        pixelDatatype : Cesium.PixelDatatype.FLOAT
+                    })
+                );
             }
 
-            return new Cesium.CubeMap({
-                context : scene.context,
-                source : sources,
-                mipLevels : mipLevels,
-                pixelDatatype : Cesium.PixelDatatype.FLOAT,
-                sampler : new Cesium.Sampler({
-                    minificationFilter : Cesium.TextureMinificationFilter.LINEAR_MIPMAP_LINEAR
-                })
-            });
+            return cubeMaps;
         });
     }
 

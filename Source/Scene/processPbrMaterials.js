@@ -705,7 +705,8 @@ define([
             fragmentShader += '#endif \n';
             fragmentShader += '#ifdef SPECULAR_IBL \n';
             fragmentShader += '    vec2 brdfLut = texture2D(czm_brdfLut, vec2(NdotV, roughness)).rg;\n';
-            fragmentShader += '    vec3 specularIBL = textureLod(gltf_specularMap, cubeDir,  roughness * gltf_maxSpecularLOD).rgb;\n';
+            //fragmentShader += '    vec3 specularIBL = textureLod(gltf_specularMap, cubeDir,  roughness * gltf_maxSpecularLOD).rgb;\n';
+            fragmentShader += '    vec3 specularIBL = czm_sampleOctahedralProjection(gltf_specularMap, gltf_specularMapSize, cubeDir,  roughness * gltf_maxSpecularLOD);\n';
             fragmentShader += '    specularIBL *= F * brdfLut.x + brdfLut.y;\n';
             fragmentShader += '#else \n';
             fragmentShader += '    vec3 specularIBL = vec3(0.0); \n';

@@ -68,6 +68,7 @@ define([
         './ModelMesh',
         './ModelNode',
         './ModelUtility',
+        './OctahedralProjectedCubeMap',
         './processModelMaterialsCommon',
         './processPbrMaterials',
         './SceneMode',
@@ -142,6 +143,7 @@ define([
         ModelMesh,
         ModelNode,
         ModelUtility,
+        OctahedralProjectedCubeMap,
         processModelMaterialsCommon,
         processPbrMaterials,
         SceneMode,
@@ -661,10 +663,12 @@ define([
 
         this.diffuseIrradiance = undefined;
         this._diffuseIrradiance = undefined;
+        this._diffuseIrradianceAtlas = undefined;
         this.sphericalHarmonicCoefficients = undefined;
         this._sphericalHarmonicCoefficients = undefined;
-        this.specularEnvironmentMap = undefined;
-        this._specularEnvironmentMap = undefined;
+        this.specularEnvironmentMaps = undefined;
+        this._specularEnvironmentMaps = undefined;
+        this._specularEnvironmentMapAtlas = undefined;
     }
 
     defineProperties(Model.prototype, {
@@ -1959,10 +1963,10 @@ define([
         if (defined(model._sphericalHarmonicCoefficients)) {
             drawFS = '#define DIFFUSE_IBL \n' + '#define SPHERICAL_HARMONICS \n' + 'uniform vec3 gltf_sphericalHarmonicCoefficients[9]; \n' + drawFS;
         } else if (defined(model._diffuseIrradiance)) {
-            drawFS = '#define DIFFUSE_IBL \n' + 'uniform samplerCube gltf_diffuseIrradiance; \n' + drawFS;
+            drawFS = '#define DIFFUSE_IBL \n' + 'uniform sampler2D gltf_diffuseIrradiance; \n' + drawFS;
         }
-        if (defined(model._specularEnvironmentMap)) {
-            drawFS = '#define SPECULAR_IBL \n' + 'uniform samplerCube gltf_specularMap; \n' + 'uniform float gltf_maxSpecularLOD; \n' + drawFS;
+        if (defined(model._specularEnvironmentMaps)) {
+            drawFS = '#define SPECULAR_IBL \n' + 'uniform sampler2D gltf_specularMap; \n' + 'uniform vec2 gltf_specularMapSize; \n' + 'uniform float gltf_maxSpecularLOD; \n' + drawFS;
         }
 
         createAttributesAndProgram(programId, techniqueId, drawFS, drawVS, model, context);
@@ -2021,10 +2025,10 @@ define([
         if (defined(model._sphericalHarmonicCoefficients)) {
             drawFS = '#define DIFFUSE_IBL \n' + '#define SPHERICAL_HARMONICS \n' + 'uniform vec3 gltf_sphericalHarmonicCoefficients[9]; \n' + drawFS;
         } else if (defined(model._diffuseIrradiance)) {
-            drawFS = '#define DIFFUSE_IBL \n' + 'uniform samplerCube gltf_diffuseIrradiance; \n' + drawFS;
+            drawFS = '#define DIFFUSE_IBL \n' + 'uniform sampler2D gltf_diffuseIrradiance; \n' + drawFS;
         }
-        if (defined(model._specularEnvironmentMap)) {
-            drawFS = '#define SPECULAR_IBL \n' + 'uniform samplerCube gltf_specularMap; \n' + 'uniform float gltf_maxSpecularLOD; \n' + drawFS;
+        if (defined(model._specularEnvironmentMaps)) {
+            drawFS = '#define SPECULAR_IBL \n' + 'uniform sampler2D gltf_specularMap; \n' + 'uniform vec2 gltf_specularMapSize; \n' + 'uniform float gltf_maxSpecularLOD; \n' + drawFS;
         }
 
         createAttributesAndProgram(programId, techniqueId, drawFS, drawVS, model, context);
@@ -2903,19 +2907,25 @@ define([
 
     function createDiffuseIrradianceFunction(model) {
         return function() {
-            return model._diffuseIrradiance;
+            return model._diffuseIrradianceAtlas;
         };
     }
 
     function createSpecularEnvironmentMapFunction(model) {
         return function() {
-            return model._specularEnvironmentMap;
+            return model._specularEnvironmentMapAtlas.texture;
+        };
+    }
+
+    function createSpecularEnvironmentMapSizeFunction(model) {
+        return function() {
+            return model._specularEnvironmentMapAtlas.texture.dimensions;
         };
     }
 
     function createSpecularEnvironmentMapLOD(model) {
         return function() {
-            return Math.floor(Math.log2(model._specularEnvironmentMap.width)) - 3.0;
+            return model._specularEnvironmentMapAtlas.maximumMipmapLevel;
         };
     }
 
@@ -3015,6 +3025,7 @@ define([
                 gltf_sphericalHarmonicCoefficients : createSphericalHarmonicCoefficientsFunction(model),
                 gltf_diffuseIrradiance : createDiffuseIrradianceFunction(model),
                 gltf_specularMap : createSpecularEnvironmentMapFunction(model),
+                gltf_specularMapSize : createSpecularEnvironmentMapSizeFunction(model),
                 gltf_maxSpecularLOD : createSpecularEnvironmentMapLOD(model)
             });
 
@@ -4260,6 +4271,7 @@ define([
         var invisible = isInvisible(this);
         var displayConditionPassed = defined(this.distanceDisplayCondition) ? distanceDisplayConditionVisible(this, frameState) : true;
         var show = this.show && displayConditionPassed && (this.scale !== 0.0) && (!invisible || silhouette);
+        var specularMapChanged = this._specularEnvironmentMaps !== this.specularEnvironmentMaps;
 
         if ((show && this._state === ModelState.LOADED) || justLoaded) {
             var animated = this.activeAnimations.update(frameState) || this._cesiumAnimationsDirty;
@@ -4339,7 +4351,7 @@ define([
 
             var shouldRegenerateShaders = this._clippingPlanesState !== currentClippingPlanesState;
             shouldRegenerateShaders = this._diffuseIrradiance !== this.diffuseIrradiance || shouldRegenerateShaders;
-            shouldRegenerateShaders = this._specularEnvironmentMap !== this.specularEnvironmentMap || shouldRegenerateShaders;
+            shouldRegenerateShaders = specularMapChanged || shouldRegenerateShaders;
             shouldRegenerateShaders = this._sphericalHarmonicCoefficients !== this.sphericalHarmonicCoefficients || shouldRegenerateShaders;
             this._clippingPlanesState = currentClippingPlanesState;
 
@@ -4356,6 +4368,19 @@ define([
                 updateColor(this, frameState, false);
                 updateSilhouette(this, frameState, false);
             }
+        }
+
+        if (specularMapChanged) {
+            this._specularEnvironmentMapAtlas = this._specularEnvironmentMapAtlas && this._specularEnvironmentMapAtlas.destroy();
+            if (defined(this._specularEnvironmentMaps)) {
+                this._specularEnvironmentMapAtlas = new OctahedralProjectedCubeMap(this._specularEnvironmentMaps);
+            } else {
+                this._specularEnvironmentMapAtlas = undefined;
+            }
+        }
+
+        if (defined(this._specularEnvironmentMapAtlas)) {
+            this._specularEnvironmentMapAtlas.update(frameState);
         }
 
         if (justLoaded) {
@@ -4449,9 +4474,9 @@ define([
         destroyIfNotCached(rendererResources, cachedRendererResources);
 
         var programId;
-        if (isClippingEnabled(model) || isColorShadingEnabled(model) || model.diffuseIrradiance !== model._diffuseIrradiance || model.specularEnvironmentMap !== model._specularEnvironmentMap || model.sphericalHarmonicCoefficients !== model._sphericalHarmonicCoefficients) {
+        if (isClippingEnabled(model) || isColorShadingEnabled(model) || model.diffuseIrradiance !== model._diffuseIrradiance || model.specularEnvironmentMaps !== model._specularEnvironmentMaps || model.sphericalHarmonicCoefficients !== model._sphericalHarmonicCoefficients) {
             model._diffuseIrradiance = model.diffuseIrradiance;
-            model._specularEnvironmentMap = model.specularEnvironmentMap;
+            model._specularEnvironmentMaps = model.specularEnvironmentMaps;
             model._sphericalHarmonicCoefficients = model.sphericalHarmonicCoefficients;
 
             rendererResources.programs = {};
