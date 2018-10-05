@@ -11,6 +11,7 @@ define([
         '../Core/IndexDatatype',
         '../Core/OrientedBoundingBox',
         '../Core/Queue',
+        '../Core/Rectangle',
         '../Core/TileEdge',
         '../Core/TerrainEncoding',
         '../Core/TerrainMesh',
@@ -34,6 +35,7 @@ define([
         IndexDatatype,
         OrientedBoundingBox,
         Queue,
+        Rectangle,
         TileEdge,
         TerrainEncoding,
         TerrainMesh,
@@ -413,7 +415,6 @@ define([
     var cartesianScratch = new Cartesian3();
     var normalScratch = new Cartesian3();
     var octEncodedNormalScratch = new Cartesian2();
-    var highestFillTileVertexCount = 0;
 
     function createFillMesh(tileProvider, frameState, tile) {
         var surfaceTile = tile.data;
@@ -449,69 +450,7 @@ define([
         var minimumHeight = Math.min(southwestHeight, southeastHeight, northwestHeight, northeastHeight);
         var maximumHeight = Math.max(southwestHeight, southeastHeight, northwestHeight, northeastHeight);
 
-        // var west = getEdgeVertices(tile, fill.westTiles, fill.westMeshes, lastSelectionFrameNumber, TileEdge.EAST, westScratch);
-        // var south = getEdgeVertices(tile, fill.southTiles, fill.southMeshes, lastSelectionFrameNumber, TileEdge.NORTH, southScratch);
-        // var east = getEdgeVertices(tile, fill.eastTiles, fill.eastMeshes, lastSelectionFrameNumber, TileEdge.WEST, eastScratch);
-        // var north = getEdgeVertices(tile, fill.northTiles, fill.northMeshes, lastSelectionFrameNumber, TileEdge.SOUTH, northScratch);
-
-        // var hasVertexNormals = tileProvider.terrainProvider.hasVertexNormals;
-        // var hasWebMercatorT = true; // TODO
-        // var stride = 6 + (hasWebMercatorT ? 1 : 0) + (hasVertexNormals ? 2 : 0);
-
-        // var minimumHeight = Number.MAX_VALUE;
-        // var maximumHeight = -Number.MAX_VALUE;
-        // var hasAnyVertices = false;
-
-        // if (west.vertices.length > 0) {
-        //     minimumHeight = Math.min(minimumHeight, west.minimumHeight);
-        //     maximumHeight = Math.max(maximumHeight, west.maximumHeight);
-        //     hasAnyVertices = true;
-        // }
-
-        // if (south.vertices.length > 0) {
-        //     minimumHeight = Math.min(minimumHeight, south.minimumHeight);
-        //     maximumHeight = Math.max(maximumHeight, south.maximumHeight);
-        //     hasAnyVertices = true;
-        // }
-
-        // if (east.vertices.length > 0) {
-        //     minimumHeight = Math.min(minimumHeight, east.minimumHeight);
-        //     maximumHeight = Math.max(maximumHeight, east.maximumHeight);
-        //     hasAnyVertices = true;
-        // }
-
-        // if (north.vertices.length > 0) {
-        //     minimumHeight = Math.min(minimumHeight, north.minimumHeight);
-        //     maximumHeight = Math.max(maximumHeight, north.maximumHeight);
-        //     hasAnyVertices = true;
-        // }
-
-        // if (!hasAnyVertices) {
-        //     var tileBoundingRegion = surfaceTile.tileBoundingRegion;
-        //     minimumHeight = tileBoundingRegion.minimumHeight;
-        //     maximumHeight = tileBoundingRegion.maximumHeight;
-        // }
-
         var middleHeight = (minimumHeight + maximumHeight) * 0.5;
-
-        // var tileVertices = tileVerticesScratch;
-        // tileVertices.length = 0;
-
-        // var ellipsoid = tile.tilingScheme.ellipsoid;
-        // var rectangle = tile.rectangle;
-
-        // var northwestIndex = 0;
-        // addCornerVertexIfNecessary(ellipsoid, 0.0, 1.0, rectangle.west, rectangle.north, middleHeight, west, north, hasVertexNormals, hasWebMercatorT, tileVertices);
-        // addVerticesToFillTile(west, stride, tileVertices);
-        // var southwestIndex = tileVertices.length / stride;
-        // addCornerVertexIfNecessary(ellipsoid, 0.0, 0.0, rectangle.west, rectangle.south, middleHeight, south, west, hasVertexNormals, hasWebMercatorT, tileVertices);
-        // addVerticesToFillTile(south, stride, tileVertices);
-        // var southeastIndex = tileVertices.length / stride;
-        // addCornerVertexIfNecessary(ellipsoid, 1.0, 0.0, rectangle.east, rectangle.south, middleHeight, east, south, hasVertexNormals, hasWebMercatorT, tileVertices);
-        // addVerticesToFillTile(east, stride, tileVertices);
-        // var northeastIndex = tileVertices.length / stride;
-        // addCornerVertexIfNecessary(ellipsoid, 1.0, 1.0, rectangle.east, rectangle.north, middleHeight, north, east, hasVertexNormals, hasWebMercatorT, tileVertices);
-        // addVerticesToFillTile(north, stride, tileVertices);
 
         // Add a single vertex at the center of the tile.
         var obb = OrientedBoundingBox.fromRectangle(tile.rectangle, minimumHeight, maximumHeight, tile.tilingScheme.ellipsoid);
@@ -526,11 +465,9 @@ define([
         tileVertices.push((cartographicScratch.longitude - rectangle.west) / (rectangle.east - rectangle.west));
         tileVertices.push((cartographicScratch.latitude - rectangle.south) / (rectangle.north - rectangle.south));
 
-        if (hasWebMercatorT) {
-            var southMercatorY = WebMercatorProjection.geodeticLatitudeToMercatorAngle(rectangle.south);
-            var oneOverMercatorHeight = 1.0 / (WebMercatorProjection.geodeticLatitudeToMercatorAngle(rectangle.north) - southMercatorY);
-            tileVertices.push((WebMercatorProjection.geodeticLatitudeToMercatorAngle(cartographicScratch.latitude) - southMercatorY) * oneOverMercatorHeight);
-        }
+        var southMercatorY = WebMercatorProjection.geodeticLatitudeToMercatorAngle(rectangle.south);
+        var oneOverMercatorHeight = 1.0 / (WebMercatorProjection.geodeticLatitudeToMercatorAngle(rectangle.north) - southMercatorY);
+        tileVertices.push((WebMercatorProjection.geodeticLatitudeToMercatorAngle(cartographicScratch.latitude) - southMercatorY) * oneOverMercatorHeight);
 
         if (hasVertexNormals) {
             ellipsoid.geodeticSurfaceNormalCartographic(cartographicScratch, normalScratch);
@@ -588,9 +525,7 @@ define([
             typedArray[write++] = tileVertices[read++];
             typedArray[write++] = tileVertices[read++];
 
-            if (hasWebMercatorT) {
-                typedArray[write++] = tileVertices[read++];
-            }
+            typedArray[write++] = tileVertices[read++];
 
             if (hasVertexNormals) {
                 typedArray[write++] = AttributeCompression.octPackFloat(Cartesian2.fromElements(tileVertices[read++], tileVertices[read++], octEncodedNormalScratch));
@@ -599,11 +534,6 @@ define([
 
         var encoding = new TerrainEncoding(undefined, minimumHeight, maximumHeight, undefined, hasVertexNormals, hasWebMercatorT);
         encoding.center = center;
-
-        if (vertexCount > highestFillTileVertexCount) {
-            highestFillTileVertexCount = vertexCount;
-            console.log('New highest vertex count: ', highestFillTileVertexCount, ' from L', tile.level, 'X', tile.x, 'Y', tile.y);
-        }
 
         var q1, q2, s;
         var previousU, previousV, currentU, currentV;
@@ -809,11 +739,9 @@ define([
 
         tileVertices.push(sourceEncoding.decodeHeight(sourceVertices, sourceIndex), u, v);
 
-        if (sourceEncoding.hasWebMercatorT) {
-            // At the corners, the geographic and web mercator vertical texture coordinate
-            // is the same: either 0.0 or 1.0;
-            tileVertices.push(v);
-        }
+        // At the corners, the geographic and web mercator vertical texture coordinate
+        // is the same: either 0.0 or 1.0;
+        tileVertices.push(v);
 
         if (sourceEncoding.hasVertexNormals) {
             sourceEncoding.getOctEncodedNormal(sourceVertices, sourceIndex, encodedNormalScratch);
@@ -850,11 +778,9 @@ define([
         tileVertices.push(position.x, position.y, position.z);
         tileVertices.push(cartographicScratch.height, u, v);
 
-        if (sourceEncoding.hasWebMercatorT) {
-            // At the corners, the geographic and web mercator vertical texture coordinate
-            // is the same: either 0.0 or 1.0;
-            tileVertices.push(v);
-        }
+        // At the corners, the geographic and web mercator vertical texture coordinate
+        // is the same: either 0.0 or 1.0;
+        tileVertices.push(v);
 
         if (sourceEncoding.hasVertexNormals) {
             var encodedNormal1 = sourceEncoding.getOctEncodedNormal(sourceVertices, previousIndex, encodedNormalScratch);
@@ -879,11 +805,9 @@ define([
         tileVertices.push(position.x, position.y, position.z);
         tileVertices.push(height, u, v);
 
-        if (hasWebMercatorT) {
-            // At the corners, the geographic and web mercator vertical texture coordinate
-            // is the same: either 0.0 or 1.0;
-            tileVertices.push(v);
-        }
+        // At the corners, the geographic and web mercator vertical texture coordinate
+        // is the same: either 0.0 or 1.0;
+        tileVertices.push(v);
 
         if (hasVertexNormals) {
             var normal = ellipsoid.geodeticSurfaceNormalCartographic(cartographicScratch, cartesianScratch);
@@ -1001,12 +925,25 @@ define([
     }
 
     var edgeDetailsScratch = new TerrainTileEdgeDetails();
+    var sourceRectangleScratch = new Rectangle();
 
     function addEdgeMesh(terrainFillMesh, ellipsoid, edgeTile, edgeMesh, tileEdge, stride, tileVertices) {
         var terrainMesh = edgeMesh;
 
+        // Handle copying edges across the anti-meridian.
+        var sourceRectangle = edgeTile.rectangle;
+        if (tileEdge === TileEdge.EAST && terrainFillMesh.tile.x === 0) {
+            sourceRectangle = Rectangle.clone(edgeTile.rectangle, sourceRectangleScratch);
+            sourceRectangle.west -= CesiumMath.TWO_PI;
+            sourceRectangle.east -= CesiumMath.TWO_PI;
+        } else if (tileEdge === TileEdge.WEST && edgeTile.x === 0) {
+            sourceRectangle = Rectangle.clone(edgeTile.rectangle, sourceRectangleScratch);
+            sourceRectangle.west += CesiumMath.TWO_PI;
+            sourceRectangle.east += CesiumMath.TWO_PI;
+        }
+
         edgeDetailsScratch.clear();
-        var edgeDetails = terrainMesh.getEdgeVertices(tileEdge, edgeTile.rectangle, terrainFillMesh.tile.rectangle, ellipsoid, edgeDetailsScratch);
+        var edgeDetails = terrainMesh.getEdgeVertices(tileEdge, sourceRectangle, terrainFillMesh.tile.rectangle, ellipsoid, edgeDetailsScratch);
 
         var vertices = edgeDetails.vertices;
 
