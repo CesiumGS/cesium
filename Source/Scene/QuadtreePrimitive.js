@@ -157,7 +157,9 @@ define([
 
         /**
          * Gets or sets a value indicating whether the siblings of rendered tiles should be preloaded.
-         * Setting this to true
+         * Setting this to true causes tiles with the same parent as a rendered tile to be loaded, even
+         * if they are culled. Setting this to true may provide a better panning experience at the
+         * cost of loading more tiles.
          */
         this.preloadSiblings = false;
 
