@@ -83,6 +83,8 @@ define([
         return undefined;
     };
 
+    var traversalQueueScratch = new Queue();
+
     TerrainFillMesh.updateFillTiles = function(tileProvider, renderedTiles, frameState) {
         // We want our fill tiles to look natural, which means they should align perfectly with
         // adjacent loaded tiles, and their edges that are not adjacent to loaded tiles should have
@@ -100,8 +102,10 @@ define([
         var levelZeroTiles = quadtree._levelZeroTiles;
         var lastSelectionFrameNumber = quadtree._lastSelectionFrameNumber;
 
-        var traversalQueue = new Queue();
+        var traversalQueue = traversalQueueScratch;
+        traversalQueue.clear();
 
+        // Add the tiles with real geometry to the traversal queue.
         for (var i = 0; i < renderedTiles.length; ++i) {
             var renderedTile = renderedTiles[i];
             if (defined(renderedTile.data.vertexArray)) {
@@ -142,7 +146,7 @@ define([
 
         var tile = startTile;
         while (tile && (tile._lastSelectionResultFrame !== currentFrameNumber || tile._lastSelectionResult === TileSelectionResult.KICKED || tile._lastSelectionResult === TileSelectionResult.CULLED)) {
-            // This wasn't visited or it was visited and then kicked, so walk up to find the closest ancestor that was rendered.
+            // This tile wasn't visited or it was visited and then kicked, so walk up to find the closest ancestor that was rendered.
             // We also walk up if the tile was culled, because if siblings were kicked an ancestor may have been rendered.
             if (downOnly) {
                 return;
@@ -248,6 +252,7 @@ define([
         var sourceMesh = sourceTile.data.mesh;
 
         if (sourceMesh === undefined) {
+            // Source is a fill, create/update it if necessary.
             var sourceFill = sourceTile.data.fill;
             if (sourceFill.changedThisFrame) {
                 createFillMesh(tileProvider, frameState, sourceTile);
@@ -278,37 +283,21 @@ define([
                 break;
             // Corners are simpler.
             case TileEdge.NORTHWEST:
-                // if (destinationFill.northwestTile !== sourceTile) {
-                //     const from = destinationFill.northwestTile || {};
-                //     console.log(`L${destinationTile.level}X${destinationTile.x}Y${destinationTile.y} changed because northwest tile changed from L${from.level}X${from.x}Y${from.y} to L${sourceTile.level}X${sourceTile.x}Y${sourceTile.y}`);
-                // }
                 destinationFill.changedThisFrame = destinationFill.changedThisFrame || destinationFill.northwestMesh !== sourceMesh;
                 destinationFill.northwestMesh = sourceMesh;
                 destinationFill.northwestTile = sourceTile;
                 return;
             case TileEdge.NORTHEAST:
-                // if (destinationFill.northeastTile !== sourceTile) {
-                //     const from = destinationFill.northeastTile || {};
-                //     console.log(`L${destinationTile.level}X${destinationTile.x}Y${destinationTile.y} changed because northeast tile changed from L${from.level}X${from.x}Y${from.y} to L${sourceTile.level}X${sourceTile.x}Y${sourceTile.y}`);
-                // }
                 destinationFill.changedThisFrame = destinationFill.changedThisFrame || destinationFill.northeastMesh !== sourceMesh;
                 destinationFill.northeastMesh = sourceMesh;
                 destinationFill.northeastTile = sourceTile;
                 return;
             case TileEdge.SOUTHWEST:
-                // if (destinationFill.southwestTile !== sourceTile) {
-                //     const from = destinationFill.southwestTile || {};
-                //     console.log(`L${destinationTile.level}X${destinationTile.x}Y${destinationTile.y} changed because southwest tile changed from L${from.level}X${from.x}Y${from.y} to L${sourceTile.level}X${sourceTile.x}Y${sourceTile.y}`);
-                // }
                 destinationFill.changedThisFrame = destinationFill.changedThisFrame || destinationFill.southwestMesh !== sourceMesh;
                 destinationFill.southwestMesh = sourceMesh;
                 destinationFill.southwestTile = sourceTile;
                 return;
             case TileEdge.SOUTHEAST:
-                // if (destinationFill.southeastTile !== sourceTile) {
-                //     const from = destinationFill.southeastTile || {};
-                //     console.log(`L${destinationTile.level}X${destinationTile.x}Y${destinationTile.y} changed because southeast tile changed from L${from.level}X${from.x}Y${from.y} to L${sourceTile.level}X${sourceTile.x}Y${sourceTile.y}`);
-                // }
                 destinationFill.changedThisFrame = destinationFill.changedThisFrame || destinationFill.southeastMesh !== sourceMesh;
                 destinationFill.southeastMesh = sourceMesh;
                 destinationFill.southeastTile = sourceTile;
@@ -317,10 +306,6 @@ define([
 
         if (sourceTile.level <= destinationTile.level) {
             // Source edge completely spans the destination edge.
-            // if (edgeTiles[0] !== sourceTile) {
-            //     const from = edgeTiles[0] || {};
-            //     console.log(`L${destinationTile.level}X${destinationTile.x}Y${destinationTile.y} changed because edge tile changed from L${from.level}X${from.x}Y${from.y} to L${sourceTile.level}X${sourceTile.x}Y${sourceTile.y}`);
-            // }
             destinationFill.changedThisFrame = destinationFill.changedThisFrame || edgeMeshes[0] !== sourceMesh || edgeMeshes.length !== 1;
             edgeMeshes[0] = sourceMesh;
             edgeTiles[0] = sourceTile;
@@ -334,34 +319,6 @@ define([
         var startIndex, endIndex, existingTile, existingRectangle;
         var sourceRectangle = sourceTile.rectangle;
 
-        function firstIsLessThanSecond(a, b, epsilon) {
-            if (Math.abs(a - b) < epsilon) {
-                return false;
-            }
-            return a < b;
-        }
-
-        function firstIsLessThanOrEqualToSecond(a, b, epsilon) {
-            if (Math.abs(a - b) < epsilon) {
-                return true;
-            }
-            return a < b;
-        }
-
-        function firstIsGreaterThanSecond(a, b, epsilon) {
-            if (Math.abs(a - b) < epsilon) {
-                return false;
-            }
-            return a > b;
-        }
-
-        function firstIsGreaterThanOrEqualToSecond(a, b, epsilon) {
-            if (Math.abs(a - b) < epsilon) {
-                return true;
-            }
-            return a > b;
-        }
-
         var epsilon;
         var destinationRectangle = destinationTile.rectangle;
 
@@ -372,14 +329,14 @@ define([
                 for (startIndex = 0; startIndex < edgeTiles.length; ++startIndex) {
                     existingTile = edgeTiles[startIndex];
                     existingRectangle = existingTile.rectangle;
-                    if (firstIsGreaterThanSecond(sourceRectangle.north, existingRectangle.south, epsilon)) {
+                    if (CesiumMath.leftIsGreaterThanRight(sourceRectangle.north, existingRectangle.south, epsilon)) {
                         break;
                     }
                 }
                 for (endIndex = startIndex; endIndex < edgeTiles.length; ++endIndex) {
                     existingTile = edgeTiles[endIndex];
                     existingRectangle = existingTile.rectangle;
-                    if (firstIsGreaterThanOrEqualToSecond(sourceRectangle.south, existingRectangle.north, epsilon)) {
+                    if (CesiumMath.leftIsGreaterThanOrEqualToRight(sourceRectangle.south, existingRectangle.north, epsilon)) {
                         break;
                     }
                 }
@@ -390,14 +347,14 @@ define([
                 for (startIndex = 0; startIndex < edgeTiles.length; ++startIndex) {
                     existingTile = edgeTiles[startIndex];
                     existingRectangle = existingTile.rectangle;
-                    if (firstIsLessThanSecond(sourceRectangle.west, existingRectangle.east, epsilon)) {
+                    if (CesiumMath.leftIsLessThanRight(sourceRectangle.west, existingRectangle.east, epsilon)) {
                         break;
                     }
                 }
                 for (endIndex = startIndex; endIndex < edgeTiles.length; ++endIndex) {
                     existingTile = edgeTiles[endIndex];
                     existingRectangle = existingTile.rectangle;
-                    if (firstIsLessThanOrEqualToSecond(sourceRectangle.east, existingRectangle.west, epsilon)) {
+                    if (CesiumMath.leftIsLessThanOrEqualToRight(sourceRectangle.east, existingRectangle.west, epsilon)) {
                         break;
                     }
                 }
@@ -408,14 +365,14 @@ define([
                 for (startIndex = 0; startIndex < edgeTiles.length; ++startIndex) {
                     existingTile = edgeTiles[startIndex];
                     existingRectangle = existingTile.rectangle;
-                    if (firstIsLessThanSecond(sourceRectangle.south, existingRectangle.north, epsilon)) {
+                    if (CesiumMath.leftIsLessThanRight(sourceRectangle.south, existingRectangle.north, epsilon)) {
                         break;
                     }
                 }
                 for (endIndex = startIndex; endIndex < edgeTiles.length; ++endIndex) {
                     existingTile = edgeTiles[endIndex];
                     existingRectangle = existingTile.rectangle;
-                    if (firstIsLessThanOrEqualToSecond(sourceRectangle.north, existingRectangle.south, epsilon)) {
+                    if (CesiumMath.leftIsLessThanOrEqualToRight(sourceRectangle.north, existingRectangle.south, epsilon)) {
                         break;
                     }
                 }
@@ -426,14 +383,14 @@ define([
                 for (startIndex = 0; startIndex < edgeTiles.length; ++startIndex) {
                     existingTile = edgeTiles[startIndex];
                     existingRectangle = existingTile.rectangle;
-                    if (firstIsGreaterThanSecond(sourceRectangle.east, existingRectangle.west, epsilon)) {
+                    if (CesiumMath.leftIsGreaterThanRight(sourceRectangle.east, existingRectangle.west, epsilon)) {
                         break;
                     }
                 }
                 for (endIndex = startIndex; endIndex < edgeTiles.length; ++endIndex) {
                     existingTile = edgeTiles[endIndex];
                     existingRectangle = existingTile.rectangle;
-                    if (firstIsGreaterThanOrEqualToSecond(sourceRectangle.west, existingRectangle.east, epsilon)) {
+                    if (CesiumMath.leftIsGreaterThanOrEqualToRight(sourceRectangle.west, existingRectangle.east, epsilon)) {
                         break;
                     }
                 }
@@ -441,15 +398,10 @@ define([
         }
 
         if (endIndex - startIndex === 1) {
-            // if (edgeTiles[startIndex] !== sourceTile) {
-            //     const from = edgeTiles[startIndex] || {};
-            //     console.log(`L${destinationTile.level}X${destinationTile.x}Y${destinationTile.y} changed because edge tile changed from L${from.level}X${from.x}Y${from.y} to L${sourceTile.level}X${sourceTile.x}Y${sourceTile.y}`);
-            // }
             destinationFill.changedThisFrame = destinationFill.changedThisFrame || edgeMeshes[startIndex] !== sourceMesh;
             edgeMeshes[startIndex] = sourceMesh;
             edgeTiles[startIndex] = sourceTile;
         } else {
-            // console.log(`L${destinationTile.level}X${destinationTile.x}Y${destinationTile.y} changed because number of tiles on edge changed`);
             destinationFill.changedThisFrame = true;
             edgeMeshes.splice(startIndex, endIndex - startIndex, sourceMesh);
             edgeTiles.splice(startIndex, endIndex - startIndex, sourceTile);
