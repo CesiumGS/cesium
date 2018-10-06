@@ -535,77 +535,6 @@ define([
         var encoding = new TerrainEncoding(undefined, minimumHeight, maximumHeight, undefined, hasVertexNormals, hasWebMercatorT);
         encoding.center = center;
 
-        var q1, q2, s;
-        var previousU, previousV, currentU, currentV;
-
-        for (s = 1; s < eastIndicesNorthToSouth.length; ++s) {
-            q1 = eastIndicesNorthToSouth[s - 1];
-            q2 = eastIndicesNorthToSouth[s];
-            previousU = tileVertices[q1 * stride + 4];
-            previousV = tileVertices[q1 * stride + 5];
-            currentU = tileVertices[q2 * stride + 4];
-            currentV = tileVertices[q2 * stride + 5];
-
-            if (previousU !== 1.0 || currentU !== 1.0) {
-                console.log('not east?!');
-            }
-
-            if (currentV >= previousV) {
-                console.log('not descending?!');
-            }
-        }
-
-        for (s = 1; s < westIndicesSouthToNorth.length; ++s) {
-            q1 = westIndicesSouthToNorth[s - 1];
-            q2 = westIndicesSouthToNorth[s];
-            previousU = tileVertices[q1 * stride + 4];
-            previousV = tileVertices[q1 * stride + 5];
-            currentU = tileVertices[q2 * stride + 4];
-            currentV = tileVertices[q2 * stride + 5];
-
-            if (previousU !== 0.0 || currentU !== 0.0) {
-                console.log('not west?!');
-            }
-
-            if (currentV <= previousV) {
-                console.log('not ascending?!');
-            }
-        }
-
-        for (s = 1; s < southIndicesEastToWest.length; ++s) {
-            q1 = southIndicesEastToWest[s - 1];
-            q2 = southIndicesEastToWest[s];
-            previousU = tileVertices[q1 * stride + 4];
-            previousV = tileVertices[q1 * stride + 5];
-            currentU = tileVertices[q2 * stride + 4];
-            currentV = tileVertices[q2 * stride + 5];
-
-            if (previousV !== 0.0 || currentV !== 0.0) {
-                console.log('not south?!');
-            }
-
-            if (currentU >= previousU) {
-                console.log('not descending?!');
-            }
-        }
-
-        for (s = 1; s < northIndicesWestToEast.length; ++s) {
-            q1 = northIndicesWestToEast[s - 1];
-            q2 = northIndicesWestToEast[s];
-            previousU = tileVertices[q1 * stride + 4];
-            previousV = tileVertices[q1 * stride + 5];
-            currentU = tileVertices[q2 * stride + 4];
-            currentV = tileVertices[q2 * stride + 5];
-
-            if (previousV !== 1.0 || currentV !== 1.0) {
-                console.log('not north?!');
-            }
-
-            if (currentU <= previousU) {
-                console.log('not ascending?!');
-            }
-        }
-
         var mesh = new TerrainMesh(
             obb.center,
             typedArray,
@@ -692,7 +621,23 @@ define([
         }
     }
 
-    function transformTextureCoordinates(sourceRectangle, targetRectangle, coordinates, result) {
+    var sourceRectangleScratch = new Rectangle();
+
+    function transformTextureCoordinates(sourceTile, targetTile, coordinates, result) {
+        var sourceRectangle = sourceTile.rectangle;
+        var targetRectangle = targetTile.rectangle;
+
+        // Handle transforming across the anti-meridian.
+        if (targetTile.x === 0 && coordinates.x === 1.0 && sourceTile.x === sourceTile.tilingScheme.getNumberOfXTilesAtLevel(sourceTile.level) - 1) {
+            sourceRectangle = Rectangle.clone(sourceTile.rectangle, sourceRectangleScratch);
+            sourceRectangle.west -= CesiumMath.TWO_PI;
+            sourceRectangle.east -= CesiumMath.TWO_PI;
+        } else if (sourceTile.x === 0 && coordinates.x === 0.0 && targetTile.x === targetTile.tilingScheme.getNumberOfXTilesAtLevel(targetTile.level) - 1) {
+            sourceRectangle = Rectangle.clone(sourceTile.rectangle, sourceRectangleScratch);
+            sourceRectangle.west += CesiumMath.TWO_PI;
+            sourceRectangle.east += CesiumMath.TWO_PI;
+        }
+
         var sourceWidth = sourceRectangle.east - sourceRectangle.west;
         var umin = (targetRectangle.west - sourceRectangle.west) / sourceWidth;
         var umax = (targetRectangle.east - sourceRectangle.west) / sourceWidth;
@@ -753,12 +698,12 @@ define([
     var encodedNormalScratch2 = new Cartesian2();
     var cartesianScratch2 = new Cartesian3();
 
-    function addInterpolatedVertexAtCorner(ellipsoid, sourceRectangle, targetRectangle, sourceMesh, previousIndex, nextIndex, u, v, interpolateU, tileVertices) {
+    function addInterpolatedVertexAtCorner(ellipsoid, sourceTile, targetTile, sourceMesh, previousIndex, nextIndex, u, v, interpolateU, tileVertices) {
         var sourceEncoding = sourceMesh.encoding;
         var sourceVertices = sourceMesh.vertices;
 
-        var previousUv = transformTextureCoordinates(sourceRectangle, targetRectangle, sourceEncoding.decodeTextureCoordinates(sourceVertices, previousIndex, uvScratch), uvScratch);
-        var nextUv = transformTextureCoordinates(sourceRectangle, targetRectangle, sourceEncoding.decodeTextureCoordinates(sourceVertices, nextIndex, uvScratch2), uvScratch2);
+        var previousUv = transformTextureCoordinates(sourceTile, targetTile, sourceEncoding.decodeTextureCoordinates(sourceVertices, previousIndex, uvScratch), uvScratch);
+        var nextUv = transformTextureCoordinates(sourceTile, targetTile, sourceEncoding.decodeTextureCoordinates(sourceVertices, nextIndex, uvScratch2), uvScratch2);
 
         var ratio;
         if (interpolateU) {
@@ -770,6 +715,7 @@ define([
         var height1 = sourceEncoding.decodeHeight(sourceVertices, previousIndex);
         var height2 = sourceEncoding.decodeHeight(sourceVertices, nextIndex);
 
+        var targetRectangle = targetTile.rectangle;
         cartographicScratch.longitude = CesiumMath.lerp(targetRectangle.west, targetRectangle.east, u);
         cartographicScratch.latitude = CesiumMath.lerp(targetRectangle.south, targetRectangle.north, v);
         cartographicScratch.height = CesiumMath.lerp(height1, height2, ratio);
@@ -925,7 +871,6 @@ define([
     }
 
     var edgeDetailsScratch = new TerrainTileEdgeDetails();
-    var sourceRectangleScratch = new Rectangle();
 
     function addEdgeMesh(terrainFillMesh, ellipsoid, edgeTile, edgeMesh, tileEdge, stride, tileVertices) {
         var terrainMesh = edgeMesh;
@@ -1102,7 +1047,7 @@ define([
                 vertexIndexIndex = isNext ? 0 : edgeVertices.length - 1;
                 vertexIndex = edgeVertices[vertexIndexIndex];
                 sourceTerrainMesh.encoding.decodeTextureCoordinates(sourceTerrainMesh.vertices, vertexIndex, uvScratch);
-                var targetUv = transformTextureCoordinates(sourceTile.rectangle, terrainFillMesh.tile.rectangle, uvScratch, uvScratch);
+                var targetUv = transformTextureCoordinates(sourceTile, terrainFillMesh.tile, uvScratch, uvScratch);
                 if (targetUv.x === u && targetUv.y === v) {
                     // Vertex is good!
                     addVertexFromTileAtCorner(sourceTerrainMesh, vertexIndex, u, v, tileVertices);
@@ -1112,7 +1057,7 @@ define([
                 // The last vertex is not the one we need, try binary searching for the right one.
                 vertexIndexIndex = binarySearch(edgeVertices, compareU ? u : v, function(vertexIndex, textureCoordinate) {
                     sourceTerrainMesh.encoding.decodeTextureCoordinates(sourceTerrainMesh.vertices, vertexIndex, uvScratch);
-                    var targetUv = transformTextureCoordinates(sourceTile.rectangle, terrainFillMesh.tile.rectangle, uvScratch, uvScratch);
+                    var targetUv = transformTextureCoordinates(sourceTile, terrainFillMesh.tile, uvScratch, uvScratch);
                     if (increasing) {
                         if (compareU) {
                             return u - targetUv.x;
@@ -1129,7 +1074,7 @@ define([
 
                     if (vertexIndexIndex > 0 && vertexIndexIndex < edgeVertices.length) {
                         // The corner falls between two vertices, so interpolate between them.
-                        addInterpolatedVertexAtCorner(ellipsoid, sourceTile.rectangle, terrainFillMesh.tile.rectangle, sourceTerrainMesh, edgeVertices[vertexIndexIndex - 1], edgeVertices[vertexIndexIndex], u, v, compareU, tileVertices);
+                        addInterpolatedVertexAtCorner(ellipsoid, sourceTile, terrainFillMesh.tile, sourceTerrainMesh, edgeVertices[vertexIndexIndex - 1], edgeVertices[vertexIndexIndex], u, v, compareU, tileVertices);
                         return true;
                     }
                 } else {
