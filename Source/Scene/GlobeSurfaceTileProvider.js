@@ -115,31 +115,6 @@ define([
     'use strict';
 
     /**
-     * The strategy to use to fill the space of tiles that are selected for rendering but that
-     * are not yet loaded / renderable.
-     * @private
-     */
-    var MissingTileStrategy = {
-        /**
-         * Render nothing, the globe will have holes during load.
-         */
-        RENDER_NOTHING: 0,
-
-        /**
-         * Create a very simple tile to fill the space by matching the heights of adjacent tiles on the edges. This is
-         * cheaper on the CPU than a full upsample and avoids cracks. But it's less representative of the real
-         * terrain surface than an upsample from a nearby ancestor.
-         */
-        CREATE_FILL_TILE: 2
-
-        /**
-         * Synchronously upsample the tile. This is expensive on the CPU and, when skipping several levels, it sometimes
-         * results in big cracks anyway. (currently not implemented)
-         */
-        // SYNCHRONOUS_UPSAMPLE: 3
-    };
-
-    /**
      * Provides quadtree tiles representing the surface of the globe.  This type is intended to be used
      * with {@link QuadtreePrimitive}.
      *
@@ -174,11 +149,6 @@ define([
         this.enableLighting = false;
         this.showGroundAtmosphere = false;
         this.shadows = ShadowMode.RECEIVE_ONLY;
-
-        /**
-         * The strategy to use to fill holes in the globe when terrain tiles are not yet loaded.
-         */
-        this.missingTileStrategy = MissingTileStrategy.CREATE_FILL_TILE;
 
         /**
          * The color to use to highlight fill tiles. If undefined, fill tiles are not
@@ -518,7 +488,7 @@ define([
 
         // If this frame has a mix of loaded and fill tiles, we need to propagate
         // loaded heights to the fill tiles.
-        if (this.missingTileStrategy === MissingTileStrategy.CREATE_FILL_TILE && this._hasFillTilesThisFrame && this._hasLoadedTilesThisFrame) {
+        if (this._hasFillTilesThisFrame && this._hasLoadedTilesThisFrame) {
             TerrainFillMesh.updateFillTiles(this, this._quadtree._tilesToRender, frameState);
         }
 
@@ -1482,21 +1452,15 @@ define([
         var surfaceTile = tile.data;
 
         if (surfaceTile.renderableTile !== undefined) {
-            // We can't render this tile yet, so do something else, depending on our missing tile strategy.
-            var missingTileStrategy = tileProvider.missingTileStrategy;
-            if (missingTileStrategy === MissingTileStrategy.CREATE_FILL_TILE) {
-                if (surfaceTile.fill === undefined) {
-                    // No fill was created for this tile, probably because this tile is not connected to
-                    // any renderable tiles. So create a simple tile in the middle of the tile's possible
-                    // height range.
-                    surfaceTile.fill = new TerrainFillMesh();
-                    surfaceTile.fill.tile = tile;
-                    surfaceTile.fill.changedThisFrame = true;
-                }
-                surfaceTile.fill.update(tileProvider, frameState);
-            } else {
-                return;
+            if (surfaceTile.fill === undefined) {
+                // No fill was created for this tile, probably because this tile is not connected to
+                // any renderable tiles. So create a simple tile in the middle of the tile's possible
+                // height range.
+                surfaceTile.fill = new TerrainFillMesh();
+                surfaceTile.fill.tile = tile;
+                surfaceTile.fill.changedThisFrame = true;
             }
+            surfaceTile.fill.update(tileProvider, frameState);
         }
 
         var creditDisplay = frameState.creditDisplay;
