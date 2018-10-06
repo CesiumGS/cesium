@@ -684,8 +684,8 @@ define([
 
         tileVertices.push(sourceEncoding.decodeHeight(sourceVertices, sourceIndex), u, v);
 
-        // At the corners, the geographic and web mercator vertical texture coordinate
-        // is the same: either 0.0 or 1.0;
+        // At the corners, the geographic and web mercator vertical texture coordinates
+        // are the same: either 0.0 or 1.0;
         tileVertices.push(v);
 
         if (sourceEncoding.hasVertexNormals) {
@@ -724,8 +724,8 @@ define([
         tileVertices.push(position.x, position.y, position.z);
         tileVertices.push(cartographicScratch.height, u, v);
 
-        // At the corners, the geographic and web mercator vertical texture coordinate
-        // is the same: either 0.0 or 1.0;
+        // At the corners, the geographic and web mercator vertical texture coordinates
+        // are the same: either 0.0 or 1.0;
         tileVertices.push(v);
 
         if (sourceEncoding.hasVertexNormals) {
@@ -805,51 +805,53 @@ define([
 
         // There is no precise vertex available from the corner or from either adjacent edge.
         // So use the height from the closest vertex anywhere on the perimeter of this tile.
-        // TODO: would be better to find the closest height rather than favoring a side.
-        // TODO: We'll do the wrong thing if the height is exactly 0.0 because that's falsy.
         var height;
         if (u === 0.0) {
             if (v === 0.0) {
                 // southwest
-                height =
-                    getNearestHeightOnEdge(terrainFillMesh.southMeshes, terrainFillMesh.southTiles, false, TileEdge.NORTH, u, v) ||
-                    getNearestHeightOnEdge(terrainFillMesh.westMeshes, terrainFillMesh.westTiles, true, TileEdge.EAST, u, v) ||
-                    getHeightAtCorner(terrainFillMesh.southeastMesh, terrainFillMesh.southeastTile, TileEdge.NORTHWEST, u, v) ||
-                    getHeightAtCorner(terrainFillMesh.northwestMesh, terrainFillMesh.northwestTile, TileEdge.SOUTHEAST, u, v) ||
-                    getNearestHeightOnEdge(terrainFillMesh.eastMeshes, terrainFillMesh.eastTiles, false, TileEdge.WEST, u, v) ||
-                    getNearestHeightOnEdge(terrainFillMesh.northMeshes, terrainFillMesh.northTiles, true, TileEdge.SOUTH, u, v) ||
-                    getHeightAtCorner(terrainFillMesh.northeastMesh, terrainFillMesh.northeastTile, TileEdge.SOUTHWEST, u, v);
+                height = getClosestHeightToCorner(
+                    terrainFillMesh.southMeshes, terrainFillMesh.southTiles, TileEdge.NORTH,
+                    terrainFillMesh.westMeshes, terrainFillMesh.westTiles, TileEdge.EAST,
+                    terrainFillMesh.southeastMesh, terrainFillMesh.southeastTile, TileEdge.NORTHWEST,
+                    terrainFillMesh.northwestMesh, terrainFillMesh.northwestTile, TileEdge.SOUTHEAST,
+                    terrainFillMesh.eastMeshes, terrainFillMesh.eastTiles, TileEdge.WEST,
+                    terrainFillMesh.northMeshes, terrainFillMesh.northTiles, TileEdge.SOUTH,
+                    terrainFillMesh.northeastMesh, terrainFillMesh.northeastTile, TileEdge.SOUTHWEST,
+                    u, v);
             } else {
                 // northwest
-                height =
-                    getNearestHeightOnEdge(terrainFillMesh.northMeshes, terrainFillMesh.northTiles, false, TileEdge.SOUTH, u, v) ||
-                    getNearestHeightOnEdge(terrainFillMesh.westMeshes, terrainFillMesh.westTiles, true, TileEdge.EAST, u, v) ||
-                    getHeightAtCorner(terrainFillMesh.southwestMesh, terrainFillMesh.southwestTile, TileEdge.NORTHEAST, u, v) ||
-                    getHeightAtCorner(terrainFillMesh.northeastMesh, terrainFillMesh.northeastTile, TileEdge.SOUTHWEST, u, v) ||
-                    getNearestHeightOnEdge(terrainFillMesh.eastMeshes, terrainFillMesh.eastTiles, false, TileEdge.WEST, u, v) ||
-                    getNearestHeightOnEdge(terrainFillMesh.southMeshes, terrainFillMesh.southTiles, true, TileEdge.NORTH, u, v) ||
-                    getHeightAtCorner(terrainFillMesh.southeastMesh, terrainFillMesh.southeastTile, TileEdge.NORTHWEST, u, v);
+                height = getClosestHeightToCorner(
+                    terrainFillMesh.northMeshes, terrainFillMesh.northTiles, TileEdge.SOUTH,
+                    terrainFillMesh.westMeshes, terrainFillMesh.westTiles, TileEdge.EAST,
+                    terrainFillMesh.southwestMesh, terrainFillMesh.southwestTile, TileEdge.NORTHEAST,
+                    terrainFillMesh.northeastMesh, terrainFillMesh.northeastTile, TileEdge.SOUTHWEST,
+                    terrainFillMesh.eastMeshes, terrainFillMesh.eastTiles, TileEdge.WEST,
+                    terrainFillMesh.southMeshes, terrainFillMesh.southTiles, TileEdge.NORTH,
+                    terrainFillMesh.southeastMesh, terrainFillMesh.southeastTile, TileEdge.NORTHWEST,
+                    u, v);
             }
         } else if (v === 0.0) {
             // southeast
-            height =
-                getNearestHeightOnEdge(terrainFillMesh.southMeshes, terrainFillMesh.southTiles, false, TileEdge.NORTH, u, v) ||
-                getNearestHeightOnEdge(terrainFillMesh.eastMeshes, terrainFillMesh.eastTiles, true, TileEdge.WEST, u, v) ||
-                getHeightAtCorner(terrainFillMesh.southwestMesh, terrainFillMesh.southwestTile, TileEdge.NORTHEAST, u, v) ||
-                getHeightAtCorner(terrainFillMesh.northeastMesh, terrainFillMesh.northeastTile, TileEdge.SOUTHWEST, u, v) ||
-                getNearestHeightOnEdge(terrainFillMesh.westMeshes, terrainFillMesh.westTiles, false, TileEdge.EAST, u, v) ||
-                getNearestHeightOnEdge(terrainFillMesh.northMeshes, terrainFillMesh.northTiles, true, TileEdge.SOUTH, u, v) ||
-                getHeightAtCorner(terrainFillMesh.northwestMesh, terrainFillMesh.northwestTile, TileEdge.SOUTHEAST, u, v);
+            height = getClosestHeightToCorner(
+                terrainFillMesh.southMeshes, terrainFillMesh.southTiles, TileEdge.NORTH,
+                terrainFillMesh.eastMeshes, terrainFillMesh.eastTiles, TileEdge.WEST,
+                terrainFillMesh.southwestMesh, terrainFillMesh.southwestTile, TileEdge.NORTHEAST,
+                terrainFillMesh.northeastMesh, terrainFillMesh.northeastTile, TileEdge.SOUTHWEST,
+                terrainFillMesh.westMeshes, terrainFillMesh.westTiles, TileEdge.EAST,
+                terrainFillMesh.northMeshes, terrainFillMesh.northTiles, TileEdge.SOUTH,
+                terrainFillMesh.northwestMesh, terrainFillMesh.northwestTile, TileEdge.SOUTHEAST,
+                u, v);
         } else {
             // northeast
-            height =
-                getNearestHeightOnEdge(terrainFillMesh.northMeshes, terrainFillMesh.northTiles, false, TileEdge.SOUTH, u, v) ||
-                getNearestHeightOnEdge(terrainFillMesh.eastMeshes, terrainFillMesh.eastTiles, true, TileEdge.WEST, u, v) ||
-                getHeightAtCorner(terrainFillMesh.southeastMesh, terrainFillMesh.southeastTile, TileEdge.NORTHWEST, u, v) ||
-                getHeightAtCorner(terrainFillMesh.northwestMesh, terrainFillMesh.northwestTile, TileEdge.SOUTHEAST, u, v) ||
-                getNearestHeightOnEdge(terrainFillMesh.westMeshes, terrainFillMesh.westTiles, false, TileEdge.EAST, u, v) ||
-                getNearestHeightOnEdge(terrainFillMesh.southMeshes, terrainFillMesh.southTiles, true, TileEdge.NORTH, u, v) ||
-                getHeightAtCorner(terrainFillMesh.southwestMesh, terrainFillMesh.southwestTile, TileEdge.NORTHEAST, u, v);
+            height = getClosestHeightToCorner(
+                terrainFillMesh.northMeshes, terrainFillMesh.northTiles, TileEdge.SOUTH,
+                terrainFillMesh.eastMeshes, terrainFillMesh.eastTiles, TileEdge.WEST,
+                terrainFillMesh.southeastMesh, terrainFillMesh.southeastTile, TileEdge.NORTHWEST,
+                terrainFillMesh.northwestMesh, terrainFillMesh.northwestTile, TileEdge.SOUTHEAST,
+                terrainFillMesh.westMeshes, terrainFillMesh.westTiles, TileEdge.EAST,
+                terrainFillMesh.southMeshes, terrainFillMesh.southTiles,TileEdge.NORTH,
+                terrainFillMesh.southwestMesh, terrainFillMesh.southwestTile, TileEdge.NORTHEAST,
+                u, v);
         }
 
         if (!defined(height)) {
@@ -862,6 +864,54 @@ define([
         }
 
         addVertexWithHeightAtCorner(terrainFillMesh, ellipsoid, u, v, height, hasVertexNormals, hasWebMercatorT, tileVertices);
+    }
+
+    function getClosestHeightToCorner(
+        adjacentEdge1Meshes, adjacentEdge1Tiles, adjacentEdge1,
+        adjacentEdge2Meshes, adjacentEdge2Tiles, adjacentEdge2,
+        adjacentCorner1Mesh, adjacentCorner1Tile, adjacentCorner1,
+        adjacentCorner2Mesh, adjacentCorner2Tile, adjacentCorner2,
+        oppositeEdge1Meshes, oppositeEdge1Tiles, oppositeEdge1,
+        oppositeEdge2Meshes, oppositeEdge2Tiles, oppositeEdge2,
+        oppositeCornerMesh, oppositeCornerTile, oppositeCorner,
+        u, v
+    ) {
+        // To find a height to use for this corner, we'll first look at the two adjacent edges,
+        // then the two adjacent corners, then the two opposite edges, then the two opposite
+        // corners. When e.g. both adjacent edges have a height, it would be better to choose
+        // the closest height rather than always choosing adjacentEdge1's height, as we're
+        // doing here, but it probably doesn't matter too much.
+        var height = getNearestHeightOnEdge(adjacentEdge1Meshes, adjacentEdge1Tiles, false, adjacentEdge1, u, v);
+        if (defined(height)) {
+            return height;
+        }
+
+        height = getNearestHeightOnEdge(adjacentEdge2Meshes, adjacentEdge2Tiles, true, adjacentEdge2, u, v);
+        if (defined(height)) {
+            return height;
+        }
+
+        height = getHeightAtCorner(adjacentCorner1Mesh, adjacentCorner1Tile, adjacentCorner1, u, v);
+        if (defined(height)) {
+            return height;
+        }
+
+        height = getHeightAtCorner(adjacentCorner2Mesh, adjacentCorner2Tile, adjacentCorner2, u, v);
+        if (defined(height)) {
+            return height;
+        }
+
+        height = getNearestHeightOnEdge(oppositeEdge1Meshes, oppositeEdge1Tiles, false, oppositeEdge1, u, v);
+        if (defined(height)) {
+            return height;
+        }
+
+        height = getNearestHeightOnEdge(oppositeEdge2Meshes, oppositeEdge2Tiles, true, oppositeEdge2, u, v);
+        if (defined(height)) {
+            return height;
+        }
+
+        return getHeightAtCorner(oppositeCornerMesh, oppositeCornerTile, oppositeCorner, u, v);
     }
 
     function addEdge(terrainFillMesh, ellipsoid, edgeTiles, edgeMeshes, tileEdge, stride, tileVertices) {
