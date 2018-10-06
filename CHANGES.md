@@ -1,6 +1,11 @@
 Change Log
 ==========
 
+### 1.51 - 2018-11-01
+
+##### Additions :tada:
+* Added WMS-T (time) support in WebMapServiceImageryProvider [#2581](https://github.com/AnalyticalGraphicsInc/cesium/issues/2581)
+
 ### 1.50 - 2018-10-01
 
 ##### Breaking Changes :mega:
