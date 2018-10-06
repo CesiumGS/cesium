@@ -32,11 +32,12 @@ var viewer2d = new Cesium.Viewer('cesiumContainer',{
     geocoder:false,
     navigationHelpButton:false,
     infoBox:false,
-    imageryProvider:new Cesium.GridImageryProvider({cells:8,
+    imageryProvider:new Cesium.GridImageryProvider({cells:3,
                                                     color:new Cesium.Color(0.8,0.8,0.8,0.8),
-                                                    glowWidth:0.001,
-                                                    glowColor:new Cesium.Color(0.8,0.8,0.8,0.8),
-                                                    backgroundColor:new Cesium.Color(1,1,1,1)})
+                                                    glowWidth:0.000001,
+                                                    glowColor:new Cesium.Color(0.8,0.8,0.8,0.0),
+                                                    backgroundColor:new Cesium.Color(1,1,1,0)}),
+                                                    canvasSize:32
 
 });
   </script>
