@@ -33,11 +33,7 @@ define([
     'use strict';
 
     /**
-     * A function to project an environment cube map onto a flat octahedron.
-     *
-     * The goal is to pack all convolutions. When EXT_texture_lod is available,
-     * they are stored as mip levels. When the extension is not supported, we
-     * pack them into a 2D texture atlas.
+     * Packs all mip levels of a cube map into a 2D texture atlas.
      *
      * Octahedral projection is a way of putting the cube maps onto a 2D texture
      * with minimal distortion and easy look up.
@@ -45,6 +41,8 @@ define([
      * and "Octahedron Environment Maps" for reference.
      *
      * @param {CubeMap[]} cubeMaps An array of {@link CubeMap}s to pack.
+     *
+     * @private
      */
     function OctahedralProjectedCubeMap(cubeMaps) {
         this._cubeMaps = cubeMaps;
@@ -68,6 +66,11 @@ define([
                 return this._texture;
             }
         },
+        /**
+         * The maximum number of mip levels.
+         * @memberOf {OctahedralProjectedMap}
+         * @type {Number}
+         */
         maximumMipmapLevel : {
             get : function() {
                 return this._maximumMipmapLevel;
@@ -170,6 +173,18 @@ define([
         }
     }
 
+    /**
+     * Creates compute commands to generate octahedral projections of each cube map
+     * and then renders them to an atlas.
+     * <p>
+     * Only needs to be called twice. The first call queues the compute commands to genrate the atlas.
+     * The second call cleans up unused resources. Every call afterwards is a no-op.
+     * </p>
+     *
+     * @param {FrameState} frameState The frame state.
+     *
+     * @private
+     */
     OctahedralProjectedCubeMap.prototype.update = function(frameState) {
         if (defined(this._va)) {
             cleanupResources(this);
@@ -211,7 +226,7 @@ define([
                 context : context,
                 width : size,
                 height : size,
-                pixelDataType : cubeMaps[i].pixelDatatype,
+                pixelDatatype : cubeMaps[i].pixelDatatype,
                 pixelFormat : cubeMaps[i].pixelFormat
             });
 
@@ -234,7 +249,7 @@ define([
             context : context,
             width : originalSize * 1.5 + 2.0, // We add a 1 pixel border to avoid linear sampling artifacts.
             height : originalSize,
-            pixelDataType : cubeMaps[0].pixelDatatype,
+            pixelDatatype : cubeMaps[0].pixelDatatype,
             pixelFormat : cubeMaps[0].pixelFormat
         });
 
@@ -248,10 +263,34 @@ define([
         frameState.commandList.push(atlasCommand);
     };
 
+    /**
+     * Returns true if this object was destroyed; otherwise, false.
+     * <p>
+     * If this object was destroyed, it should not be used; calling any function other than
+     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
+     * </p>
+     *
+     * @returns {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
+     *
+     * @see OctahedralProjectedCubeMap#destroy
+     */
     OctahedralProjectedCubeMap.prototype.isDestroyed = function() {
         return false;
     };
 
+    /**
+     * Destroys the WebGL resources held by this object.  Destroying an object allows for deterministic
+     * release of WebGL resources, instead of relying on the garbage collector to destroy this object.
+     * <p>
+     * Once an object is destroyed, it should not be used; calling any function other than
+     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
+     * assign the return value (<code>undefined</code>) to the object as done in the example.
+     * </p>
+     *
+     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
+     *
+     * @see OctahedralProjectedCubeMap#isDestroyed
+     */
     OctahedralProjectedCubeMap.prototype.destroy = function() {
         cleanupResources(this);
         this._texture = this._texture && this._texture.destroy();

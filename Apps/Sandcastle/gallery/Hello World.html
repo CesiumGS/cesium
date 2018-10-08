@@ -191,7 +191,7 @@ function startup(Cesium) {
                 cubeMaps.push(
                     new Cesium.CubeMap({
                         context : scene.context,
-                        source : sources,
+                        source : mipLevels[i],
                         pixelDatatype : Cesium.PixelDatatype.FLOAT
                     })
                 );

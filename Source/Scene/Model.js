@@ -661,11 +661,41 @@ define([
 
         this._keepPipelineExtras = options.keepPipelineExtras; // keep the buffers in memory for use in other applications
 
+        /**
+         * The diffuse irradiance environment map for image-based lighting. When <code>undefined</code>, the default diffuse irradiance map will be used.
+         * If <code>sphericalHarmonicCodefficients</code> is set, that will be used for the diffuse lighting instead.
+         *
+         * @type {CubeMap}
+         * @default {undefined}
+         *
+         * @see {@link Model#sphericalHarmonicCoefficients}
+         */
         this.diffuseIrradiance = undefined;
         this._diffuseIrradiance = undefined;
         this._diffuseIrradianceAtlas = undefined;
+
+        /**
+         * The third order spherical harmonic coefficients used for the diffuse color of image-based lighting. When <code>undefined</code>, <code>diffuseIrradiance</code>
+         * will be used.
+         * <p>
+         * There are nine <code>Cartesian3</code> coefficients.
+         * The order of the coefficients is: L<sub>00</sub>, L<sub>1-1</sub>, L<sub>10</sub>, L<sub>11</sub>, L<sub>2-2</sub>, L<sub>2-1</sub>, L<sub>20</sub>, L<sub>21<sub>, L<sub>22</sub>
+         * </p>
+         *
+         * @type {Cartesian3[]}
+         * @default undefined
+         *
+         * @see {@link https://graphics.stanford.edu/papers/envmap/envmap.pdf|An Efficient Representation for Irradiance Environment Maps}
+         */
         this.sphericalHarmonicCoefficients = undefined;
         this._sphericalHarmonicCoefficients = undefined;
+
+        /**
+         * The specular environment maps for image-based lighting. The first element of the array is the base specular map and each successive element is the next convoluted mipmap.
+         *
+         * @type {CubeMap[]}
+         * @default {undefined}
+         */
         this.specularEnvironmentMaps = undefined;
         this._specularEnvironmentMaps = undefined;
         this._specularEnvironmentMapAtlas = undefined;
