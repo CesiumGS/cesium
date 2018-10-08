@@ -6,6 +6,8 @@ vec3 czm_sampleOctahedralProjection(sampler2D projectedMap, vec2 textureSize, ve
     vec2 uv = dir.y < 0.0 ? neg : dir.xz;
     vec2 coord = 0.5 * uv + vec2(0.5);
 
+    lod = floor(lod);
+
     if (lod > 0.0)
     {
         // Each subseqeuent mip level is half the size
