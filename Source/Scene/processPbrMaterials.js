@@ -646,7 +646,7 @@ define([
             fragmentShader += '    vec3 specularContribution = F * G * D / (4.0 * NdotL * NdotV);\n';
             fragmentShader += '    vec3 color = NdotL * lightColor * (diffuseContribution + specularContribution);\n';
 
-            
+            /*
             fragmentShader += '    vec3 r = normalize(czm_inverseViewRotation * normalize(reflect(v, n)));\n';
             // Figure out if the reflection vector hits the ellipsoid
             fragmentShader += '    czm_ellipsoid ellipsoid = czm_getWgs84EllipsoidEC();\n';
@@ -686,30 +686,22 @@ define([
             fragmentShader += '    specularIrradiance = mix(specularIrradiance, belowHorizonColor, smoothstep(aroundHorizon, farBelowHorizon, reflectionDotNadir) * inverseRoughness);\n';
             fragmentShader += '    specularIrradiance = mix(specularIrradiance, nadirColor, smoothstep(farBelowHorizon, 1.0, reflectionDotNadir) * inverseRoughness);\n';
 
-            // Angle between sun and zenith
-            fragmentShader += '    float S = acos(clamp(dot(normalize(czm_inverseViewRotation * l), normalize(v_positionWC * -1.0)), 0.001, 1.0));\n'
-            // Angle between zenith and current pixel 
-            fragmentShader += '    float theta = acos(clamp(dot(normalize(czm_inverseViewRotation * n), normalize(v_positionWC * -1.0)), 0.001, 1.0));\n'
-            // Angle between sun and current pixel
-            fragmentShader += '    float gamma = acos(NdotL);\n'
-            fragmentShader += '    float luminanceAtZenith = 10.0;\n' 
-            fragmentShader += '    float luminance = luminanceAtZenith * (((0.91 + 10.0 * exp(-3.0 * gamma) + 0.45 * pow(cos(gamma), 2.0)) * (1.0 - exp(-0.32 / cos(theta)))) / (0.91 + 10.0 * exp(-3.0 * S) + 0.45 * pow(cos(S),2.0)) * (1.0 - exp(-0.32)));\n'
-
             fragmentShader += '    vec2 brdfLut = texture2D(czm_brdfLut, vec2(NdotV, 1.0 - roughness)).rg;\n';
             fragmentShader += '    vec3 IBLColor = (diffuseIrradiance * diffuseColor) + (specularIrradiance * SRGBtoLINEAR3(specularColor * brdfLut.x + brdfLut.y));\n';
-            fragmentShader += '    color += IBLColor * luminance;\n';
+            fragmentShader += '    color += IBLColor;\n';
+            */
 
             fragmentShader += '    const mat3 yUpToZUp = mat3(-1.0, 0.0, 0.0, 0.0, 0.0, -1.0, 0.0, 1.0, 0.0); \n';
             fragmentShader += '    vec3 cubeDir = normalize(czm_inverseViewRotation * n); \n';
             fragmentShader += '    cubeDir = yUpToZUp * cubeDir; \n'; // TODO
             fragmentShader += '#ifdef DIFFUSE_IBL \n';
             fragmentShader += '#ifdef SPHERICAL_HARMONICS \n';
-            fragmentShader += '    diffuseIrradiance = czm_sphericalHarmonics(cubeDir, gltf_sphericalHarmonicCoefficients); \n';
+            fragmentShader += '    vec3 diffuseIrradiance = czm_sphericalHarmonics(cubeDir, gltf_sphericalHarmonicCoefficients); \n';
             fragmentShader += '#else \n';
-            fragmentShader += '    diffuseIrradiance = textureCube(gltf_diffuseIrradiance, cubeDir).rgb;\n';
+            fragmentShader += '    vec3 diffuseIrradiance = textureCube(gltf_diffuseIrradiance, cubeDir).rgb;\n';
             fragmentShader += '#endif \n';
             fragmentShader += '#else \n';
-            fragmentShader += '    diffuseIrradiance = vec3(0.0); \n';
+            fragmentShader += '    vec3 diffuseIrradiance = vec3(0.0); \n';
             fragmentShader += '#endif \n';
             fragmentShader += '#ifdef SPECULAR_IBL \n';
             fragmentShader += '    vec2 brdfLut = texture2D(czm_brdfLut, vec2(NdotV, roughness)).rg;\n';
