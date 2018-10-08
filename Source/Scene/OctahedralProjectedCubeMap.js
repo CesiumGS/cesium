@@ -192,7 +192,8 @@ define([
         });
 
         // We only need up to 6 mip levels to avoid artifacts.
-        var length = this._maximumMipmapLevel = Math.min(cubeMaps.length, 6);
+        var length = Math.min(cubeMaps.length, 6);
+        this._maximumMipmapLevel = length - 1;
         var mipTextures = this._mipTextures = new Array(length);
         var originalSize = cubeMaps[0].width * 2.0;
         var uniformMap = {
