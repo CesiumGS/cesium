@@ -2925,7 +2925,7 @@ define([
 
     function createSpecularEnvironmentMapLOD(model) {
         return function() {
-            return model._specularEnvironmentMapAtlas.maximumMipmapLevel;
+            return model._specularEnvironmentMapAtlas.maximumMipmapLevel - 1;
         };
     }
 
