@@ -1,11 +1,12 @@
 define([
+        '../Core/Cartesian3',
         '../Core/ComponentDatatype',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/destroyObject',
-        '../Core/GeometryAttribute',
-        '../Core/Geometry',
-        '../Core/PrimitiveType',
+        '../Core/IndexDatatype',
+        '../Renderer/Buffer',
+        '../Renderer/BufferUsage',
         '../Renderer/ComputeCommand',
         '../Renderer/ShaderProgram',
         '../Renderer/Texture',
@@ -14,13 +15,14 @@ define([
         '../Shaders/OctahedralProjectionFS',
         '../Shaders/OctahedralProjectionVS'
     ], function(
+        Cartesian3,
         ComponentDatatype,
         defined,
         defineProperties,
         destroyObject,
-        GeometryAttribute,
-        Geometry,
-        PrimitiveType,
+        IndexDatatype,
+        Buffer,
+        BufferUsage,
         ComputeCommand,
         ShaderProgram,
         Texture,
@@ -73,80 +75,79 @@ define([
         }
     });
 
+    // These vertices are based on figure 1 from "Octahedron Environment Maps".
+    var v1 = new Cartesian3(1.0, 0.0, 0.0);
+    var v2 = new Cartesian3(0.0, 0.0, -1.0);
+    var v3 = new Cartesian3(-1.0, 0.0, 0.0);
+    var v4 = new Cartesian3(0.0, 0.0, 1.0);
+    var v5 = new Cartesian3(0.0, 1.0, 0.0);
+    var v6 = new Cartesian3(0.0, -1.0, 0.0);
+
+    // top left, left, top, center, right, top right, bottom, bottom left, bottom right
+    var cubeMapCoordinates = [v5, v3, v2, v6, v1, v5, v4, v5, v5];
+    var length = cubeMapCoordinates.length;
+    var flatCubeMapCoordinates = new Float32Array(length * 3);
+
+    var offset = 0;
+    for (var i = 0; i < length; ++i, offset += 3) {
+        Cartesian3.pack(cubeMapCoordinates[i], flatCubeMapCoordinates, offset);
+    }
+
+    var flatPositions = new Float32Array([
+        -1.0,  1.0, // top left
+        -1.0,  0.0, // left
+         0.0,  1.0, // top
+         0.0,  0.0, // center
+         1.0,  0.0, // right
+         1.0,  1.0, // top right
+         0.0, -1.0, // bottom
+        -1.0, -1.0, // bottom left
+         1.0, -1.0  // bottom right
+    ]);
+    var indices = new Uint16Array([
+        0, 1, 2, // top left, left, top,
+        2, 3, 1, // top, center, left,
+        7, 6, 1, // bottom left, bottom, left,
+        3, 6, 1, // center, bottom, left,
+        2, 5, 4, // top, top right, right,
+        3, 4, 2, // center, right, top,
+        4, 8, 6, // right, bottom right, bottom,
+        3, 4, 6  //center, right, bottom
+    ]);
+
     function createVertexArray(context) {
-        var topLeft = 0;
-        var left = 1;
-        var top = 2;
-        var center = 3;
-        var right = 4;
-        var topRight = 5;
-        var bottom = 6;
-        var bottomLeft = 7;
-        var bottomRight = 8;
-        // These vertices are based on figure 1 from "Octahedron Environment Maps".
-        var v1 = { x: 1, y: 0, z: 0 };
-        var v2 = { x: 0, y: 0, z: -1 };
-        var v3 = { x: -1, y: 0, z: 0 };
-        var v4 = { x: 0, y: 0, z: 1 };
-        var v5 = { x: 0, y: 1, z: 0 };
-        var v6 = { x: 0, y: -1, z: 0 };
-
-        var geometry = new Geometry({
-            attributes: {
-                position: new GeometryAttribute({
-                    componentDatatype: ComponentDatatype.FLOAT,
-                    componentsPerAttribute: 2,
-                    values: [
-                        -1.0,  1.0, // top left
-                        -1.0,  0.0, // left
-                        0.0,  1.0, // top
-                        0.0,  0.0, // center
-                        1.0,  0.0, // right
-                        1.0,  1.0, // top right
-                        0.0, -1.0, // bottom
-                        -1.0, -1.0, // bottom left
-                        1.0, -1.0  // bottom right
-                    ]
-                }),
-
-                cubeMapCoordinates: new GeometryAttribute({
-                    componentDatatype: ComponentDatatype.FLOAT,
-                    componentsPerAttribute: 3,
-                    values: [
-                        v5.x, v5.y, v5.z, // top left
-                        v3.x, v3.y, v3.z, // left
-                        v2.x, v2.y, v2.z, // top
-                        v6.x, v6.y, v6.z, // center
-                        v1.x, v1.y, v1.z, // right
-                        v5.x, v5.y, v5.z, // top right
-                        v4.x, v4.y, v4.z, // bottom
-                        v5.x, v5.y, v5.z, // bottom left
-                        v5.x, v5.y, v5.z  // bottom right
-                    ]
-                })
-            },
-
-            indices: new Uint16Array([
-                topLeft, left, top,
-                top, center, left,
-                bottomLeft, bottom, left,
-                center, bottom, left,
-                top, topRight, right,
-                center, right, top,
-                right, bottomRight, bottom,
-                center, right, bottom
-            ]),
-            primitiveType: PrimitiveType.TRIANGLES
+        var positionBuffer = Buffer.createVertexBuffer({
+            context : context,
+            typedArray : flatPositions,
+            usage : BufferUsage.STATIC_DRAW
+        });
+        var cubeMapCoordinatesBuffer = Buffer.createVertexBuffer({
+            context : context,
+            typedArray : flatCubeMapCoordinates,
+            usage : BufferUsage.STATIC_DRAW
+        });
+        var indexBuffer = Buffer.createIndexBuffer({
+            context : context,
+            typedArray : indices,
+            usage : BufferUsage.STATIC_DRAW,
+            indexDatatype : IndexDatatype.UNSIGNED_SHORT
         });
 
-        return VertexArray.fromGeometry({
+        var attributes = [{
+            index                  : 0,
+            vertexBuffer           : positionBuffer,
+            componentsPerAttribute : 2,
+            componentDatatype      : ComponentDatatype.FLOAT
+        }, {
+            index                  : 1,
+            vertexBuffer           : cubeMapCoordinatesBuffer,
+            componentsPerAttribute : 3,
+            componentDatatype      : ComponentDatatype.FLOAT
+        }];
+        return new VertexArray({
             context : context,
-            geometry : geometry,
-            attributeLocations : {
-                position : 0,
-                cubeMapCoordinates : 1
-            },
-            interleave : false
+            attributes : attributes,
+            indexBuffer : indexBuffer
         });
     }
 

@@ -646,7 +646,9 @@ define([
             fragmentShader += '    vec3 specularContribution = F * G * D / (4.0 * NdotL * NdotV);\n';
             fragmentShader += '    vec3 color = NdotL * lightColor * (diffuseContribution + specularContribution);\n';
 
-            /*
+            // Use the procedural IBL if there are no environment maps
+            fragmentShader += '#if !defined(DIFFUSE_IBL) && !defined(SPECULAR_IBL) \n';
+
             fragmentShader += '    vec3 r = normalize(czm_inverseViewRotation * normalize(reflect(v, n)));\n';
             // Figure out if the reflection vector hits the ellipsoid
             fragmentShader += '    czm_ellipsoid ellipsoid = czm_getWgs84EllipsoidEC();\n';
@@ -689,7 +691,9 @@ define([
             fragmentShader += '    vec2 brdfLut = texture2D(czm_brdfLut, vec2(NdotV, 1.0 - roughness)).rg;\n';
             fragmentShader += '    vec3 IBLColor = (diffuseIrradiance * diffuseColor) + (specularIrradiance * SRGBtoLINEAR3(specularColor * brdfLut.x + brdfLut.y));\n';
             fragmentShader += '    color += IBLColor;\n';
-            */
+
+            // Environment maps were provided, use them for IBL
+            fragmentShader += '#else \n'; // defined(DIFFUSE_IBL) || defined(SPECULAR_IBL)
 
             fragmentShader += '    const mat3 yUpToZUp = mat3(-1.0, 0.0, 0.0, 0.0, 0.0, -1.0, 0.0, 1.0, 0.0); \n';
             fragmentShader += '    vec3 cubeDir = normalize(czm_inverseViewRotation * n); \n';
@@ -705,13 +709,14 @@ define([
             fragmentShader += '#endif \n';
             fragmentShader += '#ifdef SPECULAR_IBL \n';
             fragmentShader += '    vec2 brdfLut = texture2D(czm_brdfLut, vec2(NdotV, roughness)).rg;\n';
-            //fragmentShader += '    vec3 specularIBL = textureLod(gltf_specularMap, cubeDir,  roughness * gltf_maxSpecularLOD).rgb;\n';
             fragmentShader += '    vec3 specularIBL = czm_sampleOctahedralProjection(gltf_specularMap, gltf_specularMapSize, cubeDir,  roughness * gltf_maxSpecularLOD);\n';
             fragmentShader += '    specularIBL *= F * brdfLut.x + brdfLut.y;\n';
             fragmentShader += '#else \n';
             fragmentShader += '    vec3 specularIBL = vec3(0.0); \n';
             fragmentShader += '#endif \n';
             fragmentShader += '    color += diffuseIrradiance * diffuseColor + specularColor * specularIBL;\n';
+
+            fragmentShader += '#endif \n';
         } else {
             fragmentShader += '    vec3 color = baseColor;\n';
         }
