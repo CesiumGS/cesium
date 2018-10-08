@@ -53,9 +53,12 @@ define([
         this.version = layer.version;
         this.isHeightmap = layer.isHeightmap;
         this.tileUrlTemplates = layer.tileUrlTemplates;
+        this.hasAvailability = layer.hasAvailability;
         this.availability = layer.availability;
         this.hasVertexNormals = layer.hasVertexNormals;
         this.hasWaterMask = layer.hasWaterMask;
+        this.hasBvh = layer.hasBvh;
+        this.bvhLevels = layer.bvhLevels;
         this.littleEndianExtensionSize = layer.littleEndianExtensionSize;
     }
 
@@ -145,6 +148,7 @@ define([
         var layers = this._layers = [];
         var attribution = '';
         var overallAvailability = [];
+        var overallMaxZoom = 0;
         when(options.url)
             .then(function(url) {
                 var resource = Resource.createIfNeeded(url);
@@ -191,6 +195,7 @@ define([
 
             var hasVertexNormals = false;
             var hasWaterMask = false;
+            var hasBvh = false;
             var littleEndianExtensionSize = true;
             var isHeightmap = false;
             if (data.format === 'heightmap-1.0') {
@@ -217,11 +222,14 @@ define([
 
             var tileUrlTemplates = data.tiles;
 
+            var maxZoom = data.maxzoom;
+            overallMaxZoom = Math.max(overallMaxZoom, maxZoom);
             var availableTiles = data.available;
             var availability;
+            var hasAvailability = false;
             if (defined(availableTiles)) {
                 availability = new TileAvailability(that._tilingScheme, availableTiles.length);
-
+                hasAvailability = true;
                 for (var level = 0; level < availableTiles.length; ++level) {
                     var rangesAtLevel = availableTiles[level];
                     var yTiles = that._tilingScheme.getNumberOfYTilesAtLevel(level);
@@ -237,6 +245,12 @@ define([
                         availability.addAvailableTileRange(level, range.startX, yStart, range.endX, yEnd);
                     }
                 }
+            } else {
+                availability = new TileAvailability(that._tilingScheme, maxZoom);
+                overallAvailability[0] = [
+                    [0, 0, 1, 0]
+                ];
+                availability.addAvailableTileRange(0, 0, 0, 1, 0);
             }
 
             // The vertex normals defined in the 'octvertexnormals' extension is identical to the original
@@ -254,9 +268,13 @@ define([
             if (defined(data.extensions) && data.extensions.indexOf('watermask') !== -1) {
                 hasWaterMask = true;
             }
+            if (defined(data.extensions) && data.extensions.indexOf('bvh') !== -1) {
+                hasBvh = true;
+            }
 
             that._hasWaterMask = that._hasWaterMask || hasWaterMask;
             that._hasVertexNormals = that._hasVertexNormals || hasVertexNormals;
+            that._hasBvh = that._hasBvh || hasBvh;
             if (defined(data.attribution)) {
                 if (attribution.length > 0) {
                     attribution += ' ';
@@ -269,9 +287,12 @@ define([
                 version: data.version,
                 isHeightmap: isHeightmap,
                 tileUrlTemplates: tileUrlTemplates,
+                hasAvailability: hasAvailability,
                 availability: availability,
                 hasVertexNormals: hasVertexNormals,
                 hasWaterMask: hasWaterMask,
+                hasBvh: hasBvh,
+                bvhLevels: data.bvhlevels,
                 littleEndianExtensionSize: littleEndianExtensionSize
             }));
 
@@ -308,14 +329,12 @@ define([
                     }
 
                     var length = overallAvailability.length;
-                    if (length > 0) {
-                        var availability = that._availability = new TileAvailability(that._tilingScheme, length);
-                        for (var level = 0; level < length; ++level) {
-                            var levelRanges = overallAvailability[level];
-                            for (var i = 0; i < levelRanges.length; ++i) {
-                                var range = levelRanges[i];
-                                availability.addAvailableTileRange(level, range[0], range[1], range[2], range[3]);
-                            }
+                    var availability = that._availability = new TileAvailability(that._tilingScheme, overallMaxZoom);
+                    for (var level = 0; level < length; ++level) {
+                        var levelRanges = overallAvailability[level];
+                        for (var i = 0; i < levelRanges.length; ++i) {
+                            var range = levelRanges[i];
+                            availability.addAvailableTileRange(level, range[0], range[1], range[2], range[3]);
                         }
                     }
 
@@ -382,7 +401,15 @@ define([
          * @constant
          * @default 2
          */
-        WATER_MASK: 2
+        WATER_MASK: 2,
+        /**
+         * A bounding-volume hierarchy is included as an extension to the tile mesh
+         *
+         * @type {Number}
+         * @constant
+         * @default 3
+         */
+        BVH: 3
     };
 
     function getRequestHeader(extensionsList) {
@@ -410,7 +437,8 @@ define([
         });
     }
 
-    function createQuantizedMeshTerrainData(provider, buffer, level, x, y, tmsY, littleEndianExtensionSize) {
+    function createQuantizedMeshTerrainData(provider, buffer, level, x, y, tmsY, layer) {
+        var littleEndianExtensionSize = layer.littleEndianExtensionSize;
         var pos = 0;
         var cartesian3Elements = 3;
         var boundingSphereElements = cartesian3Elements + 1;
@@ -512,6 +540,26 @@ define([
                 encodedNormalBuffer = new Uint8Array(buffer, pos, vertexCount * 2);
             } else if (extensionId === QuantizedMeshExtensionIds.WATER_MASK && provider._requestWaterMask) {
                 waterMaskBuffer = new Uint8Array(buffer, pos, extensionLength);
+            } else if (extensionId === QuantizedMeshExtensionIds.BVH && provider._requestBvh) {
+                var extensionPos = pos;
+                 // Align to 4 bytes.
+                if (extensionPos % 4 !== 0) {
+                    extensionPos += (4 - (extensionPos % 4));
+                }
+
+                var numberOfHeights = view.getUint32(extensionPos, true);
+                extensionPos += Uint32Array.BYTES_PER_ELEMENT;
+                var bvh = new Float32Array(buffer, extensionPos, numberOfHeights);
+                extensionPos += Float32Array.BYTES_PER_ELEMENT * numberOfHeights;
+
+                if (!layer.hasAvailability && defined(layer.availability)) {
+                    debugger;
+                    var maxLevel = layer.bvhLevels + level - 1;
+                    var finalIndex = recurseHeights(level, x, y, bvh, 0, maxLevel, provider.availability, layer.availability);
+                    if (finalIndex !== numberOfHeights) {
+                        console.log('Incorrect number of heights');
+                    }
+                }
             }
             pos += extensionLength;
         }
@@ -554,6 +602,27 @@ define([
             waterMask: waterMaskBuffer,
             credits: provider._tileCredits
         });
+    }
+
+    function recurseHeights(level, x, y, buffer, index, maxLevel, providerAvailability, layerAvailability) {
+        if (level > maxLevel) {
+            return index;
+        }
+
+        if (!isNaN(buffer[index])) {
+            // Minimum height isn't a Nan, so the tile exists
+            // TODO: Make this more efficient
+            providerAvailability.addAvailableTileRange(level, x, y, x, y);
+            layerAvailability.addAvailableTileRange(level, x, y, x, y);
+        }
+        index += 2;
+
+        index = recurseHeights(level + 1, x, y, buffer, index, maxLevel, providerAvailability, layerAvailability); // SW
+        index = recurseHeights(level + 1, x + 1, y, buffer, index, maxLevel, providerAvailability, layerAvailability); // SE
+        index = recurseHeights(level + 1, x, y + 1, buffer, index, maxLevel, providerAvailability, layerAvailability); // NW
+        index = recurseHeights(level + 1, x + 1, y + 1, buffer, index, maxLevel, providerAvailability, layerAvailability); // NE
+
+        return index;
     }
 
     /**
@@ -654,7 +723,7 @@ define([
             if (defined(that._heightmapStructure)) {
                 return createHeightmapTerrainData(that, buffer, level, x, y, tmsY);
             }
-            return createQuantizedMeshTerrainData(that, buffer, level, x, y, tmsY, layerToUse.littleEndianExtensionSize);
+            return createQuantizedMeshTerrainData(that, buffer, level, x, y, tmsY, layerToUse);
         });
     };
 
