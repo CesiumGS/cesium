@@ -1,6 +1,7 @@
 defineSuite([
         'DataSources/ModelVisualizer',
         'Core/BoundingSphere',
+        'Core/Cartesian2',
         'Core/Cartesian3',
         'Core/defined',
         'Core/DistanceDisplayCondition',
@@ -23,6 +24,7 @@ defineSuite([
     ], function(
         ModelVisualizer,
         BoundingSphere,
+        Cartesian2,
         Cartesian3,
         defined,
         DistanceDisplayCondition,
@@ -149,6 +151,8 @@ defineSuite([
         });
         model.clippingPlanes = new ConstantProperty(clippingPlanes);
 
+        model.imageBasedLightingFactor = new ConstantProperty(new Cartesian2(0.5, 0.5));
+
         var testObject = entityCollection.getOrCreateEntity('test');
         testObject.position = new ConstantPositionProperty(Cartesian3.fromDegrees(1, 2, 3));
         testObject.model = model;
@@ -167,6 +171,7 @@ defineSuite([
         expect(primitive.clippingPlanes._planes.length).toEqual(clippingPlanes._planes.length);
         expect(Cartesian3.equals(primitive.clippingPlanes._planes[0].normal, clippingPlanes._planes[0].normal)).toBe(true);
         expect(primitive.clippingPlanes._planes[0].distance).toEqual(clippingPlanes._planes[0].distance);
+        expect(primitive.imageBasedLightingFactor).toEqual(new Cartesian2(0.5, 0.5));
 
         // wait till the model is loaded before we can check node transformations
         return pollToPromise(function() {
