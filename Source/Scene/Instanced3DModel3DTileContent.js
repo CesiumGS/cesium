@@ -288,7 +288,7 @@ define([
             forwardAxis : Axis.X,
             opaquePass : Pass.CESIUM_3D_TILE, // Draw opaque portions during the 3D Tiles pass
             pickIdLoaded : getPickIdCallback(content),
-            iblFactor : tileset.iblFactor,
+            imageBasedLightingFactor : tileset.imageBasedLightingFactor,
             lightColor : tileset.lightColor
         };
 

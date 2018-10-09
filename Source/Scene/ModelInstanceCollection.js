@@ -1,6 +1,8 @@
 define([
         '../Core/BoundingSphere',
+        '../Core/Cartesian2',
         '../Core/Cartesian3',
+        '../Core/Check',
         '../Core/clone',
         '../Core/Color',
         '../Core/ComponentDatatype',
@@ -28,7 +30,9 @@ define([
         './ShadowMode'
     ], function(
         BoundingSphere,
+        Cartesian2,
         Cartesian3,
+        Check,
         clone,
         Color,
         ComponentDatatype,
@@ -167,7 +171,8 @@ define([
         this.debugWireframe = defaultValue(options.debugWireframe, false);
         this._debugWireframe = false;
 
-        this.iblFactor = defaultValue(options.iblFactor, 1.0);
+        this._imageBasedLightingFactor = new Cartesian2(1.0, 1.0);
+        Cartesian2.clone(options.imageBasedLightingFactor, this._imageBasedLightingFactor);
         this.lightColor = options.lightColor;
     }
 
@@ -195,6 +200,21 @@ define([
         readyPromise : {
             get : function() {
                 return this._readyPromise.promise;
+            }
+        },
+        imageBasedLightingFactor : {
+            get : function() {
+                return this._imageBasedLightingFactor;
+            },
+            set : function(value) {
+                //>>includeStart('debug', pragmas.debug);
+                Check.typeOf.object('imageBasedLightingFactor', value);
+                Check.typeOf.number.greaterThanOrEquals('imageBasedLightingFactor.x', value.x, 0.0);
+                Check.typeOf.number.lessThanOrEquals('imageBasedLightingFactor.x', value.x, 1.0);
+                Check.typeOf.number.greaterThanOrEquals('imageBasedLightingFactor.y', value.y, 0.0);
+                Check.typeOf.number.lessThanOrEquals('imageBasedLightingFactor.y', value.y, 1.0);
+                //>>includeEnd('debug');
+                Cartesian2.clone(value, this._imageBasedLightingFactor);
             }
         }
     });
@@ -580,7 +600,7 @@ define([
             pickIdLoaded : collection._pickIdLoaded,
             ignoreCommands : true,
             opaquePass : collection._opaquePass,
-            iblFactor : collection.iblFactor,
+            imageBasedLightingFactor : collection.imageBasedLightingFactor,
             lightColor : collection.lightColor
         };
 
@@ -875,7 +895,7 @@ define([
         var instancingSupported = this._instancingSupported;
         var model = this._model;
 
-        model.iblFactor = this.iblFactor;
+        model.imageBasedLightingFactor = this.imageBasedLightingFactor;
         model.lightColor = this.lightColor;
 
         model.update(frameState);

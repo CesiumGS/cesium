@@ -385,7 +385,7 @@ define([
                 pickIdLoaded : getPickIdCallback(content),
                 addBatchIdToGeneratedShaders : (batchLength > 0), // If the batch table has values in it, generated shaders will need a batchId attribute
                 pickObject : pickObject,
-                iblFactor : tileset.iblFactor,
+                imageBasedLightingFactor : tileset.imageBasedLightingFactor,
                 lightColor : tileset.lightColor
             });
         } else {
@@ -462,7 +462,7 @@ define([
         this._model.modelMatrix = this._contentModelMatrix;
 
         this._model.shadows = this._tileset.shadows;
-        this._model.iblFactor = this._tileset.iblFactor;
+        this._model.imageBasedLightingFactor = this._tileset.imageBasedLightingFactor;
         this._model.lightColor = this._tileset.lightColor;
         this._model.debugWireframe = this._tileset.debugWireframe;
 

@@ -1,8 +1,10 @@
 define([
         '../Core/BoundingSphere',
+        '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Cartesian4',
         '../Core/Cartographic',
+        '../Core/Check',
         '../Core/clone',
         '../Core/Color',
         '../Core/combine',
@@ -74,9 +76,11 @@ define([
         './ShadowMode'
     ], function(
         BoundingSphere,
+        Cartesian2,
         Cartesian3,
         Cartesian4,
         Cartographic,
+        Check,
         clone,
         Color,
         combine,
@@ -282,7 +286,7 @@ define([
      * @param {Number} [options.silhouetteSize=0.0] The size of the silhouette in pixels.
      * @param {ClippingPlaneCollection} [options.clippingPlanes] The {@link ClippingPlaneCollection} used to selectively disable rendering the model.
      * @param {Boolean} [options.dequantizeInShader=true] Determines if a {@link https://github.com/google/draco|Draco} encoded model is dequantized on the GPU. This decreases total memory usage for encoded models.
-     * @param {Number} [options.iblFactor=1.0] Scales the IBL lighting from the earth, sky, atmosphere and star skybox.
+     * @param {Number} [options.imageBasedLightingFactor=1.0] Scales the IBL lighting from the earth, sky, atmosphere and star skybox.
      * @param {Color} [options.lightColor] The color and intensity of the sunlight used to shade the model.
      *
      * @see Model.fromGltf
@@ -659,7 +663,8 @@ define([
 
         this._keepPipelineExtras = options.keepPipelineExtras; // keep the buffers in memory for use in other applications
 
-        this._iblFactor = defaultValue(options.iblFactor, 1.0);
+        this._imageBasedLightingFactor = new Cartesian2(1.0, 1.0);
+        Cartesian2.clone(options.imageBasedLightingFactor, this._imageBasedLightingFactor);
         this._lightColor = Color.clone(options.lightColor);
         this._regenerateShaders = false;
     }
@@ -1082,28 +1087,36 @@ define([
         },
 
         /**
-         * Cesium adds lighting from the earth, sky, atmosphere, and star skybox. This number is used to scale the final
-         * lighting contribution from those sources to the final color. A value of 0.0 will disable those light sources.
+         * Cesium adds lighting from the earth, sky, atmosphere, and star skybox. This cartesian is used to scale the final
+         * diffuse and specular lighting contribution from those sources to the final color. A value of 0.0 will disable those light sources.
          *
          * @memberof Model.prototype
          *
-         * @type {Number}
-         * @default 1.0
+         * @type {Cartesian2}
+         * @default Cartesian2(1.0, 1.0)
          */
-        iblFactor : {
+        imageBasedLightingFactor : {
             get : function() {
-                return this._iblFactor;
+                return this._imageBasedLightingFactor;
             },
             set : function(value) {
-                this._regenerateShaders = this._regenerateShaders || (this._iblFactor > 0.0 && value === 0.0) || (this._iblFactor === 0.0 && value > 0.0);
-                this._iblFactor = value;
+                //>>includeStart('debug', pragmas.debug);
+                Check.typeOf.object('imageBasedLightingFactor', value);
+                Check.typeOf.number.greaterThanOrEquals('imageBasedLightingFactor.x', value.x, 0.0);
+                Check.typeOf.number.lessThanOrEquals('imageBasedLightingFactor.x', value.x, 1.0);
+                Check.typeOf.number.greaterThanOrEquals('imageBasedLightingFactor.y', value.y, 0.0);
+                Check.typeOf.number.lessThanOrEquals('imageBasedLightingFactor.y', value.y, 1.0);
+                //>>includeEnd('debug');
+                this._regenerateShaders = this._regenerateShaders || (this._imageBasedLightingFactor.x > 0.0 && value.x === 0.0) || (this._imageBasedLightingFactor.x === 0.0 && value.x > 0.0);
+                this._regenerateShaders = this._regenerateShaders || (this._imageBasedLightingFactor.y > 0.0 && value.y === 0.0) || (this._imageBasedLightingFactor.y === 0.0 && value.y > 0.0);
+                Cartesian2.clone(value, this._imageBasedLightingFactor);
             }
         },
 
         /**
          * The color and intensity of the sunlight used to shade the model.
          * <p>
-         * For example, disabling additional light sources by setting <code>model.iblFactor = 0.0</code> will make the
+         * For example, disabling additional light sources by setting <code>model.imageBasedLightingFactor = 0.0</code> will make the
          * model much darker. Here, increasing the intensity of the light source will make the model brighter.
          * </p>
          *
@@ -1987,7 +2000,7 @@ define([
             drawFS = 'uniform vec4 czm_pickColor;\n' + drawFS;
         }
 
-        if (model._iblFactor > 0.0) {
+        if (model._imageBasedLightingFactor.x > 0.0 || model._imageBasedLightingFactor.y > 0.0) {
             drawFS = '#define USE_IBL_LIGHTING \n\n' + drawFS;
         }
 
@@ -2037,7 +2050,7 @@ define([
             drawFS = 'uniform vec4 czm_pickColor;\n' + drawFS;
         }
 
-        if (model._iblFactor > 0.0) {
+        if (model._imageBasedLightingFactor.x > 0.0 || model._imageBasedLightingFactor.y > 0.0) {
             drawFS = '#define USE_IBL_LIGHTING \n\n' + drawFS;
         }
 
@@ -2915,7 +2928,7 @@ define([
 
     function createIBLFactorFunction(model) {
         return function() {
-            return model._iblFactor;
+            return model._imageBasedLightingFactor;
         };
     }
 

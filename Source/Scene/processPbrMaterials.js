@@ -485,7 +485,7 @@ define([
             '}\n\n';
 
         fragmentShader += '#ifdef USE_IBL_LIGHTING \n';
-        fragmentShader += 'uniform float gltf_iblFactor; \n';
+        fragmentShader += 'uniform vec2 gltf_iblFactor; \n';
         fragmentShader += '#endif \n';
         fragmentShader += '#ifdef USE_CUSTOM_LIGHT_COLOR \n';
         fragmentShader += 'uniform vec3 gltf_lightColor; \n';
@@ -694,8 +694,8 @@ define([
             fragmentShader += '    specularIrradiance = mix(specularIrradiance, nadirColor, smoothstep(farBelowHorizon, 1.0, reflectionDotNadir) * inverseRoughness);\n';
 
             fragmentShader += '    vec2 brdfLut = texture2D(czm_brdfLut, vec2(NdotV, 1.0 - roughness)).rg;\n';
-            fragmentShader += '    vec3 IBLColor = (diffuseIrradiance * diffuseColor) + (specularIrradiance * SRGBtoLINEAR3(specularColor * brdfLut.x + brdfLut.y));\n';
-            fragmentShader += '    color += IBLColor * gltf_iblFactor;\n';
+            fragmentShader += '    vec3 IBLColor = (diffuseIrradiance * diffuseColor * gltf_iblFactor.x) + (specularIrradiance * SRGBtoLINEAR3(specularColor * brdfLut.x + brdfLut.y) * gltf_iblFactor.y);\n';
+            fragmentShader += '    color += IBLColor;\n';
             fragmentShader += '#endif \n';
         } else {
             fragmentShader += '    vec3 color = baseColor;\n';
