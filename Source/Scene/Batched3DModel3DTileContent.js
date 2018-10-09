@@ -9,11 +9,11 @@ define([
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/FeatureDetection',
-        '../Core/getBaseUri',
         '../Core/getStringFromTypedArray',
         '../Core/Matrix4',
         '../Core/RequestType',
         '../Core/RuntimeError',
+        '../Core/Transforms',
         '../Renderer/Pass',
         './Axis',
         './Cesium3DTileBatchTable',
@@ -33,11 +33,11 @@ define([
         destroyObject,
         DeveloperError,
         FeatureDetection,
-        getBaseUri,
         getStringFromTypedArray,
         Matrix4,
         RequestType,
         RuntimeError,
+        Transforms,
         Pass,
         Axis,
         Cesium3DTileBatchTable,
@@ -355,10 +355,10 @@ define([
             primitive : tileset
         };
 
-        content._rtcCenterTransform = Matrix4.clone(Matrix4.IDENTITY);
+        content._rtcCenterTransform = Matrix4.IDENTITY;
         var rtcCenter = featureTable.getGlobalProperty('RTC_CENTER', ComponentDatatype.FLOAT, 3);
         if (defined(rtcCenter)) {
-            content._rtcCenterTransform = Matrix4.fromTranslation(Cartesian3.fromArray(rtcCenter), content._rtcCenterTransform);
+            content._rtcCenterTransform = Matrix4.fromTranslation(Cartesian3.fromArray(rtcCenter));
         }
 
         content._contentModelMatrix = Matrix4.multiply(tile.computedTransform, content._rtcCenterTransform, new Matrix4());
@@ -465,6 +465,7 @@ define([
         // Update clipping planes
         var tilesetClippingPlanes = this._tileset.clippingPlanes;
         if (this._tile.clippingPlanesDirty && defined(tilesetClippingPlanes)) {
+            this._model.clippingPlaneOffsetMatrix = this._tileset.clippingPlaneOffsetMatrix;
             // Dereference the clipping planes from the model if they are irrelevant.
             // Link/Dereference directly to avoid ownership checks.
             // This will also trigger synchronous shader regeneration to remove or add the clipping plane and color blending code.
