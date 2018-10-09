@@ -125,6 +125,15 @@ define([
          */
         this._requestWaterMask = defaultValue(options.requestWaterMask, false);
 
+        /**
+         * Boolean flag that indicates if the client should request tile bounding-volume hierarchy information
+         * from the server.
+         * @type {Boolean}
+         * @default true
+         * @private
+         */
+        this._requestBvh = defaultValue(options.requestBvh, true);
+
         this._errorEvent = new Event();
 
         var credit = options.credit;
@@ -553,11 +562,12 @@ define([
                 extensionPos += Float32Array.BYTES_PER_ELEMENT * numberOfHeights;
 
                 if (!layer.hasAvailability && defined(layer.availability)) {
-                    debugger;
-                    var maxLevel = layer.bvhLevels + level - 1;
-                    var finalIndex = recurseHeights(level, x, y, bvh, 0, maxLevel, provider.availability, layer.availability);
-                    if (finalIndex !== numberOfHeights) {
-                        console.log('Incorrect number of heights');
+                    var numberofIncludedLevels = findNumberOfLevels(numberOfHeights/2);
+                    if (defined(numberofIncludedLevels) && numberofIncludedLevels <= layer.bvhLevels) {
+                        var maxLevel = numberofIncludedLevels + level - 1;
+                        recurseHeights(level, x, y, bvh, 0, maxLevel, provider.availability, layer.availability);
+                    } else {
+                        console.log('Incorrect number of heights in tile Level: %d X: %d Y: %d', level, x, y);
                     }
                 }
             }
@@ -604,6 +614,19 @@ define([
         });
     }
 
+    function findNumberOfLevels(value) {
+        // This finds the number of levels stored in a BVH extension tile.
+        // All levels need to be complete.
+        // See http://mikestoolbox.com/powersum.html
+        for (var i = 0, current = 1; i < 32; ++i, current *= 4) {
+            if (value === ((current-1) / 3)) {
+                return i;
+            }
+        }
+
+        return undefined;
+    }
+
     function recurseHeights(level, x, y, buffer, index, maxLevel, providerAvailability, layerAvailability) {
         if (level > maxLevel) {
             return index;
@@ -615,8 +638,10 @@ define([
             providerAvailability.addAvailableTileRange(level, x, y, x, y);
             layerAvailability.addAvailableTileRange(level, x, y, x, y);
         }
-        index += 2;
+        index += 2; // Skip min and max
 
+        x *= 2;
+        y *= 2;
         index = recurseHeights(level + 1, x, y, buffer, index, maxLevel, providerAvailability, layerAvailability); // SW
         index = recurseHeights(level + 1, x + 1, y, buffer, index, maxLevel, providerAvailability, layerAvailability); // SE
         index = recurseHeights(level + 1, x, y + 1, buffer, index, maxLevel, providerAvailability, layerAvailability); // NW
@@ -684,6 +709,9 @@ define([
         }
         if (this._requestWaterMask && layerToUse.hasWaterMask) {
             extensionList.push('watermask');
+        }
+        if (this._requestBvh && layerToUse.hasBvh) {
+            extensionList.push('bvh');
         }
 
         var headers;
