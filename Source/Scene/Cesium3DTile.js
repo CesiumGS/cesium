@@ -2,28 +2,30 @@ define([
         '../Core/BoundingSphere',
         '../Core/Cartesian3',
         '../Core/Color',
+        '../Core/ColorGeometryInstanceAttribute',
         '../Core/CullingVolume',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/deprecationWarning',
         '../Core/destroyObject',
+        '../Core/Ellipsoid',
         '../Core/getMagic',
         '../Core/Intersect',
-        '../Core/joinUrls',
         '../Core/JulianDate',
-        '../Core/loadArrayBuffer',
+        '../Core/Math',
         '../Core/Matrix3',
         '../Core/Matrix4',
-        '../Core/Plane',
+        '../Core/OrientedBoundingBox',
         '../Core/Rectangle',
         '../Core/Request',
         '../Core/RequestScheduler',
         '../Core/RequestState',
         '../Core/RequestType',
+        '../Core/Resource',
         '../Core/RuntimeError',
+        '../Core/Transforms',
         '../ThirdParty/when',
-        './Cesium3DTileChildrenVisibility',
         './Cesium3DTileContentFactory',
         './Cesium3DTileContentState',
         './Cesium3DTileOptimizationHint',
@@ -37,28 +39,30 @@ define([
         BoundingSphere,
         Cartesian3,
         Color,
+        ColorGeometryInstanceAttribute,
         CullingVolume,
         defaultValue,
         defined,
         defineProperties,
         deprecationWarning,
         destroyObject,
+        Ellipsoid,
         getMagic,
         Intersect,
-        joinUrls,
         JulianDate,
-        loadArrayBuffer,
+        CesiumMath,
         Matrix3,
         Matrix4,
-        Plane,
+        OrientedBoundingBox,
         Rectangle,
         Request,
         RequestScheduler,
         RequestState,
         RequestType,
+        Resource,
         RuntimeError,
+        Transforms,
         when,
-        Cesium3DTileChildrenVisibility,
         Cesium3DTileContentFactory,
         Cesium3DTileContentState,
         Cesium3DTileOptimizationHint,
@@ -80,13 +84,13 @@ define([
      * @alias Cesium3DTile
      * @constructor
      */
-    function Cesium3DTile(tileset, basePath, header, parent) {
+    function Cesium3DTile(tileset, baseResource, header, parent) {
         this._tileset = tileset;
         this._header = header;
         var contentHeader = header.content;
 
         /**
-         * The local transform of this tile
+         * The local transform of this tile.
          * @type {Matrix4}
          */
         this.transform = defined(header.transform) ? Matrix4.unpack(header.transform) : Matrix4.clone(Matrix4.IDENTITY);
@@ -94,8 +98,11 @@ define([
         var parentTransform = defined(parent) ? parent.computedTransform : tileset.modelMatrix;
         var computedTransform = Matrix4.multiply(parentTransform, this.transform, new Matrix4());
 
+        var parentInitialTransform = defined(parent) ? parent._initialTransform : Matrix4.IDENTITY;
+        this._initialTransform = Matrix4.multiply(parentInitialTransform, this.transform, new Matrix4());
+
         /**
-         * The final computed transform of this tile
+         * The final computed transform of this tile.
          * @type {Matrix4}
          * @readonly
          */
@@ -151,7 +158,7 @@ define([
         }
 
         /**
-         * Specifies the type of refinment that is used when traversing this tile for rendering.
+         * Specifies the type of refinement that is used when traversing this tile for rendering.
          *
          * @type {Cesium3DTileRefine}
          * @readonly
@@ -170,9 +177,9 @@ define([
         /**
          * This tile's parent or <code>undefined</code> if this tile is the root.
          * <p>
-         * When a tile's content points to an external tileset.json, the external tileset's
+         * When a tile's content points to an external tileset JSON file, the external tileset's
          * root tile's parent is not <code>undefined</code>; instead, the parent references
-         * the tile (with its content pointing to an external tileset.json) as if the two tilesets were merged.
+         * the tile (with its content pointing to an external tileset JSON file) as if the two tilesets were merged.
          * </p>
          *
          * @type {Cesium3DTile}
@@ -183,14 +190,23 @@ define([
         var content;
         var hasEmptyContent;
         var contentState;
-        var contentUrl;
+        var contentResource;
         var serverKey;
 
+        baseResource = Resource.createIfNeeded(baseResource);
+
         if (defined(contentHeader)) {
+            var contentHeaderUri = contentHeader.uri;
+            if (defined(contentHeader.url)) {
+                Cesium3DTile._deprecationWarning('contentUrl', 'This tileset JSON uses the "content.url" property which has been deprecated. Use "content.uri" instead.');
+                contentHeaderUri = contentHeader.url;
+            }
             hasEmptyContent = false;
             contentState = Cesium3DTileContentState.UNLOADED;
-            contentUrl = joinUrls(basePath, contentHeader.url);
-            serverKey = RequestScheduler.getServerKey(contentUrl);
+            contentResource = baseResource.getDerivedResource({
+                url : contentHeaderUri
+            });
+            serverKey = RequestScheduler.getServerKey(contentResource.getUrlComponent());
         } else {
             content = new Empty3DTileContent(tileset, this);
             hasEmptyContent = true;
@@ -198,7 +214,7 @@ define([
         }
 
         this._content = content;
-        this._contentUrl = contentUrl;
+        this._contentResource = contentResource;
         this._contentState = contentState;
         this._contentReadyToProcessPromise = undefined;
         this._contentReadyPromise = undefined;
@@ -217,19 +233,6 @@ define([
         this.hasEmptyContent = hasEmptyContent;
 
         /**
-         * When <code>true</code>, the tile's content is renderable.
-         * <p>
-         * This is <code>false</code> until the tile's content is loaded.
-         * </p>
-         *
-         * @type {Boolean}
-         * @readonly
-         *
-         * @private
-         */
-        this.hasRenderableContent = false;
-
-        /**
          * When <code>true</code>, the tile's content points to an external tileset.
          * <p>
          * This is <code>false</code> until the tile's content is loaded.
@@ -243,14 +246,16 @@ define([
         this.hasTilesetContent = false;
 
         /**
-         * The corresponding node in the cache replacement list.
+         * The node in the tileset's LRU cache, used to determine when to unload a tile's content.
+         *
+         * See {@link Cesium3DTilesetCache}
          *
          * @type {DoublyLinkedListNode}
          * @readonly
          *
          * @private
          */
-        this.replacementNode = undefined;
+        this.cacheNode = undefined;
 
         var expire = header.expire;
         var expireDuration;
@@ -277,15 +282,6 @@ define([
         this.expireDate = expireDate;
 
         /**
-         * Marks if the tile is selected this frame.
-         *
-         * @type {Boolean}
-         *
-         * @private
-         */
-        this.selected = false;
-
-        /**
          * The time when a style was last applied to this tile.
          *
          * @type {Number}
@@ -303,26 +299,41 @@ define([
          */
         this._optimChildrenWithinParent = Cesium3DTileOptimizationHint.NOT_COMPUTED;
 
+        /**
+         * Tracks if the tile's relationship with a ClippingPlaneCollection has changed with regards
+         * to the ClippingPlaneCollection's state.
+         *
+         * @type {Boolean}
+         *
+         * @private
+         */
+        this.clippingPlanesDirty = false;
+
         // Members that are updated every frame for tree traversal and rendering optimizations:
         this._distanceToCamera = 0;
-        this._visibilityPlaneMask = 0;
-        this._childrenVisibility = Cesium3DTileChildrenVisibility.VISIBLE;
-        this._lastSelectedFrameNumber = -1;
+        this._centerZDepth = 0;
         this._screenSpaceError = 0;
-        this._screenSpaceErrorComputedFrame = -1;
+        this._visibilityPlaneMask = 0;
+        this._visible = false;
+        this._inRequestVolume = false;
+
         this._finalResolution = true;
         this._depth = 0;
-        this._centerZDepth = 0;
         this._stackLength = 0;
-        this._selectedFrame = -1;
         this._selectionDepth = 0;
-        this._lastSelectionDepth = undefined;
-        this._requestedFrame = undefined;
-        this._lastVisitedFrame = undefined;
-        this._ancestorWithContent = undefined;
-        this._ancestorWithLoadedContent = undefined;
-        this._isClipped = true;
 
+        this._updatedVisibilityFrame = 0;
+        this._touchedFrame = 0;
+        this._visitedFrame = 0;
+        this._selectedFrame = 0;
+        this._requestedFrame = 0;
+        this._ancestorWithContent = undefined;
+        this._ancestorWithContentAvailable = undefined;
+        this._refines = false;
+        this._shouldSelect = false;
+        this._priority = 0.0;
+        this._isClipped = true;
+        this._clippingPlanesState = 0; // encapsulates (_isClipped, clippingPlanes.enabled) and number/function
         this._debugBoundingVolume = undefined;
         this._debugContentBoundingVolume = undefined;
         this._debugViewerRequestVolume = undefined;
@@ -355,7 +366,7 @@ define([
 
         /**
          * The tile's content.  This represents the actual tile's payload,
-         * not the content's metadata in tileset.json.
+         * not the content's metadata in the tileset JSON file.
          *
          * @memberof Cesium3DTile.prototype
          *
@@ -365,6 +376,21 @@ define([
         content : {
             get : function() {
                 return this._content;
+            }
+        },
+
+        /**
+         * Get the tile's bounding volume.
+         *
+         * @memberof Cesium3DTile.prototype
+         *
+         * @type {TileBoundingVolume}
+         * @readonly
+         * @private
+         */
+        boundingVolume : {
+            get : function() {
+                return this._boundingVolume;
             }
         },
 
@@ -396,6 +422,22 @@ define([
         boundingSphere : {
             get : function() {
                 return this._boundingVolume.boundingSphere;
+            }
+        },
+
+        /**
+         * Returns the <code>extras</code> property in the tileset JSON for this tile, which contains application specific metadata.
+         * Returns <code>undefined</code> if <code>extras</code> does not exist.
+         *
+         * @memberof Cesium3DTile.prototype
+         *
+         * @type {*}
+         * @readonly
+         * @see {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/specification#specifying-extensions-and-application-specific-extras|Extras in the 3D Tiles specification.}
+         */
+        extras : {
+            get : function() {
+                return this._header.extras;
             }
         },
 
@@ -437,13 +479,13 @@ define([
          */
         contentAvailable : {
             get : function() {
-                return this.contentReady || (defined(this._expiredContent) && this._contentState !== Cesium3DTileContentState.FAILED);
+                return (this.contentReady && !this.hasEmptyContent && !this.hasTilesetContent) || (defined(this._expiredContent) && !this.contentFailed);
             }
         },
 
         /**
-         * Determines if the tile is ready to render. <code>true</code> if the tile
-         * is ready to render; otherwise, <code>false</code>.
+         * Determines if the tile's content is ready. This is automatically <code>true</code> for
+         * tile's with empty content.
          *
          * @memberof Cesium3DTile.prototype
          *
@@ -489,6 +531,23 @@ define([
         contentExpired : {
             get : function() {
                 return this._contentState === Cesium3DTileContentState.EXPIRED;
+            }
+        },
+
+        /**
+         * Determines if the tile's content failed to load.  <code>true</code> if the tile's
+         * content failed to load; otherwise, <code>false</code>.
+         *
+         * @memberof Cesium3DTile.prototype
+         *
+         * @type {Boolean}
+         * @readonly
+         *
+         * @private
+         */
+        contentFailed : {
+            get : function() {
+                return this._contentState === Cesium3DTileContentState.FAILED;
             }
         },
 
@@ -588,7 +647,7 @@ define([
 
     function createPriorityFunction(tile) {
         return function() {
-            return tile._distanceToCamera;
+            return tile._priority;
         };
     }
 
@@ -608,12 +667,13 @@ define([
             return false;
         }
 
-        var url = this._contentUrl;
+        var resource = this._contentResource.clone();
         var expired = this.contentExpired;
         if (expired) {
             // Append a query parameter of the tile expiration date to prevent caching
-            var timestampQuery = '?expired=' + this.expireDate.toString();
-            url = joinUrls(url, timestampQuery, false);
+            resource.setQueryParameters({
+                expired: this.expireDate.toString()
+            });
         }
 
         var request = new Request({
@@ -624,7 +684,9 @@ define([
             serverKey : this._serverKey
         });
 
-        var promise = loadArrayBuffer(url, undefined, request);
+        resource.request = request;
+
+        var promise = resource.fetchArrayBuffer();
 
         if (!defined(promise)) {
             return false;
@@ -640,7 +702,6 @@ define([
         }
 
         var contentFailedFunction = getContentFailedFunction(this);
-
         promise.then(function(arrayBuffer) {
             if (that.isDestroyed()) {
                 // Tile is unloaded before the content finishes loading
@@ -656,11 +717,10 @@ define([
             tileset._disableSkipLevelOfDetail = tileset._disableSkipLevelOfDetail || magic === 'vctr' || magic === 'geom';
 
             if (defined(contentFactory)) {
-                content = contentFactory(tileset, that, that._contentUrl, arrayBuffer, 0);
-                that.hasRenderableContent = true;
+                content = contentFactory(tileset, that, that._contentResource, arrayBuffer, 0);
             } else {
                 // The content may be json instead
-                content = Cesium3DTileContentFactory.json(tileset, that, that._contentUrl, arrayBuffer, 0);
+                content = Cesium3DTileContentFactory.json(tileset, that, that._contentResource, arrayBuffer, 0);
                 that.hasTilesetContent = true;
             }
 
@@ -677,6 +737,7 @@ define([
                 updateExpireDate(that);
 
                 // Refresh style for expired content
+                that._selectedFrame = 0;
                 that.lastStyleTime = 0;
 
                 that._contentState = Cesium3DTileContentState.READY;
@@ -702,7 +763,7 @@ define([
      * @private
      */
     Cesium3DTile.prototype.unloadContent = function() {
-        if (!this.hasRenderableContent) {
+        if (this.hasEmptyContent || this.hasTilesetContent) {
             return;
         }
 
@@ -711,9 +772,9 @@ define([
         this._contentReadyToProcessPromise = undefined;
         this._contentReadyPromise = undefined;
 
-        this.replacementNode = undefined;
-
         this.lastStyleTime = 0;
+        this.clippingPlanesDirty = (this._clippingPlanesState === 0);
+        this._clippingPlanesState = 0;
 
         this._debugColorizeTiles = false;
 
@@ -759,8 +820,7 @@ define([
         var tileset = this._tileset;
         var clippingPlanes = tileset.clippingPlanes;
         if (defined(clippingPlanes) && clippingPlanes.enabled) {
-            var tileTransform = tileset._root.computedTransform;
-            var intersection = clippingPlanes.computeIntersectionWithBoundingVolume(boundingVolume, tileTransform);
+            var intersection = clippingPlanes.computeIntersectionWithBoundingVolume(boundingVolume, tileset.clippingPlaneOffsetMatrix);
             this._isClipped = intersection !== Intersect.INSIDE;
             if (intersection === Intersect.OUTSIDE) {
                 return CullingVolume.MASK_OUTSIDE;
@@ -794,8 +854,7 @@ define([
         var tileset = this._tileset;
         var clippingPlanes = tileset.clippingPlanes;
         if (defined(clippingPlanes) && clippingPlanes.enabled) {
-            var tileTransform = tileset._root.computedTransform;
-            var intersection = clippingPlanes.computeIntersectionWithBoundingVolume(boundingVolume, tileTransform);
+            var intersection = clippingPlanes.computeIntersectionWithBoundingVolume(boundingVolume, tileset.clippingPlaneOffsetMatrix);
             this._isClipped = intersection !== Intersect.INSIDE;
             if (intersection === Intersect.OUTSIDE) {
                 return Intersect.OUTSIDE;
@@ -824,7 +883,7 @@ define([
      * Computes the distance from the center of the tile's bounding volume to the camera.
      *
      * @param {FrameState} frameState The frame state.
-     * @returns {Number} The distance, in meters, or zero if the camera is inside the bounding volume.
+     * @returns {Number} The distance, in meters.
      *
      * @private
      */
@@ -856,6 +915,8 @@ define([
     var scratchHalfAxes = new Matrix3();
     var scratchCenter = new Cartesian3();
     var scratchRectangle = new Rectangle();
+    var scratchOrientedBoundingBox = new OrientedBoundingBox();
+    var scratchTransform = new Matrix4();
 
     function createBox(box, transform, result) {
         var center = Cartesian3.fromElements(box[0], box[1], box[2], scratchCenter);
@@ -873,13 +934,42 @@ define([
         return new TileOrientedBoundingBox(center, halfAxes);
     }
 
-    function createRegion(region, result) {
-        var rectangleRegion = Rectangle.unpack(region, 0, scratchRectangle);
+    function createBoxFromTransformedRegion(region, transform, initialTransform, result) {
+        var rectangle = Rectangle.unpack(region, 0, scratchRectangle);
+        var minimumHeight = region[4];
+        var maximumHeight = region[5];
 
-        if (defined(result)) {
-            // Don't update regions when the transform changes
+        var orientedBoundingBox = OrientedBoundingBox.fromRectangle(rectangle, minimumHeight, maximumHeight, Ellipsoid.WGS84, scratchOrientedBoundingBox);
+        var center = orientedBoundingBox.center;
+        var halfAxes = orientedBoundingBox.halfAxes;
+
+        // A region bounding volume is not transformed by the transform in the tileset JSON,
+        // but may be transformed by additional transforms applied in Cesium.
+        // This is why the transform is calculated as the difference between the initial transform and the current transform.
+        transform = Matrix4.multiplyTransformation(transform, Matrix4.inverseTransformation(initialTransform, scratchTransform), scratchTransform);
+        center = Matrix4.multiplyByPoint(transform, center, center);
+        var rotationScale = Matrix4.getRotation(transform, scratchMatrix);
+        halfAxes = Matrix3.multiply(rotationScale, halfAxes, halfAxes);
+
+        if (defined(result) && (result instanceof TileOrientedBoundingBox)) {
+            result.update(center, halfAxes);
             return result;
         }
+
+        return new TileOrientedBoundingBox(center, halfAxes);
+    }
+
+    function createRegion(region, transform, initialTransform, result) {
+        if (!Matrix4.equalsEpsilon(transform, initialTransform, CesiumMath.EPSILON8)) {
+            return createBoxFromTransformedRegion(region, transform, initialTransform, result);
+        }
+
+        if (defined(result)) {
+            return result;
+        }
+
+        var rectangleRegion = Rectangle.unpack(region, 0, scratchRectangle);
+
         return new TileBoundingRegion({
             rectangle : rectangleRegion,
             minimumHeight : region[4],
@@ -923,15 +1013,13 @@ define([
             return createBox(boundingVolumeHeader.box, transform, result);
         }
         if (defined(boundingVolumeHeader.region)) {
-            return createRegion(boundingVolumeHeader.region, result);
+            return createRegion(boundingVolumeHeader.region, transform, this._initialTransform, result);
         }
         if (defined(boundingVolumeHeader.sphere)) {
             return createSphere(boundingVolumeHeader.sphere, transform, result);
         }
         throw new RuntimeError('boundingVolume must contain a sphere, region, or box');
     };
-
-    var scratchTransform = new Matrix4();
 
     /**
      * Update the tile's transform. The transform is applied to the tile's bounding volumes.
@@ -952,12 +1040,12 @@ define([
         // Update the bounding volumes
         var header = this._header;
         var content = this._header.content;
-        this._boundingVolume = this.createBoundingVolume(header.boundingVolume, computedTransform, this._boundingVolume);
+        this._boundingVolume = this.createBoundingVolume(header.boundingVolume, this.computedTransform, this._boundingVolume);
         if (defined(this._contentBoundingVolume)) {
-            this._contentBoundingVolume = this.createBoundingVolume(content.boundingVolume, computedTransform, this._contentBoundingVolume);
+            this._contentBoundingVolume = this.createBoundingVolume(content.boundingVolume, this.computedTransform, this._contentBoundingVolume);
         }
         if (defined(this._viewerRequestVolume)) {
-            this._viewerRequestVolume = this.createBoundingVolume(header.viewerRequestVolume, computedTransform, this._viewerRequestVolume);
+            this._viewerRequestVolume = this.createBoundingVolume(header.viewerRequestVolume, this.computedTransform, this._viewerRequestVolume);
         }
 
         // Destroy the debug bounding volumes. They will be generated fresh.
@@ -968,14 +1056,24 @@ define([
 
     function applyDebugSettings(tile, tileset, frameState) {
         var hasContentBoundingVolume = defined(tile._header.content) && defined(tile._header.content.boundingVolume);
+        var empty = tile.hasEmptyContent || tile.hasTilesetContent;
 
         var showVolume = tileset.debugShowBoundingVolume || (tileset.debugShowContentBoundingVolume && !hasContentBoundingVolume);
         if (showVolume) {
+            var color;
+            if (!tile._finalResolution) {
+                color = Color.YELLOW;
+            } else if (empty) {
+                color = Color.DARKGRAY;
+            } else {
+                color = Color.WHITE;
+            }
             if (!defined(tile._debugBoundingVolume)) {
-                var color = tile._finalResolution ? (hasContentBoundingVolume ? Color.WHITE : Color.RED) : Color.YELLOW;
                 tile._debugBoundingVolume = tile._boundingVolume.createDebugVolume(color);
             }
             tile._debugBoundingVolume.update(frameState);
+            var attributes = tile._debugBoundingVolume.getGeometryInstanceAttributes('outline');
+            attributes.color = ColorGeometryInstanceAttribute.toValue(color, attributes.color);
         } else if (!showVolume && defined(tile._debugBoundingVolume)) {
             tile._debugBoundingVolume = tile._debugBoundingVolume.destroy();
         }
@@ -1038,6 +1136,23 @@ define([
         content.update(tileset, frameState);
     }
 
+    function updateClippingPlanes(tile, tileset) {
+        // Compute and compare ClippingPlanes state:
+        // - enabled-ness - are clipping planes enabled? is this tile clipped?
+        // - clipping plane count
+        // - clipping function (union v. intersection)
+        var clippingPlanes = tileset.clippingPlanes;
+        var currentClippingPlanesState = 0;
+        if (defined(clippingPlanes) && tile._isClipped && clippingPlanes.enabled) {
+            currentClippingPlanesState = clippingPlanes.clippingPlanesState;
+        }
+        // If clippingPlaneState for tile changed, mark clippingPlanesDirty so content can update
+        if (currentClippingPlanesState !== tile._clippingPlanesState) {
+            tile._clippingPlanesState = currentClippingPlanesState;
+            tile.clippingPlanesDirty = true;
+        }
+    }
+
     /**
      * Get the draw commands needed to render this tile.
      *
@@ -1045,9 +1160,12 @@ define([
      */
     Cesium3DTile.prototype.update = function(tileset, frameState) {
         var initCommandLength = frameState.commandList.length;
+        updateClippingPlanes(this, tileset);
         applyDebugSettings(this, tileset, frameState);
         updateContent(this, tileset, frameState);
         this._commandsLength = frameState.commandList.length - initCommandLength;
+
+        this.clippingPlanesDirty = false; // reset after content update
     };
 
     var scratchCommandList = [];

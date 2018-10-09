@@ -8,19 +8,21 @@ defineSuite([
         'Core/Ellipsoid',
         'Core/GeometryInstance',
         'Core/HeadingPitchRange',
-        'Core/loadArrayBuffer',
         'Core/Math',
         'Core/Matrix4',
         'Core/Rectangle',
         'Core/RectangleGeometry',
+        'Core/Resource',
         'Core/Transforms',
         'Renderer/Pass',
         'Scene/ClassificationType',
         'Scene/PerInstanceColorAppearance',
         'Scene/Primitive',
-        'ThirdParty/GltfPipeline/parseBinaryGltf',
         'Specs/createScene',
-        'Specs/pollToPromise'
+        'Specs/pollToPromise',
+        'ThirdParty/GltfPipeline/addDefaults',
+        'ThirdParty/GltfPipeline/parseGlb',
+        'ThirdParty/GltfPipeline/updateVersion'
     ], function(
         ClassificationModel,
         Cartesian3,
@@ -31,19 +33,21 @@ defineSuite([
         Ellipsoid,
         GeometryInstance,
         HeadingPitchRange,
-        loadArrayBuffer,
         CesiumMath,
         Matrix4,
         Rectangle,
         RectangleGeometry,
+        Resource,
         Transforms,
         Pass,
         ClassificationType,
         PerInstanceColorAppearance,
         Primitive,
-        parseBinaryGltf,
         createScene,
-        pollToPromise) {
+        pollToPromise,
+        addDefaults,
+        parseGlb,
+        updateVersion) {
     'use strict';
 
     var scene;
@@ -57,6 +61,16 @@ defineSuite([
         // One feature is located at the center, point the camera there
         var center = Cartesian3.fromRadians(longitude, latitude);
         scene.camera.lookAt(center, new HeadingPitchRange(0.0, -1.57, 15.0));
+    }
+
+    function loadModel(model) {
+        return Resource.fetchArrayBuffer(model).then(function(arrayBuffer) {
+            var gltf = new Uint8Array(arrayBuffer);
+            gltf = parseGlb(gltf);
+            updateVersion(gltf);
+            addDefaults(gltf);
+            return gltf;
+        });
     }
 
     beforeAll(function() {
@@ -129,7 +143,7 @@ defineSuite([
         var translation = Ellipsoid.WGS84.geodeticSurfaceNormalCartographic(new Cartographic(centerLongitude, centerLatitude));
         Cartesian3.multiplyByScalar(translation, -5.0, translation);
 
-        return loadArrayBuffer(batchedModel).then(function(arrayBuffer) {
+        return Resource.fetchArrayBuffer(batchedModel).then(function(arrayBuffer) {
             var model = scene.primitives.add(new ClassificationModel({
                 gltf : arrayBuffer,
                 classificationType : ClassificationType.CESIUM_3D_TILE,
@@ -159,7 +173,7 @@ defineSuite([
         var translation = Ellipsoid.WGS84.geodeticSurfaceNormalCartographic(new Cartographic(centerLongitude, centerLatitude));
         Cartesian3.multiplyByScalar(translation, -5.0, translation);
 
-        return loadArrayBuffer(quantizedModel).then(function(arrayBuffer) {
+        return Resource.fetchArrayBuffer(quantizedModel).then(function(arrayBuffer) {
             var model = scene.primitives.add(new ClassificationModel({
                 gltf : arrayBuffer,
                 classificationType : ClassificationType.CESIUM_3D_TILE,
@@ -186,22 +200,18 @@ defineSuite([
     });
 
     it('throws with invalid number of nodes', function() {
-        return loadArrayBuffer(batchedModel).then(function(arrayBuffer) {
-            var gltf = new Uint8Array(arrayBuffer);
-            gltf = parseBinaryGltf(gltf);
+        return loadModel(batchedModel).then(function(gltf) {
             gltf.nodes.push({});
             expect(function() {
                 return new ClassificationModel({
-                    gltf : gltf
+                    gltf: gltf
                 });
             }).toThrowRuntimeError();
         });
     });
 
     it('throws with invalid number of meshes', function() {
-        return loadArrayBuffer(batchedModel).then(function(arrayBuffer) {
-            var gltf = new Uint8Array(arrayBuffer);
-            gltf = parseBinaryGltf(gltf);
+        return loadModel(batchedModel).then(function(gltf) {
             gltf.meshes.push({});
             expect(function() {
                 return new ClassificationModel({
@@ -212,9 +222,7 @@ defineSuite([
     });
 
     it('throws with invalid number of primitives', function() {
-        return loadArrayBuffer(batchedModel).then(function(arrayBuffer) {
-            var gltf = new Uint8Array(arrayBuffer);
-            gltf = parseBinaryGltf(gltf);
+        return loadModel(batchedModel).then(function(gltf) {
             gltf.meshes[0].primitives.push({});
             expect(function() {
                 return new ClassificationModel({
@@ -225,9 +233,7 @@ defineSuite([
     });
 
     it('throws with position semantic', function() {
-        return loadArrayBuffer(batchedModel).then(function(arrayBuffer) {
-            var gltf = new Uint8Array(arrayBuffer);
-            gltf = parseBinaryGltf(gltf);
+        return loadModel(batchedModel).then(function(gltf) {
             gltf.meshes[0].primitives[0].attributes.POSITION = undefined;
             expect(function() {
                 return new ClassificationModel({
@@ -238,9 +244,7 @@ defineSuite([
     });
 
     it('throws with batch id semantic', function() {
-        return loadArrayBuffer(batchedModel).then(function(arrayBuffer) {
-            var gltf = new Uint8Array(arrayBuffer);
-            gltf = parseBinaryGltf(gltf);
+        return loadModel(batchedModel).then(function(gltf) {
             gltf.meshes[0].primitives[0].attributes._BATCHID = undefined;
             expect(function() {
                 return new ClassificationModel({

@@ -1,7 +1,6 @@
 define([
         '../Core/AttributeCompression',
         '../Core/Cartesian3',
-        '../Core/ClippingPlaneCollection',
         '../Core/Color',
         '../Core/ComponentDatatype',
         '../Core/defaultValue',
@@ -12,10 +11,8 @@ define([
         '../Core/DeveloperError',
         '../Core/Ellipsoid',
         '../Core/FeatureDetection',
-        '../Core/getAbsoluteUri',
         '../Core/getBaseUri',
         '../Core/getStringFromTypedArray',
-        '../Core/joinUrls',
         '../Core/Matrix3',
         '../Core/Matrix4',
         '../Core/Quaternion',
@@ -24,6 +21,7 @@ define([
         '../Core/Transforms',
         '../Core/TranslationRotationScale',
         '../Renderer/Pass',
+        './Axis',
         './Cesium3DTileBatchTable',
         './Cesium3DTileFeature',
         './Cesium3DTileFeatureTable',
@@ -31,7 +29,6 @@ define([
     ], function(
         AttributeCompression,
         Cartesian3,
-        ClippingPlaneCollection,
         Color,
         ComponentDatatype,
         defaultValue,
@@ -42,10 +39,8 @@ define([
         DeveloperError,
         Ellipsoid,
         FeatureDetection,
-        getAbsoluteUri,
         getBaseUri,
         getStringFromTypedArray,
-        joinUrls,
         Matrix3,
         Matrix4,
         Quaternion,
@@ -54,6 +49,7 @@ define([
         Transforms,
         TranslationRotationScale,
         Pass,
+        Axis,
         Cesium3DTileBatchTable,
         Cesium3DTileFeature,
         Cesium3DTileFeatureTable,
@@ -68,8 +64,8 @@ define([
 
     /**
      * Represents the contents of a
-     * {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/blob/master/TileFormats/Instanced3DModel/README.md|Instanced 3D Model}
-     * tile in a {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/blob/master/README.md|3D Tiles} tileset.
+     * {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/specification/TileFormats/Instanced3DModel|Instanced 3D Model}
+     * tile in a {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/specification|3D Tiles} tileset.
      * <p>
      * Implements the {@link Cesium3DTileContent} interface.
      * </p>
@@ -79,17 +75,14 @@ define([
      *
      * @private
      */
-    function Instanced3DModel3DTileContent(tileset, tile, url, arrayBuffer, byteOffset) {
+    function Instanced3DModel3DTileContent(tileset, tile, resource, arrayBuffer, byteOffset) {
         this._tileset = tileset;
         this._tile = tile;
-        this._url = url;
+        this._resource = resource;
         this._modelInstanceCollection = undefined;
         this._batchTable = undefined;
         this._features = undefined;
 
-        /**
-         * @inheritdoc Cesium3DTileContent#featurePropertiesDirty
-         */
         this.featurePropertiesDirty = false;
 
         initialize(this, arrayBuffer, byteOffset);
@@ -99,27 +92,18 @@ define([
     Instanced3DModel3DTileContent._deprecationWarning = deprecationWarning;
 
     defineProperties(Instanced3DModel3DTileContent.prototype, {
-        /**
-         * @inheritdoc Cesium3DTileContent#featuresLength
-         */
         featuresLength : {
             get : function() {
                 return this._batchTable.featuresLength;
             }
         },
 
-        /**
-         * @inheritdoc Cesium3DTileContent#pointsLength
-         */
         pointsLength : {
             get : function() {
                 return 0;
             }
         },
 
-        /**
-         * @inheritdoc Cesium3DTileContent#trianglesLength
-         */
         trianglesLength : {
             get : function() {
                 var model = this._modelInstanceCollection._model;
@@ -130,9 +114,6 @@ define([
             }
         },
 
-        /**
-         * @inheritdoc Cesium3DTileContent#geometryByteLength
-         */
         geometryByteLength : {
             get : function() {
                 var model = this._modelInstanceCollection._model;
@@ -143,9 +124,6 @@ define([
             }
         },
 
-        /**
-         * @inheritdoc Cesium3DTileContent#texturesByteLength
-         */
         texturesByteLength : {
             get : function() {
                 var model = this._modelInstanceCollection._model;
@@ -156,69 +134,54 @@ define([
             }
         },
 
-        /**
-         * @inheritdoc Cesium3DTileContent#batchTableByteLength
-         */
         batchTableByteLength : {
             get : function() {
                 return this._batchTable.memorySizeInBytes;
             }
         },
 
-        /**
-         * @inheritdoc Cesium3DTileContent#innerContents
-         */
         innerContents : {
             get : function() {
                 return undefined;
             }
         },
 
-        /**
-         * @inheritdoc Cesium3DTileContent#readyPromise
-         */
         readyPromise : {
             get : function() {
                 return this._modelInstanceCollection.readyPromise;
             }
         },
 
-        /**
-         * @inheritdoc Cesium3DTileContent#tileset
-         */
         tileset : {
             get : function() {
                 return this._tileset;
             }
         },
 
-        /**
-         * @inheritdoc Cesium3DTileContent#tile
-         */
         tile : {
             get : function() {
                 return this._tile;
             }
         },
 
-        /**
-         * @inheritdoc Cesium3DTileContent#url
-         */
         url: {
             get: function() {
-                return this._url;
+                return this._resource.getUrlComponent(true);
             }
         },
 
-        /**
-         * @inheritdoc Cesium3DTileContent#batchTable
-         */
         batchTable : {
             get : function() {
                 return this._batchTable;
             }
         }
     });
+
+    function getPickIdCallback(content) {
+        return function() {
+            return content._batchTable.getPickId();
+        };
+    }
 
     var sizeOfUint32 = Uint32Array.BYTES_PER_ELEMENT;
     var propertyScratch1 = new Array(4);
@@ -320,7 +283,9 @@ define([
             basePath : undefined,
             incrementallyLoadTextures : false,
             upAxis : content._tileset._gltfUpAxis,
-            opaquePass : Pass.CESIUM_3D_TILE // Draw opaque portions during the 3D Tiles pass
+            forwardAxis : Axis.X,
+            opaquePass : Pass.CESIUM_3D_TILE, // Draw opaque portions during the 3D Tiles pass
+            pickIdLoaded : getPickIdCallback(content)
         };
 
         if (gltfFormat === 0) {
@@ -329,10 +294,12 @@ define([
             // We need to remove padding from the end of the model URL in case this tile was part of a composite tile.
             // This removes all white space and null characters from the end of the string.
             gltfUrl = gltfUrl.replace(/[\s\0]+$/, '');
-            collectionOptions.url = getAbsoluteUri(joinUrls(getBaseUri(content._url, true), gltfUrl));
+            collectionOptions.url = content._resource.getDerivedResource({
+                url: gltfUrl
+            });
         } else {
             collectionOptions.gltf = gltfView;
-            collectionOptions.basePath = getAbsoluteUri(getBaseUri(content._url, true));
+            collectionOptions.basePath = content._resource.clone();
         }
 
         var eastNorthUp = featureTable.getGlobalProperty('EAST_NORTH_UP');
@@ -463,16 +430,10 @@ define([
         }
     }
 
-    /**
-     * @inheritdoc Cesium3DTileContent#hasProperty
-     */
     Instanced3DModel3DTileContent.prototype.hasProperty = function(batchId, name) {
         return this._batchTable.hasProperty(batchId, name);
     };
 
-    /**
-     * @inheritdoc Cesium3DTileContent#getFeature
-     */
     Instanced3DModel3DTileContent.prototype.getFeature = function(batchId) {
         var featuresLength = this.featuresLength;
         //>>includeStart('debug', pragmas.debug);
@@ -485,24 +446,15 @@ define([
         return this._features[batchId];
     };
 
-    /**
-     * @inheritdoc Cesium3DTileContent#applyDebugSettings
-     */
     Instanced3DModel3DTileContent.prototype.applyDebugSettings = function(enabled, color) {
         color = enabled ? color : Color.WHITE;
         this._batchTable.setAllColor(color);
     };
 
-    /**
-     * @inheritdoc Cesium3DTileContent#applyStyle
-     */
-    Instanced3DModel3DTileContent.prototype.applyStyle = function(frameState, style) {
-        this._batchTable.applyStyle(frameState, style);
+    Instanced3DModel3DTileContent.prototype.applyStyle = function(style) {
+        this._batchTable.applyStyle(style);
     };
 
-    /**
-     * @inheritdoc Cesium3DTileContent#update
-     */
     Instanced3DModel3DTileContent.prototype.update = function(tileset, frameState) {
         var commandStart = frameState.commandList.length;
 
@@ -513,41 +465,39 @@ define([
         this._modelInstanceCollection.modelMatrix = this._tile.computedTransform;
         this._modelInstanceCollection.shadows = this._tileset.shadows;
         this._modelInstanceCollection.debugWireframe = this._tileset.debugWireframe;
-        this._modelInstanceCollection.update(frameState);
 
-        // Update clipping planes
-        var tilesetClippingPlanes = this._tileset.clippingPlanes;
         var model = this._modelInstanceCollection._model;
-        var modelClippingPlanes = model.clippingPlanes;
-        if (defined(tilesetClippingPlanes)) {
-            if (!defined(modelClippingPlanes)) {
-                model.clippingPlanes = new ClippingPlaneCollection();
-                modelClippingPlanes = model.clippingPlanes;
+
+        if (defined(model)) {
+            // Update for clipping planes
+            var tilesetClippingPlanes = this._tileset.clippingPlanes;
+            if (this._tile.clippingPlanesDirty && defined(tilesetClippingPlanes)) {
+                model.clippingPlaneOffsetMatrix = this._tileset.clippingPlaneOffsetMatrix;
+                // Dereference the clipping planes from the model if they are irrelevant - saves on shading
+                // Link/Dereference directly to avoid ownership checks.
+                model._clippingPlanes = (tilesetClippingPlanes.enabled && this._tile._isClipped) ? tilesetClippingPlanes : undefined;
             }
 
-            tilesetClippingPlanes.clone(modelClippingPlanes);
-            modelClippingPlanes.enabled = tilesetClippingPlanes.enabled && this._tile._isClipped;
-        } else if (defined(modelClippingPlanes) && modelClippingPlanes.enabled) {
-            modelClippingPlanes.enabled = false;
+            // If the model references a different ClippingPlaneCollection due to the tileset's collection being replaced with a
+            // ClippingPlaneCollection that gives this tile the same clipping status, update the model to use the new ClippingPlaneCollection.
+            if (defined(tilesetClippingPlanes) && defined(model._clippingPlanes) && model._clippingPlanes !== tilesetClippingPlanes) {
+                model._clippingPlanes = tilesetClippingPlanes;
+            }
         }
+
+        this._modelInstanceCollection.update(frameState);
 
         // If any commands were pushed, add derived commands
         var commandEnd = frameState.commandList.length;
-        if ((commandStart < commandEnd) && frameState.passes.render) {
+        if ((commandStart < commandEnd) && (frameState.passes.render || frameState.passes.pick)) {
             this._batchTable.addDerivedCommands(frameState, commandStart, false);
         }
     };
 
-    /**
-     * @inheritdoc Cesium3DTileContent#isDestroyed
-     */
     Instanced3DModel3DTileContent.prototype.isDestroyed = function() {
         return false;
     };
 
-    /**
-     * @inheritdoc Cesium3DTileContent#destroy
-     */
     Instanced3DModel3DTileContent.prototype.destroy = function() {
         this._modelInstanceCollection = this._modelInstanceCollection && this._modelInstanceCollection.destroy();
         this._batchTable = this._batchTable && this._batchTable.destroy();

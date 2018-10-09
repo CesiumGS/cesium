@@ -1,13 +1,12 @@
 define([
-        '../Core/Event',
-        '../Core/defined'
+        '../Core/defined',
+        '../Core/Event'
     ], function(
-        Event,
-        defined
-    ) {
+        defined,
+        Event) {
     'use strict';
     /**
-     * @alias KMLTour
+     * @alias KmlTour
      * @constructor
      *
      * @param {String} name name parsed from KML
@@ -17,10 +16,12 @@ define([
     function KmlTour(name, id) {
         /**
          * Id of kml gx:Tour entry
+         * @type String
          */
         this.id = id;
         /**
          * Tour name
+         * @type String
          */
         this.name = name;
         /**

@@ -176,6 +176,51 @@ defineSuite([
         expect(pixelSize.y).toEqual(2.0);
     });
 
+    it('equals', function() {
+        var frustum2 = new OrthographicOffCenterFrustum();
+        frustum2.near = 1.0;
+        frustum2.far = 3.0;
+        frustum2.right = 1.0;
+        frustum2.left = -1.0;
+        frustum2.top = 1.0;
+        frustum2.bottom = -1.0;
+
+        expect(frustum).toEqual(frustum2);
+    });
+
+    it('equals epsilon', function() {
+        var frustum2 = new OrthographicOffCenterFrustum();
+        frustum2.near = 1.0;
+        frustum2.far = 3.0;
+        frustum2.right = 1.0;
+        frustum2.left = -1.0;
+        frustum2.top = 1.0;
+        frustum2.bottom = -1.0;
+        expect(frustum.equalsEpsilon(frustum2, CesiumMath.EPSILON7)).toEqual(true);
+
+        var frustum3 = new OrthographicOffCenterFrustum();
+        frustum3.near = 1.01;
+        frustum3.far = 2.98;
+        frustum3.right = 1.02;
+        frustum3.left = -0.99;
+        frustum3.top = 0.99;
+        frustum3.bottom = -1.05;
+        expect(frustum.equalsEpsilon(frustum3, CesiumMath.EPSILON1)).toEqual(true);
+
+        var frustum4 = new OrthographicOffCenterFrustum();
+        frustum4.near = 1.1;
+        frustum4.far = 2.9;
+        frustum4.right = 0.0;
+        frustum4.left = -1.02;
+        frustum4.top = 1.02;
+        frustum4.bottom = -1.005;
+        expect(frustum.equalsEpsilon(frustum4, CesiumMath.EPSILON2)).toEqual(false);
+    });
+
+    it('equals undefined', function() {
+        expect(frustum.equals()).toEqual(false);
+    });
+
     it('throws with undefined frustum parameters', function() {
         var frustum = new OrthographicOffCenterFrustum();
         expect(function() {

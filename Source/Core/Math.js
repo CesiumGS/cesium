@@ -1,10 +1,12 @@
 define([
         '../ThirdParty/mersenne-twister',
+        './Check',
         './defaultValue',
         './defined',
         './DeveloperError'
     ], function(
         MersenneTwister,
+        Check,
         defaultValue,
         defined,
         DeveloperError) {
@@ -14,6 +16,7 @@ define([
      * Math functions.
      *
      * @exports CesiumMath
+     * @alias Math
      */
     var CesiumMath = {};
 
@@ -158,7 +161,15 @@ define([
     CesiumMath.EPSILON20 = 0.00000000000000000001;
 
     /**
-     * 3.986004418e14
+     * 0.000000000000000000001
+     * @type {Number}
+     * @constant
+     */
+    CesiumMath.EPSILON21 = 0.000000000000000000001;
+
+    /**
+     * The gravitational parameter of the Earth in meters cubed
+     * per second squared as defined by the WGS84 model: 3.986004418e14
      * @type {Number}
      * @constant
      */
@@ -191,19 +202,18 @@ define([
      * Returns the sign of the value; 1 if the value is positive, -1 if the value is
      * negative, or 0 if the value is 0.
      *
+     * @function
      * @param {Number} value The value to return the sign of.
      * @returns {Number} The sign of value.
      */
-    CesiumMath.sign = function(value) {
-        if (value > 0) {
-            return 1;
+    CesiumMath.sign = defaultValue(Math.sign, function sign(value) {
+        value = +value; // coerce to number
+        if (value === 0 || value !== value) {
+            // zero or NaN
+            return value;
         }
-        if (value < 0) {
-            return -1;
-        }
-
-        return 0;
-    };
+        return value > 0 ? 1 : -1;
+    });
 
     /**
      * Returns 1.0 if the given value is positive or zero, and -1.0 if it is negative.
@@ -260,15 +270,13 @@ define([
      *   </ul>
      *</p>
      *
+     * @function
      * @param {Number} value The number whose hyperbolic sine is to be returned.
      * @returns {Number} The hyperbolic sine of <code>value</code>.
      */
-    CesiumMath.sinh = function(value) {
-        var part1 = Math.pow(Math.E, value);
-        var part2 = Math.pow(Math.E, -1.0 * value);
-
-        return (part1 - part2) * 0.5;
-    };
+    CesiumMath.sinh = defaultValue(Math.sinh, function sinh(value) {
+        return (Math.exp(value) - Math.exp(-value)) / 2.0;
+    });
 
     /**
      * Returns the hyperbolic cosine of a number.
@@ -286,15 +294,13 @@ define([
      *   </ul>
      *</p>
      *
+     * @function
      * @param {Number} value The number whose hyperbolic cosine is to be returned.
      * @returns {Number} The hyperbolic cosine of <code>value</code>.
      */
-    CesiumMath.cosh = function(value) {
-        var part1 = Math.pow(Math.E, value);
-        var part2 = Math.pow(Math.E, -1.0 * value);
-
-        return (part1 + part2) * 0.5;
-    };
+    CesiumMath.cosh = defaultValue(Math.cosh, function cosh(value) {
+        return (Math.exp(value) + Math.exp(-value)) / 2.0;
+    });
 
     /**
      * Computes the linear interpolation of two values.
@@ -333,7 +339,7 @@ define([
      * @type {Number}
      * @constant
      */
-    CesiumMath.PI_OVER_TWO = Math.PI * 0.5;
+    CesiumMath.PI_OVER_TWO = Math.PI / 2.0;
 
     /**
      * pi/3
@@ -365,7 +371,7 @@ define([
      * @type {Number}
      * @constant
      */
-    CesiumMath.THREE_PI_OVER_TWO = (3.0 * Math.PI) * 0.5;
+    CesiumMath.THREE_PI_OVER_TWO = 3.0 * Math.PI / 2.0;
 
     /**
      * 2pi
@@ -751,7 +757,6 @@ define([
         return randomNumberGenerator.random();
     };
 
-
     /**
      * Generates a random number between two numbers.
      *
@@ -836,11 +841,93 @@ define([
     };
 
     /**
+     * Finds the cube root of a number.
+     * Returns NaN if <code>number</code> is not provided.
+     *
+     * @function
+     * @param {Number} [number] The number.
+     * @returns {Number} The result.
+     */
+    CesiumMath.cbrt = defaultValue(Math.cbrt, function cbrt(number) {
+        var result = Math.pow(Math.abs(number), 1.0 / 3.0);
+        return number < 0.0 ? -result : result;
+    });
+
+    /**
+     * Finds the base 2 logarithm of a number.
+     *
+     * @function
+     * @param {Number} number The number.
+     * @returns {Number} The result.
+     */
+    CesiumMath.log2 = defaultValue(Math.log2, function log2(number) {
+        return Math.log(number) * Math.LOG2E;
+    });
+
+    /**
      * @private
      */
     CesiumMath.fog = function(distanceToCamera, density) {
         var scalar = distanceToCamera * density;
         return 1.0 - Math.exp(-(scalar * scalar));
+    };
+
+    /**
+     * Computes a fast approximation of Atan for input in the range [-1, 1].
+     *
+     * Based on Michal Drobot's approximation from ShaderFastLibs,
+     * which in turn is based on "Efficient approximations for the arctangent function,"
+     * Rajan, S. Sichun Wang Inkol, R. Joyal, A., May 2006.
+     * Adapted from ShaderFastLibs under MIT License.
+     *
+     * @param {Number} x An input number in the range [-1, 1]
+     * @returns {Number} An approximation of atan(x)
+     */
+    CesiumMath.fastApproximateAtan = function(x) {
+        //>>includeStart('debug', pragmas.debug);
+        Check.typeOf.number('x', x);
+        //>>includeEnd('debug');
+
+        return x * (-0.1784 * Math.abs(x) - 0.0663 * x * x + 1.0301);
+    };
+
+    /**
+     * Computes a fast approximation of Atan2(x, y) for arbitrary input scalars.
+     *
+     * Range reduction math based on nvidia's cg reference implementation: http://developer.download.nvidia.com/cg/atan2.html
+     *
+     * @param {Number} x An input number that isn't zero if y is zero.
+     * @param {Number} y An input number that isn't zero if x is zero.
+     * @returns {Number} An approximation of atan2(x, y)
+     */
+    CesiumMath.fastApproximateAtan2 = function(x, y) {
+        //>>includeStart('debug', pragmas.debug);
+        Check.typeOf.number('x', x);
+        Check.typeOf.number('y', y);
+        //>>includeEnd('debug');
+
+        // atan approximations are usually only reliable over [-1, 1]
+        // So reduce the range by flipping whether x or y is on top based on which is bigger.
+        var opposite;
+        var adjacent;
+        var t = Math.abs(x); // t used as swap and atan result.
+        opposite = Math.abs(y);
+        adjacent = Math.max(t, opposite);
+        opposite = Math.min(t, opposite);
+
+        var oppositeOverAdjacent = opposite / adjacent;
+        //>>includeStart('debug', pragmas.debug);
+        if (isNaN(oppositeOverAdjacent)) {
+            throw new DeveloperError('either x or y must be nonzero');
+        }
+        //>>includeEnd('debug');
+        t = CesiumMath.fastApproximateAtan(oppositeOverAdjacent);
+
+        // Undo range reduction
+        t = Math.abs(y) > Math.abs(x) ? CesiumMath.PI_OVER_TWO - t : t;
+        t = x < 0.0 ?  CesiumMath.PI - t : t;
+        t = y < 0.0 ? -t : t;
+        return t;
     };
 
     return CesiumMath;

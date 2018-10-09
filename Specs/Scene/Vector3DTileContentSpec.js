@@ -51,26 +51,26 @@ defineSuite([
     var tilesetRectangle = Rectangle.fromDegrees(-0.01, -0.01, 0.01, 0.01);
     var combinedRectangle = Rectangle.fromDegrees(-0.02, -0.01, 0.02, 0.01);
 
-    var vectorPoints = './Data/Cesium3DTiles/Vector/VectorTilePoints';
-    var vectorPointsBatchedChildren = './Data/Cesium3DTiles/Vector/VectorTilePointsBatchedChildren';
-    var vectorPointsBatchedChildrenWithBatchTable = './Data/Cesium3DTiles/Vector/VectorTilePointsBatchedChildrenWithBatchTable';
-    var vectorPointsWithBatchTable = './Data/Cesium3DTiles/Vector/VectorTilePointsWithBatchTable';
-    var vectorPointsWithBatchIds = './Data/Cesium3DTiles/Vector/VectorTilePointsWithBatchIds';
+    var vectorPoints = './Data/Cesium3DTiles/Vector/VectorTilePoints/tileset.json';
+    var vectorPointsBatchedChildren = './Data/Cesium3DTiles/Vector/VectorTilePointsBatchedChildren/tileset.json';
+    var vectorPointsBatchedChildrenWithBatchTable = './Data/Cesium3DTiles/Vector/VectorTilePointsBatchedChildrenWithBatchTable/tileset.json';
+    var vectorPointsWithBatchTable = './Data/Cesium3DTiles/Vector/VectorTilePointsWithBatchTable/tileset.json';
+    var vectorPointsWithBatchIds = './Data/Cesium3DTiles/Vector/VectorTilePointsWithBatchIds/tileset.json';
 
-    var vectorPolygons = './Data/Cesium3DTiles/Vector/VectorTilePolygons';
-    var vectorPolygonsBatchedChildren = './Data/Cesium3DTiles/Vector/VectorTilePolygonsBatchedChildren';
-    var vectorPolygonsBatchedChildrenWithBatchTable = './Data/Cesium3DTiles/Vector/VectorTilePolygonsBatchedChildrenWithBatchTable';
-    var vectorPolygonsWithBatchTable = './Data/Cesium3DTiles/Vector/VectorTilePolygonsWithBatchTable';
-    var vectorPolygonsWithBatchIds = './Data/Cesium3DTiles/Vector/VectorTilePolygonsWithBatchIds';
+    var vectorPolygons = './Data/Cesium3DTiles/Vector/VectorTilePolygons/tileset.json';
+    var vectorPolygonsBatchedChildren = './Data/Cesium3DTiles/Vector/VectorTilePolygonsBatchedChildren/tileset.json';
+    var vectorPolygonsBatchedChildrenWithBatchTable = './Data/Cesium3DTiles/Vector/VectorTilePolygonsBatchedChildrenWithBatchTable/tileset.json';
+    var vectorPolygonsWithBatchTable = './Data/Cesium3DTiles/Vector/VectorTilePolygonsWithBatchTable/tileset.json';
+    var vectorPolygonsWithBatchIds = './Data/Cesium3DTiles/Vector/VectorTilePolygonsWithBatchIds/tileset.json';
 
-    var vectorPolylines = './Data/Cesium3DTiles/Vector/VectorTilePolylines';
-    var vectorPolylinesBatchedChildren = './Data/Cesium3DTiles/Vector/VectorTilePolylinesBatchedChildren';
-    var vectorPolylinesBatchedChildrenWithBatchTable = './Data/Cesium3DTiles/Vector/VectorTilePolylinesBatchedChildrenWithBatchTable';
-    var vectorPolylinesWithBatchTable = './Data/Cesium3DTiles/Vector/VectorTilePolylinesWithBatchTable';
-    var vectorPolylinesWithBatchIds = './Data/Cesium3DTiles/Vector/VectorTilePolylinesWithBatchIds';
+    var vectorPolylines = './Data/Cesium3DTiles/Vector/VectorTilePolylines/tileset.json';
+    var vectorPolylinesBatchedChildren = './Data/Cesium3DTiles/Vector/VectorTilePolylinesBatchedChildren/tileset.json';
+    var vectorPolylinesBatchedChildrenWithBatchTable = './Data/Cesium3DTiles/Vector/VectorTilePolylinesBatchedChildrenWithBatchTable/tileset.json';
+    var vectorPolylinesWithBatchTable = './Data/Cesium3DTiles/Vector/VectorTilePolylinesWithBatchTable/tileset.json';
+    var vectorPolylinesWithBatchIds = './Data/Cesium3DTiles/Vector/VectorTilePolylinesWithBatchIds/tileset.json';
 
-    var vectorCombined = './Data/Cesium3DTiles/Vector/VectorTileCombined';
-    var vectorCombinedWithBatchIds = './Data/Cesium3DTiles/Vector/VectorTileCombinedWithBatchIds';
+    var vectorCombined = './Data/Cesium3DTiles/Vector/VectorTileCombined/tileset.json';
+    var vectorCombinedWithBatchIds = './Data/Cesium3DTiles/Vector/VectorTileCombinedWithBatchIds/tileset.json';
 
     var scene;
     var rectangle;
@@ -358,48 +358,6 @@ defineSuite([
         expectRenderPolylines(scene, [0, 0, 255, 255]);
     }
 
-    function verifyPickCombined(scene) {
-        var width = combinedRectangle.width;
-        var step = width / 3;
-
-        var west = combinedRectangle.west;
-        var north = combinedRectangle.north;
-        var south = combinedRectangle.south;
-
-        var polygonRect = new Rectangle(west, south, west + step, north);
-        var polylineRect = new Rectangle(west + step, south, west + step * 2, north);
-        var pointRect = new Rectangle(west + step * 2, south, west + step * 3, north);
-
-        scene.camera.lookAt(ellipsoid.cartographicToCartesian(Rectangle.center(polygonRect)), new Cartesian3(0.0, 0.0, 5.0));
-        expectPick(scene);
-        scene.camera.lookAt(ellipsoid.cartographicToCartesian(Rectangle.northeast(polylineRect)), new Cartesian3(0.0, 0.0, 5.0));
-        expectPick(scene);
-        scene.camera.lookAt(ellipsoid.cartographicToCartesian(Rectangle.center(pointRect)), new Cartesian3(0.0, 0.0, 5.0));
-        expect(scene).toPickAndCall(function(result) {
-            expect(result).toBeDefined();
-
-            result.color = Color.clone(Color.YELLOW, result.color);
-
-            expect(scene).toRenderAndCall(function(rgba) {
-                expect(rgba[0]).toBeGreaterThan(0);
-                expect(rgba[1]).toBeGreaterThan(0);
-                expect(rgba[2]).toEqual(0);
-                expect(rgba[3]).toEqual(255);
-            });
-
-            // Turn show off and on
-            result.show = false;
-            expect(scene).toRender([255, 0, 0, 255]);
-            result.show = true;
-            expect(scene).toRenderAndCall(function (rgba) {
-                expect(rgba[0]).toBeGreaterThan(0);
-                expect(rgba[1]).toBeGreaterThan(0);
-                expect(rgba[2]).toEqual(0);
-                expect(rgba[3]).toEqual(255);
-            });
-        });
-    }
-
     function expectRenderCombined(scene, color) {
         var width = combinedRectangle.width;
         var step = width / 3;
@@ -415,7 +373,15 @@ defineSuite([
         scene.camera.lookAt(ellipsoid.cartographicToCartesian(Rectangle.center(polygonRect)), new Cartesian3(0.0, 0.0, 5.0));
         expect(scene).toRender(color);
         scene.camera.lookAt(ellipsoid.cartographicToCartesian(Rectangle.northeast(polylineRect)), new Cartesian3(0.0, 0.0, 5.0));
-        expect(scene).toRender(color);
+        expect(scene).toRenderAndCall(function(rgba) {
+            for (var i = 0; i < color.length; ++i) {
+                if (color[i] === 0) {
+                    expect(rgba[i]).toEqual(0);
+                } else {
+                    expect(rgba[i]).toBeGreaterThan(0);
+                }
+            }
+        });
         scene.camera.lookAt(ellipsoid.cartographicToCartesian(Rectangle.center(pointRect)), new Cartesian3(0.0, 0.0, 5.0));
         expect(scene).toRenderAndCall(function(rgba) {
             expect(rgba).not.toEqual([0, 0, 0, 255]);
@@ -601,7 +567,6 @@ defineSuite([
         }));
         return loadTileset(tileset).then(function(tileset) {
             verifyRenderCombined(tileset, scene);
-            verifyPickCombined(scene);
         });
     });
 
@@ -612,7 +577,6 @@ defineSuite([
         }));
         return loadTileset(tileset).then(function(tileset) {
             verifyRenderCombined(tileset, scene);
-            verifyPickCombined(scene);
         });
     });
 
@@ -682,7 +646,7 @@ defineSuite([
             url : vectorPolygonsWithBatchTable
         }));
         return loadTileset(tileset).then(function(tileset) {
-            var content = tileset._root.content;
+            var content = tileset.root.content;
             expect(content.featuresLength).toBe(1);
             expect(content.innerContents).toBeUndefined();
             expect(content.hasProperty(0, 'name')).toBe(true);
@@ -695,7 +659,7 @@ defineSuite([
             url : vectorPolygonsWithBatchTable
         }));
         return loadTileset(tileset).then(function(tileset) {
-            var content = tileset._root.content;
+            var content = tileset.root.content;
             expect(function(){
                 content.getFeature(-1);
             }).toThrowDeveloperError();

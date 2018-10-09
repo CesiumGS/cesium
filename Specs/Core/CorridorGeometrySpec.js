@@ -1,17 +1,21 @@
 defineSuite([
         'Core/CorridorGeometry',
+        'Core/arrayFill',
         'Core/Cartesian3',
         'Core/CornerType',
         'Core/Ellipsoid',
+        'Core/GeometryOffsetAttribute',
         'Core/Math',
         'Core/Rectangle',
         'Core/VertexFormat',
         'Specs/createPackableSpecs'
     ], function(
         CorridorGeometry,
+        arrayFill,
         Cartesian3,
         CornerType,
         Ellipsoid,
+        GeometryOffsetAttribute,
         CesiumMath,
         Rectangle,
         VertexFormat,
@@ -126,6 +130,76 @@ defineSuite([
         expect(m.attributes.tangent.values.length).toEqual(numVertices * 3);
         expect(m.attributes.bitangent.values.length).toEqual(numVertices * 3);
         expect(m.indices.length).toEqual(numTriangles * 3);
+    });
+
+    it('computes offset attribute', function() {
+        var m = CorridorGeometry.createGeometry(new CorridorGeometry({
+            vertexFormat : VertexFormat.POSITION_ONLY,
+            positions : Cartesian3.fromDegreesArray([
+                90.0, -30.0,
+                90.0, -35.0
+            ]),
+            cornerType: CornerType.MITERED,
+            width : 30000,
+            offsetAttribute: GeometryOffsetAttribute.TOP
+        }));
+
+        var numVertices = 12;
+        expect(m.attributes.position.values.length).toEqual(numVertices * 3);
+
+        var offset = m.attributes.applyOffset.values;
+        expect(offset.length).toEqual(numVertices);
+        var expected = new Array(offset.length);
+        expected = arrayFill(expected, 1);
+        expect(offset).toEqual(expected);
+    });
+
+    it('computes offset attribute extruded for top vertices', function() {
+        var m = CorridorGeometry.createGeometry(new CorridorGeometry({
+            vertexFormat : VertexFormat.POSITION_ONLY,
+            positions : Cartesian3.fromDegreesArray([
+                90.0, -30.0,
+                90.0, -35.0
+            ]),
+            cornerType: CornerType.MITERED,
+            width : 30000,
+            extrudedHeight: 30000,
+            offsetAttribute: GeometryOffsetAttribute.TOP
+        }));
+
+        var numVertices = 72;
+        expect(m.attributes.position.values.length).toEqual(numVertices * 3);
+
+        var offset = m.attributes.applyOffset.values;
+        expect(offset.length).toEqual(numVertices);
+        var expected = new Array(offset.length);
+        expected = arrayFill(expected, 0);
+        expected = arrayFill(expected, 1, 0, 12);
+        expected = arrayFill(expected, 1, 24, 48);
+        expect(offset).toEqual(expected);
+    });
+
+    it('computes offset attribute extruded for all vertices', function() {
+        var m = CorridorGeometry.createGeometry(new CorridorGeometry({
+            vertexFormat : VertexFormat.POSITION_ONLY,
+            positions : Cartesian3.fromDegreesArray([
+                90.0, -30.0,
+                90.0, -35.0
+            ]),
+            cornerType: CornerType.MITERED,
+            width : 30000,
+            extrudedHeight: 30000,
+            offsetAttribute: GeometryOffsetAttribute.ALL
+        }));
+
+        var numVertices = 72;
+        expect(m.attributes.position.values.length).toEqual(numVertices * 3);
+
+        var offset = m.attributes.applyOffset.values;
+        expect(offset.length).toEqual(numVertices);
+        var expected = new Array(offset.length);
+        expected = arrayFill(expected, 1);
+        expect(offset).toEqual(expected);
     });
 
     it('computes right turn', function() {
@@ -281,6 +355,68 @@ defineSuite([
         expect(CesiumMath.toDegrees(r.west)).toEqual(-67.6550047734171);
     });
 
+    it('computeRectangle', function() {
+        var options = {
+            vertexFormat : VertexFormat.POSITION_ONLY,
+            positions : Cartesian3.fromDegreesArray([
+                -67.655, 0.0,
+                -67.655, 15.0,
+                -67.655, 20.0
+            ]),
+            cornerType: CornerType.MITERED,
+            width : 1
+        };
+        var geometry = new CorridorGeometry(options);
+
+        var expected = geometry.rectangle;
+        var result = CorridorGeometry.computeRectangle(options);
+
+        expect(result).toEqual(expected);
+    });
+
+    it('computeRectangle with result parameter', function() {
+        var options = {
+            positions : Cartesian3.fromDegreesArray([
+                72.0, 0.0,
+                85.0, 15.0,
+                83.0, 20.0
+            ]),
+            width : 5
+        };
+        var geometry = new CorridorGeometry(options);
+
+        var result = new Rectangle();
+        var expected = geometry.rectangle;
+        var returned = CorridorGeometry.computeRectangle(options, result);
+
+        expect(returned).toEqual(expected);
+        expect(returned).toBe(result);
+    });
+
+    it('computing textureCoordinateRotationPoints property', function() {
+        var c = new CorridorGeometry({
+            vertexFormat : VertexFormat.POSITION_ONLY,
+            positions : Cartesian3.fromDegreesArray([
+                -67.655, 0.0,
+                -67.655, 15.0,
+                -67.655, 20.0
+            ]),
+            cornerType: CornerType.MITERED,
+            width : 1,
+            granularity : Math.PI / 6.0
+        });
+
+        // Corridors don't support geometry orientation or stRotation, so expect this to equal the original coordinate system.
+        var textureCoordinateRotationPoints = c.textureCoordinateRotationPoints;
+        expect(textureCoordinateRotationPoints.length).toEqual(6);
+        expect(textureCoordinateRotationPoints[0]).toEqualEpsilon(0, CesiumMath.EPSILON7);
+        expect(textureCoordinateRotationPoints[1]).toEqualEpsilon(0, CesiumMath.EPSILON7);
+        expect(textureCoordinateRotationPoints[2]).toEqualEpsilon(0, CesiumMath.EPSILON7);
+        expect(textureCoordinateRotationPoints[3]).toEqualEpsilon(1, CesiumMath.EPSILON7);
+        expect(textureCoordinateRotationPoints[4]).toEqualEpsilon(1, CesiumMath.EPSILON7);
+        expect(textureCoordinateRotationPoints[5]).toEqualEpsilon(0, CesiumMath.EPSILON7);
+    });
+
     var positions = Cartesian3.fromDegreesArray([
          90.0, -30.0,
          90.0, -31.0
@@ -292,11 +428,10 @@ defineSuite([
         width : 30000.0,
         granularity : 0.1
     });
-    var rectangle = new Rectangle(1.568055205533759, -0.5410504013439219, 1.573537448056034, -0.5235971737132246);
+
     var packedInstance = [2, positions[0].x, positions[0].y, positions[0].z, positions[1].x, positions[1].y, positions[1].z];
     packedInstance.push(Ellipsoid.WGS84.radii.x, Ellipsoid.WGS84.radii.y, Ellipsoid.WGS84.radii.z);
     packedInstance.push(1.0, 0.0, 0.0, 0.0, 0.0, 0.0);
-    packedInstance.push(rectangle.west, rectangle.south, rectangle.east, rectangle.north);
-    packedInstance.push(30000.0, 0.0, 0.0, 2.0, 0.1, 0.0);
+    packedInstance.push(30000.0, 0.0, 0.0, 2.0, 0.1, 0.0, -1);
     createPackableSpecs(CorridorGeometry, corridor, packedInstance);
 });

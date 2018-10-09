@@ -8,17 +8,16 @@ define([
         './defaultValue',
         './defined',
         './defineProperties',
+        './deprecationWarning',
         './DeveloperError',
         './Event',
         './GeographicTilingScheme',
         './HeightmapTerrainData',
         './IndexDatatype',
-        './joinUrls',
-        './loadArrayBuffer',
-        './loadJson',
         './Math',
         './OrientedBoundingBox',
         './QuantizedMeshTerrainData',
+        './Resource',
         './RuntimeError',
         './TerrainProvider',
         './TileAvailability',
@@ -33,17 +32,16 @@ define([
         defaultValue,
         defined,
         defineProperties,
+        deprecationWarning,
         DeveloperError,
         Event,
         GeographicTilingScheme,
         HeightmapTerrainData,
         IndexDatatype,
-        joinUrls,
-        loadArrayBuffer,
-        loadJson,
         CesiumMath,
         OrientedBoundingBox,
         QuantizedMeshTerrainData,
+        Resource,
         RuntimeError,
         TerrainProvider,
         TileAvailability,
@@ -51,6 +49,8 @@ define([
     'use strict';
 
     function LayerInformation(layer) {
+        this.resource = layer.resource;
+        this.version = layer.version;
         this.isHeightmap = layer.isHeightmap;
         this.tileUrlTemplates = layer.tileUrlTemplates;
         this.availability = layer.availability;
@@ -61,15 +61,13 @@ define([
 
     /**
      * A {@link TerrainProvider} that accesses terrain data in a Cesium terrain format.
-     * The format is described on the
-     * {@link https://github.com/AnalyticalGraphicsInc/cesium/wiki/Cesium-Terrain-Server|Cesium wiki}.
+     * The supported formats are described on the {@link https://cesiumjs.org/data-and-assets/terrain/formats/|Terrain Formats page}.
      *
      * @alias CesiumTerrainProvider
      * @constructor
      *
      * @param {Object} options Object with the following properties:
-     * @param {String} options.url The URL of the Cesium terrain server.
-     * @param {Proxy} [options.proxy] A proxy to use for requests. This object is expected to have a getURL function which returns the proxied URL, if needed.
+     * @param {Resource|String|Promise<Resource>|Promise<String>} options.url The URL of the Cesium terrain server.
      * @param {Boolean} [options.requestVertexNormals=false] Flag that indicates if the client should request additional lighting information from the server, in the form of per vertex normals if available.
      * @param {Boolean} [options.requestWaterMask=false] Flag that indicates if the client should request per tile water masks from the server,  if available.
      * @param {Ellipsoid} [options.ellipsoid] The ellipsoid.  If not specified, the WGS84 ellipsoid is used.
@@ -77,29 +75,15 @@ define([
      *
      *
      * @example
-     * // Construct a terrain provider that uses per vertex normals for lighting
-     * // to add shading detail to an imagery provider.
-     * var terrainProvider = new Cesium.CesiumTerrainProvider({
-     *     url : 'https://assets.agi.com/stk-terrain/v1/tilesets/world/tiles',
-     *     requestVertexNormals : true
-     * });
-     *
-     * // Terrain geometry near the surface of the globe is difficult to view when using NaturalEarthII imagery,
-     * // unless the TerrainProvider provides additional lighting information to shade the terrain (as shown above).
-     * var imageryProvider = Cesium.createTileMapServiceImageryProvider({
-     *        url : 'http://localhost:8080/Source/Assets/Textures/NaturalEarthII',
-     *        fileExtension : 'jpg'
-     *    });
-     *
+     * // Create Arctic DEM terrain with normals.
      * var viewer = new Cesium.Viewer('cesiumContainer', {
-     *     imageryProvider : imageryProvider,
-     *     baseLayerPicker : false,
-     *     terrainProvider : terrainProvider
+     *     terrainProvider : new Cesium.CesiumTerrainProvider({
+     *         url : Cesium.IonResource.fromAssetId(3956),
+     *         requestVertexNormals : true
+     *     })
      * });
      *
-     * // The globe must enable lighting to make use of the terrain's vertex normals
-     * viewer.scene.globe.enableLighting = true;
-     *
+     * @see createWorldTerrain
      * @see TerrainProvider
      */
     function CesiumTerrainProvider(options) {
@@ -108,9 +92,6 @@ define([
             throw new DeveloperError('options.url is required.');
         }
         //>>includeEnd('debug');
-
-        this._url = options.url;
-        this._proxy = options.proxy;
 
         this._tilingScheme = new GeographicTilingScheme({
             numberOfLevelZeroTilesX : 2,
@@ -145,27 +126,53 @@ define([
 
         var credit = options.credit;
         if (typeof credit === 'string') {
-            credit = new Credit({text: credit});
+            credit = new Credit(credit);
         }
         this._credit = credit;
 
         this._availability = undefined;
 
+        var deferred = when.defer();
         this._ready = false;
-        this._readyPromise = when.defer();
-
-        var lastUrl = this._url;
-        var metadataUrl = joinUrls(this._url, 'layer.json');
-        if (defined(this._proxy)) {
-            metadataUrl = this._proxy.getURL(metadataUrl);
-        }
+        this._readyPromise = deferred;
+        this._tileCredits = undefined;
 
         var that = this;
+        var lastResource;
+        var metadataResource;
         var metadataError;
 
         var layers = this._layers = [];
         var attribution = '';
         var overallAvailability = [];
+        when(options.url)
+            .then(function(url) {
+                var resource = Resource.createIfNeeded(url);
+                resource.appendForwardSlash();
+                lastResource = resource;
+                metadataResource = lastResource.getDerivedResource({
+                    url: 'layer.json'
+                });
+
+                var uri = new Uri(metadataResource.url);
+                if (uri.authority === 'assets.agi.com') {
+                    var deprecationText = 'STK World Terrain at assets.agi.com was shut down on October 1, 2018.';
+                    var deprecationLinkText = 'Check out the new high-resolution Cesium World Terrain for migration instructions.';
+                    var deprecationLink = 'https://cesium.com/blog/2018/03/01/introducing-cesium-world-terrain/';
+                    that._tileCredits = [
+                        new Credit('<span><b>' + deprecationText + '</b></span> <a href="' + deprecationLink + '">' + deprecationLinkText + '</a>', true)
+                    ];
+                    deprecationWarning('assets.agi.com', deprecationText + ' ' + deprecationLinkText + ' ' + deprecationLink);
+                } else {
+                    // ion resources have a credits property we can use for additional attribution.
+                    that._tileCredits = resource.credits;
+                }
+
+                requestMetadata();
+            })
+            .otherwise(function(e) {
+                deferred.reject(e);
+            });
 
         function parseMetadataSuccess(data) {
             var message;
@@ -209,15 +216,6 @@ define([
             }
 
             var tileUrlTemplates = data.tiles;
-            for (var i = 0; i < tileUrlTemplates.length; ++i) {
-                var template = new Uri(tileUrlTemplates[i]);
-                var baseUri = new Uri(lastUrl);
-                if (template.authority && !baseUri.authority) {
-                    baseUri.authority = template.authority;
-                    baseUri.scheme = template.scheme;
-                }
-                tileUrlTemplates[i] = joinUrls(baseUri, template).toString().replace('{version}', data.version);
-            }
 
             var availableTiles = data.available;
             var availability;
@@ -267,6 +265,8 @@ define([
             }
 
             layers.push(new LayerInformation({
+                resource: lastResource,
+                version: data.version,
                 isHeightmap: isHeightmap,
                 tileUrlTemplates: tileUrlTemplates,
                 availability: availability,
@@ -281,12 +281,14 @@ define([
                     console.log('A layer.json can\'t have a parentUrl if it does\'t have an available array.');
                     return when.resolve();
                 }
-                lastUrl = joinUrls(lastUrl, parentUrl);
-                metadataUrl = joinUrls(lastUrl, 'layer.json');
-                if (defined(that._proxy)) {
-                    metadataUrl = that._proxy.getURL(metadataUrl);
-                }
-                var parentMetadata = loadJson(metadataUrl);
+                lastResource = lastResource.getDerivedResource({
+                    url: parentUrl
+                });
+                lastResource.appendForwardSlash(); // Terrain always expects a directory
+                metadataResource = lastResource.getDerivedResource({
+                    url: 'layer.json'
+                });
+                var parentMetadata = metadataResource.fetchJson();
                 return when(parentMetadata, parseMetadataSuccess, parseMetadataFailure);
             }
 
@@ -294,7 +296,7 @@ define([
         }
 
         function parseMetadataFailure(data) {
-            var message = 'An error occurred while accessing ' + metadataUrl + '.';
+            var message = 'An error occurred while accessing ' + metadataResource.url + '.';
             metadataError = TileProviderError.handleError(metadataError, that, that._errorEvent, message, undefined, undefined, undefined, requestMetadata);
         }
 
@@ -317,8 +319,14 @@ define([
                         }
                     }
 
-                    if (!defined(that._credit) && attribution.length > 0) {
-                        that._credit = new Credit({text: attribution});
+                    if (attribution.length > 0) {
+                        var layerJsonCredit = new Credit(attribution);
+
+                        if (defined(that._tileCredits)) {
+                            that._tileCredits.push(layerJsonCredit);
+                        } else {
+                            that._tileCredits = [layerJsonCredit];
+                        }
                     }
 
                     that._ready = true;
@@ -344,11 +352,10 @@ define([
         }
 
         function requestMetadata() {
-            var metadata = loadJson(metadataUrl);
-            when(metadata, metadataSuccess, metadataFailure);
+            when(metadataResource.fetchJson())
+                .then(metadataSuccess)
+                .otherwise(metadataFailure);
         }
-
-        requestMetadata();
     }
 
     /**
@@ -398,7 +405,8 @@ define([
             waterMask : new Uint8Array(buffer, heightBuffer.byteLength + 1, buffer.byteLength - heightBuffer.byteLength - 1),
             width : provider._heightmapWidth,
             height : provider._heightmapWidth,
-            structure : provider._heightmapStructure
+            structure : provider._heightmapStructure,
+            credits: provider._tileCredits
         });
     }
 
@@ -543,7 +551,8 @@ define([
             eastSkirtHeight : skirtHeight,
             northSkirtHeight : skirtHeight,
             childTileMask: provider.availability.computeChildMaskForTile(level, x, y),
-            waterMask: waterMaskBuffer
+            waterMask: waterMaskBuffer,
+            credits: provider._tileCredits
         });
     }
 
@@ -600,13 +609,6 @@ define([
 
         var tmsY = (yTiles - y - 1);
 
-        var url = urlTemplates[(x + tmsY + level) % urlTemplates.length].replace('{z}', level).replace('{x}', x).replace('{y}', tmsY);
-
-        var proxy = this._proxy;
-        if (defined(proxy)) {
-            url = proxy.getURL(url);
-        }
-
         var extensionList = [];
         if (this._requestVertexNormals && layerToUse.hasVertexNormals) {
             extensionList.push(layerToUse.littleEndianExtensionSize ? 'octvertexnormals' : 'vertexnormals');
@@ -615,14 +617,40 @@ define([
             extensionList.push('watermask');
         }
 
-        var promise = loadArrayBuffer(url, getRequestHeader(extensionList), request);
+        var headers;
+        var query;
+        var url = urlTemplates[(x + tmsY + level) % urlTemplates.length];
+        var resource = layerToUse.resource;
+        if (defined(resource._ionEndpoint) && !defined(resource._ionEndpoint.externalType)) {
+            // ion uses query paremeters to request extensions
+            if (extensionList.length !== 0) {
+                query = { extensions: extensionList.join('-') };
+            }
+            headers = getRequestHeader(undefined);
+        } else {
+            //All other terrain servers
+            headers = getRequestHeader(extensionList);
+        }
+
+        var promise = resource.getDerivedResource({
+            url: url,
+            templateValues: {
+                version: layerToUse.version,
+                z: level,
+                x: x,
+                y: tmsY
+            },
+            queryParameters: query,
+            headers: headers,
+            request: request
+        }).fetchArrayBuffer();
 
         if (!defined(promise)) {
             return undefined;
         }
 
         var that = this;
-        return when(promise, function(buffer) {
+        return promise.then(function (buffer) {
             if (defined(that._heightmapStructure)) {
                 return createHeightmapTerrainData(that, buffer, level, x, y, tmsY);
             }

@@ -366,6 +366,30 @@ define([
     };
 
     /**
+     * Compares the provided Rectangles componentwise and returns
+     * <code>true</code> if they pass an absolute or relative tolerance test,
+     * <code>false</code> otherwise.
+     *
+     * @param {Rectangle} [left] The first Rectangle.
+     * @param {Rectangle} [right] The second Rectangle.
+     * @param {Number} absoluteEpsilon The absolute epsilon tolerance to use for equality testing.
+     * @returns {Boolean} <code>true</code> if left and right are within the provided epsilon, <code>false</code> otherwise.
+     */
+    Rectangle.equalsEpsilon = function(left, right, absoluteEpsilon) {
+        //>>includeStart('debug', pragmas.debug);
+        Check.typeOf.number('absoluteEpsilon', absoluteEpsilon);
+        //>>includeEnd('debug');
+
+        return (left === right) ||
+               (defined(left) &&
+                defined(right) &&
+                (Math.abs(left.west - right.west) <= absoluteEpsilon) &&
+                (Math.abs(left.south - right.south) <= absoluteEpsilon) &&
+                (Math.abs(left.east - right.east) <= absoluteEpsilon) &&
+                (Math.abs(left.north - right.north) <= absoluteEpsilon));
+    };
+
+    /**
      * Duplicates this Rectangle.
      *
      * @param {Rectangle} [result] The object onto which to store the result.
@@ -418,11 +442,7 @@ define([
         Check.typeOf.number('epsilon', epsilon);
         //>>includeEnd('debug');
 
-        return defined(other) &&
-               (Math.abs(this.west - other.west) <= epsilon) &&
-               (Math.abs(this.south - other.south) <= epsilon) &&
-               (Math.abs(this.east - other.east) <= epsilon) &&
-               (Math.abs(this.north - other.north) <= epsilon);
+        return Rectangle.equalsEpsilon(this, other, epsilon);
     };
 
     /**

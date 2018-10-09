@@ -33,7 +33,7 @@
 <div id="loadingOverlay"><h1>Loading...</h1></div>
 <div id="toolbar"></div>
 
-<video id="trailer" style="display: none;" autoplay loop crossorigin controls>
+<video id="trailer" muted autoplay loop crossorigin controls>
     <source src="https://cesiumjs.org/videos/Sandcastle/big-buck-bunny_trailer.webm" type="video/webm">
     <source src="https://cesiumjs.org/videos/Sandcastle/big-buck-bunny_trailer.mp4" type="video/mp4">
     <source src="https://cesiumjs.org/videos/Sandcastle/big-buck-bunny_trailer.mov" type="video/quicktime">
@@ -43,7 +43,10 @@
 function startup(Cesium) {
     'use strict';
 //Sandcastle_Begin
-var viewer = new Cesium.Viewer('cesiumContainer', {showRenderLoopErrors : false});
+var viewer = new Cesium.Viewer('cesiumContainer', {
+    showRenderLoopErrors : false,
+    shouldAnimate : true
+});
 
 var videoElement = document.getElementById('trailer');
 
@@ -99,7 +102,7 @@ sphere.ellipsoid.material.repeat = new Cesium.CallbackProperty(function(time, re
 
 // Like Image, the video element doesn't have to be part of the DOM or
 // otherwise on the screen to be used as a texture.
-Sandcastle.addToggleButton('Video Overlay', false, function(checked) {
+Sandcastle.addToggleButton('Video Overlay', true, function(checked) {
     if (checked){
         videoElement.style.display = '';
     } else {
@@ -119,10 +122,10 @@ viewer.scene.renderError.addEventListener(function() {
 //Sandcastle_End
     Sandcastle.finishedLoading();
 }
-if (typeof Cesium !== "undefined") {
+if (typeof Cesium !== 'undefined') {
     startup(Cesium);
-} else if (typeof require === "function") {
-    require(["Cesium"], startup);
+} else if (typeof require === 'function') {
+    require(['Cesium'], startup);
 }
 </script>
 </body>

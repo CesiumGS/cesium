@@ -8,6 +8,7 @@ defineSuite([
         'Core/JulianDate',
         'Core/Matrix4',
         'Core/PrimitiveType',
+        'Core/Resource',
         'Core/Transforms',
         'Scene/Model',
         'Scene/ShadowMode',
@@ -24,6 +25,7 @@ defineSuite([
         JulianDate,
         Matrix4,
         PrimitiveType,
+        Resource,
         Transforms,
         Model,
         ShadowMode,
@@ -37,38 +39,16 @@ defineSuite([
     var riggedFigureUrl = './Data/Models/rigged-figure-test/rigged-figure-test.gltf';
     var movingBoxUrl = './Data/Models/moving-box/moving-box.gltf';
 
-    var boxGltf;
-    var cesiumAirGltf;
-    var riggedFigureGltf;
-    var movingBoxGltf;
-
-    var boxRadius;
-
     var scene;
+    var boxRadius;
 
     beforeAll(function() {
         scene = createScene();
 
-        var modelPromises = [];
-        modelPromises.push(loadModel(boxUrl).then(function(model) {
-            boxGltf = model.gltf;
+        return loadModel(boxUrl).then(function(model) {
             boxRadius = model.boundingSphere.radius;
             scene.primitives.remove(model);
-        }));
-        modelPromises.push(loadModel(cesiumAirUrl).then(function(model) {
-            cesiumAirGltf = model.gltf;
-            scene.primitives.remove(model);
-        }));
-        modelPromises.push(loadModel(riggedFigureUrl).then(function(model) {
-            riggedFigureGltf = model.gltf;
-            scene.primitives.remove(model);
-        }));
-        modelPromises.push(loadModel(movingBoxUrl).then(function(model) {
-            movingBoxGltf = model.gltf;
-            scene.primitives.remove(model);
-        }));
-
-        return when.all(modelPromises);
+        });
     });
 
     beforeEach(function() {
@@ -211,12 +191,14 @@ defineSuite([
     });
 
     it('throws when both options.gltf and options.url are provided', function() {
-        expect(function() {
-            return new ModelInstanceCollection({
-                url : boxUrl,
-                gltf : boxGltf
-            });
-        }).toThrowDeveloperError();
+        return loadModel(boxUrl).then(function(model) {
+            expect(function() {
+                return new ModelInstanceCollection({
+                    url: boxUrl,
+                    gltf: model.gltf
+                });
+            }).toThrowDeveloperError();
+        });
     });
 
     it('sets properties', function() {
@@ -250,9 +232,22 @@ defineSuite([
         });
     });
 
+    it('renders from Resource', function() {
+        var resource = new Resource({
+            url : boxUrl
+        });
+
+        return loadCollection({
+            url : resource,
+            instances : createInstances(4)
+        }).then(function(collection) {
+            expectRender(collection);
+        });
+    });
+
     it('renders from gltf', function() {
         return loadCollection({
-            gltf : boxGltf,
+            url : boxUrl,
             instances : createInstances(4)
         }).then(function(collection) {
             expectRender(collection);
@@ -261,15 +256,19 @@ defineSuite([
 
     it('resolves readyPromise', function() {
         var collection = scene.primitives.add(new ModelInstanceCollection({
-            gltf : boxGltf,
+            url : boxUrl,
             instances : createInstances(4)
         }));
 
-        scene.renderForSpecs();
-        scene.renderForSpecs();
-
-        return collection.readyPromise.then(function(collection) {
-            expect(collection.ready).toEqual(true);
+        return pollToPromise(function() {
+            scene.renderForSpecs();
+            return collection._model.ready;
+        }).then(function() {
+            scene.renderForSpecs();
+            scene.renderForSpecs();
+            return collection.readyPromise.then(function(collection) {
+                expect(collection.ready).toEqual(true);
+            });
         });
     });
 
@@ -291,7 +290,7 @@ defineSuite([
 
     it('renders one instance', function() {
         return loadCollection({
-            gltf : boxGltf,
+            url : boxUrl,
             instances : createInstances(1)
         }).then(function(collection) {
             expectRender(collection);
@@ -300,7 +299,7 @@ defineSuite([
 
     it('renders zero instances', function() {
         var collection = scene.primitives.add(new ModelInstanceCollection({
-            gltf : boxGltf,
+            url : boxUrl,
             instances : createInstances(0)
         }));
 
@@ -313,7 +312,7 @@ defineSuite([
 
     it('renders 100 instances', function() {
         return loadCollection({
-            gltf : boxGltf,
+            url : boxUrl,
             instances : createInstances(100)
         }).then(function(collection) {
             expectRender(collection);
@@ -322,7 +321,7 @@ defineSuite([
 
     it('renders cesiumAir', function() {
         return loadCollection({
-            gltf : cesiumAirGltf,
+            url : cesiumAirUrl,
             instances : createInstances(4)
         }).then(function(collection) {
             expectRender(collection);
@@ -331,9 +330,10 @@ defineSuite([
 
     it('renders rigged figure', function() {
         return loadCollection({
-            gltf : riggedFigureGltf,
+            url : riggedFigureUrl,
             instances : createInstances(4)
         }).then(function(collection) {
+            console.log(collection);
             expectRender(collection);
         });
     });
@@ -344,7 +344,7 @@ defineSuite([
         scene.context._instancedArrays = undefined;
 
         return loadCollection({
-            gltf : boxGltf,
+            url: boxUrl,
             instances : createInstances(4)
         }).then(function(collection) {
             expectRender(collection);
@@ -355,7 +355,7 @@ defineSuite([
 
     it('renders when dynamic is true', function() {
         return loadCollection({
-            gltf : boxGltf,
+            url : boxUrl,
             instances : createInstances(4),
             dynamic : true
         }).then(function(collection) {
@@ -366,7 +366,7 @@ defineSuite([
     it('verify bounding volume', function() {
         var instances = createInstances(4);
         return loadCollection({
-            gltf : boxGltf,
+            url : boxUrl,
             instances : instances
         }).then(function(collection) {
             var boundingSphere = getBoundingSphere(instances, boxRadius);
@@ -377,7 +377,7 @@ defineSuite([
 
     it('renders bounding volume', function() {
         return loadCollection({
-            gltf : boxGltf,
+            url : boxUrl,
             instances : createInstances(4)
         }).then(function(collection) {
             collection.debugShowBoundingVolume = true;
@@ -387,7 +387,7 @@ defineSuite([
 
     it('renders in wireframe', function() {
         return loadCollection({
-            gltf : boxGltf,
+            url : boxUrl,
             instances : createInstances(4)
         }).then(function(collection) {
             collection.debugWireframe = true;
@@ -400,7 +400,7 @@ defineSuite([
         // Test that all instances are being animated.
         // The moving box is in view on frame 1 and out of view by frame 5.
         return loadCollection({
-            gltf : movingBoxGltf,
+            url : movingBoxUrl,
             instances : createInstances(4)
         }).then(function(collection) {
             collection.activeAnimations.addAll();
@@ -423,7 +423,7 @@ defineSuite([
         scene.context._instancedArrays = undefined;
 
         return loadCollection({
-            gltf : movingBoxGltf,
+            url : movingBoxUrl,
             instances : createInstances(4)
         }).then(function(collection) {
             collection.activeAnimations.addAll();
@@ -497,35 +497,35 @@ defineSuite([
 
     it('culls when out of view and cull is true', function() {
         return loadCollection({
-            gltf : boxGltf,
+            url : boxUrl,
             instances : createInstances(4),
             cull : true
         }).then(function(collection) {
             scene.renderForSpecs();
-            expect(scene._frustumCommandsList.length).not.toEqual(0);
+            expect(scene.frustumCommandsList.length).not.toEqual(0);
             scene.camera.lookAt(new Cartesian3(100000.0, 0.0, 0.0), new HeadingPitchRange(0.0, 0.0, 10.0));
             scene.renderForSpecs();
-            expect(scene._frustumCommandsList.length).toEqual(0);
+            expect(scene.frustumCommandsList.length).toEqual(0);
         });
     });
 
     it('does not cull when out of view and cull is false', function() {
         return loadCollection({
-            gltf : boxGltf,
+            url : boxUrl,
             instances : createInstances(4),
             cull : false
         }).then(function(collection) {
             scene.renderForSpecs();
-            expect(scene._frustumCommandsList.length).not.toEqual(0);
+            expect(scene.frustumCommandsList.length).not.toEqual(0);
             scene.camera.lookAt(new Cartesian3(100000.0, 0.0, 0.0), new HeadingPitchRange(0.0, 0.0, 10.0));
             scene.renderForSpecs();
-            expect(scene._frustumCommandsList.length).not.toEqual(0);
+            expect(scene.frustumCommandsList.length).not.toEqual(0);
         });
     });
 
     it('shadows', function() {
         return loadCollection({
-            gltf : boxGltf,
+            url : boxUrl,
             instances : createInstances(4)
         }).then(function(collection) {
             scene.renderForSpecs();
@@ -535,6 +535,9 @@ defineSuite([
             expect(drawCommand.receiveShadows).toBe(true);
             collection.shadows = ShadowMode.DISABLED;
             scene.renderForSpecs();
+
+            // Expect commands to have been recreated
+            drawCommand = collection._drawCommands[0];
             expect(drawCommand.castShadows).toBe(false);
             expect(drawCommand.receiveShadows).toBe(false);
         });
@@ -542,7 +545,7 @@ defineSuite([
 
     it('picks', function() {
         return loadCollection({
-            gltf : boxGltf,
+            url : boxUrl,
             instances : createInstances(4)
         }).then(function(collection) {
             expectPick(collection);
@@ -555,7 +558,7 @@ defineSuite([
         scene.context._instancedArrays = undefined;
 
         return loadCollection({
-            gltf : boxGltf,
+            url : boxUrl,
             instances : createInstances(4)
         }).then(function(collection) {
             expectPick(collection);
@@ -566,7 +569,7 @@ defineSuite([
 
     it('moves instance', function() {
         return loadCollection({
-            gltf : boxGltf,
+            url : boxUrl,
             instances : createInstances(4)
         }).then(function(collection) {
             expect(scene).toPickAndCall(function(result) {
@@ -585,7 +588,7 @@ defineSuite([
         scene.context._instancedArrays = undefined;
 
         return loadCollection({
-            gltf : boxGltf,
+            url : boxUrl,
             instances : createInstances(4)
         }).then(function(collection) {
             expect(scene).toPickAndCall(function(result) {
@@ -604,7 +607,7 @@ defineSuite([
 
     it('renders in 2D', function() {
         return loadCollection({
-            gltf : boxGltf,
+            url : boxUrl,
             instances : createInstances(4)
         }).then(function(collection) {
             expectRender(collection);
@@ -619,7 +622,7 @@ defineSuite([
         scene.context._instancedArrays = undefined;
 
         return loadCollection({
-            gltf : boxGltf,
+            url : boxUrl,
             instances : createInstances(4)
         }).then(function(collection) {
             expectRender(collection);
@@ -633,7 +636,7 @@ defineSuite([
 
     it('renders in CV', function() {
         return loadCollection({
-            gltf : boxGltf,
+            url : boxUrl,
             instances : createInstances(4)
         }).then(function(collection) {
             expectRender(collection);
@@ -648,7 +651,7 @@ defineSuite([
         scene.context._instancedArrays = undefined;
 
         return loadCollection({
-            gltf : boxGltf,
+            url : boxUrl,
             instances : createInstances(4)
         }).then(function(collection) {
             expectRender(collection);
@@ -662,7 +665,7 @@ defineSuite([
 
     it('does not render during morph', function() {
         return loadCollection({
-            gltf : boxGltf,
+            url : boxUrl,
             instances : createInstances(4),
             cull : false
         }).then(function() {
@@ -677,7 +680,7 @@ defineSuite([
 
     it('destroys', function() {
         return loadCollection({
-            gltf : boxGltf,
+            url : boxUrl,
             instances : createInstances(4)
         }).then(function(collection) {
             expect(collection.isDestroyed()).toEqual(false);

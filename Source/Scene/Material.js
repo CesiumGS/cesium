@@ -11,11 +11,11 @@ define([
         '../Core/DeveloperError',
         '../Core/isArray',
         '../Core/loadCRN',
-        '../Core/loadImage',
         '../Core/loadKTX',
         '../Core/Matrix2',
         '../Core/Matrix3',
         '../Core/Matrix4',
+        '../Core/Resource',
         '../Renderer/CubeMap',
         '../Renderer/Texture',
         '../Shaders/Materials/BumpMapMaterial',
@@ -48,11 +48,11 @@ define([
         DeveloperError,
         isArray,
         loadCRN,
-        loadImage,
         loadKTX,
         Matrix2,
         Matrix3,
         Matrix4,
+        Resource,
         CubeMap,
         Texture,
         BumpMapMaterial,
@@ -539,8 +539,6 @@ define([
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
      * assign the return value (<code>undefined</code>) to the object as done in the example.
      *
-     * @returns {undefined}
-     *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
      *
@@ -790,26 +788,35 @@ define([
                 return;
             }
 
-            if (uniformValue !== material._texturePaths[uniformId]) {
-                if (typeof uniformValue === 'string') {
+            // When using the entity layer, the Resource objects get recreated on getValue because
+            //  they are clonable. That's why we check the url property for Resources
+            //  because the instances aren't the same and we keep trying to load the same
+            //  image if it fails to load.
+            var isResource = (uniformValue instanceof Resource);
+            if (!defined(material._texturePaths[uniformId]) ||
+                (isResource && uniformValue.url !== material._texturePaths[uniformId].url) ||
+                (!isResource && uniformValue !== material._texturePaths[uniformId])) {
+                if (typeof uniformValue === 'string' || isResource) {
+                    var resource = isResource ? uniformValue : Resource.createIfNeeded(uniformValue);
+
                     var promise;
                     if (ktxRegex.test(uniformValue)) {
-                        promise = loadKTX(uniformValue);
+                        promise = loadKTX(resource);
                     } else if (crnRegex.test(uniformValue)) {
-                        promise = loadCRN(uniformValue);
+                        promise = loadCRN(resource);
                     } else {
-                        promise = loadImage(uniformValue);
+                        promise = resource.fetchImage();
                     }
                     when(promise, function(image) {
                         material._loadedImages.push({
-                            id : uniformId,
-                            image : image
+                            id: uniformId,
+                            image: image
                         });
                     });
-                } else if (uniformValue instanceof HTMLCanvasElement) {
+                } else if (uniformValue instanceof HTMLCanvasElement || uniformValue instanceof HTMLImageElement) {
                     material._loadedImages.push({
-                        id : uniformId,
-                        image : uniformValue
+                        id: uniformId,
+                        image: uniformValue
                     });
                 }
 
@@ -848,12 +855,12 @@ define([
 
             if (path !== material._texturePaths[uniformId]) {
                 var promises = [
-                    loadImage(uniformValue.positiveX),
-                    loadImage(uniformValue.negativeX),
-                    loadImage(uniformValue.positiveY),
-                    loadImage(uniformValue.negativeY),
-                    loadImage(uniformValue.positiveZ),
-                    loadImage(uniformValue.negativeZ)
+                    Resource.createIfNeeded(uniformValue.positiveX).fetchImage(),
+                    Resource.createIfNeeded(uniformValue.negativeX).fetchImage(),
+                    Resource.createIfNeeded(uniformValue.positiveY).fetchImage(),
+                    Resource.createIfNeeded(uniformValue.negativeY).fetchImage(),
+                    Resource.createIfNeeded(uniformValue.positiveZ).fetchImage(),
+                    Resource.createIfNeeded(uniformValue.negativeZ).fetchImage()
                 ];
 
                 when.all(promises).then(function(images) {
@@ -964,7 +971,7 @@ define([
                 uniformType = 'float';
             } else if (type === 'boolean') {
                 uniformType = 'bool';
-            } else if (type === 'string' || uniformValue instanceof HTMLCanvasElement) {
+            } else if (type === 'string' || uniformValue instanceof Resource ||uniformValue instanceof HTMLCanvasElement || uniformValue instanceof HTMLImageElement) {
                 if (/^([rgba]){1,4}$/i.test(uniformValue)) {
                     uniformType = 'channels';
                 } else if (uniformValue === Material.DefaultCubeMapId) {

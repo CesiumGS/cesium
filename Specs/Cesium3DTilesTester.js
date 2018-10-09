@@ -3,6 +3,7 @@ define([
         'Core/Color',
         'Core/defaultValue',
         'Core/defined',
+        'Core/Resource',
         'Scene/Cesium3DTileContentFactory',
         'Scene/Cesium3DTileset',
         'Scene/TileBoundingSphere',
@@ -12,6 +13,7 @@ define([
         Color,
         defaultValue,
         defined,
+        Resource,
         Cesium3DTileContentFactory,
         Cesium3DTileset,
         TileBoundingSphere,
@@ -95,6 +97,7 @@ define([
             scene.renderForSpecs();
             return tileset.tilesLoaded;
         }).then(function() {
+            scene.renderForSpecs();
             return tileset;
         });
     };
@@ -119,15 +122,20 @@ define([
 
     Cesium3DTilesTester.loadTileExpectError = function(scene, arrayBuffer, type) {
         var tileset = {};
-        var url = '';
+        var url = Resource.createIfNeeded('');
         expect(function() {
             return Cesium3DTileContentFactory[type](tileset, mockTile, url, arrayBuffer, 0);
         }).toThrowRuntimeError();
     };
 
     Cesium3DTilesTester.loadTile = function(scene, arrayBuffer, type) {
-        var tileset = {};
-        var url = '';
+        var tileset = {
+            _statistics : {
+                batchTableByteLength : 0
+            },
+            root : {}
+        };
+        var url = Resource.createIfNeeded('');
         var content = Cesium3DTileContentFactory[type](tileset, mockTile, url, arrayBuffer, 0);
         content.update(tileset, scene.frameState);
         return content;
@@ -138,9 +146,12 @@ define([
     var counter = 0;
     Cesium3DTilesTester.rejectsReadyPromiseOnError = function(scene, arrayBuffer, type) {
         var tileset = {
-            basePath : counter++
+            basePath : counter++,
+            _statistics : {
+                batchTableByteLength : 0
+            }
         };
-        var url = '';
+        var url = Resource.createIfNeeded('');
         var content = Cesium3DTileContentFactory[type](tileset, mockTile, url, arrayBuffer, 0);
         content.update(tileset, scene.frameState);
 
@@ -153,7 +164,7 @@ define([
 
     Cesium3DTilesTester.resolvesReadyPromise = function(scene, url) {
         return Cesium3DTilesTester.loadTileset(scene, url).then(function(tileset) {
-            var content = tileset._root.content;
+            var content = tileset.root.content;
             return content.readyPromise.then(function(content) {
                 expect(content).toBeDefined();
             });
@@ -162,7 +173,7 @@ define([
 
     Cesium3DTilesTester.tileDestroys = function(scene, url) {
         return Cesium3DTilesTester.loadTileset(scene, url).then(function(tileset) {
-            var content = tileset._root.content;
+            var content = tileset.root.content;
             expect(content.isDestroyed()).toEqual(false);
             scene.primitives.remove(tileset);
             expect(content.isDestroyed()).toEqual(true);

@@ -8,8 +8,15 @@ define([
         '../Renderer/Framebuffer',
         '../Renderer/PixelDatatype',
         '../Renderer/RenderState',
+        '../Renderer/ShaderSource',
+        '../Renderer/Sampler',
         '../Renderer/Texture',
-        '../Shaders/PostProcessFilters/PassThrough'
+        '../Renderer/TextureWrap',
+        '../Renderer/TextureMagnificationFilter',
+        '../Renderer/TextureMinificationFilter',
+        '../Shaders/PostProcessStages/DepthViewPacked',
+        '../Shaders/PostProcessStages/PassThrough',
+        '../Shaders/PostProcessStages/PassThroughDepth'
     ], function(
         BoundingRectangle,
         Color,
@@ -20,8 +27,15 @@ define([
         Framebuffer,
         PixelDatatype,
         RenderState,
+        ShaderSource,
+        Sampler,
         Texture,
-        PassThrough) {
+        TextureWrap,
+        TextureMagnificationFilter,
+        TextureMinificationFilter,
+        DepthViewPacked,
+        PassThrough,
+        PassThroughDepth) {
     'use strict';
 
     /**
@@ -45,32 +59,41 @@ define([
         this._useScissorTest = false;
         this._scissorRectangle = undefined;
 
+        this._useLogDepth = undefined;
+
         this._debugGlobeDepthViewportCommand = undefined;
     }
 
-    function executeDebugGlobeDepth(globeDepth, context, passState) {
-        if (!defined(globeDepth._debugGlobeDepthViewportCommand)) {
-            var fs =
-                'uniform sampler2D u_texture;\n' +
+    function executeDebugGlobeDepth(globeDepth, context, passState, useLogDepth) {
+        if (!defined(globeDepth._debugGlobeDepthViewportCommand) || useLogDepth !== globeDepth._useLogDepth) {
+            var fsSource =
+                'uniform sampler2D u_depthTexture;\n' +
                 'varying vec2 v_textureCoordinates;\n' +
                 'void main()\n' +
                 '{\n' +
-                '    float z_window = czm_unpackDepth(texture2D(u_texture, v_textureCoordinates));\n' +
+                '    float z_window = czm_unpackDepth(texture2D(u_depthTexture, v_textureCoordinates));\n' +
+                '    z_window = czm_reverseLogDepth(z_window); \n' +
                 '    float n_range = czm_depthRange.near;\n' +
                 '    float f_range = czm_depthRange.far;\n' +
                 '    float z_ndc = (2.0 * z_window - n_range - f_range) / (f_range - n_range);\n' +
                 '    float scale = pow(z_ndc * 0.5 + 0.5, 8.0);\n' +
                 '    gl_FragColor = vec4(mix(vec3(0.0), vec3(1.0), scale), 1.0);\n' +
                 '}\n';
+            var fs = new ShaderSource({
+                defines : [useLogDepth ? 'LOG_DEPTH' : ''],
+                sources : [fsSource]
+            });
 
             globeDepth._debugGlobeDepthViewportCommand = context.createViewportQuadCommand(fs, {
                 uniformMap : {
-                    u_texture : function() {
+                    u_depthTexture : function() {
                         return globeDepth._globeDepthTexture;
                     }
                 },
                 owner : globeDepth
             });
+
+            globeDepth._useLogDepth = useLogDepth;
         }
 
         globeDepth._debugGlobeDepthViewportCommand.execute(context, passState);
@@ -93,7 +116,13 @@ define([
             width : width,
             height : height,
             pixelFormat : PixelFormat.RGBA,
-            pixelDatatype : PixelDatatype.UNSIGNED_BYTE
+            pixelDatatype : PixelDatatype.UNSIGNED_BYTE,
+            sampler : new Sampler({
+                wrapS : TextureWrap.CLAMP_TO_EDGE,
+                wrapT : TextureWrap.CLAMP_TO_EDGE,
+                minificationFilter : TextureMinificationFilter.NEAREST,
+                magnificationFilter : TextureMagnificationFilter.NEAREST
+            })
         });
 
         globeDepth._depthStencilTexture = new Texture({
@@ -109,7 +138,13 @@ define([
             width : width,
             height : height,
             pixelFormat : PixelFormat.RGBA,
-            pixelDatatype : PixelDatatype.UNSIGNED_BYTE
+            pixelDatatype : PixelDatatype.UNSIGNED_BYTE,
+            sampler : new Sampler({
+                wrapS : TextureWrap.CLAMP_TO_EDGE,
+                wrapT : TextureWrap.CLAMP_TO_EDGE,
+                minificationFilter : TextureMinificationFilter.NEAREST,
+                magnificationFilter : TextureMagnificationFilter.NEAREST
+            })
         });
     }
 
@@ -163,16 +198,9 @@ define([
         }
 
         if (!defined(globeDepth._copyDepthCommand)) {
-            var fs =
-                'uniform sampler2D u_texture;\n' +
-                'varying vec2 v_textureCoordinates;\n' +
-                'void main()\n' +
-                '{\n' +
-                '    gl_FragColor = czm_packDepth(texture2D(u_texture, v_textureCoordinates).r);\n' +
-                '}\n';
-            globeDepth._copyDepthCommand = context.createViewportQuadCommand(fs, {
+            globeDepth._copyDepthCommand = context.createViewportQuadCommand(PassThroughDepth, {
                 uniformMap : {
-                    u_texture : function() {
+                    u_depthTexture : function() {
                         return globeDepth._depthStencilTexture;
                     }
                 },
@@ -185,7 +213,7 @@ define([
         if (!defined(globeDepth._copyColorCommand)) {
             globeDepth._copyColorCommand = context.createViewportQuadCommand(PassThrough, {
                 uniformMap : {
-                    u_texture : function() {
+                    colorTexture : function() {
                         return globeDepth._colorTexture;
                     }
                 },
@@ -207,13 +235,13 @@ define([
         globeDepth._clearColorCommand.framebuffer = globeDepth.framebuffer;
     }
 
-    GlobeDepth.prototype.executeDebugGlobeDepth = function(context, passState) {
-        executeDebugGlobeDepth(this, context, passState);
+    GlobeDepth.prototype.executeDebugGlobeDepth = function(context, passState, useLogDepth) {
+        executeDebugGlobeDepth(this, context, passState, useLogDepth);
     };
 
-    GlobeDepth.prototype.update = function(context, passState) {
-        var width = context.drawingBufferWidth;
-        var height = context.drawingBufferHeight;
+    GlobeDepth.prototype.update = function(context, passState, viewport) {
+        var width = viewport.width;
+        var height = viewport.height;
 
         updateFramebuffers(this, context, width, height);
         updateCopyCommands(this, context, width, height, passState);

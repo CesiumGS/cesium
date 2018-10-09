@@ -32,7 +32,7 @@ define([
      * An expression for a style applied to a {@link Cesium3DTileset}.
      * <p>
      * Evaluates an expression defined using the
-     * {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/Styling|3D Tiles Styling language}.
+     * {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/specification/Styling|3D Tiles Styling language}.
      * </p>
      * <p>
      * Implements the {@link StyleExpression} interface.
@@ -46,11 +46,11 @@ define([
      *
      * @example
      * var expression = new Cesium.Expression('(regExp("^Chest").test(${County})) && (${YearBuilt} >= 1970)');
-     * expression.evaluate(frameState, feature); // returns true or false depending on the feature's properties
+     * expression.evaluate(feature); // returns true or false depending on the feature's properties
      *
      * @example
      * var expression = new Cesium.Expression('(${Temperature} > 90) ? color("red") : color("white")');
-     * expression.evaluateColor(frameState, feature, result); // returns a Cesium.Color object
+     * expression.evaluateColor(feature, result); // returns a Cesium.Color object
      */
     function Expression(expression, defines) {
         //>>includeStart('debug', pragmas.debug);
@@ -141,21 +141,20 @@ define([
     /**
      * Evaluates the result of an expression, optionally using the provided feature's properties. If the result of
      * the expression in the
-     * {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/Styling|3D Tiles Styling language}
+     * {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/specification/Styling|3D Tiles Styling language}
      * is of type <code>Boolean</code>, <code>Number</code>, or <code>String</code>, the corresponding JavaScript
      * primitive type will be returned. If the result is a <code>RegExp</code>, a Javascript <code>RegExp</code>
      * object will be returned. If the result is a <code>Cartesian2</code>, <code>Cartesian3</code>, or <code>Cartesian4</code>,
      * a {@link Cartesian2}, {@link Cartesian3}, or {@link Cartesian4} object will be returned. If the <code>result</code> argument is
      * a {@link Color}, the {@link Cartesian4} value is converted to a {@link Color} and then returned.
      *
-     * @param {FrameState} frameState The frame state.
      * @param {Cesium3DTileFeature} feature The feature whose properties may be used as variables in the expression.
      * @param {Object} [result] The object onto which to store the result.
      * @returns {Boolean|Number|String|RegExp|Cartesian2|Cartesian3|Cartesian4|Color} The result of evaluating the expression.
      */
-    Expression.prototype.evaluate = function(frameState, feature, result) {
+    Expression.prototype.evaluate = function(feature, result) {
         scratchStorage.reset();
-        var value = this._runtimeAst.evaluate(frameState, feature);
+        var value = this._runtimeAst.evaluate(feature);
         if ((result instanceof Color) && (value instanceof Cartesian4)) {
             return Color.fromCartesian4(value, result);
         }
@@ -171,14 +170,13 @@ define([
      * This is equivalent to {@link Expression#evaluate} but always returns a {@link Color} object.
      * </p>
      *
-     * @param {FrameState} frameState The frame state.
      * @param {Cesium3DTileFeature} feature The feature whose properties may be used as variables in the expression.
      * @param {Color} [result] The object in which to store the result
      * @returns {Color} The modified result parameter or a new Color instance if one was not provided.
      */
-    Expression.prototype.evaluateColor = function(frameState, feature, result) {
+    Expression.prototype.evaluateColor = function(feature, result) {
         scratchStorage.reset();
-        var color = this._runtimeAst.evaluate(frameState, feature);
+        var color = this._runtimeAst.evaluate(feature);
         return Color.fromCartesian4(color, result);
     };
 
@@ -256,18 +254,18 @@ define([
     };
 
     var binaryFunctions = {
-        atan2 : getEvaluateBinaryCommponentwise(Math.atan2, false),
-        pow : getEvaluateBinaryCommponentwise(Math.pow, false),
-        min : getEvaluateBinaryCommponentwise(Math.min, true),
-        max : getEvaluateBinaryCommponentwise(Math.max, true),
+        atan2 : getEvaluateBinaryComponentwise(Math.atan2, false),
+        pow : getEvaluateBinaryComponentwise(Math.pow, false),
+        min : getEvaluateBinaryComponentwise(Math.min, true),
+        max : getEvaluateBinaryComponentwise(Math.max, true),
         distance : distance,
         dot : dot,
         cross : cross
     };
 
     var ternaryFunctions = {
-        clamp : getEvaluateTernaryCommponentwise(CesiumMath.clamp, true),
-        mix : getEvaluateTernaryCommponentwise(CesiumMath.lerp, true)
+        clamp : getEvaluateTernaryComponentwise(CesiumMath.clamp, true),
+        mix : getEvaluateTernaryComponentwise(CesiumMath.lerp, true)
     };
 
     function fract(number) {
@@ -279,7 +277,7 @@ define([
     }
 
     function log2(number) {
-        return CesiumMath.logBase(number, 2.0);
+        return CesiumMath.log2(number);
     }
 
     function getEvaluateUnaryComponentwise(operation) {
@@ -297,7 +295,7 @@ define([
         };
     }
 
-    function getEvaluateBinaryCommponentwise(operation, allowScalar) {
+    function getEvaluateBinaryComponentwise(operation, allowScalar) {
         return function(call, left, right) {
             if (allowScalar && typeof right === 'number') {
                 if (typeof left === 'number') {
@@ -325,7 +323,7 @@ define([
         };
     }
 
-    function getEvaluateTernaryCommponentwise(operation, allowScalar) {
+    function getEvaluateTernaryComponentwise(operation, allowScalar) {
         return function(call, left, right, test) {
             if (allowScalar && typeof test === 'number') {
                 if (typeof left === 'number' && typeof right === 'number') {
@@ -901,85 +899,85 @@ define([
         }
     }
 
-    function evaluateTilesetTime(frameState, feature) {
+    function evaluateTilesetTime(feature) {
         return feature.content.tileset.timeSinceLoad;
     }
 
     function getEvaluateUnaryFunction(call) {
         var evaluate = unaryFunctions[call];
-        return function(frameState, feature) {
-            var left = this._left.evaluate(frameState, feature);
+        return function(feature) {
+            var left = this._left.evaluate(feature);
             return evaluate(call, left);
         };
     }
 
     function getEvaluateBinaryFunction(call) {
         var evaluate = binaryFunctions[call];
-        return function(frameState, feature) {
-            var left = this._left.evaluate(frameState, feature);
-            var right = this._right.evaluate(frameState, feature);
+        return function(feature) {
+            var left = this._left.evaluate(feature);
+            var right = this._right.evaluate(feature);
             return evaluate(call, left, right);
         };
     }
 
     function getEvaluateTernaryFunction(call) {
         var evaluate = ternaryFunctions[call];
-        return function(frameState, feature) {
-            var left = this._left.evaluate(frameState, feature);
-            var right = this._right.evaluate(frameState, feature);
-            var test = this._test.evaluate(frameState, feature);
+        return function(feature) {
+            var left = this._left.evaluate(feature);
+            var right = this._right.evaluate(feature);
+            var test = this._test.evaluate(feature);
             return evaluate(call, left, right, test);
         };
     }
 
-    Node.prototype._evaluateLiteral = function(frameState, feature) {
+    Node.prototype._evaluateLiteral = function() {
         return this._value;
     };
 
-    Node.prototype._evaluateLiteralColor = function(frameState, feature) {
+    Node.prototype._evaluateLiteralColor = function(feature) {
         var color = scratchColor;
         var args = this._left;
         if (this._value === 'color') {
             if (!defined(args)) {
                 Color.fromBytes(255, 255, 255, 255, color);
             } else if (args.length > 1) {
-                Color.fromCssColorString(args[0].evaluate(frameState, feature), color);
-                color.alpha = args[1].evaluate(frameState, feature);
+                Color.fromCssColorString(args[0].evaluate(feature), color);
+                color.alpha = args[1].evaluate(feature);
             } else {
-                Color.fromCssColorString(args[0].evaluate(frameState, feature), color);
+                Color.fromCssColorString(args[0].evaluate(feature), color);
             }
         } else if (this._value === 'rgb') {
             Color.fromBytes(
-                args[0].evaluate(frameState, feature),
-                args[1].evaluate(frameState, feature),
-                args[2].evaluate(frameState, feature),
+                args[0].evaluate(feature),
+                args[1].evaluate(feature),
+                args[2].evaluate(feature),
                 255, color);
         } else if (this._value === 'rgba') {
             // convert between css alpha (0 to 1) and cesium alpha (0 to 255)
-            var a = args[3].evaluate(frameState, feature) * 255;
+            var a = args[3].evaluate(feature) * 255;
             Color.fromBytes(
-                args[0].evaluate(frameState, feature),
-                args[1].evaluate(frameState, feature),
-                args[2].evaluate(frameState, feature),
+                args[0].evaluate(feature),
+                args[1].evaluate(feature),
+                args[2].evaluate(feature),
                 a, color);
         } else if (this._value === 'hsl') {
             Color.fromHsl(
-                args[0].evaluate(frameState, feature),
-                args[1].evaluate(frameState, feature),
-                args[2].evaluate(frameState, feature),
+                args[0].evaluate(feature),
+                args[1].evaluate(feature),
+                args[2].evaluate(feature),
                 1.0, color);
         } else if (this._value === 'hsla') {
             Color.fromHsl(
-                args[0].evaluate(frameState, feature),
-                args[1].evaluate(frameState, feature),
-                args[2].evaluate(frameState, feature),
-                args[3].evaluate(frameState, feature),
+                args[0].evaluate(feature),
+                args[1].evaluate(feature),
+                args[2].evaluate(feature),
+                args[3].evaluate(feature),
                 color);
         }
         return Cartesian4.fromColor(color, scratchStorage.getCartesian4());
     };
 
-    Node.prototype._evaluateLiteralVector = function(frameState, feature) {
+    Node.prototype._evaluateLiteralVector = function(feature) {
         // Gather the components that make up the vector, which includes components from interior vectors.
         // For example vec3(1, 2, 3) or vec3(vec2(1, 2), 3) are both valid.
         //
@@ -998,7 +996,7 @@ define([
         var args = this._left;
         var argsLength = args.length;
         for (var i = 0; i < argsLength; ++i) {
-            var value = args[i].evaluate(frameState, feature);
+            var value = args[i].evaluate(feature);
             if (typeof value === 'number') {
                 components.push(value);
             } else if (value instanceof Cartesian2) {
@@ -1038,11 +1036,11 @@ define([
         }
     };
 
-    Node.prototype._evaluateLiteralString = function(frameState, feature) {
+    Node.prototype._evaluateLiteralString = function() {
         return this._value;
     };
 
-    Node.prototype._evaluateVariableString = function(frameState, feature) {
+    Node.prototype._evaluateVariableString = function(feature) {
         var result = this._value;
         var match = variableRegex.exec(result);
         while (match !== null) {
@@ -1058,7 +1056,7 @@ define([
         return result;
     };
 
-    Node.prototype._evaluateVariable = function(frameState, feature) {
+    Node.prototype._evaluateVariable = function(feature) {
         // evaluates to undefined if the property name is not defined for that feature
         return feature.getProperty(this._value);
     };
@@ -1068,16 +1066,16 @@ define([
     }
 
     // PERFORMANCE_IDEA: Determine if parent property needs to be computed before runtime
-    Node.prototype._evaluateMemberDot = function(frameState, feature) {
+    Node.prototype._evaluateMemberDot = function(feature) {
         if (checkFeature(this._left)) {
-            return feature.getProperty(this._right.evaluate(frameState, feature));
+            return feature.getProperty(this._right.evaluate(feature));
         }
-        var property = this._left.evaluate(frameState, feature);
+        var property = this._left.evaluate(feature);
         if (!defined(property)) {
             return undefined;
         }
 
-        var member = this._right.evaluate(frameState, feature);
+        var member = this._right.evaluate(feature);
         if ((property instanceof Cartesian2) || (property instanceof Cartesian3) || (property instanceof Cartesian4)) {
             // Vector components may be accessed with .r, .g, .b, .a and implicitly with .x, .y, .z, .w
             if (member === 'r') {
@@ -1093,16 +1091,16 @@ define([
         return property[member];
     };
 
-    Node.prototype._evaluateMemberBrackets = function(frameState, feature) {
+    Node.prototype._evaluateMemberBrackets = function(feature) {
         if (checkFeature(this._left)) {
-            return feature.getProperty(this._right.evaluate(frameState, feature));
+            return feature.getProperty(this._right.evaluate(feature));
         }
-        var property = this._left.evaluate(frameState, feature);
+        var property = this._left.evaluate(feature);
         if (!defined(property)) {
             return undefined;
         }
 
-        var member = this._right.evaluate(frameState, feature);
+        var member = this._right.evaluate(feature);
         if ((property instanceof Cartesian2) || (property instanceof Cartesian3) || (property instanceof Cartesian4)) {
             // Vector components may be accessed with [0][1][2][3], ['r']['g']['b']['a'] and implicitly with ['x']['y']['z']['w']
             // For Cartesian2 and Cartesian3 out-of-range components will just return undefined
@@ -1119,10 +1117,10 @@ define([
         return property[member];
     };
 
-    Node.prototype._evaluateArray = function(frameState, feature) {
+    Node.prototype._evaluateArray = function(feature) {
         var array = [];
         for (var i = 0; i < this._value.length; i++) {
-            array[i] = this._value[i].evaluate(frameState, feature);
+            array[i] = this._value[i].evaluate(feature);
         }
         return array;
     };
@@ -1130,16 +1128,16 @@ define([
     // PERFORMANCE_IDEA: Have "fast path" functions that deal only with specific types
     // that we can assign if we know the types before runtime
 
-    Node.prototype._evaluateNot = function(frameState, feature) {
-        var left = this._left.evaluate(frameState, feature);
+    Node.prototype._evaluateNot = function(feature) {
+        var left = this._left.evaluate(feature);
         if (typeof left !== 'boolean') {
             throw new RuntimeError('Operator "!" requires a boolean argument. Argument is ' + left + '.');
         }
         return !left;
     };
 
-    Node.prototype._evaluateNegative = function(frameState, feature) {
-        var left = this._left.evaluate(frameState, feature);
+    Node.prototype._evaluateNegative = function(feature) {
+        var left = this._left.evaluate(feature);
         if (left instanceof Cartesian2) {
             return Cartesian2.negate(left, scratchStorage.getCartesian2());
         } else if (left instanceof Cartesian3) {
@@ -1153,8 +1151,8 @@ define([
         throw new RuntimeError('Operator "-" requires a vector or number argument. Argument is ' + left + '.');
     };
 
-    Node.prototype._evaluatePositive = function(frameState, feature) {
-        var left = this._left.evaluate(frameState, feature);
+    Node.prototype._evaluatePositive = function(feature) {
+        var left = this._left.evaluate(feature);
 
         if (!((left instanceof Cartesian2) || (left instanceof Cartesian3) || (left instanceof Cartesian4) || (typeof left === 'number'))) {
             throw new RuntimeError('Operator "+" requires a vector or number argument. Argument is ' + left + '.');
@@ -1163,9 +1161,9 @@ define([
         return left;
     };
 
-    Node.prototype._evaluateLessThan = function(frameState, feature) {
-        var left = this._left.evaluate(frameState, feature);
-        var right = this._right.evaluate(frameState, feature);
+    Node.prototype._evaluateLessThan = function(feature) {
+        var left = this._left.evaluate(feature);
+        var right = this._right.evaluate(feature);
 
         if ((typeof left !== 'number') || (typeof right !== 'number')) {
             throw new RuntimeError('Operator "<" requires number arguments. Arguments are ' + left + ' and ' + right + '.');
@@ -1174,9 +1172,9 @@ define([
         return left < right;
     };
 
-    Node.prototype._evaluateLessThanOrEquals = function(frameState, feature) {
-        var left = this._left.evaluate(frameState, feature);
-        var right = this._right.evaluate(frameState, feature);
+    Node.prototype._evaluateLessThanOrEquals = function(feature) {
+        var left = this._left.evaluate(feature);
+        var right = this._right.evaluate(feature);
 
         if ((typeof left !== 'number') || (typeof right !== 'number')) {
             throw new RuntimeError('Operator "<=" requires number arguments. Arguments are ' + left + ' and ' + right + '.');
@@ -1185,9 +1183,9 @@ define([
         return left <= right;
     };
 
-    Node.prototype._evaluateGreaterThan = function(frameState, feature) {
-        var left = this._left.evaluate(frameState, feature);
-        var right = this._right.evaluate(frameState, feature);
+    Node.prototype._evaluateGreaterThan = function(feature) {
+        var left = this._left.evaluate(feature);
+        var right = this._right.evaluate(feature);
 
         if ((typeof left !== 'number') || (typeof right !== 'number')) {
             throw new RuntimeError('Operator ">" requires number arguments. Arguments are ' + left + ' and ' + right + '.');
@@ -1196,9 +1194,9 @@ define([
         return left > right;
     };
 
-    Node.prototype._evaluateGreaterThanOrEquals = function(frameState, feature) {
-        var left = this._left.evaluate(frameState, feature);
-        var right = this._right.evaluate(frameState, feature);
+    Node.prototype._evaluateGreaterThanOrEquals = function(feature) {
+        var left = this._left.evaluate(feature);
+        var right = this._right.evaluate(feature);
 
         if ((typeof left !== 'number') || (typeof right !== 'number')) {
             throw new RuntimeError('Operator ">=" requires number arguments. Arguments are ' + left + ' and ' + right + '.');
@@ -1207,8 +1205,8 @@ define([
         return left >= right;
     };
 
-    Node.prototype._evaluateOr = function(frameState, feature) {
-        var left = this._left.evaluate(frameState, feature);
+    Node.prototype._evaluateOr = function(feature) {
+        var left = this._left.evaluate(feature);
         if (typeof left !== 'boolean') {
             throw new RuntimeError('Operator "||" requires boolean arguments. First argument is ' + left + '.');
         }
@@ -1218,7 +1216,7 @@ define([
             return true;
         }
 
-        var right = this._right.evaluate(frameState, feature);
+        var right = this._right.evaluate(feature);
         if (typeof right !== 'boolean') {
             throw new RuntimeError('Operator "||" requires boolean arguments. Second argument is ' + right + '.');
         }
@@ -1226,8 +1224,8 @@ define([
         return left || right;
     };
 
-    Node.prototype._evaluateAnd = function(frameState, feature) {
-        var left = this._left.evaluate(frameState, feature);
+    Node.prototype._evaluateAnd = function(feature) {
+        var left = this._left.evaluate(feature);
         if (typeof left !== 'boolean') {
             throw new RuntimeError('Operator "&&" requires boolean arguments. First argument is ' + left + '.');
         }
@@ -1237,7 +1235,7 @@ define([
             return false;
         }
 
-        var right = this._right.evaluate(frameState, feature);
+        var right = this._right.evaluate(feature);
         if (typeof right !== 'boolean') {
             throw new RuntimeError('Operator "&&" requires boolean arguments. Second argument is ' + right + '.');
         }
@@ -1245,9 +1243,9 @@ define([
         return left && right;
     };
 
-    Node.prototype._evaluatePlus = function(frameState, feature) {
-        var left = this._left.evaluate(frameState, feature);
-        var right = this._right.evaluate(frameState, feature);
+    Node.prototype._evaluatePlus = function(feature) {
+        var left = this._left.evaluate(feature);
+        var right = this._right.evaluate(feature);
         if ((right instanceof Cartesian2) && (left instanceof Cartesian2)) {
             return Cartesian2.add(left, right, scratchStorage.getCartesian2());
         } else if ((right instanceof Cartesian3) && (left instanceof Cartesian3)) {
@@ -1264,9 +1262,9 @@ define([
         throw new RuntimeError('Operator "+" requires vector or number arguments of matching types, or at least one string argument. Arguments are ' + left + ' and ' + right + '.');
     };
 
-    Node.prototype._evaluateMinus = function(frameState, feature) {
-        var left = this._left.evaluate(frameState, feature);
-        var right = this._right.evaluate(frameState, feature);
+    Node.prototype._evaluateMinus = function(feature) {
+        var left = this._left.evaluate(feature);
+        var right = this._right.evaluate(feature);
         if ((right instanceof Cartesian2) && (left instanceof Cartesian2)) {
             return Cartesian2.subtract(left, right, scratchStorage.getCartesian2());
         } else if ((right instanceof Cartesian3) && (left instanceof Cartesian3)) {
@@ -1280,9 +1278,9 @@ define([
         throw new RuntimeError('Operator "-" requires vector or number arguments of matching types. Arguments are ' + left + ' and ' + right + '.');
     };
 
-    Node.prototype._evaluateTimes = function(frameState, feature) {
-        var left = this._left.evaluate(frameState, feature);
-        var right = this._right.evaluate(frameState, feature);
+    Node.prototype._evaluateTimes = function(feature) {
+        var left = this._left.evaluate(feature);
+        var right = this._right.evaluate(feature);
         if ((right instanceof Cartesian2) && (left instanceof Cartesian2)) {
             return Cartesian2.multiplyComponents(left, right, scratchStorage.getCartesian2());
         } else if ((right instanceof Cartesian2) && (typeof left === 'number')) {
@@ -1308,9 +1306,9 @@ define([
         throw new RuntimeError('Operator "*" requires vector or number arguments. If both arguments are vectors they must be matching types. Arguments are ' + left + ' and ' + right + '.');
     };
 
-    Node.prototype._evaluateDivide = function(frameState, feature) {
-        var left = this._left.evaluate(frameState, feature);
-        var right = this._right.evaluate(frameState, feature);
+    Node.prototype._evaluateDivide = function(feature) {
+        var left = this._left.evaluate(feature);
+        var right = this._right.evaluate(feature);
         if ((right instanceof Cartesian2) && (left instanceof Cartesian2)) {
             return Cartesian2.divideComponents(left, right, scratchStorage.getCartesian2());
         } else if ((left instanceof Cartesian2) && (typeof right === 'number')) {
@@ -1330,9 +1328,9 @@ define([
         throw new RuntimeError('Operator "/" requires vector or number arguments of matching types, or a number as the second argument. Arguments are ' + left + ' and ' + right + '.');
     };
 
-    Node.prototype._evaluateMod = function(frameState, feature) {
-        var left = this._left.evaluate(frameState, feature);
-        var right = this._right.evaluate(frameState, feature);
+    Node.prototype._evaluateMod = function(feature) {
+        var left = this._left.evaluate(feature);
+        var right = this._right.evaluate(feature);
         if ((right instanceof Cartesian2) && (left instanceof Cartesian2)) {
             return Cartesian2.fromElements(left.x % right.x, left.y % right.y, scratchStorage.getCartesian2());
         } else if ((right instanceof Cartesian3) && (left instanceof Cartesian3)) {
@@ -1346,9 +1344,9 @@ define([
         throw new RuntimeError('Operator "%" requires vector or number arguments of matching types. Arguments are ' + left + ' and ' + right + '.');
     };
 
-    Node.prototype._evaluateEqualsStrict = function(frameState, feature) {
-        var left = this._left.evaluate(frameState, feature);
-        var right = this._right.evaluate(frameState, feature);
+    Node.prototype._evaluateEqualsStrict = function(feature) {
+        var left = this._left.evaluate(feature);
+        var right = this._right.evaluate(feature);
         if ((right instanceof Cartesian2) && (left instanceof Cartesian2) ||
             (right instanceof Cartesian3) && (left instanceof Cartesian3) ||
             (right instanceof Cartesian4) && (left instanceof Cartesian4)) {
@@ -1357,9 +1355,9 @@ define([
         return left === right;
     };
 
-    Node.prototype._evaluateNotEqualsStrict = function(frameState, feature) {
-        var left = this._left.evaluate(frameState, feature);
-        var right = this._right.evaluate(frameState, feature);
+    Node.prototype._evaluateNotEqualsStrict = function(feature) {
+        var left = this._left.evaluate(feature);
+        var right = this._right.evaluate(feature);
         if ((right instanceof Cartesian2) && (left instanceof Cartesian2) ||
             (right instanceof Cartesian3) && (left instanceof Cartesian3) ||
             (right instanceof Cartesian4) && (left instanceof Cartesian4)) {
@@ -1368,57 +1366,57 @@ define([
         return left !== right;
     };
 
-    Node.prototype._evaluateConditional = function(frameState, feature) {
-        var test = this._test.evaluate(frameState, feature);
+    Node.prototype._evaluateConditional = function(feature) {
+        var test = this._test.evaluate(feature);
 
         if (typeof test !== 'boolean') {
             throw new RuntimeError('Conditional argument of conditional expression must be a boolean. Argument is ' + test + '.');
         }
 
         if (test) {
-            return this._left.evaluate(frameState, feature);
+            return this._left.evaluate(feature);
         }
-        return this._right.evaluate(frameState, feature);
+        return this._right.evaluate(feature);
     };
 
-    Node.prototype._evaluateNaN = function(frameState, feature) {
-        return isNaN(this._left.evaluate(frameState, feature));
+    Node.prototype._evaluateNaN = function(feature) {
+        return isNaN(this._left.evaluate(feature));
     };
 
-    Node.prototype._evaluateIsFinite = function(frameState, feature) {
-        return isFinite(this._left.evaluate(frameState, feature));
+    Node.prototype._evaluateIsFinite = function(feature) {
+        return isFinite(this._left.evaluate(feature));
     };
 
-    Node.prototype._evaluateIsExactClass = function(frameState, feature) {
-        return feature.isExactClass(this._left.evaluate(frameState, feature));
+    Node.prototype._evaluateIsExactClass = function(feature) {
+        return feature.isExactClass(this._left.evaluate(feature));
     };
 
-    Node.prototype._evaluateIsClass = function(frameState, feature) {
-        return feature.isClass(this._left.evaluate(frameState, feature));
+    Node.prototype._evaluateIsClass = function(feature) {
+        return feature.isClass(this._left.evaluate(feature));
     };
 
-    Node.prototype._evaluategetExactClassName = function(frameState, feature) {
+    Node.prototype._evaluategetExactClassName = function(feature) {
         return feature.getExactClassName();
     };
 
-    Node.prototype._evaluateBooleanConversion = function(frameState, feature) {
-        return Boolean(this._left.evaluate(frameState, feature));
+    Node.prototype._evaluateBooleanConversion = function(feature) {
+        return Boolean(this._left.evaluate(feature));
     };
 
-    Node.prototype._evaluateNumberConversion = function(frameState, feature) {
-        return Number(this._left.evaluate(frameState, feature));
+    Node.prototype._evaluateNumberConversion = function(feature) {
+        return Number(this._left.evaluate(feature));
     };
 
-    Node.prototype._evaluateStringConversion = function(frameState, feature) {
-        return String(this._left.evaluate(frameState, feature));
+    Node.prototype._evaluateStringConversion = function(feature) {
+        return String(this._left.evaluate(feature));
     };
 
-    Node.prototype._evaluateRegExp = function(frameState, feature) {
-        var pattern = this._value.evaluate(frameState, feature);
+    Node.prototype._evaluateRegExp = function(feature) {
+        var pattern = this._value.evaluate(feature);
         var flags = '';
 
         if (defined(this._left)) {
-            flags = this._left.evaluate(frameState, feature);
+            flags = this._left.evaluate(feature);
         }
 
         var exp;
@@ -1430,9 +1428,9 @@ define([
         return exp;
     };
 
-    Node.prototype._evaluateRegExpTest = function(frameState, feature) {
-        var left = this._left.evaluate(frameState, feature);
-        var right = this._right.evaluate(frameState, feature);
+    Node.prototype._evaluateRegExpTest = function(feature) {
+        var left = this._left.evaluate(feature);
+        var right = this._right.evaluate(feature);
 
         if (!((left instanceof RegExp) && (typeof right === 'string'))) {
             throw new RuntimeError('RegExp.test requires the first argument to be a RegExp and the second argument to be a string. Arguments are ' + left + ' and ' + right + '.');
@@ -1441,9 +1439,9 @@ define([
         return left.test(right);
     };
 
-    Node.prototype._evaluateRegExpMatch = function(frameState, feature) {
-        var left = this._left.evaluate(frameState, feature);
-        var right = this._right.evaluate(frameState, feature);
+    Node.prototype._evaluateRegExpMatch = function(feature) {
+        var left = this._left.evaluate(feature);
+        var right = this._right.evaluate(feature);
 
         if ((left instanceof RegExp) && (typeof right === 'string')) {
             return left.test(right);
@@ -1454,9 +1452,9 @@ define([
         throw new RuntimeError('Operator "=~" requires one RegExp argument and one string argument. Arguments are ' + left + ' and ' + right + '.');
     };
 
-    Node.prototype._evaluateRegExpNotMatch = function(frameState, feature) {
-        var left = this._left.evaluate(frameState, feature);
-        var right = this._right.evaluate(frameState, feature);
+    Node.prototype._evaluateRegExpNotMatch = function(feature) {
+        var left = this._left.evaluate(feature);
+        var right = this._right.evaluate(feature);
 
         if ((left instanceof RegExp) && (typeof right === 'string')) {
             return !(left.test(right));
@@ -1467,9 +1465,9 @@ define([
         throw new RuntimeError('Operator "!~" requires one RegExp argument and one string argument. Arguments are ' + left + ' and ' + right + '.');
     };
 
-    Node.prototype._evaluateRegExpExec = function(frameState, feature) {
-        var left = this._left.evaluate(frameState, feature);
-        var right = this._right.evaluate(frameState, feature);
+    Node.prototype._evaluateRegExpExec = function(feature) {
+        var left = this._left.evaluate(feature);
+        var right = this._right.evaluate(feature);
 
         if (!((left instanceof RegExp) && (typeof right === 'string'))) {
             throw new RuntimeError('RegExp.exec requires the first argument to be a RegExp and the second argument to be a string. Arguments are ' + left + ' and ' + right + '.');
@@ -1482,8 +1480,8 @@ define([
         return exec[1];
     };
 
-    Node.prototype._evaluateToString = function(frameState, feature) {
-        var left = this._left.evaluate(frameState, feature);
+    Node.prototype._evaluateToString = function(feature) {
+        var left = this._left.evaluate(feature);
         if ((left instanceof RegExp) || (left instanceof Cartesian2) || (left instanceof Cartesian3) || (left instanceof Cartesian4)) {
             return String(left);
         }
@@ -1748,7 +1746,7 @@ define([
                 throw new RuntimeError('Error generating style shader: undefined is not supported.');
             case ExpressionNodeType.BUILTIN_VARIABLE:
                 if (value === 'tiles3d_tileset_time') {
-                    return 'u_tilesetTime';
+                    return 'u_time';
                 }
         }
     };

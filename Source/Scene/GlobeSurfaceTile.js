@@ -81,6 +81,8 @@ define([
 
         this.surfaceShader = undefined;
         this.isClipped = true;
+
+        this.clippedByBoundaries = false;
     }
 
     defineProperties(GlobeSurfaceTile.prototype, {
@@ -336,12 +338,15 @@ define([
             }
 
             if (isDoneLoading) {
-                var newCallbacks = [];
-                tile._loadedCallbacks.forEach(function(cb) {
-                    if (!cb(tile)) {
-                        newCallbacks.push(cb);
+                var callbacks = tile._loadedCallbacks;
+                var newCallbacks = {};
+                for(var layerId in callbacks) {
+                    if (callbacks.hasOwnProperty(layerId)) {
+                        if(!callbacks[layerId](tile)) {
+                            newCallbacks[layerId] = callbacks[layerId];
+                        }
                     }
-                });
+                }
                 tile._loadedCallbacks = newCallbacks;
 
                 tile.state = QuadtreeTileLoadState.DONE;
@@ -665,7 +670,8 @@ define([
                     height : textureSize,
                     arrayBufferView : waterMask
                 },
-                sampler : waterMaskData.sampler
+                sampler : waterMaskData.sampler,
+                flipY : false
             });
 
             texture.referenceCount = 0;

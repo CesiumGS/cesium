@@ -1,0 +1,41 @@
+[
+  {
+    "id": "document",
+    "version": "1.0",
+    "clock": {
+      "interval": "2018-07-19T15:18:00Z/2018-07-19T15:18:30Z",
+      "currentTime": "2018-07-19T15:18:00Z",
+      "multiplier": 5,
+      "range": "LOOP_STOP",
+      "step": "SYSTEM_CLOCK_MULTIPLIER"
+    }
+  },
+  {
+    "id": "CesiumMilkTruck",
+    "model": {
+      "gltf": "models/CesiumMilkTruck/CesiumMilkTruck.glb"
+    },
+    "position": {
+      "interpolationAlgorithm": "LINEAR",
+      "forwardExtrapolationType": "HOLD",
+      "cartesian": [
+        "2018-07-19T15:18:00Z",
+        1216348.1632364073,
+        -4736348.958775471,
+        4081284.5528982095,
+        "2018-07-19T15:18:30Z",
+        1216369.1229444197,
+        -4736377.467107148,
+        4081240.888485707
+      ]
+    },
+    "orientation": {
+      "unitQuaternion": [
+        0.3084011337938999,
+        0.3210181022701266,
+        -0.45850421987074924,
+        0.7686388857813198
+      ]
+    }
+  }
+]

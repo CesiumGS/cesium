@@ -1,10 +1,14 @@
 defineSuite([
         'Core/EllipsoidOutlineGeometry',
+        'Core/arrayFill',
         'Core/Cartesian3',
+        'Core/GeometryOffsetAttribute',
         'Specs/createPackableSpecs'
     ], function(
         EllipsoidOutlineGeometry,
+        arrayFill,
         Cartesian3,
+        GeometryOffsetAttribute,
         createPackableSpecs) {
     'use strict';
 
@@ -86,6 +90,24 @@ defineSuite([
         expect(m.attributes.position.values.length).toEqual(36 * 3);
         expect(m.indices.length).toEqual(30 * 2);
         expect(m.boundingSphere.radius).toEqual(1);
+    });
+ 
+    it('computes offset attribute', function() {
+        var m = EllipsoidOutlineGeometry.createGeometry(new EllipsoidOutlineGeometry({
+            stackPartitions : 3,
+            slicePartitions: 3,
+            subdivisions: 3,
+            offsetAttribute: GeometryOffsetAttribute.ALL
+        }));
+
+        var numVertices = 14;
+        expect(m.attributes.position.values.length).toEqual(numVertices * 3);
+
+        var offset = m.attributes.applyOffset.values;
+        expect(offset.length).toEqual(numVertices);
+        var expected = new Array(offset.length);
+        expected = arrayFill(expected, 1);
+        expect(offset).toEqual(expected);
     });
 
     it('undefined is returned if the x, y, or z radii are equal or less than zero', function() {

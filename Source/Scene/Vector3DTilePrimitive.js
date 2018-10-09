@@ -18,7 +18,7 @@ define([
         '../Renderer/ShaderSource',
         '../Renderer/VertexArray',
         '../Shaders/ShadowVolumeFS',
-        '../Shaders/ShadowVolumeVS',
+        '../Shaders/VectorTileVS',
         './BlendingState',
         './Cesium3DTileFeature',
         './ClassificationType',
@@ -47,7 +47,7 @@ define([
         ShaderSource,
         VertexArray,
         ShadowVolumeFS,
-        ShadowVolumeVS,
+        VectorTileVS,
         BlendingState,
         Cesium3DTileFeature,
         ClassificationType,
@@ -161,10 +161,8 @@ define([
         this._vertexShaderSource = options._vertexShaderSource;
         this._fragmentShaderSource = options._fragmentShaderSource;
         this._attributeLocations = options._attributeLocations;
-        this._pickVertexShaderSource = options._pickVertexShaderSource;
-        this._pickFragmentShaderSource = options._pickFragmentShaderSource;
         this._uniformMap = options._uniformMap;
-        this._pickUniformMap = options._pickUniformMap;
+        this._pickId = options._pickId;
         this._modelMatrix = options._modelMatrix;
         this._boundingSphere = options._boundingSphere;
 
@@ -279,29 +277,41 @@ define([
         var batchTable = primitive._batchTable;
         var attributeLocations = defaultValue(primitive._attributeLocations, defaultAttributeLocations);
 
+        var pickId = primitive._pickId;
         var vertexShaderSource = primitive._vertexShaderSource;
+        var fragmentShaderSource = primitive._fragmentShaderSource;
         if (defined(vertexShaderSource)) {
             primitive._sp = ShaderProgram.fromCache({
                 context : context,
                 vertexShaderSource : vertexShaderSource,
-                fragmentShaderSource : primitive._fragmentShaderSource,
+                fragmentShaderSource : fragmentShaderSource,
                 attributeLocations : attributeLocations
             });
             primitive._spStencil = primitive._sp;
+
+            fragmentShaderSource = ShaderSource.replaceMain(fragmentShaderSource, 'czm_non_pick_main');
+            fragmentShaderSource =
+                fragmentShaderSource +
+                'void main() \n' +
+                '{ \n' +
+                '    czm_non_pick_main(); \n' +
+                '    gl_FragColor = ' + pickId + '; \n' +
+                '} \n';
             primitive._spPick = ShaderProgram.fromCache({
                 context : context,
-                vertexShaderSource : primitive._pickVertexShaderSource,
-                fragmentShaderSource : primitive._pickFragmentShaderSource,
+                vertexShaderSource : vertexShaderSource,
+                fragmentShaderSource : fragmentShaderSource,
                 attributeLocations : attributeLocations
             });
             return;
         }
 
-        var vsSource = batchTable.getVertexShaderCallback(false, 'a_batchId', undefined)(ShadowVolumeVS);
+        var vsSource = batchTable.getVertexShaderCallback(false, 'a_batchId', undefined)(VectorTileVS);
         var fsSource = batchTable.getFragmentShaderCallback()(ShadowVolumeFS, false, undefined);
 
+        pickId = batchTable.getPickId();
+
         var vs = new ShaderSource({
-            defines : ['VECTOR_TILE'],
             sources : [vsSource]
         });
         var fs = new ShaderSource({
@@ -317,8 +327,7 @@ define([
         });
 
         vs = new ShaderSource({
-            defines : ['VECTOR_TILE'],
-            sources : [ShadowVolumeVS]
+            sources : [VectorTileVS]
         });
         fs = new ShaderSource({
             defines : ['VECTOR_TILE'],
@@ -332,11 +341,16 @@ define([
             attributeLocations : attributeLocations
         });
 
-        vsSource = batchTable.getPickVertexShaderCallbackIgnoreShow('a_batchId')(ShadowVolumeVS);
-        fsSource = batchTable.getPickFragmentShaderCallbackIgnoreShow()(ShadowVolumeFS);
+        fsSource = ShaderSource.replaceMain(fsSource, 'czm_non_pick_main');
+        fsSource =
+            fsSource + '\n' +
+            'void main() \n' +
+            '{ \n' +
+            '    czm_non_pick_main(); \n' +
+            '    gl_FragColor = ' + pickId + '; \n' +
+            '} \n';
 
         var pickVS = new ShaderSource({
-            defines : ['VECTOR_TILE'],
             sources : [vsSource]
         });
         var pickFS = new ShaderSource({
@@ -499,7 +513,6 @@ define([
         };
 
         primitive._uniformMap = primitive._batchTable.getUniformMapCallback()(uniformMap);
-        primitive._pickUniformMap = primitive._batchTable.getPickUniformMapCallback()(primitive._uniformMap);
     }
 
     function copyIndicesCPU(indices, newIndices, currentOffset, offsets, counts, batchIds, batchIdLookUp) {
@@ -796,7 +809,7 @@ define([
         var spStencil = primitive._spStencil;
         var spPick = primitive._spPick;
         var modelMatrix = defaultValue(primitive._modelMatrix, Matrix4.IDENTITY);
-        var uniformMap = primitive._pickUniformMap;
+        var uniformMap = primitive._uniformMap;
 
         for (var j = 0; j < length; ++j) {
             var offset = primitive._indexOffsets[j];
@@ -806,7 +819,8 @@ define([
             var stencilPreloadCommand = pickCommands[j * 3];
             if (!defined(stencilPreloadCommand)) {
                 stencilPreloadCommand = pickCommands[j * 3] = new DrawCommand({
-                    owner : primitive
+                    owner : primitive,
+                    pickOnly : true
                 });
             }
 
@@ -822,7 +836,8 @@ define([
             var stencilDepthCommand = pickCommands[j * 3 + 1];
             if (!defined(stencilDepthCommand)) {
                 stencilDepthCommand = pickCommands[j * 3 + 1] = new DrawCommand({
-                    owner : primitive
+                    owner : primitive,
+                    pickOnly : true
                 });
             }
 
@@ -838,7 +853,8 @@ define([
             var colorCommand = pickCommands[j * 3 + 2];
             if (!defined(colorCommand)) {
                 colorCommand = pickCommands[j * 3 + 2] = new DrawCommand({
-                    owner : primitive
+                    owner : primitive,
+                    pickOnly : true
                 });
             }
 
@@ -916,11 +932,10 @@ define([
     /**
      * Apply a style to the content.
      *
-     * @param {FrameState} frameState The frame state.
      * @param {Cesium3DTileStyle} style The style.
      * @param {Cesium3DTileFeature[]} features The array of features.
      */
-    Vector3DTilePrimitive.prototype.applyStyle = function(frameState, style, features) {
+    Vector3DTilePrimitive.prototype.applyStyle = function(style, features) {
         if (!defined(style)) {
             clearStyle(this, features);
             return;
@@ -938,8 +953,8 @@ define([
             var batchId = batchIds[i];
             var feature = features[batchId];
 
-            feature.color = defined(style.color) ? style.color.evaluateColor(frameState, feature, scratchColor) : DEFAULT_COLOR_VALUE;
-            feature.show = defined(style.show) ? style.show.evaluate(frameState, feature) : DEFAULT_SHOW_VALUE;
+            feature.color = defined(style.color) ? style.color.evaluateColor(feature, scratchColor) : DEFAULT_COLOR_VALUE;
+            feature.show = defined(style.show) ? style.show.evaluate(feature) : DEFAULT_SHOW_VALUE;
         }
 
         if (isSimpleStyle) {
@@ -1042,9 +1057,8 @@ define([
         var commandList = frameState.commandList;
         var commandLength = commands.length;
         var i;
-        var command;
         for (i = 0; i < commandLength; ++i) {
-            command = commands[i];
+            var command = commands[i];
             command.pass = pass;
             commandList.push(command);
         }
@@ -1055,9 +1069,7 @@ define([
 
         commandLength = commandsIgnoreShow.length;
         for (i = 0; i < commandLength; ++i) {
-            command = commandsIgnoreShow[i];
-            command.pass = pass;
-            commandList.push(command);
+            commandList.push(commandsIgnoreShow[i]);
         }
     }
 
@@ -1170,8 +1182,6 @@ define([
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
      * assign the return value (<code>undefined</code>) to the object as done in the example.
      * </p>
-     *
-     * @returns {undefined}
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      */

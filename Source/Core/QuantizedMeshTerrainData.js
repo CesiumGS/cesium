@@ -439,8 +439,9 @@ define([
         var southSkirtHeight = isNorthChild ? (shortestSkirt * 0.5) : this._southSkirtHeight;
         var eastSkirtHeight = isEastChild ? this._eastSkirtHeight : (shortestSkirt * 0.5);
         var northSkirtHeight = isNorthChild ? this._northSkirtHeight : (shortestSkirt * 0.5);
+        var credits = this._credits;
 
-        return when(upsamplePromise, function(result) {
+        return when(upsamplePromise).then(function(result) {
             var quantizedVertices = new Uint16Array(result.vertices);
             var indicesTypedArray = IndexDatatype.createTypedArray(quantizedVertices.length / 3, result.indices);
             var encodedNormals;
@@ -466,6 +467,7 @@ define([
                 eastSkirtHeight : eastSkirtHeight,
                 northSkirtHeight : northSkirtHeight,
                 childTileMask : 0,
+                credits: credits,
                 createdByUpsampling : true
             });
         });

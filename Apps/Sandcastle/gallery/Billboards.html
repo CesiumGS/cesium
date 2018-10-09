@@ -144,8 +144,8 @@ function fadeByDistance() {
 function offsetByDistance() {
     Sandcastle.declare(offsetByDistance);
     Cesium.when.all([
-         Cesium.loadImage('../images/Cesium_Logo_overlay.png'),
-         Cesium.loadImage('../images/facility.gif')
+         Cesium.Resource.fetchImage('../images/Cesium_Logo_overlay.png'),
+         Cesium.Resource.fetchImage('../images/facility.gif')
         ],
         function(images) {
             // As viewer zooms closer to facility billboard,
@@ -226,11 +226,7 @@ function disableDepthTest() {
     Sandcastle.declare(disableDepthTest);
 
     terrainProvider = viewer.terrainProvider;
-    viewer.terrainProvider = new Cesium.CesiumTerrainProvider({
-        url : 'https://assets.agi.com/stk-terrain/v1/tilesets/world/tiles',
-        requestWaterMask : true,
-        requestVertexNormals : true
-    });
+    viewer.terrainProvider = Cesium.createWorldTerrain();
     viewer.scene.globe.depthTestAgainstTerrain = true;
 
     viewer.entities.add({
@@ -319,10 +315,10 @@ Sandcastle.reset = function () {
 //Sandcastle_End
     Sandcastle.finishedLoading();
 }
-if (typeof Cesium !== "undefined") {
+if (typeof Cesium !== 'undefined') {
     startup(Cesium);
-} else if (typeof require === "function") {
-    require(["Cesium"], startup);
+} else if (typeof require === 'function') {
+    require(['Cesium'], startup);
 }
 </script>
 </body>

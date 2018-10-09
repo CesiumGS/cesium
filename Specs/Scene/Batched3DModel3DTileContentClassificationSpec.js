@@ -1,5 +1,4 @@
 defineSuite([
-        'Scene/Batched3DModel3DTileContent',
         'Core/Cartesian3',
         'Core/Cartographic',
         'Core/Color',
@@ -14,13 +13,13 @@ defineSuite([
         'Core/RectangleGeometry',
         'Core/Transforms',
         'Renderer/Pass',
+        'Scene/Batched3DModel3DTileContent',
         'Scene/ClassificationType',
         'Scene/PerInstanceColorAppearance',
         'Scene/Primitive',
         'Specs/Cesium3DTilesTester',
         'Specs/createScene'
     ], 'Scene/Batched3DModel3DTileContentClassification', function(
-        Batched3DModel3DTileContent,
         Cartesian3,
         Cartographic,
         Color,
@@ -35,6 +34,7 @@ defineSuite([
         RectangleGeometry,
         Transforms,
         Pass,
+        Batched3DModel3DTileContent,
         ClassificationType,
         PerInstanceColorAppearance,
         Primitive,
@@ -46,9 +46,8 @@ defineSuite([
     var centerLongitude = -1.31968;
     var centerLatitude = 0.698874;
 
-    var withBatchTableUrl = './Data/Cesium3DTiles/Batched/BatchedWithBatchTable/';
-    var withBatchTableBinaryUrl = './Data/Cesium3DTiles/Batched/BatchedWithBatchTableBinary/';
-    var withQuantizationUrl = './Data/Cesium3DTiles/Batched/BatchedWithQuantization/';
+    var withBatchTableUrl = './Data/Cesium3DTiles/Batched/BatchedWithBatchTable/tileset.json';
+    var withBatchTableBinaryUrl = './Data/Cesium3DTiles/Batched/BatchedWithBatchTableBinary/tileset.json';
 
     function setCamera(longitude, latitude) {
         // One feature is located at the center, point the camera there
@@ -139,18 +138,6 @@ defineSuite([
         Cartesian3.multiplyByScalar(translation, -5.0, translation);
 
         return Cesium3DTilesTester.loadTileset(scene, withBatchTableBinaryUrl, {
-            classificationType : ClassificationType.CESIUM_3D_TILE,
-            modelMatrix : Matrix4.fromTranslation(translation)
-        }).then(function(tileset) {
-            Cesium3DTilesTester.expectRenderTileset(scene, tileset);
-        });
-    });
-
-    it('renders with quantization', function() {
-        var translation = Ellipsoid.WGS84.geodeticSurfaceNormalCartographic(new Cartographic(centerLongitude, centerLatitude));
-        Cartesian3.multiplyByScalar(translation, -5.0, translation);
-
-        return Cesium3DTilesTester.loadTileset(scene, withQuantizationUrl, {
             classificationType : ClassificationType.CESIUM_3D_TILE,
             modelMatrix : Matrix4.fromTranslation(translation)
         }).then(function(tileset) {

@@ -45,8 +45,8 @@
         <tr>
             <td>Rate</td>
             <td>
-                <input type="range" min="0.0" max="100.0" step="1" data-bind="value: rate, valueUpdate: 'input'">
-                <input type="text" size="5" data-bind="value: rate">
+                <input type="range" min="0.0" max="100.0" step="1" data-bind="value: emissionRate, valueUpdate: 'input'">
+                <input type="text" size="5" data-bind="value: emissionRate">
             </td>
         </tr>
 
@@ -61,16 +61,16 @@
         <tr>
             <td>Min Life</td>
             <td>
-                <input type="range" min="0.1" max="30.0" step="1" data-bind="value: minimumLife, valueUpdate: 'input'">
-                <input type="text" size="5" data-bind="value: minimumLife">
+                <input type="range" min="0.1" max="30.0" step="1" data-bind="value: minimumParticleLife, valueUpdate: 'input'">
+                <input type="text" size="5" data-bind="value: minimumParticleLife">
             </td>
         </tr>
 
         <tr>
             <td>Max Life</td>
             <td>
-                <input type="range" min="0.1" max="30.0" step="1" data-bind="value: maximumLife, valueUpdate: 'input'">
-                <input type="text" size="5" data-bind="value: maximumLife">
+                <input type="range" min="0.1" max="30.0" step="1" data-bind="value: maximumParticleLife, valueUpdate: 'input'">
+                <input type="text" size="5" data-bind="value: maximumParticleLife">
             </td>
         </tr>
 
@@ -137,8 +137,8 @@
 </div>
 
 <script id="cesium_sandcastle_script">
-function startup(Cesium) {
-    'use strict';
+    function startup(Cesium) {
+        'use strict';
 //Sandcastle_Begin
 var viewer = new Cesium.Viewer('cesiumContainer');
 
@@ -155,28 +155,29 @@ viewer.clock.stopTime = stop.clone();
 viewer.clock.currentTime = start.clone();
 viewer.clock.clockRange = Cesium.ClockRange.LOOP_STOP; //Loop at the end
 viewer.clock.multiplier = 1;
+viewer.clock.shouldAnimate = true;
 
 //Set timeline to simulation bounds
 viewer.timeline.zoomTo(start, stop);
 
 var viewModel = {
-    rate : 5.0,
+    emissionRate : 5.0,
     gravity : 0.0,
-    minimumLife : 1.0,
-    maximumLife : 1.0,
-    minimumSpeed : 5.0,
-    maximumSpeed : 5.0,
+    minimumParticleLife : 1.0,
+    maximumParticleLife : 1.0,
+    minimumSpeed : 1.0,
+    maximumSpeed : 4.0,
     startScale : 1.0,
-    endScale : 4.0,
-    particleSize : 20.0,
+    endScale : 5.0,
+    particleSize : 25.0,
     transX : 2.5,
     transY : 4.0,
     transZ : 1.0,
     heading : 0.0,
     pitch : 0.0,
     roll : 0.0,
-    fly : false,
-    spin : false,
+    fly : true,
+    spin : true,
     show : true
 };
 
@@ -262,34 +263,31 @@ var particleSystem = scene.primitives.add(new Cesium.ParticleSystem({
     startScale : viewModel.startScale,
     endScale : viewModel.endScale,
 
-    minimumLife : viewModel.minimumLife,
-    maximumLife : viewModel.maximumLife,
+    minimumParticleLife : viewModel.minimumParticleLife,
+    maximumParticleLife : viewModel.maximumParticleLife,
 
     minimumSpeed : viewModel.minimumSpeed,
     maximumSpeed : viewModel.maximumSpeed,
 
-    minimumWidth : viewModel.particleSize,
-    minimumHeight : viewModel.particleSize,
-
-    maximumWidth : viewModel.particleSize,
-    maximumHeight : viewModel.particleSize,
+    imageSize : new Cesium.Cartesian2(viewModel.particleSize, viewModel.particleSize),
 
     // Particles per second.
-    rate : viewModel.rate,
+    emissionRate : viewModel.emissionRate,
 
     bursts : [
-        new Cesium.ParticleBurst({time : 5.0, minimum : 300, maximum : 500}),
+        // these burst will occasionally sync to create a multicolored effect
+        new Cesium.ParticleBurst({time : 5.0, minimum : 10, maximum : 100}),
         new Cesium.ParticleBurst({time : 10.0, minimum : 50, maximum : 100}),
         new Cesium.ParticleBurst({time : 15.0, minimum : 200, maximum : 300})
     ],
 
-    lifeTime : 16.0,
+    lifetime : 16.0,
 
-    emitter : new Cesium.CircleEmitter(0.5),
+    emitter : new Cesium.CircleEmitter(2.0),
 
     emitterModelMatrix : computeEmitterModelMatrix(),
 
-    forces : [applyGravity]
+    updateCallback : applyGravity
 }));
 
 var gravityScratch = new Cesium.Cartesian3();
@@ -304,7 +302,7 @@ function applyGravity(p, dt) {
     p.velocity = Cesium.Cartesian3.add(p.velocity, gravityScratch, p.velocity);
 }
 
-viewer.scene.preRender.addEventListener(function(scene, time) {
+viewer.scene.preUpdate.addEventListener(function(scene, time) {
     particleSystem.modelMatrix = computeModelMatrix(entity, time);
 
     // Account for any changes to the emitter model matrix.
@@ -318,31 +316,31 @@ viewer.scene.preRender.addEventListener(function(scene, time) {
     }
 });
 
-Cesium.knockout.getObservable(viewModel, 'rate').subscribe(
+Cesium.knockout.getObservable(viewModel, 'emissionRate').subscribe(
     function(newValue) {
-        particleSystem.rate = parseFloat(newValue);
+        particleSystem.emissionRate = parseFloat(newValue);
     }
 );
 
 Cesium.knockout.getObservable(viewModel, 'particleSize').subscribe(
     function(newValue) {
         var particleSize = parseFloat(newValue);
-        particleSystem.minimumWidth = particleSize;
-        particleSystem.maximumWidth = particleSize;
-        particleSystem.minimumHeight = particleSize;
-        particleSystem.maximumHeight = particleSize;
+        particleSystem.minimumImageSize.x = particleSize;
+        particleSystem.minimumImageSize.y = particleSize;
+        particleSystem.maximumImageSize.x = particleSize;
+        particleSystem.maximumImageSize.y = particleSize;
     }
 );
 
-Cesium.knockout.getObservable(viewModel, 'minimumLife').subscribe(
+Cesium.knockout.getObservable(viewModel, 'minimumParticleLife').subscribe(
     function(newValue) {
-        particleSystem.minimumLife = parseFloat(newValue);
+        particleSystem.minimumParticleLife = parseFloat(newValue);
     }
 );
 
-Cesium.knockout.getObservable(viewModel, 'maximumLife').subscribe(
+Cesium.knockout.getObservable(viewModel, 'maximumParticleLife').subscribe(
     function(newValue) {
-        particleSystem.maximumLife = parseFloat(newValue);
+        particleSystem.maximumParticleLife = parseFloat(newValue);
     }
 );
 
@@ -400,7 +398,12 @@ Sandcastle.addToggleButton('Show', viewModel.show, function(checked) {
 var options = [{
     text : 'Circle',
     onselect : function() {
-        particleSystem.emitter = new Cesium.CircleEmitter(0.5);
+        particleSystem.emitter = new Cesium.CircleEmitter(2.0);
+    }
+}, {
+    text : 'Sphere',
+    onselect : function() {
+        particleSystem.emitter = new Cesium.SphereEmitter(2.5);
     }
 }, {
     text : 'Cone',
@@ -412,23 +415,18 @@ var options = [{
     onselect : function() {
         particleSystem.emitter = new Cesium.BoxEmitter(new Cesium.Cartesian3(10.0, 10.0, 10.0));
     }
-}, {
-    text : 'Sphere',
-    onselect : function() {
-        particleSystem.emitter = new Cesium.SphereEmitter(5.0);
-    }
 }];
 
 Sandcastle.addToolbarMenu(options);
+        //Sandcastle_End
+    Sandcastle.finishedLoading();
+    }
 
-//Sandcastle_End
-Sandcastle.finishedLoading();
-}
-if (typeof Cesium !== "undefined") {
+    if (typeof Cesium !== 'undefined') {
     startup(Cesium);
-} else if (typeof require === "function") {
-    require(["Cesium"], startup);
-}
+    } else if (typeof require === 'function') {
+    require(['Cesium'], startup);
+    }
 </script>
 
 </body>

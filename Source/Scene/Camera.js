@@ -958,7 +958,10 @@ define([
         if (this._suspendTerrainAdjustment) {
             this._suspendTerrainAdjustment = !globeFinishedUpdating;
         }
-        this._adjustHeightForTerrain();
+
+        if (globeFinishedUpdating) {
+            this._adjustHeightForTerrain();
+        }
     };
 
     var setTransformPosition = new Cartesian3();
@@ -1003,7 +1006,7 @@ define([
         }
 
         var scene = this._scene;
-        var globe = scene._globe;
+        var globe = scene.globe;
         var rayIntersection;
         var depthIntersection;
 
@@ -1013,7 +1016,7 @@ define([
             mousePosition.y = scene.drawingBufferHeight / 2.0;
 
             var ray = this.getPickRay(mousePosition, pickGlobeScratchRay);
-            rayIntersection = globe.pick(ray, scene, scratchRayIntersection);
+            rayIntersection = globe.pickWorldCoordinates(ray, scene, scratchRayIntersection);
 
             if (scene.pickPositionSupported) {
                 depthIntersection = scene.pickPositionWorldCoordinates(mousePosition, scratchDepthIntersection);
@@ -1499,6 +1502,7 @@ define([
 
     /**
      * Translates the camera's position by <code>amount</code> along the camera's view vector.
+     * When in 2D mode, this will zoom in the camera instead of translating the camera's position.
      *
      * @param {Number} [amount] The amount, in meters, to move. Defaults to <code>defaultMoveAmount</code>.
      *
@@ -1506,12 +1510,20 @@ define([
      */
     Camera.prototype.moveForward = function(amount) {
         amount = defaultValue(amount, this.defaultMoveAmount);
-        this.move(this.direction, amount);
+
+        if (this._mode === SceneMode.SCENE2D) {
+            // 2D mode
+            zoom2D(this, amount);
+        } else {
+            // 3D or Columbus view mode
+            this.move(this.direction, amount);
+        }
     };
 
     /**
      * Translates the camera's position by <code>amount</code> along the opposite direction
      * of the camera's view vector.
+     * When in 2D mode, this will zoom out the camera instead of translating the camera's position.
      *
      * @param {Number} [amount] The amount, in meters, to move. Defaults to <code>defaultMoveAmount</code>.
      *
@@ -1519,7 +1531,14 @@ define([
      */
     Camera.prototype.moveBackward = function(amount) {
         amount = defaultValue(amount, this.defaultMoveAmount);
-        this.move(this.direction, -amount);
+
+        if (this._mode === SceneMode.SCENE2D) {
+            // 2D mode
+            zoom2D(this, -amount);
+        } else {
+            // 3D or Columbus view mode
+            this.move(this.direction, -amount);
+        }
     };
 
     /**
@@ -1574,7 +1593,7 @@ define([
 
     /**
      * Rotates the camera around its up vector by amount, in radians, in the opposite direction
-     * of its right vector.
+     * of its right vector if not in 2D mode.
      *
      * @param {Number} [amount] The amount, in radians, to rotate by. Defaults to <code>defaultLookAmount</code>.
      *
@@ -1582,12 +1601,16 @@ define([
      */
     Camera.prototype.lookLeft = function(amount) {
         amount = defaultValue(amount, this.defaultLookAmount);
-        this.look(this.up, -amount);
+
+        // only want view of map to change in 3D mode, 2D visual is incorrect when look changes
+        if (this._mode !== SceneMode.SCENE2D) {
+            this.look(this.up, -amount);
+        }
     };
 
     /**
      * Rotates the camera around its up vector by amount, in radians, in the direction
-     * of its right vector.
+     * of its right vector if not in 2D mode.
      *
      * @param {Number} [amount] The amount, in radians, to rotate by. Defaults to <code>defaultLookAmount</code>.
      *
@@ -1595,12 +1618,16 @@ define([
      */
     Camera.prototype.lookRight = function(amount) {
         amount = defaultValue(amount, this.defaultLookAmount);
-        this.look(this.up, amount);
+
+        // only want view of map to change in 3D mode, 2D visual is incorrect when look changes
+        if (this._mode !== SceneMode.SCENE2D) {
+            this.look(this.up, amount);
+        }
     };
 
     /**
      * Rotates the camera around its right vector by amount, in radians, in the direction
-     * of its up vector.
+     * of its up vector if not in 2D mode.
      *
      * @param {Number} [amount] The amount, in radians, to rotate by. Defaults to <code>defaultLookAmount</code>.
      *
@@ -1608,12 +1635,16 @@ define([
      */
     Camera.prototype.lookUp = function(amount) {
         amount = defaultValue(amount, this.defaultLookAmount);
-        this.look(this.right, -amount);
+
+        // only want view of map to change in 3D mode, 2D visual is incorrect when look changes
+        if (this._mode !== SceneMode.SCENE2D) {
+            this.look(this.right, -amount);
+        }
     };
 
     /**
      * Rotates the camera around its right vector by amount, in radians, in the opposite direction
-     * of its up vector.
+     * of its up vector if not in 2D mode.
      *
      * @param {Number} [amount] The amount, in radians, to rotate by. Defaults to <code>defaultLookAmount</code>.
      *
@@ -1621,7 +1652,11 @@ define([
      */
     Camera.prototype.lookDown = function(amount) {
         amount = defaultValue(amount, this.defaultLookAmount);
-        this.look(this.right, amount);
+
+        // only want view of map to change in 3D mode, 2D visual is incorrect when look changes
+        if (this._mode !== SceneMode.SCENE2D) {
+            this.look(this.right, amount);
+        }
     };
 
     var lookScratchQuaternion = new Quaternion();
@@ -2382,7 +2417,7 @@ define([
     function pickMap2D(camera, windowPosition, projection, result) {
         var ray = camera.getPickRay(windowPosition, pickEllipsoid2DRay);
         var position = ray.origin;
-        position.z = 0.0;
+        position = Cartesian3.fromElements(position.y, position.z, 0.0, position);
         var cart = projection.unproject(position);
 
         if (cart.latitude < -CesiumMath.PI_OVER_TWO || cart.latitude > CesiumMath.PI_OVER_TWO) {
@@ -2504,7 +2539,7 @@ define([
 
         Cartesian3.clone(camera.directionWC, result.direction);
 
-        if (camera._mode === SceneMode.COLUMBUS_VIEW) {
+        if (camera._mode === SceneMode.COLUMBUS_VIEW || camera._mode === SceneMode.SCENE2D) {
             Cartesian3.fromElements(result.origin.z, result.origin.x, result.origin.y, result.origin);
         }
 
@@ -3197,6 +3232,7 @@ define([
         Cartesian3.clone(camera.right, result.right);
         Matrix4.clone(camera._transform, result.transform);
         result._transformChanged = true;
+        result.frustum = camera.frustum.clone();
 
         return result;
     };

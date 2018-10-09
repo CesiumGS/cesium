@@ -280,33 +280,6 @@ define([
          */
         this.depthFrustumText = '';
 
-        /**
-         * Gets the text on the general section expand button.  This property is computed.
-         * @type {String}
-         * @default '-'
-         */
-        this.generalSwitchText = knockout.pureComputed(function() {
-            return that.generalVisible ? '-' : '+';
-        });
-
-        /**
-         * Gets the text on the primitives section expand button.  This property is computed.
-         * @type {String}
-         * @default '+'
-         */
-        this.primitivesSwitchText = knockout.pureComputed(function() {
-            return that.primitivesVisible ? '-' : '+';
-        });
-
-        /**
-         * Gets the text on the terrain section expand button.  This property is computed.
-         * @type {String}
-         * @default '+'
-         */
-        this.terrainSwitchText = knockout.pureComputed(function() {
-            return that.terrainVisible ? '-' : '+';
-        });
-
         knockout.track(this, [
             'frustums',
             'frustumPlanes',
@@ -354,10 +327,12 @@ define([
 
         this._frustumsSubscription = knockout.getObservable(this, 'frustums').subscribe(function(val) {
             that._scene.debugShowFrustums = val;
+            that._scene.requestRender();
         });
 
         this._frustumPlanesSubscription = knockout.getObservable(this, 'frustumPlanes').subscribe(function(val) {
             that._scene.debugShowFrustumPlanes = val;
+            that._scene.requestRender();
         });
 
         this._performanceSubscription = knockout.getObservable(this, 'performance').subscribe(function(val) {
@@ -372,6 +347,7 @@ define([
 
         this._showPrimitiveBoundingSphere = createCommand(function() {
             that._primitive.debugShowBoundingVolume = that.primitiveBoundingSphere;
+            that._scene.requestRender();
             return true;
         });
 
@@ -390,6 +366,7 @@ define([
                 that._scene.primitives.remove(that._modelMatrixPrimitive);
                 that._modelMatrixPrimitive = undefined;
             }
+            that._scene.requestRender();
             return true;
         });
 
@@ -415,33 +392,40 @@ define([
 
         this._filterPrimitiveSubscription = knockout.getObservable(this, 'filterPrimitive').subscribe(function() {
             that._doFilterPrimitive();
+            that._scene.requestRender();
         });
 
         this._wireframeSubscription = knockout.getObservable(this, 'wireframe').subscribe(function(val) {
             globe._surface.tileProvider._debug.wireframe = val;
+            that._scene.requestRender();
         });
 
         this._globeDepthSubscription = knockout.getObservable(this, 'globeDepth').subscribe(function(val) {
             that._scene.debugShowGlobeDepth = val;
+            that._scene.requestRender();
         });
 
         this._pickDepthSubscription = knockout.getObservable(this, 'pickDepth').subscribe(function(val) {
             that._scene.debugShowPickDepth = val;
+            that._scene.requestRender();
         });
 
         this._depthFrustumSubscription = knockout.getObservable(this, 'depthFrustum').subscribe(function(val) {
-            that.scene.debugShowDepthFrustum = val;
+            that._scene.debugShowDepthFrustum = val;
+            that._scene.requestRender();
         });
 
         this._incrementDepthFrustum = createCommand(function() {
             var next = that.depthFrustum + 1;
             that.depthFrustum = boundDepthFrustum(1, that._numberOfFrustums, next);
+            that._scene.requestRender();
             return true;
         });
 
         this._decrementDepthFrustum = createCommand(function() {
             var next = that.depthFrustum - 1;
             that.depthFrustum = boundDepthFrustum(1, that._numberOfFrustums, next);
+            that._scene.requestRender();
             return true;
         });
 
@@ -467,10 +451,12 @@ define([
 
         this._tileCoordinatesSubscription = knockout.getObservable(this, 'tileCoordinates').subscribe(function() {
             that._showTileCoordinates();
+            that._scene.requestRender();
         });
 
         this._tileBoundingSphereSubscription = knockout.getObservable(this, 'tileBoundingSphere').subscribe(function() {
             that._showTileBoundingSphere();
+            that._scene.requestRender();
         });
 
         this._showTileBoundingSphere = createCommand(function() {
@@ -479,6 +465,7 @@ define([
             } else {
                 globe._surface.tileProvider._debug.boundingSphereTile = undefined;
             }
+            that._scene.requestRender();
             return true;
         });
 
@@ -499,6 +486,7 @@ define([
 
         this._filterTileSubscription = knockout.getObservable(this, 'filterTile').subscribe(function() {
             that.doFilterTile();
+            that._scene.requestRender();
         });
 
         function pickPrimitive(e) {
@@ -510,6 +498,7 @@ define([
                 that.primitive = defined(newPick.collection) ? newPick.collection : newPick.primitive;
             }
 
+            that._scene.requestRender();
             that.pickPrimitiveActive = false;
         }
 
@@ -610,7 +599,6 @@ define([
             }
         },
 
-
         /**
          * Gets the command to toggle the visibility of a BoundingSphere for a primitive
          * @memberof CesiumInspectorViewModel.prototype
@@ -647,7 +635,6 @@ define([
             }
         },
 
-
         /**
          * Gets the command to increment the depth frustum index to be shown
          * @memberof CesiumInspectorViewModel.prototype
@@ -671,7 +658,6 @@ define([
                 return this._decrementDepthFrustum;
             }
         },
-
 
         /**
          * Gets the command to toggle the visibility of tile coordinates

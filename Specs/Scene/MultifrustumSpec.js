@@ -8,9 +8,9 @@ defineSuite([
         'Core/defined',
         'Core/destroyObject',
         'Core/GeometryPipeline',
-        'Core/loadImage',
         'Core/Math',
         'Core/Matrix4',
+        'Core/Resource',
         'Renderer/BufferUsage',
         'Renderer/DrawCommand',
         'Renderer/Pass',
@@ -35,9 +35,9 @@ defineSuite([
         defined,
         destroyObject,
         GeometryPipeline,
-        loadImage,
         CesiumMath,
         Matrix4,
+        Resource,
         BufferUsage,
         DrawCommand,
         Pass,
@@ -63,15 +63,21 @@ defineSuite([
     var blueImage;
     var whiteImage;
 
+    var logDepth;
+
     beforeAll(function() {
+        scene = createScene();
+        logDepth = scene.logarithmicDepthBuffer;
+        scene.destroyForSpecs();
+
         return when.join(
-            loadImage('./Data/Images/Green.png').then(function(image) {
+            Resource.fetchImage('./Data/Images/Green.png').then(function(image) {
                 greenImage = image;
             }),
-            loadImage('./Data/Images/Blue.png').then(function(image) {
+            Resource.fetchImage('./Data/Images/Blue.png').then(function(image) {
                 blueImage = image;
             }),
-            loadImage('./Data/Images/White.png').then(function(image) {
+            Resource.fetchImage('./Data/Images/White.png').then(function(image) {
                 whiteImage = image;
             }));
     });
@@ -80,6 +86,8 @@ defineSuite([
         scene = createScene();
         context = scene.context;
         primitives = scene.primitives;
+
+        scene.logarithmicDepthBuffer = false;
 
         var camera = scene.camera;
         camera.position = new Cartesian3();
@@ -196,7 +204,8 @@ defineSuite([
 
         var calls = DrawCommand.prototype.execute.calls.all();
         var billboardCall;
-        for (var i = 0; i < calls.length; ++i) {
+        var i;
+        for (i = 0; i < calls.length; ++i) {
             if (calls[i].object.owner instanceof BillboardCollection) {
                 billboardCall = calls[i];
                 break;
@@ -205,7 +214,16 @@ defineSuite([
 
         expect(billboardCall).toBeDefined();
         expect(billboardCall.args.length).toEqual(2);
-        expect(billboardCall.object.shaderProgram.fragmentShaderSource.sources[1]).toContain('czm_Debug_main');
+
+        var found = false;
+        var sources = billboardCall.object.shaderProgram.fragmentShaderSource.sources;
+        for (var j = 0; j < sources.length; ++j) {
+            if (sources[i].indexOf('czm_Debug_main') !== -1) {
+                found = true;
+                break;
+            }
+        }
+        expect(found).toBe(true);
     });
 
     function createPrimitive(bounded, closestFrustum) {
@@ -339,5 +357,20 @@ defineSuite([
 
         createBillboards();
         scene.renderForSpecs();
+    });
+
+    it('log depth uses less frustums', function() {
+        if (!logDepth) {
+            return;
+        }
+
+        createBillboards();
+
+        scene.render();
+        expect(scene.frustumCommandsList.length).toEqual(3);
+
+        scene.logarithmicDepthBuffer = true;
+        scene.render();
+        expect(scene.frustumCommandsList.length).toEqual(1);
     });
 }, 'WebGL');

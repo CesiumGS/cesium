@@ -238,7 +238,7 @@ WebGLGlobeDataSource.prototype.loadUrl = function(url) {
     //Use 'when' to load the URL into a json object
     //and then process is with the `load` function.
     var that = this;
-    return Cesium.when(Cesium.loadJson(url), function(json) {
+    return Cesium.Resource.fetchJson(url).then(function(json) {
         return that.load(json, url);
     }).otherwise(function(error) {
         //Otherwise will catch any errors or exceptions that occur
@@ -252,7 +252,7 @@ WebGLGlobeDataSource.prototype.loadUrl = function(url) {
 
 /**
  * Loads the provided data, replacing any existing data.
- * @param {Object} data The object to be processed.
+ * @param {Array} data The object to be processed.
  */
 WebGLGlobeDataSource.prototype.load = function(data) {
     //>>includeStart('debug', pragmas.debug);
@@ -377,10 +377,10 @@ viewer.dataSources.add(dataSource);
 //Sandcastle_End
     Sandcastle.finishedLoading();
 }
-if (typeof Cesium !== "undefined") {
+if (typeof Cesium !== 'undefined') {
     startup(Cesium);
-} else if (typeof require === "function") {
-    require(["Cesium"], startup);
+} else if (typeof require === 'function') {
+    require(['Cesium'], startup);
 }
 </script>
 </body>

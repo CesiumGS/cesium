@@ -45,7 +45,10 @@ var czml = [{
     }
 }];
 
-var viewer = new Cesium.Viewer('cesiumContainer');
+var viewer = new Cesium.Viewer('cesiumContainer', {
+    shouldAnimate : true
+});
+
 var dataSourcePromise = viewer.dataSources.add(Cesium.CzmlDataSource.load(czml));
 
 dataSourcePromise.then(function(dataSource){
@@ -57,10 +60,10 @@ dataSourcePromise.then(function(dataSource){
   //Sandcastle_End
     Sandcastle.finishedLoading();
 }
-if (typeof Cesium !== "undefined") {
+if (typeof Cesium !== 'undefined') {
     startup(Cesium);
-} else if (typeof require === "function") {
-    require(["Cesium"], startup);
+} else if (typeof require === 'function') {
+    require(['Cesium'], startup);
 }
 </script>
 </body>

@@ -41,7 +41,7 @@ defineSuite([
     beforeEach(function() {
         polylines = new PolylineCollection();
         scene.mode = SceneMode.SCENE3D;
-        scene._camera = new Camera(scene);
+        scene.camera = new Camera(scene);
     });
 
     afterEach(function() {
@@ -327,6 +327,20 @@ defineSuite([
 
         polylines.removeAll();
         expect(polylines.length).toEqual(0);
+    });
+
+    it('removes a polyline from the updated list when removed', function() {
+        var firstPolyline = polylines.add();
+        var secondPolyline = polylines.add();
+
+        firstPolyline.width = 4;
+        secondPolyline.width = 5;
+
+        expect(polylines._polylinesToUpdate.length).toEqual(2);
+
+        polylines.remove(secondPolyline);
+
+        expect(polylines._polylinesToUpdate.length).toEqual(1);
     });
 
     it('can check if it contains a polyline', function() {

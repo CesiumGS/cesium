@@ -1,4 +1,5 @@
 define([
+        '../Core/arraySlice',
         '../Core/Cartesian3',
         '../Core/Color',
         '../Core/defaultValue',
@@ -7,7 +8,6 @@ define([
         '../Core/destroyObject',
         '../Core/Ellipsoid',
         '../Core/IndexDatatype',
-        '../Core/Matrix4',
         '../Core/OrientedBoundingBox',
         '../Core/Rectangle',
         '../Core/TaskProcessor',
@@ -16,6 +16,7 @@ define([
         './Vector3DTileBatch',
         './Vector3DTilePrimitive'
     ], function(
+        arraySlice,
         Cartesian3,
         Color,
         defaultValue,
@@ -24,7 +25,6 @@ define([
         destroyObject,
         Ellipsoid,
         IndexDatatype,
-        Matrix4,
         OrientedBoundingBox,
         Rectangle,
         TaskProcessor,
@@ -251,10 +251,10 @@ define([
 
             if (!defined(batchTableColors)) {
                 // Copy because they may be the views on the same buffer.
-                positions = polygons._positions = polygons._positions.slice();
-                counts = polygons._counts = polygons._counts.slice();
-                indexCounts = polygons._indexCounts= polygons._indexCounts.slice();
-                indices = polygons._indices = polygons._indices.slice();
+                positions = polygons._positions = arraySlice(polygons._positions);
+                counts = polygons._counts = arraySlice(polygons._counts);
+                indexCounts = polygons._indexCounts= arraySlice(polygons._indexCounts);
+                indices = polygons._indices = arraySlice(polygons._indices);
 
                 polygons._center = polygons._ellipsoid.cartographicToCartesian(Rectangle.center(polygons._rectangle));
 
@@ -384,12 +384,11 @@ define([
     /**
      * Apply a style to the content.
      *
-     * @param {FrameState} frameState The frame state.
      * @param {Cesium3DTileStyle} style The style.
      * @param {Cesium3DTileFeature[]} features The array of features.
      */
-    Vector3DTilePolygons.prototype.applyStyle = function(frameState, style, features) {
-        this._primitive.applyStyle(frameState, style, features);
+    Vector3DTilePolygons.prototype.applyStyle = function(style, features) {
+        this._primitive.applyStyle(style, features);
     };
 
     /**
@@ -442,8 +441,6 @@ define([
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
      * assign the return value (<code>undefined</code>) to the object as done in the example.
      * </p>
-     *
-     * @returns {undefined}
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      */

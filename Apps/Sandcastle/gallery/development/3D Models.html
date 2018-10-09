@@ -63,6 +63,7 @@ function startup(Cesium) {
     'use strict';
 //Sandcastle_Begin
 var viewer = new Cesium.Viewer('cesiumContainer', {
+    shouldAnimate : true,
     shadows : true
 });
 
@@ -185,17 +186,17 @@ var options = [{
         createModel('../../SampleData/models/CesiumAir/Cesium_Air.glb', height, heading, pitch, roll);
     }
 }, {
-    text : 'Ground vehicle',
+    text : 'Ground Vehicle',
     onselect : function() {
-        createModel('../../SampleData/models/CesiumGround/Cesium_Ground.glb');
+        createModel('../../SampleData/models/GroundVehicle/GroundVehicle.glb');
     }
 }, {
-    text : 'Milk truck',
+    text : 'Milk Truck',
     onselect : function() {
         createModel('../../SampleData/models/CesiumMilkTruck/CesiumMilkTruck.glb');
     }
 }, {
-    text : 'Skinned character',
+    text : 'Skinned Character',
     onselect : function() {
         createModel('../../SampleData/models/CesiumMan/Cesium_Man.glb');
     }
@@ -210,10 +211,10 @@ Sandcastle.addToggleButton('Shadows', viewer.shadows, function(checked) {
 //Sandcastle_End
 Sandcastle.finishedLoading();
 }
-if (typeof Cesium !== "undefined") {
+if (typeof Cesium !== 'undefined') {
     startup(Cesium);
-} else if (typeof require === "function") {
-    require(["Cesium"], startup);
+} else if (typeof require === 'function') {
+    require(['Cesium'], startup);
 }
 </script>
 </body>

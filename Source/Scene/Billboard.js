@@ -13,6 +13,7 @@ define([
         '../Core/DistanceDisplayCondition',
         '../Core/Matrix4',
         '../Core/NearFarScalar',
+        '../Core/Resource',
         './HeightReference',
         './HorizontalOrigin',
         './SceneMode',
@@ -33,6 +34,7 @@ define([
         DistanceDisplayCondition,
         Matrix4,
         NearFarScalar,
+        Resource,
         HeightReference,
         HorizontalOrigin,
         SceneMode,
@@ -69,6 +71,7 @@ define([
      * @see Label
      *
      * @internalConstructor
+     * @class
      *
      * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Billboards.html|Cesium Sandcastle Billboard Demo}
      */
@@ -138,7 +141,7 @@ define([
         this._pixelOffsetScaleByDistance = pixelOffsetScaleByDistance;
         this._sizeInMeters = defaultValue(options.sizeInMeters, false);
         this._distanceDisplayCondition = distanceDisplayCondition;
-        this._disableDepthTestDistance = defaultValue(options.disableDepthTestDistance, 0.0);
+        this._disableDepthTestDistance = options.disableDepthTestDistance;
         this._id = options.id;
         this._collection = defaultValue(options.collection, billboardCollection);
 
@@ -156,6 +159,10 @@ define([
         this._imageSubRegion = undefined;
         this._imageWidth = undefined;
         this._imageHeight = undefined;
+
+        this._labelDimensions = undefined;
+        this._labelHorizontalOrigin = undefined;
+        this._labelTranslate = undefined;
 
         var image = options.image;
         var imageId = options.imageId;
@@ -208,7 +215,8 @@ define([
     var PIXEL_OFFSET_SCALE_BY_DISTANCE_INDEX = Billboard.PIXEL_OFFSET_SCALE_BY_DISTANCE_INDEX = 13;
     var DISTANCE_DISPLAY_CONDITION = Billboard.DISTANCE_DISPLAY_CONDITION = 14;
     var DISABLE_DEPTH_DISTANCE = Billboard.DISABLE_DEPTH_DISTANCE = 15;
-    Billboard.NUMBER_OF_PROPERTIES = 16;
+    Billboard.TEXTURE_COORDINATE_BOUNDS = 16;
+    Billboard.NUMBER_OF_PROPERTIES = 17;
 
     function makeDirty(billboard, propertyChanged) {
         var billboardCollection = billboard._billboardCollection;
@@ -782,7 +790,6 @@ define([
          * When set to zero, the depth test is always applied. When set to Number.POSITIVE_INFINITY, the depth test is never applied.
          * @memberof Billboard.prototype
          * @type {Number}
-         * @default 0.0
          */
         disableDepthTestDistance : {
             get : function() {
@@ -791,7 +798,7 @@ define([
             set : function(value) {
                 if (this._disableDepthTestDistance !== value) {
                     //>>includeStart('debug', pragmas.debug);
-                    if (!defined(value) || value < 0.0) {
+                    if (defined(value) && value < 0.0) {
                         throw new DeveloperError('disableDepthTestDistance must be greater than or equal to 0.0.');
                     }
                     //>>includeEnd('debug');
@@ -836,6 +843,15 @@ define([
         },
 
         /**
+         * @private
+         */
+        pickId : {
+            get : function() {
+                return this._pickId;
+            }
+        },
+
+        /**
          * <p>
          * Gets or sets the image to be used for this billboard.  If a texture has already been created for the
          * given image, the existing texture is used.
@@ -869,6 +885,8 @@ define([
                     makeDirty(this, IMAGE_INDEX_INDEX);
                 } else if (typeof value === 'string') {
                     this.setImage(value, value);
+                } else if (value instanceof Resource) {
+                    this.setImage(value.url, value);
                 } else if (defined(value.src)) {
                     this.setImage(value.src, value);
                 } else {
@@ -1072,7 +1090,7 @@ define([
      * </p>
      *
      * @param {String} id The id of the image.  This can be any string that uniquely identifies the image.
-     * @param {Image|Canvas|String|Billboard~CreateImageCallback} image The image to load.  This parameter
+     * @param {Image|Canvas|String|Resource|Billboard~CreateImageCallback} image The image to load.  This parameter
      *        can either be a loaded Image or Canvas, a URL which will be loaded as an Image automatically,
      *        or a function which will be called to create the image if it hasn't been loaded already.
      * @example

@@ -20,7 +20,7 @@ defineSuite([
         DomEventSimulator) {
     'use strict';
 
-    var usePointerEvents = FeatureDetection.supportsPointerEvents();
+    var usePointerEvents;
     var element;
     var handler;
 
@@ -62,6 +62,10 @@ defineSuite([
         event.stopPropagation();
         event.preventDefault();
     }
+
+    beforeAll(function(){
+        usePointerEvents = FeatureDetection.supportsPointerEvents();
+    });
 
     beforeEach(function() {
         // ignore events that bubble up to the document.
@@ -1035,6 +1039,113 @@ defineSuite([
         simulateInput();
 
         expect(action).not.toHaveBeenCalled();
+    });
+
+    it('handles touch pinch release', function() {
+        var leftDownEventType = ScreenSpaceEventType.LEFT_DOWN;
+        var leftDownAction = createCloningSpy('LEFT_DOWN');
+        handler.setInputAction(leftDownAction, leftDownEventType);
+
+        var pinchStartEventType = ScreenSpaceEventType.PINCH_START;
+        var pinchStartAction = createCloningSpy('PINCH_START');
+        handler.setInputAction(pinchStartAction, pinchStartEventType);
+
+        var pinchEndEventType = ScreenSpaceEventType.PINCH_END;
+        var pinchEndAction = createCloningSpy('PINCH_END');
+        handler.setInputAction(pinchEndAction, pinchEndEventType);
+
+        var touch1Position = {
+            clientX : 1,
+            clientY : 2
+        };
+        var touch2Position = {
+            clientX : 4,
+            clientY : 3
+        };
+        if (usePointerEvents) {
+            DomEventSimulator.firePointerDown(element, combine(
+                {
+                    pointerType : 'touch',
+                    pointerId : 1
+                },
+                touch1Position
+            ));
+            DomEventSimulator.firePointerDown(element, combine(
+                {
+                    pointerType : 'touch',
+                    pointerId : 2
+                },
+                touch2Position
+            ));
+
+            // Releasing one of two fingers should not trigger
+            // PINCH_END or LEFT_DOWN:
+            leftDownAction.calls.reset();
+            DomEventSimulator.firePointerUp(element, combine(
+                {
+                    pointerType : 'touch',
+                    pointerId : 1
+                },
+                touch1Position
+            ));
+            expect(pinchEndAction).not.toHaveBeenCalled();
+            expect(leftDownAction).not.toHaveBeenCalled();
+            pinchEndAction.calls.reset();
+
+            // Putting another finger down should not trigger
+            // PINCH_START:
+            pinchStartAction.calls.reset();
+            DomEventSimulator.firePointerDown(element, combine(
+                {
+                    pointerType : 'touch',
+                    pointerId : 1
+                },
+                touch2Position
+            ));
+            expect(pinchStartAction).not.toHaveBeenCalled();
+
+            // Releasing both fingers should trigger PINCH_END:
+            DomEventSimulator.firePointerUp(element, combine(
+                {
+                    pointerType : 'touch',
+                    pointerId : 1
+                },
+                touch2Position
+            ));
+            DomEventSimulator.firePointerUp(element, combine({
+                pointerType : 'touch',
+                pointerId : 2
+            }, touch2Position));
+            expect(pinchEndAction).toHaveBeenCalled();
+        } else {
+            DomEventSimulator.fireTouchStart(element, {
+                changedTouches : [
+                    combine({ identifier : 0 }, touch1Position),
+                    combine({ identifier : 1 }, touch2Position)
+                ]
+            });
+            leftDownAction.calls.reset();
+
+            // Releasing one of two fingers should not trigger
+            // PINCH_END or LEFT_DOWN:
+            DomEventSimulator.fireTouchEnd(element, {
+                changedTouches : [
+                    combine({ identifier : 0 }, touch1Position)
+                ]
+            });
+
+            expect(pinchEndAction).not.toHaveBeenCalled();
+            expect(leftDownAction).not.toHaveBeenCalled();
+
+            // Releasing both fingers should trigger PINCH_END:
+            pinchEndAction.calls.reset();
+            DomEventSimulator.fireTouchEnd(element, {
+                changedTouches : [
+                    combine({ identifier : 1 }, touch2Position)
+                ]
+            });
+            expect(pinchEndAction).toHaveBeenCalled();
+        }
     });
 
     it('handles touch click', function() {
