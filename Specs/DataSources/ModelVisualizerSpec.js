@@ -3,6 +3,7 @@ defineSuite([
         'Core/BoundingSphere',
         'Core/Cartesian2',
         'Core/Cartesian3',
+        'Core/Color',
         'Core/defined',
         'Core/DistanceDisplayCondition',
         'Core/JulianDate',
@@ -26,6 +27,7 @@ defineSuite([
         BoundingSphere,
         Cartesian2,
         Cartesian3,
+        Color,
         defined,
         DistanceDisplayCondition,
         JulianDate,
@@ -152,6 +154,7 @@ defineSuite([
         model.clippingPlanes = new ConstantProperty(clippingPlanes);
 
         model.imageBasedLightingFactor = new ConstantProperty(new Cartesian2(0.5, 0.5));
+        model.lightColor = new ConstantProperty(new Color(1.0, 1.0, 0.0, 1.0));
 
         var testObject = entityCollection.getOrCreateEntity('test');
         testObject.position = new ConstantPositionProperty(Cartesian3.fromDegrees(1, 2, 3));
@@ -172,6 +175,7 @@ defineSuite([
         expect(Cartesian3.equals(primitive.clippingPlanes._planes[0].normal, clippingPlanes._planes[0].normal)).toBe(true);
         expect(primitive.clippingPlanes._planes[0].distance).toEqual(clippingPlanes._planes[0].distance);
         expect(primitive.imageBasedLightingFactor).toEqual(new Cartesian2(0.5, 0.5));
+        expect(primitive.lightColor).toEqual(new Color(1.0, 1.0, 0.0, 1.0));
 
         // wait till the model is loaded before we can check node transformations
         return pollToPromise(function() {

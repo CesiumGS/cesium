@@ -5,6 +5,8 @@ Change Log
 
 ##### Additions :tada:
 * Added WMS-T (time) support in WebMapServiceImageryProvider [#2581](https://github.com/AnalyticalGraphicsInc/cesium/issues/2581)
+* Added `imageBasedLightingFactor` property to `Cesium3DTileset`, `Model`, and `ModelGraphics` to scale the diffuse and specular image-based lighting contributions to the final color. [#7025](https://github.com/AnalyticalGraphicsInc/cesium/pull/7025)
+* Added `lightColor` property to `Cesium3DTileset`, `Model`, and `ModelGraphics` to change the intensity of the light used when shading model. [#7025](https://github.com/AnalyticalGraphicsInc/cesium/pull/7025)
 
 ### 1.50 - 2018-10-01
 

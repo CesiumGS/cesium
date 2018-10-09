@@ -161,6 +161,7 @@ define([
             model.clippingPlanes = Property.getValueOrUndefined(modelGraphics._clippingPlanes, time);
             model.clampAnimations = Property.getValueOrDefault(modelGraphics._clampAnimations, time, defaultClampAnimations);
             model.imageBasedLightingFactor = Property.getValueOrDefault(modelGraphics._imageBasedLightingFactor, time, defaultImageBasedLightingFactor);
+            model.lightColor = Property.getValueOrUndefined(modelGraphics._lightColor, time);
 
             if (model.ready) {
                 var runAnimations = Property.getValueOrDefault(modelGraphics._runAnimations, time, true);

@@ -50,6 +50,7 @@ defineSuite([
             colorBlendAmount : 0.5,
             clippingPlanes : new ClippingPlaneCollection(),
             imageBasedLightingFactor : new Cartesian2(0.5, 0.5),
+            lightColor : new Color(1.0, 1.0, 0.0, 1.0),
             nodeTransformations : {
                 node1 : {
                     translation : Cartesian3.UNIT_Y,
@@ -76,6 +77,7 @@ defineSuite([
         expect(model.colorBlendAmount).toBeInstanceOf(ConstantProperty);
         expect(model.clippingPlanes).toBeInstanceOf(ConstantProperty);
         expect(model.imageBasedLightingFactor).toBeInstanceOf(ConstantProperty);
+        expect(model.lightColor).toBeInstanceOf(ConstantProperty);
         expect(model.runAnimations).toBeInstanceOf(ConstantProperty);
         expect(model.clampAnimations).toBeInstanceOf(ConstantProperty);
 
@@ -97,6 +99,7 @@ defineSuite([
         expect(model.colorBlendAmount.getValue()).toEqual(options.colorBlendAmount);
         expect(model.clippingPlanes.getValue().planes).toEqual(options.clippingPlanes.planes);
         expect(model.imageBasedLightingFactor.getValue()).toEqual(options.imageBasedLightingFactor);
+        expect(model.lightColor.getValue()).toEqual(options.lightColor);
         expect(model.runAnimations.getValue()).toEqual(options.runAnimations);
         expect(model.clampAnimations.getValue()).toEqual(options.clampAnimations);
 
@@ -127,6 +130,7 @@ defineSuite([
         source.colorBlendAmount = new ConstantProperty(0.5);
         source.clippingPlanes = new ConstantProperty(new ClippingPlaneCollection());
         source.imageBasedLightingFactor = new ConstantProperty(new Cartesian2(0.5, 0.5));
+        source.lightColor = new ConstantProperty(new Color(1.0, 1.0, 0.0, 1.0));
         source.runAnimations = new ConstantProperty(true);
         source.clampAnimations = new ConstantProperty(true);
         source.nodeTransformations = {
@@ -159,6 +163,7 @@ defineSuite([
         expect(target.colorBlendAmount).toBe(source.colorBlendAmount);
         expect(target.clippingPlanes).toBe(source.clippingPlanes);
         expect(target.imageBasedLightingFactor).toBe(source.imageBasedLightingFactor);
+        expect(target.lightColor).toBe(source.lightColor);
         expect(target.runAnimations).toBe(source.runAnimations);
         expect(target.clampAnimations).toBe(source.clampAnimations);
         expect(target.nodeTransformations).toEqual(source.nodeTransformations);
@@ -182,6 +187,7 @@ defineSuite([
         source.colorBlendAmount = new ConstantProperty(0.5);
         source.clippingPlanes = new ConstantProperty(new ClippingPlaneCollection());
         source.imageBasedLightingFactor = new ConstantProperty(new Cartesian2(0.5, 0.5));
+        source.lightColor = new ConstantProperty(new Color(1.0, 1.0, 0.0, 1.0));
         source.runAnimations = new ConstantProperty(true);
         source.clampAnimations = new ConstantProperty(true);
         source.nodeTransformations = {
@@ -204,6 +210,7 @@ defineSuite([
         var colorBlendAmount = new ConstantProperty(0.5);
         var clippingPlanes = new ConstantProperty(new ClippingPlaneCollection());
         var imageBasedLightingFactor = new ConstantProperty(new Cartesian2(0.5, 0.5));
+        var lightColor = new ConstantProperty(new Color(1.0, 1.0, 0.0, 1.0));
         var runAnimations = new ConstantProperty(true);
         var clampAnimations = new ConstantProperty(true);
         var nodeTransformations = new PropertyBag({
@@ -227,6 +234,7 @@ defineSuite([
         target.colorBlendAmount = colorBlendAmount;
         target.clippingPlanes = clippingPlanes;
         target.imageBasedLightingFactor = imageBasedLightingFactor;
+        target.lightColor = lightColor;
         target.runAnimations = runAnimations;
         target.clampAnimations = clampAnimations;
         target.nodeTransformations = nodeTransformations;
@@ -249,6 +257,7 @@ defineSuite([
         expect(target.colorBlendAmount).toBe(colorBlendAmount);
         expect(target.clippingPlanes).toBe(clippingPlanes);
         expect(target.imageBasedLightingFactor).toBe(imageBasedLightingFactor);
+        expect(target.lightColor).toBe(lightColor);
         expect(target.runAnimations).toBe(runAnimations);
         expect(target.clampAnimations).toBe(clampAnimations);
         expect(target.nodeTransformations).toBe(nodeTransformations);
@@ -272,6 +281,7 @@ defineSuite([
         source.colorBlendAmount = new ConstantProperty(0.5);
         source.clippingPlanes = new ConstantProperty(new ClippingPlaneCollection());
         source.imageBasedLightingFactor = new ConstantProperty(new Cartesian2(0.5, 0.5));
+        source.lightColor = new ConstantProperty(new Color(1.0, 1.0, 0.0, 1.0));
         source.runAnimations = new ConstantProperty(true);
         source.clampAnimations = new ConstantProperty(true);
         source.nodeTransformations = {
@@ -296,6 +306,7 @@ defineSuite([
         expect(result.colorBlendAmount).toBe(source.colorBlendAmount);
         expect(result.clippingPlanes).toBe(source.clippingPlanes);
         expect(result.imageBasedLightingFactor).toBe(source.imageBasedLightingFactor);
+        expect(result.lightColor).toBe(source.lightColor);
         expect(result.runAnimations).toBe(source.runAnimations);
         expect(result.clampAnimations).toBe(source.clampAnimations);
         expect(result.nodeTransformations).toEqual(source.nodeTransformations);
