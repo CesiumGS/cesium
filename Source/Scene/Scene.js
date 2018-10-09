@@ -2944,7 +2944,9 @@ define([
         // the function modifies scene state that should remain constant over the frame.
         var functions = scene._frameState.afterRender;
         for (var i = 0, length = functions.length; i < length; ++i) {
-            functions[i]();
+            if (functions[i]) {
+                functions[i]();
+						}
             scene.requestRender();
         }
 
