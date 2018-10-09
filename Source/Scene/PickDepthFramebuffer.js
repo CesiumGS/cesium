@@ -26,14 +26,41 @@ define([
         Texture) {
     'use strict';
 
-    /**
-     * @private
-     */
-    function PickDepthFramebuffer() {
-        this._depthStencilTexture = undefined;
-        this._framebuffer = undefined;
-        this._passState = undefined;
-    }
+        /**
+             * @private
+             */
+        class PickDepthFramebuffer {
+            constructor() {
+                this._depthStencilTexture = undefined;
+                this._framebuffer = undefined;
+                this._passState = undefined;
+            }
+            update(context, drawingBufferPosition, viewport) {
+                var width = viewport.width;
+                var height = viewport.height;
+                if (!defined(this._framebuffer) || width !== this._depthStencilTexture.width || height !== this._depthStencilTexture.height) {
+                    destroyResources(this);
+                    createResources(this, context);
+                }
+                var framebuffer = this._framebuffer;
+                var passState = this._passState;
+                passState.framebuffer = framebuffer;
+                passState.viewport.width = width;
+                passState.viewport.height = height;
+                passState.scissorTest.rectangle.x = drawingBufferPosition.x;
+                passState.scissorTest.rectangle.y = height - drawingBufferPosition.y;
+                passState.scissorTest.rectangle.width = 1;
+                passState.scissorTest.rectangle.height = 1;
+                return passState;
+            }
+            isDestroyed() {
+                return false;
+            }
+            destroy() {
+                destroyResources(this);
+                return destroyObject(this);
+            }
+        }
 
     function destroyResources(pickDepth) {
         pickDepth._framebuffer = pickDepth._framebuffer && pickDepth._framebuffer.destroy();
@@ -68,36 +95,8 @@ define([
         pickDepth._passState = passState;
     }
 
-    PickDepthFramebuffer.prototype.update = function(context, drawingBufferPosition, viewport) {
-        var width = viewport.width;
-        var height = viewport.height;
 
-        if (!defined(this._framebuffer) || width !== this._depthStencilTexture.width || height !== this._depthStencilTexture.height) {
-            destroyResources(this);
-            createResources(this, context);
-        }
 
-        var framebuffer = this._framebuffer;
-        var passState = this._passState;
-        passState.framebuffer = framebuffer;
-        passState.viewport.width = width;
-        passState.viewport.height = height;
-        passState.scissorTest.rectangle.x = drawingBufferPosition.x;
-        passState.scissorTest.rectangle.y = height - drawingBufferPosition.y;
-        passState.scissorTest.rectangle.width = 1;
-        passState.scissorTest.rectangle.height = 1;
-
-        return passState;
-    };
-
-    PickDepthFramebuffer.prototype.isDestroyed = function() {
-        return false;
-    };
-
-    PickDepthFramebuffer.prototype.destroy = function() {
-        destroyResources(this);
-        return destroyObject(this);
-    };
 
     return PickDepthFramebuffer;
 });

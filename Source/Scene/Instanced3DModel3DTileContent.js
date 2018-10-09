@@ -62,31 +62,91 @@ define([
         return {};
     }
 
-    /**
-     * Represents the contents of a
-     * {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/specification/TileFormats/Instanced3DModel|Instanced 3D Model}
-     * tile in a {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/specification|3D Tiles} tileset.
-     * <p>
-     * Implements the {@link Cesium3DTileContent} interface.
-     * </p>
-     *
-     * @alias Instanced3DModel3DTileContent
-     * @constructor
-     *
-     * @private
-     */
-    function Instanced3DModel3DTileContent(tileset, tile, resource, arrayBuffer, byteOffset) {
-        this._tileset = tileset;
-        this._tile = tile;
-        this._resource = resource;
-        this._modelInstanceCollection = undefined;
-        this._batchTable = undefined;
-        this._features = undefined;
-
-        this.featurePropertiesDirty = false;
-
-        initialize(this, arrayBuffer, byteOffset);
-    }
+        /**
+             * Represents the contents of a
+             * {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/specification/TileFormats/Instanced3DModel|Instanced 3D Model}
+             * tile in a {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/specification|3D Tiles} tileset.
+             * <p>
+             * Implements the {@link Cesium3DTileContent} interface.
+             * </p>
+             *
+             * @alias Instanced3DModel3DTileContent
+             * @constructor
+             *
+             * @private
+             */
+        class Instanced3DModel3DTileContent {
+            constructor(tileset, tile, resource, arrayBuffer, byteOffset) {
+                this._tileset = tileset;
+                this._tile = tile;
+                this._resource = resource;
+                this._modelInstanceCollection = undefined;
+                this._batchTable = undefined;
+                this._features = undefined;
+                this.featurePropertiesDirty = false;
+                initialize(this, arrayBuffer, byteOffset);
+            }
+            hasProperty(batchId, name) {
+                return this._batchTable.hasProperty(batchId, name);
+            }
+            getFeature(batchId) {
+                var featuresLength = this.featuresLength;
+                //>>includeStart('debug', pragmas.debug);
+                if (!defined(batchId) || (batchId < 0) || (batchId >= featuresLength)) {
+                    throw new DeveloperError('batchId is required and between zero and featuresLength - 1 (' + (featuresLength - 1) + ').');
+                }
+                //>>includeEnd('debug');
+                createFeatures(this);
+                return this._features[batchId];
+            }
+            applyDebugSettings(enabled, color) {
+                color = enabled ? color : Color.WHITE;
+                this._batchTable.setAllColor(color);
+            }
+            applyStyle(style) {
+                this._batchTable.applyStyle(style);
+            }
+            update(tileset, frameState) {
+                var commandStart = frameState.commandList.length;
+                // In the PROCESSING state we may be calling update() to move forward
+                // the content's resource loading.  In the READY state, it will
+                // actually generate commands.
+                this._batchTable.update(tileset, frameState);
+                this._modelInstanceCollection.modelMatrix = this._tile.computedTransform;
+                this._modelInstanceCollection.shadows = this._tileset.shadows;
+                this._modelInstanceCollection.debugWireframe = this._tileset.debugWireframe;
+                var model = this._modelInstanceCollection._model;
+                if (defined(model)) {
+                    // Update for clipping planes
+                    var tilesetClippingPlanes = this._tileset.clippingPlanes;
+                    if (this._tile.clippingPlanesDirty && defined(tilesetClippingPlanes)) {
+                        model.clippingPlaneOffsetMatrix = this._tileset.clippingPlaneOffsetMatrix;
+                        // Dereference the clipping planes from the model if they are irrelevant - saves on shading
+                        // Link/Dereference directly to avoid ownership checks.
+                        model._clippingPlanes = (tilesetClippingPlanes.enabled && this._tile._isClipped) ? tilesetClippingPlanes : undefined;
+                    }
+                    // If the model references a different ClippingPlaneCollection due to the tileset's collection being replaced with a
+                    // ClippingPlaneCollection that gives this tile the same clipping status, update the model to use the new ClippingPlaneCollection.
+                    if (defined(tilesetClippingPlanes) && defined(model._clippingPlanes) && model._clippingPlanes !== tilesetClippingPlanes) {
+                        model._clippingPlanes = tilesetClippingPlanes;
+                    }
+                }
+                this._modelInstanceCollection.update(frameState);
+                // If any commands were pushed, add derived commands
+                var commandEnd = frameState.commandList.length;
+                if ((commandStart < commandEnd) && (frameState.passes.render || frameState.passes.pick)) {
+                    this._batchTable.addDerivedCommands(frameState, commandStart, false);
+                }
+            }
+            isDestroyed() {
+                return false;
+            }
+            destroy() {
+                this._modelInstanceCollection = this._modelInstanceCollection && this._modelInstanceCollection.destroy();
+                this._batchTable = this._batchTable && this._batchTable.destroy();
+                return destroyObject(this);
+            }
+        }
 
     // This can be overridden for testing purposes
     Instanced3DModel3DTileContent._deprecationWarning = deprecationWarning;
@@ -430,79 +490,11 @@ define([
         }
     }
 
-    Instanced3DModel3DTileContent.prototype.hasProperty = function(batchId, name) {
-        return this._batchTable.hasProperty(batchId, name);
-    };
 
-    Instanced3DModel3DTileContent.prototype.getFeature = function(batchId) {
-        var featuresLength = this.featuresLength;
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(batchId) || (batchId < 0) || (batchId >= featuresLength)) {
-            throw new DeveloperError('batchId is required and between zero and featuresLength - 1 (' + (featuresLength - 1) + ').');
-        }
-        //>>includeEnd('debug');
 
-        createFeatures(this);
-        return this._features[batchId];
-    };
 
-    Instanced3DModel3DTileContent.prototype.applyDebugSettings = function(enabled, color) {
-        color = enabled ? color : Color.WHITE;
-        this._batchTable.setAllColor(color);
-    };
 
-    Instanced3DModel3DTileContent.prototype.applyStyle = function(style) {
-        this._batchTable.applyStyle(style);
-    };
 
-    Instanced3DModel3DTileContent.prototype.update = function(tileset, frameState) {
-        var commandStart = frameState.commandList.length;
 
-        // In the PROCESSING state we may be calling update() to move forward
-        // the content's resource loading.  In the READY state, it will
-        // actually generate commands.
-        this._batchTable.update(tileset, frameState);
-        this._modelInstanceCollection.modelMatrix = this._tile.computedTransform;
-        this._modelInstanceCollection.shadows = this._tileset.shadows;
-        this._modelInstanceCollection.debugWireframe = this._tileset.debugWireframe;
-
-        var model = this._modelInstanceCollection._model;
-
-        if (defined(model)) {
-            // Update for clipping planes
-            var tilesetClippingPlanes = this._tileset.clippingPlanes;
-            if (this._tile.clippingPlanesDirty && defined(tilesetClippingPlanes)) {
-                model.clippingPlaneOffsetMatrix = this._tileset.clippingPlaneOffsetMatrix;
-                // Dereference the clipping planes from the model if they are irrelevant - saves on shading
-                // Link/Dereference directly to avoid ownership checks.
-                model._clippingPlanes = (tilesetClippingPlanes.enabled && this._tile._isClipped) ? tilesetClippingPlanes : undefined;
-            }
-
-            // If the model references a different ClippingPlaneCollection due to the tileset's collection being replaced with a
-            // ClippingPlaneCollection that gives this tile the same clipping status, update the model to use the new ClippingPlaneCollection.
-            if (defined(tilesetClippingPlanes) && defined(model._clippingPlanes) && model._clippingPlanes !== tilesetClippingPlanes) {
-                model._clippingPlanes = tilesetClippingPlanes;
-            }
-        }
-
-        this._modelInstanceCollection.update(frameState);
-
-        // If any commands were pushed, add derived commands
-        var commandEnd = frameState.commandList.length;
-        if ((commandStart < commandEnd) && (frameState.passes.render || frameState.passes.pick)) {
-            this._batchTable.addDerivedCommands(frameState, commandStart, false);
-        }
-    };
-
-    Instanced3DModel3DTileContent.prototype.isDestroyed = function() {
-        return false;
-    };
-
-    Instanced3DModel3DTileContent.prototype.destroy = function() {
-        this._modelInstanceCollection = this._modelInstanceCollection && this._modelInstanceCollection.destroy();
-        this._batchTable = this._batchTable && this._batchTable.destroy();
-
-        return destroyObject(this);
-    };
     return Instanced3DModel3DTileContent;
 });

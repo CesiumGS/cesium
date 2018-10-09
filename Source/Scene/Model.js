@@ -167,18 +167,33 @@ define([
         model._cachedGltf = cachedGltf;
     }
 
-    // glTF JSON can be big given embedded geometry, textures, and animations, so we
-    // cache it across all models using the same url/cache-key.  This also reduces the
-    // slight overhead in assigning defaults to missing values.
-    //
-    // Note that this is a global cache, compared to renderer resources, which
-    // are cached per context.
-    function CachedGltf(options) {
-        this._gltf = options.gltf;
-        this.ready = options.ready;
-        this.modelsToLoad = [];
-        this.count = 0;
-    }
+        // glTF JSON can be big given embedded geometry, textures, and animations, so we
+        // cache it across all models using the same url/cache-key.  This also reduces the
+        // slight overhead in assigning defaults to missing values.
+        //
+        // Note that this is a global cache, compared to renderer resources, which
+        // are cached per context.
+        class CachedGltf {
+            constructor(options) {
+                this._gltf = options.gltf;
+                this.ready = options.ready;
+                this.modelsToLoad = [];
+                this.count = 0;
+            }
+            makeReady(gltfJson) {
+                this.gltf = gltfJson;
+                var models = this.modelsToLoad;
+                var length = models.length;
+                for (var i = 0; i < length; ++i) {
+                    var m = models[i];
+                    if (!m.isDestroyed()) {
+                        setCachedGltf(m, this);
+                    }
+                }
+                this.modelsToLoad = undefined;
+                this.ready = true;
+            }
+        }
 
     defineProperties(CachedGltf.prototype, {
         gltf : {
@@ -192,471 +207,991 @@ define([
         }
     });
 
-    CachedGltf.prototype.makeReady = function(gltfJson) {
-        this.gltf = gltfJson;
-
-        var models = this.modelsToLoad;
-        var length = models.length;
-        for (var i = 0; i < length; ++i) {
-            var m = models[i];
-            if (!m.isDestroyed()) {
-                setCachedGltf(m, this);
-            }
-        }
-        this.modelsToLoad = undefined;
-        this.ready = true;
-    };
 
     var gltfCache = {};
     var uriToGuid = {};
-    ///////////////////////////////////////////////////////////////////////////
-
-    /**
-     * A 3D model based on glTF, the runtime asset format for WebGL, OpenGL ES, and OpenGL.
-     * <p>
-     * Cesium includes support for geometry and materials, glTF animations, and glTF skinning.
-     * In addition, individual glTF nodes are pickable with {@link Scene#pick} and animatable
-     * with {@link Model#getNode}.  glTF cameras and lights are not currently supported.
-     * </p>
-     * <p>
-     * An external glTF asset is created with {@link Model.fromGltf}.  glTF JSON can also be
-     * created at runtime and passed to this constructor function.  In either case, the
-     * {@link Model#readyPromise} is resolved when the model is ready to render, i.e.,
-     * when the external binary, image, and shader files are downloaded and the WebGL
-     * resources are created.
-     * </p>
-     * <p>
-     * Cesium supports glTF assets with the following extensions:
-     * <ul>
-     * <li>
-     * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/1.0/Khronos/KHR_binary_glTF/README.md|KHR_binary_glTF}
-     * </li><li>
-     * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/1.0/Khronos/KHR_materials_common/README.md|KHR_materials_common}
-     * </li><li>
-     * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/1.0/Vendor/WEB3D_quantized_attributes/README.md|WEB3D_quantized_attributes}
-     * </li><li>
-     * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/2.0/Khronos/KHR_draco_mesh_compression/README.md|KHR_draco_mesh_compression}
-     * </li><li>
-     * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/2.0/Khronos/KHR_techniques_webgl/README.md|KHR_techniques_webgl}
-     * </li><li>
-     * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/2.0/Khronos/KHR_blend/README.md|KHR_blend}
-     * </li><li>
-     * {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Khronos/KHR_materials_unlit/README.md|KHR_materials_unlit}
-     * </li><li>
-     * {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Khronos/KHR_materials_pbrSpecularGlossiness/README.md|KHR_materials_pbrSpecularGlossiness}
-     * </li>
-     * </ul>
-     * </p>
-     * <p>
-     * For high-precision rendering, Cesium supports the {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/1.0/Vendor/CESIUM_RTC/README.md|CESIUM_RTC} extension, which introduces the
-     * CESIUM_RTC_MODELVIEW parameter semantic that says the node is in WGS84 coordinates translated
-     * relative to a local origin.
-     * </p>
-     *
-     * @alias Model
-     * @constructor
-     *
-     * @param {Object} [options] Object with the following properties:
-     * @param {Object|ArrayBuffer|Uint8Array} [options.gltf] A glTF JSON object, or a binary glTF buffer.
-     * @param {Resource|String} [options.basePath=''] The base path that paths in the glTF JSON are relative to.
-     * @param {Boolean} [options.show=true] Determines if the model primitive will be shown.
-     * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The 4x4 transformation matrix that transforms the model from model to world coordinates.
-     * @param {Number} [options.scale=1.0] A uniform scale applied to this model.
-     * @param {Number} [options.minimumPixelSize=0.0] The approximate minimum pixel size of the model regardless of zoom.
-     * @param {Number} [options.maximumScale] The maximum scale size of a model. An upper limit for minimumPixelSize.
-     * @param {Object} [options.id] A user-defined object to return when the model is picked with {@link Scene#pick}.
-     * @param {Boolean} [options.allowPicking=true] When <code>true</code>, each glTF mesh and primitive is pickable with {@link Scene#pick}.
-     * @param {Boolean} [options.incrementallyLoadTextures=true] Determine if textures may continue to stream in after the model is loaded.
-     * @param {Boolean} [options.asynchronous=true] Determines if model WebGL resource creation will be spread out over several frames or block until completion once all glTF files are loaded.
-     * @param {Boolean} [options.clampAnimations=true] Determines if the model's animations should hold a pose over frames where no keyframes are specified.
-     * @param {ShadowMode} [options.shadows=ShadowMode.ENABLED] Determines whether the model casts or receives shadows from each light source.
-     * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Draws the bounding sphere for each draw command in the model.
-     * @param {Boolean} [options.debugWireframe=false] For debugging only. Draws the model in wireframe.
-     * @param {HeightReference} [options.heightReference] Determines how the model is drawn relative to terrain.
-     * @param {Scene} [options.scene] Must be passed in for models that use the height reference property.
-     * @param {DistanceDisplayCondition} [options.distanceDisplayCondition] The condition specifying at what distance from the camera that this model will be displayed.
-     * @param {Color} [options.color=Color.WHITE] A color that blends with the model's rendered color.
-     * @param {ColorBlendMode} [options.colorBlendMode=ColorBlendMode.HIGHLIGHT] Defines how the color blends with the model.
-     * @param {Number} [options.colorBlendAmount=0.5] Value used to determine the color strength when the <code>colorBlendMode</code> is <code>MIX</code>. A value of 0.0 results in the model's rendered color while a value of 1.0 results in a solid color, with any value in-between resulting in a mix of the two.
-     * @param {Color} [options.silhouetteColor=Color.RED] The silhouette color. If more than 256 models have silhouettes enabled, there is a small chance that overlapping models will have minor artifacts.
-     * @param {Number} [options.silhouetteSize=0.0] The size of the silhouette in pixels.
-     * @param {ClippingPlaneCollection} [options.clippingPlanes] The {@link ClippingPlaneCollection} used to selectively disable rendering the model.
-     * @param {Boolean} [options.dequantizeInShader=true] Determines if a {@link https://github.com/google/draco|Draco} encoded model is dequantized on the GPU. This decreases total memory usage for encoded models.
-     *
-     * @see Model.fromGltf
-     *
-     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=3D%20Models.html|Cesium Sandcastle Models Demo}
-     */
-    function Model(options) {
-        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-
-        var cacheKey = options.cacheKey;
-        this._cacheKey = cacheKey;
-        this._cachedGltf = undefined;
-        this._releaseGltfJson = defaultValue(options.releaseGltfJson, false);
-
-        var cachedGltf;
-        if (defined(cacheKey) && defined(gltfCache[cacheKey]) && gltfCache[cacheKey].ready) {
-            // glTF JSON is in cache and ready
-            cachedGltf = gltfCache[cacheKey];
-            ++cachedGltf.count;
-        } else {
-            // glTF was explicitly provided, e.g., when a user uses the Model constructor directly
-            var gltf = options.gltf;
-
-            if (defined(gltf)) {
-                if (gltf instanceof ArrayBuffer) {
-                    gltf = new Uint8Array(gltf);
+        ///////////////////////////////////////////////////////////////////////////
+        /**
+             * A 3D model based on glTF, the runtime asset format for WebGL, OpenGL ES, and OpenGL.
+             * <p>
+             * Cesium includes support for geometry and materials, glTF animations, and glTF skinning.
+             * In addition, individual glTF nodes are pickable with {@link Scene#pick} and animatable
+             * with {@link Model#getNode}.  glTF cameras and lights are not currently supported.
+             * </p>
+             * <p>
+             * An external glTF asset is created with {@link Model.fromGltf}.  glTF JSON can also be
+             * created at runtime and passed to this constructor function.  In either case, the
+             * {@link Model#readyPromise} is resolved when the model is ready to render, i.e.,
+             * when the external binary, image, and shader files are downloaded and the WebGL
+             * resources are created.
+             * </p>
+             * <p>
+             * Cesium supports glTF assets with the following extensions:
+             * <ul>
+             * <li>
+             * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/1.0/Khronos/KHR_binary_glTF/README.md|KHR_binary_glTF}
+             * </li><li>
+             * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/1.0/Khronos/KHR_materials_common/README.md|KHR_materials_common}
+             * </li><li>
+             * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/1.0/Vendor/WEB3D_quantized_attributes/README.md|WEB3D_quantized_attributes}
+             * </li><li>
+             * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/2.0/Khronos/KHR_draco_mesh_compression/README.md|KHR_draco_mesh_compression}
+             * </li><li>
+             * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/2.0/Khronos/KHR_techniques_webgl/README.md|KHR_techniques_webgl}
+             * </li><li>
+             * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/2.0/Khronos/KHR_blend/README.md|KHR_blend}
+             * </li><li>
+             * {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Khronos/KHR_materials_unlit/README.md|KHR_materials_unlit}
+             * </li><li>
+             * {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Khronos/KHR_materials_pbrSpecularGlossiness/README.md|KHR_materials_pbrSpecularGlossiness}
+             * </li>
+             * </ul>
+             * </p>
+             * <p>
+             * For high-precision rendering, Cesium supports the {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/1.0/Vendor/CESIUM_RTC/README.md|CESIUM_RTC} extension, which introduces the
+             * CESIUM_RTC_MODELVIEW parameter semantic that says the node is in WGS84 coordinates translated
+             * relative to a local origin.
+             * </p>
+             *
+             * @alias Model
+             * @constructor
+             *
+             * @param {Object} [options] Object with the following properties:
+             * @param {Object|ArrayBuffer|Uint8Array} [options.gltf] A glTF JSON object, or a binary glTF buffer.
+             * @param {Resource|String} [options.basePath=''] The base path that paths in the glTF JSON are relative to.
+             * @param {Boolean} [options.show=true] Determines if the model primitive will be shown.
+             * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The 4x4 transformation matrix that transforms the model from model to world coordinates.
+             * @param {Number} [options.scale=1.0] A uniform scale applied to this model.
+             * @param {Number} [options.minimumPixelSize=0.0] The approximate minimum pixel size of the model regardless of zoom.
+             * @param {Number} [options.maximumScale] The maximum scale size of a model. An upper limit for minimumPixelSize.
+             * @param {Object} [options.id] A user-defined object to return when the model is picked with {@link Scene#pick}.
+             * @param {Boolean} [options.allowPicking=true] When <code>true</code>, each glTF mesh and primitive is pickable with {@link Scene#pick}.
+             * @param {Boolean} [options.incrementallyLoadTextures=true] Determine if textures may continue to stream in after the model is loaded.
+             * @param {Boolean} [options.asynchronous=true] Determines if model WebGL resource creation will be spread out over several frames or block until completion once all glTF files are loaded.
+             * @param {Boolean} [options.clampAnimations=true] Determines if the model's animations should hold a pose over frames where no keyframes are specified.
+             * @param {ShadowMode} [options.shadows=ShadowMode.ENABLED] Determines whether the model casts or receives shadows from each light source.
+             * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Draws the bounding sphere for each draw command in the model.
+             * @param {Boolean} [options.debugWireframe=false] For debugging only. Draws the model in wireframe.
+             * @param {HeightReference} [options.heightReference] Determines how the model is drawn relative to terrain.
+             * @param {Scene} [options.scene] Must be passed in for models that use the height reference property.
+             * @param {DistanceDisplayCondition} [options.distanceDisplayCondition] The condition specifying at what distance from the camera that this model will be displayed.
+             * @param {Color} [options.color=Color.WHITE] A color that blends with the model's rendered color.
+             * @param {ColorBlendMode} [options.colorBlendMode=ColorBlendMode.HIGHLIGHT] Defines how the color blends with the model.
+             * @param {Number} [options.colorBlendAmount=0.5] Value used to determine the color strength when the <code>colorBlendMode</code> is <code>MIX</code>. A value of 0.0 results in the model's rendered color while a value of 1.0 results in a solid color, with any value in-between resulting in a mix of the two.
+             * @param {Color} [options.silhouetteColor=Color.RED] The silhouette color. If more than 256 models have silhouettes enabled, there is a small chance that overlapping models will have minor artifacts.
+             * @param {Number} [options.silhouetteSize=0.0] The size of the silhouette in pixels.
+             * @param {ClippingPlaneCollection} [options.clippingPlanes] The {@link ClippingPlaneCollection} used to selectively disable rendering the model.
+             * @param {Boolean} [options.dequantizeInShader=true] Determines if a {@link https://github.com/google/draco|Draco} encoded model is dequantized on the GPU. This decreases total memory usage for encoded models.
+             *
+             * @see Model.fromGltf
+             *
+             * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=3D%20Models.html|Cesium Sandcastle Models Demo}
+             */
+        class Model {
+            constructor(options) {
+                options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+                var cacheKey = options.cacheKey;
+                this._cacheKey = cacheKey;
+                this._cachedGltf = undefined;
+                this._releaseGltfJson = defaultValue(options.releaseGltfJson, false);
+                var cachedGltf;
+                if (defined(cacheKey) && defined(gltfCache[cacheKey]) && gltfCache[cacheKey].ready) {
+                    // glTF JSON is in cache and ready
+                    cachedGltf = gltfCache[cacheKey];
+                    ++cachedGltf.count;
                 }
-
-                if (gltf instanceof Uint8Array) {
-                    // Binary glTF
-                    var parsedGltf = parseGlb(gltf);
-
-                    cachedGltf = new CachedGltf({
-                        gltf : parsedGltf,
-                        ready : true
-                    });
-                } else {
-                    // Normal glTF (JSON)
-                    cachedGltf = new CachedGltf({
-                        gltf : options.gltf,
-                        ready : true
-                    });
+                else {
+                    // glTF was explicitly provided, e.g., when a user uses the Model constructor directly
+                    var gltf = options.gltf;
+                    if (defined(gltf)) {
+                        if (gltf instanceof ArrayBuffer) {
+                            gltf = new Uint8Array(gltf);
+                        }
+                        if (gltf instanceof Uint8Array) {
+                            // Binary glTF
+                            var parsedGltf = parseGlb(gltf);
+                            cachedGltf = new CachedGltf({
+                                gltf: parsedGltf,
+                                ready: true
+                            });
+                        }
+                        else {
+                            // Normal glTF (JSON)
+                            cachedGltf = new CachedGltf({
+                                gltf: options.gltf,
+                                ready: true
+                            });
+                        }
+                        cachedGltf.count = 1;
+                        if (defined(cacheKey)) {
+                            gltfCache[cacheKey] = cachedGltf;
+                        }
+                    }
                 }
-
-                cachedGltf.count = 1;
-
-                if (defined(cacheKey)) {
-                    gltfCache[cacheKey] = cachedGltf;
+                setCachedGltf(this, cachedGltf);
+                var basePath = defaultValue(options.basePath, '');
+                this._resource = Resource.createIfNeeded(basePath);
+                /**
+                 * Determines if the model primitive will be shown.
+                 *
+                 * @type {Boolean}
+                 *
+                 * @default true
+                 */
+                this.show = defaultValue(options.show, true);
+                /**
+                 * The silhouette color.
+                 *
+                 * @type {Color}
+                 *
+                 * @default Color.RED
+                 */
+                this.silhouetteColor = defaultValue(options.silhouetteColor, Color.RED);
+                this._silhouetteColor = new Color();
+                this._silhouetteColorPreviousAlpha = 1.0;
+                this._normalAttributeName = undefined;
+                /**
+                 * The size of the silhouette in pixels.
+                 *
+                 * @type {Number}
+                 *
+                 * @default 0.0
+                 */
+                this.silhouetteSize = defaultValue(options.silhouetteSize, 0.0);
+                /**
+                 * The 4x4 transformation matrix that transforms the model from model to world coordinates.
+                 * When this is the identity matrix, the model is drawn in world coordinates, i.e., Earth's WGS84 coordinates.
+                 * Local reference frames can be used by providing a different transformation matrix, like that returned
+                 * by {@link Transforms.eastNorthUpToFixedFrame}.
+                 *
+                 * @type {Matrix4}
+                 *
+                 * @default {@link Matrix4.IDENTITY}
+                 *
+                 * @example
+                 * var origin = Cesium.Cartesian3.fromDegrees(-95.0, 40.0, 200000.0);
+                 * m.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(origin);
+                 */
+                this.modelMatrix = Matrix4.clone(defaultValue(options.modelMatrix, Matrix4.IDENTITY));
+                this._modelMatrix = Matrix4.clone(this.modelMatrix);
+                this._clampedModelMatrix = undefined;
+                /**
+                 * A uniform scale applied to this model before the {@link Model#modelMatrix}.
+                 * Values greater than <code>1.0</code> increase the size of the model; values
+                 * less than <code>1.0</code> decrease.
+                 *
+                 * @type {Number}
+                 *
+                 * @default 1.0
+                 */
+                this.scale = defaultValue(options.scale, 1.0);
+                this._scale = this.scale;
+                /**
+                 * The approximate minimum pixel size of the model regardless of zoom.
+                 * This can be used to ensure that a model is visible even when the viewer
+                 * zooms out.  When <code>0.0</code>, no minimum size is enforced.
+                 *
+                 * @type {Number}
+                 *
+                 * @default 0.0
+                 */
+                this.minimumPixelSize = defaultValue(options.minimumPixelSize, 0.0);
+                this._minimumPixelSize = this.minimumPixelSize;
+                /**
+                 * The maximum scale size for a model. This can be used to give
+                 * an upper limit to the {@link Model#minimumPixelSize}, ensuring that the model
+                 * is never an unreasonable scale.
+                 *
+                 * @type {Number}
+                 */
+                this.maximumScale = options.maximumScale;
+                this._maximumScale = this.maximumScale;
+                /**
+                 * User-defined object returned when the model is picked.
+                 *
+                 * @type Object
+                 *
+                 * @default undefined
+                 *
+                 * @see Scene#pick
+                 */
+                this.id = options.id;
+                this._id = options.id;
+                /**
+                 * Returns the height reference of the model
+                 *
+                 * @memberof Model.prototype
+                 *
+                 * @type {HeightReference}
+                 *
+                 * @default HeightReference.NONE
+                 */
+                this.heightReference = defaultValue(options.heightReference, HeightReference.NONE);
+                this._heightReference = this.heightReference;
+                this._heightChanged = false;
+                this._removeUpdateHeightCallback = undefined;
+                var scene = options.scene;
+                this._scene = scene;
+                if (defined(scene) && defined(scene.terrainProviderChanged)) {
+                    this._terrainProviderChangedCallback = scene.terrainProviderChanged.addEventListener(function() {
+                        this._heightChanged = true;
+                    }, this);
+                }
+                /**
+                 * Used for picking primitives that wrap a model.
+                 *
+                 * @private
+                 */
+                this._pickObject = options.pickObject;
+                this._allowPicking = defaultValue(options.allowPicking, true);
+                this._ready = false;
+                this._readyPromise = when.defer();
+                /**
+                 * The currently playing glTF animations.
+                 *
+                 * @type {ModelAnimationCollection}
+                 */
+                this.activeAnimations = new ModelAnimationCollection(this);
+                /**
+                 * Determines if the model's animations should hold a pose over frames where no keyframes are specified.
+                 *
+                 * @type {Boolean}
+                 */
+                this.clampAnimations = defaultValue(options.clampAnimations, true);
+                this._defaultTexture = undefined;
+                this._incrementallyLoadTextures = defaultValue(options.incrementallyLoadTextures, true);
+                this._asynchronous = defaultValue(options.asynchronous, true);
+                /**
+                 * Determines whether the model casts or receives shadows from each light source.
+                 *
+                 * @type {ShadowMode}
+                 *
+                 * @default ShadowMode.ENABLED
+                 */
+                this.shadows = defaultValue(options.shadows, ShadowMode.ENABLED);
+                this._shadows = this.shadows;
+                /**
+                 * A color that blends with the model's rendered color.
+                 *
+                 * @type {Color}
+                 *
+                 * @default Color.WHITE
+                 */
+                this.color = defaultValue(options.color, Color.WHITE);
+                this._color = new Color();
+                this._colorPreviousAlpha = 1.0;
+                /**
+                 * Defines how the color blends with the model.
+                 *
+                 * @type {ColorBlendMode}
+                 *
+                 * @default ColorBlendMode.HIGHLIGHT
+                 */
+                this.colorBlendMode = defaultValue(options.colorBlendMode, ColorBlendMode.HIGHLIGHT);
+                /**
+                 * Value used to determine the color strength when the <code>colorBlendMode</code> is <code>MIX</code>.
+                 * A value of 0.0 results in the model's rendered color while a value of 1.0 results in a solid color, with
+                 * any value in-between resulting in a mix of the two.
+                 *
+                 * @type {Number}
+                 *
+                 * @default 0.5
+                 */
+                this.colorBlendAmount = defaultValue(options.colorBlendAmount, 0.5);
+                this._colorShadingEnabled = false;
+                this._clippingPlanes = undefined;
+                this.clippingPlanes = options.clippingPlanes;
+                // Used for checking if shaders need to be regenerated due to clipping plane changes.
+                this._clippingPlanesState = 0;
+                // If defined, use this matrix to position the clipping planes instead of the modelMatrix.
+                // This is so that when models are part of a tileset they all get clipped relative
+                // to the root tile.
+                this.clippingPlaneOffsetMatrix = undefined;
+                /**
+                 * This property is for debugging only; it is not for production use nor is it optimized.
+                 * <p>
+                 * Draws the bounding sphere for each draw command in the model.  A glTF primitive corresponds
+                 * to one draw command.  A glTF mesh has an array of primitives, often of length one.
+                 * </p>
+                 *
+                 * @type {Boolean}
+                 *
+                 * @default false
+                 */
+                this.debugShowBoundingVolume = defaultValue(options.debugShowBoundingVolume, false);
+                this._debugShowBoundingVolume = false;
+                /**
+                 * This property is for debugging only; it is not for production use nor is it optimized.
+                 * <p>
+                 * Draws the model in wireframe.
+                 * </p>
+                 *
+                 * @type {Boolean}
+                 *
+                 * @default false
+                 */
+                this.debugWireframe = defaultValue(options.debugWireframe, false);
+                this._debugWireframe = false;
+                this._distanceDisplayCondition = options.distanceDisplayCondition;
+                // Undocumented options
+                this._addBatchIdToGeneratedShaders = options.addBatchIdToGeneratedShaders;
+                this._precreatedAttributes = options.precreatedAttributes;
+                this._vertexShaderLoaded = options.vertexShaderLoaded;
+                this._fragmentShaderLoaded = options.fragmentShaderLoaded;
+                this._uniformMapLoaded = options.uniformMapLoaded;
+                this._pickIdLoaded = options.pickIdLoaded;
+                this._ignoreCommands = defaultValue(options.ignoreCommands, false);
+                this._requestType = options.requestType;
+                this._upAxis = defaultValue(options.upAxis, Axis.Y);
+                this._gltfForwardAxis = Axis.Z;
+                this._forwardAxis = options.forwardAxis;
+                /**
+                 * @private
+                 * @readonly
+                 */
+                this.cull = defaultValue(options.cull, true);
+                /**
+                 * @private
+                 * @readonly
+                 */
+                this.opaquePass = defaultValue(options.opaquePass, Pass.OPAQUE);
+                this._computedModelMatrix = new Matrix4(); // Derived from modelMatrix and scale
+                this._clippingPlaneModelViewMatrix = Matrix4.clone(Matrix4.IDENTITY); // Derived from modelMatrix, scale, and the current view matrix
+                this._initialRadius = undefined; // Radius without model's scale property, model-matrix scale, animations, or skins
+                this._boundingSphere = undefined;
+                this._scaledBoundingSphere = new BoundingSphere();
+                this._state = ModelState.NEEDS_LOAD;
+                this._loadResources = undefined;
+                this._mode = undefined;
+                this._perNodeShowDirty = false; // true when the Cesium API was used to change a node's show property
+                this._cesiumAnimationsDirty = false; // true when the Cesium API, not a glTF animation, changed a node transform
+                this._dirty = false; // true when the model was transformed this frame
+                this._maxDirtyNumber = 0; // Used in place of a dirty boolean flag to avoid an extra graph traversal
+                this._runtime = {
+                    animations: undefined,
+                    rootNodes: undefined,
+                    nodes: undefined,
+                    nodesByName: undefined,
+                    skinnedNodes: undefined,
+                    meshesByName: undefined,
+                    materialsByName: undefined,
+                    materialsById: undefined // Indexed with the material's index
+                };
+                this._uniformMaps = {}; // Not cached since it can be targeted by glTF animation
+                this._extensionsUsed = undefined; // Cached used glTF extensions
+                this._extensionsRequired = undefined; // Cached required glTF extensions
+                this._quantizedUniforms = {}; // Quantized uniforms for each program for WEB3D_quantized_attributes
+                this._programPrimitives = {};
+                this._rendererResources = {
+                    buffers: {},
+                    vertexArrays: {},
+                    programs: {},
+                    sourceShaders: {},
+                    silhouettePrograms: {},
+                    textures: {},
+                    samplers: {},
+                    renderStates: {}
+                };
+                this._cachedRendererResources = undefined;
+                this._loadRendererResourcesFromCache = false;
+                this._dequantizeInShader = defaultValue(options.dequantizeInShader, true);
+                this._decodedData = {};
+                this._cachedGeometryByteLength = 0;
+                this._cachedTexturesByteLength = 0;
+                this._geometryByteLength = 0;
+                this._texturesByteLength = 0;
+                this._trianglesLength = 0;
+                // Hold references for shader reconstruction.
+                // Hold these separately because _cachedGltf may get released (this.releaseGltfJson)
+                this._sourceTechniques = {};
+                this._sourcePrograms = {};
+                this._quantizedVertexShaders = {};
+                this._nodeCommands = [];
+                this._pickIds = [];
+                // CESIUM_RTC extension
+                this._rtcCenter = undefined; // reference to either 3D or 2D
+                this._rtcCenterEye = undefined; // in eye coordinates
+                this._rtcCenter3D = undefined; // in world coordinates
+                this._rtcCenter2D = undefined; // in projected world coordinates
+                this._keepPipelineExtras = options.keepPipelineExtras; // keep the buffers in memory for use in other applications
+            }
+            /**
+                 * Returns the glTF node with the given <code>name</code> property.  This is used to
+                 * modify a node's transform for animation outside of glTF animations.
+                 *
+                 * @param {String} name The glTF name of the node.
+                 * @returns {ModelNode} The node or <code>undefined</code> if no node with <code>name</code> exists.
+                 *
+                 * @exception {DeveloperError} The model is not loaded.  Use Model.readyPromise or wait for Model.ready to be true.
+                 *
+                 * @example
+                 * // Apply non-uniform scale to node LOD3sp
+                 * var node = model.getNode('LOD3sp');
+                 * node.matrix = Cesium.Matrix4.fromScale(new Cesium.Cartesian3(5.0, 1.0, 1.0), node.matrix);
+                 */
+            getNode(name) {
+                var node = getRuntime(this, 'nodesByName', name);
+                return defined(node) ? node.publicNode : undefined;
+            }
+            /**
+                 * Returns the glTF mesh with the given <code>name</code> property.
+                 *
+                 * @param {String} name The glTF name of the mesh.
+                 *
+                 * @returns {ModelMesh} The mesh or <code>undefined</code> if no mesh with <code>name</code> exists.
+                 *
+                 * @exception {DeveloperError} The model is not loaded.  Use Model.readyPromise or wait for Model.ready to be true.
+                 */
+            getMesh(name) {
+                return getRuntime(this, 'meshesByName', name);
+            }
+            /**
+                 * Returns the glTF material with the given <code>name</code> property.
+                 *
+                 * @param {String} name The glTF name of the material.
+                 * @returns {ModelMaterial} The material or <code>undefined</code> if no material with <code>name</code> exists.
+                 *
+                 * @exception {DeveloperError} The model is not loaded.  Use Model.readyPromise or wait for Model.ready to be true.
+                 */
+            getMaterial(name) {
+                return getRuntime(this, 'materialsByName', name);
+            }
+            /**
+                 * Called when {@link Viewer} or {@link CesiumWidget} render the scene to
+                 * get the draw commands needed to render this primitive.
+                 * <p>
+                 * Do not call this function directly.  This is documented just to
+                 * list the exceptions that may be propagated when the scene is rendered:
+                 * </p>
+                 *
+                 * @exception {RuntimeError} Failed to load external reference.
+                 */
+            update(frameState) {
+                if (frameState.mode === SceneMode.MORPHING) {
+                    return;
+                }
+                var context = frameState.context;
+                this._defaultTexture = context.defaultTexture;
+                if ((this._state === ModelState.NEEDS_LOAD) && defined(this.gltf)) {
+                    // Use renderer resources from cache instead of loading/creating them?
+                    var cachedRendererResources;
+                    var cacheKey = this.cacheKey;
+                    if (defined(cacheKey)) { // cache key given? this model will pull from or contribute to context level cache
+                        context.cache.modelRendererResourceCache = defaultValue(context.cache.modelRendererResourceCache, {});
+                        var modelCaches = context.cache.modelRendererResourceCache;
+                        cachedRendererResources = modelCaches[this.cacheKey];
+                        if (defined(cachedRendererResources)) {
+                            if (!cachedRendererResources.ready) {
+                                // Cached resources for the model are not loaded yet.  We'll
+                                // try again every frame until they are.
+                                return;
+                            }
+                            ++cachedRendererResources.count;
+                            this._loadRendererResourcesFromCache = true;
+                        }
+                        else {
+                            cachedRendererResources = new CachedRendererResources(context, cacheKey);
+                            cachedRendererResources.count = 1;
+                            modelCaches[this.cacheKey] = cachedRendererResources;
+                        }
+                        this._cachedRendererResources = cachedRendererResources;
+                    }
+                    else { // cache key not given? this model doesn't care about context level cache at all. Cache is here to simplify freeing on destroy.
+                        cachedRendererResources = new CachedRendererResources(context);
+                        cachedRendererResources.count = 1;
+                        this._cachedRendererResources = cachedRendererResources;
+                    }
+                    this._state = ModelState.LOADING;
+                    if (this._state !== ModelState.FAILED) {
+                        var extensions = this.gltf.extensions;
+                        if (defined(extensions) && defined(extensions.CESIUM_RTC)) {
+                            var center = Cartesian3.fromArray(extensions.CESIUM_RTC.center);
+                            if (!Cartesian3.equals(center, Cartesian3.ZERO)) {
+                                this._rtcCenter3D = center;
+                                var projection = frameState.mapProjection;
+                                var ellipsoid = projection.ellipsoid;
+                                var cartographic = ellipsoid.cartesianToCartographic(this._rtcCenter3D);
+                                var projectedCart = projection.project(cartographic);
+                                Cartesian3.fromElements(projectedCart.z, projectedCart.x, projectedCart.y, projectedCart);
+                                this._rtcCenter2D = projectedCart;
+                                this._rtcCenterEye = new Cartesian3();
+                                this._rtcCenter = this._rtcCenter3D;
+                            }
+                        }
+                        addPipelineExtras(this.gltf);
+                        this._loadResources = new ModelLoadResources();
+                        if (!this._loadRendererResourcesFromCache) {
+                            // Buffers are required to updateVersion
+                            ModelUtility.parseBuffers(this, bufferLoad);
+                        }
+                    }
+                }
+                var loadResources = this._loadResources;
+                var incrementallyLoadTextures = this._incrementallyLoadTextures;
+                var justLoaded = false;
+                if (this._state === ModelState.LOADING) {
+                    // Transition from LOADING -> LOADED once resources are downloaded and created.
+                    // Textures may continue to stream in while in the LOADED state.
+                    if (loadResources.pendingBufferLoads === 0) {
+                        if (!loadResources.initialized) {
+                            frameState.brdfLutGenerator.update(frameState);
+                            ModelUtility.checkSupportedExtensions(this.extensionsRequired);
+                            ModelUtility.updateForwardAxis(this);
+                            // glTF pipeline updates, not needed if loading from cache
+                            if (!this._loadRendererResourcesFromCache) {
+                                var gltf = this.gltf;
+                                // Add the original version so it remains cached
+                                gltf.extras.sourceVersion = ModelUtility.getAssetVersion(gltf);
+                                updateVersion(gltf);
+                                addDefaults(gltf);
+                                var options = {
+                                    addBatchIdToGeneratedShaders: this._addBatchIdToGeneratedShaders
+                                };
+                                processModelMaterialsCommon(gltf, options);
+                                processPbrMaterials(gltf, options);
+                            }
+                            // Skip dequantizing in the shader if not encoded
+                            this._dequantizeInShader = this._dequantizeInShader && DracoLoader.hasExtension(this);
+                            // We do this after to make sure that the ids don't change
+                            addBuffersToLoadResources(this);
+                            parseTechniques(this);
+                            if (!this._loadRendererResourcesFromCache) {
+                                parseBufferViews(this);
+                                parseShaders(this);
+                                parsePrograms(this);
+                                parseTextures(this, context);
+                            }
+                            parseMaterials(this);
+                            parseMeshes(this);
+                            parseNodes(this);
+                            // Start draco decoding
+                            DracoLoader.parse(this, context);
+                            loadResources.initialized = true;
+                        }
+                        if (!loadResources.finishedDecoding()) {
+                            DracoLoader.decodeModel(this, context)
+                                .otherwise(ModelUtility.getFailedLoadFunction(this, 'model', this.basePath));
+                        }
+                        if (loadResources.finishedDecoding() && !loadResources.resourcesParsed) {
+                            this._boundingSphere = ModelUtility.computeBoundingSphere(this);
+                            this._initialRadius = this._boundingSphere.radius;
+                            DracoLoader.cacheDataForModel(this);
+                            loadResources.resourcesParsed = true;
+                        }
+                        if (loadResources.resourcesParsed &&
+                            loadResources.pendingShaderLoads === 0) {
+                            createResources(this, frameState);
+                        }
+                    }
+                    if (loadResources.finished() ||
+                        (incrementallyLoadTextures && loadResources.finishedEverythingButTextureCreation())) {
+                        this._state = ModelState.LOADED;
+                        justLoaded = true;
+                    }
+                }
+                // Incrementally stream textures.
+                if (defined(loadResources) && (this._state === ModelState.LOADED)) {
+                    if (incrementallyLoadTextures && !justLoaded) {
+                        createResources(this, frameState);
+                    }
+                    if (loadResources.finished()) {
+                        if (!this._keepPipelineExtras) {
+                            removePipelineExtras(this.gltf);
+                        }
+                        this._loadResources = undefined; // Clear CPU memory since WebGL resources were created.
+                        var resources = this._rendererResources;
+                        var cachedResources = this._cachedRendererResources;
+                        cachedResources.buffers = resources.buffers;
+                        cachedResources.vertexArrays = resources.vertexArrays;
+                        cachedResources.programs = resources.programs;
+                        cachedResources.sourceShaders = resources.sourceShaders;
+                        cachedResources.silhouettePrograms = resources.silhouettePrograms;
+                        cachedResources.textures = resources.textures;
+                        cachedResources.samplers = resources.samplers;
+                        cachedResources.renderStates = resources.renderStates;
+                        cachedResources.ready = true;
+                        // The normal attribute name is required for silhouettes, so get it before the gltf JSON is released
+                        this._normalAttributeName = ModelUtility.getAttributeOrUniformBySemantic(this.gltf, 'NORMAL');
+                        // Vertex arrays are unique to this model, do not store in cache.
+                        if (defined(this._precreatedAttributes)) {
+                            cachedResources.vertexArrays = {};
+                        }
+                        if (this.releaseGltfJson) {
+                            releaseCachedGltf(this);
+                        }
+                    }
+                }
+                var silhouette = hasSilhouette(this, frameState);
+                var translucent = isTranslucent(this);
+                var invisible = isInvisible(this);
+                var displayConditionPassed = defined(this.distanceDisplayCondition) ? distanceDisplayConditionVisible(this, frameState) : true;
+                var show = this.show && displayConditionPassed && (this.scale !== 0.0) && (!invisible || silhouette);
+                if ((show && this._state === ModelState.LOADED) || justLoaded) {
+                    var animated = this.activeAnimations.update(frameState) || this._cesiumAnimationsDirty;
+                    this._cesiumAnimationsDirty = false;
+                    this._dirty = false;
+                    var modelMatrix = this.modelMatrix;
+                    var modeChanged = frameState.mode !== this._mode;
+                    this._mode = frameState.mode;
+                    // Model's model matrix needs to be updated
+                    var modelTransformChanged = !Matrix4.equals(this._modelMatrix, modelMatrix) ||
+                        (this._scale !== this.scale) ||
+                        (this._minimumPixelSize !== this.minimumPixelSize) || (this.minimumPixelSize !== 0.0) || // Minimum pixel size changed or is enabled
+                        (this._maximumScale !== this.maximumScale) ||
+                        (this._heightReference !== this.heightReference) || this._heightChanged ||
+                        modeChanged;
+                    if (modelTransformChanged || justLoaded) {
+                        Matrix4.clone(modelMatrix, this._modelMatrix);
+                        updateClamping(this);
+                        if (defined(this._clampedModelMatrix)) {
+                            modelMatrix = this._clampedModelMatrix;
+                        }
+                        this._scale = this.scale;
+                        this._minimumPixelSize = this.minimumPixelSize;
+                        this._maximumScale = this.maximumScale;
+                        this._heightReference = this.heightReference;
+                        this._heightChanged = false;
+                        var scale = getScale(this, frameState);
+                        var computedModelMatrix = this._computedModelMatrix;
+                        Matrix4.multiplyByUniformScale(modelMatrix, scale, computedModelMatrix);
+                        if (this._upAxis === Axis.Y) {
+                            Matrix4.multiplyTransformation(computedModelMatrix, Axis.Y_UP_TO_Z_UP, computedModelMatrix);
+                        }
+                        else if (this._upAxis === Axis.X) {
+                            Matrix4.multiplyTransformation(computedModelMatrix, Axis.X_UP_TO_Z_UP, computedModelMatrix);
+                        }
+                        if (this.forwardAxis === Axis.Z) {
+                            // glTF 2.0 has a Z-forward convention that must be adapted here to X-forward.
+                            Matrix4.multiplyTransformation(computedModelMatrix, Axis.Z_UP_TO_X_UP, computedModelMatrix);
+                        }
+                    }
+                    // Update modelMatrix throughout the graph as needed
+                    if (animated || modelTransformChanged || justLoaded) {
+                        updateNodeHierarchyModelMatrix(this, modelTransformChanged, justLoaded, frameState.mapProjection);
+                        this._dirty = true;
+                        if (animated || justLoaded) {
+                            // Apply skins if animation changed any node transforms
+                            applySkins(this);
+                        }
+                    }
+                    if (this._perNodeShowDirty) {
+                        this._perNodeShowDirty = false;
+                        updatePerNodeShow(this);
+                    }
+                    updatePickIds(this, context);
+                    updateWireframe(this);
+                    updateShowBoundingVolume(this);
+                    updateShadows(this);
+                    updateClippingPlanes(this, frameState);
+                    // Regenerate shaders if ClippingPlaneCollection state changed or it was removed
+                    var clippingPlanes = this._clippingPlanes;
+                    var currentClippingPlanesState = 0;
+                    if (defined(clippingPlanes) && clippingPlanes.enabled) {
+                        var clippingPlaneOffsetMatrix = defaultValue(this.clippingPlaneOffsetMatrix, modelMatrix);
+                        Matrix4.multiply(context.uniformState.view3D, clippingPlaneOffsetMatrix, this._clippingPlaneModelViewMatrix);
+                        currentClippingPlanesState = clippingPlanes.clippingPlanesState;
+                    }
+                    var shouldRegenerateShaders = this._clippingPlanesState !== currentClippingPlanesState;
+                    this._clippingPlanesState = currentClippingPlanesState;
+                    // Regenerate shaders if color shading changed from last update
+                    var currentlyColorShadingEnabled = isColorShadingEnabled(this);
+                    if (currentlyColorShadingEnabled !== this._colorShadingEnabled) {
+                        this._colorShadingEnabled = currentlyColorShadingEnabled;
+                        shouldRegenerateShaders = true;
+                    }
+                    if (shouldRegenerateShaders) {
+                        regenerateShaders(this, frameState);
+                    }
+                    else {
+                        updateColor(this, frameState, false);
+                        updateSilhouette(this, frameState, false);
+                    }
+                }
+                if (justLoaded) {
+                    // Called after modelMatrix update.
+                    var model = this;
+                    frameState.afterRender.push(function() {
+                        model._ready = true;
+                        model._readyPromise.resolve(model);
+                    });
+                    return;
+                }
+                // We don't check show at the top of the function since we
+                // want to be able to progressively load models when they are not shown,
+                // and then have them visible immediately when show is set to true.
+                if (show && !this._ignoreCommands) {
+                    // PERFORMANCE_IDEA: This is terrible
+                    var commandList = frameState.commandList;
+                    var passes = frameState.passes;
+                    var nodeCommands = this._nodeCommands;
+                    var length = nodeCommands.length;
+                    var i;
+                    var nc;
+                    var idl2D = frameState.mapProjection.ellipsoid.maximumRadius * CesiumMath.PI;
+                    var boundingVolume;
+                    if (passes.render || (passes.pick && this.allowPicking)) {
+                        for (i = 0; i < length; ++i) {
+                            nc = nodeCommands[i];
+                            if (nc.show) {
+                                var command = translucent ? nc.translucentCommand : nc.command;
+                                command = silhouette ? nc.silhouetteModelCommand : command;
+                                commandList.push(command);
+                                boundingVolume = nc.command.boundingVolume;
+                                if (frameState.mode === SceneMode.SCENE2D &&
+                                    (boundingVolume.center.y + boundingVolume.radius > idl2D || boundingVolume.center.y - boundingVolume.radius < idl2D)) {
+                                    var command2D = translucent ? nc.translucentCommand2D : nc.command2D;
+                                    command2D = silhouette ? nc.silhouetteModelCommand2D : command2D;
+                                    commandList.push(command2D);
+                                }
+                            }
+                        }
+                        if (silhouette && !passes.pick) {
+                            // Render second silhouette pass
+                            for (i = 0; i < length; ++i) {
+                                nc = nodeCommands[i];
+                                if (nc.show) {
+                                    commandList.push(nc.silhouetteColorCommand);
+                                    boundingVolume = nc.command.boundingVolume;
+                                    if (frameState.mode === SceneMode.SCENE2D &&
+                                        (boundingVolume.center.y + boundingVolume.radius > idl2D || boundingVolume.center.y - boundingVolume.radius < idl2D)) {
+                                        commandList.push(nc.silhouetteColorCommand2D);
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             }
+            /**
+                 * Returns true if this object was destroyed; otherwise, false.
+                 * <br /><br />
+                 * If this object was destroyed, it should not be used; calling any function other than
+                 * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
+                 *
+                 * @returns {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
+                 *
+                 * @see Model#destroy
+                 */
+            isDestroyed() {
+                return false;
+            }
+            /**
+                 * Destroys the WebGL resources held by this object.  Destroying an object allows for deterministic
+                 * release of WebGL resources, instead of relying on the garbage collector to destroy this object.
+                 * <br /><br />
+                 * Once an object is destroyed, it should not be used; calling any function other than
+                 * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
+                 * assign the return value (<code>undefined</code>) to the object as done in the example.
+                 *
+                 * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
+                 *
+                 *
+                 * @example
+                 * model = model && model.destroy();
+                 *
+                 * @see Model#isDestroyed
+                 */
+            destroy() {
+                // Vertex arrays are unique to this model, destroy here.
+                if (defined(this._precreatedAttributes)) {
+                    destroy(this._rendererResources.vertexArrays);
+                }
+                if (defined(this._removeUpdateHeightCallback)) {
+                    this._removeUpdateHeightCallback();
+                    this._removeUpdateHeightCallback = undefined;
+                }
+                if (defined(this._terrainProviderChangedCallback)) {
+                    this._terrainProviderChangedCallback();
+                    this._terrainProviderChangedCallback = undefined;
+                }
+                // Shaders modified for clipping and for color don't get cached, so destroy these manually
+                if (defined(this._cachedRendererResources)) {
+                    destroyIfNotCached(this._rendererResources, this._cachedRendererResources);
+                }
+                this._rendererResources = undefined;
+                this._cachedRendererResources = this._cachedRendererResources && this._cachedRendererResources.release();
+                DracoLoader.destroyCachedDataForModel(this);
+                var pickIds = this._pickIds;
+                var length = pickIds.length;
+                for (var i = 0; i < length; ++i) {
+                    pickIds[i].destroy();
+                }
+                releaseCachedGltf(this);
+                this._quantizedVertexShaders = undefined;
+                // Only destroy the ClippingPlaneCollection if this is the owner - if this model is part of a Cesium3DTileset,
+                // _clippingPlanes references a ClippingPlaneCollection that this model does not own.
+                var clippingPlaneCollection = this._clippingPlanes;
+                if (defined(clippingPlaneCollection) && !clippingPlaneCollection.isDestroyed() && clippingPlaneCollection.owner === this) {
+                    clippingPlaneCollection.destroy();
+                }
+                this._clippingPlanes = undefined;
+                return destroyObject(this);
+            }
+            /**
+                 * Determines if silhouettes are supported.
+                 *
+                 * @param {Scene} scene The scene.
+                 * @returns {Boolean} <code>true</code> if silhouettes are supported; otherwise, returns <code>false</code>
+                 */
+            static silhouetteSupported(scene) {
+                return silhouetteSupported(scene.context);
+            }
+            /**
+                 * <p>
+                 * Creates a model from a glTF asset.  When the model is ready to render, i.e., when the external binary, image,
+                 * and shader files are downloaded and the WebGL resources are created, the {@link Model#readyPromise} is resolved.
+                 * </p>
+                 * <p>
+                 * The model can be a traditional glTF asset with a .gltf extension or a Binary glTF using the .glb extension.
+                 * </p>
+                 * <p>
+                 * Cesium supports glTF assets with the following extensions:
+                 * <ul>
+                 * <li>
+                 * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/1.0/Khronos/KHR_binary_glTF/README.md|KHR_binary_glTF}
+                 * </li><li>
+                 * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/1.0/Khronos/KHR_materials_common/README.md|KHR_materials_common}
+                 * </li><li>
+                 * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/1.0/Vendor/WEB3D_quantized_attributes/README.md|WEB3D_quantized_attributes}
+                 * </li><li>
+                 * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/2.0/Khronos/KHR_draco_mesh_compression/README.md|KHR_draco_mesh_compression}
+                 * </li><li>
+                 * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/2.0/Khronos/KHR_techniques_webgl/README.md|KHR_techniques_webgl}
+                 * </li><li>
+                 * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/2.0/Khronos/KHR_blend/README.md|KHR_blend}
+                 * </li><li>
+                 * {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Khronos/KHR_materials_unlit/README.md|KHR_materials_unlit}
+                 * </li><li>
+                 * {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Khronos/KHR_materials_pbrSpecularGlossiness/README.md|KHR_materials_pbrSpecularGlossiness}
+                 * </li>
+                 * </ul>
+                 * </p>
+                 * <p>
+                 * For high-precision rendering, Cesium supports the {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/1.0/Vendor/CESIUM_RTC/README.md|CESIUM_RTC} extension, which introduces the
+                 * CESIUM_RTC_MODELVIEW parameter semantic that says the node is in WGS84 coordinates translated
+                 * relative to a local origin.
+                 * </p>
+                 *
+                 * @param {Object} options Object with the following properties:
+                 * @param {Resource|String} options.url The url to the .gltf file.
+                 * @param {Resource|String} [options.basePath] The base path that paths in the glTF JSON are relative to.
+                 * @param {Boolean} [options.show=true] Determines if the model primitive will be shown.
+                 * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The 4x4 transformation matrix that transforms the model from model to world coordinates.
+                 * @param {Number} [options.scale=1.0] A uniform scale applied to this model.
+                 * @param {Number} [options.minimumPixelSize=0.0] The approximate minimum pixel size of the model regardless of zoom.
+                 * @param {Number} [options.maximumScale] The maximum scale for the model.
+                 * @param {Object} [options.id] A user-defined object to return when the model is picked with {@link Scene#pick}.
+                 * @param {Boolean} [options.allowPicking=true] When <code>true</code>, each glTF mesh and primitive is pickable with {@link Scene#pick}.
+                 * @param {Boolean} [options.incrementallyLoadTextures=true] Determine if textures may continue to stream in after the model is loaded.
+                 * @param {Boolean} [options.asynchronous=true] Determines if model WebGL resource creation will be spread out over several frames or block until completion once all glTF files are loaded.
+                 * @param {Boolean} [options.clampAnimations=true] Determines if the model's animations should hold a pose over frames where no keyframes are specified.
+                 * @param {ShadowMode} [options.shadows=ShadowMode.ENABLED] Determines whether the model casts or receives shadows from each light source.
+                 * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Draws the bounding sphere for each {@link DrawCommand} in the model.
+                 * @param {Boolean} [options.debugWireframe=false] For debugging only. Draws the model in wireframe.
+                 * @param {HeightReference} [options.heightReference] Determines how the model is drawn relative to terrain.
+                 * @param {Scene} [options.scene] Must be passed in for models that use the height reference property.
+                 * @param {DistanceDisplayCondition} [options.distanceDisplayCondition] The condition specifying at what distance from the camera that this model will be displayed.
+                 * @param {Color} [options.color=Color.WHITE] A color that blends with the model's rendered color.
+                 * @param {ColorBlendMode} [options.colorBlendMode=ColorBlendMode.HIGHLIGHT] Defines how the color blends with the model.
+                 * @param {Number} [options.colorBlendAmount=0.5] Value used to determine the color strength when the <code>colorBlendMode</code> is <code>MIX</code>. A value of 0.0 results in the model's rendered color while a value of 1.0 results in a solid color, with any value in-between resulting in a mix of the two.
+                 * @param {Color} [options.silhouetteColor=Color.RED] The silhouette color. If more than 256 models have silhouettes enabled, there is a small chance that overlapping models will have minor artifacts.
+                 * @param {Number} [options.silhouetteSize=0.0] The size of the silhouette in pixels.
+                 * @param {ClippingPlaneCollection} [options.clippingPlanes] The {@link ClippingPlaneCollection} used to selectively disable rendering the model.
+                 * @param {Boolean} [options.dequantizeInShader=true] Determines if a {@link https://github.com/google/draco|Draco} encoded model is dequantized on the GPU. This decreases total memory usage for encoded models.
+                 *
+                 * @returns {Model} The newly created model.
+                 *
+                 * @example
+                 * // Example 1. Create a model from a glTF asset
+                 * var model = scene.primitives.add(Cesium.Model.fromGltf({
+                 *   url : './duck/duck.gltf'
+                 * }));
+                 *
+                 * @example
+                 * // Example 2. Create model and provide all properties and events
+                 * var origin = Cesium.Cartesian3.fromDegrees(-95.0, 40.0, 200000.0);
+                 * var modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(origin);
+                 *
+                 * var model = scene.primitives.add(Cesium.Model.fromGltf({
+                 *   url : './duck/duck.gltf',
+                 *   show : true,                     // default
+                 *   modelMatrix : modelMatrix,
+                 *   scale : 2.0,                     // double size
+                 *   minimumPixelSize : 128,          // never smaller than 128 pixels
+                 *   maximumScale: 20000,             // never larger than 20000 * model size (overrides minimumPixelSize)
+                 *   allowPicking : false,            // not pickable
+                 *   debugShowBoundingVolume : false, // default
+                 *   debugWireframe : false
+                 * }));
+                 *
+                 * model.readyPromise.then(function(model) {
+                 *   // Play all animations when the model is ready to render
+                 *   model.activeAnimations.addAll();
+                 * });
+                 */
+            static fromGltf(options) {
+                //>>includeStart('debug', pragmas.debug);
+                if (!defined(options) || !defined(options.url)) {
+                    throw new DeveloperError('options.url is required');
+                }
+                //>>includeEnd('debug');
+                var url = options.url;
+                options = clone(options);
+                // Create resource for the model file
+                var modelResource = Resource.createIfNeeded(url);
+                // Setup basePath to get dependent files
+                var basePath = defaultValue(options.basePath, modelResource.clone());
+                var resource = Resource.createIfNeeded(basePath);
+                // If no cache key is provided, use a GUID.
+                // Check using a URI to GUID dictionary that we have not already added this model.
+                var cacheKey = defaultValue(options.cacheKey, uriToGuid[getAbsoluteUri(modelResource.url)]);
+                if (!defined(cacheKey)) {
+                    cacheKey = createGuid();
+                    uriToGuid[getAbsoluteUri(modelResource.url)] = cacheKey;
+                }
+                if (defined(options.basePath) && !defined(options.cacheKey)) {
+                    cacheKey += resource.url;
+                }
+                options.cacheKey = cacheKey;
+                options.basePath = resource;
+                var model = new Model(options);
+                var cachedGltf = gltfCache[cacheKey];
+                if (!defined(cachedGltf)) {
+                    cachedGltf = new CachedGltf({
+                        ready: false
+                    });
+                    cachedGltf.count = 1;
+                    cachedGltf.modelsToLoad.push(model);
+                    setCachedGltf(model, cachedGltf);
+                    gltfCache[cacheKey] = cachedGltf;
+                    // Add Accept header if we need it
+                    if (!defined(modelResource.headers.Accept)) {
+                        modelResource.headers.Accept = defaultModelAccept;
+                    }
+                    modelResource.fetchArrayBuffer().then(function(arrayBuffer) {
+                        var array = new Uint8Array(arrayBuffer);
+                        if (containsGltfMagic(array)) {
+                            // Load binary glTF
+                            var parsedGltf = parseGlb(array);
+                            cachedGltf.makeReady(parsedGltf);
+                        }
+                        else {
+                            // Load text (JSON) glTF
+                            var json = getStringFromTypedArray(array);
+                            cachedGltf.makeReady(JSON.parse(json));
+                        }
+                    }).otherwise(ModelUtility.getFailedLoadFunction(model, 'model', url));
+                }
+                else if (!cachedGltf.ready) {
+                    // Cache hit but the fetchArrayBuffer() or fetchText() request is still pending
+                    ++cachedGltf.count;
+                    cachedGltf.modelsToLoad.push(model);
+                }
+                // else if the cached glTF is defined and ready, the
+                // model constructor will pick it up using the cache key.
+                return model;
+            }
         }
-        setCachedGltf(this, cachedGltf);
-
-        var basePath = defaultValue(options.basePath, '');
-        this._resource = Resource.createIfNeeded(basePath);
-
-        /**
-         * Determines if the model primitive will be shown.
-         *
-         * @type {Boolean}
-         *
-         * @default true
-         */
-        this.show = defaultValue(options.show, true);
-
-        /**
-         * The silhouette color.
-         *
-         * @type {Color}
-         *
-         * @default Color.RED
-         */
-        this.silhouetteColor = defaultValue(options.silhouetteColor, Color.RED);
-        this._silhouetteColor = new Color();
-        this._silhouetteColorPreviousAlpha = 1.0;
-        this._normalAttributeName = undefined;
-
-        /**
-         * The size of the silhouette in pixels.
-         *
-         * @type {Number}
-         *
-         * @default 0.0
-         */
-        this.silhouetteSize = defaultValue(options.silhouetteSize, 0.0);
-
-        /**
-         * The 4x4 transformation matrix that transforms the model from model to world coordinates.
-         * When this is the identity matrix, the model is drawn in world coordinates, i.e., Earth's WGS84 coordinates.
-         * Local reference frames can be used by providing a different transformation matrix, like that returned
-         * by {@link Transforms.eastNorthUpToFixedFrame}.
-         *
-         * @type {Matrix4}
-         *
-         * @default {@link Matrix4.IDENTITY}
-         *
-         * @example
-         * var origin = Cesium.Cartesian3.fromDegrees(-95.0, 40.0, 200000.0);
-         * m.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(origin);
-         */
-        this.modelMatrix = Matrix4.clone(defaultValue(options.modelMatrix, Matrix4.IDENTITY));
-        this._modelMatrix = Matrix4.clone(this.modelMatrix);
-        this._clampedModelMatrix = undefined;
-
-        /**
-         * A uniform scale applied to this model before the {@link Model#modelMatrix}.
-         * Values greater than <code>1.0</code> increase the size of the model; values
-         * less than <code>1.0</code> decrease.
-         *
-         * @type {Number}
-         *
-         * @default 1.0
-         */
-        this.scale = defaultValue(options.scale, 1.0);
-        this._scale = this.scale;
-
-        /**
-         * The approximate minimum pixel size of the model regardless of zoom.
-         * This can be used to ensure that a model is visible even when the viewer
-         * zooms out.  When <code>0.0</code>, no minimum size is enforced.
-         *
-         * @type {Number}
-         *
-         * @default 0.0
-         */
-        this.minimumPixelSize = defaultValue(options.minimumPixelSize, 0.0);
-        this._minimumPixelSize = this.minimumPixelSize;
-
-        /**
-         * The maximum scale size for a model. This can be used to give
-         * an upper limit to the {@link Model#minimumPixelSize}, ensuring that the model
-         * is never an unreasonable scale.
-         *
-         * @type {Number}
-         */
-        this.maximumScale = options.maximumScale;
-        this._maximumScale = this.maximumScale;
-
-        /**
-         * User-defined object returned when the model is picked.
-         *
-         * @type Object
-         *
-         * @default undefined
-         *
-         * @see Scene#pick
-         */
-        this.id = options.id;
-        this._id = options.id;
-
-        /**
-         * Returns the height reference of the model
-         *
-         * @memberof Model.prototype
-         *
-         * @type {HeightReference}
-         *
-         * @default HeightReference.NONE
-         */
-        this.heightReference = defaultValue(options.heightReference, HeightReference.NONE);
-        this._heightReference = this.heightReference;
-        this._heightChanged = false;
-        this._removeUpdateHeightCallback = undefined;
-        var scene = options.scene;
-        this._scene = scene;
-        if (defined(scene) && defined(scene.terrainProviderChanged)) {
-            this._terrainProviderChangedCallback = scene.terrainProviderChanged.addEventListener(function() {
-                this._heightChanged = true;
-            }, this);
-        }
-
-        /**
-         * Used for picking primitives that wrap a model.
-         *
-         * @private
-         */
-        this._pickObject = options.pickObject;
-        this._allowPicking = defaultValue(options.allowPicking, true);
-
-        this._ready = false;
-        this._readyPromise = when.defer();
-
-        /**
-         * The currently playing glTF animations.
-         *
-         * @type {ModelAnimationCollection}
-         */
-        this.activeAnimations = new ModelAnimationCollection(this);
-
-        /**
-         * Determines if the model's animations should hold a pose over frames where no keyframes are specified.
-         *
-         * @type {Boolean}
-         */
-        this.clampAnimations = defaultValue(options.clampAnimations, true);
-
-        this._defaultTexture = undefined;
-        this._incrementallyLoadTextures = defaultValue(options.incrementallyLoadTextures, true);
-        this._asynchronous = defaultValue(options.asynchronous, true);
-
-        /**
-         * Determines whether the model casts or receives shadows from each light source.
-         *
-         * @type {ShadowMode}
-         *
-         * @default ShadowMode.ENABLED
-         */
-        this.shadows = defaultValue(options.shadows, ShadowMode.ENABLED);
-        this._shadows = this.shadows;
-
-        /**
-         * A color that blends with the model's rendered color.
-         *
-         * @type {Color}
-         *
-         * @default Color.WHITE
-         */
-        this.color = defaultValue(options.color, Color.WHITE);
-        this._color = new Color();
-        this._colorPreviousAlpha = 1.0;
-
-        /**
-         * Defines how the color blends with the model.
-         *
-         * @type {ColorBlendMode}
-         *
-         * @default ColorBlendMode.HIGHLIGHT
-         */
-        this.colorBlendMode = defaultValue(options.colorBlendMode, ColorBlendMode.HIGHLIGHT);
-
-        /**
-         * Value used to determine the color strength when the <code>colorBlendMode</code> is <code>MIX</code>.
-         * A value of 0.0 results in the model's rendered color while a value of 1.0 results in a solid color, with
-         * any value in-between resulting in a mix of the two.
-         *
-         * @type {Number}
-         *
-         * @default 0.5
-         */
-        this.colorBlendAmount = defaultValue(options.colorBlendAmount, 0.5);
-
-        this._colorShadingEnabled = false;
-
-        this._clippingPlanes = undefined;
-        this.clippingPlanes = options.clippingPlanes;
-        // Used for checking if shaders need to be regenerated due to clipping plane changes.
-        this._clippingPlanesState = 0;
-        // If defined, use this matrix to position the clipping planes instead of the modelMatrix.
-        // This is so that when models are part of a tileset they all get clipped relative
-        // to the root tile.
-        this.clippingPlaneOffsetMatrix = undefined;
-
-        /**
-         * This property is for debugging only; it is not for production use nor is it optimized.
-         * <p>
-         * Draws the bounding sphere for each draw command in the model.  A glTF primitive corresponds
-         * to one draw command.  A glTF mesh has an array of primitives, often of length one.
-         * </p>
-         *
-         * @type {Boolean}
-         *
-         * @default false
-         */
-        this.debugShowBoundingVolume = defaultValue(options.debugShowBoundingVolume, false);
-        this._debugShowBoundingVolume = false;
-
-        /**
-         * This property is for debugging only; it is not for production use nor is it optimized.
-         * <p>
-         * Draws the model in wireframe.
-         * </p>
-         *
-         * @type {Boolean}
-         *
-         * @default false
-         */
-        this.debugWireframe = defaultValue(options.debugWireframe, false);
-        this._debugWireframe = false;
-
-        this._distanceDisplayCondition = options.distanceDisplayCondition;
-
-        // Undocumented options
-        this._addBatchIdToGeneratedShaders = options.addBatchIdToGeneratedShaders;
-        this._precreatedAttributes = options.precreatedAttributes;
-        this._vertexShaderLoaded = options.vertexShaderLoaded;
-        this._fragmentShaderLoaded = options.fragmentShaderLoaded;
-        this._uniformMapLoaded = options.uniformMapLoaded;
-        this._pickIdLoaded = options.pickIdLoaded;
-        this._ignoreCommands = defaultValue(options.ignoreCommands, false);
-        this._requestType = options.requestType;
-        this._upAxis = defaultValue(options.upAxis, Axis.Y);
-        this._gltfForwardAxis = Axis.Z;
-        this._forwardAxis = options.forwardAxis;
-
-        /**
-         * @private
-         * @readonly
-         */
-        this.cull = defaultValue(options.cull, true);
-
-        /**
-         * @private
-         * @readonly
-         */
-        this.opaquePass = defaultValue(options.opaquePass, Pass.OPAQUE);
-
-        this._computedModelMatrix = new Matrix4(); // Derived from modelMatrix and scale
-        this._clippingPlaneModelViewMatrix = Matrix4.clone(Matrix4.IDENTITY); // Derived from modelMatrix, scale, and the current view matrix
-        this._initialRadius = undefined;           // Radius without model's scale property, model-matrix scale, animations, or skins
-        this._boundingSphere = undefined;
-        this._scaledBoundingSphere = new BoundingSphere();
-        this._state = ModelState.NEEDS_LOAD;
-        this._loadResources = undefined;
-
-        this._mode = undefined;
-
-        this._perNodeShowDirty = false;            // true when the Cesium API was used to change a node's show property
-        this._cesiumAnimationsDirty = false;       // true when the Cesium API, not a glTF animation, changed a node transform
-        this._dirty = false;                       // true when the model was transformed this frame
-        this._maxDirtyNumber = 0;                  // Used in place of a dirty boolean flag to avoid an extra graph traversal
-
-        this._runtime = {
-            animations : undefined,
-            rootNodes : undefined,
-            nodes : undefined,            // Indexed with the node's index
-            nodesByName : undefined,      // Indexed with name property in the node
-            skinnedNodes : undefined,
-            meshesByName : undefined,     // Indexed with the name property in the mesh
-            materialsByName : undefined,  // Indexed with the name property in the material
-            materialsById : undefined     // Indexed with the material's index
-        };
-
-        this._uniformMaps = {};           // Not cached since it can be targeted by glTF animation
-        this._extensionsUsed = undefined;     // Cached used glTF extensions
-        this._extensionsRequired = undefined; // Cached required glTF extensions
-        this._quantizedUniforms = {};     // Quantized uniforms for each program for WEB3D_quantized_attributes
-        this._programPrimitives = {};
-        this._rendererResources = {       // Cached between models with the same url/cache-key
-            buffers : {},
-            vertexArrays : {},
-            programs : {},
-            sourceShaders : {},
-            silhouettePrograms : {},
-            textures : {},
-            samplers : {},
-            renderStates : {}
-        };
-        this._cachedRendererResources = undefined;
-        this._loadRendererResourcesFromCache = false;
-
-        this._dequantizeInShader = defaultValue(options.dequantizeInShader, true);
-        this._decodedData = {};
-
-        this._cachedGeometryByteLength = 0;
-        this._cachedTexturesByteLength = 0;
-        this._geometryByteLength = 0;
-        this._texturesByteLength = 0;
-        this._trianglesLength = 0;
-
-        // Hold references for shader reconstruction.
-        // Hold these separately because _cachedGltf may get released (this.releaseGltfJson)
-        this._sourceTechniques = {};
-        this._sourcePrograms = {};
-        this._quantizedVertexShaders = {};
-
-        this._nodeCommands = [];
-        this._pickIds = [];
-
-        // CESIUM_RTC extension
-        this._rtcCenter = undefined;    // reference to either 3D or 2D
-        this._rtcCenterEye = undefined; // in eye coordinates
-        this._rtcCenter3D = undefined;  // in world coordinates
-        this._rtcCenter2D = undefined;  // in projected world coordinates
-
-        this._keepPipelineExtras = options.keepPipelineExtras; // keep the buffers in memory for use in other applications
-    }
 
     defineProperties(Model.prototype, {
         /**
@@ -1089,184 +1624,12 @@ define([
         return defined(clippingPlanes) && clippingPlanes.enabled;
     }
 
-    /**
-     * Determines if silhouettes are supported.
-     *
-     * @param {Scene} scene The scene.
-     * @returns {Boolean} <code>true</code> if silhouettes are supported; otherwise, returns <code>false</code>
-     */
-    Model.silhouetteSupported = function(scene) {
-        return silhouetteSupported(scene.context);
-    };
 
     function containsGltfMagic(uint8Array) {
         var magic = getMagic(uint8Array);
         return magic === 'glTF';
     }
 
-    /**
-     * <p>
-     * Creates a model from a glTF asset.  When the model is ready to render, i.e., when the external binary, image,
-     * and shader files are downloaded and the WebGL resources are created, the {@link Model#readyPromise} is resolved.
-     * </p>
-     * <p>
-     * The model can be a traditional glTF asset with a .gltf extension or a Binary glTF using the .glb extension.
-     * </p>
-     * <p>
-     * Cesium supports glTF assets with the following extensions:
-     * <ul>
-     * <li>
-     * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/1.0/Khronos/KHR_binary_glTF/README.md|KHR_binary_glTF}
-     * </li><li>
-     * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/1.0/Khronos/KHR_materials_common/README.md|KHR_materials_common}
-     * </li><li>
-     * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/1.0/Vendor/WEB3D_quantized_attributes/README.md|WEB3D_quantized_attributes}
-     * </li><li>
-     * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/2.0/Khronos/KHR_draco_mesh_compression/README.md|KHR_draco_mesh_compression}
-     * </li><li>
-     * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/2.0/Khronos/KHR_techniques_webgl/README.md|KHR_techniques_webgl}
-     * </li><li>
-     * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/2.0/Khronos/KHR_blend/README.md|KHR_blend}
-     * </li><li>
-     * {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Khronos/KHR_materials_unlit/README.md|KHR_materials_unlit}
-     * </li><li>
-     * {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Khronos/KHR_materials_pbrSpecularGlossiness/README.md|KHR_materials_pbrSpecularGlossiness}
-     * </li>
-     * </ul>
-     * </p>
-     * <p>
-     * For high-precision rendering, Cesium supports the {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/1.0/Vendor/CESIUM_RTC/README.md|CESIUM_RTC} extension, which introduces the
-     * CESIUM_RTC_MODELVIEW parameter semantic that says the node is in WGS84 coordinates translated
-     * relative to a local origin.
-     * </p>
-     *
-     * @param {Object} options Object with the following properties:
-     * @param {Resource|String} options.url The url to the .gltf file.
-     * @param {Resource|String} [options.basePath] The base path that paths in the glTF JSON are relative to.
-     * @param {Boolean} [options.show=true] Determines if the model primitive will be shown.
-     * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The 4x4 transformation matrix that transforms the model from model to world coordinates.
-     * @param {Number} [options.scale=1.0] A uniform scale applied to this model.
-     * @param {Number} [options.minimumPixelSize=0.0] The approximate minimum pixel size of the model regardless of zoom.
-     * @param {Number} [options.maximumScale] The maximum scale for the model.
-     * @param {Object} [options.id] A user-defined object to return when the model is picked with {@link Scene#pick}.
-     * @param {Boolean} [options.allowPicking=true] When <code>true</code>, each glTF mesh and primitive is pickable with {@link Scene#pick}.
-     * @param {Boolean} [options.incrementallyLoadTextures=true] Determine if textures may continue to stream in after the model is loaded.
-     * @param {Boolean} [options.asynchronous=true] Determines if model WebGL resource creation will be spread out over several frames or block until completion once all glTF files are loaded.
-     * @param {Boolean} [options.clampAnimations=true] Determines if the model's animations should hold a pose over frames where no keyframes are specified.
-     * @param {ShadowMode} [options.shadows=ShadowMode.ENABLED] Determines whether the model casts or receives shadows from each light source.
-     * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Draws the bounding sphere for each {@link DrawCommand} in the model.
-     * @param {Boolean} [options.debugWireframe=false] For debugging only. Draws the model in wireframe.
-     * @param {HeightReference} [options.heightReference] Determines how the model is drawn relative to terrain.
-     * @param {Scene} [options.scene] Must be passed in for models that use the height reference property.
-     * @param {DistanceDisplayCondition} [options.distanceDisplayCondition] The condition specifying at what distance from the camera that this model will be displayed.
-     * @param {Color} [options.color=Color.WHITE] A color that blends with the model's rendered color.
-     * @param {ColorBlendMode} [options.colorBlendMode=ColorBlendMode.HIGHLIGHT] Defines how the color blends with the model.
-     * @param {Number} [options.colorBlendAmount=0.5] Value used to determine the color strength when the <code>colorBlendMode</code> is <code>MIX</code>. A value of 0.0 results in the model's rendered color while a value of 1.0 results in a solid color, with any value in-between resulting in a mix of the two.
-     * @param {Color} [options.silhouetteColor=Color.RED] The silhouette color. If more than 256 models have silhouettes enabled, there is a small chance that overlapping models will have minor artifacts.
-     * @param {Number} [options.silhouetteSize=0.0] The size of the silhouette in pixels.
-     * @param {ClippingPlaneCollection} [options.clippingPlanes] The {@link ClippingPlaneCollection} used to selectively disable rendering the model.
-     * @param {Boolean} [options.dequantizeInShader=true] Determines if a {@link https://github.com/google/draco|Draco} encoded model is dequantized on the GPU. This decreases total memory usage for encoded models.
-     *
-     * @returns {Model} The newly created model.
-     *
-     * @example
-     * // Example 1. Create a model from a glTF asset
-     * var model = scene.primitives.add(Cesium.Model.fromGltf({
-     *   url : './duck/duck.gltf'
-     * }));
-     *
-     * @example
-     * // Example 2. Create model and provide all properties and events
-     * var origin = Cesium.Cartesian3.fromDegrees(-95.0, 40.0, 200000.0);
-     * var modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(origin);
-     *
-     * var model = scene.primitives.add(Cesium.Model.fromGltf({
-     *   url : './duck/duck.gltf',
-     *   show : true,                     // default
-     *   modelMatrix : modelMatrix,
-     *   scale : 2.0,                     // double size
-     *   minimumPixelSize : 128,          // never smaller than 128 pixels
-     *   maximumScale: 20000,             // never larger than 20000 * model size (overrides minimumPixelSize)
-     *   allowPicking : false,            // not pickable
-     *   debugShowBoundingVolume : false, // default
-     *   debugWireframe : false
-     * }));
-     *
-     * model.readyPromise.then(function(model) {
-     *   // Play all animations when the model is ready to render
-     *   model.activeAnimations.addAll();
-     * });
-     */
-    Model.fromGltf = function(options) {
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(options) || !defined(options.url)) {
-            throw new DeveloperError('options.url is required');
-        }
-        //>>includeEnd('debug');
-
-        var url = options.url;
-        options = clone(options);
-
-        // Create resource for the model file
-        var modelResource = Resource.createIfNeeded(url);
-
-        // Setup basePath to get dependent files
-        var basePath = defaultValue(options.basePath, modelResource.clone());
-        var resource = Resource.createIfNeeded(basePath);
-
-        // If no cache key is provided, use a GUID.
-        // Check using a URI to GUID dictionary that we have not already added this model.
-        var cacheKey = defaultValue(options.cacheKey, uriToGuid[getAbsoluteUri(modelResource.url)]);
-        if (!defined(cacheKey)) {
-            cacheKey = createGuid();
-            uriToGuid[getAbsoluteUri(modelResource.url)] = cacheKey;
-        }
-
-        if (defined(options.basePath) && !defined(options.cacheKey)) {
-            cacheKey += resource.url;
-        }
-        options.cacheKey = cacheKey;
-        options.basePath = resource;
-
-        var model = new Model(options);
-
-        var cachedGltf = gltfCache[cacheKey];
-        if (!defined(cachedGltf)) {
-            cachedGltf = new CachedGltf({
-                ready : false
-            });
-            cachedGltf.count = 1;
-            cachedGltf.modelsToLoad.push(model);
-            setCachedGltf(model, cachedGltf);
-            gltfCache[cacheKey] = cachedGltf;
-
-            // Add Accept header if we need it
-            if (!defined(modelResource.headers.Accept)) {
-                modelResource.headers.Accept = defaultModelAccept;
-            }
-
-            modelResource.fetchArrayBuffer().then(function(arrayBuffer) {
-                var array = new Uint8Array(arrayBuffer);
-                if (containsGltfMagic(array)) {
-                    // Load binary glTF
-                    var parsedGltf = parseGlb(array);
-                    cachedGltf.makeReady(parsedGltf);
-                } else {
-                    // Load text (JSON) glTF
-                    var json = getStringFromTypedArray(array);
-                    cachedGltf.makeReady(JSON.parse(json));
-                }
-            }).otherwise(ModelUtility.getFailedLoadFunction(model, 'model', url));
-        } else if (!cachedGltf.ready) {
-            // Cache hit but the fetchArrayBuffer() or fetchText() request is still pending
-            ++cachedGltf.count;
-            cachedGltf.modelsToLoad.push(model);
-        }
-        // else if the cached glTF is defined and ready, the
-        // model constructor will pick it up using the cache key.
-
-        return model;
-    };
 
     /**
      * For the unit tests to verify model caching.
@@ -1289,49 +1652,8 @@ define([
         return (model._runtime[runtimeName])[name];
     }
 
-    /**
-     * Returns the glTF node with the given <code>name</code> property.  This is used to
-     * modify a node's transform for animation outside of glTF animations.
-     *
-     * @param {String} name The glTF name of the node.
-     * @returns {ModelNode} The node or <code>undefined</code> if no node with <code>name</code> exists.
-     *
-     * @exception {DeveloperError} The model is not loaded.  Use Model.readyPromise or wait for Model.ready to be true.
-     *
-     * @example
-     * // Apply non-uniform scale to node LOD3sp
-     * var node = model.getNode('LOD3sp');
-     * node.matrix = Cesium.Matrix4.fromScale(new Cesium.Cartesian3(5.0, 1.0, 1.0), node.matrix);
-     */
-    Model.prototype.getNode = function(name) {
-        var node = getRuntime(this, 'nodesByName', name);
-        return defined(node) ? node.publicNode : undefined;
-    };
 
-    /**
-     * Returns the glTF mesh with the given <code>name</code> property.
-     *
-     * @param {String} name The glTF name of the mesh.
-     *
-     * @returns {ModelMesh} The mesh or <code>undefined</code> if no mesh with <code>name</code> exists.
-     *
-     * @exception {DeveloperError} The model is not loaded.  Use Model.readyPromise or wait for Model.ready to be true.
-     */
-    Model.prototype.getMesh = function(name) {
-        return getRuntime(this, 'meshesByName', name);
-    };
 
-    /**
-     * Returns the glTF material with the given <code>name</code> property.
-     *
-     * @param {String} name The glTF name of the material.
-     * @returns {ModelMaterial} The material or <code>undefined</code> if no material with <code>name</code> exists.
-     *
-     * @exception {DeveloperError} The model is not loaded.  Use Model.readyPromise or wait for Model.ready to be true.
-     */
-    Model.prototype.getMaterial = function(name) {
-        return getRuntime(this, 'materialsByName', name);
-    };
 
     ///////////////////////////////////////////////////////////////////////////
 
@@ -1684,23 +2006,24 @@ define([
         model._runtime.meshesByName = runtimeMeshesByName;
     }
 
-    ///////////////////////////////////////////////////////////////////////////
+        ///////////////////////////////////////////////////////////////////////////
+        class CreateVertexBufferJob {
+            constructor() {
+                this.id = undefined;
+                this.model = undefined;
+                this.context = undefined;
+            }
+            set(id, model, context) {
+                this.id = id;
+                this.model = model;
+                this.context = context;
+            }
+            execute() {
+                createVertexBuffer(this.id, this.model, this.context);
+            }
+        }
 
-    var CreateVertexBufferJob = function() {
-        this.id = undefined;
-        this.model = undefined;
-        this.context = undefined;
-    };
 
-    CreateVertexBufferJob.prototype.set = function(id, model, context) {
-        this.id = id;
-        this.model = model;
-        this.context = context;
-    };
-
-    CreateVertexBufferJob.prototype.execute = function() {
-        createVertexBuffer(this.id, this.model, this.context);
-    };
 
     ///////////////////////////////////////////////////////////////////////////
 
@@ -1724,25 +2047,26 @@ define([
         model._geometryByteLength += vertexBuffer.sizeInBytes;
     }
 
-    ///////////////////////////////////////////////////////////////////////////
+        ///////////////////////////////////////////////////////////////////////////
+        class CreateIndexBufferJob {
+            constructor() {
+                this.id = undefined;
+                this.componentType = undefined;
+                this.model = undefined;
+                this.context = undefined;
+            }
+            set(id, componentType, model, context) {
+                this.id = id;
+                this.componentType = componentType;
+                this.model = model;
+                this.context = context;
+            }
+            execute() {
+                createIndexBuffer(this.id, this.componentType, this.model, this.context);
+            }
+        }
 
-    var CreateIndexBufferJob = function() {
-        this.id = undefined;
-        this.componentType = undefined;
-        this.model = undefined;
-        this.context = undefined;
-    };
 
-    CreateIndexBufferJob.prototype.set = function(id, componentType, model, context) {
-        this.id = id;
-        this.componentType = componentType;
-        this.model = model;
-        this.context = context;
-    };
-
-    CreateIndexBufferJob.prototype.execute = function() {
-        createIndexBuffer(this.id, this.componentType, this.model, this.context);
-    };
 
     ///////////////////////////////////////////////////////////////////////////
 
@@ -1880,21 +2204,23 @@ define([
         return shader;
     }
 
-    var CreateProgramJob = function() {
-        this.programToCreate = undefined;
-        this.model = undefined;
-        this.context = undefined;
-    };
+        class CreateProgramJob {
+            constructor() {
+                this.programToCreate = undefined;
+                this.model = undefined;
+                this.context = undefined;
+            }
+            set(programToCreate, model, context) {
+                this.programToCreate = programToCreate;
+                this.model = model;
+                this.context = context;
+            }
+            execute() {
+                createProgram(this.programToCreate, this.model, this.context);
+            }
+        }
 
-    CreateProgramJob.prototype.set = function(programToCreate, model, context) {
-        this.programToCreate = programToCreate;
-        this.model = model;
-        this.context = context;
-    };
 
-    CreateProgramJob.prototype.execute = function() {
-        createProgram(this.programToCreate, this.model, this.context);
-    };
 
     ///////////////////////////////////////////////////////////////////////////
 
@@ -2087,23 +2413,24 @@ define([
         }
     }
 
-    ///////////////////////////////////////////////////////////////////////////
+        ///////////////////////////////////////////////////////////////////////////
+        class CreateTextureJob {
+            constructor() {
+                this.gltfTexture = undefined;
+                this.model = undefined;
+                this.context = undefined;
+            }
+            set(gltfTexture, model, context) {
+                this.gltfTexture = gltfTexture;
+                this.model = model;
+                this.context = context;
+            }
+            execute() {
+                createTexture(this.gltfTexture, this.model, this.context);
+            }
+        }
 
-    var CreateTextureJob = function() {
-        this.gltfTexture = undefined;
-        this.model = undefined;
-        this.context = undefined;
-    };
 
-    CreateTextureJob.prototype.set = function(gltfTexture, model, context) {
-        this.gltfTexture = gltfTexture;
-        this.model = model;
-        this.context = context;
-    };
-
-    CreateTextureJob.prototype.execute = function() {
-        createTexture(this.gltfTexture, this.model, this.context);
-    };
 
     ///////////////////////////////////////////////////////////////////////////
 
@@ -3829,23 +4156,34 @@ define([
         model._cachedGltf = undefined;
     }
 
-    ///////////////////////////////////////////////////////////////////////////
-
-    function CachedRendererResources(context, cacheKey) {
-        this.buffers = undefined;
-        this.vertexArrays = undefined;
-        this.programs = undefined;
-        this.sourceShaders = undefined;
-        this.silhouettePrograms = undefined;
-        this.textures = undefined;
-        this.samplers = undefined;
-        this.renderStates = undefined;
-        this.ready = false;
-
-        this.context = context;
-        this.cacheKey = cacheKey;
-        this.count = 0;
-    }
+        ///////////////////////////////////////////////////////////////////////////
+        class CachedRendererResources {
+            constructor(context, cacheKey) {
+                this.buffers = undefined;
+                this.vertexArrays = undefined;
+                this.programs = undefined;
+                this.sourceShaders = undefined;
+                this.silhouettePrograms = undefined;
+                this.textures = undefined;
+                this.samplers = undefined;
+                this.renderStates = undefined;
+                this.ready = false;
+                this.context = context;
+                this.cacheKey = cacheKey;
+                this.count = 0;
+            }
+            release() {
+                if (--this.count === 0) {
+                    if (defined(this.cacheKey)) {
+                        // Remove if this was cached
+                        delete this.context.cache.modelRendererResourceCache[this.cacheKey];
+                    }
+                    destroyCachedRendererResources(this);
+                    return destroyObject(this);
+                }
+                return undefined;
+            }
+        }
 
     function destroy(property) {
         for (var name in property) {
@@ -3863,18 +4201,6 @@ define([
         destroy(resources.textures);
     }
 
-    CachedRendererResources.prototype.release = function() {
-        if (--this.count === 0) {
-            if (defined(this.cacheKey)) {
-                // Remove if this was cached
-                delete this.context.cache.modelRendererResourceCache[this.cacheKey];
-            }
-            destroyCachedRendererResources(this);
-            return destroyObject(this);
-        }
-
-        return undefined;
-    };
 
     ///////////////////////////////////////////////////////////////////////////
 
@@ -3976,363 +4302,6 @@ define([
         return (distance2 >= nearSquared) && (distance2 <= farSquared);
     }
 
-    /**
-     * Called when {@link Viewer} or {@link CesiumWidget} render the scene to
-     * get the draw commands needed to render this primitive.
-     * <p>
-     * Do not call this function directly.  This is documented just to
-     * list the exceptions that may be propagated when the scene is rendered:
-     * </p>
-     *
-     * @exception {RuntimeError} Failed to load external reference.
-     */
-    Model.prototype.update = function(frameState) {
-        if (frameState.mode === SceneMode.MORPHING) {
-            return;
-        }
-
-        var context = frameState.context;
-        this._defaultTexture = context.defaultTexture;
-
-        if ((this._state === ModelState.NEEDS_LOAD) && defined(this.gltf)) {
-            // Use renderer resources from cache instead of loading/creating them?
-            var cachedRendererResources;
-            var cacheKey = this.cacheKey;
-            if (defined(cacheKey)) { // cache key given? this model will pull from or contribute to context level cache
-                context.cache.modelRendererResourceCache = defaultValue(context.cache.modelRendererResourceCache, {});
-                var modelCaches = context.cache.modelRendererResourceCache;
-
-                cachedRendererResources = modelCaches[this.cacheKey];
-                if (defined(cachedRendererResources)) {
-                    if (!cachedRendererResources.ready) {
-                        // Cached resources for the model are not loaded yet.  We'll
-                        // try again every frame until they are.
-                        return;
-                    }
-
-                    ++cachedRendererResources.count;
-                    this._loadRendererResourcesFromCache = true;
-                } else {
-                    cachedRendererResources = new CachedRendererResources(context, cacheKey);
-                    cachedRendererResources.count = 1;
-                    modelCaches[this.cacheKey] = cachedRendererResources;
-                }
-                this._cachedRendererResources = cachedRendererResources;
-            } else { // cache key not given? this model doesn't care about context level cache at all. Cache is here to simplify freeing on destroy.
-                cachedRendererResources = new CachedRendererResources(context);
-                cachedRendererResources.count = 1;
-                this._cachedRendererResources = cachedRendererResources;
-            }
-
-            this._state = ModelState.LOADING;
-            if (this._state !== ModelState.FAILED) {
-                var extensions = this.gltf.extensions;
-                if (defined(extensions) && defined(extensions.CESIUM_RTC)) {
-                    var center = Cartesian3.fromArray(extensions.CESIUM_RTC.center);
-                    if (!Cartesian3.equals(center, Cartesian3.ZERO)) {
-                        this._rtcCenter3D = center;
-
-                        var projection = frameState.mapProjection;
-                        var ellipsoid = projection.ellipsoid;
-                        var cartographic = ellipsoid.cartesianToCartographic(this._rtcCenter3D);
-                        var projectedCart = projection.project(cartographic);
-                        Cartesian3.fromElements(projectedCart.z, projectedCart.x, projectedCart.y, projectedCart);
-                        this._rtcCenter2D = projectedCart;
-
-                        this._rtcCenterEye = new Cartesian3();
-                        this._rtcCenter = this._rtcCenter3D;
-                    }
-                }
-
-                addPipelineExtras(this.gltf);
-
-                this._loadResources = new ModelLoadResources();
-                if (!this._loadRendererResourcesFromCache) {
-                    // Buffers are required to updateVersion
-                    ModelUtility.parseBuffers(this, bufferLoad);
-                }
-            }
-        }
-
-        var loadResources = this._loadResources;
-        var incrementallyLoadTextures = this._incrementallyLoadTextures;
-        var justLoaded = false;
-
-        if (this._state === ModelState.LOADING) {
-            // Transition from LOADING -> LOADED once resources are downloaded and created.
-            // Textures may continue to stream in while in the LOADED state.
-            if (loadResources.pendingBufferLoads === 0) {
-                if (!loadResources.initialized) {
-                    frameState.brdfLutGenerator.update(frameState);
-
-                    ModelUtility.checkSupportedExtensions(this.extensionsRequired);
-                    ModelUtility.updateForwardAxis(this);
-
-                    // glTF pipeline updates, not needed if loading from cache
-                    if (!this._loadRendererResourcesFromCache) {
-                        var gltf = this.gltf;
-                        // Add the original version so it remains cached
-                        gltf.extras.sourceVersion = ModelUtility.getAssetVersion(gltf);
-
-                        updateVersion(gltf);
-                        addDefaults(gltf);
-
-                        var options = {
-                            addBatchIdToGeneratedShaders: this._addBatchIdToGeneratedShaders
-                        };
-
-                        processModelMaterialsCommon(gltf, options);
-                        processPbrMaterials(gltf, options);
-                    }
-
-                    // Skip dequantizing in the shader if not encoded
-                    this._dequantizeInShader = this._dequantizeInShader && DracoLoader.hasExtension(this);
-
-                    // We do this after to make sure that the ids don't change
-                    addBuffersToLoadResources(this);
-                    parseTechniques(this);
-                    if (!this._loadRendererResourcesFromCache) {
-                        parseBufferViews(this);
-                        parseShaders(this);
-                        parsePrograms(this);
-                        parseTextures(this, context);
-                    }
-                    parseMaterials(this);
-                    parseMeshes(this);
-                    parseNodes(this);
-
-                    // Start draco decoding
-                    DracoLoader.parse(this, context);
-
-                    loadResources.initialized = true;
-                }
-
-                if (!loadResources.finishedDecoding()) {
-                    DracoLoader.decodeModel(this, context)
-                        .otherwise(ModelUtility.getFailedLoadFunction(this, 'model', this.basePath));
-                }
-
-                if (loadResources.finishedDecoding() && !loadResources.resourcesParsed) {
-                    this._boundingSphere = ModelUtility.computeBoundingSphere(this);
-                    this._initialRadius = this._boundingSphere.radius;
-
-                    DracoLoader.cacheDataForModel(this);
-
-                    loadResources.resourcesParsed = true;
-                }
-
-                if (loadResources.resourcesParsed &&
-                    loadResources.pendingShaderLoads === 0) {
-                    createResources(this, frameState);
-                }
-            }
-
-            if (loadResources.finished() ||
-                (incrementallyLoadTextures && loadResources.finishedEverythingButTextureCreation())) {
-                this._state = ModelState.LOADED;
-                justLoaded = true;
-            }
-        }
-
-        // Incrementally stream textures.
-        if (defined(loadResources) && (this._state === ModelState.LOADED)) {
-            if (incrementallyLoadTextures && !justLoaded) {
-                createResources(this, frameState);
-            }
-
-            if (loadResources.finished()) {
-                if (!this._keepPipelineExtras) {
-                    removePipelineExtras(this.gltf);
-                }
-
-                this._loadResources = undefined;  // Clear CPU memory since WebGL resources were created.
-
-                var resources = this._rendererResources;
-                var cachedResources = this._cachedRendererResources;
-
-                cachedResources.buffers = resources.buffers;
-                cachedResources.vertexArrays = resources.vertexArrays;
-                cachedResources.programs = resources.programs;
-                cachedResources.sourceShaders = resources.sourceShaders;
-                cachedResources.silhouettePrograms = resources.silhouettePrograms;
-                cachedResources.textures = resources.textures;
-                cachedResources.samplers = resources.samplers;
-                cachedResources.renderStates = resources.renderStates;
-                cachedResources.ready = true;
-
-                // The normal attribute name is required for silhouettes, so get it before the gltf JSON is released
-                this._normalAttributeName = ModelUtility.getAttributeOrUniformBySemantic(this.gltf, 'NORMAL');
-
-                // Vertex arrays are unique to this model, do not store in cache.
-                if (defined(this._precreatedAttributes)) {
-                    cachedResources.vertexArrays = {};
-                }
-
-                if (this.releaseGltfJson) {
-                    releaseCachedGltf(this);
-                }
-            }
-        }
-
-        var silhouette = hasSilhouette(this, frameState);
-        var translucent = isTranslucent(this);
-        var invisible = isInvisible(this);
-        var displayConditionPassed = defined(this.distanceDisplayCondition) ? distanceDisplayConditionVisible(this, frameState) : true;
-        var show = this.show && displayConditionPassed && (this.scale !== 0.0) && (!invisible || silhouette);
-
-        if ((show && this._state === ModelState.LOADED) || justLoaded) {
-            var animated = this.activeAnimations.update(frameState) || this._cesiumAnimationsDirty;
-            this._cesiumAnimationsDirty = false;
-            this._dirty = false;
-            var modelMatrix = this.modelMatrix;
-
-            var modeChanged = frameState.mode !== this._mode;
-            this._mode = frameState.mode;
-
-            // Model's model matrix needs to be updated
-            var modelTransformChanged = !Matrix4.equals(this._modelMatrix, modelMatrix) ||
-                (this._scale !== this.scale) ||
-                (this._minimumPixelSize !== this.minimumPixelSize) || (this.minimumPixelSize !== 0.0) || // Minimum pixel size changed or is enabled
-                (this._maximumScale !== this.maximumScale) ||
-                (this._heightReference !== this.heightReference) || this._heightChanged ||
-                modeChanged;
-
-            if (modelTransformChanged || justLoaded) {
-                Matrix4.clone(modelMatrix, this._modelMatrix);
-
-                updateClamping(this);
-
-                if (defined(this._clampedModelMatrix)) {
-                    modelMatrix = this._clampedModelMatrix;
-                }
-
-                this._scale = this.scale;
-                this._minimumPixelSize = this.minimumPixelSize;
-                this._maximumScale = this.maximumScale;
-                this._heightReference = this.heightReference;
-                this._heightChanged = false;
-
-                var scale = getScale(this, frameState);
-                var computedModelMatrix = this._computedModelMatrix;
-                Matrix4.multiplyByUniformScale(modelMatrix, scale, computedModelMatrix);
-                if (this._upAxis === Axis.Y) {
-                    Matrix4.multiplyTransformation(computedModelMatrix, Axis.Y_UP_TO_Z_UP, computedModelMatrix);
-                } else if (this._upAxis === Axis.X) {
-                    Matrix4.multiplyTransformation(computedModelMatrix, Axis.X_UP_TO_Z_UP, computedModelMatrix);
-                }
-                if (this.forwardAxis === Axis.Z) {
-                    // glTF 2.0 has a Z-forward convention that must be adapted here to X-forward.
-                    Matrix4.multiplyTransformation(computedModelMatrix, Axis.Z_UP_TO_X_UP, computedModelMatrix);
-                }
-            }
-
-            // Update modelMatrix throughout the graph as needed
-            if (animated || modelTransformChanged || justLoaded) {
-                updateNodeHierarchyModelMatrix(this, modelTransformChanged, justLoaded, frameState.mapProjection);
-                this._dirty = true;
-
-                if (animated || justLoaded) {
-                    // Apply skins if animation changed any node transforms
-                    applySkins(this);
-                }
-            }
-
-            if (this._perNodeShowDirty) {
-                this._perNodeShowDirty = false;
-                updatePerNodeShow(this);
-            }
-            updatePickIds(this, context);
-            updateWireframe(this);
-            updateShowBoundingVolume(this);
-            updateShadows(this);
-            updateClippingPlanes(this, frameState);
-
-            // Regenerate shaders if ClippingPlaneCollection state changed or it was removed
-            var clippingPlanes = this._clippingPlanes;
-            var currentClippingPlanesState = 0;
-            if (defined(clippingPlanes) && clippingPlanes.enabled) {
-                var clippingPlaneOffsetMatrix = defaultValue(this.clippingPlaneOffsetMatrix, modelMatrix);
-                Matrix4.multiply(context.uniformState.view3D, clippingPlaneOffsetMatrix, this._clippingPlaneModelViewMatrix);
-                currentClippingPlanesState = clippingPlanes.clippingPlanesState;
-            }
-
-            var shouldRegenerateShaders = this._clippingPlanesState !== currentClippingPlanesState;
-            this._clippingPlanesState = currentClippingPlanesState;
-
-            // Regenerate shaders if color shading changed from last update
-            var currentlyColorShadingEnabled = isColorShadingEnabled(this);
-            if (currentlyColorShadingEnabled !== this._colorShadingEnabled) {
-                this._colorShadingEnabled = currentlyColorShadingEnabled;
-                shouldRegenerateShaders = true;
-            }
-
-            if (shouldRegenerateShaders) {
-                regenerateShaders(this, frameState);
-            } else {
-                updateColor(this, frameState, false);
-                updateSilhouette(this, frameState, false);
-            }
-        }
-
-        if (justLoaded) {
-            // Called after modelMatrix update.
-            var model = this;
-            frameState.afterRender.push(function() {
-                model._ready = true;
-                model._readyPromise.resolve(model);
-            });
-            return;
-        }
-
-        // We don't check show at the top of the function since we
-        // want to be able to progressively load models when they are not shown,
-        // and then have them visible immediately when show is set to true.
-        if (show && !this._ignoreCommands) {
-            // PERFORMANCE_IDEA: This is terrible
-            var commandList = frameState.commandList;
-            var passes = frameState.passes;
-            var nodeCommands = this._nodeCommands;
-            var length = nodeCommands.length;
-            var i;
-            var nc;
-
-            var idl2D = frameState.mapProjection.ellipsoid.maximumRadius * CesiumMath.PI;
-            var boundingVolume;
-
-            if (passes.render || (passes.pick && this.allowPicking)) {
-                for (i = 0; i < length; ++i) {
-                    nc = nodeCommands[i];
-                    if (nc.show) {
-                        var command = translucent ? nc.translucentCommand : nc.command;
-                        command = silhouette ? nc.silhouetteModelCommand : command;
-                        commandList.push(command);
-                        boundingVolume = nc.command.boundingVolume;
-                        if (frameState.mode === SceneMode.SCENE2D &&
-                            (boundingVolume.center.y + boundingVolume.radius > idl2D || boundingVolume.center.y - boundingVolume.radius < idl2D)) {
-                            var command2D = translucent ? nc.translucentCommand2D : nc.command2D;
-                            command2D = silhouette ? nc.silhouetteModelCommand2D : command2D;
-                            commandList.push(command2D);
-                        }
-                    }
-                }
-
-                if (silhouette && !passes.pick) {
-                    // Render second silhouette pass
-                    for (i = 0; i < length; ++i) {
-                        nc = nodeCommands[i];
-                        if (nc.show) {
-                            commandList.push(nc.silhouetteColorCommand);
-                            boundingVolume = nc.command.boundingVolume;
-                            if (frameState.mode === SceneMode.SCENE2D &&
-                                (boundingVolume.center.y + boundingVolume.radius > idl2D || boundingVolume.center.y - boundingVolume.radius < idl2D)) {
-                                commandList.push(nc.silhouetteColorCommand2D);
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    };
 
     function destroyIfNotCached(rendererResources, cachedRendererResources) {
         if (rendererResources.programs !== cachedRendererResources.programs) {
@@ -4412,80 +4381,7 @@ define([
         updateSilhouette(model, frameState, true);
     }
 
-    /**
-     * Returns true if this object was destroyed; otherwise, false.
-     * <br /><br />
-     * If this object was destroyed, it should not be used; calling any function other than
-     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
-     *
-     * @returns {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
-     *
-     * @see Model#destroy
-     */
-    Model.prototype.isDestroyed = function() {
-        return false;
-    };
 
-    /**
-     * Destroys the WebGL resources held by this object.  Destroying an object allows for deterministic
-     * release of WebGL resources, instead of relying on the garbage collector to destroy this object.
-     * <br /><br />
-     * Once an object is destroyed, it should not be used; calling any function other than
-     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
-     * assign the return value (<code>undefined</code>) to the object as done in the example.
-     *
-     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
-     *
-     *
-     * @example
-     * model = model && model.destroy();
-     *
-     * @see Model#isDestroyed
-     */
-    Model.prototype.destroy = function() {
-        // Vertex arrays are unique to this model, destroy here.
-        if (defined(this._precreatedAttributes)) {
-            destroy(this._rendererResources.vertexArrays);
-        }
-
-        if (defined(this._removeUpdateHeightCallback)) {
-            this._removeUpdateHeightCallback();
-            this._removeUpdateHeightCallback = undefined;
-        }
-
-        if (defined(this._terrainProviderChangedCallback)) {
-            this._terrainProviderChangedCallback();
-            this._terrainProviderChangedCallback = undefined;
-        }
-
-        // Shaders modified for clipping and for color don't get cached, so destroy these manually
-        if (defined(this._cachedRendererResources)) {
-            destroyIfNotCached(this._rendererResources, this._cachedRendererResources);
-        }
-
-        this._rendererResources = undefined;
-        this._cachedRendererResources = this._cachedRendererResources && this._cachedRendererResources.release();
-        DracoLoader.destroyCachedDataForModel(this);
-
-        var pickIds = this._pickIds;
-        var length = pickIds.length;
-        for (var i = 0; i < length; ++i) {
-            pickIds[i].destroy();
-        }
-
-        releaseCachedGltf(this);
-        this._quantizedVertexShaders = undefined;
-
-        // Only destroy the ClippingPlaneCollection if this is the owner - if this model is part of a Cesium3DTileset,
-        // _clippingPlanes references a ClippingPlaneCollection that this model does not own.
-        var clippingPlaneCollection = this._clippingPlanes;
-        if (defined(clippingPlaneCollection) && !clippingPlaneCollection.isDestroyed() && clippingPlaneCollection.owner === this) {
-            clippingPlaneCollection.destroy();
-        }
-        this._clippingPlanes = undefined;
-
-        return destroyObject(this);
-    };
 
     // exposed for testing
     Model._getClippingFunction = getClippingFunction;

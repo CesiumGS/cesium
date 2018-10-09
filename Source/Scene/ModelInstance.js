@@ -6,14 +6,16 @@ define([
         Matrix4) {
     'use strict';
 
-    /**
-     * @private
-     */
-    function ModelInstance(collection, modelMatrix, instanceId) {
-        this.primitive = collection;
-        this._modelMatrix = Matrix4.clone(modelMatrix);
-        this._instanceId = instanceId;
-    }
+        /**
+             * @private
+             */
+        class ModelInstance {
+            constructor(collection, modelMatrix, instanceId) {
+                this.primitive = collection;
+                this._modelMatrix = Matrix4.clone(modelMatrix);
+                this._instanceId = instanceId;
+            }
+        }
 
     defineProperties(ModelInstance.prototype, {
         instanceId : {

@@ -16,101 +16,123 @@ define([
         Resource) {
     'use strict';
 
-    /**
-     * Provides imagery to be displayed on the surface of an ellipsoid.  This type describes an
-     * interface and is not intended to be instantiated directly.
-     *
-     * @alias ImageryProvider
-     * @constructor
-     *
-     * @see ArcGisMapServerImageryProvider
-     * @see BingMapsImageryProvider
-     * @see createOpenStreetMapImageryProvider
-     * @see createTileMapServiceImageryProvider
-     * @see GoogleEarthEnterpriseImageryProvider
-     * @see GoogleEarthEnterpriseMapsProvider
-     * @see GridImageryProvider
-     * @see MapboxImageryProvider
-     * @see SingleTileImageryProvider
-     * @see TileCoordinatesImageryProvider
-     * @see UrlTemplateImageryProvider
-     * @see WebMapServiceImageryProvider
-     * @see WebMapTileServiceImageryProvider
-     *
-     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Imagery%20Layers.html|Cesium Sandcastle Imagery Layers Demo}
-     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Imagery%20Layers%20Manipulation.html|Cesium Sandcastle Imagery Manipulation Demo}
-     */
-    function ImageryProvider() {
         /**
-         * The default alpha blending value of this provider, with 0.0 representing fully transparent and
-         * 1.0 representing fully opaque.
-         *
-         * @type {Number}
-         * @default undefined
-         */
-        this.defaultAlpha = undefined;
-
-        /**
-         * The default brightness of this provider.  1.0 uses the unmodified imagery color.  Less than 1.0
-         * makes the imagery darker while greater than 1.0 makes it brighter.
-         *
-         * @type {Number}
-         * @default undefined
-         */
-        this.defaultBrightness = undefined;
-
-        /**
-         * The default contrast of this provider.  1.0 uses the unmodified imagery color.  Less than 1.0 reduces
-         * the contrast while greater than 1.0 increases it.
-         *
-         * @type {Number}
-         * @default undefined
-         */
-        this.defaultContrast = undefined;
-
-        /**
-         * The default hue of this provider in radians. 0.0 uses the unmodified imagery color.
-         *
-         * @type {Number}
-         * @default undefined
-         */
-        this.defaultHue = undefined;
-
-        /**
-         * The default saturation of this provider. 1.0 uses the unmodified imagery color. Less than 1.0 reduces the
-         * saturation while greater than 1.0 increases it.
-         *
-         * @type {Number}
-         * @default undefined
-         */
-        this.defaultSaturation = undefined;
-
-        /**
-         * The default gamma correction to apply to this provider.  1.0 uses the unmodified imagery color.
-         *
-         * @type {Number}
-         * @default undefined
-         */
-        this.defaultGamma = undefined;
-
-        /**
-         * The default texture minification filter to apply to this provider.
-         *
-         * @type {TextureMinificationFilter}
-         * @default undefined
-         */
-        this.defaultMinificationFilter = undefined;
-
-        /**
-         * The default texture magnification filter to apply to this provider.
-         *
-         * @type {TextureMagnificationFilter}
-         * @default undefined
-         */
-        this.defaultMagnificationFilter = undefined;
-
-        DeveloperError.throwInstantiationError();
-    }
+             * Provides imagery to be displayed on the surface of an ellipsoid.  This type describes an
+             * interface and is not intended to be instantiated directly.
+             *
+             * @alias ImageryProvider
+             * @constructor
+             *
+             * @see ArcGisMapServerImageryProvider
+             * @see BingMapsImageryProvider
+             * @see createOpenStreetMapImageryProvider
+             * @see createTileMapServiceImageryProvider
+             * @see GoogleEarthEnterpriseImageryProvider
+             * @see GoogleEarthEnterpriseMapsProvider
+             * @see GridImageryProvider
+             * @see MapboxImageryProvider
+             * @see SingleTileImageryProvider
+             * @see TileCoordinatesImageryProvider
+             * @see UrlTemplateImageryProvider
+             * @see WebMapServiceImageryProvider
+             * @see WebMapTileServiceImageryProvider
+             *
+             * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Imagery%20Layers.html|Cesium Sandcastle Imagery Layers Demo}
+             * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Imagery%20Layers%20Manipulation.html|Cesium Sandcastle Imagery Manipulation Demo}
+             */
+        class ImageryProvider {
+            constructor() {
+                /**
+                 * The default alpha blending value of this provider, with 0.0 representing fully transparent and
+                 * 1.0 representing fully opaque.
+                 *
+                 * @type {Number}
+                 * @default undefined
+                 */
+                this.defaultAlpha = undefined;
+                /**
+                 * The default brightness of this provider.  1.0 uses the unmodified imagery color.  Less than 1.0
+                 * makes the imagery darker while greater than 1.0 makes it brighter.
+                 *
+                 * @type {Number}
+                 * @default undefined
+                 */
+                this.defaultBrightness = undefined;
+                /**
+                 * The default contrast of this provider.  1.0 uses the unmodified imagery color.  Less than 1.0 reduces
+                 * the contrast while greater than 1.0 increases it.
+                 *
+                 * @type {Number}
+                 * @default undefined
+                 */
+                this.defaultContrast = undefined;
+                /**
+                 * The default hue of this provider in radians. 0.0 uses the unmodified imagery color.
+                 *
+                 * @type {Number}
+                 * @default undefined
+                 */
+                this.defaultHue = undefined;
+                /**
+                 * The default saturation of this provider. 1.0 uses the unmodified imagery color. Less than 1.0 reduces the
+                 * saturation while greater than 1.0 increases it.
+                 *
+                 * @type {Number}
+                 * @default undefined
+                 */
+                this.defaultSaturation = undefined;
+                /**
+                 * The default gamma correction to apply to this provider.  1.0 uses the unmodified imagery color.
+                 *
+                 * @type {Number}
+                 * @default undefined
+                 */
+                this.defaultGamma = undefined;
+                /**
+                 * The default texture minification filter to apply to this provider.
+                 *
+                 * @type {TextureMinificationFilter}
+                 * @default undefined
+                 */
+                this.defaultMinificationFilter = undefined;
+                /**
+                 * The default texture magnification filter to apply to this provider.
+                 *
+                 * @type {TextureMagnificationFilter}
+                 * @default undefined
+                 */
+                this.defaultMagnificationFilter = undefined;
+                DeveloperError.throwInstantiationError();
+            }
+            /**
+                 * Loads an image from a given URL.  If the server referenced by the URL already has
+                 * too many requests pending, this function will instead return undefined, indicating
+                 * that the request should be retried later.
+                 *
+                 * @param {ImageryProvider} imageryProvider The imagery provider for the URL.
+                 * @param {Resource|String} url The URL of the image.
+                 * @returns {Promise.<Image|Canvas>|undefined} A promise for the image that will resolve when the image is available, or
+                 *          undefined if there are too many active requests to the server, and the request
+                 *          should be retried later.  The resolved image may be either an
+                 *          Image or a Canvas DOM object.
+                 */
+            static loadImage(imageryProvider, url) {
+                //>>includeStart('debug', pragmas.debug);
+                Check.defined('url', url);
+                //>>includeEnd('debug');
+                var resource = Resource.createIfNeeded(url);
+                if (ktxRegex.test(resource)) {
+                    return loadKTX(resource);
+                }
+                else if (crnRegex.test(resource)) {
+                    return loadCRN(resource);
+                }
+                else if (defined(imageryProvider.tileDiscardPolicy)) {
+                    return resource.fetchImage(true);
+                }
+                return resource.fetchImage();
+            }
+        }
 
     defineProperties(ImageryProvider.prototype, {
         /**
@@ -320,35 +342,6 @@ define([
     var ktxRegex = /\.ktx$/i;
     var crnRegex = /\.crn$/i;
 
-    /**
-     * Loads an image from a given URL.  If the server referenced by the URL already has
-     * too many requests pending, this function will instead return undefined, indicating
-     * that the request should be retried later.
-     *
-     * @param {ImageryProvider} imageryProvider The imagery provider for the URL.
-     * @param {Resource|String} url The URL of the image.
-     * @returns {Promise.<Image|Canvas>|undefined} A promise for the image that will resolve when the image is available, or
-     *          undefined if there are too many active requests to the server, and the request
-     *          should be retried later.  The resolved image may be either an
-     *          Image or a Canvas DOM object.
-     */
-    ImageryProvider.loadImage = function(imageryProvider, url) {
-        //>>includeStart('debug', pragmas.debug);
-        Check.defined('url', url);
-        //>>includeEnd('debug');
-
-        var resource = Resource.createIfNeeded(url);
-
-        if (ktxRegex.test(resource)) {
-            return loadKTX(resource);
-        } else if (crnRegex.test(resource)) {
-            return loadCRN(resource);
-        } else if (defined(imageryProvider.tileDiscardPolicy)) {
-            return resource.fetchImage(true);
-        }
-
-        return resource.fetchImage();
-    };
 
     return ImageryProvider;
 });

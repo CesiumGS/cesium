@@ -60,139 +60,199 @@ define([
         WMTS: createFactory(WebMapTileServiceImageryProvider)
     };
 
-    /**
-     * Provides tiled imagery using the Cesium ion REST API.
-     *
-     * @alias IonImageryProvider
-     * @constructor
-     *
-     * @param {Object} options Object with the following properties:
-     * @param {Number} options.assetId An ion imagery asset ID;
-     * @param {String} [options.accessToken=Ion.defaultAccessToken] The access token to use.
-     * @param {String|Resource} [options.server=Ion.defaultServer] The resource to the Cesium ion API server.
-     *
-     * @example
-     * viewer.imageryLayers.addImageryProvider(new Cesium.IonImageryProvider({ assetId : 23489024 }));
-     */
-    function IonImageryProvider(options) {
-        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-
-        //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.number('options.assetId', options.assetId);
-        //>>includeEnd('debug');
-
-        var endpointResource = IonResource._createEndpointResource(options.assetId, options);
-
         /**
-         * The default alpha blending value of this provider, with 0.0 representing fully transparent and
-         * 1.0 representing fully opaque.
-         *
-         * @type {Number}
-         * @default undefined
-         */
-        this.defaultAlpha = undefined;
-
-        /**
-         * The default brightness of this provider.  1.0 uses the unmodified imagery color.  Less than 1.0
-         * makes the imagery darker while greater than 1.0 makes it brighter.
-         *
-         * @type {Number}
-         * @default undefined
-         */
-        this.defaultBrightness = undefined;
-
-        /**
-         * The default contrast of this provider.  1.0 uses the unmodified imagery color.  Less than 1.0 reduces
-         * the contrast while greater than 1.0 increases it.
-         *
-         * @type {Number}
-         * @default undefined
-         */
-        this.defaultContrast = undefined;
-
-        /**
-         * The default hue of this provider in radians. 0.0 uses the unmodified imagery color.
-         *
-         * @type {Number}
-         * @default undefined
-         */
-        this.defaultHue = undefined;
-
-        /**
-         * The default saturation of this provider. 1.0 uses the unmodified imagery color. Less than 1.0 reduces the
-         * saturation while greater than 1.0 increases it.
-         *
-         * @type {Number}
-         * @default undefined
-         */
-        this.defaultSaturation = undefined;
-
-        /**
-         * The default gamma correction to apply to this provider.  1.0 uses the unmodified imagery color.
-         *
-         * @type {Number}
-         * @default undefined
-         */
-        this.defaultGamma = undefined;
-
-        /**
-         * The default texture minification filter to apply to this provider.
-         *
-         * @type {TextureMinificationFilter}
-         * @default undefined
-         */
-        this.defaultMinificationFilter = undefined;
-
-        /**
-         * The default texture magnification filter to apply to this provider.
-         *
-         * @type {TextureMagnificationFilter}
-         * @default undefined
-         */
-        this.defaultMagnificationFilter = undefined;
-
-        this._ready = false;
-        this._tileCredits = undefined;
-        this._errorEvent = new Event();
-
-        var that = this;
-        this._readyPromise = endpointResource.fetchJson()
-            .then(function(endpoint) {
-                if (endpoint.type !== 'IMAGERY') {
-                    return when.reject(new RuntimeError('Cesium ion asset ' + options.assetId + ' is not an imagery asset.'));
-                }
-
-                var imageryProvider;
-                var externalType = endpoint.externalType;
-                if (!defined(externalType)) {
-                    imageryProvider = createTileMapServiceImageryProvider({
-                        url: new IonResource(endpoint, endpointResource)
+             * Provides tiled imagery using the Cesium ion REST API.
+             *
+             * @alias IonImageryProvider
+             * @constructor
+             *
+             * @param {Object} options Object with the following properties:
+             * @param {Number} options.assetId An ion imagery asset ID;
+             * @param {String} [options.accessToken=Ion.defaultAccessToken] The access token to use.
+             * @param {String|Resource} [options.server=Ion.defaultServer] The resource to the Cesium ion API server.
+             *
+             * @example
+             * viewer.imageryLayers.addImageryProvider(new Cesium.IonImageryProvider({ assetId : 23489024 }));
+             */
+        class IonImageryProvider {
+            constructor(options) {
+                options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+                //>>includeStart('debug', pragmas.debug);
+                Check.typeOf.number('options.assetId', options.assetId);
+                //>>includeEnd('debug');
+                var endpointResource = IonResource._createEndpointResource(options.assetId, options);
+                /**
+                 * The default alpha blending value of this provider, with 0.0 representing fully transparent and
+                 * 1.0 representing fully opaque.
+                 *
+                 * @type {Number}
+                 * @default undefined
+                 */
+                this.defaultAlpha = undefined;
+                /**
+                 * The default brightness of this provider.  1.0 uses the unmodified imagery color.  Less than 1.0
+                 * makes the imagery darker while greater than 1.0 makes it brighter.
+                 *
+                 * @type {Number}
+                 * @default undefined
+                 */
+                this.defaultBrightness = undefined;
+                /**
+                 * The default contrast of this provider.  1.0 uses the unmodified imagery color.  Less than 1.0 reduces
+                 * the contrast while greater than 1.0 increases it.
+                 *
+                 * @type {Number}
+                 * @default undefined
+                 */
+                this.defaultContrast = undefined;
+                /**
+                 * The default hue of this provider in radians. 0.0 uses the unmodified imagery color.
+                 *
+                 * @type {Number}
+                 * @default undefined
+                 */
+                this.defaultHue = undefined;
+                /**
+                 * The default saturation of this provider. 1.0 uses the unmodified imagery color. Less than 1.0 reduces the
+                 * saturation while greater than 1.0 increases it.
+                 *
+                 * @type {Number}
+                 * @default undefined
+                 */
+                this.defaultSaturation = undefined;
+                /**
+                 * The default gamma correction to apply to this provider.  1.0 uses the unmodified imagery color.
+                 *
+                 * @type {Number}
+                 * @default undefined
+                 */
+                this.defaultGamma = undefined;
+                /**
+                 * The default texture minification filter to apply to this provider.
+                 *
+                 * @type {TextureMinificationFilter}
+                 * @default undefined
+                 */
+                this.defaultMinificationFilter = undefined;
+                /**
+                 * The default texture magnification filter to apply to this provider.
+                 *
+                 * @type {TextureMagnificationFilter}
+                 * @default undefined
+                 */
+                this.defaultMagnificationFilter = undefined;
+                this._ready = false;
+                this._tileCredits = undefined;
+                this._errorEvent = new Event();
+                var that = this;
+                this._readyPromise = endpointResource.fetchJson()
+                    .then(function(endpoint) {
+                        if (endpoint.type !== 'IMAGERY') {
+                            return when.reject(new RuntimeError('Cesium ion asset ' + options.assetId + ' is not an imagery asset.'));
+                        }
+                        var imageryProvider;
+                        var externalType = endpoint.externalType;
+                        if (!defined(externalType)) {
+                            imageryProvider = createTileMapServiceImageryProvider({
+                                url: new IonResource(endpoint, endpointResource)
+                            });
+                        }
+                        else {
+                            var factory = ImageryProviderMapping[externalType];
+                            if (!defined(factory)) {
+                                return when.reject(new RuntimeError('Unrecognized Cesium ion imagery type: ' + externalType));
+                            }
+                            imageryProvider = factory(endpoint.options);
+                        }
+                        that._tileCredits = IonResource.getCreditsFromEndpoint(endpoint, endpointResource);
+                        imageryProvider.errorEvent.addEventListener(function(tileProviderError) {
+                            //Propagate the errorEvent but set the provider to this instance instead
+                            //of the inner instance.
+                            tileProviderError.provider = that;
+                            that._errorEvent.raiseEvent(tileProviderError);
+                        });
+                        that._imageryProvider = imageryProvider;
+                        return imageryProvider.readyPromise.then(function() {
+                            that._ready = true;
+                            return true;
+                        });
                     });
-                } else {
-                    var factory = ImageryProviderMapping[externalType];
-
-                    if (!defined(factory)) {
-                        return when.reject(new RuntimeError('Unrecognized Cesium ion imagery type: ' + externalType));
-                    }
-                    imageryProvider = factory(endpoint.options);
+            }
+            /**
+                 * Gets the credits to be displayed when a given tile is displayed.
+                 * @function
+                 *
+                 * @param {Number} x The tile X coordinate.
+                 * @param {Number} y The tile Y coordinate.
+                 * @param {Number} level The tile level;
+                 * @returns {Credit[]} The credits to be displayed when the tile is displayed.
+                 *
+                 * @exception {DeveloperError} <code>getTileCredits</code> must not be called before the imagery provider is ready.
+                 */
+            getTileCredits(x, y, level) {
+                //>>includeStart('debug', pragmas.debug);
+                if (!this._ready) {
+                    throw new DeveloperError('getTileCredits must not be called before the imagery provider is ready.');
                 }
-
-                that._tileCredits = IonResource.getCreditsFromEndpoint(endpoint, endpointResource);
-
-                imageryProvider.errorEvent.addEventListener(function(tileProviderError) {
-                    //Propagate the errorEvent but set the provider to this instance instead
-                    //of the inner instance.
-                    tileProviderError.provider = that;
-                    that._errorEvent.raiseEvent(tileProviderError);
-                });
-
-                that._imageryProvider = imageryProvider;
-                return imageryProvider.readyPromise.then(function() {
-                    that._ready = true;
-                    return true;
-                });
-            });
-    }
+                //>>includeEnd('debug');
+                var innerCredits = this._imageryProvider.getTileCredits(x, y, level);
+                if (!defined(innerCredits)) {
+                    return this._tileCredits;
+                }
+                return this._tileCredits.concat(innerCredits);
+            }
+            /**
+                 * Requests the image for a given tile.  This function should
+                 * not be called before {@link IonImageryProvider#ready} returns true.
+                 * @function
+                 *
+                 * @param {Number} x The tile X coordinate.
+                 * @param {Number} y The tile Y coordinate.
+                 * @param {Number} level The tile level.
+                 * @param {Request} [request] The request object. Intended for internal use only.
+                 * @returns {Promise.<Image|Canvas>|undefined} A promise for the image that will resolve when the image is available, or
+                 *          undefined if there are too many active requests to the server, and the request
+                 *          should be retried later.  The resolved image may be either an
+                 *          Image or a Canvas DOM object.
+                 *
+                 * @exception {DeveloperError} <code>requestImage</code> must not be called before the imagery provider is ready.
+                 */
+            requestImage(x, y, level, request) {
+                //>>includeStart('debug', pragmas.debug);
+                if (!this._ready) {
+                    throw new DeveloperError('requestImage must not be called before the imagery provider is ready.');
+                }
+                //>>includeEnd('debug');
+                return this._imageryProvider.requestImage(x, y, level, request);
+            }
+            /**
+                 * Asynchronously determines what features, if any, are located at a given longitude and latitude within
+                 * a tile.  This function should not be called before {@link IonImageryProvider#ready} returns true.
+                 * This function is optional, so it may not exist on all ImageryProviders.
+                 *
+                 * @function
+                 *
+                 * @param {Number} x The tile X coordinate.
+                 * @param {Number} y The tile Y coordinate.
+                 * @param {Number} level The tile level.
+                 * @param {Number} longitude The longitude at which to pick features.
+                 * @param {Number} latitude  The latitude at which to pick features.
+                 * @return {Promise.<ImageryLayerFeatureInfo[]>|undefined} A promise for the picked features that will resolve when the asynchronous
+                 *                   picking completes.  The resolved value is an array of {@link ImageryLayerFeatureInfo}
+                 *                   instances.  The array may be empty if no features are found at the given location.
+                 *                   It may also be undefined if picking is not supported.
+                 *
+                 * @exception {DeveloperError} <code>pickFeatures</code> must not be called before the imagery provider is ready.
+                 */
+            pickFeatures(x, y, level, longitude, latitude) {
+                //>>includeStart('debug', pragmas.debug);
+                if (!this._ready) {
+                    throw new DeveloperError('pickFeatures must not be called before the imagery provider is ready.');
+                }
+                //>>includeEnd('debug');
+                return this._imageryProvider.pickFeatures(x, y, level, longitude, latitude);
+            }
+        }
 
     defineProperties(IonImageryProvider.prototype, {
         /**
@@ -406,84 +466,8 @@ define([
         }
     });
 
-    /**
-     * Gets the credits to be displayed when a given tile is displayed.
-     * @function
-     *
-     * @param {Number} x The tile X coordinate.
-     * @param {Number} y The tile Y coordinate.
-     * @param {Number} level The tile level;
-     * @returns {Credit[]} The credits to be displayed when the tile is displayed.
-     *
-     * @exception {DeveloperError} <code>getTileCredits</code> must not be called before the imagery provider is ready.
-     */
-    IonImageryProvider.prototype.getTileCredits = function(x, y, level) {
-        //>>includeStart('debug', pragmas.debug);
-        if (!this._ready) {
-            throw new DeveloperError('getTileCredits must not be called before the imagery provider is ready.');
-        }
-        //>>includeEnd('debug');
 
-        var innerCredits = this._imageryProvider.getTileCredits(x, y, level);
-        if (!defined(innerCredits)) {
-            return this._tileCredits;
-        }
 
-        return this._tileCredits.concat(innerCredits);
-    };
-
-    /**
-     * Requests the image for a given tile.  This function should
-     * not be called before {@link IonImageryProvider#ready} returns true.
-     * @function
-     *
-     * @param {Number} x The tile X coordinate.
-     * @param {Number} y The tile Y coordinate.
-     * @param {Number} level The tile level.
-     * @param {Request} [request] The request object. Intended for internal use only.
-     * @returns {Promise.<Image|Canvas>|undefined} A promise for the image that will resolve when the image is available, or
-     *          undefined if there are too many active requests to the server, and the request
-     *          should be retried later.  The resolved image may be either an
-     *          Image or a Canvas DOM object.
-     *
-     * @exception {DeveloperError} <code>requestImage</code> must not be called before the imagery provider is ready.
-     */
-    IonImageryProvider.prototype.requestImage = function(x, y, level, request) {
-        //>>includeStart('debug', pragmas.debug);
-        if (!this._ready) {
-            throw new DeveloperError('requestImage must not be called before the imagery provider is ready.');
-        }
-        //>>includeEnd('debug');
-        return this._imageryProvider.requestImage(x, y, level, request);
-    };
-
-    /**
-     * Asynchronously determines what features, if any, are located at a given longitude and latitude within
-     * a tile.  This function should not be called before {@link IonImageryProvider#ready} returns true.
-     * This function is optional, so it may not exist on all ImageryProviders.
-     *
-     * @function
-     *
-     * @param {Number} x The tile X coordinate.
-     * @param {Number} y The tile Y coordinate.
-     * @param {Number} level The tile level.
-     * @param {Number} longitude The longitude at which to pick features.
-     * @param {Number} latitude  The latitude at which to pick features.
-     * @return {Promise.<ImageryLayerFeatureInfo[]>|undefined} A promise for the picked features that will resolve when the asynchronous
-     *                   picking completes.  The resolved value is an array of {@link ImageryLayerFeatureInfo}
-     *                   instances.  The array may be empty if no features are found at the given location.
-     *                   It may also be undefined if picking is not supported.
-     *
-     * @exception {DeveloperError} <code>pickFeatures</code> must not be called before the imagery provider is ready.
-     */
-    IonImageryProvider.prototype.pickFeatures = function(x, y, level, longitude, latitude) {
-        //>>includeStart('debug', pragmas.debug);
-        if (!this._ready) {
-            throw new DeveloperError('pickFeatures must not be called before the imagery provider is ready.');
-        }
-        //>>includeEnd('debug');
-        return this._imageryProvider.pickFeatures(x, y, level, longitude, latitude);
-    };
 
     return IonImageryProvider;
 });

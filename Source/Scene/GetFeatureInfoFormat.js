@@ -12,68 +12,71 @@ define([
         ImageryLayerFeatureInfo) {
     'use strict';
 
-    /**
-     * Describes the format in which to request GetFeatureInfo from a Web Map Service (WMS) server.
-     *
-     * @alias GetFeatureInfoFormat
-     * @constructor
-     *
-     * @param {String} type The type of response to expect from a GetFeatureInfo request.  Valid
-     *        values are 'json', 'xml', 'html', or 'text'.
-     * @param {String} [format] The info format to request from the WMS server.  This is usually a
-     *        MIME type such as 'application/json' or text/xml'.  If this parameter is not specified, the provider will request 'json'
-     *        using 'application/json', 'xml' using 'text/xml', 'html' using 'text/html', and 'text' using 'text/plain'.
-     * @param {Function} [callback] A function to invoke with the GetFeatureInfo response from the WMS server
-     *        in order to produce an array of picked {@link ImageryLayerFeatureInfo} instances.  If this parameter is not specified,
-     *        a default function for the type of response is used.
-     */
-    function GetFeatureInfoFormat(type, format, callback) {
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(type)) {
-            throw new DeveloperError('type is required.');
+        /**
+             * Describes the format in which to request GetFeatureInfo from a Web Map Service (WMS) server.
+             *
+             * @alias GetFeatureInfoFormat
+             * @constructor
+             *
+             * @param {String} type The type of response to expect from a GetFeatureInfo request.  Valid
+             *        values are 'json', 'xml', 'html', or 'text'.
+             * @param {String} [format] The info format to request from the WMS server.  This is usually a
+             *        MIME type such as 'application/json' or text/xml'.  If this parameter is not specified, the provider will request 'json'
+             *        using 'application/json', 'xml' using 'text/xml', 'html' using 'text/html', and 'text' using 'text/plain'.
+             * @param {Function} [callback] A function to invoke with the GetFeatureInfo response from the WMS server
+             *        in order to produce an array of picked {@link ImageryLayerFeatureInfo} instances.  If this parameter is not specified,
+             *        a default function for the type of response is used.
+             */
+        class GetFeatureInfoFormat {
+            constructor(type, format, callback) {
+                //>>includeStart('debug', pragmas.debug);
+                if (!defined(type)) {
+                    throw new DeveloperError('type is required.');
+                }
+                //>>includeEnd('debug');
+                this.type = type;
+                if (!defined(format)) {
+                    if (type === 'json') {
+                        format = 'application/json';
+                    }
+                    else if (type === 'xml') {
+                        format = 'text/xml';
+                    }
+                    else if (type === 'html') {
+                        format = 'text/html';
+                    }
+                    else if (type === 'text') {
+                        format = 'text/plain';
+                    }
+                    //>>includeStart('debug', pragmas.debug);
+                    else {
+                        throw new DeveloperError('format is required when type is not "json", "xml", "html", or "text".');
+                    }
+                    //>>includeEnd('debug');
+                }
+                this.format = format;
+                if (!defined(callback)) {
+                    if (type === 'json') {
+                        callback = geoJsonToFeatureInfo;
+                    }
+                    else if (type === 'xml') {
+                        callback = xmlToFeatureInfo;
+                    }
+                    else if (type === 'html') {
+                        callback = textToFeatureInfo;
+                    }
+                    else if (type === 'text') {
+                        callback = textToFeatureInfo;
+                    }
+                    //>>includeStart('debug', pragmas.debug);
+                    else {
+                        throw new DeveloperError('callback is required when type is not "json", "xml", "html", or "text".');
+                    }
+                    //>>includeEnd('debug');
+                }
+                this.callback = callback;
+            }
         }
-        //>>includeEnd('debug');
-
-        this.type = type;
-
-        if (!defined(format)) {
-            if (type === 'json') {
-                format = 'application/json';
-            } else if (type === 'xml') {
-                format = 'text/xml';
-            } else if (type === 'html') {
-                format = 'text/html';
-            } else if (type === 'text') {
-                format = 'text/plain';
-            }
-            //>>includeStart('debug', pragmas.debug);
-            else {
-                throw new DeveloperError('format is required when type is not "json", "xml", "html", or "text".');
-            }
-            //>>includeEnd('debug');
-        }
-
-        this.format = format;
-
-        if (!defined(callback)) {
-            if (type === 'json') {
-                callback = geoJsonToFeatureInfo;
-            } else if (type === 'xml') {
-                callback = xmlToFeatureInfo;
-            } else if (type === 'html') {
-                callback = textToFeatureInfo;
-            } else if (type === 'text') {
-                callback = textToFeatureInfo;
-            }
-            //>>includeStart('debug', pragmas.debug);
-            else {
-                throw new DeveloperError('callback is required when type is not "json", "xml", "html", or "text".');
-            }
-            //>>includeEnd('debug');
-        }
-
-        this.callback = callback;
-    }
 
     function geoJsonToFeatureInfo(json) {
         var result = [];
