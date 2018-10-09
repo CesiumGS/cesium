@@ -185,6 +185,10 @@ define([
         this.clippingPlanes = undefined;
         this.isClipped = false;
         this.clippingPlanesDirty = false;
+        // If defined, use this matrix to position the clipping planes instead of the modelMatrix.
+        // This is so that when point clouds are part of a tileset they all get clipped relative
+        // to the root tile.
+        this.clippingPlaneOffsetMatrix = undefined;
 
         this.attenuation = false;
         this._attenuation = false;
@@ -819,8 +823,10 @@ define([
                 if (!defined(clippingPlanes)) {
                     return Matrix4.IDENTITY;
                 }
-                var modelViewMatrix = Matrix4.multiply(context.uniformState.view3D, pointCloud._modelMatrix, scratchClippingPlaneMatrix);
-                return Matrix4.multiply(modelViewMatrix, clippingPlanes.modelMatrix, scratchClippingPlaneMatrix);
+
+                var clippingPlaneOffsetMatrix = defaultValue(pointCloud.clippingPlaneOffsetMatrix, pointCloud._modelMatrix);
+                Matrix4.multiply(context.uniformState.view3D, clippingPlaneOffsetMatrix, scratchClippingPlaneMatrix);
+                return Matrix4.multiply(scratchClippingPlaneMatrix, clippingPlanes.modelMatrix, scratchClippingPlaneMatrix);
             }
         };
 

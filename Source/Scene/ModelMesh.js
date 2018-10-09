@@ -32,10 +32,7 @@ define([
 
     defineProperties(ModelMesh.prototype, {
         /**
-         * The value of the <code>name</code> property of this mesh.  This is the
-         * name assigned by the artist when the asset is created.  This can be
-         * different than the name of the mesh property ({@link ModelMesh#id}),
-         * which is internal to glTF.
+         * The value of the <code>name</code> property of this mesh.
          *
          * @memberof ModelMesh.prototype
          *
@@ -49,10 +46,7 @@ define([
         },
 
         /**
-         * The name of the glTF JSON property for this mesh.  This is guaranteed
-         * to be unique among all meshes.  It may not match the mesh's <code>
-         * name</code> property (@link ModelMesh#name), which is assigned by
-         * the artist when the asset is created.
+         * The index of the mesh.
          *
          * @memberof ModelMesh.prototype
          *

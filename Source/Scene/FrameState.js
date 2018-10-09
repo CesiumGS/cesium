@@ -159,7 +159,14 @@ define([
              * @type {Boolean}
              * @default false
              */
-            postProcess : false
+            postProcess : false,
+
+            /**
+             * <code>true</code> if the primitive should update for an offscreen pass, <code>false</code> otherwise.
+             * @type {Boolean}
+             * @default false
+             */
+            offscreen : false
         };
 
         /**
@@ -339,14 +346,6 @@ define([
          * @default false
          */
         this.useLogDepth = false;
-
-        /**
-         * Whether or not the scene's logarithmic depth buffer usage changed since last frame.
-         *
-         * @type {Boolean}
-         * @default false
-         */
-        this.useLogDepthDirty = false;
     }
 
     /**
