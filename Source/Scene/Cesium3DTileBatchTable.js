@@ -73,66 +73,573 @@ define([
     var DEFAULT_COLOR_VALUE = Color.WHITE;
     var DEFAULT_SHOW_VALUE = true;
 
-    /**
-     * @private
-     */
-    function Cesium3DTileBatchTable(content, featuresLength, batchTableJson, batchTableBinary, colorChangedCallback) {
         /**
-         * @readonly
-         */
-        this.featuresLength = featuresLength;
-
-        this._translucentFeaturesLength = 0; // Number of features in the tile that are translucent
-
-        var extensions;
-        if (defined(batchTableJson)) {
-            extensions = batchTableJson.extensions;
+             * @private
+             */
+        class Cesium3DTileBatchTable {
+            constructor(content, featuresLength, batchTableJson, batchTableBinary, colorChangedCallback) {
+                /**
+                 * @readonly
+                 */
+                this.featuresLength = featuresLength;
+                this._translucentFeaturesLength = 0; // Number of features in the tile that are translucent
+                var extensions;
+                if (defined(batchTableJson)) {
+                    extensions = batchTableJson.extensions;
+                }
+                this._extensions = defaultValue(extensions, {});
+                var properties = initializeProperties(batchTableJson);
+                this._properties = properties;
+                this._batchTableHierarchy = initializeHierarchy(this, batchTableJson, batchTableBinary);
+                this._batchTableBinaryProperties = getBinaryProperties(featuresLength, properties, batchTableBinary);
+                // PERFORMANCE_IDEA: These parallel arrays probably generate cache misses in get/set color/show
+                // and use A LOT of memory.  How can we use less memory?
+                this._showAlphaProperties = undefined; // [Show (0 or 255), Alpha (0 to 255)] property for each feature
+                this._batchValues = undefined; // Per-feature RGBA (A is based on the color's alpha and feature's show property)
+                this._batchValuesDirty = false;
+                this._batchTexture = undefined;
+                this._defaultTexture = undefined;
+                this._pickTexture = undefined;
+                this._pickIds = [];
+                this._content = content;
+                this._colorChangedCallback = colorChangedCallback;
+                // Dimensions for batch and pick textures
+                var textureDimensions;
+                var textureStep;
+                if (featuresLength > 0) {
+                    // PERFORMANCE_IDEA: this can waste memory in the last row in the uncommon case
+                    // when more than one row is needed (e.g., > 16K features in one tile)
+                    var width = Math.min(featuresLength, ContextLimits.maximumTextureSize);
+                    var height = Math.ceil(featuresLength / ContextLimits.maximumTextureSize);
+                    var stepX = 1.0 / width;
+                    var centerX = stepX * 0.5;
+                    var stepY = 1.0 / height;
+                    var centerY = stepY * 0.5;
+                    textureDimensions = new Cartesian2(width, height);
+                    textureStep = new Cartesian4(stepX, centerX, stepY, centerY);
+                }
+                this._textureDimensions = textureDimensions;
+                this._textureStep = textureStep;
+            }
+            setShow(batchId, show) {
+                //>>includeStart('debug', pragmas.debug);
+                checkBatchId(batchId, this.featuresLength);
+                Check.typeOf.bool('show', show);
+                //>>includeEnd('debug');
+                if (show && !defined(this._showAlphaProperties)) {
+                    // Avoid allocating since the default is show = true
+                    return;
+                }
+                var showAlphaProperties = getShowAlphaProperties(this);
+                var propertyOffset = batchId * 2;
+                var newShow = show ? 255 : 0;
+                if (showAlphaProperties[propertyOffset] !== newShow) {
+                    showAlphaProperties[propertyOffset] = newShow;
+                    var batchValues = getBatchValues(this);
+                    // Compute alpha used in the shader based on show and color.alpha properties
+                    var offset = (batchId * 4) + 3;
+                    batchValues[offset] = show ? showAlphaProperties[propertyOffset + 1] : 0;
+                    this._batchValuesDirty = true;
+                }
+            }
+            setAllShow(show) {
+                //>>includeStart('debug', pragmas.debug);
+                Check.typeOf.bool('show', show);
+                //>>includeEnd('debug');
+                var featuresLength = this.featuresLength;
+                for (var i = 0; i < featuresLength; ++i) {
+                    this.setShow(i, show);
+                }
+            }
+            getShow(batchId) {
+                //>>includeStart('debug', pragmas.debug);
+                checkBatchId(batchId, this.featuresLength);
+                //>>includeEnd('debug');
+                if (!defined(this._showAlphaProperties)) {
+                    // Avoid allocating since the default is show = true
+                    return true;
+                }
+                var offset = batchId * 2;
+                return (this._showAlphaProperties[offset] === 255);
+            }
+            setColor(batchId, color) {
+                //>>includeStart('debug', pragmas.debug);
+                checkBatchId(batchId, this.featuresLength);
+                Check.typeOf.object('color', color);
+                //>>includeEnd('debug');
+                if (Color.equals(color, DEFAULT_COLOR_VALUE) && !defined(this._batchValues)) {
+                    // Avoid allocating since the default is white
+                    return;
+                }
+                var newColor = color.toBytes(scratchColorBytes);
+                var newAlpha = newColor[3];
+                var batchValues = getBatchValues(this);
+                var offset = batchId * 4;
+                var showAlphaProperties = getShowAlphaProperties(this);
+                var propertyOffset = batchId * 2;
+                if ((batchValues[offset] !== newColor[0]) ||
+                    (batchValues[offset + 1] !== newColor[1]) ||
+                    (batchValues[offset + 2] !== newColor[2]) ||
+                    (showAlphaProperties[propertyOffset + 1] !== newAlpha)) {
+                    batchValues[offset] = newColor[0];
+                    batchValues[offset + 1] = newColor[1];
+                    batchValues[offset + 2] = newColor[2];
+                    var wasTranslucent = (showAlphaProperties[propertyOffset + 1] !== 255);
+                    // Compute alpha used in the shader based on show and color.alpha properties
+                    var show = showAlphaProperties[propertyOffset] !== 0;
+                    batchValues[offset + 3] = show ? newAlpha : 0;
+                    showAlphaProperties[propertyOffset + 1] = newAlpha;
+                    // Track number of translucent features so we know if this tile needs
+                    // opaque commands, translucent commands, or both for rendering.
+                    var isTranslucent = (newAlpha !== 255);
+                    if (isTranslucent && !wasTranslucent) {
+                        ++this._translucentFeaturesLength;
+                    }
+                    else if (!isTranslucent && wasTranslucent) {
+                        --this._translucentFeaturesLength;
+                    }
+                    this._batchValuesDirty = true;
+                    if (defined(this._colorChangedCallback)) {
+                        this._colorChangedCallback(batchId, color);
+                    }
+                }
+            }
+            setAllColor(color) {
+                //>>includeStart('debug', pragmas.debug);
+                Check.typeOf.object('color', color);
+                //>>includeEnd('debug');
+                var featuresLength = this.featuresLength;
+                for (var i = 0; i < featuresLength; ++i) {
+                    this.setColor(i, color);
+                }
+            }
+            getColor(batchId, result) {
+                //>>includeStart('debug', pragmas.debug);
+                checkBatchId(batchId, this.featuresLength);
+                Check.typeOf.object('result', result);
+                //>>includeEnd('debug');
+                if (!defined(this._batchValues)) {
+                    return Color.clone(DEFAULT_COLOR_VALUE, result);
+                }
+                var batchValues = this._batchValues;
+                var offset = batchId * 4;
+                var showAlphaProperties = this._showAlphaProperties;
+                var propertyOffset = batchId * 2;
+                return Color.fromBytes(batchValues[offset], batchValues[offset + 1], batchValues[offset + 2], showAlphaProperties[propertyOffset + 1], result);
+            }
+            getPickColor(batchId) {
+                //>>includeStart('debug', pragmas.debug);
+                checkBatchId(batchId, this.featuresLength);
+                //>>includeEnd('debug');
+                return this._pickIds[batchId];
+            }
+            applyStyle(style) {
+                if (!defined(style)) {
+                    this.setAllColor(DEFAULT_COLOR_VALUE);
+                    this.setAllShow(true);
+                    return;
+                }
+                var content = this._content;
+                var length = this.featuresLength;
+                for (var i = 0; i < length; ++i) {
+                    var feature = content.getFeature(i);
+                    var color = defined(style.color) ? style.color.evaluateColor(feature, scratchColor) : DEFAULT_COLOR_VALUE;
+                    var show = defined(style.show) ? style.show.evaluate(feature) : DEFAULT_SHOW_VALUE;
+                    this.setColor(i, color);
+                    this.setShow(i, show);
+                }
+            }
+            isClass(batchId, className) {
+                //>>includeStart('debug', pragmas.debug);
+                checkBatchId(batchId, this.featuresLength);
+                Check.typeOf.string('className', className);
+                //>>includeEnd('debug');
+                // PERFORMANCE_IDEA : cache results in the ancestor classes to speed up this check if this area becomes a hotspot
+                var hierarchy = this._batchTableHierarchy;
+                if (!defined(hierarchy)) {
+                    return false;
+                }
+                // PERFORMANCE_IDEA : treat class names as integers for faster comparisons
+                var result = traverseHierarchy(hierarchy, batchId, function(hierarchy, instanceIndex) {
+                    var classId = hierarchy.classIds[instanceIndex];
+                    var instanceClass = hierarchy.classes[classId];
+                    if (instanceClass.name === className) {
+                        return true;
+                    }
+                });
+                return defined(result);
+            }
+            isExactClass(batchId, className) {
+                //>>includeStart('debug', pragmas.debug);
+                Check.typeOf.string('className', className);
+                //>>includeEnd('debug');
+                return (this.getExactClassName(batchId) === className);
+            }
+            getExactClassName(batchId) {
+                //>>includeStart('debug', pragmas.debug);
+                checkBatchId(batchId, this.featuresLength);
+                //>>includeEnd('debug');
+                var hierarchy = this._batchTableHierarchy;
+                if (!defined(hierarchy)) {
+                    return undefined;
+                }
+                var classId = hierarchy.classIds[batchId];
+                var instanceClass = hierarchy.classes[classId];
+                return instanceClass.name;
+            }
+            hasProperty(batchId, name) {
+                //>>includeStart('debug', pragmas.debug);
+                checkBatchId(batchId, this.featuresLength);
+                Check.typeOf.string('name', name);
+                //>>includeEnd('debug');
+                return (defined(this._properties[name])) || (defined(this._batchTableHierarchy) && hasPropertyInHierarchy(this, batchId, name));
+            }
+            getPropertyNames(batchId, results) {
+                //>>includeStart('debug', pragmas.debug);
+                checkBatchId(batchId, this.featuresLength);
+                //>>includeEnd('debug');
+                results = defined(results) ? results : [];
+                results.length = 0;
+                var propertyNames = Object.keys(this._properties);
+                results.push.apply(results, propertyNames);
+                if (defined(this._batchTableHierarchy)) {
+                    getPropertyNamesInHierarchy(this, batchId, results);
+                }
+                return results;
+            }
+            getProperty(batchId, name) {
+                //>>includeStart('debug', pragmas.debug);
+                checkBatchId(batchId, this.featuresLength);
+                Check.typeOf.string('name', name);
+                //>>includeEnd('debug');
+                if (defined(this._batchTableBinaryProperties)) {
+                    var binaryProperty = this._batchTableBinaryProperties[name];
+                    if (defined(binaryProperty)) {
+                        return getBinaryProperty(binaryProperty, batchId);
+                    }
+                }
+                var propertyValues = this._properties[name];
+                if (defined(propertyValues)) {
+                    return clone(propertyValues[batchId], true);
+                }
+                if (defined(this._batchTableHierarchy)) {
+                    var hierarchyProperty = getHierarchyProperty(this, batchId, name);
+                    if (defined(hierarchyProperty)) {
+                        return hierarchyProperty;
+                    }
+                }
+                return undefined;
+            }
+            setProperty(batchId, name, value) {
+                var featuresLength = this.featuresLength;
+                //>>includeStart('debug', pragmas.debug);
+                checkBatchId(batchId, featuresLength);
+                Check.typeOf.string('name', name);
+                //>>includeEnd('debug');
+                if (defined(this._batchTableBinaryProperties)) {
+                    var binaryProperty = this._batchTableBinaryProperties[name];
+                    if (defined(binaryProperty)) {
+                        setBinaryProperty(binaryProperty, batchId, value);
+                        return;
+                    }
+                }
+                if (defined(this._batchTableHierarchy)) {
+                    if (setHierarchyProperty(this, batchId, name, value)) {
+                        return;
+                    }
+                }
+                var propertyValues = this._properties[name];
+                if (!defined(propertyValues)) {
+                    // Property does not exist. Create it.
+                    this._properties[name] = new Array(featuresLength);
+                    propertyValues = this._properties[name];
+                }
+                propertyValues[batchId] = clone(value, true);
+            }
+            getVertexShaderCallback(handleTranslucent, batchIdAttributeName, diffuseAttributeOrUniformName) {
+                if (this.featuresLength === 0) {
+                    return;
+                }
+                var that = this;
+                return function(source) {
+                    // If the color blend mode is HIGHLIGHT, the highlight color will always be applied in the fragment shader.
+                    // No need to apply the highlight color in the vertex shader as well.
+                    var renamedSource = modifyDiffuse(source, diffuseAttributeOrUniformName, false);
+                    var newMain;
+                    if (ContextLimits.maximumVertexTextureImageUnits > 0) {
+                        // When VTF is supported, perform per-feature show/hide in the vertex shader
+                        newMain = '';
+                        if (handleTranslucent) {
+                            newMain += 'uniform bool tile_translucentCommand; \n';
+                        }
+                        newMain +=
+                            'uniform sampler2D tile_batchTexture; \n' +
+                            'varying vec4 tile_featureColor; \n' +
+                            'varying vec2 tile_featureSt; \n' +
+                            'void main() \n' +
+                            '{ \n' +
+                            '    vec2 st = computeSt(' + batchIdAttributeName + '); \n' +
+                            '    vec4 featureProperties = texture2D(tile_batchTexture, st); \n' +
+                            '    tile_color(featureProperties); \n' +
+                            '    float show = ceil(featureProperties.a); \n' + // 0 - false, non-zeo - true
+                            '    gl_Position *= show; \n'; // Per-feature show/hide
+                        if (handleTranslucent) {
+                            newMain +=
+                                '    bool isStyleTranslucent = (featureProperties.a != 1.0); \n' +
+                                '    if (czm_pass == czm_passTranslucent) \n' +
+                                '    { \n' +
+                                '        if (!isStyleTranslucent && !tile_translucentCommand) \n' + // Do not render opaque features in the translucent pass
+                                '        { \n' +
+                                '            gl_Position *= 0.0; \n' +
+                                '        } \n' +
+                                '    } \n' +
+                                '    else \n' +
+                                '    { \n' +
+                                '        if (isStyleTranslucent) \n' + // Do not render translucent features in the opaque pass
+                                '        { \n' +
+                                '            gl_Position *= 0.0; \n' +
+                                '        } \n' +
+                                '    } \n';
+                        }
+                        newMain +=
+                            '    tile_featureColor = featureProperties; \n' +
+                            '    tile_featureSt = st; \n' +
+                            '}';
+                    }
+                    else {
+                        // When VTF is not supported, color blend mode MIX will look incorrect due to the feature's color not being available in the vertex shader
+                        newMain =
+                            'varying vec2 tile_featureSt; \n' +
+                            'void main() \n' +
+                            '{ \n' +
+                            '    tile_color(vec4(1.0)); \n' +
+                            '    tile_featureSt = computeSt(' + batchIdAttributeName + '); \n' +
+                            '}';
+                    }
+                    return renamedSource + '\n' + getGlslComputeSt(that) + newMain;
+                };
+            }
+            getFragmentShaderCallback(handleTranslucent, diffuseAttributeOrUniformName) {
+                if (this.featuresLength === 0) {
+                    return;
+                }
+                return function(source) {
+                    source = modifyDiffuse(source, diffuseAttributeOrUniformName, true);
+                    if (ContextLimits.maximumVertexTextureImageUnits > 0) {
+                        // When VTF is supported, per-feature show/hide already happened in the fragment shader
+                        source +=
+                            'uniform sampler2D tile_pickTexture; \n' +
+                            'varying vec2 tile_featureSt; \n' +
+                            'varying vec4 tile_featureColor; \n' +
+                            'void main() \n' +
+                            '{ \n' +
+                            '    tile_color(tile_featureColor); \n' +
+                            '}';
+                    }
+                    else {
+                        if (handleTranslucent) {
+                            source += 'uniform bool tile_translucentCommand; \n';
+                        }
+                        source +=
+                            'uniform sampler2D tile_pickTexture; \n' +
+                            'uniform sampler2D tile_batchTexture; \n' +
+                            'varying vec2 tile_featureSt; \n' +
+                            'void main() \n' +
+                            '{ \n' +
+                            '    vec4 featureProperties = texture2D(tile_batchTexture, tile_featureSt); \n' +
+                            '    if (featureProperties.a == 0.0) { \n' + // show: alpha == 0 - false, non-zeo - true
+                            '        discard; \n' +
+                            '    } \n';
+                        if (handleTranslucent) {
+                            source +=
+                                '    bool isStyleTranslucent = (featureProperties.a != 1.0); \n' +
+                                '    if (czm_pass == czm_passTranslucent) \n' +
+                                '    { \n' +
+                                '        if (!isStyleTranslucent && !tile_translucentCommand) \n' + // Do not render opaque features in the translucent pass
+                                '        { \n' +
+                                '            discard; \n' +
+                                '        } \n' +
+                                '    } \n' +
+                                '    else \n' +
+                                '    { \n' +
+                                '        if (isStyleTranslucent) \n' + // Do not render translucent features in the opaque pass
+                                '        { \n' +
+                                '            discard; \n' +
+                                '        } \n' +
+                                '    } \n';
+                        }
+                        source +=
+                            '    tile_color(featureProperties); \n' +
+                            '} \n';
+                    }
+                    return source;
+                };
+            }
+            getClassificationFragmentShaderCallback() {
+                if (this.featuresLength === 0) {
+                    return;
+                }
+                return function(source) {
+                    source = ShaderSource.replaceMain(source, 'tile_main');
+                    if (ContextLimits.maximumVertexTextureImageUnits > 0) {
+                        // When VTF is supported, per-feature show/hide already happened in the fragment shader
+                        source +=
+                            'uniform sampler2D tile_pickTexture;\n' +
+                            'varying vec2 tile_featureSt; \n' +
+                            'varying vec4 tile_featureColor; \n' +
+                            'void main() \n' +
+                            '{ \n' +
+                            '    tile_main(); \n' +
+                            '    gl_FragColor = tile_featureColor; \n' +
+                            '}';
+                    }
+                    else {
+                        source +=
+                            'uniform sampler2D tile_batchTexture; \n' +
+                            'uniform sampler2D tile_pickTexture;\n' +
+                            'varying vec2 tile_featureSt; \n' +
+                            'void main() \n' +
+                            '{ \n' +
+                            '    tile_main(); \n' +
+                            '    vec4 featureProperties = texture2D(tile_batchTexture, tile_featureSt); \n' +
+                            '    if (featureProperties.a == 0.0) { \n' + // show: alpha == 0 - false, non-zeo - true
+                            '        discard; \n' +
+                            '    } \n' +
+                            '    gl_FragColor = featureProperties; \n' +
+                            '} \n';
+                    }
+                    return source;
+                };
+            }
+            getUniformMapCallback() {
+                if (this.featuresLength === 0) {
+                    return;
+                }
+                var that = this;
+                return function(uniformMap) {
+                    var batchUniformMap = {
+                        tile_batchTexture: function() {
+                            // PERFORMANCE_IDEA: we could also use a custom shader that avoids the texture read.
+                            return defaultValue(that._batchTexture, that._defaultTexture);
+                        },
+                        tile_textureDimensions: function() {
+                            return that._textureDimensions;
+                        },
+                        tile_textureStep: function() {
+                            return that._textureStep;
+                        },
+                        tile_colorBlend: function() {
+                            return getColorBlend(that);
+                        },
+                        tile_pickTexture: function() {
+                            return that._pickTexture;
+                        }
+                    };
+                    return combine(uniformMap, batchUniformMap);
+                };
+            }
+            getPickId() {
+                return 'texture2D(tile_pickTexture, tile_featureSt)';
+            }
+            addDerivedCommands(frameState, commandStart) {
+                var commandList = frameState.commandList;
+                var commandEnd = commandList.length;
+                var tile = this._content._tile;
+                var finalResolution = tile._finalResolution;
+                var tileset = tile.tileset;
+                var bivariateVisibilityTest = tileset._skipLevelOfDetail && tileset._hasMixedContent && frameState.context.stencilBuffer;
+                var styleCommandsNeeded = getStyleCommandsNeeded(this);
+                for (var i = commandStart; i < commandEnd; ++i) {
+                    var command = commandList[i];
+                    var derivedCommands = command.derivedCommands.tileset;
+                    if (!defined(derivedCommands) || command.dirty) {
+                        derivedCommands = {};
+                        command.derivedCommands.tileset = derivedCommands;
+                        derivedCommands.originalCommand = deriveCommand(command);
+                        command.dirty = false;
+                    }
+                    if (styleCommandsNeeded !== StyleCommandsNeeded.ALL_OPAQUE) {
+                        if (!defined(derivedCommands.translucent)) {
+                            derivedCommands.translucent = deriveTranslucentCommand(derivedCommands.originalCommand);
+                        }
+                    }
+                    if (bivariateVisibilityTest) {
+                        if (command.pass !== Pass.TRANSLUCENT && !finalResolution) {
+                            if (!defined(derivedCommands.zback)) {
+                                derivedCommands.zback = deriveZBackfaceCommand(frameState.context, derivedCommands.originalCommand);
+                            }
+                            tileset._backfaceCommands.push(derivedCommands.zback);
+                        }
+                        if (!defined(derivedCommands.stencil) || tile._selectionDepth !== getLastSelectionDepth(derivedCommands.stencil)) {
+                            derivedCommands.stencil = deriveStencilCommand(derivedCommands.originalCommand, tile._selectionDepth);
+                        }
+                    }
+                    var opaqueCommand = bivariateVisibilityTest ? derivedCommands.stencil : derivedCommands.originalCommand;
+                    var translucentCommand = derivedCommands.translucent;
+                    // If the command was originally opaque:
+                    //    * If the styling applied to the tile is all opaque, use the original command
+                    //      (with one additional uniform needed for the shader).
+                    //    * If the styling is all translucent, use new (cached) derived commands (front
+                    //      and back faces) with a translucent render state.
+                    //    * If the styling causes both opaque and translucent features in this tile,
+                    //      then use both sets of commands.
+                    if (command.pass !== Pass.TRANSLUCENT) {
+                        if (styleCommandsNeeded === StyleCommandsNeeded.ALL_OPAQUE) {
+                            commandList[i] = opaqueCommand;
+                        }
+                        if (styleCommandsNeeded === StyleCommandsNeeded.ALL_TRANSLUCENT) {
+                            commandList[i] = translucentCommand;
+                        }
+                        if (styleCommandsNeeded === StyleCommandsNeeded.OPAQUE_AND_TRANSLUCENT) {
+                            // PERFORMANCE_IDEA: if the tile has multiple commands, we do not know what features are in what
+                            // commands so this case may be overkill.
+                            commandList[i] = opaqueCommand;
+                            commandList.push(translucentCommand);
+                        }
+                    }
+                    else {
+                        // Command was originally translucent so no need to derive new commands;
+                        // as of now, a style can't change an originally translucent feature to
+                        // opaque since the style's alpha is modulated, not a replacement.  When
+                        // this changes, we need to derive new opaque commands here.
+                        commandList[i] = opaqueCommand;
+                    }
+                }
+            }
+            update(tileset, frameState) {
+                var context = frameState.context;
+                this._defaultTexture = context.defaultTexture;
+                var passes = frameState.passes;
+                if (passes.pick || passes.postProcess) {
+                    createPickTexture(this, context);
+                }
+                if (this._batchValuesDirty) {
+                    this._batchValuesDirty = false;
+                    // Create batch texture on-demand
+                    if (!defined(this._batchTexture)) {
+                        this._batchTexture = createTexture(this, context, this._batchValues);
+                        tileset._statistics.batchTableByteLength += this._batchTexture.sizeInBytes;
+                    }
+                    updateBatchTexture(this); // Apply per-feature show/color updates
+                }
+            }
+            isDestroyed() {
+                return false;
+            }
+            destroy() {
+                this._batchTexture = this._batchTexture && this._batchTexture.destroy();
+                this._pickTexture = this._pickTexture && this._pickTexture.destroy();
+                var pickIds = this._pickIds;
+                var length = pickIds.length;
+                for (var i = 0; i < length; ++i) {
+                    pickIds[i].destroy();
+                }
+                return destroyObject(this);
+            }
+            static getBinaryProperties(featuresLength, batchTableJson, batchTableBinary) {
+                return getBinaryProperties(featuresLength, batchTableJson, batchTableBinary);
+            }
         }
-        this._extensions = defaultValue(extensions, {});
-
-        var properties = initializeProperties(batchTableJson);
-        this._properties = properties;
-
-        this._batchTableHierarchy = initializeHierarchy(this, batchTableJson, batchTableBinary);
-        this._batchTableBinaryProperties = getBinaryProperties(featuresLength, properties, batchTableBinary);
-
-        // PERFORMANCE_IDEA: These parallel arrays probably generate cache misses in get/set color/show
-        // and use A LOT of memory.  How can we use less memory?
-        this._showAlphaProperties = undefined; // [Show (0 or 255), Alpha (0 to 255)] property for each feature
-        this._batchValues = undefined;  // Per-feature RGBA (A is based on the color's alpha and feature's show property)
-
-        this._batchValuesDirty = false;
-        this._batchTexture = undefined;
-        this._defaultTexture = undefined;
-
-        this._pickTexture = undefined;
-        this._pickIds = [];
-
-        this._content = content;
-
-        this._colorChangedCallback = colorChangedCallback;
-
-        // Dimensions for batch and pick textures
-        var textureDimensions;
-        var textureStep;
-
-        if (featuresLength > 0) {
-            // PERFORMANCE_IDEA: this can waste memory in the last row in the uncommon case
-            // when more than one row is needed (e.g., > 16K features in one tile)
-            var width = Math.min(featuresLength, ContextLimits.maximumTextureSize);
-            var height = Math.ceil(featuresLength / ContextLimits.maximumTextureSize);
-            var stepX = 1.0 / width;
-            var centerX = stepX * 0.5;
-            var stepY = 1.0 / height;
-            var centerY = stepY * 0.5;
-
-            textureDimensions = new Cartesian2(width, height);
-            textureStep = new Cartesian4(stepX, centerX, stepY, centerY);
-        }
-
-        this._textureDimensions = textureDimensions;
-        this._textureStep = textureStep;
-    }
 
     // This can be overridden for testing purposes
     Cesium3DTileBatchTable._deprecationWarning = deprecationWarning;
@@ -355,9 +862,6 @@ define([
         return binaryProperties;
     }
 
-    Cesium3DTileBatchTable.getBinaryProperties = function(featuresLength, batchTableJson, batchTableBinary) {
-        return getBinaryProperties(featuresLength, batchTableJson, batchTableBinary);
-    };
 
     function getByteLength(batchTable) {
         var dimensions = batchTable._textureDimensions;
@@ -393,174 +897,17 @@ define([
         }
     }
 
-    Cesium3DTileBatchTable.prototype.setShow = function(batchId, show) {
-        //>>includeStart('debug', pragmas.debug);
-        checkBatchId(batchId, this.featuresLength);
-        Check.typeOf.bool('show', show);
-        //>>includeEnd('debug');
 
-        if (show && !defined(this._showAlphaProperties)) {
-            // Avoid allocating since the default is show = true
-            return;
-        }
 
-        var showAlphaProperties = getShowAlphaProperties(this);
-        var propertyOffset = batchId * 2;
-
-        var newShow = show ? 255 : 0;
-        if (showAlphaProperties[propertyOffset] !== newShow) {
-            showAlphaProperties[propertyOffset] = newShow;
-
-            var batchValues = getBatchValues(this);
-
-            // Compute alpha used in the shader based on show and color.alpha properties
-            var offset = (batchId * 4) + 3;
-            batchValues[offset] = show ? showAlphaProperties[propertyOffset + 1] : 0;
-
-            this._batchValuesDirty = true;
-        }
-    };
-
-    Cesium3DTileBatchTable.prototype.setAllShow = function(show) {
-        //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.bool('show', show);
-        //>>includeEnd('debug');
-
-        var featuresLength = this.featuresLength;
-        for (var i = 0; i < featuresLength; ++i) {
-            this.setShow(i, show);
-        }
-    };
-
-    Cesium3DTileBatchTable.prototype.getShow = function(batchId) {
-        //>>includeStart('debug', pragmas.debug);
-        checkBatchId(batchId, this.featuresLength);
-        //>>includeEnd('debug');
-
-        if (!defined(this._showAlphaProperties)) {
-            // Avoid allocating since the default is show = true
-            return true;
-        }
-
-        var offset = batchId * 2;
-        return (this._showAlphaProperties[offset] === 255);
-    };
 
     var scratchColorBytes = new Array(4);
 
-    Cesium3DTileBatchTable.prototype.setColor = function(batchId, color) {
-        //>>includeStart('debug', pragmas.debug);
-        checkBatchId(batchId, this.featuresLength);
-        Check.typeOf.object('color', color);
-        //>>includeEnd('debug');
 
-        if (Color.equals(color, DEFAULT_COLOR_VALUE) && !defined(this._batchValues)) {
-            // Avoid allocating since the default is white
-            return;
-        }
 
-        var newColor = color.toBytes(scratchColorBytes);
-        var newAlpha = newColor[3];
 
-        var batchValues = getBatchValues(this);
-        var offset = batchId * 4;
-
-        var showAlphaProperties = getShowAlphaProperties(this);
-        var propertyOffset = batchId * 2;
-
-        if ((batchValues[offset] !== newColor[0]) ||
-            (batchValues[offset + 1] !== newColor[1]) ||
-            (batchValues[offset + 2] !== newColor[2]) ||
-            (showAlphaProperties[propertyOffset + 1] !== newAlpha)) {
-
-            batchValues[offset] = newColor[0];
-            batchValues[offset + 1] = newColor[1];
-            batchValues[offset + 2] = newColor[2];
-
-            var wasTranslucent = (showAlphaProperties[propertyOffset + 1] !== 255);
-
-            // Compute alpha used in the shader based on show and color.alpha properties
-            var show = showAlphaProperties[propertyOffset] !== 0;
-            batchValues[offset + 3] = show ? newAlpha : 0;
-            showAlphaProperties[propertyOffset + 1] = newAlpha;
-
-            // Track number of translucent features so we know if this tile needs
-            // opaque commands, translucent commands, or both for rendering.
-            var isTranslucent = (newAlpha !== 255);
-            if (isTranslucent && !wasTranslucent) {
-                ++this._translucentFeaturesLength;
-            } else if (!isTranslucent && wasTranslucent) {
-                --this._translucentFeaturesLength;
-            }
-
-            this._batchValuesDirty = true;
-
-            if (defined(this._colorChangedCallback)) {
-                this._colorChangedCallback(batchId, color);
-            }
-        }
-    };
-
-    Cesium3DTileBatchTable.prototype.setAllColor = function(color) {
-        //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.object('color', color);
-        //>>includeEnd('debug');
-
-        var featuresLength = this.featuresLength;
-        for (var i = 0; i < featuresLength; ++i) {
-            this.setColor(i, color);
-        }
-    };
-
-    Cesium3DTileBatchTable.prototype.getColor = function(batchId, result) {
-        //>>includeStart('debug', pragmas.debug);
-        checkBatchId(batchId, this.featuresLength);
-        Check.typeOf.object('result', result);
-        //>>includeEnd('debug');
-
-        if (!defined(this._batchValues)) {
-            return Color.clone(DEFAULT_COLOR_VALUE, result);
-        }
-
-        var batchValues = this._batchValues;
-        var offset = batchId * 4;
-
-        var showAlphaProperties = this._showAlphaProperties;
-        var propertyOffset = batchId * 2;
-
-        return Color.fromBytes(batchValues[offset],
-            batchValues[offset + 1],
-            batchValues[offset + 2],
-            showAlphaProperties[propertyOffset + 1],
-            result);
-    };
-
-    Cesium3DTileBatchTable.prototype.getPickColor = function(batchId) {
-        //>>includeStart('debug', pragmas.debug);
-        checkBatchId(batchId, this.featuresLength);
-        //>>includeEnd('debug');
-        return this._pickIds[batchId];
-    };
 
     var scratchColor = new Color();
 
-    Cesium3DTileBatchTable.prototype.applyStyle = function(style) {
-        if (!defined(style)) {
-            this.setAllColor(DEFAULT_COLOR_VALUE);
-            this.setAllShow(true);
-            return;
-        }
-
-        var content = this._content;
-        var length = this.featuresLength;
-        for (var i = 0; i < length; ++i) {
-            var feature = content.getFeature(i);
-            var color = defined(style.color) ? style.color.evaluateColor(feature, scratchColor) : DEFAULT_COLOR_VALUE;
-            var show = defined(style.show) ? style.show.evaluate(feature) : DEFAULT_SHOW_VALUE;
-            this.setColor(i, color);
-            this.setShow(i, show);
-        }
-    };
 
     function getBinaryProperty(binaryProperty, index) {
         var typedArray = binaryProperty.typedArray;
@@ -722,136 +1069,12 @@ define([
         return defined(result);
     }
 
-    Cesium3DTileBatchTable.prototype.isClass = function(batchId, className) {
-        //>>includeStart('debug', pragmas.debug);
-        checkBatchId(batchId, this.featuresLength);
-        Check.typeOf.string('className', className);
-        //>>includeEnd('debug');
 
-        // PERFORMANCE_IDEA : cache results in the ancestor classes to speed up this check if this area becomes a hotspot
-        var hierarchy = this._batchTableHierarchy;
-        if (!defined(hierarchy)) {
-            return false;
-        }
 
-        // PERFORMANCE_IDEA : treat class names as integers for faster comparisons
-        var result = traverseHierarchy(hierarchy, batchId, function(hierarchy, instanceIndex) {
-            var classId = hierarchy.classIds[instanceIndex];
-            var instanceClass = hierarchy.classes[classId];
-            if (instanceClass.name === className) {
-                return true;
-            }
-        });
-        return defined(result);
-    };
 
-    Cesium3DTileBatchTable.prototype.isExactClass = function(batchId, className) {
-        //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.string('className', className);
-        //>>includeEnd('debug');
 
-        return (this.getExactClassName(batchId) === className);
-    };
 
-    Cesium3DTileBatchTable.prototype.getExactClassName = function(batchId) {
-        //>>includeStart('debug', pragmas.debug);
-        checkBatchId(batchId, this.featuresLength);
-        //>>includeEnd('debug');
 
-        var hierarchy = this._batchTableHierarchy;
-        if (!defined(hierarchy)) {
-            return undefined;
-        }
-        var classId = hierarchy.classIds[batchId];
-        var instanceClass = hierarchy.classes[classId];
-        return instanceClass.name;
-    };
-
-    Cesium3DTileBatchTable.prototype.hasProperty = function(batchId, name) {
-        //>>includeStart('debug', pragmas.debug);
-        checkBatchId(batchId, this.featuresLength);
-        Check.typeOf.string('name', name);
-        //>>includeEnd('debug');
-
-        return (defined(this._properties[name])) || (defined(this._batchTableHierarchy) && hasPropertyInHierarchy(this, batchId, name));
-    };
-
-    Cesium3DTileBatchTable.prototype.getPropertyNames = function(batchId, results) {
-        //>>includeStart('debug', pragmas.debug);
-        checkBatchId(batchId, this.featuresLength);
-        //>>includeEnd('debug');
-
-        results = defined(results) ? results : [];
-        results.length = 0;
-
-        var propertyNames = Object.keys(this._properties);
-        results.push.apply(results, propertyNames);
-
-        if (defined(this._batchTableHierarchy)) {
-            getPropertyNamesInHierarchy(this, batchId, results);
-        }
-
-        return results;
-    };
-
-    Cesium3DTileBatchTable.prototype.getProperty = function(batchId, name) {
-        //>>includeStart('debug', pragmas.debug);
-        checkBatchId(batchId, this.featuresLength);
-        Check.typeOf.string('name', name);
-        //>>includeEnd('debug');
-
-        if (defined(this._batchTableBinaryProperties)) {
-            var binaryProperty = this._batchTableBinaryProperties[name];
-            if (defined(binaryProperty)) {
-                return getBinaryProperty(binaryProperty, batchId);
-            }
-        }
-
-        var propertyValues = this._properties[name];
-        if (defined(propertyValues)) {
-            return clone(propertyValues[batchId], true);
-        }
-
-        if (defined(this._batchTableHierarchy)) {
-            var hierarchyProperty = getHierarchyProperty(this, batchId, name);
-            if (defined(hierarchyProperty)) {
-                return hierarchyProperty;
-            }
-        }
-
-        return undefined;
-    };
-
-    Cesium3DTileBatchTable.prototype.setProperty = function(batchId, name, value) {
-        var featuresLength = this.featuresLength;
-        //>>includeStart('debug', pragmas.debug);
-        checkBatchId(batchId, featuresLength);
-        Check.typeOf.string('name', name);
-        //>>includeEnd('debug');
-
-        if (defined(this._batchTableBinaryProperties)) {
-            var binaryProperty = this._batchTableBinaryProperties[name];
-            if (defined(binaryProperty)) {
-                setBinaryProperty(binaryProperty, batchId, value);
-                return;
-            }
-        }
-
-        if (defined(this._batchTableHierarchy)) {
-            if (setHierarchyProperty(this, batchId, name, value)) {
-                return;
-            }
-        }
-
-        var propertyValues = this._properties[name];
-        if (!defined(propertyValues)) {
-            // Property does not exist. Create it.
-            this._properties[name] = new Array(featuresLength);
-            propertyValues = this._properties[name];
-        }
-
-        propertyValues[batchId] = clone(value, true);
-    };
 
     function getGlslComputeSt(batchTable) {
         // GLSL batchId is zero-based: [0, featuresLength - 1]
@@ -879,71 +1102,6 @@ define([
             '} \n';
     }
 
-    Cesium3DTileBatchTable.prototype.getVertexShaderCallback = function(handleTranslucent, batchIdAttributeName, diffuseAttributeOrUniformName) {
-        if (this.featuresLength === 0) {
-            return;
-        }
-
-        var that = this;
-        return function(source) {
-            // If the color blend mode is HIGHLIGHT, the highlight color will always be applied in the fragment shader.
-            // No need to apply the highlight color in the vertex shader as well.
-            var renamedSource = modifyDiffuse(source, diffuseAttributeOrUniformName, false);
-            var newMain;
-
-            if (ContextLimits.maximumVertexTextureImageUnits > 0) {
-                // When VTF is supported, perform per-feature show/hide in the vertex shader
-                newMain = '';
-                if (handleTranslucent) {
-                    newMain += 'uniform bool tile_translucentCommand; \n';
-                }
-                newMain +=
-                    'uniform sampler2D tile_batchTexture; \n' +
-                    'varying vec4 tile_featureColor; \n' +
-                    'varying vec2 tile_featureSt; \n' +
-                    'void main() \n' +
-                    '{ \n' +
-                    '    vec2 st = computeSt(' + batchIdAttributeName + '); \n' +
-                    '    vec4 featureProperties = texture2D(tile_batchTexture, st); \n' +
-                    '    tile_color(featureProperties); \n' +
-                    '    float show = ceil(featureProperties.a); \n' +      // 0 - false, non-zeo - true
-                    '    gl_Position *= show; \n';                          // Per-feature show/hide
-                if (handleTranslucent) {
-                    newMain +=
-                        '    bool isStyleTranslucent = (featureProperties.a != 1.0); \n' +
-                        '    if (czm_pass == czm_passTranslucent) \n' +
-                        '    { \n' +
-                        '        if (!isStyleTranslucent && !tile_translucentCommand) \n' + // Do not render opaque features in the translucent pass
-                        '        { \n' +
-                        '            gl_Position *= 0.0; \n' +
-                        '        } \n' +
-                        '    } \n' +
-                        '    else \n' +
-                        '    { \n' +
-                        '        if (isStyleTranslucent) \n' + // Do not render translucent features in the opaque pass
-                        '        { \n' +
-                        '            gl_Position *= 0.0; \n' +
-                        '        } \n' +
-                        '    } \n';
-                }
-                newMain +=
-                    '    tile_featureColor = featureProperties; \n' +
-                    '    tile_featureSt = st; \n' +
-                    '}';
-            } else {
-                // When VTF is not supported, color blend mode MIX will look incorrect due to the feature's color not being available in the vertex shader
-                newMain =
-                    'varying vec2 tile_featureSt; \n' +
-                    'void main() \n' +
-                    '{ \n' +
-                    '    tile_color(vec4(1.0)); \n' +
-                    '    tile_featureSt = computeSt(' + batchIdAttributeName + '); \n' +
-                    '}';
-            }
-
-            return renamedSource + '\n' + getGlslComputeSt(that) + newMain;
-        };
-    };
 
     function getDefaultShader(source, applyHighlight) {
         source = ShaderSource.replaceMain(source, 'tile_main');
@@ -1086,99 +1244,7 @@ define([
         return source;
     }
 
-    Cesium3DTileBatchTable.prototype.getFragmentShaderCallback = function(handleTranslucent, diffuseAttributeOrUniformName) {
-        if (this.featuresLength === 0) {
-            return;
-        }
-        return function(source) {
-            source = modifyDiffuse(source, diffuseAttributeOrUniformName, true);
-            if (ContextLimits.maximumVertexTextureImageUnits > 0) {
-                // When VTF is supported, per-feature show/hide already happened in the fragment shader
-                source +=
-                    'uniform sampler2D tile_pickTexture; \n' +
-                    'varying vec2 tile_featureSt; \n' +
-                    'varying vec4 tile_featureColor; \n' +
-                    'void main() \n' +
-                    '{ \n' +
-                    '    tile_color(tile_featureColor); \n' +
-                    '}';
-            } else {
-                if (handleTranslucent) {
-                    source += 'uniform bool tile_translucentCommand; \n';
-                }
-                source +=
-                    'uniform sampler2D tile_pickTexture; \n' +
-                    'uniform sampler2D tile_batchTexture; \n' +
-                    'varying vec2 tile_featureSt; \n' +
-                    'void main() \n' +
-                    '{ \n' +
-                    '    vec4 featureProperties = texture2D(tile_batchTexture, tile_featureSt); \n' +
-                    '    if (featureProperties.a == 0.0) { \n' + // show: alpha == 0 - false, non-zeo - true
-                    '        discard; \n' +
-                    '    } \n';
 
-                if (handleTranslucent) {
-                    source +=
-                        '    bool isStyleTranslucent = (featureProperties.a != 1.0); \n' +
-                        '    if (czm_pass == czm_passTranslucent) \n' +
-                        '    { \n' +
-                        '        if (!isStyleTranslucent && !tile_translucentCommand) \n' + // Do not render opaque features in the translucent pass
-                        '        { \n' +
-                        '            discard; \n' +
-                        '        } \n' +
-                        '    } \n' +
-                        '    else \n' +
-                        '    { \n' +
-                        '        if (isStyleTranslucent) \n' + // Do not render translucent features in the opaque pass
-                        '        { \n' +
-                        '            discard; \n' +
-                        '        } \n' +
-                        '    } \n';
-                }
-
-                source +=
-                    '    tile_color(featureProperties); \n' +
-                    '} \n';
-            }
-            return source;
-        };
-    };
-
-    Cesium3DTileBatchTable.prototype.getClassificationFragmentShaderCallback = function() {
-        if (this.featuresLength === 0) {
-            return;
-        }
-        return function(source) {
-            source = ShaderSource.replaceMain(source, 'tile_main');
-            if (ContextLimits.maximumVertexTextureImageUnits > 0) {
-                // When VTF is supported, per-feature show/hide already happened in the fragment shader
-                source +=
-                    'uniform sampler2D tile_pickTexture;\n' +
-                    'varying vec2 tile_featureSt; \n' +
-                    'varying vec4 tile_featureColor; \n' +
-                    'void main() \n' +
-                    '{ \n' +
-                    '    tile_main(); \n' +
-                    '    gl_FragColor = tile_featureColor; \n' +
-                    '}';
-            } else {
-                source +=
-                    'uniform sampler2D tile_batchTexture; \n' +
-                    'uniform sampler2D tile_pickTexture;\n' +
-                    'varying vec2 tile_featureSt; \n' +
-                    'void main() \n' +
-                    '{ \n' +
-                    '    tile_main(); \n' +
-                    '    vec4 featureProperties = texture2D(tile_batchTexture, tile_featureSt); \n' +
-                    '    if (featureProperties.a == 0.0) { \n' + // show: alpha == 0 - false, non-zeo - true
-                    '        discard; \n' +
-                    '    } \n' +
-                    '    gl_FragColor = featureProperties; \n' +
-                    '} \n';
-            }
-            return source;
-        };
-    };
 
     function getColorBlend(batchTable) {
         var tileset = batchTable._content.tileset;
@@ -1199,39 +1265,7 @@ define([
         //>>includeEnd('debug');
     }
 
-    Cesium3DTileBatchTable.prototype.getUniformMapCallback = function() {
-        if (this.featuresLength === 0) {
-            return;
-        }
 
-        var that = this;
-        return function(uniformMap) {
-            var batchUniformMap = {
-                tile_batchTexture : function() {
-                    // PERFORMANCE_IDEA: we could also use a custom shader that avoids the texture read.
-                    return defaultValue(that._batchTexture, that._defaultTexture);
-                },
-                tile_textureDimensions : function() {
-                    return that._textureDimensions;
-                },
-                tile_textureStep : function() {
-                    return that._textureStep;
-                },
-                tile_colorBlend : function() {
-                    return getColorBlend(that);
-                },
-                tile_pickTexture : function() {
-                    return that._pickTexture;
-                }
-            };
-
-            return combine(uniformMap, batchUniformMap);
-        };
-    };
-
-    Cesium3DTileBatchTable.prototype.getPickId = function() {
-        return 'texture2D(tile_pickTexture, tile_featureSt)';
-    };
 
     ///////////////////////////////////////////////////////////////////////////
 
@@ -1241,75 +1275,6 @@ define([
         OPAQUE_AND_TRANSLUCENT : 2
     };
 
-    Cesium3DTileBatchTable.prototype.addDerivedCommands = function(frameState, commandStart) {
-        var commandList = frameState.commandList;
-        var commandEnd = commandList.length;
-        var tile = this._content._tile;
-        var finalResolution = tile._finalResolution;
-        var tileset = tile.tileset;
-        var bivariateVisibilityTest = tileset._skipLevelOfDetail && tileset._hasMixedContent && frameState.context.stencilBuffer;
-        var styleCommandsNeeded = getStyleCommandsNeeded(this);
-
-        for (var i = commandStart; i < commandEnd; ++i) {
-            var command = commandList[i];
-            var derivedCommands = command.derivedCommands.tileset;
-            if (!defined(derivedCommands) || command.dirty) {
-                derivedCommands = {};
-                command.derivedCommands.tileset = derivedCommands;
-                derivedCommands.originalCommand = deriveCommand(command);
-                command.dirty = false;
-            }
-
-            if (styleCommandsNeeded !== StyleCommandsNeeded.ALL_OPAQUE) {
-                if (!defined(derivedCommands.translucent)) {
-                    derivedCommands.translucent = deriveTranslucentCommand(derivedCommands.originalCommand);
-                }
-            }
-
-            if (bivariateVisibilityTest) {
-                if (command.pass !== Pass.TRANSLUCENT && !finalResolution) {
-                    if (!defined(derivedCommands.zback)) {
-                        derivedCommands.zback = deriveZBackfaceCommand(frameState.context, derivedCommands.originalCommand);
-                    }
-                    tileset._backfaceCommands.push(derivedCommands.zback);
-                }
-                if (!defined(derivedCommands.stencil) || tile._selectionDepth !== getLastSelectionDepth(derivedCommands.stencil)) {
-                    derivedCommands.stencil = deriveStencilCommand(derivedCommands.originalCommand, tile._selectionDepth);
-                }
-            }
-
-            var opaqueCommand = bivariateVisibilityTest ? derivedCommands.stencil : derivedCommands.originalCommand;
-            var translucentCommand = derivedCommands.translucent;
-
-            // If the command was originally opaque:
-            //    * If the styling applied to the tile is all opaque, use the original command
-            //      (with one additional uniform needed for the shader).
-            //    * If the styling is all translucent, use new (cached) derived commands (front
-            //      and back faces) with a translucent render state.
-            //    * If the styling causes both opaque and translucent features in this tile,
-            //      then use both sets of commands.
-            if (command.pass !== Pass.TRANSLUCENT) {
-                if (styleCommandsNeeded === StyleCommandsNeeded.ALL_OPAQUE) {
-                    commandList[i] = opaqueCommand;
-                }
-                if (styleCommandsNeeded === StyleCommandsNeeded.ALL_TRANSLUCENT) {
-                    commandList[i] = translucentCommand;
-                }
-                if (styleCommandsNeeded === StyleCommandsNeeded.OPAQUE_AND_TRANSLUCENT) {
-                    // PERFORMANCE_IDEA: if the tile has multiple commands, we do not know what features are in what
-                    // commands so this case may be overkill.
-                    commandList[i] = opaqueCommand;
-                    commandList.push(translucentCommand);
-                }
-            } else {
-                // Command was originally translucent so no need to derive new commands;
-                // as of now, a style can't change an originally translucent feature to
-                // opaque since the style's alpha is modulated, not a replacement.  When
-                // this changes, we need to derive new opaque commands here.
-                commandList[i] = opaqueCommand;
-            }
-        }
-    };
 
     function getStyleCommandsNeeded(batchTable) {
         var translucentFeaturesLength = batchTable._translucentFeaturesLength;
@@ -1488,44 +1453,8 @@ define([
         });
     }
 
-    Cesium3DTileBatchTable.prototype.update = function(tileset, frameState) {
-        var context = frameState.context;
-        this._defaultTexture = context.defaultTexture;
 
-        var passes = frameState.passes;
-        if (passes.pick || passes.postProcess) {
-            createPickTexture(this, context);
-        }
 
-        if (this._batchValuesDirty) {
-            this._batchValuesDirty = false;
-
-            // Create batch texture on-demand
-            if (!defined(this._batchTexture)) {
-                this._batchTexture = createTexture(this, context, this._batchValues);
-                tileset._statistics.batchTableByteLength += this._batchTexture.sizeInBytes;
-            }
-
-            updateBatchTexture(this);  // Apply per-feature show/color updates
-        }
-    };
-
-    Cesium3DTileBatchTable.prototype.isDestroyed = function() {
-        return false;
-    };
-
-    Cesium3DTileBatchTable.prototype.destroy = function() {
-        this._batchTexture = this._batchTexture && this._batchTexture.destroy();
-        this._pickTexture = this._pickTexture && this._pickTexture.destroy();
-
-        var pickIds = this._pickIds;
-        var length = pickIds.length;
-        for (var i = 0; i < length; ++i) {
-            pickIds[i].destroy();
-        }
-
-        return destroyObject(this);
-    };
 
     return Cesium3DTileBatchTable;
 });

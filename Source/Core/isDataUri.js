@@ -16,7 +16,7 @@ define([
      *
      * @private
      */
-    function isDataUri(uri) {
+    export function isDataUri(uri) {
         //>>includeStart('debug', pragmas.debug);
         Check.typeOf.string('uri', uri);
         //>>includeEnd('debug');

@@ -24,28 +24,75 @@ define([
         return {};
     }
 
-    /**
-     * Represents the contents of a
-     * {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/specification/TileFormats/Composite|Composite}
-     * tile in a {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/specification|3D Tiles} tileset.
-     * <p>
-     * Implements the {@link Cesium3DTileContent} interface.
-     * </p>
-     *
-     * @alias Composite3DTileContent
-     * @constructor
-     *
-     * @private
-     */
-    function Composite3DTileContent(tileset, tile, resource, arrayBuffer, byteOffset, factory) {
-        this._tileset = tileset;
-        this._tile = tile;
-        this._resource = resource;
-        this._contents = [];
-        this._readyPromise = when.defer();
-
-        initialize(this, arrayBuffer, byteOffset, factory);
-    }
+        /**
+             * Represents the contents of a
+             * {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/specification/TileFormats/Composite|Composite}
+             * tile in a {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/specification|3D Tiles} tileset.
+             * <p>
+             * Implements the {@link Cesium3DTileContent} interface.
+             * </p>
+             *
+             * @alias Composite3DTileContent
+             * @constructor
+             *
+             * @private
+             */
+        class Composite3DTileContent {
+            constructor(tileset, tile, resource, arrayBuffer, byteOffset, factory) {
+                this._tileset = tileset;
+                this._tile = tile;
+                this._resource = resource;
+                this._contents = [];
+                this._readyPromise = when.defer();
+                initialize(this, arrayBuffer, byteOffset, factory);
+            }
+            /**
+                 * Part of the {@link Cesium3DTileContent} interface.  <code>Composite3DTileContent</code>
+                 * always returns <code>false</code>.  Instead call <code>hasProperty</code> for a tile in the composite.
+                 */
+            hasProperty(batchId, name) {
+                return false;
+            }
+            /**
+                 * Part of the {@link Cesium3DTileContent} interface.  <code>Composite3DTileContent</code>
+                 * always returns <code>undefined</code>.  Instead call <code>getFeature</code> for a tile in the composite.
+                 */
+            getFeature(batchId) {
+                return undefined;
+            }
+            applyDebugSettings(enabled, color) {
+                var contents = this._contents;
+                var length = contents.length;
+                for (var i = 0; i < length; ++i) {
+                    contents[i].applyDebugSettings(enabled, color);
+                }
+            }
+            applyStyle(style) {
+                var contents = this._contents;
+                var length = contents.length;
+                for (var i = 0; i < length; ++i) {
+                    contents[i].applyStyle(style);
+                }
+            }
+            update(tileset, frameState) {
+                var contents = this._contents;
+                var length = contents.length;
+                for (var i = 0; i < length; ++i) {
+                    contents[i].update(tileset, frameState);
+                }
+            }
+            isDestroyed() {
+                return false;
+            }
+            destroy() {
+                var contents = this._contents;
+                var length = contents.length;
+                for (var i = 0; i < length; ++i) {
+                    contents[i].destroy();
+                }
+                return destroyObject(this);
+            }
+        }
 
     defineProperties(Composite3DTileContent.prototype, {
         featurePropertiesDirty : {
@@ -226,58 +273,12 @@ define([
         });
     }
 
-    /**
-     * Part of the {@link Cesium3DTileContent} interface.  <code>Composite3DTileContent</code>
-     * always returns <code>false</code>.  Instead call <code>hasProperty</code> for a tile in the composite.
-     */
-    Composite3DTileContent.prototype.hasProperty = function(batchId, name) {
-        return false;
-    };
 
-    /**
-     * Part of the {@link Cesium3DTileContent} interface.  <code>Composite3DTileContent</code>
-     * always returns <code>undefined</code>.  Instead call <code>getFeature</code> for a tile in the composite.
-     */
-    Composite3DTileContent.prototype.getFeature = function(batchId) {
-        return undefined;
-    };
 
-    Composite3DTileContent.prototype.applyDebugSettings = function(enabled, color) {
-        var contents = this._contents;
-        var length = contents.length;
-        for (var i = 0; i < length; ++i) {
-            contents[i].applyDebugSettings(enabled, color);
-        }
-    };
 
-    Composite3DTileContent.prototype.applyStyle = function(style) {
-        var contents = this._contents;
-        var length = contents.length;
-        for (var i = 0; i < length; ++i) {
-            contents[i].applyStyle(style);
-        }
-    };
 
-    Composite3DTileContent.prototype.update = function(tileset, frameState) {
-        var contents = this._contents;
-        var length = contents.length;
-        for (var i = 0; i < length; ++i) {
-            contents[i].update(tileset, frameState);
-        }
-    };
 
-    Composite3DTileContent.prototype.isDestroyed = function() {
-        return false;
-    };
 
-    Composite3DTileContent.prototype.destroy = function() {
-        var contents = this._contents;
-        var length = contents.length;
-        for (var i = 0; i < length; ++i) {
-            contents[i].destroy();
-        }
-        return destroyObject(this);
-    };
 
     return Composite3DTileContent;
 });

@@ -33,7 +33,7 @@ define([
      *     // updatedPositions is just a reference to positions.
      * });
      */
-    function sampleTerrainMostDetailed(terrainProvider, positions) {
+    export function sampleTerrainMostDetailed(terrainProvider, positions) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(terrainProvider)) {
             throw new DeveloperError('terrainProvider is required.');

@@ -18,44 +18,49 @@ define([
         TextureWrap) {
     'use strict';
 
-    /**
-     * @private
-     */
-    function Sampler(options) {
-        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-
-        var wrapS = defaultValue(options.wrapS, TextureWrap.CLAMP_TO_EDGE);
-        var wrapT = defaultValue(options.wrapT, TextureWrap.CLAMP_TO_EDGE);
-        var minificationFilter = defaultValue(options.minificationFilter, TextureMinificationFilter.LINEAR);
-        var magnificationFilter = defaultValue(options.magnificationFilter, TextureMagnificationFilter.LINEAR);
-        var maximumAnisotropy = (defined(options.maximumAnisotropy)) ? options.maximumAnisotropy : 1.0;
-
-        //>>includeStart('debug', pragmas.debug);
-        if (!TextureWrap.validate(wrapS)) {
-            throw new DeveloperError('Invalid sampler.wrapS.');
+        /**
+             * @private
+             */
+        class Sampler {
+            constructor(options) {
+                options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+                var wrapS = defaultValue(options.wrapS, TextureWrap.CLAMP_TO_EDGE);
+                var wrapT = defaultValue(options.wrapT, TextureWrap.CLAMP_TO_EDGE);
+                var minificationFilter = defaultValue(options.minificationFilter, TextureMinificationFilter.LINEAR);
+                var magnificationFilter = defaultValue(options.magnificationFilter, TextureMagnificationFilter.LINEAR);
+                var maximumAnisotropy = (defined(options.maximumAnisotropy)) ? options.maximumAnisotropy : 1.0;
+                //>>includeStart('debug', pragmas.debug);
+                if (!TextureWrap.validate(wrapS)) {
+                    throw new DeveloperError('Invalid sampler.wrapS.');
+                }
+                if (!TextureWrap.validate(wrapT)) {
+                    throw new DeveloperError('Invalid sampler.wrapT.');
+                }
+                if (!TextureMinificationFilter.validate(minificationFilter)) {
+                    throw new DeveloperError('Invalid sampler.minificationFilter.');
+                }
+                if (!TextureMagnificationFilter.validate(magnificationFilter)) {
+                    throw new DeveloperError('Invalid sampler.magnificationFilter.');
+                }
+                Check.typeOf.number.greaterThanOrEquals('maximumAnisotropy', maximumAnisotropy, 1.0);
+                //>>includeEnd('debug');
+                this._wrapS = wrapS;
+                this._wrapT = wrapT;
+                this._minificationFilter = minificationFilter;
+                this._magnificationFilter = magnificationFilter;
+                this._maximumAnisotropy = maximumAnisotropy;
+            }
+            static equals(left, right) {
+                return (left === right) ||
+                    ((defined(left)) &&
+                        (defined(right)) &&
+                        (left._wrapS === right._wrapS) &&
+                        (left._wrapT === right._wrapT) &&
+                        (left._minificationFilter === right._minificationFilter) &&
+                        (left._magnificationFilter === right._magnificationFilter) &&
+                        (left._maximumAnisotropy === right._maximumAnisotropy));
+            }
         }
-
-        if (!TextureWrap.validate(wrapT)) {
-            throw new DeveloperError('Invalid sampler.wrapT.');
-        }
-
-        if (!TextureMinificationFilter.validate(minificationFilter)) {
-            throw new DeveloperError('Invalid sampler.minificationFilter.');
-        }
-
-        if (!TextureMagnificationFilter.validate(magnificationFilter)) {
-            throw new DeveloperError('Invalid sampler.magnificationFilter.');
-        }
-
-        Check.typeOf.number.greaterThanOrEquals('maximumAnisotropy', maximumAnisotropy, 1.0);
-        //>>includeEnd('debug');
-
-        this._wrapS = wrapS;
-        this._wrapT = wrapT;
-        this._minificationFilter = minificationFilter;
-        this._magnificationFilter = magnificationFilter;
-        this._maximumAnisotropy = maximumAnisotropy;
-    }
 
     defineProperties(Sampler.prototype, {
         wrapS : {
@@ -85,16 +90,6 @@ define([
         }
     });
 
-    Sampler.equals = function(left, right) {
-        return (left === right) ||
-               ((defined(left)) &&
-                (defined(right)) &&
-                (left._wrapS === right._wrapS) &&
-                (left._wrapT === right._wrapT) &&
-                (left._minificationFilter === right._minificationFilter) &&
-                (left._magnificationFilter === right._magnificationFilter) &&
-                (left._maximumAnisotropy === right._maximumAnisotropy));
-    };
 
     return Sampler;
 });

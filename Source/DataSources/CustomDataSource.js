@@ -16,36 +16,38 @@ define([
         EntityCollection) {
     'use strict';
 
-    /**
-     * A {@link DataSource} implementation which can be used to manually manage a group of entities.
-     *
-     * @alias CustomDataSource
-     * @constructor
-     *
-     * @param {String} [name] A human-readable name for this instance.
-     *
-     * @example
-     * var dataSource = new Cesium.CustomDataSource('myData');
-     *
-     * var entity = dataSource.entities.add({
-     *    position : Cesium.Cartesian3.fromDegrees(1, 2, 0),
-     *    billboard : {
-     *        image : 'image.png'
-     *    }
-     * });
-     *
-     * viewer.dataSources.add(dataSource);
-     */
-    function CustomDataSource(name) {
-        this._name = name;
-        this._clock = undefined;
-        this._changed = new Event();
-        this._error = new Event();
-        this._isLoading = false;
-        this._loading = new Event();
-        this._entityCollection = new EntityCollection(this);
-        this._entityCluster = new EntityCluster();
-    }
+        /**
+             * A {@link DataSource} implementation which can be used to manually manage a group of entities.
+             *
+             * @alias CustomDataSource
+             * @constructor
+             *
+             * @param {String} [name] A human-readable name for this instance.
+             *
+             * @example
+             * var dataSource = new Cesium.CustomDataSource('myData');
+             *
+             * var entity = dataSource.entities.add({
+             *    position : Cesium.Cartesian3.fromDegrees(1, 2, 0),
+             *    billboard : {
+             *        image : 'image.png'
+             *    }
+             * });
+             *
+             * viewer.dataSources.add(dataSource);
+             */
+        class CustomDataSource {
+            constructor(name) {
+                this._name = name;
+                this._clock = undefined;
+                this._changed = new Event();
+                this._error = new Event();
+                this._isLoading = false;
+                this._loading = new Event();
+                this._entityCollection = new EntityCollection(this);
+                this._entityCluster = new EntityCluster();
+            }
+        }
 
     defineProperties(CustomDataSource.prototype, {
         /**

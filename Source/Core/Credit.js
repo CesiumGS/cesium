@@ -15,42 +15,86 @@ define([
     var nextCreditId = 0;
     var creditToId = {};
 
-    /**
-     * A credit contains data pertaining to how to display attributions/credits for certain content on the screen.
-     * @param {String} html An string representing an html code snippet
-     * @param {Boolean} [showOnScreen=false] If true, the credit will be visible in the main credit container.  Otherwise, it will appear in a popover
-     *
-     * @alias Credit
-     * @constructor
-     *
-     * @exception {DeveloperError} html is required.
-     *
-     * @example
-     * //Create a credit with a tooltip, image and link
-     * var credit = new Cesium.Credit('<a href="https://cesiumjs.org/" target="_blank"><img src="/images/cesium_logo.png" title="Cesium"/></a>');
-     */
-    function Credit(html, showOnScreen) {
-        //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.string('html', html);
-        //>>includeEnd('debug');
-        var id;
-        var key = html;
-
-        if (defined(creditToId[key])) {
-            id = creditToId[key];
-        } else {
-            id = nextCreditId++;
-            creditToId[key] = id;
+        /**
+             * A credit contains data pertaining to how to display attributions/credits for certain content on the screen.
+             * @param {String} html An string representing an html code snippet
+             * @param {Boolean} [showOnScreen=false] If true, the credit will be visible in the main credit container.  Otherwise, it will appear in a popover
+             *
+             * @alias Credit
+             * @constructor
+             *
+             * @exception {DeveloperError} html is required.
+             *
+             * @example
+             * //Create a credit with a tooltip, image and link
+             * var credit = new Cesium.Credit('<a href="https://cesiumjs.org/" target="_blank"><img src="/images/cesium_logo.png" title="Cesium"/></a>');
+             */
+        class Credit {
+            constructor(html, showOnScreen) {
+                //>>includeStart('debug', pragmas.debug);
+                Check.typeOf.string('html', html);
+                //>>includeEnd('debug');
+                var id;
+                var key = html;
+                if (defined(creditToId[key])) {
+                    id = creditToId[key];
+                }
+                else {
+                    id = nextCreditId++;
+                    creditToId[key] = id;
+                }
+                showOnScreen = defaultValue(showOnScreen, false);
+                // Credits are immutable so generate an id to use to optimize equal()
+                this._id = id;
+                this._html = html;
+                this._showOnScreen = showOnScreen;
+                this._element = undefined;
+            }
+            /**
+                 * Returns true if the credits are equal
+                 *
+                 * @param {Credit} credit The credit to compare to.
+                 * @returns {Boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
+                 */
+            equals(credit) {
+                return Credit.equals(this, credit);
+            }
+            /**
+                 * Returns true if the credits are equal
+                 *
+                 * @param {Credit} left The first credit
+                 * @param {Credit} right The second credit
+                 * @returns {Boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
+                 */
+            static equals(left, right) {
+                return (left === right) ||
+                    ((defined(left)) &&
+                        (defined(right)) &&
+                        (left._id === right._id));
+            }
+            /**
+                 * @private
+                 * @param attribution
+                 * @return {Credit}
+                 */
+            static getIonCredit(attribution) {
+                var showOnScreen = defined(attribution.collapsible) && !attribution.collapsible;
+                var credit = new Credit(attribution.html, showOnScreen);
+                credit._isIon = credit.html.indexOf('ion-credit.png') !== -1;
+                return credit;
+            }
+            /**
+                 * Duplicates a Credit instance.
+                 *
+                 * @param {Credit} [credit] The Credit to duplicate.
+                 * @returns {Credit} A new Credit instance that is a duplicate of the one provided. (Returns undefined if the credit is undefined)
+                 */
+            static clone(credit) {
+                if (defined(credit)) {
+                    return new Credit(credit.html, credit.showOnScreen);
+                }
+            }
         }
-
-        showOnScreen = defaultValue(showOnScreen, false);
-
-        // Credits are immutable so generate an id to use to optimize equal()
-        this._id = id;
-        this._html = html;
-        this._showOnScreen = showOnScreen;
-        this._element = undefined;
-    }
 
     defineProperties(Credit.prototype, {
         /**
@@ -118,54 +162,9 @@ define([
         }
     });
 
-    /**
-     * Returns true if the credits are equal
-     *
-     * @param {Credit} left The first credit
-     * @param {Credit} right The second credit
-     * @returns {Boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
-     */
-    Credit.equals = function(left, right) {
-        return (left === right) ||
-               ((defined(left)) &&
-                (defined(right)) &&
-                (left._id === right._id));
-    };
 
-    /**
-     * Returns true if the credits are equal
-     *
-     * @param {Credit} credit The credit to compare to.
-     * @returns {Boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
-     */
-    Credit.prototype.equals = function(credit) {
-        return Credit.equals(this, credit);
-    };
 
-    /**
-     * @private
-     * @param attribution
-     * @return {Credit}
-     */
-    Credit.getIonCredit = function(attribution) {
-        var showOnScreen = defined(attribution.collapsible) && !attribution.collapsible;
-        var credit = new Credit(attribution.html, showOnScreen);
 
-        credit._isIon = credit.html.indexOf('ion-credit.png') !== -1;
-        return credit;
-    };
-
-    /**
-     * Duplicates a Credit instance.
-     *
-     * @param {Credit} [credit] The Credit to duplicate.
-     * @returns {Credit} A new Credit instance that is a duplicate of the one provided. (Returns undefined if the credit is undefined)
-     */
-    Credit.clone = function(credit) {
-        if (defined(credit)) {
-            return new Credit(credit.html, credit.showOnScreen);
-        }
-    };
 
     return Credit;
 });

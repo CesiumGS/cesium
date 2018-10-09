@@ -12,33 +12,69 @@ define([
         defineProperties) {
     'use strict';
 
-    /**
-     * Value and type information for per-instance geometry attribute that determines the geometry instance offset
-     *
-     * @alias OffsetGeometryInstanceAttribute
-     * @constructor
-     *
-     * @param {Number} [x=0] The x translation
-     * @param {Number} [y=0] The y translation
-     * @param {Number} [z=0] The z translation
-     *
-     * @private
-     *
-     * @see GeometryInstance
-     * @see GeometryInstanceAttribute
-     */
-    function OffsetGeometryInstanceAttribute(x, y, z) {
-        x = defaultValue(x, 0);
-        y = defaultValue(y, 0);
-        z = defaultValue(z, 0);
-
         /**
-         * The values for the attributes stored in a typed array.
-         *
-         * @type Float32Array
-         */
-        this.value = new Float32Array([x, y, z]);
-    }
+             * Value and type information for per-instance geometry attribute that determines the geometry instance offset
+             *
+             * @alias OffsetGeometryInstanceAttribute
+             * @constructor
+             *
+             * @param {Number} [x=0] The x translation
+             * @param {Number} [y=0] The y translation
+             * @param {Number} [z=0] The z translation
+             *
+             * @private
+             *
+             * @see GeometryInstance
+             * @see GeometryInstanceAttribute
+             */
+        class OffsetGeometryInstanceAttribute {
+            constructor(x, y, z) {
+                x = defaultValue(x, 0);
+                y = defaultValue(y, 0);
+                z = defaultValue(z, 0);
+                /**
+                 * The values for the attributes stored in a typed array.
+                 *
+                 * @type Float32Array
+                 */
+                this.value = new Float32Array([x, y, z]);
+            }
+            /**
+                 * Creates a new {@link OffsetGeometryInstanceAttribute} instance given the provided an enabled flag and {@link DistanceDisplayCondition}.
+                 *
+                 * @param {Cartesian3} offset The cartesian offset
+                 * @returns {OffsetGeometryInstanceAttribute} The new {@link OffsetGeometryInstanceAttribute} instance.
+                 */
+            static fromCartesian3(offset) {
+                //>>includeStart('debug', pragmas.debug);
+                Check.defined('offset', offset);
+                //>>includeEnd('debug');
+                return new OffsetGeometryInstanceAttribute(offset.x, offset.y, offset.z);
+            }
+            /**
+                 * Converts a distance display condition to a typed array that can be used to assign a distance display condition attribute.
+                 *
+                 * @param {Cartesian3} offset The cartesian offset
+                 * @param {Float32Array} [result] The array to store the result in, if undefined a new instance will be created.
+                 * @returns {Float32Array} The modified result parameter or a new instance if result was undefined.
+                 *
+                 * @example
+                 * var attributes = primitive.getGeometryInstanceAttributes('an id');
+                 * attributes.modelMatrix = Cesium.OffsetGeometryInstanceAttribute.toValue(modelMatrix, attributes.modelMatrix);
+                 */
+            static toValue(offset, result) {
+                //>>includeStart('debug', pragmas.debug);
+                Check.defined('offset', offset);
+                //>>includeEnd('debug');
+                if (!defined(result)) {
+                    result = new Float32Array([offset.x, offset.y, offset.z]);
+                }
+                result[0] = offset.x;
+                result[1] = offset.y;
+                result[2] = offset.z;
+                return result;
+            }
+        }
 
     defineProperties(OffsetGeometryInstanceAttribute.prototype, {
         /**
@@ -93,45 +129,7 @@ define([
         }
     });
 
-    /**
-     * Creates a new {@link OffsetGeometryInstanceAttribute} instance given the provided an enabled flag and {@link DistanceDisplayCondition}.
-     *
-     * @param {Cartesian3} offset The cartesian offset
-     * @returns {OffsetGeometryInstanceAttribute} The new {@link OffsetGeometryInstanceAttribute} instance.
-     */
-    OffsetGeometryInstanceAttribute.fromCartesian3 = function(offset) {
-        //>>includeStart('debug', pragmas.debug);
-        Check.defined('offset', offset);
-        //>>includeEnd('debug');
 
-        return new OffsetGeometryInstanceAttribute(offset.x, offset.y, offset.z);
-    };
-
-    /**
-     * Converts a distance display condition to a typed array that can be used to assign a distance display condition attribute.
-     *
-     * @param {Cartesian3} offset The cartesian offset
-     * @param {Float32Array} [result] The array to store the result in, if undefined a new instance will be created.
-     * @returns {Float32Array} The modified result parameter or a new instance if result was undefined.
-     *
-     * @example
-     * var attributes = primitive.getGeometryInstanceAttributes('an id');
-     * attributes.modelMatrix = Cesium.OffsetGeometryInstanceAttribute.toValue(modelMatrix, attributes.modelMatrix);
-     */
-    OffsetGeometryInstanceAttribute.toValue = function(offset, result) {
-        //>>includeStart('debug', pragmas.debug);
-        Check.defined('offset', offset);
-        //>>includeEnd('debug');
-
-        if (!defined(result)) {
-            result = new Float32Array([offset.x, offset.y, offset.z]);
-        }
-
-        result[0] = offset.x;
-        result[1] = offset.y;
-        result[2] = offset.z;
-        return result;
-    };
 
     return OffsetGeometryInstanceAttribute;
 });

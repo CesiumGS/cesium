@@ -267,83 +267,127 @@ define([
         return result;
     }
 
-    /**
-     * An object containing various inputs that will be combined to form a final GLSL shader string.
-     *
-     * @param {Object} [options] Object with the following properties:
-     * @param {String[]} [options.sources] An array of strings to combine containing GLSL code for the shader.
-     * @param {String[]} [options.defines] An array of strings containing GLSL identifiers to <code>#define</code>.
-     * @param {String} [options.pickColorQualifier] The GLSL qualifier, <code>uniform</code> or <code>varying</code>, for the input <code>czm_pickColor</code>.  When defined, a pick fragment shader is generated.
-     * @param {Boolean} [options.includeBuiltIns=true] If true, referenced built-in functions will be included with the combined shader.  Set to false if this shader will become a source in another shader, to avoid duplicating functions.
-     *
-     * @exception {DeveloperError} options.pickColorQualifier must be 'uniform' or 'varying'.
-     *
-     * @example
-     * // 1. Prepend #defines to a shader
-     * var source = new Cesium.ShaderSource({
-     *   defines : ['WHITE'],
-     *   sources : ['void main() { \n#ifdef WHITE\n gl_FragColor = vec4(1.0); \n#else\n gl_FragColor = vec4(0.0); \n#endif\n }']
-     * });
-     *
-     * // 2. Modify a fragment shader for picking
-     * var source = new Cesium.ShaderSource({
-     *   sources : ['void main() { gl_FragColor = vec4(1.0); }'],
-     *   pickColorQualifier : 'uniform'
-     * });
-     *
-     * @private
-     */
-    function ShaderSource(options) {
-        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-        var pickColorQualifier = options.pickColorQualifier;
-
-        //>>includeStart('debug', pragmas.debug);
-        if (defined(pickColorQualifier) && pickColorQualifier !== 'uniform' && pickColorQualifier !== 'varying') {
-            throw new DeveloperError('options.pickColorQualifier must be \'uniform\' or \'varying\'.');
+        /**
+             * An object containing various inputs that will be combined to form a final GLSL shader string.
+             *
+             * @param {Object} [options] Object with the following properties:
+             * @param {String[]} [options.sources] An array of strings to combine containing GLSL code for the shader.
+             * @param {String[]} [options.defines] An array of strings containing GLSL identifiers to <code>#define</code>.
+             * @param {String} [options.pickColorQualifier] The GLSL qualifier, <code>uniform</code> or <code>varying</code>, for the input <code>czm_pickColor</code>.  When defined, a pick fragment shader is generated.
+             * @param {Boolean} [options.includeBuiltIns=true] If true, referenced built-in functions will be included with the combined shader.  Set to false if this shader will become a source in another shader, to avoid duplicating functions.
+             *
+             * @exception {DeveloperError} options.pickColorQualifier must be 'uniform' or 'varying'.
+             *
+             * @example
+             * // 1. Prepend #defines to a shader
+             * var source = new Cesium.ShaderSource({
+             *   defines : ['WHITE'],
+             *   sources : ['void main() { \n#ifdef WHITE\n gl_FragColor = vec4(1.0); \n#else\n gl_FragColor = vec4(0.0); \n#endif\n }']
+             * });
+             *
+             * // 2. Modify a fragment shader for picking
+             * var source = new Cesium.ShaderSource({
+             *   sources : ['void main() { gl_FragColor = vec4(1.0); }'],
+             *   pickColorQualifier : 'uniform'
+             * });
+             *
+             * @private
+             */
+        class ShaderSource {
+            constructor(options) {
+                options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+                var pickColorQualifier = options.pickColorQualifier;
+                //>>includeStart('debug', pragmas.debug);
+                if (defined(pickColorQualifier) && pickColorQualifier !== 'uniform' && pickColorQualifier !== 'varying') {
+                    throw new DeveloperError('options.pickColorQualifier must be \'uniform\' or \'varying\'.');
+                }
+                //>>includeEnd('debug');
+                this.defines = defined(options.defines) ? options.defines.slice(0) : [];
+                this.sources = defined(options.sources) ? options.sources.slice(0) : [];
+                this.pickColorQualifier = pickColorQualifier;
+                this.includeBuiltIns = defaultValue(options.includeBuiltIns, true);
+            }
+            clone() {
+                return new ShaderSource({
+                    sources: this.sources,
+                    defines: this.defines,
+                    pickColorQualifier: this.pickColorQualifier,
+                    includeBuiltIns: this.includeBuiltIns
+                });
+            }
+            /**
+                 * Create a single string containing the full, combined vertex shader with all dependencies and defines.
+                 *
+                 * @param {Context} context The current rendering context
+                 *
+                 * @returns {String} The combined shader string.
+                 */
+            createCombinedVertexShader(context) {
+                return combineShader(this, false, context);
+            }
+            /**
+                 * Create a single string containing the full, combined fragment shader with all dependencies and defines.
+                 *
+                 * @param {Context} context The current rendering context
+                 *
+                 * @returns {String} The combined shader string.
+                 */
+            createCombinedFragmentShader(context) {
+                return combineShader(this, true, context);
+            }
+            static replaceMain(source, renamedMain) {
+                renamedMain = 'void ' + renamedMain + '()';
+                return source.replace(/void\s+main\s*\(\s*(?:void)?\s*\)/g, renamedMain);
+            }
+            static createPickVertexShaderSource(vertexShaderSource) {
+                var renamedVS = ShaderSource.replaceMain(vertexShaderSource, 'czm_old_main');
+                var pickMain = 'attribute vec4 pickColor; \n' +
+                    'varying vec4 czm_pickColor; \n' +
+                    'void main() \n' +
+                    '{ \n' +
+                    '    czm_old_main(); \n' +
+                    '    czm_pickColor = pickColor; \n' +
+                    '}';
+                return renamedVS + '\n' + pickMain;
+            }
+            static createPickFragmentShaderSource(fragmentShaderSource, pickColorQualifier) {
+                var renamedFS = ShaderSource.replaceMain(fragmentShaderSource, 'czm_old_main');
+                var pickMain = pickColorQualifier + ' vec4 czm_pickColor; \n' +
+                    'void main() \n' +
+                    '{ \n' +
+                    '    czm_old_main(); \n' +
+                    '    if (gl_FragColor.a == 0.0) { \n' +
+                    '       discard; \n' +
+                    '    } \n' +
+                    '    gl_FragColor = czm_pickColor; \n' +
+                    '}';
+                return renamedFS + '\n' + pickMain;
+            }
+            static findVarying(shaderSource, names) {
+                var sources = shaderSource.sources;
+                var namesLength = names.length;
+                for (var i = 0; i < namesLength; ++i) {
+                    var name = names[i];
+                    var sourcesLength = sources.length;
+                    for (var j = 0; j < sourcesLength; ++j) {
+                        if (sources[j].indexOf(name) !== -1) {
+                            return name;
+                        }
+                    }
+                }
+                return undefined;
+            }
+            static findNormalVarying(shaderSource) {
+                return ShaderSource.findVarying(shaderSource, normalVaryingNames);
+            }
+            static findPositionVarying(shaderSource) {
+                return ShaderSource.findVarying(shaderSource, positionVaryingNames);
+            }
         }
-        //>>includeEnd('debug');
 
-        this.defines = defined(options.defines) ? options.defines.slice(0) : [];
-        this.sources = defined(options.sources) ? options.sources.slice(0) : [];
-        this.pickColorQualifier = pickColorQualifier;
-        this.includeBuiltIns = defaultValue(options.includeBuiltIns, true);
-    }
 
-    ShaderSource.prototype.clone = function() {
-        return new ShaderSource({
-            sources : this.sources,
-            defines : this.defines,
-            pickColorQualifier : this.pickColorQualifier,
-            includeBuiltIns : this.includeBuiltIns
-        });
-    };
 
-    ShaderSource.replaceMain = function(source, renamedMain) {
-        renamedMain = 'void ' + renamedMain + '()';
-        return source.replace(/void\s+main\s*\(\s*(?:void)?\s*\)/g, renamedMain);
-    };
 
-    /**
-     * Create a single string containing the full, combined vertex shader with all dependencies and defines.
-     *
-     * @param {Context} context The current rendering context
-     *
-     * @returns {String} The combined shader string.
-     */
-    ShaderSource.prototype.createCombinedVertexShader = function(context) {
-        return combineShader(this, false, context);
-    };
-
-    /**
-     * Create a single string containing the full, combined fragment shader with all dependencies and defines.
-     *
-     * @param {Context} context The current rendering context
-     *
-     * @returns {String} The combined shader string.
-     */
-    ShaderSource.prototype.createCombinedFragmentShader = function(context) {
-        return combineShader(this, true, context);
-    };
 
     /**
      * For ShaderProgram testing
@@ -366,63 +410,14 @@ define([
         }
     }
 
-    ShaderSource.createPickVertexShaderSource = function(vertexShaderSource) {
-        var renamedVS = ShaderSource.replaceMain(vertexShaderSource, 'czm_old_main');
-        var pickMain = 'attribute vec4 pickColor; \n' +
-            'varying vec4 czm_pickColor; \n' +
-            'void main() \n' +
-            '{ \n' +
-            '    czm_old_main(); \n' +
-            '    czm_pickColor = pickColor; \n' +
-            '}';
 
-        return renamedVS + '\n' + pickMain;
-    };
 
-    ShaderSource.createPickFragmentShaderSource = function(fragmentShaderSource, pickColorQualifier) {
-        var renamedFS = ShaderSource.replaceMain(fragmentShaderSource, 'czm_old_main');
-        var pickMain = pickColorQualifier + ' vec4 czm_pickColor; \n' +
-            'void main() \n' +
-            '{ \n' +
-            '    czm_old_main(); \n' +
-            '    if (gl_FragColor.a == 0.0) { \n' +
-            '       discard; \n' +
-            '    } \n' +
-            '    gl_FragColor = czm_pickColor; \n' +
-            '}';
-
-        return renamedFS + '\n' + pickMain;
-    };
-
-    ShaderSource.findVarying = function(shaderSource, names) {
-        var sources = shaderSource.sources;
-
-        var namesLength = names.length;
-        for (var i = 0; i < namesLength; ++i) {
-            var name = names[i];
-
-            var sourcesLength = sources.length;
-            for (var j = 0; j < sourcesLength; ++j) {
-                if (sources[j].indexOf(name) !== -1) {
-                    return name;
-                }
-            }
-        }
-
-        return undefined;
-    };
 
     var normalVaryingNames = ['v_normalEC', 'v_normal'];
 
-    ShaderSource.findNormalVarying = function(shaderSource) {
-        return ShaderSource.findVarying(shaderSource, normalVaryingNames);
-    };
 
     var positionVaryingNames = ['v_positionEC'];
 
-    ShaderSource.findPositionVarying = function(shaderSource) {
-        return ShaderSource.findVarying(shaderSource, positionVaryingNames);
-    };
 
     return ShaderSource;
 });

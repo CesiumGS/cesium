@@ -13,7 +13,7 @@ define([
     /**
      * @private
      */
-    function getStringFromTypedArray(uint8Array, byteOffset, byteLength) {
+    export function getStringFromTypedArray(uint8Array, byteOffset, byteLength) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(uint8Array)) {
             throw new DeveloperError('uint8Array is required.');

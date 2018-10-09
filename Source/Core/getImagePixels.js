@@ -17,7 +17,7 @@ define([
      * @param {Number} height The height of the image. If not defined, then image.height is assigned.
      * @returns {CanvasPixelArray} The pixels of the image.
      */
-    function getImagePixels(image, width, height) {
+    export function getImagePixels(image, width, height) {
         if (!defined(width)) {
             width = image.width;
         }

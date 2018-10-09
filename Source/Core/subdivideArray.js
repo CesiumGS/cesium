@@ -16,7 +16,7 @@ define([
      *
      * @exception {DeveloperError} numberOfArrays must be greater than 0.
      */
-    function subdivideArray(array, numberOfArrays) {
+    export function subdivideArray(array, numberOfArrays) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(array)) {
             throw new DeveloperError('array is required.');

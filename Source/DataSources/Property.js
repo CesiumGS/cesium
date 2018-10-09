@@ -10,24 +10,81 @@ define([
         DeveloperError) {
     'use strict';
 
-    /**
-     * The interface for all properties, which represent a value that can optionally vary over time.
-     * This type defines an interface and cannot be instantiated directly.
-     *
-     * @alias Property
-     * @constructor
-     *
-     * @see CompositeProperty
-     * @see ConstantProperty
-     * @see SampledProperty
-     * @see TimeIntervalCollectionProperty
-     * @see MaterialProperty
-     * @see PositionProperty
-     * @see ReferenceProperty
-     */
-    function Property() {
-        DeveloperError.throwInstantiationError();
-    }
+        /**
+             * The interface for all properties, which represent a value that can optionally vary over time.
+             * This type defines an interface and cannot be instantiated directly.
+             *
+             * @alias Property
+             * @constructor
+             *
+             * @see CompositeProperty
+             * @see ConstantProperty
+             * @see SampledProperty
+             * @see TimeIntervalCollectionProperty
+             * @see MaterialProperty
+             * @see PositionProperty
+             * @see ReferenceProperty
+             */
+        class Property {
+            constructor() {
+                DeveloperError.throwInstantiationError();
+            }
+            /**
+                 * @private
+                 */
+            static equals(left, right) {
+                return left === right || (defined(left) && left.equals(right));
+            }
+            /**
+                 * @private
+                 */
+            static arrayEquals(left, right) {
+                if (left === right) {
+                    return true;
+                }
+                if ((!defined(left) || !defined(right)) || (left.length !== right.length)) {
+                    return false;
+                }
+                var length = left.length;
+                for (var i = 0; i < length; i++) {
+                    if (!Property.equals(left[i], right[i])) {
+                        return false;
+                    }
+                }
+                return true;
+            }
+            /**
+                 * @private
+                 */
+            static isConstant(property) {
+                return !defined(property) || property.isConstant;
+            }
+            /**
+                 * @private
+                 */
+            static getValueOrUndefined(property, time, result) {
+                return defined(property) ? property.getValue(time, result) : undefined;
+            }
+            /**
+                 * @private
+                 */
+            static getValueOrDefault(property, time, valueDefault, result) {
+                return defined(property) ? defaultValue(property.getValue(time, result), valueDefault) : valueDefault;
+            }
+            /**
+                 * @private
+                 */
+            static getValueOrClonedDefault(property, time, valueDefault, result) {
+                var value;
+                if (defined(property)) {
+                    value = property.getValue(time, result);
+                }
+                if (!defined(value)) {
+                    value = valueDefault.clone(value);
+                }
+                return value;
+            }
+        }
 
     defineProperties(Property.prototype, {
         /**
@@ -75,66 +132,11 @@ define([
      */
     Property.prototype.equals = DeveloperError.throwInstantiationError;
 
-    /**
-     * @private
-     */
-    Property.equals = function(left, right) {
-        return left === right || (defined(left) && left.equals(right));
-    };
 
-    /**
-     * @private
-     */
-    Property.arrayEquals = function(left, right) {
-        if (left === right) {
-            return true;
-        }
-        if ((!defined(left) || !defined(right)) || (left.length !== right.length)) {
-            return false;
-        }
-        var length = left.length;
-        for (var i = 0; i < length; i++) {
-            if (!Property.equals(left[i], right[i])) {
-                return false;
-            }
-        }
-        return true;
-    };
 
-    /**
-     * @private
-     */
-    Property.isConstant = function(property) {
-        return !defined(property) || property.isConstant;
-    };
 
-    /**
-     * @private
-     */
-    Property.getValueOrUndefined = function(property, time, result) {
-        return defined(property) ? property.getValue(time, result) : undefined;
-    };
 
-    /**
-     * @private
-     */
-    Property.getValueOrDefault = function(property, time, valueDefault, result) {
-        return defined(property) ? defaultValue(property.getValue(time, result), valueDefault) : valueDefault;
-    };
 
-    /**
-     * @private
-     */
-    Property.getValueOrClonedDefault = function(property, time, valueDefault, result) {
-        var value;
-        if (defined(property)) {
-            value = property.getValue(time, result);
-        }
-        if (!defined(value)) {
-            value = valueDefault.clone(value);
-        }
-        return value;
-    };
 
     return Property;
 });

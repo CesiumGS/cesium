@@ -1,14 +1,14 @@
 define([
-        './Check',
-        './defined',
-        './FeatureDetection'
-    ], function(
-        Check,
-        defined,
-        FeatureDetection) {
+    './Check',
+    './defined',
+    './FeatureDetection'
+], function(
+    Check,
+    defined,
+    FeatureDetection) {
     'use strict';
 
-     /**
+    /**
      * Create a shallow copy of an array from begin to end.
      *
      * @param {Array} array The array to fill.
@@ -18,7 +18,7 @@ define([
      * @returns {Array} The resulting array.
      * @private
      */
-    function arraySlice(array, begin, end) {
+    export function arraySlice(array: any[], begin: number = 0, end: number = array.length): any[] {
         //>>includeStart('debug', pragmas.debug);
         Check.defined('array', array);
         if (defined(begin)) {

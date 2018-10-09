@@ -1,7 +1,7 @@
 define([
-        './freezeObject'
-    ], function(
-        freezeObject) {
+    './freezeObject'
+], function(
+    freezeObject) {
     'use strict';
 
     /**
@@ -17,7 +17,7 @@ define([
      * @example
      * param = Cesium.defaultValue(param, 'default');
      */
-    function defaultValue(a, b) {
+    function defaultValue(a: any, b: any): any {
         if (a !== undefined && a !== null) {
             return a;
         }

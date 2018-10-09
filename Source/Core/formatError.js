@@ -13,7 +13,7 @@ define([
      * @param {*} object The item to find in the array.
      * @returns {String} A string containing the formatted error.
      */
-    function formatError(object) {
+    export function formatError(object) {
         var result;
 
         var name = object.name;

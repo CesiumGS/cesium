@@ -33,125 +33,734 @@ define([
         return m1;
     }
 
-    /**
-     * A color, specified using red, green, blue, and alpha values,
-     * which range from <code>0</code> (no intensity) to <code>1.0</code> (full intensity).
-     * @param {Number} [red=1.0] The red component.
-     * @param {Number} [green=1.0] The green component.
-     * @param {Number} [blue=1.0] The blue component.
-     * @param {Number} [alpha=1.0] The alpha component.
-     *
-     * @constructor
-     * @alias Color
-     *
-     * @see Packable
-     */
-    function Color(red, green, blue, alpha) {
         /**
-         * The red component.
-         * @type {Number}
-         * @default 1.0
-         */
-        this.red = defaultValue(red, 1.0);
-        /**
-         * The green component.
-         * @type {Number}
-         * @default 1.0
-         */
-        this.green = defaultValue(green, 1.0);
-        /**
-         * The blue component.
-         * @type {Number}
-         * @default 1.0
-         */
-        this.blue = defaultValue(blue, 1.0);
-        /**
-         * The alpha component.
-         * @type {Number}
-         * @default 1.0
-         */
-        this.alpha = defaultValue(alpha, 1.0);
-    }
-
-    /**
-     * Creates a Color instance from a {@link Cartesian4}. <code>x</code>, <code>y</code>, <code>z</code>,
-     * and <code>w</code> map to <code>red</code>, <code>green</code>, <code>blue</code>, and <code>alpha</code>, respectively.
-     *
-     * @param {Cartesian4} cartesian The source cartesian.
-     * @param {Color} [result] The object onto which to store the result.
-     * @returns {Color} The modified result parameter or a new Color instance if one was not provided.
-     */
-    Color.fromCartesian4 = function(cartesian, result) {
-        //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.object('cartesian', cartesian);
-        //>>includeEnd('debug');
-
-        if (!defined(result)) {
-            return new Color(cartesian.x, cartesian.y, cartesian.z, cartesian.w);
+             * A color, specified using red, green, blue, and alpha values,
+             * which range from <code>0</code> (no intensity) to <code>1.0</code> (full intensity).
+             * @param {Number} [red=1.0] The red component.
+             * @param {Number} [green=1.0] The green component.
+             * @param {Number} [blue=1.0] The blue component.
+             * @param {Number} [alpha=1.0] The alpha component.
+             *
+             * @constructor
+             * @alias Color
+             *
+             * @see Packable
+             */
+        class Color {
+            constructor(red, green, blue, alpha) {
+                /**
+                 * The red component.
+                 * @type {Number}
+                 * @default 1.0
+                 */
+                this.red = defaultValue(red, 1.0);
+                /**
+                 * The green component.
+                 * @type {Number}
+                 * @default 1.0
+                 */
+                this.green = defaultValue(green, 1.0);
+                /**
+                 * The blue component.
+                 * @type {Number}
+                 * @default 1.0
+                 */
+                this.blue = defaultValue(blue, 1.0);
+                /**
+                 * The alpha component.
+                 * @type {Number}
+                 * @default 1.0
+                 */
+                this.alpha = defaultValue(alpha, 1.0);
+            }
+            /**
+                 * Returns a duplicate of a Color instance.
+                 *
+                 * @param {Color} [result] The object to store the result in, if undefined a new instance will be created.
+                 * @returns {Color} The modified result parameter or a new instance if result was undefined.
+                 */
+            clone(result) {
+                return Color.clone(this, result);
+            }
+            /**
+                 * Returns true if this Color equals other.
+                 *
+                 * @param {Color} other The Color to compare for equality.
+                 * @returns {Boolean} <code>true</code> if the Colors are equal; otherwise, <code>false</code>.
+                 */
+            equals(other) {
+                return Color.equals(this, other);
+            }
+            /**
+                 * Returns <code>true</code> if this Color equals other componentwise within the specified epsilon.
+                 *
+                 * @param {Color} other The Color to compare for equality.
+                 * @param {Number} [epsilon=0.0] The epsilon to use for equality testing.
+                 * @returns {Boolean} <code>true</code> if the Colors are equal within the specified epsilon; otherwise, <code>false</code>.
+                 */
+            equalsEpsilon(other, epsilon) {
+                return (this === other) || //
+                    ((defined(other)) && //
+                        (Math.abs(this.red - other.red) <= epsilon) && //
+                        (Math.abs(this.green - other.green) <= epsilon) && //
+                        (Math.abs(this.blue - other.blue) <= epsilon) && //
+                        (Math.abs(this.alpha - other.alpha) <= epsilon));
+            }
+            /**
+                 * Creates a string representing this Color in the format '(red, green, blue, alpha)'.
+                 *
+                 * @returns {String} A string representing this Color in the format '(red, green, blue, alpha)'.
+                 */
+            toString() {
+                return '(' + this.red + ', ' + this.green + ', ' + this.blue + ', ' + this.alpha + ')';
+            }
+            /**
+                 * Creates a string containing the CSS color value for this color.
+                 *
+                 * @returns {String} The CSS equivalent of this color.
+                 *
+                 * @see {@link http://www.w3.org/TR/css3-color/#rgba-color|CSS RGB or RGBA color values}
+                 */
+            toCssColorString() {
+                var red = Color.floatToByte(this.red);
+                var green = Color.floatToByte(this.green);
+                var blue = Color.floatToByte(this.blue);
+                if (this.alpha === 1) {
+                    return 'rgb(' + red + ',' + green + ',' + blue + ')';
+                }
+                return 'rgba(' + red + ',' + green + ',' + blue + ',' + this.alpha + ')';
+            }
+            /**
+                 * Converts this color to an array of red, green, blue, and alpha values
+                 * that are in the range of 0 to 255.
+                 *
+                 * @param {Number[]} [result] The array to store the result in, if undefined a new instance will be created.
+                 * @returns {Number[]} The modified result parameter or a new instance if result was undefined.
+                 */
+            toBytes(result) {
+                var red = Color.floatToByte(this.red);
+                var green = Color.floatToByte(this.green);
+                var blue = Color.floatToByte(this.blue);
+                var alpha = Color.floatToByte(this.alpha);
+                if (!defined(result)) {
+                    return [red, green, blue, alpha];
+                }
+                result[0] = red;
+                result[1] = green;
+                result[2] = blue;
+                result[3] = alpha;
+                return result;
+            }
+            /**
+                 * Converts this color to a single numeric unsigned 32-bit RGBA value, using the endianness
+                 * of the system.
+                 *
+                 * @returns {Number} A single numeric unsigned 32-bit RGBA value.
+                 *
+                 *
+                 * @example
+                 * var rgba = Cesium.Color.BLUE.toRgba();
+                 *
+                 * @see Color.fromRgba
+                 */
+            toRgba() {
+                // scratchUint32Array and scratchUint8Array share an underlying array buffer
+                scratchUint8Array[0] = Color.floatToByte(this.red);
+                scratchUint8Array[1] = Color.floatToByte(this.green);
+                scratchUint8Array[2] = Color.floatToByte(this.blue);
+                scratchUint8Array[3] = Color.floatToByte(this.alpha);
+                return scratchUint32Array[0];
+            }
+            /**
+                 * Brightens this color by the provided magnitude.
+                 *
+                 * @param {Number} magnitude A positive number indicating the amount to brighten.
+                 * @param {Color} result The object onto which to store the result.
+                 * @returns {Color} The modified result parameter.
+                 *
+                 * @example
+                 * var brightBlue = Cesium.Color.BLUE.brighten(0.5, new Cesium.Color());
+                 */
+            brighten(magnitude, result) {
+                //>>includeStart('debug', pragmas.debug);
+                Check.typeOf.number('magnitude', magnitude);
+                Check.typeOf.number.greaterThanOrEquals('magnitude', magnitude, 0.0);
+                Check.typeOf.object('result', result);
+                //>>includeEnd('debug');
+                magnitude = (1.0 - magnitude);
+                result.red = 1.0 - ((1.0 - this.red) * magnitude);
+                result.green = 1.0 - ((1.0 - this.green) * magnitude);
+                result.blue = 1.0 - ((1.0 - this.blue) * magnitude);
+                result.alpha = this.alpha;
+                return result;
+            }
+            /**
+                 * Darkens this color by the provided magnitude.
+                 *
+                 * @param {Number} magnitude A positive number indicating the amount to darken.
+                 * @param {Color} result The object onto which to store the result.
+                 * @returns {Color} The modified result parameter.
+                 *
+                 * @example
+                 * var darkBlue = Cesium.Color.BLUE.darken(0.5, new Cesium.Color());
+                 */
+            darken(magnitude, result) {
+                //>>includeStart('debug', pragmas.debug);
+                Check.typeOf.number('magnitude', magnitude);
+                Check.typeOf.number.greaterThanOrEquals('magnitude', magnitude, 0.0);
+                Check.typeOf.object('result', result);
+                //>>includeEnd('debug');
+                magnitude = (1.0 - magnitude);
+                result.red = this.red * magnitude;
+                result.green = this.green * magnitude;
+                result.blue = this.blue * magnitude;
+                result.alpha = this.alpha;
+                return result;
+            }
+            /**
+                 * Creates a new Color that has the same red, green, and blue components
+                 * as this Color, but with the specified alpha value.
+                 *
+                 * @param {Number} alpha The new alpha component.
+                 * @param {Color} [result] The object onto which to store the result.
+                 * @returns {Color} The modified result parameter or a new Color instance if one was not provided.
+                 *
+                 * @example var translucentRed = Cesium.Color.RED.withAlpha(0.9);
+                 */
+            withAlpha(alpha, result) {
+                return Color.fromAlpha(this, alpha, result);
+            }
+            /**
+                 * Creates a Color instance from a {@link Cartesian4}. <code>x</code>, <code>y</code>, <code>z</code>,
+                 * and <code>w</code> map to <code>red</code>, <code>green</code>, <code>blue</code>, and <code>alpha</code>, respectively.
+                 *
+                 * @param {Cartesian4} cartesian The source cartesian.
+                 * @param {Color} [result] The object onto which to store the result.
+                 * @returns {Color} The modified result parameter or a new Color instance if one was not provided.
+                 */
+            static fromCartesian4(cartesian, result) {
+                //>>includeStart('debug', pragmas.debug);
+                Check.typeOf.object('cartesian', cartesian);
+                //>>includeEnd('debug');
+                if (!defined(result)) {
+                    return new Color(cartesian.x, cartesian.y, cartesian.z, cartesian.w);
+                }
+                result.red = cartesian.x;
+                result.green = cartesian.y;
+                result.blue = cartesian.z;
+                result.alpha = cartesian.w;
+                return result;
+            }
+            /**
+                 * Creates a new Color specified using red, green, blue, and alpha values
+                 * that are in the range of 0 to 255, converting them internally to a range of 0.0 to 1.0.
+                 *
+                 * @param {Number} [red=255] The red component.
+                 * @param {Number} [green=255] The green component.
+                 * @param {Number} [blue=255] The blue component.
+                 * @param {Number} [alpha=255] The alpha component.
+                 * @param {Color} [result] The object onto which to store the result.
+                 * @returns {Color} The modified result parameter or a new Color instance if one was not provided.
+                 */
+            static fromBytes(red, green, blue, alpha, result) {
+                red = Color.byteToFloat(defaultValue(red, 255.0));
+                green = Color.byteToFloat(defaultValue(green, 255.0));
+                blue = Color.byteToFloat(defaultValue(blue, 255.0));
+                alpha = Color.byteToFloat(defaultValue(alpha, 255.0));
+                if (!defined(result)) {
+                    return new Color(red, green, blue, alpha);
+                }
+                result.red = red;
+                result.green = green;
+                result.blue = blue;
+                result.alpha = alpha;
+                return result;
+            }
+            /**
+                 * Creates a new Color that has the same red, green, and blue components
+                 * of the specified color, but with the specified alpha value.
+                 *
+                 * @param {Color} color The base color
+                 * @param {Number} alpha The new alpha component.
+                 * @param {Color} [result] The object onto which to store the result.
+                 * @returns {Color} The modified result parameter or a new Color instance if one was not provided.
+                 *
+                 * @example var translucentRed = Cesium.Color.fromAlpha(Cesium.Color.RED, 0.9);
+                 */
+            static fromAlpha(color, alpha, result) {
+                //>>includeStart('debug', pragmas.debug);
+                Check.typeOf.object('color', color);
+                Check.typeOf.number('alpha', alpha);
+                //>>includeEnd('debug');
+                if (!defined(result)) {
+                    return new Color(color.red, color.green, color.blue, alpha);
+                }
+                result.red = color.red;
+                result.green = color.green;
+                result.blue = color.blue;
+                result.alpha = alpha;
+                return result;
+            }
+            /**
+                 * Creates a new Color from a single numeric unsigned 32-bit RGBA value, using the endianness
+                 * of the system.
+                 *
+                 * @param {Number} rgba A single numeric unsigned 32-bit RGBA value.
+                 * @param {Color} [result] The object to store the result in, if undefined a new instance will be created.
+                 * @returns {Color} The color object.
+                 *
+                 * @example
+                 * var color = Cesium.Color.fromRgba(0x67ADDFFF);
+                 *
+                 * @see Color#toRgba
+                 */
+            static fromRgba(rgba, result) {
+                // scratchUint32Array and scratchUint8Array share an underlying array buffer
+                scratchUint32Array[0] = rgba;
+                return Color.fromBytes(scratchUint8Array[0], scratchUint8Array[1], scratchUint8Array[2], scratchUint8Array[3], result);
+            }
+            /**
+                 * Creates a Color instance from hue, saturation, and lightness.
+                 *
+                 * @param {Number} [hue=0] The hue angle 0...1
+                 * @param {Number} [saturation=0] The saturation value 0...1
+                 * @param {Number} [lightness=0] The lightness value 0...1
+                 * @param {Number} [alpha=1.0] The alpha component 0...1
+                 * @param {Color} [result] The object to store the result in, if undefined a new instance will be created.
+                 * @returns {Color} The color object.
+                 *
+                 * @see {@link http://www.w3.org/TR/css3-color/#hsl-color|CSS color values}
+                 */
+            static fromHsl(hue, saturation, lightness, alpha, result) {
+                hue = defaultValue(hue, 0.0) % 1.0;
+                saturation = defaultValue(saturation, 0.0);
+                lightness = defaultValue(lightness, 0.0);
+                alpha = defaultValue(alpha, 1.0);
+                var red = lightness;
+                var green = lightness;
+                var blue = lightness;
+                if (saturation !== 0) {
+                    var m2;
+                    if (lightness < 0.5) {
+                        m2 = lightness * (1 + saturation);
+                    }
+                    else {
+                        m2 = lightness + saturation - lightness * saturation;
+                    }
+                    var m1 = 2.0 * lightness - m2;
+                    red = hue2rgb(m1, m2, hue + 1 / 3);
+                    green = hue2rgb(m1, m2, hue);
+                    blue = hue2rgb(m1, m2, hue - 1 / 3);
+                }
+                if (!defined(result)) {
+                    return new Color(red, green, blue, alpha);
+                }
+                result.red = red;
+                result.green = green;
+                result.blue = blue;
+                result.alpha = alpha;
+                return result;
+            }
+            /**
+                 * Creates a random color using the provided options. For reproducible random colors, you should
+                 * call {@link CesiumMath#setRandomNumberSeed} once at the beginning of your application.
+                 *
+                 * @param {Object} [options] Object with the following properties:
+                 * @param {Number} [options.red] If specified, the red component to use instead of a randomized value.
+                 * @param {Number} [options.minimumRed=0.0] The maximum red value to generate if none was specified.
+                 * @param {Number} [options.maximumRed=1.0] The minimum red value to generate if none was specified.
+                 * @param {Number} [options.green] If specified, the green component to use instead of a randomized value.
+                 * @param {Number} [options.minimumGreen=0.0] The maximum green value to generate if none was specified.
+                 * @param {Number} [options.maximumGreen=1.0] The minimum green value to generate if none was specified.
+                 * @param {Number} [options.blue] If specified, the blue component to use instead of a randomized value.
+                 * @param {Number} [options.minimumBlue=0.0] The maximum blue value to generate if none was specified.
+                 * @param {Number} [options.maximumBlue=1.0] The minimum blue value to generate if none was specified.
+                 * @param {Number} [options.alpha] If specified, the alpha component to use instead of a randomized value.
+                 * @param {Number} [options.minimumAlpha=0.0] The maximum alpha value to generate if none was specified.
+                 * @param {Number} [options.maximumAlpha=1.0] The minimum alpha value to generate if none was specified.
+                 * @param {Color} [result] The object to store the result in, if undefined a new instance will be created.
+                 * @returns {Color} The modified result parameter or a new instance if result was undefined.
+                 *
+                 * @exception {DeveloperError} minimumRed must be less than or equal to maximumRed.
+                 * @exception {DeveloperError} minimumGreen must be less than or equal to maximumGreen.
+                 * @exception {DeveloperError} minimumBlue must be less than or equal to maximumBlue.
+                 * @exception {DeveloperError} minimumAlpha must be less than or equal to maximumAlpha.
+                 *
+                 * @example
+                 * //Create a completely random color
+                 * var color = Cesium.Color.fromRandom();
+                 *
+                 * //Create a random shade of yellow.
+                 * var color = Cesium.Color.fromRandom({
+                 *     red : 1.0,
+                 *     green : 1.0,
+                 *     alpha : 1.0
+                 * });
+                 *
+                 * //Create a random bright color.
+                 * var color = Cesium.Color.fromRandom({
+                 *     minimumRed : 0.75,
+                 *     minimumGreen : 0.75,
+                 *     minimumBlue : 0.75,
+                 *     alpha : 1.0
+                 * });
+                 */
+            static fromRandom(options, result) {
+                options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+                var red = options.red;
+                if (!defined(red)) {
+                    var minimumRed = defaultValue(options.minimumRed, 0);
+                    var maximumRed = defaultValue(options.maximumRed, 1.0);
+                    //>>includeStart('debug', pragmas.debug);
+                    Check.typeOf.number.lessThanOrEquals('minimumRed', minimumRed, maximumRed);
+                    //>>includeEnd('debug');
+                    red = minimumRed + (CesiumMath.nextRandomNumber() * (maximumRed - minimumRed));
+                }
+                var green = options.green;
+                if (!defined(green)) {
+                    var minimumGreen = defaultValue(options.minimumGreen, 0);
+                    var maximumGreen = defaultValue(options.maximumGreen, 1.0);
+                    //>>includeStart('debug', pragmas.debug);
+                    Check.typeOf.number.lessThanOrEquals('minimumGreen', minimumGreen, maximumGreen);
+                    //>>includeEnd('debug');
+                    green = minimumGreen + (CesiumMath.nextRandomNumber() * (maximumGreen - minimumGreen));
+                }
+                var blue = options.blue;
+                if (!defined(blue)) {
+                    var minimumBlue = defaultValue(options.minimumBlue, 0);
+                    var maximumBlue = defaultValue(options.maximumBlue, 1.0);
+                    //>>includeStart('debug', pragmas.debug);
+                    Check.typeOf.number.lessThanOrEquals('minimumBlue', minimumBlue, maximumBlue);
+                    //>>includeEnd('debug');
+                    blue = minimumBlue + (CesiumMath.nextRandomNumber() * (maximumBlue - minimumBlue));
+                }
+                var alpha = options.alpha;
+                if (!defined(alpha)) {
+                    var minimumAlpha = defaultValue(options.minimumAlpha, 0);
+                    var maximumAlpha = defaultValue(options.maximumAlpha, 1.0);
+                    //>>includeStart('debug', pragmas.debug);
+                    Check.typeOf.number.lessThanOrEquals('minumumAlpha', minimumAlpha, maximumAlpha);
+                    //>>includeEnd('debug');
+                    alpha = minimumAlpha + (CesiumMath.nextRandomNumber() * (maximumAlpha - minimumAlpha));
+                }
+                if (!defined(result)) {
+                    return new Color(red, green, blue, alpha);
+                }
+                result.red = red;
+                result.green = green;
+                result.blue = blue;
+                result.alpha = alpha;
+                return result;
+            }
+            /**
+                 * Creates a Color instance from a CSS color value.
+                 *
+                 * @param {String} color The CSS color value in #rgb, #rrggbb, rgb(), rgba(), hsl(), or hsla() format.
+                 * @param {Color} [result] The object to store the result in, if undefined a new instance will be created.
+                 * @returns {Color} The color object, or undefined if the string was not a valid CSS color.
+                 *
+                 *
+                 * @example
+                 * var cesiumBlue = Cesium.Color.fromCssColorString('#67ADDF');
+                 * var green = Cesium.Color.fromCssColorString('green');
+                 *
+                 * @see {@link http://www.w3.org/TR/css3-color|CSS color values}
+                 */
+            static fromCssColorString(color, result) {
+                //>>includeStart('debug', pragmas.debug);
+                Check.typeOf.string('color', color);
+                //>>includeEnd('debug');
+                if (!defined(result)) {
+                    result = new Color();
+                }
+                var namedColor = Color[color.toUpperCase()];
+                if (defined(namedColor)) {
+                    Color.clone(namedColor, result);
+                    return result;
+                }
+                var matches = rgbMatcher.exec(color);
+                if (matches !== null) {
+                    result.red = parseInt(matches[1], 16) / 15;
+                    result.green = parseInt(matches[2], 16) / 15.0;
+                    result.blue = parseInt(matches[3], 16) / 15.0;
+                    result.alpha = 1.0;
+                    return result;
+                }
+                matches = rrggbbMatcher.exec(color);
+                if (matches !== null) {
+                    result.red = parseInt(matches[1], 16) / 255.0;
+                    result.green = parseInt(matches[2], 16) / 255.0;
+                    result.blue = parseInt(matches[3], 16) / 255.0;
+                    result.alpha = 1.0;
+                    return result;
+                }
+                matches = rgbParenthesesMatcher.exec(color);
+                if (matches !== null) {
+                    result.red = parseFloat(matches[1]) / ('%' === matches[1].substr(-1) ? 100.0 : 255.0);
+                    result.green = parseFloat(matches[2]) / ('%' === matches[2].substr(-1) ? 100.0 : 255.0);
+                    result.blue = parseFloat(matches[3]) / ('%' === matches[3].substr(-1) ? 100.0 : 255.0);
+                    result.alpha = parseFloat(defaultValue(matches[4], '1.0'));
+                    return result;
+                }
+                matches = hslParenthesesMatcher.exec(color);
+                if (matches !== null) {
+                    return Color.fromHsl(parseFloat(matches[1]) / 360.0, parseFloat(matches[2]) / 100.0, parseFloat(matches[3]) / 100.0, parseFloat(defaultValue(matches[4], '1.0')), result);
+                }
+                result = undefined;
+                return result;
+            }
+            /**
+                 * Stores the provided instance into the provided array.
+                 *
+                 * @param {Color} value The value to pack.
+                 * @param {Number[]} array The array to pack into.
+                 * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
+                 *
+                 * @returns {Number[]} The array that was packed into
+                 */
+            static pack(value, array, startingIndex) {
+                //>>includeStart('debug', pragmas.debug);
+                Check.typeOf.object('value', value);
+                Check.defined('array', array);
+                //>>includeEnd('debug');
+                startingIndex = defaultValue(startingIndex, 0);
+                array[startingIndex++] = value.red;
+                array[startingIndex++] = value.green;
+                array[startingIndex++] = value.blue;
+                array[startingIndex] = value.alpha;
+                return array;
+            }
+            /**
+                 * Retrieves an instance from a packed array.
+                 *
+                 * @param {Number[]} array The packed array.
+                 * @param {Number} [startingIndex=0] The starting index of the element to be unpacked.
+                 * @param {Color} [result] The object into which to store the result.
+                 * @returns {Color} The modified result parameter or a new Color instance if one was not provided.
+                 */
+            static unpack(array, startingIndex, result) {
+                //>>includeStart('debug', pragmas.debug);
+                Check.defined('array', array);
+                //>>includeEnd('debug');
+                startingIndex = defaultValue(startingIndex, 0);
+                if (!defined(result)) {
+                    result = new Color();
+                }
+                result.red = array[startingIndex++];
+                result.green = array[startingIndex++];
+                result.blue = array[startingIndex++];
+                result.alpha = array[startingIndex];
+                return result;
+            }
+            /**
+                 * Converts a 'byte' color component in the range of 0 to 255 into
+                 * a 'float' color component in the range of 0 to 1.0.
+                 *
+                 * @param {Number} number The number to be converted.
+                 * @returns {Number} The converted number.
+                 */
+            static byteToFloat(number) {
+                return number / 255.0;
+            }
+            /**
+                 * Converts a 'float' color component in the range of 0 to 1.0 into
+                 * a 'byte' color component in the range of 0 to 255.
+                 *
+                 * @param {Number} number The number to be converted.
+                 * @returns {Number} The converted number.
+                 */
+            static floatToByte(number) {
+                return number === 1.0 ? 255.0 : (number * 256.0) | 0;
+            }
+            /**
+                 * Duplicates a Color.
+                 *
+                 * @param {Color} color The Color to duplicate.
+                 * @param {Color} [result] The object to store the result in, if undefined a new instance will be created.
+                 * @returns {Color} The modified result parameter or a new instance if result was undefined. (Returns undefined if color is undefined)
+                 */
+            static clone(color, result) {
+                if (!defined(color)) {
+                    return undefined;
+                }
+                if (!defined(result)) {
+                    return new Color(color.red, color.green, color.blue, color.alpha);
+                }
+                result.red = color.red;
+                result.green = color.green;
+                result.blue = color.blue;
+                result.alpha = color.alpha;
+                return result;
+            }
+            /**
+                 * Returns true if the first Color equals the second color.
+                 *
+                 * @param {Color} left The first Color to compare for equality.
+                 * @param {Color} right The second Color to compare for equality.
+                 * @returns {Boolean} <code>true</code> if the Colors are equal; otherwise, <code>false</code>.
+                 */
+            static equals(left, right) {
+                return (left === right) || //
+                    (defined(left) && //
+                        defined(right) && //
+                        left.red === right.red && //
+                        left.green === right.green && //
+                        left.blue === right.blue && //
+                        left.alpha === right.alpha);
+            }
+            /**
+                 * @private
+                 */
+            static equalsArray(color, array, offset) {
+                return color.red === array[offset] &&
+                    color.green === array[offset + 1] &&
+                    color.blue === array[offset + 2] &&
+                    color.alpha === array[offset + 3];
+            }
+            /**
+                 * Computes the componentwise sum of two Colors.
+                 *
+                 * @param {Color} left The first Color.
+                 * @param {Color} right The second Color.
+                 * @param {Color} result The object onto which to store the result.
+                 * @returns {Color} The modified result parameter.
+                 */
+            static add(left, right, result) {
+                //>>includeStart('debug', pragmas.debug);
+                Check.typeOf.object('left', left);
+                Check.typeOf.object('right', right);
+                Check.typeOf.object('result', result);
+                //>>includeEnd('debug');
+                result.red = left.red + right.red;
+                result.green = left.green + right.green;
+                result.blue = left.blue + right.blue;
+                result.alpha = left.alpha + right.alpha;
+                return result;
+            }
+            /**
+                 * Computes the componentwise difference of two Colors.
+                 *
+                 * @param {Color} left The first Color.
+                 * @param {Color} right The second Color.
+                 * @param {Color} result The object onto which to store the result.
+                 * @returns {Color} The modified result parameter.
+                 */
+            static subtract(left, right, result) {
+                //>>includeStart('debug', pragmas.debug);
+                Check.typeOf.object('left', left);
+                Check.typeOf.object('right', right);
+                Check.typeOf.object('result', result);
+                //>>includeEnd('debug');
+                result.red = left.red - right.red;
+                result.green = left.green - right.green;
+                result.blue = left.blue - right.blue;
+                result.alpha = left.alpha - right.alpha;
+                return result;
+            }
+            /**
+                 * Computes the componentwise product of two Colors.
+                 *
+                 * @param {Color} left The first Color.
+                 * @param {Color} right The second Color.
+                 * @param {Color} result The object onto which to store the result.
+                 * @returns {Color} The modified result parameter.
+                 */
+            static multiply(left, right, result) {
+                //>>includeStart('debug', pragmas.debug);
+                Check.typeOf.object('left', left);
+                Check.typeOf.object('right', right);
+                Check.typeOf.object('result', result);
+                //>>includeEnd('debug');
+                result.red = left.red * right.red;
+                result.green = left.green * right.green;
+                result.blue = left.blue * right.blue;
+                result.alpha = left.alpha * right.alpha;
+                return result;
+            }
+            /**
+                 * Computes the componentwise quotient of two Colors.
+                 *
+                 * @param {Color} left The first Color.
+                 * @param {Color} right The second Color.
+                 * @param {Color} result The object onto which to store the result.
+                 * @returns {Color} The modified result parameter.
+                 */
+            static divide(left, right, result) {
+                //>>includeStart('debug', pragmas.debug);
+                Check.typeOf.object('left', left);
+                Check.typeOf.object('right', right);
+                Check.typeOf.object('result', result);
+                //>>includeEnd('debug');
+                result.red = left.red / right.red;
+                result.green = left.green / right.green;
+                result.blue = left.blue / right.blue;
+                result.alpha = left.alpha / right.alpha;
+                return result;
+            }
+            /**
+                 * Computes the componentwise modulus of two Colors.
+                 *
+                 * @param {Color} left The first Color.
+                 * @param {Color} right The second Color.
+                 * @param {Color} result The object onto which to store the result.
+                 * @returns {Color} The modified result parameter.
+                 */
+            static mod(left, right, result) {
+                //>>includeStart('debug', pragmas.debug);
+                Check.typeOf.object('left', left);
+                Check.typeOf.object('right', right);
+                Check.typeOf.object('result', result);
+                //>>includeEnd('debug');
+                result.red = left.red % right.red;
+                result.green = left.green % right.green;
+                result.blue = left.blue % right.blue;
+                result.alpha = left.alpha % right.alpha;
+                return result;
+            }
+            /**
+                 * Multiplies the provided Color componentwise by the provided scalar.
+                 *
+                 * @param {Color} color The Color to be scaled.
+                 * @param {Number} scalar The scalar to multiply with.
+                 * @param {Color} result The object onto which to store the result.
+                 * @returns {Color} The modified result parameter.
+                 */
+            static multiplyByScalar(color, scalar, result) {
+                //>>includeStart('debug', pragmas.debug);
+                Check.typeOf.object('color', color);
+                Check.typeOf.number('scalar', scalar);
+                Check.typeOf.object('result', result);
+                //>>includeEnd('debug');
+                result.red = color.red * scalar;
+                result.green = color.green * scalar;
+                result.blue = color.blue * scalar;
+                result.alpha = color.alpha * scalar;
+                return result;
+            }
+            /**
+                 * Divides the provided Color componentwise by the provided scalar.
+                 *
+                 * @param {Color} color The Color to be divided.
+                 * @param {Number} scalar The scalar to divide with.
+                 * @param {Color} result The object onto which to store the result.
+                 * @returns {Color} The modified result parameter.
+                 */
+            static divideByScalar(color, scalar, result) {
+                //>>includeStart('debug', pragmas.debug);
+                Check.typeOf.object('color', color);
+                Check.typeOf.number('scalar', scalar);
+                Check.typeOf.object('result', result);
+                //>>includeEnd('debug');
+                result.red = color.red / scalar;
+                result.green = color.green / scalar;
+                result.blue = color.blue / scalar;
+                result.alpha = color.alpha / scalar;
+                return result;
+            }
         }
 
-        result.red = cartesian.x;
-        result.green = cartesian.y;
-        result.blue = cartesian.z;
-        result.alpha = cartesian.w;
-        return result;
-    };
 
-    /**
-     * Creates a new Color specified using red, green, blue, and alpha values
-     * that are in the range of 0 to 255, converting them internally to a range of 0.0 to 1.0.
-     *
-     * @param {Number} [red=255] The red component.
-     * @param {Number} [green=255] The green component.
-     * @param {Number} [blue=255] The blue component.
-     * @param {Number} [alpha=255] The alpha component.
-     * @param {Color} [result] The object onto which to store the result.
-     * @returns {Color} The modified result parameter or a new Color instance if one was not provided.
-     */
-    Color.fromBytes = function(red, green, blue, alpha, result) {
-        red = Color.byteToFloat(defaultValue(red, 255.0));
-        green = Color.byteToFloat(defaultValue(green, 255.0));
-        blue = Color.byteToFloat(defaultValue(blue, 255.0));
-        alpha = Color.byteToFloat(defaultValue(alpha, 255.0));
 
-        if (!defined(result)) {
-            return new Color(red, green, blue, alpha);
-        }
-
-        result.red = red;
-        result.green = green;
-        result.blue = blue;
-        result.alpha = alpha;
-        return result;
-    };
-
-    /**
-     * Creates a new Color that has the same red, green, and blue components
-     * of the specified color, but with the specified alpha value.
-     *
-     * @param {Color} color The base color
-     * @param {Number} alpha The new alpha component.
-     * @param {Color} [result] The object onto which to store the result.
-     * @returns {Color} The modified result parameter or a new Color instance if one was not provided.
-     *
-     * @example var translucentRed = Cesium.Color.fromAlpha(Cesium.Color.RED, 0.9);
-     */
-    Color.fromAlpha = function(color, alpha, result) {
-        //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.object('color', color);
-        Check.typeOf.number('alpha', alpha);
-        //>>includeEnd('debug');
-
-        if (!defined(result)) {
-            return new Color(color.red, color.green, color.blue, alpha);
-        }
-
-        result.red = color.red;
-        result.green = color.green;
-        result.blue = color.blue;
-        result.alpha = alpha;
-        return result;
-    };
 
     var scratchArrayBuffer;
     var scratchUint32Array;
@@ -162,176 +771,8 @@ define([
         scratchUint8Array = new Uint8Array(scratchArrayBuffer);
     }
 
-    /**
-     * Creates a new Color from a single numeric unsigned 32-bit RGBA value, using the endianness
-     * of the system.
-     *
-     * @param {Number} rgba A single numeric unsigned 32-bit RGBA value.
-     * @param {Color} [result] The object to store the result in, if undefined a new instance will be created.
-     * @returns {Color} The color object.
-     *
-     * @example
-     * var color = Cesium.Color.fromRgba(0x67ADDFFF);
-     *
-     * @see Color#toRgba
-     */
-    Color.fromRgba = function(rgba, result) {
-        // scratchUint32Array and scratchUint8Array share an underlying array buffer
-        scratchUint32Array[0] = rgba;
-        return Color.fromBytes(scratchUint8Array[0], scratchUint8Array[1], scratchUint8Array[2], scratchUint8Array[3], result);
-    };
 
-    /**
-     * Creates a Color instance from hue, saturation, and lightness.
-     *
-     * @param {Number} [hue=0] The hue angle 0...1
-     * @param {Number} [saturation=0] The saturation value 0...1
-     * @param {Number} [lightness=0] The lightness value 0...1
-     * @param {Number} [alpha=1.0] The alpha component 0...1
-     * @param {Color} [result] The object to store the result in, if undefined a new instance will be created.
-     * @returns {Color} The color object.
-     *
-     * @see {@link http://www.w3.org/TR/css3-color/#hsl-color|CSS color values}
-     */
-    Color.fromHsl = function(hue, saturation, lightness, alpha, result) {
-        hue = defaultValue(hue, 0.0) % 1.0;
-        saturation = defaultValue(saturation, 0.0);
-        lightness = defaultValue(lightness, 0.0);
-        alpha = defaultValue(alpha, 1.0);
 
-        var red = lightness;
-        var green = lightness;
-        var blue = lightness;
-
-        if (saturation !== 0) {
-            var m2;
-            if (lightness < 0.5) {
-                m2 = lightness * (1 + saturation);
-            } else {
-                m2 = lightness + saturation - lightness * saturation;
-            }
-
-            var m1 = 2.0 * lightness - m2;
-            red = hue2rgb(m1, m2, hue + 1 / 3);
-            green = hue2rgb(m1, m2, hue);
-            blue = hue2rgb(m1, m2, hue - 1 / 3);
-        }
-
-        if (!defined(result)) {
-            return new Color(red, green, blue, alpha);
-        }
-
-        result.red = red;
-        result.green = green;
-        result.blue = blue;
-        result.alpha = alpha;
-        return result;
-    };
-
-    /**
-     * Creates a random color using the provided options. For reproducible random colors, you should
-     * call {@link CesiumMath#setRandomNumberSeed} once at the beginning of your application.
-     *
-     * @param {Object} [options] Object with the following properties:
-     * @param {Number} [options.red] If specified, the red component to use instead of a randomized value.
-     * @param {Number} [options.minimumRed=0.0] The maximum red value to generate if none was specified.
-     * @param {Number} [options.maximumRed=1.0] The minimum red value to generate if none was specified.
-     * @param {Number} [options.green] If specified, the green component to use instead of a randomized value.
-     * @param {Number} [options.minimumGreen=0.0] The maximum green value to generate if none was specified.
-     * @param {Number} [options.maximumGreen=1.0] The minimum green value to generate if none was specified.
-     * @param {Number} [options.blue] If specified, the blue component to use instead of a randomized value.
-     * @param {Number} [options.minimumBlue=0.0] The maximum blue value to generate if none was specified.
-     * @param {Number} [options.maximumBlue=1.0] The minimum blue value to generate if none was specified.
-     * @param {Number} [options.alpha] If specified, the alpha component to use instead of a randomized value.
-     * @param {Number} [options.minimumAlpha=0.0] The maximum alpha value to generate if none was specified.
-     * @param {Number} [options.maximumAlpha=1.0] The minimum alpha value to generate if none was specified.
-     * @param {Color} [result] The object to store the result in, if undefined a new instance will be created.
-     * @returns {Color} The modified result parameter or a new instance if result was undefined.
-     *
-     * @exception {DeveloperError} minimumRed must be less than or equal to maximumRed.
-     * @exception {DeveloperError} minimumGreen must be less than or equal to maximumGreen.
-     * @exception {DeveloperError} minimumBlue must be less than or equal to maximumBlue.
-     * @exception {DeveloperError} minimumAlpha must be less than or equal to maximumAlpha.
-     *
-     * @example
-     * //Create a completely random color
-     * var color = Cesium.Color.fromRandom();
-     *
-     * //Create a random shade of yellow.
-     * var color = Cesium.Color.fromRandom({
-     *     red : 1.0,
-     *     green : 1.0,
-     *     alpha : 1.0
-     * });
-     *
-     * //Create a random bright color.
-     * var color = Cesium.Color.fromRandom({
-     *     minimumRed : 0.75,
-     *     minimumGreen : 0.75,
-     *     minimumBlue : 0.75,
-     *     alpha : 1.0
-     * });
-     */
-    Color.fromRandom = function(options, result) {
-        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-
-        var red = options.red;
-        if (!defined(red)) {
-            var minimumRed = defaultValue(options.minimumRed, 0);
-            var maximumRed = defaultValue(options.maximumRed, 1.0);
-
-            //>>includeStart('debug', pragmas.debug);
-            Check.typeOf.number.lessThanOrEquals('minimumRed', minimumRed, maximumRed);
-            //>>includeEnd('debug');
-
-            red = minimumRed + (CesiumMath.nextRandomNumber() * (maximumRed - minimumRed));
-        }
-
-        var green = options.green;
-        if (!defined(green)) {
-            var minimumGreen = defaultValue(options.minimumGreen, 0);
-            var maximumGreen = defaultValue(options.maximumGreen, 1.0);
-
-            //>>includeStart('debug', pragmas.debug);
-            Check.typeOf.number.lessThanOrEquals('minimumGreen', minimumGreen, maximumGreen);
-            //>>includeEnd('debug');
-            green = minimumGreen + (CesiumMath.nextRandomNumber() * (maximumGreen - minimumGreen));
-        }
-
-        var blue = options.blue;
-        if (!defined(blue)) {
-            var minimumBlue = defaultValue(options.minimumBlue, 0);
-            var maximumBlue = defaultValue(options.maximumBlue, 1.0);
-
-            //>>includeStart('debug', pragmas.debug);
-            Check.typeOf.number.lessThanOrEquals('minimumBlue', minimumBlue, maximumBlue);
-            //>>includeEnd('debug');
-
-            blue = minimumBlue + (CesiumMath.nextRandomNumber() * (maximumBlue - minimumBlue));
-        }
-
-        var alpha = options.alpha;
-        if (!defined(alpha)) {
-            var minimumAlpha = defaultValue(options.minimumAlpha, 0);
-            var maximumAlpha = defaultValue(options.maximumAlpha, 1.0);
-
-            //>>includeStart('debug', pragmas.debug);
-            Check.typeOf.number.lessThanOrEquals('minumumAlpha', minimumAlpha, maximumAlpha);
-            //>>includeEnd('debug');
-
-            alpha = minimumAlpha + (CesiumMath.nextRandomNumber() * (maximumAlpha - minimumAlpha));
-        }
-
-        if (!defined(result)) {
-            return new Color(red, green, blue, alpha);
-        }
-
-        result.red = red;
-        result.green = green;
-        result.blue = blue;
-        result.alpha = alpha;
-        return result;
-    };
 
     //#rgb
     var rgbMatcher = /^#([0-9a-f])([0-9a-f])([0-9a-f])$/i;
@@ -342,73 +783,6 @@ define([
     //hsl(), hsla(), or hsl%()
     var hslParenthesesMatcher = /^hsla?\(\s*([0-9.]+)\s*,\s*([0-9.]+%)\s*,\s*([0-9.]+%)(?:\s*,\s*([0-9.]+))?\s*\)$/i;
 
-    /**
-     * Creates a Color instance from a CSS color value.
-     *
-     * @param {String} color The CSS color value in #rgb, #rrggbb, rgb(), rgba(), hsl(), or hsla() format.
-     * @param {Color} [result] The object to store the result in, if undefined a new instance will be created.
-     * @returns {Color} The color object, or undefined if the string was not a valid CSS color.
-     *
-     *
-     * @example
-     * var cesiumBlue = Cesium.Color.fromCssColorString('#67ADDF');
-     * var green = Cesium.Color.fromCssColorString('green');
-     *
-     * @see {@link http://www.w3.org/TR/css3-color|CSS color values}
-     */
-    Color.fromCssColorString = function(color, result) {
-        //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.string('color', color);
-        //>>includeEnd('debug');
-
-        if (!defined(result)) {
-            result = new Color();
-        }
-
-        var namedColor = Color[color.toUpperCase()];
-        if (defined(namedColor)) {
-            Color.clone(namedColor, result);
-            return result;
-        }
-
-        var matches = rgbMatcher.exec(color);
-        if (matches !== null) {
-            result.red = parseInt(matches[1], 16) / 15;
-            result.green = parseInt(matches[2], 16) / 15.0;
-            result.blue = parseInt(matches[3], 16) / 15.0;
-            result.alpha = 1.0;
-            return result;
-        }
-
-        matches = rrggbbMatcher.exec(color);
-        if (matches !== null) {
-            result.red = parseInt(matches[1], 16) / 255.0;
-            result.green = parseInt(matches[2], 16) / 255.0;
-            result.blue = parseInt(matches[3], 16) / 255.0;
-            result.alpha = 1.0;
-            return result;
-        }
-
-        matches = rgbParenthesesMatcher.exec(color);
-        if (matches !== null) {
-            result.red = parseFloat(matches[1]) / ('%' === matches[1].substr(-1) ? 100.0 : 255.0);
-            result.green = parseFloat(matches[2]) / ('%' === matches[2].substr(-1) ? 100.0 : 255.0);
-            result.blue = parseFloat(matches[3]) / ('%' === matches[3].substr(-1) ? 100.0 : 255.0);
-            result.alpha = parseFloat(defaultValue(matches[4], '1.0'));
-            return result;
-        }
-
-        matches = hslParenthesesMatcher.exec(color);
-        if (matches !== null) {
-            return Color.fromHsl(parseFloat(matches[1]) / 360.0,
-                                 parseFloat(matches[2]) / 100.0,
-                                 parseFloat(matches[3]) / 100.0,
-                                 parseFloat(defaultValue(matches[4], '1.0')), result);
-        }
-
-        result = undefined;
-        return result;
-    };
 
     /**
      * The number of elements used to pack the object into an array.
@@ -416,447 +790,29 @@ define([
      */
     Color.packedLength = 4;
 
-    /**
-     * Stores the provided instance into the provided array.
-     *
-     * @param {Color} value The value to pack.
-     * @param {Number[]} array The array to pack into.
-     * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
-     *
-     * @returns {Number[]} The array that was packed into
-     */
-    Color.pack = function(value, array, startingIndex) {
-        //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.object('value', value);
-        Check.defined('array', array);
-        //>>includeEnd('debug');
 
-        startingIndex = defaultValue(startingIndex, 0);
-        array[startingIndex++] = value.red;
-        array[startingIndex++] = value.green;
-        array[startingIndex++] = value.blue;
-        array[startingIndex] = value.alpha;
 
-        return array;
-    };
 
-    /**
-     * Retrieves an instance from a packed array.
-     *
-     * @param {Number[]} array The packed array.
-     * @param {Number} [startingIndex=0] The starting index of the element to be unpacked.
-     * @param {Color} [result] The object into which to store the result.
-     * @returns {Color} The modified result parameter or a new Color instance if one was not provided.
-     */
-    Color.unpack = function(array, startingIndex, result) {
-        //>>includeStart('debug', pragmas.debug);
-        Check.defined('array', array);
-        //>>includeEnd('debug');
 
-        startingIndex = defaultValue(startingIndex, 0);
-        if (!defined(result)) {
-            result = new Color();
-        }
-        result.red = array[startingIndex++];
-        result.green = array[startingIndex++];
-        result.blue = array[startingIndex++];
-        result.alpha = array[startingIndex];
-        return result;
-    };
 
-    /**
-     * Converts a 'byte' color component in the range of 0 to 255 into
-     * a 'float' color component in the range of 0 to 1.0.
-     *
-     * @param {Number} number The number to be converted.
-     * @returns {Number} The converted number.
-     */
-    Color.byteToFloat = function(number) {
-        return number / 255.0;
-    };
 
-    /**
-     * Converts a 'float' color component in the range of 0 to 1.0 into
-     * a 'byte' color component in the range of 0 to 255.
-     *
-     * @param {Number} number The number to be converted.
-     * @returns {Number} The converted number.
-     */
-    Color.floatToByte = function(number) {
-        return number === 1.0 ? 255.0 : (number * 256.0) | 0;
-    };
 
-    /**
-     * Duplicates a Color.
-     *
-     * @param {Color} color The Color to duplicate.
-     * @param {Color} [result] The object to store the result in, if undefined a new instance will be created.
-     * @returns {Color} The modified result parameter or a new instance if result was undefined. (Returns undefined if color is undefined)
-     */
-    Color.clone = function(color, result) {
-        if (!defined(color)) {
-            return undefined;
-        }
-        if (!defined(result)) {
-            return new Color(color.red, color.green, color.blue, color.alpha);
-        }
-        result.red = color.red;
-        result.green = color.green;
-        result.blue = color.blue;
-        result.alpha = color.alpha;
-        return result;
-    };
 
-    /**
-     * Returns true if the first Color equals the second color.
-     *
-     * @param {Color} left The first Color to compare for equality.
-     * @param {Color} right The second Color to compare for equality.
-     * @returns {Boolean} <code>true</code> if the Colors are equal; otherwise, <code>false</code>.
-     */
-    Color.equals = function(left, right) {
-        return (left === right) || //
-               (defined(left) && //
-                defined(right) && //
-                left.red === right.red && //
-                left.green === right.green && //
-                left.blue === right.blue && //
-                left.alpha === right.alpha);
-    };
 
-    /**
-     * @private
-     */
-    Color.equalsArray = function(color, array, offset) {
-        return color.red === array[offset] &&
-               color.green === array[offset + 1] &&
-               color.blue === array[offset + 2] &&
-               color.alpha === array[offset + 3];
-    };
 
-    /**
-     * Returns a duplicate of a Color instance.
-     *
-     * @param {Color} [result] The object to store the result in, if undefined a new instance will be created.
-     * @returns {Color} The modified result parameter or a new instance if result was undefined.
-     */
-    Color.prototype.clone = function(result) {
-        return Color.clone(this, result);
-    };
 
-    /**
-     * Returns true if this Color equals other.
-     *
-     * @param {Color} other The Color to compare for equality.
-     * @returns {Boolean} <code>true</code> if the Colors are equal; otherwise, <code>false</code>.
-     */
-    Color.prototype.equals = function(other) {
-        return Color.equals(this, other);
-    };
 
-    /**
-     * Returns <code>true</code> if this Color equals other componentwise within the specified epsilon.
-     *
-     * @param {Color} other The Color to compare for equality.
-     * @param {Number} [epsilon=0.0] The epsilon to use for equality testing.
-     * @returns {Boolean} <code>true</code> if the Colors are equal within the specified epsilon; otherwise, <code>false</code>.
-     */
-    Color.prototype.equalsEpsilon = function(other, epsilon) {
-        return (this === other) || //
-               ((defined(other)) && //
-                (Math.abs(this.red - other.red) <= epsilon) && //
-                (Math.abs(this.green - other.green) <= epsilon) && //
-                (Math.abs(this.blue - other.blue) <= epsilon) && //
-                (Math.abs(this.alpha - other.alpha) <= epsilon));
-    };
 
-    /**
-     * Creates a string representing this Color in the format '(red, green, blue, alpha)'.
-     *
-     * @returns {String} A string representing this Color in the format '(red, green, blue, alpha)'.
-     */
-    Color.prototype.toString = function() {
-        return '(' + this.red + ', ' + this.green + ', ' + this.blue + ', ' + this.alpha + ')';
-    };
 
-    /**
-     * Creates a string containing the CSS color value for this color.
-     *
-     * @returns {String} The CSS equivalent of this color.
-     *
-     * @see {@link http://www.w3.org/TR/css3-color/#rgba-color|CSS RGB or RGBA color values}
-     */
-    Color.prototype.toCssColorString = function() {
-        var red = Color.floatToByte(this.red);
-        var green = Color.floatToByte(this.green);
-        var blue = Color.floatToByte(this.blue);
-        if (this.alpha === 1) {
-            return 'rgb(' + red + ',' + green + ',' + blue + ')';
-        }
-        return 'rgba(' + red + ',' + green + ',' + blue + ',' + this.alpha + ')';
-    };
 
-    /**
-     * Converts this color to an array of red, green, blue, and alpha values
-     * that are in the range of 0 to 255.
-     *
-     * @param {Number[]} [result] The array to store the result in, if undefined a new instance will be created.
-     * @returns {Number[]} The modified result parameter or a new instance if result was undefined.
-     */
-    Color.prototype.toBytes = function(result) {
-        var red = Color.floatToByte(this.red);
-        var green = Color.floatToByte(this.green);
-        var blue = Color.floatToByte(this.blue);
-        var alpha = Color.floatToByte(this.alpha);
 
-        if (!defined(result)) {
-            return [red, green, blue, alpha];
-        }
-        result[0] = red;
-        result[1] = green;
-        result[2] = blue;
-        result[3] = alpha;
-        return result;
-    };
 
-    /**
-     * Converts this color to a single numeric unsigned 32-bit RGBA value, using the endianness
-     * of the system.
-     *
-     * @returns {Number} A single numeric unsigned 32-bit RGBA value.
-     *
-     *
-     * @example
-     * var rgba = Cesium.Color.BLUE.toRgba();
-     *
-     * @see Color.fromRgba
-     */
-    Color.prototype.toRgba = function() {
-        // scratchUint32Array and scratchUint8Array share an underlying array buffer
-        scratchUint8Array[0] = Color.floatToByte(this.red);
-        scratchUint8Array[1] = Color.floatToByte(this.green);
-        scratchUint8Array[2] = Color.floatToByte(this.blue);
-        scratchUint8Array[3] = Color.floatToByte(this.alpha);
-        return scratchUint32Array[0];
-    };
 
-    /**
-     * Brightens this color by the provided magnitude.
-     *
-     * @param {Number} magnitude A positive number indicating the amount to brighten.
-     * @param {Color} result The object onto which to store the result.
-     * @returns {Color} The modified result parameter.
-     *
-     * @example
-     * var brightBlue = Cesium.Color.BLUE.brighten(0.5, new Cesium.Color());
-     */
-    Color.prototype.brighten = function(magnitude, result) {
-        //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.number('magnitude', magnitude);
-        Check.typeOf.number.greaterThanOrEquals('magnitude', magnitude, 0.0);
-        Check.typeOf.object('result', result);
-        //>>includeEnd('debug');
 
-        magnitude = (1.0 - magnitude);
-        result.red = 1.0 - ((1.0 - this.red) * magnitude);
-        result.green = 1.0 - ((1.0 - this.green) * magnitude);
-        result.blue = 1.0 - ((1.0 - this.blue) * magnitude);
-        result.alpha = this.alpha;
-        return result;
-    };
 
-    /**
-     * Darkens this color by the provided magnitude.
-     *
-     * @param {Number} magnitude A positive number indicating the amount to darken.
-     * @param {Color} result The object onto which to store the result.
-     * @returns {Color} The modified result parameter.
-     *
-     * @example
-     * var darkBlue = Cesium.Color.BLUE.darken(0.5, new Cesium.Color());
-     */
-    Color.prototype.darken = function(magnitude, result) {
-        //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.number('magnitude', magnitude);
-        Check.typeOf.number.greaterThanOrEquals('magnitude', magnitude, 0.0);
-        Check.typeOf.object('result', result);
-        //>>includeEnd('debug');
 
-        magnitude = (1.0 - magnitude);
-        result.red = this.red * magnitude;
-        result.green = this.green * magnitude;
-        result.blue = this.blue * magnitude;
-        result.alpha = this.alpha;
-        return result;
-    };
 
-    /**
-     * Creates a new Color that has the same red, green, and blue components
-     * as this Color, but with the specified alpha value.
-     *
-     * @param {Number} alpha The new alpha component.
-     * @param {Color} [result] The object onto which to store the result.
-     * @returns {Color} The modified result parameter or a new Color instance if one was not provided.
-     *
-     * @example var translucentRed = Cesium.Color.RED.withAlpha(0.9);
-     */
-    Color.prototype.withAlpha = function(alpha, result) {
-        return Color.fromAlpha(this, alpha, result);
-    };
 
-    /**
-     * Computes the componentwise sum of two Colors.
-     *
-     * @param {Color} left The first Color.
-     * @param {Color} right The second Color.
-     * @param {Color} result The object onto which to store the result.
-     * @returns {Color} The modified result parameter.
-     */
-    Color.add = function(left, right, result) {
-        //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.object('left', left);
-        Check.typeOf.object('right', right);
-        Check.typeOf.object('result', result);
-        //>>includeEnd('debug');
-
-        result.red = left.red + right.red;
-        result.green = left.green + right.green;
-        result.blue = left.blue + right.blue;
-        result.alpha = left.alpha + right.alpha;
-        return result;
-    };
-
-    /**
-     * Computes the componentwise difference of two Colors.
-     *
-     * @param {Color} left The first Color.
-     * @param {Color} right The second Color.
-     * @param {Color} result The object onto which to store the result.
-     * @returns {Color} The modified result parameter.
-     */
-    Color.subtract = function(left, right, result) {
-        //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.object('left', left);
-        Check.typeOf.object('right', right);
-        Check.typeOf.object('result', result);
-        //>>includeEnd('debug');
-
-        result.red = left.red - right.red;
-        result.green = left.green - right.green;
-        result.blue = left.blue - right.blue;
-        result.alpha = left.alpha - right.alpha;
-        return result;
-    };
-
-    /**
-     * Computes the componentwise product of two Colors.
-     *
-     * @param {Color} left The first Color.
-     * @param {Color} right The second Color.
-     * @param {Color} result The object onto which to store the result.
-     * @returns {Color} The modified result parameter.
-     */
-    Color.multiply = function(left, right, result) {
-        //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.object('left', left);
-        Check.typeOf.object('right', right);
-        Check.typeOf.object('result', result);
-        //>>includeEnd('debug');
-
-        result.red = left.red * right.red;
-        result.green = left.green * right.green;
-        result.blue = left.blue * right.blue;
-        result.alpha = left.alpha * right.alpha;
-        return result;
-    };
-
-    /**
-     * Computes the componentwise quotient of two Colors.
-     *
-     * @param {Color} left The first Color.
-     * @param {Color} right The second Color.
-     * @param {Color} result The object onto which to store the result.
-     * @returns {Color} The modified result parameter.
-     */
-    Color.divide = function(left, right, result) {
-        //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.object('left', left);
-        Check.typeOf.object('right', right);
-        Check.typeOf.object('result', result);
-        //>>includeEnd('debug');
-
-        result.red = left.red / right.red;
-        result.green = left.green / right.green;
-        result.blue = left.blue / right.blue;
-        result.alpha = left.alpha / right.alpha;
-        return result;
-    };
-
-    /**
-     * Computes the componentwise modulus of two Colors.
-     *
-     * @param {Color} left The first Color.
-     * @param {Color} right The second Color.
-     * @param {Color} result The object onto which to store the result.
-     * @returns {Color} The modified result parameter.
-     */
-    Color.mod = function(left, right, result) {
-        //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.object('left', left);
-        Check.typeOf.object('right', right);
-        Check.typeOf.object('result', result);
-        //>>includeEnd('debug');
-
-        result.red = left.red % right.red;
-        result.green = left.green % right.green;
-        result.blue = left.blue % right.blue;
-        result.alpha = left.alpha % right.alpha;
-        return result;
-    };
-
-    /**
-     * Multiplies the provided Color componentwise by the provided scalar.
-     *
-     * @param {Color} color The Color to be scaled.
-     * @param {Number} scalar The scalar to multiply with.
-     * @param {Color} result The object onto which to store the result.
-     * @returns {Color} The modified result parameter.
-     */
-    Color.multiplyByScalar = function(color, scalar, result) {
-        //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.object('color', color);
-        Check.typeOf.number('scalar', scalar);
-        Check.typeOf.object('result', result);
-        //>>includeEnd('debug');
-
-        result.red = color.red * scalar;
-        result.green = color.green * scalar;
-        result.blue = color.blue * scalar;
-        result.alpha = color.alpha * scalar;
-        return result;
-    };
-
-    /**
-     * Divides the provided Color componentwise by the provided scalar.
-     *
-     * @param {Color} color The Color to be divided.
-     * @param {Number} scalar The scalar to divide with.
-     * @param {Color} result The object onto which to store the result.
-     * @returns {Color} The modified result parameter.
-     */
-    Color.divideByScalar = function(color, scalar, result) {
-        //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.object('color', color);
-        Check.typeOf.number('scalar', scalar);
-        Check.typeOf.object('result', result);
-        //>>includeEnd('debug');
-
-        result.red = color.red / scalar;
-        result.green = color.green / scalar;
-        result.blue = color.blue / scalar;
-        result.alpha = color.alpha / scalar;
-        return result;
-    };
 
     /**
      * An immutable Color instance initialized to CSS color #F0F8FF

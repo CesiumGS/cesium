@@ -69,76 +69,309 @@ define([
     var WALL_INITIAL_MIN_HEIGHT = 0.0;
     var WALL_INITIAL_MAX_HEIGHT = 1000.0;
 
-    /**
-     * A description of a polyline on terrain. Only to be used with {@link GroundPolylinePrimitive}.
-     *
-     * @alias GroundPolylineGeometry
-     * @constructor
-     *
-     * @param {Object} options Options with the following properties:
-     * @param {Cartesian3[]} options.positions An array of {@link Cartesian3} defining the polyline's points. Heights above the ellipsoid will be ignored.
-     * @param {Number} [options.width=1.0] The screen space width in pixels.
-     * @param {Number} [options.granularity=9999.0] The distance interval in meters used for interpolating options.points. Defaults to 9999.0 meters. Zero indicates no interpolation.
-     * @param {Boolean} [options.loop=false] Whether during geometry creation a line segment will be added between the last and first line positions to make this Polyline a loop.
-     *
-     * @exception {DeveloperError} At least two positions are required.
-     *
-     * @see GroundPolylinePrimitive
-     *
-     * @example
-     * var positions = Cesium.Cartesian3.fromDegreesArray([
-     *   -112.1340164450331, 36.05494287836128,
-     *   -112.08821010582645, 36.097804071380715,
-     *   -112.13296079730024, 36.168769146801104
-     * ]);
-     *
-     * var geometry = new Cesium.GroundPolylineGeometry({
-     *   positions : positions
-     * });
-     */
-    function GroundPolylineGeometry(options) {
-        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-        var positions = options.positions;
-
-        //>>includeStart('debug', pragmas.debug);
-        if ((!defined(positions)) || (positions.length < 2)) {
-            throw new DeveloperError('At least two positions are required.');
+        /**
+             * A description of a polyline on terrain. Only to be used with {@link GroundPolylinePrimitive}.
+             *
+             * @alias GroundPolylineGeometry
+             * @constructor
+             *
+             * @param {Object} options Options with the following properties:
+             * @param {Cartesian3[]} options.positions An array of {@link Cartesian3} defining the polyline's points. Heights above the ellipsoid will be ignored.
+             * @param {Number} [options.width=1.0] The screen space width in pixels.
+             * @param {Number} [options.granularity=9999.0] The distance interval in meters used for interpolating options.points. Defaults to 9999.0 meters. Zero indicates no interpolation.
+             * @param {Boolean} [options.loop=false] Whether during geometry creation a line segment will be added between the last and first line positions to make this Polyline a loop.
+             *
+             * @exception {DeveloperError} At least two positions are required.
+             *
+             * @see GroundPolylinePrimitive
+             *
+             * @example
+             * var positions = Cesium.Cartesian3.fromDegreesArray([
+             *   -112.1340164450331, 36.05494287836128,
+             *   -112.08821010582645, 36.097804071380715,
+             *   -112.13296079730024, 36.168769146801104
+             * ]);
+             *
+             * var geometry = new Cesium.GroundPolylineGeometry({
+             *   positions : positions
+             * });
+             */
+        class GroundPolylineGeometry {
+            constructor(options) {
+                options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+                var positions = options.positions;
+                //>>includeStart('debug', pragmas.debug);
+                if ((!defined(positions)) || (positions.length < 2)) {
+                    throw new DeveloperError('At least two positions are required.');
+                }
+                //>>includeEnd('debug');
+                /**
+                 * The screen space width in pixels.
+                 * @type {Number}
+                 */
+                this.width = defaultValue(options.width, 1.0); // Doesn't get packed, not necessary for computing geometry.
+                this._positions = positions;
+                /**
+                 * The distance interval used for interpolating options.points. Zero indicates no interpolation.
+                 * Default of 9999.0 allows centimeter accuracy with 32 bit floating point.
+                 * @type {Boolean}
+                 * @default 9999.0
+                 */
+                this.granularity = defaultValue(options.granularity, 9999.0);
+                /**
+                 * Whether during geometry creation a line segment will be added between the last and first line positions to make this Polyline a loop.
+                 * If the geometry has two positions this parameter will be ignored.
+                 * @type {Boolean}
+                 * @default false
+                 */
+                this.loop = defaultValue(options.loop, false);
+                this._ellipsoid = Ellipsoid.WGS84;
+                // MapProjections can't be packed, so store the index to a known MapProjection.
+                this._projectionIndex = 0;
+                this._workerName = 'createGroundPolylineGeometry';
+                // Used by GroundPolylinePrimitive to signal worker that scenemode is 3D only.
+                this._scene3DOnly = false;
+            }
+            /**
+                 * Set the GroundPolylineGeometry's projection and ellipsoid.
+                 * Used by GroundPolylinePrimitive to signal scene information to the geometry for generating 2D attributes.
+                 *
+                 * @param {GroundPolylineGeometry} groundPolylineGeometry GroundPolylinGeometry describing a polyline on terrain.
+                 * @param {Projection} mapProjection A MapProjection used for projecting cartographic coordinates to 2D.
+                 * @private
+                 */
+            static setProjectionAndEllipsoid(groundPolylineGeometry, mapProjection) {
+                var projectionIndex = 0;
+                for (var i = 0; i < PROJECTION_COUNT; i++) {
+                    if (mapProjection instanceof PROJECTIONS[i]) {
+                        projectionIndex = i;
+                        break;
+                    }
+                }
+                groundPolylineGeometry._projectionIndex = projectionIndex;
+                groundPolylineGeometry._ellipsoid = mapProjection.ellipsoid;
+            }
+            /**
+                 * Stores the provided instance into the provided array.
+                 *
+                 * @param {PolygonGeometry} value The value to pack.
+                 * @param {Number[]} array The array to pack into.
+                 * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
+                 *
+                 * @returns {Number[]} The array that was packed into
+                 */
+            static pack(value, array, startingIndex) {
+                //>>includeStart('debug', pragmas.debug);
+                Check.typeOf.object('value', value);
+                Check.defined('array', array);
+                //>>includeEnd('debug');
+                var index = defaultValue(startingIndex, 0);
+                var positions = value._positions;
+                var positionsLength = positions.length;
+                array[index++] = positionsLength;
+                for (var i = 0; i < positionsLength; ++i) {
+                    var cartesian = positions[i];
+                    Cartesian3.pack(cartesian, array, index);
+                    index += 3;
+                }
+                array[index++] = value.granularity;
+                array[index++] = value.loop ? 1.0 : 0.0;
+                Ellipsoid.pack(value._ellipsoid, array, index);
+                index += Ellipsoid.packedLength;
+                array[index++] = value._projectionIndex;
+                array[index++] = value._scene3DOnly ? 1.0 : 0.0;
+                return array;
+            }
+            /**
+                 * Retrieves an instance from a packed array.
+                 *
+                 * @param {Number[]} array The packed array.
+                 * @param {Number} [startingIndex=0] The starting index of the element to be unpacked.
+                 * @param {PolygonGeometry} [result] The object into which to store the result.
+                 */
+            static unpack(array, startingIndex, result) {
+                //>>includeStart('debug', pragmas.debug);
+                Check.defined('array', array);
+                //>>includeEnd('debug');
+                var index = defaultValue(startingIndex, 0);
+                var positionsLength = array[index++];
+                var positions = new Array(positionsLength);
+                for (var i = 0; i < positionsLength; i++) {
+                    positions[i] = Cartesian3.unpack(array, index);
+                    index += 3;
+                }
+                var granularity = array[index++];
+                var loop = array[index++] === 1.0;
+                var ellipsoid = Ellipsoid.unpack(array, index);
+                index += Ellipsoid.packedLength;
+                var projectionIndex = array[index++];
+                var scene3DOnly = (array[index++] === 1.0);
+                if (!defined(result)) {
+                    var geometry = new GroundPolylineGeometry({
+                        positions: positions,
+                        granularity: granularity,
+                        loop: loop,
+                        ellipsoid: ellipsoid
+                    });
+                    geometry._projectionIndex = projectionIndex;
+                    geometry._scene3DOnly = scene3DOnly;
+                    return geometry;
+                }
+                result._positions = positions;
+                result.granularity = granularity;
+                result.loop = loop;
+                result._ellipsoid = ellipsoid;
+                result._projectionIndex = projectionIndex;
+                result._scene3DOnly = scene3DOnly;
+                return result;
+            }
+            /**
+                 * Computes shadow volumes for the ground polyline, consisting of its vertices, indices, and a bounding sphere.
+                 * Vertices are "fat," packing all the data needed in each volume to describe a line on terrain.
+                 * Should not be called independent of {@link GroundPolylinePrimitive}.
+                 *
+                 * @param {GroundPolylineGeometry} groundPolylineGeometry
+                 * @private
+                 */
+            static createGeometry(groundPolylineGeometry) {
+                var compute2dAttributes = !groundPolylineGeometry._scene3DOnly;
+                var loop = groundPolylineGeometry.loop;
+                var ellipsoid = groundPolylineGeometry._ellipsoid;
+                var granularity = groundPolylineGeometry.granularity;
+                var projection = new PROJECTIONS[groundPolylineGeometry._projectionIndex](ellipsoid);
+                var minHeight = WALL_INITIAL_MIN_HEIGHT;
+                var maxHeight = WALL_INITIAL_MAX_HEIGHT;
+                var index;
+                var i;
+                var positions = groundPolylineGeometry._positions;
+                var positionsLength = positions.length;
+                if (positionsLength === 2) {
+                    loop = false;
+                }
+                // Split positions across the IDL and the Prime Meridian as well.
+                // Split across prime meridian because very large geometries crossing the Prime Meridian but not the IDL
+                // may get split by the plane of IDL + Prime Meridian.
+                var p0;
+                var p1;
+                var intersection;
+                var splitPositions = [positions[0]];
+                for (i = 0; i < positionsLength - 1; i++) {
+                    p0 = positions[i];
+                    p1 = positions[i + 1];
+                    intersection = IntersectionTests.lineSegmentPlane(p0, p1, XZ_PLANE, intersectionScratch);
+                    if (defined(intersection) &&
+                        !Cartesian3.equalsEpsilon(intersection, p0, CesiumMath.EPSILON7) &&
+                        !Cartesian3.equalsEpsilon(intersection, p1, CesiumMath.EPSILON7)) {
+                        splitPositions.push(Cartesian3.clone(intersection));
+                    }
+                    splitPositions.push(p1);
+                }
+                if (loop) {
+                    p0 = positions[positionsLength - 1];
+                    p1 = positions[0];
+                    intersection = IntersectionTests.lineSegmentPlane(p0, p1, XZ_PLANE, intersectionScratch);
+                    if (defined(intersection) &&
+                        !Cartesian3.equalsEpsilon(intersection, p0, CesiumMath.EPSILON7) &&
+                        !Cartesian3.equalsEpsilon(intersection, p1, CesiumMath.EPSILON7)) {
+                        splitPositions.push(Cartesian3.clone(intersection));
+                    }
+                }
+                var cartographicsLength = splitPositions.length;
+                var cartographics = new Array(cartographicsLength);
+                for (i = 0; i < cartographicsLength; i++) {
+                    var cartographic = Cartographic.fromCartesian(splitPositions[i], ellipsoid);
+                    cartographic.height = 0.0;
+                    cartographics[i] = cartographic;
+                }
+                cartographics = arrayRemoveDuplicates(cartographics, Cartographic.equalsEpsilon);
+                cartographicsLength = cartographics.length;
+                if (cartographicsLength < 2) {
+                    return undefined;
+                }
+                /**** Build heap-side arrays for positions, interpolated cartographics, and normals from which to compute vertices ****/
+                // We build a "wall" and then decompose it into separately connected component "volumes" because we need a lot
+                // of information about the wall. Also, this simplifies interpolation.
+                // Convention: "next" and "end" are locally forward to each segment of the wall,
+                // and we are computing normals pointing towards the local right side of the vertices in each segment.
+                var cartographicsArray = [];
+                var normalsArray = [];
+                var bottomPositionsArray = [];
+                var topPositionsArray = [];
+                var previousBottom = previousBottomScratch;
+                var vertexBottom = vertexBottomScratch;
+                var vertexTop = vertexTopScratch;
+                var nextBottom = nextBottomScratch;
+                var vertexNormal = vertexNormalScratch;
+                // First point - either loop or attach a "perpendicular" normal
+                var startCartographic = cartographics[0];
+                var nextCartographic = cartographics[1];
+                var prestartCartographic = cartographics[cartographicsLength - 1];
+                previousBottom = getPosition(ellipsoid, prestartCartographic, minHeight, previousBottom);
+                nextBottom = getPosition(ellipsoid, nextCartographic, minHeight, nextBottom);
+                vertexBottom = getPosition(ellipsoid, startCartographic, minHeight, vertexBottom);
+                vertexTop = getPosition(ellipsoid, startCartographic, maxHeight, vertexTop);
+                if (loop) {
+                    vertexNormal = computeVertexMiterNormal(previousBottom, vertexBottom, vertexTop, nextBottom, vertexNormal);
+                }
+                else {
+                    vertexNormal = computeRightNormal(startCartographic, nextCartographic, maxHeight, ellipsoid, vertexNormal);
+                }
+                Cartesian3.pack(vertexNormal, normalsArray, 0);
+                Cartesian3.pack(vertexBottom, bottomPositionsArray, 0);
+                Cartesian3.pack(vertexTop, topPositionsArray, 0);
+                cartographicsArray.push(startCartographic.latitude);
+                cartographicsArray.push(startCartographic.longitude);
+                interpolateSegment(startCartographic, nextCartographic, minHeight, maxHeight, granularity, ellipsoid, normalsArray, bottomPositionsArray, topPositionsArray, cartographicsArray);
+                // All inbetween points
+                for (i = 1; i < cartographicsLength - 1; ++i) {
+                    previousBottom = Cartesian3.clone(vertexBottom, previousBottom);
+                    vertexBottom = Cartesian3.clone(nextBottom, vertexBottom);
+                    var vertexCartographic = cartographics[i];
+                    getPosition(ellipsoid, vertexCartographic, maxHeight, vertexTop);
+                    getPosition(ellipsoid, cartographics[i + 1], minHeight, nextBottom);
+                    computeVertexMiterNormal(previousBottom, vertexBottom, vertexTop, nextBottom, vertexNormal);
+                    index = normalsArray.length;
+                    Cartesian3.pack(vertexNormal, normalsArray, index);
+                    Cartesian3.pack(vertexBottom, bottomPositionsArray, index);
+                    Cartesian3.pack(vertexTop, topPositionsArray, index);
+                    cartographicsArray.push(vertexCartographic.latitude);
+                    cartographicsArray.push(vertexCartographic.longitude);
+                    interpolateSegment(cartographics[i], cartographics[i + 1], minHeight, maxHeight, granularity, ellipsoid, normalsArray, bottomPositionsArray, topPositionsArray, cartographicsArray);
+                }
+                // Last point - either loop or attach a normal "perpendicular" to the wall.
+                var endCartographic = cartographics[cartographicsLength - 1];
+                var preEndCartographic = cartographics[cartographicsLength - 2];
+                vertexBottom = getPosition(ellipsoid, endCartographic, minHeight, vertexBottom);
+                vertexTop = getPosition(ellipsoid, endCartographic, maxHeight, vertexTop);
+                if (loop) {
+                    var postEndCartographic = cartographics[0];
+                    previousBottom = getPosition(ellipsoid, preEndCartographic, minHeight, previousBottom);
+                    nextBottom = getPosition(ellipsoid, postEndCartographic, minHeight, nextBottom);
+                    vertexNormal = computeVertexMiterNormal(previousBottom, vertexBottom, vertexTop, nextBottom, vertexNormal);
+                }
+                else {
+                    vertexNormal = computeRightNormal(preEndCartographic, endCartographic, maxHeight, ellipsoid, vertexNormal);
+                }
+                index = normalsArray.length;
+                Cartesian3.pack(vertexNormal, normalsArray, index);
+                Cartesian3.pack(vertexBottom, bottomPositionsArray, index);
+                Cartesian3.pack(vertexTop, topPositionsArray, index);
+                cartographicsArray.push(endCartographic.latitude);
+                cartographicsArray.push(endCartographic.longitude);
+                if (loop) {
+                    interpolateSegment(endCartographic, startCartographic, minHeight, maxHeight, granularity, ellipsoid, normalsArray, bottomPositionsArray, topPositionsArray, cartographicsArray);
+                    index = normalsArray.length;
+                    for (i = 0; i < 3; ++i) {
+                        normalsArray[index + i] = normalsArray[i];
+                        bottomPositionsArray[index + i] = bottomPositionsArray[i];
+                        topPositionsArray[index + i] = topPositionsArray[i];
+                    }
+                    cartographicsArray.push(startCartographic.latitude);
+                    cartographicsArray.push(startCartographic.longitude);
+                }
+                return generateGeometryAttributes(loop, projection, bottomPositionsArray, topPositionsArray, normalsArray, cartographicsArray, compute2dAttributes);
+            }
         }
-        //>>includeEnd('debug');
-
-        /**
-         * The screen space width in pixels.
-         * @type {Number}
-         */
-        this.width = defaultValue(options.width, 1.0); // Doesn't get packed, not necessary for computing geometry.
-
-        this._positions = positions;
-
-        /**
-         * The distance interval used for interpolating options.points. Zero indicates no interpolation.
-         * Default of 9999.0 allows centimeter accuracy with 32 bit floating point.
-         * @type {Boolean}
-         * @default 9999.0
-         */
-        this.granularity = defaultValue(options.granularity, 9999.0);
-
-        /**
-         * Whether during geometry creation a line segment will be added between the last and first line positions to make this Polyline a loop.
-         * If the geometry has two positions this parameter will be ignored.
-         * @type {Boolean}
-         * @default false
-         */
-        this.loop = defaultValue(options.loop, false);
-
-        this._ellipsoid = Ellipsoid.WGS84;
-
-        // MapProjections can't be packed, so store the index to a known MapProjection.
-        this._projectionIndex = 0;
-        this._workerName = 'createGroundPolylineGeometry';
-
-        // Used by GroundPolylinePrimitive to signal worker that scenemode is 3D only.
-        this._scene3DOnly = false;
-    }
 
     defineProperties(GroundPolylineGeometry.prototype, {
         /**
@@ -155,26 +388,6 @@ define([
         }
     });
 
-    /**
-     * Set the GroundPolylineGeometry's projection and ellipsoid.
-     * Used by GroundPolylinePrimitive to signal scene information to the geometry for generating 2D attributes.
-     *
-     * @param {GroundPolylineGeometry} groundPolylineGeometry GroundPolylinGeometry describing a polyline on terrain.
-     * @param {Projection} mapProjection A MapProjection used for projecting cartographic coordinates to 2D.
-     * @private
-     */
-    GroundPolylineGeometry.setProjectionAndEllipsoid = function(groundPolylineGeometry, mapProjection) {
-        var projectionIndex = 0;
-        for (var i = 0; i < PROJECTION_COUNT; i++) {
-            if (mapProjection instanceof PROJECTIONS[i]) {
-                projectionIndex = i;
-                break;
-            }
-        }
-
-        groundPolylineGeometry._projectionIndex = projectionIndex;
-        groundPolylineGeometry._ellipsoid = mapProjection.ellipsoid;
-    };
 
     var cart3Scratch1 = new Cartesian3();
     var cart3Scratch2 = new Cartesian3();
@@ -236,97 +449,7 @@ define([
         return Cartographic.toCartesian(heightlessCartographicScratch, ellipsoid, result);
     }
 
-    /**
-     * Stores the provided instance into the provided array.
-     *
-     * @param {PolygonGeometry} value The value to pack.
-     * @param {Number[]} array The array to pack into.
-     * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
-     *
-     * @returns {Number[]} The array that was packed into
-     */
-    GroundPolylineGeometry.pack = function(value, array, startingIndex) {
-        //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.object('value', value);
-        Check.defined('array', array);
-        //>>includeEnd('debug');
 
-        var index = defaultValue(startingIndex, 0);
-
-        var positions = value._positions;
-        var positionsLength = positions.length;
-
-        array[index++] = positionsLength;
-
-        for (var i = 0; i < positionsLength; ++i) {
-            var cartesian = positions[i];
-            Cartesian3.pack(cartesian, array, index);
-            index += 3;
-        }
-
-        array[index++] = value.granularity;
-        array[index++] = value.loop ? 1.0 : 0.0;
-
-        Ellipsoid.pack(value._ellipsoid, array, index);
-        index += Ellipsoid.packedLength;
-
-        array[index++] = value._projectionIndex;
-        array[index++] = value._scene3DOnly ? 1.0 : 0.0;
-
-        return array;
-    };
-
-    /**
-     * Retrieves an instance from a packed array.
-     *
-     * @param {Number[]} array The packed array.
-     * @param {Number} [startingIndex=0] The starting index of the element to be unpacked.
-     * @param {PolygonGeometry} [result] The object into which to store the result.
-     */
-    GroundPolylineGeometry.unpack = function(array, startingIndex, result) {
-        //>>includeStart('debug', pragmas.debug);
-        Check.defined('array', array);
-        //>>includeEnd('debug');
-
-        var index = defaultValue(startingIndex, 0);
-        var positionsLength = array[index++];
-        var positions = new Array(positionsLength);
-
-        for (var i = 0; i < positionsLength; i++) {
-            positions[i] = Cartesian3.unpack(array, index);
-            index += 3;
-        }
-
-        var granularity = array[index++];
-        var loop = array[index++] === 1.0;
-
-        var ellipsoid = Ellipsoid.unpack(array, index);
-        index += Ellipsoid.packedLength;
-
-        var projectionIndex = array[index++];
-        var scene3DOnly = (array[index++] === 1.0);
-
-        if (!defined(result)) {
-            var geometry = new GroundPolylineGeometry({
-                positions : positions,
-                granularity : granularity,
-                loop : loop,
-                ellipsoid : ellipsoid
-            });
-            geometry._projectionIndex = projectionIndex;
-            geometry._scene3DOnly = scene3DOnly;
-            return geometry;
-        }
-
-        result._positions = positions;
-        result.granularity = granularity;
-        result.loop = loop;
-        result._ellipsoid = ellipsoid;
-        result._projectionIndex = projectionIndex;
-        result._scene3DOnly = scene3DOnly;
-
-        return result;
-    };
 
     function direction(target, origin, result) {
         Cartesian3.subtract(target, origin, result);
@@ -384,177 +507,6 @@ define([
     var nextBottomScratch = new Cartesian3();
     var vertexNormalScratch = new Cartesian3();
     var intersectionScratch = new Cartesian3();
-    /**
-     * Computes shadow volumes for the ground polyline, consisting of its vertices, indices, and a bounding sphere.
-     * Vertices are "fat," packing all the data needed in each volume to describe a line on terrain.
-     * Should not be called independent of {@link GroundPolylinePrimitive}.
-     *
-     * @param {GroundPolylineGeometry} groundPolylineGeometry
-     * @private
-     */
-    GroundPolylineGeometry.createGeometry = function(groundPolylineGeometry) {
-        var compute2dAttributes = !groundPolylineGeometry._scene3DOnly;
-        var loop = groundPolylineGeometry.loop;
-        var ellipsoid = groundPolylineGeometry._ellipsoid;
-        var granularity = groundPolylineGeometry.granularity;
-        var projection = new PROJECTIONS[groundPolylineGeometry._projectionIndex](ellipsoid);
-
-        var minHeight = WALL_INITIAL_MIN_HEIGHT;
-        var maxHeight = WALL_INITIAL_MAX_HEIGHT;
-
-        var index;
-        var i;
-
-        var positions = groundPolylineGeometry._positions;
-        var positionsLength = positions.length;
-
-        if (positionsLength === 2) {
-            loop = false;
-        }
-
-        // Split positions across the IDL and the Prime Meridian as well.
-        // Split across prime meridian because very large geometries crossing the Prime Meridian but not the IDL
-        // may get split by the plane of IDL + Prime Meridian.
-        var p0;
-        var p1;
-        var intersection;
-        var splitPositions = [positions[0]];
-        for (i = 0; i < positionsLength - 1; i++) {
-            p0 = positions[i];
-            p1 = positions[i + 1];
-            intersection = IntersectionTests.lineSegmentPlane(p0, p1, XZ_PLANE, intersectionScratch);
-            if (defined(intersection) &&
-                !Cartesian3.equalsEpsilon(intersection, p0, CesiumMath.EPSILON7) &&
-                !Cartesian3.equalsEpsilon(intersection, p1, CesiumMath.EPSILON7)) {
-                splitPositions.push(Cartesian3.clone(intersection));
-            }
-            splitPositions.push(p1);
-        }
-
-        if (loop) {
-            p0 = positions[positionsLength - 1];
-            p1 = positions[0];
-            intersection = IntersectionTests.lineSegmentPlane(p0, p1, XZ_PLANE, intersectionScratch);
-            if (defined(intersection) &&
-                !Cartesian3.equalsEpsilon(intersection, p0, CesiumMath.EPSILON7) &&
-                !Cartesian3.equalsEpsilon(intersection, p1, CesiumMath.EPSILON7)) {
-                splitPositions.push(Cartesian3.clone(intersection));
-            }
-        }
-        var cartographicsLength = splitPositions.length;
-
-        var cartographics = new Array(cartographicsLength);
-        for (i = 0; i < cartographicsLength; i++) {
-            var cartographic = Cartographic.fromCartesian(splitPositions[i], ellipsoid);
-            cartographic.height = 0.0;
-            cartographics[i] = cartographic;
-        }
-
-        cartographics = arrayRemoveDuplicates(cartographics, Cartographic.equalsEpsilon);
-        cartographicsLength = cartographics.length;
-
-        if (cartographicsLength < 2) {
-            return undefined;
-        }
-
-        /**** Build heap-side arrays for positions, interpolated cartographics, and normals from which to compute vertices ****/
-        // We build a "wall" and then decompose it into separately connected component "volumes" because we need a lot
-        // of information about the wall. Also, this simplifies interpolation.
-        // Convention: "next" and "end" are locally forward to each segment of the wall,
-        // and we are computing normals pointing towards the local right side of the vertices in each segment.
-        var cartographicsArray = [];
-        var normalsArray = [];
-        var bottomPositionsArray = [];
-        var topPositionsArray = [];
-
-        var previousBottom = previousBottomScratch;
-        var vertexBottom = vertexBottomScratch;
-        var vertexTop = vertexTopScratch;
-        var nextBottom = nextBottomScratch;
-        var vertexNormal = vertexNormalScratch;
-
-        // First point - either loop or attach a "perpendicular" normal
-        var startCartographic = cartographics[0];
-        var nextCartographic = cartographics[1];
-
-        var prestartCartographic = cartographics[cartographicsLength - 1];
-        previousBottom = getPosition(ellipsoid, prestartCartographic, minHeight, previousBottom);
-        nextBottom = getPosition(ellipsoid, nextCartographic, minHeight, nextBottom);
-        vertexBottom = getPosition(ellipsoid, startCartographic, minHeight, vertexBottom);
-        vertexTop = getPosition(ellipsoid, startCartographic, maxHeight, vertexTop);
-
-        if (loop) {
-            vertexNormal = computeVertexMiterNormal(previousBottom, vertexBottom, vertexTop, nextBottom, vertexNormal);
-        } else {
-            vertexNormal = computeRightNormal(startCartographic, nextCartographic, maxHeight, ellipsoid, vertexNormal);
-        }
-
-        Cartesian3.pack(vertexNormal, normalsArray, 0);
-        Cartesian3.pack(vertexBottom, bottomPositionsArray, 0);
-        Cartesian3.pack(vertexTop, topPositionsArray, 0);
-        cartographicsArray.push(startCartographic.latitude);
-        cartographicsArray.push(startCartographic.longitude);
-
-        interpolateSegment(startCartographic, nextCartographic, minHeight, maxHeight, granularity, ellipsoid, normalsArray, bottomPositionsArray, topPositionsArray, cartographicsArray);
-
-        // All inbetween points
-        for (i = 1; i < cartographicsLength - 1; ++i) {
-            previousBottom = Cartesian3.clone(vertexBottom, previousBottom);
-            vertexBottom = Cartesian3.clone(nextBottom, vertexBottom);
-            var vertexCartographic = cartographics[i];
-            getPosition(ellipsoid, vertexCartographic, maxHeight, vertexTop);
-            getPosition(ellipsoid, cartographics[i + 1], minHeight, nextBottom);
-
-            computeVertexMiterNormal(previousBottom, vertexBottom, vertexTop, nextBottom, vertexNormal);
-
-            index = normalsArray.length;
-            Cartesian3.pack(vertexNormal, normalsArray, index);
-            Cartesian3.pack(vertexBottom, bottomPositionsArray, index);
-            Cartesian3.pack(vertexTop, topPositionsArray, index);
-            cartographicsArray.push(vertexCartographic.latitude);
-            cartographicsArray.push(vertexCartographic.longitude);
-
-            interpolateSegment(cartographics[i], cartographics[i + 1], minHeight, maxHeight, granularity, ellipsoid, normalsArray, bottomPositionsArray, topPositionsArray, cartographicsArray);
-        }
-
-        // Last point - either loop or attach a normal "perpendicular" to the wall.
-        var endCartographic = cartographics[cartographicsLength - 1];
-        var preEndCartographic = cartographics[cartographicsLength - 2];
-
-        vertexBottom = getPosition(ellipsoid, endCartographic, minHeight, vertexBottom);
-        vertexTop = getPosition(ellipsoid, endCartographic, maxHeight, vertexTop);
-
-        if (loop) {
-            var postEndCartographic = cartographics[0];
-            previousBottom = getPosition(ellipsoid, preEndCartographic, minHeight, previousBottom);
-            nextBottom = getPosition(ellipsoid, postEndCartographic, minHeight, nextBottom);
-
-            vertexNormal = computeVertexMiterNormal(previousBottom, vertexBottom, vertexTop, nextBottom, vertexNormal);
-        } else {
-            vertexNormal = computeRightNormal(preEndCartographic, endCartographic, maxHeight, ellipsoid, vertexNormal);
-        }
-
-        index = normalsArray.length;
-        Cartesian3.pack(vertexNormal, normalsArray, index);
-        Cartesian3.pack(vertexBottom, bottomPositionsArray, index);
-        Cartesian3.pack(vertexTop, topPositionsArray, index);
-        cartographicsArray.push(endCartographic.latitude);
-        cartographicsArray.push(endCartographic.longitude);
-
-        if (loop) {
-            interpolateSegment(endCartographic, startCartographic, minHeight, maxHeight, granularity, ellipsoid, normalsArray, bottomPositionsArray, topPositionsArray, cartographicsArray);
-            index = normalsArray.length;
-            for (i = 0; i < 3; ++i) {
-                normalsArray[index + i] = normalsArray[i];
-                bottomPositionsArray[index + i] = bottomPositionsArray[i];
-                topPositionsArray[index + i] = topPositionsArray[i];
-            }
-            cartographicsArray.push(startCartographic.latitude);
-            cartographicsArray.push(startCartographic.longitude);
-        }
-
-        return generateGeometryAttributes(loop, projection, bottomPositionsArray, topPositionsArray, normalsArray, cartographicsArray, compute2dAttributes);
-    };
 
     // If the end normal angle is too steep compared to the direction of the line segment,
     // "break" the miter by rotating the normal 90 degrees around the "up" direction at the point

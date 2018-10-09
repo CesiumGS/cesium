@@ -1,9 +1,9 @@
 define([
-        './defaultValue',
-        './defined'
-    ], function(
-        defaultValue,
-        defined) {
+    './defaultValue',
+    './defined'
+], function(
+    defaultValue,
+    defined) {
     'use strict';
 
     /**
@@ -37,7 +37,7 @@ define([
      *
      * @exports combine
      */
-    function combine(object1, object2, deep) {
+    export function combine(object1: Object, object2: Object, deep: boolean = false): Object {
         deep = defaultValue(deep, false);
 
         var result = {};

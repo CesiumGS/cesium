@@ -36,77 +36,274 @@ define([
         TerrainMesh) {
     'use strict';
 
-    /**
-     * Terrain data for a single tile from a Google Earth Enterprise server.
-     *
-     * @alias GoogleEarthEnterpriseTerrainData
-     * @constructor
-     *
-     * @param {Object} options Object with the following properties:
-     * @param {ArrayBuffer} options.buffer The buffer containing terrain data.
-     * @param {Number} options.negativeAltitudeExponentBias Multiplier for negative terrain heights that are encoded as very small positive values.
-     * @param {Number} options.negativeElevationThreshold Threshold for negative values
-     * @param {Number} [options.childTileMask=15] A bit mask indicating which of this tile's four children exist.
-     *                 If a child's bit is set, geometry will be requested for that tile as well when it
-     *                 is needed.  If the bit is cleared, the child tile is not requested and geometry is
-     *                 instead upsampled from the parent.  The bit values are as follows:
-     *                 <table>
-     *                  <tr><th>Bit Position</th><th>Bit Value</th><th>Child Tile</th></tr>
-     *                  <tr><td>0</td><td>1</td><td>Southwest</td></tr>
-     *                  <tr><td>1</td><td>2</td><td>Southeast</td></tr>
-     *                  <tr><td>2</td><td>4</td><td>Northeast</td></tr>
-     *                  <tr><td>3</td><td>8</td><td>Northwest</td></tr>
-     *                 </table>
-     * @param {Boolean} [options.createdByUpsampling=false] True if this instance was created by upsampling another instance;
-     *                  otherwise, false.
-     * @param {Credit[]} [options.credits] Array of credits for this tile.
-     *
-     *
-     * @example
-     * var buffer = ...
-     * var childTileMask = ...
-     * var terrainData = new Cesium.GoogleEarthEnterpriseTerrainData({
-     *   buffer : heightBuffer,
-     *   childTileMask : childTileMask
-     * });
-     *
-     * @see TerrainData
-     * @see HeightTerrainData
-     * @see QuantizedMeshTerrainData
-     */
-    function GoogleEarthEnterpriseTerrainData(options) {
-        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-        //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.object('options.buffer', options.buffer);
-        Check.typeOf.number('options.negativeAltitudeExponentBias', options.negativeAltitudeExponentBias);
-        Check.typeOf.number('options.negativeElevationThreshold', options.negativeElevationThreshold);
-        //>>includeEnd('debug');
-
-        this._buffer = options.buffer;
-        this._credits = options.credits;
-        this._negativeAltitudeExponentBias = options.negativeAltitudeExponentBias;
-        this._negativeElevationThreshold = options.negativeElevationThreshold;
-
-        // Convert from google layout to layout of other providers
-        // 3 2 -> 2 3
-        // 0 1 -> 0 1
-        var googleChildTileMask = defaultValue(options.childTileMask, 15);
-        var childTileMask = googleChildTileMask & 3; // Bottom row is identical
-        childTileMask |= (googleChildTileMask & 4) ? 8 : 0; // NE
-        childTileMask |= (googleChildTileMask & 8) ? 4 : 0; // NW
-
-        this._childTileMask = childTileMask;
-
-        this._createdByUpsampling = defaultValue(options.createdByUpsampling, false);
-
-        this._skirtHeight = undefined;
-        this._bufferType = this._buffer.constructor;
-        this._mesh = undefined;
-        this._minimumHeight = undefined;
-        this._maximumHeight = undefined;
-        this._vertexCountWithoutSkirts = undefined;
-        this._skirtIndex = undefined;
-    }
+        /**
+             * Terrain data for a single tile from a Google Earth Enterprise server.
+             *
+             * @alias GoogleEarthEnterpriseTerrainData
+             * @constructor
+             *
+             * @param {Object} options Object with the following properties:
+             * @param {ArrayBuffer} options.buffer The buffer containing terrain data.
+             * @param {Number} options.negativeAltitudeExponentBias Multiplier for negative terrain heights that are encoded as very small positive values.
+             * @param {Number} options.negativeElevationThreshold Threshold for negative values
+             * @param {Number} [options.childTileMask=15] A bit mask indicating which of this tile's four children exist.
+             *                 If a child's bit is set, geometry will be requested for that tile as well when it
+             *                 is needed.  If the bit is cleared, the child tile is not requested and geometry is
+             *                 instead upsampled from the parent.  The bit values are as follows:
+             *                 <table>
+             *                  <tr><th>Bit Position</th><th>Bit Value</th><th>Child Tile</th></tr>
+             *                  <tr><td>0</td><td>1</td><td>Southwest</td></tr>
+             *                  <tr><td>1</td><td>2</td><td>Southeast</td></tr>
+             *                  <tr><td>2</td><td>4</td><td>Northeast</td></tr>
+             *                  <tr><td>3</td><td>8</td><td>Northwest</td></tr>
+             *                 </table>
+             * @param {Boolean} [options.createdByUpsampling=false] True if this instance was created by upsampling another instance;
+             *                  otherwise, false.
+             * @param {Credit[]} [options.credits] Array of credits for this tile.
+             *
+             *
+             * @example
+             * var buffer = ...
+             * var childTileMask = ...
+             * var terrainData = new Cesium.GoogleEarthEnterpriseTerrainData({
+             *   buffer : heightBuffer,
+             *   childTileMask : childTileMask
+             * });
+             *
+             * @see TerrainData
+             * @see HeightTerrainData
+             * @see QuantizedMeshTerrainData
+             */
+        class GoogleEarthEnterpriseTerrainData {
+            constructor(options) {
+                options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+                //>>includeStart('debug', pragmas.debug);
+                Check.typeOf.object('options.buffer', options.buffer);
+                Check.typeOf.number('options.negativeAltitudeExponentBias', options.negativeAltitudeExponentBias);
+                Check.typeOf.number('options.negativeElevationThreshold', options.negativeElevationThreshold);
+                //>>includeEnd('debug');
+                this._buffer = options.buffer;
+                this._credits = options.credits;
+                this._negativeAltitudeExponentBias = options.negativeAltitudeExponentBias;
+                this._negativeElevationThreshold = options.negativeElevationThreshold;
+                // Convert from google layout to layout of other providers
+                // 3 2 -> 2 3
+                // 0 1 -> 0 1
+                var googleChildTileMask = defaultValue(options.childTileMask, 15);
+                var childTileMask = googleChildTileMask & 3; // Bottom row is identical
+                childTileMask |= (googleChildTileMask & 4) ? 8 : 0; // NE
+                childTileMask |= (googleChildTileMask & 8) ? 4 : 0; // NW
+                this._childTileMask = childTileMask;
+                this._createdByUpsampling = defaultValue(options.createdByUpsampling, false);
+                this._skirtHeight = undefined;
+                this._bufferType = this._buffer.constructor;
+                this._mesh = undefined;
+                this._minimumHeight = undefined;
+                this._maximumHeight = undefined;
+                this._vertexCountWithoutSkirts = undefined;
+                this._skirtIndex = undefined;
+            }
+            /**
+                 * Creates a {@link TerrainMesh} from this terrain data.
+                 *
+                 * @private
+                 *
+                 * @param {TilingScheme} tilingScheme The tiling scheme to which this tile belongs.
+                 * @param {Number} x The X coordinate of the tile for which to create the terrain data.
+                 * @param {Number} y The Y coordinate of the tile for which to create the terrain data.
+                 * @param {Number} level The level of the tile for which to create the terrain data.
+                 * @param {Number} [exaggeration=1.0] The scale used to exaggerate the terrain.
+                 * @returns {Promise.<TerrainMesh>|undefined} A promise for the terrain mesh, or undefined if too many
+                 *          asynchronous mesh creations are already in progress and the operation should
+                 *          be retried later.
+                 */
+            createMesh(tilingScheme, x, y, level, exaggeration) {
+                //>>includeStart('debug', pragmas.debug);
+                Check.typeOf.object('tilingScheme', tilingScheme);
+                Check.typeOf.number('x', x);
+                Check.typeOf.number('y', y);
+                Check.typeOf.number('level', level);
+                //>>includeEnd('debug');
+                var ellipsoid = tilingScheme.ellipsoid;
+                tilingScheme.tileXYToNativeRectangle(x, y, level, nativeRectangleScratch);
+                tilingScheme.tileXYToRectangle(x, y, level, rectangleScratch);
+                exaggeration = defaultValue(exaggeration, 1.0);
+                // Compute the center of the tile for RTC rendering.
+                var center = ellipsoid.cartographicToCartesian(Rectangle.center(rectangleScratch));
+                var levelZeroMaxError = 40075.16; // From Google's Doc
+                var thisLevelMaxError = levelZeroMaxError / (1 << level);
+                this._skirtHeight = Math.min(thisLevelMaxError * 8.0, 1000.0);
+                var verticesPromise = taskProcessor.scheduleTask({
+                    buffer: this._buffer,
+                    nativeRectangle: nativeRectangleScratch,
+                    rectangle: rectangleScratch,
+                    relativeToCenter: center,
+                    ellipsoid: ellipsoid,
+                    skirtHeight: this._skirtHeight,
+                    exaggeration: exaggeration,
+                    includeWebMercatorT: true,
+                    negativeAltitudeExponentBias: this._negativeAltitudeExponentBias,
+                    negativeElevationThreshold: this._negativeElevationThreshold
+                });
+                if (!defined(verticesPromise)) {
+                    // Postponed
+                    return undefined;
+                }
+                var that = this;
+                return verticesPromise
+                    .then(function(result) {
+                        that._mesh = new TerrainMesh(center, new Float32Array(result.vertices), new Uint16Array(result.indices), result.minimumHeight, result.maximumHeight, result.boundingSphere3D, result.occludeePointInScaledSpace, result.numberOfAttributes, result.orientedBoundingBox, TerrainEncoding.clone(result.encoding), exaggeration);
+                        that._vertexCountWithoutSkirts = result.vertexCountWithoutSkirts;
+                        that._skirtIndex = result.skirtIndex;
+                        that._minimumHeight = result.minimumHeight;
+                        that._maximumHeight = result.maximumHeight;
+                        // Free memory received from server after mesh is created.
+                        that._buffer = undefined;
+                        return that._mesh;
+                    });
+            }
+            /**
+                 * Computes the terrain height at a specified longitude and latitude.
+                 *
+                 * @param {Rectangle} rectangle The rectangle covered by this terrain data.
+                 * @param {Number} longitude The longitude in radians.
+                 * @param {Number} latitude The latitude in radians.
+                 * @returns {Number} The terrain height at the specified position.  If the position
+                 *          is outside the rectangle, this method will extrapolate the height, which is likely to be wildly
+                 *          incorrect for positions far outside the rectangle.
+                 */
+            interpolateHeight(rectangle, longitude, latitude) {
+                var u = CesiumMath.clamp((longitude - rectangle.west) / rectangle.width, 0.0, 1.0);
+                var v = CesiumMath.clamp((latitude - rectangle.south) / rectangle.height, 0.0, 1.0);
+                if (!defined(this._mesh)) {
+                    return interpolateHeight(this, u, v, rectangle);
+                }
+                return interpolateMeshHeight(this, u, v);
+            }
+            /**
+                 * Upsamples this terrain data for use by a descendant tile.  The resulting instance will contain a subset of the
+                 * height samples in this instance, interpolated if necessary.
+                 *
+                 * @param {TilingScheme} tilingScheme The tiling scheme of this terrain data.
+                 * @param {Number} thisX The X coordinate of this tile in the tiling scheme.
+                 * @param {Number} thisY The Y coordinate of this tile in the tiling scheme.
+                 * @param {Number} thisLevel The level of this tile in the tiling scheme.
+                 * @param {Number} descendantX The X coordinate within the tiling scheme of the descendant tile for which we are upsampling.
+                 * @param {Number} descendantY The Y coordinate within the tiling scheme of the descendant tile for which we are upsampling.
+                 * @param {Number} descendantLevel The level within the tiling scheme of the descendant tile for which we are upsampling.
+                 * @returns {Promise.<HeightmapTerrainData>|undefined} A promise for upsampled heightmap terrain data for the descendant tile,
+                 *          or undefined if too many asynchronous upsample operations are in progress and the request has been
+                 *          deferred.
+                 */
+            upsample(tilingScheme, thisX, thisY, thisLevel, descendantX, descendantY, descendantLevel) {
+                //>>includeStart('debug', pragmas.debug);
+                Check.typeOf.object('tilingScheme', tilingScheme);
+                Check.typeOf.number('thisX', thisX);
+                Check.typeOf.number('thisY', thisY);
+                Check.typeOf.number('thisLevel', thisLevel);
+                Check.typeOf.number('descendantX', descendantX);
+                Check.typeOf.number('descendantY', descendantY);
+                Check.typeOf.number('descendantLevel', descendantLevel);
+                var levelDifference = descendantLevel - thisLevel;
+                if (levelDifference > 1) {
+                    throw new DeveloperError('Upsampling through more than one level at a time is not currently supported.');
+                }
+                //>>includeEnd('debug');
+                var mesh = this._mesh;
+                if (!defined(this._mesh)) {
+                    return undefined;
+                }
+                var isEastChild = thisX * 2 !== descendantX;
+                var isNorthChild = thisY * 2 === descendantY;
+                var ellipsoid = tilingScheme.ellipsoid;
+                var childRectangle = tilingScheme.tileXYToRectangle(descendantX, descendantY, descendantLevel);
+                var upsamplePromise = upsampleTaskProcessor.scheduleTask({
+                    vertices: mesh.vertices,
+                    vertexCountWithoutSkirts: this._vertexCountWithoutSkirts,
+                    indices: mesh.indices,
+                    skirtIndex: this._skirtIndex,
+                    encoding: mesh.encoding,
+                    minimumHeight: this._minimumHeight,
+                    maximumHeight: this._maximumHeight,
+                    isEastChild: isEastChild,
+                    isNorthChild: isNorthChild,
+                    childRectangle: childRectangle,
+                    ellipsoid: ellipsoid,
+                    exaggeration: mesh.exaggeration
+                });
+                if (!defined(upsamplePromise)) {
+                    // Postponed
+                    return undefined;
+                }
+                var that = this;
+                return upsamplePromise
+                    .then(function(result) {
+                        var quantizedVertices = new Uint16Array(result.vertices);
+                        var indicesTypedArray = IndexDatatype.createTypedArray(quantizedVertices.length / 3, result.indices);
+                        var skirtHeight = that._skirtHeight;
+                        // Use QuantizedMeshTerrainData since we have what we need already parsed
+                        return new QuantizedMeshTerrainData({
+                            quantizedVertices: quantizedVertices,
+                            indices: indicesTypedArray,
+                            minimumHeight: result.minimumHeight,
+                            maximumHeight: result.maximumHeight,
+                            boundingSphere: BoundingSphere.clone(result.boundingSphere),
+                            orientedBoundingBox: OrientedBoundingBox.clone(result.orientedBoundingBox),
+                            horizonOcclusionPoint: Cartesian3.clone(result.horizonOcclusionPoint),
+                            westIndices: result.westIndices,
+                            southIndices: result.southIndices,
+                            eastIndices: result.eastIndices,
+                            northIndices: result.northIndices,
+                            westSkirtHeight: skirtHeight,
+                            southSkirtHeight: skirtHeight,
+                            eastSkirtHeight: skirtHeight,
+                            northSkirtHeight: skirtHeight,
+                            childTileMask: 0,
+                            createdByUpsampling: true,
+                            credits: that._credits
+                        });
+                    });
+            }
+            /**
+                 * Determines if a given child tile is available, based on the
+                 * {@link HeightmapTerrainData.childTileMask}.  The given child tile coordinates are assumed
+                 * to be one of the four children of this tile.  If non-child tile coordinates are
+                 * given, the availability of the southeast child tile is returned.
+                 *
+                 * @param {Number} thisX The tile X coordinate of this (the parent) tile.
+                 * @param {Number} thisY The tile Y coordinate of this (the parent) tile.
+                 * @param {Number} childX The tile X coordinate of the child tile to check for availability.
+                 * @param {Number} childY The tile Y coordinate of the child tile to check for availability.
+                 * @returns {Boolean} True if the child tile is available; otherwise, false.
+                 */
+            isChildAvailable(thisX, thisY, childX, childY) {
+                //>>includeStart('debug', pragmas.debug);
+                Check.typeOf.number('thisX', thisX);
+                Check.typeOf.number('thisY', thisY);
+                Check.typeOf.number('childX', childX);
+                Check.typeOf.number('childY', childY);
+                //>>includeEnd('debug');
+                var bitNumber = 2; // northwest child
+                if (childX !== thisX * 2) {
+                    ++bitNumber; // east child
+                }
+                if (childY !== thisY * 2) {
+                    bitNumber -= 2; // south child
+                }
+                return (this._childTileMask & (1 << bitNumber)) !== 0;
+            }
+            /**
+                 * Gets a value indicating whether or not this terrain data was created by upsampling lower resolution
+                 * terrain data.  If this value is false, the data was obtained from some other source, such
+                 * as by downloading it from a remote server.  This method should return true for instances
+                 * returned from a call to {@link HeightmapTerrainData#upsample}.
+                 *
+                 * @returns {Boolean} True if this instance was created by upsampling; otherwise, false.
+                 */
+            wasCreatedByUpsampling() {
+                return this._createdByUpsampling;
+            }
+        }
 
     defineProperties(GoogleEarthEnterpriseTerrainData.prototype, {
         /**
@@ -138,243 +335,12 @@ define([
     var nativeRectangleScratch = new Rectangle();
     var rectangleScratch = new Rectangle();
 
-    /**
-     * Creates a {@link TerrainMesh} from this terrain data.
-     *
-     * @private
-     *
-     * @param {TilingScheme} tilingScheme The tiling scheme to which this tile belongs.
-     * @param {Number} x The X coordinate of the tile for which to create the terrain data.
-     * @param {Number} y The Y coordinate of the tile for which to create the terrain data.
-     * @param {Number} level The level of the tile for which to create the terrain data.
-     * @param {Number} [exaggeration=1.0] The scale used to exaggerate the terrain.
-     * @returns {Promise.<TerrainMesh>|undefined} A promise for the terrain mesh, or undefined if too many
-     *          asynchronous mesh creations are already in progress and the operation should
-     *          be retried later.
-     */
-    GoogleEarthEnterpriseTerrainData.prototype.createMesh = function(tilingScheme, x, y, level, exaggeration) {
-        //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.object('tilingScheme', tilingScheme);
-        Check.typeOf.number('x', x);
-        Check.typeOf.number('y', y);
-        Check.typeOf.number('level', level);
-        //>>includeEnd('debug');
 
-        var ellipsoid = tilingScheme.ellipsoid;
-        tilingScheme.tileXYToNativeRectangle(x, y, level, nativeRectangleScratch);
-        tilingScheme.tileXYToRectangle(x, y, level, rectangleScratch);
-        exaggeration = defaultValue(exaggeration, 1.0);
-
-        // Compute the center of the tile for RTC rendering.
-        var center = ellipsoid.cartographicToCartesian(Rectangle.center(rectangleScratch));
-
-        var levelZeroMaxError = 40075.16; // From Google's Doc
-        var thisLevelMaxError = levelZeroMaxError / (1 << level);
-        this._skirtHeight = Math.min(thisLevelMaxError * 8.0, 1000.0);
-
-        var verticesPromise = taskProcessor.scheduleTask({
-            buffer : this._buffer,
-            nativeRectangle : nativeRectangleScratch,
-            rectangle : rectangleScratch,
-            relativeToCenter : center,
-            ellipsoid : ellipsoid,
-            skirtHeight : this._skirtHeight,
-            exaggeration : exaggeration,
-            includeWebMercatorT : true,
-            negativeAltitudeExponentBias: this._negativeAltitudeExponentBias,
-            negativeElevationThreshold: this._negativeElevationThreshold
-        });
-
-        if (!defined(verticesPromise)) {
-            // Postponed
-            return undefined;
-        }
-
-        var that = this;
-        return verticesPromise
-            .then(function(result) {
-                that._mesh = new TerrainMesh(
-                    center,
-                    new Float32Array(result.vertices),
-                    new Uint16Array(result.indices),
-                    result.minimumHeight,
-                    result.maximumHeight,
-                    result.boundingSphere3D,
-                    result.occludeePointInScaledSpace,
-                    result.numberOfAttributes,
-                    result.orientedBoundingBox,
-                    TerrainEncoding.clone(result.encoding),
-                    exaggeration);
-
-                that._vertexCountWithoutSkirts = result.vertexCountWithoutSkirts;
-                that._skirtIndex = result.skirtIndex;
-                that._minimumHeight = result.minimumHeight;
-                that._maximumHeight = result.maximumHeight;
-
-                // Free memory received from server after mesh is created.
-                that._buffer = undefined;
-                return that._mesh;
-            });
-    };
-
-    /**
-     * Computes the terrain height at a specified longitude and latitude.
-     *
-     * @param {Rectangle} rectangle The rectangle covered by this terrain data.
-     * @param {Number} longitude The longitude in radians.
-     * @param {Number} latitude The latitude in radians.
-     * @returns {Number} The terrain height at the specified position.  If the position
-     *          is outside the rectangle, this method will extrapolate the height, which is likely to be wildly
-     *          incorrect for positions far outside the rectangle.
-     */
-    GoogleEarthEnterpriseTerrainData.prototype.interpolateHeight = function(rectangle, longitude, latitude) {
-        var u = CesiumMath.clamp((longitude - rectangle.west) / rectangle.width, 0.0, 1.0);
-        var v = CesiumMath.clamp((latitude - rectangle.south) / rectangle.height, 0.0, 1.0);
-
-        if (!defined(this._mesh)) {
-            return interpolateHeight(this, u, v, rectangle);
-        }
-
-        return interpolateMeshHeight(this, u, v);
-    };
 
     var upsampleTaskProcessor = new TaskProcessor('upsampleQuantizedTerrainMesh');
 
-    /**
-     * Upsamples this terrain data for use by a descendant tile.  The resulting instance will contain a subset of the
-     * height samples in this instance, interpolated if necessary.
-     *
-     * @param {TilingScheme} tilingScheme The tiling scheme of this terrain data.
-     * @param {Number} thisX The X coordinate of this tile in the tiling scheme.
-     * @param {Number} thisY The Y coordinate of this tile in the tiling scheme.
-     * @param {Number} thisLevel The level of this tile in the tiling scheme.
-     * @param {Number} descendantX The X coordinate within the tiling scheme of the descendant tile for which we are upsampling.
-     * @param {Number} descendantY The Y coordinate within the tiling scheme of the descendant tile for which we are upsampling.
-     * @param {Number} descendantLevel The level within the tiling scheme of the descendant tile for which we are upsampling.
-     * @returns {Promise.<HeightmapTerrainData>|undefined} A promise for upsampled heightmap terrain data for the descendant tile,
-     *          or undefined if too many asynchronous upsample operations are in progress and the request has been
-     *          deferred.
-     */
-    GoogleEarthEnterpriseTerrainData.prototype.upsample = function(tilingScheme, thisX, thisY, thisLevel, descendantX, descendantY, descendantLevel) {
-        //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.object('tilingScheme', tilingScheme);
-        Check.typeOf.number('thisX', thisX);
-        Check.typeOf.number('thisY', thisY);
-        Check.typeOf.number('thisLevel', thisLevel);
-        Check.typeOf.number('descendantX', descendantX);
-        Check.typeOf.number('descendantY', descendantY);
-        Check.typeOf.number('descendantLevel', descendantLevel);
-        var levelDifference = descendantLevel - thisLevel;
-        if (levelDifference > 1) {
-            throw new DeveloperError('Upsampling through more than one level at a time is not currently supported.');
-        }
-        //>>includeEnd('debug');
 
-        var mesh = this._mesh;
-        if (!defined(this._mesh)) {
-            return undefined;
-        }
 
-        var isEastChild = thisX * 2 !== descendantX;
-        var isNorthChild = thisY * 2 === descendantY;
-
-        var ellipsoid = tilingScheme.ellipsoid;
-        var childRectangle = tilingScheme.tileXYToRectangle(descendantX, descendantY, descendantLevel);
-
-        var upsamplePromise = upsampleTaskProcessor.scheduleTask({
-            vertices : mesh.vertices,
-            vertexCountWithoutSkirts : this._vertexCountWithoutSkirts,
-            indices : mesh.indices,
-            skirtIndex : this._skirtIndex,
-            encoding : mesh.encoding,
-            minimumHeight : this._minimumHeight,
-            maximumHeight : this._maximumHeight,
-            isEastChild : isEastChild,
-            isNorthChild : isNorthChild,
-            childRectangle : childRectangle,
-            ellipsoid : ellipsoid,
-            exaggeration : mesh.exaggeration
-        });
-
-        if (!defined(upsamplePromise)) {
-            // Postponed
-            return undefined;
-        }
-
-        var that = this;
-        return upsamplePromise
-            .then(function(result) {
-                var quantizedVertices = new Uint16Array(result.vertices);
-                var indicesTypedArray = IndexDatatype.createTypedArray(quantizedVertices.length / 3, result.indices);
-
-                var skirtHeight = that._skirtHeight;
-
-                // Use QuantizedMeshTerrainData since we have what we need already parsed
-                return new QuantizedMeshTerrainData({
-                    quantizedVertices : quantizedVertices,
-                    indices : indicesTypedArray,
-                    minimumHeight : result.minimumHeight,
-                    maximumHeight : result.maximumHeight,
-                    boundingSphere : BoundingSphere.clone(result.boundingSphere),
-                    orientedBoundingBox : OrientedBoundingBox.clone(result.orientedBoundingBox),
-                    horizonOcclusionPoint : Cartesian3.clone(result.horizonOcclusionPoint),
-                    westIndices : result.westIndices,
-                    southIndices : result.southIndices,
-                    eastIndices : result.eastIndices,
-                    northIndices : result.northIndices,
-                    westSkirtHeight : skirtHeight,
-                    southSkirtHeight : skirtHeight,
-                    eastSkirtHeight : skirtHeight,
-                    northSkirtHeight : skirtHeight,
-                    childTileMask : 0,
-                    createdByUpsampling : true,
-                    credits : that._credits
-                });
-            });
-    };
-
-    /**
-     * Determines if a given child tile is available, based on the
-     * {@link HeightmapTerrainData.childTileMask}.  The given child tile coordinates are assumed
-     * to be one of the four children of this tile.  If non-child tile coordinates are
-     * given, the availability of the southeast child tile is returned.
-     *
-     * @param {Number} thisX The tile X coordinate of this (the parent) tile.
-     * @param {Number} thisY The tile Y coordinate of this (the parent) tile.
-     * @param {Number} childX The tile X coordinate of the child tile to check for availability.
-     * @param {Number} childY The tile Y coordinate of the child tile to check for availability.
-     * @returns {Boolean} True if the child tile is available; otherwise, false.
-     */
-    GoogleEarthEnterpriseTerrainData.prototype.isChildAvailable = function(thisX, thisY, childX, childY) {
-        //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.number('thisX', thisX);
-        Check.typeOf.number('thisY', thisY);
-        Check.typeOf.number('childX', childX);
-        Check.typeOf.number('childY', childY);
-        //>>includeEnd('debug');
-
-        var bitNumber = 2; // northwest child
-        if (childX !== thisX * 2) {
-            ++bitNumber; // east child
-        }
-        if (childY !== thisY * 2) {
-            bitNumber -= 2; // south child
-        }
-
-        return (this._childTileMask & (1 << bitNumber)) !== 0;
-    };
-
-    /**
-     * Gets a value indicating whether or not this terrain data was created by upsampling lower resolution
-     * terrain data.  If this value is false, the data was obtained from some other source, such
-     * as by downloading it from a remote server.  This method should return true for instances
-     * returned from a call to {@link HeightmapTerrainData#upsample}.
-     *
-     * @returns {Boolean} True if this instance was created by upsampling; otherwise, false.
-     */
-    GoogleEarthEnterpriseTerrainData.prototype.wasCreatedByUpsampling = function() {
-        return this._createdByUpsampling;
-    };
 
     var texCoordScratch0 = new Cartesian2();
     var texCoordScratch1 = new Cartesian2();

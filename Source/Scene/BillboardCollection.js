@@ -122,221 +122,806 @@ define([
         a_batchId : 11
     };
 
-    /**
-     * A renderable collection of billboards.  Billboards are viewport-aligned
-     * images positioned in the 3D scene.
-     * <br /><br />
-     * <div align='center'>
-     * <img src='Images/Billboard.png' width='400' height='300' /><br />
-     * Example billboards
-     * </div>
-     * <br /><br />
-     * Billboards are added and removed from the collection using {@link BillboardCollection#add}
-     * and {@link BillboardCollection#remove}.  Billboards in a collection automatically share textures
-     * for images with the same identifier.
-     *
-     * @alias BillboardCollection
-     * @constructor
-     *
-     * @param {Object} [options] Object with the following properties:
-     * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The 4x4 transformation matrix that transforms each billboard from model to world coordinates.
-     * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Determines if this primitive's commands' bounding spheres are shown.
-     * @param {Scene} [options.scene] Must be passed in for billboards that use the height reference property or will be depth tested against the globe.
-     * @param {BlendOption} [options.blendOption=BlendOption.OPAQUE_AND_TRANSLUCENT] The billboard blending option. The default
-     * is used for rendering both opaque and translucent billboards. However, if either all of the billboards are completely opaque or all are completely translucent,
-     * setting the technique to BlendOption.OPAQUE or BlendOption.TRANSLUCENT can improve performance by up to 2x.
-     *
-     * @performance For best performance, prefer a few collections, each with many billboards, to
-     * many collections with only a few billboards each.  Organize collections so that billboards
-     * with the same update frequency are in the same collection, i.e., billboards that do not
-     * change should be in one collection; billboards that change every frame should be in another
-     * collection; and so on.
-     *
-     * @see BillboardCollection#add
-     * @see BillboardCollection#remove
-     * @see Billboard
-     * @see LabelCollection
-     *
-     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Billboards.html|Cesium Sandcastle Billboard Demo}
-     *
-     * @example
-     * // Create a billboard collection with two billboards
-     * var billboards = scene.primitives.add(new Cesium.BillboardCollection());
-     * billboards.add({
-     *   position : new Cesium.Cartesian3(1.0, 2.0, 3.0),
-     *   image : 'url/to/image'
-     * });
-     * billboards.add({
-     *   position : new Cesium.Cartesian3(4.0, 5.0, 6.0),
-     *   image : 'url/to/another/image'
-     * });
-     */
-    function BillboardCollection(options) {
-        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-
-        this._scene = options.scene;
-        this._batchTable = options.batchTable;
-
-        this._textureAtlas = undefined;
-        this._textureAtlasGUID = undefined;
-        this._destroyTextureAtlas = true;
-        this._sp = undefined;
-        this._spTranslucent = undefined;
-        this._rsOpaque = undefined;
-        this._rsTranslucent = undefined;
-        this._vaf = undefined;
-
-        this._billboards = [];
-        this._billboardsToUpdate = [];
-        this._billboardsToUpdateIndex = 0;
-        this._billboardsRemoved = false;
-        this._createVertexArray = false;
-
-        this._shaderRotation = false;
-        this._compiledShaderRotation = false;
-
-        this._shaderAlignedAxis = false;
-        this._compiledShaderAlignedAxis = false;
-
-        this._shaderScaleByDistance = false;
-        this._compiledShaderScaleByDistance = false;
-
-        this._shaderTranslucencyByDistance = false;
-        this._compiledShaderTranslucencyByDistance = false;
-
-        this._shaderPixelOffsetScaleByDistance = false;
-        this._compiledShaderPixelOffsetScaleByDistance = false;
-
-        this._shaderDistanceDisplayCondition = false;
-        this._compiledShaderDistanceDisplayCondition = false;
-
-        this._shaderDisableDepthDistance = false;
-        this._compiledShaderDisableDepthDistance = false;
-
-        this._shaderClampToGround = false;
-        this._compiledShaderClampToGround = false;
-
-        this._propertiesChanged = new Uint32Array(NUMBER_OF_PROPERTIES);
-
-        this._maxSize = 0.0;
-        this._maxEyeOffset = 0.0;
-        this._maxScale = 1.0;
-        this._maxPixelOffset = 0.0;
-        this._allHorizontalCenter = true;
-        this._allVerticalCenter = true;
-        this._allSizedInMeters = true;
-
-        this._baseVolume = new BoundingSphere();
-        this._baseVolumeWC = new BoundingSphere();
-        this._baseVolume2D = new BoundingSphere();
-        this._boundingVolume = new BoundingSphere();
-        this._boundingVolumeDirty = false;
-
-        this._colorCommands = [];
-
         /**
-         * The 4x4 transformation matrix that transforms each billboard in this collection from model to world coordinates.
-         * When this is the identity matrix, the billboards are drawn in world coordinates, i.e., Earth's WGS84 coordinates.
-         * Local reference frames can be used by providing a different transformation matrix, like that returned
-         * by {@link Transforms.eastNorthUpToFixedFrame}.
-         *
-         * @type {Matrix4}
-         * @default {@link Matrix4.IDENTITY}
-         *
-         *
-         * @example
-         * var center = Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883);
-         * billboards.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(center);
-         * billboards.add({
-         *   image : 'url/to/image',
-         *   position : new Cesium.Cartesian3(0.0, 0.0, 0.0) // center
-         * });
-         * billboards.add({
-         *   image : 'url/to/image',
-         *   position : new Cesium.Cartesian3(1000000.0, 0.0, 0.0) // east
-         * });
-         * billboards.add({
-         *   image : 'url/to/image',
-         *   position : new Cesium.Cartesian3(0.0, 1000000.0, 0.0) // north
-         * });
-         * billboards.add({
-         *   image : 'url/to/image',
-         *   position : new Cesium.Cartesian3(0.0, 0.0, 1000000.0) // up
-         * });
-         *
-         * @see Transforms.eastNorthUpToFixedFrame
-         */
-        this.modelMatrix = Matrix4.clone(defaultValue(options.modelMatrix, Matrix4.IDENTITY));
-        this._modelMatrix = Matrix4.clone(Matrix4.IDENTITY);
-
-        /**
-         * This property is for debugging only; it is not for production use nor is it optimized.
-         * <p>
-         * Draws the bounding sphere for each draw command in the primitive.
-         * </p>
-         *
-         * @type {Boolean}
-         *
-         * @default false
-         */
-        this.debugShowBoundingVolume = defaultValue(options.debugShowBoundingVolume, false);
-
-        /**
-         * The billboard blending option. The default is used for rendering both opaque and translucent billboards.
-         * However, if either all of the billboards are completely opaque or all are completely translucent,
-         * setting the technique to BlendOption.OPAQUE or BlendOption.TRANSLUCENT can improve
-         * performance by up to 2x.
-         * @type {BlendOption}
-         * @default BlendOption.OPAQUE_AND_TRANSLUCENT
-         */
-        this.blendOption = defaultValue(options.blendOption, BlendOption.OPAQUE_AND_TRANSLUCENT);
-        this._blendOption = undefined;
-
-        this._mode = SceneMode.SCENE3D;
-
-        // The buffer usage for each attribute is determined based on the usage of the attribute over time.
-        this._buffersUsage = [
-            BufferUsage.STATIC_DRAW, // SHOW_INDEX
-            BufferUsage.STATIC_DRAW, // POSITION_INDEX
-            BufferUsage.STATIC_DRAW, // PIXEL_OFFSET_INDEX
-            BufferUsage.STATIC_DRAW, // EYE_OFFSET_INDEX
-            BufferUsage.STATIC_DRAW, // HORIZONTAL_ORIGIN_INDEX
-            BufferUsage.STATIC_DRAW, // VERTICAL_ORIGIN_INDEX
-            BufferUsage.STATIC_DRAW, // SCALE_INDEX
-            BufferUsage.STATIC_DRAW, // IMAGE_INDEX_INDEX
-            BufferUsage.STATIC_DRAW, // COLOR_INDEX
-            BufferUsage.STATIC_DRAW, // ROTATION_INDEX
-            BufferUsage.STATIC_DRAW, // ALIGNED_AXIS_INDEX
-            BufferUsage.STATIC_DRAW, // SCALE_BY_DISTANCE_INDEX
-            BufferUsage.STATIC_DRAW, // TRANSLUCENCY_BY_DISTANCE_INDEX
-            BufferUsage.STATIC_DRAW, // PIXEL_OFFSET_SCALE_BY_DISTANCE_INDEX
-            BufferUsage.STATIC_DRAW, // DISTANCE_DISPLAY_CONDITION_INDEX
-            BufferUsage.STATIC_DRAW  // TEXTURE_COORDINATE_BOUNDS
-        ];
-
-        this._highlightColor = Color.clone(Color.WHITE); // Only used by Vector3DTilePoints
-
-        var that = this;
-        this._uniforms = {
-            u_atlas : function() {
-                return that._textureAtlas.texture;
-            },
-            u_highlightColor : function() {
-                return that._highlightColor;
-            }
-        };
-
-        var scene = this._scene;
-        if (defined(scene) && defined(scene.terrainProviderChanged)) {
-            this._removeCallbackFunc = scene.terrainProviderChanged.addEventListener(function() {
-                var billboards = this._billboards;
-                var length = billboards.length;
-                for (var i = 0; i < length; ++i) {
-                    billboards[i]._updateClamping();
+             * A renderable collection of billboards.  Billboards are viewport-aligned
+             * images positioned in the 3D scene.
+             * <br /><br />
+             * <div align='center'>
+             * <img src='Images/Billboard.png' width='400' height='300' /><br />
+             * Example billboards
+             * </div>
+             * <br /><br />
+             * Billboards are added and removed from the collection using {@link BillboardCollection#add}
+             * and {@link BillboardCollection#remove}.  Billboards in a collection automatically share textures
+             * for images with the same identifier.
+             *
+             * @alias BillboardCollection
+             * @constructor
+             *
+             * @param {Object} [options] Object with the following properties:
+             * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The 4x4 transformation matrix that transforms each billboard from model to world coordinates.
+             * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Determines if this primitive's commands' bounding spheres are shown.
+             * @param {Scene} [options.scene] Must be passed in for billboards that use the height reference property or will be depth tested against the globe.
+             * @param {BlendOption} [options.blendOption=BlendOption.OPAQUE_AND_TRANSLUCENT] The billboard blending option. The default
+             * is used for rendering both opaque and translucent billboards. However, if either all of the billboards are completely opaque or all are completely translucent,
+             * setting the technique to BlendOption.OPAQUE or BlendOption.TRANSLUCENT can improve performance by up to 2x.
+             *
+             * @performance For best performance, prefer a few collections, each with many billboards, to
+             * many collections with only a few billboards each.  Organize collections so that billboards
+             * with the same update frequency are in the same collection, i.e., billboards that do not
+             * change should be in one collection; billboards that change every frame should be in another
+             * collection; and so on.
+             *
+             * @see BillboardCollection#add
+             * @see BillboardCollection#remove
+             * @see Billboard
+             * @see LabelCollection
+             *
+             * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Billboards.html|Cesium Sandcastle Billboard Demo}
+             *
+             * @example
+             * // Create a billboard collection with two billboards
+             * var billboards = scene.primitives.add(new Cesium.BillboardCollection());
+             * billboards.add({
+             *   position : new Cesium.Cartesian3(1.0, 2.0, 3.0),
+             *   image : 'url/to/image'
+             * });
+             * billboards.add({
+             *   position : new Cesium.Cartesian3(4.0, 5.0, 6.0),
+             *   image : 'url/to/another/image'
+             * });
+             */
+        class BillboardCollection {
+            constructor(options) {
+                options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+                this._scene = options.scene;
+                this._batchTable = options.batchTable;
+                this._textureAtlas = undefined;
+                this._textureAtlasGUID = undefined;
+                this._destroyTextureAtlas = true;
+                this._sp = undefined;
+                this._spTranslucent = undefined;
+                this._rsOpaque = undefined;
+                this._rsTranslucent = undefined;
+                this._vaf = undefined;
+                this._billboards = [];
+                this._billboardsToUpdate = [];
+                this._billboardsToUpdateIndex = 0;
+                this._billboardsRemoved = false;
+                this._createVertexArray = false;
+                this._shaderRotation = false;
+                this._compiledShaderRotation = false;
+                this._shaderAlignedAxis = false;
+                this._compiledShaderAlignedAxis = false;
+                this._shaderScaleByDistance = false;
+                this._compiledShaderScaleByDistance = false;
+                this._shaderTranslucencyByDistance = false;
+                this._compiledShaderTranslucencyByDistance = false;
+                this._shaderPixelOffsetScaleByDistance = false;
+                this._compiledShaderPixelOffsetScaleByDistance = false;
+                this._shaderDistanceDisplayCondition = false;
+                this._compiledShaderDistanceDisplayCondition = false;
+                this._shaderDisableDepthDistance = false;
+                this._compiledShaderDisableDepthDistance = false;
+                this._shaderClampToGround = false;
+                this._compiledShaderClampToGround = false;
+                this._propertiesChanged = new Uint32Array(NUMBER_OF_PROPERTIES);
+                this._maxSize = 0.0;
+                this._maxEyeOffset = 0.0;
+                this._maxScale = 1.0;
+                this._maxPixelOffset = 0.0;
+                this._allHorizontalCenter = true;
+                this._allVerticalCenter = true;
+                this._allSizedInMeters = true;
+                this._baseVolume = new BoundingSphere();
+                this._baseVolumeWC = new BoundingSphere();
+                this._baseVolume2D = new BoundingSphere();
+                this._boundingVolume = new BoundingSphere();
+                this._boundingVolumeDirty = false;
+                this._colorCommands = [];
+                /**
+                 * The 4x4 transformation matrix that transforms each billboard in this collection from model to world coordinates.
+                 * When this is the identity matrix, the billboards are drawn in world coordinates, i.e., Earth's WGS84 coordinates.
+                 * Local reference frames can be used by providing a different transformation matrix, like that returned
+                 * by {@link Transforms.eastNorthUpToFixedFrame}.
+                 *
+                 * @type {Matrix4}
+                 * @default {@link Matrix4.IDENTITY}
+                 *
+                 *
+                 * @example
+                 * var center = Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883);
+                 * billboards.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(center);
+                 * billboards.add({
+                 *   image : 'url/to/image',
+                 *   position : new Cesium.Cartesian3(0.0, 0.0, 0.0) // center
+                 * });
+                 * billboards.add({
+                 *   image : 'url/to/image',
+                 *   position : new Cesium.Cartesian3(1000000.0, 0.0, 0.0) // east
+                 * });
+                 * billboards.add({
+                 *   image : 'url/to/image',
+                 *   position : new Cesium.Cartesian3(0.0, 1000000.0, 0.0) // north
+                 * });
+                 * billboards.add({
+                 *   image : 'url/to/image',
+                 *   position : new Cesium.Cartesian3(0.0, 0.0, 1000000.0) // up
+                 * });
+                 *
+                 * @see Transforms.eastNorthUpToFixedFrame
+                 */
+                this.modelMatrix = Matrix4.clone(defaultValue(options.modelMatrix, Matrix4.IDENTITY));
+                this._modelMatrix = Matrix4.clone(Matrix4.IDENTITY);
+                /**
+                 * This property is for debugging only; it is not for production use nor is it optimized.
+                 * <p>
+                 * Draws the bounding sphere for each draw command in the primitive.
+                 * </p>
+                 *
+                 * @type {Boolean}
+                 *
+                 * @default false
+                 */
+                this.debugShowBoundingVolume = defaultValue(options.debugShowBoundingVolume, false);
+                /**
+                 * The billboard blending option. The default is used for rendering both opaque and translucent billboards.
+                 * However, if either all of the billboards are completely opaque or all are completely translucent,
+                 * setting the technique to BlendOption.OPAQUE or BlendOption.TRANSLUCENT can improve
+                 * performance by up to 2x.
+                 * @type {BlendOption}
+                 * @default BlendOption.OPAQUE_AND_TRANSLUCENT
+                 */
+                this.blendOption = defaultValue(options.blendOption, BlendOption.OPAQUE_AND_TRANSLUCENT);
+                this._blendOption = undefined;
+                this._mode = SceneMode.SCENE3D;
+                // The buffer usage for each attribute is determined based on the usage of the attribute over time.
+                this._buffersUsage = [
+                    BufferUsage.STATIC_DRAW,
+                    BufferUsage.STATIC_DRAW,
+                    BufferUsage.STATIC_DRAW,
+                    BufferUsage.STATIC_DRAW,
+                    BufferUsage.STATIC_DRAW,
+                    BufferUsage.STATIC_DRAW,
+                    BufferUsage.STATIC_DRAW,
+                    BufferUsage.STATIC_DRAW,
+                    BufferUsage.STATIC_DRAW,
+                    BufferUsage.STATIC_DRAW,
+                    BufferUsage.STATIC_DRAW,
+                    BufferUsage.STATIC_DRAW,
+                    BufferUsage.STATIC_DRAW,
+                    BufferUsage.STATIC_DRAW,
+                    BufferUsage.STATIC_DRAW,
+                    BufferUsage.STATIC_DRAW // TEXTURE_COORDINATE_BOUNDS
+                ];
+                this._highlightColor = Color.clone(Color.WHITE); // Only used by Vector3DTilePoints
+                var that = this;
+                this._uniforms = {
+                    u_atlas: function() {
+                        return that._textureAtlas.texture;
+                    },
+                    u_highlightColor: function() {
+                        return that._highlightColor;
+                    }
+                };
+                var scene = this._scene;
+                if (defined(scene) && defined(scene.terrainProviderChanged)) {
+                    this._removeCallbackFunc = scene.terrainProviderChanged.addEventListener(function() {
+                        var billboards = this._billboards;
+                        var length = billboards.length;
+                        for (var i = 0; i < length; ++i) {
+                            billboards[i]._updateClamping();
+                        }
+                    }, this);
                 }
-            }, this);
+            }
+            /**
+                 * Creates and adds a billboard with the specified initial properties to the collection.
+                 * The added billboard is returned so it can be modified or removed from the collection later.
+                 *
+                 * @param {Object}[billboard] A template describing the billboard's properties as shown in Example 1.
+                 * @returns {Billboard} The billboard that was added to the collection.
+                 *
+                 * @performance Calling <code>add</code> is expected constant time.  However, the collection's vertex buffer
+                 * is rewritten - an <code>O(n)</code> operation that also incurs CPU to GPU overhead.  For
+                 * best performance, add as many billboards as possible before calling <code>update</code>.
+                 *
+                 * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
+                 *
+                 *
+                 * @example
+                 * // Example 1:  Add a billboard, specifying all the default values.
+                 * var b = billboards.add({
+                 *   show : true,
+                 *   position : Cesium.Cartesian3.ZERO,
+                 *   pixelOffset : Cesium.Cartesian2.ZERO,
+                 *   eyeOffset : Cesium.Cartesian3.ZERO,
+                 *   heightReference : Cesium.HeightReference.NONE,
+                 *   horizontalOrigin : Cesium.HorizontalOrigin.CENTER,
+                 *   verticalOrigin : Cesium.VerticalOrigin.CENTER,
+                 *   scale : 1.0,
+                 *   image : 'url/to/image',
+                 *   imageSubRegion : undefined,
+                 *   color : Cesium.Color.WHITE,
+                 *   id : undefined,
+                 *   rotation : 0.0,
+                 *   alignedAxis : Cesium.Cartesian3.ZERO,
+                 *   width : undefined,
+                 *   height : undefined,
+                 *   scaleByDistance : undefined,
+                 *   translucencyByDistance : undefined,
+                 *   pixelOffsetScaleByDistance : undefined,
+                 *   sizeInMeters : false,
+                 *   distanceDisplayCondition : undefined
+                 * });
+                 *
+                 * @example
+                 * // Example 2:  Specify only the billboard's cartographic position.
+                 * var b = billboards.add({
+                 *   position : Cesium.Cartesian3.fromDegrees(longitude, latitude, height)
+                 * });
+                 *
+                 * @see BillboardCollection#remove
+                 * @see BillboardCollection#removeAll
+                 */
+            add(billboard) {
+                var b = new Billboard(billboard, this);
+                b._index = this._billboards.length;
+                this._billboards.push(b);
+                this._createVertexArray = true;
+                return b;
+            }
+            /**
+                 * Removes a billboard from the collection.
+                 *
+                 * @param {Billboard} billboard The billboard to remove.
+                 * @returns {Boolean} <code>true</code> if the billboard was removed; <code>false</code> if the billboard was not found in the collection.
+                 *
+                 * @performance Calling <code>remove</code> is expected constant time.  However, the collection's vertex buffer
+                 * is rewritten - an <code>O(n)</code> operation that also incurs CPU to GPU overhead.  For
+                 * best performance, remove as many billboards as possible before calling <code>update</code>.
+                 * If you intend to temporarily hide a billboard, it is usually more efficient to call
+                 * {@link Billboard#show} instead of removing and re-adding the billboard.
+                 *
+                 * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
+                 *
+                 *
+                 * @example
+                 * var b = billboards.add(...);
+                 * billboards.remove(b);  // Returns true
+                 *
+                 * @see BillboardCollection#add
+                 * @see BillboardCollection#removeAll
+                 * @see Billboard#show
+                 */
+            remove(billboard) {
+                if (this.contains(billboard)) {
+                    this._billboards[billboard._index] = null; // Removed later
+                    this._billboardsRemoved = true;
+                    this._createVertexArray = true;
+                    billboard._destroy();
+                    return true;
+                }
+                return false;
+            }
+            /**
+                 * Removes all billboards from the collection.
+                 *
+                 * @performance <code>O(n)</code>.  It is more efficient to remove all the billboards
+                 * from a collection and then add new ones than to create a new collection entirely.
+                 *
+                 * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
+                 *
+                 *
+                 * @example
+                 * billboards.add(...);
+                 * billboards.add(...);
+                 * billboards.removeAll();
+                 *
+                 * @see BillboardCollection#add
+                 * @see BillboardCollection#remove
+                 */
+            removeAll() {
+                destroyBillboards(this._billboards);
+                this._billboards = [];
+                this._billboardsToUpdate = [];
+                this._billboardsToUpdateIndex = 0;
+                this._billboardsRemoved = false;
+                this._createVertexArray = true;
+            }
+            _updateBillboard(billboard, propertyChanged) {
+                if (!billboard._dirty) {
+                    this._billboardsToUpdate[this._billboardsToUpdateIndex++] = billboard;
+                }
+                ++this._propertiesChanged[propertyChanged];
+            }
+            /**
+                 * Check whether this collection contains a given billboard.
+                 *
+                 * @param {Billboard} [billboard] The billboard to check for.
+                 * @returns {Boolean} true if this collection contains the billboard, false otherwise.
+                 *
+                 * @see BillboardCollection#get
+                 */
+            contains(billboard) {
+                return defined(billboard) && billboard._billboardCollection === this;
+            }
+            /**
+                 * Returns the billboard in the collection at the specified index.  Indices are zero-based
+                 * and increase as billboards are added.  Removing a billboard shifts all billboards after
+                 * it to the left, changing their indices.  This function is commonly used with
+                 * {@link BillboardCollection#length} to iterate over all the billboards
+                 * in the collection.
+                 *
+                 * @param {Number} index The zero-based index of the billboard.
+                 * @returns {Billboard} The billboard at the specified index.
+                 *
+                 * @performance Expected constant time.  If billboards were removed from the collection and
+                 * {@link BillboardCollection#update} was not called, an implicit <code>O(n)</code>
+                 * operation is performed.
+                 *
+                 * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
+                 *
+                 *
+                 * @example
+                 * // Toggle the show property of every billboard in the collection
+                 * var len = billboards.length;
+                 * for (var i = 0; i < len; ++i) {
+                 *   var b = billboards.get(i);
+                 *   b.show = !b.show;
+                 * }
+                 *
+                 * @see BillboardCollection#length
+                 */
+            get(index) {
+                //>>includeStart('debug', pragmas.debug);
+                if (!defined(index)) {
+                    throw new DeveloperError('index is required.');
+                }
+                //>>includeEnd('debug');
+                removeBillboards(this);
+                return this._billboards[index];
+            }
+            computeNewBuffersUsage() {
+                var buffersUsage = this._buffersUsage;
+                var usageChanged = false;
+                var properties = this._propertiesChanged;
+                for (var k = 0; k < NUMBER_OF_PROPERTIES; ++k) {
+                    var newUsage = (properties[k] === 0) ? BufferUsage.STATIC_DRAW : BufferUsage.STREAM_DRAW;
+                    usageChanged = usageChanged || (buffersUsage[k] !== newUsage);
+                    buffersUsage[k] = newUsage;
+                }
+                return usageChanged;
+            }
+            /**
+                 * Called when {@link Viewer} or {@link CesiumWidget} render the scene to
+                 * get the draw commands needed to render this primitive.
+                 * <p>
+                 * Do not call this function directly.  This is documented just to
+                 * list the exceptions that may be propagated when the scene is rendered:
+                 * </p>
+                 *
+                 * @exception {RuntimeError} image with id must be in the atlas.
+                 */
+            update(frameState) {
+                removeBillboards(this);
+                var billboards = this._billboards;
+                var billboardsLength = billboards.length;
+                var context = frameState.context;
+                this._instanced = context.instancedArrays;
+                attributeLocations = this._instanced ? attributeLocationsInstanced : attributeLocationsBatched;
+                getIndexBuffer = this._instanced ? getIndexBufferInstanced : getIndexBufferBatched;
+                var textureAtlas = this._textureAtlas;
+                if (!defined(textureAtlas)) {
+                    textureAtlas = this._textureAtlas = new TextureAtlas({
+                        context: context
+                    });
+                    for (var ii = 0; ii < billboardsLength; ++ii) {
+                        billboards[ii]._loadImage();
+                    }
+                }
+                var textureAtlasCoordinates = textureAtlas.textureCoordinates;
+                if (textureAtlasCoordinates.length === 0) {
+                    // Can't write billboard vertices until we have texture coordinates
+                    // provided by a texture atlas
+                    return;
+                }
+                updateMode(this, frameState);
+                billboards = this._billboards;
+                billboardsLength = billboards.length;
+                var billboardsToUpdate = this._billboardsToUpdate;
+                var billboardsToUpdateLength = this._billboardsToUpdateIndex;
+                var properties = this._propertiesChanged;
+                var textureAtlasGUID = textureAtlas.guid;
+                var createVertexArray = this._createVertexArray || this._textureAtlasGUID !== textureAtlasGUID;
+                this._textureAtlasGUID = textureAtlasGUID;
+                var vafWriters;
+                var pass = frameState.passes;
+                var picking = pass.pick;
+                // PERFORMANCE_IDEA: Round robin multiple buffers.
+                if (createVertexArray || (!picking && this.computeNewBuffersUsage())) {
+                    this._createVertexArray = false;
+                    for (var k = 0; k < NUMBER_OF_PROPERTIES; ++k) {
+                        properties[k] = 0;
+                    }
+                    this._vaf = this._vaf && this._vaf.destroy();
+                    if (billboardsLength > 0) {
+                        // PERFORMANCE_IDEA:  Instead of creating a new one, resize like std::vector.
+                        this._vaf = createVAF(context, billboardsLength, this._buffersUsage, this._instanced, this._batchTable);
+                        vafWriters = this._vaf.writers;
+                        // Rewrite entire buffer if billboards were added or removed.
+                        for (var i = 0; i < billboardsLength; ++i) {
+                            var billboard = this._billboards[i];
+                            billboard._dirty = false; // In case it needed an update.
+                            writeBillboard(this, context, textureAtlasCoordinates, vafWriters, billboard);
+                        }
+                        // Different billboard collections share the same index buffer.
+                        this._vaf.commit(getIndexBuffer(context));
+                    }
+                    this._billboardsToUpdateIndex = 0;
+                }
+                else if (billboardsToUpdateLength > 0) {
+                    // Billboards were modified, but none were added or removed.
+                    var writers = scratchWriterArray;
+                    writers.length = 0;
+                    if (properties[POSITION_INDEX] || properties[ROTATION_INDEX] || properties[SCALE_INDEX]) {
+                        writers.push(writePositionScaleAndRotation);
+                    }
+                    if (properties[IMAGE_INDEX_INDEX] || properties[PIXEL_OFFSET_INDEX] || properties[HORIZONTAL_ORIGIN_INDEX] || properties[VERTICAL_ORIGIN_INDEX] || properties[SHOW_INDEX]) {
+                        writers.push(writeCompressedAttrib0);
+                        if (this._instanced) {
+                            writers.push(writeEyeOffset);
+                        }
+                    }
+                    if (properties[IMAGE_INDEX_INDEX] || properties[ALIGNED_AXIS_INDEX] || properties[TRANSLUCENCY_BY_DISTANCE_INDEX]) {
+                        writers.push(writeCompressedAttrib1);
+                        writers.push(writeCompressedAttrib2);
+                    }
+                    if (properties[IMAGE_INDEX_INDEX] || properties[COLOR_INDEX]) {
+                        writers.push(writeCompressedAttrib2);
+                    }
+                    if (properties[EYE_OFFSET_INDEX]) {
+                        writers.push(writeEyeOffset);
+                    }
+                    if (properties[SCALE_BY_DISTANCE_INDEX]) {
+                        writers.push(writeScaleByDistance);
+                    }
+                    if (properties[PIXEL_OFFSET_SCALE_BY_DISTANCE_INDEX]) {
+                        writers.push(writePixelOffsetScaleByDistance);
+                    }
+                    if (properties[DISTANCE_DISPLAY_CONDITION_INDEX] || properties[DISABLE_DEPTH_DISTANCE] || properties[IMAGE_INDEX_INDEX] || properties[POSITION_INDEX]) {
+                        writers.push(writeCompressedAttribute3);
+                    }
+                    if (properties[IMAGE_INDEX_INDEX] || properties[POSITION_INDEX]) {
+                        writers.push(writeTextureCoordinateBoundsOrLabelTranslate);
+                    }
+                    var numWriters = writers.length;
+                    vafWriters = this._vaf.writers;
+                    if ((billboardsToUpdateLength / billboardsLength) > 0.1) {
+                        // If more than 10% of billboard change, rewrite the entire buffer.
+                        // PERFORMANCE_IDEA:  I totally made up 10% :).
+                        for (var m = 0; m < billboardsToUpdateLength; ++m) {
+                            var b = billboardsToUpdate[m];
+                            b._dirty = false;
+                            for (var n = 0; n < numWriters; ++n) {
+                                writers[n](this, context, textureAtlasCoordinates, vafWriters, b);
+                            }
+                        }
+                        this._vaf.commit(getIndexBuffer(context));
+                    }
+                    else {
+                        for (var h = 0; h < billboardsToUpdateLength; ++h) {
+                            var bb = billboardsToUpdate[h];
+                            bb._dirty = false;
+                            for (var o = 0; o < numWriters; ++o) {
+                                writers[o](this, context, textureAtlasCoordinates, vafWriters, bb);
+                            }
+                            if (this._instanced) {
+                                this._vaf.subCommit(bb._index, 1);
+                            }
+                            else {
+                                this._vaf.subCommit(bb._index * 4, 4);
+                            }
+                        }
+                        this._vaf.endSubCommits();
+                    }
+                    this._billboardsToUpdateIndex = 0;
+                }
+                // If the number of total billboards ever shrinks considerably
+                // Truncate billboardsToUpdate so that we free memory that we're
+                // not going to be using.
+                if (billboardsToUpdateLength > billboardsLength * 1.5) {
+                    billboardsToUpdate.length = billboardsLength;
+                }
+                if (!defined(this._vaf) || !defined(this._vaf.va)) {
+                    return;
+                }
+                if (this._boundingVolumeDirty) {
+                    this._boundingVolumeDirty = false;
+                    BoundingSphere.transform(this._baseVolume, this.modelMatrix, this._baseVolumeWC);
+                }
+                var boundingVolume;
+                var modelMatrix = Matrix4.IDENTITY;
+                if (frameState.mode === SceneMode.SCENE3D) {
+                    modelMatrix = this.modelMatrix;
+                    boundingVolume = BoundingSphere.clone(this._baseVolumeWC, this._boundingVolume);
+                }
+                else {
+                    boundingVolume = BoundingSphere.clone(this._baseVolume2D, this._boundingVolume);
+                }
+                updateBoundingVolume(this, frameState, boundingVolume);
+                var blendOptionChanged = this._blendOption !== this.blendOption;
+                this._blendOption = this.blendOption;
+                if (blendOptionChanged) {
+                    if (this._blendOption === BlendOption.OPAQUE || this._blendOption === BlendOption.OPAQUE_AND_TRANSLUCENT) {
+                        this._rsOpaque = RenderState.fromCache({
+                            depthTest: {
+                                enabled: true,
+                                func: WebGLConstants.LESS
+                            },
+                            depthMask: true
+                        });
+                    }
+                    else {
+                        this._rsOpaque = undefined;
+                    }
+                    // If OPAQUE_AND_TRANSLUCENT is in use, only the opaque pass gets the benefit of the depth buffer,
+                    // not the translucent pass.  Otherwise, if the TRANSLUCENT pass is on its own, it turns on
+                    // a depthMask in lieu of full depth sorting (because it has opaque-ish fragments that look bad in OIT).
+                    // When the TRANSLUCENT depth mask is in use, label backgrounds require the depth func to be LEQUAL.
+                    var useTranslucentDepthMask = this._blendOption === BlendOption.TRANSLUCENT;
+                    if (this._blendOption === BlendOption.TRANSLUCENT || this._blendOption === BlendOption.OPAQUE_AND_TRANSLUCENT) {
+                        this._rsTranslucent = RenderState.fromCache({
+                            depthTest: {
+                                enabled: true,
+                                func: (useTranslucentDepthMask ? WebGLConstants.LEQUAL : WebGLConstants.LESS)
+                            },
+                            depthMask: useTranslucentDepthMask,
+                            blending: BlendingState.ALPHA_BLEND
+                        });
+                    }
+                    else {
+                        this._rsTranslucent = undefined;
+                    }
+                }
+                this._shaderDisableDepthDistance = this._shaderDisableDepthDistance || frameState.minimumDisableDepthTestDistance !== 0.0;
+                var vsSource;
+                var fsSource;
+                var vs;
+                var fs;
+                var vertDefines;
+                var supportVSTextureReads = ContextLimits.maximumVertexTextureImageUnits > 0;
+                if (blendOptionChanged ||
+                    (this._shaderRotation !== this._compiledShaderRotation) ||
+                    (this._shaderAlignedAxis !== this._compiledShaderAlignedAxis) ||
+                    (this._shaderScaleByDistance !== this._compiledShaderScaleByDistance) ||
+                    (this._shaderTranslucencyByDistance !== this._compiledShaderTranslucencyByDistance) ||
+                    (this._shaderPixelOffsetScaleByDistance !== this._compiledShaderPixelOffsetScaleByDistance) ||
+                    (this._shaderDistanceDisplayCondition !== this._compiledShaderDistanceDisplayCondition) ||
+                    (this._shaderDisableDepthDistance !== this._compiledShaderDisableDepthDistance) ||
+                    (this._shaderClampToGround !== this._compiledShaderClampToGround)) {
+                    vsSource = BillboardCollectionVS;
+                    fsSource = BillboardCollectionFS;
+                    vertDefines = [];
+                    if (defined(this._batchTable)) {
+                        vertDefines.push('VECTOR_TILE');
+                        vsSource = this._batchTable.getVertexShaderCallback(false, 'a_batchId', undefined)(vsSource);
+                        fsSource = this._batchTable.getFragmentShaderCallback(false, undefined)(fsSource);
+                    }
+                    vs = new ShaderSource({
+                        defines: vertDefines,
+                        sources: [vsSource]
+                    });
+                    if (this._instanced) {
+                        vs.defines.push('INSTANCED');
+                    }
+                    if (this._shaderRotation) {
+                        vs.defines.push('ROTATION');
+                    }
+                    if (this._shaderAlignedAxis) {
+                        vs.defines.push('ALIGNED_AXIS');
+                    }
+                    if (this._shaderScaleByDistance) {
+                        vs.defines.push('EYE_DISTANCE_SCALING');
+                    }
+                    if (this._shaderTranslucencyByDistance) {
+                        vs.defines.push('EYE_DISTANCE_TRANSLUCENCY');
+                    }
+                    if (this._shaderPixelOffsetScaleByDistance) {
+                        vs.defines.push('EYE_DISTANCE_PIXEL_OFFSET');
+                    }
+                    if (this._shaderDistanceDisplayCondition) {
+                        vs.defines.push('DISTANCE_DISPLAY_CONDITION');
+                    }
+                    if (this._shaderDisableDepthDistance) {
+                        vs.defines.push('DISABLE_DEPTH_DISTANCE');
+                    }
+                    if (this._shaderClampToGround) {
+                        if (supportVSTextureReads) {
+                            vs.defines.push('VERTEX_DEPTH_CHECK');
+                        }
+                        else {
+                            vs.defines.push('FRAGMENT_DEPTH_CHECK');
+                        }
+                    }
+                    var vectorFragDefine = defined(this._batchTable) ? 'VECTOR_TILE' : '';
+                    if (this._blendOption === BlendOption.OPAQUE_AND_TRANSLUCENT) {
+                        fs = new ShaderSource({
+                            defines: ['OPAQUE', vectorFragDefine],
+                            sources: [fsSource]
+                        });
+                        if (this._shaderClampToGround) {
+                            if (supportVSTextureReads) {
+                                fs.defines.push('VERTEX_DEPTH_CHECK');
+                            }
+                            else {
+                                fs.defines.push('FRAGMENT_DEPTH_CHECK');
+                            }
+                        }
+                        this._sp = ShaderProgram.replaceCache({
+                            context: context,
+                            shaderProgram: this._sp,
+                            vertexShaderSource: vs,
+                            fragmentShaderSource: fs,
+                            attributeLocations: attributeLocations
+                        });
+                        fs = new ShaderSource({
+                            defines: ['TRANSLUCENT', vectorFragDefine],
+                            sources: [fsSource]
+                        });
+                        if (this._shaderClampToGround) {
+                            if (supportVSTextureReads) {
+                                fs.defines.push('VERTEX_DEPTH_CHECK');
+                            }
+                            else {
+                                fs.defines.push('FRAGMENT_DEPTH_CHECK');
+                            }
+                        }
+                        this._spTranslucent = ShaderProgram.replaceCache({
+                            context: context,
+                            shaderProgram: this._spTranslucent,
+                            vertexShaderSource: vs,
+                            fragmentShaderSource: fs,
+                            attributeLocations: attributeLocations
+                        });
+                    }
+                    if (this._blendOption === BlendOption.OPAQUE) {
+                        fs = new ShaderSource({
+                            defines: [vectorFragDefine],
+                            sources: [fsSource]
+                        });
+                        if (this._shaderClampToGround) {
+                            if (supportVSTextureReads) {
+                                fs.defines.push('VERTEX_DEPTH_CHECK');
+                            }
+                            else {
+                                fs.defines.push('FRAGMENT_DEPTH_CHECK');
+                            }
+                        }
+                        this._sp = ShaderProgram.replaceCache({
+                            context: context,
+                            shaderProgram: this._sp,
+                            vertexShaderSource: vs,
+                            fragmentShaderSource: fs,
+                            attributeLocations: attributeLocations
+                        });
+                    }
+                    if (this._blendOption === BlendOption.TRANSLUCENT) {
+                        fs = new ShaderSource({
+                            defines: [vectorFragDefine],
+                            sources: [fsSource]
+                        });
+                        if (this._shaderClampToGround) {
+                            if (supportVSTextureReads) {
+                                fs.defines.push('VERTEX_DEPTH_CHECK');
+                            }
+                            else {
+                                fs.defines.push('FRAGMENT_DEPTH_CHECK');
+                            }
+                        }
+                        this._spTranslucent = ShaderProgram.replaceCache({
+                            context: context,
+                            shaderProgram: this._spTranslucent,
+                            vertexShaderSource: vs,
+                            fragmentShaderSource: fs,
+                            attributeLocations: attributeLocations
+                        });
+                    }
+                    this._compiledShaderRotation = this._shaderRotation;
+                    this._compiledShaderAlignedAxis = this._shaderAlignedAxis;
+                    this._compiledShaderScaleByDistance = this._shaderScaleByDistance;
+                    this._compiledShaderTranslucencyByDistance = this._shaderTranslucencyByDistance;
+                    this._compiledShaderPixelOffsetScaleByDistance = this._shaderPixelOffsetScaleByDistance;
+                    this._compiledShaderDistanceDisplayCondition = this._shaderDistanceDisplayCondition;
+                    this._compiledShaderDisableDepthDistance = this._shaderDisableDepthDistance;
+                    this._compiledShaderClampToGround = this._shaderClampToGround;
+                }
+                var commandList = frameState.commandList;
+                if (pass.render || pass.pick) {
+                    var colorList = this._colorCommands;
+                    var opaque = this._blendOption === BlendOption.OPAQUE;
+                    var opaqueAndTranslucent = this._blendOption === BlendOption.OPAQUE_AND_TRANSLUCENT;
+                    var va = this._vaf.va;
+                    var vaLength = va.length;
+                    var uniforms = this._uniforms;
+                    var pickId;
+                    if (defined(this._batchTable)) {
+                        uniforms = this._batchTable.getUniformMapCallback()(uniforms);
+                        pickId = this._batchTable.getPickId();
+                    }
+                    else {
+                        pickId = 'v_pickColor';
+                    }
+                    colorList.length = vaLength;
+                    var totalLength = opaqueAndTranslucent ? vaLength * 2 : vaLength;
+                    for (var j = 0; j < totalLength; ++j) {
+                        var command = colorList[j];
+                        if (!defined(command)) {
+                            command = colorList[j] = new DrawCommand();
+                        }
+                        var opaqueCommand = opaque || (opaqueAndTranslucent && j % 2 === 0);
+                        command.pass = opaqueCommand || !opaqueAndTranslucent ? Pass.OPAQUE : Pass.TRANSLUCENT;
+                        command.owner = this;
+                        var index = opaqueAndTranslucent ? Math.floor(j / 2.0) : j;
+                        command.boundingVolume = boundingVolume;
+                        command.modelMatrix = modelMatrix;
+                        command.count = va[index].indicesCount;
+                        command.shaderProgram = opaqueCommand ? this._sp : this._spTranslucent;
+                        command.uniformMap = uniforms;
+                        command.vertexArray = va[index].va;
+                        command.renderState = opaqueCommand ? this._rsOpaque : this._rsTranslucent;
+                        command.debugShowBoundingVolume = this.debugShowBoundingVolume;
+                        command.pickId = pickId;
+                        if (this._instanced) {
+                            command.count = 6;
+                            command.instanceCount = billboardsLength;
+                        }
+                        commandList.push(command);
+                    }
+                }
+            }
+            /**
+                 * Returns true if this object was destroyed; otherwise, false.
+                 * <br /><br />
+                 * If this object was destroyed, it should not be used; calling any function other than
+                 * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
+                 *
+                 * @returns {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
+                 *
+                 * @see BillboardCollection#destroy
+                 */
+            isDestroyed() {
+                return false;
+            }
+            /**
+                 * Destroys the WebGL resources held by this object.  Destroying an object allows for deterministic
+                 * release of WebGL resources, instead of relying on the garbage collector to destroy this object.
+                 * <br /><br />
+                 * Once an object is destroyed, it should not be used; calling any function other than
+                 * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
+                 * assign the return value (<code>undefined</code>) to the object as done in the example.
+                 *
+                 * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
+                 *
+                 *
+                 * @example
+                 * billboards = billboards && billboards.destroy();
+                 *
+                 * @see BillboardCollection#isDestroyed
+                 */
+            destroy() {
+                if (defined(this._removeCallbackFunc)) {
+                    this._removeCallbackFunc();
+                    this._removeCallbackFunc = undefined;
+                }
+                this._textureAtlas = this._destroyTextureAtlas && this._textureAtlas && this._textureAtlas.destroy();
+                this._sp = this._sp && this._sp.destroy();
+                this._spTranslucent = this._spTranslucent && this._spTranslucent.destroy();
+                this._vaf = this._vaf && this._vaf.destroy();
+                destroyBillboards(this._billboards);
+                return destroyObject(this);
+            }
         }
-    }
 
     defineProperties(BillboardCollection.prototype, {
         /**
@@ -415,126 +1000,8 @@ define([
         }
     }
 
-    /**
-     * Creates and adds a billboard with the specified initial properties to the collection.
-     * The added billboard is returned so it can be modified or removed from the collection later.
-     *
-     * @param {Object}[billboard] A template describing the billboard's properties as shown in Example 1.
-     * @returns {Billboard} The billboard that was added to the collection.
-     *
-     * @performance Calling <code>add</code> is expected constant time.  However, the collection's vertex buffer
-     * is rewritten - an <code>O(n)</code> operation that also incurs CPU to GPU overhead.  For
-     * best performance, add as many billboards as possible before calling <code>update</code>.
-     *
-     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
-     *
-     *
-     * @example
-     * // Example 1:  Add a billboard, specifying all the default values.
-     * var b = billboards.add({
-     *   show : true,
-     *   position : Cesium.Cartesian3.ZERO,
-     *   pixelOffset : Cesium.Cartesian2.ZERO,
-     *   eyeOffset : Cesium.Cartesian3.ZERO,
-     *   heightReference : Cesium.HeightReference.NONE,
-     *   horizontalOrigin : Cesium.HorizontalOrigin.CENTER,
-     *   verticalOrigin : Cesium.VerticalOrigin.CENTER,
-     *   scale : 1.0,
-     *   image : 'url/to/image',
-     *   imageSubRegion : undefined,
-     *   color : Cesium.Color.WHITE,
-     *   id : undefined,
-     *   rotation : 0.0,
-     *   alignedAxis : Cesium.Cartesian3.ZERO,
-     *   width : undefined,
-     *   height : undefined,
-     *   scaleByDistance : undefined,
-     *   translucencyByDistance : undefined,
-     *   pixelOffsetScaleByDistance : undefined,
-     *   sizeInMeters : false,
-     *   distanceDisplayCondition : undefined
-     * });
-     *
-     * @example
-     * // Example 2:  Specify only the billboard's cartographic position.
-     * var b = billboards.add({
-     *   position : Cesium.Cartesian3.fromDegrees(longitude, latitude, height)
-     * });
-     *
-     * @see BillboardCollection#remove
-     * @see BillboardCollection#removeAll
-     */
-    BillboardCollection.prototype.add = function(billboard) {
-        var b = new Billboard(billboard, this);
-        b._index = this._billboards.length;
 
-        this._billboards.push(b);
-        this._createVertexArray = true;
 
-        return b;
-    };
-
-    /**
-     * Removes a billboard from the collection.
-     *
-     * @param {Billboard} billboard The billboard to remove.
-     * @returns {Boolean} <code>true</code> if the billboard was removed; <code>false</code> if the billboard was not found in the collection.
-     *
-     * @performance Calling <code>remove</code> is expected constant time.  However, the collection's vertex buffer
-     * is rewritten - an <code>O(n)</code> operation that also incurs CPU to GPU overhead.  For
-     * best performance, remove as many billboards as possible before calling <code>update</code>.
-     * If you intend to temporarily hide a billboard, it is usually more efficient to call
-     * {@link Billboard#show} instead of removing and re-adding the billboard.
-     *
-     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
-     *
-     *
-     * @example
-     * var b = billboards.add(...);
-     * billboards.remove(b);  // Returns true
-     *
-     * @see BillboardCollection#add
-     * @see BillboardCollection#removeAll
-     * @see Billboard#show
-     */
-    BillboardCollection.prototype.remove = function(billboard) {
-        if (this.contains(billboard)) {
-            this._billboards[billboard._index] = null; // Removed later
-            this._billboardsRemoved = true;
-            this._createVertexArray = true;
-            billboard._destroy();
-            return true;
-        }
-
-        return false;
-    };
-
-    /**
-     * Removes all billboards from the collection.
-     *
-     * @performance <code>O(n)</code>.  It is more efficient to remove all the billboards
-     * from a collection and then add new ones than to create a new collection entirely.
-     *
-     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
-     *
-     *
-     * @example
-     * billboards.add(...);
-     * billboards.add(...);
-     * billboards.removeAll();
-     *
-     * @see BillboardCollection#add
-     * @see BillboardCollection#remove
-     */
-    BillboardCollection.prototype.removeAll = function() {
-        destroyBillboards(this._billboards);
-        this._billboards = [];
-        this._billboardsToUpdate = [];
-        this._billboardsToUpdateIndex = 0;
-        this._billboardsRemoved = false;
-
-        this._createVertexArray = true;
-    };
 
     function removeBillboards(billboardCollection) {
         if (billboardCollection._billboardsRemoved) {
@@ -555,63 +1022,8 @@ define([
         }
     }
 
-    BillboardCollection.prototype._updateBillboard = function(billboard, propertyChanged) {
-        if (!billboard._dirty) {
-            this._billboardsToUpdate[this._billboardsToUpdateIndex++] = billboard;
-        }
 
-        ++this._propertiesChanged[propertyChanged];
-    };
 
-    /**
-     * Check whether this collection contains a given billboard.
-     *
-     * @param {Billboard} [billboard] The billboard to check for.
-     * @returns {Boolean} true if this collection contains the billboard, false otherwise.
-     *
-     * @see BillboardCollection#get
-     */
-    BillboardCollection.prototype.contains = function(billboard) {
-        return defined(billboard) && billboard._billboardCollection === this;
-    };
-
-    /**
-     * Returns the billboard in the collection at the specified index.  Indices are zero-based
-     * and increase as billboards are added.  Removing a billboard shifts all billboards after
-     * it to the left, changing their indices.  This function is commonly used with
-     * {@link BillboardCollection#length} to iterate over all the billboards
-     * in the collection.
-     *
-     * @param {Number} index The zero-based index of the billboard.
-     * @returns {Billboard} The billboard at the specified index.
-     *
-     * @performance Expected constant time.  If billboards were removed from the collection and
-     * {@link BillboardCollection#update} was not called, an implicit <code>O(n)</code>
-     * operation is performed.
-     *
-     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
-     *
-     *
-     * @example
-     * // Toggle the show property of every billboard in the collection
-     * var len = billboards.length;
-     * for (var i = 0; i < len; ++i) {
-     *   var b = billboards.get(i);
-     *   b.show = !b.show;
-     * }
-     *
-     * @see BillboardCollection#length
-     */
-    BillboardCollection.prototype.get = function(index) {
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(index)) {
-            throw new DeveloperError('index is required.');
-        }
-        //>>includeEnd('debug');
-
-        removeBillboards(this);
-        return this._billboards[index];
-    };
 
     var getIndexBuffer;
 
@@ -685,19 +1097,6 @@ define([
         return vertexBuffer;
     }
 
-    BillboardCollection.prototype.computeNewBuffersUsage = function() {
-        var buffersUsage = this._buffersUsage;
-        var usageChanged = false;
-
-        var properties = this._propertiesChanged;
-        for (var k = 0; k < NUMBER_OF_PROPERTIES; ++k) {
-            var newUsage = (properties[k] === 0) ? BufferUsage.STATIC_DRAW : BufferUsage.STREAM_DRAW;
-            usageChanged = usageChanged || (buffersUsage[k] !== newUsage);
-            buffersUsage[k] = newUsage;
-        }
-
-        return usageChanged;
-    };
 
     function createVAF(context, numberOfBillboards, buffersUsage, instanced, batchTable) {
         var attributes = [{
@@ -1422,491 +1821,8 @@ define([
 
     var scratchWriterArray = [];
 
-    /**
-     * Called when {@link Viewer} or {@link CesiumWidget} render the scene to
-     * get the draw commands needed to render this primitive.
-     * <p>
-     * Do not call this function directly.  This is documented just to
-     * list the exceptions that may be propagated when the scene is rendered:
-     * </p>
-     *
-     * @exception {RuntimeError} image with id must be in the atlas.
-     */
-    BillboardCollection.prototype.update = function(frameState) {
-        removeBillboards(this);
-        var billboards = this._billboards;
-        var billboardsLength = billboards.length;
 
-        var context = frameState.context;
-        this._instanced = context.instancedArrays;
-        attributeLocations = this._instanced ? attributeLocationsInstanced : attributeLocationsBatched;
-        getIndexBuffer = this._instanced ? getIndexBufferInstanced : getIndexBufferBatched;
 
-        var textureAtlas = this._textureAtlas;
-        if (!defined(textureAtlas)) {
-            textureAtlas = this._textureAtlas = new TextureAtlas({
-                context : context
-            });
-
-            for (var ii = 0; ii < billboardsLength; ++ii) {
-                billboards[ii]._loadImage();
-            }
-        }
-
-        var textureAtlasCoordinates = textureAtlas.textureCoordinates;
-        if (textureAtlasCoordinates.length === 0) {
-            // Can't write billboard vertices until we have texture coordinates
-            // provided by a texture atlas
-            return;
-        }
-
-        updateMode(this, frameState);
-
-        billboards = this._billboards;
-        billboardsLength = billboards.length;
-        var billboardsToUpdate = this._billboardsToUpdate;
-        var billboardsToUpdateLength = this._billboardsToUpdateIndex;
-
-        var properties = this._propertiesChanged;
-
-        var textureAtlasGUID = textureAtlas.guid;
-        var createVertexArray = this._createVertexArray || this._textureAtlasGUID !== textureAtlasGUID;
-        this._textureAtlasGUID = textureAtlasGUID;
-
-        var vafWriters;
-        var pass = frameState.passes;
-        var picking = pass.pick;
-
-        // PERFORMANCE_IDEA: Round robin multiple buffers.
-        if (createVertexArray || (!picking && this.computeNewBuffersUsage())) {
-            this._createVertexArray = false;
-
-            for (var k = 0; k < NUMBER_OF_PROPERTIES; ++k) {
-                properties[k] = 0;
-            }
-
-            this._vaf = this._vaf && this._vaf.destroy();
-
-            if (billboardsLength > 0) {
-                // PERFORMANCE_IDEA:  Instead of creating a new one, resize like std::vector.
-                this._vaf = createVAF(context, billboardsLength, this._buffersUsage, this._instanced, this._batchTable);
-                vafWriters = this._vaf.writers;
-
-                // Rewrite entire buffer if billboards were added or removed.
-                for (var i = 0; i < billboardsLength; ++i) {
-                    var billboard = this._billboards[i];
-                    billboard._dirty = false; // In case it needed an update.
-                    writeBillboard(this, context, textureAtlasCoordinates, vafWriters, billboard);
-                }
-
-                // Different billboard collections share the same index buffer.
-                this._vaf.commit(getIndexBuffer(context));
-            }
-
-            this._billboardsToUpdateIndex = 0;
-        } else if (billboardsToUpdateLength > 0) {
-            // Billboards were modified, but none were added or removed.
-            var writers = scratchWriterArray;
-            writers.length = 0;
-
-            if (properties[POSITION_INDEX] || properties[ROTATION_INDEX] || properties[SCALE_INDEX]) {
-                writers.push(writePositionScaleAndRotation);
-            }
-
-            if (properties[IMAGE_INDEX_INDEX] || properties[PIXEL_OFFSET_INDEX] || properties[HORIZONTAL_ORIGIN_INDEX] || properties[VERTICAL_ORIGIN_INDEX] || properties[SHOW_INDEX]) {
-                writers.push(writeCompressedAttrib0);
-                if (this._instanced) {
-                    writers.push(writeEyeOffset);
-                }
-            }
-
-            if (properties[IMAGE_INDEX_INDEX] || properties[ALIGNED_AXIS_INDEX] || properties[TRANSLUCENCY_BY_DISTANCE_INDEX]) {
-                writers.push(writeCompressedAttrib1);
-                writers.push(writeCompressedAttrib2);
-            }
-
-            if (properties[IMAGE_INDEX_INDEX] || properties[COLOR_INDEX]) {
-                writers.push(writeCompressedAttrib2);
-            }
-
-            if (properties[EYE_OFFSET_INDEX]) {
-                writers.push(writeEyeOffset);
-            }
-
-            if (properties[SCALE_BY_DISTANCE_INDEX]) {
-                writers.push(writeScaleByDistance);
-            }
-
-            if (properties[PIXEL_OFFSET_SCALE_BY_DISTANCE_INDEX]) {
-                writers.push(writePixelOffsetScaleByDistance);
-            }
-
-            if (properties[DISTANCE_DISPLAY_CONDITION_INDEX] || properties[DISABLE_DEPTH_DISTANCE] || properties[IMAGE_INDEX_INDEX] || properties[POSITION_INDEX]) {
-                writers.push(writeCompressedAttribute3);
-            }
-
-            if (properties[IMAGE_INDEX_INDEX] || properties[POSITION_INDEX]) {
-                writers.push(writeTextureCoordinateBoundsOrLabelTranslate);
-            }
-
-            var numWriters = writers.length;
-            vafWriters = this._vaf.writers;
-
-            if ((billboardsToUpdateLength / billboardsLength) > 0.1) {
-                // If more than 10% of billboard change, rewrite the entire buffer.
-
-                // PERFORMANCE_IDEA:  I totally made up 10% :).
-
-                for (var m = 0; m < billboardsToUpdateLength; ++m) {
-                    var b = billboardsToUpdate[m];
-                    b._dirty = false;
-
-                    for (var n = 0; n < numWriters; ++n) {
-                        writers[n](this, context, textureAtlasCoordinates, vafWriters, b);
-                    }
-                }
-                this._vaf.commit(getIndexBuffer(context));
-            } else {
-                for (var h = 0; h < billboardsToUpdateLength; ++h) {
-                    var bb = billboardsToUpdate[h];
-                    bb._dirty = false;
-
-                    for (var o = 0; o < numWriters; ++o) {
-                        writers[o](this, context, textureAtlasCoordinates, vafWriters, bb);
-                    }
-
-                    if (this._instanced) {
-                        this._vaf.subCommit(bb._index, 1);
-                    } else {
-                        this._vaf.subCommit(bb._index * 4, 4);
-                    }
-                }
-                this._vaf.endSubCommits();
-            }
-
-            this._billboardsToUpdateIndex = 0;
-        }
-
-        // If the number of total billboards ever shrinks considerably
-        // Truncate billboardsToUpdate so that we free memory that we're
-        // not going to be using.
-        if (billboardsToUpdateLength > billboardsLength * 1.5) {
-            billboardsToUpdate.length = billboardsLength;
-        }
-
-        if (!defined(this._vaf) || !defined(this._vaf.va)) {
-            return;
-        }
-
-        if (this._boundingVolumeDirty) {
-            this._boundingVolumeDirty = false;
-            BoundingSphere.transform(this._baseVolume, this.modelMatrix, this._baseVolumeWC);
-        }
-
-        var boundingVolume;
-        var modelMatrix = Matrix4.IDENTITY;
-        if (frameState.mode === SceneMode.SCENE3D) {
-            modelMatrix = this.modelMatrix;
-            boundingVolume = BoundingSphere.clone(this._baseVolumeWC, this._boundingVolume);
-        } else {
-            boundingVolume = BoundingSphere.clone(this._baseVolume2D, this._boundingVolume);
-        }
-        updateBoundingVolume(this, frameState, boundingVolume);
-
-        var blendOptionChanged = this._blendOption !== this.blendOption;
-        this._blendOption = this.blendOption;
-
-        if (blendOptionChanged) {
-            if (this._blendOption === BlendOption.OPAQUE || this._blendOption === BlendOption.OPAQUE_AND_TRANSLUCENT) {
-                this._rsOpaque = RenderState.fromCache({
-                    depthTest : {
-                        enabled : true,
-                        func : WebGLConstants.LESS
-                    },
-                    depthMask : true
-                });
-            } else {
-                this._rsOpaque = undefined;
-            }
-
-            // If OPAQUE_AND_TRANSLUCENT is in use, only the opaque pass gets the benefit of the depth buffer,
-            // not the translucent pass.  Otherwise, if the TRANSLUCENT pass is on its own, it turns on
-            // a depthMask in lieu of full depth sorting (because it has opaque-ish fragments that look bad in OIT).
-            // When the TRANSLUCENT depth mask is in use, label backgrounds require the depth func to be LEQUAL.
-            var useTranslucentDepthMask = this._blendOption === BlendOption.TRANSLUCENT;
-
-            if (this._blendOption === BlendOption.TRANSLUCENT || this._blendOption === BlendOption.OPAQUE_AND_TRANSLUCENT) {
-                this._rsTranslucent = RenderState.fromCache({
-                    depthTest : {
-                        enabled : true,
-                        func : (useTranslucentDepthMask ? WebGLConstants.LEQUAL : WebGLConstants.LESS)
-                    },
-                    depthMask : useTranslucentDepthMask,
-                    blending : BlendingState.ALPHA_BLEND
-                });
-            } else {
-                this._rsTranslucent = undefined;
-            }
-        }
-
-        this._shaderDisableDepthDistance = this._shaderDisableDepthDistance || frameState.minimumDisableDepthTestDistance !== 0.0;
-
-        var vsSource;
-        var fsSource;
-        var vs;
-        var fs;
-        var vertDefines;
-
-        var supportVSTextureReads = ContextLimits.maximumVertexTextureImageUnits > 0;
-
-        if (blendOptionChanged ||
-            (this._shaderRotation !== this._compiledShaderRotation) ||
-            (this._shaderAlignedAxis !== this._compiledShaderAlignedAxis) ||
-            (this._shaderScaleByDistance !== this._compiledShaderScaleByDistance) ||
-            (this._shaderTranslucencyByDistance !== this._compiledShaderTranslucencyByDistance) ||
-            (this._shaderPixelOffsetScaleByDistance !== this._compiledShaderPixelOffsetScaleByDistance) ||
-            (this._shaderDistanceDisplayCondition !== this._compiledShaderDistanceDisplayCondition) ||
-            (this._shaderDisableDepthDistance !== this._compiledShaderDisableDepthDistance) ||
-            (this._shaderClampToGround !== this._compiledShaderClampToGround)) {
-
-            vsSource = BillboardCollectionVS;
-            fsSource = BillboardCollectionFS;
-
-            vertDefines = [];
-            if (defined(this._batchTable)) {
-                vertDefines.push('VECTOR_TILE');
-                vsSource = this._batchTable.getVertexShaderCallback(false, 'a_batchId', undefined)(vsSource);
-                fsSource = this._batchTable.getFragmentShaderCallback(false, undefined)(fsSource);
-            }
-
-            vs = new ShaderSource({
-                defines : vertDefines,
-                sources : [vsSource]
-            });
-            if (this._instanced) {
-                vs.defines.push('INSTANCED');
-            }
-            if (this._shaderRotation) {
-                vs.defines.push('ROTATION');
-            }
-            if (this._shaderAlignedAxis) {
-                vs.defines.push('ALIGNED_AXIS');
-            }
-            if (this._shaderScaleByDistance) {
-                vs.defines.push('EYE_DISTANCE_SCALING');
-            }
-            if (this._shaderTranslucencyByDistance) {
-                vs.defines.push('EYE_DISTANCE_TRANSLUCENCY');
-            }
-            if (this._shaderPixelOffsetScaleByDistance) {
-                vs.defines.push('EYE_DISTANCE_PIXEL_OFFSET');
-            }
-            if (this._shaderDistanceDisplayCondition) {
-                vs.defines.push('DISTANCE_DISPLAY_CONDITION');
-            }
-            if (this._shaderDisableDepthDistance) {
-                vs.defines.push('DISABLE_DEPTH_DISTANCE');
-            }
-            if (this._shaderClampToGround) {
-                if (supportVSTextureReads) {
-                    vs.defines.push('VERTEX_DEPTH_CHECK');
-                } else {
-                    vs.defines.push('FRAGMENT_DEPTH_CHECK');
-                }
-            }
-
-            var vectorFragDefine = defined(this._batchTable) ? 'VECTOR_TILE' : '';
-
-            if (this._blendOption === BlendOption.OPAQUE_AND_TRANSLUCENT) {
-                fs = new ShaderSource({
-                    defines : ['OPAQUE', vectorFragDefine],
-                    sources : [fsSource]
-                });
-                if (this._shaderClampToGround) {
-                    if (supportVSTextureReads) {
-                        fs.defines.push('VERTEX_DEPTH_CHECK');
-                    } else {
-                        fs.defines.push('FRAGMENT_DEPTH_CHECK');
-                    }
-                }
-                this._sp = ShaderProgram.replaceCache({
-                    context : context,
-                    shaderProgram : this._sp,
-                    vertexShaderSource : vs,
-                    fragmentShaderSource : fs,
-                    attributeLocations : attributeLocations
-                });
-
-                fs = new ShaderSource({
-                    defines : ['TRANSLUCENT', vectorFragDefine],
-                    sources : [fsSource]
-                });
-                if (this._shaderClampToGround) {
-                    if (supportVSTextureReads) {
-                        fs.defines.push('VERTEX_DEPTH_CHECK');
-                    } else {
-                        fs.defines.push('FRAGMENT_DEPTH_CHECK');
-                    }
-                }
-                this._spTranslucent = ShaderProgram.replaceCache({
-                    context : context,
-                    shaderProgram : this._spTranslucent,
-                    vertexShaderSource : vs,
-                    fragmentShaderSource : fs,
-                    attributeLocations : attributeLocations
-                });
-            }
-
-            if (this._blendOption === BlendOption.OPAQUE) {
-                fs = new ShaderSource({
-                    defines : [vectorFragDefine],
-                    sources : [fsSource]
-                });
-                if (this._shaderClampToGround) {
-                    if (supportVSTextureReads) {
-                        fs.defines.push('VERTEX_DEPTH_CHECK');
-                    } else {
-                        fs.defines.push('FRAGMENT_DEPTH_CHECK');
-                    }
-                }
-                this._sp = ShaderProgram.replaceCache({
-                    context : context,
-                    shaderProgram : this._sp,
-                    vertexShaderSource : vs,
-                    fragmentShaderSource : fs,
-                    attributeLocations : attributeLocations
-                });
-            }
-
-            if (this._blendOption === BlendOption.TRANSLUCENT) {
-                fs = new ShaderSource({
-                    defines : [vectorFragDefine],
-                    sources : [fsSource]
-                });
-                if (this._shaderClampToGround) {
-                    if (supportVSTextureReads) {
-                        fs.defines.push('VERTEX_DEPTH_CHECK');
-                    } else {
-                        fs.defines.push('FRAGMENT_DEPTH_CHECK');
-                    }
-                }
-                this._spTranslucent = ShaderProgram.replaceCache({
-                    context : context,
-                    shaderProgram : this._spTranslucent,
-                    vertexShaderSource : vs,
-                    fragmentShaderSource : fs,
-                    attributeLocations : attributeLocations
-                });
-            }
-
-            this._compiledShaderRotation = this._shaderRotation;
-            this._compiledShaderAlignedAxis = this._shaderAlignedAxis;
-            this._compiledShaderScaleByDistance = this._shaderScaleByDistance;
-            this._compiledShaderTranslucencyByDistance = this._shaderTranslucencyByDistance;
-            this._compiledShaderPixelOffsetScaleByDistance = this._shaderPixelOffsetScaleByDistance;
-            this._compiledShaderDistanceDisplayCondition = this._shaderDistanceDisplayCondition;
-            this._compiledShaderDisableDepthDistance = this._shaderDisableDepthDistance;
-            this._compiledShaderClampToGround = this._shaderClampToGround;
-        }
-
-        var commandList = frameState.commandList;
-
-        if (pass.render || pass.pick) {
-            var colorList = this._colorCommands;
-
-            var opaque = this._blendOption === BlendOption.OPAQUE;
-            var opaqueAndTranslucent = this._blendOption === BlendOption.OPAQUE_AND_TRANSLUCENT;
-
-            var va = this._vaf.va;
-            var vaLength = va.length;
-
-            var uniforms = this._uniforms;
-            var pickId;
-            if (defined(this._batchTable)) {
-                uniforms = this._batchTable.getUniformMapCallback()(uniforms);
-                pickId = this._batchTable.getPickId();
-            } else {
-                pickId = 'v_pickColor';
-            }
-
-            colorList.length = vaLength;
-            var totalLength = opaqueAndTranslucent ? vaLength * 2 : vaLength;
-            for (var j = 0; j < totalLength; ++j) {
-                var command = colorList[j];
-                if (!defined(command)) {
-                    command = colorList[j] = new DrawCommand();
-                }
-
-                var opaqueCommand = opaque || (opaqueAndTranslucent && j % 2 === 0);
-
-                command.pass = opaqueCommand || !opaqueAndTranslucent ? Pass.OPAQUE : Pass.TRANSLUCENT;
-                command.owner = this;
-
-                var index = opaqueAndTranslucent ? Math.floor(j / 2.0) : j;
-                command.boundingVolume = boundingVolume;
-                command.modelMatrix = modelMatrix;
-                command.count = va[index].indicesCount;
-                command.shaderProgram = opaqueCommand ? this._sp : this._spTranslucent;
-                command.uniformMap = uniforms;
-                command.vertexArray = va[index].va;
-                command.renderState = opaqueCommand ? this._rsOpaque : this._rsTranslucent;
-                command.debugShowBoundingVolume = this.debugShowBoundingVolume;
-                command.pickId = pickId;
-
-                if (this._instanced) {
-                    command.count = 6;
-                    command.instanceCount = billboardsLength;
-                }
-
-                commandList.push(command);
-            }
-        }
-    };
-
-    /**
-     * Returns true if this object was destroyed; otherwise, false.
-     * <br /><br />
-     * If this object was destroyed, it should not be used; calling any function other than
-     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
-     *
-     * @returns {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
-     *
-     * @see BillboardCollection#destroy
-     */
-    BillboardCollection.prototype.isDestroyed = function() {
-        return false;
-    };
-
-    /**
-     * Destroys the WebGL resources held by this object.  Destroying an object allows for deterministic
-     * release of WebGL resources, instead of relying on the garbage collector to destroy this object.
-     * <br /><br />
-     * Once an object is destroyed, it should not be used; calling any function other than
-     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
-     * assign the return value (<code>undefined</code>) to the object as done in the example.
-     *
-     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
-     *
-     *
-     * @example
-     * billboards = billboards && billboards.destroy();
-     *
-     * @see BillboardCollection#isDestroyed
-     */
-    BillboardCollection.prototype.destroy = function() {
-        if (defined(this._removeCallbackFunc)) {
-            this._removeCallbackFunc();
-            this._removeCallbackFunc = undefined;
-        }
-
-        this._textureAtlas = this._destroyTextureAtlas && this._textureAtlas && this._textureAtlas.destroy();
-        this._sp = this._sp && this._sp.destroy();
-        this._spTranslucent = this._spTranslucent && this._spTranslucent.destroy();
-        this._vaf = this._vaf && this._vaf.destroy();
-        destroyBillboards(this._billboards);
-
-        return destroyObject(this);
-    };
 
     return BillboardCollection;
 });

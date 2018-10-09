@@ -47,7 +47,7 @@ define([
      *
      * @private
      */
-    function deprecationWarning(identifier, message) {
+    export function deprecationWarning(identifier, message) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(identifier) || !defined(message)) {
             throw new DeveloperError('identifier and message are required.');

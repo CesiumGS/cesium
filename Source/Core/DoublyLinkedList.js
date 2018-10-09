@@ -6,14 +6,68 @@ define([
         defineProperties) {
     'use strict';
 
-    /**
-     * @private
-     */
-    function DoublyLinkedList() {
-        this.head = undefined;
-        this.tail = undefined;
-        this._length = 0;
-    }
+        /**
+             * @private
+             */
+        class DoublyLinkedList {
+            constructor() {
+                this.head = undefined;
+                this.tail = undefined;
+                this._length = 0;
+            }
+            /**
+                 * Adds the item to the end of the list
+                 * @param {*} [item]
+                 * @return {DoublyLinkedListNode}
+                 */
+            add(item) {
+                var node = new DoublyLinkedListNode(item, this.tail, undefined);
+                if (defined(this.tail)) {
+                    this.tail.next = node;
+                    this.tail = node;
+                }
+                else {
+                    this.head = node;
+                    this.tail = node;
+                }
+                ++this._length;
+                return node;
+            }
+            /**
+                 * Removes the given node from the list
+                 * @param {DoublyLinkedListNode} node
+                 */
+            remove(node) {
+                if (!defined(node)) {
+                    return;
+                }
+                remove(this, node);
+                --this._length;
+            }
+            /**
+                 * Moves nextNode after node
+                 * @param {DoublyLinkedListNode} node
+                 * @param {DoublyLinkedListNode} nextNode
+                 */
+            splice(node, nextNode) {
+                if (node === nextNode) {
+                    return;
+                }
+                // Remove nextNode, then insert after node
+                remove(this, nextNode);
+                var oldNodeNext = node.next;
+                node.next = nextNode;
+                // nextNode is the new tail
+                if (this.tail === node) {
+                    this.tail = nextNode;
+                }
+                else {
+                    oldNodeNext.previous = nextNode;
+                }
+                nextNode.next = oldNodeNext;
+                nextNode.previous = node;
+            }
+        }
 
     defineProperties(DoublyLinkedList.prototype, {
         length : {
@@ -23,32 +77,14 @@ define([
         }
     });
 
-    function DoublyLinkedListNode(item, previous, next) {
-        this.item = item;
-        this.previous  = previous;
-        this.next = next;
-    }
-
-    /**
-     * Adds the item to the end of the list
-     * @param {*} [item]
-     * @return {DoublyLinkedListNode}
-     */
-    DoublyLinkedList.prototype.add = function(item) {
-        var node = new DoublyLinkedListNode(item, this.tail, undefined);
-
-        if (defined(this.tail)) {
-            this.tail.next = node;
-            this.tail = node;
-        } else {
-            this.head = node;
-            this.tail = node;
+        class DoublyLinkedListNode {
+            constructor(item, previous, next) {
+                this.item = item;
+                this.previous = previous;
+                this.next = next;
+            }
         }
 
-        ++this._length;
-
-        return node;
-    };
 
     function remove(list, node) {
         if (defined(node.previous) && defined(node.next)) {
@@ -72,46 +108,7 @@ define([
         node.previous = undefined;
     }
 
-    /**
-     * Removes the given node from the list
-     * @param {DoublyLinkedListNode} node
-     */
-    DoublyLinkedList.prototype.remove = function(node) {
-        if (!defined(node)) {
-            return;
-        }
 
-        remove(this, node);
-
-        --this._length;
-    };
-
-    /**
-     * Moves nextNode after node
-     * @param {DoublyLinkedListNode} node
-     * @param {DoublyLinkedListNode} nextNode
-     */
-    DoublyLinkedList.prototype.splice = function(node, nextNode) {
-        if (node === nextNode) {
-            return;
-        }
-
-        // Remove nextNode, then insert after node
-        remove(this, nextNode);
-
-        var oldNodeNext = node.next;
-        node.next = nextNode;
-
-        // nextNode is the new tail
-        if (this.tail === node) {
-            this.tail = nextNode;
-        } else {
-            oldNodeNext.previous = nextNode;
-        }
-
-        nextNode.next = oldNodeNext;
-        nextNode.previous = node;
-    };
 
     return DoublyLinkedList;
 });

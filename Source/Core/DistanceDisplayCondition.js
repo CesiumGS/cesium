@@ -10,26 +10,122 @@ define([
         DeveloperError) {
     'use strict';
 
-    /**
-     * Determines visibility based on the distance to the camera.
-     *
-     * @alias DistanceDisplayCondition
-     * @constructor
-     *
-     * @param {Number} [near=0.0] The smallest distance in the interval where the object is visible.
-     * @param {Number} [far=Number.MAX_VALUE] The largest distance in the interval where the object is visible.
-     *
-     * @example
-     * // Make a billboard that is only visible when the distance to the camera is between 10 and 20 meters.
-     * billboard.distanceDisplayCondition = new Cesium.DistanceDisplayCondition(10.0, 20.0);
-     */
-    function DistanceDisplayCondition(near, far) {
-        near = defaultValue(near, 0.0);
-        this._near = near;
-
-        far = defaultValue(far, Number.MAX_VALUE);
-        this._far = far;
-    }
+        /**
+             * Determines visibility based on the distance to the camera.
+             *
+             * @alias DistanceDisplayCondition
+             * @constructor
+             *
+             * @param {Number} [near=0.0] The smallest distance in the interval where the object is visible.
+             * @param {Number} [far=Number.MAX_VALUE] The largest distance in the interval where the object is visible.
+             *
+             * @example
+             * // Make a billboard that is only visible when the distance to the camera is between 10 and 20 meters.
+             * billboard.distanceDisplayCondition = new Cesium.DistanceDisplayCondition(10.0, 20.0);
+             */
+        class DistanceDisplayCondition {
+            constructor(near, far) {
+                near = defaultValue(near, 0.0);
+                this._near = near;
+                far = defaultValue(far, Number.MAX_VALUE);
+                this._far = far;
+            }
+            /**
+                 * Duplicates this instance.
+                 *
+                 * @param {DistanceDisplayCondition} [result] The result onto which to store the result.
+                 * @return {DistanceDisplayCondition} The duplicated instance.
+                 */
+            clone(result) {
+                return DistanceDisplayCondition.clone(this, result);
+            }
+            /**
+                 * Determines if this distance display condition is equal to another.
+                 *
+                 * @param {DistanceDisplayCondition} other Another distance display condition.
+                 * @return {Boolean} Whether this distance display condition is equal to the other.
+                 */
+            equals(other) {
+                return DistanceDisplayCondition.equals(this, other);
+            }
+            /**
+                 * Stores the provided instance into the provided array.
+                 *
+                 * @param {DistanceDisplayCondition} value The value to pack.
+                 * @param {Number[]} array The array to pack into.
+                 * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
+                 *
+                 * @returns {Number[]} The array that was packed into
+                 */
+            static pack(value, array, startingIndex) {
+                //>>includeStart('debug', pragmas.debug);
+                if (!defined(value)) {
+                    throw new DeveloperError('value is required');
+                }
+                if (!defined(array)) {
+                    throw new DeveloperError('array is required');
+                }
+                //>>includeEnd('debug');
+                startingIndex = defaultValue(startingIndex, 0);
+                array[startingIndex++] = value.near;
+                array[startingIndex] = value.far;
+                return array;
+            }
+            /**
+                 * Retrieves an instance from a packed array.
+                 *
+                 * @param {Number[]} array The packed array.
+                 * @param {Number} [startingIndex=0] The starting index of the element to be unpacked.
+                 * @param {DistanceDisplayCondition} [result] The object into which to store the result.
+                 * @returns {DistanceDisplayCondition} The modified result parameter or a new DistanceDisplayCondition instance if one was not provided.
+                 */
+            static unpack(array, startingIndex, result) {
+                //>>includeStart('debug', pragmas.debug);
+                if (!defined(array)) {
+                    throw new DeveloperError('array is required');
+                }
+                //>>includeEnd('debug');
+                startingIndex = defaultValue(startingIndex, 0);
+                if (!defined(result)) {
+                    result = new DistanceDisplayCondition();
+                }
+                result.near = array[startingIndex++];
+                result.far = array[startingIndex];
+                return result;
+            }
+            /**
+                 * Determines if two distance display conditions are equal.
+                 *
+                 * @param {DistanceDisplayCondition} left A distance display condition.
+                 * @param {DistanceDisplayCondition} right Another distance display condition.
+                 * @return {Boolean} Whether the two distance display conditions are equal.
+                 */
+            static equals(left, right) {
+                return left === right ||
+                    (defined(left) &&
+                        defined(right) &&
+                        left.near === right.near &&
+                        left.far === right.far);
+            }
+            /**
+                 * Duplicates a distance display condition instance.
+                 *
+                 * @param {DistanceDisplayCondition} [value] The distance display condition to duplicate.
+                 * @param {DistanceDisplayCondition} [result] The result onto which to store the result.
+                 * @return {DistanceDisplayCondition} The duplicated instance.
+                 */
+            static clone(value, result) {
+                if (!defined(value)) {
+                    return undefined;
+                }
+                if (!defined(result)) {
+                    result = new DistanceDisplayCondition();
+                }
+                result.near = value.near;
+                result.far = value.far;
+                return result;
+            }
+        }
 
     defineProperties(DistanceDisplayCondition.prototype, {
         /**
@@ -68,113 +164,11 @@ define([
      */
     DistanceDisplayCondition.packedLength = 2;
 
-    /**
-     * Stores the provided instance into the provided array.
-     *
-     * @param {DistanceDisplayCondition} value The value to pack.
-     * @param {Number[]} array The array to pack into.
-     * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
-     *
-     * @returns {Number[]} The array that was packed into
-     */
-    DistanceDisplayCondition.pack = function(value, array, startingIndex) {
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(value)) {
-            throw new DeveloperError('value is required');
-        }
-        if (!defined(array)) {
-            throw new DeveloperError('array is required');
-        }
-        //>>includeEnd('debug');
 
-        startingIndex = defaultValue(startingIndex, 0);
 
-        array[startingIndex++] = value.near;
-        array[startingIndex] = value.far;
 
-        return array;
-    };
 
-    /**
-     * Retrieves an instance from a packed array.
-     *
-     * @param {Number[]} array The packed array.
-     * @param {Number} [startingIndex=0] The starting index of the element to be unpacked.
-     * @param {DistanceDisplayCondition} [result] The object into which to store the result.
-     * @returns {DistanceDisplayCondition} The modified result parameter or a new DistanceDisplayCondition instance if one was not provided.
-     */
-    DistanceDisplayCondition.unpack = function(array, startingIndex, result) {
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(array)) {
-            throw new DeveloperError('array is required');
-        }
-        //>>includeEnd('debug');
 
-        startingIndex = defaultValue(startingIndex, 0);
-
-        if (!defined(result)) {
-            result = new DistanceDisplayCondition();
-        }
-        result.near = array[startingIndex++];
-        result.far = array[startingIndex];
-        return result;
-    };
-
-    /**
-     * Determines if two distance display conditions are equal.
-     *
-     * @param {DistanceDisplayCondition} left A distance display condition.
-     * @param {DistanceDisplayCondition} right Another distance display condition.
-     * @return {Boolean} Whether the two distance display conditions are equal.
-     */
-    DistanceDisplayCondition.equals = function(left, right) {
-        return left === right ||
-               (defined(left) &&
-                defined(right) &&
-                left.near === right.near &&
-                left.far === right.far);
-    };
-
-    /**
-     * Duplicates a distance display condition instance.
-     *
-     * @param {DistanceDisplayCondition} [value] The distance display condition to duplicate.
-     * @param {DistanceDisplayCondition} [result] The result onto which to store the result.
-     * @return {DistanceDisplayCondition} The duplicated instance.
-     */
-    DistanceDisplayCondition.clone = function(value, result) {
-        if (!defined(value)) {
-            return undefined;
-        }
-
-        if (!defined(result)) {
-            result = new DistanceDisplayCondition();
-        }
-
-        result.near = value.near;
-        result.far = value.far;
-        return result;
-    };
-
-    /**
-     * Duplicates this instance.
-     *
-     * @param {DistanceDisplayCondition} [result] The result onto which to store the result.
-     * @return {DistanceDisplayCondition} The duplicated instance.
-     */
-    DistanceDisplayCondition.prototype.clone = function(result) {
-        return DistanceDisplayCondition.clone(this, result);
-    };
-
-    /**
-     * Determines if this distance display condition is equal to another.
-     *
-     * @param {DistanceDisplayCondition} other Another distance display condition.
-     * @return {Boolean} Whether this distance display condition is equal to the other.
-     */
-    DistanceDisplayCondition.prototype.equals = function(other) {
-        return DistanceDisplayCondition.equals(this, other);
-    };
 
     return DistanceDisplayCondition;
 });

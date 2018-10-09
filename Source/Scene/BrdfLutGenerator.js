@@ -30,14 +30,33 @@ define([
         BrdfLutGeneratorFS) {
     'use strict';
 
-    /**
-     * @private
-     */
-    function BrdfLutGenerator() {
-        this._framebuffer = undefined;
-        this._colorTexture = undefined;
-        this._drawCommand = undefined;
-    }
+        /**
+             * @private
+             */
+        class BrdfLutGenerator {
+            constructor() {
+                this._framebuffer = undefined;
+                this._colorTexture = undefined;
+                this._drawCommand = undefined;
+            }
+            update(frameState) {
+                if (!defined(this._colorTexture)) {
+                    var context = frameState.context;
+                    createFramebuffer(this, context);
+                    createCommand(this, context);
+                    this._drawCommand.execute(context);
+                    this._framebuffer = this._framebuffer && this._framebuffer.destroy();
+                    this._drawCommand.shaderProgram = this._drawCommand.shaderProgram && this._drawCommand.shaderProgram.destroy();
+                }
+            }
+            isDestroyed() {
+                return false;
+            }
+            destroy() {
+                this._colorTexture = this._colorTexture && this._colorTexture.destroy();
+                return destroyObject(this);
+            }
+        }
 
     defineProperties(BrdfLutGenerator.prototype, {
         colorTexture : {
@@ -86,26 +105,8 @@ define([
         generator._framebuffer = framebuffer;
     }
 
-    BrdfLutGenerator.prototype.update = function(frameState) {
-        if (!defined(this._colorTexture)) {
-            var context = frameState.context;
 
-            createFramebuffer(this, context);
-            createCommand(this, context);
-            this._drawCommand.execute(context);
-            this._framebuffer = this._framebuffer && this._framebuffer.destroy();
-            this._drawCommand.shaderProgram = this._drawCommand.shaderProgram && this._drawCommand.shaderProgram.destroy();
-        }
-    };
 
-    BrdfLutGenerator.prototype.isDestroyed = function() {
-        return false;
-    };
-
-    BrdfLutGenerator.prototype.destroy = function() {
-        this._colorTexture = this._colorTexture && this._colorTexture.destroy();
-        return destroyObject(this);
-    };
 
     return BrdfLutGenerator;
 });

@@ -101,90 +101,100 @@ define([
     var firstTangentScratch = new Cartesian3();
     var lastTangentScratch = new Cartesian3();
 
-    /**
-     * A Catmull-Rom spline is a cubic spline where the tangent at control points,
-     * except the first and last, are computed using the previous and next control points.
-     * Catmull-Rom splines are in the class C<sup>1</sup>.
-     *
-     * @alias CatmullRomSpline
-     * @constructor
-     *
-     * @param {Object} options Object with the following properties:
-     * @param {Number[]} options.times An array of strictly increasing, unit-less, floating-point times at each point.
-     *                The values are in no way connected to the clock time. They are the parameterization for the curve.
-     * @param {Cartesian3[]} options.points The array of {@link Cartesian3} control points.
-     * @param {Cartesian3} [options.firstTangent] The tangent of the curve at the first control point.
-     *                     If the tangent is not given, it will be estimated.
-     * @param {Cartesian3} [options.lastTangent] The tangent of the curve at the last control point.
-     *                     If the tangent is not given, it will be estimated.
-     *
-     * @exception {DeveloperError} points.length must be greater than or equal to 2.
-     * @exception {DeveloperError} times.length must be equal to points.length.
-     *
-     *
-     * @example
-     * // spline above the earth from Philadelphia to Los Angeles
-     * var spline = new Cesium.CatmullRomSpline({
-     *     times : [ 0.0, 1.5, 3.0, 4.5, 6.0 ],
-     *     points : [
-     *         new Cesium.Cartesian3(1235398.0, -4810983.0, 4146266.0),
-     *         new Cesium.Cartesian3(1372574.0, -5345182.0, 4606657.0),
-     *         new Cesium.Cartesian3(-757983.0, -5542796.0, 4514323.0),
-     *         new Cesium.Cartesian3(-2821260.0, -5248423.0, 4021290.0),
-     *         new Cesium.Cartesian3(-2539788.0, -4724797.0, 3620093.0)
-     *     ]
-     * });
-     *
-     * var p0 = spline.evaluate(times[i]);         // equal to positions[i]
-     * var p1 = spline.evaluate(times[i] + delta); // interpolated value when delta < times[i + 1] - times[i]
-     *
-     * @see HermiteSpline
-     * @see LinearSpline
-     * @see QuaternionSpline
-     * @see WeightSpline
-     */
-    function CatmullRomSpline(options) {
-        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-
-        var points = options.points;
-        var times = options.times;
-        var firstTangent = options.firstTangent;
-        var lastTangent = options.lastTangent;
-
-        //>>includeStart('debug', pragmas.debug);
-        Check.defined('points', points);
-        Check.defined('times', times);
-        Check.typeOf.number.greaterThanOrEquals('points.length', points.length, 2);
-        Check.typeOf.number.equals('times.length', 'points.length', times.length, points.length);
-        //>>includeEnd('debug');
-
-        if (points.length > 2) {
-            if (!defined(firstTangent)) {
-                firstTangent = firstTangentScratch;
-                Cartesian3.multiplyByScalar(points[1], 2.0, firstTangent);
-                Cartesian3.subtract(firstTangent, points[2], firstTangent);
-                Cartesian3.subtract(firstTangent, points[0], firstTangent);
-                Cartesian3.multiplyByScalar(firstTangent, 0.5, firstTangent);
+        /**
+             * A Catmull-Rom spline is a cubic spline where the tangent at control points,
+             * except the first and last, are computed using the previous and next control points.
+             * Catmull-Rom splines are in the class C<sup>1</sup>.
+             *
+             * @alias CatmullRomSpline
+             * @constructor
+             *
+             * @param {Object} options Object with the following properties:
+             * @param {Number[]} options.times An array of strictly increasing, unit-less, floating-point times at each point.
+             *                The values are in no way connected to the clock time. They are the parameterization for the curve.
+             * @param {Cartesian3[]} options.points The array of {@link Cartesian3} control points.
+             * @param {Cartesian3} [options.firstTangent] The tangent of the curve at the first control point.
+             *                     If the tangent is not given, it will be estimated.
+             * @param {Cartesian3} [options.lastTangent] The tangent of the curve at the last control point.
+             *                     If the tangent is not given, it will be estimated.
+             *
+             * @exception {DeveloperError} points.length must be greater than or equal to 2.
+             * @exception {DeveloperError} times.length must be equal to points.length.
+             *
+             *
+             * @example
+             * // spline above the earth from Philadelphia to Los Angeles
+             * var spline = new Cesium.CatmullRomSpline({
+             *     times : [ 0.0, 1.5, 3.0, 4.5, 6.0 ],
+             *     points : [
+             *         new Cesium.Cartesian3(1235398.0, -4810983.0, 4146266.0),
+             *         new Cesium.Cartesian3(1372574.0, -5345182.0, 4606657.0),
+             *         new Cesium.Cartesian3(-757983.0, -5542796.0, 4514323.0),
+             *         new Cesium.Cartesian3(-2821260.0, -5248423.0, 4021290.0),
+             *         new Cesium.Cartesian3(-2539788.0, -4724797.0, 3620093.0)
+             *     ]
+             * });
+             *
+             * var p0 = spline.evaluate(times[i]);         // equal to positions[i]
+             * var p1 = spline.evaluate(times[i] + delta); // interpolated value when delta < times[i + 1] - times[i]
+             *
+             * @see HermiteSpline
+             * @see LinearSpline
+             * @see QuaternionSpline
+             * @see WeightSpline
+             */
+        class CatmullRomSpline {
+            constructor(options) {
+                options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+                var points = options.points;
+                var times = options.times;
+                var firstTangent = options.firstTangent;
+                var lastTangent = options.lastTangent;
+                //>>includeStart('debug', pragmas.debug);
+                Check.defined('points', points);
+                Check.defined('times', times);
+                Check.typeOf.number.greaterThanOrEquals('points.length', points.length, 2);
+                Check.typeOf.number.equals('times.length', 'points.length', times.length, points.length);
+                //>>includeEnd('debug');
+                if (points.length > 2) {
+                    if (!defined(firstTangent)) {
+                        firstTangent = firstTangentScratch;
+                        Cartesian3.multiplyByScalar(points[1], 2.0, firstTangent);
+                        Cartesian3.subtract(firstTangent, points[2], firstTangent);
+                        Cartesian3.subtract(firstTangent, points[0], firstTangent);
+                        Cartesian3.multiplyByScalar(firstTangent, 0.5, firstTangent);
+                    }
+                    if (!defined(lastTangent)) {
+                        var n = points.length - 1;
+                        lastTangent = lastTangentScratch;
+                        Cartesian3.multiplyByScalar(points[n - 1], 2.0, lastTangent);
+                        Cartesian3.subtract(points[n], lastTangent, lastTangent);
+                        Cartesian3.add(lastTangent, points[n - 2], lastTangent);
+                        Cartesian3.multiplyByScalar(lastTangent, 0.5, lastTangent);
+                    }
+                }
+                this._times = times;
+                this._points = points;
+                this._firstTangent = Cartesian3.clone(firstTangent);
+                this._lastTangent = Cartesian3.clone(lastTangent);
+                this._evaluateFunction = createEvaluateFunction(this);
+                this._lastTimeIndex = 0;
             }
-
-            if (!defined(lastTangent)) {
-                var n = points.length - 1;
-                lastTangent = lastTangentScratch;
-                Cartesian3.multiplyByScalar(points[n - 1], 2.0, lastTangent);
-                Cartesian3.subtract(points[n], lastTangent, lastTangent);
-                Cartesian3.add(lastTangent, points[n - 2], lastTangent);
-                Cartesian3.multiplyByScalar(lastTangent, 0.5, lastTangent);
+            /**
+                 * Evaluates the curve at a given time.
+                 *
+                 * @param {Number} time The time at which to evaluate the curve.
+                 * @param {Cartesian3} [result] The object onto which to store the result.
+                 * @returns {Cartesian3} The modified result parameter or a new instance of the point on the curve at the given time.
+                 *
+                 * @exception {DeveloperError} time must be in the range <code>[t<sub>0</sub>, t<sub>n</sub>]</code>, where <code>t<sub>0</sub></code>
+                 *                             is the first element in the array <code>times</code> and <code>t<sub>n</sub></code> is the last element
+                 *                             in the array <code>times</code>.
+                 */
+            evaluate(time, result) {
+                return this._evaluateFunction(time, result);
             }
         }
-
-        this._times = times;
-        this._points = points;
-        this._firstTangent = Cartesian3.clone(firstTangent);
-        this._lastTangent = Cartesian3.clone(lastTangent);
-
-        this._evaluateFunction = createEvaluateFunction(this);
-        this._lastTimeIndex = 0;
-    }
 
     defineProperties(CatmullRomSpline.prototype, {
         /**
@@ -285,20 +295,6 @@ define([
      */
     CatmullRomSpline.prototype.clampTime = Spline.prototype.clampTime;
 
-    /**
-     * Evaluates the curve at a given time.
-     *
-     * @param {Number} time The time at which to evaluate the curve.
-     * @param {Cartesian3} [result] The object onto which to store the result.
-     * @returns {Cartesian3} The modified result parameter or a new instance of the point on the curve at the given time.
-     *
-     * @exception {DeveloperError} time must be in the range <code>[t<sub>0</sub>, t<sub>n</sub>]</code>, where <code>t<sub>0</sub></code>
-     *                             is the first element in the array <code>times</code> and <code>t<sub>n</sub></code> is the last element
-     *                             in the array <code>times</code>.
-     */
-    CatmullRomSpline.prototype.evaluate = function(time, result) {
-        return this._evaluateFunction(time, result);
-    };
 
     return CatmullRomSpline;
 });

@@ -12,16 +12,16 @@ define(function() {
      *
      * @returns {Number} The timestamp in milliseconds since some unspecified reference time.
      */
-    var getTimestamp;
-
-    if (typeof performance !== 'undefined' && typeof performance.now === 'function' && isFinite(performance.now())) {
-        getTimestamp = function() {
+    export function getTimestamp(): number {
+        if (
+            typeof performance !== 'undefined' &&
+            typeof performance.now === 'function' &&
+            isFinite(performance.now())
+        ) {
             return performance.now();
-        };
-    } else {
-        getTimestamp = function() {
+        } else {
             return Date.now();
-        };
+        }
     }
 
     return getTimestamp;

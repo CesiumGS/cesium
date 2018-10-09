@@ -16,22 +16,48 @@ define([
         Transforms) {
     'use strict';
 
-    /**
-     * The interface for all {@link Property} objects that define a world
-     * location as a {@link Cartesian3} with an associated {@link ReferenceFrame}.
-     * This type defines an interface and cannot be instantiated directly.
-     *
-     * @alias PositionProperty
-     * @constructor
-     *
-     * @see CompositePositionProperty
-     * @see ConstantPositionProperty
-     * @see SampledPositionProperty
-     * @see TimeIntervalCollectionPositionProperty
-     */
-    function PositionProperty() {
-        DeveloperError.throwInstantiationError();
-    }
+        /**
+             * The interface for all {@link Property} objects that define a world
+             * location as a {@link Cartesian3} with an associated {@link ReferenceFrame}.
+             * This type defines an interface and cannot be instantiated directly.
+             *
+             * @alias PositionProperty
+             * @constructor
+             *
+             * @see CompositePositionProperty
+             * @see ConstantPositionProperty
+             * @see SampledPositionProperty
+             * @see TimeIntervalCollectionPositionProperty
+             */
+        class PositionProperty {
+            constructor() {
+                DeveloperError.throwInstantiationError();
+            }
+            /**
+                 * @private
+                 */
+            static convertToReferenceFrame(time, value, inputFrame, outputFrame, result) {
+                if (!defined(value)) {
+                    return value;
+                }
+                if (!defined(result)) {
+                    result = new Cartesian3();
+                }
+                if (inputFrame === outputFrame) {
+                    return Cartesian3.clone(value, result);
+                }
+                var icrfToFixed = Transforms.computeIcrfToFixedMatrix(time, scratchMatrix3);
+                if (!defined(icrfToFixed)) {
+                    icrfToFixed = Transforms.computeTemeToPseudoFixedMatrix(time, scratchMatrix3);
+                }
+                if (inputFrame === ReferenceFrame.INERTIAL) {
+                    return Matrix3.multiplyByVector(icrfToFixed, value, result);
+                }
+                if (inputFrame === ReferenceFrame.FIXED) {
+                    return Matrix3.multiplyByVector(Matrix3.transpose(icrfToFixed, scratchMatrix3), value, result);
+                }
+            }
+        }
 
     defineProperties(PositionProperty.prototype, {
         /**
@@ -100,32 +126,6 @@ define([
 
     var scratchMatrix3 = new Matrix3();
 
-    /**
-     * @private
-     */
-    PositionProperty.convertToReferenceFrame = function(time, value, inputFrame, outputFrame, result) {
-        if (!defined(value)) {
-            return value;
-        }
-        if (!defined(result)){
-            result = new Cartesian3();
-        }
-
-        if (inputFrame === outputFrame) {
-            return Cartesian3.clone(value, result);
-        }
-
-        var icrfToFixed = Transforms.computeIcrfToFixedMatrix(time, scratchMatrix3);
-        if (!defined(icrfToFixed)) {
-            icrfToFixed = Transforms.computeTemeToPseudoFixedMatrix(time, scratchMatrix3);
-        }
-        if (inputFrame === ReferenceFrame.INERTIAL) {
-            return Matrix3.multiplyByVector(icrfToFixed, value, result);
-        }
-        if (inputFrame === ReferenceFrame.FIXED) {
-            return Matrix3.multiplyByVector(Matrix3.transpose(icrfToFixed, scratchMatrix3), value, result);
-        }
-    };
 
     return PositionProperty;
 });

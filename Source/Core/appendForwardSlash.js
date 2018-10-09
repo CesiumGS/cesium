@@ -4,7 +4,7 @@ define(function() {
     /**
      * @private
      */
-    function appendForwardSlash(url) {
+    export function appendForwardSlash(url: string) {
         if (url.length === 0 || url[url.length - 1] !== '/') {
             url = url + '/';
         }

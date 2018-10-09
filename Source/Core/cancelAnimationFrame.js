@@ -1,7 +1,7 @@
 define([
-        './defined'
-    ], function(
-        defined) {
+    './defined'
+], function(
+    defined) {
     'use strict';
 
     if (typeof window === 'undefined') {
@@ -39,7 +39,7 @@ define([
      *
      * @see {@link http://www.w3.org/TR/animation-timing/#the-WindowAnimationTiming-interface|The WindowAnimationTiming interface}
      */
-    function cancelAnimationFrame(requestID) {
+    function cancelAnimationFrame(requestID: number) {
         // we need this extra wrapper function because the native cancelAnimationFrame
         // functions must be invoked on the global scope (window), which is not the case
         // if invoked as Cesium.cancelAnimationFrame(requestID)

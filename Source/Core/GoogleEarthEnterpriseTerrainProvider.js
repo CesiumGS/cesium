@@ -53,128 +53,349 @@ define([
 
     var julianDateScratch = new JulianDate();
 
-    function TerrainCache() {
-        this._terrainCache = {};
-        this._lastTidy = JulianDate.now();
-    }
-
-    TerrainCache.prototype.add = function(quadKey, buffer) {
-        this._terrainCache[quadKey] = {
-            buffer : buffer,
-            timestamp : JulianDate.now()
-        };
-    };
-
-    TerrainCache.prototype.get = function(quadKey) {
-        var terrainCache = this._terrainCache;
-        var result = terrainCache[quadKey];
-        if (defined(result)) {
-            delete this._terrainCache[quadKey];
-            return result.buffer;
-        }
-    };
-
-    TerrainCache.prototype.tidy = function() {
-        JulianDate.now(julianDateScratch);
-        if (JulianDate.secondsDifference(julianDateScratch, this._lastTidy) > 10) {
-            var terrainCache = this._terrainCache;
-            var keys = Object.keys(terrainCache);
-            var count = keys.length;
-            for (var i = 0; i < count; ++i) {
-                var k = keys[i];
-                var e = terrainCache[k];
-                if (JulianDate.secondsDifference(julianDateScratch, e.timestamp) > 10) {
-                    delete terrainCache[k];
+        class TerrainCache {
+            constructor() {
+                this._terrainCache = {};
+                this._lastTidy = JulianDate.now();
+            }
+            add(quadKey, buffer) {
+                this._terrainCache[quadKey] = {
+                    buffer: buffer,
+                    timestamp: JulianDate.now()
+                };
+            }
+            get(quadKey) {
+                var terrainCache = this._terrainCache;
+                var result = terrainCache[quadKey];
+                if (defined(result)) {
+                    delete this._terrainCache[quadKey];
+                    return result.buffer;
                 }
             }
-
-            JulianDate.clone(julianDateScratch, this._lastTidy);
-        }
-    };
-
-    /**
-     * Provides tiled terrain using the Google Earth Enterprise REST API.
-     *
-     * @alias GoogleEarthEnterpriseTerrainProvider
-     * @constructor
-     *
-     * @param {Object} options Object with the following properties:
-     * @param {Resource|String} options.url The url of the Google Earth Enterprise server hosting the imagery.
-     * @param {GoogleEarthEnterpriseMetadata} options.metadata A metadata object that can be used to share metadata requests with a GoogleEarthEnterpriseImageryProvider.
-     * @param {Ellipsoid} [options.ellipsoid] The ellipsoid.  If not specified, the WGS84 ellipsoid is used.
-     * @param {Credit|String} [options.credit] A credit for the data source, which is displayed on the canvas.
-     *
-     * @see GoogleEarthEnterpriseImageryProvider
-     * @see CesiumTerrainProvider
-     *
-     * @example
-     * var geeMetadata = new GoogleEarthEnterpriseMetadata('http://www.earthenterprise.org/3d');
-     * var gee = new Cesium.GoogleEarthEnterpriseTerrainProvider({
-     *     metadata : geeMetadata
-     * });
-     *
-     * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
-     */
-    function GoogleEarthEnterpriseTerrainProvider(options) {
-        options = defaultValue(options, {});
-
-        //>>includeStart('debug', pragmas.debug);
-        if (!(defined(options.url) || defined(options.metadata))) {
-            throw new DeveloperError('options.url or options.metadata is required.');
-        }
-        //>>includeEnd('debug');
-
-        var metadata;
-        if (defined(options.metadata)) {
-            metadata = options.metadata;
-        } else {
-            var resource = Resource.createIfNeeded(options.url);
-            metadata = new GoogleEarthEnterpriseMetadata(resource);
-        }
-
-        this._metadata = metadata;
-        this._tilingScheme = new GeographicTilingScheme({
-            numberOfLevelZeroTilesX : 2,
-            numberOfLevelZeroTilesY : 2,
-            rectangle : new Rectangle(-CesiumMath.PI, -CesiumMath.PI, CesiumMath.PI, CesiumMath.PI),
-            ellipsoid : options.ellipsoid
-        });
-
-        var credit = options.credit;
-        if (typeof credit === 'string') {
-            credit = new Credit(credit);
-        }
-        this._credit = credit;
-
-        // Pulled from Google's documentation
-        this._levelZeroMaximumGeometricError = 40075.16;
-
-        this._terrainCache = new TerrainCache();
-        this._terrainPromises = {};
-        this._terrainRequests = {};
-
-        this._errorEvent = new Event();
-
-        this._ready = false;
-        var that = this;
-        var metadataError;
-        this._readyPromise = metadata.readyPromise
-            .then(function(result) {
-                if (!metadata.terrainPresent) {
-                    var e = new RuntimeError('The server ' + metadata.url + ' doesn\'t have terrain');
-                    metadataError = TileProviderError.handleError(metadataError, that, that._errorEvent, e.message, undefined, undefined, undefined, e);
-                    return when.reject(e);
+            tidy() {
+                JulianDate.now(julianDateScratch);
+                if (JulianDate.secondsDifference(julianDateScratch, this._lastTidy) > 10) {
+                    var terrainCache = this._terrainCache;
+                    var keys = Object.keys(terrainCache);
+                    var count = keys.length;
+                    for (var i = 0; i < count; ++i) {
+                        var k = keys[i];
+                        var e = terrainCache[k];
+                        if (JulianDate.secondsDifference(julianDateScratch, e.timestamp) > 10) {
+                            delete terrainCache[k];
+                        }
+                    }
+                    JulianDate.clone(julianDateScratch, this._lastTidy);
                 }
+            }
+        }
 
-                TileProviderError.handleSuccess(metadataError);
-                that._ready = result;
-                return result;
-            })
-            .otherwise(function(e) {
-                metadataError = TileProviderError.handleError(metadataError, that, that._errorEvent, e.message, undefined, undefined, undefined, e);
-                return when.reject(e);
-            });
-    }
+
+
+
+        /**
+             * Provides tiled terrain using the Google Earth Enterprise REST API.
+             *
+             * @alias GoogleEarthEnterpriseTerrainProvider
+             * @constructor
+             *
+             * @param {Object} options Object with the following properties:
+             * @param {Resource|String} options.url The url of the Google Earth Enterprise server hosting the imagery.
+             * @param {GoogleEarthEnterpriseMetadata} options.metadata A metadata object that can be used to share metadata requests with a GoogleEarthEnterpriseImageryProvider.
+             * @param {Ellipsoid} [options.ellipsoid] The ellipsoid.  If not specified, the WGS84 ellipsoid is used.
+             * @param {Credit|String} [options.credit] A credit for the data source, which is displayed on the canvas.
+             *
+             * @see GoogleEarthEnterpriseImageryProvider
+             * @see CesiumTerrainProvider
+             *
+             * @example
+             * var geeMetadata = new GoogleEarthEnterpriseMetadata('http://www.earthenterprise.org/3d');
+             * var gee = new Cesium.GoogleEarthEnterpriseTerrainProvider({
+             *     metadata : geeMetadata
+             * });
+             *
+             * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
+             */
+        class GoogleEarthEnterpriseTerrainProvider {
+            constructor(options) {
+                options = defaultValue(options, {});
+                //>>includeStart('debug', pragmas.debug);
+                if (!(defined(options.url) || defined(options.metadata))) {
+                    throw new DeveloperError('options.url or options.metadata is required.');
+                }
+                //>>includeEnd('debug');
+                var metadata;
+                if (defined(options.metadata)) {
+                    metadata = options.metadata;
+                }
+                else {
+                    var resource = Resource.createIfNeeded(options.url);
+                    metadata = new GoogleEarthEnterpriseMetadata(resource);
+                }
+                this._metadata = metadata;
+                this._tilingScheme = new GeographicTilingScheme({
+                    numberOfLevelZeroTilesX: 2,
+                    numberOfLevelZeroTilesY: 2,
+                    rectangle: new Rectangle(-CesiumMath.PI, -CesiumMath.PI, CesiumMath.PI, CesiumMath.PI),
+                    ellipsoid: options.ellipsoid
+                });
+                var credit = options.credit;
+                if (typeof credit === 'string') {
+                    credit = new Credit(credit);
+                }
+                this._credit = credit;
+                // Pulled from Google's documentation
+                this._levelZeroMaximumGeometricError = 40075.16;
+                this._terrainCache = new TerrainCache();
+                this._terrainPromises = {};
+                this._terrainRequests = {};
+                this._errorEvent = new Event();
+                this._ready = false;
+                var that = this;
+                var metadataError;
+                this._readyPromise = metadata.readyPromise
+                    .then(function(result) {
+                        if (!metadata.terrainPresent) {
+                            var e = new RuntimeError('The server ' + metadata.url + ' doesn\'t have terrain');
+                            metadataError = TileProviderError.handleError(metadataError, that, that._errorEvent, e.message, undefined, undefined, undefined, e);
+                            return when.reject(e);
+                        }
+                        TileProviderError.handleSuccess(metadataError);
+                        that._ready = result;
+                        return result;
+                    })
+                    .otherwise(function(e) {
+                        metadataError = TileProviderError.handleError(metadataError, that, that._errorEvent, e.message, undefined, undefined, undefined, e);
+                        return when.reject(e);
+                    });
+            }
+            /**
+                 * Requests the geometry for a given tile.  This function should not be called before
+                 * {@link GoogleEarthEnterpriseTerrainProvider#ready} returns true.  The result must include terrain data and
+                 * may optionally include a water mask and an indication of which child tiles are available.
+                 *
+                 * @param {Number} x The X coordinate of the tile for which to request geometry.
+                 * @param {Number} y The Y coordinate of the tile for which to request geometry.
+                 * @param {Number} level The level of the tile for which to request geometry.
+                 * @param {Request} [request] The request object. Intended for internal use only.
+                 * @returns {Promise.<TerrainData>|undefined} A promise for the requested geometry.  If this method
+                 *          returns undefined instead of a promise, it is an indication that too many requests are already
+                 *          pending and the request will be retried later.
+                 *
+                 * @exception {DeveloperError} This function must not be called before {@link GoogleEarthEnterpriseTerrainProvider#ready}
+                 *            returns true.
+                 */
+            requestTileGeometry(x, y, level, request) {
+                //>>includeStart('debug', pragmas.debug)
+                if (!this._ready) {
+                    throw new DeveloperError('requestTileGeometry must not be called before the terrain provider is ready.');
+                }
+                //>>includeEnd('debug');
+                var quadKey = GoogleEarthEnterpriseMetadata.tileXYToQuadKey(x, y, level);
+                var terrainCache = this._terrainCache;
+                var metadata = this._metadata;
+                var info = metadata.getTileInformationFromQuadKey(quadKey);
+                // Check if this tile is even possibly available
+                if (!defined(info)) {
+                    return when.reject(new RuntimeError('Terrain tile doesn\'t exist'));
+                }
+                var terrainState = info.terrainState;
+                if (!defined(terrainState)) {
+                    // First time we have tried to load this tile, so set terrain state to UNKNOWN
+                    terrainState = info.terrainState = TerrainState.UNKNOWN;
+                }
+                // If its in the cache, return it
+                var buffer = terrainCache.get(quadKey);
+                if (defined(buffer)) {
+                    var credit = metadata.providers[info.terrainProvider];
+                    return when.resolve(new GoogleEarthEnterpriseTerrainData({
+                        buffer: buffer,
+                        childTileMask: computeChildMask(quadKey, info, metadata),
+                        credits: defined(credit) ? [credit] : undefined,
+                        negativeAltitudeExponentBias: metadata.negativeAltitudeExponentBias,
+                        negativeElevationThreshold: metadata.negativeAltitudeThreshold
+                    }));
+                }
+                // Clean up the cache
+                terrainCache.tidy();
+                // We have a tile, check to see if no ancestors have terrain or that we know for sure it doesn't
+                if (!info.ancestorHasTerrain) {
+                    // We haven't reached a level with terrain, so return the ellipsoid
+                    return when.resolve(new HeightmapTerrainData({
+                        buffer: new Uint8Array(16 * 16),
+                        width: 16,
+                        height: 16
+                    }));
+                }
+                else if (terrainState === TerrainState.NONE) {
+                    // Already have info and there isn't any terrain here
+                    return when.reject(new RuntimeError('Terrain tile doesn\'t exist'));
+                }
+                // Figure out where we are getting the terrain and what version
+                var parentInfo;
+                var q = quadKey;
+                var terrainVersion = -1;
+                switch (terrainState) {
+                    case TerrainState.SELF: // We have terrain and have retrieved it before
+                        terrainVersion = info.terrainVersion;
+                        break;
+                    case TerrainState.PARENT: // We have terrain in our parent
+                        q = q.substring(0, q.length - 1);
+                        parentInfo = metadata.getTileInformationFromQuadKey(q);
+                        terrainVersion = parentInfo.terrainVersion;
+                        break;
+                    case TerrainState.UNKNOWN: // We haven't tried to retrieve terrain yet
+                        if (info.hasTerrain()) {
+                            terrainVersion = info.terrainVersion; // We should have terrain
+                        }
+                        else {
+                            q = q.substring(0, q.length - 1);
+                            parentInfo = metadata.getTileInformationFromQuadKey(q);
+                            if (defined(parentInfo) && parentInfo.hasTerrain()) {
+                                terrainVersion = parentInfo.terrainVersion; // Try checking in the parent
+                            }
+                        }
+                        break;
+                }
+                // We can't figure out where to get the terrain
+                if (terrainVersion < 0) {
+                    return when.reject(new RuntimeError('Terrain tile doesn\'t exist'));
+                }
+                // Load that terrain
+                var terrainPromises = this._terrainPromises;
+                var terrainRequests = this._terrainRequests;
+                var sharedPromise;
+                var sharedRequest;
+                if (defined(terrainPromises[q])) { // Already being loaded possibly from another child, so return existing promise
+                    sharedPromise = terrainPromises[q];
+                    sharedRequest = terrainRequests[q];
+                }
+                else { // Create new request for terrain
+                    sharedRequest = request;
+                    var requestPromise = buildTerrainResource(this, q, terrainVersion, sharedRequest).fetchArrayBuffer();
+                    if (!defined(requestPromise)) {
+                        return undefined; // Throttled
+                    }
+                    sharedPromise = requestPromise
+                        .then(function(terrain) {
+                            if (defined(terrain)) {
+                                return taskProcessor.scheduleTask({
+                                    buffer: terrain,
+                                    type: 'Terrain',
+                                    key: metadata.key
+                                }, [terrain])
+                                    .then(function(terrainTiles) {
+                                        // Add requested tile and mark it as SELF
+                                        var requestedInfo = metadata.getTileInformationFromQuadKey(q);
+                                        requestedInfo.terrainState = TerrainState.SELF;
+                                        terrainCache.add(q, terrainTiles[0]);
+                                        var provider = requestedInfo.terrainProvider;
+                                        // Add children to cache
+                                        var count = terrainTiles.length - 1;
+                                        for (var j = 0; j < count; ++j) {
+                                            var childKey = q + j.toString();
+                                            var child = metadata.getTileInformationFromQuadKey(childKey);
+                                            if (defined(child)) {
+                                                terrainCache.add(childKey, terrainTiles[j + 1]);
+                                                child.terrainState = TerrainState.PARENT;
+                                                if (child.terrainProvider === 0) {
+                                                    child.terrainProvider = provider;
+                                                }
+                                            }
+                                        }
+                                    });
+                            }
+                            return when.reject(new RuntimeError('Failed to load terrain.'));
+                        });
+                    terrainPromises[q] = sharedPromise; // Store promise without delete from terrainPromises
+                    terrainRequests[q] = sharedRequest;
+                    // Set promise so we remove from terrainPromises just one time
+                    sharedPromise = sharedPromise
+                        .always(function() {
+                            delete terrainPromises[q];
+                            delete terrainRequests[q];
+                        });
+                }
+                return sharedPromise
+                    .then(function() {
+                        var buffer = terrainCache.get(quadKey);
+                        if (defined(buffer)) {
+                            var credit = metadata.providers[info.terrainProvider];
+                            return new GoogleEarthEnterpriseTerrainData({
+                                buffer: buffer,
+                                childTileMask: computeChildMask(quadKey, info, metadata),
+                                credits: defined(credit) ? [credit] : undefined,
+                                negativeAltitudeExponentBias: metadata.negativeAltitudeExponentBias,
+                                negativeElevationThreshold: metadata.negativeAltitudeThreshold
+                            });
+                        }
+                        return when.reject(new RuntimeError('Failed to load terrain.'));
+                    })
+                    .otherwise(function(error) {
+                        if (sharedRequest.state === RequestState.CANCELLED) {
+                            request.state = sharedRequest.state;
+                            return when.reject(error);
+                        }
+                        info.terrainState = TerrainState.NONE;
+                        return when.reject(error);
+                    });
+            }
+            /**
+                 * Gets the maximum geometric error allowed in a tile at a given level.
+                 *
+                 * @param {Number} level The tile level for which to get the maximum geometric error.
+                 * @returns {Number} The maximum geometric error.
+                 */
+            getLevelMaximumGeometricError(level) {
+                return this._levelZeroMaximumGeometricError / (1 << level);
+            }
+            /**
+                 * Determines whether data for a tile is available to be loaded.
+                 *
+                 * @param {Number} x The X coordinate of the tile for which to request geometry.
+                 * @param {Number} y The Y coordinate of the tile for which to request geometry.
+                 * @param {Number} level The level of the tile for which to request geometry.
+                 * @returns {Boolean} Undefined if not supported, otherwise true or false.
+                 */
+            getTileDataAvailable(x, y, level) {
+                var metadata = this._metadata;
+                var quadKey = GoogleEarthEnterpriseMetadata.tileXYToQuadKey(x, y, level);
+                var info = metadata.getTileInformation(x, y, level);
+                if (info === null) {
+                    return false;
+                }
+                if (defined(info)) {
+                    if (!info.ancestorHasTerrain) {
+                        return true; // We'll just return the ellipsoid
+                    }
+                    var terrainState = info.terrainState;
+                    if (terrainState === TerrainState.NONE) {
+                        return false; // Terrain is not available
+                    }
+                    if (!defined(terrainState) || (terrainState === TerrainState.UNKNOWN)) {
+                        info.terrainState = TerrainState.UNKNOWN;
+                        if (!info.hasTerrain()) {
+                            quadKey = quadKey.substring(0, quadKey.length - 1);
+                            var parentInfo = metadata.getTileInformationFromQuadKey(quadKey);
+                            if (!defined(parentInfo) || !parentInfo.hasTerrain()) {
+                                return false;
+                            }
+                        }
+                    }
+                    return true;
+                }
+                if (metadata.isValid(quadKey)) {
+                    // We will need this tile, so request metadata and return false for now
+                    var request = new Request({
+                        throttle: true,
+                        throttleByServer: true,
+                        type: RequestType.TERRAIN
+                    });
+                    metadata.populateSubtree(x, y, level, request);
+                }
+                return false;
+            }
+        }
 
     defineProperties(GoogleEarthEnterpriseTerrainProvider.prototype, {
         /**
@@ -331,254 +552,8 @@ define([
         return childMask;
     }
 
-    /**
-     * Requests the geometry for a given tile.  This function should not be called before
-     * {@link GoogleEarthEnterpriseTerrainProvider#ready} returns true.  The result must include terrain data and
-     * may optionally include a water mask and an indication of which child tiles are available.
-     *
-     * @param {Number} x The X coordinate of the tile for which to request geometry.
-     * @param {Number} y The Y coordinate of the tile for which to request geometry.
-     * @param {Number} level The level of the tile for which to request geometry.
-     * @param {Request} [request] The request object. Intended for internal use only.
-     * @returns {Promise.<TerrainData>|undefined} A promise for the requested geometry.  If this method
-     *          returns undefined instead of a promise, it is an indication that too many requests are already
-     *          pending and the request will be retried later.
-     *
-     * @exception {DeveloperError} This function must not be called before {@link GoogleEarthEnterpriseTerrainProvider#ready}
-     *            returns true.
-     */
-    GoogleEarthEnterpriseTerrainProvider.prototype.requestTileGeometry = function(x, y, level, request) {
-        //>>includeStart('debug', pragmas.debug)
-        if (!this._ready) {
-            throw new DeveloperError('requestTileGeometry must not be called before the terrain provider is ready.');
-        }
-        //>>includeEnd('debug');
 
-        var quadKey = GoogleEarthEnterpriseMetadata.tileXYToQuadKey(x, y, level);
-        var terrainCache = this._terrainCache;
-        var metadata = this._metadata;
-        var info = metadata.getTileInformationFromQuadKey(quadKey);
 
-        // Check if this tile is even possibly available
-        if (!defined(info)) {
-            return when.reject(new RuntimeError('Terrain tile doesn\'t exist'));
-        }
-
-        var terrainState = info.terrainState;
-        if (!defined(terrainState)) {
-            // First time we have tried to load this tile, so set terrain state to UNKNOWN
-            terrainState = info.terrainState = TerrainState.UNKNOWN;
-        }
-
-        // If its in the cache, return it
-        var buffer = terrainCache.get(quadKey);
-        if (defined(buffer)) {
-            var credit = metadata.providers[info.terrainProvider];
-            return when.resolve(new GoogleEarthEnterpriseTerrainData({
-                buffer : buffer,
-                childTileMask : computeChildMask(quadKey, info, metadata),
-                credits : defined(credit) ? [credit] : undefined,
-                negativeAltitudeExponentBias: metadata.negativeAltitudeExponentBias,
-                negativeElevationThreshold: metadata.negativeAltitudeThreshold
-            }));
-        }
-
-        // Clean up the cache
-        terrainCache.tidy();
-
-        // We have a tile, check to see if no ancestors have terrain or that we know for sure it doesn't
-        if (!info.ancestorHasTerrain) {
-            // We haven't reached a level with terrain, so return the ellipsoid
-            return when.resolve(new HeightmapTerrainData({
-                buffer : new Uint8Array(16 * 16),
-                width : 16,
-                height : 16
-            }));
-        } else if (terrainState === TerrainState.NONE) {
-            // Already have info and there isn't any terrain here
-            return when.reject(new RuntimeError('Terrain tile doesn\'t exist'));
-        }
-
-        // Figure out where we are getting the terrain and what version
-        var parentInfo;
-        var q = quadKey;
-        var terrainVersion = -1;
-        switch (terrainState) {
-            case TerrainState.SELF: // We have terrain and have retrieved it before
-                terrainVersion = info.terrainVersion;
-                break;
-            case TerrainState.PARENT: // We have terrain in our parent
-                q = q.substring(0, q.length - 1);
-                parentInfo = metadata.getTileInformationFromQuadKey(q);
-                terrainVersion = parentInfo.terrainVersion;
-                break;
-            case TerrainState.UNKNOWN: // We haven't tried to retrieve terrain yet
-                if (info.hasTerrain()) {
-                    terrainVersion = info.terrainVersion; // We should have terrain
-                } else {
-                    q = q.substring(0, q.length - 1);
-                    parentInfo = metadata.getTileInformationFromQuadKey(q);
-                    if (defined(parentInfo) && parentInfo.hasTerrain()) {
-                        terrainVersion = parentInfo.terrainVersion; // Try checking in the parent
-                    }
-                }
-                break;
-        }
-
-        // We can't figure out where to get the terrain
-        if (terrainVersion < 0) {
-            return when.reject(new RuntimeError('Terrain tile doesn\'t exist'));
-        }
-
-        // Load that terrain
-        var terrainPromises = this._terrainPromises;
-        var terrainRequests = this._terrainRequests;
-        var sharedPromise;
-        var sharedRequest;
-        if (defined(terrainPromises[q])) { // Already being loaded possibly from another child, so return existing promise
-            sharedPromise = terrainPromises[q];
-            sharedRequest = terrainRequests[q];
-        } else { // Create new request for terrain
-            sharedRequest = request;
-            var requestPromise = buildTerrainResource(this, q, terrainVersion, sharedRequest).fetchArrayBuffer();
-
-            if (!defined(requestPromise)) {
-                return undefined; // Throttled
-            }
-
-            sharedPromise = requestPromise
-                .then(function(terrain) {
-                    if (defined(terrain)) {
-                        return taskProcessor.scheduleTask({
-                            buffer : terrain,
-                            type : 'Terrain',
-                            key : metadata.key
-                        }, [terrain])
-                            .then(function(terrainTiles) {
-                                // Add requested tile and mark it as SELF
-                                var requestedInfo = metadata.getTileInformationFromQuadKey(q);
-                                requestedInfo.terrainState = TerrainState.SELF;
-                                terrainCache.add(q, terrainTiles[0]);
-                                var provider = requestedInfo.terrainProvider;
-
-                                // Add children to cache
-                                var count = terrainTiles.length - 1;
-                                for (var j = 0; j < count; ++j) {
-                                    var childKey = q + j.toString();
-                                    var child = metadata.getTileInformationFromQuadKey(childKey);
-                                    if (defined(child)) {
-                                        terrainCache.add(childKey, terrainTiles[j + 1]);
-                                        child.terrainState = TerrainState.PARENT;
-                                        if (child.terrainProvider === 0) {
-                                            child.terrainProvider = provider;
-                                        }
-                                    }
-                                }
-                            });
-                    }
-
-                    return when.reject(new RuntimeError('Failed to load terrain.'));
-                });
-
-            terrainPromises[q] = sharedPromise; // Store promise without delete from terrainPromises
-            terrainRequests[q] = sharedRequest;
-
-            // Set promise so we remove from terrainPromises just one time
-            sharedPromise = sharedPromise
-                .always(function() {
-                    delete terrainPromises[q];
-                    delete terrainRequests[q];
-                });
-        }
-
-        return sharedPromise
-            .then(function() {
-                var buffer = terrainCache.get(quadKey);
-                if (defined(buffer)) {
-                    var credit = metadata.providers[info.terrainProvider];
-                    return new GoogleEarthEnterpriseTerrainData({
-                        buffer : buffer,
-                        childTileMask : computeChildMask(quadKey, info, metadata),
-                        credits : defined(credit) ? [credit] : undefined,
-                        negativeAltitudeExponentBias: metadata.negativeAltitudeExponentBias,
-                        negativeElevationThreshold: metadata.negativeAltitudeThreshold
-                    });
-                }
-
-                return when.reject(new RuntimeError('Failed to load terrain.'));
-            })
-            .otherwise(function(error) {
-                if (sharedRequest.state === RequestState.CANCELLED) {
-                    request.state = sharedRequest.state;
-                    return when.reject(error);
-                }
-                info.terrainState = TerrainState.NONE;
-                return when.reject(error);
-            });
-    };
-
-    /**
-     * Gets the maximum geometric error allowed in a tile at a given level.
-     *
-     * @param {Number} level The tile level for which to get the maximum geometric error.
-     * @returns {Number} The maximum geometric error.
-     */
-    GoogleEarthEnterpriseTerrainProvider.prototype.getLevelMaximumGeometricError = function(level) {
-        return this._levelZeroMaximumGeometricError / (1 << level);
-    };
-
-    /**
-     * Determines whether data for a tile is available to be loaded.
-     *
-     * @param {Number} x The X coordinate of the tile for which to request geometry.
-     * @param {Number} y The Y coordinate of the tile for which to request geometry.
-     * @param {Number} level The level of the tile for which to request geometry.
-     * @returns {Boolean} Undefined if not supported, otherwise true or false.
-     */
-    GoogleEarthEnterpriseTerrainProvider.prototype.getTileDataAvailable = function(x, y, level) {
-        var metadata = this._metadata;
-        var quadKey = GoogleEarthEnterpriseMetadata.tileXYToQuadKey(x, y, level);
-
-        var info = metadata.getTileInformation(x, y, level);
-        if (info === null) {
-            return false;
-        }
-
-        if (defined(info)) {
-            if (!info.ancestorHasTerrain) {
-                return true; // We'll just return the ellipsoid
-            }
-
-            var terrainState = info.terrainState;
-            if (terrainState === TerrainState.NONE) {
-                return false; // Terrain is not available
-            }
-
-            if (!defined(terrainState) || (terrainState === TerrainState.UNKNOWN)) {
-                info.terrainState = TerrainState.UNKNOWN;
-                if (!info.hasTerrain()) {
-                    quadKey = quadKey.substring(0, quadKey.length - 1);
-                    var parentInfo = metadata.getTileInformationFromQuadKey(quadKey);
-                    if (!defined(parentInfo) || !parentInfo.hasTerrain()) {
-                        return false;
-                    }
-                }
-            }
-
-            return true;
-        }
-
-        if (metadata.isValid(quadKey)) {
-            // We will need this tile, so request metadata and return false for now
-            var request = new Request({
-                throttle : true,
-                throttleByServer : true,
-                type : RequestType.TERRAIN
-            });
-            metadata.populateSubtree(x, y, level, request);
-        }
-        return false;
-    };
 
     //
     // Functions to handle imagery packets

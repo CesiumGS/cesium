@@ -38,138 +38,203 @@ define([
         Sampler) {
     'use strict';
 
-    /**
-     * @private
-     */
-    function UniformState() {
         /**
-         * @type {Texture}
-         */
-        this.globeDepthTexture = undefined;
-
-        this._viewport = new BoundingRectangle();
-        this._viewportCartesian4 = new Cartesian4();
-        this._viewportDirty = false;
-        this._viewportOrthographicMatrix = Matrix4.clone(Matrix4.IDENTITY);
-        this._viewportTransformation = Matrix4.clone(Matrix4.IDENTITY);
-
-        this._model = Matrix4.clone(Matrix4.IDENTITY);
-        this._view = Matrix4.clone(Matrix4.IDENTITY);
-        this._inverseView = Matrix4.clone(Matrix4.IDENTITY);
-        this._projection = Matrix4.clone(Matrix4.IDENTITY);
-        this._infiniteProjection = Matrix4.clone(Matrix4.IDENTITY);
-        this._entireFrustum = new Cartesian2();
-        this._currentFrustum = new Cartesian2();
-        this._frustumPlanes = new Cartesian4();
-        this._log2FarDistance = undefined;
-        this._log2FarPlusOne = undefined;
-        this._log2NearDistance = undefined;
-
-        this._frameState = undefined;
-        this._temeToPseudoFixed = Matrix3.clone(Matrix4.IDENTITY);
-
-        // Derived members
-        this._view3DDirty = true;
-        this._view3D = new Matrix4();
-
-        this._inverseView3DDirty = true;
-        this._inverseView3D = new Matrix4();
-
-        this._inverseModelDirty = true;
-        this._inverseModel = new Matrix4();
-
-        this._inverseTransposeModelDirty = true;
-        this._inverseTransposeModel = new Matrix3();
-
-        this._viewRotation = new Matrix3();
-        this._inverseViewRotation = new Matrix3();
-
-        this._viewRotation3D = new Matrix3();
-        this._inverseViewRotation3D = new Matrix3();
-
-        this._inverseProjectionDirty = true;
-        this._inverseProjection = new Matrix4();
-
-        this._modelViewDirty = true;
-        this._modelView = new Matrix4();
-
-        this._modelView3DDirty = true;
-        this._modelView3D = new Matrix4();
-
-        this._modelViewRelativeToEyeDirty = true;
-        this._modelViewRelativeToEye = new Matrix4();
-
-        this._inverseModelViewDirty = true;
-        this._inverseModelView = new Matrix4();
-
-        this._inverseModelView3DDirty = true;
-        this._inverseModelView3D = new Matrix4();
-
-        this._viewProjectionDirty = true;
-        this._viewProjection = new Matrix4();
-
-        this._inverseViewProjectionDirty = true;
-        this._inverseViewProjection = new Matrix4();
-
-        this._modelViewProjectionDirty = true;
-        this._modelViewProjection = new Matrix4();
-
-        this._inverseModelViewProjectionDirty = true;
-        this._inverseModelViewProjection = new Matrix4();
-
-        this._modelViewProjectionRelativeToEyeDirty = true;
-        this._modelViewProjectionRelativeToEye = new Matrix4();
-
-        this._modelViewInfiniteProjectionDirty = true;
-        this._modelViewInfiniteProjection = new Matrix4();
-
-        this._normalDirty = true;
-        this._normal = new Matrix3();
-
-        this._normal3DDirty = true;
-        this._normal3D = new Matrix3();
-
-        this._inverseNormalDirty = true;
-        this._inverseNormal = new Matrix3();
-
-        this._inverseNormal3DDirty = true;
-        this._inverseNormal3D = new Matrix3();
-
-        this._encodedCameraPositionMCDirty = true;
-        this._encodedCameraPositionMC = new EncodedCartesian3();
-        this._cameraPosition = new Cartesian3();
-
-        this._sunPositionWC = new Cartesian3();
-        this._sunPositionColumbusView = new Cartesian3();
-        this._sunDirectionWC = new Cartesian3();
-        this._sunDirectionEC = new Cartesian3();
-        this._moonDirectionEC = new Cartesian3();
-
-        this._pass = undefined;
-        this._mode = undefined;
-        this._mapProjection = undefined;
-        this._cameraDirection = new Cartesian3();
-        this._cameraRight = new Cartesian3();
-        this._cameraUp = new Cartesian3();
-        this._frustum2DWidth = 0.0;
-        this._eyeHeight2D = new Cartesian2();
-        this._resolutionScale = 1.0;
-        this._orthographicIn3D = false;
-        this._backgroundColor = new Color();
-
-        this._brdfLut = new Sampler();
-        this._environmentMap = new Sampler();
-
-        this._fogDensity = undefined;
-
-        this._invertClassificationColor = undefined;
-
-        this._imagerySplitPosition = 0.0;
-        this._pixelSizePerMeter = undefined;
-        this._geometricToleranceOverMeter = undefined;
-
-        this._minimumDisableDepthTestDistance = undefined;
-    }
+             * @private
+             */
+        class UniformState {
+            constructor() {
+                /**
+                 * @type {Texture}
+                 */
+                this.globeDepthTexture = undefined;
+                this._viewport = new BoundingRectangle();
+                this._viewportCartesian4 = new Cartesian4();
+                this._viewportDirty = false;
+                this._viewportOrthographicMatrix = Matrix4.clone(Matrix4.IDENTITY);
+                this._viewportTransformation = Matrix4.clone(Matrix4.IDENTITY);
+                this._model = Matrix4.clone(Matrix4.IDENTITY);
+                this._view = Matrix4.clone(Matrix4.IDENTITY);
+                this._inverseView = Matrix4.clone(Matrix4.IDENTITY);
+                this._projection = Matrix4.clone(Matrix4.IDENTITY);
+                this._infiniteProjection = Matrix4.clone(Matrix4.IDENTITY);
+                this._entireFrustum = new Cartesian2();
+                this._currentFrustum = new Cartesian2();
+                this._frustumPlanes = new Cartesian4();
+                this._log2FarDistance = undefined;
+                this._log2FarPlusOne = undefined;
+                this._log2NearDistance = undefined;
+                this._frameState = undefined;
+                this._temeToPseudoFixed = Matrix3.clone(Matrix4.IDENTITY);
+                // Derived members
+                this._view3DDirty = true;
+                this._view3D = new Matrix4();
+                this._inverseView3DDirty = true;
+                this._inverseView3D = new Matrix4();
+                this._inverseModelDirty = true;
+                this._inverseModel = new Matrix4();
+                this._inverseTransposeModelDirty = true;
+                this._inverseTransposeModel = new Matrix3();
+                this._viewRotation = new Matrix3();
+                this._inverseViewRotation = new Matrix3();
+                this._viewRotation3D = new Matrix3();
+                this._inverseViewRotation3D = new Matrix3();
+                this._inverseProjectionDirty = true;
+                this._inverseProjection = new Matrix4();
+                this._modelViewDirty = true;
+                this._modelView = new Matrix4();
+                this._modelView3DDirty = true;
+                this._modelView3D = new Matrix4();
+                this._modelViewRelativeToEyeDirty = true;
+                this._modelViewRelativeToEye = new Matrix4();
+                this._inverseModelViewDirty = true;
+                this._inverseModelView = new Matrix4();
+                this._inverseModelView3DDirty = true;
+                this._inverseModelView3D = new Matrix4();
+                this._viewProjectionDirty = true;
+                this._viewProjection = new Matrix4();
+                this._inverseViewProjectionDirty = true;
+                this._inverseViewProjection = new Matrix4();
+                this._modelViewProjectionDirty = true;
+                this._modelViewProjection = new Matrix4();
+                this._inverseModelViewProjectionDirty = true;
+                this._inverseModelViewProjection = new Matrix4();
+                this._modelViewProjectionRelativeToEyeDirty = true;
+                this._modelViewProjectionRelativeToEye = new Matrix4();
+                this._modelViewInfiniteProjectionDirty = true;
+                this._modelViewInfiniteProjection = new Matrix4();
+                this._normalDirty = true;
+                this._normal = new Matrix3();
+                this._normal3DDirty = true;
+                this._normal3D = new Matrix3();
+                this._inverseNormalDirty = true;
+                this._inverseNormal = new Matrix3();
+                this._inverseNormal3DDirty = true;
+                this._inverseNormal3D = new Matrix3();
+                this._encodedCameraPositionMCDirty = true;
+                this._encodedCameraPositionMC = new EncodedCartesian3();
+                this._cameraPosition = new Cartesian3();
+                this._sunPositionWC = new Cartesian3();
+                this._sunPositionColumbusView = new Cartesian3();
+                this._sunDirectionWC = new Cartesian3();
+                this._sunDirectionEC = new Cartesian3();
+                this._moonDirectionEC = new Cartesian3();
+                this._pass = undefined;
+                this._mode = undefined;
+                this._mapProjection = undefined;
+                this._cameraDirection = new Cartesian3();
+                this._cameraRight = new Cartesian3();
+                this._cameraUp = new Cartesian3();
+                this._frustum2DWidth = 0.0;
+                this._eyeHeight2D = new Cartesian2();
+                this._resolutionScale = 1.0;
+                this._orthographicIn3D = false;
+                this._backgroundColor = new Color();
+                this._brdfLut = new Sampler();
+                this._environmentMap = new Sampler();
+                this._fogDensity = undefined;
+                this._invertClassificationColor = undefined;
+                this._imagerySplitPosition = 0.0;
+                this._pixelSizePerMeter = undefined;
+                this._geometricToleranceOverMeter = undefined;
+                this._minimumDisableDepthTestDistance = undefined;
+            }
+            /**
+                 * Synchronizes the frustum's state with the camera state.  This is called
+                 * by the {@link Scene} when rendering to ensure that automatic GLSL uniforms
+                 * are set to the right value.
+                 *
+                 * @param {Object} camera The camera to synchronize with.
+                 */
+            updateCamera(camera) {
+                setView(this, camera.viewMatrix);
+                setInverseView(this, camera.inverseViewMatrix);
+                setCamera(this, camera);
+                this._entireFrustum.x = camera.frustum.near;
+                this._entireFrustum.y = camera.frustum.far;
+                this.updateFrustum(camera.frustum);
+                this._orthographicIn3D = this._mode !== SceneMode.SCENE2D && camera.frustum instanceof OrthographicFrustum;
+            }
+            /**
+                 * Synchronizes the frustum's state with the uniform state.  This is called
+                 * by the {@link Scene} when rendering to ensure that automatic GLSL uniforms
+                 * are set to the right value.
+                 *
+                 * @param {Object} frustum The frustum to synchronize with.
+                 */
+            updateFrustum(frustum) {
+                setProjection(this, frustum.projectionMatrix);
+                if (defined(frustum.infiniteProjectionMatrix)) {
+                    setInfiniteProjection(this, frustum.infiniteProjectionMatrix);
+                }
+                this._currentFrustum.x = frustum.near;
+                this._currentFrustum.y = frustum.far;
+                this._log2FarDistance = 2.0 / CesiumMath.log2(frustum.far + 1.0);
+                this._log2FarPlusOne = CesiumMath.log2(frustum.far + 1.0);
+                this._log2NearDistance = CesiumMath.log2(frustum.near);
+                if (defined(frustum._offCenterFrustum)) {
+                    frustum = frustum._offCenterFrustum;
+                }
+                this._frustumPlanes.x = frustum.top;
+                this._frustumPlanes.y = frustum.bottom;
+                this._frustumPlanes.z = frustum.left;
+                this._frustumPlanes.w = frustum.right;
+            }
+            updatePass(pass) {
+                this._pass = pass;
+            }
+            /**
+                 * Synchronizes frame state with the uniform state.  This is called
+                 * by the {@link Scene} when rendering to ensure that automatic GLSL uniforms
+                 * are set to the right value.
+                 *
+                 * @param {FrameState} frameState The frameState to synchronize with.
+                 */
+            update(frameState) {
+                this._mode = frameState.mode;
+                this._mapProjection = frameState.mapProjection;
+                var canvas = frameState.context._canvas;
+                this._resolutionScale = canvas.width / canvas.clientWidth;
+                var camera = frameState.camera;
+                this.updateCamera(camera);
+                if (frameState.mode === SceneMode.SCENE2D) {
+                    this._frustum2DWidth = camera.frustum.right - camera.frustum.left;
+                    this._eyeHeight2D.x = this._frustum2DWidth * 0.5;
+                    this._eyeHeight2D.y = this._eyeHeight2D.x * this._eyeHeight2D.x;
+                }
+                else {
+                    this._frustum2DWidth = 0.0;
+                    this._eyeHeight2D.x = 0.0;
+                    this._eyeHeight2D.y = 0.0;
+                }
+                setSunAndMoonDirections(this, frameState);
+                var brdfLutGenerator = frameState.brdfLutGenerator;
+                var brdfLut = defined(brdfLutGenerator) ? brdfLutGenerator.colorTexture : undefined;
+                this._brdfLut = brdfLut;
+                this._environmentMap = defaultValue(frameState.environmentMap, frameState.context.defaultCubeMap);
+                this._fogDensity = frameState.fog.density;
+                this._invertClassificationColor = frameState.invertClassificationColor;
+                this._frameState = frameState;
+                this._temeToPseudoFixed = Transforms.computeTemeToPseudoFixedMatrix(frameState.time, this._temeToPseudoFixed);
+                // Convert the relative imagerySplitPosition to absolute pixel coordinates
+                this._imagerySplitPosition = frameState.imagerySplitPosition * frameState.context.drawingBufferWidth;
+                var fov = camera.frustum.fov;
+                var viewport = this._viewport;
+                var pixelSizePerMeter;
+                if (viewport.height > viewport.width) {
+                    pixelSizePerMeter = Math.tan(0.5 * fov) * 2.0 / viewport.height;
+                }
+                else {
+                    pixelSizePerMeter = Math.tan(0.5 * fov) * 2.0 / viewport.width;
+                }
+                this._geometricToleranceOverMeter = pixelSizePerMeter * frameState.maximumScreenSpaceError;
+                Color.clone(frameState.backgroundColor, this._backgroundColor);
+                this._minimumDisableDepthTestDistance = frameState.minimumDisableDepthTestDistance;
+                this._minimumDisableDepthTestDistance *= this._minimumDisableDepthTestDistance;
+                if (this._minimumDisableDepthTestDistance === Number.POSITIVE_INFINITY) {
+                    this._minimumDisableDepthTestDistance = -1.0;
+                }
+            }
+        }
 
     defineProperties(UniformState.prototype, {
         /**
@@ -989,120 +1054,9 @@ define([
         projection.project(sunCartographic, uniformState._sunPositionColumbusView);
     }
 
-    /**
-     * Synchronizes the frustum's state with the camera state.  This is called
-     * by the {@link Scene} when rendering to ensure that automatic GLSL uniforms
-     * are set to the right value.
-     *
-     * @param {Object} camera The camera to synchronize with.
-     */
-    UniformState.prototype.updateCamera = function(camera) {
-        setView(this, camera.viewMatrix);
-        setInverseView(this, camera.inverseViewMatrix);
-        setCamera(this, camera);
 
-        this._entireFrustum.x = camera.frustum.near;
-        this._entireFrustum.y = camera.frustum.far;
-        this.updateFrustum(camera.frustum);
 
-        this._orthographicIn3D = this._mode !== SceneMode.SCENE2D && camera.frustum instanceof OrthographicFrustum;
-    };
 
-    /**
-     * Synchronizes the frustum's state with the uniform state.  This is called
-     * by the {@link Scene} when rendering to ensure that automatic GLSL uniforms
-     * are set to the right value.
-     *
-     * @param {Object} frustum The frustum to synchronize with.
-     */
-    UniformState.prototype.updateFrustum = function(frustum) {
-        setProjection(this, frustum.projectionMatrix);
-        if (defined(frustum.infiniteProjectionMatrix)) {
-            setInfiniteProjection(this, frustum.infiniteProjectionMatrix);
-        }
-        this._currentFrustum.x = frustum.near;
-        this._currentFrustum.y = frustum.far;
-
-        this._log2FarDistance = 2.0 / CesiumMath.log2(frustum.far + 1.0);
-        this._log2FarPlusOne = CesiumMath.log2(frustum.far + 1.0);
-        this._log2NearDistance = CesiumMath.log2(frustum.near);
-
-        if (defined(frustum._offCenterFrustum)) {
-            frustum = frustum._offCenterFrustum;
-        }
-
-        this._frustumPlanes.x = frustum.top;
-        this._frustumPlanes.y = frustum.bottom;
-        this._frustumPlanes.z = frustum.left;
-        this._frustumPlanes.w = frustum.right;
-    };
-
-    UniformState.prototype.updatePass = function(pass) {
-        this._pass = pass;
-    };
-
-    /**
-     * Synchronizes frame state with the uniform state.  This is called
-     * by the {@link Scene} when rendering to ensure that automatic GLSL uniforms
-     * are set to the right value.
-     *
-     * @param {FrameState} frameState The frameState to synchronize with.
-     */
-    UniformState.prototype.update = function(frameState) {
-        this._mode = frameState.mode;
-        this._mapProjection = frameState.mapProjection;
-
-        var canvas = frameState.context._canvas;
-        this._resolutionScale = canvas.width / canvas.clientWidth;
-
-        var camera = frameState.camera;
-        this.updateCamera(camera);
-
-        if (frameState.mode === SceneMode.SCENE2D) {
-            this._frustum2DWidth = camera.frustum.right - camera.frustum.left;
-            this._eyeHeight2D.x = this._frustum2DWidth * 0.5;
-            this._eyeHeight2D.y = this._eyeHeight2D.x * this._eyeHeight2D.x;
-        } else {
-            this._frustum2DWidth = 0.0;
-            this._eyeHeight2D.x = 0.0;
-            this._eyeHeight2D.y = 0.0;
-        }
-
-        setSunAndMoonDirections(this, frameState);
-
-        var brdfLutGenerator = frameState.brdfLutGenerator;
-        var brdfLut = defined(brdfLutGenerator) ? brdfLutGenerator.colorTexture : undefined;
-        this._brdfLut = brdfLut;
-
-        this._environmentMap = defaultValue(frameState.environmentMap, frameState.context.defaultCubeMap);
-
-        this._fogDensity = frameState.fog.density;
-
-        this._invertClassificationColor = frameState.invertClassificationColor;
-
-        this._frameState = frameState;
-        this._temeToPseudoFixed = Transforms.computeTemeToPseudoFixedMatrix(frameState.time, this._temeToPseudoFixed);
-
-        // Convert the relative imagerySplitPosition to absolute pixel coordinates
-        this._imagerySplitPosition = frameState.imagerySplitPosition * frameState.context.drawingBufferWidth;
-        var fov = camera.frustum.fov;
-        var viewport = this._viewport;
-        var pixelSizePerMeter;
-        if (viewport.height > viewport.width) {
-            pixelSizePerMeter = Math.tan(0.5 * fov) * 2.0 / viewport.height;
-        } else {
-            pixelSizePerMeter = Math.tan(0.5 * fov) * 2.0 / viewport.width;
-        }
-
-        this._geometricToleranceOverMeter = pixelSizePerMeter * frameState.maximumScreenSpaceError;
-        Color.clone(frameState.backgroundColor, this._backgroundColor);
-
-        this._minimumDisableDepthTestDistance = frameState.minimumDisableDepthTestDistance;
-        this._minimumDisableDepthTestDistance *= this._minimumDisableDepthTestDistance;
-        if (this._minimumDisableDepthTestDistance === Number.POSITIVE_INFINITY) {
-            this._minimumDisableDepthTestDistance = -1.0;
-        }
-    };
 
     function cleanViewport(uniformState) {
         if (uniformState._viewportDirty) {

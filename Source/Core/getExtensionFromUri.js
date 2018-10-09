@@ -1,11 +1,11 @@
 define([
-        '../ThirdParty/Uri',
-        './defined',
-        './DeveloperError'
-    ], function(
-        Uri,
-        defined,
-        DeveloperError) {
+    '../ThirdParty/Uri',
+    './defined',
+    './DeveloperError'
+], function(
+    Uri,
+    defined,
+    DeveloperError) {
     'use strict';
 
     /**
@@ -19,7 +19,7 @@ define([
      * //extension will be "czml";
      * var extension = Cesium.getExtensionFromUri('/Gallery/simple.czml?value=true&example=false');
      */
-    function getExtensionFromUri(uri) {
+    export function getExtensionFromUri(uri: string): string {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(uri)) {
             throw new DeveloperError('uri is required.');

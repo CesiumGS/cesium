@@ -1,22 +1,22 @@
 define([
-        './defined',
-        './DeveloperError',
-        './getAbsoluteUri',
-        './Resource',
-        'require'
-    ], function(
-        defined,
-        DeveloperError,
-        getAbsoluteUri,
-        Resource,
-        require) {
+    './defined',
+    './DeveloperError',
+    './getAbsoluteUri',
+    './Resource',
+    'require'
+], function(
+    defined,
+    DeveloperError,
+    getAbsoluteUri,
+    Resource,
+    require) {
     'use strict';
     /*global CESIUM_BASE_URL*/
 
     var cesiumScriptRegex = /((?:.*\/)|^)cesium[\w-]*\.js(?:\W|$)/i;
-    function getBaseUrlFromCesiumScript() {
+    export function getBaseUrlFromCesiumScript(): string | undefined {
         var scripts = document.getElementsByTagName('script');
-        for ( var i = 0, len = scripts.length; i < len; ++i) {
+        for (var i = 0, len = scripts.length; i < len; ++i) {
             var src = scripts[i].getAttribute('src');
             var result = cesiumScriptRegex.exec(src);
             if (result !== null) {
@@ -27,7 +27,8 @@ define([
     }
 
     var a;
-    function tryMakeAbsolute(url) {
+
+    export function tryMakeAbsolute(url: string): HTMLElement {
         if (typeof document === 'undefined') {
             //Node.js and Web Workers. In both cases, the URL will already be absolute.
             return url;
@@ -44,7 +45,8 @@ define([
     }
 
     var baseResource;
-    function getCesiumBaseUrl() {
+
+    export function getCesiumBaseUrl(): Resource {
         if (defined(baseResource)) {
             return baseResource;
         }
@@ -72,12 +74,12 @@ define([
         return baseResource;
     }
 
-    function buildModuleUrlFromRequireToUrl(moduleID) {
+    export function buildModuleUrlFromRequireToUrl(moduleID: string): string {
         //moduleID will be non-relative, so require it relative to this module, in Core.
         return tryMakeAbsolute(require.toUrl('../' + moduleID));
     }
 
-    function buildModuleUrlFromBaseUrl(moduleID) {
+    export function buildModuleUrlFromBaseUrl(moduleID: string): string {
         var resource = getCesiumBaseUrl().getDerivedResource({
             url: moduleID
         });
@@ -93,7 +95,7 @@ define([
      *
      * @private
      */
-    function buildModuleUrl(moduleID) {
+    export function buildModuleUrl(moduleID: string): string {
         if (!defined(implementation)) {
             //select implementation
             if (defined(define.amd) && !define.amd.toUrlUndefined && defined(require.toUrl)) {
@@ -118,7 +120,7 @@ define([
      * Sets the base URL for resolving modules.
      * @param {String} value The new base URL.
      */
-    buildModuleUrl.setBaseUrl = function(value) {
+    buildModuleUrl.setBaseUrl = function(value: string) {
         baseResource = Resource.DEFAULT.getDerivedResource({
             url: value
         });

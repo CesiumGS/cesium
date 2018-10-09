@@ -1,15 +1,15 @@
 define([
-        './Cartesian2',
-        './Cartesian3',
-        './Check',
-        './defined',
-        './Math'
-    ], function(
-        Cartesian2,
-        Cartesian3,
-        Check,
-        defined,
-        CesiumMath) {
+    './Cartesian2',
+    './Cartesian3',
+    './Check',
+    './defined',
+    './Math'
+], function(
+    Cartesian2,
+    Cartesian3,
+    Check,
+    defined,
+    CesiumMath) {
     'use strict';
 
     var scratchCartesian1 = new Cartesian3();
@@ -36,7 +36,7 @@ define([
      *   new Cesium.Cartesian3( 1.0, 0.0, 0.0),
      *   new Cesium.Cartesian3( 0.0, 1.0, 1.0));
      */
-    function barycentricCoordinates(point, p0, p1, p2, result) {
+    export function barycentricCoordinates(point: Cartesian2 | Cartesian3, p0: Cartesian2 | Cartesian, p1: Cartesian2 | Cartesian3, p2: Cartesian2 | Cartesian3, result ?: Cartesian2 | Cartesian3): Cartesian2 | Cartesian3 {
         //>>includeStart('debug', pragmas.debug);
         Check.defined('point', point);
         Check.defined('p0', p0);
@@ -58,7 +58,7 @@ define([
         var dot11;
         var dot12;
 
-        if(!defined(p0.z)) {
+        if (!defined(p0.z)) {
             if (Cartesian2.equalsEpsilon(point, p0, CesiumMath.EPSILON14)) {
                 return Cartesian3.clone(Cartesian3.UNIT_X, result);
             }

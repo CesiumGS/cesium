@@ -54,38 +54,100 @@ define([
         return {};
     }
 
-    /**
-     * Represents the contents of a
-     * {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/specification/TileFormats/Batched3DModel|Batched 3D Model}
-     * tile in a {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/specification|3D Tiles} tileset.
-     * <p>
-     * Implements the {@link Cesium3DTileContent} interface.
-     * </p>
-     *
-     * @alias Batched3DModel3DTileContent
-     * @constructor
-     *
-     * @private
-     */
-    function Batched3DModel3DTileContent(tileset, tile, resource, arrayBuffer, byteOffset) {
-        this._tileset = tileset;
-        this._tile = tile;
-        this._resource = resource;
-        this._model = undefined;
-        this._batchTable = undefined;
-        this._features = undefined;
-
-        // Populate from gltf when available
-        this._batchIdAttributeName = undefined;
-        this._diffuseAttributeOrUniformName = {};
-
-        this._rtcCenterTransform = undefined;
-        this._contentModelMatrix = undefined;
-
-        this.featurePropertiesDirty = false;
-
-        initialize(this, arrayBuffer, byteOffset);
-    }
+        /**
+             * Represents the contents of a
+             * {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/specification/TileFormats/Batched3DModel|Batched 3D Model}
+             * tile in a {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/specification|3D Tiles} tileset.
+             * <p>
+             * Implements the {@link Cesium3DTileContent} interface.
+             * </p>
+             *
+             * @alias Batched3DModel3DTileContent
+             * @constructor
+             *
+             * @private
+             */
+        class Batched3DModel3DTileContent {
+            constructor(tileset, tile, resource, arrayBuffer, byteOffset) {
+                this._tileset = tileset;
+                this._tile = tile;
+                this._resource = resource;
+                this._model = undefined;
+                this._batchTable = undefined;
+                this._features = undefined;
+                // Populate from gltf when available
+                this._batchIdAttributeName = undefined;
+                this._diffuseAttributeOrUniformName = {};
+                this._rtcCenterTransform = undefined;
+                this._contentModelMatrix = undefined;
+                this.featurePropertiesDirty = false;
+                initialize(this, arrayBuffer, byteOffset);
+            }
+            hasProperty(batchId, name) {
+                return this._batchTable.hasProperty(batchId, name);
+            }
+            getFeature(batchId) {
+                //>>includeStart('debug', pragmas.debug);
+                var featuresLength = this.featuresLength;
+                if (!defined(batchId) || (batchId < 0) || (batchId >= featuresLength)) {
+                    throw new DeveloperError('batchId is required and between zero and featuresLength - 1 (' + (featuresLength - 1) + ').');
+                }
+                //>>includeEnd('debug');
+                createFeatures(this);
+                return this._features[batchId];
+            }
+            applyDebugSettings(enabled, color) {
+                color = enabled ? color : Color.WHITE;
+                if (this.featuresLength === 0) {
+                    this._model.color = color;
+                }
+                else {
+                    this._batchTable.setAllColor(color);
+                }
+            }
+            applyStyle(style) {
+                this._batchTable.applyStyle(style);
+            }
+            update(tileset, frameState) {
+                var commandStart = frameState.commandList.length;
+                // In the PROCESSING state we may be calling update() to move forward
+                // the content's resource loading.  In the READY state, it will
+                // actually generate commands.
+                this._batchTable.update(tileset, frameState);
+                this._contentModelMatrix = Matrix4.multiply(this._tile.computedTransform, this._rtcCenterTransform, this._contentModelMatrix);
+                this._model.modelMatrix = this._contentModelMatrix;
+                this._model.shadows = this._tileset.shadows;
+                this._model.debugWireframe = this._tileset.debugWireframe;
+                // Update clipping planes
+                var tilesetClippingPlanes = this._tileset.clippingPlanes;
+                if (this._tile.clippingPlanesDirty && defined(tilesetClippingPlanes)) {
+                    this._model.clippingPlaneOffsetMatrix = this._tileset.clippingPlaneOffsetMatrix;
+                    // Dereference the clipping planes from the model if they are irrelevant.
+                    // Link/Dereference directly to avoid ownership checks.
+                    // This will also trigger synchronous shader regeneration to remove or add the clipping plane and color blending code.
+                    this._model._clippingPlanes = (tilesetClippingPlanes.enabled && this._tile._isClipped) ? tilesetClippingPlanes : undefined;
+                }
+                // If the model references a different ClippingPlaneCollection due to the tileset's collection being replaced with a
+                // ClippingPlaneCollection that gives this tile the same clipping status, update the model to use the new ClippingPlaneCollection.
+                if (defined(tilesetClippingPlanes) && defined(this._model._clippingPlanes) && this._model._clippingPlanes !== tilesetClippingPlanes) {
+                    this._model._clippingPlanes = tilesetClippingPlanes;
+                }
+                this._model.update(frameState);
+                // If any commands were pushed, add derived commands
+                var commandEnd = frameState.commandList.length;
+                if ((commandStart < commandEnd) && (frameState.passes.render || frameState.passes.pick) && !defined(tileset.classificationType)) {
+                    this._batchTable.addDerivedCommands(frameState, commandStart);
+                }
+            }
+            isDestroyed() {
+                return false;
+            }
+            destroy() {
+                this._model = this._model && this._model.destroy();
+                this._batchTable = this._batchTable && this._batchTable.destroy();
+                return destroyObject(this);
+            }
+        }
 
     // This can be overridden for testing purposes
     Batched3DModel3DTileContent._deprecationWarning = deprecationWarning;
@@ -419,83 +481,12 @@ define([
         }
     }
 
-    Batched3DModel3DTileContent.prototype.hasProperty = function(batchId, name) {
-        return this._batchTable.hasProperty(batchId, name);
-    };
 
-    Batched3DModel3DTileContent.prototype.getFeature = function(batchId) {
-        //>>includeStart('debug', pragmas.debug);
-        var featuresLength = this.featuresLength;
-        if (!defined(batchId) || (batchId < 0) || (batchId >= featuresLength)) {
-            throw new DeveloperError('batchId is required and between zero and featuresLength - 1 (' + (featuresLength - 1) + ').');
-        }
-        //>>includeEnd('debug');
 
-        createFeatures(this);
-        return this._features[batchId];
-    };
 
-    Batched3DModel3DTileContent.prototype.applyDebugSettings = function(enabled, color) {
-        color = enabled ? color : Color.WHITE;
-        if (this.featuresLength === 0) {
-            this._model.color = color;
-        } else {
-            this._batchTable.setAllColor(color);
-        }
-    };
 
-    Batched3DModel3DTileContent.prototype.applyStyle = function(style) {
-        this._batchTable.applyStyle(style);
-    };
 
-    Batched3DModel3DTileContent.prototype.update = function(tileset, frameState) {
-        var commandStart = frameState.commandList.length;
 
-        // In the PROCESSING state we may be calling update() to move forward
-        // the content's resource loading.  In the READY state, it will
-        // actually generate commands.
-        this._batchTable.update(tileset, frameState);
-
-        this._contentModelMatrix = Matrix4.multiply(this._tile.computedTransform, this._rtcCenterTransform, this._contentModelMatrix);
-        this._model.modelMatrix = this._contentModelMatrix;
-
-        this._model.shadows = this._tileset.shadows;
-        this._model.debugWireframe = this._tileset.debugWireframe;
-
-        // Update clipping planes
-        var tilesetClippingPlanes = this._tileset.clippingPlanes;
-        if (this._tile.clippingPlanesDirty && defined(tilesetClippingPlanes)) {
-            this._model.clippingPlaneOffsetMatrix = this._tileset.clippingPlaneOffsetMatrix;
-            // Dereference the clipping planes from the model if they are irrelevant.
-            // Link/Dereference directly to avoid ownership checks.
-            // This will also trigger synchronous shader regeneration to remove or add the clipping plane and color blending code.
-            this._model._clippingPlanes = (tilesetClippingPlanes.enabled && this._tile._isClipped) ? tilesetClippingPlanes : undefined;
-        }
-
-        // If the model references a different ClippingPlaneCollection due to the tileset's collection being replaced with a
-        // ClippingPlaneCollection that gives this tile the same clipping status, update the model to use the new ClippingPlaneCollection.
-        if (defined(tilesetClippingPlanes) && defined(this._model._clippingPlanes) && this._model._clippingPlanes !== tilesetClippingPlanes) {
-            this._model._clippingPlanes = tilesetClippingPlanes;
-        }
-
-        this._model.update(frameState);
-
-        // If any commands were pushed, add derived commands
-        var commandEnd = frameState.commandList.length;
-        if ((commandStart < commandEnd) && (frameState.passes.render || frameState.passes.pick) && !defined(tileset.classificationType)) {
-            this._batchTable.addDerivedCommands(frameState, commandStart);
-        }
-   };
-
-    Batched3DModel3DTileContent.prototype.isDestroyed = function() {
-        return false;
-    };
-
-    Batched3DModel3DTileContent.prototype.destroy = function() {
-        this._model = this._model && this._model.destroy();
-        this._batchTable = this._batchTable && this._batchTable.destroy();
-        return destroyObject(this);
-    };
 
     return Batched3DModel3DTileContent;
 });
