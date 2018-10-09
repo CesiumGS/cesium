@@ -573,13 +573,13 @@ defineSuite([
         switchViewMode(SceneMode.SCENE3D, new GeographicProjection(Ellipsoid.WGS84));
 
         return updateUntilDone(scene.globe).then(function() {
-            expect(scene).toRender([0, 0, 127, 255]); // default baseColor
+            expect(scene).toRender([0, 0, 128, 255]); // default baseColor
             layer.cutoutRectangle = undefined;
 
             return updateUntilDone(scene.globe);
         })
         .then(function() {
-            expect(scene).notToRender([0, 0, 127, 255]);
+            expect(scene).notToRender([0, 0, 128, 255]);
             expect(scene).notToRender([0, 0, 0, 255]);
         });
     });
