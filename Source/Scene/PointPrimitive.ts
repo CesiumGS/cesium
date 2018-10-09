@@ -30,90 +30,204 @@ define([
         SceneTransforms) {
     'use strict';
 
-    /**
-     * A graphical point positioned in the 3D scene, that is created
-     * and rendered using a {@link PointPrimitiveCollection}.  A point is created and its initial
-     * properties are set by calling {@link PointPrimitiveCollection#add}.
-     *
-     * @alias PointPrimitive
-     *
-     * @performance Reading a property, e.g., {@link PointPrimitive#show}, is constant time.
-     * Assigning to a property is constant time but results in
-     * CPU to GPU traffic when {@link PointPrimitiveCollection#update} is called.  The per-pointPrimitive traffic is
-     * the same regardless of how many properties were updated.  If most pointPrimitives in a collection need to be
-     * updated, it may be more efficient to clear the collection with {@link PointPrimitiveCollection#removeAll}
-     * and add new pointPrimitives instead of modifying each one.
-     *
-     * @exception {DeveloperError} scaleByDistance.far must be greater than scaleByDistance.near
-     * @exception {DeveloperError} translucencyByDistance.far must be greater than translucencyByDistance.near
-     * @exception {DeveloperError} distanceDisplayCondition.far must be greater than distanceDisplayCondition.near
-     *
-     * @see PointPrimitiveCollection
-     * @see PointPrimitiveCollection#add
-     *
-     * @internalConstructor
-     * @class
-     *
-     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Points.html|Cesium Sandcastle Points Demo}
-     */
-    function PointPrimitive(options, pointPrimitiveCollection) {
-        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-
-        //>>includeStart('debug', pragmas.debug);
-        if (defined(options.disableDepthTestDistance) && options.disableDepthTestDistance < 0.0) {
-            throw new DeveloperError('disableDepthTestDistance must be greater than or equal to 0.0.');
-        }
-        //>>includeEnd('debug');
-
-        var translucencyByDistance = options.translucencyByDistance;
-        var scaleByDistance = options.scaleByDistance;
-        var distanceDisplayCondition = options.distanceDisplayCondition;
-        if (defined(translucencyByDistance)) {
-            //>>includeStart('debug', pragmas.debug);
-            if (translucencyByDistance.far <= translucencyByDistance.near) {
-                throw new DeveloperError('translucencyByDistance.far must be greater than translucencyByDistance.near.');
+        /**
+             * A graphical point positioned in the 3D scene, that is created
+             * and rendered using a {@link PointPrimitiveCollection}.  A point is created and its initial
+             * properties are set by calling {@link PointPrimitiveCollection#add}.
+             *
+             * @alias PointPrimitive
+             *
+             * @performance Reading a property, e.g., {@link PointPrimitive#show}, is constant time.
+             * Assigning to a property is constant time but results in
+             * CPU to GPU traffic when {@link PointPrimitiveCollection#update} is called.  The per-pointPrimitive traffic is
+             * the same regardless of how many properties were updated.  If most pointPrimitives in a collection need to be
+             * updated, it may be more efficient to clear the collection with {@link PointPrimitiveCollection#removeAll}
+             * and add new pointPrimitives instead of modifying each one.
+             *
+             * @exception {DeveloperError} scaleByDistance.far must be greater than scaleByDistance.near
+             * @exception {DeveloperError} translucencyByDistance.far must be greater than translucencyByDistance.near
+             * @exception {DeveloperError} distanceDisplayCondition.far must be greater than distanceDisplayCondition.near
+             *
+             * @see PointPrimitiveCollection
+             * @see PointPrimitiveCollection#add
+             *
+             * @internalConstructor
+             * @class
+             *
+             * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Points.html|Cesium Sandcastle Points Demo}
+             */
+        class PointPrimitive {
+            constructor(options, pointPrimitiveCollection) {
+                options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+                //>>includeStart('debug', pragmas.debug);
+                if (defined(options.disableDepthTestDistance) && options.disableDepthTestDistance < 0.0) {
+                    throw new DeveloperError('disableDepthTestDistance must be greater than or equal to 0.0.');
+                }
+                //>>includeEnd('debug');
+                var translucencyByDistance = options.translucencyByDistance;
+                var scaleByDistance = options.scaleByDistance;
+                var distanceDisplayCondition = options.distanceDisplayCondition;
+                if (defined(translucencyByDistance)) {
+                    //>>includeStart('debug', pragmas.debug);
+                    if (translucencyByDistance.far <= translucencyByDistance.near) {
+                        throw new DeveloperError('translucencyByDistance.far must be greater than translucencyByDistance.near.');
+                    }
+                    //>>includeEnd('debug');
+                    translucencyByDistance = NearFarScalar.clone(translucencyByDistance);
+                }
+                if (defined(scaleByDistance)) {
+                    //>>includeStart('debug', pragmas.debug);
+                    if (scaleByDistance.far <= scaleByDistance.near) {
+                        throw new DeveloperError('scaleByDistance.far must be greater than scaleByDistance.near.');
+                    }
+                    //>>includeEnd('debug');
+                    scaleByDistance = NearFarScalar.clone(scaleByDistance);
+                }
+                if (defined(distanceDisplayCondition)) {
+                    //>>includeStart('debug', pragmas.debug);
+                    if (distanceDisplayCondition.far <= distanceDisplayCondition.near) {
+                        throw new DeveloperError('distanceDisplayCondition.far must be greater than distanceDisplayCondition.near.');
+                    }
+                    //>>includeEnd('debug');
+                    distanceDisplayCondition = DistanceDisplayCondition.clone(distanceDisplayCondition);
+                }
+                this._show = defaultValue(options.show, true);
+                this._position = Cartesian3.clone(defaultValue(options.position, Cartesian3.ZERO));
+                this._actualPosition = Cartesian3.clone(this._position); // For columbus view and 2D
+                this._color = Color.clone(defaultValue(options.color, Color.WHITE));
+                this._outlineColor = Color.clone(defaultValue(options.outlineColor, Color.TRANSPARENT));
+                this._outlineWidth = defaultValue(options.outlineWidth, 0.0);
+                this._pixelSize = defaultValue(options.pixelSize, 10.0);
+                this._scaleByDistance = scaleByDistance;
+                this._translucencyByDistance = translucencyByDistance;
+                this._distanceDisplayCondition = distanceDisplayCondition;
+                this._disableDepthTestDistance = defaultValue(options.disableDepthTestDistance, 0.0);
+                this._id = options.id;
+                this._collection = defaultValue(options.collection, pointPrimitiveCollection);
+                this._clusterShow = true;
+                this._pickId = undefined;
+                this._pointPrimitiveCollection = pointPrimitiveCollection;
+                this._dirty = false;
+                this._index = -1; //Used only by PointPrimitiveCollection
             }
-            //>>includeEnd('debug');
-            translucencyByDistance = NearFarScalar.clone(translucencyByDistance);
-        }
-        if (defined(scaleByDistance)) {
-            //>>includeStart('debug', pragmas.debug);
-            if (scaleByDistance.far <= scaleByDistance.near) {
-                throw new DeveloperError('scaleByDistance.far must be greater than scaleByDistance.near.');
+            getPickId(context) {
+                if (!defined(this._pickId)) {
+                    this._pickId = context.createPickId({
+                        primitive: this,
+                        collection: this._collection,
+                        id: this._id
+                    });
+                }
+                return this._pickId;
             }
-            //>>includeEnd('debug');
-            scaleByDistance = NearFarScalar.clone(scaleByDistance);
-        }
-        if (defined(distanceDisplayCondition)) {
-            //>>includeStart('debug', pragmas.debug);
-            if (distanceDisplayCondition.far <= distanceDisplayCondition.near) {
-                throw new DeveloperError('distanceDisplayCondition.far must be greater than distanceDisplayCondition.near.');
+            _getActualPosition() {
+                return this._actualPosition;
             }
-            //>>includeEnd('debug');
-            distanceDisplayCondition = DistanceDisplayCondition.clone(distanceDisplayCondition);
+            _setActualPosition(value) {
+                Cartesian3.clone(value, this._actualPosition);
+                makeDirty(this, POSITION_INDEX);
+            }
+            /**
+                 * Computes the screen-space position of the point's origin.
+                 * The screen space origin is the top, left corner of the canvas; <code>x</code> increases from
+                 * left to right, and <code>y</code> increases from top to bottom.
+                 *
+                 * @param {Scene} scene The scene.
+                 * @param {Cartesian2} [result] The object onto which to store the result.
+                 * @returns {Cartesian2} The screen-space position of the point.
+                 *
+                 * @exception {DeveloperError} PointPrimitive must be in a collection.
+                 *
+                 * @example
+                 * console.log(p.computeScreenSpacePosition(scene).toString());
+                 */
+            computeScreenSpacePosition(scene, result) {
+                var pointPrimitiveCollection = this._pointPrimitiveCollection;
+                if (!defined(result)) {
+                    result = new Cartesian2();
+                }
+                //>>includeStart('debug', pragmas.debug);
+                if (!defined(pointPrimitiveCollection)) {
+                    throw new DeveloperError('PointPrimitive must be in a collection.');
+                }
+                if (!defined(scene)) {
+                    throw new DeveloperError('scene is required.');
+                }
+                //>>includeEnd('debug');
+                var modelMatrix = pointPrimitiveCollection.modelMatrix;
+                var windowCoordinates = PointPrimitive._computeScreenSpacePosition(modelMatrix, this._actualPosition, scene, result);
+                if (!defined(windowCoordinates)) {
+                    return undefined;
+                }
+                windowCoordinates.y = scene.canvas.clientHeight - windowCoordinates.y;
+                return windowCoordinates;
+            }
+            /**
+                 * Determines if this point equals another point.  Points are equal if all their properties
+                 * are equal.  Points in different collections can be equal.
+                 *
+                 * @param {PointPrimitive} other The point to compare for equality.
+                 * @returns {Boolean} <code>true</code> if the points are equal; otherwise, <code>false</code>.
+                 */
+            equals(other) {
+                return this === other ||
+                    defined(other) &&
+                    this._id === other._id &&
+                    Cartesian3.equals(this._position, other._position) &&
+                    Color.equals(this._color, other._color) &&
+                    this._pixelSize === other._pixelSize &&
+                    this._outlineWidth === other._outlineWidth &&
+                    this._show === other._show &&
+                    Color.equals(this._outlineColor, other._outlineColor) &&
+                    NearFarScalar.equals(this._scaleByDistance, other._scaleByDistance) &&
+                    NearFarScalar.equals(this._translucencyByDistance, other._translucencyByDistance) &&
+                    DistanceDisplayCondition.equals(this._distanceDisplayCondition, other._distanceDisplayCondition) &&
+                    this._disableDepthTestDistance === other._disableDepthTestDistance;
+            }
+            _destroy() {
+                this._pickId = this._pickId && this._pickId.destroy();
+                this._pointPrimitiveCollection = undefined;
+            }
+            static _computeActualPosition(position, frameState, modelMatrix) {
+                if (frameState.mode === SceneMode.SCENE3D) {
+                    return position;
+                }
+                Matrix4.multiplyByPoint(modelMatrix, position, tempCartesian3);
+                return SceneTransforms.computeActualWgs84Position(frameState, tempCartesian3);
+            }
+            // This function is basically a stripped-down JavaScript version of PointPrimitiveCollectionVS.glsl
+            static _computeScreenSpacePosition(modelMatrix, position, scene, result) {
+                // Model to world coordinates
+                var positionWorld = Matrix4.multiplyByVector(modelMatrix, Cartesian4.fromElements(position.x, position.y, position.z, 1, scratchCartesian4), scratchCartesian4);
+                var positionWC = SceneTransforms.wgs84ToWindowCoordinates(scene, positionWorld, result);
+                return positionWC;
+            }
+            /**
+                 * Gets a point's screen space bounding box centered around screenSpacePosition.
+                 * @param {PointPrimitive} point The point to get the screen space bounding box for.
+                 * @param {Cartesian2} screenSpacePosition The screen space center of the label.
+                 * @param {BoundingRectangle} [result] The object onto which to store the result.
+                 * @returns {BoundingRectangle} The screen space bounding box.
+                 *
+                 * @private
+                 */
+            static getScreenSpaceBoundingBox(point, screenSpacePosition, result) {
+                var size = point.pixelSize;
+                var halfSize = size * 0.5;
+                var x = screenSpacePosition.x - halfSize;
+                var y = screenSpacePosition.y - halfSize;
+                var width = size;
+                var height = size;
+                if (!defined(result)) {
+                    result = new BoundingRectangle();
+                }
+                result.x = x;
+                result.y = y;
+                result.width = width;
+                result.height = height;
+                return result;
+            }
         }
-
-        this._show = defaultValue(options.show, true);
-        this._position = Cartesian3.clone(defaultValue(options.position, Cartesian3.ZERO));
-        this._actualPosition = Cartesian3.clone(this._position); // For columbus view and 2D
-        this._color = Color.clone(defaultValue(options.color, Color.WHITE));
-        this._outlineColor = Color.clone(defaultValue(options.outlineColor, Color.TRANSPARENT));
-        this._outlineWidth = defaultValue(options.outlineWidth, 0.0);
-        this._pixelSize = defaultValue(options.pixelSize, 10.0);
-        this._scaleByDistance = scaleByDistance;
-        this._translucencyByDistance = translucencyByDistance;
-        this._distanceDisplayCondition = distanceDisplayCondition;
-        this._disableDepthTestDistance = defaultValue(options.disableDepthTestDistance, 0.0);
-        this._id = options.id;
-        this._collection = defaultValue(options.collection, pointPrimitiveCollection);
-
-        this._clusterShow = true;
-
-        this._pickId = undefined;
-        this._pointPrimitiveCollection = pointPrimitiveCollection;
-        this._dirty = false;
-        this._index = -1; //Used only by PointPrimitiveCollection
-    }
 
     var SHOW_INDEX = PointPrimitive.SHOW_INDEX = 0;
     var POSITION_INDEX = PointPrimitive.POSITION_INDEX = 1;
@@ -467,143 +581,17 @@ define([
         }
     });
 
-    PointPrimitive.prototype.getPickId = function(context) {
-        if (!defined(this._pickId)) {
-            this._pickId = context.createPickId({
-                primitive : this,
-                collection : this._collection,
-                id : this._id
-            });
-        }
 
-        return this._pickId;
-    };
 
-    PointPrimitive.prototype._getActualPosition = function() {
-        return this._actualPosition;
-    };
-
-    PointPrimitive.prototype._setActualPosition = function(value) {
-        Cartesian3.clone(value, this._actualPosition);
-        makeDirty(this, POSITION_INDEX);
-    };
 
     var tempCartesian3 = new Cartesian4();
-    PointPrimitive._computeActualPosition = function(position, frameState, modelMatrix) {
-        if (frameState.mode === SceneMode.SCENE3D) {
-            return position;
-        }
-
-        Matrix4.multiplyByPoint(modelMatrix, position, tempCartesian3);
-        return SceneTransforms.computeActualWgs84Position(frameState, tempCartesian3);
-    };
 
     var scratchCartesian4 = new Cartesian4();
 
-    // This function is basically a stripped-down JavaScript version of PointPrimitiveCollectionVS.glsl
-    PointPrimitive._computeScreenSpacePosition = function(modelMatrix, position, scene, result) {
-        // Model to world coordinates
-        var positionWorld = Matrix4.multiplyByVector(modelMatrix, Cartesian4.fromElements(position.x, position.y, position.z, 1, scratchCartesian4), scratchCartesian4);
-        var positionWC = SceneTransforms.wgs84ToWindowCoordinates(scene, positionWorld, result);
-        return positionWC;
-    };
 
-    /**
-     * Computes the screen-space position of the point's origin.
-     * The screen space origin is the top, left corner of the canvas; <code>x</code> increases from
-     * left to right, and <code>y</code> increases from top to bottom.
-     *
-     * @param {Scene} scene The scene.
-     * @param {Cartesian2} [result] The object onto which to store the result.
-     * @returns {Cartesian2} The screen-space position of the point.
-     *
-     * @exception {DeveloperError} PointPrimitive must be in a collection.
-     *
-     * @example
-     * console.log(p.computeScreenSpacePosition(scene).toString());
-     */
-    PointPrimitive.prototype.computeScreenSpacePosition = function(scene, result) {
-        var pointPrimitiveCollection = this._pointPrimitiveCollection;
-        if (!defined(result)) {
-            result = new Cartesian2();
-        }
 
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(pointPrimitiveCollection)) {
-            throw new DeveloperError('PointPrimitive must be in a collection.');
-        }
-        if (!defined(scene)) {
-            throw new DeveloperError('scene is required.');
-        }
-        //>>includeEnd('debug');
 
-        var modelMatrix = pointPrimitiveCollection.modelMatrix;
-        var windowCoordinates = PointPrimitive._computeScreenSpacePosition(modelMatrix, this._actualPosition, scene, result);
-        if (!defined(windowCoordinates)) {
-            return undefined;
-        }
 
-        windowCoordinates.y = scene.canvas.clientHeight - windowCoordinates.y;
-        return windowCoordinates;
-    };
-
-    /**
-     * Gets a point's screen space bounding box centered around screenSpacePosition.
-     * @param {PointPrimitive} point The point to get the screen space bounding box for.
-     * @param {Cartesian2} screenSpacePosition The screen space center of the label.
-     * @param {BoundingRectangle} [result] The object onto which to store the result.
-     * @returns {BoundingRectangle} The screen space bounding box.
-     *
-     * @private
-     */
-    PointPrimitive.getScreenSpaceBoundingBox = function(point, screenSpacePosition, result) {
-        var size = point.pixelSize;
-        var halfSize = size * 0.5;
-
-        var x = screenSpacePosition.x - halfSize;
-        var y = screenSpacePosition.y - halfSize;
-        var width = size;
-        var height = size;
-
-        if (!defined(result)) {
-            result = new BoundingRectangle();
-        }
-
-        result.x = x;
-        result.y = y;
-        result.width = width;
-        result.height = height;
-
-        return result;
-    };
-
-    /**
-     * Determines if this point equals another point.  Points are equal if all their properties
-     * are equal.  Points in different collections can be equal.
-     *
-     * @param {PointPrimitive} other The point to compare for equality.
-     * @returns {Boolean} <code>true</code> if the points are equal; otherwise, <code>false</code>.
-     */
-    PointPrimitive.prototype.equals = function(other) {
-        return this === other ||
-               defined(other) &&
-               this._id === other._id &&
-               Cartesian3.equals(this._position, other._position) &&
-               Color.equals(this._color, other._color) &&
-               this._pixelSize === other._pixelSize &&
-               this._outlineWidth === other._outlineWidth &&
-               this._show === other._show &&
-               Color.equals(this._outlineColor, other._outlineColor) &&
-               NearFarScalar.equals(this._scaleByDistance, other._scaleByDistance) &&
-               NearFarScalar.equals(this._translucencyByDistance, other._translucencyByDistance) &&
-               DistanceDisplayCondition.equals(this._distanceDisplayCondition, other._distanceDisplayCondition) &&
-               this._disableDepthTestDistance === other._disableDepthTestDistance;
-    };
-
-    PointPrimitive.prototype._destroy = function() {
-        this._pickId = this._pickId && this._pickId.destroy();
-        this._pointPrimitiveCollection = undefined;
-    };
 
     return PointPrimitive;
 });

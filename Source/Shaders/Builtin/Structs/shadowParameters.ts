@@ -4,16 +4,17 @@ define(function() {
     return "struct czm_shadowParameters\n\
 {\n\
 #ifdef USE_CUBE_MAP_SHADOW\n\
-vec3 texCoords;\n\
+    vec3 texCoords;\n\
 #else\n\
-vec2 texCoords;\n\
+    vec2 texCoords;\n\
 #endif\n\
-float depthBias;\n\
-float depth;\n\
-float nDotL;\n\
-vec2 texelStepSize;\n\
-float normalShadingSmooth;\n\
-float darkness;\n\
+\n\
+    float depthBias;\n\
+    float depth;\n\
+    float nDotL;\n\
+    vec2 texelStepSize;\n\
+    float normalShadingSmooth;\n\
+    float darkness;\n\
 };\n\
 ";
 });

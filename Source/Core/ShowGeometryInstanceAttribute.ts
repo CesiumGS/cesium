@@ -12,45 +12,69 @@ define([
         DeveloperError) {
     'use strict';
 
-    /**
-     * Value and type information for per-instance geometry attribute that determines if the geometry instance will be shown.
-     *
-     * @alias ShowGeometryInstanceAttribute
-     * @constructor
-     *
-     * @param {Boolean} [show=true] Determines if the geometry instance will be shown.
-     *
-     *
-     * @example
-     * var instance = new Cesium.GeometryInstance({
-     *   geometry : new Cesium.BoxGeometry({
-     *     vertexFormat : Cesium.VertexFormat.POSITION_AND_NORMAL,
-     *     minimum : new Cesium.Cartesian3(-250000.0, -250000.0, -250000.0),
-     *     maximum : new Cesium.Cartesian3(250000.0, 250000.0, 250000.0)
-     *   }),
-     *   modelMatrix : Cesium.Matrix4.multiplyByTranslation(Cesium.Transforms.eastNorthUpToFixedFrame(
-     *     Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883)), new Cesium.Cartesian3(0.0, 0.0, 1000000.0), new Cesium.Matrix4()),
-     *   id : 'box',
-     *   attributes : {
-     *     show : new Cesium.ShowGeometryInstanceAttribute(false)
-     *   }
-     * });
-     *
-     * @see GeometryInstance
-     * @see GeometryInstanceAttribute
-     */
-    function ShowGeometryInstanceAttribute(show) {
-        show = defaultValue(show, true);
-
         /**
-         * The values for the attributes stored in a typed array.
-         *
-         * @type Uint8Array
-         *
-         * @default [1.0]
-         */
-        this.value = ShowGeometryInstanceAttribute.toValue(show);
-    }
+             * Value and type information for per-instance geometry attribute that determines if the geometry instance will be shown.
+             *
+             * @alias ShowGeometryInstanceAttribute
+             * @constructor
+             *
+             * @param {Boolean} [show=true] Determines if the geometry instance will be shown.
+             *
+             *
+             * @example
+             * var instance = new Cesium.GeometryInstance({
+             *   geometry : new Cesium.BoxGeometry({
+             *     vertexFormat : Cesium.VertexFormat.POSITION_AND_NORMAL,
+             *     minimum : new Cesium.Cartesian3(-250000.0, -250000.0, -250000.0),
+             *     maximum : new Cesium.Cartesian3(250000.0, 250000.0, 250000.0)
+             *   }),
+             *   modelMatrix : Cesium.Matrix4.multiplyByTranslation(Cesium.Transforms.eastNorthUpToFixedFrame(
+             *     Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883)), new Cesium.Cartesian3(0.0, 0.0, 1000000.0), new Cesium.Matrix4()),
+             *   id : 'box',
+             *   attributes : {
+             *     show : new Cesium.ShowGeometryInstanceAttribute(false)
+             *   }
+             * });
+             *
+             * @see GeometryInstance
+             * @see GeometryInstanceAttribute
+             */
+        class ShowGeometryInstanceAttribute {
+            constructor(show) {
+                show = defaultValue(show, true);
+                /**
+                 * The values for the attributes stored in a typed array.
+                 *
+                 * @type Uint8Array
+                 *
+                 * @default [1.0]
+                 */
+                this.value = ShowGeometryInstanceAttribute.toValue(show);
+            }
+            /**
+                 * Converts a boolean show to a typed array that can be used to assign a show attribute.
+                 *
+                 * @param {Boolean} show The show value.
+                 * @param {Uint8Array} [result] The array to store the result in, if undefined a new instance will be created.
+                 * @returns {Uint8Array} The modified result parameter or a new instance if result was undefined.
+                 *
+                 * @example
+                 * var attributes = primitive.getGeometryInstanceAttributes('an id');
+                 * attributes.show = Cesium.ShowGeometryInstanceAttribute.toValue(true, attributes.show);
+                 */
+            static toValue(show, result) {
+                //>>includeStart('debug', pragmas.debug);
+                if (!defined(show)) {
+                    throw new DeveloperError('show is required.');
+                }
+                //>>includeEnd('debug');
+                if (!defined(result)) {
+                    return new Uint8Array([show]);
+                }
+                result[0] = show;
+                return result;
+            }
+        }
 
     defineProperties(ShowGeometryInstanceAttribute.prototype, {
         /**
@@ -105,30 +129,6 @@ define([
         }
     });
 
-    /**
-     * Converts a boolean show to a typed array that can be used to assign a show attribute.
-     *
-     * @param {Boolean} show The show value.
-     * @param {Uint8Array} [result] The array to store the result in, if undefined a new instance will be created.
-     * @returns {Uint8Array} The modified result parameter or a new instance if result was undefined.
-     *
-     * @example
-     * var attributes = primitive.getGeometryInstanceAttributes('an id');
-     * attributes.show = Cesium.ShowGeometryInstanceAttribute.toValue(true, attributes.show);
-     */
-    ShowGeometryInstanceAttribute.toValue = function(show, result) {
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(show)) {
-            throw new DeveloperError('show is required.');
-        }
-        //>>includeEnd('debug');
-
-        if (!defined(result)) {
-            return new Uint8Array([show]);
-        }
-        result[0] = show;
-        return result;
-    };
 
     return ShowGeometryInstanceAttribute;
 });

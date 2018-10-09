@@ -88,313 +88,752 @@ define([
         ShadowMode) {
     'use strict';
 
-    /**
-     * A primitive represents geometry in the {@link Scene}.  The geometry can be from a single {@link GeometryInstance}
-     * as shown in example 1 below, or from an array of instances, even if the geometry is from different
-     * geometry types, e.g., an {@link RectangleGeometry} and an {@link EllipsoidGeometry} as shown in Code Example 2.
-     * <p>
-     * A primitive combines geometry instances with an {@link Appearance} that describes the full shading, including
-     * {@link Material} and {@link RenderState}.  Roughly, the geometry instance defines the structure and placement,
-     * and the appearance defines the visual characteristics.  Decoupling geometry and appearance allows us to mix
-     * and match most of them and add a new geometry or appearance independently of each other.
-     * </p>
-     * <p>
-     * Combining multiple instances into one primitive is called batching, and significantly improves performance for static data.
-     * Instances can be individually picked; {@link Scene#pick} returns their {@link GeometryInstance#id}.  Using
-     * per-instance appearances like {@link PerInstanceColorAppearance}, each instance can also have a unique color.
-     * </p>
-     * <p>
-     * {@link Geometry} can either be created and batched on a web worker or the main thread. The first two examples
-     * show geometry that will be created on a web worker by using the descriptions of the geometry. The third example
-     * shows how to create the geometry on the main thread by explicitly calling the <code>createGeometry</code> method.
-     * </p>
-     *
-     * @alias Primitive
-     * @constructor
-     *
-     * @param {Object} [options] Object with the following properties:
-     * @param {GeometryInstance[]|GeometryInstance} [options.geometryInstances] The geometry instances - or a single geometry instance - to render.
-     * @param {Appearance} [options.appearance] The appearance used to render the primitive.
-     * @param {Boolean} [options.show=true] Determines if this primitive will be shown.
-     * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The 4x4 transformation matrix that transforms the primitive (all geometry instances) from model to world coordinates.
-     * @param {Boolean} [options.vertexCacheOptimize=false] When <code>true</code>, geometry vertices are optimized for the pre and post-vertex-shader caches.
-     * @param {Boolean} [options.interleave=false] When <code>true</code>, geometry vertex attributes are interleaved, which can slightly improve rendering performance but increases load time.
-     * @param {Boolean} [options.compressVertices=true] When <code>true</code>, the geometry vertices are compressed, which will save memory.
-     * @param {Boolean} [options.releaseGeometryInstances=true] When <code>true</code>, the primitive does not keep a reference to the input <code>geometryInstances</code> to save memory.
-     * @param {Boolean} [options.allowPicking=true] When <code>true</code>, each geometry instance will only be pickable with {@link Scene#pick}.  When <code>false</code>, GPU memory is saved.
-     * @param {Boolean} [options.cull=true] When <code>true</code>, the renderer frustum culls and horizon culls the primitive's commands based on their bounding volume.  Set this to <code>false</code> for a small performance gain if you are manually culling the primitive.
-     * @param {Boolean} [options.asynchronous=true] Determines if the primitive will be created asynchronously or block until ready.
-     * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Determines if this primitive's commands' bounding spheres are shown.
-     * @param {ShadowMode} [options.shadows=ShadowMode.DISABLED] Determines whether this primitive casts or receives shadows from each light source.
-     *
-     * @example
-     * // 1. Draw a translucent ellipse on the surface with a checkerboard pattern
-     * var instance = new Cesium.GeometryInstance({
-     *   geometry : new Cesium.EllipseGeometry({
-     *       center : Cesium.Cartesian3.fromDegrees(-100.0, 20.0),
-     *       semiMinorAxis : 500000.0,
-     *       semiMajorAxis : 1000000.0,
-     *       rotation : Cesium.Math.PI_OVER_FOUR,
-     *       vertexFormat : Cesium.VertexFormat.POSITION_AND_ST
-     *   }),
-     *   id : 'object returned when this instance is picked and to get/set per-instance attributes'
-     * });
-     * scene.primitives.add(new Cesium.Primitive({
-     *   geometryInstances : instance,
-     *   appearance : new Cesium.EllipsoidSurfaceAppearance({
-     *     material : Cesium.Material.fromType('Checkerboard')
-     *   })
-     * }));
-     *
-     * @example
-     * // 2. Draw different instances each with a unique color
-     * var rectangleInstance = new Cesium.GeometryInstance({
-     *   geometry : new Cesium.RectangleGeometry({
-     *     rectangle : Cesium.Rectangle.fromDegrees(-140.0, 30.0, -100.0, 40.0),
-     *     vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT
-     *   }),
-     *   id : 'rectangle',
-     *   attributes : {
-     *     color : new Cesium.ColorGeometryInstanceAttribute(0.0, 1.0, 1.0, 0.5)
-     *   }
-     * });
-     * var ellipsoidInstance = new Cesium.GeometryInstance({
-     *   geometry : new Cesium.EllipsoidGeometry({
-     *     radii : new Cesium.Cartesian3(500000.0, 500000.0, 1000000.0),
-     *     vertexFormat : Cesium.VertexFormat.POSITION_AND_NORMAL
-     *   }),
-     *   modelMatrix : Cesium.Matrix4.multiplyByTranslation(Cesium.Transforms.eastNorthUpToFixedFrame(
-     *     Cesium.Cartesian3.fromDegrees(-95.59777, 40.03883)), new Cesium.Cartesian3(0.0, 0.0, 500000.0), new Cesium.Matrix4()),
-     *   id : 'ellipsoid',
-     *   attributes : {
-     *     color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.AQUA)
-     *   }
-     * });
-     * scene.primitives.add(new Cesium.Primitive({
-     *   geometryInstances : [rectangleInstance, ellipsoidInstance],
-     *   appearance : new Cesium.PerInstanceColorAppearance()
-     * }));
-     *
-     * @example
-     * // 3. Create the geometry on the main thread.
-     * scene.primitives.add(new Cesium.Primitive({
-     *   geometryInstances : new Cesium.GeometryInstance({
-     *       geometry : Cesium.EllipsoidGeometry.createGeometry(new Cesium.EllipsoidGeometry({
-     *         radii : new Cesium.Cartesian3(500000.0, 500000.0, 1000000.0),
-     *         vertexFormat : Cesium.VertexFormat.POSITION_AND_NORMAL
-     *       })),
-     *       modelMatrix : Cesium.Matrix4.multiplyByTranslation(Cesium.Transforms.eastNorthUpToFixedFrame(
-     *         Cesium.Cartesian3.fromDegrees(-95.59777, 40.03883)), new Cesium.Cartesian3(0.0, 0.0, 500000.0), new Cesium.Matrix4()),
-     *       id : 'ellipsoid',
-     *       attributes : {
-     *         color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.AQUA)
-     *       }
-     *   }),
-     *   appearance : new Cesium.PerInstanceColorAppearance()
-     * }));
-     *
-     * @see GeometryInstance
-     * @see Appearance
-     * @see ClassificationPrimitive
-     * @see GroundPrimitive
-     */
-    function Primitive(options) {
-        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-
         /**
-         * The geometry instances rendered with this primitive.  This may
-         * be <code>undefined</code> if <code>options.releaseGeometryInstances</code>
-         * is <code>true</code> when the primitive is constructed.
-         * <p>
-         * Changing this property after the primitive is rendered has no effect.
-         * </p>
-         *
-         * @readonly
-         * @type GeometryInstance[]|GeometryInstance
-         *
-         * @default undefined
-         */
-        this.geometryInstances = options.geometryInstances;
-
-        /**
-         * The {@link Appearance} used to shade this primitive. Each geometry
-         * instance is shaded with the same appearance.  Some appearances, like
-         * {@link PerInstanceColorAppearance} allow giving each instance unique
-         * properties.
-         *
-         * @type Appearance
-         *
-         * @default undefined
-         */
-        this.appearance = options.appearance;
-        this._appearance = undefined;
-        this._material = undefined;
-
-        /**
-         * The {@link Appearance} used to shade this primitive when it fails the depth test. Each geometry
-         * instance is shaded with the same appearance.  Some appearances, like
-         * {@link PerInstanceColorAppearance} allow giving each instance unique
-         * properties.
-         *
-         * <p>
-         * When using an appearance that requires a color attribute, like PerInstanceColorAppearance,
-         * add a depthFailColor per-instance attribute instead.
-         * </p>
-         *
-         * <p>
-         * Requires the EXT_frag_depth WebGL extension to render properly. If the extension is not supported,
-         * there may be artifacts.
-         * </p>
-         * @type Appearance
-         *
-         * @default undefined
-         */
-        this.depthFailAppearance = options.depthFailAppearance;
-        this._depthFailAppearance = undefined;
-        this._depthFailMaterial = undefined;
-
-        /**
-         * The 4x4 transformation matrix that transforms the primitive (all geometry instances) from model to world coordinates.
-         * When this is the identity matrix, the primitive is drawn in world coordinates, i.e., Earth's WGS84 coordinates.
-         * Local reference frames can be used by providing a different transformation matrix, like that returned
-         * by {@link Transforms.eastNorthUpToFixedFrame}.
-         *
-         * <p>
-         * This property is only supported in 3D mode.
-         * </p>
-         *
-         * @type Matrix4
-         *
-         * @default Matrix4.IDENTITY
-         *
-         * @example
-         * var origin = Cesium.Cartesian3.fromDegrees(-95.0, 40.0, 200000.0);
-         * p.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(origin);
-         */
-        this.modelMatrix = Matrix4.clone(defaultValue(options.modelMatrix, Matrix4.IDENTITY));
-        this._modelMatrix = new Matrix4();
-
-        /**
-         * Determines if the primitive will be shown.  This affects all geometry
-         * instances in the primitive.
-         *
-         * @type Boolean
-         *
-         * @default true
-         */
-        this.show = defaultValue(options.show, true);
-
-        this._vertexCacheOptimize = defaultValue(options.vertexCacheOptimize, false);
-        this._interleave = defaultValue(options.interleave, false);
-        this._releaseGeometryInstances = defaultValue(options.releaseGeometryInstances, true);
-        this._allowPicking = defaultValue(options.allowPicking, true);
-        this._asynchronous = defaultValue(options.asynchronous, true);
-        this._compressVertices = defaultValue(options.compressVertices, true);
-
-        /**
-         * When <code>true</code>, the renderer frustum culls and horizon culls the primitive's commands
-         * based on their bounding volume.  Set this to <code>false</code> for a small performance gain
-         * if you are manually culling the primitive.
-         *
-         * @type {Boolean}
-         *
-         * @default true
-         */
-        this.cull = defaultValue(options.cull, true);
-
-        /**
-         * This property is for debugging only; it is not for production use nor is it optimized.
-         * <p>
-         * Draws the bounding sphere for each draw command in the primitive.
-         * </p>
-         *
-         * @type {Boolean}
-         *
-         * @default false
-         */
-        this.debugShowBoundingVolume = defaultValue(options.debugShowBoundingVolume, false);
-
-        /**
-         * @private
-         */
-        this.rtcCenter = options.rtcCenter;
-
-        //>>includeStart('debug', pragmas.debug);
-        if (defined(this.rtcCenter) && (!defined(this.geometryInstances) || (isArray(this.geometryInstances) && this.geometryInstances !== 1))) {
-            throw new DeveloperError('Relative-to-center rendering only supports one geometry instance.');
+             * A primitive represents geometry in the {@link Scene}.  The geometry can be from a single {@link GeometryInstance}
+             * as shown in example 1 below, or from an array of instances, even if the geometry is from different
+             * geometry types, e.g., an {@link RectangleGeometry} and an {@link EllipsoidGeometry} as shown in Code Example 2.
+             * <p>
+             * A primitive combines geometry instances with an {@link Appearance} that describes the full shading, including
+             * {@link Material} and {@link RenderState}.  Roughly, the geometry instance defines the structure and placement,
+             * and the appearance defines the visual characteristics.  Decoupling geometry and appearance allows us to mix
+             * and match most of them and add a new geometry or appearance independently of each other.
+             * </p>
+             * <p>
+             * Combining multiple instances into one primitive is called batching, and significantly improves performance for static data.
+             * Instances can be individually picked; {@link Scene#pick} returns their {@link GeometryInstance#id}.  Using
+             * per-instance appearances like {@link PerInstanceColorAppearance}, each instance can also have a unique color.
+             * </p>
+             * <p>
+             * {@link Geometry} can either be created and batched on a web worker or the main thread. The first two examples
+             * show geometry that will be created on a web worker by using the descriptions of the geometry. The third example
+             * shows how to create the geometry on the main thread by explicitly calling the <code>createGeometry</code> method.
+             * </p>
+             *
+             * @alias Primitive
+             * @constructor
+             *
+             * @param {Object} [options] Object with the following properties:
+             * @param {GeometryInstance[]|GeometryInstance} [options.geometryInstances] The geometry instances - or a single geometry instance - to render.
+             * @param {Appearance} [options.appearance] The appearance used to render the primitive.
+             * @param {Boolean} [options.show=true] Determines if this primitive will be shown.
+             * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The 4x4 transformation matrix that transforms the primitive (all geometry instances) from model to world coordinates.
+             * @param {Boolean} [options.vertexCacheOptimize=false] When <code>true</code>, geometry vertices are optimized for the pre and post-vertex-shader caches.
+             * @param {Boolean} [options.interleave=false] When <code>true</code>, geometry vertex attributes are interleaved, which can slightly improve rendering performance but increases load time.
+             * @param {Boolean} [options.compressVertices=true] When <code>true</code>, the geometry vertices are compressed, which will save memory.
+             * @param {Boolean} [options.releaseGeometryInstances=true] When <code>true</code>, the primitive does not keep a reference to the input <code>geometryInstances</code> to save memory.
+             * @param {Boolean} [options.allowPicking=true] When <code>true</code>, each geometry instance will only be pickable with {@link Scene#pick}.  When <code>false</code>, GPU memory is saved.
+             * @param {Boolean} [options.cull=true] When <code>true</code>, the renderer frustum culls and horizon culls the primitive's commands based on their bounding volume.  Set this to <code>false</code> for a small performance gain if you are manually culling the primitive.
+             * @param {Boolean} [options.asynchronous=true] Determines if the primitive will be created asynchronously or block until ready.
+             * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Determines if this primitive's commands' bounding spheres are shown.
+             * @param {ShadowMode} [options.shadows=ShadowMode.DISABLED] Determines whether this primitive casts or receives shadows from each light source.
+             *
+             * @example
+             * // 1. Draw a translucent ellipse on the surface with a checkerboard pattern
+             * var instance = new Cesium.GeometryInstance({
+             *   geometry : new Cesium.EllipseGeometry({
+             *       center : Cesium.Cartesian3.fromDegrees(-100.0, 20.0),
+             *       semiMinorAxis : 500000.0,
+             *       semiMajorAxis : 1000000.0,
+             *       rotation : Cesium.Math.PI_OVER_FOUR,
+             *       vertexFormat : Cesium.VertexFormat.POSITION_AND_ST
+             *   }),
+             *   id : 'object returned when this instance is picked and to get/set per-instance attributes'
+             * });
+             * scene.primitives.add(new Cesium.Primitive({
+             *   geometryInstances : instance,
+             *   appearance : new Cesium.EllipsoidSurfaceAppearance({
+             *     material : Cesium.Material.fromType('Checkerboard')
+             *   })
+             * }));
+             *
+             * @example
+             * // 2. Draw different instances each with a unique color
+             * var rectangleInstance = new Cesium.GeometryInstance({
+             *   geometry : new Cesium.RectangleGeometry({
+             *     rectangle : Cesium.Rectangle.fromDegrees(-140.0, 30.0, -100.0, 40.0),
+             *     vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT
+             *   }),
+             *   id : 'rectangle',
+             *   attributes : {
+             *     color : new Cesium.ColorGeometryInstanceAttribute(0.0, 1.0, 1.0, 0.5)
+             *   }
+             * });
+             * var ellipsoidInstance = new Cesium.GeometryInstance({
+             *   geometry : new Cesium.EllipsoidGeometry({
+             *     radii : new Cesium.Cartesian3(500000.0, 500000.0, 1000000.0),
+             *     vertexFormat : Cesium.VertexFormat.POSITION_AND_NORMAL
+             *   }),
+             *   modelMatrix : Cesium.Matrix4.multiplyByTranslation(Cesium.Transforms.eastNorthUpToFixedFrame(
+             *     Cesium.Cartesian3.fromDegrees(-95.59777, 40.03883)), new Cesium.Cartesian3(0.0, 0.0, 500000.0), new Cesium.Matrix4()),
+             *   id : 'ellipsoid',
+             *   attributes : {
+             *     color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.AQUA)
+             *   }
+             * });
+             * scene.primitives.add(new Cesium.Primitive({
+             *   geometryInstances : [rectangleInstance, ellipsoidInstance],
+             *   appearance : new Cesium.PerInstanceColorAppearance()
+             * }));
+             *
+             * @example
+             * // 3. Create the geometry on the main thread.
+             * scene.primitives.add(new Cesium.Primitive({
+             *   geometryInstances : new Cesium.GeometryInstance({
+             *       geometry : Cesium.EllipsoidGeometry.createGeometry(new Cesium.EllipsoidGeometry({
+             *         radii : new Cesium.Cartesian3(500000.0, 500000.0, 1000000.0),
+             *         vertexFormat : Cesium.VertexFormat.POSITION_AND_NORMAL
+             *       })),
+             *       modelMatrix : Cesium.Matrix4.multiplyByTranslation(Cesium.Transforms.eastNorthUpToFixedFrame(
+             *         Cesium.Cartesian3.fromDegrees(-95.59777, 40.03883)), new Cesium.Cartesian3(0.0, 0.0, 500000.0), new Cesium.Matrix4()),
+             *       id : 'ellipsoid',
+             *       attributes : {
+             *         color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.AQUA)
+             *       }
+             *   }),
+             *   appearance : new Cesium.PerInstanceColorAppearance()
+             * }));
+             *
+             * @see GeometryInstance
+             * @see Appearance
+             * @see ClassificationPrimitive
+             * @see GroundPrimitive
+             */
+        class Primitive {
+            constructor(options) {
+                options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+                /**
+                 * The geometry instances rendered with this primitive.  This may
+                 * be <code>undefined</code> if <code>options.releaseGeometryInstances</code>
+                 * is <code>true</code> when the primitive is constructed.
+                 * <p>
+                 * Changing this property after the primitive is rendered has no effect.
+                 * </p>
+                 *
+                 * @readonly
+                 * @type GeometryInstance[]|GeometryInstance
+                 *
+                 * @default undefined
+                 */
+                this.geometryInstances = options.geometryInstances;
+                /**
+                 * The {@link Appearance} used to shade this primitive. Each geometry
+                 * instance is shaded with the same appearance.  Some appearances, like
+                 * {@link PerInstanceColorAppearance} allow giving each instance unique
+                 * properties.
+                 *
+                 * @type Appearance
+                 *
+                 * @default undefined
+                 */
+                this.appearance = options.appearance;
+                this._appearance = undefined;
+                this._material = undefined;
+                /**
+                 * The {@link Appearance} used to shade this primitive when it fails the depth test. Each geometry
+                 * instance is shaded with the same appearance.  Some appearances, like
+                 * {@link PerInstanceColorAppearance} allow giving each instance unique
+                 * properties.
+                 *
+                 * <p>
+                 * When using an appearance that requires a color attribute, like PerInstanceColorAppearance,
+                 * add a depthFailColor per-instance attribute instead.
+                 * </p>
+                 *
+                 * <p>
+                 * Requires the EXT_frag_depth WebGL extension to render properly. If the extension is not supported,
+                 * there may be artifacts.
+                 * </p>
+                 * @type Appearance
+                 *
+                 * @default undefined
+                 */
+                this.depthFailAppearance = options.depthFailAppearance;
+                this._depthFailAppearance = undefined;
+                this._depthFailMaterial = undefined;
+                /**
+                 * The 4x4 transformation matrix that transforms the primitive (all geometry instances) from model to world coordinates.
+                 * When this is the identity matrix, the primitive is drawn in world coordinates, i.e., Earth's WGS84 coordinates.
+                 * Local reference frames can be used by providing a different transformation matrix, like that returned
+                 * by {@link Transforms.eastNorthUpToFixedFrame}.
+                 *
+                 * <p>
+                 * This property is only supported in 3D mode.
+                 * </p>
+                 *
+                 * @type Matrix4
+                 *
+                 * @default Matrix4.IDENTITY
+                 *
+                 * @example
+                 * var origin = Cesium.Cartesian3.fromDegrees(-95.0, 40.0, 200000.0);
+                 * p.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(origin);
+                 */
+                this.modelMatrix = Matrix4.clone(defaultValue(options.modelMatrix, Matrix4.IDENTITY));
+                this._modelMatrix = new Matrix4();
+                /**
+                 * Determines if the primitive will be shown.  This affects all geometry
+                 * instances in the primitive.
+                 *
+                 * @type Boolean
+                 *
+                 * @default true
+                 */
+                this.show = defaultValue(options.show, true);
+                this._vertexCacheOptimize = defaultValue(options.vertexCacheOptimize, false);
+                this._interleave = defaultValue(options.interleave, false);
+                this._releaseGeometryInstances = defaultValue(options.releaseGeometryInstances, true);
+                this._allowPicking = defaultValue(options.allowPicking, true);
+                this._asynchronous = defaultValue(options.asynchronous, true);
+                this._compressVertices = defaultValue(options.compressVertices, true);
+                /**
+                 * When <code>true</code>, the renderer frustum culls and horizon culls the primitive's commands
+                 * based on their bounding volume.  Set this to <code>false</code> for a small performance gain
+                 * if you are manually culling the primitive.
+                 *
+                 * @type {Boolean}
+                 *
+                 * @default true
+                 */
+                this.cull = defaultValue(options.cull, true);
+                /**
+                 * This property is for debugging only; it is not for production use nor is it optimized.
+                 * <p>
+                 * Draws the bounding sphere for each draw command in the primitive.
+                 * </p>
+                 *
+                 * @type {Boolean}
+                 *
+                 * @default false
+                 */
+                this.debugShowBoundingVolume = defaultValue(options.debugShowBoundingVolume, false);
+                /**
+                 * @private
+                 */
+                this.rtcCenter = options.rtcCenter;
+                //>>includeStart('debug', pragmas.debug);
+                if (defined(this.rtcCenter) && (!defined(this.geometryInstances) || (isArray(this.geometryInstances) && this.geometryInstances !== 1))) {
+                    throw new DeveloperError('Relative-to-center rendering only supports one geometry instance.');
+                }
+                //>>includeEnd('debug');
+                /**
+                 * Determines whether this primitive casts or receives shadows from each light source.
+                 *
+                 * @type {ShadowMode}
+                 *
+                 * @default ShadowMode.DISABLED
+                 */
+                this.shadows = defaultValue(options.shadows, ShadowMode.DISABLED);
+                this._translucent = undefined;
+                this._state = PrimitiveState.READY;
+                this._geometries = [];
+                this._error = undefined;
+                this._numberOfInstances = 0;
+                this._boundingSpheres = [];
+                this._boundingSphereWC = [];
+                this._boundingSphereCV = [];
+                this._boundingSphere2D = [];
+                this._boundingSphereMorph = [];
+                this._perInstanceAttributeCache = [];
+                this._instanceIds = [];
+                this._lastPerInstanceAttributeIndex = 0;
+                this._va = [];
+                this._attributeLocations = undefined;
+                this._primitiveType = undefined;
+                this._frontFaceRS = undefined;
+                this._backFaceRS = undefined;
+                this._sp = undefined;
+                this._depthFailAppearance = undefined;
+                this._spDepthFail = undefined;
+                this._frontFaceDepthFailRS = undefined;
+                this._backFaceDepthFailRS = undefined;
+                this._pickIds = [];
+                this._colorCommands = [];
+                this._pickCommands = [];
+                this._readOnlyInstanceAttributes = options._readOnlyInstanceAttributes;
+                this._createBoundingVolumeFunction = options._createBoundingVolumeFunction;
+                this._createRenderStatesFunction = options._createRenderStatesFunction;
+                this._createShaderProgramFunction = options._createShaderProgramFunction;
+                this._createCommandsFunction = options._createCommandsFunction;
+                this._updateAndQueueCommandsFunction = options._updateAndQueueCommandsFunction;
+                this._createPickOffsets = options._createPickOffsets;
+                this._pickOffsets = undefined;
+                this._createGeometryResults = undefined;
+                this._ready = false;
+                this._readyPromise = when.defer();
+                this._batchTable = undefined;
+                this._batchTableAttributeIndices = undefined;
+                this._offsetInstanceExtend = undefined;
+                this._batchTableOffsetAttribute2DIndex = undefined;
+                this._batchTableOffsetsUpdated = false;
+                this._instanceBoundingSpheres = undefined;
+                this._instanceBoundingSpheresCV = undefined;
+                this._tempBoundingSpheres = undefined;
+                this._recomputeBoundingSpheres = false;
+                this._batchTableBoundingSpheresUpdated = false;
+                this._batchTableBoundingSphereAttributeIndices = undefined;
+            }
+            /**
+                 * Called when {@link Viewer} or {@link CesiumWidget} render the scene to
+                 * get the draw commands needed to render this primitive.
+                 * <p>
+                 * Do not call this function directly.  This is documented just to
+                 * list the exceptions that may be propagated when the scene is rendered:
+                 * </p>
+                 *
+                 * @exception {DeveloperError} All instance geometries must have the same primitiveType.
+                 * @exception {DeveloperError} Appearance and material have a uniform with the same name.
+                 * @exception {DeveloperError} Primitive.modelMatrix is only supported in 3D mode.
+                 * @exception {RuntimeError} Vertex texture fetch support is required to render primitives with per-instance attributes. The maximum number of vertex texture image units must be greater than zero.
+                 */
+            update(frameState) {
+                if (((!defined(this.geometryInstances)) && (this._va.length === 0)) ||
+                    (defined(this.geometryInstances) && isArray(this.geometryInstances) && this.geometryInstances.length === 0) ||
+                    (!defined(this.appearance)) ||
+                    (frameState.mode !== SceneMode.SCENE3D && frameState.scene3DOnly) ||
+                    (!frameState.passes.render && !frameState.passes.pick)) {
+                    return;
+                }
+                if (defined(this._error)) {
+                    throw this._error;
+                }
+                //>>includeStart('debug', pragmas.debug);
+                if (defined(this.rtcCenter) && !frameState.scene3DOnly) {
+                    throw new DeveloperError('RTC rendering is only available for 3D only scenes.');
+                }
+                //>>includeEnd('debug');
+                if (this._state === PrimitiveState.FAILED) {
+                    return;
+                }
+                var context = frameState.context;
+                if (!defined(this._batchTable)) {
+                    createBatchTable(this, context);
+                }
+                if (this._batchTable.attributes.length > 0) {
+                    if (ContextLimits.maximumVertexTextureImageUnits === 0) {
+                        throw new RuntimeError('Vertex texture fetch support is required to render primitives with per-instance attributes. The maximum number of vertex texture image units must be greater than zero.');
+                    }
+                    this._batchTable.update(frameState);
+                }
+                if (this._state !== PrimitiveState.COMPLETE && this._state !== PrimitiveState.COMBINED) {
+                    if (this.asynchronous) {
+                        loadAsynchronous(this, frameState);
+                    }
+                    else {
+                        loadSynchronous(this, frameState);
+                    }
+                }
+                if (this._state === PrimitiveState.COMBINED) {
+                    updateBatchTableBoundingSpheres(this, frameState);
+                    updateBatchTableOffsets(this, frameState);
+                    createVertexArray(this, frameState);
+                }
+                if (!this.show || this._state !== PrimitiveState.COMPLETE) {
+                    return;
+                }
+                if (!this._batchTableOffsetsUpdated) {
+                    updateBatchTableOffsets(this, frameState);
+                }
+                if (this._recomputeBoundingSpheres) {
+                    recomputeBoundingSpheres(this, frameState);
+                }
+                // Create or recreate render state and shader program if appearance/material changed
+                var appearance = this.appearance;
+                var material = appearance.material;
+                var createRS = false;
+                var createSP = false;
+                if (this._appearance !== appearance) {
+                    this._appearance = appearance;
+                    this._material = material;
+                    createRS = true;
+                    createSP = true;
+                }
+                else if (this._material !== material) {
+                    this._material = material;
+                    createSP = true;
+                }
+                var depthFailAppearance = this.depthFailAppearance;
+                var depthFailMaterial = defined(depthFailAppearance) ? depthFailAppearance.material : undefined;
+                if (this._depthFailAppearance !== depthFailAppearance) {
+                    this._depthFailAppearance = depthFailAppearance;
+                    this._depthFailMaterial = depthFailMaterial;
+                    createRS = true;
+                    createSP = true;
+                }
+                else if (this._depthFailMaterial !== depthFailMaterial) {
+                    this._depthFailMaterial = depthFailMaterial;
+                    createSP = true;
+                }
+                var translucent = this._appearance.isTranslucent();
+                if (this._translucent !== translucent) {
+                    this._translucent = translucent;
+                    createRS = true;
+                }
+                if (defined(this._material)) {
+                    this._material.update(context);
+                }
+                var twoPasses = appearance.closed && translucent;
+                if (createRS) {
+                    var rsFunc = defaultValue(this._createRenderStatesFunction, createRenderStates);
+                    rsFunc(this, context, appearance, twoPasses);
+                }
+                if (createSP) {
+                    var spFunc = defaultValue(this._createShaderProgramFunction, createShaderProgram);
+                    spFunc(this, frameState, appearance);
+                }
+                if (createRS || createSP) {
+                    var commandFunc = defaultValue(this._createCommandsFunction, createCommands);
+                    commandFunc(this, appearance, material, translucent, twoPasses, this._colorCommands, this._pickCommands, frameState);
+                }
+                var updateAndQueueCommandsFunc = defaultValue(this._updateAndQueueCommandsFunction, updateAndQueueCommands);
+                updateAndQueueCommandsFunc(this, frameState, this._colorCommands, this._pickCommands, this.modelMatrix, this.cull, this.debugShowBoundingVolume, twoPasses);
+            }
+            /**
+                 * Returns the modifiable per-instance attributes for a {@link GeometryInstance}.
+                 *
+                 * @param {*} id The id of the {@link GeometryInstance}.
+                 * @returns {Object} The typed array in the attribute's format or undefined if the is no instance with id.
+                 *
+                 * @exception {DeveloperError} must call update before calling getGeometryInstanceAttributes.
+                 *
+                 * @example
+                 * var attributes = primitive.getGeometryInstanceAttributes('an id');
+                 * attributes.color = Cesium.ColorGeometryInstanceAttribute.toValue(Cesium.Color.AQUA);
+                 * attributes.show = Cesium.ShowGeometryInstanceAttribute.toValue(true);
+                 * attributes.distanceDisplayCondition = Cesium.DistanceDisplayConditionGeometryInstanceAttribute.toValue(100.0, 10000.0);
+                 * attributes.offset = Cesium.OffsetGeometryInstanceAttribute.toValue(Cartesian3.IDENTITY);
+                 */
+            getGeometryInstanceAttributes(id) {
+                //>>includeStart('debug', pragmas.debug);
+                if (!defined(id)) {
+                    throw new DeveloperError('id is required');
+                }
+                if (!defined(this._batchTable)) {
+                    throw new DeveloperError('must call update before calling getGeometryInstanceAttributes');
+                }
+                //>>includeEnd('debug');
+                var index = -1;
+                var lastIndex = this._lastPerInstanceAttributeIndex;
+                var ids = this._instanceIds;
+                var length = ids.length;
+                for (var i = 0; i < length; ++i) {
+                    var curIndex = (lastIndex + i) % length;
+                    if (id === ids[curIndex]) {
+                        index = curIndex;
+                        break;
+                    }
+                }
+                if (index === -1) {
+                    return undefined;
+                }
+                var attributes = this._perInstanceAttributeCache[index];
+                if (defined(attributes)) {
+                    return attributes;
+                }
+                var batchTable = this._batchTable;
+                var perInstanceAttributeIndices = this._batchTableAttributeIndices;
+                attributes = {};
+                var properties = {};
+                for (var name in perInstanceAttributeIndices) {
+                    if (perInstanceAttributeIndices.hasOwnProperty(name)) {
+                        var attributeIndex = perInstanceAttributeIndices[name];
+                        properties[name] = {
+                            get: createGetFunction(batchTable, index, attributeIndex)
+                        };
+                        var createSetter = true;
+                        var readOnlyAttributes = this._readOnlyInstanceAttributes;
+                        if (createSetter && defined(readOnlyAttributes)) {
+                            length = readOnlyAttributes.length;
+                            for (var k = 0; k < length; ++k) {
+                                if (name === readOnlyAttributes[k]) {
+                                    createSetter = false;
+                                    break;
+                                }
+                            }
+                        }
+                        if (createSetter) {
+                            properties[name].set = createSetFunction(batchTable, index, attributeIndex, this, name);
+                        }
+                    }
+                }
+                createBoundingSphereProperties(this, properties, index);
+                createPickIdProperty(this, properties, index);
+                defineProperties(attributes, properties);
+                this._lastPerInstanceAttributeIndex = index;
+                this._perInstanceAttributeCache[index] = attributes;
+                return attributes;
+            }
+            /**
+                 * Returns true if this object was destroyed; otherwise, false.
+                 * <p>
+                 * If this object was destroyed, it should not be used; calling any function other than
+                 * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
+                 * </p>
+                 *
+                 * @returns {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
+                 *
+                 * @see Primitive#destroy
+                 */
+            isDestroyed() {
+                return false;
+            }
+            /**
+                 * Destroys the WebGL resources held by this object.  Destroying an object allows for deterministic
+                 * release of WebGL resources, instead of relying on the garbage collector to destroy this object.
+                 * <p>
+                 * Once an object is destroyed, it should not be used; calling any function other than
+                 * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
+                 * assign the return value (<code>undefined</code>) to the object as done in the example.
+                 * </p>
+                 *
+                 * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
+                 *
+                 *
+                 * @example
+                 * e = e && e.destroy();
+                 *
+                 * @see Primitive#isDestroyed
+                 */
+            destroy() {
+                var length;
+                var i;
+                this._sp = this._sp && this._sp.destroy();
+                this._pickSP = this._pickSP && this._pickSP.destroy();
+                var va = this._va;
+                length = va.length;
+                for (i = 0; i < length; ++i) {
+                    va[i].destroy();
+                }
+                this._va = undefined;
+                var pickIds = this._pickIds;
+                length = pickIds.length;
+                for (i = 0; i < length; ++i) {
+                    pickIds[i].destroy();
+                }
+                this._pickIds = undefined;
+                this._batchTable = this._batchTable && this._batchTable.destroy();
+                //These objects may be fairly large and reference other large objects (like Entities)
+                //We explicitly set them to undefined here so that the memory can be freed
+                //even if a reference to the destroyed Primitive has been kept around.
+                this._instanceIds = undefined;
+                this._perInstanceAttributeCache = undefined;
+                this._attributeLocations = undefined;
+                return destroyObject(this);
+            }
+            static _modifyShaderPosition(primitive, vertexShaderSource, scene3DOnly) {
+                var match;
+                var forwardDecl = '';
+                var attributes = '';
+                var computeFunctions = '';
+                while ((match = positionRegex.exec(vertexShaderSource)) !== null) {
+                    var name = match[1];
+                    var functionName = 'vec4 czm_compute' + name[0].toUpperCase() + name.substr(1) + '()';
+                    // Don't forward-declare czm_computePosition because computePosition.glsl already does.
+                    if (functionName !== 'vec4 czm_computePosition()') {
+                        forwardDecl += functionName + ';\n';
+                    }
+                    if (!defined(primitive.rtcCenter)) {
+                        // Use GPU RTE
+                        if (!scene3DOnly) {
+                            attributes +=
+                                'attribute vec3 ' + name + '2DHigh;\n' +
+                                'attribute vec3 ' + name + '2DLow;\n';
+                            computeFunctions +=
+                                functionName + '\n' +
+                                '{\n' +
+                                '    vec4 p;\n' +
+                                '    if (czm_morphTime == 1.0)\n' +
+                                '    {\n' +
+                                '        p = czm_translateRelativeToEye(' + name + '3DHigh, ' + name + '3DLow);\n' +
+                                '    }\n' +
+                                '    else if (czm_morphTime == 0.0)\n' +
+                                '    {\n' +
+                                '        p = czm_translateRelativeToEye(' + name + '2DHigh.zxy, ' + name + '2DLow.zxy);\n' +
+                                '    }\n' +
+                                '    else\n' +
+                                '    {\n' +
+                                '        p = czm_columbusViewMorph(\n' +
+                                '                czm_translateRelativeToEye(' + name + '2DHigh.zxy, ' + name + '2DLow.zxy),\n' +
+                                '                czm_translateRelativeToEye(' + name + '3DHigh, ' + name + '3DLow),\n' +
+                                '                czm_morphTime);\n' +
+                                '    }\n' +
+                                '    return p;\n' +
+                                '}\n\n';
+                        }
+                        else {
+                            computeFunctions +=
+                                functionName + '\n' +
+                                '{\n' +
+                                '    return czm_translateRelativeToEye(' + name + '3DHigh, ' + name + '3DLow);\n' +
+                                '}\n\n';
+                        }
+                    }
+                    else {
+                        // Use RTC
+                        vertexShaderSource = vertexShaderSource.replace(/attribute\s+vec(?:3|4)\s+position3DHigh;/g, '');
+                        vertexShaderSource = vertexShaderSource.replace(/attribute\s+vec(?:3|4)\s+position3DLow;/g, '');
+                        forwardDecl += 'uniform mat4 u_modifiedModelView;\n';
+                        attributes += 'attribute vec4 position;\n';
+                        computeFunctions +=
+                            functionName + '\n' +
+                            '{\n' +
+                            '    return u_modifiedModelView * position;\n' +
+                            '}\n\n';
+                        vertexShaderSource = vertexShaderSource.replace(/czm_modelViewRelativeToEye\s+\*\s+/g, '');
+                        vertexShaderSource = vertexShaderSource.replace(/czm_modelViewProjectionRelativeToEye/g, 'czm_projection');
+                    }
+                }
+                return [forwardDecl, attributes, vertexShaderSource, computeFunctions].join('\n');
+            }
+            static _appendShowToShader(primitive, vertexShaderSource) {
+                if (!defined(primitive._batchTableAttributeIndices.show)) {
+                    return vertexShaderSource;
+                }
+                var renamedVS = ShaderSource.replaceMain(vertexShaderSource, 'czm_non_show_main');
+                var showMain = 'void main() \n' +
+                    '{ \n' +
+                    '    czm_non_show_main(); \n' +
+                    '    gl_Position *= czm_batchTable_show(batchId); \n' +
+                    '}';
+                return renamedVS + '\n' + showMain;
+            }
+            static _updateColorAttribute(primitive, vertexShaderSource, isDepthFail) {
+                // some appearances have a color attribute for per vertex color.
+                // only remove if color is a per instance attribute.
+                if (!defined(primitive._batchTableAttributeIndices.color) && !defined(primitive._batchTableAttributeIndices.depthFailColor)) {
+                    return vertexShaderSource;
+                }
+                if (vertexShaderSource.search(/attribute\s+vec4\s+color;/g) === -1) {
+                    return vertexShaderSource;
+                }
+                //>>includeStart('debug', pragmas.debug);
+                if (isDepthFail && !defined(primitive._batchTableAttributeIndices.depthFailColor)) {
+                    throw new DeveloperError('A depthFailColor per-instance attribute is required when using a depth fail appearance that uses a color attribute.');
+                }
+                //>>includeEnd('debug');
+                var modifiedVS = vertexShaderSource;
+                modifiedVS = modifiedVS.replace(/attribute\s+vec4\s+color;/g, '');
+                if (!isDepthFail) {
+                    modifiedVS = modifiedVS.replace(/(\b)color(\b)/g, '$1czm_batchTable_color(batchId)$2');
+                }
+                else {
+                    modifiedVS = modifiedVS.replace(/(\b)color(\b)/g, '$1czm_batchTable_depthFailColor(batchId)$2');
+                }
+                return modifiedVS;
+            }
+            static _updatePickColorAttribute(source) {
+                var vsPick = source.replace(/attribute\s+vec4\s+pickColor;/g, '');
+                vsPick = vsPick.replace(/(\b)pickColor(\b)/g, '$1czm_batchTable_pickColor(batchId)$2');
+                return vsPick;
+            }
+            static _appendOffsetToShader(primitive, vertexShaderSource) {
+                if (!defined(primitive._batchTableAttributeIndices.offset)) {
+                    return vertexShaderSource;
+                }
+                var attr = 'attribute float batchId;\n';
+                attr += 'attribute float applyOffset;';
+                var modifiedShader = vertexShaderSource.replace(/attribute\s+float\s+batchId;/g, attr);
+                var str = 'vec4 $1 = czm_computePosition();\n';
+                str += '    if (czm_sceneMode == czm_sceneMode3D)\n';
+                str += '    {\n';
+                str += '        $1 = $1 + vec4(czm_batchTable_offset(batchId) * applyOffset, 0.0);';
+                str += '    }\n';
+                str += '    else\n';
+                str += '    {\n';
+                str += '        $1 = $1 + vec4(czm_batchTable_offset2D(batchId) * applyOffset, 0.0);';
+                str += '    }\n';
+                modifiedShader = modifiedShader.replace(/vec4\s+([A-Za-z0-9_]+)\s+=\s+czm_computePosition\(\);/g, str);
+                return modifiedShader;
+            }
+            static _appendDistanceDisplayConditionToShader(primitive, vertexShaderSource, scene3DOnly) {
+                if (!defined(primitive._batchTableAttributeIndices.distanceDisplayCondition)) {
+                    return vertexShaderSource;
+                }
+                var renamedVS = ShaderSource.replaceMain(vertexShaderSource, 'czm_non_distanceDisplayCondition_main');
+                var distanceDisplayConditionMain = 'void main() \n' +
+                    '{ \n' +
+                    '    czm_non_distanceDisplayCondition_main(); \n' +
+                    '    vec2 distanceDisplayCondition = czm_batchTable_distanceDisplayCondition(batchId);\n' +
+                    '    vec3 boundingSphereCenter3DHigh = czm_batchTable_boundingSphereCenter3DHigh(batchId);\n' +
+                    '    vec3 boundingSphereCenter3DLow = czm_batchTable_boundingSphereCenter3DLow(batchId);\n' +
+                    '    float boundingSphereRadius = czm_batchTable_boundingSphereRadius(batchId);\n';
+                if (!scene3DOnly) {
+                    distanceDisplayConditionMain +=
+                        '    vec3 boundingSphereCenter2DHigh = czm_batchTable_boundingSphereCenter2DHigh(batchId);\n' +
+                        '    vec3 boundingSphereCenter2DLow = czm_batchTable_boundingSphereCenter2DLow(batchId);\n' +
+                        '    vec4 centerRTE;\n' +
+                        '    if (czm_morphTime == 1.0)\n' +
+                        '    {\n' +
+                        '        centerRTE = czm_translateRelativeToEye(boundingSphereCenter3DHigh, boundingSphereCenter3DLow);\n' +
+                        '    }\n' +
+                        '    else if (czm_morphTime == 0.0)\n' +
+                        '    {\n' +
+                        '        centerRTE = czm_translateRelativeToEye(boundingSphereCenter2DHigh.zxy, boundingSphereCenter2DLow.zxy);\n' +
+                        '    }\n' +
+                        '    else\n' +
+                        '    {\n' +
+                        '        centerRTE = czm_columbusViewMorph(\n' +
+                        '                czm_translateRelativeToEye(boundingSphereCenter2DHigh.zxy, boundingSphereCenter2DLow.zxy),\n' +
+                        '                czm_translateRelativeToEye(boundingSphereCenter3DHigh, boundingSphereCenter3DLow),\n' +
+                        '                czm_morphTime);\n' +
+                        '    }\n';
+                }
+                else {
+                    distanceDisplayConditionMain +=
+                        '    vec4 centerRTE = czm_translateRelativeToEye(boundingSphereCenter3DHigh, boundingSphereCenter3DLow);\n';
+                }
+                distanceDisplayConditionMain +=
+                    '    float radiusSq = boundingSphereRadius * boundingSphereRadius; \n' +
+                    '    float distanceSq; \n' +
+                    '    if (czm_sceneMode == czm_sceneMode2D) \n' +
+                    '    { \n' +
+                    '        distanceSq = czm_eyeHeight2D.y - radiusSq; \n' +
+                    '    } \n' +
+                    '    else \n' +
+                    '    { \n' +
+                    '        distanceSq = dot(centerRTE.xyz, centerRTE.xyz) - radiusSq; \n' +
+                    '    } \n' +
+                    '    distanceSq = max(distanceSq, 0.0); \n' +
+                    '    float nearSq = distanceDisplayCondition.x * distanceDisplayCondition.x; \n' +
+                    '    float farSq = distanceDisplayCondition.y * distanceDisplayCondition.y; \n' +
+                    '    float show = (distanceSq >= nearSq && distanceSq <= farSq) ? 1.0 : 0.0; \n' +
+                    '    gl_Position *= show; \n' +
+                    '}';
+                return renamedVS + '\n' + distanceDisplayConditionMain;
+            }
+            static _updateBoundingVolumes(primitive, frameState, modelMatrix, forceUpdate) {
+                var i;
+                var length;
+                var boundingSphere;
+                if (forceUpdate || !Matrix4.equals(modelMatrix, primitive._modelMatrix)) {
+                    Matrix4.clone(modelMatrix, primitive._modelMatrix);
+                    length = primitive._boundingSpheres.length;
+                    for (i = 0; i < length; ++i) {
+                        boundingSphere = primitive._boundingSpheres[i];
+                        if (defined(boundingSphere)) {
+                            primitive._boundingSphereWC[i] = BoundingSphere.transform(boundingSphere, modelMatrix, primitive._boundingSphereWC[i]);
+                            if (!frameState.scene3DOnly) {
+                                primitive._boundingSphere2D[i] = BoundingSphere.clone(primitive._boundingSphereCV[i], primitive._boundingSphere2D[i]);
+                                primitive._boundingSphere2D[i].center.x = 0.0;
+                                primitive._boundingSphereMorph[i] = BoundingSphere.union(primitive._boundingSphereWC[i], primitive._boundingSphereCV[i]);
+                            }
+                        }
+                    }
+                }
+                // Update bounding volumes for primitives that are sized in pixels.
+                // The pixel size in meters varies based on the distance from the camera.
+                var pixelSize = primitive.appearance.pixelSize;
+                if (defined(pixelSize)) {
+                    length = primitive._boundingSpheres.length;
+                    for (i = 0; i < length; ++i) {
+                        boundingSphere = primitive._boundingSpheres[i];
+                        var boundingSphereWC = primitive._boundingSphereWC[i];
+                        var pixelSizeInMeters = frameState.camera.getPixelSize(boundingSphere, frameState.context.drawingBufferWidth, frameState.context.drawingBufferHeight);
+                        var sizeInMeters = pixelSizeInMeters * pixelSize;
+                        boundingSphereWC.radius = boundingSphere.radius + sizeInMeters;
+                    }
+                }
+            }
         }
-        //>>includeEnd('debug');
-
-        /**
-         * Determines whether this primitive casts or receives shadows from each light source.
-         *
-         * @type {ShadowMode}
-         *
-         * @default ShadowMode.DISABLED
-         */
-        this.shadows = defaultValue(options.shadows, ShadowMode.DISABLED);
-
-        this._translucent = undefined;
-
-        this._state = PrimitiveState.READY;
-        this._geometries = [];
-        this._error = undefined;
-        this._numberOfInstances = 0;
-
-        this._boundingSpheres = [];
-        this._boundingSphereWC = [];
-        this._boundingSphereCV = [];
-        this._boundingSphere2D = [];
-        this._boundingSphereMorph = [];
-        this._perInstanceAttributeCache = [];
-        this._instanceIds = [];
-        this._lastPerInstanceAttributeIndex = 0;
-
-        this._va = [];
-        this._attributeLocations = undefined;
-        this._primitiveType = undefined;
-
-        this._frontFaceRS = undefined;
-        this._backFaceRS = undefined;
-        this._sp = undefined;
-
-        this._depthFailAppearance = undefined;
-        this._spDepthFail = undefined;
-        this._frontFaceDepthFailRS = undefined;
-        this._backFaceDepthFailRS = undefined;
-
-        this._pickIds = [];
-
-        this._colorCommands = [];
-        this._pickCommands = [];
-
-        this._readOnlyInstanceAttributes = options._readOnlyInstanceAttributes;
-
-        this._createBoundingVolumeFunction = options._createBoundingVolumeFunction;
-        this._createRenderStatesFunction = options._createRenderStatesFunction;
-        this._createShaderProgramFunction = options._createShaderProgramFunction;
-        this._createCommandsFunction = options._createCommandsFunction;
-        this._updateAndQueueCommandsFunction = options._updateAndQueueCommandsFunction;
-
-        this._createPickOffsets = options._createPickOffsets;
-        this._pickOffsets = undefined;
-
-        this._createGeometryResults = undefined;
-        this._ready = false;
-        this._readyPromise = when.defer();
-
-        this._batchTable = undefined;
-        this._batchTableAttributeIndices = undefined;
-        this._offsetInstanceExtend = undefined;
-        this._batchTableOffsetAttribute2DIndex = undefined;
-        this._batchTableOffsetsUpdated = false;
-        this._instanceBoundingSpheres = undefined;
-        this._instanceBoundingSpheresCV = undefined;
-        this._tempBoundingSpheres = undefined;
-        this._recomputeBoundingSpheres = false;
-        this._batchTableBoundingSpheresUpdated = false;
-        this._batchTableBoundingSphereAttributeIndices = undefined;
-    }
 
     defineProperties(Primitive.prototype, {
         /**
@@ -751,122 +1190,8 @@ define([
 
     var positionRegex = /attribute\s+vec(?:3|4)\s+(.*)3DHigh;/g;
 
-    Primitive._modifyShaderPosition = function(primitive, vertexShaderSource, scene3DOnly) {
-        var match;
 
-        var forwardDecl = '';
-        var attributes = '';
-        var computeFunctions = '';
 
-        while ((match = positionRegex.exec(vertexShaderSource)) !== null) {
-            var name = match[1];
-
-            var functionName = 'vec4 czm_compute' + name[0].toUpperCase() + name.substr(1) + '()';
-
-            // Don't forward-declare czm_computePosition because computePosition.glsl already does.
-            if (functionName !== 'vec4 czm_computePosition()') {
-                forwardDecl += functionName + ';\n';
-            }
-
-            if (!defined(primitive.rtcCenter)) {
-                // Use GPU RTE
-                if (!scene3DOnly) {
-                    attributes +=
-                        'attribute vec3 ' + name + '2DHigh;\n' +
-                        'attribute vec3 ' + name + '2DLow;\n';
-
-                    computeFunctions +=
-                        functionName + '\n' +
-                        '{\n' +
-                        '    vec4 p;\n' +
-                        '    if (czm_morphTime == 1.0)\n' +
-                        '    {\n' +
-                        '        p = czm_translateRelativeToEye(' + name + '3DHigh, ' + name + '3DLow);\n' +
-                        '    }\n' +
-                        '    else if (czm_morphTime == 0.0)\n' +
-                        '    {\n' +
-                        '        p = czm_translateRelativeToEye(' + name + '2DHigh.zxy, ' + name + '2DLow.zxy);\n' +
-                        '    }\n' +
-                        '    else\n' +
-                        '    {\n' +
-                        '        p = czm_columbusViewMorph(\n' +
-                        '                czm_translateRelativeToEye(' + name + '2DHigh.zxy, ' + name + '2DLow.zxy),\n' +
-                        '                czm_translateRelativeToEye(' + name + '3DHigh, ' + name + '3DLow),\n' +
-                        '                czm_morphTime);\n' +
-                        '    }\n' +
-                        '    return p;\n' +
-                        '}\n\n';
-                } else {
-                    computeFunctions +=
-                        functionName + '\n' +
-                        '{\n' +
-                        '    return czm_translateRelativeToEye(' + name + '3DHigh, ' + name + '3DLow);\n' +
-                        '}\n\n';
-                }
-            } else {
-                // Use RTC
-                vertexShaderSource = vertexShaderSource.replace(/attribute\s+vec(?:3|4)\s+position3DHigh;/g, '');
-                vertexShaderSource = vertexShaderSource.replace(/attribute\s+vec(?:3|4)\s+position3DLow;/g, '');
-
-                forwardDecl += 'uniform mat4 u_modifiedModelView;\n';
-                attributes += 'attribute vec4 position;\n';
-
-                computeFunctions +=
-                    functionName + '\n' +
-                    '{\n' +
-                    '    return u_modifiedModelView * position;\n' +
-                    '}\n\n';
-
-                vertexShaderSource = vertexShaderSource.replace(/czm_modelViewRelativeToEye\s+\*\s+/g, '');
-                vertexShaderSource = vertexShaderSource.replace(/czm_modelViewProjectionRelativeToEye/g, 'czm_projection');
-            }
-        }
-
-        return [forwardDecl, attributes, vertexShaderSource, computeFunctions].join('\n');
-    };
-
-    Primitive._appendShowToShader = function(primitive, vertexShaderSource) {
-        if (!defined(primitive._batchTableAttributeIndices.show)) {
-            return vertexShaderSource;
-        }
-
-        var renamedVS = ShaderSource.replaceMain(vertexShaderSource, 'czm_non_show_main');
-        var showMain =
-            'void main() \n' +
-            '{ \n' +
-            '    czm_non_show_main(); \n' +
-            '    gl_Position *= czm_batchTable_show(batchId); \n' +
-            '}';
-
-        return renamedVS + '\n' + showMain;
-    };
-
-    Primitive._updateColorAttribute = function(primitive, vertexShaderSource, isDepthFail) {
-        // some appearances have a color attribute for per vertex color.
-        // only remove if color is a per instance attribute.
-        if (!defined(primitive._batchTableAttributeIndices.color) && !defined(primitive._batchTableAttributeIndices.depthFailColor)) {
-            return vertexShaderSource;
-        }
-
-        if (vertexShaderSource.search(/attribute\s+vec4\s+color;/g) === -1) {
-            return vertexShaderSource;
-        }
-
-        //>>includeStart('debug', pragmas.debug);
-        if (isDepthFail && !defined(primitive._batchTableAttributeIndices.depthFailColor)) {
-            throw new DeveloperError('A depthFailColor per-instance attribute is required when using a depth fail appearance that uses a color attribute.');
-        }
-        //>>includeEnd('debug');
-
-        var modifiedVS = vertexShaderSource;
-        modifiedVS = modifiedVS.replace(/attribute\s+vec4\s+color;/g, '');
-        if (!isDepthFail) {
-            modifiedVS = modifiedVS.replace(/(\b)color(\b)/g, '$1czm_batchTable_color(batchId)$2');
-        } else {
-            modifiedVS = modifiedVS.replace(/(\b)color(\b)/g, '$1czm_batchTable_depthFailColor(batchId)$2');
-        }
-        return modifiedVS;
-    };
 
     function appendPickToVertexShader(source) {
         var renamedVS = ShaderSource.replaceMain(source, 'czm_non_pick_main');
@@ -884,93 +1209,8 @@ define([
         return 'varying vec4 v_pickColor;\n' + source;
     }
 
-    Primitive._updatePickColorAttribute = function(source) {
-        var vsPick = source.replace(/attribute\s+vec4\s+pickColor;/g, '');
-        vsPick = vsPick.replace(/(\b)pickColor(\b)/g, '$1czm_batchTable_pickColor(batchId)$2');
-        return vsPick;
-    };
 
-    Primitive._appendOffsetToShader = function(primitive, vertexShaderSource) {
-        if (!defined(primitive._batchTableAttributeIndices.offset)) {
-            return vertexShaderSource;
-        }
 
-        var attr = 'attribute float batchId;\n';
-        attr += 'attribute float applyOffset;';
-        var modifiedShader = vertexShaderSource.replace(/attribute\s+float\s+batchId;/g, attr);
-
-        var str = 'vec4 $1 = czm_computePosition();\n';
-        str += '    if (czm_sceneMode == czm_sceneMode3D)\n';
-        str += '    {\n';
-        str += '        $1 = $1 + vec4(czm_batchTable_offset(batchId) * applyOffset, 0.0);';
-        str += '    }\n';
-        str += '    else\n';
-        str += '    {\n';
-        str += '        $1 = $1 + vec4(czm_batchTable_offset2D(batchId) * applyOffset, 0.0);';
-        str += '    }\n';
-        modifiedShader = modifiedShader.replace(/vec4\s+([A-Za-z0-9_]+)\s+=\s+czm_computePosition\(\);/g, str);
-        return modifiedShader;
-    };
-
-    Primitive._appendDistanceDisplayConditionToShader = function(primitive, vertexShaderSource, scene3DOnly) {
-        if (!defined(primitive._batchTableAttributeIndices.distanceDisplayCondition)) {
-            return vertexShaderSource;
-        }
-
-        var renamedVS = ShaderSource.replaceMain(vertexShaderSource, 'czm_non_distanceDisplayCondition_main');
-        var distanceDisplayConditionMain =
-            'void main() \n' +
-            '{ \n' +
-            '    czm_non_distanceDisplayCondition_main(); \n' +
-            '    vec2 distanceDisplayCondition = czm_batchTable_distanceDisplayCondition(batchId);\n' +
-            '    vec3 boundingSphereCenter3DHigh = czm_batchTable_boundingSphereCenter3DHigh(batchId);\n' +
-            '    vec3 boundingSphereCenter3DLow = czm_batchTable_boundingSphereCenter3DLow(batchId);\n' +
-            '    float boundingSphereRadius = czm_batchTable_boundingSphereRadius(batchId);\n';
-
-        if (!scene3DOnly) {
-            distanceDisplayConditionMain +=
-                '    vec3 boundingSphereCenter2DHigh = czm_batchTable_boundingSphereCenter2DHigh(batchId);\n' +
-                '    vec3 boundingSphereCenter2DLow = czm_batchTable_boundingSphereCenter2DLow(batchId);\n' +
-                '    vec4 centerRTE;\n' +
-                '    if (czm_morphTime == 1.0)\n' +
-                '    {\n' +
-                '        centerRTE = czm_translateRelativeToEye(boundingSphereCenter3DHigh, boundingSphereCenter3DLow);\n' +
-                '    }\n' +
-                '    else if (czm_morphTime == 0.0)\n' +
-                '    {\n' +
-                '        centerRTE = czm_translateRelativeToEye(boundingSphereCenter2DHigh.zxy, boundingSphereCenter2DLow.zxy);\n' +
-                '    }\n' +
-                '    else\n' +
-                '    {\n' +
-                '        centerRTE = czm_columbusViewMorph(\n' +
-                '                czm_translateRelativeToEye(boundingSphereCenter2DHigh.zxy, boundingSphereCenter2DLow.zxy),\n' +
-                '                czm_translateRelativeToEye(boundingSphereCenter3DHigh, boundingSphereCenter3DLow),\n' +
-                '                czm_morphTime);\n' +
-                '    }\n';
-        } else {
-            distanceDisplayConditionMain +=
-                '    vec4 centerRTE = czm_translateRelativeToEye(boundingSphereCenter3DHigh, boundingSphereCenter3DLow);\n';
-        }
-
-        distanceDisplayConditionMain +=
-            '    float radiusSq = boundingSphereRadius * boundingSphereRadius; \n' +
-            '    float distanceSq; \n' +
-            '    if (czm_sceneMode == czm_sceneMode2D) \n' +
-            '    { \n' +
-            '        distanceSq = czm_eyeHeight2D.y - radiusSq; \n' +
-            '    } \n' +
-            '    else \n' +
-            '    { \n' +
-            '        distanceSq = dot(centerRTE.xyz, centerRTE.xyz) - radiusSq; \n' +
-            '    } \n' +
-            '    distanceSq = max(distanceSq, 0.0); \n' +
-            '    float nearSq = distanceDisplayCondition.x * distanceDisplayCondition.x; \n' +
-            '    float farSq = distanceDisplayCondition.y * distanceDisplayCondition.y; \n' +
-            '    float show = (distanceSq >= nearSq && distanceSq <= farSq) ? 1.0 : 0.0; \n' +
-            '    gl_Position *= show; \n' +
-            '}';
-        return renamedVS + '\n' + distanceDisplayConditionMain;
-    };
 
     function modifyForEncodedNormals(primitive, vertexShaderSource) {
         if (!primitive.compressVertices) {
@@ -1756,41 +1996,6 @@ define([
         }
     }
 
-    Primitive._updateBoundingVolumes = function(primitive, frameState, modelMatrix, forceUpdate) {
-        var i;
-        var length;
-        var boundingSphere;
-
-        if (forceUpdate || !Matrix4.equals(modelMatrix, primitive._modelMatrix)) {
-            Matrix4.clone(modelMatrix, primitive._modelMatrix);
-            length = primitive._boundingSpheres.length;
-            for (i = 0; i < length; ++i) {
-                boundingSphere = primitive._boundingSpheres[i];
-                if (defined(boundingSphere)) {
-                    primitive._boundingSphereWC[i] = BoundingSphere.transform(boundingSphere, modelMatrix, primitive._boundingSphereWC[i]);
-                    if (!frameState.scene3DOnly) {
-                        primitive._boundingSphere2D[i] = BoundingSphere.clone(primitive._boundingSphereCV[i], primitive._boundingSphere2D[i]);
-                        primitive._boundingSphere2D[i].center.x = 0.0;
-                        primitive._boundingSphereMorph[i] = BoundingSphere.union(primitive._boundingSphereWC[i], primitive._boundingSphereCV[i]);
-                    }
-                }
-            }
-        }
-
-        // Update bounding volumes for primitives that are sized in pixels.
-        // The pixel size in meters varies based on the distance from the camera.
-        var pixelSize = primitive.appearance.pixelSize;
-        if (defined(pixelSize)) {
-            length = primitive._boundingSpheres.length;
-            for (i = 0; i < length; ++i) {
-                boundingSphere = primitive._boundingSpheres[i];
-                var boundingSphereWC = primitive._boundingSphereWC[i];
-                var pixelSizeInMeters = frameState.camera.getPixelSize(boundingSphere, frameState.context.drawingBufferWidth, frameState.context.drawingBufferHeight);
-                var sizeInMeters = pixelSizeInMeters * pixelSize;
-                boundingSphereWC.radius = boundingSphere.radius + sizeInMeters;
-            }
-        }
-    };
 
     function updateAndQueueCommands(primitive, frameState, colorCommands, pickCommands, modelMatrix, cull, debugShowBoundingVolume, twoPasses) {
         //>>includeStart('debug', pragmas.debug);
@@ -1844,137 +2049,6 @@ define([
         }
     }
 
-    /**
-     * Called when {@link Viewer} or {@link CesiumWidget} render the scene to
-     * get the draw commands needed to render this primitive.
-     * <p>
-     * Do not call this function directly.  This is documented just to
-     * list the exceptions that may be propagated when the scene is rendered:
-     * </p>
-     *
-     * @exception {DeveloperError} All instance geometries must have the same primitiveType.
-     * @exception {DeveloperError} Appearance and material have a uniform with the same name.
-     * @exception {DeveloperError} Primitive.modelMatrix is only supported in 3D mode.
-     * @exception {RuntimeError} Vertex texture fetch support is required to render primitives with per-instance attributes. The maximum number of vertex texture image units must be greater than zero.
-     */
-    Primitive.prototype.update = function(frameState) {
-        if (((!defined(this.geometryInstances)) && (this._va.length === 0)) ||
-            (defined(this.geometryInstances) && isArray(this.geometryInstances) && this.geometryInstances.length === 0) ||
-            (!defined(this.appearance)) ||
-            (frameState.mode !== SceneMode.SCENE3D && frameState.scene3DOnly) ||
-            (!frameState.passes.render && !frameState.passes.pick)) {
-            return;
-        }
-
-        if (defined(this._error)) {
-            throw this._error;
-        }
-
-        //>>includeStart('debug', pragmas.debug);
-        if (defined(this.rtcCenter) && !frameState.scene3DOnly) {
-            throw new DeveloperError('RTC rendering is only available for 3D only scenes.');
-        }
-        //>>includeEnd('debug');
-
-        if (this._state === PrimitiveState.FAILED) {
-            return;
-        }
-
-        var context = frameState.context;
-        if (!defined(this._batchTable)) {
-            createBatchTable(this, context);
-        }
-        if (this._batchTable.attributes.length > 0) {
-            if (ContextLimits.maximumVertexTextureImageUnits === 0) {
-                throw new RuntimeError('Vertex texture fetch support is required to render primitives with per-instance attributes. The maximum number of vertex texture image units must be greater than zero.');
-            }
-            this._batchTable.update(frameState);
-        }
-
-        if (this._state !== PrimitiveState.COMPLETE && this._state !== PrimitiveState.COMBINED) {
-            if (this.asynchronous) {
-                loadAsynchronous(this, frameState);
-            } else {
-                loadSynchronous(this, frameState);
-            }
-        }
-
-        if (this._state === PrimitiveState.COMBINED) {
-            updateBatchTableBoundingSpheres(this, frameState);
-            updateBatchTableOffsets(this, frameState);
-            createVertexArray(this, frameState);
-        }
-
-        if (!this.show || this._state !== PrimitiveState.COMPLETE) {
-            return;
-        }
-
-        if (!this._batchTableOffsetsUpdated) {
-            updateBatchTableOffsets(this, frameState);
-        }
-        if (this._recomputeBoundingSpheres) {
-            recomputeBoundingSpheres(this, frameState);
-        }
-
-        // Create or recreate render state and shader program if appearance/material changed
-        var appearance = this.appearance;
-        var material = appearance.material;
-        var createRS = false;
-        var createSP = false;
-
-        if (this._appearance !== appearance) {
-            this._appearance = appearance;
-            this._material = material;
-            createRS = true;
-            createSP = true;
-        } else if (this._material !== material) {
-            this._material = material;
-            createSP = true;
-        }
-
-        var depthFailAppearance = this.depthFailAppearance;
-        var depthFailMaterial = defined(depthFailAppearance) ? depthFailAppearance.material : undefined;
-
-        if (this._depthFailAppearance !== depthFailAppearance) {
-            this._depthFailAppearance = depthFailAppearance;
-            this._depthFailMaterial = depthFailMaterial;
-            createRS = true;
-            createSP = true;
-        } else if (this._depthFailMaterial !== depthFailMaterial) {
-            this._depthFailMaterial = depthFailMaterial;
-            createSP = true;
-        }
-
-        var translucent = this._appearance.isTranslucent();
-        if (this._translucent !== translucent) {
-            this._translucent = translucent;
-            createRS = true;
-        }
-
-        if (defined(this._material)) {
-            this._material.update(context);
-        }
-
-        var twoPasses = appearance.closed && translucent;
-
-        if (createRS) {
-            var rsFunc = defaultValue(this._createRenderStatesFunction, createRenderStates);
-            rsFunc(this, context, appearance, twoPasses);
-        }
-
-        if (createSP) {
-            var spFunc = defaultValue(this._createShaderProgramFunction, createShaderProgram);
-            spFunc(this, frameState, appearance);
-        }
-
-        if (createRS || createSP) {
-            var commandFunc = defaultValue(this._createCommandsFunction, createCommands);
-            commandFunc(this, appearance, material, translucent, twoPasses, this._colorCommands, this._pickCommands, frameState);
-        }
-
-        var updateAndQueueCommandsFunc = defaultValue(this._updateAndQueueCommandsFunction, updateAndQueueCommands);
-        updateAndQueueCommandsFunc(this, frameState, this._colorCommands, this._pickCommands, this.modelMatrix, this.cull, this.debugShowBoundingVolume, twoPasses);
-    };
 
     var offsetBoundingSphereScratch1 = new BoundingSphere();
     var offsetBoundingSphereScratch2 = new BoundingSphere();
@@ -2058,155 +2132,8 @@ define([
         };
     }
 
-    /**
-     * Returns the modifiable per-instance attributes for a {@link GeometryInstance}.
-     *
-     * @param {*} id The id of the {@link GeometryInstance}.
-     * @returns {Object} The typed array in the attribute's format or undefined if the is no instance with id.
-     *
-     * @exception {DeveloperError} must call update before calling getGeometryInstanceAttributes.
-     *
-     * @example
-     * var attributes = primitive.getGeometryInstanceAttributes('an id');
-     * attributes.color = Cesium.ColorGeometryInstanceAttribute.toValue(Cesium.Color.AQUA);
-     * attributes.show = Cesium.ShowGeometryInstanceAttribute.toValue(true);
-     * attributes.distanceDisplayCondition = Cesium.DistanceDisplayConditionGeometryInstanceAttribute.toValue(100.0, 10000.0);
-     * attributes.offset = Cesium.OffsetGeometryInstanceAttribute.toValue(Cartesian3.IDENTITY);
-     */
-    Primitive.prototype.getGeometryInstanceAttributes = function(id) {
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(id)) {
-            throw new DeveloperError('id is required');
-        }
-        if (!defined(this._batchTable)) {
-            throw new DeveloperError('must call update before calling getGeometryInstanceAttributes');
-        }
-        //>>includeEnd('debug');
 
-        var index = -1;
-        var lastIndex = this._lastPerInstanceAttributeIndex;
-        var ids = this._instanceIds;
-        var length = ids.length;
-        for (var i = 0; i < length; ++i) {
-            var curIndex = (lastIndex + i) % length;
-            if (id === ids[curIndex]) {
-                index = curIndex;
-                break;
-            }
-        }
 
-        if (index === -1) {
-            return undefined;
-        }
-
-        var attributes = this._perInstanceAttributeCache[index];
-        if (defined(attributes)) {
-            return attributes;
-        }
-
-        var batchTable = this._batchTable;
-        var perInstanceAttributeIndices = this._batchTableAttributeIndices;
-        attributes = {};
-        var properties = {};
-
-        for (var name in perInstanceAttributeIndices) {
-            if (perInstanceAttributeIndices.hasOwnProperty(name)) {
-                var attributeIndex = perInstanceAttributeIndices[name];
-                properties[name] = {
-                    get : createGetFunction(batchTable, index, attributeIndex)
-                };
-
-                var createSetter = true;
-                var readOnlyAttributes = this._readOnlyInstanceAttributes;
-                if (createSetter && defined(readOnlyAttributes)) {
-                    length = readOnlyAttributes.length;
-                    for (var k = 0; k < length; ++k) {
-                        if (name === readOnlyAttributes[k]) {
-                            createSetter = false;
-                            break;
-                        }
-                    }
-                }
-
-                if (createSetter) {
-                    properties[name].set = createSetFunction(batchTable, index, attributeIndex, this, name);
-                }
-            }
-        }
-
-        createBoundingSphereProperties(this, properties, index);
-        createPickIdProperty(this, properties, index);
-        defineProperties(attributes, properties);
-
-        this._lastPerInstanceAttributeIndex = index;
-        this._perInstanceAttributeCache[index] = attributes;
-        return attributes;
-    };
-
-    /**
-     * Returns true if this object was destroyed; otherwise, false.
-     * <p>
-     * If this object was destroyed, it should not be used; calling any function other than
-     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
-     * </p>
-     *
-     * @returns {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
-     *
-     * @see Primitive#destroy
-     */
-    Primitive.prototype.isDestroyed = function() {
-        return false;
-    };
-
-    /**
-     * Destroys the WebGL resources held by this object.  Destroying an object allows for deterministic
-     * release of WebGL resources, instead of relying on the garbage collector to destroy this object.
-     * <p>
-     * Once an object is destroyed, it should not be used; calling any function other than
-     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
-     * assign the return value (<code>undefined</code>) to the object as done in the example.
-     * </p>
-     *
-     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
-     *
-     *
-     * @example
-     * e = e && e.destroy();
-     *
-     * @see Primitive#isDestroyed
-     */
-    Primitive.prototype.destroy = function() {
-        var length;
-        var i;
-
-        this._sp = this._sp && this._sp.destroy();
-        this._pickSP = this._pickSP && this._pickSP.destroy();
-
-        var va = this._va;
-        length = va.length;
-        for (i = 0; i < length; ++i) {
-            va[i].destroy();
-        }
-        this._va = undefined;
-
-        var pickIds = this._pickIds;
-        length = pickIds.length;
-        for (i = 0; i < length; ++i) {
-            pickIds[i].destroy();
-        }
-        this._pickIds = undefined;
-
-        this._batchTable = this._batchTable && this._batchTable.destroy();
-
-        //These objects may be fairly large and reference other large objects (like Entities)
-        //We explicitly set them to undefined here so that the memory can be freed
-        //even if a reference to the destroyed Primitive has been kept around.
-        this._instanceIds = undefined;
-        this._perInstanceAttributeCache = undefined;
-        this._attributeLocations = undefined;
-
-        return destroyObject(this);
-    };
 
     function setReady(primitive, frameState, state, error) {
         primitive._error = error;

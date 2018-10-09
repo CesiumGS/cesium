@@ -14,112 +14,113 @@ define([
         writeTextToCanvas) {
     'use strict';
 
-    /**
-     * A utility class for generating custom map pins as canvas elements.
-     * <br /><br />
-     * <div align='center'>
-     * <img src='Images/PinBuilder.png' width='500'/><br />
-     * Example pins generated using both the maki icon set, which ships with Cesium, and single character text.
-     * </div>
-     *
-     * @alias PinBuilder
-     * @constructor
-     *
-     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Map%20Pins.html|Cesium Sandcastle PinBuilder Demo}
-     */
-    function PinBuilder() {
-        this._cache = {};
-    }
+        /**
+             * A utility class for generating custom map pins as canvas elements.
+             * <br /><br />
+             * <div align='center'>
+             * <img src='Images/PinBuilder.png' width='500'/><br />
+             * Example pins generated using both the maki icon set, which ships with Cesium, and single character text.
+             * </div>
+             *
+             * @alias PinBuilder
+             * @constructor
+             *
+             * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Map%20Pins.html|Cesium Sandcastle PinBuilder Demo}
+             */
+        class PinBuilder {
+            constructor() {
+                this._cache = {};
+            }
+            /**
+                 * Creates an empty pin of the specified color and size.
+                 *
+                 * @param {Color} color The color of the pin.
+                 * @param {Number} size The size of the pin, in pixels.
+                 * @returns {Canvas} The canvas element that represents the generated pin.
+                 */
+            fromColor(color, size) {
+                //>>includeStart('debug', pragmas.debug);
+                if (!defined(color)) {
+                    throw new DeveloperError('color is required');
+                }
+                if (!defined(size)) {
+                    throw new DeveloperError('size is required');
+                }
+                //>>includeEnd('debug');
+                return createPin(undefined, undefined, color, size, this._cache);
+            }
+            /**
+                 * Creates a pin with the specified icon, color, and size.
+                 *
+                 * @param {Resource|String} url The url of the image to be stamped onto the pin.
+                 * @param {Color} color The color of the pin.
+                 * @param {Number} size The size of the pin, in pixels.
+                 * @returns {Canvas|Promise.<Canvas>} The canvas element or a Promise to the canvas element that represents the generated pin.
+                 */
+            fromUrl(url, color, size) {
+                //>>includeStart('debug', pragmas.debug);
+                if (!defined(url)) {
+                    throw new DeveloperError('url is required');
+                }
+                if (!defined(color)) {
+                    throw new DeveloperError('color is required');
+                }
+                if (!defined(size)) {
+                    throw new DeveloperError('size is required');
+                }
+                //>>includeEnd('debug');
+                return createPin(url, undefined, color, size, this._cache);
+            }
+            /**
+                 * Creates a pin with the specified {@link https://www.mapbox.com/maki/|maki} icon identifier, color, and size.
+                 *
+                 * @param {String} id The id of the maki icon to be stamped onto the pin.
+                 * @param {Color} color The color of the pin.
+                 * @param {Number} size The size of the pin, in pixels.
+                 * @returns {Canvas|Promise.<Canvas>} The canvas element or a Promise to the canvas element that represents the generated pin.
+                 */
+            fromMakiIconId(id, color, size) {
+                //>>includeStart('debug', pragmas.debug);
+                if (!defined(id)) {
+                    throw new DeveloperError('id is required');
+                }
+                if (!defined(color)) {
+                    throw new DeveloperError('color is required');
+                }
+                if (!defined(size)) {
+                    throw new DeveloperError('size is required');
+                }
+                //>>includeEnd('debug');
+                return createPin(buildModuleUrl('Assets/Textures/maki/' + encodeURIComponent(id) + '.png'), undefined, color, size, this._cache);
+            }
+            /**
+                 * Creates a pin with the specified text, color, and size.  The text will be sized to be as large as possible
+                 * while still being contained completely within the pin.
+                 *
+                 * @param {String} text The text to be stamped onto the pin.
+                 * @param {Color} color The color of the pin.
+                 * @param {Number} size The size of the pin, in pixels.
+                 * @returns {Canvas} The canvas element that represents the generated pin.
+                 */
+            fromText(text, color, size) {
+                //>>includeStart('debug', pragmas.debug);
+                if (!defined(text)) {
+                    throw new DeveloperError('text is required');
+                }
+                if (!defined(color)) {
+                    throw new DeveloperError('color is required');
+                }
+                if (!defined(size)) {
+                    throw new DeveloperError('size is required');
+                }
+                //>>includeEnd('debug');
+                return createPin(undefined, text, color, size, this._cache);
+            }
+        }
 
-    /**
-     * Creates an empty pin of the specified color and size.
-     *
-     * @param {Color} color The color of the pin.
-     * @param {Number} size The size of the pin, in pixels.
-     * @returns {Canvas} The canvas element that represents the generated pin.
-     */
-    PinBuilder.prototype.fromColor = function(color, size) {
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(color)) {
-            throw new DeveloperError('color is required');
-        }
-        if (!defined(size)) {
-            throw new DeveloperError('size is required');
-        }
-        //>>includeEnd('debug');
-        return createPin(undefined, undefined, color, size, this._cache);
-    };
 
-    /**
-     * Creates a pin with the specified icon, color, and size.
-     *
-     * @param {Resource|String} url The url of the image to be stamped onto the pin.
-     * @param {Color} color The color of the pin.
-     * @param {Number} size The size of the pin, in pixels.
-     * @returns {Canvas|Promise.<Canvas>} The canvas element or a Promise to the canvas element that represents the generated pin.
-     */
-    PinBuilder.prototype.fromUrl = function(url, color, size) {
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(url)) {
-            throw new DeveloperError('url is required');
-        }
-        if (!defined(color)) {
-            throw new DeveloperError('color is required');
-        }
-        if (!defined(size)) {
-            throw new DeveloperError('size is required');
-        }
-        //>>includeEnd('debug');
-        return createPin(url, undefined, color, size, this._cache);
-    };
 
-    /**
-     * Creates a pin with the specified {@link https://www.mapbox.com/maki/|maki} icon identifier, color, and size.
-     *
-     * @param {String} id The id of the maki icon to be stamped onto the pin.
-     * @param {Color} color The color of the pin.
-     * @param {Number} size The size of the pin, in pixels.
-     * @returns {Canvas|Promise.<Canvas>} The canvas element or a Promise to the canvas element that represents the generated pin.
-     */
-    PinBuilder.prototype.fromMakiIconId = function(id, color, size) {
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(id)) {
-            throw new DeveloperError('id is required');
-        }
-        if (!defined(color)) {
-            throw new DeveloperError('color is required');
-        }
-        if (!defined(size)) {
-            throw new DeveloperError('size is required');
-        }
-        //>>includeEnd('debug');
-        return createPin(buildModuleUrl('Assets/Textures/maki/' + encodeURIComponent(id) + '.png'), undefined, color, size, this._cache);
-    };
 
-    /**
-     * Creates a pin with the specified text, color, and size.  The text will be sized to be as large as possible
-     * while still being contained completely within the pin.
-     *
-     * @param {String} text The text to be stamped onto the pin.
-     * @param {Color} color The color of the pin.
-     * @param {Number} size The size of the pin, in pixels.
-     * @returns {Canvas} The canvas element that represents the generated pin.
-     */
-    PinBuilder.prototype.fromText = function(text, color, size) {
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(text)) {
-            throw new DeveloperError('text is required');
-        }
-        if (!defined(color)) {
-            throw new DeveloperError('color is required');
-        }
-        if (!defined(size)) {
-            throw new DeveloperError('size is required');
-        }
-        //>>includeEnd('debug');
-
-        return createPin(undefined, text, color, size, this._cache);
-    };
 
     var colorScratch = new Color();
 

@@ -34,116 +34,172 @@ define([
         TileProviderError) {
     'use strict';
 
-    function DataRectangle(rectangle, maxLevel) {
-        this.rectangle = rectangle;
-        this.maxLevel = maxLevel;
-    }
-
-    /**
-     * A {@link TerrainProvider} that produces terrain geometry by tessellating height maps
-     * retrieved from a {@link http://vr-theworld.com/|VT MÄK VR-TheWorld server}.
-     *
-     * @alias VRTheWorldTerrainProvider
-     * @constructor
-     *
-     * @param {Object} options Object with the following properties:
-     * @param {Resource|String} options.url The URL of the VR-TheWorld TileMap.
-     * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid.  If this parameter is not
-     *                    specified, the WGS84 ellipsoid is used.
-     * @param {Credit|String} [options.credit] A credit for the data source, which is displayed on the canvas.
-     *
-     *
-     * @example
-     * var terrainProvider = new Cesium.VRTheWorldTerrainProvider({
-     *   url : 'https://www.vr-theworld.com/vr-theworld/tiles1.0.0/73/'
-     * });
-     * viewer.terrainProvider = terrainProvider;
-     *
-     * @see TerrainProvider
-     */
-    function VRTheWorldTerrainProvider(options) {
-        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(options.url)) {
-            throw new DeveloperError('options.url is required.');
-        }
-        //>>includeEnd('debug');
-
-        var resource = Resource.createIfNeeded(options.url);
-
-        this._resource = resource;
-
-        this._errorEvent = new Event();
-        this._ready = false;
-        this._readyPromise = when.defer();
-
-        this._terrainDataStructure = {
-            heightScale : 1.0 / 1000.0,
-            heightOffset : -1000.0,
-            elementsPerHeight : 3,
-            stride : 4,
-            elementMultiplier : 256.0,
-            isBigEndian : true,
-            lowestEncodedHeight : 0,
-            highestEncodedHeight : 256 * 256 * 256 - 1
-        };
-
-        var credit = options.credit;
-        if (typeof credit === 'string') {
-            credit = new Credit(credit);
-        }
-        this._credit = credit;
-
-        this._tilingScheme = undefined;
-        this._rectangles = [];
-
-        var that = this;
-        var metadataError;
-        var ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
-
-        function metadataSuccess(xml) {
-            var srs = xml.getElementsByTagName('SRS')[0].textContent;
-            if (srs === 'EPSG:4326') {
-                that._tilingScheme = new GeographicTilingScheme({ellipsoid : ellipsoid});
-            } else {
-                metadataFailure('SRS ' + srs + ' is not supported.');
-                return;
+        class DataRectangle {
+            constructor(rectangle, maxLevel) {
+                this.rectangle = rectangle;
+                this.maxLevel = maxLevel;
             }
+        }
 
-            var tileFormat = xml.getElementsByTagName('TileFormat')[0];
-            that._heightmapWidth = parseInt(tileFormat.getAttribute('width'), 10);
-            that._heightmapHeight = parseInt(tileFormat.getAttribute('height'), 10);
-            that._levelZeroMaximumGeometricError = TerrainProvider.getEstimatedLevelZeroGeometricErrorForAHeightmap(ellipsoid, Math.min(that._heightmapWidth, that._heightmapHeight), that._tilingScheme.getNumberOfXTilesAtLevel(0));
-
-            var dataRectangles = xml.getElementsByTagName('DataExtent');
-
-            for (var i = 0; i < dataRectangles.length; ++i) {
-                var dataRectangle = dataRectangles[i];
-
-                var west = CesiumMath.toRadians(parseFloat(dataRectangle.getAttribute('minx')));
-                var south = CesiumMath.toRadians(parseFloat(dataRectangle.getAttribute('miny')));
-                var east = CesiumMath.toRadians(parseFloat(dataRectangle.getAttribute('maxx')));
-                var north = CesiumMath.toRadians(parseFloat(dataRectangle.getAttribute('maxy')));
-                var maxLevel = parseInt(dataRectangle.getAttribute('maxlevel'), 10);
-
-                that._rectangles.push(new DataRectangle(new Rectangle(west, south, east, north), maxLevel));
+        /**
+             * A {@link TerrainProvider} that produces terrain geometry by tessellating height maps
+             * retrieved from a {@link http://vr-theworld.com/|VT MÄK VR-TheWorld server}.
+             *
+             * @alias VRTheWorldTerrainProvider
+             * @constructor
+             *
+             * @param {Object} options Object with the following properties:
+             * @param {Resource|String} options.url The URL of the VR-TheWorld TileMap.
+             * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid.  If this parameter is not
+             *                    specified, the WGS84 ellipsoid is used.
+             * @param {Credit|String} [options.credit] A credit for the data source, which is displayed on the canvas.
+             *
+             *
+             * @example
+             * var terrainProvider = new Cesium.VRTheWorldTerrainProvider({
+             *   url : 'https://www.vr-theworld.com/vr-theworld/tiles1.0.0/73/'
+             * });
+             * viewer.terrainProvider = terrainProvider;
+             *
+             * @see TerrainProvider
+             */
+        class VRTheWorldTerrainProvider {
+            constructor(options) {
+                options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+                //>>includeStart('debug', pragmas.debug);
+                if (!defined(options.url)) {
+                    throw new DeveloperError('options.url is required.');
+                }
+                //>>includeEnd('debug');
+                var resource = Resource.createIfNeeded(options.url);
+                this._resource = resource;
+                this._errorEvent = new Event();
+                this._ready = false;
+                this._readyPromise = when.defer();
+                this._terrainDataStructure = {
+                    heightScale: 1.0 / 1000.0,
+                    heightOffset: -1000.0,
+                    elementsPerHeight: 3,
+                    stride: 4,
+                    elementMultiplier: 256.0,
+                    isBigEndian: true,
+                    lowestEncodedHeight: 0,
+                    highestEncodedHeight: 256 * 256 * 256 - 1
+                };
+                var credit = options.credit;
+                if (typeof credit === 'string') {
+                    credit = new Credit(credit);
+                }
+                this._credit = credit;
+                this._tilingScheme = undefined;
+                this._rectangles = [];
+                var that = this;
+                var metadataError;
+                var ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
+                function metadataSuccess(xml) {
+                    var srs = xml.getElementsByTagName('SRS')[0].textContent;
+                    if (srs === 'EPSG:4326') {
+                        that._tilingScheme = new GeographicTilingScheme({ ellipsoid: ellipsoid });
+                    }
+                    else {
+                        metadataFailure('SRS ' + srs + ' is not supported.');
+                        return;
+                    }
+                    var tileFormat = xml.getElementsByTagName('TileFormat')[0];
+                    that._heightmapWidth = parseInt(tileFormat.getAttribute('width'), 10);
+                    that._heightmapHeight = parseInt(tileFormat.getAttribute('height'), 10);
+                    that._levelZeroMaximumGeometricError = TerrainProvider.getEstimatedLevelZeroGeometricErrorForAHeightmap(ellipsoid, Math.min(that._heightmapWidth, that._heightmapHeight), that._tilingScheme.getNumberOfXTilesAtLevel(0));
+                    var dataRectangles = xml.getElementsByTagName('DataExtent');
+                    for (var i = 0; i < dataRectangles.length; ++i) {
+                        var dataRectangle = dataRectangles[i];
+                        var west = CesiumMath.toRadians(parseFloat(dataRectangle.getAttribute('minx')));
+                        var south = CesiumMath.toRadians(parseFloat(dataRectangle.getAttribute('miny')));
+                        var east = CesiumMath.toRadians(parseFloat(dataRectangle.getAttribute('maxx')));
+                        var north = CesiumMath.toRadians(parseFloat(dataRectangle.getAttribute('maxy')));
+                        var maxLevel = parseInt(dataRectangle.getAttribute('maxlevel'), 10);
+                        that._rectangles.push(new DataRectangle(new Rectangle(west, south, east, north), maxLevel));
+                    }
+                    that._ready = true;
+                    that._readyPromise.resolve(true);
+                }
+                function metadataFailure(e) {
+                    var message = defaultValue(e, 'An error occurred while accessing ' + that._resource.url + '.');
+                    metadataError = TileProviderError.handleError(metadataError, that, that._errorEvent, message, undefined, undefined, undefined, requestMetadata);
+                }
+                function requestMetadata() {
+                    when(that._resource.fetchXML(), metadataSuccess, metadataFailure);
+                }
+                requestMetadata();
             }
-
-            that._ready = true;
-            that._readyPromise.resolve(true);
+            /**
+                 * Requests the geometry for a given tile.  This function should not be called before
+                 * {@link VRTheWorldTerrainProvider#ready} returns true.  The result includes terrain
+                 * data and indicates that all child tiles are available.
+                 *
+                 * @param {Number} x The X coordinate of the tile for which to request geometry.
+                 * @param {Number} y The Y coordinate of the tile for which to request geometry.
+                 * @param {Number} level The level of the tile for which to request geometry.
+                 * @param {Request} [request] The request object. Intended for internal use only.
+                 * @returns {Promise.<TerrainData>|undefined} A promise for the requested geometry.  If this method
+                 *          returns undefined instead of a promise, it is an indication that too many requests are already
+                 *          pending and the request will be retried later.
+                 */
+            requestTileGeometry(x, y, level, request) {
+                //>>includeStart('debug', pragmas.debug);
+                if (!this.ready) {
+                    throw new DeveloperError('requestTileGeometry must not be called before ready returns true.');
+                }
+                //>>includeEnd('debug');
+                var yTiles = this._tilingScheme.getNumberOfYTilesAtLevel(level);
+                var resource = this._resource.getDerivedResource({
+                    url: level + '/' + x + '/' + (yTiles - y - 1) + '.tif',
+                    queryParameters: {
+                        cesium: true
+                    },
+                    request: request
+                });
+                var promise = resource.fetchImage();
+                if (!defined(promise)) {
+                    return undefined;
+                }
+                var that = this;
+                return when(promise)
+                    .then(function(image) {
+                        return new HeightmapTerrainData({
+                            buffer: getImagePixels(image),
+                            width: that._heightmapWidth,
+                            height: that._heightmapHeight,
+                            childTileMask: getChildMask(that, x, y, level),
+                            structure: that._terrainDataStructure
+                        });
+                    });
+            }
+            /**
+                 * Gets the maximum geometric error allowed in a tile at a given level.
+                 *
+                 * @param {Number} level The tile level for which to get the maximum geometric error.
+                 * @returns {Number} The maximum geometric error.
+                 */
+            getLevelMaximumGeometricError(level) {
+                //>>includeStart('debug', pragmas.debug);
+                if (!this.ready) {
+                    throw new DeveloperError('requestTileGeometry must not be called before ready returns true.');
+                }
+                //>>includeEnd('debug');
+                return this._levelZeroMaximumGeometricError / (1 << level);
+            }
+            /**
+                 * Determines whether data for a tile is available to be loaded.
+                 *
+                 * @param {Number} x The X coordinate of the tile for which to request geometry.
+                 * @param {Number} y The Y coordinate of the tile for which to request geometry.
+                 * @param {Number} level The level of the tile for which to request geometry.
+                 * @returns {Boolean} Undefined if not supported, otherwise true or false.
+                 */
+            getTileDataAvailable(x, y, level) {
+                return undefined;
+            }
         }
-
-        function metadataFailure(e) {
-            var message = defaultValue(e, 'An error occurred while accessing ' + that._resource.url + '.');
-            metadataError = TileProviderError.handleError(metadataError, that, that._errorEvent, message, undefined, undefined, undefined, requestMetadata);
-        }
-
-        function requestMetadata() {
-            when(that._resource.fetchXML(), metadataSuccess, metadataFailure);
-        }
-
-        requestMetadata();
-    }
 
     defineProperties(VRTheWorldTerrainProvider.prototype, {
         /**
@@ -239,66 +295,7 @@ define([
         }
     });
 
-    /**
-     * Requests the geometry for a given tile.  This function should not be called before
-     * {@link VRTheWorldTerrainProvider#ready} returns true.  The result includes terrain
-     * data and indicates that all child tiles are available.
-     *
-     * @param {Number} x The X coordinate of the tile for which to request geometry.
-     * @param {Number} y The Y coordinate of the tile for which to request geometry.
-     * @param {Number} level The level of the tile for which to request geometry.
-     * @param {Request} [request] The request object. Intended for internal use only.
-     * @returns {Promise.<TerrainData>|undefined} A promise for the requested geometry.  If this method
-     *          returns undefined instead of a promise, it is an indication that too many requests are already
-     *          pending and the request will be retried later.
-     */
-    VRTheWorldTerrainProvider.prototype.requestTileGeometry = function(x, y, level, request) {
-        //>>includeStart('debug', pragmas.debug);
-        if (!this.ready) {
-            throw new DeveloperError('requestTileGeometry must not be called before ready returns true.');
-        }
-        //>>includeEnd('debug');
 
-        var yTiles = this._tilingScheme.getNumberOfYTilesAtLevel(level);
-        var resource = this._resource.getDerivedResource({
-            url : level + '/' + x + '/' + (yTiles - y - 1) + '.tif',
-            queryParameters : {
-                cesium : true
-            },
-            request : request
-        });
-        var promise = resource.fetchImage();
-        if (!defined(promise)) {
-            return undefined;
-        }
-
-        var that = this;
-        return when(promise)
-            .then(function(image) {
-                return new HeightmapTerrainData({
-                    buffer : getImagePixels(image),
-                    width : that._heightmapWidth,
-                    height : that._heightmapHeight,
-                    childTileMask : getChildMask(that, x, y, level),
-                    structure : that._terrainDataStructure
-                });
-            });
-    };
-
-    /**
-     * Gets the maximum geometric error allowed in a tile at a given level.
-     *
-     * @param {Number} level The tile level for which to get the maximum geometric error.
-     * @returns {Number} The maximum geometric error.
-     */
-    VRTheWorldTerrainProvider.prototype.getLevelMaximumGeometricError = function(level) {
-        //>>includeStart('debug', pragmas.debug);
-        if (!this.ready) {
-            throw new DeveloperError('requestTileGeometry must not be called before ready returns true.');
-        }
-        //>>includeEnd('debug');
-        return this._levelZeroMaximumGeometricError / (1 << level);
-    };
 
     var rectangleScratch = new Rectangle();
 
@@ -343,17 +340,6 @@ define([
         return defined(Rectangle.intersection(tileRectangle, rectangle, rectangleScratch));
     }
 
-    /**
-     * Determines whether data for a tile is available to be loaded.
-     *
-     * @param {Number} x The X coordinate of the tile for which to request geometry.
-     * @param {Number} y The Y coordinate of the tile for which to request geometry.
-     * @param {Number} level The level of the tile for which to request geometry.
-     * @returns {Boolean} Undefined if not supported, otherwise true or false.
-     */
-    VRTheWorldTerrainProvider.prototype.getTileDataAvailable = function(x, y, level) {
-        return undefined;
-    };
 
     return VRTheWorldTerrainProvider;
 });

@@ -19,27 +19,64 @@ define([
     var defaultColor = Color.WHITE;
     var defaultGlowPower = 0.25;
 
-    /**
-     * A {@link MaterialProperty} that maps to polyline glow {@link Material} uniforms.
-     * @alias PolylineGlowMaterialProperty
-     * @constructor
-     *
-     * @param {Object} [options] Object with the following properties:
-     * @param {Property} [options.color=Color.WHITE] A Property specifying the {@link Color} of the line.
-     * @param {Property} [options.glowPower=0.25] A numeric Property specifying the strength of the glow, as a percentage of the total line width.
-     */
-    function PolylineGlowMaterialProperty(options) {
-        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-
-        this._definitionChanged = new Event();
-        this._color = undefined;
-        this._colorSubscription = undefined;
-        this._glowPower = undefined;
-        this._glowPowerSubscription = undefined;
-
-        this.color = options.color;
-        this.glowPower = options.glowPower;
-    }
+        /**
+             * A {@link MaterialProperty} that maps to polyline glow {@link Material} uniforms.
+             * @alias PolylineGlowMaterialProperty
+             * @constructor
+             *
+             * @param {Object} [options] Object with the following properties:
+             * @param {Property} [options.color=Color.WHITE] A Property specifying the {@link Color} of the line.
+             * @param {Property} [options.glowPower=0.25] A numeric Property specifying the strength of the glow, as a percentage of the total line width.
+             */
+        class PolylineGlowMaterialProperty {
+            constructor(options) {
+                options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+                this._definitionChanged = new Event();
+                this._color = undefined;
+                this._colorSubscription = undefined;
+                this._glowPower = undefined;
+                this._glowPowerSubscription = undefined;
+                this.color = options.color;
+                this.glowPower = options.glowPower;
+            }
+            /**
+                 * Gets the {@link Material} type at the provided time.
+                 *
+                 * @param {JulianDate} time The time for which to retrieve the type.
+                 * @returns {String} The type of material.
+                 */
+            getType(time) {
+                return 'PolylineGlow';
+            }
+            /**
+                 * Gets the value of the property at the provided time.
+                 *
+                 * @param {JulianDate} time The time for which to retrieve the value.
+                 * @param {Object} [result] The object to store the value into, if omitted, a new instance is created and returned.
+                 * @returns {Object} The modified result parameter or a new instance if the result parameter was not supplied.
+                 */
+            getValue(time, result) {
+                if (!defined(result)) {
+                    result = {};
+                }
+                result.color = Property.getValueOrClonedDefault(this._color, time, defaultColor, result.color);
+                result.glowPower = Property.getValueOrDefault(this._glowPower, time, defaultGlowPower, result.glowPower);
+                return result;
+            }
+            /**
+                 * Compares this property to the provided property and returns
+                 * <code>true</code> if they are equal, <code>false</code> otherwise.
+                 *
+                 * @param {Property} [other] The other property.
+                 * @returns {Boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
+                 */
+            equals(other) {
+                return this === other || //
+                    (other instanceof PolylineGlowMaterialProperty && //
+                        Property.equals(this._color, other._color) &&
+                        Property.equals(this._glowPower, other._glowPower));
+            }
+        }
 
     defineProperties(PolylineGlowMaterialProperty.prototype, {
         /**
@@ -81,45 +118,8 @@ define([
         glowPower : createPropertyDescriptor('glowPower')
     });
 
-    /**
-     * Gets the {@link Material} type at the provided time.
-     *
-     * @param {JulianDate} time The time for which to retrieve the type.
-     * @returns {String} The type of material.
-     */
-    PolylineGlowMaterialProperty.prototype.getType = function(time) {
-        return 'PolylineGlow';
-    };
 
-    /**
-     * Gets the value of the property at the provided time.
-     *
-     * @param {JulianDate} time The time for which to retrieve the value.
-     * @param {Object} [result] The object to store the value into, if omitted, a new instance is created and returned.
-     * @returns {Object} The modified result parameter or a new instance if the result parameter was not supplied.
-     */
-    PolylineGlowMaterialProperty.prototype.getValue = function(time, result) {
-        if (!defined(result)) {
-            result = {};
-        }
-        result.color = Property.getValueOrClonedDefault(this._color, time, defaultColor, result.color);
-        result.glowPower = Property.getValueOrDefault(this._glowPower, time, defaultGlowPower, result.glowPower);
-        return result;
-    };
 
-    /**
-     * Compares this property to the provided property and returns
-     * <code>true</code> if they are equal, <code>false</code> otherwise.
-     *
-     * @param {Property} [other] The other property.
-     * @returns {Boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
-     */
-    PolylineGlowMaterialProperty.prototype.equals = function(other) {
-        return this === other || //
-               (other instanceof PolylineGlowMaterialProperty && //
-                Property.equals(this._color, other._color) &&
-                Property.equals(this._glowPower, other._glowPower));
-    };
 
     return PolylineGlowMaterialProperty;
 });

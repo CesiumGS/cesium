@@ -42,178 +42,327 @@ define([
         ShadowMode) {
     'use strict';
 
-    /**
-     * Provides playback of time-dynamic point cloud data.
-     * <p>
-     * Point cloud frames are prefetched in intervals determined by the average frame load time and the current clock speed.
-     * If intermediate frames cannot be loaded in time to meet playback speed, they will be skipped. If frames are sufficiently
-     * small or the clock is sufficiently slow then no frames will be skipped.
-     * </p>
-     *
-     * @alias TimeDynamicPointCloud
-     * @constructor
-     *
-     * @param {Object} options Object with the following properties:
-     * @param {Clock} options.clock A {@link Clock} instance that is used when determining the value for the time dimension.
-     * @param {TimeIntervalCollection} options.intervals A {@link TimeIntervalCollection} with its data property being an object containing a <code>uri</code> to a 3D Tiles Point Cloud tile and an optional <code>transform</code>.
-     * @param {Boolean} [options.show=true] Determines if the point cloud will be shown.
-     * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] A 4x4 transformation matrix that transforms the point cloud.
-     * @param {ShadowMode} [options.shadows=ShadowMode.ENABLED] Determines whether the point cloud casts or receives shadows from each light source.
-     * @param {Number} [options.maximumMemoryUsage=256] The maximum amount of memory in MB that can be used by the point cloud.
-     * @param {Object} [options.shading] Options for constructing a {@link PointCloudShading} object to control point attenuation and eye dome lighting.
-     * @param {Cesium3DTileStyle} [options.style] The style, defined using the {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/specification/Styling|3D Tiles Styling language}, applied to each point in the point cloud.
-     * @param {ClippingPlaneCollection} [options.clippingPlanes] The {@link ClippingPlaneCollection} used to selectively disable rendering the point cloud.
-     */
-    function TimeDynamicPointCloud(options) {
-        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-
-        //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.object('options.clock', options.clock);
-        Check.typeOf.object('options.intervals', options.intervals);
-        //>>includeEnd('debug');
-
         /**
-         * Determines if the point cloud will be shown.
-         *
-         * @type {Boolean}
-         * @default true
-         */
-        this.show = defaultValue(options.show, true);
-
-        /**
-         * A 4x4 transformation matrix that transforms the point cloud.
-         *
-         * @type {Matrix4}
-         * @default Matrix4.IDENTITY
-         */
-        this.modelMatrix = Matrix4.clone(defaultValue(options.modelMatrix, Matrix4.IDENTITY));
-
-        /**
-         * Determines whether the point cloud casts or receives shadows from each light source.
-         * <p>
-         * Enabling shadows has a performance impact. A point cloud that casts shadows must be rendered twice, once from the camera and again from the light's point of view.
-         * </p>
-         * <p>
-         * Shadows are rendered only when {@link Viewer#shadows} is <code>true</code>.
-         * </p>
-         *
-         * @type {ShadowMode}
-         * @default ShadowMode.ENABLED
-         */
-        this.shadows = defaultValue(options.shadows, ShadowMode.ENABLED);
-
-        /**
-         * The maximum amount of GPU memory (in MB) that may be used to cache point cloud frames.
-         * <p>
-         * Frames that are not being loaded or rendered are unloaded to enforce this.
-         * </p>
-         * <p>
-         * If decreasing this value results in unloading tiles, the tiles are unloaded the next frame.
-         * </p>
-         *
-         * @type {Number}
-         * @default 256
-         *
-         * @see TimeDynamicPointCloud#totalMemoryUsageInBytes
-         */
-        this.maximumMemoryUsage = defaultValue(options.maximumMemoryUsage, 256);
-
-        /**
-         * Options for controlling point size based on geometric error and eye dome lighting.
-         * @type {PointCloudShading}
-         */
-        this.shading = new PointCloudShading(options.shading);
-
-        /**
-         * The style, defined using the
-         * {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/specification/Styling|3D Tiles Styling language},
-         * applied to each point in the point cloud.
-         * <p>
-         * Assign <code>undefined</code> to remove the style, which will restore the visual
-         * appearance of the point cloud to its default when no style was applied.
-         * </p>
-         *
-         * @type {Cesium3DTileStyle}
-         *
-         * @example
-         * pointCloud.style = new Cesium.Cesium3DTileStyle({
-         *    color : {
-         *        conditions : [
-         *            ['${Classification} === 0', 'color("purple", 0.5)'],
-         *            ['${Classification} === 1', 'color("red")'],
-         *            ['true', '${COLOR}']
-         *        ]
-         *    },
-         *    show : '${Classification} !== 2'
-         * });
-         *
-         * @see {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/specification/Styling|3D Tiles Styling language}
-         */
-        this.style = options.style;
-
-        /**
-         * The event fired to indicate that a frame failed to load. A frame may fail to load if the
-         * request for its uri fails or processing fails due to invalid content.
-         * <p>
-         * If there are no event listeners, error messages will be logged to the console.
-         * </p>
-         * <p>
-         * The error object passed to the listener contains two properties:
-         * <ul>
-         * <li><code>uri</code>: the uri of the failed frame.</li>
-         * <li><code>message</code>: the error message.</li>
-         * </ul>
-         *
-         * @type {Event}
-         * @default new Event()
-         *
-         * @example
-         * pointCloud.frameFailed.addEventListener(function(error) {
-         *     console.log('An error occurred loading frame: ' + error.uri);
-         *     console.log('Error: ' + error.message);
-         * });
-         */
-        this.frameFailed = new Event();
-
-        /**
-         * The event fired to indicate that a new frame was rendered.
-         * <p>
-         * The time dynamic point cloud {@link TimeDynamicPointCloud} is passed to the event listener.
-         * </p>
-         * @type {Event}
-         * @default new Event()
-         *
-         * @example
-         * pointCloud.frameChanged.addEventListener(function(timeDynamicPointCloud) {
-         *     viewer.camera.viewBoundingSphere(timeDynamicPointCloud.boundingSphere);
-         * });
-         */
-        this.frameChanged = new Event();
-
-        this._clock = options.clock;
-        this._intervals = options.intervals;
-        this._clippingPlanes = undefined;
-        this.clippingPlanes = options.clippingPlanes; // Call setter
-        this._pointCloudEyeDomeLighting = new PointCloudEyeDomeLighting();
-        this._loadTimestamp = undefined;
-        this._clippingPlanesState = 0;
-        this._styleDirty = false;
-        this._pickId = undefined;
-        this._totalMemoryUsageInBytes = 0;
-        this._frames = [];
-        this._previousInterval = undefined;
-        this._nextInterval = undefined;
-        this._lastRenderedFrame = undefined;
-        this._clockMultiplier = 0.0;
-        this._readyPromise = when.defer();
-
-        // For calculating average load time of the last N frames
-        this._runningSum = 0.0;
-        this._runningLength = 0;
-        this._runningIndex = 0;
-        this._runningSamples = arrayFill(new Array(5), 0.0);
-        this._runningAverage = 0.0;
-    }
+             * Provides playback of time-dynamic point cloud data.
+             * <p>
+             * Point cloud frames are prefetched in intervals determined by the average frame load time and the current clock speed.
+             * If intermediate frames cannot be loaded in time to meet playback speed, they will be skipped. If frames are sufficiently
+             * small or the clock is sufficiently slow then no frames will be skipped.
+             * </p>
+             *
+             * @alias TimeDynamicPointCloud
+             * @constructor
+             *
+             * @param {Object} options Object with the following properties:
+             * @param {Clock} options.clock A {@link Clock} instance that is used when determining the value for the time dimension.
+             * @param {TimeIntervalCollection} options.intervals A {@link TimeIntervalCollection} with its data property being an object containing a <code>uri</code> to a 3D Tiles Point Cloud tile and an optional <code>transform</code>.
+             * @param {Boolean} [options.show=true] Determines if the point cloud will be shown.
+             * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] A 4x4 transformation matrix that transforms the point cloud.
+             * @param {ShadowMode} [options.shadows=ShadowMode.ENABLED] Determines whether the point cloud casts or receives shadows from each light source.
+             * @param {Number} [options.maximumMemoryUsage=256] The maximum amount of memory in MB that can be used by the point cloud.
+             * @param {Object} [options.shading] Options for constructing a {@link PointCloudShading} object to control point attenuation and eye dome lighting.
+             * @param {Cesium3DTileStyle} [options.style] The style, defined using the {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/specification/Styling|3D Tiles Styling language}, applied to each point in the point cloud.
+             * @param {ClippingPlaneCollection} [options.clippingPlanes] The {@link ClippingPlaneCollection} used to selectively disable rendering the point cloud.
+             */
+        class TimeDynamicPointCloud {
+            constructor(options) {
+                options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+                //>>includeStart('debug', pragmas.debug);
+                Check.typeOf.object('options.clock', options.clock);
+                Check.typeOf.object('options.intervals', options.intervals);
+                //>>includeEnd('debug');
+                /**
+                 * Determines if the point cloud will be shown.
+                 *
+                 * @type {Boolean}
+                 * @default true
+                 */
+                this.show = defaultValue(options.show, true);
+                /**
+                 * A 4x4 transformation matrix that transforms the point cloud.
+                 *
+                 * @type {Matrix4}
+                 * @default Matrix4.IDENTITY
+                 */
+                this.modelMatrix = Matrix4.clone(defaultValue(options.modelMatrix, Matrix4.IDENTITY));
+                /**
+                 * Determines whether the point cloud casts or receives shadows from each light source.
+                 * <p>
+                 * Enabling shadows has a performance impact. A point cloud that casts shadows must be rendered twice, once from the camera and again from the light's point of view.
+                 * </p>
+                 * <p>
+                 * Shadows are rendered only when {@link Viewer#shadows} is <code>true</code>.
+                 * </p>
+                 *
+                 * @type {ShadowMode}
+                 * @default ShadowMode.ENABLED
+                 */
+                this.shadows = defaultValue(options.shadows, ShadowMode.ENABLED);
+                /**
+                 * The maximum amount of GPU memory (in MB) that may be used to cache point cloud frames.
+                 * <p>
+                 * Frames that are not being loaded or rendered are unloaded to enforce this.
+                 * </p>
+                 * <p>
+                 * If decreasing this value results in unloading tiles, the tiles are unloaded the next frame.
+                 * </p>
+                 *
+                 * @type {Number}
+                 * @default 256
+                 *
+                 * @see TimeDynamicPointCloud#totalMemoryUsageInBytes
+                 */
+                this.maximumMemoryUsage = defaultValue(options.maximumMemoryUsage, 256);
+                /**
+                 * Options for controlling point size based on geometric error and eye dome lighting.
+                 * @type {PointCloudShading}
+                 */
+                this.shading = new PointCloudShading(options.shading);
+                /**
+                 * The style, defined using the
+                 * {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/specification/Styling|3D Tiles Styling language},
+                 * applied to each point in the point cloud.
+                 * <p>
+                 * Assign <code>undefined</code> to remove the style, which will restore the visual
+                 * appearance of the point cloud to its default when no style was applied.
+                 * </p>
+                 *
+                 * @type {Cesium3DTileStyle}
+                 *
+                 * @example
+                 * pointCloud.style = new Cesium.Cesium3DTileStyle({
+                 *    color : {
+                 *        conditions : [
+                 *            ['${Classification} === 0', 'color("purple", 0.5)'],
+                 *            ['${Classification} === 1', 'color("red")'],
+                 *            ['true', '${COLOR}']
+                 *        ]
+                 *    },
+                 *    show : '${Classification} !== 2'
+                 * });
+                 *
+                 * @see {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/specification/Styling|3D Tiles Styling language}
+                 */
+                this.style = options.style;
+                /**
+                 * The event fired to indicate that a frame failed to load. A frame may fail to load if the
+                 * request for its uri fails or processing fails due to invalid content.
+                 * <p>
+                 * If there are no event listeners, error messages will be logged to the console.
+                 * </p>
+                 * <p>
+                 * The error object passed to the listener contains two properties:
+                 * <ul>
+                 * <li><code>uri</code>: the uri of the failed frame.</li>
+                 * <li><code>message</code>: the error message.</li>
+                 * </ul>
+                 *
+                 * @type {Event}
+                 * @default new Event()
+                 *
+                 * @example
+                 * pointCloud.frameFailed.addEventListener(function(error) {
+                 *     console.log('An error occurred loading frame: ' + error.uri);
+                 *     console.log('Error: ' + error.message);
+                 * });
+                 */
+                this.frameFailed = new Event();
+                /**
+                 * The event fired to indicate that a new frame was rendered.
+                 * <p>
+                 * The time dynamic point cloud {@link TimeDynamicPointCloud} is passed to the event listener.
+                 * </p>
+                 * @type {Event}
+                 * @default new Event()
+                 *
+                 * @example
+                 * pointCloud.frameChanged.addEventListener(function(timeDynamicPointCloud) {
+                 *     viewer.camera.viewBoundingSphere(timeDynamicPointCloud.boundingSphere);
+                 * });
+                 */
+                this.frameChanged = new Event();
+                this._clock = options.clock;
+                this._intervals = options.intervals;
+                this._clippingPlanes = undefined;
+                this.clippingPlanes = options.clippingPlanes; // Call setter
+                this._pointCloudEyeDomeLighting = new PointCloudEyeDomeLighting();
+                this._loadTimestamp = undefined;
+                this._clippingPlanesState = 0;
+                this._styleDirty = false;
+                this._pickId = undefined;
+                this._totalMemoryUsageInBytes = 0;
+                this._frames = [];
+                this._previousInterval = undefined;
+                this._nextInterval = undefined;
+                this._lastRenderedFrame = undefined;
+                this._clockMultiplier = 0.0;
+                this._readyPromise = when.defer();
+                // For calculating average load time of the last N frames
+                this._runningSum = 0.0;
+                this._runningLength = 0;
+                this._runningIndex = 0;
+                this._runningSamples = arrayFill(new Array(5), 0.0);
+                this._runningAverage = 0.0;
+            }
+            /**
+                 * Marks the point cloud's {@link TimeDynamicPointCloud#style} as dirty, which forces all
+                 * points to re-evaluate the style in the next frame.
+                 */
+            makeStyleDirty() {
+                this._styleDirty = true;
+            }
+            /**
+                 * Exposed for testing.
+                 *
+                 * @private
+                 */
+            _getAverageLoadTime() {
+                if (this._runningLength === 0) {
+                    // Before any frames have loaded make a best guess about the average load time
+                    return 0.05;
+                }
+                return this._runningAverage;
+            }
+            /**
+                 * @private
+                 */
+            update(frameState) {
+                if (frameState.mode === SceneMode.MORPHING) {
+                    return;
+                }
+                if (!this.show) {
+                    return;
+                }
+                if (!defined(this._pickId)) {
+                    this._pickId = frameState.context.createPickId({
+                        primitive: this
+                    });
+                }
+                if (!defined(this._loadTimestamp)) {
+                    this._loadTimestamp = JulianDate.clone(frameState.time);
+                }
+                // For styling
+                var timeSinceLoad = Math.max(JulianDate.secondsDifference(frameState.time, this._loadTimestamp) * 1000, 0.0);
+                // Update clipping planes
+                var clippingPlanes = this._clippingPlanes;
+                var clippingPlanesState = 0;
+                var clippingPlanesDirty = false;
+                var isClipped = defined(clippingPlanes) && clippingPlanes.enabled;
+                if (isClipped) {
+                    clippingPlanes.update(frameState);
+                    clippingPlanesState = clippingPlanes.clippingPlanesState;
+                }
+                if (this._clippingPlanesState !== clippingPlanesState) {
+                    this._clippingPlanesState = clippingPlanesState;
+                    clippingPlanesDirty = true;
+                }
+                var styleDirty = this._styleDirty;
+                this._styleDirty = false;
+                if (clippingPlanesDirty || styleDirty) {
+                    setFramesDirty(this, clippingPlanesDirty, styleDirty);
+                }
+                updateState.timeSinceLoad = timeSinceLoad;
+                updateState.isClipped = isClipped;
+                var shading = this.shading;
+                var eyeDomeLighting = this._pointCloudEyeDomeLighting;
+                var commandList = frameState.commandList;
+                var lengthBeforeUpdate = commandList.length;
+                var previousInterval = this._previousInterval;
+                var nextInterval = this._nextInterval;
+                var currentInterval = getCurrentInterval(this);
+                if (!defined(currentInterval)) {
+                    return;
+                }
+                var clockMultiplierChanged = false;
+                var clockMultiplier = getClockMultiplier(this);
+                var clockPaused = clockMultiplier === 0;
+                if (clockMultiplier !== this._clockMultiplier) {
+                    clockMultiplierChanged = true;
+                    this._clockMultiplier = clockMultiplier;
+                }
+                if (!defined(previousInterval) || clockPaused) {
+                    previousInterval = currentInterval;
+                }
+                if (!defined(nextInterval) || clockMultiplierChanged || reachedInterval(this, currentInterval, nextInterval)) {
+                    nextInterval = getNextInterval(this, currentInterval);
+                }
+                previousInterval = getNearestReadyInterval(this, previousInterval, currentInterval, updateState, frameState);
+                var frame = getFrame(this, previousInterval);
+                if (!defined(frame)) {
+                    // The frame is not ready to render. This can happen when the simulation starts or when scrubbing the timeline
+                    // to a frame that hasn't loaded yet. Just render the last rendered frame in its place until it finishes loading.
+                    loadFrame(this, previousInterval, updateState, frameState);
+                    frame = this._lastRenderedFrame;
+                }
+                if (defined(frame)) {
+                    renderFrame(this, frame, updateState, frameState);
+                }
+                if (defined(nextInterval)) {
+                    // Start loading the next frame
+                    loadFrame(this, nextInterval, updateState, frameState);
+                }
+                var that = this;
+                if (defined(frame) && !defined(this._lastRenderedFrame)) {
+                    frameState.afterRender.push(function() {
+                        that._readyPromise.resolve(that);
+                    });
+                }
+                if (defined(frame) && (frame !== this._lastRenderedFrame)) {
+                    if (that.frameChanged.numberOfListeners > 0) {
+                        frameState.afterRender.push(function() {
+                            that.frameChanged.raiseEvent(that);
+                        });
+                    }
+                }
+                this._previousInterval = previousInterval;
+                this._nextInterval = nextInterval;
+                this._lastRenderedFrame = frame;
+                var totalMemoryUsageInBytes = this._totalMemoryUsageInBytes;
+                var maximumMemoryUsageInBytes = this.maximumMemoryUsage * 1024 * 1024;
+                if (totalMemoryUsageInBytes > maximumMemoryUsageInBytes) {
+                    unloadFrames(this, getUnloadCondition(frameState));
+                }
+                var lengthAfterUpdate = commandList.length;
+                var addedCommandsLength = lengthAfterUpdate - lengthBeforeUpdate;
+                if (defined(shading) && shading.attenuation && shading.eyeDomeLighting && (addedCommandsLength > 0)) {
+                    eyeDomeLighting.update(frameState, lengthBeforeUpdate, shading);
+                }
+            }
+            /**
+                 * Returns true if this object was destroyed; otherwise, false.
+                 * <br /><br />
+                 * If this object was destroyed, it should not be used; calling any function other than
+                 * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
+                 *
+                 * @returns {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
+                 *
+                 * @see TimeDynamicPointCloud#destroy
+                 */
+            isDestroyed() {
+                return false;
+            }
+            /**
+                 * Destroys the WebGL resources held by this object.  Destroying an object allows for deterministic
+                 * release of WebGL resources, instead of relying on the garbage collector to destroy this object.
+                 * <br /><br />
+                 * Once an object is destroyed, it should not be used; calling any function other than
+                 * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
+                 * assign the return value (<code>undefined</code>) to the object as done in the example.
+                 *
+                 * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
+                 *
+                 * @example
+                 * pointCloud = pointCloud && pointCloud.destroy();
+                 *
+                 * @see TimeDynamicPointCloud#isDestroyed
+                 */
+            destroy() {
+                unloadFrames(this);
+                this._clippingPlanes = this._clippingPlanes && this._clippingPlanes.destroy();
+                this._pickId = this._pickId && this._pickId.destroy();
+                return destroyObject(this);
+            }
+        }
 
     defineProperties(TimeDynamicPointCloud.prototype, {
         /**
@@ -297,26 +446,7 @@ define([
         return 'czm_pickColor';
     }
 
-    /**
-     * Marks the point cloud's {@link TimeDynamicPointCloud#style} as dirty, which forces all
-     * points to re-evaluate the style in the next frame.
-     */
-    TimeDynamicPointCloud.prototype.makeStyleDirty = function() {
-        this._styleDirty = true;
-    };
 
-    /**
-     * Exposed for testing.
-     *
-     * @private
-     */
-    TimeDynamicPointCloud.prototype._getAverageLoadTime = function() {
-        if (this._runningLength === 0) {
-            // Before any frames have loaded make a best guess about the average load time
-            return 0.05;
-        }
-        return this._runningAverage;
-    };
 
     var scratchDate = new JulianDate();
 
@@ -614,175 +744,8 @@ define([
         clippingPlanesDirty : false
     };
 
-    /**
-     * @private
-     */
-    TimeDynamicPointCloud.prototype.update = function(frameState) {
-        if (frameState.mode === SceneMode.MORPHING) {
-            return;
-        }
 
-        if (!this.show) {
-            return;
-        }
 
-        if (!defined(this._pickId)) {
-            this._pickId = frameState.context.createPickId({
-                primitive : this
-            });
-        }
-
-        if (!defined(this._loadTimestamp)) {
-            this._loadTimestamp = JulianDate.clone(frameState.time);
-        }
-
-        // For styling
-        var timeSinceLoad = Math.max(JulianDate.secondsDifference(frameState.time, this._loadTimestamp) * 1000, 0.0);
-
-        // Update clipping planes
-        var clippingPlanes = this._clippingPlanes;
-        var clippingPlanesState = 0;
-        var clippingPlanesDirty = false;
-        var isClipped = defined(clippingPlanes) && clippingPlanes.enabled;
-
-        if (isClipped) {
-            clippingPlanes.update(frameState);
-            clippingPlanesState = clippingPlanes.clippingPlanesState;
-        }
-
-        if (this._clippingPlanesState !== clippingPlanesState) {
-            this._clippingPlanesState = clippingPlanesState;
-            clippingPlanesDirty = true;
-        }
-
-        var styleDirty = this._styleDirty;
-        this._styleDirty = false;
-
-        if (clippingPlanesDirty || styleDirty) {
-            setFramesDirty(this, clippingPlanesDirty, styleDirty);
-        }
-
-        updateState.timeSinceLoad = timeSinceLoad;
-        updateState.isClipped = isClipped;
-
-        var shading = this.shading;
-        var eyeDomeLighting = this._pointCloudEyeDomeLighting;
-
-        var commandList = frameState.commandList;
-        var lengthBeforeUpdate = commandList.length;
-
-        var previousInterval = this._previousInterval;
-        var nextInterval = this._nextInterval;
-        var currentInterval = getCurrentInterval(this);
-
-        if (!defined(currentInterval)) {
-            return;
-        }
-
-        var clockMultiplierChanged = false;
-        var clockMultiplier = getClockMultiplier(this);
-        var clockPaused = clockMultiplier === 0;
-        if (clockMultiplier !== this._clockMultiplier) {
-            clockMultiplierChanged  = true;
-            this._clockMultiplier = clockMultiplier;
-        }
-
-        if (!defined(previousInterval) || clockPaused) {
-            previousInterval = currentInterval;
-        }
-
-        if (!defined(nextInterval) || clockMultiplierChanged || reachedInterval(this, currentInterval, nextInterval)) {
-            nextInterval = getNextInterval(this, currentInterval);
-        }
-
-        previousInterval = getNearestReadyInterval(this, previousInterval, currentInterval, updateState, frameState);
-        var frame = getFrame(this, previousInterval);
-
-        if (!defined(frame)) {
-            // The frame is not ready to render. This can happen when the simulation starts or when scrubbing the timeline
-            // to a frame that hasn't loaded yet. Just render the last rendered frame in its place until it finishes loading.
-            loadFrame(this, previousInterval, updateState, frameState);
-            frame = this._lastRenderedFrame;
-        }
-
-        if (defined(frame)) {
-            renderFrame(this, frame, updateState, frameState);
-        }
-
-        if (defined(nextInterval)) {
-            // Start loading the next frame
-            loadFrame(this, nextInterval, updateState, frameState);
-        }
-
-        var that = this;
-        if (defined(frame) && !defined(this._lastRenderedFrame)) {
-            frameState.afterRender.push(function() {
-                that._readyPromise.resolve(that);
-            });
-        }
-
-        if (defined(frame) && (frame !== this._lastRenderedFrame)) {
-            if (that.frameChanged.numberOfListeners > 0) {
-                frameState.afterRender.push(function() {
-                    that.frameChanged.raiseEvent(that);
-                });
-            }
-        }
-
-        this._previousInterval = previousInterval;
-        this._nextInterval = nextInterval;
-        this._lastRenderedFrame = frame;
-
-        var totalMemoryUsageInBytes = this._totalMemoryUsageInBytes;
-        var maximumMemoryUsageInBytes = this.maximumMemoryUsage * 1024 * 1024;
-
-        if (totalMemoryUsageInBytes > maximumMemoryUsageInBytes) {
-            unloadFrames(this, getUnloadCondition(frameState));
-        }
-
-        var lengthAfterUpdate = commandList.length;
-        var addedCommandsLength = lengthAfterUpdate - lengthBeforeUpdate;
-
-        if (defined(shading) && shading.attenuation && shading.eyeDomeLighting && (addedCommandsLength > 0)) {
-            eyeDomeLighting.update(frameState, lengthBeforeUpdate, shading);
-        }
-    };
-
-    /**
-     * Returns true if this object was destroyed; otherwise, false.
-     * <br /><br />
-     * If this object was destroyed, it should not be used; calling any function other than
-     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
-     *
-     * @returns {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
-     *
-     * @see TimeDynamicPointCloud#destroy
-     */
-    TimeDynamicPointCloud.prototype.isDestroyed = function() {
-        return false;
-    };
-
-    /**
-     * Destroys the WebGL resources held by this object.  Destroying an object allows for deterministic
-     * release of WebGL resources, instead of relying on the garbage collector to destroy this object.
-     * <br /><br />
-     * Once an object is destroyed, it should not be used; calling any function other than
-     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
-     * assign the return value (<code>undefined</code>) to the object as done in the example.
-     *
-     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
-     *
-     * @example
-     * pointCloud = pointCloud && pointCloud.destroy();
-     *
-     * @see TimeDynamicPointCloud#isDestroyed
-     */
-    TimeDynamicPointCloud.prototype.destroy = function() {
-        unloadFrames(this);
-        this._clippingPlanes = this._clippingPlanes && this._clippingPlanes.destroy();
-        this._pickId = this._pickId && this._pickId.destroy();
-        return destroyObject(this);
-    };
 
     return TimeDynamicPointCloud;
 });

@@ -4,7 +4,7 @@ define([], function() {
     /**
      * @private
      */
-    function isBitSet(bits, mask) {
+    export function isBitSet(bits, mask) {
         return ((bits & mask) !== 0);
     }
 

@@ -6,19 +6,21 @@ define([
         DeveloperError) {
     'use strict';
 
-    /**
-     * Defines how geodetic ellipsoid coordinates ({@link Cartographic}) project to a
-     * flat map like Cesium's 2D and Columbus View modes.
-     *
-     * @alias MapProjection
-     * @constructor
-     *
-     * @see GeographicProjection
-     * @see WebMercatorProjection
-     */
-    function MapProjection() {
-        DeveloperError.throwInstantiationError();
-    }
+        /**
+             * Defines how geodetic ellipsoid coordinates ({@link Cartographic}) project to a
+             * flat map like Cesium's 2D and Columbus View modes.
+             *
+             * @alias MapProjection
+             * @constructor
+             *
+             * @see GeographicProjection
+             * @see WebMercatorProjection
+             */
+        class MapProjection {
+            constructor() {
+                DeveloperError.throwInstantiationError();
+            }
+        }
 
     defineProperties(MapProjection.prototype, {
         /**

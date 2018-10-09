@@ -97,114 +97,298 @@ define([
         });
     }
 
-    /**
-     * Entity instances aggregate multiple forms of visualization into a single high-level object.
-     * They can be created manually and added to {@link Viewer#entities} or be produced by
-     * data sources, such as {@link CzmlDataSource} and {@link GeoJsonDataSource}.
-     * @alias Entity
-     * @constructor
-     *
-     * @param {Object} [options] Object with the following properties:
-     * @param {String} [options.id] A unique identifier for this object. If none is provided, a GUID is generated.
-     * @param {String} [options.name] A human readable name to display to users. It does not have to be unique.
-     * @param {TimeIntervalCollection} [options.availability] The availability, if any, associated with this object.
-     * @param {Boolean} [options.show] A boolean value indicating if the entity and its children are displayed.
-     * @param {Property} [options.description] A string Property specifying an HTML description for this entity.
-     * @param {PositionProperty} [options.position] A Property specifying the entity position.
-     * @param {Property} [options.orientation] A Property specifying the entity orientation.
-     * @param {Property} [options.viewFrom] A suggested initial offset for viewing this object.
-     * @param {Entity} [options.parent] A parent entity to associate with this entity.
-     * @param {BillboardGraphics} [options.billboard] A billboard to associate with this entity.
-     * @param {BoxGraphics} [options.box] A box to associate with this entity.
-     * @param {CorridorGraphics} [options.corridor] A corridor to associate with this entity.
-     * @param {CylinderGraphics} [options.cylinder] A cylinder to associate with this entity.
-     * @param {EllipseGraphics} [options.ellipse] A ellipse to associate with this entity.
-     * @param {EllipsoidGraphics} [options.ellipsoid] A ellipsoid to associate with this entity.
-     * @param {LabelGraphics} [options.label] A options.label to associate with this entity.
-     * @param {ModelGraphics} [options.model] A model to associate with this entity.
-     * @param {PathGraphics} [options.path] A path to associate with this entity.
-     * @param {PlaneGraphics} [options.plane] A plane to associate with this entity.
-     * @param {PointGraphics} [options.point] A point to associate with this entity.
-     * @param {PolygonGraphics} [options.polygon] A polygon to associate with this entity.
-     * @param {PolylineGraphics} [options.polyline] A polyline to associate with this entity.
-     * @param {PropertyBag} [options.properties] Arbitrary properties to associate with this entity.
-     * @param {PolylineVolumeGraphics} [options.polylineVolume] A polylineVolume to associate with this entity.
-     * @param {RectangleGraphics} [options.rectangle] A rectangle to associate with this entity.
-     * @param {WallGraphics} [options.wall] A wall to associate with this entity.
-     *
-     * @see {@link https://cesiumjs.org/tutorials/Visualizing-Spatial-Data/|Visualizing Spatial Data}
-     */
-    function Entity(options) {
-        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-
-        var id = options.id;
-        if (!defined(id)) {
-            id = createGuid();
-        }
-
-        this._availability = undefined;
-        this._id = id;
-        this._definitionChanged = new Event();
-        this._name = options.name;
-        this._show = defaultValue(options.show, true);
-        this._parent = undefined;
-        this._propertyNames = ['billboard', 'box', 'corridor', 'cylinder', 'description', 'ellipse', //
-                               'ellipsoid', 'label', 'model', 'orientation', 'path', 'plane', 'point', 'polygon', //
-                               'polyline', 'polylineVolume', 'position', 'properties', 'rectangle', 'viewFrom', 'wall'];
-
-        this._billboard = undefined;
-        this._billboardSubscription = undefined;
-        this._box = undefined;
-        this._boxSubscription = undefined;
-        this._corridor = undefined;
-        this._corridorSubscription = undefined;
-        this._cylinder = undefined;
-        this._cylinderSubscription = undefined;
-        this._description = undefined;
-        this._descriptionSubscription = undefined;
-        this._ellipse = undefined;
-        this._ellipseSubscription = undefined;
-        this._ellipsoid = undefined;
-        this._ellipsoidSubscription = undefined;
-        this._label = undefined;
-        this._labelSubscription = undefined;
-        this._model = undefined;
-        this._modelSubscription = undefined;
-        this._orientation = undefined;
-        this._orientationSubscription = undefined;
-        this._path = undefined;
-        this._pathSubscription = undefined;
-        this._plane = undefined;
-        this._planeSubscription = undefined;
-        this._point = undefined;
-        this._pointSubscription = undefined;
-        this._polygon = undefined;
-        this._polygonSubscription = undefined;
-        this._polyline = undefined;
-        this._polylineSubscription = undefined;
-        this._polylineVolume = undefined;
-        this._polylineVolumeSubscription = undefined;
-        this._position = undefined;
-        this._positionSubscription = undefined;
-        this._properties = undefined;
-        this._propertiesSubscription = undefined;
-        this._rectangle = undefined;
-        this._rectangleSubscription = undefined;
-        this._viewFrom = undefined;
-        this._viewFromSubscription = undefined;
-        this._wall = undefined;
-        this._wallSubscription = undefined;
-        this._children = [];
-
         /**
-         * Gets or sets the entity collection that this entity belongs to.
-         * @type {EntityCollection}
-         */
-        this.entityCollection = undefined;
-
-        this.parent = options.parent;
-        this.merge(options);
-    }
+             * Entity instances aggregate multiple forms of visualization into a single high-level object.
+             * They can be created manually and added to {@link Viewer#entities} or be produced by
+             * data sources, such as {@link CzmlDataSource} and {@link GeoJsonDataSource}.
+             * @alias Entity
+             * @constructor
+             *
+             * @param {Object} [options] Object with the following properties:
+             * @param {String} [options.id] A unique identifier for this object. If none is provided, a GUID is generated.
+             * @param {String} [options.name] A human readable name to display to users. It does not have to be unique.
+             * @param {TimeIntervalCollection} [options.availability] The availability, if any, associated with this object.
+             * @param {Boolean} [options.show] A boolean value indicating if the entity and its children are displayed.
+             * @param {Property} [options.description] A string Property specifying an HTML description for this entity.
+             * @param {PositionProperty} [options.position] A Property specifying the entity position.
+             * @param {Property} [options.orientation] A Property specifying the entity orientation.
+             * @param {Property} [options.viewFrom] A suggested initial offset for viewing this object.
+             * @param {Entity} [options.parent] A parent entity to associate with this entity.
+             * @param {BillboardGraphics} [options.billboard] A billboard to associate with this entity.
+             * @param {BoxGraphics} [options.box] A box to associate with this entity.
+             * @param {CorridorGraphics} [options.corridor] A corridor to associate with this entity.
+             * @param {CylinderGraphics} [options.cylinder] A cylinder to associate with this entity.
+             * @param {EllipseGraphics} [options.ellipse] A ellipse to associate with this entity.
+             * @param {EllipsoidGraphics} [options.ellipsoid] A ellipsoid to associate with this entity.
+             * @param {LabelGraphics} [options.label] A options.label to associate with this entity.
+             * @param {ModelGraphics} [options.model] A model to associate with this entity.
+             * @param {PathGraphics} [options.path] A path to associate with this entity.
+             * @param {PlaneGraphics} [options.plane] A plane to associate with this entity.
+             * @param {PointGraphics} [options.point] A point to associate with this entity.
+             * @param {PolygonGraphics} [options.polygon] A polygon to associate with this entity.
+             * @param {PolylineGraphics} [options.polyline] A polyline to associate with this entity.
+             * @param {PropertyBag} [options.properties] Arbitrary properties to associate with this entity.
+             * @param {PolylineVolumeGraphics} [options.polylineVolume] A polylineVolume to associate with this entity.
+             * @param {RectangleGraphics} [options.rectangle] A rectangle to associate with this entity.
+             * @param {WallGraphics} [options.wall] A wall to associate with this entity.
+             *
+             * @see {@link https://cesiumjs.org/tutorials/Visualizing-Spatial-Data/|Visualizing Spatial Data}
+             */
+        class Entity {
+            constructor(options) {
+                options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+                var id = options.id;
+                if (!defined(id)) {
+                    id = createGuid();
+                }
+                this._availability = undefined;
+                this._id = id;
+                this._definitionChanged = new Event();
+                this._name = options.name;
+                this._show = defaultValue(options.show, true);
+                this._parent = undefined;
+                this._propertyNames = ['billboard', 'box', 'corridor', 'cylinder', 'description', 'ellipse',
+                    'ellipsoid', 'label', 'model', 'orientation', 'path', 'plane', 'point', 'polygon',
+                    'polyline', 'polylineVolume', 'position', 'properties', 'rectangle', 'viewFrom', 'wall'];
+                this._billboard = undefined;
+                this._billboardSubscription = undefined;
+                this._box = undefined;
+                this._boxSubscription = undefined;
+                this._corridor = undefined;
+                this._corridorSubscription = undefined;
+                this._cylinder = undefined;
+                this._cylinderSubscription = undefined;
+                this._description = undefined;
+                this._descriptionSubscription = undefined;
+                this._ellipse = undefined;
+                this._ellipseSubscription = undefined;
+                this._ellipsoid = undefined;
+                this._ellipsoidSubscription = undefined;
+                this._label = undefined;
+                this._labelSubscription = undefined;
+                this._model = undefined;
+                this._modelSubscription = undefined;
+                this._orientation = undefined;
+                this._orientationSubscription = undefined;
+                this._path = undefined;
+                this._pathSubscription = undefined;
+                this._plane = undefined;
+                this._planeSubscription = undefined;
+                this._point = undefined;
+                this._pointSubscription = undefined;
+                this._polygon = undefined;
+                this._polygonSubscription = undefined;
+                this._polyline = undefined;
+                this._polylineSubscription = undefined;
+                this._polylineVolume = undefined;
+                this._polylineVolumeSubscription = undefined;
+                this._position = undefined;
+                this._positionSubscription = undefined;
+                this._properties = undefined;
+                this._propertiesSubscription = undefined;
+                this._rectangle = undefined;
+                this._rectangleSubscription = undefined;
+                this._viewFrom = undefined;
+                this._viewFromSubscription = undefined;
+                this._wall = undefined;
+                this._wallSubscription = undefined;
+                this._children = [];
+                /**
+                 * Gets or sets the entity collection that this entity belongs to.
+                 * @type {EntityCollection}
+                 */
+                this.entityCollection = undefined;
+                this.parent = options.parent;
+                this.merge(options);
+            }
+            /**
+                 * Given a time, returns true if this object should have data during that time.
+                 *
+                 * @param {JulianDate} time The time to check availability for.
+                 * @returns {Boolean} true if the object should have data during the provided time, false otherwise.
+                 */
+            isAvailable(time) {
+                //>>includeStart('debug', pragmas.debug);
+                if (!defined(time)) {
+                    throw new DeveloperError('time is required.');
+                }
+                //>>includeEnd('debug');
+                var availability = this._availability;
+                return !defined(availability) || availability.contains(time);
+            }
+            /**
+                 * Adds a property to this object.  Once a property is added, it can be
+                 * observed with {@link Entity#definitionChanged} and composited
+                 * with {@link CompositeEntityCollection}
+                 *
+                 * @param {String} propertyName The name of the property to add.
+                 *
+                 * @exception {DeveloperError} "propertyName" is a reserved property name.
+                 * @exception {DeveloperError} "propertyName" is already a registered property.
+                 */
+            addProperty(propertyName) {
+                var propertyNames = this._propertyNames;
+                //>>includeStart('debug', pragmas.debug);
+                if (!defined(propertyName)) {
+                    throw new DeveloperError('propertyName is required.');
+                }
+                if (propertyNames.indexOf(propertyName) !== -1) {
+                    throw new DeveloperError(propertyName + ' is already a registered property.');
+                }
+                if (propertyName in this) {
+                    throw new DeveloperError(propertyName + ' is a reserved property name.');
+                }
+                //>>includeEnd('debug');
+                propertyNames.push(propertyName);
+                Object.defineProperty(this, propertyName, createRawPropertyDescriptor(propertyName, true));
+            }
+            /**
+                 * Removed a property previously added with addProperty.
+                 *
+                 * @param {String} propertyName The name of the property to remove.
+                 *
+                 * @exception {DeveloperError} "propertyName" is a reserved property name.
+                 * @exception {DeveloperError} "propertyName" is not a registered property.
+                 */
+            removeProperty(propertyName) {
+                var propertyNames = this._propertyNames;
+                var index = propertyNames.indexOf(propertyName);
+                //>>includeStart('debug', pragmas.debug);
+                if (!defined(propertyName)) {
+                    throw new DeveloperError('propertyName is required.');
+                }
+                if (index === -1) {
+                    throw new DeveloperError(propertyName + ' is not a registered property.');
+                }
+                //>>includeEnd('debug');
+                this._propertyNames.splice(index, 1);
+                delete this[propertyName];
+            }
+            /**
+                 * Assigns each unassigned property on this object to the value
+                 * of the same property on the provided source object.
+                 *
+                 * @param {Entity} source The object to be merged into this object.
+                 */
+            merge(source) {
+                //>>includeStart('debug', pragmas.debug);
+                if (!defined(source)) {
+                    throw new DeveloperError('source is required.');
+                }
+                //>>includeEnd('debug');
+                //Name, show, and availability are not Property objects and are currently handled differently.
+                //source.show is intentionally ignored because this.show always has a value.
+                this.name = defaultValue(this.name, source.name);
+                this.availability = defaultValue(source.availability, this.availability);
+                var propertyNames = this._propertyNames;
+                var sourcePropertyNames = defined(source._propertyNames) ? source._propertyNames : Object.keys(source);
+                var propertyNamesLength = sourcePropertyNames.length;
+                for (var i = 0; i < propertyNamesLength; i++) {
+                    var name = sourcePropertyNames[i];
+                    //Ignore parent when merging, this only happens at construction time.
+                    if (name === 'parent') {
+                        continue;
+                    }
+                    var targetProperty = this[name];
+                    var sourceProperty = source[name];
+                    //Custom properties that are registered on the source entity must also
+                    //get registered on this entity.
+                    if (!defined(targetProperty) && propertyNames.indexOf(name) === -1) {
+                        this.addProperty(name);
+                    }
+                    if (defined(sourceProperty)) {
+                        if (defined(targetProperty)) {
+                            if (defined(targetProperty.merge)) {
+                                targetProperty.merge(sourceProperty);
+                            }
+                        }
+                        else if (defined(sourceProperty.merge) && defined(sourceProperty.clone)) {
+                            this[name] = sourceProperty.clone();
+                        }
+                        else {
+                            this[name] = sourceProperty;
+                        }
+                    }
+                }
+            }
+            /**
+                 * Computes the model matrix for the entity's transform at specified time. Returns undefined if orientation or position
+                 * are undefined.
+                 *
+                 * @param {JulianDate} time The time to retrieve model matrix for.
+                 * @param {Matrix4} [result] The object onto which to store the result.
+                 *
+                 * @returns {Matrix4} The modified result parameter or a new Matrix4 instance if one was not provided. Result is undefined if position or orientation are undefined.
+                 */
+            computeModelMatrix(time, result) {
+                //>>includeStart('debug', pragmas.debug);
+                Check.typeOf.object('time', time);
+                //>>includeEnd('debug');
+                var position = Property.getValueOrUndefined(this._position, time, positionScratch);
+                if (!defined(position)) {
+                    return undefined;
+                }
+                var orientation = Property.getValueOrUndefined(this._orientation, time, orientationScratch);
+                if (!defined(orientation)) {
+                    result = Transforms.eastNorthUpToFixedFrame(position, undefined, result);
+                }
+                else {
+                    result = Matrix4.fromRotationTranslation(Matrix3.fromQuaternion(orientation, matrix3Scratch), position, result);
+                }
+                return result;
+            }
+            /**
+                 * @private
+                 */
+            computeModelMatrixForHeightReference(time, heightReferenceProperty, heightOffset, ellipsoid, result) {
+                //>>includeStart('debug', pragmas.debug);
+                Check.typeOf.object('time', time);
+                //>>includeEnd('debug');
+                var heightReference = Property.getValueOrDefault(heightReferenceProperty, time, HeightReference.NONE);
+                var position = Property.getValueOrUndefined(this._position, time, positionScratch);
+                if (heightReference === HeightReference.NONE || !defined(position) || Cartesian3.equalsEpsilon(position, Cartesian3.ZERO, CesiumMath.EPSILON8)) {
+                    return this.computeModelMatrix(time, result);
+                }
+                var carto = ellipsoid.cartesianToCartographic(position, cartoScratch);
+                if (heightReference === HeightReference.CLAMP_TO_GROUND) {
+                    carto.height = heightOffset;
+                }
+                else {
+                    carto.height += heightOffset;
+                }
+                position = ellipsoid.cartographicToCartesian(carto, position);
+                var orientation = Property.getValueOrUndefined(this._orientation, time, orientationScratch);
+                if (!defined(orientation)) {
+                    result = Transforms.eastNorthUpToFixedFrame(position, undefined, result);
+                }
+                else {
+                    result = Matrix4.fromRotationTranslation(Matrix3.fromQuaternion(orientation, matrix3Scratch), position, result);
+                }
+                return result;
+            }
+            /**
+                 * Checks if the given Scene supports materials besides Color on Entities draped on terrain.
+                 * If this feature is not supported, Entities with non-color materials but no `height` will
+                 * instead be rendered as if height is 0.
+                 *
+                 * @param {Scene} scene The current scene.
+                 * @returns {Boolean} Whether or not the current scene supports materials for entities on terrain.
+                 */
+            static supportsMaterialsforEntitiesOnTerrain(scene) {
+                return GroundPrimitive.supportsMaterials(scene);
+            }
+            /**
+                 * Checks if the given Scene supports polylines clamped to the ground..
+                 * If this feature is not supported, Entities with PolylineGraphics will be rendered with vertices at
+                 * the provided heights and using the `followSurface` parameter instead of clamped to the ground.
+                 *
+                 * @param {Scene} scene The current scene.
+                 * @returns {Boolean} Whether or not the current scene supports Polylines on Terrain.
+                 */
+            static supportsPolylinesOnTerrain(scene) {
+                return GroundPolylinePrimitive.isSupported(scene);
+            }
+        }
 
     function updateShow(entity, children, isShowing) {
         var length = children.length;
@@ -479,213 +663,17 @@ define([
         wall : createPropertyTypeDescriptor('wall', WallGraphics)
     });
 
-    /**
-     * Given a time, returns true if this object should have data during that time.
-     *
-     * @param {JulianDate} time The time to check availability for.
-     * @returns {Boolean} true if the object should have data during the provided time, false otherwise.
-     */
-    Entity.prototype.isAvailable = function(time) {
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(time)) {
-            throw new DeveloperError('time is required.');
-        }
-        //>>includeEnd('debug');
 
-        var availability = this._availability;
-        return !defined(availability) || availability.contains(time);
-    };
 
-    /**
-     * Adds a property to this object.  Once a property is added, it can be
-     * observed with {@link Entity#definitionChanged} and composited
-     * with {@link CompositeEntityCollection}
-     *
-     * @param {String} propertyName The name of the property to add.
-     *
-     * @exception {DeveloperError} "propertyName" is a reserved property name.
-     * @exception {DeveloperError} "propertyName" is already a registered property.
-     */
-    Entity.prototype.addProperty = function(propertyName) {
-        var propertyNames = this._propertyNames;
 
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(propertyName)) {
-            throw new DeveloperError('propertyName is required.');
-        }
-        if (propertyNames.indexOf(propertyName) !== -1) {
-            throw new DeveloperError(propertyName + ' is already a registered property.');
-        }
-        if (propertyName in this) {
-            throw new DeveloperError(propertyName + ' is a reserved property name.');
-        }
-        //>>includeEnd('debug');
-
-        propertyNames.push(propertyName);
-        Object.defineProperty(this, propertyName, createRawPropertyDescriptor(propertyName, true));
-    };
-
-    /**
-     * Removed a property previously added with addProperty.
-     *
-     * @param {String} propertyName The name of the property to remove.
-     *
-     * @exception {DeveloperError} "propertyName" is a reserved property name.
-     * @exception {DeveloperError} "propertyName" is not a registered property.
-     */
-    Entity.prototype.removeProperty = function(propertyName) {
-        var propertyNames = this._propertyNames;
-        var index = propertyNames.indexOf(propertyName);
-
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(propertyName)) {
-            throw new DeveloperError('propertyName is required.');
-        }
-        if (index === -1) {
-            throw new DeveloperError(propertyName + ' is not a registered property.');
-        }
-        //>>includeEnd('debug');
-
-        this._propertyNames.splice(index, 1);
-        delete this[propertyName];
-    };
-
-    /**
-     * Assigns each unassigned property on this object to the value
-     * of the same property on the provided source object.
-     *
-     * @param {Entity} source The object to be merged into this object.
-     */
-    Entity.prototype.merge = function(source) {
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(source)) {
-            throw new DeveloperError('source is required.');
-        }
-        //>>includeEnd('debug');
-
-        //Name, show, and availability are not Property objects and are currently handled differently.
-        //source.show is intentionally ignored because this.show always has a value.
-        this.name = defaultValue(this.name, source.name);
-        this.availability = defaultValue(source.availability, this.availability);
-
-        var propertyNames = this._propertyNames;
-        var sourcePropertyNames = defined(source._propertyNames) ? source._propertyNames : Object.keys(source);
-        var propertyNamesLength = sourcePropertyNames.length;
-        for (var i = 0; i < propertyNamesLength; i++) {
-            var name = sourcePropertyNames[i];
-
-            //Ignore parent when merging, this only happens at construction time.
-            if (name === 'parent') {
-                continue;
-            }
-
-            var targetProperty = this[name];
-            var sourceProperty = source[name];
-
-            //Custom properties that are registered on the source entity must also
-            //get registered on this entity.
-            if (!defined(targetProperty) && propertyNames.indexOf(name) === -1) {
-                this.addProperty(name);
-            }
-
-            if (defined(sourceProperty)) {
-                if (defined(targetProperty)) {
-                    if (defined(targetProperty.merge)) {
-                        targetProperty.merge(sourceProperty);
-                    }
-                } else if (defined(sourceProperty.merge) && defined(sourceProperty.clone)) {
-                    this[name] = sourceProperty.clone();
-                } else {
-                    this[name] = sourceProperty;
-                }
-            }
-        }
-    };
 
     var matrix3Scratch = new Matrix3();
     var positionScratch = new Cartesian3();
     var orientationScratch = new Quaternion();
 
-    /**
-     * Computes the model matrix for the entity's transform at specified time. Returns undefined if orientation or position
-     * are undefined.
-     *
-     * @param {JulianDate} time The time to retrieve model matrix for.
-     * @param {Matrix4} [result] The object onto which to store the result.
-     *
-     * @returns {Matrix4} The modified result parameter or a new Matrix4 instance if one was not provided. Result is undefined if position or orientation are undefined.
-     */
-    Entity.prototype.computeModelMatrix = function(time, result) {
-        //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.object('time', time);
-        //>>includeEnd('debug');
-        var position = Property.getValueOrUndefined(this._position, time, positionScratch);
-        if (!defined(position)) {
-            return undefined;
-        }
 
-        var orientation = Property.getValueOrUndefined(this._orientation, time, orientationScratch);
-        if (!defined(orientation)) {
-            result = Transforms.eastNorthUpToFixedFrame(position, undefined, result);
-        } else {
-            result = Matrix4.fromRotationTranslation(Matrix3.fromQuaternion(orientation, matrix3Scratch), position, result);
-        }
-        return result;
-    };
 
-    /**
-     * @private
-     */
-    Entity.prototype.computeModelMatrixForHeightReference = function(time, heightReferenceProperty, heightOffset, ellipsoid, result) {
-        //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.object('time', time);
-        //>>includeEnd('debug');
-        var heightReference = Property.getValueOrDefault(heightReferenceProperty, time, HeightReference.NONE);
-        var position = Property.getValueOrUndefined(this._position, time, positionScratch);
-        if (heightReference === HeightReference.NONE || !defined(position) || Cartesian3.equalsEpsilon(position, Cartesian3.ZERO, CesiumMath.EPSILON8)) {
-            return this.computeModelMatrix(time, result);
-        }
 
-        var carto = ellipsoid.cartesianToCartographic(position, cartoScratch);
-        if (heightReference === HeightReference.CLAMP_TO_GROUND) {
-            carto.height = heightOffset;
-        } else {
-            carto.height += heightOffset;
-        }
-        position = ellipsoid.cartographicToCartesian(carto, position);
-
-        var orientation = Property.getValueOrUndefined(this._orientation, time, orientationScratch);
-        if (!defined(orientation)) {
-            result = Transforms.eastNorthUpToFixedFrame(position, undefined, result);
-        } else {
-            result = Matrix4.fromRotationTranslation(Matrix3.fromQuaternion(orientation, matrix3Scratch), position, result);
-        }
-        return result;
-    };
-
-    /**
-     * Checks if the given Scene supports materials besides Color on Entities draped on terrain.
-     * If this feature is not supported, Entities with non-color materials but no `height` will
-     * instead be rendered as if height is 0.
-     *
-     * @param {Scene} scene The current scene.
-     * @returns {Boolean} Whether or not the current scene supports materials for entities on terrain.
-     */
-    Entity.supportsMaterialsforEntitiesOnTerrain = function(scene) {
-        return GroundPrimitive.supportsMaterials(scene);
-    };
-
-    /**
-     * Checks if the given Scene supports polylines clamped to the ground..
-     * If this feature is not supported, Entities with PolylineGraphics will be rendered with vertices at
-     * the provided heights and using the `followSurface` parameter instead of clamped to the ground.
-     *
-     * @param {Scene} scene The current scene.
-     * @returns {Boolean} Whether or not the current scene supports Polylines on Terrain.
-     */
-    Entity.supportsPolylinesOnTerrain = function(scene) {
-        return GroundPolylinePrimitive.isSupported(scene);
-    };
 
     return Entity;
 });

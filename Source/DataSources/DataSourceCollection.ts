@@ -18,17 +18,204 @@ define([
         when) {
     'use strict';
 
-    /**
-     * A collection of {@link DataSource} instances.
-     * @alias DataSourceCollection
-     * @constructor
-     */
-    function DataSourceCollection() {
-        this._dataSources = [];
-        this._dataSourceAdded = new Event();
-        this._dataSourceRemoved = new Event();
-        this._dataSourceMoved = new Event();
-    }
+        /**
+             * A collection of {@link DataSource} instances.
+             * @alias DataSourceCollection
+             * @constructor
+             */
+        class DataSourceCollection {
+            constructor() {
+                this._dataSources = [];
+                this._dataSourceAdded = new Event();
+                this._dataSourceRemoved = new Event();
+                this._dataSourceMoved = new Event();
+            }
+            /**
+                 * Adds a data source to the collection.
+                 *
+                 * @param {DataSource|Promise.<DataSource>} dataSource A data source or a promise to a data source to add to the collection.
+                 *                                        When passing a promise, the data source will not actually be added
+                 *                                        to the collection until the promise resolves successfully.
+                 * @returns {Promise.<DataSource>} A Promise that resolves once the data source has been added to the collection.
+                 */
+            add(dataSource) {
+                //>>includeStart('debug', pragmas.debug);
+                if (!defined(dataSource)) {
+                    throw new DeveloperError('dataSource is required.');
+                }
+                //>>includeEnd('debug');
+                var that = this;
+                var dataSources = this._dataSources;
+                return when(dataSource, function(value) {
+                    //Only add the data source if removeAll has not been called
+                    //Since it was added.
+                    if (dataSources === that._dataSources) {
+                        that._dataSources.push(value);
+                        that._dataSourceAdded.raiseEvent(that, value);
+                    }
+                    return value;
+                });
+            }
+            /**
+                 * Removes a data source from this collection, if present.
+                 *
+                 * @param {DataSource} dataSource The data source to remove.
+                 * @param {Boolean} [destroy=false] Whether to destroy the data source in addition to removing it.
+                 * @returns {Boolean} true if the data source was in the collection and was removed,
+                 *                    false if the data source was not in the collection.
+                 */
+            remove(dataSource, destroy) {
+                destroy = defaultValue(destroy, false);
+                var index = this._dataSources.indexOf(dataSource);
+                if (index !== -1) {
+                    this._dataSources.splice(index, 1);
+                    this._dataSourceRemoved.raiseEvent(this, dataSource);
+                    if (destroy && typeof dataSource.destroy === 'function') {
+                        dataSource.destroy();
+                    }
+                    return true;
+                }
+                return false;
+            }
+            /**
+                 * Removes all data sources from this collection.
+                 *
+                 * @param {Boolean} [destroy=false] whether to destroy the data sources in addition to removing them.
+                 */
+            removeAll(destroy) {
+                destroy = defaultValue(destroy, false);
+                var dataSources = this._dataSources;
+                for (var i = 0, len = dataSources.length; i < len; ++i) {
+                    var dataSource = dataSources[i];
+                    this._dataSourceRemoved.raiseEvent(this, dataSource);
+                    if (destroy && typeof dataSource.destroy === 'function') {
+                        dataSource.destroy();
+                    }
+                }
+                this._dataSources = [];
+            }
+            /**
+                 * Checks to see if the collection contains a given data source.
+                 *
+                 * @param {DataSource} dataSource The data source to check for.
+                 * @returns {Boolean} true if the collection contains the data source, false otherwise.
+                 */
+            contains(dataSource) {
+                return this.indexOf(dataSource) !== -1;
+            }
+            /**
+                 * Determines the index of a given data source in the collection.
+                 *
+                 * @param {DataSource} dataSource The data source to find the index of.
+                 * @returns {Number} The index of the data source in the collection, or -1 if the data source does not exist in the collection.
+                 */
+            indexOf(dataSource) {
+                return this._dataSources.indexOf(dataSource);
+            }
+            /**
+                 * Gets a data source by index from the collection.
+                 *
+                 * @param {Number} index the index to retrieve.
+                 * @returns {DataSource} The data source at the specified index.
+                 */
+            get(index) {
+                //>>includeStart('debug', pragmas.debug);
+                if (!defined(index)) {
+                    throw new DeveloperError('index is required.');
+                }
+                //>>includeEnd('debug');
+                return this._dataSources[index];
+            }
+            /**
+                 * Raises a data source up one position in the collection.
+                 *
+                 * @param {DataSource} dataSource The data source to move.
+                 *
+                 * @exception {DeveloperError} dataSource is not in this collection.
+                 * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
+                 */
+            raise(dataSource) {
+                var index = getIndex(this._dataSources, dataSource);
+                swapDataSources(this, index, index + 1);
+            }
+            /**
+                 * Lowers a data source down one position in the collection.
+                 *
+                 * @param {DataSource} dataSource The data source to move.
+                 *
+                 * @exception {DeveloperError} dataSource is not in this collection.
+                 * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
+                 */
+            lower(dataSource) {
+                var index = getIndex(this._dataSources, dataSource);
+                swapDataSources(this, index, index - 1);
+            }
+            /**
+                 * Raises a data source to the top of the collection.
+                 *
+                 * @param {DataSource} dataSource The data source to move.
+                 *
+                 * @exception {DeveloperError} dataSource is not in this collection.
+                 * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
+                 */
+            raiseToTop(dataSource) {
+                var index = getIndex(this._dataSources, dataSource);
+                if (index === this._dataSources.length - 1) {
+                    return;
+                }
+                this._dataSources.splice(index, 1);
+                this._dataSources.push(dataSource);
+                this.dataSourceMoved.raiseEvent(dataSource, this._dataSources.length - 1, index);
+            }
+            /**
+                 * Lowers a data source to the bottom of the collection.
+                 *
+                 * @param {DataSource} dataSource The data source to move.
+                 *
+                 * @exception {DeveloperError} dataSource is not in this collection.
+                 * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
+                 */
+            lowerToBottom(dataSource) {
+                var index = getIndex(this._dataSources, dataSource);
+                if (index === 0) {
+                    return;
+                }
+                this._dataSources.splice(index, 1);
+                this._dataSources.splice(0, 0, dataSource);
+                this.dataSourceMoved.raiseEvent(dataSource, 0, index);
+            }
+            /**
+                 * Returns true if this object was destroyed; otherwise, false.
+                 * If this object was destroyed, it should not be used; calling any function other than
+                 * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
+                 *
+                 * @returns {Boolean} true if this object was destroyed; otherwise, false.
+                 *
+                 * @see DataSourceCollection#destroy
+                 */
+            isDestroyed() {
+                return false;
+            }
+            /**
+                 * Destroys the resources held by all data sources in this collection.  Explicitly destroying this
+                 * object allows for deterministic release of WebGL resources, instead of relying on the garbage
+                 * collector. Once this object is destroyed, it should not be used; calling any function other than
+                 * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
+                 * assign the return value (<code>undefined</code>) to the object as done in the example.
+                 *
+                 * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
+                 *
+                 *
+                 * @example
+                 * dataSourceCollection = dataSourceCollection && dataSourceCollection.destroy();
+                 *
+                 * @see DataSourceCollection#isDestroyed
+                 */
+            destroy() {
+                this.removeAll(true);
+                return destroyObject(this);
+            }
+        }
 
     defineProperties(DataSourceCollection.prototype, {
         /**
@@ -83,115 +270,11 @@ define([
         }
     });
 
-    /**
-     * Adds a data source to the collection.
-     *
-     * @param {DataSource|Promise.<DataSource>} dataSource A data source or a promise to a data source to add to the collection.
-     *                                        When passing a promise, the data source will not actually be added
-     *                                        to the collection until the promise resolves successfully.
-     * @returns {Promise.<DataSource>} A Promise that resolves once the data source has been added to the collection.
-     */
-    DataSourceCollection.prototype.add = function(dataSource) {
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(dataSource)) {
-            throw new DeveloperError('dataSource is required.');
-        }
-        //>>includeEnd('debug');
 
-        var that = this;
-        var dataSources = this._dataSources;
-        return when(dataSource, function(value) {
-            //Only add the data source if removeAll has not been called
-            //Since it was added.
-            if (dataSources === that._dataSources) {
-                that._dataSources.push(value);
-                that._dataSourceAdded.raiseEvent(that, value);
-            }
-            return value;
-        });
-    };
 
-    /**
-     * Removes a data source from this collection, if present.
-     *
-     * @param {DataSource} dataSource The data source to remove.
-     * @param {Boolean} [destroy=false] Whether to destroy the data source in addition to removing it.
-     * @returns {Boolean} true if the data source was in the collection and was removed,
-     *                    false if the data source was not in the collection.
-     */
-    DataSourceCollection.prototype.remove = function(dataSource, destroy) {
-        destroy = defaultValue(destroy, false);
 
-        var index = this._dataSources.indexOf(dataSource);
-        if (index !== -1) {
-            this._dataSources.splice(index, 1);
-            this._dataSourceRemoved.raiseEvent(this, dataSource);
 
-            if (destroy && typeof dataSource.destroy === 'function') {
-                dataSource.destroy();
-            }
 
-            return true;
-        }
-
-        return false;
-    };
-
-    /**
-     * Removes all data sources from this collection.
-     *
-     * @param {Boolean} [destroy=false] whether to destroy the data sources in addition to removing them.
-     */
-    DataSourceCollection.prototype.removeAll = function(destroy) {
-        destroy = defaultValue(destroy, false);
-
-        var dataSources = this._dataSources;
-        for (var i = 0, len = dataSources.length; i < len; ++i) {
-            var dataSource = dataSources[i];
-            this._dataSourceRemoved.raiseEvent(this, dataSource);
-
-            if (destroy && typeof dataSource.destroy === 'function') {
-                dataSource.destroy();
-            }
-        }
-        this._dataSources = [];
-    };
-
-    /**
-     * Checks to see if the collection contains a given data source.
-     *
-     * @param {DataSource} dataSource The data source to check for.
-     * @returns {Boolean} true if the collection contains the data source, false otherwise.
-     */
-    DataSourceCollection.prototype.contains = function(dataSource) {
-        return this.indexOf(dataSource) !== -1;
-    };
-
-    /**
-     * Determines the index of a given data source in the collection.
-     *
-     * @param {DataSource} dataSource The data source to find the index of.
-     * @returns {Number} The index of the data source in the collection, or -1 if the data source does not exist in the collection.
-     */
-    DataSourceCollection.prototype.indexOf = function(dataSource) {
-        return this._dataSources.indexOf(dataSource);
-    };
-
-    /**
-     * Gets a data source by index from the collection.
-     *
-     * @param {Number} index the index to retrieve.
-     * @returns {DataSource} The data source at the specified index.
-     */
-    DataSourceCollection.prototype.get = function(index) {
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(index)) {
-            throw new DeveloperError('index is required.');
-        }
-        //>>includeEnd('debug');
-
-        return this._dataSources[index];
-    };
 
     function getIndex(dataSources, dataSource) {
         //>>includeStart('debug', pragmas.debug);
@@ -228,102 +311,11 @@ define([
         collection.dataSourceMoved.raiseEvent(temp, j, i);
     }
 
-    /**
-     * Raises a data source up one position in the collection.
-     *
-     * @param {DataSource} dataSource The data source to move.
-     *
-     * @exception {DeveloperError} dataSource is not in this collection.
-     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
-     */
-    DataSourceCollection.prototype.raise = function(dataSource) {
-        var index = getIndex(this._dataSources, dataSource);
-        swapDataSources(this, index, index + 1);
-    };
 
-    /**
-     * Lowers a data source down one position in the collection.
-     *
-     * @param {DataSource} dataSource The data source to move.
-     *
-     * @exception {DeveloperError} dataSource is not in this collection.
-     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
-     */
-    DataSourceCollection.prototype.lower = function(dataSource) {
-        var index = getIndex(this._dataSources, dataSource);
-        swapDataSources(this, index, index - 1);
-    };
 
-    /**
-     * Raises a data source to the top of the collection.
-     *
-     * @param {DataSource} dataSource The data source to move.
-     *
-     * @exception {DeveloperError} dataSource is not in this collection.
-     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
-     */
-    DataSourceCollection.prototype.raiseToTop = function(dataSource) {
-        var index = getIndex(this._dataSources, dataSource);
-        if (index === this._dataSources.length - 1) {
-            return;
-        }
-        this._dataSources.splice(index, 1);
-        this._dataSources.push(dataSource);
 
-        this.dataSourceMoved.raiseEvent(dataSource, this._dataSources.length - 1, index);
-    };
 
-    /**
-     * Lowers a data source to the bottom of the collection.
-     *
-     * @param {DataSource} dataSource The data source to move.
-     *
-     * @exception {DeveloperError} dataSource is not in this collection.
-     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
-     */
-    DataSourceCollection.prototype.lowerToBottom = function(dataSource) {
-        var index = getIndex(this._dataSources, dataSource);
-        if (index === 0) {
-            return;
-        }
-        this._dataSources.splice(index, 1);
-        this._dataSources.splice(0, 0, dataSource);
 
-        this.dataSourceMoved.raiseEvent(dataSource, 0, index);
-    };
-
-    /**
-     * Returns true if this object was destroyed; otherwise, false.
-     * If this object was destroyed, it should not be used; calling any function other than
-     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
-     *
-     * @returns {Boolean} true if this object was destroyed; otherwise, false.
-     *
-     * @see DataSourceCollection#destroy
-     */
-    DataSourceCollection.prototype.isDestroyed = function() {
-        return false;
-    };
-
-    /**
-     * Destroys the resources held by all data sources in this collection.  Explicitly destroying this
-     * object allows for deterministic release of WebGL resources, instead of relying on the garbage
-     * collector. Once this object is destroyed, it should not be used; calling any function other than
-     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
-     * assign the return value (<code>undefined</code>) to the object as done in the example.
-     *
-     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
-     *
-     *
-     * @example
-     * dataSourceCollection = dataSourceCollection && dataSourceCollection.destroy();
-     *
-     * @see DataSourceCollection#isDestroyed
-     */
-    DataSourceCollection.prototype.destroy = function() {
-        this.removeAll(true);
-        return destroyObject(this);
-    };
 
     return DataSourceCollection;
 });

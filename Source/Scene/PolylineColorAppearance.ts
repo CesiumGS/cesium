@@ -19,78 +19,74 @@ define([
     var defaultVertexShaderSource = PolylineCommon + '\n' + PolylineColorAppearanceVS;
     var defaultFragmentShaderSource = PerInstanceFlatColorAppearanceFS;
 
-    /**
-     * An appearance for {@link GeometryInstance} instances with color attributes and
-     * {@link PolylineGeometry} or {@link GroundPolylineGeometry}.
-     * This allows several geometry instances, each with a different color, to
-     * be drawn with the same {@link Primitive}.
-     *
-     * @alias PolylineColorAppearance
-     * @constructor
-     *
-     * @param {Object} [options] Object with the following properties:
-     * @param {Boolean} [options.translucent=true] When <code>true</code>, the geometry is expected to appear translucent so {@link PolylineColorAppearance#renderState} has alpha blending enabled.
-     * @param {String} [options.vertexShaderSource] Optional GLSL vertex shader source to override the default vertex shader.
-     * @param {String} [options.fragmentShaderSource] Optional GLSL fragment shader source to override the default fragment shader.
-     * @param {RenderState} [options.renderState] Optional render state to override the default render state.
-     *
-     * @example
-     * // A solid white line segment
-     * var primitive = new Cesium.Primitive({
-     *   geometryInstances : new Cesium.GeometryInstance({
-     *     geometry : new Cesium.PolylineGeometry({
-     *       positions : Cesium.Cartesian3.fromDegreesArray([
-     *         0.0, 0.0,
-     *         5.0, 0.0
-     *       ]),
-     *       width : 10.0,
-     *       vertexFormat : Cesium.PolylineColorAppearance.VERTEX_FORMAT
-     *     }),
-     *     attributes : {
-     *       color : Cesium.ColorGeometryInstanceAttribute.fromColor(new Cesium.Color(1.0, 1.0, 1.0, 1.0))
-     *     }
-     *   }),
-     *   appearance : new Cesium.PolylineColorAppearance({
-     *     translucent : false
-     *   })
-     * });
-     */
-    function PolylineColorAppearance(options) {
-        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-
-        var translucent = defaultValue(options.translucent, true);
-        var closed = false;
-        var vertexFormat = PolylineColorAppearance.VERTEX_FORMAT;
-
         /**
-         * This property is part of the {@link Appearance} interface, but is not
-         * used by {@link PolylineColorAppearance} since a fully custom fragment shader is used.
-         *
-         * @type Material
-         *
-         * @default undefined
-         */
-        this.material = undefined;
-
-        /**
-         * When <code>true</code>, the geometry is expected to appear translucent so
-         * {@link PolylineColorAppearance#renderState} has alpha blending enabled.
-         *
-         * @type {Boolean}
-         *
-         * @default true
-         */
-        this.translucent = translucent;
-
-        this._vertexShaderSource = defaultValue(options.vertexShaderSource, defaultVertexShaderSource);
-        this._fragmentShaderSource = defaultValue(options.fragmentShaderSource, defaultFragmentShaderSource);
-        this._renderState = Appearance.getDefaultRenderState(translucent, closed, options.renderState);
-        this._closed = closed;
-
-        // Non-derived members
-
-        this._vertexFormat = vertexFormat;
-    }
+             * An appearance for {@link GeometryInstance} instances with color attributes and
+             * {@link PolylineGeometry} or {@link GroundPolylineGeometry}.
+             * This allows several geometry instances, each with a different color, to
+             * be drawn with the same {@link Primitive}.
+             *
+             * @alias PolylineColorAppearance
+             * @constructor
+             *
+             * @param {Object} [options] Object with the following properties:
+             * @param {Boolean} [options.translucent=true] When <code>true</code>, the geometry is expected to appear translucent so {@link PolylineColorAppearance#renderState} has alpha blending enabled.
+             * @param {String} [options.vertexShaderSource] Optional GLSL vertex shader source to override the default vertex shader.
+             * @param {String} [options.fragmentShaderSource] Optional GLSL fragment shader source to override the default fragment shader.
+             * @param {RenderState} [options.renderState] Optional render state to override the default render state.
+             *
+             * @example
+             * // A solid white line segment
+             * var primitive = new Cesium.Primitive({
+             *   geometryInstances : new Cesium.GeometryInstance({
+             *     geometry : new Cesium.PolylineGeometry({
+             *       positions : Cesium.Cartesian3.fromDegreesArray([
+             *         0.0, 0.0,
+             *         5.0, 0.0
+             *       ]),
+             *       width : 10.0,
+             *       vertexFormat : Cesium.PolylineColorAppearance.VERTEX_FORMAT
+             *     }),
+             *     attributes : {
+             *       color : Cesium.ColorGeometryInstanceAttribute.fromColor(new Cesium.Color(1.0, 1.0, 1.0, 1.0))
+             *     }
+             *   }),
+             *   appearance : new Cesium.PolylineColorAppearance({
+             *     translucent : false
+             *   })
+             * });
+             */
+        class PolylineColorAppearance {
+            constructor(options) {
+                options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+                var translucent = defaultValue(options.translucent, true);
+                var closed = false;
+                var vertexFormat = PolylineColorAppearance.VERTEX_FORMAT;
+                /**
+                 * This property is part of the {@link Appearance} interface, but is not
+                 * used by {@link PolylineColorAppearance} since a fully custom fragment shader is used.
+                 *
+                 * @type Material
+                 *
+                 * @default undefined
+                 */
+                this.material = undefined;
+                /**
+                 * When <code>true</code>, the geometry is expected to appear translucent so
+                 * {@link PolylineColorAppearance#renderState} has alpha blending enabled.
+                 *
+                 * @type {Boolean}
+                 *
+                 * @default true
+                 */
+                this.translucent = translucent;
+                this._vertexShaderSource = defaultValue(options.vertexShaderSource, defaultVertexShaderSource);
+                this._fragmentShaderSource = defaultValue(options.fragmentShaderSource, defaultFragmentShaderSource);
+                this._renderState = Appearance.getDefaultRenderState(translucent, closed, options.renderState);
+                this._closed = closed;
+                // Non-derived members
+                this._vertexFormat = vertexFormat;
+            }
+        }
 
     defineProperties(PolylineColorAppearance.prototype, {
         /**

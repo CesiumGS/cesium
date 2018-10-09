@@ -4,31 +4,32 @@ define([
         defineProperties) {
     'use strict';
 
-    /**
-     * A model's mesh and its materials.
-     * <p>
-     * Use {@link Model#getMesh} to create an instance.
-     * </p>
-     *
-     * @alias ModelMesh
-     * @internalConstructor
-     * @class
-     *
-     * @see Model#getMesh
-     */
-    function ModelMesh(mesh, runtimeMaterialsById, id) {
-        var materials = [];
-        var primitives = mesh.primitives;
-        var length = primitives.length;
-        for (var i = 0; i < length; ++i) {
-            var p = primitives[i];
-            materials[i] = runtimeMaterialsById[p.material];
+        /**
+             * A model's mesh and its materials.
+             * <p>
+             * Use {@link Model#getMesh} to create an instance.
+             * </p>
+             *
+             * @alias ModelMesh
+             * @internalConstructor
+             * @class
+             *
+             * @see Model#getMesh
+             */
+        class ModelMesh {
+            constructor(mesh, runtimeMaterialsById, id) {
+                var materials = [];
+                var primitives = mesh.primitives;
+                var length = primitives.length;
+                for (var i = 0; i < length; ++i) {
+                    var p = primitives[i];
+                    materials[i] = runtimeMaterialsById[p.material];
+                }
+                this._name = mesh.name;
+                this._materials = materials;
+                this._id = id;
+            }
         }
-
-        this._name = mesh.name;
-        this._materials = materials;
-        this._id = id;
-    }
 
     defineProperties(ModelMesh.prototype, {
         /**

@@ -28,12 +28,65 @@ define([
         ShaderProgram) {
     'use strict';
 
-    /**
-     * @private
-     */
-    function ComputeEngine(context) {
-        this._context = context;
-    }
+        /**
+             * @private
+             */
+        class ComputeEngine {
+            constructor(context) {
+                this._context = context;
+            }
+            execute(computeCommand) {
+                //>>includeStart('debug', pragmas.debug);
+                Check.defined('computeCommand', computeCommand);
+                //>>includeEnd('debug');
+                // This may modify the command's resources, so do error checking afterwards
+                if (defined(computeCommand.preExecute)) {
+                    computeCommand.preExecute(computeCommand);
+                }
+                //>>includeStart('debug', pragmas.debug);
+                if (!defined(computeCommand.fragmentShaderSource) && !defined(computeCommand.shaderProgram)) {
+                    throw new DeveloperError('computeCommand.fragmentShaderSource or computeCommand.shaderProgram is required.');
+                }
+                Check.defined('computeCommand.outputTexture', computeCommand.outputTexture);
+                //>>includeEnd('debug');
+                var outputTexture = computeCommand.outputTexture;
+                var width = outputTexture.width;
+                var height = outputTexture.height;
+                var context = this._context;
+                var vertexArray = defined(computeCommand.vertexArray) ? computeCommand.vertexArray : context.getViewportQuadVertexArray();
+                var shaderProgram = defined(computeCommand.shaderProgram) ? computeCommand.shaderProgram : createViewportQuadShader(context, computeCommand.fragmentShaderSource);
+                var framebuffer = createFramebuffer(context, outputTexture);
+                var renderState = createRenderState(width, height);
+                var uniformMap = computeCommand.uniformMap;
+                var clearCommand = clearCommandScratch;
+                clearCommand.framebuffer = framebuffer;
+                clearCommand.renderState = renderState;
+                clearCommand.execute(context);
+                var drawCommand = drawCommandScratch;
+                drawCommand.vertexArray = vertexArray;
+                drawCommand.renderState = renderState;
+                drawCommand.shaderProgram = shaderProgram;
+                drawCommand.uniformMap = uniformMap;
+                drawCommand.framebuffer = framebuffer;
+                drawCommand.execute(context);
+                framebuffer.destroy();
+                if (!computeCommand.persists) {
+                    shaderProgram.destroy();
+                    if (defined(computeCommand.vertexArray)) {
+                        vertexArray.destroy();
+                    }
+                }
+                if (defined(computeCommand.postExecute)) {
+                    computeCommand.postExecute(outputTexture);
+                }
+            }
+            isDestroyed() {
+                return false;
+            }
+            destroy() {
+                return destroyObject(this);
+            }
+        }
 
     var renderStateScratch;
     var drawCommandScratch = new DrawCommand({
@@ -75,69 +128,8 @@ define([
         return renderStateScratch;
     }
 
-    ComputeEngine.prototype.execute = function(computeCommand) {
-        //>>includeStart('debug', pragmas.debug);
-        Check.defined('computeCommand', computeCommand);
-        //>>includeEnd('debug');
 
-        // This may modify the command's resources, so do error checking afterwards
-        if (defined(computeCommand.preExecute)) {
-            computeCommand.preExecute(computeCommand);
-        }
 
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(computeCommand.fragmentShaderSource) && !defined(computeCommand.shaderProgram)) {
-            throw new DeveloperError('computeCommand.fragmentShaderSource or computeCommand.shaderProgram is required.');
-        }
-
-        Check.defined('computeCommand.outputTexture', computeCommand.outputTexture);
-        //>>includeEnd('debug');
-
-        var outputTexture = computeCommand.outputTexture;
-        var width = outputTexture.width;
-        var height = outputTexture.height;
-
-        var context = this._context;
-        var vertexArray = defined(computeCommand.vertexArray) ? computeCommand.vertexArray : context.getViewportQuadVertexArray();
-        var shaderProgram = defined(computeCommand.shaderProgram) ? computeCommand.shaderProgram : createViewportQuadShader(context, computeCommand.fragmentShaderSource);
-        var framebuffer = createFramebuffer(context, outputTexture);
-        var renderState = createRenderState(width, height);
-        var uniformMap = computeCommand.uniformMap;
-
-        var clearCommand = clearCommandScratch;
-        clearCommand.framebuffer = framebuffer;
-        clearCommand.renderState = renderState;
-        clearCommand.execute(context);
-
-        var drawCommand = drawCommandScratch;
-        drawCommand.vertexArray = vertexArray;
-        drawCommand.renderState = renderState;
-        drawCommand.shaderProgram = shaderProgram;
-        drawCommand.uniformMap = uniformMap;
-        drawCommand.framebuffer = framebuffer;
-        drawCommand.execute(context);
-
-        framebuffer.destroy();
-
-        if (!computeCommand.persists) {
-            shaderProgram.destroy();
-            if (defined(computeCommand.vertexArray)) {
-                vertexArray.destroy();
-            }
-        }
-
-        if (defined(computeCommand.postExecute)) {
-            computeCommand.postExecute(outputTexture);
-        }
-    };
-
-    ComputeEngine.prototype.isDestroyed = function() {
-        return false;
-    };
-
-    ComputeEngine.prototype.destroy = function() {
-        return destroyObject(this);
-    };
 
     return ComputeEngine;
 });

@@ -192,32 +192,112 @@ define([
         setConstants(ellipsoidGeodesic);
     }
 
-    /**
-     * Initializes a geodesic on the ellipsoid connecting the two provided planetodetic points.
-     *
-     * @alias EllipsoidGeodesic
-     * @constructor
-     *
-     * @param {Cartographic} [start] The initial planetodetic point on the path.
-     * @param {Cartographic} [end] The final planetodetic point on the path.
-     * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid on which the geodesic lies.
-     */
-    function EllipsoidGeodesic(start, end, ellipsoid) {
-        var e = defaultValue(ellipsoid, Ellipsoid.WGS84);
-        this._ellipsoid = e;
-        this._start = new Cartographic();
-        this._end = new Cartographic();
-
-        this._constants = {};
-        this._startHeading = undefined;
-        this._endHeading = undefined;
-        this._distance = undefined;
-        this._uSquared = undefined;
-
-        if (defined(start) && defined(end)) {
-            computeProperties(this, start, end, e);
+        /**
+             * Initializes a geodesic on the ellipsoid connecting the two provided planetodetic points.
+             *
+             * @alias EllipsoidGeodesic
+             * @constructor
+             *
+             * @param {Cartographic} [start] The initial planetodetic point on the path.
+             * @param {Cartographic} [end] The final planetodetic point on the path.
+             * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid on which the geodesic lies.
+             */
+        class EllipsoidGeodesic {
+            constructor(start, end, ellipsoid) {
+                var e = defaultValue(ellipsoid, Ellipsoid.WGS84);
+                this._ellipsoid = e;
+                this._start = new Cartographic();
+                this._end = new Cartographic();
+                this._constants = {};
+                this._startHeading = undefined;
+                this._endHeading = undefined;
+                this._distance = undefined;
+                this._uSquared = undefined;
+                if (defined(start) && defined(end)) {
+                    computeProperties(this, start, end, e);
+                }
+            }
+            /**
+                 * Sets the start and end points of the geodesic
+                 *
+                 * @param {Cartographic} start The initial planetodetic point on the path.
+                 * @param {Cartographic} end The final planetodetic point on the path.
+                 */
+            setEndPoints(start, end) {
+                //>>includeStart('debug', pragmas.debug);
+                Check.defined('start', start);
+                Check.defined('end', end);
+                //>>includeEnd('debug');
+                computeProperties(this, start, end, this._ellipsoid);
+            }
+            /**
+                 * Provides the location of a point at the indicated portion along the geodesic.
+                 *
+                 * @param {Number} fraction The portion of the distance between the initial and final points.
+                 * @param {Cartographic} result The object in which to store the result.
+                 * @returns {Cartographic} The location of the point along the geodesic.
+                 */
+            interpolateUsingFraction(fraction, result) {
+                return this.interpolateUsingSurfaceDistance(this._distance * fraction, result);
+            }
+            /**
+                 * Provides the location of a point at the indicated distance along the geodesic.
+                 *
+                 * @param {Number} distance The distance from the inital point to the point of interest along the geodesic
+                 * @param {Cartographic} result The object in which to store the result.
+                 * @returns {Cartographic} The location of the point along the geodesic.
+                 *
+                 * @exception {DeveloperError} start and end must be set before calling function interpolateUsingSurfaceDistance
+                 */
+            interpolateUsingSurfaceDistance(distance, result) {
+                //>>includeStart('debug', pragmas.debug);
+                Check.defined('distance', this._distance);
+                //>>includeEnd('debug');
+                var constants = this._constants;
+                var s = constants.distanceRatio + distance / constants.b;
+                var cosine2S = Math.cos(2.0 * s);
+                var cosine4S = Math.cos(4.0 * s);
+                var cosine6S = Math.cos(6.0 * s);
+                var sine2S = Math.sin(2.0 * s);
+                var sine4S = Math.sin(4.0 * s);
+                var sine6S = Math.sin(6.0 * s);
+                var sine8S = Math.sin(8.0 * s);
+                var s2 = s * s;
+                var s3 = s * s2;
+                var u8Over256 = constants.u8Over256;
+                var u2Over4 = constants.u2Over4;
+                var u6Over64 = constants.u6Over64;
+                var u4Over16 = constants.u4Over16;
+                var sigma = 2.0 * s3 * u8Over256 * cosine2S / 3.0 +
+                    s * (1.0 - u2Over4 + 7.0 * u4Over16 / 4.0 - 15.0 * u6Over64 / 4.0 + 579.0 * u8Over256 / 64.0 -
+                        (u4Over16 - 15.0 * u6Over64 / 4.0 + 187.0 * u8Over256 / 16.0) * cosine2S -
+                        (5.0 * u6Over64 / 4.0 - 115.0 * u8Over256 / 16.0) * cosine4S -
+                        29.0 * u8Over256 * cosine6S / 16.0) +
+                    (u2Over4 / 2.0 - u4Over16 + 71.0 * u6Over64 / 32.0 - 85.0 * u8Over256 / 16.0) * sine2S +
+                    (5.0 * u4Over16 / 16.0 - 5.0 * u6Over64 / 4.0 + 383.0 * u8Over256 / 96.0) * sine4S -
+                    s2 * ((u6Over64 - 11.0 * u8Over256 / 2.0) * sine2S + 5.0 * u8Over256 * sine4S / 2.0) +
+                    (29.0 * u6Over64 / 96.0 - 29.0 * u8Over256 / 16.0) * sine6S +
+                    539.0 * u8Over256 * sine8S / 1536.0;
+                var theta = Math.asin(Math.sin(sigma) * constants.cosineAlpha);
+                var latitude = Math.atan(constants.a / constants.b * Math.tan(theta));
+                // Redefine in terms of relative argument of latitude.
+                sigma = sigma - constants.sigma;
+                var cosineTwiceSigmaMidpoint = Math.cos(2.0 * constants.sigma + sigma);
+                var sineSigma = Math.sin(sigma);
+                var cosineSigma = Math.cos(sigma);
+                var cc = constants.cosineU * cosineSigma;
+                var ss = constants.sineU * sineSigma;
+                var lambda = Math.atan2(sineSigma * constants.sineHeading, cc - ss * constants.cosineHeading);
+                var l = lambda - computeDeltaLambda(constants.f, constants.sineAlpha, constants.cosineSquaredAlpha, sigma, sineSigma, cosineSigma, cosineTwiceSigmaMidpoint);
+                if (defined(result)) {
+                    result.longitude = this._start.longitude + l;
+                    result.latitude = latitude;
+                    result.height = 0.0;
+                    return result;
+                }
+                return new Cartographic(this._start.longitude + l, latitude, 0.0);
+            }
         }
-    }
 
     defineProperties(EllipsoidGeodesic.prototype, {
         /**
@@ -305,104 +385,8 @@ define([
         }
     });
 
-    /**
-     * Sets the start and end points of the geodesic
-     *
-     * @param {Cartographic} start The initial planetodetic point on the path.
-     * @param {Cartographic} end The final planetodetic point on the path.
-     */
-    EllipsoidGeodesic.prototype.setEndPoints = function(start, end) {
-        //>>includeStart('debug', pragmas.debug);
-        Check.defined('start', start);
-        Check.defined('end', end);
-        //>>includeEnd('debug');
 
-        computeProperties(this, start, end, this._ellipsoid);
-    };
 
-    /**
-     * Provides the location of a point at the indicated portion along the geodesic.
-     *
-     * @param {Number} fraction The portion of the distance between the initial and final points.
-     * @param {Cartographic} result The object in which to store the result.
-     * @returns {Cartographic} The location of the point along the geodesic.
-     */
-    EllipsoidGeodesic.prototype.interpolateUsingFraction = function(fraction, result) {
-        return this.interpolateUsingSurfaceDistance(this._distance * fraction, result);
-    };
-
-    /**
-     * Provides the location of a point at the indicated distance along the geodesic.
-     *
-     * @param {Number} distance The distance from the inital point to the point of interest along the geodesic
-     * @param {Cartographic} result The object in which to store the result.
-     * @returns {Cartographic} The location of the point along the geodesic.
-     *
-     * @exception {DeveloperError} start and end must be set before calling function interpolateUsingSurfaceDistance
-     */
-    EllipsoidGeodesic.prototype.interpolateUsingSurfaceDistance = function(distance, result) {
-        //>>includeStart('debug', pragmas.debug);
-        Check.defined('distance', this._distance);
-        //>>includeEnd('debug');
-
-        var constants = this._constants;
-
-        var s = constants.distanceRatio + distance / constants.b;
-
-        var cosine2S = Math.cos(2.0 * s);
-        var cosine4S = Math.cos(4.0 * s);
-        var cosine6S = Math.cos(6.0 * s);
-        var sine2S = Math.sin(2.0 * s);
-        var sine4S = Math.sin(4.0 * s);
-        var sine6S = Math.sin(6.0 * s);
-        var sine8S = Math.sin(8.0 * s);
-
-        var s2 = s * s;
-        var s3 = s * s2;
-
-        var u8Over256 = constants.u8Over256;
-        var u2Over4 = constants.u2Over4;
-        var u6Over64 = constants.u6Over64;
-        var u4Over16 = constants.u4Over16;
-        var sigma = 2.0 * s3 * u8Over256 * cosine2S / 3.0 +
-            s * (1.0 - u2Over4 + 7.0 * u4Over16 / 4.0 - 15.0 * u6Over64 / 4.0 + 579.0 * u8Over256 / 64.0 -
-            (u4Over16 - 15.0 * u6Over64 / 4.0 + 187.0 * u8Over256 / 16.0) * cosine2S -
-            (5.0 * u6Over64 / 4.0 - 115.0 * u8Over256 / 16.0) * cosine4S -
-            29.0 * u8Over256 * cosine6S / 16.0) +
-            (u2Over4 / 2.0 - u4Over16 + 71.0 * u6Over64 / 32.0 - 85.0 * u8Over256 / 16.0) * sine2S +
-            (5.0 * u4Over16 / 16.0 - 5.0 * u6Over64 / 4.0 + 383.0 * u8Over256 / 96.0) * sine4S -
-            s2 * ((u6Over64 - 11.0 * u8Over256 / 2.0) * sine2S + 5.0 * u8Over256 * sine4S / 2.0) +
-            (29.0 * u6Over64 / 96.0 - 29.0 * u8Over256 / 16.0) * sine6S +
-            539.0 * u8Over256 * sine8S / 1536.0;
-
-        var theta = Math.asin(Math.sin(sigma) * constants.cosineAlpha);
-        var latitude = Math.atan(constants.a / constants.b * Math.tan(theta));
-
-        // Redefine in terms of relative argument of latitude.
-        sigma = sigma - constants.sigma;
-
-        var cosineTwiceSigmaMidpoint = Math.cos(2.0 * constants.sigma + sigma);
-
-        var sineSigma = Math.sin(sigma);
-        var cosineSigma = Math.cos(sigma);
-
-        var cc = constants.cosineU * cosineSigma;
-        var ss = constants.sineU * sineSigma;
-
-        var lambda = Math.atan2(sineSigma * constants.sineHeading, cc - ss * constants.cosineHeading);
-
-        var l = lambda - computeDeltaLambda(constants.f, constants.sineAlpha, constants.cosineSquaredAlpha,
-                                            sigma, sineSigma, cosineSigma, cosineTwiceSigmaMidpoint);
-
-        if (defined(result)) {
-            result.longitude = this._start.longitude + l;
-            result.latitude = latitude;
-            result.height = 0.0;
-            return result;
-        }
-
-        return new Cartographic(this._start.longitude + l, latitude, 0.0);
-    };
 
     return EllipsoidGeodesic;
 });

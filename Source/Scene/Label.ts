@@ -57,112 +57,253 @@ define([
         label._repositionAllGlyphs = true;
     }
 
-    /**
-     * A Label draws viewport-aligned text positioned in the 3D scene.  This constructor
-     * should not be used directly, instead create labels by calling {@link LabelCollection#add}.
-     *
-     * @alias Label
-     * @internalConstructor
-     * @class
-     *
-     * @exception {DeveloperError} translucencyByDistance.far must be greater than translucencyByDistance.near
-     * @exception {DeveloperError} pixelOffsetScaleByDistance.far must be greater than pixelOffsetScaleByDistance.near
-     * @exception {DeveloperError} distanceDisplayCondition.far must be greater than distanceDisplayCondition.near
-     *
-     * @see LabelCollection
-     * @see LabelCollection#add
-     *
-     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Labels.html|Cesium Sandcastle Labels Demo}
-     */
-    function Label(options, labelCollection) {
-        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-
-        //>>includeStart('debug', pragmas.debug);
-        if (defined(options.disableDepthTestDistance) && options.disableDepthTestDistance < 0.0) {
-            throw new DeveloperError('disableDepthTestDistance must be greater than 0.0.');
-        }
-        //>>includeEnd('debug');
-
-        var translucencyByDistance = options.translucencyByDistance;
-        var pixelOffsetScaleByDistance = options.pixelOffsetScaleByDistance;
-        var scaleByDistance = options.scaleByDistance;
-        var distanceDisplayCondition = options.distanceDisplayCondition;
-        if (defined(translucencyByDistance)) {
-            //>>includeStart('debug', pragmas.debug);
-            if (translucencyByDistance.far <= translucencyByDistance.near) {
-                throw new DeveloperError('translucencyByDistance.far must be greater than translucencyByDistance.near.');
+        /**
+             * A Label draws viewport-aligned text positioned in the 3D scene.  This constructor
+             * should not be used directly, instead create labels by calling {@link LabelCollection#add}.
+             *
+             * @alias Label
+             * @internalConstructor
+             * @class
+             *
+             * @exception {DeveloperError} translucencyByDistance.far must be greater than translucencyByDistance.near
+             * @exception {DeveloperError} pixelOffsetScaleByDistance.far must be greater than pixelOffsetScaleByDistance.near
+             * @exception {DeveloperError} distanceDisplayCondition.far must be greater than distanceDisplayCondition.near
+             *
+             * @see LabelCollection
+             * @see LabelCollection#add
+             *
+             * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Labels.html|Cesium Sandcastle Labels Demo}
+             */
+        class Label {
+            constructor(options, labelCollection) {
+                options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+                //>>includeStart('debug', pragmas.debug);
+                if (defined(options.disableDepthTestDistance) && options.disableDepthTestDistance < 0.0) {
+                    throw new DeveloperError('disableDepthTestDistance must be greater than 0.0.');
+                }
+                //>>includeEnd('debug');
+                var translucencyByDistance = options.translucencyByDistance;
+                var pixelOffsetScaleByDistance = options.pixelOffsetScaleByDistance;
+                var scaleByDistance = options.scaleByDistance;
+                var distanceDisplayCondition = options.distanceDisplayCondition;
+                if (defined(translucencyByDistance)) {
+                    //>>includeStart('debug', pragmas.debug);
+                    if (translucencyByDistance.far <= translucencyByDistance.near) {
+                        throw new DeveloperError('translucencyByDistance.far must be greater than translucencyByDistance.near.');
+                    }
+                    //>>includeEnd('debug');
+                    translucencyByDistance = NearFarScalar.clone(translucencyByDistance);
+                }
+                if (defined(pixelOffsetScaleByDistance)) {
+                    //>>includeStart('debug', pragmas.debug);
+                    if (pixelOffsetScaleByDistance.far <= pixelOffsetScaleByDistance.near) {
+                        throw new DeveloperError('pixelOffsetScaleByDistance.far must be greater than pixelOffsetScaleByDistance.near.');
+                    }
+                    //>>includeEnd('debug');
+                    pixelOffsetScaleByDistance = NearFarScalar.clone(pixelOffsetScaleByDistance);
+                }
+                if (defined(scaleByDistance)) {
+                    //>>includeStart('debug', pragmas.debug);
+                    if (scaleByDistance.far <= scaleByDistance.near) {
+                        throw new DeveloperError('scaleByDistance.far must be greater than scaleByDistance.near.');
+                    }
+                    //>>includeEnd('debug');
+                    scaleByDistance = NearFarScalar.clone(scaleByDistance);
+                }
+                if (defined(distanceDisplayCondition)) {
+                    //>>includeStart('debug', pragmas.debug);
+                    if (distanceDisplayCondition.far <= distanceDisplayCondition.near) {
+                        throw new DeveloperError('distanceDisplayCondition.far must be greater than distanceDisplayCondition.near.');
+                    }
+                    //>>includeEnd('debug');
+                    distanceDisplayCondition = DistanceDisplayCondition.clone(distanceDisplayCondition);
+                }
+                this._renderedText = undefined;
+                this._text = undefined;
+                this._show = defaultValue(options.show, true);
+                this._font = defaultValue(options.font, '30px sans-serif');
+                this._fillColor = Color.clone(defaultValue(options.fillColor, Color.WHITE));
+                this._outlineColor = Color.clone(defaultValue(options.outlineColor, Color.BLACK));
+                this._outlineWidth = defaultValue(options.outlineWidth, 1.0);
+                this._showBackground = defaultValue(options.showBackground, false);
+                this._backgroundColor = defaultValue(options.backgroundColor, new Color(0.165, 0.165, 0.165, 0.8));
+                this._backgroundPadding = defaultValue(options.backgroundPadding, new Cartesian2(7, 5));
+                this._style = defaultValue(options.style, LabelStyle.FILL);
+                this._verticalOrigin = defaultValue(options.verticalOrigin, VerticalOrigin.BASELINE);
+                this._horizontalOrigin = defaultValue(options.horizontalOrigin, HorizontalOrigin.LEFT);
+                this._pixelOffset = Cartesian2.clone(defaultValue(options.pixelOffset, Cartesian2.ZERO));
+                this._eyeOffset = Cartesian3.clone(defaultValue(options.eyeOffset, Cartesian3.ZERO));
+                this._position = Cartesian3.clone(defaultValue(options.position, Cartesian3.ZERO));
+                this._scale = defaultValue(options.scale, 1.0);
+                this._id = options.id;
+                this._translucencyByDistance = translucencyByDistance;
+                this._pixelOffsetScaleByDistance = pixelOffsetScaleByDistance;
+                this._scaleByDistance = scaleByDistance;
+                this._heightReference = defaultValue(options.heightReference, HeightReference.NONE);
+                this._distanceDisplayCondition = distanceDisplayCondition;
+                this._disableDepthTestDistance = options.disableDepthTestDistance;
+                this._labelCollection = labelCollection;
+                this._glyphs = [];
+                this._backgroundBillboard = undefined;
+                this._batchIndex = undefined; // Used only by Vector3DTilePoints and BillboardCollection
+                this._rebindAllGlyphs = true;
+                this._repositionAllGlyphs = true;
+                this._actualClampedPosition = undefined;
+                this._removeCallbackFunc = undefined;
+                this._mode = undefined;
+                this._clusterShow = true;
+                this.text = defaultValue(options.text, '');
+                this._updateClamping();
             }
-            //>>includeEnd('debug');
-            translucencyByDistance = NearFarScalar.clone(translucencyByDistance);
-        }
-        if (defined(pixelOffsetScaleByDistance)) {
-            //>>includeStart('debug', pragmas.debug);
-            if (pixelOffsetScaleByDistance.far <= pixelOffsetScaleByDistance.near) {
-                throw new DeveloperError('pixelOffsetScaleByDistance.far must be greater than pixelOffsetScaleByDistance.near.');
+            _updateClamping() {
+                Billboard._updateClamping(this._labelCollection, this);
             }
-            //>>includeEnd('debug');
-            pixelOffsetScaleByDistance = NearFarScalar.clone(pixelOffsetScaleByDistance);
-        }
-        if (defined(scaleByDistance)) {
-            //>>includeStart('debug', pragmas.debug);
-            if (scaleByDistance.far <= scaleByDistance.near) {
-                throw new DeveloperError('scaleByDistance.far must be greater than scaleByDistance.near.');
+            /**
+                 * Computes the screen-space position of the label's origin, taking into account eye and pixel offsets.
+                 * The screen space origin is the top, left corner of the canvas; <code>x</code> increases from
+                 * left to right, and <code>y</code> increases from top to bottom.
+                 *
+                 * @param {Scene} scene The scene the label is in.
+                 * @param {Cartesian2} [result] The object onto which to store the result.
+                 * @returns {Cartesian2} The screen-space position of the label.
+                 *
+                 *
+                 * @example
+                 * console.log(l.computeScreenSpacePosition(scene).toString());
+                 *
+                 * @see Label#eyeOffset
+                 * @see Label#pixelOffset
+                 */
+            computeScreenSpacePosition(scene, result) {
+                //>>includeStart('debug', pragmas.debug);
+                if (!defined(scene)) {
+                    throw new DeveloperError('scene is required.');
+                }
+                //>>includeEnd('debug');
+                if (!defined(result)) {
+                    result = new Cartesian2();
+                }
+                var labelCollection = this._labelCollection;
+                var modelMatrix = labelCollection.modelMatrix;
+                var actualPosition = defined(this._actualClampedPosition) ? this._actualClampedPosition : this._position;
+                var windowCoordinates = Billboard._computeScreenSpacePosition(modelMatrix, actualPosition, this._eyeOffset, this._pixelOffset, scene, result);
+                return windowCoordinates;
             }
-            //>>includeEnd('debug');
-            scaleByDistance = NearFarScalar.clone(scaleByDistance);
-        }
-        if (defined(distanceDisplayCondition)) {
-            //>>includeStart('debug', pragmas.debug);
-            if (distanceDisplayCondition.far <= distanceDisplayCondition.near) {
-                throw new DeveloperError('distanceDisplayCondition.far must be greater than distanceDisplayCondition.near.');
+            /**
+                 * Determines if this label equals another label.  Labels are equal if all their properties
+                 * are equal.  Labels in different collections can be equal.
+                 *
+                 * @param {Label} other The label to compare for equality.
+                 * @returns {Boolean} <code>true</code> if the labels are equal; otherwise, <code>false</code>.
+                 */
+            equals(other) {
+                return this === other ||
+                    defined(other) &&
+                    this._show === other._show &&
+                    this._scale === other._scale &&
+                    this._outlineWidth === other._outlineWidth &&
+                    this._showBackground === other._showBackground &&
+                    this._style === other._style &&
+                    this._verticalOrigin === other._verticalOrigin &&
+                    this._horizontalOrigin === other._horizontalOrigin &&
+                    this._heightReference === other._heightReference &&
+                    this._renderedText === other._renderedText &&
+                    this._font === other._font &&
+                    Cartesian3.equals(this._position, other._position) &&
+                    Color.equals(this._fillColor, other._fillColor) &&
+                    Color.equals(this._outlineColor, other._outlineColor) &&
+                    Color.equals(this._backgroundColor, other._backgroundColor) &&
+                    Cartesian2.equals(this._backgroundPadding, other._backgroundPadding) &&
+                    Cartesian2.equals(this._pixelOffset, other._pixelOffset) &&
+                    Cartesian3.equals(this._eyeOffset, other._eyeOffset) &&
+                    NearFarScalar.equals(this._translucencyByDistance, other._translucencyByDistance) &&
+                    NearFarScalar.equals(this._pixelOffsetScaleByDistance, other._pixelOffsetScaleByDistance) &&
+                    NearFarScalar.equals(this._scaleByDistance, other._scaleByDistance) &&
+                    DistanceDisplayCondition.equals(this._distanceDisplayCondition, other._distanceDisplayCondition) &&
+                    this._disableDepthTestDistance === other._disableDepthTestDistance &&
+                    this._id === other._id;
             }
-            //>>includeEnd('debug');
-            distanceDisplayCondition = DistanceDisplayCondition.clone(distanceDisplayCondition);
+            /**
+                 * Returns true if this object was destroyed; otherwise, false.
+                 * <br /><br />
+                 * If this object was destroyed, it should not be used; calling any function other than
+                 * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
+                 *
+                 * @returns {Boolean} True if this object was destroyed; otherwise, false.
+                 */
+            isDestroyed() {
+                return false;
+            }
+            /**
+                 * Gets a label's screen space bounding box centered around screenSpacePosition.
+                 * @param {Label} label The label to get the screen space bounding box for.
+                 * @param {Cartesian2} screenSpacePosition The screen space center of the label.
+                 * @param {BoundingRectangle} [result] The object onto which to store the result.
+                 * @returns {BoundingRectangle} The screen space bounding box.
+                 *
+                 * @private
+                 */
+            static getScreenSpaceBoundingBox(label, screenSpacePosition, result) {
+                var x = 0;
+                var y = 0;
+                var width = 0;
+                var height = 0;
+                var scale = label.scale;
+                var resolutionScale = label._labelCollection._resolutionScale;
+                var backgroundBillboard = label._backgroundBillboard;
+                if (defined(backgroundBillboard)) {
+                    x = screenSpacePosition.x + (backgroundBillboard._translate.x / resolutionScale);
+                    y = screenSpacePosition.y - (backgroundBillboard._translate.y / resolutionScale);
+                    width = backgroundBillboard.width * scale;
+                    height = backgroundBillboard.height * scale;
+                    if (label.verticalOrigin === VerticalOrigin.BOTTOM || label.verticalOrigin === VerticalOrigin.BASELINE) {
+                        y -= height;
+                    }
+                    else if (label.verticalOrigin === VerticalOrigin.CENTER) {
+                        y -= height * 0.5;
+                    }
+                }
+                else {
+                    x = Number.POSITIVE_INFINITY;
+                    y = Number.POSITIVE_INFINITY;
+                    var maxX = 0;
+                    var maxY = 0;
+                    var glyphs = label._glyphs;
+                    var length = glyphs.length;
+                    for (var i = 0; i < length; ++i) {
+                        var glyph = glyphs[i];
+                        var billboard = glyph.billboard;
+                        if (!defined(billboard)) {
+                            continue;
+                        }
+                        var glyphX = screenSpacePosition.x + (billboard._translate.x / resolutionScale);
+                        var glyphY = screenSpacePosition.y - (billboard._translate.y / resolutionScale);
+                        var glyphWidth = billboard.width * scale;
+                        var glyphHeight = billboard.height * scale;
+                        if (label.verticalOrigin === VerticalOrigin.BOTTOM || label.verticalOrigin === VerticalOrigin.BASELINE) {
+                            glyphY -= glyphHeight;
+                        }
+                        else if (label.verticalOrigin === VerticalOrigin.CENTER) {
+                            glyphY -= glyphHeight * 0.5;
+                        }
+                        x = Math.min(x, glyphX);
+                        y = Math.min(y, glyphY);
+                        maxX = Math.max(maxX, glyphX + glyphWidth);
+                        maxY = Math.max(maxY, glyphY + glyphHeight);
+                    }
+                    width = maxX - x;
+                    height = maxY - y;
+                }
+                if (!defined(result)) {
+                    result = new BoundingRectangle();
+                }
+                result.x = x;
+                result.y = y;
+                result.width = width;
+                result.height = height;
+                return result;
+            }
         }
-
-        this._renderedText = undefined;
-        this._text = undefined;
-        this._show = defaultValue(options.show, true);
-        this._font = defaultValue(options.font, '30px sans-serif');
-        this._fillColor = Color.clone(defaultValue(options.fillColor, Color.WHITE));
-        this._outlineColor = Color.clone(defaultValue(options.outlineColor, Color.BLACK));
-        this._outlineWidth = defaultValue(options.outlineWidth, 1.0);
-        this._showBackground = defaultValue(options.showBackground, false);
-        this._backgroundColor = defaultValue(options.backgroundColor, new Color(0.165, 0.165, 0.165, 0.8));
-        this._backgroundPadding = defaultValue(options.backgroundPadding, new Cartesian2(7, 5));
-        this._style = defaultValue(options.style, LabelStyle.FILL);
-        this._verticalOrigin = defaultValue(options.verticalOrigin, VerticalOrigin.BASELINE);
-        this._horizontalOrigin = defaultValue(options.horizontalOrigin, HorizontalOrigin.LEFT);
-        this._pixelOffset = Cartesian2.clone(defaultValue(options.pixelOffset, Cartesian2.ZERO));
-        this._eyeOffset = Cartesian3.clone(defaultValue(options.eyeOffset, Cartesian3.ZERO));
-        this._position = Cartesian3.clone(defaultValue(options.position, Cartesian3.ZERO));
-        this._scale = defaultValue(options.scale, 1.0);
-        this._id = options.id;
-        this._translucencyByDistance = translucencyByDistance;
-        this._pixelOffsetScaleByDistance = pixelOffsetScaleByDistance;
-        this._scaleByDistance = scaleByDistance;
-        this._heightReference = defaultValue(options.heightReference, HeightReference.NONE);
-        this._distanceDisplayCondition = distanceDisplayCondition;
-        this._disableDepthTestDistance = options.disableDepthTestDistance;
-
-        this._labelCollection = labelCollection;
-        this._glyphs = [];
-        this._backgroundBillboard = undefined;
-        this._batchIndex = undefined; // Used only by Vector3DTilePoints and BillboardCollection
-
-        this._rebindAllGlyphs = true;
-        this._repositionAllGlyphs = true;
-
-        this._actualClampedPosition = undefined;
-        this._removeCallbackFunc = undefined;
-        this._mode = undefined;
-
-        this._clusterShow = true;
-
-        this.text = defaultValue(options.text, '');
-
-        this._updateClamping();
-    }
 
     defineProperties(Label.prototype, {
         /**
@@ -1059,168 +1200,10 @@ define([
         }
     });
 
-    Label.prototype._updateClamping = function() {
-        Billboard._updateClamping(this._labelCollection, this);
-    };
 
-    /**
-     * Computes the screen-space position of the label's origin, taking into account eye and pixel offsets.
-     * The screen space origin is the top, left corner of the canvas; <code>x</code> increases from
-     * left to right, and <code>y</code> increases from top to bottom.
-     *
-     * @param {Scene} scene The scene the label is in.
-     * @param {Cartesian2} [result] The object onto which to store the result.
-     * @returns {Cartesian2} The screen-space position of the label.
-     *
-     *
-     * @example
-     * console.log(l.computeScreenSpacePosition(scene).toString());
-     *
-     * @see Label#eyeOffset
-     * @see Label#pixelOffset
-     */
-    Label.prototype.computeScreenSpacePosition = function(scene, result) {
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(scene)) {
-            throw new DeveloperError('scene is required.');
-        }
-        //>>includeEnd('debug');
 
-        if (!defined(result)) {
-            result = new Cartesian2();
-        }
 
-        var labelCollection = this._labelCollection;
-        var modelMatrix = labelCollection.modelMatrix;
-        var actualPosition = defined(this._actualClampedPosition) ? this._actualClampedPosition : this._position;
 
-        var windowCoordinates = Billboard._computeScreenSpacePosition(modelMatrix, actualPosition,
-                this._eyeOffset, this._pixelOffset, scene, result);
-        return windowCoordinates;
-    };
-
-    /**
-     * Gets a label's screen space bounding box centered around screenSpacePosition.
-     * @param {Label} label The label to get the screen space bounding box for.
-     * @param {Cartesian2} screenSpacePosition The screen space center of the label.
-     * @param {BoundingRectangle} [result] The object onto which to store the result.
-     * @returns {BoundingRectangle} The screen space bounding box.
-     *
-     * @private
-     */
-    Label.getScreenSpaceBoundingBox = function(label, screenSpacePosition, result) {
-        var x = 0;
-        var y = 0;
-        var width = 0;
-        var height = 0;
-        var scale = label.scale;
-        var resolutionScale = label._labelCollection._resolutionScale;
-
-        var backgroundBillboard = label._backgroundBillboard;
-        if (defined(backgroundBillboard)) {
-            x = screenSpacePosition.x + (backgroundBillboard._translate.x / resolutionScale);
-            y = screenSpacePosition.y - (backgroundBillboard._translate.y / resolutionScale);
-            width = backgroundBillboard.width * scale;
-            height = backgroundBillboard.height * scale;
-
-            if (label.verticalOrigin === VerticalOrigin.BOTTOM || label.verticalOrigin === VerticalOrigin.BASELINE) {
-                y -= height;
-            } else if (label.verticalOrigin === VerticalOrigin.CENTER) {
-                y -= height * 0.5;
-            }
-        } else {
-            x = Number.POSITIVE_INFINITY;
-            y = Number.POSITIVE_INFINITY;
-            var maxX = 0;
-            var maxY = 0;
-            var glyphs = label._glyphs;
-            var length = glyphs.length;
-            for (var i = 0; i < length; ++i) {
-                var glyph = glyphs[i];
-                var billboard = glyph.billboard;
-                if (!defined(billboard)) {
-                    continue;
-                }
-
-                var glyphX = screenSpacePosition.x + (billboard._translate.x / resolutionScale);
-                var glyphY = screenSpacePosition.y - (billboard._translate.y / resolutionScale);
-                var glyphWidth = billboard.width * scale;
-                var glyphHeight = billboard.height * scale;
-
-                if (label.verticalOrigin === VerticalOrigin.BOTTOM || label.verticalOrigin === VerticalOrigin.BASELINE) {
-                    glyphY -= glyphHeight;
-                } else if (label.verticalOrigin === VerticalOrigin.CENTER) {
-                    glyphY -= glyphHeight * 0.5;
-                }
-
-                x = Math.min(x, glyphX);
-                y = Math.min(y, glyphY);
-                maxX = Math.max(maxX, glyphX + glyphWidth);
-                maxY = Math.max(maxY, glyphY + glyphHeight);
-            }
-
-            width = maxX - x;
-            height = maxY - y;
-        }
-
-        if (!defined(result)) {
-            result = new BoundingRectangle();
-        }
-
-        result.x = x;
-        result.y = y;
-        result.width = width;
-        result.height = height;
-
-        return result;
-    };
-
-    /**
-     * Determines if this label equals another label.  Labels are equal if all their properties
-     * are equal.  Labels in different collections can be equal.
-     *
-     * @param {Label} other The label to compare for equality.
-     * @returns {Boolean} <code>true</code> if the labels are equal; otherwise, <code>false</code>.
-     */
-    Label.prototype.equals = function(other) {
-        return this === other ||
-               defined(other) &&
-               this._show === other._show &&
-               this._scale === other._scale &&
-               this._outlineWidth === other._outlineWidth &&
-               this._showBackground === other._showBackground &&
-               this._style === other._style &&
-               this._verticalOrigin === other._verticalOrigin &&
-               this._horizontalOrigin === other._horizontalOrigin &&
-               this._heightReference === other._heightReference &&
-               this._renderedText === other._renderedText &&
-               this._font === other._font &&
-               Cartesian3.equals(this._position, other._position) &&
-               Color.equals(this._fillColor, other._fillColor) &&
-               Color.equals(this._outlineColor, other._outlineColor) &&
-               Color.equals(this._backgroundColor, other._backgroundColor) &&
-               Cartesian2.equals(this._backgroundPadding, other._backgroundPadding) &&
-               Cartesian2.equals(this._pixelOffset, other._pixelOffset) &&
-               Cartesian3.equals(this._eyeOffset, other._eyeOffset) &&
-               NearFarScalar.equals(this._translucencyByDistance, other._translucencyByDistance) &&
-               NearFarScalar.equals(this._pixelOffsetScaleByDistance, other._pixelOffsetScaleByDistance) &&
-               NearFarScalar.equals(this._scaleByDistance, other._scaleByDistance) &&
-               DistanceDisplayCondition.equals(this._distanceDisplayCondition, other._distanceDisplayCondition) &&
-               this._disableDepthTestDistance === other._disableDepthTestDistance &&
-               this._id === other._id;
-    };
-
-    /**
-     * Returns true if this object was destroyed; otherwise, false.
-     * <br /><br />
-     * If this object was destroyed, it should not be used; calling any function other than
-     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
-     *
-     * @returns {Boolean} True if this object was destroyed; otherwise, false.
-     */
-    Label.prototype.isDestroyed = function() {
-        return false;
-    };
 
     /**
      * Determines whether or not run the algorithm, that match the text of the label to right-to-left languages

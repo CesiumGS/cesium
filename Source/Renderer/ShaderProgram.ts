@@ -26,62 +26,108 @@ define([
 
     var nextShaderProgramId = 0;
 
-    /**
-     * @private
-     */
-    function ShaderProgram(options) {
-        var modifiedFS = handleUniformPrecisionMismatches(options.vertexShaderText, options.fragmentShaderText);
-
-        this._gl = options.gl;
-        this._logShaderCompilation = options.logShaderCompilation;
-        this._debugShaders = options.debugShaders;
-        this._attributeLocations = options.attributeLocations;
-
-        this._program = undefined;
-        this._numberOfVertexAttributes = undefined;
-        this._vertexAttributes = undefined;
-        this._uniformsByName = undefined;
-        this._uniforms = undefined;
-        this._automaticUniforms = undefined;
-        this._manualUniforms = undefined;
-        this._duplicateUniformNames = modifiedFS.duplicateUniformNames;
-        this._cachedShader = undefined; // Used by ShaderCache
-
         /**
-         * @private
-         */
-        this.maximumTextureUnitIndex = undefined;
+             * @private
+             */
+        class ShaderProgram {
+            constructor(options) {
+                var modifiedFS = handleUniformPrecisionMismatches(options.vertexShaderText, options.fragmentShaderText);
+                this._gl = options.gl;
+                this._logShaderCompilation = options.logShaderCompilation;
+                this._debugShaders = options.debugShaders;
+                this._attributeLocations = options.attributeLocations;
+                this._program = undefined;
+                this._numberOfVertexAttributes = undefined;
+                this._vertexAttributes = undefined;
+                this._uniformsByName = undefined;
+                this._uniforms = undefined;
+                this._automaticUniforms = undefined;
+                this._manualUniforms = undefined;
+                this._duplicateUniformNames = modifiedFS.duplicateUniformNames;
+                this._cachedShader = undefined; // Used by ShaderCache
+                /**
+                 * @private
+                 */
+                this.maximumTextureUnitIndex = undefined;
+                this._vertexShaderSource = options.vertexShaderSource;
+                this._vertexShaderText = options.vertexShaderText;
+                this._fragmentShaderSource = options.fragmentShaderSource;
+                this._fragmentShaderText = modifiedFS.fragmentShaderText;
+                /**
+                 * @private
+                 */
+                this.id = nextShaderProgramId++;
+            }
+            _bind() {
+                initialize(this);
+                this._gl.useProgram(this._program);
+            }
+            _setUniforms(uniformMap, uniformState, validate) {
+                var len;
+                var i;
+                if (defined(uniformMap)) {
+                    var manualUniforms = this._manualUniforms;
+                    len = manualUniforms.length;
+                    for (i = 0; i < len; ++i) {
+                        var mu = manualUniforms[i];
+                        mu.value = uniformMap[mu.name]();
+                    }
+                }
+                var automaticUniforms = this._automaticUniforms;
+                len = automaticUniforms.length;
+                for (i = 0; i < len; ++i) {
+                    var au = automaticUniforms[i];
+                    au.uniform.value = au.automaticUniform.getValue(uniformState);
+                }
+                ///////////////////////////////////////////////////////////////////
+                // It appears that assigning the uniform values above and then setting them here
+                // (which makes the GL calls) is faster than removing this loop and making
+                // the GL calls above.  I suspect this is because each GL call pollutes the
+                // L2 cache making our JavaScript and the browser/driver ping-pong cache lines.
+                var uniforms = this._uniforms;
+                len = uniforms.length;
+                for (i = 0; i < len; ++i) {
+                    uniforms[i].set();
+                }
+                if (validate) {
+                    var gl = this._gl;
+                    var program = this._program;
+                    gl.validateProgram(program);
+                    //>>includeStart('debug', pragmas.debug);
+                    if (!gl.getProgramParameter(program, gl.VALIDATE_STATUS)) {
+                        throw new DeveloperError('Program validation failed.  Program info log: ' + gl.getProgramInfoLog(program));
+                    }
+                    //>>includeEnd('debug');
+                }
+            }
+            isDestroyed() {
+                return false;
+            }
+            destroy() {
+                this._cachedShader.cache.releaseShaderProgram(this);
+                return undefined;
+            }
+            finalDestroy() {
+                this._gl.deleteProgram(this._program);
+                return destroyObject(this);
+            }
+            static fromCache(options) {
+                options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+                //>>includeStart('debug', pragmas.debug);
+                Check.defined('options.context', options.context);
+                //>>includeEnd('debug');
+                return options.context.shaderCache.getShaderProgram(options);
+            }
+            static replaceCache(options) {
+                options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+                //>>includeStart('debug', pragmas.debug);
+                Check.defined('options.context', options.context);
+                //>>includeEnd('debug');
+                return options.context.shaderCache.replaceShaderProgram(options);
+            }
+        }
 
-        this._vertexShaderSource = options.vertexShaderSource;
-        this._vertexShaderText = options.vertexShaderText;
-        this._fragmentShaderSource = options.fragmentShaderSource;
-        this._fragmentShaderText = modifiedFS.fragmentShaderText;
 
-        /**
-         * @private
-         */
-        this.id = nextShaderProgramId++;
-    }
-
-    ShaderProgram.fromCache = function(options) {
-        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-
-        //>>includeStart('debug', pragmas.debug);
-        Check.defined('options.context', options.context);
-        //>>includeEnd('debug');
-
-        return options.context.shaderCache.getShaderProgram(options);
-    };
-
-    ShaderProgram.replaceCache = function(options) {
-        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-
-        //>>includeStart('debug', pragmas.debug);
-        Check.defined('options.context', options.context);
-        //>>includeEnd('debug');
-
-        return options.context.shaderCache.replaceShaderProgram(options);
-    };
 
     defineProperties(ShaderProgram.prototype, {
         /**
@@ -464,69 +510,10 @@ define([
         shader.maximumTextureUnitIndex = setSamplerUniforms(gl, program, uniforms.samplerUniforms);
     }
 
-    ShaderProgram.prototype._bind = function() {
-        initialize(this);
-        this._gl.useProgram(this._program);
-    };
 
-    ShaderProgram.prototype._setUniforms = function(uniformMap, uniformState, validate) {
-        var len;
-        var i;
 
-        if (defined(uniformMap)) {
-            var manualUniforms = this._manualUniforms;
-            len = manualUniforms.length;
-            for (i = 0; i < len; ++i) {
-                var mu = manualUniforms[i];
-                mu.value = uniformMap[mu.name]();
-            }
-        }
 
-        var automaticUniforms = this._automaticUniforms;
-        len = automaticUniforms.length;
-        for (i = 0; i < len; ++i) {
-            var au = automaticUniforms[i];
-            au.uniform.value = au.automaticUniform.getValue(uniformState);
-        }
 
-        ///////////////////////////////////////////////////////////////////
-
-        // It appears that assigning the uniform values above and then setting them here
-        // (which makes the GL calls) is faster than removing this loop and making
-        // the GL calls above.  I suspect this is because each GL call pollutes the
-        // L2 cache making our JavaScript and the browser/driver ping-pong cache lines.
-        var uniforms = this._uniforms;
-        len = uniforms.length;
-        for (i = 0; i < len; ++i) {
-            uniforms[i].set();
-        }
-
-        if (validate) {
-            var gl = this._gl;
-            var program = this._program;
-
-            gl.validateProgram(program);
-            //>>includeStart('debug', pragmas.debug);
-            if (!gl.getProgramParameter(program, gl.VALIDATE_STATUS)) {
-                throw new DeveloperError('Program validation failed.  Program info log: ' + gl.getProgramInfoLog(program));
-            }
-            //>>includeEnd('debug');
-        }
-    };
-
-    ShaderProgram.prototype.isDestroyed = function() {
-        return false;
-    };
-
-    ShaderProgram.prototype.destroy = function() {
-        this._cachedShader.cache.releaseShaderProgram(this);
-        return undefined;
-    };
-
-    ShaderProgram.prototype.finalDestroy = function() {
-        this._gl.deleteProgram(this._program);
-        return destroyObject(this);
-    };
 
     return ShaderProgram;
 });

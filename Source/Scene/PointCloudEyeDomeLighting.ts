@@ -44,23 +44,92 @@ define([
         PointCloudEyeDomeLightingShader) {
     'use strict';
 
-    /**
-     * Eye dome lighting. Does not support points with per-point translucency, but does allow translucent styling against the globe.
-     * Requires support for EXT_frag_depth and WEBGL_draw_buffers extensions in WebGL 1.0.
-     *
-     * @private
-     */
-    function PointCloudEyeDomeLighting() {
-        this._framebuffer = undefined;
-        this._colorGBuffer = undefined; // color gbuffer
-        this._depthGBuffer = undefined; // depth gbuffer
-        this._depthTexture = undefined; // needed to write depth so camera based on depth works
-        this._drawCommand = undefined;
-        this._clearCommand = undefined;
-
-        this._strength = 1.0;
-        this._radius = 1.0;
-    }
+        /**
+             * Eye dome lighting. Does not support points with per-point translucency, but does allow translucent styling against the globe.
+             * Requires support for EXT_frag_depth and WEBGL_draw_buffers extensions in WebGL 1.0.
+             *
+             * @private
+             */
+        class PointCloudEyeDomeLighting {
+            constructor() {
+                this._framebuffer = undefined;
+                this._colorGBuffer = undefined; // color gbuffer
+                this._depthGBuffer = undefined; // depth gbuffer
+                this._depthTexture = undefined; // needed to write depth so camera based on depth works
+                this._drawCommand = undefined;
+                this._clearCommand = undefined;
+                this._strength = 1.0;
+                this._radius = 1.0;
+            }
+            update(frameState, commandStart, pointCloudShading) {
+                var passes = frameState.passes;
+                var isPick = (passes.pick && !passes.render);
+                if (!isSupported(frameState.context) || isPick) {
+                    return;
+                }
+                this._strength = pointCloudShading.eyeDomeLightingStrength;
+                this._radius = pointCloudShading.eyeDomeLightingRadius;
+                var dirty = createResources(this, frameState.context);
+                // Hijack existing point commands to render into an offscreen FBO.
+                var i;
+                var commandList = frameState.commandList;
+                var commandEnd = commandList.length;
+                for (i = commandStart; i < commandEnd; ++i) {
+                    var command = commandList[i];
+                    if (command.primitiveType !== PrimitiveType.POINTS || command.pass === Pass.TRANSLUCENT) {
+                        continue;
+                    }
+                    var derivedCommand = command.derivedCommands.pointCloudProcessor;
+                    if (!defined(derivedCommand) || command.dirty || dirty ||
+                        (derivedCommand.framebuffer !== this._framebuffer)) { // Prevent crash when tiles out-of-view come in-view during context size change
+                        derivedCommand = DrawCommand.shallowClone(command);
+                        command.derivedCommands.pointCloudProcessor = derivedCommand;
+                        derivedCommand.framebuffer = this._framebuffer;
+                        derivedCommand.shaderProgram = getECShaderProgram(frameState.context, command.shaderProgram);
+                        derivedCommand.castShadows = false;
+                        derivedCommand.receiveShadows = false;
+                    }
+                    commandList[i] = derivedCommand;
+                }
+                var clearCommand = this._clearCommand;
+                var blendCommand = this._drawCommand;
+                // Blend EDL into the main FBO
+                commandList.push(blendCommand);
+                commandList.push(clearCommand);
+            }
+            /**
+                 * Returns true if this object was destroyed; otherwise, false.
+                 * <br /><br />
+                 * If this object was destroyed, it should not be used; calling any function other than
+                 * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
+                 *
+                 * @returns {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
+                 *
+                 * @see PointCloudEyeDomeLighting#destroy
+                 */
+            isDestroyed() {
+                return false;
+            }
+            /**
+                 * Destroys the WebGL resources held by this object.  Destroying an object allows for deterministic
+                 * release of WebGL resources, instead of relying on the garbage collector to destroy this object.
+                 * <br /><br />
+                 * Once an object is destroyed, it should not be used; calling any function other than
+                 * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
+                 * assign the return value (<code>undefined</code>) to the object as done in the example.
+                 *
+                 * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
+                 *
+                 * @example
+                 * processor = processor && processor.destroy();
+                 *
+                 * @see PointCloudEyeDomeLighting#isDestroyed
+                 */
+            destroy() {
+                destroyFramebuffer(this);
+                return destroyObject(this);
+            }
+        }
 
     function createSampler() {
         return new Sampler({
@@ -235,84 +304,8 @@ define([
         return shader;
     }
 
-    PointCloudEyeDomeLighting.prototype.update = function(frameState, commandStart, pointCloudShading) {
-        var passes = frameState.passes;
-        var isPick = (passes.pick && !passes.render);
-        if (!isSupported(frameState.context) || isPick) {
-            return;
-        }
 
-        this._strength = pointCloudShading.eyeDomeLightingStrength;
-        this._radius = pointCloudShading.eyeDomeLightingRadius;
 
-        var dirty = createResources(this, frameState.context);
-
-        // Hijack existing point commands to render into an offscreen FBO.
-        var i;
-        var commandList = frameState.commandList;
-        var commandEnd = commandList.length;
-
-        for (i = commandStart; i < commandEnd; ++i) {
-            var command = commandList[i];
-            if (command.primitiveType !== PrimitiveType.POINTS || command.pass === Pass.TRANSLUCENT) {
-                continue;
-            }
-            var derivedCommand = command.derivedCommands.pointCloudProcessor;
-            if (!defined(derivedCommand) || command.dirty || dirty ||
-                (derivedCommand.framebuffer !== this._framebuffer)) { // Prevent crash when tiles out-of-view come in-view during context size change
-                derivedCommand = DrawCommand.shallowClone(command);
-                command.derivedCommands.pointCloudProcessor = derivedCommand;
-
-                derivedCommand.framebuffer = this._framebuffer;
-                derivedCommand.shaderProgram = getECShaderProgram(frameState.context, command.shaderProgram);
-                derivedCommand.castShadows = false;
-                derivedCommand.receiveShadows = false;
-            }
-
-            commandList[i] = derivedCommand;
-        }
-
-        var clearCommand = this._clearCommand;
-        var blendCommand = this._drawCommand;
-
-        // Blend EDL into the main FBO
-        commandList.push(blendCommand);
-        commandList.push(clearCommand);
-    };
-
-    /**
-     * Returns true if this object was destroyed; otherwise, false.
-     * <br /><br />
-     * If this object was destroyed, it should not be used; calling any function other than
-     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
-     *
-     * @returns {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
-     *
-     * @see PointCloudEyeDomeLighting#destroy
-     */
-    PointCloudEyeDomeLighting.prototype.isDestroyed = function() {
-        return false;
-    };
-
-    /**
-     * Destroys the WebGL resources held by this object.  Destroying an object allows for deterministic
-     * release of WebGL resources, instead of relying on the garbage collector to destroy this object.
-     * <br /><br />
-     * Once an object is destroyed, it should not be used; calling any function other than
-     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
-     * assign the return value (<code>undefined</code>) to the object as done in the example.
-     *
-     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
-     *
-     * @example
-     * processor = processor && processor.destroy();
-     *
-     * @see PointCloudEyeDomeLighting#isDestroyed
-     */
-    PointCloudEyeDomeLighting.prototype.destroy = function() {
-        destroyFramebuffer(this);
-        return destroyObject(this);
-    };
 
     return PointCloudEyeDomeLighting;
 });

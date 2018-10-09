@@ -1,7 +1,7 @@
 define([
-        './defined'
-    ], function(
-        defined) {
+    './defined'
+], function(
+    defined) {
     'use strict';
 
     /**
@@ -13,11 +13,13 @@ define([
      *
      * @exports freezeObject
      */
-    var freezeObject = Object.freeze;
-    if (!defined(freezeObject)) {
-        freezeObject = function(o) {
+    export function freezeObject(o: any): any {
+
+        if (!defined(freezeObject)) {
             return o;
-        };
+        } else {
+            return Object.freeze(o);
+        }
     }
 
     return freezeObject;

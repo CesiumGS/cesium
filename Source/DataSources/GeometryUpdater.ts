@@ -45,52 +45,208 @@ define([
     var defaultDistanceDisplayCondition = new ConstantProperty(new DistanceDisplayCondition());
     var defaultClassificationType = new ConstantProperty(ClassificationType.TERRAIN);
 
-    /**
-     * An abstract class for updating geometry entites.
-     * @alias GeometryUpdater
-     * @constructor
-     *
-     * @param {Object} options An object with the following properties:
-     * @param {Entity} options.entity The entity containing the geometry to be visualized.
-     * @param {Scene} options.scene The scene where visualization is taking place.
-     * @param {Object} options.geometryOptions Options for the geometry
-     * @param {String} options.geometryPropertyName The geometry property name
-     * @param {String[]} options.observedPropertyNames The entity properties this geometry cares about
-     */
-    function GeometryUpdater(options) {
-        //>>includeStart('debug', pragmas.debug);
-        Check.defined('options.entity', options.entity);
-        Check.defined('options.scene', options.scene);
-        Check.defined('options.geometryOptions', options.geometryOptions);
-        Check.defined('options.geometryPropertyName', options.geometryPropertyName);
-        Check.defined('options.observedPropertyNames', options.observedPropertyNames);
-        //>>includeEnd('debug');
-
-        var entity = options.entity;
-        var geometryPropertyName = options.geometryPropertyName;
-
-        this._entity = entity;
-        this._scene = options.scene;
-        this._fillEnabled = false;
-        this._isClosed = false;
-        this._onTerrain = false;
-        this._dynamic = false;
-        this._outlineEnabled = false;
-        this._geometryChanged = new Event();
-        this._showProperty = undefined;
-        this._materialProperty = undefined;
-        this._showOutlineProperty = undefined;
-        this._outlineColorProperty = undefined;
-        this._outlineWidth = 1.0;
-        this._shadowsProperty = undefined;
-        this._distanceDisplayConditionProperty = undefined;
-        this._classificationTypeProperty = undefined;
-        this._options = options.geometryOptions;
-        this._geometryPropertyName = geometryPropertyName;
-        this._id = geometryPropertyName + '-' + entity.id;
-        this._observedPropertyNames = options.observedPropertyNames;
-        this._supportsMaterialsforEntitiesOnTerrain = Entity.supportsMaterialsforEntitiesOnTerrain(options.scene);
-    }
+        /**
+             * An abstract class for updating geometry entites.
+             * @alias GeometryUpdater
+             * @constructor
+             *
+             * @param {Object} options An object with the following properties:
+             * @param {Entity} options.entity The entity containing the geometry to be visualized.
+             * @param {Scene} options.scene The scene where visualization is taking place.
+             * @param {Object} options.geometryOptions Options for the geometry
+             * @param {String} options.geometryPropertyName The geometry property name
+             * @param {String[]} options.observedPropertyNames The entity properties this geometry cares about
+             */
+        class GeometryUpdater {
+            constructor(options) {
+                //>>includeStart('debug', pragmas.debug);
+                Check.defined('options.entity', options.entity);
+                Check.defined('options.scene', options.scene);
+                Check.defined('options.geometryOptions', options.geometryOptions);
+                Check.defined('options.geometryPropertyName', options.geometryPropertyName);
+                Check.defined('options.observedPropertyNames', options.observedPropertyNames);
+                //>>includeEnd('debug');
+                var entity = options.entity;
+                var geometryPropertyName = options.geometryPropertyName;
+                this._entity = entity;
+                this._scene = options.scene;
+                this._fillEnabled = false;
+                this._isClosed = false;
+                this._onTerrain = false;
+                this._dynamic = false;
+                this._outlineEnabled = false;
+                this._geometryChanged = new Event();
+                this._showProperty = undefined;
+                this._materialProperty = undefined;
+                this._showOutlineProperty = undefined;
+                this._outlineColorProperty = undefined;
+                this._outlineWidth = 1.0;
+                this._shadowsProperty = undefined;
+                this._distanceDisplayConditionProperty = undefined;
+                this._classificationTypeProperty = undefined;
+                this._options = options.geometryOptions;
+                this._geometryPropertyName = geometryPropertyName;
+                this._id = geometryPropertyName + '-' + entity.id;
+                this._observedPropertyNames = options.observedPropertyNames;
+                this._supportsMaterialsforEntitiesOnTerrain = Entity.supportsMaterialsforEntitiesOnTerrain(options.scene);
+            }
+            /**
+                 * Checks if the geometry is outlined at the provided time.
+                 *
+                 * @param {JulianDate} time The time for which to retrieve visibility.
+                 * @returns {Boolean} true if geometry is outlined at the provided time, false otherwise.
+                 */
+            isOutlineVisible(time) {
+                var entity = this._entity;
+                return this._outlineEnabled && entity.isAvailable(time) && this._showProperty.getValue(time) && this._showOutlineProperty.getValue(time);
+            }
+            /**
+                 * Checks if the geometry is filled at the provided time.
+                 *
+                 * @param {JulianDate} time The time for which to retrieve visibility.
+                 * @returns {Boolean} true if geometry is filled at the provided time, false otherwise.
+                 */
+            isFilled(time) {
+                var entity = this._entity;
+                return this._fillEnabled && entity.isAvailable(time) && this._showProperty.getValue(time) && this._fillProperty.getValue(time);
+            }
+            /**
+                 * Returns true if this object was destroyed; otherwise, false.
+                 *
+                 * @returns {Boolean} True if this object was destroyed; otherwise, false.
+                 */
+            isDestroyed() {
+                return false;
+            }
+            /**
+                 * Destroys and resources used by the object.  Once an object is destroyed, it should not be used.
+                 *
+                 * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
+                 */
+            destroy() {
+                destroyObject(this);
+            }
+            /**
+                 * @param {Entity} entity
+                 * @param {Object} geometry
+                 * @private
+                 */
+            _isHidden(entity, geometry) {
+                var show = geometry.show;
+                return defined(show) && show.isConstant && !show.getValue(Iso8601.MINIMUM_VALUE);
+            }
+            /**
+                 * @param {Entity} entity
+                 * @param {Object} geometry
+                 * @private
+                 */
+            _isOnTerrain(entity, geometry) {
+                return false;
+            }
+            /**
+                 * @param {GeometryOptions} options
+                 * @private
+                 */
+            _getIsClosed(options) {
+                return true;
+            }
+            /**
+                 * @param {Entity} entity
+                 * @param {String} propertyName
+                 * @param {*} newValue
+                 * @param {*} oldValue
+                 * @private
+                 */
+            _onEntityPropertyChanged(entity, propertyName, newValue, oldValue) {
+                if (this._observedPropertyNames.indexOf(propertyName) === -1) {
+                    return;
+                }
+                var geometry = this._entity[this._geometryPropertyName];
+                if (!defined(geometry)) {
+                    if (this._fillEnabled || this._outlineEnabled) {
+                        this._fillEnabled = false;
+                        this._outlineEnabled = false;
+                        this._geometryChanged.raiseEvent(this);
+                    }
+                    return;
+                }
+                var fillProperty = geometry.fill;
+                var fillEnabled = defined(fillProperty) && fillProperty.isConstant ? fillProperty.getValue(Iso8601.MINIMUM_VALUE) : true;
+                var outlineProperty = geometry.outline;
+                var outlineEnabled = defined(outlineProperty);
+                if (outlineEnabled && outlineProperty.isConstant) {
+                    outlineEnabled = outlineProperty.getValue(Iso8601.MINIMUM_VALUE);
+                }
+                if (!fillEnabled && !outlineEnabled) {
+                    if (this._fillEnabled || this._outlineEnabled) {
+                        this._fillEnabled = false;
+                        this._outlineEnabled = false;
+                        this._geometryChanged.raiseEvent(this);
+                    }
+                    return;
+                }
+                var show = geometry.show;
+                if (this._isHidden(entity, geometry)) {
+                    if (this._fillEnabled || this._outlineEnabled) {
+                        this._fillEnabled = false;
+                        this._outlineEnabled = false;
+                        this._geometryChanged.raiseEvent(this);
+                    }
+                    return;
+                }
+                this._materialProperty = defaultValue(geometry.material, defaultMaterial);
+                this._fillProperty = defaultValue(fillProperty, defaultFill);
+                this._showProperty = defaultValue(show, defaultShow);
+                this._showOutlineProperty = defaultValue(geometry.outline, defaultOutline);
+                this._outlineColorProperty = outlineEnabled ? defaultValue(geometry.outlineColor, defaultOutlineColor) : undefined;
+                this._shadowsProperty = defaultValue(geometry.shadows, defaultShadows);
+                this._distanceDisplayConditionProperty = defaultValue(geometry.distanceDisplayCondition, defaultDistanceDisplayCondition);
+                this._classificationTypeProperty = defaultValue(geometry.classificationType, defaultClassificationType);
+                this._fillEnabled = fillEnabled;
+                var onTerrain = this._isOnTerrain(entity, geometry) &&
+                    (this._supportsMaterialsforEntitiesOnTerrain || this._materialProperty instanceof ColorMaterialProperty);
+                if (outlineEnabled && onTerrain) {
+                    oneTimeWarning(oneTimeWarning.geometryOutlines);
+                    outlineEnabled = false;
+                }
+                this._onTerrain = onTerrain;
+                this._outlineEnabled = outlineEnabled;
+                if (this._isDynamic(entity, geometry)) {
+                    if (!this._dynamic) {
+                        this._dynamic = true;
+                        this._geometryChanged.raiseEvent(this);
+                    }
+                }
+                else {
+                    this._setStaticOptions(entity, geometry);
+                    this._isClosed = this._getIsClosed(this._options);
+                    var outlineWidth = geometry.outlineWidth;
+                    this._outlineWidth = defined(outlineWidth) ? outlineWidth.getValue(Iso8601.MINIMUM_VALUE) : 1.0;
+                    this._dynamic = false;
+                    this._geometryChanged.raiseEvent(this);
+                }
+            }
+            /**
+                 * Creates the dynamic updater to be used when GeometryUpdater#isDynamic is true.
+                 *
+                 * @param {PrimitiveCollection} primitives The primitive collection to use.
+                 * @param {PrimitiveCollection} [groundPrimitives] The primitive collection to use for ground primitives.
+                 *
+                 * @returns {DynamicGeometryUpdater} The dynamic updater used to update the geometry each frame.
+                 *
+                 * @exception {DeveloperError} This instance does not represent dynamic geometry.
+                 */
+            createDynamicUpdater(primitives, groundPrimitives) {
+                //>>includeStart('debug', pragmas.debug);
+                Check.defined('primitives', primitives);
+                Check.defined('groundPrimitives', groundPrimitives);
+                if (!this._dynamic) {
+                    throw new DeveloperError('This instance does not represent dynamic geometry.');
+                }
+                //>>includeEnd('debug');
+                return new this.constructor.DynamicGeometryUpdater(this, primitives, groundPrimitives);
+            }
+        }
 
     defineProperties(GeometryUpdater.prototype, {
         /**
@@ -298,27 +454,7 @@ define([
         }
     });
 
-    /**
-     * Checks if the geometry is outlined at the provided time.
-     *
-     * @param {JulianDate} time The time for which to retrieve visibility.
-     * @returns {Boolean} true if geometry is outlined at the provided time, false otherwise.
-     */
-    GeometryUpdater.prototype.isOutlineVisible = function(time) {
-        var entity = this._entity;
-        return this._outlineEnabled && entity.isAvailable(time) && this._showProperty.getValue(time) && this._showOutlineProperty.getValue(time);
-    };
 
-    /**
-     * Checks if the geometry is filled at the provided time.
-     *
-     * @param {JulianDate} time The time for which to retrieve visibility.
-     * @returns {Boolean} true if geometry is filled at the provided time, false otherwise.
-     */
-    GeometryUpdater.prototype.isFilled = function(time) {
-        var entity = this._entity;
-        return this._fillEnabled && entity.isAvailable(time) && this._showProperty.getValue(time) && this._fillProperty.getValue(time);
-    };
 
     /**
      * Creates the geometry instance which represents the fill of the geometry.
@@ -342,49 +478,9 @@ define([
      */
     GeometryUpdater.prototype.createOutlineGeometryInstance = DeveloperError.throwInstantiationError;
 
-    /**
-     * Returns true if this object was destroyed; otherwise, false.
-     *
-     * @returns {Boolean} True if this object was destroyed; otherwise, false.
-     */
-    GeometryUpdater.prototype.isDestroyed = function() {
-        return false;
-    };
 
-    /**
-     * Destroys and resources used by the object.  Once an object is destroyed, it should not be used.
-     *
-     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
-     */
-    GeometryUpdater.prototype.destroy = function() {
-        destroyObject(this);
-    };
-    /**
-     * @param {Entity} entity
-     * @param {Object} geometry
-     * @private
-     */
-    GeometryUpdater.prototype._isHidden = function(entity, geometry) {
-        var show = geometry.show;
-        return defined(show) && show.isConstant && !show.getValue(Iso8601.MINIMUM_VALUE);
-    };
 
-    /**
-     * @param {Entity} entity
-     * @param {Object} geometry
-     * @private
-     */
-    GeometryUpdater.prototype._isOnTerrain = function(entity, geometry) {
-        return false;
-    };
 
-    /**
-     * @param {GeometryOptions} options
-     * @private
-     */
-    GeometryUpdater.prototype._getIsClosed = function(options) {
-        return true;
-    };
 
     /**
      * @param {Entity} entity
@@ -400,116 +496,7 @@ define([
      */
     GeometryUpdater.prototype._setStaticOptions = DeveloperError.throwInstantiationError;
 
-    /**
-     * @param {Entity} entity
-     * @param {String} propertyName
-     * @param {*} newValue
-     * @param {*} oldValue
-     * @private
-     */
-    GeometryUpdater.prototype._onEntityPropertyChanged = function(entity, propertyName, newValue, oldValue) {
-        if (this._observedPropertyNames.indexOf(propertyName) === -1) {
-            return;
-        }
 
-        var geometry = this._entity[this._geometryPropertyName];
-
-        if (!defined(geometry)) {
-            if (this._fillEnabled || this._outlineEnabled) {
-                this._fillEnabled = false;
-                this._outlineEnabled = false;
-                this._geometryChanged.raiseEvent(this);
-            }
-            return;
-        }
-
-        var fillProperty = geometry.fill;
-        var fillEnabled = defined(fillProperty) && fillProperty.isConstant ? fillProperty.getValue(Iso8601.MINIMUM_VALUE) : true;
-
-        var outlineProperty = geometry.outline;
-        var outlineEnabled = defined(outlineProperty);
-        if (outlineEnabled && outlineProperty.isConstant) {
-            outlineEnabled = outlineProperty.getValue(Iso8601.MINIMUM_VALUE);
-        }
-
-        if (!fillEnabled && !outlineEnabled) {
-            if (this._fillEnabled || this._outlineEnabled) {
-                this._fillEnabled = false;
-                this._outlineEnabled = false;
-                this._geometryChanged.raiseEvent(this);
-            }
-            return;
-        }
-
-        var show = geometry.show;
-        if (this._isHidden(entity, geometry)) {
-            if (this._fillEnabled || this._outlineEnabled) {
-                this._fillEnabled = false;
-                this._outlineEnabled = false;
-                this._geometryChanged.raiseEvent(this);
-            }
-            return;
-        }
-
-        this._materialProperty = defaultValue(geometry.material, defaultMaterial);
-        this._fillProperty = defaultValue(fillProperty, defaultFill);
-        this._showProperty = defaultValue(show, defaultShow);
-        this._showOutlineProperty = defaultValue(geometry.outline, defaultOutline);
-        this._outlineColorProperty = outlineEnabled ? defaultValue(geometry.outlineColor, defaultOutlineColor) : undefined;
-        this._shadowsProperty = defaultValue(geometry.shadows, defaultShadows);
-        this._distanceDisplayConditionProperty = defaultValue(geometry.distanceDisplayCondition, defaultDistanceDisplayCondition);
-        this._classificationTypeProperty = defaultValue(geometry.classificationType, defaultClassificationType);
-
-        this._fillEnabled = fillEnabled;
-
-        var onTerrain = this._isOnTerrain(entity, geometry) &&
-            (this._supportsMaterialsforEntitiesOnTerrain || this._materialProperty instanceof ColorMaterialProperty);
-
-        if (outlineEnabled && onTerrain) {
-            oneTimeWarning(oneTimeWarning.geometryOutlines);
-            outlineEnabled = false;
-        }
-
-        this._onTerrain = onTerrain;
-        this._outlineEnabled = outlineEnabled;
-
-        if (this._isDynamic(entity, geometry)) {
-            if (!this._dynamic) {
-                this._dynamic = true;
-                this._geometryChanged.raiseEvent(this);
-            }
-        } else {
-            this._setStaticOptions(entity, geometry);
-            this._isClosed = this._getIsClosed(this._options);
-            var outlineWidth = geometry.outlineWidth;
-            this._outlineWidth = defined(outlineWidth) ? outlineWidth.getValue(Iso8601.MINIMUM_VALUE) : 1.0;
-            this._dynamic = false;
-            this._geometryChanged.raiseEvent(this);
-        }
-    };
-
-    /**
-     * Creates the dynamic updater to be used when GeometryUpdater#isDynamic is true.
-     *
-     * @param {PrimitiveCollection} primitives The primitive collection to use.
-     * @param {PrimitiveCollection} [groundPrimitives] The primitive collection to use for ground primitives.
-     *
-     * @returns {DynamicGeometryUpdater} The dynamic updater used to update the geometry each frame.
-     *
-     * @exception {DeveloperError} This instance does not represent dynamic geometry.
-     */
-    GeometryUpdater.prototype.createDynamicUpdater = function(primitives, groundPrimitives) {
-        //>>includeStart('debug', pragmas.debug);
-        Check.defined('primitives', primitives);
-        Check.defined('groundPrimitives', groundPrimitives);
-
-        if (!this._dynamic) {
-            throw new DeveloperError('This instance does not represent dynamic geometry.');
-        }
-        //>>includeEnd('debug');
-
-        return new this.constructor.DynamicGeometryUpdater(this, primitives, groundPrimitives);
-    };
 
     return GeometryUpdater;
 });

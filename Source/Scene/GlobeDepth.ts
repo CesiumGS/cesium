@@ -38,31 +38,73 @@ define([
         PassThroughDepth) {
     'use strict';
 
-    /**
-     * @private
-     */
-    function GlobeDepth() {
-        this._colorTexture = undefined;
-        this._depthStencilTexture = undefined;
-        this._globeDepthTexture = undefined;
-
-        this.framebuffer = undefined;
-        this._copyDepthFramebuffer = undefined;
-
-        this._clearColorCommand = undefined;
-        this._copyColorCommand = undefined;
-        this._copyDepthCommand = undefined;
-
-        this._viewport = new BoundingRectangle();
-        this._rs = undefined;
-
-        this._useScissorTest = false;
-        this._scissorRectangle = undefined;
-
-        this._useLogDepth = undefined;
-
-        this._debugGlobeDepthViewportCommand = undefined;
-    }
+        /**
+             * @private
+             */
+        class GlobeDepth {
+            constructor() {
+                this._colorTexture = undefined;
+                this._depthStencilTexture = undefined;
+                this._globeDepthTexture = undefined;
+                this.framebuffer = undefined;
+                this._copyDepthFramebuffer = undefined;
+                this._clearColorCommand = undefined;
+                this._copyColorCommand = undefined;
+                this._copyDepthCommand = undefined;
+                this._viewport = new BoundingRectangle();
+                this._rs = undefined;
+                this._useScissorTest = false;
+                this._scissorRectangle = undefined;
+                this._useLogDepth = undefined;
+                this._debugGlobeDepthViewportCommand = undefined;
+            }
+            executeDebugGlobeDepth(context, passState, useLogDepth) {
+                executeDebugGlobeDepth(this, context, passState, useLogDepth);
+            }
+            update(context, passState, viewport) {
+                var width = viewport.width;
+                var height = viewport.height;
+                updateFramebuffers(this, context, width, height);
+                updateCopyCommands(this, context, width, height, passState);
+                context.uniformState.globeDepthTexture = undefined;
+            }
+            executeCopyDepth(context, passState) {
+                if (defined(this._copyDepthCommand)) {
+                    this._copyDepthCommand.execute(context, passState);
+                    context.uniformState.globeDepthTexture = this._globeDepthTexture;
+                }
+            }
+            executeCopyColor(context, passState) {
+                if (defined(this._copyColorCommand)) {
+                    this._copyColorCommand.execute(context, passState);
+                }
+            }
+            clear(context, passState, clearColor) {
+                var clear = this._clearColorCommand;
+                if (defined(clear)) {
+                    Color.clone(clearColor, clear.color);
+                    clear.execute(context, passState);
+                }
+            }
+            isDestroyed() {
+                return false;
+            }
+            destroy() {
+                destroyTextures(this);
+                destroyFramebuffers(this);
+                if (defined(this._copyColorCommand)) {
+                    this._copyColorCommand.shaderProgram = this._copyColorCommand.shaderProgram.destroy();
+                }
+                if (defined(this._copyDepthCommand)) {
+                    this._copyDepthCommand.shaderProgram = this._copyDepthCommand.shaderProgram.destroy();
+                }
+                var command = this._debugGlobeDepthViewportCommand;
+                if (defined(command)) {
+                    command.shaderProgram = command.shaderProgram.destroy();
+                }
+                return destroyObject(this);
+            }
+        }
 
     function executeDebugGlobeDepth(globeDepth, context, passState, useLogDepth) {
         if (!defined(globeDepth._debugGlobeDepthViewportCommand) || useLogDepth !== globeDepth._useLogDepth) {
@@ -235,63 +277,12 @@ define([
         globeDepth._clearColorCommand.framebuffer = globeDepth.framebuffer;
     }
 
-    GlobeDepth.prototype.executeDebugGlobeDepth = function(context, passState, useLogDepth) {
-        executeDebugGlobeDepth(this, context, passState, useLogDepth);
-    };
 
-    GlobeDepth.prototype.update = function(context, passState, viewport) {
-        var width = viewport.width;
-        var height = viewport.height;
 
-        updateFramebuffers(this, context, width, height);
-        updateCopyCommands(this, context, width, height, passState);
-        context.uniformState.globeDepthTexture = undefined;
-    };
 
-    GlobeDepth.prototype.executeCopyDepth = function(context, passState) {
-        if (defined(this._copyDepthCommand)) {
-            this._copyDepthCommand.execute(context, passState);
-            context.uniformState.globeDepthTexture = this._globeDepthTexture;
-        }
-    };
 
-    GlobeDepth.prototype.executeCopyColor = function(context, passState) {
-        if (defined(this._copyColorCommand)) {
-            this._copyColorCommand.execute(context, passState);
-        }
-    };
 
-    GlobeDepth.prototype.clear = function(context, passState, clearColor) {
-        var clear = this._clearColorCommand;
-        if (defined(clear)) {
-            Color.clone(clearColor, clear.color);
-            clear.execute(context, passState);
-        }
-    };
 
-    GlobeDepth.prototype.isDestroyed = function() {
-        return false;
-    };
-
-    GlobeDepth.prototype.destroy = function() {
-        destroyTextures(this);
-        destroyFramebuffers(this);
-
-        if (defined(this._copyColorCommand)) {
-            this._copyColorCommand.shaderProgram = this._copyColorCommand.shaderProgram.destroy();
-        }
-
-        if (defined(this._copyDepthCommand)) {
-            this._copyDepthCommand.shaderProgram = this._copyDepthCommand.shaderProgram.destroy();
-        }
-
-        var command = this._debugGlobeDepthViewportCommand;
-        if (defined(command)) {
-            command.shaderProgram = command.shaderProgram.destroy();
-        }
-
-        return destroyObject(this);
-    };
 
     return GlobeDepth;
 });

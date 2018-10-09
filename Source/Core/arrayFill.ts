@@ -1,11 +1,11 @@
 define([
-        './Check',
-        './defaultValue',
-        './defined'
-    ], function(
-        Check,
-        defaultValue,
-        defined) {
+    './Check',
+    './defaultValue',
+    './defined'
+], function(
+    Check,
+    defaultValue,
+    defined) {
     'use strict';
 
     /**
@@ -19,7 +19,7 @@ define([
      * @returns {Array} The resulting array.
      * @private
      */
-    function arrayFill(array, value, start, end) {
+    export function arrayFill(array: any[], value: any, start: number = 0, end: number = 0): any[] {
         //>>includeStart('debug', pragmas.debug);
         Check.defined('array', array);
         Check.defined('value', value);

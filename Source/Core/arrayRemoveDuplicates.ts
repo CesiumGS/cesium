@@ -1,13 +1,13 @@
 define([
-        './Check',
-        './defaultValue',
-        './defined',
-        './Math'
-    ], function(
-        Check,
-        defaultValue,
-        defined,
-        CesiumMath) {
+    './Check',
+    './defaultValue',
+    './defined',
+    './Math'
+], function(
+    Check,
+    defaultValue,
+    defined,
+    CesiumMath) {
     'use strict';
 
     var removeDuplicatesEpsilon = CesiumMath.EPSILON10;
@@ -42,7 +42,7 @@ define([
      *
      * @private
      */
-    function arrayRemoveDuplicates(values, equalsEpsilon, wrapAround) {
+    export function arrayRemoveDuplicates(values: any[], equalsEpsilon: () => any, wrapAround: boolean = false): any[] {
         //>>includeStart('debug', pragmas.debug);
         Check.defined('equalsEpsilon', equalsEpsilon);
         //>>includeEnd('debug');

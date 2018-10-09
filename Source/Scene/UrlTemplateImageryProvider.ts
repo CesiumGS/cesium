@@ -72,179 +72,323 @@ define([
         'format' : formatTag
     });
 
-    /**
-     * Provides imagery by requesting tiles using a specified URL template.
-     *
-     * @alias UrlTemplateImageryProvider
-     * @constructor
-     *
-     * @param {Promise.<Object>|Object} [options] Object with the following properties:
-     * @param {Resource|String} options.url  The URL template to use to request tiles.  It has the following keywords:
-     * <ul>
-     *     <li><code>{z}</code>: The level of the tile in the tiling scheme.  Level zero is the root of the quadtree pyramid.</li>
-     *     <li><code>{x}</code>: The tile X coordinate in the tiling scheme, where 0 is the Westernmost tile.</li>
-     *     <li><code>{y}</code>: The tile Y coordinate in the tiling scheme, where 0 is the Northernmost tile.</li>
-     *     <li><code>{s}</code>: One of the available subdomains, used to overcome browser limits on the number of simultaneous requests per host.</li>
-     *     <li><code>{reverseX}</code>: The tile X coordinate in the tiling scheme, where 0 is the Easternmost tile.</li>
-     *     <li><code>{reverseY}</code>: The tile Y coordinate in the tiling scheme, where 0 is the Southernmost tile.</li>
-     *     <li><code>{reverseZ}</code>: The level of the tile in the tiling scheme, where level zero is the maximum level of the quadtree pyramid.  In order to use reverseZ, maximumLevel must be defined.</li>
-     *     <li><code>{westDegrees}</code>: The Western edge of the tile in geodetic degrees.</li>
-     *     <li><code>{southDegrees}</code>: The Southern edge of the tile in geodetic degrees.</li>
-     *     <li><code>{eastDegrees}</code>: The Eastern edge of the tile in geodetic degrees.</li>
-     *     <li><code>{northDegrees}</code>: The Northern edge of the tile in geodetic degrees.</li>
-     *     <li><code>{westProjected}</code>: The Western edge of the tile in projected coordinates of the tiling scheme.</li>
-     *     <li><code>{southProjected}</code>: The Southern edge of the tile in projected coordinates of the tiling scheme.</li>
-     *     <li><code>{eastProjected}</code>: The Eastern edge of the tile in projected coordinates of the tiling scheme.</li>
-     *     <li><code>{northProjected}</code>: The Northern edge of the tile in projected coordinates of the tiling scheme.</li>
-     *     <li><code>{width}</code>: The width of each tile in pixels.</li>
-     *     <li><code>{height}</code>: The height of each tile in pixels.</li>
-     * </ul>
-     * @param {Resource|String} [options.pickFeaturesUrl] The URL template to use to pick features.  If this property is not specified,
-     *                 {@link UrlTemplateImageryProvider#pickFeatures} will immediately returned undefined, indicating no
-     *                 features picked.  The URL template supports all of the keywords supported by the <code>url</code>
-     *                 parameter, plus the following:
-     * <ul>
-     *     <li><code>{i}</code>: The pixel column (horizontal coordinate) of the picked position, where the Westernmost pixel is 0.</li>
-     *     <li><code>{j}</code>: The pixel row (vertical coordinate) of the picked position, where the Northernmost pixel is 0.</li>
-     *     <li><code>{reverseI}</code>: The pixel column (horizontal coordinate) of the picked position, where the Easternmost pixel is 0.</li>
-     *     <li><code>{reverseJ}</code>: The pixel row (vertical coordinate) of the picked position, where the Southernmost pixel is 0.</li>
-     *     <li><code>{longitudeDegrees}</code>: The longitude of the picked position in degrees.</li>
-     *     <li><code>{latitudeDegrees}</code>: The latitude of the picked position in degrees.</li>
-     *     <li><code>{longitudeProjected}</code>: The longitude of the picked position in the projected coordinates of the tiling scheme.</li>
-     *     <li><code>{latitudeProjected}</code>: The latitude of the picked position in the projected coordinates of the tiling scheme.</li>
-     *     <li><code>{format}</code>: The format in which to get feature information, as specified in the {@link GetFeatureInfoFormat}.</li>
-     * </ul>
-     * @param {Object} [options.urlSchemeZeroPadding] Gets the URL scheme zero padding for each tile coordinate. The format is '000' where
-     * each coordinate will be padded on the left with zeros to match the width of the passed string of zeros. e.g. Setting:
-     * urlSchemeZeroPadding : { '{x}' : '0000'}
-     * will cause an 'x' value of 12 to return the string '0012' for {x} in the generated URL.
-     * It the passed object has the following keywords:
-     * <ul>
-     *  <li> <code>{z}</code>: The zero padding for the level of the tile in the tiling scheme.</li>
-     *  <li> <code>{x}</code>: The zero padding for the tile X coordinate in the tiling scheme.</li>
-     *  <li> <code>{y}</code>: The zero padding for the the tile Y coordinate in the tiling scheme.</li>
-     *  <li> <code>{reverseX}</code>: The zero padding for the tile reverseX coordinate in the tiling scheme.</li>
-     *  <li> <code>{reverseY}</code>: The zero padding for the tile reverseY coordinate in the tiling scheme.</li>
-     *  <li> <code>{reverseZ}</code>: The zero padding for the reverseZ coordinate of the tile in the tiling scheme.</li>
-     * </ul>
-     * @param {String|String[]} [options.subdomains='abc'] The subdomains to use for the <code>{s}</code> placeholder in the URL template.
-     *                          If this parameter is a single string, each character in the string is a subdomain.  If it is
-     *                          an array, each element in the array is a subdomain.
-     * @param {Credit|String} [options.credit=''] A credit for the data source, which is displayed on the canvas.
-     * @param {Number} [options.minimumLevel=0] The minimum level-of-detail supported by the imagery provider.  Take care when specifying
-     *                 this that the number of tiles at the minimum level is small, such as four or less.  A larger number is likely
-     *                 to result in rendering problems.
-     * @param {Number} [options.maximumLevel] The maximum level-of-detail supported by the imagery provider, or undefined if there is no limit.
-     * @param {Rectangle} [options.rectangle=Rectangle.MAX_VALUE] The rectangle, in radians, covered by the image.
-     * @param {TilingScheme} [options.tilingScheme=WebMercatorTilingScheme] The tiling scheme specifying how the ellipsoidal
-     * surface is broken into tiles.  If this parameter is not provided, a {@link WebMercatorTilingScheme}
-     * is used.
-     * @param {Ellipsoid} [options.ellipsoid] The ellipsoid.  If the tilingScheme is specified,
-     *                    this parameter is ignored and the tiling scheme's ellipsoid is used instead. If neither
-     *                    parameter is specified, the WGS84 ellipsoid is used.
-     * @param {Number} [options.tileWidth=256] Pixel width of image tiles.
-     * @param {Number} [options.tileHeight=256] Pixel height of image tiles.
-     * @param {Boolean} [options.hasAlphaChannel=true] true if the images provided by this imagery provider
-     *                  include an alpha channel; otherwise, false.  If this property is false, an alpha channel, if
-     *                  present, will be ignored.  If this property is true, any images without an alpha channel will
-     *                  be treated as if their alpha is 1.0 everywhere.  When this property is false, memory usage
-     *                  and texture upload time are potentially reduced.
-     * @param {GetFeatureInfoFormat[]} [options.getFeatureInfoFormats] The formats in which to get feature information at a
-     *                                 specific location when {@link UrlTemplateImageryProvider#pickFeatures} is invoked.  If this
-     *                                 parameter is not specified, feature picking is disabled.
-     * @param {Boolean} [options.enablePickFeatures=true] If true, {@link UrlTemplateImageryProvider#pickFeatures} will
-     *        request the <code>options.pickFeaturesUrl</code> and attempt to interpret the features included in the response.  If false,
-     *        {@link UrlTemplateImageryProvider#pickFeatures} will immediately return undefined (indicating no pickable
-     *        features) without communicating with the server.  Set this property to false if you know your data
-     *        source does not support picking features or if you don't want this provider's features to be pickable. Note
-     *        that this can be dynamically overridden by modifying the {@link UriTemplateImageryProvider#enablePickFeatures}
-     *        property.
-     * @param {Object} [options.customTags] Allow to replace custom keywords in the URL template. The object must have strings as keys and functions as values.
-     *
-     *
-     * @example
-     * // Access Natural Earth II imagery, which uses a TMS tiling scheme and Geographic (EPSG:4326) project
-     * var tms = new Cesium.UrlTemplateImageryProvider({
-     *     url : 'https://cesiumjs.org/tilesets/imagery/naturalearthii/{z}/{x}/{reverseY}.jpg',
-     *     credit : '© Analytical Graphics, Inc.',
-     *     tilingScheme : new Cesium.GeographicTilingScheme(),
-     *     maximumLevel : 5
-     * });
-     * // Access the CartoDB Positron basemap, which uses an OpenStreetMap-like tiling scheme.
-     * var positron = new Cesium.UrlTemplateImageryProvider({
-     *     url : 'http://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png',
-     *     credit : 'Map tiles by CartoDB, under CC BY 3.0. Data by OpenStreetMap, under ODbL.'
-     * });
-     * // Access a Web Map Service (WMS) server.
-     * var wms = new Cesium.UrlTemplateImageryProvider({
-     *    url : 'https://programs.communications.gov.au/geoserver/ows?tiled=true&' +
-     *          'transparent=true&format=image%2Fpng&exceptions=application%2Fvnd.ogc.se_xml&' +
-     *          'styles=&service=WMS&version=1.1.1&request=GetMap&' +
-     *          'layers=public%3AMyBroadband_Availability&srs=EPSG%3A3857&' +
-     *          'bbox={westProjected}%2C{southProjected}%2C{eastProjected}%2C{northProjected}&' +
-     *          'width=256&height=256',
-     *    rectangle : Cesium.Rectangle.fromDegrees(96.799393, -43.598214999057824, 153.63925700000001, -9.2159219997013)
-     * });
-     * // Using custom tags in your template url.
-     * var custom = new Cesium.UrlTemplateImageryProvider({
-     *    url : 'https://yoururl/{Time}/{z}/{y}/{x}.png',
-     *    customTags : {
-     *        Time: function(imageryProvider, x, y, level) {
-     *            return '20171231'
-     *        }
-     *    }
-     * });
-     *
-     * @see ArcGisMapServerImageryProvider
-     * @see BingMapsImageryProvider
-     * @see GoogleEarthEnterpriseMapsProvider
-     * @see createOpenStreetMapImageryProvider
-     * @see SingleTileImageryProvider
-     * @see createTileMapServiceImageryProvider
-     * @see WebMapServiceImageryProvider
-     * @see WebMapTileServiceImageryProvider
-     */
-    function UrlTemplateImageryProvider(options) {
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(options)) {
-          throw new DeveloperError('options is required.');
-        }
-        if (!when.isPromise(options) && !defined(options.url)) {
-          throw new DeveloperError('options is required.');
-        }
-        //>>includeEnd('debug');
-
-        this._errorEvent = new Event();
-
-        this._resource = undefined;
-        this._urlSchemeZeroPadding = undefined;
-        this._pickFeaturesResource = undefined;
-        this._tileWidth = undefined;
-        this._tileHeight = undefined;
-        this._maximumLevel = undefined;
-        this._minimumLevel = undefined;
-        this._tilingScheme = undefined;
-        this._rectangle = undefined;
-        this._tileDiscardPolicy = undefined;
-        this._credit = undefined;
-        this._hasAlphaChannel = undefined;
-        this._readyPromise = undefined;
-        this._tags = undefined;
-        this._pickFeaturesTags = undefined;
-
         /**
-         * Gets or sets a value indicating whether feature picking is enabled.  If true, {@link UrlTemplateImageryProvider#pickFeatures} will
-         * request the <code>options.pickFeaturesUrl</code> and attempt to interpret the features included in the response.  If false,
-         * {@link UrlTemplateImageryProvider#pickFeatures} will immediately return undefined (indicating no pickable
-         * features) without communicating with the server.  Set this property to false if you know your data
-         * source does not support picking features or if you don't want this provider's features to be pickable.
-         * @type {Boolean}
-         * @default true
-         */
-        this.enablePickFeatures = true;
-
-        this.reinitialize(options);
-    }
+             * Provides imagery by requesting tiles using a specified URL template.
+             *
+             * @alias UrlTemplateImageryProvider
+             * @constructor
+             *
+             * @param {Promise.<Object>|Object} [options] Object with the following properties:
+             * @param {Resource|String} options.url  The URL template to use to request tiles.  It has the following keywords:
+             * <ul>
+             *     <li><code>{z}</code>: The level of the tile in the tiling scheme.  Level zero is the root of the quadtree pyramid.</li>
+             *     <li><code>{x}</code>: The tile X coordinate in the tiling scheme, where 0 is the Westernmost tile.</li>
+             *     <li><code>{y}</code>: The tile Y coordinate in the tiling scheme, where 0 is the Northernmost tile.</li>
+             *     <li><code>{s}</code>: One of the available subdomains, used to overcome browser limits on the number of simultaneous requests per host.</li>
+             *     <li><code>{reverseX}</code>: The tile X coordinate in the tiling scheme, where 0 is the Easternmost tile.</li>
+             *     <li><code>{reverseY}</code>: The tile Y coordinate in the tiling scheme, where 0 is the Southernmost tile.</li>
+             *     <li><code>{reverseZ}</code>: The level of the tile in the tiling scheme, where level zero is the maximum level of the quadtree pyramid.  In order to use reverseZ, maximumLevel must be defined.</li>
+             *     <li><code>{westDegrees}</code>: The Western edge of the tile in geodetic degrees.</li>
+             *     <li><code>{southDegrees}</code>: The Southern edge of the tile in geodetic degrees.</li>
+             *     <li><code>{eastDegrees}</code>: The Eastern edge of the tile in geodetic degrees.</li>
+             *     <li><code>{northDegrees}</code>: The Northern edge of the tile in geodetic degrees.</li>
+             *     <li><code>{westProjected}</code>: The Western edge of the tile in projected coordinates of the tiling scheme.</li>
+             *     <li><code>{southProjected}</code>: The Southern edge of the tile in projected coordinates of the tiling scheme.</li>
+             *     <li><code>{eastProjected}</code>: The Eastern edge of the tile in projected coordinates of the tiling scheme.</li>
+             *     <li><code>{northProjected}</code>: The Northern edge of the tile in projected coordinates of the tiling scheme.</li>
+             *     <li><code>{width}</code>: The width of each tile in pixels.</li>
+             *     <li><code>{height}</code>: The height of each tile in pixels.</li>
+             * </ul>
+             * @param {Resource|String} [options.pickFeaturesUrl] The URL template to use to pick features.  If this property is not specified,
+             *                 {@link UrlTemplateImageryProvider#pickFeatures} will immediately returned undefined, indicating no
+             *                 features picked.  The URL template supports all of the keywords supported by the <code>url</code>
+             *                 parameter, plus the following:
+             * <ul>
+             *     <li><code>{i}</code>: The pixel column (horizontal coordinate) of the picked position, where the Westernmost pixel is 0.</li>
+             *     <li><code>{j}</code>: The pixel row (vertical coordinate) of the picked position, where the Northernmost pixel is 0.</li>
+             *     <li><code>{reverseI}</code>: The pixel column (horizontal coordinate) of the picked position, where the Easternmost pixel is 0.</li>
+             *     <li><code>{reverseJ}</code>: The pixel row (vertical coordinate) of the picked position, where the Southernmost pixel is 0.</li>
+             *     <li><code>{longitudeDegrees}</code>: The longitude of the picked position in degrees.</li>
+             *     <li><code>{latitudeDegrees}</code>: The latitude of the picked position in degrees.</li>
+             *     <li><code>{longitudeProjected}</code>: The longitude of the picked position in the projected coordinates of the tiling scheme.</li>
+             *     <li><code>{latitudeProjected}</code>: The latitude of the picked position in the projected coordinates of the tiling scheme.</li>
+             *     <li><code>{format}</code>: The format in which to get feature information, as specified in the {@link GetFeatureInfoFormat}.</li>
+             * </ul>
+             * @param {Object} [options.urlSchemeZeroPadding] Gets the URL scheme zero padding for each tile coordinate. The format is '000' where
+             * each coordinate will be padded on the left with zeros to match the width of the passed string of zeros. e.g. Setting:
+             * urlSchemeZeroPadding : { '{x}' : '0000'}
+             * will cause an 'x' value of 12 to return the string '0012' for {x} in the generated URL.
+             * It the passed object has the following keywords:
+             * <ul>
+             *  <li> <code>{z}</code>: The zero padding for the level of the tile in the tiling scheme.</li>
+             *  <li> <code>{x}</code>: The zero padding for the tile X coordinate in the tiling scheme.</li>
+             *  <li> <code>{y}</code>: The zero padding for the the tile Y coordinate in the tiling scheme.</li>
+             *  <li> <code>{reverseX}</code>: The zero padding for the tile reverseX coordinate in the tiling scheme.</li>
+             *  <li> <code>{reverseY}</code>: The zero padding for the tile reverseY coordinate in the tiling scheme.</li>
+             *  <li> <code>{reverseZ}</code>: The zero padding for the reverseZ coordinate of the tile in the tiling scheme.</li>
+             * </ul>
+             * @param {String|String[]} [options.subdomains='abc'] The subdomains to use for the <code>{s}</code> placeholder in the URL template.
+             *                          If this parameter is a single string, each character in the string is a subdomain.  If it is
+             *                          an array, each element in the array is a subdomain.
+             * @param {Credit|String} [options.credit=''] A credit for the data source, which is displayed on the canvas.
+             * @param {Number} [options.minimumLevel=0] The minimum level-of-detail supported by the imagery provider.  Take care when specifying
+             *                 this that the number of tiles at the minimum level is small, such as four or less.  A larger number is likely
+             *                 to result in rendering problems.
+             * @param {Number} [options.maximumLevel] The maximum level-of-detail supported by the imagery provider, or undefined if there is no limit.
+             * @param {Rectangle} [options.rectangle=Rectangle.MAX_VALUE] The rectangle, in radians, covered by the image.
+             * @param {TilingScheme} [options.tilingScheme=WebMercatorTilingScheme] The tiling scheme specifying how the ellipsoidal
+             * surface is broken into tiles.  If this parameter is not provided, a {@link WebMercatorTilingScheme}
+             * is used.
+             * @param {Ellipsoid} [options.ellipsoid] The ellipsoid.  If the tilingScheme is specified,
+             *                    this parameter is ignored and the tiling scheme's ellipsoid is used instead. If neither
+             *                    parameter is specified, the WGS84 ellipsoid is used.
+             * @param {Number} [options.tileWidth=256] Pixel width of image tiles.
+             * @param {Number} [options.tileHeight=256] Pixel height of image tiles.
+             * @param {Boolean} [options.hasAlphaChannel=true] true if the images provided by this imagery provider
+             *                  include an alpha channel; otherwise, false.  If this property is false, an alpha channel, if
+             *                  present, will be ignored.  If this property is true, any images without an alpha channel will
+             *                  be treated as if their alpha is 1.0 everywhere.  When this property is false, memory usage
+             *                  and texture upload time are potentially reduced.
+             * @param {GetFeatureInfoFormat[]} [options.getFeatureInfoFormats] The formats in which to get feature information at a
+             *                                 specific location when {@link UrlTemplateImageryProvider#pickFeatures} is invoked.  If this
+             *                                 parameter is not specified, feature picking is disabled.
+             * @param {Boolean} [options.enablePickFeatures=true] If true, {@link UrlTemplateImageryProvider#pickFeatures} will
+             *        request the <code>options.pickFeaturesUrl</code> and attempt to interpret the features included in the response.  If false,
+             *        {@link UrlTemplateImageryProvider#pickFeatures} will immediately return undefined (indicating no pickable
+             *        features) without communicating with the server.  Set this property to false if you know your data
+             *        source does not support picking features or if you don't want this provider's features to be pickable. Note
+             *        that this can be dynamically overridden by modifying the {@link UriTemplateImageryProvider#enablePickFeatures}
+             *        property.
+             * @param {Object} [options.customTags] Allow to replace custom keywords in the URL template. The object must have strings as keys and functions as values.
+             *
+             *
+             * @example
+             * // Access Natural Earth II imagery, which uses a TMS tiling scheme and Geographic (EPSG:4326) project
+             * var tms = new Cesium.UrlTemplateImageryProvider({
+             *     url : 'https://cesiumjs.org/tilesets/imagery/naturalearthii/{z}/{x}/{reverseY}.jpg',
+             *     credit : '© Analytical Graphics, Inc.',
+             *     tilingScheme : new Cesium.GeographicTilingScheme(),
+             *     maximumLevel : 5
+             * });
+             * // Access the CartoDB Positron basemap, which uses an OpenStreetMap-like tiling scheme.
+             * var positron = new Cesium.UrlTemplateImageryProvider({
+             *     url : 'http://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png',
+             *     credit : 'Map tiles by CartoDB, under CC BY 3.0. Data by OpenStreetMap, under ODbL.'
+             * });
+             * // Access a Web Map Service (WMS) server.
+             * var wms = new Cesium.UrlTemplateImageryProvider({
+             *    url : 'https://programs.communications.gov.au/geoserver/ows?tiled=true&' +
+             *          'transparent=true&format=image%2Fpng&exceptions=application%2Fvnd.ogc.se_xml&' +
+             *          'styles=&service=WMS&version=1.1.1&request=GetMap&' +
+             *          'layers=public%3AMyBroadband_Availability&srs=EPSG%3A3857&' +
+             *          'bbox={westProjected}%2C{southProjected}%2C{eastProjected}%2C{northProjected}&' +
+             *          'width=256&height=256',
+             *    rectangle : Cesium.Rectangle.fromDegrees(96.799393, -43.598214999057824, 153.63925700000001, -9.2159219997013)
+             * });
+             * // Using custom tags in your template url.
+             * var custom = new Cesium.UrlTemplateImageryProvider({
+             *    url : 'https://yoururl/{Time}/{z}/{y}/{x}.png',
+             *    customTags : {
+             *        Time: function(imageryProvider, x, y, level) {
+             *            return '20171231'
+             *        }
+             *    }
+             * });
+             *
+             * @see ArcGisMapServerImageryProvider
+             * @see BingMapsImageryProvider
+             * @see GoogleEarthEnterpriseMapsProvider
+             * @see createOpenStreetMapImageryProvider
+             * @see SingleTileImageryProvider
+             * @see createTileMapServiceImageryProvider
+             * @see WebMapServiceImageryProvider
+             * @see WebMapTileServiceImageryProvider
+             */
+        class UrlTemplateImageryProvider {
+            constructor(options) {
+                //>>includeStart('debug', pragmas.debug);
+                if (!defined(options)) {
+                    throw new DeveloperError('options is required.');
+                }
+                if (!when.isPromise(options) && !defined(options.url)) {
+                    throw new DeveloperError('options is required.');
+                }
+                //>>includeEnd('debug');
+                this._errorEvent = new Event();
+                this._resource = undefined;
+                this._urlSchemeZeroPadding = undefined;
+                this._pickFeaturesResource = undefined;
+                this._tileWidth = undefined;
+                this._tileHeight = undefined;
+                this._maximumLevel = undefined;
+                this._minimumLevel = undefined;
+                this._tilingScheme = undefined;
+                this._rectangle = undefined;
+                this._tileDiscardPolicy = undefined;
+                this._credit = undefined;
+                this._hasAlphaChannel = undefined;
+                this._readyPromise = undefined;
+                this._tags = undefined;
+                this._pickFeaturesTags = undefined;
+                /**
+                 * Gets or sets a value indicating whether feature picking is enabled.  If true, {@link UrlTemplateImageryProvider#pickFeatures} will
+                 * request the <code>options.pickFeaturesUrl</code> and attempt to interpret the features included in the response.  If false,
+                 * {@link UrlTemplateImageryProvider#pickFeatures} will immediately return undefined (indicating no pickable
+                 * features) without communicating with the server.  Set this property to false if you know your data
+                 * source does not support picking features or if you don't want this provider's features to be pickable.
+                 * @type {Boolean}
+                 * @default true
+                 */
+                this.enablePickFeatures = true;
+                this.reinitialize(options);
+            }
+            /**
+                 * Reinitializes this instance.  Reinitializing an instance already in use is supported, but it is not
+                 * recommended because existing tiles provided by the imagery provider will not be updated.
+                 *
+                 * @param {Promise.<Object>|Object} options Any of the options that may be passed to the {@link UrlTemplateImageryProvider} constructor.
+                 */
+            reinitialize(options) {
+                var that = this;
+                that._readyPromise = when(options).then(function(properties) {
+                    //>>includeStart('debug', pragmas.debug);
+                    if (!defined(properties)) {
+                        throw new DeveloperError('options is required.');
+                    }
+                    if (!defined(properties.url)) {
+                        throw new DeveloperError('options.url is required.');
+                    }
+                    //>>includeEnd('debug');
+                    var customTags = properties.customTags;
+                    var allTags = combine(tags, customTags);
+                    var allPickFeaturesTags = combine(pickFeaturesTags, customTags);
+                    var resource = Resource.createIfNeeded(properties.url);
+                    var pickFeaturesResource = Resource.createIfNeeded(properties.pickFeaturesUrl);
+                    that.enablePickFeatures = defaultValue(properties.enablePickFeatures, that.enablePickFeatures);
+                    that._urlSchemeZeroPadding = defaultValue(properties.urlSchemeZeroPadding, that.urlSchemeZeroPadding);
+                    that._tileDiscardPolicy = properties.tileDiscardPolicy;
+                    that._getFeatureInfoFormats = properties.getFeatureInfoFormats;
+                    that._subdomains = properties.subdomains;
+                    if (isArray(that._subdomains)) {
+                        that._subdomains = that._subdomains.slice();
+                    }
+                    else if (defined(that._subdomains) && that._subdomains.length > 0) {
+                        that._subdomains = that._subdomains.split('');
+                    }
+                    else {
+                        that._subdomains = ['a', 'b', 'c'];
+                    }
+                    that._tileWidth = defaultValue(properties.tileWidth, 256);
+                    that._tileHeight = defaultValue(properties.tileHeight, 256);
+                    that._minimumLevel = defaultValue(properties.minimumLevel, 0);
+                    that._maximumLevel = properties.maximumLevel;
+                    that._tilingScheme = defaultValue(properties.tilingScheme, new WebMercatorTilingScheme({ ellipsoid: properties.ellipsoid }));
+                    that._rectangle = defaultValue(properties.rectangle, that._tilingScheme.rectangle);
+                    that._rectangle = Rectangle.intersection(that._rectangle, that._tilingScheme.rectangle);
+                    that._hasAlphaChannel = defaultValue(properties.hasAlphaChannel, true);
+                    var credit = properties.credit;
+                    if (typeof credit === 'string') {
+                        credit = new Credit(credit);
+                    }
+                    that._credit = credit;
+                    that._resource = resource;
+                    that._tags = allTags;
+                    that._pickFeaturesResource = pickFeaturesResource;
+                    that._pickFeaturesTags = allPickFeaturesTags;
+                    return true;
+                });
+            }
+            /**
+                 * Gets the credits to be displayed when a given tile is displayed.
+                 *
+                 * @param {Number} x The tile X coordinate.
+                 * @param {Number} y The tile Y coordinate.
+                 * @param {Number} level The tile level;
+                 * @returns {Credit[]} The credits to be displayed when the tile is displayed.
+                 *
+                 * @exception {DeveloperError} <code>getTileCredits</code> must not be called before the imagery provider is ready.
+                 */
+            getTileCredits(x, y, level) {
+                //>>includeStart('debug', pragmas.debug);
+                if (!this.ready) {
+                    throw new DeveloperError('getTileCredits must not be called before the imagery provider is ready.');
+                }
+                //>>includeEnd('debug');
+                return undefined;
+            }
+            /**
+                 * Requests the image for a given tile.  This function should
+                 * not be called before {@link UrlTemplateImageryProvider#ready} returns true.
+                 *
+                 * @param {Number} x The tile X coordinate.
+                 * @param {Number} y The tile Y coordinate.
+                 * @param {Number} level The tile level.
+                 * @param {Request} [request] The request object. Intended for internal use only.
+                 * @returns {Promise.<Image|Canvas>|undefined} A promise for the image that will resolve when the image is available, or
+                 *          undefined if there are too many active requests to the server, and the request
+                 *          should be retried later.  The resolved image may be either an
+                 *          Image or a Canvas DOM object.
+                 */
+            requestImage(x, y, level, request) {
+                //>>includeStart('debug', pragmas.debug);
+                if (!this.ready) {
+                    throw new DeveloperError('requestImage must not be called before the imagery provider is ready.');
+                }
+                //>>includeEnd('debug');
+                return ImageryProvider.loadImage(this, buildImageResource(this, x, y, level, request));
+            }
+            /**
+                 * Asynchronously determines what features, if any, are located at a given longitude and latitude within
+                 * a tile.  This function should not be called before {@link ImageryProvider#ready} returns true.
+                 *
+                 * @param {Number} x The tile X coordinate.
+                 * @param {Number} y The tile Y coordinate.
+                 * @param {Number} level The tile level.
+                 * @param {Number} longitude The longitude at which to pick features.
+                 * @param {Number} latitude  The latitude at which to pick features.
+                 * @return {Promise.<ImageryLayerFeatureInfo[]>|undefined} A promise for the picked features that will resolve when the asynchronous
+                 *                   picking completes.  The resolved value is an array of {@link ImageryLayerFeatureInfo}
+                 *                   instances.  The array may be empty if no features are found at the given location.
+                 *                   It may also be undefined if picking is not supported.
+                 */
+            pickFeatures(x, y, level, longitude, latitude) {
+                //>>includeStart('debug', pragmas.debug);
+                if (!this.ready) {
+                    throw new DeveloperError('pickFeatures must not be called before the imagery provider is ready.');
+                }
+                //>>includeEnd('debug');
+                if (!this.enablePickFeatures || !defined(this._pickFeaturesResource) || this._getFeatureInfoFormats.length === 0) {
+                    return undefined;
+                }
+                var formatIndex = 0;
+                var that = this;
+                function handleResponse(format, data) {
+                    return format.callback(data);
+                }
+                function doRequest() {
+                    if (formatIndex >= that._getFeatureInfoFormats.length) {
+                        // No valid formats, so no features picked.
+                        return when([]);
+                    }
+                    var format = that._getFeatureInfoFormats[formatIndex];
+                    var resource = buildPickFeaturesResource(that, x, y, level, longitude, latitude, format.format);
+                    ++formatIndex;
+                    if (format.type === 'json') {
+                        return resource.fetchJson().then(format.callback).otherwise(doRequest);
+                    }
+                    else if (format.type === 'xml') {
+                        return resource.fetchXML().then(format.callback).otherwise(doRequest);
+                    }
+                    else if (format.type === 'text' || format.type === 'html') {
+                        return resource.fetchText().then(format.callback).otherwise(doRequest);
+                    }
+                    return resource.fetch({
+                        responseType: format.format
+                    }).then(handleResponse.bind(undefined, format)).otherwise(doRequest);
+                }
+                return doRequest();
+            }
+        }
 
     defineProperties(UrlTemplateImageryProvider.prototype, {
         /**
@@ -557,167 +701,9 @@ define([
         }
     });
 
-    /**
-     * Reinitializes this instance.  Reinitializing an instance already in use is supported, but it is not
-     * recommended because existing tiles provided by the imagery provider will not be updated.
-     *
-     * @param {Promise.<Object>|Object} options Any of the options that may be passed to the {@link UrlTemplateImageryProvider} constructor.
-     */
-    UrlTemplateImageryProvider.prototype.reinitialize = function(options) {
-        var that = this;
-        that._readyPromise = when(options).then(function(properties) {
-            //>>includeStart('debug', pragmas.debug);
-            if (!defined(properties)) {
-                throw new DeveloperError('options is required.');
-              }
-            if (!defined(properties.url)) {
-                throw new DeveloperError('options.url is required.');
-            }
-            //>>includeEnd('debug');
 
-            var customTags = properties.customTags;
-            var allTags = combine(tags, customTags);
-            var allPickFeaturesTags = combine(pickFeaturesTags, customTags);
-            var resource = Resource.createIfNeeded(properties.url);
-            var pickFeaturesResource = Resource.createIfNeeded(properties.pickFeaturesUrl);
 
-            that.enablePickFeatures = defaultValue(properties.enablePickFeatures, that.enablePickFeatures);
-            that._urlSchemeZeroPadding = defaultValue(properties.urlSchemeZeroPadding, that.urlSchemeZeroPadding);
-            that._tileDiscardPolicy = properties.tileDiscardPolicy;
-            that._getFeatureInfoFormats = properties.getFeatureInfoFormats;
 
-            that._subdomains = properties.subdomains;
-            if (isArray(that._subdomains)) {
-                that._subdomains = that._subdomains.slice();
-            } else if (defined(that._subdomains) && that._subdomains.length > 0) {
-                that._subdomains = that._subdomains.split('');
-            } else {
-                that._subdomains = ['a', 'b', 'c'];
-            }
-
-            that._tileWidth = defaultValue(properties.tileWidth, 256);
-            that._tileHeight = defaultValue(properties.tileHeight, 256);
-            that._minimumLevel = defaultValue(properties.minimumLevel, 0);
-            that._maximumLevel = properties.maximumLevel;
-            that._tilingScheme = defaultValue(properties.tilingScheme, new WebMercatorTilingScheme({ ellipsoid : properties.ellipsoid }));
-            that._rectangle = defaultValue(properties.rectangle, that._tilingScheme.rectangle);
-            that._rectangle = Rectangle.intersection(that._rectangle, that._tilingScheme.rectangle);
-            that._hasAlphaChannel = defaultValue(properties.hasAlphaChannel, true);
-
-            var credit = properties.credit;
-            if (typeof credit === 'string') {
-                credit = new Credit(credit);
-            }
-            that._credit = credit;
-
-            that._resource = resource;
-            that._tags = allTags;
-            that._pickFeaturesResource = pickFeaturesResource;
-            that._pickFeaturesTags = allPickFeaturesTags;
-
-            return true;
-        });
-    };
-
-    /**
-     * Gets the credits to be displayed when a given tile is displayed.
-     *
-     * @param {Number} x The tile X coordinate.
-     * @param {Number} y The tile Y coordinate.
-     * @param {Number} level The tile level;
-     * @returns {Credit[]} The credits to be displayed when the tile is displayed.
-     *
-     * @exception {DeveloperError} <code>getTileCredits</code> must not be called before the imagery provider is ready.
-     */
-    UrlTemplateImageryProvider.prototype.getTileCredits = function(x, y, level) {
-        //>>includeStart('debug', pragmas.debug);
-        if (!this.ready) {
-            throw new DeveloperError('getTileCredits must not be called before the imagery provider is ready.');
-        }
-        //>>includeEnd('debug');
-        return undefined;
-    };
-
-    /**
-     * Requests the image for a given tile.  This function should
-     * not be called before {@link UrlTemplateImageryProvider#ready} returns true.
-     *
-     * @param {Number} x The tile X coordinate.
-     * @param {Number} y The tile Y coordinate.
-     * @param {Number} level The tile level.
-     * @param {Request} [request] The request object. Intended for internal use only.
-     * @returns {Promise.<Image|Canvas>|undefined} A promise for the image that will resolve when the image is available, or
-     *          undefined if there are too many active requests to the server, and the request
-     *          should be retried later.  The resolved image may be either an
-     *          Image or a Canvas DOM object.
-     */
-    UrlTemplateImageryProvider.prototype.requestImage = function(x, y, level, request) {
-        //>>includeStart('debug', pragmas.debug);
-        if (!this.ready) {
-            throw new DeveloperError('requestImage must not be called before the imagery provider is ready.');
-        }
-        //>>includeEnd('debug');
-        return ImageryProvider.loadImage(this, buildImageResource(this, x, y, level, request));
-    };
-
-    /**
-     * Asynchronously determines what features, if any, are located at a given longitude and latitude within
-     * a tile.  This function should not be called before {@link ImageryProvider#ready} returns true.
-     *
-     * @param {Number} x The tile X coordinate.
-     * @param {Number} y The tile Y coordinate.
-     * @param {Number} level The tile level.
-     * @param {Number} longitude The longitude at which to pick features.
-     * @param {Number} latitude  The latitude at which to pick features.
-     * @return {Promise.<ImageryLayerFeatureInfo[]>|undefined} A promise for the picked features that will resolve when the asynchronous
-     *                   picking completes.  The resolved value is an array of {@link ImageryLayerFeatureInfo}
-     *                   instances.  The array may be empty if no features are found at the given location.
-     *                   It may also be undefined if picking is not supported.
-     */
-    UrlTemplateImageryProvider.prototype.pickFeatures = function(x, y, level, longitude, latitude) {
-        //>>includeStart('debug', pragmas.debug);
-        if (!this.ready) {
-            throw new DeveloperError('pickFeatures must not be called before the imagery provider is ready.');
-        }
-        //>>includeEnd('debug');
-
-        if (!this.enablePickFeatures || !defined(this._pickFeaturesResource) || this._getFeatureInfoFormats.length === 0) {
-            return undefined;
-        }
-
-        var formatIndex = 0;
-
-        var that = this;
-
-        function handleResponse(format, data) {
-            return format.callback(data);
-        }
-
-        function doRequest() {
-            if (formatIndex >= that._getFeatureInfoFormats.length) {
-                // No valid formats, so no features picked.
-                return when([]);
-            }
-
-            var format = that._getFeatureInfoFormats[formatIndex];
-            var resource = buildPickFeaturesResource(that, x, y, level, longitude, latitude, format.format);
-
-            ++formatIndex;
-
-            if (format.type === 'json') {
-                return resource.fetchJson().then(format.callback).otherwise(doRequest);
-            } else if (format.type === 'xml') {
-                return resource.fetchXML().then(format.callback).otherwise(doRequest);
-            } else if (format.type === 'text' || format.type === 'html') {
-                return resource.fetchText().then(format.callback).otherwise(doRequest);
-            }
-            return resource.fetch({
-                responseType: format.format
-            }).then(handleResponse.bind(undefined, format)).otherwise(doRequest);
-        }
-
-        return doRequest();
-    };
 
     var degreesScratchComputed = false;
     var degreesScratch = new Rectangle();

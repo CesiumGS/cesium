@@ -102,215 +102,334 @@ define([
         ShadowMapShader) {
     'use strict';
 
-    /**
-     * Use {@link Viewer#shadowMap} to get the scene's shadow map originating from the sun. Do not construct this directly.
-     *
-     * <p>
-     * The normalOffset bias pushes the shadows forward slightly, and may be disabled
-     * for applications that require ultra precise shadows.
-     * </p>
-     *
-     * @alias ShadowMap
-     * @internalConstructor
-     * @class
-     *
-     * @param {Object} options An object containing the following properties:
-     * @param {Camera} options.lightCamera A camera representing the light source.
-     * @param {Boolean} [options.enabled=true] Whether the shadow map is enabled.
-     * @param {Boolean} [options.isPointLight=false] Whether the light source is a point light. Point light shadows do not use cascades.
-     * @param {Boolean} [options.pointLightRadius=100.0] Radius of the point light.
-     * @param {Boolean} [options.cascadesEnabled=true] Use multiple shadow maps to cover different partitions of the view frustum.
-     * @param {Number} [options.numberOfCascades=4] The number of cascades to use for the shadow map. Supported values are one and four.
-     * @param {Number} [options.maximumDistance=5000.0] The maximum distance used for generating cascaded shadows. Lower values improve shadow quality.
-     * @param {Number} [options.size=2048] The width and height, in pixels, of each shadow map.
-     * @param {Boolean} [options.softShadows=false] Whether percentage-closer-filtering is enabled for producing softer shadows.
-     * @param {Number} [options.darkness=0.3] The shadow darkness.
-     * @param {Boolean} [options.normalOffset=true] Whether a normal bias is applied to shadows.
-     *
-     * @exception {DeveloperError} Only one or four cascades are supported.
-     *
-     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Shadows.html|Cesium Sandcastle Shadows Demo}
-     */
-    function ShadowMap(options) {
-        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-        // options.context is an undocumented option
-        var context = options.context;
-
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(context)) {
-            throw new DeveloperError('context is required.');
-        }
-        if (!defined(options.lightCamera)) {
-            throw new DeveloperError('lightCamera is required.');
-        }
-        if (defined(options.numberOfCascades) && ((options.numberOfCascades !== 1) && (options.numberOfCascades !== 4))) {
-            throw new DeveloperError('Only one or four cascades are supported.');
-        }
-        //>>includeEnd('debug');
-
-        this._enabled = defaultValue(options.enabled, true);
-        this._softShadows = defaultValue(options.softShadows, false);
-        this._normalOffset = defaultValue(options.normalOffset, true);
-        this.dirty = true;
-
         /**
-         * Specifies whether the shadow map originates from a light source. Shadow maps that are used for analytical
-         * purposes should set this to false so as not to affect scene rendering.
-         *
-         * @private
-         */
-        this.fromLightSource = defaultValue(options.fromLightSource, true);
-
-        /**
-         * Determines the darkness of the shadows.
-         *
-         * @type {Number}
-         * @default 0.3
-         */
-        this.darkness = defaultValue(options.darkness, 0.3);
-        this._darkness = this.darkness;
-
-        /**
-         * Determines the maximum distance of the shadow map. Only applicable for cascaded shadows. Larger distances may result in lower quality shadows.
-         *
-         * @type {Number}
-         * @default 5000.0
-         */
-        this.maximumDistance = defaultValue(options.maximumDistance, 5000.0);
-
-        this._outOfView = false;
-        this._outOfViewPrevious = false;
-        this._needsUpdate = true;
-
-        // In IE11 and Edge polygon offset is not functional.
-        // TODO : Also disabled for instances of Firefox and Chrome running ANGLE that do not support depth textures.
-        // Re-enable once https://github.com/AnalyticalGraphicsInc/cesium/issues/4560 is resolved.
-        var polygonOffsetSupported = true;
-        if (FeatureDetection.isInternetExplorer() || FeatureDetection.isEdge() || ((FeatureDetection.isChrome() || FeatureDetection.isFirefox()) && FeatureDetection.isWindows() && !context.depthTexture)) {
-            polygonOffsetSupported = false;
+             * Use {@link Viewer#shadowMap} to get the scene's shadow map originating from the sun. Do not construct this directly.
+             *
+             * <p>
+             * The normalOffset bias pushes the shadows forward slightly, and may be disabled
+             * for applications that require ultra precise shadows.
+             * </p>
+             *
+             * @alias ShadowMap
+             * @internalConstructor
+             * @class
+             *
+             * @param {Object} options An object containing the following properties:
+             * @param {Camera} options.lightCamera A camera representing the light source.
+             * @param {Boolean} [options.enabled=true] Whether the shadow map is enabled.
+             * @param {Boolean} [options.isPointLight=false] Whether the light source is a point light. Point light shadows do not use cascades.
+             * @param {Boolean} [options.pointLightRadius=100.0] Radius of the point light.
+             * @param {Boolean} [options.cascadesEnabled=true] Use multiple shadow maps to cover different partitions of the view frustum.
+             * @param {Number} [options.numberOfCascades=4] The number of cascades to use for the shadow map. Supported values are one and four.
+             * @param {Number} [options.maximumDistance=5000.0] The maximum distance used for generating cascaded shadows. Lower values improve shadow quality.
+             * @param {Number} [options.size=2048] The width and height, in pixels, of each shadow map.
+             * @param {Boolean} [options.softShadows=false] Whether percentage-closer-filtering is enabled for producing softer shadows.
+             * @param {Number} [options.darkness=0.3] The shadow darkness.
+             * @param {Boolean} [options.normalOffset=true] Whether a normal bias is applied to shadows.
+             *
+             * @exception {DeveloperError} Only one or four cascades are supported.
+             *
+             * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Shadows.html|Cesium Sandcastle Shadows Demo}
+             */
+        class ShadowMap {
+            constructor(options) {
+                options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+                // options.context is an undocumented option
+                var context = options.context;
+                //>>includeStart('debug', pragmas.debug);
+                if (!defined(context)) {
+                    throw new DeveloperError('context is required.');
+                }
+                if (!defined(options.lightCamera)) {
+                    throw new DeveloperError('lightCamera is required.');
+                }
+                if (defined(options.numberOfCascades) && ((options.numberOfCascades !== 1) && (options.numberOfCascades !== 4))) {
+                    throw new DeveloperError('Only one or four cascades are supported.');
+                }
+                //>>includeEnd('debug');
+                this._enabled = defaultValue(options.enabled, true);
+                this._softShadows = defaultValue(options.softShadows, false);
+                this._normalOffset = defaultValue(options.normalOffset, true);
+                this.dirty = true;
+                /**
+                 * Specifies whether the shadow map originates from a light source. Shadow maps that are used for analytical
+                 * purposes should set this to false so as not to affect scene rendering.
+                 *
+                 * @private
+                 */
+                this.fromLightSource = defaultValue(options.fromLightSource, true);
+                /**
+                 * Determines the darkness of the shadows.
+                 *
+                 * @type {Number}
+                 * @default 0.3
+                 */
+                this.darkness = defaultValue(options.darkness, 0.3);
+                this._darkness = this.darkness;
+                /**
+                 * Determines the maximum distance of the shadow map. Only applicable for cascaded shadows. Larger distances may result in lower quality shadows.
+                 *
+                 * @type {Number}
+                 * @default 5000.0
+                 */
+                this.maximumDistance = defaultValue(options.maximumDistance, 5000.0);
+                this._outOfView = false;
+                this._outOfViewPrevious = false;
+                this._needsUpdate = true;
+                // In IE11 and Edge polygon offset is not functional.
+                // TODO : Also disabled for instances of Firefox and Chrome running ANGLE that do not support depth textures.
+                // Re-enable once https://github.com/AnalyticalGraphicsInc/cesium/issues/4560 is resolved.
+                var polygonOffsetSupported = true;
+                if (FeatureDetection.isInternetExplorer() || FeatureDetection.isEdge() || ((FeatureDetection.isChrome() || FeatureDetection.isFirefox()) && FeatureDetection.isWindows() && !context.depthTexture)) {
+                    polygonOffsetSupported = false;
+                }
+                this._polygonOffsetSupported = polygonOffsetSupported;
+                this._terrainBias = {
+                    polygonOffset: polygonOffsetSupported,
+                    polygonOffsetFactor: 1.1,
+                    polygonOffsetUnits: 4.0,
+                    normalOffset: this._normalOffset,
+                    normalOffsetScale: 0.5,
+                    normalShading: true,
+                    normalShadingSmooth: 0.3,
+                    depthBias: 0.0001
+                };
+                this._primitiveBias = {
+                    polygonOffset: polygonOffsetSupported,
+                    polygonOffsetFactor: 1.1,
+                    polygonOffsetUnits: 4.0,
+                    normalOffset: this._normalOffset,
+                    normalOffsetScale: 0.1,
+                    normalShading: true,
+                    normalShadingSmooth: 0.05,
+                    depthBias: 0.00002
+                };
+                this._pointBias = {
+                    polygonOffset: false,
+                    polygonOffsetFactor: 1.1,
+                    polygonOffsetUnits: 4.0,
+                    normalOffset: this._normalOffset,
+                    normalOffsetScale: 0.0,
+                    normalShading: true,
+                    normalShadingSmooth: 0.1,
+                    depthBias: 0.0005
+                };
+                // Framebuffer resources
+                this._depthAttachment = undefined;
+                this._colorAttachment = undefined;
+                // Uniforms
+                this._shadowMapMatrix = new Matrix4();
+                this._shadowMapTexture = undefined;
+                this._lightDirectionEC = new Cartesian3();
+                this._lightPositionEC = new Cartesian4();
+                this._distance = 0.0;
+                this._lightCamera = options.lightCamera;
+                this._shadowMapCamera = new ShadowMapCamera();
+                this._shadowMapCullingVolume = undefined;
+                this._sceneCamera = undefined;
+                this._boundingSphere = new BoundingSphere();
+                this._isPointLight = defaultValue(options.isPointLight, false);
+                this._pointLightRadius = defaultValue(options.pointLightRadius, 100.0);
+                this._cascadesEnabled = this._isPointLight ? false : defaultValue(options.cascadesEnabled, true);
+                this._numberOfCascades = !this._cascadesEnabled ? 0 : defaultValue(options.numberOfCascades, 4);
+                this._fitNearFar = true;
+                this._maximumCascadeDistances = [25.0, 150.0, 700.0, Number.MAX_VALUE];
+                this._textureSize = new Cartesian2();
+                this._isSpotLight = false;
+                if (this._cascadesEnabled) {
+                    // Cascaded shadows are always orthographic. The frustum dimensions are calculated on the fly.
+                    this._shadowMapCamera.frustum = new OrthographicOffCenterFrustum();
+                }
+                else if (defined(this._lightCamera.frustum.fov)) {
+                    // If the light camera uses a perspective frustum, then the light source is a spot light
+                    this._isSpotLight = true;
+                }
+                // Uniforms
+                this._cascadeSplits = [new Cartesian4(), new Cartesian4()];
+                this._cascadeMatrices = [new Matrix4(), new Matrix4(), new Matrix4(), new Matrix4()];
+                this._cascadeDistances = new Cartesian4();
+                var numberOfPasses;
+                if (this._isPointLight) {
+                    numberOfPasses = 6; // One shadow map for each direction
+                }
+                else if (!this._cascadesEnabled) {
+                    numberOfPasses = 1;
+                }
+                else {
+                    numberOfPasses = this._numberOfCascades;
+                }
+                this._passes = new Array(numberOfPasses);
+                for (var i = 0; i < numberOfPasses; ++i) {
+                    this._passes[i] = new ShadowPass(context);
+                }
+                this.debugShow = false;
+                this.debugFreezeFrame = false;
+                this._debugFreezeFrame = false;
+                this._debugCascadeColors = false;
+                this._debugLightFrustum = undefined;
+                this._debugCameraFrustum = undefined;
+                this._debugCascadeFrustums = new Array(this._numberOfCascades);
+                this._debugShadowViewCommand = undefined;
+                this._usesDepthTexture = context.depthTexture;
+                if (this._isPointLight) {
+                    this._usesDepthTexture = false;
+                }
+                // Create render states for shadow casters
+                this._primitiveRenderState = undefined;
+                this._terrainRenderState = undefined;
+                this._pointRenderState = undefined;
+                createRenderStates(this);
+                // For clearing the shadow map texture every frame
+                this._clearCommand = new ClearCommand({
+                    depth: 1.0,
+                    color: new Color()
+                });
+                this._clearPassState = new PassState(context);
+                this._size = defaultValue(options.size, 2048);
+                this.size = this._size;
+            }
+            /**
+                 * @private
+                 */
+            debugCreateRenderStates() {
+                createRenderStates(this);
+            }
+            /**
+                 * @private
+                 */
+            update(frameState) {
+                updateCameras(this, frameState);
+                if (this._needsUpdate) {
+                    updateFramebuffer(this, frameState.context);
+                    if (this._isPointLight) {
+                        computeOmnidirectional(this, frameState);
+                    }
+                    if (this._cascadesEnabled) {
+                        fitShadowMapToScene(this, frameState);
+                        if (this._numberOfCascades > 1) {
+                            computeCascades(this, frameState);
+                        }
+                    }
+                    if (!this._isPointLight) {
+                        // Compute the culling volume
+                        var shadowMapCamera = this._shadowMapCamera;
+                        var position = shadowMapCamera.positionWC;
+                        var direction = shadowMapCamera.directionWC;
+                        var up = shadowMapCamera.upWC;
+                        this._shadowMapCullingVolume = shadowMapCamera.frustum.computeCullingVolume(position, direction, up);
+                        if (this._passes.length === 1) {
+                            // Since there is only one pass, use the shadow map camera as the pass camera.
+                            this._passes[0].camera.clone(shadowMapCamera);
+                        }
+                    }
+                    else {
+                        this._shadowMapCullingVolume = CullingVolume.fromBoundingSphere(this._boundingSphere);
+                    }
+                }
+                if (this._passes.length === 1) {
+                    // Transforms from eye space to shadow texture space.
+                    // Always requires an update since the scene camera constantly changes.
+                    var inverseView = this._sceneCamera.inverseViewMatrix;
+                    Matrix4.multiply(this._shadowMapCamera.getViewProjection(), inverseView, this._shadowMapMatrix);
+                }
+                if (this.debugShow) {
+                    applyDebugSettings(this, frameState);
+                }
+            }
+            /**
+                 * @private
+                 */
+            updatePass(context, shadowPass) {
+                clearFramebuffer(this, context, shadowPass);
+            }
+            /**
+                 * @private
+                 */
+            isDestroyed() {
+                return false;
+            }
+            /**
+                 * @private
+                 */
+            destroy() {
+                destroyFramebuffer(this);
+                this._debugLightFrustum = this._debugLightFrustum && this._debugLightFrustum.destroy();
+                this._debugCameraFrustum = this._debugCameraFrustum && this._debugCameraFrustum.destroy();
+                this._debugShadowViewCommand = this._debugShadowViewCommand && this._debugShadowViewCommand.shaderProgram && this._debugShadowViewCommand.shaderProgram.destroy();
+                for (var i = 0; i < this._numberOfCascades; ++i) {
+                    this._debugCascadeFrustums[i] = this._debugCascadeFrustums[i] && this._debugCascadeFrustums[i].destroy();
+                }
+                return destroyObject(this);
+            }
+            static createReceiveDerivedCommand(lightShadowMaps, command, shadowsDirty, context, result) {
+                if (!defined(result)) {
+                    result = {};
+                }
+                var lightShadowMapsEnabled = (lightShadowMaps.length > 0);
+                var shaderProgram = command.shaderProgram;
+                var vertexShaderSource = shaderProgram.vertexShaderSource;
+                var fragmentShaderSource = shaderProgram.fragmentShaderSource;
+                var isTerrain = command.pass === Pass.GLOBE;
+                var hasTerrainNormal = false;
+                if (isTerrain) {
+                    hasTerrainNormal = command.owner.data.pickTerrain.mesh.encoding.hasVertexNormals;
+                }
+                if (command.receiveShadows && lightShadowMapsEnabled) {
+                    // Only generate a receiveCommand if there is a shadow map originating from a light source.
+                    var receiveShader;
+                    var receiveUniformMap;
+                    if (defined(result.receiveCommand)) {
+                        receiveShader = result.receiveCommand.shaderProgram;
+                        receiveUniformMap = result.receiveCommand.uniformMap;
+                    }
+                    result.receiveCommand = DrawCommand.shallowClone(command, result.receiveCommand);
+                    result.castShadows = false;
+                    result.receiveShadows = true;
+                    // If castShadows changed, recompile the receive shadows shader. The normal shading technique simulates
+                    // self-shadowing so it should be turned off if castShadows is false.
+                    var castShadowsDirty = result.receiveShaderCastShadows !== command.castShadows;
+                    var shaderDirty = result.receiveShaderProgramId !== command.shaderProgram.id;
+                    if (!defined(receiveShader) || shaderDirty || shadowsDirty || castShadowsDirty) {
+                        var keyword = ShadowMapShader.getShadowReceiveShaderKeyword(lightShadowMaps[0], command.castShadows, isTerrain, hasTerrainNormal);
+                        receiveShader = context.shaderCache.getDerivedShaderProgram(shaderProgram, keyword);
+                        if (!defined(receiveShader)) {
+                            var receiveVS = ShadowMapShader.createShadowReceiveVertexShader(vertexShaderSource, isTerrain, hasTerrainNormal);
+                            var receiveFS = ShadowMapShader.createShadowReceiveFragmentShader(fragmentShaderSource, lightShadowMaps[0], command.castShadows, isTerrain, hasTerrainNormal);
+                            receiveShader = context.shaderCache.createDerivedShaderProgram(shaderProgram, keyword, {
+                                vertexShaderSource: receiveVS,
+                                fragmentShaderSource: receiveFS,
+                                attributeLocations: shaderProgram._attributeLocations
+                            });
+                        }
+                        receiveUniformMap = combineUniforms(lightShadowMaps[0], command.uniformMap, isTerrain);
+                    }
+                    result.receiveCommand.shaderProgram = receiveShader;
+                    result.receiveCommand.uniformMap = receiveUniformMap;
+                    result.receiveShaderProgramId = command.shaderProgram.id;
+                    result.receiveShaderCastShadows = command.castShadows;
+                }
+                return result;
+            }
+            static createCastDerivedCommand(shadowMaps, command, shadowsDirty, context, result) {
+                if (!defined(result)) {
+                    result = {};
+                }
+                if (command.castShadows) {
+                    var castCommands = result.castCommands;
+                    if (!defined(castCommands)) {
+                        castCommands = result.castCommands = [];
+                    }
+                    var oldShaderId = result.castShaderProgramId;
+                    var shadowMapLength = shadowMaps.length;
+                    castCommands.length = shadowMapLength;
+                    for (var i = 0; i < shadowMapLength; ++i) {
+                        castCommands[i] = createCastDerivedCommand(shadowMaps[i], shadowsDirty, command, context, oldShaderId, castCommands[i]);
+                    }
+                    result.castShaderProgramId = command.shaderProgram.id;
+                }
+                return result;
+            }
         }
-        this._polygonOffsetSupported = polygonOffsetSupported;
-
-        this._terrainBias = {
-            polygonOffset : polygonOffsetSupported,
-            polygonOffsetFactor : 1.1,
-            polygonOffsetUnits : 4.0,
-            normalOffset : this._normalOffset,
-            normalOffsetScale : 0.5,
-            normalShading : true,
-            normalShadingSmooth : 0.3,
-            depthBias : 0.0001
-        };
-
-        this._primitiveBias = {
-            polygonOffset : polygonOffsetSupported,
-            polygonOffsetFactor : 1.1,
-            polygonOffsetUnits : 4.0,
-            normalOffset : this._normalOffset,
-            normalOffsetScale : 0.1,
-            normalShading : true,
-            normalShadingSmooth : 0.05,
-            depthBias : 0.00002
-        };
-
-        this._pointBias = {
-            polygonOffset : false,
-            polygonOffsetFactor : 1.1,
-            polygonOffsetUnits : 4.0,
-            normalOffset : this._normalOffset,
-            normalOffsetScale : 0.0,
-            normalShading : true,
-            normalShadingSmooth : 0.1,
-            depthBias : 0.0005
-        };
-
-        // Framebuffer resources
-        this._depthAttachment = undefined;
-        this._colorAttachment = undefined;
-
-        // Uniforms
-        this._shadowMapMatrix = new Matrix4();
-        this._shadowMapTexture = undefined;
-        this._lightDirectionEC = new Cartesian3();
-        this._lightPositionEC = new Cartesian4();
-        this._distance = 0.0;
-
-        this._lightCamera = options.lightCamera;
-        this._shadowMapCamera = new ShadowMapCamera();
-        this._shadowMapCullingVolume = undefined;
-        this._sceneCamera = undefined;
-        this._boundingSphere = new BoundingSphere();
-
-        this._isPointLight = defaultValue(options.isPointLight, false);
-        this._pointLightRadius = defaultValue(options.pointLightRadius, 100.0);
-
-        this._cascadesEnabled = this._isPointLight ? false : defaultValue(options.cascadesEnabled, true);
-        this._numberOfCascades = !this._cascadesEnabled ? 0 : defaultValue(options.numberOfCascades, 4);
-        this._fitNearFar = true;
-        this._maximumCascadeDistances = [25.0, 150.0, 700.0, Number.MAX_VALUE];
-
-        this._textureSize = new Cartesian2();
-
-        this._isSpotLight = false;
-        if (this._cascadesEnabled) {
-            // Cascaded shadows are always orthographic. The frustum dimensions are calculated on the fly.
-            this._shadowMapCamera.frustum = new OrthographicOffCenterFrustum();
-        } else if (defined(this._lightCamera.frustum.fov)) {
-            // If the light camera uses a perspective frustum, then the light source is a spot light
-            this._isSpotLight = true;
-        }
-
-        // Uniforms
-        this._cascadeSplits = [new Cartesian4(), new Cartesian4()];
-        this._cascadeMatrices = [new Matrix4(), new Matrix4(), new Matrix4(), new Matrix4()];
-        this._cascadeDistances = new Cartesian4();
-
-        var numberOfPasses;
-        if (this._isPointLight) {
-            numberOfPasses = 6; // One shadow map for each direction
-        } else if (!this._cascadesEnabled) {
-            numberOfPasses = 1;
-        } else {
-            numberOfPasses = this._numberOfCascades;
-        }
-
-        this._passes = new Array(numberOfPasses);
-        for (var i = 0; i < numberOfPasses; ++i) {
-            this._passes[i] = new ShadowPass(context);
-        }
-
-        this.debugShow = false;
-        this.debugFreezeFrame = false;
-        this._debugFreezeFrame = false;
-        this._debugCascadeColors = false;
-        this._debugLightFrustum = undefined;
-        this._debugCameraFrustum = undefined;
-        this._debugCascadeFrustums = new Array(this._numberOfCascades);
-        this._debugShadowViewCommand = undefined;
-
-        this._usesDepthTexture = context.depthTexture;
-
-        if (this._isPointLight) {
-            this._usesDepthTexture = false;
-        }
-
-        // Create render states for shadow casters
-        this._primitiveRenderState = undefined;
-        this._terrainRenderState = undefined;
-        this._pointRenderState = undefined;
-        createRenderStates(this);
-
-        // For clearing the shadow map texture every frame
-        this._clearCommand = new ClearCommand({
-            depth : 1.0,
-            color : new Color()
-        });
-
-        this._clearPassState = new PassState(context);
-
-        this._size = defaultValue(options.size, 2048);
-        this.size = this._size;
-    }
 
     /**
      * Global maximum shadow distance used to prevent far off receivers from extending
@@ -320,14 +439,16 @@ define([
      */
     ShadowMap.MAXIMUM_DISTANCE = 20000.0;
 
-    function ShadowPass(context) {
-        this.camera = new ShadowMapCamera();
-        this.passState = new PassState(context);
-        this.framebuffer = undefined;
-        this.textureOffsets = undefined;
-        this.commandList = [];
-        this.cullingVolume = undefined;
-    }
+        class ShadowPass {
+            constructor(context) {
+                this.camera = new ShadowMapCamera();
+                this.passState = new PassState(context);
+                this.framebuffer = undefined;
+                this.textureOffsets = undefined;
+                this.commandList = [];
+                this.cullingVolume = undefined;
+            }
+        }
 
     function createRenderState(colorMask, bias) {
         return RenderState.fromCache({
@@ -361,12 +482,6 @@ define([
         shadowMap._pointRenderState = createRenderState(colorMask, shadowMap._pointBias);
     }
 
-    /**
-     * @private
-     */
-    ShadowMap.prototype.debugCreateRenderStates = function() {
-        createRenderStates(this);
-    };
 
     defineProperties(ShadowMap.prototype, {
         /**
@@ -966,39 +1081,41 @@ define([
         }
     }
 
-    function ShadowMapCamera() {
-        this.viewMatrix = new Matrix4();
-        this.inverseViewMatrix = new Matrix4();
-        this.frustum = undefined;
-        this.positionCartographic = new Cartographic();
-        this.positionWC = new Cartesian3();
-        this.directionWC = Cartesian3.clone(Cartesian3.UNIT_Z);
-        this.upWC = Cartesian3.clone(Cartesian3.UNIT_Y);
-        this.rightWC = Cartesian3.clone(Cartesian3.UNIT_X);
-        this.viewProjectionMatrix = new Matrix4();
-    }
+        class ShadowMapCamera {
+            constructor() {
+                this.viewMatrix = new Matrix4();
+                this.inverseViewMatrix = new Matrix4();
+                this.frustum = undefined;
+                this.positionCartographic = new Cartographic();
+                this.positionWC = new Cartesian3();
+                this.directionWC = Cartesian3.clone(Cartesian3.UNIT_Z);
+                this.upWC = Cartesian3.clone(Cartesian3.UNIT_Y);
+                this.rightWC = Cartesian3.clone(Cartesian3.UNIT_X);
+                this.viewProjectionMatrix = new Matrix4();
+            }
+            clone(camera) {
+                Matrix4.clone(camera.viewMatrix, this.viewMatrix);
+                Matrix4.clone(camera.inverseViewMatrix, this.inverseViewMatrix);
+                this.frustum = camera.frustum.clone(this.frustum);
+                Cartographic.clone(camera.positionCartographic, this.positionCartographic);
+                Cartesian3.clone(camera.positionWC, this.positionWC);
+                Cartesian3.clone(camera.directionWC, this.directionWC);
+                Cartesian3.clone(camera.upWC, this.upWC);
+                Cartesian3.clone(camera.rightWC, this.rightWC);
+            }
+            getViewProjection() {
+                var view = this.viewMatrix;
+                var projection = this.frustum.projectionMatrix;
+                Matrix4.multiply(projection, view, this.viewProjectionMatrix);
+                Matrix4.multiply(scaleBiasMatrix, this.viewProjectionMatrix, this.viewProjectionMatrix);
+                return this.viewProjectionMatrix;
+            }
+        }
 
-    ShadowMapCamera.prototype.clone = function(camera) {
-        Matrix4.clone(camera.viewMatrix, this.viewMatrix);
-        Matrix4.clone(camera.inverseViewMatrix, this.inverseViewMatrix);
-        this.frustum = camera.frustum.clone(this.frustum);
-        Cartographic.clone(camera.positionCartographic, this.positionCartographic);
-        Cartesian3.clone(camera.positionWC, this.positionWC);
-        Cartesian3.clone(camera.directionWC, this.directionWC);
-        Cartesian3.clone(camera.upWC, this.upWC);
-        Cartesian3.clone(camera.rightWC, this.rightWC);
-    };
 
     // Converts from NDC space to texture space
     var scaleBiasMatrix = new Matrix4(0.5, 0.0, 0.0, 0.5, 0.0, 0.5, 0.0, 0.5, 0.0, 0.0, 0.5, 0.5, 0.0, 0.0, 0.0, 1.0);
 
-    ShadowMapCamera.prototype.getViewProjection = function() {
-        var view = this.viewMatrix;
-        var projection = this.frustum.projectionMatrix;
-        Matrix4.multiply(projection, view, this.viewProjectionMatrix);
-        Matrix4.multiply(scaleBiasMatrix, this.viewProjectionMatrix, this.viewProjectionMatrix);
-        return this.viewProjectionMatrix;
-    };
 
     var scratchSplits = new Array(5);
     var scratchFrustum = new PerspectiveFrustum();
@@ -1359,62 +1476,7 @@ define([
         shadowMap._outOfViewPrevious = shadowMap._outOfView;
     }
 
-    /**
-     * @private
-     */
-    ShadowMap.prototype.update = function(frameState) {
-        updateCameras(this, frameState);
 
-        if (this._needsUpdate) {
-            updateFramebuffer(this, frameState.context);
-
-            if (this._isPointLight) {
-                computeOmnidirectional(this, frameState);
-            }
-
-            if (this._cascadesEnabled) {
-                fitShadowMapToScene(this, frameState);
-
-                if (this._numberOfCascades > 1) {
-                    computeCascades(this, frameState);
-                }
-            }
-
-            if (!this._isPointLight) {
-                // Compute the culling volume
-                var shadowMapCamera = this._shadowMapCamera;
-                var position = shadowMapCamera.positionWC;
-                var direction = shadowMapCamera.directionWC;
-                var up = shadowMapCamera.upWC;
-                this._shadowMapCullingVolume = shadowMapCamera.frustum.computeCullingVolume(position, direction, up);
-
-                if (this._passes.length === 1) {
-                    // Since there is only one pass, use the shadow map camera as the pass camera.
-                    this._passes[0].camera.clone(shadowMapCamera);
-                }
-            } else {
-                this._shadowMapCullingVolume = CullingVolume.fromBoundingSphere(this._boundingSphere);
-            }
-        }
-
-        if (this._passes.length === 1) {
-            // Transforms from eye space to shadow texture space.
-            // Always requires an update since the scene camera constantly changes.
-            var inverseView = this._sceneCamera.inverseViewMatrix;
-            Matrix4.multiply(this._shadowMapCamera.getViewProjection(), inverseView, this._shadowMapMatrix);
-        }
-
-        if (this.debugShow) {
-            applyDebugSettings(this, frameState);
-        }
-    };
-
-    /**
-     * @private
-     */
-    ShadowMap.prototype.updatePass = function(context, shadowPass) {
-        clearFramebuffer(this, context, shadowPass);
-    };
 
     var scratchTexelStepSize = new Cartesian2();
 
@@ -1528,115 +1590,9 @@ define([
         return result;
     }
 
-    ShadowMap.createReceiveDerivedCommand = function(lightShadowMaps, command, shadowsDirty, context, result) {
-        if (!defined(result)) {
-            result = {};
-        }
 
-        var lightShadowMapsEnabled = (lightShadowMaps.length > 0);
-        var shaderProgram = command.shaderProgram;
-        var vertexShaderSource = shaderProgram.vertexShaderSource;
-        var fragmentShaderSource = shaderProgram.fragmentShaderSource;
-        var isTerrain = command.pass === Pass.GLOBE;
 
-        var hasTerrainNormal = false;
-        if (isTerrain) {
-            hasTerrainNormal = command.owner.data.pickTerrain.mesh.encoding.hasVertexNormals;
-        }
 
-        if (command.receiveShadows && lightShadowMapsEnabled) {
-            // Only generate a receiveCommand if there is a shadow map originating from a light source.
-            var receiveShader;
-            var receiveUniformMap;
-            if (defined(result.receiveCommand)) {
-                receiveShader = result.receiveCommand.shaderProgram;
-                receiveUniformMap = result.receiveCommand.uniformMap;
-            }
-
-            result.receiveCommand = DrawCommand.shallowClone(command, result.receiveCommand);
-            result.castShadows = false;
-            result.receiveShadows = true;
-
-            // If castShadows changed, recompile the receive shadows shader. The normal shading technique simulates
-            // self-shadowing so it should be turned off if castShadows is false.
-            var castShadowsDirty = result.receiveShaderCastShadows !== command.castShadows;
-            var shaderDirty = result.receiveShaderProgramId !== command.shaderProgram.id;
-
-            if (!defined(receiveShader) || shaderDirty || shadowsDirty || castShadowsDirty) {
-                var keyword = ShadowMapShader.getShadowReceiveShaderKeyword(lightShadowMaps[0], command.castShadows, isTerrain, hasTerrainNormal);
-                receiveShader = context.shaderCache.getDerivedShaderProgram(shaderProgram, keyword);
-                if (!defined(receiveShader)) {
-                    var receiveVS = ShadowMapShader.createShadowReceiveVertexShader(vertexShaderSource, isTerrain, hasTerrainNormal);
-                    var receiveFS = ShadowMapShader.createShadowReceiveFragmentShader(fragmentShaderSource, lightShadowMaps[0], command.castShadows, isTerrain, hasTerrainNormal);
-
-                    receiveShader = context.shaderCache.createDerivedShaderProgram(shaderProgram, keyword, {
-                        vertexShaderSource : receiveVS,
-                        fragmentShaderSource : receiveFS,
-                        attributeLocations : shaderProgram._attributeLocations
-                    });
-                }
-
-                receiveUniformMap = combineUniforms(lightShadowMaps[0], command.uniformMap, isTerrain);
-            }
-
-            result.receiveCommand.shaderProgram = receiveShader;
-            result.receiveCommand.uniformMap = receiveUniformMap;
-            result.receiveShaderProgramId = command.shaderProgram.id;
-            result.receiveShaderCastShadows = command.castShadows;
-        }
-
-        return result;
-    };
-
-    ShadowMap.createCastDerivedCommand = function(shadowMaps, command, shadowsDirty, context, result) {
-        if (!defined(result)) {
-            result = {};
-        }
-
-        if (command.castShadows) {
-            var castCommands = result.castCommands;
-            if (!defined(castCommands)) {
-                castCommands = result.castCommands = [];
-            }
-
-            var oldShaderId = result.castShaderProgramId;
-
-            var shadowMapLength = shadowMaps.length;
-            castCommands.length = shadowMapLength;
-
-            for (var i = 0; i < shadowMapLength; ++i) {
-                castCommands[i] = createCastDerivedCommand(shadowMaps[i], shadowsDirty, command, context, oldShaderId, castCommands[i]);
-            }
-
-            result.castShaderProgramId = command.shaderProgram.id;
-        }
-
-        return result;
-    };
-
-    /**
-     * @private
-     */
-    ShadowMap.prototype.isDestroyed = function() {
-        return false;
-    };
-
-    /**
-     * @private
-     */
-    ShadowMap.prototype.destroy = function() {
-        destroyFramebuffer(this);
-
-        this._debugLightFrustum = this._debugLightFrustum && this._debugLightFrustum.destroy();
-        this._debugCameraFrustum = this._debugCameraFrustum && this._debugCameraFrustum.destroy();
-        this._debugShadowViewCommand = this._debugShadowViewCommand && this._debugShadowViewCommand.shaderProgram && this._debugShadowViewCommand.shaderProgram.destroy();
-
-        for (var i = 0; i < this._numberOfCascades; ++i) {
-            this._debugCascadeFrustums[i] = this._debugCascadeFrustums[i] && this._debugCascadeFrustums[i].destroy();
-        }
-
-        return destroyObject(this);
-    };
 
     return ShadowMap;
 });

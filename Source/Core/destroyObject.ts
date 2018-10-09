@@ -1,9 +1,9 @@
 define([
-        './defaultValue',
-        './DeveloperError'
-    ], function(
-        defaultValue,
-        DeveloperError) {
+    './defaultValue',
+    './DeveloperError'
+], function(
+    defaultValue,
+    DeveloperError) {
     'use strict';
 
     function returnTrue() {
@@ -37,7 +37,7 @@ define([
      *
      * @see DeveloperError
      */
-    function destroyObject(object, message) {
+    function destroyObject(object: Object, message: string): undefined {
         message = defaultValue(message, 'This object was destroyed, i.e., destroy() was called.');
 
         function throwOnDestroyed() {
@@ -46,7 +46,7 @@ define([
             //>>includeEnd('debug');
         }
 
-        for ( var key in object) {
+        for (var key in object) {
             if (typeof object[key] === 'function') {
                 object[key] = throwOnDestroyed;
             }

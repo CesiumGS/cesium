@@ -20,96 +20,156 @@ define([
         Expression) {
     'use strict';
 
-    /**
-     * A style that is applied to a {@link Cesium3DTileset}.
-     * <p>
-     * Evaluates an expression defined using the
-     * {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/specification/Styling|3D Tiles Styling language}.
-     * </p>
-     *
-     * @alias Cesium3DTileStyle
-     * @constructor
-     *
-     * @param {Resource|String|Object} [style] The url of a style or an object defining a style.
-     *
-     * @example
-     * tileset.style = new Cesium.Cesium3DTileStyle({
-     *     color : {
-     *         conditions : [
-     *             ['${Height} >= 100', 'color("purple", 0.5)'],
-     *             ['${Height} >= 50', 'color("red")'],
-     *             ['true', 'color("blue")']
-     *         ]
-     *     },
-     *     show : '${Height} > 0',
-     *     meta : {
-     *         description : '"Building id ${id} has height ${Height}."'
-     *     }
-     * });
-     *
-     * @example
-     * tileset.style = new Cesium.Cesium3DTileStyle({
-     *     color : 'vec4(${Temperature})',
-     *     pointSize : '${Temperature} * 2.0'
-     * });
-     *
-     * @see {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/specification/Styling|3D Tiles Styling language}
-     */
-    function Cesium3DTileStyle(style) {
-        this._style = undefined;
-        this._ready = false;
-
-        this._show = undefined;
-        this._color = undefined;
-        this._pointSize = undefined;
-        this._pointOutlineColor = undefined;
-        this._pointOutlineWidth = undefined;
-        this._labelColor = undefined;
-        this._labelOutlineColor = undefined;
-        this._labelOutlineWidth = undefined;
-        this._font = undefined;
-        this._labelStyle = undefined;
-        this._labelText = undefined;
-        this._backgroundColor = undefined;
-        this._backgroundPadding = undefined;
-        this._backgroundEnabled = undefined;
-        this._scaleByDistance = undefined;
-        this._translucencyByDistance = undefined;
-        this._distanceDisplayCondition = undefined;
-        this._heightOffset = undefined;
-        this._anchorLineEnabled = undefined;
-        this._anchorLineColor = undefined;
-        this._image = undefined;
-        this._disableDepthTestDistance = undefined;
-        this._horizontalOrigin = undefined;
-        this._verticalOrigin = undefined;
-        this._labelHorizontalOrigin = undefined;
-        this._labelVerticalOrigin = undefined;
-        this._meta = undefined;
-
-        this._colorShaderFunction = undefined;
-        this._showShaderFunction = undefined;
-        this._pointSizeShaderFunction = undefined;
-        this._colorShaderFunctionReady = false;
-        this._showShaderFunctionReady = false;
-        this._pointSizeShaderFunctionReady = false;
-
-        this._colorShaderTranslucent = false;
-
-        var promise;
-        if (typeof style === 'string' || style instanceof Resource) {
-            var resource = Resource.createIfNeeded(style);
-            promise = resource.fetchJson(style);
-        } else {
-            promise = when.resolve(style);
+        /**
+             * A style that is applied to a {@link Cesium3DTileset}.
+             * <p>
+             * Evaluates an expression defined using the
+             * {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/specification/Styling|3D Tiles Styling language}.
+             * </p>
+             *
+             * @alias Cesium3DTileStyle
+             * @constructor
+             *
+             * @param {Resource|String|Object} [style] The url of a style or an object defining a style.
+             *
+             * @example
+             * tileset.style = new Cesium.Cesium3DTileStyle({
+             *     color : {
+             *         conditions : [
+             *             ['${Height} >= 100', 'color("purple", 0.5)'],
+             *             ['${Height} >= 50', 'color("red")'],
+             *             ['true', 'color("blue")']
+             *         ]
+             *     },
+             *     show : '${Height} > 0',
+             *     meta : {
+             *         description : '"Building id ${id} has height ${Height}."'
+             *     }
+             * });
+             *
+             * @example
+             * tileset.style = new Cesium.Cesium3DTileStyle({
+             *     color : 'vec4(${Temperature})',
+             *     pointSize : '${Temperature} * 2.0'
+             * });
+             *
+             * @see {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/specification/Styling|3D Tiles Styling language}
+             */
+        class Cesium3DTileStyle {
+            constructor(style) {
+                this._style = undefined;
+                this._ready = false;
+                this._show = undefined;
+                this._color = undefined;
+                this._pointSize = undefined;
+                this._pointOutlineColor = undefined;
+                this._pointOutlineWidth = undefined;
+                this._labelColor = undefined;
+                this._labelOutlineColor = undefined;
+                this._labelOutlineWidth = undefined;
+                this._font = undefined;
+                this._labelStyle = undefined;
+                this._labelText = undefined;
+                this._backgroundColor = undefined;
+                this._backgroundPadding = undefined;
+                this._backgroundEnabled = undefined;
+                this._scaleByDistance = undefined;
+                this._translucencyByDistance = undefined;
+                this._distanceDisplayCondition = undefined;
+                this._heightOffset = undefined;
+                this._anchorLineEnabled = undefined;
+                this._anchorLineColor = undefined;
+                this._image = undefined;
+                this._disableDepthTestDistance = undefined;
+                this._horizontalOrigin = undefined;
+                this._verticalOrigin = undefined;
+                this._labelHorizontalOrigin = undefined;
+                this._labelVerticalOrigin = undefined;
+                this._meta = undefined;
+                this._colorShaderFunction = undefined;
+                this._showShaderFunction = undefined;
+                this._pointSizeShaderFunction = undefined;
+                this._colorShaderFunctionReady = false;
+                this._showShaderFunctionReady = false;
+                this._pointSizeShaderFunctionReady = false;
+                this._colorShaderTranslucent = false;
+                var promise;
+                if (typeof style === 'string' || style instanceof Resource) {
+                    var resource = Resource.createIfNeeded(style);
+                    promise = resource.fetchJson(style);
+                }
+                else {
+                    promise = when.resolve(style);
+                }
+                var that = this;
+                this._readyPromise = promise.then(function(styleJson) {
+                    setup(that, styleJson);
+                    return that;
+                });
+            }
+            /**
+                 * Gets the color shader function for this style.
+                 *
+                 * @param {String} functionName Name to give to the generated function.
+                 * @param {String} attributePrefix Prefix that is added to any variable names to access vertex attributes.
+                 * @param {Object} shaderState Stores information about the generated shader function, including whether it is translucent.
+                 *
+                 * @returns {String} The shader function.
+                 *
+                 * @private
+                 */
+            getColorShaderFunction(functionName, attributePrefix, shaderState) {
+                if (this._colorShaderFunctionReady) {
+                    shaderState.translucent = this._colorShaderTranslucent;
+                    // Return the cached result, may be undefined
+                    return this._colorShaderFunction;
+                }
+                this._colorShaderFunctionReady = true;
+                this._colorShaderFunction = defined(this.color) ? this.color.getShaderFunction(functionName, attributePrefix, shaderState, 'vec4') : undefined;
+                this._colorShaderTranslucent = shaderState.translucent;
+                return this._colorShaderFunction;
+            }
+            /**
+                 * Gets the show shader function for this style.
+                 *
+                 * @param {String} functionName Name to give to the generated function.
+                 * @param {String} attributePrefix Prefix that is added to any variable names to access vertex attributes.
+                 * @param {Object} shaderState Stores information about the generated shader function, including whether it is translucent.
+                 *
+                 * @returns {String} The shader function.
+                 *
+                 * @private
+                 */
+            getShowShaderFunction(functionName, attributePrefix, shaderState) {
+                if (this._showShaderFunctionReady) {
+                    // Return the cached result, may be undefined
+                    return this._showShaderFunction;
+                }
+                this._showShaderFunctionReady = true;
+                this._showShaderFunction = defined(this.show) ? this.show.getShaderFunction(functionName, attributePrefix, shaderState, 'bool') : undefined;
+                return this._showShaderFunction;
+            }
+            /**
+                 * Gets the pointSize shader function for this style.
+                 *
+                 * @param {String} functionName Name to give to the generated function.
+                 * @param {String} attributePrefix Prefix that is added to any variable names to access vertex attributes.
+                 * @param {Object} shaderState Stores information about the generated shader function, including whether it is translucent.
+                 *
+                 * @returns {String} The shader function.
+                 *
+                 * @private
+                 */
+            getPointSizeShaderFunction(functionName, attributePrefix, shaderState) {
+                if (this._pointSizeShaderFunctionReady) {
+                    // Return the cached result, may be undefined
+                    return this._pointSizeShaderFunction;
+                }
+                this._pointSizeShaderFunctionReady = true;
+                this._pointSizeShaderFunction = defined(this.pointSize) ? this.pointSize.getShaderFunction(functionName, attributePrefix, shaderState, 'float') : undefined;
+                return this._pointSizeShaderFunction;
+            }
         }
-
-        var that = this;
-        this._readyPromise = promise.then(function(styleJson) {
-            setup(that, styleJson);
-            return that;
-        });
-    }
 
     function setup(that, styleJson) {
         that._style = clone(styleJson, true);
@@ -1521,73 +1581,8 @@ define([
         }
     });
 
-    /**
-     * Gets the color shader function for this style.
-     *
-     * @param {String} functionName Name to give to the generated function.
-     * @param {String} attributePrefix Prefix that is added to any variable names to access vertex attributes.
-     * @param {Object} shaderState Stores information about the generated shader function, including whether it is translucent.
-     *
-     * @returns {String} The shader function.
-     *
-     * @private
-     */
-    Cesium3DTileStyle.prototype.getColorShaderFunction = function(functionName, attributePrefix, shaderState) {
-        if (this._colorShaderFunctionReady) {
-            shaderState.translucent = this._colorShaderTranslucent;
-            // Return the cached result, may be undefined
-            return this._colorShaderFunction;
-        }
 
-        this._colorShaderFunctionReady = true;
-        this._colorShaderFunction = defined(this.color) ? this.color.getShaderFunction(functionName, attributePrefix, shaderState, 'vec4') : undefined;
-        this._colorShaderTranslucent = shaderState.translucent;
-        return this._colorShaderFunction;
-    };
 
-    /**
-     * Gets the show shader function for this style.
-     *
-     * @param {String} functionName Name to give to the generated function.
-     * @param {String} attributePrefix Prefix that is added to any variable names to access vertex attributes.
-     * @param {Object} shaderState Stores information about the generated shader function, including whether it is translucent.
-     *
-     * @returns {String} The shader function.
-     *
-     * @private
-     */
-    Cesium3DTileStyle.prototype.getShowShaderFunction = function(functionName, attributePrefix, shaderState) {
-        if (this._showShaderFunctionReady) {
-            // Return the cached result, may be undefined
-            return this._showShaderFunction;
-        }
-
-        this._showShaderFunctionReady = true;
-        this._showShaderFunction = defined(this.show) ? this.show.getShaderFunction(functionName, attributePrefix, shaderState, 'bool') : undefined;
-        return this._showShaderFunction;
-    };
-
-    /**
-     * Gets the pointSize shader function for this style.
-     *
-     * @param {String} functionName Name to give to the generated function.
-     * @param {String} attributePrefix Prefix that is added to any variable names to access vertex attributes.
-     * @param {Object} shaderState Stores information about the generated shader function, including whether it is translucent.
-     *
-     * @returns {String} The shader function.
-     *
-     * @private
-     */
-    Cesium3DTileStyle.prototype.getPointSizeShaderFunction = function(functionName, attributePrefix, shaderState) {
-        if (this._pointSizeShaderFunctionReady) {
-            // Return the cached result, may be undefined
-            return this._pointSizeShaderFunction;
-        }
-
-        this._pointSizeShaderFunctionReady = true;
-        this._pointSizeShaderFunction = defined(this.pointSize) ? this.pointSize.getShaderFunction(functionName, attributePrefix, shaderState, 'float') : undefined;
-        return this._pointSizeShaderFunction;
-    };
 
     return Cesium3DTileStyle;
 });

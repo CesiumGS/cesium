@@ -20,20 +20,74 @@ define([
         Property) {
     'use strict';
 
-    /**
-     * A {@link TimeIntervalCollectionProperty} which is also a {@link PositionProperty}.
-     *
-     * @alias TimeIntervalCollectionPositionProperty
-     * @constructor
-     *
-     * @param {ReferenceFrame} [referenceFrame=ReferenceFrame.FIXED] The reference frame in which the position is defined.
-     */
-    function TimeIntervalCollectionPositionProperty(referenceFrame) {
-        this._definitionChanged = new Event();
-        this._intervals = new TimeIntervalCollection();
-        this._intervals.changedEvent.addEventListener(TimeIntervalCollectionPositionProperty.prototype._intervalsChanged, this);
-        this._referenceFrame = defaultValue(referenceFrame, ReferenceFrame.FIXED);
-    }
+        /**
+             * A {@link TimeIntervalCollectionProperty} which is also a {@link PositionProperty}.
+             *
+             * @alias TimeIntervalCollectionPositionProperty
+             * @constructor
+             *
+             * @param {ReferenceFrame} [referenceFrame=ReferenceFrame.FIXED] The reference frame in which the position is defined.
+             */
+        class TimeIntervalCollectionPositionProperty {
+            constructor(referenceFrame) {
+                this._definitionChanged = new Event();
+                this._intervals = new TimeIntervalCollection();
+                this._intervals.changedEvent.addEventListener(TimeIntervalCollectionPositionProperty.prototype._intervalsChanged, this);
+                this._referenceFrame = defaultValue(referenceFrame, ReferenceFrame.FIXED);
+            }
+            /**
+                 * Gets the value of the property at the provided time in the fixed frame.
+                 *
+                 * @param {JulianDate} time The time for which to retrieve the value.
+                 * @param {Object} [result] The object to store the value into, if omitted, a new instance is created and returned.
+                 * @returns {Object} The modified result parameter or a new instance if the result parameter was not supplied.
+                 */
+            getValue(time, result) {
+                return this.getValueInReferenceFrame(time, ReferenceFrame.FIXED, result);
+            }
+            /**
+                 * Gets the value of the property at the provided time and in the provided reference frame.
+                 *
+                 * @param {JulianDate} time The time for which to retrieve the value.
+                 * @param {ReferenceFrame} referenceFrame The desired referenceFrame of the result.
+                 * @param {Cartesian3} [result] The object to store the value into, if omitted, a new instance is created and returned.
+                 * @returns {Cartesian3} The modified result parameter or a new instance if the result parameter was not supplied.
+                 */
+            getValueInReferenceFrame(time, referenceFrame, result) {
+                //>>includeStart('debug', pragmas.debug);
+                if (!defined(time)) {
+                    throw new DeveloperError('time is required.');
+                }
+                if (!defined(referenceFrame)) {
+                    throw new DeveloperError('referenceFrame is required.');
+                }
+                //>>includeEnd('debug');
+                var position = this._intervals.findDataForIntervalContainingDate(time);
+                if (defined(position)) {
+                    return PositionProperty.convertToReferenceFrame(time, position, this._referenceFrame, referenceFrame, result);
+                }
+                return undefined;
+            }
+            /**
+                 * Compares this property to the provided property and returns
+                 * <code>true</code> if they are equal, <code>false</code> otherwise.
+                 *
+                 * @param {Property} [other] The other property.
+                 * @returns {Boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
+                 */
+            equals(other) {
+                return this === other || //
+                    (other instanceof TimeIntervalCollectionPositionProperty && //
+                        this._intervals.equals(other._intervals, Property.equals) && //
+                        this._referenceFrame === other._referenceFrame);
+            }
+            /**
+                 * @private
+                 */
+            _intervalsChanged() {
+                this._definitionChanged.raiseEvent(this);
+            }
+        }
 
     defineProperties(TimeIntervalCollectionPositionProperty.prototype, {
         /**
@@ -86,62 +140,9 @@ define([
         }
     });
 
-    /**
-     * Gets the value of the property at the provided time in the fixed frame.
-     *
-     * @param {JulianDate} time The time for which to retrieve the value.
-     * @param {Object} [result] The object to store the value into, if omitted, a new instance is created and returned.
-     * @returns {Object} The modified result parameter or a new instance if the result parameter was not supplied.
-     */
-    TimeIntervalCollectionPositionProperty.prototype.getValue = function(time, result) {
-        return this.getValueInReferenceFrame(time, ReferenceFrame.FIXED, result);
-    };
 
-    /**
-     * Gets the value of the property at the provided time and in the provided reference frame.
-     *
-     * @param {JulianDate} time The time for which to retrieve the value.
-     * @param {ReferenceFrame} referenceFrame The desired referenceFrame of the result.
-     * @param {Cartesian3} [result] The object to store the value into, if omitted, a new instance is created and returned.
-     * @returns {Cartesian3} The modified result parameter or a new instance if the result parameter was not supplied.
-     */
-    TimeIntervalCollectionPositionProperty.prototype.getValueInReferenceFrame = function(time, referenceFrame, result) {
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(time)) {
-            throw new DeveloperError('time is required.');
-        }
-        if (!defined(referenceFrame)) {
-            throw new DeveloperError('referenceFrame is required.');
-        }
-        //>>includeEnd('debug');
 
-        var position = this._intervals.findDataForIntervalContainingDate(time);
-        if (defined(position)) {
-            return PositionProperty.convertToReferenceFrame(time, position, this._referenceFrame, referenceFrame, result);
-        }
-        return undefined;
-    };
 
-    /**
-     * Compares this property to the provided property and returns
-     * <code>true</code> if they are equal, <code>false</code> otherwise.
-     *
-     * @param {Property} [other] The other property.
-     * @returns {Boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
-     */
-    TimeIntervalCollectionPositionProperty.prototype.equals = function(other) {
-        return this === other || //
-               (other instanceof TimeIntervalCollectionPositionProperty && //
-                this._intervals.equals(other._intervals, Property.equals) && //
-                this._referenceFrame === other._referenceFrame);
-    };
-
-    /**
-     * @private
-     */
-    TimeIntervalCollectionPositionProperty.prototype._intervalsChanged = function() {
-        this._definitionChanged.raiseEvent(this);
-    };
 
     return TimeIntervalCollectionPositionProperty;
 });

@@ -26,77 +26,125 @@ define([
         Material) {
     'use strict';
 
-    /**
-     * A renderable polyline. Create this by calling {@link PolylineCollection#add}
-     *
-     * @alias Polyline
-     * @internalConstructor
-     * @class
-     *
-     * @param {Object} [options] Object with the following properties:
-     * @param {Boolean} [options.show=true] <code>true</code> if this polyline will be shown; otherwise, <code>false</code>.
-     * @param {Number} [options.width=1.0] The width of the polyline in pixels.
-     * @param {Boolean} [options.loop=false] Whether a line segment will be added between the last and first line positions to make this line a loop.
-     * @param {Material} [options.material=Material.ColorType] The material.
-     * @param {Cartesian3[]} [options.positions] The positions.
-     * @param {Object} [options.id] The user-defined object to be returned when this polyline is picked.
-     * @param {DistanceDisplayCondition} [options.distanceDisplayCondition] The condition specifying at what distance from the camera that this polyline will be displayed.
-     * @param {PolylineCollection} polylineCollection The renderable polyline collection.
-     *
-     * @see PolylineCollection
-     *
-     */
-    function Polyline(options, polylineCollection) {
-        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-
-        this._show = defaultValue(options.show, true);
-        this._width = defaultValue(options.width, 1.0);
-        this._loop = defaultValue(options.loop, false);
-        this._distanceDisplayCondition = options.distanceDisplayCondition;
-
-        this._material = options.material;
-        if (!defined(this._material)) {
-            this._material = Material.fromType(Material.ColorType, {
-                color : new Color(1.0, 1.0, 1.0, 1.0)
-            });
-        }
-
-        var positions = options.positions;
-        if (!defined(positions)) {
-            positions = [];
-        }
-
-        this._positions = positions;
-        this._actualPositions = arrayRemoveDuplicates(positions, Cartesian3.equalsEpsilon);
-
-        if (this._loop && this._actualPositions.length > 2) {
-            if (this._actualPositions === this._positions) {
-                this._actualPositions = positions.slice();
+        /**
+             * A renderable polyline. Create this by calling {@link PolylineCollection#add}
+             *
+             * @alias Polyline
+             * @internalConstructor
+             * @class
+             *
+             * @param {Object} [options] Object with the following properties:
+             * @param {Boolean} [options.show=true] <code>true</code> if this polyline will be shown; otherwise, <code>false</code>.
+             * @param {Number} [options.width=1.0] The width of the polyline in pixels.
+             * @param {Boolean} [options.loop=false] Whether a line segment will be added between the last and first line positions to make this line a loop.
+             * @param {Material} [options.material=Material.ColorType] The material.
+             * @param {Cartesian3[]} [options.positions] The positions.
+             * @param {Object} [options.id] The user-defined object to be returned when this polyline is picked.
+             * @param {DistanceDisplayCondition} [options.distanceDisplayCondition] The condition specifying at what distance from the camera that this polyline will be displayed.
+             * @param {PolylineCollection} polylineCollection The renderable polyline collection.
+             *
+             * @see PolylineCollection
+             *
+             */
+        class Polyline {
+            constructor(options, polylineCollection) {
+                options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+                this._show = defaultValue(options.show, true);
+                this._width = defaultValue(options.width, 1.0);
+                this._loop = defaultValue(options.loop, false);
+                this._distanceDisplayCondition = options.distanceDisplayCondition;
+                this._material = options.material;
+                if (!defined(this._material)) {
+                    this._material = Material.fromType(Material.ColorType, {
+                        color: new Color(1.0, 1.0, 1.0, 1.0)
+                    });
+                }
+                var positions = options.positions;
+                if (!defined(positions)) {
+                    positions = [];
+                }
+                this._positions = positions;
+                this._actualPositions = arrayRemoveDuplicates(positions, Cartesian3.equalsEpsilon);
+                if (this._loop && this._actualPositions.length > 2) {
+                    if (this._actualPositions === this._positions) {
+                        this._actualPositions = positions.slice();
+                    }
+                    this._actualPositions.push(Cartesian3.clone(this._actualPositions[0]));
+                }
+                this._length = this._actualPositions.length;
+                this._id = options.id;
+                var modelMatrix;
+                if (defined(polylineCollection)) {
+                    modelMatrix = Matrix4.clone(polylineCollection.modelMatrix);
+                }
+                this._modelMatrix = modelMatrix;
+                this._segments = PolylinePipeline.wrapLongitude(this._actualPositions, modelMatrix);
+                this._actualLength = undefined;
+                this._propertiesChanged = new Uint32Array(NUMBER_OF_PROPERTIES); //eslint-disable-line no-use-before-define
+                this._polylineCollection = polylineCollection;
+                this._dirty = false;
+                this._pickId = undefined;
+                this._boundingVolume = BoundingSphere.fromPoints(this._actualPositions);
+                this._boundingVolumeWC = BoundingSphere.transform(this._boundingVolume, this._modelMatrix);
+                this._boundingVolume2D = new BoundingSphere(); // modified in PolylineCollection
             }
-            this._actualPositions.push(Cartesian3.clone(this._actualPositions[0]));
+            /**
+                 * @private
+                 */
+            update() {
+                var modelMatrix = Matrix4.IDENTITY;
+                if (defined(this._polylineCollection)) {
+                    modelMatrix = this._polylineCollection.modelMatrix;
+                }
+                var segmentPositionsLength = this._segments.positions.length;
+                var segmentLengths = this._segments.lengths;
+                var positionsChanged = this._propertiesChanged[POSITION_INDEX] > 0 || this._propertiesChanged[POSITION_SIZE_INDEX] > 0;
+                if (!Matrix4.equals(modelMatrix, this._modelMatrix) || positionsChanged) {
+                    this._segments = PolylinePipeline.wrapLongitude(this._actualPositions, modelMatrix);
+                    this._boundingVolumeWC = BoundingSphere.transform(this._boundingVolume, modelMatrix, this._boundingVolumeWC);
+                }
+                this._modelMatrix = Matrix4.clone(modelMatrix, this._modelMatrix);
+                if (this._segments.positions.length !== segmentPositionsLength) {
+                    // number of positions changed
+                    makeDirty(this, POSITION_SIZE_INDEX);
+                }
+                else {
+                    var length = segmentLengths.length;
+                    for (var i = 0; i < length; ++i) {
+                        if (segmentLengths[i] !== this._segments.lengths[i]) {
+                            // indices changed
+                            makeDirty(this, POSITION_SIZE_INDEX);
+                            break;
+                        }
+                    }
+                }
+            }
+            /**
+                 * @private
+                 */
+            getPickId(context) {
+                if (!defined(this._pickId)) {
+                    this._pickId = context.createPickId({
+                        primitive: this,
+                        collection: this._polylineCollection,
+                        id: this._id
+                    });
+                }
+                return this._pickId;
+            }
+            _clean() {
+                this._dirty = false;
+                var properties = this._propertiesChanged;
+                for (var k = 0; k < NUMBER_OF_PROPERTIES - 1; ++k) {
+                    properties[k] = 0;
+                }
+            }
+            _destroy() {
+                this._pickId = this._pickId && this._pickId.destroy();
+                this._material = this._material && this._material.destroy();
+                this._polylineCollection = undefined;
+            }
         }
-
-        this._length = this._actualPositions.length;
-        this._id = options.id;
-
-        var modelMatrix;
-        if (defined(polylineCollection)) {
-            modelMatrix = Matrix4.clone(polylineCollection.modelMatrix);
-        }
-
-        this._modelMatrix = modelMatrix;
-        this._segments = PolylinePipeline.wrapLongitude(this._actualPositions, modelMatrix);
-
-        this._actualLength = undefined;
-
-        this._propertiesChanged = new Uint32Array(NUMBER_OF_PROPERTIES); //eslint-disable-line no-use-before-define
-        this._polylineCollection = polylineCollection;
-        this._dirty = false;
-        this._pickId = undefined;
-        this._boundingVolume = BoundingSphere.fromPoints(this._actualPositions);
-        this._boundingVolumeWC = BoundingSphere.transform(this._boundingVolume, this._modelMatrix);
-        this._boundingVolume2D = new BoundingSphere(); // modified in PolylineCollection
-    }
 
     var POSITION_INDEX = Polyline.POSITION_INDEX = 0;
     var SHOW_INDEX = Polyline.SHOW_INDEX = 1;
@@ -324,68 +372,9 @@ define([
         }
     });
 
-    /**
-     * @private
-     */
-    Polyline.prototype.update = function() {
-        var modelMatrix = Matrix4.IDENTITY;
-        if (defined(this._polylineCollection)) {
-            modelMatrix = this._polylineCollection.modelMatrix;
-        }
 
-        var segmentPositionsLength = this._segments.positions.length;
-        var segmentLengths = this._segments.lengths;
 
-        var positionsChanged = this._propertiesChanged[POSITION_INDEX] > 0 || this._propertiesChanged[POSITION_SIZE_INDEX] > 0;
-        if (!Matrix4.equals(modelMatrix, this._modelMatrix) || positionsChanged) {
-            this._segments = PolylinePipeline.wrapLongitude(this._actualPositions, modelMatrix);
-            this._boundingVolumeWC = BoundingSphere.transform(this._boundingVolume, modelMatrix, this._boundingVolumeWC);
-        }
 
-        this._modelMatrix = Matrix4.clone(modelMatrix, this._modelMatrix);
-
-        if (this._segments.positions.length !== segmentPositionsLength) {
-            // number of positions changed
-            makeDirty(this, POSITION_SIZE_INDEX);
-        } else {
-            var length = segmentLengths.length;
-            for (var i = 0; i < length; ++i) {
-                if (segmentLengths[i] !== this._segments.lengths[i]) {
-                    // indices changed
-                    makeDirty(this, POSITION_SIZE_INDEX);
-                    break;
-                }
-            }
-        }
-    };
-
-    /**
-     * @private
-     */
-    Polyline.prototype.getPickId = function(context) {
-        if (!defined(this._pickId)) {
-            this._pickId = context.createPickId({
-                primitive : this,
-                collection : this._polylineCollection,
-                id : this._id
-            });
-        }
-        return this._pickId;
-    };
-
-    Polyline.prototype._clean = function() {
-        this._dirty = false;
-        var properties = this._propertiesChanged;
-        for ( var k = 0; k < NUMBER_OF_PROPERTIES - 1; ++k) {
-            properties[k] = 0;
-        }
-    };
-
-    Polyline.prototype._destroy = function() {
-        this._pickId = this._pickId && this._pickId.destroy();
-        this._material = this._material && this._material.destroy();
-        this._polylineCollection = undefined;
-    };
 
     return Polyline;
 });

@@ -36,55 +36,197 @@ define([
         SceneMode) {
     'use strict';
 
-    /**
-     * @private
-     */
-    function SceneTransitioner(scene) {
-        //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.object('scene', scene);
-        //>>includeEnd('debug');
-
-        this._scene = scene;
-        this._currentTweens = [];
-        this._morphHandler = undefined;
-        this._morphCancelled = false;
-        this._completeMorph = undefined;
-        this._morphToOrthographic = false;
-    }
-
-    SceneTransitioner.prototype.completeMorph = function() {
-        if (defined(this._completeMorph)) {
-            this._completeMorph();
+        /**
+             * @private
+             */
+        class SceneTransitioner {
+            constructor(scene) {
+                //>>includeStart('debug', pragmas.debug);
+                Check.typeOf.object('scene', scene);
+                //>>includeEnd('debug');
+                this._scene = scene;
+                this._currentTweens = [];
+                this._morphHandler = undefined;
+                this._morphCancelled = false;
+                this._completeMorph = undefined;
+                this._morphToOrthographic = false;
+            }
+            completeMorph() {
+                if (defined(this._completeMorph)) {
+                    this._completeMorph();
+                }
+            }
+            morphTo2D(duration, ellipsoid) {
+                if (defined(this._completeMorph)) {
+                    this._completeMorph();
+                }
+                var scene = this._scene;
+                this._previousMode = scene.mode;
+                this._morphToOrthographic = scene.camera.frustum instanceof OrthographicFrustum;
+                if (this._previousMode === SceneMode.SCENE2D || this._previousMode === SceneMode.MORPHING) {
+                    return;
+                }
+                this._scene.morphStart.raiseEvent(this, this._previousMode, SceneMode.SCENE2D, true);
+                scene._mode = SceneMode.MORPHING;
+                scene.camera._setTransform(Matrix4.IDENTITY);
+                if (this._previousMode === SceneMode.COLUMBUS_VIEW) {
+                    morphFromColumbusViewTo2D(this, duration);
+                }
+                else {
+                    morphFrom3DTo2D(this, duration, ellipsoid);
+                }
+                if (duration === 0.0 && defined(this._completeMorph)) {
+                    this._completeMorph();
+                }
+            }
+            morphToColumbusView(duration, ellipsoid) {
+                if (defined(this._completeMorph)) {
+                    this._completeMorph();
+                }
+                var scene = this._scene;
+                this._previousMode = scene.mode;
+                if (this._previousMode === SceneMode.COLUMBUS_VIEW || this._previousMode === SceneMode.MORPHING) {
+                    return;
+                }
+                this._scene.morphStart.raiseEvent(this, this._previousMode, SceneMode.COLUMBUS_VIEW, true);
+                scene.camera._setTransform(Matrix4.IDENTITY);
+                var position = scratchToCVPosition;
+                var direction = scratchToCVDirection;
+                var up = scratchToCVUp;
+                if (duration > 0.0) {
+                    position.x = 0.0;
+                    position.y = -1.0;
+                    position.z = 1.0;
+                    position = Cartesian3.multiplyByScalar(Cartesian3.normalize(position, position), 5.0 * ellipsoid.maximumRadius, position);
+                    Cartesian3.negate(Cartesian3.normalize(position, direction), direction);
+                    Cartesian3.cross(Cartesian3.UNIT_X, direction, up);
+                }
+                else {
+                    var camera = scene.camera;
+                    if (this._previousMode === SceneMode.SCENE2D) {
+                        Cartesian3.clone(camera.position, position);
+                        position.z = camera.frustum.right - camera.frustum.left;
+                        Cartesian3.negate(Cartesian3.UNIT_Z, direction);
+                        Cartesian3.clone(Cartesian3.UNIT_Y, up);
+                    }
+                    else {
+                        Cartesian3.clone(camera.positionWC, position);
+                        Cartesian3.clone(camera.directionWC, direction);
+                        Cartesian3.clone(camera.upWC, up);
+                        var surfacePoint = ellipsoid.scaleToGeodeticSurface(position, scratchToCVSurfacePosition);
+                        var toENU = Transforms.eastNorthUpToFixedFrame(surfacePoint, ellipsoid, scratchToCVToENU);
+                        Matrix4.inverseTransformation(toENU, toENU);
+                        scene.mapProjection.project(ellipsoid.cartesianToCartographic(position, scratchToCVCartographic), position);
+                        Matrix4.multiplyByPointAsVector(toENU, direction, direction);
+                        Matrix4.multiplyByPointAsVector(toENU, up, up);
+                    }
+                }
+                var frustum;
+                if (this._morphToOrthographic) {
+                    frustum = scratchToCVFrustumOrthographic;
+                    frustum.width = scene.camera.frustum.right - scene.camera.frustum.left;
+                    frustum.aspectRatio = scene.drawingBufferWidth / scene.drawingBufferHeight;
+                }
+                else {
+                    frustum = scratchToCVFrustumPerspective;
+                    frustum.aspectRatio = scene.drawingBufferWidth / scene.drawingBufferHeight;
+                    frustum.fov = CesiumMath.toRadians(60.0);
+                }
+                var cameraCV = scratchToCVCamera;
+                cameraCV.position = position;
+                cameraCV.direction = direction;
+                cameraCV.up = up;
+                cameraCV.frustum = frustum;
+                var complete = completeColumbusViewCallback(cameraCV);
+                createMorphHandler(this, complete);
+                if (this._previousMode === SceneMode.SCENE2D) {
+                    morphFrom2DToColumbusView(this, duration, cameraCV, complete);
+                }
+                else {
+                    cameraCV.position2D = Matrix4.multiplyByPoint(Camera.TRANSFORM_2D, position, scratchToCVPosition2D);
+                    cameraCV.direction2D = Matrix4.multiplyByPointAsVector(Camera.TRANSFORM_2D, direction, scratchToCVDirection2D);
+                    cameraCV.up2D = Matrix4.multiplyByPointAsVector(Camera.TRANSFORM_2D, up, scratchToCVUp2D);
+                    scene._mode = SceneMode.MORPHING;
+                    morphFrom3DToColumbusView(this, duration, cameraCV, complete);
+                }
+                if (duration === 0.0 && defined(this._completeMorph)) {
+                    this._completeMorph();
+                }
+            }
+            morphTo3D(duration, ellipsoid) {
+                if (defined(this._completeMorph)) {
+                    this._completeMorph();
+                }
+                var scene = this._scene;
+                this._previousMode = scene.mode;
+                if (this._previousMode === SceneMode.SCENE3D || this._previousMode === SceneMode.MORPHING) {
+                    return;
+                }
+                this._scene.morphStart.raiseEvent(this, this._previousMode, SceneMode.SCENE3D, true);
+                scene._mode = SceneMode.MORPHING;
+                scene.camera._setTransform(Matrix4.IDENTITY);
+                if (this._previousMode === SceneMode.SCENE2D) {
+                    morphFrom2DTo3D(this, duration, ellipsoid);
+                }
+                else {
+                    var camera3D;
+                    if (duration > 0.0) {
+                        camera3D = scratchCVTo3DCamera;
+                        Cartesian3.fromDegrees(0.0, 0.0, 5.0 * ellipsoid.maximumRadius, ellipsoid, camera3D.position);
+                        Cartesian3.negate(camera3D.position, camera3D.direction);
+                        Cartesian3.normalize(camera3D.direction, camera3D.direction);
+                        Cartesian3.clone(Cartesian3.UNIT_Z, camera3D.up);
+                    }
+                    else {
+                        camera3D = getColumbusViewTo3DCamera(this, ellipsoid);
+                    }
+                    var frustum;
+                    var camera = scene.camera;
+                    if (camera.frustum instanceof OrthographicFrustum) {
+                        frustum = camera.frustum.clone();
+                    }
+                    else {
+                        frustum = scratch2DTo3DFrustumPersp;
+                        frustum.aspectRatio = scene.drawingBufferWidth / scene.drawingBufferHeight;
+                        frustum.fov = CesiumMath.toRadians(60.0);
+                    }
+                    camera3D.frustum = frustum;
+                    var complete = complete3DCallback(camera3D);
+                    createMorphHandler(this, complete);
+                    morphFromColumbusViewTo3D(this, duration, camera3D, complete);
+                }
+                if (duration === 0.0 && defined(this._completeMorph)) {
+                    this._completeMorph();
+                }
+            }
+            /**
+                 * Returns true if this object was destroyed; otherwise, false.
+                 * <br /><br />
+                 * If this object was destroyed, it should not be used; calling any function other than
+                 * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
+                 *
+                 * @returns {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
+                 */
+            isDestroyed() {
+                return false;
+            }
+            /**
+                 * Once an object is destroyed, it should not be used; calling any function other than
+                 * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
+                 * assign the return value (<code>undefined</code>) to the object as done in the example.
+                 *
+                 * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
+                 *
+                 * @example
+                 * transitioner = transitioner && transitioner.destroy();
+                 */
+            destroy() {
+                destroyMorphHandler(this);
+                return destroyObject(this);
+            }
         }
-    };
 
-    SceneTransitioner.prototype.morphTo2D = function(duration, ellipsoid) {
-        if (defined(this._completeMorph)) {
-            this._completeMorph();
-        }
 
-        var scene = this._scene;
-        this._previousMode = scene.mode;
-        this._morphToOrthographic = scene.camera.frustum instanceof OrthographicFrustum;
-
-        if (this._previousMode === SceneMode.SCENE2D || this._previousMode === SceneMode.MORPHING) {
-            return;
-        }
-        this._scene.morphStart.raiseEvent(this, this._previousMode, SceneMode.SCENE2D, true);
-
-        scene._mode = SceneMode.MORPHING;
-        scene.camera._setTransform(Matrix4.IDENTITY);
-
-        if (this._previousMode === SceneMode.COLUMBUS_VIEW) {
-            morphFromColumbusViewTo2D(this, duration);
-        } else {
-            morphFrom3DTo2D(this, duration, ellipsoid);
-        }
-
-        if (duration === 0.0 && defined(this._completeMorph)) {
-            this._completeMorph();
-        }
-    };
 
     var scratchToCVPosition = new Cartesian3();
     var scratchToCVDirection = new Cartesian3();
@@ -107,90 +249,6 @@ define([
         frustum : undefined
     };
 
-    SceneTransitioner.prototype.morphToColumbusView = function(duration, ellipsoid) {
-        if (defined(this._completeMorph)) {
-            this._completeMorph();
-        }
-
-        var scene = this._scene;
-        this._previousMode = scene.mode;
-
-        if (this._previousMode === SceneMode.COLUMBUS_VIEW || this._previousMode === SceneMode.MORPHING) {
-            return;
-        }
-        this._scene.morphStart.raiseEvent(this, this._previousMode, SceneMode.COLUMBUS_VIEW, true);
-
-        scene.camera._setTransform(Matrix4.IDENTITY);
-
-        var position = scratchToCVPosition;
-        var direction = scratchToCVDirection;
-        var up = scratchToCVUp;
-
-        if (duration > 0.0) {
-            position.x = 0.0;
-            position.y = -1.0;
-            position.z = 1.0;
-            position = Cartesian3.multiplyByScalar(Cartesian3.normalize(position, position), 5.0 * ellipsoid.maximumRadius, position);
-
-            Cartesian3.negate(Cartesian3.normalize(position, direction), direction);
-            Cartesian3.cross(Cartesian3.UNIT_X, direction, up);
-        } else {
-            var camera = scene.camera;
-            if (this._previousMode === SceneMode.SCENE2D) {
-                Cartesian3.clone(camera.position, position);
-                position.z = camera.frustum.right - camera.frustum.left;
-                Cartesian3.negate(Cartesian3.UNIT_Z, direction);
-                Cartesian3.clone(Cartesian3.UNIT_Y, up);
-            } else {
-                Cartesian3.clone(camera.positionWC, position);
-                Cartesian3.clone(camera.directionWC, direction);
-                Cartesian3.clone(camera.upWC, up);
-
-                var surfacePoint = ellipsoid.scaleToGeodeticSurface(position, scratchToCVSurfacePosition);
-                var toENU = Transforms.eastNorthUpToFixedFrame(surfacePoint, ellipsoid, scratchToCVToENU);
-                Matrix4.inverseTransformation(toENU, toENU);
-
-                scene.mapProjection.project(ellipsoid.cartesianToCartographic(position, scratchToCVCartographic), position);
-                Matrix4.multiplyByPointAsVector(toENU, direction, direction);
-                Matrix4.multiplyByPointAsVector(toENU, up, up);
-            }
-        }
-
-        var frustum;
-        if (this._morphToOrthographic) {
-            frustum = scratchToCVFrustumOrthographic;
-            frustum.width = scene.camera.frustum.right - scene.camera.frustum.left;
-            frustum.aspectRatio = scene.drawingBufferWidth / scene.drawingBufferHeight;
-        } else {
-            frustum = scratchToCVFrustumPerspective;
-            frustum.aspectRatio = scene.drawingBufferWidth / scene.drawingBufferHeight;
-            frustum.fov = CesiumMath.toRadians(60.0);
-        }
-
-        var cameraCV = scratchToCVCamera;
-        cameraCV.position = position;
-        cameraCV.direction = direction;
-        cameraCV.up = up;
-        cameraCV.frustum = frustum;
-
-        var complete = completeColumbusViewCallback(cameraCV);
-        createMorphHandler(this, complete);
-
-        if (this._previousMode === SceneMode.SCENE2D) {
-            morphFrom2DToColumbusView(this, duration, cameraCV, complete);
-        } else {
-            cameraCV.position2D = Matrix4.multiplyByPoint(Camera.TRANSFORM_2D, position, scratchToCVPosition2D);
-            cameraCV.direction2D = Matrix4.multiplyByPointAsVector(Camera.TRANSFORM_2D, direction, scratchToCVDirection2D);
-            cameraCV.up2D = Matrix4.multiplyByPointAsVector(Camera.TRANSFORM_2D, up, scratchToCVUp2D);
-
-            scene._mode = SceneMode.MORPHING;
-            morphFrom3DToColumbusView(this, duration, cameraCV, complete);
-        }
-
-        if (duration === 0.0 && defined(this._completeMorph)) {
-            this._completeMorph();
-        }
-    };
 
     var scratchCVTo3DCamera = {
         position : new Cartesian3(),
@@ -200,84 +258,8 @@ define([
     };
     var scratch2DTo3DFrustumPersp = new PerspectiveFrustum();
 
-    SceneTransitioner.prototype.morphTo3D = function(duration, ellipsoid) {
-        if (defined(this._completeMorph)) {
-            this._completeMorph();
-        }
 
-        var scene = this._scene;
-        this._previousMode = scene.mode;
 
-        if (this._previousMode === SceneMode.SCENE3D || this._previousMode === SceneMode.MORPHING) {
-            return;
-        }
-        this._scene.morphStart.raiseEvent(this, this._previousMode, SceneMode.SCENE3D, true);
-
-        scene._mode = SceneMode.MORPHING;
-        scene.camera._setTransform(Matrix4.IDENTITY);
-
-        if (this._previousMode === SceneMode.SCENE2D) {
-            morphFrom2DTo3D(this, duration, ellipsoid);
-        } else {
-            var camera3D;
-            if (duration > 0.0) {
-                camera3D = scratchCVTo3DCamera;
-                Cartesian3.fromDegrees(0.0, 0.0, 5.0 * ellipsoid.maximumRadius, ellipsoid, camera3D.position);
-                Cartesian3.negate(camera3D.position, camera3D.direction);
-                Cartesian3.normalize(camera3D.direction, camera3D.direction);
-                Cartesian3.clone(Cartesian3.UNIT_Z, camera3D.up);
-            } else {
-                camera3D = getColumbusViewTo3DCamera(this, ellipsoid);
-            }
-
-            var frustum;
-            var camera = scene.camera;
-            if (camera.frustum instanceof OrthographicFrustum) {
-                frustum = camera.frustum.clone();
-            } else {
-                frustum = scratch2DTo3DFrustumPersp;
-                frustum.aspectRatio = scene.drawingBufferWidth / scene.drawingBufferHeight;
-                frustum.fov = CesiumMath.toRadians(60.0);
-            }
-            camera3D.frustum = frustum;
-
-            var complete = complete3DCallback(camera3D);
-            createMorphHandler(this, complete);
-
-            morphFromColumbusViewTo3D(this, duration, camera3D, complete);
-        }
-
-        if (duration === 0.0 && defined(this._completeMorph)) {
-            this._completeMorph();
-        }
-    };
-
-    /**
-     * Returns true if this object was destroyed; otherwise, false.
-     * <br /><br />
-     * If this object was destroyed, it should not be used; calling any function other than
-     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
-     *
-     * @returns {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
-     */
-    SceneTransitioner.prototype.isDestroyed = function() {
-        return false;
-    };
-
-    /**
-     * Once an object is destroyed, it should not be used; calling any function other than
-     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
-     * assign the return value (<code>undefined</code>) to the object as done in the example.
-     *
-     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
-     *
-     * @example
-     * transitioner = transitioner && transitioner.destroy();
-     */
-    SceneTransitioner.prototype.destroy = function() {
-        destroyMorphHandler(this);
-        return destroyObject(this);
-    };
 
     function createMorphHandler(transitioner, completeMorphFunction) {
         if (transitioner._scene.completeMorphOnUserInput) {

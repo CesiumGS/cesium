@@ -42,48 +42,202 @@ define([
         TileTerrain) {
     'use strict';
 
-    /**
-     * Contains additional information about a {@link QuadtreeTile} of the globe's surface, and
-     * encapsulates state transition logic for loading tiles.
-     *
-     * @constructor
-     * @alias GlobeSurfaceTile
-     * @private
-     */
-    function GlobeSurfaceTile() {
         /**
-         * The {@link TileImagery} attached to this tile.
-         * @type {TileImagery[]}
-         * @default []
-         */
-        this.imagery = [];
-
-        this.waterMaskTexture = undefined;
-
-        this.waterMaskTranslationAndScale = new Cartesian4(0.0, 0.0, 1.0, 1.0);
-
-        this.terrainData = undefined;
-        this.center = new Cartesian3();
-        this.vertexArray = undefined;
-        this.minimumHeight = 0.0;
-        this.maximumHeight = 0.0;
-        this.boundingSphere3D = new BoundingSphere();
-        this.boundingSphere2D = new BoundingSphere();
-        this.orientedBoundingBox = undefined;
-        this.tileBoundingRegion = undefined;
-        this.occludeePointInScaledSpace = new Cartesian3();
-
-        this.loadedTerrain = undefined;
-        this.upsampledTerrain = undefined;
-
-        this.pickBoundingSphere = new BoundingSphere();
-        this.pickTerrain = undefined;
-
-        this.surfaceShader = undefined;
-        this.isClipped = true;
-
-        this.clippedByBoundaries = false;
-    }
+             * Contains additional information about a {@link QuadtreeTile} of the globe's surface, and
+             * encapsulates state transition logic for loading tiles.
+             *
+             * @constructor
+             * @alias GlobeSurfaceTile
+             * @private
+             */
+        class GlobeSurfaceTile {
+            constructor() {
+                /**
+                 * The {@link TileImagery} attached to this tile.
+                 * @type {TileImagery[]}
+                 * @default []
+                 */
+                this.imagery = [];
+                this.waterMaskTexture = undefined;
+                this.waterMaskTranslationAndScale = new Cartesian4(0.0, 0.0, 1.0, 1.0);
+                this.terrainData = undefined;
+                this.center = new Cartesian3();
+                this.vertexArray = undefined;
+                this.minimumHeight = 0.0;
+                this.maximumHeight = 0.0;
+                this.boundingSphere3D = new BoundingSphere();
+                this.boundingSphere2D = new BoundingSphere();
+                this.orientedBoundingBox = undefined;
+                this.tileBoundingRegion = undefined;
+                this.occludeePointInScaledSpace = new Cartesian3();
+                this.loadedTerrain = undefined;
+                this.upsampledTerrain = undefined;
+                this.pickBoundingSphere = new BoundingSphere();
+                this.pickTerrain = undefined;
+                this.surfaceShader = undefined;
+                this.isClipped = true;
+                this.clippedByBoundaries = false;
+            }
+            pick(ray, mode, projection, cullBackFaces, result) {
+                var terrain = this.pickTerrain;
+                if (!defined(terrain)) {
+                    return undefined;
+                }
+                var mesh = terrain.mesh;
+                if (!defined(mesh)) {
+                    return undefined;
+                }
+                var vertices = mesh.vertices;
+                var indices = mesh.indices;
+                var encoding = mesh.encoding;
+                var length = indices.length;
+                for (var i = 0; i < length; i += 3) {
+                    var i0 = indices[i];
+                    var i1 = indices[i + 1];
+                    var i2 = indices[i + 2];
+                    var v0 = getPosition(encoding, mode, projection, vertices, i0, scratchV0);
+                    var v1 = getPosition(encoding, mode, projection, vertices, i1, scratchV1);
+                    var v2 = getPosition(encoding, mode, projection, vertices, i2, scratchV2);
+                    var intersection = IntersectionTests.rayTriangle(ray, v0, v1, v2, cullBackFaces, scratchResult);
+                    if (defined(intersection)) {
+                        return Cartesian3.clone(intersection, result);
+                    }
+                }
+                return undefined;
+            }
+            freeResources() {
+                if (defined(this.waterMaskTexture)) {
+                    --this.waterMaskTexture.referenceCount;
+                    if (this.waterMaskTexture.referenceCount === 0) {
+                        this.waterMaskTexture.destroy();
+                    }
+                    this.waterMaskTexture = undefined;
+                }
+                this.terrainData = undefined;
+                if (defined(this.loadedTerrain)) {
+                    this.loadedTerrain.freeResources();
+                    this.loadedTerrain = undefined;
+                }
+                if (defined(this.upsampledTerrain)) {
+                    this.upsampledTerrain.freeResources();
+                    this.upsampledTerrain = undefined;
+                }
+                if (defined(this.pickTerrain)) {
+                    this.pickTerrain.freeResources();
+                    this.pickTerrain = undefined;
+                }
+                var i, len;
+                var imageryList = this.imagery;
+                for (i = 0, len = imageryList.length; i < len; ++i) {
+                    imageryList[i].freeResources();
+                }
+                this.imagery.length = 0;
+                this.freeVertexArray();
+            }
+            freeVertexArray() {
+                var indexBuffer;
+                if (defined(this.vertexArray)) {
+                    indexBuffer = this.vertexArray.indexBuffer;
+                    this.vertexArray = this.vertexArray.destroy();
+                    if (!indexBuffer.isDestroyed() && defined(indexBuffer.referenceCount)) {
+                        --indexBuffer.referenceCount;
+                        if (indexBuffer.referenceCount === 0) {
+                            indexBuffer.destroy();
+                        }
+                    }
+                }
+                if (defined(this.wireframeVertexArray)) {
+                    indexBuffer = this.wireframeVertexArray.indexBuffer;
+                    this.wireframeVertexArray = this.wireframeVertexArray.destroy();
+                    if (!indexBuffer.isDestroyed() && defined(indexBuffer.referenceCount)) {
+                        --indexBuffer.referenceCount;
+                        if (indexBuffer.referenceCount === 0) {
+                            indexBuffer.destroy();
+                        }
+                    }
+                }
+            }
+            static processStateMachine(tile, frameState, terrainProvider, imageryLayerCollection, vertexArraysToDestroy) {
+                var surfaceTile = tile.data;
+                if (!defined(surfaceTile)) {
+                    surfaceTile = tile.data = new GlobeSurfaceTile();
+                    // Create the TileBoundingRegion now in order to estimate the distance, which is used to prioritize the request.
+                    // Since the terrain isn't loaded yet, estimate the heights using its parent's values.
+                    surfaceTile.tileBoundingRegion = createTileBoundingRegion(tile);
+                }
+                if (!defined(tile._priorityFunction)) {
+                    // The priority function is used to prioritize requests among all requested tiles
+                    tile._priorityFunction = createPriorityFunction(surfaceTile, frameState);
+                }
+                if (tile.state === QuadtreeTileLoadState.START) {
+                    prepareNewTile(tile, terrainProvider, imageryLayerCollection);
+                    tile.state = QuadtreeTileLoadState.LOADING;
+                }
+                if (tile.state === QuadtreeTileLoadState.LOADING) {
+                    processTerrainStateMachine(tile, frameState, terrainProvider, vertexArraysToDestroy);
+                }
+                // The terrain is renderable as soon as we have a valid vertex array.
+                var isRenderable = defined(surfaceTile.vertexArray);
+                // But it's not done loading until our two state machines are terminated.
+                var isDoneLoading = !defined(surfaceTile.loadedTerrain) && !defined(surfaceTile.upsampledTerrain);
+                // If this tile's terrain and imagery are just upsampled from its parent, mark the tile as
+                // upsampled only.  We won't refine a tile if its four children are upsampled only.
+                var isUpsampledOnly = defined(surfaceTile.terrainData) && surfaceTile.terrainData.wasCreatedByUpsampling();
+                // Transition imagery states
+                var tileImageryCollection = surfaceTile.imagery;
+                var i, len;
+                for (i = 0, len = tileImageryCollection.length; i < len; ++i) {
+                    var tileImagery = tileImageryCollection[i];
+                    if (!defined(tileImagery.loadingImagery)) {
+                        isUpsampledOnly = false;
+                        continue;
+                    }
+                    if (tileImagery.loadingImagery.state === ImageryState.PLACEHOLDER) {
+                        var imageryLayer = tileImagery.loadingImagery.imageryLayer;
+                        if (imageryLayer.imageryProvider.ready) {
+                            // Remove the placeholder and add the actual skeletons (if any)
+                            // at the same position.  Then continue the loop at the same index.
+                            tileImagery.freeResources();
+                            tileImageryCollection.splice(i, 1);
+                            imageryLayer._createTileImagerySkeletons(tile, terrainProvider, i);
+                            --i;
+                            len = tileImageryCollection.length;
+                            continue;
+                        }
+                        else {
+                            isUpsampledOnly = false;
+                        }
+                    }
+                    var thisTileDoneLoading = tileImagery.processStateMachine(tile, frameState);
+                    isDoneLoading = isDoneLoading && thisTileDoneLoading;
+                    // The imagery is renderable as soon as we have any renderable imagery for this region.
+                    isRenderable = isRenderable && (thisTileDoneLoading || defined(tileImagery.readyImagery));
+                    isUpsampledOnly = isUpsampledOnly && defined(tileImagery.loadingImagery) &&
+                        (tileImagery.loadingImagery.state === ImageryState.FAILED || tileImagery.loadingImagery.state === ImageryState.INVALID);
+                }
+                tile.upsampledFromParent = isUpsampledOnly;
+                // The tile becomes renderable when the terrain and all imagery data are loaded.
+                if (i === len) {
+                    if (isRenderable) {
+                        tile.renderable = true;
+                    }
+                    if (isDoneLoading) {
+                        var callbacks = tile._loadedCallbacks;
+                        var newCallbacks = {};
+                        for (var layerId in callbacks) {
+                            if (callbacks.hasOwnProperty(layerId)) {
+                                if (!callbacks[layerId](tile)) {
+                                    newCallbacks[layerId] = callbacks[layerId];
+                                }
+                            }
+                        }
+                        tile._loadedCallbacks = newCallbacks;
+                        tile.state = QuadtreeTileLoadState.DONE;
+                        tile._priorityFunction = undefined;
+                    }
+                }
+            }
+        }
 
     defineProperties(GlobeSurfaceTile.prototype, {
         /**
@@ -138,106 +292,8 @@ define([
     var scratchV2 = new Cartesian3();
     var scratchResult = new Cartesian3();
 
-    GlobeSurfaceTile.prototype.pick = function(ray, mode, projection, cullBackFaces, result) {
-        var terrain = this.pickTerrain;
-        if (!defined(terrain)) {
-            return undefined;
-        }
 
-        var mesh = terrain.mesh;
-        if (!defined(mesh)) {
-            return undefined;
-        }
 
-        var vertices = mesh.vertices;
-        var indices = mesh.indices;
-        var encoding = mesh.encoding;
-
-        var length = indices.length;
-        for (var i = 0; i < length; i += 3) {
-            var i0 = indices[i];
-            var i1 = indices[i + 1];
-            var i2 = indices[i + 2];
-
-            var v0 = getPosition(encoding, mode, projection, vertices, i0, scratchV0);
-            var v1 = getPosition(encoding, mode, projection, vertices, i1, scratchV1);
-            var v2 = getPosition(encoding, mode, projection, vertices, i2, scratchV2);
-
-            var intersection = IntersectionTests.rayTriangle(ray, v0, v1, v2, cullBackFaces, scratchResult);
-            if (defined(intersection)) {
-                return Cartesian3.clone(intersection, result);
-            }
-        }
-
-        return undefined;
-    };
-
-    GlobeSurfaceTile.prototype.freeResources = function() {
-        if (defined(this.waterMaskTexture)) {
-            --this.waterMaskTexture.referenceCount;
-            if (this.waterMaskTexture.referenceCount === 0) {
-                this.waterMaskTexture.destroy();
-            }
-            this.waterMaskTexture = undefined;
-        }
-
-        this.terrainData = undefined;
-
-        if (defined(this.loadedTerrain)) {
-            this.loadedTerrain.freeResources();
-            this.loadedTerrain = undefined;
-        }
-
-        if (defined(this.upsampledTerrain)) {
-            this.upsampledTerrain.freeResources();
-            this.upsampledTerrain = undefined;
-        }
-
-        if (defined(this.pickTerrain)) {
-            this.pickTerrain.freeResources();
-            this.pickTerrain = undefined;
-        }
-
-        var i, len;
-
-        var imageryList = this.imagery;
-        for (i = 0, len = imageryList.length; i < len; ++i) {
-            imageryList[i].freeResources();
-        }
-        this.imagery.length = 0;
-
-        this.freeVertexArray();
-    };
-
-    GlobeSurfaceTile.prototype.freeVertexArray = function() {
-        var indexBuffer;
-
-        if (defined(this.vertexArray)) {
-            indexBuffer = this.vertexArray.indexBuffer;
-
-            this.vertexArray = this.vertexArray.destroy();
-
-            if (!indexBuffer.isDestroyed() && defined(indexBuffer.referenceCount)) {
-                --indexBuffer.referenceCount;
-                if (indexBuffer.referenceCount === 0) {
-                    indexBuffer.destroy();
-                }
-            }
-        }
-
-        if (defined(this.wireframeVertexArray)) {
-            indexBuffer = this.wireframeVertexArray.indexBuffer;
-
-            this.wireframeVertexArray = this.wireframeVertexArray.destroy();
-
-            if (!indexBuffer.isDestroyed() && defined(indexBuffer.referenceCount)) {
-                --indexBuffer.referenceCount;
-                if (indexBuffer.referenceCount === 0) {
-                    indexBuffer.destroy();
-                }
-            }
-        }
-    };
 
     function createTileBoundingRegion(tile) {
         var minimumHeight;
@@ -260,100 +316,6 @@ define([
         };
     }
 
-    GlobeSurfaceTile.processStateMachine = function(tile, frameState, terrainProvider, imageryLayerCollection, vertexArraysToDestroy) {
-        var surfaceTile = tile.data;
-        if (!defined(surfaceTile)) {
-            surfaceTile = tile.data = new GlobeSurfaceTile();
-            // Create the TileBoundingRegion now in order to estimate the distance, which is used to prioritize the request.
-            // Since the terrain isn't loaded yet, estimate the heights using its parent's values.
-            surfaceTile.tileBoundingRegion = createTileBoundingRegion(tile);
-        }
-
-        if (!defined(tile._priorityFunction)) {
-            // The priority function is used to prioritize requests among all requested tiles
-            tile._priorityFunction = createPriorityFunction(surfaceTile, frameState);
-        }
-
-        if (tile.state === QuadtreeTileLoadState.START) {
-            prepareNewTile(tile, terrainProvider, imageryLayerCollection);
-            tile.state = QuadtreeTileLoadState.LOADING;
-        }
-
-        if (tile.state === QuadtreeTileLoadState.LOADING) {
-            processTerrainStateMachine(tile, frameState, terrainProvider, vertexArraysToDestroy);
-        }
-
-        // The terrain is renderable as soon as we have a valid vertex array.
-        var isRenderable = defined(surfaceTile.vertexArray);
-
-        // But it's not done loading until our two state machines are terminated.
-        var isDoneLoading = !defined(surfaceTile.loadedTerrain) && !defined(surfaceTile.upsampledTerrain);
-
-        // If this tile's terrain and imagery are just upsampled from its parent, mark the tile as
-        // upsampled only.  We won't refine a tile if its four children are upsampled only.
-        var isUpsampledOnly = defined(surfaceTile.terrainData) && surfaceTile.terrainData.wasCreatedByUpsampling();
-
-        // Transition imagery states
-        var tileImageryCollection = surfaceTile.imagery;
-        var i, len;
-        for (i = 0, len = tileImageryCollection.length; i < len; ++i) {
-            var tileImagery = tileImageryCollection[i];
-            if (!defined(tileImagery.loadingImagery)) {
-                isUpsampledOnly = false;
-                continue;
-            }
-
-            if (tileImagery.loadingImagery.state === ImageryState.PLACEHOLDER) {
-                var imageryLayer = tileImagery.loadingImagery.imageryLayer;
-                if (imageryLayer.imageryProvider.ready) {
-                    // Remove the placeholder and add the actual skeletons (if any)
-                    // at the same position.  Then continue the loop at the same index.
-                    tileImagery.freeResources();
-                    tileImageryCollection.splice(i, 1);
-                    imageryLayer._createTileImagerySkeletons(tile, terrainProvider, i);
-                    --i;
-                    len = tileImageryCollection.length;
-                    continue;
-                } else {
-                    isUpsampledOnly = false;
-                }
-            }
-
-            var thisTileDoneLoading = tileImagery.processStateMachine(tile, frameState);
-            isDoneLoading = isDoneLoading && thisTileDoneLoading;
-
-            // The imagery is renderable as soon as we have any renderable imagery for this region.
-            isRenderable = isRenderable && (thisTileDoneLoading || defined(tileImagery.readyImagery));
-
-            isUpsampledOnly = isUpsampledOnly && defined(tileImagery.loadingImagery) &&
-                              (tileImagery.loadingImagery.state === ImageryState.FAILED || tileImagery.loadingImagery.state === ImageryState.INVALID);
-        }
-
-        tile.upsampledFromParent = isUpsampledOnly;
-
-        // The tile becomes renderable when the terrain and all imagery data are loaded.
-        if (i === len) {
-            if (isRenderable) {
-                tile.renderable = true;
-            }
-
-            if (isDoneLoading) {
-                var callbacks = tile._loadedCallbacks;
-                var newCallbacks = {};
-                for(var layerId in callbacks) {
-                    if (callbacks.hasOwnProperty(layerId)) {
-                        if(!callbacks[layerId](tile)) {
-                            newCallbacks[layerId] = callbacks[layerId];
-                        }
-                    }
-                }
-                tile._loadedCallbacks = newCallbacks;
-
-                tile.state = QuadtreeTileLoadState.DONE;
-                tile._priorityFunction = undefined;
-            }
-        }
-    };
 
     function prepareNewTile(tile, terrainProvider, imageryLayerCollection) {
         var surfaceTile = tile.data;

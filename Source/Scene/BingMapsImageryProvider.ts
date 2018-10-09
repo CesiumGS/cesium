@@ -42,183 +42,274 @@ define([
         ImageryProvider) {
     'use strict';
 
-    /**
-     * Provides tiled imagery using the Bing Maps Imagery REST API.
-     *
-     * @alias BingMapsImageryProvider
-     * @constructor
-     *
-     * @param {Object} options Object with the following properties:
-     * @param {Resource|String} options.url The url of the Bing Maps server hosting the imagery.
-     * @param {String} [options.key] The Bing Maps key for your application, which can be
-     *        created at {@link https://www.bingmapsportal.com/}.
-     *        If this parameter is not provided, {@link BingMapsApi.defaultKey} is used, which is undefined by default.
-     * @param {String} [options.tileProtocol] The protocol to use when loading tiles, e.g. 'http:' or 'https:'.
-     *        By default, tiles are loaded using the same protocol as the page.
-     * @param {BingMapsStyle} [options.mapStyle=BingMapsStyle.AERIAL] The type of Bing Maps imagery to load.
-     * @param {String} [options.culture=''] The culture to use when requesting Bing Maps imagery. Not
-     *        all cultures are supported. See {@link http://msdn.microsoft.com/en-us/library/hh441729.aspx}
-     *        for information on the supported cultures.
-     * @param {Ellipsoid} [options.ellipsoid] The ellipsoid.  If not specified, the WGS84 ellipsoid is used.
-     * @param {TileDiscardPolicy} [options.tileDiscardPolicy] The policy that determines if a tile
-     *        is invalid and should be discarded.  If this value is not specified, a default
-     *        {@link DiscardMissingTileImagePolicy} is used which requests
-     *        tile 0,0 at the maximum tile level and checks pixels (0,0), (120,140), (130,160),
-     *        (200,50), and (200,200).  If all of these pixels are transparent, the discard check is
-     *        disabled and no tiles are discarded.  If any of them have a non-transparent color, any
-     *        tile that has the same values in these pixel locations is discarded.  The end result of
-     *        these defaults should be correct tile discarding for a standard Bing Maps server.  To ensure
-     *        that no tiles are discarded, construct and pass a {@link NeverTileDiscardPolicy} for this
-     *        parameter.
-     *
-     * @see ArcGisMapServerImageryProvider
-     * @see GoogleEarthEnterpriseMapsProvider
-     * @see createOpenStreetMapImageryProvider
-     * @see SingleTileImageryProvider
-     * @see createTileMapServiceImageryProvider
-     * @see WebMapServiceImageryProvider
-     * @see WebMapTileServiceImageryProvider
-     * @see UrlTemplateImageryProvider
-     *
-     *
-     * @example
-     * var bing = new Cesium.BingMapsImageryProvider({
-     *     url : 'https://dev.virtualearth.net',
-     *     key : 'get-yours-at-https://www.bingmapsportal.com/',
-     *     mapStyle : Cesium.BingMapsStyle.AERIAL
-     * });
-     *
-     * @see {@link http://msdn.microsoft.com/en-us/library/ff701713.aspx|Bing Maps REST Services}
-     * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
-     */
-    function BingMapsImageryProvider(options) {
-        options = defaultValue(options, {});
-
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(options.url)) {
-            throw new DeveloperError('options.url is required.');
-        }
-        //>>includeEnd('debug');
-
-        this._key = BingMapsApi.getKey(options.key);
-        this._resource = Resource.createIfNeeded(options.url);
-        this._resource.appendForwardSlash();
-        this._tileProtocol = options.tileProtocol;
-        this._mapStyle = defaultValue(options.mapStyle, BingMapsStyle.AERIAL);
-        this._culture = defaultValue(options.culture, '');
-        this._tileDiscardPolicy = options.tileDiscardPolicy;
-        this._proxy = options.proxy;
-        this._credit = new Credit('<a href="http://www.bing.com"><img src="' + BingMapsImageryProvider.logoUrl + '" title="Bing Imagery"/></a>');
-
         /**
-         * The default {@link ImageryLayer#gamma} to use for imagery layers created for this provider.
-         * Changing this value after creating an {@link ImageryLayer} for this provider will have
-         * no effect.  Instead, set the layer's {@link ImageryLayer#gamma} property.
-         *
-         * @type {Number}
-         * @default 1.0
-         */
-        this.defaultGamma = 1.0;
-
-        this._tilingScheme = new WebMercatorTilingScheme({
-            numberOfLevelZeroTilesX : 2,
-            numberOfLevelZeroTilesY : 2,
-            ellipsoid : options.ellipsoid
-        });
-
-        this._tileWidth = undefined;
-        this._tileHeight = undefined;
-        this._maximumLevel = undefined;
-        this._imageUrlTemplate = undefined;
-        this._imageUrlSubdomains = undefined;
-
-        this._errorEvent = new Event();
-
-        this._ready = false;
-        this._readyPromise = when.defer();
-
-        var metadataResource = this._resource.getDerivedResource({
-            url:'REST/v1/Imagery/Metadata/' + this._mapStyle,
-            queryParameters: {
-                incl: 'ImageryProviders',
-                key: this._key
-            }
-        });
-        var that = this;
-        var metadataError;
-
-        function metadataSuccess(data) {
-            if (data.resourceSets.length !== 1) {
-                metadataFailure();
-                return;
-            }
-            var resource = data.resourceSets[0].resources[0];
-
-            that._tileWidth = resource.imageWidth;
-            that._tileHeight = resource.imageHeight;
-            that._maximumLevel = resource.zoomMax - 1;
-            that._imageUrlSubdomains = resource.imageUrlSubdomains;
-            that._imageUrlTemplate = resource.imageUrl;
-
-            var tileProtocol = that._tileProtocol;
-            if (!defined(tileProtocol)) {
-                // use the document's protocol, unless it's not http or https
-                var documentProtocol = document.location.protocol;
-                tileProtocol = /^http/.test(documentProtocol) ? documentProtocol : 'http:';
-            }
-
-            that._imageUrlTemplate = that._imageUrlTemplate.replace(/^http:/, tileProtocol);
-
-            // Install the default tile discard policy if none has been supplied.
-            if (!defined(that._tileDiscardPolicy)) {
-                that._tileDiscardPolicy = new DiscardMissingTileImagePolicy({
-                    missingImageUrl : buildImageResource(that, 0, 0, that._maximumLevel).url,
-                    pixelsToCheck : [new Cartesian2(0, 0), new Cartesian2(120, 140), new Cartesian2(130, 160), new Cartesian2(200, 50), new Cartesian2(200, 200)],
-                    disableCheckIfAllPixelsAreTransparent : true
-                });
-            }
-
-            var attributionList = that._attributionList = resource.imageryProviders;
-            if (!attributionList) {
-                attributionList = that._attributionList = [];
-            }
-
-            for (var attributionIndex = 0, attributionLength = attributionList.length; attributionIndex < attributionLength; ++attributionIndex) {
-                var attribution = attributionList[attributionIndex];
-
-                attribution.credit = new Credit(attribution.attribution);
-
-                var coverageAreas = attribution.coverageAreas;
-
-                for (var areaIndex = 0, areaLength = attribution.coverageAreas.length; areaIndex < areaLength; ++areaIndex) {
-                    var area = coverageAreas[areaIndex];
-                    var bbox = area.bbox;
-                    area.bbox = new Rectangle(
-                            CesiumMath.toRadians(bbox[1]),
-                            CesiumMath.toRadians(bbox[0]),
-                            CesiumMath.toRadians(bbox[3]),
-                            CesiumMath.toRadians(bbox[2]));
+             * Provides tiled imagery using the Bing Maps Imagery REST API.
+             *
+             * @alias BingMapsImageryProvider
+             * @constructor
+             *
+             * @param {Object} options Object with the following properties:
+             * @param {Resource|String} options.url The url of the Bing Maps server hosting the imagery.
+             * @param {String} [options.key] The Bing Maps key for your application, which can be
+             *        created at {@link https://www.bingmapsportal.com/}.
+             *        If this parameter is not provided, {@link BingMapsApi.defaultKey} is used, which is undefined by default.
+             * @param {String} [options.tileProtocol] The protocol to use when loading tiles, e.g. 'http:' or 'https:'.
+             *        By default, tiles are loaded using the same protocol as the page.
+             * @param {BingMapsStyle} [options.mapStyle=BingMapsStyle.AERIAL] The type of Bing Maps imagery to load.
+             * @param {String} [options.culture=''] The culture to use when requesting Bing Maps imagery. Not
+             *        all cultures are supported. See {@link http://msdn.microsoft.com/en-us/library/hh441729.aspx}
+             *        for information on the supported cultures.
+             * @param {Ellipsoid} [options.ellipsoid] The ellipsoid.  If not specified, the WGS84 ellipsoid is used.
+             * @param {TileDiscardPolicy} [options.tileDiscardPolicy] The policy that determines if a tile
+             *        is invalid and should be discarded.  If this value is not specified, a default
+             *        {@link DiscardMissingTileImagePolicy} is used which requests
+             *        tile 0,0 at the maximum tile level and checks pixels (0,0), (120,140), (130,160),
+             *        (200,50), and (200,200).  If all of these pixels are transparent, the discard check is
+             *        disabled and no tiles are discarded.  If any of them have a non-transparent color, any
+             *        tile that has the same values in these pixel locations is discarded.  The end result of
+             *        these defaults should be correct tile discarding for a standard Bing Maps server.  To ensure
+             *        that no tiles are discarded, construct and pass a {@link NeverTileDiscardPolicy} for this
+             *        parameter.
+             *
+             * @see ArcGisMapServerImageryProvider
+             * @see GoogleEarthEnterpriseMapsProvider
+             * @see createOpenStreetMapImageryProvider
+             * @see SingleTileImageryProvider
+             * @see createTileMapServiceImageryProvider
+             * @see WebMapServiceImageryProvider
+             * @see WebMapTileServiceImageryProvider
+             * @see UrlTemplateImageryProvider
+             *
+             *
+             * @example
+             * var bing = new Cesium.BingMapsImageryProvider({
+             *     url : 'https://dev.virtualearth.net',
+             *     key : 'get-yours-at-https://www.bingmapsportal.com/',
+             *     mapStyle : Cesium.BingMapsStyle.AERIAL
+             * });
+             *
+             * @see {@link http://msdn.microsoft.com/en-us/library/ff701713.aspx|Bing Maps REST Services}
+             * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
+             */
+        class BingMapsImageryProvider {
+            constructor(options) {
+                options = defaultValue(options, {});
+                //>>includeStart('debug', pragmas.debug);
+                if (!defined(options.url)) {
+                    throw new DeveloperError('options.url is required.');
                 }
+                //>>includeEnd('debug');
+                this._key = BingMapsApi.getKey(options.key);
+                this._resource = Resource.createIfNeeded(options.url);
+                this._resource.appendForwardSlash();
+                this._tileProtocol = options.tileProtocol;
+                this._mapStyle = defaultValue(options.mapStyle, BingMapsStyle.AERIAL);
+                this._culture = defaultValue(options.culture, '');
+                this._tileDiscardPolicy = options.tileDiscardPolicy;
+                this._proxy = options.proxy;
+                this._credit = new Credit('<a href="http://www.bing.com"><img src="' + BingMapsImageryProvider.logoUrl + '" title="Bing Imagery"/></a>');
+                /**
+                 * The default {@link ImageryLayer#gamma} to use for imagery layers created for this provider.
+                 * Changing this value after creating an {@link ImageryLayer} for this provider will have
+                 * no effect.  Instead, set the layer's {@link ImageryLayer#gamma} property.
+                 *
+                 * @type {Number}
+                 * @default 1.0
+                 */
+                this.defaultGamma = 1.0;
+                this._tilingScheme = new WebMercatorTilingScheme({
+                    numberOfLevelZeroTilesX: 2,
+                    numberOfLevelZeroTilesY: 2,
+                    ellipsoid: options.ellipsoid
+                });
+                this._tileWidth = undefined;
+                this._tileHeight = undefined;
+                this._maximumLevel = undefined;
+                this._imageUrlTemplate = undefined;
+                this._imageUrlSubdomains = undefined;
+                this._errorEvent = new Event();
+                this._ready = false;
+                this._readyPromise = when.defer();
+                var metadataResource = this._resource.getDerivedResource({
+                    url: 'REST/v1/Imagery/Metadata/' + this._mapStyle,
+                    queryParameters: {
+                        incl: 'ImageryProviders',
+                        key: this._key
+                    }
+                });
+                var that = this;
+                var metadataError;
+                function metadataSuccess(data) {
+                    if (data.resourceSets.length !== 1) {
+                        metadataFailure();
+                        return;
+                    }
+                    var resource = data.resourceSets[0].resources[0];
+                    that._tileWidth = resource.imageWidth;
+                    that._tileHeight = resource.imageHeight;
+                    that._maximumLevel = resource.zoomMax - 1;
+                    that._imageUrlSubdomains = resource.imageUrlSubdomains;
+                    that._imageUrlTemplate = resource.imageUrl;
+                    var tileProtocol = that._tileProtocol;
+                    if (!defined(tileProtocol)) {
+                        // use the document's protocol, unless it's not http or https
+                        var documentProtocol = document.location.protocol;
+                        tileProtocol = /^http/.test(documentProtocol) ? documentProtocol : 'http:';
+                    }
+                    that._imageUrlTemplate = that._imageUrlTemplate.replace(/^http:/, tileProtocol);
+                    // Install the default tile discard policy if none has been supplied.
+                    if (!defined(that._tileDiscardPolicy)) {
+                        that._tileDiscardPolicy = new DiscardMissingTileImagePolicy({
+                            missingImageUrl: buildImageResource(that, 0, 0, that._maximumLevel).url,
+                            pixelsToCheck: [new Cartesian2(0, 0), new Cartesian2(120, 140), new Cartesian2(130, 160), new Cartesian2(200, 50), new Cartesian2(200, 200)],
+                            disableCheckIfAllPixelsAreTransparent: true
+                        });
+                    }
+                    var attributionList = that._attributionList = resource.imageryProviders;
+                    if (!attributionList) {
+                        attributionList = that._attributionList = [];
+                    }
+                    for (var attributionIndex = 0, attributionLength = attributionList.length; attributionIndex < attributionLength; ++attributionIndex) {
+                        var attribution = attributionList[attributionIndex];
+                        attribution.credit = new Credit(attribution.attribution);
+                        var coverageAreas = attribution.coverageAreas;
+                        for (var areaIndex = 0, areaLength = attribution.coverageAreas.length; areaIndex < areaLength; ++areaIndex) {
+                            var area = coverageAreas[areaIndex];
+                            var bbox = area.bbox;
+                            area.bbox = new Rectangle(CesiumMath.toRadians(bbox[1]), CesiumMath.toRadians(bbox[0]), CesiumMath.toRadians(bbox[3]), CesiumMath.toRadians(bbox[2]));
+                        }
+                    }
+                    that._ready = true;
+                    that._readyPromise.resolve(true);
+                    TileProviderError.handleSuccess(metadataError);
+                }
+                function metadataFailure(e) {
+                    var message = 'An error occurred while accessing ' + metadataResource.url + '.';
+                    metadataError = TileProviderError.handleError(metadataError, that, that._errorEvent, message, undefined, undefined, undefined, requestMetadata);
+                    that._readyPromise.reject(new RuntimeError(message));
+                }
+                function requestMetadata() {
+                    var metadata = metadataResource.fetchJsonp('jsonp');
+                    when(metadata, metadataSuccess, metadataFailure);
+                }
+                requestMetadata();
             }
-
-            that._ready = true;
-            that._readyPromise.resolve(true);
-            TileProviderError.handleSuccess(metadataError);
+            /**
+                 * Gets the credits to be displayed when a given tile is displayed.
+                 *
+                 * @param {Number} x The tile X coordinate.
+                 * @param {Number} y The tile Y coordinate.
+                 * @param {Number} level The tile level;
+                 * @returns {Credit[]} The credits to be displayed when the tile is displayed.
+                 *
+                 * @exception {DeveloperError} <code>getTileCredits</code> must not be called before the imagery provider is ready.
+                 */
+            getTileCredits(x, y, level) {
+                //>>includeStart('debug', pragmas.debug);
+                if (!this._ready) {
+                    throw new DeveloperError('getTileCredits must not be called before the imagery provider is ready.');
+                }
+                //>>includeEnd('debug');
+                var rectangle = this._tilingScheme.tileXYToRectangle(x, y, level, rectangleScratch);
+                var result = getRectangleAttribution(this._attributionList, level, rectangle);
+                return result;
+            }
+            /**
+                 * Requests the image for a given tile.  This function should
+                 * not be called before {@link BingMapsImageryProvider#ready} returns true.
+                 *
+                 * @param {Number} x The tile X coordinate.
+                 * @param {Number} y The tile Y coordinate.
+                 * @param {Number} level The tile level.
+                 * @param {Request} [request] The request object. Intended for internal use only.
+                 * @returns {Promise.<Image|Canvas>|undefined} A promise for the image that will resolve when the image is available, or
+                 *          undefined if there are too many active requests to the server, and the request
+                 *          should be retried later.  The resolved image may be either an
+                 *          Image or a Canvas DOM object.
+                 *
+                 * @exception {DeveloperError} <code>requestImage</code> must not be called before the imagery provider is ready.
+                 */
+            requestImage(x, y, level, request) {
+                //>>includeStart('debug', pragmas.debug);
+                if (!this._ready) {
+                    throw new DeveloperError('requestImage must not be called before the imagery provider is ready.');
+                }
+                //>>includeEnd('debug');
+                return ImageryProvider.loadImage(this, buildImageResource(this, x, y, level, request));
+            }
+            /**
+                 * Picking features is not currently supported by this imagery provider, so this function simply returns
+                 * undefined.
+                 *
+                 * @param {Number} x The tile X coordinate.
+                 * @param {Number} y The tile Y coordinate.
+                 * @param {Number} level The tile level.
+                 * @param {Number} longitude The longitude at which to pick features.
+                 * @param {Number} latitude  The latitude at which to pick features.
+                 * @return {Promise.<ImageryLayerFeatureInfo[]>|undefined} A promise for the picked features that will resolve when the asynchronous
+                 *                   picking completes.  The resolved value is an array of {@link ImageryLayerFeatureInfo}
+                 *                   instances.  The array may be empty if no features are found at the given location.
+                 *                   It may also be undefined if picking is not supported.
+                 */
+            pickFeatures(x, y, level, longitude, latitude) {
+                return undefined;
+            }
+            /**
+                 * Converts a tiles (x, y, level) position into a quadkey used to request an image
+                 * from a Bing Maps server.
+                 *
+                 * @param {Number} x The tile's x coordinate.
+                 * @param {Number} y The tile's y coordinate.
+                 * @param {Number} level The tile's zoom level.
+                 *
+                 * @see {@link http://msdn.microsoft.com/en-us/library/bb259689.aspx|Bing Maps Tile System}
+                 * @see BingMapsImageryProvider#quadKeyToTileXY
+                 */
+            static tileXYToQuadKey(x, y, level) {
+                var quadkey = '';
+                for (var i = level; i >= 0; --i) {
+                    var bitmask = 1 << i;
+                    var digit = 0;
+                    if ((x & bitmask) !== 0) {
+                        digit |= 1;
+                    }
+                    if ((y & bitmask) !== 0) {
+                        digit |= 2;
+                    }
+                    quadkey += digit;
+                }
+                return quadkey;
+            }
+            /**
+                 * Converts a tile's quadkey used to request an image from a Bing Maps server into the
+                 * (x, y, level) position.
+                 *
+                 * @param {String} quadkey The tile's quad key
+                 *
+                 * @see {@link http://msdn.microsoft.com/en-us/library/bb259689.aspx|Bing Maps Tile System}
+                 * @see BingMapsImageryProvider#tileXYToQuadKey
+                 */
+            static quadKeyToTileXY(quadkey) {
+                var x = 0;
+                var y = 0;
+                var level = quadkey.length - 1;
+                for (var i = level; i >= 0; --i) {
+                    var bitmask = 1 << i;
+                    var digit = +quadkey[level - i];
+                    if ((digit & 1) !== 0) {
+                        x |= bitmask;
+                    }
+                    if ((digit & 2) !== 0) {
+                        y |= bitmask;
+                    }
+                }
+                return {
+                    x: x,
+                    y: y,
+                    level: level
+                };
+            }
         }
-
-        function metadataFailure(e) {
-            var message = 'An error occurred while accessing ' + metadataResource.url + '.';
-            metadataError = TileProviderError.handleError(metadataError, that, that._errorEvent, message, undefined, undefined, undefined, requestMetadata);
-            that._readyPromise.reject(new RuntimeError(message));
-        }
-
-        function requestMetadata() {
-            var metadata = metadataResource.fetchJsonp('jsonp');
-            when(metadata, metadataSuccess, metadataFailure);
-        }
-
-        requestMetadata();
-    }
 
     defineProperties(BingMapsImageryProvider.prototype, {
         /**
@@ -488,133 +579,10 @@ define([
 
     var rectangleScratch = new Rectangle();
 
-    /**
-     * Gets the credits to be displayed when a given tile is displayed.
-     *
-     * @param {Number} x The tile X coordinate.
-     * @param {Number} y The tile Y coordinate.
-     * @param {Number} level The tile level;
-     * @returns {Credit[]} The credits to be displayed when the tile is displayed.
-     *
-     * @exception {DeveloperError} <code>getTileCredits</code> must not be called before the imagery provider is ready.
-     */
-    BingMapsImageryProvider.prototype.getTileCredits = function(x, y, level) {
-        //>>includeStart('debug', pragmas.debug);
-        if (!this._ready) {
-            throw new DeveloperError('getTileCredits must not be called before the imagery provider is ready.');
-        }
-        //>>includeEnd('debug');
 
-        var rectangle = this._tilingScheme.tileXYToRectangle(x, y, level, rectangleScratch);
-        var result = getRectangleAttribution(this._attributionList, level, rectangle);
 
-        return result;
-    };
 
-    /**
-     * Requests the image for a given tile.  This function should
-     * not be called before {@link BingMapsImageryProvider#ready} returns true.
-     *
-     * @param {Number} x The tile X coordinate.
-     * @param {Number} y The tile Y coordinate.
-     * @param {Number} level The tile level.
-     * @param {Request} [request] The request object. Intended for internal use only.
-     * @returns {Promise.<Image|Canvas>|undefined} A promise for the image that will resolve when the image is available, or
-     *          undefined if there are too many active requests to the server, and the request
-     *          should be retried later.  The resolved image may be either an
-     *          Image or a Canvas DOM object.
-     *
-     * @exception {DeveloperError} <code>requestImage</code> must not be called before the imagery provider is ready.
-     */
-    BingMapsImageryProvider.prototype.requestImage = function(x, y, level, request) {
-        //>>includeStart('debug', pragmas.debug);
-        if (!this._ready) {
-            throw new DeveloperError('requestImage must not be called before the imagery provider is ready.');
-        }
-        //>>includeEnd('debug');
 
-        return ImageryProvider.loadImage(this, buildImageResource(this, x, y, level, request));
-    };
-
-    /**
-     * Picking features is not currently supported by this imagery provider, so this function simply returns
-     * undefined.
-     *
-     * @param {Number} x The tile X coordinate.
-     * @param {Number} y The tile Y coordinate.
-     * @param {Number} level The tile level.
-     * @param {Number} longitude The longitude at which to pick features.
-     * @param {Number} latitude  The latitude at which to pick features.
-     * @return {Promise.<ImageryLayerFeatureInfo[]>|undefined} A promise for the picked features that will resolve when the asynchronous
-     *                   picking completes.  The resolved value is an array of {@link ImageryLayerFeatureInfo}
-     *                   instances.  The array may be empty if no features are found at the given location.
-     *                   It may also be undefined if picking is not supported.
-     */
-    BingMapsImageryProvider.prototype.pickFeatures = function(x, y, level, longitude, latitude) {
-        return undefined;
-    };
-
-    /**
-     * Converts a tiles (x, y, level) position into a quadkey used to request an image
-     * from a Bing Maps server.
-     *
-     * @param {Number} x The tile's x coordinate.
-     * @param {Number} y The tile's y coordinate.
-     * @param {Number} level The tile's zoom level.
-     *
-     * @see {@link http://msdn.microsoft.com/en-us/library/bb259689.aspx|Bing Maps Tile System}
-     * @see BingMapsImageryProvider#quadKeyToTileXY
-     */
-    BingMapsImageryProvider.tileXYToQuadKey = function(x, y, level) {
-        var quadkey = '';
-        for ( var i = level; i >= 0; --i) {
-            var bitmask = 1 << i;
-            var digit = 0;
-
-            if ((x & bitmask) !== 0) {
-                digit |= 1;
-            }
-
-            if ((y & bitmask) !== 0) {
-                digit |= 2;
-            }
-
-            quadkey += digit;
-        }
-        return quadkey;
-    };
-
-    /**
-     * Converts a tile's quadkey used to request an image from a Bing Maps server into the
-     * (x, y, level) position.
-     *
-     * @param {String} quadkey The tile's quad key
-     *
-     * @see {@link http://msdn.microsoft.com/en-us/library/bb259689.aspx|Bing Maps Tile System}
-     * @see BingMapsImageryProvider#tileXYToQuadKey
-     */
-    BingMapsImageryProvider.quadKeyToTileXY = function(quadkey) {
-        var x = 0;
-        var y = 0;
-        var level = quadkey.length - 1;
-        for ( var i = level; i >= 0; --i) {
-            var bitmask = 1 << i;
-            var digit = +quadkey[level - i];
-
-            if ((digit & 1) !== 0) {
-                x |= bitmask;
-            }
-
-            if ((digit & 2) !== 0) {
-                y |= bitmask;
-            }
-        }
-        return {
-            x : x,
-            y : y,
-            level : level
-        };
-    };
 
     BingMapsImageryProvider._logoUrl = undefined;
 

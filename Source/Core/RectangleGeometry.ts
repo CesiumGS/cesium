@@ -645,81 +645,275 @@ define([
         return Rectangle.fromCartesianArray(positions, ellipsoid, result);
     }
 
-    /**
-     * A description of a cartographic rectangle on an ellipsoid centered at the origin. Rectangle geometry can be rendered with both {@link Primitive} and {@link GroundPrimitive}.
-     *
-     * @alias RectangleGeometry
-     * @constructor
-     *
-     * @param {Object} options Object with the following properties:
-     * @param {Rectangle} options.rectangle A cartographic rectangle with north, south, east and west properties in radians.
-     * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
-     * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid on which the rectangle lies.
-     * @param {Number} [options.granularity=CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
-     * @param {Number} [options.height=0.0] The distance in meters between the rectangle and the ellipsoid surface.
-     * @param {Number} [options.rotation=0.0] The rotation of the rectangle, in radians. A positive rotation is counter-clockwise.
-     * @param {Number} [options.stRotation=0.0] The rotation of the texture coordinates, in radians. A positive rotation is counter-clockwise.
-     * @param {Number} [options.extrudedHeight] The distance in meters between the rectangle's extruded face and the ellipsoid surface.
-     *
-     * @exception {DeveloperError} <code>options.rectangle.north</code> must be in the interval [<code>-Pi/2</code>, <code>Pi/2</code>].
-     * @exception {DeveloperError} <code>options.rectangle.south</code> must be in the interval [<code>-Pi/2</code>, <code>Pi/2</code>].
-     * @exception {DeveloperError} <code>options.rectangle.east</code> must be in the interval [<code>-Pi</code>, <code>Pi</code>].
-     * @exception {DeveloperError} <code>options.rectangle.west</code> must be in the interval [<code>-Pi</code>, <code>Pi</code>].
-     * @exception {DeveloperError} <code>options.rectangle.north</code> must be greater than <code>options.rectangle.south</code>.
-     *
-     * @see RectangleGeometry#createGeometry
-     *
-     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Rectangle.html|Cesium Sandcastle Rectangle Demo}
-     *
-     * @example
-     * // 1. create a rectangle
-     * var rectangle = new Cesium.RectangleGeometry({
-     *   ellipsoid : Cesium.Ellipsoid.WGS84,
-     *   rectangle : Cesium.Rectangle.fromDegrees(-80.0, 39.0, -74.0, 42.0),
-     *   height : 10000.0
-     * });
-     * var geometry = Cesium.RectangleGeometry.createGeometry(rectangle);
-     *
-     * // 2. create an extruded rectangle without a top
-     * var rectangle = new Cesium.RectangleGeometry({
-     *   ellipsoid : Cesium.Ellipsoid.WGS84,
-     *   rectangle : Cesium.Rectangle.fromDegrees(-80.0, 39.0, -74.0, 42.0),
-     *   height : 10000.0,
-     *   extrudedHeight: 300000
-     * });
-     * var geometry = Cesium.RectangleGeometry.createGeometry(rectangle);
-     */
-    function RectangleGeometry(options) {
-        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-
-        var rectangle = options.rectangle;
-
-        //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.object('rectangle', rectangle);
-        Rectangle.validate(rectangle);
-        if (rectangle.north < rectangle.south) {
-            throw new DeveloperError('options.rectangle.north must be greater than or equal to options.rectangle.south');
+        /**
+             * A description of a cartographic rectangle on an ellipsoid centered at the origin. Rectangle geometry can be rendered with both {@link Primitive} and {@link GroundPrimitive}.
+             *
+             * @alias RectangleGeometry
+             * @constructor
+             *
+             * @param {Object} options Object with the following properties:
+             * @param {Rectangle} options.rectangle A cartographic rectangle with north, south, east and west properties in radians.
+             * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
+             * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid on which the rectangle lies.
+             * @param {Number} [options.granularity=CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
+             * @param {Number} [options.height=0.0] The distance in meters between the rectangle and the ellipsoid surface.
+             * @param {Number} [options.rotation=0.0] The rotation of the rectangle, in radians. A positive rotation is counter-clockwise.
+             * @param {Number} [options.stRotation=0.0] The rotation of the texture coordinates, in radians. A positive rotation is counter-clockwise.
+             * @param {Number} [options.extrudedHeight] The distance in meters between the rectangle's extruded face and the ellipsoid surface.
+             *
+             * @exception {DeveloperError} <code>options.rectangle.north</code> must be in the interval [<code>-Pi/2</code>, <code>Pi/2</code>].
+             * @exception {DeveloperError} <code>options.rectangle.south</code> must be in the interval [<code>-Pi/2</code>, <code>Pi/2</code>].
+             * @exception {DeveloperError} <code>options.rectangle.east</code> must be in the interval [<code>-Pi</code>, <code>Pi</code>].
+             * @exception {DeveloperError} <code>options.rectangle.west</code> must be in the interval [<code>-Pi</code>, <code>Pi</code>].
+             * @exception {DeveloperError} <code>options.rectangle.north</code> must be greater than <code>options.rectangle.south</code>.
+             *
+             * @see RectangleGeometry#createGeometry
+             *
+             * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Rectangle.html|Cesium Sandcastle Rectangle Demo}
+             *
+             * @example
+             * // 1. create a rectangle
+             * var rectangle = new Cesium.RectangleGeometry({
+             *   ellipsoid : Cesium.Ellipsoid.WGS84,
+             *   rectangle : Cesium.Rectangle.fromDegrees(-80.0, 39.0, -74.0, 42.0),
+             *   height : 10000.0
+             * });
+             * var geometry = Cesium.RectangleGeometry.createGeometry(rectangle);
+             *
+             * // 2. create an extruded rectangle without a top
+             * var rectangle = new Cesium.RectangleGeometry({
+             *   ellipsoid : Cesium.Ellipsoid.WGS84,
+             *   rectangle : Cesium.Rectangle.fromDegrees(-80.0, 39.0, -74.0, 42.0),
+             *   height : 10000.0,
+             *   extrudedHeight: 300000
+             * });
+             * var geometry = Cesium.RectangleGeometry.createGeometry(rectangle);
+             */
+        class RectangleGeometry {
+            constructor(options) {
+                options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+                var rectangle = options.rectangle;
+                //>>includeStart('debug', pragmas.debug);
+                Check.typeOf.object('rectangle', rectangle);
+                Rectangle.validate(rectangle);
+                if (rectangle.north < rectangle.south) {
+                    throw new DeveloperError('options.rectangle.north must be greater than or equal to options.rectangle.south');
+                }
+                //>>includeEnd('debug');
+                var height = defaultValue(options.height, 0.0);
+                var extrudedHeight = defaultValue(options.extrudedHeight, height);
+                this._rectangle = Rectangle.clone(rectangle);
+                this._granularity = defaultValue(options.granularity, CesiumMath.RADIANS_PER_DEGREE);
+                this._ellipsoid = Ellipsoid.clone(defaultValue(options.ellipsoid, Ellipsoid.WGS84));
+                this._surfaceHeight = Math.max(height, extrudedHeight);
+                this._rotation = defaultValue(options.rotation, 0.0);
+                this._stRotation = defaultValue(options.stRotation, 0.0);
+                this._vertexFormat = VertexFormat.clone(defaultValue(options.vertexFormat, VertexFormat.DEFAULT));
+                this._extrudedHeight = Math.min(height, extrudedHeight);
+                this._shadowVolume = defaultValue(options.shadowVolume, false);
+                this._workerName = 'createRectangleGeometry';
+                this._offsetAttribute = options.offsetAttribute;
+                this._rotatedRectangle = undefined;
+                this._textureCoordinateRotationPoints = undefined;
+            }
+            /**
+                 * Stores the provided instance into the provided array.
+                 *
+                 * @param {RectangleGeometry} value The value to pack.
+                 * @param {Number[]} array The array to pack into.
+                 * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
+                 *
+                 * @returns {Number[]} The array that was packed into
+                 */
+            static pack(value, array, startingIndex) {
+                //>>includeStart('debug', pragmas.debug);
+                Check.typeOf.object('value', value);
+                Check.defined('array', array);
+                //>>includeEnd('debug');
+                startingIndex = defaultValue(startingIndex, 0);
+                Rectangle.pack(value._rectangle, array, startingIndex);
+                startingIndex += Rectangle.packedLength;
+                Ellipsoid.pack(value._ellipsoid, array, startingIndex);
+                startingIndex += Ellipsoid.packedLength;
+                VertexFormat.pack(value._vertexFormat, array, startingIndex);
+                startingIndex += VertexFormat.packedLength;
+                array[startingIndex++] = value._granularity;
+                array[startingIndex++] = value._surfaceHeight;
+                array[startingIndex++] = value._rotation;
+                array[startingIndex++] = value._stRotation;
+                array[startingIndex++] = value._extrudedHeight;
+                array[startingIndex++] = value._shadowVolume ? 1.0 : 0.0;
+                array[startingIndex] = defaultValue(value._offsetAttribute, -1);
+                return array;
+            }
+            /**
+                 * Retrieves an instance from a packed array.
+                 *
+                 * @param {Number[]} array The packed array.
+                 * @param {Number} [startingIndex=0] The starting index of the element to be unpacked.
+                 * @param {RectangleGeometry} [result] The object into which to store the result.
+                 * @returns {RectangleGeometry} The modified result parameter or a new RectangleGeometry instance if one was not provided.
+                 */
+            static unpack(array, startingIndex, result) {
+                //>>includeStart('debug', pragmas.debug);
+                Check.defined('array', array);
+                //>>includeEnd('debug');
+                startingIndex = defaultValue(startingIndex, 0);
+                var rectangle = Rectangle.unpack(array, startingIndex, scratchRectangle);
+                startingIndex += Rectangle.packedLength;
+                var ellipsoid = Ellipsoid.unpack(array, startingIndex, scratchEllipsoid);
+                startingIndex += Ellipsoid.packedLength;
+                var vertexFormat = VertexFormat.unpack(array, startingIndex, scratchVertexFormat);
+                startingIndex += VertexFormat.packedLength;
+                var granularity = array[startingIndex++];
+                var surfaceHeight = array[startingIndex++];
+                var rotation = array[startingIndex++];
+                var stRotation = array[startingIndex++];
+                var extrudedHeight = array[startingIndex++];
+                var shadowVolume = array[startingIndex++] === 1.0;
+                var offsetAttribute = array[startingIndex];
+                if (!defined(result)) {
+                    scratchOptions.granularity = granularity;
+                    scratchOptions.height = surfaceHeight;
+                    scratchOptions.rotation = rotation;
+                    scratchOptions.stRotation = stRotation;
+                    scratchOptions.extrudedHeight = extrudedHeight;
+                    scratchOptions.shadowVolume = shadowVolume;
+                    scratchOptions.offsetAttribute = offsetAttribute === -1 ? undefined : offsetAttribute;
+                    return new RectangleGeometry(scratchOptions);
+                }
+                result._rectangle = Rectangle.clone(rectangle, result._rectangle);
+                result._ellipsoid = Ellipsoid.clone(ellipsoid, result._ellipsoid);
+                result._vertexFormat = VertexFormat.clone(vertexFormat, result._vertexFormat);
+                result._granularity = granularity;
+                result._surfaceHeight = surfaceHeight;
+                result._rotation = rotation;
+                result._stRotation = stRotation;
+                result._extrudedHeight = extrudedHeight;
+                result._shadowVolume = shadowVolume;
+                result._offsetAttribute = offsetAttribute === -1 ? undefined : offsetAttribute;
+                return result;
+            }
+            /**
+                 * Computes the bounding rectangle based on the provided options
+                 *
+                 * @param {Object} options Object with the following properties:
+                 * @param {Rectangle} options.rectangle A cartographic rectangle with north, south, east and west properties in radians.
+                 * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid on which the rectangle lies.
+                 * @param {Number} [options.granularity=CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
+                 * @param {Number} [options.rotation=0.0] The rotation of the rectangle, in radians. A positive rotation is counter-clockwise.
+                 * @param {Rectangle} [result] An object in which to store the result.
+                 *
+                 * @returns {Rectangle} The result rectangle
+                 */
+            static computeRectangle(options, result) {
+                options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+                var rectangle = options.rectangle;
+                //>>includeStart('debug', pragmas.debug);
+                Check.typeOf.object('rectangle', rectangle);
+                Rectangle.validate(rectangle);
+                if (rectangle.north < rectangle.south) {
+                    throw new DeveloperError('options.rectangle.north must be greater than or equal to options.rectangle.south');
+                }
+                //>>includeEnd('debug');
+                var granularity = defaultValue(options.granularity, CesiumMath.RADIANS_PER_DEGREE);
+                var ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
+                var rotation = defaultValue(options.rotation, 0.0);
+                return computeRectangle(rectangle, granularity, rotation, ellipsoid, result);
+            }
+            /**
+                 * Computes the geometric representation of a rectangle, including its vertices, indices, and a bounding sphere.
+                 *
+                 * @param {RectangleGeometry} rectangleGeometry A description of the rectangle.
+                 * @returns {Geometry|undefined} The computed vertices and indices.
+                 *
+                 * @exception {DeveloperError} Rotated rectangle is invalid.
+                 */
+            static createGeometry(rectangleGeometry) {
+                if ((CesiumMath.equalsEpsilon(rectangleGeometry._rectangle.north, rectangleGeometry._rectangle.south, CesiumMath.EPSILON10) ||
+                    (CesiumMath.equalsEpsilon(rectangleGeometry._rectangle.east, rectangleGeometry._rectangle.west, CesiumMath.EPSILON10)))) {
+                    return undefined;
+                }
+                var rectangle = rectangleGeometry._rectangle;
+                var ellipsoid = rectangleGeometry._ellipsoid;
+                var rotation = rectangleGeometry._rotation;
+                var stRotation = rectangleGeometry._stRotation;
+                var vertexFormat = rectangleGeometry._vertexFormat;
+                var computedOptions = RectangleGeometryLibrary.computeOptions(rectangle, rectangleGeometry._granularity, rotation, stRotation, rectangleScratch, nwScratch, stNwScratch);
+                var tangentRotationMatrix = tangentRotationMatrixScratch;
+                if (stRotation !== 0 || rotation !== 0) {
+                    var center = Rectangle.center(rectangle, centerScratch);
+                    var axis = ellipsoid.geodeticSurfaceNormalCartographic(center, v1Scratch);
+                    Quaternion.fromAxisAngle(axis, -stRotation, quaternionScratch);
+                    Matrix3.fromQuaternion(quaternionScratch, tangentRotationMatrix);
+                }
+                else {
+                    Matrix3.clone(Matrix3.IDENTITY, tangentRotationMatrix);
+                }
+                var surfaceHeight = rectangleGeometry._surfaceHeight;
+                var extrudedHeight = rectangleGeometry._extrudedHeight;
+                var extrude = !CesiumMath.equalsEpsilon(surfaceHeight, extrudedHeight, 0, CesiumMath.EPSILON2);
+                computedOptions.lonScalar = 1.0 / rectangleGeometry._rectangle.width;
+                computedOptions.latScalar = 1.0 / rectangleGeometry._rectangle.height;
+                computedOptions.tangentRotationMatrix = tangentRotationMatrix;
+                computedOptions.size = computedOptions.width * computedOptions.height;
+                var geometry;
+                var boundingSphere;
+                rectangle = rectangleGeometry._rectangle;
+                if (extrude) {
+                    geometry = constructExtrudedRectangle(rectangleGeometry, computedOptions);
+                    var topBS = BoundingSphere.fromRectangle3D(rectangle, ellipsoid, surfaceHeight, topBoundingSphere);
+                    var bottomBS = BoundingSphere.fromRectangle3D(rectangle, ellipsoid, extrudedHeight, bottomBoundingSphere);
+                    boundingSphere = BoundingSphere.union(topBS, bottomBS);
+                }
+                else {
+                    geometry = constructRectangle(rectangleGeometry, computedOptions);
+                    geometry.attributes.position.values = PolygonPipeline.scaleToGeodeticHeight(geometry.attributes.position.values, surfaceHeight, ellipsoid, false);
+                    if (defined(rectangleGeometry._offsetAttribute)) {
+                        var length = geometry.attributes.position.values.length;
+                        var applyOffset = new Uint8Array(length / 3);
+                        var offsetValue = rectangleGeometry._offsetAttribute === GeometryOffsetAttribute.NONE ? 0 : 1;
+                        arrayFill(applyOffset, offsetValue);
+                        geometry.attributes.applyOffset = new GeometryAttribute({
+                            componentDatatype: ComponentDatatype.UNSIGNED_BYTE,
+                            componentsPerAttribute: 1,
+                            values: applyOffset
+                        });
+                    }
+                    boundingSphere = BoundingSphere.fromRectangle3D(rectangle, ellipsoid, surfaceHeight);
+                }
+                if (!vertexFormat.position) {
+                    delete geometry.attributes.position;
+                }
+                return new Geometry({
+                    attributes: geometry.attributes,
+                    indices: geometry.indices,
+                    primitiveType: geometry.primitiveType,
+                    boundingSphere: boundingSphere,
+                    offsetAttribute: rectangleGeometry._offsetAttribute
+                });
+            }
+            /**
+                 * @private
+                 */
+            static createShadowVolume(rectangleGeometry, minHeightFunc, maxHeightFunc) {
+                var granularity = rectangleGeometry._granularity;
+                var ellipsoid = rectangleGeometry._ellipsoid;
+                var minHeight = minHeightFunc(granularity, ellipsoid);
+                var maxHeight = maxHeightFunc(granularity, ellipsoid);
+                return new RectangleGeometry({
+                    rectangle: rectangleGeometry._rectangle,
+                    rotation: rectangleGeometry._rotation,
+                    ellipsoid: ellipsoid,
+                    stRotation: rectangleGeometry._stRotation,
+                    granularity: granularity,
+                    extrudedHeight: maxHeight,
+                    height: minHeight,
+                    vertexFormat: VertexFormat.POSITION_ONLY,
+                    shadowVolume: true
+                });
+            }
         }
-        //>>includeEnd('debug');
-
-        var height = defaultValue(options.height, 0.0);
-        var extrudedHeight = defaultValue(options.extrudedHeight, height);
-
-        this._rectangle = Rectangle.clone(rectangle);
-        this._granularity = defaultValue(options.granularity, CesiumMath.RADIANS_PER_DEGREE);
-        this._ellipsoid = Ellipsoid.clone(defaultValue(options.ellipsoid, Ellipsoid.WGS84));
-        this._surfaceHeight = Math.max(height, extrudedHeight);
-        this._rotation = defaultValue(options.rotation, 0.0);
-        this._stRotation = defaultValue(options.stRotation, 0.0);
-        this._vertexFormat = VertexFormat.clone(defaultValue(options.vertexFormat, VertexFormat.DEFAULT));
-        this._extrudedHeight = Math.min(height, extrudedHeight);
-        this._shadowVolume = defaultValue(options.shadowVolume, false);
-        this._workerName = 'createRectangleGeometry';
-        this._offsetAttribute = options.offsetAttribute;
-        this._rotatedRectangle = undefined;
-
-        this._textureCoordinateRotationPoints = undefined;
-    }
 
     /**
      * The number of elements used to pack the object into an array.
@@ -727,42 +921,6 @@ define([
      */
     RectangleGeometry.packedLength = Rectangle.packedLength + Ellipsoid.packedLength + VertexFormat.packedLength + 7;
 
-    /**
-     * Stores the provided instance into the provided array.
-     *
-     * @param {RectangleGeometry} value The value to pack.
-     * @param {Number[]} array The array to pack into.
-     * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
-     *
-     * @returns {Number[]} The array that was packed into
-     */
-    RectangleGeometry.pack = function(value, array, startingIndex) {
-        //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.object('value', value);
-        Check.defined('array', array);
-        //>>includeEnd('debug');
-
-        startingIndex = defaultValue(startingIndex, 0);
-
-        Rectangle.pack(value._rectangle, array, startingIndex);
-        startingIndex += Rectangle.packedLength;
-
-        Ellipsoid.pack(value._ellipsoid, array, startingIndex);
-        startingIndex += Ellipsoid.packedLength;
-
-        VertexFormat.pack(value._vertexFormat, array, startingIndex);
-        startingIndex += VertexFormat.packedLength;
-
-        array[startingIndex++] = value._granularity;
-        array[startingIndex++] = value._surfaceHeight;
-        array[startingIndex++] = value._rotation;
-        array[startingIndex++] = value._stRotation;
-        array[startingIndex++] = value._extrudedHeight;
-        array[startingIndex++] = value._shadowVolume ? 1.0 : 0.0;
-        array[startingIndex] = defaultValue(value._offsetAttribute, -1);
-
-        return array;
-    };
 
     var scratchRectangle = new Rectangle();
     var scratchEllipsoid = Ellipsoid.clone(Ellipsoid.UNIT_SPHERE);
@@ -779,202 +937,12 @@ define([
         offsetAttribute: undefined
     };
 
-    /**
-     * Retrieves an instance from a packed array.
-     *
-     * @param {Number[]} array The packed array.
-     * @param {Number} [startingIndex=0] The starting index of the element to be unpacked.
-     * @param {RectangleGeometry} [result] The object into which to store the result.
-     * @returns {RectangleGeometry} The modified result parameter or a new RectangleGeometry instance if one was not provided.
-     */
-    RectangleGeometry.unpack = function(array, startingIndex, result) {
-        //>>includeStart('debug', pragmas.debug);
-        Check.defined('array', array);
-        //>>includeEnd('debug');
 
-        startingIndex = defaultValue(startingIndex, 0);
-
-        var rectangle = Rectangle.unpack(array, startingIndex, scratchRectangle);
-        startingIndex += Rectangle.packedLength;
-
-        var ellipsoid = Ellipsoid.unpack(array, startingIndex, scratchEllipsoid);
-        startingIndex += Ellipsoid.packedLength;
-
-        var vertexFormat = VertexFormat.unpack(array, startingIndex, scratchVertexFormat);
-        startingIndex += VertexFormat.packedLength;
-
-        var granularity = array[startingIndex++];
-        var surfaceHeight = array[startingIndex++];
-        var rotation = array[startingIndex++];
-        var stRotation = array[startingIndex++];
-        var extrudedHeight = array[startingIndex++];
-        var shadowVolume = array[startingIndex++] === 1.0;
-        var offsetAttribute = array[startingIndex];
-
-        if (!defined(result)) {
-            scratchOptions.granularity = granularity;
-            scratchOptions.height = surfaceHeight;
-            scratchOptions.rotation = rotation;
-            scratchOptions.stRotation = stRotation;
-            scratchOptions.extrudedHeight = extrudedHeight;
-            scratchOptions.shadowVolume = shadowVolume;
-            scratchOptions.offsetAttribute = offsetAttribute === -1 ? undefined : offsetAttribute;
-
-            return new RectangleGeometry(scratchOptions);
-        }
-
-        result._rectangle = Rectangle.clone(rectangle, result._rectangle);
-        result._ellipsoid = Ellipsoid.clone(ellipsoid, result._ellipsoid);
-        result._vertexFormat = VertexFormat.clone(vertexFormat, result._vertexFormat);
-        result._granularity = granularity;
-        result._surfaceHeight = surfaceHeight;
-        result._rotation = rotation;
-        result._stRotation = stRotation;
-        result._extrudedHeight = extrudedHeight;
-        result._shadowVolume = shadowVolume;
-        result._offsetAttribute = offsetAttribute === -1 ? undefined : offsetAttribute;
-
-        return result;
-    };
-
-    /**
-     * Computes the bounding rectangle based on the provided options
-     *
-     * @param {Object} options Object with the following properties:
-     * @param {Rectangle} options.rectangle A cartographic rectangle with north, south, east and west properties in radians.
-     * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid on which the rectangle lies.
-     * @param {Number} [options.granularity=CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
-     * @param {Number} [options.rotation=0.0] The rotation of the rectangle, in radians. A positive rotation is counter-clockwise.
-     * @param {Rectangle} [result] An object in which to store the result.
-     *
-     * @returns {Rectangle} The result rectangle
-     */
-    RectangleGeometry.computeRectangle = function(options, result) {
-        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-
-        var rectangle = options.rectangle;
-
-        //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.object('rectangle', rectangle);
-        Rectangle.validate(rectangle);
-        if (rectangle.north < rectangle.south) {
-            throw new DeveloperError('options.rectangle.north must be greater than or equal to options.rectangle.south');
-        }
-        //>>includeEnd('debug');
-
-        var granularity = defaultValue(options.granularity, CesiumMath.RADIANS_PER_DEGREE);
-        var ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
-        var rotation = defaultValue(options.rotation, 0.0);
-
-        return computeRectangle(rectangle, granularity, rotation, ellipsoid, result);
-    };
 
     var tangentRotationMatrixScratch = new Matrix3();
     var quaternionScratch = new Quaternion();
     var centerScratch = new Cartographic();
-    /**
-     * Computes the geometric representation of a rectangle, including its vertices, indices, and a bounding sphere.
-     *
-     * @param {RectangleGeometry} rectangleGeometry A description of the rectangle.
-     * @returns {Geometry|undefined} The computed vertices and indices.
-     *
-     * @exception {DeveloperError} Rotated rectangle is invalid.
-     */
-    RectangleGeometry.createGeometry = function(rectangleGeometry) {
-        if ((CesiumMath.equalsEpsilon(rectangleGeometry._rectangle.north, rectangleGeometry._rectangle.south, CesiumMath.EPSILON10) ||
-             (CesiumMath.equalsEpsilon(rectangleGeometry._rectangle.east, rectangleGeometry._rectangle.west, CesiumMath.EPSILON10)))) {
-            return undefined;
-        }
 
-        var rectangle = rectangleGeometry._rectangle;
-        var ellipsoid = rectangleGeometry._ellipsoid;
-        var rotation = rectangleGeometry._rotation;
-        var stRotation = rectangleGeometry._stRotation;
-        var vertexFormat = rectangleGeometry._vertexFormat;
-
-        var computedOptions = RectangleGeometryLibrary.computeOptions(rectangle, rectangleGeometry._granularity, rotation, stRotation, rectangleScratch, nwScratch, stNwScratch);
-
-        var tangentRotationMatrix = tangentRotationMatrixScratch;
-        if (stRotation !== 0 || rotation !== 0) {
-            var center = Rectangle.center(rectangle, centerScratch);
-            var axis = ellipsoid.geodeticSurfaceNormalCartographic(center, v1Scratch);
-            Quaternion.fromAxisAngle(axis, -stRotation, quaternionScratch);
-            Matrix3.fromQuaternion(quaternionScratch, tangentRotationMatrix);
-        } else {
-            Matrix3.clone(Matrix3.IDENTITY, tangentRotationMatrix);
-        }
-
-        var surfaceHeight = rectangleGeometry._surfaceHeight;
-        var extrudedHeight = rectangleGeometry._extrudedHeight;
-        var extrude = !CesiumMath.equalsEpsilon(surfaceHeight, extrudedHeight, 0, CesiumMath.EPSILON2);
-
-        computedOptions.lonScalar = 1.0 / rectangleGeometry._rectangle.width;
-        computedOptions.latScalar = 1.0 / rectangleGeometry._rectangle.height;
-        computedOptions.tangentRotationMatrix = tangentRotationMatrix;
-        computedOptions.size = computedOptions.width * computedOptions.height;
-
-        var geometry;
-        var boundingSphere;
-        rectangle = rectangleGeometry._rectangle;
-        if (extrude) {
-            geometry = constructExtrudedRectangle(rectangleGeometry, computedOptions);
-            var topBS = BoundingSphere.fromRectangle3D(rectangle, ellipsoid, surfaceHeight, topBoundingSphere);
-            var bottomBS = BoundingSphere.fromRectangle3D(rectangle, ellipsoid, extrudedHeight, bottomBoundingSphere);
-            boundingSphere = BoundingSphere.union(topBS, bottomBS);
-        } else {
-            geometry = constructRectangle(rectangleGeometry, computedOptions);
-            geometry.attributes.position.values = PolygonPipeline.scaleToGeodeticHeight(geometry.attributes.position.values, surfaceHeight, ellipsoid, false);
-
-            if (defined(rectangleGeometry._offsetAttribute)) {
-                var length = geometry.attributes.position.values.length;
-                var applyOffset = new Uint8Array(length / 3);
-                var offsetValue = rectangleGeometry._offsetAttribute === GeometryOffsetAttribute.NONE ? 0 : 1;
-                arrayFill(applyOffset, offsetValue);
-                geometry.attributes.applyOffset = new GeometryAttribute({
-                    componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
-                    componentsPerAttribute : 1,
-                    values: applyOffset
-                });
-            }
-
-            boundingSphere = BoundingSphere.fromRectangle3D(rectangle, ellipsoid, surfaceHeight);
-        }
-
-        if (!vertexFormat.position) {
-            delete geometry.attributes.position;
-        }
-
-        return new Geometry({
-            attributes : geometry.attributes,
-            indices : geometry.indices,
-            primitiveType : geometry.primitiveType,
-            boundingSphere : boundingSphere,
-            offsetAttribute : rectangleGeometry._offsetAttribute
-        });
-    };
-
-    /**
-     * @private
-     */
-    RectangleGeometry.createShadowVolume = function(rectangleGeometry, minHeightFunc, maxHeightFunc) {
-        var granularity = rectangleGeometry._granularity;
-        var ellipsoid = rectangleGeometry._ellipsoid;
-
-        var minHeight = minHeightFunc(granularity, ellipsoid);
-        var maxHeight = maxHeightFunc(granularity, ellipsoid);
-
-        return new RectangleGeometry({
-            rectangle : rectangleGeometry._rectangle,
-            rotation : rectangleGeometry._rotation,
-            ellipsoid : ellipsoid,
-            stRotation : rectangleGeometry._stRotation,
-            granularity : granularity,
-            extrudedHeight : maxHeight,
-            height : minHeight,
-            vertexFormat : VertexFormat.POSITION_ONLY,
-            shadowVolume : true
-        });
-    };
 
     var unrotatedTextureRectangleScratch = new Rectangle();
     var points2DScratch = [new Cartesian2(), new Cartesian2(), new Cartesian2()];

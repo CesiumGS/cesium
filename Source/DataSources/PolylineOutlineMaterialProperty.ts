@@ -20,31 +20,70 @@ define([
     var defaultOutlineColor = Color.BLACK;
     var defaultOutlineWidth = 1.0;
 
-    /**
-     * A {@link MaterialProperty} that maps to polyline outline {@link Material} uniforms.
-     * @alias PolylineOutlineMaterialProperty
-     * @constructor
-     *
-     * @param {Object} [options] Object with the following properties:
-     * @param {Property} [options.color=Color.WHITE] A Property specifying the {@link Color} of the line.
-     * @param {Property} [options.outlineColor=Color.BLACK] A Property specifying the {@link Color} of the outline.
-     * @param {Property} [options.outlineWidth=1.0] A numeric Property specifying the width of the outline, in pixels.
-     */
-    function PolylineOutlineMaterialProperty(options) {
-        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-
-        this._definitionChanged = new Event();
-        this._color = undefined;
-        this._colorSubscription = undefined;
-        this._outlineColor = undefined;
-        this._outlineColorSubscription = undefined;
-        this._outlineWidth = undefined;
-        this._outlineWidthSubscription = undefined;
-
-        this.color = options.color;
-        this.outlineColor = options.outlineColor;
-        this.outlineWidth = options.outlineWidth;
-    }
+        /**
+             * A {@link MaterialProperty} that maps to polyline outline {@link Material} uniforms.
+             * @alias PolylineOutlineMaterialProperty
+             * @constructor
+             *
+             * @param {Object} [options] Object with the following properties:
+             * @param {Property} [options.color=Color.WHITE] A Property specifying the {@link Color} of the line.
+             * @param {Property} [options.outlineColor=Color.BLACK] A Property specifying the {@link Color} of the outline.
+             * @param {Property} [options.outlineWidth=1.0] A numeric Property specifying the width of the outline, in pixels.
+             */
+        class PolylineOutlineMaterialProperty {
+            constructor(options) {
+                options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+                this._definitionChanged = new Event();
+                this._color = undefined;
+                this._colorSubscription = undefined;
+                this._outlineColor = undefined;
+                this._outlineColorSubscription = undefined;
+                this._outlineWidth = undefined;
+                this._outlineWidthSubscription = undefined;
+                this.color = options.color;
+                this.outlineColor = options.outlineColor;
+                this.outlineWidth = options.outlineWidth;
+            }
+            /**
+                 * Gets the {@link Material} type at the provided time.
+                 *
+                 * @param {JulianDate} time The time for which to retrieve the type.
+                 * @returns {String} The type of material.
+                 */
+            getType(time) {
+                return 'PolylineOutline';
+            }
+            /**
+                 * Gets the value of the property at the provided time.
+                 *
+                 * @param {JulianDate} time The time for which to retrieve the value.
+                 * @param {Object} [result] The object to store the value into, if omitted, a new instance is created and returned.
+                 * @returns {Object} The modified result parameter or a new instance if the result parameter was not supplied.
+                 */
+            getValue(time, result) {
+                if (!defined(result)) {
+                    result = {};
+                }
+                result.color = Property.getValueOrClonedDefault(this._color, time, defaultColor, result.color);
+                result.outlineColor = Property.getValueOrClonedDefault(this._outlineColor, time, defaultOutlineColor, result.outlineColor);
+                result.outlineWidth = Property.getValueOrDefault(this._outlineWidth, time, defaultOutlineWidth);
+                return result;
+            }
+            /**
+                 * Compares this property to the provided property and returns
+                 * <code>true</code> if they are equal, <code>false</code> otherwise.
+                 *
+                 * @param {Property} [other] The other property.
+                 * @returns {Boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
+                 */
+            equals(other) {
+                return this === other || //
+                    (other instanceof PolylineOutlineMaterialProperty && //
+                        Property.equals(this._color, other._color) && //
+                        Property.equals(this._outlineColor, other._outlineColor) && //
+                        Property.equals(this._outlineWidth, other._outlineWidth));
+            }
+        }
 
     defineProperties(PolylineOutlineMaterialProperty.prototype, {
         /**
@@ -97,47 +136,8 @@ define([
         outlineWidth : createPropertyDescriptor('outlineWidth')
     });
 
-    /**
-     * Gets the {@link Material} type at the provided time.
-     *
-     * @param {JulianDate} time The time for which to retrieve the type.
-     * @returns {String} The type of material.
-     */
-    PolylineOutlineMaterialProperty.prototype.getType = function(time) {
-        return 'PolylineOutline';
-    };
 
-    /**
-     * Gets the value of the property at the provided time.
-     *
-     * @param {JulianDate} time The time for which to retrieve the value.
-     * @param {Object} [result] The object to store the value into, if omitted, a new instance is created and returned.
-     * @returns {Object} The modified result parameter or a new instance if the result parameter was not supplied.
-     */
-    PolylineOutlineMaterialProperty.prototype.getValue = function(time, result) {
-        if (!defined(result)) {
-            result = {};
-        }
-        result.color = Property.getValueOrClonedDefault(this._color, time, defaultColor, result.color);
-        result.outlineColor = Property.getValueOrClonedDefault(this._outlineColor, time, defaultOutlineColor, result.outlineColor);
-        result.outlineWidth = Property.getValueOrDefault(this._outlineWidth, time, defaultOutlineWidth);
-        return result;
-    };
 
-    /**
-     * Compares this property to the provided property and returns
-     * <code>true</code> if they are equal, <code>false</code> otherwise.
-     *
-     * @param {Property} [other] The other property.
-     * @returns {Boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
-     */
-    PolylineOutlineMaterialProperty.prototype.equals = function(other) {
-        return this === other || //
-               (other instanceof PolylineOutlineMaterialProperty && //
-                Property.equals(this._color, other._color) && //
-                Property.equals(this._outlineColor, other._outlineColor) && //
-                Property.equals(this._outlineWidth, other._outlineWidth));
-    };
 
     return PolylineOutlineMaterialProperty;
 });

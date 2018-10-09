@@ -12,24 +12,47 @@ define([
         Material) {
     'use strict';
 
-    /**
-     * The interface for all {@link Property} objects that represent {@link Material} uniforms.
-     * This type defines an interface and cannot be instantiated directly.
-     *
-     * @alias MaterialProperty
-     * @constructor
-     *
-     * @see ColorMaterialProperty
-     * @see CompositeMaterialProperty
-     * @see GridMaterialProperty
-     * @see ImageMaterialProperty
-     * @see PolylineGlowMaterialProperty
-     * @see PolylineOutlineMaterialProperty
-     * @see StripeMaterialProperty
-     */
-    function MaterialProperty() {
-        DeveloperError.throwInstantiationError();
-    }
+        /**
+             * The interface for all {@link Property} objects that represent {@link Material} uniforms.
+             * This type defines an interface and cannot be instantiated directly.
+             *
+             * @alias MaterialProperty
+             * @constructor
+             *
+             * @see ColorMaterialProperty
+             * @see CompositeMaterialProperty
+             * @see GridMaterialProperty
+             * @see ImageMaterialProperty
+             * @see PolylineGlowMaterialProperty
+             * @see PolylineOutlineMaterialProperty
+             * @see StripeMaterialProperty
+             */
+        class MaterialProperty {
+            constructor() {
+                DeveloperError.throwInstantiationError();
+            }
+            /**
+                 * @private
+                 */
+            static getValue(time, materialProperty, material) {
+                var type;
+                if (defined(materialProperty)) {
+                    type = materialProperty.getType(time);
+                    if (defined(type)) {
+                        if (!defined(material) || (material.type !== type)) {
+                            material = Material.fromType(type);
+                        }
+                        materialProperty.getValue(time, material.uniforms);
+                        return material;
+                    }
+                }
+                if (!defined(material) || (material.type !== Material.ColorType)) {
+                    material = Material.fromType(Material.ColorType);
+                }
+                Color.clone(Color.WHITE, material.uniforms.color);
+                return material;
+            }
+        }
 
     defineProperties(MaterialProperty.prototype, {
         /**
@@ -86,30 +109,6 @@ define([
      */
     MaterialProperty.prototype.equals = DeveloperError.throwInstantiationError;
 
-    /**
-     * @private
-     */
-    MaterialProperty.getValue = function(time, materialProperty, material) {
-        var type;
-
-        if (defined(materialProperty)) {
-            type = materialProperty.getType(time);
-            if (defined(type)) {
-                if (!defined(material) || (material.type !== type)) {
-                    material = Material.fromType(type);
-                }
-                materialProperty.getValue(time, material.uniforms);
-                return material;
-            }
-        }
-
-        if (!defined(material) || (material.type !== Material.ColorType)) {
-            material = Material.fromType(Material.ColorType);
-        }
-        Color.clone(Color.WHITE, material.uniforms.color);
-
-        return material;
-    };
 
     return MaterialProperty;
 });

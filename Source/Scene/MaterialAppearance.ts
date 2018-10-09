@@ -28,82 +28,78 @@ define([
         Material) {
     'use strict';
 
-    /**
-     * An appearance for arbitrary geometry (as opposed to {@link EllipsoidSurfaceAppearance}, for example)
-     * that supports shading with materials.
-     *
-     * @alias MaterialAppearance
-     * @constructor
-     *
-     * @param {Object} [options] Object with the following properties:
-     * @param {Boolean} [options.flat=false] When <code>true</code>, flat shading is used in the fragment shader, which means lighting is not taking into account.
-     * @param {Boolean} [options.faceForward=!options.closed] When <code>true</code>, the fragment shader flips the surface normal as needed to ensure that the normal faces the viewer to avoid dark spots.  This is useful when both sides of a geometry should be shaded like {@link WallGeometry}.
-     * @param {Boolean} [options.translucent=true] When <code>true</code>, the geometry is expected to appear translucent so {@link MaterialAppearance#renderState} has alpha blending enabled.
-     * @param {Boolean} [options.closed=false] When <code>true</code>, the geometry is expected to be closed so {@link MaterialAppearance#renderState} has backface culling enabled.
-     * @param {MaterialAppearance.MaterialSupport} [options.materialSupport=MaterialAppearance.MaterialSupport.TEXTURED] The type of materials that will be supported.
-     * @param {Material} [options.material=Material.ColorType] The material used to determine the fragment color.
-     * @param {String} [options.vertexShaderSource] Optional GLSL vertex shader source to override the default vertex shader.
-     * @param {String} [options.fragmentShaderSource] Optional GLSL fragment shader source to override the default fragment shader.
-     * @param {RenderState} [options.renderState] Optional render state to override the default render state.
-     *
-     * @see {@link https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric|Fabric}
-     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Materials.html|Cesium Sandcastle Material Appearance Demo}
-     *
-     * @example
-     * var primitive = new Cesium.Primitive({
-     *   geometryInstances : new Cesium.GeometryInstance({
-     *     geometry : new Cesium.WallGeometry({
-            materialSupport :  Cesium.MaterialAppearance.MaterialSupport.BASIC.vertexFormat,
-     *       // ...
-     *     })
-     *   }),
-     *   appearance : new Cesium.MaterialAppearance({
-     *     material : Cesium.Material.fromType('Color'),
-     *     faceForward : true
-     *   })
-     *
-     * });
-     */
-    function MaterialAppearance(options) {
-        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-
-        var translucent = defaultValue(options.translucent, true);
-        var closed = defaultValue(options.closed, false);
-        var materialSupport = defaultValue(options.materialSupport, MaterialAppearance.MaterialSupport.TEXTURED);
-
         /**
-         * The material used to determine the fragment color.  Unlike other {@link MaterialAppearance}
-         * properties, this is not read-only, so an appearance's material can change on the fly.
-         *
-         * @type Material
-         *
-         * @default {@link Material.ColorType}
-         *
-         * @see {@link https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric|Fabric}
-         */
-        this.material = (defined(options.material)) ? options.material : Material.fromType(Material.ColorType);
-
-        /**
-         * When <code>true</code>, the geometry is expected to appear translucent.
-         *
-         * @type {Boolean}
-         *
-         * @default true
-         */
-        this.translucent = translucent;
-
-        this._vertexShaderSource = defaultValue(options.vertexShaderSource, materialSupport.vertexShaderSource);
-        this._fragmentShaderSource = defaultValue(options.fragmentShaderSource, materialSupport.fragmentShaderSource);
-        this._renderState = Appearance.getDefaultRenderState(translucent, closed, options.renderState);
-        this._closed = closed;
-
-        // Non-derived members
-
-        this._materialSupport = materialSupport;
-        this._vertexFormat = materialSupport.vertexFormat;
-        this._flat = defaultValue(options.flat, false);
-        this._faceForward = defaultValue(options.faceForward, !closed);
-    }
+             * An appearance for arbitrary geometry (as opposed to {@link EllipsoidSurfaceAppearance}, for example)
+             * that supports shading with materials.
+             *
+             * @alias MaterialAppearance
+             * @constructor
+             *
+             * @param {Object} [options] Object with the following properties:
+             * @param {Boolean} [options.flat=false] When <code>true</code>, flat shading is used in the fragment shader, which means lighting is not taking into account.
+             * @param {Boolean} [options.faceForward=!options.closed] When <code>true</code>, the fragment shader flips the surface normal as needed to ensure that the normal faces the viewer to avoid dark spots.  This is useful when both sides of a geometry should be shaded like {@link WallGeometry}.
+             * @param {Boolean} [options.translucent=true] When <code>true</code>, the geometry is expected to appear translucent so {@link MaterialAppearance#renderState} has alpha blending enabled.
+             * @param {Boolean} [options.closed=false] When <code>true</code>, the geometry is expected to be closed so {@link MaterialAppearance#renderState} has backface culling enabled.
+             * @param {MaterialAppearance.MaterialSupport} [options.materialSupport=MaterialAppearance.MaterialSupport.TEXTURED] The type of materials that will be supported.
+             * @param {Material} [options.material=Material.ColorType] The material used to determine the fragment color.
+             * @param {String} [options.vertexShaderSource] Optional GLSL vertex shader source to override the default vertex shader.
+             * @param {String} [options.fragmentShaderSource] Optional GLSL fragment shader source to override the default fragment shader.
+             * @param {RenderState} [options.renderState] Optional render state to override the default render state.
+             *
+             * @see {@link https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric|Fabric}
+             * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Materials.html|Cesium Sandcastle Material Appearance Demo}
+             *
+             * @example
+             * var primitive = new Cesium.Primitive({
+             *   geometryInstances : new Cesium.GeometryInstance({
+             *     geometry : new Cesium.WallGeometry({
+                    materialSupport :  Cesium.MaterialAppearance.MaterialSupport.BASIC.vertexFormat,
+             *       // ...
+             *     })
+             *   }),
+             *   appearance : new Cesium.MaterialAppearance({
+             *     material : Cesium.Material.fromType('Color'),
+             *     faceForward : true
+             *   })
+             *
+             * });
+             */
+        class MaterialAppearance {
+            constructor(options) {
+                options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+                var translucent = defaultValue(options.translucent, true);
+                var closed = defaultValue(options.closed, false);
+                var materialSupport = defaultValue(options.materialSupport, MaterialAppearance.MaterialSupport.TEXTURED);
+                /**
+                 * The material used to determine the fragment color.  Unlike other {@link MaterialAppearance}
+                 * properties, this is not read-only, so an appearance's material can change on the fly.
+                 *
+                 * @type Material
+                 *
+                 * @default {@link Material.ColorType}
+                 *
+                 * @see {@link https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric|Fabric}
+                 */
+                this.material = (defined(options.material)) ? options.material : Material.fromType(Material.ColorType);
+                /**
+                 * When <code>true</code>, the geometry is expected to appear translucent.
+                 *
+                 * @type {Boolean}
+                 *
+                 * @default true
+                 */
+                this.translucent = translucent;
+                this._vertexShaderSource = defaultValue(options.vertexShaderSource, materialSupport.vertexShaderSource);
+                this._fragmentShaderSource = defaultValue(options.fragmentShaderSource, materialSupport.fragmentShaderSource);
+                this._renderState = Appearance.getDefaultRenderState(translucent, closed, options.renderState);
+                this._closed = closed;
+                // Non-derived members
+                this._materialSupport = materialSupport;
+                this._vertexFormat = materialSupport.vertexFormat;
+                this._flat = defaultValue(options.flat, false);
+                this._faceForward = defaultValue(options.faceForward, !closed);
+            }
+        }
 
     defineProperties(MaterialAppearance.prototype, {
         /**

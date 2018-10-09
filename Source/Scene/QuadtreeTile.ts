@@ -12,177 +12,186 @@ define([
         QuadtreeTileLoadState) {
     'use strict';
 
-    /**
-     * A single tile in a {@link QuadtreePrimitive}.
-     *
-     * @alias QuadtreeTile
-     * @constructor
-     * @private
-     *
-     * @param {Number} options.level The level of the tile in the quadtree.
-     * @param {Number} options.x The X coordinate of the tile in the quadtree.  0 is the westernmost tile.
-     * @param {Number} options.y The Y coordinate of the tile in the quadtree.  0 is the northernmost tile.
-     * @param {TilingScheme} options.tilingScheme The tiling scheme in which this tile exists.
-     * @param {QuadtreeTile} [options.parent] This tile's parent, or undefined if this is a root tile.
-     */
-    function QuadtreeTile(options) {
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(options)) {
-            throw new DeveloperError('options is required.');
-        }
-        if (!defined(options.x)) {
-            throw new DeveloperError('options.x is required.');
-        } else if (!defined(options.y)) {
-            throw new DeveloperError('options.y is required.');
-        } else if (options.x < 0 || options.y < 0) {
-            throw new DeveloperError('options.x and options.y must be greater than or equal to zero.');
-        }
-        if (!defined(options.level)) {
-            throw new DeveloperError('options.level is required and must be greater than or equal to zero.');
-        }
-        if (!defined(options.tilingScheme)) {
-            throw new DeveloperError('options.tilingScheme is required.');
-        }
-        //>>includeEnd('debug');
-
-        this._tilingScheme = options.tilingScheme;
-        this._x = options.x;
-        this._y = options.y;
-        this._level = options.level;
-        this._parent = options.parent;
-        this._rectangle = this._tilingScheme.tileXYToRectangle(this._x, this._y, this._level);
-
-        this._southwestChild = undefined;
-        this._southeastChild = undefined;
-        this._northwestChild = undefined;
-        this._northeastChild = undefined;
-
-        // QuadtreeTileReplacementQueue gets/sets these private properties.
-        this._replacementPrevious = undefined;
-        this._replacementNext = undefined;
-
-        // The distance from the camera to this tile, updated when the tile is selected
-        // for rendering.  We can get rid of this if we have a better way to sort by
-        // distance - for example, by using the natural ordering of a quadtree.
-        // QuadtreePrimitive gets/sets this private property.
-        this._distance = 0.0;
-        this._priorityFunction = undefined;
-
-        this._customData = [];
-        this._frameUpdated = undefined;
-        this._frameRendered = undefined;
-        this._loadedCallbacks = {};
-
         /**
-         * Gets or sets the current state of the tile in the tile load pipeline.
-         * @type {QuadtreeTileLoadState}
-         * @default {@link QuadtreeTileLoadState.START}
-         */
-        this.state = QuadtreeTileLoadState.START;
-
-        /**
-         * Gets or sets a value indicating whether or not the tile is currently renderable.
-         * @type {Boolean}
-         * @default false
-         */
-        this.renderable = false;
-
-        /**
-         * Gets or set a value indicating whether or not the tile was entire upsampled from its
-         * parent tile.  If all four children of a parent tile were upsampled from the parent,
-         * we will render the parent instead of the children even if the LOD indicates that
-         * the children would be preferable.
-         * @type {Boolean}
-         * @default false
-         */
-        this.upsampledFromParent = false;
-
-        /**
-         * Gets or sets the additional data associated with this tile.  The exact content is specific to the
-         * {@link QuadtreeTileProvider}.
-         * @type {Object}
-         * @default undefined
-         */
-        this.data = undefined;
-    }
-
-    /**
-     * Creates a rectangular set of tiles for level of detail zero, the coarsest, least detailed level.
-     *
-     * @memberof QuadtreeTile
-     *
-     * @param {TilingScheme} tilingScheme The tiling scheme for which the tiles are to be created.
-     * @returns {QuadtreeTile[]} An array containing the tiles at level of detail zero, starting with the
-     * tile in the northwest corner and followed by the tile (if any) to its east.
-     */
-    QuadtreeTile.createLevelZeroTiles = function(tilingScheme) {
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(tilingScheme)) {
-            throw new DeveloperError('tilingScheme is required.');
-        }
-        //>>includeEnd('debug');
-
-        var numberOfLevelZeroTilesX = tilingScheme.getNumberOfXTilesAtLevel(0);
-        var numberOfLevelZeroTilesY = tilingScheme.getNumberOfYTilesAtLevel(0);
-
-        var result = new Array(numberOfLevelZeroTilesX * numberOfLevelZeroTilesY);
-
-        var index = 0;
-        for (var y = 0; y < numberOfLevelZeroTilesY; ++y) {
-            for (var x = 0; x < numberOfLevelZeroTilesX; ++x) {
-                result[index++] = new QuadtreeTile({
-                    tilingScheme : tilingScheme,
-                    x : x,
-                    y : y,
-                    level : 0
-                });
-            }
-        }
-
-        return result;
-    };
-
-    QuadtreeTile.prototype._updateCustomData = function(frameNumber, added, removed) {
-        var customData = this.customData;
-
-        var i;
-        var data;
-        var rectangle;
-
-        if (defined(added) && defined(removed)) {
-            customData = customData.filter(function(value) {
-                return removed.indexOf(value) === -1;
-            });
-            this._customData = customData;
-
-            rectangle = this._rectangle;
-            for (i = 0; i < added.length; ++i) {
-                data = added[i];
-                if (Rectangle.contains(rectangle, data.positionCartographic)) {
-                    customData.push(data);
+             * A single tile in a {@link QuadtreePrimitive}.
+             *
+             * @alias QuadtreeTile
+             * @constructor
+             * @private
+             *
+             * @param {Number} options.level The level of the tile in the quadtree.
+             * @param {Number} options.x The X coordinate of the tile in the quadtree.  0 is the westernmost tile.
+             * @param {Number} options.y The Y coordinate of the tile in the quadtree.  0 is the northernmost tile.
+             * @param {TilingScheme} options.tilingScheme The tiling scheme in which this tile exists.
+             * @param {QuadtreeTile} [options.parent] This tile's parent, or undefined if this is a root tile.
+             */
+        class QuadtreeTile {
+            constructor(options) {
+                //>>includeStart('debug', pragmas.debug);
+                if (!defined(options)) {
+                    throw new DeveloperError('options is required.');
                 }
+                if (!defined(options.x)) {
+                    throw new DeveloperError('options.x is required.');
+                }
+                else if (!defined(options.y)) {
+                    throw new DeveloperError('options.y is required.');
+                }
+                else if (options.x < 0 || options.y < 0) {
+                    throw new DeveloperError('options.x and options.y must be greater than or equal to zero.');
+                }
+                if (!defined(options.level)) {
+                    throw new DeveloperError('options.level is required and must be greater than or equal to zero.');
+                }
+                if (!defined(options.tilingScheme)) {
+                    throw new DeveloperError('options.tilingScheme is required.');
+                }
+                //>>includeEnd('debug');
+                this._tilingScheme = options.tilingScheme;
+                this._x = options.x;
+                this._y = options.y;
+                this._level = options.level;
+                this._parent = options.parent;
+                this._rectangle = this._tilingScheme.tileXYToRectangle(this._x, this._y, this._level);
+                this._southwestChild = undefined;
+                this._southeastChild = undefined;
+                this._northwestChild = undefined;
+                this._northeastChild = undefined;
+                // QuadtreeTileReplacementQueue gets/sets these private properties.
+                this._replacementPrevious = undefined;
+                this._replacementNext = undefined;
+                // The distance from the camera to this tile, updated when the tile is selected
+                // for rendering.  We can get rid of this if we have a better way to sort by
+                // distance - for example, by using the natural ordering of a quadtree.
+                // QuadtreePrimitive gets/sets this private property.
+                this._distance = 0.0;
+                this._priorityFunction = undefined;
+                this._customData = [];
+                this._frameUpdated = undefined;
+                this._frameRendered = undefined;
+                this._loadedCallbacks = {};
+                /**
+                 * Gets or sets the current state of the tile in the tile load pipeline.
+                 * @type {QuadtreeTileLoadState}
+                 * @default {@link QuadtreeTileLoadState.START}
+                 */
+                this.state = QuadtreeTileLoadState.START;
+                /**
+                 * Gets or sets a value indicating whether or not the tile is currently renderable.
+                 * @type {Boolean}
+                 * @default false
+                 */
+                this.renderable = false;
+                /**
+                 * Gets or set a value indicating whether or not the tile was entire upsampled from its
+                 * parent tile.  If all four children of a parent tile were upsampled from the parent,
+                 * we will render the parent instead of the children even if the LOD indicates that
+                 * the children would be preferable.
+                 * @type {Boolean}
+                 * @default false
+                 */
+                this.upsampledFromParent = false;
+                /**
+                 * Gets or sets the additional data associated with this tile.  The exact content is specific to the
+                 * {@link QuadtreeTileProvider}.
+                 * @type {Object}
+                 * @default undefined
+                 */
+                this.data = undefined;
             }
-
-            this._frameUpdated = frameNumber;
-        } else {
-            // interior or leaf tile, update from parent
-            var parent = this._parent;
-            if (defined(parent) && this._frameUpdated !== parent._frameUpdated) {
-                customData.length = 0;
-
-                rectangle = this._rectangle;
-                var parentCustomData = parent.customData;
-                for (i = 0; i < parentCustomData.length; ++i) {
-                    data = parentCustomData[i];
-                    if (Rectangle.contains(rectangle, data.positionCartographic)) {
-                        customData.push(data);
+            _updateCustomData(frameNumber, added, removed) {
+                var customData = this.customData;
+                var i;
+                var data;
+                var rectangle;
+                if (defined(added) && defined(removed)) {
+                    customData = customData.filter(function(value) {
+                        return removed.indexOf(value) === -1;
+                    });
+                    this._customData = customData;
+                    rectangle = this._rectangle;
+                    for (i = 0; i < added.length; ++i) {
+                        data = added[i];
+                        if (Rectangle.contains(rectangle, data.positionCartographic)) {
+                            customData.push(data);
+                        }
+                    }
+                    this._frameUpdated = frameNumber;
+                }
+                else {
+                    // interior or leaf tile, update from parent
+                    var parent = this._parent;
+                    if (defined(parent) && this._frameUpdated !== parent._frameUpdated) {
+                        customData.length = 0;
+                        rectangle = this._rectangle;
+                        var parentCustomData = parent.customData;
+                        for (i = 0; i < parentCustomData.length; ++i) {
+                            data = parentCustomData[i];
+                            if (Rectangle.contains(rectangle, data.positionCartographic)) {
+                                customData.push(data);
+                            }
+                        }
+                        this._frameUpdated = parent._frameUpdated;
                     }
                 }
-
-                this._frameUpdated = parent._frameUpdated;
+            }
+            /**
+                 * Frees the resources associated with this tile and returns it to the <code>START</code>
+                 * {@link QuadtreeTileLoadState}.  If the {@link QuadtreeTile#data} property is defined and it
+                 * has a <code>freeResources</code> method, the method will be invoked.
+                 *
+                 * @memberof QuadtreeTile
+                 */
+            freeResources() {
+                this.state = QuadtreeTileLoadState.START;
+                this.renderable = false;
+                this.upsampledFromParent = false;
+                if (defined(this.data) && defined(this.data.freeResources)) {
+                    this.data.freeResources();
+                }
+                freeTile(this._southwestChild);
+                this._southwestChild = undefined;
+                freeTile(this._southeastChild);
+                this._southeastChild = undefined;
+                freeTile(this._northwestChild);
+                this._northwestChild = undefined;
+                freeTile(this._northeastChild);
+                this._northeastChild = undefined;
+            }
+            /**
+                 * Creates a rectangular set of tiles for level of detail zero, the coarsest, least detailed level.
+                 *
+                 * @memberof QuadtreeTile
+                 *
+                 * @param {TilingScheme} tilingScheme The tiling scheme for which the tiles are to be created.
+                 * @returns {QuadtreeTile[]} An array containing the tiles at level of detail zero, starting with the
+                 * tile in the northwest corner and followed by the tile (if any) to its east.
+                 */
+            static createLevelZeroTiles(tilingScheme) {
+                //>>includeStart('debug', pragmas.debug);
+                if (!defined(tilingScheme)) {
+                    throw new DeveloperError('tilingScheme is required.');
+                }
+                //>>includeEnd('debug');
+                var numberOfLevelZeroTilesX = tilingScheme.getNumberOfXTilesAtLevel(0);
+                var numberOfLevelZeroTilesY = tilingScheme.getNumberOfYTilesAtLevel(0);
+                var result = new Array(numberOfLevelZeroTilesX * numberOfLevelZeroTilesY);
+                var index = 0;
+                for (var y = 0; y < numberOfLevelZeroTilesY; ++y) {
+                    for (var x = 0; x < numberOfLevelZeroTilesX; ++x) {
+                        result[index++] = new QuadtreeTile({
+                            tilingScheme: tilingScheme,
+                            x: x,
+                            y: y,
+                            level: 0
+                        });
+                    }
+                }
+                return result;
             }
         }
-    };
+
+
 
     defineProperties(QuadtreeTile.prototype, {
         /**
@@ -394,31 +403,6 @@ define([
         }
     });
 
-    /**
-     * Frees the resources associated with this tile and returns it to the <code>START</code>
-     * {@link QuadtreeTileLoadState}.  If the {@link QuadtreeTile#data} property is defined and it
-     * has a <code>freeResources</code> method, the method will be invoked.
-     *
-     * @memberof QuadtreeTile
-     */
-    QuadtreeTile.prototype.freeResources = function() {
-        this.state = QuadtreeTileLoadState.START;
-        this.renderable = false;
-        this.upsampledFromParent = false;
-
-        if (defined(this.data) && defined(this.data.freeResources)) {
-            this.data.freeResources();
-        }
-
-        freeTile(this._southwestChild);
-        this._southwestChild = undefined;
-        freeTile(this._southeastChild);
-        this._southeastChild = undefined;
-        freeTile(this._northwestChild);
-        this._northwestChild = undefined;
-        freeTile(this._northeastChild);
-        this._northeastChild = undefined;
-    };
 
     function freeTile(tile) {
         if (defined(tile)) {

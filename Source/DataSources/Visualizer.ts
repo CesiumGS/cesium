@@ -4,25 +4,27 @@ define([
         DeveloperError) {
     'use strict';
 
-    /**
-     * Defines the interface for visualizers. Visualizers are plug-ins to
-     * {@link DataSourceDisplay} that render data associated with
-     * {@link DataSource} instances.
-     * This object is an interface for documentation purposes and is not intended
-     * to be instantiated directly.
-     * @alias Visualizer
-     * @constructor
-     *
-     * @see BillboardVisualizer
-     * @see LabelVisualizer
-     * @see ModelVisualizer
-     * @see PathVisualizer
-     * @see PointVisualizer
-     * @see GeometryVisualizer
-     */
-    function Visualizer() {
-        DeveloperError.throwInstantiationError();
-    }
+        /**
+             * Defines the interface for visualizers. Visualizers are plug-ins to
+             * {@link DataSourceDisplay} that render data associated with
+             * {@link DataSource} instances.
+             * This object is an interface for documentation purposes and is not intended
+             * to be instantiated directly.
+             * @alias Visualizer
+             * @constructor
+             *
+             * @see BillboardVisualizer
+             * @see LabelVisualizer
+             * @see ModelVisualizer
+             * @see PathVisualizer
+             * @see PointVisualizer
+             * @see GeometryVisualizer
+             */
+        class Visualizer {
+            constructor() {
+                DeveloperError.throwInstantiationError();
+            }
+        }
 
     /**
      * Updates the visualization to the provided time.

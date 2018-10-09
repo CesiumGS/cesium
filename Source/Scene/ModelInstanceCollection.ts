@@ -63,110 +63,194 @@ define([
         FAILED : 3
     };
 
-    /**
-     * A 3D model instance collection. All instances reference the same underlying model, but have unique
-     * per-instance properties like model matrix, pick id, etc.
-     *
-     * Instances are rendered relative-to-center and for best results instances should be positioned close to one another.
-     * Otherwise there may be precision issues if, for example, instances are placed on opposite sides of the globe.
-     *
-     * @alias ModelInstanceCollection
-     * @constructor
-     *
-     * @param {Object} options Object with the following properties:
-     * @param {Object[]} [options.instances] An array of instances, where each instance contains a modelMatrix and optional batchId when options.batchTable is defined.
-     * @param {Cesium3DTileBatchTable} [options.batchTable] The batch table of the instanced 3D Tile.
-     * @param {Resource|String} [options.url] The url to the .gltf file.
-     * @param {Object} [options.requestType] The request type, used for request prioritization
-     * @param {Object|ArrayBuffer|Uint8Array} [options.gltf] A glTF JSON object, or a binary glTF buffer.
-     * @param {Resource|String} [options.basePath=''] The base path that paths in the glTF JSON are relative to.
-     * @param {Boolean} [options.dynamic=false] Hint if instance model matrices will be updated frequently.
-     * @param {Boolean} [options.show=true] Determines if the collection will be shown.
-     * @param {Boolean} [options.allowPicking=true] When <code>true</code>, each instance is pickable with {@link Scene#pick}.
-     * @param {Boolean} [options.asynchronous=true] Determines if model WebGL resource creation will be spread out over several frames or block until completion once all glTF files are loaded.
-     * @param {Boolean} [options.incrementallyLoadTextures=true] Determine if textures may continue to stream in after the model is loaded.
-     * @param {ShadowMode} [options.shadows=ShadowMode.ENABLED] Determines whether the collection casts or receives shadows from each light source.
-     * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Draws the bounding sphere for the collection.
-     * @param {Boolean} [options.debugWireframe=false] For debugging only. Draws the instances in wireframe.
-     *
-     * @exception {DeveloperError} Must specify either <options.gltf> or <options.url>, but not both.
-     * @exception {DeveloperError} Shader program cannot be optimized for instancing. Parameters cannot have any of the following semantics: MODEL, MODELINVERSE, MODELVIEWINVERSE, MODELVIEWPROJECTIONINVERSE, MODELINVERSETRANSPOSE.
-     *
-     * @private
-     */
-    function ModelInstanceCollection(options) {
-        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(options.gltf) && !defined(options.url)) {
-            throw new DeveloperError('Either options.gltf or options.url is required.');
+        /**
+             * A 3D model instance collection. All instances reference the same underlying model, but have unique
+             * per-instance properties like model matrix, pick id, etc.
+             *
+             * Instances are rendered relative-to-center and for best results instances should be positioned close to one another.
+             * Otherwise there may be precision issues if, for example, instances are placed on opposite sides of the globe.
+             *
+             * @alias ModelInstanceCollection
+             * @constructor
+             *
+             * @param {Object} options Object with the following properties:
+             * @param {Object[]} [options.instances] An array of instances, where each instance contains a modelMatrix and optional batchId when options.batchTable is defined.
+             * @param {Cesium3DTileBatchTable} [options.batchTable] The batch table of the instanced 3D Tile.
+             * @param {Resource|String} [options.url] The url to the .gltf file.
+             * @param {Object} [options.requestType] The request type, used for request prioritization
+             * @param {Object|ArrayBuffer|Uint8Array} [options.gltf] A glTF JSON object, or a binary glTF buffer.
+             * @param {Resource|String} [options.basePath=''] The base path that paths in the glTF JSON are relative to.
+             * @param {Boolean} [options.dynamic=false] Hint if instance model matrices will be updated frequently.
+             * @param {Boolean} [options.show=true] Determines if the collection will be shown.
+             * @param {Boolean} [options.allowPicking=true] When <code>true</code>, each instance is pickable with {@link Scene#pick}.
+             * @param {Boolean} [options.asynchronous=true] Determines if model WebGL resource creation will be spread out over several frames or block until completion once all glTF files are loaded.
+             * @param {Boolean} [options.incrementallyLoadTextures=true] Determine if textures may continue to stream in after the model is loaded.
+             * @param {ShadowMode} [options.shadows=ShadowMode.ENABLED] Determines whether the collection casts or receives shadows from each light source.
+             * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Draws the bounding sphere for the collection.
+             * @param {Boolean} [options.debugWireframe=false] For debugging only. Draws the instances in wireframe.
+             *
+             * @exception {DeveloperError} Must specify either <options.gltf> or <options.url>, but not both.
+             * @exception {DeveloperError} Shader program cannot be optimized for instancing. Parameters cannot have any of the following semantics: MODEL, MODELINVERSE, MODELVIEWINVERSE, MODELVIEWPROJECTIONINVERSE, MODELINVERSETRANSPOSE.
+             *
+             * @private
+             */
+        class ModelInstanceCollection {
+            constructor(options) {
+                options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+                //>>includeStart('debug', pragmas.debug);
+                if (!defined(options.gltf) && !defined(options.url)) {
+                    throw new DeveloperError('Either options.gltf or options.url is required.');
+                }
+                if (defined(options.gltf) && defined(options.url)) {
+                    throw new DeveloperError('Cannot pass in both options.gltf and options.url.');
+                }
+                //>>includeEnd('debug');
+                this.show = defaultValue(options.show, true);
+                this._instancingSupported = false;
+                this._dynamic = defaultValue(options.dynamic, false);
+                this._allowPicking = defaultValue(options.allowPicking, true);
+                this._ready = false;
+                this._readyPromise = when.defer();
+                this._state = LoadState.NEEDS_LOAD;
+                this._dirty = false;
+                // Undocumented options
+                this._cull = defaultValue(options.cull, true);
+                this._opaquePass = defaultValue(options.opaquePass, Pass.OPAQUE);
+                this._instances = createInstances(this, options.instances);
+                // When the model instance collection is backed by an i3dm tile,
+                // use its batch table resources to modify the shaders, attributes, and uniform maps.
+                this._batchTable = options.batchTable;
+                this._model = undefined;
+                this._vertexBufferTypedArray = undefined; // Hold onto the vertex buffer contents when dynamic is true
+                this._vertexBuffer = undefined;
+                this._batchIdBuffer = undefined;
+                this._instancedUniformsByProgram = undefined;
+                this._drawCommands = [];
+                this._modelCommands = undefined;
+                this._boundingSphere = createBoundingSphere(this);
+                this._center = Cartesian3.clone(this._boundingSphere.center);
+                this._rtcTransform = new Matrix4();
+                this._rtcModelView = new Matrix4(); // Holds onto uniform
+                this._mode = undefined;
+                this.modelMatrix = Matrix4.clone(Matrix4.IDENTITY);
+                this._modelMatrix = Matrix4.clone(this.modelMatrix);
+                // Passed on to Model
+                this._url = Resource.createIfNeeded(options.url);
+                this._requestType = options.requestType;
+                this._gltf = options.gltf;
+                this._basePath = Resource.createIfNeeded(options.basePath);
+                this._asynchronous = options.asynchronous;
+                this._incrementallyLoadTextures = options.incrementallyLoadTextures;
+                this._upAxis = options.upAxis; // Undocumented option
+                this._forwardAxis = options.forwardAxis; // Undocumented option
+                this.shadows = defaultValue(options.shadows, ShadowMode.ENABLED);
+                this._shadows = this.shadows;
+                this._pickIdLoaded = options.pickIdLoaded;
+                this.debugShowBoundingVolume = defaultValue(options.debugShowBoundingVolume, false);
+                this._debugShowBoundingVolume = false;
+                this.debugWireframe = defaultValue(options.debugWireframe, false);
+                this._debugWireframe = false;
+            }
+            expandBoundingSphere(instanceModelMatrix) {
+                var translation = Matrix4.getTranslation(instanceModelMatrix, scratchCartesian);
+                BoundingSphere.expand(this._boundingSphere, translation, this._boundingSphere);
+            }
+            update(frameState) {
+                if (frameState.mode === SceneMode.MORPHING) {
+                    return;
+                }
+                if (!this.show) {
+                    return;
+                }
+                if (this.length === 0) {
+                    return;
+                }
+                var context = frameState.context;
+                if (this._state === LoadState.NEEDS_LOAD) {
+                    this._state = LoadState.LOADING;
+                    this._instancingSupported = context.instancedArrays;
+                    createModel(this, context);
+                    var that = this;
+                    this._model.readyPromise.otherwise(function(error) {
+                        that._state = LoadState.FAILED;
+                        that._readyPromise.reject(error);
+                    });
+                }
+                var instancingSupported = this._instancingSupported;
+                var model = this._model;
+                model.update(frameState);
+                if (model.ready && (this._state === LoadState.LOADING)) {
+                    this._state = LoadState.LOADED;
+                    this._ready = true;
+                    // Expand bounding volume to fit the radius of the loaded model including the model's offset from the center
+                    var modelRadius = model.boundingSphere.radius + Cartesian3.magnitude(model.boundingSphere.center);
+                    this._boundingSphere.radius += modelRadius;
+                    this._modelCommands = getModelCommands(model);
+                    generateModelCommands(this, instancingSupported);
+                    this._readyPromise.resolve(this);
+                    return;
+                }
+                if (this._state !== LoadState.LOADED) {
+                    return;
+                }
+                var modeChanged = (frameState.mode !== this._mode);
+                var modelMatrix = this.modelMatrix;
+                var modelMatrixChanged = !Matrix4.equals(this._modelMatrix, modelMatrix);
+                if (modeChanged || modelMatrixChanged) {
+                    this._mode = frameState.mode;
+                    Matrix4.clone(modelMatrix, this._modelMatrix);
+                    var rtcTransform = Matrix4.multiplyByTranslation(this._modelMatrix, this._center, this._rtcTransform);
+                    if (this._mode !== SceneMode.SCENE3D) {
+                        rtcTransform = Transforms.basisTo2D(frameState.mapProjection, rtcTransform, rtcTransform);
+                    }
+                    Matrix4.getTranslation(rtcTransform, this._boundingSphere.center);
+                }
+                if (instancingSupported && this._dirty) {
+                    // If at least one instance has moved assume the collection is now dynamic
+                    this._dynamic = true;
+                    this._dirty = false;
+                    // PERFORMANCE_IDEA: only update dirty sub-sections instead of the whole collection
+                    updateVertexBuffer(this);
+                }
+                // If the model was set to rebuild shaders during update, rebuild instanced commands.
+                if (commandsDirty(model)) {
+                    generateModelCommands(this, instancingSupported);
+                }
+                // If any node changes due to an animation, update the commands. This could be inefficient if the model is
+                // composed of many nodes and only one changes, however it is probably fine in the general use case.
+                // Only applies when instancing is disabled. The instanced shader automatically handles node transformations.
+                if (!instancingSupported && (model.dirty || this._dirty || modeChanged || modelMatrixChanged)) {
+                    updateCommandsNonInstanced(this);
+                }
+                updateShadows(this);
+                updateWireframe(this);
+                updateShowBoundingVolume(this);
+                var passes = frameState.passes;
+                if (!passes.render && !passes.pick) {
+                    return;
+                }
+                var commandList = frameState.commandList;
+                var commands = this._drawCommands;
+                var commandsLength = commands.length;
+                for (var i = 0; i < commandsLength; ++i) {
+                    commandList.push(commands[i]);
+                }
+            }
+            isDestroyed() {
+                return false;
+            }
+            destroy() {
+                this._model = this._model && this._model.destroy();
+                var pickIds = this._pickIds;
+                if (defined(pickIds)) {
+                    var length = pickIds.length;
+                    for (var i = 0; i < length; ++i) {
+                        pickIds[i].destroy();
+                    }
+                }
+                return destroyObject(this);
+            }
         }
-
-        if (defined(options.gltf) && defined(options.url)) {
-            throw new DeveloperError('Cannot pass in both options.gltf and options.url.');
-        }
-        //>>includeEnd('debug');
-
-        this.show = defaultValue(options.show, true);
-
-        this._instancingSupported = false;
-        this._dynamic = defaultValue(options.dynamic, false);
-        this._allowPicking = defaultValue(options.allowPicking, true);
-        this._ready = false;
-        this._readyPromise = when.defer();
-        this._state = LoadState.NEEDS_LOAD;
-        this._dirty = false;
-
-        // Undocumented options
-        this._cull = defaultValue(options.cull, true);
-        this._opaquePass = defaultValue(options.opaquePass, Pass.OPAQUE);
-
-        this._instances = createInstances(this, options.instances);
-
-        // When the model instance collection is backed by an i3dm tile,
-        // use its batch table resources to modify the shaders, attributes, and uniform maps.
-        this._batchTable = options.batchTable;
-
-        this._model = undefined;
-        this._vertexBufferTypedArray = undefined; // Hold onto the vertex buffer contents when dynamic is true
-        this._vertexBuffer = undefined;
-        this._batchIdBuffer = undefined;
-        this._instancedUniformsByProgram = undefined;
-
-        this._drawCommands = [];
-        this._modelCommands = undefined;
-
-        this._boundingSphere = createBoundingSphere(this);
-        this._center = Cartesian3.clone(this._boundingSphere.center);
-        this._rtcTransform = new Matrix4();
-        this._rtcModelView = new Matrix4(); // Holds onto uniform
-
-        this._mode = undefined;
-
-        this.modelMatrix = Matrix4.clone(Matrix4.IDENTITY);
-        this._modelMatrix = Matrix4.clone(this.modelMatrix);
-
-        // Passed on to Model
-        this._url = Resource.createIfNeeded(options.url);
-        this._requestType = options.requestType;
-        this._gltf = options.gltf;
-        this._basePath = Resource.createIfNeeded(options.basePath);
-        this._asynchronous = options.asynchronous;
-        this._incrementallyLoadTextures = options.incrementallyLoadTextures;
-        this._upAxis = options.upAxis; // Undocumented option
-        this._forwardAxis = options.forwardAxis; // Undocumented option
-
-        this.shadows = defaultValue(options.shadows, ShadowMode.ENABLED);
-        this._shadows = this.shadows;
-
-        this._pickIdLoaded = options.pickIdLoaded;
-
-        this.debugShowBoundingVolume = defaultValue(options.debugShowBoundingVolume, false);
-        this._debugShowBoundingVolume = false;
-
-        this.debugWireframe = defaultValue(options.debugWireframe, false);
-        this._debugWireframe = false;
-    }
 
     defineProperties(ModelInstanceCollection.prototype, {
         allowPicking : {
@@ -222,10 +306,6 @@ define([
     var scratchCartesian = new Cartesian3();
     var scratchMatrix = new Matrix4();
 
-    ModelInstanceCollection.prototype.expandBoundingSphere = function(instanceModelMatrix) {
-        var translation = Matrix4.getTranslation(instanceModelMatrix, scratchCartesian);
-        BoundingSphere.expand(this._boundingSphere, translation, this._boundingSphere);
-    };
 
     function getCheckUniformSemanticFunction(modelSemantics, supportedSemantics, programId, uniformMap) {
         return function(uniform, uniformName) {
@@ -841,126 +921,8 @@ define([
         }
     }
 
-    ModelInstanceCollection.prototype.update = function(frameState) {
-        if (frameState.mode === SceneMode.MORPHING) {
-            return;
-        }
 
-        if (!this.show) {
-            return;
-        }
 
-        if (this.length === 0) {
-            return;
-        }
-
-        var context = frameState.context;
-
-        if (this._state === LoadState.NEEDS_LOAD) {
-            this._state = LoadState.LOADING;
-            this._instancingSupported = context.instancedArrays;
-            createModel(this, context);
-            var that = this;
-            this._model.readyPromise.otherwise(function(error) {
-                that._state = LoadState.FAILED;
-                that._readyPromise.reject(error);
-            });
-        }
-
-        var instancingSupported = this._instancingSupported;
-        var model = this._model;
-
-        model.update(frameState);
-
-        if (model.ready && (this._state === LoadState.LOADING)) {
-            this._state = LoadState.LOADED;
-            this._ready = true;
-
-            // Expand bounding volume to fit the radius of the loaded model including the model's offset from the center
-            var modelRadius = model.boundingSphere.radius + Cartesian3.magnitude(model.boundingSphere.center);
-            this._boundingSphere.radius += modelRadius;
-            this._modelCommands = getModelCommands(model);
-
-            generateModelCommands(this, instancingSupported);
-
-            this._readyPromise.resolve(this);
-            return;
-        }
-
-        if (this._state !== LoadState.LOADED) {
-            return;
-        }
-
-        var modeChanged = (frameState.mode !== this._mode);
-        var modelMatrix = this.modelMatrix;
-        var modelMatrixChanged = !Matrix4.equals(this._modelMatrix, modelMatrix);
-
-        if (modeChanged || modelMatrixChanged) {
-            this._mode = frameState.mode;
-            Matrix4.clone(modelMatrix, this._modelMatrix);
-            var rtcTransform = Matrix4.multiplyByTranslation(this._modelMatrix, this._center, this._rtcTransform);
-            if (this._mode !== SceneMode.SCENE3D) {
-                rtcTransform = Transforms.basisTo2D(frameState.mapProjection, rtcTransform, rtcTransform);
-            }
-            Matrix4.getTranslation(rtcTransform, this._boundingSphere.center);
-        }
-
-        if (instancingSupported && this._dirty) {
-            // If at least one instance has moved assume the collection is now dynamic
-            this._dynamic = true;
-            this._dirty = false;
-
-            // PERFORMANCE_IDEA: only update dirty sub-sections instead of the whole collection
-            updateVertexBuffer(this);
-        }
-
-        // If the model was set to rebuild shaders during update, rebuild instanced commands.
-        if (commandsDirty(model)) {
-            generateModelCommands(this, instancingSupported);
-        }
-
-        // If any node changes due to an animation, update the commands. This could be inefficient if the model is
-        // composed of many nodes and only one changes, however it is probably fine in the general use case.
-        // Only applies when instancing is disabled. The instanced shader automatically handles node transformations.
-        if (!instancingSupported && (model.dirty || this._dirty || modeChanged || modelMatrixChanged)) {
-            updateCommandsNonInstanced(this);
-        }
-
-        updateShadows(this);
-        updateWireframe(this);
-        updateShowBoundingVolume(this);
-
-        var passes = frameState.passes;
-        if (!passes.render && !passes.pick) {
-            return;
-        }
-
-        var commandList = frameState.commandList;
-        var commands = this._drawCommands;
-        var commandsLength = commands.length;
-
-        for (var i = 0; i < commandsLength; ++i) {
-            commandList.push(commands[i]);
-        }
-    };
-
-    ModelInstanceCollection.prototype.isDestroyed = function() {
-        return false;
-    };
-
-    ModelInstanceCollection.prototype.destroy = function() {
-        this._model = this._model && this._model.destroy();
-
-        var pickIds = this._pickIds;
-        if (defined(pickIds)) {
-            var length = pickIds.length;
-            for (var i = 0; i < length; ++i) {
-                pickIds[i].destroy();
-            }
-        }
-
-        return destroyObject(this);
-    };
 
     return ModelInstanceCollection;
 });

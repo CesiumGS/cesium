@@ -56,58 +56,242 @@ define([
         }
     }
 
-    /**
-     * An observable collection of {@link Entity} instances where each entity has a unique id.
-     * @alias EntityCollection
-     * @constructor
-     *
-     * @param {DataSource|CompositeEntityCollection} [owner] The data source (or composite entity collection) which created this collection.
-     */
-    function EntityCollection(owner) {
-        this._owner = owner;
-        this._entities = new AssociativeArray();
-        this._addedEntities = new AssociativeArray();
-        this._removedEntities = new AssociativeArray();
-        this._changedEntities = new AssociativeArray();
-        this._suspendCount = 0;
-        this._collectionChanged = new Event();
-        this._id = createGuid();
-        this._show = true;
-        this._firing = false;
-        this._refire  = false;
-    }
-
-    /**
-     * Prevents {@link EntityCollection#collectionChanged} events from being raised
-     * until a corresponding call is made to {@link EntityCollection#resumeEvents}, at which
-     * point a single event will be raised that covers all suspended operations.
-     * This allows for many items to be added and removed efficiently.
-     * This function can be safely called multiple times as long as there
-     * are corresponding calls to {@link EntityCollection#resumeEvents}.
-     */
-    EntityCollection.prototype.suspendEvents = function() {
-        this._suspendCount++;
-    };
-
-    /**
-     * Resumes raising {@link EntityCollection#collectionChanged} events immediately
-     * when an item is added or removed.  Any modifications made while while events were suspended
-     * will be triggered as a single event when this function is called.
-     * This function is reference counted and can safely be called multiple times as long as there
-     * are corresponding calls to {@link EntityCollection#resumeEvents}.
-     *
-     * @exception {DeveloperError} resumeEvents can not be called before suspendEvents.
-     */
-    EntityCollection.prototype.resumeEvents = function() {
-        //>>includeStart('debug', pragmas.debug);
-        if (this._suspendCount === 0) {
-            throw new DeveloperError('resumeEvents can not be called before suspendEvents.');
+        /**
+             * An observable collection of {@link Entity} instances where each entity has a unique id.
+             * @alias EntityCollection
+             * @constructor
+             *
+             * @param {DataSource|CompositeEntityCollection} [owner] The data source (or composite entity collection) which created this collection.
+             */
+        class EntityCollection {
+            constructor(owner) {
+                this._owner = owner;
+                this._entities = new AssociativeArray();
+                this._addedEntities = new AssociativeArray();
+                this._removedEntities = new AssociativeArray();
+                this._changedEntities = new AssociativeArray();
+                this._suspendCount = 0;
+                this._collectionChanged = new Event();
+                this._id = createGuid();
+                this._show = true;
+                this._firing = false;
+                this._refire = false;
+            }
+            /**
+                 * Prevents {@link EntityCollection#collectionChanged} events from being raised
+                 * until a corresponding call is made to {@link EntityCollection#resumeEvents}, at which
+                 * point a single event will be raised that covers all suspended operations.
+                 * This allows for many items to be added and removed efficiently.
+                 * This function can be safely called multiple times as long as there
+                 * are corresponding calls to {@link EntityCollection#resumeEvents}.
+                 */
+            suspendEvents() {
+                this._suspendCount++;
+            }
+            /**
+                 * Resumes raising {@link EntityCollection#collectionChanged} events immediately
+                 * when an item is added or removed.  Any modifications made while while events were suspended
+                 * will be triggered as a single event when this function is called.
+                 * This function is reference counted and can safely be called multiple times as long as there
+                 * are corresponding calls to {@link EntityCollection#resumeEvents}.
+                 *
+                 * @exception {DeveloperError} resumeEvents can not be called before suspendEvents.
+                 */
+            resumeEvents() {
+                //>>includeStart('debug', pragmas.debug);
+                if (this._suspendCount === 0) {
+                    throw new DeveloperError('resumeEvents can not be called before suspendEvents.');
+                }
+                //>>includeEnd('debug');
+                this._suspendCount--;
+                fireChangedEvent(this);
+            }
+            /**
+                 * Computes the maximum availability of the entities in the collection.
+                 * If the collection contains a mix of infinitely available data and non-infinite data,
+                 * it will return the interval pertaining to the non-infinite data only.  If all
+                 * data is infinite, an infinite interval will be returned.
+                 *
+                 * @returns {TimeInterval} The availability of entities in the collection.
+                 */
+            computeAvailability() {
+                var startTime = Iso8601.MAXIMUM_VALUE;
+                var stopTime = Iso8601.MINIMUM_VALUE;
+                var entities = this._entities.values;
+                for (var i = 0, len = entities.length; i < len; i++) {
+                    var entity = entities[i];
+                    var availability = entity.availability;
+                    if (defined(availability)) {
+                        var start = availability.start;
+                        var stop = availability.stop;
+                        if (JulianDate.lessThan(start, startTime) && !start.equals(Iso8601.MINIMUM_VALUE)) {
+                            startTime = start;
+                        }
+                        if (JulianDate.greaterThan(stop, stopTime) && !stop.equals(Iso8601.MAXIMUM_VALUE)) {
+                            stopTime = stop;
+                        }
+                    }
+                }
+                if (Iso8601.MAXIMUM_VALUE.equals(startTime)) {
+                    startTime = Iso8601.MINIMUM_VALUE;
+                }
+                if (Iso8601.MINIMUM_VALUE.equals(stopTime)) {
+                    stopTime = Iso8601.MAXIMUM_VALUE;
+                }
+                return new TimeInterval({
+                    start: startTime,
+                    stop: stopTime
+                });
+            }
+            /**
+                 * Add an entity to the collection.
+                 *
+                 * @param {Entity} entity The entity to be added.
+                 * @returns {Entity} The entity that was added.
+                 * @exception {DeveloperError} An entity with <entity.id> already exists in this collection.
+                 */
+            add(entity) {
+                //>>includeStart('debug', pragmas.debug);
+                if (!defined(entity)) {
+                    throw new DeveloperError('entity is required.');
+                }
+                //>>includeEnd('debug');
+                if (!(entity instanceof Entity)) {
+                    entity = new Entity(entity);
+                }
+                var id = entity.id;
+                var entities = this._entities;
+                if (entities.contains(id)) {
+                    throw new RuntimeError('An entity with id ' + id + ' already exists in this collection.');
+                }
+                entity.entityCollection = this;
+                entities.set(id, entity);
+                if (!this._removedEntities.remove(id)) {
+                    this._addedEntities.set(id, entity);
+                }
+                entity.definitionChanged.addEventListener(EntityCollection.prototype._onEntityDefinitionChanged, this);
+                fireChangedEvent(this);
+                return entity;
+            }
+            /**
+                 * Removes an entity from the collection.
+                 *
+                 * @param {Entity} entity The entity to be removed.
+                 * @returns {Boolean} true if the item was removed, false if it did not exist in the collection.
+                 */
+            remove(entity) {
+                if (!defined(entity)) {
+                    return false;
+                }
+                return this.removeById(entity.id);
+            }
+            /**
+                 * Returns true if the provided entity is in this collection, false otherwise.
+                 *
+                 * @param {Entity} entity The entity.
+                 * @returns {Boolean} true if the provided entity is in this collection, false otherwise.
+                 */
+            contains(entity) {
+                //>>includeStart('debug', pragmas.debug);
+                if (!defined(entity)) {
+                    throw new DeveloperError('entity is required');
+                }
+                //>>includeEnd('debug');
+                return this._entities.get(entity.id) === entity;
+            }
+            /**
+                 * Removes an entity with the provided id from the collection.
+                 *
+                 * @param {String} id The id of the entity to remove.
+                 * @returns {Boolean} true if the item was removed, false if no item with the provided id existed in the collection.
+                 */
+            removeById(id) {
+                if (!defined(id)) {
+                    return false;
+                }
+                var entities = this._entities;
+                var entity = entities.get(id);
+                if (!this._entities.remove(id)) {
+                    return false;
+                }
+                if (!this._addedEntities.remove(id)) {
+                    this._removedEntities.set(id, entity);
+                    this._changedEntities.remove(id);
+                }
+                this._entities.remove(id);
+                entity.definitionChanged.removeEventListener(EntityCollection.prototype._onEntityDefinitionChanged, this);
+                fireChangedEvent(this);
+                return true;
+            }
+            /**
+                 * Removes all Entities from the collection.
+                 */
+            removeAll() {
+                //The event should only contain items added before events were suspended
+                //and the contents of the collection.
+                var entities = this._entities;
+                var entitiesLength = entities.length;
+                var array = entities.values;
+                var addedEntities = this._addedEntities;
+                var removed = this._removedEntities;
+                for (var i = 0; i < entitiesLength; i++) {
+                    var existingItem = array[i];
+                    var existingItemId = existingItem.id;
+                    var addedItem = addedEntities.get(existingItemId);
+                    if (!defined(addedItem)) {
+                        existingItem.definitionChanged.removeEventListener(EntityCollection.prototype._onEntityDefinitionChanged, this);
+                        removed.set(existingItemId, existingItem);
+                    }
+                }
+                entities.removeAll();
+                addedEntities.removeAll();
+                this._changedEntities.removeAll();
+                fireChangedEvent(this);
+            }
+            /**
+                 * Gets an entity with the specified id.
+                 *
+                 * @param {String} id The id of the entity to retrieve.
+                 * @returns {Entity} The entity with the provided id or undefined if the id did not exist in the collection.
+                 */
+            getById(id) {
+                //>>includeStart('debug', pragmas.debug);
+                if (!defined(id)) {
+                    throw new DeveloperError('id is required.');
+                }
+                //>>includeEnd('debug');
+                return this._entities.get(id);
+            }
+            /**
+                 * Gets an entity with the specified id or creates it and adds it to the collection if it does not exist.
+                 *
+                 * @param {String} id The id of the entity to retrieve or create.
+                 * @returns {Entity} The new or existing object.
+                 */
+            getOrCreateEntity(id) {
+                //>>includeStart('debug', pragmas.debug);
+                if (!defined(id)) {
+                    throw new DeveloperError('id is required.');
+                }
+                //>>includeEnd('debug');
+                var entity = this._entities.get(id);
+                if (!defined(entity)) {
+                    entityOptionsScratch.id = id;
+                    entity = new Entity(entityOptionsScratch);
+                    this.add(entity);
+                }
+                return entity;
+            }
+            _onEntityDefinitionChanged(entity) {
+                var id = entity.id;
+                if (!this._addedEntities.contains(id)) {
+                    this._changedEntities.set(id, entity);
+                }
+                fireChangedEvent(this);
+            }
         }
-        //>>includeEnd('debug');
 
-        this._suspendCount--;
-        fireChangedEvent(this);
-    };
+
 
     /**
      * The signature of the event generated by {@link EntityCollection#collectionChanged}.
@@ -219,211 +403,14 @@ define([
         }
     });
 
-    /**
-     * Computes the maximum availability of the entities in the collection.
-     * If the collection contains a mix of infinitely available data and non-infinite data,
-     * it will return the interval pertaining to the non-infinite data only.  If all
-     * data is infinite, an infinite interval will be returned.
-     *
-     * @returns {TimeInterval} The availability of entities in the collection.
-     */
-    EntityCollection.prototype.computeAvailability = function() {
-        var startTime = Iso8601.MAXIMUM_VALUE;
-        var stopTime = Iso8601.MINIMUM_VALUE;
-        var entities = this._entities.values;
-        for (var i = 0, len = entities.length; i < len; i++) {
-            var entity = entities[i];
-            var availability = entity.availability;
-            if (defined(availability)) {
-                var start = availability.start;
-                var stop = availability.stop;
-                if (JulianDate.lessThan(start, startTime) && !start.equals(Iso8601.MINIMUM_VALUE)) {
-                    startTime = start;
-                }
-                if (JulianDate.greaterThan(stop, stopTime) && !stop.equals(Iso8601.MAXIMUM_VALUE)) {
-                    stopTime = stop;
-                }
-            }
-        }
 
-        if (Iso8601.MAXIMUM_VALUE.equals(startTime)) {
-            startTime = Iso8601.MINIMUM_VALUE;
-        }
-        if (Iso8601.MINIMUM_VALUE.equals(stopTime)) {
-            stopTime = Iso8601.MAXIMUM_VALUE;
-        }
-        return new TimeInterval({
-            start : startTime,
-            stop : stopTime
-        });
-    };
 
-    /**
-     * Add an entity to the collection.
-     *
-     * @param {Entity} entity The entity to be added.
-     * @returns {Entity} The entity that was added.
-     * @exception {DeveloperError} An entity with <entity.id> already exists in this collection.
-     */
-    EntityCollection.prototype.add = function(entity) {
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(entity)) {
-            throw new DeveloperError('entity is required.');
-        }
-        //>>includeEnd('debug');
 
-        if (!(entity instanceof Entity)) {
-            entity = new Entity(entity);
-        }
 
-        var id = entity.id;
-        var entities = this._entities;
-        if (entities.contains(id)) {
-            throw new RuntimeError('An entity with id ' + id + ' already exists in this collection.');
-        }
 
-        entity.entityCollection = this;
-        entities.set(id, entity);
 
-        if (!this._removedEntities.remove(id)) {
-            this._addedEntities.set(id, entity);
-        }
-        entity.definitionChanged.addEventListener(EntityCollection.prototype._onEntityDefinitionChanged, this);
 
-        fireChangedEvent(this);
-        return entity;
-    };
 
-    /**
-     * Removes an entity from the collection.
-     *
-     * @param {Entity} entity The entity to be removed.
-     * @returns {Boolean} true if the item was removed, false if it did not exist in the collection.
-     */
-    EntityCollection.prototype.remove = function(entity) {
-        if (!defined(entity)) {
-            return false;
-        }
-        return this.removeById(entity.id);
-    };
-
-    /**
-     * Returns true if the provided entity is in this collection, false otherwise.
-     *
-     * @param {Entity} entity The entity.
-     * @returns {Boolean} true if the provided entity is in this collection, false otherwise.
-     */
-    EntityCollection.prototype.contains = function(entity) {
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(entity)) {
-            throw new DeveloperError('entity is required');
-        }
-        //>>includeEnd('debug');
-        return this._entities.get(entity.id) === entity;
-    };
-
-    /**
-     * Removes an entity with the provided id from the collection.
-     *
-     * @param {String} id The id of the entity to remove.
-     * @returns {Boolean} true if the item was removed, false if no item with the provided id existed in the collection.
-     */
-    EntityCollection.prototype.removeById = function(id) {
-        if (!defined(id)) {
-            return false;
-        }
-
-        var entities = this._entities;
-        var entity = entities.get(id);
-        if (!this._entities.remove(id)) {
-            return false;
-        }
-
-        if (!this._addedEntities.remove(id)) {
-            this._removedEntities.set(id, entity);
-            this._changedEntities.remove(id);
-        }
-        this._entities.remove(id);
-        entity.definitionChanged.removeEventListener(EntityCollection.prototype._onEntityDefinitionChanged, this);
-        fireChangedEvent(this);
-
-        return true;
-    };
-
-    /**
-     * Removes all Entities from the collection.
-     */
-    EntityCollection.prototype.removeAll = function() {
-        //The event should only contain items added before events were suspended
-        //and the contents of the collection.
-        var entities = this._entities;
-        var entitiesLength = entities.length;
-        var array = entities.values;
-
-        var addedEntities = this._addedEntities;
-        var removed = this._removedEntities;
-
-        for (var i = 0; i < entitiesLength; i++) {
-            var existingItem = array[i];
-            var existingItemId = existingItem.id;
-            var addedItem = addedEntities.get(existingItemId);
-            if (!defined(addedItem)) {
-                existingItem.definitionChanged.removeEventListener(EntityCollection.prototype._onEntityDefinitionChanged, this);
-                removed.set(existingItemId, existingItem);
-            }
-        }
-
-        entities.removeAll();
-        addedEntities.removeAll();
-        this._changedEntities.removeAll();
-        fireChangedEvent(this);
-    };
-
-    /**
-     * Gets an entity with the specified id.
-     *
-     * @param {String} id The id of the entity to retrieve.
-     * @returns {Entity} The entity with the provided id or undefined if the id did not exist in the collection.
-     */
-    EntityCollection.prototype.getById = function(id) {
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(id)) {
-            throw new DeveloperError('id is required.');
-        }
-        //>>includeEnd('debug');
-
-        return this._entities.get(id);
-    };
-
-    /**
-     * Gets an entity with the specified id or creates it and adds it to the collection if it does not exist.
-     *
-     * @param {String} id The id of the entity to retrieve or create.
-     * @returns {Entity} The new or existing object.
-     */
-    EntityCollection.prototype.getOrCreateEntity = function(id) {
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(id)) {
-            throw new DeveloperError('id is required.');
-        }
-        //>>includeEnd('debug');
-
-        var entity = this._entities.get(id);
-        if (!defined(entity)) {
-            entityOptionsScratch.id = id;
-            entity = new Entity(entityOptionsScratch);
-            this.add(entity);
-        }
-        return entity;
-    };
-
-    EntityCollection.prototype._onEntityDefinitionChanged = function(entity) {
-        var id = entity.id;
-        if (!this._addedEntities.contains(id)) {
-            this._changedEntities.set(id, entity);
-        }
-        fireChangedEvent(this);
-    };
 
     return EntityCollection;
 });

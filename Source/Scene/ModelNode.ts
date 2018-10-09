@@ -6,39 +6,47 @@ define([
         Matrix4) {
     'use strict';
 
-    /**
-     * A model node with a transform for user-defined animations.  A glTF asset can
-     * contain animations that target a node's transform.  This class allows
-     * changing a node's transform externally so animation can be driven by another
-     * source, not just an animation in the glTF asset.
-     * <p>
-     * Use {@link Model#getNode} to create an instance.
-     * </p>
-     *
-     * @alias ModelNode
-     * @internalConstructor
-     * @class
-     *
-     * @example
-     * var node = model.getNode('LOD3sp');
-     * node.matrix = Cesium.Matrix4.fromScale(new Cesium.Cartesian3(5.0, 1.0, 1.0), node.matrix);
-     *
-     * @see Model#getNode
-     */
-    function ModelNode(model, node, runtimeNode, id, matrix) {
-        this._model = model;
-        this._runtimeNode = runtimeNode;
-        this._name = node.name;
-        this._id = id;
-
         /**
-         * @private
-         */
-        this.useMatrix = false;
-
-        this._show = true;
-        this._matrix = Matrix4.clone(matrix);
-    }
+             * A model node with a transform for user-defined animations.  A glTF asset can
+             * contain animations that target a node's transform.  This class allows
+             * changing a node's transform externally so animation can be driven by another
+             * source, not just an animation in the glTF asset.
+             * <p>
+             * Use {@link Model#getNode} to create an instance.
+             * </p>
+             *
+             * @alias ModelNode
+             * @internalConstructor
+             * @class
+             *
+             * @example
+             * var node = model.getNode('LOD3sp');
+             * node.matrix = Cesium.Matrix4.fromScale(new Cesium.Cartesian3(5.0, 1.0, 1.0), node.matrix);
+             *
+             * @see Model#getNode
+             */
+        class ModelNode {
+            constructor(model, node, runtimeNode, id, matrix) {
+                this._model = model;
+                this._runtimeNode = runtimeNode;
+                this._name = node.name;
+                this._id = id;
+                /**
+                 * @private
+                 */
+                this.useMatrix = false;
+                this._show = true;
+                this._matrix = Matrix4.clone(matrix);
+            }
+            /**
+                 * @private
+                 */
+            setMatrix(matrix) {
+                // Update matrix but do not set the dirty flag since this is used internally
+                // to keep the matrix in-sync during a glTF animation.
+                Matrix4.clone(matrix, this._matrix);
+            }
+        }
 
     defineProperties(ModelNode.prototype, {
         /**
@@ -115,14 +123,6 @@ define([
         }
     });
 
-    /**
-     * @private
-     */
-    ModelNode.prototype.setMatrix = function(matrix) {
-        // Update matrix but do not set the dirty flag since this is used internally
-        // to keep the matrix in-sync during a glTF animation.
-        Matrix4.clone(matrix, this._matrix);
-    };
 
     return ModelNode;
 });

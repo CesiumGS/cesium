@@ -646,141 +646,133 @@ define([
         }
     }
 
-    /**
-     * Handles user input events. Custom functions can be added to be executed on
-     * when the user enters input.
-     *
-     * @alias ScreenSpaceEventHandler
-     *
-     * @param {Canvas} [element=document] The element to add events to.
-     *
-     * @constructor
-     */
-    function ScreenSpaceEventHandler(element) {
-        this._inputEvents = {};
-        this._buttonDown = undefined;
-        this._isPinching = false;
-        this._lastSeenTouchEvent = -ScreenSpaceEventHandler.mouseEmulationIgnoreMilliseconds;
-
-        this._primaryStartPosition = new Cartesian2();
-        this._primaryPosition = new Cartesian2();
-        this._primaryPreviousPosition = new Cartesian2();
-
-        this._positions = new AssociativeArray();
-        this._previousPositions = new AssociativeArray();
-
-        this._removalFunctions = [];
-
-        // TODO: Revisit when doing mobile development. May need to be configurable
-        // or determined based on the platform?
-        this._clickPixelTolerance = 5;
-
-        this._element = defaultValue(element, document);
-
-        registerListeners(this);
-    }
-
-    /**
-     * Set a function to be executed on an input event.
-     *
-     * @param {Function} action Function to be executed when the input event occurs.
-     * @param {Number} type The ScreenSpaceEventType of input event.
-     * @param {Number} [modifier] A KeyboardEventModifier key that is held when a <code>type</code>
-     * event occurs.
-     *
-     * @see ScreenSpaceEventHandler#getInputAction
-     * @see ScreenSpaceEventHandler#removeInputAction
-     */
-    ScreenSpaceEventHandler.prototype.setInputAction = function(action, type, modifier) {
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(action)) {
-            throw new DeveloperError('action is required.');
+        /**
+             * Handles user input events. Custom functions can be added to be executed on
+             * when the user enters input.
+             *
+             * @alias ScreenSpaceEventHandler
+             *
+             * @param {Canvas} [element=document] The element to add events to.
+             *
+             * @constructor
+             */
+        class ScreenSpaceEventHandler {
+            constructor(element) {
+                this._inputEvents = {};
+                this._buttonDown = undefined;
+                this._isPinching = false;
+                this._lastSeenTouchEvent = -ScreenSpaceEventHandler.mouseEmulationIgnoreMilliseconds;
+                this._primaryStartPosition = new Cartesian2();
+                this._primaryPosition = new Cartesian2();
+                this._primaryPreviousPosition = new Cartesian2();
+                this._positions = new AssociativeArray();
+                this._previousPositions = new AssociativeArray();
+                this._removalFunctions = [];
+                // TODO: Revisit when doing mobile development. May need to be configurable
+                // or determined based on the platform?
+                this._clickPixelTolerance = 5;
+                this._element = defaultValue(element, document);
+                registerListeners(this);
+            }
+            /**
+                 * Set a function to be executed on an input event.
+                 *
+                 * @param {Function} action Function to be executed when the input event occurs.
+                 * @param {Number} type The ScreenSpaceEventType of input event.
+                 * @param {Number} [modifier] A KeyboardEventModifier key that is held when a <code>type</code>
+                 * event occurs.
+                 *
+                 * @see ScreenSpaceEventHandler#getInputAction
+                 * @see ScreenSpaceEventHandler#removeInputAction
+                 */
+            setInputAction(action, type, modifier) {
+                //>>includeStart('debug', pragmas.debug);
+                if (!defined(action)) {
+                    throw new DeveloperError('action is required.');
+                }
+                if (!defined(type)) {
+                    throw new DeveloperError('type is required.');
+                }
+                //>>includeEnd('debug');
+                var key = getInputEventKey(type, modifier);
+                this._inputEvents[key] = action;
+            }
+            /**
+                 * Returns the function to be executed on an input event.
+                 *
+                 * @param {Number} type The ScreenSpaceEventType of input event.
+                 * @param {Number} [modifier] A KeyboardEventModifier key that is held when a <code>type</code>
+                 * event occurs.
+                 *
+                 * @see ScreenSpaceEventHandler#setInputAction
+                 * @see ScreenSpaceEventHandler#removeInputAction
+                 */
+            getInputAction(type, modifier) {
+                //>>includeStart('debug', pragmas.debug);
+                if (!defined(type)) {
+                    throw new DeveloperError('type is required.');
+                }
+                //>>includeEnd('debug');
+                var key = getInputEventKey(type, modifier);
+                return this._inputEvents[key];
+            }
+            /**
+                 * Removes the function to be executed on an input event.
+                 *
+                 * @param {Number} type The ScreenSpaceEventType of input event.
+                 * @param {Number} [modifier] A KeyboardEventModifier key that is held when a <code>type</code>
+                 * event occurs.
+                 *
+                 * @see ScreenSpaceEventHandler#getInputAction
+                 * @see ScreenSpaceEventHandler#setInputAction
+                 */
+            removeInputAction(type, modifier) {
+                //>>includeStart('debug', pragmas.debug);
+                if (!defined(type)) {
+                    throw new DeveloperError('type is required.');
+                }
+                //>>includeEnd('debug');
+                var key = getInputEventKey(type, modifier);
+                delete this._inputEvents[key];
+            }
+            /**
+                 * Returns true if this object was destroyed; otherwise, false.
+                 * <br /><br />
+                 * If this object was destroyed, it should not be used; calling any function other than
+                 * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
+                 *
+                 * @returns {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
+                 *
+                 * @see ScreenSpaceEventHandler#destroy
+                 */
+            isDestroyed() {
+                return false;
+            }
+            /**
+                 * Removes listeners held by this object.
+                 * <br /><br />
+                 * Once an object is destroyed, it should not be used; calling any function other than
+                 * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
+                 * assign the return value (<code>undefined</code>) to the object as done in the example.
+                 *
+                 * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
+                 *
+                 *
+                 * @example
+                 * handler = handler && handler.destroy();
+                 *
+                 * @see ScreenSpaceEventHandler#isDestroyed
+                 */
+            destroy() {
+                unregisterListeners(this);
+                return destroyObject(this);
+            }
         }
-        if (!defined(type)) {
-            throw new DeveloperError('type is required.');
-        }
-        //>>includeEnd('debug');
 
-        var key = getInputEventKey(type, modifier);
-        this._inputEvents[key] = action;
-    };
 
-    /**
-     * Returns the function to be executed on an input event.
-     *
-     * @param {Number} type The ScreenSpaceEventType of input event.
-     * @param {Number} [modifier] A KeyboardEventModifier key that is held when a <code>type</code>
-     * event occurs.
-     *
-     * @see ScreenSpaceEventHandler#setInputAction
-     * @see ScreenSpaceEventHandler#removeInputAction
-     */
-    ScreenSpaceEventHandler.prototype.getInputAction = function(type, modifier) {
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(type)) {
-            throw new DeveloperError('type is required.');
-        }
-        //>>includeEnd('debug');
 
-        var key = getInputEventKey(type, modifier);
-        return this._inputEvents[key];
-    };
 
-    /**
-     * Removes the function to be executed on an input event.
-     *
-     * @param {Number} type The ScreenSpaceEventType of input event.
-     * @param {Number} [modifier] A KeyboardEventModifier key that is held when a <code>type</code>
-     * event occurs.
-     *
-     * @see ScreenSpaceEventHandler#getInputAction
-     * @see ScreenSpaceEventHandler#setInputAction
-     */
-    ScreenSpaceEventHandler.prototype.removeInputAction = function(type, modifier) {
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(type)) {
-            throw new DeveloperError('type is required.');
-        }
-        //>>includeEnd('debug');
 
-        var key = getInputEventKey(type, modifier);
-        delete this._inputEvents[key];
-    };
-
-    /**
-     * Returns true if this object was destroyed; otherwise, false.
-     * <br /><br />
-     * If this object was destroyed, it should not be used; calling any function other than
-     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
-     *
-     * @returns {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
-     *
-     * @see ScreenSpaceEventHandler#destroy
-     */
-    ScreenSpaceEventHandler.prototype.isDestroyed = function() {
-        return false;
-    };
-
-    /**
-     * Removes listeners held by this object.
-     * <br /><br />
-     * Once an object is destroyed, it should not be used; calling any function other than
-     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
-     * assign the return value (<code>undefined</code>) to the object as done in the example.
-     *
-     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
-     *
-     *
-     * @example
-     * handler = handler && handler.destroy();
-     *
-     * @see ScreenSpaceEventHandler#isDestroyed
-     */
-    ScreenSpaceEventHandler.prototype.destroy = function() {
-        unregisterListeners(this);
-
-        return destroyObject(this);
-    };
 
     /**
      * The amount of time, in milliseconds, that mouse events will be disabled after

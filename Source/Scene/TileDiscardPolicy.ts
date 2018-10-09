@@ -4,19 +4,21 @@ define([
         DeveloperError) {
     'use strict';
 
-    /**
-     * A policy for discarding tile images according to some criteria.  This type describes an
-     * interface and is not intended to be instantiated directly.
-     *
-     * @alias TileDiscardPolicy
-     * @constructor
-     *
-     * @see DiscardMissingTileImagePolicy
-     * @see NeverTileDiscardPolicy
-     */
-    function TileDiscardPolicy(options) {
-        DeveloperError.throwInstantiationError();
-    }
+        /**
+             * A policy for discarding tile images according to some criteria.  This type describes an
+             * interface and is not intended to be instantiated directly.
+             *
+             * @alias TileDiscardPolicy
+             * @constructor
+             *
+             * @see DiscardMissingTileImagePolicy
+             * @see NeverTileDiscardPolicy
+             */
+        class TileDiscardPolicy {
+            constructor(options) {
+                DeveloperError.throwInstantiationError();
+            }
+        }
 
     /**
      * Determines if the discard policy is ready to process images.
