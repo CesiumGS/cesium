@@ -18,7 +18,7 @@ vec3 czm_sampleOctahedralProjection(sampler2D projectedMap, vec2 textureSize, ve
     vec2 uv = direction.y < 0.0 ? neg : direction.xz;
     vec2 coord = 0.5 * uv + vec2(0.5);
 
-    lod = floor(lod);
+    lod = floor(lod + 0.5);
 
     if (lod > 0.0)
     {
