@@ -10,45 +10,89 @@ define([
         PrimitiveType) {
     'use strict';
 
-    /**
-     * Represents a command to the renderer for drawing.
-     *
-     * @private
-     */
-    function DrawCommand(options) {
-        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-
-        this._boundingVolume = options.boundingVolume;
-        this._orientedBoundingBox = options.orientedBoundingBox;
-        this._cull = defaultValue(options.cull, true);
-        this._modelMatrix = options.modelMatrix;
-        this._primitiveType = defaultValue(options.primitiveType, PrimitiveType.TRIANGLES);
-        this._vertexArray = options.vertexArray;
-        this._count = options.count;
-        this._offset = defaultValue(options.offset, 0);
-        this._instanceCount = defaultValue(options.instanceCount, 0);
-        this._shaderProgram = options.shaderProgram;
-        this._uniformMap = options.uniformMap;
-        this._renderState = options.renderState;
-        this._framebuffer = options.framebuffer;
-        this._pass = options.pass;
-        this._executeInClosestFrustum = defaultValue(options.executeInClosestFrustum, false);
-        this._owner = options.owner;
-        this._debugShowBoundingVolume = defaultValue(options.debugShowBoundingVolume, false);
-        this._debugOverlappingFrustums = 0;
-        this._castShadows = defaultValue(options.castShadows, false);
-        this._receiveShadows = defaultValue(options.receiveShadows, false);
-        this._pickId = options.pickId;
-        this._pickOnly = defaultValue(options.pickOnly, false);
-
-        this.dirty = true;
-        this.lastDirtyTime = 0;
-
         /**
-         * @private
-         */
-        this.derivedCommands = {};
-    }
+             * Represents a command to the renderer for drawing.
+             *
+             * @private
+             */
+        class DrawCommand {
+            constructor(options) {
+                options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+                this._boundingVolume = options.boundingVolume;
+                this._orientedBoundingBox = options.orientedBoundingBox;
+                this._cull = defaultValue(options.cull, true);
+                this._modelMatrix = options.modelMatrix;
+                this._primitiveType = defaultValue(options.primitiveType, PrimitiveType.TRIANGLES);
+                this._vertexArray = options.vertexArray;
+                this._count = options.count;
+                this._offset = defaultValue(options.offset, 0);
+                this._instanceCount = defaultValue(options.instanceCount, 0);
+                this._shaderProgram = options.shaderProgram;
+                this._uniformMap = options.uniformMap;
+                this._renderState = options.renderState;
+                this._framebuffer = options.framebuffer;
+                this._pass = options.pass;
+                this._executeInClosestFrustum = defaultValue(options.executeInClosestFrustum, false);
+                this._owner = options.owner;
+                this._debugShowBoundingVolume = defaultValue(options.debugShowBoundingVolume, false);
+                this._debugOverlappingFrustums = 0;
+                this._castShadows = defaultValue(options.castShadows, false);
+                this._receiveShadows = defaultValue(options.receiveShadows, false);
+                this._pickId = options.pickId;
+                this._pickOnly = defaultValue(options.pickOnly, false);
+                this.dirty = true;
+                this.lastDirtyTime = 0;
+                /**
+                 * @private
+                 */
+                this.derivedCommands = {};
+            }
+            /**
+                 * Executes the draw command.
+                 *
+                 * @param {Context} context The renderer context in which to draw.
+                 * @param {PassState} [passState] The state for the current render pass.
+                 */
+            execute(context, passState) {
+                context.draw(this, passState);
+            }
+            /**
+                 * @private
+                 */
+            static shallowClone(command, result) {
+                if (!defined(command)) {
+                    return undefined;
+                }
+                if (!defined(result)) {
+                    result = new DrawCommand();
+                }
+                result._boundingVolume = command._boundingVolume;
+                result._orientedBoundingBox = command._orientedBoundingBox;
+                result._cull = command._cull;
+                result._modelMatrix = command._modelMatrix;
+                result._primitiveType = command._primitiveType;
+                result._vertexArray = command._vertexArray;
+                result._count = command._count;
+                result._offset = command._offset;
+                result._instanceCount = command._instanceCount;
+                result._shaderProgram = command._shaderProgram;
+                result._uniformMap = command._uniformMap;
+                result._renderState = command._renderState;
+                result._framebuffer = command._framebuffer;
+                result._pass = command._pass;
+                result._executeInClosestFrustum = command._executeInClosestFrustum;
+                result._owner = command._owner;
+                result._debugShowBoundingVolume = command._debugShowBoundingVolume;
+                result._debugOverlappingFrustums = command._debugOverlappingFrustums;
+                result._castShadows = command._castShadows;
+                result._receiveShadows = command._receiveShadows;
+                result._pickId = command._pickId;
+                result._pickOnly = command._pickOnly;
+                result.dirty = true;
+                result.lastDirtyTime = 0;
+                return result;
+            }
+        }
 
     defineProperties(DrawCommand.prototype, {
         /**
@@ -488,55 +532,7 @@ define([
         }
     });
 
-    /**
-     * @private
-     */
-    DrawCommand.shallowClone = function(command, result) {
-        if (!defined(command)) {
-            return undefined;
-        }
-        if (!defined(result)) {
-            result = new DrawCommand();
-        }
 
-        result._boundingVolume = command._boundingVolume;
-        result._orientedBoundingBox = command._orientedBoundingBox;
-        result._cull = command._cull;
-        result._modelMatrix = command._modelMatrix;
-        result._primitiveType = command._primitiveType;
-        result._vertexArray = command._vertexArray;
-        result._count = command._count;
-        result._offset = command._offset;
-        result._instanceCount = command._instanceCount;
-        result._shaderProgram = command._shaderProgram;
-        result._uniformMap = command._uniformMap;
-        result._renderState = command._renderState;
-        result._framebuffer = command._framebuffer;
-        result._pass = command._pass;
-        result._executeInClosestFrustum = command._executeInClosestFrustum;
-        result._owner = command._owner;
-        result._debugShowBoundingVolume = command._debugShowBoundingVolume;
-        result._debugOverlappingFrustums = command._debugOverlappingFrustums;
-        result._castShadows = command._castShadows;
-        result._receiveShadows = command._receiveShadows;
-        result._pickId = command._pickId;
-        result._pickOnly = command._pickOnly;
-
-        result.dirty = true;
-        result.lastDirtyTime = 0;
-
-        return result;
-    };
-
-    /**
-     * Executes the draw command.
-     *
-     * @param {Context} context The renderer context in which to draw.
-     * @param {PassState} [passState] The state for the current render pass.
-     */
-    DrawCommand.prototype.execute = function(context, passState) {
-        context.draw(this, passState);
-    };
 
     return DrawCommand;
 });

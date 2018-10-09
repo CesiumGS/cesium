@@ -243,60 +243,218 @@ define([
         }, ScreenSpaceEventType.MOUSE_MOVE, modifier);
     }
 
-    /**
-     * Aggregates input events. For example, suppose the following inputs are received between frames:
-     * left mouse button down, mouse move, mouse move, left mouse button up. These events will be aggregated into
-     * one event with a start and end position of the mouse.
-     *
-     * @alias CameraEventAggregator
-     * @constructor
-     *
-     * @param {Canvas} [canvas=document] The element to handle events for.
-     *
-     * @see ScreenSpaceEventHandler
-     */
-    function CameraEventAggregator(canvas) {
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(canvas)) {
-            throw new DeveloperError('canvas is required.');
-        }
-        //>>includeEnd('debug');
-
-        this._eventHandler = new ScreenSpaceEventHandler(canvas, true);
-
-        this._update = {};
-        this._movement = {};
-        this._lastMovement = {};
-        this._isDown = {};
-        this._eventStartPosition = {};
-        this._pressTime = {};
-        this._releaseTime = {};
-
-        this._buttonsDown = 0;
-
-        this._currentMousePosition = new Cartesian2();
-
-        listenToWheel(this, undefined);
-        listenToPinch(this, undefined, canvas);
-        listenMouseButtonDownUp(this, undefined, CameraEventType.LEFT_DRAG);
-        listenMouseButtonDownUp(this, undefined, CameraEventType.RIGHT_DRAG);
-        listenMouseButtonDownUp(this, undefined, CameraEventType.MIDDLE_DRAG);
-        listenMouseMove(this, undefined);
-
-        for ( var modifierName in KeyboardEventModifier) {
-            if (KeyboardEventModifier.hasOwnProperty(modifierName)) {
-                var modifier = KeyboardEventModifier[modifierName];
-                if (defined(modifier)) {
-                    listenToWheel(this, modifier);
-                    listenToPinch(this, modifier, canvas);
-                    listenMouseButtonDownUp(this, modifier, CameraEventType.LEFT_DRAG);
-                    listenMouseButtonDownUp(this, modifier, CameraEventType.RIGHT_DRAG);
-                    listenMouseButtonDownUp(this, modifier, CameraEventType.MIDDLE_DRAG);
-                    listenMouseMove(this, modifier);
+        /**
+             * Aggregates input events. For example, suppose the following inputs are received between frames:
+             * left mouse button down, mouse move, mouse move, left mouse button up. These events will be aggregated into
+             * one event with a start and end position of the mouse.
+             *
+             * @alias CameraEventAggregator
+             * @constructor
+             *
+             * @param {Canvas} [canvas=document] The element to handle events for.
+             *
+             * @see ScreenSpaceEventHandler
+             */
+        class CameraEventAggregator {
+            constructor(canvas) {
+                //>>includeStart('debug', pragmas.debug);
+                if (!defined(canvas)) {
+                    throw new DeveloperError('canvas is required.');
+                }
+                //>>includeEnd('debug');
+                this._eventHandler = new ScreenSpaceEventHandler(canvas, true);
+                this._update = {};
+                this._movement = {};
+                this._lastMovement = {};
+                this._isDown = {};
+                this._eventStartPosition = {};
+                this._pressTime = {};
+                this._releaseTime = {};
+                this._buttonsDown = 0;
+                this._currentMousePosition = new Cartesian2();
+                listenToWheel(this, undefined);
+                listenToPinch(this, undefined, canvas);
+                listenMouseButtonDownUp(this, undefined, CameraEventType.LEFT_DRAG);
+                listenMouseButtonDownUp(this, undefined, CameraEventType.RIGHT_DRAG);
+                listenMouseButtonDownUp(this, undefined, CameraEventType.MIDDLE_DRAG);
+                listenMouseMove(this, undefined);
+                for (var modifierName in KeyboardEventModifier) {
+                    if (KeyboardEventModifier.hasOwnProperty(modifierName)) {
+                        var modifier = KeyboardEventModifier[modifierName];
+                        if (defined(modifier)) {
+                            listenToWheel(this, modifier);
+                            listenToPinch(this, modifier, canvas);
+                            listenMouseButtonDownUp(this, modifier, CameraEventType.LEFT_DRAG);
+                            listenMouseButtonDownUp(this, modifier, CameraEventType.RIGHT_DRAG);
+                            listenMouseButtonDownUp(this, modifier, CameraEventType.MIDDLE_DRAG);
+                            listenMouseMove(this, modifier);
+                        }
+                    }
                 }
             }
+            /**
+                 * Gets if a mouse button down or touch has started and has been moved.
+                 *
+                 * @param {CameraEventType} type The camera event type.
+                 * @param {KeyboardEventModifier} [modifier] The keyboard modifier.
+                 * @returns {Boolean} Returns <code>true</code> if a mouse button down or touch has started and has been moved; otherwise, <code>false</code>
+                 */
+            isMoving(type, modifier) {
+                //>>includeStart('debug', pragmas.debug);
+                if (!defined(type)) {
+                    throw new DeveloperError('type is required.');
+                }
+                //>>includeEnd('debug');
+                var key = getKey(type, modifier);
+                return !this._update[key];
+            }
+            /**
+                 * Gets the aggregated start and end position of the current event.
+                 *
+                 * @param {CameraEventType} type The camera event type.
+                 * @param {KeyboardEventModifier} [modifier] The keyboard modifier.
+                 * @returns {Object} An object with two {@link Cartesian2} properties: <code>startPosition</code> and <code>endPosition</code>.
+                 */
+            getMovement(type, modifier) {
+                //>>includeStart('debug', pragmas.debug);
+                if (!defined(type)) {
+                    throw new DeveloperError('type is required.');
+                }
+                //>>includeEnd('debug');
+                var key = getKey(type, modifier);
+                var movement = this._movement[key];
+                return movement;
+            }
+            /**
+                 * Gets the start and end position of the last move event (not the aggregated event).
+                 *
+                 * @param {CameraEventType} type The camera event type.
+                 * @param {KeyboardEventModifier} [modifier] The keyboard modifier.
+                 * @returns {Object|undefined} An object with two {@link Cartesian2} properties: <code>startPosition</code> and <code>endPosition</code> or <code>undefined</code>.
+                 */
+            getLastMovement(type, modifier) {
+                //>>includeStart('debug', pragmas.debug);
+                if (!defined(type)) {
+                    throw new DeveloperError('type is required.');
+                }
+                //>>includeEnd('debug');
+                var key = getKey(type, modifier);
+                var lastMovement = this._lastMovement[key];
+                if (lastMovement.valid) {
+                    return lastMovement;
+                }
+                return undefined;
+            }
+            /**
+                 * Gets whether the mouse button is down or a touch has started.
+                 *
+                 * @param {CameraEventType} type The camera event type.
+                 * @param {KeyboardEventModifier} [modifier] The keyboard modifier.
+                 * @returns {Boolean} Whether the mouse button is down or a touch has started.
+                 */
+            isButtonDown(type, modifier) {
+                //>>includeStart('debug', pragmas.debug);
+                if (!defined(type)) {
+                    throw new DeveloperError('type is required.');
+                }
+                //>>includeEnd('debug');
+                var key = getKey(type, modifier);
+                return this._isDown[key];
+            }
+            /**
+                 * Gets the mouse position that started the aggregation.
+                 *
+                 * @param {CameraEventType} type The camera event type.
+                 * @param {KeyboardEventModifier} [modifier] The keyboard modifier.
+                 * @returns {Cartesian2} The mouse position.
+                 */
+            getStartMousePosition(type, modifier) {
+                //>>includeStart('debug', pragmas.debug);
+                if (!defined(type)) {
+                    throw new DeveloperError('type is required.');
+                }
+                //>>includeEnd('debug');
+                if (type === CameraEventType.WHEEL) {
+                    return this._currentMousePosition;
+                }
+                var key = getKey(type, modifier);
+                return this._eventStartPosition[key];
+            }
+            /**
+                 * Gets the time the button was pressed or the touch was started.
+                 *
+                 * @param {CameraEventType} type The camera event type.
+                 * @param {KeyboardEventModifier} [modifier] The keyboard modifier.
+                 * @returns {Date} The time the button was pressed or the touch was started.
+                 */
+            getButtonPressTime(type, modifier) {
+                //>>includeStart('debug', pragmas.debug);
+                if (!defined(type)) {
+                    throw new DeveloperError('type is required.');
+                }
+                //>>includeEnd('debug');
+                var key = getKey(type, modifier);
+                return this._pressTime[key];
+            }
+            /**
+                 * Gets the time the button was released or the touch was ended.
+                 *
+                 * @param {CameraEventType} type The camera event type.
+                 * @param {KeyboardEventModifier} [modifier] The keyboard modifier.
+                 * @returns {Date} The time the button was released or the touch was ended.
+                 */
+            getButtonReleaseTime(type, modifier) {
+                //>>includeStart('debug', pragmas.debug);
+                if (!defined(type)) {
+                    throw new DeveloperError('type is required.');
+                }
+                //>>includeEnd('debug');
+                var key = getKey(type, modifier);
+                return this._releaseTime[key];
+            }
+            /**
+                 * Signals that all of the events have been handled and the aggregator should be reset to handle new events.
+                 */
+            reset() {
+                for (var name in this._update) {
+                    if (this._update.hasOwnProperty(name)) {
+                        this._update[name] = true;
+                    }
+                }
+            }
+            /**
+                 * Returns true if this object was destroyed; otherwise, false.
+                 * <br /><br />
+                 * If this object was destroyed, it should not be used; calling any function other than
+                 * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
+                 *
+                 * @returns {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
+                 *
+                 * @see CameraEventAggregator#destroy
+                 */
+            isDestroyed() {
+                return false;
+            }
+            /**
+                 * Removes mouse listeners held by this object.
+                 * <br /><br />
+                 * Once an object is destroyed, it should not be used; calling any function other than
+                 * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
+                 * assign the return value (<code>undefined</code>) to the object as done in the example.
+                 *
+                 * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
+                 *
+                 *
+                 * @example
+                 * handler = handler && handler.destroy();
+                 *
+                 * @see CameraEventAggregator#isDestroyed
+                 */
+            destroy() {
+                this._eventHandler = this._eventHandler && this._eventHandler.destroy();
+                return destroyObject(this);
+            }
         }
-    }
 
     defineProperties(CameraEventAggregator.prototype, {
         /**
@@ -326,186 +484,15 @@ define([
         }
     });
 
-    /**
-     * Gets if a mouse button down or touch has started and has been moved.
-     *
-     * @param {CameraEventType} type The camera event type.
-     * @param {KeyboardEventModifier} [modifier] The keyboard modifier.
-     * @returns {Boolean} Returns <code>true</code> if a mouse button down or touch has started and has been moved; otherwise, <code>false</code>
-     */
-    CameraEventAggregator.prototype.isMoving = function(type, modifier) {
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(type)) {
-            throw new DeveloperError('type is required.');
-        }
-        //>>includeEnd('debug');
 
-        var key = getKey(type, modifier);
-        return !this._update[key];
-    };
 
-    /**
-     * Gets the aggregated start and end position of the current event.
-     *
-     * @param {CameraEventType} type The camera event type.
-     * @param {KeyboardEventModifier} [modifier] The keyboard modifier.
-     * @returns {Object} An object with two {@link Cartesian2} properties: <code>startPosition</code> and <code>endPosition</code>.
-     */
-    CameraEventAggregator.prototype.getMovement = function(type, modifier) {
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(type)) {
-            throw new DeveloperError('type is required.');
-        }
-        //>>includeEnd('debug');
 
-        var key = getKey(type, modifier);
-        var movement = this._movement[key];
-        return movement;
-    };
 
-    /**
-     * Gets the start and end position of the last move event (not the aggregated event).
-     *
-     * @param {CameraEventType} type The camera event type.
-     * @param {KeyboardEventModifier} [modifier] The keyboard modifier.
-     * @returns {Object|undefined} An object with two {@link Cartesian2} properties: <code>startPosition</code> and <code>endPosition</code> or <code>undefined</code>.
-     */
-    CameraEventAggregator.prototype.getLastMovement = function(type, modifier) {
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(type)) {
-            throw new DeveloperError('type is required.');
-        }
-        //>>includeEnd('debug');
 
-        var key = getKey(type, modifier);
-        var lastMovement = this._lastMovement[key];
-        if (lastMovement.valid) {
-            return lastMovement;
-        }
 
-        return undefined;
-    };
 
-    /**
-     * Gets whether the mouse button is down or a touch has started.
-     *
-     * @param {CameraEventType} type The camera event type.
-     * @param {KeyboardEventModifier} [modifier] The keyboard modifier.
-     * @returns {Boolean} Whether the mouse button is down or a touch has started.
-     */
-    CameraEventAggregator.prototype.isButtonDown = function(type, modifier) {
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(type)) {
-            throw new DeveloperError('type is required.');
-        }
-        //>>includeEnd('debug');
 
-        var key = getKey(type, modifier);
-        return this._isDown[key];
-    };
 
-    /**
-     * Gets the mouse position that started the aggregation.
-     *
-     * @param {CameraEventType} type The camera event type.
-     * @param {KeyboardEventModifier} [modifier] The keyboard modifier.
-     * @returns {Cartesian2} The mouse position.
-     */
-    CameraEventAggregator.prototype.getStartMousePosition = function(type, modifier) {
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(type)) {
-            throw new DeveloperError('type is required.');
-        }
-        //>>includeEnd('debug');
-
-        if (type === CameraEventType.WHEEL) {
-            return this._currentMousePosition;
-        }
-
-        var key = getKey(type, modifier);
-        return this._eventStartPosition[key];
-    };
-
-    /**
-     * Gets the time the button was pressed or the touch was started.
-     *
-     * @param {CameraEventType} type The camera event type.
-     * @param {KeyboardEventModifier} [modifier] The keyboard modifier.
-     * @returns {Date} The time the button was pressed or the touch was started.
-     */
-    CameraEventAggregator.prototype.getButtonPressTime = function(type, modifier) {
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(type)) {
-            throw new DeveloperError('type is required.');
-        }
-        //>>includeEnd('debug');
-
-        var key = getKey(type, modifier);
-        return this._pressTime[key];
-    };
-
-    /**
-     * Gets the time the button was released or the touch was ended.
-     *
-     * @param {CameraEventType} type The camera event type.
-     * @param {KeyboardEventModifier} [modifier] The keyboard modifier.
-     * @returns {Date} The time the button was released or the touch was ended.
-     */
-    CameraEventAggregator.prototype.getButtonReleaseTime = function(type, modifier) {
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(type)) {
-            throw new DeveloperError('type is required.');
-        }
-        //>>includeEnd('debug');
-
-        var key = getKey(type, modifier);
-        return this._releaseTime[key];
-    };
-
-    /**
-     * Signals that all of the events have been handled and the aggregator should be reset to handle new events.
-     */
-    CameraEventAggregator.prototype.reset = function() {
-        for ( var name in this._update) {
-            if (this._update.hasOwnProperty(name)) {
-                this._update[name] = true;
-            }
-        }
-    };
-
-    /**
-     * Returns true if this object was destroyed; otherwise, false.
-     * <br /><br />
-     * If this object was destroyed, it should not be used; calling any function other than
-     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
-     *
-     * @returns {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
-     *
-     * @see CameraEventAggregator#destroy
-     */
-    CameraEventAggregator.prototype.isDestroyed = function() {
-        return false;
-    };
-
-    /**
-     * Removes mouse listeners held by this object.
-     * <br /><br />
-     * Once an object is destroyed, it should not be used; calling any function other than
-     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
-     * assign the return value (<code>undefined</code>) to the object as done in the example.
-     *
-     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
-     *
-     *
-     * @example
-     * handler = handler && handler.destroy();
-     *
-     * @see CameraEventAggregator#isDestroyed
-     */
-    CameraEventAggregator.prototype.destroy = function() {
-        this._eventHandler = this._eventHandler && this._eventHandler.destroy();
-        return destroyObject(this);
-    };
 
     return CameraEventAggregator;
 });

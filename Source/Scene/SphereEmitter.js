@@ -12,24 +12,40 @@ define([
         CesiumMath) {
     'use strict';
 
-    /**
-     * A ParticleEmitter that emits particles within a sphere.
-     * Particles will be positioned randomly within the sphere and have initial velocities emanating from the center of the sphere.
-     *
-     * @alias SphereEmitter
-     * @constructor
-     *
-     * @param {Number} [radius=1.0] The radius of the sphere in meters.
-     */
-    function SphereEmitter(radius) {
-        radius = defaultValue(radius, 1.0);
-
-        //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.number.greaterThan('radius', radius, 0.0);
-        //>>includeEnd('debug');
-
-        this._radius = defaultValue(radius, 1.0);
-    }
+        /**
+             * A ParticleEmitter that emits particles within a sphere.
+             * Particles will be positioned randomly within the sphere and have initial velocities emanating from the center of the sphere.
+             *
+             * @alias SphereEmitter
+             * @constructor
+             *
+             * @param {Number} [radius=1.0] The radius of the sphere in meters.
+             */
+        class SphereEmitter {
+            constructor(radius) {
+                radius = defaultValue(radius, 1.0);
+                //>>includeStart('debug', pragmas.debug);
+                Check.typeOf.number.greaterThan('radius', radius, 0.0);
+                //>>includeEnd('debug');
+                this._radius = defaultValue(radius, 1.0);
+            }
+            /**
+                 * Initializes the given {Particle} by setting it's position and velocity.
+                 *
+                 * @private
+                 * @param {Particle} particle The particle to initialize
+                 */
+            emit(particle) {
+                var theta = CesiumMath.randomBetween(0.0, CesiumMath.TWO_PI);
+                var phi = CesiumMath.randomBetween(0.0, CesiumMath.PI);
+                var rad = CesiumMath.randomBetween(0.0, this._radius);
+                var x = rad * Math.cos(theta) * Math.sin(phi);
+                var y = rad * Math.sin(theta) * Math.sin(phi);
+                var z = rad * Math.cos(phi);
+                particle.position = Cartesian3.fromElements(x, y, z, particle.position);
+                particle.velocity = Cartesian3.normalize(particle.position, particle.velocity);
+            }
+        }
 
     defineProperties(SphereEmitter.prototype, {
         /**
@@ -51,24 +67,6 @@ define([
         }
     });
 
-    /**
-     * Initializes the given {Particle} by setting it's position and velocity.
-     *
-     * @private
-     * @param {Particle} particle The particle to initialize
-     */
-    SphereEmitter.prototype.emit = function(particle) {
-        var theta = CesiumMath.randomBetween(0.0, CesiumMath.TWO_PI);
-        var phi = CesiumMath.randomBetween(0.0, CesiumMath.PI);
-        var rad = CesiumMath.randomBetween(0.0, this._radius);
-
-        var x = rad * Math.cos(theta) * Math.sin(phi);
-        var y = rad * Math.sin(theta) * Math.sin(phi);
-        var z = rad * Math.cos(phi);
-
-        particle.position = Cartesian3.fromElements(x, y, z, particle.position);
-        particle.velocity = Cartesian3.normalize(particle.position, particle.velocity);
-    };
 
     return SphereEmitter;
 });

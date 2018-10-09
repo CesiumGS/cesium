@@ -48,315 +48,404 @@ define([
         TileProviderError) {
     'use strict';
 
-    function LayerInformation(layer) {
-        this.resource = layer.resource;
-        this.version = layer.version;
-        this.isHeightmap = layer.isHeightmap;
-        this.tileUrlTemplates = layer.tileUrlTemplates;
-        this.availability = layer.availability;
-        this.hasVertexNormals = layer.hasVertexNormals;
-        this.hasWaterMask = layer.hasWaterMask;
-        this.littleEndianExtensionSize = layer.littleEndianExtensionSize;
-    }
-
-    /**
-     * A {@link TerrainProvider} that accesses terrain data in a Cesium terrain format.
-     * The supported formats are described on the {@link https://cesiumjs.org/data-and-assets/terrain/formats/|Terrain Formats page}.
-     *
-     * @alias CesiumTerrainProvider
-     * @constructor
-     *
-     * @param {Object} options Object with the following properties:
-     * @param {Resource|String|Promise<Resource>|Promise<String>} options.url The URL of the Cesium terrain server.
-     * @param {Boolean} [options.requestVertexNormals=false] Flag that indicates if the client should request additional lighting information from the server, in the form of per vertex normals if available.
-     * @param {Boolean} [options.requestWaterMask=false] Flag that indicates if the client should request per tile water masks from the server,  if available.
-     * @param {Ellipsoid} [options.ellipsoid] The ellipsoid.  If not specified, the WGS84 ellipsoid is used.
-     * @param {Credit|String} [options.credit] A credit for the data source, which is displayed on the canvas.
-     *
-     *
-     * @example
-     * // Create Arctic DEM terrain with normals.
-     * var viewer = new Cesium.Viewer('cesiumContainer', {
-     *     terrainProvider : new Cesium.CesiumTerrainProvider({
-     *         url : Cesium.IonResource.fromAssetId(3956),
-     *         requestVertexNormals : true
-     *     })
-     * });
-     *
-     * @see createWorldTerrain
-     * @see TerrainProvider
-     */
-    function CesiumTerrainProvider(options) {
-        //>>includeStart('debug', pragmas.debug)
-        if (!defined(options) || !defined(options.url)) {
-            throw new DeveloperError('options.url is required.');
+        class LayerInformation {
+            constructor(layer) {
+                this.resource = layer.resource;
+                this.version = layer.version;
+                this.isHeightmap = layer.isHeightmap;
+                this.tileUrlTemplates = layer.tileUrlTemplates;
+                this.availability = layer.availability;
+                this.hasVertexNormals = layer.hasVertexNormals;
+                this.hasWaterMask = layer.hasWaterMask;
+                this.littleEndianExtensionSize = layer.littleEndianExtensionSize;
+            }
         }
-        //>>includeEnd('debug');
-
-        this._tilingScheme = new GeographicTilingScheme({
-            numberOfLevelZeroTilesX : 2,
-            numberOfLevelZeroTilesY : 1,
-            ellipsoid : options.ellipsoid
-        });
-
-        this._heightmapWidth = 65;
-        this._levelZeroMaximumGeometricError = TerrainProvider.getEstimatedLevelZeroGeometricErrorForAHeightmap(this._tilingScheme.ellipsoid, this._heightmapWidth, this._tilingScheme.getNumberOfXTilesAtLevel(0));
-
-        this._heightmapStructure = undefined;
-        this._hasWaterMask = false;
-        this._hasVertexNormals = false;
 
         /**
-         * Boolean flag that indicates if the client should request vertex normals from the server.
-         * @type {Boolean}
-         * @default false
-         * @private
-         */
-        this._requestVertexNormals = defaultValue(options.requestVertexNormals, false);
-
-        /**
-         * Boolean flag that indicates if the client should request tile watermasks from the server.
-         * @type {Boolean}
-         * @default false
-         * @private
-         */
-        this._requestWaterMask = defaultValue(options.requestWaterMask, false);
-
-        this._errorEvent = new Event();
-
-        var credit = options.credit;
-        if (typeof credit === 'string') {
-            credit = new Credit(credit);
-        }
-        this._credit = credit;
-
-        this._availability = undefined;
-
-        var deferred = when.defer();
-        this._ready = false;
-        this._readyPromise = deferred;
-        this._tileCredits = undefined;
-
-        var that = this;
-        var lastResource;
-        var metadataResource;
-        var metadataError;
-
-        var layers = this._layers = [];
-        var attribution = '';
-        var overallAvailability = [];
-        when(options.url)
-            .then(function(url) {
-                var resource = Resource.createIfNeeded(url);
-                resource.appendForwardSlash();
-                lastResource = resource;
-                metadataResource = lastResource.getDerivedResource({
-                    url: 'layer.json'
+             * A {@link TerrainProvider} that accesses terrain data in a Cesium terrain format.
+             * The supported formats are described on the {@link https://cesiumjs.org/data-and-assets/terrain/formats/|Terrain Formats page}.
+             *
+             * @alias CesiumTerrainProvider
+             * @constructor
+             *
+             * @param {Object} options Object with the following properties:
+             * @param {Resource|String|Promise<Resource>|Promise<String>} options.url The URL of the Cesium terrain server.
+             * @param {Boolean} [options.requestVertexNormals=false] Flag that indicates if the client should request additional lighting information from the server, in the form of per vertex normals if available.
+             * @param {Boolean} [options.requestWaterMask=false] Flag that indicates if the client should request per tile water masks from the server,  if available.
+             * @param {Ellipsoid} [options.ellipsoid] The ellipsoid.  If not specified, the WGS84 ellipsoid is used.
+             * @param {Credit|String} [options.credit] A credit for the data source, which is displayed on the canvas.
+             *
+             *
+             * @example
+             * // Create Arctic DEM terrain with normals.
+             * var viewer = new Cesium.Viewer('cesiumContainer', {
+             *     terrainProvider : new Cesium.CesiumTerrainProvider({
+             *         url : Cesium.IonResource.fromAssetId(3956),
+             *         requestVertexNormals : true
+             *     })
+             * });
+             *
+             * @see createWorldTerrain
+             * @see TerrainProvider
+             */
+        class CesiumTerrainProvider {
+            constructor(options) {
+                //>>includeStart('debug', pragmas.debug)
+                if (!defined(options) || !defined(options.url)) {
+                    throw new DeveloperError('options.url is required.');
+                }
+                //>>includeEnd('debug');
+                this._tilingScheme = new GeographicTilingScheme({
+                    numberOfLevelZeroTilesX: 2,
+                    numberOfLevelZeroTilesY: 1,
+                    ellipsoid: options.ellipsoid
                 });
-
-                var uri = new Uri(metadataResource.url);
-                if (uri.authority === 'assets.agi.com') {
-                    var deprecationText = 'STK World Terrain at assets.agi.com was shut down on October 1, 2018.';
-                    var deprecationLinkText = 'Check out the new high-resolution Cesium World Terrain for migration instructions.';
-                    var deprecationLink = 'https://cesium.com/blog/2018/03/01/introducing-cesium-world-terrain/';
-                    that._tileCredits = [
-                        new Credit('<span><b>' + deprecationText + '</b></span> <a href="' + deprecationLink + '">' + deprecationLinkText + '</a>', true)
-                    ];
-                    deprecationWarning('assets.agi.com', deprecationText + ' ' + deprecationLinkText + ' ' + deprecationLink);
-                } else {
-                    // ion resources have a credits property we can use for additional attribution.
-                    that._tileCredits = resource.credits;
+                this._heightmapWidth = 65;
+                this._levelZeroMaximumGeometricError = TerrainProvider.getEstimatedLevelZeroGeometricErrorForAHeightmap(this._tilingScheme.ellipsoid, this._heightmapWidth, this._tilingScheme.getNumberOfXTilesAtLevel(0));
+                this._heightmapStructure = undefined;
+                this._hasWaterMask = false;
+                this._hasVertexNormals = false;
+                /**
+                 * Boolean flag that indicates if the client should request vertex normals from the server.
+                 * @type {Boolean}
+                 * @default false
+                 * @private
+                 */
+                this._requestVertexNormals = defaultValue(options.requestVertexNormals, false);
+                /**
+                 * Boolean flag that indicates if the client should request tile watermasks from the server.
+                 * @type {Boolean}
+                 * @default false
+                 * @private
+                 */
+                this._requestWaterMask = defaultValue(options.requestWaterMask, false);
+                this._errorEvent = new Event();
+                var credit = options.credit;
+                if (typeof credit === 'string') {
+                    credit = new Credit(credit);
                 }
-
-                requestMetadata();
-            })
-            .otherwise(function(e) {
-                deferred.reject(e);
-            });
-
-        function parseMetadataSuccess(data) {
-            var message;
-
-            if (!data.format) {
-                message = 'The tile format is not specified in the layer.json file.';
-                metadataError = TileProviderError.handleError(metadataError, that, that._errorEvent, message, undefined, undefined, undefined, requestMetadata);
-                return;
-            }
-
-            if (!data.tiles || data.tiles.length === 0) {
-                message = 'The layer.json file does not specify any tile URL templates.';
-                metadataError = TileProviderError.handleError(metadataError, that, that._errorEvent, message, undefined, undefined, undefined, requestMetadata);
-                return;
-            }
-
-            var hasVertexNormals = false;
-            var hasWaterMask = false;
-            var littleEndianExtensionSize = true;
-            var isHeightmap = false;
-            if (data.format === 'heightmap-1.0') {
-                isHeightmap = true;
-                if (!defined(that._heightmapStructure)) {
-                    that._heightmapStructure = {
-                        heightScale : 1.0 / 5.0,
-                        heightOffset : -1000.0,
-                        elementsPerHeight : 1,
-                        stride : 1,
-                        elementMultiplier : 256.0,
-                        isBigEndian : false,
-                        lowestEncodedHeight : 0,
-                        highestEncodedHeight : 256 * 256 - 1
-                    };
-                }
-                hasWaterMask = true;
-                that._requestWaterMask = true;
-            } else if (data.format.indexOf('quantized-mesh-1.') !== 0) {
-                message = 'The tile format "' + data.format + '" is invalid or not supported.';
-                metadataError = TileProviderError.handleError(metadataError, that, that._errorEvent, message, undefined, undefined, undefined, requestMetadata);
-                return;
-            }
-
-            var tileUrlTemplates = data.tiles;
-
-            var availableTiles = data.available;
-            var availability;
-            if (defined(availableTiles)) {
-                availability = new TileAvailability(that._tilingScheme, availableTiles.length);
-
-                for (var level = 0; level < availableTiles.length; ++level) {
-                    var rangesAtLevel = availableTiles[level];
-                    var yTiles = that._tilingScheme.getNumberOfYTilesAtLevel(level);
-                    if (!defined(overallAvailability[level])) {
-                        overallAvailability[level] = [];
-                    }
-
-                    for (var rangeIndex = 0; rangeIndex < rangesAtLevel.length; ++rangeIndex) {
-                        var range = rangesAtLevel[rangeIndex];
-                        var yStart = yTiles - range.endY - 1;
-                        var yEnd = yTiles - range.startY - 1;
-                        overallAvailability[level].push([range.startX, yStart, range.endX, yEnd]);
-                        availability.addAvailableTileRange(level, range.startX, yStart, range.endX, yEnd);
-                    }
-                }
-            }
-
-            // The vertex normals defined in the 'octvertexnormals' extension is identical to the original
-            // contents of the original 'vertexnormals' extension.  'vertexnormals' extension is now
-            // deprecated, as the extensionLength for this extension was incorrectly using big endian.
-            // We maintain backwards compatibility with the legacy 'vertexnormal' implementation
-            // by setting the _littleEndianExtensionSize to false. Always prefer 'octvertexnormals'
-            // over 'vertexnormals' if both extensions are supported by the server.
-            if (defined(data.extensions) && data.extensions.indexOf('octvertexnormals') !== -1) {
-                hasVertexNormals = true;
-            } else if (defined(data.extensions) && data.extensions.indexOf('vertexnormals') !== -1) {
-                hasVertexNormals = true;
-                littleEndianExtensionSize = false;
-            }
-            if (defined(data.extensions) && data.extensions.indexOf('watermask') !== -1) {
-                hasWaterMask = true;
-            }
-
-            that._hasWaterMask = that._hasWaterMask || hasWaterMask;
-            that._hasVertexNormals = that._hasVertexNormals || hasVertexNormals;
-            if (defined(data.attribution)) {
-                if (attribution.length > 0) {
-                    attribution += ' ';
-                }
-                attribution += data.attribution;
-            }
-
-            layers.push(new LayerInformation({
-                resource: lastResource,
-                version: data.version,
-                isHeightmap: isHeightmap,
-                tileUrlTemplates: tileUrlTemplates,
-                availability: availability,
-                hasVertexNormals: hasVertexNormals,
-                hasWaterMask: hasWaterMask,
-                littleEndianExtensionSize: littleEndianExtensionSize
-            }));
-
-            var parentUrl = data.parentUrl;
-            if (defined(parentUrl)) {
-                if (!defined(availability)) {
-                    console.log('A layer.json can\'t have a parentUrl if it does\'t have an available array.');
-                    return when.resolve();
-                }
-                lastResource = lastResource.getDerivedResource({
-                    url: parentUrl
-                });
-                lastResource.appendForwardSlash(); // Terrain always expects a directory
-                metadataResource = lastResource.getDerivedResource({
-                    url: 'layer.json'
-                });
-                var parentMetadata = metadataResource.fetchJson();
-                return when(parentMetadata, parseMetadataSuccess, parseMetadataFailure);
-            }
-
-            return when.resolve();
-        }
-
-        function parseMetadataFailure(data) {
-            var message = 'An error occurred while accessing ' + metadataResource.url + '.';
-            metadataError = TileProviderError.handleError(metadataError, that, that._errorEvent, message, undefined, undefined, undefined, requestMetadata);
-        }
-
-        function metadataSuccess(data) {
-            parseMetadataSuccess(data)
-                .then(function() {
-                    if (defined(metadataError)) {
+                this._credit = credit;
+                this._availability = undefined;
+                var deferred = when.defer();
+                this._ready = false;
+                this._readyPromise = deferred;
+                this._tileCredits = undefined;
+                var that = this;
+                var lastResource;
+                var metadataResource;
+                var metadataError;
+                var layers = this._layers = [];
+                var attribution = '';
+                var overallAvailability = [];
+                when(options.url)
+                    .then(function(url) {
+                        var resource = Resource.createIfNeeded(url);
+                        resource.appendForwardSlash();
+                        lastResource = resource;
+                        metadataResource = lastResource.getDerivedResource({
+                            url: 'layer.json'
+                        });
+                        var uri = new Uri(metadataResource.url);
+                        if (uri.authority === 'assets.agi.com') {
+                            var deprecationText = 'STK World Terrain at assets.agi.com was shut down on October 1, 2018.';
+                            var deprecationLinkText = 'Check out the new high-resolution Cesium World Terrain for migration instructions.';
+                            var deprecationLink = 'https://cesium.com/blog/2018/03/01/introducing-cesium-world-terrain/';
+                            that._tileCredits = [
+                                new Credit('<span><b>' + deprecationText + '</b></span> <a href="' + deprecationLink + '">' + deprecationLinkText + '</a>', true)
+                            ];
+                            deprecationWarning('assets.agi.com', deprecationText + ' ' + deprecationLinkText + ' ' + deprecationLink);
+                        }
+                        else {
+                            // ion resources have a credits property we can use for additional attribution.
+                            that._tileCredits = resource.credits;
+                        }
+                        requestMetadata();
+                    })
+                    .otherwise(function(e) {
+                        deferred.reject(e);
+                    });
+                function parseMetadataSuccess(data) {
+                    var message;
+                    if (!data.format) {
+                        message = 'The tile format is not specified in the layer.json file.';
+                        metadataError = TileProviderError.handleError(metadataError, that, that._errorEvent, message, undefined, undefined, undefined, requestMetadata);
                         return;
                     }
-
-                    var length = overallAvailability.length;
-                    if (length > 0) {
-                        var availability = that._availability = new TileAvailability(that._tilingScheme, length);
-                        for (var level = 0; level < length; ++level) {
-                            var levelRanges = overallAvailability[level];
-                            for (var i = 0; i < levelRanges.length; ++i) {
-                                var range = levelRanges[i];
-                                availability.addAvailableTileRange(level, range[0], range[1], range[2], range[3]);
+                    if (!data.tiles || data.tiles.length === 0) {
+                        message = 'The layer.json file does not specify any tile URL templates.';
+                        metadataError = TileProviderError.handleError(metadataError, that, that._errorEvent, message, undefined, undefined, undefined, requestMetadata);
+                        return;
+                    }
+                    var hasVertexNormals = false;
+                    var hasWaterMask = false;
+                    var littleEndianExtensionSize = true;
+                    var isHeightmap = false;
+                    if (data.format === 'heightmap-1.0') {
+                        isHeightmap = true;
+                        if (!defined(that._heightmapStructure)) {
+                            that._heightmapStructure = {
+                                heightScale: 1.0 / 5.0,
+                                heightOffset: -1000.0,
+                                elementsPerHeight: 1,
+                                stride: 1,
+                                elementMultiplier: 256.0,
+                                isBigEndian: false,
+                                lowestEncodedHeight: 0,
+                                highestEncodedHeight: 256 * 256 - 1
+                            };
+                        }
+                        hasWaterMask = true;
+                        that._requestWaterMask = true;
+                    }
+                    else if (data.format.indexOf('quantized-mesh-1.') !== 0) {
+                        message = 'The tile format "' + data.format + '" is invalid or not supported.';
+                        metadataError = TileProviderError.handleError(metadataError, that, that._errorEvent, message, undefined, undefined, undefined, requestMetadata);
+                        return;
+                    }
+                    var tileUrlTemplates = data.tiles;
+                    var availableTiles = data.available;
+                    var availability;
+                    if (defined(availableTiles)) {
+                        availability = new TileAvailability(that._tilingScheme, availableTiles.length);
+                        for (var level = 0; level < availableTiles.length; ++level) {
+                            var rangesAtLevel = availableTiles[level];
+                            var yTiles = that._tilingScheme.getNumberOfYTilesAtLevel(level);
+                            if (!defined(overallAvailability[level])) {
+                                overallAvailability[level] = [];
+                            }
+                            for (var rangeIndex = 0; rangeIndex < rangesAtLevel.length; ++rangeIndex) {
+                                var range = rangesAtLevel[rangeIndex];
+                                var yStart = yTiles - range.endY - 1;
+                                var yEnd = yTiles - range.startY - 1;
+                                overallAvailability[level].push([range.startX, yStart, range.endX, yEnd]);
+                                availability.addAvailableTileRange(level, range.startX, yStart, range.endX, yEnd);
                             }
                         }
                     }
-
-                    if (attribution.length > 0) {
-                        var layerJsonCredit = new Credit(attribution);
-
-                        if (defined(that._tileCredits)) {
-                            that._tileCredits.push(layerJsonCredit);
-                        } else {
-                            that._tileCredits = [layerJsonCredit];
+                    // The vertex normals defined in the 'octvertexnormals' extension is identical to the original
+                    // contents of the original 'vertexnormals' extension.  'vertexnormals' extension is now
+                    // deprecated, as the extensionLength for this extension was incorrectly using big endian.
+                    // We maintain backwards compatibility with the legacy 'vertexnormal' implementation
+                    // by setting the _littleEndianExtensionSize to false. Always prefer 'octvertexnormals'
+                    // over 'vertexnormals' if both extensions are supported by the server.
+                    if (defined(data.extensions) && data.extensions.indexOf('octvertexnormals') !== -1) {
+                        hasVertexNormals = true;
+                    }
+                    else if (defined(data.extensions) && data.extensions.indexOf('vertexnormals') !== -1) {
+                        hasVertexNormals = true;
+                        littleEndianExtensionSize = false;
+                    }
+                    if (defined(data.extensions) && data.extensions.indexOf('watermask') !== -1) {
+                        hasWaterMask = true;
+                    }
+                    that._hasWaterMask = that._hasWaterMask || hasWaterMask;
+                    that._hasVertexNormals = that._hasVertexNormals || hasVertexNormals;
+                    if (defined(data.attribution)) {
+                        if (attribution.length > 0) {
+                            attribution += ' ';
+                        }
+                        attribution += data.attribution;
+                    }
+                    layers.push(new LayerInformation({
+                        resource: lastResource,
+                        version: data.version,
+                        isHeightmap: isHeightmap,
+                        tileUrlTemplates: tileUrlTemplates,
+                        availability: availability,
+                        hasVertexNormals: hasVertexNormals,
+                        hasWaterMask: hasWaterMask,
+                        littleEndianExtensionSize: littleEndianExtensionSize
+                    }));
+                    var parentUrl = data.parentUrl;
+                    if (defined(parentUrl)) {
+                        if (!defined(availability)) {
+                            console.log('A layer.json can\'t have a parentUrl if it does\'t have an available array.');
+                            return when.resolve();
+                        }
+                        lastResource = lastResource.getDerivedResource({
+                            url: parentUrl
+                        });
+                        lastResource.appendForwardSlash(); // Terrain always expects a directory
+                        metadataResource = lastResource.getDerivedResource({
+                            url: 'layer.json'
+                        });
+                        var parentMetadata = metadataResource.fetchJson();
+                        return when(parentMetadata, parseMetadataSuccess, parseMetadataFailure);
+                    }
+                    return when.resolve();
+                }
+                function parseMetadataFailure(data) {
+                    var message = 'An error occurred while accessing ' + metadataResource.url + '.';
+                    metadataError = TileProviderError.handleError(metadataError, that, that._errorEvent, message, undefined, undefined, undefined, requestMetadata);
+                }
+                function metadataSuccess(data) {
+                    parseMetadataSuccess(data)
+                        .then(function() {
+                            if (defined(metadataError)) {
+                                return;
+                            }
+                            var length = overallAvailability.length;
+                            if (length > 0) {
+                                var availability = that._availability = new TileAvailability(that._tilingScheme, length);
+                                for (var level = 0; level < length; ++level) {
+                                    var levelRanges = overallAvailability[level];
+                                    for (var i = 0; i < levelRanges.length; ++i) {
+                                        var range = levelRanges[i];
+                                        availability.addAvailableTileRange(level, range[0], range[1], range[2], range[3]);
+                                    }
+                                }
+                            }
+                            if (attribution.length > 0) {
+                                var layerJsonCredit = new Credit(attribution);
+                                if (defined(that._tileCredits)) {
+                                    that._tileCredits.push(layerJsonCredit);
+                                }
+                                else {
+                                    that._tileCredits = [layerJsonCredit];
+                                }
+                            }
+                            that._ready = true;
+                            that._readyPromise.resolve(true);
+                        });
+                }
+                function metadataFailure(data) {
+                    // If the metadata is not found, assume this is a pre-metadata heightmap tileset.
+                    if (defined(data) && data.statusCode === 404) {
+                        metadataSuccess({
+                            tilejson: '2.1.0',
+                            format: 'heightmap-1.0',
+                            version: '1.0.0',
+                            scheme: 'tms',
+                            tiles: [
+                                '{z}/{x}/{y}.terrain?v={version}'
+                            ]
+                        });
+                        return;
+                    }
+                    parseMetadataFailure(data);
+                }
+                function requestMetadata() {
+                    when(metadataResource.fetchJson())
+                        .then(metadataSuccess)
+                        .otherwise(metadataFailure);
+                }
+            }
+            /**
+                 * Requests the geometry for a given tile.  This function should not be called before
+                 * {@link CesiumTerrainProvider#ready} returns true.  The result must include terrain data and
+                 * may optionally include a water mask and an indication of which child tiles are available.
+                 *
+                 * @param {Number} x The X coordinate of the tile for which to request geometry.
+                 * @param {Number} y The Y coordinate of the tile for which to request geometry.
+                 * @param {Number} level The level of the tile for which to request geometry.
+                 * @param {Request} [request] The request object. Intended for internal use only.
+                 *
+                 * @returns {Promise.<TerrainData>|undefined} A promise for the requested geometry.  If this method
+                 *          returns undefined instead of a promise, it is an indication that too many requests are already
+                 *          pending and the request will be retried later.
+                 *
+                 * @exception {DeveloperError} This function must not be called before {@link CesiumTerrainProvider#ready}
+                 *            returns true.
+                 */
+            requestTileGeometry(x, y, level, request) {
+                //>>includeStart('debug', pragmas.debug)
+                if (!this._ready) {
+                    throw new DeveloperError('requestTileGeometry must not be called before the terrain provider is ready.');
+                }
+                //>>includeEnd('debug');
+                var layers = this._layers;
+                var layerToUse;
+                var layerCount = layers.length;
+                if (layerCount === 1) { // Optimized path for single layers
+                    layerToUse = layers[0];
+                }
+                else {
+                    for (var i = 0; i < layerCount; ++i) {
+                        var layer = layers[i];
+                        if (!defined(layer.availability) || layer.availability.isTileAvailable(level, x, y)) {
+                            layerToUse = layer;
+                            break;
                         }
                     }
-
-                    that._ready = true;
-                    that._readyPromise.resolve(true);
+                }
+                if (!defined(layerToUse)) {
+                    return when.reject(new RuntimeError('Terrain tile doesn\'t exist'));
+                }
+                var urlTemplates = layerToUse.tileUrlTemplates;
+                if (urlTemplates.length === 0) {
+                    return undefined;
+                }
+                var yTiles = this._tilingScheme.getNumberOfYTilesAtLevel(level);
+                var tmsY = (yTiles - y - 1);
+                var extensionList = [];
+                if (this._requestVertexNormals && layerToUse.hasVertexNormals) {
+                    extensionList.push(layerToUse.littleEndianExtensionSize ? 'octvertexnormals' : 'vertexnormals');
+                }
+                if (this._requestWaterMask && layerToUse.hasWaterMask) {
+                    extensionList.push('watermask');
+                }
+                var headers;
+                var query;
+                var url = urlTemplates[(x + tmsY + level) % urlTemplates.length];
+                var resource = layerToUse.resource;
+                if (defined(resource._ionEndpoint) && !defined(resource._ionEndpoint.externalType)) {
+                    // ion uses query paremeters to request extensions
+                    if (extensionList.length !== 0) {
+                        query = { extensions: extensionList.join('-') };
+                    }
+                    headers = getRequestHeader(undefined);
+                }
+                else {
+                    //All other terrain servers
+                    headers = getRequestHeader(extensionList);
+                }
+                var promise = resource.getDerivedResource({
+                    url: url,
+                    templateValues: {
+                        version: layerToUse.version,
+                        z: level,
+                        x: x,
+                        y: tmsY
+                    },
+                    queryParameters: query,
+                    headers: headers,
+                    request: request
+                }).fetchArrayBuffer();
+                if (!defined(promise)) {
+                    return undefined;
+                }
+                var that = this;
+                return promise.then(function(buffer) {
+                    if (defined(that._heightmapStructure)) {
+                        return createHeightmapTerrainData(that, buffer, level, x, y, tmsY);
+                    }
+                    return createQuantizedMeshTerrainData(that, buffer, level, x, y, tmsY, layerToUse.littleEndianExtensionSize);
                 });
-        }
-
-        function metadataFailure(data) {
-            // If the metadata is not found, assume this is a pre-metadata heightmap tileset.
-            if (defined(data) && data.statusCode === 404) {
-                metadataSuccess({
-                    tilejson: '2.1.0',
-                    format : 'heightmap-1.0',
-                    version : '1.0.0',
-                    scheme : 'tms',
-                    tiles : [
-                        '{z}/{x}/{y}.terrain?v={version}'
-                    ]
-                });
-                return;
             }
-            parseMetadataFailure(data);
+            /**
+                 * Gets the maximum geometric error allowed in a tile at a given level.
+                 *
+                 * @param {Number} level The tile level for which to get the maximum geometric error.
+                 * @returns {Number} The maximum geometric error.
+                 */
+            getLevelMaximumGeometricError(level) {
+                return this._levelZeroMaximumGeometricError / (1 << level);
+            }
+            /**
+                 * Determines whether data for a tile is available to be loaded.
+                 *
+                 * @param {Number} x The X coordinate of the tile for which to request geometry.
+                 * @param {Number} y The Y coordinate of the tile for which to request geometry.
+                 * @param {Number} level The level of the tile for which to request geometry.
+                 * @returns {Boolean} Undefined if not supported, otherwise true or false.
+                 */
+            getTileDataAvailable(x, y, level) {
+                if (!defined(this._availability)) {
+                    return undefined;
+                }
+                return this._availability.isTileAvailable(level, x, y);
+            }
         }
-
-        function requestMetadata() {
-            when(metadataResource.fetchJson())
-                .then(metadataSuccess)
-                .otherwise(metadataFailure);
-        }
-    }
 
     /**
      * When using the Quantized-Mesh format, a tile may be returned that includes additional extensions, such as PerVertexNormals, watermask, etc.
@@ -556,107 +645,6 @@ define([
         });
     }
 
-    /**
-     * Requests the geometry for a given tile.  This function should not be called before
-     * {@link CesiumTerrainProvider#ready} returns true.  The result must include terrain data and
-     * may optionally include a water mask and an indication of which child tiles are available.
-     *
-     * @param {Number} x The X coordinate of the tile for which to request geometry.
-     * @param {Number} y The Y coordinate of the tile for which to request geometry.
-     * @param {Number} level The level of the tile for which to request geometry.
-     * @param {Request} [request] The request object. Intended for internal use only.
-     *
-     * @returns {Promise.<TerrainData>|undefined} A promise for the requested geometry.  If this method
-     *          returns undefined instead of a promise, it is an indication that too many requests are already
-     *          pending and the request will be retried later.
-     *
-     * @exception {DeveloperError} This function must not be called before {@link CesiumTerrainProvider#ready}
-     *            returns true.
-     */
-    CesiumTerrainProvider.prototype.requestTileGeometry = function(x, y, level, request) {
-        //>>includeStart('debug', pragmas.debug)
-        if (!this._ready) {
-            throw new DeveloperError('requestTileGeometry must not be called before the terrain provider is ready.');
-        }
-        //>>includeEnd('debug');
-
-        var layers = this._layers;
-        var layerToUse;
-        var layerCount = layers.length;
-
-        if (layerCount === 1) { // Optimized path for single layers
-            layerToUse = layers[0];
-        } else {
-            for (var i = 0; i < layerCount; ++i) {
-                var layer = layers[i];
-                if (!defined(layer.availability) || layer.availability.isTileAvailable(level, x, y)) {
-                    layerToUse = layer;
-                    break;
-                }
-            }
-        }
-
-        if (!defined(layerToUse)) {
-            return when.reject(new RuntimeError('Terrain tile doesn\'t exist'));
-        }
-
-        var urlTemplates = layerToUse.tileUrlTemplates;
-        if (urlTemplates.length === 0) {
-            return undefined;
-        }
-
-        var yTiles = this._tilingScheme.getNumberOfYTilesAtLevel(level);
-
-        var tmsY = (yTiles - y - 1);
-
-        var extensionList = [];
-        if (this._requestVertexNormals && layerToUse.hasVertexNormals) {
-            extensionList.push(layerToUse.littleEndianExtensionSize ? 'octvertexnormals' : 'vertexnormals');
-        }
-        if (this._requestWaterMask && layerToUse.hasWaterMask) {
-            extensionList.push('watermask');
-        }
-
-        var headers;
-        var query;
-        var url = urlTemplates[(x + tmsY + level) % urlTemplates.length];
-        var resource = layerToUse.resource;
-        if (defined(resource._ionEndpoint) && !defined(resource._ionEndpoint.externalType)) {
-            // ion uses query paremeters to request extensions
-            if (extensionList.length !== 0) {
-                query = { extensions: extensionList.join('-') };
-            }
-            headers = getRequestHeader(undefined);
-        } else {
-            //All other terrain servers
-            headers = getRequestHeader(extensionList);
-        }
-
-        var promise = resource.getDerivedResource({
-            url: url,
-            templateValues: {
-                version: layerToUse.version,
-                z: level,
-                x: x,
-                y: tmsY
-            },
-            queryParameters: query,
-            headers: headers,
-            request: request
-        }).fetchArrayBuffer();
-
-        if (!defined(promise)) {
-            return undefined;
-        }
-
-        var that = this;
-        return promise.then(function (buffer) {
-            if (defined(that._heightmapStructure)) {
-                return createHeightmapTerrainData(that, buffer, level, x, y, tmsY);
-            }
-            return createQuantizedMeshTerrainData(that, buffer, level, x, y, tmsY, layerToUse.littleEndianExtensionSize);
-        });
-    };
 
     defineProperties(CesiumTerrainProvider.prototype, {
         /**
@@ -818,31 +806,7 @@ define([
         }
     });
 
-    /**
-     * Gets the maximum geometric error allowed in a tile at a given level.
-     *
-     * @param {Number} level The tile level for which to get the maximum geometric error.
-     * @returns {Number} The maximum geometric error.
-     */
-    CesiumTerrainProvider.prototype.getLevelMaximumGeometricError = function(level) {
-        return this._levelZeroMaximumGeometricError / (1 << level);
-    };
 
-    /**
-     * Determines whether data for a tile is available to be loaded.
-     *
-     * @param {Number} x The X coordinate of the tile for which to request geometry.
-     * @param {Number} y The Y coordinate of the tile for which to request geometry.
-     * @param {Number} level The level of the tile for which to request geometry.
-     * @returns {Boolean} Undefined if not supported, otherwise true or false.
-     */
-    CesiumTerrainProvider.prototype.getTileDataAvailable = function(x, y, level) {
-        if (!defined(this._availability)) {
-            return undefined;
-        }
-
-        return this._availability.isTileAvailable(level, x, y);
-    };
 
     return CesiumTerrainProvider;
 });

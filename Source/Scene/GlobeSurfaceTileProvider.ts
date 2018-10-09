@@ -94,90 +94,461 @@ define([
         ShadowMode) {
     'use strict';
 
-    /**
-     * Provides quadtree tiles representing the surface of the globe.  This type is intended to be used
-     * with {@link QuadtreePrimitive}.
-     *
-     * @alias GlobeSurfaceTileProvider
-     * @constructor
-     *
-     * @param {TerrainProvider} options.terrainProvider The terrain provider that describes the surface geometry.
-     * @param {ImageryLayerCollection} option.imageryLayers The collection of imagery layers describing the shading of the surface.
-     * @param {GlobeSurfaceShaderSet} options.surfaceShaderSet The set of shaders used to render the surface.
-     *
-     * @private
-     */
-    function GlobeSurfaceTileProvider(options) {
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(options)) {
-            throw new DeveloperError('options is required.');
-        }
-        if (!defined(options.terrainProvider)) {
-            throw new DeveloperError('options.terrainProvider is required.');
-        } else if (!defined(options.imageryLayers)) {
-            throw new DeveloperError('options.imageryLayers is required.');
-        } else if (!defined(options.surfaceShaderSet)) {
-            throw new DeveloperError('options.surfaceShaderSet is required.');
-        }
-        //>>includeEnd('debug');
-
-        this.lightingFadeOutDistance = 6500000.0;
-        this.lightingFadeInDistance = 9000000.0;
-        this.hasWaterMask = false;
-        this.oceanNormalMap = undefined;
-        this.zoomedOutOceanSpecularIntensity = 0.5;
-        this.enableLighting = false;
-        this.showGroundAtmosphere = false;
-        this.shadows = ShadowMode.RECEIVE_ONLY;
-
-        this._quadtree = undefined;
-        this._terrainProvider = options.terrainProvider;
-        this._imageryLayers = options.imageryLayers;
-        this._surfaceShaderSet = options.surfaceShaderSet;
-
-        this._renderState = undefined;
-        this._blendRenderState = undefined;
-
-        this._errorEvent = new Event();
-
-        this._imageryLayers.layerAdded.addEventListener(GlobeSurfaceTileProvider.prototype._onLayerAdded, this);
-        this._imageryLayers.layerRemoved.addEventListener(GlobeSurfaceTileProvider.prototype._onLayerRemoved, this);
-        this._imageryLayers.layerMoved.addEventListener(GlobeSurfaceTileProvider.prototype._onLayerMoved, this);
-        this._imageryLayers.layerShownOrHidden.addEventListener(GlobeSurfaceTileProvider.prototype._onLayerShownOrHidden, this);
-        this._tileLoadedEvent = new Event();
-        this._imageryLayersUpdatedEvent = new Event();
-
-        this._layerOrderChanged = false;
-
-        this._tilesToRenderByTextureCount = [];
-        this._drawCommands = [];
-        this._uniformMaps = [];
-        this._usedDrawCommands = 0;
-
-        this._vertexArraysToDestroy = [];
-
-        this._debug = {
-            wireframe : false,
-            boundingSphereTile : undefined
-        };
-
-        this._baseColor = undefined;
-        this._firstPassInitialColor = undefined;
-        this.baseColor = new Color(0.0, 0.0, 0.5, 1.0);
-
         /**
-         * A property specifying a {@link ClippingPlaneCollection} used to selectively disable rendering on the outside of each plane.
-         * @type {ClippingPlaneCollection}
-         * @private
-         */
-        this._clippingPlanes = undefined;
-
-        /**
-         * A property specifying a {@link Rectangle} used to selectively limit terrain and imagery rendering.
-         * @type {Rectangle}
-         */
-        this.cartographicLimitRectangle = Rectangle.clone(Rectangle.MAX_VALUE);
-    }
+             * Provides quadtree tiles representing the surface of the globe.  This type is intended to be used
+             * with {@link QuadtreePrimitive}.
+             *
+             * @alias GlobeSurfaceTileProvider
+             * @constructor
+             *
+             * @param {TerrainProvider} options.terrainProvider The terrain provider that describes the surface geometry.
+             * @param {ImageryLayerCollection} option.imageryLayers The collection of imagery layers describing the shading of the surface.
+             * @param {GlobeSurfaceShaderSet} options.surfaceShaderSet The set of shaders used to render the surface.
+             *
+             * @private
+             */
+        class GlobeSurfaceTileProvider {
+            constructor(options) {
+                //>>includeStart('debug', pragmas.debug);
+                if (!defined(options)) {
+                    throw new DeveloperError('options is required.');
+                }
+                if (!defined(options.terrainProvider)) {
+                    throw new DeveloperError('options.terrainProvider is required.');
+                }
+                else if (!defined(options.imageryLayers)) {
+                    throw new DeveloperError('options.imageryLayers is required.');
+                }
+                else if (!defined(options.surfaceShaderSet)) {
+                    throw new DeveloperError('options.surfaceShaderSet is required.');
+                }
+                //>>includeEnd('debug');
+                this.lightingFadeOutDistance = 6500000.0;
+                this.lightingFadeInDistance = 9000000.0;
+                this.hasWaterMask = false;
+                this.oceanNormalMap = undefined;
+                this.zoomedOutOceanSpecularIntensity = 0.5;
+                this.enableLighting = false;
+                this.showGroundAtmosphere = false;
+                this.shadows = ShadowMode.RECEIVE_ONLY;
+                this._quadtree = undefined;
+                this._terrainProvider = options.terrainProvider;
+                this._imageryLayers = options.imageryLayers;
+                this._surfaceShaderSet = options.surfaceShaderSet;
+                this._renderState = undefined;
+                this._blendRenderState = undefined;
+                this._errorEvent = new Event();
+                this._imageryLayers.layerAdded.addEventListener(GlobeSurfaceTileProvider.prototype._onLayerAdded, this);
+                this._imageryLayers.layerRemoved.addEventListener(GlobeSurfaceTileProvider.prototype._onLayerRemoved, this);
+                this._imageryLayers.layerMoved.addEventListener(GlobeSurfaceTileProvider.prototype._onLayerMoved, this);
+                this._imageryLayers.layerShownOrHidden.addEventListener(GlobeSurfaceTileProvider.prototype._onLayerShownOrHidden, this);
+                this._tileLoadedEvent = new Event();
+                this._imageryLayersUpdatedEvent = new Event();
+                this._layerOrderChanged = false;
+                this._tilesToRenderByTextureCount = [];
+                this._drawCommands = [];
+                this._uniformMaps = [];
+                this._usedDrawCommands = 0;
+                this._vertexArraysToDestroy = [];
+                this._debug = {
+                    wireframe: false,
+                    boundingSphereTile: undefined
+                };
+                this._baseColor = undefined;
+                this._firstPassInitialColor = undefined;
+                this.baseColor = new Color(0.0, 0.0, 0.5, 1.0);
+                /**
+                 * A property specifying a {@link ClippingPlaneCollection} used to selectively disable rendering on the outside of each plane.
+                 * @type {ClippingPlaneCollection}
+                 * @private
+                 */
+                this._clippingPlanes = undefined;
+                /**
+                 * A property specifying a {@link Rectangle} used to selectively limit terrain and imagery rendering.
+                 * @type {Rectangle}
+                 */
+                this.cartographicLimitRectangle = Rectangle.clone(Rectangle.MAX_VALUE);
+            }
+            /**
+                 * Make updates to the tile provider that are not involved in rendering. Called before the render update cycle.
+                 */
+            update(frameState) {
+                // update collection: imagery indices, base layers, raise layer show/hide event
+                this._imageryLayers._update();
+            }
+            /**
+                 * Called at the beginning of each render frame, before {@link QuadtreeTileProvider#showTileThisFrame}
+                 * @param {FrameState} frameState The frame state.
+                 */
+            initialize(frameState) {
+                // update each layer for texture reprojection.
+                this._imageryLayers.queueReprojectionCommands(frameState);
+                if (this._layerOrderChanged) {
+                    this._layerOrderChanged = false;
+                    // Sort the TileImagery instances in each tile by the layer index.
+                    this._quadtree.forEachLoadedTile(function(tile) {
+                        tile.data.imagery.sort(sortTileImageryByLayerIndex);
+                    });
+                }
+                // Add credits for terrain and imagery providers.
+                updateCredits(this, frameState);
+                var vertexArraysToDestroy = this._vertexArraysToDestroy;
+                var length = vertexArraysToDestroy.length;
+                for (var j = 0; j < length; ++j) {
+                    freeVertexArray(vertexArraysToDestroy[j]);
+                }
+                vertexArraysToDestroy.length = 0;
+            }
+            /**
+                 * Called at the beginning of the update cycle for each render frame, before {@link QuadtreeTileProvider#showTileThisFrame}
+                 * or any other functions.
+                 *
+                 * @param {FrameState} frameState The frame state.
+                 */
+            beginUpdate(frameState) {
+                var tilesToRenderByTextureCount = this._tilesToRenderByTextureCount;
+                for (var i = 0, len = tilesToRenderByTextureCount.length; i < len; ++i) {
+                    var tiles = tilesToRenderByTextureCount[i];
+                    if (defined(tiles)) {
+                        tiles.length = 0;
+                    }
+                }
+                // update clipping planes
+                var clippingPlanes = this._clippingPlanes;
+                if (defined(clippingPlanes) && clippingPlanes.enabled) {
+                    clippingPlanes.update(frameState);
+                }
+                this._usedDrawCommands = 0;
+            }
+            /**
+                 * Called at the end of the update cycle for each render frame, after {@link QuadtreeTileProvider#showTileThisFrame}
+                 * and any other functions.
+                 *
+                 * @param {FrameState} frameState The frame state.
+                 */
+            endUpdate(frameState) {
+                if (!defined(this._renderState)) {
+                    this._renderState = RenderState.fromCache({
+                        cull: {
+                            enabled: true
+                        },
+                        depthTest: {
+                            enabled: true,
+                            func: DepthFunction.LESS
+                        }
+                    });
+                    this._blendRenderState = RenderState.fromCache({
+                        cull: {
+                            enabled: true
+                        },
+                        depthTest: {
+                            enabled: true,
+                            func: DepthFunction.LESS_OR_EQUAL
+                        },
+                        blending: BlendingState.ALPHA_BLEND
+                    });
+                }
+                // Add the tile render commands to the command list, sorted by texture count.
+                var tilesToRenderByTextureCount = this._tilesToRenderByTextureCount;
+                for (var textureCountIndex = 0, textureCountLength = tilesToRenderByTextureCount.length; textureCountIndex < textureCountLength; ++textureCountIndex) {
+                    var tilesToRender = tilesToRenderByTextureCount[textureCountIndex];
+                    if (!defined(tilesToRender)) {
+                        continue;
+                    }
+                    for (var tileIndex = 0, tileLength = tilesToRender.length; tileIndex < tileLength; ++tileIndex) {
+                        addDrawCommandsForTile(this, tilesToRender[tileIndex], frameState);
+                    }
+                }
+            }
+            /**
+                 * Adds draw commands for tiles rendered in the previous frame for a pick pass.
+                 *
+                 * @param {FrameState} frameState The frame state.
+                 */
+            updateForPick(frameState) {
+                // Add the tile pick commands from the tiles drawn last frame.
+                var drawCommands = this._drawCommands;
+                for (var i = 0, length = this._usedDrawCommands; i < length; ++i) {
+                    frameState.commandList.push(drawCommands[i]);
+                }
+            }
+            /**
+                 * Cancels any imagery re-projections in the queue.
+                 */
+            cancelReprojections() {
+                this._imageryLayers.cancelReprojections();
+            }
+            /**
+                 * Gets the maximum geometric error allowed in a tile at a given level, in meters.  This function should not be
+                 * called before {@link GlobeSurfaceTileProvider#ready} returns true.
+                 *
+                 * @param {Number} level The tile level for which to get the maximum geometric error.
+                 * @returns {Number} The maximum geometric error in meters.
+                 */
+            getLevelMaximumGeometricError(level) {
+                return this._terrainProvider.getLevelMaximumGeometricError(level);
+            }
+            /**
+                 * Loads, or continues loading, a given tile.  This function will continue to be called
+                 * until {@link QuadtreeTile#state} is no longer {@link QuadtreeTileLoadState#LOADING}.  This function should
+                 * not be called before {@link GlobeSurfaceTileProvider#ready} returns true.
+                 *
+                 * @param {FrameState} frameState The frame state.
+                 * @param {QuadtreeTile} tile The tile to load.
+                 *
+                 * @exception {DeveloperError} <code>loadTile</code> must not be called before the tile provider is ready.
+                 */
+            loadTile(frameState, tile) {
+                GlobeSurfaceTile.processStateMachine(tile, frameState, this._terrainProvider, this._imageryLayers, this._vertexArraysToDestroy);
+                var tileLoadedEvent = this._tileLoadedEvent;
+                tile._loadedCallbacks['tileLoadedEvent'] = function(tile) {
+                    tileLoadedEvent.raiseEvent();
+                    return true;
+                };
+            }
+            /**
+                 * Determines the visibility of a given tile.  The tile may be fully visible, partially visible, or not
+                 * visible at all.  Tiles that are renderable and are at least partially visible will be shown by a call
+                 * to {@link GlobeSurfaceTileProvider#showTileThisFrame}.
+                 *
+                 * @param {QuadtreeTile} tile The tile instance.
+                 * @param {FrameState} frameState The state information about the current frame.
+                 * @param {QuadtreeOccluders} occluders The objects that may occlude this tile.
+                 *
+                 * @returns {Visibility} The visibility of the tile.
+                 */
+            computeTileVisibility(tile, frameState, occluders) {
+                var distance = this.computeDistanceToTile(tile, frameState);
+                tile._distance = distance;
+                if (frameState.fog.enabled) {
+                    if (CesiumMath.fog(distance, frameState.fog.density) >= 1.0) {
+                        // Tile is completely in fog so return that it is not visible.
+                        return Visibility.NONE;
+                    }
+                }
+                var surfaceTile = tile.data;
+                var cullingVolume = frameState.cullingVolume;
+                var boundingVolume = defaultValue(surfaceTile.orientedBoundingBox, surfaceTile.boundingSphere3D);
+                // Check if the tile is outside the limit area in cartographic space
+                surfaceTile.clippedByBoundaries = false;
+                var clippedCartographicLimitRectangle = clipRectangleAntimeridian(tile.rectangle, this.cartographicLimitRectangle);
+                var areaLimitIntersection = Rectangle.simpleIntersection(clippedCartographicLimitRectangle, tile.rectangle, rectangleIntersectionScratch);
+                if (!defined(areaLimitIntersection)) {
+                    return Visibility.NONE;
+                }
+                if (!Rectangle.equals(areaLimitIntersection, tile.rectangle)) {
+                    surfaceTile.clippedByBoundaries = true;
+                }
+                if (frameState.mode !== SceneMode.SCENE3D) {
+                    boundingVolume = boundingSphereScratch;
+                    BoundingSphere.fromRectangleWithHeights2D(tile.rectangle, frameState.mapProjection, surfaceTile.minimumHeight, surfaceTile.maximumHeight, boundingVolume);
+                    Cartesian3.fromElements(boundingVolume.center.z, boundingVolume.center.x, boundingVolume.center.y, boundingVolume.center);
+                    if (frameState.mode === SceneMode.MORPHING) {
+                        boundingVolume = BoundingSphere.union(surfaceTile.boundingSphere3D, boundingVolume, boundingVolume);
+                    }
+                }
+                var clippingPlanes = this._clippingPlanes;
+                if (defined(clippingPlanes) && clippingPlanes.enabled) {
+                    var planeIntersection = clippingPlanes.computeIntersectionWithBoundingVolume(boundingVolume);
+                    tile.isClipped = (planeIntersection !== Intersect.INSIDE);
+                    if (planeIntersection === Intersect.OUTSIDE) {
+                        return Visibility.NONE;
+                    }
+                }
+                var intersection = cullingVolume.computeVisibility(boundingVolume);
+                if (intersection === Intersect.OUTSIDE) {
+                    return Visibility.NONE;
+                }
+                var ortho3D = frameState.mode === SceneMode.SCENE3D && frameState.camera.frustum instanceof OrthographicFrustum;
+                if (frameState.mode === SceneMode.SCENE3D && !ortho3D && defined(occluders)) {
+                    var occludeePointInScaledSpace = surfaceTile.occludeePointInScaledSpace;
+                    if (!defined(occludeePointInScaledSpace)) {
+                        return intersection;
+                    }
+                    if (occluders.ellipsoid.isScaledSpacePointVisible(occludeePointInScaledSpace)) {
+                        return intersection;
+                    }
+                    return Visibility.NONE;
+                }
+                return intersection;
+            }
+            /**
+                 * Shows a specified tile in this frame.  The provider can cause the tile to be shown by adding
+                 * render commands to the commandList, or use any other method as appropriate.  The tile is not
+                 * expected to be visible next frame as well, unless this method is called next frame, too.
+                 *
+                 * @param {Object} tile The tile instance.
+                 * @param {FrameState} frameState The state information of the current rendering frame.
+                 */
+            showTileThisFrame(tile, frameState) {
+                var readyTextureCount = 0;
+                var tileImageryCollection = tile.data.imagery;
+                for (var i = 0, len = tileImageryCollection.length; i < len; ++i) {
+                    var tileImagery = tileImageryCollection[i];
+                    if (defined(tileImagery.readyImagery) && tileImagery.readyImagery.imageryLayer.alpha !== 0.0) {
+                        ++readyTextureCount;
+                    }
+                }
+                var tileSet = this._tilesToRenderByTextureCount[readyTextureCount];
+                if (!defined(tileSet)) {
+                    tileSet = [];
+                    this._tilesToRenderByTextureCount[readyTextureCount] = tileSet;
+                }
+                tileSet.push(tile);
+                var debug = this._debug;
+                ++debug.tilesRendered;
+                debug.texturesRendered += readyTextureCount;
+            }
+            /**
+                 * Gets the distance from the camera to the closest point on the tile.  This is used for level-of-detail selection.
+                 *
+                 * @param {QuadtreeTile} tile The tile instance.
+                 * @param {FrameState} frameState The state information of the current rendering frame.
+                 *
+                 * @returns {Number} The distance from the camera to the closest point on the tile, in meters.
+                 */
+            computeDistanceToTile(tile, frameState) {
+                var surfaceTile = tile.data;
+                var tileBoundingRegion = surfaceTile.tileBoundingRegion;
+                return tileBoundingRegion.distanceToCamera(frameState);
+            }
+            /**
+                 * Returns true if this object was destroyed; otherwise, false.
+                 * <br /><br />
+                 * If this object was destroyed, it should not be used; calling any function other than
+                 * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
+                 *
+                 * @returns {Boolean} True if this object was destroyed; otherwise, false.
+                 *
+                 * @see GlobeSurfaceTileProvider#destroy
+                 */
+            isDestroyed() {
+                return false;
+            }
+            /**
+                 * Destroys the WebGL resources held by this object.  Destroying an object allows for deterministic
+                 * release of WebGL resources, instead of relying on the garbage collector to destroy this object.
+                 * <br /><br />
+                 * Once an object is destroyed, it should not be used; calling any function other than
+                 * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
+                 * assign the return value (<code>undefined</code>) to the object as done in the example.
+                 *
+                 * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
+                 *
+                 *
+                 * @example
+                 * provider = provider && provider();
+                 *
+                 * @see GlobeSurfaceTileProvider#isDestroyed
+                 */
+            destroy() {
+                this._tileProvider = this._tileProvider && this._tileProvider.destroy();
+                this._clippingPlanes = this._clippingPlanes && this._clippingPlanes.destroy();
+                return destroyObject(this);
+            }
+            _onLayerAdded(layer, index) {
+                if (layer.show) {
+                    var terrainProvider = this._terrainProvider;
+                    var that = this;
+                    var imageryProvider = layer.imageryProvider;
+                    var tileImageryUpdatedEvent = this._imageryLayersUpdatedEvent;
+                    imageryProvider._reload = function() {
+                        // Clear the layer's cache
+                        layer._imageryCache = {};
+                        that._quadtree.forEachLoadedTile(function(tile) {
+                            // If this layer is still waiting to for the loaded callback, just return
+                            if (defined(tile._loadedCallbacks[layer._layerIndex])) {
+                                return;
+                            }
+                            var i;
+                            // Figure out how many TileImageries we will need to remove and where to insert new ones
+                            var tileImageryCollection = tile.data.imagery;
+                            var length = tileImageryCollection.length;
+                            var startIndex = -1;
+                            var tileImageriesToFree = 0;
+                            for (i = 0; i < length; ++i) {
+                                var tileImagery = tileImageryCollection[i];
+                                var imagery = defaultValue(tileImagery.readyImagery, tileImagery.loadingImagery);
+                                if (imagery.imageryLayer === layer) {
+                                    if (startIndex === -1) {
+                                        startIndex = i;
+                                    }
+                                    ++tileImageriesToFree;
+                                }
+                                else if (startIndex !== -1) {
+                                    // iterated past the section of TileImageries belonging to this layer, no need to continue.
+                                    break;
+                                }
+                            }
+                            if (startIndex === -1) {
+                                return;
+                            }
+                            // Insert immediately after existing TileImageries
+                            var insertionPoint = startIndex + tileImageriesToFree;
+                            // Create new TileImageries for all loaded tiles
+                            if (layer._createTileImagerySkeletons(tile, terrainProvider, insertionPoint)) {
+                                // Add callback to remove old TileImageries when the new TileImageries are ready
+                                tile._loadedCallbacks[layer._layerIndex] = getTileReadyCallback(tileImageriesToFree, layer, terrainProvider);
+                                tile.state = QuadtreeTileLoadState.LOADING;
+                            }
+                        });
+                    };
+                    // create TileImageries for this layer for all previously loaded tiles
+                    this._quadtree.forEachLoadedTile(function(tile) {
+                        if (layer._createTileImagerySkeletons(tile, terrainProvider)) {
+                            tile.state = QuadtreeTileLoadState.LOADING;
+                        }
+                    });
+                    this._layerOrderChanged = true;
+                    tileImageryUpdatedEvent.raiseEvent();
+                }
+            }
+            _onLayerRemoved(layer, index) {
+                // destroy TileImagerys for this layer for all previously loaded tiles
+                this._quadtree.forEachLoadedTile(function(tile) {
+                    var tileImageryCollection = tile.data.imagery;
+                    var startIndex = -1;
+                    var numDestroyed = 0;
+                    for (var i = 0, len = tileImageryCollection.length; i < len; ++i) {
+                        var tileImagery = tileImageryCollection[i];
+                        var imagery = tileImagery.loadingImagery;
+                        if (!defined(imagery)) {
+                            imagery = tileImagery.readyImagery;
+                        }
+                        if (imagery.imageryLayer === layer) {
+                            if (startIndex === -1) {
+                                startIndex = i;
+                            }
+                            tileImagery.freeResources();
+                            ++numDestroyed;
+                        }
+                        else if (startIndex !== -1) {
+                            // iterated past the section of TileImagerys belonging to this layer, no need to continue.
+                            break;
+                        }
+                    }
+                    if (startIndex !== -1) {
+                        tileImageryCollection.splice(startIndex, numDestroyed);
+                    }
+                });
+                if (defined(layer.imageryProvider)) {
+                    layer.imageryProvider._reload = undefined;
+                }
+                this._imageryLayersUpdatedEvent.raiseEvent();
+            }
+            _onLayerMoved(layer, newIndex, oldIndex) {
+                this._layerOrderChanged = true;
+                this._imageryLayersUpdatedEvent.raiseEvent();
+            }
+            _onLayerShownOrHidden(layer, index, show) {
+                if (show) {
+                    this._onLayerAdded(layer, index);
+                }
+                else {
+                    this._onLayerRemoved(layer, index);
+                }
+            }
+        }
 
     defineProperties(GlobeSurfaceTileProvider.prototype, {
         /**
@@ -338,13 +709,6 @@ define([
         return aImagery.imageryLayer._layerIndex - bImagery.imageryLayer._layerIndex;
     }
 
-     /**
-     * Make updates to the tile provider that are not involved in rendering. Called before the render update cycle.
-     */
-    GlobeSurfaceTileProvider.prototype.update = function(frameState) {
-        // update collection: imagery indices, base layers, raise layer show/hide event
-        this._imageryLayers._update();
-    };
 
     function freeVertexArray(vertexArray) {
         var indexBuffer = vertexArray.indexBuffer;
@@ -373,149 +737,12 @@ define([
         }
     }
 
-    /**
-     * Called at the beginning of each render frame, before {@link QuadtreeTileProvider#showTileThisFrame}
-     * @param {FrameState} frameState The frame state.
-     */
-    GlobeSurfaceTileProvider.prototype.initialize = function(frameState) {
-        // update each layer for texture reprojection.
-        this._imageryLayers.queueReprojectionCommands(frameState);
 
-        if (this._layerOrderChanged) {
-            this._layerOrderChanged = false;
 
-            // Sort the TileImagery instances in each tile by the layer index.
-            this._quadtree.forEachLoadedTile(function(tile) {
-                tile.data.imagery.sort(sortTileImageryByLayerIndex);
-            });
-        }
 
-        // Add credits for terrain and imagery providers.
-        updateCredits(this, frameState);
 
-        var vertexArraysToDestroy = this._vertexArraysToDestroy;
-        var length = vertexArraysToDestroy.length;
-        for (var j = 0; j < length; ++j) {
-            freeVertexArray(vertexArraysToDestroy[j]);
-        }
-        vertexArraysToDestroy.length = 0;
-    };
 
-    /**
-     * Called at the beginning of the update cycle for each render frame, before {@link QuadtreeTileProvider#showTileThisFrame}
-     * or any other functions.
-     *
-     * @param {FrameState} frameState The frame state.
-     */
-    GlobeSurfaceTileProvider.prototype.beginUpdate = function(frameState) {
-        var tilesToRenderByTextureCount = this._tilesToRenderByTextureCount;
-        for (var i = 0, len = tilesToRenderByTextureCount.length; i < len; ++i) {
-            var tiles = tilesToRenderByTextureCount[i];
-            if (defined(tiles)) {
-                tiles.length = 0;
-            }
-        }
-        // update clipping planes
-        var clippingPlanes = this._clippingPlanes;
-        if (defined(clippingPlanes) && clippingPlanes.enabled) {
-            clippingPlanes.update(frameState);
-        }
-        this._usedDrawCommands = 0;
-    };
 
-    /**
-     * Called at the end of the update cycle for each render frame, after {@link QuadtreeTileProvider#showTileThisFrame}
-     * and any other functions.
-     *
-     * @param {FrameState} frameState The frame state.
-     */
-    GlobeSurfaceTileProvider.prototype.endUpdate = function(frameState) {
-        if (!defined(this._renderState)) {
-            this._renderState = RenderState.fromCache({ // Write color and depth
-                cull : {
-                    enabled : true
-                },
-                depthTest : {
-                    enabled : true,
-                    func : DepthFunction.LESS
-                }
-            });
-
-            this._blendRenderState = RenderState.fromCache({ // Write color and depth
-                cull : {
-                    enabled : true
-                },
-                depthTest : {
-                    enabled : true,
-                    func : DepthFunction.LESS_OR_EQUAL
-                },
-                blending : BlendingState.ALPHA_BLEND
-            });
-        }
-
-        // Add the tile render commands to the command list, sorted by texture count.
-        var tilesToRenderByTextureCount = this._tilesToRenderByTextureCount;
-        for (var textureCountIndex = 0, textureCountLength = tilesToRenderByTextureCount.length; textureCountIndex < textureCountLength; ++textureCountIndex) {
-            var tilesToRender = tilesToRenderByTextureCount[textureCountIndex];
-            if (!defined(tilesToRender)) {
-                continue;
-            }
-
-            for (var tileIndex = 0, tileLength = tilesToRender.length; tileIndex < tileLength; ++tileIndex) {
-                addDrawCommandsForTile(this, tilesToRender[tileIndex], frameState);
-            }
-        }
-    };
-
-    /**
-     * Adds draw commands for tiles rendered in the previous frame for a pick pass.
-     *
-     * @param {FrameState} frameState The frame state.
-     */
-    GlobeSurfaceTileProvider.prototype.updateForPick = function(frameState) {
-        // Add the tile pick commands from the tiles drawn last frame.
-        var drawCommands = this._drawCommands;
-        for (var i = 0, length = this._usedDrawCommands; i < length; ++i) {
-            frameState.commandList.push(drawCommands[i]);
-        }
-    };
-
-    /**
-     * Cancels any imagery re-projections in the queue.
-     */
-    GlobeSurfaceTileProvider.prototype.cancelReprojections = function() {
-        this._imageryLayers.cancelReprojections();
-    };
-
-    /**
-     * Gets the maximum geometric error allowed in a tile at a given level, in meters.  This function should not be
-     * called before {@link GlobeSurfaceTileProvider#ready} returns true.
-     *
-     * @param {Number} level The tile level for which to get the maximum geometric error.
-     * @returns {Number} The maximum geometric error in meters.
-     */
-    GlobeSurfaceTileProvider.prototype.getLevelMaximumGeometricError = function(level) {
-        return this._terrainProvider.getLevelMaximumGeometricError(level);
-    };
-
-    /**
-     * Loads, or continues loading, a given tile.  This function will continue to be called
-     * until {@link QuadtreeTile#state} is no longer {@link QuadtreeTileLoadState#LOADING}.  This function should
-     * not be called before {@link GlobeSurfaceTileProvider#ready} returns true.
-     *
-     * @param {FrameState} frameState The frame state.
-     * @param {QuadtreeTile} tile The tile to load.
-     *
-     * @exception {DeveloperError} <code>loadTile</code> must not be called before the tile provider is ready.
-     */
-    GlobeSurfaceTileProvider.prototype.loadTile = function(frameState, tile) {
-        GlobeSurfaceTile.processStateMachine(tile, frameState, this._terrainProvider, this._imageryLayers, this._vertexArraysToDestroy);
-        var tileLoadedEvent = this._tileLoadedEvent;
-        tile._loadedCallbacks['tileLoadedEvent'] = function (tile) {
-            tileLoadedEvent.raiseEvent();
-            return true;
-        };
-    };
 
     var boundingSphereScratch = new BoundingSphere();
     var rectangleIntersectionScratch = new Rectangle();
@@ -537,83 +764,6 @@ define([
         return splitRectangle;
     }
 
-    /**
-     * Determines the visibility of a given tile.  The tile may be fully visible, partially visible, or not
-     * visible at all.  Tiles that are renderable and are at least partially visible will be shown by a call
-     * to {@link GlobeSurfaceTileProvider#showTileThisFrame}.
-     *
-     * @param {QuadtreeTile} tile The tile instance.
-     * @param {FrameState} frameState The state information about the current frame.
-     * @param {QuadtreeOccluders} occluders The objects that may occlude this tile.
-     *
-     * @returns {Visibility} The visibility of the tile.
-     */
-    GlobeSurfaceTileProvider.prototype.computeTileVisibility = function(tile, frameState, occluders) {
-        var distance = this.computeDistanceToTile(tile, frameState);
-        tile._distance = distance;
-
-        if (frameState.fog.enabled) {
-            if (CesiumMath.fog(distance, frameState.fog.density) >= 1.0) {
-                // Tile is completely in fog so return that it is not visible.
-                return Visibility.NONE;
-            }
-        }
-
-        var surfaceTile = tile.data;
-        var cullingVolume = frameState.cullingVolume;
-        var boundingVolume = defaultValue(surfaceTile.orientedBoundingBox, surfaceTile.boundingSphere3D);
-
-        // Check if the tile is outside the limit area in cartographic space
-        surfaceTile.clippedByBoundaries = false;
-        var clippedCartographicLimitRectangle = clipRectangleAntimeridian(tile.rectangle, this.cartographicLimitRectangle);
-        var areaLimitIntersection = Rectangle.simpleIntersection(clippedCartographicLimitRectangle, tile.rectangle, rectangleIntersectionScratch);
-        if (!defined(areaLimitIntersection)) {
-            return Visibility.NONE;
-        }
-        if (!Rectangle.equals(areaLimitIntersection, tile.rectangle)) {
-            surfaceTile.clippedByBoundaries = true;
-        }
-
-        if (frameState.mode !== SceneMode.SCENE3D) {
-            boundingVolume = boundingSphereScratch;
-            BoundingSphere.fromRectangleWithHeights2D(tile.rectangle, frameState.mapProjection, surfaceTile.minimumHeight, surfaceTile.maximumHeight, boundingVolume);
-            Cartesian3.fromElements(boundingVolume.center.z, boundingVolume.center.x, boundingVolume.center.y, boundingVolume.center);
-
-            if (frameState.mode === SceneMode.MORPHING) {
-                boundingVolume = BoundingSphere.union(surfaceTile.boundingSphere3D, boundingVolume, boundingVolume);
-            }
-        }
-
-        var clippingPlanes = this._clippingPlanes;
-        if (defined(clippingPlanes) && clippingPlanes.enabled) {
-            var planeIntersection = clippingPlanes.computeIntersectionWithBoundingVolume(boundingVolume);
-            tile.isClipped = (planeIntersection !== Intersect.INSIDE);
-            if (planeIntersection === Intersect.OUTSIDE) {
-                return Visibility.NONE;
-            }
-        }
-
-        var intersection = cullingVolume.computeVisibility(boundingVolume);
-        if (intersection === Intersect.OUTSIDE) {
-            return Visibility.NONE;
-        }
-
-        var ortho3D = frameState.mode === SceneMode.SCENE3D && frameState.camera.frustum instanceof OrthographicFrustum;
-        if (frameState.mode === SceneMode.SCENE3D && !ortho3D && defined(occluders)) {
-            var occludeePointInScaledSpace = surfaceTile.occludeePointInScaledSpace;
-            if (!defined(occludeePointInScaledSpace)) {
-                return intersection;
-            }
-
-            if (occluders.ellipsoid.isScaledSpacePointVisible(occludeePointInScaledSpace)) {
-                return intersection;
-            }
-
-            return Visibility.NONE;
-        }
-
-        return intersection;
-    };
 
     var modifiedModelViewScratch = new Matrix4();
     var modifiedModelViewProjectionScratch = new Matrix4();
@@ -624,87 +774,9 @@ define([
     var southwestScratch = new Cartesian3();
     var northeastScratch = new Cartesian3();
 
-    /**
-     * Shows a specified tile in this frame.  The provider can cause the tile to be shown by adding
-     * render commands to the commandList, or use any other method as appropriate.  The tile is not
-     * expected to be visible next frame as well, unless this method is called next frame, too.
-     *
-     * @param {Object} tile The tile instance.
-     * @param {FrameState} frameState The state information of the current rendering frame.
-     */
-    GlobeSurfaceTileProvider.prototype.showTileThisFrame = function(tile, frameState) {
-        var readyTextureCount = 0;
-        var tileImageryCollection = tile.data.imagery;
-        for (var i = 0, len = tileImageryCollection.length; i < len; ++i) {
-            var tileImagery = tileImageryCollection[i];
-            if (defined(tileImagery.readyImagery) && tileImagery.readyImagery.imageryLayer.alpha !== 0.0) {
-                ++readyTextureCount;
-            }
-        }
 
-        var tileSet = this._tilesToRenderByTextureCount[readyTextureCount];
-        if (!defined(tileSet)) {
-            tileSet = [];
-            this._tilesToRenderByTextureCount[readyTextureCount] = tileSet;
-        }
 
-        tileSet.push(tile);
 
-        var debug = this._debug;
-        ++debug.tilesRendered;
-        debug.texturesRendered += readyTextureCount;
-    };
-
-    /**
-     * Gets the distance from the camera to the closest point on the tile.  This is used for level-of-detail selection.
-     *
-     * @param {QuadtreeTile} tile The tile instance.
-     * @param {FrameState} frameState The state information of the current rendering frame.
-     *
-     * @returns {Number} The distance from the camera to the closest point on the tile, in meters.
-     */
-    GlobeSurfaceTileProvider.prototype.computeDistanceToTile = function(tile, frameState) {
-        var surfaceTile = tile.data;
-        var tileBoundingRegion = surfaceTile.tileBoundingRegion;
-        return tileBoundingRegion.distanceToCamera(frameState);
-    };
-
-    /**
-     * Returns true if this object was destroyed; otherwise, false.
-     * <br /><br />
-     * If this object was destroyed, it should not be used; calling any function other than
-     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
-     *
-     * @returns {Boolean} True if this object was destroyed; otherwise, false.
-     *
-     * @see GlobeSurfaceTileProvider#destroy
-     */
-    GlobeSurfaceTileProvider.prototype.isDestroyed = function() {
-        return false;
-    };
-
-    /**
-     * Destroys the WebGL resources held by this object.  Destroying an object allows for deterministic
-     * release of WebGL resources, instead of relying on the garbage collector to destroy this object.
-     * <br /><br />
-     * Once an object is destroyed, it should not be used; calling any function other than
-     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
-     * assign the return value (<code>undefined</code>) to the object as done in the example.
-     *
-     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
-     *
-     *
-     * @example
-     * provider = provider && provider();
-     *
-     * @see GlobeSurfaceTileProvider#isDestroyed
-     */
-    GlobeSurfaceTileProvider.prototype.destroy = function() {
-        this._tileProvider = this._tileProvider && this._tileProvider.destroy();
-        this._clippingPlanes = this._clippingPlanes && this._clippingPlanes.destroy();
-
-        return destroyObject(this);
-    };
 
     function getTileReadyCallback(tileImageriesToFree, layer, terrainProvider) {
         return function(tile) {
@@ -744,124 +816,9 @@ define([
         };
     }
 
-    GlobeSurfaceTileProvider.prototype._onLayerAdded = function(layer, index) {
-        if (layer.show) {
-            var terrainProvider = this._terrainProvider;
 
-            var that = this;
-            var imageryProvider = layer.imageryProvider;
-            var tileImageryUpdatedEvent = this._imageryLayersUpdatedEvent;
-            imageryProvider._reload = function() {
-                // Clear the layer's cache
-                layer._imageryCache = {};
 
-                that._quadtree.forEachLoadedTile(function(tile) {
-                    // If this layer is still waiting to for the loaded callback, just return
-                    if (defined(tile._loadedCallbacks[layer._layerIndex])) {
-                        return;
-                    }
 
-                    var i;
-
-                    // Figure out how many TileImageries we will need to remove and where to insert new ones
-                    var tileImageryCollection = tile.data.imagery;
-                    var length = tileImageryCollection.length;
-                    var startIndex = -1;
-                    var tileImageriesToFree = 0;
-                    for (i = 0; i < length; ++i) {
-                        var tileImagery = tileImageryCollection[i];
-                        var imagery = defaultValue(tileImagery.readyImagery, tileImagery.loadingImagery);
-                        if (imagery.imageryLayer === layer) {
-                            if (startIndex === -1) {
-                                startIndex = i;
-                            }
-
-                            ++tileImageriesToFree;
-                        } else if (startIndex !== -1) {
-                            // iterated past the section of TileImageries belonging to this layer, no need to continue.
-                            break;
-                        }
-                    }
-
-                    if (startIndex === -1) {
-                        return;
-                    }
-
-                    // Insert immediately after existing TileImageries
-                    var insertionPoint = startIndex + tileImageriesToFree;
-
-                    // Create new TileImageries for all loaded tiles
-                    if (layer._createTileImagerySkeletons(tile, terrainProvider, insertionPoint)) {
-                        // Add callback to remove old TileImageries when the new TileImageries are ready
-                        tile._loadedCallbacks[layer._layerIndex] = getTileReadyCallback(tileImageriesToFree, layer, terrainProvider);
-
-                        tile.state = QuadtreeTileLoadState.LOADING;
-                    }
-                });
-            };
-
-            // create TileImageries for this layer for all previously loaded tiles
-            this._quadtree.forEachLoadedTile(function(tile) {
-                if (layer._createTileImagerySkeletons(tile, terrainProvider)) {
-                    tile.state = QuadtreeTileLoadState.LOADING;
-                }
-            });
-
-            this._layerOrderChanged = true;
-            tileImageryUpdatedEvent.raiseEvent();
-        }
-    };
-
-    GlobeSurfaceTileProvider.prototype._onLayerRemoved = function(layer, index) {
-        // destroy TileImagerys for this layer for all previously loaded tiles
-        this._quadtree.forEachLoadedTile(function(tile) {
-            var tileImageryCollection = tile.data.imagery;
-
-            var startIndex = -1;
-            var numDestroyed = 0;
-            for (var i = 0, len = tileImageryCollection.length; i < len; ++i) {
-                var tileImagery = tileImageryCollection[i];
-                var imagery = tileImagery.loadingImagery;
-                if (!defined(imagery)) {
-                    imagery = tileImagery.readyImagery;
-                }
-                if (imagery.imageryLayer === layer) {
-                    if (startIndex === -1) {
-                        startIndex = i;
-                    }
-
-                    tileImagery.freeResources();
-                    ++numDestroyed;
-                } else if (startIndex !== -1) {
-                    // iterated past the section of TileImagerys belonging to this layer, no need to continue.
-                    break;
-                }
-            }
-
-            if (startIndex !== -1) {
-                tileImageryCollection.splice(startIndex, numDestroyed);
-            }
-        });
-
-        if (defined(layer.imageryProvider)) {
-            layer.imageryProvider._reload = undefined;
-        }
-
-        this._imageryLayersUpdatedEvent.raiseEvent();
-    };
-
-    GlobeSurfaceTileProvider.prototype._onLayerMoved = function(layer, newIndex, oldIndex) {
-        this._layerOrderChanged = true;
-        this._imageryLayersUpdatedEvent.raiseEvent();
-    };
-
-    GlobeSurfaceTileProvider.prototype._onLayerShownOrHidden = function(layer, index, show) {
-        if (show) {
-            this._onLayerAdded(layer, index);
-        } else {
-            this._onLayerRemoved(layer, index);
-        }
-    };
 
     var scratchClippingPlaneMatrix = new Matrix4();
     function createTileUniformMap(frameState, globeSurfaceTileProvider) {

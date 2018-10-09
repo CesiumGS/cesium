@@ -14,115 +14,109 @@ define([
         ModelAnimationState) {
     'use strict';
 
-    /**
-     * An active glTF animation.  A glTF asset can contain animations.  An active animation
-     * is an animation that is currently playing or scheduled to be played because it was
-     * added to a model's {@link ModelAnimationCollection}.  An active animation is an
-     * instance of an animation; for example, there can be multiple active animations
-     * for the same glTF animation, each with a different start time.
-     * <p>
-     * Create this by calling {@link ModelAnimationCollection#add}.
-     * </p>
-     *
-     * @alias ModelAnimation
-     * @internalConstructor
-     * @class
-     *
-     * @see ModelAnimationCollection#add
-     */
-    function ModelAnimation(options, model, runtimeAnimation) {
-        this._name = runtimeAnimation.name;
-        this._startTime = JulianDate.clone(options.startTime);
-        this._delay = defaultValue(options.delay, 0.0); // in seconds
-        this._stopTime = options.stopTime;
-
         /**
-         * When <code>true</code>, the animation is removed after it stops playing.
-         * This is slightly more efficient that not removing it, but if, for example,
-         * time is reversed, the animation is not played again.
-         *
-         * @type {Boolean}
-         * @default false
-         */
-        this.removeOnStop = defaultValue(options.removeOnStop, false);
-
-        this._speedup = defaultValue(options.speedup, 1.0);
-        this._reverse = defaultValue(options.reverse, false);
-        this._loop = defaultValue(options.loop, ModelAnimationLoop.NONE);
-
-        /**
-         * The event fired when this animation is started.  This can be used, for
-         * example, to play a sound or start a particle system, when the animation starts.
-         * <p>
-         * This event is fired at the end of the frame after the scene is rendered.
-         * </p>
-         *
-         * @type {Event}
-         * @default new Event()
-         *
-         * @example
-         * animation.start.addEventListener(function(model, animation) {
-         *   console.log('Animation started: ' + animation.name);
-         * });
-         */
-        this.start = new Event();
-
-        /**
-         * The event fired when on each frame when this animation is updated.  The
-         * current time of the animation, relative to the glTF animation time span, is
-         * passed to the event, which allows, for example, starting new animations at a
-         * specific time relative to a playing animation.
-         * <p>
-         * This event is fired at the end of the frame after the scene is rendered.
-         * </p>
-         *
-         * @type {Event}
-         * @default new Event()
-         *
-         * @example
-         * animation.update.addEventListener(function(model, animation, time) {
-         *   console.log('Animation updated: ' + animation.name + '. glTF animation time: ' + time);
-         * });
-         */
-        this.update = new Event();
-
-        /**
-         * The event fired when this animation is stopped.  This can be used, for
-         * example, to play a sound or start a particle system, when the animation stops.
-         * <p>
-         * This event is fired at the end of the frame after the scene is rendered.
-         * </p>
-         *
-         * @type {Event}
-         * @default new Event()
-         *
-         * @example
-         * animation.stop.addEventListener(function(model, animation) {
-         *   console.log('Animation stopped: ' + animation.name);
-         * });
-         */
-        this.stop = new Event();
-
-        this._state = ModelAnimationState.STOPPED;
-        this._runtimeAnimation = runtimeAnimation;
-
-        // Set during animation update
-        this._computedStartTime = undefined;
-        this._duration = undefined;
-
-        // To avoid allocations in ModelAnimationCollection.update
-        var that = this;
-        this._raiseStartEvent = function() {
-            that.start.raiseEvent(model, that);
-        };
-        this._updateEventTime = 0.0;
-        this._raiseUpdateEvent = function() {
-            that.update.raiseEvent(model, that, that._updateEventTime);
-        };
-        this._raiseStopEvent = function() {
-            that.stop.raiseEvent(model, that);
-        };
-    }
+             * An active glTF animation.  A glTF asset can contain animations.  An active animation
+             * is an animation that is currently playing or scheduled to be played because it was
+             * added to a model's {@link ModelAnimationCollection}.  An active animation is an
+             * instance of an animation; for example, there can be multiple active animations
+             * for the same glTF animation, each with a different start time.
+             * <p>
+             * Create this by calling {@link ModelAnimationCollection#add}.
+             * </p>
+             *
+             * @alias ModelAnimation
+             * @internalConstructor
+             * @class
+             *
+             * @see ModelAnimationCollection#add
+             */
+        class ModelAnimation {
+            constructor(options, model, runtimeAnimation) {
+                this._name = runtimeAnimation.name;
+                this._startTime = JulianDate.clone(options.startTime);
+                this._delay = defaultValue(options.delay, 0.0); // in seconds
+                this._stopTime = options.stopTime;
+                /**
+                 * When <code>true</code>, the animation is removed after it stops playing.
+                 * This is slightly more efficient that not removing it, but if, for example,
+                 * time is reversed, the animation is not played again.
+                 *
+                 * @type {Boolean}
+                 * @default false
+                 */
+                this.removeOnStop = defaultValue(options.removeOnStop, false);
+                this._speedup = defaultValue(options.speedup, 1.0);
+                this._reverse = defaultValue(options.reverse, false);
+                this._loop = defaultValue(options.loop, ModelAnimationLoop.NONE);
+                /**
+                 * The event fired when this animation is started.  This can be used, for
+                 * example, to play a sound or start a particle system, when the animation starts.
+                 * <p>
+                 * This event is fired at the end of the frame after the scene is rendered.
+                 * </p>
+                 *
+                 * @type {Event}
+                 * @default new Event()
+                 *
+                 * @example
+                 * animation.start.addEventListener(function(model, animation) {
+                 *   console.log('Animation started: ' + animation.name);
+                 * });
+                 */
+                this.start = new Event();
+                /**
+                 * The event fired when on each frame when this animation is updated.  The
+                 * current time of the animation, relative to the glTF animation time span, is
+                 * passed to the event, which allows, for example, starting new animations at a
+                 * specific time relative to a playing animation.
+                 * <p>
+                 * This event is fired at the end of the frame after the scene is rendered.
+                 * </p>
+                 *
+                 * @type {Event}
+                 * @default new Event()
+                 *
+                 * @example
+                 * animation.update.addEventListener(function(model, animation, time) {
+                 *   console.log('Animation updated: ' + animation.name + '. glTF animation time: ' + time);
+                 * });
+                 */
+                this.update = new Event();
+                /**
+                 * The event fired when this animation is stopped.  This can be used, for
+                 * example, to play a sound or start a particle system, when the animation stops.
+                 * <p>
+                 * This event is fired at the end of the frame after the scene is rendered.
+                 * </p>
+                 *
+                 * @type {Event}
+                 * @default new Event()
+                 *
+                 * @example
+                 * animation.stop.addEventListener(function(model, animation) {
+                 *   console.log('Animation stopped: ' + animation.name);
+                 * });
+                 */
+                this.stop = new Event();
+                this._state = ModelAnimationState.STOPPED;
+                this._runtimeAnimation = runtimeAnimation;
+                // Set during animation update
+                this._computedStartTime = undefined;
+                this._duration = undefined;
+                // To avoid allocations in ModelAnimationCollection.update
+                var that = this;
+                this._raiseStartEvent = function() {
+                    that.start.raiseEvent(model, that);
+                };
+                this._updateEventTime = 0.0;
+                this._raiseUpdateEvent = function() {
+                    that.update.raiseEvent(model, that, that._updateEventTime);
+                };
+                this._raiseStopEvent = function() {
+                    that.stop.raiseEvent(model, that);
+                };
+            }
+        }
 
     defineProperties(ModelAnimation.prototype, {
         /**

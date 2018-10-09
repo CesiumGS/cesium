@@ -6,24 +6,26 @@ define([
         DeveloperError) {
     'use strict';
 
-    /**
-     * A tiling scheme for geometry or imagery on the surface of an ellipsoid.  At level-of-detail zero,
-     * the coarsest, least-detailed level, the number of tiles is configurable.
-     * At level of detail one, each of the level zero tiles has four children, two in each direction.
-     * At level of detail two, each of the level one tiles has four children, two in each direction.
-     * This continues for as many levels as are present in the geometry or imagery source.
-     *
-     * @alias TilingScheme
-     * @constructor
-     *
-     * @see WebMercatorTilingScheme
-     * @see GeographicTilingScheme
-     */
-    function TilingScheme(options) {
-        //>>includeStart('debug', pragmas.debug);
-        throw new DeveloperError('This type should not be instantiated directly.  Instead, use WebMercatorTilingScheme or GeographicTilingScheme.');
-        //>>includeEnd('debug');
-    }
+        /**
+             * A tiling scheme for geometry or imagery on the surface of an ellipsoid.  At level-of-detail zero,
+             * the coarsest, least-detailed level, the number of tiles is configurable.
+             * At level of detail one, each of the level zero tiles has four children, two in each direction.
+             * At level of detail two, each of the level one tiles has four children, two in each direction.
+             * This continues for as many levels as are present in the geometry or imagery source.
+             *
+             * @alias TilingScheme
+             * @constructor
+             *
+             * @see WebMercatorTilingScheme
+             * @see GeographicTilingScheme
+             */
+        class TilingScheme {
+            constructor(options) {
+                //>>includeStart('debug', pragmas.debug);
+                throw new DeveloperError('This type should not be instantiated directly.  Instead, use WebMercatorTilingScheme or GeographicTilingScheme.');
+                //>>includeEnd('debug');
+            }
+        }
 
     defineProperties(TilingScheme.prototype, {
         /**

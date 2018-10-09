@@ -473,61 +473,116 @@ define([
         }
     }
 
-    /**
-     * A {@link DataSource} which processes both
-     * {@link http://www.geojson.org/|GeoJSON} and {@link https://github.com/mbostock/topojson|TopoJSON} data.
-     * {@link https://github.com/mapbox/simplestyle-spec|simplestyle-spec} properties will also be used if they
-     * are present.
-     *
-     * @alias GeoJsonDataSource
-     * @constructor
-     *
-     * @param {String} [name] The name of this data source.  If undefined, a name will be taken from
-     *                        the name of the GeoJSON file.
-     *
-     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=GeoJSON%20and%20TopoJSON.html|Cesium Sandcastle GeoJSON and TopoJSON Demo}
-     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=GeoJSON%20simplestyle.html|Cesium Sandcastle GeoJSON simplestyle Demo}
-     *
-     * @example
-     * var viewer = new Cesium.Viewer('cesiumContainer');
-     * viewer.dataSources.add(Cesium.GeoJsonDataSource.load('../../SampleData/ne_10m_us_states.topojson', {
-     *   stroke: Cesium.Color.HOTPINK,
-     *   fill: Cesium.Color.PINK,
-     *   strokeWidth: 3,
-     *   markerSymbol: '?'
-     * }));
-     */
-    function GeoJsonDataSource(name) {
-        this._name = name;
-        this._changed = new Event();
-        this._error = new Event();
-        this._isLoading = false;
-        this._loading = new Event();
-        this._entityCollection = new EntityCollection(this);
-        this._promises = [];
-        this._pinBuilder = new PinBuilder();
-        this._entityCluster = new EntityCluster();
-    }
+        /**
+             * A {@link DataSource} which processes both
+             * {@link http://www.geojson.org/|GeoJSON} and {@link https://github.com/mbostock/topojson|TopoJSON} data.
+             * {@link https://github.com/mapbox/simplestyle-spec|simplestyle-spec} properties will also be used if they
+             * are present.
+             *
+             * @alias GeoJsonDataSource
+             * @constructor
+             *
+             * @param {String} [name] The name of this data source.  If undefined, a name will be taken from
+             *                        the name of the GeoJSON file.
+             *
+             * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=GeoJSON%20and%20TopoJSON.html|Cesium Sandcastle GeoJSON and TopoJSON Demo}
+             * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=GeoJSON%20simplestyle.html|Cesium Sandcastle GeoJSON simplestyle Demo}
+             *
+             * @example
+             * var viewer = new Cesium.Viewer('cesiumContainer');
+             * viewer.dataSources.add(Cesium.GeoJsonDataSource.load('../../SampleData/ne_10m_us_states.topojson', {
+             *   stroke: Cesium.Color.HOTPINK,
+             *   fill: Cesium.Color.PINK,
+             *   strokeWidth: 3,
+             *   markerSymbol: '?'
+             * }));
+             */
+        class GeoJsonDataSource {
+            constructor(name) {
+                this._name = name;
+                this._changed = new Event();
+                this._error = new Event();
+                this._isLoading = false;
+                this._loading = new Event();
+                this._entityCollection = new EntityCollection(this);
+                this._promises = [];
+                this._pinBuilder = new PinBuilder();
+                this._entityCluster = new EntityCluster();
+            }
+            /**
+                 * Asynchronously loads the provided GeoJSON or TopoJSON data, replacing any existing data.
+                 *
+                 * @param {Resource|String|Object} data A url, GeoJSON object, or TopoJSON object to be loaded.
+                 * @param {Object} [options] An object with the following properties:
+                 * @param {String} [options.sourceUri] Overrides the url to use for resolving relative links.
+                 * @param {GeoJsonDataSource~describe} [options.describe=GeoJsonDataSource.defaultDescribeProperty] A function which returns a Property object (or just a string),
+                 *                                                                                which converts the properties into an html description.
+                 * @param {Number} [options.markerSize=GeoJsonDataSource.markerSize] The default size of the map pin created for each point, in pixels.
+                 * @param {String} [options.markerSymbol=GeoJsonDataSource.markerSymbol] The default symbol of the map pin created for each point.
+                 * @param {Color} [options.markerColor=GeoJsonDataSource.markerColor] The default color of the map pin created for each point.
+                 * @param {Color} [options.stroke=GeoJsonDataSource.stroke] The default color of polylines and polygon outlines.
+                 * @param {Number} [options.strokeWidth=GeoJsonDataSource.strokeWidth] The default width of polylines and polygon outlines.
+                 * @param {Color} [options.fill=GeoJsonDataSource.fill] The default color for polygon interiors.
+                 * @param {Boolean} [options.clampToGround=GeoJsonDataSource.clampToGround] true if we want the features clamped to the ground.
+                 *
+                 * @returns {Promise.<GeoJsonDataSource>} a promise that will resolve when the GeoJSON is loaded.
+                 */
+            load(data, options) {
+                //>>includeStart('debug', pragmas.debug);
+                if (!defined(data)) {
+                    throw new DeveloperError('data is required.');
+                }
+                //>>includeEnd('debug');
+                DataSource.setLoading(this, true);
+                var promise = data;
+                options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+                var sourceUri = options.sourceUri;
+                if (typeof data === 'string' || (data instanceof Resource)) {
+                    data = Resource.createIfNeeded(data);
+                    promise = data.fetchJson();
+                    sourceUri = defaultValue(sourceUri, data.getUrlComponent());
+                }
+                options = {
+                    describe: defaultValue(options.describe, defaultDescribeProperty),
+                    markerSize: defaultValue(options.markerSize, defaultMarkerSize),
+                    markerSymbol: defaultValue(options.markerSymbol, defaultMarkerSymbol),
+                    markerColor: defaultValue(options.markerColor, defaultMarkerColor),
+                    strokeWidthProperty: new ConstantProperty(defaultValue(options.strokeWidth, defaultStrokeWidth)),
+                    strokeMaterialProperty: new ColorMaterialProperty(defaultValue(options.stroke, defaultStroke)),
+                    fillMaterialProperty: new ColorMaterialProperty(defaultValue(options.fill, defaultFill)),
+                    clampToGround: defaultValue(options.clampToGround, defaultClampToGround)
+                };
+                var that = this;
+                return when(promise, function(geoJson) {
+                    return load(that, geoJson, options, sourceUri);
+                }).otherwise(function(error) {
+                    DataSource.setLoading(that, false);
+                    that._error.raiseEvent(that, error);
+                    console.log(error);
+                    return when.reject(error);
+                });
+            }
+            /**
+                 * Creates a Promise to a new instance loaded with the provided GeoJSON or TopoJSON data.
+                 *
+                 * @param {Resource|String|Object} data A url, GeoJSON object, or TopoJSON object to be loaded.
+                 * @param {Object} [options] An object with the following properties:
+                 * @param {String} [options.sourceUri] Overrides the url to use for resolving relative links.
+                 * @param {Number} [options.markerSize=GeoJsonDataSource.markerSize] The default size of the map pin created for each point, in pixels.
+                 * @param {String} [options.markerSymbol=GeoJsonDataSource.markerSymbol] The default symbol of the map pin created for each point.
+                 * @param {Color} [options.markerColor=GeoJsonDataSource.markerColor] The default color of the map pin created for each point.
+                 * @param {Color} [options.stroke=GeoJsonDataSource.stroke] The default color of polylines and polygon outlines.
+                 * @param {Number} [options.strokeWidth=GeoJsonDataSource.strokeWidth] The default width of polylines and polygon outlines.
+                 * @param {Color} [options.fill=GeoJsonDataSource.fill] The default color for polygon interiors.
+                 * @param {Boolean} [options.clampToGround=GeoJsonDataSource.clampToGround] true if we want the geometry features (polygons or linestrings) clamped to the ground.
+                 *
+                 * @returns {Promise.<GeoJsonDataSource>} A promise that will resolve when the data is loaded.
+                 */
+            static load(data, options) {
+                return new GeoJsonDataSource().load(data, options);
+            }
+        }
 
-    /**
-     * Creates a Promise to a new instance loaded with the provided GeoJSON or TopoJSON data.
-     *
-     * @param {Resource|String|Object} data A url, GeoJSON object, or TopoJSON object to be loaded.
-     * @param {Object} [options] An object with the following properties:
-     * @param {String} [options.sourceUri] Overrides the url to use for resolving relative links.
-     * @param {Number} [options.markerSize=GeoJsonDataSource.markerSize] The default size of the map pin created for each point, in pixels.
-     * @param {String} [options.markerSymbol=GeoJsonDataSource.markerSymbol] The default symbol of the map pin created for each point.
-     * @param {Color} [options.markerColor=GeoJsonDataSource.markerColor] The default color of the map pin created for each point.
-     * @param {Color} [options.stroke=GeoJsonDataSource.stroke] The default color of polylines and polygon outlines.
-     * @param {Number} [options.strokeWidth=GeoJsonDataSource.strokeWidth] The default width of polylines and polygon outlines.
-     * @param {Color} [options.fill=GeoJsonDataSource.fill] The default color for polygon interiors.
-     * @param {Boolean} [options.clampToGround=GeoJsonDataSource.clampToGround] true if we want the geometry features (polygons or linestrings) clamped to the ground.
-     *
-     * @returns {Promise.<GeoJsonDataSource>} A promise that will resolve when the data is loaded.
-     */
-    GeoJsonDataSource.load = function(data, options) {
-        return new GeoJsonDataSource().load(data, options);
-    };
 
     defineProperties(GeoJsonDataSource, {
         /**
@@ -785,65 +840,6 @@ define([
         }
     });
 
-    /**
-     * Asynchronously loads the provided GeoJSON or TopoJSON data, replacing any existing data.
-     *
-     * @param {Resource|String|Object} data A url, GeoJSON object, or TopoJSON object to be loaded.
-     * @param {Object} [options] An object with the following properties:
-     * @param {String} [options.sourceUri] Overrides the url to use for resolving relative links.
-     * @param {GeoJsonDataSource~describe} [options.describe=GeoJsonDataSource.defaultDescribeProperty] A function which returns a Property object (or just a string),
-     *                                                                                which converts the properties into an html description.
-     * @param {Number} [options.markerSize=GeoJsonDataSource.markerSize] The default size of the map pin created for each point, in pixels.
-     * @param {String} [options.markerSymbol=GeoJsonDataSource.markerSymbol] The default symbol of the map pin created for each point.
-     * @param {Color} [options.markerColor=GeoJsonDataSource.markerColor] The default color of the map pin created for each point.
-     * @param {Color} [options.stroke=GeoJsonDataSource.stroke] The default color of polylines and polygon outlines.
-     * @param {Number} [options.strokeWidth=GeoJsonDataSource.strokeWidth] The default width of polylines and polygon outlines.
-     * @param {Color} [options.fill=GeoJsonDataSource.fill] The default color for polygon interiors.
-     * @param {Boolean} [options.clampToGround=GeoJsonDataSource.clampToGround] true if we want the features clamped to the ground.
-     *
-     * @returns {Promise.<GeoJsonDataSource>} a promise that will resolve when the GeoJSON is loaded.
-     */
-    GeoJsonDataSource.prototype.load = function(data, options) {
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(data)) {
-            throw new DeveloperError('data is required.');
-        }
-        //>>includeEnd('debug');
-
-        DataSource.setLoading(this, true);
-
-        var promise = data;
-        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-        var sourceUri = options.sourceUri;
-        if (typeof data === 'string' || (data instanceof Resource)) {
-            data = Resource.createIfNeeded(data);
-
-            promise = data.fetchJson();
-
-            sourceUri = defaultValue(sourceUri, data.getUrlComponent());
-        }
-
-        options = {
-            describe: defaultValue(options.describe, defaultDescribeProperty),
-            markerSize : defaultValue(options.markerSize, defaultMarkerSize),
-            markerSymbol : defaultValue(options.markerSymbol, defaultMarkerSymbol),
-            markerColor : defaultValue(options.markerColor, defaultMarkerColor),
-            strokeWidthProperty : new ConstantProperty(defaultValue(options.strokeWidth, defaultStrokeWidth)),
-            strokeMaterialProperty : new ColorMaterialProperty(defaultValue(options.stroke, defaultStroke)),
-            fillMaterialProperty : new ColorMaterialProperty(defaultValue(options.fill, defaultFill)),
-            clampToGround : defaultValue(options.clampToGround, defaultClampToGround)
-        };
-
-        var that = this;
-        return when(promise, function(geoJson) {
-            return load(that, geoJson, options, sourceUri);
-        }).otherwise(function(error) {
-            DataSource.setLoading(that, false);
-            that._error.raiseEvent(that, error);
-            console.log(error);
-            return when.reject(error);
-        });
-    };
 
     function load(that, geoJson, options, sourceUri) {
         var name;

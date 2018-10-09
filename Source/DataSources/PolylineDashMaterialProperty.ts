@@ -21,35 +21,76 @@ define([
     var defaultDashLength = 16.0;
     var defaultDashPattern = 255.0;
 
-    /**
-     * A {@link MaterialProperty} that maps to polyline dash {@link Material} uniforms.
-     * @alias PolylineDashMaterialProperty
-     * @constructor
-     *
-     * @param {Object} [options] Object with the following properties:
-     * @param {Property} [options.color=Color.WHITE] A Property specifying the {@link Color} of the line.
-     * @param {Property} [options.gapColor=Color.TRANSPARENT] A Property specifying the {@link Color} of the gaps in the line.
-     * @param {Property} [options.dashLength=16.0] A numeric Property specifying the length of the dash pattern in pixel.s
-     * @param {Property} [options.dashPattern=255.0] A numeric Property specifying a 16 bit pattern for the dash
-     */
-    function PolylineDashMaterialProperty(options) {
-        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-
-        this._definitionChanged = new Event();
-        this._color = undefined;
-        this._colorSubscription = undefined;
-        this._gapColor = undefined;
-        this._gapColorSubscription = undefined;
-        this._dashLength = undefined;
-        this._dashLengthSubscription = undefined;
-        this._dashPattern = undefined;
-        this._dashPatternSubscription = undefined;
-
-        this.color = options.color;
-        this.gapColor = options.gapColor;
-        this.dashLength = options.dashLength;
-        this.dashPattern = options.dashPattern;
-    }
+        /**
+             * A {@link MaterialProperty} that maps to polyline dash {@link Material} uniforms.
+             * @alias PolylineDashMaterialProperty
+             * @constructor
+             *
+             * @param {Object} [options] Object with the following properties:
+             * @param {Property} [options.color=Color.WHITE] A Property specifying the {@link Color} of the line.
+             * @param {Property} [options.gapColor=Color.TRANSPARENT] A Property specifying the {@link Color} of the gaps in the line.
+             * @param {Property} [options.dashLength=16.0] A numeric Property specifying the length of the dash pattern in pixel.s
+             * @param {Property} [options.dashPattern=255.0] A numeric Property specifying a 16 bit pattern for the dash
+             */
+        class PolylineDashMaterialProperty {
+            constructor(options) {
+                options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+                this._definitionChanged = new Event();
+                this._color = undefined;
+                this._colorSubscription = undefined;
+                this._gapColor = undefined;
+                this._gapColorSubscription = undefined;
+                this._dashLength = undefined;
+                this._dashLengthSubscription = undefined;
+                this._dashPattern = undefined;
+                this._dashPatternSubscription = undefined;
+                this.color = options.color;
+                this.gapColor = options.gapColor;
+                this.dashLength = options.dashLength;
+                this.dashPattern = options.dashPattern;
+            }
+            /**
+                 * Gets the {@link Material} type at the provided time.
+                 *
+                 * @param {JulianDate} time The time for which to retrieve the type.
+                 * @returns {String} The type of material.
+                 */
+            getType(time) {
+                return 'PolylineDash';
+            }
+            /**
+                 * Gets the value of the property at the provided time.
+                 *
+                 * @param {JulianDate} time The time for which to retrieve the value.
+                 * @param {Object} [result] The object to store the value into, if omitted, a new instance is created and returned.
+                 * @returns {Object} The modified result parameter or a new instance if the result parameter was not supplied.
+                 */
+            getValue(time, result) {
+                if (!defined(result)) {
+                    result = {};
+                }
+                result.color = Property.getValueOrClonedDefault(this._color, time, defaultColor, result.color);
+                result.gapColor = Property.getValueOrClonedDefault(this._gapColor, time, defaultGapColor, result.gapColor);
+                result.dashLength = Property.getValueOrDefault(this._dashLength, time, defaultDashLength, result.dashLength);
+                result.dashPattern = Property.getValueOrDefault(this._dashPattern, time, defaultDashPattern, result.dashPattern);
+                return result;
+            }
+            /**
+                 * Compares this property to the provided property and returns
+                 * <code>true</code> if they are equal, <code>false</code> otherwise.
+                 *
+                 * @param {Property} [other] The other property.
+                 * @returns {Boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
+                 */
+            equals(other) {
+                return this === other || //
+                    (other instanceof PolylineDashMaterialProperty &&
+                        Property.equals(this._color, other._color) &&
+                        Property.equals(this._gapColor, other._gapColor) &&
+                        Property.equals(this._dashLength, other._dashLength) &&
+                        Property.equals(this._dashPattern, other._dashPattern));
+            }
+        }
 
     defineProperties(PolylineDashMaterialProperty.prototype, {
         /**
@@ -106,50 +147,8 @@ define([
         dashPattern : createPropertyDescriptor('dashPattern')
     });
 
-    /**
-     * Gets the {@link Material} type at the provided time.
-     *
-     * @param {JulianDate} time The time for which to retrieve the type.
-     * @returns {String} The type of material.
-     */
-    PolylineDashMaterialProperty.prototype.getType = function(time) {
-        return 'PolylineDash';
-    };
 
-    /**
-     * Gets the value of the property at the provided time.
-     *
-     * @param {JulianDate} time The time for which to retrieve the value.
-     * @param {Object} [result] The object to store the value into, if omitted, a new instance is created and returned.
-     * @returns {Object} The modified result parameter or a new instance if the result parameter was not supplied.
-     */
-    PolylineDashMaterialProperty.prototype.getValue = function(time, result) {
-        if (!defined(result)) {
-            result = {};
-        }
-        result.color = Property.getValueOrClonedDefault(this._color, time, defaultColor, result.color);
-        result.gapColor = Property.getValueOrClonedDefault(this._gapColor, time, defaultGapColor, result.gapColor);
-        result.dashLength = Property.getValueOrDefault(this._dashLength, time, defaultDashLength, result.dashLength);
-        result.dashPattern = Property.getValueOrDefault(this._dashPattern, time, defaultDashPattern, result.dashPattern);
-        return result;
-    };
 
-    /**
-     * Compares this property to the provided property and returns
-     * <code>true</code> if they are equal, <code>false</code> otherwise.
-     *
-     * @param {Property} [other] The other property.
-     * @returns {Boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
-     */
-    PolylineDashMaterialProperty.prototype.equals = function(other) {
-        return this === other || //
-               (other instanceof PolylineDashMaterialProperty &&
-                Property.equals(this._color, other._color) &&
-                Property.equals(this._gapColor, other._gapColor) &&
-                Property.equals(this._dashLength, other._dashLength) &&
-                Property.equals(this._dashPattern, other._dashPattern)
-                );
-    };
 
     return PolylineDashMaterialProperty;
 });

@@ -4,24 +4,25 @@ define([
         DeveloperError) {
     'use strict';
 
-    /**
-     * @typedef {Object} GeocoderService~Result
-     * @property {String} displayName The display name for a location
-     * @property {Rectangle|Cartesian3} destination The bounding box for a location
-     */
-
-    /**
-     * Provides geocoding through an external service. This type describes an interface and
-     * is not intended to be used.
-     * @alias GeocoderService
-     * @constructor
-     *
-     * @see BingMapsGeocoderService
-     * @see PeliasGeocoderService
-     * @see OpenCageGeocoderService
-     */
-    function GeocoderService() {
-    }
+        /**
+             * @typedef {Object} GeocoderService~Result
+             * @property {String} displayName The display name for a location
+             * @property {Rectangle|Cartesian3} destination The bounding box for a location
+             */
+        /**
+             * Provides geocoding through an external service. This type describes an interface and
+             * is not intended to be used.
+             * @alias GeocoderService
+             * @constructor
+             *
+             * @see BingMapsGeocoderService
+             * @see PeliasGeocoderService
+             * @see OpenCageGeocoderService
+             */
+        class GeocoderService {
+            constructor() {
+            }
+        }
 
     /**
      * @function

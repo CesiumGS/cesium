@@ -38,103 +38,259 @@ define([
         TileReplacementQueue) {
     'use strict';
 
-    /**
-     * Renders massive sets of data by utilizing level-of-detail and culling.  The globe surface is divided into
-     * a quadtree of tiles with large, low-detail tiles at the root and small, high-detail tiles at the leaves.
-     * The set of tiles to render is selected by projecting an estimate of the geometric error in a tile onto
-     * the screen to estimate screen-space error, in pixels, which must be below a user-specified threshold.
-     * The actual content of the tiles is arbitrary and is specified using a {@link QuadtreeTileProvider}.
-     *
-     * @alias QuadtreePrimitive
-     * @constructor
-     * @private
-     *
-     * @param {QuadtreeTileProvider} options.tileProvider The tile provider that loads, renders, and estimates
-     *        the distance to individual tiles.
-     * @param {Number} [options.maximumScreenSpaceError=2] The maximum screen-space error, in pixels, that is allowed.
-     *        A higher maximum error will render fewer tiles and improve performance, while a lower
-     *        value will improve visual quality.
-     * @param {Number} [options.tileCacheSize=100] The maximum number of tiles that will be retained in the tile cache.
-     *        Note that tiles will never be unloaded if they were used for rendering the last
-     *        frame, so the actual number of resident tiles may be higher.  The value of
-     *        this property will not affect visual quality.
-     */
-    function QuadtreePrimitive(options) {
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(options) || !defined(options.tileProvider)) {
-            throw new DeveloperError('options.tileProvider is required.');
-        }
-        if (defined(options.tileProvider.quadtree)) {
-            throw new DeveloperError('A QuadtreeTileProvider can only be used with a single QuadtreePrimitive');
-        }
-        //>>includeEnd('debug');
-
-        this._tileProvider = options.tileProvider;
-        this._tileProvider.quadtree = this;
-
-        this._debug = {
-            enableDebugOutput : false,
-
-            maxDepth : 0,
-            tilesVisited : 0,
-            tilesCulled : 0,
-            tilesRendered : 0,
-            tilesWaitingForChildren : 0,
-
-            lastMaxDepth : -1,
-            lastTilesVisited : -1,
-            lastTilesCulled : -1,
-            lastTilesRendered : -1,
-            lastTilesWaitingForChildren : -1,
-
-            suspendLodUpdate : false
-        };
-
-        var tilingScheme = this._tileProvider.tilingScheme;
-        var ellipsoid = tilingScheme.ellipsoid;
-
-        this._tilesToRender = [];
-        this._tileLoadQueueHigh = []; // high priority tiles are preventing refinement
-        this._tileLoadQueueMedium = []; // medium priority tiles are being rendered
-        this._tileLoadQueueLow = []; // low priority tiles were refined past or are non-visible parts of quads.
-        this._tileReplacementQueue = new TileReplacementQueue();
-        this._levelZeroTiles = undefined;
-        this._loadQueueTimeSlice = 5.0;
-        this._tilesInvalidated = false;
-
-        this._addHeightCallbacks = [];
-        this._removeHeightCallbacks = [];
-
-        this._tileToUpdateHeights = [];
-        this._lastTileIndex = 0;
-        this._updateHeightsTimeSlice = 2.0;
-
         /**
-         * Gets or sets the maximum screen-space error, in pixels, that is allowed.
-         * A higher maximum error will render fewer tiles and improve performance, while a lower
-         * value will improve visual quality.
-         * @type {Number}
-         * @default 2
-         */
-        this.maximumScreenSpaceError = defaultValue(options.maximumScreenSpaceError, 2);
-
-        /**
-         * Gets or sets the maximum number of tiles that will be retained in the tile cache.
-         * Note that tiles will never be unloaded if they were used for rendering the last
-         * frame, so the actual number of resident tiles may be higher.  The value of
-         * this property will not affect visual quality.
-         * @type {Number}
-         * @default 100
-         */
-        this.tileCacheSize = defaultValue(options.tileCacheSize, 100);
-
-        this._occluders = new QuadtreeOccluders({
-            ellipsoid : ellipsoid
-        });
-
-        this._tileLoadProgressEvent = new Event();
-        this._lastTileLoadQueueLength = 0;
-    }
+             * Renders massive sets of data by utilizing level-of-detail and culling.  The globe surface is divided into
+             * a quadtree of tiles with large, low-detail tiles at the root and small, high-detail tiles at the leaves.
+             * The set of tiles to render is selected by projecting an estimate of the geometric error in a tile onto
+             * the screen to estimate screen-space error, in pixels, which must be below a user-specified threshold.
+             * The actual content of the tiles is arbitrary and is specified using a {@link QuadtreeTileProvider}.
+             *
+             * @alias QuadtreePrimitive
+             * @constructor
+             * @private
+             *
+             * @param {QuadtreeTileProvider} options.tileProvider The tile provider that loads, renders, and estimates
+             *        the distance to individual tiles.
+             * @param {Number} [options.maximumScreenSpaceError=2] The maximum screen-space error, in pixels, that is allowed.
+             *        A higher maximum error will render fewer tiles and improve performance, while a lower
+             *        value will improve visual quality.
+             * @param {Number} [options.tileCacheSize=100] The maximum number of tiles that will be retained in the tile cache.
+             *        Note that tiles will never be unloaded if they were used for rendering the last
+             *        frame, so the actual number of resident tiles may be higher.  The value of
+             *        this property will not affect visual quality.
+             */
+        class QuadtreePrimitive {
+            constructor(options) {
+                //>>includeStart('debug', pragmas.debug);
+                if (!defined(options) || !defined(options.tileProvider)) {
+                    throw new DeveloperError('options.tileProvider is required.');
+                }
+                if (defined(options.tileProvider.quadtree)) {
+                    throw new DeveloperError('A QuadtreeTileProvider can only be used with a single QuadtreePrimitive');
+                }
+                //>>includeEnd('debug');
+                this._tileProvider = options.tileProvider;
+                this._tileProvider.quadtree = this;
+                this._debug = {
+                    enableDebugOutput: false,
+                    maxDepth: 0,
+                    tilesVisited: 0,
+                    tilesCulled: 0,
+                    tilesRendered: 0,
+                    tilesWaitingForChildren: 0,
+                    lastMaxDepth: -1,
+                    lastTilesVisited: -1,
+                    lastTilesCulled: -1,
+                    lastTilesRendered: -1,
+                    lastTilesWaitingForChildren: -1,
+                    suspendLodUpdate: false
+                };
+                var tilingScheme = this._tileProvider.tilingScheme;
+                var ellipsoid = tilingScheme.ellipsoid;
+                this._tilesToRender = [];
+                this._tileLoadQueueHigh = []; // high priority tiles are preventing refinement
+                this._tileLoadQueueMedium = []; // medium priority tiles are being rendered
+                this._tileLoadQueueLow = []; // low priority tiles were refined past or are non-visible parts of quads.
+                this._tileReplacementQueue = new TileReplacementQueue();
+                this._levelZeroTiles = undefined;
+                this._loadQueueTimeSlice = 5.0;
+                this._tilesInvalidated = false;
+                this._addHeightCallbacks = [];
+                this._removeHeightCallbacks = [];
+                this._tileToUpdateHeights = [];
+                this._lastTileIndex = 0;
+                this._updateHeightsTimeSlice = 2.0;
+                /**
+                 * Gets or sets the maximum screen-space error, in pixels, that is allowed.
+                 * A higher maximum error will render fewer tiles and improve performance, while a lower
+                 * value will improve visual quality.
+                 * @type {Number}
+                 * @default 2
+                 */
+                this.maximumScreenSpaceError = defaultValue(options.maximumScreenSpaceError, 2);
+                /**
+                 * Gets or sets the maximum number of tiles that will be retained in the tile cache.
+                 * Note that tiles will never be unloaded if they were used for rendering the last
+                 * frame, so the actual number of resident tiles may be higher.  The value of
+                 * this property will not affect visual quality.
+                 * @type {Number}
+                 * @default 100
+                 */
+                this.tileCacheSize = defaultValue(options.tileCacheSize, 100);
+                this._occluders = new QuadtreeOccluders({
+                    ellipsoid: ellipsoid
+                });
+                this._tileLoadProgressEvent = new Event();
+                this._lastTileLoadQueueLength = 0;
+            }
+            /**
+                 * Invalidates and frees all the tiles in the quadtree.  The tiles must be reloaded
+                 * before they can be displayed.
+                 *
+                 * @memberof QuadtreePrimitive
+                 */
+            invalidateAllTiles() {
+                this._tilesInvalidated = true;
+            }
+            /**
+                 * Invokes a specified function for each {@link QuadtreeTile} that is partially
+                 * or completely loaded.
+                 *
+                 * @param {Function} tileFunction The function to invoke for each loaded tile.  The
+                 *        function is passed a reference to the tile as its only parameter.
+                 */
+            forEachLoadedTile(tileFunction) {
+                var tile = this._tileReplacementQueue.head;
+                while (defined(tile)) {
+                    if (tile.state !== QuadtreeTileLoadState.START) {
+                        tileFunction(tile);
+                    }
+                    tile = tile.replacementNext;
+                }
+            }
+            /**
+                 * Invokes a specified function for each {@link QuadtreeTile} that was rendered
+                 * in the most recent frame.
+                 *
+                 * @param {Function} tileFunction The function to invoke for each rendered tile.  The
+                 *        function is passed a reference to the tile as its only parameter.
+                 */
+            forEachRenderedTile(tileFunction) {
+                var tilesRendered = this._tilesToRender;
+                for (var i = 0, len = tilesRendered.length; i < len; ++i) {
+                    tileFunction(tilesRendered[i]);
+                }
+            }
+            /**
+                 * Calls the callback when a new tile is rendered that contains the given cartographic. The only parameter
+                 * is the cartesian position on the tile.
+                 *
+                 * @param {Cartographic} cartographic The cartographic position.
+                 * @param {Function} callback The function to be called when a new tile is loaded containing cartographic.
+                 * @returns {Function} The function to remove this callback from the quadtree.
+                 */
+            updateHeight(cartographic, callback) {
+                var primitive = this;
+                var object = {
+                    positionOnEllipsoidSurface: undefined,
+                    positionCartographic: cartographic,
+                    level: -1,
+                    callback: callback
+                };
+                object.removeFunc = function() {
+                    var addedCallbacks = primitive._addHeightCallbacks;
+                    var length = addedCallbacks.length;
+                    for (var i = 0; i < length; ++i) {
+                        if (addedCallbacks[i] === object) {
+                            addedCallbacks.splice(i, 1);
+                            break;
+                        }
+                    }
+                    primitive._removeHeightCallbacks.push(object);
+                };
+                primitive._addHeightCallbacks.push(object);
+                return object.removeFunc;
+            }
+            /**
+                 * Updates the tile provider imagery and continues to process the tile load queue.
+                 * @private
+                 */
+            update(frameState) {
+                if (defined(this._tileProvider.update)) {
+                    this._tileProvider.update(frameState);
+                }
+            }
+            /**
+                 * Initializes values for a new render frame and prepare the tile load queue.
+                 * @private
+                 */
+            beginFrame(frameState) {
+                var passes = frameState.passes;
+                if (!passes.render) {
+                    return;
+                }
+                if (this._tilesInvalidated) {
+                    invalidateAllTiles(this);
+                    this._tilesInvalidated = false;
+                }
+                // Gets commands for any texture re-projections
+                this._tileProvider.initialize(frameState);
+                if (this._debug.suspendLodUpdate) {
+                    return;
+                }
+                clearTileLoadQueue(this);
+                this._tileReplacementQueue.markStartOfRenderFrame();
+            }
+            /**
+                 * Selects new tiles to load based on the frame state and creates render commands.
+                 * @private
+                 */
+            render(frameState) {
+                var passes = frameState.passes;
+                var tileProvider = this._tileProvider;
+                if (passes.render) {
+                    tileProvider.beginUpdate(frameState);
+                    selectTilesForRendering(this, frameState);
+                    createRenderCommandsForSelectedTiles(this, frameState);
+                    tileProvider.endUpdate(frameState);
+                }
+                if (passes.pick && this._tilesToRender.length > 0) {
+                    tileProvider.updateForPick(frameState);
+                }
+            }
+            /**
+                 * Updates terrain heights.
+                 * @private
+                 */
+            endFrame(frameState) {
+                var passes = frameState.passes;
+                if (!passes.render || frameState.mode === SceneMode.MORPHING) {
+                    // Only process the load queue for a single pass.
+                    // Don't process the load queue or update heights during the morph flights.
+                    return;
+                }
+                // Load/create resources for terrain and imagery. Prepare texture re-projections for the next frame.
+                processTileLoadQueue(this, frameState);
+                updateHeights(this, frameState);
+                updateTileLoadProgress(this, frameState);
+            }
+            /**
+                 * Returns true if this object was destroyed; otherwise, false.
+                 * <br /><br />
+                 * If this object was destroyed, it should not be used; calling any function other than
+                 * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
+                 *
+                 * @memberof QuadtreePrimitive
+                 *
+                 * @returns {Boolean} True if this object was destroyed; otherwise, false.
+                 *
+                 * @see QuadtreePrimitive#destroy
+                 */
+            isDestroyed() {
+                return false;
+            }
+            /**
+                 * Destroys the WebGL resources held by this object.  Destroying an object allows for deterministic
+                 * release of WebGL resources, instead of relying on the garbage collector to destroy this object.
+                 * <br /><br />
+                 * Once an object is destroyed, it should not be used; calling any function other than
+                 * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
+                 * assign the return value (<code>undefined</code>) to the object as done in the example.
+                 *
+                 * @memberof QuadtreePrimitive
+                 *
+                 * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
+                 *
+                 *
+                 * @example
+                 * primitive = primitive && primitive.destroy();
+                 *
+                 * @see QuadtreePrimitive#isDestroyed
+                 */
+            destroy() {
+                this._tileProvider = this._tileProvider && this._tileProvider.destroy();
+            }
+        }
 
     defineProperties(QuadtreePrimitive.prototype, {
         /**
@@ -161,15 +317,6 @@ define([
         }
     });
 
-    /**
-     * Invalidates and frees all the tiles in the quadtree.  The tiles must be reloaded
-     * before they can be displayed.
-     *
-     * @memberof QuadtreePrimitive
-     */
-    QuadtreePrimitive.prototype.invalidateAllTiles = function() {
-        this._tilesInvalidated = true;
-    };
 
     function invalidateAllTiles(primitive) {
         // Clear the replacement queue
@@ -203,79 +350,9 @@ define([
         primitive._tileProvider.cancelReprojections();
     }
 
-    /**
-     * Invokes a specified function for each {@link QuadtreeTile} that is partially
-     * or completely loaded.
-     *
-     * @param {Function} tileFunction The function to invoke for each loaded tile.  The
-     *        function is passed a reference to the tile as its only parameter.
-     */
-    QuadtreePrimitive.prototype.forEachLoadedTile = function(tileFunction) {
-        var tile = this._tileReplacementQueue.head;
-        while (defined(tile)) {
-            if (tile.state !== QuadtreeTileLoadState.START) {
-                tileFunction(tile);
-            }
-            tile = tile.replacementNext;
-        }
-    };
 
-    /**
-     * Invokes a specified function for each {@link QuadtreeTile} that was rendered
-     * in the most recent frame.
-     *
-     * @param {Function} tileFunction The function to invoke for each rendered tile.  The
-     *        function is passed a reference to the tile as its only parameter.
-     */
-    QuadtreePrimitive.prototype.forEachRenderedTile = function(tileFunction) {
-        var tilesRendered = this._tilesToRender;
-        for (var i = 0, len = tilesRendered.length; i < len; ++i) {
-            tileFunction(tilesRendered[i]);
-        }
-    };
 
-    /**
-     * Calls the callback when a new tile is rendered that contains the given cartographic. The only parameter
-     * is the cartesian position on the tile.
-     *
-     * @param {Cartographic} cartographic The cartographic position.
-     * @param {Function} callback The function to be called when a new tile is loaded containing cartographic.
-     * @returns {Function} The function to remove this callback from the quadtree.
-     */
-    QuadtreePrimitive.prototype.updateHeight = function(cartographic, callback) {
-        var primitive = this;
-        var object = {
-            positionOnEllipsoidSurface : undefined,
-            positionCartographic : cartographic,
-            level : -1,
-            callback : callback
-        };
 
-        object.removeFunc = function() {
-            var addedCallbacks = primitive._addHeightCallbacks;
-            var length = addedCallbacks.length;
-            for (var i = 0; i < length; ++i) {
-                if (addedCallbacks[i] === object) {
-                    addedCallbacks.splice(i, 1);
-                    break;
-                }
-            }
-            primitive._removeHeightCallbacks.push(object);
-        };
-
-        primitive._addHeightCallbacks.push(object);
-        return object.removeFunc;
-    };
-
-    /**
-     * Updates the tile provider imagery and continues to process the tile load queue.
-     * @private
-     */
-    QuadtreePrimitive.prototype.update = function(frameState) {
-        if (defined(this._tileProvider.update)) {
-            this._tileProvider.update(frameState);
-        }
-    };
 
     function clearTileLoadQueue(primitive) {
         var debug = primitive._debug;
@@ -290,53 +367,7 @@ define([
         primitive._tileLoadQueueLow.length = 0;
     }
 
-    /**
-     * Initializes values for a new render frame and prepare the tile load queue.
-     * @private
-     */
-    QuadtreePrimitive.prototype.beginFrame = function(frameState) {
-        var passes = frameState.passes;
-        if (!passes.render) {
-            return;
-        }
 
-        if (this._tilesInvalidated) {
-            invalidateAllTiles(this);
-            this._tilesInvalidated = false;
-        }
-
-        // Gets commands for any texture re-projections
-        this._tileProvider.initialize(frameState);
-
-        if (this._debug.suspendLodUpdate) {
-            return;
-        }
-
-        clearTileLoadQueue(this);
-        this._tileReplacementQueue.markStartOfRenderFrame();
-    };
-
-    /**
-     * Selects new tiles to load based on the frame state and creates render commands.
-     * @private
-     */
-    QuadtreePrimitive.prototype.render = function(frameState) {
-        var passes = frameState.passes;
-        var tileProvider = this._tileProvider;
-
-        if (passes.render) {
-            tileProvider.beginUpdate(frameState);
-
-            selectTilesForRendering(this, frameState);
-            createRenderCommandsForSelectedTiles(this, frameState);
-
-            tileProvider.endUpdate(frameState);
-        }
-
-        if (passes.pick && this._tilesToRender.length > 0) {
-            tileProvider.updateForPick(frameState);
-        }
-    };
 
     /**
      * Checks if the load queue length has changed since the last time we raised a queue change event - if so, raises
@@ -369,61 +400,8 @@ define([
         }
     }
 
-    /**
-     * Updates terrain heights.
-     * @private
-     */
-    QuadtreePrimitive.prototype.endFrame = function(frameState) {
-        var passes = frameState.passes;
-        if (!passes.render || frameState.mode === SceneMode.MORPHING) {
-            // Only process the load queue for a single pass.
-            // Don't process the load queue or update heights during the morph flights.
-            return;
-        }
 
-        // Load/create resources for terrain and imagery. Prepare texture re-projections for the next frame.
-        processTileLoadQueue(this, frameState);
-        updateHeights(this, frameState);
-        updateTileLoadProgress(this, frameState);
-    };
 
-    /**
-     * Returns true if this object was destroyed; otherwise, false.
-     * <br /><br />
-     * If this object was destroyed, it should not be used; calling any function other than
-     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
-     *
-     * @memberof QuadtreePrimitive
-     *
-     * @returns {Boolean} True if this object was destroyed; otherwise, false.
-     *
-     * @see QuadtreePrimitive#destroy
-     */
-    QuadtreePrimitive.prototype.isDestroyed = function() {
-        return false;
-    };
-
-    /**
-     * Destroys the WebGL resources held by this object.  Destroying an object allows for deterministic
-     * release of WebGL resources, instead of relying on the garbage collector to destroy this object.
-     * <br /><br />
-     * Once an object is destroyed, it should not be used; calling any function other than
-     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
-     * assign the return value (<code>undefined</code>) to the object as done in the example.
-     *
-     * @memberof QuadtreePrimitive
-     *
-     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
-     *
-     *
-     * @example
-     * primitive = primitive && primitive.destroy();
-     *
-     * @see QuadtreePrimitive#isDestroyed
-     */
-    QuadtreePrimitive.prototype.destroy = function() {
-        this._tileProvider = this._tileProvider && this._tileProvider.destroy();
-    };
 
     var comparisonPoint;
     var centerScratch = new Cartographic();

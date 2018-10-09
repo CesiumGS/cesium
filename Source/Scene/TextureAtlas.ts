@@ -30,65 +30,190 @@ define([
         when) {
     'use strict';
 
-    // The atlas is made up of regions of space called nodes that contain images or child nodes.
-    function TextureAtlasNode(bottomLeft, topRight, childNode1, childNode2, imageIndex) {
-        this.bottomLeft = defaultValue(bottomLeft, Cartesian2.ZERO);
-        this.topRight = defaultValue(topRight, Cartesian2.ZERO);
-        this.childNode1 = childNode1;
-        this.childNode2 = childNode2;
-        this.imageIndex = imageIndex;
-    }
+        // The atlas is made up of regions of space called nodes that contain images or child nodes.
+        class TextureAtlasNode {
+            constructor(bottomLeft, topRight, childNode1, childNode2, imageIndex) {
+                this.bottomLeft = defaultValue(bottomLeft, Cartesian2.ZERO);
+                this.topRight = defaultValue(topRight, Cartesian2.ZERO);
+                this.childNode1 = childNode1;
+                this.childNode2 = childNode2;
+                this.imageIndex = imageIndex;
+            }
+        }
 
     var defaultInitialSize = new Cartesian2(16.0, 16.0);
 
-    /**
-     * A TextureAtlas stores multiple images in one square texture and keeps
-     * track of the texture coordinates for each image. TextureAtlas is dynamic,
-     * meaning new images can be added at any point in time.
-     * Texture coordinates are subject to change if the texture atlas resizes, so it is
-     * important to check {@link TextureAtlas#getGUID} before using old values.
-     *
-     * @alias TextureAtlas
-     * @constructor
-     *
-     * @param {Object} options Object with the following properties:
-     * @param {Scene} options.context The context in which the texture gets created.
-     * @param {PixelFormat} [options.pixelFormat=PixelFormat.RGBA] The pixel format of the texture.
-     * @param {Number} [options.borderWidthInPixels=1] The amount of spacing between adjacent images in pixels.
-     * @param {Cartesian2} [options.initialSize=new Cartesian2(16.0, 16.0)] The initial side lengths of the texture.
-     *
-     * @exception {DeveloperError} borderWidthInPixels must be greater than or equal to zero.
-     * @exception {DeveloperError} initialSize must be greater than zero.
-     *
-     * @private
-     */
-    function TextureAtlas(options) {
-        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-        var borderWidthInPixels = defaultValue(options.borderWidthInPixels, 1.0);
-        var initialSize = defaultValue(options.initialSize, defaultInitialSize);
-
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(options.context)) {
-            throw new DeveloperError('context is required.');
+        /**
+             * A TextureAtlas stores multiple images in one square texture and keeps
+             * track of the texture coordinates for each image. TextureAtlas is dynamic,
+             * meaning new images can be added at any point in time.
+             * Texture coordinates are subject to change if the texture atlas resizes, so it is
+             * important to check {@link TextureAtlas#getGUID} before using old values.
+             *
+             * @alias TextureAtlas
+             * @constructor
+             *
+             * @param {Object} options Object with the following properties:
+             * @param {Scene} options.context The context in which the texture gets created.
+             * @param {PixelFormat} [options.pixelFormat=PixelFormat.RGBA] The pixel format of the texture.
+             * @param {Number} [options.borderWidthInPixels=1] The amount of spacing between adjacent images in pixels.
+             * @param {Cartesian2} [options.initialSize=new Cartesian2(16.0, 16.0)] The initial side lengths of the texture.
+             *
+             * @exception {DeveloperError} borderWidthInPixels must be greater than or equal to zero.
+             * @exception {DeveloperError} initialSize must be greater than zero.
+             *
+             * @private
+             */
+        class TextureAtlas {
+            constructor(options) {
+                options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+                var borderWidthInPixels = defaultValue(options.borderWidthInPixels, 1.0);
+                var initialSize = defaultValue(options.initialSize, defaultInitialSize);
+                //>>includeStart('debug', pragmas.debug);
+                if (!defined(options.context)) {
+                    throw new DeveloperError('context is required.');
+                }
+                if (borderWidthInPixels < 0) {
+                    throw new DeveloperError('borderWidthInPixels must be greater than or equal to zero.');
+                }
+                if (initialSize.x < 1 || initialSize.y < 1) {
+                    throw new DeveloperError('initialSize must be greater than zero.');
+                }
+                //>>includeEnd('debug');
+                this._context = options.context;
+                this._pixelFormat = defaultValue(options.pixelFormat, PixelFormat.RGBA);
+                this._borderWidthInPixels = borderWidthInPixels;
+                this._textureCoordinates = [];
+                this._guid = createGuid();
+                this._idHash = {};
+                this._initialSize = initialSize;
+                this._root = undefined;
+            }
+            /**
+                 * Adds an image to the atlas.  If the image is already in the atlas, the atlas is unchanged and
+                 * the existing index is used.
+                 *
+                 * @param {String} id An identifier to detect whether the image already exists in the atlas.
+                 * @param {Image|Canvas|String|Resource|Promise|TextureAtlas~CreateImageCallback} image An image or canvas to add to the texture atlas,
+                 *        or a URL to an Image, or a Promise for an image, or a function that creates an image.
+                 * @returns {Promise.<Number>} A Promise for the image index.
+                 */
+            addImage(id, image) {
+                //>>includeStart('debug', pragmas.debug);
+                if (!defined(id)) {
+                    throw new DeveloperError('id is required.');
+                }
+                if (!defined(image)) {
+                    throw new DeveloperError('image is required.');
+                }
+                //>>includeEnd('debug');
+                var indexPromise = this._idHash[id];
+                if (defined(indexPromise)) {
+                    // we're already aware of this source
+                    return indexPromise;
+                }
+                // not in atlas, create the promise for the index
+                if (typeof image === 'function') {
+                    // if image is a function, call it
+                    image = image(id);
+                    //>>includeStart('debug', pragmas.debug);
+                    if (!defined(image)) {
+                        throw new DeveloperError('image is required.');
+                    }
+                    //>>includeEnd('debug');
+                }
+                else if ((typeof image === 'string') || (image instanceof Resource)) {
+                    // Get a resource
+                    var resource = Resource.createIfNeeded(image);
+                    image = resource.fetchImage();
+                }
+                var that = this;
+                indexPromise = when(image, function(image) {
+                    if (that.isDestroyed()) {
+                        return -1;
+                    }
+                    var index = that.numberOfImages;
+                    addImage(that, image, index);
+                    return index;
+                });
+                // store the promise
+                this._idHash[id] = indexPromise;
+                return indexPromise;
+            }
+            /**
+                 * Add a sub-region of an existing atlas image as additional image indices.
+                 *
+                 * @param {String} id The identifier of the existing image.
+                 * @param {BoundingRectangle} subRegion An {@link BoundingRectangle} sub-region measured in pixels from the bottom-left.
+                 *
+                 * @returns {Promise.<Number>} A Promise for the image index.
+                 */
+            addSubRegion(id, subRegion) {
+                //>>includeStart('debug', pragmas.debug);
+                if (!defined(id)) {
+                    throw new DeveloperError('id is required.');
+                }
+                if (!defined(subRegion)) {
+                    throw new DeveloperError('subRegion is required.');
+                }
+                //>>includeEnd('debug');
+                var indexPromise = this._idHash[id];
+                if (!defined(indexPromise)) {
+                    throw new RuntimeError('image with id "' + id + '" not found in the atlas.');
+                }
+                var that = this;
+                return when(indexPromise, function(index) {
+                    if (index === -1) {
+                        // the atlas is destroyed
+                        return -1;
+                    }
+                    var atlasWidth = that._texture.width;
+                    var atlasHeight = that._texture.height;
+                    var numImages = that.numberOfImages;
+                    var baseRegion = that._textureCoordinates[index];
+                    var x = baseRegion.x + (subRegion.x / atlasWidth);
+                    var y = baseRegion.y + (subRegion.y / atlasHeight);
+                    var w = subRegion.width / atlasWidth;
+                    var h = subRegion.height / atlasHeight;
+                    that._textureCoordinates.push(new BoundingRectangle(x, y, w, h));
+                    that._guid = createGuid();
+                    return numImages;
+                });
+            }
+            /**
+                 * Returns true if this object was destroyed; otherwise, false.
+                 * <br /><br />
+                 * If this object was destroyed, it should not be used; calling any function other than
+                 * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
+                 *
+                 * @returns {Boolean} True if this object was destroyed; otherwise, false.
+                 *
+                 * @see TextureAtlas#destroy
+                 */
+            isDestroyed() {
+                return false;
+            }
+            /**
+                 * Destroys the WebGL resources held by this object.  Destroying an object allows for deterministic
+                 * release of WebGL resources, instead of relying on the garbage collector to destroy this object.
+                 * <br /><br />
+                 * Once an object is destroyed, it should not be used; calling any function other than
+                 * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
+                 * assign the return value (<code>undefined</code>) to the object as done in the example.
+                 *
+                 * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
+                 *
+                 *
+                 * @example
+                 * atlas = atlas && atlas.destroy();
+                 *
+                 * @see TextureAtlas#isDestroyed
+                 */
+            destroy() {
+                this._texture = this._texture && this._texture.destroy();
+                return destroyObject(this);
+            }
         }
-        if (borderWidthInPixels < 0) {
-            throw new DeveloperError('borderWidthInPixels must be greater than or equal to zero.');
-        }
-        if (initialSize.x < 1 || initialSize.y < 1) {
-            throw new DeveloperError('initialSize must be greater than zero.');
-        }
-        //>>includeEnd('debug');
-
-        this._context = options.context;
-        this._pixelFormat = defaultValue(options.pixelFormat, PixelFormat.RGBA);
-        this._borderWidthInPixels = borderWidthInPixels;
-        this._textureCoordinates = [];
-        this._guid = createGuid();
-        this._idHash = {};
-        this._initialSize = initialSize;
-
-        this._root = undefined;
-    }
 
     defineProperties(TextureAtlas.prototype, {
         /**
@@ -322,146 +447,9 @@ define([
         textureAtlas._guid = createGuid();
     }
 
-    /**
-     * Adds an image to the atlas.  If the image is already in the atlas, the atlas is unchanged and
-     * the existing index is used.
-     *
-     * @param {String} id An identifier to detect whether the image already exists in the atlas.
-     * @param {Image|Canvas|String|Resource|Promise|TextureAtlas~CreateImageCallback} image An image or canvas to add to the texture atlas,
-     *        or a URL to an Image, or a Promise for an image, or a function that creates an image.
-     * @returns {Promise.<Number>} A Promise for the image index.
-     */
-    TextureAtlas.prototype.addImage = function(id, image) {
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(id)) {
-            throw new DeveloperError('id is required.');
-        }
-        if (!defined(image)) {
-            throw new DeveloperError('image is required.');
-        }
-        //>>includeEnd('debug');
 
-        var indexPromise = this._idHash[id];
-        if (defined(indexPromise)) {
-            // we're already aware of this source
-            return indexPromise;
-        }
 
-        // not in atlas, create the promise for the index
 
-        if (typeof image === 'function') {
-            // if image is a function, call it
-            image = image(id);
-            //>>includeStart('debug', pragmas.debug);
-            if (!defined(image)) {
-                throw new DeveloperError('image is required.');
-            }
-            //>>includeEnd('debug');
-        } else if ((typeof image === 'string') || (image instanceof Resource)) {
-            // Get a resource
-            var resource = Resource.createIfNeeded(image);
-            image = resource.fetchImage();
-        }
-
-        var that = this;
-
-        indexPromise = when(image, function(image) {
-            if (that.isDestroyed()) {
-                return -1;
-            }
-
-            var index = that.numberOfImages;
-
-            addImage(that, image, index);
-
-            return index;
-        });
-
-        // store the promise
-        this._idHash[id] = indexPromise;
-
-        return indexPromise;
-    };
-
-    /**
-     * Add a sub-region of an existing atlas image as additional image indices.
-     *
-     * @param {String} id The identifier of the existing image.
-     * @param {BoundingRectangle} subRegion An {@link BoundingRectangle} sub-region measured in pixels from the bottom-left.
-     *
-     * @returns {Promise.<Number>} A Promise for the image index.
-     */
-    TextureAtlas.prototype.addSubRegion = function(id, subRegion) {
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(id)) {
-            throw new DeveloperError('id is required.');
-        }
-        if (!defined(subRegion)) {
-            throw new DeveloperError('subRegion is required.');
-        }
-        //>>includeEnd('debug');
-
-        var indexPromise = this._idHash[id];
-        if (!defined(indexPromise)) {
-            throw new RuntimeError('image with id "' + id + '" not found in the atlas.');
-        }
-
-        var that = this;
-        return when(indexPromise, function(index) {
-            if (index === -1) {
-                // the atlas is destroyed
-                return -1;
-            }
-            var atlasWidth = that._texture.width;
-            var atlasHeight = that._texture.height;
-            var numImages = that.numberOfImages;
-
-            var baseRegion = that._textureCoordinates[index];
-            var x = baseRegion.x + (subRegion.x / atlasWidth);
-            var y = baseRegion.y + (subRegion.y / atlasHeight);
-            var w = subRegion.width / atlasWidth;
-            var h = subRegion.height / atlasHeight;
-            that._textureCoordinates.push(new BoundingRectangle(x, y, w, h));
-            that._guid = createGuid();
-
-            return numImages;
-        });
-    };
-
-    /**
-     * Returns true if this object was destroyed; otherwise, false.
-     * <br /><br />
-     * If this object was destroyed, it should not be used; calling any function other than
-     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
-     *
-     * @returns {Boolean} True if this object was destroyed; otherwise, false.
-     *
-     * @see TextureAtlas#destroy
-     */
-    TextureAtlas.prototype.isDestroyed = function() {
-        return false;
-    };
-
-    /**
-     * Destroys the WebGL resources held by this object.  Destroying an object allows for deterministic
-     * release of WebGL resources, instead of relying on the garbage collector to destroy this object.
-     * <br /><br />
-     * Once an object is destroyed, it should not be used; calling any function other than
-     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
-     * assign the return value (<code>undefined</code>) to the object as done in the example.
-     *
-     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
-     *
-     *
-     * @example
-     * atlas = atlas && atlas.destroy();
-     *
-     * @see TextureAtlas#isDestroyed
-     */
-    TextureAtlas.prototype.destroy = function() {
-        this._texture = this._texture && this._texture.destroy();
-        return destroyObject(this);
-    };
 
     /**
      * A function that creates an image.

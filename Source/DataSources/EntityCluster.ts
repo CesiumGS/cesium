@@ -36,57 +36,207 @@ define([
         kdbush) {
     'use strict';
 
-    /**
-     * Defines how screen space objects (billboards, points, labels) are clustered.
-     *
-     * @param {Object} [options] An object with the following properties:
-     * @param {Boolean} [options.enabled=false] Whether or not to enable clustering.
-     * @param {Number} [options.pixelRange=80] The pixel range to extend the screen space bounding box.
-     * @param {Number} [options.minimumClusterSize=2] The minimum number of screen space objects that can be clustered.
-     * @param {Boolean} [options.clusterBillboards=true] Whether or not to cluster the billboards of an entity.
-     * @param {Boolean} [options.clusterLabels=true] Whether or not to cluster the labels of an entity.
-     * @param {Boolean} [options.clusterPoints=true] Whether or not to cluster the points of an entity.
-     *
-     * @alias EntityCluster
-     * @constructor
-     *
-     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Clustering.html|Cesium Sandcastle Clustering Demo}
-     */
-    function EntityCluster(options) {
-        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-
-        this._enabled = defaultValue(options.enabled, false);
-        this._pixelRange = defaultValue(options.pixelRange, 80);
-        this._minimumClusterSize = defaultValue(options.minimumClusterSize, 2);
-        this._clusterBillboards = defaultValue(options.clusterBillboards, true);
-        this._clusterLabels = defaultValue(options.clusterLabels, true);
-        this._clusterPoints = defaultValue(options.clusterPoints, true);
-
-        this._labelCollection = undefined;
-        this._billboardCollection = undefined;
-        this._pointCollection = undefined;
-
-        this._clusterBillboardCollection = undefined;
-        this._clusterLabelCollection = undefined;
-        this._clusterPointCollection = undefined;
-
-        this._collectionIndicesByEntity = {};
-
-        this._unusedLabelIndices = [];
-        this._unusedBillboardIndices = [];
-        this._unusedPointIndices = [];
-
-        this._previousClusters = [];
-        this._previousHeight = undefined;
-
-        this._enabledDirty = false;
-        this._clusterDirty = false;
-
-        this._cluster = undefined;
-        this._removeEventListener = undefined;
-
-        this._clusterEvent = new Event();
-    }
+        /**
+             * Defines how screen space objects (billboards, points, labels) are clustered.
+             *
+             * @param {Object} [options] An object with the following properties:
+             * @param {Boolean} [options.enabled=false] Whether or not to enable clustering.
+             * @param {Number} [options.pixelRange=80] The pixel range to extend the screen space bounding box.
+             * @param {Number} [options.minimumClusterSize=2] The minimum number of screen space objects that can be clustered.
+             * @param {Boolean} [options.clusterBillboards=true] Whether or not to cluster the billboards of an entity.
+             * @param {Boolean} [options.clusterLabels=true] Whether or not to cluster the labels of an entity.
+             * @param {Boolean} [options.clusterPoints=true] Whether or not to cluster the points of an entity.
+             *
+             * @alias EntityCluster
+             * @constructor
+             *
+             * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Clustering.html|Cesium Sandcastle Clustering Demo}
+             */
+        class EntityCluster {
+            constructor(options) {
+                options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+                this._enabled = defaultValue(options.enabled, false);
+                this._pixelRange = defaultValue(options.pixelRange, 80);
+                this._minimumClusterSize = defaultValue(options.minimumClusterSize, 2);
+                this._clusterBillboards = defaultValue(options.clusterBillboards, true);
+                this._clusterLabels = defaultValue(options.clusterLabels, true);
+                this._clusterPoints = defaultValue(options.clusterPoints, true);
+                this._labelCollection = undefined;
+                this._billboardCollection = undefined;
+                this._pointCollection = undefined;
+                this._clusterBillboardCollection = undefined;
+                this._clusterLabelCollection = undefined;
+                this._clusterPointCollection = undefined;
+                this._collectionIndicesByEntity = {};
+                this._unusedLabelIndices = [];
+                this._unusedBillboardIndices = [];
+                this._unusedPointIndices = [];
+                this._previousClusters = [];
+                this._previousHeight = undefined;
+                this._enabledDirty = false;
+                this._clusterDirty = false;
+                this._cluster = undefined;
+                this._removeEventListener = undefined;
+                this._clusterEvent = new Event();
+            }
+            _initialize(scene) {
+                this._scene = scene;
+                var cluster = createDeclutterCallback(this);
+                this._cluster = cluster;
+                this._removeEventListener = scene.camera.changed.addEventListener(cluster);
+            }
+            /**
+                 * Removes the {@link Label} associated with an entity so it can be reused by another entity.
+                 * @param {Entity} entity The entity that will uses the returned {@link Label} for visualization.
+                 *
+                 * @private
+                 */
+            removeLabel(entity) {
+                var entityIndices = this._collectionIndicesByEntity && this._collectionIndicesByEntity[entity.id];
+                if (!defined(this._labelCollection) || !defined(entityIndices) || !defined(entityIndices.labelIndex)) {
+                    return;
+                }
+                var index = entityIndices.labelIndex;
+                entityIndices.labelIndex = undefined;
+                removeEntityIndicesIfUnused(this, entity.id);
+                var label = this._labelCollection.get(index);
+                label.show = false;
+                label.text = '';
+                label.id = undefined;
+                this._unusedLabelIndices.push(index);
+                this._clusterDirty = true;
+            }
+            /**
+                 * Removes the {@link Billboard} associated with an entity so it can be reused by another entity.
+                 * @param {Entity} entity The entity that will uses the returned {@link Billboard} for visualization.
+                 *
+                 * @private
+                 */
+            removeBillboard(entity) {
+                var entityIndices = this._collectionIndicesByEntity && this._collectionIndicesByEntity[entity.id];
+                if (!defined(this._billboardCollection) || !defined(entityIndices) || !defined(entityIndices.billboardIndex)) {
+                    return;
+                }
+                var index = entityIndices.billboardIndex;
+                entityIndices.billboardIndex = undefined;
+                removeEntityIndicesIfUnused(this, entity.id);
+                var billboard = this._billboardCollection.get(index);
+                billboard.id = undefined;
+                billboard.show = false;
+                billboard.image = undefined;
+                this._unusedBillboardIndices.push(index);
+                this._clusterDirty = true;
+            }
+            /**
+                 * Removes the {@link Point} associated with an entity so it can be reused by another entity.
+                 * @param {Entity} entity The entity that will uses the returned {@link Point} for visualization.
+                 *
+                 * @private
+                 */
+            removePoint(entity) {
+                var entityIndices = this._collectionIndicesByEntity && this._collectionIndicesByEntity[entity.id];
+                if (!defined(this._pointCollection) || !defined(entityIndices) || !defined(entityIndices.pointIndex)) {
+                    return;
+                }
+                var index = entityIndices.pointIndex;
+                entityIndices.pointIndex = undefined;
+                removeEntityIndicesIfUnused(this, entity.id);
+                var point = this._pointCollection.get(index);
+                point.show = false;
+                point.id = undefined;
+                this._unusedPointIndices.push(index);
+                this._clusterDirty = true;
+            }
+            /**
+                 * Gets the draw commands for the clustered billboards/points/labels if enabled, otherwise,
+                 * queues the draw commands for billboards/points/labels created for entities.
+                 * @private
+                 */
+            update(frameState) {
+                // If clustering is enabled before the label collection is updated,
+                // the glyphs haven't been created so the screen space bounding boxes
+                // are incorrect.
+                var commandList;
+                if (defined(this._labelCollection) && this._labelCollection.length > 0 && this._labelCollection.get(0)._glyphs.length === 0) {
+                    commandList = frameState.commandList;
+                    frameState.commandList = [];
+                    this._labelCollection.update(frameState);
+                    frameState.commandList = commandList;
+                }
+                // If clustering is enabled before the billboard collection is updated,
+                // the images haven't been added to the image atlas so the screen space bounding boxes
+                // are incorrect.
+                if (defined(this._billboardCollection) && this._billboardCollection.length > 0 && !defined(this._billboardCollection.get(0).width)) {
+                    commandList = frameState.commandList;
+                    frameState.commandList = [];
+                    this._billboardCollection.update(frameState);
+                    frameState.commandList = commandList;
+                }
+                if (this._enabledDirty) {
+                    this._enabledDirty = false;
+                    updateEnable(this);
+                    this._clusterDirty = true;
+                }
+                if (this._clusterDirty) {
+                    this._clusterDirty = false;
+                    this._cluster();
+                }
+                if (defined(this._clusterLabelCollection)) {
+                    this._clusterLabelCollection.update(frameState);
+                }
+                if (defined(this._clusterBillboardCollection)) {
+                    this._clusterBillboardCollection.update(frameState);
+                }
+                if (defined(this._clusterPointCollection)) {
+                    this._clusterPointCollection.update(frameState);
+                }
+                if (defined(this._labelCollection)) {
+                    this._labelCollection.update(frameState);
+                }
+                if (defined(this._billboardCollection)) {
+                    this._billboardCollection.update(frameState);
+                }
+                if (defined(this._pointCollection)) {
+                    this._pointCollection.update(frameState);
+                }
+            }
+            /**
+                 * Destroys the WebGL resources held by this object.  Destroying an object allows for deterministic
+                 * release of WebGL resources, instead of relying on the garbage collector to destroy this object.
+                 * <p>
+                 * Unlike other objects that use WebGL resources, this object can be reused. For example, if a data source is removed
+                 * from a data source collection and added to another.
+                 * </p>
+                 */
+            destroy() {
+                this._labelCollection = this._labelCollection && this._labelCollection.destroy();
+                this._billboardCollection = this._billboardCollection && this._billboardCollection.destroy();
+                this._pointCollection = this._pointCollection && this._pointCollection.destroy();
+                this._clusterLabelCollection = this._clusterLabelCollection && this._clusterLabelCollection.destroy();
+                this._clusterBillboardCollection = this._clusterBillboardCollection && this._clusterBillboardCollection.destroy();
+                this._clusterPointCollection = this._clusterPointCollection && this._clusterPointCollection.destroy();
+                if (defined(this._removeEventListener)) {
+                    this._removeEventListener();
+                    this._removeEventListener = undefined;
+                }
+                this._labelCollection = undefined;
+                this._billboardCollection = undefined;
+                this._pointCollection = undefined;
+                this._clusterBillboardCollection = undefined;
+                this._clusterLabelCollection = undefined;
+                this._clusterPointCollection = undefined;
+                this._collectionIndicesByEntity = undefined;
+                this._unusedLabelIndices = [];
+                this._unusedBillboardIndices = [];
+                this._unusedPointIndices = [];
+                this._previousClusters = [];
+                this._previousHeight = undefined;
+                this._enabledDirty = false;
+                this._pixelRangeDirty = false;
+                this._minimumClusterSizeDirty = false;
+                return undefined;
+            }
+        }
 
     function getX(point) {
         return point.coord.x;
@@ -412,13 +562,6 @@ define([
         };
     }
 
-    EntityCluster.prototype._initialize = function(scene) {
-        this._scene = scene;
-
-        var cluster = createDeclutterCallback(this);
-        this._cluster = cluster;
-        this._removeEventListener = scene.camera.changed.addEventListener(cluster);
-    };
 
     defineProperties(EntityCluster.prototype, {
         /**
@@ -582,31 +725,6 @@ define([
      */
     EntityCluster.prototype.getLabel = createGetEntity('_labelCollection', LabelCollection, '_unusedLabelIndices', 'labelIndex');
 
-    /**
-     * Removes the {@link Label} associated with an entity so it can be reused by another entity.
-     * @param {Entity} entity The entity that will uses the returned {@link Label} for visualization.
-     *
-     * @private
-     */
-    EntityCluster.prototype.removeLabel = function(entity) {
-        var entityIndices = this._collectionIndicesByEntity && this._collectionIndicesByEntity[entity.id];
-        if (!defined(this._labelCollection) || !defined(entityIndices) || !defined(entityIndices.labelIndex)) {
-            return;
-        }
-
-        var index = entityIndices.labelIndex;
-        entityIndices.labelIndex = undefined;
-        removeEntityIndicesIfUnused(this, entity.id);
-
-        var label = this._labelCollection.get(index);
-        label.show = false;
-        label.text = '';
-        label.id = undefined;
-
-        this._unusedLabelIndices.push(index);
-
-        this._clusterDirty = true;
-    };
 
     /**
      * Returns a new {@link Billboard}.
@@ -617,31 +735,6 @@ define([
      */
     EntityCluster.prototype.getBillboard = createGetEntity('_billboardCollection', BillboardCollection, '_unusedBillboardIndices', 'billboardIndex');
 
-    /**
-     * Removes the {@link Billboard} associated with an entity so it can be reused by another entity.
-     * @param {Entity} entity The entity that will uses the returned {@link Billboard} for visualization.
-     *
-     * @private
-     */
-    EntityCluster.prototype.removeBillboard = function(entity) {
-        var entityIndices = this._collectionIndicesByEntity && this._collectionIndicesByEntity[entity.id];
-        if (!defined(this._billboardCollection) || !defined(entityIndices) || !defined(entityIndices.billboardIndex)) {
-            return;
-        }
-
-        var index = entityIndices.billboardIndex;
-        entityIndices.billboardIndex = undefined;
-        removeEntityIndicesIfUnused(this, entity.id);
-
-        var billboard = this._billboardCollection.get(index);
-        billboard.id = undefined;
-        billboard.show = false;
-        billboard.image = undefined;
-
-        this._unusedBillboardIndices.push(index);
-
-        this._clusterDirty = true;
-    };
 
     /**
      * Returns a new {@link Point}.
@@ -652,30 +745,6 @@ define([
      */
     EntityCluster.prototype.getPoint = createGetEntity('_pointCollection', PointPrimitiveCollection, '_unusedPointIndices', 'pointIndex');
 
-    /**
-     * Removes the {@link Point} associated with an entity so it can be reused by another entity.
-     * @param {Entity} entity The entity that will uses the returned {@link Point} for visualization.
-     *
-     * @private
-     */
-    EntityCluster.prototype.removePoint = function(entity) {
-        var entityIndices = this._collectionIndicesByEntity && this._collectionIndicesByEntity[entity.id];
-        if (!defined(this._pointCollection) || !defined(entityIndices) || !defined(entityIndices.pointIndex)) {
-            return;
-        }
-
-        var index = entityIndices.pointIndex;
-        entityIndices.pointIndex = undefined;
-        removeEntityIndicesIfUnused(this, entity.id);
-
-        var point = this._pointCollection.get(index);
-        point.show = false;
-        point.id = undefined;
-
-        this._unusedPointIndices.push(index);
-
-        this._clusterDirty = true;
-    };
 
     function disableCollectionClustering(collection) {
         if (!defined(collection)) {
@@ -712,110 +781,7 @@ define([
         disableCollectionClustering(entityCluster._pointCollection);
     }
 
-    /**
-     * Gets the draw commands for the clustered billboards/points/labels if enabled, otherwise,
-     * queues the draw commands for billboards/points/labels created for entities.
-     * @private
-     */
-    EntityCluster.prototype.update = function(frameState) {
-        // If clustering is enabled before the label collection is updated,
-        // the glyphs haven't been created so the screen space bounding boxes
-        // are incorrect.
-        var commandList;
-        if (defined(this._labelCollection) && this._labelCollection.length > 0 && this._labelCollection.get(0)._glyphs.length === 0) {
-            commandList = frameState.commandList;
-            frameState.commandList = [];
-            this._labelCollection.update(frameState);
-            frameState.commandList = commandList;
-        }
 
-        // If clustering is enabled before the billboard collection is updated,
-        // the images haven't been added to the image atlas so the screen space bounding boxes
-        // are incorrect.
-        if (defined(this._billboardCollection) && this._billboardCollection.length > 0 && !defined(this._billboardCollection.get(0).width)) {
-            commandList = frameState.commandList;
-            frameState.commandList = [];
-            this._billboardCollection.update(frameState);
-            frameState.commandList = commandList;
-        }
-
-        if (this._enabledDirty) {
-            this._enabledDirty = false;
-            updateEnable(this);
-            this._clusterDirty = true;
-        }
-
-        if (this._clusterDirty) {
-            this._clusterDirty = false;
-            this._cluster();
-        }
-
-        if (defined(this._clusterLabelCollection)) {
-            this._clusterLabelCollection.update(frameState);
-        }
-        if (defined(this._clusterBillboardCollection)) {
-            this._clusterBillboardCollection.update(frameState);
-        }
-        if (defined(this._clusterPointCollection)) {
-            this._clusterPointCollection.update(frameState);
-        }
-
-        if (defined(this._labelCollection)) {
-            this._labelCollection.update(frameState);
-        }
-        if (defined(this._billboardCollection)) {
-            this._billboardCollection.update(frameState);
-        }
-        if (defined(this._pointCollection)) {
-            this._pointCollection.update(frameState);
-        }
-    };
-
-    /**
-     * Destroys the WebGL resources held by this object.  Destroying an object allows for deterministic
-     * release of WebGL resources, instead of relying on the garbage collector to destroy this object.
-     * <p>
-     * Unlike other objects that use WebGL resources, this object can be reused. For example, if a data source is removed
-     * from a data source collection and added to another.
-     * </p>
-     */
-    EntityCluster.prototype.destroy = function() {
-        this._labelCollection = this._labelCollection && this._labelCollection.destroy();
-        this._billboardCollection = this._billboardCollection && this._billboardCollection.destroy();
-        this._pointCollection = this._pointCollection && this._pointCollection.destroy();
-
-        this._clusterLabelCollection = this._clusterLabelCollection && this._clusterLabelCollection.destroy();
-        this._clusterBillboardCollection = this._clusterBillboardCollection && this._clusterBillboardCollection.destroy();
-        this._clusterPointCollection = this._clusterPointCollection && this._clusterPointCollection.destroy();
-
-        if (defined(this._removeEventListener)) {
-            this._removeEventListener();
-            this._removeEventListener = undefined;
-        }
-
-        this._labelCollection = undefined;
-        this._billboardCollection = undefined;
-        this._pointCollection = undefined;
-
-        this._clusterBillboardCollection = undefined;
-        this._clusterLabelCollection = undefined;
-        this._clusterPointCollection = undefined;
-
-        this._collectionIndicesByEntity = undefined;
-
-        this._unusedLabelIndices = [];
-        this._unusedBillboardIndices = [];
-        this._unusedPointIndices = [];
-
-        this._previousClusters = [];
-        this._previousHeight = undefined;
-
-        this._enabledDirty = false;
-        this._pixelRangeDirty = false;
-        this._minimumClusterSizeDirty = false;
-
-        return undefined;
-    };
 
     /**
      * A event listener function used to style clusters.

@@ -724,83 +724,277 @@ define([
         return rectangle;
     }
 
-    /**
-     * A description of an ellipse on an ellipsoid. Ellipse geometry can be rendered with both {@link Primitive} and {@link GroundPrimitive}.
-     *
-     * @alias EllipseGeometry
-     * @constructor
-     *
-     * @param {Object} options Object with the following properties:
-     * @param {Cartesian3} options.center The ellipse's center point in the fixed frame.
-     * @param {Number} options.semiMajorAxis The length of the ellipse's semi-major axis in meters.
-     * @param {Number} options.semiMinorAxis The length of the ellipse's semi-minor axis in meters.
-     * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid the ellipse will be on.
-     * @param {Number} [options.height=0.0] The distance in meters between the ellipse and the ellipsoid surface.
-     * @param {Number} [options.extrudedHeight] The distance in meters between the ellipse's extruded face and the ellipsoid surface.
-     * @param {Number} [options.rotation=0.0] The angle of rotation counter-clockwise from north.
-     * @param {Number} [options.stRotation=0.0] The rotation of the texture coordinates counter-clockwise from north.
-     * @param {Number} [options.granularity=CesiumMath.RADIANS_PER_DEGREE] The angular distance between points on the ellipse in radians.
-     * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
-     *
-     * @exception {DeveloperError} semiMajorAxis and semiMinorAxis must be greater than zero.
-     * @exception {DeveloperError} semiMajorAxis must be greater than or equal to the semiMinorAxis.
-     * @exception {DeveloperError} granularity must be greater than zero.
-     *
-     *
-     * @example
-     * // Create an ellipse.
-     * var ellipse = new Cesium.EllipseGeometry({
-     *   center : Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883),
-     *   semiMajorAxis : 500000.0,
-     *   semiMinorAxis : 300000.0,
-     *   rotation : Cesium.Math.toRadians(60.0)
-     * });
-     * var geometry = Cesium.EllipseGeometry.createGeometry(ellipse);
-     *
-     * @see EllipseGeometry.createGeometry
-     */
-    function EllipseGeometry(options) {
-        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-
-        var center = options.center;
-        var ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
-        var semiMajorAxis = options.semiMajorAxis;
-        var semiMinorAxis = options.semiMinorAxis;
-        var granularity = defaultValue(options.granularity, CesiumMath.RADIANS_PER_DEGREE);
-        var vertexFormat = defaultValue(options.vertexFormat, VertexFormat.DEFAULT);
-
-        //>>includeStart('debug', pragmas.debug);
-        Check.defined('options.center', center);
-        Check.typeOf.number('options.semiMajorAxis', semiMajorAxis);
-        Check.typeOf.number('options.semiMinorAxis', semiMinorAxis);
-        if (semiMajorAxis < semiMinorAxis) {
-            throw new DeveloperError('semiMajorAxis must be greater than or equal to the semiMinorAxis.');
+        /**
+             * A description of an ellipse on an ellipsoid. Ellipse geometry can be rendered with both {@link Primitive} and {@link GroundPrimitive}.
+             *
+             * @alias EllipseGeometry
+             * @constructor
+             *
+             * @param {Object} options Object with the following properties:
+             * @param {Cartesian3} options.center The ellipse's center point in the fixed frame.
+             * @param {Number} options.semiMajorAxis The length of the ellipse's semi-major axis in meters.
+             * @param {Number} options.semiMinorAxis The length of the ellipse's semi-minor axis in meters.
+             * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid the ellipse will be on.
+             * @param {Number} [options.height=0.0] The distance in meters between the ellipse and the ellipsoid surface.
+             * @param {Number} [options.extrudedHeight] The distance in meters between the ellipse's extruded face and the ellipsoid surface.
+             * @param {Number} [options.rotation=0.0] The angle of rotation counter-clockwise from north.
+             * @param {Number} [options.stRotation=0.0] The rotation of the texture coordinates counter-clockwise from north.
+             * @param {Number} [options.granularity=CesiumMath.RADIANS_PER_DEGREE] The angular distance between points on the ellipse in radians.
+             * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
+             *
+             * @exception {DeveloperError} semiMajorAxis and semiMinorAxis must be greater than zero.
+             * @exception {DeveloperError} semiMajorAxis must be greater than or equal to the semiMinorAxis.
+             * @exception {DeveloperError} granularity must be greater than zero.
+             *
+             *
+             * @example
+             * // Create an ellipse.
+             * var ellipse = new Cesium.EllipseGeometry({
+             *   center : Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883),
+             *   semiMajorAxis : 500000.0,
+             *   semiMinorAxis : 300000.0,
+             *   rotation : Cesium.Math.toRadians(60.0)
+             * });
+             * var geometry = Cesium.EllipseGeometry.createGeometry(ellipse);
+             *
+             * @see EllipseGeometry.createGeometry
+             */
+        class EllipseGeometry {
+            constructor(options) {
+                options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+                var center = options.center;
+                var ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
+                var semiMajorAxis = options.semiMajorAxis;
+                var semiMinorAxis = options.semiMinorAxis;
+                var granularity = defaultValue(options.granularity, CesiumMath.RADIANS_PER_DEGREE);
+                var vertexFormat = defaultValue(options.vertexFormat, VertexFormat.DEFAULT);
+                //>>includeStart('debug', pragmas.debug);
+                Check.defined('options.center', center);
+                Check.typeOf.number('options.semiMajorAxis', semiMajorAxis);
+                Check.typeOf.number('options.semiMinorAxis', semiMinorAxis);
+                if (semiMajorAxis < semiMinorAxis) {
+                    throw new DeveloperError('semiMajorAxis must be greater than or equal to the semiMinorAxis.');
+                }
+                if (granularity <= 0.0) {
+                    throw new DeveloperError('granularity must be greater than zero.');
+                }
+                //>>includeEnd('debug');
+                var height = defaultValue(options.height, 0.0);
+                var extrudedHeight = defaultValue(options.extrudedHeight, height);
+                this._center = Cartesian3.clone(center);
+                this._semiMajorAxis = semiMajorAxis;
+                this._semiMinorAxis = semiMinorAxis;
+                this._ellipsoid = Ellipsoid.clone(ellipsoid);
+                this._rotation = defaultValue(options.rotation, 0.0);
+                this._stRotation = defaultValue(options.stRotation, 0.0);
+                this._height = Math.max(extrudedHeight, height);
+                this._granularity = granularity;
+                this._vertexFormat = VertexFormat.clone(vertexFormat);
+                this._extrudedHeight = Math.min(extrudedHeight, height);
+                this._shadowVolume = defaultValue(options.shadowVolume, false);
+                this._workerName = 'createEllipseGeometry';
+                this._offsetAttribute = options.offsetAttribute;
+                this._rectangle = undefined;
+                this._textureCoordinateRotationPoints = undefined;
+            }
+            /**
+                 * Stores the provided instance into the provided array.
+                 *
+                 * @param {EllipseGeometry} value The value to pack.
+                 * @param {Number[]} array The array to pack into.
+                 * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
+                 *
+                 * @returns {Number[]} The array that was packed into
+                 */
+            static pack(value, array, startingIndex) {
+                //>>includeStart('debug', pragmas.debug);
+                Check.defined('value', value);
+                Check.defined('array', array);
+                //>>includeEnd('debug');
+                startingIndex = defaultValue(startingIndex, 0);
+                Cartesian3.pack(value._center, array, startingIndex);
+                startingIndex += Cartesian3.packedLength;
+                Ellipsoid.pack(value._ellipsoid, array, startingIndex);
+                startingIndex += Ellipsoid.packedLength;
+                VertexFormat.pack(value._vertexFormat, array, startingIndex);
+                startingIndex += VertexFormat.packedLength;
+                array[startingIndex++] = value._semiMajorAxis;
+                array[startingIndex++] = value._semiMinorAxis;
+                array[startingIndex++] = value._rotation;
+                array[startingIndex++] = value._stRotation;
+                array[startingIndex++] = value._height;
+                array[startingIndex++] = value._granularity;
+                array[startingIndex++] = value._extrudedHeight;
+                array[startingIndex++] = value._shadowVolume ? 1.0 : 0.0;
+                array[startingIndex] = defaultValue(value._offsetAttribute, -1);
+                return array;
+            }
+            /**
+                 * Retrieves an instance from a packed array.
+                 *
+                 * @param {Number[]} array The packed array.
+                 * @param {Number} [startingIndex=0] The starting index of the element to be unpacked.
+                 * @param {EllipseGeometry} [result] The object into which to store the result.
+                 * @returns {EllipseGeometry} The modified result parameter or a new EllipseGeometry instance if one was not provided.
+                 */
+            static unpack(array, startingIndex, result) {
+                //>>includeStart('debug', pragmas.debug);
+                Check.defined('array', array);
+                //>>includeEnd('debug');
+                startingIndex = defaultValue(startingIndex, 0);
+                var center = Cartesian3.unpack(array, startingIndex, scratchCenter);
+                startingIndex += Cartesian3.packedLength;
+                var ellipsoid = Ellipsoid.unpack(array, startingIndex, scratchEllipsoid);
+                startingIndex += Ellipsoid.packedLength;
+                var vertexFormat = VertexFormat.unpack(array, startingIndex, scratchVertexFormat);
+                startingIndex += VertexFormat.packedLength;
+                var semiMajorAxis = array[startingIndex++];
+                var semiMinorAxis = array[startingIndex++];
+                var rotation = array[startingIndex++];
+                var stRotation = array[startingIndex++];
+                var height = array[startingIndex++];
+                var granularity = array[startingIndex++];
+                var extrudedHeight = array[startingIndex++];
+                var shadowVolume = array[startingIndex++] === 1.0;
+                var offsetAttribute = array[startingIndex];
+                if (!defined(result)) {
+                    scratchOptions.height = height;
+                    scratchOptions.extrudedHeight = extrudedHeight;
+                    scratchOptions.granularity = granularity;
+                    scratchOptions.stRotation = stRotation;
+                    scratchOptions.rotation = rotation;
+                    scratchOptions.semiMajorAxis = semiMajorAxis;
+                    scratchOptions.semiMinorAxis = semiMinorAxis;
+                    scratchOptions.shadowVolume = shadowVolume;
+                    scratchOptions.offsetAttribute = offsetAttribute === -1 ? undefined : offsetAttribute;
+                    return new EllipseGeometry(scratchOptions);
+                }
+                result._center = Cartesian3.clone(center, result._center);
+                result._ellipsoid = Ellipsoid.clone(ellipsoid, result._ellipsoid);
+                result._vertexFormat = VertexFormat.clone(vertexFormat, result._vertexFormat);
+                result._semiMajorAxis = semiMajorAxis;
+                result._semiMinorAxis = semiMinorAxis;
+                result._rotation = rotation;
+                result._stRotation = stRotation;
+                result._height = height;
+                result._granularity = granularity;
+                result._extrudedHeight = extrudedHeight;
+                result._shadowVolume = shadowVolume;
+                result._offsetAttribute = offsetAttribute === -1 ? undefined : offsetAttribute;
+                return result;
+            }
+            /**
+                 * Computes the bounding rectangle based on the provided options
+                 *
+                 * @param {Object} options Object with the following properties:
+                 * @param {Cartesian3} options.center The ellipse's center point in the fixed frame.
+                 * @param {Number} options.semiMajorAxis The length of the ellipse's semi-major axis in meters.
+                 * @param {Number} options.semiMinorAxis The length of the ellipse's semi-minor axis in meters.
+                 * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid the ellipse will be on.
+                 * @param {Number} [options.rotation=0.0] The angle of rotation counter-clockwise from north.
+                 * @param {Number} [options.granularity=CesiumMath.RADIANS_PER_DEGREE] The angular distance between points on the ellipse in radians.
+                 * @param {Rectangle} [result] An object in which to store the result
+                 *
+                 * @returns {Rectangle} The result rectangle
+                 */
+            static computeRectangle(options, result) {
+                options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+                var center = options.center;
+                var ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
+                var semiMajorAxis = options.semiMajorAxis;
+                var semiMinorAxis = options.semiMinorAxis;
+                var granularity = defaultValue(options.granularity, CesiumMath.RADIANS_PER_DEGREE);
+                var rotation = defaultValue(options.rotation, 0.0);
+                //>>includeStart('debug', pragmas.debug);
+                Check.defined('options.center', center);
+                Check.typeOf.number('options.semiMajorAxis', semiMajorAxis);
+                Check.typeOf.number('options.semiMinorAxis', semiMinorAxis);
+                if (semiMajorAxis < semiMinorAxis) {
+                    throw new DeveloperError('semiMajorAxis must be greater than or equal to the semiMinorAxis.');
+                }
+                if (granularity <= 0.0) {
+                    throw new DeveloperError('granularity must be greater than zero.');
+                }
+                //>>includeEnd('debug');
+                return computeRectangle(center, semiMajorAxis, semiMinorAxis, rotation, granularity, ellipsoid, result);
+            }
+            /**
+                 * Computes the geometric representation of a ellipse on an ellipsoid, including its vertices, indices, and a bounding sphere.
+                 *
+                 * @param {EllipseGeometry} ellipseGeometry A description of the ellipse.
+                 * @returns {Geometry|undefined} The computed vertices and indices.
+                 */
+            static createGeometry(ellipseGeometry) {
+                if ((ellipseGeometry._semiMajorAxis <= 0.0) || (ellipseGeometry._semiMinorAxis <= 0.0)) {
+                    return;
+                }
+                var height = ellipseGeometry._height;
+                var extrudedHeight = ellipseGeometry._extrudedHeight;
+                var extrude = !CesiumMath.equalsEpsilon(height, extrudedHeight, 0, CesiumMath.EPSILON2);
+                ellipseGeometry._center = ellipseGeometry._ellipsoid.scaleToGeodeticSurface(ellipseGeometry._center, ellipseGeometry._center);
+                var options = {
+                    center: ellipseGeometry._center,
+                    semiMajorAxis: ellipseGeometry._semiMajorAxis,
+                    semiMinorAxis: ellipseGeometry._semiMinorAxis,
+                    ellipsoid: ellipseGeometry._ellipsoid,
+                    rotation: ellipseGeometry._rotation,
+                    height: height,
+                    granularity: ellipseGeometry._granularity,
+                    vertexFormat: ellipseGeometry._vertexFormat,
+                    stRotation: ellipseGeometry._stRotation
+                };
+                var geometry;
+                if (extrude) {
+                    options.extrudedHeight = extrudedHeight;
+                    options.shadowVolume = ellipseGeometry._shadowVolume;
+                    options.offsetAttribute = ellipseGeometry._offsetAttribute;
+                    geometry = computeExtrudedEllipse(options);
+                }
+                else {
+                    geometry = computeEllipse(options);
+                    if (defined(ellipseGeometry._offsetAttribute)) {
+                        var length = geometry.attributes.position.values.length;
+                        var applyOffset = new Uint8Array(length / 3);
+                        var offsetValue = ellipseGeometry._offsetAttribute === GeometryOffsetAttribute.NONE ? 0 : 1;
+                        arrayFill(applyOffset, offsetValue);
+                        geometry.attributes.applyOffset = new GeometryAttribute({
+                            componentDatatype: ComponentDatatype.UNSIGNED_BYTE,
+                            componentsPerAttribute: 1,
+                            values: applyOffset
+                        });
+                    }
+                }
+                return new Geometry({
+                    attributes: geometry.attributes,
+                    indices: geometry.indices,
+                    primitiveType: PrimitiveType.TRIANGLES,
+                    boundingSphere: geometry.boundingSphere,
+                    offsetAttribute: ellipseGeometry._offsetAttribute
+                });
+            }
+            /**
+                 * @private
+                 */
+            static createShadowVolume(ellipseGeometry, minHeightFunc, maxHeightFunc) {
+                var granularity = ellipseGeometry._granularity;
+                var ellipsoid = ellipseGeometry._ellipsoid;
+                var minHeight = minHeightFunc(granularity, ellipsoid);
+                var maxHeight = maxHeightFunc(granularity, ellipsoid);
+                return new EllipseGeometry({
+                    center: ellipseGeometry._center,
+                    semiMajorAxis: ellipseGeometry._semiMajorAxis,
+                    semiMinorAxis: ellipseGeometry._semiMinorAxis,
+                    ellipsoid: ellipsoid,
+                    rotation: ellipseGeometry._rotation,
+                    stRotation: ellipseGeometry._stRotation,
+                    granularity: granularity,
+                    extrudedHeight: minHeight,
+                    height: maxHeight,
+                    vertexFormat: VertexFormat.POSITION_ONLY,
+                    shadowVolume: true
+                });
+            }
         }
-        if (granularity <= 0.0) {
-            throw new DeveloperError('granularity must be greater than zero.');
-        }
-        //>>includeEnd('debug');
-
-        var height = defaultValue(options.height, 0.0);
-        var extrudedHeight = defaultValue(options.extrudedHeight, height);
-
-        this._center = Cartesian3.clone(center);
-        this._semiMajorAxis = semiMajorAxis;
-        this._semiMinorAxis = semiMinorAxis;
-        this._ellipsoid = Ellipsoid.clone(ellipsoid);
-        this._rotation = defaultValue(options.rotation, 0.0);
-        this._stRotation = defaultValue(options.stRotation, 0.0);
-        this._height = Math.max(extrudedHeight, height);
-        this._granularity = granularity;
-        this._vertexFormat = VertexFormat.clone(vertexFormat);
-        this._extrudedHeight = Math.min(extrudedHeight, height);
-        this._shadowVolume = defaultValue(options.shadowVolume, false);
-        this._workerName = 'createEllipseGeometry';
-        this._offsetAttribute = options.offsetAttribute;
-
-        this._rectangle = undefined;
-        this._textureCoordinateRotationPoints = undefined;
-    }
 
     /**
      * The number of elements used to pack the object into an array.
@@ -808,44 +1002,6 @@ define([
      */
     EllipseGeometry.packedLength = Cartesian3.packedLength + Ellipsoid.packedLength + VertexFormat.packedLength + 9;
 
-    /**
-     * Stores the provided instance into the provided array.
-     *
-     * @param {EllipseGeometry} value The value to pack.
-     * @param {Number[]} array The array to pack into.
-     * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
-     *
-     * @returns {Number[]} The array that was packed into
-     */
-    EllipseGeometry.pack = function(value, array, startingIndex) {
-        //>>includeStart('debug', pragmas.debug);
-        Check.defined('value', value);
-        Check.defined('array', array);
-        //>>includeEnd('debug');
-
-        startingIndex = defaultValue(startingIndex, 0);
-
-        Cartesian3.pack(value._center, array, startingIndex);
-        startingIndex += Cartesian3.packedLength;
-
-        Ellipsoid.pack(value._ellipsoid, array, startingIndex);
-        startingIndex += Ellipsoid.packedLength;
-
-        VertexFormat.pack(value._vertexFormat, array, startingIndex);
-        startingIndex += VertexFormat.packedLength;
-
-        array[startingIndex++] = value._semiMajorAxis;
-        array[startingIndex++] = value._semiMinorAxis;
-        array[startingIndex++] = value._rotation;
-        array[startingIndex++] = value._stRotation;
-        array[startingIndex++] = value._height;
-        array[startingIndex++] = value._granularity;
-        array[startingIndex++] = value._extrudedHeight;
-        array[startingIndex++] = value._shadowVolume ? 1.0 : 0.0;
-        array[startingIndex] = defaultValue(value._offsetAttribute, -1);
-
-        return array;
-    };
 
     var scratchCenter = new Cartesian3();
     var scratchEllipsoid = new Ellipsoid();
@@ -865,191 +1021,9 @@ define([
         offsetAttribute: undefined
     };
 
-    /**
-     * Retrieves an instance from a packed array.
-     *
-     * @param {Number[]} array The packed array.
-     * @param {Number} [startingIndex=0] The starting index of the element to be unpacked.
-     * @param {EllipseGeometry} [result] The object into which to store the result.
-     * @returns {EllipseGeometry} The modified result parameter or a new EllipseGeometry instance if one was not provided.
-     */
-    EllipseGeometry.unpack = function(array, startingIndex, result) {
-        //>>includeStart('debug', pragmas.debug);
-        Check.defined('array', array);
-        //>>includeEnd('debug');
 
-        startingIndex = defaultValue(startingIndex, 0);
 
-        var center = Cartesian3.unpack(array, startingIndex, scratchCenter);
-        startingIndex += Cartesian3.packedLength;
 
-        var ellipsoid = Ellipsoid.unpack(array, startingIndex, scratchEllipsoid);
-        startingIndex += Ellipsoid.packedLength;
-
-        var vertexFormat = VertexFormat.unpack(array, startingIndex, scratchVertexFormat);
-        startingIndex += VertexFormat.packedLength;
-
-        var semiMajorAxis = array[startingIndex++];
-        var semiMinorAxis = array[startingIndex++];
-        var rotation = array[startingIndex++];
-        var stRotation = array[startingIndex++];
-        var height = array[startingIndex++];
-        var granularity = array[startingIndex++];
-        var extrudedHeight = array[startingIndex++];
-        var shadowVolume = array[startingIndex++] === 1.0;
-        var offsetAttribute = array[startingIndex];
-
-        if (!defined(result)) {
-            scratchOptions.height = height;
-            scratchOptions.extrudedHeight = extrudedHeight;
-            scratchOptions.granularity = granularity;
-            scratchOptions.stRotation = stRotation;
-            scratchOptions.rotation = rotation;
-            scratchOptions.semiMajorAxis = semiMajorAxis;
-            scratchOptions.semiMinorAxis = semiMinorAxis;
-            scratchOptions.shadowVolume = shadowVolume;
-            scratchOptions.offsetAttribute = offsetAttribute === -1 ? undefined : offsetAttribute;
-
-            return new EllipseGeometry(scratchOptions);
-        }
-
-        result._center = Cartesian3.clone(center, result._center);
-        result._ellipsoid = Ellipsoid.clone(ellipsoid, result._ellipsoid);
-        result._vertexFormat = VertexFormat.clone(vertexFormat, result._vertexFormat);
-        result._semiMajorAxis = semiMajorAxis;
-        result._semiMinorAxis = semiMinorAxis;
-        result._rotation = rotation;
-        result._stRotation = stRotation;
-        result._height = height;
-        result._granularity = granularity;
-        result._extrudedHeight = extrudedHeight;
-        result._shadowVolume = shadowVolume;
-        result._offsetAttribute = offsetAttribute === -1 ? undefined : offsetAttribute;
-
-        return result;
-    };
-
-    /**
-     * Computes the bounding rectangle based on the provided options
-     *
-     * @param {Object} options Object with the following properties:
-     * @param {Cartesian3} options.center The ellipse's center point in the fixed frame.
-     * @param {Number} options.semiMajorAxis The length of the ellipse's semi-major axis in meters.
-     * @param {Number} options.semiMinorAxis The length of the ellipse's semi-minor axis in meters.
-     * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid the ellipse will be on.
-     * @param {Number} [options.rotation=0.0] The angle of rotation counter-clockwise from north.
-     * @param {Number} [options.granularity=CesiumMath.RADIANS_PER_DEGREE] The angular distance between points on the ellipse in radians.
-     * @param {Rectangle} [result] An object in which to store the result
-     *
-     * @returns {Rectangle} The result rectangle
-     */
-    EllipseGeometry.computeRectangle = function(options, result) {
-        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-
-        var center = options.center;
-        var ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
-        var semiMajorAxis = options.semiMajorAxis;
-        var semiMinorAxis = options.semiMinorAxis;
-        var granularity = defaultValue(options.granularity, CesiumMath.RADIANS_PER_DEGREE);
-        var rotation = defaultValue(options.rotation, 0.0);
-
-        //>>includeStart('debug', pragmas.debug);
-        Check.defined('options.center', center);
-        Check.typeOf.number('options.semiMajorAxis', semiMajorAxis);
-        Check.typeOf.number('options.semiMinorAxis', semiMinorAxis);
-        if (semiMajorAxis < semiMinorAxis) {
-            throw new DeveloperError('semiMajorAxis must be greater than or equal to the semiMinorAxis.');
-        }
-        if (granularity <= 0.0) {
-            throw new DeveloperError('granularity must be greater than zero.');
-        }
-        //>>includeEnd('debug');
-
-        return computeRectangle(center, semiMajorAxis, semiMinorAxis, rotation, granularity, ellipsoid, result);
-    };
-
-    /**
-     * Computes the geometric representation of a ellipse on an ellipsoid, including its vertices, indices, and a bounding sphere.
-     *
-     * @param {EllipseGeometry} ellipseGeometry A description of the ellipse.
-     * @returns {Geometry|undefined} The computed vertices and indices.
-     */
-    EllipseGeometry.createGeometry = function(ellipseGeometry) {
-        if ((ellipseGeometry._semiMajorAxis <= 0.0) || (ellipseGeometry._semiMinorAxis <= 0.0)) {
-            return;
-        }
-
-        var height = ellipseGeometry._height;
-        var extrudedHeight = ellipseGeometry._extrudedHeight;
-        var extrude = !CesiumMath.equalsEpsilon(height, extrudedHeight, 0, CesiumMath.EPSILON2);
-
-        ellipseGeometry._center = ellipseGeometry._ellipsoid.scaleToGeodeticSurface(ellipseGeometry._center, ellipseGeometry._center);
-        var options = {
-            center : ellipseGeometry._center,
-            semiMajorAxis : ellipseGeometry._semiMajorAxis,
-            semiMinorAxis : ellipseGeometry._semiMinorAxis,
-            ellipsoid : ellipseGeometry._ellipsoid,
-            rotation : ellipseGeometry._rotation,
-            height : height,
-            granularity : ellipseGeometry._granularity,
-            vertexFormat : ellipseGeometry._vertexFormat,
-            stRotation : ellipseGeometry._stRotation
-        };
-        var geometry;
-        if (extrude) {
-            options.extrudedHeight = extrudedHeight;
-            options.shadowVolume = ellipseGeometry._shadowVolume;
-            options.offsetAttribute = ellipseGeometry._offsetAttribute;
-            geometry = computeExtrudedEllipse(options);
-        } else {
-            geometry = computeEllipse(options);
-
-            if (defined(ellipseGeometry._offsetAttribute)) {
-                var length = geometry.attributes.position.values.length;
-                var applyOffset = new Uint8Array(length / 3);
-                var offsetValue = ellipseGeometry._offsetAttribute === GeometryOffsetAttribute.NONE ? 0 : 1;
-                arrayFill(applyOffset, offsetValue);
-                geometry.attributes.applyOffset = new GeometryAttribute({
-                    componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
-                    componentsPerAttribute : 1,
-                    values: applyOffset
-                });
-            }
-        }
-
-        return new Geometry({
-            attributes : geometry.attributes,
-            indices : geometry.indices,
-            primitiveType : PrimitiveType.TRIANGLES,
-            boundingSphere : geometry.boundingSphere,
-            offsetAttribute : ellipseGeometry._offsetAttribute
-        });
-    };
-
-    /**
-     * @private
-     */
-    EllipseGeometry.createShadowVolume = function(ellipseGeometry, minHeightFunc, maxHeightFunc) {
-        var granularity = ellipseGeometry._granularity;
-        var ellipsoid = ellipseGeometry._ellipsoid;
-
-        var minHeight = minHeightFunc(granularity, ellipsoid);
-        var maxHeight = maxHeightFunc(granularity, ellipsoid);
-
-        return new EllipseGeometry({
-            center : ellipseGeometry._center,
-            semiMajorAxis : ellipseGeometry._semiMajorAxis,
-            semiMinorAxis : ellipseGeometry._semiMinorAxis,
-            ellipsoid : ellipsoid,
-            rotation : ellipseGeometry._rotation,
-            stRotation : ellipseGeometry._stRotation,
-            granularity : granularity,
-            extrudedHeight : minHeight,
-            height : maxHeight,
-            vertexFormat : VertexFormat.POSITION_ONLY,
-            shadowVolume: true
-        });
-    };
 
     function textureCoordinateRotationPoints(ellipseGeometry) {
         var stRotation = -ellipseGeometry._stRotation;

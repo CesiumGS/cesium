@@ -20,20 +20,50 @@ define([
         Texture) {
     'use strict';
 
-    /**
-     * @private
-     */
-    function PickDepth() {
-        this._framebuffer = undefined;
-
-        this._depthTexture = undefined;
-        this._textureToCopy = undefined;
-        this._copyDepthCommand = undefined;
-
-        this._useLogDepth = undefined;
-
-        this._debugPickDepthViewportCommand = undefined;
-    }
+        /**
+             * @private
+             */
+        class PickDepth {
+            constructor() {
+                this._framebuffer = undefined;
+                this._depthTexture = undefined;
+                this._textureToCopy = undefined;
+                this._copyDepthCommand = undefined;
+                this._useLogDepth = undefined;
+                this._debugPickDepthViewportCommand = undefined;
+            }
+            executeDebugPickDepth(context, passState, useLogDepth) {
+                executeDebugPickDepth(this, context, passState, useLogDepth);
+            }
+            update(context, depthTexture) {
+                updateFramebuffers(this, context, depthTexture);
+                updateCopyCommands(this, context, depthTexture);
+            }
+            getDepth(context, x, y) {
+                var pixels = context.readPixels({
+                    x: x,
+                    y: y,
+                    width: 1,
+                    height: 1,
+                    framebuffer: this._framebuffer
+                });
+                var packedDepth = Cartesian4.unpack(pixels, 0, scratchPackedDepth);
+                Cartesian4.divideByScalar(packedDepth, 255.0, packedDepth);
+                return Cartesian4.dot(packedDepth, packedDepthScale);
+            }
+            executeCopyDepth(context, passState) {
+                this._copyDepthCommand.execute(context, passState);
+            }
+            isDestroyed() {
+                return false;
+            }
+            destroy() {
+                destroyTextures(this);
+                destroyFramebuffers(this);
+                this._copyDepthCommand.shaderProgram = defined(this._copyDepthCommand.shaderProgram) && this._copyDepthCommand.shaderProgram.destroy();
+                return destroyObject(this);
+            }
+        }
 
     function executeDebugPickDepth(pickDepth, context, passState, useLogDepth) {
         if (!defined(pickDepth._debugPickDepthViewportCommand) || useLogDepth !== pickDepth._useLogDepth) {
@@ -136,48 +166,14 @@ define([
         pickDepth._copyDepthCommand.framebuffer = pickDepth._framebuffer;
     }
 
-    PickDepth.prototype.executeDebugPickDepth = function(context, passState, useLogDepth) {
-        executeDebugPickDepth(this, context, passState, useLogDepth);
-    };
 
-    PickDepth.prototype.update = function(context, depthTexture) {
-        updateFramebuffers(this, context, depthTexture);
-        updateCopyCommands(this, context, depthTexture);
-    };
 
     var scratchPackedDepth = new Cartesian4();
     var packedDepthScale = new Cartesian4(1.0, 1.0 / 255.0, 1.0 / 65025.0, 1.0 / 16581375.0);
 
-    PickDepth.prototype.getDepth = function(context, x, y) {
-        var pixels = context.readPixels({
-            x : x,
-            y : y,
-            width : 1,
-            height : 1,
-            framebuffer : this._framebuffer
-        });
 
-        var packedDepth = Cartesian4.unpack(pixels, 0, scratchPackedDepth);
-        Cartesian4.divideByScalar(packedDepth, 255.0, packedDepth);
-        return Cartesian4.dot(packedDepth, packedDepthScale);
-    };
 
-    PickDepth.prototype.executeCopyDepth = function(context, passState) {
-        this._copyDepthCommand.execute(context, passState);
-    };
 
-    PickDepth.prototype.isDestroyed = function() {
-        return false;
-    };
-
-    PickDepth.prototype.destroy = function() {
-        destroyTextures(this);
-        destroyFramebuffers(this);
-
-        this._copyDepthCommand.shaderProgram = defined(this._copyDepthCommand.shaderProgram) && this._copyDepthCommand.shaderProgram.destroy();
-
-        return destroyObject(this);
-    };
 
     return PickDepth;
 });

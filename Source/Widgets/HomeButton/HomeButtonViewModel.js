@@ -12,38 +12,36 @@ define([
         createCommand) {
     'use strict';
 
-    /**
-     * The view model for {@link HomeButton}.
-     * @alias HomeButtonViewModel
-     * @constructor
-     *
-     * @param {Scene} scene The scene instance to use.
-     * @param {Number} [duration] The duration of the camera flight in seconds.
-     */
-    function HomeButtonViewModel(scene, duration) {
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(scene)) {
-            throw new DeveloperError('scene is required.');
-        }
-        //>>includeEnd('debug');
-
-        this._scene = scene;
-        this._duration = duration;
-
-        var that = this;
-        this._command = createCommand(function() {
-            that._scene.camera.flyHome(that._duration);
-        });
-
         /**
-         * Gets or sets the tooltip.  This property is observable.
-         *
-         * @type {String}
-         */
-        this.tooltip = 'View Home';
-
-        knockout.track(this, ['tooltip']);
-    }
+             * The view model for {@link HomeButton}.
+             * @alias HomeButtonViewModel
+             * @constructor
+             *
+             * @param {Scene} scene The scene instance to use.
+             * @param {Number} [duration] The duration of the camera flight in seconds.
+             */
+        class HomeButtonViewModel {
+            constructor(scene, duration) {
+                //>>includeStart('debug', pragmas.debug);
+                if (!defined(scene)) {
+                    throw new DeveloperError('scene is required.');
+                }
+                //>>includeEnd('debug');
+                this._scene = scene;
+                this._duration = duration;
+                var that = this;
+                this._command = createCommand(function() {
+                    that._scene.camera.flyHome(that._duration);
+                });
+                /**
+                 * Gets or sets the tooltip.  This property is observable.
+                 *
+                 * @type {String}
+                 */
+                this.tooltip = 'View Home';
+                knockout.track(this, ['tooltip']);
+            }
+        }
 
     defineProperties(HomeButtonViewModel.prototype, {
         /**

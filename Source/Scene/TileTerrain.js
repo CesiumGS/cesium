@@ -32,79 +32,108 @@ define([
         TerrainState) {
     'use strict';
 
-    /**
-     * Manages details of the terrain load or upsample process.
-     *
-     * @alias TileTerrain
-     * @constructor
-     * @private
-     *
-     * @param {TerrainData} [upsampleDetails.data] The terrain data being upsampled.
-     * @param {Number} [upsampleDetails.x] The X coordinate of the tile being upsampled.
-     * @param {Number} [upsampleDetails.y] The Y coordinate of the tile being upsampled.
-     * @param {Number} [upsampleDetails.level] The level coordinate of the tile being upsampled.
-     */
-    function TileTerrain(upsampleDetails) {
         /**
-         * The current state of the terrain in the terrain processing pipeline.
-         * @type {TerrainState}
-         * @default {@link TerrainState.UNLOADED}
-         */
-        this.state = TerrainState.UNLOADED;
-        this.data = undefined;
-        this.mesh = undefined;
-        this.vertexArray = undefined;
-        this.upsampleDetails = upsampleDetails;
-        this.request = undefined;
-    }
-
-    TileTerrain.prototype.freeResources = function() {
-        this.state = TerrainState.UNLOADED;
-        this.data = undefined;
-        this.mesh = undefined;
-
-        if (defined(this.vertexArray)) {
-            var indexBuffer = this.vertexArray.indexBuffer;
-
-            this.vertexArray.destroy();
-            this.vertexArray = undefined;
-
-            if (!indexBuffer.isDestroyed() && defined(indexBuffer.referenceCount)) {
-                --indexBuffer.referenceCount;
-                if (indexBuffer.referenceCount === 0) {
-                    indexBuffer.destroy();
+             * Manages details of the terrain load or upsample process.
+             *
+             * @alias TileTerrain
+             * @constructor
+             * @private
+             *
+             * @param {TerrainData} [upsampleDetails.data] The terrain data being upsampled.
+             * @param {Number} [upsampleDetails.x] The X coordinate of the tile being upsampled.
+             * @param {Number} [upsampleDetails.y] The Y coordinate of the tile being upsampled.
+             * @param {Number} [upsampleDetails.level] The level coordinate of the tile being upsampled.
+             */
+        class TileTerrain {
+            constructor(upsampleDetails) {
+                /**
+                 * The current state of the terrain in the terrain processing pipeline.
+                 * @type {TerrainState}
+                 * @default {@link TerrainState.UNLOADED}
+                 */
+                this.state = TerrainState.UNLOADED;
+                this.data = undefined;
+                this.mesh = undefined;
+                this.vertexArray = undefined;
+                this.upsampleDetails = upsampleDetails;
+                this.request = undefined;
+            }
+            freeResources() {
+                this.state = TerrainState.UNLOADED;
+                this.data = undefined;
+                this.mesh = undefined;
+                if (defined(this.vertexArray)) {
+                    var indexBuffer = this.vertexArray.indexBuffer;
+                    this.vertexArray.destroy();
+                    this.vertexArray = undefined;
+                    if (!indexBuffer.isDestroyed() && defined(indexBuffer.referenceCount)) {
+                        --indexBuffer.referenceCount;
+                        if (indexBuffer.referenceCount === 0) {
+                            indexBuffer.destroy();
+                        }
+                    }
+                }
+            }
+            publishToTile(tile) {
+                var surfaceTile = tile.data;
+                var mesh = this.mesh;
+                Cartesian3.clone(mesh.center, surfaceTile.center);
+                surfaceTile.minimumHeight = mesh.minimumHeight;
+                surfaceTile.maximumHeight = mesh.maximumHeight;
+                surfaceTile.boundingSphere3D = BoundingSphere.clone(mesh.boundingSphere3D, surfaceTile.boundingSphere3D);
+                surfaceTile.orientedBoundingBox = OrientedBoundingBox.clone(mesh.orientedBoundingBox, surfaceTile.orientedBoundingBox);
+                surfaceTile.tileBoundingRegion.minimumHeight = mesh.minimumHeight;
+                surfaceTile.tileBoundingRegion.maximumHeight = mesh.maximumHeight;
+                tile.data.occludeePointInScaledSpace = Cartesian3.clone(mesh.occludeePointInScaledSpace, surfaceTile.occludeePointInScaledSpace);
+            }
+            processLoadStateMachine(frameState, terrainProvider, x, y, level, priorityFunction) {
+                if (this.state === TerrainState.UNLOADED) {
+                    requestTileGeometry(this, terrainProvider, x, y, level, priorityFunction);
+                }
+                if (this.state === TerrainState.RECEIVED) {
+                    transform(this, frameState, terrainProvider, x, y, level);
+                }
+                if (this.state === TerrainState.TRANSFORMED) {
+                    createResources(this, frameState.context, terrainProvider, x, y, level);
+                }
+            }
+            processUpsampleStateMachine(frameState, terrainProvider, x, y, level) {
+                if (this.state === TerrainState.UNLOADED) {
+                    var upsampleDetails = this.upsampleDetails;
+                    //>>includeStart('debug', pragmas.debug);
+                    if (!defined(upsampleDetails)) {
+                        throw new DeveloperError('TileTerrain cannot upsample unless provided upsampleDetails.');
+                    }
+                    //>>includeEnd('debug');
+                    var sourceData = upsampleDetails.data;
+                    var sourceX = upsampleDetails.x;
+                    var sourceY = upsampleDetails.y;
+                    var sourceLevel = upsampleDetails.level;
+                    this.data = sourceData.upsample(terrainProvider.tilingScheme, sourceX, sourceY, sourceLevel, x, y, level);
+                    if (!defined(this.data)) {
+                        // The upsample request has been deferred - try again later.
+                        return;
+                    }
+                    this.state = TerrainState.RECEIVING;
+                    var that = this;
+                    when(this.data, function(terrainData) {
+                        that.data = terrainData;
+                        that.state = TerrainState.RECEIVED;
+                    }, function() {
+                        that.state = TerrainState.FAILED;
+                    });
+                }
+                if (this.state === TerrainState.RECEIVED) {
+                    transform(this, frameState, terrainProvider, x, y, level);
+                }
+                if (this.state === TerrainState.TRANSFORMED) {
+                    createResources(this, frameState.context, terrainProvider, x, y, level);
                 }
             }
         }
-    };
 
-    TileTerrain.prototype.publishToTile = function(tile) {
-        var surfaceTile = tile.data;
 
-        var mesh = this.mesh;
-        Cartesian3.clone(mesh.center, surfaceTile.center);
-        surfaceTile.minimumHeight = mesh.minimumHeight;
-        surfaceTile.maximumHeight = mesh.maximumHeight;
-        surfaceTile.boundingSphere3D = BoundingSphere.clone(mesh.boundingSphere3D, surfaceTile.boundingSphere3D);
-        surfaceTile.orientedBoundingBox = OrientedBoundingBox.clone(mesh.orientedBoundingBox, surfaceTile.orientedBoundingBox);
-        surfaceTile.tileBoundingRegion.minimumHeight = mesh.minimumHeight;
-        surfaceTile.tileBoundingRegion.maximumHeight = mesh.maximumHeight;
-        tile.data.occludeePointInScaledSpace = Cartesian3.clone(mesh.occludeePointInScaledSpace, surfaceTile.occludeePointInScaledSpace);
-    };
 
-    TileTerrain.prototype.processLoadStateMachine = function(frameState, terrainProvider, x, y, level, priorityFunction) {
-        if (this.state === TerrainState.UNLOADED) {
-            requestTileGeometry(this, terrainProvider, x, y, level, priorityFunction);
-        }
-
-        if (this.state === TerrainState.RECEIVED) {
-            transform(this, frameState, terrainProvider, x, y, level);
-        }
-
-        if (this.state === TerrainState.TRANSFORMED) {
-            createResources(this, frameState.context, terrainProvider, x, y, level);
-        }
-    };
 
     function requestTileGeometry(tileTerrain, terrainProvider, x, y, level, priorityFunction) {
         function success(terrainData) {
@@ -163,46 +192,6 @@ define([
         doRequest();
     }
 
-    TileTerrain.prototype.processUpsampleStateMachine = function(frameState, terrainProvider, x, y, level) {
-        if (this.state === TerrainState.UNLOADED) {
-            var upsampleDetails = this.upsampleDetails;
-
-            //>>includeStart('debug', pragmas.debug);
-            if (!defined(upsampleDetails)) {
-                throw new DeveloperError('TileTerrain cannot upsample unless provided upsampleDetails.');
-            }
-            //>>includeEnd('debug');
-
-            var sourceData = upsampleDetails.data;
-            var sourceX = upsampleDetails.x;
-            var sourceY = upsampleDetails.y;
-            var sourceLevel = upsampleDetails.level;
-
-            this.data = sourceData.upsample(terrainProvider.tilingScheme, sourceX, sourceY, sourceLevel, x, y, level);
-            if (!defined(this.data)) {
-                // The upsample request has been deferred - try again later.
-                return;
-            }
-
-            this.state = TerrainState.RECEIVING;
-
-            var that = this;
-            when(this.data, function(terrainData) {
-                that.data = terrainData;
-                that.state = TerrainState.RECEIVED;
-            }, function() {
-                that.state = TerrainState.FAILED;
-            });
-        }
-
-        if (this.state === TerrainState.RECEIVED) {
-            transform(this, frameState, terrainProvider, x, y, level);
-        }
-
-        if (this.state === TerrainState.TRANSFORMED) {
-            createResources(this, frameState.context, terrainProvider, x, y, level);
-        }
-    };
 
     function transform(tileTerrain, frameState, terrainProvider, x, y, level) {
         var tilingScheme = terrainProvider.tilingScheme;

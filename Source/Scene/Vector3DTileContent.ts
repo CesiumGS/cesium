@@ -46,41 +46,112 @@ define([
         return {};
     }
 
-    /**
-     * Represents the contents of a
-     * {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/3d-tiles-next/TileFormats/VectorData|Vector}
-     * tile in a {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/specification|3D Tiles} tileset.
-     * <p>
-     * Implements the {@link Cesium3DTileContent} interface.
-     * </p>
-     *
-     * @alias Vector3DTileContent
-     * @constructor
-     *
-     * @private
-     */
-    function Vector3DTileContent(tileset, tile, resource, arrayBuffer, byteOffset) {
-        this._tileset = tileset;
-        this._tile = tile;
-        this._resource = resource;
-
-        this._polygons = undefined;
-        this._polylines = undefined;
-        this._points = undefined;
-
-        this._contentReadyPromise = undefined;
-        this._readyPromise = when.defer();
-
-        this._batchTable = undefined;
-        this._features = undefined;
-
         /**
-         * Part of the {@link Cesium3DTileContent} interface.
-         */
-        this.featurePropertiesDirty = false;
-
-        initialize(this, arrayBuffer, byteOffset);
-    }
+             * Represents the contents of a
+             * {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/3d-tiles-next/TileFormats/VectorData|Vector}
+             * tile in a {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/specification|3D Tiles} tileset.
+             * <p>
+             * Implements the {@link Cesium3DTileContent} interface.
+             * </p>
+             *
+             * @alias Vector3DTileContent
+             * @constructor
+             *
+             * @private
+             */
+        class Vector3DTileContent {
+            constructor(tileset, tile, resource, arrayBuffer, byteOffset) {
+                this._tileset = tileset;
+                this._tile = tile;
+                this._resource = resource;
+                this._polygons = undefined;
+                this._polylines = undefined;
+                this._points = undefined;
+                this._contentReadyPromise = undefined;
+                this._readyPromise = when.defer();
+                this._batchTable = undefined;
+                this._features = undefined;
+                /**
+                 * Part of the {@link Cesium3DTileContent} interface.
+                 */
+                this.featurePropertiesDirty = false;
+                initialize(this, arrayBuffer, byteOffset);
+            }
+            hasProperty(batchId, name) {
+                return this._batchTable.hasProperty(batchId, name);
+            }
+            getFeature(batchId) {
+                //>>includeStart('debug', pragmas.debug);
+                var featuresLength = this.featuresLength;
+                if (!defined(batchId) || (batchId < 0) || (batchId >= featuresLength)) {
+                    throw new DeveloperError('batchId is required and between zero and featuresLength - 1 (' + (featuresLength - 1) + ').');
+                }
+                //>>includeEnd('debug');
+                createFeatures(this);
+                return this._features[batchId];
+            }
+            applyDebugSettings(enabled, color) {
+                if (defined(this._polygons)) {
+                    this._polygons.applyDebugSettings(enabled, color);
+                }
+                if (defined(this._polylines)) {
+                    this._polylines.applyDebugSettings(enabled, color);
+                }
+                if (defined(this._points)) {
+                    this._points.applyDebugSettings(enabled, color);
+                }
+            }
+            applyStyle(style) {
+                createFeatures(this);
+                if (defined(this._polygons)) {
+                    this._polygons.applyStyle(style, this._features);
+                }
+                if (defined(this._polylines)) {
+                    this._polylines.applyStyle(style, this._features);
+                }
+                if (defined(this._points)) {
+                    this._points.applyStyle(style, this._features);
+                }
+            }
+            update(tileset, frameState) {
+                var ready = true;
+                if (defined(this._polygons)) {
+                    this._polygons.classificationType = this._tileset.classificationType;
+                    this._polygons.update(frameState);
+                    ready = ready && this._polygons._ready;
+                }
+                if (defined(this._polylines)) {
+                    this._polylines.update(frameState);
+                    ready = ready && this._polylines._ready;
+                }
+                if (defined(this._points)) {
+                    this._points.update(frameState);
+                    ready = ready && this._points._ready;
+                }
+                if (defined(this._batchTable) && ready) {
+                    this._batchTable.update(tileset, frameState);
+                }
+                if (!defined(this._contentReadyPromise)) {
+                    var pointsPromise = defined(this._points) ? this._points.readyPromise : undefined;
+                    var polygonPromise = defined(this._polygons) ? this._polygons.readyPromise : undefined;
+                    var polylinePromise = defined(this._polylines) ? this._polylines.readyPromise : undefined;
+                    var that = this;
+                    this._contentReadyPromise = when.all([pointsPromise, polygonPromise, polylinePromise]).then(function() {
+                        that._readyPromise.resolve(that);
+                    });
+                }
+            }
+            isDestroyed() {
+                return false;
+            }
+            destroy() {
+                this._polygons = this._polygons && this._polygons.destroy();
+                this._polylines = this._polylines && this._polylines.destroy();
+                this._points = this._points && this._points.destroy();
+                this._batchTable = this._batchTable && this._batchTable.destroy();
+                return destroyObject(this);
+            }
+        }
 
     defineProperties(Vector3DTileContent.prototype, {
         featuresLength : {
@@ -466,89 +537,12 @@ define([
         }
     }
 
-    Vector3DTileContent.prototype.hasProperty = function(batchId, name) {
-        return this._batchTable.hasProperty(batchId, name);
-    };
 
-    Vector3DTileContent.prototype.getFeature = function(batchId) {
-        //>>includeStart('debug', pragmas.debug);
-        var featuresLength = this.featuresLength;
-        if (!defined(batchId) || (batchId < 0) || (batchId >= featuresLength)) {
-            throw new DeveloperError('batchId is required and between zero and featuresLength - 1 (' + (featuresLength - 1) + ').');
-        }
-        //>>includeEnd('debug');
 
-        createFeatures(this);
-        return this._features[batchId];
-    };
 
-    Vector3DTileContent.prototype.applyDebugSettings = function(enabled, color) {
-        if (defined(this._polygons)) {
-            this._polygons.applyDebugSettings(enabled, color);
-        }
-        if (defined(this._polylines)) {
-            this._polylines.applyDebugSettings(enabled, color);
-        }
-        if (defined(this._points)) {
-            this._points.applyDebugSettings(enabled, color);
-        }
-    };
 
-    Vector3DTileContent.prototype.applyStyle = function(style) {
-        createFeatures(this);
-        if (defined(this._polygons)) {
-            this._polygons.applyStyle(style, this._features);
-        }
-        if (defined(this._polylines)) {
-            this._polylines.applyStyle(style, this._features);
-        }
-        if (defined(this._points)) {
-            this._points.applyStyle(style, this._features);
-        }
-    };
 
-    Vector3DTileContent.prototype.update = function(tileset, frameState) {
-        var ready = true;
-        if (defined(this._polygons)) {
-            this._polygons.classificationType = this._tileset.classificationType;
-            this._polygons.update(frameState);
-            ready = ready && this._polygons._ready;
-        }
-        if (defined(this._polylines)) {
-            this._polylines.update(frameState);
-            ready = ready && this._polylines._ready;
-        }
-        if (defined(this._points)) {
-            this._points.update(frameState);
-            ready = ready && this._points._ready;
-        }
-        if (defined(this._batchTable) && ready) {
-            this._batchTable.update(tileset, frameState);
-        }
 
-        if (!defined(this._contentReadyPromise)) {
-            var pointsPromise = defined(this._points) ? this._points.readyPromise : undefined;
-            var polygonPromise = defined(this._polygons) ? this._polygons.readyPromise : undefined;
-            var polylinePromise = defined(this._polylines) ? this._polylines.readyPromise : undefined;
-
-            var that = this;
-            this._contentReadyPromise = when.all([pointsPromise, polygonPromise, polylinePromise]).then(function() {
-                that._readyPromise.resolve(that);
-            });
-        }
-    };
-
-    Vector3DTileContent.prototype.isDestroyed = function() {
-        return false;
-    };
-
-    Vector3DTileContent.prototype.destroy = function() {
-        this._polygons = this._polygons && this._polygons.destroy();
-        this._polylines = this._polylines && this._polylines.destroy();
-        this._points = this._points && this._points.destroy();
-        this._batchTable = this._batchTable && this._batchTable.destroy();
-        return destroyObject(this);
-    };
 
     return Vector3DTileContent;
 });

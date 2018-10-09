@@ -6,19 +6,21 @@ define([
         DeveloperError) {
     'use strict';
 
-    /**
-     * Terrain data for a single tile.  This type describes an
-     * interface and is not intended to be instantiated directly.
-     *
-     * @alias TerrainData
-     * @constructor
-     *
-     * @see HeightmapTerrainData
-     * @see QuantizedMeshTerrainData
-     */
-    function TerrainData() {
-        DeveloperError.throwInstantiationError();
-    }
+        /**
+             * Terrain data for a single tile.  This type describes an
+             * interface and is not intended to be instantiated directly.
+             *
+             * @alias TerrainData
+             * @constructor
+             *
+             * @see HeightmapTerrainData
+             * @see QuantizedMeshTerrainData
+             */
+        class TerrainData {
+            constructor() {
+                DeveloperError.throwInstantiationError();
+            }
+        }
 
     defineProperties(TerrainData.prototype, {
         /**

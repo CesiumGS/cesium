@@ -2449,101 +2449,262 @@ define([
             });
     }
 
-    /**
-     * A {@link DataSource} which processes Keyhole Markup Language 2.2 (KML).
-     * <p>
-     * KML support in Cesium is incomplete, but a large amount of the standard,
-     * as well as Google's <code>gx</code> extension namespace, is supported. See Github issue
-     * {@link https://github.com/AnalyticalGraphicsInc/cesium/issues/873|#873} for a
-     * detailed list of what is and isn't support. Cesium will also write information to the
-     * console when it encounters most unsupported features.
-     * </p>
-     * <p>
-     * Non visual feature data, such as <code>atom:author</code> and <code>ExtendedData</code>
-     * is exposed via an instance of {@link KmlFeatureData}, which is added to each {@link Entity}
-     * under the <code>kml</code> property.
-     * </p>
-     *
-     * @alias KmlDataSource
-     * @constructor
-     *
-     * @param {Object} options An object with the following properties:
-     * @param {Camera} options.camera The camera that is used for viewRefreshModes and sending camera properties to network links.
-     * @param {Canvas} options.canvas The canvas that is used for sending viewer properties to network links.
-     * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The global ellipsoid used for geographical calculations.
-     *
-     * @see {@link http://www.opengeospatial.org/standards/kml/|Open Geospatial Consortium KML Standard}
-     * @see {@link https://developers.google.com/kml/|Google KML Documentation}
-     *
-     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=KML.html|Cesium Sandcastle KML Demo}
-     *
-     * @example
-     * var viewer = new Cesium.Viewer('cesiumContainer');
-     * viewer.dataSources.add(Cesium.KmlDataSource.load('../../SampleData/facilities.kmz',
-     *      {
-     *           camera: viewer.scene.camera,
-     *           canvas: viewer.scene.canvas
-     *      })
-     * );
-     */
-    function KmlDataSource(options) {
-        options = defaultValue(options, {});
-        var camera = options.camera;
-        var canvas = options.canvas;
-
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(camera)) {
-            throw new DeveloperError('options.camera is required.');
+        /**
+             * A {@link DataSource} which processes Keyhole Markup Language 2.2 (KML).
+             * <p>
+             * KML support in Cesium is incomplete, but a large amount of the standard,
+             * as well as Google's <code>gx</code> extension namespace, is supported. See Github issue
+             * {@link https://github.com/AnalyticalGraphicsInc/cesium/issues/873|#873} for a
+             * detailed list of what is and isn't support. Cesium will also write information to the
+             * console when it encounters most unsupported features.
+             * </p>
+             * <p>
+             * Non visual feature data, such as <code>atom:author</code> and <code>ExtendedData</code>
+             * is exposed via an instance of {@link KmlFeatureData}, which is added to each {@link Entity}
+             * under the <code>kml</code> property.
+             * </p>
+             *
+             * @alias KmlDataSource
+             * @constructor
+             *
+             * @param {Object} options An object with the following properties:
+             * @param {Camera} options.camera The camera that is used for viewRefreshModes and sending camera properties to network links.
+             * @param {Canvas} options.canvas The canvas that is used for sending viewer properties to network links.
+             * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The global ellipsoid used for geographical calculations.
+             *
+             * @see {@link http://www.opengeospatial.org/standards/kml/|Open Geospatial Consortium KML Standard}
+             * @see {@link https://developers.google.com/kml/|Google KML Documentation}
+             *
+             * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=KML.html|Cesium Sandcastle KML Demo}
+             *
+             * @example
+             * var viewer = new Cesium.Viewer('cesiumContainer');
+             * viewer.dataSources.add(Cesium.KmlDataSource.load('../../SampleData/facilities.kmz',
+             *      {
+             *           camera: viewer.scene.camera,
+             *           canvas: viewer.scene.canvas
+             *      })
+             * );
+             */
+        class KmlDataSource {
+            constructor(options) {
+                options = defaultValue(options, {});
+                var camera = options.camera;
+                var canvas = options.canvas;
+                //>>includeStart('debug', pragmas.debug);
+                if (!defined(camera)) {
+                    throw new DeveloperError('options.camera is required.');
+                }
+                if (!defined(canvas)) {
+                    throw new DeveloperError('options.canvas is required.');
+                }
+                //>>includeEnd('debug');
+                this._changed = new Event();
+                this._error = new Event();
+                this._loading = new Event();
+                this._refresh = new Event();
+                this._unsupportedNode = new Event();
+                this._clock = undefined;
+                this._entityCollection = new EntityCollection(this);
+                this._name = undefined;
+                this._isLoading = false;
+                this._pinBuilder = new PinBuilder();
+                this._networkLinks = new AssociativeArray();
+                this._entityCluster = new EntityCluster();
+                this._canvas = canvas;
+                this._camera = camera;
+                this._lastCameraView = {
+                    position: defined(camera) ? Cartesian3.clone(camera.positionWC) : undefined,
+                    direction: defined(camera) ? Cartesian3.clone(camera.directionWC) : undefined,
+                    up: defined(camera) ? Cartesian3.clone(camera.upWC) : undefined,
+                    bbox: defined(camera) ? camera.computeViewRectangle() : Rectangle.clone(Rectangle.MAX_VALUE)
+                };
+                this._ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
+            }
+            /**
+                 * Asynchronously loads the provided KML data, replacing any existing data.
+                 *
+                 * @param {Resource|String|Document|Blob} data A url, parsed KML document, or Blob containing binary KMZ data or a parsed KML document.
+                 * @param {Object} [options] An object with the following properties:
+                 * @param {Resource|String} [options.sourceUri] Overrides the url to use for resolving relative links and other KML network features.
+                 * @param {Boolean} [options.clampToGround=false] true if we want the geometry features (Polygons, LineStrings and LinearRings) clamped to the ground. If true, lines will use corridors so use Entity.corridor instead of Entity.polyline.
+                 * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The global ellipsoid used for geographical calculations.
+                 *
+                 * @returns {Promise.<KmlDataSource>} A promise that will resolve to this instances once the KML is loaded.
+                 */
+            load(data, options) {
+                //>>includeStart('debug', pragmas.debug);
+                if (!defined(data)) {
+                    throw new DeveloperError('data is required.');
+                }
+                //>>includeEnd('debug');
+                options = defaultValue(options, {});
+                DataSource.setLoading(this, true);
+                var oldName = this._name;
+                this._name = undefined;
+                this._clampToGround = defaultValue(options.clampToGround, false);
+                var that = this;
+                return load(this, this._entityCollection, data, options).then(function() {
+                    var clock;
+                    var availability = that._entityCollection.computeAvailability();
+                    var start = availability.start;
+                    var stop = availability.stop;
+                    var isMinStart = JulianDate.equals(start, Iso8601.MINIMUM_VALUE);
+                    var isMaxStop = JulianDate.equals(stop, Iso8601.MAXIMUM_VALUE);
+                    if (!isMinStart || !isMaxStop) {
+                        var date;
+                        //If start is min time just start at midnight this morning, local time
+                        if (isMinStart) {
+                            date = new Date();
+                            date.setHours(0, 0, 0, 0);
+                            start = JulianDate.fromDate(date);
+                        }
+                        //If stop is max value just stop at midnight tonight, local time
+                        if (isMaxStop) {
+                            date = new Date();
+                            date.setHours(24, 0, 0, 0);
+                            stop = JulianDate.fromDate(date);
+                        }
+                        clock = new DataSourceClock();
+                        clock.startTime = start;
+                        clock.stopTime = stop;
+                        clock.currentTime = JulianDate.clone(start);
+                        clock.clockRange = ClockRange.LOOP_STOP;
+                        clock.clockStep = ClockStep.SYSTEM_CLOCK_MULTIPLIER;
+                        clock.multiplier = Math.round(Math.min(Math.max(JulianDate.secondsDifference(stop, start) / 60, 1), 3.15569e7));
+                    }
+                    var changed = false;
+                    if (clock !== that._clock) {
+                        that._clock = clock;
+                        changed = true;
+                    }
+                    if (oldName !== that._name) {
+                        changed = true;
+                    }
+                    if (changed) {
+                        that._changed.raiseEvent(that);
+                    }
+                    DataSource.setLoading(that, false);
+                    return that;
+                }).otherwise(function(error) {
+                    DataSource.setLoading(that, false);
+                    that._error.raiseEvent(that, error);
+                    console.log(error);
+                    return when.reject(error);
+                });
+            }
+            /**
+                 * Updates any NetworkLink that require updating
+                 * @function
+                 *
+                 * @param {JulianDate} time The simulation time.
+                 * @returns {Boolean} True if this data source is ready to be displayed at the provided time, false otherwise.
+                 */
+            update(time) {
+                var networkLinks = this._networkLinks;
+                if (networkLinks.length === 0) {
+                    return true;
+                }
+                var now = JulianDate.now();
+                var that = this;
+                entitiesToIgnore.removeAll();
+                function recurseIgnoreEntities(entity) {
+                    var children = entity._children;
+                    var count = children.length;
+                    for (var i = 0; i < count; ++i) {
+                        var child = children[i];
+                        entitiesToIgnore.set(child.id, child);
+                        recurseIgnoreEntities(child);
+                    }
+                }
+                var cameraViewUpdate = false;
+                var lastCameraView = this._lastCameraView;
+                var camera = this._camera;
+                if (defined(camera) &&
+                    !(camera.positionWC.equalsEpsilon(lastCameraView.position, CesiumMath.EPSILON7) &&
+                        camera.directionWC.equalsEpsilon(lastCameraView.direction, CesiumMath.EPSILON7) &&
+                        camera.upWC.equalsEpsilon(lastCameraView.up, CesiumMath.EPSILON7))) {
+                    // Camera has changed so update the last view
+                    lastCameraView.position = Cartesian3.clone(camera.positionWC);
+                    lastCameraView.direction = Cartesian3.clone(camera.directionWC);
+                    lastCameraView.up = Cartesian3.clone(camera.upWC);
+                    lastCameraView.bbox = camera.computeViewRectangle();
+                    cameraViewUpdate = true;
+                }
+                var newNetworkLinks = new AssociativeArray();
+                var changed = false;
+                networkLinks.values.forEach(function(networkLink) {
+                    var entity = networkLink.entity;
+                    if (entitiesToIgnore.contains(entity.id)) {
+                        return;
+                    }
+                    if (!networkLink.updating) {
+                        var doUpdate = false;
+                        if (networkLink.refreshMode === RefreshMode.INTERVAL) {
+                            if (JulianDate.secondsDifference(now, networkLink.lastUpdated) > networkLink.time) {
+                                doUpdate = true;
+                            }
+                        }
+                        else if (networkLink.refreshMode === RefreshMode.EXPIRE) {
+                            if (JulianDate.greaterThan(now, networkLink.time)) {
+                                doUpdate = true;
+                            }
+                        }
+                        else if (networkLink.refreshMode === RefreshMode.STOP) {
+                            if (cameraViewUpdate) {
+                                networkLink.needsUpdate = true;
+                                networkLink.cameraUpdateTime = now;
+                            }
+                            if (networkLink.needsUpdate && JulianDate.secondsDifference(now, networkLink.cameraUpdateTime) >= networkLink.time) {
+                                doUpdate = true;
+                            }
+                        }
+                        if (doUpdate) {
+                            recurseIgnoreEntities(entity);
+                            networkLink.updating = true;
+                            var newEntityCollection = new EntityCollection();
+                            var href = networkLink.href.clone();
+                            href.setQueryParameters(networkLink.cookie);
+                            var ellipsoid = defaultValue(that._ellipsoid, Ellipsoid.WGS84);
+                            processNetworkLinkQueryString(href, that._camera, that._canvas, networkLink.viewBoundScale, lastCameraView.bbox, ellipsoid);
+                            load(that, newEntityCollection, href, { context: entity.id })
+                                .then(getNetworkLinkUpdateCallback(that, networkLink, newEntityCollection, newNetworkLinks, href))
+                                .otherwise(function(error) {
+                                    var msg = 'NetworkLink ' + networkLink.href + ' refresh failed: ' + error;
+                                    console.log(msg);
+                                    that._error.raiseEvent(that, msg);
+                                });
+                            changed = true;
+                        }
+                    }
+                    newNetworkLinks.set(networkLink.id, networkLink);
+                });
+                if (changed) {
+                    this._networkLinks = newNetworkLinks;
+                    this._changed.raiseEvent(this);
+                }
+                return true;
+            }
+            /**
+                 * Creates a Promise to a new instance loaded with the provided KML data.
+                 *
+                 * @param {Resource|String|Document|Blob} data A url, parsed KML document, or Blob containing binary KMZ data or a parsed KML document.
+                 * @param {Object} options An object with the following properties:
+                 * @param {Camera} options.camera The camera that is used for viewRefreshModes and sending camera properties to network links.
+                 * @param {Canvas} options.canvas The canvas that is used for sending viewer properties to network links.
+                 * @param {String} [options.sourceUri] Overrides the url to use for resolving relative links and other KML network features.
+                 * @param {Boolean} [options.clampToGround=false] true if we want the geometry features (Polygons, LineStrings and LinearRings) clamped to the ground.
+                 * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The global ellipsoid used for geographical calculations.
+                 *
+                 * @returns {Promise.<KmlDataSource>} A promise that will resolve to a new KmlDataSource instance once the KML is loaded.
+                 */
+            static load(data, options) {
+                options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+                var dataSource = new KmlDataSource(options);
+                return dataSource.load(data, options);
+            }
         }
-        if (!defined(canvas)) {
-            throw new DeveloperError('options.canvas is required.');
-        }
-        //>>includeEnd('debug');
 
-        this._changed = new Event();
-        this._error = new Event();
-        this._loading = new Event();
-        this._refresh = new Event();
-        this._unsupportedNode = new Event();
-
-        this._clock = undefined;
-        this._entityCollection = new EntityCollection(this);
-        this._name = undefined;
-        this._isLoading = false;
-        this._pinBuilder = new PinBuilder();
-        this._networkLinks = new AssociativeArray();
-        this._entityCluster = new EntityCluster();
-
-        this._canvas = canvas;
-        this._camera = camera;
-        this._lastCameraView = {
-            position : defined(camera) ? Cartesian3.clone(camera.positionWC) : undefined,
-            direction : defined(camera) ? Cartesian3.clone(camera.directionWC) : undefined,
-            up : defined(camera) ? Cartesian3.clone(camera.upWC) : undefined,
-            bbox : defined(camera) ? camera.computeViewRectangle() : Rectangle.clone(Rectangle.MAX_VALUE)
-        };
-
-        this._ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
-    }
-
-    /**
-     * Creates a Promise to a new instance loaded with the provided KML data.
-     *
-     * @param {Resource|String|Document|Blob} data A url, parsed KML document, or Blob containing binary KMZ data or a parsed KML document.
-     * @param {Object} options An object with the following properties:
-     * @param {Camera} options.camera The camera that is used for viewRefreshModes and sending camera properties to network links.
-     * @param {Canvas} options.canvas The canvas that is used for sending viewer properties to network links.
-     * @param {String} [options.sourceUri] Overrides the url to use for resolving relative links and other KML network features.
-     * @param {Boolean} [options.clampToGround=false] true if we want the geometry features (Polygons, LineStrings and LinearRings) clamped to the ground.
-     * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The global ellipsoid used for geographical calculations.
-     *
-     * @returns {Promise.<KmlDataSource>} A promise that will resolve to a new KmlDataSource instance once the KML is loaded.
-     */
-    KmlDataSource.load = function(data, options) {
-        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-        var dataSource = new KmlDataSource(options);
-        return dataSource.load(data, options);
-    };
 
     defineProperties(KmlDataSource.prototype, {
         /**
@@ -2680,91 +2841,6 @@ define([
         }
     });
 
-    /**
-     * Asynchronously loads the provided KML data, replacing any existing data.
-     *
-     * @param {Resource|String|Document|Blob} data A url, parsed KML document, or Blob containing binary KMZ data or a parsed KML document.
-     * @param {Object} [options] An object with the following properties:
-     * @param {Resource|String} [options.sourceUri] Overrides the url to use for resolving relative links and other KML network features.
-     * @param {Boolean} [options.clampToGround=false] true if we want the geometry features (Polygons, LineStrings and LinearRings) clamped to the ground. If true, lines will use corridors so use Entity.corridor instead of Entity.polyline.
-     * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The global ellipsoid used for geographical calculations.
-     *
-     * @returns {Promise.<KmlDataSource>} A promise that will resolve to this instances once the KML is loaded.
-     */
-    KmlDataSource.prototype.load = function(data, options) {
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(data)) {
-            throw new DeveloperError('data is required.');
-        }
-        //>>includeEnd('debug');
-
-        options = defaultValue(options, {});
-        DataSource.setLoading(this, true);
-
-        var oldName = this._name;
-        this._name = undefined;
-        this._clampToGround = defaultValue(options.clampToGround, false);
-
-        var that = this;
-        return load(this, this._entityCollection, data, options).then(function() {
-            var clock;
-
-            var availability = that._entityCollection.computeAvailability();
-
-            var start = availability.start;
-            var stop = availability.stop;
-            var isMinStart = JulianDate.equals(start, Iso8601.MINIMUM_VALUE);
-            var isMaxStop = JulianDate.equals(stop, Iso8601.MAXIMUM_VALUE);
-            if (!isMinStart || !isMaxStop) {
-                var date;
-
-                //If start is min time just start at midnight this morning, local time
-                if (isMinStart) {
-                    date = new Date();
-                    date.setHours(0, 0, 0, 0);
-                    start = JulianDate.fromDate(date);
-                }
-
-                //If stop is max value just stop at midnight tonight, local time
-                if (isMaxStop) {
-                    date = new Date();
-                    date.setHours(24, 0, 0, 0);
-                    stop = JulianDate.fromDate(date);
-                }
-
-                clock = new DataSourceClock();
-                clock.startTime = start;
-                clock.stopTime = stop;
-                clock.currentTime = JulianDate.clone(start);
-                clock.clockRange = ClockRange.LOOP_STOP;
-                clock.clockStep = ClockStep.SYSTEM_CLOCK_MULTIPLIER;
-                clock.multiplier = Math.round(Math.min(Math.max(JulianDate.secondsDifference(stop, start) / 60, 1), 3.15569e7));
-            }
-
-            var changed = false;
-            if (clock !== that._clock) {
-                that._clock = clock;
-                changed = true;
-            }
-
-            if (oldName !== that._name) {
-                changed = true;
-            }
-
-            if (changed) {
-                that._changed.raiseEvent(that);
-            }
-
-            DataSource.setLoading(that, false);
-
-            return that;
-        }).otherwise(function(error) {
-            DataSource.setLoading(that, false);
-            that._error.raiseEvent(that, error);
-            console.log(error);
-            return when.reject(error);
-        });
-    };
 
     function mergeAvailabilityWithParent(child) {
         var parent = child.parent;
@@ -2902,227 +2978,122 @@ define([
 
     var entitiesToIgnore = new AssociativeArray();
 
-    /**
-     * Updates any NetworkLink that require updating
-     * @function
-     *
-     * @param {JulianDate} time The simulation time.
-     * @returns {Boolean} True if this data source is ready to be displayed at the provided time, false otherwise.
-     */
-    KmlDataSource.prototype.update = function(time) {
-        var networkLinks = this._networkLinks;
-        if (networkLinks.length === 0) {
-            return true;
-        }
 
-        var now = JulianDate.now();
-        var that = this;
-
-        entitiesToIgnore.removeAll();
-
-        function recurseIgnoreEntities(entity) {
-            var children = entity._children;
-            var count = children.length;
-            for (var i = 0; i < count; ++i) {
-                var child = children[i];
-                entitiesToIgnore.set(child.id, child);
-                recurseIgnoreEntities(child);
+        /**
+             * Contains KML Feature data loaded into the <code>Entity.kml</code> property by {@link KmlDataSource}.
+             * @alias KmlFeatureData
+             * @constructor
+             */
+        class KmlFeatureData {
+            constructor() {
+                /**
+                 * Gets the atom syndication format author field.
+                 * @type Object
+                 */
+                this.author = {
+                    /**
+                     * Gets the name.
+                     * @type String
+                     * @alias author.name
+                     * @memberof! KmlFeatureData#
+                     * @property author.name
+                     */
+                    name: undefined,
+                    /**
+                     * Gets the URI.
+                     * @type String
+                     * @alias author.uri
+                     * @memberof! KmlFeatureData#
+                     * @property author.uri
+                     */
+                    uri: undefined,
+                    /**
+                     * Gets the email.
+                     * @type String
+                     * @alias author.email
+                     * @memberof! KmlFeatureData#
+                     * @property author.email
+                     */
+                    email: undefined
+                };
+                /**
+                 * Gets the link.
+                 * @type Object
+                 */
+                this.link = {
+                    /**
+                     * Gets the href.
+                     * @type String
+                     * @alias link.href
+                     * @memberof! KmlFeatureData#
+                     * @property link.href
+                     */
+                    href: undefined,
+                    /**
+                     * Gets the language of the linked resource.
+                     * @type String
+                     * @alias link.hreflang
+                     * @memberof! KmlFeatureData#
+                     * @property link.hreflang
+                     */
+                    hreflang: undefined,
+                    /**
+                     * Gets the link relation.
+                     * @type String
+                     * @alias link.rel
+                     * @memberof! KmlFeatureData#
+                     * @property link.rel
+                     */
+                    rel: undefined,
+                    /**
+                     * Gets the link type.
+                     * @type String
+                     * @alias link.type
+                     * @memberof! KmlFeatureData#
+                     * @property link.type
+                     */
+                    type: undefined,
+                    /**
+                     * Gets the link title.
+                     * @type String
+                     * @alias link.title
+                     * @memberof! KmlFeatureData#
+                     * @property link.title
+                     */
+                    title: undefined,
+                    /**
+                     * Gets the link length.
+                     * @type String
+                     * @alias link.length
+                     * @memberof! KmlFeatureData#
+                     * @property link.length
+                     */
+                    length: undefined
+                };
+                /**
+                 * Gets the unstructured address field.
+                 * @type String
+                 */
+                this.address = undefined;
+                /**
+                 * Gets the phone number.
+                 * @type String
+                 */
+                this.phoneNumber = undefined;
+                /**
+                 * Gets the snippet.
+                 * @type String
+                 */
+                this.snippet = undefined;
+                /**
+                 * Gets the extended data, parsed into a JSON object.
+                 * Currently only the <code>Data</code> property is supported.
+                 * <code>SchemaData</code> and custom data are ignored.
+                 * @type String
+                 */
+                this.extendedData = undefined;
             }
         }
-
-        var cameraViewUpdate = false;
-        var lastCameraView = this._lastCameraView;
-        var camera = this._camera;
-        if (defined(camera) &&
-            !(camera.positionWC.equalsEpsilon(lastCameraView.position, CesiumMath.EPSILON7) &&
-            camera.directionWC.equalsEpsilon(lastCameraView.direction, CesiumMath.EPSILON7) &&
-            camera.upWC.equalsEpsilon(lastCameraView.up, CesiumMath.EPSILON7))) {
-
-            // Camera has changed so update the last view
-            lastCameraView.position = Cartesian3.clone(camera.positionWC);
-            lastCameraView.direction = Cartesian3.clone(camera.directionWC);
-            lastCameraView.up = Cartesian3.clone(camera.upWC);
-            lastCameraView.bbox = camera.computeViewRectangle();
-            cameraViewUpdate = true;
-        }
-
-        var newNetworkLinks = new AssociativeArray();
-        var changed = false;
-        networkLinks.values.forEach(function(networkLink) {
-            var entity = networkLink.entity;
-            if (entitiesToIgnore.contains(entity.id)) {
-                return;
-            }
-
-            if (!networkLink.updating) {
-                var doUpdate = false;
-                if (networkLink.refreshMode === RefreshMode.INTERVAL) {
-                    if (JulianDate.secondsDifference(now, networkLink.lastUpdated) > networkLink.time) {
-                        doUpdate = true;
-                    }
-                }
-                else if (networkLink.refreshMode === RefreshMode.EXPIRE) {
-                    if (JulianDate.greaterThan(now, networkLink.time)) {
-                        doUpdate = true;
-                    }
-
-                } else if (networkLink.refreshMode === RefreshMode.STOP) {
-                    if (cameraViewUpdate) {
-                        networkLink.needsUpdate = true;
-                        networkLink.cameraUpdateTime = now;
-                    }
-
-                    if (networkLink.needsUpdate && JulianDate.secondsDifference(now, networkLink.cameraUpdateTime) >= networkLink.time) {
-                        doUpdate = true;
-                    }
-                }
-
-                if (doUpdate) {
-                    recurseIgnoreEntities(entity);
-                    networkLink.updating = true;
-                    var newEntityCollection = new EntityCollection();
-                    var href = networkLink.href.clone();
-
-                    href.setQueryParameters(networkLink.cookie);
-                    var ellipsoid = defaultValue(that._ellipsoid, Ellipsoid.WGS84);
-                    processNetworkLinkQueryString(href, that._camera, that._canvas, networkLink.viewBoundScale, lastCameraView.bbox, ellipsoid);
-
-                    load(that, newEntityCollection, href, {context : entity.id})
-                        .then(getNetworkLinkUpdateCallback(that, networkLink, newEntityCollection, newNetworkLinks, href))
-                        .otherwise(function(error) {
-                            var msg = 'NetworkLink ' + networkLink.href + ' refresh failed: ' + error;
-                            console.log(msg);
-                            that._error.raiseEvent(that, msg);
-                        });
-                    changed = true;
-                }
-            }
-            newNetworkLinks.set(networkLink.id, networkLink);
-        });
-
-        if (changed) {
-            this._networkLinks = newNetworkLinks;
-            this._changed.raiseEvent(this);
-        }
-
-        return true;
-    };
-
-    /**
-     * Contains KML Feature data loaded into the <code>Entity.kml</code> property by {@link KmlDataSource}.
-     * @alias KmlFeatureData
-     * @constructor
-     */
-    function KmlFeatureData() {
-        /**
-         * Gets the atom syndication format author field.
-         * @type Object
-         */
-        this.author = {
-            /**
-             * Gets the name.
-             * @type String
-             * @alias author.name
-             * @memberof! KmlFeatureData#
-             * @property author.name
-             */
-            name : undefined,
-            /**
-             * Gets the URI.
-             * @type String
-             * @alias author.uri
-             * @memberof! KmlFeatureData#
-             * @property author.uri
-             */
-            uri : undefined,
-            /**
-             * Gets the email.
-             * @type String
-             * @alias author.email
-             * @memberof! KmlFeatureData#
-             * @property author.email
-             */
-            email : undefined
-        };
-
-        /**
-         * Gets the link.
-         * @type Object
-         */
-        this.link = {
-            /**
-             * Gets the href.
-             * @type String
-             * @alias link.href
-             * @memberof! KmlFeatureData#
-             * @property link.href
-             */
-            href : undefined,
-            /**
-             * Gets the language of the linked resource.
-             * @type String
-             * @alias link.hreflang
-             * @memberof! KmlFeatureData#
-             * @property link.hreflang
-             */
-            hreflang : undefined,
-            /**
-             * Gets the link relation.
-             * @type String
-             * @alias link.rel
-             * @memberof! KmlFeatureData#
-             * @property link.rel
-             */
-            rel : undefined,
-            /**
-             * Gets the link type.
-             * @type String
-             * @alias link.type
-             * @memberof! KmlFeatureData#
-             * @property link.type
-             */
-            type : undefined,
-            /**
-             * Gets the link title.
-             * @type String
-             * @alias link.title
-             * @memberof! KmlFeatureData#
-             * @property link.title
-             */
-            title : undefined,
-            /**
-             * Gets the link length.
-             * @type String
-             * @alias link.length
-             * @memberof! KmlFeatureData#
-             * @property link.length
-             */
-            length : undefined
-        };
-
-        /**
-         * Gets the unstructured address field.
-         * @type String
-         */
-        this.address = undefined;
-        /**
-         * Gets the phone number.
-         * @type String
-         */
-        this.phoneNumber = undefined;
-        /**
-         * Gets the snippet.
-         * @type String
-         */
-        this.snippet = undefined;
-        /**
-         * Gets the extended data, parsed into a JSON object.
-         * Currently only the <code>Data</code> property is supported.
-         * <code>SchemaData</code> and custom data are ignored.
-         * @type String
-         */
-        this.extendedData = undefined;
-    }
 
     return KmlDataSource;
 });

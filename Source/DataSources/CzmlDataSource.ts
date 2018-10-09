@@ -2028,44 +2028,81 @@ define([
         return dataSource;
     }
 
-    function DocumentPacket() {
-        this.name = undefined;
-        this.clock = undefined;
-    }
+        class DocumentPacket {
+            constructor() {
+                this.name = undefined;
+                this.clock = undefined;
+            }
+        }
 
-    /**
-     * A {@link DataSource} which processes {@link https://github.com/AnalyticalGraphicsInc/cesium/wiki/CZML-Guide|CZML}.
-     * @alias CzmlDataSource
-     * @constructor
-     *
-     * @param {String} [name] An optional name for the data source.  This value will be overwritten if a loaded document contains a name.
-     *
-     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=CZML.html|Cesium Sandcastle CZML Demo}
-     */
-    function CzmlDataSource(name) {
-        this._name = name;
-        this._changed = new Event();
-        this._error = new Event();
-        this._isLoading = false;
-        this._loading = new Event();
-        this._clock = undefined;
-        this._documentPacket = new DocumentPacket();
-        this._version = undefined;
-        this._entityCollection = new EntityCollection(this);
-        this._entityCluster = new EntityCluster();
-    }
+        /**
+             * A {@link DataSource} which processes {@link https://github.com/AnalyticalGraphicsInc/cesium/wiki/CZML-Guide|CZML}.
+             * @alias CzmlDataSource
+             * @constructor
+             *
+             * @param {String} [name] An optional name for the data source.  This value will be overwritten if a loaded document contains a name.
+             *
+             * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=CZML.html|Cesium Sandcastle CZML Demo}
+             */
+        class CzmlDataSource {
+            constructor(name) {
+                this._name = name;
+                this._changed = new Event();
+                this._error = new Event();
+                this._isLoading = false;
+                this._loading = new Event();
+                this._clock = undefined;
+                this._documentPacket = new DocumentPacket();
+                this._version = undefined;
+                this._entityCollection = new EntityCollection(this);
+                this._entityCluster = new EntityCluster();
+            }
+            /**
+                 * Processes the provided url or CZML object without clearing any existing data.
+                 *
+                 * @param {Resource|String|Object} czml A url or CZML object to be processed.
+                 * @param {Object} [options] An object with the following properties:
+                 * @param {String} [options.sourceUri] Overrides the url to use for resolving relative links.
+                 * @returns {Promise.<CzmlDataSource>} A promise that resolves to this instances once the data is processed.
+                 */
+            process(czml, options) {
+                return load(this, czml, options, false);
+            }
+            /**
+                 * Loads the provided url or CZML object, replacing any existing data.
+                 *
+                 * @param {Resource|String|Object} czml A url or CZML object to be processed.
+                 * @param {Object} [options] An object with the following properties:
+                 * @param {String} [options.sourceUri] Overrides the url to use for resolving relative links.
+                 * @returns {Promise.<CzmlDataSource>} A promise that resolves to this instances once the data is processed.
+                 */
+            load(czml, options) {
+                return load(this, czml, options, true);
+            }
+            /**
+                 * Creates a Promise to a new instance loaded with the provided CZML data.
+                 *
+                 * @param {Resource|String|Object} czml A url or CZML object to be processed.
+                 * @param {Object} [options] An object with the following properties:
+                 * @param {Resource|String} [options.sourceUri] Overrides the url to use for resolving relative links.
+                 * @returns {Promise.<CzmlDataSource>} A promise that resolves to the new instance once the data is processed.
+                 */
+            static load(czml, options) {
+                return new CzmlDataSource().load(czml, options);
+            }
+            static _processCzml(czml, entityCollection, sourceUri, updaterFunctions, dataSource) {
+                updaterFunctions = defined(updaterFunctions) ? updaterFunctions : CzmlDataSource.updaters;
+                if (isArray(czml)) {
+                    for (var i = 0, len = czml.length; i < len; i++) {
+                        processCzmlPacket(czml[i], entityCollection, updaterFunctions, sourceUri, dataSource);
+                    }
+                }
+                else {
+                    processCzmlPacket(czml, entityCollection, updaterFunctions, sourceUri, dataSource);
+                }
+            }
+        }
 
-    /**
-     * Creates a Promise to a new instance loaded with the provided CZML data.
-     *
-     * @param {Resource|String|Object} czml A url or CZML object to be processed.
-     * @param {Object} [options] An object with the following properties:
-     * @param {Resource|String} [options.sourceUri] Overrides the url to use for resolving relative links.
-     * @returns {Promise.<CzmlDataSource>} A promise that resolves to the new instance once the data is processed.
-     */
-    CzmlDataSource.load = function(czml, options) {
-        return new CzmlDataSource().load(czml, options);
-    };
 
     defineProperties(CzmlDataSource.prototype, {
         /**
@@ -2203,29 +2240,7 @@ define([
         processOrientation, //
         processAvailability];
 
-    /**
-     * Processes the provided url or CZML object without clearing any existing data.
-     *
-     * @param {Resource|String|Object} czml A url or CZML object to be processed.
-     * @param {Object} [options] An object with the following properties:
-     * @param {String} [options.sourceUri] Overrides the url to use for resolving relative links.
-     * @returns {Promise.<CzmlDataSource>} A promise that resolves to this instances once the data is processed.
-     */
-    CzmlDataSource.prototype.process = function(czml, options) {
-        return load(this, czml, options, false);
-    };
 
-    /**
-     * Loads the provided url or CZML object, replacing any existing data.
-     *
-     * @param {Resource|String|Object} czml A url or CZML object to be processed.
-     * @param {Object} [options] An object with the following properties:
-     * @param {String} [options.sourceUri] Overrides the url to use for resolving relative links.
-     * @returns {Promise.<CzmlDataSource>} A promise that resolves to this instances once the data is processed.
-     */
-    CzmlDataSource.prototype.load = function(czml, options) {
-        return load(this, czml, options, true);
-    };
 
     /**
      * A helper function used by custom CZML updater functions
@@ -2270,17 +2285,6 @@ define([
      */
     CzmlDataSource.processMaterialPacketData = processMaterialPacketData;
 
-    CzmlDataSource._processCzml = function(czml, entityCollection, sourceUri, updaterFunctions, dataSource) {
-        updaterFunctions = defined(updaterFunctions) ? updaterFunctions : CzmlDataSource.updaters;
-
-        if (isArray(czml)) {
-            for (var i = 0, len = czml.length; i < len; i++) {
-                processCzmlPacket(czml[i], entityCollection, updaterFunctions, sourceUri, dataSource);
-            }
-        } else {
-            processCzmlPacket(czml, entityCollection, updaterFunctions, sourceUri, dataSource);
-        }
-    };
 
     return CzmlDataSource;
 });

@@ -51,12 +51,14 @@ define([
     var subSampleCompositePropertyScratch = new TimeInterval();
     var subSampleIntervalPropertyScratch = new TimeInterval();
 
-    function EntityData(entity) {
-        this.entity = entity;
-        this.polyline = undefined;
-        this.index = undefined;
-        this.updater = undefined;
-    }
+        class EntityData {
+            constructor(entity) {
+                this.entity = entity;
+                this.polyline = undefined;
+                this.index = undefined;
+                this.updater = undefined;
+            }
+        }
 
     function subSampleSampledProperty(property, start, stop, times, updateTime, referenceFrame, maximumStep, startingIndex, result) {
         var r = startingIndex;
@@ -260,279 +262,257 @@ define([
     }
 
     var toFixedScratch = new Matrix3();
-    function PolylineUpdater(scene, referenceFrame) {
-        this._unusedIndexes = [];
-        this._polylineCollection = new PolylineCollection();
-        this._scene = scene;
-        this._referenceFrame = referenceFrame;
-        scene.primitives.add(this._polylineCollection);
-    }
-
-    PolylineUpdater.prototype.update = function(time) {
-        if (this._referenceFrame === ReferenceFrame.INERTIAL) {
-            var toFixed = Transforms.computeIcrfToFixedMatrix(time, toFixedScratch);
-            if (!defined(toFixed)) {
-                toFixed = Transforms.computeTemeToPseudoFixedMatrix(time, toFixedScratch);
+        class PolylineUpdater {
+            constructor(scene, referenceFrame) {
+                this._unusedIndexes = [];
+                this._polylineCollection = new PolylineCollection();
+                this._scene = scene;
+                this._referenceFrame = referenceFrame;
+                scene.primitives.add(this._polylineCollection);
             }
-            Matrix4.fromRotationTranslation(toFixed, Cartesian3.ZERO, this._polylineCollection.modelMatrix);
-        }
-    };
-
-    PolylineUpdater.prototype.updateObject = function(time, item) {
-        var entity = item.entity;
-        var pathGraphics = entity._path;
-        var positionProperty = entity._position;
-
-        var sampleStart;
-        var sampleStop;
-        var showProperty = pathGraphics._show;
-        var polyline = item.polyline;
-        var show = entity.isShowing && (!defined(showProperty) || showProperty.getValue(time));
-
-        //While we want to show the path, there may not actually be anything to show
-        //depending on lead/trail settings.  Compute the interval of the path to
-        //show and check against actual availability.
-        if (show) {
-            var leadTime = Property.getValueOrUndefined(pathGraphics._leadTime, time);
-            var trailTime = Property.getValueOrUndefined(pathGraphics._trailTime, time);
-            var availability = entity._availability;
-            var hasAvailability = defined(availability);
-            var hasLeadTime = defined(leadTime);
-            var hasTrailTime = defined(trailTime);
-
-            //Objects need to have either defined availability or both a lead and trail time in order to
-            //draw a path (since we can't draw "infinite" paths.
-            show = hasAvailability || (hasLeadTime && hasTrailTime);
-
-            //The final step is to compute the actual start/stop times of the path to show.
-            //If current time is outside of the availability interval, there's a chance that
-            //we won't have to draw anything anyway.
-            if (show) {
-                if (hasTrailTime) {
-                    sampleStart = JulianDate.addSeconds(time, -trailTime, new JulianDate());
-                }
-                if (hasLeadTime) {
-                    sampleStop = JulianDate.addSeconds(time, leadTime, new JulianDate());
-                }
-
-                if (hasAvailability) {
-                    var start = availability.start;
-                    var stop = availability.stop;
-
-                    if (!hasTrailTime || JulianDate.greaterThan(start, sampleStart)) {
-                        sampleStart = start;
+            update(time) {
+                if (this._referenceFrame === ReferenceFrame.INERTIAL) {
+                    var toFixed = Transforms.computeIcrfToFixedMatrix(time, toFixedScratch);
+                    if (!defined(toFixed)) {
+                        toFixed = Transforms.computeTemeToPseudoFixedMatrix(time, toFixedScratch);
                     }
-
-                    if (!hasLeadTime || JulianDate.lessThan(stop, sampleStop)) {
-                        sampleStop = stop;
+                    Matrix4.fromRotationTranslation(toFixed, Cartesian3.ZERO, this._polylineCollection.modelMatrix);
+                }
+            }
+            updateObject(time, item) {
+                var entity = item.entity;
+                var pathGraphics = entity._path;
+                var positionProperty = entity._position;
+                var sampleStart;
+                var sampleStop;
+                var showProperty = pathGraphics._show;
+                var polyline = item.polyline;
+                var show = entity.isShowing && (!defined(showProperty) || showProperty.getValue(time));
+                //While we want to show the path, there may not actually be anything to show
+                //depending on lead/trail settings.  Compute the interval of the path to
+                //show and check against actual availability.
+                if (show) {
+                    var leadTime = Property.getValueOrUndefined(pathGraphics._leadTime, time);
+                    var trailTime = Property.getValueOrUndefined(pathGraphics._trailTime, time);
+                    var availability = entity._availability;
+                    var hasAvailability = defined(availability);
+                    var hasLeadTime = defined(leadTime);
+                    var hasTrailTime = defined(trailTime);
+                    //Objects need to have either defined availability or both a lead and trail time in order to
+                    //draw a path (since we can't draw "infinite" paths.
+                    show = hasAvailability || (hasLeadTime && hasTrailTime);
+                    //The final step is to compute the actual start/stop times of the path to show.
+                    //If current time is outside of the availability interval, there's a chance that
+                    //we won't have to draw anything anyway.
+                    if (show) {
+                        if (hasTrailTime) {
+                            sampleStart = JulianDate.addSeconds(time, -trailTime, new JulianDate());
+                        }
+                        if (hasLeadTime) {
+                            sampleStop = JulianDate.addSeconds(time, leadTime, new JulianDate());
+                        }
+                        if (hasAvailability) {
+                            var start = availability.start;
+                            var stop = availability.stop;
+                            if (!hasTrailTime || JulianDate.greaterThan(start, sampleStart)) {
+                                sampleStart = start;
+                            }
+                            if (!hasLeadTime || JulianDate.lessThan(stop, sampleStop)) {
+                                sampleStop = stop;
+                            }
+                        }
+                        show = JulianDate.lessThan(sampleStart, sampleStop);
                     }
                 }
-                show = JulianDate.lessThan(sampleStart, sampleStop);
-            }
-        }
-
-        if (!show) {
-            //don't bother creating or updating anything else
-            if (defined(polyline)) {
-                this._unusedIndexes.push(item.index);
-                item.polyline = undefined;
-                polyline.show = false;
-                item.index = undefined;
-            }
-            return;
-        }
-
-        if (!defined(polyline)) {
-            var unusedIndexes = this._unusedIndexes;
-            var length = unusedIndexes.length;
-            if (length > 0) {
-                var index = unusedIndexes.pop();
-                polyline = this._polylineCollection.get(index);
-                item.index = index;
-            } else {
-                item.index = this._polylineCollection.length;
-                polyline = this._polylineCollection.add();
-            }
-            polyline.id = entity;
-            item.polyline = polyline;
-        }
-
-        var resolution = Property.getValueOrDefault(pathGraphics._resolution, time, defaultResolution);
-
-        polyline.show = true;
-        polyline.positions = subSample(positionProperty, sampleStart, sampleStop, time, this._referenceFrame, resolution, polyline.positions.slice());
-        polyline.material = MaterialProperty.getValue(time, pathGraphics._material, polyline.material);
-        polyline.width = Property.getValueOrDefault(pathGraphics._width, time, defaultWidth);
-        polyline.distanceDisplayCondition = Property.getValueOrUndefined(pathGraphics._distanceDisplayCondition, time, polyline.distanceDisplayCondition);
-    };
-
-    PolylineUpdater.prototype.removeObject = function(item) {
-        var polyline = item.polyline;
-        if (defined(polyline)) {
-            this._unusedIndexes.push(item.index);
-            item.polyline = undefined;
-            polyline.show = false;
-            polyline.id = undefined;
-            item.index = undefined;
-        }
-    };
-
-    PolylineUpdater.prototype.destroy = function() {
-        this._scene.primitives.remove(this._polylineCollection);
-        return destroyObject(this);
-    };
-
-    /**
-     * A {@link Visualizer} which maps {@link Entity#path} to a {@link Polyline}.
-     * @alias PathVisualizer
-     * @constructor
-     *
-     * @param {Scene} scene The scene the primitives will be rendered in.
-     * @param {EntityCollection} entityCollection The entityCollection to visualize.
-     */
-    function PathVisualizer(scene, entityCollection) {
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(scene)) {
-            throw new DeveloperError('scene is required.');
-        }
-        if (!defined(entityCollection)) {
-            throw new DeveloperError('entityCollection is required.');
-        }
-        //>>includeEnd('debug');
-
-        entityCollection.collectionChanged.addEventListener(PathVisualizer.prototype._onCollectionChanged, this);
-
-        this._scene = scene;
-        this._updaters = {};
-        this._entityCollection = entityCollection;
-        this._items = new AssociativeArray();
-
-        this._onCollectionChanged(entityCollection, entityCollection.values, [], []);
-    }
-
-    /**
-     * Updates all of the primitives created by this visualizer to match their
-     * Entity counterpart at the given time.
-     *
-     * @param {JulianDate} time The time to update to.
-     * @returns {Boolean} This function always returns true.
-     */
-    PathVisualizer.prototype.update = function(time) {
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(time)) {
-            throw new DeveloperError('time is required.');
-        }
-        //>>includeEnd('debug');
-
-        var updaters = this._updaters;
-        for ( var key in updaters) {
-            if (updaters.hasOwnProperty(key)) {
-                updaters[key].update(time);
-            }
-        }
-
-        var items = this._items.values;
-        for (var i = 0, len = items.length; i < len; i++) {
-            var item = items[i];
-            var entity = item.entity;
-            var positionProperty = entity._position;
-
-            var lastUpdater = item.updater;
-
-            var frameToVisualize = ReferenceFrame.FIXED;
-            if (this._scene.mode === SceneMode.SCENE3D) {
-                frameToVisualize = positionProperty.referenceFrame;
-            }
-
-            var currentUpdater = this._updaters[frameToVisualize];
-
-            if ((lastUpdater === currentUpdater) && (defined(currentUpdater))) {
-                currentUpdater.updateObject(time, item);
-                continue;
-            }
-
-            if (defined(lastUpdater)) {
-                lastUpdater.removeObject(item);
-            }
-
-            if (!defined(currentUpdater)) {
-                currentUpdater = new PolylineUpdater(this._scene, frameToVisualize);
-                currentUpdater.update(time);
-                this._updaters[frameToVisualize] = currentUpdater;
-            }
-
-            item.updater = currentUpdater;
-            if (defined(currentUpdater)) {
-                currentUpdater.updateObject(time, item);
-            }
-        }
-        return true;
-    };
-
-    /**
-     * Returns true if this object was destroyed; otherwise, false.
-     *
-     * @returns {Boolean} True if this object was destroyed; otherwise, false.
-     */
-    PathVisualizer.prototype.isDestroyed = function() {
-        return false;
-    };
-
-    /**
-     * Removes and destroys all primitives created by this instance.
-     */
-    PathVisualizer.prototype.destroy = function() {
-        this._entityCollection.collectionChanged.removeEventListener(PathVisualizer.prototype._onCollectionChanged, this);
-
-        var updaters = this._updaters;
-        for ( var key in updaters) {
-            if (updaters.hasOwnProperty(key)) {
-                updaters[key].destroy();
-            }
-        }
-
-        return destroyObject(this);
-    };
-
-    PathVisualizer.prototype._onCollectionChanged = function(entityCollection, added, removed, changed) {
-        var i;
-        var entity;
-        var item;
-        var items = this._items;
-
-        for (i = added.length - 1; i > -1; i--) {
-            entity = added[i];
-            if (defined(entity._path) && defined(entity._position)) {
-                items.set(entity.id, new EntityData(entity));
-            }
-        }
-
-        for (i = changed.length - 1; i > -1; i--) {
-            entity = changed[i];
-            if (defined(entity._path) && defined(entity._position)) {
-                if (!items.contains(entity.id)) {
-                    items.set(entity.id, new EntityData(entity));
+                if (!show) {
+                    //don't bother creating or updating anything else
+                    if (defined(polyline)) {
+                        this._unusedIndexes.push(item.index);
+                        item.polyline = undefined;
+                        polyline.show = false;
+                        item.index = undefined;
+                    }
+                    return;
                 }
-            } else {
-                item = items.get(entity.id);
-                if (defined(item)) {
-                    item.updater.removeObject(item);
-                    items.remove(entity.id);
+                if (!defined(polyline)) {
+                    var unusedIndexes = this._unusedIndexes;
+                    var length = unusedIndexes.length;
+                    if (length > 0) {
+                        var index = unusedIndexes.pop();
+                        polyline = this._polylineCollection.get(index);
+                        item.index = index;
+                    }
+                    else {
+                        item.index = this._polylineCollection.length;
+                        polyline = this._polylineCollection.add();
+                    }
+                    polyline.id = entity;
+                    item.polyline = polyline;
+                }
+                var resolution = Property.getValueOrDefault(pathGraphics._resolution, time, defaultResolution);
+                polyline.show = true;
+                polyline.positions = subSample(positionProperty, sampleStart, sampleStop, time, this._referenceFrame, resolution, polyline.positions.slice());
+                polyline.material = MaterialProperty.getValue(time, pathGraphics._material, polyline.material);
+                polyline.width = Property.getValueOrDefault(pathGraphics._width, time, defaultWidth);
+                polyline.distanceDisplayCondition = Property.getValueOrUndefined(pathGraphics._distanceDisplayCondition, time, polyline.distanceDisplayCondition);
+            }
+            removeObject(item) {
+                var polyline = item.polyline;
+                if (defined(polyline)) {
+                    this._unusedIndexes.push(item.index);
+                    item.polyline = undefined;
+                    polyline.show = false;
+                    polyline.id = undefined;
+                    item.index = undefined;
+                }
+            }
+            destroy() {
+                this._scene.primitives.remove(this._polylineCollection);
+                return destroyObject(this);
+            }
+        }
+
+
+
+
+
+        /**
+             * A {@link Visualizer} which maps {@link Entity#path} to a {@link Polyline}.
+             * @alias PathVisualizer
+             * @constructor
+             *
+             * @param {Scene} scene The scene the primitives will be rendered in.
+             * @param {EntityCollection} entityCollection The entityCollection to visualize.
+             */
+        class PathVisualizer {
+            constructor(scene, entityCollection) {
+                //>>includeStart('debug', pragmas.debug);
+                if (!defined(scene)) {
+                    throw new DeveloperError('scene is required.');
+                }
+                if (!defined(entityCollection)) {
+                    throw new DeveloperError('entityCollection is required.');
+                }
+                //>>includeEnd('debug');
+                entityCollection.collectionChanged.addEventListener(PathVisualizer.prototype._onCollectionChanged, this);
+                this._scene = scene;
+                this._updaters = {};
+                this._entityCollection = entityCollection;
+                this._items = new AssociativeArray();
+                this._onCollectionChanged(entityCollection, entityCollection.values, [], []);
+            }
+            /**
+                 * Updates all of the primitives created by this visualizer to match their
+                 * Entity counterpart at the given time.
+                 *
+                 * @param {JulianDate} time The time to update to.
+                 * @returns {Boolean} This function always returns true.
+                 */
+            update(time) {
+                //>>includeStart('debug', pragmas.debug);
+                if (!defined(time)) {
+                    throw new DeveloperError('time is required.');
+                }
+                //>>includeEnd('debug');
+                var updaters = this._updaters;
+                for (var key in updaters) {
+                    if (updaters.hasOwnProperty(key)) {
+                        updaters[key].update(time);
+                    }
+                }
+                var items = this._items.values;
+                for (var i = 0, len = items.length; i < len; i++) {
+                    var item = items[i];
+                    var entity = item.entity;
+                    var positionProperty = entity._position;
+                    var lastUpdater = item.updater;
+                    var frameToVisualize = ReferenceFrame.FIXED;
+                    if (this._scene.mode === SceneMode.SCENE3D) {
+                        frameToVisualize = positionProperty.referenceFrame;
+                    }
+                    var currentUpdater = this._updaters[frameToVisualize];
+                    if ((lastUpdater === currentUpdater) && (defined(currentUpdater))) {
+                        currentUpdater.updateObject(time, item);
+                        continue;
+                    }
+                    if (defined(lastUpdater)) {
+                        lastUpdater.removeObject(item);
+                    }
+                    if (!defined(currentUpdater)) {
+                        currentUpdater = new PolylineUpdater(this._scene, frameToVisualize);
+                        currentUpdater.update(time);
+                        this._updaters[frameToVisualize] = currentUpdater;
+                    }
+                    item.updater = currentUpdater;
+                    if (defined(currentUpdater)) {
+                        currentUpdater.updateObject(time, item);
+                    }
+                }
+                return true;
+            }
+            /**
+                 * Returns true if this object was destroyed; otherwise, false.
+                 *
+                 * @returns {Boolean} True if this object was destroyed; otherwise, false.
+                 */
+            isDestroyed() {
+                return false;
+            }
+            /**
+                 * Removes and destroys all primitives created by this instance.
+                 */
+            destroy() {
+                this._entityCollection.collectionChanged.removeEventListener(PathVisualizer.prototype._onCollectionChanged, this);
+                var updaters = this._updaters;
+                for (var key in updaters) {
+                    if (updaters.hasOwnProperty(key)) {
+                        updaters[key].destroy();
+                    }
+                }
+                return destroyObject(this);
+            }
+            _onCollectionChanged(entityCollection, added, removed, changed) {
+                var i;
+                var entity;
+                var item;
+                var items = this._items;
+                for (i = added.length - 1; i > -1; i--) {
+                    entity = added[i];
+                    if (defined(entity._path) && defined(entity._position)) {
+                        items.set(entity.id, new EntityData(entity));
+                    }
+                }
+                for (i = changed.length - 1; i > -1; i--) {
+                    entity = changed[i];
+                    if (defined(entity._path) && defined(entity._position)) {
+                        if (!items.contains(entity.id)) {
+                            items.set(entity.id, new EntityData(entity));
+                        }
+                    }
+                    else {
+                        item = items.get(entity.id);
+                        if (defined(item)) {
+                            item.updater.removeObject(item);
+                            items.remove(entity.id);
+                        }
+                    }
+                }
+                for (i = removed.length - 1; i > -1; i--) {
+                    entity = removed[i];
+                    item = items.get(entity.id);
+                    if (defined(item)) {
+                        if (defined(item.updater)) {
+                            item.updater.removeObject(item);
+                        }
+                        items.remove(entity.id);
+                    }
                 }
             }
         }
 
-        for (i = removed.length - 1; i > -1; i--) {
-            entity = removed[i];
-            item = items.get(entity.id);
-            if (defined(item)) {
-                if (defined(item.updater)) {
-                    item.updater.removeObject(item);
-                }
-                items.remove(entity.id);
-            }
-        }
-    };
+
+
+
 
     //for testing
     PathVisualizer._subSample = subSample;

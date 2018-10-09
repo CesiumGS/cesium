@@ -18,40 +18,131 @@ define([
         RequestType) {
     'use strict';
 
-    /**
-     * Provides functionality for ImageryProviders that have time dynamic imagery
-     *
-     * @alias TimeDynamicImagery
-     * @constructor
-     *
-     * @param {Object} options Object with the following properties:
-     * @param {Clock} options.clock A Clock instance that is used when determining the value for the time dimension. Required when <code>options.times</code> is specified.
-     * @param {TimeIntervalCollection} options.times TimeIntervalCollection with its <code>data</code> property being an object containing time dynamic dimension and their values.
-     * @param {Function} options.requestImageFunction A function that will request imagery tiles.
-     * @param {Function} options.reloadFunction A function that will be called when all imagery tiles need to be reloaded.
-     */
-    function TimeDynamicImagery(options) {
-        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-
-        //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.object('options.clock', options.clock);
-        Check.typeOf.object('options.times', options.times);
-        Check.typeOf.func('options.requestImageFunction', options.requestImageFunction);
-        Check.typeOf.func('options.reloadFunction', options.reloadFunction);
-        //>>includeEnd('debug');
-
-        this._tileCache = {};
-        this._tilesRequestedForInterval = [];
-
-        var clock = this._clock = options.clock;
-        this._times = options.times;
-        this._requestImageFunction = options.requestImageFunction;
-        this._reloadFunction = options.reloadFunction;
-        this._currentIntervalIndex = -1;
-
-        clock.onTick.addEventListener(this._clockOnTick, this);
-        this._clockOnTick(clock);
-    }
+        /**
+             * Provides functionality for ImageryProviders that have time dynamic imagery
+             *
+             * @alias TimeDynamicImagery
+             * @constructor
+             *
+             * @param {Object} options Object with the following properties:
+             * @param {Clock} options.clock A Clock instance that is used when determining the value for the time dimension. Required when <code>options.times</code> is specified.
+             * @param {TimeIntervalCollection} options.times TimeIntervalCollection with its <code>data</code> property being an object containing time dynamic dimension and their values.
+             * @param {Function} options.requestImageFunction A function that will request imagery tiles.
+             * @param {Function} options.reloadFunction A function that will be called when all imagery tiles need to be reloaded.
+             */
+        class TimeDynamicImagery {
+            constructor(options) {
+                options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+                //>>includeStart('debug', pragmas.debug);
+                Check.typeOf.object('options.clock', options.clock);
+                Check.typeOf.object('options.times', options.times);
+                Check.typeOf.func('options.requestImageFunction', options.requestImageFunction);
+                Check.typeOf.func('options.reloadFunction', options.reloadFunction);
+                //>>includeEnd('debug');
+                this._tileCache = {};
+                this._tilesRequestedForInterval = [];
+                var clock = this._clock = options.clock;
+                this._times = options.times;
+                this._requestImageFunction = options.requestImageFunction;
+                this._reloadFunction = options.reloadFunction;
+                this._currentIntervalIndex = -1;
+                clock.onTick.addEventListener(this._clockOnTick, this);
+                this._clockOnTick(clock);
+            }
+            /**
+                 * Gets the tile from the cache if its available.
+                 *
+                 * @param {Number} x The tile X coordinate.
+                 * @param {Number} y The tile Y coordinate.
+                 * @param {Number} level The tile level.
+                 * @param {Request} [request] The request object. Intended for internal use only.
+                 *
+                 * @returns {Promise.<Image>|undefined} A promise for the image that will resolve when the image is available, or
+                 *          undefined if the tile is not in the cache.
+                 */
+            getFromCache(x, y, level, request) {
+                var key = getKey(x, y, level);
+                var result;
+                var cache = this._tileCache[this._currentIntervalIndex];
+                if (defined(cache) && defined(cache[key])) {
+                    var item = cache[key];
+                    result = item.promise
+                        .otherwise(function(e) {
+                            // Set the correct state in case it was cancelled
+                            request.state = item.request.state;
+                            throw e;
+                        });
+                    delete cache[key];
+                }
+                return result;
+            }
+            /**
+                 * Checks if the next interval is approaching and will start preload the tile if necessary. Otherwise it will
+                 * just add the tile to a list to preload when we approach the next interval.
+                 *
+                 * @param {Number} x The tile X coordinate.
+                 * @param {Number} y The tile Y coordinate.
+                 * @param {Number} level The tile level.
+                 * @param {Request} [request] The request object. Intended for internal use only.
+                 */
+            checkApproachingInterval(x, y, level, request) {
+                var key = getKey(x, y, level);
+                var tilesRequestedForInterval = this._tilesRequestedForInterval;
+                // If we are approaching an interval, preload this tile in the next interval
+                var approachingInterval = getApproachingInterval(this);
+                var tile = {
+                    key: key,
+                    // Determines priority based on camera distance to the tile.
+                    // Since the imagery regardless of time will be attached to the same tile we can just steal it.
+                    priorityFunction: request.priorityFunction
+                };
+                if (!defined(approachingInterval) || !addToCache(this, tile, approachingInterval)) {
+                    // Add to recent request list if we aren't approaching and interval or the request was throttled
+                    tilesRequestedForInterval.push(tile);
+                }
+                // Don't let the tile list get out of hand
+                if (tilesRequestedForInterval.length >= 512) {
+                    tilesRequestedForInterval.splice(0, 256);
+                }
+            }
+            _clockOnTick(clock) {
+                var time = clock.currentTime;
+                var times = this._times;
+                var index = times.indexOf(time);
+                var currentIntervalIndex = this._currentIntervalIndex;
+                if (index !== currentIntervalIndex) {
+                    // Cancel all outstanding requests and clear out caches not from current time interval
+                    var currentCache = this._tileCache[currentIntervalIndex];
+                    for (var t in currentCache) {
+                        if (currentCache.hasOwnProperty(t)) {
+                            currentCache[t].request.cancel();
+                        }
+                    }
+                    delete this._tileCache[currentIntervalIndex];
+                    this._tilesRequestedForInterval = [];
+                    this._currentIntervalIndex = index;
+                    this._reloadFunction();
+                    return;
+                }
+                var approachingInterval = getApproachingInterval(this);
+                if (defined(approachingInterval)) {
+                    // Start loading recent tiles from end of this._tilesRequestedForInterval
+                    //  We keep preloading until we hit a throttling limit.
+                    var tilesRequested = this._tilesRequestedForInterval;
+                    var success = true;
+                    while (success) {
+                        if (tilesRequested.length === 0) {
+                            break;
+                        }
+                        var tile = tilesRequested.pop();
+                        success = addToCache(this, tile, approachingInterval);
+                        if (!success) {
+                            tilesRequested.push(tile);
+                        }
+                    }
+                }
+            }
+        }
 
     defineProperties(TimeDynamicImagery.prototype, {
         /**
@@ -112,109 +203,8 @@ define([
         }
     });
 
-    /**
-     * Gets the tile from the cache if its available.
-     *
-     * @param {Number} x The tile X coordinate.
-     * @param {Number} y The tile Y coordinate.
-     * @param {Number} level The tile level.
-     * @param {Request} [request] The request object. Intended for internal use only.
-     *
-     * @returns {Promise.<Image>|undefined} A promise for the image that will resolve when the image is available, or
-     *          undefined if the tile is not in the cache.
-     */
-    TimeDynamicImagery.prototype.getFromCache = function(x, y, level, request) {
-        var key = getKey(x, y, level);
-        var result;
-        var cache = this._tileCache[this._currentIntervalIndex];
-        if (defined(cache) && defined(cache[key])) {
-            var item = cache[key];
-            result = item.promise
-                .otherwise(function(e) {
-                    // Set the correct state in case it was cancelled
-                    request.state = item.request.state;
-                    throw e;
-                });
-            delete cache[key];
-        }
 
-        return result;
-    };
 
-    /**
-     * Checks if the next interval is approaching and will start preload the tile if necessary. Otherwise it will
-     * just add the tile to a list to preload when we approach the next interval.
-     *
-     * @param {Number} x The tile X coordinate.
-     * @param {Number} y The tile Y coordinate.
-     * @param {Number} level The tile level.
-     * @param {Request} [request] The request object. Intended for internal use only.
-     */
-    TimeDynamicImagery.prototype.checkApproachingInterval = function(x, y, level, request) {
-        var key = getKey(x, y, level);
-        var tilesRequestedForInterval = this._tilesRequestedForInterval;
-
-        // If we are approaching an interval, preload this tile in the next interval
-        var approachingInterval = getApproachingInterval(this);
-        var tile = {
-            key : key,
-            // Determines priority based on camera distance to the tile.
-            // Since the imagery regardless of time will be attached to the same tile we can just steal it.
-            priorityFunction : request.priorityFunction
-        };
-        if (!defined(approachingInterval) || !addToCache(this, tile, approachingInterval)) {
-            // Add to recent request list if we aren't approaching and interval or the request was throttled
-            tilesRequestedForInterval.push(tile);
-        }
-
-        // Don't let the tile list get out of hand
-        if (tilesRequestedForInterval.length >= 512) {
-            tilesRequestedForInterval.splice(0, 256);
-        }
-    };
-
-    TimeDynamicImagery.prototype._clockOnTick = function(clock) {
-        var time = clock.currentTime;
-        var times = this._times;
-        var index = times.indexOf(time);
-        var currentIntervalIndex = this._currentIntervalIndex;
-
-        if (index !== currentIntervalIndex) {
-            // Cancel all outstanding requests and clear out caches not from current time interval
-            var currentCache = this._tileCache[currentIntervalIndex];
-            for (var t in currentCache) {
-                if (currentCache.hasOwnProperty(t)) {
-                    currentCache[t].request.cancel();
-                }
-            }
-            delete this._tileCache[currentIntervalIndex];
-            this._tilesRequestedForInterval = [];
-
-            this._currentIntervalIndex = index;
-            this._reloadFunction();
-
-            return;
-        }
-
-        var approachingInterval = getApproachingInterval(this);
-        if (defined(approachingInterval)) {
-            // Start loading recent tiles from end of this._tilesRequestedForInterval
-            //  We keep preloading until we hit a throttling limit.
-            var tilesRequested = this._tilesRequestedForInterval;
-            var success = true;
-            while (success) {
-                if (tilesRequested.length === 0) {
-                    break;
-                }
-
-                var tile = tilesRequested.pop();
-                success = addToCache(this, tile, approachingInterval);
-                if (!success) {
-                    tilesRequested.push(tile);
-                }
-            }
-        }
-    };
 
     function getKey(x, y, level) {
         return x + '-' + y + '-' + level;

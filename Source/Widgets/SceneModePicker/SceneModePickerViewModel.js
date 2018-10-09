@@ -20,106 +20,104 @@ define([
         createCommand) {
     'use strict';
 
-    /**
-     * The view model for {@link SceneModePicker}.
-     * @alias SceneModePickerViewModel
-     * @constructor
-     *
-     * @param {Scene} scene The Scene to morph
-     * @param {Number} [duration=2.0] The duration of scene morph animations, in seconds
-     */
-    function SceneModePickerViewModel(scene, duration) {
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(scene)) {
-            throw new DeveloperError('scene is required.');
+        /**
+             * The view model for {@link SceneModePicker}.
+             * @alias SceneModePickerViewModel
+             * @constructor
+             *
+             * @param {Scene} scene The Scene to morph
+             * @param {Number} [duration=2.0] The duration of scene morph animations, in seconds
+             */
+        class SceneModePickerViewModel {
+            constructor(scene, duration) {
+                //>>includeStart('debug', pragmas.debug);
+                if (!defined(scene)) {
+                    throw new DeveloperError('scene is required.');
+                }
+                //>>includeEnd('debug');
+                this._scene = scene;
+                var that = this;
+                var morphStart = function(transitioner, oldMode, newMode, isMorphing) {
+                    that.sceneMode = newMode;
+                    that.dropDownVisible = false;
+                };
+                this._eventHelper = new EventHelper();
+                this._eventHelper.add(scene.morphStart, morphStart);
+                this._duration = defaultValue(duration, 2.0);
+                /**
+                 * Gets or sets the current SceneMode.  This property is observable.
+                 * @type {SceneMode}
+                */
+                this.sceneMode = scene.mode;
+                /**
+                 * Gets or sets whether the button drop-down is currently visible.  This property is observable.
+                 * @type {Boolean}
+                 * @default false
+                */
+                this.dropDownVisible = false;
+                /**
+                 * Gets or sets the 2D tooltip.  This property is observable.
+                 * @type {String}
+                 * @default '2D'
+                */
+                this.tooltip2D = '2D';
+                /**
+                 * Gets or sets the 3D tooltip.  This property is observable.
+                 * @type {String}
+                 * @default '3D'
+                */
+                this.tooltip3D = '3D';
+                /**
+                 * Gets or sets the Columbus View tooltip.  This property is observable.
+                 * @type {String}
+                 * @default 'Columbus View'
+                */
+                this.tooltipColumbusView = 'Columbus View';
+                knockout.track(this, ['sceneMode', 'dropDownVisible', 'tooltip2D', 'tooltip3D', 'tooltipColumbusView']);
+                /**
+                 * Gets the currently active tooltip.  This property is observable.
+                 * @type {String}
+                 */
+                this.selectedTooltip = undefined;
+                knockout.defineProperty(this, 'selectedTooltip', function() {
+                    var mode = that.sceneMode;
+                    if (mode === SceneMode.SCENE2D) {
+                        return that.tooltip2D;
+                    }
+                    if (mode === SceneMode.SCENE3D) {
+                        return that.tooltip3D;
+                    }
+                    return that.tooltipColumbusView;
+                });
+                this._toggleDropDown = createCommand(function() {
+                    that.dropDownVisible = !that.dropDownVisible;
+                });
+                this._morphTo2D = createCommand(function() {
+                    scene.morphTo2D(that._duration);
+                });
+                this._morphTo3D = createCommand(function() {
+                    scene.morphTo3D(that._duration);
+                });
+                this._morphToColumbusView = createCommand(function() {
+                    scene.morphToColumbusView(that._duration);
+                });
+                //Used by knockout
+                this._sceneMode = SceneMode;
+            }
+            /**
+                 * @returns {Boolean} true if the object has been destroyed, false otherwise.
+                 */
+            isDestroyed() {
+                return false;
+            }
+            /**
+                 * Destroys the view model.
+                 */
+            destroy() {
+                this._eventHelper.removeAll();
+                destroyObject(this);
+            }
         }
-        //>>includeEnd('debug');
-
-        this._scene = scene;
-
-        var that = this;
-
-        var morphStart = function(transitioner, oldMode, newMode, isMorphing) {
-            that.sceneMode = newMode;
-            that.dropDownVisible = false;
-        };
-
-        this._eventHelper = new EventHelper();
-        this._eventHelper.add(scene.morphStart, morphStart);
-
-        this._duration = defaultValue(duration, 2.0);
-
-        /**
-         * Gets or sets the current SceneMode.  This property is observable.
-         * @type {SceneMode}
-        */
-        this.sceneMode = scene.mode;
-
-        /**
-         * Gets or sets whether the button drop-down is currently visible.  This property is observable.
-         * @type {Boolean}
-         * @default false
-        */
-        this.dropDownVisible = false;
-
-        /**
-         * Gets or sets the 2D tooltip.  This property is observable.
-         * @type {String}
-         * @default '2D'
-        */
-        this.tooltip2D = '2D';
-
-        /**
-         * Gets or sets the 3D tooltip.  This property is observable.
-         * @type {String}
-         * @default '3D'
-        */
-        this.tooltip3D = '3D';
-
-        /**
-         * Gets or sets the Columbus View tooltip.  This property is observable.
-         * @type {String}
-         * @default 'Columbus View'
-        */
-        this.tooltipColumbusView = 'Columbus View';
-
-        knockout.track(this, ['sceneMode', 'dropDownVisible', 'tooltip2D', 'tooltip3D', 'tooltipColumbusView']);
-
-        /**
-         * Gets the currently active tooltip.  This property is observable.
-         * @type {String}
-         */
-        this.selectedTooltip = undefined;
-        knockout.defineProperty(this, 'selectedTooltip', function() {
-            var mode = that.sceneMode;
-            if (mode === SceneMode.SCENE2D) {
-                return that.tooltip2D;
-            }
-            if (mode === SceneMode.SCENE3D) {
-                return that.tooltip3D;
-            }
-            return that.tooltipColumbusView;
-        });
-
-        this._toggleDropDown = createCommand(function() {
-            that.dropDownVisible = !that.dropDownVisible;
-        });
-
-        this._morphTo2D = createCommand(function() {
-            scene.morphTo2D(that._duration);
-        });
-
-        this._morphTo3D = createCommand(function() {
-            scene.morphTo3D(that._duration);
-        });
-
-        this._morphToColumbusView = createCommand(function() {
-            scene.morphToColumbusView(that._duration);
-        });
-
-        //Used by knockout
-        this._sceneMode = SceneMode;
-    }
 
     defineProperties(SceneModePickerViewModel.prototype, {
         /**
@@ -203,21 +201,7 @@ define([
         }
     });
 
-    /**
-     * @returns {Boolean} true if the object has been destroyed, false otherwise.
-     */
-    SceneModePickerViewModel.prototype.isDestroyed = function() {
-        return false;
-    };
 
-    /**
-     * Destroys the view model.
-     */
-    SceneModePickerViewModel.prototype.destroy = function() {
-        this._eventHelper.removeAll();
-
-        destroyObject(this);
-    };
 
     return SceneModePickerViewModel;
 });

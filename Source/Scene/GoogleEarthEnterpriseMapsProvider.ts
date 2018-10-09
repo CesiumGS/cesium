@@ -34,211 +34,258 @@ define([
         ImageryProvider) {
     'use strict';
 
-    /**
-     * Provides tiled imagery using the Google Earth Imagery API.
-     *
-     * Notes: This imagery provider does not work with the public Google Earth servers. It works with the
-     *        Google Earth Enterprise Server.
-     *
-     *        By default the Google Earth Enterprise server does not set the
-     *        {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing} headers. You can either
-     *        use a proxy server which adds these headers, or in the /opt/google/gehttpd/conf/gehttpd.conf
-     *        and add the 'Header set Access-Control-Allow-Origin "*"' option to the '&lt;Directory /&gt;' and
-     *        '&lt;Directory "/opt/google/gehttpd/htdocs"&gt;' directives.
-     *
-     *        This provider is for use with 2D Maps API as part of Google Earth Enterprise. For 3D Earth API uses, it
-     *        is necessary to use {@link GoogleEarthEnterpriseImageryProvider}
-     *
-     * @alias GoogleEarthEnterpriseMapsProvider
-     * @constructor
-     *
-     * @param {Object} options Object with the following properties:
-     * @param {Resource|String} options.url The url of the Google Earth server hosting the imagery.
-     * @param {Number} options.channel The channel (id) to be used when requesting data from the server.
-     *        The channel number can be found by looking at the json file located at:
-     *        earth.localdomain/default_map/query?request=Json&vars=geeServerDefs The /default_map path may
-     *        differ depending on your Google Earth Enterprise server configuration. Look for the "id" that
-     *        is associated with a "ImageryMaps" requestType. There may be more than one id available.
-     *        Example:
-     *        {
-     *          layers: [
-     *            {
-     *              id: 1002,
-     *              requestType: "ImageryMaps"
-     *            },
-     *            {
-     *              id: 1007,
-     *              requestType: "VectorMapsRaster"
-     *            }
-     *          ]
-     *        }
-     * @param {String} [options.path="/default_map"] The path of the Google Earth server hosting the imagery.
-     * @param {Number} [options.maximumLevel] The maximum level-of-detail supported by the Google Earth
-     *        Enterprise server, or undefined if there is no limit.
-     * @param {TileDiscardPolicy} [options.tileDiscardPolicy] The policy that determines if a tile
-     *        is invalid and should be discarded. To ensure that no tiles are discarded, construct and pass
-     *        a {@link NeverTileDiscardPolicy} for this parameter.
-     * @param {Ellipsoid} [options.ellipsoid] The ellipsoid.  If not specified, the WGS84 ellipsoid is used.
-     *
-     * @exception {RuntimeError} Could not find layer with channel (id) of <code>options.channel</code>.
-     * @exception {RuntimeError} Could not find a version in channel (id) <code>options.channel</code>.
-     * @exception {RuntimeError} Unsupported projection <code>data.projection</code>.
-     *
-     * @see ArcGisMapServerImageryProvider
-     * @see BingMapsImageryProvider
-     * @see createOpenStreetMapImageryProvider
-     * @see SingleTileImageryProvider
-     * @see createTileMapServiceImageryProvider
-     * @see WebMapServiceImageryProvider
-     * @see WebMapTileServiceImageryProvider
-     * @see UrlTemplateImageryProvider
-     *
-     *
-     * @example
-     * var google = new Cesium.GoogleEarthEnterpriseMapsProvider({
-     *     url : 'https://earth.localdomain',
-     *     channel : 1008
-     * });
-     *
-     * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
-     */
-    function GoogleEarthEnterpriseMapsProvider(options) {
-        options = defaultValue(options, {});
-
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(options.url)) {
-            throw new DeveloperError('options.url is required.');
-        }
-        if (!defined(options.channel)) {
-            throw new DeveloperError('options.channel is required.');
-        }
-        //>>includeEnd('debug');
-
-        var url = options.url;
-        var path = defaultValue(options.path, '/default_map');
-
-        var resource = Resource.createIfNeeded(url).getDerivedResource({
-            // We used to just append path to url, so now that we do proper URI resolution, removed the /
-            url : (path[0] === '/') ? path.substring(1) : path
-        });
-
-        resource.appendForwardSlash();
-
-        this._resource = resource;
-        this._url = url;
-        this._path = path;
-        this._tileDiscardPolicy = options.tileDiscardPolicy;
-        this._channel = options.channel;
-        this._requestType = 'ImageryMaps';
-        this._credit = new Credit('<a href="http://www.google.com/enterprise/mapsearth/products/earthenterprise.html"><img src="' + GoogleEarthEnterpriseMapsProvider.logoUrl + '" title="Google Imagery"/></a>');
-
         /**
-         * The default {@link ImageryLayer#gamma} to use for imagery layers created for this provider.
-         * By default, this is set to 1.9.  Changing this value after creating an {@link ImageryLayer} for this provider will have
-         * no effect.  Instead, set the layer's {@link ImageryLayer#gamma} property.
-         *
-         * @type {Number}
-         * @default 1.9
-         */
-        this.defaultGamma = 1.9;
-
-        this._tilingScheme = undefined;
-
-        this._version = undefined;
-
-        this._tileWidth = 256;
-        this._tileHeight = 256;
-        this._maximumLevel = options.maximumLevel;
-
-        this._errorEvent = new Event();
-
-        this._ready = false;
-        this._readyPromise = when.defer();
-
-        var metadataResource = resource.getDerivedResource({
-            url: 'query',
-            queryParameters: {
-                request: 'Json',
-                vars: 'geeServerDefs',
-                is2d: 't'
-            }
-        });
-        var that = this;
-        var metadataError;
-
-        function metadataSuccess(text) {
-            var data;
-
-            // The Google Earth server sends malformed JSON data currently...
-            try {
-                // First, try parsing it like normal in case a future version sends correctly formatted JSON
-                data = JSON.parse(text);
-            } catch (e) {
-                // Quote object strings manually, then try parsing again
-                data = JSON.parse(text.replace(/([\[\{,])[\n\r ]*([A-Za-z0-9]+)[\n\r ]*:/g, '$1"$2":'));
-            }
-
-            var layer;
-            for (var i = 0; i < data.layers.length; i++) {
-                if (data.layers[i].id === that._channel) {
-                    layer = data.layers[i];
-                    break;
+             * Provides tiled imagery using the Google Earth Imagery API.
+             *
+             * Notes: This imagery provider does not work with the public Google Earth servers. It works with the
+             *        Google Earth Enterprise Server.
+             *
+             *        By default the Google Earth Enterprise server does not set the
+             *        {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing} headers. You can either
+             *        use a proxy server which adds these headers, or in the /opt/google/gehttpd/conf/gehttpd.conf
+             *        and add the 'Header set Access-Control-Allow-Origin "*"' option to the '&lt;Directory /&gt;' and
+             *        '&lt;Directory "/opt/google/gehttpd/htdocs"&gt;' directives.
+             *
+             *        This provider is for use with 2D Maps API as part of Google Earth Enterprise. For 3D Earth API uses, it
+             *        is necessary to use {@link GoogleEarthEnterpriseImageryProvider}
+             *
+             * @alias GoogleEarthEnterpriseMapsProvider
+             * @constructor
+             *
+             * @param {Object} options Object with the following properties:
+             * @param {Resource|String} options.url The url of the Google Earth server hosting the imagery.
+             * @param {Number} options.channel The channel (id) to be used when requesting data from the server.
+             *        The channel number can be found by looking at the json file located at:
+             *        earth.localdomain/default_map/query?request=Json&vars=geeServerDefs The /default_map path may
+             *        differ depending on your Google Earth Enterprise server configuration. Look for the "id" that
+             *        is associated with a "ImageryMaps" requestType. There may be more than one id available.
+             *        Example:
+             *        {
+             *          layers: [
+             *            {
+             *              id: 1002,
+             *              requestType: "ImageryMaps"
+             *            },
+             *            {
+             *              id: 1007,
+             *              requestType: "VectorMapsRaster"
+             *            }
+             *          ]
+             *        }
+             * @param {String} [options.path="/default_map"] The path of the Google Earth server hosting the imagery.
+             * @param {Number} [options.maximumLevel] The maximum level-of-detail supported by the Google Earth
+             *        Enterprise server, or undefined if there is no limit.
+             * @param {TileDiscardPolicy} [options.tileDiscardPolicy] The policy that determines if a tile
+             *        is invalid and should be discarded. To ensure that no tiles are discarded, construct and pass
+             *        a {@link NeverTileDiscardPolicy} for this parameter.
+             * @param {Ellipsoid} [options.ellipsoid] The ellipsoid.  If not specified, the WGS84 ellipsoid is used.
+             *
+             * @exception {RuntimeError} Could not find layer with channel (id) of <code>options.channel</code>.
+             * @exception {RuntimeError} Could not find a version in channel (id) <code>options.channel</code>.
+             * @exception {RuntimeError} Unsupported projection <code>data.projection</code>.
+             *
+             * @see ArcGisMapServerImageryProvider
+             * @see BingMapsImageryProvider
+             * @see createOpenStreetMapImageryProvider
+             * @see SingleTileImageryProvider
+             * @see createTileMapServiceImageryProvider
+             * @see WebMapServiceImageryProvider
+             * @see WebMapTileServiceImageryProvider
+             * @see UrlTemplateImageryProvider
+             *
+             *
+             * @example
+             * var google = new Cesium.GoogleEarthEnterpriseMapsProvider({
+             *     url : 'https://earth.localdomain',
+             *     channel : 1008
+             * });
+             *
+             * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
+             */
+        class GoogleEarthEnterpriseMapsProvider {
+            constructor(options) {
+                options = defaultValue(options, {});
+                //>>includeStart('debug', pragmas.debug);
+                if (!defined(options.url)) {
+                    throw new DeveloperError('options.url is required.');
                 }
-            }
-
-            var message;
-
-            if (!defined(layer)) {
-                message = 'Could not find layer with channel (id) of ' + that._channel + '.';
-                metadataError = TileProviderError.handleError(metadataError, that, that._errorEvent, message, undefined, undefined, undefined, requestMetadata);
-                throw new RuntimeError(message);
-            }
-
-            if (!defined(layer.version)) {
-                message = 'Could not find a version in channel (id) ' + that._channel + '.';
-                metadataError = TileProviderError.handleError(metadataError, that, that._errorEvent, message, undefined, undefined, undefined, requestMetadata);
-                throw new RuntimeError(message);
-            }
-            that._version = layer.version;
-
-            if (defined(data.projection) && data.projection === 'flat') {
-                that._tilingScheme = new GeographicTilingScheme({
-                    numberOfLevelZeroTilesX : 2,
-                    numberOfLevelZeroTilesY : 2,
-                    rectangle : new Rectangle(-Math.PI, -Math.PI, Math.PI, Math.PI),
-                    ellipsoid : options.ellipsoid
+                if (!defined(options.channel)) {
+                    throw new DeveloperError('options.channel is required.');
+                }
+                //>>includeEnd('debug');
+                var url = options.url;
+                var path = defaultValue(options.path, '/default_map');
+                var resource = Resource.createIfNeeded(url).getDerivedResource({
+                    // We used to just append path to url, so now that we do proper URI resolution, removed the /
+                    url: (path[0] === '/') ? path.substring(1) : path
                 });
-                // Default to mercator projection when projection is undefined
-            } else if (!defined(data.projection) || data.projection === 'mercator') {
-                that._tilingScheme = new WebMercatorTilingScheme({
-                    numberOfLevelZeroTilesX : 2,
-                    numberOfLevelZeroTilesY : 2,
-                    ellipsoid : options.ellipsoid
+                resource.appendForwardSlash();
+                this._resource = resource;
+                this._url = url;
+                this._path = path;
+                this._tileDiscardPolicy = options.tileDiscardPolicy;
+                this._channel = options.channel;
+                this._requestType = 'ImageryMaps';
+                this._credit = new Credit('<a href="http://www.google.com/enterprise/mapsearth/products/earthenterprise.html"><img src="' + GoogleEarthEnterpriseMapsProvider.logoUrl + '" title="Google Imagery"/></a>');
+                /**
+                 * The default {@link ImageryLayer#gamma} to use for imagery layers created for this provider.
+                 * By default, this is set to 1.9.  Changing this value after creating an {@link ImageryLayer} for this provider will have
+                 * no effect.  Instead, set the layer's {@link ImageryLayer#gamma} property.
+                 *
+                 * @type {Number}
+                 * @default 1.9
+                 */
+                this.defaultGamma = 1.9;
+                this._tilingScheme = undefined;
+                this._version = undefined;
+                this._tileWidth = 256;
+                this._tileHeight = 256;
+                this._maximumLevel = options.maximumLevel;
+                this._errorEvent = new Event();
+                this._ready = false;
+                this._readyPromise = when.defer();
+                var metadataResource = resource.getDerivedResource({
+                    url: 'query',
+                    queryParameters: {
+                        request: 'Json',
+                        vars: 'geeServerDefs',
+                        is2d: 't'
+                    }
                 });
-            } else {
-                message = 'Unsupported projection ' + data.projection + '.';
-                metadataError = TileProviderError.handleError(metadataError, that, that._errorEvent, message, undefined, undefined, undefined, requestMetadata);
-                throw new RuntimeError(message);
+                var that = this;
+                var metadataError;
+                function metadataSuccess(text) {
+                    var data;
+                    // The Google Earth server sends malformed JSON data currently...
+                    try {
+                        // First, try parsing it like normal in case a future version sends correctly formatted JSON
+                        data = JSON.parse(text);
+                    }
+                    catch (e) {
+                        // Quote object strings manually, then try parsing again
+                        data = JSON.parse(text.replace(/([\[\{,])[\n\r ]*([A-Za-z0-9]+)[\n\r ]*:/g, '$1"$2":'));
+                    }
+                    var layer;
+                    for (var i = 0; i < data.layers.length; i++) {
+                        if (data.layers[i].id === that._channel) {
+                            layer = data.layers[i];
+                            break;
+                        }
+                    }
+                    var message;
+                    if (!defined(layer)) {
+                        message = 'Could not find layer with channel (id) of ' + that._channel + '.';
+                        metadataError = TileProviderError.handleError(metadataError, that, that._errorEvent, message, undefined, undefined, undefined, requestMetadata);
+                        throw new RuntimeError(message);
+                    }
+                    if (!defined(layer.version)) {
+                        message = 'Could not find a version in channel (id) ' + that._channel + '.';
+                        metadataError = TileProviderError.handleError(metadataError, that, that._errorEvent, message, undefined, undefined, undefined, requestMetadata);
+                        throw new RuntimeError(message);
+                    }
+                    that._version = layer.version;
+                    if (defined(data.projection) && data.projection === 'flat') {
+                        that._tilingScheme = new GeographicTilingScheme({
+                            numberOfLevelZeroTilesX: 2,
+                            numberOfLevelZeroTilesY: 2,
+                            rectangle: new Rectangle(-Math.PI, -Math.PI, Math.PI, Math.PI),
+                            ellipsoid: options.ellipsoid
+                        });
+                        // Default to mercator projection when projection is undefined
+                    }
+                    else if (!defined(data.projection) || data.projection === 'mercator') {
+                        that._tilingScheme = new WebMercatorTilingScheme({
+                            numberOfLevelZeroTilesX: 2,
+                            numberOfLevelZeroTilesY: 2,
+                            ellipsoid: options.ellipsoid
+                        });
+                    }
+                    else {
+                        message = 'Unsupported projection ' + data.projection + '.';
+                        metadataError = TileProviderError.handleError(metadataError, that, that._errorEvent, message, undefined, undefined, undefined, requestMetadata);
+                        throw new RuntimeError(message);
+                    }
+                    that._ready = true;
+                    that._readyPromise.resolve(true);
+                    TileProviderError.handleSuccess(metadataError);
+                }
+                function metadataFailure(e) {
+                    var message = 'An error occurred while accessing ' + metadataResource.url + '.';
+                    metadataError = TileProviderError.handleError(metadataError, that, that._errorEvent, message, undefined, undefined, undefined, requestMetadata);
+                    that._readyPromise.reject(new RuntimeError(message));
+                }
+                function requestMetadata() {
+                    var metadata = metadataResource.fetchText();
+                    when(metadata, metadataSuccess, metadataFailure);
+                }
+                requestMetadata();
             }
-
-            that._ready = true;
-            that._readyPromise.resolve(true);
-            TileProviderError.handleSuccess(metadataError);
+            /**
+                 * Gets the credits to be displayed when a given tile is displayed.
+                 *
+                 * @param {Number} x The tile X coordinate.
+                 * @param {Number} y The tile Y coordinate.
+                 * @param {Number} level The tile level;
+                 * @returns {Credit[]} The credits to be displayed when the tile is displayed.
+                 *
+                 * @exception {DeveloperError} <code>getTileCredits</code> must not be called before the imagery provider is ready.
+                 */
+            getTileCredits(x, y, level) {
+                return undefined;
+            }
+            /**
+                 * Requests the image for a given tile.  This function should
+                 * not be called before {@link GoogleEarthEnterpriseMapsProvider#ready} returns true.
+                 *
+                 * @param {Number} x The tile X coordinate.
+                 * @param {Number} y The tile Y coordinate.
+                 * @param {Number} level The tile level.
+                 * @param {Request} [request] The request object. Intended for internal use only.
+                 * @returns {Promise.<Image|Canvas>|undefined} A promise for the image that will resolve when the image is available, or
+                 *          undefined if there are too many active requests to the server, and the request
+                 *          should be retried later.  The resolved image may be either an
+                 *          Image or a Canvas DOM object.
+                 *
+                 * @exception {DeveloperError} <code>requestImage</code> must not be called before the imagery provider is ready.
+                 */
+            requestImage(x, y, level, request) {
+                //>>includeStart('debug', pragmas.debug);
+                if (!this._ready) {
+                    throw new DeveloperError('requestImage must not be called before the imagery provider is ready.');
+                }
+                //>>includeEnd('debug');
+                var resource = this._resource.getDerivedResource({
+                    url: 'query',
+                    request: request,
+                    queryParameters: {
+                        request: this._requestType,
+                        channel: this._channel,
+                        version: this._version,
+                        x: x,
+                        y: y,
+                        z: level + 1 // Google Earth starts with a zoom level of 1, not 0
+                    }
+                });
+                return ImageryProvider.loadImage(this, resource);
+            }
+            /**
+                 * Picking features is not currently supported by this imagery provider, so this function simply returns
+                 * undefined.
+                 *
+                 * @param {Number} x The tile X coordinate.
+                 * @param {Number} y The tile Y coordinate.
+                 * @param {Number} level The tile level.
+                 * @param {Number} longitude The longitude at which to pick features.
+                 * @param {Number} latitude  The latitude at which to pick features.
+                 * @return {Promise.<ImageryLayerFeatureInfo[]>|undefined} A promise for the picked features that will resolve when the asynchronous
+                 *                   picking completes.  The resolved value is an array of {@link ImageryLayerFeatureInfo}
+                 *                   instances.  The array may be empty if no features are found at the given location.
+                 *                   It may also be undefined if picking is not supported.
+                 */
+            pickFeatures(x, y, level, longitude, latitude) {
+                return undefined;
+            }
         }
-
-        function metadataFailure(e) {
-            var message = 'An error occurred while accessing ' + metadataResource.url + '.';
-            metadataError = TileProviderError.handleError(metadataError, that, that._errorEvent, message, undefined, undefined, undefined, requestMetadata);
-            that._readyPromise.reject(new RuntimeError(message));
-        }
-
-        function requestMetadata() {
-            var metadata = metadataResource.fetchText();
-            when(metadata, metadataSuccess, metadataFailure);
-        }
-
-        requestMetadata();
-    }
 
     defineProperties(GoogleEarthEnterpriseMapsProvider.prototype, {
         /**
@@ -529,75 +576,8 @@ define([
         }
     });
 
-    /**
-     * Gets the credits to be displayed when a given tile is displayed.
-     *
-     * @param {Number} x The tile X coordinate.
-     * @param {Number} y The tile Y coordinate.
-     * @param {Number} level The tile level;
-     * @returns {Credit[]} The credits to be displayed when the tile is displayed.
-     *
-     * @exception {DeveloperError} <code>getTileCredits</code> must not be called before the imagery provider is ready.
-     */
-    GoogleEarthEnterpriseMapsProvider.prototype.getTileCredits = function(x, y, level) {
-        return undefined;
-    };
 
-    /**
-     * Requests the image for a given tile.  This function should
-     * not be called before {@link GoogleEarthEnterpriseMapsProvider#ready} returns true.
-     *
-     * @param {Number} x The tile X coordinate.
-     * @param {Number} y The tile Y coordinate.
-     * @param {Number} level The tile level.
-     * @param {Request} [request] The request object. Intended for internal use only.
-     * @returns {Promise.<Image|Canvas>|undefined} A promise for the image that will resolve when the image is available, or
-     *          undefined if there are too many active requests to the server, and the request
-     *          should be retried later.  The resolved image may be either an
-     *          Image or a Canvas DOM object.
-     *
-     * @exception {DeveloperError} <code>requestImage</code> must not be called before the imagery provider is ready.
-     */
-    GoogleEarthEnterpriseMapsProvider.prototype.requestImage = function(x, y, level, request) {
-        //>>includeStart('debug', pragmas.debug);
-        if (!this._ready) {
-            throw new DeveloperError('requestImage must not be called before the imagery provider is ready.');
-        }
-        //>>includeEnd('debug');
 
-        var resource = this._resource.getDerivedResource({
-            url: 'query',
-            request: request,
-            queryParameters: {
-                request: this._requestType,
-                channel: this._channel,
-                version: this._version,
-                x: x,
-                y: y,
-                z: level + 1 // Google Earth starts with a zoom level of 1, not 0
-            }
-        });
-
-        return ImageryProvider.loadImage(this, resource);
-    };
-
-    /**
-     * Picking features is not currently supported by this imagery provider, so this function simply returns
-     * undefined.
-     *
-     * @param {Number} x The tile X coordinate.
-     * @param {Number} y The tile Y coordinate.
-     * @param {Number} level The tile level.
-     * @param {Number} longitude The longitude at which to pick features.
-     * @param {Number} latitude  The latitude at which to pick features.
-     * @return {Promise.<ImageryLayerFeatureInfo[]>|undefined} A promise for the picked features that will resolve when the asynchronous
-     *                   picking completes.  The resolved value is an array of {@link ImageryLayerFeatureInfo}
-     *                   instances.  The array may be empty if no features are found at the given location.
-     *                   It may also be undefined if picking is not supported.
-     */
-    GoogleEarthEnterpriseMapsProvider.prototype.pickFeatures = function(x, y, level, longitude, latitude) {
-        return undefined;
-    };
 
     GoogleEarthEnterpriseMapsProvider._logoUrl = undefined;
 

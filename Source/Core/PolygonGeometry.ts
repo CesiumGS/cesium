@@ -481,242 +481,441 @@ define([
         return geos;
     }
 
-    /**
-     * A description of a polygon on the ellipsoid. The polygon is defined by a polygon hierarchy. Polygon geometry can be rendered with both {@link Primitive} and {@link GroundPrimitive}.
-     *
-     * @alias PolygonGeometry
-     * @constructor
-     *
-     * @param {Object} options Object with the following properties:
-     * @param {PolygonHierarchy} options.polygonHierarchy A polygon hierarchy that can include holes.
-     * @param {Number} [options.height=0.0] The distance in meters between the polygon and the ellipsoid surface.
-     * @param {Number} [options.extrudedHeight] The distance in meters between the polygon's extruded face and the ellipsoid surface.
-     * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
-     * @param {Number} [options.stRotation=0.0] The rotation of the texture coordinates, in radians. A positive rotation is counter-clockwise.
-     * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid to be used as a reference.
-     * @param {Number} [options.granularity=CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
-     * @param {Boolean} [options.perPositionHeight=false] Use the height of options.positions for each position instead of using options.height to determine the height.
-     * @param {Boolean} [options.closeTop=true] When false, leaves off the top of an extruded polygon open.
-     * @param {Boolean} [options.closeBottom=true] When false, leaves off the bottom of an extruded polygon open.
-     *
-     * @see PolygonGeometry#createGeometry
-     * @see PolygonGeometry#fromPositions
-     *
-     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Polygon.html|Cesium Sandcastle Polygon Demo}
-     *
-     * @example
-     * // 1. create a polygon from points
-     * var polygon = new Cesium.PolygonGeometry({
-     *   polygonHierarchy : new Cesium.PolygonHierarchy(
-     *     Cesium.Cartesian3.fromDegreesArray([
-     *       -72.0, 40.0,
-     *       -70.0, 35.0,
-     *       -75.0, 30.0,
-     *       -70.0, 30.0,
-     *       -68.0, 40.0
-     *     ])
-     *   )
-     * });
-     * var geometry = Cesium.PolygonGeometry.createGeometry(polygon);
-     *
-     * // 2. create a nested polygon with holes
-     * var polygonWithHole = new Cesium.PolygonGeometry({
-     *   polygonHierarchy : new Cesium.PolygonHierarchy(
-     *     Cesium.Cartesian3.fromDegreesArray([
-     *       -109.0, 30.0,
-     *       -95.0, 30.0,
-     *       -95.0, 40.0,
-     *       -109.0, 40.0
-     *     ]),
-     *     [new Cesium.PolygonHierarchy(
-     *       Cesium.Cartesian3.fromDegreesArray([
-     *         -107.0, 31.0,
-     *         -107.0, 39.0,
-     *         -97.0, 39.0,
-     *         -97.0, 31.0
-     *       ]),
-     *       [new Cesium.PolygonHierarchy(
-     *         Cesium.Cartesian3.fromDegreesArray([
-     *           -105.0, 33.0,
-     *           -99.0, 33.0,
-     *           -99.0, 37.0,
-     *           -105.0, 37.0
-     *         ]),
-     *         [new Cesium.PolygonHierarchy(
-     *           Cesium.Cartesian3.fromDegreesArray([
-     *             -103.0, 34.0,
-     *             -101.0, 34.0,
-     *             -101.0, 36.0,
-     *             -103.0, 36.0
-     *           ])
-     *         )]
-     *       )]
-     *     )]
-     *   )
-     * });
-     * var geometry = Cesium.PolygonGeometry.createGeometry(polygonWithHole);
-     *
-     * // 3. create extruded polygon
-     * var extrudedPolygon = new Cesium.PolygonGeometry({
-     *   polygonHierarchy : new Cesium.PolygonHierarchy(
-     *     Cesium.Cartesian3.fromDegreesArray([
-     *       -72.0, 40.0,
-     *       -70.0, 35.0,
-     *       -75.0, 30.0,
-     *       -70.0, 30.0,
-     *       -68.0, 40.0
-     *     ])
-     *   ),
-     *   extrudedHeight: 300000
-     * });
-     * var geometry = Cesium.PolygonGeometry.createGeometry(extrudedPolygon);
-     */
-    function PolygonGeometry(options) {
-        //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.object('options', options);
-        Check.typeOf.object('options.polygonHierarchy', options.polygonHierarchy);
-        if (defined(options.perPositionHeight) && options.perPositionHeight && defined(options.height)) {
-            throw new DeveloperError('Cannot use both options.perPositionHeight and options.height');
-        }
-        //>>includeEnd('debug');
-
-        var polygonHierarchy = options.polygonHierarchy;
-        var vertexFormat = defaultValue(options.vertexFormat, VertexFormat.DEFAULT);
-        var ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
-        var granularity = defaultValue(options.granularity, CesiumMath.RADIANS_PER_DEGREE);
-        var stRotation = defaultValue(options.stRotation, 0.0);
-        var perPositionHeight = defaultValue(options.perPositionHeight, false);
-        var perPositionHeightExtrude = perPositionHeight && defined(options.extrudedHeight);
-        var height = defaultValue(options.height, 0.0);
-        var extrudedHeight = defaultValue(options.extrudedHeight, height);
-
-        if (!perPositionHeightExtrude) {
-            var h = Math.max(height, extrudedHeight);
-            extrudedHeight = Math.min(height, extrudedHeight);
-            height = h;
-        }
-
-        this._vertexFormat = VertexFormat.clone(vertexFormat);
-        this._ellipsoid = Ellipsoid.clone(ellipsoid);
-        this._granularity = granularity;
-        this._stRotation = stRotation;
-        this._height = height;
-        this._extrudedHeight = extrudedHeight;
-        this._closeTop = defaultValue(options.closeTop, true);
-        this._closeBottom = defaultValue(options.closeBottom, true);
-        this._polygonHierarchy = polygonHierarchy;
-        this._perPositionHeight = perPositionHeight;
-        this._perPositionHeightExtrude = perPositionHeightExtrude;
-        this._shadowVolume = defaultValue(options.shadowVolume, false);
-        this._workerName = 'createPolygonGeometry';
-        this._offsetAttribute = options.offsetAttribute;
-
-        this._rectangle = undefined;
-        this._textureCoordinateRotationPoints = undefined;
-
         /**
-         * The number of elements used to pack the object into an array.
-         * @type {Number}
-         */
-        this.packedLength = PolygonGeometryLibrary.computeHierarchyPackedLength(polygonHierarchy) + Ellipsoid.packedLength + VertexFormat.packedLength + 11;
-    }
+             * A description of a polygon on the ellipsoid. The polygon is defined by a polygon hierarchy. Polygon geometry can be rendered with both {@link Primitive} and {@link GroundPrimitive}.
+             *
+             * @alias PolygonGeometry
+             * @constructor
+             *
+             * @param {Object} options Object with the following properties:
+             * @param {PolygonHierarchy} options.polygonHierarchy A polygon hierarchy that can include holes.
+             * @param {Number} [options.height=0.0] The distance in meters between the polygon and the ellipsoid surface.
+             * @param {Number} [options.extrudedHeight] The distance in meters between the polygon's extruded face and the ellipsoid surface.
+             * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
+             * @param {Number} [options.stRotation=0.0] The rotation of the texture coordinates, in radians. A positive rotation is counter-clockwise.
+             * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid to be used as a reference.
+             * @param {Number} [options.granularity=CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
+             * @param {Boolean} [options.perPositionHeight=false] Use the height of options.positions for each position instead of using options.height to determine the height.
+             * @param {Boolean} [options.closeTop=true] When false, leaves off the top of an extruded polygon open.
+             * @param {Boolean} [options.closeBottom=true] When false, leaves off the bottom of an extruded polygon open.
+             *
+             * @see PolygonGeometry#createGeometry
+             * @see PolygonGeometry#fromPositions
+             *
+             * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Polygon.html|Cesium Sandcastle Polygon Demo}
+             *
+             * @example
+             * // 1. create a polygon from points
+             * var polygon = new Cesium.PolygonGeometry({
+             *   polygonHierarchy : new Cesium.PolygonHierarchy(
+             *     Cesium.Cartesian3.fromDegreesArray([
+             *       -72.0, 40.0,
+             *       -70.0, 35.0,
+             *       -75.0, 30.0,
+             *       -70.0, 30.0,
+             *       -68.0, 40.0
+             *     ])
+             *   )
+             * });
+             * var geometry = Cesium.PolygonGeometry.createGeometry(polygon);
+             *
+             * // 2. create a nested polygon with holes
+             * var polygonWithHole = new Cesium.PolygonGeometry({
+             *   polygonHierarchy : new Cesium.PolygonHierarchy(
+             *     Cesium.Cartesian3.fromDegreesArray([
+             *       -109.0, 30.0,
+             *       -95.0, 30.0,
+             *       -95.0, 40.0,
+             *       -109.0, 40.0
+             *     ]),
+             *     [new Cesium.PolygonHierarchy(
+             *       Cesium.Cartesian3.fromDegreesArray([
+             *         -107.0, 31.0,
+             *         -107.0, 39.0,
+             *         -97.0, 39.0,
+             *         -97.0, 31.0
+             *       ]),
+             *       [new Cesium.PolygonHierarchy(
+             *         Cesium.Cartesian3.fromDegreesArray([
+             *           -105.0, 33.0,
+             *           -99.0, 33.0,
+             *           -99.0, 37.0,
+             *           -105.0, 37.0
+             *         ]),
+             *         [new Cesium.PolygonHierarchy(
+             *           Cesium.Cartesian3.fromDegreesArray([
+             *             -103.0, 34.0,
+             *             -101.0, 34.0,
+             *             -101.0, 36.0,
+             *             -103.0, 36.0
+             *           ])
+             *         )]
+             *       )]
+             *     )]
+             *   )
+             * });
+             * var geometry = Cesium.PolygonGeometry.createGeometry(polygonWithHole);
+             *
+             * // 3. create extruded polygon
+             * var extrudedPolygon = new Cesium.PolygonGeometry({
+             *   polygonHierarchy : new Cesium.PolygonHierarchy(
+             *     Cesium.Cartesian3.fromDegreesArray([
+             *       -72.0, 40.0,
+             *       -70.0, 35.0,
+             *       -75.0, 30.0,
+             *       -70.0, 30.0,
+             *       -68.0, 40.0
+             *     ])
+             *   ),
+             *   extrudedHeight: 300000
+             * });
+             * var geometry = Cesium.PolygonGeometry.createGeometry(extrudedPolygon);
+             */
+        class PolygonGeometry {
+            constructor(options) {
+                //>>includeStart('debug', pragmas.debug);
+                Check.typeOf.object('options', options);
+                Check.typeOf.object('options.polygonHierarchy', options.polygonHierarchy);
+                if (defined(options.perPositionHeight) && options.perPositionHeight && defined(options.height)) {
+                    throw new DeveloperError('Cannot use both options.perPositionHeight and options.height');
+                }
+                //>>includeEnd('debug');
+                var polygonHierarchy = options.polygonHierarchy;
+                var vertexFormat = defaultValue(options.vertexFormat, VertexFormat.DEFAULT);
+                var ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
+                var granularity = defaultValue(options.granularity, CesiumMath.RADIANS_PER_DEGREE);
+                var stRotation = defaultValue(options.stRotation, 0.0);
+                var perPositionHeight = defaultValue(options.perPositionHeight, false);
+                var perPositionHeightExtrude = perPositionHeight && defined(options.extrudedHeight);
+                var height = defaultValue(options.height, 0.0);
+                var extrudedHeight = defaultValue(options.extrudedHeight, height);
+                if (!perPositionHeightExtrude) {
+                    var h = Math.max(height, extrudedHeight);
+                    extrudedHeight = Math.min(height, extrudedHeight);
+                    height = h;
+                }
+                this._vertexFormat = VertexFormat.clone(vertexFormat);
+                this._ellipsoid = Ellipsoid.clone(ellipsoid);
+                this._granularity = granularity;
+                this._stRotation = stRotation;
+                this._height = height;
+                this._extrudedHeight = extrudedHeight;
+                this._closeTop = defaultValue(options.closeTop, true);
+                this._closeBottom = defaultValue(options.closeBottom, true);
+                this._polygonHierarchy = polygonHierarchy;
+                this._perPositionHeight = perPositionHeight;
+                this._perPositionHeightExtrude = perPositionHeightExtrude;
+                this._shadowVolume = defaultValue(options.shadowVolume, false);
+                this._workerName = 'createPolygonGeometry';
+                this._offsetAttribute = options.offsetAttribute;
+                this._rectangle = undefined;
+                this._textureCoordinateRotationPoints = undefined;
+                /**
+                 * The number of elements used to pack the object into an array.
+                 * @type {Number}
+                 */
+                this.packedLength = PolygonGeometryLibrary.computeHierarchyPackedLength(polygonHierarchy) + Ellipsoid.packedLength + VertexFormat.packedLength + 11;
+            }
+            /**
+                 * A description of a polygon from an array of positions. Polygon geometry can be rendered with both {@link Primitive} and {@link GroundPrimitive}.
+                 *
+                 * @param {Object} options Object with the following properties:
+                 * @param {Cartesian3[]} options.positions An array of positions that defined the corner points of the polygon.
+                 * @param {Number} [options.height=0.0] The height of the polygon.
+                 * @param {Number} [options.extrudedHeight] The height of the polygon extrusion.
+                 * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
+                 * @param {Number} [options.stRotation=0.0] The rotation of the texture coordinates, in radians. A positive rotation is counter-clockwise.
+                 * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid to be used as a reference.
+                 * @param {Number} [options.granularity=CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
+                 * @param {Boolean} [options.perPositionHeight=false] Use the height of options.positions for each position instead of using options.height to determine the height.
+                 * @param {Boolean} [options.closeTop=true] When false, leaves off the top of an extruded polygon open.
+                 * @param {Boolean} [options.closeBottom=true] When false, leaves off the bottom of an extruded polygon open.
+                 * @returns {PolygonGeometry}
+                 *
+                 *
+                 * @example
+                 * // create a polygon from points
+                 * var polygon = Cesium.PolygonGeometry.fromPositions({
+                 *   positions : Cesium.Cartesian3.fromDegreesArray([
+                 *     -72.0, 40.0,
+                 *     -70.0, 35.0,
+                 *     -75.0, 30.0,
+                 *     -70.0, 30.0,
+                 *     -68.0, 40.0
+                 *   ])
+                 * });
+                 * var geometry = Cesium.PolygonGeometry.createGeometry(polygon);
+                 *
+                 * @see PolygonGeometry#createGeometry
+                 */
+            static fromPositions(options) {
+                options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+                //>>includeStart('debug', pragmas.debug);
+                Check.defined('options.positions', options.positions);
+                //>>includeEnd('debug');
+                var newOptions = {
+                    polygonHierarchy: {
+                        positions: options.positions
+                    },
+                    height: options.height,
+                    extrudedHeight: options.extrudedHeight,
+                    vertexFormat: options.vertexFormat,
+                    stRotation: options.stRotation,
+                    ellipsoid: options.ellipsoid,
+                    granularity: options.granularity,
+                    perPositionHeight: options.perPositionHeight,
+                    closeTop: options.closeTop,
+                    closeBottom: options.closeBottom,
+                    offsetAttribute: options.offsetAttribute
+                };
+                return new PolygonGeometry(newOptions);
+            }
+            /**
+                 * Stores the provided instance into the provided array.
+                 *
+                 * @param {PolygonGeometry} value The value to pack.
+                 * @param {Number[]} array The array to pack into.
+                 * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
+                 *
+                 * @returns {Number[]} The array that was packed into
+                 */
+            static pack(value, array, startingIndex) {
+                //>>includeStart('debug', pragmas.debug);
+                Check.typeOf.object('value', value);
+                Check.defined('array', array);
+                //>>includeEnd('debug');
+                startingIndex = defaultValue(startingIndex, 0);
+                startingIndex = PolygonGeometryLibrary.packPolygonHierarchy(value._polygonHierarchy, array, startingIndex);
+                Ellipsoid.pack(value._ellipsoid, array, startingIndex);
+                startingIndex += Ellipsoid.packedLength;
+                VertexFormat.pack(value._vertexFormat, array, startingIndex);
+                startingIndex += VertexFormat.packedLength;
+                array[startingIndex++] = value._height;
+                array[startingIndex++] = value._extrudedHeight;
+                array[startingIndex++] = value._granularity;
+                array[startingIndex++] = value._stRotation;
+                array[startingIndex++] = value._perPositionHeightExtrude ? 1.0 : 0.0;
+                array[startingIndex++] = value._perPositionHeight ? 1.0 : 0.0;
+                array[startingIndex++] = value._closeTop ? 1.0 : 0.0;
+                array[startingIndex++] = value._closeBottom ? 1.0 : 0.0;
+                array[startingIndex++] = value._shadowVolume ? 1.0 : 0.0;
+                array[startingIndex++] = defaultValue(value._offsetAttribute, -1);
+                array[startingIndex] = value.packedLength;
+                return array;
+            }
+            /**
+                 * Retrieves an instance from a packed array.
+                 *
+                 * @param {Number[]} array The packed array.
+                 * @param {Number} [startingIndex=0] The starting index of the element to be unpacked.
+                 * @param {PolygonGeometry} [result] The object into which to store the result.
+                 */
+            static unpack(array, startingIndex, result) {
+                //>>includeStart('debug', pragmas.debug);
+                Check.defined('array', array);
+                //>>includeEnd('debug');
+                startingIndex = defaultValue(startingIndex, 0);
+                var polygonHierarchy = PolygonGeometryLibrary.unpackPolygonHierarchy(array, startingIndex);
+                startingIndex = polygonHierarchy.startingIndex;
+                delete polygonHierarchy.startingIndex;
+                var ellipsoid = Ellipsoid.unpack(array, startingIndex, scratchEllipsoid);
+                startingIndex += Ellipsoid.packedLength;
+                var vertexFormat = VertexFormat.unpack(array, startingIndex, scratchVertexFormat);
+                startingIndex += VertexFormat.packedLength;
+                var height = array[startingIndex++];
+                var extrudedHeight = array[startingIndex++];
+                var granularity = array[startingIndex++];
+                var stRotation = array[startingIndex++];
+                var perPositionHeightExtrude = array[startingIndex++] === 1.0;
+                var perPositionHeight = array[startingIndex++] === 1.0;
+                var closeTop = array[startingIndex++] === 1.0;
+                var closeBottom = array[startingIndex++] === 1.0;
+                var shadowVolume = array[startingIndex++] === 1.0;
+                var offsetAttribute = array[startingIndex++];
+                var packedLength = array[startingIndex];
+                if (!defined(result)) {
+                    result = new PolygonGeometry(dummyOptions);
+                }
+                result._polygonHierarchy = polygonHierarchy;
+                result._ellipsoid = Ellipsoid.clone(ellipsoid, result._ellipsoid);
+                result._vertexFormat = VertexFormat.clone(vertexFormat, result._vertexFormat);
+                result._height = height;
+                result._extrudedHeight = extrudedHeight;
+                result._granularity = granularity;
+                result._stRotation = stRotation;
+                result._perPositionHeightExtrude = perPositionHeightExtrude;
+                result._perPositionHeight = perPositionHeight;
+                result._closeTop = closeTop;
+                result._closeBottom = closeBottom;
+                result._shadowVolume = shadowVolume;
+                result._offsetAttribute = offsetAttribute === -1 ? undefined : offsetAttribute;
+                result.packedLength = packedLength;
+                return result;
+            }
+            /**
+                 * Returns the bounding rectangle given the provided options
+                 *
+                 * @param {Object} options Object with the following properties:
+                 * @param {PolygonHierarchy} options.polygonHierarchy A polygon hierarchy that can include holes.
+                 * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid to be used as a reference.
+                 * @param {Rectangle} [result] An object in which to store the result.
+                 *
+                 * @returns {Rectangle} The result rectangle
+                 */
+            static computeRectangle(options, result) {
+                //>>includeStart('debug', pragmas.debug);
+                Check.typeOf.object('options', options);
+                Check.typeOf.object('options.polygonHierarchy', options.polygonHierarchy);
+                //>>includeEnd('debug');
+                var polygonHierarchy = options.polygonHierarchy;
+                var ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
+                return computeRectangle(polygonHierarchy.positions, ellipsoid, result);
+            }
+            /**
+                 * Computes the geometric representation of a polygon, including its vertices, indices, and a bounding sphere.
+                 *
+                 * @param {PolygonGeometry} polygonGeometry A description of the polygon.
+                 * @returns {Geometry|undefined} The computed vertices and indices.
+                 */
+            static createGeometry(polygonGeometry) {
+                var vertexFormat = polygonGeometry._vertexFormat;
+                var ellipsoid = polygonGeometry._ellipsoid;
+                var granularity = polygonGeometry._granularity;
+                var stRotation = polygonGeometry._stRotation;
+                var polygonHierarchy = polygonGeometry._polygonHierarchy;
+                var perPositionHeight = polygonGeometry._perPositionHeight;
+                var closeTop = polygonGeometry._closeTop;
+                var closeBottom = polygonGeometry._closeBottom;
+                var outerPositions = polygonHierarchy.positions;
+                if (outerPositions.length < 3) {
+                    return;
+                }
+                var tangentPlane = EllipsoidTangentPlane.fromPoints(outerPositions, ellipsoid);
+                var results = PolygonGeometryLibrary.polygonsFromHierarchy(polygonHierarchy, tangentPlane.projectPointsOntoPlane.bind(tangentPlane), !perPositionHeight, ellipsoid);
+                var hierarchy = results.hierarchy;
+                var polygons = results.polygons;
+                if (hierarchy.length === 0) {
+                    return;
+                }
+                outerPositions = hierarchy[0].outerRing;
+                var boundingRectangle = PolygonGeometryLibrary.computeBoundingRectangle(tangentPlane.plane.normal, tangentPlane.projectPointOntoPlane.bind(tangentPlane), outerPositions, stRotation, scratchBoundingRectangle);
+                var geometries = [];
+                var height = polygonGeometry._height;
+                var extrudedHeight = polygonGeometry._extrudedHeight;
+                var extrude = polygonGeometry._perPositionHeightExtrude || !CesiumMath.equalsEpsilon(height, extrudedHeight, 0, CesiumMath.EPSILON2);
+                var options = {
+                    perPositionHeight: perPositionHeight,
+                    vertexFormat: vertexFormat,
+                    geometry: undefined,
+                    tangentPlane: tangentPlane,
+                    boundingRectangle: boundingRectangle,
+                    ellipsoid: ellipsoid,
+                    stRotation: stRotation,
+                    bottom: false,
+                    top: true,
+                    wall: false,
+                    extrude: false
+                };
+                var i;
+                if (extrude) {
+                    options.extrude = true;
+                    options.top = closeTop;
+                    options.bottom = closeBottom;
+                    options.shadowVolume = polygonGeometry._shadowVolume;
+                    options.offsetAttribute = polygonGeometry._offsetAttribute;
+                    for (i = 0; i < polygons.length; i++) {
+                        var splitGeometry = createGeometryFromPositionsExtruded(ellipsoid, polygons[i], granularity, hierarchy[i], perPositionHeight, closeTop, closeBottom, vertexFormat);
+                        var topAndBottom;
+                        if (closeTop && closeBottom) {
+                            topAndBottom = splitGeometry.topAndBottom;
+                            options.geometry = PolygonGeometryLibrary.scaleToGeodeticHeightExtruded(topAndBottom.geometry, height, extrudedHeight, ellipsoid, perPositionHeight);
+                        }
+                        else if (closeTop) {
+                            topAndBottom = splitGeometry.topAndBottom;
+                            topAndBottom.geometry.attributes.position.values = PolygonPipeline.scaleToGeodeticHeight(topAndBottom.geometry.attributes.position.values, height, ellipsoid, !perPositionHeight);
+                            options.geometry = topAndBottom.geometry;
+                        }
+                        else if (closeBottom) {
+                            topAndBottom = splitGeometry.topAndBottom;
+                            topAndBottom.geometry.attributes.position.values = PolygonPipeline.scaleToGeodeticHeight(topAndBottom.geometry.attributes.position.values, extrudedHeight, ellipsoid, true);
+                            options.geometry = topAndBottom.geometry;
+                        }
+                        if (closeTop || closeBottom) {
+                            options.wall = false;
+                            topAndBottom.geometry = computeAttributes(options);
+                            geometries.push(topAndBottom);
+                        }
+                        var walls = splitGeometry.walls;
+                        options.wall = true;
+                        for (var k = 0; k < walls.length; k++) {
+                            var wall = walls[k];
+                            options.geometry = PolygonGeometryLibrary.scaleToGeodeticHeightExtruded(wall.geometry, height, extrudedHeight, ellipsoid, perPositionHeight);
+                            wall.geometry = computeAttributes(options);
+                            geometries.push(wall);
+                        }
+                    }
+                }
+                else {
+                    for (i = 0; i < polygons.length; i++) {
+                        var geometryInstance = new GeometryInstance({
+                            geometry: PolygonGeometryLibrary.createGeometryFromPositions(ellipsoid, polygons[i], granularity, perPositionHeight, vertexFormat)
+                        });
+                        geometryInstance.geometry.attributes.position.values = PolygonPipeline.scaleToGeodeticHeight(geometryInstance.geometry.attributes.position.values, height, ellipsoid, !perPositionHeight);
+                        options.geometry = geometryInstance.geometry;
+                        geometryInstance.geometry = computeAttributes(options);
+                        if (defined(polygonGeometry._offsetAttribute)) {
+                            var length = geometryInstance.geometry.attributes.position.values.length;
+                            var applyOffset = new Uint8Array(length / 3);
+                            var offsetValue = polygonGeometry._offsetAttribute === GeometryOffsetAttribute.NONE ? 0 : 1;
+                            arrayFill(applyOffset, offsetValue);
+                            geometryInstance.geometry.attributes.applyOffset = new GeometryAttribute({
+                                componentDatatype: ComponentDatatype.UNSIGNED_BYTE,
+                                componentsPerAttribute: 1,
+                                values: applyOffset
+                            });
+                        }
+                        geometries.push(geometryInstance);
+                    }
+                }
+                var geometry = GeometryPipeline.combineInstances(geometries)[0];
+                geometry.attributes.position.values = new Float64Array(geometry.attributes.position.values);
+                geometry.indices = IndexDatatype.createTypedArray(geometry.attributes.position.values.length / 3, geometry.indices);
+                var attributes = geometry.attributes;
+                var boundingSphere = BoundingSphere.fromVertices(attributes.position.values);
+                if (!vertexFormat.position) {
+                    delete attributes.position;
+                }
+                return new Geometry({
+                    attributes: attributes,
+                    indices: geometry.indices,
+                    primitiveType: geometry.primitiveType,
+                    boundingSphere: boundingSphere,
+                    offsetAttribute: polygonGeometry._offsetAttribute
+                });
+            }
+            /**
+                 * @private
+                 */
+            static createShadowVolume(polygonGeometry, minHeightFunc, maxHeightFunc) {
+                var granularity = polygonGeometry._granularity;
+                var ellipsoid = polygonGeometry._ellipsoid;
+                var minHeight = minHeightFunc(granularity, ellipsoid);
+                var maxHeight = maxHeightFunc(granularity, ellipsoid);
+                return new PolygonGeometry({
+                    polygonHierarchy: polygonGeometry._polygonHierarchy,
+                    ellipsoid: ellipsoid,
+                    stRotation: polygonGeometry._stRotation,
+                    granularity: granularity,
+                    perPositionHeight: false,
+                    extrudedHeight: minHeight,
+                    height: maxHeight,
+                    vertexFormat: VertexFormat.POSITION_ONLY,
+                    shadowVolume: true
+                });
+            }
+        }
 
-    /**
-     * A description of a polygon from an array of positions. Polygon geometry can be rendered with both {@link Primitive} and {@link GroundPrimitive}.
-     *
-     * @param {Object} options Object with the following properties:
-     * @param {Cartesian3[]} options.positions An array of positions that defined the corner points of the polygon.
-     * @param {Number} [options.height=0.0] The height of the polygon.
-     * @param {Number} [options.extrudedHeight] The height of the polygon extrusion.
-     * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
-     * @param {Number} [options.stRotation=0.0] The rotation of the texture coordinates, in radians. A positive rotation is counter-clockwise.
-     * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid to be used as a reference.
-     * @param {Number} [options.granularity=CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
-     * @param {Boolean} [options.perPositionHeight=false] Use the height of options.positions for each position instead of using options.height to determine the height.
-     * @param {Boolean} [options.closeTop=true] When false, leaves off the top of an extruded polygon open.
-     * @param {Boolean} [options.closeBottom=true] When false, leaves off the bottom of an extruded polygon open.
-     * @returns {PolygonGeometry}
-     *
-     *
-     * @example
-     * // create a polygon from points
-     * var polygon = Cesium.PolygonGeometry.fromPositions({
-     *   positions : Cesium.Cartesian3.fromDegreesArray([
-     *     -72.0, 40.0,
-     *     -70.0, 35.0,
-     *     -75.0, 30.0,
-     *     -70.0, 30.0,
-     *     -68.0, 40.0
-     *   ])
-     * });
-     * var geometry = Cesium.PolygonGeometry.createGeometry(polygon);
-     *
-     * @see PolygonGeometry#createGeometry
-     */
-    PolygonGeometry.fromPositions = function(options) {
-        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
-        //>>includeStart('debug', pragmas.debug);
-        Check.defined('options.positions', options.positions);
-        //>>includeEnd('debug');
-
-        var newOptions = {
-            polygonHierarchy : {
-                positions : options.positions
-            },
-            height : options.height,
-            extrudedHeight : options.extrudedHeight,
-            vertexFormat : options.vertexFormat,
-            stRotation : options.stRotation,
-            ellipsoid : options.ellipsoid,
-            granularity : options.granularity,
-            perPositionHeight : options.perPositionHeight,
-            closeTop : options.closeTop,
-            closeBottom : options.closeBottom,
-            offsetAttribute : options.offsetAttribute
-        };
-        return new PolygonGeometry(newOptions);
-    };
-
-    /**
-     * Stores the provided instance into the provided array.
-     *
-     * @param {PolygonGeometry} value The value to pack.
-     * @param {Number[]} array The array to pack into.
-     * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
-     *
-     * @returns {Number[]} The array that was packed into
-     */
-    PolygonGeometry.pack = function(value, array, startingIndex) {
-        //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.object('value', value);
-        Check.defined('array', array);
-        //>>includeEnd('debug');
-
-        startingIndex = defaultValue(startingIndex, 0);
-
-        startingIndex = PolygonGeometryLibrary.packPolygonHierarchy(value._polygonHierarchy, array, startingIndex);
-
-        Ellipsoid.pack(value._ellipsoid, array, startingIndex);
-        startingIndex += Ellipsoid.packedLength;
-
-        VertexFormat.pack(value._vertexFormat, array, startingIndex);
-        startingIndex += VertexFormat.packedLength;
-
-        array[startingIndex++] = value._height;
-        array[startingIndex++] = value._extrudedHeight;
-        array[startingIndex++] = value._granularity;
-        array[startingIndex++] = value._stRotation;
-        array[startingIndex++] = value._perPositionHeightExtrude ? 1.0 : 0.0;
-        array[startingIndex++] = value._perPositionHeight ? 1.0 : 0.0;
-        array[startingIndex++] = value._closeTop ? 1.0 : 0.0;
-        array[startingIndex++] = value._closeBottom ? 1.0 : 0.0;
-        array[startingIndex++] = value._shadowVolume ? 1.0 : 0.0;
-        array[startingIndex++] = defaultValue(value._offsetAttribute, -1);
-        array[startingIndex] = value.packedLength;
-
-        return array;
-    };
 
     var scratchEllipsoid = Ellipsoid.clone(Ellipsoid.UNIT_SPHERE);
     var scratchVertexFormat = new VertexFormat();
@@ -726,245 +925,9 @@ define([
         polygonHierarchy : {}
     };
 
-    /**
-     * Retrieves an instance from a packed array.
-     *
-     * @param {Number[]} array The packed array.
-     * @param {Number} [startingIndex=0] The starting index of the element to be unpacked.
-     * @param {PolygonGeometry} [result] The object into which to store the result.
-     */
-    PolygonGeometry.unpack = function(array, startingIndex, result) {
-        //>>includeStart('debug', pragmas.debug);
-        Check.defined('array', array);
-        //>>includeEnd('debug');
 
-        startingIndex = defaultValue(startingIndex, 0);
 
-        var polygonHierarchy = PolygonGeometryLibrary.unpackPolygonHierarchy(array, startingIndex);
-        startingIndex = polygonHierarchy.startingIndex;
-        delete polygonHierarchy.startingIndex;
 
-        var ellipsoid = Ellipsoid.unpack(array, startingIndex, scratchEllipsoid);
-        startingIndex += Ellipsoid.packedLength;
-
-        var vertexFormat = VertexFormat.unpack(array, startingIndex, scratchVertexFormat);
-        startingIndex += VertexFormat.packedLength;
-
-        var height = array[startingIndex++];
-        var extrudedHeight = array[startingIndex++];
-        var granularity = array[startingIndex++];
-        var stRotation = array[startingIndex++];
-        var perPositionHeightExtrude = array[startingIndex++] === 1.0;
-        var perPositionHeight = array[startingIndex++] === 1.0;
-        var closeTop = array[startingIndex++] === 1.0;
-        var closeBottom = array[startingIndex++] === 1.0;
-        var shadowVolume = array[startingIndex++] === 1.0;
-        var offsetAttribute = array[startingIndex++];
-        var packedLength = array[startingIndex];
-
-        if (!defined(result)) {
-            result = new PolygonGeometry(dummyOptions);
-        }
-
-        result._polygonHierarchy = polygonHierarchy;
-        result._ellipsoid = Ellipsoid.clone(ellipsoid, result._ellipsoid);
-        result._vertexFormat = VertexFormat.clone(vertexFormat, result._vertexFormat);
-        result._height = height;
-        result._extrudedHeight = extrudedHeight;
-        result._granularity = granularity;
-        result._stRotation = stRotation;
-        result._perPositionHeightExtrude = perPositionHeightExtrude;
-        result._perPositionHeight = perPositionHeight;
-        result._closeTop = closeTop;
-        result._closeBottom = closeBottom;
-        result._shadowVolume = shadowVolume;
-        result._offsetAttribute = offsetAttribute === -1 ? undefined : offsetAttribute;
-        result.packedLength = packedLength;
-        return result;
-    };
-
-    /**
-     * Returns the bounding rectangle given the provided options
-     *
-     * @param {Object} options Object with the following properties:
-     * @param {PolygonHierarchy} options.polygonHierarchy A polygon hierarchy that can include holes.
-     * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid to be used as a reference.
-     * @param {Rectangle} [result] An object in which to store the result.
-     *
-     * @returns {Rectangle} The result rectangle
-     */
-    PolygonGeometry.computeRectangle = function(options, result) {
-        //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.object('options', options);
-        Check.typeOf.object('options.polygonHierarchy', options.polygonHierarchy);
-        //>>includeEnd('debug');
-
-        var polygonHierarchy = options.polygonHierarchy;
-        var ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
-
-        return computeRectangle(polygonHierarchy.positions, ellipsoid, result);
-    };
-
-    /**
-     * Computes the geometric representation of a polygon, including its vertices, indices, and a bounding sphere.
-     *
-     * @param {PolygonGeometry} polygonGeometry A description of the polygon.
-     * @returns {Geometry|undefined} The computed vertices and indices.
-     */
-    PolygonGeometry.createGeometry = function(polygonGeometry) {
-        var vertexFormat = polygonGeometry._vertexFormat;
-        var ellipsoid = polygonGeometry._ellipsoid;
-        var granularity = polygonGeometry._granularity;
-        var stRotation = polygonGeometry._stRotation;
-        var polygonHierarchy = polygonGeometry._polygonHierarchy;
-        var perPositionHeight = polygonGeometry._perPositionHeight;
-        var closeTop = polygonGeometry._closeTop;
-        var closeBottom = polygonGeometry._closeBottom;
-
-        var outerPositions = polygonHierarchy.positions;
-        if (outerPositions.length < 3) {
-            return;
-        }
-
-        var tangentPlane = EllipsoidTangentPlane.fromPoints(outerPositions, ellipsoid);
-
-        var results = PolygonGeometryLibrary.polygonsFromHierarchy(polygonHierarchy, tangentPlane.projectPointsOntoPlane.bind(tangentPlane), !perPositionHeight, ellipsoid);
-        var hierarchy = results.hierarchy;
-        var polygons = results.polygons;
-
-        if (hierarchy.length === 0) {
-            return;
-        }
-
-        outerPositions = hierarchy[0].outerRing;
-        var boundingRectangle = PolygonGeometryLibrary.computeBoundingRectangle(tangentPlane.plane.normal, tangentPlane.projectPointOntoPlane.bind(tangentPlane), outerPositions, stRotation, scratchBoundingRectangle);
-
-        var geometries = [];
-
-        var height = polygonGeometry._height;
-        var extrudedHeight = polygonGeometry._extrudedHeight;
-        var extrude = polygonGeometry._perPositionHeightExtrude || !CesiumMath.equalsEpsilon(height, extrudedHeight, 0, CesiumMath.EPSILON2);
-
-        var options = {
-            perPositionHeight: perPositionHeight,
-            vertexFormat: vertexFormat,
-            geometry: undefined,
-            tangentPlane: tangentPlane,
-            boundingRectangle: boundingRectangle,
-            ellipsoid: ellipsoid,
-            stRotation: stRotation,
-            bottom: false,
-            top: true,
-            wall: false,
-            extrude: false
-        };
-
-        var i;
-
-        if (extrude) {
-            options.extrude = true;
-            options.top = closeTop;
-            options.bottom = closeBottom;
-            options.shadowVolume = polygonGeometry._shadowVolume;
-            options.offsetAttribute = polygonGeometry._offsetAttribute;
-            for (i = 0; i < polygons.length; i++) {
-                var splitGeometry = createGeometryFromPositionsExtruded(ellipsoid, polygons[i], granularity, hierarchy[i], perPositionHeight, closeTop, closeBottom, vertexFormat);
-
-                var topAndBottom;
-                if (closeTop && closeBottom) {
-                    topAndBottom = splitGeometry.topAndBottom;
-                    options.geometry = PolygonGeometryLibrary.scaleToGeodeticHeightExtruded(topAndBottom.geometry, height, extrudedHeight, ellipsoid, perPositionHeight);
-                } else if (closeTop) {
-                    topAndBottom = splitGeometry.topAndBottom;
-                    topAndBottom.geometry.attributes.position.values = PolygonPipeline.scaleToGeodeticHeight(topAndBottom.geometry.attributes.position.values, height, ellipsoid, !perPositionHeight);
-                    options.geometry = topAndBottom.geometry;
-                } else if (closeBottom) {
-                    topAndBottom = splitGeometry.topAndBottom;
-                    topAndBottom.geometry.attributes.position.values = PolygonPipeline.scaleToGeodeticHeight(topAndBottom.geometry.attributes.position.values, extrudedHeight, ellipsoid, true);
-                    options.geometry = topAndBottom.geometry;
-                }
-                if (closeTop || closeBottom) {
-                    options.wall = false;
-                    topAndBottom.geometry = computeAttributes(options);
-                    geometries.push(topAndBottom);
-                }
-
-                var walls = splitGeometry.walls;
-                options.wall = true;
-                for ( var k = 0; k < walls.length; k++) {
-                    var wall = walls[k];
-                    options.geometry = PolygonGeometryLibrary.scaleToGeodeticHeightExtruded(wall.geometry, height, extrudedHeight, ellipsoid, perPositionHeight);
-                    wall.geometry = computeAttributes(options);
-                    geometries.push(wall);
-                }
-            }
-        } else {
-            for (i = 0; i < polygons.length; i++) {
-                var geometryInstance = new GeometryInstance({
-                    geometry : PolygonGeometryLibrary.createGeometryFromPositions(ellipsoid, polygons[i], granularity, perPositionHeight, vertexFormat)
-                });
-                geometryInstance.geometry.attributes.position.values = PolygonPipeline.scaleToGeodeticHeight(geometryInstance.geometry.attributes.position.values, height, ellipsoid, !perPositionHeight);
-                options.geometry = geometryInstance.geometry;
-                geometryInstance.geometry = computeAttributes(options);
-
-                if (defined(polygonGeometry._offsetAttribute)) {
-                    var length = geometryInstance.geometry.attributes.position.values.length;
-                    var applyOffset = new Uint8Array(length / 3);
-                    var offsetValue = polygonGeometry._offsetAttribute === GeometryOffsetAttribute.NONE ? 0 : 1;
-                    arrayFill(applyOffset, offsetValue);
-                    geometryInstance.geometry.attributes.applyOffset = new GeometryAttribute({
-                        componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
-                        componentsPerAttribute : 1,
-                        values: applyOffset
-                    });
-                }
-
-                geometries.push(geometryInstance);
-            }
-        }
-
-        var geometry = GeometryPipeline.combineInstances(geometries)[0];
-        geometry.attributes.position.values = new Float64Array(geometry.attributes.position.values);
-        geometry.indices = IndexDatatype.createTypedArray(geometry.attributes.position.values.length / 3, geometry.indices);
-
-        var attributes = geometry.attributes;
-        var boundingSphere = BoundingSphere.fromVertices(attributes.position.values);
-
-        if (!vertexFormat.position) {
-            delete attributes.position;
-        }
-
-        return new Geometry({
-            attributes : attributes,
-            indices : geometry.indices,
-            primitiveType : geometry.primitiveType,
-            boundingSphere : boundingSphere,
-            offsetAttribute : polygonGeometry._offsetAttribute
-        });
-    };
-
-    /**
-     * @private
-     */
-    PolygonGeometry.createShadowVolume = function(polygonGeometry, minHeightFunc, maxHeightFunc) {
-        var granularity = polygonGeometry._granularity;
-        var ellipsoid = polygonGeometry._ellipsoid;
-
-        var minHeight = minHeightFunc(granularity, ellipsoid);
-        var maxHeight = maxHeightFunc(granularity, ellipsoid);
-
-        return new PolygonGeometry({
-            polygonHierarchy : polygonGeometry._polygonHierarchy,
-            ellipsoid : ellipsoid,
-            stRotation : polygonGeometry._stRotation,
-            granularity : granularity,
-            perPositionHeight : false,
-            extrudedHeight : minHeight,
-            height : maxHeight,
-            vertexFormat : VertexFormat.POSITION_ONLY,
-            shadowVolume: true
-        });
-    };
 
     function textureCoordinateRotationPoints(polygonGeometry) {
         var stRotation = -polygonGeometry._stRotation;

@@ -22,34 +22,78 @@ define([
     var defaultTransparent = false;
     var defaultColor = Color.WHITE;
 
-    /**
-     * A {@link MaterialProperty} that maps to image {@link Material} uniforms.
-     * @alias ImageMaterialProperty
-     * @constructor
-     *
-     * @param {Object} [options] Object with the following properties:
-     * @param {Property} [options.image] A Property specifying the Image, URL, Canvas, or Video.
-     * @param {Property} [options.repeat=new Cartesian2(1.0, 1.0)] A {@link Cartesian2} Property specifying the number of times the image repeats in each direction.
-     * @param {Property} [options.color=Color.WHITE] The color applied to the image
-     * @param {Property} [options.transparent=false] Set to true when the image has transparency (for example, when a png has transparent sections)
-     */
-    function ImageMaterialProperty(options) {
-        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-
-        this._definitionChanged = new Event();
-        this._image = undefined;
-        this._imageSubscription = undefined;
-        this._repeat = undefined;
-        this._repeatSubscription = undefined;
-        this._color = undefined;
-        this._colorSubscription = undefined;
-        this._transparent = undefined;
-        this._transparentSubscription = undefined;
-        this.image = options.image;
-        this.repeat = options.repeat;
-        this.color = options.color;
-        this.transparent = options.transparent;
-    }
+        /**
+             * A {@link MaterialProperty} that maps to image {@link Material} uniforms.
+             * @alias ImageMaterialProperty
+             * @constructor
+             *
+             * @param {Object} [options] Object with the following properties:
+             * @param {Property} [options.image] A Property specifying the Image, URL, Canvas, or Video.
+             * @param {Property} [options.repeat=new Cartesian2(1.0, 1.0)] A {@link Cartesian2} Property specifying the number of times the image repeats in each direction.
+             * @param {Property} [options.color=Color.WHITE] The color applied to the image
+             * @param {Property} [options.transparent=false] Set to true when the image has transparency (for example, when a png has transparent sections)
+             */
+        class ImageMaterialProperty {
+            constructor(options) {
+                options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+                this._definitionChanged = new Event();
+                this._image = undefined;
+                this._imageSubscription = undefined;
+                this._repeat = undefined;
+                this._repeatSubscription = undefined;
+                this._color = undefined;
+                this._colorSubscription = undefined;
+                this._transparent = undefined;
+                this._transparentSubscription = undefined;
+                this.image = options.image;
+                this.repeat = options.repeat;
+                this.color = options.color;
+                this.transparent = options.transparent;
+            }
+            /**
+                 * Gets the {@link Material} type at the provided time.
+                 *
+                 * @param {JulianDate} time The time for which to retrieve the type.
+                 * @returns {String} The type of material.
+                 */
+            getType(time) {
+                return 'Image';
+            }
+            /**
+                 * Gets the value of the property at the provided time.
+                 *
+                 * @param {JulianDate} time The time for which to retrieve the value.
+                 * @param {Object} [result] The object to store the value into, if omitted, a new instance is created and returned.
+                 * @returns {Object} The modified result parameter or a new instance if the result parameter was not supplied.
+                 */
+            getValue(time, result) {
+                if (!defined(result)) {
+                    result = {};
+                }
+                result.image = Property.getValueOrUndefined(this._image, time);
+                result.repeat = Property.getValueOrClonedDefault(this._repeat, time, defaultRepeat, result.repeat);
+                result.color = Property.getValueOrClonedDefault(this._color, time, defaultColor, result.color);
+                if (Property.getValueOrDefault(this._transparent, time, defaultTransparent)) {
+                    result.color.alpha = Math.min(0.99, result.color.alpha);
+                }
+                return result;
+            }
+            /**
+                 * Compares this property to the provided property and returns
+                 * <code>true</code> if they are equal, <code>false</code> otherwise.
+                 *
+                 * @param {Property} [other] The other property.
+                 * @returns {Boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
+                 */
+            equals(other) {
+                return this === other ||
+                    (other instanceof ImageMaterialProperty &&
+                        Property.equals(this._image, other._image) &&
+                        Property.equals(this._color, other._color) &&
+                        Property.equals(this._transparent, other._transparent) &&
+                        Property.equals(this._repeat, other._repeat));
+            }
+        }
 
     defineProperties(ImageMaterialProperty.prototype, {
         /**
@@ -108,53 +152,8 @@ define([
         transparent : createPropertyDescriptor('transparent')
     });
 
-    /**
-     * Gets the {@link Material} type at the provided time.
-     *
-     * @param {JulianDate} time The time for which to retrieve the type.
-     * @returns {String} The type of material.
-     */
-    ImageMaterialProperty.prototype.getType = function(time) {
-        return 'Image';
-    };
 
-    /**
-     * Gets the value of the property at the provided time.
-     *
-     * @param {JulianDate} time The time for which to retrieve the value.
-     * @param {Object} [result] The object to store the value into, if omitted, a new instance is created and returned.
-     * @returns {Object} The modified result parameter or a new instance if the result parameter was not supplied.
-     */
-    ImageMaterialProperty.prototype.getValue = function(time, result) {
-        if (!defined(result)) {
-            result = {};
-        }
 
-        result.image = Property.getValueOrUndefined(this._image, time);
-        result.repeat = Property.getValueOrClonedDefault(this._repeat, time, defaultRepeat, result.repeat);
-        result.color = Property.getValueOrClonedDefault(this._color, time, defaultColor, result.color);
-        if (Property.getValueOrDefault(this._transparent, time, defaultTransparent)) {
-            result.color.alpha = Math.min(0.99, result.color.alpha);
-        }
-
-        return result;
-    };
-
-    /**
-     * Compares this property to the provided property and returns
-     * <code>true</code> if they are equal, <code>false</code> otherwise.
-     *
-     * @param {Property} [other] The other property.
-     * @returns {Boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
-     */
-    ImageMaterialProperty.prototype.equals = function(other) {
-        return this === other ||
-               (other instanceof ImageMaterialProperty &&
-                Property.equals(this._image, other._image) &&
-                Property.equals(this._color, other._color) &&
-                Property.equals(this._transparent, other._transparent) &&
-                Property.equals(this._repeat, other._repeat));
-    };
 
     return ImageMaterialProperty;
 });

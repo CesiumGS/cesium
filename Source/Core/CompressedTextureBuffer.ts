@@ -6,22 +6,44 @@ define([
         defineProperties) {
     'use strict';
 
-    /**
-     * Describes a compressed texture and contains a compressed texture buffer.
-     * @alias CompressedTextureBuffer
-     * @constructor
-     *
-     * @param {PixelFormat} internalFormat The pixel format of the compressed texture.
-     * @param {Number} width The width of the texture.
-     * @param {Number} height The height of the texture.
-     * @param {Uint8Array} buffer The compressed texture buffer.
-     */
-    function CompressedTextureBuffer(internalFormat, width, height, buffer) {
-        this._format = internalFormat;
-        this._width = width;
-        this._height = height;
-        this._buffer =  buffer;
-    }
+        /**
+             * Describes a compressed texture and contains a compressed texture buffer.
+             * @alias CompressedTextureBuffer
+             * @constructor
+             *
+             * @param {PixelFormat} internalFormat The pixel format of the compressed texture.
+             * @param {Number} width The width of the texture.
+             * @param {Number} height The height of the texture.
+             * @param {Uint8Array} buffer The compressed texture buffer.
+             */
+        class CompressedTextureBuffer {
+            constructor(internalFormat, width, height, buffer) {
+                this._format = internalFormat;
+                this._width = width;
+                this._height = height;
+                this._buffer = buffer;
+            }
+            /**
+                 * Creates a shallow clone of this compressed texture buffer.
+                 *
+                 * @return {CompressedTextureBuffer} A shallow clone of the compressed texture buffer.
+                 */
+            clone() {
+                return CompressedTextureBuffer.clone(this);
+            }
+            /**
+                 * Creates a shallow clone of a compressed texture buffer.
+                 *
+                 * @param {CompressedTextureBuffer} object The compressed texture buffer to be cloned.
+                 * @return {CompressedTextureBuffer} A shallow clone of the compressed texture buffer.
+                 */
+            static clone(object) {
+                if (!defined(object)) {
+                    return undefined;
+                }
+                return new CompressedTextureBuffer(object._format, object._width, object._height, object._buffer);
+            }
+        }
 
     defineProperties(CompressedTextureBuffer.prototype, {
         /**
@@ -70,28 +92,7 @@ define([
         }
     });
 
-    /**
-     * Creates a shallow clone of a compressed texture buffer.
-     *
-     * @param {CompressedTextureBuffer} object The compressed texture buffer to be cloned.
-     * @return {CompressedTextureBuffer} A shallow clone of the compressed texture buffer.
-     */
-    CompressedTextureBuffer.clone = function(object) {
-        if (!defined(object)) {
-            return undefined;
-        }
 
-        return new CompressedTextureBuffer(object._format, object._width, object._height, object._buffer);
-    };
-
-    /**
-     * Creates a shallow clone of this compressed texture buffer.
-     *
-     * @return {CompressedTextureBuffer} A shallow clone of the compressed texture buffer.
-     */
-    CompressedTextureBuffer.prototype.clone = function() {
-        return CompressedTextureBuffer.clone(this);
-    };
 
     return CompressedTextureBuffer;
 });

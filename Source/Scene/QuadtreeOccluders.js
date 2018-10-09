@@ -8,18 +8,20 @@ define([
         EllipsoidalOccluder) {
     'use strict';
 
-    /**
-     * A set of occluders that can be used to test quadtree tiles for occlusion.
-     *
-     * @alias QuadtreeOccluders
-     * @constructor
-     * @private
-     *
-     * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid that potentially occludes tiles.
-     */
-    function QuadtreeOccluders(options) {
-        this._ellipsoid = new EllipsoidalOccluder(options.ellipsoid, Cartesian3.ZERO);
-    }
+        /**
+             * A set of occluders that can be used to test quadtree tiles for occlusion.
+             *
+             * @alias QuadtreeOccluders
+             * @constructor
+             * @private
+             *
+             * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid that potentially occludes tiles.
+             */
+        class QuadtreeOccluders {
+            constructor(options) {
+                this._ellipsoid = new EllipsoidalOccluder(options.ellipsoid, Cartesian3.ZERO);
+            }
+        }
 
     defineProperties(QuadtreeOccluders.prototype, {
         /**

@@ -54,69 +54,152 @@ define([
         Cesium3DTileFeature) {
     'use strict';
 
-    /**
-     * Creates a batch of polylines that have been subdivided to be draped on terrain.
-     *
-     * @alias Vector3DTilePolylines
-     * @constructor
-     *
-     * @param {Object} options An object with following properties:
-     * @param {Uint16Array} options.positions The positions of the polylines
-     * @param {Uint32Array} options.counts The number or positions in the each polyline.
-     * @param {Uint16Array} options.widths The width of each polyline.
-     * @param {Number} options.minimumHeight The minimum height of the terrain covered by the tile.
-     * @param {Number} options.maximumHeight The maximum height of the terrain covered by the tile.
-     * @param {Rectangle} options.rectangle The rectangle containing the tile.
-     * @param {Cartesian3} [options.center=Cartesian3.ZERO] The RTC center.
-     * @param {Cesium3DTileBatchTable} options.batchTable The batch table for the tile containing the batched polylines.
-     * @param {Uint16Array} options.batchIds The batch ids for each polyline.
-     * @param {BoundingSphere} options.boundingVolume The bounding volume for the entire batch of polylines.
-     *
-     * @private
-     */
-    function Vector3DTilePolylines(options) {
-        // these arrays are all released after the first update.
-        this._positions = options.positions;
-        this._widths = options.widths;
-        this._counts = options.counts;
-        this._batchIds = options.batchIds;
-
-        this._ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
-        this._minimumHeight = options.minimumHeight;
-        this._maximumHeight = options.maximumHeight;
-        this._center = options.center;
-        this._rectangle = options.rectangle;
-
-        this._boundingVolume = options.boundingVolume;
-        this._batchTable = options.batchTable;
-
-        this._va = undefined;
-        this._sp = undefined;
-        this._rs = undefined;
-        this._uniformMap = undefined;
-        this._command = undefined;
-
-        this._transferrableBatchIds = undefined;
-        this._packedBuffer = undefined;
-
-        this._currentPositions = undefined;
-        this._previousPositions = undefined;
-        this._nextPositions = undefined;
-        this._expandAndWidth = undefined;
-        this._vertexBatchIds = undefined;
-        this._indices = undefined;
-
-        this._constantColor = Color.clone(Color.WHITE);
-        this._highlightColor = this._constantColor;
-
-        this._trianglesLength = 0;
-        this._geometryByteLength = 0;
-
-        this._ready = false;
-        this._readyPromise = when.defer();
-
-        this._verticesPromise = undefined;
-    }
+        /**
+             * Creates a batch of polylines that have been subdivided to be draped on terrain.
+             *
+             * @alias Vector3DTilePolylines
+             * @constructor
+             *
+             * @param {Object} options An object with following properties:
+             * @param {Uint16Array} options.positions The positions of the polylines
+             * @param {Uint32Array} options.counts The number or positions in the each polyline.
+             * @param {Uint16Array} options.widths The width of each polyline.
+             * @param {Number} options.minimumHeight The minimum height of the terrain covered by the tile.
+             * @param {Number} options.maximumHeight The maximum height of the terrain covered by the tile.
+             * @param {Rectangle} options.rectangle The rectangle containing the tile.
+             * @param {Cartesian3} [options.center=Cartesian3.ZERO] The RTC center.
+             * @param {Cesium3DTileBatchTable} options.batchTable The batch table for the tile containing the batched polylines.
+             * @param {Uint16Array} options.batchIds The batch ids for each polyline.
+             * @param {BoundingSphere} options.boundingVolume The bounding volume for the entire batch of polylines.
+             *
+             * @private
+             */
+        class Vector3DTilePolylines {
+            constructor(options) {
+                // these arrays are all released after the first update.
+                this._positions = options.positions;
+                this._widths = options.widths;
+                this._counts = options.counts;
+                this._batchIds = options.batchIds;
+                this._ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
+                this._minimumHeight = options.minimumHeight;
+                this._maximumHeight = options.maximumHeight;
+                this._center = options.center;
+                this._rectangle = options.rectangle;
+                this._boundingVolume = options.boundingVolume;
+                this._batchTable = options.batchTable;
+                this._va = undefined;
+                this._sp = undefined;
+                this._rs = undefined;
+                this._uniformMap = undefined;
+                this._command = undefined;
+                this._transferrableBatchIds = undefined;
+                this._packedBuffer = undefined;
+                this._currentPositions = undefined;
+                this._previousPositions = undefined;
+                this._nextPositions = undefined;
+                this._expandAndWidth = undefined;
+                this._vertexBatchIds = undefined;
+                this._indices = undefined;
+                this._constantColor = Color.clone(Color.WHITE);
+                this._highlightColor = this._constantColor;
+                this._trianglesLength = 0;
+                this._geometryByteLength = 0;
+                this._ready = false;
+                this._readyPromise = when.defer();
+                this._verticesPromise = undefined;
+            }
+            /**
+                 * Creates features for each polyline and places it at the batch id index of features.
+                 *
+                 * @param {Vector3DTileContent} content The vector tile content.
+                 * @param {Cesium3DTileFeature[]} features An array of features where the polygon features will be placed.
+                 */
+            createFeatures(content, features) {
+                var batchIds = this._batchIds;
+                var length = batchIds.length;
+                for (var i = 0; i < length; ++i) {
+                    var batchId = batchIds[i];
+                    features[batchId] = new Cesium3DTileFeature(content, batchId);
+                }
+            }
+            /**
+                 * Colors the entire tile when enabled is true. The resulting color will be (polyline batch table color * color).
+                 *
+                 * @param {Boolean} enabled Whether to enable debug coloring.
+                 * @param {Color} color The debug color.
+                 */
+            applyDebugSettings(enabled, color) {
+                this._highlightColor = enabled ? color : this._constantColor;
+            }
+            /**
+                 * Apply a style to the content.
+                 *
+                 * @param {Cesium3DTileStyle} style The style.
+                 * @param {Cesium3DTileFeature[]} features The array of features.
+                 */
+            applyStyle(style, features) {
+                if (!defined(style)) {
+                    clearStyle(this, features);
+                    return;
+                }
+                var batchIds = this._batchIds;
+                var length = batchIds.length;
+                for (var i = 0; i < length; ++i) {
+                    var batchId = batchIds[i];
+                    var feature = features[batchId];
+                    feature.color = defined(style.color) ? style.color.evaluateColor(feature, scratchColor) : DEFAULT_COLOR_VALUE;
+                    feature.show = defined(style.show) ? style.show.evaluate(feature) : DEFAULT_SHOW_VALUE;
+                }
+            }
+            /**
+                 * Updates the batches and queues the commands for rendering.
+                 *
+                 * @param {FrameState} frameState The current frame state.
+                 */
+            update(frameState) {
+                var context = frameState.context;
+                createVertexArray(this, context);
+                createUniformMap(this, context);
+                createShaders(this, context);
+                createRenderStates(this);
+                if (!this._ready) {
+                    return;
+                }
+                var passes = frameState.passes;
+                if (passes.render || passes.pick) {
+                    queueCommands(this, frameState);
+                }
+            }
+            /**
+                 * Returns true if this object was destroyed; otherwise, false.
+                 * <p>
+                 * If this object was destroyed, it should not be used; calling any function other than
+                 * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
+                 * </p>
+                 *
+                 * @returns {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
+                 */
+            isDestroyed() {
+                return false;
+            }
+            /**
+                 * Destroys the WebGL resources held by this object.  Destroying an object allows for deterministic
+                 * release of WebGL resources, instead of relying on the garbage collector to destroy this object.
+                 * <p>
+                 * Once an object is destroyed, it should not be used; calling any function other than
+                 * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
+                 * assign the return value (<code>undefined</code>) to the object as done in the example.
+                 * </p>
+                 *
+                 * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
+                 */
+            destroy() {
+                this._va = this._va && this._va.destroy();
+                this._sp = this._sp && this._sp.destroy();
+                return destroyObject(this);
+            }
+        }
 
     defineProperties(Vector3DTilePolylines.prototype, {
         /**
@@ -444,30 +527,7 @@ define([
         frameState.commandList.push(primitive._command);
     }
 
-    /**
-     * Creates features for each polyline and places it at the batch id index of features.
-     *
-     * @param {Vector3DTileContent} content The vector tile content.
-     * @param {Cesium3DTileFeature[]} features An array of features where the polygon features will be placed.
-     */
-    Vector3DTilePolylines.prototype.createFeatures = function(content, features) {
-        var batchIds = this._batchIds;
-        var length = batchIds.length;
-        for (var i = 0; i < length; ++i) {
-            var batchId = batchIds[i];
-            features[batchId] = new Cesium3DTileFeature(content, batchId);
-        }
-    };
 
-    /**
-     * Colors the entire tile when enabled is true. The resulting color will be (polyline batch table color * color).
-     *
-     * @param {Boolean} enabled Whether to enable debug coloring.
-     * @param {Color} color The debug color.
-     */
-    Vector3DTilePolylines.prototype.applyDebugSettings = function(enabled, color) {
-        this._highlightColor = enabled ? color : this._constantColor;
-    };
 
     function clearStyle(polygons, features) {
         var batchIds = polygons._batchIds;
@@ -486,81 +546,9 @@ define([
     var DEFAULT_COLOR_VALUE = Color.WHITE;
     var DEFAULT_SHOW_VALUE = true;
 
-    /**
-     * Apply a style to the content.
-     *
-     * @param {Cesium3DTileStyle} style The style.
-     * @param {Cesium3DTileFeature[]} features The array of features.
-     */
-    Vector3DTilePolylines.prototype.applyStyle = function(style, features) {
-        if (!defined(style)) {
-            clearStyle(this, features);
-            return;
-        }
 
-        var batchIds = this._batchIds;
-        var length = batchIds.length;
-        for (var i = 0; i < length; ++i) {
-            var batchId = batchIds[i];
-            var feature = features[batchId];
 
-            feature.color = defined(style.color) ? style.color.evaluateColor(feature, scratchColor) : DEFAULT_COLOR_VALUE;
-            feature.show = defined(style.show) ? style.show.evaluate(feature) : DEFAULT_SHOW_VALUE;
-        }
-    };
 
-    /**
-     * Updates the batches and queues the commands for rendering.
-     *
-     * @param {FrameState} frameState The current frame state.
-     */
-    Vector3DTilePolylines.prototype.update = function(frameState) {
-        var context = frameState.context;
-
-        createVertexArray(this, context);
-        createUniformMap(this, context);
-        createShaders(this, context);
-        createRenderStates(this);
-
-        if (!this._ready) {
-            return;
-        }
-
-        var passes = frameState.passes;
-        if (passes.render || passes.pick) {
-            queueCommands(this, frameState);
-        }
-    };
-
-    /**
-     * Returns true if this object was destroyed; otherwise, false.
-     * <p>
-     * If this object was destroyed, it should not be used; calling any function other than
-     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
-     * </p>
-     *
-     * @returns {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
-     */
-    Vector3DTilePolylines.prototype.isDestroyed = function() {
-        return false;
-    };
-
-    /**
-     * Destroys the WebGL resources held by this object.  Destroying an object allows for deterministic
-     * release of WebGL resources, instead of relying on the garbage collector to destroy this object.
-     * <p>
-     * Once an object is destroyed, it should not be used; calling any function other than
-     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
-     * assign the return value (<code>undefined</code>) to the object as done in the example.
-     * </p>
-     *
-     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
-     */
-    Vector3DTilePolylines.prototype.destroy = function() {
-        this._va = this._va && this._va.destroy();
-        this._sp = this._sp && this._sp.destroy();
-        return destroyObject(this);
-    };
 
     return Vector3DTilePolylines;
 });

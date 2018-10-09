@@ -195,54 +195,105 @@ define([
         }
     }
 
-    /**
-     * A utility object for tracking an entity with the camera.
-     * @alias EntityView
-     * @constructor
-     *
-     * @param {Entity} entity The entity to track with the camera.
-     * @param {Scene} scene The scene to use.
-     * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid to use for orienting the camera.
-     */
-    function EntityView(entity, scene, ellipsoid) {
-        //>>includeStart('debug', pragmas.debug);
-        Check.defined('entity', entity);
-        Check.defined('scene', scene);
-        //>>includeEnd('debug');
-
         /**
-         * The entity to track with the camera.
-         * @type {Entity}
-         */
-        this.entity = entity;
-
-        /**
-         * The scene in which to track the object.
-         * @type {Scene}
-         */
-        this.scene = scene;
-
-        /**
-         * The ellipsoid to use for orienting the camera.
-         * @type {Ellipsoid}
-         */
-        this.ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
-
-        /**
-         * The bounding sphere of the object.
-         * @type {BoundingSphere}
-         */
-        this.boundingSphere = undefined;
-
-        // Shadow copies of the objects so we can detect changes.
-        this._lastEntity = undefined;
-        this._mode = undefined;
-
-        this._lastCartesian = new Cartesian3();
-        this._defaultOffset3D = undefined;
-
-        this._offset3D = new Cartesian3();
-    }
+             * A utility object for tracking an entity with the camera.
+             * @alias EntityView
+             * @constructor
+             *
+             * @param {Entity} entity The entity to track with the camera.
+             * @param {Scene} scene The scene to use.
+             * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid to use for orienting the camera.
+             */
+        class EntityView {
+            constructor(entity, scene, ellipsoid) {
+                //>>includeStart('debug', pragmas.debug);
+                Check.defined('entity', entity);
+                Check.defined('scene', scene);
+                //>>includeEnd('debug');
+                /**
+                 * The entity to track with the camera.
+                 * @type {Entity}
+                 */
+                this.entity = entity;
+                /**
+                 * The scene in which to track the object.
+                 * @type {Scene}
+                 */
+                this.scene = scene;
+                /**
+                 * The ellipsoid to use for orienting the camera.
+                 * @type {Ellipsoid}
+                 */
+                this.ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
+                /**
+                 * The bounding sphere of the object.
+                 * @type {BoundingSphere}
+                 */
+                this.boundingSphere = undefined;
+                // Shadow copies of the objects so we can detect changes.
+                this._lastEntity = undefined;
+                this._mode = undefined;
+                this._lastCartesian = new Cartesian3();
+                this._defaultOffset3D = undefined;
+                this._offset3D = new Cartesian3();
+            }
+            /**
+                 * Should be called each animation frame to update the camera
+                 * to the latest settings.
+                 * @param {JulianDate} time The current animation time.
+                 * @param {BoundingSphere} [boundingSphere] bounding sphere of the object.
+                 */
+            update(time, boundingSphere) {
+                //>>includeStart('debug', pragmas.debug);
+                Check.defined('time', time);
+                //>>includeEnd('debug');
+                var scene = this.scene;
+                var ellipsoid = this.ellipsoid;
+                var sceneMode = scene.mode;
+                if (sceneMode === SceneMode.MORPHING) {
+                    return;
+                }
+                var entity = this.entity;
+                var positionProperty = entity.position;
+                if (!defined(positionProperty)) {
+                    return;
+                }
+                var objectChanged = entity !== this._lastEntity;
+                var sceneModeChanged = sceneMode !== this._mode;
+                var camera = scene.camera;
+                var updateLookAt = objectChanged || sceneModeChanged;
+                var saveCamera = true;
+                if (objectChanged) {
+                    var viewFromProperty = entity.viewFrom;
+                    var hasViewFrom = defined(viewFromProperty);
+                    if (!hasViewFrom && defined(boundingSphere)) {
+                        // The default HPR is not ideal for high altitude objects so
+                        // we scale the pitch as we get further from the earth for a more
+                        // downward view.
+                        scratchHeadingPitchRange.pitch = -CesiumMath.PI_OVER_FOUR;
+                        scratchHeadingPitchRange.range = 0;
+                        var position = positionProperty.getValue(time, scratchCartesian);
+                        if (defined(position)) {
+                            var factor = 2 - 1 / Math.max(1, Cartesian3.magnitude(position) / ellipsoid.maximumRadius);
+                            scratchHeadingPitchRange.pitch *= factor;
+                        }
+                        camera.viewBoundingSphere(boundingSphere, scratchHeadingPitchRange);
+                        this.boundingSphere = boundingSphere;
+                        updateLookAt = false;
+                        saveCamera = false;
+                    }
+                    else if (!hasViewFrom || !defined(viewFromProperty.getValue(time, this._offset3D))) {
+                        Cartesian3.clone(EntityView._defaultOffset3D, this._offset3D);
+                    }
+                }
+                else if (!sceneModeChanged && this._mode !== SceneMode.SCENE2D) {
+                    Cartesian3.clone(camera.position, this._offset3D);
+                }
+                this._lastEntity = entity;
+                this._mode = sceneMode;
+                updateTransform(this, camera, updateLookAt, saveCamera, positionProperty, time, ellipsoid);
+            }
+        }
 
     // STATIC properties defined here, not per-instance.
     defineProperties(EntityView, {
@@ -268,69 +319,6 @@ define([
     var scratchHeadingPitchRange = new HeadingPitchRange();
     var scratchCartesian = new Cartesian3();
 
-    /**
-     * Should be called each animation frame to update the camera
-     * to the latest settings.
-     * @param {JulianDate} time The current animation time.
-     * @param {BoundingSphere} [boundingSphere] bounding sphere of the object.
-     */
-    EntityView.prototype.update = function(time, boundingSphere) {
-        //>>includeStart('debug', pragmas.debug);
-        Check.defined('time', time);
-        //>>includeEnd('debug');
-
-        var scene = this.scene;
-        var ellipsoid = this.ellipsoid;
-        var sceneMode = scene.mode;
-        if (sceneMode === SceneMode.MORPHING) {
-            return;
-        }
-
-        var entity = this.entity;
-        var positionProperty = entity.position;
-        if (!defined(positionProperty)) {
-            return;
-        }
-        var objectChanged = entity !== this._lastEntity;
-        var sceneModeChanged = sceneMode !== this._mode;
-
-        var camera = scene.camera;
-
-        var updateLookAt = objectChanged || sceneModeChanged;
-        var saveCamera = true;
-
-        if (objectChanged) {
-            var viewFromProperty = entity.viewFrom;
-            var hasViewFrom = defined(viewFromProperty);
-
-            if (!hasViewFrom && defined(boundingSphere)) {
-                // The default HPR is not ideal for high altitude objects so
-                // we scale the pitch as we get further from the earth for a more
-                // downward view.
-                scratchHeadingPitchRange.pitch = -CesiumMath.PI_OVER_FOUR;
-                scratchHeadingPitchRange.range = 0;
-                var position = positionProperty.getValue(time, scratchCartesian);
-                if (defined(position)) {
-                    var factor = 2 - 1 / Math.max(1, Cartesian3.magnitude(position) / ellipsoid.maximumRadius);
-                    scratchHeadingPitchRange.pitch *= factor;
-                }
-
-                camera.viewBoundingSphere(boundingSphere, scratchHeadingPitchRange);
-                this.boundingSphere = boundingSphere;
-                updateLookAt = false;
-                saveCamera = false;
-            } else if (!hasViewFrom || !defined(viewFromProperty.getValue(time, this._offset3D))) {
-                Cartesian3.clone(EntityView._defaultOffset3D, this._offset3D);
-            }
-        } else if (!sceneModeChanged && this._mode !== SceneMode.SCENE2D) {
-            Cartesian3.clone(camera.position, this._offset3D);
-        }
-
-        this._lastEntity = entity;
-        this._mode = sceneMode;
-
-        updateTransform(this, camera, updateLookAt, saveCamera, positionProperty, time, ellipsoid);
-    };
 
     return EntityView;
 });

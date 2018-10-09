@@ -6,19 +6,36 @@ define([
         DeveloperError) {
     'use strict';
 
-    /**
-     * Defines the interface for data sources, which turn arbitrary data into a
-     * {@link EntityCollection} for generic consumption. This object is an interface
-     * for documentation purposes and is not intended to be instantiated directly.
-     * @alias DataSource
-     * @constructor
-     *
-     * @see Entity
-     * @see DataSourceDisplay
-     */
-    function DataSource() {
-        DeveloperError.throwInstantiationError();
-    }
+        /**
+             * Defines the interface for data sources, which turn arbitrary data into a
+             * {@link EntityCollection} for generic consumption. This object is an interface
+             * for documentation purposes and is not intended to be instantiated directly.
+             * @alias DataSource
+             * @constructor
+             *
+             * @see Entity
+             * @see DataSourceDisplay
+             */
+        class DataSource {
+            constructor() {
+                DeveloperError.throwInstantiationError();
+            }
+            /**
+                 * @private
+                 */
+            static setLoading(dataSource, isLoading) {
+                if (dataSource._isLoading !== isLoading) {
+                    if (isLoading) {
+                        dataSource._entityCollection.suspendEvents();
+                    }
+                    else {
+                        dataSource._entityCollection.resumeEvents();
+                    }
+                    dataSource._isLoading = isLoading;
+                    dataSource._loading.raiseEvent(dataSource, isLoading);
+                }
+            }
+        }
 
     defineProperties(DataSource.prototype, {
         /**
@@ -109,20 +126,6 @@ define([
      */
     DataSource.prototype.update = DeveloperError.throwInstantiationError;
 
-    /**
-     * @private
-     */
-    DataSource.setLoading = function(dataSource, isLoading) {
-        if (dataSource._isLoading !== isLoading) {
-            if (isLoading) {
-                dataSource._entityCollection.suspendEvents();
-            } else {
-                dataSource._entityCollection.resumeEvents();
-            }
-            dataSource._isLoading = isLoading;
-            dataSource._loading.raiseEvent(dataSource, isLoading);
-        }
-    };
 
     return DataSource;
 });

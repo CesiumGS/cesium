@@ -51,7 +51,7 @@ define([
      * job of optimizing lookups if it notices that the string is constant throughout the function.
      * @private
      */
-    function createPropertyDescriptor(name, configurable, createPropertyCallback) {
+    export function createPropertyDescriptor(name, configurable, createPropertyCallback) {
         //Safari 8.0.3 has a JavaScript bug that causes it to confuse two variables and treat them as the same.
         //The two extra toString calls work around the issue.
         return createProperty(name, '_' + name.toString(), '_' + name.toString() + 'Subscription', defaultValue(configurable, false), defaultValue(createPropertyCallback, createConstantProperty));

@@ -26,94 +26,132 @@ define([
         when) {
     'use strict';
 
-    /**
-     * Provides a single, top-level imagery tile.  The single image is assumed to use a
-     * {@link GeographicTilingScheme}.
-     *
-     * @alias SingleTileImageryProvider
-     * @constructor
-     *
-     * @param {Object} options Object with the following properties:
-     * @param {Resource|String} options.url The url for the tile.
-     * @param {Rectangle} [options.rectangle=Rectangle.MAX_VALUE] The rectangle, in radians, covered by the image.
-     * @param {Credit|String} [options.credit] A credit for the data source, which is displayed on the canvas.
-     * @param {Ellipsoid} [options.ellipsoid] The ellipsoid.  If not specified, the WGS84 ellipsoid is used.
-     *
-     * @see ArcGisMapServerImageryProvider
-     * @see BingMapsImageryProvider
-     * @see GoogleEarthEnterpriseMapsProvider
-     * @see createOpenStreetMapImageryProvider
-     * @see createTileMapServiceImageryProvider
-     * @see WebMapServiceImageryProvider
-     * @see WebMapTileServiceImageryProvider
-     * @see UrlTemplateImageryProvider
-     */
-    function SingleTileImageryProvider(options) {
-        options = defaultValue(options, {});
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(options.url)) {
-            throw new DeveloperError('options.url is required.');
+        /**
+             * Provides a single, top-level imagery tile.  The single image is assumed to use a
+             * {@link GeographicTilingScheme}.
+             *
+             * @alias SingleTileImageryProvider
+             * @constructor
+             *
+             * @param {Object} options Object with the following properties:
+             * @param {Resource|String} options.url The url for the tile.
+             * @param {Rectangle} [options.rectangle=Rectangle.MAX_VALUE] The rectangle, in radians, covered by the image.
+             * @param {Credit|String} [options.credit] A credit for the data source, which is displayed on the canvas.
+             * @param {Ellipsoid} [options.ellipsoid] The ellipsoid.  If not specified, the WGS84 ellipsoid is used.
+             *
+             * @see ArcGisMapServerImageryProvider
+             * @see BingMapsImageryProvider
+             * @see GoogleEarthEnterpriseMapsProvider
+             * @see createOpenStreetMapImageryProvider
+             * @see createTileMapServiceImageryProvider
+             * @see WebMapServiceImageryProvider
+             * @see WebMapTileServiceImageryProvider
+             * @see UrlTemplateImageryProvider
+             */
+        class SingleTileImageryProvider {
+            constructor(options) {
+                options = defaultValue(options, {});
+                //>>includeStart('debug', pragmas.debug);
+                if (!defined(options.url)) {
+                    throw new DeveloperError('options.url is required.');
+                }
+                //>>includeEnd('debug');
+                var resource = Resource.createIfNeeded(options.url);
+                var rectangle = defaultValue(options.rectangle, Rectangle.MAX_VALUE);
+                var tilingScheme = new GeographicTilingScheme({
+                    rectangle: rectangle,
+                    numberOfLevelZeroTilesX: 1,
+                    numberOfLevelZeroTilesY: 1,
+                    ellipsoid: options.ellipsoid
+                });
+                this._tilingScheme = tilingScheme;
+                this._resource = resource;
+                this._image = undefined;
+                this._texture = undefined;
+                this._tileWidth = 0;
+                this._tileHeight = 0;
+                this._errorEvent = new Event();
+                this._ready = false;
+                this._readyPromise = when.defer();
+                var credit = options.credit;
+                if (typeof credit === 'string') {
+                    credit = new Credit(credit);
+                }
+                this._credit = credit;
+                var that = this;
+                var error;
+                function success(image) {
+                    that._image = image;
+                    that._tileWidth = image.width;
+                    that._tileHeight = image.height;
+                    that._ready = true;
+                    that._readyPromise.resolve(true);
+                    TileProviderError.handleSuccess(that._errorEvent);
+                }
+                function failure(e) {
+                    var message = 'Failed to load image ' + resource.url + '.';
+                    error = TileProviderError.handleError(error, that, that._errorEvent, message, 0, 0, 0, doRequest, e);
+                    that._readyPromise.reject(new RuntimeError(message));
+                }
+                function doRequest() {
+                    when(resource.fetchImage(), success, failure);
+                }
+                doRequest();
+            }
+            /**
+                 * Gets the credits to be displayed when a given tile is displayed.
+                 *
+                 * @param {Number} x The tile X coordinate.
+                 * @param {Number} y The tile Y coordinate.
+                 * @param {Number} level The tile level;
+                 * @returns {Credit[]} The credits to be displayed when the tile is displayed.
+                 *
+                 * @exception {DeveloperError} <code>getTileCredits</code> must not be called before the imagery provider is ready.
+                 */
+            getTileCredits(x, y, level) {
+                return undefined;
+            }
+            /**
+                 * Requests the image for a given tile.  This function should
+                 * not be called before {@link SingleTileImageryProvider#ready} returns true.
+                 *
+                 * @param {Number} x The tile X coordinate.
+                 * @param {Number} y The tile Y coordinate.
+                 * @param {Number} level The tile level.
+                 * @param {Request} [request] The request object. Intended for internal use only.
+                 * @returns {Promise.<Image|Canvas>|undefined} A promise for the image that will resolve when the image is available, or
+                 *          undefined if there are too many active requests to the server, and the request
+                 *          should be retried later.  The resolved image may be either an
+                 *          Image or a Canvas DOM object.
+                 *
+                 * @exception {DeveloperError} <code>requestImage</code> must not be called before the imagery provider is ready.
+                 */
+            requestImage(x, y, level, request) {
+                //>>includeStart('debug', pragmas.debug);
+                if (!this._ready) {
+                    throw new DeveloperError('requestImage must not be called before the imagery provider is ready.');
+                }
+                //>>includeEnd('debug');
+                return this._image;
+            }
+            /**
+                 * Picking features is not currently supported by this imagery provider, so this function simply returns
+                 * undefined.
+                 *
+                 * @param {Number} x The tile X coordinate.
+                 * @param {Number} y The tile Y coordinate.
+                 * @param {Number} level The tile level.
+                 * @param {Number} longitude The longitude at which to pick features.
+                 * @param {Number} latitude  The latitude at which to pick features.
+                 * @return {Promise.<ImageryLayerFeatureInfo[]>|undefined} A promise for the picked features that will resolve when the asynchronous
+                 *                   picking completes.  The resolved value is an array of {@link ImageryLayerFeatureInfo}
+                 *                   instances.  The array may be empty if no features are found at the given location.
+                 *                   It may also be undefined if picking is not supported.
+                 */
+            pickFeatures(x, y, level, longitude, latitude) {
+                return undefined;
+            }
         }
-        //>>includeEnd('debug');
-
-        var resource = Resource.createIfNeeded(options.url);
-
-        var rectangle = defaultValue(options.rectangle, Rectangle.MAX_VALUE);
-        var tilingScheme = new GeographicTilingScheme({
-            rectangle : rectangle,
-            numberOfLevelZeroTilesX : 1,
-            numberOfLevelZeroTilesY : 1,
-            ellipsoid : options.ellipsoid
-        });
-        this._tilingScheme = tilingScheme;
-        this._resource = resource;
-        this._image = undefined;
-        this._texture = undefined;
-        this._tileWidth = 0;
-        this._tileHeight = 0;
-
-        this._errorEvent = new Event();
-
-        this._ready = false;
-        this._readyPromise = when.defer();
-
-        var credit = options.credit;
-        if (typeof credit === 'string') {
-            credit = new Credit(credit);
-        }
-        this._credit = credit;
-
-        var that = this;
-        var error;
-
-        function success(image) {
-            that._image = image;
-            that._tileWidth = image.width;
-            that._tileHeight = image.height;
-            that._ready = true;
-            that._readyPromise.resolve(true);
-            TileProviderError.handleSuccess(that._errorEvent);
-        }
-
-        function failure(e) {
-            var message = 'Failed to load image ' + resource.url + '.';
-            error = TileProviderError.handleError(
-                    error,
-                    that,
-                    that._errorEvent,
-                    message,
-                    0, 0, 0,
-                    doRequest,
-                    e);
-            that._readyPromise.reject(new RuntimeError(message));
-        }
-
-        function doRequest() {
-            when(resource.fetchImage(), success, failure);
-        }
-
-        doRequest();
-    }
 
     defineProperties(SingleTileImageryProvider.prototype, {
         /**
@@ -337,62 +375,8 @@ define([
         }
     });
 
-    /**
-     * Gets the credits to be displayed when a given tile is displayed.
-     *
-     * @param {Number} x The tile X coordinate.
-     * @param {Number} y The tile Y coordinate.
-     * @param {Number} level The tile level;
-     * @returns {Credit[]} The credits to be displayed when the tile is displayed.
-     *
-     * @exception {DeveloperError} <code>getTileCredits</code> must not be called before the imagery provider is ready.
-     */
-    SingleTileImageryProvider.prototype.getTileCredits = function(x, y, level) {
-        return undefined;
-    };
 
-    /**
-     * Requests the image for a given tile.  This function should
-     * not be called before {@link SingleTileImageryProvider#ready} returns true.
-     *
-     * @param {Number} x The tile X coordinate.
-     * @param {Number} y The tile Y coordinate.
-     * @param {Number} level The tile level.
-     * @param {Request} [request] The request object. Intended for internal use only.
-     * @returns {Promise.<Image|Canvas>|undefined} A promise for the image that will resolve when the image is available, or
-     *          undefined if there are too many active requests to the server, and the request
-     *          should be retried later.  The resolved image may be either an
-     *          Image or a Canvas DOM object.
-     *
-     * @exception {DeveloperError} <code>requestImage</code> must not be called before the imagery provider is ready.
-     */
-    SingleTileImageryProvider.prototype.requestImage = function(x, y, level, request) {
-        //>>includeStart('debug', pragmas.debug);
-        if (!this._ready) {
-            throw new DeveloperError('requestImage must not be called before the imagery provider is ready.');
-        }
-        //>>includeEnd('debug');
 
-        return this._image;
-    };
-
-    /**
-     * Picking features is not currently supported by this imagery provider, so this function simply returns
-     * undefined.
-     *
-     * @param {Number} x The tile X coordinate.
-     * @param {Number} y The tile Y coordinate.
-     * @param {Number} level The tile level.
-     * @param {Number} longitude The longitude at which to pick features.
-     * @param {Number} latitude  The latitude at which to pick features.
-     * @return {Promise.<ImageryLayerFeatureInfo[]>|undefined} A promise for the picked features that will resolve when the asynchronous
-     *                   picking completes.  The resolved value is an array of {@link ImageryLayerFeatureInfo}
-     *                   instances.  The array may be empty if no features are found at the given location.
-     *                   It may also be undefined if picking is not supported.
-     */
-    SingleTileImageryProvider.prototype.pickFeatures = function(x, y, level, longitude, latitude) {
-        return undefined;
-    };
 
     return SingleTileImageryProvider;
 });

@@ -16,59 +16,111 @@ define([
         createPropertyDescriptor) {
     'use strict';
 
-    /**
-     * Describe an ellipsoid or sphere.  The center position and orientation are determined by the containing {@link Entity}.
-     *
-     * @alias EllipsoidGraphics
-     * @constructor
-     *
-     * @param {Object} [options] Object with the following properties:
-     * @param {Property} [options.heightReference] A Property specifying what the height from the entity position is relative to.
-     * @param {Property} [options.radii] A {@link Cartesian3} Property specifying the radii of the ellipsoid.
-     * @param {Property} [options.show=true] A boolean Property specifying the visibility of the ellipsoid.
-     * @param {Property} [options.fill=true] A boolean Property specifying whether the ellipsoid is filled with the provided material.
-     * @param {MaterialProperty} [options.material=Color.WHITE] A Property specifying the material used to fill the ellipsoid.
-     * @param {Property} [options.outline=false] A boolean Property specifying whether the ellipsoid is outlined.
-     * @param {Property} [options.outlineColor=Color.BLACK] A Property specifying the {@link Color} of the outline.
-     * @param {Property} [options.outlineWidth=1.0] A numeric Property specifying the width of the outline.
-     * @param {Property} [options.subdivisions=128] A Property specifying the number of samples per outline ring, determining the granularity of the curvature.
-     * @param {Property} [options.stackPartitions=64] A Property specifying the number of stacks.
-     * @param {Property} [options.slicePartitions=64] A Property specifying the number of radial slices.
-     * @param {Property} [options.shadows=ShadowMode.DISABLED] An enum Property specifying whether the ellipsoid casts or receives shadows from each light source.
-     * @param {Property} [options.distanceDisplayCondition] A Property specifying at what distance from the camera that this ellipsoid will be displayed.
-     *
-     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Spheres%20and%20Ellipsoids.html|Cesium Sandcastle Spheres and Ellipsoids Demo}
-     */
-    function EllipsoidGraphics(options) {
-        this._heightReference = undefined;
-        this._show = undefined;
-        this._showSubscription = undefined;
-        this._radii = undefined;
-        this._radiiSubscription = undefined;
-        this._material = undefined;
-        this._materialSubscription = undefined;
-        this._stackPartitions = undefined;
-        this._stackPartitionsSubscription = undefined;
-        this._slicePartitions = undefined;
-        this._slicePartitionsSubscription = undefined;
-        this._subdivisions = undefined;
-        this._subdivisionsSubscription = undefined;
-        this._fill = undefined;
-        this._fillSubscription = undefined;
-        this._outline = undefined;
-        this._outlineSubscription = undefined;
-        this._outlineColor = undefined;
-        this._outlineColorSubscription = undefined;
-        this._outlineWidth = undefined;
-        this._outlineWidthSubscription = undefined;
-        this._shadows = undefined;
-        this._shadowsSubscription = undefined;
-        this._distanceDisplayCondition = undefined;
-        this._distanceDisplayConditionSubscription = undefined;
-        this._definitionChanged = new Event();
-
-        this.merge(defaultValue(options, defaultValue.EMPTY_OBJECT));
-    }
+        /**
+             * Describe an ellipsoid or sphere.  The center position and orientation are determined by the containing {@link Entity}.
+             *
+             * @alias EllipsoidGraphics
+             * @constructor
+             *
+             * @param {Object} [options] Object with the following properties:
+             * @param {Property} [options.heightReference] A Property specifying what the height from the entity position is relative to.
+             * @param {Property} [options.radii] A {@link Cartesian3} Property specifying the radii of the ellipsoid.
+             * @param {Property} [options.show=true] A boolean Property specifying the visibility of the ellipsoid.
+             * @param {Property} [options.fill=true] A boolean Property specifying whether the ellipsoid is filled with the provided material.
+             * @param {MaterialProperty} [options.material=Color.WHITE] A Property specifying the material used to fill the ellipsoid.
+             * @param {Property} [options.outline=false] A boolean Property specifying whether the ellipsoid is outlined.
+             * @param {Property} [options.outlineColor=Color.BLACK] A Property specifying the {@link Color} of the outline.
+             * @param {Property} [options.outlineWidth=1.0] A numeric Property specifying the width of the outline.
+             * @param {Property} [options.subdivisions=128] A Property specifying the number of samples per outline ring, determining the granularity of the curvature.
+             * @param {Property} [options.stackPartitions=64] A Property specifying the number of stacks.
+             * @param {Property} [options.slicePartitions=64] A Property specifying the number of radial slices.
+             * @param {Property} [options.shadows=ShadowMode.DISABLED] An enum Property specifying whether the ellipsoid casts or receives shadows from each light source.
+             * @param {Property} [options.distanceDisplayCondition] A Property specifying at what distance from the camera that this ellipsoid will be displayed.
+             *
+             * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Spheres%20and%20Ellipsoids.html|Cesium Sandcastle Spheres and Ellipsoids Demo}
+             */
+        class EllipsoidGraphics {
+            constructor(options) {
+                this._heightReference = undefined;
+                this._show = undefined;
+                this._showSubscription = undefined;
+                this._radii = undefined;
+                this._radiiSubscription = undefined;
+                this._material = undefined;
+                this._materialSubscription = undefined;
+                this._stackPartitions = undefined;
+                this._stackPartitionsSubscription = undefined;
+                this._slicePartitions = undefined;
+                this._slicePartitionsSubscription = undefined;
+                this._subdivisions = undefined;
+                this._subdivisionsSubscription = undefined;
+                this._fill = undefined;
+                this._fillSubscription = undefined;
+                this._outline = undefined;
+                this._outlineSubscription = undefined;
+                this._outlineColor = undefined;
+                this._outlineColorSubscription = undefined;
+                this._outlineWidth = undefined;
+                this._outlineWidthSubscription = undefined;
+                this._shadows = undefined;
+                this._shadowsSubscription = undefined;
+                this._distanceDisplayCondition = undefined;
+                this._distanceDisplayConditionSubscription = undefined;
+                this._definitionChanged = new Event();
+                this.merge(defaultValue(options, defaultValue.EMPTY_OBJECT));
+            }
+            /**
+                 * Duplicates this instance.
+                 *
+                 * @param {EllipsoidGraphics} [result] The object onto which to store the result.
+                 * @returns {EllipsoidGraphics} The modified result parameter or a new instance if one was not provided.
+                 */
+            clone(result) {
+                if (!defined(result)) {
+                    return new EllipsoidGraphics(this);
+                }
+                result.heightReference = this.heightReference;
+                result.show = this.show;
+                result.radii = this.radii;
+                result.material = this.material;
+                result.fill = this.fill;
+                result.outline = this.outline;
+                result.outlineColor = this.outlineColor;
+                result.outlineWidth = this.outlineWidth;
+                result.stackPartitions = this.stackPartitions;
+                result.slicePartitions = this.slicePartitions;
+                result.subdivisions = this.subdivisions;
+                result.shadows = this.shadows;
+                result.distanceDisplayCondition = this.distanceDisplayCondition;
+                return result;
+            }
+            /**
+                 * Assigns each unassigned property on this object to the value
+                 * of the same property on the provided source object.
+                 *
+                 * @param {EllipsoidGraphics} source The object to be merged into this object.
+                 */
+            merge(source) {
+                //>>includeStart('debug', pragmas.debug);
+                if (!defined(source)) {
+                    throw new DeveloperError('source is required.');
+                }
+                //>>includeEnd('debug');
+                this.heightReference = defaultValue(this.heightReference, source.heightReference);
+                this.show = defaultValue(this.show, source.show);
+                this.radii = defaultValue(this.radii, source.radii);
+                this.material = defaultValue(this.material, source.material);
+                this.fill = defaultValue(this.fill, source.fill);
+                this.outline = defaultValue(this.outline, source.outline);
+                this.outlineColor = defaultValue(this.outlineColor, source.outlineColor);
+                this.outlineWidth = defaultValue(this.outlineWidth, source.outlineWidth);
+                this.stackPartitions = defaultValue(this.stackPartitions, source.stackPartitions);
+                this.slicePartitions = defaultValue(this.slicePartitions, source.slicePartitions);
+                this.subdivisions = defaultValue(this.subdivisions, source.subdivisions);
+                this.shadows = defaultValue(this.shadows, source.shadows);
+                this.distanceDisplayCondition = defaultValue(this.distanceDisplayCondition, source.distanceDisplayCondition);
+            }
+        }
 
     defineProperties(EllipsoidGraphics.prototype, {
         /**
@@ -188,60 +240,7 @@ define([
         distanceDisplayCondition : createPropertyDescriptor('distanceDisplayCondition')
     });
 
-    /**
-     * Duplicates this instance.
-     *
-     * @param {EllipsoidGraphics} [result] The object onto which to store the result.
-     * @returns {EllipsoidGraphics} The modified result parameter or a new instance if one was not provided.
-     */
-    EllipsoidGraphics.prototype.clone = function(result) {
-        if (!defined(result)) {
-            return new EllipsoidGraphics(this);
-        }
-        result.heightReference = this.heightReference;
-        result.show = this.show;
-        result.radii = this.radii;
-        result.material = this.material;
-        result.fill = this.fill;
-        result.outline = this.outline;
-        result.outlineColor = this.outlineColor;
-        result.outlineWidth = this.outlineWidth;
-        result.stackPartitions = this.stackPartitions;
-        result.slicePartitions = this.slicePartitions;
-        result.subdivisions = this.subdivisions;
-        result.shadows = this.shadows;
-        result.distanceDisplayCondition = this.distanceDisplayCondition;
 
-        return result;
-    };
-
-    /**
-     * Assigns each unassigned property on this object to the value
-     * of the same property on the provided source object.
-     *
-     * @param {EllipsoidGraphics} source The object to be merged into this object.
-     */
-    EllipsoidGraphics.prototype.merge = function(source) {
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(source)) {
-            throw new DeveloperError('source is required.');
-        }
-        //>>includeEnd('debug');
-
-        this.heightReference = defaultValue(this.heightReference, source.heightReference);
-        this.show = defaultValue(this.show, source.show);
-        this.radii = defaultValue(this.radii, source.radii);
-        this.material = defaultValue(this.material, source.material);
-        this.fill = defaultValue(this.fill, source.fill);
-        this.outline = defaultValue(this.outline, source.outline);
-        this.outlineColor = defaultValue(this.outlineColor, source.outlineColor);
-        this.outlineWidth = defaultValue(this.outlineWidth, source.outlineWidth);
-        this.stackPartitions = defaultValue(this.stackPartitions, source.stackPartitions);
-        this.slicePartitions = defaultValue(this.slicePartitions, source.slicePartitions);
-        this.subdivisions = defaultValue(this.subdivisions, source.subdivisions);
-        this.shadows = defaultValue(this.shadows, source.shadows);
-        this.distanceDisplayCondition = defaultValue(this.distanceDisplayCondition, source.distanceDisplayCondition);
-    };
 
     return EllipsoidGraphics;
 });

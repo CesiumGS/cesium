@@ -36,124 +36,161 @@ define([
         SceneFramebuffer) {
     'use strict';
 
-    function SunPostProcess() {
-        this._sceneFramebuffer = new SceneFramebuffer();
-
-        var scale = 0.125;
-        var stages = new Array(6);
-
-        stages[0] = new PostProcessStage({
-            fragmentShader : PassThrough,
-            textureScale : scale,
-            forcePowerOfTwo : true,
-            sampleMode : PostProcessStageSampleMode.LINEAR
-        });
-
-        var brightPass = stages[1] = new PostProcessStage({
-            fragmentShader : BrightPass,
-            uniforms : {
-                avgLuminance : 0.5, // A guess at the average luminance across the entire scene
-                threshold : 0.25,
-                offset : 0.1
-            },
-            textureScale : scale,
-            forcePowerOfTwo : true
-        });
-
-        var that = this;
-        this._delta = 1.0;
-        this._sigma = 2.0;
-        this._blurStep = new Cartesian2();
-
-        stages[2] = new PostProcessStage({
-            fragmentShader : GaussianBlur1D,
-            uniforms : {
-                step : function() {
-                    that._blurStep.x = that._blurStep.y = 1.0 / brightPass.outputTexture.width;
-                    return that._blurStep;
-                },
-                delta : function() {
-                    return that._delta;
-                },
-                sigma : function() {
-                    return that._sigma;
-                },
-                direction : 0.0
-            },
-            textureScale : scale,
-            forcePowerOfTwo : true
-        });
-
-        stages[3] = new PostProcessStage({
-            fragmentShader : GaussianBlur1D,
-            uniforms : {
-                step : function() {
-                    that._blurStep.x = that._blurStep.y = 1.0 / brightPass.outputTexture.width;
-                    return that._blurStep;
-                },
-                delta : function() {
-                    return that._delta;
-                },
-                sigma : function() {
-                    return that._sigma;
-                },
-                direction : 1.0
-            },
-            textureScale : scale,
-            forcePowerOfTwo : true
-        });
-
-        stages[4] = new PostProcessStage({
-            fragmentShader : PassThrough,
-            sampleMode : PostProcessStageSampleMode.LINEAR
-        });
-
-        this._uCenter = new Cartesian2();
-        this._uRadius = undefined;
-
-        stages[5] = new PostProcessStage({
-            fragmentShader : AdditiveBlend,
-            uniforms : {
-                center : function() {
-                    return that._uCenter;
-                },
-                radius : function() {
-                    return that._uRadius;
-                },
-                colorTexture2 : function() {
-                    return that._sceneFramebuffer.getFramebuffer().getColorTexture(0);
+        class SunPostProcess {
+            constructor() {
+                this._sceneFramebuffer = new SceneFramebuffer();
+                var scale = 0.125;
+                var stages = new Array(6);
+                stages[0] = new PostProcessStage({
+                    fragmentShader: PassThrough,
+                    textureScale: scale,
+                    forcePowerOfTwo: true,
+                    sampleMode: PostProcessStageSampleMode.LINEAR
+                });
+                var brightPass = stages[1] = new PostProcessStage({
+                    fragmentShader: BrightPass,
+                    uniforms: {
+                        avgLuminance: 0.5,
+                        threshold: 0.25,
+                        offset: 0.1
+                    },
+                    textureScale: scale,
+                    forcePowerOfTwo: true
+                });
+                var that = this;
+                this._delta = 1.0;
+                this._sigma = 2.0;
+                this._blurStep = new Cartesian2();
+                stages[2] = new PostProcessStage({
+                    fragmentShader: GaussianBlur1D,
+                    uniforms: {
+                        step: function() {
+                            that._blurStep.x = that._blurStep.y = 1.0 / brightPass.outputTexture.width;
+                            return that._blurStep;
+                        },
+                        delta: function() {
+                            return that._delta;
+                        },
+                        sigma: function() {
+                            return that._sigma;
+                        },
+                        direction: 0.0
+                    },
+                    textureScale: scale,
+                    forcePowerOfTwo: true
+                });
+                stages[3] = new PostProcessStage({
+                    fragmentShader: GaussianBlur1D,
+                    uniforms: {
+                        step: function() {
+                            that._blurStep.x = that._blurStep.y = 1.0 / brightPass.outputTexture.width;
+                            return that._blurStep;
+                        },
+                        delta: function() {
+                            return that._delta;
+                        },
+                        sigma: function() {
+                            return that._sigma;
+                        },
+                        direction: 1.0
+                    },
+                    textureScale: scale,
+                    forcePowerOfTwo: true
+                });
+                stages[4] = new PostProcessStage({
+                    fragmentShader: PassThrough,
+                    sampleMode: PostProcessStageSampleMode.LINEAR
+                });
+                this._uCenter = new Cartesian2();
+                this._uRadius = undefined;
+                stages[5] = new PostProcessStage({
+                    fragmentShader: AdditiveBlend,
+                    uniforms: {
+                        center: function() {
+                            return that._uCenter;
+                        },
+                        radius: function() {
+                            return that._uRadius;
+                        },
+                        colorTexture2: function() {
+                            return that._sceneFramebuffer.getFramebuffer().getColorTexture(0);
+                        }
+                    }
+                });
+                this._stages = new PostProcessStageComposite({
+                    stages: stages
+                });
+                var textureCache = new PostProcessStageTextureCache(this);
+                var length = stages.length;
+                for (var i = 0; i < length; ++i) {
+                    stages[i]._textureCache = textureCache;
+                }
+                this._textureCache = textureCache;
+                this.length = stages.length;
+            }
+            get(index) {
+                return this._stages.get(index);
+            }
+            getStageByName(name) {
+                var length = this._stages.length;
+                for (var i = 0; i < length; ++i) {
+                    var stage = this._stages.get(i);
+                    if (stage.name === name) {
+                        return stage;
+                    }
+                }
+                return undefined;
+            }
+            clear(context, passState, clearColor) {
+                this._sceneFramebuffer.clear(context, passState, clearColor);
+                this._textureCache.clear(context);
+            }
+            update(passState) {
+                var context = passState.context;
+                var viewport = passState.viewport;
+                var sceneFramebuffer = this._sceneFramebuffer;
+                sceneFramebuffer.update(context, viewport);
+                var framebuffer = sceneFramebuffer.getFramebuffer();
+                this._textureCache.update(context);
+                this._stages.update(context, false);
+                updateSunPosition(this, context, viewport);
+                return framebuffer;
+            }
+            execute(context) {
+                var colorTexture = this._sceneFramebuffer.getFramebuffer().getColorTexture(0);
+                var stages = this._stages;
+                var length = stages.length;
+                stages.get(0).execute(context, colorTexture);
+                for (var i = 1; i < length; ++i) {
+                    stages.get(i).execute(context, stages.get(i - 1).outputTexture);
                 }
             }
-        });
-
-        this._stages = new PostProcessStageComposite({
-            stages : stages
-        });
-
-        var textureCache = new PostProcessStageTextureCache(this);
-        var length = stages.length;
-        for (var i = 0; i < length; ++i) {
-            stages[i]._textureCache = textureCache;
-        }
-
-        this._textureCache = textureCache;
-        this.length = stages.length;
-    }
-
-    SunPostProcess.prototype.get = function(index) {
-        return this._stages.get(index);
-    };
-
-    SunPostProcess.prototype.getStageByName = function(name) {
-        var length = this._stages.length;
-        for (var i = 0; i < length; ++i) {
-            var stage = this._stages.get(i);
-            if (stage.name === name) {
-                return stage;
+            copy(context, framebuffer) {
+                if (!defined(this._copyColorCommand)) {
+                    var that = this;
+                    this._copyColorCommand = context.createViewportQuadCommand(PassThrough, {
+                        uniformMap: {
+                            colorTexture: function() {
+                                return that._stages.get(that._stages.length - 1).outputTexture;
+                            }
+                        },
+                        owner: this
+                    });
+                }
+                this._copyColorCommand.framebuffer = framebuffer;
+                this._copyColorCommand.execute(context);
+            }
+            isDestroyed() {
+                return false;
+            }
+            destroy() {
+                this._textureCache.destroy();
+                this._stages.destroy();
+                return destroyObject(this);
             }
         }
-        return undefined;
-    };
+
+
 
     var sunPositionECScratch = new Cartesian4();
     var sunPositionWCScratch = new Cartesian2();
@@ -214,63 +251,11 @@ define([
         }
     }
 
-    SunPostProcess.prototype.clear = function(context, passState, clearColor) {
-        this._sceneFramebuffer.clear(context, passState, clearColor);
-        this._textureCache.clear(context);
-    };
 
-    SunPostProcess.prototype.update = function(passState) {
-        var context = passState.context;
-        var viewport = passState.viewport;
 
-        var sceneFramebuffer = this._sceneFramebuffer;
-        sceneFramebuffer.update(context, viewport);
-        var framebuffer = sceneFramebuffer.getFramebuffer();
 
-        this._textureCache.update(context);
-        this._stages.update(context, false);
 
-        updateSunPosition(this, context, viewport);
 
-        return framebuffer;
-    };
-
-    SunPostProcess.prototype.execute = function(context) {
-        var colorTexture = this._sceneFramebuffer.getFramebuffer().getColorTexture(0);
-        var stages = this._stages;
-        var length = stages.length;
-        stages.get(0).execute(context, colorTexture);
-        for (var i = 1; i < length; ++i) {
-            stages.get(i).execute(context, stages.get(i - 1).outputTexture);
-        }
-    };
-
-    SunPostProcess.prototype.copy = function(context, framebuffer) {
-        if (!defined(this._copyColorCommand)) {
-            var that = this;
-            this._copyColorCommand = context.createViewportQuadCommand(PassThrough, {
-                uniformMap : {
-                    colorTexture : function() {
-                        return that._stages.get(that._stages.length - 1).outputTexture;
-                    }
-                },
-                owner : this
-            });
-        }
-
-        this._copyColorCommand.framebuffer = framebuffer;
-        this._copyColorCommand.execute(context);
-    };
-
-    SunPostProcess.prototype.isDestroyed = function() {
-        return false;
-    };
-
-    SunPostProcess.prototype.destroy = function() {
-        this._textureCache.destroy();
-        this._stages.destroy();
-        return destroyObject(this);
-    };
 
     return SunPostProcess;
 });

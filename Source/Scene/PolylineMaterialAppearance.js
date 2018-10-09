@@ -23,76 +23,72 @@ define([
     var defaultVertexShaderSource = PolylineCommon + '\n' + PolylineMaterialAppearanceVS;
     var defaultFragmentShaderSource = PolylineFS;
 
-    /**
-     * An appearance for {@link PolylineGeometry} that supports shading with materials.
-     *
-     * @alias PolylineMaterialAppearance
-     * @constructor
-     *
-     * @param {Object} [options] Object with the following properties:
-     * @param {Boolean} [options.translucent=true] When <code>true</code>, the geometry is expected to appear translucent so {@link PolylineMaterialAppearance#renderState} has alpha blending enabled.
-     * @param {Material} [options.material=Material.ColorType] The material used to determine the fragment color.
-     * @param {String} [options.vertexShaderSource] Optional GLSL vertex shader source to override the default vertex shader.
-     * @param {String} [options.fragmentShaderSource] Optional GLSL fragment shader source to override the default fragment shader.
-     * @param {RenderState} [options.renderState] Optional render state to override the default render state.
-     *
-     * @see {@link https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric|Fabric}
-     *
-     * @example
-     * var primitive = new Cesium.Primitive({
-     *   geometryInstances : new Cesium.GeometryInstance({
-     *     geometry : new Cesium.PolylineGeometry({
-     *       positions : Cesium.Cartesian3.fromDegreesArray([
-     *         0.0, 0.0,
-     *         5.0, 0.0
-     *       ]),
-     *       width : 10.0,
-     *       vertexFormat : Cesium.PolylineMaterialAppearance.VERTEX_FORMAT
-     *     })
-     *   }),
-     *   appearance : new Cesium.PolylineMaterialAppearance({
-     *     material : Cesium.Material.fromType('Color')
-     *   })
-     * });
-     */
-    function PolylineMaterialAppearance(options) {
-        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-
-        var translucent = defaultValue(options.translucent, true);
-        var closed = false;
-        var vertexFormat = PolylineMaterialAppearance.VERTEX_FORMAT;
-
         /**
-         * The material used to determine the fragment color.  Unlike other {@link PolylineMaterialAppearance}
-         * properties, this is not read-only, so an appearance's material can change on the fly.
-         *
-         * @type Material
-         *
-         * @default {@link Material.ColorType}
-         *
-         * @see {@link https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric|Fabric}
-         */
-        this.material = defined(options.material) ? options.material : Material.fromType(Material.ColorType);
-
-        /**
-         * When <code>true</code>, the geometry is expected to appear translucent so
-         * {@link PolylineMaterialAppearance#renderState} has alpha blending enabled.
-         *
-         * @type {Boolean}
-         *
-         * @default true
-         */
-        this.translucent = translucent;
-
-        this._vertexShaderSource = defaultValue(options.vertexShaderSource, defaultVertexShaderSource);
-        this._fragmentShaderSource = defaultValue(options.fragmentShaderSource, defaultFragmentShaderSource);
-        this._renderState = Appearance.getDefaultRenderState(translucent, closed, options.renderState);
-        this._closed = closed;
-
-        // Non-derived members
-
-        this._vertexFormat = vertexFormat;
-    }
+             * An appearance for {@link PolylineGeometry} that supports shading with materials.
+             *
+             * @alias PolylineMaterialAppearance
+             * @constructor
+             *
+             * @param {Object} [options] Object with the following properties:
+             * @param {Boolean} [options.translucent=true] When <code>true</code>, the geometry is expected to appear translucent so {@link PolylineMaterialAppearance#renderState} has alpha blending enabled.
+             * @param {Material} [options.material=Material.ColorType] The material used to determine the fragment color.
+             * @param {String} [options.vertexShaderSource] Optional GLSL vertex shader source to override the default vertex shader.
+             * @param {String} [options.fragmentShaderSource] Optional GLSL fragment shader source to override the default fragment shader.
+             * @param {RenderState} [options.renderState] Optional render state to override the default render state.
+             *
+             * @see {@link https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric|Fabric}
+             *
+             * @example
+             * var primitive = new Cesium.Primitive({
+             *   geometryInstances : new Cesium.GeometryInstance({
+             *     geometry : new Cesium.PolylineGeometry({
+             *       positions : Cesium.Cartesian3.fromDegreesArray([
+             *         0.0, 0.0,
+             *         5.0, 0.0
+             *       ]),
+             *       width : 10.0,
+             *       vertexFormat : Cesium.PolylineMaterialAppearance.VERTEX_FORMAT
+             *     })
+             *   }),
+             *   appearance : new Cesium.PolylineMaterialAppearance({
+             *     material : Cesium.Material.fromType('Color')
+             *   })
+             * });
+             */
+        class PolylineMaterialAppearance {
+            constructor(options) {
+                options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+                var translucent = defaultValue(options.translucent, true);
+                var closed = false;
+                var vertexFormat = PolylineMaterialAppearance.VERTEX_FORMAT;
+                /**
+                 * The material used to determine the fragment color.  Unlike other {@link PolylineMaterialAppearance}
+                 * properties, this is not read-only, so an appearance's material can change on the fly.
+                 *
+                 * @type Material
+                 *
+                 * @default {@link Material.ColorType}
+                 *
+                 * @see {@link https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric|Fabric}
+                 */
+                this.material = defined(options.material) ? options.material : Material.fromType(Material.ColorType);
+                /**
+                 * When <code>true</code>, the geometry is expected to appear translucent so
+                 * {@link PolylineMaterialAppearance#renderState} has alpha blending enabled.
+                 *
+                 * @type {Boolean}
+                 *
+                 * @default true
+                 */
+                this.translucent = translucent;
+                this._vertexShaderSource = defaultValue(options.vertexShaderSource, defaultVertexShaderSource);
+                this._fragmentShaderSource = defaultValue(options.fragmentShaderSource, defaultFragmentShaderSource);
+                this._renderState = Appearance.getDefaultRenderState(translucent, closed, options.renderState);
+                this._closed = closed;
+                // Non-derived members
+                this._vertexFormat = vertexFormat;
+            }
+        }
 
     defineProperties(PolylineMaterialAppearance.prototype, {
         /**

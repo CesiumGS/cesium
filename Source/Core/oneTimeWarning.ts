@@ -1,11 +1,11 @@
 define([
-        './defaultValue',
-        './defined',
-        './DeveloperError'
-    ], function(
-        defaultValue,
-        defined,
-        DeveloperError) {
+    './defaultValue',
+    './defined',
+    './DeveloperError'
+], function(
+    defaultValue,
+    defined,
+    DeveloperError) {
     'use strict';
 
     var warnings = {};
@@ -32,7 +32,7 @@ define([
      *
      * @private
      */
-    function oneTimeWarning(identifier, message) {
+    export function oneTimeWarning(identifier: string, message ? : string): void {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(identifier)) {
             throw new DeveloperError('identifier is required.');

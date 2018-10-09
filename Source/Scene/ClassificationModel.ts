@@ -82,186 +82,267 @@ define([
 
     var ModelState = ModelUtility.ModelState;
 
-    ///////////////////////////////////////////////////////////////////////////
-
-    /**
-     * A 3D model for classifying other 3D assets based on glTF, the runtime 3D asset format.
-     * This is a special case when a model of a 3D tileset becomes a classifier when setting {@link Cesium3DTileset#classificationType}.
-     *
-     * @alias ClassificationModel
-     * @constructor
-     *
-     * @private
-     *
-     * @param {Object} options Object with the following properties:
-     * @param {ArrayBuffer|Uint8Array} options.gltf A binary glTF buffer.
-     * @param {Boolean} [options.show=true] Determines if the model primitive will be shown.
-     * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The 4x4 transformation matrix that transforms the model from model to world coordinates.
-     * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Draws the bounding sphere for each draw command in the model.
-     * @param {Boolean} [options.debugWireframe=false] For debugging only. Draws the model in wireframe.
-     * @param {ClassificationType} [options.classificationType] What this model will classify.
-     *
-     * @exception {RuntimeError} Only binary glTF is supported.
-     * @exception {RuntimeError} Buffer data must be embedded in the binary glTF.
-     * @exception {RuntimeError} Only one node is supported for classification and it must have a mesh.
-     * @exception {RuntimeError} Only one mesh is supported when using b3dm for classification.
-     * @exception {RuntimeError} Only one primitive per mesh is supported when using b3dm for classification.
-     * @exception {RuntimeError} The mesh must have a position attribute.
-     * @exception {RuntimeError} The mesh must have a batch id attribute.
-     */
-    function ClassificationModel(options) {
-        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-
-        var gltf = options.gltf;
-        if (gltf instanceof ArrayBuffer) {
-            gltf = new Uint8Array(gltf);
-        }
-
-        if (gltf instanceof Uint8Array) {
-            // Parse and update binary glTF
-            gltf = parseGlb(gltf);
-            updateVersion(gltf);
-            addDefaults(gltf);
-            processModelMaterialsCommon(gltf);
-            processPbrMaterials(gltf);
-        } else {
-            throw new RuntimeError('Only binary glTF is supported as a classifier.');
-        }
-
-        ForEach.buffer(gltf, function(buffer) {
-            if (!defined(buffer.extras._pipeline.source)) {
-                throw new RuntimeError('Buffer data must be embedded in the binary gltf.');
+        ///////////////////////////////////////////////////////////////////////////
+        /**
+             * A 3D model for classifying other 3D assets based on glTF, the runtime 3D asset format.
+             * This is a special case when a model of a 3D tileset becomes a classifier when setting {@link Cesium3DTileset#classificationType}.
+             *
+             * @alias ClassificationModel
+             * @constructor
+             *
+             * @private
+             *
+             * @param {Object} options Object with the following properties:
+             * @param {ArrayBuffer|Uint8Array} options.gltf A binary glTF buffer.
+             * @param {Boolean} [options.show=true] Determines if the model primitive will be shown.
+             * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The 4x4 transformation matrix that transforms the model from model to world coordinates.
+             * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Draws the bounding sphere for each draw command in the model.
+             * @param {Boolean} [options.debugWireframe=false] For debugging only. Draws the model in wireframe.
+             * @param {ClassificationType} [options.classificationType] What this model will classify.
+             *
+             * @exception {RuntimeError} Only binary glTF is supported.
+             * @exception {RuntimeError} Buffer data must be embedded in the binary glTF.
+             * @exception {RuntimeError} Only one node is supported for classification and it must have a mesh.
+             * @exception {RuntimeError} Only one mesh is supported when using b3dm for classification.
+             * @exception {RuntimeError} Only one primitive per mesh is supported when using b3dm for classification.
+             * @exception {RuntimeError} The mesh must have a position attribute.
+             * @exception {RuntimeError} The mesh must have a batch id attribute.
+             */
+        class ClassificationModel {
+            constructor(options) {
+                options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+                var gltf = options.gltf;
+                if (gltf instanceof ArrayBuffer) {
+                    gltf = new Uint8Array(gltf);
+                }
+                if (gltf instanceof Uint8Array) {
+                    // Parse and update binary glTF
+                    gltf = parseGlb(gltf);
+                    updateVersion(gltf);
+                    addDefaults(gltf);
+                    processModelMaterialsCommon(gltf);
+                    processPbrMaterials(gltf);
+                }
+                else {
+                    throw new RuntimeError('Only binary glTF is supported as a classifier.');
+                }
+                ForEach.buffer(gltf, function(buffer) {
+                    if (!defined(buffer.extras._pipeline.source)) {
+                        throw new RuntimeError('Buffer data must be embedded in the binary gltf.');
+                    }
+                });
+                var gltfNodes = gltf.nodes;
+                var gltfMeshes = gltf.meshes;
+                var gltfNode = gltfNodes[0];
+                var meshId = gltfNode.mesh;
+                if (gltfNodes.length !== 1 || !defined(meshId)) {
+                    throw new RuntimeError('Only one node is supported for classification and it must have a mesh.');
+                }
+                if (gltfMeshes.length !== 1) {
+                    throw new RuntimeError('Only one mesh is supported when using b3dm for classification.');
+                }
+                var gltfPrimitives = gltfMeshes[0].primitives;
+                if (gltfPrimitives.length !== 1) {
+                    throw new RuntimeError('Only one primitive per mesh is supported when using b3dm for classification.');
+                }
+                var gltfPositionAttribute = gltfPrimitives[0].attributes.POSITION;
+                if (!defined(gltfPositionAttribute)) {
+                    throw new RuntimeError('The mesh must have a position attribute.');
+                }
+                var gltfBatchIdAttribute = gltfPrimitives[0].attributes._BATCHID;
+                if (!defined(gltfBatchIdAttribute)) {
+                    throw new RuntimeError('The mesh must have a batch id attribute.');
+                }
+                this._gltf = gltf;
+                /**
+                 * Determines if the model primitive will be shown.
+                 *
+                 * @type {Boolean}
+                 *
+                 * @default true
+                 */
+                this.show = defaultValue(options.show, true);
+                /**
+                 * The 4x4 transformation matrix that transforms the model from model to world coordinates.
+                 * When this is the identity matrix, the model is drawn in world coordinates, i.e., Earth's WGS84 coordinates.
+                 * Local reference frames can be used by providing a different transformation matrix, like that returned
+                 * by {@link Transforms.eastNorthUpToFixedFrame}.
+                 *
+                 * @type {Matrix4}
+                 *
+                 * @default {@link Matrix4.IDENTITY}
+                 *
+                 * @example
+                 * var origin = Cesium.Cartesian3.fromDegrees(-95.0, 40.0, 200000.0);
+                 * m.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(origin);
+                 */
+                this.modelMatrix = Matrix4.clone(defaultValue(options.modelMatrix, Matrix4.IDENTITY));
+                this._modelMatrix = Matrix4.clone(this.modelMatrix);
+                this._ready = false;
+                this._readyPromise = when.defer();
+                /**
+                 * This property is for debugging only; it is not for production use nor is it optimized.
+                 * <p>
+                 * Draws the bounding sphere for each draw command in the model.  A glTF primitive corresponds
+                 * to one draw command.  A glTF mesh has an array of primitives, often of length one.
+                 * </p>
+                 *
+                 * @type {Boolean}
+                 *
+                 * @default false
+                 */
+                this.debugShowBoundingVolume = defaultValue(options.debugShowBoundingVolume, false);
+                this._debugShowBoundingVolume = false;
+                /**
+                 * This property is for debugging only; it is not for production use nor is it optimized.
+                 * <p>
+                 * Draws the model in wireframe.
+                 * </p>
+                 *
+                 * @type {Boolean}
+                 *
+                 * @default false
+                 */
+                this.debugWireframe = defaultValue(options.debugWireframe, false);
+                this._debugWireframe = false;
+                this._classificationType = options.classificationType;
+                // Undocumented options
+                this._vertexShaderLoaded = options.vertexShaderLoaded;
+                this._classificationShaderLoaded = options.classificationShaderLoaded;
+                this._uniformMapLoaded = options.uniformMapLoaded;
+                this._pickIdLoaded = options.pickIdLoaded;
+                this._ignoreCommands = defaultValue(options.ignoreCommands, false);
+                this._upAxis = defaultValue(options.upAxis, Axis.Y);
+                this._batchTable = options.batchTable;
+                this._computedModelMatrix = new Matrix4(); // Derived from modelMatrix and axis
+                this._initialRadius = undefined; // Radius without model's scale property, model-matrix scale, animations, or skins
+                this._boundingSphere = undefined;
+                this._scaledBoundingSphere = new BoundingSphere();
+                this._state = ModelState.NEEDS_LOAD;
+                this._loadResources = undefined;
+                this._mode = undefined;
+                this._dirty = false; // true when the model was transformed this frame
+                this._nodeMatrix = new Matrix4();
+                this._primitive = undefined;
+                this._extensionsUsed = undefined; // Cached used glTF extensions
+                this._extensionsRequired = undefined; // Cached required glTF extensions
+                this._quantizedUniforms = undefined; // Quantized uniforms for WEB3D_quantized_attributes
+                this._buffers = {};
+                this._vertexArray = undefined;
+                this._shaderProgram = undefined;
+                this._uniformMap = undefined;
+                this._geometryByteLength = 0;
+                this._trianglesLength = 0;
+                // CESIUM_RTC extension
+                this._rtcCenter = undefined; // reference to either 3D or 2D
+                this._rtcCenterEye = undefined; // in eye coordinates
+                this._rtcCenter3D = undefined; // in world coordinates
+                this._rtcCenter2D = undefined; // in projected world coordinates
             }
-        });
-
-        var gltfNodes = gltf.nodes;
-        var gltfMeshes = gltf.meshes;
-
-        var gltfNode = gltfNodes[0];
-        var meshId = gltfNode.mesh;
-        if (gltfNodes.length !== 1 || !defined(meshId)) {
-            throw new RuntimeError('Only one node is supported for classification and it must have a mesh.');
+            ///////////////////////////////////////////////////////////////////////////
+            updateCommands(batchId, color) {
+                this._primitive.updateCommands(batchId, color);
+            }
+            update(frameState) {
+                if (frameState.mode === SceneMode.MORPHING) {
+                    return;
+                }
+                if ((this._state === ModelState.NEEDS_LOAD) && defined(this.gltf)) {
+                    this._state = ModelState.LOADING;
+                    if (this._state !== ModelState.FAILED) {
+                        var extensions = this.gltf.extensions;
+                        if (defined(extensions) && defined(extensions.CESIUM_RTC)) {
+                            var center = Cartesian3.fromArray(extensions.CESIUM_RTC.center);
+                            if (!Cartesian3.equals(center, Cartesian3.ZERO)) {
+                                this._rtcCenter3D = center;
+                                var projection = frameState.mapProjection;
+                                var ellipsoid = projection.ellipsoid;
+                                var cartographic = ellipsoid.cartesianToCartographic(this._rtcCenter3D);
+                                var projectedCart = projection.project(cartographic);
+                                Cartesian3.fromElements(projectedCart.z, projectedCart.x, projectedCart.y, projectedCart);
+                                this._rtcCenter2D = projectedCart;
+                                this._rtcCenterEye = new Cartesian3();
+                                this._rtcCenter = this._rtcCenter3D;
+                            }
+                        }
+                        this._loadResources = new ModelLoadResources();
+                        ModelUtility.parseBuffers(this);
+                    }
+                }
+                var loadResources = this._loadResources;
+                var justLoaded = false;
+                if (this._state === ModelState.LOADING) {
+                    // Transition from LOADING -> LOADED once resources are downloaded and created.
+                    // Textures may continue to stream in while in the LOADED state.
+                    if (loadResources.pendingBufferLoads === 0) {
+                        ModelUtility.checkSupportedExtensions(this.extensionsRequired);
+                        addBuffersToLoadResources(this);
+                        parseBufferViews(this);
+                        this._boundingSphere = ModelUtility.computeBoundingSphere(this);
+                        this._initialRadius = this._boundingSphere.radius;
+                        createResources(this, frameState);
+                    }
+                    if (loadResources.finished()) {
+                        this._state = ModelState.LOADED;
+                        justLoaded = true;
+                    }
+                }
+                if (defined(loadResources) && (this._state === ModelState.LOADED)) {
+                    if (!justLoaded) {
+                        createResources(this, frameState);
+                    }
+                    if (loadResources.finished()) {
+                        this._loadResources = undefined; // Clear CPU memory since WebGL resources were created.
+                    }
+                }
+                var show = this.show;
+                if ((show && this._state === ModelState.LOADED) || justLoaded) {
+                    this._dirty = false;
+                    var modelMatrix = this.modelMatrix;
+                    var modeChanged = frameState.mode !== this._mode;
+                    this._mode = frameState.mode;
+                    // ClassificationModel's model matrix needs to be updated
+                    var modelTransformChanged = !Matrix4.equals(this._modelMatrix, modelMatrix) || modeChanged;
+                    if (modelTransformChanged || justLoaded) {
+                        Matrix4.clone(modelMatrix, this._modelMatrix);
+                        var computedModelMatrix = this._computedModelMatrix;
+                        Matrix4.clone(modelMatrix, computedModelMatrix);
+                        if (this._upAxis === Axis.Y) {
+                            Matrix4.multiplyTransformation(computedModelMatrix, Axis.Y_UP_TO_Z_UP, computedModelMatrix);
+                        }
+                        else if (this._upAxis === Axis.X) {
+                            Matrix4.multiplyTransformation(computedModelMatrix, Axis.X_UP_TO_Z_UP, computedModelMatrix);
+                        }
+                    }
+                    // Update modelMatrix throughout the graph as needed
+                    if (modelTransformChanged || justLoaded) {
+                        updateNodeModelMatrix(this, modelTransformChanged, justLoaded, frameState.mapProjection);
+                        this._dirty = true;
+                    }
+                }
+                if (justLoaded) {
+                    // Called after modelMatrix update.
+                    var model = this;
+                    frameState.afterRender.push(function() {
+                        model._ready = true;
+                        model._readyPromise.resolve(model);
+                    });
+                    return;
+                }
+                if (show && !this._ignoreCommands) {
+                    this._primitive.debugShowBoundingVolume = this.debugShowBoundingVolume;
+                    this._primitive.debugWireframe = this.debugWireframe;
+                    this._primitive.update(frameState);
+                }
+            }
+            isDestroyed() {
+                return false;
+            }
+            destroy() {
+                this._primitive = this._primitive && this._primitive.destroy();
+                return destroyObject(this);
+            }
         }
-
-        if (gltfMeshes.length !== 1) {
-            throw new RuntimeError('Only one mesh is supported when using b3dm for classification.');
-        }
-
-        var gltfPrimitives = gltfMeshes[0].primitives;
-        if (gltfPrimitives.length !== 1) {
-            throw new RuntimeError('Only one primitive per mesh is supported when using b3dm for classification.');
-        }
-
-        var gltfPositionAttribute = gltfPrimitives[0].attributes.POSITION;
-        if (!defined(gltfPositionAttribute)) {
-            throw new RuntimeError('The mesh must have a position attribute.');
-        }
-
-        var gltfBatchIdAttribute = gltfPrimitives[0].attributes._BATCHID;
-        if (!defined(gltfBatchIdAttribute)) {
-            throw new RuntimeError('The mesh must have a batch id attribute.');
-        }
-
-        this._gltf = gltf;
-
-        /**
-         * Determines if the model primitive will be shown.
-         *
-         * @type {Boolean}
-         *
-         * @default true
-         */
-        this.show = defaultValue(options.show, true);
-
-        /**
-         * The 4x4 transformation matrix that transforms the model from model to world coordinates.
-         * When this is the identity matrix, the model is drawn in world coordinates, i.e., Earth's WGS84 coordinates.
-         * Local reference frames can be used by providing a different transformation matrix, like that returned
-         * by {@link Transforms.eastNorthUpToFixedFrame}.
-         *
-         * @type {Matrix4}
-         *
-         * @default {@link Matrix4.IDENTITY}
-         *
-         * @example
-         * var origin = Cesium.Cartesian3.fromDegrees(-95.0, 40.0, 200000.0);
-         * m.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(origin);
-         */
-        this.modelMatrix = Matrix4.clone(defaultValue(options.modelMatrix, Matrix4.IDENTITY));
-        this._modelMatrix = Matrix4.clone(this.modelMatrix);
-
-        this._ready = false;
-        this._readyPromise = when.defer();
-
-        /**
-         * This property is for debugging only; it is not for production use nor is it optimized.
-         * <p>
-         * Draws the bounding sphere for each draw command in the model.  A glTF primitive corresponds
-         * to one draw command.  A glTF mesh has an array of primitives, often of length one.
-         * </p>
-         *
-         * @type {Boolean}
-         *
-         * @default false
-         */
-        this.debugShowBoundingVolume = defaultValue(options.debugShowBoundingVolume, false);
-        this._debugShowBoundingVolume = false;
-
-        /**
-         * This property is for debugging only; it is not for production use nor is it optimized.
-         * <p>
-         * Draws the model in wireframe.
-         * </p>
-         *
-         * @type {Boolean}
-         *
-         * @default false
-         */
-        this.debugWireframe = defaultValue(options.debugWireframe, false);
-        this._debugWireframe = false;
-
-        this._classificationType = options.classificationType;
-
-        // Undocumented options
-        this._vertexShaderLoaded = options.vertexShaderLoaded;
-        this._classificationShaderLoaded = options.classificationShaderLoaded;
-        this._uniformMapLoaded = options.uniformMapLoaded;
-        this._pickIdLoaded = options.pickIdLoaded;
-        this._ignoreCommands = defaultValue(options.ignoreCommands, false);
-        this._upAxis = defaultValue(options.upAxis, Axis.Y);
-        this._batchTable = options.batchTable;
-
-        this._computedModelMatrix = new Matrix4(); // Derived from modelMatrix and axis
-        this._initialRadius = undefined;           // Radius without model's scale property, model-matrix scale, animations, or skins
-        this._boundingSphere = undefined;
-        this._scaledBoundingSphere = new BoundingSphere();
-        this._state = ModelState.NEEDS_LOAD;
-        this._loadResources = undefined;
-
-        this._mode = undefined;
-        this._dirty = false;                       // true when the model was transformed this frame
-
-        this._nodeMatrix = new Matrix4();
-        this._primitive = undefined;
-
-        this._extensionsUsed = undefined;     // Cached used glTF extensions
-        this._extensionsRequired = undefined; // Cached required glTF extensions
-        this._quantizedUniforms = undefined;  // Quantized uniforms for WEB3D_quantized_attributes
-
-        this._buffers = {};
-        this._vertexArray = undefined;
-        this._shaderProgram = undefined;
-        this._uniformMap = undefined;
-
-        this._geometryByteLength = 0;
-        this._trianglesLength = 0;
-
-        // CESIUM_RTC extension
-        this._rtcCenter = undefined;    // reference to either 3D or 2D
-        this._rtcCenterEye = undefined; // in eye coordinates
-        this._rtcCenter3D = undefined;  // in world coordinates
-        this._rtcCenter2D = undefined;  // in projected world coordinates
-    }
 
     defineProperties(ClassificationModel.prototype, {
         /**
@@ -947,131 +1028,9 @@ define([
         }
     }
 
-    ///////////////////////////////////////////////////////////////////////////
 
-    ClassificationModel.prototype.updateCommands = function(batchId, color) {
-        this._primitive.updateCommands(batchId, color);
-    };
 
-    ClassificationModel.prototype.update = function(frameState) {
-        if (frameState.mode === SceneMode.MORPHING) {
-            return;
-        }
 
-        if ((this._state === ModelState.NEEDS_LOAD) && defined(this.gltf)) {
-            this._state = ModelState.LOADING;
-            if (this._state !== ModelState.FAILED) {
-                var extensions = this.gltf.extensions;
-                if (defined(extensions) && defined(extensions.CESIUM_RTC)) {
-                    var center = Cartesian3.fromArray(extensions.CESIUM_RTC.center);
-                    if (!Cartesian3.equals(center, Cartesian3.ZERO)) {
-                        this._rtcCenter3D = center;
-
-                        var projection = frameState.mapProjection;
-                        var ellipsoid = projection.ellipsoid;
-                        var cartographic = ellipsoid.cartesianToCartographic(this._rtcCenter3D);
-                        var projectedCart = projection.project(cartographic);
-                        Cartesian3.fromElements(projectedCart.z, projectedCart.x, projectedCart.y, projectedCart);
-                        this._rtcCenter2D = projectedCart;
-
-                        this._rtcCenterEye = new Cartesian3();
-                        this._rtcCenter = this._rtcCenter3D;
-                    }
-                }
-
-                this._loadResources = new ModelLoadResources();
-                ModelUtility.parseBuffers(this);
-            }
-        }
-
-        var loadResources = this._loadResources;
-        var justLoaded = false;
-
-        if (this._state === ModelState.LOADING) {
-            // Transition from LOADING -> LOADED once resources are downloaded and created.
-            // Textures may continue to stream in while in the LOADED state.
-            if (loadResources.pendingBufferLoads === 0) {
-                ModelUtility.checkSupportedExtensions(this.extensionsRequired);
-
-                addBuffersToLoadResources(this);
-                parseBufferViews(this);
-
-                this._boundingSphere = ModelUtility.computeBoundingSphere(this);
-                this._initialRadius = this._boundingSphere.radius;
-                createResources(this, frameState);
-            }
-            if (loadResources.finished()) {
-                this._state = ModelState.LOADED;
-                justLoaded = true;
-            }
-        }
-
-        if (defined(loadResources) && (this._state === ModelState.LOADED)) {
-            if (!justLoaded) {
-                createResources(this, frameState);
-            }
-
-            if (loadResources.finished()) {
-                this._loadResources = undefined;  // Clear CPU memory since WebGL resources were created.
-            }
-        }
-
-        var show = this.show;
-
-        if ((show && this._state === ModelState.LOADED) || justLoaded) {
-            this._dirty = false;
-            var modelMatrix = this.modelMatrix;
-
-            var modeChanged = frameState.mode !== this._mode;
-            this._mode = frameState.mode;
-
-            // ClassificationModel's model matrix needs to be updated
-            var modelTransformChanged = !Matrix4.equals(this._modelMatrix, modelMatrix) || modeChanged;
-
-            if (modelTransformChanged || justLoaded) {
-                Matrix4.clone(modelMatrix, this._modelMatrix);
-
-                var computedModelMatrix = this._computedModelMatrix;
-                Matrix4.clone(modelMatrix, computedModelMatrix);
-                if (this._upAxis === Axis.Y) {
-                    Matrix4.multiplyTransformation(computedModelMatrix, Axis.Y_UP_TO_Z_UP, computedModelMatrix);
-                } else if (this._upAxis === Axis.X) {
-                    Matrix4.multiplyTransformation(computedModelMatrix, Axis.X_UP_TO_Z_UP, computedModelMatrix);
-                }
-            }
-
-            // Update modelMatrix throughout the graph as needed
-            if (modelTransformChanged || justLoaded) {
-                updateNodeModelMatrix(this, modelTransformChanged, justLoaded, frameState.mapProjection);
-                this._dirty = true;
-            }
-        }
-
-        if (justLoaded) {
-            // Called after modelMatrix update.
-            var model = this;
-            frameState.afterRender.push(function() {
-                model._ready = true;
-                model._readyPromise.resolve(model);
-            });
-            return;
-        }
-
-        if (show && !this._ignoreCommands) {
-            this._primitive.debugShowBoundingVolume = this.debugShowBoundingVolume;
-            this._primitive.debugWireframe = this.debugWireframe;
-            this._primitive.update(frameState);
-        }
-    };
-
-    ClassificationModel.prototype.isDestroyed = function() {
-        return false;
-    };
-
-    ClassificationModel.prototype.destroy = function() {
-        this._primitive = this._primitive && this._primitive.destroy();
-        return destroyObject(this);
-    };
 
     return ClassificationModel;
 });

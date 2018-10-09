@@ -85,103 +85,108 @@ define([
         }
     }
 
-    /**
-     * The view model for {@link VRButton}.
-     * @alias VRButtonViewModel
-     * @constructor
-     *
-     * @param {Scene} scene The scene.
-     * @param {Element|String} [vrElement=document.body] The element or id to be placed into VR mode.
-     */
-    function VRButtonViewModel(scene, vrElement) {
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(scene)) {
-            throw new DeveloperError('scene is required.');
-        }
-        //>>includeEnd('debug');
-
-        var that = this;
-
-        var isEnabled = knockout.observable(Fullscreen.enabled);
-        var isVRMode = knockout.observable(false);
-
         /**
-         * Gets whether or not VR mode is active.
-         *
-         * @type {Boolean}
-         */
-        this.isVRMode = undefined;
-        knockout.defineProperty(this, 'isVRMode', {
-            get : function() {
-                return isVRMode();
-            }
-        });
-
-        /**
-         * Gets or sets whether or not VR functionality should be enabled.
-         *
-         * @type {Boolean}
-         * @see Fullscreen.enabled
-         */
-        this.isVREnabled = undefined;
-        knockout.defineProperty(this, 'isVREnabled', {
-            get : function() {
-                return isEnabled();
-            },
-            set : function(value) {
-                isEnabled(value && Fullscreen.enabled);
-            }
-        });
-
-        /**
-         * Gets the tooltip.  This property is observable.
-         *
-         * @type {String}
-         */
-        this.tooltip = undefined;
-        knockout.defineProperty(this, 'tooltip', function() {
-            if (!isEnabled()) {
-                return 'VR mode is unavailable';
-            }
-            return isVRMode() ? 'Exit VR mode' : 'Enter VR mode';
-        });
-
-        var isOrthographic = knockout.observable(false);
-
-        this._isOrthographic = undefined;
-        knockout.defineProperty(this, '_isOrthographic', {
-            get : function() {
-                return isOrthographic();
-            }
-        });
-
-        this._eventHelper = new EventHelper();
-        this._eventHelper.add(scene.preRender, function() {
-            isOrthographic(scene.camera.frustum instanceof OrthographicFrustum);
-        });
-
-        this._locked = false;
-        this._noSleep = new NoSleep();
-
-        this._command = createCommand(function() {
-            toggleVR(that, scene, isVRMode, isOrthographic);
-        }, knockout.getObservable(this, 'isVREnabled'));
-
-        this._vrElement = defaultValue(getElement(vrElement), document.body);
-
-        this._callback = function() {
-            if (!Fullscreen.fullscreen && isVRMode()) {
-                scene.useWebVR = false;
-                if (that._locked) {
-                    unlockScreen();
-                    that._locked = false;
+             * The view model for {@link VRButton}.
+             * @alias VRButtonViewModel
+             * @constructor
+             *
+             * @param {Scene} scene The scene.
+             * @param {Element|String} [vrElement=document.body] The element or id to be placed into VR mode.
+             */
+        class VRButtonViewModel {
+            constructor(scene, vrElement) {
+                //>>includeStart('debug', pragmas.debug);
+                if (!defined(scene)) {
+                    throw new DeveloperError('scene is required.');
                 }
-                that._noSleep.disable();
-                isVRMode(false);
+                //>>includeEnd('debug');
+                var that = this;
+                var isEnabled = knockout.observable(Fullscreen.enabled);
+                var isVRMode = knockout.observable(false);
+                /**
+                 * Gets whether or not VR mode is active.
+                 *
+                 * @type {Boolean}
+                 */
+                this.isVRMode = undefined;
+                knockout.defineProperty(this, 'isVRMode', {
+                    get: function() {
+                        return isVRMode();
+                    }
+                });
+                /**
+                 * Gets or sets whether or not VR functionality should be enabled.
+                 *
+                 * @type {Boolean}
+                 * @see Fullscreen.enabled
+                 */
+                this.isVREnabled = undefined;
+                knockout.defineProperty(this, 'isVREnabled', {
+                    get: function() {
+                        return isEnabled();
+                    },
+                    set: function(value) {
+                        isEnabled(value && Fullscreen.enabled);
+                    }
+                });
+                /**
+                 * Gets the tooltip.  This property is observable.
+                 *
+                 * @type {String}
+                 */
+                this.tooltip = undefined;
+                knockout.defineProperty(this, 'tooltip', function() {
+                    if (!isEnabled()) {
+                        return 'VR mode is unavailable';
+                    }
+                    return isVRMode() ? 'Exit VR mode' : 'Enter VR mode';
+                });
+                var isOrthographic = knockout.observable(false);
+                this._isOrthographic = undefined;
+                knockout.defineProperty(this, '_isOrthographic', {
+                    get: function() {
+                        return isOrthographic();
+                    }
+                });
+                this._eventHelper = new EventHelper();
+                this._eventHelper.add(scene.preRender, function() {
+                    isOrthographic(scene.camera.frustum instanceof OrthographicFrustum);
+                });
+                this._locked = false;
+                this._noSleep = new NoSleep();
+                this._command = createCommand(function() {
+                    toggleVR(that, scene, isVRMode, isOrthographic);
+                }, knockout.getObservable(this, 'isVREnabled'));
+                this._vrElement = defaultValue(getElement(vrElement), document.body);
+                this._callback = function() {
+                    if (!Fullscreen.fullscreen && isVRMode()) {
+                        scene.useWebVR = false;
+                        if (that._locked) {
+                            unlockScreen();
+                            that._locked = false;
+                        }
+                        that._noSleep.disable();
+                        isVRMode(false);
+                    }
+                };
+                document.addEventListener(Fullscreen.changeEventName, this._callback);
             }
-        };
-        document.addEventListener(Fullscreen.changeEventName, this._callback);
-    }
+            /**
+                 * @returns {Boolean} true if the object has been destroyed, false otherwise.
+                 */
+            isDestroyed() {
+                return false;
+            }
+            /**
+                 * Destroys the view model.  Should be called to
+                 * properly clean up the view model when it is no longer needed.
+                 */
+            destroy() {
+                this._eventHelper.removeAll();
+                document.removeEventListener(Fullscreen.changeEventName, this._callback);
+                destroyObject(this);
+            }
+        }
 
     defineProperties(VRButtonViewModel.prototype, {
         /**
@@ -220,22 +225,7 @@ define([
         }
     });
 
-    /**
-     * @returns {Boolean} true if the object has been destroyed, false otherwise.
-     */
-    VRButtonViewModel.prototype.isDestroyed = function() {
-        return false;
-    };
 
-    /**
-     * Destroys the view model.  Should be called to
-     * properly clean up the view model when it is no longer needed.
-     */
-    VRButtonViewModel.prototype.destroy = function() {
-        this._eventHelper.removeAll();
-        document.removeEventListener(Fullscreen.changeEventName, this._callback);
-        destroyObject(this);
-    };
 
     return VRButtonViewModel;
 });

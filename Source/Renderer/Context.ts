@@ -173,278 +173,451 @@ define([
         return undefined;
     }
 
-    /**
-     * @private
-     */
-    function Context(canvas, options) {
-        // this check must use typeof, not defined, because defined doesn't work with undeclared variables.
-        if (typeof WebGLRenderingContext === 'undefined') {
-            throw new RuntimeError('The browser does not support WebGL.  Visit http://get.webgl.org.');
-        }
-
-        //>>includeStart('debug', pragmas.debug);
-        Check.defined('canvas', canvas);
-        //>>includeEnd('debug');
-
-        this._canvas = canvas;
-
-        options = clone(options, true);
-        options = defaultValue(options, {});
-        options.allowTextureFilterAnisotropic = defaultValue(options.allowTextureFilterAnisotropic, true);
-        var webglOptions = defaultValue(options.webgl, {});
-
-        // Override select WebGL defaults
-        webglOptions.alpha = defaultValue(webglOptions.alpha, false); // WebGL default is true
-        webglOptions.stencil = defaultValue(webglOptions.stencil, true); // WebGL default is false
-
-        var requestWebgl2 = defaultValue(options.requestWebgl2, false) && (typeof WebGL2RenderingContext !== 'undefined');
-        var webgl2 = false;
-
-        var glContext;
-        var getWebGLStub = options.getWebGLStub;
-
-        if (!defined(getWebGLStub)) {
-            if (requestWebgl2) {
-                glContext = canvas.getContext('webgl2', webglOptions) || canvas.getContext('experimental-webgl2', webglOptions) || undefined;
-                if (defined(glContext)) {
-                    webgl2 = true;
+        /**
+             * @private
+             */
+        class Context {
+            constructor(canvas, options) {
+                // this check must use typeof, not defined, because defined doesn't work with undeclared variables.
+                if (typeof WebGLRenderingContext === 'undefined') {
+                    throw new RuntimeError('The browser does not support WebGL.  Visit http://get.webgl.org.');
+                }
+                //>>includeStart('debug', pragmas.debug);
+                Check.defined('canvas', canvas);
+                //>>includeEnd('debug');
+                this._canvas = canvas;
+                options = clone(options, true);
+                options = defaultValue(options, {});
+                options.allowTextureFilterAnisotropic = defaultValue(options.allowTextureFilterAnisotropic, true);
+                var webglOptions = defaultValue(options.webgl, {});
+                // Override select WebGL defaults
+                webglOptions.alpha = defaultValue(webglOptions.alpha, false); // WebGL default is true
+                webglOptions.stencil = defaultValue(webglOptions.stencil, true); // WebGL default is false
+                var requestWebgl2 = defaultValue(options.requestWebgl2, false) && (typeof WebGL2RenderingContext !== 'undefined');
+                var webgl2 = false;
+                var glContext;
+                var getWebGLStub = options.getWebGLStub;
+                if (!defined(getWebGLStub)) {
+                    if (requestWebgl2) {
+                        glContext = canvas.getContext('webgl2', webglOptions) || canvas.getContext('experimental-webgl2', webglOptions) || undefined;
+                        if (defined(glContext)) {
+                            webgl2 = true;
+                        }
+                    }
+                    if (!defined(glContext)) {
+                        glContext = canvas.getContext('webgl', webglOptions) || canvas.getContext('experimental-webgl', webglOptions) || undefined;
+                    }
+                    if (!defined(glContext)) {
+                        throw new RuntimeError('The browser supports WebGL, but initialization failed.');
+                    }
+                }
+                else {
+                    // Use WebGL stub when requested for unit tests
+                    glContext = getWebGLStub(canvas, webglOptions);
+                }
+                this._originalGLContext = glContext;
+                this._gl = glContext;
+                this._webgl2 = webgl2;
+                this._id = createGuid();
+                // Validation and logging disabled by default for speed.
+                this.validateFramebuffer = false;
+                this.validateShaderProgram = false;
+                this.logShaderCompilation = false;
+                this._throwOnWebGLError = false;
+                this._shaderCache = new ShaderCache(this);
+                var gl = glContext;
+                this._stencilBits = gl.getParameter(gl.STENCIL_BITS);
+                ContextLimits._maximumCombinedTextureImageUnits = gl.getParameter(gl.MAX_COMBINED_TEXTURE_IMAGE_UNITS); // min: 8
+                ContextLimits._maximumCubeMapSize = gl.getParameter(gl.MAX_CUBE_MAP_TEXTURE_SIZE); // min: 16
+                ContextLimits._maximumFragmentUniformVectors = gl.getParameter(gl.MAX_FRAGMENT_UNIFORM_VECTORS); // min: 16
+                ContextLimits._maximumTextureImageUnits = gl.getParameter(gl.MAX_TEXTURE_IMAGE_UNITS); // min: 8
+                ContextLimits._maximumRenderbufferSize = gl.getParameter(gl.MAX_RENDERBUFFER_SIZE); // min: 1
+                ContextLimits._maximumTextureSize = gl.getParameter(gl.MAX_TEXTURE_SIZE); // min: 64
+                ContextLimits._maximumVaryingVectors = gl.getParameter(gl.MAX_VARYING_VECTORS); // min: 8
+                ContextLimits._maximumVertexAttributes = gl.getParameter(gl.MAX_VERTEX_ATTRIBS); // min: 8
+                ContextLimits._maximumVertexTextureImageUnits = gl.getParameter(gl.MAX_VERTEX_TEXTURE_IMAGE_UNITS); // min: 0
+                ContextLimits._maximumVertexUniformVectors = gl.getParameter(gl.MAX_VERTEX_UNIFORM_VECTORS); // min: 128
+                var aliasedLineWidthRange = gl.getParameter(gl.ALIASED_LINE_WIDTH_RANGE); // must include 1
+                ContextLimits._minimumAliasedLineWidth = aliasedLineWidthRange[0];
+                ContextLimits._maximumAliasedLineWidth = aliasedLineWidthRange[1];
+                var aliasedPointSizeRange = gl.getParameter(gl.ALIASED_POINT_SIZE_RANGE); // must include 1
+                ContextLimits._minimumAliasedPointSize = aliasedPointSizeRange[0];
+                ContextLimits._maximumAliasedPointSize = aliasedPointSizeRange[1];
+                var maximumViewportDimensions = gl.getParameter(gl.MAX_VIEWPORT_DIMS);
+                ContextLimits._maximumViewportWidth = maximumViewportDimensions[0];
+                ContextLimits._maximumViewportHeight = maximumViewportDimensions[1];
+                var highpFloat = gl.getShaderPrecisionFormat(gl.FRAGMENT_SHADER, gl.HIGH_FLOAT);
+                ContextLimits._highpFloatSupported = highpFloat.precision !== 0;
+                var highpInt = gl.getShaderPrecisionFormat(gl.FRAGMENT_SHADER, gl.HIGH_INT);
+                ContextLimits._highpIntSupported = highpInt.rangeMax !== 0;
+                this._antialias = gl.getContextAttributes().antialias;
+                // Query and initialize extensions
+                this._standardDerivatives = !!getExtension(gl, ['OES_standard_derivatives']);
+                this._blendMinmax = !!getExtension(gl, ['EXT_blend_minmax']);
+                this._elementIndexUint = !!getExtension(gl, ['OES_element_index_uint']);
+                this._depthTexture = !!getExtension(gl, ['WEBGL_depth_texture', 'WEBKIT_WEBGL_depth_texture']);
+                this._fragDepth = !!getExtension(gl, ['EXT_frag_depth']);
+                this._debugShaders = getExtension(gl, ['WEBGL_debug_shaders']);
+                this._textureFloat = !!getExtension(gl, ['OES_texture_float']);
+                this._textureHalfFloat = !!getExtension(gl, ['OES_texture_half_float']);
+                this._textureFloatLinear = !!getExtension(gl, ['OES_texture_float_linear']);
+                this._textureHalfFloatLinear = !!getExtension(gl, ['OES_texture_half_float_linear']);
+                this._colorBufferFloat = !!getExtension(gl, ['EXT_color_buffer_float', 'WEBGL_color_buffer_float']);
+                this._colorBufferHalfFloat = !!getExtension(gl, ['EXT_color_buffer_half_float']);
+                this._s3tc = !!getExtension(gl, ['WEBGL_compressed_texture_s3tc', 'MOZ_WEBGL_compressed_texture_s3tc', 'WEBKIT_WEBGL_compressed_texture_s3tc']);
+                this._pvrtc = !!getExtension(gl, ['WEBGL_compressed_texture_pvrtc', 'WEBKIT_WEBGL_compressed_texture_pvrtc']);
+                this._etc1 = !!getExtension(gl, ['WEBGL_compressed_texture_etc1']);
+                var textureFilterAnisotropic = options.allowTextureFilterAnisotropic ? getExtension(gl, ['EXT_texture_filter_anisotropic', 'WEBKIT_EXT_texture_filter_anisotropic']) : undefined;
+                this._textureFilterAnisotropic = textureFilterAnisotropic;
+                ContextLimits._maximumTextureFilterAnisotropy = defined(textureFilterAnisotropic) ? gl.getParameter(textureFilterAnisotropic.MAX_TEXTURE_MAX_ANISOTROPY_EXT) : 1.0;
+                var glCreateVertexArray;
+                var glBindVertexArray;
+                var glDeleteVertexArray;
+                var glDrawElementsInstanced;
+                var glDrawArraysInstanced;
+                var glVertexAttribDivisor;
+                var glDrawBuffers;
+                var vertexArrayObject;
+                var instancedArrays;
+                var drawBuffers;
+                if (webgl2) {
+                    var that = this;
+                    glCreateVertexArray = function() {
+                        return that._gl.createVertexArray();
+                    };
+                    glBindVertexArray = function(vao) {
+                        that._gl.bindVertexArray(vao);
+                    };
+                    glDeleteVertexArray = function(vao) {
+                        that._gl.deleteVertexArray(vao);
+                    };
+                    glDrawElementsInstanced = function(mode, count, type, offset, instanceCount) {
+                        gl.drawElementsInstanced(mode, count, type, offset, instanceCount);
+                    };
+                    glDrawArraysInstanced = function(mode, first, count, instanceCount) {
+                        gl.drawArraysInstanced(mode, first, count, instanceCount);
+                    };
+                    glVertexAttribDivisor = function(index, divisor) {
+                        gl.vertexAttribDivisor(index, divisor);
+                    };
+                    glDrawBuffers = function(buffers) {
+                        gl.drawBuffers(buffers);
+                    };
+                }
+                else {
+                    vertexArrayObject = getExtension(gl, ['OES_vertex_array_object']);
+                    if (defined(vertexArrayObject)) {
+                        glCreateVertexArray = function() {
+                            return vertexArrayObject.createVertexArrayOES();
+                        };
+                        glBindVertexArray = function(vertexArray) {
+                            vertexArrayObject.bindVertexArrayOES(vertexArray);
+                        };
+                        glDeleteVertexArray = function(vertexArray) {
+                            vertexArrayObject.deleteVertexArrayOES(vertexArray);
+                        };
+                    }
+                    instancedArrays = getExtension(gl, ['ANGLE_instanced_arrays']);
+                    if (defined(instancedArrays)) {
+                        glDrawElementsInstanced = function(mode, count, type, offset, instanceCount) {
+                            instancedArrays.drawElementsInstancedANGLE(mode, count, type, offset, instanceCount);
+                        };
+                        glDrawArraysInstanced = function(mode, first, count, instanceCount) {
+                            instancedArrays.drawArraysInstancedANGLE(mode, first, count, instanceCount);
+                        };
+                        glVertexAttribDivisor = function(index, divisor) {
+                            instancedArrays.vertexAttribDivisorANGLE(index, divisor);
+                        };
+                    }
+                    drawBuffers = getExtension(gl, ['WEBGL_draw_buffers']);
+                    if (defined(drawBuffers)) {
+                        glDrawBuffers = function(buffers) {
+                            drawBuffers.drawBuffersWEBGL(buffers);
+                        };
+                    }
+                }
+                this.glCreateVertexArray = glCreateVertexArray;
+                this.glBindVertexArray = glBindVertexArray;
+                this.glDeleteVertexArray = glDeleteVertexArray;
+                this.glDrawElementsInstanced = glDrawElementsInstanced;
+                this.glDrawArraysInstanced = glDrawArraysInstanced;
+                this.glVertexAttribDivisor = glVertexAttribDivisor;
+                this.glDrawBuffers = glDrawBuffers;
+                this._vertexArrayObject = !!vertexArrayObject;
+                this._instancedArrays = !!instancedArrays;
+                this._drawBuffers = !!drawBuffers;
+                ContextLimits._maximumDrawBuffers = this.drawBuffers ? gl.getParameter(WebGLConstants.MAX_DRAW_BUFFERS) : 1;
+                ContextLimits._maximumColorAttachments = this.drawBuffers ? gl.getParameter(WebGLConstants.MAX_COLOR_ATTACHMENTS) : 1;
+                this._clearColor = new Color(0.0, 0.0, 0.0, 0.0);
+                this._clearDepth = 1.0;
+                this._clearStencil = 0;
+                var us = new UniformState();
+                var ps = new PassState(this);
+                var rs = RenderState.fromCache();
+                this._defaultPassState = ps;
+                this._defaultRenderState = rs;
+                this._defaultTexture = undefined;
+                this._defaultCubeMap = undefined;
+                this._us = us;
+                this._currentRenderState = rs;
+                this._currentPassState = ps;
+                this._currentFramebuffer = undefined;
+                this._maxFrameTextureUnitIndex = 0;
+                // Vertex attribute divisor state cache. Workaround for ANGLE (also look at VertexArray.setVertexAttribDivisor)
+                this._vertexAttribDivisors = [];
+                this._previousDrawInstanced = false;
+                for (var i = 0; i < ContextLimits._maximumVertexAttributes; i++) {
+                    this._vertexAttribDivisors.push(0);
+                }
+                this._pickObjects = {};
+                this._nextPickColor = new Uint32Array(1);
+                /**
+                 * @example
+                 * {
+                 *   webgl : {
+                 *     alpha : false,
+                 *     depth : true,
+                 *     stencil : false,
+                 *     antialias : true,
+                 *     premultipliedAlpha : true,
+                 *     preserveDrawingBuffer : false,
+                 *     failIfMajorPerformanceCaveat : true
+                 *   },
+                 *   allowTextureFilterAnisotropic : true
+                 * }
+                 */
+                this.options = options;
+                /**
+                 * A cache of objects tied to this context.  Just before the Context is destroyed,
+                 * <code>destroy</code> will be invoked on each object in this object literal that has
+                 * such a method.  This is useful for caching any objects that might otherwise
+                 * be stored globally, except they're tied to a particular context, and to manage
+                 * their lifetime.
+                 *
+                 * @type {Object}
+                 */
+                this.cache = {};
+                RenderState.apply(gl, rs, ps);
+            }
+            clear(clearCommand, passState) {
+                clearCommand = defaultValue(clearCommand, defaultClearCommand);
+                passState = defaultValue(passState, this._defaultPassState);
+                var gl = this._gl;
+                var bitmask = 0;
+                var c = clearCommand.color;
+                var d = clearCommand.depth;
+                var s = clearCommand.stencil;
+                if (defined(c)) {
+                    if (!Color.equals(this._clearColor, c)) {
+                        Color.clone(c, this._clearColor);
+                        gl.clearColor(c.red, c.green, c.blue, c.alpha);
+                    }
+                    bitmask |= gl.COLOR_BUFFER_BIT;
+                }
+                if (defined(d)) {
+                    if (d !== this._clearDepth) {
+                        this._clearDepth = d;
+                        gl.clearDepth(d);
+                    }
+                    bitmask |= gl.DEPTH_BUFFER_BIT;
+                }
+                if (defined(s)) {
+                    if (s !== this._clearStencil) {
+                        this._clearStencil = s;
+                        gl.clearStencil(s);
+                    }
+                    bitmask |= gl.STENCIL_BUFFER_BIT;
+                }
+                var rs = defaultValue(clearCommand.renderState, this._defaultRenderState);
+                applyRenderState(this, rs, passState, true);
+                // The command's framebuffer takes presidence over the pass' framebuffer, e.g., for off-screen rendering.
+                var framebuffer = defaultValue(clearCommand.framebuffer, passState.framebuffer);
+                bindFramebuffer(this, framebuffer);
+                gl.clear(bitmask);
+            }
+            draw(drawCommand, passState, shaderProgram, uniformMap) {
+                //>>includeStart('debug', pragmas.debug);
+                Check.defined('drawCommand', drawCommand);
+                Check.defined('drawCommand.shaderProgram', drawCommand._shaderProgram);
+                //>>includeEnd('debug');
+                passState = defaultValue(passState, this._defaultPassState);
+                // The command's framebuffer takes presidence over the pass' framebuffer, e.g., for off-screen rendering.
+                var framebuffer = defaultValue(drawCommand._framebuffer, passState.framebuffer);
+                var renderState = defaultValue(drawCommand._renderState, this._defaultRenderState);
+                shaderProgram = defaultValue(shaderProgram, drawCommand._shaderProgram);
+                uniformMap = defaultValue(uniformMap, drawCommand._uniformMap);
+                beginDraw(this, framebuffer, passState, shaderProgram, renderState);
+                continueDraw(this, drawCommand, shaderProgram, uniformMap);
+            }
+            endFrame() {
+                var gl = this._gl;
+                gl.useProgram(null);
+                this._currentFramebuffer = undefined;
+                gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+                var buffers = scratchBackBufferArray;
+                if (this.drawBuffers) {
+                    this.glDrawBuffers(buffers);
+                }
+                var length = this._maxFrameTextureUnitIndex;
+                this._maxFrameTextureUnitIndex = 0;
+                for (var i = 0; i < length; ++i) {
+                    gl.activeTexture(gl.TEXTURE0 + i);
+                    gl.bindTexture(gl.TEXTURE_2D, null);
+                    gl.bindTexture(gl.TEXTURE_CUBE_MAP, null);
                 }
             }
-            if (!defined(glContext)) {
-                glContext = canvas.getContext('webgl', webglOptions) || canvas.getContext('experimental-webgl', webglOptions) || undefined;
+            readPixels(readState) {
+                var gl = this._gl;
+                readState = defaultValue(readState, defaultValue.EMPTY_OBJECT);
+                var x = Math.max(defaultValue(readState.x, 0), 0);
+                var y = Math.max(defaultValue(readState.y, 0), 0);
+                var width = defaultValue(readState.width, gl.drawingBufferWidth);
+                var height = defaultValue(readState.height, gl.drawingBufferHeight);
+                var framebuffer = readState.framebuffer;
+                //>>includeStart('debug', pragmas.debug);
+                Check.typeOf.number.greaterThan('readState.width', width, 0);
+                Check.typeOf.number.greaterThan('readState.height', height, 0);
+                //>>includeEnd('debug');
+                var pixelDatatype = PixelDatatype.UNSIGNED_BYTE;
+                if (defined(framebuffer) && framebuffer.numberOfColorAttachments > 0) {
+                    pixelDatatype = framebuffer.getColorTexture(0).pixelDatatype;
+                }
+                var pixels = PixelFormat.createTypedArray(PixelFormat.RGBA, pixelDatatype, width, height);
+                bindFramebuffer(this, framebuffer);
+                gl.readPixels(x, y, width, height, PixelFormat.RGBA, pixelDatatype, pixels);
+                return pixels;
             }
-            if (!defined(glContext)) {
-                throw new RuntimeError('The browser supports WebGL, but initialization failed.');
+            getViewportQuadVertexArray() {
+                // Per-context cache for viewport quads
+                var vertexArray = this.cache.viewportQuad_vertexArray;
+                if (!defined(vertexArray)) {
+                    var geometry = new Geometry({
+                        attributes: {
+                            position: new GeometryAttribute({
+                                componentDatatype: ComponentDatatype.FLOAT,
+                                componentsPerAttribute: 2,
+                                values: [
+                                    -1.0, -1.0,
+                                    1.0, -1.0,
+                                    1.0, 1.0,
+                                    -1.0, 1.0
+                                ]
+                            }),
+                            textureCoordinates: new GeometryAttribute({
+                                componentDatatype: ComponentDatatype.FLOAT,
+                                componentsPerAttribute: 2,
+                                values: [
+                                    0.0, 0.0,
+                                    1.0, 0.0,
+                                    1.0, 1.0,
+                                    0.0, 1.0
+                                ]
+                            })
+                        },
+                        // Workaround Internet Explorer 11.0.8 lack of TRIANGLE_FAN
+                        indices: new Uint16Array([0, 1, 2, 0, 2, 3]),
+                        primitiveType: PrimitiveType.TRIANGLES
+                    });
+                    vertexArray = VertexArray.fromGeometry({
+                        context: this,
+                        geometry: geometry,
+                        attributeLocations: viewportQuadAttributeLocations,
+                        bufferUsage: BufferUsage.STATIC_DRAW,
+                        interleave: true
+                    });
+                    this.cache.viewportQuad_vertexArray = vertexArray;
+                }
+                return vertexArray;
             }
-        } else {
-            // Use WebGL stub when requested for unit tests
-            glContext = getWebGLStub(canvas, webglOptions);
-        }
-
-        this._originalGLContext = glContext;
-        this._gl = glContext;
-        this._webgl2 = webgl2;
-        this._id = createGuid();
-
-        // Validation and logging disabled by default for speed.
-        this.validateFramebuffer = false;
-        this.validateShaderProgram = false;
-        this.logShaderCompilation = false;
-
-        this._throwOnWebGLError = false;
-
-        this._shaderCache = new ShaderCache(this);
-
-        var gl = glContext;
-
-        this._stencilBits = gl.getParameter(gl.STENCIL_BITS);
-
-        ContextLimits._maximumCombinedTextureImageUnits = gl.getParameter(gl.MAX_COMBINED_TEXTURE_IMAGE_UNITS); // min: 8
-        ContextLimits._maximumCubeMapSize = gl.getParameter(gl.MAX_CUBE_MAP_TEXTURE_SIZE); // min: 16
-        ContextLimits._maximumFragmentUniformVectors = gl.getParameter(gl.MAX_FRAGMENT_UNIFORM_VECTORS); // min: 16
-        ContextLimits._maximumTextureImageUnits = gl.getParameter(gl.MAX_TEXTURE_IMAGE_UNITS); // min: 8
-        ContextLimits._maximumRenderbufferSize = gl.getParameter(gl.MAX_RENDERBUFFER_SIZE); // min: 1
-        ContextLimits._maximumTextureSize = gl.getParameter(gl.MAX_TEXTURE_SIZE); // min: 64
-        ContextLimits._maximumVaryingVectors = gl.getParameter(gl.MAX_VARYING_VECTORS); // min: 8
-        ContextLimits._maximumVertexAttributes = gl.getParameter(gl.MAX_VERTEX_ATTRIBS); // min: 8
-        ContextLimits._maximumVertexTextureImageUnits = gl.getParameter(gl.MAX_VERTEX_TEXTURE_IMAGE_UNITS); // min: 0
-        ContextLimits._maximumVertexUniformVectors = gl.getParameter(gl.MAX_VERTEX_UNIFORM_VECTORS); // min: 128
-
-        var aliasedLineWidthRange = gl.getParameter(gl.ALIASED_LINE_WIDTH_RANGE); // must include 1
-        ContextLimits._minimumAliasedLineWidth = aliasedLineWidthRange[0];
-        ContextLimits._maximumAliasedLineWidth = aliasedLineWidthRange[1];
-
-        var aliasedPointSizeRange = gl.getParameter(gl.ALIASED_POINT_SIZE_RANGE); // must include 1
-        ContextLimits._minimumAliasedPointSize = aliasedPointSizeRange[0];
-        ContextLimits._maximumAliasedPointSize = aliasedPointSizeRange[1];
-
-        var maximumViewportDimensions = gl.getParameter(gl.MAX_VIEWPORT_DIMS);
-        ContextLimits._maximumViewportWidth = maximumViewportDimensions[0];
-        ContextLimits._maximumViewportHeight = maximumViewportDimensions[1];
-
-        var highpFloat = gl.getShaderPrecisionFormat(gl.FRAGMENT_SHADER, gl.HIGH_FLOAT);
-        ContextLimits._highpFloatSupported = highpFloat.precision !== 0;
-        var highpInt = gl.getShaderPrecisionFormat(gl.FRAGMENT_SHADER, gl.HIGH_INT);
-        ContextLimits._highpIntSupported = highpInt.rangeMax !== 0;
-
-        this._antialias = gl.getContextAttributes().antialias;
-
-        // Query and initialize extensions
-        this._standardDerivatives = !!getExtension(gl, ['OES_standard_derivatives']);
-        this._blendMinmax = !!getExtension(gl, ['EXT_blend_minmax']);
-        this._elementIndexUint = !!getExtension(gl, ['OES_element_index_uint']);
-        this._depthTexture = !!getExtension(gl, ['WEBGL_depth_texture', 'WEBKIT_WEBGL_depth_texture']);
-        this._fragDepth = !!getExtension(gl, ['EXT_frag_depth']);
-        this._debugShaders = getExtension(gl, ['WEBGL_debug_shaders']);
-
-        this._textureFloat = !!getExtension(gl, ['OES_texture_float']);
-        this._textureHalfFloat = !!getExtension(gl, ['OES_texture_half_float']);
-
-        this._textureFloatLinear = !!getExtension(gl, ['OES_texture_float_linear']);
-        this._textureHalfFloatLinear = !!getExtension(gl, ['OES_texture_half_float_linear']);
-
-        this._colorBufferFloat = !!getExtension(gl, ['EXT_color_buffer_float', 'WEBGL_color_buffer_float']);
-        this._colorBufferHalfFloat = !!getExtension(gl, ['EXT_color_buffer_half_float']);
-
-        this._s3tc = !!getExtension(gl, ['WEBGL_compressed_texture_s3tc', 'MOZ_WEBGL_compressed_texture_s3tc', 'WEBKIT_WEBGL_compressed_texture_s3tc']);
-        this._pvrtc = !!getExtension(gl, ['WEBGL_compressed_texture_pvrtc', 'WEBKIT_WEBGL_compressed_texture_pvrtc']);
-        this._etc1 = !!getExtension(gl, ['WEBGL_compressed_texture_etc1']);
-
-        var textureFilterAnisotropic = options.allowTextureFilterAnisotropic ? getExtension(gl, ['EXT_texture_filter_anisotropic', 'WEBKIT_EXT_texture_filter_anisotropic']) : undefined;
-        this._textureFilterAnisotropic = textureFilterAnisotropic;
-        ContextLimits._maximumTextureFilterAnisotropy = defined(textureFilterAnisotropic) ? gl.getParameter(textureFilterAnisotropic.MAX_TEXTURE_MAX_ANISOTROPY_EXT) : 1.0;
-
-        var glCreateVertexArray;
-        var glBindVertexArray;
-        var glDeleteVertexArray;
-
-        var glDrawElementsInstanced;
-        var glDrawArraysInstanced;
-        var glVertexAttribDivisor;
-
-        var glDrawBuffers;
-
-        var vertexArrayObject;
-        var instancedArrays;
-        var drawBuffers;
-
-        if (webgl2) {
-            var that = this;
-
-            glCreateVertexArray = function() {
-                return that._gl.createVertexArray();
-            };
-            glBindVertexArray = function(vao) {
-                that._gl.bindVertexArray(vao);
-            };
-            glDeleteVertexArray = function(vao) {
-                that._gl.deleteVertexArray(vao);
-            };
-
-            glDrawElementsInstanced = function(mode, count, type, offset, instanceCount) {
-                gl.drawElementsInstanced(mode, count, type, offset, instanceCount);
-            };
-            glDrawArraysInstanced = function(mode, first, count, instanceCount) {
-                gl.drawArraysInstanced(mode, first, count, instanceCount);
-            };
-            glVertexAttribDivisor = function(index, divisor) {
-                gl.vertexAttribDivisor(index, divisor);
-            };
-
-            glDrawBuffers = function(buffers) {
-                gl.drawBuffers(buffers);
-            };
-        } else {
-            vertexArrayObject = getExtension(gl, ['OES_vertex_array_object']);
-            if (defined(vertexArrayObject)) {
-                glCreateVertexArray = function() {
-                    return vertexArrayObject.createVertexArrayOES();
-                };
-                glBindVertexArray = function(vertexArray) {
-                    vertexArrayObject.bindVertexArrayOES(vertexArray);
-                };
-                glDeleteVertexArray = function(vertexArray) {
-                    vertexArrayObject.deleteVertexArrayOES(vertexArray);
-                };
+            createViewportQuadCommand(fragmentShaderSource, overrides) {
+                overrides = defaultValue(overrides, defaultValue.EMPTY_OBJECT);
+                return new DrawCommand({
+                    vertexArray: this.getViewportQuadVertexArray(),
+                    primitiveType: PrimitiveType.TRIANGLES,
+                    renderState: overrides.renderState,
+                    shaderProgram: ShaderProgram.fromCache({
+                        context: this,
+                        vertexShaderSource: ViewportQuadVS,
+                        fragmentShaderSource: fragmentShaderSource,
+                        attributeLocations: viewportQuadAttributeLocations
+                    }),
+                    uniformMap: overrides.uniformMap,
+                    owner: overrides.owner,
+                    framebuffer: overrides.framebuffer,
+                    pass: overrides.pass
+                });
             }
-
-            instancedArrays = getExtension(gl, ['ANGLE_instanced_arrays']);
-            if (defined(instancedArrays)) {
-                glDrawElementsInstanced = function(mode, count, type, offset, instanceCount) {
-                    instancedArrays.drawElementsInstancedANGLE(mode, count, type, offset, instanceCount);
-                };
-                glDrawArraysInstanced = function(mode, first, count, instanceCount) {
-                    instancedArrays.drawArraysInstancedANGLE(mode, first, count, instanceCount);
-                };
-                glVertexAttribDivisor = function(index, divisor) {
-                    instancedArrays.vertexAttribDivisorANGLE(index, divisor);
-                };
+            /**
+                 * Gets the object associated with a pick color.
+                 *
+                 * @param {Color} pickColor The pick color.
+                 * @returns {Object} The object associated with the pick color, or undefined if no object is associated with that color.
+                 *
+                 * @example
+                 * var object = context.getObjectByPickColor(pickColor);
+                 *
+                 * @see Context#createPickId
+                 */
+            getObjectByPickColor(pickColor) {
+                //>>includeStart('debug', pragmas.debug);
+                Check.defined('pickColor', pickColor);
+                //>>includeEnd('debug');
+                return this._pickObjects[pickColor.toRgba()];
             }
-
-            drawBuffers = getExtension(gl, ['WEBGL_draw_buffers']);
-            if (defined(drawBuffers)) {
-                glDrawBuffers = function(buffers) {
-                    drawBuffers.drawBuffersWEBGL(buffers);
-                };
+            /**
+                 * Creates a unique ID associated with the input object for use with color-buffer picking.
+                 * The ID has an RGBA color value unique to this context.  You must call destroy()
+                 * on the pick ID when destroying the input object.
+                 *
+                 * @param {Object} object The object to associate with the pick ID.
+                 * @returns {Object} A PickId object with a <code>color</code> property.
+                 *
+                 * @exception {RuntimeError} Out of unique Pick IDs.
+                 *
+                 *
+                 * @example
+                 * this._pickId = context.createPickId({
+                 *   primitive : this,
+                 *   id : this.id
+                 * });
+                 *
+                 * @see Context#getObjectByPickColor
+                 */
+            createPickId(object) {
+                //>>includeStart('debug', pragmas.debug);
+                Check.defined('object', object);
+                //>>includeEnd('debug');
+                // the increment and assignment have to be separate statements to
+                // actually detect overflow in the Uint32 value
+                ++this._nextPickColor[0];
+                var key = this._nextPickColor[0];
+                if (key === 0) {
+                    // In case of overflow
+                    throw new RuntimeError('Out of unique Pick IDs.');
+                }
+                this._pickObjects[key] = object;
+                return new PickId(this._pickObjects, key, Color.fromRgba(key));
+            }
+            isDestroyed() {
+                return false;
+            }
+            destroy() {
+                // Destroy all objects in the cache that have a destroy method.
+                var cache = this.cache;
+                for (var property in cache) {
+                    if (cache.hasOwnProperty(property)) {
+                        var propertyValue = cache[property];
+                        if (defined(propertyValue.destroy)) {
+                            propertyValue.destroy();
+                        }
+                    }
+                }
+                this._shaderCache = this._shaderCache.destroy();
+                this._defaultTexture = this._defaultTexture && this._defaultTexture.destroy();
+                this._defaultCubeMap = this._defaultCubeMap && this._defaultCubeMap.destroy();
+                return destroyObject(this);
             }
         }
-
-        this.glCreateVertexArray = glCreateVertexArray;
-        this.glBindVertexArray = glBindVertexArray;
-        this.glDeleteVertexArray = glDeleteVertexArray;
-
-        this.glDrawElementsInstanced = glDrawElementsInstanced;
-        this.glDrawArraysInstanced = glDrawArraysInstanced;
-        this.glVertexAttribDivisor = glVertexAttribDivisor;
-
-        this.glDrawBuffers = glDrawBuffers;
-
-        this._vertexArrayObject = !!vertexArrayObject;
-        this._instancedArrays = !!instancedArrays;
-        this._drawBuffers = !!drawBuffers;
-
-        ContextLimits._maximumDrawBuffers = this.drawBuffers ? gl.getParameter(WebGLConstants.MAX_DRAW_BUFFERS) : 1;
-        ContextLimits._maximumColorAttachments = this.drawBuffers ? gl.getParameter(WebGLConstants.MAX_COLOR_ATTACHMENTS) : 1;
-
-        this._clearColor = new Color(0.0, 0.0, 0.0, 0.0);
-        this._clearDepth = 1.0;
-        this._clearStencil = 0;
-
-        var us = new UniformState();
-        var ps = new PassState(this);
-        var rs = RenderState.fromCache();
-
-        this._defaultPassState = ps;
-        this._defaultRenderState = rs;
-        this._defaultTexture = undefined;
-        this._defaultCubeMap = undefined;
-
-        this._us = us;
-        this._currentRenderState = rs;
-        this._currentPassState = ps;
-        this._currentFramebuffer = undefined;
-        this._maxFrameTextureUnitIndex = 0;
-
-        // Vertex attribute divisor state cache. Workaround for ANGLE (also look at VertexArray.setVertexAttribDivisor)
-        this._vertexAttribDivisors = [];
-        this._previousDrawInstanced = false;
-        for (var i = 0; i < ContextLimits._maximumVertexAttributes; i++) {
-            this._vertexAttribDivisors.push(0);
-        }
-
-        this._pickObjects = {};
-        this._nextPickColor = new Uint32Array(1);
-
-        /**
-         * @example
-         * {
-         *   webgl : {
-         *     alpha : false,
-         *     depth : true,
-         *     stencil : false,
-         *     antialias : true,
-         *     premultipliedAlpha : true,
-         *     preserveDrawingBuffer : false,
-         *     failIfMajorPerformanceCaveat : true
-         *   },
-         *   allowTextureFilterAnisotropic : true
-         * }
-         */
-        this.options = options;
-
-        /**
-         * A cache of objects tied to this context.  Just before the Context is destroyed,
-         * <code>destroy</code> will be invoked on each object in this object literal that has
-         * such a method.  This is useful for caching any objects that might otherwise
-         * be stored globally, except they're tied to a particular context, and to manage
-         * their lifetime.
-         *
-         * @type {Object}
-         */
-        this.cache = {};
-
-        RenderState.apply(gl, rs, ps);
-    }
 
     var defaultFramebufferMarker = {};
 
@@ -943,50 +1116,6 @@ define([
 
     var defaultClearCommand = new ClearCommand();
 
-    Context.prototype.clear = function(clearCommand, passState) {
-        clearCommand = defaultValue(clearCommand, defaultClearCommand);
-        passState = defaultValue(passState, this._defaultPassState);
-
-        var gl = this._gl;
-        var bitmask = 0;
-
-        var c = clearCommand.color;
-        var d = clearCommand.depth;
-        var s = clearCommand.stencil;
-
-        if (defined(c)) {
-            if (!Color.equals(this._clearColor, c)) {
-                Color.clone(c, this._clearColor);
-                gl.clearColor(c.red, c.green, c.blue, c.alpha);
-            }
-            bitmask |= gl.COLOR_BUFFER_BIT;
-        }
-
-        if (defined(d)) {
-            if (d !== this._clearDepth) {
-                this._clearDepth = d;
-                gl.clearDepth(d);
-            }
-            bitmask |= gl.DEPTH_BUFFER_BIT;
-        }
-
-        if (defined(s)) {
-            if (s !== this._clearStencil) {
-                this._clearStencil = s;
-                gl.clearStencil(s);
-            }
-            bitmask |= gl.STENCIL_BUFFER_BIT;
-        }
-
-        var rs = defaultValue(clearCommand.renderState, this._defaultRenderState);
-        applyRenderState(this, rs, passState, true);
-
-        // The command's framebuffer takes presidence over the pass' framebuffer, e.g., for off-screen rendering.
-        var framebuffer = defaultValue(clearCommand.framebuffer, passState.framebuffer);
-        bindFramebuffer(this, framebuffer);
-
-        gl.clear(bitmask);
-    };
 
     function beginDraw(context, framebuffer, passState, shaderProgram, renderState) {
         //>>includeStart('debug', pragmas.debug);
@@ -1052,171 +1181,28 @@ define([
         va._unBind();
     }
 
-    Context.prototype.draw = function(drawCommand, passState, shaderProgram, uniformMap) {
-        //>>includeStart('debug', pragmas.debug);
-        Check.defined('drawCommand', drawCommand);
-        Check.defined('drawCommand.shaderProgram', drawCommand._shaderProgram);
-        //>>includeEnd('debug');
 
-        passState = defaultValue(passState, this._defaultPassState);
-        // The command's framebuffer takes presidence over the pass' framebuffer, e.g., for off-screen rendering.
-        var framebuffer = defaultValue(drawCommand._framebuffer, passState.framebuffer);
-        var renderState = defaultValue(drawCommand._renderState, this._defaultRenderState);
-        shaderProgram = defaultValue(shaderProgram, drawCommand._shaderProgram);
-        uniformMap = defaultValue(uniformMap, drawCommand._uniformMap);
 
-        beginDraw(this, framebuffer, passState, shaderProgram, renderState);
-        continueDraw(this, drawCommand, shaderProgram, uniformMap);
-    };
-
-    Context.prototype.endFrame = function() {
-        var gl = this._gl;
-        gl.useProgram(null);
-
-        this._currentFramebuffer = undefined;
-        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-
-        var buffers = scratchBackBufferArray;
-        if (this.drawBuffers) {
-            this.glDrawBuffers(buffers);
-        }
-
-        var length = this._maxFrameTextureUnitIndex;
-        this._maxFrameTextureUnitIndex = 0;
-
-        for (var i = 0; i < length; ++i) {
-            gl.activeTexture(gl.TEXTURE0 + i);
-            gl.bindTexture(gl.TEXTURE_2D, null);
-            gl.bindTexture(gl.TEXTURE_CUBE_MAP, null);
-        }
-    };
-
-    Context.prototype.readPixels = function(readState) {
-        var gl = this._gl;
-
-        readState = defaultValue(readState, defaultValue.EMPTY_OBJECT);
-        var x = Math.max(defaultValue(readState.x, 0), 0);
-        var y = Math.max(defaultValue(readState.y, 0), 0);
-        var width = defaultValue(readState.width, gl.drawingBufferWidth);
-        var height = defaultValue(readState.height, gl.drawingBufferHeight);
-        var framebuffer = readState.framebuffer;
-
-        //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.number.greaterThan('readState.width', width, 0);
-        Check.typeOf.number.greaterThan('readState.height', height, 0);
-        //>>includeEnd('debug');
-
-        var pixelDatatype = PixelDatatype.UNSIGNED_BYTE;
-        if (defined(framebuffer) && framebuffer.numberOfColorAttachments > 0) {
-            pixelDatatype = framebuffer.getColorTexture(0).pixelDatatype;
-        }
-
-        var pixels = PixelFormat.createTypedArray(PixelFormat.RGBA, pixelDatatype, width, height);
-
-        bindFramebuffer(this, framebuffer);
-
-        gl.readPixels(x, y, width, height, PixelFormat.RGBA, pixelDatatype, pixels);
-
-        return pixels;
-    };
 
     var viewportQuadAttributeLocations = {
         position : 0,
         textureCoordinates : 1
     };
 
-    Context.prototype.getViewportQuadVertexArray = function() {
-        // Per-context cache for viewport quads
-        var vertexArray = this.cache.viewportQuad_vertexArray;
 
-        if (!defined(vertexArray)) {
-            var geometry = new Geometry({
-                attributes : {
-                    position : new GeometryAttribute({
-                        componentDatatype : ComponentDatatype.FLOAT,
-                        componentsPerAttribute : 2,
-                        values : [
-                            -1.0, -1.0,
-                            1.0, -1.0,
-                            1.0, 1.0,
-                            -1.0, 1.0
-                        ]
-                    }),
 
-                    textureCoordinates : new GeometryAttribute({
-                        componentDatatype : ComponentDatatype.FLOAT,
-                        componentsPerAttribute : 2,
-                        values : [
-                            0.0, 0.0,
-                            1.0, 0.0,
-                            1.0, 1.0,
-                            0.0, 1.0
-                        ]
-                    })
-                },
-                // Workaround Internet Explorer 11.0.8 lack of TRIANGLE_FAN
-                indices : new Uint16Array([0, 1, 2, 0, 2, 3]),
-                primitiveType : PrimitiveType.TRIANGLES
-            });
 
-            vertexArray = VertexArray.fromGeometry({
-                context : this,
-                geometry : geometry,
-                attributeLocations : viewportQuadAttributeLocations,
-                bufferUsage : BufferUsage.STATIC_DRAW,
-                interleave : true
-            });
-
-            this.cache.viewportQuad_vertexArray = vertexArray;
+        class PickId {
+            constructor(pickObjects, key, color) {
+                this._pickObjects = pickObjects;
+                this.key = key;
+                this.color = color;
+            }
+            destroy() {
+                delete this._pickObjects[this.key];
+                return undefined;
+            }
         }
-
-        return vertexArray;
-    };
-
-    Context.prototype.createViewportQuadCommand = function(fragmentShaderSource, overrides) {
-        overrides = defaultValue(overrides, defaultValue.EMPTY_OBJECT);
-
-        return new DrawCommand({
-            vertexArray : this.getViewportQuadVertexArray(),
-            primitiveType : PrimitiveType.TRIANGLES,
-            renderState : overrides.renderState,
-            shaderProgram : ShaderProgram.fromCache({
-                context : this,
-                vertexShaderSource : ViewportQuadVS,
-                fragmentShaderSource : fragmentShaderSource,
-                attributeLocations : viewportQuadAttributeLocations
-            }),
-            uniformMap : overrides.uniformMap,
-            owner : overrides.owner,
-            framebuffer : overrides.framebuffer,
-            pass : overrides.pass
-        });
-    };
-
-    /**
-     * Gets the object associated with a pick color.
-     *
-     * @param {Color} pickColor The pick color.
-     * @returns {Object} The object associated with the pick color, or undefined if no object is associated with that color.
-     *
-     * @example
-     * var object = context.getObjectByPickColor(pickColor);
-     *
-     * @see Context#createPickId
-     */
-    Context.prototype.getObjectByPickColor = function(pickColor) {
-        //>>includeStart('debug', pragmas.debug);
-        Check.defined('pickColor', pickColor);
-        //>>includeEnd('debug');
-
-        return this._pickObjects[pickColor.toRgba()];
-    };
-
-    function PickId(pickObjects, key, color) {
-        this._pickObjects = pickObjects;
-        this.key = key;
-        this.color = color;
-    }
 
     defineProperties(PickId.prototype, {
         object : {
@@ -1229,70 +1215,9 @@ define([
         }
     });
 
-    PickId.prototype.destroy = function() {
-        delete this._pickObjects[this.key];
-        return undefined;
-    };
 
-    /**
-     * Creates a unique ID associated with the input object for use with color-buffer picking.
-     * The ID has an RGBA color value unique to this context.  You must call destroy()
-     * on the pick ID when destroying the input object.
-     *
-     * @param {Object} object The object to associate with the pick ID.
-     * @returns {Object} A PickId object with a <code>color</code> property.
-     *
-     * @exception {RuntimeError} Out of unique Pick IDs.
-     *
-     *
-     * @example
-     * this._pickId = context.createPickId({
-     *   primitive : this,
-     *   id : this.id
-     * });
-     *
-     * @see Context#getObjectByPickColor
-     */
-    Context.prototype.createPickId = function(object) {
-        //>>includeStart('debug', pragmas.debug);
-        Check.defined('object', object);
-        //>>includeEnd('debug');
 
-        // the increment and assignment have to be separate statements to
-        // actually detect overflow in the Uint32 value
-        ++this._nextPickColor[0];
-        var key = this._nextPickColor[0];
-        if (key === 0) {
-            // In case of overflow
-            throw new RuntimeError('Out of unique Pick IDs.');
-        }
 
-        this._pickObjects[key] = object;
-        return new PickId(this._pickObjects, key, Color.fromRgba(key));
-    };
-
-    Context.prototype.isDestroyed = function() {
-        return false;
-    };
-
-    Context.prototype.destroy = function() {
-        // Destroy all objects in the cache that have a destroy method.
-        var cache = this.cache;
-        for (var property in cache) {
-            if (cache.hasOwnProperty(property)) {
-                var propertyValue = cache[property];
-                if (defined(propertyValue.destroy)) {
-                    propertyValue.destroy();
-                }
-            }
-        }
-
-        this._shaderCache = this._shaderCache.destroy();
-        this._defaultTexture = this._defaultTexture && this._defaultTexture.destroy();
-        this._defaultCubeMap = this._defaultCubeMap && this._defaultCubeMap.destroy();
-
-        return destroyObject(this);
-    };
 
     return Context;
 });

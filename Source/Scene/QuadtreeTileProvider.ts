@@ -6,30 +6,32 @@ define([
         DeveloperError) {
     'use strict';
 
-    /**
-     * Provides general quadtree tiles to be displayed on or near the surface of an ellipsoid.  It is intended to be
-     * used with the {@link QuadtreePrimitive}.  This type describes an interface and is not intended to be
-     * instantiated directly.
-     *
-     * @alias QuadtreeTileProvider
-     * @constructor
-     * @private
-     */
-    function QuadtreeTileProvider() {
-        DeveloperError.throwInstantiationError();
-    }
+        /**
+             * Provides general quadtree tiles to be displayed on or near the surface of an ellipsoid.  It is intended to be
+             * used with the {@link QuadtreePrimitive}.  This type describes an interface and is not intended to be
+             * instantiated directly.
+             *
+             * @alias QuadtreeTileProvider
+             * @constructor
+             * @private
+             */
+        class QuadtreeTileProvider {
+            constructor() {
+                DeveloperError.throwInstantiationError();
+            }
+            /**
+                 * Computes the default geometric error for level zero of the quadtree.
+                 *
+                 * @memberof QuadtreeTileProvider
+                 *
+                 * @param {TilingScheme} tilingScheme The tiling scheme for which to compute the geometric error.
+                 * @returns {Number} The maximum geometric error at level zero, in meters.
+                 */
+            static computeDefaultLevelZeroMaximumGeometricError(tilingScheme) {
+                return tilingScheme.ellipsoid.maximumRadius * 2 * Math.PI * 0.25 / (65 * tilingScheme.getNumberOfXTilesAtLevel(0));
+            }
+        }
 
-    /**
-     * Computes the default geometric error for level zero of the quadtree.
-     *
-     * @memberof QuadtreeTileProvider
-     *
-     * @param {TilingScheme} tilingScheme The tiling scheme for which to compute the geometric error.
-     * @returns {Number} The maximum geometric error at level zero, in meters.
-     */
-    QuadtreeTileProvider.computeDefaultLevelZeroMaximumGeometricError = function(tilingScheme) {
-        return tilingScheme.ellipsoid.maximumRadius * 2 * Math.PI * 0.25 / (65 * tilingScheme.getNumberOfXTilesAtLevel(0));
-    };
 
     defineProperties(QuadtreeTileProvider.prototype, {
         /**

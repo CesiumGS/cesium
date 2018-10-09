@@ -14,29 +14,55 @@ define([
         when) {
     'use strict';
 
-    /**
-     * Represents content for a tile in a
-     * {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/specification|3D Tiles} tileset whose
-     * content points to another 3D Tiles tileset.
-     * <p>
-     * Implements the {@link Cesium3DTileContent} interface.
-     * </p>
-     *
-     * @alias Tileset3DTileContent
-     * @constructor
-     *
-     * @private
-     */
-    function Tileset3DTileContent(tileset, tile, resource, arrayBuffer, byteOffset) {
-        this._tileset = tileset;
-        this._tile = tile;
-        this._resource = resource;
-        this._readyPromise = when.defer();
-
-        this.featurePropertiesDirty = false;
-
-        initialize(this, arrayBuffer, byteOffset);
-    }
+        /**
+             * Represents content for a tile in a
+             * {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/specification|3D Tiles} tileset whose
+             * content points to another 3D Tiles tileset.
+             * <p>
+             * Implements the {@link Cesium3DTileContent} interface.
+             * </p>
+             *
+             * @alias Tileset3DTileContent
+             * @constructor
+             *
+             * @private
+             */
+        class Tileset3DTileContent {
+            constructor(tileset, tile, resource, arrayBuffer, byteOffset) {
+                this._tileset = tileset;
+                this._tile = tile;
+                this._resource = resource;
+                this._readyPromise = when.defer();
+                this.featurePropertiesDirty = false;
+                initialize(this, arrayBuffer, byteOffset);
+            }
+            /**
+                 * Part of the {@link Cesium3DTileContent} interface.  <code>Tileset3DTileContent</code>
+                 * always returns <code>false</code> since a tile of this type does not have any features.
+                 */
+            hasProperty(batchId, name) {
+                return false;
+            }
+            /**
+                 * Part of the {@link Cesium3DTileContent} interface.  <code>Tileset3DTileContent</code>
+                 * always returns <code>undefined</code> since a tile of this type does not have any features.
+                 */
+            getFeature(batchId) {
+                return undefined;
+            }
+            applyDebugSettings(enabled, color) {
+            }
+            applyStyle(style) {
+            }
+            update(tileset, frameState) {
+            }
+            isDestroyed() {
+                return false;
+            }
+            destroy() {
+                return destroyObject(this);
+            }
+        }
 
     defineProperties(Tileset3DTileContent.prototype, {
         featuresLength : {
@@ -129,38 +155,12 @@ define([
         content._readyPromise.resolve(content);
     }
 
-    /**
-     * Part of the {@link Cesium3DTileContent} interface.  <code>Tileset3DTileContent</code>
-     * always returns <code>false</code> since a tile of this type does not have any features.
-     */
-    Tileset3DTileContent.prototype.hasProperty = function(batchId, name) {
-        return false;
-    };
 
-    /**
-     * Part of the {@link Cesium3DTileContent} interface.  <code>Tileset3DTileContent</code>
-     * always returns <code>undefined</code> since a tile of this type does not have any features.
-     */
-    Tileset3DTileContent.prototype.getFeature = function(batchId) {
-        return undefined;
-    };
 
-    Tileset3DTileContent.prototype.applyDebugSettings = function(enabled, color) {
-    };
 
-    Tileset3DTileContent.prototype.applyStyle = function(style) {
-    };
 
-    Tileset3DTileContent.prototype.update = function(tileset, frameState) {
-    };
 
-    Tileset3DTileContent.prototype.isDestroyed = function() {
-        return false;
-    };
 
-    Tileset3DTileContent.prototype.destroy = function() {
-        return destroyObject(this);
-    };
 
     return Tileset3DTileContent;
 });

@@ -18,20 +18,74 @@ define([
         Property) {
     'use strict';
 
-    /**
-     * A {@link CompositeProperty} which is also a {@link PositionProperty}.
-     *
-     * @alias CompositePositionProperty
-     * @constructor
-     *
-     * @param {ReferenceFrame} [referenceFrame=ReferenceFrame.FIXED] The reference frame in which the position is defined.
-     */
-    function CompositePositionProperty(referenceFrame) {
-        this._referenceFrame = defaultValue(referenceFrame, ReferenceFrame.FIXED);
-        this._definitionChanged = new Event();
-        this._composite = new CompositeProperty();
-        this._composite.definitionChanged.addEventListener(CompositePositionProperty.prototype._raiseDefinitionChanged, this);
-    }
+        /**
+             * A {@link CompositeProperty} which is also a {@link PositionProperty}.
+             *
+             * @alias CompositePositionProperty
+             * @constructor
+             *
+             * @param {ReferenceFrame} [referenceFrame=ReferenceFrame.FIXED] The reference frame in which the position is defined.
+             */
+        class CompositePositionProperty {
+            constructor(referenceFrame) {
+                this._referenceFrame = defaultValue(referenceFrame, ReferenceFrame.FIXED);
+                this._definitionChanged = new Event();
+                this._composite = new CompositeProperty();
+                this._composite.definitionChanged.addEventListener(CompositePositionProperty.prototype._raiseDefinitionChanged, this);
+            }
+            /**
+                 * Gets the value of the property at the provided time in the fixed frame.
+                 *
+                 * @param {JulianDate} time The time for which to retrieve the value.
+                 * @param {Object} [result] The object to store the value into, if omitted, a new instance is created and returned.
+                 * @returns {Object} The modified result parameter or a new instance if the result parameter was not supplied.
+                 */
+            getValue(time, result) {
+                return this.getValueInReferenceFrame(time, ReferenceFrame.FIXED, result);
+            }
+            /**
+                 * Gets the value of the property at the provided time and in the provided reference frame.
+                 *
+                 * @param {JulianDate} time The time for which to retrieve the value.
+                 * @param {ReferenceFrame} referenceFrame The desired referenceFrame of the result.
+                 * @param {Cartesian3} [result] The object to store the value into, if omitted, a new instance is created and returned.
+                 * @returns {Cartesian3} The modified result parameter or a new instance if the result parameter was not supplied.
+                 */
+            getValueInReferenceFrame(time, referenceFrame, result) {
+                //>>includeStart('debug', pragmas.debug);
+                if (!defined(time)) {
+                    throw new DeveloperError('time is required.');
+                }
+                if (!defined(referenceFrame)) {
+                    throw new DeveloperError('referenceFrame is required.');
+                }
+                //>>includeEnd('debug');
+                var innerProperty = this._composite._intervals.findDataForIntervalContainingDate(time);
+                if (defined(innerProperty)) {
+                    return innerProperty.getValueInReferenceFrame(time, referenceFrame, result);
+                }
+                return undefined;
+            }
+            /**
+                 * Compares this property to the provided property and returns
+                 * <code>true</code> if they are equal, <code>false</code> otherwise.
+                 *
+                 * @param {Property} [other] The other property.
+                 * @returns {Boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
+                 */
+            equals(other) {
+                return this === other || //
+                    (other instanceof CompositePositionProperty && //
+                        this._referenceFrame === other._referenceFrame && //
+                        this._composite.equals(other._composite, Property.equals));
+            }
+            /**
+                 * @private
+                 */
+            _raiseDefinitionChanged() {
+                this._definitionChanged.raiseEvent(this);
+            }
+        }
 
     defineProperties(CompositePositionProperty.prototype, {
         /**
@@ -91,62 +145,9 @@ define([
         }
     });
 
-    /**
-     * Gets the value of the property at the provided time in the fixed frame.
-     *
-     * @param {JulianDate} time The time for which to retrieve the value.
-     * @param {Object} [result] The object to store the value into, if omitted, a new instance is created and returned.
-     * @returns {Object} The modified result parameter or a new instance if the result parameter was not supplied.
-     */
-    CompositePositionProperty.prototype.getValue = function(time, result) {
-        return this.getValueInReferenceFrame(time, ReferenceFrame.FIXED, result);
-    };
 
-    /**
-     * Gets the value of the property at the provided time and in the provided reference frame.
-     *
-     * @param {JulianDate} time The time for which to retrieve the value.
-     * @param {ReferenceFrame} referenceFrame The desired referenceFrame of the result.
-     * @param {Cartesian3} [result] The object to store the value into, if omitted, a new instance is created and returned.
-     * @returns {Cartesian3} The modified result parameter or a new instance if the result parameter was not supplied.
-     */
-    CompositePositionProperty.prototype.getValueInReferenceFrame = function(time, referenceFrame, result) {
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(time)) {
-            throw new DeveloperError('time is required.');
-        }
-        if (!defined(referenceFrame)) {
-            throw new DeveloperError('referenceFrame is required.');
-        }
-        //>>includeEnd('debug');
 
-        var innerProperty = this._composite._intervals.findDataForIntervalContainingDate(time);
-        if (defined(innerProperty)) {
-            return innerProperty.getValueInReferenceFrame(time, referenceFrame, result);
-        }
-        return undefined;
-    };
 
-    /**
-     * Compares this property to the provided property and returns
-     * <code>true</code> if they are equal, <code>false</code> otherwise.
-     *
-     * @param {Property} [other] The other property.
-     * @returns {Boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
-     */
-    CompositePositionProperty.prototype.equals = function(other) {
-        return this === other || //
-               (other instanceof CompositePositionProperty && //
-                this._referenceFrame === other._referenceFrame && //
-                this._composite.equals(other._composite, Property.equals));
-    };
-
-    /**
-     * @private
-     */
-    CompositePositionProperty.prototype._raiseDefinitionChanged = function() {
-        this._definitionChanged.raiseEvent(this);
-    };
 
     return CompositePositionProperty;
 });
