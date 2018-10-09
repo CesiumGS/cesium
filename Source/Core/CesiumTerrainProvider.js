@@ -938,8 +938,46 @@ define([
             return undefined;
         }
 
-        return this._availability.isTileAvailable(level, x, y);
+        var layers = this._layers;
+        var layerCount = layers.length;
+        if (this._availability.isTileAvailable(level, x, y)) {
+            // If the tile is listed as available, then we are done
+            return true;
+        }
+        if (layerCount === 1 || !this._hasBvh) {
+            // TODO: check Unavailable list??
+            // If we don't have any ancestors or no ancestors have the bvh extension
+            //  then we know this tile isn't available.
+            return false;
+        }
+
+        // We need to load some tiles to figure out what is available
+        checkAncestors(x, y, level, layers, 0);
+
+        // Return false for now
+        return false;
     };
+
+    function checkAncestors(x, y, level, layers, index) {
+        var layer = layers[index];
+        if (!layer.hasAvailability && layer.hasBvh) {
+            // We only need to check this layer if there wasn't
+            //  an available list and it has the bvh extension
+
+            // TODO: Check if tile that has bvh has been loaded
+            // Be careful because it's availability could've been loaded
+            //  from the tile before (eg level 0 contains level 5,
+            //  but level 5 must be loaded to check level 6)
+        }
+
+        if (++index === layers.length)
+        {
+            // TODO: Unavailable list??
+            return when.resolve(false);
+        }
+
+        return checkAncestors(x, y, level, layers, index);
+    }
 
     return CesiumTerrainProvider;
 });
