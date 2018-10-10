@@ -2944,9 +2944,7 @@ define([
         // the function modifies scene state that should remain constant over the frame.
         var functions = scene._frameState.afterRender;
         for (var i = 0, length = functions.length; i < length; ++i) {
-            if (functions[i]) {
-                functions[i]();
-						}
+            functions[i]();
             scene.requestRender();
         }
 
@@ -3691,7 +3689,6 @@ define([
 
         scene._view = scene._defaultView;
         context.endFrame();
-        callAfterRenderFunctions(scene);
 
         if (defined(object) || defined(position)) {
             return {
