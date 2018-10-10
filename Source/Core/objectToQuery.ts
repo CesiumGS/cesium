@@ -29,7 +29,7 @@ define([
      * // str will be:
      * // 'key1=some%20value&key2=a%2Fb&key3=x&key3=y'
      */
-    export function objectToQuery(obj) {
+    function objectToQuery(obj) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(obj)) {
             throw new DeveloperError('obj is required.');

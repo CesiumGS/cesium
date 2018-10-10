@@ -22,7 +22,7 @@ define([
      * //absolute Uri will be "https://test.com/awesome.png";
      * var absoluteUri = Cesium.getAbsoluteUri('awesome.png', 'https://test.com');
      */
-    export function getAbsoluteUri(relative: string, base ? : string): string {
+    function getAbsoluteUri(relative: string, base ? : string): string {
         var documentObject;
         if (typeof document !== 'undefined') {
             documentObject = document;

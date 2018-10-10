@@ -13,7 +13,7 @@ define([
      *
      * @exports freezeObject
      */
-    export function freezeObject(o: any): any {
+    function freezeObject(o: any): any {
 
         if (!defined(freezeObject)) {
             return o;

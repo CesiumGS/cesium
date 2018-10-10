@@ -36,7 +36,7 @@ define([
      * });
      *
      */
-    export function createWorldTerrain (options: {
+    function createWorldTerrain (options: {
         requestVertexNormals?: boolean,
         requestWaterMask?: boolean
     }): CesiumTerrainProvider {

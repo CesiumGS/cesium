@@ -19,7 +19,7 @@ define([
      * @returns {Array} The resulting array.
      * @private
      */
-    export function arrayFill(array: any[], value: any, start: number = 0, end: number = 0): any[] {
+    function arrayFill(array: any[], value: any, start: number = 0, end: number = 0): any[] {
         //>>includeStart('debug', pragmas.debug);
         Check.defined('array', array);
         Check.defined('value', value);

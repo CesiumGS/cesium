@@ -19,7 +19,7 @@ define([
      * //extension will be "czml";
      * var extension = Cesium.getExtensionFromUri('/Gallery/simple.czml?value=true&example=false');
      */
-    export function getExtensionFromUri(uri: string): string {
+    function getExtensionFromUri(uri: string): string {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(uri)) {
             throw new DeveloperError('uri is required.');

@@ -26,7 +26,7 @@ define([
      * var numbers = [0, 2, 4, 6, 8];
      * var index = Cesium.binarySearch(numbers, 6, comparator); // 3
      */
-    export function binarySearch(array: any[], itemToFind: any, comparator: (a: any, b: any) => number): number {
+    function binarySearch(array: any[], itemToFind: any, comparator: (a: any, b: any) => number): number {
         //>>includeStart('debug', pragmas.debug);
         Check.defined('array', array);
         Check.defined('itemToFind', itemToFind);

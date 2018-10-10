@@ -14,7 +14,7 @@ define(function() {
      *      doSomethingElse();
      * }
      */
-    export function defined(value: any): boolean {
+    function defined(value: any): boolean {
         return value !== undefined && value !== null;
     }
 

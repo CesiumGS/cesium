@@ -14,7 +14,7 @@ define([
     /*global CESIUM_BASE_URL*/
 
     var cesiumScriptRegex = /((?:.*\/)|^)cesium[\w-]*\.js(?:\W|$)/i;
-    export function getBaseUrlFromCesiumScript(): string | undefined {
+    function getBaseUrlFromCesiumScript(): string | undefined {
         var scripts = document.getElementsByTagName('script');
         for (var i = 0, len = scripts.length; i < len; ++i) {
             var src = scripts[i].getAttribute('src');
@@ -28,7 +28,7 @@ define([
 
     var a;
 
-    export function tryMakeAbsolute(url: string): HTMLElement {
+    function tryMakeAbsolute(url: string): HTMLElement {
         if (typeof document === 'undefined') {
             //Node.js and Web Workers. In both cases, the URL will already be absolute.
             return url;
@@ -46,7 +46,7 @@ define([
 
     var baseResource;
 
-    export function getCesiumBaseUrl(): Resource {
+    function getCesiumBaseUrl(): Resource {
         if (defined(baseResource)) {
             return baseResource;
         }
@@ -74,12 +74,12 @@ define([
         return baseResource;
     }
 
-    export function buildModuleUrlFromRequireToUrl(moduleID: string): string {
+    function buildModuleUrlFromRequireToUrl(moduleID: string): string {
         //moduleID will be non-relative, so require it relative to this module, in Core.
         return tryMakeAbsolute(require.toUrl('../' + moduleID));
     }
 
-    export function buildModuleUrlFromBaseUrl(moduleID: string): string {
+    function buildModuleUrlFromBaseUrl(moduleID: string): string {
         var resource = getCesiumBaseUrl().getDerivedResource({
             url: moduleID
         });
@@ -95,7 +95,7 @@ define([
      *
      * @private
      */
-    export function buildModuleUrl(moduleID: string): string {
+    function buildModuleUrl(moduleID: string): string {
         if (!defined(implementation)) {
             //select implementation
             if (defined(define.amd) && !define.amd.toUrlUndefined && defined(require.toUrl)) {

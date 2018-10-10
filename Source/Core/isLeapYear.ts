@@ -15,7 +15,7 @@ define([
      * @example
      * var leapYear = Cesium.isLeapYear(2000); // true
      */
-    export function isLeapYear(year) {
+    function isLeapYear(year) {
         //>>includeStart('debug', pragmas.debug);
         if (year === null || isNaN(year)) {
             throw new DeveloperError('year is required and must be a number.');

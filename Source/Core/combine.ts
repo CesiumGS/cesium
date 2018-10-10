@@ -37,7 +37,7 @@ define([
      *
      * @exports combine
      */
-    export function combine(object1: Object, object2: Object, deep: boolean = false): Object {
+    function combine(object1: Object, object2: Object, deep: boolean = false): Object {
         deep = defaultValue(deep, false);
 
         var result = {};

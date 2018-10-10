@@ -13,7 +13,7 @@ define([
      * @param {Boolean} [deep=false] If true, all properties will be deep cloned recursively.
      * @returns {Object} The cloned object.
      */
-    export function clone < T extend Object > (object: T, deep: boolean = false): T {
+    function clone < T extend Object > (object: T, deep: boolean = false): T {
         if (object === null || typeof object !== 'object') {
             return object;
         }

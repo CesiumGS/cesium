@@ -11,7 +11,7 @@ define([
     /**
      * @private
      */
-    export function createRawPropertyDescriptor(name, configurable) {
+    function createRawPropertyDescriptor(name, configurable) {
         return createPropertyDescriptor(name, configurable, createRawProperty);
     }
 

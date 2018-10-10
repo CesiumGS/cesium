@@ -14,7 +14,7 @@ define([
         ImageMaterialProperty) {
     'use strict';
 
-    export function createMaterialProperty(value) {
+    function createMaterialProperty(value) {
         if (value instanceof Color) {
             return new ColorMaterialProperty(value);
         }

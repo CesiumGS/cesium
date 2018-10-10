@@ -12,7 +12,7 @@ define(function() {
      *
      * @returns {Number} The timestamp in milliseconds since some unspecified reference time.
      */
-    export function getTimestamp(): number {
+    function getTimestamp(): number {
         if (
             typeof performance !== 'undefined' &&
             typeof performance.now === 'function' &&

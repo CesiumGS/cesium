@@ -32,7 +32,7 @@ define([
      *
      * @private
      */
-    export function oneTimeWarning(identifier: string, message ? : string): void {
+    function oneTimeWarning(identifier: string, message ? : string): void {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(identifier)) {
             throw new DeveloperError('identifier is required.');

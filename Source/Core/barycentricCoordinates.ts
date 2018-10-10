@@ -36,7 +36,7 @@ define([
      *   new Cesium.Cartesian3( 1.0, 0.0, 0.0),
      *   new Cesium.Cartesian3( 0.0, 1.0, 1.0));
      */
-    export function barycentricCoordinates(point: Cartesian2 | Cartesian3, p0: Cartesian2 | Cartesian, p1: Cartesian2 | Cartesian3, p2: Cartesian2 | Cartesian3, result ?: Cartesian2 | Cartesian3): Cartesian2 | Cartesian3 {
+    function barycentricCoordinates(point: Cartesian2 | Cartesian3, p0: Cartesian2 | Cartesian, p1: Cartesian2 | Cartesian3, p2: Cartesian2 | Cartesian3, result ?: Cartesian2 | Cartesian3): Cartesian2 | Cartesian3 {
         //>>includeStart('debug', pragmas.debug);
         Check.defined('point', point);
         Check.defined('p0', p0);

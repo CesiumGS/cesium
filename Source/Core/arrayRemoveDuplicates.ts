@@ -42,7 +42,7 @@ define([
      *
      * @private
      */
-    export function arrayRemoveDuplicates(values: any[], equalsEpsilon: () => any, wrapAround: boolean = false): any[] {
+    function arrayRemoveDuplicates(values: any[], equalsEpsilon: () => any, wrapAround: boolean = false): any[] {
         //>>includeStart('debug', pragmas.debug);
         Check.defined('equalsEpsilon', equalsEpsilon);
         //>>includeEnd('debug');

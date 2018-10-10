@@ -42,7 +42,7 @@ define([
      *     // updatedPositions is just a reference to positions.
      * });
      */
-    export function sampleTerrain(terrainProvider, level, positions) {
+    function sampleTerrain(terrainProvider, level, positions) {
         //>>includeStart('debug', pragmas.debug);
         Check.typeOf.object('terrainProvider', terrainProvider);
         Check.typeOf.number('level', level);

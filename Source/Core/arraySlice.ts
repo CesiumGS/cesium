@@ -18,7 +18,7 @@ define([
      * @returns {Array} The resulting array.
      * @private
      */
-    export function arraySlice(array: any[], begin: number = 0, end: number = array.length): any[] {
+    function arraySlice(array: any[], begin: number = 0, end: number = array.length): any[] {
         //>>includeStart('debug', pragmas.debug);
         Check.defined('array', array);
         if (defined(begin)) {

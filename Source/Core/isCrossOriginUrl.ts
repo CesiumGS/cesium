@@ -11,7 +11,7 @@ define([
      *
      * @private
      */
-    export function isCrossOriginUrl(url) {
+    function isCrossOriginUrl(url) {
         if (!defined(a)) {
             a = document.createElement('a');
         }

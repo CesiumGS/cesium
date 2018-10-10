@@ -29,7 +29,7 @@ define([
      *
      * @see objectToQuery
      */
-    export function queryToObject(queryString) {
+    function queryToObject(queryString) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(queryString)) {
             throw new DeveloperError('queryString is required.');
