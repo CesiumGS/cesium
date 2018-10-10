@@ -699,7 +699,7 @@ define([
 
             fragmentShader += '    vec2 brdfLut = texture2D(czm_brdfLut, vec2(NdotV, 1.0 - roughness)).rg;\n';
             fragmentShader += '    vec3 IBLColor = (diffuseIrradiance * diffuseColor) + (specularIrradiance * SRGBtoLINEAR3(specularColor * brdfLut.x + brdfLut.y));\n';
-            fragmentShader += '    color += IBLColor * 1.0;\n';
+            fragmentShader += '    color += IBLColor * luminance;\n';
 
             // Environment maps were provided, use them for IBL
             fragmentShader += '#else \n'; // defined(DIFFUSE_IBL) || defined(SPECULAR_IBL)
