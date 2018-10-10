@@ -236,6 +236,7 @@ define([
             var availableTiles = data.available;
             var availability;
             var hasAvailability = false;
+            var bvhLoaded; // Keeps track of which BVH tiles were loaded
             if (defined(availableTiles)) {
                 availability = new TileAvailability(that._tilingScheme, availableTiles.length);
                 hasAvailability = true;
@@ -279,6 +280,7 @@ define([
             }
             if (defined(data.extensions) && data.extensions.indexOf('bvh') !== -1) {
                 hasBvh = true;
+                bvhLoaded = new TileAvailability(that._tilingScheme, maxZoom);
             }
 
             that._hasWaterMask = that._hasWaterMask || hasWaterMask;
@@ -302,6 +304,7 @@ define([
                 hasWaterMask: hasWaterMask,
                 hasBvh: hasBvh,
                 bvhLevels: data.bvhlevels,
+                bvhLoaded: bvhLoaded,
                 littleEndianExtensionSize: littleEndianExtensionSize
             }));
 
@@ -561,10 +564,11 @@ define([
                 var bvh = new Float32Array(buffer, extensionPos, numberOfHeights);
                 extensionPos += Float32Array.BYTES_PER_ELEMENT * numberOfHeights;
 
-                if (!layer.hasAvailability && defined(layer.availability)) {
+                if (!layer.hasAvailability) { // No available list in layer.json
                     var numberofIncludedLevels = findNumberOfLevels(numberOfHeights/2);
                     if (defined(numberofIncludedLevels) && numberofIncludedLevels <= layer.bvhLevels) {
                         var maxLevel = numberofIncludedLevels + level - 1;
+                        layer.bvhLoaded.addAvailableTileRange(level, x, y, x, y);
                         recurseHeights(level, x, y, bvh, 0, maxLevel, provider.availability, layer.availability);
                     } else {
                         console.log('Incorrect number of heights in tile Level: %d X: %d Y: %d', level, x, y);
@@ -938,45 +942,99 @@ define([
             return undefined;
         }
 
-        var layers = this._layers;
-        var layerCount = layers.length;
         if (this._availability.isTileAvailable(level, x, y)) {
             // If the tile is listed as available, then we are done
             return true;
         }
-        if (layerCount === 1 || !this._hasBvh) {
-            // TODO: check Unavailable list??
-            // If we don't have any ancestors or no ancestors have the bvh extension
-            //  then we know this tile isn't available.
+        if (!this._hasBvh) {
+            // If we don't have any layers with the bvh extension then we don't have this tile
             return false;
         }
 
-        // We need to load some tiles to figure out what is available
-        checkAncestors(x, y, level, layers, 0);
+        // Load any tiles we need to figure out availability
+        checkAncestorsLayers(this, x, y, level, 0);
 
         // Return false for now
         return false;
     };
 
-    function checkAncestors(x, y, level, layers, index) {
+    function checkAncestorsLayers(provider, x, y, level, index) {
+        var layers = provider._layers;
         var layer = layers[index];
+        var promise;
         if (!layer.hasAvailability && layer.hasBvh) {
             // We only need to check this layer if there wasn't
             //  an available list and it has the bvh extension
-
-            // TODO: Check if tile that has bvh has been loaded
-            // Be careful because it's availability could've been loaded
-            //  from the tile before (eg level 0 contains level 5,
-            //  but level 5 must be loaded to check level 6)
+            var bvhLevels = layer.bvhLevels - 1;
+            var bvhLevel = ((level / bvhLevels) | 0) * bvhLevels;
+            var divisor = 1 << (level - bvhLevel);
+            var bvhX = (x / divisor) | 0;
+            var bvhY = (y / divisor) | 0;
+            promise = checkBVHParentTiles(provider, bvhLevel, bvhX, bvhY, layer);
         }
 
-        if (++index === layers.length)
-        {
-            // TODO: Unavailable list??
-            return when.resolve(false);
+        // Nothing to load, so this tile isn't available in this layer
+        if (!defined(promise)) {
+            // This layer doesn't have it so we can move on to check the next layer
+            if (++index === layers.length)
+            {
+                // No more layers left
+                return;
+            }
+            return checkAncestorsLayers(provider, x, y, level, index);
         }
 
-        return checkAncestors(x, y, level, layers, index);
+        return promise
+            .then(function() {
+                if (layer.availability.isTileAvailable(level, x, y)) {
+                    // We now know we have this tile, so we can stop here
+                    return;
+                }
+
+                // This layer doesn't have it so we can move on to check the next layer
+                if (++index === layers.length)
+                {
+                    // No more layers left
+                    return;
+                }
+                return checkAncestorsLayers(provider, x, y, level, index);
+            });
+    }
+
+    function checkBVHParentTiles(provider, x, y, level, layer) {
+        var isAvailable = layer.availability.isTileAvailable(level, x, y);
+        var isLoaded = layer.bvhLoaded.isTileAvailable(level, x, y);
+        if (isAvailable && isLoaded) {
+            // We are available and loaded, so just return
+            return;
+        }
+
+        var promise = when.resolve();
+        if (!isAvailable) {
+            var bvhLevels = layer.bvhLevels - 1;
+            var divisor = 1 << bvhLevels;
+            var parentLevel = level - bvhLevels;
+            var parentX = (x / divisor) | 0;
+            var parentY = (y / divisor) | 0;
+
+            promise = checkBVHParentTiles(provider, parentLevel, parentX, parentY);
+
+            // If all parent BVH tiles are already loaded, then this tile isn't available
+            if (!defined(promise)) {
+                return;
+            }
+        }
+
+        return promise
+            .then(function() {
+                if (!layer.availability.isTileAvailable(level, x, y)) {
+                    // All parents are loaded, so if this tile isn't available don't try to load it.
+                    return;
+                }
+
+                // Load the tile
+                return provider.requestTileGeometry(x, y, level);
+            });
     }
 
     return CesiumTerrainProvider;
