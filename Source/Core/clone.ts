@@ -1,7 +1,4 @@
-define([
-    './defaultValue'
-], function(
-    defaultValue) {
+define(['./defaultValue'], function(defaultValue) {
     'use strict';
 
     /**
@@ -13,7 +10,7 @@ define([
      * @param {Boolean} [deep=false] If true, all properties will be deep cloned recursively.
      * @returns {Object} The cloned object.
      */
-    function clone < T extend Object > (object: T, deep: boolean = false): T {
+    function clone(object: any, deep: boolean = false): object {
         if (object === null || typeof object !== 'object') {
             return object;
         }
