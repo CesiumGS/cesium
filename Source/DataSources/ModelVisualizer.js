@@ -266,7 +266,7 @@ define([
         if (model.heightReference === HeightReference.NONE) {
             BoundingSphere.transform(model.boundingSphere, model.modelMatrix, result);
         } else {
-            if (!defined(model._clampedModelMatrix)) {
+            if (!defined(model._clampedModelMatrix) || model._heightChanged) {
                 return BoundingSphereState.PENDING;
             }
             BoundingSphere.transform(model.boundingSphere, model._clampedModelMatrix, result);

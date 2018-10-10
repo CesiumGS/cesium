@@ -11,6 +11,7 @@ define([
         './DeveloperError',
         './Ellipsoid',
         './GeographicTilingScheme',
+        './getAbsoluteUri',
         './Rectangle',
         './Resource'
     ], function(
@@ -26,6 +27,7 @@ define([
         DeveloperError,
         Ellipsoid,
         GeographicTilingScheme,
+        getAbsoluteUri,
         Rectangle,
         Resource) {
     'use strict';
@@ -57,7 +59,14 @@ define([
             return initPromise;
         }
 
-        initPromise = Resource.fetchJson(buildModuleUrl('Assets/approximateTerrainHeights.json'))
+        var url = buildModuleUrl('Assets/approximateTerrainHeights.json');
+        if (/build\/cesiumWorkers\.js$/.test(location.href)) {
+            // We're running in a Web Worker, we can't just load by relative path.
+            var basePath = location.href.substring(0, location.href.length - 'build/cesiumWorkers.js'.length);
+            url = getAbsoluteUri(url, basePath);
+        }
+
+        initPromise = Resource.fetchJson(url)
             .then(function(json) {
                 ApproximateTerrainHeights._terrainHeights = json;
             });
