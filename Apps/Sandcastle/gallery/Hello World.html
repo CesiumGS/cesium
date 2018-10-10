@@ -119,12 +119,12 @@ function startup(Cesium) {
                     width : width,
                     height : height
                 },
-                positiveY : {
+                negativeY : {
                     arrayBufferView : dds.mipmaps[mipLevel + 2 * mipmapCount].data,
                     width : width,
                     height : height
                 },
-                negativeY : {
+                positiveY : {
                     arrayBufferView : dds.mipmaps[mipLevel + 3 * mipmapCount].data,
                     width : width,
                     height : height
@@ -166,12 +166,12 @@ function startup(Cesium) {
                         width : width,
                         height : height
                     },
-                    positiveY : {
+                    negativeY : {
                         arrayBufferView : dds.mipmaps[mipLevel + 2 * mipmapCount].data,
                         width : width,
                         height : height
                     },
-                    negativeY : {
+                    positiveY : {
                         arrayBufferView : dds.mipmaps[mipLevel + 3 * mipmapCount].data,
                         width : width,
                         height : height

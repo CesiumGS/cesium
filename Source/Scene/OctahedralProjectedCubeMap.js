@@ -80,9 +80,9 @@ define([
 
     // These vertices are based on figure 1 from "Octahedron Environment Maps".
     var v1 = new Cartesian3(1.0, 0.0, 0.0);
-    var v2 = new Cartesian3(0.0, 0.0, -1.0);
+    var v2 = new Cartesian3(0.0, 0.0, 1.0);
     var v3 = new Cartesian3(-1.0, 0.0, 0.0);
-    var v4 = new Cartesian3(0.0, 0.0, 1.0);
+    var v4 = new Cartesian3(0.0, 0.0, -1.0);
     var v5 = new Cartesian3(0.0, 1.0, 0.0);
     var v6 = new Cartesian3(0.0, -1.0, 0.0);
 
