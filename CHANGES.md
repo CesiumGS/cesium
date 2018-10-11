@@ -6,6 +6,10 @@ Change Log
 ##### Additions :tada:
 * Added WMS-T (time) support in WebMapServiceImageryProvider [#2581](https://github.com/AnalyticalGraphicsInc/cesium/issues/2581)
 
+##### Fixes :wrench:
+* Fixed middle mouse button locked glitch [#7137]
+(https://github.com/AnalyticalGraphicsInc/cesium/pull/7137)
+
 ### 1.50 - 2018-10-01
 
 ##### Breaking Changes :mega:

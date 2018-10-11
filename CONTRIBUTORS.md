@@ -117,6 +117,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
    * [Chris Cooper](https://github.com/chris-cooper)
    * [Andrew McDowell](https://github.com/madole)
    * [Tony Luk](https://github.com/impactblue573)
+   * [Daniel Cooper](https://github.com/moodragon46)
 ## [Individual CLA](Documentation/Contributors/CLAs/individual-cla-agi-v1.0.txt)
 * [Victor Berchet](https://github.com/vicb)
 * [Caleb Morse](https://github.com/cmorse)
