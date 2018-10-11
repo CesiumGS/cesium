@@ -2,12 +2,14 @@ defineSuite([
         'Core/EllipsoidOutlineGeometry',
         'Core/arrayFill',
         'Core/Cartesian3',
+        'Core/Math',
         'Core/GeometryOffsetAttribute',
         'Specs/createPackableSpecs'
     ], function(
         EllipsoidOutlineGeometry,
         arrayFill,
         Cartesian3,
+        CesiumMath,
         GeometryOffsetAttribute,
         createPackableSpecs) {
     'use strict';
@@ -70,8 +72,8 @@ defineSuite([
             subdivisions: 3
         }));
 
-        expect(m.attributes.position.values.length).toEqual(14 * 3);
-        expect(m.indices.length).toEqual(15 * 2);
+        expect(m.attributes.position.values.length).toEqual(24 * 3);
+        expect(m.indices.length).toEqual(16 * 2);
         expect(m.boundingSphere.radius).toEqual(1);
     });
 
@@ -87,11 +89,11 @@ defineSuite([
             subdivisions: 3
         }));
 
-        expect(m.attributes.position.values.length).toEqual(36 * 3);
-        expect(m.indices.length).toEqual(30 * 2);
+        expect(m.attributes.position.values.length).toEqual(24 * 3);
+        expect(m.indices.length).toEqual(20 * 2);
         expect(m.boundingSphere.radius).toEqual(1);
     });
- 
+
     it('computes offset attribute', function() {
         var m = EllipsoidOutlineGeometry.createGeometry(new EllipsoidOutlineGeometry({
             stackPartitions : 3,
@@ -100,7 +102,7 @@ defineSuite([
             offsetAttribute: GeometryOffsetAttribute.ALL
         }));
 
-        var numVertices = 14;
+        var numVertices = 24;
         expect(m.attributes.position.values.length).toEqual(numVertices * 3);
 
         var offset = m.attributes.applyOffset.values;
@@ -197,7 +199,8 @@ defineSuite([
         0.5, 0.6, 0.7,
         0.1, 0.2,
         0.3, 0.4,
-        3.0, 3.0, 3.0
+        3.0, 3.0, 3.0,
+        -1
     ];
     createPackableSpecs(EllipsoidOutlineGeometry, ellipsoidgeometry, packedInstance);
 });

@@ -74,9 +74,9 @@ define([
         var maximumClock = defaultValue(options.maximumClock, CesiumMath.TWO_PI);
         var minimumCone = defaultValue(options.minimumCone, 0.0);
         var maximumCone = defaultValue(options.maximumCone, CesiumMath.PI);
-        var stackPartitions = defaultValue(options.stackPartitions, 10);
-        var slicePartitions = defaultValue(options.slicePartitions, 8);
-        var subdivisions = defaultValue(options.subdivisions, 128);
+        var stackPartitions = Math.round(defaultValue(options.stackPartitions, 10));
+        var slicePartitions = Math.round(defaultValue(options.slicePartitions, 8));
+        var subdivisions = Math.round(defaultValue(options.subdivisions, 128));
 
         //>>includeStart('debug', pragmas.debug);
         if (stackPartitions < 1) {
@@ -247,7 +247,7 @@ define([
         var maximumCone = ellipsoidGeometry._maximumCone;
         var subdivisions = ellipsoidGeometry._subdivisions;
         var ellipsoid = Ellipsoid.fromCartesian3(radii);
-        
+
         // Add an extra slice and stack to remain consistent with EllipsoidGeometry
         var slicePartitions = ellipsoidGeometry._slicePartitions + 1;
         var stackPartitions = ellipsoidGeometry._stackPartitions + 1;

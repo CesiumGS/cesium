@@ -464,7 +464,7 @@ define([
             options.subdivisions = subdivisions;
             options.offsetAttribute = offsetAttribute;
             options.radii = in3D ? unitSphere : radii;
-            var innerRadii = Property.getValueOrUndefined(ellipsoid.innerRadii, time, innerRadiiScratch);
+            var innerRadii = Property.getValueOrDefault(ellipsoid.innerRadii, time, radii, innerRadii);
             if (in3D) {
                var mag = Cartesian3.magnitude(radii);
                var innerRadiiUnit = new Cartesian3(innerRadii.x/mag, innerRadii.y/mag, innerRadii.z/mag);

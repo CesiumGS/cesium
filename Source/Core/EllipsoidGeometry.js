@@ -1,4 +1,5 @@
 define([
+    './arrayFill',
     './BoundingSphere',
     './Cartesian2',
     './Cartesian3',
@@ -10,11 +11,13 @@ define([
     './Geometry',
     './GeometryAttribute',
     './GeometryAttributes',
+    './GeometryOffsetAttribute',
     './IndexDatatype',
     './Math',
     './PrimitiveType',
     './VertexFormat'
 ], function(
+    arrayFill,
     BoundingSphere,
     Cartesian2,
     Cartesian3,
@@ -26,6 +29,7 @@ define([
     Geometry,
     GeometryAttribute,
     GeometryAttributes,
+    GeometryOffsetAttribute,
     IndexDatatype,
     CesiumMath,
     PrimitiveType,
@@ -80,8 +84,8 @@ function EllipsoidGeometry(options) {
     var maximumClock = defaultValue(options.maximumClock, CesiumMath.TWO_PI);
     var minimumCone = defaultValue(options.minimumCone, 0.0);
     var maximumCone = defaultValue(options.maximumCone, CesiumMath.PI);
-    var stackPartitions = defaultValue(options.stackPartitions, 64);
-    var slicePartitions = defaultValue(options.slicePartitions, 64);
+    var stackPartitions = Math.round(defaultValue(options.stackPartitions, 64));
+    var slicePartitions = Math.round(defaultValue(options.slicePartitions, 64));
     var vertexFormat = defaultValue(options.vertexFormat, VertexFormat.DEFAULT);
 
     //>>includeStart('debug', pragmas.debug);
@@ -102,6 +106,7 @@ function EllipsoidGeometry(options) {
     this._stackPartitions = stackPartitions;
     this._slicePartitions = slicePartitions;
     this._vertexFormat = VertexFormat.clone(vertexFormat);
+    this._offsetAttribute = options.offsetAttribute;
     this._workerName = 'createEllipsoidGeometry';
 }
 
@@ -109,7 +114,7 @@ function EllipsoidGeometry(options) {
  * The number of elements used to pack the object into an array.
  * @type {Number}
  */
-EllipsoidGeometry.packedLength = 2 * (Cartesian3.packedLength) + VertexFormat.packedLength + 6;
+EllipsoidGeometry.packedLength = 2 * (Cartesian3.packedLength) + VertexFormat.packedLength + 7;
 
 /**
  * Stores the provided instance into the provided array.
@@ -147,6 +152,7 @@ EllipsoidGeometry.pack = function(value, array, startingIndex) {
     array[startingIndex++] = value._maximumCone;
     array[startingIndex++] = value._stackPartitions;
     array[startingIndex++] = value._slicePartitions;
+    array[startingIndex] = defaultValue(value._offsetAttribute, -1);
 
     return array;
 };
@@ -163,7 +169,8 @@ var scratchOptions = {
     minimumCone : undefined,
     maximumCone : undefined,
     stackPartitions : undefined,
-    slicePartitions : undefined
+    slicePartitions : undefined,
+    offsetAttribute : undefined
 };
 
 /**
@@ -198,6 +205,7 @@ EllipsoidGeometry.unpack = function(array, startingIndex, result) {
     var maximumCone = array[startingIndex++];
     var stackPartitions = array[startingIndex++];
     var slicePartitions = array[startingIndex++];
+    var offsetAttribute = array[startingIndex];
 
     if (!defined(result)) {
         scratchOptions.minimumClock = minimumClock;
@@ -206,6 +214,7 @@ EllipsoidGeometry.unpack = function(array, startingIndex, result) {
         scratchOptions.maximumCone = maximumCone;
         scratchOptions.stackPartitions = stackPartitions;
         scratchOptions.slicePartitions = slicePartitions;
+        scratchOptions.offsetAttribute = offsetAttribute === -1 ? undefined : offsetAttribute;
         return new EllipsoidGeometry(scratchOptions);
     }
 
@@ -218,6 +227,7 @@ EllipsoidGeometry.unpack = function(array, startingIndex, result) {
     result._maximumCone = maximumCone;
     result._stackPartitions = stackPartitions;
     result._slicePartitions = slicePartitions;
+    result._offsetAttribute = offsetAttribute === -1 ? undefined : offsetAttribute;
 
     return result;
 };
@@ -573,11 +583,24 @@ EllipsoidGeometry.createGeometry = function(ellipsoidGeometry) {
         }
     }
 
+    if (defined(ellipsoidGeometry._offsetAttribute)) {
+        var length = positions.length;
+        var applyOffset = new Uint8Array(length / 3);
+        var offsetValue = ellipsoidGeometry._offsetAttribute === GeometryOffsetAttribute.NONE ? 0 : 1;
+        arrayFill(applyOffset, offsetValue);
+        attributes.applyOffset = new GeometryAttribute({
+            componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
+            componentsPerAttribute : 1,
+            values: applyOffset
+        });
+    }
+
     return new Geometry({
         attributes : attributes,
         indices : indices,
         primitiveType : PrimitiveType.TRIANGLES,
-        boundingSphere : BoundingSphere.fromEllipsoid(ellipsoidOuter)
+        boundingSphere : BoundingSphere.fromEllipsoid(ellipsoidOuter),
+        offsetAttribute : ellipsoidGeometry._offsetAttribute
     });
 };
 
