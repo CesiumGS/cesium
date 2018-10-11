@@ -176,6 +176,29 @@ define([
         position : new Cartesian2()
     };
 
+    function cancelMouseEvent(screenSpaceEventHandler, screenSpaceEventType, clickScreenSpaceEventType) {
+        var modifier = getModifier(event);
+        var action = screenSpaceEventHandler.getInputAction(screenSpaceEventType, modifier);
+        var clickAction = screenSpaceEventHandler.getInputAction(clickScreenSpaceEventType, modifier);
+        if (defined(action) || defined(clickAction)) {
+            var position = getPosition(screenSpaceEventHandler, event, screenSpaceEventHandler._primaryPosition);
+            if (defined(action)) {
+                Cartesian2.clone(position, mouseUpEvent.position);
+                action(mouseUpEvent);
+            }
+            if (defined(clickAction)) {
+                var startPosition = screenSpaceEventHandler._primaryStartPosition;
+                var xDiff = startPosition.x - position.x;
+                var yDiff = startPosition.y - position.y;
+                var totalPixels = Math.sqrt(xDiff * xDiff + yDiff * yDiff);
+                if (totalPixels < screenSpaceEventHandler._clickPixelTolerance) {
+                    Cartesian2.clone(position, mouseClickEvent.position);
+                    clickAction(mouseClickEvent);
+                }
+            }
+        }
+    }
+
     function handleMouseUp(screenSpaceEventHandler, event) {
         if (!canProcessMouseEvent(screenSpaceEventHandler)) {
             return;
@@ -184,48 +207,13 @@ define([
         var button = event.button;
         screenSpaceEventHandler._buttonDown = undefined;
 
-        var screenSpaceEventType;
-        var clickScreenSpaceEventType;
-        if (button === MouseButton.LEFT) {
-            screenSpaceEventType = ScreenSpaceEventType.LEFT_UP;
-            clickScreenSpaceEventType = ScreenSpaceEventType.LEFT_CLICK;
-        } else if (button === MouseButton.MIDDLE) {
-            screenSpaceEventType = ScreenSpaceEventType.MIDDLE_UP;
-            clickScreenSpaceEventType = ScreenSpaceEventType.MIDDLE_CLICK;
-        } else if (button === MouseButton.RIGHT) {
-            screenSpaceEventType = ScreenSpaceEventType.RIGHT_UP;
-            clickScreenSpaceEventType = ScreenSpaceEventType.RIGHT_CLICK;
-        } else {
+        if (button !== MouseButton.LEFT && button !== MouseButton.MIDDLE && button !== MouseButton.RIGHT){
             return;
         }
 
-        var modifier = getModifier(event);
-
-        var action = screenSpaceEventHandler.getInputAction(screenSpaceEventType, modifier);
-        var clickAction = screenSpaceEventHandler.getInputAction(clickScreenSpaceEventType, modifier);
-
-        if (defined(action) || defined(clickAction)) {
-            var position = getPosition(screenSpaceEventHandler, event, screenSpaceEventHandler._primaryPosition);
-
-            if (defined(action)) {
-                Cartesian2.clone(position, mouseUpEvent.position);
-
-                action(mouseUpEvent);
-            }
-
-            if (defined(clickAction)) {
-                var startPosition = screenSpaceEventHandler._primaryStartPosition;
-                var xDiff = startPosition.x - position.x;
-                var yDiff = startPosition.y - position.y;
-                var totalPixels = Math.sqrt(xDiff * xDiff + yDiff * yDiff);
-
-                if (totalPixels < screenSpaceEventHandler._clickPixelTolerance) {
-                    Cartesian2.clone(position, mouseClickEvent.position);
-
-                    clickAction(mouseClickEvent);
-                }
-            }
-        }
+        cancelMouseEvent(screenSpaceEventHandler, ScreenSpaceEventType.LEFT_UP, ScreenSpaceEventType.LEFT_CLICK);
+        cancelMouseEvent(screenSpaceEventHandler, ScreenSpaceEventType.MIDDLE_UP, ScreenSpaceEventType.MIDDLE_CLICK);
+        cancelMouseEvent(screenSpaceEventHandler, ScreenSpaceEventType.RIGHT_UP, ScreenSpaceEventType.RIGHT_CLICK);
     }
 
     var mouseMoveEvent = {
