@@ -24,8 +24,6 @@ vec3 czm_sampleOctahedralProjectionWithFiltering(sampler2D projectedMap, vec2 te
 
         coord.x += offset + pixel.x;
         coord.y += (1.0 - (1.0 / pow(2.0, lod - 1.0))) + pixel.y * (lod - 1.0) * 2.0;
-
-        pixel *= scale;
     }
     else
     {
