@@ -5,6 +5,7 @@ Change Log
 
 ##### Additions :tada:
 * Added WMS-T (time) support in WebMapServiceImageryProvider [#2581](https://github.com/AnalyticalGraphicsInc/cesium/issues/2581)
+* Added `cutoutRectangle` to `ImageryLayer`, which allows cutting out rectangular areas in imagery layers to reveal underlying imagery. [#7056](https://github.com/AnalyticalGraphicsInc/cesium/pull/7056)
 
 ### 1.50 - 2018-10-01
 
