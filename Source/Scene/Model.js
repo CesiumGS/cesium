@@ -18,6 +18,7 @@ define([
         '../Core/getMagic',
         '../Core/getStringFromTypedArray',
         '../Core/IndexDatatype',
+        '../Core/isArray',
         '../Core/loadCRN',
         '../Core/loadImageFromTypedArray',
         '../Core/loadKTX',
@@ -93,6 +94,7 @@ define([
         getMagic,
         getStringFromTypedArray,
         IndexDatatype,
+        isArray,
         loadCRN,
         loadImageFromTypedArray,
         loadKTX,
@@ -661,44 +663,11 @@ define([
 
         this._keepPipelineExtras = options.keepPipelineExtras; // keep the buffers in memory for use in other applications
 
-        /**
-         * The diffuse irradiance environment map for image-based lighting. When <code>undefined</code>, the default diffuse irradiance map will be used.
-         * If <code>sphericalHarmonicCodefficients</code> is set, that will be used for the diffuse lighting instead.
-         *
-         * @type {CubeMap}
-         * @default {undefined}
-         *
-         * @see {@link Model#sphericalHarmonicCoefficients}
-         */
-        this.diffuseIrradiance = undefined;
-        this._diffuseIrradiance = undefined;
-        this._diffuseIrradianceAtlas = undefined;
-
-        /**
-         * The third order spherical harmonic coefficients used for the diffuse color of image-based lighting. When <code>undefined</code>, <code>diffuseIrradiance</code>
-         * will be used.
-         * <p>
-         * There are nine <code>Cartesian3</code> coefficients.
-         * The order of the coefficients is: L<sub>00</sub>, L<sub>1-1</sub>, L<sub>10</sub>, L<sub>11</sub>, L<sub>2-2</sub>, L<sub>2-1</sub>, L<sub>20</sub>, L<sub>21<sub>, L<sub>22</sub>
-         * </p>
-         *
-         * @type {Cartesian3[]}
-         * @default undefined
-         *
-         * @see {@link https://graphics.stanford.edu/papers/envmap/envmap.pdf|An Efficient Representation for Irradiance Environment Maps}
-         */
-        this.sphericalHarmonicCoefficients = undefined;
         this._sphericalHarmonicCoefficients = undefined;
-
-        /**
-         * The specular environment maps for image-based lighting. The first element of the array is the base specular map and each successive element is the next convoluted mipmap.
-         *
-         * @type {CubeMap[]}
-         * @default {undefined}
-         */
-        this.specularEnvironmentMaps = undefined;
         this._specularEnvironmentMaps = undefined;
+        this._shouldUpdateSpecularMapAtlas = false;
         this._specularEnvironmentMapAtlas = undefined;
+        this._shouldRegenerateShaders = false;
     }
 
     defineProperties(Model.prototype, {
@@ -1115,6 +1084,43 @@ define([
         pickIds : {
             get : function() {
                 return this._pickIds;
+            }
+        },
+
+        /**
+         * The third order spherical harmonic coefficients used for the diffuse color of image-based lighting. When <code>undefined</code>, <code>diffuseIrradiance</code>
+         * will be used.
+         * <p>
+         * There are nine <code>Cartesian3</code> coefficients.
+         * The order of the coefficients is: L<sub>00</sub>, L<sub>1-1</sub>, L<sub>10</sub>, L<sub>11</sub>, L<sub>2-2</sub>, L<sub>2-1</sub>, L<sub>20</sub>, L<sub>21<sub>, L<sub>22</sub>
+         * </p>
+         *
+         * @type {Cartesian3[]}
+         * @default undefined
+         *
+         * @see {@link https://graphics.stanford.edu/papers/envmap/envmap.pdf|An Efficient Representation for Irradiance Environment Maps}
+         */
+        sphericalHarmonicCoefficients : {
+            get : function() {
+                return this._sphericalHarmonicCoefficients;
+            },
+            set : function(value) {
+                //>>includeStart('debug', pragmas.debug);
+                if (defined(value) && (!isArray(value) || value.length !== 9)) {
+                    throw new DeveloperError('sphericalHarmonicCoefficients must be an array of 9 Cartesian3 values.');
+                }
+                //>>includeEnd('debug');
+                this._sphericalHarmonicCoefficients = value;
+                this._shouldRegenerateShaders = true;
+            }
+        },
+        specularEnvironmentMaps : {
+            get : function() {
+                return this._specularEnvironmentMaps;
+            },
+            set : function(value) {
+                this._shouldUpdateSpecularMapAtlas = value !== this._specularEnvironmentMaps;
+                this._specularEnvironmentMaps = value;
             }
         }
     });
@@ -1992,10 +1998,8 @@ define([
 
         if (defined(model._sphericalHarmonicCoefficients)) {
             drawFS = '#define DIFFUSE_IBL \n' + '#define SPHERICAL_HARMONICS \n' + 'uniform vec3 gltf_sphericalHarmonicCoefficients[9]; \n' + drawFS;
-        } else if (defined(model._diffuseIrradiance)) {
-            drawFS = '#define DIFFUSE_IBL \n' + 'uniform sampler2D gltf_diffuseIrradiance; \n' + drawFS;
         }
-        if (defined(model._specularEnvironmentMaps)) {
+        if (defined(model._specularEnvironmentMapAtlas) && model._specularEnvironmentMapAtlas.ready) {
             drawFS = '#define SPECULAR_IBL \n' + 'uniform sampler2D gltf_specularMap; \n' + 'uniform vec2 gltf_specularMapSize; \n' + 'uniform float gltf_maxSpecularLOD; \n' + drawFS;
         }
 
@@ -2054,10 +2058,8 @@ define([
 
         if (defined(model._sphericalHarmonicCoefficients)) {
             drawFS = '#define DIFFUSE_IBL \n' + '#define SPHERICAL_HARMONICS \n' + 'uniform vec3 gltf_sphericalHarmonicCoefficients[9]; \n' + drawFS;
-        } else if (defined(model._diffuseIrradiance)) {
-            drawFS = '#define DIFFUSE_IBL \n' + 'uniform sampler2D gltf_diffuseIrradiance; \n' + drawFS;
         }
-        if (defined(model._specularEnvironmentMaps)) {
+        if (defined(model._specularEnvironmentMapAtlas) && model._specularEnvironmentMapAtlas.ready) {
             drawFS = '#define SPECULAR_IBL \n' + 'uniform sampler2D gltf_specularMap; \n' + 'uniform vec2 gltf_specularMapSize; \n' + 'uniform float gltf_maxSpecularLOD; \n' + drawFS;
         }
 
@@ -2935,12 +2937,6 @@ define([
         };
     }
 
-    function createDiffuseIrradianceFunction(model) {
-        return function() {
-            return model._diffuseIrradianceAtlas;
-        };
-    }
-
     function createSpecularEnvironmentMapFunction(model) {
         return function() {
             return model._specularEnvironmentMapAtlas.texture;
@@ -3053,7 +3049,6 @@ define([
                 gltf_clippingPlanesEdgeStyle : createClippingPlanesEdgeStyleFunction(model),
                 gltf_clippingPlanesMatrix : createClippingPlanesMatrixFunction(model),
                 gltf_sphericalHarmonicCoefficients : createSphericalHarmonicCoefficientsFunction(model),
-                gltf_diffuseIrradiance : createDiffuseIrradianceFunction(model),
                 gltf_specularMap : createSpecularEnvironmentMapFunction(model),
                 gltf_specularMapSize : createSpecularEnvironmentMapSizeFunction(model),
                 gltf_maxSpecularLOD : createSpecularEnvironmentMapLOD(model)
@@ -4301,7 +4296,6 @@ define([
         var invisible = isInvisible(this);
         var displayConditionPassed = defined(this.distanceDisplayCondition) ? distanceDisplayConditionVisible(this, frameState) : true;
         var show = this.show && displayConditionPassed && (this.scale !== 0.0) && (!invisible || silhouette);
-        var specularMapChanged = this._specularEnvironmentMaps !== this.specularEnvironmentMaps;
 
         if ((show && this._state === ModelState.LOADED) || justLoaded) {
             var animated = this.activeAnimations.update(frameState) || this._cesiumAnimationsDirty;
@@ -4379,10 +4373,8 @@ define([
                 currentClippingPlanesState = clippingPlanes.clippingPlanesState;
             }
 
-            var shouldRegenerateShaders = this._clippingPlanesState !== currentClippingPlanesState;
-            shouldRegenerateShaders = this._diffuseIrradiance !== this.diffuseIrradiance || shouldRegenerateShaders;
-            shouldRegenerateShaders = specularMapChanged || shouldRegenerateShaders;
-            shouldRegenerateShaders = this._sphericalHarmonicCoefficients !== this.sphericalHarmonicCoefficients || shouldRegenerateShaders;
+            var shouldRegenerateShaders = this._shouldRegenerateShaders;
+            shouldRegenerateShaders = shouldRegenerateShaders || this._clippingPlanesState !== currentClippingPlanesState;
             this._clippingPlanesState = currentClippingPlanesState;
 
             // Regenerate shaders if color shading changed from last update
@@ -4400,12 +4392,16 @@ define([
             }
         }
 
-        if (specularMapChanged) {
+        if (this._shouldUpdateSpecularMapAtlas) {
+            this._shouldUpdateSpecularMapAtlas = false;
             this._specularEnvironmentMapAtlas = this._specularEnvironmentMapAtlas && this._specularEnvironmentMapAtlas.destroy();
+            this._specularEnvironmentMapAtlas = undefined;
             if (defined(this._specularEnvironmentMaps)) {
                 this._specularEnvironmentMapAtlas = new OctahedralProjectedCubeMap(this._specularEnvironmentMaps);
-            } else {
-                this._specularEnvironmentMapAtlas = undefined;
+                var that = this;
+                this._specularEnvironmentMapAtlas.readyPromise.then(function() {
+                    that._shouldRegenerateShaders = true;
+                });
             }
         }
 
@@ -4504,10 +4500,8 @@ define([
         destroyIfNotCached(rendererResources, cachedRendererResources);
 
         var programId;
-        if (isClippingEnabled(model) || isColorShadingEnabled(model) || model.diffuseIrradiance !== model._diffuseIrradiance || model.specularEnvironmentMaps !== model._specularEnvironmentMaps || model.sphericalHarmonicCoefficients !== model._sphericalHarmonicCoefficients) {
-            model._diffuseIrradiance = model.diffuseIrradiance;
-            model._specularEnvironmentMaps = model.specularEnvironmentMaps;
-            model._sphericalHarmonicCoefficients = model.sphericalHarmonicCoefficients;
+        if (isClippingEnabled(model) || isColorShadingEnabled(model) || model._shouldRegenerateShaders) {
+            model._shouldRegenerateShaders = false;
 
             rendererResources.programs = {};
             rendererResources.silhouettePrograms = {};
