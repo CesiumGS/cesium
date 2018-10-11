@@ -178,21 +178,28 @@ define([
 
     function cancelMouseEvent(screenSpaceEventHandler, screenSpaceEventType, clickScreenSpaceEventType) {
         var modifier = getModifier(event);
+
         var action = screenSpaceEventHandler.getInputAction(screenSpaceEventType, modifier);
         var clickAction = screenSpaceEventHandler.getInputAction(clickScreenSpaceEventType, modifier);
+
         if (defined(action) || defined(clickAction)) {
             var position = getPosition(screenSpaceEventHandler, event, screenSpaceEventHandler._primaryPosition);
+
             if (defined(action)) {
                 Cartesian2.clone(position, mouseUpEvent.position);
+
                 action(mouseUpEvent);
             }
+
             if (defined(clickAction)) {
                 var startPosition = screenSpaceEventHandler._primaryStartPosition;
                 var xDiff = startPosition.x - position.x;
                 var yDiff = startPosition.y - position.y;
                 var totalPixels = Math.sqrt(xDiff * xDiff + yDiff * yDiff);
+
                 if (totalPixels < screenSpaceEventHandler._clickPixelTolerance) {
                     Cartesian2.clone(position, mouseClickEvent.position);
+
                     clickAction(mouseClickEvent);
                 }
             }
