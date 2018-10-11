@@ -239,7 +239,7 @@ define([
      *
      * @param {Function} callback A callback that takes <code>CustomProjection~project</code> and <code>CustomProjection~unproject</code> functions as arguments.
      * @example
-     * function simpleProjection(callback) {
+     * function createProjectionFunctions(callback) {
      *     function project(cartographic, result) {
      *          result.x = cartographic.longitude * 6378137.0;
      *          result.y = cartographic.latitude * 6378137.0;
@@ -257,7 +257,8 @@ define([
      */
 
     /**
-     * A function that projects a cartographic coordinate to x/y/z coordinates in 2.5D space.
+     * A function that projects a cartographic coordinate to x/y/z meter coordinates in 2.5D space.
+     * For example, a Geographic projection would project latitude and longitude to the X/Y plane and the altitude to Z.
      * @callback CustomProjection~project
      *
      * @param {Cartographic} cartographic A Cesium Cartographic type providing the latitude and longitude in radians and the height in meters.
@@ -271,7 +272,8 @@ define([
      */
 
     /**
-     * A function that unprojects x and y coordinates in 2.5D space to longitude and latitude in radians and height in meters.
+     * Coordinates come from a Z-up space, so for example, a Geographic projection would unproject x/y coordinates in meters
+     * to latitude and longitude, and z coordinates to altitudes in meters over the x/y plane.
      * @callback CustomProjection~unproject
      *
      * @param {Cartesian3} cartesian A x/y/z coordinate in projected space space.

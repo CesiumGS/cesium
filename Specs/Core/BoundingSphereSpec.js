@@ -13,8 +13,7 @@ defineSuite([
         'Core/Plane',
         'Core/Proj4Projection',
         'Core/Rectangle',
-        'Specs/createPackableSpecs',
-        '../../../ThirdParty/proj4js-2.5.0/proj4'
+        'Specs/createPackableSpecs'
     ], function(
         BoundingSphere,
         Cartesian3,
@@ -30,8 +29,7 @@ defineSuite([
         Plane,
         Proj4Projection,
         Rectangle,
-        createPackableSpecs,
-        proj4) {
+        createPackableSpecs) {
     'use strict';
 
     var positionsRadius = 1.0;
@@ -916,8 +914,7 @@ defineSuite([
 
     it('fromRectangleWithHeights2D includes specified min and max heights when using non cylindrical, non-equatorial projections', function() {
         var rectangle = Rectangle.MAX_VALUE;
-        var proj4Uri = '../../../ThirdParty/proj4js-2.5.0/proj4.js';
-        var projection = new Proj4Projection(proj4Uri, proj4, '+proj=moll +lon_0=0 +x_0=0 +y_0=0 +a=6371000 +b=6371000 +units=m +no_defs');
+        var projection = new Proj4Projection('+proj=moll +lon_0=0 +x_0=0 +y_0=0 +a=6371000 +b=6371000 +units=m +no_defs');
         var minHeight = -327.0;
         var maxHeight = 2456.0;
         var boundingSphere = BoundingSphere.fromRectangleWithHeights2D(rectangle, projection, minHeight, maxHeight);

@@ -613,8 +613,7 @@ gulp.task('test', function(done) {
     var files = [
         'Specs/karma-main.js',
         {pattern : 'Source/**', included : false},
-        {pattern : 'Specs/**', included : false},
-        {pattern : 'ThirdParty/proj4js-2.5.0/proj4.js', included : false}
+        {pattern : 'Specs/**', included : false}
     ];
 
     if (release) {
