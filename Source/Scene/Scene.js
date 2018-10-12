@@ -25,6 +25,7 @@ define([
         '../Core/Intersect',
         '../Core/Interval',
         '../Core/JulianDate',
+        '../Core/MapProjection',
         '../Core/Math',
         '../Core/Matrix4',
         '../Core/mergeSort',
@@ -107,6 +108,7 @@ define([
         Intersect,
         Interval,
         JulianDate,
+        MapProjection,
         CesiumMath,
         Matrix4,
         mergeSort,
@@ -459,6 +461,7 @@ define([
         var mapProjection = defined(options.mapProjection) ? options.mapProjection : new GeographicProjection();
         this._mapProjection = mapProjection;
         this._serializedMapProjection = new SerializedMapProjection(mapProjection);
+        this._maxCoord2D = MapProjection.approximateMaximumCoordinate(mapProjection);
 
         /**
          * The current morph transition time between 2D/Columbus View and 3D,
@@ -2713,6 +2716,8 @@ define([
 
         var projection = scene.mapProjection;
         projection.project(maxCartographic, maxCoord);
+
+        Cartesian3.clone(scene._maxCoord2D, maxCoord);
 
         var position = Cartesian3.clone(camera.position, scratch2DViewportSavedPosition);
         var transform = Matrix4.clone(camera.transform, scratch2DViewportCameraTransform);

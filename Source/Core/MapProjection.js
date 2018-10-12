@@ -1,9 +1,19 @@
 define([
+        './Cartographic',
+        './Cartesian3',
+        './Check',
         './defineProperties',
-        './DeveloperError'
+        './defaultValue',
+        './DeveloperError',
+        './Math'
     ], function(
+        Cartographic,
+        Cartesian3,
+        Check,
         defineProperties,
-        DeveloperError) {
+        defaultValue,
+        DeveloperError,
+        CesiumMath) {
     'use strict';
 
     /**
@@ -78,6 +88,46 @@ define([
      *          created and returned.
      */
     MapProjection.prototype.unproject = DeveloperError.throwInstantiationError;
+
+    var maxCoordCartographicScratch = new Cartographic();
+    /**
+     * Approximates the extents of a map projection in 2D.
+     *
+     * @function
+     *
+     * @param {MapProjection} mapProjection A map projection from cartographic coordinates to 2D space.
+     * @param {Cartesian3} [result] Optional result parameter.
+     * @private
+     */
+    MapProjection.approximateMaximumCoordinate = function(mapProjection, result) {
+        Check.defined('mapProjection', mapProjection);
+
+        var maxCoord = defaultValue(result, new Cartesian3());
+        var cartographicExtreme = maxCoordCartographicScratch;
+
+        var halfMapWidth = 0.0;
+        var halfMapHeight = 0.0;
+
+        // Check the four corners of the projection and the four edge-centers.
+        for (var x = -1; x < 2; x++) {
+            for (var y = -1; y < 2; y++) {
+                if (x === 0 && y === 0) {
+                    continue;
+                }
+
+                cartographicExtreme.longitude = CesiumMath.PI * x;
+                cartographicExtreme.latitude = CesiumMath.PI_OVER_TWO * y;
+                mapProjection.project(cartographicExtreme, maxCoord);
+
+                halfMapWidth = Math.max(halfMapWidth, Math.abs(maxCoord.x));
+                halfMapHeight = Math.max(halfMapHeight, Math.abs(maxCoord.y));
+            }
+        }
+        maxCoord.x = halfMapWidth;
+        maxCoord.y = halfMapHeight;
+
+        return maxCoord;
+    };
 
     return MapProjection;
 });
