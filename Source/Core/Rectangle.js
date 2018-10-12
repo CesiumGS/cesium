@@ -1,5 +1,6 @@
 define([
         './Cartographic',
+        './Cartesian3',
         './Check',
         './defaultValue',
         './defined',
@@ -9,6 +10,7 @@ define([
         './Math'
     ], function(
         Cartographic,
+        Cartesian3,
         Check,
         defaultValue,
         defined,
@@ -869,6 +871,105 @@ define([
             length++;
         }
         result.length = length;
+        return result;
+    };
+
+    var unprojectedScratch = new Cartographic();
+    var cornerScratch = new Cartographic();
+    var projectedScratch = new Cartesian3();
+    /**
+     * Approximates a Cartographic rectangle's extents in some projection by projecting
+     * each of the four corners and the four edge-centers.
+     *
+     * @function
+     *
+     * @param {Rectangle} cartographicRectangle An input rectangle in cartographic coordinates
+     * @param {MapProjection} mapProjection A MapProjection indicating a projection from cartographic coordiantes.
+     * @param {Rectangle} [result] Rectangle on which to store the projected extents of the input.
+     * @param {Number} [steps=3] Number of points to sample along each side of the unprojected Rectangle.
+     */
+    Rectangle.approximateProjectedExtents = function(cartographicRectangle, mapProjection, result, steps) {
+        //>>includeStart('debug', pragmas.debug);
+        Check.defined('cartographicRectangle', cartographicRectangle);
+        Check.defined('mapProjection', mapProjection);
+        //>>includeEnd('debug');
+
+        result = defaultValue(result, new Rectangle());
+        steps = defaultValue(steps, 3);
+
+        result.west = Number.MAX_VALUE;
+        result.east = -Number.MAX_VALUE;
+        result.south = Number.MAX_VALUE;
+        result.north = -Number.MAX_VALUE;
+
+        var projectedCorner = Rectangle.southwest(cartographicRectangle, cornerScratch);
+        var projectedWidthStep = cartographicRectangle.width / (steps - 1);
+        var projectedHeightStep = cartographicRectangle.height / (steps - 1);
+
+        var projected = projectedScratch;
+        var unprojected = unprojectedScratch;
+        for (var longIndex = 0; longIndex < steps; longIndex++) {
+            for (var latIndex = 0; latIndex < steps; latIndex++) {
+                unprojected.longitude = projectedCorner.longitude + projectedWidthStep * longIndex;
+                unprojected.latitude = projectedCorner.latitude + projectedHeightStep * latIndex;
+
+                mapProjection.project(unprojected, projected);
+
+                result.west = Math.min(result.west, projected.x);
+                result.east = Math.max(result.east, projected.x);
+                result.south = Math.min(result.south, projected.y);
+                result.north = Math.max(result.north, projected.y);
+            }
+        }
+
+        return result;
+    };
+
+    /**
+     * Approximates a projected rectangle's extents in Cartographic space by unprojecting
+     * points along the Rectangle's boundary.
+     *
+     * @function
+     *
+     * @param {Rectangle} projectedRectangle An input rectangle in projected coordinates
+     * @param {MapProjection} mapProjection A MapProjection indicating a projection from cartographic coordiantes.
+     * @param {Rectangle} [result] Rectangle on which to store the projected extents of the input.
+     * @param {Number} [steps=3] Number of points to sample along each side of the projected Rectangle.
+     */
+    Rectangle.approximateCartographicExtents = function(projectedRectangle, mapProjection, result, steps) {
+        //>>includeStart('debug', pragmas.debug);
+        Check.defined('projectedRectangle', projectedRectangle);
+        Check.defined('mapProjection', mapProjection);
+        //>>includeEnd('debug');
+
+        result = defaultValue(result, new Rectangle());
+        steps = defaultValue(steps, 3);
+
+        result.west = Number.MAX_VALUE;
+        result.east = -Number.MAX_VALUE;
+        result.south = Number.MAX_VALUE;
+        result.north = -Number.MAX_VALUE;
+
+        var projectedCorner = Rectangle.southwest(projectedRectangle, cornerScratch);
+        var projectedWidthStep = projectedRectangle.width / (steps - 1);
+        var projectedHeightStep = projectedRectangle.height / (steps - 1);
+
+        var projected = projectedScratch;
+        var unprojected = unprojectedScratch;
+        for (var longIndex = 0; longIndex < steps; longIndex++) {
+            for (var latIndex = 0; latIndex < steps; latIndex++) {
+                projected.x = projectedCorner.longitude + projectedWidthStep * longIndex;
+                projected.y = projectedCorner.latitude + projectedHeightStep * latIndex;
+
+                mapProjection.unproject(projected, unprojected);
+
+                result.west = Math.min(result.west, unprojected.longitude);
+                result.east = Math.max(result.east, unprojected.longitude);
+                result.south = Math.min(result.south, unprojected.latitude);
+                result.north = Math.max(result.north, unprojected.latitude);
+            }
+        }
+
         return result;
     };
 

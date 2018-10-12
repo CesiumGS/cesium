@@ -8,6 +8,7 @@ define([
         './defineProperties',
         './Ellipsoid',
         './oneTimeWarning',
+        './Rectangle',
         '../ThirdParty/proj4-2.5.0'
     ], function(
         Cartesian3,
@@ -19,21 +20,27 @@ define([
         defineProperties,
         Ellipsoid,
         oneTimeWarning,
+        Rectangle,
         proj4) {
     'use strict';
+
+    // proj4 may crash with absolute extents
+    var smallerThanMax = Rectangle.fromDegrees(-180.0 + CesiumMath.EPSILON7, -90.0 + CesiumMath.EPSILON7, 180 - CesiumMath.EPSILON7, 90 - CesiumMath.EPSILON7);
 
     /**
      * MapProjection using proj4js. This projection is only to be used with Ellipsoid.WGS84.
      * Users should exercise caution when using local-area projections, as local area projections
-     * may produce unexpected results outside their specified boundaries.
+     * may produce unexpected results outside their valid boundaries in Cartographic space (wgs84Bounds).
+     * These boundaries may be looked up at spatialreference.org.
      *
      * @alias Proj4Projection
      * @constructor
      *
      * @param {String} [wellKnownText] proj4js well known text specifying the projection. Defaults to EPSG:3857, web mercator.
      * @param {Number} [heightScale=1.0] Scale to convert from heights in meters to the projection's units.
+     * @param {Rectangle} [wgs84Bounds] Cartographic bounds over which the projection is valid. Cartographic points will be clamped to these bounds prior to projection.
      */
-    function Proj4Projection(wellKnownText, heightScale) {
+    function Proj4Projection(wellKnownText, heightScale, wgs84Bounds) {
         this.ellipsoid = Ellipsoid.WGS84;
 
         var wkt = defaultValue(wellKnownText, 'EPSG:3857'); // web mercator
@@ -44,6 +51,10 @@ define([
         heightScale = defaultValue(heightScale, 1.0);
         this._heightScale = heightScale;
         this._inverseHeightScale = 1.0 / heightScale;
+
+        wgs84Bounds = defaultValue(wgs84Bounds, smallerThanMax);
+
+        this._wgs84Bounds = Rectangle.clone(wgs84Bounds);
     }
 
     defineProperties(Proj4Projection.prototype, {
@@ -60,6 +71,9 @@ define([
         },
         /**
          * The scale for converting from heights in meters to the projection's units.
+         * @memberof Proj4Projection.prototype
+         * @type {Number}
+         * @readonly
          */
         heightScale: {
             get: function() {
@@ -79,6 +93,17 @@ define([
         isEquatorialCylindrical : {
             get : function() {
                 return false;
+            }
+        },
+        /**
+         * The bounds in Cartographic coordinates over which this projection is valid.
+         * @memberof Proj4Projection.prototype
+         * @type {Rectangle}
+         * @readonly
+         */
+        wgs84Bounds : {
+            get : function() {
+                return this._wgs84Bounds;
             }
         }
     });
@@ -104,9 +129,9 @@ define([
             result = new Cartesian3();
         }
 
-        // without clamp proj4 might crash
-        scratchProjectionArray[0] = CesiumMath.clamp(CesiumMath.toDegrees(cartographic.longitude), -180.0 + CesiumMath.EPSILON7, 180.0 - CesiumMath.EPSILON7);
-        scratchProjectionArray[1] = CesiumMath.clamp(CesiumMath.toDegrees(cartographic.latitude), -90.0 + CesiumMath.EPSILON7, 90.0 - CesiumMath.EPSILON7);
+        var wgs84Bounds = this.wgs84Bounds;
+        scratchProjectionArray[0] = CesiumMath.toDegrees(CesiumMath.clamp(cartographic.longitude, wgs84Bounds.west, wgs84Bounds.east));
+        scratchProjectionArray[1] = CesiumMath.toDegrees(CesiumMath.clamp(cartographic.latitude, wgs84Bounds.south, wgs84Bounds.north));
 
         var projected;
         try {

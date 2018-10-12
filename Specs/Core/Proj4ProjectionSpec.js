@@ -3,13 +3,15 @@ defineSuite([
     'Core/Cartesian3',
     'Core/Cartographic',
     'Core/Ellipsoid',
-    'Core/Math'
+    'Core/Math',
+    'Core/Rectangle'
 ], function(
     Proj4Projection,
     Cartesian3,
     Cartographic,
     Ellipsoid,
-    CesiumMath) {
+    CesiumMath,
+    Rectangle) {
     'use strict';
 
     var mollweideWellKnownText = '+proj=moll +lon_0=0 +x_0=0 +y_0=0 +a=6371000 +b=6371000 +units=m +no_defs';
@@ -115,6 +117,14 @@ defineSuite([
 
         var unprojected = projection.unproject(returnValue);
         expect(unprojected).toEqualEpsilon(cartographic, CesiumMath.EPSILON8);
+    });
+
+    it('clamps cartographic coordinates to the specified wgs84 bounds', function() {
+        var projection = new Proj4Projection('EPSG:3857', 0.5, Rectangle.fromDegrees(-180, -90, 180, 45));
+        var edgeProjected = projection.project(Cartographic.fromDegrees(0, 45, 0));
+        var clampedProjected = projection.project(Cartographic.fromDegrees(0, 50, 0));
+
+        expect(edgeProjected).toEqualEpsilon(clampedProjected, CesiumMath.EPSILON8);
     });
 
     it('project throws without cartesian', function() {

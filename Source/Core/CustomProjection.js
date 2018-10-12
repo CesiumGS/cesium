@@ -41,8 +41,10 @@ define([
      * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The MapProjection's ellipsoid.
      */
     function CustomProjection(url, projectionName, ellipsoid) {
+        //>>includeStart('debug', pragmas.debug);
         Check.typeOf.string('url', url);
         Check.typeOf.string('projectionName', projectionName);
+        //>>includeEnd('debug');
 
         this._ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
 

@@ -5,7 +5,8 @@ define([
         './defineProperties',
         './defaultValue',
         './DeveloperError',
-        './Math'
+        './Math',
+        './Rectangle'
     ], function(
         Cartographic,
         Cartesian3,
@@ -13,7 +14,8 @@ define([
         defineProperties,
         defaultValue,
         DeveloperError,
-        CesiumMath) {
+        CesiumMath,
+        Rectangle) {
     'use strict';
 
     /**
@@ -89,7 +91,7 @@ define([
      */
     MapProjection.prototype.unproject = DeveloperError.throwInstantiationError;
 
-    var maxCoordCartographicScratch = new Cartographic();
+    var maxcoordRectangleScratch = new Rectangle();
     /**
      * Approximates the extents of a map projection in 2D.
      *
@@ -103,28 +105,10 @@ define([
         Check.defined('mapProjection', mapProjection);
 
         var maxCoord = defaultValue(result, new Cartesian3());
-        var cartographicExtreme = maxCoordCartographicScratch;
+        var projectedExtents = Rectangle.approximateProjectedExtents(Rectangle.MAX_VALUE, mapProjection, maxcoordRectangleScratch);
 
-        var halfMapWidth = 0.0;
-        var halfMapHeight = 0.0;
-
-        // Check the four corners of the projection and the four edge-centers.
-        for (var x = -1; x < 2; x++) {
-            for (var y = -1; y < 2; y++) {
-                if (x === 0 && y === 0) {
-                    continue;
-                }
-
-                cartographicExtreme.longitude = CesiumMath.PI * x;
-                cartographicExtreme.latitude = CesiumMath.PI_OVER_TWO * y;
-                mapProjection.project(cartographicExtreme, maxCoord);
-
-                halfMapWidth = Math.max(halfMapWidth, Math.abs(maxCoord.x));
-                halfMapHeight = Math.max(halfMapHeight, Math.abs(maxCoord.y));
-            }
-        }
-        maxCoord.x = halfMapWidth;
-        maxCoord.y = halfMapHeight;
+        maxCoord.x = projectedExtents.width * 0.5;
+        maxCoord.y = projectedExtents.height * 0.5;
 
         return maxCoord;
     };

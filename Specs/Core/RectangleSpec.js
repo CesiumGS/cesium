@@ -2,6 +2,7 @@ defineSuite([
         'Core/Rectangle',
         'Core/Cartesian3',
         'Core/Cartographic',
+        'Core/GeographicProjection',
         'Core/Ellipsoid',
         'Core/Math',
         'Specs/createPackableSpecs'
@@ -9,6 +10,7 @@ defineSuite([
         Rectangle,
         Cartesian3,
         Cartographic,
+        GeographicProjection,
         Ellipsoid,
         CesiumMath,
         createPackableSpecs) {
@@ -871,6 +873,32 @@ defineSuite([
         expect(function() {
             Rectangle.contains(rectangle, undefined);
         }).toThrowDeveloperError();
+    });
+
+    it('approximates the projected extents of a cartographic Rectangle', function() {
+        var projection = new GeographicProjection();
+        var cartographicRectangle = Rectangle.fromDegrees(-90, -45, 90, 45);
+        var projectedRectangle = Rectangle.approximateProjectedExtents(cartographicRectangle, projection);
+        expect(projectedRectangle.west).toEqualEpsilon(-CesiumMath.PI_OVER_TWO * Ellipsoid.WGS84.maximumRadius, CesiumMath.EPSILON7);
+        expect(projectedRectangle.east).toEqualEpsilon(CesiumMath.PI_OVER_TWO * Ellipsoid.WGS84.maximumRadius, CesiumMath.EPSILON7);
+        expect(projectedRectangle.south).toEqualEpsilon(-CesiumMath.PI_OVER_FOUR * Ellipsoid.WGS84.maximumRadius, CesiumMath.EPSILON7);
+        expect(projectedRectangle.north).toEqualEpsilon(CesiumMath.PI_OVER_FOUR * Ellipsoid.WGS84.maximumRadius, CesiumMath.EPSILON7);
+    });
+
+    it('approximates the cartographic extents of a projected Rectangle', function() {
+        var projection = new GeographicProjection();
+
+        var west = -CesiumMath.PI_OVER_TWO * Ellipsoid.WGS84.maximumRadius;
+        var east = CesiumMath.PI_OVER_TWO * Ellipsoid.WGS84.maximumRadius;
+        var south = -CesiumMath.PI_OVER_FOUR * Ellipsoid.WGS84.maximumRadius;
+        var north = CesiumMath.PI_OVER_FOUR * Ellipsoid.WGS84.maximumRadius;
+
+        var projectedRectangle = new Rectangle(west, south, east, north);
+        var cartographicRectangle = Rectangle.approximateCartographicExtents(projectedRectangle, projection);
+        expect(cartographicRectangle.west).toEqualEpsilon(-CesiumMath.PI_OVER_TWO, CesiumMath.EPSILON7);
+        expect(cartographicRectangle.east).toEqualEpsilon(CesiumMath.PI_OVER_TWO, CesiumMath.EPSILON7);
+        expect(cartographicRectangle.south).toEqualEpsilon(-CesiumMath.PI_OVER_FOUR, CesiumMath.EPSILON7);
+        expect(cartographicRectangle.north).toEqualEpsilon(CesiumMath.PI_OVER_FOUR, CesiumMath.EPSILON7);
     });
 
     var rectangle = new Rectangle(west, south, east, north);
