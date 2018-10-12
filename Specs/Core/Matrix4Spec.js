@@ -993,6 +993,38 @@ defineSuite([
         expect(expected).toEqualEpsilon(result, CesiumMath.EPSILON20);
     });
 
+    it('inverse behaves acceptably with near single precision zero scale matrix', function() {
+        var trs = new TranslationRotationScale(new Cartesian3(0.0, 0.0, 0.0),
+        Quaternion.fromAxisAngle(Cartesian3.UNIT_X, 0.0),
+        new Cartesian3(1.0e-7, 1.0e-7, 1.1e-7));
+
+        var matrix = Matrix4.fromTranslationRotationScale(trs);
+
+        var expected = new Matrix4(1e7, 0, 0, 0,
+                                   0, 1e7, 0, 0,
+                                   0, 0, (1.0/1.1)*1e7, 0,
+                                   0, 0, 0, 1);
+
+        var result = Matrix4.inverse(matrix, new Matrix4());
+        expect(expected).toEqualEpsilon(result, CesiumMath.EPSILON15);
+    });
+
+    it('inverse behaves acceptably with single precision zero scale matrix', function() {
+        var trs = new TranslationRotationScale(new Cartesian3(0.0, 0.0, 0.0),
+        Quaternion.fromAxisAngle(Cartesian3.UNIT_X, 0.0),
+        new Cartesian3(1.8e-8, 1.2e-8, 1.2e-8));
+
+        var matrix = Matrix4.fromTranslationRotationScale(trs);
+
+        var expected = new Matrix4(0, 0, 0, -matrix[12],
+                                   0, 0, 0, -matrix[13],
+                                   0, 0, 0, -matrix[14],
+                                   0, 0, 0, 1);
+
+        var result = Matrix4.inverse(matrix, new Matrix4());
+        expect(expected).toEqualEpsilon(result, CesiumMath.EPSILON20);
+    });
+
     it('inverseTransformation works', function() {
         var matrix = new Matrix4(1, 0, 0, 10,
                                  0, 0, 1, 20,

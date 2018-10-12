@@ -12,6 +12,7 @@ define([
         '../Renderer/ShaderSource',
         './Cesium3DTileBatchTable',
         './Cesium3DTileFeature',
+        './Cesium3DTileRefine',
         './PointCloud',
         './SceneMode'
     ], function(
@@ -28,6 +29,7 @@ define([
         ShaderSource,
         Cesium3DTileBatchTable,
         Cesium3DTileFeature,
+        Cesium3DTileRefine,
         PointCloud,
         SceneMode) {
     'use strict';
@@ -297,6 +299,8 @@ define([
         var styleDirty = this._styleDirty;
         this._styleDirty = false;
 
+        pointCloud.clippingPlaneOffsetMatrix = tileset.clippingPlaneOffsetMatrix;
+
         pointCloud.style = defined(batchTable) ? undefined : tileset.style;
         pointCloud.styleDirty = styleDirty;
         pointCloud.modelMatrix = tile.computedTransform;
@@ -309,7 +313,13 @@ define([
         pointCloud.attenuation = defined(pointCloudShading) ? pointCloudShading.attenuation : false;
         pointCloud.geometricError = getGeometricError(this);
         pointCloud.geometricErrorScale = defined(pointCloudShading) ? pointCloudShading.geometricErrorScale : 1.0;
-        pointCloud.maximumAttenuation = (defined(pointCloudShading) && defined(pointCloudShading.maximumAttenuation)) ? pointCloudShading.maximumAttenuation : tileset.maximumScreenSpaceError;
+        if (defined(pointCloudShading) && defined(pointCloudShading.maximumAttenuation)) {
+            pointCloud.maximumAttenuation = pointCloudShading.maximumAttenuation;
+        } else if (tile.refine === Cesium3DTileRefine.ADD) {
+            pointCloud.maximumAttenuation = 5.0;
+        } else {
+            pointCloud.maximumAttenuation = tileset.maximumScreenSpaceError;
+        }
 
         pointCloud.update(frameState);
     };

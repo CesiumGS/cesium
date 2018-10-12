@@ -4,6 +4,7 @@ define([
         '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Cartesian4',
+        '../Core/Cartographic',
         '../Core/Color',
         '../Core/ColorGeometryInstanceAttribute',
         '../Core/combine',
@@ -50,6 +51,7 @@ define([
         Cartesian2,
         Cartesian3,
         Cartesian4,
+        Cartographic,
         Color,
         ColorGeometryInstanceAttribute,
         combine,
@@ -125,6 +127,7 @@ define([
         this.oceanNormalMap = undefined;
         this.zoomedOutOceanSpecularIntensity = 0.5;
         this.enableLighting = false;
+        this.showGroundAtmosphere = false;
         this.shadows = ShadowMode.RECEIVE_ONLY;
 
         this._quadtree = undefined;
@@ -168,6 +171,12 @@ define([
          * @private
          */
         this._clippingPlanes = undefined;
+
+        /**
+         * A property specifying a {@link Rectangle} used to selectively limit terrain and imagery rendering.
+         * @type {Rectangle}
+         */
+        this.cartographicLimitRectangle = Rectangle.clone(Rectangle.MAX_VALUE);
     }
 
     defineProperties(GlobeSurfaceTileProvider.prototype, {
@@ -509,6 +518,24 @@ define([
     };
 
     var boundingSphereScratch = new BoundingSphere();
+    var rectangleIntersectionScratch = new Rectangle();
+    var splitCartographicLimitRectangleScratch = new Rectangle();
+    var rectangleCenterScratch = new Cartographic();
+
+    // cartographicLimitRectangle may span the IDL, but tiles never will.
+    function clipRectangleAntimeridian(tileRectangle, cartographicLimitRectangle) {
+        if (cartographicLimitRectangle.west < cartographicLimitRectangle.east) {
+            return cartographicLimitRectangle;
+        }
+        var splitRectangle = Rectangle.clone(cartographicLimitRectangle, splitCartographicLimitRectangleScratch);
+        var tileCenter = Rectangle.center(tileRectangle, rectangleCenterScratch);
+        if (tileCenter.longitude > 0.0) {
+            splitRectangle.east = CesiumMath.PI;
+        } else {
+            splitRectangle.west = -CesiumMath.PI;
+        }
+        return splitRectangle;
+    }
 
     /**
      * Determines the visibility of a given tile.  The tile may be fully visible, partially visible, or not
@@ -535,6 +562,17 @@ define([
         var surfaceTile = tile.data;
         var cullingVolume = frameState.cullingVolume;
         var boundingVolume = defaultValue(surfaceTile.orientedBoundingBox, surfaceTile.boundingSphere3D);
+
+        // Check if the tile is outside the limit area in cartographic space
+        surfaceTile.clippedByBoundaries = false;
+        var clippedCartographicLimitRectangle = clipRectangleAntimeridian(tile.rectangle, this.cartographicLimitRectangle);
+        var areaLimitIntersection = Rectangle.simpleIntersection(clippedCartographicLimitRectangle, tile.rectangle, rectangleIntersectionScratch);
+        if (!defined(areaLimitIntersection)) {
+            return Visibility.NONE;
+        }
+        if (!Rectangle.equals(areaLimitIntersection, tile.rectangle)) {
+            surfaceTile.clippedByBoundaries = true;
+        }
 
         if (frameState.mode !== SceneMode.SCENE3D) {
             boundingVolume = boundingSphereScratch;
@@ -580,6 +618,7 @@ define([
     var modifiedModelViewScratch = new Matrix4();
     var modifiedModelViewProjectionScratch = new Matrix4();
     var tileRectangleScratch = new Cartesian4();
+    var localizedCartographicLimitRectangleScratch = new Cartesian4();
     var rtcScratch = new Cartesian3();
     var centerEyeScratch = new Cartesian3();
     var southwestScratch = new Cartesian3();
@@ -839,6 +878,9 @@ define([
             u_lightingFadeDistance : function() {
                 return this.properties.lightingFadeDistance;
             },
+            u_nightFadeDistance : function() {
+                return this.properties.nightFadeDistance;
+            },
             u_center3D : function() {
                 return this.properties.center3D;
             },
@@ -916,6 +958,9 @@ define([
             u_dayTextureSplit : function() {
                 return this.properties.dayTextureSplit;
             },
+            u_dayTextureCutoutRectangles : function() {
+                return this.properties.dayTextureCutoutRectangles;
+            },
             u_clippingPlanes : function() {
                 var clippingPlanes = globeSurfaceTileProvider._clippingPlanes;
                 if (defined(clippingPlanes) && defined(clippingPlanes.texture)) {
@@ -923,6 +968,9 @@ define([
                     return clippingPlanes.texture;
                 }
                 return frameState.context.defaultTexture;
+            },
+            u_cartographicLimitRectangle : function() {
+                return this.properties.localizedCartographicLimitRectangle;
             },
             u_clippingPlanesMatrix : function() {
                 var clippingPlanes = globeSurfaceTileProvider._clippingPlanes;
@@ -944,6 +992,7 @@ define([
                 zoomedOutOceanSpecularIntensity : 0.5,
                 oceanNormalMap : undefined,
                 lightingFadeDistance : new Cartesian2(6500000.0, 9000000.0),
+                nightFadeDistance : new Cartesian2(10000000.0, 40000000.0),
 
                 center3D : undefined,
                 center2D : undefined,
@@ -962,6 +1011,7 @@ define([
                 dayTextureSaturation : [],
                 dayTextureOneOverGamma : [],
                 dayTextureSplit : [],
+                dayTextureCutoutRectangles : [],
                 dayIntensity : 0.0,
 
                 southAndNorthLatitude : new Cartesian2(),
@@ -973,7 +1023,9 @@ define([
                 minMaxHeight : new Cartesian2(),
                 scaleAndBias : new Matrix4(),
                 clippingPlanesEdgeColor : Color.clone(Color.WHITE),
-                clippingPlanesEdgeWidth : 0.0
+                clippingPlanesEdgeWidth : 0.0,
+
+                localizedCartographicLimitRectangle : new Cartesian4()
             }
         };
 
@@ -1096,6 +1148,30 @@ define([
     })();
 
     var otherPassesInitialColor = new Cartesian4(0.0, 0.0, 0.0, 0.0);
+    var surfaceShaderSetOptionsScratch = {
+        frameState : undefined,
+        surfaceTile : undefined,
+        numberOfDayTextures : undefined,
+        applyBrightness : undefined,
+        applyContrast : undefined,
+        applyHue : undefined,
+        applySaturation : undefined,
+        applyGamma : undefined,
+        applyAlpha : undefined,
+        applySplit : undefined,
+        showReflectiveOcean : undefined,
+        showOceanWaves : undefined,
+        enableLighting : undefined,
+        showGroundAtmosphere : undefined,
+        perFragmentGroundAtmosphere : undefined,
+        hasVertexNormals : undefined,
+        useWebMercatorProjection : undefined,
+        enableFog : undefined,
+        enableClippingPlanes : undefined,
+        clippingPlanes : undefined,
+        clippedByBoundaries : undefined,
+        hasImageryLayerCutout : undefined
+    };
 
     function addDrawCommandsForTile(tileProvider, tile, frameState) {
         var surfaceTile = tile.data;
@@ -1118,8 +1194,26 @@ define([
         var showOceanWaves = showReflectiveOcean && defined(oceanNormalMap);
         var hasVertexNormals = tileProvider.terrainProvider.ready && tileProvider.terrainProvider.hasVertexNormals;
         var enableFog = frameState.fog.enabled;
+        var showGroundAtmosphere = tileProvider.showGroundAtmosphere;
         var castShadows = ShadowMode.castShadows(tileProvider.shadows);
         var receiveShadows = ShadowMode.receiveShadows(tileProvider.shadows);
+
+        var perFragmentGroundAtmosphere = false;
+        if (showGroundAtmosphere) {
+            var mode = frameState.mode;
+            var camera = frameState.camera;
+            var cameraDistance;
+            if (mode === SceneMode.SCENE2D || mode === SceneMode.COLUMBUS_VIEW) {
+                cameraDistance = camera.positionCartographic.height;
+            } else {
+                cameraDistance = Cartesian3.magnitude(camera.positionWC);
+            }
+            var fadeOutDistance = tileProvider.nightFadeOutDistance;
+            if (mode !== SceneMode.SCENE3D) {
+                fadeOutDistance -= frameState.mapProjection.ellipsoid.maximumRadius;
+            }
+            perFragmentGroundAtmosphere = cameraDistance > fadeOutDistance;
+        }
 
         if (showReflectiveOcean) {
             --maxTextures;
@@ -1198,6 +1292,18 @@ define([
             }
         }
 
+        var surfaceShaderSetOptions = surfaceShaderSetOptionsScratch;
+        surfaceShaderSetOptions.frameState = frameState;
+        surfaceShaderSetOptions.surfaceTile = surfaceTile;
+        surfaceShaderSetOptions.showReflectiveOcean = showReflectiveOcean;
+        surfaceShaderSetOptions.showOceanWaves = showOceanWaves;
+        surfaceShaderSetOptions.enableLighting = tileProvider.enableLighting;
+        surfaceShaderSetOptions.showGroundAtmosphere = showGroundAtmosphere;
+        surfaceShaderSetOptions.perFragmentGroundAtmosphere = perFragmentGroundAtmosphere;
+        surfaceShaderSetOptions.hasVertexNormals = hasVertexNormals;
+        surfaceShaderSetOptions.useWebMercatorProjection = useWebMercatorProjection;
+        surfaceShaderSetOptions.clippedByBoundaries = surfaceTile.clippedByBoundaries;
+
         var tileImageryCollection = surfaceTile.imagery;
         var imageryIndex = 0;
         var imageryLen = tileImageryCollection.length;
@@ -1256,6 +1362,8 @@ define([
             uniformMapProperties.oceanNormalMap = oceanNormalMap;
             uniformMapProperties.lightingFadeDistance.x = tileProvider.lightingFadeOutDistance;
             uniformMapProperties.lightingFadeDistance.y = tileProvider.lightingFadeInDistance;
+            uniformMapProperties.nightFadeDistance.x = tileProvider.nightFadeOutDistance;
+            uniformMapProperties.nightFadeDistance.y = tileProvider.nightFadeInDistance;
             uniformMapProperties.zoomedOutOceanSpecularIntensity = tileProvider.zoomedOutOceanSpecularIntensity;
 
             uniformMapProperties.center3D = surfaceTile.center;
@@ -1268,6 +1376,20 @@ define([
             uniformMapProperties.southMercatorYAndOneOverHeight.x = southMercatorY;
             uniformMapProperties.southMercatorYAndOneOverHeight.y = oneOverMercatorHeight;
 
+            // Convert tile limiter rectangle from cartographic to texture space using the tileRectangle.
+            var localizedCartographicLimitRectangle = localizedCartographicLimitRectangleScratch;
+            var cartographicLimitRectangle = clipRectangleAntimeridian(tile.rectangle, tileProvider.cartographicLimitRectangle);
+
+            var cartographicTileRectangle = tile.rectangle;
+            var inverseTileWidth = 1.0 / cartographicTileRectangle.width;
+            var inverseTileHeight = 1.0 / cartographicTileRectangle.height;
+            localizedCartographicLimitRectangle.x = (cartographicLimitRectangle.west - cartographicTileRectangle.west) * inverseTileWidth;
+            localizedCartographicLimitRectangle.y = (cartographicLimitRectangle.south - cartographicTileRectangle.south) * inverseTileHeight;
+            localizedCartographicLimitRectangle.z = (cartographicLimitRectangle.east - cartographicTileRectangle.west) * inverseTileWidth;
+            localizedCartographicLimitRectangle.w = (cartographicLimitRectangle.north - cartographicTileRectangle.south) * inverseTileHeight;
+
+            Cartesian4.clone(localizedCartographicLimitRectangle, uniformMapProperties.localizedCartographicLimitRectangle);
+
             // For performance, use fog in the shader only when the tile is in fog.
             var applyFog = enableFog && CesiumMath.fog(tile._distance, frameState.fog.density) > CesiumMath.EPSILON3;
 
@@ -1278,6 +1400,7 @@ define([
             var applyGamma = false;
             var applyAlpha = false;
             var applySplit = false;
+            var applyCutout = false;
 
             while (numberOfDayTextures < maxTextures && imageryIndex < imageryLen) {
                 var tileImagery = tileImageryCollection[imageryIndex];
@@ -1338,6 +1461,24 @@ define([
                 uniformMapProperties.dayTextureSplit[numberOfDayTextures] = imageryLayer.splitDirection;
                 applySplit = applySplit || uniformMapProperties.dayTextureSplit[numberOfDayTextures] !== 0.0;
 
+                // Update cutout rectangle
+                var dayTextureCutoutRectangle = uniformMapProperties.dayTextureCutoutRectangles[numberOfDayTextures];
+                if (!defined(dayTextureCutoutRectangle)) {
+                    dayTextureCutoutRectangle = uniformMapProperties.dayTextureCutoutRectangles[numberOfDayTextures] = new Cartesian4();
+                }
+
+                Cartesian4.clone(Cartesian4.ZERO, dayTextureCutoutRectangle);
+                if (defined(imageryLayer.cutoutRectangle)) {
+                    var cutoutRectangle = clipRectangleAntimeridian(cartographicTileRectangle, imageryLayer.cutoutRectangle);
+                    var intersection = Rectangle.simpleIntersection(cutoutRectangle, cartographicTileRectangle, rectangleIntersectionScratch);
+                    applyCutout = defined(intersection) || applyCutout;
+
+                    dayTextureCutoutRectangle.x = (cutoutRectangle.west - cartographicTileRectangle.west) * inverseTileWidth;
+                    dayTextureCutoutRectangle.y = (cutoutRectangle.south - cartographicTileRectangle.south) * inverseTileHeight;
+                    dayTextureCutoutRectangle.z = (cutoutRectangle.east - cartographicTileRectangle.west) * inverseTileWidth;
+                    dayTextureCutoutRectangle.w = (cutoutRectangle.north - cartographicTileRectangle.south) * inverseTileHeight;
+                }
+
                 if (defined(imagery.credits)) {
                     var credits = imagery.credits;
                     for (var creditIndex = 0, creditLength = credits.length; creditIndex < creditLength; ++creditIndex) {
@@ -1370,7 +1511,20 @@ define([
                 uniformMap = combine(uniformMap, tileProvider.uniformMap);
             }
 
-            command.shaderProgram = tileProvider._surfaceShaderSet.getShaderProgram(frameState, surfaceTile, numberOfDayTextures, applyBrightness, applyContrast, applyHue, applySaturation, applyGamma, applyAlpha, applySplit, showReflectiveOcean, showOceanWaves, tileProvider.enableLighting, hasVertexNormals, useWebMercatorProjection, applyFog, clippingPlanesEnabled, clippingPlanes);
+            surfaceShaderSetOptions.numberOfDayTextures = numberOfDayTextures;
+            surfaceShaderSetOptions.applyBrightness = applyBrightness;
+            surfaceShaderSetOptions.applyContrast = applyContrast;
+            surfaceShaderSetOptions.applyHue = applyHue;
+            surfaceShaderSetOptions.applySaturation = applySaturation;
+            surfaceShaderSetOptions.applyGamma = applyGamma;
+            surfaceShaderSetOptions.applyAlpha = applyAlpha;
+            surfaceShaderSetOptions.applySplit = applySplit;
+            surfaceShaderSetOptions.enableFog = applyFog;
+            surfaceShaderSetOptions.enableClippingPlanes = clippingPlanesEnabled;
+            surfaceShaderSetOptions.clippingPlanes = clippingPlanes;
+            surfaceShaderSetOptions.hasImageryLayerCutout = applyCutout;
+
+            command.shaderProgram = tileProvider._surfaceShaderSet.getShaderProgram(surfaceShaderSetOptions);
             command.castShadows = castShadows;
             command.receiveShadows = receiveShadows;
             command.renderState = renderState;

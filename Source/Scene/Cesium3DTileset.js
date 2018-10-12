@@ -18,6 +18,7 @@ define([
         '../Core/Matrix4',
         '../Core/Resource',
         '../Core/RuntimeError',
+        '../Core/Transforms',
         '../Renderer/ClearCommand',
         '../Renderer/Pass',
         '../ThirdParty/when',
@@ -60,6 +61,7 @@ define([
         Matrix4,
         Resource,
         RuntimeError,
+        Transforms,
         ClearCommand,
         Pass,
         when,
@@ -179,6 +181,7 @@ define([
         this._selectedTilesToStyle = [];
         this._loadTimestamp = undefined;
         this._timeSinceLoad = 0.0;
+        this._extras = undefined;
 
         this._cullWithChildrenBounds = defaultValue(options.cullWithChildrenBounds, true);
         this._allTilesAdditive = true;
@@ -199,6 +202,7 @@ define([
         this._statisticsLastPick = new Cesium3DTilesetStatistics();
 
         this._tilesLoaded = false;
+        this._initialTilesLoaded = false;
 
         this._tileDebugLabels = undefined;
 
@@ -207,6 +211,9 @@ define([
         this._classificationType = options.classificationType;
 
         this._ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
+
+        this._useBoundingSphereForClipping = false;
+        this._clippingPlaneOffsetMatrix = undefined;
 
         /**
          * Optimization option. Whether the tileset should refine based on a dynamic screen space error. Tiles that are further
@@ -358,6 +365,25 @@ define([
          * @see Cesium3DTileset#tilesLoaded
          */
         this.allTilesLoaded = new Event();
+
+        /**
+         * The event fired to indicate that all tiles that meet the screen space error this frame are loaded. This event
+         * is fired once when all tiles in the initial view are loaded.
+         * <p>
+         * This event is fired at the end of the frame after the scene is rendered.
+         * </p>
+         *
+         * @type {Event}
+         * @default new Event()
+         *
+         * @example
+         * tileset.initialTilesLoaded.addEventListener(function() {
+         *     console.log('Initial tiles are loaded');
+         * });
+         *
+         * @see Cesium3DTileset#allTilesLoaded
+         */
+        this.initialTilesLoaded = new Event();
 
         /**
          * The event fired to indicate that a tile's content was loaded.
@@ -695,6 +721,11 @@ define([
                 that._geometricError = tilesetJson.geometricError;
                 that._extensionsUsed = tilesetJson.extensionsUsed;
                 that._gltfUpAxis = gltfUpAxis;
+                that._extras = tilesetJson.extras;
+                if (!defined(tilesetJson.root.transform)) {
+                    that._useBoundingSphereForClipping = true;
+                    that._clippingPlaneOffsetMatrix = Transforms.eastNorthUpToFixedFrame(that.boundingSphere.center);
+                }
                 that._readyPromise.resolve(that);
             }).otherwise(function(error) {
                 that._readyPromise.reject(error);
@@ -1108,6 +1139,18 @@ define([
         /**
          * @private
          */
+        clippingPlaneOffsetMatrix : {
+            get : function() {
+                if (this._useBoundingSphereForClipping) {
+                    return this._clippingPlaneOffsetMatrix;
+                }
+                return this.root.computedTransform;
+            }
+        },
+
+        /**
+         * @private
+         */
         styleEngine : {
             get : function() {
                 return this._styleEngine;
@@ -1167,6 +1210,31 @@ define([
         ellipsoid : {
             get : function() {
                 return this._ellipsoid;
+            }
+        },
+
+        /**
+         * Returns the <code>extras</code> property at the top-level of the tileset JSON, which contains application specific metadata.
+         * Returns <code>undefined</code> if <code>extras</code> does not exist.
+         *
+         * @memberof Cesium3DTileset.prototype
+         *
+         * @exception {DeveloperError} The tileset is not loaded.  Use Cesium3DTileset.readyPromise or wait for Cesium3DTileset.ready to be true.
+         *
+         * @type {*}
+         * @readonly
+         *
+         * @see {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/specification#specifying-extensions-and-application-specific-extras|Extras in the 3D Tiles specification.}
+         */
+        extras : {
+            get : function() {
+                //>>includeStart('debug', pragmas.debug);
+                if (!this.ready) {
+                    throw new DeveloperError('The tileset is not loaded.  Use Cesium3DTileset.readyPromise or wait for Cesium3DTileset.ready to be true.');
+                }
+                //>>includeEnd('debug');
+
+                return this._extras;
             }
         }
     });
@@ -1451,7 +1519,6 @@ define([
         filterProcessingQueue(tileset);
         var tiles = tileset._processingQueue;
         var length = tiles.length;
-
         // Process tiles in the PROCESSING state so they will eventually move to the READY state.
         for (var i = 0; i < length; ++i) {
             tiles[i].process(tileset, frameState);
@@ -1757,6 +1824,12 @@ define([
             frameState.afterRender.push(function() {
                 tileset.allTilesLoaded.raiseEvent();
             });
+            if (!tileset._initialTilesLoaded) {
+                tileset._initialTilesLoaded = true;
+                frameState.afterRender.push(function() {
+                    tileset.initialTilesLoaded.raiseEvent();
+                });
+            }
         }
     }
 
@@ -1782,6 +1855,9 @@ define([
         var clippingPlanes = this._clippingPlanes;
         if (defined(clippingPlanes) && clippingPlanes.enabled) {
             clippingPlanes.update(frameState);
+            if (this._useBoundingSphereForClipping) {
+                this._clippingPlaneOffsetMatrix = Transforms.eastNorthUpToFixedFrame(this.boundingSphere.center);
+            }
         }
 
         this._timeSinceLoad = Math.max(JulianDate.secondsDifference(frameState.time, this._loadTimestamp) * 1000, 0.0);

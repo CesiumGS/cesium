@@ -1,7 +1,9 @@
 define([
+        '../Core/BoundingSphere',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Cartesian4',
+        '../Core/clone',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/Matrix2',
@@ -11,11 +13,17 @@ define([
         '../Core/RuntimeError',
         '../Core/WebGLConstants',
         '../Renderer/ShaderSource',
-        './AttributeType'
+        '../ThirdParty/GltfPipeline/addToArray',
+        '../ThirdParty/GltfPipeline/ForEach',
+        '../ThirdParty/GltfPipeline/hasExtension',
+        './AttributeType',
+        './Axis'
     ], function(
+        BoundingSphere,
         Cartesian2,
         Cartesian3,
         Cartesian4,
+        clone,
         defined,
         defineProperties,
         Matrix2,
@@ -25,13 +33,349 @@ define([
         RuntimeError,
         WebGLConstants,
         ShaderSource,
-        AttributeType) {
+        addToArray,
+        ForEach,
+        hasExtension,
+        AttributeType,
+        Axis) {
     'use strict';
 
     /**
      * @private
      */
     var ModelUtility = {};
+
+    /**
+     * Updates the model's forward axis if the model is not a 2.0 model.
+     *
+     * @param {Object} model The model to update.
+     */
+    ModelUtility.updateForwardAxis = function(model) {
+        var cachedSourceVersion = model.gltf.extras.sourceVersion;
+
+        if ((defined(cachedSourceVersion) && cachedSourceVersion !== '2.0')
+                || ModelUtility.getAssetVersion(model.gltf) !== '2.0') {
+            model._gltfForwardAxis = Axis.X;
+        }
+    };
+
+    /**
+     *  Gets the string representing the glTF asset version.
+     *
+     *  @param {Object} gltf A javascript object containing a glTF asset.
+     *  @returns {String} The glTF asset version string.
+     */
+    ModelUtility.getAssetVersion = function(gltf) {
+        // In glTF 1.0 it was valid to omit the version number.
+        if (!defined(gltf.asset) || !defined(gltf.asset.version)) {
+            return '1.0';
+        }
+
+        return gltf.asset.version;
+    };
+
+    /**
+     * Splits primitive materials with values incompatible for generating techniques.
+     *
+     * @param {Object} gltf A javascript object containing a glTF asset.
+     * @returns {Object} The glTF asset with modified materials.
+     */
+    ModelUtility.splitIncompatibleMaterials = function(gltf) {
+        var accessors = gltf.accessors;
+        var materials = gltf.materials;
+        var primitiveInfoByMaterial = {};
+        ForEach.mesh(gltf, function(mesh) {
+            ForEach.meshPrimitive(mesh, function(primitive) {
+                var materialIndex = primitive.material;
+                var material = materials[materialIndex];
+
+                var jointAccessorId = primitive.attributes.JOINTS_0;
+                var componentType;
+                var type;
+                if (defined(jointAccessorId)) {
+                    var jointAccessor = accessors[jointAccessorId];
+                    componentType = jointAccessor.componentType;
+                    type = jointAccessor.type;
+                }
+                var isSkinned = defined(jointAccessorId);
+                var hasVertexColors = defined(primitive.attributes.COLOR_0);
+                var hasMorphTargets = defined(primitive.targets);
+                var hasNormals = defined(primitive.attributes.NORMAL);
+                var hasTangents = defined(primitive.attributes.TANGENT);
+                var hasTexCoords = defined(primitive.attributes.TEXCOORD_0);
+
+                var primitiveInfo = primitiveInfoByMaterial[materialIndex];
+                if (!defined(primitiveInfo)) {
+                    primitiveInfoByMaterial[materialIndex] = {
+                        skinning: {
+                            skinned: isSkinned,
+                            componentType: componentType,
+                            type: type
+                        },
+                        hasVertexColors: hasVertexColors,
+                        hasMorphTargets: hasMorphTargets,
+                        hasNormals: hasNormals,
+                        hasTangents: hasTangents,
+                        hasTexCoords: hasTexCoords
+                    };
+                } else if ((primitiveInfo.skinning.skinned !== isSkinned) ||
+                    (primitiveInfo.skinning.type !== type) ||
+                    (primitiveInfo.hasVertexColors !== hasVertexColors) ||
+                    (primitiveInfo.hasMorphTargets !== hasMorphTargets) ||
+                    (primitiveInfo.hasNormals !== hasNormals) ||
+                    (primitiveInfo.hasTangents !== hasTangents) ||
+                    (primitiveInfo.hasTexCoords !== hasTexCoords)) {
+                    // This primitive uses the same material as another one that either:
+                    // * Isn't skinned
+                    // * Uses a different type to store joints and weights
+                    // * Doesn't have vertex colors, morph targets, normals, tangents, or texCoords
+                    var clonedMaterial = clone(material, true);
+                    // Split this off as a separate material
+                    materialIndex = addToArray(materials, clonedMaterial);
+                    primitive.material = materialIndex;
+                    primitiveInfoByMaterial[materialIndex] = {
+                        skinning: {
+                            skinned: isSkinned,
+                            componentType: componentType,
+                            type: type
+                        },
+                        hasVertexColors: hasVertexColors,
+                        hasMorphTargets: hasMorphTargets,
+                        hasNormals: hasNormals,
+                        hasTangents: hasTangents,
+                        hasTexCoords: hasTexCoords
+                    };
+                }
+            });
+        });
+
+        return primitiveInfoByMaterial;
+    };
+
+    ModelUtility.getShaderVariable = function(type) {
+        if (type === 'SCALAR') {
+            return 'float';
+        }
+        return type.toLowerCase();
+    };
+
+    ModelUtility.ModelState = {
+        NEEDS_LOAD: 0,
+        LOADING: 1,
+        LOADED: 2, // Renderable, but textures can still be pending when incrementallyLoadTextures is true.
+        FAILED: 3
+    };
+
+    ModelUtility.getFailedLoadFunction = function(model, type, path) {
+        return function(error) {
+            model._state = ModelUtility.ModelState.FAILED;
+            var message = 'Failed to load ' + type + ': ' + path;
+            if (defined(error)) {
+                message += '\n' + error.message;
+            }
+            model._readyPromise.reject(new RuntimeError(message));
+        };
+    };
+
+    ModelUtility.parseBuffers = function(model, bufferLoad) {
+        var loadResources = model._loadResources;
+        ForEach.buffer(model.gltf, function(buffer, bufferViewId) {
+            if (defined(buffer.extras._pipeline.source)) {
+                loadResources.buffers[bufferViewId] = buffer.extras._pipeline.source;
+            } else if (defined(bufferLoad)) {
+                var bufferResource = model._resource.getDerivedResource({
+                    url: buffer.uri
+                });
+                ++loadResources.pendingBufferLoads;
+                bufferResource.fetchArrayBuffer()
+                    .then(bufferLoad(model, bufferViewId))
+                    .otherwise(ModelUtility.getFailedLoadFunction(model, 'buffer', bufferResource.url));
+            }
+        });
+    };
+
+    var aMinScratch = new Cartesian3();
+    var aMaxScratch = new Cartesian3();
+
+    ModelUtility.computeBoundingSphere = function(model) {
+        var gltf = model.gltf;
+        var gltfNodes = gltf.nodes;
+        var gltfMeshes = gltf.meshes;
+        var rootNodes = gltf.scenes[gltf.scene].nodes;
+        var rootNodesLength = rootNodes.length;
+
+        var nodeStack = [];
+
+        var min = new Cartesian3(Number.MAX_VALUE, Number.MAX_VALUE, Number.MAX_VALUE);
+        var max = new Cartesian3(-Number.MAX_VALUE, -Number.MAX_VALUE, -Number.MAX_VALUE);
+
+        for (var i = 0; i < rootNodesLength; ++i) {
+            var n = gltfNodes[rootNodes[i]];
+            n._transformToRoot = ModelUtility.getTransform(n);
+            nodeStack.push(n);
+
+            while (nodeStack.length > 0) {
+                n = nodeStack.pop();
+                var transformToRoot = n._transformToRoot;
+
+                var meshId = n.mesh;
+                if (defined(meshId)) {
+                    var mesh = gltfMeshes[meshId];
+                    var primitives = mesh.primitives;
+                    var primitivesLength = primitives.length;
+                    for (var m = 0; m < primitivesLength; ++m) {
+                        var positionAccessor = primitives[m].attributes.POSITION;
+                        if (defined(positionAccessor)) {
+                            var minMax = ModelUtility.getAccessorMinMax(gltf, positionAccessor);
+                            var aMin = Cartesian3.fromArray(minMax.min, 0, aMinScratch);
+                            var aMax = Cartesian3.fromArray(minMax.max, 0, aMaxScratch);
+                            if (defined(min) && defined(max)) {
+                                Matrix4.multiplyByPoint(transformToRoot, aMin, aMin);
+                                Matrix4.multiplyByPoint(transformToRoot, aMax, aMax);
+                                Cartesian3.minimumByComponent(min, aMin, min);
+                                Cartesian3.maximumByComponent(max, aMax, max);
+                            }
+                        }
+                    }
+                }
+
+                var children = n.children;
+                if (defined(children)) {
+                    var childrenLength = children.length;
+                    for (var k = 0; k < childrenLength; ++k) {
+                        var child = gltfNodes[children[k]];
+                        child._transformToRoot = ModelUtility.getTransform(child);
+                        Matrix4.multiplyTransformation(transformToRoot, child._transformToRoot, child._transformToRoot);
+                        nodeStack.push(child);
+                    }
+                }
+                delete n._transformToRoot;
+            }
+        }
+
+        var boundingSphere = BoundingSphere.fromCornerPoints(min, max);
+        if (model._forwardAxis === Axis.Z) {
+            // glTF 2.0 has a Z-forward convention that must be adapted here to X-forward.
+            BoundingSphere.transformWithoutScale(boundingSphere, Axis.Z_UP_TO_X_UP, boundingSphere);
+        }
+        if (model._upAxis === Axis.Y) {
+            BoundingSphere.transformWithoutScale(boundingSphere, Axis.Y_UP_TO_Z_UP, boundingSphere);
+        } else if (model._upAxis === Axis.X) {
+            BoundingSphere.transformWithoutScale(boundingSphere, Axis.X_UP_TO_Z_UP, boundingSphere);
+        }
+        return boundingSphere;
+    };
+
+    function techniqueAttributeForSemantic(technique, semantic) {
+        return ForEach.techniqueAttribute(technique, function(attribute, attributeName) {
+            if (attribute.semantic === semantic) {
+                return attributeName;
+            }
+        });
+    }
+
+    function ensureSemanticExistenceForPrimitive(gltf, primitive) {
+        var accessors = gltf.accessors;
+        var materials = gltf.materials;
+        var techniquesWebgl = gltf.extensions.KHR_techniques_webgl;
+
+        var techniques = techniquesWebgl.techniques;
+        var programs = techniquesWebgl.programs;
+        var shaders = techniquesWebgl.shaders;
+        var targets = primitive.targets;
+
+        var attributes = primitive.attributes;
+        for (var target in targets) {
+            if (targets.hasOwnProperty(target)) {
+                var targetAttributes = targets[target];
+                for (var attribute in targetAttributes) {
+                    if (attribute !== 'extras') {
+                        attributes[attribute + '_' + target] = targetAttributes[attribute];
+                    }
+                }
+            }
+        }
+
+        var material = materials[primitive.material];
+        var technique = techniques[material.extensions.KHR_techniques_webgl.technique];
+        var program = programs[technique.program];
+        var vertexShader = shaders[program.vertexShader];
+
+        for (var semantic in attributes) {
+            if (attributes.hasOwnProperty(semantic)) {
+                if (!defined(techniqueAttributeForSemantic(technique, semantic))) {
+                    var accessorId = attributes[semantic];
+                    var accessor = accessors[accessorId];
+                    var lowerCase = semantic.toLowerCase();
+                    if (lowerCase.charAt(0) === '_') {
+                        lowerCase = lowerCase.slice(1);
+                    }
+                    var attributeName = 'a_' + lowerCase;
+                    technique.attributes[attributeName] = {
+                        semantic: semantic,
+                        type: accessor.componentType
+                    };
+                    var pipelineExtras = vertexShader.extras._pipeline;
+                    var shaderText = pipelineExtras.source;
+                    shaderText = 'attribute ' + ModelUtility.getShaderVariable(accessor.type) + ' ' + attributeName + ';\n' + shaderText;
+                    pipelineExtras.source = shaderText;
+                }
+            }
+        }
+    }
+
+    /**
+     * Ensures all attributes present on the primitive are present in the technique and
+     * vertex shader.
+     *
+     * @param {Object} gltf A javascript object containing a glTF asset.
+     * @returns {Object} The glTF asset, including any additional attributes.
+     */
+    ModelUtility.ensureSemanticExistence = function (gltf) {
+        ForEach.mesh(gltf, function(mesh) {
+            ForEach.meshPrimitive(mesh, function(primitive) {
+                ensureSemanticExistenceForPrimitive(gltf, primitive);
+            });
+        });
+
+        return gltf;
+    };
+
+    /**
+     * Creates attribute location for all attributes required by a technique.
+     *
+     * @param {Object} technique A glTF KHR_techniques_webgl technique object.
+     * @param {Object} precreatedAttributes A dictionary object of pre-created attributes for which to also create locations.
+     * @returns {Object} A dictionary object containing attribute names and their locations.
+     */
+    ModelUtility.createAttributeLocations = function(technique, precreatedAttributes) {
+        var attributeLocations = {};
+        var hasIndex0 = false;
+        var i = 1;
+
+        ForEach.techniqueAttribute(technique, function (attribute, attributeName) {
+            // Set the position attribute to the 0th index. In some WebGL implementations the shader
+            // will not work correctly if the 0th attribute is not active. For example, some glTF models
+            // list the normal attribute first but derived shaders like the cast-shadows shader do not use
+            // the normal attribute.
+            if (/pos/i.test(attributeName) && !hasIndex0) {
+                attributeLocations[attributeName] = 0;
+                hasIndex0 = true;
+            } else {
+                attributeLocations[attributeName] = i++;
+            }
+        });
+
+        if (defined(precreatedAttributes)) {
+            for (var attributeName in precreatedAttributes) {
+                if (precreatedAttributes.hasOwnProperty(attributeName)) {
+                    attributeLocations[attributeName] = i++;
+                }
+            }
+        }
+
+        return attributeLocations;
+    };
 
     ModelUtility.getAccessorMinMax = function(gltf, accessorId) {
         var accessor = gltf.accessors[accessorId];
@@ -52,37 +396,37 @@ define([
         };
     };
 
-    ModelUtility.getAttributeOrUniformBySemantic = function(gltf, semantic, programId, ignoreNodes) {
-        var techniques = gltf.techniques;
-        var parameter;
-        for (var techniqueName in techniques) {
-            if (techniques.hasOwnProperty(techniqueName)) {
-                var technique = techniques[techniqueName];
-                if (defined(programId) && (technique.program !== programId)) {
-                    continue;
+    function getTechniqueAttributeOrUniformFunction(gltf, technique, semantic, ignoreNodes) {
+        if (hasExtension(gltf, 'KHR_techniques_webgl')) {
+            return function(attributeOrUniform, attributeOrUniformName) {
+                if (attributeOrUniform.semantic === semantic && (!ignoreNodes || !defined(attributeOrUniform.node))) {
+                    return attributeOrUniformName;
                 }
-                var parameters = technique.parameters;
-                var attributes = technique.attributes;
-                var uniforms = technique.uniforms;
-                for (var attributeName in attributes) {
-                    if (attributes.hasOwnProperty(attributeName)) {
-                        parameter = parameters[attributes[attributeName]];
-                        if (defined(parameter) && parameter.semantic === semantic && (!ignoreNodes || !defined(parameter.node))) {
-                            return attributeName;
-                        }
-                    }
-                }
-                for (var uniformName in uniforms) {
-                    if (uniforms.hasOwnProperty(uniformName)) {
-                        parameter = parameters[uniforms[uniformName]];
-                        if (defined(parameter) && parameter.semantic === semantic && (!ignoreNodes || !defined(parameter.node))) {
-                            return uniformName;
-                        }
-                    }
-                }
-            }
+            };
         }
-        return undefined;
+
+        return function(parameterName, attributeOrUniformName) {
+            var attributeOrUniform = technique.parameters[parameterName];
+            if (attributeOrUniform.semantic === semantic && (!ignoreNodes || !defined(attributeOrUniform.node))) {
+                return attributeOrUniformName;
+            }
+        };
+    }
+
+    ModelUtility.getAttributeOrUniformBySemantic = function(gltf, semantic, programId, ignoreNodes) {
+        return ForEach.technique(gltf, function(technique) {
+            if (defined(programId) && (technique.program !== programId)) {
+                return;
+            }
+
+            var value = ForEach.techniqueAttribute(technique, getTechniqueAttributeOrUniformFunction(gltf, technique, semantic, ignoreNodes));
+
+            if (defined(value)) {
+                return value;
+            }
+
+            return ForEach.techniqueUniform(technique, getTechniqueAttributeOrUniformFunction(gltf, technique, semantic, ignoreNodes));
+        });
     };
 
     ModelUtility.getDiffuseAttributeOrUniform = function(gltf, programId) {
@@ -138,15 +482,22 @@ define([
         return cachedExtensionsRequired;
     };
 
+    ModelUtility.supportedExtensions = {
+        'CESIUM_RTC' : true,
+        'KHR_blend' : true,
+        'KHR_binary_glTF' : true,
+        'KHR_draco_mesh_compression' : true,
+        'KHR_materials_common' : true,
+        'KHR_techniques_webgl' : true,
+        'KHR_materials_unlit' : true,
+        'KHR_materials_pbrSpecularGlossiness' : true,
+        'WEB3D_quantized_attributes' : true
+    };
+
     ModelUtility.checkSupportedExtensions = function(extensionsRequired) {
         for (var extension in extensionsRequired) {
             if (extensionsRequired.hasOwnProperty(extension)) {
-                if (extension !== 'CESIUM_RTC' &&
-                    extension !== 'KHR_technique_webgl' &&
-                    extension !== 'KHR_binary_glTF' &&
-                    extension !== 'KHR_materials_common' &&
-                    extension !== 'WEB3D_quantized_attributes' &&
-                    extension !== 'KHR_draco_mesh_compression') {
+                if (!ModelUtility.supportedExtensions[extension]) {
                     throw new RuntimeError('Unsupported glTF Extension: ' + extension);
                 }
             }
@@ -190,25 +541,22 @@ define([
     function getAttributeVariableName(gltf, primitive, attributeSemantic) {
         var materialId = primitive.material;
         var material = gltf.materials[materialId];
-        var techniqueId = material.technique;
-        var technique = gltf.techniques[techniqueId];
-        for (var parameter in technique.parameters) {
-            if (technique.parameters.hasOwnProperty(parameter)) {
-                var semantic = technique.parameters[parameter].semantic;
-                if (semantic === attributeSemantic) {
-                    var attributes = technique.attributes;
-                    for (var attributeVarName in attributes) {
-                        if (attributes.hasOwnProperty(attributeVarName)) {
-                            var name = attributes[attributeVarName];
-                            if (name === parameter) {
-                                return attributeVarName;
-                            }
-                        }
-                    }
-                }
-            }
+
+        if (!hasExtension(gltf, 'KHR_techniques_webgl')
+                || !defined(material.extensions)
+                || !defined(material.extensions.KHR_techniques_webgl)) {
+            return;
         }
-        return undefined;
+
+        var techniqueId = material.extensions.KHR_techniques_webgl.technique;
+        var techniquesWebgl = gltf.extensions.KHR_techniques_webgl;
+        var technique = techniquesWebgl.techniques[techniqueId];
+        return ForEach.techniqueAttribute(technique, function(attribute, attributeName) {
+            var semantic = attribute.semantic;
+            if (semantic === attributeSemantic) {
+                return attributeName;
+            }
+        });
     }
 
     ModelUtility.modifyShaderForDracoQuantizedAttributes = function(gltf, primitive, shader, decodedAttributes) {
@@ -516,8 +864,8 @@ define([
 
     ///////////////////////////////////////////////////////////////////////////
 
-    function getTextureUniformFunction(value, texture, defaultTexture) {
-        var uniform = new DelayLoadedTextureUniform(value, texture, defaultTexture);
+    function getTextureUniformFunction(value, textures, defaultTexture) {
+        var uniform = new DelayLoadedTextureUniform(value, textures, defaultTexture);
         // Define function here to access closure since 'this' can't be
         // used when the Renderer sets uniforms.
         uniform.func = function() {

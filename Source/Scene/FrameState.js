@@ -146,6 +146,7 @@ define([
              * @default false
              */
             render : false,
+
             /**
              * <code>true</code> if the primitive should update for a picking pass, <code>false</code> otherwise.
              *
@@ -166,7 +167,14 @@ define([
              * @type {Boolean}
              * @default false
              */
-            postProcess : false
+            postProcess : false,
+
+            /**
+             * <code>true</code> if the primitive should update for an offscreen pass, <code>false</code> otherwise.
+             * @type {Boolean}
+             * @default false
+             */
+            offscreen : false
         };
 
         /**
@@ -240,7 +248,7 @@ define([
          */
         this.terrainExaggeration = 1.0;
 
-        this.shadowHints = {
+        this.shadowState = {
             /**
              * Whether there are any active shadow maps this frame.
              * @type {Boolean}
@@ -338,6 +346,14 @@ define([
          * @type {Color}
          */
         this.invertClassificationColor = undefined;
+
+        /**
+         * Whether or not the scene uses a logarithmic depth buffer.
+         *
+         * @type {Boolean}
+         * @default false
+         */
+        this.useLogDepth = false;
     }
 
     /**
