@@ -439,6 +439,30 @@ define([
                 };
             },
 
+            toPickPositionAndCall : function(util, customEqualityTesters) {
+                return {
+                    compare : function(actual, expected, x, y) {
+                        var scene = actual;
+                        var canvas = scene.canvas;
+                        x = defaultValue(x, canvas.clientWidth / 2);
+                        y = defaultValue(y, canvas.clientHeight / 2);
+                        var result = scene.pickPosition(new Cartesian2(x, y));
+
+                        var webglStub = !!window.webglStub;
+                        if (!webglStub) {
+                            // The callback may have expectations that fail, which still makes the
+                            // spec fail, as we desired, even though this matcher sets pass to true.
+                            var callback = expected;
+                            callback(result);
+                        }
+
+                        return {
+                            pass : true
+                        };
+                    }
+                };
+            },
+
             toReadPixels : function(util, customEqualityTesters) {
                 return {
                     compare : function(actual, expected) {

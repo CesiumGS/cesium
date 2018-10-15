@@ -3400,6 +3400,7 @@ define([
             return Cartesian3.clone(this._pickPositionCache[cacheKey], result);
         }
 
+        var frameState = this._frameState;
         var context = this._context;
         var uniformState = context.uniformState;
 
@@ -3410,6 +3411,8 @@ define([
         if (this.pickTranslucentDepth) {
             renderTranslucentDepthForPick(this, drawingBufferPosition);
         } else {
+            updateFrameState(this, frameState.frameNumber, frameState.time);
+            uniformState.update(frameState);
             updateEnvironment(this);
         }
         drawingBufferPosition.y = this.drawingBufferHeight - drawingBufferPosition.y;
@@ -3441,7 +3444,7 @@ define([
                     camera.position.z = height2D - renderedFrustum.near + 1.0;
                     frustum.far = Math.max(1.0, renderedFrustum.far - renderedFrustum.near);
                     frustum.near = 1.0;
-                    uniformState.update(this.frameState);
+                    uniformState.update(frameState);
                     uniformState.updateFrustum(frustum);
                 } else {
                     frustum.near = renderedFrustum.near * (i !== 0 ? this.opaqueFrustumNearOffset : 1.0);
@@ -3453,7 +3456,7 @@ define([
 
                 if (this.mode === SceneMode.SCENE2D) {
                     camera.position.z = height2D;
-                    uniformState.update(this.frameState);
+                    uniformState.update(frameState);
                 }
 
                 this._pickPositionCache[cacheKey] = Cartesian3.clone(result);

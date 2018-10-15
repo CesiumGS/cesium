@@ -88,6 +88,7 @@ define([
         var enableClippingPlanes = options.enableClippingPlanes;
         var clippingPlanes = options.clippingPlanes;
         var clippedByBoundaries = options.clippedByBoundaries;
+        var hasImageryLayerCutout = options.hasImageryLayerCutout;
 
         var quantization = 0;
         var quantizationDefine = '';
@@ -113,6 +114,13 @@ define([
             cartographicLimitRectangleDefine = 'TILE_LIMIT_RECTANGLE';
         }
 
+        var imageryCutoutFlag = 0;
+        var imageryCutoutDefine = '';
+        if (hasImageryLayerCutout) {
+            imageryCutoutFlag = 1;
+            imageryCutoutDefine = 'APPLY_IMAGERY_CUTOUT';
+        }
+
         var sceneMode = frameState.mode;
         var flags = sceneMode |
                     (applyBrightness << 2) |
@@ -133,7 +141,8 @@ define([
                     (applySplit << 17) |
                     (enableClippingPlanes << 18) |
                     (vertexLogDepth << 19) |
-                    (cartographicLimitRectangleFlag << 20);
+                    (cartographicLimitRectangleFlag << 20) |
+                    (imageryCutoutFlag << 21);
 
         var currentClippingShaderState = 0;
         if (defined(clippingPlanes)) {
@@ -166,7 +175,7 @@ define([
             }
 
             vs.defines.push(quantizationDefine, vertexLogDepthDefine);
-            fs.defines.push('TEXTURE_UNITS ' + numberOfDayTextures, cartographicLimitRectangleDefine);
+            fs.defines.push('TEXTURE_UNITS ' + numberOfDayTextures, cartographicLimitRectangleDefine, imageryCutoutDefine);
 
             if (applyBrightness) {
                 fs.defines.push('APPLY_BRIGHTNESS');
@@ -233,22 +242,40 @@ define([
     {\n\
         vec4 color = initialColor;\n';
 
+        if (hasImageryLayerCutout) {
+            computeDayColor += '\
+        vec4 cutoutAndColorResult;\n\
+        bool texelUnclipped;\n';
+        }
+
             for (var i = 0; i < numberOfDayTextures; ++i) {
-                computeDayColor += '\
-    color = sampleAndBlend(\n\
-        color,\n\
-        u_dayTextures[' + i + '],\n\
-        u_dayTextureUseWebMercatorT[' + i + '] ? textureCoordinates.xz : textureCoordinates.xy,\n\
-        u_dayTextureTexCoordsRectangle[' + i + '],\n\
-        u_dayTextureTranslationAndScale[' + i + '],\n\
-        ' + (applyAlpha ? 'u_dayTextureAlpha[' + i + ']' : '1.0') + ',\n\
-        ' + (applyBrightness ? 'u_dayTextureBrightness[' + i + ']' : '0.0') + ',\n\
-        ' + (applyContrast ? 'u_dayTextureContrast[' + i + ']' : '0.0') + ',\n\
-        ' + (applyHue ? 'u_dayTextureHue[' + i + ']' : '0.0') + ',\n\
-        ' + (applySaturation ? 'u_dayTextureSaturation[' + i + ']' : '0.0') + ',\n\
-        ' + (applyGamma ? 'u_dayTextureOneOverGamma[' + i + ']' : '0.0') + ',\n\
-        ' + (applySplit ? 'u_dayTextureSplit[' + i + ']' : '0.0') + '\n\
-    );\n';
+                if (hasImageryLayerCutout) {
+                    computeDayColor += '\
+        cutoutAndColorResult = u_dayTextureCutoutRectangles[' + i + '];\n\
+        texelUnclipped = v_textureCoordinates.x < cutoutAndColorResult.x || cutoutAndColorResult.z < v_textureCoordinates.x || v_textureCoordinates.y < cutoutAndColorResult.y || cutoutAndColorResult.w < v_textureCoordinates.y;\n\
+        cutoutAndColorResult = sampleAndBlend(\n';
+                } else {
+                    computeDayColor += '\
+        color = sampleAndBlend(\n';
+                }
+        computeDayColor += '\
+            color,\n\
+            u_dayTextures[' + i + '],\n\
+            u_dayTextureUseWebMercatorT[' + i + '] ? textureCoordinates.xz : textureCoordinates.xy,\n\
+            u_dayTextureTexCoordsRectangle[' + i + '],\n\
+            u_dayTextureTranslationAndScale[' + i + '],\n\
+            ' + (applyAlpha ? 'u_dayTextureAlpha[' + i + ']' : '1.0') + ',\n\
+            ' + (applyBrightness ? 'u_dayTextureBrightness[' + i + ']' : '0.0') + ',\n\
+            ' + (applyContrast ? 'u_dayTextureContrast[' + i + ']' : '0.0') + ',\n\
+            ' + (applyHue ? 'u_dayTextureHue[' + i + ']' : '0.0') + ',\n\
+            ' + (applySaturation ? 'u_dayTextureSaturation[' + i + ']' : '0.0') + ',\n\
+            ' + (applyGamma ? 'u_dayTextureOneOverGamma[' + i + ']' : '0.0') + ',\n\
+            ' + (applySplit ? 'u_dayTextureSplit[' + i + ']' : '0.0') + '\n\
+        );\n';
+                if (hasImageryLayerCutout) {
+                    computeDayColor += '\
+        color = czm_branchFreeTernary(texelUnclipped, cutoutAndColorResult, color);\n';
+                }
             }
 
             computeDayColor += '\
