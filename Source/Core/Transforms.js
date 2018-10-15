@@ -120,94 +120,94 @@ define([
     * @return {localFrameToFixedFrameGenerator~resultat} The function that will computes a
     * 4x4 transformation matrix from a reference frame, with first axis and second axis compliant with the parameters,
     */
-    Transforms.localFrameToFixedFrameGenerator = function( firstAxis, secondAxis) {
-      if (!vectorProductLocalFrame.hasOwnProperty(firstAxis) || !vectorProductLocalFrame[firstAxis].hasOwnProperty(secondAxis)) {
-          throw new DeveloperError('firstAxis and secondAxis must be east, north, up, west, south or down.');
-      }
-      var thirdAxis = vectorProductLocalFrame[firstAxis][secondAxis];
+    Transforms.localFrameToFixedFrameGenerator = function (firstAxis, secondAxis) {
+        if (!vectorProductLocalFrame.hasOwnProperty(firstAxis) || !vectorProductLocalFrame[firstAxis].hasOwnProperty(secondAxis)) {
+            throw new DeveloperError('firstAxis and secondAxis must be east, north, up, west, south or down.');
+        }
+        var thirdAxis = vectorProductLocalFrame[firstAxis][secondAxis];
 
-      /**
-       * Computes a 4x4 transformation matrix from a reference frame
-       * centered at the provided origin to the provided ellipsoid's fixed reference frame.
-       * @callback Transforms~LocalFrameToFixedFrame
-       * @param {Cartesian3} origin The center point of the local reference frame.
-       * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid whose fixed frame is used in the transformation.
-       * @param {Matrix4} [result] The object onto which to store the result.
-       * @returns {Matrix4} The modified result parameter or a new Matrix4 instance if none was provided.
-       */
-      var resultat;
-      var hashAxis = firstAxis + secondAxis;
-      if (defined(localFrameToFixedFrameCache[hashAxis])) {
-          resultat = localFrameToFixedFrameCache[hashAxis];
-      } else {
-          resultat = function(origin, ellipsoid, result) {
-              //>>includeStart('debug', pragmas.debug);
-              if (!defined(origin)) {
-                  throw new DeveloperError('origin is required.');
-              }
-              //>>includeEnd('debug');
-              if (!defined(result)) {
-                  result = new Matrix4();
-              }
-              // If x and y are zero, assume origin is at a pole, which is a special case.
-              if (CesiumMath.equalsEpsilon(origin.x, 0.0, CesiumMath.EPSILON14) && CesiumMath.equalsEpsilon(origin.y, 0.0, CesiumMath.EPSILON14)) {
-                  var sign = CesiumMath.sign(origin.z);
+        /**
+         * Computes a 4x4 transformation matrix from a reference frame
+         * centered at the provided origin to the provided ellipsoid's fixed reference frame.
+         * @callback Transforms~LocalFrameToFixedFrame
+         * @param {Cartesian3} origin The center point of the local reference frame.
+         * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid whose fixed frame is used in the transformation.
+         * @param {Matrix4} [result] The object onto which to store the result.
+         * @returns {Matrix4} The modified result parameter or a new Matrix4 instance if none was provided.
+         */
+        var resultat;
+        var hashAxis = firstAxis + secondAxis;
+        if (defined(localFrameToFixedFrameCache[hashAxis])) {
+            resultat = localFrameToFixedFrameCache[hashAxis];
+        } else {
+            resultat = function (origin, ellipsoid, result) {
+                //>>includeStart('debug', pragmas.debug);
+                if (!defined(origin)) {
+                    throw new DeveloperError('origin is required.');
+                }
+                //>>includeEnd('debug');
+                if (!defined(result)) {
+                    result = new Matrix4();
+                }
+                // If x and y are zero, assume origin is at a pole, which is a special case.
+                if (CesiumMath.equalsEpsilon(origin.x, 0.0, CesiumMath.EPSILON14) && CesiumMath.equalsEpsilon(origin.y, 0.0, CesiumMath.EPSILON14)) {
+                    var sign = CesiumMath.sign(origin.z);
 
-                  Cartesian3.unpack(degeneratePositionLocalFrame[firstAxis], 0, scratchFirstCartesian);
-                  if (firstAxis !== 'east' && firstAxis !== 'west') {
-                      Cartesian3.multiplyByScalar(scratchFirstCartesian, sign, scratchFirstCartesian);
-                  }
+                    Cartesian3.unpack(degeneratePositionLocalFrame[firstAxis], 0, scratchFirstCartesian);
+                    if (firstAxis !== 'east' && firstAxis !== 'west') {
+                        Cartesian3.multiplyByScalar(scratchFirstCartesian, sign, scratchFirstCartesian);
+                    }
 
-                  Cartesian3.unpack(degeneratePositionLocalFrame[secondAxis], 0, scratchSecondCartesian);
-                  if (secondAxis !== 'east' && secondAxis !== 'west') {
-                      Cartesian3.multiplyByScalar(scratchSecondCartesian, sign, scratchSecondCartesian);
-                  }
+                    Cartesian3.unpack(degeneratePositionLocalFrame[secondAxis], 0, scratchSecondCartesian);
+                    if (secondAxis !== 'east' && secondAxis !== 'west') {
+                        Cartesian3.multiplyByScalar(scratchSecondCartesian, sign, scratchSecondCartesian);
+                    }
 
-                  Cartesian3.unpack(degeneratePositionLocalFrame[thirdAxis], 0, scratchThirdCartesian);
-                  if (thirdAxis !== 'east' && thirdAxis !== 'west') {
-                      Cartesian3.multiplyByScalar(scratchThirdCartesian, sign, scratchThirdCartesian);
-                  }
-              } else {
-                  ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
-                  ellipsoid.geodeticSurfaceNormal(origin, scratchCalculateCartesian.up);
+                    Cartesian3.unpack(degeneratePositionLocalFrame[thirdAxis], 0, scratchThirdCartesian);
+                    if (thirdAxis !== 'east' && thirdAxis !== 'west') {
+                        Cartesian3.multiplyByScalar(scratchThirdCartesian, sign, scratchThirdCartesian);
+                    }
+                } else {
+                    ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
+                    ellipsoid.geodeticSurfaceNormal(origin, scratchCalculateCartesian.up);
 
-                  var up = scratchCalculateCartesian.up;
-                  var east = scratchCalculateCartesian.east;
-                  east.x = -origin.y;
-                  east.y = origin.x;
-                  east.z = 0.0;
-                  Cartesian3.normalize(east, scratchCalculateCartesian.east);
-                  Cartesian3.cross(up, east, scratchCalculateCartesian.north);
+                    var up = scratchCalculateCartesian.up;
+                    var east = scratchCalculateCartesian.east;
+                    east.x = -origin.y;
+                    east.y = origin.x;
+                    east.z = 0.0;
+                    Cartesian3.normalize(east, scratchCalculateCartesian.east);
+                    Cartesian3.cross(up, east, scratchCalculateCartesian.north);
 
-                  Cartesian3.multiplyByScalar(scratchCalculateCartesian.up, -1, scratchCalculateCartesian.down);
-                  Cartesian3.multiplyByScalar(scratchCalculateCartesian.east, -1, scratchCalculateCartesian.west);
-                  Cartesian3.multiplyByScalar(scratchCalculateCartesian.north, -1, scratchCalculateCartesian.south);
+                    Cartesian3.multiplyByScalar(scratchCalculateCartesian.up, -1, scratchCalculateCartesian.down);
+                    Cartesian3.multiplyByScalar(scratchCalculateCartesian.east, -1, scratchCalculateCartesian.west);
+                    Cartesian3.multiplyByScalar(scratchCalculateCartesian.north, -1, scratchCalculateCartesian.south);
 
-                  scratchFirstCartesian = scratchCalculateCartesian[firstAxis];
-                  scratchSecondCartesian = scratchCalculateCartesian[secondAxis];
-                  scratchThirdCartesian = scratchCalculateCartesian[thirdAxis];
-              }
-              result[0] = scratchFirstCartesian.x;
-              result[1] = scratchFirstCartesian.y;
-              result[2] = scratchFirstCartesian.z;
-              result[3] = 0.0;
-              result[4] = scratchSecondCartesian.x;
-              result[5] = scratchSecondCartesian.y;
-              result[6] = scratchSecondCartesian.z;
-              result[7] = 0.0;
-              result[8] = scratchThirdCartesian.x;
-              result[9] = scratchThirdCartesian.y;
-              result[10] = scratchThirdCartesian.z;
-              result[11] = 0.0;
-              result[12] = origin.x;
-              result[13] = origin.y;
-              result[14] = origin.z;
-              result[15] = 1.0;
-              return result;
-          };
-          localFrameToFixedFrameCache[hashAxis] = resultat;
-      }
-      return resultat;
+                    scratchFirstCartesian = scratchCalculateCartesian[firstAxis];
+                    scratchSecondCartesian = scratchCalculateCartesian[secondAxis];
+                    scratchThirdCartesian = scratchCalculateCartesian[thirdAxis];
+                }
+                result[0] = scratchFirstCartesian.x;
+                result[1] = scratchFirstCartesian.y;
+                result[2] = scratchFirstCartesian.z;
+                result[3] = 0.0;
+                result[4] = scratchSecondCartesian.x;
+                result[5] = scratchSecondCartesian.y;
+                result[6] = scratchSecondCartesian.z;
+                result[7] = 0.0;
+                result[8] = scratchThirdCartesian.x;
+                result[9] = scratchThirdCartesian.y;
+                result[10] = scratchThirdCartesian.z;
+                result[11] = 0.0;
+                result[12] = origin.x;
+                result[13] = origin.y;
+                result[14] = origin.z;
+                result[15] = 1.0;
+                return result;
+            };
+            localFrameToFixedFrameCache[hashAxis] = resultat;
+        }
+        return resultat;
     };
 
     /**
