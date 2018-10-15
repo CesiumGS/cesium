@@ -688,6 +688,7 @@ define([
             fragmentShader += '    specularIrradiance = mix(specularIrradiance, belowHorizonColor, smoothstep(aroundHorizon, farBelowHorizon, reflectionDotNadir) * inverseRoughness);\n';
             fragmentShader += '    specularIrradiance = mix(specularIrradiance, nadirColor, smoothstep(farBelowHorizon, 1.0, reflectionDotNadir) * inverseRoughness);\n';
 
+            // Luminance model from page 40 of http://silviojemma.com/public/papers/lighting/spherical-harmonic-lighting.pdf
             // Angle between sun and zenith
             fragmentShader += '    float S = acos(clamp(dot(normalize(czm_inverseViewRotation * l), normalize(v_positionWC * -1.0)), 0.001, 1.0));\n'
             // Angle between zenith and current pixel 
