@@ -1,5 +1,4 @@
 defineSuite([
-        'Core/Cartesian2',
         'Core/Cartesian3',
         'Core/Cartographic',
         'Core/Color',
@@ -27,7 +26,6 @@ defineSuite([
         'Specs/createScene',
         'Specs/pollToPromise'
     ], 'Scene/Pick', function(
-        Cartesian2,
         Cartesian3,
         Cartographic,
         Color,
