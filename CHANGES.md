@@ -10,6 +10,7 @@ Change Log
 
 ##### Fixes :wrench:
 * Fixed an issue where `pickPosition` would return incorrect results when called after `sampleHeight` or `clampToHeight`. [#7113](https://github.com/AnalyticalGraphicsInc/cesium/pull/7113)
+* Fixed an issue where `sampleHeight` and `clampToHeight` would crash if picking a primitive that doesn't write depth. [#7120](https://github.com/AnalyticalGraphicsInc/cesium/issues/7120)
 
 ### 1.50 - 2018-10-01
 
