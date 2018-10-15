@@ -3529,16 +3529,7 @@ define([
         return result;
     };
 
-    function isExcluded(object, objectsToExclude) {
-        if (!defined(objectsToExclude) || objectsToExclude.length === 0) {
-            return false;
-        }
-        return (objectsToExclude.indexOf(object) > -1) ||
-               (objectsToExclude.indexOf(object.primitive) > -1) ||
-               (objectsToExclude.indexOf(object.id) > -1);
-    }
-
-    function drillPick(limit, pickCallback, objectsToExclude) {
+    function drillPick(limit, pickCallback) {
         // PERFORMANCE_IDEA: This function calls each primitive's update for each pass. Instead
         // we could update the primitive once, and then just execute their commands for each pass,
         // and cull commands for picked primitives.  e.g., base on the command's owner.
@@ -3556,6 +3547,7 @@ define([
         while (defined(pickedResult)) {
             var object = pickedResult.object;
             var position = pickedResult.position;
+            var exclude = pickedResult.exclude;
 
             if (defined(position) && !defined(object)) {
                 result.push(pickedResult);
@@ -3566,7 +3558,7 @@ define([
                 break;
             }
 
-            if (!isExcluded(object, objectsToExclude)) {
+            if (!exclude) {
                 result.push(pickedResult);
                 if (0 >= --limit) {
                     break;
@@ -3645,7 +3637,9 @@ define([
             var object = that.pick(windowPosition, width, height);
             if (defined(object)) {
                 return {
-                    object : object
+                    object : object,
+                    position : undefined,
+                    exclude : false
                 };
             }
         };
@@ -3744,7 +3738,16 @@ define([
         });
     }
 
-    function getRayIntersection(scene, ray, async) {
+    function isExcluded(object, objectsToExclude) {
+        if (!defined(object) || !defined(objectsToExclude) || objectsToExclude.length === 0) {
+            return false;
+        }
+        return (objectsToExclude.indexOf(object) > -1) ||
+               (objectsToExclude.indexOf(object.primitive) > -1) ||
+               (objectsToExclude.indexOf(object.id) > -1);
+    }
+
+    function getRayIntersection(scene, ray, objectsToExclude, async, requirePosition) {
         var context = scene._context;
         var uniformState = context.uniformState;
         var frameState = scene._frameState;
@@ -3798,12 +3801,13 @@ define([
         if (defined(object) || defined(position)) {
             return {
                 object : object,
-                position : position
+                position : position,
+                exclude : (!defined(position) && requirePosition) || isExcluded(object, objectsToExclude)
             };
         }
     }
 
-    function getRayIntersections(scene, ray, limit, objectsToExclude, async) {
+    function getRayIntersections(scene, ray, limit, objectsToExclude, async, requirePosition) {
         //>>includeStart('debug', pragmas.debug);
         Check.defined('ray', ray);
         if (scene._mode !== SceneMode.SCENE3D) {
@@ -3811,20 +3815,20 @@ define([
         }
         //>>includeEnd('debug');
         var pickCallback = function() {
-            return getRayIntersection(scene, ray, async);
+            return getRayIntersection(scene, ray, objectsToExclude, async, requirePosition);
         };
-        return drillPick(limit, pickCallback, objectsToExclude);
+        return drillPick(limit, pickCallback);
     }
 
-    function pickFromRay(scene, ray, objectsToExclude, async) {
-        var results = getRayIntersections(scene, ray, 1, objectsToExclude, async);
+    function pickFromRay(scene, ray, objectsToExclude, async, requirePosition) {
+        var results = getRayIntersections(scene, ray, 1, objectsToExclude, async, requirePosition);
         if (results.length > 0) {
             return results[0];
         }
     }
 
-    function drillPickFromRay(scene, ray, limit, objectsToExclude, async) {
-        return getRayIntersections(scene, ray, limit, objectsToExclude, async);
+    function drillPickFromRay(scene, ray, limit, objectsToExclude, async, requirePosition) {
+        return getRayIntersections(scene, ray, limit, objectsToExclude, async, requirePosition);
     }
 
     /**
@@ -3832,6 +3836,10 @@ define([
      * or <code>undefined</code> if there were no intersections. The intersected object has a <code>primitive</code>
      * property that contains the intersected primitive. Other properties may be set depending on the type of primitive
      * and may be used to further identify the picked object. The ray must be given in world coordinates.
+     * <p>
+     * This function only picks globe tiles and 3D Tiles that are rendered in the current view. Picks all other
+     * primitives regardless of their visibility.
+     * </p>
      *
      * @private
      *
@@ -3842,7 +3850,7 @@ define([
      * @exception {DeveloperError} Ray intersections are only supported in 3D mode.
      */
     Scene.prototype.pickFromRay = function(ray, objectsToExclude) {
-        return pickFromRay(this, ray, objectsToExclude, false);
+        return pickFromRay(this, ray, objectsToExclude, false, false);
     };
 
     /**
@@ -3851,6 +3859,10 @@ define([
      * properties may also be set depending on the type of primitive and may be used to further identify the picked object.
      * The primitives in the list are ordered by first intersection to last intersection. The ray must be given in
      * world coordinates.
+     * <p>
+     * This function only picks globe tiles and 3D Tiles that are rendered in the current view. Picks all other
+     * primitives regardless of their visibility.
+     * </p>
      *
      * @private
      *
@@ -3862,7 +3874,7 @@ define([
      * @exception {DeveloperError} Ray intersections are only supported in 3D mode.
      */
     Scene.prototype.drillPickFromRay = function(ray, limit, objectsToExclude) {
-        return drillPickFromRay(this, ray, limit, objectsToExclude, false);
+        return drillPickFromRay(this, ray, limit, objectsToExclude, false, false);
     };
 
     /**
@@ -3882,7 +3894,7 @@ define([
         ray = Ray.clone(ray);
         objectsToExclude = objectsToExclude.slice();
         return launchAsyncLoader(this, ray, objectsToExclude, function() {
-            return pickFromRay(that, ray, objectsToExclude, true);
+            return pickFromRay(that, ray, objectsToExclude, true, false);
         });
     };
 
@@ -3904,7 +3916,7 @@ define([
         ray = Ray.clone(ray);
         objectsToExclude = objectsToExclude.slice();
         return launchAsyncLoader(this, ray, objectsToExclude, function() {
-            return drillPickFromRay(that, ray, limit, objectsToExclude, true);
+            return drillPickFromRay(that, ray, limit, objectsToExclude, true, false);
         });
     };
 
@@ -3945,7 +3957,7 @@ define([
     function sampleHeightMostDetailed(scene, position, objectsToExclude) {
         var ray = getRayForSampleHeight(scene, position);
         return launchAsyncLoader(scene, ray, objectsToExclude, function() {
-            var pickResult = pickFromRay(scene, ray, objectsToExclude, true);
+            var pickResult = pickFromRay(scene, ray, objectsToExclude, true, true);
             if (defined(pickResult)) {
                 return getHeightFromCartesian(scene, pickResult.position);
             }
@@ -3955,7 +3967,7 @@ define([
     function clampToHeightMostDetailed(scene, cartesian, objectsToExclude) {
         var ray = getRayForClampToHeight(scene, cartesian);
         return launchAsyncLoader(scene, ray, objectsToExclude, function() {
-            var pickResult = pickFromRay(scene, ray, objectsToExclude, true);
+            var pickResult = pickFromRay(scene, ray, objectsToExclude, true, true);
             if (defined(pickResult)) {
                 return pickResult.position;
             }
@@ -3989,7 +4001,7 @@ define([
         }
         //>>includeEnd('debug');
         var ray = getRayForSampleHeight(this, position);
-        var pickResult = pickFromRay(this, ray, objectsToExclude, false);
+        var pickResult = pickFromRay(this, ray, objectsToExclude, false, true);
         if (defined(pickResult)) {
             return getHeightFromCartesian(this, pickResult.position);
         }
@@ -4024,7 +4036,7 @@ define([
         }
         //>>includeEnd('debug');
         var ray = getRayForClampToHeight(this, cartesian);
-        var pickResult = pickFromRay(this, ray, objectsToExclude, false);
+        var pickResult = pickFromRay(this, ray, objectsToExclude, false, true);
         if (defined(pickResult)) {
             return Cartesian3.clone(pickResult.position, result);
         }
@@ -4034,9 +4046,9 @@ define([
      * Initiates an asynchronous {@link Scene#sampleHeight} request using the maximum level of detail for 3D Tilesets
      * regardless of visibility.
      *
-     * @param {Cartographic|Cartographic[]} positions The cartographic position(s) to sample height from.
+     * @param {Cartographic[]} positions The cartographic positions to sample height from.
      * @param {Object[]} [objectsToExclude] A list of primitives, entities, or features to not sample height from.
-     * @returns {Promise.<Number|Number[]>} A promise that resolves to the height(s), or <code>undefined</code> if there was no scene geometry to sample height from.
+     * @returns {Promise.<Number[]>} A promise that resolves to the heights, or <code>undefined</code> if there was no scene geometry to sample height from.
      *
      * @see Scene#sampleHeight
      *
@@ -4051,24 +4063,21 @@ define([
         }
         //>>includeEnd('debug');
         objectsToExclude = defined(objectsToExclude) ? objectsToExclude.slice() : objectsToExclude;
-        positions = isArray(positions) ? positions : [positions];
         var length = positions.length;
         var promises = new Array(length);
         for (var i = 0; i < length; ++i) {
             promises[i] = sampleHeightMostDetailed(this, positions[i], objectsToExclude);
         }
-        return when.all(promises).then(function(heights) {
-            return (length === 1) ? heights[0] : heights;
-        });
+        return when.all(promises);
     };
 
     /**
      * Initiates an asynchronous {@link Scene#clampToHeight} request using the maximum level of detail for 3D Tilesets
      * regardless of visibility.
      *
-     * @param {Cartesian3} cartesians The cartesian positions.
+     * @param {Cartesian3[]} cartesians The cartesian positions.
      * @param {Object[]} [objectsToExclude] A list of primitives, entities, or features to not clamp to.
-     * @returns {Promise.<Cartesian3|Cartesian3[]>} A promise that resolves to the clamped cartesian position(s), or <code>undefined</code> if there was no scene geometry to clamp to.
+     * @returns {Promise.<Cartesian3[]>} A promise that resolves to the clamped cartesian positions, or <code>undefined</code> if there was no scene geometry to clamp to.
      *
      * @see Scene#clampToHeight
      *
@@ -4083,15 +4092,12 @@ define([
         }
         //>>includeEnd('debug');
         objectsToExclude = defined(objectsToExclude) ? objectsToExclude.slice() : objectsToExclude;
-        cartesians = isArray(cartesians) ? cartesians : [cartesians];
         var length = cartesians.length;
         var promises = new Array(length);
         for (var i = 0; i < length; ++i) {
             promises[i] = clampToHeightMostDetailed(this, cartesians[i], objectsToExclude);
         }
-        return when.all(promises).then(function(cartesians) {
-            return (length === 1) ? cartesians[0] : cartesians;
-        });
+        return when.all(promises);
     };
 
     /**
