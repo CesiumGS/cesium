@@ -1,6 +1,7 @@
 define([
     './Cartesian3',
     './Check',
+    './combine',
     './defaultValue',
     './defined',
     './defineProperties',
@@ -10,6 +11,7 @@ define([
 ], function (
     Cartesian3,
     Check,
+    combine,
     defaultValue,
     defined,
     defineProperties,
@@ -100,7 +102,7 @@ define([
 
         var resource = this._url.getDerivedResource({
             url: 'json',
-            queryParameters: Object.assign(this._params, {q: query})
+            queryParameters: combine(this._params, {q: query})
         });
         return resource.fetchJson()
             .then(function (response) {
