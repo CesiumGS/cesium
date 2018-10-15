@@ -286,7 +286,7 @@ define([
      * @param {Number} [options.silhouetteSize=0.0] The size of the silhouette in pixels.
      * @param {ClippingPlaneCollection} [options.clippingPlanes] The {@link ClippingPlaneCollection} used to selectively disable rendering the model.
      * @param {Boolean} [options.dequantizeInShader=true] Determines if a {@link https://github.com/google/draco|Draco} encoded model is dequantized on the GPU. This decreases total memory usage for encoded models.
-     * @param {Number} [options.imageBasedLightingFactor=1.0] Scales the IBL lighting from the earth, sky, atmosphere and star skybox.
+     * @param {Cartesian2} [options.imageBasedLightingFactor=Cartesian2(1.0, 1.0)] Scales diffuse and specular image-based lighting from the earth, sky, atmosphere and star skybox.
      * @param {Color} [options.lightColor] The color and intensity of the sunlight used to shade the model.
      *
      * @see Model.fromGltf
@@ -1116,7 +1116,7 @@ define([
         /**
          * The color and intensity of the sunlight used to shade the model.
          * <p>
-         * For example, disabling additional light sources by setting <code>model.imageBasedLightingFactor = 0.0</code> will make the
+         * For example, disabling additional light sources by setting <code>model.imageBasedLightingFactor = new Cesium.Cartesian2(0.0, 0.0)</code> will make the
          * model much darker. Here, increasing the intensity of the light source will make the model brighter.
          * </p>
          *
