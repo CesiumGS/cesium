@@ -3957,8 +3957,8 @@ define([
         return cartographic.height;
     }
 
-    function sampleHeightMostDetailed(scene, position, objectsToExclude) {
-        var ray = getRayForSampleHeight(scene, position);
+    function sampleHeightMostDetailed(scene, cartographic, objectsToExclude) {
+        var ray = getRayForSampleHeight(scene, cartographic);
         return launchAsyncLoader(scene, ray, objectsToExclude, function() {
             var pickResult = pickFromRay(scene, ray, objectsToExclude, true, true);
             if (defined(pickResult)) {
@@ -3967,12 +3967,12 @@ define([
         });
     }
 
-    function clampToHeightMostDetailed(scene, cartesian, objectsToExclude) {
+    function clampToHeightMostDetailed(scene, cartesian, objectsToExclude, result) {
         var ray = getRayForClampToHeight(scene, cartesian);
         return launchAsyncLoader(scene, ray, objectsToExclude, function() {
             var pickResult = pickFromRay(scene, ray, objectsToExclude, true, true);
             if (defined(pickResult)) {
-                return pickResult.position;
+                return Cartesian3.clone(pickResult.position, result);
             }
         });
     }
@@ -4046,12 +4046,14 @@ define([
     };
 
     /**
-     * Initiates an asynchronous {@link Scene#sampleHeight} request using the maximum level of detail for 3D Tilesets
-     * regardless of visibility.
+     * Initiates an asynchronous {@link Scene#sampleHeight} query for an array of {@link Cartographic} positions
+     * using the maximum level of detail for 3D Tilesets in the scene. Returns a promise that is resolved when
+     * the query completes. Each point height is modified in place. If a height cannot be determined because no
+     * geometry can be sampled at that location, or another error occurs, the height is set to undefined.
      *
-     * @param {Cartographic[]} positions The cartographic positions to sample height from.
+     * @param {Cartographic[]} positions The cartographic positions to update with sampled heights.
      * @param {Object[]} [objectsToExclude] A list of primitives, entities, or features to not sample height from.
-     * @returns {Promise.<Number[]>} A promise that resolves to the heights, or <code>undefined</code> if there was no scene geometry to sample height from.
+     * @returns {Promise.<Number[]>} A promise that resolves to the provided list of positions when the query has completed.
      *
      * @see Scene#sampleHeight
      *
@@ -4066,21 +4068,29 @@ define([
         }
         //>>includeEnd('debug');
         objectsToExclude = defined(objectsToExclude) ? objectsToExclude.slice() : objectsToExclude;
+        var i;
         var length = positions.length;
         var promises = new Array(length);
-        for (var i = 0; i < length; ++i) {
+        for (i = 0; i < length; ++i) {
             promises[i] = sampleHeightMostDetailed(this, positions[i], objectsToExclude);
         }
-        return when.all(promises);
+        return when.all(promises).then(function(heights) {
+            for (i = 0; i < length; ++i) {
+                positions[i].height = heights[i];
+            }
+            return positions;
+        });
     };
 
     /**
-     * Initiates an asynchronous {@link Scene#clampToHeight} request using the maximum level of detail for 3D Tilesets
-     * regardless of visibility.
+     * Initiates an asynchronous {@link Scene#clampToHeight} query for an array of {@link Cartesian3} positions
+     * using the maximum level of detail for 3D Tilesets in the scene. Returns a promise that is resolved when
+     * the query completes. Each position is modified in place. If a position cannot be clamped because no geometry
+     * can be sampled at that location, or another error occurs, the element in the array is set to undefined.
      *
-     * @param {Cartesian3[]} cartesians The cartesian positions.
+     * @param {Cartesian3[]} cartesians The cartesian positions to update with clamped positions.
      * @param {Object[]} [objectsToExclude] A list of primitives, entities, or features to not clamp to.
-     * @returns {Promise.<Cartesian3[]>} A promise that resolves to the clamped cartesian positions, or <code>undefined</code> if there was no scene geometry to clamp to.
+     * @returns {Promise.<Cartesian3[]>} A promise that resolves to the provided list of positions when the query has completed.
      *
      * @see Scene#clampToHeight
      *
@@ -4089,18 +4099,24 @@ define([
      */
     Scene.prototype.clampToHeightMostDetailed = function(cartesians, objectsToExclude) {
         //>>includeStart('debug', pragmas.debug);
-        Check.defined('cartesian', cartesians);
+        Check.defined('cartesians', cartesians);
         if (!this.clampToHeightSupported) {
             throw new DeveloperError('clampToHeightMostDetailed required depth texture support. Check clampToHeightSupported.');
         }
         //>>includeEnd('debug');
         objectsToExclude = defined(objectsToExclude) ? objectsToExclude.slice() : objectsToExclude;
+        var i;
         var length = cartesians.length;
         var promises = new Array(length);
-        for (var i = 0; i < length; ++i) {
-            promises[i] = clampToHeightMostDetailed(this, cartesians[i], objectsToExclude);
+        for (i = 0; i < length; ++i) {
+            promises[i] = clampToHeightMostDetailed(this, cartesians[i], objectsToExclude, cartesians[i]);
         }
-        return when.all(promises);
+        return when.all(promises).then(function(clampedCartesians) {
+            for (i = 0; i < length; ++i) {
+                cartesians[i] = clampedCartesians[i];
+            }
+            return cartesians;
+        });
     };
 
     /**
