@@ -304,7 +304,7 @@ defineSuite([
                 rectangle : Rectangle.fromDegrees(-50.0, -50.0, 50.0, 50.0),
                 granularity : CesiumMath.toRadians(20.0),
                 vertexFormat : EllipsoidSurfaceAppearance.VERTEX_FORMAT,
-                height : 1.0
+                height : 20.0
             });
 
             var instance1 = new GeometryInstance({
@@ -391,7 +391,7 @@ defineSuite([
                 rectangle : Rectangle.fromDegrees(-50.0, -50.0, 50.0, 50.0),
                 granularity : CesiumMath.toRadians(20.0),
                 vertexFormat : EllipsoidSurfaceAppearance.VERTEX_FORMAT,
-                height : 1.0
+                height : 20.0
             });
 
             var instance1 = new GeometryInstance({
@@ -471,6 +471,9 @@ defineSuite([
         });
 
         it('picks the globe', function() {
+            if (!scene.context.depthTexture) {
+                return;
+            }
             return createGlobe().then(function() {
                 expect(scene).toPickFromRayAndCall(function(result) {
                     expect(result.object).toBeUndefined();
