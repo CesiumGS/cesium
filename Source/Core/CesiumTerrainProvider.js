@@ -3,6 +3,7 @@ define([
         '../ThirdParty/when',
         './AttributeCompression',
         './BoundingSphere',
+        './Cartesian2',
         './Cartesian3',
         './Credit',
         './defaultValue',
@@ -27,6 +28,7 @@ define([
         when,
         AttributeCompression,
         BoundingSphere,
+        Cartesian2,
         Cartesian3,
         Credit,
         defaultValue,
@@ -343,12 +345,14 @@ define([
                     }
 
                     var length = overallAvailability.length;
-                    var availability = that._availability = new TileAvailability(that._tilingScheme, overallMaxZoom);
-                    for (var level = 0; level < length; ++level) {
-                        var levelRanges = overallAvailability[level];
-                        for (var i = 0; i < levelRanges.length; ++i) {
-                            var range = levelRanges[i];
-                            availability.addAvailableTileRange(level, range[0], range[1], range[2], range[3]);
+                    if (length > 0) {
+                        var availability = that._availability = new TileAvailability(that._tilingScheme, overallMaxZoom);
+                        for (var level = 0; level < length; ++level) {
+                            var levelRanges = overallAvailability[level];
+                            for (var i = 0; i < levelRanges.length; ++i) {
+                                var range = levelRanges[i];
+                                availability.addAvailableTileRange(level, range[0], range[1], range[2], range[3]);
+                            }
                         }
                     }
 
@@ -877,6 +881,26 @@ define([
         },
 
         /**
+         * Gets a value indicating whether or not the requested tiles include a BVH.
+         * This function should not be called before {@link CesiumTerrainProvider#ready} returns true.
+         * @memberof CesiumTerrainProvider.prototype
+         * @type {Boolean}
+         * @exception {DeveloperError} This property must not be called before {@link CesiumTerrainProvider#ready}
+         */
+        hasBvh : {
+            get : function() {
+                //>>includeStart('debug', pragmas.debug)
+                if (!this._ready) {
+                    throw new DeveloperError('hasBvh must not be called before the terrain provider is ready.');
+                }
+                //>>includeEnd('debug');
+
+                // returns true if we can request vertex normals from the server
+                return this._hasBvh && this._requestBvh;
+            }
+        },
+
+        /**
          * Boolean flag that indicates if the client should request vertex normals from the server.
          * Vertex normals data is appended to the standard tile mesh data only if the client requests the vertex normals and
          * if the server provides vertex normals.
@@ -899,6 +923,19 @@ define([
         requestWaterMask : {
             get : function() {
                 return this._requestWaterMask;
+            }
+        },
+
+        /**
+         * Boolean flag that indicates if the client should request a BVH from the server.
+         * BVH data is appended to the standard tile mesh data only if the client requests the BVH and
+         * if the server provides a BVH.
+         * @memberof CesiumTerrainProvider.prototype
+         * @type {Boolean}
+         */
+        requestBvh : {
+            get : function() {
+                return this._requestBvh;
             }
         },
 
@@ -932,6 +969,40 @@ define([
         return this._levelZeroMaximumGeometricError / (1 << level);
     };
 
+    var scratchTileXY = new Cartesian2();
+    /**
+     * Loads the availability for the position if not already loaded.
+     *
+     * @param {Cartographic} position The position to make sure availability is loaded for.
+     * @returns {undefined|Promise<>} A promise that resolves when the availability is loaded. Undefined if availability isn't supported.
+     */
+    CesiumTerrainProvider.prototype.loadAvailability = function(position) {
+        if (!defined(this._availability)) {
+            return undefined;
+        }
+
+        // Try and load the max level tile at the position. Even if its not there we will
+        //  still end up loading all the BVH tiles below it and its max level of availability.
+        var level = this.availability._maximumLevel;
+        this._tilingScheme.positionToTileXY(position, level, scratchTileXY);
+
+        return when(loadTileAvailability(this, scratchTileXY.x, scratchTileXY.y, level));
+    };
+
+    function loadTileAvailability(provider, x, y, level) {
+        if (provider._availability.isTileAvailable(level, x, y)) {
+            // If the tile is listed as available, then we are done
+            return true;
+        }
+        if (!provider._hasBvh) {
+            // If we don't have any layers with the bvh extension then we don't have this tile
+            return false;
+        }
+
+        // Load any tiles we need to figure out availability
+        return checkAncestorsLayers(provider, x, y, level, 0);
+    }
+
     /**
      * Determines whether data for a tile is available to be loaded.
      *
@@ -945,20 +1016,10 @@ define([
             return undefined;
         }
 
-        if (this._availability.isTileAvailable(level, x, y)) {
-            // If the tile is listed as available, then we are done
-            return true;
-        }
-        if (!this._hasBvh) {
-            // If we don't have any layers with the bvh extension then we don't have this tile
-            return false;
-        }
+        var result = loadTileAvailability(this, x, y, level);
 
-        // Load any tiles we need to figure out availability
-        checkAncestorsLayers(this, x, y, level, 0);
-
-        // Return false for now
-        return false;
+        // If we got a result, return it. If it was a promise return false for now.
+        return (typeof result === 'boolean') ? result : false;
     };
 
     function checkAncestorsLayers(provider, x, y, level, index) {

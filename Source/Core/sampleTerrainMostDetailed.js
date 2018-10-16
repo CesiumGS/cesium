@@ -43,19 +43,39 @@ define([
         }
         //>>includeEnd('debug');
 
-        return terrainProvider.readyPromise.then(function() {
-            var byLevel = [];
+        return terrainProvider.readyPromise
+            .then(function() {
+                var byLevel = [];
 
-            var availability = terrainProvider.availability;
+                var availability = terrainProvider.availability;
 
-            //>>includeStart('debug', pragmas.debug);
-            if (!defined(availability)) {
-                throw new DeveloperError('sampleTerrainMostDetailed requires a terrain provider that has tile availability.');
-            }
-            //>>includeEnd('debug');
+                //>>includeStart('debug', pragmas.debug);
+                if (!defined(availability)) {
+                    throw new DeveloperError('sampleTerrainMostDetailed requires a terrain provider that has tile availability.');
+                }
+                //>>includeEnd('debug');
 
-            for (var i = 0; i < positions.length; ++i) {
-                var position = positions[i];
+                var promises = [];
+                for (var i = 0; i < positions.length; ++i) {
+                    promises.push(loadAvailability(terrainProvider, positions[i], availability, byLevel));
+                }
+
+                return when.all(promises)
+                    .then(function() {
+                        return when.all(byLevel.map(function(positionsAtLevel, index) {
+                            if (defined(positionsAtLevel)) {
+                                return sampleTerrain(terrainProvider, index, positionsAtLevel);
+                            }
+                        }));
+                    }).then(function() {
+                        return positions;
+                    });
+        });
+    }
+
+    function loadAvailability(terrainProvider, position, availability, byLevel) {
+        return terrainProvider.loadAvailability(position)
+            .then(function() {
                 var maxLevel = availability.computeMaximumLevelAtPosition(position);
 
                 var atLevel = byLevel[maxLevel];
@@ -63,16 +83,7 @@ define([
                     byLevel[maxLevel] = atLevel = [];
                 }
                 atLevel.push(position);
-            }
-
-            return when.all(byLevel.map(function(positionsAtLevel, index) {
-                if (defined(positionsAtLevel)) {
-                    return sampleTerrain(terrainProvider, index, positionsAtLevel);
-                }
-            })).then(function() {
-                return positions;
             });
-        });
     }
 
     return sampleTerrainMostDetailed;
