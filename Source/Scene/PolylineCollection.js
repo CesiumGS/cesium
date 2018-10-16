@@ -1128,7 +1128,7 @@ define([
 
     PolylineCollection.prototype._updatePolyline = function(polyline, propertyChanged) {
         this._polylinesUpdated = true;
-        if (this._polylinesToUpdate.indexOf(polyline) === -1) {
+        if (!polyline._dirty) {
             this._polylinesToUpdate.push(polyline);
         }
         ++this._propertiesChanged[propertyChanged];
