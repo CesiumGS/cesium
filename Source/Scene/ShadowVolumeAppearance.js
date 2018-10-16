@@ -403,50 +403,41 @@ define([
         });
     }
 
-    var cartographicScratch = new Cartographic();
-    var cornerScratch = new Cartesian3();
-    var northWestScratch = new Cartesian3();
-    var southEastScratch = new Cartesian3();
+    var cornerScratch = new Cartographic();
+    var topLeftScratch = new Cartographic();
+    var bottomRightScratch = new Cartographic();
+    var projectedExtentsScratch = new Rectangle();
     var highLowScratch = {high : 0.0, low : 0.0};
     function add2DTextureCoordinateAttributes(rectangle, projection, attributes) {
         // Compute corner positions in double precision
-        var carto = cartographicScratch;
-        carto.height = 0.0;
+        var projectedExtents = Rectangle.approximateProjectedExtents(rectangle, projection, projectedExtentsScratch);
 
-        carto.longitude = rectangle.west;
-        carto.latitude = rectangle.south;
-
-        var southWestCorner = projection.project(carto, cornerScratch);
-
-        carto.latitude = rectangle.north;
-        var northWest = projection.project(carto, northWestScratch);
-
-        carto.longitude = rectangle.east;
-        carto.latitude = rectangle.south;
-        var southEast = projection.project(carto, southEastScratch);
+        var bottomLeftCorner = Rectangle.southwest(projectedExtents, cornerScratch);
+        var topLeft = Rectangle.northwest(projectedExtents, topLeftScratch);
+        var bottomRight = Rectangle.southeast(projectedExtents, bottomRightScratch);
 
         // Since these positions are all in the 2D plane, there's a lot of zeros
         // and a lot of repetition. So we only need to encode 4 values.
         // Encode:
-        // x: x value for southWestCorner
-        // y: y value for southWestCorner
-        // z: y value for northWest
-        // w: x value for southEast
+        // x: x value for bottomLeftCorner
+        // y: y value for bottomLeftCorner
+        // z: y value for topLeft
+        // w: x value for bottomRight
         var valuesHigh = [0, 0, 0, 0];
         var valuesLow = [0, 0, 0, 0];
-        var encoded = EncodedCartesian3.encode(southWestCorner.x, highLowScratch);
+        var encoded = EncodedCartesian3.encode(bottomLeftCorner.longitude, highLowScratch);
         valuesHigh[0] = encoded.high;
         valuesLow[0] = encoded.low;
 
-        encoded = EncodedCartesian3.encode(southWestCorner.y, highLowScratch);
+        encoded = EncodedCartesian3.encode(bottomLeftCorner.latitude, highLowScratch);
         valuesHigh[1] = encoded.high;
         valuesLow[1] = encoded.low;
 
-        encoded = EncodedCartesian3.encode(northWest.y, highLowScratch);
+        encoded = EncodedCartesian3.encode(topLeft.latitude, highLowScratch);
         valuesHigh[2] = encoded.high;
         valuesLow[2] = encoded.low;
 
-        encoded = EncodedCartesian3.encode(southEast.x, highLowScratch);
+        encoded = EncodedCartesian3.encode(bottomRight.longitude, highLowScratch);
         valuesHigh[3] = encoded.high;
         valuesLow[3] = encoded.low;
 
@@ -627,6 +618,7 @@ define([
         return attributes;
     };
 
+    var cartographicScratch = new Cartographic();
     var spherePointScratch = new Cartesian3();
     function latLongToSpherical(latitude, longitude, ellipsoid, result) {
         var cartographic = cartographicScratch;

@@ -34,7 +34,7 @@ define([
     var defaultDistanceDisplayCondition = new DistanceDisplayCondition();
 
     // Encapsulates a Primitive and all the entities that it represents.
-    function Batch(primitives, appearanceType, materialProperty, usingSphericalTextureCoordinates, zIndex) {
+    function Batch(primitives, appearanceType, materialProperty, usingSphericalTextureCoordinates, zIndex, mapProjection) {
         this.primitives = primitives; // scene level primitive collection
         this.appearanceType = appearanceType;
         this.materialProperty = materialProperty;
@@ -52,7 +52,7 @@ define([
         this.showsUpdated = new AssociativeArray();
         this.usingSphericalTextureCoordinates = usingSphericalTextureCoordinates;
         this.zIndex = zIndex;
-        this.rectangleCollisionCheck = new RectangleCollisionChecker();
+        this.rectangleCollisionCheck = new RectangleCollisionChecker(mapProjection);
     }
 
     Batch.prototype.onMaterialChanged = function() {
@@ -265,10 +265,11 @@ define([
     /**
      * @private
      */
-    function StaticGroundGeometryPerMaterialBatch(primitives, appearanceType) {
+    function StaticGroundGeometryPerMaterialBatch(primitives, appearanceType, mapProjection) {
         this._items = [];
         this._primitives = primitives;
         this._appearanceType = appearanceType;
+        this._mapProjection = mapProjection;
     }
 
     StaticGroundGeometryPerMaterialBatch.prototype.add = function(time, updater) {
@@ -292,7 +293,7 @@ define([
             }
         }
         // If a compatible batch wasn't found, create a new batch.
-        var batch = new Batch(this._primitives, this._appearanceType, updater.fillMaterialProperty, usingSphericalTextureCoordinates, zIndex);
+        var batch = new Batch(this._primitives, this._appearanceType, updater.fillMaterialProperty, usingSphericalTextureCoordinates, zIndex, this._mapProjection);
         batch.add(time, updater, geometryInstance);
         items.push(batch);
     };

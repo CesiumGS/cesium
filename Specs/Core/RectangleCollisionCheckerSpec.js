@@ -1,9 +1,11 @@
 defineSuite([
         'Core/RectangleCollisionChecker',
-        'Core/Rectangle'
+        'Core/Rectangle',
+        'Core/GeographicProjection'
     ], function(
         RectangleCollisionChecker,
-        Rectangle) {
+        Rectangle,
+        GeographicProjection) {
     'use strict';
 
     var testRectangle1 = new Rectangle(0.0, 0.0, 1.0, 1.0);
@@ -11,7 +13,7 @@ defineSuite([
     var testRectangle3 = new Rectangle(1.1, 1.1, 1.2, 1.2);
 
     it('Checks for collisions with contained rectangles', function() {
-        var collisionChecker = new RectangleCollisionChecker();
+        var collisionChecker = new RectangleCollisionChecker(new GeographicProjection());
         collisionChecker.insert('test1', testRectangle1);
 
         expect(collisionChecker.collides(testRectangle2)).toBe(false);
@@ -21,7 +23,7 @@ defineSuite([
     });
 
     it('removes rectangles', function() {
-        var collisionChecker = new RectangleCollisionChecker();
+        var collisionChecker = new RectangleCollisionChecker(new GeographicProjection());
         collisionChecker.insert('test1', testRectangle1);
 
         collisionChecker.insert('test3', testRectangle3);

@@ -175,13 +175,13 @@ define([
         if (supportsMaterialsforEntitiesOnTerrain) {
             // Culling, phong shading only supported for ClassificationType.TERRAIN at the moment because
             // tileset depth information not yet available.
-            groundColorBatches[ClassificationType.TERRAIN] = new StaticGroundGeometryPerMaterialBatch(groundPrimitives, PerInstanceColorAppearance);
+            groundColorBatches[ClassificationType.TERRAIN] = new StaticGroundGeometryPerMaterialBatch(groundPrimitives, PerInstanceColorAppearance, scene.mapProjection);
             for (i = 0; i < numberOfClassificationTypes; ++i) {
                 if (i !== ClassificationType.TERRAIN) {
                     groundColorBatches[i] = new StaticGroundGeometryColorBatch(groundPrimitives, i);
                 }
             }
-            groundMaterialBatches[0] = new StaticGroundGeometryPerMaterialBatch(groundPrimitives, MaterialAppearance);
+            groundMaterialBatches[0] = new StaticGroundGeometryPerMaterialBatch(groundPrimitives, MaterialAppearance, scene.mapProjection);
             this._groundTerrainMaterialBatch = groundMaterialBatches[0];
         } else {
             for (i = 0; i < numberOfClassificationTypes; ++i) {
