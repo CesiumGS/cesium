@@ -260,7 +260,7 @@ define([
             // The root tile may be culled by the children bounds optimization in which
             // case this tile should also be culled.
             var child = tile.children[0];
-            updateTileVisibility(tileset, child, frameState);
+            updateTileVisibility(tileset, child, statistics, frameState);
             tile._visible = child._visible;
             return;
         }
