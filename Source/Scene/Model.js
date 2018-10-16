@@ -436,6 +436,17 @@ define([
         this._id = options.id;
 
         /**
+         * The sun's luminance at the zenith in kilo candela per meter squared to use for this model's procedural environment map.
+         * This is used when {@link Model#specularEnvironmentMaps} and {@link Model#sphericalHarmonicCoefficients} are not defined.
+         *
+         * @type Number
+         *
+         * @default 10.0
+         *
+         */
+        this.luminanceAtZenith = defaultValue(options.luminanceAtZenith, 10.0);
+
+        /**
          * Returns the height reference of the model
          *
          * @memberof Model.prototype
@@ -2003,6 +2014,8 @@ define([
             drawFS = '#define SPECULAR_IBL \n' + 'uniform sampler2D gltf_specularMap; \n' + 'uniform vec2 gltf_specularMapSize; \n' + 'uniform float gltf_maxSpecularLOD; \n' + drawFS;
         }
 
+        drawFS = 'uniform float gltf_luminanceAtZenith;\n' + drawFS;
+
         createAttributesAndProgram(programId, techniqueId, drawFS, drawVS, model, context);
     }
 
@@ -2931,6 +2944,12 @@ define([
         };
     }
 
+    function createLuminanceAtZenithFunction(model) {
+        return function() {
+            return model.luminanceAtZenith;
+        };
+    }
+
     function createSphericalHarmonicCoefficientsFunction(model) {
         return function() {
             return model._sphericalHarmonicCoefficients;
@@ -3051,7 +3070,8 @@ define([
                 gltf_sphericalHarmonicCoefficients : createSphericalHarmonicCoefficientsFunction(model),
                 gltf_specularMap : createSpecularEnvironmentMapFunction(model),
                 gltf_specularMapSize : createSpecularEnvironmentMapSizeFunction(model),
-                gltf_maxSpecularLOD : createSpecularEnvironmentMapLOD(model)
+                gltf_maxSpecularLOD : createSpecularEnvironmentMapLOD(model),
+                gltf_luminanceAtZenith : createLuminanceAtZenithFunction(model)
             });
 
             // Allow callback to modify the uniformMap
