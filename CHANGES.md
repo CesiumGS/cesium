@@ -9,6 +9,7 @@ Change Log
 
 ##### Fixes :wrench:
 * Fixed an issue where `pickPosition` would return incorrect results when called after `sampleHeight` or `clampToHeight`. [#7113](https://github.com/AnalyticalGraphicsInc/cesium/pull/7113)
+* Fixed a crash when using `BingMapsGeocoderService` [#7143](https://github.com/AnalyticalGraphicsInc/cesium/issues/7143)
 
 ### 1.50 - 2018-10-01
 
