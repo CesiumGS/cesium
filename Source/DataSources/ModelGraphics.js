@@ -278,7 +278,7 @@ define([
         imageBasedLightingFactor : createPropertyDescriptor('imageBasedLightingFactor'),
 
         /**
-         * A property specifying the {@link Color} of the light source when shading the model.
+         * A property specifying the {@link Cartesian3} color of the light source when shading the model.
          * @memberOf ModelGraphics.prototype
          * @type {Property}
          */

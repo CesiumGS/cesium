@@ -287,7 +287,7 @@ define([
      * @param {ClippingPlaneCollection} [options.clippingPlanes] The {@link ClippingPlaneCollection} used to selectively disable rendering the model.
      * @param {Boolean} [options.dequantizeInShader=true] Determines if a {@link https://github.com/google/draco|Draco} encoded model is dequantized on the GPU. This decreases total memory usage for encoded models.
      * @param {Cartesian2} [options.imageBasedLightingFactor=Cartesian2(1.0, 1.0)] Scales diffuse and specular image-based lighting from the earth, sky, atmosphere and star skybox.
-     * @param {Color} [options.lightColor] The color and intensity of the sunlight used to shade the model.
+     * @param {Cartesian3} [options.lightColor] The color and intensity of the sunlight used to shade the model.
      *
      * @see Model.fromGltf
      *
@@ -665,7 +665,7 @@ define([
 
         this._imageBasedLightingFactor = new Cartesian2(1.0, 1.0);
         Cartesian2.clone(options.imageBasedLightingFactor, this._imageBasedLightingFactor);
-        this._lightColor = Color.clone(options.lightColor);
+        this._lightColor = Cartesian3.clone(options.lightColor);
         this._regenerateShaders = false;
     }
 
@@ -1122,7 +1122,7 @@ define([
          *
          * @memberof Model.prototype
          *
-         * @type {Color}
+         * @type {Cartesian3}
          * @default undefined
          */
         lightColor : {
@@ -1131,11 +1131,11 @@ define([
             },
             set : function(value) {
                 var lightColor = this._lightColor;
-                if (value === lightColor || Color.equals(value, lightColor)) {
+                if (value === lightColor || Cartesian3.equals(value, lightColor)) {
                     return;
                 }
                 this._regenerateShaders = this._regenerateShaders || (defined(lightColor) && !defined(value)) || (defined(value) && !defined(lightColor));
-                this._lightColor = Color.clone(value, lightColor);
+                this._lightColor = Cartesian3.clone(value, lightColor);
             }
         }
     });

@@ -116,7 +116,7 @@ define([
      * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid determining the size and shape of the globe.
      * @param {Object} [options.pointCloudShading] Options for constructing a {@link PointCloudShading} object to control point attenuation based on geometric error and lighting.
      * @param {Cartesian2} [options.imageBasedLightingFactor=new Cartesian2(1.0, 1.0)] Scales the diffuse and specular image-based lighting from the earth, sky, atmosphere and star skybox.
-     * @param {Color} [options.lightColor] The color and intensity of the sunlight used to shade models.
+     * @param {Cartesian3} [options.lightColor] The color and intensity of the sunlight used to shade models.
      * @param {Boolean} [options.debugFreezeFrame=false] For debugging only. Determines if only the tiles from last frame should be used for rendering.
      * @param {Boolean} [options.debugColorizeTiles=false] For debugging only. When true, assigns a random color to each tile.
      * @param {Boolean} [options.debugWireframe=false] For debugging only. When true, render's each tile's content as a wireframe.
@@ -581,7 +581,7 @@ define([
          * model much darker. Here, increasing the intensity of the light source will make the model brighter.
          * </p>
          *
-         * @type {Color}
+         * @type {Cartesian3}
          * @default undefined
          */
         this.lightColor = options.lightColor;
