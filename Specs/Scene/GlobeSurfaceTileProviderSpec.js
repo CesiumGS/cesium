@@ -90,12 +90,13 @@ defineSuite([
         });
     }
 
+    var cameraDestination = new Rectangle(0.0001, 0.0001, 0.0030, 0.0030);
     function switchViewMode(mode, projection) {
         scene.mode = mode;
         scene.frameState.mapProjection = projection;
         scene.camera.update(scene.mode);
         scene.camera.setView({
-            destination : new Rectangle(0.0001, 0.0001, 0.0030, 0.0030)
+            destination : cameraDestination
         });
     }
 
@@ -558,6 +559,34 @@ defineSuite([
             }
 
             expect(tileCommandCount).toBeGreaterThan(0);
+        });
+    });
+
+    it('renders imagery cutout', function() {
+        expect(scene).toRender([0, 0, 0, 255]);
+
+        var layer = scene.imageryLayers.addImageryProvider(new SingleTileImageryProvider({
+            url : 'Data/Images/Red16x16.png'
+        }));
+        layer.cutoutRectangle = cameraDestination;
+
+        switchViewMode(SceneMode.SCENE3D, new GeographicProjection(Ellipsoid.WGS84));
+
+        var baseColor;
+        return updateUntilDone(scene.globe).then(function() {
+            expect(scene).toRenderAndCall(function(rgba) {
+                baseColor = rgba;
+                expect(rgba).not.toEqual([0, 0, 0, 255]);
+            });
+            layer.cutoutRectangle = undefined;
+
+            return updateUntilDone(scene.globe);
+        })
+        .then(function() {
+            expect(scene).toRenderAndCall(function(rgba) {
+                expect(rgba).not.toEqual(baseColor);
+                expect(rgba).not.toEqual([0, 0, 0, 255]);
+            });
         });
     });
 
