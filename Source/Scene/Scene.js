@@ -3692,7 +3692,6 @@ define([
 
         scene._view = scene._defaultView;
         context.endFrame();
-        callAfterRenderFunctions(scene);
 
         if (defined(object) || defined(position)) {
             return {
