@@ -959,6 +959,9 @@ define([
             u_dayTextureSplit : function() {
                 return this.properties.dayTextureSplit;
             },
+            u_dayTextureCutoutRectangles : function() {
+                return this.properties.dayTextureCutoutRectangles;
+            },
             u_clippingPlanes : function() {
                 var clippingPlanes = globeSurfaceTileProvider._clippingPlanes;
                 if (defined(clippingPlanes) && defined(clippingPlanes.texture)) {
@@ -1012,6 +1015,7 @@ define([
                 dayTextureSaturation : [],
                 dayTextureOneOverGamma : [],
                 dayTextureSplit : [],
+                dayTextureCutoutRectangles : [],
                 dayIntensity : 0.0,
 
                 southAndNorthLatitude : new Cartesian2(),
@@ -1170,6 +1174,7 @@ define([
         enableClippingPlanes : undefined,
         clippingPlanes : undefined,
         clippedByBoundaries : undefined,
+        hasImageryLayerCutout : undefined,
         colorCorrect : undefined
     };
 
@@ -1402,6 +1407,7 @@ define([
             var applyGamma = false;
             var applyAlpha = false;
             var applySplit = false;
+            var applyCutout = false;
 
             while (numberOfDayTextures < maxTextures && imageryIndex < imageryLen) {
                 var tileImagery = tileImageryCollection[imageryIndex];
@@ -1462,6 +1468,24 @@ define([
                 uniformMapProperties.dayTextureSplit[numberOfDayTextures] = imageryLayer.splitDirection;
                 applySplit = applySplit || uniformMapProperties.dayTextureSplit[numberOfDayTextures] !== 0.0;
 
+                // Update cutout rectangle
+                var dayTextureCutoutRectangle = uniformMapProperties.dayTextureCutoutRectangles[numberOfDayTextures];
+                if (!defined(dayTextureCutoutRectangle)) {
+                    dayTextureCutoutRectangle = uniformMapProperties.dayTextureCutoutRectangles[numberOfDayTextures] = new Cartesian4();
+                }
+
+                Cartesian4.clone(Cartesian4.ZERO, dayTextureCutoutRectangle);
+                if (defined(imageryLayer.cutoutRectangle)) {
+                    var cutoutRectangle = clipRectangleAntimeridian(cartographicTileRectangle, imageryLayer.cutoutRectangle);
+                    var intersection = Rectangle.simpleIntersection(cutoutRectangle, cartographicTileRectangle, rectangleIntersectionScratch);
+                    applyCutout = defined(intersection) || applyCutout;
+
+                    dayTextureCutoutRectangle.x = (cutoutRectangle.west - cartographicTileRectangle.west) * inverseTileWidth;
+                    dayTextureCutoutRectangle.y = (cutoutRectangle.south - cartographicTileRectangle.south) * inverseTileHeight;
+                    dayTextureCutoutRectangle.z = (cutoutRectangle.east - cartographicTileRectangle.west) * inverseTileWidth;
+                    dayTextureCutoutRectangle.w = (cutoutRectangle.north - cartographicTileRectangle.south) * inverseTileHeight;
+                }
+
                 if (defined(imagery.credits)) {
                     var credits = imagery.credits;
                     for (var creditIndex = 0, creditLength = credits.length; creditIndex < creditLength; ++creditIndex) {
@@ -1505,6 +1529,7 @@ define([
             surfaceShaderSetOptions.enableFog = applyFog;
             surfaceShaderSetOptions.enableClippingPlanes = clippingPlanesEnabled;
             surfaceShaderSetOptions.clippingPlanes = clippingPlanes;
+            surfaceShaderSetOptions.hasImageryLayerCutout = applyCutout;
             surfaceShaderSetOptions.colorCorrect = colorCorrect;
 
             command.shaderProgram = tileProvider._surfaceShaderSet.getShaderProgram(surfaceShaderSetOptions);
