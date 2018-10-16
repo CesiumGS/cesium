@@ -60,6 +60,7 @@ define([
         this.hasBvh = layer.hasBvh;
         this.bvhLevels = layer.bvhLevels;
         this.littleEndianExtensionSize = layer.littleEndianExtensionSize;
+        this.bvhLoaded = layer.bvhLoaded;
     }
 
     /**
@@ -233,35 +234,7 @@ define([
 
             var maxZoom = data.maxzoom;
             overallMaxZoom = Math.max(overallMaxZoom, maxZoom);
-            var availableTiles = data.available;
-            var availability;
-            var hasAvailability = false;
             var bvhLoaded; // Keeps track of which BVH tiles were loaded
-            if (defined(availableTiles)) {
-                availability = new TileAvailability(that._tilingScheme, availableTiles.length);
-                hasAvailability = true;
-                for (var level = 0; level < availableTiles.length; ++level) {
-                    var rangesAtLevel = availableTiles[level];
-                    var yTiles = that._tilingScheme.getNumberOfYTilesAtLevel(level);
-                    if (!defined(overallAvailability[level])) {
-                        overallAvailability[level] = [];
-                    }
-
-                    for (var rangeIndex = 0; rangeIndex < rangesAtLevel.length; ++rangeIndex) {
-                        var range = rangesAtLevel[rangeIndex];
-                        var yStart = yTiles - range.endY - 1;
-                        var yEnd = yTiles - range.startY - 1;
-                        overallAvailability[level].push([range.startX, yStart, range.endX, yEnd]);
-                        availability.addAvailableTileRange(level, range.startX, yStart, range.endX, yEnd);
-                    }
-                }
-            } else {
-                availability = new TileAvailability(that._tilingScheme, maxZoom);
-                overallAvailability[0] = [
-                    [0, 0, 1, 0]
-                ];
-                availability.addAvailableTileRange(0, 0, 0, 1, 0);
-            }
 
             // The vertex normals defined in the 'octvertexnormals' extension is identical to the original
             // contents of the original 'vertexnormals' extension.  'vertexnormals' extension is now
@@ -281,6 +254,35 @@ define([
             if (defined(data.extensions) && data.extensions.indexOf('bvh') !== -1) {
                 hasBvh = true;
                 bvhLoaded = new TileAvailability(that._tilingScheme, maxZoom);
+            }
+
+            var availableTiles = data.available;
+            var availability;
+            var hasAvailability = false;
+            if (defined(availableTiles)) {
+                availability = new TileAvailability(that._tilingScheme, availableTiles.length);
+                hasAvailability = true;
+                for (var level = 0; level < availableTiles.length; ++level) {
+                    var rangesAtLevel = availableTiles[level];
+                    var yTiles = that._tilingScheme.getNumberOfYTilesAtLevel(level);
+                    if (!defined(overallAvailability[level])) {
+                        overallAvailability[level] = [];
+                    }
+
+                    for (var rangeIndex = 0; rangeIndex < rangesAtLevel.length; ++rangeIndex) {
+                        var range = rangesAtLevel[rangeIndex];
+                        var yStart = yTiles - range.endY - 1;
+                        var yEnd = yTiles - range.startY - 1;
+                        overallAvailability[level].push([range.startX, yStart, range.endX, yEnd]);
+                        availability.addAvailableTileRange(level, range.startX, yStart, range.endX, yEnd);
+                    }
+                }
+            } else if (hasBvh) {
+                availability = new TileAvailability(that._tilingScheme, maxZoom);
+                overallAvailability[0] = [
+                    [0, 0, 1, 0]
+                ];
+                availability.addAvailableTileRange(0, 0, 0, 1, 0);
             }
 
             that._hasWaterMask = that._hasWaterMask || hasWaterMask;
@@ -564,7 +566,8 @@ define([
                 var bvh = new Float32Array(buffer, extensionPos, numberOfHeights);
                 extensionPos += Float32Array.BYTES_PER_ELEMENT * numberOfHeights;
 
-                if (!layer.hasAvailability) { // No available list in layer.json
+                // No available list in layer.json, so load availability from this tile
+                if (!layer.hasAvailability) {
                     var numberofIncludedLevels = findNumberOfLevels(numberOfHeights/2);
                     if (defined(numberofIncludedLevels) && numberofIncludedLevels <= layer.bvhLevels) {
                         var maxLevel = numberofIncludedLevels + level - 1;
@@ -970,7 +973,7 @@ define([
             var divisor = 1 << (level - bvhLevel);
             var bvhX = (x / divisor) | 0;
             var bvhY = (y / divisor) | 0;
-            promise = checkBVHParentTiles(provider, bvhLevel, bvhX, bvhY, layer);
+            promise = checkBVHParentTiles(provider, bvhX, bvhY, bvhLevel, layer);
         }
 
         // Nothing to load, so this tile isn't available in this layer
@@ -1017,7 +1020,7 @@ define([
             var parentX = (x / divisor) | 0;
             var parentY = (y / divisor) | 0;
 
-            promise = checkBVHParentTiles(provider, parentLevel, parentX, parentY);
+            promise = checkBVHParentTiles(provider, parentX, parentY, parentLevel, layer);
 
             // If all parent BVH tiles are already loaded, then this tile isn't available
             if (!defined(promise)) {
