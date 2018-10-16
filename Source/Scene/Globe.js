@@ -136,7 +136,9 @@ define([
         this.enableLighting = false;
 
         /**
-         * Enable the ground atmosphere.
+         * Enable the ground atmosphere, which is drawn over the globe when viewed from a distance greater than <code>lightingFadeOutDistance</code>. 
+         *
+         * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Ground%20Atmosphere.html|Ground atmosphere demo on Sandcastle}
          *
          * @type {Boolean}
          * @default true
