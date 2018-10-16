@@ -444,7 +444,7 @@ define([
          * @default 10.0
          *
          */
-        this.luminanceAtZenith = defaultValue(options.luminanceAtZenith, 10.0);
+        this.luminanceAtZenith = defaultValue(options.luminanceAtZenith, 1.0);
 
         /**
          * Returns the height reference of the model
