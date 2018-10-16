@@ -3,6 +3,9 @@ Change Log
 
 ### 1.51 - 2018-11-01
 
+##### Breaking Changes :mega:
+* Renamed Atmosphere Sandcastle example to [Ground Atmosphere](https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Ground%20Atmosphere.html) and Atmosphere color Sandcastle example to [Sky Atmosphere](https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Sky%20Atmosphere.html).
+
 ##### Additions :tada:
 * Added WMS-T (time) support in WebMapServiceImageryProvider [#2581](https://github.com/AnalyticalGraphicsInc/cesium/issues/2581)
 * Added `cutoutRectangle` to `ImageryLayer`, which allows cutting out rectangular areas in imagery layers to reveal underlying imagery. [#7056](https://github.com/AnalyticalGraphicsInc/cesium/pull/7056)
