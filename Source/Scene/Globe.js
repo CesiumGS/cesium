@@ -138,7 +138,7 @@ define([
         /**
          * Enable the ground atmosphere, which is drawn over the globe when viewed from a distance between <code>lightingFadeInDistance</code> and <code>lightingFadeOutDistance</code>.
          *
-         * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Ground%20Atmosphere.html|Ground atmosphere demo on Sandcastle}
+         * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Ground%20Atmosphere.html|Ground atmosphere demo in Sandcastle}
          *
          * @type {Boolean}
          * @default true
