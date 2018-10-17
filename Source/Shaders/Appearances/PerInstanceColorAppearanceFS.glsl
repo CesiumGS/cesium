@@ -15,7 +15,7 @@ void main()
     materialInput.normalEC = normalEC;
     materialInput.positionToEyeEC = positionToEyeEC;
     czm_material material = czm_getDefaultMaterial(materialInput);
-    material.diffuse = v_color.rgb;
+    material.diffuse = czm_gammaCorrect(v_color.rgb);
     material.alpha = v_color.a;
 
     gl_FragColor = czm_phong(normalize(positionToEyeEC), material);
