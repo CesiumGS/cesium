@@ -6,6 +6,7 @@ Change Log
 ##### Additions :tada:
 * Shrink minified and gzipped Cesium.js by 27 KB (~3.7%) by delay loading seldom-used third-party dependencies. [#7140](https://github.com/AnalyticalGraphicsInc/cesium/pull/7140)
 * Added WMS-T (time) support in WebMapServiceImageryProvider [#2581](https://github.com/AnalyticalGraphicsInc/cesium/issues/2581)
+* Added `Transforms.fixedFrameToHeadingPitchRoll`, a helper function for extracting a `HeadingPitchRoll` from a fixed frame transform [#7164](https://github.com/AnalyticalGraphicsInc/cesium/pull/7164)
 * Added `cutoutRectangle` to `ImageryLayer`, which allows cutting out rectangular areas in imagery layers to reveal underlying imagery. [#7056](https://github.com/AnalyticalGraphicsInc/cesium/pull/7056)
 
 ##### Fixes :wrench:

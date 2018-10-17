@@ -11,6 +11,7 @@ define([
         './EarthOrientationParameters',
         './EarthOrientationParametersSample',
         './Ellipsoid',
+        './HeadingPitchRoll',
         './Iau2006XysData',
         './Iau2006XysSample',
         './JulianDate',
@@ -32,6 +33,7 @@ define([
         EarthOrientationParameters,
         EarthOrientationParametersSample,
         Ellipsoid,
+        HeadingPitchRoll,
         Iau2006XysData,
         Iau2006XysSample,
         JulianDate,
@@ -375,6 +377,53 @@ define([
         var transform = Transforms.headingPitchRollToFixedFrame(origin, headingPitchRoll, ellipsoid, fixedFrameTransform, scratchENUMatrix4);
         var rotation = Matrix4.getRotation(transform, scratchHPRMatrix3);
         return Quaternion.fromRotationMatrix(rotation, result);
+    };
+
+    var noScale = new Cartesian3(1.0, 1.0, 1.0);
+    var hprCenterScratch = new Cartesian3();
+    var ffScratch = new Matrix4();
+    var hprTransformScratch = new Matrix4();
+    var hprRotationScratch = new Matrix3();
+    var hprQuaternionScratch = new Quaternion();
+    /**
+     * Computes heading-pitch-roll angles from a transform in a particular reference frame. Heading is the rotation from the local north
+     * direction where a positive angle is increasing eastward. Pitch is the rotation from the local east-north plane. Positive pitch angles
+     * are above the plane. Negative pitch angles are below the plane. Roll is the first rotation applied about the local east axis.
+     *
+     * @param {Matrix4} transform The transform
+     * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid whose fixed frame is used in the transformation.
+     * @param {Transforms~LocalFrameToFixedFrame} [fixedFrameTransform=Transforms.eastNorthUpToFixedFrame] A 4x4 transformation
+     *  matrix from a reference frame to the provided ellipsoid's fixed reference frame
+     * @param {HeadingPitchRoll} [result] The object onto which to store the result.
+     * @returns {HeadingPitchRoll} The modified result parameter or a new HeadingPitchRoll instance if none was provided.
+     */
+    Transforms.fixedFrameToHeadingPitchRoll = function(transform, ellipsoid, fixedFrameTransform, result) {
+        //>>includeStart('debug', pragmas.debug);
+        Check.defined('transform', transform);
+        //>>includeEnd('debug');
+
+        ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
+        fixedFrameTransform = defaultValue(fixedFrameTransform, Transforms.eastNorthUpToFixedFrame);
+        if (!defined(result)) {
+            result = new HeadingPitchRoll();
+        }
+
+        var center = Matrix4.getTranslation(transform, hprCenterScratch);
+        if (Cartesian3.equals(center, Cartesian3.ZERO)) {
+            result.heading = 0;
+            result.pitch = 0;
+            result.roll = 0;
+            return result;
+        }
+        var toFixedFrame = Matrix4.inverseTransformation(fixedFrameTransform(center, ellipsoid, ffScratch), ffScratch);
+        var transformCopy = Matrix4.setScale(transform, noScale, hprTransformScratch);
+        transformCopy = Matrix4.setTranslation(transformCopy, Cartesian3.ZERO, transformCopy);
+
+        toFixedFrame = Matrix4.multiply(toFixedFrame, transformCopy, toFixedFrame);
+        var quaternionRotation = Quaternion.fromRotationMatrix(Matrix4.getRotation(toFixedFrame, hprRotationScratch), hprQuaternionScratch);
+        quaternionRotation = Quaternion.normalize(quaternionRotation, quaternionRotation);
+
+        return HeadingPitchRoll.fromQuaternion(quaternionRotation, result);
     };
 
     var gmstConstant0 = 6 * 3600 + 41 * 60 + 50.54841;
