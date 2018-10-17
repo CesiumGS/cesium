@@ -32,9 +32,10 @@ function startup(Cesium) {
     scene.skyBox = undefined;
     scene.sun = undefined;
     scene.moon = undefined;
-    scene.globe = undefined;
+    //scene.globe = undefined;
 
-    var height = 5000000.0;
+    //var height = 5000000.0;
+    var height = 5.0;
     var heading = 0.0;
     var pitch = 0.0;
     var roll = 0.0;
@@ -81,6 +82,7 @@ function startup(Cesium) {
         var heading = Cesium.Math.toRadians(230.0);
         var pitch = Cesium.Math.toRadians(-20.0);
         camera.lookAt(center, new Cesium.HeadingPitchRange(heading, pitch, r * 2.0));
+        camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
 
         model.sphericalHarmonicCoefficients = coefficients;
         model.specularEnvironmentMaps = envMap;
