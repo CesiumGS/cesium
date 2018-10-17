@@ -24,6 +24,7 @@ define([
         './GlobeSurfaceShaderSet',
         './GlobeSurfaceTileProvider',
         './ImageryLayerCollection',
+        './ImagerySplitDirection',
         './QuadtreePrimitive',
         './SceneMode',
         './ShadowMode'
@@ -53,6 +54,7 @@ define([
         GlobeSurfaceShaderSet,
         GlobeSurfaceTileProvider,
         ImageryLayerCollection,
+        ImagerySplitDirection,
         QuadtreePrimitive,
         SceneMode,
         ShadowMode) {
@@ -211,6 +213,15 @@ define([
          * @default ShadowMode.RECEIVE_ONLY
          */
         this.shadows = ShadowMode.RECEIVE_ONLY;
+
+        /**
+         * The {@link ImagerySplitDirection} to apply to this layer, showing the terrain only on
+         * the left or right of the splitter control.
+         *
+         * @type {ImagerySplitDirection}
+         * @default {@link ImagerySplitDirection.NONE}
+         */
+        this.splitDirection = ImagerySplitDirection.NONE;
 
         this._oceanNormalMap = undefined;
         this._zoomedOutOceanSpecularIntensity = undefined;
@@ -758,6 +769,7 @@ define([
             tileProvider.enableLighting = this.enableLighting;
             tileProvider.showGroundAtmosphere = this.showGroundAtmosphere;
             tileProvider.shadows = this.shadows;
+            tileProvider.splitDirection = this.splitDirection;
 
             surface.beginFrame(frameState);
         }
