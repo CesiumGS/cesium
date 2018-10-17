@@ -9,6 +9,7 @@ Change Log
 * Added `cutoutRectangle` to `ImageryLayer`, which allows cutting out rectangular areas in imagery layers to reveal underlying imagery. [#7056](https://github.com/AnalyticalGraphicsInc/cesium/pull/7056)
 
 ##### Fixes :wrench:
+* Fixed issue removing geometry entities with different materials [#7163](https://github.com/AnalyticalGraphicsInc/cesium/pull/7163)
 * Fixed an issue where `pickPosition` would return incorrect results when called after `sampleHeight` or `clampToHeight`. [#7113](https://github.com/AnalyticalGraphicsInc/cesium/pull/7113)
 * Fixed a crash when using `BingMapsGeocoderService` [#7143](https://github.com/AnalyticalGraphicsInc/cesium/issues/7143)
 
