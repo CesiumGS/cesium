@@ -194,6 +194,8 @@ define([
             if (glFormat !== 0) {
                 throw new RuntimeError('glFormat must be zero when the texture is compressed.');
             }
+        } else if (glType !== WebGLConstants.UNSIGNED_BYTE) {
+            throw new RuntimeError('Only unsigned byte buffers are supported.');
         } else if (glBaseInternalFormat !== glFormat) {
             throw new RuntimeError('The base internal format must be the same as the format for uncompressed textures.');
         }
@@ -204,9 +206,6 @@ define([
 
         if (numberOfArrayElements !== 0) {
             throw new RuntimeError('Texture arrays are unsupported.');
-        }
-        if (glType !== WebGLConstants.UNSIGNED_BYTE) {
-            throw new RuntimeError('Only unsigned byte buffers are supported.');
         }
 
         var offset = texture.byteOffset;
@@ -226,12 +225,12 @@ define([
         }
 
         var result = mipmaps;
-        if (numberOfFaces === 0) {
+        if (numberOfFaces === 1) {
             for (i = 0; i < numberOfMipmapLevels; ++i) {
                 result[i] = result[i][faceOrder[0]];
             }
         }
-        if (numberOfMipmapLevels === 0) {
+        if (numberOfMipmapLevels === 1) {
             result = result[0];
         }
 
