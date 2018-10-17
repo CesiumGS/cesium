@@ -23,7 +23,7 @@ define([
         '../Shaders/PostProcessStages/LensFlare',
         '../Shaders/PostProcessStages/ModifiedReinhardTonemapping',
         '../Shaders/PostProcessStages/NightVision',
-        '../shaders/PostProcessStages/ReinhardTonemapping',
+        '../Shaders/PostProcessStages/ReinhardTonemapping',
         '../Shaders/PostProcessStages/Silhouette',
         '../ThirdParty/Shaders/FXAA3_11',
         './AutoExposure',
