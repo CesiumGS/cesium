@@ -1,6 +1,6 @@
 /**
- * Samples the 4 neighboring pixels and return the weighted average. 
- * 
+ * Samples the 4 neighboring pixels and return the weighted average.
+ *
  * @private
  */
 vec3 czm_sampleOctahedralProjectionWithFiltering(sampler2D projectedMap, vec2 textureSize, vec3 direction, float lod)
@@ -45,10 +45,12 @@ vec3 czm_sampleOctahedralProjectionWithFiltering(sampler2D projectedMap, vec2 te
         vec3 average1 = mix(color4, color2, fu);
         vec3 average2 = mix(color1, color3, fu);
 
-        return mix(average1, average2, fv);
-    #else 
-        return texture2D(projectedMap, coord).rgb;
+        vec3 color = mix(average1, average2, fv);
+    #else
+        vec3 color = texture2D(projectedMap, coord).rgb;
     #endif
+
+    return color;
 }
 
 
@@ -69,8 +71,8 @@ vec3 czm_sampleOctahedralProjection(sampler2D projectedMap, vec2 textureSize, ve
     float currentLod = floor(lod + 0.5);
     float nextLod = min(currentLod + 1.0, maxLod);
 
-    vec3 colorCurrentLod = czm_sampleOctahedralProjectionWithFiltering(projectedMap, textureSize, direction, currentLod); 
-    vec3 colorNextLod = czm_sampleOctahedralProjectionWithFiltering(projectedMap, textureSize, direction, nextLod); 
+    vec3 colorCurrentLod = czm_sampleOctahedralProjectionWithFiltering(projectedMap, textureSize, direction, currentLod);
+    vec3 colorNextLod = czm_sampleOctahedralProjectionWithFiltering(projectedMap, textureSize, direction, nextLod);
 
-    return mix(colorNextLod, colorCurrentLod, nextLod - lod); 
+    return mix(colorNextLod, colorCurrentLod, nextLod - lod);
 }
