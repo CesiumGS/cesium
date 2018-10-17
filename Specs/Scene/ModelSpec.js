@@ -945,7 +945,11 @@ defineSuite([
         return loadModel(boxGltf2Url).then(function(m) {
             verifyRender(m);
             m.show = true;
-            expect(scene).toRender([169, 3, 3, 255]); // Red
+
+            expect(scene).toRenderAndCall(function(rgba) {
+                expect(rgba).toEqualEpsilon([169, 3, 3, 255], 10); // Red
+            });
+
             primitives.remove(m);
         });
     });
@@ -2288,22 +2292,22 @@ defineSuite([
         // Red
         scene.camera.moveLeft(0.5);
         expect(scene).toRenderAndCall(function(rgba) {
-            expect(rgba[0]).toBeGreaterThan(10);
-            expect(rgba[1]).toBeLessThan(10);
-            expect(rgba[2]).toBeLessThan(10);
+            expect(rgba[0]).toBeGreaterThan(20);
+            expect(rgba[1]).toBeLessThan(20);
+            expect(rgba[2]).toBeLessThan(20);
         });
         // Green
         scene.camera.moveRight(0.5);
         expect(scene).toRenderAndCall(function(rgba) {
-            expect(rgba[0]).toBeLessThan(10);
+            expect(rgba[0]).toBeLessThan(20);
             expect(rgba[1]).toBeGreaterThan(20);
-            expect(rgba[2]).toBeLessThan(10);
+            expect(rgba[2]).toBeLessThan(20);
         });
         // Blue
         scene.camera.moveRight(0.5);
         expect(scene).toRenderAndCall(function(rgba) {
-            expect(rgba[0]).toBeLessThan(10);
-            expect(rgba[1]).toBeLessThan(10);
+            expect(rgba[0]).toBeLessThan(20);
+            expect(rgba[1]).toBeLessThan(20);
             expect(rgba[2]).toBeGreaterThan(20);
         });
     }
@@ -2343,9 +2347,9 @@ defineSuite([
             model.zoomTo();
             expect(scene).toRenderAndCall(function(rgba) {
                 // Emissive texture is red
-                expect(rgba[0]).toBeGreaterThan(10);
-                expect(rgba[1]).toBeLessThan(10);
-                expect(rgba[2]).toBeLessThan(10);
+                expect(rgba[0]).toBeGreaterThan(20);
+                expect(rgba[1]).toBeLessThan(20);
+                expect(rgba[2]).toBeLessThan(20);
             });
 
             primitives.remove(model);

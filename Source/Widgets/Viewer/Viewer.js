@@ -457,7 +457,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
 
         var eventHelper = new EventHelper();
 
-        eventHelper.add(scene.preUpdate, Viewer.prototype._onPreUpdate, this);
+        eventHelper.add(clock.onTick, Viewer.prototype._onTick, this);
         eventHelper.add(scene.morphStart, Viewer.prototype._clearTrackedObject, this);
 
         // Selection Indicator
@@ -1586,7 +1586,9 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
     /**
      * @private
      */
-    Viewer.prototype._onPreUpdate = function(scene, time) {
+    Viewer.prototype._onTick = function(clock) {
+        var time = clock.currentTime;
+
         var isUpdated = this._dataSourceDisplay.update(time);
         if (this._allowDataSourcesToSuspendAnimation) {
             this._clockViewModel.canAnimate = isUpdated;
@@ -1980,14 +1982,9 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         }
 
         // If zoomTarget was an ImageryLayer
-        var isCartographic = target instanceof Cartographic;
-        if (target instanceof Rectangle || isCartographic) {
-            var destination = target;
-            if (isCartographic) {
-                destination = scene.mapProjection.ellipsoid.cartographicToCartesian(destination);
-            }
+        if (target instanceof Cartographic) {
             options = {
-                destination : destination,
+                destination : scene.mapProjection.ellipsoid.cartographicToCartesian(target),
                 duration : zoomOptions.duration,
                 maximumHeight : zoomOptions.maximumHeight,
                 complete : function() {

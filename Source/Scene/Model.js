@@ -654,6 +654,8 @@ define([
         this._rtcCenterEye = undefined; // in eye coordinates
         this._rtcCenter3D = undefined;  // in world coordinates
         this._rtcCenter2D = undefined;  // in projected world coordinates
+
+        this._keepPipelineExtras = options.keepPipelineExtras; // keep the buffers in memory for use in other applications
     }
 
     defineProperties(Model.prototype, {
@@ -1676,7 +1678,7 @@ define([
                     }
                     programPrimitives[meshId + '.primitive.' + primitiveId] = primitive;
                 });
-                }
+            }
         });
 
         model._runtime.meshesByName = runtimeMeshesByName;
@@ -2899,15 +2901,14 @@ define([
             var vertexArray = rendererVertexArrays[id + '.primitive.' + i];
             var offset;
             var count;
-            if (defined(ix)) {
+
+            // Use indices of the previously decoded Draco geometry.
+            if (defined(decodedData)) {
+                count = decodedData.numberOfIndices;
+                offset = 0;
+            } else if (defined(ix)) {
                 count = ix.count;
-
-                // Use indices of the previously decoded Draco geometry.
-                if (defined(decodedData)) {
-                    count = decodedData.numberOfIndices;
-                }
-
-                offset = (ix.byteOffset / IndexDatatype.getSizeInBytes(ix.componentType));  // glTF has offset in bytes.  Cesium has offsets in indices
+                offset = (ix.byteOffset / IndexDatatype.getSizeInBytes(ix.componentType)); // glTF has offset in bytes.  Cesium has offsets in indices
             } else {
                 var positions = accessors[primitive.attributes.POSITION];
                 count = positions.count;
@@ -4140,7 +4141,9 @@ define([
             }
 
             if (loadResources.finished()) {
-                removePipelineExtras(this.gltf);
+                if (!this._keepPipelineExtras) {
+                    removePipelineExtras(this.gltf);
+                }
 
                 this._loadResources = undefined;  // Clear CPU memory since WebGL resources were created.
 
