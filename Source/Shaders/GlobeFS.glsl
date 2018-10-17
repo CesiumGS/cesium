@@ -33,6 +33,10 @@ uniform float u_dayTextureSaturation[TEXTURE_UNITS];
 uniform float u_dayTextureOneOverGamma[TEXTURE_UNITS];
 #endif
 
+#ifdef APPLY_IMAGERY_CUTOUT
+uniform vec4 u_dayTextureCutoutRectangles[TEXTURE_UNITS];
+#endif
+
 uniform vec4 u_dayTextureTexCoordsRectangle[TEXTURE_UNITS];
 #endif
 
