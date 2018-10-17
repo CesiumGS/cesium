@@ -3,9 +3,6 @@ Change Log
 
 ### 1.51 - 2018-11-01
 
-##### Breaking Changes :mega:
-* Renamed Atmosphere Sandcastle example to [Ground Atmosphere](https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Ground%20Atmosphere.html) and Atmosphere color Sandcastle example to [Sky Atmosphere](https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Sky%20Atmosphere.html).
-
 ##### Additions :tada:
 * Added WMS-T (time) support in WebMapServiceImageryProvider [#2581](https://github.com/AnalyticalGraphicsInc/cesium/issues/2581)
 * Added `cutoutRectangle` to `ImageryLayer`, which allows cutting out rectangular areas in imagery layers to reveal underlying imagery. [#7056](https://github.com/AnalyticalGraphicsInc/cesium/pull/7056)
@@ -16,7 +13,6 @@ Change Log
 ### 1.50 - 2018-10-01
 
 ##### Breaking Changes :mega:
-* Renamed Ground Clamping Sandcastle example to [Clamp to Terrain](https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Clamp%20to%20Terrain.html).
 * Clipping planes on tilesets now use the root tile's transform, or the root tile's bounding sphere if a transform is not defined. [#7034](https://github.com/AnalyticalGraphicsInc/cesium/pull/7034)
     * This is to make clipping planes' coordinates always relative to the object they're attached to. So if you were positioning the clipping planes as in the example below, this is no longer necessary:
     ```javascript
