@@ -7,6 +7,7 @@ Change Log
 * Added support for refreshing expired tokens for `ArcGisMapServerImageryProvider` via callback registered with `options.requestNewToken` in constructor.
 * Added support for `parameters` to `ArcGisMapServerImageryProvider`.
 * Hacky fix/workaround for https://github.com/AnalyticalGraphicsInc/cesium/issues/7121.
+* Added support for using the imagery splitting system with the terrain and the atmosphere, too.
 
 ### 1.50 - 2018-10-01
 
