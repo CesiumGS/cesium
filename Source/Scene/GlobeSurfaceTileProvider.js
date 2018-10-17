@@ -41,6 +41,7 @@ define([
         '../Scene/Primitive',
         './ClippingPlaneCollection',
         './GlobeSurfaceTile',
+        './ImagerySplitDirection',
         './ImageryLayer',
         './QuadtreeTileLoadState',
         './SceneMode',
@@ -88,6 +89,7 @@ define([
         Primitive,
         ClippingPlaneCollection,
         GlobeSurfaceTile,
+        ImagerySplitDirection,
         ImageryLayer,
         QuadtreeTileLoadState,
         SceneMode,
@@ -129,6 +131,7 @@ define([
         this.enableLighting = false;
         this.showGroundAtmosphere = false;
         this.shadows = ShadowMode.RECEIVE_ONLY;
+        this.splitDirection = ImagerySplitDirection.NONE;
 
         this._quadtree = undefined;
         this._terrainProvider = options.terrainProvider;
@@ -978,6 +981,9 @@ define([
             u_minimumBrightness : function() {
                 return frameState.fog.minimumBrightness;
             },
+            u_terrainSplitDirection : function() {
+                return globeSurfaceTileProvider.splitDirection;
+            },
 
             // make a separate object so that changes to the properties are seen on
             // derived commands that combine another uniform map with this one.
@@ -1286,6 +1292,7 @@ define([
         surfaceShaderSetOptions.hasVertexNormals = hasVertexNormals;
         surfaceShaderSetOptions.useWebMercatorProjection = useWebMercatorProjection;
         surfaceShaderSetOptions.clippedByBoundaries = surfaceTile.clippedByBoundaries;
+        surfaceShaderSetOptions.splitTerrain = tileProvider.splitDirection !== ImagerySplitDirection.NONE;
 
         var tileImageryCollection = surfaceTile.imagery;
         var imageryIndex = 0;

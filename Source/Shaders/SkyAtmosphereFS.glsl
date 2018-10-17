@@ -39,6 +39,10 @@ uniform vec3 u_hsbShift; // Hue, saturation, brightness
 
 uniform vec4 u_cameraAndRadiiAndDynamicAtmosphereColor; // Camera height, outer radius, inner radius, dynamic atmosphere color flag
 
+#ifdef SPLIT_ATMOSPHERE
+uniform float u_splitDirection;
+#endif
+
 const float g = -0.95;
 const float g2 = g * g;
 
@@ -49,6 +53,15 @@ varying vec3 v_positionEC;
 
 void main (void)
 {
+#ifdef SPLIT_ATMOSPHERE
+    float splitPosition = czm_imagerySplitPosition;
+    if (u_splitDirection < 0.0 && gl_FragCoord.x > splitPosition) {
+        discard;
+    } else if (u_splitDirection > 0.0 && gl_FragCoord.x < splitPosition) {
+        discard;
+    }
+#endif
+
     // Extra normalize added for Android
     float cosAngle = dot(czm_sunDirectionWC, normalize(v_toCamera)) / length(v_toCamera);
     float rayleighPhase = 0.75 * (1.0 + cosAngle * cosAngle);
