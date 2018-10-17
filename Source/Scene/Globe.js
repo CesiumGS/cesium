@@ -215,7 +215,7 @@ define([
         this.shadows = ShadowMode.RECEIVE_ONLY;
 
         /**
-         * The {@link ImagerySplitDirection} to apply to this layer, showing the terrain only on
+         * The {@link ImagerySplitDirection} to apply, showing the terrain only on
          * the left or right of the splitter control.
          *
          * @type {ImagerySplitDirection}
