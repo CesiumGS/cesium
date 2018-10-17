@@ -697,6 +697,8 @@ define([
                     if (components.hasOwnProperty(component)) {
                         if (component === 'diffuse' || component === 'emission') {
                             material.shaderSource += 'material.' + component + ' = czm_gammaCorrect(' + components[component] + '); \n';
+                        } else if (component === 'alpha') {
+                            material.shaderSource += 'material.alpha = czm_gammaCorrectAlpha(' + components.alpha + '); \n';
                         } else {
                             material.shaderSource += 'material.' + component + ' = ' + components[component] + ';\n';
                         }

@@ -10,7 +10,8 @@ czm_material czm_getMaterial(czm_materialInput materialInput)
     float b = smoothstep(0.3, 0.32, length(fract(repeat * materialInput.st) - 0.5));  // 0.0 or 1.0
 
     vec4 color = mix(lightColor, darkColor, b);
-    material.diffuse = czm_gammaCorrect(color.rgb);
+    color = czm_gammaCorrect(color);
+    material.diffuse = color.rgb;
     material.alpha = color.a;
 
     return material;

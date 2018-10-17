@@ -1945,7 +1945,7 @@ define([
                 '\n' +
                 'void main() { \n' +
                 '    non_gamma_corrected_main(); \n' +
-                '    gl_FragColor.rgb = czm_gammaCorrect(gl_FragColor.rgb); \n' +
+                '    gl_FragColor = czm_gammaCorrect(gl_FragColor); \n' +
                 '} \n';
         }
 
@@ -1998,7 +1998,7 @@ define([
                 '\n' +
                 'void main() { \n' +
                 '    non_gamma_corrected_main(); \n' +
-                '    gl_FragColor.rgb = czm_gammaCorrect(gl_FragColor.rgb); \n' +
+                '    gl_FragColor = czm_gammaCorrect(gl_FragColor); \n' +
                 '} \n';
         }
 
