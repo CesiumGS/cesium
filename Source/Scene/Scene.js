@@ -3811,12 +3811,6 @@ define([
     }
 
     function getRayIntersections(scene, ray, limit, objectsToExclude, async, requirePosition) {
-        //>>includeStart('debug', pragmas.debug);
-        Check.defined('ray', ray);
-        if (scene._mode !== SceneMode.SCENE3D) {
-            throw new DeveloperError('Ray intersections are only supported in 3D mode.');
-        }
-        //>>includeEnd('debug');
         var pickCallback = function() {
             return getRayIntersection(scene, ray, objectsToExclude, async, requirePosition);
         };
@@ -3853,6 +3847,12 @@ define([
      * @exception {DeveloperError} Ray intersections are only supported in 3D mode.
      */
     Scene.prototype.pickFromRay = function(ray, objectsToExclude) {
+        //>>includeStart('debug', pragmas.debug);
+        Check.defined('ray', ray);
+        if (this._mode !== SceneMode.SCENE3D) {
+            throw new DeveloperError('Ray intersections are only supported in 3D mode.');
+        }
+        //>>includeEnd('debug');
         return pickFromRay(this, ray, objectsToExclude, false, false);
     };
 
@@ -3877,6 +3877,12 @@ define([
      * @exception {DeveloperError} Ray intersections are only supported in 3D mode.
      */
     Scene.prototype.drillPickFromRay = function(ray, limit, objectsToExclude) {
+        //>>includeStart('debug', pragmas.debug);
+        Check.defined('ray', ray);
+        if (this._mode !== SceneMode.SCENE3D) {
+            throw new DeveloperError('Ray intersections are only supported in 3D mode.');
+        }
+        //>>includeEnd('debug');
         return drillPickFromRay(this, ray, limit, objectsToExclude, false, false);
     };
 
@@ -3893,9 +3899,15 @@ define([
      * @exception {DeveloperError} Ray intersections are only supported in 3D mode.
      */
     Scene.prototype.pickFromRayMostDetailed = function(ray, objectsToExclude) {
+        //>>includeStart('debug', pragmas.debug);
+        Check.defined('ray', ray);
+        if (this._mode !== SceneMode.SCENE3D) {
+            throw new DeveloperError('Ray intersections are only supported in 3D mode.');
+        }
+        //>>includeEnd('debug');
         var that = this;
         ray = Ray.clone(ray);
-        objectsToExclude = objectsToExclude.slice();
+        objectsToExclude = defined(objectsToExclude) ? objectsToExclude.slice() : objectsToExclude;
         return launchAsyncLoader(this, ray, objectsToExclude, function() {
             return pickFromRay(that, ray, objectsToExclude, true, false);
         });
@@ -3915,9 +3927,15 @@ define([
      * @exception {DeveloperError} Ray intersections are only supported in 3D mode.
      */
     Scene.prototype.drillPickFromRayMostDetailed = function(ray, limit, objectsToExclude) {
+        //>>includeStart('debug', pragmas.debug);
+        Check.defined('ray', ray);
+        if (this._mode !== SceneMode.SCENE3D) {
+            throw new DeveloperError('Ray intersections are only supported in 3D mode.');
+        }
+        //>>includeEnd('debug');
         var that = this;
         ray = Ray.clone(ray);
-        objectsToExclude = objectsToExclude.slice();
+        objectsToExclude = defined(objectsToExclude) ? objectsToExclude.slice() : objectsToExclude;
         return launchAsyncLoader(this, ray, objectsToExclude, function() {
             return drillPickFromRay(that, ray, limit, objectsToExclude, true, false);
         });
@@ -3993,14 +4011,17 @@ define([
      * @see Scene#clampToHeightMostDetailed
      * @see Scene#sampleHeightMostDetailed
      *
-     * @exception {DeveloperError} Ray intersections are only supported in 3D mode.
-     * @exception {DeveloperError} sampleHeight required depth texture support. Check sampleHeightSupported.
+     * @exception {DeveloperError} sampleHeight is only supported in 3D mode.
+     * @exception {DeveloperError} sampleHeight requires depth texture support. Check sampleHeightSupported.
      */
     Scene.prototype.sampleHeight = function(position, objectsToExclude) {
         //>>includeStart('debug', pragmas.debug);
         Check.defined('position', position);
+        if (this._mode !== SceneMode.SCENE3D) {
+            throw new DeveloperError('sampleHeight is only supported in 3D mode.');
+        }
         if (!this.sampleHeightSupported) {
-            throw new DeveloperError('sampleHeight required depth texture support. Check sampleHeightSupported.');
+            throw new DeveloperError('sampleHeight requires depth texture support. Check sampleHeightSupported.');
         }
         //>>includeEnd('debug');
         var ray = getRayForSampleHeight(this, position);
@@ -4028,14 +4049,17 @@ define([
      * @see Scene#sampleHeightMostDetailed
      * @see Scene#clampToHeightMostDetailed
      *
-     * @exception {DeveloperError} Ray intersections are only supported in 3D mode.
-     * @exception {DeveloperError} clampToHeight required depth texture support. Check clampToHeightSupported.
+     * @exception {DeveloperError} clampToHeight is only supported in 3D mode.
+     * @exception {DeveloperError} clampToHeight requires depth texture support. Check clampToHeightSupported.
      */
     Scene.prototype.clampToHeight = function(cartesian, objectsToExclude, result) {
         //>>includeStart('debug', pragmas.debug);
         Check.defined('cartesian', cartesian);
+        if (this._mode !== SceneMode.SCENE3D) {
+            throw new DeveloperError('sampleHeight is only supported in 3D mode.');
+        }
         if (!this.clampToHeightSupported) {
-            throw new DeveloperError('clampToHeight required depth texture support. Check clampToHeightSupported.');
+            throw new DeveloperError('clampToHeight requires depth texture support. Check clampToHeightSupported.');
         }
         //>>includeEnd('debug');
         var ray = getRayForClampToHeight(this, cartesian);
@@ -4057,14 +4081,17 @@ define([
      *
      * @see Scene#sampleHeight
      *
-     * @exception {DeveloperError} Ray intersections are only supported in 3D mode.
-     * @exception {DeveloperError} sampleHeightMostDetailed required depth texture support. Check sampleHeightSupported.
+     * @exception {DeveloperError} sampleHeightMostDetailed is only supported in 3D mode.
+     * @exception {DeveloperError} sampleHeightMostDetailed requires depth texture support. Check sampleHeightSupported.
      */
     Scene.prototype.sampleHeightMostDetailed = function(positions, objectsToExclude) {
         //>>includeStart('debug', pragmas.debug);
         Check.defined('positions', positions);
+        if (this._mode !== SceneMode.SCENE3D) {
+            throw new DeveloperError('sampleHeightMostDetailed is only supported in 3D mode.');
+        }
         if (!this.sampleHeightSupported) {
-            throw new DeveloperError('sampleHeightMostDetailed required depth texture support. Check sampleHeightSupported.');
+            throw new DeveloperError('sampleHeightMostDetailed requires depth texture support. Check sampleHeightSupported.');
         }
         //>>includeEnd('debug');
         objectsToExclude = defined(objectsToExclude) ? objectsToExclude.slice() : objectsToExclude;
@@ -4094,14 +4121,17 @@ define([
      *
      * @see Scene#clampToHeight
      *
-     * @exception {DeveloperError} Ray intersections are only supported in 3D mode.
-     * @exception {DeveloperError} clampToHeightMostDetailed required depth texture support. Check clampToHeightSupported.
+     * @exception {DeveloperError} clampToHeightMostDetailed is only supported in 3D mode.
+     * @exception {DeveloperError} clampToHeightMostDetailed requires depth texture support. Check clampToHeightSupported.
      */
     Scene.prototype.clampToHeightMostDetailed = function(cartesians, objectsToExclude) {
         //>>includeStart('debug', pragmas.debug);
         Check.defined('cartesians', cartesians);
+        if (this._mode !== SceneMode.SCENE3D) {
+            throw new DeveloperError('clampToHeightMostDetailed is only supported in 3D mode.');
+        }
         if (!this.clampToHeightSupported) {
-            throw new DeveloperError('clampToHeightMostDetailed required depth texture support. Check clampToHeightSupported.');
+            throw new DeveloperError('clampToHeightMostDetailed requires depth texture support. Check clampToHeightSupported.');
         }
         //>>includeEnd('debug');
         objectsToExclude = defined(objectsToExclude) ? objectsToExclude.slice() : objectsToExclude;
