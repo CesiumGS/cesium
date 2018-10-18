@@ -3069,6 +3069,8 @@ define([
         frameState.creditDisplay.update();
     }
 
+    var scratchBackgroundColor = new Color();
+
     function render(scene, time) {
         scene._pickPositionCacheDirty = true;
 
@@ -3085,6 +3087,12 @@ define([
         frameState.passes.postProcess = scene.postProcessStages.hasSelected;
 
         var backgroundColor = defaultValue(scene.backgroundColor, Color.BLACK);
+        if (scene._hdr) {
+            backgroundColor = Color.clone(backgroundColor, scratchBackgroundColor);
+            backgroundColor.red = Math.pow(backgroundColor.red, scene.gamma);
+            backgroundColor.green = Math.pow(backgroundColor.green, scene.gamma);
+            backgroundColor.blue = Math.pow(backgroundColor.blue, scene.gamma);
+        }
         frameState.backgroundColor = backgroundColor;
 
         frameState.creditDisplay.beginFrame();
