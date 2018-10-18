@@ -1982,14 +1982,9 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         }
 
         // If zoomTarget was an ImageryLayer
-        var isCartographic = target instanceof Cartographic;
-        if (target instanceof Rectangle || isCartographic) {
-            var destination = target;
-            if (isCartographic) {
-                destination = scene.mapProjection.ellipsoid.cartographicToCartesian(destination);
-            }
+        if (target instanceof Cartographic) {
             options = {
-                destination : destination,
+                destination : scene.mapProjection.ellipsoid.cartographicToCartesian(target),
                 duration : zoomOptions.duration,
                 maximumHeight : zoomOptions.maximumHeight,
                 complete : function() {

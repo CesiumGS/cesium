@@ -8,7 +8,7 @@ define([
         './DeveloperError',
         './Ellipsoid',
         './getAbsoluteUri',
-        './Resource',
+        './loadAndExecuteScript',
         '../ThirdParty/when'
     ], function(
         Cartesian3,
@@ -20,7 +20,7 @@ define([
         DeveloperError,
         Ellipsoid,
         getAbsoluteUri,
-        Resource,
+        loadAndExecuteScript,
         when) {
     'use strict';
 
@@ -211,9 +211,7 @@ define([
             importScripts(url); // eslint-disable-line no-undef
             fetch = when.resolve();
         } else {
-            fetch = Resource.fetchJsonp({
-                    url : url
-            });
+            fetch = loadAndExecuteScript(url);
         }
 
         fetch = fetch
