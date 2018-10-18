@@ -646,8 +646,6 @@ define([
         this._sourcePrograms = {};
         this._quantizedVertexShaders = {};
 
-        this._upgrade10To20 = undefined;
-
         this._nodeCommands = [];
         this._pickIds = [];
 
@@ -1938,7 +1936,7 @@ define([
             drawFS = 'uniform vec4 czm_pickColor;\n' + drawFS;
         }
 
-        if (model._upgrade10To20) {
+        if (model.gltf.extras.sourceVersion !== '2.0') {
             drawFS = ShaderSource.replaceMain(drawFS, 'non_gamma_corrected_main');
             drawFS =
                 drawFS +
@@ -1991,7 +1989,7 @@ define([
             drawFS = 'uniform vec4 czm_pickColor;\n' + drawFS;
         }
 
-        if (model._upgrade10To20) {
+        if (model.gltf.extras.sourceVersion !== '2.0') {
             drawFS = ShaderSource.replaceMain(drawFS, 'non_gamma_corrected_main');
             drawFS =
                 drawFS +
@@ -4019,10 +4017,6 @@ define([
         this._defaultTexture = context.defaultTexture;
 
         if ((this._state === ModelState.NEEDS_LOAD) && defined(this.gltf)) {
-            if (!defined(this._upgrade10To20)) {
-                this._upgrade10To20 = defined(this.gltf.asset) && defined(this.gltf.asset.extras) && this.gltf.asset.extras.gltf_pipeline_upgrade_10to20;
-            }
-
             // Use renderer resources from cache instead of loading/creating them?
             var cachedRendererResources;
             var cacheKey = this.cacheKey;
