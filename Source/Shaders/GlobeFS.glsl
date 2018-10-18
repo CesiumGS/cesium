@@ -265,13 +265,7 @@ void main()
     color.xyz = mix(color.xyz, material.diffuse, material.alpha);
 #endif
 
-#if defined(HDR) && !defined(APPLY_MATERIAL)
-    czm_material material;
-    material.diffuse = color.rgb;
-    material.alpha = color.a;
-    material.normal = normalEC;
-    vec4 finalColor = czm_phong(normalize(-v_positionEC), material);
-#elif defined(ENABLE_VERTEX_LIGHTING)
+#ifdef ENABLE_VERTEX_LIGHTING
     float diffuseIntensity = clamp(czm_getLambertDiffuse(czm_sunDirectionEC, normalize(v_normalEC)) * 0.9 + 0.3, 0.0, 1.0);
     vec4 finalColor = vec4(color.rgb * diffuseIntensity, color.a);
 #elif defined(ENABLE_DAYNIGHT_SHADING)
