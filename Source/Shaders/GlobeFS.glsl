@@ -132,10 +132,6 @@ vec4 sampleAndBlend(
     color = pow(color, vec3(textureOneOverGamma));
 #endif
 
-    vec4 tempColor = czm_gammaCorrect(vec4(color, alpha));
-    color = tempColor.rgb;
-    alpha = tempColor.a;
-
 #ifdef APPLY_SPLIT
     float splitPosition = czm_imagerySplitPosition;
     // Split to the left
@@ -163,6 +159,10 @@ vec4 sampleAndBlend(
 #ifdef APPLY_SATURATION
     color = czm_saturation(color, textureSaturation);
 #endif
+
+    vec4 tempColor = czm_gammaCorrect(vec4(color, alpha));
+    color = tempColor.rgb;
+    alpha = tempColor.a;
 
     float sourceAlpha = alpha * textureAlpha;
     float outAlpha = mix(previousColor.a, 1.0, sourceAlpha);
