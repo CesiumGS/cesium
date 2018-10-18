@@ -224,6 +224,7 @@ define([
                 level[faceOrder[j]] = new CompressedTextureBuffer(glInternalFormat, width, height, levelBuffer);
                 offset += levelSize;
             }
+            offset += 3 - ((offset + 3) % 4) + 4;
         }
 
         var result = mipmaps;
