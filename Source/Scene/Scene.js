@@ -1893,11 +1893,11 @@ define([
             command = command.derivedCommands.logDepth.command;
         }
 
-        if (defined(command.derivedCommands) && defined(command.derivedCommands.hdr)) {
+        var passes = frameState.passes;
+        if (!passes.pick && defined(command.derivedCommands) && defined(command.derivedCommands.hdr)) {
             command = command.derivedCommands.hdr.command;
         }
 
-        var passes = frameState.passes;
         if (passes.pick || passes.depth) {
             if (passes.pick && !passes.depth && defined(command.derivedCommands.picking)) {
                 command = command.derivedCommands.picking.pickCommand;
