@@ -1543,6 +1543,7 @@ define([
         if (scene._hdr) {
             derivedCommands.hdr = DerivedCommand.createHdrCommand(command, context, derivedCommands.hdr);
             command = derivedCommands.hdr.command;
+            derivedCommands = command.derivedCommands;
         }
 
         if (lightShadowsEnabled && command.receiveShadows) {
