@@ -470,10 +470,8 @@ define([
 
     function computeTextureResolution(pixelsNeeded, result) {
         var maxSize = ContextLimits.maximumTextureSize;
-        var width = Math.min(pixelsNeeded, maxSize);
-        var height = Math.ceil(pixelsNeeded / width);
-        result.x = Math.max(width, 1);
-        result.y = Math.max(height, 1);
+        result.x = Math.min(pixelsNeeded, maxSize);
+        result.y = Math.ceil(pixelsNeeded / result.x);
         return result;
     }
 
@@ -495,7 +493,6 @@ define([
         // In RGBA UNSIGNED_BYTE, A plane is a float in [0, 1) packed to RGBA and an Oct32 quantized normal,
         // so 8 bits or 2 pixels in RGBA.
         var pixelsNeeded = useFloatTexture ? this.length : this.length * 2;
-        var requiredResolution = computeTextureResolution(pixelsNeeded, textureResolutionScratch);
 
         if (defined(clippingPlanesTexture)) {
             var currentPixelCount = clippingPlanesTexture.width * clippingPlanesTexture.height;
@@ -511,7 +508,8 @@ define([
                 }
         }
 
-        if (!defined(clippingPlanesTexture)) {
+        if (!defined(clippingPlanesTexture) && pixelsNeeded > 0) {
+            var requiredResolution = computeTextureResolution(pixelsNeeded, textureResolutionScratch);
             // Allocate twice as much space as needed to avoid frequent texture reallocation.
             // Allocate in the Y direction, since texture may be as wide as context texture support.
             requiredResolution.y *= 2;
@@ -572,7 +570,6 @@ define([
             } else {
                 offsetY = Math.floor((dirtyIndex * 2) / clippingPlanesTexture.width);
                 offsetX = Math.floor((dirtyIndex * 2) - offsetY * clippingPlanesTexture.width);
-
                 packPlanesAsUint8(this, dirtyIndex, dirtyIndex + 1);
                 clippingPlanesTexture.copyFrom({
                     width : 2,
