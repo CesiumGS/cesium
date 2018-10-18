@@ -15,6 +15,7 @@ defineSuite([
         'Core/OrthographicFrustum',
         'Core/OrthographicOffCenterFrustum',
         'Core/PerspectiveFrustum',
+        'Core/Proj4Projection',
         'Core/Rectangle',
         'Core/Transforms',
         'Core/WebMercatorProjection',
@@ -39,6 +40,7 @@ defineSuite([
         OrthographicFrustum,
         OrthographicOffCenterFrustum,
         PerspectiveFrustum,
+        Proj4Projection,
         Rectangle,
         Transforms,
         WebMercatorProjection,
@@ -60,6 +62,10 @@ defineSuite([
     var turnAmount = CesiumMath.PI_OVER_TWO;
     var rotateAmount = CesiumMath.PI_OVER_TWO;
     var zoomAmount = 1.0;
+
+    var epsg3411polarWkt = '+proj=stere +lat_0=90 +lat_ts=70 +lon_0=-45 +k=1 +x_0=0 +y_0=0 +a=6378273 +b=6356889.449 +units=m +no_defs';
+    var epsg3411polarBounds = Rectangle.fromDegrees(-180.0000, 30.0000, 180.0000, 90.0000);
+    var polarProjection = new Proj4Projection(epsg3411polarWkt, 1.0, epsg3411polarBounds);
 
     function FakeScene(projection) {
         this.canvas = {
@@ -179,6 +185,39 @@ defineSuite([
         expect(camera.right).toEqualEpsilon(right, CesiumMath.EPSILON8);
     });
 
+    it('approximate heading in 2D with non-normal-rectangular projections', function() {
+        var polarScene = new FakeScene(polarProjection);
+        var polarCamera = new Camera(polarScene);
+
+        polarCamera.up = Cartesian3.clone(Cartesian3.UNIT_Y);
+        polarCamera.direction = Cartesian3.negate(Cartesian3.UNIT_Z, new Cartesian3());
+        polarCamera.right = Cartesian3.cross(dir, up, new Cartesian3());
+
+        var frustum = new OrthographicOffCenterFrustum();
+        frustum.near = 1.0;
+        frustum.far = 2.0;
+        frustum.left = -2.0;
+        frustum.right = 2.0;
+        frustum.top = 1.0;
+        frustum.bottom = -1.0;
+        polarCamera.frustum = frustum;
+        polarCamera.update(SceneMode.SCENE2D);
+
+        // In a polar projection, expect the heading to be different
+        // for the same camera orientation at different positions.
+        polarCamera.setView({
+            destination : Cartesian3.fromDegrees(90, 30, 7000000)
+        });
+
+        var longitude90Heading = polarCamera.heading;
+
+        polarCamera.setView({
+            destination : Cartesian3.fromDegrees(-90, 30, 7000000)
+        });
+
+        expect(longitude90Heading).toEqualEpsilon(polarCamera.heading - CesiumMath.PI, CesiumMath.EPSILON7);
+    });
+
     it('get heading in CV', function() {
         camera._mode = SceneMode.COLUMBUS_VIEW;
 
@@ -241,6 +280,44 @@ defineSuite([
         expect(camera.positionCartographic).toEqual(positionCartographic);
         expect(camera.heading).not.toEqual(heading);
         expect(camera.heading).toEqualEpsilon(newHeading, CesiumMath.EPSILON14);
+    });
+
+    it('approximately sets heading in 2D when the map can be rotated and projection is not normal-cylindrical', function() {
+        var polarScene = new FakeScene(polarProjection);
+        polarScene.mapMode2D = MapMode2D.ROTATE;
+        var polarCamera = new Camera(polarScene);
+
+        polarCamera.up = Cartesian3.clone(Cartesian3.UNIT_Y);
+        polarCamera.direction = Cartesian3.negate(Cartesian3.UNIT_Z, new Cartesian3());
+        polarCamera.right = Cartesian3.cross(dir, up, new Cartesian3());
+
+        var frustum = new OrthographicOffCenterFrustum();
+        frustum.near = 1.0;
+        frustum.far = 2.0;
+        frustum.left = -2.0;
+        frustum.right = 2.0;
+        frustum.top = 1.0;
+        frustum.bottom = -1.0;
+        polarCamera.frustum = frustum;
+        polarCamera.update(SceneMode.SCENE2D);
+
+        polarCamera.setView({
+            destination : Cartesian3.fromDegrees(30, 45, 7000000)
+        });
+
+        var heading = polarCamera.heading;
+        var positionCartographic = polarCamera.positionCartographic;
+
+        var newHeading = CesiumMath.toRadians(90.0);
+        polarCamera.setView({
+            orientation: {
+                heading : newHeading
+            }
+        });
+
+        expect(polarCamera.positionCartographic).toEqual(positionCartographic);
+        expect(polarCamera.heading).not.toEqual(heading);
+        expect(polarCamera.heading).toEqualEpsilon(newHeading, CesiumMath.EPSILON7);
     });
 
     it('does not set heading in 2D for infinite scrolling mode', function() {

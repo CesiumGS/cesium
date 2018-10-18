@@ -157,7 +157,7 @@ define([
         // In particular, the functionality of Ellipsoid.cartographicToCartesian
         // is inlined.
 
-        var nonEquatorialCylindricalProjection = !mapProjection.isEquatorialCylindrical;
+        var nonEquatorialCylindricalProjection = !mapProjection.isNormalCylindrical;
 
         var cos = Math.cos;
         var sin = Math.sin;

@@ -33,6 +33,8 @@ define([
      * may produce unexpected results outside their valid boundaries in Cartographic space (wgs84Bounds).
      * These boundaries may be looked up at spatialreference.org.
      *
+     * Scenes using Proj4Projection will default to MapMode2D.ROTATE instead of MapMode2D.INFINITE_SCROLL.
+     *
      * @alias Proj4Projection
      * @constructor
      *
@@ -81,7 +83,7 @@ define([
             }
         },
         /**
-         * Gets whether or not the projection is cylindrical about the equator.
+         * Gets whether or not the projection evenly maps meridians to vertical lines.
          * Not all Proj4 projections are cylindrical about the equator.
          *
          * @memberof Proj4Projection.prototype
@@ -90,7 +92,7 @@ define([
          * @readonly
          * @private
          */
-        isEquatorialCylindrical : {
+        isNormalCylindrical : {
             get : function() {
                 return false;
             }

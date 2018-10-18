@@ -33,6 +33,8 @@ define([
      * <code>CustomProjection~factory</code> interface to provide <code>CustomProjection~project</code> and
      * <code>CustomProjection~unproject</code> functions to a callback.
      *
+     * Scenes using CustomProjection will default to MapMode2D.ROTATE instead of MapMode2D.INFINITE_SCROLL.
+     *
      * @alias CustomProjection
      * @constructor
      *
@@ -75,7 +77,7 @@ define([
             }
         },
         /**
-         * Gets whether or not the projection is cylindrical about the equator.
+         * Gets whether or not the projection evenly maps meridians to vertical lines.
          * No guarantee that a custom projection will be cylindrical about the equator.
          *
          * @memberof CustomProjection.prototype
@@ -84,7 +86,7 @@ define([
          * @readonly
          * @private
          */
-        isEquatorialCylindrical : {
+        isNormalCylindrical : {
             get : function() {
                 return false;
             }

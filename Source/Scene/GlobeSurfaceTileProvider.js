@@ -1250,7 +1250,7 @@ define([
             if (frameState.mode !== SceneMode.MORPHING) {
                 // If using a custom projection, project the existing tile center instead.
                 rtc = rtcScratch;
-                if (frameState.mapProjection.isEquatorialCylindrical) {
+                if (frameState.mapProjection.isNormalCylindrical) {
                     rtc.x = 0.0;
                     rtc.y = (tileRectangle.z + tileRectangle.x) * 0.5;
                     rtc.z = (tileRectangle.w + tileRectangle.y) * 0.5;

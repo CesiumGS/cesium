@@ -109,7 +109,7 @@ define([
 
         var positions2d = 0;
         var positions2dDefine = '';
-        if (!frameState.mapProjection.isEquatorialCylindrical) {
+        if (!frameState.mapProjection.isNormalCylindrical) {
             positions2d = 1;
             positions2dDefine = 'POSITIONS_2D';
         }
