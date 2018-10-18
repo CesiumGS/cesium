@@ -106,7 +106,7 @@ define([
             }
             return true;
         }
-        return false
+        return false;
     };
 
     var colorScratch = new Color();
