@@ -608,7 +608,7 @@ define([
     }
 
     function typedArrayToArray(array) {
-        if (array !== null && typeof array === 'object' && isTypedArray(array)) {
+        if (isTypedArray(array)) {
             return Array.prototype.slice.call(array, 0);
         }
         return array;
