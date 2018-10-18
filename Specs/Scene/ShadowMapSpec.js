@@ -1118,9 +1118,7 @@ defineSuite([
             scene.render();
         }
 
-        // Expect derived commands to be updated twice for both the floor and box,
-        // once on the first frame and again when the shadow map is dirty
-        expect(spy1.calls.count()).toEqual(4);
+        expect(spy1.calls.count()).toEqual(8);
         expect(spy2.calls.count()).toEqual(4);
 
         box.show = false;

@@ -14,17 +14,10 @@ vec3 czm_gammaCorrect(vec3 color) {
     return color;
 }
 
-float czm_gammaCorrectAlpha(float alpha) {
-#ifdef HDR
-    alpha = pow(alpha, 1.0 / czm_gamma);
-#endif
-    return alpha;
-}
-
 vec4 czm_gammaCorrect(vec4 color) {
 #ifdef HDR
     color.rgb = pow(color.rgb, vec3(czm_gamma));
-    color.a = czm_gammaCorrectAlpha(color.a);
+    color.a = pow(color.a, 1.0 / czm_gamma);
 #endif
     return color;
 }

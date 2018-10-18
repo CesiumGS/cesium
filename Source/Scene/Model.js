@@ -656,6 +656,7 @@ define([
         this._rtcCenter2D = undefined;  // in projected world coordinates
 
         this._keepPipelineExtras = options.keepPipelineExtras; // keep the buffers in memory for use in other applications
+        this._sourceVersion = undefined;
     }
 
     defineProperties(Model.prototype, {
@@ -1936,7 +1937,7 @@ define([
             drawFS = 'uniform vec4 czm_pickColor;\n' + drawFS;
         }
 
-        if (model.gltf.extras.sourceVersion !== '2.0') {
+        if (model._sourceVersion !== '2.0') {
             drawFS = ShaderSource.replaceMain(drawFS, 'non_gamma_corrected_main');
             drawFS =
                 drawFS +
@@ -1989,7 +1990,7 @@ define([
             drawFS = 'uniform vec4 czm_pickColor;\n' + drawFS;
         }
 
-        if (model.gltf.extras.sourceVersion !== '2.0') {
+        if (model._sourceVersion !== '2.0') {
             drawFS = ShaderSource.replaceMain(drawFS, 'non_gamma_corrected_main');
             drawFS =
                 drawFS +
@@ -4095,6 +4096,7 @@ define([
                         var gltf = this.gltf;
                         // Add the original version so it remains cached
                         gltf.extras.sourceVersion = ModelUtility.getAssetVersion(gltf);
+                        this._sourceVersion = gltf.extras.sourceVersion;
 
                         updateVersion(gltf);
                         addDefaults(gltf);

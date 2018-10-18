@@ -748,7 +748,7 @@ define([
             execute(autoexposure, context, initialTexture, depthTexture, idTexture);
         }
         if (tonemappingEnabled && tonemapping.ready) {
-            execute(tonemapping, context, initialTexture, depthTexture);
+            execute(tonemapping, context, initialTexture, depthTexture, idTexture);
             initialTexture = getOutputTexture(tonemapping);
         }
 

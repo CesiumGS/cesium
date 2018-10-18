@@ -698,7 +698,7 @@ define([
                         if (component === 'diffuse' || component === 'emission') {
                             material.shaderSource += 'material.' + component + ' = czm_gammaCorrect(' + components[component] + '); \n';
                         } else if (component === 'alpha') {
-                            material.shaderSource += 'material.alpha = czm_gammaCorrectAlpha(' + components.alpha + '); \n';
+                            material.shaderSource += 'material.alpha = czm_gammaCorrect(vec4(vec3(0.0), ' + components.alpha + ')).a; \n';
                         } else {
                             material.shaderSource += 'material.' + component + ' = ' + components[component] + ';\n';
                         }
