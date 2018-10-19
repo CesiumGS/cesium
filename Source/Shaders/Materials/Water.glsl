@@ -47,7 +47,7 @@ czm_material czm_getMaterial(czm_materialInput materialInput)
     // diffuse highlights are based on how perturbed the normal is
     material.diffuse += (0.1 * tsPerturbationRatio);
 
-    material.diffuse = czm_gammaCorrect(material.diffuse);
+    material.diffuse = material.diffuse;
 
     material.normal = normalize(materialInput.tangentToEyeMatrix * normalTangentSpace);
 

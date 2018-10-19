@@ -947,7 +947,11 @@ defineSuite([
             m.show = true;
 
             expect(scene).toRenderAndCall(function(rgba) {
-                expect(rgba).toEqualEpsilon([169, 3, 3, 255], 10); // Red
+                // Red
+                expect(rgba[0]).toBeGreaterThan(160);
+                expect(rgba[1]).toBeLessThan(15);
+                expect(rgba[2]).toBeLessThan(15);
+                expect(rgba[3]).toEqual(255);
             });
 
             primitives.remove(m);

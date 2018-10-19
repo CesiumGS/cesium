@@ -650,8 +650,6 @@ define([
         this._sourcePrograms = {};
         this._quantizedVertexShaders = {};
 
-        this._upgrade10To20 = undefined;
-
         this._nodeCommands = [];
         this._pickIds = [];
 
@@ -662,6 +660,7 @@ define([
         this._rtcCenter2D = undefined;  // in projected world coordinates
 
         this._keepPipelineExtras = options.keepPipelineExtras; // keep the buffers in memory for use in other applications
+        this._sourceVersion = undefined;
 
         this._sphericalHarmonicCoefficients = undefined;
         this._specularEnvironmentMaps = undefined;
@@ -1985,14 +1984,14 @@ define([
             drawFS = 'uniform vec4 czm_pickColor;\n' + drawFS;
         }
 
-        if (model._upgrade10To20) {
+        if (model._sourceVersion !== '2.0') {
             drawFS = ShaderSource.replaceMain(drawFS, 'non_gamma_corrected_main');
             drawFS =
                 drawFS +
                 '\n' +
                 'void main() { \n' +
                 '    non_gamma_corrected_main(); \n' +
-                '    gl_FragColor.rgb = czm_gammaCorrect(gl_FragColor.rgb); \n' +
+                '    gl_FragColor = czm_gammaCorrect(gl_FragColor); \n' +
                 '} \n';
         }
 
@@ -2045,14 +2044,14 @@ define([
             drawFS = 'uniform vec4 czm_pickColor;\n' + drawFS;
         }
 
-        if (model._upgrade10To20) {
+        if (model._sourceVersion !== '2.0') {
             drawFS = ShaderSource.replaceMain(drawFS, 'non_gamma_corrected_main');
             drawFS =
                 drawFS +
                 '\n' +
                 'void main() { \n' +
                 '    non_gamma_corrected_main(); \n' +
-                '    gl_FragColor.rgb = czm_gammaCorrect(gl_FragColor.rgb); \n' +
+                '    gl_FragColor = czm_gammaCorrect(gl_FragColor); \n' +
                 '} \n';
         }
 
@@ -4108,10 +4107,6 @@ define([
         this._defaultTexture = context.defaultTexture;
 
         if ((this._state === ModelState.NEEDS_LOAD) && defined(this.gltf)) {
-            if (!defined(this._upgrade10To20)) {
-                this._upgrade10To20 = defined(this.gltf.asset) && defined(this.gltf.asset.extras) && this.gltf.asset.extras.gltf_pipeline_upgrade_10to20;
-            }
-
             // Use renderer resources from cache instead of loading/creating them?
             var cachedRendererResources;
             var cacheKey = this.cacheKey;
@@ -4190,6 +4185,7 @@ define([
                         var gltf = this.gltf;
                         // Add the original version so it remains cached
                         gltf.extras.sourceVersion = ModelUtility.getAssetVersion(gltf);
+                        this._sourceVersion = gltf.extras.sourceVersion;
 
                         updateVersion(gltf);
                         addDefaults(gltf);

@@ -96,7 +96,7 @@ void main(void)
 
 #ifdef PER_INSTANCE_COLOR
 
-    vec4 color = vec4(czm_gammaCorrect(v_color.rgb), v_color.a);
+    vec4 color = czm_gammaCorrect(v_color);
 #ifdef FLAT
     gl_FragColor = color;
 #else // FLAT

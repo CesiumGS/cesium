@@ -1543,6 +1543,7 @@ define([
         if (scene._hdr) {
             derivedCommands.hdr = DerivedCommand.createHdrCommand(command, context, derivedCommands.hdr);
             command = derivedCommands.hdr.command;
+            derivedCommands = command.derivedCommands;
         }
 
         if (lightShadowsEnabled && command.receiveShadows) {
@@ -1892,11 +1893,11 @@ define([
             command = command.derivedCommands.logDepth.command;
         }
 
-        if (defined(command.derivedCommands) && defined(command.derivedCommands.hdr)) {
+        var passes = frameState.passes;
+        if (!passes.pick && defined(command.derivedCommands) && defined(command.derivedCommands.hdr)) {
             command = command.derivedCommands.hdr.command;
         }
 
-        var passes = frameState.passes;
         if (passes.pick || passes.depth) {
             if (passes.pick && !passes.depth && defined(command.derivedCommands.picking)) {
                 command = command.derivedCommands.picking.pickCommand;
@@ -3069,6 +3070,8 @@ define([
         frameState.creditDisplay.update();
     }
 
+    var scratchBackgroundColor = new Color();
+
     function render(scene, time) {
         scene._pickPositionCacheDirty = true;
 
@@ -3085,6 +3088,12 @@ define([
         frameState.passes.postProcess = scene.postProcessStages.hasSelected;
 
         var backgroundColor = defaultValue(scene.backgroundColor, Color.BLACK);
+        if (scene._hdr) {
+            backgroundColor = Color.clone(backgroundColor, scratchBackgroundColor);
+            backgroundColor.red = Math.pow(backgroundColor.red, scene.gamma);
+            backgroundColor.green = Math.pow(backgroundColor.green, scene.gamma);
+            backgroundColor.blue = Math.pow(backgroundColor.blue, scene.gamma);
+        }
         frameState.backgroundColor = backgroundColor;
 
         frameState.creditDisplay.beginFrame();
@@ -3468,6 +3477,7 @@ define([
             return Cartesian3.clone(this._pickPositionCache[cacheKey], result);
         }
 
+        var frameState = this._frameState;
         var context = this._context;
         var uniformState = context.uniformState;
 
@@ -3478,6 +3488,8 @@ define([
         if (this.pickTranslucentDepth) {
             renderTranslucentDepthForPick(this, drawingBufferPosition);
         } else {
+            updateFrameState(this, frameState.frameNumber, frameState.time);
+            uniformState.update(frameState);
             updateEnvironment(this);
         }
         drawingBufferPosition.y = this.drawingBufferHeight - drawingBufferPosition.y;
@@ -3509,7 +3521,7 @@ define([
                     camera.position.z = height2D - renderedFrustum.near + 1.0;
                     frustum.far = Math.max(1.0, renderedFrustum.far - renderedFrustum.near);
                     frustum.near = 1.0;
-                    uniformState.update(this.frameState);
+                    uniformState.update(frameState);
                     uniformState.updateFrustum(frustum);
                 } else {
                     frustum.near = renderedFrustum.near * (i !== 0 ? this.opaqueFrustumNearOffset : 1.0);
@@ -3521,7 +3533,7 @@ define([
 
                 if (this.mode === SceneMode.SCENE2D) {
                     camera.position.z = height2D;
-                    uniformState.update(this.frameState);
+                    uniformState.update(frameState);
                 }
 
                 this._pickPositionCache[cacheKey] = Cartesian3.clone(result);

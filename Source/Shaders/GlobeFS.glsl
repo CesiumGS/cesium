@@ -33,6 +33,10 @@ uniform float u_dayTextureSaturation[TEXTURE_UNITS];
 uniform float u_dayTextureOneOverGamma[TEXTURE_UNITS];
 #endif
 
+#ifdef APPLY_IMAGERY_CUTOUT
+uniform vec4 u_dayTextureCutoutRectangles[TEXTURE_UNITS];
+#endif
+
 uniform vec4 u_dayTextureTexCoordsRectangle[TEXTURE_UNITS];
 #endif
 
@@ -128,8 +132,6 @@ vec4 sampleAndBlend(
     color = pow(color, vec3(textureOneOverGamma));
 #endif
 
-    color = czm_gammaCorrect(color);
-
 #ifdef APPLY_SPLIT
     float splitPosition = czm_imagerySplitPosition;
     // Split to the left
@@ -157,6 +159,10 @@ vec4 sampleAndBlend(
 #ifdef APPLY_SATURATION
     color = czm_saturation(color, textureSaturation);
 #endif
+
+    vec4 tempColor = czm_gammaCorrect(vec4(color, alpha));
+    color = tempColor.rgb;
+    alpha = tempColor.a;
 
     float sourceAlpha = alpha * textureAlpha;
     float outAlpha = mix(previousColor.a, 1.0, sourceAlpha);
@@ -259,13 +265,7 @@ void main()
     color.xyz = mix(color.xyz, material.diffuse, material.alpha);
 #endif
 
-#ifdef HDR
-    czm_material material;
-    material.diffuse = color.rgb;
-    material.alpha = color.a;
-    material.normal = normalEC;
-    vec4 finalColor = czm_phong(normalize(-v_positionEC), material);
-#elif defined(ENABLE_VERTEX_LIGHTING)
+#ifdef ENABLE_VERTEX_LIGHTING
     float diffuseIntensity = clamp(czm_getLambertDiffuse(czm_sunDirectionEC, normalize(v_normalEC)) * 0.9 + 0.3, 0.0, 1.0);
     vec4 finalColor = vec4(color.rgb * diffuseIntensity, color.a);
 #elif defined(ENABLE_DAYNIGHT_SHADING)

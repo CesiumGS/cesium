@@ -1189,7 +1189,7 @@ define([
 
         fs +=  'void main() \n' +
                '{ \n' +
-               '    gl_FragColor = v_color; \n';
+               '    gl_FragColor = czm_gammaCorrect(v_color); \n';
 
         if (hasClippedContent) {
             fs += getClipAndStyleCode('u_clippingPlanes', 'u_clippingPlanesMatrix', 'u_clippingPlanesEdgeStyle');
