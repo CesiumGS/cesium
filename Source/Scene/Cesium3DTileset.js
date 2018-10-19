@@ -1692,8 +1692,6 @@ define([
     function updateTiles(tileset, frameState) {
         tileset._styleEngine.applyStyle(tileset, frameState);
 
-        var passes = frameState.passes;
-        var isRender = passes.render;
         var statistics = tileset._statistics;
         var passes = frameState.passes;
         var isRender = passes.render;
