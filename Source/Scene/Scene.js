@@ -3748,7 +3748,7 @@ define([
                (objectsToExclude.indexOf(object.id) > -1);
     }
 
-    function getRayIntersection(scene, ray, objectsToExclude, async, requirePosition) {
+    function getRayIntersection(scene, ray, objectsToExclude, requirePosition, async) {
         var context = scene._context;
         var uniformState = context.uniformState;
         var frameState = scene._frameState;
@@ -3807,22 +3807,22 @@ define([
         }
     }
 
-    function getRayIntersections(scene, ray, limit, objectsToExclude, async, requirePosition) {
+    function getRayIntersections(scene, ray, limit, objectsToExclude, requirePosition, async) {
         var pickCallback = function() {
-            return getRayIntersection(scene, ray, objectsToExclude, async, requirePosition);
+            return getRayIntersection(scene, ray, objectsToExclude, requirePosition, async);
         };
         return drillPick(limit, pickCallback);
     }
 
-    function pickFromRay(scene, ray, objectsToExclude, async, requirePosition) {
-        var results = getRayIntersections(scene, ray, 1, objectsToExclude, async, requirePosition);
+    function pickFromRay(scene, ray, objectsToExclude, requirePosition, async) {
+        var results = getRayIntersections(scene, ray, 1, objectsToExclude, requirePosition, async);
         if (results.length > 0) {
             return results[0];
         }
     }
 
-    function drillPickFromRay(scene, ray, limit, objectsToExclude, async, requirePosition) {
-        return getRayIntersections(scene, ray, limit, objectsToExclude, async, requirePosition);
+    function drillPickFromRay(scene, ray, limit, objectsToExclude, requirePosition, async) {
+        return getRayIntersections(scene, ray, limit, objectsToExclude, requirePosition, async);
     }
 
     /**
@@ -3906,7 +3906,7 @@ define([
         ray = Ray.clone(ray);
         objectsToExclude = defined(objectsToExclude) ? objectsToExclude.slice() : objectsToExclude;
         return launchAsyncLoader(this, ray, objectsToExclude, function() {
-            return pickFromRay(that, ray, objectsToExclude, true, false);
+            return pickFromRay(that, ray, objectsToExclude, false, true);
         });
     };
 
@@ -3934,7 +3934,7 @@ define([
         ray = Ray.clone(ray);
         objectsToExclude = defined(objectsToExclude) ? objectsToExclude.slice() : objectsToExclude;
         return launchAsyncLoader(this, ray, objectsToExclude, function() {
-            return drillPickFromRay(that, ray, limit, objectsToExclude, true, false);
+            return drillPickFromRay(that, ray, limit, objectsToExclude, false, true);
         });
     };
 
@@ -4022,7 +4022,7 @@ define([
         }
         //>>includeEnd('debug');
         var ray = getRayForSampleHeight(this, position);
-        var pickResult = pickFromRay(this, ray, objectsToExclude, false, true);
+        var pickResult = pickFromRay(this, ray, objectsToExclude, true, false);
         if (defined(pickResult)) {
             return getHeightFromCartesian(this, pickResult.position);
         }
@@ -4060,7 +4060,7 @@ define([
         }
         //>>includeEnd('debug');
         var ray = getRayForClampToHeight(this, cartesian);
-        var pickResult = pickFromRay(this, ray, objectsToExclude, false, true);
+        var pickResult = pickFromRay(this, ray, objectsToExclude, true, false);
         if (defined(pickResult)) {
             return Cartesian3.clone(pickResult.position, result);
         }

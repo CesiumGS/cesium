@@ -1692,6 +1692,8 @@ define([
     function updateTiles(tileset, frameState) {
         tileset._styleEngine.applyStyle(tileset, frameState);
 
+        var passes = frameState.passes;
+        var isRender = passes.render;
         var statistics = tileset._statistics;
         var passes = frameState.passes;
         var isRender = passes.render;
@@ -1928,7 +1930,6 @@ define([
         var isAsync = passes.async;
 
         var statistics = this._statistics;
-        var statisticsLast = isAsync ? this._statisticsLastAsync : (isPick ? this._statisticsLastPick : this._statisticsLastRender);
         statistics.clear();
 
         if (this.dynamicScreenSpaceError) {
@@ -1964,12 +1965,7 @@ define([
             // may resolve outside of the update loop that then raise events, e.g.,
             // model's readyPromise.
             raiseLoadProgressEvent(this, frameState);
-        }
 
-        // Update last statistics
-        Cesium3DTilesetStatistics.clone(statistics, statisticsLast);
-
-        if (isRender) {
             if (statistics.selected !== 0) {
                 var credits = this._credits;
                 if (defined(credits)) {
@@ -1980,6 +1976,10 @@ define([
                 }
             }
         }
+
+        // Update last statistics
+        var statisticsLast = isPick ? this._statisticsLastPick : this._statisticsLastRender;
+        Cesium3DTilesetStatistics.clone(statistics, statisticsLast);
 
         return ready;
     };

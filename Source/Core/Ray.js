@@ -43,17 +43,15 @@ define([
      *
      * @param {Ray} ray The ray to duplicate.
      * @param {Ray} [result] The object onto which to store the result.
-     * @returns {Ray} The modified result parameter or a new Ray instance if one was not provided.
+     * @returns {Ray} The modified result parameter or a new Ray instance if one was not provided. (Returns undefined if ray is undefined)
      */
     Ray.clone = function(ray, result) {
-        //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.object('ray', ray);
-        //>>includeEnd('debug');
-
+        if (!defined(ray)) {
+            return undefined;
+        }
         if (!defined(result)) {
             return new Ray(ray.origin, ray.direction);
         }
-
         result.origin = ray.origin;
         result.direction = ray.direction;
         return result;

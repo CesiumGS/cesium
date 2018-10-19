@@ -554,7 +554,6 @@ defineSuite([
                 position : Cartographic.fromRadians(0.0, 0.0, 100.0),
                 disableDepthTestDistance : Number.POSITIVE_INFINITY
             });
-
             expect(scene).toPickFromRayAndCall(function(result) {
                 expect(result.object.primitive).toBe(point);
                 expect(result.position).toBeUndefined();
@@ -915,7 +914,6 @@ defineSuite([
             }
 
             var rectangle = createSmallRectangle(0.0);
-
             var height = 100.0;
             var cartographic = new Cartographic(0.0, 0.0, height);
             var collection = scene.primitives.add(new PointPrimitiveCollection());
@@ -1082,7 +1080,6 @@ defineSuite([
             }
 
             var rectangle = createSmallRectangle(0.0);
-
             var cartesian = Cartesian3.fromRadians(0.0, 0.0, 100.0);
             var collection = scene.primitives.add(new PointPrimitiveCollection());
             var point = collection.add({

@@ -622,13 +622,11 @@ define([
             // Leaf tiles do not have any error so save the computation
             return 0.0;
         }
-
         var camera = frameState.camera;
         var frustum = camera.frustum;
         var context = frameState.context;
         var width = context.drawingBufferWidth;
         var height = context.drawingBufferHeight;
-
         var error;
         if (frameState.mode === SceneMode.SCENE2D || frustum instanceof OrthographicFrustum) {
             if (defined(frustum._offCenterFrustum)) {
@@ -641,7 +639,6 @@ define([
             var distance = Math.max(this._distanceToCamera, CesiumMath.EPSILON7);
             var sseDenominator = camera.frustum.sseDenominator;
             error = (geometricError * height) / (distance * sseDenominator);
-
             if (tileset.dynamicScreenSpaceError) {
                 var density = tileset._dynamicScreenSpaceErrorComputedDensity;
                 var factor = tileset.dynamicScreenSpaceErrorFactor;
@@ -649,7 +646,6 @@ define([
                 error -= dynamicError;
             }
         }
-
         return error;
     };
 
@@ -662,7 +658,6 @@ define([
         var parent = this.parent;
         var parentTransform = defined(parent) ? parent.computedTransform : this._tileset.modelMatrix;
         var parentVisibilityPlaneMask = defined(parent) ? parent._visibilityPlaneMask : CullingVolume.MASK_INDETERMINATE;
-
         this.updateTransform(parentTransform);
         this._distanceToCamera = this.distanceToTile(frameState);
         this._centerZDepth = this.distanceToTileCenter(frameState);
