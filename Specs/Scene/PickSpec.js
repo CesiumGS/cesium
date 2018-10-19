@@ -2153,8 +2153,8 @@ defineSuite([
             scene.render();
             return completed === 2;
         }).then(function() {
-            expect(results[0][0].toBeDefined());
-            expect(results[1][0].height.toBeDefined());
+            expect(results[0][0]).toBeDefined();
+            expect(results[1][0].height).toBeDefined();
         });
     });
 
