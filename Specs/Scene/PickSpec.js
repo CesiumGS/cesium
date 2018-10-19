@@ -18,6 +18,7 @@ defineSuite([
         'Scene/Cesium3DTileStyle',
         'Scene/EllipsoidSurfaceAppearance',
         'Scene/Globe',
+        'Scene/PointPrimitiveCollection',
         'Scene/Primitive',
         'Scene/Scene',
         'Scene/SceneMode',
@@ -45,6 +46,7 @@ defineSuite([
         Cesium3DTileStyle,
         EllipsoidSurfaceAppearance,
         Globe,
+        PointPrimitiveCollection,
         Primitive,
         Scene,
         SceneMode,
@@ -546,6 +548,18 @@ defineSuite([
             }, primitiveRay);
         });
 
+        it('picks primitive that doesn\'t write depth', function() {
+            var collection = scene.primitives.add(new PointPrimitiveCollection());
+            var point = collection.add({
+                position : Cartographic.fromRadians(0.0, 0.0, 100.0),
+                disableDepthTestDistance : Number.POSITIVE_INFINITY
+            });
+            expect(scene).toPickFromRayAndCall(function(result) {
+                expect(result.object.primitive).toBe(point);
+                expect(result.position).toBeUndefined();
+            }, primitiveRay);
+        });
+
         it('throws if ray is undefined', function() {
             expect(function() {
                 scene.pickFromRay(undefined);
@@ -894,6 +908,30 @@ defineSuite([
             }, cartographic, [rectangle2, rectangle3]);
         });
 
+        it('excludes primitive that doesn\'t write depth', function() {
+            if (!scene.sampleHeightSupported) {
+                return;
+            }
+            var rectangle = createSmallRectangle(0.0);
+            var height = 100.0;
+            var cartographic = new Cartographic(0.0, 0.0, height);
+            var collection = scene.primitives.add(new PointPrimitiveCollection());
+            var point = collection.add({
+                position : Cartographic.toCartesian(cartographic)
+            });
+            expect(scene).toSampleHeightAndCall(function(height) {
+                expect(height).toEqualEpsilon(height, CesiumMath.EPSILON3);
+            }, cartographic);
+            point.disableDepthTestDistance = Number.POSITIVE_INFINITY;
+            expect(scene).toSampleHeightAndCall(function(height) {
+                expect(height).toEqualEpsilon(0.0, CesiumMath.EPSILON3);
+            }, cartographic);
+            rectangle.show = false;
+            expect(scene).toSampleHeightAndCall(function(height) {
+                expect(height).toBeUndefined();
+            }, cartographic);
+        });
+
         it('throws if position is undefined', function() {
             if (!scene.sampleHeightSupported) {
                 return;
@@ -966,7 +1004,7 @@ defineSuite([
         });
 
         it('clamps to the globe', function() {
-            if (!scene.sampleHeightSupported) {
+            if (!scene.clampToHeightSupported) {
                 return;
             }
 
@@ -1030,6 +1068,29 @@ defineSuite([
                 var expectedCartesian = Cartesian3.fromRadians(0.0, 0.0);
                 expect(cartesian).toEqualEpsilon(expectedCartesian, CesiumMath.EPSILON5);
             }, cartesian, [rectangle2, rectangle3]);
+        });
+
+        it('excludes primitive that doesn\'t write depth', function() {
+            if (!scene.clampToHeightSupported) {
+                return;
+            }
+            var rectangle = createSmallRectangle(0.0);
+            var cartesian = Cartesian3.fromRadians(0.0, 0.0, 100.0);
+            var collection = scene.primitives.add(new PointPrimitiveCollection());
+            var point = collection.add({
+                position : cartesian
+            });
+            expect(scene).toClampToHeightAndCall(function(clampedCartesian) {
+                expect(clampedCartesian).toEqualEpsilon(cartesian, CesiumMath.EPSILON3);
+            }, cartesian);
+            point.disableDepthTestDistance = Number.POSITIVE_INFINITY;
+            expect(scene).toClampToHeightAndCall(function(clampedCartesian) {
+                expect(clampedCartesian).toEqualEpsilon(cartesian, CesiumMath.EPSILON3);
+            }, cartesian);
+            rectangle.show = false;
+            expect(scene).toClampToHeightAndCall(function(clampedCartesian) {
+                expect(clampedCartesian).toBeUndefined();
+            }, cartesian);
         });
 
         it('throws if cartesian is undefined', function() {
