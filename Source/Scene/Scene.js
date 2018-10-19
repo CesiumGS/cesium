@@ -3713,12 +3713,6 @@ define([
     }
 
     function getRayIntersections(scene, ray, limit, objectsToExclude, requirePosition) {
-        //>>includeStart('debug', pragmas.debug);
-        Check.defined('ray', ray);
-        if (scene._mode !== SceneMode.SCENE3D) {
-            throw new DeveloperError('Ray intersections are only supported in 3D mode.');
-        }
-        //>>includeEnd('debug');
         var pickCallback = function() {
             return getRayIntersection(scene, ray, objectsToExclude, requirePosition);
         };

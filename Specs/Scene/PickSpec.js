@@ -924,13 +924,13 @@ defineSuite([
             expect(scene).toSampleHeightAndCall(function(height) {
                 expect(height).toEqualEpsilon(height, CesiumMath.EPSILON3);
             }, cartographic);
-            point.disableDepthTestDistance = Number.POSITIVE_INFINITY;
 
+            point.disableDepthTestDistance = Number.POSITIVE_INFINITY;
             expect(scene).toSampleHeightAndCall(function(height) {
                 expect(height).toEqualEpsilon(0.0, CesiumMath.EPSILON3);
             }, cartographic);
-            rectangle.show = false;
 
+            rectangle.show = false;
             expect(scene).toSampleHeightAndCall(function(height) {
                 expect(height).toBeUndefined();
             }, cartographic);
