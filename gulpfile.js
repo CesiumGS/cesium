@@ -61,6 +61,7 @@ var sourceFiles = ['Source/**/*.js',
                    '!Source/*.js',
                    '!Source/Workers/**',
                    '!Source/ThirdParty/Workers/**',
+                   '!Source/ThirdParty/google-earth-dbroot-parser.js',
                    '!Source/ThirdParty/pako_inflate.js',
                    '!Source/ThirdParty/crunch.js',
                    'Source/Workers/createTaskProcessorWorker.js'];
@@ -891,6 +892,14 @@ function minifyCSS(outputDirectory) {
     });
 }
 
+var gulpUglify = require('gulp-uglify');
+
+function minifyModules(outputDirectory) {
+    return streamToPromise(gulp.src('Source/ThirdParty/google-earth-dbroot-parser.js')
+        .pipe(gulpUglify())
+        .pipe(gulp.dest(outputDirectory + '/ThirdParty/')));
+}
+
 function combineJavaScript(options) {
     var optimizer = options.optimizer;
     var outputDirectory = options.outputDirectory;
@@ -901,7 +910,8 @@ function combineJavaScript(options) {
 
     var promise = Promise.join(
         combineCesium(!removePragmas, optimizer, combineOutput),
-        combineWorkers(!removePragmas, optimizer, combineOutput)
+        combineWorkers(!removePragmas, optimizer, combineOutput),
+        minifyModules(outputDirectory)
     );
 
     return promise.then(function() {
@@ -1264,7 +1274,7 @@ function buildCesiumViewer() {
 
             gulp.src(['Build/Cesium/Assets/**',
                       'Build/Cesium/Workers/**',
-                      'Build/Cesium/ThirdParty/Workers/**',
+                      'Build/Cesium/ThirdParty/**',
                       'Build/Cesium/Widgets/**',
                       '!Build/Cesium/Widgets/**/*.css'],
                 {

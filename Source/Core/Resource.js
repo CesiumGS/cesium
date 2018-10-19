@@ -10,7 +10,6 @@ define([
         './defineProperties',
         './deprecationWarning',
         './DeveloperError',
-        './FeatureDetection',
         './freezeObject',
         './getAbsoluteUri',
         './getBaseUri',
@@ -18,6 +17,7 @@ define([
         './isBlobUri',
         './isCrossOriginUrl',
         './isDataUri',
+        './loadAndExecuteScript',
         './objectToQuery',
         './queryToObject',
         './Request',
@@ -38,7 +38,6 @@ define([
         defineProperties,
         deprecationWarning,
         DeveloperError,
-        FeatureDetection,
         freezeObject,
         getAbsoluteUri,
         getBaseUri,
@@ -46,6 +45,7 @@ define([
         isBlobUri,
         isCrossOriginUrl,
         isDataUri,
+        loadAndExecuteScript,
         objectToQuery,
         queryToObject,
         Request,
@@ -1934,20 +1934,7 @@ define([
     };
 
     Resource._Implementations.loadAndExecuteScript = function(url, functionName, deferred) {
-        var script = document.createElement('script');
-        script.async = true;
-        script.src = url;
-
-        var head = document.getElementsByTagName('head')[0];
-        script.onload = function() {
-            script.onload = undefined;
-            head.removeChild(script);
-        };
-        script.onerror = function(e) {
-            deferred.reject(e);
-        };
-
-        head.appendChild(script);
+        return loadAndExecuteScript(url, functionName).otherwise(deferred.reject);
     };
 
     /**

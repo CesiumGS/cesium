@@ -272,6 +272,8 @@ define([
             gltfView = new Uint8Array(uint8Array.subarray(byteOffset, byteOffset + gltfByteLength));
         }
 
+        var tileset = content._tileset;
+
         // Create model instance collection
         var collectionOptions = {
             instances : new Array(instancesLength),
@@ -282,10 +284,12 @@ define([
             gltf : undefined,
             basePath : undefined,
             incrementallyLoadTextures : false,
-            upAxis : content._tileset._gltfUpAxis,
+            upAxis : tileset._gltfUpAxis,
             forwardAxis : Axis.X,
             opaquePass : Pass.CESIUM_3D_TILE, // Draw opaque portions during the 3D Tiles pass
-            pickIdLoaded : getPickIdCallback(content)
+            pickIdLoaded : getPickIdCallback(content),
+            imageBasedLightingFactor : tileset.imageBasedLightingFactor,
+            lightColor : tileset.lightColor
         };
 
         if (gltfFormat === 0) {
