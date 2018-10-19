@@ -70,6 +70,7 @@ define([
         './PolylineGlowMaterialProperty',
         './PolylineGraphics',
         './PolylineOutlineMaterialProperty',
+        './PolylineVolumeGraphics',
         './PositionPropertyArray',
         './PropertyArray',
         './PropertyBag',
@@ -157,6 +158,7 @@ define([
         PolylineGlowMaterialProperty,
         PolylineGraphics,
         PolylineOutlineMaterialProperty,
+        PolylineVolumeGraphics,
         PositionPropertyArray,
         PropertyArray,
         PropertyBag,
@@ -1241,6 +1243,39 @@ define([
         }
     }
 
+    function processShapesPacketData(object, propertyName, shapesData, entityCollection) {
+        if (defined(shapesData.references)) {
+            var properties = shapesData.references.map(function(reference) {
+                return createReferenceProperty(entityCollection, reference);
+            });
+
+            var iso8601Interval = shapesData.interval;
+            if (defined(iso8601Interval)) {
+                iso8601Interval = TimeInterval.fromIso8601(iso8601Interval);
+                if (!(object[propertyName] instanceof CompositePositionProperty)) {
+                    iso8601Interval.data = new PositionPropertyArray(properties);
+                    var property = new CompositePositionProperty();
+                    property.intervals.addInterval(iso8601Interval);
+                    object[propertyName] = property;
+                }
+            } else {
+                object[propertyName] = new PositionPropertyArray(properties);
+            }
+        } else {
+            if (defined(shapesData.cartesian)) {
+                shapesData.array = Cartesian2.unpackArray(shapesData.cartesian);
+            } else if (defined(shapesData.cartographicRadians)) {
+                shapesData.array = Cartesian2.fromRadiansArray(shapesData.cartographicRadians);
+            } else if (defined(shapesData.cartographicDegrees)) {
+                shapesData.array = Cartesian2.fromDegreesArray(shapesData.cartographicDegrees);
+            }
+
+            if (defined(shapesData.array)) {
+                processPacketData(Array, object, propertyName, shapesData, undefined, undefined, entityCollection);
+            }
+        }
+    }
+
     function processPositions(object, propertyName, positionsData, entityCollection) {
         if (!defined(positionsData)) {
             return;
@@ -1252,6 +1287,20 @@ define([
             }
         } else {
             processPositionsPacketData(object, propertyName, positionsData, entityCollection);
+        }
+    }
+
+    function processShapes(object, propertyName, shapesData, entityCollection) {
+        if (!defined(shapesData)) {
+            return;
+        }
+
+        if (isArray(shapesData)) {
+            for (var i = 0, length = shapesData.length; i < length; i++) {
+                processShapesPacketData(object, propertyName, shapesData[i], entityCollection);
+            }
+        } else {
+            processShapesPacketData(object, propertyName, shapesData, entityCollection);
         }
     }
 
@@ -1801,6 +1850,38 @@ define([
         processPacketData(Number, polyline, 'zIndex', polylineData.zIndex, interval, sourceUri, entityCollection);
     }
 
+    function processPolylineVolume(entity, packet, entityCollection, sourceUri) {
+        var polylineVolumeData = packet.polylineVolume;
+        if (!defined(polylineVolumeData)) {
+            return;
+        }
+
+        var interval;
+        var intervalString = polylineVolumeData.interval;
+        if (defined(intervalString)) {
+            iso8601Scratch.iso8601 = intervalString;
+            interval = TimeInterval.fromIso8601(iso8601Scratch);
+        }
+
+        var polylineVolume = entity.polylineVolume;
+        if (!defined(polylineVolume)) {
+            entity.polylineVolume = polylineVolume = new PolylineVolumeGraphics();
+        }
+
+        processPositions(polylineVolume, 'positions', polylineVolumeData.positions, entityCollection);
+        processShapes(polylineVolume, 'shape', polylineVolumeData.shape, entityCollection);
+        processPacketData(Boolean, polylineVolume, 'show', polylineVolumeData.show, interval, sourceUri, entityCollection);
+        processPacketData(CornerType, polylineVolume, 'cornerType', polylineVolumeData.cornerType, interval, sourceUri, entityCollection);
+        processPacketData(Boolean, polylineVolume, 'fill', polylineVolumeData.fill, interval, sourceUri, entityCollection);
+        processMaterialPacketData(polylineVolume, 'material', polylineVolumeData.material, interval, sourceUri, entityCollection);
+        processPacketData(Boolean, polylineVolume, 'outline', polylineVolumeData.outline, interval, sourceUri, entityCollection);
+        processPacketData(Color, polylineVolume, 'outlineColor', polylineVolumeData.outlineColor, interval, sourceUri, entityCollection);
+        processPacketData(Number, polylineVolume, 'outlineWidth', polylineVolumeData.outlineWidth, interval, sourceUri, entityCollection);
+        processPacketData(Number, polylineVolume, 'granularity', polylineVolumeData.granularity, interval, sourceUri, entityCollection);
+        processPacketData(ShadowMode, polylineVolume, 'shadows', polylineVolumeData.shadows, interval, sourceUri, entityCollection);
+        processPacketData(DistanceDisplayCondition, polylineVolume, 'distanceDisplayCondition', polylineVolumeData.distanceDisplayCondition, interval, sourceUri, entityCollection);
+    }
+
     function processRectangle(entity, packet, entityCollection, sourceUri) {
         var rectangleData = packet.rectangle;
         if (!defined(rectangleData)) {
@@ -2195,6 +2276,7 @@ define([
         processPoint, //
         processPolygon, //
         processPolyline, //
+        processPolylineVolume, //
         processProperties, //
         processRectangle, //
         processPosition, //

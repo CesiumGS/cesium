@@ -1,10 +1,14 @@
 defineSuite([
         'Core/Cartesian2',
+        'Core/Cartographic',
+        'Core/Ellipsoid',
         'Core/Math',
         'Specs/createPackableArraySpecs',
         'Specs/createPackableSpecs'
     ], function(
         Cartesian2,
+        Cartographic,
+        Ellipsoid,
         CesiumMath,
         createPackableArraySpecs,
         createPackableSpecs) {
@@ -43,6 +47,132 @@ defineSuite([
     it('fromArray throws without values', function() {
         expect(function() {
             Cartesian2.fromArray();
+        }).toThrowDeveloperError();
+    });
+
+    it('fromDegrees', function(){
+        var lon = -115;
+        var lat = 37;
+        var ellipsoid = Ellipsoid.WGS84;
+        var actual = Cartesian2.fromDegrees(lon, lat);
+        var expected = ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(lon, lat));
+        expect(actual).toEqual(expected);
+    });
+
+    it('fromDegrees with result', function(){
+        var lon = -115;
+        var lat = 37;
+        var ellipsoid = Ellipsoid.WGS84;
+        var result = new Cartesian2();
+        var actual = Cartesian2.fromDegrees(lon, lat, ellipsoid, result);
+        var expected = ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(lon, lat));
+        expect(actual).toEqual(expected);
+        expect(actual).toBe(result);
+    });
+
+    it('fromDegrees throws with no longitude', function() {
+        expect(function() {
+            Cartesian2.fromDegrees();
+        }).toThrowDeveloperError();
+    });
+
+    it('fromDegrees throws with no latitude', function() {
+        expect(function() {
+            Cartesian2.fromDegrees(1);
+        }).toThrowDeveloperError();
+    });
+
+    it('fromRadians', function(){
+        var lon = CesiumMath.toRadians(150);
+        var lat = CesiumMath.toRadians(-40);
+        var ellipsoid = Ellipsoid.WGS84;
+        var actual = Cartesian2.fromRadians(lon, lat);
+        var expected = ellipsoid.cartographicToCartesian(new Cartographic(lon, lat));
+        expect(actual).toEqual(expected);
+    });
+
+    it('fromRadians with result', function(){
+        var lon = CesiumMath.toRadians(150);
+        var lat = CesiumMath.toRadians(-40);
+        var ellipsoid = Ellipsoid.WGS84;
+        var result = new Cartesian2();
+        var actual = Cartesian2.fromRadians(lon, lat, ellipsoid, result);
+        var expected = ellipsoid.cartographicToCartesian(new Cartographic(lon, lat));
+        expect(actual).toEqual(expected);
+        expect(actual).toBe(result);
+    });
+
+    it('fromRadians throws with no longitude', function() {
+        expect(function() {
+            Cartesian2.fromRadians();
+        }).toThrowDeveloperError();
+    });
+
+    it('fromRadians throws with no latitude', function() {
+        expect(function() {
+            Cartesian2.fromRadians(1);
+        }).toThrowDeveloperError();
+    });
+
+    it('fromDegreesArray throws with no positions', function() {
+        expect(function() {
+            Cartesian2.fromDegreesArray();
+        }).toThrowDeveloperError();
+    });
+
+    it('fromDegreesArray throws with positions length < 2', function() {
+        expect(function() {
+            Cartesian2.fromDegreesArray([]);
+        }).toThrowDeveloperError();
+    });
+
+    it('fromDegreesArray throws with positions length not multiple of 2', function() {
+        expect(function() {
+            Cartesian2.fromDegreesArray([1, 3, 5]);
+        }).toThrowDeveloperError();
+    });
+
+    it('fromRadiansArray', function(){
+        var lon1 = CesiumMath.toRadians(90);
+        var lat1 = CesiumMath.toRadians(-70);
+        var lon2 = CesiumMath.toRadians(-100);
+        var lat2 = CesiumMath.toRadians(40);
+
+        var ellipsoid = Ellipsoid.WGS84;
+        var actual = Cartesian2.fromRadiansArray([lon1, lat1, lon2, lat2]);
+        var expected = ellipsoid.cartographicArrayToCartesianArray([new Cartographic(lon1, lat1), new Cartographic(lon2, lat2)]);
+        expect(actual).toEqual(expected);
+    });
+
+    it('fromRadiansArray with result', function(){
+        var lon1 = CesiumMath.toRadians(90);
+        var lat1 = CesiumMath.toRadians(-70);
+        var lon2 = CesiumMath.toRadians(-100);
+        var lat2 = CesiumMath.toRadians(40);
+
+        var ellipsoid = Ellipsoid.WGS84;
+        var result = [new Cartesian2(), new Cartesian2()];
+        var actual = Cartesian2.fromRadiansArray([lon1, lat1, lon2, lat2], ellipsoid, result);
+        var expected = ellipsoid.cartographicArrayToCartesianArray([new Cartographic(lon1, lat1), new Cartographic(lon2, lat2)]);
+        expect(result).toEqual(expected);
+        expect(actual).toBe(result);
+    });
+
+    it('fromRadiansArray throws with no positions', function() {
+        expect(function() {
+            Cartesian2.fromRadiansArray();
+        }).toThrowDeveloperError();
+    });
+
+    it('fromRadiansArray throws with positions length < 2', function() {
+        expect(function() {
+            Cartesian2.fromRadiansArray([]);
+        }).toThrowDeveloperError();
+    });
+
+    it('fromRadiansArray throws with positions length not multiple of 2', function() {
+        expect(function() {
+            Cartesian2.fromRadiansArray([1, 3, 5]);
         }).toThrowDeveloperError();
     });
 

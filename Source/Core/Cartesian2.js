@@ -4,6 +4,7 @@ define([
         './defined',
         './DeveloperError',
         './freezeObject',
+        './Cartesian3',
         './Math'
     ], function(
         Check,
@@ -11,6 +12,7 @@ define([
         defined,
         DeveloperError,
         freezeObject,
+        Cartesian3,
         CesiumMath) {
     'use strict';
 
@@ -672,6 +674,132 @@ define([
                 defined(right) &&
                 CesiumMath.equalsEpsilon(left.x, right.x, relativeEpsilon, absoluteEpsilon) &&
                 CesiumMath.equalsEpsilon(left.y, right.y, relativeEpsilon, absoluteEpsilon));
+    };
+
+    /**
+     * Returns a Cartesian2 position from longitude and latitude values given in degrees.
+     *
+     * @param {Number} longitude The longitude, in degrees
+     * @param {Number} latitude The latitude, in degrees
+     * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid on which the position lies.
+     * @param {Cartesian2} [result] The object onto which to store the result.
+     * @returns {Cartesian2} The position
+     *
+     * @example
+     * var position = Cesium.Cartesian2.fromDegrees(-115.0, 37.0);
+     */
+    Cartesian2.fromDegrees = function(longitude, latitude, ellipsoid, result) {
+        //>>includeStart('debug', pragmas.debug);
+        Check.typeOf.number('longitude', longitude);
+        Check.typeOf.number('latitude', latitude);
+        //>>includeEnd('debug');
+
+        var scratch = new Cartesian3();
+        scratch = Cartesian3.fromDegrees(longitude, latitude, 0, ellipsoid, scratch);
+
+        if(!defined(result)) {
+            result = new Cartesian2();
+        }
+        return Cartesian2.fromCartesian3(scratch, result);
+    };
+
+    /**
+     * Returns a Cartesian2 position from longitude and latitude values given in radians.
+     *
+     * @param {Number} longitude The longitude, in radians
+     * @param {Number} latitude The latitude, in radians
+     * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid on which the position lies.
+     * @param {Cartesian2} [result] The object onto which to store the result.
+     * @returns {Cartesian2} The position
+     *
+     * @example
+     * var position = Cesium.Cartesian2.fromRadians(-2.007, 0.645);
+     */
+    Cartesian2.fromRadians = function(longitude, latitude, ellipsoid, result) {
+        //>>includeStart('debug', pragmas.debug);
+        Check.typeOf.number('longitude', longitude);
+        Check.typeOf.number('latitude', latitude);
+        //>>includeEnd('debug');
+
+        var scratch = new Cartesian3();
+        scratch = Cartesian3.fromRadians(longitude, latitude, 0, ellipsoid, scratch);
+
+        if(!defined(result)) {
+            result = new Cartesian2();
+        }
+        return Cartesian2.fromCartesian3(scratch, result);
+    };
+
+    /**
+     * Returns an array of Cartesian2 positions given an array of longitude and latitude values given in degrees.
+     *
+     * @param {Number[]} coordinates A list of longitude and latitude values. Values alternate [longitude, latitude, longitude, latitude...].
+     * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid on which the coordinates lie.
+     * @param {Cartesian2[]} [result] An array of Cartesian2 objects to store the result.
+     * @returns {Cartesian2[]} The array of positions.
+     *
+     * @example
+     * var positions = Cesium.Cartesian2.fromDegreesArray([-115.0, 37.0, -107.0, 33.0]);
+     */
+    Cartesian2.fromDegreesArray = function(coordinates, ellipsoid, result) {
+        //>>includeStart('debug', pragmas.debug);
+        Check.defined('coordinates', coordinates);
+        if (coordinates.length < 2 || coordinates.length % 2 !== 0) {
+            throw new DeveloperError('the number of coordinates must be a multiple of 2 and at least 2');
+        }
+        //>>includeEnd('debug');
+
+        var length = coordinates.length;
+        if (!defined(result)) {
+            result = new Array(length / 2);
+        } else {
+            result.length = length / 2;
+        }
+
+        for (var i = 0; i < length; i += 2) {
+            var longitude = coordinates[i];
+            var latitude = coordinates[i + 1];
+            var index = i / 2;
+            result[index] = Cartesian2.fromDegrees(longitude, latitude, ellipsoid, result[index]);
+        }
+
+        return result;
+    };
+
+    /**
+     * Returns an array of Cartesian2 positions given an array of longitude and latitude values given in radians.
+     *
+     * @param {Number[]} coordinates A list of longitude and latitude values. Values alternate [longitude, latitude, longitude, latitude...].
+     * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid on which the coordinates lie.
+     * @param {Cartesian2[]} [result] An array of Cartesian2 objects to store the result.
+     * @returns {Cartesian2[]} The array of positions.
+     *
+     * @example
+     * var positions = Cesium.Cartesian2.fromRadiansArray([-2.007, 0.645, -1.867, .575]);
+     */
+    Cartesian2.fromRadiansArray = function(coordinates, ellipsoid, result) {
+        //>>includeStart('debug', pragmas.debug);
+        Check.defined('coordinates', coordinates);
+        if (coordinates.length < 2 || coordinates.length % 2 !== 0) {
+            throw new DeveloperError('the number of coordinates must be a multiple of 2 and at least 2');
+        }
+        //>>includeEnd('debug');
+
+        var length = coordinates.length;
+        if (!defined(result)) {
+            result = new Array(length / 2);
+        } else {
+            result.length = length / 2;
+        }
+
+        for (var i = 0; i < length; i += 2) {
+            var longitude = coordinates[i];
+            var latitude = coordinates[i + 1];
+            var index = i / 2;
+            result[index] = Cartesian2.fromRadians(longitude, latitude, ellipsoid, result[index]);
+        }
+
+        return result;
     };
 
     /**
