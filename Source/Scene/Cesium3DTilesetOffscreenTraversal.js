@@ -19,7 +19,7 @@ define([
         stackMaximumLength : 0
     };
 
-    Cesium3DTilesetOffscreenTraversal.selectTiles = function(tileset, statistics, frameState) {
+    Cesium3DTilesetOffscreenTraversal.selectTiles = function(tileset, frameState) {
         tileset._selectedTiles.length = 0;
         tileset._requestedTiles.length = 0;
         tileset._hasMixedContent = false;
@@ -62,7 +62,7 @@ define([
                 }
             }
 
-            visitTile(statistics);
+            visitTile(tileset);
             touchTile(tileset, tile);
         }
 
@@ -124,8 +124,8 @@ define([
         tileset._cache.touch(tile);
     }
 
-    function visitTile(statistics) {
-        ++statistics.visited;
+    function visitTile(tileset) {
+        ++tileset.statistics.visited;
     }
 
     function selectDesiredTile(tileset, tile, frameState) {

@@ -187,8 +187,6 @@ define([
         this._timeSinceLoad = 0.0;
         this._extras = undefined;
 
-        this._offscreenCache = new Cesium3DTilesetCache();
-
         this._cullWithChildrenBounds = defaultValue(options.cullWithChildrenBounds, true);
         this._allTilesAdditive = true;
 
@@ -204,8 +202,6 @@ define([
         this._modelMatrix = defined(options.modelMatrix) ? Matrix4.clone(options.modelMatrix) : Matrix4.clone(Matrix4.IDENTITY);
 
         this._statistics = new Cesium3DTilesetStatistics();
-        this._statisticsPick = new Cesium3DTilesetStatistics();
-        this._statisticsAsync = new Cesium3DTilesetStatistics();
         this._statisticsLastRender = new Cesium3DTilesetStatistics();
         this._statisticsLastPick = new Cesium3DTilesetStatistics();
         this._statisticsLastAsync = new Cesium3DTilesetStatistics();
@@ -1449,11 +1445,12 @@ define([
 
     ///////////////////////////////////////////////////////////////////////////
 
-    function requestContent(tileset, tile, statistics) {
+    function requestContent(tileset, tile) {
         if (tile.hasEmptyContent) {
             return;
         }
 
+        var statistics = tileset._statistics;
         var expired = tile.contentExpired;
         var requested = tile.requestContent();
 
@@ -1464,7 +1461,7 @@ define([
 
         if (expired) {
             if (tile.hasTilesetContent) {
-                destroySubtree(tileset, tile, statistics);
+                destroySubtree(tileset, tile);
             } else {
                 statistics.decrementLoadCounts(tile.content);
                 --statistics.numberOfTilesWithContentReady;
@@ -1473,43 +1470,42 @@ define([
 
         ++statistics.numberOfPendingRequests;
 
-        tile.contentReadyToProcessPromise.then(addToProcessingQueue(tileset, tile, statistics));
-        tile.contentReadyPromise.then(handleTileSuccess(tileset, tile, statistics)).otherwise(handleTileFailure(tileset, tile, statistics));
+        tile.contentReadyToProcessPromise.then(addToProcessingQueue(tileset, tile));
+        tile.contentReadyPromise.then(handleTileSuccess(tileset, tile)).otherwise(handleTileFailure(tileset, tile));
     }
 
     function sortRequestByPriority(a, b) {
         return a._priority - b._priority;
     }
 
-    function requestTiles(tileset, requestedTiles, sortByPriority, statistics) {
-        if (sortByPriority) {
-            // Sort requests by priority before making any requests.
-            // This makes it less likely that requests will be cancelled after being issued.
-            requestedTiles.sort(sortRequestByPriority);
-        }
+    function requestTiles(tileset) {
+        // Sort requests by priority before making any requests.
+        // This makes it less likely that requests will be cancelled after being issued.
+        var requestedTiles = tileset._requestedTiles;
         var length = requestedTiles.length;
+        requestedTiles.sort(sortRequestByPriority);
         for (var i = 0; i < length; ++i) {
-            requestContent(tileset, requestedTiles[i], statistics);
+            requestContent(tileset, requestedTiles[i]);
         }
     }
 
-    function addToProcessingQueue(tileset, tile, statistics) {
+    function addToProcessingQueue(tileset, tile) {
         return function() {
             tileset._processingQueue.push(tile);
 
-            --statistics.numberOfPendingRequests;
-            ++statistics.numberOfTilesProcessing;
+            --tileset._statistics.numberOfPendingRequests;
+            ++tileset._statistics.numberOfTilesProcessing;
         };
     }
 
-    function handleTileFailure(tileset, tile, statistics) {
+    function handleTileFailure(tileset, tile) {
         return function(error) {
             if (tileset._processingQueue.indexOf(tile) >= 0) {
                 // Failed during processing
-                --statistics.numberOfTilesProcessing;
+                --tileset._statistics.numberOfTilesProcessing;
             } else {
                 // Failed when making request
-                --statistics.numberOfPendingRequests;
+                --tileset._statistics.numberOfPendingRequests;
             }
 
             var url = tile._contentResource.url;
@@ -1526,15 +1522,15 @@ define([
         };
     }
 
-    function handleTileSuccess(tileset, tile, statistics) {
+    function handleTileSuccess(tileset, tile) {
         return function() {
-            --statistics.numberOfTilesProcessing;
+            --tileset._statistics.numberOfTilesProcessing;
 
             if (!tile.hasTilesetContent) {
                 // RESEARCH_IDEA: ability to unload tiles (without content) for an
                 // external tileset when all the tiles are unloaded.
-                statistics.incrementLoadCounts(tile.content);
-                ++statistics.numberOfTilesWithContentReady;
+                tileset._statistics.incrementLoadCounts(tile.content);
+                ++tileset._statistics.numberOfTilesWithContentReady;
 
                 // Add to the tile cache. Previously expired tiles are already in the cache and won't get re-added.
                 tileset._cache.add(tile);
@@ -1693,9 +1689,10 @@ define([
         pass : Pass.CESIUM_3D_TILE
     });
 
-    function updateTiles(tileset, frameState, statistics) {
+    function updateTiles(tileset, frameState) {
         tileset._styleEngine.applyStyle(tileset, frameState);
 
+        var statistics = tileset._statistics;
         var passes = frameState.passes;
         var isRender = passes.render;
         var isPick = passes.pick;
@@ -1811,7 +1808,7 @@ define([
 
     var scratchStack = [];
 
-    function destroySubtree(tileset, tile, statistics) {
+    function destroySubtree(tileset, tile) {
         var root = tile;
         var stack = scratchStack;
         stack.push(tile);
@@ -1823,27 +1820,27 @@ define([
                 stack.push(children[i]);
             }
             if (tile !== root) {
-                destroyTile(tileset, tile, statistics);
-                --statistics.numberOfTilesTotal;
+                destroyTile(tileset, tile);
+                --tileset._statistics.numberOfTilesTotal;
             }
         }
         root.children = [];
     }
 
-    function unloadTile(tileset, tile, statistics) {
+    function unloadTile(tileset, tile) {
         tileset.tileUnload.raiseEvent(tile);
-        statistics.decrementLoadCounts(tile.content);
-        --statistics.numberOfTilesWithContentReady;
+        tileset._statistics.decrementLoadCounts(tile.content);
+        --tileset._statistics.numberOfTilesWithContentReady;
         tile.unloadContent();
     }
 
-    function destroyTile(tileset, tile, statistics) {
-        tileset._cache.unloadTile(tileset, tile, statistics, unloadTile);
+    function destroyTile(tileset, tile) {
+        tileset._cache.unloadTile(tileset, tile, unloadTile);
         tile.destroy();
     }
 
-    function unloadTiles(tileset, statistics) {
-        tileset._cache.unloadTiles(tileset, statistics, unloadTile);
+    function unloadTiles(tileset) {
+        tileset._cache.unloadTiles(tileset, unloadTile);
     }
 
     /**
@@ -1861,7 +1858,9 @@ define([
 
     ///////////////////////////////////////////////////////////////////////////
 
-    function raiseLoadProgressEvent(tileset, frameState, statistics, statisticsLast) {
+    function raiseLoadProgressEvent(tileset, frameState) {
+        var statistics = tileset._statistics;
+        var statisticsLast = tileset._statisticsLastRender;
         var numberOfPendingRequests = statistics.numberOfPendingRequests;
         var numberOfTilesProcessing = statistics.numberOfTilesProcessing;
         var lastNumberOfPendingRequest = statisticsLast.numberOfPendingRequests;
@@ -1921,14 +1920,14 @@ define([
 
         this._skipLevelOfDetail = this.skipLevelOfDetail && !defined(this._classificationType) && !this._disableSkipLevelOfDetail && !this._allTilesAdditive;
 
-        // Do not do out-of-core operations (new content requests, cache removal,
-        // process new tiles) during the pick pass.
+        // Do out-of-core operations (new content requests, cache removal,
+        // process new tiles) only during the render pass.
         var passes = frameState.passes;
         var isRender = passes.render;
         var isPick = passes.pick;
         var isAsync = passes.async;
 
-        var statistics = isAsync ? this._statisticsAsync : (isPick ? this._statisticsPick : this._statistics);
+        var statistics = this._statistics;
         var statisticsLast = isAsync ? this._statisticsLastAsync : (isPick ? this._statisticsLastPick : this._statisticsLastRender);
         statistics.clear();
 
@@ -1943,28 +1942,28 @@ define([
         var ready;
 
         if (isAsync) {
-            ready = Cesium3DTilesetOffscreenTraversal.selectTiles(this, statistics, frameState);
+            ready = Cesium3DTilesetOffscreenTraversal.selectTiles(this, frameState);
         } else {
-            ready = Cesium3DTilesetTraversal.selectTiles(this, statistics, frameState);
+            ready = Cesium3DTilesetTraversal.selectTiles(this, frameState);
         }
 
         if (isRender || isAsync) {
-            requestTiles(this, this._requestedTiles, true, statistics);
+            requestTiles(this);
         }
 
         if (isRender) {
             processTiles(this, frameState);
         }
 
-        updateTiles(this, frameState, statistics);
+        updateTiles(this, frameState);
 
         if (isRender) {
-            unloadTiles(this, statistics);
+            unloadTiles(this);
 
             // Events are raised (added to the afterRender queue) here since promises
             // may resolve outside of the update loop that then raise events, e.g.,
             // model's readyPromise.
-            raiseLoadProgressEvent(this, frameState, statistics, statisticsLast);
+            raiseLoadProgressEvent(this, frameState);
         }
 
         // Update last statistics
