@@ -16,7 +16,6 @@ Change Log
 ### 1.50 - 2018-10-01
 
 ##### Breaking Changes :mega:
-* Renamed Ground Clamping Sandcastle example to [Clamp to Terrain](https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Clamp%20to%20Terrain.html).
 * Clipping planes on tilesets now use the root tile's transform, or the root tile's bounding sphere if a transform is not defined. [#7034](https://github.com/AnalyticalGraphicsInc/cesium/pull/7034)
     * This is to make clipping planes' coordinates always relative to the object they're attached to. So if you were positioning the clipping planes as in the example below, this is no longer necessary:
     ```javascript
