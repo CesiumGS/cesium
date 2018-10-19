@@ -2079,7 +2079,8 @@ define([
                 '    non_gamma_corrected_main(); \n' +
                 '    gl_FragColor = czm_gammaCorrect(gl_FragColor); \n' +
                 '} \n';
-        }?
+        }
+
         createAttributesAndProgram(programId, techniqueId, drawFS, drawVS, model, context);
     }
 
