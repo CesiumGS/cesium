@@ -696,7 +696,7 @@ define([
             fragmentShader += '#else \n'; // defined(DIFFUSE_IBL) || defined(SPECULAR_IBL)
 
             fragmentShader += '    const mat3 yUpToZUp = mat3(-1.0, 0.0, 0.0, 0.0, 0.0, -1.0, 0.0, 1.0, 0.0); \n';
-            fragmentShader += '    vec3 cubeDir = normalize(czm_inverseViewRotation * n); \n';
+            fragmentShader += '    vec3 cubeDir = normalize((czm_inverseModelView * vec4(n, 0.0)).xyz); \n';
             fragmentShader += '    cubeDir = yUpToZUp * cubeDir; \n'; // TODO
             fragmentShader += '#ifdef DIFFUSE_IBL \n';
             fragmentShader += '#ifdef SPHERICAL_HARMONICS \n';

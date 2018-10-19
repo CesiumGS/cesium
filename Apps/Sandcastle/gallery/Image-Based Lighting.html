@@ -29,7 +29,7 @@ function startup(Cesium) {
 //Sandcastle_Begin
 var viewer = new Cesium.Viewer('cesiumContainer');
 
-var envMap = '../../SampleData/EnvironmentMap/kiara_6_afternoon_2k_ibl.ktx';
+var environmentMapURL = '../../SampleData/EnvironmentMap/kiara_6_afternoon_2k_ibl.ktx';
 var modelURL = '../../SampleData/models/Spheres/MetalRoughSpheres.glb';
 
 var L00  = new Cesium.Cartesian3( 0.170455150831422,  0.163151083190219,  0.196966760289763);
@@ -69,7 +69,7 @@ model.readyPromise.then(function(model) {
     camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
 
     model.sphericalHarmonicCoefficients = coefficients;
-    model.specularEnvironmentMaps = envMap;
+    model.specularEnvironmentMaps = environmentMapURL;
 }).otherwise(function(error){
     window.alert(error);
 });
