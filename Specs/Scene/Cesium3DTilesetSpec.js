@@ -1,5 +1,6 @@
 defineSuite([
         'Scene/Cesium3DTileset',
+        'Core/Cartesian2',
         'Core/Cartesian3',
         'Core/Color',
         'Core/defined',
@@ -32,6 +33,7 @@ defineSuite([
         'ThirdParty/when'
     ], function(
         Cesium3DTileset,
+        Cartesian2,
         Cartesian3,
         Color,
         defined,
@@ -1916,6 +1918,30 @@ defineSuite([
                 fail('should not resolve');
             }).otherwise(function(error) {
                 expect(root._contentState).toBe(Cesium3DTileContentState.FAILED);
+            });
+        });
+    });
+
+    it('renders with imageBaseLightingFactor', function() {
+        return Cesium3DTilesTester.loadTileset(scene, withoutBatchTableUrl).then(function(tileset) {
+            expect(scene).toRenderAndCall(function(rgba) {
+                expect(rgba).not.toEqual([0, 0, 0, 255]);
+                tileset.imageBasedLightingFactor = new Cartesian2(0.0, 0.0);
+                expect(scene).notToRender(rgba);
+            });
+        });
+    });
+
+    it('renders with lightColor', function() {
+        return Cesium3DTilesTester.loadTileset(scene, withoutBatchTableUrl).then(function(tileset) {
+            expect(scene).toRenderAndCall(function(rgba) {
+                expect(rgba).not.toEqual([0, 0, 0, 255]);
+                tileset.imageBasedLightingFactor = new Cartesian2(0.0, 0.0);
+                expect(scene).toRenderAndCall(function(rgba2) {
+                    expect(rgba2).not.toEqual(rgba);
+                    tileset.lightColor = new Cartesian3(5.0, 5.0, 5.0);
+                    expect(scene).notToRender(rgba2);
+                });
             });
         });
     });
