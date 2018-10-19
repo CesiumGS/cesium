@@ -1086,7 +1086,7 @@ define([
 
     function isClippingEnabled(model) {
         var clippingPlanes = model._clippingPlanes;
-        return defined(clippingPlanes) && clippingPlanes.enabled;
+        return defined(clippingPlanes) && clippingPlanes.enabled && clippingPlanes.length !== 0;
     }
 
     /**
@@ -4250,7 +4250,7 @@ define([
             // Regenerate shaders if ClippingPlaneCollection state changed or it was removed
             var clippingPlanes = this._clippingPlanes;
             var currentClippingPlanesState = 0;
-            if (defined(clippingPlanes) && clippingPlanes.enabled) {
+            if (defined(clippingPlanes) && clippingPlanes.enabled && clippingPlanes.length > 0) {
                 var clippingPlaneOffsetMatrix = defaultValue(this.clippingPlaneOffsetMatrix, modelMatrix);
                 Matrix4.multiply(context.uniformState.view3D, clippingPlaneOffsetMatrix, this._clippingPlaneModelViewMatrix);
                 currentClippingPlanesState = clippingPlanes.clippingPlanesState;

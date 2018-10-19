@@ -505,10 +505,16 @@ define([
                 pixelsNeeded < 0.25 * currentPixelCount) {
                     clippingPlanesTexture.destroy();
                     clippingPlanesTexture = undefined;
+                    this._clippingPlanesTexture = undefined;
                 }
         }
 
-        if (!defined(clippingPlanesTexture) && pixelsNeeded > 0) {
+        // If there are no clipping planes, there's nothing to update.
+        if (this.length === 0) {
+            return;
+        }
+
+        if (!defined(clippingPlanesTexture)) {
             var requiredResolution = computeTextureResolution(pixelsNeeded, textureResolutionScratch);
             // Allocate twice as much space as needed to avoid frequent texture reallocation.
             // Allocate in the Y direction, since texture may be as wide as context texture support.
