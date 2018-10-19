@@ -1451,7 +1451,7 @@ define([
         },
 
         /**
-         * The value used for gamma correction.
+         * The value used for gamma correction. This is only used when rendering with high dynamic range.
          * @memberof Scene.prototype
          * @type {Number}
          * @default 2.2
@@ -1488,7 +1488,7 @@ define([
          *
          * @memberof Scene.prototype
          * @type {Color}
-         * @default Color(0.8, 0.8, 0.8)
+         * @default Color(0.8, 0.85, 1.0)
          */
         sunColor: {
             get: function() {
