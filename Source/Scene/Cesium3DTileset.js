@@ -28,10 +28,10 @@ define([
         './Cesium3DTileContentState',
         './Cesium3DTileOptimizations',
         './Cesium3DTileRefine',
+        './Cesium3DTilesetAsyncTraversal',
         './Cesium3DTilesetCache',
         './Cesium3DTilesetStatistics',
         './Cesium3DTilesetTraversal',
-        './Cesium3DTilesetOffscreenTraversal',
         './Cesium3DTileStyleEngine',
         './ClippingPlaneCollection',
         './LabelCollection',
@@ -72,10 +72,10 @@ define([
         Cesium3DTileContentState,
         Cesium3DTileOptimizations,
         Cesium3DTileRefine,
+        Cesium3DTilesetAsyncTraversal,
         Cesium3DTilesetCache,
         Cesium3DTilesetStatistics,
         Cesium3DTilesetTraversal,
-        Cesium3DTilesetOffscreenTraversal,
         Cesium3DTileStyleEngine,
         ClippingPlaneCollection,
         LabelCollection,
@@ -1943,7 +1943,7 @@ define([
         var ready;
 
         if (isAsync) {
-            ready = Cesium3DTilesetOffscreenTraversal.selectTiles(this, frameState);
+            ready = Cesium3DTilesetAsyncTraversal.selectTiles(this, frameState);
         } else {
             ready = Cesium3DTilesetTraversal.selectTiles(this, frameState);
         }

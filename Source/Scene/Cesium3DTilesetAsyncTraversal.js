@@ -9,17 +9,20 @@ define([
     'use strict';
 
     /**
+     * Traversal that loads all leaves that intersect the camera frustum.
+     * Used to determine ray-tileset intersections during a pickFromRayMostDetailed call.
+     *
      * @private
      */
-    function Cesium3DTilesetOffscreenTraversal() {
+    function Cesium3DTilesetAsyncTraversal() {
     }
 
-    var offscreenTraversal = {
+    var asyncTraversal = {
         stack : new ManagedArray(),
         stackMaximumLength : 0
     };
 
-    Cesium3DTilesetOffscreenTraversal.selectTiles = function(tileset, frameState) {
+    Cesium3DTilesetAsyncTraversal.selectTiles = function(tileset, frameState) {
         tileset._selectedTiles.length = 0;
         tileset._requestedTiles.length = 0;
         tileset._hasMixedContent = false;
@@ -38,11 +41,11 @@ define([
             return ready;
         }
 
-        var stack = offscreenTraversal.stack;
+        var stack = asyncTraversal.stack;
         stack.push(tileset.root);
 
         while (stack.length > 0) {
-            offscreenTraversal.stackMaximumLength = Math.max(offscreenTraversal.stackMaximumLength, stack.length);
+            asyncTraversal.stackMaximumLength = Math.max(asyncTraversal.stackMaximumLength, stack.length);
 
             var tile = stack.pop();
             var add = tile.refine === Cesium3DTileRefine.ADD;
@@ -66,7 +69,7 @@ define([
             touchTile(tileset, tile);
         }
 
-        offscreenTraversal.stack.trim(offscreenTraversal.stackMaximumLength);
+        asyncTraversal.stack.trim(asyncTraversal.stackMaximumLength);
 
         return ready;
     };
@@ -134,5 +137,5 @@ define([
         }
     }
 
-    return Cesium3DTilesetOffscreenTraversal;
+    return Cesium3DTilesetAsyncTraversal;
 });
