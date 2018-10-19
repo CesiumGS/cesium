@@ -384,7 +384,9 @@ define([
                 uniformMapLoaded : batchTable.getUniformMapCallback(),
                 pickIdLoaded : getPickIdCallback(content),
                 addBatchIdToGeneratedShaders : (batchLength > 0), // If the batch table has values in it, generated shaders will need a batchId attribute
-                pickObject : pickObject
+                pickObject : pickObject,
+                imageBasedLightingFactor : tileset.imageBasedLightingFactor,
+                lightColor : tileset.lightColor
             });
         } else {
             // This transcodes glTF to an internal representation for geometry so we can take advantage of the re-batching of vector data.
@@ -460,6 +462,8 @@ define([
         this._model.modelMatrix = this._contentModelMatrix;
 
         this._model.shadows = this._tileset.shadows;
+        this._model.imageBasedLightingFactor = this._tileset.imageBasedLightingFactor;
+        this._model.lightColor = this._tileset.lightColor;
         this._model.debugWireframe = this._tileset.debugWireframe;
 
         // Update clipping planes
