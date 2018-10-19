@@ -917,7 +917,7 @@ define([
         },
 
         /**
-         * Returns <code>true</code> if the {@link clampToHeight} and {@link Scene#clampToHeightMostDetailed} functions are supported.
+         * Returns <code>true</code> if the {@link Scene#clampToHeight} and {@link Scene#clampToHeightMostDetailed} functions are supported.
          * @memberof Scene.prototype
          *
          * @type {Boolean}
@@ -3332,7 +3332,6 @@ define([
 
         this._jobScheduler.disableThisFrame();
 
-        // Update with previous frame's number and time, assuming that render is called before picking.
         updateFrameState(this);
         frameState.cullingVolume = getPickCullingVolume(this, drawingBufferPosition, rectangleWidth, rectangleHeight, viewport);
         frameState.invertClassification = false;
@@ -3680,7 +3679,6 @@ define([
 
         updateCameraFromRay(ray, view.camera);
 
-        // Update with previous frame's number and time, assuming that render is called first.
         updateFrameState(scene);
         frameState.passes.offscreen = true;
         frameState.passes.async = true;
@@ -3766,7 +3764,6 @@ define([
 
         scene._jobScheduler.disableThisFrame();
 
-        // Update with previous frame's number and time, assuming that render is called before picking.
         updateFrameState(scene);
         frameState.invertClassification = false;
         frameState.passes.pick = true;
