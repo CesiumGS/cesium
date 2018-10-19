@@ -3691,9 +3691,9 @@ define([
         var primitivesLength = primitives.length;
         for (var i = 0; i < primitivesLength; ++i) {
             var primitive = primitives[i];
-            if (scene.primitives.contains(primitive)) {
-                // Only update primitives that are still contained in the scene's primitive collection
-                ready = primitive.updateAsync(frameState) && ready;
+            if (scene.primitives.contains(primitive) && primitive.show) {
+                // Only update primitives that are still contained in the scene's primitive collection and are still visible
+                ready = primitive.update(frameState) && ready;
             }
         }
 
@@ -3724,7 +3724,7 @@ define([
         var length = primitives.length;
         for (var i = 0; i < length; ++i) {
             var primitive = primitives.get(i);
-            if (primitive instanceof Cesium3DTileset) {
+            if ((primitive instanceof Cesium3DTileset) && primitive.show) {
                 if (!defined(objectsToExclude) || objectsToExclude.indexOf(primitive) === -1) {
                     asyncPrimitives.push(primitive);
                 }

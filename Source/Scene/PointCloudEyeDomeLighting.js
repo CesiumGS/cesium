@@ -236,7 +236,7 @@ define([
     }
 
     PointCloudEyeDomeLighting.prototype.update = function(frameState, commandStart, pointCloudShading) {
-        if (!isSupported(frameState.context) || !frameState.passes.render) {
+        if (!isSupported(frameState.context)) {
             return;
         }
 

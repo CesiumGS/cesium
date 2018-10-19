@@ -1656,7 +1656,10 @@ define([
     function updateTiles(tileset, frameState, statistics) {
         tileset._styleEngine.applyStyle(tileset, frameState);
 
-        var isRender = frameState.passes.render;
+        var passes = frameState.passes;
+        var isRender = passes.render;
+        var isPick = passes.pick;
+        var isAsync = passes.async;
         var commandList = frameState.commandList;
         var numberOfInitialCommands = commandList.length;
         var selectedTiles = tileset._selectedTiles;
@@ -1692,8 +1695,7 @@ define([
             tile.update(tileset, frameState);
         }
 
-        var lengthAfterUpdate = commandList.length;
-        var addedCommandsLength = lengthAfterUpdate - lengthBeforeUpdate;
+        var addedCommandsLength = commandList.length - lengthBeforeUpdate;
 
         tileset._backfaceCommands.trim();
 
@@ -1738,11 +1740,18 @@ define([
             }
         }
 
+        if (isAsync && !isRender && !isPick) {
+            // Don't push commands for an async-only pass
+            commandList.length = numberOfInitialCommands;
+        }
+
         // Number of commands added by each update above
-        statistics.numberOfCommands = (commandList.length - numberOfInitialCommands);
+        addedCommandsLength = commandList.length - numberOfInitialCommands;
+        statistics.numberOfCommands = addedCommandsLength;
 
         // Only run EDL if simple attenuation is on
-        if (tileset.pointCloudShading.attenuation &&
+        if (isRender &&
+            tileset.pointCloudShading.attenuation &&
             tileset.pointCloudShading.eyeDomeLighting &&
             (addedCommandsLength > 0)) {
             tileset._pointCloudEyeDomeLighting.update(frameState, numberOfInitialCommands, tileset.pointCloudShading);
@@ -1848,11 +1857,11 @@ define([
      */
     Cesium3DTileset.prototype.update = function(frameState) {
         if (frameState.mode === SceneMode.MORPHING) {
-            return;
+            return false;
         }
 
         if (!this.show || !this.ready) {
-            return;
+            return false;
         }
 
         if (!defined(this._loadTimestamp)) {
@@ -1878,7 +1887,6 @@ define([
         var isRender = passes.render;
         var isPick = passes.pick;
         var isAsync = passes.async;
-        var outOfCore = isRender;
 
         var statistics = isAsync ? this._statisticsAsync : (isPick ? this._statisticsPick : this._statistics);
         var statisticsLast = isAsync ? this._statisticsLastAsync : (isPick ? this._statisticsLastPick : this._statisticsLastRender);
@@ -1888,29 +1896,29 @@ define([
             updateDynamicScreenSpaceError(this, frameState);
         }
 
-        if (outOfCore) {
+        if (isRender) {
             this._cache.reset();
         }
 
+        var ready;
+
         if (isAsync) {
-            Cesium3DTilesetOffscreenTraversal.selectTiles(this, statistics, frameState);
+            ready = Cesium3DTilesetOffscreenTraversal.selectTiles(this, statistics, frameState);
         } else {
-            Cesium3DTilesetTraversal.selectTiles(this, statistics, frameState);
+            ready = Cesium3DTilesetTraversal.selectTiles(this, statistics, frameState);
         }
 
-        if (outOfCore) {
+        if (isRender || isAsync) {
             requestTiles(this, this._requestedTiles, true, statistics);
+        }
+
+        if (isRender) {
             processTiles(this, frameState);
         }
 
         updateTiles(this, frameState, statistics);
 
-        // TODO - remove
-        if (passes.offscreen) {
-            printSelectedTiles(this);
-        }
-
-        if (outOfCore) {
+        if (isRender) {
             unloadTiles(this, statistics);
 
             // Events are raised (added to the afterRender queue) here since promises
@@ -1922,44 +1930,18 @@ define([
         // Update last statistics
         Cesium3DTilesetStatistics.clone(statistics, statisticsLast);
 
-        if (statistics.selected !== 0) {
-            var credits = this._credits;
-            if (defined(credits)) {
-                var length = credits.length;
-                for (var i = 0; i < length; i++) {
-                    frameState.creditDisplay.addCredit(credits[i]);
+        if (isRender) {
+            if (statistics.selected !== 0) {
+                var credits = this._credits;
+                if (defined(credits)) {
+                    var length = credits.length;
+                    for (var i = 0; i < length; i++) {
+                        frameState.creditDisplay.addCredit(credits[i]);
+                    }
                 }
             }
         }
-    };
 
-    // TODO : remove
-    function printSelectedTiles(tileset) {
-        // console.log('Printing selected tiles:');
-        // var selectedTiles = tileset._selectedTiles;
-        // var length = selectedTiles.length;
-        // for (var i = 0; i < length; ++i) {
-        //     var tile = selectedTiles[i];
-        //     console.log(tile._header.content.uri);
-        // }
-    }
-
-    /**
-     * TODO private - who calls this?
-     * @param {FrameState} frameState The ray.
-     * @returns {Boolean} true when the primitive is ready
-     *
-     * @private
-     */
-    Cesium3DTileset.prototype.updateAsync = function(frameState) {
-        var statistics = this._statisticsAsync;
-        var ready = Cesium3DTilesetOffscreenTraversal.selectTiles(this, statistics, frameState);
-
-        // TODO - remove
-        if (ready) {
-            printSelectedTiles(this);
-        }
-        requestTiles(this, this._requestedTiles, false, statistics); // Tiles are requested now but processed in main update
         return ready;
     };
 
