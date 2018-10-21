@@ -75,6 +75,7 @@ define([
     var defaultStrokeWidth = 2;
     var defaultFill = Color.fromBytes(255, 255, 0, 100);
     var defaultClampToGround = false;
+    var defaultHeightReference = HeightReference.NONE;
 
     var sizes = {
         small : 24,
@@ -434,6 +435,14 @@ define([
         polygon.outlineColor = outlineColorProperty;
         polygon.outlineWidth = widthProperty;
         polygon.material = material;
+        polygon.heightReference = options.heightReference;
+
+        if (options.heightProperty) {
+            polygon.height = properties[options.heightProperty];
+        }
+        if (options.extrudedHeightProperty) {
+            polygon.extrudedHeight = properties[options.extrudedHeightProperty];
+        }
 
         var holes = [];
         for (var i = 1, len = coordinates.length; i < len; i++) {
@@ -832,7 +841,10 @@ define([
             polylineStrokeMaterialProperty : new ColorMaterialProperty(defaultValue(getColor(options.polylineStroke), defaultValue(getColor(options.stroke), defaultStroke))),
             polygonStrokeColor : defaultValue(getColor(options.polygonStroke), defaultValue(getColor(options.stroke), defaultStroke)),
             fillMaterialProperty : new ColorMaterialProperty(defaultValue(options.fill, defaultFill)),
-            clampToGround : defaultValue(options.clampToGround, defaultClampToGround)
+            clampToGround : defaultValue(options.clampToGround, defaultClampToGround),
+            heightReference : defaultValue(options.heightReference, defaultHeightReference),
+            heightProperty : options.heightProperty,
+            extrudedHeightProperty : options.extrudedHeightProperty
         };
 
         var that = this;
