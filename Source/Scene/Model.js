@@ -2075,6 +2075,8 @@ define([
             drawFS = '#define SPECULAR_IBL \n' + 'uniform sampler2D gltf_specularMap; \n' + 'uniform vec2 gltf_specularMapSize; \n' + 'uniform float gltf_maxSpecularLOD; \n' + drawFS;
         }
 
+        drawFS = 'uniform float gltf_luminanceAtZenith;\n' + drawFS;
+
         createAttributesAndProgram(programId, techniqueId, drawFS, drawVS, model, context);
     }
 
