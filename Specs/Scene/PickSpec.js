@@ -56,6 +56,10 @@ defineSuite([
         pollToPromise) {
     'use strict';
 
+    // It's not easily possible to mock the asynchronous pick functions
+    // so don't run the tests if running with the WebGL stub
+    var webglStub = !!window.webglStub;
+
     var scene;
     var primitives;
     var camera;
@@ -1153,8 +1157,6 @@ defineSuite([
         });
     });
 
-    // TODO : how to write default matchers for these since they return promises? Do they fail when run in WebGL stub?
-
     function pickFromRayMostDetailed(ray, objectsToExclude) {
         var result;
         var completed = false;
@@ -1221,6 +1223,9 @@ defineSuite([
 
     describe('pickFromRayMostDetailed', function() {
         it('picks a tileset', function() {
+            if (webglStub) {
+                return;
+            }
             scene.camera.setView({ destination : offscreenRectangle });
             return createTileset().then(function(tileset) {
                 return pickFromRayMostDetailed(primitiveRay).then(function(result) {
@@ -1242,6 +1247,9 @@ defineSuite([
         });
 
         it('picks a primitive', function() {
+            if (webglStub) {
+                return;
+            }
             var rectangle = createSmallRectangle(0.0);
             scene.camera.setView({ destination : offscreenRectangle });
             return pickFromRayMostDetailed(primitiveRay).then(function(result) {
@@ -1258,6 +1266,9 @@ defineSuite([
         });
 
         it('returns undefined if no primitives are picked', function() {
+            if (webglStub) {
+                return;
+            }
             createLargeRectangle(0.0);
             scene.camera.setView({ destination : offscreenRectangle });
             return pickFromRayMostDetailed(offscreenRay).then(function(result) {
@@ -1266,6 +1277,9 @@ defineSuite([
         });
 
         it('picks the top primitive', function() {
+            if (webglStub) {
+                return;
+            }
             createLargeRectangle(0.0);
             var rectangle2 = createLargeRectangle(1.0);
             scene.camera.setView({ destination : offscreenRectangle });
@@ -1275,6 +1289,9 @@ defineSuite([
         });
 
         it('excludes objects', function() {
+            if (webglStub) {
+                return;
+            }
             var rectangle1 = createLargeRectangle(0.0);
             var rectangle2 = createLargeRectangle(1.0);
             var rectangle3 = createLargeRectangle(2.0);
@@ -1292,6 +1309,9 @@ defineSuite([
         });
 
         it('picks primitive that doesn\'t write depth', function() {
+            if (webglStub) {
+                return;
+            }
             var collection = scene.primitives.add(new PointPrimitiveCollection());
             var point = collection.add({
                 position : Cartographic.fromRadians(0.0, 0.0, 100.0),
@@ -1328,6 +1348,9 @@ defineSuite([
 
     describe('drillPickFromRayMostDetailed', function() {
         it('drill picks a primitive', function() {
+            if (webglStub) {
+                return;
+            }
             var rectangle = createSmallRectangle(0.0);
             scene.camera.setView({ destination : offscreenRectangle });
             return drillPickFromRayMostDetailed(primitiveRay).then(function(results) {
@@ -1348,6 +1371,9 @@ defineSuite([
         });
 
         it('drill picks multiple primitives', function() {
+            if (webglStub) {
+                return;
+            }
             var rectangle1 = createSmallRectangle(0.0);
             var rectangle2 = createSmallRectangle(1.0);
             scene.camera.setView({ destination : offscreenRectangle });
@@ -1371,6 +1397,9 @@ defineSuite([
         });
 
         it('does not drill pick when show is false', function() {
+            if (webglStub) {
+                return;
+            }
             var rectangle1 = createLargeRectangle(0.0);
             var rectangle2 = createLargeRectangle(1.0);
             rectangle2.show = false;
@@ -1382,6 +1411,9 @@ defineSuite([
         });
 
         it('does not drill pick when alpha is zero', function() {
+            if (webglStub) {
+                return;
+            }
             var rectangle1 = createLargeRectangle(0.0);
             var rectangle2 = createLargeRectangle(1.0);
             rectangle2.appearance.material.uniforms.color.alpha = 0.0;
@@ -1393,6 +1425,9 @@ defineSuite([
         });
 
         it('returns empty array if no primitives are picked', function() {
+            if (webglStub) {
+                return;
+            }
             createLargeRectangle(0.0);
             createLargeRectangle(1.0);
             scene.camera.setView({ destination : offscreenRectangle });
@@ -1402,6 +1437,9 @@ defineSuite([
         });
 
         it('can drill pick batched Primitives with show attribute', function() {
+            if (webglStub) {
+                return;
+            }
             var geometry = new RectangleGeometry({
                 rectangle : Rectangle.fromDegrees(-50.0, -50.0, 50.0, 50.0),
                 granularity : CesiumMath.toRadians(20.0),
@@ -1457,6 +1495,9 @@ defineSuite([
         });
 
         it('can drill pick without ID', function() {
+            if (webglStub) {
+                return;
+            }
             var geometry = new RectangleGeometry({
                 rectangle : Rectangle.fromDegrees(-50.0, -50.0, 50.0, 50.0),
                 granularity : CesiumMath.toRadians(20.0),
@@ -1491,6 +1532,9 @@ defineSuite([
         });
 
         it('can drill pick batched Primitives without show attribute', function() {
+            if (webglStub) {
+                return;
+            }
             var geometry = new RectangleGeometry({
                 rectangle : Rectangle.fromDegrees(-50.0, -50.0, 50.0, 50.0),
                 granularity : CesiumMath.toRadians(20.0),
@@ -1535,6 +1579,9 @@ defineSuite([
         });
 
         it('stops drill picking when the limit is reached.', function() {
+            if (webglStub) {
+                return;
+            }
             createLargeRectangle(0.0);
             var rectangle2 = createLargeRectangle(1.0);
             var rectangle3 = createLargeRectangle(2.0);
@@ -1550,6 +1597,9 @@ defineSuite([
         });
 
         it('excludes objects', function() {
+            if (webglStub) {
+                return;
+            }
             createLargeRectangle(0.0);
             var rectangle2 = createLargeRectangle(1.0);
             var rectangle3 = createLargeRectangle(2.0);
