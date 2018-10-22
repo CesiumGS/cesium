@@ -17,6 +17,7 @@ Change Log
 * Fixed an issue where `pickPosition` would return incorrect results when called after `sampleHeight` or `clampToHeight`. [#7113](https://github.com/AnalyticalGraphicsInc/cesium/pull/7113)
 * Fixed crash when updating polyline attributes twice in one frame [#7155](https://github.com/AnalyticalGraphicsInc/cesium/pull/7155)
 * Fixed a crash when using `BingMapsGeocoderService` [#7143](https://github.com/AnalyticalGraphicsInc/cesium/issues/7143)
+* Fixed entity visibility issue related to setting an entity show property and altering or adding entity geometry [#7156](https://github.com/AnalyticalGraphicsInc/cesium/pull/7156)
 
 ### 1.50 - 2018-10-01
 
