@@ -974,7 +974,7 @@ define([
      * Loads the availability for the position if not already loaded.
      *
      * @param {Cartographic} position The position to make sure availability is loaded for.
-     * @returns {undefined|Promise<>} A promise that resolves when the availability is loaded. Undefined if availability isn't supported.
+     * @returns {undefined|Promise} A promise that resolves when the availability is loaded. Undefined if availability isn't supported.
      */
     CesiumTerrainProvider.prototype.loadAvailability = function(position) {
         if (!defined(this._availability)) {
