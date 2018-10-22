@@ -741,7 +741,7 @@ define([
                 that._extras = tilesetJson.extras;
                 if (!defined(tilesetJson.root.transform)) {
                     that._useBoundingSphereForClipping = true;
-                    that._clippingPlaneOffsetMatrix = Transforms.eastNorthUpToFixedFrame(that.boundingSphere.center);
+                    that.updateClippingPlaneOffsetMatrix();
                 }
                 that._readyPromise.resolve(that);
             }).otherwise(function(error) {
@@ -1895,9 +1895,7 @@ define([
         var clippingPlanes = this._clippingPlanes;
         if (defined(clippingPlanes) && clippingPlanes.enabled) {
             clippingPlanes.update(frameState);
-            if (this._useBoundingSphereForClipping) {
-                this._clippingPlaneOffsetMatrix = Transforms.eastNorthUpToFixedFrame(this.boundingSphere.center);
-            }
+            this.updateClippingPlaneOffsetMatrix();
         }
 
         this._timeSinceLoad = Math.max(JulianDate.secondsDifference(frameState.time, this._loadTimestamp) * 1000, 0.0);
@@ -1953,6 +1951,15 @@ define([
                     frameState.creditDisplay.addCredit(credits[i]);
                 }
             }
+        }
+    };
+
+    /**
+     * @private
+     */
+    Cesium3DTileset.prototype.updateClippingPlaneOffsetMatrix = function() {
+        if (this._useBoundingSphereForClipping) {
+            this._clippingPlaneOffsetMatrix = Transforms.eastNorthUpToFixedFrame(this.boundingSphere.center);
         }
     };
 
