@@ -136,7 +136,9 @@ define([
         this.enableLighting = false;
 
         /**
-         * Enable the ground atmosphere.
+         * Enable the ground atmosphere, which is drawn over the globe when viewed from a distance between <code>lightingFadeInDistance</code> and <code>lightingFadeOutDistance</code>.
+         *
+         * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Ground%20Atmosphere.html|Ground atmosphere demo in Sandcastle}
          *
          * @type {Boolean}
          * @default true
@@ -145,7 +147,7 @@ define([
 
         /**
          * The distance where everything becomes lit. This only takes effect
-         * when <code>enableLighting</code> is <code>true</code>.
+         * when <code>enableLighting</code> or <code>showGroundAtmosphere</code> is <code>true</code>.
          *
          * @type {Number}
          * @default 10000000.0
@@ -154,7 +156,7 @@ define([
 
         /**
          * The distance where lighting resumes. This only takes effect
-         * when <code>enableLighting</code> is <code>true</code>.
+         * when <code>enableLighting</code> or <code>showGroundAtmosphere</code> is <code>true</code>.
          *
          * @type {Number}
          * @default 20000000.0
@@ -211,6 +213,30 @@ define([
          * @default ShadowMode.RECEIVE_ONLY
          */
         this.shadows = ShadowMode.RECEIVE_ONLY;
+
+        /**
+         * The hue shift to apply to the atmosphere. Defaults to 0.0 (no shift).
+         * A hue shift of 1.0 indicates a complete rotation of the hues available.
+         * @type {Number}
+         * @default 0.0
+         */
+        this.atmosphereHueShift = 0.0;
+
+        /**
+         * The saturation shift to apply to the atmosphere. Defaults to 0.0 (no shift).
+         * A saturation shift of -1.0 is monochrome.
+         * @type {Number}
+         * @default 0.0
+         */
+        this.atmosphereSaturationShift = 0.0;
+
+        /**
+         * The brightness shift to apply to the atmosphere. Defaults to 0.0 (no shift).
+         * A brightness shift of -1.0 is complete darkness, which will let space show through.
+         * @type {Number}
+         * @default 0.0
+         */
+        this.atmosphereBrightnessShift = 0.0;
 
         this._oceanNormalMap = undefined;
         this._zoomedOutOceanSpecularIntensity = undefined;
@@ -686,6 +712,9 @@ define([
             tileProvider.enableLighting = this.enableLighting;
             tileProvider.showGroundAtmosphere = this.showGroundAtmosphere;
             tileProvider.shadows = this.shadows;
+            tileProvider.hueShift = this.atmosphereHueShift;
+            tileProvider.saturationShift = this.atmosphereSaturationShift;
+            tileProvider.brightnessShift = this.atmosphereBrightnessShift;
 
             surface.beginFrame(frameState);
         }

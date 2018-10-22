@@ -4,6 +4,7 @@ define([
         'Core/defaultValue',
         'Core/defined',
         'Core/DeveloperError',
+        'Core/FeatureDetection',
         'Core/Math',
         'Core/PrimitiveType',
         'Core/RuntimeError',
@@ -19,6 +20,7 @@ define([
         defaultValue,
         defined,
         DeveloperError,
+        FeatureDetection,
         CesiumMath,
         PrimitiveType,
         RuntimeError,
@@ -599,6 +601,19 @@ define([
         return scene.context.readPixels();
     }
 
+    function isTypedArray(o) {
+        return FeatureDetection.typedArrayTypes.some(function(type) {
+            return o instanceof type;
+        });
+    }
+
+    function typedArrayToArray(array) {
+        if (isTypedArray(array)) {
+            return Array.prototype.slice.call(array, 0);
+        }
+        return array;
+    }
+
     function renderEquals(util, customEqualityTesters, actual, expected, expectEqual) {
         var actualRgba = renderAndReadPixels(actual);
 
@@ -617,7 +632,7 @@ define([
 
         var message;
         if (!pass) {
-            message = 'Expected ' + (expectEqual ? '' : 'not ')  + 'to render [' + expected + '], but actually rendered [' + actualRgba + '].';
+            message = 'Expected ' + (expectEqual ? '' : 'not ')  + 'to render [' + typedArrayToArray(expected) + '], but actually rendered [' + typedArrayToArray(actualRgba) + '].';
         }
 
         return {
