@@ -1894,7 +1894,7 @@ define([
         }
 
         var passes = frameState.passes;
-        if (!passes.pick && defined(command.derivedCommands) && defined(command.derivedCommands.hdr)) {
+        if (!passes.pick && scene._hdr && defined(command.derivedCommands) && defined(command.derivedCommands.hdr)) {
             command = command.derivedCommands.hdr.command;
         }
 
