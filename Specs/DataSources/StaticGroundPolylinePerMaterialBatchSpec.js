@@ -445,6 +445,10 @@ defineSuite([
     });
 
     it('has correct show attribute after rebuilding primitive', function() {
+        if (!GroundPolylinePrimitive.isSupported(scene)) {
+            // Don't fail if GroundPolylinePrimitive is not supported
+            return;
+        }
         var batch = new StaticGroundPolylinePerMaterialBatch(scene.groundPrimitives);
 
         function buildEntity() {
