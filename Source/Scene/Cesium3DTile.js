@@ -648,6 +648,7 @@ define([
         }
         return error;
     };
+
     /**
      * Update the tile's visibility.
      *
@@ -660,7 +661,7 @@ define([
         this.updateTransform(parentTransform);
         this._distanceToCamera = this.distanceToTile(frameState);
         this._centerZDepth = this.distanceToTileCenter(frameState);
-        this._screenSpaceError = this.getScreenSpaceError(frameState);
+        this._screenSpaceError = this.getScreenSpaceError(frameState, false);
         this._visibilityPlaneMask = this.visibility(frameState, parentVisibilityPlaneMask); // Use parent's plane mask to speed up visibility test
         this._visible = this._visibilityPlaneMask !== CullingVolume.MASK_OUTSIDE;
         this._inRequestVolume = this.insideViewerRequestVolume(frameState);
