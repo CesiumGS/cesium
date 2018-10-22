@@ -104,8 +104,9 @@ define([
                 this.subscriptions.remove(id);
                 this.showsUpdated.remove(id);
             }
+            return true;
         }
-        return this.createPrimitive;
+        return false;
     };
 
     var colorScratch = new Color();

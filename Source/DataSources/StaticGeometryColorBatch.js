@@ -109,7 +109,9 @@ define([
                 this.subscriptions.remove(id);
                 this.showsUpdated.remove(id);
             }
+            return true;
         }
+        return false;
     };
 
     Batch.prototype.update = function(time) {
@@ -354,8 +356,8 @@ define([
                 if (item.updaters.length === 0) {
                     items.splice(i, 1);
                     item.destroy();
-                    return true;
                 }
+                return true;
             }
         }
         return false;
