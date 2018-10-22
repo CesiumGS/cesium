@@ -147,7 +147,7 @@ define([
         this._sunPositionColumbusView = new Cartesian3();
         this._sunDirectionWC = new Cartesian3();
         this._sunDirectionEC = new Cartesian3();
-        this._sunColor = new Color();
+        this._sunColor = new Cartesian3();
         this._moonDirectionEC = new Cartesian3();
 
         this._pass = undefined;
@@ -1085,7 +1085,7 @@ define([
         }
 
         setSunAndMoonDirections(this, frameState);
-        this._sunColor = Color.clone(frameState.sunColor, this._sunColor);
+        this._sunColor = Cartesian3.clone(frameState.sunColor, this._sunColor);
 
         var brdfLutGenerator = frameState.brdfLutGenerator;
         var brdfLut = defined(brdfLutGenerator) ? brdfLutGenerator.colorTexture : undefined;

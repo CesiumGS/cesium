@@ -779,7 +779,7 @@ define([
         this._hdrDirty = undefined;
         this.highDynamicRange = true;
         this.gamma = 2.2;
-        this._sunColor = new Color(0.8, 0.85, 1.0, 1.0);
+        this._sunColor = new Cartesian3(1.8, 1.85, 2.0);
 
         // Give frameState, camera, and screen space camera controller initial state before rendering
         updateFrameState(this, 0.0, JulianDate.now());
@@ -1487,8 +1487,8 @@ define([
          * Gets or sets the color of the light emitted by the sun.
          *
          * @memberof Scene.prototype
-         * @type {Color}
-         * @default Color(0.8, 0.85, 1.0)
+         * @type {Cartesian3}
+         * @default Cartesian3(1.8, 1.85, 2.0)
          */
         sunColor: {
             get: function() {
