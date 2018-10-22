@@ -948,12 +948,11 @@ defineSuite([
             verifyRender(m);
             m.show = true;
 
-            expect(scene).toRenderAndCall(function(rgba) {
-                // Red
-                expect(rgba[0]).toBeGreaterThan(160);
-                expect(rgba[1]).toBeLessThan(15);
-                expect(rgba[2]).toBeLessThan(15);
-                expect(rgba[3]).toEqual(255);
+            expect({
+                scene : scene,
+                time : JulianDate.fromDate(new Date('January 1, 2014 12:00:00 UTC'))
+            }).toRenderAndCall(function(rgba) {
+                expect(rgba).toEqualEpsilon([193, 17, 16, 255], 5); // Red
             });
 
             primitives.remove(m);
