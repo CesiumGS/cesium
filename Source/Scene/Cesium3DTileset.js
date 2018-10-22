@@ -1695,8 +1695,6 @@ define([
         var statistics = tileset._statistics;
         var passes = frameState.passes;
         var isRender = passes.render;
-        var isPick = passes.pick;
-        var isAsync = passes.async;
         var commandList = frameState.commandList;
         var numberOfInitialCommands = commandList.length;
         var selectedTiles = tileset._selectedTiles;
@@ -1775,11 +1773,6 @@ define([
             for (i = 0; i < backfaceCommandsLength; ++i) {
                 commandList[lengthBeforeUpdate + i] = backfaceCommands[i];
             }
-        }
-
-        if (isAsync && !isRender && !isPick) {
-            // Don't push commands for an async-only pass
-            commandList.length = numberOfInitialCommands;
         }
 
         // Number of commands added by each update above

@@ -3683,6 +3683,9 @@ define([
 
         uniformState.update(frameState);
 
+        var commandList = frameState.commandList;
+        var commandsLength = commandList.length;
+
         var ready = true;
         var primitivesLength = primitives.length;
         for (var i = 0; i < primitivesLength; ++i) {
@@ -3692,6 +3695,9 @@ define([
                 ready = primitive.update(frameState) && ready;
             }
         }
+
+        // Ignore commands pushed during async pass
+        commandList.length = commandsLength;
 
         scene._view = scene._defaultView;
 
