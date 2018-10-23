@@ -81,6 +81,8 @@ define([
 
         this.surfaceShader = undefined;
         this.isClipped = true;
+
+        this.clippedByBoundaries = false;
     }
 
     defineProperties(GlobeSurfaceTile.prototype, {

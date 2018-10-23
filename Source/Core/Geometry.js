@@ -6,6 +6,7 @@ define([
         './defaultValue',
         './defined',
         './DeveloperError',
+        './GeometryOffsetAttribute',
         './GeometryType',
         './Matrix2',
         './Matrix3',
@@ -22,6 +23,7 @@ define([
         defaultValue,
         defined,
         DeveloperError,
+        GeometryOffsetAttribute,
         GeometryType,
         Matrix2,
         Matrix3,
@@ -176,6 +178,12 @@ define([
          * @private
          */
         this.boundingSphereCV = options.boundingSphereCV;
+
+        /**
+         * @private
+         * Used for computing the bounding sphere for geometry using the applyOffset vertex attribute
+         */
+        this.offsetAttribute = options.offsetAttribute;
     }
 
     /**

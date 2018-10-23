@@ -94,12 +94,12 @@ defineSuite([
         expect(label.horizontalOrigin).toEqual(HorizontalOrigin.LEFT);
         expect(label.verticalOrigin).toEqual(VerticalOrigin.BASELINE);
         expect(label.scale).toEqual(1.0);
-        expect(label.id).not.toBeDefined();
-        expect(label.translucencyByDistance).not.toBeDefined();
-        expect(label.pixelOffsetScaleByDistance).not.toBeDefined();
-        expect(label.scaleByDistance).not.toBeDefined();
-        expect(label.distanceDisplayCondition).not.toBeDefined();
-        expect(label.disableDepthTestDistance).toEqual(0.0);
+        expect(label.id).toBeUndefined();
+        expect(label.translucencyByDistance).toBeUndefined();
+        expect(label.pixelOffsetScaleByDistance).toBeUndefined();
+        expect(label.scaleByDistance).toBeUndefined();
+        expect(label.distanceDisplayCondition).toBeUndefined();
+        expect(label.disableDepthTestDistance).toBeUndefined();
     });
 
     it('can add a label with specified values', function() {
@@ -2271,7 +2271,7 @@ defineSuite([
         it('explicitly constructs a label with height reference', function() {
             scene.globe = createGlobe();
             var l = labelsWithHeight.add({
-                text : "test",
+                text : 'test',
                 heightReference : HeightReference.CLAMP_TO_GROUND
             });
 
@@ -2281,7 +2281,7 @@ defineSuite([
         it('set label height reference property', function() {
             scene.globe = createGlobe();
             var l = labelsWithHeight.add({
-                text : "test"
+                text : 'test'
             });
             l.heightReference = HeightReference.CLAMP_TO_GROUND;
 
@@ -2321,7 +2321,7 @@ defineSuite([
             scene.globe.removedCallback = false;
             l.heightReference = HeightReference.NONE;
             expect(scene.globe.removedCallback).toEqual(true);
-            expect(scene.globe.callback).not.toBeDefined();
+            expect(scene.globe.callback).toBeUndefined();
         });
 
         it('changing the position updates the callback', function() {
@@ -2384,7 +2384,7 @@ defineSuite([
             var spy = spyOn(billboard, '_removeCallbackFunc');
             labelsWithHeight.remove(l);
             expect(spy).toHaveBeenCalled();
-            expect(labelsWithHeight._spareBillboards[0]._removeCallbackFunc).not.toBeDefined();
+            expect(labelsWithHeight._spareBillboards[0]._removeCallbackFunc).toBeUndefined();
         });
     });
 

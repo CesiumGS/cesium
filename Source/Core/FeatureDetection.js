@@ -163,14 +163,6 @@ define([
         return isFirefox() && firefoxVersionResult;
     }
 
-    var isNodeJsResult;
-    function isNodeJs() {
-        if (!defined(isNodeJsResult)) {
-            isNodeJsResult = typeof process === 'object' && Object.prototype.toString.call(process) === '[object process]'; // eslint-disable-line
-        }
-        return isNodeJsResult;
-    }
-
     var hasPointerEvents;
     function supportsPointerEvents() {
         if (!defined(hasPointerEvents)) {
@@ -178,7 +170,9 @@ define([
             //we still need to use it if it exists in order to support browsers
             //that rely on it, such as the Windows WebBrowser control which defines
             //PointerEvent but sets navigator.pointerEnabled to false.
-            hasPointerEvents = typeof PointerEvent !== 'undefined' && (!defined(theNavigator.pointerEnabled) || theNavigator.pointerEnabled);
+
+            //Firefox disabled because of https://github.com/AnalyticalGraphicsInc/cesium/issues/6372
+            hasPointerEvents = !isFirefox() && typeof PointerEvent !== 'undefined' && (!defined(theNavigator.pointerEnabled) || theNavigator.pointerEnabled);
         }
         return hasPointerEvents;
     }
@@ -238,7 +232,6 @@ define([
         isFirefox : isFirefox,
         firefoxVersion : firefoxVersion,
         isWindows : isWindows,
-        isNodeJs: isNodeJs,
         hardwareConcurrency : defaultValue(theNavigator.hardwareConcurrency, 3),
         supportsPointerEvents : supportsPointerEvents,
         supportsImageRenderingPixelated: supportsImageRenderingPixelated,

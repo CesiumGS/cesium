@@ -138,7 +138,13 @@ define([
             width : width,
             height : height,
             pixelFormat : PixelFormat.RGBA,
-            pixelDatatype : PixelDatatype.UNSIGNED_BYTE
+            pixelDatatype : PixelDatatype.UNSIGNED_BYTE,
+            sampler : new Sampler({
+                wrapS : TextureWrap.CLAMP_TO_EDGE,
+                wrapT : TextureWrap.CLAMP_TO_EDGE,
+                minificationFilter : TextureMinificationFilter.NEAREST,
+                magnificationFilter : TextureMagnificationFilter.NEAREST
+            })
         });
     }
 
@@ -233,9 +239,9 @@ define([
         executeDebugGlobeDepth(this, context, passState, useLogDepth);
     };
 
-    GlobeDepth.prototype.update = function(context, passState) {
-        var width = context.drawingBufferWidth;
-        var height = context.drawingBufferHeight;
+    GlobeDepth.prototype.update = function(context, passState, viewport) {
+        var width = viewport.width;
+        var height = viewport.height;
 
         updateFramebuffers(this, context, width, height);
         updateCopyCommands(this, context, width, height, passState);

@@ -1,6 +1,7 @@
 {
   "asset": {
-    "version": "1.0"
+    "version": "1.0",
+    "tilesetVersion": "1.2.3"
   },
   "properties": {
     "id": {
@@ -17,7 +18,7 @@
     },
     "Height": {
       "minimum": 6.161747192963958,
-      "maximum": 84.83180232718587
+      "maximum": 85.41026367992163
     }
   },
   "geometricError": 240,
@@ -35,7 +36,7 @@
     "geometricError": 70,
     "refine": "ADD",
     "content": {
-      "url": "tileset2.json"
+      "uri": "tileset2.json"
     }
   }
 }

@@ -1,5 +1,6 @@
 defineSuite([
         'DataSources/StaticGroundGeometryPerMaterialBatch',
+        'Core/ApproximateTerrainHeights',
         'Core/Cartesian2',
         'Core/Cartesian3',
         'Core/Color',
@@ -27,6 +28,7 @@ defineSuite([
         'Specs/pollToPromise'
     ], function(
         StaticGroundGeometryPerMaterialBatch,
+        ApproximateTerrainHeights,
         Cartesian2,
         Cartesian3,
         Color,
@@ -58,10 +60,18 @@ defineSuite([
     var scene;
     beforeAll(function() {
         scene = createScene();
+
+        return GroundPrimitive.initializeTerrainHeights();
     });
 
     afterAll(function() {
         scene.destroyForSpecs();
+
+        // Leave ground primitive uninitialized
+        GroundPrimitive._initialized = false;
+        GroundPrimitive._initPromise = undefined;
+        ApproximateTerrainHeights._initPromise = undefined;
+        ApproximateTerrainHeights._terrainHeights = undefined;
     });
 
     it('handles shared material being invalidated with geometry', function() {
@@ -111,10 +121,10 @@ defineSuite([
                 var isUpdated = batch.update(time);
                 scene.render(time);
                 return isUpdated;
-            }).then(function() {
-                expect(scene.primitives.length).toEqual(2);
-                batch.removeAllPrimitives();
             });
+        }).then(function() {
+            expect(scene.primitives.length).toEqual(2);
+            batch.removeAllPrimitives();
         });
     });
 
@@ -327,5 +337,82 @@ defineSuite([
 
             batch.removeAllPrimitives();
         });
+    });
+
+    it('has correct show attribute after rebuilding primitive', function() {
+        if (!GroundPrimitive.isSupported(scene)) {
+            return;
+        }
+
+        if (!GroundPrimitive.isSupported(scene) || !GroundPrimitive.supportsMaterials(scene)) {
+            // Don't fail if materials on GroundPrimitive not supported
+            return;
+        }
+
+        var batch = new StaticGroundGeometryPerMaterialBatch(scene.primitives, MaterialAppearance);
+
+        function buildEntity(x, y, z) {
+            var material = new GridMaterialProperty({
+                color : Color.YELLOW,
+                cellAlpha : 0.3,
+                lineCount : new Cartesian2(8, 8),
+                lineThickness : new Cartesian2(2.0, 2.0)
+            });
+
+            return new Entity({
+                position : new Cartesian3(x, y, z),
+                ellipse : {
+                    semiMajorAxis : 2,
+                    semiMinorAxis : 1,
+                    material: material
+                }
+            });
+        }
+
+        function renderScene() {
+            scene.initializeFrame();
+            var isUpdated = batch.update(time);
+            scene.render(time);
+            return isUpdated;
+        }
+
+        var entity1 = buildEntity(1234, 5678, 9101112);
+        var updater1 = new EllipseGeometryUpdater(entity1, scene);
+        batch.add(time, updater1);
+
+        var entity2 = buildEntity(123, 456, 789);
+        var updater2 = new EllipseGeometryUpdater(entity2, scene);
+
+        return pollToPromise(renderScene)
+            .then(function() {
+                expect(scene.primitives.length).toEqual(1);
+                var primitive = scene.primitives.get(0);
+                var attributes = primitive.getGeometryInstanceAttributes(entity1);
+                expect(attributes.show).toEqual([1]);
+
+                entity1.show = false;
+                updater1._onEntityPropertyChanged(entity1, 'isShowing');
+                return pollToPromise(renderScene);
+            })
+            .then(function() {
+                expect(scene.primitives.length).toEqual(1);
+                var primitive = scene.primitives.get(0);
+                var attributes = primitive.getGeometryInstanceAttributes(entity1);
+                expect(attributes.show).toEqual([0]);
+
+                batch.add(time, updater2);
+                return pollToPromise(renderScene);
+            })
+            .then(function() {
+                expect(scene.primitives.length).toEqual(1);
+                var primitive = scene.primitives.get(0);
+                var attributes = primitive.getGeometryInstanceAttributes(entity1);
+                expect(attributes.show).toEqual([0]);
+
+                attributes = primitive.getGeometryInstanceAttributes(entity2);
+                expect(attributes.show).toEqual([1]);
+
+                batch.removeAllPrimitives();
+            });
     });
 });

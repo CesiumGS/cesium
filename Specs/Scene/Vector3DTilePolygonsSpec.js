@@ -76,12 +76,13 @@ defineSuite([
             _statistics : {
                 texturesByteLength : 0
             },
-            _tileset : {
+            tileset : {
                 _statistics : {
                     batchTableByteLength : 0
                 },
                 colorBlendMode : ColorBlendMode.HIGHLIGHT
-            }
+            },
+            getFeature : function(id) { return { batchId : id }; }
         };
 
         function MockGlobePrimitive(primitive) {
@@ -497,7 +498,6 @@ defineSuite([
             var polygonOptions = createPolygon(rectangle);
 
             var batchTable = new Cesium3DTileBatchTable(mockTileset, 1);
-            batchTable.update(mockTileset, scene.frameState);
 
             scene.primitives.add(depthPrimitive);
 
@@ -520,6 +520,8 @@ defineSuite([
 
                 var features = [];
                 polygons.createFeatures(mockTileset, features);
+
+                var getFeature = mockTileset.getFeature;
                 mockTileset.getFeature = function(index) {
                     return features[index];
                 };
@@ -530,7 +532,7 @@ defineSuite([
                     expect(result).toBe(features[0]);
                 });
 
-                mockTileset.getFeature = undefined;
+                mockTileset.getFeature = getFeature;
             });
         });
 

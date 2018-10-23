@@ -533,14 +533,14 @@ defineSuite([
 
     it('can handle aligned axis expressed as a velocity reference', function() {
         var packet = {
-            "position" : {
-                "epoch" : "2016-06-17T12:00:00Z",
-                "cartesian" : [0, 1, 2, 3,
+            'position' : {
+                'epoch' : '2016-06-17T12:00:00Z',
+                'cartesian' : [0, 1, 2, 3,
                                60, 61, 122, 183]
             },
-            "billboard" : {
-                "alignedAxis" : {
-                    "velocityReference" : "#position"
+            'billboard' : {
+                'alignedAxis' : {
+                    'velocityReference' : '#position'
                 }
             }
         };
@@ -560,24 +560,24 @@ defineSuite([
 
     it('can handle aligned axis expressed as a velocity reference within an interval', function() {
         var packet = {
-            "position": {
-                "epoch": "2016-06-17T12:00:00Z",
-                "cartesian": [0, 1, 2, 3,
+            'position': {
+                'epoch': '2016-06-17T12:00:00Z',
+                'cartesian': [0, 1, 2, 3,
                               60, 61, 122, 183]
             },
-            "billboard": {
-                "alignedAxis": [
+            'billboard': {
+                'alignedAxis': [
                     {
-                        "interval": "2016-06-17T12:00:00Z/2016-06-17T12:00:30Z",
-                        "unitCartesian": [
+                        'interval': '2016-06-17T12:00:00Z/2016-06-17T12:00:30Z',
+                        'unitCartesian': [
                             0,
                             1,
                             0
                         ]
                     },
                     {
-                        "interval": "2016-06-17T12:00:30Z/2016-06-17T12:01:00Z",
-                        "velocityReference": "#position"
+                        'interval': '2016-06-17T12:00:30Z/2016-06-17T12:01:00Z',
+                        'velocityReference': '#position'
                     }
                 ]
             }
@@ -1115,7 +1115,8 @@ defineSuite([
                     rgbaf : [0.2, 0.2, 0.2, 0.2]
                 },
                 outlineWidth : 6,
-                shadows : 'ENABLED'
+                shadows : 'ENABLED',
+                zIndex: 8
             }
         };
 
@@ -1131,6 +1132,7 @@ defineSuite([
             expect(entity.ellipse.outlineColor.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Color(0.2, 0.2, 0.2, 0.2));
             expect(entity.ellipse.outlineWidth.getValue(Iso8601.MINIMUM_VALUE)).toEqual(6);
             expect(entity.ellipse.shadows.getValue(Iso8601.MINIMUM_VALUE)).toEqual(ShadowMode.ENABLED);
+            expect(entity.ellipse.zIndex.getValue(Iso8601.MINIMUM_VALUE)).toEqual(8);
         });
     });
 
@@ -1468,13 +1470,13 @@ defineSuite([
 
     it('can handle orientation expressed as a velocity reference', function() {
         var packet = {
-            "position" : {
-                "epoch" : "2016-06-17T12:00:00Z",
-                "cartesian" : [0, 1, 2, 3,
+            'position' : {
+                'epoch' : '2016-06-17T12:00:00Z',
+                'cartesian' : [0, 1, 2, 3,
                                60, 61, 122, 183]
             },
-            "orientation": {
-                "velocityReference": "#position"
+            'orientation': {
+                'velocityReference': '#position'
             }
         };
 
@@ -2370,7 +2372,8 @@ defineSuite([
                 outlineWidth : 6,
                 closeTop : false,
                 closeBottom : false,
-                shadows : 'ENABLED'
+                shadows : 'ENABLED',
+                zIndex: 3
             }
         };
 
@@ -2391,6 +2394,7 @@ defineSuite([
             expect(entity.polygon.closeTop.getValue(Iso8601.MINIMUM_VALUE)).toEqual(false);
             expect(entity.polygon.closeBottom.getValue(Iso8601.MINIMUM_VALUE)).toEqual(false);
             expect(entity.polygon.shadows.getValue(Iso8601.MINIMUM_VALUE)).toEqual(ShadowMode.ENABLED);
+            expect(entity.polygon.zIndex.getValue(Iso8601.MINIMUM_VALUE)).toEqual(3);
         });
     });
 
@@ -2506,6 +2510,42 @@ defineSuite([
             expect(entity.polyline.width.getValue(invalidTime)).toBeUndefined();
             expect(entity.polyline.show.getValue(invalidTime)).toBeUndefined();
             expect(entity.polyline.shadows.getValue(invalidTime)).toBeUndefined();
+        });
+    });
+
+    it('CZML adds data for polyline clamped to terrain.', function() {
+        var polylinePacket = {
+            polyline : {
+                material : {
+                    polylineOutline : {
+                        color : {
+                            rgbaf : [0.1, 0.1, 0.1, 0.1]
+                        },
+                        outlineColor : {
+                            rgbaf : [0.2, 0.2, 0.2, 0.2]
+                        },
+                        outlineWidth : 1.0
+                    }
+                },
+                width : 1.0,
+                show : true,
+                clampToGround : true,
+                zIndex : 1
+            }
+        };
+
+        var dataSource = new CzmlDataSource();
+        return dataSource.load(makePacket(polylinePacket)).then(function(dataSource) {
+            var entity = dataSource.entities.values[0];
+
+            expect(entity.polyline).toBeDefined();
+            expect(entity.polyline.material.color.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Color(0.1, 0.1, 0.1, 0.1));
+            expect(entity.polyline.width.getValue(Iso8601.MINIMUM_VALUE)).toEqual(polylinePacket.polyline.width);
+            expect(entity.polyline.material.outlineColor.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Color(0.2, 0.2, 0.2, 0.2));
+            expect(entity.polyline.material.outlineWidth.getValue(Iso8601.MINIMUM_VALUE)).toEqual(1.0);
+            expect(entity.polyline.show.getValue(Iso8601.MINIMUM_VALUE)).toEqual(true);
+            expect(entity.polyline.clampToGround.getValue(Iso8601.MINIMUM_VALUE)).toEqual(true);
+            expect(entity.polyline.zIndex.getValue(Iso8601.MINIMUM_VALUE)).toEqual(1);
         });
     });
 
@@ -2888,7 +2928,8 @@ defineSuite([
                     rgbaf : [0.2, 0.2, 0.2, 0.2]
                 },
                 outlineWidth : 6,
-                shadows : 'ENABLED'
+                shadows : 'ENABLED',
+                zIndex : 6
             }
         };
 
@@ -2911,6 +2952,7 @@ defineSuite([
             expect(entity.rectangle.outlineColor.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Color(0.2, 0.2, 0.2, 0.2));
             expect(entity.rectangle.outlineWidth.getValue(Iso8601.MINIMUM_VALUE)).toEqual(6);
             expect(entity.rectangle.shadows.getValue(Iso8601.MINIMUM_VALUE)).toEqual(ShadowMode.ENABLED);
+            expect(entity.rectangle.zIndex.getValue(Iso8601.MINIMUM_VALUE)).toEqual(6);
         });
     });
 
@@ -3163,7 +3205,7 @@ defineSuite([
                 positions : {
                     cartesian : [expectedResult[0].x, expectedResult[0].y, expectedResult[0].z, expectedResult[1].x, expectedResult[1].y, expectedResult[1].z]
                 },
-                cornerType : "MITERED",
+                cornerType : 'MITERED',
                 extrudedHeight : 2,
                 granularity : 3,
                 height : 4,
@@ -3174,7 +3216,8 @@ defineSuite([
                     rgbaf : [0.2, 0.2, 0.2, 0.2]
                 },
                 outlineWidth : 6,
-                shadows : 'ENABLED'
+                shadows : 'ENABLED',
+                zIndex: 5
             }
         };
 
@@ -3197,6 +3240,7 @@ defineSuite([
             expect(entity.corridor.outlineColor.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Color(0.2, 0.2, 0.2, 0.2));
             expect(entity.corridor.outlineWidth.getValue(Iso8601.MINIMUM_VALUE)).toEqual(6);
             expect(entity.corridor.shadows.getValue(Iso8601.MINIMUM_VALUE)).toEqual(ShadowMode.ENABLED);
+            expect(entity.corridor.zIndex.getValue(Iso8601.MINIMUM_VALUE)).toEqual(5);
         });
     });
 
@@ -3476,17 +3520,17 @@ defineSuite([
         var packet = {
             id : 'point',
             position : {
-                forwardExtrapolationType : "HOLD",
+                forwardExtrapolationType : 'HOLD',
                 forwardExtrapolationDuration : 2.0,
-                backwardExtrapolationType : "NONE",
+                backwardExtrapolationType : 'NONE',
                 backwardExtrapolationDuration : 1.0,
                 cartesian : ['2012', 0, 0, 0]
             },
             point : {
                 color : {
-                    forwardExtrapolationType : "NONE",
+                    forwardExtrapolationType : 'NONE',
                     forwardExtrapolationDuration : 1.0,
-                    backwardExtrapolationType : "HOLD",
+                    backwardExtrapolationType : 'HOLD',
                     backwardExtrapolationDuration : 2.0,
                     rgbaf : ['2012', 0.1, 0.2, 0.3, 0.4]
                 }

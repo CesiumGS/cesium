@@ -5,6 +5,7 @@ defineSuite([
     'Core/Math',
     'Core/ComponentDatatype',
     'Core/Ellipsoid',
+    'Core/EncodedCartesian3',
     'Core/Matrix4',
     'Core/WebMercatorProjection',
     'Core/Rectangle',
@@ -19,6 +20,7 @@ defineSuite([
     CesiumMath,
     ComponentDatatype,
     Ellipsoid,
+    EncodedCartesian3,
     Matrix4,
     WebMercatorProjection,
     Rectangle,
@@ -69,6 +71,29 @@ defineSuite([
         flat :true
     });
 
+    // Defines for projection extents
+    var eastMostCartographic = new Cartographic();
+    var longitudeExtentsEncodeScratch = {
+        high : 0.0,
+        low : 0.0
+    };
+    eastMostCartographic.longitude = CesiumMath.PI;
+    eastMostCartographic.latitude = 0.0;
+    eastMostCartographic.height = 0.0;
+    var eastMostCartesian = projection.project(eastMostCartographic);
+    var encoded = EncodedCartesian3.encode(eastMostCartesian.x, longitudeExtentsEncodeScratch);
+    var eastMostYhighDefine = 'EAST_MOST_X_HIGH ' + encoded.high.toFixed((encoded.high + '').length + 1);
+    var eastMostYlowDefine = 'EAST_MOST_X_LOW ' + encoded.low.toFixed((encoded.low + '').length + 1);
+
+    var westMostCartographic = new Cartographic();
+    westMostCartographic.longitude = -CesiumMath.PI;
+    westMostCartographic.latitude = 0.0;
+    westMostCartographic.height = 0.0;
+    var westMostCartesian = projection.project(westMostCartographic);
+    encoded = EncodedCartesian3.encode(westMostCartesian.x, longitudeExtentsEncodeScratch);
+    var westMostYhighDefine = 'WEST_MOST_X_HIGH ' + encoded.high.toFixed((encoded.high + '').length + 1);
+    var westMostYlowDefine = 'WEST_MOST_X_LOW ' + encoded.low.toFixed((encoded.low + '').length + 1);
+
     it('provides attributes for computing texture coordinates from Spherical extents', function() {
         var attributes = largeRectangleAttributes;
 
@@ -81,6 +106,13 @@ defineSuite([
         expect(value[1]).toEqualEpsilon(-CesiumMath.PI_OVER_FOUR, CesiumMath.EPSILON4);
         expect(value[2]).toEqualEpsilon(1.0 / CesiumMath.PI_OVER_TWO, CesiumMath.EPSILON4);
         expect(value[3]).toEqualEpsilon(1.0 / CesiumMath.PI_OVER_TWO, CesiumMath.EPSILON4);
+
+        var longitudeRotation = attributes.longitudeRotation;
+        expect(longitudeRotation.componentDatatype).toEqual(ComponentDatatype.FLOAT);
+        expect(longitudeRotation.componentsPerAttribute).toEqual(1);
+        expect(longitudeRotation.normalize).toEqual(false);
+        value = longitudeRotation.value;
+        expect(value[0]).toEqualEpsilon(0.0, CesiumMath.EPSILON4);
     });
 
     function checkGeometryInstanceAttributeVec3(attribute) {
@@ -214,82 +246,116 @@ defineSuite([
     it('creates vertex shaders for color', function() {
         // Check defines
         var sphericalTexturedAppearance = new ShadowVolumeAppearance(true, false, textureMaterialAppearance);
-        var shaderSource = sphericalTexturedAppearance.createVertexShader([], testVs, false);
+        var shaderSource = sphericalTexturedAppearance.createVertexShader([], testVs, false, projection);
         var defines = shaderSource.defines;
         expect(defines.length).toEqual(2);
         expect(defines.indexOf('TEXTURE_COORDINATES')).not.toEqual(-1);
         expect(defines.indexOf('SPHERICAL')).not.toEqual(-1);
 
         // 2D variant
-        shaderSource = sphericalTexturedAppearance.createVertexShader([], testVs, true);
+        shaderSource = sphericalTexturedAppearance.createVertexShader([], testVs, true, projection);
         defines = shaderSource.defines;
-        expect(defines.length).toEqual(2);
+        expect(defines.length).toEqual(6);
         expect(defines.indexOf('TEXTURE_COORDINATES')).not.toEqual(-1);
         expect(defines.indexOf('COLUMBUS_VIEW_2D')).not.toEqual(-1);
 
+        expect(defines.indexOf(eastMostYhighDefine)).not.toEqual(-1);
+        expect(defines.indexOf(eastMostYlowDefine)).not.toEqual(-1);
+        expect(defines.indexOf(westMostYhighDefine)).not.toEqual(-1);
+        expect(defines.indexOf(westMostYlowDefine)).not.toEqual(-1);
+
         // Unculled color appearance - no texcoords at all
         var sphericalUnculledColorAppearance = new ShadowVolumeAppearance(false, false, perInstanceColorMaterialAppearance);
-        shaderSource = sphericalUnculledColorAppearance.createVertexShader([], testVs, false);
+        shaderSource = sphericalUnculledColorAppearance.createVertexShader([], testVs, false, projection);
         defines = shaderSource.defines;
         expect(defines.length).toEqual(1);
         expect(defines.indexOf('PER_INSTANCE_COLOR')).not.toEqual(-1);
 
         // 2D variant
-        shaderSource = sphericalUnculledColorAppearance.createVertexShader([], testVs, true);
+        shaderSource = sphericalUnculledColorAppearance.createVertexShader([], testVs, true, projection);
         defines = shaderSource.defines;
-        expect(defines.length).toEqual(1);
+        expect(defines.length).toEqual(5);
+
+        expect(defines.indexOf(eastMostYhighDefine)).not.toEqual(-1);
+        expect(defines.indexOf(eastMostYlowDefine)).not.toEqual(-1);
+        expect(defines.indexOf(westMostYhighDefine)).not.toEqual(-1);
+        expect(defines.indexOf(westMostYlowDefine)).not.toEqual(-1);
+
         expect(defines.indexOf('PER_INSTANCE_COLOR')).not.toEqual(-1);
 
         // Planar textured, without culling
         var planarTexturedAppearance = new ShadowVolumeAppearance(false, true, textureMaterialAppearance);
-        shaderSource = planarTexturedAppearance.createVertexShader([], testVs, false);
+        shaderSource = planarTexturedAppearance.createVertexShader([], testVs, false, projection);
         defines = shaderSource.defines;
         expect(defines.indexOf('TEXTURE_COORDINATES')).not.toEqual(-1);
         expect(defines.length).toEqual(1);
 
-        shaderSource = planarTexturedAppearance.createVertexShader([], testVs, true);
+        shaderSource = planarTexturedAppearance.createVertexShader([], testVs, true, projection);
         defines = shaderSource.defines;
         expect(defines.indexOf('TEXTURE_COORDINATES')).not.toEqual(-1);
         expect(defines.indexOf('COLUMBUS_VIEW_2D')).not.toEqual(-1);
-        expect(defines.length).toEqual(2);
+
+        expect(defines.indexOf(eastMostYhighDefine)).not.toEqual(-1);
+        expect(defines.indexOf(eastMostYlowDefine)).not.toEqual(-1);
+        expect(defines.indexOf(westMostYhighDefine)).not.toEqual(-1);
+        expect(defines.indexOf(westMostYlowDefine)).not.toEqual(-1);
+
+        expect(defines.length).toEqual(6);
     });
 
     it('creates vertex shaders for pick', function() {
         // Check defines
         var sphericalTexturedAppearance = new ShadowVolumeAppearance(true, false, textureMaterialAppearance);
-        var shaderSource = sphericalTexturedAppearance.createPickVertexShader([], testVs, false);
+        var shaderSource = sphericalTexturedAppearance.createPickVertexShader([], testVs, false, projection);
         var defines = shaderSource.defines;
         expect(defines.length).toEqual(2);
         expect(defines.indexOf('TEXTURE_COORDINATES')).not.toEqual(-1);
         expect(defines.indexOf('SPHERICAL')).not.toEqual(-1);
 
         // 2D variant
-        shaderSource = sphericalTexturedAppearance.createPickVertexShader([], testVs, true);
+        shaderSource = sphericalTexturedAppearance.createPickVertexShader([], testVs, true, projection);
         defines = shaderSource.defines;
-        expect(defines.length).toEqual(2);
+        expect(defines.length).toEqual(6);
         expect(defines.indexOf('TEXTURE_COORDINATES')).not.toEqual(-1);
         expect(defines.indexOf('COLUMBUS_VIEW_2D')).not.toEqual(-1);
 
+        expect(defines.indexOf(eastMostYhighDefine)).not.toEqual(-1);
+        expect(defines.indexOf(eastMostYlowDefine)).not.toEqual(-1);
+        expect(defines.indexOf(westMostYhighDefine)).not.toEqual(-1);
+        expect(defines.indexOf(westMostYlowDefine)).not.toEqual(-1);
+
         // Unculled color appearance - no texcoords at all
         var sphericalUnculledColorAppearance = new ShadowVolumeAppearance(false, false, perInstanceColorMaterialAppearance);
-        shaderSource = sphericalUnculledColorAppearance.createPickVertexShader([], testVs, false);
+        shaderSource = sphericalUnculledColorAppearance.createPickVertexShader([], testVs, false, projection);
         defines = shaderSource.defines;
         expect(defines.length).toEqual(0);
 
         // 2D variant
-        shaderSource = sphericalUnculledColorAppearance.createPickVertexShader([], testVs, true);
+        shaderSource = sphericalUnculledColorAppearance.createPickVertexShader([], testVs, true, projection);
         defines = shaderSource.defines;
-        expect(defines.length).toEqual(0);
+
+        expect(defines.indexOf(eastMostYhighDefine)).not.toEqual(-1);
+        expect(defines.indexOf(eastMostYlowDefine)).not.toEqual(-1);
+        expect(defines.indexOf(westMostYhighDefine)).not.toEqual(-1);
+        expect(defines.indexOf(westMostYlowDefine)).not.toEqual(-1);
+
+        expect(defines.length).toEqual(4);
 
         // Planar textured, without culling
         var planarTexturedAppearance = new ShadowVolumeAppearance(false, true, textureMaterialAppearance);
-        shaderSource = planarTexturedAppearance.createPickVertexShader([], testVs, false);
+        shaderSource = planarTexturedAppearance.createPickVertexShader([], testVs, false, projection);
         defines = shaderSource.defines;
         expect(defines.length).toEqual(0);
 
-        shaderSource = planarTexturedAppearance.createPickVertexShader([], testVs, true);
+        shaderSource = planarTexturedAppearance.createPickVertexShader([], testVs, true, projection);
         defines = shaderSource.defines;
-        expect(defines.length).toEqual(0);
+
+        expect(defines.indexOf(eastMostYhighDefine)).not.toEqual(-1);
+        expect(defines.indexOf(eastMostYlowDefine)).not.toEqual(-1);
+        expect(defines.indexOf(westMostYhighDefine)).not.toEqual(-1);
+        expect(defines.indexOf(westMostYlowDefine)).not.toEqual(-1);
+
+        expect(defines.length).toEqual(4);
     });
 
     it('creates fragment shaders for color and pick', function() {

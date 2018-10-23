@@ -300,6 +300,11 @@ define([
             return;
         }
 
+        if (this._tilesInvalidated) {
+            invalidateAllTiles(this);
+            this._tilesInvalidated = false;
+        }
+
         // Gets commands for any texture re-projections
         this._tileProvider.initialize(frameState);
 
@@ -376,16 +381,10 @@ define([
             return;
         }
 
-        if (this._tilesInvalidated) {
-            invalidateAllTiles(this);
-        }
-
         // Load/create resources for terrain and imagery. Prepare texture re-projections for the next frame.
         processTileLoadQueue(this, frameState);
         updateHeights(this, frameState);
         updateTileLoadProgress(this, frameState);
-
-        this._tilesInvalidated = false;
     };
 
     /**
@@ -771,8 +770,11 @@ define([
     var scratchRay = new Ray();
     var scratchCartographic = new Cartographic();
     var scratchPosition = new Cartesian3();
+    var scratchArray = [];
 
     function updateHeights(primitive, frameState) {
+        var tryNextFrame = scratchArray;
+        tryNextFrame.length = 0;
         var tilesToUpdateHeights = primitive._tileToUpdateHeights;
         var terrainProvider = primitive._tileProvider.terrainProvider;
 
@@ -783,14 +785,20 @@ define([
         var mode = frameState.mode;
         var projection = frameState.mapProjection;
         var ellipsoid = projection.ellipsoid;
+        var i;
 
         while (tilesToUpdateHeights.length > 0) {
             var tile = tilesToUpdateHeights[0];
+            if (tile.state !== QuadtreeTileLoadState.DONE) {
+                tryNextFrame.push(tile);
+                tilesToUpdateHeights.shift();
+                primitive._lastTileIndex = 0;
+                continue;
+            }
             var customData = tile.customData;
             var customDataLength = customData.length;
 
             var timeSliceMax = false;
-            var i;
             for (i = primitive._lastTileIndex; i < customDataLength; ++i) {
                 var data = customData[i];
 
@@ -833,9 +841,8 @@ define([
                     var position = tile.data.pick(scratchRay, mode, projection, false, scratchPosition);
                     if (defined(position)) {
                         data.callback(position);
+                        data.level = tile.level;
                     }
-
-                    data.level = tile.level;
                 } else if (tile.level === data.level) {
                     var children = tile.children;
                     var childrenLength = children.length;
@@ -870,6 +877,9 @@ define([
                 primitive._lastTileIndex = 0;
                 tilesToUpdateHeights.shift();
             }
+        }
+        for (i = 0; i < tryNextFrame.length; i++) {
+            tilesToUpdateHeights.push(tryNextFrame[i]);
         }
     }
 

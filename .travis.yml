@@ -2,6 +2,9 @@ language: node_js
 node_js:
   - "8"
 sudo: false
+addons:
+  chrome: stable
+  firefox: latest
 before_script:
   - export DISPLAY=:99.0
   - sh -e /etc/init.d/xvfb start
@@ -17,7 +20,7 @@ script:
 
   - echo 'test webgl-stub' && echo -en 'travis_fold:start:script.test\\r'
   - npm run build
-  - npm run test -- --browsers Electron --webgl-stub --failTaskOnError --suppressPassed
+  - npm run test -- --browsers FirefoxHeadless --webgl-stub --failTaskOnError --suppressPassed
   - echo -en 'travis_fold:end:script.test\\r'
 
   - echo 'makeZipFile' && echo -en 'travis_fold:start:script.makeZipFile\\r'
@@ -36,7 +39,7 @@ script:
   - echo -en 'travis_fold:end:script.deploy\\r'
 
   - echo 'test webgl-stub release' && echo -en 'travis_fold:start:script test.release\\r'
-  - npm run test -- --browsers Electron --failTaskOnError --webgl-stub --release --suppressPassed
+  - npm run test -- --browsers ChromeCI --failTaskOnError --webgl-stub --release --suppressPassed
   - echo -en 'travis_fold:end:script test.release\\r'
 
   - echo 'test node' && echo -en 'travis_fold:start:script test.node\\r'

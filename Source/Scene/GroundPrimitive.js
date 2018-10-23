@@ -174,20 +174,24 @@ define([
                 }
             }
         }
-
+        /**
+         * The {@link Appearance} used to shade this primitive. Each geometry
+         * instance is shaded with the same appearance.  Some appearances, like
+         * {@link PerInstanceColorAppearance} allow giving each instance unique
+         * properties.
+         *
+         * @type Appearance
+         *
+         * @default undefined
+         */
         this.appearance = appearance;
 
         /**
-         * The geometry instance rendered with this primitive.  This may
+         * The geometry instances rendered with this primitive.  This may
          * be <code>undefined</code> if <code>options.releaseGeometryInstances</code>
          * is <code>true</code> when the primitive is constructed.
          * <p>
          * Changing this property after the primitive is rendered has no effect.
-         * </p>
-         * <p>
-         * Because of the rendering technique used, all geometry instances must be the same color.
-         * If there is an instance with a differing color, a <code>DeveloperError</code> will be thrown
-         * on the first attempt to render.
          * </p>
          *
          * @readonly
@@ -541,7 +545,7 @@ define([
             for (i = 0; i < colorLength; ++i) {
                 colorCommand = colorCommands[i];
 
-                // derive a separate appearance command for 2D if needed
+                // Use derived appearance command for 2D if needed
                 if (frameState.mode !== SceneMode.SCENE3D &&
                     colorCommand.shaderProgram === classificationPrimitive._spColor &&
                     classificationPrimitive._needs2DShader) {
@@ -587,7 +591,7 @@ define([
             for (var j = 0; j < pickLength; ++j) {
                 var pickCommand = pickCommands[j];
 
-                // derive a separate appearance command for 2D if needed
+                // Use derived pick command for 2D if needed
                 if (frameState.mode !== SceneMode.SCENE3D &&
                     pickCommand.shaderProgram === classificationPrimitive._spPick &&
                     classificationPrimitive._needs2DShader) {
@@ -610,9 +614,6 @@ define([
         }
     }
 
-    GroundPrimitive._initialized = false;
-    GroundPrimitive._initPromise = undefined;
-
     /**
      * Initializes the minimum and maximum terrain heights. This only needs to be called if you are creating the
      * GroundPrimitive synchronously.
@@ -621,17 +622,7 @@ define([
      *
      */
     GroundPrimitive.initializeTerrainHeights = function() {
-        var initPromise = GroundPrimitive._initPromise;
-        if (defined(initPromise)) {
-            return initPromise;
-        }
-
-        GroundPrimitive._initPromise = ApproximateTerrainHeights.initialize()
-            .then(function() {
-                GroundPrimitive._initialized = true;
-            });
-
-        return GroundPrimitive._initPromise;
+        return ApproximateTerrainHeights.initialize();
     };
 
     /**
@@ -642,16 +633,16 @@ define([
      * list the exceptions that may be propagated when the scene is rendered:
      * </p>
      *
+     * @exception {DeveloperError} For synchronous GroundPrimitive, you must call GroundPrimitive.initializeTerrainHeights() and wait for the returned promise to resolve.
      * @exception {DeveloperError} All instance geometries must have the same primitiveType.
      * @exception {DeveloperError} Appearance and material have a uniform with the same name.
-     * @exception {DeveloperError} Not all of the geometry instances have the same color attribute.
      */
     GroundPrimitive.prototype.update = function(frameState) {
         if (!defined(this._primitive) && !defined(this.geometryInstances)) {
             return;
         }
 
-        if (!GroundPrimitive._initialized) {
+        if (!ApproximateTerrainHeights.initialized) {
             //>>includeStart('debug', pragmas.debug);
             if (!this.asynchronous) {
                 throw new DeveloperError('For synchronous GroundPrimitives, you must call GroundPrimitive.initializeTerrainHeights() and wait for the returned promise to resolve.');

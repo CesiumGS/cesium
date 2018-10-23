@@ -20,6 +20,7 @@ module.exports = {
         'curly': 'error',
         'block-scoped-var': 'error',
         'eqeqeq': 'error',
+        'eol-last': ['error', 'always'],
         'guard-for-in': 'error',
         'new-cap': ['error', {properties: false}],
         'no-alert': 'error',

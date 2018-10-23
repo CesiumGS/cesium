@@ -476,6 +476,19 @@ defineSuite([
         expect(result).toEqual(expected);
     });
 
+    it('setScale works', function() {
+        var matrix = Matrix4.clone(Matrix4.IDENTITY);
+        var result = new Matrix4();
+        var newScale = new Cartesian3(1.0, 2.0, 3.0);
+
+        expect(Matrix4.getScale(matrix, new Cartesian3())).toEqual(new Cartesian3(1.0, 1.0, 1.0));
+
+        var returnedResult = Matrix4.setScale(matrix, newScale, result);
+
+        expect(Matrix4.getScale(returnedResult, new Cartesian3())).toEqual(newScale);
+        expect(result).toBe(returnedResult);
+    });
+
     it('getRow works for each row', function() {
         var matrix = new Matrix4(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0);
         var expectedRow0 = new Cartesian4(1.0, 2.0, 3.0, 4.0);
@@ -975,6 +988,38 @@ defineSuite([
         matrix = Matrix4.multiplyByUniformScale(matrix, 0.0, matrix);
         var expected = Matrix4.fromTranslation(new Cartesian3(-1.0, -2.0, -3.0));
         expected = Matrix4.multiplyByUniformScale(expected, 0.0, expected);
+
+        var result = Matrix4.inverse(matrix, new Matrix4());
+        expect(expected).toEqualEpsilon(result, CesiumMath.EPSILON20);
+    });
+
+    it('inverse behaves acceptably with near single precision zero scale matrix', function() {
+        var trs = new TranslationRotationScale(new Cartesian3(0.0, 0.0, 0.0),
+        Quaternion.fromAxisAngle(Cartesian3.UNIT_X, 0.0),
+        new Cartesian3(1.0e-7, 1.0e-7, 1.1e-7));
+
+        var matrix = Matrix4.fromTranslationRotationScale(trs);
+
+        var expected = new Matrix4(1e7, 0, 0, 0,
+                                   0, 1e7, 0, 0,
+                                   0, 0, (1.0/1.1)*1e7, 0,
+                                   0, 0, 0, 1);
+
+        var result = Matrix4.inverse(matrix, new Matrix4());
+        expect(expected).toEqualEpsilon(result, CesiumMath.EPSILON15);
+    });
+
+    it('inverse behaves acceptably with single precision zero scale matrix', function() {
+        var trs = new TranslationRotationScale(new Cartesian3(0.0, 0.0, 0.0),
+        Quaternion.fromAxisAngle(Cartesian3.UNIT_X, 0.0),
+        new Cartesian3(1.8e-8, 1.2e-8, 1.2e-8));
+
+        var matrix = Matrix4.fromTranslationRotationScale(trs);
+
+        var expected = new Matrix4(0, 0, 0, -matrix[12],
+                                   0, 0, 0, -matrix[13],
+                                   0, 0, 0, -matrix[14],
+                                   0, 0, 0, 1);
 
         var result = Matrix4.inverse(matrix, new Matrix4());
         expect(expected).toEqualEpsilon(result, CesiumMath.EPSILON20);

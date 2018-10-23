@@ -48,19 +48,18 @@ define([
     var defaultHeightReference = HeightReference.NONE;
     var defaultHorizontalOrigin = HorizontalOrigin.CENTER;
     var defaultVerticalOrigin = VerticalOrigin.CENTER;
-    var defaultDisableDepthTestDistance = 0.0;
 
-    var position = new Cartesian3();
-    var fillColor = new Color();
-    var outlineColor = new Color();
-    var backgroundColor = new Color();
-    var backgroundPadding = new Cartesian2();
-    var eyeOffset = new Cartesian3();
-    var pixelOffset = new Cartesian2();
-    var translucencyByDistance = new NearFarScalar();
-    var pixelOffsetScaleByDistance = new NearFarScalar();
-    var scaleByDistance = new NearFarScalar();
-    var distanceDisplayCondition = new DistanceDisplayCondition();
+    var positionScratch = new Cartesian3();
+    var fillColorScratch = new Color();
+    var outlineColorScratch = new Color();
+    var backgroundColorScratch = new Color();
+    var backgroundPaddingScratch = new Cartesian2();
+    var eyeOffsetScratch = new Cartesian3();
+    var pixelOffsetScratch = new Cartesian2();
+    var translucencyByDistanceScratch = new NearFarScalar();
+    var pixelOffsetScaleByDistanceScratch = new NearFarScalar();
+    var scaleByDistanceScratch = new NearFarScalar();
+    var distanceDisplayConditionScratch = new DistanceDisplayCondition();
 
     function EntityData(entity) {
         this.entity = entity;
@@ -120,9 +119,9 @@ define([
             var text;
             var label = item.label;
             var show = entity.isShowing && entity.isAvailable(time) && Property.getValueOrDefault(labelGraphics._show, time, true);
-
+            var position;
             if (show) {
-                position = Property.getValueOrUndefined(entity._position, time, position);
+                position = Property.getValueOrUndefined(entity._position, time, positionScratch);
                 text = Property.getValueOrUndefined(labelGraphics._text, time);
                 show = defined(position) && defined(text);
             }
@@ -149,22 +148,22 @@ define([
             label.scale = Property.getValueOrDefault(labelGraphics._scale, time, defaultScale);
             label.font = Property.getValueOrDefault(labelGraphics._font, time, defaultFont);
             label.style = Property.getValueOrDefault(labelGraphics._style, time, defaultStyle);
-            label.fillColor = Property.getValueOrDefault(labelGraphics._fillColor, time, defaultFillColor, fillColor);
-            label.outlineColor = Property.getValueOrDefault(labelGraphics._outlineColor, time, defaultOutlineColor, outlineColor);
+            label.fillColor = Property.getValueOrDefault(labelGraphics._fillColor, time, defaultFillColor, fillColorScratch);
+            label.outlineColor = Property.getValueOrDefault(labelGraphics._outlineColor, time, defaultOutlineColor, outlineColorScratch);
             label.outlineWidth = Property.getValueOrDefault(labelGraphics._outlineWidth, time, defaultOutlineWidth);
             label.showBackground = Property.getValueOrDefault(labelGraphics._showBackground, time, defaultShowBackground);
-            label.backgroundColor = Property.getValueOrDefault(labelGraphics._backgroundColor, time, defaultBackgroundColor, backgroundColor);
-            label.backgroundPadding = Property.getValueOrDefault(labelGraphics._backgroundPadding, time, defaultBackgroundPadding, backgroundPadding);
-            label.pixelOffset = Property.getValueOrDefault(labelGraphics._pixelOffset, time, defaultPixelOffset, pixelOffset);
-            label.eyeOffset = Property.getValueOrDefault(labelGraphics._eyeOffset, time, defaultEyeOffset, eyeOffset);
+            label.backgroundColor = Property.getValueOrDefault(labelGraphics._backgroundColor, time, defaultBackgroundColor, backgroundColorScratch);
+            label.backgroundPadding = Property.getValueOrDefault(labelGraphics._backgroundPadding, time, defaultBackgroundPadding, backgroundPaddingScratch);
+            label.pixelOffset = Property.getValueOrDefault(labelGraphics._pixelOffset, time, defaultPixelOffset, pixelOffsetScratch);
+            label.eyeOffset = Property.getValueOrDefault(labelGraphics._eyeOffset, time, defaultEyeOffset, eyeOffsetScratch);
             label.heightReference = Property.getValueOrDefault(labelGraphics._heightReference, time, defaultHeightReference);
             label.horizontalOrigin = Property.getValueOrDefault(labelGraphics._horizontalOrigin, time, defaultHorizontalOrigin);
             label.verticalOrigin = Property.getValueOrDefault(labelGraphics._verticalOrigin, time, defaultVerticalOrigin);
-            label.translucencyByDistance = Property.getValueOrUndefined(labelGraphics._translucencyByDistance, time, translucencyByDistance);
-            label.pixelOffsetScaleByDistance = Property.getValueOrUndefined(labelGraphics._pixelOffsetScaleByDistance, time, pixelOffsetScaleByDistance);
-            label.scaleByDistance = Property.getValueOrUndefined(labelGraphics._scaleByDistance, time, scaleByDistance);
-            label.distanceDisplayCondition = Property.getValueOrUndefined(labelGraphics._distanceDisplayCondition, time, distanceDisplayCondition);
-            label.disableDepthTestDistance = Property.getValueOrDefault(labelGraphics._disableDepthTestDistance, time, defaultDisableDepthTestDistance);
+            label.translucencyByDistance = Property.getValueOrUndefined(labelGraphics._translucencyByDistance, time, translucencyByDistanceScratch);
+            label.pixelOffsetScaleByDistance = Property.getValueOrUndefined(labelGraphics._pixelOffsetScaleByDistance, time, pixelOffsetScaleByDistanceScratch);
+            label.scaleByDistance = Property.getValueOrUndefined(labelGraphics._scaleByDistance, time, scaleByDistanceScratch);
+            label.distanceDisplayCondition = Property.getValueOrUndefined(labelGraphics._distanceDisplayCondition, time, distanceDisplayConditionScratch);
+            label.disableDepthTestDistance = Property.getValueOrUndefined(labelGraphics._disableDepthTestDistance, time);
         }
         return true;
     };

@@ -10,7 +10,6 @@ define([
         './defineProperties',
         './deprecationWarning',
         './DeveloperError',
-        './FeatureDetection',
         './freezeObject',
         './getAbsoluteUri',
         './getBaseUri',
@@ -18,6 +17,7 @@ define([
         './isBlobUri',
         './isCrossOriginUrl',
         './isDataUri',
+        './loadAndExecuteScript',
         './objectToQuery',
         './queryToObject',
         './Request',
@@ -38,7 +38,6 @@ define([
         defineProperties,
         deprecationWarning,
         DeveloperError,
-        FeatureDetection,
         freezeObject,
         getAbsoluteUri,
         getBaseUri,
@@ -46,6 +45,7 @@ define([
         isBlobUri,
         isCrossOriginUrl,
         isDataUri,
+        loadAndExecuteScript,
         objectToQuery,
         queryToObject,
         Request,
@@ -1834,6 +1834,7 @@ define([
             }).end();
     }
 
+    var noXMLHttpRequest = typeof XMLHttpRequest === 'undefined';
     Resource._Implementations.loadWithXhr = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
         var dataUriRegexResult = dataUriRegex.exec(url);
         if (dataUriRegexResult !== null) {
@@ -1841,7 +1842,7 @@ define([
             return;
         }
 
-        if (FeatureDetection.isNodeJs()) {
+        if (noXMLHttpRequest) {
             loadWithHttpRequest(url, responseType, method, data, headers, deferred, overrideMimeType);
             return;
         }
@@ -1852,11 +1853,11 @@ define([
             xhr.withCredentials = true;
         }
 
+        xhr.open(method, url, true);
+
         if (defined(overrideMimeType) && defined(xhr.overrideMimeType)) {
             xhr.overrideMimeType(overrideMimeType);
         }
-
-        xhr.open(method, url, true);
 
         if (defined(headers)) {
             for (var key in headers) {
@@ -1933,20 +1934,7 @@ define([
     };
 
     Resource._Implementations.loadAndExecuteScript = function(url, functionName, deferred) {
-        var script = document.createElement('script');
-        script.async = true;
-        script.src = url;
-
-        var head = document.getElementsByTagName('head')[0];
-        script.onload = function() {
-            script.onload = undefined;
-            head.removeChild(script);
-        };
-        script.onerror = function(e) {
-            deferred.reject(e);
-        };
-
-        head.appendChild(script);
+        return loadAndExecuteScript(url, functionName).otherwise(deferred.reject);
     };
 
     /**
