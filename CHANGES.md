@@ -4,6 +4,7 @@ Change Log
 ### 1.51 - 2018-11-01
 
 ##### Additions :tada:
+* Added `Ray.clone`. [#7174](https://github.com/AnalyticalGraphicsInc/cesium/pull/7174)
 * Shrink minified and gzipped Cesium.js by 27 KB (~3.7%) by delay loading seldom-used third-party dependencies. [#7140](https://github.com/AnalyticalGraphicsInc/cesium/pull/7140)
 * Added WMS-T (time) support in WebMapServiceImageryProvider [#2581](https://github.com/AnalyticalGraphicsInc/cesium/issues/2581)
 * Added `Transforms.fixedFrameToHeadingPitchRoll`, a helper function for extracting a `HeadingPitchRoll` from a fixed frame transform [#7164](https://github.com/AnalyticalGraphicsInc/cesium/pull/7164)
@@ -15,6 +16,7 @@ Change Log
 ##### Fixes :wrench:
 * Fixed issue removing geometry entities with different materials [#7163](https://github.com/AnalyticalGraphicsInc/cesium/pull/7163)
 * Fixed an issue where `pickPosition` would return incorrect results when called after `sampleHeight` or `clampToHeight`. [#7113](https://github.com/AnalyticalGraphicsInc/cesium/pull/7113)
+* Fixed an issue where `sampleHeight` and `clampToHeight` would crash if picking a primitive that doesn't write depth. [#7120](https://github.com/AnalyticalGraphicsInc/cesium/issues/7120)
 * Fixed crash when updating polyline attributes twice in one frame [#7155](https://github.com/AnalyticalGraphicsInc/cesium/pull/7155)
 * Fixed a crash when using `BingMapsGeocoderService` [#7143](https://github.com/AnalyticalGraphicsInc/cesium/issues/7143)
 * Fixed entity visibility issue related to setting an entity show property and altering or adding entity geometry [#7156](https://github.com/AnalyticalGraphicsInc/cesium/pull/7156)
