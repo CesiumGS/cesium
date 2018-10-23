@@ -117,6 +117,9 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
    * [Chris Cooper](https://github.com/chris-cooper)
    * [Andrew McDowell](https://github.com/madole)
    * [Tony Luk](https://github.com/impactblue573)
+* [GeoFS](https://www.geo-fs.com)
+   * [Xavier Tassin](https://github.com/xtassin/)
+
 ## [Individual CLA](Documentation/Contributors/CLAs/individual-cla-agi-v1.0.txt)
 * [Victor Berchet](https://github.com/vicb)
 * [Caleb Morse](https://github.com/cmorse)
