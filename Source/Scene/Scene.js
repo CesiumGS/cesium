@@ -1484,6 +1484,19 @@ define([
         },
 
         /**
+         * Whether or not high dynamic range rendering is supported.
+         * @memberof Scene.prototype
+         * @type {Boolean}
+         * @default true
+         */
+        highDynamicRangeSupported : {
+            get : function() {
+                var context = this._context;
+                return context.depthTexture && (context.colorBufferFloat || context.colorBufferHalfFloat);
+            }
+        },
+
+        /**
          * Gets or sets the color of the light emitted by the sun.
          *
          * @memberof Scene.prototype
