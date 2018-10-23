@@ -214,7 +214,6 @@ define([
 
         this._ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
 
-        this._useBoundingSphereForClipping = false;
         this._clippingPlaneOffsetMatrix = undefined;
 
         /**
@@ -739,10 +738,7 @@ define([
                 that._extensionsUsed = tilesetJson.extensionsUsed;
                 that._gltfUpAxis = gltfUpAxis;
                 that._extras = tilesetJson.extras;
-                if (!defined(tilesetJson.root.transform)) {
-                    that._useBoundingSphereForClipping = true;
-                    that._clippingPlaneOffsetMatrix = Transforms.eastNorthUpToFixedFrame(that.boundingSphere.center);
-                }
+                that._clippingPlaneOffsetMatrix = Transforms.eastNorthUpToFixedFrame(that.boundingSphere.center);
                 that._readyPromise.resolve(that);
             }).otherwise(function(error) {
                 that._readyPromise.reject(error);
@@ -1158,10 +1154,7 @@ define([
          */
         clippingPlaneOffsetMatrix : {
             get : function() {
-                if (this._useBoundingSphereForClipping) {
-                    return this._clippingPlaneOffsetMatrix;
-                }
-                return this.root.computedTransform;
+                return Matrix4.multiply(this.root.computedTransform, this._clippingPlaneOffsetMatrix, new Matrix4());
             }
         },
 
@@ -1895,9 +1888,6 @@ define([
         var clippingPlanes = this._clippingPlanes;
         if (defined(clippingPlanes) && clippingPlanes.enabled) {
             clippingPlanes.update(frameState);
-            if (this._useBoundingSphereForClipping) {
-                this._clippingPlaneOffsetMatrix = Transforms.eastNorthUpToFixedFrame(this.boundingSphere.center);
-            }
         }
 
         this._timeSinceLoad = Math.max(JulianDate.secondsDifference(frameState.time, this._loadTimestamp) * 1000, 0.0);
