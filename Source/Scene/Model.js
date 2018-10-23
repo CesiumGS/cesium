@@ -682,7 +682,6 @@ define([
         this._imageBasedLightingFactor = new Cartesian2(1.0, 1.0);
         Cartesian2.clone(options.imageBasedLightingFactor, this._imageBasedLightingFactor);
         this._lightColor = Cartesian3.clone(options.lightColor);
-        this._regenerateShaders = false;
 
         this._sphericalHarmonicCoefficients = undefined;
         this._specularEnvironmentMaps = undefined;
@@ -1129,8 +1128,8 @@ define([
                 Check.typeOf.number.greaterThanOrEquals('imageBasedLightingFactor.y', value.y, 0.0);
                 Check.typeOf.number.lessThanOrEquals('imageBasedLightingFactor.y', value.y, 1.0);
                 //>>includeEnd('debug');
-                this._regenerateShaders = this._regenerateShaders || (this._imageBasedLightingFactor.x > 0.0 && value.x === 0.0) || (this._imageBasedLightingFactor.x === 0.0 && value.x > 0.0);
-                this._regenerateShaders = this._regenerateShaders || (this._imageBasedLightingFactor.y > 0.0 && value.y === 0.0) || (this._imageBasedLightingFactor.y === 0.0 && value.y > 0.0);
+                this._shouldRegenerateShaders = this._shouldRegenerateShaders || (this._imageBasedLightingFactor.x > 0.0 && value.x === 0.0) || (this._imageBasedLightingFactor.x === 0.0 && value.x > 0.0);
+                this._shouldRegenerateShaders = this._shouldRegenerateShaders || (this._imageBasedLightingFactor.y > 0.0 && value.y === 0.0) || (this._imageBasedLightingFactor.y === 0.0 && value.y > 0.0);
                 Cartesian2.clone(value, this._imageBasedLightingFactor);
             }
         },
@@ -1156,7 +1155,7 @@ define([
                 if (value === lightColor || Cartesian3.equals(value, lightColor)) {
                     return;
                 }
-                this._regenerateShaders = this._regenerateShaders || (defined(lightColor) && !defined(value)) || (defined(value) && !defined(lightColor));
+                this._shouldRegenerateShaders = this._shouldRegenerateShaders || (defined(lightColor) && !defined(value)) || (defined(value) && !defined(lightColor));
                 this._lightColor = Cartesian3.clone(value, lightColor);
             }
         },
@@ -1168,6 +1167,8 @@ define([
          * There are nine <code>Cartesian3</code> coefficients.
          * The order of the coefficients is: L<sub>00</sub>, L<sub>1-1</sub>, L<sub>10</sub>, L<sub>11</sub>, L<sub>2-2</sub>, L<sub>2-1</sub>, L<sub>20</sub>, L<sub>21<sub>, L<sub>22</sub>
          * </p>
+         *
+         * @memberof Model.prototype
          *
          * @type {Cartesian3[]}
          * @default undefined
@@ -1188,6 +1189,15 @@ define([
                 this._shouldRegenerateShaders = true;
             }
         },
+
+        /**
+         * A URL to a KTX file that contains a cube map of the specular lighting and the convoluted specular mipmaps.
+         *
+         * @memberof Model.prototype
+         *
+         * @type {String}
+         * @default undefined
+         */
         specularEnvironmentMaps : {
             get : function() {
                 return this._specularEnvironmentMaps;
@@ -4502,8 +4512,6 @@ define([
                 updateColor(this, frameState, false);
                 updateSilhouette(this, frameState, false);
             }
-
-            this._regenerateShaders = false;
         }
 
         if (this._shouldUpdateSpecularMapAtlas) {
