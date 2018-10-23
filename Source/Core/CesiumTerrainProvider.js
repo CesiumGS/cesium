@@ -55,7 +55,6 @@ define([
         this.version = layer.version;
         this.isHeightmap = layer.isHeightmap;
         this.tileUrlTemplates = layer.tileUrlTemplates;
-        this.hasAvailability = layer.hasAvailability;
         this.availability = layer.availability;
         this.hasVertexNormals = layer.hasVertexNormals;
         this.hasWaterMask = layer.hasWaterMask;
@@ -260,10 +259,8 @@ define([
 
             var availableTiles = data.available;
             var availability;
-            var hasAvailability = false;
-            if (defined(availableTiles)) {
+            if (defined(availableTiles) && !hasBvh) {
                 availability = new TileAvailability(that._tilingScheme, availableTiles.length);
-                hasAvailability = true;
                 for (var level = 0; level < availableTiles.length; ++level) {
                     var rangesAtLevel = availableTiles[level];
                     var yTiles = that._tilingScheme.getNumberOfYTilesAtLevel(level);
@@ -302,7 +299,6 @@ define([
                 version: data.version,
                 isHeightmap: isHeightmap,
                 tileUrlTemplates: tileUrlTemplates,
-                hasAvailability: hasAvailability,
                 availability: availability,
                 hasVertexNormals: hasVertexNormals,
                 hasWaterMask: hasWaterMask,
@@ -455,7 +451,7 @@ define([
         });
     }
 
-    function createQuantizedMeshTerrainData(provider, buffer, level, x, y, tmsY, layer) {
+    function createQuantizedMeshTerrainData(provider, buffer, level, x, y, tmsY, layer, availabilityOnly) {
         var littleEndianExtensionSize = layer.littleEndianExtensionSize;
         var pos = 0;
         var cartesian3Elements = 3;
@@ -570,19 +566,20 @@ define([
                 var bvh = new Float32Array(buffer, extensionPos, numberOfHeights);
                 extensionPos += Float32Array.BYTES_PER_ELEMENT * numberOfHeights;
 
-                // No available list in layer.json, so load availability from this tile
-                if (!layer.hasAvailability) {
-                    var numberofIncludedLevels = findNumberOfLevels(numberOfHeights/2);
-                    if (defined(numberofIncludedLevels) && numberofIncludedLevels <= layer.bvhLevels) {
-                        var maxLevel = numberofIncludedLevels + level - 1;
-                        layer.bvhLoaded.addAvailableTileRange(level, x, y, x, y);
-                        recurseHeights(level, x, y, bvh, 0, maxLevel, provider.availability, layer.availability);
-                    } else {
-                        console.log('Incorrect number of heights in tile Level: %d X: %d Y: %d', level, x, y);
-                    }
+                var numberofIncludedLevels = findNumberOfLevels(numberOfHeights/2);
+                if (defined(numberofIncludedLevels) && numberofIncludedLevels <= layer.bvhLevels) {
+                    var maxLevel = numberofIncludedLevels + level - 1;
+                    layer.bvhLoaded.addAvailableTileRange(level, x, y, x, y);
+                    recurseHeights(level, x, y, bvh, 0, maxLevel, provider.availability, layer.availability);
+                } else {
+                    console.log('Incorrect number of heights in tile Level: %d X: %d Y: %d', level, x, y);
                 }
             }
             pos += extensionLength;
+        }
+
+        if (availabilityOnly) {
+            return;
         }
 
         var skirtHeight = provider.getLevelMaximumGeometricError(level) * 5.0;
@@ -701,6 +698,10 @@ define([
             }
         }
 
+        return requestTileGeometry(this, x, y, level, request, layerToUse, false);
+    };
+
+    function requestTileGeometry(provider, x, y, level, request, layerToUse, availabilityOnly) {
         if (!defined(layerToUse)) {
             return when.reject(new RuntimeError('Terrain tile doesn\'t exist'));
         }
@@ -710,18 +711,18 @@ define([
             return undefined;
         }
 
-        var yTiles = this._tilingScheme.getNumberOfYTilesAtLevel(level);
+        var yTiles = provider._tilingScheme.getNumberOfYTilesAtLevel(level);
 
         var tmsY = (yTiles - y - 1);
 
         var extensionList = [];
-        if (this._requestVertexNormals && layerToUse.hasVertexNormals) {
+        if (provider._requestVertexNormals && layerToUse.hasVertexNormals) {
             extensionList.push(layerToUse.littleEndianExtensionSize ? 'octvertexnormals' : 'vertexnormals');
         }
-        if (this._requestWaterMask && layerToUse.hasWaterMask) {
+        if (provider._requestWaterMask && layerToUse.hasWaterMask) {
             extensionList.push('watermask');
         }
-        if (this._requestBvh && layerToUse.hasBvh) {
+        if (provider._requestBvh && layerToUse.hasBvh) {
             extensionList.push('bvh');
         }
 
@@ -757,14 +758,13 @@ define([
             return undefined;
         }
 
-        var that = this;
         return promise.then(function (buffer) {
-            if (defined(that._heightmapStructure)) {
-                return createHeightmapTerrainData(that, buffer, level, x, y, tmsY);
+            if (defined(provider._heightmapStructure)) {
+                return createHeightmapTerrainData(provider, buffer, level, x, y, tmsY);
             }
-            return createQuantizedMeshTerrainData(that, buffer, level, x, y, tmsY, layerToUse);
+            return createQuantizedMeshTerrainData(provider, buffer, level, x, y, tmsY, layerToUse, availabilityOnly);
         });
-    };
+    }
 
     defineProperties(CesiumTerrainProvider.prototype, {
         /**
@@ -1026,7 +1026,7 @@ define([
         var layers = provider._layers;
         var layer = layers[index];
         var promise;
-        if (!layer.hasAvailability && layer.hasBvh) {
+        if (layer.hasBvh) {
             // We only need to check this layer if there wasn't
             //  an available list and it has the bvh extension
             var bvhLevels = layer.bvhLevels - 1;
@@ -1097,7 +1097,7 @@ define([
                 }
 
                 // Load the tile
-                return provider.requestTileGeometry(x, y, level);
+                return requestTileGeometry(provider, x, y, level, undefined, layer, true);
             });
     }
 
