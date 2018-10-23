@@ -1,5 +1,6 @@
 defineSuite([
         'Scene/Model',
+        'Core/Cartesian2',
         'Core/Cartesian3',
         'Core/Cartesian4',
         'Core/CesiumTerrainProvider',
@@ -37,6 +38,7 @@ defineSuite([
         'ThirdParty/when'
     ], function(
         Model,
+        Cartesian2,
         Cartesian3,
         Cartesian4,
         CesiumTerrainProvider,
@@ -946,12 +948,11 @@ defineSuite([
             verifyRender(m);
             m.show = true;
 
-            expect(scene).toRenderAndCall(function(rgba) {
-                // Red
-                expect(rgba[0]).toBeGreaterThan(160);
-                expect(rgba[1]).toBeLessThan(15);
-                expect(rgba[2]).toBeLessThan(15);
-                expect(rgba[3]).toEqual(255);
+            expect({
+                scene : scene,
+                time : JulianDate.fromDate(new Date('January 1, 2014 12:00:00 UTC'))
+            }).toRenderAndCall(function(rgba) {
+                expect(rgba).toEqualEpsilon([193, 17, 16, 255], 5); // Red
             });
 
             primitives.remove(m);
@@ -2926,6 +2927,38 @@ defineSuite([
 
                 primitives.remove(model);
                 primitives.remove(model2);
+            });
+        });
+    });
+
+    it('renders with imageBaseLightingFactor', function() {
+        return loadModel(boxPbrUrl).then(function(model) {
+            model.show = true;
+            model.zoomTo();
+            expect(scene).toRenderAndCall(function(rgba) {
+                expect(rgba).not.toEqual([0, 0, 0, 255]);
+                model.imageBasedLightingFactor = new Cartesian2(0.0, 0.0);
+                expect(scene).notToRender(rgba);
+
+                primitives.remove(model);
+            });
+        });
+    });
+
+    it('renders with lightColor', function() {
+        return loadModel(boxPbrUrl).then(function(model) {
+            model.show = true;
+            model.zoomTo();
+            expect(scene).toRenderAndCall(function(rgba) {
+                expect(rgba).not.toEqual([0, 0, 0, 255]);
+                model.imageBasedLightingFactor = new Cartesian2(0.0, 0.0);
+                expect(scene).toRenderAndCall(function(rgba2) {
+                    expect(rgba2).not.toEqual(rgba);
+                    model.lightColor = new Cartesian3(5.0, 5.0, 5.0);
+                    expect(scene).notToRender(rgba2);
+
+                    primitives.remove(model);
+                });
             });
         });
     });

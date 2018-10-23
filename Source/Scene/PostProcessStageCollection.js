@@ -351,6 +351,11 @@ define([
                 }
                 //>>includeEnd('debug');
 
+                if (defined(this._tonemapping)) {
+                    delete this._stageNames[this._tonemapping.name];
+                    this._tonemapping.destroy();
+                }
+
                 var useAutoExposure = this._autoExposureEnabled;
                 var tonemapper;
 
@@ -378,6 +383,13 @@ define([
 
                 this._tonemapper = value;
                 this._tonemapping = tonemapper;
+
+                if (defined(this._stageNames)) {
+                    this._stageNames[tonemapper.name] = tonemapper;
+                    tonemapper._textureCache = this._textureCache;
+                }
+
+                this._textureCacheDirty = true;
             }
         }
     });

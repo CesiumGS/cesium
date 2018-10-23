@@ -779,7 +779,7 @@ define([
         this._hdrDirty = undefined;
         this.highDynamicRange = true;
         this.gamma = 2.2;
-        this._sunColor = new Color(0.8, 0.85, 1.0, 1.0);
+        this._sunColor = new Cartesian3(1.8, 1.85, 2.0);
 
         // Give frameState, camera, and screen space camera controller initial state before rendering
         updateFrameState(this, 0.0, JulianDate.now());
@@ -1451,7 +1451,7 @@ define([
         },
 
         /**
-         * The value used for gamma correction.
+         * The value used for gamma correction. This is only used when rendering with high dynamic range.
          * @memberof Scene.prototype
          * @type {Number}
          * @default 2.2
@@ -1484,11 +1484,24 @@ define([
         },
 
         /**
+         * Whether or not high dynamic range rendering is supported.
+         * @memberof Scene.prototype
+         * @type {Boolean}
+         * @default true
+         */
+        highDynamicRangeSupported : {
+            get : function() {
+                var context = this._context;
+                return context.depthTexture && (context.colorBufferFloat || context.colorBufferHalfFloat);
+            }
+        },
+
+        /**
          * Gets or sets the color of the light emitted by the sun.
          *
          * @memberof Scene.prototype
-         * @type {Color}
-         * @default Color(0.8, 0.8, 0.8)
+         * @type {Cartesian3}
+         * @default Cartesian3(1.8, 1.85, 2.0)
          */
         sunColor: {
             get: function() {
@@ -1894,7 +1907,7 @@ define([
         }
 
         var passes = frameState.passes;
-        if (!passes.pick && defined(command.derivedCommands) && defined(command.derivedCommands.hdr)) {
+        if (!passes.pick && scene._hdr && defined(command.derivedCommands) && defined(command.derivedCommands.hdr)) {
             command = command.derivedCommands.hdr.command;
         }
 

@@ -77,6 +77,8 @@ define([
             return previousName;
         }
 
+        var originalDependency = previousName;
+
         var inSeries = !defined(composite.inputPreviousStageTexture) || composite.inputPreviousStageTexture;
         var currentName = previousName;
         var length = composite.length;
@@ -96,13 +98,20 @@ define([
         // Stages not in a series depend on every stage executed before it since it could reference it as a uniform.
         // This prevents looking at the dependencies of each stage in the composite, but might create more framebuffers than necessary.
         // In practice, there are only 2-3 stages in these composites.
+        var j;
+        var name;
         if (!inSeries) {
-            for (var j = 1; j < length; ++j) {
-                var name = getLastStageName(composite.get(j));
+            for (j = 1; j < length; ++j) {
+                name = getLastStageName(composite.get(j));
                 var currentDependencies = dependencies[name];
                 for (var k = 0; k < j; ++k) {
                     currentDependencies[getLastStageName(composite.get(k))] = true;
                 }
+            }
+        } else {
+            for (j = 1; j < length; ++j) {
+                name = getLastStageName(composite.get(j));
+                dependencies[name][originalDependency] = true;
             }
         }
 

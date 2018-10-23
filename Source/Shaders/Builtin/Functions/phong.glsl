@@ -47,9 +47,8 @@ vec4 czm_phong(vec3 toEye, czm_material material)
     color += material.specular * specular;
 
 #ifdef HDR
-    vec3 sunColor = czm_sunColor.rgb + czm_sunColor.a;
     float sunDiffuse = czm_private_getLambertDiffuseOfMaterial(czm_sunDirectionEC, material);
-    color += materialDiffuse * sunDiffuse * sunColor;
+    color += materialDiffuse * sunDiffuse * czm_sunColor;
 #endif
 
     return vec4(color, material.alpha);

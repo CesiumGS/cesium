@@ -1710,7 +1710,7 @@ define([
          */
         czm_sunColor: new AutomaticUniform({
             size: 1,
-            datatype: WebGLConstants.FLOAT_VEC4,
+            datatype: WebGLConstants.FLOAT_VEC3,
             getValue: function(uniformState) {
                 return uniformState.sunColor;
             }
