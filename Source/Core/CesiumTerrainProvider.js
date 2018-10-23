@@ -570,7 +570,7 @@ define([
                 if (defined(numberofIncludedLevels) && numberofIncludedLevels <= layer.bvhLevels) {
                     var maxLevel = numberofIncludedLevels + level - 1;
                     layer.bvhLoaded.addAvailableTileRange(level, x, y, x, y);
-                    recurseHeights(level, x, y, bvh, 0, maxLevel, provider.availability, layer.availability);
+                    recurseHeights(level, x, y, bvh, 0, maxLevel, provider, layer.availability);
                 } else {
                     console.log('Incorrect number of heights in tile Level: %d X: %d Y: %d', level, x, y);
                 }
@@ -635,25 +635,32 @@ define([
         return undefined;
     }
 
-    function recurseHeights(level, x, y, buffer, index, maxLevel, providerAvailability, layerAvailability) {
+    function recurseHeights(level, x, y, buffer, index, maxLevel, provider, layerAvailability) {
         if (level > maxLevel) {
             return index;
         }
 
+        var providerAvailability = provider.availability;
         if (!isNaN(buffer[index])) {
             // Minimum height isn't a Nan, so the tile exists
+
+            // The server stores everything in TMS, which has the reverse Y that our
+            //  tiling scheme uses. Convert to the Cesium version to store in availability.
+            var yTiles = provider._tilingScheme.getNumberOfYTilesAtLevel(level);
+            var cesiumY = yTiles - y - 1;
+
             // TODO: Make this more efficient
-            providerAvailability.addAvailableTileRange(level, x, y, x, y);
-            layerAvailability.addAvailableTileRange(level, x, y, x, y);
+            providerAvailability.addAvailableTileRange(level, x, cesiumY, x, cesiumY);
+            layerAvailability.addAvailableTileRange(level, x, cesiumY, x, cesiumY);
         }
         index += 2; // Skip min and max
 
         x *= 2;
         y *= 2;
-        index = recurseHeights(level + 1, x, y, buffer, index, maxLevel, providerAvailability, layerAvailability); // SW
-        index = recurseHeights(level + 1, x + 1, y, buffer, index, maxLevel, providerAvailability, layerAvailability); // SE
-        index = recurseHeights(level + 1, x, y + 1, buffer, index, maxLevel, providerAvailability, layerAvailability); // NW
-        index = recurseHeights(level + 1, x + 1, y + 1, buffer, index, maxLevel, providerAvailability, layerAvailability); // NE
+        index = recurseHeights(level + 1, x, y, buffer, index, maxLevel, provider, layerAvailability); // SW
+        index = recurseHeights(level + 1, x + 1, y, buffer, index, maxLevel, provider, layerAvailability); // SE
+        index = recurseHeights(level + 1, x, y + 1, buffer, index, maxLevel, provider, layerAvailability); // NW
+        index = recurseHeights(level + 1, x + 1, y + 1, buffer, index, maxLevel, provider, layerAvailability); // NE
 
         return index;
     }
