@@ -48,7 +48,7 @@ tileset.readyPromise.then(function(tileset) {
 tileset.colorBlendMode = Cesium.Cesium3DTileColorBlendMode.REPLACE;
 
 var picking = false;
-Sandcastle.addToggleButton('Picking', false, function(checked) {
+Sandcastle.addToggleButton('Per-feature selection', false, function(checked) {
     picking = checked;
 });
 
