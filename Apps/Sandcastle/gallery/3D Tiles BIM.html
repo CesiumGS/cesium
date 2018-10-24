@@ -24,6 +24,7 @@
 </style>
 <div id="cesiumContainer" class="fullSize"></div>
 <div id="loadingOverlay"><h1>Loading...</h1></div>
+<div id="toolbar"></div>
 <script id="cesium_sandcastle_script">
 function startup(Cesium) {
     'use strict';
@@ -46,6 +47,11 @@ tileset.readyPromise.then(function(tileset) {
 
 tileset.colorBlendMode = Cesium.Cesium3DTileColorBlendMode.REPLACE;
 
+var picking = false;
+Sandcastle.addToggleButton('Picking', false, function(checked) {
+    picking = checked;
+});
+
 var selectedFeature;
 
 function selectFeature(feature) {
@@ -64,6 +70,10 @@ function unselectFeature(feature) {
 
 var handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
 handler.setInputAction(function(movement) {
+    if (!picking) {
+        return;
+    }
+
     var feature = scene.pick(movement.endPosition);
 
     if (Cesium.defined(selectedFeature)) {
