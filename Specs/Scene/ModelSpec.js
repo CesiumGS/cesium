@@ -990,6 +990,7 @@ defineSuite([
         return loadModel(boxGltf2Url).then(function(m) {
             verifyRender(m);
             m.show = true;
+            m.luminanceAtZenith = undefined;
 
             expect({
                 scene : scene,

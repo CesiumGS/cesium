@@ -2204,6 +2204,8 @@ defineSuite([
 
     function testColorBlendMode(url) {
         return Cesium3DTilesTester.loadTileset(scene, url).then(function(tileset) {
+            tileset.luminanceAtZenith = undefined;
+
             // Check that the feature is red
             var sourceRed;
             var renderOptions = {

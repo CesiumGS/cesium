@@ -174,6 +174,7 @@ define([
         this._imageBasedLightingFactor = new Cartesian2(1.0, 1.0);
         Cartesian2.clone(options.imageBasedLightingFactor, this._imageBasedLightingFactor);
         this.lightColor = options.lightColor;
+        this.luminanceAtZenith = options.luminanceAtZenith;
     }
 
     defineProperties(ModelInstanceCollection.prototype, {
@@ -601,7 +602,8 @@ define([
             ignoreCommands : true,
             opaquePass : collection._opaquePass,
             imageBasedLightingFactor : collection.imageBasedLightingFactor,
-            lightColor : collection.lightColor
+            lightColor : collection.lightColor,
+            luminanceAtZenith : collection.luminanceAtZenith
         };
 
         if (!usesBatchTable) {
@@ -897,6 +899,7 @@ define([
 
         model.imageBasedLightingFactor = this.imageBasedLightingFactor;
         model.lightColor = this.lightColor;
+        model.luminanceAtZenith = this.luminanceAtZenith;
 
         model.update(frameState);
 

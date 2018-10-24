@@ -292,6 +292,7 @@ define([
      * @param {Boolean} [options.dequantizeInShader=true] Determines if a {@link https://github.com/google/draco|Draco} encoded model is dequantized on the GPU. This decreases total memory usage for encoded models.
      * @param {Cartesian2} [options.imageBasedLightingFactor=Cartesian2(1.0, 1.0)] Scales diffuse and specular image-based lighting from the earth, sky, atmosphere and star skybox.
      * @param {Cartesian3} [options.lightColor] The color and intensity of the sunlight used to shade the model.
+     * @param {Number} [options.luminanceAtZenith=1.0] The sun's luminance at the zenith in kilo candela per meter squared to use for this model's procedural environment map.
      *
      * @see Model.fromGltf
      *
@@ -440,17 +441,6 @@ define([
          */
         this.id = options.id;
         this._id = options.id;
-
-        /**
-         * The sun's luminance at the zenith in kilo candela per meter squared to use for this model's procedural environment map.
-         * This is used when {@link Model#specularEnvironmentMaps} and {@link Model#sphericalHarmonicCoefficients} are not defined.
-         *
-         * @type Number
-         *
-         * @default 10.0
-         *
-         */
-        this.luminanceAtZenith = defaultValue(options.luminanceAtZenith, 1.0);
 
         /**
          * Returns the height reference of the model
@@ -683,10 +673,14 @@ define([
         Cartesian2.clone(options.imageBasedLightingFactor, this._imageBasedLightingFactor);
         this._lightColor = Cartesian3.clone(options.lightColor);
 
+        this._luminanceAtZenith = undefined;
+        this.luminanceAtZenith = defaultValue(options.luminanceAtZenith, 1.0);
+
         this._sphericalHarmonicCoefficients = undefined;
         this._specularEnvironmentMaps = undefined;
         this._shouldUpdateSpecularMapAtlas = false;
         this._specularEnvironmentMapAtlas = undefined;
+
         this._shouldRegenerateShaders = false;
     }
 
@@ -1157,6 +1151,29 @@ define([
                 }
                 this._shouldRegenerateShaders = this._shouldRegenerateShaders || (defined(lightColor) && !defined(value)) || (defined(value) && !defined(lightColor));
                 this._lightColor = Cartesian3.clone(value, lightColor);
+            }
+        },
+
+        /**
+         * The sun's luminance at the zenith in kilo candela per meter squared to use for this model's procedural environment map.
+         * This is used when {@link Model#specularEnvironmentMaps} and {@link Model#sphericalHarmonicCoefficients} are not defined.
+         *
+         * @memberof Model.prototype
+         *
+         * @type {Number}
+         * @default 1.0
+         */
+        luminanceAtZenith : {
+            get : function() {
+                return this._luminanceAtZenith;
+            },
+            set : function(value) {
+                var lum = this._luminanceAtZenith;
+                if (value === lum) {
+                    return;
+                }
+                this._shouldRegenerateShaders = this._shouldRegenerateShaders || (defined(lum) && !defined(value)) || (defined(value) && !defined(lum));
+                this._luminanceAtZenith = value;
             }
         },
 
@@ -2095,7 +2112,9 @@ define([
             drawFS = '#define SPECULAR_IBL \n' + 'uniform sampler2D gltf_specularMap; \n' + 'uniform vec2 gltf_specularMapSize; \n' + 'uniform float gltf_maxSpecularLOD; \n' + drawFS;
         }
 
-        drawFS = 'uniform float gltf_luminanceAtZenith;\n' + drawFS;
+        if (defined(model._luminanceAtZenith)) {
+            drawFS = '#define USE_SUN_LUMINANCE \n' + 'uniform float gltf_luminanceAtZenith;\n' + drawFS;
+        }
 
         createAttributesAndProgram(programId, techniqueId, drawFS, drawVS, model, context);
     }
@@ -2165,7 +2184,9 @@ define([
             drawFS = '#define SPECULAR_IBL \n' + 'uniform sampler2D gltf_specularMap; \n' + 'uniform vec2 gltf_specularMapSize; \n' + 'uniform float gltf_maxSpecularLOD; \n' + drawFS;
         }
 
-        drawFS = 'uniform float gltf_luminanceAtZenith;\n' + drawFS;
+        if (defined(model._luminanceAtZenith)) {
+            drawFS = '#define USE_SUN_LUMINANCE \n' + 'uniform float gltf_luminanceAtZenith;\n' + drawFS;
+        }
 
         createAttributesAndProgram(programId, techniqueId, drawFS, drawVS, model, context);
     }

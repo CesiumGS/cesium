@@ -117,6 +117,7 @@ define([
      * @param {Object} [options.pointCloudShading] Options for constructing a {@link PointCloudShading} object to control point attenuation based on geometric error and lighting.
      * @param {Cartesian2} [options.imageBasedLightingFactor=new Cartesian2(1.0, 1.0)] Scales the diffuse and specular image-based lighting from the earth, sky, atmosphere and star skybox.
      * @param {Cartesian3} [options.lightColor] The color and intensity of the sunlight used to shade models.
+     * @param {Number} [options.luminanceAtZenith=1.0] The sun's luminance at the zenith in kilo candela per meter squared to use for this model's procedural environment map.
      * @param {Boolean} [options.debugFreezeFrame=false] For debugging only. Determines if only the tiles from last frame should be used for rendering.
      * @param {Boolean} [options.debugColorizeTiles=false] For debugging only. When true, assigns a random color to each tile.
      * @param {Boolean} [options.debugWireframe=false] For debugging only. When true, render's each tile's content as a wireframe.
@@ -585,6 +586,17 @@ define([
          * @default undefined
          */
         this.lightColor = options.lightColor;
+
+        /**
+         * The sun's luminance at the zenith in kilo candela per meter squared to use for this model's procedural environment map.
+         * This is used when {@link Model#specularEnvironmentMaps} and {@link Model#sphericalHarmonicCoefficients} are not defined.
+         *
+         * @type Number
+         *
+         * @default 1.0
+         *
+         */
+        this.luminanceAtZenith = defaultValue(options.luminanceAtZenith, 1.0);
 
         /**
          * This property is for debugging only; it is not optimized for production use.

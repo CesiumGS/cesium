@@ -289,7 +289,8 @@ define([
             opaquePass : Pass.CESIUM_3D_TILE, // Draw opaque portions during the 3D Tiles pass
             pickIdLoaded : getPickIdCallback(content),
             imageBasedLightingFactor : tileset.imageBasedLightingFactor,
-            lightColor : tileset.lightColor
+            lightColor : tileset.lightColor,
+            luminanceAtZenith : tileset.luminanceAtZenith
         };
 
         if (gltfFormat === 0) {
@@ -468,6 +469,8 @@ define([
         this._batchTable.update(tileset, frameState);
         this._modelInstanceCollection.modelMatrix = this._tile.computedTransform;
         this._modelInstanceCollection.shadows = this._tileset.shadows;
+        this._modelInstanceCollection.lightColor = this._tileset.lightColor;
+        this._modelInstanceCollection.luminanceAtZenith = this._tileset.luminanceAtZenith;
         this._modelInstanceCollection.debugWireframe = this._tileset.debugWireframe;
 
         var model = this._modelInstanceCollection._model;

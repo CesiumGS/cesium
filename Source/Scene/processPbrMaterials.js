@@ -700,6 +700,7 @@ define([
             fragmentShader += '    specularIrradiance = mix(specularIrradiance, nadirColor, smoothstep(farBelowHorizon, 1.0, reflectionDotNadir) * inverseRoughness);\n';
 
             // Luminance model from page 40 of http://silviojemma.com/public/papers/lighting/spherical-harmonic-lighting.pdf
+            fragmentShader += '#ifdef USE_SUN_LUMINANCE \n';
             // Angle between sun and zenith
             fragmentShader += '    float LdotZenith = clamp(dot(normalize(czm_inverseViewRotation * l), normalize(v_positionWC * -1.0)), 0.001, 1.0);\n';
             fragmentShader += '    float S = acos(LdotZenith);\n';
@@ -710,9 +711,17 @@ define([
             fragmentShader += '    float numerator = ((0.91 + 10.0 * exp(-3.0 * gamma) + 0.45 * pow(NdotL, 2.0)) * (1.0 - exp(-0.32 / NdotZenith)));\n';
             fragmentShader += '    float denominator = (0.91 + 10.0 * exp(-3.0 * S) + 0.45 * pow(LdotZenith,2.0)) * (1.0 - exp(-0.32));\n';
             fragmentShader += '    float luminance = gltf_luminanceAtZenith * (numerator / denominator);\n';
+            fragmentShader += '#endif \n';
+
             fragmentShader += '    vec2 brdfLut = texture2D(czm_brdfLut, vec2(NdotV, 1.0 - roughness)).rg;\n';
             fragmentShader += '    vec3 IBLColor = (diffuseIrradiance * diffuseColor * gltf_iblFactor.x) + (specularIrradiance * SRGBtoLINEAR3(specularColor * brdfLut.x + brdfLut.y) * gltf_iblFactor.y);\n';
+
+            fragmentShader += '#ifdef USE_SUN_LUMINANCE \n';
             fragmentShader += '    color += IBLColor * luminance;\n';
+            fragmentShader += '#else \n';
+            fragmentShader += '    color += IBLColor; \n';
+            fragmentShader += '#endif \n';
+
             // Environment maps were provided, use them for IBL
             fragmentShader += '#else \n'; // defined(DIFFUSE_IBL) || defined(SPECULAR_IBL)
 

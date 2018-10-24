@@ -386,7 +386,8 @@ define([
                 addBatchIdToGeneratedShaders : (batchLength > 0), // If the batch table has values in it, generated shaders will need a batchId attribute
                 pickObject : pickObject,
                 imageBasedLightingFactor : tileset.imageBasedLightingFactor,
-                lightColor : tileset.lightColor
+                lightColor : tileset.lightColor,
+                luminanceAtZenith : tileset.luminanceAtZenith
             });
         } else {
             // This transcodes glTF to an internal representation for geometry so we can take advantage of the re-batching of vector data.
@@ -464,6 +465,7 @@ define([
         this._model.shadows = this._tileset.shadows;
         this._model.imageBasedLightingFactor = this._tileset.imageBasedLightingFactor;
         this._model.lightColor = this._tileset.lightColor;
+        this._model.luminanceAtZenith = this._tileset.luminanceAtZenith;
         this._model.debugWireframe = this._tileset.debugWireframe;
 
         // Update clipping planes
