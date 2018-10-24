@@ -1,27 +1,15 @@
 define([
-        '../Core/CullingVolume',
-        '../Core/defaultValue',
         '../Core/defined',
-        '../Core/freezeObject',
         '../Core/Intersect',
         '../Core/ManagedArray',
-        '../Core/Math',
-        '../Core/OrthographicFrustum',
         './Cesium3DTileOptimizationHint',
-        './Cesium3DTileRefine',
-        './SceneMode'
+        './Cesium3DTileRefine'
     ], function(
-        CullingVolume,
-        defaultValue,
         defined,
-        freezeObject,
         Intersect,
         ManagedArray,
-        CesiumMath,
-        OrthographicFrustum,
         Cesium3DTileOptimizationHint,
-        Cesium3DTileRefine,
-        SceneMode) {
+        Cesium3DTileRefine) {
     'use strict';
 
     /**
@@ -59,6 +47,8 @@ define([
     var descendantSelectionDepth = 2;
 
     Cesium3DTilesetTraversal.selectTiles = function(tileset, frameState) {
+        tileset._requestedTiles.length = 0;
+
         if (tileset.debugFreezeFrame) {
             return;
         }
@@ -77,7 +67,7 @@ define([
         }
 
         // The tileset doesn't meet the SSE requirement, therefore the tree does not need to be rendered
-        if (getScreenSpaceError(tileset, tileset._geometricError, root, frameState) <= tileset._maximumScreenSpaceError) {
+        if (root.getScreenSpaceError(frameState, true) <= tileset._maximumScreenSpaceError) {
             return;
         }
 
@@ -124,13 +114,8 @@ define([
         tileset._emptyTiles.push(tile);
     }
 
-    function contentVisible(tile, frameState) {
-        return (tile._visibilityPlaneMask === CullingVolume.MASK_INSIDE) ||
-               (tile.contentVisibility(frameState) !== Intersect.OUTSIDE);
-    }
-
     function selectTile(tileset, tile, frameState) {
-        if (contentVisible(tile, frameState)) {
+        if (tile.contentVisibility(frameState) !== Intersect.OUTSIDE) {
             var tileContent = tile.content;
             if (tileContent.featurePropertiesDirty) {
                 // A feature's property in this tile changed, the tile needs to be re-styled.
@@ -229,42 +214,6 @@ define([
         }
     }
 
-    function getScreenSpaceError(tileset, geometricError, tile, frameState) {
-        if (geometricError === 0.0) {
-            // Leaf tiles do not have any error so save the computation
-            return 0.0;
-        }
-
-        var camera = frameState.camera;
-        var frustum = camera.frustum;
-        var context = frameState.context;
-        var height = context.drawingBufferHeight;
-
-        var error;
-        if (frameState.mode === SceneMode.SCENE2D || frustum instanceof OrthographicFrustum) {
-            if (defined(frustum._offCenterFrustum)) {
-                frustum = frustum._offCenterFrustum;
-            }
-            var width = context.drawingBufferWidth;
-            var pixelSize = Math.max(frustum.top - frustum.bottom, frustum.right - frustum.left) / Math.max(width, height);
-            error = geometricError / pixelSize;
-        } else {
-            // Avoid divide by zero when viewer is inside the tile
-            var distance = Math.max(tile._distanceToCamera, CesiumMath.EPSILON7);
-            var sseDenominator = camera.frustum.sseDenominator;
-            error = (geometricError * height) / (distance * sseDenominator);
-
-            if (tileset.dynamicScreenSpaceError) {
-                var density = tileset._dynamicScreenSpaceErrorComputedDensity;
-                var factor = tileset.dynamicScreenSpaceErrorFactor;
-                var dynamicError = CesiumMath.fog(distance, density) * factor;
-                error -= dynamicError;
-            }
-        }
-
-        return error;
-    }
-
     function updateVisibility(tileset, tile, frameState) {
         if (tile._updatedVisibilityFrame === frameState.frameNumber) {
             // Return early if visibility has already been checked during the traversal.
@@ -272,17 +221,7 @@ define([
             return;
         }
 
-        var parent = tile.parent;
-        var parentTransform = defined(parent) ? parent.computedTransform : tileset._modelMatrix;
-        var parentVisibilityPlaneMask = defined(parent) ? parent._visibilityPlaneMask : CullingVolume.MASK_INDETERMINATE;
-
-        tile.updateTransform(parentTransform);
-        tile._distanceToCamera = tile.distanceToTile(frameState);
-        tile._centerZDepth = tile.distanceToTileCenter(frameState);
-        tile._screenSpaceError = getScreenSpaceError(tileset, tile.geometricError, tile, frameState);
-        tile._visibilityPlaneMask = tile.visibility(frameState, parentVisibilityPlaneMask); // Use parent's plane mask to speed up visibility test
-        tile._visible = tile._visibilityPlaneMask !== CullingVolume.MASK_OUTSIDE;
-        tile._inRequestVolume = tile.insideViewerRequestVolume(frameState);
+        tile.updateVisibility(frameState);
         tile._updatedVisibilityFrame = frameState.frameNumber;
     }
 
@@ -305,8 +244,7 @@ define([
         }
 
         // Use parent's geometric error with child's box to see if the tile already meet the SSE
-        var sse = getScreenSpaceError(tileset, parent.geometricError, tile, frameState);
-        return sse <= tileset._maximumScreenSpaceError;
+        return tile.getScreenSpaceError(frameState, true) <= tileset._maximumScreenSpaceError;
     }
 
     function updateTileVisibility(tileset, tile, frameState) {
@@ -530,7 +468,7 @@ define([
             visitTile(tileset, tile, frameState);
             touchTile(tileset, tile, frameState);
             tile._refines = refines;
-            tile._updatedVisibilityFrame = 0; // Reset so visibility is checked during the next pass
+            tile._updatedVisibilityFrame = 0; // Reset so visibility is checked during the next pass which may use a different camera
         }
     }
 
