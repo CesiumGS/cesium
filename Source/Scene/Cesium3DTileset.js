@@ -1,4 +1,5 @@
 define([
+        '../Core/ApproximateTerrainHeights',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Cartographic',
@@ -42,6 +43,7 @@ define([
         './TileBoundingSphere',
         './TileOrientedBoundingBox'
     ], function(
+        ApproximateTerrainHeights,
         Cartesian2,
         Cartesian3,
         Cartographic,
@@ -215,6 +217,8 @@ define([
         this._ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
 
         this._clippingPlaneOffsetMatrix = undefined;
+        this._clippingPlaneTransformMatrix = undefined;
+        this._recomputeClippingPlaneMatrix = false;
 
         /**
          * Optimization option. Whether the tileset should refine based on a dynamic screen space error. Tiles that are further
@@ -738,7 +742,20 @@ define([
                 that._extensionsUsed = tilesetJson.extensionsUsed;
                 that._gltfUpAxis = gltfUpAxis;
                 that._extras = tilesetJson.extras;
-                that._clippingPlaneOffsetMatrix = Transforms.eastNorthUpToFixedFrame(that.boundingSphere.center);
+                // Save the original, untransformed bounding volume position so we can apply
+                // the tile transform and model matrix at run time
+                var boundingVolume = that._root.createBoundingVolume(tilesetJson.root.boundingVolume, Matrix4.IDENTITY);
+                var clippingPlanesOrigin = boundingVolume.boundingSphere.center;
+                // If this origin is above the surface of the earth, we want to apply an ENU orientation
+                // otherwise, we assume it gets its position/orientation completely from the
+                // root tile transform and the tileset's model matrix
+                var heightAboveEllipsoid = Cartographic.fromCartesian(clippingPlanesOrigin).height;
+                if (heightAboveEllipsoid < ApproximateTerrainHeights._defaultMinTerrainHeight) {
+                    that._clippingPlaneOffsetMatrix = Matrix4.clone(Matrix4.IDENTITY);
+                } else {
+                    that._clippingPlaneOffsetMatrix = Transforms.eastNorthUpToFixedFrame(clippingPlanesOrigin);
+                }
+                that._clippingPlaneTransformMatrix = Matrix4.clone(that._clippingPlaneOffsetMatrix);
                 that._readyPromise.resolve(that);
             }).otherwise(function(error) {
                 that._readyPromise.reject(error);
@@ -1154,7 +1171,13 @@ define([
          */
         clippingPlaneOffsetMatrix : {
             get : function() {
-                return Matrix4.multiply(this.root.computedTransform, this._clippingPlaneOffsetMatrix, new Matrix4());
+                // Make sure to only do this once per frame.
+                if (this._recomputeClippingPlaneMatrix) {
+                    Matrix4.multiply(this.root.computedTransform, this._clippingPlaneOffsetMatrix, this._clippingPlaneTransformMatrix);
+                    this._recomputeClippingPlaneMatrix = false;
+                }
+
+                return this._clippingPlaneTransformMatrix;
             }
         },
 
@@ -1892,6 +1915,7 @@ define([
 
         // Update clipping planes
         var clippingPlanes = this._clippingPlanes;
+        this._recomputeClippingPlaneMatrix = true;
         if (defined(clippingPlanes) && clippingPlanes.enabled) {
             clippingPlanes.update(frameState);
         }
