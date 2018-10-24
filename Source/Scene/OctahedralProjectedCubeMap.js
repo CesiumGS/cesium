@@ -281,6 +281,11 @@ define([
 
         // First we project each cubemap onto a flat octahedron, and write that to a texture.
         for (var i = 0; i < length; ++i) {
+            // Swap +Y/-Y faces since the octahedral projection expects this order.
+            var positiveY = cubeMapBuffers[i].positiveY;
+            cubeMapBuffers[i].positiveY = cubeMapBuffers[i].negativeY;
+            cubeMapBuffers[i].negativeY = positiveY;
+
             var cubeMap = cubeMaps[i] = new CubeMap({
                 context : context,
                 source : cubeMapBuffers[i]
