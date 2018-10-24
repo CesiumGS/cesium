@@ -808,13 +808,16 @@ define([
 
         var normal = defaultValue(ellipsoid, Ellipsoid.WGS84).geodeticSurfaceNormal(position, normalScratch);
         var right = Cartesian3.cross(velocity, normal, rightScratch);
+        
         if (Cartesian3.equalsEpsilon(right, Cartesian3.ZERO, CesiumMath.EPSILON6)) {
             right = Cartesian3.clone(Cartesian3.UNIT_X, right);
         }
 
         var up = Cartesian3.cross(right, velocity, upScratch);
+        Cartesian3.normalize(up, up);
         Cartesian3.cross(velocity, up, right);
         Cartesian3.negate(right, right);
+        Cartesian3.normalize(right, right);
 
         if (!defined(result)) {
             result = new Matrix3();

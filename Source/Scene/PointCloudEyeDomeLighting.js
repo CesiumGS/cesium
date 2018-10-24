@@ -236,9 +236,7 @@ define([
     }
 
     PointCloudEyeDomeLighting.prototype.update = function(frameState, commandStart, pointCloudShading) {
-        var passes = frameState.passes;
-        var isPick = (passes.pick && !passes.render);
-        if (!isSupported(frameState.context) || isPick) {
+        if (!isSupported(frameState.context)) {
             return;
         }
 
