@@ -200,7 +200,7 @@ define([
         this._modelMatrix = defined(options.modelMatrix) ? Matrix4.clone(options.modelMatrix) : Matrix4.clone(Matrix4.IDENTITY);
 
         this._statistics = new Cesium3DTilesetStatistics();
-        this._statisticsLastColor = new Cesium3DTilesetStatistics();
+        this._statisticsLastRender = new Cesium3DTilesetStatistics();
         this._statisticsLastPick = new Cesium3DTilesetStatistics();
 
         this._tilesLoaded = false;
@@ -1461,7 +1461,7 @@ define([
                 destroySubtree(tileset, tile);
             } else {
                 statistics.decrementLoadCounts(tile.content);
-                --tileset._statistics.numberOfTilesWithContentReady;
+                --statistics.numberOfTilesWithContentReady;
             }
         }
 
@@ -1689,6 +1689,8 @@ define([
     function updateTiles(tileset, frameState) {
         tileset._styleEngine.applyStyle(tileset, frameState);
 
+        var passes = frameState.passes;
+        var isRender = passes.render;
         var statistics = tileset._statistics;
         var commandList = frameState.commandList;
         var numberOfInitialCommands = commandList.length;
@@ -1713,7 +1715,9 @@ define([
             tile = selectedTiles[i];
             // Raise the tileVisible event before update in case the tileVisible event
             // handler makes changes that update needs to apply to WebGL resources
-            tileVisible.raiseEvent(tile);
+            if (isRender) {
+                tileVisible.raiseEvent(tile);
+            }
             tile.update(tileset, frameState);
             statistics.incrementSelectionCounts(tile.content);
             ++statistics.selected;
@@ -1723,8 +1727,7 @@ define([
             tile.update(tileset, frameState);
         }
 
-        var lengthAfterUpdate = commandList.length;
-        var addedCommandsLength = lengthAfterUpdate - lengthBeforeUpdate;
+        var addedCommandsLength = commandList.length - lengthBeforeUpdate;
 
         tileset._backfaceCommands.trim();
 
@@ -1770,22 +1773,26 @@ define([
         }
 
         // Number of commands added by each update above
-        statistics.numberOfCommands = (commandList.length - numberOfInitialCommands);
+        addedCommandsLength = commandList.length - numberOfInitialCommands;
+        statistics.numberOfCommands = addedCommandsLength;
 
         // Only run EDL if simple attenuation is on
-        if (tileset.pointCloudShading.attenuation &&
+        if (isRender &&
+            tileset.pointCloudShading.attenuation &&
             tileset.pointCloudShading.eyeDomeLighting &&
             (addedCommandsLength > 0)) {
             tileset._pointCloudEyeDomeLighting.update(frameState, numberOfInitialCommands, tileset.pointCloudShading);
         }
 
-        if (tileset.debugShowGeometricError || tileset.debugShowRenderingStatistics || tileset.debugShowMemoryUsage || tileset.debugShowUrl) {
-            if (!defined(tileset._tileDebugLabels)) {
-                tileset._tileDebugLabels = new LabelCollection();
+        if (isRender) {
+            if (tileset.debugShowGeometricError || tileset.debugShowRenderingStatistics || tileset.debugShowMemoryUsage || tileset.debugShowUrl) {
+                if (!defined(tileset._tileDebugLabels)) {
+                    tileset._tileDebugLabels = new LabelCollection();
+                }
+                updateTileDebugLabels(tileset, frameState);
+            } else {
+                tileset._tileDebugLabels = tileset._tileDebugLabels && tileset._tileDebugLabels.destroy();
             }
-            updateTileDebugLabels(tileset, frameState);
-        } else {
-            tileset._tileDebugLabels = tileset._tileDebugLabels && tileset._tileDebugLabels.destroy();
         }
     }
 
@@ -1793,7 +1800,6 @@ define([
 
     function destroySubtree(tileset, tile) {
         var root = tile;
-        var statistics = tileset._statistics;
         var stack = scratchStack;
         stack.push(tile);
         while (stack.length > 0) {
@@ -1805,7 +1811,7 @@ define([
             }
             if (tile !== root) {
                 destroyTile(tileset, tile);
-                --statistics.numberOfTilesTotal;
+                --tileset._statistics.numberOfTilesTotal;
             }
         }
         root.children = [];
@@ -1844,7 +1850,7 @@ define([
 
     function raiseLoadProgressEvent(tileset, frameState) {
         var statistics = tileset._statistics;
-        var statisticsLast = tileset._statisticsLastColor;
+        var statisticsLast = tileset._statisticsLastRender;
         var numberOfPendingRequests = statistics.numberOfPendingRequests;
         var numberOfTilesProcessing = statistics.numberOfTilesProcessing;
         var lastNumberOfPendingRequest = statisticsLast.numberOfPendingRequests;
@@ -1904,12 +1910,11 @@ define([
 
         this._skipLevelOfDetail = this.skipLevelOfDetail && !defined(this._classificationType) && !this._disableSkipLevelOfDetail && !this._allTilesAdditive;
 
-        // Do not do out-of-core operations (new content requests, cache removal,
-        // process new tiles) during the pick pass.
+        // Do out-of-core operations (new content requests, cache removal,
+        // process new tiles) only during the render pass.
         var passes = frameState.passes;
         var isRender = passes.render;
         var isPick = passes.pick;
-        var outOfCore = isRender;
 
         var statistics = this._statistics;
         statistics.clear();
@@ -1918,42 +1923,41 @@ define([
             updateDynamicScreenSpaceError(this, frameState);
         }
 
-        if (outOfCore) {
+        if (isRender) {
             this._cache.reset();
         }
 
-        this._requestedTiles.length = 0;
         Cesium3DTilesetTraversal.selectTiles(this, frameState);
 
-        if (outOfCore) {
+        if (isRender) {
             requestTiles(this);
             processTiles(this, frameState);
         }
 
         updateTiles(this, frameState);
 
-        if (outOfCore) {
+        if (isRender) {
             unloadTiles(this);
-        }
 
-        // Events are raised (added to the afterRender queue) here since promises
-        // may resolve outside of the update loop that then raise events, e.g.,
-        // model's readyPromise.
-        raiseLoadProgressEvent(this, frameState);
+            // Events are raised (added to the afterRender queue) here since promises
+            // may resolve outside of the update loop that then raise events, e.g.,
+            // model's readyPromise.
+            raiseLoadProgressEvent(this, frameState);
 
-        // Update last statistics
-        var statisticsLast = isPick ? this._statisticsLastPick : this._statisticsLastColor;
-        Cesium3DTilesetStatistics.clone(statistics, statisticsLast);
-
-        if (statistics.selected !== 0) {
-            var credits = this._credits;
-            if (defined(credits)) {
-                var length = credits.length;
-                for (var i = 0; i < length; i++) {
-                    frameState.creditDisplay.addCredit(credits[i]);
+            if (statistics.selected !== 0) {
+                var credits = this._credits;
+                if (defined(credits)) {
+                    var length = credits.length;
+                    for (var i = 0; i < length; i++) {
+                        frameState.creditDisplay.addCredit(credits[i]);
+                    }
                 }
             }
         }
+
+        // Update last statistics
+        var statisticsLast = isPick ? this._statisticsLastPick : this._statisticsLastRender;
+        Cesium3DTilesetStatistics.clone(statistics, statisticsLast);
     };
 
     /**
