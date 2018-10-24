@@ -464,6 +464,7 @@ define([
      * Called before the post-process stages in the collection are executed. Calls update for each stage and creates WebGL resources.
      *
      * @param {Context} context The context.
+     * @param {Boolean} useLogDepth Whether the scene uses a logarithmic depth buffer.
      *
      * @private
      */
@@ -621,6 +622,7 @@ define([
      * @param {Context} context The context.
      * @param {Texture} colorTexture The color texture rendered to by the scene.
      * @param {Texture} depthTexture The depth texture written to by the scene.
+     * @param {Texture} idTexture The id texture written to by the scene.
      *
      * @private
      */

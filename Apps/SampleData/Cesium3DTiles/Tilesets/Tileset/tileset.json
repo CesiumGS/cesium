@@ -3,6 +3,9 @@
     "version": "1.0",
     "tilesetVersion": "1.2.3"
   },
+  "extras": {
+    "name": "Sample Tileset"
+  },
   "properties": {
     "id": {
       "minimum": 0,
@@ -79,6 +82,9 @@
         "geometricError": 0,
         "content": {
           "uri": "lr.b3dm"
+        },
+        "extras": {
+          "id": "Special Tile"
         }
       },
       {

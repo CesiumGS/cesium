@@ -443,4 +443,71 @@ defineSuite([
             batch.removeAllPrimitives();
         });
     });
+
+    it('has correct show attribute after rebuilding primitive', function() {
+        if (!GroundPolylinePrimitive.isSupported(scene)) {
+            // Don't fail if GroundPolylinePrimitive is not supported
+            return;
+        }
+        var batch = new StaticGroundPolylinePerMaterialBatch(scene.groundPrimitives);
+
+        function buildEntity() {
+            var polyline = createGroundPolyline();
+            polyline.material = new PolylineOutlineMaterialProperty({
+                color : Color.ORANGE,
+                outlineWidth : 2,
+                outlineColor : Color.BLACK
+            });
+
+            return new Entity({
+                polyline : polyline
+            });
+        }
+
+        function renderScene() {
+            scene.initializeFrame();
+            var isUpdated = batch.update(time);
+            scene.render(time);
+            return isUpdated;
+        }
+
+        var entity1 = buildEntity();
+        var updater1 = new PolylineGeometryUpdater(entity1, scene);
+        batch.add(time, updater1);
+
+        var entity2 = buildEntity();
+        var updater2 = new PolylineGeometryUpdater(entity2, scene);
+
+        return pollToPromise(renderScene)
+            .then(function() {
+                expect(scene.groundPrimitives.length).toEqual(1);
+                var primitive = scene.groundPrimitives.get(0);
+                var attributes = primitive.getGeometryInstanceAttributes(entity1);
+                expect(attributes.show).toEqual([1]);
+
+                entity1.show = false;
+                updater1._onEntityPropertyChanged(entity1, 'isShowing');
+                return pollToPromise(renderScene);
+            })
+            .then(function() {
+                expect(scene.groundPrimitives.length).toEqual(1);
+                var primitive = scene.groundPrimitives.get(0);
+                var attributes = primitive.getGeometryInstanceAttributes(entity1);
+                expect(attributes.show).toEqual([0]);
+
+                batch.add(time, updater2);
+                return pollToPromise(renderScene);
+            })
+            .then(function() {
+                expect(scene.groundPrimitives.length).toEqual(1);
+                var primitive = scene.groundPrimitives.get(0);
+                var attributes = primitive.getGeometryInstanceAttributes(entity1);
+                expect(attributes.show).toEqual([0]);
+
+                attributes = primitive.getGeometryInstanceAttributes(entity2);
+                expect(attributes.show).toEqual([1]);
+
+                batch.removeAllPrimitives();
+            });
+    });
 });

@@ -109,7 +109,9 @@ define([
                 this.subscriptions.remove(id);
                 this.showsUpdated.remove(id);
             }
+            return true;
         }
+        return false;
     };
 
     Batch.prototype.update = function(time) {
@@ -117,7 +119,6 @@ define([
         var removedCount = 0;
         var primitive = this.primitive;
         var primitives = this.primitives;
-        var attributes;
         var i;
 
         if (this.createPrimitive) {
@@ -129,24 +130,6 @@ define([
                         this.oldPrimitive = primitive;
                     } else {
                         primitives.remove(primitive);
-                    }
-                }
-
-                for (i = 0; i < geometriesLength; i++) {
-                    var geometryItem = geometries[i];
-                    var originalAttributes = geometryItem.attributes;
-                    attributes = this.attributes.get(geometryItem.id.id);
-
-                    if (defined(attributes)) {
-                        if (defined(originalAttributes.show)) {
-                            attributes.show = originalAttributes.show.value;
-                        }
-                        if (defined(originalAttributes.color)) {
-                            attributes.color = originalAttributes.color.value;
-                        }
-                        if (defined(originalAttributes.depthFailColor)) {
-                            attributes.depthFailColor = originalAttributes.depthFailColor.value;
-                        }
                     }
                 }
 
@@ -210,7 +193,7 @@ define([
                 var updater = updatersWithAttributes[i];
                 var instance = this.geometry.get(updater.id);
 
-                attributes = this.attributes.get(instance.id.id);
+                var attributes = this.attributes.get(instance.id.id);
                 if (!defined(attributes)) {
                     attributes = primitive.getGeometryInstanceAttributes(instance.id);
                     this.attributes.set(instance.id.id, attributes);
@@ -288,6 +271,7 @@ define([
             var currentShow = attributes.show[0] === 1;
             if (show !== currentShow) {
                 attributes.show = ShowGeometryInstanceAttribute.toValue(show, attributes.show);
+                instance.attributes.show.value[0] = attributes.show[0];
             }
         }
         this.showsUpdated.removeAll();
@@ -372,8 +356,8 @@ define([
                 if (item.updaters.length === 0) {
                     items.splice(i, 1);
                     item.destroy();
-                    return true;
                 }
+                return true;
             }
         }
         return false;

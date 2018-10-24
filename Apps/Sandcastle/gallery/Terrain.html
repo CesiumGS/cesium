@@ -10,10 +10,12 @@
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
     <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
     <script type="text/javascript">
-    require.config({
-        baseUrl : '../../../Source',
-        waitSeconds : 60
-    });
+        if(typeof require === 'function') {
+            require.config({
+                baseUrl : '../../../Source',
+                waitSeconds : 120
+            });
+        }
     </script>
 </head>
 <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
@@ -191,6 +193,10 @@ Sandcastle.addToolbarButton('Sample Everest Terrain at Level 9', function() {
 }, 'sampleButtons');
 
 Sandcastle.addToolbarButton('Sample Most Detailed Everest Terrain', function() {
+    if (!Cesium.defined(viewer.terrainProvider.availability)) {
+        console.log('sampleTerrainMostDetailed is not supported for the selected terrain provider');
+        return;
+    }
     var terrainSamplePositions = createGrid(0.0005);
     Cesium.when(Cesium.sampleTerrainMostDetailed(viewer.terrainProvider, terrainSamplePositions), sampleTerrainSuccess);
     lookAtMtEverest();

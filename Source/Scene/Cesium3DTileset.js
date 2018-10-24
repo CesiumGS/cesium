@@ -12,13 +12,13 @@ define([
         '../Core/DoublyLinkedList',
         '../Core/Ellipsoid',
         '../Core/Event',
-        '../Core/getMagic',
         '../Core/JulianDate',
         '../Core/ManagedArray',
         '../Core/Math',
         '../Core/Matrix4',
         '../Core/Resource',
         '../Core/RuntimeError',
+        '../Core/Transforms',
         '../Renderer/ClearCommand',
         '../Renderer/Pass',
         '../ThirdParty/when',
@@ -55,13 +55,13 @@ define([
         DoublyLinkedList,
         Ellipsoid,
         Event,
-        getMagic,
         JulianDate,
         ManagedArray,
         CesiumMath,
         Matrix4,
         Resource,
         RuntimeError,
+        Transforms,
         ClearCommand,
         Pass,
         when,
@@ -115,6 +115,8 @@ define([
      * @param {ClassificationType} [options.classificationType] Determines whether terrain, 3D Tiles or both will be classified by this tileset. See {@link Cesium3DTileset#classificationType} for details about restrictions and limitations.
      * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid determining the size and shape of the globe.
      * @param {Object} [options.pointCloudShading] Options for constructing a {@link PointCloudShading} object to control point attenuation based on geometric error and lighting.
+     * @param {Cartesian2} [options.imageBasedLightingFactor=new Cartesian2(1.0, 1.0)] Scales the diffuse and specular image-based lighting from the earth, sky, atmosphere and star skybox.
+     * @param {Cartesian3} [options.lightColor] The color and intensity of the sunlight used to shade models.
      * @param {Boolean} [options.debugFreezeFrame=false] For debugging only. Determines if only the tiles from last frame should be used for rendering.
      * @param {Boolean} [options.debugColorizeTiles=false] For debugging only. When true, assigns a random color to each tile.
      * @param {Boolean} [options.debugWireframe=false] For debugging only. When true, render's each tile's content as a wireframe.
@@ -181,6 +183,7 @@ define([
         this._selectedTilesToStyle = [];
         this._loadTimestamp = undefined;
         this._timeSinceLoad = 0.0;
+        this._extras = undefined;
 
         this._cullWithChildrenBounds = defaultValue(options.cullWithChildrenBounds, true);
         this._allTilesAdditive = true;
@@ -197,10 +200,11 @@ define([
         this._modelMatrix = defined(options.modelMatrix) ? Matrix4.clone(options.modelMatrix) : Matrix4.clone(Matrix4.IDENTITY);
 
         this._statistics = new Cesium3DTilesetStatistics();
-        this._statisticsLastColor = new Cesium3DTilesetStatistics();
+        this._statisticsLastRender = new Cesium3DTilesetStatistics();
         this._statisticsLastPick = new Cesium3DTilesetStatistics();
 
         this._tilesLoaded = false;
+        this._initialTilesLoaded = false;
 
         this._tileDebugLabels = undefined;
 
@@ -209,6 +213,9 @@ define([
         this._classificationType = options.classificationType;
 
         this._ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
+
+        this._useBoundingSphereForClipping = false;
+        this._clippingPlaneOffsetMatrix = undefined;
 
         /**
          * Optimization option. Whether the tileset should refine based on a dynamic screen space error. Tiles that are further
@@ -360,6 +367,25 @@ define([
          * @see Cesium3DTileset#tilesLoaded
          */
         this.allTilesLoaded = new Event();
+
+        /**
+         * The event fired to indicate that all tiles that meet the screen space error this frame are loaded. This event
+         * is fired once when all tiles in the initial view are loaded.
+         * <p>
+         * This event is fired at the end of the frame after the scene is rendered.
+         * </p>
+         *
+         * @type {Event}
+         * @default new Event()
+         *
+         * @example
+         * tileset.initialTilesLoaded.addEventListener(function() {
+         *     console.log('Initial tiles are loaded');
+         * });
+         *
+         * @see Cesium3DTileset#allTilesLoaded
+         */
+        this.initialTilesLoaded = new Event();
 
         /**
          * The event fired to indicate that a tile's content was loaded.
@@ -545,6 +571,21 @@ define([
         this._clippingPlanes = undefined;
         this.clippingPlanes = options.clippingPlanes;
 
+        this._imageBasedLightingFactor = new Cartesian2(1.0, 1.0);
+        Cartesian2.clone(options.imageBasedLightingFactor, this._imageBasedLightingFactor);
+
+        /**
+         * The color and intensity of the sunlight used to shade a model.
+         * <p>
+         * For example, disabling additional light sources by setting <code>model.imageBasedLightingFactor = new Cartesian2(0.0, 0.0)</code> will make the
+         * model much darker. Here, increasing the intensity of the light source will make the model brighter.
+         * </p>
+         *
+         * @type {Cartesian3}
+         * @default undefined
+         */
+        this.lightColor = options.lightColor;
+
         /**
          * This property is for debugging only; it is not optimized for production use.
          * <p>
@@ -666,12 +707,6 @@ define([
          * @default false
          */
         this.debugShowUrl = defaultValue(options.debugShowUrl, false);
-
-        // A bunch of tilesets were generated that have a leading / in front of all URLs in the tileset JSON file. If the tiles aren't
-        //  at the root of the domain they will not load anymore. If we find a b3dm file with a leading slash, we test load a tile.
-        //  If it succeeds we continue on. If it fails, we set this to true so we know to strip the slash when loading tiles.
-        this._brokenUrlWorkaround = false;
-
         this._credits = undefined;
 
         var that = this;
@@ -696,13 +731,6 @@ define([
                 return Cesium3DTileset.loadJson(resource);
             })
             .then(function(tilesetJson) {
-                return detectBrokenUrlWorkaround(that, resource, tilesetJson);
-            })
-            .then(function(tilesetJson) {
-                if (that._brokenUrlWorkaround) {
-                    deprecationWarning('Cesium3DTileset.leadingSlash', 'Having a leading slash in a tile URL that is actually relative to the tileset JSON file is deprecated.');
-                }
-
                 that._root = that.loadTileset(resource, tilesetJson);
                 var gltfUpAxis = defined(tilesetJson.asset.gltfUpAxis) ? Axis.fromName(tilesetJson.asset.gltfUpAxis) : Axis.Y;
                 that._asset = tilesetJson.asset;
@@ -710,64 +738,15 @@ define([
                 that._geometricError = tilesetJson.geometricError;
                 that._extensionsUsed = tilesetJson.extensionsUsed;
                 that._gltfUpAxis = gltfUpAxis;
+                that._extras = tilesetJson.extras;
+                if (!defined(tilesetJson.root.transform)) {
+                    that._useBoundingSphereForClipping = true;
+                    that._clippingPlaneOffsetMatrix = Transforms.eastNorthUpToFixedFrame(that.boundingSphere.center);
+                }
                 that._readyPromise.resolve(that);
             }).otherwise(function(error) {
                 that._readyPromise.reject(error);
             });
-    }
-
-    function detectBrokenUrlWorkaround(tileset, resource, tilesetJson) {
-        var testUrl = findBrokenUrl(tilesetJson.root);
-
-        // If it's an empty string, we are good to load the tileset.
-        if (!defined(testUrl) || (testUrl.length === 0)) {
-            return tilesetJson;
-        }
-
-        var testResource = resource.getDerivedResource({
-            url : testUrl
-        });
-
-        return testResource.fetchArrayBuffer()
-            .then(function(buffer) {
-                var uint8Array = new Uint8Array(buffer);
-                var magic = getMagic(uint8Array);
-
-                // If its not a b3dm file, then use workaround
-                // This accounts for servers that return an error page with a 200 status code
-                tileset._brokenUrlWorkaround = (magic !== 'b3dm');
-
-                return tilesetJson;
-            })
-            .otherwise(function() {
-                // Tile failed to load, so use the workaround
-                tileset._brokenUrlWorkaround = true;
-                return tilesetJson;
-            });
-    }
-
-    var brokenUrlRegex = /^\/.+\.b3dm$/;
-
-    function findBrokenUrl(node) {
-        var content = node.content;
-        if (defined(content) && defined(content.url)) {
-            if (brokenUrlRegex.test(content.url)) {
-                return content.url;
-            }
-
-            return '';
-        }
-
-        var children = node.children;
-        if (defined(children)) {
-            var count = children.length;
-            for (var i = 0; i < count; ++i) {
-                var result = findBrokenUrl(children[i]);
-                if (defined(result)) {
-                    return result;
-                }
-            }
-        }
     }
 
     defineProperties(Cesium3DTileset.prototype, {
@@ -1060,6 +1039,28 @@ define([
         },
 
         /**
+         * The root tile.
+         *
+         * @memberOf Cesium3DTileset.prototype
+         *
+         * @type {Cesium3DTile}
+         * @readonly
+         *
+         * @exception {DeveloperError} The tileset is not loaded.  Use Cesium3DTileset.readyPromise or wait for Cesium3DTileset.ready to be true.
+         */
+        root : {
+            get : function() {
+                //>>includeStart('debug', pragmas.debug);
+                if (!this.ready) {
+                    throw new DeveloperError('The tileset is not loaded.  Use Cesium3DTileset.readyPromise or wait for Cesium3DTileset.ready to be true.');
+                }
+                //>>includeEnd('debug');
+
+                return this._root;
+            }
+        },
+
+        /**
          * The tileset's bounding sphere.
          *
          * @memberof Cesium3DTileset.prototype
@@ -1155,6 +1156,18 @@ define([
         /**
          * @private
          */
+        clippingPlaneOffsetMatrix : {
+            get : function() {
+                if (this._useBoundingSphereForClipping) {
+                    return this._clippingPlaneOffsetMatrix;
+                }
+                return this.root.computedTransform;
+            }
+        },
+
+        /**
+         * @private
+         */
         styleEngine : {
             get : function() {
                 return this._styleEngine;
@@ -1214,6 +1227,54 @@ define([
         ellipsoid : {
             get : function() {
                 return this._ellipsoid;
+            }
+        },
+
+        /**
+         * Returns the <code>extras</code> property at the top-level of the tileset JSON, which contains application specific metadata.
+         * Returns <code>undefined</code> if <code>extras</code> does not exist.
+         *
+         * @memberof Cesium3DTileset.prototype
+         *
+         * @exception {DeveloperError} The tileset is not loaded.  Use Cesium3DTileset.readyPromise or wait for Cesium3DTileset.ready to be true.
+         *
+         * @type {*}
+         * @readonly
+         *
+         * @see {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/specification#specifying-extensions-and-application-specific-extras|Extras in the 3D Tiles specification.}
+         */
+        extras : {
+            get : function() {
+                //>>includeStart('debug', pragmas.debug);
+                if (!this.ready) {
+                    throw new DeveloperError('The tileset is not loaded.  Use Cesium3DTileset.readyPromise or wait for Cesium3DTileset.ready to be true.');
+                }
+                //>>includeEnd('debug');
+
+                return this._extras;
+            }
+        },
+
+        /**
+         * Cesium adds lighting from the earth, sky, atmosphere, and star skybox. This cartesian is used to scale the final
+         * diffuse and specular lighting contribution from those sources to the final color. A value of 0.0 will disable those light sources.
+         *
+         * @type {Cartesian2}
+         * @default Cartesian2(1.0, 1.0)
+         */
+        imageBasedLightingFactor : {
+            get : function() {
+                return this._imageBasedLightingFactor;
+            },
+            set : function(value) {
+                //>>includeStart('debug', pragmas.debug);
+                Check.typeOf.object('imageBasedLightingFactor', value);
+                Check.typeOf.number.greaterThanOrEquals('imageBasedLightingFactor.x', value.x, 0.0);
+                Check.typeOf.number.lessThanOrEquals('imageBasedLightingFactor.x', value.x, 1.0);
+                Check.typeOf.number.greaterThanOrEquals('imageBasedLightingFactor.y', value.y, 0.0);
+                Check.typeOf.number.lessThanOrEquals('imageBasedLightingFactor.y', value.y, 1.0);
+                //>>includeEnd('debug');
+                Cartesian2.clone(value, this._imageBasedLightingFactor);
             }
         }
     });
@@ -1400,7 +1461,7 @@ define([
                 destroySubtree(tileset, tile);
             } else {
                 statistics.decrementLoadCounts(tile.content);
-                --tileset._statistics.numberOfTilesWithContentReady;
+                --statistics.numberOfTilesWithContentReady;
             }
         }
 
@@ -1498,7 +1559,6 @@ define([
         filterProcessingQueue(tileset);
         var tiles = tileset._processingQueue;
         var length = tiles.length;
-
         // Process tiles in the PROCESSING state so they will eventually move to the READY state.
         for (var i = 0; i < length; ++i) {
             tiles[i].process(tileset, frameState);
@@ -1522,7 +1582,7 @@ define([
     }
 
     function computeTileLabelPosition(tile) {
-        var boundingVolume = tile._boundingVolume.boundingVolume;
+        var boundingVolume = tile.boundingVolume.boundingVolume;
         var halfAxes = boundingVolume.halfAxes;
         var radius = boundingVolume.radius;
 
@@ -1629,6 +1689,8 @@ define([
     function updateTiles(tileset, frameState) {
         tileset._styleEngine.applyStyle(tileset, frameState);
 
+        var passes = frameState.passes;
+        var isRender = passes.render;
         var statistics = tileset._statistics;
         var commandList = frameState.commandList;
         var numberOfInitialCommands = commandList.length;
@@ -1653,7 +1715,9 @@ define([
             tile = selectedTiles[i];
             // Raise the tileVisible event before update in case the tileVisible event
             // handler makes changes that update needs to apply to WebGL resources
-            tileVisible.raiseEvent(tile);
+            if (isRender) {
+                tileVisible.raiseEvent(tile);
+            }
             tile.update(tileset, frameState);
             statistics.incrementSelectionCounts(tile.content);
             ++statistics.selected;
@@ -1663,8 +1727,7 @@ define([
             tile.update(tileset, frameState);
         }
 
-        var lengthAfterUpdate = commandList.length;
-        var addedCommandsLength = lengthAfterUpdate - lengthBeforeUpdate;
+        var addedCommandsLength = commandList.length - lengthBeforeUpdate;
 
         tileset._backfaceCommands.trim();
 
@@ -1710,22 +1773,26 @@ define([
         }
 
         // Number of commands added by each update above
-        statistics.numberOfCommands = (commandList.length - numberOfInitialCommands);
+        addedCommandsLength = commandList.length - numberOfInitialCommands;
+        statistics.numberOfCommands = addedCommandsLength;
 
         // Only run EDL if simple attenuation is on
-        if (tileset.pointCloudShading.attenuation &&
+        if (isRender &&
+            tileset.pointCloudShading.attenuation &&
             tileset.pointCloudShading.eyeDomeLighting &&
             (addedCommandsLength > 0)) {
             tileset._pointCloudEyeDomeLighting.update(frameState, numberOfInitialCommands, tileset.pointCloudShading);
         }
 
-        if (tileset.debugShowGeometricError || tileset.debugShowRenderingStatistics || tileset.debugShowMemoryUsage || tileset.debugShowUrl) {
-            if (!defined(tileset._tileDebugLabels)) {
-                tileset._tileDebugLabels = new LabelCollection();
+        if (isRender) {
+            if (tileset.debugShowGeometricError || tileset.debugShowRenderingStatistics || tileset.debugShowMemoryUsage || tileset.debugShowUrl) {
+                if (!defined(tileset._tileDebugLabels)) {
+                    tileset._tileDebugLabels = new LabelCollection();
+                }
+                updateTileDebugLabels(tileset, frameState);
+            } else {
+                tileset._tileDebugLabels = tileset._tileDebugLabels && tileset._tileDebugLabels.destroy();
             }
-            updateTileDebugLabels(tileset, frameState);
-        } else {
-            tileset._tileDebugLabels = tileset._tileDebugLabels && tileset._tileDebugLabels.destroy();
         }
     }
 
@@ -1733,7 +1800,6 @@ define([
 
     function destroySubtree(tileset, tile) {
         var root = tile;
-        var statistics = tileset._statistics;
         var stack = scratchStack;
         stack.push(tile);
         while (stack.length > 0) {
@@ -1745,7 +1811,7 @@ define([
             }
             if (tile !== root) {
                 destroyTile(tileset, tile);
-                --statistics.numberOfTilesTotal;
+                --tileset._statistics.numberOfTilesTotal;
             }
         }
         root.children = [];
@@ -1784,7 +1850,7 @@ define([
 
     function raiseLoadProgressEvent(tileset, frameState) {
         var statistics = tileset._statistics;
-        var statisticsLast = tileset._statisticsLastColor;
+        var statisticsLast = tileset._statisticsLastRender;
         var numberOfPendingRequests = statistics.numberOfPendingRequests;
         var numberOfTilesProcessing = statistics.numberOfTilesProcessing;
         var lastNumberOfPendingRequest = statisticsLast.numberOfPendingRequests;
@@ -1804,6 +1870,12 @@ define([
             frameState.afterRender.push(function() {
                 tileset.allTilesLoaded.raiseEvent();
             });
+            if (!tileset._initialTilesLoaded) {
+                tileset._initialTilesLoaded = true;
+                frameState.afterRender.push(function() {
+                    tileset.initialTilesLoaded.raiseEvent();
+                });
+            }
         }
     }
 
@@ -1829,18 +1901,20 @@ define([
         var clippingPlanes = this._clippingPlanes;
         if (defined(clippingPlanes) && clippingPlanes.enabled) {
             clippingPlanes.update(frameState);
+            if (this._useBoundingSphereForClipping) {
+                this._clippingPlaneOffsetMatrix = Transforms.eastNorthUpToFixedFrame(this.boundingSphere.center);
+            }
         }
 
         this._timeSinceLoad = Math.max(JulianDate.secondsDifference(frameState.time, this._loadTimestamp) * 1000, 0.0);
 
         this._skipLevelOfDetail = this.skipLevelOfDetail && !defined(this._classificationType) && !this._disableSkipLevelOfDetail && !this._allTilesAdditive;
 
-        // Do not do out-of-core operations (new content requests, cache removal,
-        // process new tiles) during the pick pass.
+        // Do out-of-core operations (new content requests, cache removal,
+        // process new tiles) only during the render pass.
         var passes = frameState.passes;
         var isRender = passes.render;
         var isPick = passes.pick;
-        var outOfCore = isRender;
 
         var statistics = this._statistics;
         statistics.clear();
@@ -1849,42 +1923,41 @@ define([
             updateDynamicScreenSpaceError(this, frameState);
         }
 
-        if (outOfCore) {
+        if (isRender) {
             this._cache.reset();
         }
 
-        this._requestedTiles.length = 0;
         Cesium3DTilesetTraversal.selectTiles(this, frameState);
 
-        if (outOfCore) {
+        if (isRender) {
             requestTiles(this);
             processTiles(this, frameState);
         }
 
         updateTiles(this, frameState);
 
-        if (outOfCore) {
+        if (isRender) {
             unloadTiles(this);
-        }
 
-        // Events are raised (added to the afterRender queue) here since promises
-        // may resolve outside of the update loop that then raise events, e.g.,
-        // model's readyPromise.
-        raiseLoadProgressEvent(this, frameState);
+            // Events are raised (added to the afterRender queue) here since promises
+            // may resolve outside of the update loop that then raise events, e.g.,
+            // model's readyPromise.
+            raiseLoadProgressEvent(this, frameState);
 
-        // Update last statistics
-        var statisticsLast = isPick ? this._statisticsLastPick : this._statisticsLastColor;
-        Cesium3DTilesetStatistics.clone(statistics, statisticsLast);
-
-        if (statistics.selected !== 0) {
-            var credits = this._credits;
-            if (defined(credits)) {
-                var length = credits.length;
-                for (var i = 0; i < length; i++) {
-                    frameState.creditDisplay.addCredit(credits[i]);
+            if (statistics.selected !== 0) {
+                var credits = this._credits;
+                if (defined(credits)) {
+                    var length = credits.length;
+                    for (var i = 0; i < length; i++) {
+                        frameState.creditDisplay.addCredit(credits[i]);
+                    }
                 }
             }
         }
+
+        // Update last statistics
+        var statisticsLast = isPick ? this._statisticsLastPick : this._statisticsLastRender;
+        Cesium3DTilesetStatistics.clone(statistics, statisticsLast);
     };
 
     /**

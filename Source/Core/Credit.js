@@ -1,13 +1,15 @@
 define([
-        '../ThirdParty/xss',
+        '../ThirdParty/purify',
         './defaultValue',
         './defined',
-        './defineProperties'
+        './defineProperties',
+        './Check'
     ], function(
-        xss,
+        DOMPurify,
         defaultValue,
         defined,
-        defineProperties) {
+        defineProperties,
+        Check) {
     'use strict';
 
     var nextCreditId = 0;
@@ -15,19 +17,22 @@ define([
 
     /**
      * A credit contains data pertaining to how to display attributions/credits for certain content on the screen.
-     * @param {String} html An string representing an html code snippet (can be text only)
+     * @param {String} html An string representing an html code snippet
      * @param {Boolean} [showOnScreen=false] If true, the credit will be visible in the main credit container.  Otherwise, it will appear in a popover
      *
      * @alias Credit
      * @constructor
      *
-     * @exception {DeveloperError} options.text, options.imageUrl, or options.link is required.
+     * @exception {DeveloperError} html is required.
      *
      * @example
      * //Create a credit with a tooltip, image and link
      * var credit = new Cesium.Credit('<a href="https://cesiumjs.org/" target="_blank"><img src="/images/cesium_logo.png" title="Cesium"/></a>');
      */
     function Credit(html, showOnScreen) {
+        //>>includeStart('debug', pragmas.debug);
+        Check.typeOf.string('html', html);
+        //>>includeEnd('debug');
         var id;
         var key = html;
 
@@ -94,7 +99,7 @@ define([
         element: {
             get: function() {
                 if (!defined(this._element)) {
-                    var html = xss(this._html);
+                    var html = DOMPurify.sanitize(this._html);
 
                     var div = document.createElement('div');
                     div._creditId = this._id;
@@ -148,6 +153,18 @@ define([
 
         credit._isIon = credit.html.indexOf('ion-credit.png') !== -1;
         return credit;
+    };
+
+    /**
+     * Duplicates a Credit instance.
+     *
+     * @param {Credit} [credit] The Credit to duplicate.
+     * @returns {Credit} A new Credit instance that is a duplicate of the one provided. (Returns undefined if the credit is undefined)
+     */
+    Credit.clone = function(credit) {
+        if (defined(credit)) {
+            return new Credit(credit.html, credit.showOnScreen);
+        }
     };
 
     return Credit;
