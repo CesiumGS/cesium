@@ -216,7 +216,7 @@ define([
 
         this._ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
 
-        this._clippingPlaneOffsetMatrix = undefined;
+        this._clippingPlaneOffsetMatrix = Matrix4.IDENTITY;
         this._clippingPlaneTransformMatrix = undefined;
         this._recomputeClippingPlaneMatrix = true;
 
@@ -750,9 +750,7 @@ define([
                 // otherwise, we assume it gets its position/orientation completely from the
                 // root tile transform and the tileset's model matrix
                 var heightAboveEllipsoid = Cartographic.fromCartesian(clippingPlanesOrigin).height;
-                if (heightAboveEllipsoid < ApproximateTerrainHeights._defaultMinTerrainHeight) {
-                    that._clippingPlaneOffsetMatrix = Matrix4.clone(Matrix4.IDENTITY);
-                } else {
+                if (heightAboveEllipsoid > ApproximateTerrainHeights._defaultMinTerrainHeight) {
                     that._clippingPlaneOffsetMatrix = Transforms.eastNorthUpToFixedFrame(clippingPlanesOrigin);
                 }
                 that._clippingPlaneTransformMatrix = Matrix4.clone(that._clippingPlaneOffsetMatrix);
@@ -1171,7 +1169,10 @@ define([
          */
         clippingPlaneOffsetMatrix : {
             get : function() {
-                // Make sure to only do this once per frame.
+                if (!defined(this._clippingPlaneTransformMatrix)) {
+                    return Matrix4.IDENTITY;
+                }
+
                 if (this._recomputeClippingPlaneMatrix) {
                     Matrix4.multiply(this.root.computedTransform, this._clippingPlaneOffsetMatrix, this._clippingPlaneTransformMatrix);
                     this._recomputeClippingPlaneMatrix = false;
