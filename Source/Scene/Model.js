@@ -1320,7 +1320,7 @@ define([
                     var json = getStringFromTypedArray(array);
                     cachedGltf.makeReady(JSON.parse(json));
                 }
-            }).otherwise(ModelUtility.getFailedLoadFunction(model, 'model', url));
+            }).otherwise(ModelUtility.getFailedLoadFunction(model, 'model', modelResource.url));
         } else if (!cachedGltf.ready) {
             // Cache hit but the fetchArrayBuffer() or fetchText() request is still pending
             ++cachedGltf.count;
