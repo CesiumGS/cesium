@@ -50,6 +50,9 @@ tileset.colorBlendMode = Cesium.Cesium3DTileColorBlendMode.REPLACE;
 var picking = false;
 Sandcastle.addToggleButton('Per-feature selection', false, function(checked) {
     picking = checked;
+    if (!picking) {
+        unselectFeature(selectedFeature);
+    }
 });
 
 var selectedFeature;
@@ -61,6 +64,9 @@ function selectFeature(feature) {
 }
 
 function unselectFeature(feature) {
+    if (!Cesium.defined(feature)) {
+        return;
+    }
     var element = feature.getProperty('element');
     setElementColor(element, Cesium.Color.WHITE);
     if (feature === selectedFeature) {
@@ -76,9 +82,7 @@ handler.setInputAction(function(movement) {
 
     var feature = scene.pick(movement.endPosition);
 
-    if (Cesium.defined(selectedFeature)) {
-        unselectFeature(selectedFeature);
-    }
+    unselectFeature(selectedFeature);
 
     if (feature instanceof Cesium.Cesium3DTileFeature) {
         selectFeature(feature);
