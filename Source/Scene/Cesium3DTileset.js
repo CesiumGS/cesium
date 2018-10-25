@@ -218,7 +218,7 @@ define([
 
         this._clippingPlaneOffsetMatrix = undefined;
         this._clippingPlaneTransformMatrix = undefined;
-        this._recomputeClippingPlaneMatrix = false;
+        this._recomputeClippingPlaneMatrix = true;
 
         /**
          * Optimization option. Whether the tileset should refine based on a dynamic screen space error. Tiles that are further
