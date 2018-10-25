@@ -397,10 +397,12 @@ define([
         normal = Cartesian3.cross(axis1, axis2, normal);
         normal = Cartesian3.normalize(normal, normal);
 
-        var surfaceNormal = polygonGeometry._ellipsoid.geodeticSurfaceNormal(centerScratch, surfaceNormalScratch);
-        if (Cartesian3.dot(normal, surfaceNormal) < 0) {
-            normal = Cartesian3.negate(normal, normal);
-            axis1 = Cartesian3.negate(axis1, axis1);
+        if (!Cartesian3.equalsEpsilon(centerScratch, Cartesian3.ZERO, CesiumMath.EPSILON6)) {
+            var surfaceNormal = polygonGeometry._ellipsoid.geodeticSurfaceNormal(centerScratch, surfaceNormalScratch);
+            if (Cartesian3.dot(normal, surfaceNormal) < 0) {
+                normal = Cartesian3.negate(normal, normal);
+                axis1 = Cartesian3.negate(axis1, axis1);
+            }
         }
 
         var projectPoints = CoplanarPolygonGeometryLibrary.createProjectPointsTo2DFunction(centerScratch, axis1, axis2);
