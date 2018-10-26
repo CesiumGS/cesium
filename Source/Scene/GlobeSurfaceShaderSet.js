@@ -147,7 +147,7 @@ define([
                     (colorCorrect << 22);
 
         var currentClippingShaderState = 0;
-        if (defined(clippingPlanes)) {
+        if (defined(clippingPlanes) && clippingPlanes.length > 0) {
             currentClippingShaderState = enableClippingPlanes ? clippingPlanes.clippingPlanesState : 0;
         }
         var surfaceShader = surfaceTile.surfaceShader;
