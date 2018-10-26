@@ -540,6 +540,26 @@ define([
                 };
             },
 
+            contextToRenderAndCall : function(util, customEqualityTesters) {
+                return {
+                    compare : function(actual, expected) {
+                        var actualRgba = contextRenderAndReadPixels(actual);
+
+                        var webglStub = !!window.webglStub;
+                        if (!webglStub) {
+                            // The callback may have expectations that fail, which still makes the
+                            // spec fail, as we desired, even though this matcher sets pass to true.
+                            var callback = expected;
+                            callback(actualRgba);
+                        }
+
+                        return {
+                            pass : true
+                        };
+                    }
+                };
+            },
+
             contextToRender : function(util, customEqualityTesters) {
                 return {
                     compare : function(actual, expected) {
@@ -701,6 +721,80 @@ define([
         };
     }
 
+    function contextRenderAndReadPixels(options) {
+        var context = options.context;
+        var vs = options.vertexShader;
+        var fs = options.fragmentShader;
+        var sp = options.shaderProgram;
+        var uniformMap = options.uniformMap;
+        var modelMatrix = options.modelMatrix;
+        var depth = defaultValue(options.depth, 0.0);
+        var clear = defaultValue(options.clear, true);
+
+        if (!defined(context)) {
+            throw new DeveloperError('options.context is required.');
+        }
+
+        if (!defined(fs) && !defined(sp)) {
+            throw new DeveloperError('options.fragmentShader or options.shaderProgram is required.');
+        }
+
+        if (defined(fs) && defined(sp)) {
+            throw new DeveloperError('Both options.fragmentShader and options.shaderProgram can not be used at the same time.');
+        }
+
+        if (defined(vs) && defined(sp)) {
+            throw new DeveloperError('Both options.vertexShader and options.shaderProgram can not be used at the same time.');
+        }
+
+        if (!defined(sp)) {
+            if (!defined(vs)) {
+                vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
+            }
+            sp = ShaderProgram.fromCache({
+                context : context,
+                vertexShaderSource : vs,
+                fragmentShaderSource : fs,
+                attributeLocations: {
+                    position: 0
+                }
+            });
+        }
+
+        var va = new VertexArray({
+            context : context,
+            attributes : [{
+                index : 0,
+                vertexBuffer : Buffer.createVertexBuffer({
+                    context : context,
+                    typedArray : new Float32Array([0.0, 0.0, depth, 1.0]),
+                    usage : BufferUsage.STATIC_DRAW
+                }),
+                componentsPerAttribute : 4
+            }]
+        });
+
+        if (clear) {
+            ClearCommand.ALL.execute(context);
+        }
+
+        var command = new DrawCommand({
+            primitiveType : PrimitiveType.POINTS,
+            shaderProgram : sp,
+            vertexArray : va,
+            uniformMap : uniformMap,
+            modelMatrix : modelMatrix
+        });
+
+        command.execute(context);
+        var rgba = context.readPixels();
+
+        sp = sp.destroy();
+        va = va.destroy();
+
+        return rgba;
+    }
+
     function expectContextToRender(actual, expected, expectEqual) {
         var options = actual;
         var context = options.context;
@@ -789,6 +883,7 @@ define([
         });
         command.execute(context);
         var rgba = context.readPixels();
+
         if (!webglStub) {
             if (expectEqual) {
                 if (!CesiumMath.equalsEpsilon(rgba[0], expected[0], 0, epsilon) ||
