@@ -366,7 +366,7 @@ define([
             // This subdivides a line at a much greater granularity. This may be a workaround for an actual bug
             // where a polyline blinks in and out during camera movement when log depth is enabled and a segment of
             // the polyline intersects the near plane.
-            minDistance = CesiumMath.chordLength(granularity * 10.0, ellipsoid.maximumRadius);
+            minDistance = ellipsoid.maximumRadius * 0.9;
             positions = PolylinePipeline.subdivideCartesianLine(positions, minDistance);
         }
 

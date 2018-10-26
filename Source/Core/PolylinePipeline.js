@@ -318,11 +318,12 @@ define([
     };
 
     var distanceScratch = new Cartesian3();
-    function getPointAtDistance(p0, p1, distance, length) {
+
+    function getPointAtDistance(p0, p1, distance, length, result) {
         Cartesian3.subtract(p1, p0, distanceScratch);
         Cartesian3.multiplyByScalar(distanceScratch, distance / length, distanceScratch);
         Cartesian3.add(p0, distanceScratch, distanceScratch);
-        return [distanceScratch.x, distanceScratch.y, distanceScratch.z];
+        return Cartesian3.clone(distanceScratch, result);
     }
 
     PolylinePipeline.subdivideLineSegmentCount = function(p0, p1, minDistance) {
@@ -331,6 +332,8 @@ define([
         var countDivide = Math.max(0, Math.ceil(Math.log(n) / Math.log(2)));
         return Math.pow(2, countDivide);
     };
+
+    var scratchPointAtDistanceResult = new Cartesian3();
 
     PolylinePipeline.subdivideLineSegment = function(p0, p1, minDistance, result, offset) {
         var numVertices = PolylinePipeline.subdivideLineSegmentCount(p0, p1, minDistance);
@@ -347,10 +350,10 @@ define([
 
         var index = offset;
         for ( var i = 0; i < numVertices; i++) {
-            var p = getPointAtDistance(p0, p1, i * distanceBetweenVertices, length);
-            positions[index++] = p[0];
-            positions[index++] = p[1];
-            positions[index++] = p[2];
+            var p = getPointAtDistance(p0, p1, i * distanceBetweenVertices, length, scratchPointAtDistanceResult);
+            positions[index++] = p.x;
+            positions[index++] = p.y;
+            positions[index++] = p.z;
         }
 
         return positions;
