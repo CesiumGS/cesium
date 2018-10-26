@@ -47,15 +47,15 @@ tileset.readyPromise.then(function(tileset) {
 
 tileset.colorBlendMode = Cesium.Cesium3DTileColorBlendMode.REPLACE;
 
+var selectedFeature;
 var picking = false;
+
 Sandcastle.addToggleButton('Per-feature selection', false, function(checked) {
     picking = checked;
     if (!picking) {
         unselectFeature(selectedFeature);
     }
 });
-
-var selectedFeature;
 
 function selectFeature(feature) {
     var element = feature.getProperty('element');
