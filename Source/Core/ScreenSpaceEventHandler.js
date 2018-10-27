@@ -176,7 +176,7 @@ define([
         position : new Cartesian2()
     };
 
-    function cancelMouseEvent(screenSpaceEventHandler, screenSpaceEventType, clickScreenSpaceEventType) {
+    function cancelMouseEvent(screenSpaceEventHandler, screenSpaceEventType, clickScreenSpaceEventType, event) {
         var modifier = getModifier(event);
 
         var action = screenSpaceEventHandler.getInputAction(screenSpaceEventType, modifier);
@@ -218,9 +218,9 @@ define([
             return;
         }
 
-        cancelMouseEvent(screenSpaceEventHandler, ScreenSpaceEventType.LEFT_UP, ScreenSpaceEventType.LEFT_CLICK);
-        cancelMouseEvent(screenSpaceEventHandler, ScreenSpaceEventType.MIDDLE_UP, ScreenSpaceEventType.MIDDLE_CLICK);
-        cancelMouseEvent(screenSpaceEventHandler, ScreenSpaceEventType.RIGHT_UP, ScreenSpaceEventType.RIGHT_CLICK);
+        cancelMouseEvent(screenSpaceEventHandler, ScreenSpaceEventType.LEFT_UP, ScreenSpaceEventType.LEFT_CLICK, event);
+        cancelMouseEvent(screenSpaceEventHandler, ScreenSpaceEventType.MIDDLE_UP, ScreenSpaceEventType.MIDDLE_CLICK, event);
+        cancelMouseEvent(screenSpaceEventHandler, ScreenSpaceEventType.RIGHT_UP, ScreenSpaceEventType.RIGHT_CLICK, event);
     }
 
     var mouseMoveEvent = {
