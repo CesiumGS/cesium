@@ -2016,7 +2016,7 @@ defineSuite([
         expect(expression.evaluate(undefined)).toEqual(new Cartesian3(0.0, 1.0, 2.0));
 
         expression = new Expression('log2(vec4(1.0, 2.0, 4.0, 8.0))');
-        expect(expression.evaluate(undefined)).toEqual(new Cartesian4(0.0, 1.0, 2.0, 3.0));
+        expect(expression.evaluate(undefined)).toEqualEpsilon(new Cartesian4(0.0, 1.0, 2.0, 3.0), CesiumMath.EPSILON10);
     });
 
     it('throws if log2 function takes an invalid number of arguments', function() {
