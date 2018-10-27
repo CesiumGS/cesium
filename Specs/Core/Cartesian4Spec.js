@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Core/Cartesian4',
         'Core/Color',
@@ -945,6 +944,21 @@ defineSuite([
         expect(function() {
             Cartesian4.mostOrthogonalAxis(new Cartesian4());
         }).toThrowDeveloperError();
+    });
+
+    it('packs and unpacks floating point values for representation as uint8 4-vectors', function() {
+        var float = 123.456;
+        var packedFloat = Cartesian4.packFloat(float);
+        expect(0 <= packedFloat.x && packedFloat.x <= 255).toBe(true);
+        expect(0 <= packedFloat.y && packedFloat.y <= 255).toBe(true);
+        expect(0 <= packedFloat.z && packedFloat.z <= 255).toBe(true);
+        expect(0 <= packedFloat.w && packedFloat.w <= 255).toBe(true);
+
+        var unpackedFloat = Cartesian4.unpackFloat(packedFloat);
+        expect(CesiumMath.equalsEpsilon(float, unpackedFloat, CesiumMath.EPSILON7)).toBe(true);
+
+        var packedZero = Cartesian4.packFloat(0);
+        expect(packedZero).toEqual(Cartesian4.ZERO);
     });
 
     createPackableSpecs(Cartesian4, new Cartesian4(1, 2, 3, 4), [1, 2, 3, 4]);

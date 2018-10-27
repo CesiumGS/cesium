@@ -47,7 +47,8 @@ var greenWall = viewer.entities.add({
                                                         -97.0, 40.0, 100000.0,
                                                         -107.0, 40.0, 100000.0,
                                                         -107.0, 43.0, 100000.0]),
-        material : Cesium.Color.GREEN
+        material : Cesium.Color.GREEN,
+        outline : true
     }
 });
 
@@ -76,10 +77,10 @@ viewer.zoomTo(viewer.entities);
 //Sandcastle_End
     Sandcastle.finishedLoading();
 }
-if (typeof Cesium !== "undefined") {
+if (typeof Cesium !== 'undefined') {
     startup(Cesium);
-} else if (typeof require === "function") {
-    require(["Cesium"], startup);
+} else if (typeof require === 'function') {
+    require(['Cesium'], startup);
 }
 </script>
 </body>

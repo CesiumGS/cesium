@@ -1,4 +1,3 @@
-/*global define*/
 define([
         'Core/clone',
         'Core/defaultValue',
@@ -189,7 +188,7 @@ define([
             antialias : defaultValue(options.antialias, true),
             premultipliedAlpha : defaultValue(options.premultipliedAlpha, true),
             preserveDrawingBuffer : defaultValue(options.preserveDrawingBuffer, false),
-            preferLowPowerToHighPerformance : defaultValue(options.preferLowPowerToHighPerformance, false),
+            powerPreference : defaultValue(options.powerPreference, false),
             failIfMajorPerformanceCaveat : defaultValue(options.failIfMajorPerformanceCaveat, false)
         };
 

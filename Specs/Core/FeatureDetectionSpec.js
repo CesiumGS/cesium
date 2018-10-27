@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Core/FeatureDetection'
     ], function(
@@ -19,6 +18,11 @@ defineSuite([
     it('detects typed array support', function() {
         var supportsTypedArrays = FeatureDetection.supportsTypedArrays();
         expect(typeof supportsTypedArrays).toEqual('boolean');
+    });
+
+    it('detects web assembly support', function() {
+        var supportsWebAssembly = FeatureDetection.supportsWebAssembly();
+        expect(typeof supportsWebAssembly).toEqual('boolean');
     });
 
     function checkVersionArray(array) {

@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../../Core/defined',
         '../../Core/defineProperties',
@@ -34,15 +33,8 @@ define([
      * @param {Scene} options.scene The Scene instance to use.
      * @param {GeocoderService[]} [options.geocoderServices] The geocoder services to be used
      * @param {Boolean} [options.autoComplete = true] True if the geocoder should query as the user types to autocomplete
-     * @param {String} [options.url='https://dev.virtualearth.net'] The base URL of the Bing Maps API.
-     * @param {String} [options.key] The Bing Maps key for your application, which can be
-     *        created at {@link https://www.bingmapsportal.com}.
-     *        If this parameter is not provided, {@link BingMapsApi.defaultKey} is used.
-     *        If {@link BingMapsApi.defaultKey} is undefined as well, a message is
-     *        written to the console reminding you that you must create and supply a Bing Maps
-     *        key as soon as possible.  Please do not deploy an application that uses
-     *        this widget without creating a separate key for your application.
      * @param {Number} [options.flightDuration=1.5] The duration of the camera flight to an entered location, in seconds.
+     * @param {Geocoder~DestinationFoundFunction} [options.destinationFound=GeocoderViewModel.flyToDestination] A callback function that is called after a successful geocode.  If not supplied, the default behavior is to fly the camera to the result destination.
      */
     function Geocoder(options) {
         //>>includeStart('debug', pragmas.debug);
@@ -218,6 +210,13 @@ css: { active: $data === $parent._selectedSuggestion }');
 
         return destroyObject(this);
     };
+
+    /**
+     * A function that handles the result of a successful geocode.
+     * @callback Geocoder~DestinationFoundFunction
+     * @param {GeocoderViewModel} viewModel The view model.
+     * @param {Cartesian3|Rectangle} destination The destination result of the geocode.
+     */
 
     return Geocoder;
 });

@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../../Core/defined',
         '../../Core/defineProperties',
@@ -27,11 +26,11 @@ define([
         createCommand) {
     'use strict';
 
-    function frustumStatsToString(stats) {
+    function frustumStatisticsToString(statistics) {
         var str;
-        if (defined(stats)) {
+        if (defined(statistics)) {
             str = 'Command Statistics';
-            var com = stats.commandsInFrustums;
+            var com = statistics.commandsInFrustums;
             for (var n in com) {
                 if (com.hasOwnProperty(n)) {
                     var num = parseInt(n, 10);
@@ -52,7 +51,7 @@ define([
                     str += '<br>&nbsp;&nbsp;&nbsp;&nbsp;' + com[n] + ' in frustum ' + s;
                 }
             }
-            str += '<br>Total: ' + stats.totalCommands;
+            str += '<br>Total: ' + statistics.totalCommands;
         }
 
         return str;
@@ -71,8 +70,6 @@ define([
      *
      * @param {Scene} scene The scene instance to use.
      * @param {PerformanceContainer} performanceContainer The instance to use for performance container.
-     *
-     * @exception {DeveloperError} scene is required.
      */
     function CesiumInspectorViewModel(scene, performanceContainer) {
         //>>includeStart('debug', pragmas.debug);
@@ -283,33 +280,6 @@ define([
          */
         this.depthFrustumText = '';
 
-        /**
-         * Gets the text on the general section expand button.  This property is computed.
-         * @type {String}
-         * @default '-'
-         */
-        this.generalSwitchText = knockout.pureComputed(function() {
-            return that.generalVisible ? '-' : '+';
-        });
-
-        /**
-         * Gets the text on the primitives section expand button.  This property is computed.
-         * @type {String}
-         * @default '+'
-         */
-        this.primitivesSwitchText = knockout.pureComputed(function() {
-            return that.primitivesVisible ? '-' : '+';
-        });
-
-        /**
-         * Gets the text on the terrain section expand button.  This property is computed.
-         * @type {String}
-         * @default '+'
-         */
-        this.terrainSwitchText = knockout.pureComputed(function() {
-            return that.terrainVisible ? '-' : '+';
-        });
-
         knockout.track(this, [
             'frustums',
             'frustumPlanes',
@@ -357,10 +327,12 @@ define([
 
         this._frustumsSubscription = knockout.getObservable(this, 'frustums').subscribe(function(val) {
             that._scene.debugShowFrustums = val;
+            that._scene.requestRender();
         });
 
         this._frustumPlanesSubscription = knockout.getObservable(this, 'frustumPlanes').subscribe(function(val) {
             that._scene.debugShowFrustumPlanes = val;
+            that._scene.requestRender();
         });
 
         this._performanceSubscription = knockout.getObservable(this, 'performance').subscribe(function(val) {
@@ -375,6 +347,7 @@ define([
 
         this._showPrimitiveBoundingSphere = createCommand(function() {
             that._primitive.debugShowBoundingVolume = that.primitiveBoundingSphere;
+            that._scene.requestRender();
             return true;
         });
 
@@ -393,6 +366,7 @@ define([
                 that._scene.primitives.remove(that._modelMatrixPrimitive);
                 that._modelMatrixPrimitive = undefined;
             }
+            that._scene.requestRender();
             return true;
         });
 
@@ -418,33 +392,40 @@ define([
 
         this._filterPrimitiveSubscription = knockout.getObservable(this, 'filterPrimitive').subscribe(function() {
             that._doFilterPrimitive();
+            that._scene.requestRender();
         });
 
         this._wireframeSubscription = knockout.getObservable(this, 'wireframe').subscribe(function(val) {
             globe._surface.tileProvider._debug.wireframe = val;
+            that._scene.requestRender();
         });
 
         this._globeDepthSubscription = knockout.getObservable(this, 'globeDepth').subscribe(function(val) {
             that._scene.debugShowGlobeDepth = val;
+            that._scene.requestRender();
         });
 
         this._pickDepthSubscription = knockout.getObservable(this, 'pickDepth').subscribe(function(val) {
             that._scene.debugShowPickDepth = val;
+            that._scene.requestRender();
         });
 
         this._depthFrustumSubscription = knockout.getObservable(this, 'depthFrustum').subscribe(function(val) {
-            that.scene.debugShowDepthFrustum = val;
+            that._scene.debugShowDepthFrustum = val;
+            that._scene.requestRender();
         });
 
         this._incrementDepthFrustum = createCommand(function() {
             var next = that.depthFrustum + 1;
             that.depthFrustum = boundDepthFrustum(1, that._numberOfFrustums, next);
+            that._scene.requestRender();
             return true;
         });
 
         this._decrementDepthFrustum = createCommand(function() {
             var next = that.depthFrustum - 1;
             that.depthFrustum = boundDepthFrustum(1, that._numberOfFrustums, next);
+            that._scene.requestRender();
             return true;
         });
 
@@ -470,10 +451,12 @@ define([
 
         this._tileCoordinatesSubscription = knockout.getObservable(this, 'tileCoordinates').subscribe(function() {
             that._showTileCoordinates();
+            that._scene.requestRender();
         });
 
         this._tileBoundingSphereSubscription = knockout.getObservable(this, 'tileBoundingSphere').subscribe(function() {
             that._showTileBoundingSphere();
+            that._scene.requestRender();
         });
 
         this._showTileBoundingSphere = createCommand(function() {
@@ -482,6 +465,7 @@ define([
             } else {
                 globe._surface.tileProvider._debug.boundingSphereTile = undefined;
             }
+            that._scene.requestRender();
             return true;
         });
 
@@ -493,7 +477,7 @@ define([
 
                 globe._surface._tilesToRender = [];
 
-                if (defined(that._tile)) {
+                if (defined(that._tile) && that._tile.renderable) {
                     globe._surface._tilesToRender.push(that._tile);
                 }
             }
@@ -502,6 +486,7 @@ define([
 
         this._filterTileSubscription = knockout.getObservable(this, 'filterTile').subscribe(function() {
             that.doFilterTile();
+            that._scene.requestRender();
         });
 
         function pickPrimitive(e) {
@@ -513,6 +498,7 @@ define([
                 that.primitive = defined(newPick.collection) ? newPick.collection : newPick.primitive;
             }
 
+            that._scene.requestRender();
             that.pickPrimitiveActive = false;
         }
 
@@ -570,6 +556,10 @@ define([
                 eventHandler.removeInputAction(ScreenSpaceEventType.LEFT_CLICK);
             }
         });
+
+        this._removePostRenderEvent = scene.postRender.addEventListener(function() {
+            that._update();
+        });
     }
 
     defineProperties(CesiumInspectorViewModel.prototype, {
@@ -609,7 +599,6 @@ define([
             }
         },
 
-
         /**
          * Gets the command to toggle the visibility of a BoundingSphere for a primitive
          * @memberof CesiumInspectorViewModel.prototype
@@ -646,7 +635,6 @@ define([
             }
         },
 
-
         /**
          * Gets the command to increment the depth frustum index to be shown
          * @memberof CesiumInspectorViewModel.prototype
@@ -670,7 +658,6 @@ define([
                 return this._decrementDepthFrustum;
             }
         },
-
 
         /**
          * Gets the command to toggle the visibility of tile coordinates
@@ -850,6 +837,9 @@ define([
          * @type {Command}
          */
         primitive : {
+            get : function() {
+                return this._primitive;
+            },
             set : function(newPrimitive) {
                 var oldPrimitive = this._primitive;
                 if (newPrimitive !== oldPrimitive) {
@@ -871,10 +861,6 @@ define([
                     this.showPrimitiveReferenceFrame();
                     this.doFilterPrimitive();
                 }
-            },
-
-            get : function() {
-                return this._primitive;
             }
         },
 
@@ -885,6 +871,9 @@ define([
          * @type {Command}
          */
         tile : {
+            get : function() {
+                return this._tile;
+            },
             set : function(newTile) {
                 if (defined(newTile)) {
                     this.hasPickedTile = true;
@@ -893,7 +882,12 @@ define([
                         this.tileText = 'L: ' + newTile.level + ' X: ' + newTile.x + ' Y: ' + newTile.y;
                         this.tileText += '<br>SW corner: ' + newTile.rectangle.west + ', ' + newTile.rectangle.south;
                         this.tileText += '<br>NE corner: ' + newTile.rectangle.east + ', ' + newTile.rectangle.north;
-                        this.tileText += '<br>Min: ' + newTile.data.minimumHeight + ' Max: ' + newTile.data.maximumHeight;
+                        var data = newTile.data;
+                        if (defined(data)) {
+                            this.tileText += '<br>Min: ' + data.minimumHeight + ' Max: ' + data.maximumHeight;
+                        } else {
+                            this.tileText += '<br>(Tile is not loaded)';
+                        }
                     }
                     this._tile = newTile;
                     this.showTileBoundingSphere();
@@ -902,41 +896,36 @@ define([
                     this.hasPickedTile = false;
                     this._tile = undefined;
                 }
-            },
-
-            get : function() {
-                return this._tile;
-            }
-        },
-
-        update : {
-            get : function() {
-                var that = this;
-                return function() {
-                    if (that.frustums) {
-                        that.frustumStatisticText = frustumStatsToString(that._scene.debugFrustumStatistics);
-                    }
-
-                    // Determine the number of frustums being used.
-                    var numberOfFrustums = that._scene.numberOfFrustums;
-                    that._numberOfFrustums = numberOfFrustums;
-                    // Bound the frustum to be displayed.
-                    that.depthFrustum = boundDepthFrustum(1, numberOfFrustums, that.depthFrustum);
-                    // Update the displayed text.
-                    that.depthFrustumText = that.depthFrustum + ' of ' + numberOfFrustums;
-
-                    if (that.performance) {
-                        that._performanceDisplay.update();
-                    }
-                    if (that.primitiveReferenceFrame) {
-                        that._modelMatrixPrimitive.modelMatrix = that._primitive.modelMatrix;
-                    }
-
-                    that.shaderCacheText = 'Cached shaders: ' + that._scene.context.shaderCache.numberOfShaders;
-                };
             }
         }
     });
+
+    /**
+     * Updates the view model
+     * @private
+     */
+    CesiumInspectorViewModel.prototype._update = function() {
+        if (this.frustums) {
+            this.frustumStatisticText = frustumStatisticsToString(this._scene.debugFrustumStatistics);
+        }
+
+        // Determine the number of frustums being used.
+        var numberOfFrustums = this._scene.numberOfFrustums;
+        this._numberOfFrustums = numberOfFrustums;
+        // Bound the frustum to be displayed.
+        this.depthFrustum = boundDepthFrustum(1, numberOfFrustums, this.depthFrustum);
+        // Update the displayed text.
+        this.depthFrustumText = this.depthFrustum + ' of ' + numberOfFrustums;
+
+        if (this.performance) {
+            this._performanceDisplay.update();
+        }
+        if (this.primitiveReferenceFrame) {
+            this._modelMatrixPrimitive.modelMatrix = this._primitive.modelMatrix;
+        }
+
+        this.shaderCacheText = 'Cached shaders: ' + this._scene.context.shaderCache.numberOfShaders;
+    };
 
     /**
      * @returns {Boolean} true if the object has been destroyed, false otherwise.
@@ -951,6 +940,7 @@ define([
      */
     CesiumInspectorViewModel.prototype.destroy = function() {
         this._eventHandler.destroy();
+        this._removePostRenderEvent();
         this._frustumsSubscription.dispose();
         this._frustumPlanesSubscription.dispose();
         this._performanceSubscription.dispose();

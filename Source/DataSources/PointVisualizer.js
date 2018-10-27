@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/AssociativeArray',
         '../Core/Cartesian3',
@@ -8,6 +7,7 @@ define([
         '../Core/DeveloperError',
         '../Core/DistanceDisplayCondition',
         '../Core/NearFarScalar',
+        '../Scene/createBillboardPointCallback',
         '../Scene/HeightReference',
         './BoundingSphereState',
         './Property'
@@ -20,6 +20,7 @@ define([
         DeveloperError,
         DistanceDisplayCondition,
         NearFarScalar,
+        createBillboardPointCallback,
         HeightReference,
         BoundingSphereState,
         Property) {
@@ -29,13 +30,14 @@ define([
     var defaultOutlineColor = Color.BLACK;
     var defaultOutlineWidth = 0.0;
     var defaultPixelSize = 1.0;
+    var defaultDisableDepthTestDistance = 0.0;
 
-    var color = new Color();
-    var position = new Cartesian3();
-    var outlineColor = new Color();
-    var scaleByDistance = new NearFarScalar();
-    var translucencyByDistance = new NearFarScalar();
-    var distanceDisplayCondition = new DistanceDisplayCondition();
+    var colorScratch = new Color();
+    var positionScratch = new Cartesian3();
+    var outlineColorScratch = new Color();
+    var scaleByDistanceScratch = new NearFarScalar();
+    var translucencyByDistanceScratch = new NearFarScalar();
+    var distanceDisplayConditionScratch = new DistanceDisplayCondition();
 
     function EntityData(entity) {
         this.entity = entity;
@@ -97,8 +99,9 @@ define([
             var billboard = item.billboard;
             var heightReference = Property.getValueOrDefault(pointGraphics._heightReference, time, HeightReference.NONE);
             var show = entity.isShowing && entity.isAvailable(time) && Property.getValueOrDefault(pointGraphics._show, time, true);
+            var position;
             if (show) {
-                position = Property.getValueOrUndefined(entity._position, time, position);
+                position = Property.getValueOrUndefined(entity._position, time, positionScratch);
                 show = defined(position);
             }
             if (!show) {
@@ -136,23 +139,25 @@ define([
             if (defined(pointPrimitive)) {
                 pointPrimitive.show = true;
                 pointPrimitive.position = position;
-                pointPrimitive.scaleByDistance = Property.getValueOrUndefined(pointGraphics._scaleByDistance, time, scaleByDistance);
-                pointPrimitive.translucencyByDistance = Property.getValueOrUndefined(pointGraphics._translucencyByDistance, time, translucencyByDistance);
-                pointPrimitive.color = Property.getValueOrDefault(pointGraphics._color, time, defaultColor, color);
-                pointPrimitive.outlineColor = Property.getValueOrDefault(pointGraphics._outlineColor, time, defaultOutlineColor, outlineColor);
+                pointPrimitive.scaleByDistance = Property.getValueOrUndefined(pointGraphics._scaleByDistance, time, scaleByDistanceScratch);
+                pointPrimitive.translucencyByDistance = Property.getValueOrUndefined(pointGraphics._translucencyByDistance, time, translucencyByDistanceScratch);
+                pointPrimitive.color = Property.getValueOrDefault(pointGraphics._color, time, defaultColor, colorScratch);
+                pointPrimitive.outlineColor = Property.getValueOrDefault(pointGraphics._outlineColor, time, defaultOutlineColor, outlineColorScratch);
                 pointPrimitive.outlineWidth = Property.getValueOrDefault(pointGraphics._outlineWidth, time, defaultOutlineWidth);
                 pointPrimitive.pixelSize = Property.getValueOrDefault(pointGraphics._pixelSize, time, defaultPixelSize);
-                pointPrimitive.distanceDisplayCondition = Property.getValueOrUndefined(pointGraphics._distanceDisplayCondition, time, distanceDisplayCondition);
-            } else { // billboard
+                pointPrimitive.distanceDisplayCondition = Property.getValueOrUndefined(pointGraphics._distanceDisplayCondition, time, distanceDisplayConditionScratch);
+                pointPrimitive.disableDepthTestDistance = Property.getValueOrDefault(pointGraphics._disableDepthTestDistance, time, defaultDisableDepthTestDistance);
+            } else if (defined(billboard)) {
                 billboard.show = true;
                 billboard.position = position;
-                billboard.scaleByDistance = Property.getValueOrUndefined(pointGraphics._scaleByDistance, time, scaleByDistance);
-                billboard.translucencyByDistance = Property.getValueOrUndefined(pointGraphics._translucencyByDistance, time, translucencyByDistance);
-                billboard.distanceDisplayCondition = Property.getValueOrUndefined(pointGraphics._distanceDisplayCondition, time, distanceDisplayCondition);
+                billboard.scaleByDistance = Property.getValueOrUndefined(pointGraphics._scaleByDistance, time, scaleByDistanceScratch);
+                billboard.translucencyByDistance = Property.getValueOrUndefined(pointGraphics._translucencyByDistance, time, translucencyByDistanceScratch);
+                billboard.distanceDisplayCondition = Property.getValueOrUndefined(pointGraphics._distanceDisplayCondition, time, distanceDisplayConditionScratch);
+                billboard.disableDepthTestDistance = Property.getValueOrDefault(pointGraphics._disableDepthTestDistance, time, defaultDisableDepthTestDistance);
                 billboard.heightReference = heightReference;
 
-                var newColor = Property.getValueOrDefault(pointGraphics._color, time, defaultColor, color);
-                var newOutlineColor = Property.getValueOrDefault(pointGraphics._outlineColor, time, defaultOutlineColor, outlineColor);
+                var newColor = Property.getValueOrDefault(pointGraphics._color, time, defaultColor, colorScratch);
+                var newOutlineColor = Property.getValueOrDefault(pointGraphics._outlineColor, time, defaultOutlineColor, outlineColorScratch);
                 var newOutlineWidth = Math.round(Property.getValueOrDefault(pointGraphics._outlineWidth, time, defaultOutlineWidth));
                 var newPixelSize = Math.max(1, Math.round(Property.getValueOrDefault(pointGraphics._pixelSize, time, defaultPixelSize)));
 
@@ -183,7 +188,7 @@ define([
                     var cssOutlineColor = newOutlineColor.toCssColorString();
                     var textureId = JSON.stringify([cssColor, newPixelSize, cssOutlineColor, newOutlineWidth]);
 
-                    billboard.setImage(textureId, createCallback(centerAlpha, cssColor, cssOutlineColor, newOutlineWidth, newPixelSize));
+                    billboard.setImage(textureId, createBillboardPointCallback(centerAlpha, cssColor, cssOutlineColor, newOutlineWidth, newPixelSize));
                 }
             }
         }
@@ -298,46 +303,6 @@ define([
             }
         }
     }
-
-    function createCallback(centerAlpha, cssColor, cssOutlineColor, cssOutlineWidth, newPixelSize) {
-        return function(id) {
-            var canvas = document.createElement('canvas');
-
-            var length = newPixelSize + (2 * cssOutlineWidth);
-            canvas.height = canvas.width = length;
-
-            var context2D = canvas.getContext('2d');
-            context2D.clearRect(0, 0, length, length);
-
-            if (cssOutlineWidth !== 0) {
-                context2D.beginPath();
-                context2D.arc(length / 2, length / 2, length / 2, 0, 2 * Math.PI, true);
-                context2D.closePath();
-                context2D.fillStyle = cssOutlineColor;
-                context2D.fill();
-                // Punch a hole in the center if needed.
-                if (centerAlpha < 1.0) {
-                    context2D.save();
-                    context2D.globalCompositeOperation = 'destination-out';
-                    context2D.beginPath();
-                    context2D.arc(length / 2, length / 2, newPixelSize / 2, 0, 2 * Math.PI, true);
-                    context2D.closePath();
-                    context2D.fillStyle = 'black';
-                    context2D.fill();
-                    context2D.restore();
-                }
-            }
-
-            context2D.beginPath();
-            context2D.arc(length / 2, length / 2, newPixelSize / 2, 0, 2 * Math.PI, true);
-            context2D.closePath();
-            context2D.fillStyle = cssColor;
-            context2D.fill();
-
-            return canvas;
-        };
-    }
-
 
     return PointVisualizer;
 });

@@ -1,7 +1,7 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="Run tests" type="JavaScriptTestRunnerKarma" factoryName="Karma">
     <config-file value="$PROJECT_DIR$/Specs/karma.conf.js" />
-    <browsers value="Electron" />
+    <browsers value="Chrome" />
     <karma-package-dir value="$PROJECT_DIR$/node_modules/karma" />
     <node-interpreter value="project" />
     <envs />

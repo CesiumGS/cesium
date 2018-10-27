@@ -1,34 +1,19 @@
-/*global defineSuite*/
 defineSuite([
         'Scene/TextureAtlas',
         'Core/BoundingRectangle',
         'Core/Cartesian2',
-        'Core/loadImage',
         'Core/Math',
         'Core/PixelFormat',
-        'Core/PrimitiveType',
-        'Renderer/Buffer',
-        'Renderer/BufferUsage',
-        'Renderer/ClearCommand',
-        'Renderer/DrawCommand',
-        'Renderer/ShaderProgram',
-        'Renderer/VertexArray',
+        'Core/Resource',
         'Specs/createScene',
         'ThirdParty/when'
     ], function(
         TextureAtlas,
         BoundingRectangle,
         Cartesian2,
-        loadImage,
         CesiumMath,
         PixelFormat,
-        PrimitiveType,
-        Buffer,
-        BufferUsage,
-        ClearCommand,
-        DrawCommand,
-        ShaderProgram,
-        VertexArray,
+        Resource,
         createScene,
         when) {
     'use strict';
@@ -46,22 +31,22 @@ defineSuite([
         scene = createScene();
 
         return when.join(
-            loadImage('./Data/Images/Green.png').then(function(image) {
+            Resource.fetchImage('./Data/Images/Green.png').then(function(image) {
                 greenImage = image;
             }),
-            loadImage('./Data/Images/Green1x4.png').then(function(image) {
+            Resource.fetchImage('./Data/Images/Green1x4.png').then(function(image) {
                 tallGreenImage = image;
             }),
-            loadImage('./Data/Images/Blue.png').then(function(image) {
+            Resource.fetchImage('./Data/Images/Blue.png').then(function(image) {
                 blueImage = image;
             }),
-            loadImage('./Data/Images/Red16x16.png').then(function(image) {
+            Resource.fetchImage('./Data/Images/Red16x16.png').then(function(image) {
                 bigRedImage = image;
             }),
-            loadImage('./Data/Images/Blue10x10.png').then(function(image) {
+            Resource.fetchImage('./Data/Images/Blue10x10.png').then(function(image) {
                 bigBlueImage = image;
             }),
-            loadImage('./Data/Images/Green4x4.png').then(function(image) {
+            Resource.fetchImage('./Data/Images/Green4x4.png').then(function(image) {
                 bigGreenImage = image;
             }));
     });
@@ -77,7 +62,7 @@ defineSuite([
     function expectToRender(texture, textureCoordinates, expected) {
         var x = textureCoordinates.x + textureCoordinates.width / 2.0;
         var y = textureCoordinates.y + textureCoordinates.height / 2.0;
-        var fs = 
+        var fs =
             'uniform sampler2D u_texture;' +
             'void main() {' +
             '  gl_FragColor = texture2D(u_texture, vec2(' + x + ', ' + y + '));' +

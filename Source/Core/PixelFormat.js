@@ -1,8 +1,9 @@
-/*global define*/
 define([
+        '../Renderer/PixelDatatype',
         './freezeObject',
         './WebGLConstants'
     ], function(
+        PixelDatatype,
         freezeObject,
         WebGLConstants) {
     'use strict';
@@ -144,6 +145,25 @@ define([
         /**
          * @private
          */
+        componentsLength : function(pixelFormat) {
+            switch (pixelFormat) {
+                case PixelFormat.RGB:
+                    return 3;
+                case PixelFormat.RGBA:
+                    return 4;
+                case PixelFormat.LUMINANCE_ALPHA:
+                    return 2;
+                case PixelFormat.ALPHA:
+                case PixelFormat.LUMINANCE:
+                    return 1;
+                default:
+                    return 1;
+            }
+        },
+
+        /**
+         * @private
+         */
         validate : function(pixelFormat) {
             return pixelFormat === PixelFormat.DEPTH_COMPONENT ||
                    pixelFormat === PixelFormat.DEPTH_STENCIL ||
@@ -227,7 +247,7 @@ define([
         /**
          * @private
          */
-        compressedTextureSize : function(pixelFormat, width, height) {
+        compressedTextureSizeInBytes : function(pixelFormat, width, height) {
             switch (pixelFormat) {
                 case PixelFormat.RGB_DXT1:
                 case PixelFormat.RGBA_DXT1:
@@ -249,6 +269,57 @@ define([
                 default:
                     return 0;
             }
+        },
+
+        /**
+         * @private
+         */
+        textureSizeInBytes : function(pixelFormat, pixelDatatype, width, height) {
+            var componentsLength = PixelFormat.componentsLength(pixelFormat);
+            if (PixelDatatype.isPacked(pixelDatatype)) {
+                componentsLength = 1;
+            }
+            return componentsLength * PixelDatatype.sizeInBytes(pixelDatatype) * width * height;
+        },
+
+        /**
+         * @private
+         */
+        createTypedArray : function(pixelFormat, pixelDatatype, width, height) {
+            var constructor;
+            var sizeInBytes = PixelDatatype.sizeInBytes(pixelDatatype);
+            if (sizeInBytes === Uint8Array.BYTES_PER_ELEMENT) {
+                constructor = Uint8Array;
+            } else if (sizeInBytes === Uint16Array.BYTES_PER_ELEMENT) {
+                constructor = Uint16Array;
+            } else if (sizeInBytes === Float32Array.BYTES_PER_ELEMENT && pixelDatatype === PixelDatatype.FLOAT) {
+                constructor = Float32Array;
+            } else {
+                constructor = Uint32Array;
+            }
+
+            var size = PixelFormat.componentsLength(pixelFormat) * width * height;
+            return new constructor(size);
+        },
+
+        /**
+         * @private
+         */
+        flipY : function(bufferView, pixelFormat, pixelDatatype, width, height) {
+            if (height === 1) {
+                return bufferView;
+            }
+            var flipped = PixelFormat.createTypedArray(pixelFormat, pixelDatatype, width, height);
+            var numberOfComponents = PixelFormat.componentsLength(pixelFormat);
+            var textureWidth = width * numberOfComponents;
+            for (var i = 0; i < height; ++i) {
+                var row = i * height * numberOfComponents;
+                var flippedRow = (height - i - 1) * height * numberOfComponents;
+                for (var j = 0; j < textureWidth; ++j) {
+                    flipped[flippedRow + j] = bufferView[row + j];
+                }
+            }
+            return flipped;
         }
     };
 

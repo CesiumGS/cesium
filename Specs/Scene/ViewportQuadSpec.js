@@ -1,9 +1,8 @@
-/*global defineSuite*/
 defineSuite([
         'Scene/ViewportQuad',
         'Core/BoundingRectangle',
         'Core/Color',
-        'Core/loadImage',
+        'Core/Resource',
         'Renderer/Texture',
         'Scene/Material',
         'Specs/createScene',
@@ -12,7 +11,7 @@ defineSuite([
         ViewportQuad,
         BoundingRectangle,
         Color,
-        loadImage,
+        Resource,
         Texture,
         Material,
         createScene,
@@ -25,7 +24,7 @@ defineSuite([
 
     beforeAll(function() {
         scene = createScene();
-        return loadImage('./Data/Images/Red16x16.png').then(function(image) {
+        return Resource.fetchImage('./Data/Images/Red16x16.png').then(function(image) {
             testImage = image;
         });
     });

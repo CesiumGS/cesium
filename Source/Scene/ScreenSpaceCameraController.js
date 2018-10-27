@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/Cartesian2',
         '../Core/Cartesian3',
@@ -9,12 +8,14 @@ define([
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/Ellipsoid',
+        '../Core/HeadingPitchRoll',
         '../Core/IntersectionTests',
         '../Core/isArray',
         '../Core/KeyboardEventModifier',
         '../Core/Math',
         '../Core/Matrix3',
         '../Core/Matrix4',
+        '../Core/OrthographicFrustum',
         '../Core/Plane',
         '../Core/Quaternion',
         '../Core/Ray',
@@ -35,12 +36,14 @@ define([
         destroyObject,
         DeveloperError,
         Ellipsoid,
+        HeadingPitchRoll,
         IntersectionTests,
         isArray,
         KeyboardEventModifier,
         CesiumMath,
         Matrix3,
         Matrix4,
+        OrthographicFrustum,
         Plane,
         Quaternion,
         Ray,
@@ -94,7 +97,7 @@ define([
          */
         this.enableZoom = true;
         /**
-         * If true, allows the user to rotate the camera.  If false, the camera is locked to the current heading.
+         * If true, allows the user to rotate the world which translates the user's position.
          * This flag only applies in 2D and 3D.
          * @type {Boolean}
          * @default true
@@ -445,6 +448,9 @@ define([
     var scratchCartesian = new Cartesian3();
     var scratchCartesianTwo = new Cartesian3();
     var scratchCartesianThree = new Cartesian3();
+    var scratchZoomViewOptions = {
+      orientation: new HeadingPitchRoll()
+    };
 
     function handleZoom(object, startPosition, movement, zoomFactor, distanceMeasure, unitPositionDotDirection) {
         var percentage = 1.0;
@@ -484,6 +490,19 @@ define([
         var camera = scene.camera;
         var mode = scene.mode;
 
+        var orientation = scratchZoomViewOptions.orientation;
+        orientation.heading = camera.heading;
+        orientation.pitch = camera.pitch;
+        orientation.roll = camera.roll;
+
+        if (camera.frustum instanceof OrthographicFrustum) {
+            if (Math.abs(distance) > 0.0) {
+                camera.zoomIn(distance);
+                camera._adjustOrthographicFrustum();
+            }
+            return;
+        }
+
         var sameStartPosition = Cartesian2.equals(startPosition, object._zoomMouseStart);
         var zoomingOnVector = object._zoomingOnVector;
         var rotatingZoom = object._rotatingZoom;
@@ -493,7 +512,12 @@ define([
             object._zoomMouseStart = Cartesian2.clone(startPosition, object._zoomMouseStart);
 
             if (defined(object._globe)) {
-                pickedPosition = mode !== SceneMode.SCENE2D ? pickGlobe(object, startPosition, scratchPickCartesian) : camera.getPickRay(startPosition, scratchZoomPickRay).origin;
+                if (mode === SceneMode.SCENE2D) {
+                    pickedPosition = camera.getPickRay(startPosition, scratchZoomPickRay).origin;
+                    pickedPosition = Cartesian3.fromElements(pickedPosition.y, pickedPosition.z, pickedPosition.x);
+                } else {
+                    pickedPosition = pickGlobe(object, startPosition, scratchPickCartesian);
+                }
             }
             if (defined(pickedPosition)) {
                 object._useZoomWorldPosition = true;
@@ -533,6 +557,7 @@ define([
 
                     if ((camera.position.x < 0.0 && savedX > 0.0) || (camera.position.x > 0.0 && savedX < 0.0)) {
                         pickedPosition = camera.getPickRay(startPosition, scratchZoomPickRay).origin;
+                        pickedPosition = Cartesian3.fromElements(pickedPosition.y, pickedPosition.z, pickedPosition.x);
                         object._zoomWorldPosition = Cartesian3.clone(pickedPosition, object._zoomWorldPosition);
                     }
                 }
@@ -637,6 +662,7 @@ define([
                         Cartesian3.cross(camera.direction, camera.up, camera.right);
                         Cartesian3.cross(camera.right, camera.direction, camera.up);
 
+                        camera.setView(scratchZoomViewOptions);
                         return;
                     }
 
@@ -672,7 +698,7 @@ define([
             }
 
             var rayDirection = ray.direction;
-            if (mode === SceneMode.COLUMBUS_VIEW) {
+            if (mode === SceneMode.COLUMBUS_VIEW || mode === SceneMode.SCENE2D) {
                 Cartesian3.fromElements(rayDirection.y, rayDirection.z, rayDirection.x, rayDirection);
             }
 
@@ -682,6 +708,8 @@ define([
         } else {
             camera.zoomIn(distance);
         }
+
+        camera.setView(scratchZoomViewOptions);
     }
 
     var translate2DStart = new Ray();
@@ -693,6 +721,9 @@ define([
         var camera = scene.camera;
         var start = camera.getPickRay(movement.startPosition, translate2DStart).origin;
         var end = camera.getPickRay(movement.endPosition, translate2DEnd).origin;
+
+        start = Cartesian3.fromElements(start.y, start.z, start.x, start);
+        end = Cartesian3.fromElements(end.y, end.z, end.x, end);
 
         var direction = Cartesian3.subtract(start, end, scratchTranslateP0);
         var distance = Cartesian3.magnitude(direction);
@@ -806,11 +837,11 @@ define([
 
         var depthIntersection;
         if (scene.pickPositionSupported) {
-            depthIntersection = scene.pickPosition(mousePosition, scratchDepthIntersection);
+            depthIntersection = scene.pickPositionWorldCoordinates(mousePosition, scratchDepthIntersection);
         }
 
         var ray = camera.getPickRay(mousePosition, pickGlobeScratchRay);
-        var rayIntersection = globe.pick(ray, scene, scratchRayIntersection);
+        var rayIntersection = globe.pickWorldCoordinates(ray, scene, scratchRayIntersection);
 
         var pickDistance = defined(depthIntersection) ? Cartesian3.distance(depthIntersection, camera.positionWC) : Number.POSITIVE_INFINITY;
         var rayDistance = defined(rayIntersection) ? Cartesian3.distance(rayIntersection, camera.positionWC) : Number.POSITIVE_INFINITY;
@@ -828,7 +859,7 @@ define([
     var translateCVEndPos = new Cartesian3();
     var translatCVDifference = new Cartesian3();
     var translateCVOrigin = new Cartesian3();
-    var translateCVPlane = new Plane(Cartesian3.ZERO, 0.0);
+    var translateCVPlane = new Plane(Cartesian3.UNIT_X, 0.0);
     var translateCVStartMouse = new Cartesian2();
     var translateCVEndMouse = new Cartesian2();
 
@@ -910,12 +941,13 @@ define([
     var rotateCVTransform = new Matrix4();
     var rotateCVVerticalTransform = new Matrix4();
     var rotateCVOrigin = new Cartesian3();
-    var rotateCVPlane = new Plane(Cartesian3.ZERO, 0.0);
+    var rotateCVPlane = new Plane(Cartesian3.UNIT_X, 0.0);
     var rotateCVCartesian3 = new Cartesian3();
     var rotateCVCart = new Cartographic();
     var rotateCVOldTransform = new Matrix4();
     var rotateCVQuaternion = new Quaternion();
     var rotateCVMatrix = new Matrix3();
+    var tilt3DCartesian3 = new Cartesian3();
 
     function rotateCV(controller, startPosition, movement) {
         if (defined(movement.angleAndHeight)) {
@@ -1232,9 +1264,10 @@ define([
     }
 
     var scratchStrafeRay = new Ray();
-    var scratchStrafePlane = new Plane(Cartesian3.ZERO, 0.0);
+    var scratchStrafePlane = new Plane(Cartesian3.UNIT_X, 0.0);
     var scratchStrafeIntersection = new Cartesian3();
     var scratchStrafeDirection = new Cartesian3();
+    var scratchMousePos = new Cartesian3();
 
     function strafe(controller, startPosition, movement) {
         var scene = controller._scene;
@@ -1269,7 +1302,6 @@ define([
 
     var spin3DPick = new Cartesian3();
     var scratchCartographic = new Cartographic();
-    var scratchMousePos = new Cartesian3();
     var scratchRadii = new Cartesian3();
     var scratchEllipsoid = new Ellipsoid();
     var scratchLookUp = new Cartesian3();
@@ -1324,11 +1356,10 @@ define([
                 pan3D(controller, startPosition, movement, ellipsoid);
             }
             return;
-        } else {
-            controller._looking = false;
-            controller._rotating = false;
-            controller._strafing = false;
         }
+        controller._looking = false;
+        controller._rotating = false;
+        controller._strafing = false;
 
         if (defined(globe) && height < controller._minimumPickingTerrainHeight) {
             if (defined(mousePos)) {
@@ -1548,7 +1579,6 @@ define([
     var tilt3DVerticalCenter = new Cartesian3();
     var tilt3DTransform = new Matrix4();
     var tilt3DVerticalTransform = new Matrix4();
-    var tilt3DCartesian3 = new Cartesian3();
     var tilt3DOldTransform = new Matrix4();
     var tilt3DQuaternion = new Quaternion();
     var tilt3DMatrix = new Matrix3();
@@ -1810,14 +1840,35 @@ define([
         var endPos = look3DEndPos;
         endPos.x = movement.endPosition.x;
         endPos.y = 0.0;
-        var start = camera.getPickRay(startPos, look3DStartRay).direction;
-        var end = camera.getPickRay(endPos, look3DEndRay).direction;
 
+        var startRay = camera.getPickRay(startPos, look3DStartRay);
+        var endRay = camera.getPickRay(endPos, look3DEndRay);
         var angle = 0.0;
+        var start;
+        var end;
+
+        if (camera.frustum instanceof OrthographicFrustum) {
+            start = startRay.origin;
+            end = endRay.origin;
+
+            Cartesian3.add(camera.direction, start, start);
+            Cartesian3.add(camera.direction, end, end);
+
+            Cartesian3.subtract(start, camera.position, start);
+            Cartesian3.subtract(end, camera.position, end);
+
+            Cartesian3.normalize(start, start);
+            Cartesian3.normalize(end, end);
+        } else {
+            start = startRay.direction;
+            end = endRay.direction;
+        }
+
         var dot = Cartesian3.dot(start, end);
         if (dot < 1.0) { // dot is in [0, 1]
             angle = Math.acos(dot);
         }
+
         angle = (movement.startPosition.x > movement.endPosition.x) ? -angle : angle;
 
         var horizontalRotationAxis = controller._horizontalRotationAxis;
@@ -1833,10 +1884,28 @@ define([
         startPos.y = movement.startPosition.y;
         endPos.x = 0.0;
         endPos.y = movement.endPosition.y;
-        start = camera.getPickRay(startPos, look3DStartRay).direction;
-        end = camera.getPickRay(endPos, look3DEndRay).direction;
 
+        startRay = camera.getPickRay(startPos, look3DStartRay);
+        endRay = camera.getPickRay(endPos, look3DEndRay);
         angle = 0.0;
+
+        if (camera.frustum instanceof OrthographicFrustum) {
+            start = startRay.origin;
+            end = endRay.origin;
+
+            Cartesian3.add(camera.direction, start, start);
+            Cartesian3.add(camera.direction, end, end);
+
+            Cartesian3.subtract(start, camera.position, start);
+            Cartesian3.subtract(end, camera.position, end);
+
+            Cartesian3.normalize(start, start);
+            Cartesian3.normalize(end, end);
+        } else {
+            start = startRay.direction;
+            end = endRay.direction;
+        }
+
         dot = Cartesian3.dot(start, end);
         if (dot < 1.0) { // dot is in [0, 1]
             angle = Math.acos(dot);
@@ -1934,8 +2003,6 @@ define([
      * Once an object is destroyed, it should not be used; calling any function other than
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
      * assign the return value (<code>undefined</code>) to the object as done in the example.
-     *
-     * @returns {undefined}
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *

@@ -1,4 +1,3 @@
-/*global define*/
 define([
         './binarySearch',
         './defaultValue',
@@ -6,6 +5,9 @@ define([
         './defineProperties',
         './DeveloperError',
         './Event',
+        './GregorianDate',
+        './isLeapYear',
+        './Iso8601',
         './JulianDate',
         './TimeInterval'
     ], function(
@@ -15,6 +17,9 @@ define([
         defineProperties,
         DeveloperError,
         Event,
+        GregorianDate,
+        isLeapYear,
+        Iso8601,
         JulianDate,
         TimeInterval) {
     'use strict';
@@ -303,7 +308,7 @@ define([
     TimeIntervalCollection.prototype.addInterval = function(interval, dataComparer) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(interval)) {
-            throw new DeveloperError("interval is required");
+            throw new DeveloperError('interval is required');
         }
         //>>includeEnd('debug');
 
@@ -311,8 +316,6 @@ define([
             return;
         }
 
-        var comparison;
-        var index;
         var intervals = this._intervals;
 
         // Handle the common case quickly: we're adding a new interval which is after all existing intervals.
@@ -323,7 +326,7 @@ define([
         }
 
         // Keep the list sorted by the start date
-        index = binarySearch(intervals, interval, compareIntervalStartTimes);
+        var index = binarySearch(intervals, interval, compareIntervalStartTimes);
         if (index < 0) {
             index = ~index;
         } else {
@@ -332,36 +335,50 @@ define([
             // include the date.  In that case, the binary search could have found either.  We need to
             // look at the surrounding intervals and their IsStartIncluded properties in order to make sure
             // we're working with the correct interval.
-            if (index > 0 && interval.isStartIncluded && intervals[index - 1].isStartIncluded && intervals[index - 1].start.equals(interval.start)) {
+
+            // eslint-disable-next-line no-lonely-if
+            if (index > 0 &&
+                interval.isStartIncluded &&
+                intervals[index - 1].isStartIncluded &&
+                intervals[index - 1].start.equals(interval.start)) {
+
                 --index;
-            } else if (index < intervals.length && !interval.isStartIncluded && intervals[index].isStartIncluded && intervals[index].start.equals(interval.start)) {
+            } else if (index < intervals.length &&
+                !interval.isStartIncluded &&
+                intervals[index].isStartIncluded &&
+                intervals[index].start.equals(interval.start)) {
+
                 ++index;
             }
         }
 
+        var comparison;
         if (index > 0) {
             // Not the first thing in the list, so see if the interval before this one
             // overlaps this one.
+
             comparison = JulianDate.compare(intervals[index - 1].stop, interval.start);
-            if (comparison > 0 || (comparison === 0 && (intervals[index - 1].isStopIncluded || interval.isStartIncluded))) {
+            if (comparison > 0 ||
+                (comparison === 0 &&
+                    (intervals[index - 1].isStopIncluded || interval.isStartIncluded))) {
                 // There is an overlap
                 if (defined(dataComparer) ? dataComparer(intervals[index - 1].data, interval.data) : (intervals[index - 1].data === interval.data)) {
                     // Overlapping intervals have the same data, so combine them
                     if (JulianDate.greaterThan(interval.stop, intervals[index - 1].stop)) {
                         interval = new TimeInterval({
-                            start : intervals[index - 1].start,
-                            stop : interval.stop,
-                            isStartIncluded : intervals[index - 1].isStartIncluded,
-                            isStopIncluded : interval.isStopIncluded,
-                            data : interval.data
+                            start: intervals[index - 1].start,
+                            stop: interval.stop,
+                            isStartIncluded: intervals[index - 1].isStartIncluded,
+                            isStopIncluded: interval.isStopIncluded,
+                            data: interval.data
                         });
                     } else {
                         interval = new TimeInterval({
-                            start : intervals[index - 1].start,
-                            stop : intervals[index - 1].stop,
-                            isStartIncluded : intervals[index - 1].isStartIncluded,
-                            isStopIncluded : intervals[index - 1].isStopIncluded || (interval.stop.equals(intervals[index - 1].stop) && interval.isStopIncluded),
-                            data : interval.data
+                            start: intervals[index - 1].start,
+                            stop: intervals[index - 1].stop,
+                            isStartIncluded: intervals[index - 1].isStartIncluded,
+                            isStopIncluded: intervals[index - 1].isStopIncluded || (interval.stop.equals(intervals[index - 1].stop) && interval.isStopIncluded),
+                            data: interval.data
                         });
                     }
                     intervals.splice(index - 1, 1);
@@ -372,29 +389,24 @@ define([
                     // If the existing interval extends past the end of the new one,
                     // split the existing interval into two intervals.
                     comparison = JulianDate.compare(intervals[index - 1].stop, interval.stop);
-                    if (comparison > 0 || (comparison === 0 && intervals[index - 1].isStopIncluded && !interval.isStopIncluded)) {
-                        intervals.splice(index - 1, 1, new TimeInterval({
-                            start : intervals[index - 1].start,
-                            stop : interval.start,
-                            isStartIncluded : intervals[index - 1].isStartIncluded,
-                            isStopIncluded : !interval.isStartIncluded,
-                            data : intervals[index - 1].data
-                        }), new TimeInterval({
-                            start : interval.stop,
-                            stop : intervals[index - 1].stop,
-                            isStartIncluded : !interval.isStopIncluded,
-                            isStopIncluded : intervals[index - 1].isStopIncluded,
-                            data : intervals[index - 1].data
+                    if (comparison > 0 ||
+                        (comparison === 0 && intervals[index - 1].isStopIncluded && !interval.isStopIncluded)) {
+
+                        intervals.splice(index, 0, new TimeInterval({
+                            start: interval.stop,
+                            stop: intervals[index - 1].stop,
+                            isStartIncluded: !interval.isStopIncluded,
+                            isStopIncluded: intervals[index - 1].isStopIncluded,
+                            data: intervals[index - 1].data
                         }));
-                    } else {
-                        intervals[index - 1] = new TimeInterval({
-                            start : intervals[index - 1].start,
-                            stop : interval.start,
-                            isStartIncluded : intervals[index - 1].isStartIncluded,
-                            isStopIncluded : !interval.isStartIncluded,
-                            data : intervals[index - 1].data
-                        });
                     }
+                    intervals[index - 1] = new TimeInterval({
+                        start: intervals[index - 1].start,
+                        stop: interval.start,
+                        isStartIncluded: intervals[index - 1].isStartIncluded,
+                        isStopIncluded: !interval.isStartIncluded,
+                        data: intervals[index - 1].data
+                    });
                 }
             }
         }
@@ -402,28 +414,30 @@ define([
         while (index < intervals.length) {
             // Not the last thing in the list, so see if the intervals after this one overlap this one.
             comparison = JulianDate.compare(interval.stop, intervals[index].start);
-            if (comparison > 0 || (comparison === 0 && (interval.isStopIncluded || intervals[index].isStartIncluded))) {
+            if (comparison > 0 ||
+                (comparison === 0 && (interval.isStopIncluded || intervals[index].isStartIncluded))) {
                 // There is an overlap
                 if (defined(dataComparer) ? dataComparer(intervals[index].data, interval.data) : intervals[index].data === interval.data) {
                     // Overlapping intervals have the same data, so combine them
                     interval = new TimeInterval({
-                        start : interval.start,
-                        stop : JulianDate.greaterThan(intervals[index].stop, interval.stop) ? intervals[index].stop : interval.stop,
-                        isStartIncluded : interval.isStartIncluded,
-                        isStopIncluded : JulianDate.greaterThan(intervals[index].stop, interval.stop) ? intervals[index].isStopIncluded : interval.isStopIncluded,
-                        data : interval.data
+                        start: interval.start,
+                        stop: JulianDate.greaterThan(intervals[index].stop, interval.stop) ? intervals[index].stop : interval.stop,
+                        isStartIncluded: interval.isStartIncluded,
+                        isStopIncluded: JulianDate.greaterThan(intervals[index].stop, interval.stop) ? intervals[index].isStopIncluded : interval.isStopIncluded,
+                        data: interval.data
                     });
                     intervals.splice(index, 1);
                 } else {
                     // Overlapping intervals have different data.  The new interval
                     // being added 'wins' so truncate the next interval.
                     intervals[index] = new TimeInterval({
-                        start : interval.stop,
-                        stop : intervals[index].stop,
-                        isStartIncluded : !interval.isStopIncluded,
-                        isStopIncluded : intervals[index].isStopIncluded,
-                        data : intervals[index].data
+                        start: interval.stop,
+                        stop: intervals[index].stop,
+                        isStartIncluded: !interval.isStopIncluded,
+                        isStopIncluded: intervals[index].isStopIncluded,
+                        data: intervals[index].data
                     });
+
                     if (intervals[index].isEmpty) {
                         intervals.splice(index, 1);
                     } else {
@@ -453,7 +467,7 @@ define([
     TimeIntervalCollection.prototype.removeInterval = function(interval) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(interval)) {
-            throw new DeveloperError("interval is required");
+            throw new DeveloperError('interval is required');
         }
         //>>includeEnd('debug');
 
@@ -461,7 +475,6 @@ define([
             return false;
         }
 
-        var result = false;
         var intervals = this._intervals;
 
         var index = binarySearch(intervals, interval, compareIntervalStartTimes);
@@ -469,96 +482,89 @@ define([
             index = ~index;
         }
 
-        var intervalStart = interval.start;
-        var intervalStop = interval.stop;
-        var intervalIsStartIncluded = interval.isStartIncluded;
-        var intervalIsStopIncluded = interval.isStopIncluded;
+        var result = false;
 
         // Check for truncation of the end of the previous interval.
-        if (index > 0) {
-            var indexMinus1 = intervals[index - 1];
-            var indexMinus1Stop = indexMinus1.stop;
-            if (JulianDate.greaterThan(indexMinus1Stop, intervalStart) ||
-                (TimeInterval.equals(indexMinus1Stop, intervalStart) &&
-                 indexMinus1.isStopIncluded && intervalIsStartIncluded)) {
-                result = true;
+        if (index > 0 &&
+            (JulianDate.greaterThan(intervals[index - 1].stop, interval.start) ||
+                (intervals[index - 1].stop.equals(interval.start) && intervals[index - 1].isStopIncluded && interval.isStartIncluded))) {
 
-                if (JulianDate.greaterThan(indexMinus1Stop, intervalStop) ||
-                    (indexMinus1.isStopIncluded && !intervalIsStopIncluded && TimeInterval.equals(indexMinus1Stop, intervalStop))) {
-                    // Break the existing interval into two pieces
-                    intervals.splice(index, 0, new TimeInterval({
-                        start : intervalStop,
-                        stop : indexMinus1Stop,
-                        isStartIncluded : !intervalIsStopIncluded,
-                        isStopIncluded : indexMinus1.isStopIncluded,
-                        data : indexMinus1.data
-                    }));
-                }
-                intervals[index - 1] = new TimeInterval({
-                    start : indexMinus1.start,
-                    stop : intervalStart,
-                    isStartIncluded : indexMinus1.isStartIncluded,
-                    isStopIncluded : !intervalIsStartIncluded,
-                    data : indexMinus1.data
-                });
+            result = true;
+
+            if (JulianDate.greaterThan(intervals[index - 1].stop, interval.stop) ||
+                (intervals[index - 1].isStopIncluded && !interval.isStopIncluded && intervals[index - 1].stop.equals(interval.stop))) {
+                // Break the existing interval into two pieces
+                intervals.splice(index, 0, new TimeInterval({
+                    start: interval.stop,
+                    stop: intervals[index - 1].stop,
+                    isStartIncluded: !interval.isStopIncluded,
+                    isStopIncluded: intervals[index - 1].isStopIncluded,
+                    data: intervals[index - 1].data
+                }));
             }
+            intervals[index - 1] = new TimeInterval({
+                start: intervals[index - 1].start,
+                stop: interval.start,
+                isStartIncluded: intervals[index - 1].isStartIncluded,
+                isStopIncluded: !interval.isStartIncluded,
+                data: intervals[index - 1].data
+            });
         }
 
         // Check if the Start of the current interval should remain because interval.start is the same but
         // it is not included.
-        var indexInterval = intervals[index];
         if (index < intervals.length &&
-            !intervalIsStartIncluded &&
-            indexInterval.isStartIncluded &&
-            intervalStart.equals(indexInterval.start)) {
+            !interval.isStartIncluded &&
+            intervals[index].isStartIncluded &&
+            interval.start.equals(intervals[index].start)) {
+
             result = true;
 
             intervals.splice(index, 0, new TimeInterval({
-                start : indexInterval.start,
-                stop : indexInterval.start,
-                isStartIncluded : true,
-                isStopIncluded : true,
-                data : indexInterval.data
+                start: intervals[index].start,
+                stop: intervals[index].start,
+                isStartIncluded: true,
+                isStopIncluded: true,
+                data: intervals[index].data
             }));
             ++index;
-            indexInterval = intervals[index];
         }
 
         // Remove any intervals that are completely overlapped by the input interval.
-        while (index < intervals.length && JulianDate.greaterThan(intervalStop, indexInterval.stop)) {
+        while (index < intervals.length && JulianDate.greaterThan(interval.stop, intervals[index].stop)) {
             result = true;
             intervals.splice(index, 1);
-            indexInterval = intervals[index];
         }
 
         // Check for the case where the input interval ends on the same date
         // as an existing interval.
-        if (index < intervals.length && intervalStop.equals(indexInterval.stop)) {
+        if (index < intervals.length && interval.stop.equals(intervals[index].stop)) {
             result = true;
 
-            if (!intervalIsStopIncluded && indexInterval.isStopIncluded) {
+            if (!interval.isStopIncluded && intervals[index].isStopIncluded) {
                 // Last point of interval should remain because the stop date is included in
                 // the existing interval but is not included in the input interval.
-                if ((index + 1) < intervals.length && intervals[index + 1].start.equals(intervalStop) && indexInterval.data === intervals[index + 1].data) {
+                if (index + 1 < intervals.length &&
+                    intervals[index + 1].start.equals(interval.stop) &&
+                    intervals[index].data === intervals[index + 1].data) {
                     // Combine single point with the next interval
                     intervals.splice(index, 1);
-                    indexInterval = new TimeInterval({
-                        start : indexInterval.start,
-                        stop : indexInterval.stop,
-                        isStartIncluded : true,
-                        isStopIncluded : indexInterval.isStopIncluded,
-                        data : indexInterval.data
+                    intervals[index] = new TimeInterval({
+                        start: intervals[index].start,
+                        stop: intervals[index].stop,
+                        isStartIncluded: true,
+                        isStopIncluded: intervals[index].isStopIncluded,
+                        data: intervals[index].data
                     });
                 } else {
-                    indexInterval = new TimeInterval({
-                        start : intervalStop,
-                        stop : intervalStop,
-                        isStartIncluded : true,
-                        isStopIncluded : true,
-                        data : indexInterval.data
+                    intervals[index] = new TimeInterval({
+                        start: interval.stop,
+                        stop: interval.stop,
+                        isStartIncluded: true,
+                        isStopIncluded: true,
+                        data: intervals[index].data
                     });
                 }
-                intervals[index] = indexInterval;
             } else {
                 // Interval is completely overlapped
                 intervals.splice(index, 1);
@@ -567,17 +573,16 @@ define([
 
         // Truncate any partially-overlapped intervals.
         if (index < intervals.length &&
-            (JulianDate.greaterThan(intervalStop, indexInterval.start) ||
-             (intervalStop.equals(indexInterval.start) &&
-              intervalIsStopIncluded &&
-              indexInterval.isStartIncluded))) {
+            (JulianDate.greaterThan(interval.stop, intervals[index].start) ||
+                (interval.stop.equals(intervals[index].start) && interval.isStopIncluded && intervals[index].isStartIncluded))) {
+
             result = true;
             intervals[index] = new TimeInterval({
-                start : intervalStop,
-                stop : indexInterval.stop,
-                isStartIncluded : !intervalIsStopIncluded,
-                isStopIncluded : indexInterval.isStopIncluded,
-                data : indexInterval.data
+                start: interval.stop,
+                stop: intervals[index].stop,
+                isStartIncluded: !interval.isStopIncluded,
+                isStopIncluded: intervals[index].isStopIncluded,
+                data: intervals[index].data
             });
         }
 
@@ -603,9 +608,9 @@ define([
         }
         //>>includeEnd('debug');
 
+        var result = new TimeIntervalCollection();
         var left = 0;
         var right = 0;
-        var result = new TimeIntervalCollection();
         var intervals = this._intervals;
         var otherIntervals = other._intervals;
 
@@ -619,8 +624,8 @@ define([
             } else {
                 // The following will return an intersection whose data is 'merged' if the callback is defined
                 if (defined(mergeCallback) ||
-                   ((defined(dataComparer) && dataComparer(leftInterval.data, rightInterval.data)) ||
-                    (!defined(dataComparer) && rightInterval.data === leftInterval.data))) {
+                    ((defined(dataComparer) && dataComparer(leftInterval.data, rightInterval.data)) ||
+                        (!defined(dataComparer) && rightInterval.data === leftInterval.data))) {
 
                     var intersection = TimeInterval.intersect(leftInterval, rightInterval, new TimeInterval(), mergeCallback);
                     if (!intersection.isEmpty) {
@@ -631,9 +636,8 @@ define([
                 }
 
                 if (JulianDate.lessThan(leftInterval.stop, rightInterval.stop) ||
-                    (leftInterval.stop.equals(rightInterval.stop) &&
-                     !leftInterval.isStopIncluded &&
-                     rightInterval.isStopIncluded)) {
+                    (leftInterval.stop.equals(rightInterval.stop) && !leftInterval.isStopIncluded && rightInterval.isStopIncluded)) {
+
                     ++left;
                 } else {
                     ++right;
@@ -641,6 +645,379 @@ define([
             }
         }
         return result;
+    };
+
+    /**
+     * Creates a new instance from a JulianDate array.
+     *
+     * @param {Object} options Object with the following properties:
+     * @param {JulianDate[]} options.julianDates An array of ISO 8601 dates.
+     * @param {Boolean} [options.isStartIncluded=true] <code>true</code> if start time is included in the interval, <code>false</code> otherwise.
+     * @param {Boolean} [options.isStopIncluded=true] <code>true</code> if stop time is included in the interval, <code>false</code> otherwise.
+     * @param {Boolean} [options.leadingInterval=false] <code>true</code> if you want to add a interval from Iso8601.MINIMUM_VALUE to start time,  <code>false</code> otherwise.
+     * @param {Boolean} [options.trailingInterval=false] <code>true</code> if you want to add a interval from stop time to Iso8601.MAXIMUM_VALUE,  <code>false</code> otherwise.
+     * @param {Function} [options.dataCallback] A function that will be return the data that is called with each interval before it is added to the collection. If unspecified, the data will be the index in the collection.
+     * @param {TimeIntervalCollection} [result] An existing instance to use for the result.
+     * @returns {TimeIntervalCollection} The modified result parameter or a new instance if none was provided.
+     */
+    TimeIntervalCollection.fromJulianDateArray = function(options, result) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(options)) {
+            throw new DeveloperError('options is required.');
+        }
+        if (!defined(options.julianDates)) {
+            throw new DeveloperError('options.iso8601Array is required.');
+        }
+        //>>includeEnd('debug');
+
+        if (!defined(result)) {
+            result = new TimeIntervalCollection();
+        }
+
+        var julianDates = options.julianDates;
+        var length = julianDates.length;
+        var dataCallback = options.dataCallback;
+
+        var isStartIncluded = defaultValue(options.isStartIncluded, true);
+        var isStopIncluded = defaultValue(options.isStopIncluded, true);
+        var leadingInterval = defaultValue(options.leadingInterval, false);
+        var trailingInterval = defaultValue(options.trailingInterval, false);
+        var interval;
+
+        // Add a default interval, which will only end up being used up to first interval
+        var startIndex = 0;
+        if (leadingInterval) {
+            ++startIndex;
+            interval = new TimeInterval({
+                start : Iso8601.MINIMUM_VALUE,
+                stop : julianDates[0],
+                isStartIncluded : true,
+                isStopIncluded : !isStartIncluded
+            });
+            interval.data = defined(dataCallback) ? dataCallback(interval, result.length) : result.length;
+            result.addInterval(interval);
+        }
+
+        for (var i = 0; i < length - 1; ++i) {
+            var startDate = julianDates[i];
+            var endDate = julianDates[i + 1];
+
+            interval = new TimeInterval({
+                start : startDate,
+                stop : endDate,
+                isStartIncluded : (result.length === startIndex) ? isStartIncluded : true,
+                isStopIncluded : (i === (length - 2)) ? isStopIncluded : false
+            });
+            interval.data = defined(dataCallback) ? dataCallback(interval, result.length) : result.length;
+            result.addInterval(interval);
+
+            startDate = endDate;
+        }
+
+        if (trailingInterval) {
+            interval = new TimeInterval({
+                start : julianDates[length - 1],
+                stop : Iso8601.MAXIMUM_VALUE,
+                isStartIncluded : !isStopIncluded,
+                isStopIncluded : true
+            });
+            interval.data = defined(dataCallback) ? dataCallback(interval, result.length) : result.length;
+            result.addInterval(interval);
+        }
+
+        return result;
+    };
+
+    var scratchGregorianDate = new GregorianDate();
+    var monthLengths = [0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+
+    /**
+     * Adds duration represented as a GregorianDate to a JulianDate
+     *
+     * @param {JulianDate} julianDate The date.
+     * @param {GregorianDate} duration An duration represented as a GregorianDate.
+     * @param {JulianDate} result An existing instance to use for the result.
+     * @returns {JulianDate} The modified result parameter.
+     *
+     * @private
+     */
+    function addToDate(julianDate, duration, result) {
+        if (!defined(result)) {
+            result = new JulianDate();
+        }
+        JulianDate.toGregorianDate(julianDate, scratchGregorianDate);
+
+        var millisecond = scratchGregorianDate.millisecond + duration.millisecond;
+        var second = scratchGregorianDate.second + duration.second;
+        var minute = scratchGregorianDate.minute + duration.minute;
+        var hour = scratchGregorianDate.hour + duration.hour;
+        var day = scratchGregorianDate.day + duration.day;
+        var month = scratchGregorianDate.month + duration.month;
+        var year = scratchGregorianDate.year + duration.year;
+
+        if (millisecond >= 1000) {
+            second += Math.floor(millisecond / 1000);
+            millisecond = millisecond % 1000;
+        }
+
+        if (second >= 60) {
+            minute += Math.floor(second / 60);
+            second = second % 60;
+        }
+
+        if (minute >= 60) {
+            hour += Math.floor(minute / 60);
+            minute = minute % 60;
+        }
+
+        if (hour >= 24) {
+            day += Math.floor(hour / 24);
+            hour = hour % 24;
+        }
+
+        // If days is greater than the month's length we need to remove those number of days,
+        //  readjust month and year and repeat until days is less than the month's length.
+        monthLengths[2] = isLeapYear(year) ? 29 : 28;
+        while ((day > monthLengths[month]) || (month >= 13)) {
+            if (day > monthLengths[month]) {
+                day -= monthLengths[month];
+                ++month;
+            }
+
+            if (month >= 13) {
+                --month;
+                year += Math.floor(month / 12);
+                month = month % 12;
+                ++month;
+            }
+
+            monthLengths[2] = isLeapYear(year) ? 29 : 28;
+        }
+
+        scratchGregorianDate.millisecond = millisecond;
+        scratchGregorianDate.second = second;
+        scratchGregorianDate.minute = minute;
+        scratchGregorianDate.hour = hour;
+        scratchGregorianDate.day = day;
+        scratchGregorianDate.month = month;
+        scratchGregorianDate.year = year;
+
+        return JulianDate.fromGregorianDate(scratchGregorianDate, result);
+    }
+
+    var scratchJulianDate = new JulianDate();
+    var durationRegex = /P(?:([\d.,]+)Y)?(?:([\d.,]+)M)?(?:([\d.,]+)W)?(?:([\d.,]+)D)?(?:T(?:([\d.,]+)H)?(?:([\d.,]+)M)?(?:([\d.,]+)S)?)?/;
+
+    /**
+     * Parses ISO8601 duration string
+     *
+     * @param {String} iso8601 An ISO 8601 duration.
+     * @param {GregorianDate} result An existing instance to use for the result.
+     * @returns {Boolean} True is parsing succeeded, false otherwise
+     *
+     * @private
+     */
+    function parseDuration(iso8601, result) {
+        if (!defined(iso8601) || iso8601.length === 0) {
+            return false;
+        }
+
+        // Reset object
+        result.year = 0;
+        result.month = 0;
+        result.day = 0;
+        result.hour = 0;
+        result.minute = 0;
+        result.second = 0;
+        result.millisecond = 0;
+
+        if (iso8601[0] === 'P') {
+            var matches = iso8601.match(durationRegex);
+            if (!defined(matches)) {
+                return false;
+            }
+            if (defined(matches[1])) { // Years
+                result.year = Number(matches[1].replace(',', '.'));
+            }
+            if (defined(matches[2])) { // Months
+                result.month = Number(matches[2].replace(',', '.'));
+            }
+            if (defined(matches[3])) { // Weeks
+                result.day = Number(matches[3].replace(',', '.')) * 7;
+            }
+            if (defined(matches[4])) { // Days
+                result.day += Number(matches[4].replace(',', '.'));
+            }
+            if (defined(matches[5])) { // Hours
+                result.hour = Number(matches[5].replace(',', '.'));
+            }
+            if (defined(matches[6])) { // Weeks
+                result.minute = Number(matches[6].replace(',', '.'));
+            }
+            if (defined(matches[7])) { // Seconds
+                var seconds = Number(matches[7].replace(',', '.'));
+                result.second = Math.floor(seconds);
+                result.millisecond = (seconds % 1) * 1000;
+            }
+        } else {
+            // They can technically specify the duration as a normal date with some caveats. Try our best to load it.
+            if (iso8601[iso8601.length - 1] !== 'Z') { // It's not a date, its a duration, so it always has to be UTC
+                iso8601 += 'Z';
+            }
+            JulianDate.toGregorianDate(JulianDate.fromIso8601(iso8601, scratchJulianDate), result);
+        }
+
+        // A duration of 0 will cause an infinite loop, so just make sure something is non-zero
+        return (result.year || result.month || result.day || result.hour ||
+                result.minute || result.second || result.millisecond);
+    }
+
+    var scratchDuration = new GregorianDate();
+    /**
+     * Creates a new instance from an {@link http://en.wikipedia.org/wiki/ISO_8601|ISO 8601} time interval (start/end/duration).
+     *
+     * @param {Object} options Object with the following properties:
+     * @param {String} options.iso8601 An ISO 8601 interval.
+     * @param {Boolean} [options.isStartIncluded=true] <code>true</code> if start time is included in the interval, <code>false</code> otherwise.
+     * @param {Boolean} [options.isStopIncluded=true] <code>true</code> if stop time is included in the interval, <code>false</code> otherwise.
+     * @param {Boolean} [options.leadingInterval=false] <code>true</code> if you want to add a interval from Iso8601.MINIMUM_VALUE to start time,  <code>false</code> otherwise.
+     * @param {Boolean} [options.trailingInterval=false] <code>true</code> if you want to add a interval from stop time to Iso8601.MAXIMUM_VALUE,  <code>false</code> otherwise.
+     * @param {Function} [options.dataCallback] A function that will be return the data that is called with each interval before it is added to the collection. If unspecified, the data will be the index in the collection.
+     * @param {TimeIntervalCollection} [result] An existing instance to use for the result.
+     * @returns {TimeIntervalCollection} The modified result parameter or a new instance if none was provided.
+     */
+    TimeIntervalCollection.fromIso8601 = function(options, result) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(options)) {
+            throw new DeveloperError('options is required.');
+        }
+        if (!defined(options.iso8601)) {
+            throw new DeveloperError('options.iso8601 is required.');
+        }
+        //>>includeEnd('debug');
+
+        var dates = options.iso8601.split('/');
+        var start = JulianDate.fromIso8601(dates[0]);
+        var stop = JulianDate.fromIso8601(dates[1]);
+        var julianDates = [];
+
+        if (!parseDuration(dates[2], scratchDuration)) {
+            julianDates.push(start, stop);
+        } else {
+            var date = JulianDate.clone(start);
+            julianDates.push(date);
+            while (JulianDate.compare(date, stop) < 0) {
+                date = addToDate(date, scratchDuration);
+                var afterStop = (JulianDate.compare(stop, date) <= 0);
+                if (afterStop) {
+                    JulianDate.clone(stop, date);
+                }
+
+                julianDates.push(date);
+            }
+        }
+
+        return TimeIntervalCollection.fromJulianDateArray({
+            julianDates : julianDates,
+            isStartIncluded : options.isStartIncluded,
+            isStopIncluded : options.isStopIncluded,
+            leadingInterval : options.leadingInterval,
+            trailingInterval : options.trailingInterval,
+            dataCallback : options.dataCallback
+        }, result);
+    };
+
+    /**
+     * Creates a new instance from a {@link http://en.wikipedia.org/wiki/ISO_8601|ISO 8601} date array.
+     *
+     * @param {Object} options Object with the following properties:
+     * @param {String[]} options.iso8601Dates An array of ISO 8601 dates.
+     * @param {Boolean} [options.isStartIncluded=true] <code>true</code> if start time is included in the interval, <code>false</code> otherwise.
+     * @param {Boolean} [options.isStopIncluded=true] <code>true</code> if stop time is included in the interval, <code>false</code> otherwise.
+     * @param {Boolean} [options.leadingInterval=false] <code>true</code> if you want to add a interval from Iso8601.MINIMUM_VALUE to start time,  <code>false</code> otherwise.
+     * @param {Boolean} [options.trailingInterval=false] <code>true</code> if you want to add a interval from stop time to Iso8601.MAXIMUM_VALUE,  <code>false</code> otherwise.
+     * @param {Function} [options.dataCallback] A function that will be return the data that is called with each interval before it is added to the collection. If unspecified, the data will be the index in the collection.
+     * @param {TimeIntervalCollection} [result] An existing instance to use for the result.
+     * @returns {TimeIntervalCollection} The modified result parameter or a new instance if none was provided.
+     */
+    TimeIntervalCollection.fromIso8601DateArray = function(options, result) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(options)) {
+            throw new DeveloperError('options is required.');
+        }
+        if (!defined(options.iso8601Dates)) {
+            throw new DeveloperError('options.iso8601Dates is required.');
+        }
+        //>>includeEnd('debug');
+
+        return TimeIntervalCollection.fromJulianDateArray({
+            julianDates : options.iso8601Dates.map(function(date) {
+                return JulianDate.fromIso8601(date);
+            }),
+            isStartIncluded : options.isStartIncluded,
+            isStopIncluded : options.isStopIncluded,
+            leadingInterval : options.leadingInterval,
+            trailingInterval : options.trailingInterval,
+            dataCallback : options.dataCallback
+        }, result);
+    };
+
+    /**
+     * Creates a new instance from a {@link http://en.wikipedia.org/wiki/ISO_8601|ISO 8601} duration array.
+     *
+     * @param {Object} options Object with the following properties:
+     * @param {JulianDate} options.epoch An date that the durations are relative to.
+     * @param {String} options.iso8601Durations An array of ISO 8601 durations.
+     * @param {Boolean} [options.relativeToPrevious=false] <code>true</code> if durations are relative to previous date, <code>false</code> if always relative to the epoch.
+     * @param {Boolean} [options.isStartIncluded=true] <code>true</code> if start time is included in the interval, <code>false</code> otherwise.
+     * @param {Boolean} [options.isStopIncluded=true] <code>true</code> if stop time is included in the interval, <code>false</code> otherwise.
+     * @param {Boolean} [options.leadingInterval=false] <code>true</code> if you want to add a interval from Iso8601.MINIMUM_VALUE to start time,  <code>false</code> otherwise.
+     * @param {Boolean} [options.trailingInterval=false] <code>true</code> if you want to add a interval from stop time to Iso8601.MAXIMUM_VALUE,  <code>false</code> otherwise.
+     * @param {Function} [options.dataCallback] A function that will be return the data that is called with each interval before it is added to the collection. If unspecified, the data will be the index in the collection.
+     * @param {TimeIntervalCollection} [result] An existing instance to use for the result.
+     * @returns {TimeIntervalCollection} The modified result parameter or a new instance if none was provided.
+     */
+    TimeIntervalCollection.fromIso8601DurationArray = function(options, result) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(options)) {
+            throw new DeveloperError('options is required.');
+        }
+        if (!defined(options.epoch)) {
+            throw new DeveloperError('options.epoch is required.');
+        }
+        if (!defined(options.iso8601Durations)) {
+            throw new DeveloperError('options.iso8601Durations is required.');
+        }
+        //>>includeEnd('debug');
+
+        var epoch = options.epoch;
+        var iso8601Durations = options.iso8601Durations;
+        var relativeToPrevious = defaultValue(options.relativeToPrevious, false);
+        var julianDates = [];
+        var date, previousDate;
+
+        var length = iso8601Durations.length;
+        for (var i = 0; i < length; ++i) {
+            // Allow a duration of 0 on the first iteration, because then it is just the epoch
+            if (parseDuration(iso8601Durations[i], scratchDuration) || i === 0) {
+                if (relativeToPrevious && defined(previousDate)) {
+                    date = addToDate(previousDate, scratchDuration);
+                } else {
+                    date = addToDate(epoch, scratchDuration);
+                }
+                julianDates.push(date);
+                previousDate = date;
+            }
+        }
+
+        return TimeIntervalCollection.fromJulianDateArray({
+            julianDates : julianDates,
+            isStartIncluded : options.isStartIncluded,
+            isStopIncluded : options.isStopIncluded,
+            leadingInterval : options.leadingInterval,
+            trailingInterval : options.trailingInterval,
+            dataCallback : options.dataCallback
+        }, result);
     };
 
     return TimeIntervalCollection;

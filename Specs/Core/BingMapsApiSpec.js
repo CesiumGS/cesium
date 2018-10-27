@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Core/BingMapsApi'
     ], function(
@@ -13,13 +12,6 @@ defineSuite([
         var oldKey = BingMapsApi.defaultKey;
         BingMapsApi.defaultKey = 'somekey';
         expect(BingMapsApi.getKey(undefined)).toEqual('somekey');
-        BingMapsApi.defaultKey = oldKey;
-    });
-
-    it('getKey returns a key even if the provided key and the default key are undefined', function() {
-        var oldKey = BingMapsApi.defaultKey;
-        BingMapsApi.defaultKey = undefined;
-        expect(BingMapsApi.getKey(undefined).length).toBeGreaterThan(0);
         BingMapsApi.defaultKey = oldKey;
     });
 });

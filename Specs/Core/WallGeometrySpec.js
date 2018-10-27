@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Core/WallGeometry',
         'Core/Cartesian3',

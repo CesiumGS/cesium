@@ -1,10 +1,10 @@
-/*global defineSuite*/
 defineSuite([
         'DataSources/LabelVisualizer',
         'Core/BoundingSphere',
         'Core/Cartesian2',
         'Core/Cartesian3',
         'Core/Color',
+        'Core/defined',
         'Core/DistanceDisplayCondition',
         'Core/JulianDate',
         'Core/NearFarScalar',
@@ -24,6 +24,7 @@ defineSuite([
         Cartesian2,
         Cartesian3,
         Color,
+        defined,
         DistanceDisplayCondition,
         JulianDate,
         NearFarScalar,
@@ -58,7 +59,9 @@ defineSuite([
     });
 
     afterEach(function() {
-        visualizer = visualizer && visualizer.destroy();
+        if (defined(visualizer)) {
+            visualizer = visualizer.destroy();
+        }
         entityCluster.destroy();
     });
 
@@ -87,10 +90,11 @@ defineSuite([
 
     it('removes the listener from the entity collection when destroyed', function() {
         var entityCollection = new EntityCollection();
-        var visualizer = new LabelVisualizer(entityCluster, entityCollection);
+        visualizer = new LabelVisualizer(entityCluster, entityCollection);
         expect(entityCollection.collectionChanged.numberOfListeners).toEqual(1);
-        visualizer = visualizer.destroy();
+        visualizer.destroy();
         expect(entityCollection.collectionChanged.numberOfListeners).toEqual(0);
+        visualizer = undefined;
     });
 
     it('object with no label does not create a label.', function() {
@@ -154,7 +158,9 @@ defineSuite([
         label.show = new ConstantProperty(true);
         label.translucencyByDistance = new ConstantProperty(new NearFarScalar());
         label.pixelOffsetScaleByDistance = new ConstantProperty(new NearFarScalar());
+        label.scaleByDistance = new ConstantProperty(new NearFarScalar());
         label.distanceDisplayCondition = new ConstantProperty(new DistanceDisplayCondition());
+        label.disableDepthTestDistance = new ConstantProperty(10.0);
 
         visualizer.update(time);
 
@@ -179,7 +185,9 @@ defineSuite([
         expect(l.show).toEqual(testObject.label.show.getValue(time));
         expect(l.translucencyByDistance).toEqual(testObject.label.translucencyByDistance.getValue(time));
         expect(l.pixelOffsetScaleByDistance).toEqual(testObject.label.pixelOffsetScaleByDistance.getValue(time));
+        expect(l.scaleByDistance).toEqual(testObject.label.scaleByDistance.getValue(time));
         expect(l.distanceDisplayCondition).toEqual(testObject.label.distanceDisplayCondition.getValue(time));
+        expect(l.disableDepthTestDistance).toEqual(testObject.label.disableDepthTestDistance.getValue(time));
 
         testObject.position = new ConstantProperty(new Cartesian3(5678, 1234, 1293434));
         label.text = new ConstantProperty('b');
@@ -196,7 +204,9 @@ defineSuite([
         label.show = new ConstantProperty(true);
         label.translucencyByDistance = new ConstantProperty(new NearFarScalar());
         label.pixelOffsetScaleByDistance = new ConstantProperty(new NearFarScalar());
+        label.scaleByDistance = new ConstantProperty(new NearFarScalar());
         label.distanceDisplayCondition = new ConstantProperty(new DistanceDisplayCondition());
+        label.disableDepthTestDistance = new ConstantProperty(20.0);
 
         visualizer.update(time);
         expect(l.position).toEqual(testObject.position.getValue(time));
@@ -214,7 +224,9 @@ defineSuite([
         expect(l.show).toEqual(testObject.label.show.getValue(time));
         expect(l.translucencyByDistance).toEqual(testObject.label.translucencyByDistance.getValue(time));
         expect(l.pixelOffsetScaleByDistance).toEqual(testObject.label.pixelOffsetScaleByDistance.getValue(time));
+        expect(l.scaleByDistance).toEqual(testObject.label.scaleByDistance.getValue(time));
         expect(l.distanceDisplayCondition).toEqual(testObject.label.distanceDisplayCondition.getValue(time));
+        expect(l.disableDepthTestDistance).toEqual(testObject.label.disableDepthTestDistance.getValue(time));
 
         label.show = new ConstantProperty(false);
         visualizer.update(time);

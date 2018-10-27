@@ -1,88 +1,124 @@
-/*global defineSuite*/
 defineSuite([
+        'Scene/Scene',
         'Core/BoundingSphere',
         'Core/Cartesian2',
         'Core/Cartesian3',
+        'Core/CesiumTerrainProvider',
         'Core/Color',
         'Core/defined',
         'Core/Ellipsoid',
         'Core/GeographicProjection',
         'Core/GeometryInstance',
+        'Core/HeadingPitchRoll',
+        'Core/JulianDate',
+        'Core/Math',
+        'Core/PerspectiveFrustum',
         'Core/PixelFormat',
         'Core/Rectangle',
         'Core/RectangleGeometry',
+        'Core/RequestScheduler',
         'Core/RuntimeError',
+        'Core/TaskProcessor',
         'Core/WebGLConstants',
         'Core/WebMercatorProjection',
         'Renderer/DrawCommand',
         'Renderer/Framebuffer',
         'Renderer/Pass',
         'Renderer/PixelDatatype',
+        'Renderer/RenderState',
         'Renderer/ShaderProgram',
+        'Renderer/ShaderSource',
         'Renderer/Texture',
         'Scene/Camera',
         'Scene/EllipsoidSurfaceAppearance',
         'Scene/FrameState',
         'Scene/Globe',
+        'Scene/Material',
         'Scene/Primitive',
         'Scene/PrimitiveCollection',
-        'Scene/Scene',
+        'Scene/SceneTransforms',
         'Scene/ScreenSpaceCameraController',
         'Scene/TweenCollection',
         'Specs/createCanvas',
         'Specs/createScene',
-        'Specs/equals',
         'Specs/pollToPromise',
         'Specs/render'
-    ], 'Scene/Scene', function(
+    ], function(
+        Scene,
         BoundingSphere,
         Cartesian2,
         Cartesian3,
+        CesiumTerrainProvider,
         Color,
         defined,
         Ellipsoid,
         GeographicProjection,
         GeometryInstance,
+        HeadingPitchRoll,
+        JulianDate,
+        CesiumMath,
+        PerspectiveFrustum,
         PixelFormat,
         Rectangle,
         RectangleGeometry,
+        RequestScheduler,
         RuntimeError,
+        TaskProcessor,
         WebGLConstants,
         WebMercatorProjection,
         DrawCommand,
         Framebuffer,
         Pass,
         PixelDatatype,
+        RenderState,
         ShaderProgram,
+        ShaderSource,
         Texture,
         Camera,
         EllipsoidSurfaceAppearance,
         FrameState,
         Globe,
+        Material,
         Primitive,
         PrimitiveCollection,
-        Scene,
+        SceneTransforms,
         ScreenSpaceCameraController,
         TweenCollection,
         createCanvas,
         createScene,
-        equals,
         pollToPromise,
         render) {
     'use strict';
 
     var scene;
+    var simpleShaderProgram;
+    var simpleRenderState;
 
     beforeAll(function() {
         scene = createScene();
+        simpleShaderProgram = ShaderProgram.fromCache({
+            context : scene.context,
+            vertexShaderSource : new ShaderSource({
+                sources : ['void main() { gl_Position = vec4(1.0); }']
+            }),
+            fragmentShaderSource : new ShaderSource({
+                sources : ['void main() { gl_FragColor = vec4(1.0); }']
+            })
+        });
+        simpleRenderState = new RenderState();
     });
 
     afterEach(function() {
         scene.backgroundColor = new Color(0.0, 0.0, 0.0, 0.0);
         scene.debugCommandFilter = undefined;
-        scene.fxaa = false;
+        scene.postProcessStages.fxaa.enabled = false;
         scene.primitives.removeAll();
-        scene.morphTo3D();
+        scene.morphTo3D(0.0);
+
+        var camera = scene.camera;
+        camera.frustum = new PerspectiveFrustum();
+        camera.frustum.aspectRatio = scene.drawingBufferWidth / scene.drawingBufferHeight;
+        camera.frustum.fov = CesiumMath.toRadians(60.0);
     });
 
     afterAll(function() {
@@ -197,6 +233,8 @@ defineSuite([
 
     it('debugCommandFilter filters commands', function() {
         var c = new DrawCommand({
+            shaderProgram : simpleShaderProgram,
+            renderState : simpleRenderState,
             pass : Pass.OPAQUE
         });
         c.execute = function() {};
@@ -213,7 +251,12 @@ defineSuite([
     });
 
     it('debugCommandFilter does not filter commands', function() {
+        var originalLogDepth = scene.logarithmicDepthBuffer;
+        scene.logarithmicDepthBuffer = false;
+
         var c = new DrawCommand({
+            shaderProgram : simpleShaderProgram,
+            renderState : simpleRenderState,
             pass : Pass.OPAQUE
         });
         c.execute = function() {};
@@ -224,13 +267,20 @@ defineSuite([
         expect(scene.debugCommandFilter).toBeUndefined();
         scene.renderForSpecs();
         expect(c.execute).toHaveBeenCalled();
+
+        scene.logarithmicDepthBuffer = originalLogDepth;
     });
 
     it('debugShowBoundingVolume draws a bounding sphere', function() {
+        var originalLogDepth = scene.logarithmicDepthBuffer;
+        scene.logarithmicDepthBuffer = false;
+
         var radius = 10.0;
         var center = Cartesian3.add(scene.camera.position, scene.camera.direction, new Cartesian3());
 
         var c = new DrawCommand({
+            shaderProgram : simpleShaderProgram,
+            renderState : simpleRenderState,
             pass : Pass.OPAQUE,
             debugShowBoundingVolume : true,
             boundingVolume : new BoundingSphere(center, radius)
@@ -243,17 +293,18 @@ defineSuite([
         expect(scene).toRenderAndCall(function(rgba) {
             expect(rgba[0]).not.toEqual(0);  // Red bounding sphere
         });
+
+        scene.logarithmicDepthBuffer = originalLogDepth;
     });
 
     it('debugShowCommands tints commands', function() {
-        var c = new DrawCommand({
-            pass : Pass.OPAQUE,
+        var originalLogDepth = scene.logarithmicDepthBuffer;
+        scene.logarithmicDepthBuffer = false;
 
-            shaderProgram : ShaderProgram.fromCache({
-                context : scene.context,
-                vertexShaderSource : 'void main() { gl_Position = vec4(1.0); }',
-                fragmentShaderSource : 'void main() { gl_FragColor = vec4(1.0); }'
-            })
+        var c = new DrawCommand({
+            shaderProgram : simpleShaderProgram,
+            renderState : simpleRenderState,
+            pass : Pass.OPAQUE
         });
         c.execute = function() {};
 
@@ -270,6 +321,8 @@ defineSuite([
         scene.renderForSpecs();
         expect(c._debugColor).toBeDefined();
         scene.debugShowCommands = false;
+
+        scene.logarithmicDepthBuffer = originalLogDepth;
     });
 
     it('debugShowFramesPerSecond', function() {
@@ -280,7 +333,7 @@ defineSuite([
     });
 
     it('debugShowGlobeDepth', function() {
-        if(!defined(scene._globeDepth)){
+        if (!scene.context.depthTexture) {
             return;
         }
 
@@ -294,7 +347,7 @@ defineSuite([
         expect(scene).toRender([255, 0, 0, 255]);
 
         scene.debugShowGlobeDepth = true;
-        expect(scene).toRender([0, 0, 0, 255]);
+        expect(scene).notToRender([255, 0, 0, 255]);
 
         scene.debugShowGlobeDepth = false;
     });
@@ -355,23 +408,6 @@ defineSuite([
         });
     });
 
-    it('renders fast path with no translucent primitives', function() {
-        var rectangle = Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0);
-
-        var rectanglePrimitive = createRectangle(rectangle, 1000.0);
-        rectanglePrimitive.appearance.material.uniforms.color = new Color(1.0, 0.0, 0.0, 1.0);
-
-        var primitives = scene.primitives;
-        primitives.add(rectanglePrimitive);
-
-        scene.camera.setView({ destination : rectangle });
-        expect(scene).toRenderAndCall(function(rgba) {
-            expect(rgba[0]).not.toEqual(0);
-            expect(rgba[1]).toEqual(0);
-            expect(rgba[2]).toEqual(0);
-        });
-    });
-
     it('renders with OIT and without FXAA', function() {
         var rectangle = Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0);
 
@@ -382,7 +418,7 @@ defineSuite([
         primitives.add(rectanglePrimitive);
 
         scene.camera.setView({ destination : rectangle });
-        scene.fxaa = false;
+        scene.postProcessStages.fxaa.enabled = false;
         expect(scene).toRenderAndCall(function(rgba) {
             expect(rgba[0]).not.toEqual(0);
             expect(rgba[1]).toEqual(0);
@@ -429,7 +465,7 @@ defineSuite([
             s._oit._translucentMultipassSupport = false;
         }
 
-        s.fxaa = true;
+        s.postProcessStages.fxaa.enabled = false;
 
         var rectangle = Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0);
 
@@ -468,27 +504,91 @@ defineSuite([
         scene.globe = globe;
         expect(globe.isDestroyed()).toEqual(false);
 
-        scene.globe = null;
+        scene.globe = undefined;
         expect(globe.isDestroyed()).toEqual(true);
 
         scene.destroyForSpecs();
     });
 
-    it('renders a globe', function() {
-        var s = createScene();
+    describe('render tests', function() {
+        var s;
 
-        s.globe = new Globe(Ellipsoid.UNIT_SPHERE);
-        s.camera.position = new Cartesian3(1.02, 0.0, 0.0);
-        s.camera.up = Cartesian3.clone(Cartesian3.UNIT_Z);
-        s.camera.direction = Cartesian3.negate(Cartesian3.normalize(s.camera.position, new Cartesian3()), new Cartesian3());
+        beforeEach(function() {
+            s = createScene();
+        });
 
-        // To avoid Jasmine's spec has no expectations error
-        expect(true).toEqual(true);
+        afterEach(function() {
+            s.destroyForSpecs();
+        });
 
-        return expect(s).toRenderAndCall(function() {
-            return pollToPromise(function() {
-                render(s.frameState, s.globe);
-                return !jasmine.matchersUtil.equals(s._context.readPixels(), [0, 0, 0, 0]);
+        it('renders a globe', function() {
+            s.globe = new Globe(Ellipsoid.UNIT_SPHERE);
+            s.camera.position = new Cartesian3(1.02, 0.0, 0.0);
+            s.camera.up = Cartesian3.clone(Cartesian3.UNIT_Z);
+            s.camera.direction = Cartesian3.negate(Cartesian3.normalize(s.camera.position, new Cartesian3()), new Cartesian3());
+
+            // To avoid Jasmine's spec has no expectations error
+            expect(true).toEqual(true);
+
+            return expect(s).toRenderAndCall(function() {
+                return pollToPromise(function() {
+                    render(s.frameState, s.globe);
+                    return !jasmine.matchersUtil.equals(s._context.readPixels(), [0, 0, 0, 0]);
+                });
+            });
+        });
+
+        it('renders a globe with an ElevationContour', function() {
+            s.globe = new Globe(Ellipsoid.UNIT_SPHERE);
+            s.globe.material = Material.fromType('ElevationContour');
+            s.camera.position = new Cartesian3(1.02, 0.0, 0.0);
+            s.camera.up = Cartesian3.clone(Cartesian3.UNIT_Z);
+            s.camera.direction = Cartesian3.negate(Cartesian3.normalize(s.camera.position, new Cartesian3()), new Cartesian3());
+
+            // To avoid Jasmine's spec has no expectations error
+            expect(true).toEqual(true);
+
+            return expect(s).toRenderAndCall(function() {
+                return pollToPromise(function() {
+                    render(s.frameState, s.globe);
+                    return !jasmine.matchersUtil.equals(s._context.readPixels(), [0, 0, 0, 0]);
+                });
+            });
+        });
+
+        it('renders a globe with a SlopeRamp', function() {
+            s.globe = new Globe(Ellipsoid.UNIT_SPHERE);
+            s.globe.material = Material.fromType('SlopeRamp');
+            s.camera.position = new Cartesian3(1.02, 0.0, 0.0);
+            s.camera.up = Cartesian3.clone(Cartesian3.UNIT_Z);
+            s.camera.direction = Cartesian3.negate(Cartesian3.normalize(s.camera.position, new Cartesian3()), new Cartesian3());
+
+            // To avoid Jasmine's spec has no expectations error
+            expect(true).toEqual(true);
+
+            return expect(s).toRenderAndCall(function() {
+                return pollToPromise(function() {
+                    render(s.frameState, s.globe);
+                    return !jasmine.matchersUtil.equals(s._context.readPixels(), [0, 0, 0, 0]);
+                });
+            });
+        });
+
+        it('renders a globe with a ElevationRamp', function() {
+            s.globe = new Globe(Ellipsoid.UNIT_SPHERE);
+            s.globe.material = Material.fromType('ElevationRamp');
+            s.camera.position = new Cartesian3(1.02, 0.0, 0.0);
+            s.camera.up = Cartesian3.clone(Cartesian3.UNIT_Z);
+            s.camera.direction = Cartesian3.negate(Cartesian3.normalize(s.camera.position, new Cartesian3()), new Cartesian3());
+
+            // To avoid Jasmine's spec has no expectations error
+            expect(true).toEqual(true);
+
+            return expect(s).toRenderAndCall(function() {
+                return pollToPromise(function() {
+                    render(s.frameState, s.globe);
+                    return !jasmine.matchersUtil.equals(s._context.readPixels(), [0, 0, 0, 0]);
+                });
             });
         });
     });
@@ -602,7 +702,7 @@ defineSuite([
 
     it('copies the globe depth', function() {
         var scene = createScene();
-        if (defined(scene._globeDepth)) {
+        if (scene.context.depthTexture) {
             var rectangle = Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0);
 
             var rectanglePrimitive = createRectangle(rectangle, 1000.0);
@@ -616,11 +716,6 @@ defineSuite([
             var uniformState = scene.context.uniformState;
 
             expect(scene).toRenderAndCall(function(rgba) {
-                expect(uniformState.globeDepthTexture).not.toBeDefined();
-            });
-
-            scene.copyGlobeDepth = true;
-            expect(scene).toRenderAndCall(function(rgba) {
                 expect(uniformState.globeDepthTexture).toBeDefined();
             });
         }
@@ -633,7 +728,7 @@ defineSuite([
             return;
         }
 
-        var rectangle = Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0);
+        var rectangle = Rectangle.fromDegrees(-0.0001, -0.0001, 0.0001, 0.0001);
         scene.camera.setView({ destination : rectangle });
 
         var canvas = scene.canvas;
@@ -652,7 +747,73 @@ defineSuite([
 
         expect(scene).toRenderAndCall(function() {
             var position = scene.pickPosition(windowPosition);
-            expect(position).toBeDefined();
+            expect(position.x).toBeGreaterThan(Ellipsoid.WGS84.minimumRadius);
+            expect(position.y).toEqualEpsilon(0.0, CesiumMath.EPSILON5);
+            expect(position.z).toEqualEpsilon(0.0, CesiumMath.EPSILON5);
+        });
+    });
+
+    it('pickPosition in CV', function() {
+        if (!scene.pickPositionSupported) {
+            return;
+        }
+
+        scene.morphToColumbusView(0.0);
+
+        var rectangle = Rectangle.fromDegrees(-0.0001, -0.0001, 0.0001, 0.0001);
+        scene.camera.setView({ destination : rectangle });
+
+        var canvas = scene.canvas;
+        var windowPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 2);
+
+        expect(scene).toRenderAndCall(function() {
+            var position = scene.pickPosition(windowPosition);
+            expect(position).not.toBeDefined();
+
+            var rectanglePrimitive = createRectangle(rectangle);
+            rectanglePrimitive.appearance.material.uniforms.color = new Color(1.0, 0.0, 0.0, 1.0);
+
+            var primitives = scene.primitives;
+            primitives.add(rectanglePrimitive);
+        });
+
+        expect(scene).toRenderAndCall(function() {
+            var position = scene.pickPosition(windowPosition);
+            expect(position.x).toBeGreaterThan(Ellipsoid.WGS84.minimumRadius);
+            expect(position.y).toEqualEpsilon(0.0, CesiumMath.EPSILON5);
+            expect(position.z).toEqualEpsilon(0.0, CesiumMath.EPSILON5);
+        });
+    });
+
+    it('pickPosition in 2D', function() {
+        if (!scene.pickPositionSupported) {
+            return;
+        }
+
+        scene.morphTo2D(0.0);
+
+        var rectangle = Rectangle.fromDegrees(-0.0001, -0.0001, 0.0001, 0.0001);
+        scene.camera.setView({ destination : rectangle });
+
+        var canvas = scene.canvas;
+        var windowPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 2);
+
+        expect(scene).toRenderAndCall(function() {
+            var position = scene.pickPosition(windowPosition);
+            expect(position).not.toBeDefined();
+
+            var rectanglePrimitive = createRectangle(rectangle);
+            rectanglePrimitive.appearance.material.uniforms.color = new Color(1.0, 0.0, 0.0, 1.0);
+
+            var primitives = scene.primitives;
+            primitives.add(rectanglePrimitive);
+        });
+
+        expect(scene).toRenderAndCall(function() {
+            var position = scene.pickPosition(windowPosition);
+            expect(position.x).toBeGreaterThan(Ellipsoid.WGS84.minimumRadius);
+            expect(position.y).toEqualEpsilon(0.0, CesiumMath.EPSILON5);
+            expect(position.z).toEqualEpsilon(0.0, CesiumMath.EPSILON5);
         });
     });
 
@@ -685,6 +846,71 @@ defineSuite([
         expect(scene).toRenderAndCall(function() {
             var position = scene.pickPosition(windowPosition);
             expect(position).toBeDefined();
+        });
+    });
+
+    it('pickPosition picks translucent geometry when pickTranslucentDepth is true', function() {
+        if (!scene.pickPositionSupported) {
+            return;
+        }
+
+        var rectangle = Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0);
+        scene.camera.setView({
+            destination : rectangle
+        });
+
+        var canvas = scene.canvas;
+        var windowPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 2);
+
+        var rectanglePrimitive = scene.primitives.add(createRectangle(rectangle));
+        rectanglePrimitive.appearance.material.uniforms.color = new Color(1.0, 0.0, 0.0, 0.5);
+
+        scene.useDepthPicking = true;
+        scene.pickTranslucentDepth = false;
+        expect(scene).toRenderAndCall(function() {
+            var position = scene.pickPosition(windowPosition);
+            expect(position).not.toBeDefined();
+        });
+
+        scene.pickTranslucentDepth = true;
+        expect(scene).toRenderAndCall(function() {
+            var position = scene.pickPosition(windowPosition);
+            expect(position).toBeDefined();
+        });
+    });
+
+    it('pickPosition caches results per frame',function(){
+        if (!scene.pickPositionSupported) {
+            return;
+        }
+
+        var rectangle = Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0);
+        scene.camera.setView({ destination : rectangle });
+
+        var canvas = scene.canvas;
+        var windowPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 2);
+        spyOn(SceneTransforms, 'transformWindowToDrawingBuffer').and.callThrough();
+
+        expect(scene).toRenderAndCall(function() {
+            scene.pickPosition(windowPosition);
+            expect(SceneTransforms.transformWindowToDrawingBuffer).toHaveBeenCalled();
+
+            scene.pickPosition(windowPosition);
+            expect(SceneTransforms.transformWindowToDrawingBuffer.calls.count()).toEqual(1);
+
+            var rectanglePrimitive = createRectangle(rectangle);
+            rectanglePrimitive.appearance.material.uniforms.color = new Color(1.0, 0.0, 0.0, 1.0);
+
+            var primitives = scene.primitives;
+            primitives.add(rectanglePrimitive);
+        });
+
+        expect(scene).toRenderAndCall(function() {
+            scene.pickPosition(windowPosition);
+            expect(SceneTransforms.transformWindowToDrawingBuffer.calls.count()).toEqual(2);
+
+            scene.pickPosition(windowPosition);
+            expect(SceneTransforms.transformWindowToDrawingBuffer.calls.count()).toEqual(2);
         });
     });
 
@@ -742,7 +968,47 @@ defineSuite([
         s.destroyForSpecs();
     });
 
-    it('raises the preRender event prior to rendering', function() {
+    it('alwayas raises preUpdate event prior to updating', function() {
+        var s = createScene();
+
+        var spyListener = jasmine.createSpy('listener');
+        s.preUpdate.addEventListener(spyListener);
+
+        s.render();
+
+        expect(spyListener.calls.count()).toBe(1);
+
+        s.requestRenderMode = true;
+        s.maximumRenderTimeChange = undefined;
+
+        s.render();
+
+        expect(spyListener.calls.count()).toBe(2);
+
+        s.destroyForSpecs();
+    });
+
+    it('always raises preUpdate event after updating', function() {
+        var s = createScene();
+
+        var spyListener = jasmine.createSpy('listener');
+        s.preUpdate.addEventListener(spyListener);
+
+        s.render();
+
+        expect(spyListener.calls.count()).toBe(1);
+
+        s.requestRenderMode = true;
+        s.maximumRenderTimeChange = undefined;
+
+        s.render();
+
+        expect(spyListener.calls.count()).toBe(2);
+
+        s.destroyForSpecs();
+    });
+
+    it('raises the preRender event prior to rendering only if the scene renders', function() {
         var s = createScene();
 
         var spyListener = jasmine.createSpy('listener');
@@ -752,14 +1018,28 @@ defineSuite([
 
         expect(spyListener.calls.count()).toBe(1);
 
+        s.requestRenderMode = true;
+        s.maximumRenderTimeChange = undefined;
+
+        s.render();
+
+        expect(spyListener.calls.count()).toBe(1);
+
         s.destroyForSpecs();
     });
 
-    it('raises the postRender event after rendering', function() {
+    it('raises the postRender event after rendering if the scene rendered', function() {
         var s = createScene();
 
         var spyListener = jasmine.createSpy('listener');
         s.postRender.addEventListener(spyListener);
+
+        s.render();
+
+        expect(spyListener.calls.count()).toBe(1);
+
+        s.requestRenderMode = true;
+        s.maximumRenderTimeChange = undefined;
 
         s.render();
 
@@ -774,6 +1054,7 @@ defineSuite([
 
         var spyListener = jasmine.createSpy('listener');
         s.camera.moveStart.addEventListener(spyListener);
+        s._cameraStartFired = false; // reset this value after camera changes for initial render trigger the event
 
         s.camera.moveLeft();
         s.render();
@@ -928,4 +1209,493 @@ defineSuite([
         }
         s.destroyForSpecs();
     });
+
+    it('throws when minimumDisableDepthTestDistance is set less than 0.0', function() {
+        expect(function() {
+            scene.minimumDisableDepthTestDistance = -1.0;
+        }).toThrowDeveloperError();
+    });
+
+    it('converts to canvas coordinates',function(){
+        var mockPosition = new Cartesian3();
+        spyOn(SceneTransforms, 'wgs84ToWindowCoordinates');
+        scene.cartesianToCanvasCoordinates(mockPosition);
+
+        expect(SceneTransforms.wgs84ToWindowCoordinates).toHaveBeenCalledWith(scene, mockPosition, undefined);
+    });
+
+    it('converts to canvas coordinates and return it in a variable',function(){
+        var result = new Cartesian2();
+        var mockPosition = new Cartesian3();
+        spyOn(SceneTransforms, 'wgs84ToWindowCoordinates');
+        scene.cartesianToCanvasCoordinates(mockPosition, result);
+
+        expect(SceneTransforms.wgs84ToWindowCoordinates).toHaveBeenCalledWith(scene, mockPosition, result);
+    });
+
+    it('Gets imageryLayers', function() {
+        var scene = createScene();
+        var globe = scene.globe = new Globe(Ellipsoid.UNIT_SPHERE);
+        expect(scene.imageryLayers).toBe(globe.imageryLayers);
+
+        scene.globe = undefined;
+        expect(scene.imageryLayers).toBeUndefined();
+
+        scene.destroyForSpecs();
+    });
+
+    it('Gets terrainProvider', function() {
+        var scene = createScene();
+        var globe = scene.globe = new Globe(Ellipsoid.UNIT_SPHERE);
+        expect(scene.terrainProvider).toBe(globe.terrainProvider);
+
+        scene.globe = undefined;
+        expect(scene.terrainProvider).toBeUndefined();
+
+        scene.destroyForSpecs();
+    });
+
+    it('Sets terrainProvider', function() {
+        var scene = createScene();
+        var globe = scene.globe = new Globe(Ellipsoid.UNIT_SPHERE);
+        scene.terrainProvider = new CesiumTerrainProvider({
+            url: '//terrain/tiles'
+        });
+
+        expect(scene.terrainProvider).toBe(globe.terrainProvider);
+
+        scene.globe = undefined;
+        expect(function() {
+            scene.terrainProvider = new CesiumTerrainProvider({
+                url: '//newTerrain/tiles'
+            });
+        }).not.toThrow();
+
+        scene.destroyForSpecs();
+    });
+
+    it('Gets terrainProviderChanged', function() {
+        var scene = createScene();
+        var globe = scene.globe = new Globe(Ellipsoid.UNIT_SPHERE);
+        expect(scene.terrainProviderChanged).toBe(globe.terrainProviderChanged);
+
+        scene.globe = undefined;
+        expect(scene.terrainProviderChanged).toBeUndefined();
+
+        scene.destroyForSpecs();
+    });
+
+    it('Sets material', function() {
+        var scene = createScene();
+        var globe = scene.globe = new Globe(Ellipsoid.UNIT_SPHERE);
+        var material = Material.fromType('ElevationContour');
+        globe.material = material;
+        expect(globe.material).toBe(material);
+
+        globe.material = undefined;
+        expect(globe.material).toBeUndefined();
+
+        scene.destroyForSpecs();
+    });
+
+    var scratchTime = new JulianDate();
+
+    it('doesn\'t render scene if requestRenderMode is enabled', function() {
+        var scene = createScene();
+
+        scene.renderForSpecs();
+
+        var lastRenderTime = JulianDate.clone(scene.lastRenderTime, scratchTime);
+        expect(lastRenderTime).toBeDefined();
+
+        scene.requestRenderMode = true;
+        scene.maximumRenderTimeChange = undefined;
+        scene.renderForSpecs();
+        expect(scene.lastRenderTime).toEqualEpsilon(lastRenderTime, CesiumMath.EPSILON15);
+
+        scene.destroyForSpecs();
+    });
+
+    it('requestRender causes a new frame to be rendered in requestRenderMode', function() {
+        var scene = createScene();
+
+        scene.renderForSpecs();
+
+        var lastRenderTime = JulianDate.clone(scene.lastRenderTime, scratchTime);
+        expect(lastRenderTime).toBeDefined();
+        expect(scene._renderRequested).toBe(false);
+
+        scene.requestRenderMode = true;
+        scene.maximumRenderTimeChange = undefined;
+
+        scene.requestRender();
+        expect(scene._renderRequested).toBe(true);
+
+        scene.renderForSpecs();
+        expect(scene.lastRenderTime).not.toEqual(lastRenderTime);
+
+        scene.destroyForSpecs();
+    });
+
+    it('moving the camera causes a new frame to be rendered in requestRenderMode', function() {
+        var scene = createScene();
+
+        scene.renderForSpecs();
+
+        var lastRenderTime = JulianDate.clone(scene.lastRenderTime, scratchTime);
+        expect(lastRenderTime).toBeDefined();
+        expect(scene._renderRequested).toBe(false);
+
+        scene.requestRenderMode = true;
+        scene.maximumRenderTimeChange = undefined;
+
+        scene.camera.moveLeft();
+
+        scene.renderForSpecs();
+        expect(scene.lastRenderTime).not.toEqual(lastRenderTime);
+
+        scene.destroyForSpecs();
+    });
+
+    it('changing the camera frustum does not cause continuous rendering in requestRenderMode', function() {
+        var scene = createScene();
+
+        scene.renderForSpecs();
+
+        var lastRenderTime = JulianDate.clone(scene.lastRenderTime, scratchTime);
+        expect(lastRenderTime).toBeDefined();
+        expect(scene._renderRequested).toBe(false);
+
+        scene.requestRenderMode = true;
+        scene.maximumRenderTimeChange = undefined;
+
+        scene.camera.frustum.near *= 1.1;
+
+        // Render once properly
+        scene.renderForSpecs();
+        expect(scene.lastRenderTime).not.toEqual(lastRenderTime);
+
+        // Render again - but this time nothing should happen.
+        lastRenderTime = JulianDate.clone(scene.lastRenderTime, scratchTime);
+        scene.renderForSpecs();
+        expect(scene.lastRenderTime).toEqual(lastRenderTime);
+
+        scene.destroyForSpecs();
+    });
+
+    it('successful completed requests causes a new frame to be rendered in requestRenderMode', function() {
+        var scene = createScene();
+
+        scene.renderForSpecs();
+
+        var lastRenderTime = JulianDate.clone(scene.lastRenderTime, scratchTime);
+        expect(lastRenderTime).toBeDefined();
+        expect(scene._renderRequested).toBe(false);
+
+        scene.requestRenderMode = true;
+        scene.maximumRenderTimeChange = undefined;
+
+        RequestScheduler.requestCompletedEvent.raiseEvent();
+
+        scene.renderForSpecs();
+
+        expect(scene._renderRequested).toBe(true);
+
+        scene.renderForSpecs();
+        expect(scene.lastRenderTime).not.toEqual(lastRenderTime);
+
+        scene.destroyForSpecs();
+    });
+
+    it('data returning from a web worker causes a new frame to be rendered in requestRenderMode', function() {
+        var scene = createScene();
+
+        scene.renderForSpecs();
+
+        var lastRenderTime = JulianDate.clone(scene.lastRenderTime, scratchTime);
+        expect(lastRenderTime).toBeDefined();
+        expect(scene._renderRequested).toBe(false);
+
+        scene.requestRenderMode = true;
+        scene.maximumRenderTimeChange = undefined;
+
+        TaskProcessor.taskCompletedEvent.raiseEvent();
+
+        scene.renderForSpecs();
+
+        expect(scene._renderRequested).toBe(true);
+
+        scene.renderForSpecs();
+        expect(scene.lastRenderTime).not.toEqual(lastRenderTime);
+
+        scene.destroyForSpecs();
+    });
+
+    it('Executing an after render function causes a new frame to be rendered in requestRenderMode', function() {
+        var scene = createScene();
+
+        scene.renderForSpecs();
+
+        var lastRenderTime = JulianDate.clone(scene.lastRenderTime, scratchTime);
+        expect(lastRenderTime).toBeDefined();
+        expect(scene._renderRequested).toBe(false);
+
+        scene.requestRenderMode = true;
+        scene.maximumRenderTimeChange = undefined;
+
+        var functionCalled = false;
+        scene._frameState.afterRender.push(function () {
+            functionCalled = true;
+        });
+
+        scene.renderForSpecs();
+
+        expect(functionCalled).toBe(true);
+        expect(scene._renderRequested).toBe(true);
+
+        scene.renderForSpecs();
+        expect(scene.lastRenderTime).not.toEqual(lastRenderTime);
+
+        scene.destroyForSpecs();
+    });
+
+    it('Globe tile loading triggers a new frame to be rendered in requestRenderMode', function() {
+        var scene = createScene();
+
+        scene.renderForSpecs();
+
+        var lastRenderTime = JulianDate.clone(scene.lastRenderTime, scratchTime);
+        expect(lastRenderTime).toBeDefined();
+        expect(scene._renderRequested).toBe(false);
+
+        scene.requestRenderMode = true;
+        scene.maximumRenderTimeChange = undefined;
+
+        var ellipsoid = Ellipsoid.UNIT_SPHERE;
+        var globe = new Globe(ellipsoid);
+        scene.globe = globe;
+
+        scene.requestRender();
+        Object.defineProperty(globe, 'tilesLoaded', { value: false });
+        scene.renderForSpecs();
+        lastRenderTime = JulianDate.clone(scene.lastRenderTime, scratchTime);
+
+        expect(scene._renderRequested).toBe(true);
+        scene.renderForSpecs();
+        expect(scene.lastRenderTime).not.toEqual(lastRenderTime);
+
+        scene.destroyForSpecs();
+    });
+
+    it('Globe imagery updates triggers a new frame to be rendered in requestRenderMode', function() {
+        var scene = createScene();
+
+        scene.renderForSpecs();
+
+        var lastRenderTime = JulianDate.clone(scene.lastRenderTime, scratchTime);
+        expect(lastRenderTime).toBeDefined();
+        expect(scene._renderRequested).toBe(false);
+
+        scene.requestRenderMode = true;
+        scene.maximumRenderTimeChange = undefined;
+
+        var ellipsoid = Ellipsoid.UNIT_SPHERE;
+        var globe = new Globe(ellipsoid);
+        scene.globe = globe;
+        globe.imageryLayersUpdatedEvent.raiseEvent();
+
+        scene.renderForSpecs();
+
+        expect(scene._renderRequested).toBe(true);
+
+        scene.renderForSpecs();
+        expect(scene.lastRenderTime).not.toEqual(lastRenderTime);
+
+        scene.destroyForSpecs();
+    });
+
+    it('Globe changing terrain providers triggers a new frame to be rendered in requestRenderMode', function() {
+        var scene = createScene();
+
+        scene.renderForSpecs();
+
+        var lastRenderTime = JulianDate.clone(scene.lastRenderTime, scratchTime);
+        expect(lastRenderTime).toBeDefined();
+        expect(scene._renderRequested).toBe(false);
+
+        scene.requestRenderMode = true;
+        scene.maximumRenderTimeChange = undefined;
+
+        var ellipsoid = Ellipsoid.UNIT_SPHERE;
+        var globe = new Globe(ellipsoid);
+        scene.globe = globe;
+        globe.terrainProviderChanged.raiseEvent();
+
+        scene.renderForSpecs();
+
+        expect(scene._renderRequested).toBe(true);
+
+        scene.renderForSpecs();
+        expect(scene.lastRenderTime).not.toEqual(lastRenderTime);
+
+        scene.destroyForSpecs();
+    });
+
+    it('scene morphing causes a new frame to be rendered in requestRenderMode', function() {
+        var scene = createScene();
+        scene.renderForSpecs();
+
+        var lastRenderTime = JulianDate.clone(scene.lastRenderTime, scratchTime);
+        expect(lastRenderTime).toBeDefined();
+        expect(scene._renderRequested).toBe(false);
+
+        scene.requestRenderMode = true;
+        scene.maximumRenderTimeChange = undefined;
+
+        scene.morphTo2D(1.0);
+        scene.renderForSpecs(JulianDate.addSeconds(lastRenderTime, 0.5, new JulianDate()));
+        expect(scene.lastRenderTime).not.toEqual(lastRenderTime);
+
+        scene.completeMorph();
+        scene.renderForSpecs();
+        lastRenderTime = JulianDate.clone(scene.lastRenderTime, scratchTime);
+
+        scene.renderForSpecs();
+        expect(scene.lastRenderTime).toEqualEpsilon(lastRenderTime, CesiumMath.EPSILON15);
+        lastRenderTime = JulianDate.clone(scene.lastRenderTime, scratchTime);
+
+        scene.morphToColumbusView(1.0);
+        scene.renderForSpecs(JulianDate.addSeconds(lastRenderTime, 0.5, new JulianDate()));
+        expect(scene.lastRenderTime).not.toEqual(lastRenderTime);
+
+        scene.completeMorph();
+        scene.renderForSpecs();
+        lastRenderTime = JulianDate.clone(scene.lastRenderTime, scratchTime);
+
+        scene.renderForSpecs();
+        expect(scene.lastRenderTime).toEqualEpsilon(lastRenderTime, CesiumMath.EPSILON15);
+        lastRenderTime = JulianDate.clone(scene.lastRenderTime, scratchTime);
+
+        scene.morphTo3D(1.0);
+        scene.renderForSpecs(JulianDate.addSeconds(lastRenderTime, 0.5, new JulianDate()));
+        expect(scene.lastRenderTime).not.toEqual(lastRenderTime);
+
+        scene.completeMorph();
+        scene.renderForSpecs();
+        lastRenderTime = JulianDate.clone(scene.lastRenderTime, scratchTime);
+
+        scene.renderForSpecs();
+        expect(scene.lastRenderTime).toEqualEpsilon(lastRenderTime, CesiumMath.EPSILON15);
+
+        scene.destroyForSpecs();
+    });
+
+    it('time change exceeding maximumRenderTimeChange causes a new frame to be rendered in requestRenderMode', function() {
+        var scene = createScene();
+
+        scene.renderForSpecs();
+
+        var lastRenderTime = JulianDate.clone(scene.lastRenderTime, scratchTime);
+        expect(lastRenderTime).toBeDefined();
+        expect(scene._renderRequested).toBe(false);
+
+        scene.requestRenderMode = true;
+
+        scene.renderForSpecs(lastRenderTime);
+        expect(scene.lastRenderTime).toEqual(lastRenderTime);
+
+        scene.maximumRenderTimeChange = 100.0;
+
+        scene.renderForSpecs(JulianDate.addSeconds(lastRenderTime, 50.0, new JulianDate()));
+        expect(scene.lastRenderTime).toEqualEpsilon(lastRenderTime, CesiumMath.EPSILON15);
+
+        scene.renderForSpecs(JulianDate.addSeconds(lastRenderTime, 150.0, new JulianDate()));
+        expect(scene.lastRenderTime).not.toEqual(lastRenderTime);
+
+        scene.destroyForSpecs();
+    });
+
+    it('undefined maximumRenderTimeChange will not cause a new frame to be rendered in requestRenderMode', function() {
+        var scene = createScene();
+
+        scene.renderForSpecs();
+
+        var lastRenderTime = JulianDate.clone(scene.lastRenderTime, scratchTime);
+        expect(lastRenderTime).toBeDefined();
+        expect(scene._renderRequested).toBe(false);
+
+        scene.requestRenderMode = true;
+        scene.maximumRenderTimeChange = undefined;
+
+        var farFuture = JulianDate.addDays(lastRenderTime, 10000, new JulianDate());
+
+        scene.renderForSpecs();
+        scene.renderForSpecs(farFuture);
+
+        expect(scene.lastRenderTime).toEqual(lastRenderTime);
+
+        scene.destroyForSpecs();
+    });
+
+    it('forceRender renders a scene regardless of whether a render was requested', function() {
+        var scene = createScene();
+
+        scene.renderForSpecs();
+
+        var lastRenderTime = JulianDate.clone(scene.lastRenderTime, scratchTime);
+        expect(lastRenderTime).toBeDefined();
+        expect(scene._renderRequested).toBe(false);
+
+        scene.requestRenderMode = true;
+        scene.maximumRenderTimeChange = undefined;
+
+        scene.forceRender();
+        expect(scene.lastRenderTime).not.toEqual(lastRenderTime);
+
+        scene.destroyForSpecs();
+    });
+
+    function getFrustumCommandsLength(scene) {
+        var commandsLength = 0;
+        var frustumCommandsList = scene.frustumCommandsList;
+        var frustumsLength = frustumCommandsList.length;
+        for (var i = 0; i < frustumsLength; ++i) {
+            var frustumCommands = frustumCommandsList[i];
+            for (var j = 0; j < Pass.NUMBER_OF_PASSES; ++j) {
+                commandsLength += frustumCommands.indices[j];
+            }
+        }
+        return commandsLength;
+    }
+
+    it('occludes primitive', function() {
+        var scene = createScene();
+        scene.globe = new Globe(Ellipsoid.WGS84);
+
+        var rectangle = Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0);
+        var rectanglePrimitive = createRectangle(rectangle, 10);
+        scene.primitives.add(rectanglePrimitive);
+
+        scene.camera.setView({
+            destination: new Cartesian3(-588536.1057451078, -10512475.371849751, 6737159.100747835),
+            orientation: new HeadingPitchRoll(6.283185307179586, -1.5688261558859757, 0.0)
+        });
+        scene.renderForSpecs();
+        expect(getFrustumCommandsLength(scene)).toBe(1);
+
+        scene.camera.setView({
+            destination: new Cartesian3(-5754647.167415793, 14907694.100240812, -483807.2406259497),
+            orientation: new HeadingPitchRoll(6.283185307179586, -1.5698869547885104, 0.0)
+        });
+        scene.renderForSpecs();
+        expect(getFrustumCommandsLength(scene)).toBe(0);
+
+        // Still on opposite side of globe but now show is false, the command should not be occluded anymore
+        scene.globe.show = false;
+        scene.renderForSpecs();
+        expect(getFrustumCommandsLength(scene)).toBe(1);
+
+        scene.destroyForSpecs();
+    });
+
 }, 'WebGL');

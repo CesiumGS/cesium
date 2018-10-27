@@ -1,22 +1,19 @@
-/*global define*/
 define([
+        '../Core/Check',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/loadCRN',
-        '../Core/loadImage',
-        '../Core/loadImageViaBlob',
         '../Core/loadKTX',
-        '../Core/throttleRequestByServer'
+        '../Core/Resource'
     ], function(
+        Check,
         defined,
         defineProperties,
         DeveloperError,
         loadCRN,
-        loadImage,
-        loadImageViaBlob,
         loadKTX,
-        throttleRequestByServer) {
+        Resource) {
     'use strict';
 
     /**
@@ -27,16 +24,21 @@ define([
      * @constructor
      *
      * @see ArcGisMapServerImageryProvider
-     * @see SingleTileImageryProvider
      * @see BingMapsImageryProvider
-     * @see GoogleEarthImageryProvider
-     * @see MapboxImageryProvider
      * @see createOpenStreetMapImageryProvider
-     * @see WebMapTileServiceImageryProvider
+     * @see createTileMapServiceImageryProvider
+     * @see GoogleEarthEnterpriseImageryProvider
+     * @see GoogleEarthEnterpriseMapsProvider
+     * @see GridImageryProvider
+     * @see MapboxImageryProvider
+     * @see SingleTileImageryProvider
+     * @see TileCoordinatesImageryProvider
+     * @see UrlTemplateImageryProvider
      * @see WebMapServiceImageryProvider
+     * @see WebMapTileServiceImageryProvider
      *
-     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Imagery%20Layers.html|Cesium Sandcastle Imagery Layers Demo}
-     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Imagery%20Layers%20Manipulation.html|Cesium Sandcastle Imagery Manipulation Demo}
+     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Imagery%20Layers.html|Cesium Sandcastle Imagery Layers Demo}
+     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Imagery%20Layers%20Manipulation.html|Cesium Sandcastle Imagery Manipulation Demo}
      */
     function ImageryProvider() {
         /**
@@ -90,6 +92,22 @@ define([
          * @default undefined
          */
         this.defaultGamma = undefined;
+
+        /**
+         * The default texture minification filter to apply to this provider.
+         *
+         * @type {TextureMinificationFilter}
+         * @default undefined
+         */
+        this.defaultMinificationFilter = undefined;
+
+        /**
+         * The default texture magnification filter to apply to this provider.
+         *
+         * @type {TextureMagnificationFilter}
+         * @default undefined
+         */
+        this.defaultMagnificationFilter = undefined;
 
         DeveloperError.throwInstantiationError();
     }
@@ -268,6 +286,7 @@ define([
      * @param {Number} x The tile X coordinate.
      * @param {Number} y The tile Y coordinate.
      * @param {Number} level The tile level.
+     * @param {Request} [request] The request object. Intended for internal use only.
      * @returns {Promise.<Image|Canvas>|undefined} A promise for the image that will resolve when the image is available, or
      *          undefined if there are too many active requests to the server, and the request
      *          should be retried later.  The resolved image may be either an
@@ -307,21 +326,28 @@ define([
      * that the request should be retried later.
      *
      * @param {ImageryProvider} imageryProvider The imagery provider for the URL.
-     * @param {String} url The URL of the image.
+     * @param {Resource|String} url The URL of the image.
      * @returns {Promise.<Image|Canvas>|undefined} A promise for the image that will resolve when the image is available, or
      *          undefined if there are too many active requests to the server, and the request
      *          should be retried later.  The resolved image may be either an
      *          Image or a Canvas DOM object.
      */
     ImageryProvider.loadImage = function(imageryProvider, url) {
-        if (ktxRegex.test(url)) {
-            return throttleRequestByServer(url, loadKTX);
-        } else if (crnRegex.test(url)) {
-            return throttleRequestByServer(url, loadCRN);
+        //>>includeStart('debug', pragmas.debug);
+        Check.defined('url', url);
+        //>>includeEnd('debug');
+
+        var resource = Resource.createIfNeeded(url);
+
+        if (ktxRegex.test(resource)) {
+            return loadKTX(resource);
+        } else if (crnRegex.test(resource)) {
+            return loadCRN(resource);
         } else if (defined(imageryProvider.tileDiscardPolicy)) {
-            return throttleRequestByServer(url, loadImageViaBlob);
+            return resource.fetchImage(true);
         }
-        return throttleRequestByServer(url, loadImage);
+
+        return resource.fetchImage();
     };
 
     return ImageryProvider;

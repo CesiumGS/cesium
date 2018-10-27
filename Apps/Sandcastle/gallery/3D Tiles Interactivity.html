@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">  <!-- Use Chrome Frame in IE -->
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <meta name="description" content="Interaction examples with 3D Tiles.">
+    <meta name="cesium-sandcastle-labels" content="3D Tiles">
+    <title>Cesium Demo</title>
+    <script type="text/javascript" src="../Sandcastle-header.js"></script>
+    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
+    <script type="text/javascript">
+    require.config({
+        baseUrl : '../../../Source',
+        waitSeconds : 60
+    });
+    </script>
+</head>
+<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
+<style>
+    @import url(../templates/bucket.css);
+    #toolbar {
+        background: rgba(42, 42, 42, 0.8);
+        padding: 4px;
+        border-radius: 4px;
+    }
+    #toolbar .header {
+        font-weight: bold;
+        padding-top: 5px;
+        padding-bottom: 5px;
+    }
+</style>
+<div id="cesiumContainer" class="fullSize"></div>
+<div id="loadingOverlay"><h1>Loading...</h1></div>
+<div id="toolbar">
+    <div class="header">Right click action:</div>
+    <div><input type="radio" value="annotate" data-bind="checked: rightClickAction">Annotate</div>
+    <div><input type="radio" value="properties" data-bind="checked: rightClickAction">Print metadata</div>
+    <div><input type="radio" value="zoom" data-bind="checked: rightClickAction">Zoom to feature</div>
+    <div class="header">Middle click action:</div>
+    <div><input type="radio" value="hide" data-bind="checked: middleClickAction">Hide feature</div>
+</div>
+<script id="cesium_sandcastle_script">
+function startup(Cesium) {
+    'use strict';
+//Sandcastle_Begin
+var viewer = new Cesium.Viewer('cesiumContainer', {
+    terrainProvider: Cesium.createWorldTerrain()
+});
+
+var scene = viewer.scene;
+if (!scene.pickPositionSupported) {
+    console.log('This browser does not support pickPosition.');
+}
+
+scene.globe.depthTestAgainstTerrain = true;
+
+var viewModel = {
+    rightClickAction: 'annotate',
+    middleClickAction: 'hide'
+};
+
+Cesium.knockout.track(viewModel);
+
+var toolbar = document.getElementById('toolbar');
+Cesium.knockout.applyBindings(viewModel, toolbar);
+
+var annotations = scene.primitives.add(new Cesium.LabelCollection());
+
+// Set the initial camera view to look at Manhattan
+var initialPosition = Cesium.Cartesian3.fromDegrees(-74.01881302800248, 40.69114333714821, 753);
+var initialOrientation = new Cesium.HeadingPitchRoll.fromDegrees(21.27879878293835, -21.34390550872461, 0.0716951918898415);
+scene.camera.setView({
+    destination: initialPosition,
+    orientation: initialOrientation,
+    endTransform: Cesium.Matrix4.IDENTITY
+});
+
+// Load the NYC buildings tileset.
+var tileset = new Cesium.Cesium3DTileset({ url: Cesium.IonResource.fromAssetId(5741) });
+scene.primitives.add(tileset);
+tileset.style = new Cesium.Cesium3DTileStyle({
+    meta: {
+        description: "'Building id ${id} has height ${height}.'"
+    }
+});
+
+var handler = new Cesium.ScreenSpaceEventHandler(viewer.canvas);
+
+handler.setInputAction(function(movement) {
+    var feature = scene.pick(movement.position);
+    if (!Cesium.defined(feature)) {
+        return;
+    }
+
+    var action = viewModel.rightClickAction;
+    if (action === 'annotate') {
+        annotate(movement, feature);
+    } else if (action === 'properties') {
+        printProperties(movement, feature);
+    } else if (action === 'zoom') {
+        zoom(movement, feature);
+    }
+}, Cesium.ScreenSpaceEventType.RIGHT_CLICK);
+
+handler.setInputAction(function(movement) {
+    var feature = scene.pick(movement.position);
+    if (!Cesium.defined(feature)) {
+        return;
+    }
+
+    var action = viewModel.middleClickAction;
+    if (action === 'hide') {
+        feature.show = false;
+    }
+}, Cesium.ScreenSpaceEventType.MIDDLE_CLICK);
+
+function annotate(movement, feature) {
+    if (scene.pickPositionSupported) {
+        var cartesian = scene.pickPosition(movement.position);
+        if(Cesium.defined(cartesian)){
+            var cartographic = Cesium.Cartographic.fromCartesian(cartesian);
+            var height = cartographic.height.toFixed(2) + ' m';
+
+            annotations.add({
+                position : cartesian,
+                text : height,
+                showBackground : true,
+                font : '14px monospace',
+                horizontalOrigin : Cesium.HorizontalOrigin.LEFT,
+                verticalOrigin : Cesium.VerticalOrigin.BOTTOM,
+                disableDepthTestDistance : Number.POSITIVE_INFINITY
+            });
+        }
+    }
+}
+
+function printProperties(movement, feature) {
+    console.log('Properties:');
+    var propertyNames = feature.getPropertyNames();
+    var length = propertyNames.length;
+    for (var i = 0; i < length; ++i) {
+        var propertyName = propertyNames[i];
+        console.log('  ' + propertyName + ': ' + feature.getProperty(propertyName));
+    }
+
+    // Evaluate feature description
+    console.log('Description : ' + tileset.style.meta.description.evaluate(feature));
+}
+
+function zoom(movement, feature) {
+    var longitude = Cesium.Math.toRadians(feature.getProperty('longitude'));
+    var latitude = Cesium.Math.toRadians(feature.getProperty('latitude'));
+    var height = feature.getProperty('height');
+
+    var positionCartographic = new Cesium.Cartographic(longitude, latitude, height * 0.5);
+    var position = scene.globe.ellipsoid.cartographicToCartesian(positionCartographic);
+
+    var camera = scene.camera;
+    var heading = camera.heading;
+    var pitch = camera.pitch;
+
+    var offset = offsetFromHeadingPitchRange(heading, pitch, height * 2.0);
+
+    var transform = Cesium.Transforms.eastNorthUpToFixedFrame(position);
+    Cesium.Matrix4.multiplyByPoint(transform, offset, position);
+
+    camera.flyTo({
+        destination : position,
+        orientation : {
+            heading : heading,
+            pitch : pitch
+        },
+        easingFunction : Cesium.EasingFunction.QUADRATIC_OUT
+    });
+}
+
+function offsetFromHeadingPitchRange(heading, pitch, range) {
+    pitch = Cesium.Math.clamp(pitch, -Cesium.Math.PI_OVER_TWO, Cesium.Math.PI_OVER_TWO);
+    heading = Cesium.Math.zeroToTwoPi(heading) - Cesium.Math.PI_OVER_TWO;
+
+    var pitchQuat = Cesium.Quaternion.fromAxisAngle(Cesium.Cartesian3.UNIT_Y, -pitch);
+    var headingQuat = Cesium.Quaternion.fromAxisAngle(Cesium.Cartesian3.UNIT_Z, -heading);
+    var rotQuat = Cesium.Quaternion.multiply(headingQuat, pitchQuat, headingQuat);
+    var rotMatrix = Cesium.Matrix3.fromQuaternion(rotQuat);
+
+    var offset = Cesium.Cartesian3.clone(Cesium.Cartesian3.UNIT_X);
+    Cesium.Matrix3.multiplyByVector(rotMatrix, offset, offset);
+    Cesium.Cartesian3.negate(offset, offset);
+    Cesium.Cartesian3.multiplyByScalar(offset, range, offset);
+    return offset;
+}
+
+//Sandcastle_End
+Sandcastle.finishedLoading();
+}
+if (typeof Cesium !== 'undefined') {
+    startup(Cesium);
+} else if (typeof require === 'function') {
+    require(['Cesium'], startup);
+}
+</script>
+</body>
+</html>

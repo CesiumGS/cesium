@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/BoundingSphere',
         '../Core/buildModuleUrl',
@@ -13,10 +12,9 @@ define([
         '../Core/EllipsoidTerrainProvider',
         '../Core/Event',
         '../Core/IntersectionTests',
-        '../Core/loadImage',
-        '../Core/Math',
         '../Core/Ray',
         '../Core/Rectangle',
+        '../Core/Resource',
         '../Renderer/ShaderSource',
         '../Renderer/Texture',
         '../Shaders/GlobeFS',
@@ -43,10 +41,9 @@ define([
         EllipsoidTerrainProvider,
         Event,
         IntersectionTests,
-        loadImage,
-        CesiumMath,
         Ray,
         Rectangle,
+        Resource,
         ShaderSource,
         Texture,
         GlobeFS,
@@ -82,14 +79,7 @@ define([
         this._imageryLayerCollection = imageryLayerCollection;
 
         this._surfaceShaderSet = new GlobeSurfaceShaderSet();
-
-        this._surfaceShaderSet.baseVertexShaderSource = new ShaderSource({
-            sources : [GroundAtmosphere, GlobeVS]
-        });
-
-        this._surfaceShaderSet.baseFragmentShaderSource = new ShaderSource({
-            sources : [GlobeFS]
-        });
+        this._material = undefined;
 
         this._surface = new QuadtreePrimitive({
             tileProvider : new GlobeSurfaceTileProvider({
@@ -102,6 +92,8 @@ define([
         this._terrainProvider = terrainProvider;
         this._terrainProviderChanged = new Event();
 
+        makeShadersDirty(this);
+
         /**
          * Determines if the globe will be shown.
          *
@@ -110,15 +102,10 @@ define([
          */
         this.show = true;
 
-        /**
-         * The normal map to use for rendering waves in the ocean.  Setting this property will
-         * only have an effect if the configured terrain provider includes a water mask.
-         *
-         * @type {String}
-         * @default buildModuleUrl('Assets/Textures/waterNormalsSmall.jpg')
-         */
-        this.oceanNormalMapUrl = buildModuleUrl('Assets/Textures/waterNormalsSmall.jpg');
-        this._oceanNormalMapUrl = undefined;
+        this._oceanNormalMapResourceDirty = true;
+        this._oceanNormalMapResource = new Resource({
+            url: buildModuleUrl('Assets/Textures/waterNormalsSmall.jpg')
+        });
 
         /**
          * The maximum screen-space error used to drive level-of-detail refinement.  Higher
@@ -144,27 +131,55 @@ define([
          * Enable lighting the globe with the sun as a light source.
          *
          * @type {Boolean}
-         * @default false
+         * @default true
          */
         this.enableLighting = false;
 
         /**
+         * Enable the ground atmosphere, which is drawn over the globe when viewed from a distance between <code>lightingFadeInDistance</code> and <code>lightingFadeOutDistance</code>.
+         *
+         * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Ground%20Atmosphere.html|Ground atmosphere demo in Sandcastle}
+         *
+         * @type {Boolean}
+         * @default true
+         */
+        this.showGroundAtmosphere = true;
+
+        /**
          * The distance where everything becomes lit. This only takes effect
-         * when <code>enableLighting</code> is <code>true</code>.
+         * when <code>enableLighting</code> or <code>showGroundAtmosphere</code> is <code>true</code>.
          *
          * @type {Number}
-         * @default 6500000.0
+         * @default 10000000.0
          */
-        this.lightingFadeOutDistance = 6500000.0;
+        this.lightingFadeOutDistance = 1.0e7;
 
         /**
          * The distance where lighting resumes. This only takes effect
-         * when <code>enableLighting</code> is <code>true</code>.
+         * when <code>enableLighting</code> or <code>showGroundAtmosphere</code> is <code>true</code>.
          *
          * @type {Number}
-         * @default 9000000.0
+         * @default 20000000.0
          */
-        this.lightingFadeInDistance = 9000000.0;
+        this.lightingFadeInDistance = 2.0e7;
+
+        /**
+         * The distance where the darkness of night from the ground atmosphere fades out to a lit ground atmosphere.
+         * This only takes effect when <code>showGroundAtmosphere</code> and <code>enableLighting</code> are <code>true</code>.
+         *
+         * @type {Number}
+         * @default 10000000.0
+         */
+        this.nightFadeOutDistance = 1.0e7;
+
+        /**
+         * The distance where the darkness of night from the ground atmosphere fades in to an unlit ground atmosphere.
+         * This only takes effect when <code>showGroundAtmosphere</code> and <code>enableLighting</code> are <code>true</code>.
+         *
+         * @type {Number}
+         * @default 50000000.0
+         */
+        this.nightFadeInDistance = 5.0e7;
 
         /**
          * True if an animated wave effect should be shown in areas of the globe
@@ -199,8 +214,32 @@ define([
          */
         this.shadows = ShadowMode.RECEIVE_ONLY;
 
+        /**
+         * The hue shift to apply to the atmosphere. Defaults to 0.0 (no shift).
+         * A hue shift of 1.0 indicates a complete rotation of the hues available.
+         * @type {Number}
+         * @default 0.0
+         */
+        this.atmosphereHueShift = 0.0;
+
+        /**
+         * The saturation shift to apply to the atmosphere. Defaults to 0.0 (no shift).
+         * A saturation shift of -1.0 is monochrome.
+         * @type {Number}
+         * @default 0.0
+         */
+        this.atmosphereSaturationShift = 0.0;
+
+        /**
+         * The brightness shift to apply to the atmosphere. Defaults to 0.0 (no shift).
+         * A brightness shift of -1.0 is complete darkness, which will let space show through.
+         * @type {Number}
+         * @default 0.0
+         */
+        this.atmosphereBrightnessShift = 0.0;
+
         this._oceanNormalMap = undefined;
-        this._zoomedOutOceanSpecularIntensity = 0.5;
+        this._zoomedOutOceanSpecularIntensity = undefined;
     }
 
     defineProperties(Globe.prototype, {
@@ -225,6 +264,45 @@ define([
             }
         },
         /**
+         * Gets an event that's raised when an imagery layer is added, shown, hidden, moved, or removed.
+         *
+         * @memberof Globe.prototype
+         * @type {Event}
+         * @readonly
+         */
+        imageryLayersUpdatedEvent : {
+            get : function() {
+                return this._surface.tileProvider.imageryLayersUpdatedEvent;
+            }
+        },
+        /**
+         * Gets an event that's raised when a surface tile is loaded and ready to be rendered.
+         *
+         * @memberof Globe.prototype
+         * @type {Event}
+         * @readonly
+         */
+        tileLoadedEvent : {
+            get : function() {
+                return this._surface.tileProvider.tileLoadedEvent;
+            }
+        },
+        /**
+         * Returns <code>true</code> when the tile load queue is empty, <code>false</code> otherwise.  When the load queue is empty,
+         * all terrain and imagery for the current view have been loaded.
+         * @memberof Globe.prototype
+         * @type {Boolean}
+         * @readonly
+         */
+        tilesLoaded: {
+            get: function() {
+                if (!defined(this._surface)) {
+                    return true;
+                }
+                return (this._surface.tileProvider.ready && this._surface._tileLoadQueueHigh.length === 0 && this._surface._tileLoadQueueMedium.length === 0 && this._surface._tileLoadQueueLow.length === 0);
+            }
+        },
+        /**
          * Gets or sets the color of the globe when no imagery is available.
          * @memberof Globe.prototype
          * @type {Color}
@@ -235,6 +313,44 @@ define([
             },
             set : function(value) {
                 this._surface.tileProvider.baseColor = value;
+            }
+        },
+        /**
+         * A property specifying a {@link ClippingPlaneCollection} used to selectively disable rendering on the outside of each plane.
+         *
+         * @memberof Globe.prototype
+         * @type {ClippingPlaneCollection}
+         */
+        clippingPlanes : {
+            get : function() {
+                return this._surface.tileProvider.clippingPlanes;
+            },
+            set : function(value) {
+                this._surface.tileProvider.clippingPlanes = value;
+            }
+        },
+        cartographicLimitRectangle : {
+            get : function() {
+                return this._surface.tileProvider.cartographicLimitRectangle;
+            },
+            set : function(value) {
+                this._surface.tileProvider.cartographicLimitRectangle = value;
+            }
+        },
+        /**
+         * The normal map to use for rendering waves in the ocean.  Setting this property will
+         * only have an effect if the configured terrain provider includes a water mask.
+         * @memberof Globe.prototype
+         * @type {String}
+         * @default buildModuleUrl('Assets/Textures/waterNormalsSmall.jpg')
+         */
+        oceanNormalMapUrl: {
+            get: function() {
+                return this._oceanNormalMapResource.url;
+            },
+            set: function(value) {
+                this._oceanNormalMapResource.url = value;
+                this._oceanNormalMapResourceDirty = true;
             }
         },
         /**
@@ -253,6 +369,9 @@ define([
                 if (value !== this._terrainProvider) {
                     this._terrainProvider = value;
                     this._terrainProviderChanged.raiseEvent(value);
+                    if (defined(this._material)) {
+                        makeShadersDirty(this);
+                    }
                 }
             }
         },
@@ -279,8 +398,53 @@ define([
             get: function() {
                 return this._surface.tileLoadProgressEvent;
             }
+        },
+
+        /**
+         * Gets or sets the material appearance of the Globe.  This can be one of several built-in {@link Material} objects or a custom material, scripted with
+         * {@link https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric|Fabric}.
+         * @memberof Globe.prototype
+         * @type {Material}
+         */
+        material: {
+            get: function() {
+                return this._material;
+            },
+            set: function(material) {
+                if (this._material !== material) {
+                    this._material = material;
+                    makeShadersDirty(this);
+                }
+            }
         }
     });
+
+    function makeShadersDirty(globe) {
+        var defines = [];
+
+        var requireNormals = defined(globe._material) && (globe._material.shaderSource.match(/slope/) || globe._material.shaderSource.match('normalEC'));
+
+        var fragmentSources = [GroundAtmosphere];
+        if (defined(globe._material) && (!requireNormals || globe._terrainProvider.requestVertexNormals)) {
+            fragmentSources.push(globe._material.shaderSource);
+            defines.push('APPLY_MATERIAL');
+            globe._surface._tileProvider.uniformMap = globe._material._uniforms;
+        } else {
+            globe._surface._tileProvider.uniformMap = undefined;
+        }
+        fragmentSources.push(GlobeFS);
+
+        globe._surfaceShaderSet.baseVertexShaderSource = new ShaderSource({
+            sources : [GroundAtmosphere, GlobeVS],
+            defines : defines
+        });
+
+        globe._surfaceShaderSet.baseFragmentShaderSource = new ShaderSource({
+            sources : fragmentSources,
+            defines : defines
+        });
+        globe._surfaceShaderSet.material = globe._material;
+    }
 
     function createComparePickTileFunction(rayOrigin) {
         return function(a, b) {
@@ -303,14 +467,11 @@ define([
      * @param {Ray} ray The ray to test for intersection.
      * @param {Scene} scene The scene.
      * @param {Cartesian3} [result] The object onto which to store the result.
-     * @returns {Cartesian3|undefined} The intersection or <code>undefined</code> if none was found.
+     * @returns {Cartesian3|undefined} The intersection or <code>undefined</code> if none was found.  The returned position is in projected coordinates for 2D and Columbus View.
      *
-     * @example
-     * // find intersection of ray through a pixel and the globe
-     * var ray = viewer.camera.getPickRay(windowCoordinates);
-     * var intersection = globe.pick(ray, scene);
+     * @private
      */
-    Globe.prototype.pick = function(ray, scene, result) {
+    Globe.prototype.pickWorldCoordinates = function(ray, scene, result) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(ray)) {
             throw new DeveloperError('ray is required');
@@ -366,6 +527,31 @@ define([
         }
 
         return intersection;
+    };
+
+    var cartoScratch = new Cartographic();
+    /**
+     * Find an intersection between a ray and the globe surface that was rendered. The ray must be given in world coordinates.
+     *
+     * @param {Ray} ray The ray to test for intersection.
+     * @param {Scene} scene The scene.
+     * @param {Cartesian3} [result] The object onto which to store the result.
+     * @returns {Cartesian3|undefined} The intersection or <code>undefined</code> if none was found.
+     *
+     * @example
+     * // find intersection of ray through a pixel and the globe
+     * var ray = viewer.camera.getPickRay(windowCoordinates);
+     * var intersection = globe.pick(ray, scene);
+     */
+    Globe.prototype.pick = function(ray, scene, result) {
+        result = this.pickWorldCoordinates(ray, scene, result);
+        if (defined(result) && scene.mode !== SceneMode.SCENE3D) {
+            result = Cartesian3.fromElements(result.y, result.z, result.x, result);
+            var carto = scene.mapProjection.unproject(result, cartoScratch);
+            result = scene.globe.ellipsoid.cartographicToCartesian(carto, result);
+        }
+
+        return result;
     };
 
     var scratchGetHeightCartesian = new Cartesian3();
@@ -459,25 +645,34 @@ define([
     /**
      * @private
      */
-    Globe.prototype.beginFrame = function(frameState) {
+    Globe.prototype.update = function(frameState) {
         if (!this.show) {
             return;
         }
 
+        if (frameState.passes.render) {
+            this._surface.update(frameState);
+        }
+    };
+
+    /**
+     * @private
+     */
+    Globe.prototype.beginFrame = function(frameState) {
         var surface = this._surface;
         var tileProvider = surface.tileProvider;
         var terrainProvider = this.terrainProvider;
         var hasWaterMask = this.showWaterEffect && terrainProvider.ready && terrainProvider.hasWaterMask;
 
-        if (hasWaterMask && this.oceanNormalMapUrl !== this._oceanNormalMapUrl) {
+        if (hasWaterMask && this._oceanNormalMapResourceDirty) {
             // url changed, load new normal map asynchronously
-            var oceanNormalMapUrl = this.oceanNormalMapUrl;
-            this._oceanNormalMapUrl = oceanNormalMapUrl;
-
+            this._oceanNormalMapResourceDirty = false;
+            var oceanNormalMapResource = this._oceanNormalMapResource;
+            var oceanNormalMapUrl =  oceanNormalMapResource.url;
             if (defined(oceanNormalMapUrl)) {
                 var that = this;
-                when(loadImage(oceanNormalMapUrl), function(image) {
-                    if (oceanNormalMapUrl !== that.oceanNormalMapUrl) {
+                when(oceanNormalMapResource.fetchImage(), function(image) {
+                    if (oceanNormalMapUrl !== that._oceanNormalMapResource.url) {
                         // url changed while we were loading
                         return;
                     }
@@ -493,15 +688,14 @@ define([
             }
         }
 
-        var mode = frameState.mode;
         var pass = frameState.passes;
+        var mode = frameState.mode;
 
         if (pass.render) {
-            // Don't show the ocean specular highlights when zoomed out in 2D and Columbus View.
-            if (mode === SceneMode.SCENE3D) {
-                this._zoomedOutOceanSpecularIntensity = 0.5;
+            if (this.showGroundAtmosphere) {
+                this._zoomedOutOceanSpecularIntensity = 0.4;
             } else {
-                this._zoomedOutOceanSpecularIntensity = 0.0;
+                this._zoomedOutOceanSpecularIntensity = 0.5;
             }
 
             surface.maximumScreenSpaceError = this.maximumScreenSpaceError;
@@ -510,11 +704,17 @@ define([
             tileProvider.terrainProvider = this.terrainProvider;
             tileProvider.lightingFadeOutDistance = this.lightingFadeOutDistance;
             tileProvider.lightingFadeInDistance = this.lightingFadeInDistance;
-            tileProvider.zoomedOutOceanSpecularIntensity = this._zoomedOutOceanSpecularIntensity;
+            tileProvider.nightFadeOutDistance = this.nightFadeOutDistance;
+            tileProvider.nightFadeInDistance = this.nightFadeInDistance;
+            tileProvider.zoomedOutOceanSpecularIntensity = mode === SceneMode.SCENE3D ? this._zoomedOutOceanSpecularIntensity : 0.0;
             tileProvider.hasWaterMask = hasWaterMask;
             tileProvider.oceanNormalMap = this._oceanNormalMap;
             tileProvider.enableLighting = this.enableLighting;
+            tileProvider.showGroundAtmosphere = this.showGroundAtmosphere;
             tileProvider.shadows = this.shadows;
+            tileProvider.hueShift = this.atmosphereHueShift;
+            tileProvider.saturationShift = this.atmosphereSaturationShift;
+            tileProvider.brightnessShift = this.atmosphereBrightnessShift;
 
             surface.beginFrame(frameState);
         }
@@ -523,20 +723,24 @@ define([
     /**
      * @private
      */
-    Globe.prototype.update = function(frameState) {
+    Globe.prototype.render = function(frameState) {
         if (!this.show) {
             return;
+        }
+
+        if (defined(this._material)) {
+            this._material.update(frameState.context);
         }
 
         var surface = this._surface;
         var pass = frameState.passes;
 
         if (pass.render) {
-            surface.update(frameState);
+            surface.render(frameState);
         }
 
         if (pass.pick) {
-            surface.update(frameState);
+            surface.render(frameState);
         }
     };
 
@@ -574,8 +778,6 @@ define([
      * Once an object is destroyed, it should not be used; calling any function other than
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
      * assign the return value (<code>undefined</code>) to the object as done in the example.
-     *
-     * @returns {undefined}
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *

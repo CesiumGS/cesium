@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Scene/TileImagery',
         'Scene/ImageryState'

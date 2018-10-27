@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Core/Quaternion',
         'Core/Cartesian3',

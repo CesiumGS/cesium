@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../ThirdParty/when',
         './BoundingSphere',
@@ -77,6 +76,7 @@ define([
      *                  otherwise, false.
      * @param {Uint8Array} [options.encodedNormals] The buffer containing per vertex normals, encoded using 'oct' encoding
      * @param {Uint8Array} [options.waterMask] The buffer containing the watermask.
+     * @param {Credit[]} [options.credits] Array of credits for this tile.
      *
      *
      * @example
@@ -165,6 +165,7 @@ define([
         this._boundingSphere = options.boundingSphere;
         this._orientedBoundingBox = options.orientedBoundingBox;
         this._horizonOcclusionPoint = options.horizonOcclusionPoint;
+        this._credits = options.credits;
 
         var vertexCount = this._quantizedVertices.length / 3;
         var uValues = this._uValues = this._quantizedVertices.subarray(0, vertexCount);
@@ -200,6 +201,16 @@ define([
 
     defineProperties(QuantizedMeshTerrainData.prototype, {
         /**
+         * An array of credits for this tile.
+         * @memberof QuantizedMeshTerrainData.prototype
+         * @type {Credit[]}
+         */
+        credits : {
+            get : function() {
+                return this._credits;
+            }
+        },
+        /**
          * The water mask included in this terrain data, if any.  A water mask is a rectangular
          * Uint8Array or image where a value of 255 indicates water and a value of 0 indicates land.
          * Values in between 0 and 255 are allowed as well to smoothly blend between land and water.
@@ -227,9 +238,8 @@ define([
         if (needsSort) {
             arrayScratch.sort(sortFunction);
             return IndexDatatype.createTypedArray(vertexCount, arrayScratch);
-        } else {
-            return indices;
         }
+        return indices;
     }
 
     var createMeshTaskProcessor = new TaskProcessor('createVerticesFromQuantizedTerrainMesh');
@@ -429,8 +439,9 @@ define([
         var southSkirtHeight = isNorthChild ? (shortestSkirt * 0.5) : this._southSkirtHeight;
         var eastSkirtHeight = isEastChild ? this._eastSkirtHeight : (shortestSkirt * 0.5);
         var northSkirtHeight = isNorthChild ? this._northSkirtHeight : (shortestSkirt * 0.5);
+        var credits = this._credits;
 
-        return when(upsamplePromise, function(result) {
+        return when(upsamplePromise).then(function(result) {
             var quantizedVertices = new Uint16Array(result.vertices);
             var indicesTypedArray = IndexDatatype.createTypedArray(quantizedVertices.length / 3, result.indices);
             var encodedNormals;
@@ -456,6 +467,7 @@ define([
                 eastSkirtHeight : eastSkirtHeight,
                 northSkirtHeight : northSkirtHeight,
                 childTileMask : 0,
+                credits: credits,
                 createdByUpsampling : true
             });
         });
@@ -483,7 +495,7 @@ define([
             return interpolateHeight(this, u, v);
         }
 
-        interpolateMeshHeight(this, u, v);
+        return interpolateMeshHeight(this, u, v);
     };
 
     var texCoordScratch0 = new Cartesian2();

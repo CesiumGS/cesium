@@ -1,15 +1,15 @@
-/*global define*/
 define([
         './defined',
         './defineProperties'
     ], function(
         defined,
-        defineProperties
-    ) {
+        defineProperties) {
     'use strict';
 
     /**
      * Describes a compressed texture and contains a compressed texture buffer.
+     * @alias CompressedTextureBuffer
+     * @constructor
      *
      * @param {PixelFormat} internalFormat The pixel format of the compressed texture.
      * @param {Number} width The width of the texture.
@@ -28,6 +28,7 @@ define([
          * The format of the compressed texture.
          * @type PixelFormat
          * @readonly
+         * @memberof CompressedTextureBuffer.prototype
          */
         internalFormat : {
             get : function() {
@@ -38,6 +39,7 @@ define([
          * The width of the texture.
          * @type Number
          * @readonly
+         * @memberof CompressedTextureBuffer.prototype
          */
         width : {
             get : function() {
@@ -48,6 +50,7 @@ define([
          * The height of the texture.
          * @type Number
          * @readonly
+         * @memberof CompressedTextureBuffer.prototype
          */
         height : {
             get : function() {
@@ -58,6 +61,7 @@ define([
          * The compressed texture buffer.
          * @type Uint8Array
          * @readonly
+         * @memberof CompressedTextureBuffer.prototype
          */
         bufferView : {
             get : function() {

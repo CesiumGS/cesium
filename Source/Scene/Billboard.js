@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/BoundingRectangle',
         '../Core/Cartesian2',
@@ -14,6 +13,7 @@ define([
         '../Core/DistanceDisplayCondition',
         '../Core/Matrix4',
         '../Core/NearFarScalar',
+        '../Core/Resource',
         './HeightReference',
         './HorizontalOrigin',
         './SceneMode',
@@ -34,6 +34,7 @@ define([
         DistanceDisplayCondition,
         Matrix4,
         NearFarScalar,
+        Resource,
         HeightReference,
         HorizontalOrigin,
         SceneMode,
@@ -47,7 +48,7 @@ define([
      * properties are set by calling {@link BillboardCollection#add}.
      * <br /><br />
      * <div align='center'>
-     * <img src='images/Billboard.png' width='400' height='300' /><br />
+     * <img src='Images/Billboard.png' width='400' height='300' /><br />
      * Example billboards
      * </div>
      *
@@ -70,26 +71,55 @@ define([
      * @see Label
      *
      * @internalConstructor
+     * @class
      *
-     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Billboards.html|Cesium Sandcastle Billboard Demo}
+     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Billboards.html|Cesium Sandcastle Billboard Demo}
      */
     function Billboard(options, billboardCollection) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         //>>includeStart('debug', pragmas.debug);
-        if (defined(options.scaleByDistance) && options.scaleByDistance.far <= options.scaleByDistance.near) {
-            throw new DeveloperError('scaleByDistance.far must be greater than scaleByDistance.near.');
-        }
-        if (defined(options.translucencyByDistance) && options.translucencyByDistance.far <= options.translucencyByDistance.near) {
-            throw new DeveloperError('translucencyByDistance.far must be greater than translucencyByDistance.near.');
-        }
-        if (defined(options.pixelOffsetScaleByDistance) && options.pixelOffsetScaleByDistance.far <= options.pixelOffsetScaleByDistance.near) {
-            throw new DeveloperError('pixelOffsetScaleByDistance.far must be greater than pixelOffsetScaleByDistance.near.');
-        }
-        if (defined(options.distanceDisplayCondition) && options.distanceDisplayCondition.far <= options.distanceDisplayCondition.near) {
-            throw new DeveloperError('distanceDisplayCondition.far must be greater than distanceDisplayCondition.near');
+        if (defined(options.disableDepthTestDistance) && options.disableDepthTestDistance < 0.0) {
+            throw new DeveloperError('disableDepthTestDistance must be greater than or equal to 0.0.');
         }
         //>>includeEnd('debug');
+
+        var translucencyByDistance = options.translucencyByDistance;
+        var pixelOffsetScaleByDistance = options.pixelOffsetScaleByDistance;
+        var scaleByDistance = options.scaleByDistance;
+        var distanceDisplayCondition = options.distanceDisplayCondition;
+        if (defined(translucencyByDistance)) {
+            //>>includeStart('debug', pragmas.debug);
+            if (translucencyByDistance.far <= translucencyByDistance.near) {
+                throw new DeveloperError('translucencyByDistance.far must be greater than translucencyByDistance.near.');
+            }
+            //>>includeEnd('debug');
+            translucencyByDistance = NearFarScalar.clone(translucencyByDistance);
+        }
+        if (defined(pixelOffsetScaleByDistance)) {
+            //>>includeStart('debug', pragmas.debug);
+            if (pixelOffsetScaleByDistance.far <= pixelOffsetScaleByDistance.near) {
+                throw new DeveloperError('pixelOffsetScaleByDistance.far must be greater than pixelOffsetScaleByDistance.near.');
+            }
+            //>>includeEnd('debug');
+            pixelOffsetScaleByDistance = NearFarScalar.clone(pixelOffsetScaleByDistance);
+        }
+        if (defined(scaleByDistance)) {
+            //>>includeStart('debug', pragmas.debug);
+            if (scaleByDistance.far <= scaleByDistance.near) {
+                throw new DeveloperError('scaleByDistance.far must be greater than scaleByDistance.near.');
+            }
+            //>>includeEnd('debug');
+            scaleByDistance = NearFarScalar.clone(scaleByDistance);
+        }
+        if (defined(distanceDisplayCondition)) {
+            //>>includeStart('debug', pragmas.debug);
+            if (distanceDisplayCondition.far <= distanceDisplayCondition.near) {
+                throw new DeveloperError('distanceDisplayCondition.far must be greater than distanceDisplayCondition.near.');
+            }
+            //>>includeEnd('debug');
+            distanceDisplayCondition = DistanceDisplayCondition.clone(distanceDisplayCondition);
+        }
 
         this._show = defaultValue(options.show, true);
         this._position = Cartesian3.clone(defaultValue(options.position, Cartesian3.ZERO));
@@ -106,11 +136,12 @@ define([
         this._alignedAxis = Cartesian3.clone(defaultValue(options.alignedAxis, Cartesian3.ZERO));
         this._width = options.width;
         this._height = options.height;
-        this._scaleByDistance = options.scaleByDistance;
-        this._translucencyByDistance = options.translucencyByDistance;
-        this._pixelOffsetScaleByDistance = options.pixelOffsetScaleByDistance;
+        this._scaleByDistance = scaleByDistance;
+        this._translucencyByDistance = translucencyByDistance;
+        this._pixelOffsetScaleByDistance = pixelOffsetScaleByDistance;
         this._sizeInMeters = defaultValue(options.sizeInMeters, false);
-        this._distanceDisplayCondition = options.distanceDisplayCondition;
+        this._distanceDisplayCondition = distanceDisplayCondition;
+        this._disableDepthTestDistance = options.disableDepthTestDistance;
         this._id = options.id;
         this._collection = defaultValue(options.collection, billboardCollection);
 
@@ -119,6 +150,7 @@ define([
         this._billboardCollection = billboardCollection;
         this._dirty = false;
         this._index = -1; //Used only by BillboardCollection
+        this._batchIndex = undefined; // Used only by Vector3DTilePoints and BillboardCollection
 
         this._imageIndex = -1;
         this._imageIndexPromise = undefined;
@@ -127,6 +159,10 @@ define([
         this._imageSubRegion = undefined;
         this._imageWidth = undefined;
         this._imageHeight = undefined;
+
+        this._labelDimensions = undefined;
+        this._labelHorizontalOrigin = undefined;
+        this._labelTranslate = undefined;
 
         var image = options.image;
         var imageId = options.imageId;
@@ -178,7 +214,9 @@ define([
     var TRANSLUCENCY_BY_DISTANCE_INDEX = Billboard.TRANSLUCENCY_BY_DISTANCE_INDEX = 12;
     var PIXEL_OFFSET_SCALE_BY_DISTANCE_INDEX = Billboard.PIXEL_OFFSET_SCALE_BY_DISTANCE_INDEX = 13;
     var DISTANCE_DISPLAY_CONDITION = Billboard.DISTANCE_DISPLAY_CONDITION = 14;
-    Billboard.NUMBER_OF_PROPERTIES = 15;
+    var DISABLE_DEPTH_DISTANCE = Billboard.DISABLE_DEPTH_DISTANCE = 15;
+    Billboard.TEXTURE_COORDINATE_BOUNDS = 16;
+    Billboard.NUMBER_OF_PROPERTIES = 17;
 
     function makeDirty(billboard, propertyChanged) {
         var billboardCollection = billboard._billboardCollection;
@@ -234,7 +272,6 @@ define([
                 if (!Cartesian3.equals(position, value)) {
                     Cartesian3.clone(value, position);
                     Cartesian3.clone(value, this._actualPosition);
-
                     this._updateClamping();
                     makeDirty(this, POSITION_INDEX);
                 }
@@ -275,8 +312,8 @@ define([
          * <br /><br />
          * <div align='center'>
          * <table border='0' cellpadding='5'><tr>
-         * <td align='center'><code>default</code><br/><img src='images/Billboard.setPixelOffset.default.png' width='250' height='188' /></td>
-         * <td align='center'><code>b.pixeloffset = new Cartesian2(50, 25);</code><br/><img src='images/Billboard.setPixelOffset.x50y-25.png' width='250' height='188' /></td>
+         * <td align='center'><code>default</code><br/><img src='Images/Billboard.setPixelOffset.default.png' width='250' height='188' /></td>
+         * <td align='center'><code>b.pixeloffset = new Cartesian2(50, 25);</code><br/><img src='Images/Billboard.setPixelOffset.x50y-25.png' width='250' height='188' /></td>
          * </tr></table>
          * The billboard's origin is indicated by the yellow point.
          * </div>
@@ -440,8 +477,8 @@ define([
          * <br /><br />
          * <div align='center'>
          * <table border='0' cellpadding='5'><tr>
-         * <td align='center'><img src='images/Billboard.setEyeOffset.one.png' width='250' height='188' /></td>
-         * <td align='center'><img src='images/Billboard.setEyeOffset.two.png' width='250' height='188' /></td>
+         * <td align='center'><img src='Images/Billboard.setEyeOffset.one.png' width='250' height='188' /></td>
+         * <td align='center'><img src='Images/Billboard.setEyeOffset.two.png' width='250' height='188' /></td>
          * </tr></table>
          * <code>b.eyeOffset = new Cartesian3(0.0, 8000000.0, 0.0);</code><br /><br />
          * </div>
@@ -472,7 +509,7 @@ define([
          * to the left, center, or right of its anchor position.
          * <br /><br />
          * <div align='center'>
-         * <img src='images/Billboard.setHorizontalOrigin.png' width='648' height='196' /><br />
+         * <img src='Images/Billboard.setHorizontalOrigin.png' width='648' height='196' /><br />
          * </div>
          * @memberof Billboard.prototype
          * @type {HorizontalOrigin}
@@ -504,7 +541,7 @@ define([
          * to the above, below, or at the center of its anchor position.
          * <br /><br />
          * <div align='center'>
-         * <img src='images/Billboard.setVerticalOrigin.png' width='695' height='175' /><br />
+         * <img src='Images/Billboard.setVerticalOrigin.png' width='695' height='175' /><br />
          * </div>
          * @memberof Billboard.prototype
          * @type {VerticalOrigin}
@@ -538,7 +575,7 @@ define([
          * the billboard.
          * <br /><br />
          * <div align='center'>
-         * <img src='images/Billboard.setScale.png' width='400' height='300' /><br/>
+         * <img src='Images/Billboard.setScale.png' width='400' height='300' /><br/>
          * From left to right in the above image, the scales are <code>0.5</code>, <code>1.0</code>,
          * and <code>2.0</code>.
          * </div>
@@ -571,8 +608,8 @@ define([
          * <br /><br />
          * <div align='center'>
          * <table border='0' cellpadding='5'><tr>
-         * <td align='center'><code>default</code><br/><img src='images/Billboard.setColor.Alpha255.png' width='250' height='188' /></td>
-         * <td align='center'><code>alpha : 0.5</code><br/><img src='images/Billboard.setColor.Alpha127.png' width='250' height='188' /></td>
+         * <td align='center'><code>default</code><br/><img src='Images/Billboard.setColor.Alpha255.png' width='250' height='188' /></td>
+         * <td align='center'><code>alpha : 0.5</code><br/><img src='Images/Billboard.setColor.Alpha127.png' width='250' height='188' /></td>
          * </tr></table>
          * </div>
          * <br />
@@ -749,6 +786,29 @@ define([
         },
 
         /**
+         * Gets or sets the distance from the camera at which to disable the depth test to, for example, prevent clipping against terrain.
+         * When set to zero, the depth test is always applied. When set to Number.POSITIVE_INFINITY, the depth test is never applied.
+         * @memberof Billboard.prototype
+         * @type {Number}
+         */
+        disableDepthTestDistance : {
+            get : function() {
+                return this._disableDepthTestDistance;
+            },
+            set : function(value) {
+                if (this._disableDepthTestDistance !== value) {
+                    //>>includeStart('debug', pragmas.debug);
+                    if (defined(value) && value < 0.0) {
+                        throw new DeveloperError('disableDepthTestDistance must be greater than or equal to 0.0.');
+                    }
+                    //>>includeEnd('debug');
+                    this._disableDepthTestDistance = value;
+                    makeDirty(this, DISABLE_DEPTH_DISTANCE);
+                }
+            }
+        },
+
+        /**
          * Gets or sets the user-defined object returned when the billboard is picked.
          * @memberof Billboard.prototype
          * @type {Object}
@@ -779,6 +839,15 @@ define([
                 if (defined(this._pickId)) {
                     this._pickId.object.primitive = value;
                 }
+            }
+        },
+
+        /**
+         * @private
+         */
+        pickId : {
+            get : function() {
+                return this._pickId;
             }
         },
 
@@ -816,6 +885,8 @@ define([
                     makeDirty(this, IMAGE_INDEX_INDEX);
                 } else if (typeof value === 'string') {
                     this.setImage(value, value);
+                } else if (value instanceof Resource) {
+                    this.setImage(value.url, value);
                 } else if (defined(value.src)) {
                     this.setImage(value.src, value);
                 } else {
@@ -897,10 +968,10 @@ define([
 
     Billboard._updateClamping = function(collection, owner) {
         var scene = collection._scene;
-        if (!defined(scene)) {
+        if (!defined(scene) || !defined(scene.globe)) {
             //>>includeStart('debug', pragmas.debug);
             if (owner._heightReference !== HeightReference.NONE) {
-                throw new DeveloperError('Height reference is not supported without a scene.');
+                throw new DeveloperError('Height reference is not supported without a scene and globe.');
             }
             //>>includeEnd('debug');
             return;
@@ -927,6 +998,7 @@ define([
 
         var position = ellipsoid.cartesianToCartographic(owner._position);
         if (!defined(position)) {
+            owner._actualClampedPosition = undefined;
             return;
         }
 
@@ -1018,7 +1090,7 @@ define([
      * </p>
      *
      * @param {String} id The id of the image.  This can be any string that uniquely identifies the image.
-     * @param {Image|Canvas|String|Billboard~CreateImageCallback} image The image to load.  This parameter
+     * @param {Image|Canvas|String|Resource|Billboard~CreateImageCallback} image The image to load.  This parameter
      *        can either be a loaded Image or Canvas, a URL which will be loaded as an Image automatically,
      *        or a function which will be called to create the image if it hasn't been loaded already.
      * @example
@@ -1186,15 +1258,26 @@ define([
         }
         //>>includeEnd('debug');
 
-        // pixel offset for screenspace computation is the pixelOffset + screenspace translate
+        // pixel offset for screen space computation is the pixelOffset + screen space translate
         Cartesian2.clone(this._pixelOffset, scratchPixelOffset);
         Cartesian2.add(scratchPixelOffset, this._translate, scratchPixelOffset);
 
         var modelMatrix = billboardCollection.modelMatrix;
-        var actualPosition = this._getActualPosition();
+        var position = this._position;
+        if (defined(this._clampedPosition)) {
+            position = this._clampedPosition;
+            if (scene.mode !== SceneMode.SCENE3D) {
+                // position needs to be in world coordinates
+                var projection = scene.mapProjection;
+                var ellipsoid = projection.ellipsoid;
+                var cart = projection.unproject(position, scratchCartographic);
+                position = ellipsoid.cartographicToCartesian(cart, scratchCartesian3);
+                modelMatrix = Matrix4.IDENTITY;
+            }
+        }
 
-        var windowCoordinates = Billboard._computeScreenSpacePosition(modelMatrix, actualPosition,
-                this._eyeOffset, scratchPixelOffset, scene, result);
+        var windowCoordinates = Billboard._computeScreenSpacePosition(modelMatrix, position,
+            this._eyeOffset, scratchPixelOffset, scene, result);
         return windowCoordinates;
     };
 
@@ -1267,7 +1350,8 @@ define([
                NearFarScalar.equals(this._scaleByDistance, other._scaleByDistance) &&
                NearFarScalar.equals(this._translucencyByDistance, other._translucencyByDistance) &&
                NearFarScalar.equals(this._pixelOffsetScaleByDistance, other._pixelOffsetScaleByDistance) &&
-               DistanceDisplayCondition.equals(this._distanceDisplayCondition, other._distanceDisplayCondition);
+               DistanceDisplayCondition.equals(this._distanceDisplayCondition, other._distanceDisplayCondition) &&
+               this._disableDepthTestDistance === other._disableDepthTestDistance;
     };
 
     Billboard.prototype._destroy = function() {

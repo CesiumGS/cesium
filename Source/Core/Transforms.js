@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../ThirdParty/when',
         './Cartesian2',
@@ -8,7 +7,6 @@ define([
         './Check',
         './defaultValue',
         './defined',
-        './deprecationWarning',
         './DeveloperError',
         './EarthOrientationParameters',
         './EarthOrientationParametersSample',
@@ -31,7 +29,6 @@ define([
         Check,
         defaultValue,
         defined,
-        deprecationWarning,
         DeveloperError,
         EarthOrientationParameters,
         EarthOrientationParametersSample,
@@ -125,94 +122,94 @@ define([
     * @return {localFrameToFixedFrameGenerator~resultat} The function that will computes a
     * 4x4 transformation matrix from a reference frame, with first axis and second axis compliant with the parameters,
     */
-    Transforms.localFrameToFixedFrameGenerator = function( firstAxis, secondAxis) {
-      if (!vectorProductLocalFrame.hasOwnProperty(firstAxis) || !vectorProductLocalFrame[firstAxis].hasOwnProperty(secondAxis)) {
-          throw new DeveloperError('firstAxis and secondAxis must be east, north, up, west, south or down.');
-      }
-      var thirdAxis = vectorProductLocalFrame[firstAxis][secondAxis];
+    Transforms.localFrameToFixedFrameGenerator = function (firstAxis, secondAxis) {
+        if (!vectorProductLocalFrame.hasOwnProperty(firstAxis) || !vectorProductLocalFrame[firstAxis].hasOwnProperty(secondAxis)) {
+            throw new DeveloperError('firstAxis and secondAxis must be east, north, up, west, south or down.');
+        }
+        var thirdAxis = vectorProductLocalFrame[firstAxis][secondAxis];
 
-      /**
-       * Computes a 4x4 transformation matrix from a reference frame
-       * centered at the provided origin to the provided ellipsoid's fixed reference frame.
-       * @callback Transforms~LocalFrameToFixedFrame
-       * @param {Cartesian3} origin The center point of the local reference frame.
-       * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid whose fixed frame is used in the transformation.
-       * @param {Matrix4} [result] The object onto which to store the result.
-       * @returns {Matrix4} The modified result parameter or a new Matrix4 instance if none was provided.
-       */
-      var resultat;
-      var hashAxis = firstAxis + secondAxis;
-      if (defined(localFrameToFixedFrameCache[hashAxis])) {
-          resultat = localFrameToFixedFrameCache[hashAxis];
-      } else {
-          resultat = function(origin, ellipsoid, result) {
-              //>>includeStart('debug', pragmas.debug);
-              if (!defined(origin)) {
-                  throw new DeveloperError('origin is required.');
-              }
-              //>>includeEnd('debug');
-              if (!defined(result)) {
-                  result = new Matrix4();
-              }
-              // If x and y are zero, assume origin is at a pole, which is a special case.
-              if (CesiumMath.equalsEpsilon(origin.x, 0.0, CesiumMath.EPSILON14) && CesiumMath.equalsEpsilon(origin.y, 0.0, CesiumMath.EPSILON14)) {
-                  var sign = CesiumMath.sign(origin.z);
+        /**
+         * Computes a 4x4 transformation matrix from a reference frame
+         * centered at the provided origin to the provided ellipsoid's fixed reference frame.
+         * @callback Transforms~LocalFrameToFixedFrame
+         * @param {Cartesian3} origin The center point of the local reference frame.
+         * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid whose fixed frame is used in the transformation.
+         * @param {Matrix4} [result] The object onto which to store the result.
+         * @returns {Matrix4} The modified result parameter or a new Matrix4 instance if none was provided.
+         */
+        var resultat;
+        var hashAxis = firstAxis + secondAxis;
+        if (defined(localFrameToFixedFrameCache[hashAxis])) {
+            resultat = localFrameToFixedFrameCache[hashAxis];
+        } else {
+            resultat = function (origin, ellipsoid, result) {
+                //>>includeStart('debug', pragmas.debug);
+                if (!defined(origin)) {
+                    throw new DeveloperError('origin is required.');
+                }
+                //>>includeEnd('debug');
+                if (!defined(result)) {
+                    result = new Matrix4();
+                }
+                // If x and y are zero, assume origin is at a pole, which is a special case.
+                if (CesiumMath.equalsEpsilon(origin.x, 0.0, CesiumMath.EPSILON14) && CesiumMath.equalsEpsilon(origin.y, 0.0, CesiumMath.EPSILON14)) {
+                    var sign = CesiumMath.sign(origin.z);
 
-                  Cartesian3.unpack(degeneratePositionLocalFrame[firstAxis], 0, scratchFirstCartesian);
-                  if (firstAxis !== 'east' && firstAxis !== 'west') {
-                      Cartesian3.multiplyByScalar(scratchFirstCartesian, sign, scratchFirstCartesian);
-                  }
+                    Cartesian3.unpack(degeneratePositionLocalFrame[firstAxis], 0, scratchFirstCartesian);
+                    if (firstAxis !== 'east' && firstAxis !== 'west') {
+                        Cartesian3.multiplyByScalar(scratchFirstCartesian, sign, scratchFirstCartesian);
+                    }
 
-                  Cartesian3.unpack(degeneratePositionLocalFrame[secondAxis], 0, scratchSecondCartesian);
-                  if (secondAxis !== 'east' && secondAxis !== 'west') {
-                      Cartesian3.multiplyByScalar(scratchSecondCartesian, sign, scratchSecondCartesian);
-                  }
+                    Cartesian3.unpack(degeneratePositionLocalFrame[secondAxis], 0, scratchSecondCartesian);
+                    if (secondAxis !== 'east' && secondAxis !== 'west') {
+                        Cartesian3.multiplyByScalar(scratchSecondCartesian, sign, scratchSecondCartesian);
+                    }
 
-                  Cartesian3.unpack(degeneratePositionLocalFrame[thirdAxis], 0, scratchThirdCartesian);
-                  if (thirdAxis !== 'east' && thirdAxis !== 'west') {
-                      Cartesian3.multiplyByScalar(scratchThirdCartesian, sign, scratchThirdCartesian);
-                  }
-              } else {
-                  ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
-                  ellipsoid.geodeticSurfaceNormal(origin, scratchCalculateCartesian.up);
+                    Cartesian3.unpack(degeneratePositionLocalFrame[thirdAxis], 0, scratchThirdCartesian);
+                    if (thirdAxis !== 'east' && thirdAxis !== 'west') {
+                        Cartesian3.multiplyByScalar(scratchThirdCartesian, sign, scratchThirdCartesian);
+                    }
+                } else {
+                    ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
+                    ellipsoid.geodeticSurfaceNormal(origin, scratchCalculateCartesian.up);
 
-                  var up = scratchCalculateCartesian.up;
-                  var east = scratchCalculateCartesian.east;
-                  east.x = -origin.y;
-                  east.y = origin.x;
-                  east.z = 0.0;
-                  Cartesian3.normalize(east, scratchCalculateCartesian.east);
-                  Cartesian3.cross(up, east, scratchCalculateCartesian.north);
+                    var up = scratchCalculateCartesian.up;
+                    var east = scratchCalculateCartesian.east;
+                    east.x = -origin.y;
+                    east.y = origin.x;
+                    east.z = 0.0;
+                    Cartesian3.normalize(east, scratchCalculateCartesian.east);
+                    Cartesian3.cross(up, east, scratchCalculateCartesian.north);
 
-                  Cartesian3.multiplyByScalar(scratchCalculateCartesian.up, -1, scratchCalculateCartesian.down);
-                  Cartesian3.multiplyByScalar(scratchCalculateCartesian.east, -1, scratchCalculateCartesian.west);
-                  Cartesian3.multiplyByScalar(scratchCalculateCartesian.north, -1, scratchCalculateCartesian.south);
+                    Cartesian3.multiplyByScalar(scratchCalculateCartesian.up, -1, scratchCalculateCartesian.down);
+                    Cartesian3.multiplyByScalar(scratchCalculateCartesian.east, -1, scratchCalculateCartesian.west);
+                    Cartesian3.multiplyByScalar(scratchCalculateCartesian.north, -1, scratchCalculateCartesian.south);
 
-                  scratchFirstCartesian = scratchCalculateCartesian[firstAxis];
-                  scratchSecondCartesian = scratchCalculateCartesian[secondAxis];
-                  scratchThirdCartesian = scratchCalculateCartesian[thirdAxis];
-              }
-              result[0] = scratchFirstCartesian.x;
-              result[1] = scratchFirstCartesian.y;
-              result[2] = scratchFirstCartesian.z;
-              result[3] = 0.0;
-              result[4] = scratchSecondCartesian.x;
-              result[5] = scratchSecondCartesian.y;
-              result[6] = scratchSecondCartesian.z;
-              result[7] = 0.0;
-              result[8] = scratchThirdCartesian.x;
-              result[9] = scratchThirdCartesian.y;
-              result[10] = scratchThirdCartesian.z;
-              result[11] = 0.0;
-              result[12] = origin.x;
-              result[13] = origin.y;
-              result[14] = origin.z;
-              result[15] = 1.0;
-              return result;
-          };
-          localFrameToFixedFrameCache[hashAxis] = resultat;
-      }
-      return resultat;
+                    scratchFirstCartesian = scratchCalculateCartesian[firstAxis];
+                    scratchSecondCartesian = scratchCalculateCartesian[secondAxis];
+                    scratchThirdCartesian = scratchCalculateCartesian[thirdAxis];
+                }
+                result[0] = scratchFirstCartesian.x;
+                result[1] = scratchFirstCartesian.y;
+                result[2] = scratchFirstCartesian.z;
+                result[3] = 0.0;
+                result[4] = scratchSecondCartesian.x;
+                result[5] = scratchSecondCartesian.y;
+                result[6] = scratchSecondCartesian.z;
+                result[7] = 0.0;
+                result[8] = scratchThirdCartesian.x;
+                result[9] = scratchThirdCartesian.y;
+                result[10] = scratchThirdCartesian.z;
+                result[11] = 0.0;
+                result[12] = origin.x;
+                result[13] = origin.y;
+                result[14] = origin.z;
+                result[15] = 1.0;
+                return result;
+            };
+            localFrameToFixedFrameCache[hashAxis] = resultat;
+        }
+        return resultat;
     };
 
     /**
@@ -225,6 +222,7 @@ define([
      * <li>The <code>z</code> axis points in the direction of the ellipsoid surface normal which passes through the position.</li>
      * </ul>
      *
+     * @function
      * @param {Cartesian3} origin The center point of the local reference frame.
      * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid whose fixed frame is used in the transformation.
      * @param {Matrix4} [result] The object onto which to store the result.
@@ -247,6 +245,7 @@ define([
      * <li>The <code>z</code> axis points in the opposite direction of the ellipsoid surface normal which passes through the position.</li>
      * </ul>
      *
+     * @function
      * @param {Cartesian3} origin The center point of the local reference frame.
      * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid whose fixed frame is used in the transformation.
      * @param {Matrix4} [result] The object onto which to store the result.
@@ -269,6 +268,7 @@ define([
      * <li>The <code>z</code> axis points in the local east direction.</li>
      * </ul>
      *
+     * @function
      * @param {Cartesian3} origin The center point of the local reference frame.
      * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid whose fixed frame is used in the transformation.
      * @param {Matrix4} [result] The object onto which to store the result.
@@ -282,26 +282,27 @@ define([
     Transforms.northUpEastToFixedFrame = Transforms.localFrameToFixedFrameGenerator('north','up');
 
     /**
-    * Computes a 4x4 transformation matrix from a reference frame with an north-west-up axes
-    * centered at the provided origin to the provided ellipsoid's fixed reference frame.
-    * The local axes are defined as:
-    * <ul>
-    * <li>The <code>x</code> axis points in the local north direction.</li>
-    * <li>The <code>y</code> axis points in the local west direction.</li>
-    * <li>The <code>z</code> axis points in the direction of the ellipsoid surface normal which passes through the position.</li>
-    * </ul>
-    *
-    * @param {Cartesian3} origin The center point of the local reference frame.
-    * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid whose fixed frame is used in the transformation.
-    * @param {Matrix4} [result] The object onto which to store the result.
-    * @returns {Matrix4} The modified result parameter or a new Matrix4 instance if none was provided.
-    *
-    * @example
-    * // Get the transform from local north-West-Up at cartographic (0.0, 0.0) to Earth's fixed frame.
-    * var center = Cesium.Cartesian3.fromDegrees(0.0, 0.0);
-    * var transform = Cesium.Transforms.northWestUpToFixedFrame(center);
-    */
-   Transforms.northWestUpToFixedFrame = Transforms.localFrameToFixedFrameGenerator('north','west');
+     * Computes a 4x4 transformation matrix from a reference frame with an north-west-up axes
+     * centered at the provided origin to the provided ellipsoid's fixed reference frame.
+     * The local axes are defined as:
+     * <ul>
+     * <li>The <code>x</code> axis points in the local north direction.</li>
+     * <li>The <code>y</code> axis points in the local west direction.</li>
+     * <li>The <code>z</code> axis points in the direction of the ellipsoid surface normal which passes through the position.</li>
+     * </ul>
+     *
+     * @function
+     * @param {Cartesian3} origin The center point of the local reference frame.
+     * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid whose fixed frame is used in the transformation.
+     * @param {Matrix4} [result] The object onto which to store the result.
+     * @returns {Matrix4} The modified result parameter or a new Matrix4 instance if none was provided.
+     *
+      * @example
+     * // Get the transform from local north-West-Up at cartographic (0.0, 0.0) to Earth's fixed frame.
+     * var center = Cesium.Cartesian3.fromDegrees(0.0, 0.0);
+     * var transform = Cesium.Transforms.northWestUpToFixedFrame(center);
+     */
+    Transforms.northWestUpToFixedFrame = Transforms.localFrameToFixedFrameGenerator('north','west');
 
     var scratchHPRQuaternion = new Quaternion();
     var scratchScale = new Cartesian3(1.0, 1.0, 1.0);
@@ -316,7 +317,7 @@ define([
      * @param {Cartesian3} origin The center point of the local reference frame.
      * @param {HeadingPitchRoll} headingPitchRoll The heading, pitch, and roll.
      * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid whose fixed frame is used in the transformation.
-     * @param {Transforms~LocalFrameToFixedFrame} [fixedFrameTransformOrResult=Transforms.eastNorthUpToFixedFrame] A 4x4 transformation
+     * @param {Transforms~LocalFrameToFixedFrame} [fixedFrameTransform=Transforms.eastNorthUpToFixedFrame] A 4x4 transformation
      *  matrix from a reference frame to the provided ellipsoid's fixed reference frame
      * @param {Matrix4} [result] The object onto which to store the result.
      * @returns {Matrix4} The modified result parameter or a new Matrix4 instance if none was provided.
@@ -330,21 +331,15 @@ define([
      * var hpr = new Cesium.HeadingPitchRoll(heading, pitch, roll);
      * var transform = Cesium.Transforms.headingPitchRollToFixedFrame(center, hpr);
      */
-    Transforms.headingPitchRollToFixedFrame = function(origin, headingPitchRoll, ellipsoid, fixedFrameTransformOrResult, result) {
+    Transforms.headingPitchRollToFixedFrame = function(origin, headingPitchRoll, ellipsoid, fixedFrameTransform, result) {
         //>>includeStart('debug', pragmas.debug);
         Check.typeOf.object( 'HeadingPitchRoll', headingPitchRoll);
         //>>includeEnd('debug');
 
-        // checks for required parameters happen in the called functions
-        if(fixedFrameTransformOrResult instanceof Matrix4){
-            result = fixedFrameTransformOrResult;
-            fixedFrameTransformOrResult = undefined;
-            deprecationWarning('Transforms.headingPitchRollToFixedFrame(origin, headingPitchRoll, ellipsoid, result)', 'The method was deprecated in Cesium 1.31 and will be removed in version 1.33. Transforms.headingPitchRollToFixedFrame(origin, headingPitchRoll, ellipsoid, fixedFrameTransform, result) where fixedFrameTransform is a a 4x4 transformation matrix (see Transforms.localFrameToFixedFrameGenerator)');
-        }
-        fixedFrameTransformOrResult = defaultValue(fixedFrameTransformOrResult,Transforms.eastNorthUpToFixedFrame);
+        fixedFrameTransform = defaultValue(fixedFrameTransform, Transforms.eastNorthUpToFixedFrame);
         var hprQuaternion = Quaternion.fromHeadingPitchRoll(headingPitchRoll, scratchHPRQuaternion);
         var hprMatrix = Matrix4.fromTranslationQuaternionRotationScale(Cartesian3.ZERO, hprQuaternion, scratchScale, scratchHPRMatrix4);
-        result = fixedFrameTransformOrResult(origin, ellipsoid, result);
+        result = fixedFrameTransform(origin, ellipsoid, result);
         return Matrix4.multiply(result, hprMatrix, result);
     };
 
@@ -360,7 +355,7 @@ define([
      * @param {Cartesian3} origin The center point of the local reference frame.
      * @param {HeadingPitchRoll} headingPitchRoll The heading, pitch, and roll.
      * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid whose fixed frame is used in the transformation.
-     * @param {Transforms~LocalFrameToFixedFrame} [fixedFrameTransformOrResult=Transforms.eastNorthUpToFixedFrame] A 4x4 transformation
+     * @param {Transforms~LocalFrameToFixedFrame} [fixedFrameTransform=Transforms.eastNorthUpToFixedFrame] A 4x4 transformation
      *  matrix from a reference frame to the provided ellipsoid's fixed reference frame
      * @param {Quaternion} [result] The object onto which to store the result.
      * @returns {Quaternion} The modified result parameter or a new Quaternion instance if none was provided.
@@ -374,18 +369,61 @@ define([
      * var hpr = new HeadingPitchRoll(heading, pitch, roll);
      * var quaternion = Cesium.Transforms.headingPitchRollQuaternion(center, hpr);
      */
-    Transforms.headingPitchRollQuaternion = function(origin, headingPitchRoll, ellipsoid, fixedFrameTransformOrResult, result) {
+    Transforms.headingPitchRollQuaternion = function(origin, headingPitchRoll, ellipsoid, fixedFrameTransform, result) {
         //>>includeStart('debug', pragmas.debug);
         Check.typeOf.object( 'HeadingPitchRoll', headingPitchRoll);
         //>>includeEnd('debug');
-        if (fixedFrameTransformOrResult instanceof Quaternion) {
-            result = fixedFrameTransformOrResult;
-            fixedFrameTransformOrResult = undefined;
-            deprecationWarning('Transforms.headingPitchRollQuaternion(origin, headingPitchRoll, ellipsoid, result)', 'The method was deprecated in Cesium 1.31 and will be removed in version 1.33. Transforms.headingPitchRollQuaternion(origin, headingPitchRoll, ellipsoid, fixedFrameTransform, result) where fixedFrameTransform is a a 4x4 transformation matrix (see Transforms.localFrameToFixedFrameGenerator)');
-        }
-        var transform = Transforms.headingPitchRollToFixedFrame(origin, headingPitchRoll, ellipsoid,fixedFrameTransformOrResult, scratchENUMatrix4);
+
+        var transform = Transforms.headingPitchRollToFixedFrame(origin, headingPitchRoll, ellipsoid, fixedFrameTransform, scratchENUMatrix4);
         var rotation = Matrix4.getRotation(transform, scratchHPRMatrix3);
         return Quaternion.fromRotationMatrix(rotation, result);
+    };
+
+    var noScale = new Cartesian3(1.0, 1.0, 1.0);
+    var hprCenterScratch = new Cartesian3();
+    var ffScratch = new Matrix4();
+    var hprTransformScratch = new Matrix4();
+    var hprRotationScratch = new Matrix3();
+    var hprQuaternionScratch = new Quaternion();
+    /**
+     * Computes heading-pitch-roll angles from a transform in a particular reference frame. Heading is the rotation from the local north
+     * direction where a positive angle is increasing eastward. Pitch is the rotation from the local east-north plane. Positive pitch angles
+     * are above the plane. Negative pitch angles are below the plane. Roll is the first rotation applied about the local east axis.
+     *
+     * @param {Matrix4} transform The transform
+     * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid whose fixed frame is used in the transformation.
+     * @param {Transforms~LocalFrameToFixedFrame} [fixedFrameTransform=Transforms.eastNorthUpToFixedFrame] A 4x4 transformation
+     *  matrix from a reference frame to the provided ellipsoid's fixed reference frame
+     * @param {HeadingPitchRoll} [result] The object onto which to store the result.
+     * @returns {HeadingPitchRoll} The modified result parameter or a new HeadingPitchRoll instance if none was provided.
+     */
+    Transforms.fixedFrameToHeadingPitchRoll = function(transform, ellipsoid, fixedFrameTransform, result) {
+        //>>includeStart('debug', pragmas.debug);
+        Check.defined('transform', transform);
+        //>>includeEnd('debug');
+
+        ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
+        fixedFrameTransform = defaultValue(fixedFrameTransform, Transforms.eastNorthUpToFixedFrame);
+        if (!defined(result)) {
+            result = new HeadingPitchRoll();
+        }
+
+        var center = Matrix4.getTranslation(transform, hprCenterScratch);
+        if (Cartesian3.equals(center, Cartesian3.ZERO)) {
+            result.heading = 0;
+            result.pitch = 0;
+            result.roll = 0;
+            return result;
+        }
+        var toFixedFrame = Matrix4.inverseTransformation(fixedFrameTransform(center, ellipsoid, ffScratch), ffScratch);
+        var transformCopy = Matrix4.setScale(transform, noScale, hprTransformScratch);
+        transformCopy = Matrix4.setTranslation(transformCopy, Cartesian3.ZERO, transformCopy);
+
+        toFixedFrame = Matrix4.multiply(toFixedFrame, transformCopy, toFixedFrame);
+        var quaternionRotation = Quaternion.fromRotationMatrix(Matrix4.getRotation(toFixedFrame, hprRotationScratch), hprQuaternionScratch);
+        quaternionRotation = Quaternion.normalize(quaternionRotation, quaternionRotation);
+
+        return HeadingPitchRoll.fromQuaternion(quaternionRotation, result);
     };
 
     var gmstConstant0 = 6 * 3600 + 41 * 60 + 50.54841;
@@ -406,8 +444,8 @@ define([
      * @returns {Matrix3} The modified result parameter or a new Matrix3 instance if none was provided.
      *
      * @example
-     * //Set the view to in the inertial frame.
-     * scene.preRender.addEventListener(function(scene, time) {
+     * //Set the view to the inertial frame.
+     * scene.postUpdate.addEventListener(function(scene, time) {
      *    var now = Cesium.JulianDate.now();
      *    var offset = Cesium.Matrix4.multiplyByPoint(camera.transform, camera.position, new Cesium.Cartesian3());
      *    var transform = Cesium.Matrix4.fromRotationTranslation(Cesium.Transforms.computeTemeToPseudoFixedMatrix(now));
@@ -539,13 +577,12 @@ define([
      *
      *
      * @example
-     * scene.preRender.addEventListener(function(scene, time) {
+     * scene.postUpdate.addEventListener(function(scene, time) {
+     *   // View in ICRF.
      *   var icrfToFixed = Cesium.Transforms.computeIcrfToFixedMatrix(time);
      *   if (Cesium.defined(icrfToFixed)) {
-     *     var offset = Cesium.Matrix4.multiplyByPoint(camera.transform, camera.position, new Cesium.Cartesian3());
-     *     var transform = Cesium.Matrix4.fromRotationTranslation(icrfToFixed)
-     *     var inverseTransform = Cesium.Matrix4.inverseTransformation(transform, new Cesium.Matrix4());
-     *     Cesium.Matrix4.multiplyByPoint(inverseTransform, offset, offset);
+     *     var offset = Cesium.Cartesian3.clone(camera.position);
+     *     var transform = Cesium.Matrix4.fromRotationTranslation(icrfToFixed);
      *     camera.lookAtTransform(transform, offset);
      *   }
      * });
@@ -771,13 +808,16 @@ define([
 
         var normal = defaultValue(ellipsoid, Ellipsoid.WGS84).geodeticSurfaceNormal(position, normalScratch);
         var right = Cartesian3.cross(velocity, normal, rightScratch);
+
         if (Cartesian3.equalsEpsilon(right, Cartesian3.ZERO, CesiumMath.EPSILON6)) {
             right = Cartesian3.clone(Cartesian3.UNIT_X, right);
         }
 
         var up = Cartesian3.cross(right, velocity, upScratch);
+        Cartesian3.normalize(up, up);
         Cartesian3.cross(velocity, up, right);
         Cartesian3.negate(right, right);
+        Cartesian3.normalize(right, right);
 
         if (!defined(result)) {
             result = new Matrix3();
@@ -796,14 +836,17 @@ define([
         return result;
     };
 
+    var swizzleMatrix = new Matrix4(
+        0.0, 0.0, 1.0, 0.0,
+        1.0, 0.0, 0.0, 0.0,
+        0.0, 1.0, 0.0, 0.0,
+        0.0, 0.0, 0.0, 1.0
+    );
+
     var scratchCartographic = new Cartographic();
     var scratchCartesian3Projection = new Cartesian3();
-    var scratchCartesian3 = new Cartesian3();
-    var scratchCartesian4Origin = new Cartesian4();
-    var scratchCartesian4NewOrigin = new Cartesian4();
-    var scratchCartesian4NewXAxis = new Cartesian4();
-    var scratchCartesian4NewYAxis = new Cartesian4();
-    var scratchCartesian4NewZAxis = new Cartesian4();
+    var scratchCenter = new Cartesian3();
+    var scratchRotation = new Matrix3();
     var scratchFromENU = new Matrix4();
     var scratchToENU = new Matrix4();
 
@@ -823,59 +866,24 @@ define([
         }
         //>>includeEnd('debug');
 
+        var rtcCenter = Matrix4.getTranslation(matrix, scratchCenter);
         var ellipsoid = projection.ellipsoid;
 
-        var origin = Matrix4.getColumn(matrix, 3, scratchCartesian4Origin);
-        var cartographic = ellipsoid.cartesianToCartographic(origin, scratchCartographic);
-
-        var fromENU = Transforms.eastNorthUpToFixedFrame(origin, ellipsoid, scratchFromENU);
-        var toENU = Matrix4.inverseTransformation(fromENU, scratchToENU);
-
+        // Get the 2D Center
+        var cartographic = ellipsoid.cartesianToCartographic(rtcCenter, scratchCartographic);
         var projectedPosition = projection.project(cartographic, scratchCartesian3Projection);
-        var newOrigin = scratchCartesian4NewOrigin;
-        newOrigin.x = projectedPosition.z;
-        newOrigin.y = projectedPosition.x;
-        newOrigin.z = projectedPosition.y;
-        newOrigin.w = 1.0;
+        Cartesian3.fromElements(projectedPosition.z, projectedPosition.x, projectedPosition.y, projectedPosition);
 
-        var xAxis = Matrix4.getColumn(matrix, 0, scratchCartesian3);
-        var xScale = Cartesian3.magnitude(xAxis);
-        var newXAxis = Matrix4.multiplyByVector(toENU, xAxis, scratchCartesian4NewXAxis);
-        Cartesian4.fromElements(newXAxis.z, newXAxis.x, newXAxis.y, 0.0, newXAxis);
-
-        var yAxis = Matrix4.getColumn(matrix, 1, scratchCartesian3);
-        var yScale = Cartesian3.magnitude(yAxis);
-        var newYAxis = Matrix4.multiplyByVector(toENU, yAxis, scratchCartesian4NewYAxis);
-        Cartesian4.fromElements(newYAxis.z, newYAxis.x, newYAxis.y, 0.0, newYAxis);
-
-        var zAxis = Matrix4.getColumn(matrix, 2, scratchCartesian3);
-        var zScale = Cartesian3.magnitude(zAxis);
-
-        var newZAxis = scratchCartesian4NewZAxis;
-        Cartesian3.cross(newXAxis, newYAxis, newZAxis);
-        Cartesian3.normalize(newZAxis, newZAxis);
-        Cartesian3.cross(newYAxis, newZAxis, newXAxis);
-        Cartesian3.normalize(newXAxis, newXAxis);
-        Cartesian3.cross(newZAxis, newXAxis, newYAxis);
-        Cartesian3.normalize(newYAxis, newYAxis);
-
-        Cartesian3.multiplyByScalar(newXAxis, xScale, newXAxis);
-        Cartesian3.multiplyByScalar(newYAxis, yScale, newYAxis);
-        Cartesian3.multiplyByScalar(newZAxis, zScale, newZAxis);
-
-        Matrix4.setColumn(result, 0, newXAxis, result);
-        Matrix4.setColumn(result, 1, newYAxis, result);
-        Matrix4.setColumn(result, 2, newZAxis, result);
-        Matrix4.setColumn(result, 3, newOrigin, result);
+        // Assuming the instance are positioned in WGS84, invert the WGS84 transform to get the local transform and then convert to 2D
+        var fromENU = Transforms.eastNorthUpToFixedFrame(rtcCenter, ellipsoid, scratchFromENU);
+        var toENU = Matrix4.inverseTransformation(fromENU, scratchToENU);
+        var rotation = Matrix4.getRotation(matrix, scratchRotation);
+        var local = Matrix4.multiplyByMatrix3(toENU, rotation, result);
+        Matrix4.multiply(swizzleMatrix, local, result); // Swap x, y, z for 2D
+        Matrix4.setTranslation(result, projectedPosition, result); // Use the projected center
 
         return result;
     };
-
-    var swizzleMatrix = new Matrix4(
-        0.0, 0.0, 1.0, 0.0,
-        1.0, 0.0, 0.0, 0.0,
-        0.0, 1.0, 0.0, 0.0,
-        0.0, 0.0, 0.0, 1.0);
 
     /**
      * @private
@@ -900,13 +908,9 @@ define([
 
         var cartographic = ellipsoid.cartesianToCartographic(center, scratchCartographic);
         var projectedPosition = projection.project(cartographic, scratchCartesian3Projection);
-        var newOrigin = scratchCartesian4NewOrigin;
-        newOrigin.x = projectedPosition.z;
-        newOrigin.y = projectedPosition.x;
-        newOrigin.z = projectedPosition.y;
-        newOrigin.w = 1.0;
+        Cartesian3.fromElements(projectedPosition.z, projectedPosition.x, projectedPosition.y, projectedPosition);
 
-        var translation = Matrix4.fromTranslation(newOrigin, scratchFromENU);
+        var translation = Matrix4.fromTranslation(projectedPosition, scratchFromENU);
         Matrix4.multiply(swizzleMatrix, toENU, result);
         Matrix4.multiply(translation, result, result);
 

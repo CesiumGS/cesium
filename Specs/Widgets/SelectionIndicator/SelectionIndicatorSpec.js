@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Widgets/SelectionIndicator/SelectionIndicator',
         'Specs/createScene'

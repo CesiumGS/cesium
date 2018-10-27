@@ -1,14 +1,23 @@
-/*jshint node:true*/
-"use strict";
+/*eslint-env node*/
+'use strict';
 
 module.exports = function(config) {
     var options = {
         // base path that will be used to resolve all patterns (eg. files, exclude)
         basePath : '..',
 
+        // Disable module load timeout
+        waitSeconds : 0,
+
         // frameworks to use
         // available frameworks: https://npmjs.org/browse/keyword/karma-adapter
         frameworks : ['jasmine', 'requirejs', 'detectBrowsers'],
+
+        client: {
+            jasmine: {
+                random: false
+            }
+        },
 
         detectBrowsers : {
             enabled : false,
@@ -55,8 +64,14 @@ module.exports = function(config) {
         // available browser launchers: https://npmjs.org/browse/keyword/karma-launcher
         browsers : ['Chrome'],
 
-        electronOpts : {
-            show : false
+        //In Travis, we need to run with the no-sandbox flag
+        customLaunchers: {
+            ChromeCI: {
+                base: 'ChromeHeadless',
+                flags: [
+                    '--no-sandbox'
+                ]
+            }
         },
 
         browserNoActivityTimeout : 30000,

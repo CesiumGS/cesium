@@ -1,13 +1,10 @@
-/*global defineSuite*/
 defineSuite([
         'Widgets/SceneModePicker/SceneModePicker',
-        'Core/defined',
         'Core/FeatureDetection',
         'Specs/createScene',
         'Specs/DomEventSimulator'
     ], function(
         SceneModePicker,
-        defined,
         FeatureDetection,
         createScene,
         DomEventSimulator) {

@@ -1,34 +1,41 @@
-/*global define*/
 define([
         '../Core/BoundingRectangle',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Cartesian4',
         '../Core/Cartographic',
+        '../Core/Color',
+        '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/EncodedCartesian3',
         '../Core/Math',
         '../Core/Matrix3',
         '../Core/Matrix4',
+        '../Core/OrthographicFrustum',
         '../Core/Simon1994PlanetaryPositions',
         '../Core/Transforms',
-        '../Scene/SceneMode'
+        '../Scene/SceneMode',
+        './Sampler'
     ], function(
         BoundingRectangle,
         Cartesian2,
         Cartesian3,
         Cartesian4,
         Cartographic,
+        Color,
+        defaultValue,
         defined,
         defineProperties,
         EncodedCartesian3,
         CesiumMath,
         Matrix3,
         Matrix4,
+        OrthographicFrustum,
         Simon1994PlanetaryPositions,
         Transforms,
-        SceneMode) {
+        SceneMode,
+        Sampler) {
     'use strict';
 
     /**
@@ -54,6 +61,9 @@ define([
         this._entireFrustum = new Cartesian2();
         this._currentFrustum = new Cartesian2();
         this._frustumPlanes = new Cartesian4();
+        this._log2FarDistance = undefined;
+        this._log2FarPlusOne = undefined;
+        this._log2NearDistance = undefined;
 
         this._frameState = undefined;
         this._temeToPseudoFixed = Matrix3.clone(Matrix4.IDENTITY);
@@ -79,9 +89,6 @@ define([
 
         this._inverseProjectionDirty = true;
         this._inverseProjection = new Matrix4();
-
-        this._inverseProjectionOITDirty = true;
-        this._inverseProjectionOIT = new Matrix4();
 
         this._modelViewDirty = true;
         this._modelView = new Matrix4();
@@ -147,12 +154,21 @@ define([
         this._frustum2DWidth = 0.0;
         this._eyeHeight2D = new Cartesian2();
         this._resolutionScale = 1.0;
+        this._orthographicIn3D = false;
+        this._backgroundColor = new Color();
+
+        this._brdfLut = new Sampler();
+        this._environmentMap = new Sampler();
 
         this._fogDensity = undefined;
+
+        this._invertClassificationColor = undefined;
 
         this._imagerySplitPosition = 0.0;
         this._pixelSizePerMeter = undefined;
         this._geometricToleranceOverMeter = undefined;
+
+        this._minimumDisableDepthTestDistance = undefined;
     }
 
     defineProperties(UniformState.prototype, {
@@ -395,17 +411,6 @@ define([
 
         /**
          * @memberof UniformState.prototype
-         * @private
-         */
-        inverseProjectionOIT : {
-            get : function() {
-                cleanInverseProjectionOIT(this);
-                return this._inverseProjectionOIT;
-            }
-        },
-
-        /**
-         * @memberof UniformState.prototype
          * @type {Matrix4}
          */
         infiniteProjection : {
@@ -640,6 +645,39 @@ define([
         },
 
         /**
+         * The log2 of the current frustum's far distance. Used to compute the log depth.
+         * @memberof UniformState.prototype
+         * @type {Number}
+         */
+        log2FarDistance : {
+            get : function() {
+                return this._log2FarDistance;
+            }
+        },
+
+        /**
+         * The log2 of 1 + the current frustum's far distance. Used to reverse log depth.
+         * @memberof UniformState.prototype
+         * @type {Number}
+         */
+        log2FarPlusOne : {
+            get : function() {
+                return this._log2FarPlusOne;
+            }
+        },
+
+        /**
+         * The log2 current frustum's near distance. Used when writing log depth in the fragment shader.
+         * @memberof UniformState.prototype
+         * @type {Number}
+         */
+        log2NearDistance : {
+            get : function() {
+                return this._log2NearDistance;
+            }
+        },
+
+        /**
          * The the height (<code>x</code>) and the height squared (<code>y</code>)
          * in meters of the camera above the 2D world plane. This uniform is only valid
          * when the {@link SceneMode} equal to <code>SCENE2D</code>.
@@ -793,12 +831,83 @@ define([
         },
 
         /**
+         * The current background color
+         * @memberof UniformState.prototype
+         * @type {Color}
+         */
+        backgroundColor : {
+            get : function() {
+                return this._backgroundColor;
+            }
+        },
+
+        /**
+         * The look up texture used to find the BRDF for a material
+         * @memberof UniformState.prototype
+         * @type {Sampler}
+         */
+        brdfLut : {
+            get : function() {
+                return this._brdfLut;
+            }
+        },
+
+        /**
+         * The environment map of the scene
+         * @memberof UniformState.prototype
+         * @type {Sampler}
+         */
+        environmentMap : {
+            get : function() {
+                return this._environmentMap;
+            }
+        },
+
+        /**
          * @memberof UniformState.prototype
          * @type {Number}
          */
         imagerySplitPosition : {
             get : function() {
                 return this._imagerySplitPosition;
+            }
+        },
+
+        /**
+         * The distance from the camera at which to disable the depth test of billboards, labels and points
+         * to, for example, prevent clipping against terrain. When set to zero, the depth test should always
+         * be applied. When less than zero, the depth test should never be applied.
+         *
+         * @memberof UniformState.prototype
+         * @type {Number}
+         */
+        minimumDisableDepthTestDistance : {
+            get : function() {
+                return this._minimumDisableDepthTestDistance;
+            }
+        },
+
+        /**
+         * The highlight color of unclassified 3D Tiles.
+         *
+         * @memberof UniformState.prototype
+         * @type {Color}
+         */
+        invertClassificationColor : {
+            get : function() {
+                return this._invertClassificationColor;
+            }
+        },
+
+        /**
+         * Whether or not the current projection is orthographic in 3D.
+         *
+         * @memberOf UniformState.prototype
+         * @type {Boolean}
+         */
+        orthographicIn3D : {
+            get : function() {
+                return this._orthographicIn3D;
             }
         }
     });
@@ -834,7 +943,6 @@ define([
         Matrix4.clone(matrix, uniformState._projection);
 
         uniformState._inverseProjectionDirty = true;
-        uniformState._inverseProjectionOITDirty = true;
         uniformState._viewProjectionDirty = true;
         uniformState._inverseViewProjectionDirty = true;
         uniformState._modelViewProjectionDirty = true;
@@ -896,6 +1004,8 @@ define([
         this._entireFrustum.x = camera.frustum.near;
         this._entireFrustum.y = camera.frustum.far;
         this.updateFrustum(camera.frustum);
+
+        this._orthographicIn3D = this._mode !== SceneMode.SCENE2D && camera.frustum instanceof OrthographicFrustum;
     };
 
     /**
@@ -913,7 +1023,11 @@ define([
         this._currentFrustum.x = frustum.near;
         this._currentFrustum.y = frustum.far;
 
-        if (!defined(frustum.top)) {
+        this._log2FarDistance = 2.0 / CesiumMath.log2(frustum.far + 1.0);
+        this._log2FarPlusOne = CesiumMath.log2(frustum.far + 1.0);
+        this._log2NearDistance = CesiumMath.log2(frustum.near);
+
+        if (defined(frustum._offCenterFrustum)) {
             frustum = frustum._offCenterFrustum;
         }
 
@@ -956,12 +1070,21 @@ define([
 
         setSunAndMoonDirections(this, frameState);
 
+        var brdfLutGenerator = frameState.brdfLutGenerator;
+        var brdfLut = defined(brdfLutGenerator) ? brdfLutGenerator.colorTexture : undefined;
+        this._brdfLut = brdfLut;
+
+        this._environmentMap = defaultValue(frameState.environmentMap, frameState.context.defaultCubeMap);
+
         this._fogDensity = frameState.fog.density;
+
+        this._invertClassificationColor = frameState.invertClassificationColor;
 
         this._frameState = frameState;
         this._temeToPseudoFixed = Transforms.computeTemeToPseudoFixedMatrix(frameState.time, this._temeToPseudoFixed);
 
-        this._imagerySplitPosition = frameState.imagerySplitPosition;
+        // Convert the relative imagerySplitPosition to absolute pixel coordinates
+        this._imagerySplitPosition = frameState.imagerySplitPosition * frameState.context.drawingBufferWidth;
         var fov = camera.frustum.fov;
         var viewport = this._viewport;
         var pixelSizePerMeter;
@@ -972,6 +1095,13 @@ define([
         }
 
         this._geometricToleranceOverMeter = pixelSizePerMeter * frameState.maximumScreenSpaceError;
+        Color.clone(frameState.backgroundColor, this._backgroundColor);
+
+        this._minimumDisableDepthTestDistance = frameState.minimumDisableDepthTestDistance;
+        this._minimumDisableDepthTestDistance *= this._minimumDisableDepthTestDistance;
+        if (this._minimumDisableDepthTestDistance === Number.POSITIVE_INFINITY) {
+            this._minimumDisableDepthTestDistance = -1.0;
+        }
     };
 
     function cleanViewport(uniformState) {
@@ -987,18 +1117,10 @@ define([
         if (uniformState._inverseProjectionDirty) {
             uniformState._inverseProjectionDirty = false;
 
-            Matrix4.inverse(uniformState._projection, uniformState._inverseProjection);
-        }
-    }
-
-    function cleanInverseProjectionOIT(uniformState) {
-        if (uniformState._inverseProjectionOITDirty) {
-            uniformState._inverseProjectionOITDirty = false;
-
-            if (uniformState._mode !== SceneMode.SCENE2D && uniformState._mode !== SceneMode.MORPHING) {
-                Matrix4.inverse(uniformState._projection, uniformState._inverseProjectionOIT);
+            if (uniformState._mode !== SceneMode.SCENE2D && uniformState._mode !== SceneMode.MORPHING && !uniformState._orthographicIn3D) {
+                Matrix4.inverse(uniformState._projection, uniformState._inverseProjection);
             } else {
-                Matrix4.clone(Matrix4.IDENTITY, uniformState._inverseProjectionOIT);
+                Matrix4.clone(Matrix4.ZERO, uniformState._inverseProjection);
             }
         }
     }

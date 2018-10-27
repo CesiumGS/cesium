@@ -1,11 +1,14 @@
-/*global defineSuite*/
 defineSuite([
         'Core/EllipsoidOutlineGeometry',
+        'Core/arrayFill',
         'Core/Cartesian3',
+        'Core/GeometryOffsetAttribute',
         'Specs/createPackableSpecs'
     ], function(
         EllipsoidOutlineGeometry,
+        arrayFill,
         Cartesian3,
+        GeometryOffsetAttribute,
         createPackableSpecs) {
     'use strict';
 
@@ -33,6 +36,33 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
+    it('constructor rounds floating-point slicePartitions', function() {
+        var m = new EllipsoidOutlineGeometry({
+            slicePartitions: 3.5,
+            stackPartitions: 3,
+            subdivisions: 3
+        });
+        expect(m._slicePartitions).toEqual(4);
+    });
+
+    it('constructor rounds floating-point stackPartitions', function() {
+        var m = new EllipsoidOutlineGeometry({
+            slicePartitions: 3,
+            stackPartitions: 3.5,
+            subdivisions: 3
+        });
+        expect(m._stackPartitions).toEqual(4);
+    });
+
+    it('constructor rounds floating-point subdivisions', function() {
+        var m = new EllipsoidOutlineGeometry({
+            slicePartitions: 3,
+            stackPartitions: 3,
+            subdivisions: 3.5
+        });
+        expect(m._subdivisions).toEqual(4);
+    });
+
     it('computes positions', function() {
         var m = EllipsoidOutlineGeometry.createGeometry(new EllipsoidOutlineGeometry({
             stackPartitions : 3,
@@ -43,6 +73,24 @@ defineSuite([
         expect(m.attributes.position.values.length).toEqual(14 * 3);
         expect(m.indices.length).toEqual(15 * 2);
         expect(m.boundingSphere.radius).toEqual(1);
+    });
+
+    it('computes offset attribute', function() {
+        var m = EllipsoidOutlineGeometry.createGeometry(new EllipsoidOutlineGeometry({
+            stackPartitions : 3,
+            slicePartitions: 3,
+            subdivisions: 3,
+            offsetAttribute: GeometryOffsetAttribute.ALL
+        }));
+
+        var numVertices = 14;
+        expect(m.attributes.position.values.length).toEqual(numVertices * 3);
+
+        var offset = m.attributes.applyOffset.values;
+        expect(offset.length).toEqual(numVertices);
+        var expected = new Array(offset.length);
+        expected = arrayFill(expected, 1);
+        expect(offset).toEqual(expected);
     });
 
     it('undefined is returned if the x, y, or z radii are equal or less than zero', function() {
@@ -86,6 +134,6 @@ defineSuite([
         stackPartitions: 3,
         subdivisions: 3
     });
-    var packedInstance = [1.0, 2.0, 3.0, 3.0, 3.0, 3.0];
+    var packedInstance = [1.0, 2.0, 3.0, 3.0, 3.0, 3.0, -1.0];
     createPackableSpecs(EllipsoidOutlineGeometry, ellipsoidgeometry, packedInstance);
 });

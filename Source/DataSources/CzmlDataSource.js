@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/BoundingRectangle',
         '../Core/Cartesian2',
@@ -13,10 +12,10 @@ define([
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/DeveloperError',
+        '../Core/DistanceDisplayCondition',
         '../Core/Ellipsoid',
         '../Core/Event',
         '../Core/ExtrapolationType',
-        '../Core/getAbsoluteUri',
         '../Core/getFilenameFromUri',
         '../Core/HermitePolynomialApproximation',
         '../Core/isArray',
@@ -24,12 +23,12 @@ define([
         '../Core/JulianDate',
         '../Core/LagrangePolynomialApproximation',
         '../Core/LinearApproximation',
-        '../Core/loadJson',
         '../Core/Math',
         '../Core/NearFarScalar',
         '../Core/Quaternion',
         '../Core/Rectangle',
         '../Core/ReferenceFrame',
+        '../Core/Resource',
         '../Core/RuntimeError',
         '../Core/Spherical',
         '../Core/TimeInterval',
@@ -67,6 +66,7 @@ define([
         './PointGraphics',
         './PolygonGraphics',
         './PolylineArrowMaterialProperty',
+        './PolylineDashMaterialProperty',
         './PolylineGlowMaterialProperty',
         './PolylineGraphics',
         './PolylineOutlineMaterialProperty',
@@ -82,6 +82,7 @@ define([
         './StripeOrientation',
         './TimeIntervalCollectionPositionProperty',
         './TimeIntervalCollectionProperty',
+        './VelocityOrientationProperty',
         './VelocityVectorProperty',
         './WallGraphics'
     ], function(
@@ -98,10 +99,10 @@ define([
         defined,
         defineProperties,
         DeveloperError,
+        DistanceDisplayCondition,
         Ellipsoid,
         Event,
         ExtrapolationType,
-        getAbsoluteUri,
         getFilenameFromUri,
         HermitePolynomialApproximation,
         isArray,
@@ -109,12 +110,12 @@ define([
         JulianDate,
         LagrangePolynomialApproximation,
         LinearApproximation,
-        loadJson,
         CesiumMath,
         NearFarScalar,
         Quaternion,
         Rectangle,
         ReferenceFrame,
+        Resource,
         RuntimeError,
         Spherical,
         TimeInterval,
@@ -152,6 +153,7 @@ define([
         PointGraphics,
         PolygonGraphics,
         PolylineArrowMaterialProperty,
+        PolylineDashMaterialProperty,
         PolylineGlowMaterialProperty,
         PolylineGraphics,
         PolylineOutlineMaterialProperty,
@@ -167,23 +169,53 @@ define([
         StripeOrientation,
         TimeIntervalCollectionPositionProperty,
         TimeIntervalCollectionProperty,
+        VelocityOrientationProperty,
         VelocityVectorProperty,
         WallGraphics) {
     'use strict';
 
+    // A marker type to distinguish CZML properties where we need to end up with a unit vector.
+    // The data is still loaded into Cartesian3 objects but they are normalized.
+    function UnitCartesian3() {}
+    UnitCartesian3.packedLength = Cartesian3.packedLength;
+    UnitCartesian3.unpack = Cartesian3.unpack;
+    UnitCartesian3.pack = Cartesian3.pack;
+
+    // As a side note, for the purposes of CZML, Quaternion always indicates a unit quaternion.
+
     var currentId;
 
-    function makeReference(collection, referenceString) {
+    function createReferenceProperty(entityCollection, referenceString) {
         if (referenceString[0] === '#') {
             referenceString = currentId + referenceString;
         }
-        return ReferenceProperty.fromString(collection, referenceString);
+        return ReferenceProperty.fromString(entityCollection, referenceString);
+    }
+
+    function createSpecializedProperty(type, entityCollection, packetData) {
+        if (defined(packetData.reference)) {
+            return createReferenceProperty(entityCollection, packetData.reference);
+        }
+
+        if (defined(packetData.velocityReference)) {
+            var referenceProperty = createReferenceProperty(entityCollection, packetData.velocityReference);
+            switch (type) {
+                case Cartesian3:
+                case UnitCartesian3:
+                    return new VelocityVectorProperty(referenceProperty, type === UnitCartesian3);
+                case Quaternion:
+                    return new VelocityOrientationProperty(referenceProperty);
+            }
+        }
+
+        throw new RuntimeError(JSON.stringify(packetData) + ' is not valid CZML.');
     }
 
     var scratchCartesian = new Cartesian3();
     var scratchSpherical = new Spherical();
     var scratchCartographic = new Cartographic();
     var scratchTimeInterval = new TimeInterval();
+    var scratchQuaternion = new Quaternion();
 
     function unwrapColorInterval(czmlInterval) {
         var rgbaf = czmlInterval.rgbaf;
@@ -213,11 +245,14 @@ define([
     }
 
     function unwrapUriInterval(czmlInterval, sourceUri) {
-        var result = defaultValue(czmlInterval.uri, czmlInterval);
+        var uri = defaultValue(czmlInterval.uri, czmlInterval);
         if (defined(sourceUri)) {
-            result = getAbsoluteUri(result, getAbsoluteUri(sourceUri));
+            return sourceUri.getDerivedResource({
+                url: uri
+            });
         }
-        return result;
+
+        return Resource.createIfNeeded(uri);
     }
 
     function unwrapRectangleInterval(czmlInterval) {
@@ -255,21 +290,21 @@ define([
             scratchSpherical.cone = unitSpherical[1];
             Cartesian3.fromSpherical(scratchSpherical, scratchCartesian);
             return [scratchCartesian.x, scratchCartesian.y, scratchCartesian.z];
-        } else {
-            var result = new Array(length / 3 * 4);
-            for (var i = 0, j = 0; i < length; i += 3, j += 4) {
-                result[j] = unitSpherical[i];
-
-                scratchSpherical.clock = unitSpherical[i + 1];
-                scratchSpherical.cone = unitSpherical[i + 2];
-                Cartesian3.fromSpherical(scratchSpherical, scratchCartesian);
-
-                result[j + 1] = scratchCartesian.x;
-                result[j + 2] = scratchCartesian.y;
-                result[j + 3] = scratchCartesian.z;
-            }
-            return result;
         }
+
+        var result = new Array(length / 3 * 4);
+        for (var i = 0, j = 0; i < length; i += 3, j += 4) {
+            result[j] = unitSpherical[i];
+
+            scratchSpherical.clock = unitSpherical[i + 1];
+            scratchSpherical.cone = unitSpherical[i + 2];
+            Cartesian3.fromSpherical(scratchSpherical, scratchCartesian);
+
+            result[j + 1] = scratchCartesian.x;
+            result[j + 2] = scratchCartesian.y;
+            result[j + 3] = scratchCartesian.z;
+        }
+        return result;
     }
 
     function convertSphericalToCartesian(spherical) {
@@ -280,22 +315,22 @@ define([
             scratchSpherical.magnitude = spherical[2];
             Cartesian3.fromSpherical(scratchSpherical, scratchCartesian);
             return [scratchCartesian.x, scratchCartesian.y, scratchCartesian.z];
-        } else {
-            var result = new Array(length);
-            for (var i = 0; i < length; i += 4) {
-                result[i] = spherical[i];
-
-                scratchSpherical.clock = spherical[i + 1];
-                scratchSpherical.cone = spherical[i + 2];
-                scratchSpherical.magnitude = spherical[i + 3];
-                Cartesian3.fromSpherical(scratchSpherical, scratchCartesian);
-
-                result[i + 1] = scratchCartesian.x;
-                result[i + 2] = scratchCartesian.y;
-                result[i + 3] = scratchCartesian.z;
-            }
-            return result;
         }
+
+        var result = new Array(length);
+        for (var i = 0; i < length; i += 4) {
+            result[i] = spherical[i];
+
+            scratchSpherical.clock = spherical[i + 1];
+            scratchSpherical.cone = spherical[i + 2];
+            scratchSpherical.magnitude = spherical[i + 3];
+            Cartesian3.fromSpherical(scratchSpherical, scratchCartesian);
+
+            result[i + 1] = scratchCartesian.x;
+            result[i + 2] = scratchCartesian.y;
+            result[i + 3] = scratchCartesian.z;
+        }
+        return result;
     }
 
     function convertCartographicRadiansToCartesian(cartographicRadians) {
@@ -306,22 +341,22 @@ define([
             scratchCartographic.height = cartographicRadians[2];
             Ellipsoid.WGS84.cartographicToCartesian(scratchCartographic, scratchCartesian);
             return [scratchCartesian.x, scratchCartesian.y, scratchCartesian.z];
-        } else {
-            var result = new Array(length);
-            for (var i = 0; i < length; i += 4) {
-                result[i] = cartographicRadians[i];
-
-                scratchCartographic.longitude = cartographicRadians[i + 1];
-                scratchCartographic.latitude = cartographicRadians[i + 2];
-                scratchCartographic.height = cartographicRadians[i + 3];
-                Ellipsoid.WGS84.cartographicToCartesian(scratchCartographic, scratchCartesian);
-
-                result[i + 1] = scratchCartesian.x;
-                result[i + 2] = scratchCartesian.y;
-                result[i + 3] = scratchCartesian.z;
-            }
-            return result;
         }
+
+        var result = new Array(length);
+        for (var i = 0; i < length; i += 4) {
+            result[i] = cartographicRadians[i];
+
+            scratchCartographic.longitude = cartographicRadians[i + 1];
+            scratchCartographic.latitude = cartographicRadians[i + 2];
+            scratchCartographic.height = cartographicRadians[i + 3];
+            Ellipsoid.WGS84.cartographicToCartesian(scratchCartographic, scratchCartesian);
+
+            result[i + 1] = scratchCartesian.x;
+            result[i + 2] = scratchCartesian.y;
+            result[i + 3] = scratchCartesian.z;
+        }
+        return result;
     }
 
     function convertCartographicDegreesToCartesian(cartographicDegrees) {
@@ -332,22 +367,22 @@ define([
             scratchCartographic.height = cartographicDegrees[2];
             Ellipsoid.WGS84.cartographicToCartesian(scratchCartographic, scratchCartesian);
             return [scratchCartesian.x, scratchCartesian.y, scratchCartesian.z];
-        } else {
-            var result = new Array(length);
-            for (var i = 0; i < length; i += 4) {
-                result[i] = cartographicDegrees[i];
-
-                scratchCartographic.longitude = CesiumMath.toRadians(cartographicDegrees[i + 1]);
-                scratchCartographic.latitude = CesiumMath.toRadians(cartographicDegrees[i + 2]);
-                scratchCartographic.height = cartographicDegrees[i + 3];
-                Ellipsoid.WGS84.cartographicToCartesian(scratchCartographic, scratchCartesian);
-
-                result[i + 1] = scratchCartesian.x;
-                result[i + 2] = scratchCartesian.y;
-                result[i + 3] = scratchCartesian.z;
-            }
-            return result;
         }
+
+        var result = new Array(length);
+        for (var i = 0; i < length; i += 4) {
+            result[i] = cartographicDegrees[i];
+
+            scratchCartographic.longitude = CesiumMath.toRadians(cartographicDegrees[i + 1]);
+            scratchCartographic.latitude = CesiumMath.toRadians(cartographicDegrees[i + 2]);
+            scratchCartographic.height = cartographicDegrees[i + 3];
+            Ellipsoid.WGS84.cartographicToCartesian(scratchCartographic, scratchCartesian);
+
+            result[i + 1] = scratchCartesian.x;
+            result[i + 2] = scratchCartesian.y;
+            result[i + 3] = scratchCartesian.z;
+        }
+        return result;
     }
 
     function unwrapCartesianInterval(czmlInterval) {
@@ -389,17 +424,30 @@ define([
         throw new RuntimeError(JSON.stringify(czmlInterval) + ' is not a valid CZML interval.');
     }
 
-    function normalizePackedQuaternionArray(array, startingIndex) {
-        var x = array[startingIndex];
-        var y = array[startingIndex + 1];
-        var z = array[startingIndex + 2];
-        var w = array[startingIndex + 3];
+    function normalizePackedCartesianArray(array, startingIndex) {
+        Cartesian3.unpack(array, startingIndex, scratchCartesian);
+        Cartesian3.normalize(scratchCartesian, scratchCartesian);
+        Cartesian3.pack(scratchCartesian, array, startingIndex);
+    }
 
-        var inverseMagnitude = 1.0 / Math.sqrt(x * x + y * y + z * z + w * w);
-        array[startingIndex] = x * inverseMagnitude;
-        array[startingIndex + 1] = y * inverseMagnitude;
-        array[startingIndex + 2] = z * inverseMagnitude;
-        array[startingIndex + 3] = w * inverseMagnitude;
+    function unwrapUnitCartesianInterval(czmlInterval) {
+        var cartesian = unwrapCartesianInterval(czmlInterval);
+        if (cartesian.length === 3) {
+            normalizePackedCartesianArray(cartesian, 0);
+            return cartesian;
+        }
+
+        for (var i = 1; i < cartesian.length; i += 4) {
+            normalizePackedCartesianArray(cartesian, i);
+        }
+
+        return cartesian;
+    }
+
+    function normalizePackedQuaternionArray(array, startingIndex) {
+        Quaternion.unpack(array, startingIndex, scratchQuaternion);
+        Quaternion.normalize(scratchQuaternion, scratchQuaternion);
+        Quaternion.pack(scratchQuaternion, array, startingIndex);
     }
 
     function unwrapQuaternionInterval(czmlInterval) {
@@ -417,8 +465,86 @@ define([
         return unitQuaternion;
     }
 
+    function getPropertyType(czmlInterval) {
+        // The associations in this function need to be kept in sync with the
+        // associations in unwrapInterval.
+
+        // Intentionally omitted due to conficts in CZML property names:
+        // * Image (conflicts with Uri)
+        // * Rotation (conflicts with Number)
+        //
+        // cartesianVelocity is also omitted due to incomplete support for
+        // derivative information in CZML properties.
+        // (Currently cartesianVelocity is hacked directly into the position processing code)
+        if (typeof czmlInterval === 'boolean') {
+            return Boolean;
+        } else if (typeof czmlInterval === 'number') {
+            return Number;
+        } else if (typeof czmlInterval === 'string') {
+            return String;
+        } else if (czmlInterval.hasOwnProperty('array')) {
+            return Array;
+        } else if (czmlInterval.hasOwnProperty('boolean')) {
+            return Boolean;
+        } else if (czmlInterval.hasOwnProperty('boundingRectangle')) {
+            return BoundingRectangle;
+        } else if (czmlInterval.hasOwnProperty('cartesian2')) {
+            return Cartesian2;
+        } else if (czmlInterval.hasOwnProperty('cartesian') ||
+                   czmlInterval.hasOwnProperty('spherical') ||
+                   czmlInterval.hasOwnProperty('cartographicRadians') ||
+                   czmlInterval.hasOwnProperty('cartographicDegrees')) {
+            return Cartesian3;
+        } else if (czmlInterval.hasOwnProperty('unitCartesian') ||
+                   czmlInterval.hasOwnProperty('unitSpherical')) {
+            return UnitCartesian3;
+        } else if (czmlInterval.hasOwnProperty('rgba') ||
+                   czmlInterval.hasOwnProperty('rgbaf')) {
+            return Color;
+        } else if (czmlInterval.hasOwnProperty('colorBlendMode')) {
+            return ColorBlendMode;
+        } else if (czmlInterval.hasOwnProperty('cornerType')) {
+            return CornerType;
+        } else if (czmlInterval.hasOwnProperty('heightReference')) {
+            return HeightReference;
+        } else if (czmlInterval.hasOwnProperty('horizontalOrigin')) {
+            return HorizontalOrigin;
+        } else if (czmlInterval.hasOwnProperty('date')) {
+            return JulianDate;
+        } else if (czmlInterval.hasOwnProperty('labelStyle')) {
+            return LabelStyle;
+        } else if (czmlInterval.hasOwnProperty('number')) {
+            return Number;
+        } else if (czmlInterval.hasOwnProperty('nearFarScalar')) {
+            return NearFarScalar;
+        } else if (czmlInterval.hasOwnProperty('distanceDisplayCondition')) {
+            return DistanceDisplayCondition;
+        } else if (czmlInterval.hasOwnProperty('object') ||
+                   czmlInterval.hasOwnProperty('value')) {
+            return Object;
+        } else if (czmlInterval.hasOwnProperty('unitQuaternion')) {
+            return Quaternion;
+        } else if (czmlInterval.hasOwnProperty('shadowMode')) {
+            return ShadowMode;
+        } else if (czmlInterval.hasOwnProperty('string')) {
+            return String;
+        } else if (czmlInterval.hasOwnProperty('stripeOrientation')) {
+            return StripeOrientation;
+        } else if (czmlInterval.hasOwnProperty('wsen') ||
+                   czmlInterval.hasOwnProperty('wsenDegrees')) {
+            return Rectangle;
+        } else if (czmlInterval.hasOwnProperty('uri')) {
+            return Uri;
+        } else if (czmlInterval.hasOwnProperty('verticalOrigin')) {
+            return VerticalOrigin;
+        }
+        // fallback case
+        return Object;
+    }
+
     function unwrapInterval(type, czmlInterval, sourceUri) {
-        /*jshint sub:true*/
+        // The associations in this function need to be kept in sync with the
+        // associations in getPropertyType
         switch (type) {
             case Array:
                 return czmlInterval.array;
@@ -430,6 +556,8 @@ define([
                 return czmlInterval.cartesian2;
             case Cartesian3:
                 return unwrapCartesianInterval(czmlInterval);
+            case UnitCartesian3:
+                return unwrapUnitCartesianInterval(czmlInterval);
             case Color:
                 return unwrapColorInterval(czmlInterval);
             case ColorBlendMode:
@@ -450,12 +578,16 @@ define([
                 return defaultValue(czmlInterval.number, czmlInterval);
             case NearFarScalar:
                 return czmlInterval.nearFarScalar;
+            case DistanceDisplayCondition:
+                return czmlInterval.distanceDisplayCondition;
+            case Object:
+                return defaultValue(defaultValue(czmlInterval.object, czmlInterval.value), czmlInterval);
             case Quaternion:
                 return unwrapQuaternionInterval(czmlInterval);
             case Rotation:
                 return defaultValue(czmlInterval.number, czmlInterval);
             case ShadowMode:
-                return ShadowMode[defaultValue(czmlInterval.shadows, czmlInterval)];
+                return ShadowMode[defaultValue(defaultValue(czmlInterval.shadowMode, czmlInterval.shadows), czmlInterval)];
             case String:
                 return defaultValue(czmlInterval.string, czmlInterval);
             case StripeOrientation:
@@ -507,6 +639,10 @@ define([
         }
     }
 
+    var iso8601Scratch = {
+        iso8601 : undefined
+    };
+
     function processProperty(type, object, propertyName, packetData, constrainedInterval, sourceUri, entityCollection) {
         var combinedInterval;
         var packetInterval = packetData.interval;
@@ -524,14 +660,21 @@ define([
         var isSampled;
         var unwrappedInterval;
         var unwrappedIntervalLength;
-        var isReference = defined(packetData.reference);
+
+        // CZML properties can be defined in many ways.  Most ways represent a structure for
+        // encoding a single value (number, string, cartesian, etc.)  Regardless of the value type,
+        // if it encodes a single value it will get loaded into a ConstantProperty eventually.
+        // Alternatively, there are ways of defining a property that require specialized
+        // client-side representation. Currently, these are ReferenceProperty,
+        // and client-side velocity computation properties such as VelocityVectorProperty.
+        var isValue = !defined(packetData.reference) && !defined(packetData.velocityReference);
         var hasInterval = defined(combinedInterval) && !combinedInterval.equals(Iso8601.MAXIMUM_INTERVAL);
 
-        if (!isReference) {
+        if (isValue) {
             unwrappedInterval = unwrapInterval(type, packetData, sourceUri);
             packedLength = defaultValue(type.packedLength, 1);
             unwrappedIntervalLength = defaultValue(unwrappedInterval.length, 1);
-            isSampled = !defined(packetData.array) && (typeof unwrappedInterval !== 'string') && unwrappedIntervalLength > packedLength;
+            isSampled = !defined(packetData.array) && (typeof unwrappedInterval !== 'string') && (unwrappedIntervalLength > packedLength) && (type !== Object);
         }
 
         //Rotation is a special case because it represents a native type (Number)
@@ -540,12 +683,10 @@ define([
 
         //Any time a constant value is assigned, it completely blows away anything else.
         if (!isSampled && !hasInterval) {
-            if (isReference) {
-                object[propertyName] = makeReference(entityCollection, packetData.reference);
-            } else if (needsUnpacking) {
-                object[propertyName] = new ConstantProperty(type.unpack(unwrappedInterval, 0));
+            if (isValue) {
+                object[propertyName] = new ConstantProperty(needsUnpacking ? type.unpack(unwrappedInterval, 0) : unwrappedInterval);
             } else {
-                object[propertyName] = new ConstantProperty(unwrappedInterval);
+                object[propertyName] = createSpecializedProperty(type, entityCollection, packetData);
             }
             return;
         }
@@ -578,30 +719,30 @@ define([
         if (!isSampled && hasInterval) {
             //Create a new interval for the constant value.
             combinedInterval = combinedInterval.clone();
-            if (isReference) {
-                combinedInterval.data = makeReference(entityCollection, packetData.reference);
-            } else if (needsUnpacking) {
-                combinedInterval.data = type.unpack(unwrappedInterval, 0);
+            if (isValue) {
+                combinedInterval.data = needsUnpacking ? type.unpack(unwrappedInterval, 0) : unwrappedInterval;
             } else {
-                combinedInterval.data = unwrappedInterval;
+                combinedInterval.data = createSpecializedProperty(type, entityCollection, packetData);
             }
 
             //If no property exists, simply use a new interval collection
             if (!defined(property)) {
-                if (isReference) {
-                    property = new CompositeProperty();
-                } else {
+                if (isValue) {
                     property = new TimeIntervalCollectionProperty();
+                } else {
+                    property = new CompositeProperty();
                 }
                 object[propertyName] = property;
             }
 
-            if (!isReference && property instanceof TimeIntervalCollectionProperty) {
+            if (isValue && property instanceof TimeIntervalCollectionProperty) {
                 //If we create a collection, or it already existed, use it.
                 property.intervals.addInterval(combinedInterval);
             } else if (property instanceof CompositeProperty) {
                 //If the collection was already a CompositeProperty, use it.
-                combinedInterval.data = isReference ? combinedInterval.data : new ConstantProperty(combinedInterval.data);
+                if (isValue) {
+                    combinedInterval.data = new ConstantProperty(combinedInterval.data);
+                }
                 property.intervals.addInterval(combinedInterval);
             } else {
                 //Otherwise, create a CompositeProperty but preserve the existing data.
@@ -618,7 +759,9 @@ define([
                 property.intervals.addInterval(interval);
 
                 //Change the new data to a ConstantProperty and add it.
-                combinedInterval.data = isReference ? combinedInterval.data : new ConstantProperty(combinedInterval.data);
+                if (isValue) {
+                    combinedInterval.data = new ConstantProperty(combinedInterval.data);
+                }
                 property.intervals.addInterval(combinedInterval);
             }
 
@@ -691,10 +834,10 @@ define([
         var unwrappedIntervalLength;
         var numberOfDerivatives = defined(packetData.cartesianVelocity) ? 1 : 0;
         var packedLength = Cartesian3.packedLength * (numberOfDerivatives + 1);
-        var isReference = defined(packetData.reference);
+        var isValue = !defined(packetData.reference);
         var hasInterval = defined(combinedInterval) && !combinedInterval.equals(Iso8601.MAXIMUM_INTERVAL);
 
-        if (!isReference) {
+        if (isValue) {
             if (defined(packetData.referenceFrame)) {
                 referenceFrame = ReferenceFrame[packetData.referenceFrame];
             }
@@ -706,10 +849,10 @@ define([
 
         //Any time a constant value is assigned, it completely blows away anything else.
         if (!isSampled && !hasInterval) {
-            if (isReference) {
-                object[propertyName] = makeReference(entityCollection, packetData.reference);
-            } else {
+            if (isValue) {
                 object[propertyName] = new ConstantPositionProperty(Cartesian3.unpack(unwrappedInterval), referenceFrame);
+            } else {
+                object[propertyName] = createReferenceProperty(entityCollection, packetData.reference);
             }
             return;
         }
@@ -742,28 +885,30 @@ define([
         if (!isSampled && hasInterval) {
             //Create a new interval for the constant value.
             combinedInterval = combinedInterval.clone();
-            if (isReference) {
-                combinedInterval.data = makeReference(entityCollection, packetData.reference);
-            } else {
+            if (isValue) {
                 combinedInterval.data = Cartesian3.unpack(unwrappedInterval);
+            } else {
+                combinedInterval.data = createReferenceProperty(entityCollection, packetData.reference);
             }
 
             //If no property exists, simply use a new interval collection
             if (!defined(property)) {
-                if (isReference) {
-                    property = new CompositePositionProperty(referenceFrame);
-                } else {
+                if (isValue) {
                     property = new TimeIntervalCollectionPositionProperty(referenceFrame);
+                } else {
+                    property = new CompositePositionProperty(referenceFrame);
                 }
                 object[propertyName] = property;
             }
 
-            if (!isReference && property instanceof TimeIntervalCollectionPositionProperty && (defined(referenceFrame) && property.referenceFrame === referenceFrame)) {
+            if (isValue && property instanceof TimeIntervalCollectionPositionProperty && (defined(referenceFrame) && property.referenceFrame === referenceFrame)) {
                 //If we create a collection, or it already existed, use it.
                 property.intervals.addInterval(combinedInterval);
             } else if (property instanceof CompositePositionProperty) {
                 //If the collection was already a CompositePositionProperty, use it.
-                combinedInterval.data = isReference ? combinedInterval.data : new ConstantPositionProperty(combinedInterval.data, referenceFrame);
+                if (isValue) {
+                    combinedInterval.data = new ConstantPositionProperty(combinedInterval.data, referenceFrame);
+                }
                 property.intervals.addInterval(combinedInterval);
             } else {
                 //Otherwise, create a CompositePositionProperty but preserve the existing data.
@@ -780,7 +925,9 @@ define([
                 property.intervals.addInterval(interval);
 
                 //Change the new data to a ConstantPositionProperty and add it.
-                combinedInterval.data = isReference ? combinedInterval.data : new ConstantPositionProperty(combinedInterval.data, referenceFrame);
+                if (isValue) {
+                    combinedInterval.data = new ConstantPositionProperty(combinedInterval.data, referenceFrame);
+                }
                 property.intervals.addInterval(combinedInterval);
             }
 
@@ -930,6 +1077,15 @@ define([
             }
             materialData = packetData.polylineArrow;
             processPacketData(Color, existingMaterial, 'color', materialData.color, undefined, undefined, entityCollection);
+        } else if (defined(packetData.polylineDash)) {
+            if (!(existingMaterial instanceof PolylineDashMaterialProperty)) {
+                existingMaterial = new PolylineDashMaterialProperty();
+            }
+            materialData = packetData.polylineDash;
+            processPacketData(Color, existingMaterial, 'color', materialData.color, undefined, undefined, entityCollection);
+            processPacketData(Color, existingMaterial, 'gapColor', materialData.gapColor, undefined, undefined, entityCollection);
+            processPacketData(Number, existingMaterial, 'dashLength', materialData.dashLength, undefined, sourceUri, entityCollection);
+            processPacketData(Number, existingMaterial, 'dashPattern', materialData.dashPattern, undefined, sourceUri, entityCollection);
         }
 
         if (defined(existingInterval)) {
@@ -985,11 +1141,40 @@ define([
         }
     }
 
+    function processProperties(entity, packet, entityCollection, sourceUri) {
+        var propertiesData = packet.properties;
+        if (defined(propertiesData)) {
+            if (!defined(entity.properties)) {
+                entity.properties = new PropertyBag();
+            }
+            //We cannot simply call processPacketData(entity, 'properties', propertyData, undefined, sourceUri, entityCollection)
+            //because each property of "properties" may vary separately.
+            //The properties will be accessible as entity.properties.myprop.getValue(time).
+
+            for (var key in propertiesData) {
+                if (propertiesData.hasOwnProperty(key)) {
+                    if (!entity.properties.hasProperty(key)) {
+                        entity.properties.addProperty(key);
+                    }
+
+                    var propertyData = propertiesData[key];
+                    if (isArray(propertyData)) {
+                        for (var i = 0, len = propertyData.length; i < len; i++) {
+                            processProperty(getPropertyType(propertyData[i]), entity.properties, key, propertyData[i], undefined, sourceUri, entityCollection);
+                        }
+                    } else {
+                        processProperty(getPropertyType(propertyData), entity.properties, key, propertyData, undefined, sourceUri, entityCollection);
+                    }
+                }
+            }
+        }
+    }
+
     function processArrayPacketData(object, propertyName, packetData, entityCollection) {
         var references = packetData.references;
         if (defined(references)) {
             var properties = references.map(function(reference) {
-                return makeReference(entityCollection, reference);
+                return createReferenceProperty(entityCollection, reference);
             });
 
             var iso8601Interval = packetData.interval;
@@ -1026,7 +1211,7 @@ define([
     function processPositionsPacketData(object, propertyName, positionsData, entityCollection) {
         if (defined(positionsData.references)) {
             var properties = positionsData.references.map(function(reference) {
-                return makeReference(entityCollection, reference);
+                return createReferenceProperty(entityCollection, reference);
             });
 
             var iso8601Interval = positionsData.interval;
@@ -1097,20 +1282,12 @@ define([
         entity.availability = intervals;
     }
 
-    var iso8601Scratch = {
-        iso8601 : undefined
-    };
-
     function processAlignedAxis(billboard, packetData, interval, sourceUri, entityCollection) {
         if (!defined(packetData)) {
             return;
         }
 
-        if (defined(packetData.velocityReference)) {
-            billboard.alignedAxis = new VelocityVectorProperty(makeReference(entityCollection, packetData.velocityReference), true);
-        } else {
-            processPacketData(Cartesian3, billboard, 'alignedAxis', packetData, interval, sourceUri, entityCollection);
-        }
+        processPacketData(UnitCartesian3, billboard, 'alignedAxis', packetData, interval, sourceUri, entityCollection);
     }
 
     function processBillboard(entity, packet, entityCollection, sourceUri) {
@@ -1149,6 +1326,8 @@ define([
         processPacketData(NearFarScalar, billboard, 'translucencyByDistance', billboardData.translucencyByDistance, interval, sourceUri, entityCollection);
         processPacketData(NearFarScalar, billboard, 'pixelOffsetScaleByDistance', billboardData.pixelOffsetScaleByDistance, interval, sourceUri, entityCollection);
         processPacketData(BoundingRectangle, billboard, 'imageSubRegion', billboardData.imageSubRegion, interval, sourceUri, entityCollection);
+        processPacketData(DistanceDisplayCondition, billboard, 'distanceDisplayCondition', billboardData.distanceDisplayCondition, interval, sourceUri, entityCollection);
+        processPacketData(Number, billboard, 'disableDepthTestDistance', billboardData.disableDepthTestDistance, interval, sourceUri, entityCollection);
     }
 
     function processBox(entity, packet, entityCollection, sourceUri) {
@@ -1177,6 +1356,7 @@ define([
         processPacketData(Color, box, 'outlineColor', boxData.outlineColor, interval, sourceUri, entityCollection);
         processPacketData(Number, box, 'outlineWidth', boxData.outlineWidth, interval, sourceUri, entityCollection);
         processPacketData(ShadowMode, box, 'shadows', boxData.shadows, interval, sourceUri, entityCollection);
+        processPacketData(DistanceDisplayCondition, box, 'distanceDisplayCondition', boxData.distanceDisplayCondition, interval, sourceUri, entityCollection);
     }
 
     function processCorridor(entity, packet, entityCollection, sourceUri) {
@@ -1210,6 +1390,8 @@ define([
         processPacketData(Color, corridor, 'outlineColor', corridorData.outlineColor, interval, sourceUri, entityCollection);
         processPacketData(Number, corridor, 'outlineWidth', corridorData.outlineWidth, interval, sourceUri, entityCollection);
         processPacketData(ShadowMode, corridor, 'shadows', corridorData.shadows, interval, sourceUri, entityCollection);
+        processPacketData(DistanceDisplayCondition, corridor, 'distanceDisplayCondition', corridorData.distanceDisplayCondition, interval, sourceUri, entityCollection);
+        processPacketData(Number, corridor, 'zIndex', corridorData.zIndex, interval, sourceUri, entityCollection);
     }
 
     function processCylinder(entity, packet, entityCollection, sourceUri) {
@@ -1242,6 +1424,7 @@ define([
         processPacketData(Number, cylinder, 'numberOfVerticalLines', cylinderData.numberOfVerticalLines, interval, sourceUri, entityCollection);
         processPacketData(Number, cylinder, 'slices', cylinderData.slices, interval, sourceUri, entityCollection);
         processPacketData(ShadowMode, cylinder, 'shadows', cylinderData.shadows, interval, sourceUri, entityCollection);
+        processPacketData(DistanceDisplayCondition, cylinder, 'distanceDisplayCondition', cylinderData.distanceDisplayCondition, interval, sourceUri, entityCollection);
     }
 
     function processDocument(packet, dataSource) {
@@ -1322,6 +1505,8 @@ define([
         processPacketData(Number, ellipse, 'outlineWidth', ellipseData.outlineWidth, interval, sourceUri, entityCollection);
         processPacketData(Number, ellipse, 'numberOfVerticalLines', ellipseData.numberOfVerticalLines, interval, sourceUri, entityCollection);
         processPacketData(ShadowMode, ellipse, 'shadows', ellipseData.shadows, interval, sourceUri, entityCollection);
+        processPacketData(DistanceDisplayCondition, ellipse, 'distanceDisplayCondition', ellipseData.distanceDisplayCondition, interval, sourceUri, entityCollection);
+        processPacketData(Number, ellipse, 'zIndex', ellipseData.zIndex, interval, sourceUri, entityCollection);
     }
 
     function processEllipsoid(entity, packet, entityCollection, sourceUri) {
@@ -1353,6 +1538,7 @@ define([
         processPacketData(Number, ellipsoid, 'slicePartitions', ellipsoidData.slicePartitions, interval, sourceUri, entityCollection);
         processPacketData(Number, ellipsoid, 'subdivisions', ellipsoidData.subdivisions, interval, sourceUri, entityCollection);
         processPacketData(ShadowMode, ellipsoid, 'shadows', ellipsoidData.shadows, interval, sourceUri, entityCollection);
+        processPacketData(DistanceDisplayCondition, ellipsoid, 'distanceDisplayCondition', ellipsoidData.distanceDisplayCondition, interval, sourceUri, entityCollection);
     }
 
     function processLabel(entity, packet, entityCollection, sourceUri) {
@@ -1391,6 +1577,9 @@ define([
         processPacketData(Number, label, 'outlineWidth', labelData.outlineWidth, interval, sourceUri, entityCollection);
         processPacketData(NearFarScalar, label, 'translucencyByDistance', labelData.translucencyByDistance, interval, sourceUri, entityCollection);
         processPacketData(NearFarScalar, label, 'pixelOffsetScaleByDistance', labelData.pixelOffsetScaleByDistance, interval, sourceUri, entityCollection);
+        processPacketData(NearFarScalar, label, 'scaleByDistance', labelData.scaleByDistance, interval, sourceUri, entityCollection);
+        processPacketData(DistanceDisplayCondition, label, 'distanceDisplayCondition', labelData.distanceDisplayCondition, interval, sourceUri, entityCollection);
+        processPacketData(Number, label, 'disableDepthTestDistance', labelData.disableDepthTestDistance, interval, sourceUri, entityCollection);
     }
 
     function processModel(entity, packet, entityCollection, sourceUri) {
@@ -1418,6 +1607,7 @@ define([
         processPacketData(Number, model, 'maximumScale', modelData.maximumScale, interval, sourceUri, entityCollection);
         processPacketData(Boolean, model, 'incrementallyLoadTextures', modelData.incrementallyLoadTextures, interval, sourceUri, entityCollection);
         processPacketData(Boolean, model, 'runAnimations', modelData.runAnimations, interval, sourceUri, entityCollection);
+        processPacketData(Boolean, model, 'clampAnimations', modelData.clampAnimations, interval, sourceUri, entityCollection);
         processPacketData(ShadowMode, model, 'shadows', modelData.shadows, interval, sourceUri, entityCollection);
         processPacketData(HeightReference, model, 'heightReference', modelData.heightReference, interval, sourceUri, entityCollection);
         processPacketData(Color, model, 'silhouetteColor', modelData.silhouetteColor, interval, sourceUri, entityCollection);
@@ -1425,6 +1615,7 @@ define([
         processPacketData(Color, model, 'color', modelData.color, interval, sourceUri, entityCollection);
         processPacketData(ColorBlendMode, model, 'colorBlendMode', modelData.colorBlendMode, interval, sourceUri, entityCollection);
         processPacketData(Number, model, 'colorBlendAmount', modelData.colorBlendAmount, interval, sourceUri, entityCollection);
+        processPacketData(DistanceDisplayCondition, model, 'distanceDisplayCondition', modelData.distanceDisplayCondition, interval, sourceUri, entityCollection);
 
         var nodeTransformationsData = modelData.nodeTransformations;
         if (defined(nodeTransformationsData)) {
@@ -1509,6 +1700,7 @@ define([
         processPacketData(Number, path, 'leadTime', pathData.leadTime, interval, sourceUri, entityCollection);
         processPacketData(Number, path, 'trailTime', pathData.trailTime, interval, sourceUri, entityCollection);
         processMaterialPacketData(path, 'material', pathData.material, interval, sourceUri, entityCollection);
+        processPacketData(DistanceDisplayCondition, path, 'distanceDisplayCondition', pathData.distanceDisplayCondition, interval, sourceUri, entityCollection);
     }
 
     function processPoint(entity, packet, entityCollection, sourceUri) {
@@ -1537,6 +1729,8 @@ define([
         processPacketData(Number, point, 'outlineWidth', pointData.outlineWidth, interval, sourceUri, entityCollection);
         processPacketData(NearFarScalar, point, 'scaleByDistance', pointData.scaleByDistance, interval, sourceUri, entityCollection);
         processPacketData(NearFarScalar, point, 'translucencyByDistance', pointData.translucencyByDistance, interval, sourceUri, entityCollection);
+        processPacketData(DistanceDisplayCondition, point, 'distanceDisplayCondition', pointData.distanceDisplayCondition, interval, sourceUri, entityCollection);
+        processPacketData(Number, point, 'disableDepthTestDistance', pointData.disableDepthTestDistance, interval, sourceUri, entityCollection);
     }
 
     function processPolygon(entity, packet, entityCollection, sourceUri) {
@@ -1572,6 +1766,8 @@ define([
         processPacketData(Boolean, polygon, 'closeTop', polygonData.closeTop, interval, sourceUri, entityCollection);
         processPacketData(Boolean, polygon, 'closeBottom', polygonData.closeBottom, interval, sourceUri, entityCollection);
         processPacketData(ShadowMode, polygon, 'shadows', polygonData.shadows, interval, sourceUri, entityCollection);
+        processPacketData(DistanceDisplayCondition, polygon, 'distanceDisplayCondition', polygonData.distanceDisplayCondition, interval, sourceUri, entityCollection);
+        processPacketData(Number, polygon, 'zIndex', polygonData.zIndex, interval, sourceUri, entityCollection);
     }
 
     function processPolyline(entity, packet, entityCollection, sourceUri) {
@@ -1597,8 +1793,12 @@ define([
         processPacketData(Number, polyline, 'width', polylineData.width, interval, sourceUri, entityCollection);
         processPacketData(Number, polyline, 'granularity', polylineData.granularity, interval, sourceUri, entityCollection);
         processMaterialPacketData(polyline, 'material', polylineData.material, interval, sourceUri, entityCollection);
+        processMaterialPacketData(polyline, 'depthFailMaterial', polylineData.depthFailMaterial, interval, sourceUri, entityCollection);
         processPacketData(Boolean, polyline, 'followSurface', polylineData.followSurface, interval, sourceUri, entityCollection);
+        processPacketData(Boolean, polyline, 'clampToGround', polylineData.clampToGround, interval, sourceUri, entityCollection);
         processPacketData(ShadowMode, polyline, 'shadows', polylineData.shadows, interval, sourceUri, entityCollection);
+        processPacketData(DistanceDisplayCondition, polyline, 'distanceDisplayCondition', polylineData.distanceDisplayCondition, interval, sourceUri, entityCollection);
+        processPacketData(Number, polyline, 'zIndex', polylineData.zIndex, interval, sourceUri, entityCollection);
     }
 
     function processRectangle(entity, packet, entityCollection, sourceUri) {
@@ -1631,9 +1831,9 @@ define([
         processPacketData(Boolean, rectangle, 'outline', rectangleData.outline, interval, sourceUri, entityCollection);
         processPacketData(Color, rectangle, 'outlineColor', rectangleData.outlineColor, interval, sourceUri, entityCollection);
         processPacketData(Number, rectangle, 'outlineWidth', rectangleData.outlineWidth, interval, sourceUri, entityCollection);
-        processPacketData(Boolean, rectangle, 'closeTop', rectangleData.closeTop, interval, sourceUri, entityCollection);
-        processPacketData(Boolean, rectangle, 'closeBottom', rectangleData.closeBottom, interval, sourceUri, entityCollection);
         processPacketData(ShadowMode, rectangle, 'shadows', rectangleData.shadows, interval, sourceUri, entityCollection);
+        processPacketData(DistanceDisplayCondition, rectangle, 'distanceDisplayCondition', rectangleData.distanceDisplayCondition, interval, sourceUri, entityCollection);
+        processPacketData(Number, rectangle, 'zIndex', rectangleData.zIndex, interval, sourceUri, entityCollection);
     }
 
     function processWall(entity, packet, entityCollection, sourceUri) {
@@ -1665,6 +1865,7 @@ define([
         processPacketData(Color, wall, 'outlineColor', wallData.outlineColor, interval, sourceUri, entityCollection);
         processPacketData(Number, wall, 'outlineWidth', wallData.outlineWidth, interval, sourceUri, entityCollection);
         processPacketData(ShadowMode, wall, 'shadows', wallData.shadows, interval, sourceUri, entityCollection);
+        processPacketData(DistanceDisplayCondition, wall, 'distanceDisplayCondition', wallData.distanceDisplayCondition, interval, sourceUri, entityCollection);
     }
 
     function processCzmlPacket(packet, entityCollection, updaterFunctions, sourceUri, dataSource) {
@@ -1774,10 +1975,15 @@ define([
 
         var promise = czml;
         var sourceUri = options.sourceUri;
-        if (typeof czml === 'string') {
-            promise = loadJson(czml);
-            sourceUri = defaultValue(sourceUri, czml);
+
+        // If the czml is a URL
+        if (typeof czml === 'string' || (czml instanceof Resource)) {
+            czml = Resource.createIfNeeded(czml);
+            promise = czml.fetchJson();
+            sourceUri = defaultValue(sourceUri, czml.clone());
         }
+
+        sourceUri = Resource.createIfNeeded(sourceUri);
 
         DataSource.setLoading(dataSource, true);
 
@@ -1810,7 +2016,7 @@ define([
             dataSource._name = documentPacket.name;
             raiseChangedEvent = true;
         } else if (!defined(dataSource._name) && defined(sourceUri)) {
-            dataSource._name = getFilenameFromUri(sourceUri);
+            dataSource._name = getFilenameFromUri(sourceUri.getUrlComponent());
             raiseChangedEvent = true;
         }
 
@@ -1834,7 +2040,7 @@ define([
      *
      * @param {String} [name] An optional name for the data source.  This value will be overwritten if a loaded document contains a name.
      *
-     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=CZML.html|Cesium Sandcastle CZML Demo}
+     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=CZML.html|Cesium Sandcastle CZML Demo}
      */
     function CzmlDataSource(name) {
         this._name = name;
@@ -1852,9 +2058,9 @@ define([
     /**
      * Creates a Promise to a new instance loaded with the provided CZML data.
      *
-     * @param {String|Object} czml A url or CZML object to be processed.
+     * @param {Resource|String|Object} czml A url or CZML object to be processed.
      * @param {Object} [options] An object with the following properties:
-     * @param {String} [options.sourceUri] Overrides the url to use for resolving relative links.
+     * @param {Resource|String} [options.sourceUri] Overrides the url to use for resolving relative links.
      * @returns {Promise.<CzmlDataSource>} A promise that resolves to the new instance once the data is processed.
      */
     CzmlDataSource.load = function(czml, options) {
@@ -1989,6 +2195,7 @@ define([
         processPoint, //
         processPolygon, //
         processPolyline, //
+        processProperties, //
         processRectangle, //
         processPosition, //
         processViewFrom, //
@@ -1999,7 +2206,7 @@ define([
     /**
      * Processes the provided url or CZML object without clearing any existing data.
      *
-     * @param {String|Object} czml A url or CZML object to be processed.
+     * @param {Resource|String|Object} czml A url or CZML object to be processed.
      * @param {Object} [options] An object with the following properties:
      * @param {String} [options.sourceUri] Overrides the url to use for resolving relative links.
      * @returns {Promise.<CzmlDataSource>} A promise that resolves to this instances once the data is processed.
@@ -2011,7 +2218,7 @@ define([
     /**
      * Loads the provided url or CZML object, replacing any existing data.
      *
-     * @param {String|Object} czml A url or CZML object to be processed.
+     * @param {Resource|String|Object} czml A url or CZML object to be processed.
      * @param {Object} [options] An object with the following properties:
      * @param {String} [options.sourceUri] Overrides the url to use for resolving relative links.
      * @returns {Promise.<CzmlDataSource>} A promise that resolves to this instances once the data is processed.

@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Core/Cartographic',
         'Core/Cartesian3',
@@ -26,6 +25,16 @@ defineSuite([
         expect(c.longitude).toEqual(1);
         expect(c.latitude).toEqual(2);
         expect(c.height).toEqual(3);
+    });
+
+    it('toCartesian conversion from Cartographic input to Cartesian3 output', function(){
+        var lon = CesiumMath.toRadians(150);
+        var lat = CesiumMath.toRadians(-40);
+        var height = 100000;
+        var ellipsoid = Ellipsoid.WGS84;
+        var actual = Cartographic.toCartesian(new Cartographic(lon, lat, height));
+        var expected = ellipsoid.cartographicToCartesian(new Cartographic(lon, lat, height));
+        expect(actual).toEqual(expected);
     });
 
     it('fromRadians works without a result parameter', function() {

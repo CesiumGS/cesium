@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Scene/CameraEventAggregator',
         'Core/Cartesian2',
@@ -19,12 +18,13 @@ defineSuite([
         DomEventSimulator) {
     'use strict';
 
-    var usePointerEvents = FeatureDetection.supportsPointerEvents();
+    var usePointerEvents;
     var canvas;
     var handler;
     var handler2;
 
     beforeAll(function() {
+        usePointerEvents = FeatureDetection.supportsPointerEvents();
         canvas = createCanvas(1024, 768);
     });
 

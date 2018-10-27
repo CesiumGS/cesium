@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../../Core/defined',
         '../../Core/defineProperties',
@@ -39,7 +38,6 @@ define([
             throw new DeveloperError('container is required.');
         }
         //>>includeEnd('debug');
-
 
         container = getElement(container);
 

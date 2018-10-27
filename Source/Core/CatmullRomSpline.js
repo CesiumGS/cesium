@@ -1,21 +1,20 @@
-/*global define*/
 define([
         './Cartesian3',
         './Cartesian4',
+        './Check',
         './defaultValue',
         './defined',
         './defineProperties',
-        './DeveloperError',
         './HermiteSpline',
         './Matrix4',
         './Spline'
     ], function(
         Cartesian3,
         Cartesian4,
+        Check,
         defaultValue,
         defined,
         defineProperties,
-        DeveloperError,
         HermiteSpline,
         Matrix4,
         Spline) {
@@ -138,10 +137,11 @@ define([
      *
      * var p0 = spline.evaluate(times[i]);         // equal to positions[i]
      * var p1 = spline.evaluate(times[i] + delta); // interpolated value when delta < times[i + 1] - times[i]
-     * 
+     *
      * @see HermiteSpline
      * @see LinearSpline
      * @see QuaternionSpline
+     * @see WeightSpline
      */
     function CatmullRomSpline(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -152,15 +152,10 @@ define([
         var lastTangent = options.lastTangent;
 
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(points) || !defined(times)) {
-            throw new DeveloperError('points and times are required.');
-        }
-        if (points.length < 2) {
-            throw new DeveloperError('points.length must be greater than or equal to 2.');
-        }
-        if (times.length !== points.length) {
-            throw new DeveloperError('times.length must be equal to points.length.');
-        }
+        Check.defined('points', points);
+        Check.defined('times', times);
+        Check.typeOf.number.greaterThanOrEquals('points.length', points.length, 2);
+        Check.typeOf.number.equals('times.length', 'points.length', times.length, points.length);
         //>>includeEnd('debug');
 
         if (points.length > 2) {
@@ -271,6 +266,24 @@ define([
      *                             in the array <code>times</code>.
      */
     CatmullRomSpline.prototype.findTimeInterval = Spline.prototype.findTimeInterval;
+
+    /**
+     * Wraps the given time to the period covered by the spline.
+     * @function
+     *
+     * @param {Number} time The time.
+     * @return {Number} The time, wrapped around to the updated animation.
+     */
+    CatmullRomSpline.prototype.wrapTime = Spline.prototype.wrapTime;
+
+    /**
+     * Clamps the given time to the period covered by the spline.
+     * @function
+     *
+     * @param {Number} time The time.
+     * @return {Number} The time, clamped to the animation period.
+     */
+    CatmullRomSpline.prototype.clampTime = Spline.prototype.clampTime;
 
     /**
      * Evaluates the curve at a given time.

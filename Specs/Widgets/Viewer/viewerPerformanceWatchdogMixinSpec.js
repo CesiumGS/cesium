@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Widgets/Viewer/viewerPerformanceWatchdogMixin',
         'Specs/createViewer',

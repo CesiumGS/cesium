@@ -1,11 +1,10 @@
-/*global defineSuite*/
 defineSuite([
-        'Core/getAbsoluteUri',
         'Core/isCrossOriginUrl',
+        'Core/getAbsoluteUri',
         'ThirdParty/Uri'
     ], function(
-        getAbsoluteUri,
         isCrossOriginUrl,
+        getAbsoluteUri,
         Uri) {
     'use strict';
 

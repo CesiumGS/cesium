@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Scene/Material',
         'Core/Cartesian3',
@@ -7,10 +6,9 @@ defineSuite([
         'Core/defined',
         'Core/Ellipsoid',
         'Core/GeometryInstance',
-        'Core/loadImage',
         'Core/Rectangle',
         'Core/RectangleGeometry',
-        'Renderer/Texture',
+        'Core/Resource',
         'Scene/MaterialAppearance',
         'Scene/PolylineCollection',
         'Scene/Primitive',
@@ -24,10 +22,9 @@ defineSuite([
         defined,
         Ellipsoid,
         GeometryInstance,
-        loadImage,
         Rectangle,
         RectangleGeometry,
-        Texture,
+        Resource,
         MaterialAppearance,
         PolylineCollection,
         Primitive,
@@ -202,6 +199,10 @@ defineSuite([
         verifyPolylineMaterial('PolylineArrow');
     });
 
+    it('draws PolylineDash built-in material', function() {
+        verifyPolylineMaterial('PolylineDash');
+    });
+
     it('draws PolylineGlow built-in material', function() {
         verifyPolylineMaterial('PolylineGlow');
     });
@@ -329,6 +330,19 @@ defineSuite([
                 type : 'DiffuseMap',
                 uniforms : {
                     image :  './Data/Images/Blue.png'
+                }
+            }
+        });
+        renderMaterial(material);
+    });
+
+    it('creates a material with an image resource uniform', function () {
+        var material = new Material({
+            strict : true,
+            fabric : {
+                type : 'DiffuseMap',
+                uniforms : {
+                    image :  new Resource('./Data/Images/Blue.png')
                 }
             }
         });

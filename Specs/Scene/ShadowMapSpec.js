@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Scene/ShadowMap',
         'Core/BoundingSphere',
@@ -7,7 +6,6 @@ defineSuite([
         'Core/Color',
         'Core/ColorGeometryInstanceAttribute',
         'Core/ComponentDatatype',
-        'Core/defined',
         'Core/EllipsoidTerrainProvider',
         'Core/GeometryInstance',
         'Core/HeadingPitchRange',
@@ -15,6 +13,7 @@ defineSuite([
         'Core/HeightmapTerrainData',
         'Core/JulianDate',
         'Core/Math',
+        'Core/OrthographicOffCenterFrustum',
         'Core/PixelFormat',
         'Core/Transforms',
         'Core/WebGLConstants',
@@ -25,7 +24,6 @@ defineSuite([
         'Scene/Camera',
         'Scene/Globe',
         'Scene/Model',
-        'Scene/OrthographicFrustum',
         'Scene/PerInstanceColorAppearance',
         'Scene/Primitive',
         'Scene/ShadowMode',
@@ -40,7 +38,6 @@ defineSuite([
         Color,
         ColorGeometryInstanceAttribute,
         ComponentDatatype,
-        defined,
         EllipsoidTerrainProvider,
         GeometryInstance,
         HeadingPitchRange,
@@ -48,6 +45,7 @@ defineSuite([
         HeightmapTerrainData,
         JulianDate,
         CesiumMath,
+        OrthographicOffCenterFrustum,
         PixelFormat,
         Transforms,
         WebGLConstants,
@@ -58,7 +56,6 @@ defineSuite([
         Camera,
         Globe,
         Model,
-        OrthographicFrustum,
         PerInstanceColorAppearance,
         Primitive,
         ShadowMode,
@@ -299,7 +296,7 @@ defineSuite([
         var center = new Cartesian3.fromRadians(longitude, latitude, height);
         scene.camera.lookAt(center, new HeadingPitchRange(0.0, CesiumMath.toRadians(-70.0), 5.0));
 
-        var frustum = new OrthographicFrustum();
+        var frustum = new OrthographicOffCenterFrustum();
         frustum.left = -50.0;
         frustum.right = 50.0;
         frustum.bottom = -50.0;
@@ -496,9 +493,7 @@ defineSuite([
         // Move the camera into the shadowed area
         scene.camera.moveRight(0.2);
 
-        var shadowedColor;
         renderAndCall(function(rgba) {
-            shadowedColor = rgba;
             expect(rgba).not.toEqual(backgroundColor);
             expect(rgba).not.toEqual(unshadowedColor);
         });
@@ -714,7 +709,6 @@ defineSuite([
         ];
 
         for (var i = 0; i < 6; ++i) {
-            /* jshint loopfunc: true */
             var box = scene.primitives.add(Model.fromGltf({
                 url : boxUrl,
                 modelMatrix : Transforms.headingPitchRollToFixedFrame(origins[i], new HeadingPitchRoll()),
@@ -723,18 +717,19 @@ defineSuite([
             scene.render(); // Model is pre-loaded, render one frame to make it ready
 
             scene.camera.lookAt(origins[i], offsets[i]);
+            scene.camera.moveForward(0.5);
 
             // Render without shadows
             scene.shadowMap.enabled = false;
             var unshadowedColor;
-            renderAndCall(function(rgba) {
+            renderAndCall(function(rgba) { //eslint-disable-line no-loop-func
                 unshadowedColor = rgba;
                 expect(rgba).not.toEqual(backgroundColor);
             });
 
             // Render with shadows
             scene.shadowMap.enabled = true;
-            renderAndCall(function(rgba) {
+            renderAndCall(function(rgba) { //eslint-disable-line no-loop-func
                 expect(rgba).not.toEqual(backgroundColor);
                 expect(rgba).not.toEqual(unshadowedColor);
             });
@@ -1076,7 +1071,8 @@ defineSuite([
     });
 
     it('model updates derived commands when the shadow map is dirty', function() {
-        var spy = spyOn(ShadowMap, 'createDerivedCommands').and.callThrough();
+        var spy1 = spyOn(ShadowMap, 'createReceiveDerivedCommand').and.callThrough();
+        var spy2 = spyOn(ShadowMap, 'createCastDerivedCommand').and.callThrough();
 
         box.show = true;
         floor.show = true;
@@ -1124,10 +1120,33 @@ defineSuite([
 
         // Expect derived commands to be updated twice for both the floor and box,
         // once on the first frame and again when the shadow map is dirty
-        expect(spy.calls.count()).toEqual(4);
+        expect(spy1.calls.count()).toEqual(4);
+        expect(spy2.calls.count()).toEqual(4);
 
         box.show = false;
         floor.show = false;
+    });
+
+    it('does not receive shadows if fromLightSource is false', function() {
+        box.show = true;
+        floorTranslucent.show = true;
+        createCascadedShadowMap();
+        scene.shadowMap.fromLightSource = false;
+
+        // Render without shadows
+        scene.shadowMap.enabled = false;
+        var unshadowedColor;
+        renderAndCall(function(rgba) {
+            unshadowedColor = rgba;
+            expect(rgba).not.toEqual(backgroundColor);
+        });
+
+        // Render with shadows
+        scene.shadowMap.enabled = true;
+        renderAndCall(function(rgba) {
+            expect(rgba).not.toEqual(backgroundColor);
+            expect(rgba).toEqual(unshadowedColor);
+        });
     });
 
     it('tweaking shadow bias parameters works', function() {

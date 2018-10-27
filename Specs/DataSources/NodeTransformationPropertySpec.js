@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'DataSources/NodeTransformationProperty',
         'Core/Cartesian3',

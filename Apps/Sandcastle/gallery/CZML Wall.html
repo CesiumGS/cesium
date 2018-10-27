@@ -61,17 +61,17 @@ var czml = [{
 }];
 
 var viewer = new Cesium.Viewer('cesiumContainer');
-var dataSource = Cesium.CzmlDataSource.load(czml);
-viewer.dataSources.add(dataSource);
-viewer.zoomTo(dataSource);
+var dataSourcePromise = Cesium.CzmlDataSource.load(czml);
+viewer.dataSources.add(dataSourcePromise);
+viewer.zoomTo(dataSourcePromise);
 
     //Sandcastle_End
     Sandcastle.finishedLoading();
 }
-if (typeof Cesium !== "undefined") {
+if (typeof Cesium !== 'undefined') {
     startup(Cesium);
-} else if (typeof require === "function") {
-    require(["Cesium"], startup);
+} else if (typeof require === 'function') {
+    require(['Cesium'], startup);
 }
 </script>
 </body>

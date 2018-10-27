@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Core/BoundingSphere',
         'Core/BoxGeometry',
@@ -7,6 +6,7 @@ defineSuite([
         'Core/CircleGeometry',
         'Core/Color',
         'Core/ColorGeometryInstanceAttribute',
+        'Core/CoplanarPolygonGeometry',
         'Core/ComponentDatatype',
         'Core/CornerType',
         'Core/CorridorGeometry',
@@ -20,6 +20,7 @@ defineSuite([
         'Core/GeometryInstance',
         'Core/Math',
         'Core/Matrix4',
+        'Core/PerspectiveFrustum',
         'Core/PolygonGeometry',
         'Core/PolylineGeometry',
         'Core/PolylineVolumeGeometry',
@@ -46,6 +47,7 @@ defineSuite([
         CircleGeometry,
         Color,
         ColorGeometryInstanceAttribute,
+        CoplanarPolygonGeometry,
         ComponentDatatype,
         CornerType,
         CorridorGeometry,
@@ -59,6 +61,7 @@ defineSuite([
         GeometryInstance,
         CesiumMath,
         Matrix4,
+        PerspectiveFrustum,
         PolygonGeometry,
         PolylineGeometry,
         PolylineVolumeGeometry,
@@ -88,12 +91,21 @@ defineSuite([
         scene = createScene();
         scene.frameState.scene3DOnly = false;
         scene.primitives.destroyPrimitives = false;
-        
+
         ellipsoid = Ellipsoid.WGS84;
     });
 
     afterAll(function() {
         scene.destroyForSpecs();
+    });
+
+    beforeEach(function() {
+        scene.morphTo3D(0.0);
+
+        var camera = scene.camera;
+        camera.frustum = new PerspectiveFrustum();
+        camera.frustum.aspectRatio = scene.drawingBufferWidth / scene.drawingBufferHeight;
+        camera.frustum.fov = CesiumMath.toRadians(60.0);
     });
 
     afterEach(function() {
@@ -321,6 +333,49 @@ defineSuite([
             return renderAsync(instance);
         });
     }, 'WebGL');
+
+    describe('CoplanarPolygonGeometry', function() {
+        var instance;
+        beforeAll(function() {
+            instance = new GeometryInstance({
+                geometry : CoplanarPolygonGeometry.fromPositions({
+                    positions : Cartesian3.fromDegreesArrayHeights([
+                        71.0, -10.0, 0.0,
+                        70.0, 0.0, 20000.0,
+                        69.0, 0.0, 20000.0,
+                        68.0, -10.0, 0.0
+                    ]),
+                    vertexFormat : PerInstanceColorAppearance.FLAT_VERTEX_FORMAT
+                }),
+                id: 'coplanar polygon',
+                attributes : {
+                    color : new ColorGeometryInstanceAttribute(Math.random(), Math.random(), Math.random(), 0.5)
+                }
+            });
+            geometry = CoplanarPolygonGeometry.createGeometry(instance.geometry);
+            geometry.boundingSphereWC = BoundingSphere.transform(geometry.boundingSphere, instance.modelMatrix);
+        });
+
+        it('3D', function() {
+            render3D(instance);
+        });
+
+        it('Columbus view', function() {
+            renderCV(instance);
+        });
+
+        it('2D', function() {
+            render2D(instance);
+        });
+
+        it('pick', function() {
+            pickGeometry(instance);
+        });
+
+        it('async', function() {
+            return renderAsync(instance);
+        });
+    });
 
     describe('CylinderGeometry', function() {
         var instance;
@@ -883,7 +938,6 @@ defineSuite([
         });
     }, 'WebGL');
 
-
     describe('Extruded PolygonGeometry', function() {
         var instance;
         var extrudedHeight;
@@ -1014,7 +1068,6 @@ defineSuite([
             render3D(instance, afterView);
         });
     }, 'WebGL');
-
 
     describe('WallGeometry', function() {
         var instance;
@@ -1340,7 +1393,6 @@ defineSuite([
             render3D(instance, afterView);
         });
     }, 'WebGL');
-
 
     describe('SimplePolylineGeometry', function() {
         var instance;

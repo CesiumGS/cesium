@@ -1,9 +1,9 @@
-/*global defineSuite*/
 defineSuite([
         'DataSources/PointVisualizer',
         'Core/BoundingSphere',
         'Core/Cartesian3',
         'Core/Color',
+        'Core/defined',
         'Core/defineProperties',
         'Core/DistanceDisplayCondition',
         'Core/Ellipsoid',
@@ -24,6 +24,7 @@ defineSuite([
         BoundingSphere,
         Cartesian3,
         Color,
+        defined,
         defineProperties,
         DistanceDisplayCondition,
         Ellipsoid,
@@ -49,7 +50,10 @@ defineSuite([
         scene = createScene();
         scene.globe = {
             ellipsoid : Ellipsoid.WGS84,
-            _surface : {}
+            _surface : {},
+            tileLoadedEvent : new Event(),
+            imageryLayersUpdatedEvent : new Event(),
+            terrainProviderChanged : new Event()
         };
 
         scene.globe.getHeight = function() {
@@ -62,7 +66,6 @@ defineSuite([
         scene.globe._surface.updateHeight = function() {
         };
 
-        scene.globe.terrainProviderChanged = new Event();
         defineProperties(scene.globe, {
             terrainProvider : {
                 set : function(value) {
@@ -82,7 +85,9 @@ defineSuite([
     });
 
     afterEach(function() {
-        visualizer = visualizer && visualizer.destroy();
+        if (defined(visualizer)) {
+            visualizer = visualizer.destroy();
+        }
         entityCluster.destroy();
     });
 
@@ -118,10 +123,11 @@ defineSuite([
 
     it('removes the listener from the entity collection when destroyed', function() {
         var entityCollection = new EntityCollection();
-        var visualizer = new PointVisualizer(entityCluster, entityCollection);
+        visualizer = new PointVisualizer(entityCluster, entityCollection);
         expect(entityCollection.collectionChanged.numberOfListeners).toEqual(1);
-        visualizer = visualizer.destroy();
+        visualizer.destroy();
         expect(entityCollection.collectionChanged.numberOfListeners).toEqual(0);
+        visualizer = undefined;
     });
 
     it('object with no point does not create a pointPrimitive.', function() {
@@ -161,7 +167,8 @@ defineSuite([
                 outlineWidth : 9,
                 pixelSize : 10,
                 scaleByDistance : new NearFarScalar(11, 12, 13, 14),
-                distanceDisplayCondition : new DistanceDisplayCondition(10.0, 100.0)
+                distanceDisplayCondition : new DistanceDisplayCondition(10.0, 100.0),
+                disableDepthTestDistance : 10.0
             }
         });
         var point = entity.point;
@@ -180,6 +187,7 @@ defineSuite([
         expect(pointPrimitive.outlineColor).toEqual(point.outlineColor.getValue(time));
         expect(pointPrimitive.outlineWidth).toEqual(point.outlineWidth.getValue(time));
         expect(pointPrimitive.distanceDisplayCondition).toEqual(point.distanceDisplayCondition.getValue(time));
+        expect(pointPrimitive.disableDepthTestDistance).toEqual(point.disableDepthTestDistance.getValue(time));
 
         point.color = new Color(0.15, 0.16, 0.17, 0.18);
         point.outlineColor = new Color(0.19, 0.20, 0.21, 0.22);
@@ -187,6 +195,7 @@ defineSuite([
         point.outlineWidth = 24;
         point.scaleByDistance = new NearFarScalar(25, 26, 27, 28);
         point.distanceDisplayCondition = new DistanceDisplayCondition(1000.0, 1000000.0);
+        point.disableDepthTestDistance = 20.0;
 
         visualizer.update(time);
 
@@ -197,6 +206,7 @@ defineSuite([
         expect(pointPrimitive.outlineColor).toEqual(point.outlineColor.getValue(time));
         expect(pointPrimitive.outlineWidth).toEqual(point.outlineWidth.getValue(time));
         expect(pointPrimitive.distanceDisplayCondition).toEqual(point.distanceDisplayCondition.getValue(time));
+        expect(pointPrimitive.disableDepthTestDistance).toEqual(point.disableDepthTestDistance.getValue(time));
 
         point.show = false;
         visualizer.update(time);
@@ -219,6 +229,7 @@ defineSuite([
                 pixelSize : 10,
                 scaleByDistance : new NearFarScalar(11, 12, 13, 14),
                 distanceDisplayCondition : new DistanceDisplayCondition(10.0, 100.0),
+                disableDepthTestDistance : 10.0,
                 heightReference : HeightReference.CLAMP_TO_GROUND
             }
         });
@@ -235,6 +246,7 @@ defineSuite([
         expect(billboard.position).toEqual(entity.position.getValue(time));
         expect(billboard.scaleByDistance).toEqual(point.scaleByDistance.getValue(time));
         expect(billboard.distanceDisplayCondition).toEqual(point.distanceDisplayCondition.getValue(time));
+        expect(billboard.disableDepthTestDistance).toEqual(point.disableDepthTestDistance.getValue(time));
         //expect(billboard.color).toEqual(point.color.getValue(time));
         //expect(billboard.outlineColor).toEqual(point.outlineColor.getValue(time));
         //expect(billboard.outlineWidth).toEqual(point.outlineWidth.getValue(time));
@@ -245,6 +257,7 @@ defineSuite([
         point.outlineWidth = 24;
         point.scaleByDistance = new NearFarScalar(25, 26, 27, 28);
         point.distanceDisplayCondition = new DistanceDisplayCondition(1000.0, 1000000.0);
+        point.disableDepthTestDistance = 20.0;
 
         visualizer.update(time);
 
@@ -252,6 +265,7 @@ defineSuite([
         expect(billboard.position).toEqual(entity.position.getValue(time));
         expect(billboard.scaleByDistance).toEqual(point.scaleByDistance.getValue(time));
         expect(billboard.distanceDisplayCondition).toEqual(point.distanceDisplayCondition.getValue(time));
+        expect(billboard.disableDepthTestDistance).toEqual(point.disableDepthTestDistance.getValue(time));
         //expect(billboard.color).toEqual(point.color.getValue(time));
         //expect(billboard.outlineColor).toEqual(point.outlineColor.getValue(time));
         //expect(billboard.outlineWidth).toEqual(point.outlineWidth.getValue(time));

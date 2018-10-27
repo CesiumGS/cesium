@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'DataSources/ImageMaterialProperty',
         'Core/Cartesian2',

@@ -1,23 +1,22 @@
-/*global define*/
 define([
-    './BingMapsApi',
-    './defaultValue',
-    './defined',
-    './defineProperties',
-    './DeveloperError',
-    './loadJsonp',
-    './Rectangle'
-], function(
-    BingMapsApi,
-    defaultValue,
-    defined,
-    defineProperties,
-    DeveloperError,
-    loadJsonp,
-    Rectangle) {
+        './BingMapsApi',
+        './Check',
+        './defaultValue',
+        './defined',
+        './defineProperties',
+        './Rectangle',
+        './Resource'
+    ], function(
+        BingMapsApi,
+        Check,
+        defaultValue,
+        defined,
+        defineProperties,
+        Rectangle,
+        Resource) {
     'use strict';
 
-   var url = 'https://dev.virtualearth.net/REST/v1/Locations';
+    var url = 'https://dev.virtualearth.net/REST/v1/Locations';
 
     /**
      * Provides geocoding through Bing Maps.
@@ -29,8 +28,16 @@ define([
      */
     function BingMapsGeocoderService(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-        this._url = 'https://dev.virtualearth.net/REST/v1/Locations';
-        this._key = BingMapsApi.getKey(options.key);
+
+        var key = options.key;
+        this._key = BingMapsApi.getKey(key);
+
+        this._resource = new Resource({
+            url: url,
+            queryParameters: {
+                key: this._key
+            }
+        });
     }
 
     defineProperties(BingMapsGeocoderService.prototype, {
@@ -42,7 +49,7 @@ define([
          */
         url : {
             get : function () {
-                return this._url;
+                return url;
             }
         },
 
@@ -63,25 +70,20 @@ define([
      * @function
      *
      * @param {String} query The query to be sent to the geocoder service
-     * @returns {Promise<GeocoderResult[]>}
+     * @returns {Promise<GeocoderService~Result[]>}
      */
     BingMapsGeocoderService.prototype.geocode = function(query) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(query)) {
-            throw new DeveloperError('query must be defined');
-        }
+        Check.typeOf.string('query', query);
         //>>includeEnd('debug');
 
-        var key = this.key;
-        var promise = loadJsonp(url, {
-            parameters : {
-                query : query,
-                key : key
-            },
-            callbackParameterName : 'jsonp'
+        var resource = this._resource.getDerivedResource({
+            queryParameters: {
+                query: query
+            }
         });
 
-        return promise.then(function(result) {
+        return resource.fetchJsonp('jsonp').then(function(result) {
             if (result.resourceSets.length === 0) {
                 return [];
             }

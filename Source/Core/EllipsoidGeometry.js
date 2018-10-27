@@ -1,5 +1,5 @@
-/*global define*/
 define([
+        './arrayFill',
         './BoundingSphere',
         './Cartesian2',
         './Cartesian3',
@@ -11,11 +11,13 @@ define([
         './Geometry',
         './GeometryAttribute',
         './GeometryAttributes',
+        './GeometryOffsetAttribute',
         './IndexDatatype',
         './Math',
         './PrimitiveType',
         './VertexFormat'
     ], function(
+        arrayFill,
         BoundingSphere,
         Cartesian2,
         Cartesian3,
@@ -27,6 +29,7 @@ define([
         Geometry,
         GeometryAttribute,
         GeometryAttributes,
+        GeometryOffsetAttribute,
         IndexDatatype,
         CesiumMath,
         PrimitiveType,
@@ -71,8 +74,8 @@ define([
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         var radii = defaultValue(options.radii, defaultRadii);
-        var stackPartitions = defaultValue(options.stackPartitions, 64);
-        var slicePartitions = defaultValue(options.slicePartitions, 64);
+        var stackPartitions = Math.round(defaultValue(options.stackPartitions, 64));
+        var slicePartitions = Math.round(defaultValue(options.slicePartitions, 64));
         var vertexFormat = defaultValue(options.vertexFormat, VertexFormat.DEFAULT);
 
         //>>includeStart('debug', pragmas.debug);
@@ -82,12 +85,16 @@ define([
         if (stackPartitions < 3) {
             throw new DeveloperError('options.stackPartitions cannot be less than three.');
         }
+        if (defined(options.offsetAttribute) && options.offsetAttribute === GeometryOffsetAttribute.TOP) {
+            throw new DeveloperError('GeometryOffsetAttribute.TOP is not a supported options.offsetAttribute for this geometry.');
+        }
         //>>includeEnd('debug');
 
         this._radii = Cartesian3.clone(radii);
         this._stackPartitions = stackPartitions;
         this._slicePartitions = slicePartitions;
         this._vertexFormat = VertexFormat.clone(vertexFormat);
+        this._offsetAttribute = options.offsetAttribute;
         this._workerName = 'createEllipsoidGeometry';
     }
 
@@ -95,7 +102,7 @@ define([
      * The number of elements used to pack the object into an array.
      * @type {Number}
      */
-    EllipsoidGeometry.packedLength = Cartesian3.packedLength + VertexFormat.packedLength + 2;
+    EllipsoidGeometry.packedLength = Cartesian3.packedLength + VertexFormat.packedLength + 3;
 
     /**
      * Stores the provided instance into the provided array.
@@ -125,7 +132,8 @@ define([
         startingIndex += VertexFormat.packedLength;
 
         array[startingIndex++] = value._stackPartitions;
-        array[startingIndex]   = value._slicePartitions;
+        array[startingIndex++] = value._slicePartitions;
+        array[startingIndex] = defaultValue(value._offsetAttribute, -1);
 
         return array;
     };
@@ -136,7 +144,8 @@ define([
         radii : scratchRadii,
         vertexFormat : scratchVertexFormat,
         stackPartitions : undefined,
-        slicePartitions : undefined
+        slicePartitions : undefined,
+        offsetAttribute : undefined
     };
 
     /**
@@ -163,11 +172,13 @@ define([
         startingIndex += VertexFormat.packedLength;
 
         var stackPartitions = array[startingIndex++];
-        var slicePartitions = array[startingIndex];
+        var slicePartitions = array[startingIndex++];
+        var offsetAttribute = array[startingIndex];
 
         if (!defined(result)) {
             scratchOptions.stackPartitions = stackPartitions;
             scratchOptions.slicePartitions = slicePartitions;
+            scratchOptions.offsetAttribute = offsetAttribute === -1 ? undefined : offsetAttribute;
             return new EllipsoidGeometry(scratchOptions);
         }
 
@@ -175,6 +186,7 @@ define([
         result._vertexFormat = VertexFormat.clone(vertexFormat, result._vertexFormat);
         result._stackPartitions = stackPartitions;
         result._slicePartitions = slicePartitions;
+        result._offsetAttribute = offsetAttribute === -1 ? undefined : offsetAttribute;
 
         return result;
     };
@@ -359,6 +371,18 @@ define([
             }
         }
 
+        if (defined(ellipsoidGeometry._offsetAttribute)) {
+            var length = positions.length;
+            var applyOffset = new Uint8Array(length / 3);
+            var offsetValue = ellipsoidGeometry._offsetAttribute === GeometryOffsetAttribute.NONE ? 0 : 1;
+            arrayFill(applyOffset, offsetValue);
+            attributes.applyOffset = new GeometryAttribute({
+                componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
+                componentsPerAttribute : 1,
+                values: applyOffset
+            });
+        }
+
         index = 0;
         for (j = 0; j < slicePartitions - 1; j++) {
             indices[index++] = slicePartitions + j;
@@ -397,8 +421,27 @@ define([
             attributes : attributes,
             indices : indices,
             primitiveType : PrimitiveType.TRIANGLES,
-            boundingSphere : BoundingSphere.fromEllipsoid(ellipsoid)
+            boundingSphere : BoundingSphere.fromEllipsoid(ellipsoid),
+            offsetAttribute : ellipsoidGeometry._offsetAttribute
         });
+    };
+
+    var unitEllipsoidGeometry;
+
+    /**
+     * Returns the geometric representation of a unit ellipsoid, including its vertices, indices, and a bounding sphere.
+     * @returns {Geometry} The computed vertices and indices.
+     *
+     * @private
+     */
+    EllipsoidGeometry.getUnitEllipsoid = function() {
+        if (!defined(unitEllipsoidGeometry)) {
+            unitEllipsoidGeometry = EllipsoidGeometry.createGeometry((new EllipsoidGeometry({
+                radii : new Cartesian3(1.0, 1.0, 1.0),
+                vertexFormat : VertexFormat.POSITION_ONLY
+            })));
+        }
+        return unitEllipsoidGeometry;
     };
 
     return EllipsoidGeometry;

@@ -1,4 +1,3 @@
-/*global define*/
 define([
         './Cartesian3',
         './CornerType',
@@ -82,7 +81,7 @@ define([
         var leftEdge = calculatedPositions[1];
         startPoint = Cartesian3.fromArray(calculatedPositions[1], leftEdge.length - 3, startPoint);
         endPoint = Cartesian3.fromArray(calculatedPositions[0], 0, endPoint);
-        cornerPoint = Cartesian3.multiplyByScalar(Cartesian3.add(startPoint, endPoint, cornerPoint), 0.5, cornerPoint);
+        cornerPoint = Cartesian3.midpoint(startPoint, endPoint, cornerPoint);
         var firstEndCap = computeRoundCorner(cornerPoint, startPoint, endPoint, CornerType.ROUNDED, false);
 
         var length = calculatedPositions.length - 1;
@@ -90,7 +89,7 @@ define([
         leftEdge = calculatedPositions[length];
         startPoint = Cartesian3.fromArray(rightEdge, rightEdge.length - 3, startPoint);
         endPoint = Cartesian3.fromArray(leftEdge, 0, endPoint);
-        cornerPoint = Cartesian3.multiplyByScalar(Cartesian3.add(startPoint, endPoint, cornerPoint), 0.5, cornerPoint);
+        cornerPoint = Cartesian3.midpoint(startPoint, endPoint, cornerPoint);
         var lastEndCap = computeRoundCorner(cornerPoint, startPoint, endPoint, CornerType.ROUNDED, false);
 
         return [firstEndCap, lastEndCap];
@@ -151,13 +150,6 @@ define([
         }
     };
 
-    function scaleToSurface(positions, ellipsoid) {
-        for (var i = 0; i < positions.length; i++) {
-            positions[i] = ellipsoid.scaleToGeodeticSurface(positions[i], positions[i]);
-        }
-        return positions;
-    }
-
     var scratchForwardProjection = new Cartesian3();
     var scratchBackwardProjection = new Cartesian3();
 
@@ -168,7 +160,6 @@ define([
         var granularity = params.granularity;
         var positions = params.positions;
         var ellipsoid = params.ellipsoid;
-        positions = scaleToSurface(positions, ellipsoid);
         var width = params.width / 2;
         var cornerType = params.cornerType;
         var saveAttributes = params.saveAttributes;

@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'DataSources/SampledProperty',
         'Core/Cartesian3',
@@ -222,6 +221,18 @@ defineSuite([
         expect(property.getValue(JulianDate.addSeconds(time, 4, new JulianDate()))).toBeUndefined();
     });
 
+    it('Allows empty options object without failing', function() {
+        var property = new SampledProperty(Number);
+
+        var interpolationAlgorithm = property.interpolationAlgorithm;
+        var interpolationDegree = property.interpolationDegree;
+
+        property.setInterpolationOptions({});
+
+        expect(property.interpolationAlgorithm).toEqual(interpolationAlgorithm);
+        expect(property.interpolationDegree).toEqual(interpolationDegree);
+    });
+
     it('mergeNewSamples works with huge data sets.', function() {
         var times = [];
         var values = [];
@@ -353,10 +364,10 @@ defineSuite([
     });
 
     var interwovenData = [{
-        epoch : JulianDate.fromIso8601("20130205T150405.704999999999927Z"),
+        epoch : JulianDate.fromIso8601('20130205T150405.704999999999927Z'),
         values : [0.0, 1, 120.0, 2, 240.0, 3, 360.0, 4, 480.0, 6, 600.0, 8, 720.0, 10, 840.0, 12, 960.0, 14, 1080.0, 16]
     }, {
-        epoch : JulianDate.fromIso8601("20130205T151151.60499999999956Z"),
+        epoch : JulianDate.fromIso8601('20130205T151151.60499999999956Z'),
         values : [0.0, 5, 120.0, 7, 240.0, 9, 360.0, 11, 480.0, 13, 600.0, 15, 720.0, 17, 840.0, 18, 960.0, 19, 1080.0, 20]
     }];
 
@@ -441,6 +452,8 @@ defineSuite([
         expect(left.equals(right)).toEqual(false);
     });
 
+    var epoch = JulianDate.fromIso8601('2014-01-01T00:00:00');
+
     //The remaining tests were verified with STK Components available from http://www.agi.com.
     it('addSample works with multiple derivatives', function() {
         var results = [0, -3.39969163485071, 0.912945250727628, -6.17439797860995, 0.745113160479349, -1.63963048028446, -0.304810621102217, 4.83619040459681, -0.993888653923375, 169.448966391543];
@@ -462,7 +475,6 @@ defineSuite([
         }
     });
 
-    var epoch = JulianDate.fromIso8601('2014-01-01T00:00:00');
     var times = [JulianDate.addSeconds(epoch, 0, new JulianDate()),
                  JulianDate.addSeconds(epoch, 60, new JulianDate()),
                  JulianDate.addSeconds(epoch, 120, new JulianDate()),

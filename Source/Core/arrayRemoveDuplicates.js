@@ -1,13 +1,12 @@
-/*global define*/
 define([
+        './Check',
         './defaultValue',
         './defined',
-        './DeveloperError',
         './Math'
     ], function(
+        Check,
         defaultValue,
         defined,
-        DeveloperError,
         CesiumMath) {
     'use strict';
 
@@ -16,10 +15,10 @@ define([
     /**
      * Removes adjacent duplicate values in an array of values.
      *
-     * @param {Object[]} [values] The array of values.
+     * @param {Array.<*>} [values] The array of values.
      * @param {Function} equalsEpsilon Function to compare values with an epsilon. Boolean equalsEpsilon(left, right, epsilon).
      * @param {Boolean} [wrapAround=false] Compare the last value in the array against the first value.
-     * @returns {Object[]|undefined} A new array of values with no adjacent duplicate values or the input array if no duplicates were found.
+     * @returns {Array.<*>|undefined} A new array of values with no adjacent duplicate values or the input array if no duplicates were found.
      *
      * @example
      * // Returns [(1.0, 1.0, 1.0), (2.0, 2.0, 2.0), (3.0, 3.0, 3.0), (1.0, 1.0, 1.0)]
@@ -45,9 +44,7 @@ define([
      */
     function arrayRemoveDuplicates(values, equalsEpsilon, wrapAround) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(equalsEpsilon)) {
-            throw new DeveloperError('equalsEpsilon is required.');
-        }
+        Check.defined('equalsEpsilon', equalsEpsilon);
         //>>includeEnd('debug');
 
         if (!defined(values)) {

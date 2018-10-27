@@ -1,4 +1,3 @@
-/*global define*/
 define([
         'Source/ThirdParty/when',
         'Specs/addDefaultMatchers',
@@ -7,7 +6,7 @@ define([
         when,
         addDefaultMatchers,
         equalsMethodEqualityTester) {
-    "use strict";
+    'use strict';
 
     return function (env, includedCategory, excludedCategory, webglValidation, webglStub, release) {
         function defineSuite(deps, name, suite, categories, focus) {
@@ -42,6 +41,8 @@ define([
                 }
             });
         }
+
+        window.specsUsingRelease = release;
 
         window.fdefineSuite = function(deps, name, suite, categories) {
             defineSuite(deps, name, suite, categories, true);

@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Scene/PolylineCollection',
         'Core/BoundingSphere',
@@ -7,6 +6,7 @@ defineSuite([
         'Core/DistanceDisplayCondition',
         'Core/HeadingPitchRange',
         'Core/Math',
+        'Core/Matrix4',
         'Scene/Camera',
         'Scene/Material',
         'Scene/SceneMode',
@@ -19,6 +19,7 @@ defineSuite([
         DistanceDisplayCondition,
         HeadingPitchRange,
         CesiumMath,
+        Matrix4,
         Camera,
         Material,
         SceneMode,
@@ -40,7 +41,7 @@ defineSuite([
     beforeEach(function() {
         polylines = new PolylineCollection();
         scene.mode = SceneMode.SCENE3D;
-        scene._camera = new Camera(scene);
+        scene.camera = new Camera(scene);
     });
 
     afterEach(function() {
@@ -326,6 +327,35 @@ defineSuite([
 
         polylines.removeAll();
         expect(polylines.length).toEqual(0);
+    });
+
+    it('removes a polyline from the updated list when removed', function() {
+        var firstPolyline = polylines.add();
+        var secondPolyline = polylines.add();
+
+        firstPolyline.width = 4;
+        secondPolyline.width = 5;
+
+        expect(polylines._polylinesToUpdate.length).toEqual(2);
+
+        polylines.remove(secondPolyline);
+
+        expect(polylines._polylinesToUpdate.length).toEqual(1);
+    });
+
+    it('only adds polyline to the update list once', function() {
+        var firstPolyline = polylines.add();
+        var secondPolyline = polylines.add();
+
+        firstPolyline.width = 4;
+        secondPolyline.width = 5;
+        secondPolyline.width = 7;
+
+        expect(polylines._polylinesToUpdate.length).toEqual(2);
+
+        polylines.remove(secondPolyline);
+
+        expect(polylines._polylinesToUpdate.length).toEqual(1);
     });
 
     it('can check if it contains a polyline', function() {
@@ -1261,6 +1291,42 @@ defineSuite([
         expect(scene).toRender([0, 0, 0, 255]);
     });
 
+    it('renders with a distance display condition after creation', function() {
+        var near = 100.0;
+        var far = 10000.0;
+
+        var line = polylines.add({
+            positions : [{
+                x : 10.0,
+                y : -10.0,
+                z : 0.0
+            }, {
+                x : 10.0,
+                y : 10.0,
+                z : 0.0
+            }],
+            width : 7
+        });
+
+        scene.primitives.add(polylines);
+        scene.renderForSpecs();
+
+        line.distanceDisplayCondition = new DistanceDisplayCondition(near, far);
+
+        var boundingSphere = line._boundingVolumeWC;
+        var center = boundingSphere.center;
+        var radius = boundingSphere.radius;
+
+        scene.camera.lookAt(center, new HeadingPitchRange(0.0, -CesiumMath.PI_OVER_TWO, radius + near - 10.0));
+        expect(scene).toRender([0, 0, 0, 255]);
+
+        scene.camera.lookAt(center, new HeadingPitchRange(0.0, -CesiumMath.PI_OVER_TWO, radius + near + 1.0));
+        expect(scene).notToRender([0, 0, 0, 255]);
+
+        scene.camera.lookAt(center, new HeadingPitchRange(0.0, -CesiumMath.PI_OVER_TWO, radius + far + 10.0));
+        expect(scene).toRender([0, 0, 0, 255]);
+    });
+
     it('changes polyline position size recreates vertex arrays', function() {
         var positions = [];
         for(var i = 0; i < 20; ++i){
@@ -1333,6 +1399,26 @@ defineSuite([
         p1.width = 1;
         expect(scene).notToRender([0, 0, 0, 255]);
 
+    });
+
+    it('renders with model matrix', function() {
+        polylines.add({
+            positions : [{
+                x : 0.0,
+                y : 0.0,
+                z : 0.0
+            }, {
+                x : 0.0,
+                y : 1.0,
+                z : 0.0
+            }]
+        });
+
+        expect(scene).toRender([0, 0, 0, 255]);
+        scene.primitives.add(polylines);
+        expect(scene).toRender([0, 0, 0, 255]);
+        polylines.modelMatrix = Matrix4.fromUniformScale(1000000.0, polylines.modelMatrix);
+        expect(scene).notToRender([0, 0, 0, 255]);
     });
 
     it('is picked', function() {

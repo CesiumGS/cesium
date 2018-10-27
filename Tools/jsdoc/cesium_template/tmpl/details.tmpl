@@ -3,16 +3,16 @@ var data = obj;
 var self = this;
 ?>
 <dl class="details">
-    <?js
-        var properties = data.properties;
-        if (properties && properties.length && properties.forEach) {
-    ?>
+<?js
+    var properties = data.properties;
+    if (properties && properties.length && properties.forEach) {
+?>
 
-        <h5 class="subsection-title">Properties:</h5>
+    <h5 class="subsection-title">Properties:</h5>
 
-        <dl><?js= this.partial('properties.tmpl', properties) ?></dl>
+    <?js= this.partial('properties.tmpl', data) ?>
 
-    <?js } ?>
+<?js } ?>
 
     <?js if (data.version) {?>
     <dt class="tag-version">Version:</dt>
@@ -79,6 +79,15 @@ var self = this;
     <ul class="see-list"><?js demo.forEach(function(d) { ?>
         <li><?js= d ?></li>
     <?js }); ?></ul>
+    <?js } ?>
+
+    <?js if (data.experimental && experimental.length) { ?>
+    <div class="tag-experimental">
+        <h5>Experimental</h5>
+        <?js experimental.forEach(function(e) { ?>
+            <p><?js= e ?></p>
+        <?js }); ?>
+    </div>
     <?js } ?>
 
     <?js if (data.see && see.length) {?>

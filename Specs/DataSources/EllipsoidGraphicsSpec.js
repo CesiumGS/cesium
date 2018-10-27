@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'DataSources/EllipsoidGraphics',
         'Core/Cartesian3',

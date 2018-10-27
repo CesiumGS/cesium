@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Core/Matrix3',
         'Core/Cartesian3',
@@ -38,7 +37,6 @@ defineSuite([
         expect(matrix[Matrix3.COLUMN1ROW2]).toEqual(8.0);
         expect(matrix[Matrix3.COLUMN2ROW2]).toEqual(9.0);
     });
-
 
     it('can pack and unpack', function() {
         var array = [];
@@ -142,6 +140,20 @@ defineSuite([
         var quaternion = new Quaternion(tmp.x, tmp.y, tmp.z, cPiOver4);
         var headingPitchRoll = HeadingPitchRoll.fromQuaternion(quaternion);
         var expected = new Matrix3(cPiOver2, -sPiOver2, 0.0, sPiOver2, cPiOver2, 0.0, 0.0, 0.0, 1.0);
+        var result = new Matrix3();
+        var returnedResult = Matrix3.fromHeadingPitchRoll(headingPitchRoll, result);
+        expect(result).toBe(returnedResult);
+        expect(returnedResult).toEqualEpsilon(expected, CesiumMath.EPSILON15);
+    });
+
+    it('fromHeadingPitchRoll computed correctly', function() {
+        // Expected generated via STK Components
+        var expected = new Matrix3(
+            0.754406506735489, 0.418940943945763, 0.505330889696038,
+            0.133022221559489, 0.656295369162553, -0.742685314912828,
+            -0.642787609686539, 0.627506871597133, 0.439385041770705);
+
+        var headingPitchRoll = new HeadingPitchRoll(-CesiumMath.toRadians(10), -CesiumMath.toRadians(40), CesiumMath.toRadians(55));
         var result = new Matrix3();
         var returnedResult = Matrix3.fromHeadingPitchRoll(headingPitchRoll, result);
         expect(result).toBe(returnedResult);

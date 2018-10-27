@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <meta name="description" content="Create 3D models with realistic materials using glTF 2.0.">
+    <meta name="cesium-sandcastle-labels" content="Showcases">
+    <title>Cesium Demo</title>
+    <script type="text/javascript" src="../Sandcastle-header.js"></script>
+    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
+    <script type="text/javascript">
+        if(typeof require === 'function') {
+            require.config({
+                baseUrl : '../../../Source',
+                waitSeconds : 120
+            });
+        }
+    </script>
+</head>
+<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
+<style>
+    @import url(../templates/bucket.css);
+</style>
+<div id="cesiumContainer" class="fullSize"></div>
+<div id="loadingOverlay"><h1>Loading...</h1></div>
+<div id="toolbar"></div>
+<script id="cesium_sandcastle_script">
+function startup(Cesium) {
+    'use strict';
+//Sandcastle_Begin
+var clock = new Cesium.Clock({
+    startTime : Cesium.JulianDate.fromIso8601('2017-07-11T00:00:00Z'),
+    stopTime : Cesium.JulianDate.fromIso8601('2017-07-11T24:00:00Z'),
+    currentTime : Cesium.JulianDate.fromIso8601('2017-07-11T10:00:00Z'),
+    clockRange : Cesium.ClockRange.LOOP_STOP,
+    clockStep : Cesium.ClockStep.SYSTEM_CLOCK_MULTIPLIER,
+    multiplier : 1000,
+    shouldAnimate : true
+});
+
+var viewer = new Cesium.Viewer('cesiumContainer', {
+    clockViewModel : new Cesium.ClockViewModel(clock),
+    selectionIndicator : false,
+    terrainProvider: Cesium.createWorldTerrain()
+});
+
+Sandcastle.addToggleButton('Shadows', viewer.shadows, function(checked) {
+    viewer.shadows = checked;
+});
+
+viewer.scene.globe.enableLighting = true;
+viewer.scene.globe.depthTestAgainstTerrain = true;
+
+var position = new Cesium.Cartesian3(-1371108.6511167218, -5508684.080096612, 2901825.449865087);
+var heading = Cesium.Math.toRadians(180);
+var pitch = Cesium.Math.toRadians(2);
+var roll = Cesium.Math.toRadians(-6);
+var hpr = new Cesium.HeadingPitchRoll(heading, pitch, roll);
+var orientation = Cesium.Transforms.headingPitchRollQuaternion(position, hpr);
+
+var entity = viewer.entities.add({
+    name : 'truck',
+    position : position,
+    orientation : orientation,
+    model : {
+        uri : '../../SampleData/models/GroundVehicle/GroundVehicle.glb',
+        heightReference : Cesium.HeightReference.CLAMP_TO_GROUND,
+        minimumPixelSize : 128,
+        maximumScale : 20,
+        scale : 8.0,
+        runAnimations : false
+    }
+});
+
+var threeQuartersView = {
+    destination : new Cesium.Cartesian3(-1371203.1456494154, -5508700.033950869, 2901802.2749172337),
+    orientation : {
+        heading : Cesium.Math.toRadians(67.64973594265429),
+        pitch : Cesium.Math.toRadians(-8.158676059409297),
+        roll : Cesium.Math.toRadians(359.9999987450017)
+    },
+    maximumHeight : 100
+};
+
+var frontView =  {
+    destination : new Cesium.Cartesian3(-1371214.9554156072, -5508700.8494476415, 2901826.794611029),
+    orientation : {
+        heading : Cesium.Math.toRadians(80.5354269423926),
+        pitch : Cesium.Math.toRadians(-15.466062969558285),
+        roll : Cesium.Math.toRadians(359.9999999526579)
+    },
+    maximumHeight : 100
+};
+
+var topView = {
+    destination : new Cesium.Cartesian3(-1371190.7755780201, -5508732.668834588, 2901827.2625979027),
+    orientation : {
+        heading : Cesium.Math.toRadians(68.29411482061157),
+        pitch : Cesium.Math.toRadians(-33.97774554735345),
+        roll : Cesium.Math.toRadians(359.9999999298912)
+    },
+    maximumHeight : 100
+};
+
+var upwardsView = {
+    destination : new Cesium.Cartesian3(-1371052.4616855076, -5508691.745389906, 2901861.440673151),
+    orientation : {
+        heading : Cesium.Math.toRadians(236.4536374528137),
+        pitch : Cesium.Math.toRadians(-1.3382025460115552),
+        roll : Cesium.Math.toRadians(359.9999985917282)
+    },
+    maximumHeight : 100
+};
+
+viewer.scene.camera.flyTo({
+    destination : frontView.destination,
+    orientation :  frontView.orientation,
+    duration : 5.0,
+    pitchAdjustHeight : 20
+});
+Sandcastle.addToolbarMenu([{
+    text : 'Front reflection',
+    onselect : function() {
+        viewer.scene.camera.flyTo(frontView);
+        viewer.clockViewModel.clock.currentTime = Cesium.JulianDate.fromIso8601('2017-07-11T20:00:00Z');
+    }
+}, {
+    text : 'Three quarters sunrise',
+    onselect : function() {
+        viewer.scene.camera.flyTo(threeQuartersView);
+        viewer.clockViewModel.clock.currentTime = Cesium.JulianDate.fromIso8601('2017-07-11T11:00:00Z');
+    }
+}, {
+    text : 'Top reflection',
+    onselect : function() {
+        viewer.scene.camera.flyTo(topView);
+        viewer.clockViewModel.clock.currentTime = Cesium.JulianDate.fromIso8601('2017-07-11T12:00:00Z');
+    }
+}, {
+    text : 'Upward angle side reflection',
+    onselect : function() {
+        viewer.scene.camera.flyTo(upwardsView);
+        viewer.clockViewModel.clock.currentTime = Cesium.JulianDate.fromIso8601('2017-07-11T23:00:00Z');
+    }
+}], 'toolbar');
+//Sandcastle_End
+    Sandcastle.finishedLoading();
+}
+if (typeof Cesium !== 'undefined') {
+    startup(Cesium);
+} else if (typeof require === 'function') {
+    require(['Cesium'], startup);
+}
+</script>
+</body>
+</html>

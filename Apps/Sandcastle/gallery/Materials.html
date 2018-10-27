@@ -176,7 +176,7 @@ function applyWaterMaterial(primitive, scene) {
             type : 'Water',
             uniforms : {
                 specularMap: '../images/earthspec1k.jpg',
-                normalMap: require.toUrl('Assets/Textures/waterNormals.jpg'),
+                normalMap: Cesium.buildModuleUrl('Assets/Textures/waterNormals.jpg'),
                 frequency: 10000.0,
                 animationSpeed: 0.01,
                 amplitude: 1.0
@@ -523,10 +523,10 @@ createButtons(scene);
 //Sandcastle_End
     Sandcastle.finishedLoading();
 }
-if (typeof Cesium !== "undefined") {
+if (typeof Cesium !== 'undefined') {
     startup(Cesium);
-} else if (typeof require === "function") {
-    require(["Cesium"], startup);
+} else if (typeof require === 'function') {
+    require(['Cesium'], startup);
 }
 </script>
 </body>

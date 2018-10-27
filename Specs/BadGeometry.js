@@ -1,4 +1,3 @@
-/*global define*/
 define([
         'Core/queryToObject',
         'Core/RuntimeError'

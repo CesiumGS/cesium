@@ -1,12 +1,13 @@
-/*global defineSuite*/
 defineSuite([
         'Core/Cartesian2',
         'Core/Cartesian3',
+        'Core/Color',
         'Core/defaultValue',
         'Core/Matrix4',
+        'Core/OrthographicFrustum',
+        'Core/OrthographicOffCenterFrustum',
         'Renderer/Pass',
         'Renderer/Texture',
-        'Scene/OrthographicFrustum',
         'Scene/SceneMode',
         'Specs/createCamera',
         'Specs/createContext',
@@ -14,11 +15,13 @@ defineSuite([
     ], 'Renderer/AutomaticUniforms', function(
         Cartesian2,
         Cartesian3,
+        Color,
         defaultValue,
         Matrix4,
+        OrthographicFrustum,
+        OrthographicOffCenterFrustum,
         Pass,
         Texture,
-        OrthographicFrustum,
         SceneMode,
         createCamera,
         createContext,
@@ -406,22 +409,25 @@ defineSuite([
         }).contextToRender();
     });
 
-    it('has czm_inverseProjectionOIT', function() {
-        var us = context.uniformState;
-        us.update(createFrameState(context, createMockCamera(
+    it('has czm_inverseProjection in 2D', function() {
+        var frameState = createFrameState(context, createMockCamera(
             undefined,
             new Matrix4(
-               0.0, -1.0, 0.0, 1.0,
-               1.0,  0.0, 0.0, 2.0,
-               0.0,  0.0, 1.0, 0.0,
-               0.0,  0.0, 0.0, 1.0))));
+                0.0, -1.0, 0.0, 1.0,
+                1.0, 0.0, 0.0, 2.0,
+                0.0, 0.0, 1.0, 0.0,
+                0.0, 0.0, 0.0, 1.0)));
+        frameState.mode = SceneMode.SCENE2D;
+
+        var us = context.uniformState;
+        us.update(frameState);
 
         var fs =
             'void main() { ' +
-            '  bool b0 = (czm_inverseProjectionOIT[0][0] ==  0.0) && (czm_inverseProjectionOIT[1][0] == 1.0) && (czm_inverseProjectionOIT[2][0] == 0.0) && (czm_inverseProjectionOIT[3][0] == -2.0); ' +
-            '  bool b1 = (czm_inverseProjectionOIT[0][1] == -1.0) && (czm_inverseProjectionOIT[1][1] == 0.0) && (czm_inverseProjectionOIT[2][1] == 0.0) && (czm_inverseProjectionOIT[3][1] ==  1.0); ' +
-            '  bool b2 = (czm_inverseProjectionOIT[0][2] ==  0.0) && (czm_inverseProjectionOIT[1][2] == 0.0) && (czm_inverseProjectionOIT[2][2] == 1.0) && (czm_inverseProjectionOIT[3][2] ==  0.0); ' +
-            '  bool b3 = (czm_inverseProjectionOIT[0][3] ==  0.0) && (czm_inverseProjectionOIT[1][3] == 0.0) && (czm_inverseProjectionOIT[2][3] == 0.0) && (czm_inverseProjectionOIT[3][3] ==  1.0); ' +
+            '  bool b0 = (czm_inverseProjection[0][0] == 0.0) && (czm_inverseProjection[1][0] == 0.0) && (czm_inverseProjection[2][0] == 0.0) && (czm_inverseProjection[3][0] == 0.0); ' +
+            '  bool b1 = (czm_inverseProjection[0][1] == 0.0) && (czm_inverseProjection[1][1] == 0.0) && (czm_inverseProjection[2][1] == 0.0) && (czm_inverseProjection[3][1] == 0.0); ' +
+            '  bool b2 = (czm_inverseProjection[0][2] == 0.0) && (czm_inverseProjection[1][2] == 0.0) && (czm_inverseProjection[2][2] == 0.0) && (czm_inverseProjection[3][2] == 0.0); ' +
+            '  bool b3 = (czm_inverseProjection[0][3] == 0.0) && (czm_inverseProjection[1][3] == 0.0) && (czm_inverseProjection[2][3] == 0.0) && (czm_inverseProjection[3][3] == 0.0); ' +
             '  gl_FragColor = vec4(b0 && b1 && b2 && b3); ' +
             '}';
         expect({
@@ -430,24 +436,28 @@ defineSuite([
         }).contextToRender();
     });
 
-    it('has czm_inverseProjectionOIT in 2D', function() {
-        var us = context.uniformState;
+    it('has czm_inverseProjection in 3D with orthographic projection', function() {
         var frameState = createFrameState(context, createMockCamera(
             undefined,
             new Matrix4(
-               0.0, -1.0, 0.0, 1.0,
-               1.0,  0.0, 0.0, 2.0,
-               0.0,  0.0, 1.0, 0.0,
-               0.0,  0.0, 0.0, 1.0)));
-        frameState.mode = SceneMode.SCENE2D;
+                0.0, -1.0, 0.0, 1.0,
+                1.0, 0.0, 0.0, 2.0,
+                0.0, 0.0, 1.0, 0.0,
+                0.0, 0.0, 0.0, 1.0)));
+        var frustum = new OrthographicFrustum();
+        frustum.aspectRatio = 1.0;
+        frustum.width = 1.0;
+        frameState.camera.frustum = frustum;
+
+        var us = context.uniformState;
         us.update(frameState);
 
         var fs =
             'void main() { ' +
-            '  bool b0 = (czm_inverseProjectionOIT[0][0] == 1.0) && (czm_inverseProjectionOIT[1][0] == 0.0) && (czm_inverseProjectionOIT[2][0] == 0.0) && (czm_inverseProjectionOIT[3][0] == 0.0); ' +
-            '  bool b1 = (czm_inverseProjectionOIT[0][1] == 0.0) && (czm_inverseProjectionOIT[1][1] == 1.0) && (czm_inverseProjectionOIT[2][1] == 0.0) && (czm_inverseProjectionOIT[3][1] == 0.0); ' +
-            '  bool b2 = (czm_inverseProjectionOIT[0][2] == 0.0) && (czm_inverseProjectionOIT[1][2] == 0.0) && (czm_inverseProjectionOIT[2][2] == 1.0) && (czm_inverseProjectionOIT[3][2] == 0.0); ' +
-            '  bool b3 = (czm_inverseProjectionOIT[0][3] == 0.0) && (czm_inverseProjectionOIT[1][3] == 0.0) && (czm_inverseProjectionOIT[2][3] == 0.0) && (czm_inverseProjectionOIT[3][3] == 1.0); ' +
+            '  bool b0 = (czm_inverseProjection[0][0] == 0.0) && (czm_inverseProjection[1][0] == 0.0) && (czm_inverseProjection[2][0] == 0.0) && (czm_inverseProjection[3][0] == 0.0); ' +
+            '  bool b1 = (czm_inverseProjection[0][1] == 0.0) && (czm_inverseProjection[1][1] == 0.0) && (czm_inverseProjection[2][1] == 0.0) && (czm_inverseProjection[3][1] == 0.0); ' +
+            '  bool b2 = (czm_inverseProjection[0][2] == 0.0) && (czm_inverseProjection[1][2] == 0.0) && (czm_inverseProjection[2][2] == 0.0) && (czm_inverseProjection[3][2] == 0.0); ' +
+            '  bool b3 = (czm_inverseProjection[0][3] == 0.0) && (czm_inverseProjection[1][3] == 0.0) && (czm_inverseProjection[2][3] == 0.0) && (czm_inverseProjection[3][3] == 0.0); ' +
             '  gl_FragColor = vec4(b0 && b1 && b2 && b3); ' +
             '}';
         expect({
@@ -1070,13 +1080,27 @@ defineSuite([
         }).contextToRender();
     });
 
-    it('has czm_pass and czm_passGround', function() {
+    it('has czm_pass and czm_passTerrainClassification', function() {
         var us = context.uniformState;
-        us.updatePass(Pass.GROUND);
+        us.updatePass(Pass.TERRAIN_CLASSIFICATION);
 
         var fs =
             'void main() { ' +
-            '  gl_FragColor = vec4(czm_pass == czm_passGround);' +
+            '  gl_FragColor = vec4(czm_pass == czm_passTerrainClassification);' +
+            '}';
+        expect({
+            context : context,
+            fragmentShader : fs
+        }).contextToRender();
+    });
+
+    it('has czm_pass and czm_passCesium3DTileClassification', function() {
+        var us = context.uniformState;
+        us.updatePass(Pass.CESIUM_3D_TILE_CLASSIFICATION);
+
+        var fs =
+            'void main() { ' +
+            '  gl_FragColor = vec4(czm_pass == czm_passCesium3DTileClassification);' +
             '}';
         expect({
             context : context,
@@ -1195,7 +1219,7 @@ defineSuite([
     it('has czm_eyeHeight2D in Scene2D', function() {
         var us = context.uniformState;
         var camera = createCamera();
-        var frustum = new OrthographicFrustum();
+        var frustum = new OrthographicOffCenterFrustum();
         frustum.near = 1.0;
         frustum.far = 2.0;
         frustum.left = -2.0;
@@ -1221,6 +1245,94 @@ defineSuite([
         var fs =
             'void main() { ' +
             '  gl_FragColor = vec4(czm_imagerySplitPosition == 0.0); ' +
+            '}';
+        expect({
+            context : context,
+            fragmentShader : fs
+        }).contextToRender();
+    });
+
+    it('has czm_backgroundColor', function() {
+        var frameState = createFrameState(context, createMockCamera());
+        frameState.backgroundColor = new Color(0.0, 0.25, 0.75, 1.0);
+        context.uniformState.update(frameState);
+
+        var fs =
+            'void main() { ' +
+            '  gl_FragColor = vec4(czm_backgroundColor.r == 0.0, czm_backgroundColor.g == 0.25, czm_backgroundColor.b == 0.75, czm_backgroundColor.a == 1.0); ' +
+            '}';
+        expect({
+            context : context,
+            fragmentShader : fs
+        }).contextToRender();
+    });
+
+    it('has czm_minimumDisableDepthTestDistance', function() {
+        var frameState = createFrameState(context, createMockCamera());
+        context.uniformState.update(frameState);
+        var fs =
+            'void main() {' +
+            '  gl_FragColor = vec4(czm_minimumDisableDepthTestDistance == 0.0);' +
+            '}';
+        expect({
+            context : context,
+            fragmentShader : fs
+        }).contextToRender();
+    });
+
+    it('has czm_orthographicIn3D', function() {
+        var frameState = createFrameState(context, createMockCamera());
+        context.uniformState.update(frameState);
+        var fs =
+            'void main() {' +
+            '  gl_FragColor = vec4(czm_orthographicIn3D == 0.0);' +
+            '}';
+        expect({
+            context : context,
+            fragmentShader : fs
+        }).contextToRender();
+
+        var frustum = new OrthographicFrustum();
+        frustum.aspectRatio = 1.0;
+        frustum.width = 1.0;
+        frameState.camera.frustum = frustum;
+        context.uniformState.update(frameState);
+        fs =
+            'void main() {' +
+            '  gl_FragColor = vec4(czm_orthographicIn3D == 1.0);' +
+            '}';
+        expect({
+            context : context,
+            fragmentShader : fs
+        }).contextToRender();
+    });
+
+    it('has czm_log2FarDistance', function() {
+        var fs =
+            'void main() {' +
+            '  gl_FragColor = vec4(czm_log2FarDistance == (2.0 / log2(czm_currentFrustum.y + 1.0)));' +
+            '}';
+        expect({
+            context : context,
+            fragmentShader : fs
+        }).contextToRender();
+    });
+
+    it('has czm_log2FarPlusOne', function() {
+        var fs =
+            'void main() {' +
+            '  gl_FragColor = vec4(czm_log2FarPlusOne == log2(czm_currentFrustum.y + 1.0));' +
+            '}';
+        expect({
+            context : context,
+            fragmentShader : fs
+        }).contextToRender();
+    });
+
+    it('has czm_log2NearDistance', function() {
+        var fs =
+            'void main() {' +
+            '  gl_FragColor = vec4(czm_log2NearDistance == log2(czm_currentFrustum.x));' +
             '}';
         expect({
             context : context,

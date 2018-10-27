@@ -79,7 +79,7 @@ function changeBillboardProperties() {
 
 function sizeBillboardInMeters() {
     Sandcastle.declare(sizeBillboardInMeters);
-    
+
     var entity = viewer.entities.add({
         position : Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883),
         billboard : {
@@ -87,7 +87,7 @@ function sizeBillboardInMeters() {
             sizeInMeters : true
         }
     });
-    
+
     viewer.zoomTo(entity);
 }
 
@@ -144,8 +144,8 @@ function fadeByDistance() {
 function offsetByDistance() {
     Sandcastle.declare(offsetByDistance);
     Cesium.when.all([
-         Cesium.loadImage('../images/Cesium_Logo_overlay.png'),
-         Cesium.loadImage('../images/facility.gif')
+         Cesium.Resource.fetchImage('../images/Cesium_Logo_overlay.png'),
+         Cesium.Resource.fetchImage('../images/facility.gif')
         ],
         function(images) {
             // As viewer zooms closer to facility billboard,
@@ -221,6 +221,25 @@ function addMarkerBillboards() {
     });
 }
 
+var terrainProvider;
+function disableDepthTest() {
+    Sandcastle.declare(disableDepthTest);
+
+    terrainProvider = viewer.terrainProvider;
+    viewer.terrainProvider = Cesium.createWorldTerrain();
+    viewer.scene.globe.depthTestAgainstTerrain = true;
+
+    viewer.entities.add({
+        position : Cesium.Cartesian3.fromDegrees(-122.1958, 46.1915),
+        billboard : {
+            image : '../images/facility.gif',
+            heightReference : Cesium.HeightReference.CLAMP_TO_GROUND,
+            disableDepthTestDistance : Number.POSITIVE_INFINITY
+        }
+    });
+    viewer.zoomTo(viewer.entities);
+}
+
 Sandcastle.addToolbarMenu([{
     text : 'Add billboard',
     onselect : function() {
@@ -275,19 +294,31 @@ Sandcastle.addToolbarMenu([{
         addMarkerBillboards();
         Sandcastle.highlight(addMarkerBillboards);
     }
+}, {
+    text : 'Disable the depth test when clamped to ground',
+    onselect : function() {
+        disableDepthTest();
+        Sandcastle.highlight(disableDepthTest);
+    }
 }]);
 
 Sandcastle.reset = function () {
     viewer.camera.flyHome(0);
     viewer.entities.removeAll();
+
+    if (Cesium.defined(terrainProvider)) {
+        viewer.terrainProvider = terrainProvider;
+        terrainProvider = undefined;
+        viewer.scene.globe.depthTestAgainstTerrain = false;
+    }
 };
 //Sandcastle_End
     Sandcastle.finishedLoading();
 }
-if (typeof Cesium !== "undefined") {
+if (typeof Cesium !== 'undefined') {
     startup(Cesium);
-} else if (typeof require === "function") {
-    require(["Cesium"], startup);
+} else if (typeof require === 'function') {
+    require(['Cesium'], startup);
 }
 </script>
 </body>

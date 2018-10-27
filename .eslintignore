@@ -1,0 +1,12 @@
+Apps/HelloWorld.html
+Apps/Sandcastle/ThirdParty/**
+Build/**
+Documentation/**
+Instrumented/**
+Source/Shaders/**
+Source/ThirdParty/**
+Source/Workers/cesiumWorkerBootstrapper.js
+ThirdParty/**
+Tools/**
+Apps/Sandcastle/jsHintOptions.js
+Apps/Sandcastle/gallery/gallery-index.js

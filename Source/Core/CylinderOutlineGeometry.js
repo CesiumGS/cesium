@@ -1,9 +1,10 @@
 
-/*global define*/
 define([
+        './arrayFill',
         './BoundingSphere',
         './Cartesian2',
         './Cartesian3',
+        './Check',
         './ComponentDatatype',
         './CylinderGeometryLibrary',
         './defaultValue',
@@ -12,12 +13,15 @@ define([
         './Geometry',
         './GeometryAttribute',
         './GeometryAttributes',
+        './GeometryOffsetAttribute',
         './IndexDatatype',
         './PrimitiveType'
     ], function(
+        arrayFill,
         BoundingSphere,
         Cartesian2,
         Cartesian3,
+        Check,
         ComponentDatatype,
         CylinderGeometryLibrary,
         defaultValue,
@@ -26,6 +30,7 @@ define([
         Geometry,
         GeometryAttribute,
         GeometryAttributes,
+        GeometryOffsetAttribute,
         IndexDatatype,
         PrimitiveType) {
     'use strict';
@@ -72,17 +77,12 @@ define([
         var numberOfVerticalLines = Math.max(defaultValue(options.numberOfVerticalLines, 16), 0);
 
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(length)) {
-            throw new DeveloperError('options.length must be defined.');
-        }
-        if (!defined(topRadius)) {
-            throw new DeveloperError('options.topRadius must be defined.');
-        }
-        if (!defined(bottomRadius)) {
-            throw new DeveloperError('options.bottomRadius must be defined.');
-        }
-        if (slices < 3) {
-            throw new DeveloperError('options.slices must be greater than or equal to 3.');
+        Check.typeOf.number('options.positions', length);
+        Check.typeOf.number('options.topRadius', topRadius);
+        Check.typeOf.number('options.bottomRadius', bottomRadius);
+        Check.typeOf.number.greaterThanOrEquals('options.slices', slices, 3);
+        if (defined(options.offsetAttribute) && options.offsetAttribute === GeometryOffsetAttribute.TOP) {
+            throw new DeveloperError('GeometryOffsetAttribute.TOP is not a supported options.offsetAttribute for this geometry.');
         }
         //>>includeEnd('debug');
 
@@ -91,6 +91,7 @@ define([
         this._bottomRadius = bottomRadius;
         this._slices = slices;
         this._numberOfVerticalLines = numberOfVerticalLines;
+        this._offsetAttribute = options.offsetAttribute;
         this._workerName = 'createCylinderOutlineGeometry';
     }
 
@@ -98,7 +99,7 @@ define([
      * The number of elements used to pack the object into an array.
      * @type {Number}
      */
-    CylinderOutlineGeometry.packedLength = 5;
+    CylinderOutlineGeometry.packedLength = 6;
 
     /**
      * Stores the provided instance into the provided array.
@@ -111,12 +112,8 @@ define([
      */
     CylinderOutlineGeometry.pack = function(value, array, startingIndex) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(value)) {
-            throw new DeveloperError('value is required');
-        }
-        if (!defined(array)) {
-            throw new DeveloperError('array is required');
-        }
+        Check.typeOf.object('value', value);
+        Check.defined('array', array);
         //>>includeEnd('debug');
 
         startingIndex = defaultValue(startingIndex, 0);
@@ -125,7 +122,8 @@ define([
         array[startingIndex++] = value._topRadius;
         array[startingIndex++] = value._bottomRadius;
         array[startingIndex++] = value._slices;
-        array[startingIndex]   = value._numberOfVerticalLines;
+        array[startingIndex++] = value._numberOfVerticalLines;
+        array[startingIndex] = defaultValue(value._offsetAttribute, -1);
 
         return array;
     };
@@ -135,7 +133,8 @@ define([
         topRadius : undefined,
         bottomRadius : undefined,
         slices : undefined,
-        numberOfVerticalLines : undefined
+        numberOfVerticalLines : undefined,
+        offsetAttribute : undefined
     };
 
     /**
@@ -148,9 +147,7 @@ define([
      */
     CylinderOutlineGeometry.unpack = function(array, startingIndex, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(array)) {
-            throw new DeveloperError('array is required');
-        }
+        Check.defined('array', array);
         //>>includeEnd('debug');
 
         startingIndex = defaultValue(startingIndex, 0);
@@ -159,7 +156,8 @@ define([
         var topRadius = array[startingIndex++];
         var bottomRadius = array[startingIndex++];
         var slices = array[startingIndex++];
-        var numberOfVerticalLines = array[startingIndex];
+        var numberOfVerticalLines = array[startingIndex++];
+        var offsetAttribute = array[startingIndex];
 
         if (!defined(result)) {
             scratchOptions.length = length;
@@ -167,6 +165,7 @@ define([
             scratchOptions.bottomRadius = bottomRadius;
             scratchOptions.slices = slices;
             scratchOptions.numberOfVerticalLines = numberOfVerticalLines;
+            scratchOptions.offsetAttribute = offsetAttribute === -1 ? undefined : offsetAttribute;
             return new CylinderOutlineGeometry(scratchOptions);
         }
 
@@ -175,6 +174,7 @@ define([
         result._bottomRadius = bottomRadius;
         result._slices = slices;
         result._numberOfVerticalLines = numberOfVerticalLines;
+        result._offsetAttribute = offsetAttribute === -1 ? undefined : offsetAttribute;
 
         return result;
     };
@@ -209,7 +209,8 @@ define([
 
         var indices = IndexDatatype.createTypedArray(numVertices, numIndices * 2);
         var index = 0;
-        for (var i = 0; i < slices - 1; i++) {
+        var i;
+        for (i = 0; i < slices - 1; i++) {
             indices[index++] = i;
             indices[index++] = i + 1;
             indices[index++] = i + slices;
@@ -240,11 +241,24 @@ define([
 
         var boundingSphere = new BoundingSphere(Cartesian3.ZERO, Cartesian2.magnitude(radiusScratch));
 
+        if (defined(cylinderGeometry._offsetAttribute)) {
+            length = positions.length;
+            var applyOffset = new Uint8Array(length / 3);
+            var offsetValue = cylinderGeometry._offsetAttribute === GeometryOffsetAttribute.NONE ? 0 : 1;
+            arrayFill(applyOffset, offsetValue);
+            attributes.applyOffset = new GeometryAttribute({
+                componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
+                componentsPerAttribute : 1,
+                values: applyOffset
+            });
+        }
+
         return new Geometry({
             attributes : attributes,
             indices : indices,
             primitiveType : PrimitiveType.LINES,
-            boundingSphere : boundingSphere
+            boundingSphere : boundingSphere,
+            offsetAttribute : cylinderGeometry._offsetAttribute
         });
     };
 

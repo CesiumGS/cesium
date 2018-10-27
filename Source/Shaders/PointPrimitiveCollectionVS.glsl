@@ -2,19 +2,16 @@ uniform float u_maxTotalPointSize;
 
 attribute vec4 positionHighAndSize;
 attribute vec4 positionLowAndOutline;
-attribute vec4 compressedAttribute0;        // color, outlineColor, pick color
-attribute vec4 compressedAttribute1;        // show, translucency by distance, some free space
-attribute vec4 scaleByDistance;             // near, nearScale, far, farScale
-attribute vec2 distanceDisplayCondition;    // near, far
+attribute vec4 compressedAttribute0;                       // color, outlineColor, pick color
+attribute vec4 compressedAttribute1;                       // show, translucency by distance, some free space
+attribute vec4 scaleByDistance;                            // near, nearScale, far, farScale
+attribute vec3 distanceDisplayConditionAndDisableDepth;    // near, far, disableDepthTestDistance
 
 varying vec4 v_color;
 varying vec4 v_outlineColor;
 varying float v_innerPercent;
 varying float v_pixelDistance;
-
-#ifdef RENDER_FOR_PICK
 varying vec4 v_pickColor;
-#endif
 
 const float SHIFT_LEFT8 = 256.0;
 const float SHIFT_RIGHT8 = 1.0 / 256.0;
@@ -52,18 +49,16 @@ void main()
 
     vec4 color;
     vec4 outlineColor;
-#ifdef RENDER_FOR_PICK
+    vec4 pickColor;
+
     // compressedAttribute0.z => pickColor.rgb
 
-    color = vec4(0.0);
-    outlineColor = vec4(0.0);
-    vec4 pickColor;
     temp = compressedAttribute0.z * SHIFT_RIGHT8;
     pickColor.b = (temp - floor(temp)) * SHIFT_LEFT8;
     temp = floor(temp) * SHIFT_RIGHT8;
     pickColor.g = (temp - floor(temp)) * SHIFT_LEFT8;
     pickColor.r = floor(temp);
-#else
+
     // compressedAttribute0.x => color.rgb
 
     temp = compressedAttribute0.x * SHIFT_RIGHT8;
@@ -79,15 +74,13 @@ void main()
     temp = floor(temp) * SHIFT_RIGHT8;
     outlineColor.g = (temp - floor(temp)) * SHIFT_LEFT8;
     outlineColor.r = floor(temp);
-#endif
 
     // compressedAttribute0.w => color.a, outlineColor.a, pickColor.a
 
     temp = compressedAttribute0.w * SHIFT_RIGHT8;
-#ifdef RENDER_FOR_PICK
     pickColor.a = (temp - floor(temp)) * SHIFT_LEFT8;
     pickColor = pickColor / 255.0;
-#endif
+
     temp = floor(temp) * SHIFT_RIGHT8;
     outlineColor.a = (temp - floor(temp)) * SHIFT_LEFT8;
     outlineColor /= 255.0;
@@ -102,7 +95,7 @@ void main()
 
     ///////////////////////////////////////////////////////////////////////////
 
-#if defined(EYE_DISTANCE_SCALING) || defined(EYE_DISTANCE_TRANSLUCENCY) || defined(DISTANCE_DISPLAY_CONDITION)
+#if defined(EYE_DISTANCE_SCALING) || defined(EYE_DISTANCE_TRANSLUCENCY) || defined(DISTANCE_DISPLAY_CONDITION) || defined(DISABLE_DEPTH_DISTANCE)
     float lengthSq;
     if (czm_sceneMode == czm_sceneMode2D)
     {
@@ -140,16 +133,38 @@ void main()
 #endif
 
 #ifdef DISTANCE_DISPLAY_CONDITION
-    float nearSq = distanceDisplayCondition.x * distanceDisplayCondition.x;
-    float farSq = distanceDisplayCondition.y * distanceDisplayCondition.y;
+    float nearSq = distanceDisplayConditionAndDisableDepth.x;
+    float farSq = distanceDisplayConditionAndDisableDepth.y;
     if (lengthSq < nearSq || lengthSq > farSq) {
         positionEC.xyz = vec3(0.0);
     }
 #endif
 
-    vec4 positionWC = czm_eyeToWindowCoordinates(positionEC);
+    gl_Position = czm_projection * positionEC;
+    czm_vertexLogDepth();
 
-    gl_Position = czm_viewportOrthographic * vec4(positionWC.xy, -positionWC.z, 1.0);
+#ifdef DISABLE_DEPTH_DISTANCE
+    float disableDepthTestDistance = distanceDisplayConditionAndDisableDepth.z;
+    if (disableDepthTestDistance == 0.0 && czm_minimumDisableDepthTestDistance != 0.0)
+    {
+        disableDepthTestDistance = czm_minimumDisableDepthTestDistance;
+    }
+
+    if (disableDepthTestDistance != 0.0)
+    {
+        // Don't try to "multiply both sides" by w.  Greater/less-than comparisons won't work for negative values of w.
+        float zclip = gl_Position.z / gl_Position.w;
+        bool clipped = (zclip < -1.0 || zclip > 1.0);
+        if (!clipped && (disableDepthTestDistance < 0.0 || (lengthSq > 0.0 && lengthSq < disableDepthTestDistance)))
+        {
+            // Position z on the near plane.
+            gl_Position.z = -gl_Position.w;
+#ifdef LOG_DEPTH
+            czm_vertexLogDepth(vec4(czm_currentFrustum.x));
+#endif
+        }
+    }
+#endif
 
     v_color = color;
     v_color.a *= translucency;
@@ -160,7 +175,5 @@ void main()
     v_pixelDistance = 2.0 / totalSize;
     gl_PointSize = totalSize;
 
-#ifdef RENDER_FOR_PICK
     v_pickColor = pickColor;
-#endif
 }

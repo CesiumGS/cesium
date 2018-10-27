@@ -1,13 +1,14 @@
-/*global defineSuite*/
 defineSuite([
         'Core/Cartesian3',
         'Core/Color',
         'Core/ColorGeometryInstanceAttribute',
         'Core/defaultValue',
         'Core/GeometryInstance',
-        'Core/loadImage',
+        'Core/Math',
+        'Core/PerspectiveFrustum',
         'Core/Rectangle',
         'Core/RectangleGeometry',
+        'Core/Resource',
         'Core/Transforms',
         'Scene/BillboardCollection',
         'Scene/Globe',
@@ -26,9 +27,11 @@ defineSuite([
         ColorGeometryInstanceAttribute,
         defaultValue,
         GeometryInstance,
-        loadImage,
+        CesiumMath,
+        PerspectiveFrustum,
         Rectangle,
         RectangleGeometry,
+        Resource,
         Transforms,
         BillboardCollection,
         Globe,
@@ -52,13 +55,22 @@ defineSuite([
         scene = createScene();
         scene.primitives.destroyPrimitives = false;
 
-        return loadImage('./Data/Images/Green.png').then(function(image) {
+        return Resource.fetchImage('./Data/Images/Green.png').then(function(image) {
             greenImage = image;
         });
     });
 
     afterAll(function() {
         scene.destroyForSpecs();
+    });
+
+    beforeEach(function() {
+        scene.morphTo3D(0.0);
+
+        var camera = scene.camera;
+        camera.frustum = new PerspectiveFrustum();
+        camera.frustum.aspectRatio = scene.drawingBufferWidth / scene.drawingBufferHeight;
+        camera.frustum.fov = CesiumMath.toRadians(60.0);
     });
 
     afterEach(function() {

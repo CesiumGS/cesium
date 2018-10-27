@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Core/IntersectionTests',
         'Core/BoundingSphere',
@@ -173,7 +172,6 @@ defineSuite([
             IntersectionTests.lineSegmentTriangle();
         }).toThrowDeveloperError();
     });
-
 
     it('lineSegmentTriangle throws without v1', function() {
         expect(function() {

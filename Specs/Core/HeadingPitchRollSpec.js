@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Core/HeadingPitchRoll',
         'Core/Math',
@@ -7,7 +6,7 @@ defineSuite([
         HeadingPitchRoll,
         CesiumMath,
         Quaternion) {
-    "use strict";
+    'use strict';
     /*global it,expect*/
 
     var deg2rad = CesiumMath.RADIANS_PER_DEGREE;

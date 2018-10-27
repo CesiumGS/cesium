@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Widgets/CesiumInspector/CesiumInspector',
         'Core/Ellipsoid',

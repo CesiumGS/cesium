@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/defaultValue',
         '../Core/defined',
@@ -39,7 +38,7 @@ define([
      * @param {Property} [options.distanceDisplayCondition] A Property specifying at what distance from the camera that this wall will be displayed.
      *
      * @see Entity
-     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Wall.html|Cesium Sandcastle Wall Demo}
+     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Wall.html|Cesium Sandcastle Wall Demo}
      */
     function WallGraphics(options) {
         this._show = undefined;
@@ -163,7 +162,7 @@ define([
          * @default 1.0
          */
         outlineWidth : createPropertyDescriptor('outlineWidth'),
-        
+
         /**
          * Get or sets the enum Property specifying whether the wall
          * casts or receives shadows from each light source.

@@ -1,17 +1,36 @@
-/*global defineSuite*/
 defineSuite([
         'Core/EllipsoidGeometry',
+        'Core/arrayFill',
         'Core/Cartesian3',
+        'Core/GeometryOffsetAttribute',
         'Core/Math',
         'Core/VertexFormat',
         'Specs/createPackableSpecs'
     ], function(
         EllipsoidGeometry,
+        arrayFill,
         Cartesian3,
+        GeometryOffsetAttribute,
         CesiumMath,
         VertexFormat,
         createPackableSpecs) {
     'use strict';
+
+    it('constructor rounds floating-point slicePartitions', function() {
+        var m = new EllipsoidGeometry({
+            slicePartitions: 3.5,
+            stackPartitions: 3
+        });
+        expect(m._slicePartitions).toEqual(4);
+    });
+
+    it('constructor rounds floating-point stackPartitions', function() {
+        var m = new EllipsoidGeometry({
+            slicePartitions: 3,
+            stackPartitions: 3.5
+        });
+        expect(m._stackPartitions).toEqual(4);
+    });
 
     it('constructor throws with invalid slicePartitions', function() {
         expect(function() {
@@ -41,6 +60,24 @@ defineSuite([
         expect(m.attributes.position.values.length).toEqual(numVertices * 3);
         expect(m.indices.length).toEqual(numTriangles * 3);
         expect(m.boundingSphere.radius).toEqual(1);
+    });
+
+    it('computes offset attribute', function() {
+        var m = EllipsoidGeometry.createGeometry(new EllipsoidGeometry({
+            vertexFormat : VertexFormat.POSITION_ONLY,
+            slicePartitions: 3,
+            stackPartitions: 3,
+            offsetAttribute: GeometryOffsetAttribute.ALL
+        }));
+
+        var numVertices = 16;
+        expect(m.attributes.position.values.length).toEqual(numVertices * 3);
+
+        var offset = m.attributes.applyOffset.values;
+        expect(offset.length).toEqual(numVertices);
+        var expected = new Array(offset.length);
+        expected = arrayFill(expected, 1);
+        expect(offset).toEqual(expected);
     });
 
     it('compute all vertex attributes', function() {
@@ -132,6 +169,6 @@ defineSuite([
         slicePartitions: 3,
         stackPartitions: 3
     });
-    var packedInstance = [1.0, 2.0, 3.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 3.0, 3.0];
+    var packedInstance = [1.0, 2.0, 3.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 3.0, 3.0, -1.0];
     createPackableSpecs(EllipsoidGeometry, ellipsoidgeometry, packedInstance);
 });

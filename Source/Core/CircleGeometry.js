@@ -1,11 +1,9 @@
-/*global define*/
 define([
         './Cartesian3',
         './Check',
         './defaultValue',
         './defined',
         './defineProperties',
-        './DeveloperError',
         './EllipseGeometry',
         './Ellipsoid',
         './VertexFormat'
@@ -15,7 +13,6 @@ define([
         defaultValue,
         defined,
         defineProperties,
-        DeveloperError,
         EllipseGeometry,
         Ellipsoid,
         VertexFormat) {
@@ -186,6 +183,15 @@ define([
         rectangle : {
             get : function() {
                 return this._ellipseGeometry.rectangle;
+            }
+        },
+        /**
+         * For remapping texture coordinates when rendering CircleGeometries as GroundPrimitives.
+         * @private
+         */
+        textureCoordinateRotationPoints : {
+            get : function() {
+                return this._ellipseGeometry.textureCoordinateRotationPoints;
             }
         }
     });

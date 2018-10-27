@@ -1,0 +1,239 @@
+{
+  "accessors": [
+    {
+      "bufferView": 0,
+      "byteOffset": 0,
+      "componentType": 5123,
+      "count": 36,
+      "type": "SCALAR",
+      "name": "accessor_21"
+    },
+    {
+      "bufferView": 1,
+      "byteOffset": 0,
+      "componentType": 5126,
+      "count": 24,
+      "max": [
+        0.5,
+        0.5,
+        0.5
+      ],
+      "min": [
+        -0.5,
+        -0.5,
+        -0.5
+      ],
+      "type": "VEC3",
+      "name": "accessor_23"
+    },
+    {
+      "bufferView": 1,
+      "byteOffset": 288,
+      "componentType": 5126,
+      "count": 24,
+      "max": [
+        1,
+        1,
+        1
+      ],
+      "min": [
+        -1,
+        -1,
+        -1
+      ],
+      "type": "VEC3",
+      "name": "accessor_25"
+    }
+  ],
+  "asset": {
+    "generator": "collada2gltf@027f74366341d569dea42e9a68b7104cc3892054",
+    "version": "2.0"
+  },
+  "bufferViews": [
+    {
+      "buffer": 0,
+      "byteLength": 72,
+      "byteOffset": 0,
+      "target": 34963,
+      "name": "bufferView_29"
+    },
+    {
+      "buffer": 0,
+      "byteLength": 576,
+      "byteOffset": 72,
+      "target": 34962,
+      "name": "bufferView_30",
+      "byteStride": 12
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 648,
+      "byteLength": 473
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 1124,
+      "byteLength": 355
+    }
+  ],
+  "buffers": [
+    {
+      "name": "Box",
+      "byteLength": 1480,
+      "uri": "data:application/octet-stream;base64,AAABAAIAAwACAAEABAAFAAYABwAGAAUACAAJAAoACwAKAAkADAANAA4ADwAOAA0AEAARABIAEwASABEAFAAVABYAFwAWABUAAAAAvwAAAL8AAAA/AAAAPwAAAL8AAAA/AAAAvwAAAD8AAAA/AAAAPwAAAD8AAAA/AAAAPwAAAL8AAAA/AAAAvwAAAL8AAAA/AAAAPwAAAL8AAAC/AAAAvwAAAL8AAAC/AAAAPwAAAD8AAAA/AAAAPwAAAL8AAAA/AAAAPwAAAD8AAAC/AAAAPwAAAL8AAAC/AAAAvwAAAD8AAAA/AAAAPwAAAD8AAAA/AAAAvwAAAD8AAAC/AAAAPwAAAD8AAAC/AAAAvwAAAL8AAAA/AAAAvwAAAD8AAAA/AAAAvwAAAL8AAAC/AAAAvwAAAD8AAAC/AAAAvwAAAL8AAAC/AAAAvwAAAD8AAAC/AAAAPwAAAL8AAAC/AAAAPwAAAD8AAAC/AAAAAAAAAAAAAIA/AAAAAAAAAAAAAIA/AAAAAAAAAAAAAIA/AAAAAAAAAAAAAIA/AAAAAAAAgL8AAAAAAAAAAAAAgL8AAAAAAAAAAAAAgL8AAAAAAAAAAAAAgL8AAAAAAACAPwAAAAAAAAAAAACAPwAAAAAAAAAAAACAPwAAAAAAAAAAAACAPwAAAAAAAAAAAAAAAAAAgD8AAAAAAAAAAAAAgD8AAAAAAAAAAAAAgD8AAAAAAAAAAAAAgD8AAAAAAACAvwAAAAAAAAAAAACAvwAAAAAAAAAAAACAvwAAAAAAAAAAAACAvwAAAAAAAAAAAAAAAAAAAAAAAIC/AAAAAAAAAAAAAIC/AAAAAAAAAAAAAIC/AAAAAAAAAAAAAIC/cHJlY2lzaW9uIGhpZ2hwIGZsb2F0Ow0KdmFyeWluZyB2ZWMzIHZfbm9ybWFsOw0KdW5pZm9ybSB2ZWM0IHVfZGlmZnVzZTsNCnVuaWZvcm0gdmVjNCB1X3NwZWN1bGFyOw0KdW5pZm9ybSBmbG9hdCB1X3NoaW5pbmVzczsNCnZvaWQgbWFpbih2b2lkKSB7DQp2ZWMzIG5vcm1hbCA9IG5vcm1hbGl6ZSh2X25vcm1hbCk7DQp2ZWM0IGNvbG9yID0gdmVjNCgwLiwgMC4sIDAuLCAwLik7DQp2ZWM0IGRpZmZ1c2UgPSB2ZWM0KDAuLCAwLiwgMC4sIDEuKTsNCnZlYzQgc3BlY3VsYXI7DQpkaWZmdXNlID0gdV9kaWZmdXNlOw0Kc3BlY3VsYXIgPSB1X3NwZWN1bGFyOw0KZGlmZnVzZS54eXogKj0gbWF4KGRvdChub3JtYWwsdmVjMygwLiwwLiwxLikpLCAwLik7DQpjb2xvci54eXogKz0gZGlmZnVzZS54eXo7DQpjb2xvciA9IHZlYzQoY29sb3IucmdiICogZGlmZnVzZS5hLCBkaWZmdXNlLmEpOw0KZ2xfRnJhZ0NvbG9yID0gY29sb3I7DQp9DQoAAABwcmVjaXNpb24gaGlnaHAgZmxvYXQ7DQphdHRyaWJ1dGUgdmVjMyBhX3Bvc2l0aW9uOw0KYXR0cmlidXRlIHZlYzMgYV9ub3JtYWw7DQp2YXJ5aW5nIHZlYzMgdl9ub3JtYWw7DQp1bmlmb3JtIG1hdDMgdV9ub3JtYWxNYXRyaXg7DQp1bmlmb3JtIG1hdDQgdV9tb2RlbFZpZXdNYXRyaXg7DQp1bmlmb3JtIG1hdDQgdV9wcm9qZWN0aW9uTWF0cml4Ow0Kdm9pZCBtYWluKHZvaWQpIHsNCnZlYzQgcG9zID0gdV9tb2RlbFZpZXdNYXRyaXggKiB2ZWM0KGFfcG9zaXRpb24sMS4wKTsNCnZfbm9ybWFsID0gdV9ub3JtYWxNYXRyaXggKiBhX25vcm1hbDsNCmdsX1Bvc2l0aW9uID0gdV9wcm9qZWN0aW9uTWF0cml4ICogcG9zOw0KfQ0KAA=="
+    }
+  ],
+  "materials": [
+    {
+      "name": "Red",
+      "extensions": {
+        "KHR_techniques_webgl": {
+          "technique": 0,
+          "values": {
+            "u_diffuse": [
+              0.8,
+              0,
+              0,
+              1
+            ],
+            "u_shininess": 256,
+            "u_specular": [
+              0.2,
+              0.2,
+              0.2,
+              1
+            ]
+          }
+        }
+      },
+      "emissiveFactor": [
+        0,
+        0,
+        0
+      ],
+      "alphaMode": "OPAQUE",
+      "doubleSided": false
+    }
+  ],
+  "meshes": [
+    {
+      "name": "Mesh",
+      "primitives": [
+        {
+          "attributes": {
+            "NORMAL": 2,
+            "POSITION": 1
+          },
+          "indices": 0,
+          "material": 0,
+          "mode": 4
+        }
+      ]
+    }
+  ],
+  "nodes": [
+    {
+      "name": "Mesh",
+      "mesh": 0
+    },
+    {
+      "children": [
+        0
+      ],
+      "matrix": [
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        -1,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1
+      ],
+      "name": "Y_UP_Transform"
+    }
+  ],
+  "scene": 0,
+  "scenes": [
+    {
+      "nodes": [
+        1
+      ],
+      "name": "defaultScene"
+    }
+  ],
+  "extensionsRequired": [
+    "KHR_techniques_webgl"
+  ],
+  "extensions": {
+    "KHR_techniques_webgl": {
+      "programs": [
+        {
+          "name": "program_0",
+          "fragmentShader": 0,
+          "vertexShader": 1
+        }
+      ],
+      "shaders": [
+        {
+          "type": 35632,
+          "name": "Box0FS",
+          "bufferView": 2
+        },
+        {
+          "type": 35633,
+          "name": "Box0VS",
+          "bufferView": 3
+        }
+      ],
+      "techniques": [
+        {
+          "name": "technique0",
+          "program": 0,
+          "attributes": {
+            "a_normal": {
+              "semantic": "NORMAL"
+            },
+            "a_position": {
+              "semantic": "POSITION"
+            }
+          },
+          "uniforms": {
+            "u_diffuse": {
+              "type": 35666
+            },
+            "u_modelViewMatrix": {
+              "type": 35676,
+              "semantic": "MODELVIEW"
+            },
+            "u_normalMatrix": {
+              "type": 35675,
+              "semantic": "MODELVIEWINVERSETRANSPOSE"
+            },
+            "u_projectionMatrix": {
+              "type": 35676,
+              "semantic": "PROJECTION"
+            },
+            "u_shininess": {
+              "type": 5126
+            },
+            "u_specular": {
+              "type": 35666
+            }
+          }
+        }
+      ]
+    }
+  },
+  "extensionsUsed": [
+    "KHR_techniques_webgl"
+  ]
+}

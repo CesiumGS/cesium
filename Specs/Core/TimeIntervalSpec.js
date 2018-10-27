@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Core/TimeInterval',
         'Core/JulianDate'
@@ -99,6 +98,12 @@ defineSuite([
         expect(interval.isStartIncluded).toEqual(isStartIncluded);
         expect(interval.isStopIncluded).toEqual(isStopIncluded);
         expect(interval.data).toEqual(data);
+    });
+
+    it('fromIso8601 throws error when given Invalid ISO 8601 date.', function() {
+        expect(function() {
+            TimeInterval.fromIso8601({ iso8601 : '2020-08-29T00:00:00+00:00' });
+        }).toThrowDeveloperError();
     });
 
     it('toIso8601 works', function() {

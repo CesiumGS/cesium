@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Core/Ellipsoid',
         'Core/Cartesian3',
@@ -324,7 +323,7 @@ defineSuite([
     });
 
     it('toString produces expected values', function() {
-        var expected = "(1, 2, 3)";
+        var expected = '(1, 2, 3)';
         var ellipsoid = new Ellipsoid(1, 2, 3);
         expect(ellipsoid.toString()).toEqual(expected);
     });
@@ -536,11 +535,11 @@ defineSuite([
 
     });
 
-    it('ellipsoid is initialized with _sqauredXOverSquaredZ property', function() {
+    it('ellipsoid is initialized with _squaredXOverSquaredZ property', function() {
        var ellipsoid = new Ellipsoid(4 , 4 , 3);
 
-       var sqauredXOverSquaredZ = ellipsoid.radiiSquared.x / ellipsoid.radiiSquared.z;
-       expect(ellipsoid._sqauredXOverSquaredZ).toEqual(sqauredXOverSquaredZ);
+       var squaredXOverSquaredZ = ellipsoid.radiiSquared.x / ellipsoid.radiiSquared.z;
+       expect(ellipsoid._squaredXOverSquaredZ).toEqual(squaredXOverSquaredZ);
     });
 
     createPackableSpecs(Ellipsoid, Ellipsoid.WGS84, [Ellipsoid.WGS84.radii.x, Ellipsoid.WGS84.radii.y, Ellipsoid.WGS84.radii.z]);

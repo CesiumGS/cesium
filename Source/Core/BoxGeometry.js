@@ -1,7 +1,8 @@
-/*global define*/
 define([
+        './arrayFill',
         './BoundingSphere',
         './Cartesian3',
+        './Check',
         './ComponentDatatype',
         './defaultValue',
         './defined',
@@ -9,11 +10,14 @@ define([
         './Geometry',
         './GeometryAttribute',
         './GeometryAttributes',
+        './GeometryOffsetAttribute',
         './PrimitiveType',
         './VertexFormat'
     ], function(
+        arrayFill,
         BoundingSphere,
         Cartesian3,
+        Check,
         ComponentDatatype,
         defaultValue,
         defined,
@@ -21,6 +25,7 @@ define([
         Geometry,
         GeometryAttribute,
         GeometryAttributes,
+        GeometryOffsetAttribute,
         PrimitiveType,
         VertexFormat) {
     'use strict';
@@ -42,7 +47,7 @@ define([
      * @see BoxGeometry.createGeometry
      * @see Packable
      *
-     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Box.html|Cesium Sandcastle Box Demo}
+     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Box.html|Cesium Sandcastle Box Demo}
      *
      * @example
      * var box = new Cesium.BoxGeometry({
@@ -59,11 +64,10 @@ define([
         var max = options.maximum;
 
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(min)) {
-            throw new DeveloperError('options.minimum is required.');
-        }
-        if (!defined(max)) {
-            throw new DeveloperError('options.maximum is required');
+        Check.typeOf.object('min', min);
+        Check.typeOf.object('max', max);
+        if (defined(options.offsetAttribute) && options.offsetAttribute === GeometryOffsetAttribute.TOP) {
+            throw new DeveloperError('GeometryOffsetAttribute.TOP is not a supported options.offsetAttribute for this geometry.');
         }
         //>>includeEnd('debug');
 
@@ -72,6 +76,7 @@ define([
         this._minimum = Cartesian3.clone(min);
         this._maximum = Cartesian3.clone(max);
         this._vertexFormat = vertexFormat;
+        this._offsetAttribute = options.offsetAttribute;
         this._workerName = 'createBoxGeometry';
     }
 
@@ -100,12 +105,10 @@ define([
         var dimensions = options.dimensions;
 
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(dimensions)) {
-            throw new DeveloperError('options.dimensions is required.');
-        }
-        if (dimensions.x < 0 || dimensions.y < 0 || dimensions.z < 0) {
-            throw new DeveloperError('All dimensions components must be greater than or equal to zero.');
-        }
+        Check.typeOf.object('dimensions', dimensions);
+        Check.typeOf.number.greaterThanOrEquals('dimensions.x', dimensions.x, 0);
+        Check.typeOf.number.greaterThanOrEquals('dimensions.y', dimensions.y, 0);
+        Check.typeOf.number.greaterThanOrEquals('dimensions.z', dimensions.z, 0);
         //>>includeEnd('debug');
 
         var corner = Cartesian3.multiplyByScalar(dimensions, 0.5, new Cartesian3());
@@ -113,7 +116,8 @@ define([
         return new BoxGeometry({
             minimum : Cartesian3.negate(corner, new Cartesian3()),
             maximum : corner,
-            vertexFormat : options.vertexFormat
+            vertexFormat : options.vertexFormat,
+            offsetAttribute: options.offsetAttribute
         });
     };
 
@@ -139,9 +143,7 @@ define([
      */
     BoxGeometry.fromAxisAlignedBoundingBox = function (boundingBox) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(boundingBox)) {
-            throw new DeveloperError('boundingBox is required.');
-        }
+        Check.typeOf.object('boundingBox', boundingBox);
         //>>includeEnd('debug');
 
         return new BoxGeometry({
@@ -154,7 +156,7 @@ define([
      * The number of elements used to pack the object into an array.
      * @type {Number}
      */
-    BoxGeometry.packedLength = 2 * Cartesian3.packedLength + VertexFormat.packedLength;
+    BoxGeometry.packedLength = 2 * Cartesian3.packedLength + VertexFormat.packedLength + 1;
 
     /**
      * Stores the provided instance into the provided array.
@@ -167,12 +169,8 @@ define([
      */
     BoxGeometry.pack = function(value, array, startingIndex) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(value)) {
-            throw new DeveloperError('value is required');
-        }
-        if (!defined(array)) {
-            throw new DeveloperError('array is required');
-        }
+        Check.typeOf.object('value', value);
+        Check.defined('array', array);
         //>>includeEnd('debug');
 
         startingIndex = defaultValue(startingIndex, 0);
@@ -180,6 +178,7 @@ define([
         Cartesian3.pack(value._minimum, array, startingIndex);
         Cartesian3.pack(value._maximum, array, startingIndex + Cartesian3.packedLength);
         VertexFormat.pack(value._vertexFormat, array, startingIndex + 2 * Cartesian3.packedLength);
+        array[startingIndex + 2 * Cartesian3.packedLength + VertexFormat.packedLength] = defaultValue(value._offsetAttribute, -1);
 
         return array;
     };
@@ -190,7 +189,8 @@ define([
     var scratchOptions = {
         minimum: scratchMin,
         maximum: scratchMax,
-        vertexFormat: scratchVertexFormat
+        vertexFormat: scratchVertexFormat,
+        offsetAttribute : undefined
     };
 
     /**
@@ -203,9 +203,7 @@ define([
      */
     BoxGeometry.unpack = function(array, startingIndex, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(array)) {
-            throw new DeveloperError('array is required');
-        }
+        Check.defined('array', array);
         //>>includeEnd('debug');
 
         startingIndex = defaultValue(startingIndex, 0);
@@ -213,14 +211,17 @@ define([
         var min = Cartesian3.unpack(array, startingIndex, scratchMin);
         var max = Cartesian3.unpack(array, startingIndex + Cartesian3.packedLength, scratchMax);
         var vertexFormat = VertexFormat.unpack(array, startingIndex + 2 * Cartesian3.packedLength, scratchVertexFormat);
+        var offsetAttribute = array[startingIndex + 2 * Cartesian3.packedLength + VertexFormat.packedLength];
 
         if (!defined(result)) {
+            scratchOptions.offsetAttribute = offsetAttribute === -1 ? undefined : offsetAttribute;
             return new BoxGeometry(scratchOptions);
         }
 
         result._minimum = Cartesian3.clone(min, result._minimum);
         result._maximum = Cartesian3.clone(max, result._maximum);
         result._vertexFormat = VertexFormat.clone(vertexFormat, result._vertexFormat);
+        result._offsetAttribute = offsetAttribute === -1 ? undefined : offsetAttribute;
 
         return result;
     };
@@ -833,12 +834,43 @@ define([
         var diff = Cartesian3.subtract(max, min, diffScratch);
         var radius = Cartesian3.magnitude(diff) * 0.5;
 
+        if (defined(boxGeometry._offsetAttribute)) {
+            var length = positions.length;
+            var applyOffset = new Uint8Array(length / 3);
+            var offsetValue = boxGeometry._offsetAttribute === GeometryOffsetAttribute.NONE ? 0 : 1;
+            arrayFill(applyOffset, offsetValue);
+            attributes.applyOffset = new GeometryAttribute({
+                componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
+                componentsPerAttribute : 1,
+                values: applyOffset
+            });
+        }
+
         return new Geometry({
             attributes : attributes,
             indices : indices,
             primitiveType : PrimitiveType.TRIANGLES,
-            boundingSphere : new BoundingSphere(Cartesian3.ZERO, radius)
+            boundingSphere : new BoundingSphere(Cartesian3.ZERO, radius),
+            offsetAttribute : boxGeometry._offsetAttribute
         });
+    };
+
+    var unitBoxGeometry;
+
+    /**
+     * Returns the geometric representation of a unit box, including its vertices, indices, and a bounding sphere.
+     * @returns {Geometry} The computed vertices and indices.
+     *
+     * @private
+     */
+    BoxGeometry.getUnitBox = function() {
+        if (!defined(unitBoxGeometry)) {
+            unitBoxGeometry = BoxGeometry.createGeometry(BoxGeometry.fromDimensions({
+                dimensions : new Cartesian3(1.0, 1.0, 1.0),
+                vertexFormat : VertexFormat.POSITION_ONLY
+            }));
+        }
+        return unitBoxGeometry;
     };
 
     return BoxGeometry;

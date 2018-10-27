@@ -1,4 +1,3 @@
-/*global define*/
 define([
         'Core/Cartesian2',
         'Core/clone',
@@ -57,6 +56,10 @@ define([
         scene.renderForSpecs = function(time) {
             this.initializeFrame();
             this.render(time);
+        };
+
+        scene.pickForSpecs = function() {
+            this.pick(new Cartesian2(0, 0));
         };
 
         scene.rethrowRenderErrors = defaultValue(options.rethrowRenderErrors, true);

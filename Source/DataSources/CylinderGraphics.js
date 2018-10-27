@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/defaultValue',
         '../Core/defined',
@@ -25,6 +24,7 @@ define([
      * @constructor
      *
      * @param {Object} [options] Object with the following properties:
+     * @param {Property} [options.heightReference] A Property specifying what the height from the entity position is relative to.
      * @param {Property} [options.length] A numeric Property specifying the length of the cylinder.
      * @param {Property} [options.topRadius] A numeric Property specifying the radius of the top of the cylinder.
      * @param {Property} [options.bottomRadius] A numeric Property specifying the radius of the bottom of the cylinder.
@@ -40,6 +40,7 @@ define([
      * @param {Property} [options.distanceDisplayCondition] A Property specifying at what distance from the camera that this cylinder will be displayed.
      */
     function CylinderGraphics(options) {
+        this._heightReference = undefined;
         this._length = undefined;
         this._lengthSubscription = undefined;
         this._topRadius = undefined;
@@ -86,6 +87,14 @@ define([
         },
 
         /**
+         * Gets or sets the Property specifying the {@link HeightReference}.
+         * @memberof CylinderGraphics.prototype
+         * @type {Property}
+         * @default HeightReference.NONE
+         */
+        heightReference : createPropertyDescriptor('heightReference'),
+
+        /**
          * Gets or sets the numeric Property specifying the length of the cylinder.
          * @memberof CylinderGraphics.prototype
          * @type {Property}
@@ -118,7 +127,7 @@ define([
          * Gets or sets the Property specifying the number of edges around the perimeter of the cylinder.
          * @memberof CylinderGraphics.prototype
          * @type {Property}
-         * @default 16
+         * @default 128
          */
         slices : createPropertyDescriptor('slices'),
 
@@ -197,6 +206,7 @@ define([
         if (!defined(result)) {
             return new CylinderGraphics(this);
         }
+        result.heightReference = this.heightReference;
         result.bottomRadius = this.bottomRadius;
         result.length = this.length;
         result.topRadius = this.topRadius;
@@ -226,6 +236,7 @@ define([
         }
         //>>includeEnd('debug');
 
+        this.heightReference = defaultValue(this.heightReference, source.heightReference);
         this.bottomRadius = defaultValue(this.bottomRadius, source.bottomRadius);
         this.length = defaultValue(this.length, source.length);
         this.topRadius = defaultValue(this.topRadius, source.topRadius);

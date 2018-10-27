@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <meta name="description" content="Particle systems.">
+    <meta name="cesium-sandcastle-labels" content="Beginner, Showcases">
+    <title>Cesium Demo</title>
+    <script type="text/javascript" src="../Sandcastle-header.js"></script>
+    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
+    <script type="text/javascript">
+        require.config({
+            baseUrl : '../../../Source',
+            waitSeconds : 60
+        });
+    </script>
+</head>
+<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
+<style>
+    @import url(../templates/bucket.css);
+
+    #toolbar {
+        background: rgba(42, 42, 42, 0.8);
+        padding: 4px;
+        border-radius: 4px;
+    }
+
+    #toolbar input {
+        vertical-align: middle;
+        padding-top: 2px;
+        padding-bottom: 2px;
+    }
+
+    #toolbar .header {
+        font-weight: bold;
+    }
+</style>
+<div id="cesiumContainer" class="fullSize"></div>
+<div id="loadingOverlay"><h1>Loading...</h1></div>
+<div id="toolbar">
+    <table>
+        <tbody>
+        <tr>
+            <td>Rate</td>
+            <td>
+                <input type="range" min="0.0" max="100.0" step="1" data-bind="value: emissionRate, valueUpdate: 'input'">
+                <input type="text" size="5" data-bind="value: emissionRate">
+            </td>
+        </tr>
+
+        <tr>
+            <td>Size</td>
+            <td>
+                <input type="range" min="2" max="60.0" step="1" data-bind="value: particleSize, valueUpdate: 'input'">
+                <input type="text" size="5" data-bind="value: particleSize">
+            </td>
+        </tr>
+
+        <tr>
+            <td>Min Life</td>
+            <td>
+                <input type="range" min="0.1" max="30.0" step="1" data-bind="value: minimumParticleLife, valueUpdate: 'input'">
+                <input type="text" size="5" data-bind="value: minimumParticleLife">
+            </td>
+        </tr>
+
+        <tr>
+            <td>Max Life</td>
+            <td>
+                <input type="range" min="0.1" max="30.0" step="1" data-bind="value: maximumParticleLife, valueUpdate: 'input'">
+                <input type="text" size="5" data-bind="value: maximumParticleLife">
+            </td>
+        </tr>
+
+        <tr>
+            <td>Min Speed</td>
+            <td>
+                <input type="range" min="0.0" max="30.0" step="1" data-bind="value: minimumSpeed, valueUpdate: 'input'">
+                <input type="text" size="5" data-bind="value: minimumSpeed">
+            </td>
+        </tr>
+
+        <tr>
+            <td>Max Speed</td>
+            <td>
+                <input type="range" min="0.0" max="30.0" step="1" data-bind="value: maximumSpeed, valueUpdate: 'input'">
+                <input type="text" size="5" data-bind="value: maximumSpeed">
+            </td>
+        </tr>
+
+        <tr>
+            <td>Start Scale</td>
+            <td>
+                <input type="range" min="0.0" max="10.0" step="1" data-bind="value: startScale, valueUpdate: 'input'">
+                <input type="text" size="5" data-bind="value: startScale">
+            </td>
+        </tr>
+
+        <tr>
+            <td>End Scale</td>
+            <td>
+                <input type="range" min="0.0" max="10.0" step="1" data-bind="value: endScale, valueUpdate: 'input'">
+                <input type="text" size="5" data-bind="value: endScale">
+            </td>
+        </tr>
+
+        <tr>
+            <td>Gravity</td>
+            <td>
+                <input type="range" min="-20.0" max="20.0" step="1" data-bind="value: gravity, valueUpdate: 'input'">
+                <input type="text" size="5" data-bind="value: gravity">
+            </td>
+        </tr>
+
+        <tr>
+            <td>Translation</td>
+            <td>
+                X <input type="text" size="5" data-bind="value: transX">
+                Y <input type="text" size="5" data-bind="value: transY">
+                Z <input type="text" size="5" data-bind="value: transZ">
+            </td>
+        </tr>
+
+        <tr>
+            <td>Rotation</td>
+            <td>
+                H <input type="text" size="5" data-bind="value: heading">
+                P <input type="text" size="5" data-bind="value: pitch">
+                R <input type="text" size="5" data-bind="value: roll">
+            </td>
+        </tr>
+
+        </tbody>
+    </table>
+</div>
+
+<script id="cesium_sandcastle_script">
+    function startup(Cesium) {
+        'use strict';
+//Sandcastle_Begin
+var viewer = new Cesium.Viewer('cesiumContainer');
+
+//Set the random number seed for consistent results.
+Cesium.Math.setRandomNumberSeed(3);
+
+//Set bounds of our simulation time
+var start = Cesium.JulianDate.fromDate(new Date(2015, 2, 25, 16));
+var stop = Cesium.JulianDate.addSeconds(start, 360, new Cesium.JulianDate());
+
+//Make sure viewer is at the desired time.
+viewer.clock.startTime = start.clone();
+viewer.clock.stopTime = stop.clone();
+viewer.clock.currentTime = start.clone();
+viewer.clock.clockRange = Cesium.ClockRange.LOOP_STOP; //Loop at the end
+viewer.clock.multiplier = 1;
+viewer.clock.shouldAnimate = true;
+
+//Set timeline to simulation bounds
+viewer.timeline.zoomTo(start, stop);
+
+var viewModel = {
+    emissionRate : 5.0,
+    gravity : 0.0,
+    minimumParticleLife : 1.0,
+    maximumParticleLife : 1.0,
+    minimumSpeed : 1.0,
+    maximumSpeed : 4.0,
+    startScale : 1.0,
+    endScale : 5.0,
+    particleSize : 25.0,
+    transX : 2.5,
+    transY : 4.0,
+    transZ : 1.0,
+    heading : 0.0,
+    pitch : 0.0,
+    roll : 0.0,
+    fly : true,
+    spin : true,
+    show : true
+};
+
+Cesium.knockout.track(viewModel);
+var toolbar = document.getElementById('toolbar');
+Cesium.knockout.applyBindings(viewModel, toolbar);
+
+var entityPosition = new Cesium.Cartesian3();
+var entityOrientation = new Cesium.Quaternion();
+var rotationMatrix = new Cesium.Matrix3();
+var modelMatrix = new Cesium.Matrix4();
+
+function computeModelMatrix(entity, time) {
+    var position = Cesium.Property.getValueOrUndefined(entity.position, time, entityPosition);
+    if (!Cesium.defined(position)) {
+        return undefined;
+    }
+    var orientation = Cesium.Property.getValueOrUndefined(entity.orientation, time, entityOrientation);
+    if (!Cesium.defined(orientation)) {
+        modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(position, undefined, modelMatrix);
+    } else {
+        modelMatrix = Cesium.Matrix4.fromRotationTranslation(Cesium.Matrix3.fromQuaternion(orientation, rotationMatrix), position, modelMatrix);
+    }
+    return modelMatrix;
+}
+
+var emitterModelMatrix = new Cesium.Matrix4();
+var translation = new Cesium.Cartesian3();
+var rotation = new Cesium.Quaternion();
+var hpr = new Cesium.HeadingPitchRoll();
+var trs = new Cesium.TranslationRotationScale();
+
+function computeEmitterModelMatrix() {
+    hpr = Cesium.HeadingPitchRoll.fromDegrees(viewModel.heading, viewModel.pitch, viewModel.roll, hpr);
+
+    trs.translation = Cesium.Cartesian3.fromElements(viewModel.transX, viewModel.transY, viewModel.transZ, translation);
+    trs.rotation = Cesium.Quaternion.fromHeadingPitchRoll(hpr, rotation);
+
+    return Cesium.Matrix4.fromTranslationRotationScale(trs, emitterModelMatrix);
+}
+
+//Generate a random circular pattern with varying heights.
+function computeCirclularFlight(lon, lat, radius) {
+    var property = new Cesium.SampledPositionProperty();
+    for (var i = 0; i <= 360; i += 45) {
+        var radians = Cesium.Math.toRadians(i);
+        var time = Cesium.JulianDate.addSeconds(start, i, new Cesium.JulianDate());
+        var position = Cesium.Cartesian3.fromDegrees(lon + (radius * 1.5 * Math.cos(radians)), lat + (radius * Math.sin(radians)), Cesium.Math.nextRandomNumber() * 500 + 1750);
+        property.addSample(time, position);
+    }
+    return property;
+}
+
+//Compute the entity position property.
+var circularPosition = computeCirclularFlight(-112.110693, 36.0994841, 0.03);
+var staticPosition = Cesium.Cartesian3.fromDegrees(-112.110693, 36.0994841, 1000);
+
+var entity = viewer.entities.add({
+
+    //Set the entity availability to the same interval as the simulation time.
+    availability : new Cesium.TimeIntervalCollection([new Cesium.TimeInterval({
+        start : start,
+        stop : stop
+    })]),
+
+    //Load the Cesium plane model to represent the entity
+    model : {
+        uri : '../../SampleData/models/CesiumAir/Cesium_Air.gltf',
+        minimumPixelSize : 64
+    },
+
+    position : staticPosition
+});
+viewer.trackedEntity = entity;
+
+var scene = viewer.scene;
+var particleSystem = scene.primitives.add(new Cesium.ParticleSystem({
+    image : '../../SampleData/fire.png',
+
+    startColor : Cesium.Color.RED.withAlpha(0.7),
+    endColor : Cesium.Color.YELLOW.withAlpha(0.3),
+
+    startScale : viewModel.startScale,
+    endScale : viewModel.endScale,
+
+    minimumParticleLife : viewModel.minimumParticleLife,
+    maximumParticleLife : viewModel.maximumParticleLife,
+
+    minimumSpeed : viewModel.minimumSpeed,
+    maximumSpeed : viewModel.maximumSpeed,
+
+    imageSize : new Cesium.Cartesian2(viewModel.particleSize, viewModel.particleSize),
+
+    // Particles per second.
+    emissionRate : viewModel.emissionRate,
+
+    bursts : [
+        // these burst will occasionally sync to create a multicolored effect
+        new Cesium.ParticleBurst({time : 5.0, minimum : 10, maximum : 100}),
+        new Cesium.ParticleBurst({time : 10.0, minimum : 50, maximum : 100}),
+        new Cesium.ParticleBurst({time : 15.0, minimum : 200, maximum : 300})
+    ],
+
+    lifetime : 16.0,
+
+    emitter : new Cesium.CircleEmitter(2.0),
+
+    emitterModelMatrix : computeEmitterModelMatrix(),
+
+    updateCallback : applyGravity
+}));
+
+var gravityScratch = new Cesium.Cartesian3();
+
+function applyGravity(p, dt) {
+    // We need to compute a local up vector for each particle in geocentric space.
+    var position = p.position;
+
+    Cesium.Cartesian3.normalize(position, gravityScratch);
+    Cesium.Cartesian3.multiplyByScalar(gravityScratch, viewModel.gravity * dt, gravityScratch);
+
+    p.velocity = Cesium.Cartesian3.add(p.velocity, gravityScratch, p.velocity);
+}
+
+viewer.scene.preUpdate.addEventListener(function(scene, time) {
+    particleSystem.modelMatrix = computeModelMatrix(entity, time);
+
+    // Account for any changes to the emitter model matrix.
+    particleSystem.emitterModelMatrix = computeEmitterModelMatrix();
+
+    // Spin the emitter if enabled.
+    if (viewModel.spin) {
+        viewModel.heading += 1.0;
+        viewModel.pitch += 1.0;
+        viewModel.roll += 1.0;
+    }
+});
+
+Cesium.knockout.getObservable(viewModel, 'emissionRate').subscribe(
+    function(newValue) {
+        particleSystem.emissionRate = parseFloat(newValue);
+    }
+);
+
+Cesium.knockout.getObservable(viewModel, 'particleSize').subscribe(
+    function(newValue) {
+        var particleSize = parseFloat(newValue);
+        particleSystem.minimumImageSize.x = particleSize;
+        particleSystem.minimumImageSize.y = particleSize;
+        particleSystem.maximumImageSize.x = particleSize;
+        particleSystem.maximumImageSize.y = particleSize;
+    }
+);
+
+Cesium.knockout.getObservable(viewModel, 'minimumParticleLife').subscribe(
+    function(newValue) {
+        particleSystem.minimumParticleLife = parseFloat(newValue);
+    }
+);
+
+Cesium.knockout.getObservable(viewModel, 'maximumParticleLife').subscribe(
+    function(newValue) {
+        particleSystem.maximumParticleLife = parseFloat(newValue);
+    }
+);
+
+Cesium.knockout.getObservable(viewModel, 'minimumSpeed').subscribe(
+    function(newValue) {
+        particleSystem.minimumSpeed = parseFloat(newValue);
+    }
+);
+
+Cesium.knockout.getObservable(viewModel, 'maximumSpeed').subscribe(
+    function(newValue) {
+        particleSystem.maximumSpeed = parseFloat(newValue);
+    }
+);
+
+Cesium.knockout.getObservable(viewModel, 'startScale').subscribe(
+    function(newValue) {
+        particleSystem.startScale = parseFloat(newValue);
+    }
+);
+
+Cesium.knockout.getObservable(viewModel, 'endScale').subscribe(
+    function(newValue) {
+        particleSystem.endScale = parseFloat(newValue);
+    }
+);
+
+Cesium.knockout.getObservable(viewModel, 'fly').subscribe(
+    function(newValue) {
+        if (newValue) {
+            entity.position = circularPosition;
+            //Automatically compute orientation based on position movement.
+            entity.orientation = new Cesium.VelocityOrientationProperty(circularPosition);
+        }
+        else {
+            entity.position = staticPosition;
+            entity.orientation = undefined;
+        }
+    }
+);
+
+Sandcastle.addToggleButton('Spin', viewModel.spin, function(checked) {
+    viewModel.spin = checked;
+});
+
+Sandcastle.addToggleButton('Fly', viewModel.fly, function(checked) {
+    viewModel.fly = checked;
+});
+
+Sandcastle.addToggleButton('Show', viewModel.show, function(checked) {
+    entity.show = checked;
+    particleSystem.show = checked;
+});
+
+var options = [{
+    text : 'Circle',
+    onselect : function() {
+        particleSystem.emitter = new Cesium.CircleEmitter(2.0);
+    }
+}, {
+    text : 'Sphere',
+    onselect : function() {
+        particleSystem.emitter = new Cesium.SphereEmitter(2.5);
+    }
+}, {
+    text : 'Cone',
+    onselect : function() {
+        particleSystem.emitter = new Cesium.ConeEmitter(Cesium.Math.toRadians(45.0));
+    }
+}, {
+    text : 'Box',
+    onselect : function() {
+        particleSystem.emitter = new Cesium.BoxEmitter(new Cesium.Cartesian3(10.0, 10.0, 10.0));
+    }
+}];
+
+Sandcastle.addToolbarMenu(options);
+        //Sandcastle_End
+    Sandcastle.finishedLoading();
+    }
+
+    if (typeof Cesium !== 'undefined') {
+    startup(Cesium);
+    } else if (typeof require === 'function') {
+    require(['Cesium'], startup);
+    }
+</script>
+
+</body>
+</html>

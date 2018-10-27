@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Core/Check'
     ], function(
@@ -186,6 +185,32 @@ defineSuite([
         it('does not throw if test is less than limit', function () {
             expect(function () {
                 Check.typeOf.number.lessThanOrEquals('mockName', 2, 3);
+            }).not.toThrowDeveloperError();
+        });
+    });
+
+    describe('Check.typeOf.number.equals', function () {
+        it('throws if either value is not a number', function () {
+            expect(function () {
+                Check.typeOf.number.equals('mockName1', 'mockname2', 'a', 3);
+            }).toThrowDeveloperError();
+            expect(function () {
+                Check.typeOf.number.equals('mockName1', 'mockname2', 3, 'a');
+            }).toThrowDeveloperError();
+            expect(function () {
+                Check.typeOf.number.equals('mockName1', 'mockname2', 'b', 'a');
+            }).toThrowDeveloperError();
+        });
+
+        it('throws if both the values are a number but not equal', function () {
+            expect(function () {
+                Check.typeOf.number.equals('mockName1', 'mockName2', 1, 4);
+            }).toThrowDeveloperError();
+        });
+
+        it('does not throw if both values are a number and are equal', function () {
+            expect(function () {
+                Check.typeOf.number.equal('mockName1', 'mockName2', 3, 3);
             }).not.toThrowDeveloperError();
         });
     });

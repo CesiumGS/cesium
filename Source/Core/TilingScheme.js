@@ -1,4 +1,3 @@
-/*global define*/
 define([
         './defineProperties',
         './DeveloperError'
@@ -45,7 +44,6 @@ define([
             get : DeveloperError.throwInstantiationError
         },
 
-
         /**
          * Gets the map projection used by the tiling scheme.
          * @memberof TilingScheme.prototype
@@ -75,7 +73,7 @@ define([
     TilingScheme.prototype.getNumberOfYTilesAtLevel = DeveloperError.throwInstantiationError;
 
     /**
-     * Transforms an rectangle specified in geodetic radians to the native coordinate system
+     * Transforms a rectangle specified in geodetic radians to the native coordinate system
      * of this tiling scheme.
      * @function
      *
@@ -88,7 +86,7 @@ define([
     TilingScheme.prototype.rectangleToNativeRectangle = DeveloperError.throwInstantiationError;
 
     /**
-     * Converts tile x, y coordinates and level to an rectangle expressed in the native coordinates
+     * Converts tile x, y coordinates and level to a rectangle expressed in the native coordinates
      * of the tiling scheme.
      * @function
      *

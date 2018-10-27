@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/buildModuleUrl',
         '../Core/Cartesian3',
@@ -45,7 +44,7 @@ define([
      *
      * @example
      * scene.moon = new Cesium.Moon();
-     * 
+     *
      * @see Scene#moon
      */
     function Moon(options) {
@@ -170,14 +169,12 @@ define([
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
      * assign the return value (<code>undefined</code>) to the object as done in the example.
      *
-     * @returns {undefined}
-     *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
      *
      * @example
      * moon = moon && moon.destroy();
-     * 
+     *
      * @see Moon#isDestroyed
      */
     Moon.prototype.destroy = function() {
