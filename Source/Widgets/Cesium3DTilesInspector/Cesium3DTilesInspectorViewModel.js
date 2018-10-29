@@ -71,7 +71,7 @@ define([
             return '';
         }
 
-        var statistics = isPick ? tileset._statisticsLastPick : tileset._statisticsLastColor;
+        var statistics = isPick ? tileset._statisticsLastPick : tileset._statisticsLastRender;
 
         // Since the pick pass uses a smaller frustum around the pixel of interest,
         // the statistics will be different than the normal render pass.

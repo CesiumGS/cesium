@@ -89,6 +89,7 @@ define([
         var clippingPlanes = options.clippingPlanes;
         var clippedByBoundaries = options.clippedByBoundaries;
         var hasImageryLayerCutout = options.hasImageryLayerCutout;
+        var colorCorrect = options.colorCorrect;
 
         var quantization = 0;
         var quantizationDefine = '';
@@ -150,10 +151,11 @@ define([
                     (vertexLogDepth << 19) |
                     (cartographicLimitRectangleFlag << 20) |
                     (imageryCutoutFlag << 21) |
-                    (positions2d << 22);
+                    (colorCorrect << 22) |
+                    (positions2d << 23);
 
         var currentClippingShaderState = 0;
-        if (defined(clippingPlanes)) {
+        if (defined(clippingPlanes) && clippingPlanes.length > 0) {
             currentClippingShaderState = enableClippingPlanes ? clippingPlanes.clippingPlanesState : 0;
         }
         var surfaceShader = surfaceTile.surfaceShader;
@@ -243,6 +245,10 @@ define([
 
             if (enableClippingPlanes) {
                 fs.defines.push('ENABLE_CLIPPING_PLANES');
+            }
+
+            if (colorCorrect) {
+                fs.defines.push('COLOR_CORRECT');
             }
 
             var computeDayColor = '\
