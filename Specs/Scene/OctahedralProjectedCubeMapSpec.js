@@ -132,11 +132,15 @@ defineSuite([
         });
     });
 
-    fit('correctly projects the given cube map and all mip levels', function() {
+    it('correctly projects the given cube map and all mip levels', function() {
         var octahedralMap = new OctahedralProjectedCubeMap(environmentMapUrl);
         var frameState = createFrameState(context);
 
         return pollToPromise(function() {
+            // We manually call update and execute the commands 
+            // because calling scene.renderForSpecs does not 
+            // actually execute these commands, and we need
+            // to get the output of the texture. 
             octahedralMap.update(frameState);
             executeCommands(frameState);
 
