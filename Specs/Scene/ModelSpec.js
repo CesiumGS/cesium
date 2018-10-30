@@ -653,7 +653,7 @@ defineSuite([
 
         return loadModel(boomBoxUrl).then(function(m) {
             m.scale = 20.0; // Source model is very small, so scale up a bit
-            m.specularEnvironmentMaps = './Data/EnvironmentMap/shanghai_bund_1k_ibl.ktx';
+            m.specularEnvironmentMaps = './Data/EnvironmentMap/kiara_6_afternoon_2k_ibl.ktx';
 
             return pollToPromise(function() {
                 scene.render();
