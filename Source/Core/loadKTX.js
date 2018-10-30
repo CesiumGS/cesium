@@ -95,8 +95,7 @@ define([
 
     var fileIdentifier = [0xAB, 0x4B, 0x54, 0x58, 0x20, 0x31, 0x31, 0xBB, 0x0D, 0x0A, 0x1A, 0x0A];
     var endiannessTest = 0x04030201;
-    //var faceOrder = ['positiveX', 'negativeX', 'positiveY', 'negativeY', 'positiveZ', 'negativeZ'];
-    var faceOrder = ['positiveX', 'negativeX', 'negativeY', 'positiveY', 'positiveZ', 'negativeZ']; // TODO: Are the RGBM files in the wrong order?
+    var faceOrder = ['positiveX', 'negativeX', 'positiveY', 'negativeY', 'positiveZ', 'negativeZ'];
 
     var sizeOfUint32 = 4;
 
