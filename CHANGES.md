@@ -25,6 +25,7 @@ Change Log
 * Fixed clipping plane crash when adding a plane to an empty collection. [#7168](https://github.com/AnalyticalGraphicsInc/cesium/pull/7168)
 * Fixed texture coordinate calculation for polygon entities with `perPositionHeight` [#7188](https://github.com/AnalyticalGraphicsInc/cesium/pull/7188)
 * Fixed clipping planes on tilesets not taking into account the tileset model matrix. [#7182](https://github.com/AnalyticalGraphicsInc/cesium/pull/7182)
+* Fixed middle mouse button locked glitch [#7137](https://github.com/AnalyticalGraphicsInc/cesium/pull/7137)
 
 ### 1.50 - 2018-10-01
 
