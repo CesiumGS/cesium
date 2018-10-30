@@ -1150,7 +1150,7 @@ define([
 
     function isClippingEnabled(model) {
         var clippingPlanes = model._clippingPlanes;
-        return defined(clippingPlanes) && clippingPlanes.enabled;
+        return defined(clippingPlanes) && clippingPlanes.enabled && clippingPlanes.length !== 0;
     }
 
     /**
@@ -1320,7 +1320,7 @@ define([
                     var json = getStringFromTypedArray(array);
                     cachedGltf.makeReady(JSON.parse(json));
                 }
-            }).otherwise(ModelUtility.getFailedLoadFunction(model, 'model', url));
+            }).otherwise(ModelUtility.getFailedLoadFunction(model, 'model', modelResource.url));
         } else if (!cachedGltf.ready) {
             // Cache hit but the fetchArrayBuffer() or fetchText() request is still pending
             ++cachedGltf.count;
@@ -4344,7 +4344,7 @@ define([
             // Regenerate shaders if ClippingPlaneCollection state changed or it was removed
             var clippingPlanes = this._clippingPlanes;
             var currentClippingPlanesState = 0;
-            if (defined(clippingPlanes) && clippingPlanes.enabled) {
+            if (defined(clippingPlanes) && clippingPlanes.enabled && clippingPlanes.length > 0) {
                 var clippingPlaneOffsetMatrix = defaultValue(this.clippingPlaneOffsetMatrix, modelMatrix);
                 Matrix4.multiply(context.uniformState.view3D, clippingPlaneOffsetMatrix, this._clippingPlaneModelViewMatrix);
                 currentClippingPlanesState = clippingPlanes.clippingPlanesState;

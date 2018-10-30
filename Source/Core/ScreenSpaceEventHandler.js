@@ -176,29 +176,7 @@ define([
         position : new Cartesian2()
     };
 
-    function handleMouseUp(screenSpaceEventHandler, event) {
-        if (!canProcessMouseEvent(screenSpaceEventHandler)) {
-            return;
-        }
-
-        var button = event.button;
-        screenSpaceEventHandler._buttonDown = undefined;
-
-        var screenSpaceEventType;
-        var clickScreenSpaceEventType;
-        if (button === MouseButton.LEFT) {
-            screenSpaceEventType = ScreenSpaceEventType.LEFT_UP;
-            clickScreenSpaceEventType = ScreenSpaceEventType.LEFT_CLICK;
-        } else if (button === MouseButton.MIDDLE) {
-            screenSpaceEventType = ScreenSpaceEventType.MIDDLE_UP;
-            clickScreenSpaceEventType = ScreenSpaceEventType.MIDDLE_CLICK;
-        } else if (button === MouseButton.RIGHT) {
-            screenSpaceEventType = ScreenSpaceEventType.RIGHT_UP;
-            clickScreenSpaceEventType = ScreenSpaceEventType.RIGHT_CLICK;
-        } else {
-            return;
-        }
-
+    function cancelMouseEvent(screenSpaceEventHandler, screenSpaceEventType, clickScreenSpaceEventType, event) {
         var modifier = getModifier(event);
 
         var action = screenSpaceEventHandler.getInputAction(screenSpaceEventType, modifier);
@@ -226,6 +204,23 @@ define([
                 }
             }
         }
+    }
+
+    function handleMouseUp(screenSpaceEventHandler, event) {
+        if (!canProcessMouseEvent(screenSpaceEventHandler)) {
+            return;
+        }
+
+        var button = event.button;
+        screenSpaceEventHandler._buttonDown = undefined;
+
+        if (button !== MouseButton.LEFT && button !== MouseButton.MIDDLE && button !== MouseButton.RIGHT){
+            return;
+        }
+
+        cancelMouseEvent(screenSpaceEventHandler, ScreenSpaceEventType.LEFT_UP, ScreenSpaceEventType.LEFT_CLICK, event);
+        cancelMouseEvent(screenSpaceEventHandler, ScreenSpaceEventType.MIDDLE_UP, ScreenSpaceEventType.MIDDLE_CLICK, event);
+        cancelMouseEvent(screenSpaceEventHandler, ScreenSpaceEventType.RIGHT_UP, ScreenSpaceEventType.RIGHT_CLICK, event);
     }
 
     var mouseMoveEvent = {
