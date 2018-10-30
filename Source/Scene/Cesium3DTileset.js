@@ -216,8 +216,8 @@ define([
 
         this._ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
 
-        this._clippingPlaneOffsetMatrix = Matrix4.IDENTITY;
-        this._clippingPlaneTransformMatrix = undefined;
+        this._initialClippingPlanesOriginMatrix = Matrix4.IDENTITY; // Computed from the tileset JSON.
+        this._clippingPlanesOriginMatrix = undefined; // Combines the above with any run-time transforms.
         this._recomputeClippingPlaneMatrix = true;
 
         /**
@@ -752,9 +752,9 @@ define([
                 // root tile transform and the tileset's model matrix
                 var heightAboveEllipsoid = Cartographic.fromCartesian(clippingPlanesOrigin).height;
                 if (heightAboveEllipsoid > ApproximateTerrainHeights._defaultMinTerrainHeight) {
-                    that._clippingPlaneOffsetMatrix = Transforms.eastNorthUpToFixedFrame(clippingPlanesOrigin);
+                    that._initialClippingPlanesOriginMatrix = Transforms.eastNorthUpToFixedFrame(clippingPlanesOrigin);
                 }
-                that._clippingPlaneTransformMatrix = Matrix4.clone(that._clippingPlaneOffsetMatrix);
+                that._clippingPlanesOriginMatrix = Matrix4.clone(that._initialClippingPlanesOriginMatrix);
                 that._readyPromise.resolve(that);
             }).otherwise(function(error) {
                 that._readyPromise.reject(error);
@@ -1168,18 +1168,18 @@ define([
         /**
          * @private
          */
-        clippingPlaneOffsetMatrix : {
+        clippingPlanesOriginMatrix : {
             get : function() {
-                if (!defined(this._clippingPlaneTransformMatrix)) {
+                if (!defined(this._clippingPlanesOriginMatrix)) {
                     return Matrix4.IDENTITY;
                 }
 
                 if (this._recomputeClippingPlaneMatrix) {
-                    Matrix4.multiply(this.root.computedTransform, this._clippingPlaneOffsetMatrix, this._clippingPlaneTransformMatrix);
+                    Matrix4.multiply(this.root.computedTransform, this._initialClippingPlanesOriginMatrix, this._clippingPlanesOriginMatrix);
                     this._recomputeClippingPlaneMatrix = false;
                 }
 
-                return this._clippingPlaneTransformMatrix;
+                return this._clippingPlanesOriginMatrix;
             }
         },
 
