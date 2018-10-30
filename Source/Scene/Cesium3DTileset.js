@@ -750,7 +750,7 @@ define([
                 // we want to apply an ENU orientation as our best guess of orientation.
                 // Otherwise, we assume it gets its position/orientation completely from the
                 // root tile transform and the tileset's model matrix
-                var heightAboveEllipsoid = Cartographic.fromCartesian(clippingPlanesOrigin).height;
+                var heightAboveEllipsoid = that._ellipsoid.cartesianToCartographic(clippingPlanesOrigin).height;
                 if (heightAboveEllipsoid > ApproximateTerrainHeights._defaultMinTerrainHeight) {
                     that._initialClippingPlanesOriginMatrix = Transforms.eastNorthUpToFixedFrame(clippingPlanesOrigin);
                 }
