@@ -963,6 +963,7 @@ define([
                'void tile_color(vec4 tile_featureColor) \n' +
                '{ \n' +
                '    tile_main(); \n' +
+               '    tile_featureColor = czm_gammaCorrect(tile_featureColor);; \n' +
                '    gl_FragColor.a *= tile_featureColor.a; \n' +
                '    float highlight = ceil(tile_colorBlend); \n' +
                '    gl_FragColor.rgb *= mix(tile_featureColor.rgb, vec3(1.0), highlight); \n' +
@@ -1044,6 +1045,7 @@ define([
         // The color blend mode is intended for the RGB channels so alpha is always just multiplied.
         // gl_FragColor is multiplied by the tile color only when tile_colorBlend is 0.0 (highlight)
         var highlight =
+            '    tile_featureColor = czm_gammaCorrect(tile_featureColor); \n' +
             '    gl_FragColor.a *= tile_featureColor.a; \n' +
             '    float highlight = ceil(tile_colorBlend); \n' +
             '    gl_FragColor.rgb *= mix(tile_featureColor.rgb, vec3(1.0), highlight); \n';
@@ -1055,7 +1057,7 @@ define([
             regex = new RegExp(diffuseAttributeOrUniformName, 'g');
             source = source.replace(regex, replaceDiffuse);
             setColor =
-                '    vec4 source = ' + sourceDiffuse + '; \n' +
+                '    vec4 source = czm_gammaCorrect(' + sourceDiffuse + '); \n' +
                 '    tile_diffuse = tile_diffuse_final(source, tile_featureColor); \n' +
                 '    tile_main(); \n';
         } else if (type === 'sampler2D') {
