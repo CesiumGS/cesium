@@ -3257,19 +3257,19 @@ defineSuite([
         });
     });
 
-    it('clippingPlaneOffsetMatrix has correct orientation', function() {
+    it('clippingPlanesOriginMatrix has correct orientation', function() {
         return Cesium3DTilesTester.loadTileset(scene, withTransformBoxUrl).then(function(tileset) {
             // The bounding volume of this tileset puts it under the surface, so no
             // east-north-up should be applied. Check that it matches the orientation
             // of the original transform.
-            var offsetMatrix = tileset.clippingPlaneOffsetMatrix;
+            var offsetMatrix = tileset.clippingPlanesOriginMatrix;
 
             expect(Matrix4.equals(offsetMatrix, tileset.root.computedTransform)).toBe(true);
 
             return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function(tileset) {
                 // The bounding volume of this tileset puts it on the surface,
                 //  so we want to apply east-north-up as our best guess.
-                offsetMatrix = tileset.clippingPlaneOffsetMatrix;
+                offsetMatrix = tileset.clippingPlanesOriginMatrix;
                 // The clipping plane matrix is not the same as the original because we applied east-north-up.
                 expect(Matrix4.equals(offsetMatrix, tileset.root.computedTransform)).toBe(false);
 
@@ -3280,19 +3280,19 @@ defineSuite([
         });
     });
 
-    it('clippingPlaneOffsetMatrix matches root tile bounding sphere', function() {
+    it('clippingPlanesOriginMatrix matches root tile bounding sphere', function() {
         return Cesium3DTilesTester.loadTileset(scene, tilesetOfTilesetsUrl).then(function(tileset) {
-            var offsetMatrix = Matrix4.clone(tileset.clippingPlaneOffsetMatrix, new Matrix4());
+            var offsetMatrix = Matrix4.clone(tileset.clippingPlanesOriginMatrix, new Matrix4());
             var boundingSphereEastNorthUp = Transforms.eastNorthUpToFixedFrame(tileset.root.boundingSphere.center);
             expect(Matrix4.equals(offsetMatrix, boundingSphereEastNorthUp)).toBe(true);
 
             // Changing the model matrix should change the clipping planes matrix
             tileset.modelMatrix = Matrix4.fromTranslation(new Cartesian3(100, 0, 0));
             scene.renderForSpecs();
-            expect(Matrix4.equals(offsetMatrix, tileset.clippingPlaneOffsetMatrix)).toBe(false);
+            expect(Matrix4.equals(offsetMatrix, tileset.clippingPlanesOriginMatrix)).toBe(false);
 
             boundingSphereEastNorthUp = Transforms.eastNorthUpToFixedFrame(tileset.root.boundingSphere.center);
-            offsetMatrix = tileset.clippingPlaneOffsetMatrix;
+            offsetMatrix = tileset.clippingPlanesOriginMatrix;
             expect(offsetMatrix).toEqualEpsilon(boundingSphereEastNorthUp, CesiumMath.EPSILON3);
         });
     });
