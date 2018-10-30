@@ -821,8 +821,6 @@ define([
         var output = contextRenderAndReadPixels(options);
 
         if (clear) {
-            ClearCommand.ALL.execute(context);
-
             var clearedRgba = output.clearColor;
             if (!webglStub) {
                 var expectedAlpha = context.options.webgl.alpha ? 0 : 255;
