@@ -3267,10 +3267,9 @@ defineSuite([
             expect(Matrix4.equals(offsetMatrix, tileset.root.computedTransform)).toBe(true);
 
             return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function(tileset) {
-                // The bounding volume of this tileset puts it on the surface, and its
-                // root transform is identity, so we want to apply east-north-up as our best guess.
+                // The bounding volume of this tileset puts it on the surface,
+                //  so we want to apply east-north-up as our best guess.
                 offsetMatrix = tileset.clippingPlaneOffsetMatrix;
-                expect(Matrix4.equals(tileset.root.transform, Matrix4.IDENTITY)).toBe(true);
                 // The clipping plane matrix is not the same as the original because we applied east-north-up.
                 expect(Matrix4.equals(offsetMatrix, tileset.root.computedTransform)).toBe(false);
 
@@ -3290,12 +3289,11 @@ defineSuite([
             // Changing the model matrix should change the clipping planes matrix
             tileset.modelMatrix = Matrix4.fromTranslation(new Cartesian3(100, 0, 0));
             scene.renderForSpecs();
-            tileset.update(scene.frameState);
             expect(Matrix4.equals(offsetMatrix, tileset.clippingPlaneOffsetMatrix)).toBe(false);
 
             boundingSphereEastNorthUp = Transforms.eastNorthUpToFixedFrame(tileset.root.boundingSphere.center);
             offsetMatrix = tileset.clippingPlaneOffsetMatrix;
-            expect(Matrix4.equalsEpsilon(offsetMatrix, boundingSphereEastNorthUp, CesiumMath.EPSILON3)).toBe(true);
+            expect(offsetMatrix).toEqualEpsilon(boundingSphereEastNorthUp, CesiumMath.EPSILON3);
         });
     });
 }, 'WebGL');
