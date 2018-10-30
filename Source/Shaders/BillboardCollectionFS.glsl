@@ -52,7 +52,7 @@ void main()
 {
     vec4 color = texture2D(u_atlas, v_textureCoordinates);
     color = czm_gammaCorrect(color);
-    color *= v_color;
+    color *= czm_gammaCorrect(v_color);
 
 // Fully transparent parts of the billboard are not pickable.
 #if !defined(OPAQUE) && !defined(TRANSLUCENT)
