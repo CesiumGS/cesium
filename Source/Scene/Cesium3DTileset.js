@@ -746,7 +746,7 @@ define([
                 // the tile transform and model matrix at run time
                 var boundingVolume = that._root.createBoundingVolume(tilesetJson.root.boundingVolume, Matrix4.IDENTITY);
                 var clippingPlanesOrigin = boundingVolume.boundingSphere.center;
-                // If this origin is above the surface of the earth 
+                // If this origin is above the surface of the earth
                 // we want to apply an ENU orientation as our best guess of orientation.
                 // Otherwise, we assume it gets its position/orientation completely from the
                 // root tile transform and the tileset's model matrix
