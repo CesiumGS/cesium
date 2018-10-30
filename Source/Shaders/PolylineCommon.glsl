@@ -82,7 +82,7 @@ vec4 getPolylineWindowCoordinatesEC(vec4 positionEC, vec4 prevEC, vec4 nextEC, f
     }
     else if (czm_equalsEpsilon(nextEC.xyz - positionEC.xyz, vec3(0.0), czm_epsilon1) || clipped)
     {
-        direction = vec2(prevWC.y, -prevWC.x);
+        direction = vec2(-prevWC.y, prevWC.x);
     }
     else
     {
