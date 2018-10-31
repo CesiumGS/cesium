@@ -26,6 +26,7 @@ Change Log
 * Fixed texture coordinate calculation for polygon entities with `perPositionHeight` [#7188](https://github.com/AnalyticalGraphicsInc/cesium/pull/7188)
 * Fixed clipping planes on tilesets not taking into account the tileset model matrix. [#7182](https://github.com/AnalyticalGraphicsInc/cesium/pull/7182)
 * Fixed middle mouse button locked glitch [#7137](https://github.com/AnalyticalGraphicsInc/cesium/pull/7137)
+* Fixed an issue where dynamic Entities on terrain would cause a crash in platforms that do not support depth textures such as Internet Explorer [#7103](https://github.com/AnalyticalGraphicsInc/cesium/issues/7103)
 
 ### 1.50 - 2018-10-01
 
