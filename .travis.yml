@@ -25,8 +25,8 @@ script:
 
   - echo 'makeZipFile' && echo -en 'travis_fold:start:script.makeZipFile\\r'
   - npm run clean
-  - npm run makeZipFile -- --concurrency 2
-  - npm pack
+  - npm run makeZipFile -- --concurrency 1
+  - npm pack &> /dev/null
   - echo -en 'travis_fold:end:script.makeZipFile\\r'
 
   - echo 'buildApps' && echo -en 'travis_fold:start:script.buildApps\\r'
