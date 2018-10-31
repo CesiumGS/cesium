@@ -468,12 +468,14 @@ define([
 
         // Update clipping planes
         var tilesetClippingPlanes = this._tileset.clippingPlanes;
-        if (this._tile.clippingPlanesDirty && defined(tilesetClippingPlanes)) {
-            this._model.clippingPlaneOffsetMatrix = this._tileset.clippingPlaneOffsetMatrix;
-            // Dereference the clipping planes from the model if they are irrelevant.
-            // Link/Dereference directly to avoid ownership checks.
-            // This will also trigger synchronous shader regeneration to remove or add the clipping plane and color blending code.
-            this._model._clippingPlanes = (tilesetClippingPlanes.enabled && this._tile._isClipped) ? tilesetClippingPlanes : undefined;
+        if (defined(tilesetClippingPlanes)) {
+            this._model.clippingPlanesOriginMatrix = this._tileset.clippingPlanesOriginMatrix;
+            if (this._tile.clippingPlanesDirty) {
+                // Dereference the clipping planes from the model if they are irrelevant.
+                // Link/Dereference directly to avoid ownership checks.
+                // This will also trigger synchronous shader regeneration to remove or add the clipping plane and color blending code.
+                this._model._clippingPlanes = (tilesetClippingPlanes.enabled && this._tile._isClipped) ? tilesetClippingPlanes : undefined;
+            }
         }
 
         // If the model references a different ClippingPlaneCollection due to the tileset's collection being replaced with a
