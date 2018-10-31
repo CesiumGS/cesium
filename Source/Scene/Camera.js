@@ -803,6 +803,7 @@ define([
             get : function() {
                 var projection = this._projection;
                 if (this._mode === SceneMode.SCENE2D && !projection.isNormalCylindrical) {
+                    updateMembers(this);
                     return approximateHeading2D(projection, this._position, this.up);
                 } else if (this._mode !== SceneMode.MORPHING) {
                     var ellipsoid = projection.ellipsoid;

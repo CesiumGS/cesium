@@ -562,6 +562,9 @@ define([
                         pickedPosition = Cartesian3.fromElements(pickedPosition.y, pickedPosition.z, pickedPosition.x);
                         object._zoomWorldPosition = Cartesian3.clone(pickedPosition, object._zoomWorldPosition);
                     }
+
+                    // Set heading again - in some projections, this may change due to camera.move
+                    orientation.heading = camera.heading;
                 }
             } else if (mode === SceneMode.SCENE3D) {
                 var cameraPositionNormal = Cartesian3.normalize(camera.position, scratchCameraPositionNormal);
