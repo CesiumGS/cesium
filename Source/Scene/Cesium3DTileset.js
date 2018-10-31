@@ -218,7 +218,7 @@ define([
 
         this._initialClippingPlanesOriginMatrix = Matrix4.IDENTITY; // Computed from the tileset JSON.
         this._clippingPlanesOriginMatrix = undefined; // Combines the above with any run-time transforms.
-        this._recomputeClippingPlaneMatrix = true;
+        this._clippingPlanesOriginMatrixDirty = true;
 
         /**
          * Optimization option. Whether the tileset should refine based on a dynamic screen space error. Tiles that are further
@@ -1174,9 +1174,9 @@ define([
                     return Matrix4.IDENTITY;
                 }
 
-                if (this._recomputeClippingPlaneMatrix) {
+                if (this._clippingPlanesOriginMatrixDirty) {
                     Matrix4.multiply(this.root.computedTransform, this._initialClippingPlanesOriginMatrix, this._clippingPlanesOriginMatrix);
-                    this._recomputeClippingPlaneMatrix = false;
+                    this._clippingPlanesOriginMatrixDirty = false;
                 }
 
                 return this._clippingPlanesOriginMatrix;
@@ -1917,7 +1917,7 @@ define([
 
         // Update clipping planes
         var clippingPlanes = this._clippingPlanes;
-        this._recomputeClippingPlaneMatrix = true;
+        this._clippingPlanesOriginMatrixDirty = true;
         if (defined(clippingPlanes) && clippingPlanes.enabled) {
             clippingPlanes.update(frameState);
         }
