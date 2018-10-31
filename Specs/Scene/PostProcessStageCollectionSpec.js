@@ -73,6 +73,18 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
+    it('removes a single stage', function() {
+        var stage1 = scene.postProcessStages.add(new PostProcessStage({
+            fragmentShader : 'void main() { gl_FragColor = vec4(1.0, 1.0, 0.0, 1.0); }'
+        }));
+        scene.renderForSpecs();
+        expect(scene).toRender([255, 255, 0, 255]);
+
+        scene.postProcessStages.remove(stage1);
+        scene.renderForSpecs();
+        expect(scene).toRender([0, 0, 0, 255]);
+    });
+
     it('removes stages', function() {
         expect(scene).toRender([0, 0, 0, 255]);
 
