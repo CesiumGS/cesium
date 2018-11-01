@@ -25,7 +25,6 @@ Change Log
 * Fixed clipping plane crash when adding a plane to an empty collection. [#7168](https://github.com/AnalyticalGraphicsInc/cesium/pull/7168)
 * Fixed texture coordinate calculation for polygon entities with `perPositionHeight` [#7188](https://github.com/AnalyticalGraphicsInc/cesium/pull/7188)
 * Fixed clipping planes on tilesets not taking into account the tileset model matrix. [#7182](https://github.com/AnalyticalGraphicsInc/cesium/pull/7182)
-* Fixed middle mouse button locked glitch [#7137](https://github.com/AnalyticalGraphicsInc/cesium/pull/7137)
 * Fixed an issue where dynamic Entities on terrain would cause a crash in platforms that do not support depth textures such as Internet Explorer [#7103](https://github.com/AnalyticalGraphicsInc/cesium/issues/7103)
 * Fixed an issue that would cause a crash when removing a post process stage. [#7210](https://github.com/AnalyticalGraphicsInc/cesium/issues/7210)
 
