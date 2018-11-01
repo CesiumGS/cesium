@@ -24,7 +24,7 @@ var gulpRename = require('gulp-rename');
 var gulpReplace = require('gulp-replace');
 var Promise = require('bluebird');
 var requirejs = require('requirejs');
-var Karma = require('karma').Server;
+var Karma = require('karma');
 var yargs = require('yargs');
 var AWS = require('aws-sdk');
 var mime = require('mime');
@@ -44,6 +44,8 @@ var travisDeployUrl = 'http://cesium-dev.s3-website-us-east-1.amazonaws.com/cesi
 var taskName = process.argv[2];
 var noDevelopmentGallery = taskName === 'release' || taskName === 'makeZipFile';
 var minifyShaders = taskName === 'minify' || taskName === 'minifyRelease' || taskName === 'release' || taskName === 'makeZipFile' || taskName === 'buildApps';
+
+var verbose = yargs.argv.verbose;
 
 var concurrency = yargs.argv.concurrency;
 if (!concurrency) {
@@ -426,7 +428,9 @@ function deployCesium(bucketName, uploadDirectory, cacheControl, done) {
                         return;
                     }
 
-                    console.log('Uploading ' + blobName + '...');
+                    if (verbose) {
+                        console.log('Uploading ' + blobName + '...');
+                    }
                     var params = {
                         Bucket : bucketName,
                         Key : blobName,
@@ -477,7 +481,9 @@ function deployCesium(bucketName, uploadDirectory, cacheControl, done) {
                             Objects: objects
                         }
                     }).promise().then(function() {
-                        console.log('Cleaned ' + objects.length + ' files.');
+                        if (verbose) {
+                            console.log('Cleaned ' + objects.length + ' files.');
+                        }
                     });
                 }, {concurrency : concurrency});
             }
@@ -623,7 +629,7 @@ gulp.task('test', function(done) {
         files.push({pattern : 'Build/**', included : false});
     }
 
-    var karma = new Karma({
+    var karma = new Karma.Server({
         configFile: karmaConfigFile,
         browsers: browsers,
         specReporter: {
@@ -635,8 +641,10 @@ gulp.task('test', function(done) {
         detectBrowsers: {
             enabled: enableAllBrowsers
         },
+        logLevel: verbose ? Karma.constants.LOG_INFO : Karma.constants.LOG_ERROR,
         files: files,
         client: {
+            captureConsole: verbose,
             args: [includeCategory, excludeCategory, webglValidation, webglStub, release]
         }
     }, function(e) {
@@ -1306,7 +1314,9 @@ function removeExtension(p) {
 }
 
 function requirejsOptimize(name, config) {
-    console.log('Building ' + name);
+    if (verbose) {
+        console.log('Building ' + name);
+    }
     return new Promise(function(resolve, reject) {
         var cmd = 'npm run requirejs -- --' + new Buffer(JSON.stringify(config)).toString('base64') + ' --silent';
         child_process.exec(cmd, function(e) {
@@ -1315,7 +1325,9 @@ function requirejsOptimize(name, config) {
                 reject(e);
                 return;
             }
-            console.log('Finished ' + name);
+            if (verbose) {
+                console.log('Finished ' + name);
+            }
             resolve();
         });
     });
