@@ -854,7 +854,7 @@ define([
             (!defined(node.scale) || Cartesian3.fromArray(node.scale).equals(new Cartesian3(1.0, 1.0, 1.0))) &&
             (!defined(node.rotation) || Cartesian4.fromArray(node.rotation).equals(new Cartesian4(0.0, 0.0, 0.0, 1.0))) &&
             (!defined(node.matrix) || Matrix4.fromColumnMajorArray(node.matrix).equals(Matrix4.IDENTITY)) &&
-            !defined(node.extensions && !defined(node.extras));
+            !defined(node.extensions) && !defined(node.extras);
     }
 
     function deleteNode(gltf, nodeId) {
