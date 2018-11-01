@@ -888,6 +888,9 @@ define([
             u_center3D : function() {
                 return this.properties.center3D;
             },
+            u_center2D : function() {
+                return this.properties.center2D;
+            },
             u_tileRectangle : function() {
                 return this.properties.tileRectangle;
             },
@@ -1000,6 +1003,7 @@ define([
                 hsbShift : new Cartesian3(),
 
                 center3D : undefined,
+                center2D : undefined,
                 rtc : new Cartesian3(),
                 modifiedModelView : new Matrix4(),
                 tileRectangle : new Cartesian4(),
@@ -1261,10 +1265,18 @@ define([
 
             // In 2D and Columbus View, use the center of the tile for RTC rendering.
             if (frameState.mode !== SceneMode.MORPHING) {
+                // If using a custom projection, project the existing tile center instead.
                 rtc = rtcScratch;
-                rtc.x = 0.0;
-                rtc.y = (tileRectangle.z + tileRectangle.x) * 0.5;
-                rtc.z = (tileRectangle.w + tileRectangle.y) * 0.5;
+                if (frameState.mapProjection.isNormalCylindrical) {
+                    rtc.x = 0.0;
+                    rtc.y = (tileRectangle.z + tileRectangle.x) * 0.5;
+                    rtc.z = (tileRectangle.w + tileRectangle.y) * 0.5;
+                } else {
+                    rtc.x = surfaceTile.center2D.z;
+                    rtc.y = surfaceTile.center2D.x;
+                    rtc.z = surfaceTile.center2D.y;
+                }
+
                 tileRectangle.x -= rtc.y;
                 tileRectangle.y -= rtc.z;
                 tileRectangle.z -= rtc.y;
@@ -1372,6 +1384,7 @@ define([
             uniformMapProperties.zoomedOutOceanSpecularIntensity = tileProvider.zoomedOutOceanSpecularIntensity;
 
             uniformMapProperties.center3D = surfaceTile.center;
+            uniformMapProperties.center2D = surfaceTile.center2D;
             Cartesian3.clone(rtc, uniformMapProperties.rtc);
 
             Cartesian4.clone(tileRectangle, uniformMapProperties.tileRectangle);

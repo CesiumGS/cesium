@@ -5,6 +5,7 @@ defineSuite([
         'Core/Cartesian3',
         'Core/Color',
         'Core/DistanceDisplayCondition',
+        'Core/GeographicProjection',
         'Core/JulianDate',
         'Core/Math',
         'Core/TimeInterval',
@@ -33,6 +34,7 @@ defineSuite([
         Cartesian3,
         Color,
         DistanceDisplayCondition,
+        GeographicProjection,
         JulianDate,
         CesiumMath,
         TimeInterval,
@@ -80,7 +82,7 @@ defineSuite([
             return;
         }
 
-        var batch = new StaticGroundGeometryPerMaterialBatch(scene.primitives, MaterialAppearance);
+        var batch = new StaticGroundGeometryPerMaterialBatch(scene.primitives, MaterialAppearance, new GeographicProjection());
 
         var ellipse = new EllipseGraphics();
         ellipse.semiMajorAxis = new ConstantProperty(2);
@@ -151,7 +153,7 @@ defineSuite([
             }
         });
 
-        var batch = new StaticGroundGeometryPerMaterialBatch(scene.primitives, MaterialAppearance);
+        var batch = new StaticGroundGeometryPerMaterialBatch(scene.primitives, MaterialAppearance, new GeographicProjection());
 
         var updater = new EllipseGeometryUpdater(entity, scene);
         batch.add(validTime, updater);
@@ -184,7 +186,7 @@ defineSuite([
             return;
         }
 
-        var batch = new StaticGroundGeometryPerMaterialBatch(scene.primitives, MaterialAppearance);
+        var batch = new StaticGroundGeometryPerMaterialBatch(scene.primitives, MaterialAppearance, new GeographicProjection());
 
         function buildEntity(x, y, z) {
             var material = new GridMaterialProperty({
@@ -258,7 +260,7 @@ defineSuite([
             return;
         }
 
-        var batch = new StaticGroundGeometryPerMaterialBatch(scene.primitives, MaterialAppearance);
+        var batch = new StaticGroundGeometryPerMaterialBatch(scene.primitives, MaterialAppearance, new GeographicProjection());
 
         var ellipse = new EllipseGraphics();
         ellipse.semiMajorAxis = new ConstantProperty(2);
@@ -303,7 +305,7 @@ defineSuite([
             return;
         }
 
-        var batch = new StaticGroundGeometryPerMaterialBatch(scene.primitives, MaterialAppearance);
+        var batch = new StaticGroundGeometryPerMaterialBatch(scene.primitives, MaterialAppearance, new GeographicProjection());
         var entity = new Entity({
             position : new Cartesian3(1234, 5678, 9101112),
             ellipse : {
@@ -349,7 +351,7 @@ defineSuite([
             return;
         }
 
-        var batch = new StaticGroundGeometryPerMaterialBatch(scene.primitives, MaterialAppearance);
+        var batch = new StaticGroundGeometryPerMaterialBatch(scene.primitives, MaterialAppearance, new GeographicProjection());
 
         function buildEntity(x, y, z) {
             var material = new GridMaterialProperty({

@@ -1,5 +1,6 @@
 define([
         '../Core/BoundingSphere',
+        '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Cartesian4',
         '../Core/defaultValue',
@@ -21,6 +22,7 @@ define([
         './TileTerrain'
     ], function(
         BoundingSphere,
+        Cartesian2,
         Cartesian3,
         Cartesian4,
         defaultValue,
@@ -81,8 +83,12 @@ define([
 
         this.surfaceShader = undefined;
         this.isClipped = true;
-
         this.clippedByBoundaries = false;
+
+        /**
+         * Only for use with Proj4 and custom projections.
+         */
+        this.center2D = new Cartesian3();
     }
 
     defineProperties(GlobeSurfaceTile.prototype, {

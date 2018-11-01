@@ -48,6 +48,21 @@ define([
             get : function() {
                 return this._ellipsoid;
             }
+        },
+        /**
+         * Gets whether or not the projection evenly maps meridians to vertical lines.
+         * Geographic projections are cylindrical about the equator.
+         *
+         * @memberof GeographicProjection.prototype
+         *
+         * @type {Boolean}
+         * @readonly
+         * @private
+         */
+        isNormalCylindrical : {
+            get : function() {
+                return true;
+            }
         }
     });
 

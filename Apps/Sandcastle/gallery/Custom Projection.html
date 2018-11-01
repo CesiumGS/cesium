@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <meta name="description" content="Demonstration of Custom projections.">
+    <meta name="cesium-sandcastle-labels" content="Showcases">
+    <title>Cesium Demo</title>
+    <script type="text/javascript" src="../Sandcastle-header.js"></script>
+    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
+    <script type="text/javascript">
+        if(typeof require === "function") {
+            require.config({
+                baseUrl : '../../../Source',
+                waitSeconds : 120
+            });
+        }
+    </script>
+</head>
+<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
+<style>
+    @import url(../templates/bucket.css);
+</style>
+<div id="cesiumContainer" class="fullSize"></div>
+<div id="loadingOverlay"><h1>Loading...</h1></div>
+<div id="toolbar"></div>
+<script id="cesium_sandcastle_script">
+function startup(Cesium) {
+    'use strict';
+//Sandcastle_Begin
+
+var projectionText =
+    'function createProjectionFunctions(callback) {\n' +
+    '     function project(cartographic, result) {\n' +
+    '          result.x = cartographic.longitude * 6378137.0;\n' +
+    '          result.y = cartographic.latitude * 2.0 * 6378137.0;\n' +
+    '          result.z = cartographic.height + Math.abs(cartographic.longitude * cartographic.longitude * 1000000.0);\n' +
+    '     }\n' +
+    '     function unproject(cartesian, result) {\n' +
+    '          result.longitude = cartesian.x / 6378137.0;\n' +
+    '          result.latitude = cartesian.y / (2.0 * 6378137.0);\n' +
+    '          result.height = cartesian.z - Math.abs(result.longitude * result.longitude * 1000000.0);\n' +
+    '     }\n' +
+    '     callback(project, unproject);\n' +
+    ' }\n';
+var projectionTextUrl = 'data:text/plain;base64,' + window.btoa(projectionText);
+
+if (Cesium.FeatureDetection.isInternetExplorer()) {
+    projectionTextUrl = '../../SampleData/SampleProjection.txt';
+}
+
+var customProjection = new Cesium.CustomProjection(projectionTextUrl, 'sample projection');
+customProjection.readyPromise
+    .then(function(projection) {
+
+    var viewer = new Cesium.Viewer('cesiumContainer', {
+        sceneMode : Cesium.SceneMode.COLUMBUS_VIEW,
+        mapProjection : projection
+    });
+
+    var pointEntities = [];
+    function addPoint(longitude, latitude) {
+        pointEntities.push(viewer.entities.add({
+            position : Cesium.Cartesian3.fromDegrees(longitude, latitude),
+            point : {
+                pixelSize : 5,
+                color : Cesium.Color.PURPLE,
+                disableDepthTestDistance : Number.POSITIVE_INFINITY
+            },
+            id : 'longitude: ' + longitude + ' latitude: ' + latitude
+        }));
+    }
+
+    for (var longitude = -175; longitude < 180; longitude += 10) {
+        for (var latitude = -85; latitude < 90; latitude += 10) {
+            addPoint(longitude, latitude);
+        }
+    }
+
+    Sandcastle.addToolbarButton('Show/Hide Points', function() {
+        for (var i = 0; i < pointEntities.length; i++) {
+            pointEntities[i].show = !pointEntities[i].show;
+        }
+    });
+
+}).otherwise(function(e) {
+    console.log(e);
+});
+
+//Sandcastle_End
+    Sandcastle.finishedLoading();
+}
+if (typeof Cesium !== "undefined") {
+    startup(Cesium);
+} else if (typeof require === "function") {
+    require(["Cesium"], startup);
+}
+</script>
+</body>
+</html>

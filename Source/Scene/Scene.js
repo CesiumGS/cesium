@@ -24,6 +24,7 @@ define([
         '../Core/GeometryPipeline',
         '../Core/Intersect',
         '../Core/JulianDate',
+        '../Core/MapProjection',
         '../Core/Math',
         '../Core/Matrix4',
         '../Core/mergeSort',
@@ -35,6 +36,7 @@ define([
         '../Core/PixelFormat',
         '../Core/Ray',
         '../Core/RequestScheduler',
+        '../Core/SerializedMapProjection',
         '../Core/ShowGeometryInstanceAttribute',
         '../Core/TaskProcessor',
         '../Core/Transforms',
@@ -103,6 +105,7 @@ define([
         GeometryPipeline,
         Intersect,
         JulianDate,
+        MapProjection,
         CesiumMath,
         Matrix4,
         mergeSort,
@@ -114,6 +117,7 @@ define([
         PixelFormat,
         Ray,
         RequestScheduler,
+        SerializedMapProjection,
         ShowGeometryInstanceAttribute,
         TaskProcessor,
         Transforms,
@@ -219,7 +223,7 @@ define([
      * @param {Boolean} [options.scene3DOnly=false] If true, optimizes memory use and performance for 3D mode but disables the ability to use 2D or Columbus View.
      * @param {Number} [options.terrainExaggeration=1.0] A scalar used to exaggerate the terrain. Note that terrain exaggeration will not modify any other primitive as they are positioned relative to the ellipsoid.
      * @param {Boolean} [options.shadows=false] Determines if shadows are cast by the sun.
-     * @param {MapMode2D} [options.mapMode2D=MapMode2D.INFINITE_SCROLL] Determines if the 2D map is rotatable or can be scrolled infinitely in the horizontal direction.
+     * @param {MapMode2D} [options.mapMode2D] Determines if the 2D map is rotatable or can be scrolled infinitely in the horizontal direction. MapMode2D.INFINITE_SCROLL is default for scenes using GeographicProjection or WebMercatorProjection.
      * @param {Boolean} [options.requestRenderMode=false] If true, rendering a frame will only occur when needed as determined by changes within the scene. Enabling improves performance of the application, but requires using {@link Scene#requestRender} to render a new frame explicitly in this mode. This will be necessary in many cases after making changes to the scene in other parts of the API. See {@link https://cesium.com/blog/2018/01/24/cesium-scene-rendering-performance/|Improving Performance with Explicit Rendering}.
      * @param {Number} [options.maximumRenderTimeChange=0.0] If requestRenderMode is true, this value defines the maximum change in simulation time allowed before a render is requested. See {@link https://cesium.com/blog/2018/01/24/cesium-scene-rendering-performance/|Improving Performance with Explicit Rendering}.
      *
@@ -415,7 +419,10 @@ define([
 
         this._mode = SceneMode.SCENE3D;
 
-        this._mapProjection = defined(options.mapProjection) ? options.mapProjection : new GeographicProjection();
+        var mapProjection = defined(options.mapProjection) ? options.mapProjection : new GeographicProjection();
+        this._mapProjection = mapProjection;
+        this._serializedMapProjection = new SerializedMapProjection(mapProjection);
+        this._maxCoord2D = MapProjection.approximateMaximumCoordinate(mapProjection);
 
         /**
          * The current morph transition time between 2D/Columbus View and 3D,
@@ -680,7 +687,7 @@ define([
         this._debugVolume = undefined;
 
         this._screenSpaceCameraController = new ScreenSpaceCameraController(this);
-        this._mapMode2D = defaultValue(options.mapMode2D, MapMode2D.INFINITE_SCROLL);
+        this._mapMode2D = defaultValue(options.mapMode2D, mapProjection.isNormalCylindrical ? MapMode2D.INFINITE_SCROLL : MapMode2D.ROTATE);
 
         // Keeps track of the state of a frame. FrameState is the state across
         // the primitives of the scene. This state is for internally keeping track
@@ -1590,6 +1597,7 @@ define([
         frameState.mode = scene._mode;
         frameState.morphTime = scene.morphTime;
         frameState.mapProjection = scene.mapProjection;
+        frameState.serializedMapProjection = scene._serializedMapProjection;
         frameState.camera = camera;
         frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.positionWC, camera.directionWC, camera.upWC);
         frameState.occluder = getOccluder(scene);
@@ -2502,7 +2510,6 @@ define([
         Camera.clone(savedCamera, camera);
     }
 
-    var scratch2DViewportCartographic = new Cartographic(Math.PI, CesiumMath.PI_OVER_TWO);
     var scratch2DViewportMaxCoord = new Cartesian3();
     var scratch2DViewportSavedPosition = new Cartesian3();
     var scratch2DViewportTransform = new Matrix4();
@@ -2520,11 +2527,9 @@ define([
         var viewport = BoundingRectangle.clone(originalViewport, scratch2DViewport);
         passState.viewport = viewport;
 
-        var maxCartographic = scratch2DViewportCartographic;
         var maxCoord = scratch2DViewportMaxCoord;
 
-        var projection = scene.mapProjection;
-        projection.project(maxCartographic, maxCoord);
+        Cartesian3.clone(scene._maxCoord2D, maxCoord);
 
         var position = Cartesian3.clone(camera.position, scratch2DViewportSavedPosition);
         var transform = Matrix4.clone(camera.transform, scratch2DViewportCameraTransform);

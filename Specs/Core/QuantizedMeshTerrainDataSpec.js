@@ -2,8 +2,10 @@ defineSuite([
         'Core/QuantizedMeshTerrainData',
         'Core/BoundingSphere',
         'Core/Cartesian3',
+        'Core/GeographicProjection',
         'Core/GeographicTilingScheme',
         'Core/Math',
+        'Core/SerializedMapProjection',
         'Core/TerrainData',
         'Core/TerrainMesh',
         'ThirdParty/when'
@@ -11,8 +13,10 @@ defineSuite([
         QuantizedMeshTerrainData,
         BoundingSphere,
         Cartesian3,
+        GeographicProjection,
         GeographicTilingScheme,
         CesiumMath,
+        SerializedMapProjection,
         TerrainData,
         TerrainMesh,
         when) {
@@ -23,6 +27,8 @@ defineSuite([
      });
 
      describe('upsample', function() {
+        var serializedMapProjection = new SerializedMapProjection(new GeographicProjection());
+
          function findVertexWithCoordinates(uBuffer, vBuffer, u, v) {
              u *= 32767;
              u |= 0;
@@ -92,7 +98,7 @@ defineSuite([
 
              var tilingScheme = new GeographicTilingScheme();
 
-             return when(data.createMesh(tilingScheme, 0, 0, 0, 1)).then(function() {
+             return when(data.createMesh(tilingScheme, 0, 0, 0, serializedMapProjection, 1)).then(function() {
                  var swPromise = data.upsample(tilingScheme, 0, 0, 0, 0, 0, 1);
                  var sePromise = data.upsample(tilingScheme, 0, 0, 0, 1, 0, 1);
                  var nwPromise = data.upsample(tilingScheme, 0, 0, 0, 0, 1, 1);
@@ -171,7 +177,7 @@ defineSuite([
 
              var tilingScheme = new GeographicTilingScheme();
 
-             return when(data.createMesh(tilingScheme, 0, 0, 0, 1)).then(function() {
+             return when(data.createMesh(tilingScheme, 0, 0, 0, serializedMapProjection, 1)).then(function() {
                  var swPromise = data.upsample(tilingScheme, 0, 0, 0, 0, 0, 1);
                  var sePromise = data.upsample(tilingScheme, 0, 0, 0, 1, 0, 1);
                  var nwPromise = data.upsample(tilingScheme, 0, 0, 0, 0, 1, 1);
@@ -228,7 +234,7 @@ defineSuite([
              });
 
              var tilingScheme = new GeographicTilingScheme();
-             return when(data.createMesh(tilingScheme, 0, 0, 0, 1)).then(function() {
+             return when(data.createMesh(tilingScheme, 0, 0, 0, serializedMapProjection, 1)).then(function() {
                  return data.upsample(tilingScheme, 0, 0, 0, 0, 0, 1);
              }).then(function(upsampled) {
                  var uBuffer = upsampled._uValues;
@@ -302,7 +308,7 @@ defineSuite([
              });
 
              var tilingScheme = new GeographicTilingScheme();
-             return when(data.createMesh(tilingScheme, 0, 0, 0, 1)).then(function() {
+             return when(data.createMesh(tilingScheme, 0, 0, 0, serializedMapProjection, 1)).then(function() {
                  var nwPromise = data.upsample(tilingScheme, 0, 0, 0, 0, 0, 1);
                  var nePromise = data.upsample(tilingScheme, 0, 0, 0, 1, 0, 1);
                  return when.join(nwPromise, nePromise);
@@ -362,6 +368,7 @@ defineSuite([
      describe('createMesh', function() {
          var data;
          var tilingScheme;
+         var serializedMapProjection = new SerializedMapProjection(new GeographicProjection());
 
          beforeEach(function() {
              tilingScheme = new GeographicTilingScheme();
@@ -396,30 +403,36 @@ defineSuite([
 
          it('requires tilingScheme', function() {
              expect(function() {
-                 data.createMesh(undefined, 0, 0, 0);
+                 data.createMesh(undefined, 0, 0, 0, serializedMapProjection);
              }).toThrowDeveloperError();
          });
 
          it('requires x', function() {
              expect(function() {
-                 data.createMesh(tilingScheme, undefined, 0, 0);
+                 data.createMesh(tilingScheme, undefined, 0, 0, serializedMapProjection);
              }).toThrowDeveloperError();
          });
 
          it('requires y', function() {
              expect(function() {
-                 data.createMesh(tilingScheme, 0, undefined, 0);
+                 data.createMesh(tilingScheme, 0, undefined, 0, serializedMapProjection);
              }).toThrowDeveloperError();
          });
 
          it('requires level', function() {
              expect(function() {
-                 data.createMesh(tilingScheme, 0, 0, undefined);
+                 data.createMesh(tilingScheme, 0, 0, undefined, serializedMapProjection);
              }).toThrowDeveloperError();
          });
 
+         it('requires serializedMapProjection', function() {
+            expect(function() {
+                data.createMesh(tilingScheme, 0, 0, 0, undefined);
+            }).toThrowDeveloperError();
+        });
+
          it('creates specified vertices plus skirt vertices', function() {
-             return data.createMesh(tilingScheme, 0, 0, 0).then(function(mesh) {
+             return data.createMesh(tilingScheme, 0, 0, 0, serializedMapProjection).then(function(mesh) {
                  expect(mesh).toBeInstanceOf(TerrainMesh);
                  expect(mesh.vertices.length).toBe(12 * mesh.encoding.getStride()); // 4 regular vertices, 8 skirt vertices.
                  expect(mesh.indices.length).toBe(10 * 3); // 2 regular triangles, 8 skirt triangles.
@@ -430,7 +443,7 @@ defineSuite([
          });
 
          it('exaggerates mesh', function() {
-             return data.createMesh(tilingScheme, 0, 0, 0, 2).then(function(mesh) {
+             return data.createMesh(tilingScheme, 0, 0, 0, serializedMapProjection, 2).then(function(mesh) {
                  expect(mesh).toBeInstanceOf(TerrainMesh);
                  expect(mesh.vertices.length).toBe(12 * mesh.encoding.getStride()); // 4 regular vertices, 8 skirt vertices.
                  expect(mesh.indices.length).toBe(10 * 3); // 2 regular triangles, 8 skirt triangles.
@@ -473,7 +486,7 @@ defineSuite([
                  childTileMask : 15
              });
 
-             return data.createMesh(tilingScheme, 0, 0, 0).then(function(mesh) {
+             return data.createMesh(tilingScheme, 0, 0, 0, serializedMapProjection).then(function(mesh) {
                  expect(mesh).toBeInstanceOf(TerrainMesh);
                  expect(mesh.indices.BYTES_PER_ELEMENT).toBe(4);
              });

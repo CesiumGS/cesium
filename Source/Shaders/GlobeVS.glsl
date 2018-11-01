@@ -6,6 +6,12 @@ attribute vec4 position3DAndHeight;
 attribute vec4 textureCoordAndEncodedNormals;
 #endif
 
+#ifdef POSITIONS_2D
+attribute vec3 position2D;
+
+uniform vec3 u_center2D;
+#endif
+
 uniform vec3 u_center3D;
 uniform mat4 u_modifiedModelView;
 uniform mat4 u_modifiedModelViewProjection;
@@ -72,9 +78,13 @@ float get2DGeographicYPositionFraction(vec2 textureCoordinates)
 
 vec4 getPositionPlanarEarth(vec3 position, float height, vec2 textureCoordinates)
 {
+#ifdef POSITIONS_2D
+    return u_modifiedModelViewProjection * vec4(position2D.zxy, 1.0);
+#else
     float yPositionFraction = get2DYPositionFraction(textureCoordinates);
     vec4 rtcPosition2D = vec4(height, mix(u_tileRectangle.st, u_tileRectangle.pq, vec2(textureCoordinates.x, yPositionFraction)), 1.0);
     return u_modifiedModelViewProjection * rtcPosition2D;
+#endif
 }
 
 vec4 getPosition2DMode(vec3 position, float height, vec2 textureCoordinates)
@@ -93,7 +103,13 @@ vec4 getPositionMorphingMode(vec3 position, float height, vec2 textureCoordinate
     // This is unlikely to be noticeable, though.
     vec3 position3DWC = position + u_center3D;
     float yPositionFraction = get2DYPositionFraction(textureCoordinates);
+
+#ifdef POSITIONS_2D
+    vec4 position2DWC = vec4(position2D.zxy + u_center2D.zxy, 1.0);
+#else
     vec4 position2DWC = vec4(height, mix(u_tileRectangle.st, u_tileRectangle.pq, vec2(textureCoordinates.x, yPositionFraction)), 1.0);
+#endif
+
     vec4 morphPosition = czm_columbusViewMorph(position2DWC, vec4(position3DWC, 1.0), czm_morphTime);
     return czm_modelViewProjection * morphPosition;
 }

@@ -108,6 +108,13 @@ define([
             vertexLogDepthDefine = 'DISABLE_GL_POSITION_LOG_DEPTH';
         }
 
+        var positions2d = 0;
+        var positions2dDefine = '';
+        if (!frameState.mapProjection.isNormalCylindrical) {
+            positions2d = 1;
+            positions2dDefine = 'POSITIONS_2D';
+        }
+
         var cartographicLimitRectangleFlag = 0;
         var cartographicLimitRectangleDefine = '';
         if (clippedByBoundaries) {
@@ -144,7 +151,8 @@ define([
                     (vertexLogDepth << 19) |
                     (cartographicLimitRectangleFlag << 20) |
                     (imageryCutoutFlag << 21) |
-                    (colorCorrect << 22);
+                    (colorCorrect << 22) |
+                    (positions2d << 23);
 
         var currentClippingShaderState = 0;
         if (defined(clippingPlanes) && clippingPlanes.length > 0) {
@@ -176,7 +184,7 @@ define([
                 fs.sources.unshift(getClippingFunction(clippingPlanes, frameState.context)); // Need to go before GlobeFS
             }
 
-            vs.defines.push(quantizationDefine, vertexLogDepthDefine);
+            vs.defines.push(quantizationDefine, vertexLogDepthDefine, positions2dDefine);
             fs.defines.push('TEXTURE_UNITS ' + numberOfDayTextures, cartographicLimitRectangleDefine, imageryCutoutDefine);
 
             if (applyBrightness) {

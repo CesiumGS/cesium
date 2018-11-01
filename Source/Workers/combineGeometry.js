@@ -7,9 +7,11 @@ define([
     'use strict';
 
     function combineGeometry(packedParameters, transferableObjects) {
-        var parameters = PrimitivePipeline.unpackCombineGeometryParameters(packedParameters);
-        var results = PrimitivePipeline.combineGeometry(parameters);
-        return PrimitivePipeline.packCombineGeometryResults(results, transferableObjects);
+        return PrimitivePipeline.unpackCombineGeometryParameters(packedParameters)
+            .then(function(parameters) {
+                var results = PrimitivePipeline.combineGeometry(parameters);
+                return PrimitivePipeline.packCombineGeometryResults(results, transferableObjects);
+            });
     }
 
     return createTaskProcessorWorker(combineGeometry);
