@@ -795,7 +795,7 @@ define([
         va = va.destroy();
 
         return {
-            color : rgba, 
+            color : rgba,
             clearColor : clearColor
         };
     }
@@ -803,12 +803,6 @@ define([
     function expectContextToRender(actual, expected, expectEqual) {
         var options = actual;
         var context = options.context;
-        var vs = options.vertexShader;
-        var fs = options.fragmentShader;
-        var sp = options.shaderProgram;
-        var uniformMap = options.uniformMap;
-        var modelMatrix = options.modelMatrix;
-        var depth = defaultValue(options.depth, 0.0);
         var clear = defaultValue(options.clear, true);
         var epsilon = defaultValue(options.epsilon, 0);
 
