@@ -15,7 +15,8 @@ define([
      *
      * @alias Event
      * @constructor
-     *
+     * @namespace
+     * @exports Event
      * @example
      * MyObject.prototype.myListener = function(arg1, arg2) {
      *     this.myArg1Copy = arg1;
@@ -38,7 +39,6 @@ define([
     defineProperties(Event.prototype, {
         /**
          * The number of listeners currently subscribed to the event.
-         * @memberof Event.prototype
          * @type {Number}
          * @readonly
          */
