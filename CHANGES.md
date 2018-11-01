@@ -1,6 +1,11 @@
 Change Log
 ==========
 
+### 1.52 - 2018-12-03
+
+##### Additions :tada:
+* Added `Scene.invertClassificationSupported` for checking if invert classification is supported.
+
 ### 1.51 - 2018-11-01
 
 ##### Additions :tada:
