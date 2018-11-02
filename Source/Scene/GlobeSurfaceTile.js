@@ -83,12 +83,12 @@ define([
 
         this.surfaceShader = undefined;
         this.isClipped = true;
+        this.clippedByBoundaries = false;
 
         /**
-         * Only for use with custom projections.
+         * Only for use with Proj4 and custom projections.
          */
         this.center2D = new Cartesian3();
-        this.clippedByBoundaries = false;
     }
 
     defineProperties(GlobeSurfaceTile.prototype, {

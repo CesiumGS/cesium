@@ -9,6 +9,7 @@ define([
     '../Core/GeometryOffsetAttribute',
     '../Core/Iso8601',
     '../Core/oneTimeWarning',
+    '../Scene/GroundPrimitive',
     '../Scene/HeightReference',
     './CallbackProperty',
     './ConstantProperty',
@@ -26,6 +27,7 @@ define([
     GeometryOffsetAttribute,
     Iso8601,
     oneTimeWarning,
+    GroundPrimitive,
     HeightReference,
     CallbackProperty,
     ConstantProperty,
@@ -85,6 +87,16 @@ define([
         }
     });
 
+    GroundGeometryUpdater.prototype._isOnTerrain = function(entity, geometry) {
+        return this._fillEnabled && !defined(geometry.height) && !defined(geometry.extrudedHeight) && GroundPrimitive.isSupported(this._scene);
+    };
+
+    GroundGeometryUpdater.prototype._getIsClosed = function(options) {
+        var height = options.height;
+        var extrudedHeight = options.extrudedHeight;
+        return height === 0 || (defined(extrudedHeight) && extrudedHeight !== height);
+    };
+
     GroundGeometryUpdater.prototype._computeCenter = DeveloperError.throwInstantiationError;
 
     GroundGeometryUpdater.prototype._onEntityPropertyChanged = function(entity, propertyName, newValue, oldValue) {
@@ -120,10 +132,19 @@ define([
     /**
      * @private
      */
-    GroundGeometryUpdater.getGeometryHeight = function(heightProperty, heightReferenceProperty, time) {
-        var heightReference = Property.getValueOrDefault(heightReferenceProperty, time, HeightReference.NONE);
+    GroundGeometryUpdater.getGeometryHeight = function(height, heightReference) {
+        //>>includeStart('debug', pragmas.debug);
+        Check.defined('heightReference', heightReference);
+        //>>includeEnd('debug');
+        if (!defined(height)) {
+            if (heightReference !== HeightReference.NONE) {
+                oneTimeWarning(oneTimeWarning.geometryHeightReference);
+            }
+            return;
+        }
+
         if (heightReference !== HeightReference.CLAMP_TO_GROUND) {
-            return Property.getValueOrUndefined(heightProperty, time);
+            return height;
         }
         return 0.0;
     };
@@ -131,10 +152,18 @@ define([
     /**
      * @private
      */
-    GroundGeometryUpdater.getGeometryExtrudedHeight = function(extrudedHeightProperty, extrudedHeightReferenceProperty, time) {
-        var heightReference = Property.getValueOrDefault(extrudedHeightReferenceProperty, time, HeightReference.NONE);
-        if (heightReference !== HeightReference.CLAMP_TO_GROUND) {
-            return Property.getValueOrUndefined(extrudedHeightProperty, time);
+    GroundGeometryUpdater.getGeometryExtrudedHeight = function(extrudedHeight, extrudedHeightReference) {
+        //>>includeStart('debug', pragmas.debug);
+        Check.defined('extrudedHeightReference', extrudedHeightReference);
+        //>>includeEnd('debug');
+        if (!defined(extrudedHeight)) {
+            if (extrudedHeightReference !== HeightReference.NONE) {
+                oneTimeWarning(oneTimeWarning.geometryExtrudedHeightReference);
+            }
+            return;
+        }
+        if (extrudedHeightReference !== HeightReference.CLAMP_TO_GROUND) {
+            return extrudedHeight;
         }
 
         return GroundGeometryUpdater.CLAMP_TO_GROUND;
@@ -148,10 +177,13 @@ define([
     /**
      * @private
      */
-    GroundGeometryUpdater.computeGeometryOffsetAttribute = function(heightReferenceProperty, extrudedHeightReferenceProperty, time) {
-        var heightReference = Property.getValueOrDefault(heightReferenceProperty, time, HeightReference.NONE);
-        var extrudedHeightReference = Property.getValueOrDefault(extrudedHeightReferenceProperty, time, HeightReference.NONE);
-
+    GroundGeometryUpdater.computeGeometryOffsetAttribute = function(height, heightReference, extrudedHeight, extrudedHeightReference) {
+        if (!defined(height) || !defined(heightReference)) {
+            heightReference = HeightReference.NONE;
+        }
+        if (!defined(extrudedHeight) || !defined(extrudedHeightReference)) {
+            extrudedHeightReference = HeightReference.NONE;
+        }
         var n = 0;
         if (heightReference !== HeightReference.NONE) {
             n++;

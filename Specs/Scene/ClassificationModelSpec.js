@@ -20,7 +20,9 @@ defineSuite([
         'Scene/Primitive',
         'Specs/createScene',
         'Specs/pollToPromise',
-        'ThirdParty/GltfPipeline/parseBinaryGltf'
+        'ThirdParty/GltfPipeline/addDefaults',
+        'ThirdParty/GltfPipeline/parseGlb',
+        'ThirdParty/GltfPipeline/updateVersion'
     ], function(
         ClassificationModel,
         Cartesian3,
@@ -43,7 +45,9 @@ defineSuite([
         Primitive,
         createScene,
         pollToPromise,
-        parseBinaryGltf) {
+        addDefaults,
+        parseGlb,
+        updateVersion) {
     'use strict';
 
     var scene;
@@ -57,6 +61,16 @@ defineSuite([
         // One feature is located at the center, point the camera there
         var center = Cartesian3.fromRadians(longitude, latitude);
         scene.camera.lookAt(center, new HeadingPitchRange(0.0, -1.57, 15.0));
+    }
+
+    function loadModel(model) {
+        return Resource.fetchArrayBuffer(model).then(function(arrayBuffer) {
+            var gltf = new Uint8Array(arrayBuffer);
+            gltf = parseGlb(gltf);
+            updateVersion(gltf);
+            addDefaults(gltf);
+            return gltf;
+        });
     }
 
     beforeAll(function() {
@@ -186,22 +200,18 @@ defineSuite([
     });
 
     it('throws with invalid number of nodes', function() {
-        return Resource.fetchArrayBuffer(batchedModel).then(function(arrayBuffer) {
-            var gltf = new Uint8Array(arrayBuffer);
-            gltf = parseBinaryGltf(gltf);
+        return loadModel(batchedModel).then(function(gltf) {
             gltf.nodes.push({});
             expect(function() {
                 return new ClassificationModel({
-                    gltf : gltf
+                    gltf: gltf
                 });
             }).toThrowRuntimeError();
         });
     });
 
     it('throws with invalid number of meshes', function() {
-        return Resource.fetchArrayBuffer(batchedModel).then(function(arrayBuffer) {
-            var gltf = new Uint8Array(arrayBuffer);
-            gltf = parseBinaryGltf(gltf);
+        return loadModel(batchedModel).then(function(gltf) {
             gltf.meshes.push({});
             expect(function() {
                 return new ClassificationModel({
@@ -212,9 +222,7 @@ defineSuite([
     });
 
     it('throws with invalid number of primitives', function() {
-        return Resource.fetchArrayBuffer(batchedModel).then(function(arrayBuffer) {
-            var gltf = new Uint8Array(arrayBuffer);
-            gltf = parseBinaryGltf(gltf);
+        return loadModel(batchedModel).then(function(gltf) {
             gltf.meshes[0].primitives.push({});
             expect(function() {
                 return new ClassificationModel({
@@ -225,9 +233,7 @@ defineSuite([
     });
 
     it('throws with position semantic', function() {
-        return Resource.fetchArrayBuffer(batchedModel).then(function(arrayBuffer) {
-            var gltf = new Uint8Array(arrayBuffer);
-            gltf = parseBinaryGltf(gltf);
+        return loadModel(batchedModel).then(function(gltf) {
             gltf.meshes[0].primitives[0].attributes.POSITION = undefined;
             expect(function() {
                 return new ClassificationModel({
@@ -238,9 +244,7 @@ defineSuite([
     });
 
     it('throws with batch id semantic', function() {
-        return Resource.fetchArrayBuffer(batchedModel).then(function(arrayBuffer) {
-            var gltf = new Uint8Array(arrayBuffer);
-            gltf = parseBinaryGltf(gltf);
+        return loadModel(batchedModel).then(function(gltf) {
             gltf.meshes[0].primitives[0].attributes._BATCHID = undefined;
             expect(function() {
                 return new ClassificationModel({

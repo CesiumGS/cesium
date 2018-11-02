@@ -16,6 +16,7 @@ define([
         '../Core/HeadingPitchRoll',
         '../Core/Intersect',
         '../Core/IntersectionTests',
+        '../Core/MapProjection',
         '../Core/Math',
         '../Core/Matrix3',
         '../Core/Matrix4',
@@ -47,6 +48,7 @@ define([
         HeadingPitchRoll,
         Intersect,
         IntersectionTests,
+        MapProjection,
         CesiumMath,
         Matrix3,
         Matrix4,
@@ -61,8 +63,6 @@ define([
         MapMode2D,
         SceneMode) {
     'use strict';
-
-    var maxCoordCartographicScratch = new Cartographic();
 
     /**
      * The camera is defined by a position, orientation, and view frustum.
@@ -224,32 +224,7 @@ define([
         this._modeChanged = true;
         var projection = scene.mapProjection;
         this._projection = projection;
-
-        // Check the four corners of the projection and the four edge-centers.
-        var maxCoord = new Cartesian3();
-        var cartographicExtreme = maxCoordCartographicScratch;
-
-        var halfMapWidth = 0.0;
-        var halfMapHeight = 0.0;
-
-        for (var x = -1; x < 2; x++) {
-            for (var y = -1; y < 2; y++) {
-                if (x === 0 && y === 0) {
-                    continue;
-                }
-
-                cartographicExtreme.longitude = CesiumMath.PI * x;
-                cartographicExtreme.latitude = CesiumMath.PI_OVER_TWO * y;
-                projection.project(cartographicExtreme, maxCoord);
-
-                halfMapWidth = Math.max(halfMapWidth, Math.abs(maxCoord.x));
-                halfMapHeight = Math.max(halfMapHeight, Math.abs(maxCoord.y));
-            }
-        }
-        maxCoord.x = halfMapWidth;
-        maxCoord.y = halfMapHeight;
-
-        this._maxCoord = maxCoord;
+        this._maxCoord = MapProjection.approximateMaximumCoordinate(projection);
         this._max2Dfrustum = undefined;
         this._suspendTerrainAdjustment = false;
 
@@ -826,8 +801,12 @@ define([
          */
         heading : {
             get : function() {
-                if (this._mode !== SceneMode.MORPHING) {
-                    var ellipsoid = this._projection.ellipsoid;
+                var projection = this._projection;
+                if (this._mode === SceneMode.SCENE2D && !projection.isNormalCylindrical) {
+                    updateMembers(this);
+                    return approximateHeading2D(projection, this._position, this.up);
+                } else if (this._mode !== SceneMode.MORPHING) {
+                    var ellipsoid = projection.ellipsoid;
 
                     var oldTransform = Matrix4.clone(this._transform, scratchHPRMatrix1);
                     var transform = Transforms.eastNorthUpToFixedFrame(this.positionWC, ellipsoid, scratchHPRMatrix2);
@@ -1122,10 +1101,10 @@ define([
     function setView2D(camera, position, hpr, convert) {
         var currentTransform = Matrix4.clone(camera.transform, scratchSetViewTransform1);
         camera._setTransform(Matrix4.IDENTITY);
+        var projection = camera._projection;
 
         if (!Cartesian3.equals(position, camera.positionWC)) {
             if (convert) {
-                var projection = camera._projection;
                 var cartographic = projection.ellipsoid.cartesianToCartographic(position, scratchSetViewCartographic);
                 position = projection.project(cartographic, scratchSetViewCartesian);
             }
@@ -1145,18 +1124,28 @@ define([
             }
         }
 
-        if (camera._scene.mapMode2D === MapMode2D.ROTATE) {
-            hpr.heading = hpr.heading  - CesiumMath.PI_OVER_TWO;
-            hpr.pitch = -CesiumMath.PI_OVER_TWO;
-            hpr.roll =  0.0;
-            var rotQuat = Quaternion.fromHeadingPitchRoll(hpr, scratchSetViewQuaternion);
-            var rotMat = Matrix3.fromQuaternion(rotQuat, scratchSetViewMatrix3);
-
-            Matrix3.getColumn(rotMat, 2, camera.up);
-            Cartesian3.cross(camera.direction, camera.up, camera.right);
-        }
-
         camera._setTransform(currentTransform);
+
+        if (camera._scene.mapMode2D === MapMode2D.ROTATE) {
+            // If the projection is normal-cylindrical,
+            // assume that heading is a similar 2D vector anywhere in 2D space.
+            if (projection.isNormalCylindrical) {
+                hpr.heading = hpr.heading - CesiumMath.PI_OVER_TWO;
+                hpr.pitch = -CesiumMath.PI_OVER_TWO;
+                hpr.roll = 0.0;
+                var rotQuat = Quaternion.fromHeadingPitchRoll(hpr, scratchSetViewQuaternion);
+                var rotMat = Matrix3.fromQuaternion(rotQuat, scratchSetViewMatrix3);
+
+                Matrix3.getColumn(rotMat, 2, camera.up);
+                Cartesian3.cross(camera.direction, camera.up, camera.right);
+            } else {
+                // Otherwise, twist camera at its new position according to new heading
+                var currentHeading = camera.heading;
+                if (currentHeading !== hpr.heading) {
+                    camera.twistRight(hpr.heading - currentHeading);
+                }
+            }
+        }
     }
 
     var scratchToHPRDirection = new Cartesian3();
@@ -1183,6 +1172,39 @@ define([
         result.roll = getRoll(direction, up, right);
 
         return result;
+    }
+
+    var heightlessPositionScratch = new Cartesian3();
+    var heightlessEndpointScratch = new Cartesian3();
+    var cartographicPositionScratch = new Cartographic();
+    var cartographicEndpointScratch = new Cartographic();
+    var fixedFramePositionScratch = new Cartesian3();
+    var fixedFrameEndpointScratch = new Cartesian3();
+    var fixedFrameDirectionScratch = new Cartesian3();
+    var fixedFrameToEnuScratch = new Matrix4();
+    var enuDirectionScratch = new Cartesian3();
+    function approximateHeading2D(projection, position, direction) {
+        var heightlessPosition = heightlessPositionScratch;
+        heightlessPosition.x = position.x;
+        heightlessPosition.y = position.y;
+        var heightlessEndpoint = heightlessEndpointScratch;
+        heightlessEndpoint.x = position.x + direction.x;
+        heightlessEndpoint.y = position.y + direction.y;
+
+        var cartographicPosition = projection.unproject(heightlessPosition, cartographicPositionScratch);
+        var cartographicEndpoint = projection.unproject(heightlessEndpoint, cartographicEndpointScratch);
+
+        var ellipsoid = projection.ellipsoid;
+        var fixedFramePosition = ellipsoid.cartographicToCartesian(cartographicPosition, fixedFramePositionScratch);
+        var fixedFrameEndpoint = ellipsoid.cartographicToCartesian(cartographicEndpoint, fixedFrameEndpointScratch);
+        var fixedFrameDirection = Cartesian3.subtract(fixedFrameEndpoint, fixedFramePosition, fixedFrameDirectionScratch);
+        var enuToFixedFrame = Transforms.eastNorthUpToFixedFrame(fixedFramePosition, ellipsoid, fixedFrameToEnuScratch);
+        var fixedFrameToEnu = Matrix4.inverse(enuToFixedFrame, fixedFrameToEnuScratch);
+
+        var enuDirection = Matrix4.multiplyByPointAsVector(fixedFrameToEnu, fixedFrameDirection, enuDirectionScratch);
+
+        var heading = Math.atan2(enuDirection.y, enuDirection.x) - CesiumMath.PI_OVER_TWO;
+        return CesiumMath.TWO_PI - CesiumMath.zeroToTwoPi(heading);
     }
 
     var scratchSetViewOptions = {
@@ -2772,7 +2794,7 @@ define([
      *
      * @param {Object} options Object with the following properties:
      * @param {Cartesian3|Rectangle} options.destination The final position of the camera in WGS84 (world) coordinates or a rectangle that would be visible from a top-down view.
-     * @param {Object} [options.orientation] An object that contains either direction and up properties or heading, pith and roll properties. By default, the direction will point
+     * @param {Object} [options.orientation] An object that contains either direction and up properties or heading, pitch and roll properties. By default, the direction will point
      * towards the center of the frame in 3D and in the negative z direction in Columbus view. The up direction will point towards local north in 3D and in the positive
      * y direction in Columbus view.  Orientation is not used in 2D when in infinite scrolling mode.
      * @param {Number} [options.duration] The duration of the flight in seconds. If omitted, Cesium attempts to calculate an ideal duration based on the distance to be traveled by the flight.

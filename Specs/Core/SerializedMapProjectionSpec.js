@@ -4,14 +4,16 @@ defineSuite([
         'Core/Ellipsoid',
         'Core/GeographicProjection',
         'Core/Proj4Projection',
-        'Core/WebMercatorProjection'
+        'Core/WebMercatorProjection',
+        'ThirdParty/when'
     ], function(
         SerializedMapProjection,
         CustomProjection,
         Ellipsoid,
         GeographicProjection,
         Proj4Projection,
-        WebMercatorProjection) {
+        WebMercatorProjection,
+        when) {
     'use strict';
 
     it('serializes and de-serializes WebMercatorProjection', function() {

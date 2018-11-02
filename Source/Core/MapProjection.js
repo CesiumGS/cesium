@@ -1,9 +1,21 @@
 define([
+        './Cartographic',
+        './Cartesian3',
+        './Check',
         './defineProperties',
-        './DeveloperError'
+        './defaultValue',
+        './DeveloperError',
+        './Math',
+        './Rectangle'
     ], function(
+        Cartographic,
+        Cartesian3,
+        Check,
         defineProperties,
-        DeveloperError) {
+        defaultValue,
+        DeveloperError,
+        CesiumMath,
+        Rectangle) {
     'use strict';
 
     /**
@@ -33,8 +45,8 @@ define([
             get : DeveloperError.throwInstantiationError
         },
         /**
-         * Gets whether or not the projection is cylindrical about the equator.
-         * Projections that are cylindrical around the equator (such as Web Mercator and Geographic) do not need
+         * Gets whether or not the projection evenly maps meridians to vertical lines.
+         * Projections that evenly map meridians to vertical lines (such as Web Mercator and Geographic) do not need
          * addition 2D vertex attributes and are more efficient to render.
          *
          * @memberof MapProjection.prototype
@@ -43,7 +55,7 @@ define([
          * @readonly
          * @private
          */
-        isEquatorialCylindrical : {
+        isNormalCylindrical : {
             get : DeveloperError.throwInstantiationError
         }
     });
@@ -78,6 +90,28 @@ define([
      *          created and returned.
      */
     MapProjection.prototype.unproject = DeveloperError.throwInstantiationError;
+
+    var maxcoordRectangleScratch = new Rectangle();
+    /**
+     * Approximates the extents of a map projection in 2D.
+     *
+     * @function
+     *
+     * @param {MapProjection} mapProjection A map projection from cartographic coordinates to 2D space.
+     * @param {Cartesian3} [result] Optional result parameter.
+     * @private
+     */
+    MapProjection.approximateMaximumCoordinate = function(mapProjection, result) {
+        Check.defined('mapProjection', mapProjection);
+
+        var maxCoord = defaultValue(result, new Cartesian3());
+        var projectedExtents = Rectangle.approximateProjectedExtents(Rectangle.MAX_VALUE, mapProjection, maxcoordRectangleScratch);
+
+        maxCoord.x = projectedExtents.width * 0.5;
+        maxCoord.y = projectedExtents.height * 0.5;
+
+        return maxCoord;
+    };
 
     return MapProjection;
 });

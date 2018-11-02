@@ -106,7 +106,8 @@ define([
             var closed = geometryUpdater._getIsClosed(options);
             if (isColorAppearance) {
                 appearance = new PerInstanceColorAppearance({
-                    closed: closed
+                    closed: closed,
+                    flat : !(onTerrain && geometryUpdater._supportsMaterialsforEntitiesOnTerrain)
                 });
             } else {
                 var material = MaterialProperty.getValue(time, fillMaterialProperty, this._material);

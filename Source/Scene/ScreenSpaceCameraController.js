@@ -12,6 +12,7 @@ define([
         '../Core/IntersectionTests',
         '../Core/isArray',
         '../Core/KeyboardEventModifier',
+        '../Core/MapProjection',
         '../Core/Math',
         '../Core/Matrix3',
         '../Core/Matrix4',
@@ -40,6 +41,7 @@ define([
         IntersectionTests,
         isArray,
         KeyboardEventModifier,
+        MapProjection,
         CesiumMath,
         Matrix3,
         Matrix4,
@@ -298,7 +300,7 @@ define([
         this._rotatingZoom = false;
 
         var projection = scene.mapProjection;
-        this._maxCoord = projection.project(new Cartographic(Math.PI, CesiumMath.PI_OVER_TWO));
+        this._maxCoord = MapProjection.approximateMaximumCoordinate(projection);
 
         // Constants, Make any of these public?
         this._zoomFactor = 5.0;
@@ -560,6 +562,9 @@ define([
                         pickedPosition = Cartesian3.fromElements(pickedPosition.y, pickedPosition.z, pickedPosition.x);
                         object._zoomWorldPosition = Cartesian3.clone(pickedPosition, object._zoomWorldPosition);
                     }
+
+                    // Set heading again - in some projections, this may change due to camera.move
+                    orientation.heading = camera.heading;
                 }
             } else if (mode === SceneMode.SCENE3D) {
                 var cameraPositionNormal = Cartesian3.normalize(camera.position, scratchCameraPositionNormal);

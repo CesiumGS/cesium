@@ -572,15 +572,21 @@ defineSuite([
 
         switchViewMode(SceneMode.SCENE3D, new GeographicProjection(Ellipsoid.WGS84));
 
+        var baseColor;
         return updateUntilDone(scene.globe).then(function() {
-            expect(scene).toRender([0, 0, 127, 255]); // default baseColor
+            expect(scene).toRenderAndCall(function(rgba) {
+                baseColor = rgba;
+                expect(rgba).not.toEqual([0, 0, 0, 255]);
+            });
             layer.cutoutRectangle = undefined;
 
             return updateUntilDone(scene.globe);
         })
         .then(function() {
-            expect(scene).notToRender([0, 0, 127, 255]);
-            expect(scene).notToRender([0, 0, 0, 255]);
+            expect(scene).toRenderAndCall(function(rgba) {
+                expect(rgba).not.toEqual(baseColor);
+                expect(rgba).not.toEqual([0, 0, 0, 255]);
+            });
         });
     });
 

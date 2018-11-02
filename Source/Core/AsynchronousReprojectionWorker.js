@@ -74,7 +74,7 @@ define([
 
                 for (var i = 0; i < imagesLength; i++) {
                     var projectedRectangle = projectedRectangles[i] = Rectangle.clone(projectedRectangles[i]);
-                    var unprojected = Rectangle.unproject(projectedRectangle, projections[i]);
+                    var unprojected = Rectangle.approximateCartographicExtents(projectedRectangle, projections[i]);
                     north = Math.max(north, unprojected.north);
                     south = Math.min(south, unprojected.south);
                     east = Math.max(east, unprojected.east);

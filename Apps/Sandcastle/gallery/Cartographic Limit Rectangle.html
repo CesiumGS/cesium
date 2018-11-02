@@ -55,25 +55,21 @@ for (var i = 0; i < 10; i++) {
     }));
 }
 
-Sandcastle.addToolbarButton('Show/Hide Bounds', function() {
+Sandcastle.addToggleButton('Limit Enabled', true, function(checked) {
+    if (checked) {
+        viewer.scene.globe.cartographicLimitRectangle = coffeeBeltRectangle;
+    } else {
+        viewer.scene.globe.cartographicLimitRectangle = Cesium.Rectangle.MAX_VALUE;
+    }
+});
+
+Sandcastle.addToggleButton('Show Bounds', true, function(checked) {
     var rectanglesLength = rectangles.length;
     for (var i = 0; i < rectanglesLength; i++) {
         var rectangleEntity = rectangles[i];
-        rectangleEntity.show = !rectangleEntity.show;
+        rectangleEntity.show = checked;
     }
 });
-
-var limited = true;
-Sandcastle.addToolbarButton('Enable/Disable Limiter', function() {
-    if (limited) {
-        viewer.scene.globe.cartographicLimitRectangle = Cesium.Rectangle.MAX_VALUE;
-        limited = false;
-    } else {
-        viewer.scene.globe.cartographicLimitRectangle = coffeeBeltRectangle;
-        limited = true;
-    }
-});
-
 //Sandcastle_End
     Sandcastle.finishedLoading();
 }

@@ -51,7 +51,7 @@ define([
             }
         },
         /**
-         * Gets whether or not the projection is cylindrical about the equator.
+         * Gets whether or not the projection evenly maps meridians to vertical lines.
          * The Web Mercator projection is cylindrical about the equator.
          *
          * @memberof WebMercatorProjection.prototype
@@ -60,7 +60,7 @@ define([
          * @readonly
          * @private
          */
-        isEquatorialCylindrical : {
+        isNormalCylindrical : {
             get : function() {
                 return true;
             }

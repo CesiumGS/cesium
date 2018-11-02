@@ -66,7 +66,31 @@ define([
         return useWebMercatorProjection ? get2DYPositionFractionMercatorProjection : get2DYPositionFractionGeographicProjection;
     }
 
-    GlobeSurfaceShaderSet.prototype.getShaderProgram = function(frameState, surfaceTile, numberOfDayTextures, applyBrightness, applyContrast, applyHue, applySaturation, applyGamma, applyAlpha, applySplit, showReflectiveOcean, showOceanWaves, enableLighting, hasVertexNormals, useWebMercatorProjection, enableFog, enableClippingPlanes, clippingPlanes, clippedByBoundaries, hasImageryLayerCutout) {
+    GlobeSurfaceShaderSet.prototype.getShaderProgram = function(options) {
+        var frameState = options.frameState;
+        var surfaceTile = options.surfaceTile;
+        var numberOfDayTextures = options.numberOfDayTextures;
+        var applyBrightness = options.applyBrightness;
+        var applyContrast = options.applyContrast;
+        var applyHue = options.applyHue;
+        var applySaturation = options.applySaturation;
+        var applyGamma = options.applyGamma;
+        var applyAlpha = options.applyAlpha;
+        var applySplit = options.applySplit;
+        var showReflectiveOcean = options.showReflectiveOcean;
+        var showOceanWaves = options.showOceanWaves;
+        var enableLighting = options.enableLighting;
+        var showGroundAtmosphere = options.showGroundAtmosphere;
+        var perFragmentGroundAtmosphere = options.perFragmentGroundAtmosphere;
+        var hasVertexNormals = options.hasVertexNormals;
+        var useWebMercatorProjection = options.useWebMercatorProjection;
+        var enableFog = options.enableFog;
+        var enableClippingPlanes = options.enableClippingPlanes;
+        var clippingPlanes = options.clippingPlanes;
+        var clippedByBoundaries = options.clippedByBoundaries;
+        var hasImageryLayerCutout = options.hasImageryLayerCutout;
+        var colorCorrect = options.colorCorrect;
+
         var quantization = 0;
         var quantizationDefine = '';
 
@@ -86,7 +110,7 @@ define([
 
         var positions2d = 0;
         var positions2dDefine = '';
-        if (!frameState.mapProjection.isEquatorialCylindrical) {
+        if (!frameState.mapProjection.isNormalCylindrical) {
             positions2d = 1;
             positions2dDefine = 'POSITIONS_2D';
         }
@@ -116,19 +140,22 @@ define([
                     (showReflectiveOcean << 8) |
                     (showOceanWaves << 9) |
                     (enableLighting << 10) |
-                    (hasVertexNormals << 11) |
-                    (useWebMercatorProjection << 12) |
-                    (enableFog << 13) |
-                    (quantization << 14) |
-                    (applySplit << 15) |
-                    (enableClippingPlanes << 16) |
-                    (vertexLogDepth << 17) |
-                    (positions2d << 18) |
-                    (cartographicLimitRectangleFlag << 19) |
-                    (imageryCutoutFlag << 20);
+                    (showGroundAtmosphere << 11) |
+                    (perFragmentGroundAtmosphere << 12) |
+                    (hasVertexNormals << 13) |
+                    (useWebMercatorProjection << 14) |
+                    (enableFog << 15) |
+                    (quantization << 16) |
+                    (applySplit << 17) |
+                    (enableClippingPlanes << 18) |
+                    (vertexLogDepth << 19) |
+                    (cartographicLimitRectangleFlag << 20) |
+                    (imageryCutoutFlag << 21) |
+                    (colorCorrect << 22) |
+                    (positions2d << 23);
 
         var currentClippingShaderState = 0;
-        if (defined(clippingPlanes)) {
+        if (defined(clippingPlanes) && clippingPlanes.length > 0) {
             currentClippingShaderState = enableClippingPlanes ? clippingPlanes.clippingPlanesState : 0;
         }
         var surfaceShader = surfaceTile.surfaceShader;
@@ -196,6 +223,14 @@ define([
                 }
             }
 
+            if (showGroundAtmosphere) {
+                vs.defines.push('GROUND_ATMOSPHERE');
+                fs.defines.push('GROUND_ATMOSPHERE');
+                if (perFragmentGroundAtmosphere) {
+                    fs.defines.push('PER_FRAGMENT_GROUND_ATMOSPHERE');
+                }
+            }
+
             vs.defines.push('INCLUDE_WEB_MERCATOR_Y');
             fs.defines.push('INCLUDE_WEB_MERCATOR_Y');
 
@@ -210,6 +245,10 @@ define([
 
             if (enableClippingPlanes) {
                 fs.defines.push('ENABLE_CLIPPING_PLANES');
+            }
+
+            if (colorCorrect) {
+                fs.defines.push('COLOR_CORRECT');
             }
 
             var computeDayColor = '\

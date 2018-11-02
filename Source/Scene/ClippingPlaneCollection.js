@@ -55,6 +55,13 @@ define([
     /**
      * Specifies a set of clipping planes. Clipping planes selectively disable rendering in a region on the
      * outside of the specified list of {@link ClippingPlane} objects for a single gltf model, 3D Tileset, or the globe.
+     * <p>
+     * In general the clipping planes' coordinates are relative to the object they're attached to, so a plane with distance set to 0 will clip
+     * through the center of the object.
+     * </p>
+     * <p>
+     * For 3D Tiles, the root tile's transform is used to position the clipping planes. If a transform is not defined, the root tile's {@link Cesium3DTile#boundingSphere} is used instead.
+     * </p>
      *
      * @alias ClippingPlaneCollection
      * @constructor
@@ -63,9 +70,33 @@ define([
      * @param {ClippingPlane[]} [options.planes=[]] An array of {@link ClippingPlane} objects used to selectively disable rendering on the outside of each plane.
      * @param {Boolean} [options.enabled=true] Determines whether the clipping planes are active.
      * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The 4x4 transformation matrix specifying an additional transform relative to the clipping planes original coordinate system.
-     * @param {Boolean} [options.unionClippingRegions=false] If true, a region will be clipped if included in any plane in the collection. Otherwise, the region to be clipped must intersect the regions defined by all planes in this collection.
+     * @param {Boolean} [options.unionClippingRegions=false] If true, a region will be clipped if it is on the outside of any plane in the collection. Otherwise, a region will only be clipped if it is on the outside of every plane.
      * @param {Color} [options.edgeColor=Color.WHITE] The color applied to highlight the edge along which an object is clipped.
      * @param {Number} [options.edgeWidth=0.0] The width, in pixels, of the highlight applied to the edge along which an object is clipped.
+     *
+     * @demo {@link https://cesiumjs.org/Cesium/Build/Apps/Sandcastle/?src=3D%20Tiles%20Clipping%20Planes.html|Clipping 3D Tiles and glTF models.}
+     * @demo {@link https://cesiumjs.org/Cesium/Build/Apps/Sandcastle/?src=Terrain%20Clipping%20Planes.html|Clipping the Globe.}
+     *
+     * @example
+     * // This clipping plane's distance is positive, which means its normal
+     * // is facing the origin. This will clip everything that is behind
+     * // the plane, which is anything with y coordinate < -5.
+     * var clippingPlanes = new Cesium.ClippingPlaneCollection({
+     *     planes : [
+     *         new Cesium.ClippingPlane(new Cesium.Cartesian3(0.0, 1.0, 0.0), 5.0)
+     *     ],
+     * });
+     * // Create an entity and attach the ClippingPlaneCollection to the model.
+     * var entity = viewer.entities.add({
+     *     position : Cesium.Cartesian3.fromDegrees(-123.0744619, 44.0503706, 10000),
+     *     model : {
+     *         uri : 'model.gltf',
+     *         minimumPixelSize : 128,
+     *         maximumScale : 20000,
+     *         clippingPlanes : clippingPlanes
+     *     }
+     * });
+     * viewer.zoomTo(entity);
      */
     function ClippingPlaneCollection(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -168,8 +199,9 @@ define([
         },
 
         /**
-         * If true, a region will be clipped if included in any plane in the collection. Otherwise, the region
-         * to be clipped must intersect the regions defined by all planes in this collection.
+         * If true, a region will be clipped if it is on the outside of any plane in the
+         * collection. Otherwise, a region will only be clipped if it is on the
+         * outside of every plane.
          *
          * @memberof ClippingPlaneCollection.prototype
          * @type {Boolean}
@@ -438,10 +470,8 @@ define([
 
     function computeTextureResolution(pixelsNeeded, result) {
         var maxSize = ContextLimits.maximumTextureSize;
-        var width = Math.min(pixelsNeeded, maxSize);
-        var height = Math.ceil(pixelsNeeded / width);
-        result.x = Math.max(width, 1);
-        result.y = Math.max(height, 1);
+        result.x = Math.min(pixelsNeeded, maxSize);
+        result.y = Math.ceil(pixelsNeeded / result.x);
         return result;
     }
 
@@ -463,7 +493,6 @@ define([
         // In RGBA UNSIGNED_BYTE, A plane is a float in [0, 1) packed to RGBA and an Oct32 quantized normal,
         // so 8 bits or 2 pixels in RGBA.
         var pixelsNeeded = useFloatTexture ? this.length : this.length * 2;
-        var requiredResolution = computeTextureResolution(pixelsNeeded, textureResolutionScratch);
 
         if (defined(clippingPlanesTexture)) {
             var currentPixelCount = clippingPlanesTexture.width * clippingPlanesTexture.height;
@@ -476,10 +505,17 @@ define([
                 pixelsNeeded < 0.25 * currentPixelCount) {
                     clippingPlanesTexture.destroy();
                     clippingPlanesTexture = undefined;
+                    this._clippingPlanesTexture = undefined;
                 }
         }
 
+        // If there are no clipping planes, there's nothing to update.
+        if (this.length === 0) {
+            return;
+        }
+
         if (!defined(clippingPlanesTexture)) {
+            var requiredResolution = computeTextureResolution(pixelsNeeded, textureResolutionScratch);
             // Allocate twice as much space as needed to avoid frequent texture reallocation.
             // Allocate in the Y direction, since texture may be as wide as context texture support.
             requiredResolution.y *= 2;
@@ -540,7 +576,6 @@ define([
             } else {
                 offsetY = Math.floor((dirtyIndex * 2) / clippingPlanesTexture.width);
                 offsetX = Math.floor((dirtyIndex * 2) - offsetY * clippingPlanesTexture.width);
-
                 packPlanesAsUint8(this, dirtyIndex, dirtyIndex + 1);
                 clippingPlanesTexture.copyFrom({
                     width : 2,
@@ -587,7 +622,7 @@ define([
 
         var modelMatrix = this.modelMatrix;
         if (defined(transform)) {
-            modelMatrix = Matrix4.multiply(modelMatrix, transform, scratchMatrix);
+            modelMatrix = Matrix4.multiply(transform, modelMatrix, scratchMatrix);
         }
 
         // If the collection is not set to union the clipping regions, the volume must be outside of all planes to be

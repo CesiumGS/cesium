@@ -276,7 +276,7 @@ define([
 
         projection = defaultValue(projection, defaultProjection);
 
-        if (projection.isEquatorialCylindrical) {
+        if (projection.isNormalCylindrical) {
             Rectangle.southwest(rectangle, fromRectangle2DSouthwest);
             fromRectangle2DSouthwest.height = minimumHeight;
             Rectangle.northeast(rectangle, fromRectangle2DNortheast);

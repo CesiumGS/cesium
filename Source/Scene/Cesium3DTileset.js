@@ -1,4 +1,5 @@
 define([
+        '../Core/ApproximateTerrainHeights',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Cartographic',
@@ -18,6 +19,7 @@ define([
         '../Core/Matrix4',
         '../Core/Resource',
         '../Core/RuntimeError',
+        '../Core/Transforms',
         '../Renderer/ClearCommand',
         '../Renderer/Pass',
         '../ThirdParty/when',
@@ -41,6 +43,7 @@ define([
         './TileBoundingSphere',
         './TileOrientedBoundingBox'
     ], function(
+        ApproximateTerrainHeights,
         Cartesian2,
         Cartesian3,
         Cartographic,
@@ -60,6 +63,7 @@ define([
         Matrix4,
         Resource,
         RuntimeError,
+        Transforms,
         ClearCommand,
         Pass,
         when,
@@ -113,6 +117,8 @@ define([
      * @param {ClassificationType} [options.classificationType] Determines whether terrain, 3D Tiles or both will be classified by this tileset. See {@link Cesium3DTileset#classificationType} for details about restrictions and limitations.
      * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid determining the size and shape of the globe.
      * @param {Object} [options.pointCloudShading] Options for constructing a {@link PointCloudShading} object to control point attenuation based on geometric error and lighting.
+     * @param {Cartesian2} [options.imageBasedLightingFactor=new Cartesian2(1.0, 1.0)] Scales the diffuse and specular image-based lighting from the earth, sky, atmosphere and star skybox.
+     * @param {Cartesian3} [options.lightColor] The color and intensity of the sunlight used to shade models.
      * @param {Boolean} [options.debugFreezeFrame=false] For debugging only. Determines if only the tiles from last frame should be used for rendering.
      * @param {Boolean} [options.debugColorizeTiles=false] For debugging only. When true, assigns a random color to each tile.
      * @param {Boolean} [options.debugWireframe=false] For debugging only. When true, render's each tile's content as a wireframe.
@@ -196,10 +202,11 @@ define([
         this._modelMatrix = defined(options.modelMatrix) ? Matrix4.clone(options.modelMatrix) : Matrix4.clone(Matrix4.IDENTITY);
 
         this._statistics = new Cesium3DTilesetStatistics();
-        this._statisticsLastColor = new Cesium3DTilesetStatistics();
+        this._statisticsLastRender = new Cesium3DTilesetStatistics();
         this._statisticsLastPick = new Cesium3DTilesetStatistics();
 
         this._tilesLoaded = false;
+        this._initialTilesLoaded = false;
 
         this._tileDebugLabels = undefined;
 
@@ -208,6 +215,10 @@ define([
         this._classificationType = options.classificationType;
 
         this._ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
+
+        this._initialClippingPlanesOriginMatrix = Matrix4.IDENTITY; // Computed from the tileset JSON.
+        this._clippingPlanesOriginMatrix = undefined; // Combines the above with any run-time transforms.
+        this._clippingPlanesOriginMatrixDirty = true;
 
         /**
          * Optimization option. Whether the tileset should refine based on a dynamic screen space error. Tiles that are further
@@ -359,6 +370,25 @@ define([
          * @see Cesium3DTileset#tilesLoaded
          */
         this.allTilesLoaded = new Event();
+
+        /**
+         * The event fired to indicate that all tiles that meet the screen space error this frame are loaded. This event
+         * is fired once when all tiles in the initial view are loaded.
+         * <p>
+         * This event is fired at the end of the frame after the scene is rendered.
+         * </p>
+         *
+         * @type {Event}
+         * @default new Event()
+         *
+         * @example
+         * tileset.initialTilesLoaded.addEventListener(function() {
+         *     console.log('Initial tiles are loaded');
+         * });
+         *
+         * @see Cesium3DTileset#allTilesLoaded
+         */
+        this.initialTilesLoaded = new Event();
 
         /**
          * The event fired to indicate that a tile's content was loaded.
@@ -544,6 +574,21 @@ define([
         this._clippingPlanes = undefined;
         this.clippingPlanes = options.clippingPlanes;
 
+        this._imageBasedLightingFactor = new Cartesian2(1.0, 1.0);
+        Cartesian2.clone(options.imageBasedLightingFactor, this._imageBasedLightingFactor);
+
+        /**
+         * The color and intensity of the sunlight used to shade a model.
+         * <p>
+         * For example, disabling additional light sources by setting <code>model.imageBasedLightingFactor = new Cartesian2(0.0, 0.0)</code> will make the
+         * model much darker. Here, increasing the intensity of the light source will make the model brighter.
+         * </p>
+         *
+         * @type {Cartesian3}
+         * @default undefined
+         */
+        this.lightColor = options.lightColor;
+
         /**
          * This property is for debugging only; it is not optimized for production use.
          * <p>
@@ -697,6 +742,19 @@ define([
                 that._extensionsUsed = tilesetJson.extensionsUsed;
                 that._gltfUpAxis = gltfUpAxis;
                 that._extras = tilesetJson.extras;
+                // Save the original, untransformed bounding volume position so we can apply
+                // the tile transform and model matrix at run time
+                var boundingVolume = that._root.createBoundingVolume(tilesetJson.root.boundingVolume, Matrix4.IDENTITY);
+                var clippingPlanesOrigin = boundingVolume.boundingSphere.center;
+                // If this origin is above the surface of the earth
+                // we want to apply an ENU orientation as our best guess of orientation.
+                // Otherwise, we assume it gets its position/orientation completely from the
+                // root tile transform and the tileset's model matrix
+                var originCartographic = that._ellipsoid.cartesianToCartographic(clippingPlanesOrigin);
+                if (defined(originCartographic) && (originCartographic.height > ApproximateTerrainHeights._defaultMinTerrainHeight)) {
+                    that._initialClippingPlanesOriginMatrix = Transforms.eastNorthUpToFixedFrame(clippingPlanesOrigin);
+                }
+                that._clippingPlanesOriginMatrix = Matrix4.clone(that._initialClippingPlanesOriginMatrix);
                 that._readyPromise.resolve(that);
             }).otherwise(function(error) {
                 that._readyPromise.reject(error);
@@ -1110,6 +1168,24 @@ define([
         /**
          * @private
          */
+        clippingPlanesOriginMatrix : {
+            get : function() {
+                if (!defined(this._clippingPlanesOriginMatrix)) {
+                    return Matrix4.IDENTITY;
+                }
+
+                if (this._clippingPlanesOriginMatrixDirty) {
+                    Matrix4.multiply(this.root.computedTransform, this._initialClippingPlanesOriginMatrix, this._clippingPlanesOriginMatrix);
+                    this._clippingPlanesOriginMatrixDirty = false;
+                }
+
+                return this._clippingPlanesOriginMatrix;
+            }
+        },
+
+        /**
+         * @private
+         */
         styleEngine : {
             get : function() {
                 return this._styleEngine;
@@ -1194,6 +1270,29 @@ define([
                 //>>includeEnd('debug');
 
                 return this._extras;
+            }
+        },
+
+        /**
+         * Cesium adds lighting from the earth, sky, atmosphere, and star skybox. This cartesian is used to scale the final
+         * diffuse and specular lighting contribution from those sources to the final color. A value of 0.0 will disable those light sources.
+         *
+         * @type {Cartesian2}
+         * @default Cartesian2(1.0, 1.0)
+         */
+        imageBasedLightingFactor : {
+            get : function() {
+                return this._imageBasedLightingFactor;
+            },
+            set : function(value) {
+                //>>includeStart('debug', pragmas.debug);
+                Check.typeOf.object('imageBasedLightingFactor', value);
+                Check.typeOf.number.greaterThanOrEquals('imageBasedLightingFactor.x', value.x, 0.0);
+                Check.typeOf.number.lessThanOrEquals('imageBasedLightingFactor.x', value.x, 1.0);
+                Check.typeOf.number.greaterThanOrEquals('imageBasedLightingFactor.y', value.y, 0.0);
+                Check.typeOf.number.lessThanOrEquals('imageBasedLightingFactor.y', value.y, 1.0);
+                //>>includeEnd('debug');
+                Cartesian2.clone(value, this._imageBasedLightingFactor);
             }
         }
     });
@@ -1380,7 +1479,7 @@ define([
                 destroySubtree(tileset, tile);
             } else {
                 statistics.decrementLoadCounts(tile.content);
-                --tileset._statistics.numberOfTilesWithContentReady;
+                --statistics.numberOfTilesWithContentReady;
             }
         }
 
@@ -1478,7 +1577,6 @@ define([
         filterProcessingQueue(tileset);
         var tiles = tileset._processingQueue;
         var length = tiles.length;
-
         // Process tiles in the PROCESSING state so they will eventually move to the READY state.
         for (var i = 0; i < length; ++i) {
             tiles[i].process(tileset, frameState);
@@ -1609,6 +1707,8 @@ define([
     function updateTiles(tileset, frameState) {
         tileset._styleEngine.applyStyle(tileset, frameState);
 
+        var passes = frameState.passes;
+        var isRender = passes.render;
         var statistics = tileset._statistics;
         var commandList = frameState.commandList;
         var numberOfInitialCommands = commandList.length;
@@ -1633,7 +1733,9 @@ define([
             tile = selectedTiles[i];
             // Raise the tileVisible event before update in case the tileVisible event
             // handler makes changes that update needs to apply to WebGL resources
-            tileVisible.raiseEvent(tile);
+            if (isRender) {
+                tileVisible.raiseEvent(tile);
+            }
             tile.update(tileset, frameState);
             statistics.incrementSelectionCounts(tile.content);
             ++statistics.selected;
@@ -1643,8 +1745,7 @@ define([
             tile.update(tileset, frameState);
         }
 
-        var lengthAfterUpdate = commandList.length;
-        var addedCommandsLength = lengthAfterUpdate - lengthBeforeUpdate;
+        var addedCommandsLength = commandList.length - lengthBeforeUpdate;
 
         tileset._backfaceCommands.trim();
 
@@ -1690,22 +1791,26 @@ define([
         }
 
         // Number of commands added by each update above
-        statistics.numberOfCommands = (commandList.length - numberOfInitialCommands);
+        addedCommandsLength = commandList.length - numberOfInitialCommands;
+        statistics.numberOfCommands = addedCommandsLength;
 
         // Only run EDL if simple attenuation is on
-        if (tileset.pointCloudShading.attenuation &&
+        if (isRender &&
+            tileset.pointCloudShading.attenuation &&
             tileset.pointCloudShading.eyeDomeLighting &&
             (addedCommandsLength > 0)) {
             tileset._pointCloudEyeDomeLighting.update(frameState, numberOfInitialCommands, tileset.pointCloudShading);
         }
 
-        if (tileset.debugShowGeometricError || tileset.debugShowRenderingStatistics || tileset.debugShowMemoryUsage || tileset.debugShowUrl) {
-            if (!defined(tileset._tileDebugLabels)) {
-                tileset._tileDebugLabels = new LabelCollection();
+        if (isRender) {
+            if (tileset.debugShowGeometricError || tileset.debugShowRenderingStatistics || tileset.debugShowMemoryUsage || tileset.debugShowUrl) {
+                if (!defined(tileset._tileDebugLabels)) {
+                    tileset._tileDebugLabels = new LabelCollection();
+                }
+                updateTileDebugLabels(tileset, frameState);
+            } else {
+                tileset._tileDebugLabels = tileset._tileDebugLabels && tileset._tileDebugLabels.destroy();
             }
-            updateTileDebugLabels(tileset, frameState);
-        } else {
-            tileset._tileDebugLabels = tileset._tileDebugLabels && tileset._tileDebugLabels.destroy();
         }
     }
 
@@ -1713,7 +1818,6 @@ define([
 
     function destroySubtree(tileset, tile) {
         var root = tile;
-        var statistics = tileset._statistics;
         var stack = scratchStack;
         stack.push(tile);
         while (stack.length > 0) {
@@ -1725,7 +1829,7 @@ define([
             }
             if (tile !== root) {
                 destroyTile(tileset, tile);
-                --statistics.numberOfTilesTotal;
+                --tileset._statistics.numberOfTilesTotal;
             }
         }
         root.children = [];
@@ -1764,7 +1868,7 @@ define([
 
     function raiseLoadProgressEvent(tileset, frameState) {
         var statistics = tileset._statistics;
-        var statisticsLast = tileset._statisticsLastColor;
+        var statisticsLast = tileset._statisticsLastRender;
         var numberOfPendingRequests = statistics.numberOfPendingRequests;
         var numberOfTilesProcessing = statistics.numberOfTilesProcessing;
         var lastNumberOfPendingRequest = statisticsLast.numberOfPendingRequests;
@@ -1784,6 +1888,12 @@ define([
             frameState.afterRender.push(function() {
                 tileset.allTilesLoaded.raiseEvent();
             });
+            if (!tileset._initialTilesLoaded) {
+                tileset._initialTilesLoaded = true;
+                frameState.afterRender.push(function() {
+                    tileset.initialTilesLoaded.raiseEvent();
+                });
+            }
         }
     }
 
@@ -1807,6 +1917,7 @@ define([
 
         // Update clipping planes
         var clippingPlanes = this._clippingPlanes;
+        this._clippingPlanesOriginMatrixDirty = true;
         if (defined(clippingPlanes) && clippingPlanes.enabled) {
             clippingPlanes.update(frameState);
         }
@@ -1815,12 +1926,11 @@ define([
 
         this._skipLevelOfDetail = this.skipLevelOfDetail && !defined(this._classificationType) && !this._disableSkipLevelOfDetail && !this._allTilesAdditive;
 
-        // Do not do out-of-core operations (new content requests, cache removal,
-        // process new tiles) during the pick pass.
+        // Do out-of-core operations (new content requests, cache removal,
+        // process new tiles) only during the render pass.
         var passes = frameState.passes;
         var isRender = passes.render;
         var isPick = passes.pick;
-        var outOfCore = isRender;
 
         var statistics = this._statistics;
         statistics.clear();
@@ -1829,42 +1939,41 @@ define([
             updateDynamicScreenSpaceError(this, frameState);
         }
 
-        if (outOfCore) {
+        if (isRender) {
             this._cache.reset();
         }
 
-        this._requestedTiles.length = 0;
         Cesium3DTilesetTraversal.selectTiles(this, frameState);
 
-        if (outOfCore) {
+        if (isRender) {
             requestTiles(this);
             processTiles(this, frameState);
         }
 
         updateTiles(this, frameState);
 
-        if (outOfCore) {
+        if (isRender) {
             unloadTiles(this);
-        }
 
-        // Events are raised (added to the afterRender queue) here since promises
-        // may resolve outside of the update loop that then raise events, e.g.,
-        // model's readyPromise.
-        raiseLoadProgressEvent(this, frameState);
+            // Events are raised (added to the afterRender queue) here since promises
+            // may resolve outside of the update loop that then raise events, e.g.,
+            // model's readyPromise.
+            raiseLoadProgressEvent(this, frameState);
 
-        // Update last statistics
-        var statisticsLast = isPick ? this._statisticsLastPick : this._statisticsLastColor;
-        Cesium3DTilesetStatistics.clone(statistics, statisticsLast);
-
-        if (statistics.selected !== 0) {
-            var credits = this._credits;
-            if (defined(credits)) {
-                var length = credits.length;
-                for (var i = 0; i < length; i++) {
-                    frameState.creditDisplay.addCredit(credits[i]);
+            if (statistics.selected !== 0) {
+                var credits = this._credits;
+                if (defined(credits)) {
+                    var length = credits.length;
+                    for (var i = 0; i < length; i++) {
+                        frameState.creditDisplay.addCredit(credits[i]);
+                    }
                 }
             }
         }
+
+        // Update last statistics
+        var statisticsLast = isPick ? this._statisticsLastPick : this._statisticsLastRender;
+        Cesium3DTilesetStatistics.clone(statistics, statisticsLast);
     };
 
     /**

@@ -11,6 +11,7 @@ defineSuite([
         'Core/PerspectiveFrustum',
         'Core/Transforms',
         'Renderer/Pass',
+        'Scene/Cesium3DTileRefine',
         'Scene/Cesium3DTileStyle',
         'Scene/ClippingPlane',
         'Scene/ClippingPlaneCollection',
@@ -34,6 +35,7 @@ defineSuite([
         PerspectiveFrustum,
         Transforms,
         Pass,
+        Cesium3DTileRefine,
         Cesium3DTileStyle,
         ClippingPlane,
         ClippingPlaneCollection,
@@ -517,6 +519,7 @@ defineSuite([
 
         return Cesium3DTilesTester.loadTileset(scene, pointCloudNoColorUrl).then(function(tileset) {
             tileset.pointCloudShading.eyeDomeLighting = false;
+            tileset.root.refine = Cesium3DTileRefine.REPLACE;
             postLoadCallback(scene, tileset);
             scene.destroyForSpecs();
         });
@@ -719,7 +722,9 @@ defineSuite([
 
             tileset.style.color = new Expression('color("blue", 0.5)');
             tileset.makeStyleDirty();
-            expect(scene).toRender([0, 0, 255, 255]);
+            expect(scene).toRenderAndCall(function(rgba) {
+                expect(rgba).toEqualEpsilon([0, 0, 255, 255], 5);
+            });
 
             var i;
             var commands = scene.frameState.commandList;
@@ -934,8 +939,7 @@ defineSuite([
             tileset.clippingPlanes = new ClippingPlaneCollection({
                 planes : [
                     clipPlane
-                ],
-                modelMatrix : Transforms.eastNorthUpToFixedFrame(tileset.boundingSphere.center)
+                ]
             });
 
             expect(scene).notToRender(color);

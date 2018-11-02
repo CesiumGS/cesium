@@ -1,17 +1,21 @@
 define([
         '../ThirdParty/rbush',
-        './Check'
+        './Check',
+        './Rectangle'
     ], function(
         rbush,
-        Check) {
+        Check,
+        Rectangle) {
     'use strict';
 
     /**
      * Wrapper around rbush for use with Rectangle types.
+     * Checks for collisions using the approximates projected extents of Rectangles.
      * @private
      */
-    function RectangleCollisionChecker() {
+    function RectangleCollisionChecker(mapProjection) {
         this._tree = rbush();
+        this._mapProjection = mapProjection;
     }
 
     function RectangleWithId() {
@@ -22,11 +26,14 @@ define([
         this.id = '';
     }
 
-    RectangleWithId.fromRectangleAndId = function(id, rectangle, result) {
-        result.minX = rectangle.west;
-        result.minY = rectangle.south;
-        result.maxX = rectangle.east;
-        result.maxY = rectangle.north;
+    var projectedExtentsScratch = new Rectangle();
+    RectangleWithId.fromRectangleAndId = function(id, rectangle, result, mapProjection) {
+        var projectedExtents = Rectangle.approximateProjectedExtents(rectangle, mapProjection, projectedExtentsScratch);
+
+        result.minX = projectedExtents.west;
+        result.minY = projectedExtents.south;
+        result.maxX = projectedExtents.east;
+        result.maxY = projectedExtents.north;
         result.id = id;
         return result;
     };
@@ -44,7 +51,7 @@ define([
         Check.typeOf.object('rectangle', rectangle);
         //>>includeEnd('debug');
 
-        var withId = RectangleWithId.fromRectangleAndId(id, rectangle, new RectangleWithId());
+        var withId = RectangleWithId.fromRectangleAndId(id, rectangle, new RectangleWithId(), this._mapProjection);
         this._tree.insert(withId);
     };
 
@@ -66,7 +73,7 @@ define([
         Check.typeOf.object('rectangle', rectangle);
         //>>includeEnd('debug');
 
-        var withId = RectangleWithId.fromRectangleAndId(id, rectangle, removalScratch);
+        var withId = RectangleWithId.fromRectangleAndId(id, rectangle, removalScratch, this._mapProjection);
         this._tree.remove(withId, idCompare);
     };
 
@@ -82,7 +89,7 @@ define([
         Check.typeOf.object('rectangle', rectangle);
         //>>includeEnd('debug');
 
-        var withId = RectangleWithId.fromRectangleAndId('', rectangle, collisionScratch);
+        var withId = RectangleWithId.fromRectangleAndId('', rectangle, collisionScratch, this._mapProjection);
         return this._tree.collides(withId);
     };
 

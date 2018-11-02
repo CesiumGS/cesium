@@ -34,7 +34,7 @@ define([
     var defaultDistanceDisplayCondition = new DistanceDisplayCondition();
 
     // Encapsulates a Primitive and all the entities that it represents.
-    function Batch(primitives, appearanceType, materialProperty, usingSphericalTextureCoordinates, zIndex) {
+    function Batch(primitives, appearanceType, materialProperty, usingSphericalTextureCoordinates, zIndex, mapProjection) {
         this.primitives = primitives; // scene level primitive collection
         this.appearanceType = appearanceType;
         this.materialProperty = materialProperty;
@@ -52,7 +52,7 @@ define([
         this.showsUpdated = new AssociativeArray();
         this.usingSphericalTextureCoordinates = usingSphericalTextureCoordinates;
         this.zIndex = zIndex;
-        this.rectangleCollisionCheck = new RectangleCollisionChecker();
+        this.rectangleCollisionCheck = new RectangleCollisionChecker(mapProjection);
     }
 
     Batch.prototype.onMaterialChanged = function() {
@@ -117,7 +117,6 @@ define([
         var primitive = this.primitive;
         var primitives = this.primitives;
         var geometries = this.geometry.values;
-        var attributes;
         var i;
 
         if (this.createPrimitive) {
@@ -130,21 +129,6 @@ define([
                     } else {
                         // For if the new primitive changes again before it is ready.
                         primitives.remove(primitive);
-                    }
-                }
-
-                for (i = 0; i < geometriesLength; i++) {
-                    var geometry = geometries[i];
-                    var originalAttributes = geometry.attributes;
-                    attributes = this.attributes.get(geometry.id.id);
-
-                    if (defined(attributes)) {
-                        if (defined(originalAttributes.show)) {
-                            attributes.show = originalAttributes.show.value;
-                        }
-                        if (defined(originalAttributes.color)) {
-                            attributes.color = originalAttributes.color.value;
-                        }
                     }
                 }
 
@@ -195,7 +179,7 @@ define([
                 var entity = updater.entity;
                 var instance = this.geometry.get(updater.id);
 
-                attributes = this.attributes.get(instance.id.id);
+                var attributes = this.attributes.get(instance.id.id);
                 if (!defined(attributes)) {
                     attributes = primitive.getGeometryInstanceAttributes(instance.id);
                     this.attributes.set(instance.id.id, attributes);
@@ -242,6 +226,7 @@ define([
             var currentShow = attributes.show[0] === 1;
             if (show !== currentShow) {
                 attributes.show = ShowGeometryInstanceAttribute.toValue(show, attributes.show);
+                instance.attributes.show.value[0] = attributes.show[0];
             }
         }
         this.showsUpdated.removeAll();
@@ -281,10 +266,11 @@ define([
     /**
      * @private
      */
-    function StaticGroundGeometryPerMaterialBatch(primitives, appearanceType) {
+    function StaticGroundGeometryPerMaterialBatch(primitives, appearanceType, mapProjection) {
         this._items = [];
         this._primitives = primitives;
         this._appearanceType = appearanceType;
+        this._mapProjection = mapProjection;
     }
 
     StaticGroundGeometryPerMaterialBatch.prototype.add = function(time, updater) {
@@ -308,7 +294,7 @@ define([
             }
         }
         // If a compatible batch wasn't found, create a new batch.
-        var batch = new Batch(this._primitives, this._appearanceType, updater.fillMaterialProperty, usingSphericalTextureCoordinates, zIndex);
+        var batch = new Batch(this._primitives, this._appearanceType, updater.fillMaterialProperty, usingSphericalTextureCoordinates, zIndex, this._mapProjection);
         batch.add(time, updater, geometryInstance);
         items.push(batch);
     };
@@ -347,7 +333,7 @@ define([
         }
 
         var isUpdated = true;
-        for (i = 0; i < length; i++) {
+        for (i = 0; i < items.length; i++) {
             isUpdated = items[i].update(time) && isUpdated;
         }
         return isUpdated;

@@ -102,7 +102,7 @@ define([
         var geographicNorth;
         var rectangleWidth, rectangleHeight;
 
-        var hasCustomProjection = !mapProjection.isEquatorialCylindrical;
+        var hasCustomProjection = !mapProjection.isNormalCylindrical;
 
         if (!defined(rectangle)) {
             geographicWest = CesiumMath.toRadians(nativeRectangle.west);
@@ -446,7 +446,7 @@ define([
 
     function addSkirt(positions, heights, uvs, webMercatorTs, indices, skirtOptions,
                       borderPoints, fudgeFactor, eastOrWest, cornerFudge, positions2D, mapProjection) {
-        var hasCustomProjection = !mapProjection.isEquatorialCylindrical;
+        var hasCustomProjection = !mapProjection.isNormalCylindrical;
 
         var count = borderPoints.length;
         for (var j = 0; j < count; ++j) {

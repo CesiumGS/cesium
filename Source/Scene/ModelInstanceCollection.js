@@ -1,6 +1,8 @@
 define([
         '../Core/BoundingSphere',
+        '../Core/Cartesian2',
         '../Core/Cartesian3',
+        '../Core/Check',
         '../Core/clone',
         '../Core/Color',
         '../Core/ComponentDatatype',
@@ -19,6 +21,7 @@ define([
         '../Renderer/DrawCommand',
         '../Renderer/Pass',
         '../Renderer/ShaderSource',
+        '../ThirdParty/GltfPipeline/ForEach',
         '../ThirdParty/when',
         './Model',
         './ModelInstance',
@@ -27,7 +30,9 @@ define([
         './ShadowMode'
     ], function(
         BoundingSphere,
+        Cartesian2,
         Cartesian3,
+        Check,
         clone,
         Color,
         ComponentDatatype,
@@ -46,6 +51,7 @@ define([
         DrawCommand,
         Pass,
         ShaderSource,
+        ForEach,
         when,
         Model,
         ModelInstance,
@@ -76,7 +82,7 @@ define([
      * @param {Cesium3DTileBatchTable} [options.batchTable] The batch table of the instanced 3D Tile.
      * @param {Resource|String} [options.url] The url to the .gltf file.
      * @param {Object} [options.requestType] The request type, used for request prioritization
-     * @param {Object|ArrayBuffer|Uint8Array} [options.gltf] The object for the glTF JSON or an arraybuffer of Binary glTF defined by the CESIUM_binary_glTF extension.
+     * @param {Object|ArrayBuffer|Uint8Array} [options.gltf] A glTF JSON object, or a binary glTF buffer.
      * @param {Resource|String} [options.basePath=''] The base path that paths in the glTF JSON are relative to.
      * @param {Boolean} [options.dynamic=false] Hint if instance model matrices will be updated frequently.
      * @param {Boolean} [options.show=true] Determines if the collection will be shown.
@@ -164,6 +170,10 @@ define([
 
         this.debugWireframe = defaultValue(options.debugWireframe, false);
         this._debugWireframe = false;
+
+        this._imageBasedLightingFactor = new Cartesian2(1.0, 1.0);
+        Cartesian2.clone(options.imageBasedLightingFactor, this._imageBasedLightingFactor);
+        this.lightColor = options.lightColor;
     }
 
     defineProperties(ModelInstanceCollection.prototype, {
@@ -190,6 +200,21 @@ define([
         readyPromise : {
             get : function() {
                 return this._readyPromise.promise;
+            }
+        },
+        imageBasedLightingFactor : {
+            get : function() {
+                return this._imageBasedLightingFactor;
+            },
+            set : function(value) {
+                //>>includeStart('debug', pragmas.debug);
+                Check.typeOf.object('imageBasedLightingFactor', value);
+                Check.typeOf.number.greaterThanOrEquals('imageBasedLightingFactor.x', value.x, 0.0);
+                Check.typeOf.number.lessThanOrEquals('imageBasedLightingFactor.x', value.x, 1.0);
+                Check.typeOf.number.greaterThanOrEquals('imageBasedLightingFactor.y', value.y, 0.0);
+                Check.typeOf.number.lessThanOrEquals('imageBasedLightingFactor.y', value.y, 1.0);
+                //>>includeEnd('debug');
+                Cartesian2.clone(value, this._imageBasedLightingFactor);
             }
         }
     });
@@ -225,6 +250,22 @@ define([
         BoundingSphere.expand(this._boundingSphere, translation, this._boundingSphere);
     };
 
+    function getCheckUniformSemanticFunction(modelSemantics, supportedSemantics, programId, uniformMap) {
+        return function(uniform, uniformName) {
+            var semantic = uniform.semantic;
+            if (defined(semantic) && (modelSemantics.indexOf(semantic) > -1)) {
+                if (supportedSemantics.indexOf(semantic) > -1) {
+                    uniformMap[uniformName] = semantic;
+                } else {
+                    throw new RuntimeError('Shader program cannot be optimized for instancing. ' +
+                        'Uniform "' + uniformName + '" in program "' + programId +
+                        '" uses unsupported semantic "' + semantic + '"'
+                    );
+                }
+            }
+        };
+    }
+
     function getInstancedUniforms(collection, programId) {
         if (defined(collection._instancedUniformsByProgram)) {
             return collection._instancedUniformsByProgram[programId];
@@ -237,13 +278,10 @@ define([
         var modelSemantics = ['MODEL', 'MODELVIEW', 'CESIUM_RTC_MODELVIEW', 'MODELVIEWPROJECTION', 'MODELINVERSE', 'MODELVIEWINVERSE', 'MODELVIEWPROJECTIONINVERSE', 'MODELINVERSETRANSPOSE', 'MODELVIEWINVERSETRANSPOSE'];
         var supportedSemantics = ['MODELVIEW', 'CESIUM_RTC_MODELVIEW', 'MODELVIEWPROJECTION', 'MODELVIEWINVERSETRANSPOSE'];
 
-        var gltf = collection._model.gltf;
-        var techniques = gltf.techniques;
-        for (var techniqueName in techniques) {
-            if (techniques.hasOwnProperty(techniqueName)) {
-                var technique = techniques[techniqueName];
-                var parameters = technique.parameters;
-                var uniforms = technique.uniforms;
+        var techniques = collection._model._sourceTechniques;
+        for (var techniqueId in techniques) {
+            if (techniques.hasOwnProperty(techniqueId)) {
+                var technique = techniques[techniqueId];
                 var program = technique.program;
 
                 // Different techniques may share the same program, skip if already processed.
@@ -251,23 +289,7 @@ define([
                 if (!defined(instancedUniformsByProgram[program])) {
                     var uniformMap = {};
                     instancedUniformsByProgram[program] = uniformMap;
-                    for (var uniformName in uniforms) {
-                        if (uniforms.hasOwnProperty(uniformName)) {
-                            var parameterName = uniforms[uniformName];
-                            var parameter = parameters[parameterName];
-                            var semantic = parameter.semantic;
-                            if (defined(semantic) && (modelSemantics.indexOf(semantic) > -1)) {
-                                if (supportedSemantics.indexOf(semantic) > -1) {
-                                    uniformMap[uniformName] = semantic;
-                                } else {
-                                    throw new RuntimeError('Shader program cannot be optimized for instancing. ' +
-                                        'Parameter "' + parameter + '" in program "' + programId +
-                                        '" uses unsupported semantic "' + semantic + '"'
-                                    );
-                                }
-                            }
-                        }
-                    }
+                    ForEach.techniqueUniform(technique, getCheckUniformSemanticFunction(modelSemantics, supportedSemantics, programId, uniformMap));
                 }
             }
         }
@@ -577,7 +599,9 @@ define([
             uniformMapLoaded : undefined,
             pickIdLoaded : collection._pickIdLoaded,
             ignoreCommands : true,
-            opaquePass : collection._opaquePass
+            opaquePass : collection._opaquePass,
+            imageBasedLightingFactor : collection.imageBasedLightingFactor,
+            lightColor : collection.lightColor
         };
 
         if (!usesBatchTable) {
@@ -870,6 +894,9 @@ define([
 
         var instancingSupported = this._instancingSupported;
         var model = this._model;
+
+        model.imageBasedLightingFactor = this.imageBasedLightingFactor;
+        model.lightColor = this.lightColor;
 
         model.update(frameState);
 

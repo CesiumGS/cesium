@@ -1,10 +1,12 @@
 define([
+        '../Core/ApproximateTerrainHeights',
         '../Core/BoundingRectangle',
         '../Core/BoundingSphere',
         '../Core/BoxGeometry',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Cartographic',
+        '../Core/Check',
         '../Core/Color',
         '../Core/ColorGeometryInstanceAttribute',
         '../Core/createGuid',
@@ -22,6 +24,7 @@ define([
         '../Core/GeometryPipeline',
         '../Core/Intersect',
         '../Core/JulianDate',
+        '../Core/MapProjection',
         '../Core/Math',
         '../Core/Matrix4',
         '../Core/mergeSort',
@@ -31,6 +34,7 @@ define([
         '../Core/PerspectiveFrustum',
         '../Core/PerspectiveOffCenterFrustum',
         '../Core/PixelFormat',
+        '../Core/Ray',
         '../Core/RequestScheduler',
         '../Core/SerializedMapProjection',
         '../Core/ShowGeometryInstanceAttribute',
@@ -76,12 +80,14 @@ define([
         './TweenCollection',
         './View'
     ], function(
+        ApproximateTerrainHeights,
         BoundingRectangle,
         BoundingSphere,
         BoxGeometry,
         Cartesian2,
         Cartesian3,
         Cartographic,
+        Check,
         Color,
         ColorGeometryInstanceAttribute,
         createGuid,
@@ -99,6 +105,7 @@ define([
         GeometryPipeline,
         Intersect,
         JulianDate,
+        MapProjection,
         CesiumMath,
         Matrix4,
         mergeSort,
@@ -108,6 +115,7 @@ define([
         PerspectiveFrustum,
         PerspectiveOffCenterFrustum,
         PixelFormat,
+        Ray,
         RequestScheduler,
         SerializedMapProjection,
         ShowGeometryInstanceAttribute,
@@ -215,7 +223,7 @@ define([
      * @param {Boolean} [options.scene3DOnly=false] If true, optimizes memory use and performance for 3D mode but disables the ability to use 2D or Columbus View.
      * @param {Number} [options.terrainExaggeration=1.0] A scalar used to exaggerate the terrain. Note that terrain exaggeration will not modify any other primitive as they are positioned relative to the ellipsoid.
      * @param {Boolean} [options.shadows=false] Determines if shadows are cast by the sun.
-     * @param {MapMode2D} [options.mapMode2D=MapMode2D.INFINITE_SCROLL] Determines if the 2D map is rotatable or can be scrolled infinitely in the horizontal direction.
+     * @param {MapMode2D} [options.mapMode2D] Determines if the 2D map is rotatable or can be scrolled infinitely in the horizontal direction. MapMode2D.INFINITE_SCROLL is default for scenes using GeographicProjection or WebMercatorProjection.
      * @param {Boolean} [options.requestRenderMode=false] If true, rendering a frame will only occur when needed as determined by changes within the scene. Enabling improves performance of the application, but requires using {@link Scene#requestRender} to render a new frame explicitly in this mode. This will be necessary in many cases after making changes to the scene in other parts of the API. See {@link https://cesium.com/blog/2018/01/24/cesium-scene-rendering-performance/|Improving Performance with Explicit Rendering}.
      * @param {Number} [options.maximumRenderTimeChange=0.0] If requestRenderMode is true, this value defines the maximum change in simulation time allowed before a render is requested. See {@link https://cesium.com/blog/2018/01/24/cesium-scene-rendering-performance/|Improving Performance with Explicit Rendering}.
      *
@@ -414,6 +422,7 @@ define([
         var mapProjection = defined(options.mapProjection) ? options.mapProjection : new GeographicProjection();
         this._mapProjection = mapProjection;
         this._serializedMapProjection = new SerializedMapProjection(mapProjection);
+        this._maxCoord2D = MapProjection.approximateMaximumCoordinate(mapProjection);
 
         /**
          * The current morph transition time between 2D/Columbus View and 3D,
@@ -459,16 +468,6 @@ define([
          * @default 1.75e6
          */
         this.nearToFarDistance2D = 1.75e6;
-
-        /**
-         * Determines the uniform depth size in meters of each frustum of the multifrustum in orthographic. If a primitive or model
-         * shows z-fighting, decreasing this will eliminate the artifact, but decrease performance. On the other hand, increasing
-         * this will increase performance but may cause z-fighting among primitives.
-         *
-         * @type {Number}
-         * @default 1.75e6
-         */
-        this.nearToFarDistanceOrthographic = 1.75e6;
 
         /**
          * This property is for debugging only; it is not for production use.
@@ -688,7 +687,7 @@ define([
         this._debugVolume = undefined;
 
         this._screenSpaceCameraController = new ScreenSpaceCameraController(this);
-        this._mapMode2D = defaultValue(options.mapMode2D, MapMode2D.INFINITE_SCROLL);
+        this._mapMode2D = defaultValue(options.mapMode2D, mapProjection.isNormalCylindrical ? MapMode2D.INFINITE_SCROLL : MapMode2D.ROTATE);
 
         // Keeps track of the state of a frame. FrameState is the state across
         // the primitives of the scene. This state is for internally keeping track
@@ -769,11 +768,23 @@ define([
             camera.frustum.far = 10000000000.0;
         }
 
+        var pickOffscreenViewport = new BoundingRectangle(0, 0, 1, 1);
+        var pickOffscreenCamera = new Camera(this);
+        pickOffscreenCamera.frustum = new OrthographicFrustum({
+            width: 0.01,
+            aspectRatio: 1.0,
+            near: 0.1
+        });
+
+        this._view = new View(this, camera, viewport);
+        this._pickOffscreenView = new View(this, pickOffscreenCamera, pickOffscreenViewport);
+
         this._defaultView = new View(this, camera, viewport);
         this._view = this._defaultView;
 
         // Give frameState, camera, and screen space camera controller initial state before rendering
-        updateFrameState(this, 0.0, JulianDate.now());
+        updateFrameNumber(this, 0.0, JulianDate.now());
+        updateFrameState(this);
         this.initializeFrame();
     }
 
@@ -866,13 +877,45 @@ define([
         },
 
         /**
-         * Returns true if the pickPosition function is supported.
+         * Returns <code>true</code> if the {@link Scene#pickPosition} function is supported.
          * @memberof Scene.prototype
          *
          * @type {Boolean}
          * @readonly
+         *
+         * @see Scene#pickPosition
          */
         pickPositionSupported : {
+            get : function() {
+                return this._context.depthTexture;
+            }
+        },
+
+        /**
+         * Returns <code>true</code> if the {@link Scene#sampleHeight} function is supported.
+         * @memberof Scene.prototype
+         *
+         * @type {Boolean}
+         * @readonly
+         *
+         * @see Scene#sampleHeight
+         */
+        sampleHeightSupported : {
+            get : function() {
+                return this._context.depthTexture;
+            }
+        },
+
+        /**
+         * Returns <code>true</code> if the {@link Scene#clampToHeight} function is supported.
+         * @memberof Scene.prototype
+         *
+         * @type {Boolean}
+         * @readonly
+         *
+         * @see Scene#clampToHeight
+         */
+        clampToHeightSupported : {
             get : function() {
                 return this._context.depthTexture;
             }
@@ -1534,9 +1577,16 @@ define([
         passes.pick = false;
         passes.depth = false;
         passes.postProcess = false;
+        passes.offscreen = false;
     }
 
-    function updateFrameState(scene, frameNumber, time) {
+    function updateFrameNumber(scene, frameNumber, time) {
+        var frameState = scene._frameState;
+        frameState.frameNumber = frameNumber;
+        frameState.time = JulianDate.clone(time, frameState.time);
+    }
+
+    function updateFrameState(scene) {
         var camera = scene.camera;
 
         var frameState = scene._frameState;
@@ -1548,19 +1598,13 @@ define([
         frameState.morphTime = scene.morphTime;
         frameState.mapProjection = scene.mapProjection;
         frameState.serializedMapProjection = scene._serializedMapProjection;
-        frameState.frameNumber = frameNumber;
-        frameState.time = JulianDate.clone(time, frameState.time);
         frameState.camera = camera;
         frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.positionWC, camera.directionWC, camera.upWC);
         frameState.occluder = getOccluder(scene);
         frameState.terrainExaggeration = scene._terrainExaggeration;
         frameState.minimumDisableDepthTestDistance = scene._minimumDisableDepthTestDistance;
         frameState.invertClassification = scene.invertClassification;
-
-        var useLogDepth = scene._logDepthBuffer && !(scene.camera.frustum instanceof OrthographicFrustum || scene.camera.frustum instanceof OrthographicOffCenterFrustum);
-        var useLogDepthDirty = useLogDepth !== frameState.useLogDepth;
-        frameState.useLogDepth = useLogDepth;
-        frameState.useLogDepthDirty = useLogDepthDirty;
+        frameState.useLogDepth = scene._logDepthBuffer && !(scene.camera.frustum instanceof OrthographicFrustum || scene.camera.frustum instanceof OrthographicOffCenterFrustum);
 
         scene._actualInvertClassificationColor = Color.clone(scene.invertClassificationColor, scene._actualInvertClassificationColor);
         if (!InvertClassification.isTranslucencySupported(scene._context)) {
@@ -2466,7 +2510,6 @@ define([
         Camera.clone(savedCamera, camera);
     }
 
-    var scratch2DViewportCartographic = new Cartographic(Math.PI, CesiumMath.PI_OVER_TWO);
     var scratch2DViewportMaxCoord = new Cartesian3();
     var scratch2DViewportSavedPosition = new Cartesian3();
     var scratch2DViewportTransform = new Matrix4();
@@ -2484,11 +2527,9 @@ define([
         var viewport = BoundingRectangle.clone(originalViewport, scratch2DViewport);
         passState.viewport = viewport;
 
-        var maxCartographic = scratch2DViewportCartographic;
         var maxCoord = scratch2DViewportMaxCoord;
 
-        var projection = scene.mapProjection;
-        projection.project(maxCartographic, maxCoord);
+        Cartesian3.clone(scene._maxCoord2D, maxCoord);
 
         var position = Cartesian3.clone(camera.position, scratch2DViewportSavedPosition);
         var transform = Matrix4.clone(camera.transform, scratch2DViewportCameraTransform);
@@ -2623,6 +2664,7 @@ define([
         // Update celestial and terrestrial environment effects.
         var environmentState = scene._environmentState;
         var renderPass = frameState.passes.render;
+        var offscreenPass = frameState.passes.offscreen;
         var skyAtmosphere = scene.skyAtmosphere;
         var globe = scene.globe;
 
@@ -2655,7 +2697,7 @@ define([
         }
 
         environmentState.renderTranslucentDepthForPick = false;
-        environmentState.useWebVR = scene._useWebVR && scene.mode !== SceneMode.SCENE2D;
+        environmentState.useWebVR = scene._useWebVR && scene.mode !== SceneMode.SCENE2D  && !offscreenPass;
 
         var occluder = (frameState.mode === SceneMode.SCENE3D) ? frameState.occluder: undefined;
         var cullingVolume = frameState.cullingVolume;
@@ -2970,7 +3012,7 @@ define([
         frameState.creditDisplay.update();
     }
 
-    function render(scene, time) {
+    function render(scene) {
         scene._pickPositionCacheDirty = true;
 
         var context = scene.context;
@@ -2980,8 +3022,7 @@ define([
         var view = scene._defaultView;
         scene._view = view;
 
-        var frameNumber = CesiumMath.incrementWrap(frameState.frameNumber, 15000000.0, 1.0);
-        updateFrameState(scene, frameNumber, time);
+        updateFrameState(scene);
         frameState.passes.render = true;
         frameState.passes.postProcess = scene.postProcessStages.hasSelected;
 
@@ -3039,9 +3080,9 @@ define([
         context.endFrame();
     }
 
-    function tryAndCatchError(scene, time, functionToExecute) {
+    function tryAndCatchError(scene, functionToExecute) {
         try {
-            functionToExecute(scene, time);
+            functionToExecute(scene);
         } catch (error) {
             scene._renderError.raiseEvent(scene, error);
 
@@ -3062,12 +3103,8 @@ define([
             time = JulianDate.now();
         }
 
+        var frameState = this._frameState;
         this._jobScheduler.resetBudgets();
-
-        // Update
-        this._preUpdate.raiseEvent(this, time);
-        tryAndCatchError(this, time, update);
-        this._postUpdate.raiseEvent(this, time);
 
         var cameraChanged = this._view.checkForCameraUpdates(this);
         var shouldRender = !this.requestRenderMode || this._renderRequested || cameraChanged || this._logDepthBufferDirty || (this.mode === SceneMode.MORPHING);
@@ -3080,10 +3117,19 @@ define([
             this._lastRenderTime = JulianDate.clone(time, this._lastRenderTime);
             this._renderRequested = false;
             this._logDepthBufferDirty = false;
+            var frameNumber = CesiumMath.incrementWrap(frameState.frameNumber, 15000000.0, 1.0);
+            updateFrameNumber(this, frameNumber, time);
+        }
 
+        // Update
+        this._preUpdate.raiseEvent(this, time);
+        tryAndCatchError(this, update);
+        this._postUpdate.raiseEvent(this, time);
+
+        if (shouldRender) {
             // Render
             this._preRender.raiseEvent(this, time);
-            tryAndCatchError(this, time, render);
+            tryAndCatchError(this, render);
 
             RequestScheduler.update();
         }
@@ -3221,7 +3267,7 @@ define([
     /**
      * Returns an object with a `primitive` property that contains the first (top) primitive in the scene
      * at a particular window coordinate or undefined if nothing is at the location. Other properties may
-     * potentially be set depending on the type of primitive.
+     * potentially be set depending on the type of primitive and may be used to further identify the picked object.
      * <p>
      * When a feature of a 3D Tiles tileset is picked, <code>pick</code> returns a {@link Cesium3DTileFeature} object.
      * </p>
@@ -3270,8 +3316,7 @@ define([
 
         this._jobScheduler.disableThisFrame();
 
-        // Update with previous frame's number and time, assuming that render is called before picking.
-        updateFrameState(this, frameState.frameNumber, frameState.time);
+        updateFrameState(this);
         frameState.cullingVolume = getPickCullingVolume(this, drawingBufferPosition, rectangleWidth, rectangleHeight, viewport);
         frameState.invertClassification = false;
         frameState.passes.pick = true;
@@ -3291,7 +3336,6 @@ define([
 
         var object = view.pickFramebuffer.end(scratchRectangle);
         context.endFrame();
-        callAfterRenderFunctions(this);
         return object;
     };
 
@@ -3368,6 +3412,7 @@ define([
             return Cartesian3.clone(this._pickPositionCache[cacheKey], result);
         }
 
+        var frameState = this._frameState;
         var context = this._context;
         var uniformState = context.uniformState;
 
@@ -3378,6 +3423,8 @@ define([
         if (this.pickTranslucentDepth) {
             renderTranslucentDepthForPick(this, drawingBufferPosition);
         } else {
+            updateFrameState(this, frameState.frameNumber, frameState.time);
+            uniformState.update(frameState);
             updateEnvironment(this);
         }
         drawingBufferPosition.y = this.drawingBufferHeight - drawingBufferPosition.y;
@@ -3409,7 +3456,7 @@ define([
                     camera.position.z = height2D - renderedFrustum.near + 1.0;
                     frustum.far = Math.max(1.0, renderedFrustum.far - renderedFrustum.near);
                     frustum.near = 1.0;
-                    uniformState.update(this.frameState);
+                    uniformState.update(frameState);
                     uniformState.updateFrustum(frustum);
                 } else {
                     frustum.near = renderedFrustum.near * (i !== 0 ? this.opaqueFrustumNearOffset : 1.0);
@@ -3421,7 +3468,7 @@ define([
 
                 if (this.mode === SceneMode.SCENE2D) {
                     camera.position.z = height2D;
-                    uniformState.update(this.frameState);
+                    uniformState.update(frameState);
                 }
 
                 this._pickPositionCache[cacheKey] = Cartesian3.clone(result);
@@ -3468,37 +3515,10 @@ define([
         return result;
     };
 
-    /**
-     * Returns a list of objects, each containing a `primitive` property, for all primitives at
-     * a particular window coordinate position. Other properties may also be set depending on the
-     * type of primitive. The primitives in the list are ordered by their visual order in the
-     * scene (front to back).
-     *
-     * @param {Cartesian2} windowPosition Window coordinates to perform picking on.
-     * @param {Number} [limit] If supplied, stop drilling after collecting this many picks.
-     * @param {Number} [width=3] Width of the pick rectangle.
-     * @param {Number} [height=3] Height of the pick rectangle.
-     * @returns {Object[]} Array of objects, each containing 1 picked primitives.
-     *
-     * @exception {DeveloperError} windowPosition is undefined.
-     *
-     * @example
-     * var pickedObjects = scene.drillPick(new Cesium.Cartesian2(100.0, 200.0));
-     *
-     * @see Scene#pick
-     *
-     */
-    Scene.prototype.drillPick = function(windowPosition, limit, width, height) {
+    function drillPick(limit, pickCallback) {
         // PERFORMANCE_IDEA: This function calls each primitive's update for each pass. Instead
         // we could update the primitive once, and then just execute their commands for each pass,
         // and cull commands for picked primitives.  e.g., base on the command's owner.
-
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(windowPosition)) {
-            throw new DeveloperError('windowPosition is undefined.');
-        }
-        //>>includeEnd('debug');
-
         var i;
         var attributes;
         var result = [];
@@ -3509,20 +3529,35 @@ define([
             limit = Number.MAX_VALUE;
         }
 
-        var pickedResult = this.pick(windowPosition, width, height);
-        while (defined(pickedResult) && defined(pickedResult.primitive)) {
-            result.push(pickedResult);
-            if (0 >= --limit) {
+        var pickedResult = pickCallback();
+        while (defined(pickedResult)) {
+            var object = pickedResult.object;
+            var position = pickedResult.position;
+            var exclude = pickedResult.exclude;
+
+            if (defined(position) && !defined(object)) {
+                result.push(pickedResult);
                 break;
             }
 
-            var primitive = pickedResult.primitive;
+            if (!defined(object) || !defined(object.primitive)) {
+                break;
+            }
+
+            if (!exclude) {
+                result.push(pickedResult);
+                if (0 >= --limit) {
+                    break;
+                }
+            }
+
+            var primitive = object.primitive;
             var hasShowAttribute = false;
 
-            //If the picked object has a show attribute, use it.
+            // If the picked object has a show attribute, use it.
             if (typeof primitive.getGeometryInstanceAttributes === 'function') {
-                if (defined(pickedResult.id)) {
-                    attributes = primitive.getGeometryInstanceAttributes(pickedResult.id);
+                if (defined(object.id)) {
+                    attributes = primitive.getGeometryInstanceAttributes(object.id);
                     if (defined(attributes) && defined(attributes.show)) {
                         hasShowAttribute = true;
                         attributes.show = ShowGeometryInstanceAttribute.toValue(false, attributes.show);
@@ -3531,10 +3566,10 @@ define([
                 }
             }
 
-            if (pickedResult instanceof Cesium3DTileFeature) {
+            if (object instanceof Cesium3DTileFeature) {
                 hasShowAttribute = true;
-                pickedResult.show = false;
-                pickedFeatures.push(pickedResult);
+                object.show = false;
+                pickedFeatures.push(object);
             }
 
             // Otherwise, hide the entire primitive
@@ -3543,7 +3578,7 @@ define([
                 pickedPrimitives.push(primitive);
             }
 
-            pickedResult = this.pick(windowPosition, width, height);
+            pickedResult = pickCallback();
         }
 
         // Unhide everything we hid while drill picking
@@ -3561,6 +3596,305 @@ define([
         }
 
         return result;
+    }
+
+    /**
+     * Returns a list of objects, each containing a `primitive` property, for all primitives at
+     * a particular window coordinate position. Other properties may also be set depending on the
+     * type of primitive and may be used to further identify the picked object. The primitives in
+     * the list are ordered by their visual order in the scene (front to back).
+     *
+     * @param {Cartesian2} windowPosition Window coordinates to perform picking on.
+     * @param {Number} [limit] If supplied, stop drilling after collecting this many picks.
+     * @param {Number} [width=3] Width of the pick rectangle.
+     * @param {Number} [height=3] Height of the pick rectangle.
+     * @returns {Object[]} Array of objects, each containing 1 picked primitives.
+     *
+     * @exception {DeveloperError} windowPosition is undefined.
+     *
+     * @example
+     * var pickedObjects = scene.drillPick(new Cesium.Cartesian2(100.0, 200.0));
+     *
+     * @see Scene#pick
+     */
+    Scene.prototype.drillPick = function(windowPosition, limit, width, height) {
+        var that = this;
+        var pickCallback = function() {
+            var object = that.pick(windowPosition, width, height);
+            if (defined(object)) {
+                return {
+                    object : object,
+                    position : undefined,
+                    exclude : false
+                };
+            }
+        };
+        var objects = drillPick(limit, pickCallback);
+        return objects.map(function(element) {
+            return element.object;
+        });
+    };
+
+    var scratchRight = new Cartesian3();
+    var scratchUp = new Cartesian3();
+
+    function updateCameraFromRay(ray, camera) {
+        var direction = ray.direction;
+        var orthogonalAxis = Cartesian3.mostOrthogonalAxis(direction, scratchRight);
+        var right = Cartesian3.cross(direction, orthogonalAxis, scratchRight);
+        var up = Cartesian3.cross(direction, right, scratchUp);
+
+        camera.position = ray.origin;
+        camera.direction = direction;
+        camera.up = up;
+        camera.right = right;
+    }
+
+    function isExcluded(object, objectsToExclude) {
+        if (!defined(object) || !defined(objectsToExclude) || objectsToExclude.length === 0) {
+            return false;
+        }
+        return (objectsToExclude.indexOf(object) > -1) ||
+               (objectsToExclude.indexOf(object.primitive) > -1) ||
+               (objectsToExclude.indexOf(object.id) > -1);
+    }
+
+    function getRayIntersection(scene, ray, objectsToExclude, requirePosition) {
+        var context = scene._context;
+        var uniformState = context.uniformState;
+        var frameState = scene._frameState;
+
+        var view = scene._pickOffscreenView;
+        scene._view = view;
+
+        updateCameraFromRay(ray, view.camera);
+
+        scratchRectangle = BoundingRectangle.clone(view.viewport, scratchRectangle);
+
+        var passState = view.pickFramebuffer.begin(scratchRectangle, view.viewport);
+
+        scene._jobScheduler.disableThisFrame();
+
+        updateFrameState(scene);
+        frameState.invertClassification = false;
+        frameState.passes.pick = true;
+        frameState.passes.offscreen = true;
+
+        uniformState.update(frameState);
+
+        updateEnvironment(scene, view);
+        updateAndExecuteCommands(scene, passState, scratchColorZero);
+        resolveFramebuffers(scene, passState);
+
+        var position;
+        var object = view.pickFramebuffer.end(context);
+
+        if (scene._context.depthTexture) {
+            var numFrustums = view.frustumCommandsList.length;
+            for (var i = 0; i < numFrustums; ++i) {
+                var pickDepth = getPickDepth(scene, i);
+                var depth = pickDepth.getDepth(context, 0, 0);
+                if (depth > 0.0 && depth < 1.0) {
+                    var renderedFrustum = view.frustumCommandsList[i];
+                    var near = renderedFrustum.near * (i !== 0 ? scene.opaqueFrustumNearOffset : 1.0);
+                    var far = renderedFrustum.far;
+                    var distance = near + depth * (far - near);
+                    position = Ray.getPoint(ray, distance);
+                    break;
+                }
+            }
+        }
+
+        scene._view = scene._defaultView;
+        context.endFrame();
+
+        if (defined(object) || defined(position)) {
+            return {
+                object : object,
+                position : position,
+                exclude : (!defined(position) && requirePosition) || isExcluded(object, objectsToExclude)
+            };
+        }
+    }
+
+    function getRayIntersections(scene, ray, limit, objectsToExclude, requirePosition) {
+        var pickCallback = function() {
+            return getRayIntersection(scene, ray, objectsToExclude, requirePosition);
+        };
+        return drillPick(limit, pickCallback);
+    }
+
+    function pickFromRay(scene, ray, objectsToExclude, requirePosition) {
+        var results = getRayIntersections(scene, ray, 1, objectsToExclude, requirePosition);
+        if (results.length > 0) {
+            return results[0];
+        }
+    }
+
+    function drillPickFromRay(scene, ray, limit, objectsToExclude, requirePosition) {
+        return getRayIntersections(scene, ray, limit, objectsToExclude, requirePosition);
+    }
+
+    /**
+     * Returns an object containing the first object intersected by the ray and the position of intersection,
+     * or <code>undefined</code> if there were no intersections. The intersected object has a <code>primitive</code>
+     * property that contains the intersected primitive. Other properties may be set depending on the type of primitive
+     * and may be used to further identify the picked object. The ray must be given in world coordinates.
+     * <p>
+     * This function only picks globe tiles and 3D Tiles that are rendered in the current view. Picks all other
+     * primitives regardless of their visibility.
+     * </p>
+     *
+     * @private
+     *
+     * @param {Ray} ray The ray.
+     * @param {Object[]} [objectsToExclude] A list of primitives, entities, or features to exclude from the ray intersection.
+     * @returns {Object} An object containing the object and position of the first intersection.
+     *
+     * @exception {DeveloperError} Ray intersections are only supported in 3D mode.
+     */
+    Scene.prototype.pickFromRay = function(ray, objectsToExclude) {
+        //>>includeStart('debug', pragmas.debug);
+        Check.defined('ray', ray);
+        if (this._mode !== SceneMode.SCENE3D) {
+            throw new DeveloperError('Ray intersections are only supported in 3D mode.');
+        }
+        //>>includeEnd('debug');
+        return pickFromRay(this, ray, objectsToExclude, false);
+    };
+
+    /**
+     * Returns a list of objects, each containing the object intersected by the ray and the position of intersection.
+     * The intersected object has a <code>primitive</code> property that contains the intersected primitive. Other
+     * properties may also be set depending on the type of primitive and may be used to further identify the picked object.
+     * The primitives in the list are ordered by first intersection to last intersection. The ray must be given in
+     * world coordinates.
+     * <p>
+     * This function only picks globe tiles and 3D Tiles that are rendered in the current view. Picks all other
+     * primitives regardless of their visibility.
+     * </p>
+     *
+     * @private
+     *
+     * @param {Ray} ray The ray.
+     * @param {Number} [limit=Number.MAX_VALUE] If supplied, stop finding intersections after this many intersections.
+     * @param {Object[]} [objectsToExclude] A list of primitives, entities, or features to exclude from the ray intersection.
+     * @returns {Object[]} List of objects containing the object and position of each intersection.
+     *
+     * @exception {DeveloperError} Ray intersections are only supported in 3D mode.
+     */
+    Scene.prototype.drillPickFromRay = function(ray, limit, objectsToExclude) {
+        //>>includeStart('debug', pragmas.debug);
+        Check.defined('ray', ray);
+        if (this._mode !== SceneMode.SCENE3D) {
+            throw new DeveloperError('Ray intersections are only supported in 3D mode.');
+        }
+        //>>includeEnd('debug');
+        return drillPickFromRay(this, ray, limit, objectsToExclude, false);
+    };
+
+    var scratchSurfacePosition = new Cartesian3();
+    var scratchSurfaceNormal = new Cartesian3();
+    var scratchSurfaceRay = new Ray();
+    var scratchCartographic = new Cartographic();
+
+    function getRayForSampleHeight(scene, cartographic) {
+        var globe = scene.globe;
+        var ellipsoid = defined(globe) ? globe.ellipsoid : scene.mapProjection.ellipsoid;
+        var height = ApproximateTerrainHeights._defaultMaxTerrainHeight;
+        var surfaceNormal = ellipsoid.geodeticSurfaceNormalCartographic(cartographic, scratchSurfaceNormal);
+        var surfacePosition = Cartographic.toCartesian(cartographic, ellipsoid, scratchSurfacePosition);
+        var surfaceRay = scratchSurfaceRay;
+        surfaceRay.origin = surfacePosition;
+        surfaceRay.direction =  surfaceNormal;
+        var ray = new Ray();
+        Ray.getPoint(surfaceRay, height, ray.origin);
+        Cartesian3.negate(surfaceNormal, ray.direction);
+        return ray;
+    }
+
+    function getRayForClampToHeight(scene, cartesian) {
+        var globe = scene.globe;
+        var ellipsoid = defined(globe) ? globe.ellipsoid : scene.mapProjection.ellipsoid;
+        var cartographic = Cartographic.fromCartesian(cartesian, ellipsoid, scratchCartographic);
+        return getRayForSampleHeight(scene, cartographic);
+    }
+
+    function getHeightFromCartesian(scene, cartesian) {
+        var globe = scene.globe;
+        var ellipsoid = defined(globe) ? globe.ellipsoid : scene.mapProjection.ellipsoid;
+        var cartographic = Cartographic.fromCartesian(cartesian, ellipsoid, scratchCartographic);
+        return cartographic.height;
+    }
+
+    /**
+     * Returns the height of scene geometry at the given cartographic position or <code>undefined</code> if there was no
+     * scene geometry to sample height from. May be used to clamp objects to the globe, 3D Tiles, or primitives in the scene.
+     * <p>
+     * This function only samples height from globe tiles and 3D Tiles that are rendered in the current view. Samples height
+     * from all other primitives regardless of their visibility.
+     * </p>
+     *
+     * @param {Cartographic} position The cartographic position to sample height from.
+     * @param {Object[]} [objectsToExclude] A list of primitives, entities, or features to not sample height from.
+     * @returns {Number} The height. This may be <code>undefined</code> if there was no scene geometry to sample height from.
+     *
+     * @see Scene#clampToHeight
+     *
+     * @exception {DeveloperError} sampleHeight is only supported in 3D mode.
+     * @exception {DeveloperError} sampleHeight requires depth texture support. Check sampleHeightSupported.
+     */
+    Scene.prototype.sampleHeight = function(position, objectsToExclude) {
+        //>>includeStart('debug', pragmas.debug);
+        Check.defined('position', position);
+        if (this._mode !== SceneMode.SCENE3D) {
+            throw new DeveloperError('sampleHeight is only supported in 3D mode.');
+        }
+        if (!this.sampleHeightSupported) {
+            throw new DeveloperError('sampleHeight requires depth texture support. Check sampleHeightSupported.');
+        }
+        //>>includeEnd('debug');
+        var ray = getRayForSampleHeight(this, position);
+        var pickResult = pickFromRay(this, ray, objectsToExclude, true);
+        if (defined(pickResult)) {
+            return getHeightFromCartesian(this, pickResult.position);
+        }
+    };
+
+    /**
+     * Clamps the given cartesian position to the scene geometry along the geodetic surface normal. Returns the
+     * clamped position or <code>undefined</code> if there was no scene geometry to clamp to. May be used to clamp
+     * objects to the globe, 3D Tiles, or primitives in the scene.
+     * <p>
+     * This function only clamps to globe tiles and 3D Tiles that are rendered in the current view. Clamps to
+     * all other primitives regardless of their visibility.
+     * </p>
+     *
+     * @param {Cartesian3} cartesian The cartesian position.
+     * @param {Object[]} [objectsToExclude] A list of primitives, entities, or features to not clamp to.
+     * @param {Cartesian3} [result] An optional object to return the clamped position.
+     * @returns {Cartesian3} The modified result parameter or a new Cartesian3 instance if one was not provided. This may be <code>undefined</code> if there was no scene geometry to clamp to.
+     *
+     * @see Scene#sampleHeight
+     *
+     * @exception {DeveloperError} clampToHeight is only supported in 3D mode.
+     * @exception {DeveloperError} clampToHeight requires depth texture support. Check clampToHeightSupported.
+     */
+    Scene.prototype.clampToHeight = function(cartesian, objectsToExclude, result) {
+        //>>includeStart('debug', pragmas.debug);
+        Check.defined('cartesian', cartesian);
+        if (this._mode !== SceneMode.SCENE3D) {
+            throw new DeveloperError('sampleHeight is only supported in 3D mode.');
+        }
+        if (!this.clampToHeightSupported) {
+            throw new DeveloperError('clampToHeight requires depth texture support. Check clampToHeightSupported.');
+        }
+        //>>includeEnd('debug');
+        var ray = getRayForClampToHeight(this, cartesian);
+        var pickResult = pickFromRay(this, ray, objectsToExclude, true);
+        if (defined(pickResult)) {
+            return Cartesian3.clone(pickResult.position, result);
+        }
     };
 
     /**
@@ -3689,6 +4023,7 @@ define([
         this._brdfLutGenerator = this._brdfLutGenerator && this._brdfLutGenerator.destroy();
 
         this._defaultView = this._defaultView && this._defaultView.destroy();
+        this._pickOffscreenView = this._pickOffscreenView && this._pickOffscreenView.destroy();
         this._view = undefined;
 
         if (this._removeCreditContainer) {

@@ -8,6 +8,7 @@ define([
         './freezeObject',
         './GeographicProjection',
         './Proj4Projection',
+        './Rectangle',
         './WebMercatorProjection'
     ], function(
         when,
@@ -19,6 +20,7 @@ define([
         freezeObject,
         GeographicProjection,
         Proj4Projection,
+        Rectangle,
         WebMercatorProjection) {
     'use strict';
 
@@ -47,12 +49,14 @@ define([
         var heightScale;
         var url;
         var projectionName;
+        var wgs84Bounds = Rectangle.MAX_VALUE;
         if (mapProjection instanceof WebMercatorProjection) {
             projectionType = ProjectionType.WEBMERCATOR;
         } else if (mapProjection instanceof Proj4Projection) {
             projectionType = ProjectionType.PROJ4JS;
             wellKnownText = mapProjection.wellKnownText;
             heightScale = mapProjection.heightScale;
+            wgs84Bounds = mapProjection.wgs84Bounds;
         } else if (mapProjection instanceof CustomProjection) {
             projectionType = ProjectionType.CUSTOM;
             url = mapProjection.url;
@@ -65,11 +69,12 @@ define([
         this.url = url;
         this.projectionName = projectionName;
 
+        this.packedRectangle = Rectangle.pack(wgs84Bounds, new Array(Rectangle.packedLength));
         this.packedEllipsoid = Ellipsoid.pack(mapProjection.ellipsoid, new Array(Ellipsoid.packedLength));
     }
 
     /**
-     * Unpacks the given SerializedMapProjection.
+     * Unpacks the given SerializedMapProjection on a web worker.
      *
      * @param {Object} serializedMapProjection A SerializedMapProjection object.
      * @returns {Promise.<CustomProjection>} A Promise that resolves to a MapProjection, or rejects if the SerializedMapProjection is malformed.
@@ -88,7 +93,8 @@ define([
         } else if (projectionType === ProjectionType.WEBMERCATOR) {
             projection = new WebMercatorProjection(ellipsoid);
         } else if (projectionType === ProjectionType.PROJ4JS) {
-            projection = new Proj4Projection(serializedMapProjection.wellKnownText, serializedMapProjection.heightScale);
+            var wgs84Bounds = Rectangle.unpack(serializedMapProjection.packedRectangle);
+            projection = new Proj4Projection(serializedMapProjection.wellKnownText, serializedMapProjection.heightScale, wgs84Bounds);
         } else if (projectionType === ProjectionType.CUSTOM) {
             projection = new CustomProjection(serializedMapProjection.url, serializedMapProjection.projectionName, ellipsoid);
             return projection.readyPromise;

@@ -8,7 +8,7 @@ define([
         './DeveloperError',
         './Ellipsoid',
         './getAbsoluteUri',
-        './Resource',
+        './loadAndExecuteScript',
         '../ThirdParty/when'
     ], function(
         Cartesian3,
@@ -20,7 +20,7 @@ define([
         DeveloperError,
         Ellipsoid,
         getAbsoluteUri,
-        Resource,
+        loadAndExecuteScript,
         when) {
     'use strict';
 
@@ -33,6 +33,8 @@ define([
      * <code>CustomProjection~factory</code> interface to provide <code>CustomProjection~project</code> and
      * <code>CustomProjection~unproject</code> functions to a callback.
      *
+     * Scenes using CustomProjection will default to MapMode2D.ROTATE instead of MapMode2D.INFINITE_SCROLL.
+     *
      * @alias CustomProjection
      * @constructor
      *
@@ -41,8 +43,10 @@ define([
      * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The MapProjection's ellipsoid.
      */
     function CustomProjection(url, projectionName, ellipsoid) {
+        //>>includeStart('debug', pragmas.debug);
         Check.typeOf.string('url', url);
         Check.typeOf.string('projectionName', projectionName);
+        //>>includeEnd('debug');
 
         this._ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
 
@@ -73,7 +77,7 @@ define([
             }
         },
         /**
-         * Gets whether or not the projection is cylindrical about the equator.
+         * Gets whether or not the projection evenly maps meridians to vertical lines.
          * No guarantee that a custom projection will be cylindrical about the equator.
          *
          * @memberof CustomProjection.prototype
@@ -82,7 +86,7 @@ define([
          * @readonly
          * @private
          */
-        isEquatorialCylindrical : {
+        isNormalCylindrical : {
             get : function() {
                 return false;
             }
@@ -207,9 +211,7 @@ define([
             importScripts(url); // eslint-disable-line no-undef
             fetch = when.resolve();
         } else {
-            fetch = Resource.fetchJsonp({
-                    url : url
-            });
+            fetch = loadAndExecuteScript(url);
         }
 
         fetch = fetch
@@ -239,7 +241,7 @@ define([
      *
      * @param {Function} callback A callback that takes <code>CustomProjection~project</code> and <code>CustomProjection~unproject</code> functions as arguments.
      * @example
-     * function simpleProjection(callback) {
+     * function createProjectionFunctions(callback) {
      *     function project(cartographic, result) {
      *          result.x = cartographic.longitude * 6378137.0;
      *          result.y = cartographic.latitude * 6378137.0;
@@ -257,7 +259,8 @@ define([
      */
 
     /**
-     * A function that projects a cartographic coordinate to x/y/z coordinates in 2.5D space.
+     * A function that projects a cartographic coordinate to x/y/z meter coordinates in 2.5D space.
+     * For example, a Geographic projection would project latitude and longitude to the X/Y plane and the altitude to Z.
      * @callback CustomProjection~project
      *
      * @param {Cartographic} cartographic A Cesium Cartographic type providing the latitude and longitude in radians and the height in meters.
@@ -271,7 +274,8 @@ define([
      */
 
     /**
-     * A function that unprojects x and y coordinates in 2.5D space to longitude and latitude in radians and height in meters.
+     * Coordinates come from a Z-up space, so for example, a Geographic projection would unproject x/y coordinates in meters
+     * to latitude and longitude, and z coordinates to altitudes in meters over the x/y plane.
      * @callback CustomProjection~unproject
      *
      * @param {Cartesian3} cartesian A x/y/z coordinate in projected space space.

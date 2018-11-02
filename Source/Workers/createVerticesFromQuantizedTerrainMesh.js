@@ -79,7 +79,7 @@ define([
         var fromENU = Transforms.eastNorthUpToFixedFrame(center, ellipsoid);
         var toENU = Matrix4.inverseTransformation(fromENU, new Matrix4());
 
-        var hasCustomProjection = !mapProjection.isEquatorialCylindrical;
+        var hasCustomProjection = !mapProjection.isNormalCylindrical;
 
         var southMercatorY;
         var oneOverMercatorHeight;
@@ -312,7 +312,7 @@ define([
             east += CesiumMath.TWO_PI;
         }
 
-        var hasCustomProjection = !mapProjection.isEquatorialCylindrical;
+        var hasCustomProjection = !mapProjection.isNormalCylindrical;
 
         for (var i = start; i !== end; i += increment) {
             var index = edgeVertices[i];
