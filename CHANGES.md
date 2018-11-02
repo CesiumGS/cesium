@@ -5,6 +5,7 @@ Change Log
 
 ##### Additions :tada:
 * Added `Scene.invertClassificationSupported` for checking if invert classification is supported.
+* Added `computeLineSegmentLineSegmentIntersection` to `Intersections2D`. [#7228](https://github.com/AnalyticalGraphicsInc/Cesium/pull/7228)
 
 ### 1.51 - 2018-11-01
 
