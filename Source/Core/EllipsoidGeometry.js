@@ -518,7 +518,7 @@ EllipsoidGeometry.createGeometry = function(ellipsoidGeometry) {
 
                 // Use UNIT_X for the poles
                 var offset1 = 0;
-                var offset2 = vertexCountHalf;
+                var offset2 = hasInnerSurface ? vertexCountHalf : vertexCount;
                 var unit;
                 if (isInner[i]) {
                     offset1 = vertexCountHalf;
