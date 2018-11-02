@@ -2080,7 +2080,7 @@ defineSuite([
             expect(scene).toRender([0, 0, 0, 255]);
             m.show = true;
             m.zoomTo();
-            expect(scene).toRender([51, 51, 51, 255]); // Cesium has minimum lighting
+            expect(scene).toRender([0, 0, 0, 255]);
             m.show = false;
 
             primitives.remove(m);
