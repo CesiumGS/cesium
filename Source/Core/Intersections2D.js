@@ -1,11 +1,13 @@
 define([
         './Cartesian2',
         './Cartesian3',
+        './Check',
         './defined',
         './DeveloperError'
     ], function(
         Cartesian2,
         Cartesian3,
+        Check,
         defined,
         DeveloperError) {
     'use strict';
@@ -301,30 +303,14 @@ define([
      */
     Intersections2D.computeLineSegmentLineSegmentIntersection = function(x00, y00, x01, y01, x10, y10, x11, y11, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(x00)) {
-            throw new DeveloperError('x00 is required.');
-        }
-        if (!defined(y00)) {
-            throw new DeveloperError('y00 is required.');
-        }
-        if (!defined(x01)) {
-            throw new DeveloperError('x01 is required.');
-        }
-        if (!defined(y01)) {
-            throw new DeveloperError('y01 is required.');
-        }
-        if (!defined(x10)) {
-            throw new DeveloperError('x10 is required.');
-        }
-        if (!defined(y10)) {
-            throw new DeveloperError('y10 is required.');
-        }
-        if (!defined(x11)) {
-            throw new DeveloperError('x11 is required.');
-        }
-        if (!defined(y11)) {
-            throw new DeveloperError('y11 is required.');
-        }
+        Check.typeOf.number('x00', x00);
+        Check.typeOf.number('y00', y00);
+        Check.typeOf.number('x01', x01);
+        Check.typeOf.number('y01', y01);
+        Check.typeOf.number('x10', x10);
+        Check.typeOf.number('y10', y10);
+        Check.typeOf.number('x11', x11);
+        Check.typeOf.number('y11', y11);
         //>>includeEnd('debug');
 
         var numerator1A = (x11 - x10) * (y00 - y10) - (y11 - y10) * (x00 - x10);
