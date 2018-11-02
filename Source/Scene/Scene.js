@@ -915,6 +915,21 @@ define([
         },
 
         /**
+         * Returns <code>true</code> if the {@link Scene#invertClassification} is supported.
+         * @memberof Scene.prototype
+         *
+         * @type {Boolean}
+         * @readonly
+         *
+         * @see Scene#invertClassification
+         */
+        invertClassificationSupported : {
+            get : function() {
+                return this._context.depthTexture;
+            }
+        },
+
+        /**
          * Gets or sets the depth-test ellipsoid.
          * @memberof Scene.prototype
          *
