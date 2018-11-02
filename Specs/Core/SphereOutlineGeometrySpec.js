@@ -1,7 +1,7 @@
 defineSuite([
         'Core/SphereOutlineGeometry',
         'Specs/createPackableSpecs',
-        'Core/Math',
+        'Core/Math'
     ], function(
         SphereOutlineGeometry,
         createPackableSpecs,

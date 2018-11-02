@@ -63,7 +63,6 @@ define([
 
     var offsetScratch = new Cartesian3();
     var radiiScratch = new Cartesian3();
-    var innerRadiiScratch = new Cartesian3();
     var scratchColor = new Color();
     var unitSphere = new Cartesian3(1, 1, 1);
 
@@ -222,115 +221,6 @@ define([
         return !defined(entity.position) || !defined(ellipsoid.radii) || GeometryUpdater.prototype._isHidden.call(this, entity, ellipsoid);
     };
 
-    EllipsoidGeometryUpdater.prototype._onEntityPropertyChanged = function(entity, propertyName, newValue, oldValue) {
-        if (!(propertyName === 'availability' || propertyName === 'position' || propertyName === 'orientation' || propertyName === 'ellipsoid')) {
-            return;
-        }
-
-        var ellipsoid = entity.ellipsoid;
-
-        if (!defined(ellipsoid)) {
-            if (this._fillEnabled || this._outlineEnabled) {
-                this._fillEnabled = false;
-                this._outlineEnabled = false;
-                this._geometryChanged.raiseEvent(this);
-            }
-            return;
-        }
-
-        var fillProperty = ellipsoid.fill;
-        var fillEnabled = defined(fillProperty) && fillProperty.isConstant ? fillProperty.getValue(Iso8601.MINIMUM_VALUE) : true;
-
-        var outlineProperty = ellipsoid.outline;
-        var outlineEnabled = defined(outlineProperty);
-        if (outlineEnabled && outlineProperty.isConstant) {
-            outlineEnabled = outlineProperty.getValue(Iso8601.MINIMUM_VALUE);
-        }
-
-        if (!fillEnabled && !outlineEnabled) {
-            if (this._fillEnabled || this._outlineEnabled) {
-                this._fillEnabled = false;
-                this._outlineEnabled = false;
-                this._geometryChanged.raiseEvent(this);
-            }
-            return;
-        }
-
-        var position = entity.position;
-        var radii = ellipsoid.radii;
-
-        var show = ellipsoid.show;
-        if ((defined(show) && show.isConstant && !show.getValue(Iso8601.MINIMUM_VALUE)) || //
-            (!defined(position) || !defined(radii))) {
-            if (this._fillEnabled || this._outlineEnabled) {
-                this._fillEnabled = false;
-                this._outlineEnabled = false;
-                this._geometryChanged.raiseEvent(this);
-            }
-            return;
-        }
-
-        var material = defaultValue(ellipsoid.material, defaultMaterial);
-        var isColorMaterial = material instanceof ColorMaterialProperty;
-        this._materialProperty = material;
-        this._fillProperty = defaultValue(fillProperty, defaultFill);
-        this._showProperty = defaultValue(show, defaultShow);
-        this._showOutlineProperty = defaultValue(ellipsoid.outline, defaultOutline);
-        this._outlineColorProperty = outlineEnabled ? defaultValue(ellipsoid.outlineColor, defaultOutlineColor) : undefined;
-        this._shadowsProperty = defaultValue(ellipsoid.shadows, defaultShadows);
-        this._distanceDisplayConditionProperty = defaultValue(ellipsoid.distanceDisplayCondition, defaultDistanceDisplayCondition);
-
-        this._fillEnabled = fillEnabled;
-        this._outlineEnabled = outlineEnabled;
-
-        var innerRadii = ellipsoid.innerRadii;
-        var minimumClock = ellipsoid.minimumClock;
-        var maximumClock = ellipsoid.maximumClock;
-        var minimumCone = ellipsoid.minimumCone;
-        var maximumCone = ellipsoid.maximumCone;
-        var stackPartitions = ellipsoid.stackPartitions;
-        var slicePartitions = ellipsoid.slicePartitions;
-        var outlineWidth = ellipsoid.outlineWidth;
-        var subdivisions = ellipsoid.subdivisions;
-
-        if (!defined(innerRadii)) {
-            innerRadii = radii;
-        }
-
-        if (!position.isConstant || //
-            !Property.isConstant(entity.orientation) || //
-            !radii.isConstant || //
-            !innerRadii.isConstant || //
-            !Property.isConstant(minimumClock) || //
-            !Property.isConstant(maximumClock) || //
-            !Property.isConstant(minimumCone) || //
-            !Property.isConstant(maximumCone) || //
-            !Property.isConstant(stackPartitions) || //
-            !Property.isConstant(slicePartitions) || //
-            !Property.isConstant(outlineWidth) || //
-            !Property.isConstant(subdivisions)) {
-            if (!this._dynamic) {
-                this._dynamic = true;
-                this._geometryChanged.raiseEvent(this);
-            }
-        } else {
-            var options = this._options;
-            options.vertexFormat = isColorMaterial ? PerInstanceColorAppearance.VERTEX_FORMAT : MaterialAppearance.MaterialSupport.TEXTURED.vertexFormat;
-            options.radii = radii.getValue(Iso8601.MINIMUM_VALUE, options.radii);
-            options.innerRadii = innerRadii.getValue(Iso8601.MINIMUM_VALUE, options.innerRadii);
-            options.minimumClock = defined(minimumClock) ? minimumClock.getValue(Iso8601.MINIMUM_VALUE) : undefined;
-            options.maximumClock = defined(maximumClock) ? maximumClock.getValue(Iso8601.MINIMUM_VALUE) : undefined;
-            options.minimumCone = defined(minimumCone) ? minimumCone.getValue(Iso8601.MINIMUM_VALUE) : undefined;
-            options.maximumCone = defined(maximumCone) ? maximumCone.getValue(Iso8601.MINIMUM_VALUE) : undefined;
-            options.stackPartitions = defined(stackPartitions) ? stackPartitions.getValue(Iso8601.MINIMUM_VALUE) : undefined;
-            options.slicePartitions = defined(slicePartitions) ? slicePartitions.getValue(Iso8601.MINIMUM_VALUE) : undefined;
-            options.subdivisions = defined(subdivisions) ? subdivisions.getValue(Iso8601.MINIMUM_VALUE) : undefined;
-            this._outlineWidth = defined(outlineWidth) ? outlineWidth.getValue(Iso8601.MINIMUM_VALUE) : 1.0;
-            this._dynamic = false;
-            this._geometryChanged.raiseEvent(this);
-        }
-    };
-
     EllipsoidGeometryUpdater.prototype._isDynamic = function(entity, ellipsoid) {
         return !entity.position.isConstant || //
                !Property.isConstant(entity.orientation) || //
@@ -464,7 +354,7 @@ define([
             options.subdivisions = subdivisions;
             options.offsetAttribute = offsetAttribute;
             options.radii = in3D ? unitSphere : radii;
-            var innerRadii = Property.getValueOrDefault(ellipsoid.innerRadii, time, radii, innerRadii);
+            var innerRadii = Property.getValueOrDefault(ellipsoid.innerRadii, time, radii, new Cartesian3());
             if (in3D) {
                var mag = Cartesian3.magnitude(radii);
                var innerRadiiUnit = new Cartesian3(innerRadii.x/mag, innerRadii.y/mag, innerRadii.z/mag);
