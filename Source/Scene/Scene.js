@@ -4013,7 +4013,8 @@ define([
 
     /**
      * Returns the height of scene geometry at the given cartographic position or <code>undefined</code> if there was no
-     * scene geometry to sample height from. May be used to clamp objects to the globe, 3D Tiles, or primitives in the scene.
+     * scene geometry to sample height from. The height of the input position is ignored. May be used to clamp objects to
+     * the globe, 3D Tiles, or primitives in the scene.
      * <p>
      * This function only samples height from globe tiles and 3D Tiles that are rendered in the current view. Samples height
      * from all other primitives regardless of their visibility.
@@ -4097,9 +4098,10 @@ define([
 
     /**
      * Initiates an asynchronous {@link Scene#sampleHeight} query for an array of {@link Cartographic} positions
-     * using the maximum level of detail for 3D Tilesets in the scene. Returns a promise that is resolved when
-     * the query completes. Each point height is modified in place. If a height cannot be determined because no
-     * geometry can be sampled at that location, or another error occurs, the height is set to undefined.
+     * using the maximum level of detail for 3D Tilesets in the scene. The height of the input positions is ignored.
+     * Returns a promise that is resolved when the query completes. Each point height is modified in place.
+     * If a height cannot be determined because no geometry can be sampled at that location, or another error occurs,
+     * the height is set to undefined.
      *
      * @param {Cartographic[]} positions The cartographic positions to update with sampled heights.
      * @param {Object[]} [objectsToExclude] A list of primitives, entities, or 3D Tiles features to not sample height from.
