@@ -24,7 +24,7 @@ var gulpRename = require('gulp-rename');
 var gulpReplace = require('gulp-replace');
 var Promise = require('bluebird');
 var requirejs = require('requirejs');
-var Karma = require('karma').Server;
+var Karma = require('karma');
 var yargs = require('yargs');
 var AWS = require('aws-sdk');
 var mime = require('mime');
@@ -43,18 +43,13 @@ var travisDeployUrl = 'http://cesium-dev.s3-website-us-east-1.amazonaws.com/cesi
 //per-task variables.  We use the command line argument here to detect which task is being run.
 var taskName = process.argv[2];
 var noDevelopmentGallery = taskName === 'release' || taskName === 'makeZipFile';
-var buildingRelease = noDevelopmentGallery;
 var minifyShaders = taskName === 'minify' || taskName === 'minifyRelease' || taskName === 'release' || taskName === 'makeZipFile' || taskName === 'buildApps';
+
+var verbose = yargs.argv.verbose;
 
 var concurrency = yargs.argv.concurrency;
 if (!concurrency) {
     concurrency = os.cpus().length;
-}
-
-//Since combine and minify run in parallel already, split concurrency in half when building both.
-//This can go away when gulp 4 comes out because it allows for synchronous tasks.
-if (buildingRelease) {
-    concurrency = concurrency / 2;
 }
 
 var sourceFiles = ['Source/**/*.js',
@@ -178,14 +173,16 @@ gulp.task('cloc', ['clean'], function() {
     });
 });
 
-gulp.task('combine', ['generateStubs'], function() {
+function combine() {
     var outputDirectory = path.join('Build', 'CesiumUnminified');
     return combineJavaScript({
-        removePragmas : false,
-        optimizer : 'none',
-        outputDirectory : outputDirectory
+        removePragmas: false,
+        optimizer: 'none',
+        outputDirectory: outputDirectory
     });
-});
+}
+
+gulp.task('combine', ['generateStubs'], combine);
 
 gulp.task('combineRelease', ['generateStubs'], function() {
     var outputDirectory = path.join('Build', 'CesiumUnminified');
@@ -197,7 +194,7 @@ gulp.task('combineRelease', ['generateStubs'], function() {
 });
 
 //Builds the documentation
-gulp.task('generateDocumentation', function() {
+function generateDocumentation() {
     var envPathSeperator = os.platform() === 'win32' ? ';' : ':';
 
     return new Promise(function(resolve, reject) {
@@ -216,7 +213,8 @@ gulp.task('generateDocumentation', function() {
             return streamToPromise(stream).then(resolve);
         });
     });
-});
+}
+gulp.task('generateDocumentation', generateDocumentation);
 
 gulp.task('instrumentForCoverage', ['build'], function(done) {
     var jscoveragePath = path.join('Tools', 'jscoverage-0.5.1', 'jscoverage.exe');
@@ -286,13 +284,15 @@ gulp.task('minify', ['generateStubs'], function() {
     });
 });
 
-gulp.task('minifyRelease', ['generateStubs'], function() {
+function minifyRelease() {
     return combineJavaScript({
-        removePragmas : true,
-        optimizer : 'uglify2',
-        outputDirectory : path.join('Build', 'Cesium')
+        removePragmas: true,
+        optimizer: 'uglify2',
+        outputDirectory: path.join('Build', 'Cesium')
     });
-});
+}
+
+gulp.task('minifyRelease', ['generateStubs'], minifyRelease);
 
 function isTravisPullRequest() {
     return process.env.TRAVIS_PULL_REQUEST !== undefined && process.env.TRAVIS_PULL_REQUEST !== 'false';
@@ -428,7 +428,9 @@ function deployCesium(bucketName, uploadDirectory, cacheControl, done) {
                         return;
                     }
 
-                    console.log('Uploading ' + blobName + '...');
+                    if (verbose) {
+                        console.log('Uploading ' + blobName + '...');
+                    }
                     var params = {
                         Bucket : bucketName,
                         Key : blobName,
@@ -479,7 +481,9 @@ function deployCesium(bucketName, uploadDirectory, cacheControl, done) {
                             Objects: objects
                         }
                     }).promise().then(function() {
-                        console.log('Cleaned ' + objects.length + ' files.');
+                        if (verbose) {
+                            console.log('Cleaned ' + objects.length + ' files.');
+                        }
                     });
                 }, {concurrency : concurrency});
             }
@@ -592,7 +596,11 @@ function setStatus(state, targetUrl, description, context) {
      });
 }
 
-gulp.task('release', ['combine', 'minifyRelease', 'generateDocumentation']);
+gulp.task('release', ['generateStubs'], function() {
+    return combine()
+        .then(minifyRelease)
+        .then(generateDocumentation);
+});
 
 gulp.task('test', function(done) {
     var argv = yargs.argv;
@@ -621,7 +629,7 @@ gulp.task('test', function(done) {
         files.push({pattern : 'Build/**', included : false});
     }
 
-    var karma = new Karma({
+    var karma = new Karma.Server({
         configFile: karmaConfigFile,
         browsers: browsers,
         specReporter: {
@@ -633,8 +641,10 @@ gulp.task('test', function(done) {
         detectBrowsers: {
             enabled: enableAllBrowsers
         },
+        logLevel: verbose ? Karma.constants.LOG_INFO : Karma.constants.LOG_ERROR,
         files: files,
         client: {
+            captureConsole: verbose,
             args: [includeCategory, excludeCategory, webglValidation, webglStub, release]
         }
     }, function(e) {
@@ -1215,7 +1225,7 @@ function buildSandcastle() {
         })
         .pipe(gulp.dest('Build/Apps/Sandcastle'));
 
-    return eventStream.merge(appStream, imageStream);
+    return streamToPromise(eventStream.merge(appStream, imageStream));
 }
 
 function buildCesiumViewer() {
@@ -1304,7 +1314,9 @@ function removeExtension(p) {
 }
 
 function requirejsOptimize(name, config) {
-    console.log('Building ' + name);
+    if (verbose) {
+        console.log('Building ' + name);
+    }
     return new Promise(function(resolve, reject) {
         var cmd = 'npm run requirejs -- --' + new Buffer(JSON.stringify(config)).toString('base64') + ' --silent';
         child_process.exec(cmd, function(e) {
@@ -1313,7 +1325,9 @@ function requirejsOptimize(name, config) {
                 reject(e);
                 return;
             }
-            console.log('Finished ' + name);
+            if (verbose) {
+                console.log('Finished ' + name);
+            }
             resolve();
         });
     });

@@ -2,6 +2,7 @@ defineSuite([
         'DataSources/PolygonGeometryUpdater',
         'Core/ApproximateTerrainHeights',
         'Core/Cartesian3',
+        'Core/Color',
         'Core/Ellipsoid',
         'Core/GeometryOffsetAttribute',
         'Core/JulianDate',
@@ -19,6 +20,7 @@ defineSuite([
         'DataSources/SampledPositionProperty',
         'DataSources/SampledProperty',
         'Scene/GroundPrimitive',
+        'Scene/HeightReference',
         'Scene/PrimitiveCollection',
         'Specs/createDynamicGeometryUpdaterSpecs',
         'Specs/createDynamicProperty',
@@ -29,6 +31,7 @@ defineSuite([
         PolygonGeometryUpdater,
         ApproximateTerrainHeights,
         Cartesian3,
+        Color,
         Ellipsoid,
         GeometryOffsetAttribute,
         JulianDate,
@@ -46,6 +49,7 @@ defineSuite([
         SampledPositionProperty,
         SampledProperty,
         GroundPrimitive,
+        HeightReference,
         PrimitiveCollection,
         createDynamicGeometryUpdaterSpecs,
         createDynamicProperty,
@@ -316,6 +320,27 @@ defineSuite([
         } else {
             expect(updater.onTerrain).toBe(false);
         }
+    });
+
+    it('Checks that a polygon without per position heights does not use a height reference', function() {
+        var entity = createBasicPolygon();
+        var graphics = entity.polygon;
+        graphics.perPositionHeight = new ConstantProperty(true);
+        graphics.outline = true;
+        graphics.outlineColor = Color.BLACK;
+        graphics.height = undefined;
+        graphics.extrudedHeight = undefined;
+        var updater = new PolygonGeometryUpdater(entity, scene);
+
+        var instance;
+
+        graphics.heightReference = new ConstantProperty(HeightReference.RELATIVE_TO_GROUND);
+        graphics.extrudedHeightReference = new ConstantProperty(HeightReference.RELATIVE_TO_GROUND);
+        updater._onEntityPropertyChanged(entity, 'polygon');
+        instance = updater.createFillGeometryInstance(time);
+        expect(instance.geometry._offsetAttribute).toBeUndefined();
+        instance = updater.createOutlineGeometryInstance(time);
+        expect(instance.geometry._offsetAttribute).toBeUndefined();
     });
 
     it('dynamic updater sets properties', function() {

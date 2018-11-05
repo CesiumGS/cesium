@@ -1,4 +1,5 @@
 define([
+        '../Core/ApproximateTerrainHeights',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Cartographic',
@@ -43,6 +44,7 @@ define([
         './TileBoundingSphere',
         './TileOrientedBoundingBox'
     ], function(
+        ApproximateTerrainHeights,
         Cartesian2,
         Cartesian3,
         Cartographic,
@@ -217,8 +219,9 @@ define([
 
         this._ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
 
-        this._useBoundingSphereForClipping = false;
-        this._clippingPlaneOffsetMatrix = undefined;
+        this._initialClippingPlanesOriginMatrix = Matrix4.IDENTITY; // Computed from the tileset JSON.
+        this._clippingPlanesOriginMatrix = undefined; // Combines the above with any run-time transforms.
+        this._clippingPlanesOriginMatrixDirty = true;
 
         /**
          * Optimization option. Whether the tileset should refine based on a dynamic screen space error. Tiles that are further
@@ -742,10 +745,19 @@ define([
                 that._extensionsUsed = tilesetJson.extensionsUsed;
                 that._gltfUpAxis = gltfUpAxis;
                 that._extras = tilesetJson.extras;
-                if (!defined(tilesetJson.root.transform)) {
-                    that._useBoundingSphereForClipping = true;
-                    that._clippingPlaneOffsetMatrix = Transforms.eastNorthUpToFixedFrame(that.boundingSphere.center);
+                // Save the original, untransformed bounding volume position so we can apply
+                // the tile transform and model matrix at run time
+                var boundingVolume = that._root.createBoundingVolume(tilesetJson.root.boundingVolume, Matrix4.IDENTITY);
+                var clippingPlanesOrigin = boundingVolume.boundingSphere.center;
+                // If this origin is above the surface of the earth
+                // we want to apply an ENU orientation as our best guess of orientation.
+                // Otherwise, we assume it gets its position/orientation completely from the
+                // root tile transform and the tileset's model matrix
+                var originCartographic = that._ellipsoid.cartesianToCartographic(clippingPlanesOrigin);
+                if (defined(originCartographic) && (originCartographic.height > ApproximateTerrainHeights._defaultMinTerrainHeight)) {
+                    that._initialClippingPlanesOriginMatrix = Transforms.eastNorthUpToFixedFrame(clippingPlanesOrigin);
                 }
+                that._clippingPlanesOriginMatrix = Matrix4.clone(that._initialClippingPlanesOriginMatrix);
                 that._readyPromise.resolve(that);
             }).otherwise(function(error) {
                 that._readyPromise.reject(error);
@@ -1159,12 +1171,18 @@ define([
         /**
          * @private
          */
-        clippingPlaneOffsetMatrix : {
+        clippingPlanesOriginMatrix : {
             get : function() {
-                if (this._useBoundingSphereForClipping) {
-                    return this._clippingPlaneOffsetMatrix;
+                if (!defined(this._clippingPlanesOriginMatrix)) {
+                    return Matrix4.IDENTITY;
                 }
-                return this.root.computedTransform;
+
+                if (this._clippingPlanesOriginMatrixDirty) {
+                    Matrix4.multiply(this.root.computedTransform, this._initialClippingPlanesOriginMatrix, this._clippingPlanesOriginMatrix);
+                    this._clippingPlanesOriginMatrixDirty = false;
+                }
+
+                return this._clippingPlanesOriginMatrix;
             }
         },
 
@@ -1899,11 +1917,9 @@ define([
 
         // Update clipping planes
         var clippingPlanes = tileset._clippingPlanes;
+        this._clippingPlanesOriginMatrixDirty = true;
         if (defined(clippingPlanes) && clippingPlanes.enabled) {
             clippingPlanes.update(frameState);
-            if (tileset._useBoundingSphereForClipping) {
-                tileset._clippingPlaneOffsetMatrix = Transforms.eastNorthUpToFixedFrame(tileset.boundingSphere.center);
-            }
         }
 
         tileset._timeSinceLoad = Math.max(JulianDate.secondsDifference(frameState.time, tileset._loadTimestamp) * 1000, 0.0);

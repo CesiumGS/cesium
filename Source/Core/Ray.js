@@ -52,8 +52,8 @@ define([
         if (!defined(result)) {
             return new Ray(ray.origin, ray.direction);
         }
-        result.origin = ray.origin;
-        result.direction = ray.direction;
+        result.origin = Cartesian3.clone(ray.origin);
+        result.direction = Cartesian3.clone(ray.direction);
         return result;
     };
 

@@ -948,8 +948,11 @@ defineSuite([
             verifyRender(m);
             m.show = true;
 
-            expect(scene).toRenderAndCall(function(rgba) {
-                expect(rgba).toEqualEpsilon([169, 3, 3, 255], 10); // Red
+            expect({
+                scene : scene,
+                time : JulianDate.fromDate(new Date('January 1, 2014 12:00:00 UTC'))
+            }).toRenderAndCall(function(rgba) {
+                expect(rgba).toEqualEpsilon([193, 17, 16, 255], 5); // Red
             });
 
             primitives.remove(m);
@@ -2077,7 +2080,7 @@ defineSuite([
             expect(scene).toRender([0, 0, 0, 255]);
             m.show = true;
             m.zoomTo();
-            expect(scene).toRender([51, 51, 51, 255]); // Cesium has minimum lighting
+            expect(scene).toRender([0, 0, 0, 255]);
             m.show = false;
 
             primitives.remove(m);

@@ -1,6 +1,7 @@
 define([
         '../Core/defaultValue',
         '../Core/defineProperties',
+        '../Core/FeatureDetection',
         '../Core/VertexFormat',
         '../Shaders/Appearances/PerInstanceFlatColorAppearanceFS',
         '../Shaders/Appearances/PolylineColorAppearanceVS',
@@ -9,6 +10,7 @@ define([
     ], function(
         defaultValue,
         defineProperties,
+        FeatureDetection,
         VertexFormat,
         PerInstanceFlatColorAppearanceFS,
         PolylineColorAppearanceVS,
@@ -18,6 +20,10 @@ define([
 
     var defaultVertexShaderSource = PolylineCommon + '\n' + PolylineColorAppearanceVS;
     var defaultFragmentShaderSource = PerInstanceFlatColorAppearanceFS;
+
+    if (!FeatureDetection.isInternetExplorer()) {
+        defaultVertexShaderSource = '#define CLIP_POLYLINE \n' + defaultVertexShaderSource;
+    }
 
     /**
      * An appearance for {@link GeometryInstance} instances with color attributes and

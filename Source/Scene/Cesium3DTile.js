@@ -661,7 +661,7 @@ define([
         this.updateTransform(parentTransform);
         this._distanceToCamera = this.distanceToTile(frameState);
         this._centerZDepth = this.distanceToTileCenter(frameState);
-        this._screenSpaceError = this.getScreenSpaceError(frameState);
+        this._screenSpaceError = this.getScreenSpaceError(frameState, false);
         this._visibilityPlaneMask = this.visibility(frameState, parentVisibilityPlaneMask); // Use parent's plane mask to speed up visibility test
         this._visible = this._visibilityPlaneMask !== CullingVolume.MASK_OUTSIDE;
         this._inRequestVolume = this.insideViewerRequestVolume(frameState);
@@ -880,7 +880,7 @@ define([
         var tileset = this._tileset;
         var clippingPlanes = tileset.clippingPlanes;
         if (defined(clippingPlanes) && clippingPlanes.enabled) {
-            var intersection = clippingPlanes.computeIntersectionWithBoundingVolume(boundingVolume, tileset.clippingPlaneOffsetMatrix);
+            var intersection = clippingPlanes.computeIntersectionWithBoundingVolume(boundingVolume, tileset.clippingPlanesOriginMatrix);
             this._isClipped = intersection !== Intersect.INSIDE;
             if (intersection === Intersect.OUTSIDE) {
                 return CullingVolume.MASK_OUTSIDE;
@@ -920,7 +920,7 @@ define([
         var tileset = this._tileset;
         var clippingPlanes = tileset.clippingPlanes;
         if (defined(clippingPlanes) && clippingPlanes.enabled) {
-            var intersection = clippingPlanes.computeIntersectionWithBoundingVolume(boundingVolume, tileset.clippingPlaneOffsetMatrix);
+            var intersection = clippingPlanes.computeIntersectionWithBoundingVolume(boundingVolume, tileset.clippingPlanesOriginMatrix);
             this._isClipped = intersection !== Intersect.INSIDE;
             if (intersection === Intersect.OUTSIDE) {
                 return Intersect.OUTSIDE;

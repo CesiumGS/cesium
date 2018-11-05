@@ -1,116 +1,140 @@
 <!doctype html>
 <html>
 <head>
-<title>Cesium</title>
-<link rel="shortcut icon" href="favicon.ico" type="image/x-icon" />
-<style>
-body {
-    font-family: sans-serif;
-}
+    <title>Cesium</title>
+    <link rel="shortcut icon" href="favicon.ico" type="image/x-icon"/>
+    <style>
+        body {
+            font-family: sans-serif;
+            margin: 0;
+            padding: 0;
+        }
 
-dt {
-    margin-top: 7px;
-}
+        h2 {
+            margin-top: 0;
+        }
 
-dd {
-    margin-top: 7px;
-}
+        table, p {
+            margin-left: 25px;
+        }
 
-li {
-    margin-top: 3px;
-}
+        td {
+            padding-bottom: 15px;
+            vertical-align: top;
+        }
 
-ul {
-    list-style-type: none;
-}
-</style>
+        td:first-child {
+            padding-right: 15px;
+        }
+
+        .section:nth-child(even) {
+            background-color: #fff;
+        }
+
+        .section {
+            border: none;
+            padding: 20px 40px;
+        }
+
+        .section > * {
+            max-width: 800px;
+        }
+    </style>
 </head>
-<body>
-  <div>
-    <img src="Apps/Sandcastle/images/Cesium_Logo_Color_Overlay.png" style='width: 400px' />
-    <ul>
-      <li><b>Local links</b>
-        <dl>
-          <dt>
-            <a href="Build/Documentation/index.html">Documentation</a>
-          </dt>
-          <dd>The complete API documentation and reference.</dd>
-          <dt>
-            <a href="Apps/HelloWorld.html">Hello World</a>
-          </dt>
-          <dd>
-            The simplest possible Cesium application.
-          </dd>
-          <dt>
-            <a href="Apps/CesiumViewer/index.html">Cesium Viewer</a>
-          </dt>
-          <dd>
-            A simple Cesium reference application which allows you to browse the globe and select from a variety of imagery and terrain
-            layers as well as load CZML, GeoJSON, and other formats supported by Cesium.
-          </dd>
-          <dt>
-            <a href="Apps/Sandcastle/index.html">Sandcastle</a>
-          </dt>
-          <dd>Cesium's live code editor and example gallery. Browse examples highlighting features of the Cesium API and edit and run
-            them all in your web browser. Cesium applications created in Sandcastle can even be saved and downloaded.</dd>
-        </dl>
-      <li><b>Unit Tests</b>
-        <dl>
-          <dt>
-            <a href="Specs/SpecRunner.html">Run all tests</a>
-          </dt>
-          <dt>
-            <a href="Specs/SpecRunner.html?webglValidation">Run with WebGL validation</a>
-          </dt>
-          <dt>
-            <a href="Specs/SpecRunner.html?webglStub">Run with WebGL stub</a>
-          </dt>
-          <dt>
-            <a href="Specs/SpecRunner.html?category=none">Select a test to run</a>
-          </dt>
-          <dt>
-            <a href="Specs/SpecRunner.html?category=WebGL">Run only WebGL tests</a>
-          </dt>
-          <dt>
-            <a href="Specs/SpecRunner.html?category=All&amp;not=WebGL">Run only non-WebGL tests</a>
-          </dt>
-        </dl></li>
-      <li><b>External links</b>
-        <dl>
-          <dt>
-            <a href="//cesiumjs.org">Homepage</a>
-          </dt>
-          <dd>The official Cesium homepage</dd>
-          <dt>
-            <a href="//cesiumjs.org/tutorials.html">Tutorials</a>
-          </dt>
-          <dd>Step by step guides for learning to use Cesium</dd>
-          <dt>
-            <a href="//cesiumjs.org/forum.html">Forum</a>
-          </dt>
-          <dd>Our forum and mailing list, questions and feedback welcome from all skill levels</dd>
-          <dt>
-            <a href="//github.com/AnalyticalGraphicsInc/cesium">GitHub</a>
-          </dt>
-          <dd>The official Cesium GitHub repository</dd>
-          <dt>
-            <a href="//cesiumjs.org/demos.html">Showcases</a>
-          </dt>
-          <dd>Demos and information about projects using Cesium</dd>
-          <dt>
-            <a href="http://webglreport.com/">WebGL Report</a>
-          </dt>
-          <dd>Provides technical information about WebGL capabilities supported by your browser</dd>
-        </dl></li>
-    </ul>
-  </div>
-  <script type="text/javascript">
-      if (window.location.protocol === 'file:') {
-          document.body.innerHTML = '';
-          document.write('<p><b>This file must be hosted in a web server.</br>');
-          document.write('See our <a href="https://cesiumjs.org/2013/04/12/Cesium-up-and-running/">Getting Started</a> ');
-          document.write('tutorial for a step-by-step guide.</b></p>');
-      }
-  </script>
+<body style="background-color: #f5f7f9;">
+<div>
+    <div class="section">
+        <a href="https://cesiumjs.org"><img src="Apps/Sandcastle/images/Cesium_Logo_Color_Overlay.png" style='width: 400px'/></a>
+        <div style="font-weight: bold; margin: -20px 0 0 150px;">Next Dimension Mapping</div>
+    </div>
+    <div class="section">
+        <h2>Cesium ion</h2>
+        <p>
+            Cesium ion is your hub for discovering 3D content and tiling your own data for streaming. CesiumJS and ion
+            work together to enable you to build world class 3D mapping applications.
+        </p>
+        <p>
+            <a href="https://cesium.com/ion/signup/">Sign up for a free account</a> to get your access token required for using ion's Bing Maps global imagery and Cesium World Terrain assets.
+        </p>
+    </div>
+    <div class="section">
+        <h2>Local links</h2>
+        <table>
+            <tbody>
+            <tr>
+                <td><a href="Build/Documentation/index.html">Documentation</a></td>
+                <td>The complete API documentation and reference.</td>
+            </tr>
+            <tr>
+                <td><a href="Apps/HelloWorld.html">Hello World</a></td>
+                <td>The simplest possible Cesium application.</td>
+            </tr>
+            <tr>
+                <td><a href="Apps/CesiumViewer/index.html">Cesium Viewer</a></td>
+                <td>A sample Cesium reference application which allows you to browse the globe and select from a variety
+                    of imagery and terrain layers as well as load CZML, GeoJSON, and other formats supported by Cesium.
+                </td>
+            </tr>
+            <tr>
+                <td><a href="Apps/Sandcastle/index.html">Sandcastle</a></td>
+                <td>Cesium's live code editor and example gallery. Browse examples highlighting features of the Cesium
+                    API and edit and run them all in your web browser. Cesium applications created in Sandcastle can be
+                    saved and downloaded.
+                </td>
+            </tr>
+            <tr>
+                <td><a href="Specs/SpecRunner.html">Run tests</a></td>
+                <td>Run Cesium's full suite of unit tests</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+    <div class="section">
+        <h2>External links</h2>
+        <table>
+            <tbody>
+            <tr>
+                <td><a href="https://cesium.com">Cesium</a></td>
+                <td>Learn about the Cesium team and the Cesium ion platform</td>
+            </tr>
+            <tr>
+                <td><a href="https://cesium.com/blog/">Cesium Blog</a></td>
+                <td>Follow project news, developer tips, and posts about Cesium's innovative technology</td>
+            </tr>
+            <tr>
+                <td><a href="https://cesiumjs.org/tutorials.html">Tutorials</a></td>
+                <td>Step-by-step guides for learning to use CesiumJS</td>
+            </tr>
+            <tr>
+                <td><a href="https://cesiumjs.org/forum.html">Forum</a></td>
+                <td>Questions and feedback welcome from all skill levels</td>
+            </tr>
+            <tr>
+                <td><a href="https://github.com/AnalyticalGraphicsInc/cesium">GitHub</a></td>
+                <td>The official Cesium GitHub repository</td>
+            </tr>
+            <tr>
+                <td><a href="https://cesiumjs.org/demos.html">Showcases</a></td>
+                <td>Demos and information about projects using CesiumJS</td>
+            </tr>
+            <tr>
+                <td><a href="http://webglreport.com/">WebGL Report</a></td>
+                <td>Provides technical information about WebGL capabilities supported by your browser</td>
+            </tr>
+            </tbody>
+        </table>
+        <div style="padding-top: 300px; font-size: 10pt; vertical-align: bottom;">
+            &copy; 2011-2018 CesiumJS Contributors
+        </div>
+    </div>
+</div>
+<script type="text/javascript">
+    if (window.location.protocol === 'file:') {
+        document.body.innerHTML = '';
+        document.write('<p><b>This file must be hosted in a web server.</br>');
+        document.write('See our <a href="https://cesiumjs.org/tutorials/Cesium-Workshop/#setup">Cesium Workshop</a> ');
+        document.write('tutorial for a step-by-step guide.</b></p>');
+    }
+</script>
 </body>
 </html>
