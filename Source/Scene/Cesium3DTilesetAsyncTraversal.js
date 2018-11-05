@@ -26,7 +26,6 @@ define([
         tileset._selectedTiles.length = 0;
         tileset._requestedTiles.length = 0;
         tileset._hasMixedContent = false;
-        var minimumGeometricError = 0;
 
         var ready = true;
 
@@ -34,10 +33,6 @@ define([
         root.updateVisibility(frameState);
 
         if (!isVisible(root)) {
-            return ready;
-        }
-
-        if (tileset._geometricError <= minimumGeometricError) {
             return ready;
         }
 
@@ -50,7 +45,7 @@ define([
             var tile = stack.pop();
             var add = tile.refine === Cesium3DTileRefine.ADD;
             var replace = tile.refine === Cesium3DTileRefine.REPLACE;
-            var traverse = canTraverse(tileset, minimumGeometricError, tile);
+            var traverse = canTraverse(tileset, tile);
 
             if (traverse) {
                 updateAndPushChildren(tileset, tile, stack, frameState);
@@ -86,7 +81,7 @@ define([
         return !hasEmptyContent(tile) && tile.contentUnloaded;
     }
 
-    function canTraverse(tileset, minimumGeometricError, tile) {
+    function canTraverse(tileset, tile) {
         if (tile.children.length === 0) {
             return false;
         }
@@ -101,7 +96,7 @@ define([
             return true;
         }
 
-        return tile.geometricError >= minimumGeometricError;
+        return true; // Keep traversing until a leave is hit
     }
 
     function updateAndPushChildren(tileset, tile, stack, frameState) {
