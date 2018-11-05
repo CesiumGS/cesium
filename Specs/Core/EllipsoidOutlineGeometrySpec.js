@@ -38,6 +38,14 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
+    it('constructor throws if offset attribute is equal to GeometryOffsetAttribute.TOP', function () {
+        expect(function() {
+            return new EllipsoidOutlineGeometry({
+                offsetAttribute: GeometryOffsetAttribute.TOP
+            });
+        }).toThrowDeveloperError();
+    });
+
     it('constructor rounds floating-point slicePartitions', function() {
         var m = new EllipsoidOutlineGeometry({
             slicePartitions: 3.5,
@@ -110,6 +118,19 @@ defineSuite([
         var expected = new Array(offset.length);
         expected = arrayFill(expected, 1);
         expect(offset).toEqual(expected);
+    });
+
+    it('computes partitions to default to 2 if less than 2', function() {
+        var geometry = new EllipsoidOutlineGeometry({
+            radii: new Cartesian3(0.5, 0.5, 0.5),
+        });
+
+        geometry._slicePartitions = 0;
+        geometry._stackPartitions = 0;
+
+        var m = EllipsoidOutlineGeometry.createGeometry(geometry);
+
+        expect(m.indices.length).toEqual(1016);
     });
 
     it('undefined is returned if the x, y, or z radii are equal or less than zero', function() {
