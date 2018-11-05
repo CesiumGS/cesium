@@ -1186,6 +1186,10 @@ define([
          * The order of the coefficients is: L<sub>00</sub>, L<sub>1-1</sub>, L<sub>10</sub>, L<sub>11</sub>, L<sub>2-2</sub>, L<sub>2-1</sub>, L<sub>20</sub>, L<sub>21</sub>, L<sub>22</sub>
          * </p>
          *
+         * These values can be obtained by preprocessing the environment map using the <code>cmgen</code> tool of
+         * {@link https://github.com/google/filament/releases | Google's Filament project}. This will also generate a KTX file that can be
+         * supplied to {@link Model#specularEnvironmentMaps}.
+         *
          * @memberof Model.prototype
          *
          * @type {Cartesian3[]}
@@ -1214,6 +1218,7 @@ define([
          * @memberof Model.prototype
          * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Image-Based Lighting.html|Sandcastle Image Based Lighting Demo}
          * @type {String}
+         * @see Model#sphericalHarmonicCoefficients
          * @default undefined
          */
         specularEnvironmentMaps : {
