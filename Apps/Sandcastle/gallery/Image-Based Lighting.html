@@ -32,6 +32,16 @@ var viewer = new Cesium.Viewer('cesiumContainer');
 var environmentMapURL = '../../SampleData/EnvironmentMap/kiara_6_afternoon_2k_ibl.ktx';
 var modelURL = '../../SampleData/models/Spheres/MetalRoughSpheres.glb';
 
+// CesiumJS supports image-based lighting through the glTF extension `EXT_lights_image_based`.
+// Until more tools can support this extension, the environment map can be set by manually
+// defining model.sphericalHarmonicCoefficients and model.specularEnvironmentMaps. 
+// The spherical harmonic coefficients define the diffuse irradiance color,
+// and the specular environment map is the specular color.
+// This environment map was processed using Google's Filament project.
+// 1 - Download the Filament release (https://github.com/google/filament/releases).
+// 2 - Run `cmgen --type=ktx --deploy=/path/to/output /path/to/image.hd`.
+// 3 - Take the generated coefficients and the KTX file and load them in CesiumJS as shown below.
+
 var L00  = new Cesium.Cartesian3( 0.170455150831422,  0.163151083190219,  0.196966760289763);
 var L1_1 = new Cesium.Cartesian3(-0.066550267689383, -0.022088055746048,  0.078835009246127);
 var L10  = new Cesium.Cartesian3( 0.038364097478591,  0.045714300098753,  0.063498904606215);
