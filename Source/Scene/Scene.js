@@ -3702,9 +3702,7 @@ define([
         scene._view = scene._defaultView;
 
         if (ready) {
-            frameState.afterRender.push(function() {
-                asyncLoader.deferred.resolve();
-            });
+            asyncLoader.deferred.resolve();
         }
 
         return ready;

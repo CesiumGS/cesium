@@ -57,7 +57,7 @@ defineSuite([
     'use strict';
 
     // It's not easily possible to mock the asynchronous pick functions
-    // so don't run the tests if running with the WebGL stub
+    // so don't run those tests when using the WebGL stub
     var webglStub = !!window.webglStub;
 
     var scene;
@@ -1242,6 +1242,32 @@ defineSuite([
                         expect(position.y).toEqualEpsilon(0.0, CesiumMath.EPSILON5);
                         expect(position.z).toEqualEpsilon(0.0, CesiumMath.EPSILON5);
                     }
+                });
+            });
+        });
+
+        it('excludes tileset in objectsToExclude list', function() {
+            if (webglStub) {
+                return;
+            }
+            scene.camera.setView({ destination : offscreenRectangle });
+            return createTileset().then(function(tileset) {
+                var objectsToExclude = [tileset];
+                return pickFromRayMostDetailed(primitiveRay, objectsToExclude).then(function(result) {
+                    expect(result).toBeUndefined();
+                });
+            });
+        });
+
+        it('excludes tileset whose show is false', function() {
+            if (webglStub) {
+                return;
+            }
+            scene.camera.setView({ destination : offscreenRectangle });
+            return createTileset().then(function(tileset) {
+                tileset.show = false;
+                return pickFromRayMostDetailed(primitiveRay).then(function(result) {
+                    expect(result).toBeUndefined();
                 });
             });
         });

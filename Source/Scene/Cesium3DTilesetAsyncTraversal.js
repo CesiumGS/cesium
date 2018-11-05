@@ -119,6 +119,7 @@ define([
 
     function loadTile(tileset, tile) {
         if (hasUnloadedContent(tile) || tile.contentExpired) {
+            tile._priority = 0.0; // Highest priority
             tileset._requestedTiles.push(tile);
         }
     }

@@ -1969,7 +1969,7 @@ define([
         }
 
         // Update last statistics
-        var statisticsLast = isPick ? this._statisticsLastPick : this._statisticsLastRender;
+        var statisticsLast = isAsync ? this._statisticsLastAsync : (isPick ? this._statisticsLastPick : this._statisticsLastRender);
         Cesium3DTilesetStatistics.clone(statistics, statisticsLast);
 
         return ready;
