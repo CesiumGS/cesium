@@ -32,7 +32,7 @@ var viewer = new Cesium.Viewer('cesiumContainer');
 var environmentMapURL = '../../SampleData/EnvironmentMap/kiara_6_afternoon_2k_ibl.ktx';
 var modelURL = '../../SampleData/models/Spheres/MetalRoughSpheres.glb';
 
-// This environment map was processed using Google's Filament project.
+// This environment map was processed using Google's Filament project. To process your own:
 // 1 - Download the Filament release (https://github.com/google/filament/releases).
 // 2 - Run `cmgen --type=ktx --deploy=/path/to/output /path/to/image.hdr`. Other formats are also supported. Run `cmgen --help` for all options.
 // 3 - Take the generated coefficients and the KTX file and load them in CesiumJS as shown below.
