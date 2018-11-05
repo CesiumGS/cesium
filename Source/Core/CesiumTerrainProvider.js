@@ -18,6 +18,8 @@ define([
         './Math',
         './OrientedBoundingBox',
         './QuantizedMeshTerrainData',
+        './Request',
+        './RequestType',
         './Resource',
         './RuntimeError',
         './TerrainProvider',
@@ -43,6 +45,8 @@ define([
         CesiumMath,
         OrientedBoundingBox,
         QuantizedMeshTerrainData,
+        Request,
+        RequestType,
         Resource,
         RuntimeError,
         TerrainProvider,
@@ -58,10 +62,11 @@ define([
         this.availability = layer.availability;
         this.hasVertexNormals = layer.hasVertexNormals;
         this.hasWaterMask = layer.hasWaterMask;
-        this.hasBvh = layer.hasBvh;
-        this.bvhLevels = layer.bvhLevels;
+        this.hasMetadata = layer.hasMetadata;
+        this.availabilityLevels = layer.availabilityLevels;
+        this.availabilityTilesLoaded = layer.availabilityTilesLoaded;
         this.littleEndianExtensionSize = layer.littleEndianExtensionSize;
-        this.bvhLoaded = layer.bvhLoaded;
+        this.availabilityTilesLoaded = layer.availabilityTilesLoaded;
     }
 
     /**
@@ -128,13 +133,13 @@ define([
         this._requestWaterMask = defaultValue(options.requestWaterMask, false);
 
         /**
-         * Boolean flag that indicates if the client should request tile bounding-volume hierarchy information
+         * Boolean flag that indicates if the client should request tile metadata
          * from the server.
          * @type {Boolean}
          * @default true
          * @private
          */
-        this._requestBvh = defaultValue(options.requestBvh, true);
+        this._requestMetadata = defaultValue(options.requestMetadata, true);
 
         this._errorEvent = new Event();
 
@@ -153,7 +158,7 @@ define([
 
         var that = this;
         var lastResource;
-        var metadataResource;
+        var layerJsonResource;
         var metadataError;
 
         var layers = this._layers = [];
@@ -165,11 +170,11 @@ define([
                 var resource = Resource.createIfNeeded(url);
                 resource.appendForwardSlash();
                 lastResource = resource;
-                metadataResource = lastResource.getDerivedResource({
+                layerJsonResource = lastResource.getDerivedResource({
                     url: 'layer.json'
                 });
 
-                var uri = new Uri(metadataResource.url);
+                var uri = new Uri(layerJsonResource.url);
                 if (uri.authority === 'assets.agi.com') {
                     var deprecationText = 'STK World Terrain at assets.agi.com was shut down on October 1, 2018.';
                     var deprecationLinkText = 'Check out the new high-resolution Cesium World Terrain for migration instructions.';
@@ -183,7 +188,7 @@ define([
                     that._tileCredits = resource.credits;
                 }
 
-                requestMetadata();
+                requestLayerJson();
             })
             .otherwise(function(e) {
                 deferred.reject(e);
@@ -194,19 +199,19 @@ define([
 
             if (!data.format) {
                 message = 'The tile format is not specified in the layer.json file.';
-                metadataError = TileProviderError.handleError(metadataError, that, that._errorEvent, message, undefined, undefined, undefined, requestMetadata);
+                metadataError = TileProviderError.handleError(metadataError, that, that._errorEvent, message, undefined, undefined, undefined, requestLayerJson);
                 return;
             }
 
             if (!data.tiles || data.tiles.length === 0) {
                 message = 'The layer.json file does not specify any tile URL templates.';
-                metadataError = TileProviderError.handleError(metadataError, that, that._errorEvent, message, undefined, undefined, undefined, requestMetadata);
+                metadataError = TileProviderError.handleError(metadataError, that, that._errorEvent, message, undefined, undefined, undefined, requestLayerJson);
                 return;
             }
 
             var hasVertexNormals = false;
             var hasWaterMask = false;
-            var hasBvh = false;
+            var hasMetadata = false;
             var littleEndianExtensionSize = true;
             var isHeightmap = false;
             if (data.format === 'heightmap-1.0') {
@@ -227,7 +232,7 @@ define([
                 that._requestWaterMask = true;
             } else if (data.format.indexOf('quantized-mesh-1.') !== 0) {
                 message = 'The tile format "' + data.format + '" is invalid or not supported.';
-                metadataError = TileProviderError.handleError(metadataError, that, that._errorEvent, message, undefined, undefined, undefined, requestMetadata);
+                metadataError = TileProviderError.handleError(metadataError, that, that._errorEvent, message, undefined, undefined, undefined, requestLayerJson);
                 return;
             }
 
@@ -235,7 +240,8 @@ define([
 
             var maxZoom = data.maxzoom;
             overallMaxZoom = Math.max(overallMaxZoom, maxZoom);
-            var bvhLoaded; // Keeps track of which BVH tiles were loaded
+            // Keeps track of which of the availablity containing tiles have been loaded
+            var availabilityTilesLoaded;
 
             // The vertex normals defined in the 'octvertexnormals' extension is identical to the original
             // contents of the original 'vertexnormals' extension.  'vertexnormals' extension is now
@@ -252,14 +258,14 @@ define([
             if (defined(data.extensions) && data.extensions.indexOf('watermask') !== -1) {
                 hasWaterMask = true;
             }
-            if (defined(data.extensions) && data.extensions.indexOf('bvh') !== -1) {
-                hasBvh = true;
-                bvhLoaded = new TileAvailability(that._tilingScheme, maxZoom);
+            if (defined(data.extensions) && data.extensions.indexOf('metadata') !== -1) {
+                hasMetadata = true;
             }
 
+            var availabilityLevels = data.metadataAvailability;
             var availableTiles = data.available;
             var availability;
-            if (defined(availableTiles) && !hasBvh) {
+            if (defined(availableTiles) && !defined(availabilityLevels)) {
                 availability = new TileAvailability(that._tilingScheme, availableTiles.length);
                 for (var level = 0; level < availableTiles.length; ++level) {
                     var rangesAtLevel = availableTiles[level];
@@ -276,7 +282,8 @@ define([
                         availability.addAvailableTileRange(level, range.startX, yStart, range.endX, yEnd);
                     }
                 }
-            } else if (hasBvh) {
+            } else if (defined(availabilityLevels)) {
+                availabilityTilesLoaded = new TileAvailability(that._tilingScheme, maxZoom);
                 availability = new TileAvailability(that._tilingScheme, maxZoom);
                 overallAvailability[0] = [
                     [0, 0, 1, 0]
@@ -286,7 +293,7 @@ define([
 
             that._hasWaterMask = that._hasWaterMask || hasWaterMask;
             that._hasVertexNormals = that._hasVertexNormals || hasVertexNormals;
-            that._hasBvh = that._hasBvh || hasBvh;
+            that._hasMetadata = that._hasMetadata || hasMetadata;
             if (defined(data.attribution)) {
                 if (attribution.length > 0) {
                     attribution += ' ';
@@ -302,9 +309,9 @@ define([
                 availability: availability,
                 hasVertexNormals: hasVertexNormals,
                 hasWaterMask: hasWaterMask,
-                hasBvh: hasBvh,
-                bvhLevels: data.bvhlevels,
-                bvhLoaded: bvhLoaded,
+                hasMetadata: hasMetadata,
+                availabilityLevels: availabilityLevels,
+                availabilityTilesLoaded: availabilityTilesLoaded,
                 littleEndianExtensionSize: littleEndianExtensionSize
             }));
 
@@ -318,10 +325,10 @@ define([
                     url: parentUrl
                 });
                 lastResource.appendForwardSlash(); // Terrain always expects a directory
-                metadataResource = lastResource.getDerivedResource({
+                layerJsonResource = lastResource.getDerivedResource({
                     url: 'layer.json'
                 });
-                var parentMetadata = metadataResource.fetchJson();
+                var parentMetadata = layerJsonResource.fetchJson();
                 return when(parentMetadata, parseMetadataSuccess, parseMetadataFailure);
             }
 
@@ -329,8 +336,8 @@ define([
         }
 
         function parseMetadataFailure(data) {
-            var message = 'An error occurred while accessing ' + metadataResource.url + '.';
-            metadataError = TileProviderError.handleError(metadataError, that, that._errorEvent, message, undefined, undefined, undefined, requestMetadata);
+            var message = 'An error occurred while accessing ' + layerJsonResource.url + '.';
+            metadataError = TileProviderError.handleError(metadataError, that, that._errorEvent, message, undefined, undefined, undefined, requestLayerJson);
         }
 
         function metadataSuccess(data) {
@@ -384,8 +391,8 @@ define([
             parseMetadataFailure(data);
         }
 
-        function requestMetadata() {
-            when(metadataResource.fetchJson())
+        function requestLayerJson() {
+            when(layerJsonResource.fetchJson())
                 .then(metadataSuccess)
                 .otherwise(metadataFailure);
         }
@@ -417,13 +424,13 @@ define([
          */
         WATER_MASK: 2,
         /**
-         * A bounding-volume hierarchy is included as an extension to the tile mesh
+         * A json object contain metadata about the tile
          *
          * @type {Number}
          * @constant
-         * @default 3
+         * @default 4
          */
-        BVH: 3
+        METADATA: 4
     };
 
     function getRequestHeader(extensionsList) {
@@ -451,7 +458,7 @@ define([
         });
     }
 
-    function createQuantizedMeshTerrainData(provider, buffer, level, x, y, tmsY, layer, availabilityOnly) {
+    function createQuantizedMeshTerrainData(provider, buffer, level, x, y, tmsY, layer) {
         var littleEndianExtensionSize = layer.littleEndianExtensionSize;
         var pos = 0;
         var cartesian3Elements = 3;
@@ -554,32 +561,32 @@ define([
                 encodedNormalBuffer = new Uint8Array(buffer, pos, vertexCount * 2);
             } else if (extensionId === QuantizedMeshExtensionIds.WATER_MASK && provider._requestWaterMask) {
                 waterMaskBuffer = new Uint8Array(buffer, pos, extensionLength);
-            } else if (extensionId === QuantizedMeshExtensionIds.BVH && provider._requestBvh) {
-                var extensionPos = pos;
-                 // Align to 4 bytes.
-                if (extensionPos % 4 !== 0) {
-                    extensionPos += (4 - (extensionPos % 4));
-                }
+            } else if (extensionId === QuantizedMeshExtensionIds.METADATA && provider._requestMetadata) {
+                var stringLength = view.getUint32(pos, true);
+                if (stringLength > 0) {
+                    var jsonString = String.fromCharCode.apply(null,
+                        new Uint8Array(buffer, pos + Uint32Array.BYTES_PER_ELEMENT, stringLength));
+                    var metadata = JSON.parse(jsonString);
+                    var availableTiles = metadata.available;
+                    if (defined(availableTiles)) {
+                        for (var offset = 0; offset < availableTiles.length; ++offset) {
+                            var availableLevel = level + offset + 1;
+                            var rangesAtLevel = availableTiles[offset];
+                            var yTiles = provider._tilingScheme.getNumberOfYTilesAtLevel(availableLevel);
 
-                var numberOfHeights = view.getUint32(extensionPos, true);
-                extensionPos += Uint32Array.BYTES_PER_ELEMENT;
-                var bvh = new Float32Array(buffer, extensionPos, numberOfHeights);
-                extensionPos += Float32Array.BYTES_PER_ELEMENT * numberOfHeights;
-
-                var numberofIncludedLevels = findNumberOfLevels(numberOfHeights/2);
-                if (defined(numberofIncludedLevels) && numberofIncludedLevels <= layer.bvhLevels) {
-                    var maxLevel = numberofIncludedLevels + level - 1;
-                    layer.bvhLoaded.addAvailableTileRange(level, x, y, x, y);
-                    recurseHeights(level, x, y, bvh, 0, maxLevel, provider.availability, layer.availability);
-                } else {
-                    console.log('Incorrect number of heights in tile Level: %d X: %d Y: %d', level, x, y);
+                            for (var rangeIndex = 0; rangeIndex < rangesAtLevel.length; ++rangeIndex) {
+                                var range = rangesAtLevel[rangeIndex];
+                                var yStart = yTiles - range.endY - 1;
+                                var yEnd = yTiles - range.startY - 1;
+                                provider.availability.addAvailableTileRange(availableLevel, range.startX, yStart, range.endX, yEnd);
+                                layer.availability.addAvailableTileRange(availableLevel, range.startX, yStart, range.endX, yEnd);
+                            }
+                        }
+                    }
                 }
+                layer.availabilityTilesLoaded.addAvailableTileRange(level, x, y, x, y);
             }
             pos += extensionLength;
-        }
-
-        if (availabilityOnly) {
-            return;
         }
 
         var skirtHeight = provider.getLevelMaximumGeometricError(level) * 5.0;
@@ -622,42 +629,6 @@ define([
         });
     }
 
-    function findNumberOfLevels(value) {
-        // This finds the number of levels stored in a BVH extension tile.
-        // All levels need to be complete.
-        // See http://mikestoolbox.com/powersum.html
-        for (var i = 0, current = 1; i < 32; ++i, current *= 4) {
-            if (value === ((current-1) / 3)) {
-                return i;
-            }
-        }
-
-        return undefined;
-    }
-
-    function recurseHeights(level, x, y, buffer, index, maxLevel, providerAvailability, layerAvailability) {
-        if (level > maxLevel) {
-            return index;
-        }
-
-        if (!isNaN(buffer[index])) {
-            // Minimum height isn't a Nan, so the tile exists
-            // TODO: Make this more efficient
-            providerAvailability.addAvailableTileRange(level, x, y, x, y);
-            layerAvailability.addAvailableTileRange(level, x, y, x, y);
-        }
-        index += 2; // Skip min and max
-
-        x *= 2;
-        y *= 2;
-        index = recurseHeights(level + 1, x, y + 1, buffer, index, maxLevel, providerAvailability, layerAvailability); // SW
-        index = recurseHeights(level + 1, x + 1, y + 1, buffer, index, maxLevel, providerAvailability, layerAvailability); // SE
-        index = recurseHeights(level + 1, x, y, buffer, index, maxLevel, providerAvailability, layerAvailability); // NW
-        index = recurseHeights(level + 1, x + 1, y, buffer, index, maxLevel, providerAvailability, layerAvailability); // NE
-
-        return index;
-    }
-
     /**
      * Requests the geometry for a given tile.  This function should not be called before
      * {@link CesiumTerrainProvider#ready} returns true.  The result must include terrain data and
@@ -698,13 +669,20 @@ define([
             }
         }
 
-        return requestTileGeometry(this, x, y, level, request, layerToUse, false);
+        return requestTileGeometry(this, x, y, level, layerToUse, request);
     };
 
-    function requestTileGeometry(provider, x, y, level, request, layerToUse, availabilityOnly) {
+    function requestTileGeometry(provider, x, y, level, layerToUse, request) {
         if (!defined(layerToUse)) {
             return when.reject(new RuntimeError('Terrain tile doesn\'t exist'));
         }
+
+        // Do we want a priorityFunction
+        request = defaultValue(request, new Request({
+            throttle : true,
+            throttleByServer : true,
+            type : RequestType.TERRAIN
+        }));
 
         var urlTemplates = layerToUse.tileUrlTemplates;
         if (urlTemplates.length === 0) {
@@ -722,8 +700,8 @@ define([
         if (provider._requestWaterMask && layerToUse.hasWaterMask) {
             extensionList.push('watermask');
         }
-        if (provider._requestBvh && layerToUse.hasBvh) {
-            extensionList.push('bvh');
+        if (provider._requestMetadata && layerToUse.hasMetadata) {
+            extensionList.push('metadata');
         }
 
         var headers;
@@ -762,7 +740,7 @@ define([
             if (defined(provider._heightmapStructure)) {
                 return createHeightmapTerrainData(provider, buffer, level, x, y, tmsY);
             }
-            return createQuantizedMeshTerrainData(provider, buffer, level, x, y, tmsY, layerToUse, availabilityOnly);
+            return createQuantizedMeshTerrainData(provider, buffer, level, x, y, tmsY, layerToUse);
         });
     }
 
@@ -881,22 +859,22 @@ define([
         },
 
         /**
-         * Gets a value indicating whether or not the requested tiles include a BVH.
+         * Gets a value indicating whether or not the requested tiles include metadata.
          * This function should not be called before {@link CesiumTerrainProvider#ready} returns true.
          * @memberof CesiumTerrainProvider.prototype
          * @type {Boolean}
          * @exception {DeveloperError} This property must not be called before {@link CesiumTerrainProvider#ready}
          */
-        hasBvh : {
+        hasMetadata : {
             get : function() {
                 //>>includeStart('debug', pragmas.debug)
                 if (!this._ready) {
-                    throw new DeveloperError('hasBvh must not be called before the terrain provider is ready.');
+                    throw new DeveloperError('hasMetadata must not be called before the terrain provider is ready.');
                 }
                 //>>includeEnd('debug');
 
-                // returns true if we can request vertex normals from the server
-                return this._hasBvh && this._requestBvh;
+                // returns true if we can request metadata from the server
+                return this._hasMetadata && this._requestMetadata;
             }
         },
 
@@ -927,15 +905,15 @@ define([
         },
 
         /**
-         * Boolean flag that indicates if the client should request a BVH from the server.
-         * BVH data is appended to the standard tile mesh data only if the client requests the BVH and
-         * if the server provides a BVH.
+         * Boolean flag that indicates if the client should request metadata from the server.
+         * Metadata is appended to the standard tile mesh data only if the client requests the metadata and
+         * if the server provides a metadata.
          * @memberof CesiumTerrainProvider.prototype
          * @type {Boolean}
          */
-        requestBvh : {
+        requestMetadata : {
             get : function() {
-                return this._requestBvh;
+                return this._requestMetadata;
             }
         },
 
@@ -1025,19 +1003,37 @@ define([
         return (typeof result === 'boolean') ? result : false;
     };
 
+    function getAvailabilityTile(layer, x, y, level) {
+        var availabilityLevels = layer.availabilityLevels;
+        if (level % availabilityLevels === 0) {
+            return {
+                level: level,
+                x: x,
+                y: y
+            };
+        }
+
+        var parentLevel = ((level / availabilityLevels) | 0) * availabilityLevels;
+        var divisor = 1 << (level - parentLevel);
+        var parentX = (x / divisor) | 0;
+        var parentY = (y / divisor) | 0;
+
+        return {
+            level: parentLevel,
+            x: parentX,
+            y: parentY
+        };
+    }
+
     function checkAncestorsLayers(provider, x, y, level, index) {
         var layers = provider._layers;
         var layer = layers[index];
         var promise;
-        if (layer.hasBvh) {
+        if (defined(layer.availabilityLevels)) {
             // We only need to check this layer if there wasn't
-            //  an available list and it has the bvh extension
-            var bvhLevels = layer.bvhLevels - 1;
-            var bvhLevel = ((level / bvhLevels) | 0) * bvhLevels;
-            var divisor = 1 << (level - bvhLevel);
-            var bvhX = (x / divisor) | 0;
-            var bvhY = (y / divisor) | 0;
-            promise = checkBVHParentTiles(provider, bvhX, bvhY, bvhLevel, layer);
+            //  an available list and it has the metadata extension
+            var parent = getAvailabilityTile(layer, x, y, level);
+            promise = checkParentTiles(provider, parent.x, parent.y, parent.level, layer);
         }
 
         // Nothing to load, so this tile isn't available in this layer
@@ -1068,8 +1064,8 @@ define([
             });
     }
 
-    function checkBVHParentTiles(provider, x, y, level, layer) {
-        var isLoaded = layer.bvhLoaded.isTileAvailable(level, x, y);
+    function checkParentTiles(provider, x, y, level, layer) {
+        var isLoaded = layer.availabilityTilesLoaded.isTileAvailable(level, x, y);
         if (isLoaded) {
             // Tile is loaded, so just return
             return;
@@ -1077,16 +1073,11 @@ define([
 
         var promise = when.resolve();
         if (level !== 0) {
-            var bvhLevels = layer.bvhLevels - 1;
-            var divisor = 1 << bvhLevels;
-            var parentLevel = level - bvhLevels;
-            var parentX = (x / divisor) | 0;
-            var parentY = (y / divisor) | 0;
-
-            promise = checkBVHParentTiles(provider, parentX, parentY, parentLevel, layer);
+            var parent = getAvailabilityTile(layer, x, y, level);
+            promise = checkParentTiles(provider, parent.x, parent.y, parent.level, layer);
         }
 
-        // If all parent BVH tiles are already loaded, then this tile isn't available
+        // If all parent tiles are already loaded, then this tile isn't available
         if (!defined(promise)) {
             return;
         }
@@ -1099,7 +1090,7 @@ define([
                 }
 
                 // Load the tile
-                return requestTileGeometry(provider, x, y, level, undefined, layer, true);
+                return requestTileGeometry(provider, x, y, level, layer);
             });
     }
 
