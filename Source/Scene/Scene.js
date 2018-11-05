@@ -3692,7 +3692,7 @@ define([
             var primitive = primitives[i];
             if (scene.primitives.contains(primitive) && primitive.show) {
                 // Only update primitives that are still contained in the scene's primitive collection and are still visible
-                ready = primitive.update(frameState) && ready;
+                ready = primitive.updateAsync(frameState) && ready;
             }
         }
 
