@@ -170,7 +170,7 @@ define([
         };
     };
 
-    function AsyncLoader(ray, primitives) {
+    function AsyncRayPick(ray, primitives) {
         this.ray = ray;
         this.primitives = primitives;
         this.ready = false;
@@ -291,7 +291,7 @@ define([
         this._primitives = new PrimitiveCollection();
         this._groundPrimitives = new PrimitiveCollection();
 
-        this._asyncLoaders = [];
+        this._asyncRayPicks = [];
 
         this._logDepthBuffer = context.fragmentDepth;
         this._logDepthBufferDirty = true;
@@ -3021,7 +3021,7 @@ define([
             scene.globe.update(frameState);
         }
 
-        updateAsyncLoaders(scene);
+        updateAsyncRayPicks(scene);
 
         frameState.creditDisplay.update();
     }
@@ -3664,7 +3664,7 @@ define([
         camera.right = right;
     }
 
-    function updateAsyncLoader(scene, asyncLoader) {
+    function updateAsyncRayPick(scene, asyncRayPick) {
         var context = scene._context;
         var uniformState = context.uniformState;
         var frameState = scene._frameState;
@@ -3672,8 +3672,8 @@ define([
         var view = scene._pickOffscreenView;
         scene._view = view;
 
-        var ray = asyncLoader.ray;
-        var primitives = asyncLoader.primitives;
+        var ray = asyncRayPick.ray;
+        var primitives = asyncRayPick.primitives;
 
         updateCameraFromRay(ray, view.camera);
 
@@ -3702,23 +3702,23 @@ define([
         scene._view = scene._defaultView;
 
         if (ready) {
-            asyncLoader.deferred.resolve();
+            asyncRayPick.deferred.resolve();
         }
 
         return ready;
     }
 
-    function updateAsyncLoaders(scene) {
-        var asyncLoaders = scene._asyncLoaders;
-        for (var i = 0; i < asyncLoaders.length; ++i) {
-            var ready = updateAsyncLoader(scene, asyncLoaders[i]);
+    function updateAsyncRayPicks(scene) {
+        var asyncRayPicks = scene._asyncRayPicks;
+        for (var i = 0; i < asyncRayPicks.length; ++i) {
+            var ready = updateAsyncRayPick(scene, asyncRayPicks[i]);
             if (ready) {
-                asyncLoaders.splice(i--, 1);
+                asyncRayPicks.splice(i--, 1);
             }
         }
     }
 
-    function launchAsyncLoader(scene, ray, objectsToExclude, callback) {
+    function launchAsyncRayPick(scene, ray, objectsToExclude, callback) {
         var asyncPrimitives = [];
         var primitives = scene.primitives;
         var length = primitives.length;
@@ -3734,9 +3734,9 @@ define([
             return when.resolve(callback());
         }
 
-        var asyncLoader = new AsyncLoader(ray, asyncPrimitives);
-        scene._asyncLoaders.push(asyncLoader);
-        return asyncLoader.promise.then(function() {
+        var asyncRayPick = new AsyncRayPick(ray, asyncPrimitives);
+        scene._asyncRayPicks.push(asyncRayPick);
+        return asyncRayPick.promise.then(function() {
             return callback();
         });
     }
@@ -3907,7 +3907,7 @@ define([
         var that = this;
         ray = Ray.clone(ray);
         objectsToExclude = defined(objectsToExclude) ? objectsToExclude.slice() : objectsToExclude;
-        return launchAsyncLoader(this, ray, objectsToExclude, function() {
+        return launchAsyncRayPick(this, ray, objectsToExclude, function() {
             return pickFromRay(that, ray, objectsToExclude, false, true);
         });
     };
@@ -3935,7 +3935,7 @@ define([
         var that = this;
         ray = Ray.clone(ray);
         objectsToExclude = defined(objectsToExclude) ? objectsToExclude.slice() : objectsToExclude;
-        return launchAsyncLoader(this, ray, objectsToExclude, function() {
+        return launchAsyncRayPick(this, ray, objectsToExclude, function() {
             return drillPickFromRay(that, ray, limit, objectsToExclude, false, true);
         });
     };
@@ -3976,7 +3976,7 @@ define([
 
     function sampleHeightMostDetailed(scene, cartographic, objectsToExclude) {
         var ray = getRayForSampleHeight(scene, cartographic);
-        return launchAsyncLoader(scene, ray, objectsToExclude, function() {
+        return launchAsyncRayPick(scene, ray, objectsToExclude, function() {
             var pickResult = pickFromRay(scene, ray, objectsToExclude, true, true);
             if (defined(pickResult)) {
                 return getHeightFromCartesian(scene, pickResult.position);
@@ -3986,7 +3986,7 @@ define([
 
     function clampToHeightMostDetailed(scene, cartesian, objectsToExclude, result) {
         var ray = getRayForClampToHeight(scene, cartesian);
-        return launchAsyncLoader(scene, ray, objectsToExclude, function() {
+        return launchAsyncRayPick(scene, ray, objectsToExclude, function() {
             var pickResult = pickFromRay(scene, ray, objectsToExclude, true, true);
             if (defined(pickResult)) {
                 return Cartesian3.clone(pickResult.position, result);
