@@ -1,6 +1,11 @@
 define([
-        '../Core/Bitmap',
+        '../Core/Cartesian2',
+        '../Core/Cartesian3',
+        '../Core/Cartesian4',
+        '../Core/Cartographic',
+        '../Core/Math',
         '../Core/Check',
+        '../Core/Color',
         '../Core/Credit',
         '../Core/defaultValue',
         '../Core/defined',
@@ -8,15 +13,25 @@ define([
         '../Core/DeveloperError',
         '../Core/FeatureDetection',
         '../Core/getAbsoluteUri',
+        '../Core/Matrix4',
+        '../Core/IntersectionTests',
+        '../Core/Plane',
         '../Core/Rectangle',
+        '../Core/Ray',
         '../Core/TaskProcessor',
         '../Core/SerializedMapProjection',
         '../ThirdParty/when',
         './BitmapImageryProvider',
-        './ImageryLayer'
+        './ImageryLayer',
+        './SceneMode'
     ], function(
-        Bitmap,
+        Cartesian2,
+        Cartesian3,
+        Cartesian4,
+        Cartographic,
+        CesiumMath,
         Check,
+        Color,
         Credit,
         defaultValue,
         defined,
@@ -24,12 +39,17 @@ define([
         DeveloperError,
         FeatureDetection,
         getAbsoluteUri,
+        Matrix4,
+        IntersectionTests,
+        Plane,
         Rectangle,
+        Ray,
         TaskProcessor,
         SerializedMapProjection,
         when,
         BitmapImageryProvider,
-        ImageryLayer) {
+        ImageryLayer,
+        SceneMode) {
     'use strict';
 
     var insetWaitFrames = 3;
@@ -47,7 +67,7 @@ define([
      * @param {MapProjection[]} options.projections The map projections for each image.
      * @param {Credit|String} [options.credit] A credit for all the images, which is displayed on the canvas.
      * @param {Scene} options.scene The current Cesium scene.
-     * @param {Number} [options.concurrency=4] The number of web workers across which the load should be distributed.
+     * @param {Number} [options.concurrency=2] The number of web workers across which the load should be distributed.
      * @param {Number} [options.imageCacheSize=100] Number of cached images to hold in memory at once
      */
     function ImageryMosaic(options, viewer) {
@@ -111,6 +131,11 @@ define([
 
         this._waitedFrames = 0;
 
+        this._entityCollection = viewer.entities;
+
+        this._boundsRectangle = undefined;
+        this._debugShowBoundsRectangle = false;
+
         var that = this;
 
         var urlGroups = new Array(concurrency);
@@ -141,7 +166,7 @@ define([
             });
         }
 
-        when.all(initializationPromises)
+        this.readyPromise = when.all(initializationPromises)
             .then(function(rectangles) {
                 // Merge rectangles
                 var thatRectangle = Rectangle.clone(rectangles[0], that._rectangle);
@@ -205,6 +230,24 @@ define([
                     this.refresh(this._scene);
                 }
             }
+        },
+        debugShowBoundsRectangle : {
+            get: function() {
+                return this._debugShowBoundsRectangle;
+            },
+            set: function(value) {
+                if (value) {
+                    this._debugShowBoundsRectangle = true;
+                    if (defined(this._boundsRectangle)) {
+                        this._boundsRectangle.show = true;
+                    }
+                } else {
+                    this._debugShowBoundsRectangle = false;
+                    if (defined(this._boundsRectangle)) {
+                        this._boundsRectangle.show = false;
+                    }
+                }
+            }
         }
     });
 
@@ -224,6 +267,13 @@ define([
         });
     };
 
+    var samplePoint3Scratch = new Cartesian3();
+    var surfaceNormalScratch = new Cartesian3();
+    var cvPositionScratch = new Cartesian3();
+    var samplePointCartographicScratch = new Cartographic();
+    var raycastPointScratch = new Cartesian2();
+    var rayScratch = new Ray();
+    var cvPlane = new Plane(Cartesian3.UNIT_X, 0.0);
     ImageryMosaic.prototype.refresh = function(scene) {
         // Compute an approximate geographic rectangle that we're rendering
         var quadtreePrimitive = scene.globe._surface;
@@ -239,12 +289,58 @@ define([
         renderingBounds.south = Number.POSITIVE_INFINITY;
         renderingBounds.north = Number.NEGATIVE_INFINITY;
 
-        for (var i = 0; i < quadtreeTilesToRenderLength; i++) {
-            var tileRectangle = quadtreeTilesToRender[i].rectangle;
-            renderingBounds.west = Math.min(renderingBounds.west, tileRectangle.west);
-            renderingBounds.east = Math.max(renderingBounds.east, tileRectangle.east);
-            renderingBounds.south = Math.min(renderingBounds.south, tileRectangle.south);
-            renderingBounds.north = Math.max(renderingBounds.north, tileRectangle.north);
+        // Cast rays from the camera in a screenspace grid against plane or ellipsoid to determine the rectangle
+        var sqrtRayPoints = 10;
+        var camera = scene.camera;
+        var drawingBufferWidth = scene.drawingBufferWidth;
+        var drawingBufferHeight = scene.drawingBufferHeight;
+        var gridWidthInterval = drawingBufferWidth / (sqrtRayPoints - 1);
+        var gridHeightInterval = drawingBufferHeight / (sqrtRayPoints - 1);
+        var raycastPoint = raycastPointScratch;
+
+        var ellipsoid = scene.globe.ellipsoid;
+        var mapProjection = scene.mapProjection;
+        var viewProjection = scene.context.uniformState.viewProjection;
+        var cameraPosition = scene.camera.positionWC;
+
+        for (var y = 0; y < sqrtRayPoints; y++) {
+            for (var x = 0; x < sqrtRayPoints; x++) {
+                raycastPoint.x = x * gridWidthInterval;
+                raycastPoint.y = y * gridHeightInterval;
+
+                var gridRay = camera.getPickRay(raycastPoint, rayScratch);
+                var intersectionCartographic;
+                var samplePoint3 = samplePoint3Scratch;
+                var surfaceNormal = surfaceNormalScratch;
+                if (scene.mode === SceneMode.SCENE3D) {
+                    var interval = IntersectionTests.rayEllipsoid(gridRay, ellipsoid);
+                    if (!defined(interval)) {
+                        continue;
+                    }
+                    Ray.getPoint(gridRay, interval.start, samplePoint3);
+                    intersectionCartographic = ellipsoid.cartesianToCartographic(samplePoint3, samplePointCartographicScratch);
+                    ellipsoid.geodeticSurfaceNormal(samplePoint3, surfaceNormal);
+                } else {
+                    IntersectionTests.rayPlane(gridRay, cvPlane, samplePoint3);
+                    if (!defined(samplePoint3)) {
+                        continue;
+                    }
+                    var cvPosition = cvPositionScratch;
+                    cvPosition.x = samplePoint3.y;
+                    cvPosition.y = samplePoint3.z;
+                    cvPosition.z = samplePoint3.x;
+
+                    intersectionCartographic = mapProjection.unproject(cvPosition, samplePointCartographicScratch);
+                    surfaceNormal = Cartesian3.UNIT_X;
+                }
+
+                if (pointVisible(samplePoint3, viewProjection, cameraPosition, surfaceNormal)) {
+                    renderingBounds.west = Math.min(renderingBounds.west, intersectionCartographic.longitude);
+                    renderingBounds.east = Math.max(renderingBounds.east, intersectionCartographic.longitude);
+                    renderingBounds.south = Math.min(renderingBounds.south, intersectionCartographic.latitude);
+                    renderingBounds.north = Math.max(renderingBounds.north, intersectionCartographic.latitude);
+                }
+            }
         }
 
         var imageryBounds = this._rectangle;
@@ -271,6 +367,23 @@ define([
         var that = this;
         this._iteration++;
         var iteration = this._iteration;
+
+        if (defined(this._boundsRectangle)) {
+            this._entityCollection.remove(this._boundsRectangle);
+        }
+        this._boundsRectangle = this._entityCollection.add({
+            name : 'cutout',
+            rectangle : {
+                coordinates : renderingBounds,
+                material : Color.WHITE.withAlpha(0.0),
+                height : 10.0,
+                outline : true,
+                outlineWidth : 4.0,
+                outlineColor : Color.WHITE
+            },
+            show : this._debugShowBoundsRectangle
+        });
+
         requestProjection(this._taskProcessors, 1024, 1024, renderingBounds)
             .then(function(reprojectedBitmap) {
                 if (that._iteration !== iteration) {
@@ -299,6 +412,32 @@ define([
                 console.log(e); // TODO: handle or throw?
             });
     };
+
+    var samplePointVec4Scratch = new Cartesian4();
+    var cameraDirectionScratch = new Cartesian3();
+    var maxCosineAngle = CesiumMath.toRadians(80);
+    function pointVisible(samplePoint3, viewProjection, cameraPosition, surfaceNormal) {
+        var samplePoint = samplePointVec4Scratch;
+        samplePoint.x = samplePoint3.x;
+        samplePoint.y = samplePoint3.y;
+        samplePoint.z = samplePoint3.z;
+        samplePoint.w = 1.0;
+
+        Matrix4.multiplyByVector(viewProjection, samplePoint, samplePoint);
+        var x = samplePoint.x / samplePoint.w;
+        var y = samplePoint.y / samplePoint.w;
+        var z = samplePoint.z / samplePoint.w;
+
+        if (x < -1.0 || 1.0 < x || y < -1.0 || 1.0 < y || z < -1.0 || 1.0 < z) {
+            return false;
+        }
+
+        var cameraDirection = Cartesian3.subtract(cameraPosition, samplePoint3, cameraDirectionScratch);
+        Cartesian3.normalize(cameraDirection, cameraDirection);
+        var cameraAngle = Math.acos(Cartesian3.dot(cameraDirection, surfaceNormal));
+
+        return cameraAngle < maxCosineAngle; // TODO: do we need the acos here? something tells me no...
+    }
 
     function requestProjection(taskProcessors, width, height, rectangle) {
         var concurrency = taskProcessors.length;

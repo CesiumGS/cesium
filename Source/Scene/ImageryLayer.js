@@ -1083,7 +1083,7 @@ define([
         }
 
         // For each vertex in the target grid, project into the projection
-        var unprojectedRectangle = Rectangle.unproject(rectangleInProjection, projection, unprojectedRectangleScratch);
+        var unprojectedRectangle = Rectangle.approximateCartographicExtents(rectangleInProjection, projection, unprojectedRectangleScratch);
 
         //var reprojected = Rectangle.project(unprojectedRectangle, projection);
 

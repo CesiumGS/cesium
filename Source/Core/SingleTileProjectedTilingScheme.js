@@ -24,7 +24,7 @@ define([
         this._projectedRectangle = Rectangle.clone(options.projectedRectangle);
         this._projection = options.projection;
 
-        this._rectangle = Rectangle.unproject(options.projectedRectangle, options.projection);
+        this._rectangle = Rectangle.approximateCartographicExtents(options.projectedRectangle, options.projection);
     }
 
     defineProperties(SingleTileProjectedTilingScheme.prototype, {
@@ -97,7 +97,7 @@ define([
         Check.defined('rectangle', rectangle);
         //>>includeEnd('debug');
 
-        return Rectangle.project(rectangle, this._projection, result);
+        return Rectangle.approximateProjectedExtents(rectangle, this._projection, result);
     };
 
     /**
