@@ -43,8 +43,8 @@ define([
             asyncTraversal.stackMaximumLength = Math.max(asyncTraversal.stackMaximumLength, stack.length);
 
             var tile = stack.pop();
-            var add = tile.refine === Cesium3DTileRefine.ADD;
-            var replace = tile.refine === Cesium3DTileRefine.REPLACE;
+            var add = (tile.refine === Cesium3DTileRefine.ADD);
+            var replace = (tile.refine === Cesium3DTileRefine.REPLACE);
             var traverse = canTraverse(tileset, tile);
 
             if (traverse) {
