@@ -104,10 +104,10 @@ define([
         result.z = (dot00 * dot12 - dot01 * dot02);
         var q = dot00 * dot11 - dot01 * dot01;
 
+        // This is done to avoid dividing by infinity causing a NaN
         if (result.y !== 0) {
             result.y /= q;
         }
-
         if (result.z !== 0) {
             result.z /= q;
         }
