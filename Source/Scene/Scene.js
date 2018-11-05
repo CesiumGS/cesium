@@ -3690,9 +3690,11 @@ define([
         var primitivesLength = primitives.length;
         for (var i = 0; i < primitivesLength; ++i) {
             var primitive = primitives[i];
-            if (scene.primitives.contains(primitive) && primitive.show) {
+            if (primitive.show && scene.primitives.contains(primitive)) {
                 // Only update primitives that are still contained in the scene's primitive collection and are still visible
-                ready = primitive.updateAsync(frameState) && ready;
+                // Update primitives continually until all primitives are ready. This way tiles are never removed from the cache.
+                var primitiveReady = primitive.updateAsync(frameState);
+                ready = (ready && primitiveReady);
             }
         }
 
@@ -3709,10 +3711,10 @@ define([
     }
 
     function updateAsyncRayPicks(scene) {
+        // Modifies array during iteration
         var asyncRayPicks = scene._asyncRayPicks;
         for (var i = 0; i < asyncRayPicks.length; ++i) {
-            var ready = updateAsyncRayPick(scene, asyncRayPicks[i]);
-            if (ready) {
+            if (updateAsyncRayPick(scene, asyncRayPicks[i])) {
                 asyncRayPicks.splice(i--, 1);
             }
         }
@@ -3840,7 +3842,7 @@ define([
      * @private
      *
      * @param {Ray} ray The ray.
-     * @param {Object[]} [objectsToExclude] A list of primitives, entities, or features to exclude from the ray intersection.
+     * @param {Object[]} [objectsToExclude] A list of primitives, entities, or 3D Tiles features to exclude from the ray intersection.
      * @returns {Object} An object containing the object and position of the first intersection.
      *
      * @exception {DeveloperError} Ray intersections are only supported in 3D mode.
@@ -3870,7 +3872,7 @@ define([
      *
      * @param {Ray} ray The ray.
      * @param {Number} [limit=Number.MAX_VALUE] If supplied, stop finding intersections after this many intersections.
-     * @param {Object[]} [objectsToExclude] A list of primitives, entities, or features to exclude from the ray intersection.
+     * @param {Object[]} [objectsToExclude] A list of primitives, entities, or 3D Tiles features to exclude from the ray intersection.
      * @returns {Object[]} List of objects containing the object and position of each intersection.
      *
      * @exception {DeveloperError} Ray intersections are only supported in 3D mode.
@@ -3892,7 +3894,7 @@ define([
      * @private
      *
      * @param {Ray} ray The ray.
-     * @param {Object[]} [objectsToExclude] A list of primitives, entities, or features to exclude from the ray intersection.
+     * @param {Object[]} [objectsToExclude] A list of primitives, entities, or 3D Tiles features to exclude from the ray intersection.
      * @returns {Promise.<Object>} A promise that resolves to an object containing the object and position of the first intersection.
      *
      * @exception {DeveloperError} Ray intersections are only supported in 3D mode.
@@ -3920,7 +3922,7 @@ define([
      *
      * @param {Ray} ray The ray.
      * @param {Number} [limit=Number.MAX_VALUE] If supplied, stop finding intersections after this many intersections.
-     * @param {Object[]} [objectsToExclude] A list of primitives, entities, or features to exclude from the ray intersection.
+     * @param {Object[]} [objectsToExclude] A list of primitives, entities, or 3D Tiles features to exclude from the ray intersection.
      * @returns {Promise.<Object[]>} A promise that resolves to a list of objects containing the object and position of each intersection.
      *
      * @exception {DeveloperError} Ray intersections are only supported in 3D mode.
@@ -4003,8 +4005,13 @@ define([
      * </p>
      *
      * @param {Cartographic} position The cartographic position to sample height from.
-     * @param {Object[]} [objectsToExclude] A list of primitives, entities, or features to not sample height from.
+     * @param {Object[]} [objectsToExclude] A list of primitives, entities, or 3D Tiles features to not sample height from.
      * @returns {Number} The height. This may be <code>undefined</code> if there was no scene geometry to sample height from.
+     *
+     * @example
+     * var position = new Cesium.Cartographic(-1.31968, 0.698874);
+     * var height = viewer.scene.sampleHeight(position);
+     * console.log(height);
      *
      * @see Scene#clampToHeight
      * @see Scene#clampToHeightMostDetailed
@@ -4040,9 +4047,14 @@ define([
      * </p>
      *
      * @param {Cartesian3} cartesian The cartesian position.
-     * @param {Object[]} [objectsToExclude] A list of primitives, entities, or features to not clamp to.
+     * @param {Object[]} [objectsToExclude] A list of primitives, entities, or 3D Tiles features to not clamp to.
      * @param {Cartesian3} [result] An optional object to return the clamped position.
      * @returns {Cartesian3} The modified result parameter or a new Cartesian3 instance if one was not provided. This may be <code>undefined</code> if there was no scene geometry to clamp to.
+     *
+     * @example
+     * // Clamp an entity to the underlying scene geometry
+     * var position = entity.position.getValue(Cesium.JulianDate.now());
+     * entity.position = viewer.scene.clampToHeight(position);
      *
      * @see Scene#sampleHeight
      * @see Scene#sampleHeightMostDetailed
@@ -4075,8 +4087,19 @@ define([
      * geometry can be sampled at that location, or another error occurs, the height is set to undefined.
      *
      * @param {Cartographic[]} positions The cartographic positions to update with sampled heights.
-     * @param {Object[]} [objectsToExclude] A list of primitives, entities, or features to not sample height from.
+     * @param {Object[]} [objectsToExclude] A list of primitives, entities, or 3D Tiles features to not sample height from.
      * @returns {Promise.<Number[]>} A promise that resolves to the provided list of positions when the query has completed.
+     *
+     * @example
+     * var positions = [
+     *     new Cesium.Cartographic(-1.31968, 0.69887),
+     *     new Cesium.Cartographic(-1.10489, 0.83923)
+     * ];
+     * var promise = viewer.scene.sampleHeightMostDetailed(positions);
+     * promise.then(function(updatedPosition) {
+     *     // positions[0].height and positions[1].height have been updated.
+     *     // updatedPositions is just a reference to positions.
+     * }
      *
      * @see Scene#sampleHeight
      *
@@ -4094,14 +4117,14 @@ define([
         }
         //>>includeEnd('debug');
         objectsToExclude = defined(objectsToExclude) ? objectsToExclude.slice() : objectsToExclude;
-        var i;
         var length = positions.length;
         var promises = new Array(length);
-        for (i = 0; i < length; ++i) {
+        for (var i = 0; i < length; ++i) {
             promises[i] = sampleHeightMostDetailed(this, positions[i], objectsToExclude);
         }
         return when.all(promises).then(function(heights) {
-            for (i = 0; i < length; ++i) {
+            var length = heights.length;
+            for (var i = 0; i < length; ++i) {
                 positions[i].height = heights[i];
             }
             return positions;
@@ -4115,8 +4138,19 @@ define([
      * can be sampled at that location, or another error occurs, the element in the array is set to undefined.
      *
      * @param {Cartesian3[]} cartesians The cartesian positions to update with clamped positions.
-     * @param {Object[]} [objectsToExclude] A list of primitives, entities, or features to not clamp to.
+     * @param {Object[]} [objectsToExclude] A list of primitives, entities, or 3D Tiles features to not clamp to.
      * @returns {Promise.<Cartesian3[]>} A promise that resolves to the provided list of positions when the query has completed.
+     *
+     * @example
+     * var cartesians = [
+     *     entities[0].position.getValue(Cesium.JulianDate.now()),
+     *     entities[1].position.getValue(Cesium.JulianDate.now())
+     * ];
+     * var promise = viewer.scene.clampToHeightMostDetailed(cartesians);
+     * promise.then(function(updatedCartesians) {
+     *     entities[0].position = updatedCartesians[0];
+     *     entities[1].position = updatedCartesians[1];
+     * }
      *
      * @see Scene#clampToHeight
      *
@@ -4134,14 +4168,14 @@ define([
         }
         //>>includeEnd('debug');
         objectsToExclude = defined(objectsToExclude) ? objectsToExclude.slice() : objectsToExclude;
-        var i;
         var length = cartesians.length;
         var promises = new Array(length);
-        for (i = 0; i < length; ++i) {
+        for (var i = 0; i < length; ++i) {
             promises[i] = clampToHeightMostDetailed(this, cartesians[i], objectsToExclude, cartesians[i]);
         }
         return when.all(promises).then(function(clampedCartesians) {
-            for (i = 0; i < length; ++i) {
+            var length = clampedCartesians.length;
+            for (var i = 0; i < length; ++i) {
                 cartesians[i] = clampedCartesians[i];
             }
             return cartesians;
