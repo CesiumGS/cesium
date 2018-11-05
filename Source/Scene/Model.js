@@ -1160,6 +1160,7 @@ define([
          *
          * @memberof Model.prototype
          *
+         * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Image-Based Lighting.html|Sandcastle Image Based Lighting Demo}
          * @type {Number}
          * @default 1.0
          */
@@ -1189,7 +1190,7 @@ define([
          *
          * @type {Cartesian3[]}
          * @default undefined
-         *
+         * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Image-Based Lighting.html|Sandcastle Image Based Lighting Demo}
          * @see {@link https://graphics.stanford.edu/papers/envmap/envmap.pdf|An Efficient Representation for Irradiance Environment Maps}
          */
         sphericalHarmonicCoefficients : {
@@ -1211,7 +1212,7 @@ define([
          * A URL to a KTX file that contains a cube map of the specular lighting and the convoluted specular mipmaps.
          *
          * @memberof Model.prototype
-         *
+         * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Image-Based Lighting.html|Sandcastle Image Based Lighting Demo}
          * @type {String}
          * @default undefined
          */
