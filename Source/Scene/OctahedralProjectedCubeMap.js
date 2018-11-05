@@ -107,6 +107,10 @@ define([
         }
     });
 
+    OctahedralProjectedCubeMap.isSupported = function(context) {
+        return context.halfFloatingPointTexture || context.floatingPointTexture;
+    };
+
     // These vertices are based on figure 1 from "Octahedron Environment Maps".
     var v1 = new Cartesian3(1.0, 0.0, 0.0);
     var v2 = new Cartesian3(0.0, 0.0, 1.0);
@@ -231,6 +235,11 @@ define([
      * @private
      */
     OctahedralProjectedCubeMap.prototype.update = function(frameState) {
+        var context = frameState.context;
+        if (!context.halfFloatingPointTexture && !context.floatingPointTexture) {
+            return;
+        }
+
         if (defined(this._texture) && defined(this._va)) {
             cleanupResources(this);
         }
@@ -250,8 +259,6 @@ define([
         if (!defined(this._cubeMapBuffers)) {
             return;
         }
-
-        var context = frameState.context;
 
         this._va = createVertexArray(context);
         this._sp = ShaderProgram.fromCache({
@@ -276,7 +283,7 @@ define([
             }
         };
 
-        var pixelDatatype = PixelDatatype.HALF_FLOAT;
+        var pixelDatatype = context.halfFloatingPointTexture ? PixelDatatype.HALF_FLOAT : PixelDatatype.FLOAT;
         var pixelFormat = PixelFormat.RGBA;
 
         // First we project each cubemap onto a flat octahedron, and write that to a texture.

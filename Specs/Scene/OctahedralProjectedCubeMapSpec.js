@@ -119,6 +119,10 @@ defineSuite([
     }
 
     it('creates a packed texture with the right dimensions', function() {
+        if (!OctahedralProjectedCubeMap.isSupported(context)) {
+            return;
+        }
+
         var octahedralMap = new OctahedralProjectedCubeMap(environmentMapUrl);
         var frameState = createFrameState(context);
 
@@ -133,6 +137,10 @@ defineSuite([
     });
 
     it('correctly projects the given cube map and all mip levels', function() {
+        if (!OctahedralProjectedCubeMap.isSupported(context)) {
+            return;
+        }
+
         var octahedralMap = new OctahedralProjectedCubeMap(environmentMapUrl);
         var frameState = createFrameState(context);
 
