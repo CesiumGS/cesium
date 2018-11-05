@@ -262,6 +262,7 @@ EllipsoidGeometry.createGeometry = function(ellipsoidGeometry) {
 
     slicePartitions = Math.round(slicePartitions * Math.abs(maximumClock - minimumClock) / CesiumMath.TWO_PI);
     stackPartitions = Math.round(stackPartitions * Math.abs(maximumCone - minimumCone) / CesiumMath.PI);
+
     if (slicePartitions < 2) {
         slicePartitions = 2;
     }
