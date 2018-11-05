@@ -1160,6 +1160,7 @@ define([
          *
          * @memberof Model.prototype
          *
+         * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Image-Based Lighting.html|Sandcastle Image Based Lighting Demo}
          * @type {Number}
          * @default 1.0
          */
@@ -1178,18 +1179,22 @@ define([
         },
 
         /**
-         * The third order spherical harmonic coefficients used for the diffuse color of image-based lighting. When <code>undefined</code>, <code>diffuseIrradiance</code>
-         * will be used.
+         * The third order spherical harmonic coefficients used for the diffuse color of image-based lighting. When <code>undefined</code>, a diffuse irradiance
+         * computed from the atmosphere color is used.
          * <p>
          * There are nine <code>Cartesian3</code> coefficients.
-         * The order of the coefficients is: L<sub>00</sub>, L<sub>1-1</sub>, L<sub>10</sub>, L<sub>11</sub>, L<sub>2-2</sub>, L<sub>2-1</sub>, L<sub>20</sub>, L<sub>21<sub>, L<sub>22</sub>
+         * The order of the coefficients is: L<sub>00</sub>, L<sub>1-1</sub>, L<sub>10</sub>, L<sub>11</sub>, L<sub>2-2</sub>, L<sub>2-1</sub>, L<sub>20</sub>, L<sub>21</sub>, L<sub>22</sub>
          * </p>
+         *
+         * These values can be obtained by preprocessing the environment map using the <code>cmgen</code> tool of
+         * {@link https://github.com/google/filament/releases | Google's Filament project}. This will also generate a KTX file that can be
+         * supplied to {@link Model#specularEnvironmentMaps}.
          *
          * @memberof Model.prototype
          *
          * @type {Cartesian3[]}
          * @default undefined
-         *
+         * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Image-Based Lighting.html|Sandcastle Image Based Lighting Demo}
          * @see {@link https://graphics.stanford.edu/papers/envmap/envmap.pdf|An Efficient Representation for Irradiance Environment Maps}
          */
         sphericalHarmonicCoefficients : {
@@ -1211,8 +1216,9 @@ define([
          * A URL to a KTX file that contains a cube map of the specular lighting and the convoluted specular mipmaps.
          *
          * @memberof Model.prototype
-         *
+         * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Image-Based Lighting.html|Sandcastle Image Based Lighting Demo}
          * @type {String}
+         * @see Model#sphericalHarmonicCoefficients
          * @default undefined
          */
         specularEnvironmentMaps : {
