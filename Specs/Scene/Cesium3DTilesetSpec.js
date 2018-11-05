@@ -1,5 +1,6 @@
 defineSuite([
         'Scene/Cesium3DTileset',
+        'Core/Cartesian2',
         'Core/Cartesian3',
         'Core/Color',
         'Core/defined',
@@ -32,6 +33,7 @@ defineSuite([
         'ThirdParty/when'
     ], function(
         Cesium3DTileset,
+        Cartesian2,
         Cartesian3,
         Color,
         defined,
@@ -1920,6 +1922,30 @@ defineSuite([
         });
     });
 
+    it('renders with imageBaseLightingFactor', function() {
+        return Cesium3DTilesTester.loadTileset(scene, withoutBatchTableUrl).then(function(tileset) {
+            expect(scene).toRenderAndCall(function(rgba) {
+                expect(rgba).not.toEqual([0, 0, 0, 255]);
+                tileset.imageBasedLightingFactor = new Cartesian2(0.0, 0.0);
+                expect(scene).notToRender(rgba);
+            });
+        });
+    });
+
+    it('renders with lightColor', function() {
+        return Cesium3DTilesTester.loadTileset(scene, withoutBatchTableUrl).then(function(tileset) {
+            expect(scene).toRenderAndCall(function(rgba) {
+                expect(rgba).not.toEqual([0, 0, 0, 255]);
+                tileset.imageBasedLightingFactor = new Cartesian2(0.0, 0.0);
+                expect(scene).toRenderAndCall(function(rgba2) {
+                    expect(rgba2).not.toEqual(rgba);
+                    tileset.lightColor = new Cartesian3(5.0, 5.0, 5.0);
+                    expect(scene).notToRender(rgba2);
+                });
+            });
+        });
+    });
+
     ///////////////////////////////////////////////////////////////////////////
     // Styling tests
 
@@ -2069,9 +2095,9 @@ defineSuite([
         return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl).then(function(tileset) {
             tileset.style = new Cesium3DTileStyle({color: 'color("red")'});
             scene.renderForSpecs();
-            expect(tileset.statistics.numberOfTilesStyled).toBe(1);
+            expect(tileset._statisticsLastRender.numberOfTilesStyled).toBe(1);
             scene.pickForSpecs();
-            expect(tileset.statistics.numberOfTilesStyled).toBe(0);
+            expect(tileset._statisticsLastPick.numberOfTilesStyled).toBe(0);
         });
     });
 
@@ -3231,27 +3257,43 @@ defineSuite([
         });
     });
 
-    it('uses bounding sphere for clipping only if root has no transforms', function() {
-        return Cesium3DTilesTester.loadTileset(scene, tilesetOfTilesetsUrl).then(function(tileset) {
-            expect(tileset._useBoundingSphereForClipping).toBe(true);
+    it('clippingPlanesOriginMatrix has correct orientation', function() {
+        return Cesium3DTilesTester.loadTileset(scene, withTransformBoxUrl).then(function(tileset) {
+            // The bounding volume of this tileset puts it under the surface, so no
+            // east-north-up should be applied. Check that it matches the orientation
+            // of the original transform.
+            var offsetMatrix = tileset.clippingPlanesOriginMatrix;
 
-            return Cesium3DTilesTester.loadTileset(scene, withTransformBoxUrl).then(function(tileset) {
-                expect(tileset._useBoundingSphereForClipping).toBe(false);
+            expect(Matrix4.equals(offsetMatrix, tileset.root.computedTransform)).toBe(true);
+
+            return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function(tileset) {
+                // The bounding volume of this tileset puts it on the surface,
+                //  so we want to apply east-north-up as our best guess.
+                offsetMatrix = tileset.clippingPlanesOriginMatrix;
+                // The clipping plane matrix is not the same as the original because we applied east-north-up.
+                expect(Matrix4.equals(offsetMatrix, tileset.root.computedTransform)).toBe(false);
+
+                // But they have the same translation.
+                var clippingPlanesOrigin = Matrix4.getTranslation(offsetMatrix, new Cartesian3());
+                expect(Cartesian3.equals(tileset.root.boundingSphere.center, clippingPlanesOrigin)).toBe(true);
             });
         });
     });
 
-    it('correctly computes clippingPlaneOffsetMatrix', function() {
+    it('clippingPlanesOriginMatrix matches root tile bounding sphere', function() {
         return Cesium3DTilesTester.loadTileset(scene, tilesetOfTilesetsUrl).then(function(tileset) {
-            var offsetMatrix = tileset.clippingPlaneOffsetMatrix;
-            var boundingSphereMatrix = Transforms.eastNorthUpToFixedFrame(tileset.root.boundingSphere.center);
-            expect(Matrix4.equals(offsetMatrix,boundingSphereMatrix)).toBe(true);
+            var offsetMatrix = Matrix4.clone(tileset.clippingPlanesOriginMatrix, new Matrix4());
+            var boundingSphereEastNorthUp = Transforms.eastNorthUpToFixedFrame(tileset.root.boundingSphere.center);
+            expect(Matrix4.equals(offsetMatrix, boundingSphereEastNorthUp)).toBe(true);
 
-            return Cesium3DTilesTester.loadTileset(scene, withTransformBoxUrl).then(function(tileset) {
-                offsetMatrix = tileset.clippingPlaneOffsetMatrix;
-                expect(Matrix4.equals(offsetMatrix,tileset.root.computedTransform)).toBe(true);
-            });
+            // Changing the model matrix should change the clipping planes matrix
+            tileset.modelMatrix = Matrix4.fromTranslation(new Cartesian3(100, 0, 0));
+            scene.renderForSpecs();
+            expect(Matrix4.equals(offsetMatrix, tileset.clippingPlanesOriginMatrix)).toBe(false);
+
+            boundingSphereEastNorthUp = Transforms.eastNorthUpToFixedFrame(tileset.root.boundingSphere.center);
+            offsetMatrix = tileset.clippingPlanesOriginMatrix;
+            expect(offsetMatrix).toEqualEpsilon(boundingSphereEastNorthUp, CesiumMath.EPSILON3);
         });
     });
-
 }, 'WebGL');

@@ -43,7 +43,6 @@ var travisDeployUrl = 'http://cesium-dev.s3-website-us-east-1.amazonaws.com/cesi
 //per-task variables.  We use the command line argument here to detect which task is being run.
 var taskName = process.argv[2];
 var noDevelopmentGallery = taskName === 'release' || taskName === 'makeZipFile';
-var buildingRelease = noDevelopmentGallery;
 var minifyShaders = taskName === 'minify' || taskName === 'minifyRelease' || taskName === 'release' || taskName === 'makeZipFile' || taskName === 'buildApps';
 
 var concurrency = yargs.argv.concurrency;
@@ -51,16 +50,11 @@ if (!concurrency) {
     concurrency = os.cpus().length;
 }
 
-//Since combine and minify run in parallel already, split concurrency in half when building both.
-//This can go away when gulp 4 comes out because it allows for synchronous tasks.
-if (buildingRelease) {
-    concurrency = concurrency / 2;
-}
-
 var sourceFiles = ['Source/**/*.js',
                    '!Source/*.js',
                    '!Source/Workers/**',
                    '!Source/ThirdParty/Workers/**',
+                   '!Source/ThirdParty/google-earth-dbroot-parser.js',
                    '!Source/ThirdParty/pako_inflate.js',
                    '!Source/ThirdParty/crunch.js',
                    'Source/Workers/createTaskProcessorWorker.js'];
@@ -177,14 +171,16 @@ gulp.task('cloc', ['clean'], function() {
     });
 });
 
-gulp.task('combine', ['generateStubs'], function() {
+function combine() {
     var outputDirectory = path.join('Build', 'CesiumUnminified');
     return combineJavaScript({
-        removePragmas : false,
-        optimizer : 'none',
-        outputDirectory : outputDirectory
+        removePragmas: false,
+        optimizer: 'none',
+        outputDirectory: outputDirectory
     });
-});
+}
+
+gulp.task('combine', ['generateStubs'], combine);
 
 gulp.task('combineRelease', ['generateStubs'], function() {
     var outputDirectory = path.join('Build', 'CesiumUnminified');
@@ -196,7 +192,7 @@ gulp.task('combineRelease', ['generateStubs'], function() {
 });
 
 //Builds the documentation
-gulp.task('generateDocumentation', function() {
+function generateDocumentation() {
     var envPathSeperator = os.platform() === 'win32' ? ';' : ':';
 
     return new Promise(function(resolve, reject) {
@@ -215,7 +211,8 @@ gulp.task('generateDocumentation', function() {
             return streamToPromise(stream).then(resolve);
         });
     });
-});
+}
+gulp.task('generateDocumentation', generateDocumentation);
 
 gulp.task('instrumentForCoverage', ['build'], function(done) {
     var jscoveragePath = path.join('Tools', 'jscoverage-0.5.1', 'jscoverage.exe');
@@ -285,13 +282,15 @@ gulp.task('minify', ['generateStubs'], function() {
     });
 });
 
-gulp.task('minifyRelease', ['generateStubs'], function() {
+function minifyRelease() {
     return combineJavaScript({
-        removePragmas : true,
-        optimizer : 'uglify2',
-        outputDirectory : path.join('Build', 'Cesium')
+        removePragmas: true,
+        optimizer: 'uglify2',
+        outputDirectory: path.join('Build', 'Cesium')
     });
-});
+}
+
+gulp.task('minifyRelease', ['generateStubs'], minifyRelease);
 
 function isTravisPullRequest() {
     return process.env.TRAVIS_PULL_REQUEST !== undefined && process.env.TRAVIS_PULL_REQUEST !== 'false';
@@ -591,7 +590,11 @@ function setStatus(state, targetUrl, description, context) {
      });
 }
 
-gulp.task('release', ['combine', 'minifyRelease', 'generateDocumentation']);
+gulp.task('release', ['generateStubs'], function() {
+    return combine()
+        .then(minifyRelease)
+        .then(generateDocumentation);
+});
 
 gulp.task('test', function(done) {
     var argv = yargs.argv;
@@ -891,6 +894,14 @@ function minifyCSS(outputDirectory) {
     });
 }
 
+var gulpUglify = require('gulp-uglify');
+
+function minifyModules(outputDirectory) {
+    return streamToPromise(gulp.src('Source/ThirdParty/google-earth-dbroot-parser.js')
+        .pipe(gulpUglify())
+        .pipe(gulp.dest(outputDirectory + '/ThirdParty/')));
+}
+
 function combineJavaScript(options) {
     var optimizer = options.optimizer;
     var outputDirectory = options.outputDirectory;
@@ -901,7 +912,8 @@ function combineJavaScript(options) {
 
     var promise = Promise.join(
         combineCesium(!removePragmas, optimizer, combineOutput),
-        combineWorkers(!removePragmas, optimizer, combineOutput)
+        combineWorkers(!removePragmas, optimizer, combineOutput),
+        minifyModules(outputDirectory)
     );
 
     return promise.then(function() {
@@ -1205,7 +1217,7 @@ function buildSandcastle() {
         })
         .pipe(gulp.dest('Build/Apps/Sandcastle'));
 
-    return eventStream.merge(appStream, imageStream);
+    return streamToPromise(eventStream.merge(appStream, imageStream));
 }
 
 function buildCesiumViewer() {
@@ -1264,7 +1276,7 @@ function buildCesiumViewer() {
 
             gulp.src(['Build/Cesium/Assets/**',
                       'Build/Cesium/Workers/**',
-                      'Build/Cesium/ThirdParty/Workers/**',
+                      'Build/Cesium/ThirdParty/**',
                       'Build/Cesium/Widgets/**',
                       '!Build/Cesium/Widgets/**/*.css'],
                 {

@@ -157,6 +157,7 @@ define([
      *                 or undefined to show it at all levels.  Level zero is the least-detailed level.
      * @param {Number} [options.maximumTerrainLevel] The maximum terrain level-of-detail at which to show this imagery layer,
      *                 or undefined to show it at all levels.  Level zero is the least-detailed level.
+     * @param {Rectangle} [options.cutoutRectangle] Cartographic rectangle for cutting out a portion of this ImageryLayer.
      */
     function ImageryLayer(imageryProvider, options) {
         this._imageryProvider = imageryProvider;
@@ -279,6 +280,13 @@ define([
         this._requestImageError = undefined;
 
         this._reprojectComputeCommands = [];
+
+        /**
+         * Rectangle cutout in this layer of imagery.
+         *
+         * @type {Rectangle}
+         */
+        this.cutoutRectangle = options.cutoutRectangle;
     }
 
     defineProperties(ImageryLayer.prototype, {

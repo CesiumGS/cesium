@@ -79,7 +79,9 @@ define([
                 this.subscriptions.remove(id);
                 this.showsUpdated.remove(id);
             }
+            return true;
         }
+        return false;
     };
 
     Batch.prototype.update = function(time) {
@@ -217,6 +219,7 @@ define([
             var currentShow = attributes.show[0] === 1;
             if (show !== currentShow) {
                 attributes.show = ShowGeometryInstanceAttribute.toValue(show, attributes.show);
+                instance.attributes.show.value[0] = attributes.show[0];
             }
         }
         this.showsUpdated.removeAll();

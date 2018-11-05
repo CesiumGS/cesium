@@ -272,6 +272,8 @@ define([
             gltfView = new Uint8Array(uint8Array.subarray(byteOffset, byteOffset + gltfByteLength));
         }
 
+        var tileset = content._tileset;
+
         // Create model instance collection
         var collectionOptions = {
             instances : new Array(instancesLength),
@@ -282,10 +284,12 @@ define([
             gltf : undefined,
             basePath : undefined,
             incrementallyLoadTextures : false,
-            upAxis : content._tileset._gltfUpAxis,
+            upAxis : tileset._gltfUpAxis,
             forwardAxis : Axis.X,
             opaquePass : Pass.CESIUM_3D_TILE, // Draw opaque portions during the 3D Tiles pass
-            pickIdLoaded : getPickIdCallback(content)
+            pickIdLoaded : getPickIdCallback(content),
+            imageBasedLightingFactor : tileset.imageBasedLightingFactor,
+            lightColor : tileset.lightColor
         };
 
         if (gltfFormat === 0) {
@@ -471,11 +475,13 @@ define([
         if (defined(model)) {
             // Update for clipping planes
             var tilesetClippingPlanes = this._tileset.clippingPlanes;
-            if (this._tile.clippingPlanesDirty && defined(tilesetClippingPlanes)) {
-                model.clippingPlaneOffsetMatrix = this._tileset.clippingPlaneOffsetMatrix;
-                // Dereference the clipping planes from the model if they are irrelevant - saves on shading
-                // Link/Dereference directly to avoid ownership checks.
-                model._clippingPlanes = (tilesetClippingPlanes.enabled && this._tile._isClipped) ? tilesetClippingPlanes : undefined;
+            if (defined(tilesetClippingPlanes)) {
+               model.clippingPlanesOriginMatrix = this._tileset.clippingPlanesOriginMatrix;
+                if (this._tile.clippingPlanesDirty) {
+                    // Dereference the clipping planes from the model if they are irrelevant - saves on shading
+                    // Link/Dereference directly to avoid ownership checks.
+                    model._clippingPlanes = (tilesetClippingPlanes.enabled && this._tile._isClipped) ? tilesetClippingPlanes : undefined;
+                }
             }
 
             // If the model references a different ClippingPlaneCollection due to the tileset's collection being replaced with a
