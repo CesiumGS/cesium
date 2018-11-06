@@ -1430,6 +1430,7 @@ defineSuite([
     });
 
     function checkDebugColorizeTiles(url) {
+        CesiumMath.setRandomNumberSeed(0);
         return Cesium3DTilesTester.loadTileset(scene, url).then(function(tileset) {
             // Get initial color
             var color;
