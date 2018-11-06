@@ -203,6 +203,9 @@ define([
         gl.activeTexture(gl.TEXTURE0 + this.textureUnitIndex);
 
         var v = this.value;
+        if (this.value === undefined) {
+            console.log(this);
+        }
         gl.bindTexture(v._target, v._texture);
     };
 
