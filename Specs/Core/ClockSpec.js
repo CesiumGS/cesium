@@ -394,6 +394,46 @@ defineSuite([
         expect(start).toEqual(clock.currentTime);
     });
 
+    it('fires onEnd event when endTime is reached and clock range is CLAMPED', function() {
+        var start = new JulianDate(0);
+        var stop = new JulianDate(1);
+        var currentTime = stop;
+        var multiplier = 100.0;
+        var clock = new Clock({
+            startTime : start,
+            stopTime : stop,
+            currentTime : currentTime,
+            clockStep : ClockStep.TICK_DEPENDENT,
+            multiplier : multiplier,
+            clockRange : ClockRange.CLAMPED,
+            shouldAnimate : true
+        });
+        var onStopSpy = jasmine.createSpy('event');
+        clock.onStop.addEventListener(onStopSpy);
+        clock.tick();
+        expect(onStopSpy).toHaveBeenCalled();
+    });
+
+    it('fires onEnd event when endTime is reached and clock range is LOOP_STOP', function() {
+        var start = new JulianDate(0);
+        var stop = new JulianDate(1);
+        var currentTime = stop;
+        var multiplier = 100.0;
+        var clock = new Clock({
+            startTime : start,
+            stopTime : stop,
+            currentTime : currentTime,
+            clockStep : ClockStep.TICK_DEPENDENT,
+            multiplier : multiplier,
+            clockRange : ClockRange.LOOP_STOP,
+            shouldAnimate : true
+        });
+        var onStopSpy = jasmine.createSpy('event');
+        clock.onStop.addEventListener(onStopSpy);
+        clock.tick();
+        expect(onStopSpy).toHaveBeenCalled();
+    });
+
     describe('SYSTEM_CLOCK modes', function() {
         var baseDate = new Date(2016, 6, 7);
 

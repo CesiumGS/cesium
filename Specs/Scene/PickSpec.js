@@ -1,6 +1,7 @@
 defineSuite([
         'Core/Cartesian3',
         'Core/Cartographic',
+        'Core/Color',
         'Core/Ellipsoid',
         'Core/FeatureDetection',
         'Core/GeometryInstance',
@@ -17,6 +18,7 @@ defineSuite([
         'Scene/Cesium3DTileStyle',
         'Scene/EllipsoidSurfaceAppearance',
         'Scene/Globe',
+        'Scene/PointPrimitiveCollection',
         'Scene/Primitive',
         'Scene/Scene',
         'Scene/SceneMode',
@@ -27,6 +29,7 @@ defineSuite([
     ], 'Scene/Pick', function(
         Cartesian3,
         Cartographic,
+        Color,
         Ellipsoid,
         FeatureDetection,
         GeometryInstance,
@@ -43,6 +46,7 @@ defineSuite([
         Cesium3DTileStyle,
         EllipsoidSurfaceAppearance,
         Globe,
+        PointPrimitiveCollection,
         Primitive,
         Scene,
         SceneMode,
@@ -57,7 +61,7 @@ defineSuite([
     var camera;
     var largeRectangle = Rectangle.fromDegrees(-1.0, -1.0, 1.0, 1.0);
     var smallRectangle = Rectangle.fromDegrees(-0.0001, -0.0001, 0.0001, 0.0001);
-    var offscreenRectangle = Rectangle.fromDegrees(-45.0, -1.0, -43.0, 1.0);
+    var offscreenRectangle = Rectangle.fromDegrees(-45.0002, -1.0002, -45.0001, -1.0001);
     var primitiveRay;
     var offscreenRay;
 
@@ -300,7 +304,7 @@ defineSuite([
                 rectangle : Rectangle.fromDegrees(-50.0, -50.0, 50.0, 50.0),
                 granularity : CesiumMath.toRadians(20.0),
                 vertexFormat : EllipsoidSurfaceAppearance.VERTEX_FORMAT,
-                height : 1.0
+                height : 20.0
             });
 
             var instance1 = new GeometryInstance({
@@ -387,7 +391,7 @@ defineSuite([
                 rectangle : Rectangle.fromDegrees(-50.0, -50.0, 50.0, 50.0),
                 granularity : CesiumMath.toRadians(20.0),
                 vertexFormat : EllipsoidSurfaceAppearance.VERTEX_FORMAT,
-                height : 1.0
+                height : 20.0
             });
 
             var instance1 = new GeometryInstance({
@@ -467,6 +471,9 @@ defineSuite([
         });
 
         it('picks the globe', function() {
+            if (!scene.context.depthTexture) {
+                return;
+            }
             return createGlobe().then(function() {
                 expect(scene).toPickFromRayAndCall(function(result) {
                     expect(result.object).toBeUndefined();
@@ -538,6 +545,18 @@ defineSuite([
             // Tests that rectangle4 does not get un-hidden
             expect(scene).toPickFromRayAndCall(function(result) {
                 expect(result.object.primitive).toBe(rectangle3);
+            }, primitiveRay);
+        });
+
+        it('picks primitive that doesn\'t write depth', function() {
+            var collection = scene.primitives.add(new PointPrimitiveCollection());
+            var point = collection.add({
+                position : Cartographic.fromRadians(0.0, 0.0, 100.0),
+                disableDepthTestDistance : Number.POSITIVE_INFINITY
+            });
+            expect(scene).toPickFromRayAndCall(function(result) {
+                expect(result.object.primitive).toBe(point);
+                expect(result.position).toBeUndefined();
             }, primitiveRay);
         });
 
@@ -889,6 +908,34 @@ defineSuite([
             }, cartographic, [rectangle2, rectangle3]);
         });
 
+        it('excludes primitive that doesn\'t write depth', function() {
+            if (!scene.sampleHeightSupported) {
+                return;
+            }
+
+            var rectangle = createSmallRectangle(0.0);
+            var height = 100.0;
+            var cartographic = new Cartographic(0.0, 0.0, height);
+            var collection = scene.primitives.add(new PointPrimitiveCollection());
+            var point = collection.add({
+                position : Cartographic.toCartesian(cartographic)
+            });
+
+            expect(scene).toSampleHeightAndCall(function(height) {
+                expect(height).toEqualEpsilon(height, CesiumMath.EPSILON3);
+            }, cartographic);
+
+            point.disableDepthTestDistance = Number.POSITIVE_INFINITY;
+            expect(scene).toSampleHeightAndCall(function(height) {
+                expect(height).toEqualEpsilon(0.0, CesiumMath.EPSILON3);
+            }, cartographic);
+
+            rectangle.show = false;
+            expect(scene).toSampleHeightAndCall(function(height) {
+                expect(height).toBeUndefined();
+            }, cartographic);
+        });
+
         it('throws if position is undefined', function() {
             if (!scene.sampleHeightSupported) {
                 return;
@@ -961,7 +1008,7 @@ defineSuite([
         });
 
         it('clamps to the globe', function() {
-            if (!scene.sampleHeightSupported) {
+            if (!scene.clampToHeightSupported) {
                 return;
             }
 
@@ -1027,6 +1074,33 @@ defineSuite([
             }, cartesian, [rectangle2, rectangle3]);
         });
 
+        it('excludes primitive that doesn\'t write depth', function() {
+            if (!scene.clampToHeightSupported) {
+                return;
+            }
+
+            var rectangle = createSmallRectangle(0.0);
+            var cartesian = Cartesian3.fromRadians(0.0, 0.0, 100.0);
+            var collection = scene.primitives.add(new PointPrimitiveCollection());
+            var point = collection.add({
+                position : cartesian
+            });
+
+            expect(scene).toClampToHeightAndCall(function(clampedCartesian) {
+                expect(clampedCartesian).toEqualEpsilon(cartesian, CesiumMath.EPSILON3);
+            }, cartesian);
+
+            point.disableDepthTestDistance = Number.POSITIVE_INFINITY;
+            expect(scene).toClampToHeightAndCall(function(clampedCartesian) {
+                expect(clampedCartesian).toEqualEpsilon(cartesian, CesiumMath.EPSILON3);
+            }, cartesian);
+
+            rectangle.show = false;
+            expect(scene).toClampToHeightAndCall(function(clampedCartesian) {
+                expect(clampedCartesian).toBeUndefined();
+            }, cartesian);
+        });
+
         it('throws if cartesian is undefined', function() {
             if (!scene.clampToHeightSupported) {
                 return;
@@ -1078,4 +1152,69 @@ defineSuite([
             scene.context._depthTexture = depthTexture;
         });
     });
+
+    it('calls multiple picking functions within the same frame', function() {
+        if (!scene.clampToHeightSupported || !scene.pickPositionSupported) {
+            return;
+        }
+
+        createSmallRectangle(0.0);
+        var offscreenRectanglePrimitive = createRectangle(0.0, offscreenRectangle);
+        offscreenRectanglePrimitive.appearance.material.uniforms.color = new Color(1.0, 0.0, 0.0, 1.0);
+
+        scene.camera.setView({ destination : offscreenRectangle });
+
+        // Call render. Lays down depth for the pickPosition call
+        scene.renderForSpecs();
+
+        // Call clampToHeight
+        var cartesian = Cartesian3.fromRadians(0.0, 0.0, 100000.0);
+        expect(scene).toClampToHeightAndCall(function(cartesian) {
+            var expectedCartesian = Cartesian3.fromRadians(0.0, 0.0);
+            expect(cartesian).toEqualEpsilon(expectedCartesian, CesiumMath.EPSILON5);
+        }, cartesian);
+
+        // Call pickPosition
+        expect(scene).toPickPositionAndCall(function(cartesian) {
+            var expectedCartesian = Cartographic.toCartesian(Rectangle.center(offscreenRectangle));
+            expect(cartesian).toEqualEpsilon(expectedCartesian, CesiumMath.EPSILON5);
+        });
+
+        // Call clampToHeight again
+        expect(scene).toClampToHeightAndCall(function(cartesian) {
+            var expectedCartesian = Cartesian3.fromRadians(0.0, 0.0);
+            expect(cartesian).toEqualEpsilon(expectedCartesian, CesiumMath.EPSILON5);
+        }, cartesian);
+
+        // Call pick
+        expect(scene).toPickPrimitive(offscreenRectanglePrimitive);
+
+        // Call clampToHeight again
+        expect(scene).toClampToHeightAndCall(function(cartesian) {
+            var expectedCartesian = Cartesian3.fromRadians(0.0, 0.0);
+            expect(cartesian).toEqualEpsilon(expectedCartesian, CesiumMath.EPSILON5);
+        }, cartesian);
+
+        // Call pickPosition on translucent primitive and returns undefined
+        offscreenRectanglePrimitive.appearance.material.uniforms.color = new Color(1.0, 0.0, 0.0, 0.5);
+        scene.renderForSpecs();
+        expect(scene).toPickPositionAndCall(function(cartesian) {
+            expect(cartesian).toBeUndefined();
+        });
+
+        // Call clampToHeight again
+        expect(scene).toClampToHeightAndCall(function(cartesian) {
+            var expectedCartesian = Cartesian3.fromRadians(0.0, 0.0);
+            expect(cartesian).toEqualEpsilon(expectedCartesian, CesiumMath.EPSILON5);
+        }, cartesian);
+
+        // Call pickPosition on translucent primitive with pickTranslucentDepth
+        scene.pickTranslucentDepth = true;
+        scene.renderForSpecs();
+        expect(scene).toPickPositionAndCall(function(cartesian) {
+            var expectedCartesian = Cartographic.toCartesian(Rectangle.center(offscreenRectangle));
+            expect(cartesian).toEqualEpsilon(expectedCartesian, CesiumMath.EPSILON5);
+        });
+    });
+
 }, 'WebGL');

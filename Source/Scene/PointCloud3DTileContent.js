@@ -299,7 +299,7 @@ define([
         var styleDirty = this._styleDirty;
         this._styleDirty = false;
 
-        pointCloud.clippingPlaneOffsetMatrix = tileset.clippingPlaneOffsetMatrix;
+        pointCloud.clippingPlanesOriginMatrix = tileset.clippingPlanesOriginMatrix;
 
         pointCloud.style = defined(batchTable) ? undefined : tileset.style;
         pointCloud.styleDirty = styleDirty;

@@ -776,7 +776,8 @@ define([
         this._view = this._defaultView;
 
         // Give frameState, camera, and screen space camera controller initial state before rendering
-        updateFrameState(this, 0.0, JulianDate.now());
+        updateFrameNumber(this, 0.0, JulianDate.now());
+        updateFrameState(this);
         this.initializeFrame();
     }
 
@@ -869,7 +870,7 @@ define([
         },
 
         /**
-         * Returns <code>true</code> if the pickPosition function is supported.
+         * Returns <code>true</code> if the {@link Scene#pickPosition} function is supported.
          * @memberof Scene.prototype
          *
          * @type {Boolean}
@@ -884,7 +885,7 @@ define([
         },
 
         /**
-         * Returns <code>true</code> if the sampleHeight function is supported.
+         * Returns <code>true</code> if the {@link Scene#sampleHeight} function is supported.
          * @memberof Scene.prototype
          *
          * @type {Boolean}
@@ -899,7 +900,7 @@ define([
         },
 
         /**
-         * Returns <code>true</code> if the clampToHeight function is supported.
+         * Returns <code>true</code> if the {@link Scene#clampToHeight} function is supported.
          * @memberof Scene.prototype
          *
          * @type {Boolean}
@@ -1572,7 +1573,13 @@ define([
         passes.offscreen = false;
     }
 
-    function updateFrameState(scene, frameNumber, time) {
+    function updateFrameNumber(scene, frameNumber, time) {
+        var frameState = scene._frameState;
+        frameState.frameNumber = frameNumber;
+        frameState.time = JulianDate.clone(time, frameState.time);
+    }
+
+    function updateFrameState(scene) {
         var camera = scene.camera;
 
         var frameState = scene._frameState;
@@ -1583,8 +1590,6 @@ define([
         frameState.mode = scene._mode;
         frameState.morphTime = scene.morphTime;
         frameState.mapProjection = scene.mapProjection;
-        frameState.frameNumber = frameNumber;
-        frameState.time = JulianDate.clone(time, frameState.time);
         frameState.camera = camera;
         frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.positionWC, camera.directionWC, camera.upWC);
         frameState.occluder = getOccluder(scene);
@@ -3002,7 +3007,7 @@ define([
         frameState.creditDisplay.update();
     }
 
-    function render(scene, time) {
+    function render(scene) {
         scene._pickPositionCacheDirty = true;
 
         var context = scene.context;
@@ -3012,8 +3017,7 @@ define([
         var view = scene._defaultView;
         scene._view = view;
 
-        var frameNumber = CesiumMath.incrementWrap(frameState.frameNumber, 15000000.0, 1.0);
-        updateFrameState(scene, frameNumber, time);
+        updateFrameState(scene);
         frameState.passes.render = true;
         frameState.passes.postProcess = scene.postProcessStages.hasSelected;
 
@@ -3071,9 +3075,9 @@ define([
         context.endFrame();
     }
 
-    function tryAndCatchError(scene, time, functionToExecute) {
+    function tryAndCatchError(scene, functionToExecute) {
         try {
-            functionToExecute(scene, time);
+            functionToExecute(scene);
         } catch (error) {
             scene._renderError.raiseEvent(scene, error);
 
@@ -3094,12 +3098,8 @@ define([
             time = JulianDate.now();
         }
 
+        var frameState = this._frameState;
         this._jobScheduler.resetBudgets();
-
-        // Update
-        this._preUpdate.raiseEvent(this, time);
-        tryAndCatchError(this, time, update);
-        this._postUpdate.raiseEvent(this, time);
 
         var cameraChanged = this._view.checkForCameraUpdates(this);
         var shouldRender = !this.requestRenderMode || this._renderRequested || cameraChanged || this._logDepthBufferDirty || (this.mode === SceneMode.MORPHING);
@@ -3112,10 +3112,19 @@ define([
             this._lastRenderTime = JulianDate.clone(time, this._lastRenderTime);
             this._renderRequested = false;
             this._logDepthBufferDirty = false;
+            var frameNumber = CesiumMath.incrementWrap(frameState.frameNumber, 15000000.0, 1.0);
+            updateFrameNumber(this, frameNumber, time);
+        }
 
+        // Update
+        this._preUpdate.raiseEvent(this, time);
+        tryAndCatchError(this, update);
+        this._postUpdate.raiseEvent(this, time);
+
+        if (shouldRender) {
             // Render
             this._preRender.raiseEvent(this, time);
-            tryAndCatchError(this, time, render);
+            tryAndCatchError(this, render);
 
             RequestScheduler.update();
         }
@@ -3302,8 +3311,7 @@ define([
 
         this._jobScheduler.disableThisFrame();
 
-        // Update with previous frame's number and time, assuming that render is called before picking.
-        updateFrameState(this, frameState.frameNumber, frameState.time);
+        updateFrameState(this);
         frameState.cullingVolume = getPickCullingVolume(this, drawingBufferPosition, rectangleWidth, rectangleHeight, viewport);
         frameState.invertClassification = false;
         frameState.passes.pick = true;
@@ -3323,7 +3331,6 @@ define([
 
         var object = view.pickFramebuffer.end(scratchRectangle);
         context.endFrame();
-        callAfterRenderFunctions(this);
         return object;
     };
 
@@ -3400,6 +3407,7 @@ define([
             return Cartesian3.clone(this._pickPositionCache[cacheKey], result);
         }
 
+        var frameState = this._frameState;
         var context = this._context;
         var uniformState = context.uniformState;
 
@@ -3410,6 +3418,8 @@ define([
         if (this.pickTranslucentDepth) {
             renderTranslucentDepthForPick(this, drawingBufferPosition);
         } else {
+            updateFrameState(this, frameState.frameNumber, frameState.time);
+            uniformState.update(frameState);
             updateEnvironment(this);
         }
         drawingBufferPosition.y = this.drawingBufferHeight - drawingBufferPosition.y;
@@ -3441,7 +3451,7 @@ define([
                     camera.position.z = height2D - renderedFrustum.near + 1.0;
                     frustum.far = Math.max(1.0, renderedFrustum.far - renderedFrustum.near);
                     frustum.near = 1.0;
-                    uniformState.update(this.frameState);
+                    uniformState.update(frameState);
                     uniformState.updateFrustum(frustum);
                 } else {
                     frustum.near = renderedFrustum.near * (i !== 0 ? this.opaqueFrustumNearOffset : 1.0);
@@ -3453,7 +3463,7 @@ define([
 
                 if (this.mode === SceneMode.SCENE2D) {
                     camera.position.z = height2D;
-                    uniformState.update(this.frameState);
+                    uniformState.update(frameState);
                 }
 
                 this._pickPositionCache[cacheKey] = Cartesian3.clone(result);
@@ -3500,16 +3510,7 @@ define([
         return result;
     };
 
-    function isExcluded(object, objectsToExclude) {
-        if (!defined(objectsToExclude) || objectsToExclude.length === 0) {
-            return false;
-        }
-        return (objectsToExclude.indexOf(object) > -1) ||
-               (objectsToExclude.indexOf(object.primitive) > -1) ||
-               (objectsToExclude.indexOf(object.id) > -1);
-    }
-
-    function drillPick(limit, pickCallback, objectsToExclude) {
+    function drillPick(limit, pickCallback) {
         // PERFORMANCE_IDEA: This function calls each primitive's update for each pass. Instead
         // we could update the primitive once, and then just execute their commands for each pass,
         // and cull commands for picked primitives.  e.g., base on the command's owner.
@@ -3527,6 +3528,7 @@ define([
         while (defined(pickedResult)) {
             var object = pickedResult.object;
             var position = pickedResult.position;
+            var exclude = pickedResult.exclude;
 
             if (defined(position) && !defined(object)) {
                 result.push(pickedResult);
@@ -3537,7 +3539,7 @@ define([
                 break;
             }
 
-            if (!isExcluded(object, objectsToExclude)) {
+            if (!exclude) {
                 result.push(pickedResult);
                 if (0 >= --limit) {
                     break;
@@ -3616,7 +3618,9 @@ define([
             var object = that.pick(windowPosition, width, height);
             if (defined(object)) {
                 return {
-                    object : object
+                    object : object,
+                    position : undefined,
+                    exclude : false
                 };
             }
         };
@@ -3634,13 +3638,23 @@ define([
         var orthogonalAxis = Cartesian3.mostOrthogonalAxis(direction, scratchRight);
         var right = Cartesian3.cross(direction, orthogonalAxis, scratchRight);
         var up = Cartesian3.cross(direction, right, scratchUp);
+
         camera.position = ray.origin;
         camera.direction = direction;
         camera.up = up;
         camera.right = right;
     }
 
-    function getRayIntersection(scene, ray) {
+    function isExcluded(object, objectsToExclude) {
+        if (!defined(object) || !defined(objectsToExclude) || objectsToExclude.length === 0) {
+            return false;
+        }
+        return (objectsToExclude.indexOf(object) > -1) ||
+               (objectsToExclude.indexOf(object.primitive) > -1) ||
+               (objectsToExclude.indexOf(object.id) > -1);
+    }
+
+    function getRayIntersection(scene, ray, objectsToExclude, requirePosition) {
         var context = scene._context;
         var uniformState = context.uniformState;
         var frameState = scene._frameState;
@@ -3656,8 +3670,7 @@ define([
 
         scene._jobScheduler.disableThisFrame();
 
-        // Update with previous frame's number and time, assuming that render is called before picking.
-        updateFrameState(scene, frameState.frameNumber, frameState.time);
+        updateFrameState(scene);
         frameState.invertClassification = false;
         frameState.passes.pick = true;
         frameState.passes.offscreen = true;
@@ -3689,27 +3702,32 @@ define([
 
         scene._view = scene._defaultView;
         context.endFrame();
-        callAfterRenderFunctions(scene);
 
         if (defined(object) || defined(position)) {
             return {
                 object : object,
-                position : position
+                position : position,
+                exclude : (!defined(position) && requirePosition) || isExcluded(object, objectsToExclude)
             };
         }
     }
 
-    function getRayIntersections(scene, ray, limit, objectsToExclude) {
-        //>>includeStart('debug', pragmas.debug);
-        Check.defined('ray', ray);
-        if (scene._mode !== SceneMode.SCENE3D) {
-            throw new DeveloperError('Ray intersections are only supported in 3D mode.');
-        }
-        //>>includeEnd('debug');
+    function getRayIntersections(scene, ray, limit, objectsToExclude, requirePosition) {
         var pickCallback = function() {
-            return getRayIntersection(scene, ray);
+            return getRayIntersection(scene, ray, objectsToExclude, requirePosition);
         };
-        return drillPick(limit, pickCallback, objectsToExclude);
+        return drillPick(limit, pickCallback);
+    }
+
+    function pickFromRay(scene, ray, objectsToExclude, requirePosition) {
+        var results = getRayIntersections(scene, ray, 1, objectsToExclude, requirePosition);
+        if (results.length > 0) {
+            return results[0];
+        }
+    }
+
+    function drillPickFromRay(scene, ray, limit, objectsToExclude, requirePosition) {
+        return getRayIntersections(scene, ray, limit, objectsToExclude, requirePosition);
     }
 
     /**
@@ -3717,6 +3735,10 @@ define([
      * or <code>undefined</code> if there were no intersections. The intersected object has a <code>primitive</code>
      * property that contains the intersected primitive. Other properties may be set depending on the type of primitive
      * and may be used to further identify the picked object. The ray must be given in world coordinates.
+     * <p>
+     * This function only picks globe tiles and 3D Tiles that are rendered in the current view. Picks all other
+     * primitives regardless of their visibility.
+     * </p>
      *
      * @private
      *
@@ -3727,10 +3749,13 @@ define([
      * @exception {DeveloperError} Ray intersections are only supported in 3D mode.
      */
     Scene.prototype.pickFromRay = function(ray, objectsToExclude) {
-        var results = getRayIntersections(this, ray, 1, objectsToExclude);
-        if (results.length > 0) {
-            return results[0];
+        //>>includeStart('debug', pragmas.debug);
+        Check.defined('ray', ray);
+        if (this._mode !== SceneMode.SCENE3D) {
+            throw new DeveloperError('Ray intersections are only supported in 3D mode.');
         }
+        //>>includeEnd('debug');
+        return pickFromRay(this, ray, objectsToExclude, false);
     };
 
     /**
@@ -3739,6 +3764,10 @@ define([
      * properties may also be set depending on the type of primitive and may be used to further identify the picked object.
      * The primitives in the list are ordered by first intersection to last intersection. The ray must be given in
      * world coordinates.
+     * <p>
+     * This function only picks globe tiles and 3D Tiles that are rendered in the current view. Picks all other
+     * primitives regardless of their visibility.
+     * </p>
      *
      * @private
      *
@@ -3750,7 +3779,13 @@ define([
      * @exception {DeveloperError} Ray intersections are only supported in 3D mode.
      */
     Scene.prototype.drillPickFromRay = function(ray, limit, objectsToExclude) {
-        return getRayIntersections(this, ray, limit, objectsToExclude);
+        //>>includeStart('debug', pragmas.debug);
+        Check.defined('ray', ray);
+        if (this._mode !== SceneMode.SCENE3D) {
+            throw new DeveloperError('Ray intersections are only supported in 3D mode.');
+        }
+        //>>includeEnd('debug');
+        return drillPickFromRay(this, ray, limit, objectsToExclude, false);
     };
 
     var scratchSurfacePosition = new Cartesian3();
@@ -3780,6 +3815,13 @@ define([
         return getRayForSampleHeight(scene, cartographic);
     }
 
+    function getHeightFromCartesian(scene, cartesian) {
+        var globe = scene.globe;
+        var ellipsoid = defined(globe) ? globe.ellipsoid : scene.mapProjection.ellipsoid;
+        var cartographic = Cartographic.fromCartesian(cartesian, ellipsoid, scratchCartographic);
+        return cartographic.height;
+    }
+
     /**
      * Returns the height of scene geometry at the given cartographic position or <code>undefined</code> if there was no
      * scene geometry to sample height from. May be used to clamp objects to the globe, 3D Tiles, or primitives in the scene.
@@ -3794,24 +3836,23 @@ define([
      *
      * @see Scene#clampToHeight
      *
-     * @exception {DeveloperError} Ray intersections are only supported in 3D mode.
-     * @exception {DeveloperError} sampleHeight required depth texture support. Check sampleHeightSupported.
+     * @exception {DeveloperError} sampleHeight is only supported in 3D mode.
+     * @exception {DeveloperError} sampleHeight requires depth texture support. Check sampleHeightSupported.
      */
     Scene.prototype.sampleHeight = function(position, objectsToExclude) {
         //>>includeStart('debug', pragmas.debug);
         Check.defined('position', position);
+        if (this._mode !== SceneMode.SCENE3D) {
+            throw new DeveloperError('sampleHeight is only supported in 3D mode.');
+        }
         if (!this.sampleHeightSupported) {
-            throw new DeveloperError('sampleHeight required depth texture support. Check sampleHeightSupported.');
+            throw new DeveloperError('sampleHeight requires depth texture support. Check sampleHeightSupported.');
         }
         //>>includeEnd('debug');
         var ray = getRayForSampleHeight(this, position);
-        var pickResult = this.pickFromRay(ray, objectsToExclude);
+        var pickResult = pickFromRay(this, ray, objectsToExclude, true);
         if (defined(pickResult)) {
-            var cartesian = pickResult.position;
-            var globe = this.globe;
-            var ellipsoid = defined(globe) ? globe.ellipsoid : this.mapProjection.ellipsoid;
-            var cartographic = Cartographic.fromCartesian(cartesian, ellipsoid, scratchCartographic);
-            return cartographic.height;
+            return getHeightFromCartesian(this, pickResult.position);
         }
     };
 
@@ -3831,18 +3872,21 @@ define([
      *
      * @see Scene#sampleHeight
      *
-     * @exception {DeveloperError} Ray intersections are only supported in 3D mode.
-     * @exception {DeveloperError} clampToHeight required depth texture support. Check clampToHeightSupported.
+     * @exception {DeveloperError} clampToHeight is only supported in 3D mode.
+     * @exception {DeveloperError} clampToHeight requires depth texture support. Check clampToHeightSupported.
      */
     Scene.prototype.clampToHeight = function(cartesian, objectsToExclude, result) {
         //>>includeStart('debug', pragmas.debug);
         Check.defined('cartesian', cartesian);
+        if (this._mode !== SceneMode.SCENE3D) {
+            throw new DeveloperError('sampleHeight is only supported in 3D mode.');
+        }
         if (!this.clampToHeightSupported) {
-            throw new DeveloperError('clampToHeight required depth texture support. Check clampToHeightSupported.');
+            throw new DeveloperError('clampToHeight requires depth texture support. Check clampToHeightSupported.');
         }
         //>>includeEnd('debug');
         var ray = getRayForClampToHeight(this, cartesian);
-        var pickResult = this.pickFromRay(ray, objectsToExclude);
+        var pickResult = pickFromRay(this, ray, objectsToExclude, true);
         if (defined(pickResult)) {
             return Cartesian3.clone(pickResult.position, result);
         }

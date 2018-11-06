@@ -8,6 +8,8 @@ defineSuite([
         'Core/Math',
         'Core/TimeInterval',
         'Core/TimeIntervalCollection',
+        'DataSources/BoxGeometryUpdater',
+        'DataSources/CheckerboardMaterialProperty',
         'DataSources/ColorMaterialProperty',
         'DataSources/ConstantPositionProperty',
         'DataSources/ConstantProperty',
@@ -18,6 +20,7 @@ defineSuite([
         'DataSources/PolylineArrowMaterialProperty',
         'DataSources/PolylineGeometryUpdater',
         'DataSources/PolylineGraphics',
+        'DataSources/StripeMaterialProperty',
         'DataSources/TimeIntervalCollectionProperty',
         'Scene/MaterialAppearance',
         'Scene/PolylineColorAppearance',
@@ -35,6 +38,8 @@ defineSuite([
         CesiumMath,
         TimeInterval,
         TimeIntervalCollection,
+        BoxGeometryUpdater,
+        CheckerboardMaterialProeprty,
         ColorMaterialProperty,
         ConstantPositionProperty,
         ConstantProperty,
@@ -45,6 +50,7 @@ defineSuite([
         PolylineArrowMaterialProperty,
         PolylineGeometryUpdater,
         PolylineGraphics,
+        StripeMaterialProperty,
         TimeIntervalCollectionProperty,
         MaterialAppearance,
         PolylineColorAppearance,
@@ -311,5 +317,134 @@ defineSuite([
 
             batch.removeAllPrimitives();
         });
+    });
+
+    it('removes all updaters', function() {
+        var batch = new StaticGeometryPerMaterialBatch(scene.primitives, MaterialAppearance, undefined, false, ShadowMode.DISABLED);
+
+        function buildEntity(MaterialProperty) {
+            var material = new MaterialProperty({
+                evenColor : Color.YELLOW,
+                oddColor: Color.BLUE
+            });
+
+            return new Entity({
+                position : new Cartesian3(1234, 5678, 9101112),
+                ellipse : {
+                    semiMajorAxis : 2,
+                    semiMinorAxis : 1,
+                    height : 0,
+                    material: material
+                }
+            });
+        }
+
+        function renderScene() {
+            scene.initializeFrame();
+            var isUpdated = batch.update(time);
+            scene.render(time);
+            return isUpdated;
+        }
+
+        var entity1 = buildEntity(StripeMaterialProperty);
+        var entity2 = buildEntity(CheckerboardMaterialProeprty);
+        var entity3 = buildEntity(StripeMaterialProperty);
+        var entity4 = buildEntity(CheckerboardMaterialProeprty);
+
+        var updater1 = new EllipseGeometryUpdater(entity1, scene);
+        var updater2 = new EllipseGeometryUpdater(entity2, scene);
+        var updater3 = new EllipseGeometryUpdater(entity3, scene);
+        var updater4 = new EllipseGeometryUpdater(entity4, scene);
+        var emptyUpdater = new BoxGeometryUpdater(entity1, scene);
+
+        batch.add(time, updater1);
+        batch.add(time, updater2);
+        batch.add(time, updater3);
+        batch.add(time, updater4);
+        return pollToPromise(renderScene)
+            .then(function() {
+                expect(scene.primitives.length).toEqual(2);
+            })
+            .then(function() {
+                batch.remove(updater1);
+                batch.remove(updater2);
+                batch.remove(emptyUpdater);
+                batch.remove(updater3);
+                batch.remove(updater4);
+                return pollToPromise(renderScene);
+            })
+            .then(function() {
+                expect(scene.primitives.length).toEqual(0);
+                batch.removeAllPrimitives();
+            });
+    });
+
+    it('has correct show attribute after rebuilding primitive', function() {
+        var batch = new StaticGeometryPerMaterialBatch(scene.primitives, MaterialAppearance, undefined, false, ShadowMode.DISABLED);
+
+        function buildEntity() {
+            var material = new GridMaterialProperty({
+                color : Color.YELLOW,
+                cellAlpha : 0.3,
+                lineCount : new Cartesian2(8, 8),
+                lineThickness : new Cartesian2(2.0, 2.0)
+            });
+
+            return new Entity({
+                position : new Cartesian3(1234, 5678, 9101112),
+                ellipse : {
+                    semiMajorAxis : 2,
+                    semiMinorAxis : 1,
+                    height : 0,
+                    material: material
+                }
+            });
+        }
+
+        function renderScene() {
+            scene.initializeFrame();
+            var isUpdated = batch.update(time);
+            scene.render(time);
+            return isUpdated;
+        }
+
+        var entity1 = buildEntity();
+        var updater1 = new EllipseGeometryUpdater(entity1, scene);
+        batch.add(time, updater1);
+
+        var entity2 = buildEntity();
+        var updater2 = new EllipseGeometryUpdater(entity2, scene);
+
+        return pollToPromise(renderScene)
+            .then(function() {
+                expect(scene.primitives.length).toEqual(1);
+                var primitive = scene.primitives.get(0);
+                var attributes = primitive.getGeometryInstanceAttributes(entity1);
+                expect(attributes.show).toEqual([1]);
+
+                entity1.show = false;
+                updater1._onEntityPropertyChanged(entity1, 'isShowing');
+                return pollToPromise(renderScene);
+            })
+            .then(function() {
+                expect(scene.primitives.length).toEqual(1);
+                var primitive = scene.primitives.get(0);
+                var attributes = primitive.getGeometryInstanceAttributes(entity1);
+                expect(attributes.show).toEqual([0]);
+
+                batch.add(time, updater2);
+                return pollToPromise(renderScene);
+            })
+            .then(function() {
+                expect(scene.primitives.length).toEqual(1);
+                var primitive = scene.primitives.get(0);
+                var attributes = primitive.getGeometryInstanceAttributes(entity1);
+                expect(attributes.show).toEqual([0]);
+
+                attributes = primitive.getGeometryInstanceAttributes(entity2);
+                expect(attributes.show).toEqual([1]);
+
+                batch.removeAllPrimitives();
+            });
     });
 });

@@ -8,6 +8,7 @@ define([
         '../Core/Resource',
         '../Core/WebMercatorProjection',
         './GetFeatureInfoFormat',
+        './TimeDynamicImagery',
         './UrlTemplateImageryProvider'
     ], function(
         defaultValue,
@@ -19,6 +20,7 @@ define([
         Resource,
         WebMercatorProjection,
         GetFeatureInfoFormat,
+        TimeDynamicImagery,
         UrlTemplateImageryProvider) {
     'use strict';
 
@@ -59,6 +61,8 @@ define([
      * @param {String|String[]} [options.subdomains='abc'] The subdomains to use for the <code>{s}</code> placeholder in the URL template.
      *                          If this parameter is a single string, each character in the string is a subdomain.  If it is
      *                          an array, each element in the array is a subdomain.
+     * @param {Clock} [options.clock] A Clock instance that is used when determining the value for the time dimension. Required when options.times is specified.
+     * @param {TimeIntervalCollection} [options.times] TimeIntervalCollection with its data property being an object containing time dynamic dimension and their values.
      *
      * @see ArcGisMapServerImageryProvider
      * @see BingMapsImageryProvider
@@ -93,7 +97,12 @@ define([
         }
         //>>includeEnd('debug');
 
+        if (defined(options.times) && !defined(options.clock)) {
+            throw new DeveloperError('options.times was specified, so options.clock is required.');
+        }
+
         var resource = Resource.createIfNeeded(options.url);
+
         var pickFeatureResource = resource.clone();
 
         resource.setQueryParameters(WebMapServiceImageryProvider.DefaultParameters, true);
@@ -105,6 +114,23 @@ define([
 
         if (defined(options.getFeatureInfoParameters)) {
             pickFeatureResource.setQueryParameters(objectToLowercase(options.getFeatureInfoParameters));
+        }
+
+        var that = this;
+        this._reload = undefined;
+        if (defined(options.times)) {
+            this._timeDynamicImagery = new TimeDynamicImagery({
+                clock : options.clock,
+                times : options.times,
+                requestImageFunction : function(x, y, level, request, interval) {
+                    return requestImage(that, x, y, level, request, interval);
+                },
+                reloadFunction : function() {
+                    if (defined(that._reload)) {
+                        that._reload();
+                    }
+                }
+            });
         }
 
         var parameters = {};
@@ -155,6 +181,28 @@ define([
             getFeatureInfoFormats : defaultValue(options.getFeatureInfoFormats, WebMapServiceImageryProvider.DefaultGetFeatureInfoFormats),
             enablePickFeatures: options.enablePickFeatures
         });
+    }
+
+    function requestImage(imageryProvider, col, row, level, request, interval) {
+        var dynamicIntervalData = defined(interval) ? interval.data : undefined;
+        var tileProvider = imageryProvider._tileProvider;
+
+        if (defined(dynamicIntervalData)) {
+            // We set the query parameters within the tile provider, because it is managing the query.
+            tileProvider._resource.setQueryParameters(dynamicIntervalData);
+        }
+        return tileProvider.requestImage(col, row, level, request);
+    }
+
+    function pickFeatures(imageryProvider, x, y, level, longitude, latitude, interval) {
+        var dynamicIntervalData = defined(interval) ? interval.data : undefined;
+        var tileProvider = imageryProvider._tileProvider;
+
+        if (defined(dynamicIntervalData)) {
+            // We set the query parameters within the tile provider, because it is managing the query.
+            tileProvider._pickFeaturesResource.setQueryParameters(dynamicIntervalData);
+        }
+        return tileProvider.pickFeatures(x, y, level, longitude, latitude);
     }
 
     defineProperties(WebMapServiceImageryProvider.prototype, {
@@ -371,6 +419,35 @@ define([
             set : function(enablePickFeatures)  {
                 this._tileProvider.enablePickFeatures = enablePickFeatures;
             }
+        },
+
+        /**
+         * Gets or sets a clock that is used to get keep the time used for time dynamic parameters.
+         * @memberof WebMapServiceImageryProvider.prototype
+         * @type {Clock}
+         */
+        clock : {
+            get : function() {
+                return this._timeDynamicImagery.clock;
+            },
+            set : function(value) {
+                this._timeDynamicImagery.clock = value;
+            }
+        },
+        /**
+         * Gets or sets a time interval collection that is used to get time dynamic parameters. The data of each
+         * TimeInterval is an object containing the keys and values of the properties that are used during
+         * tile requests.
+         * @memberof WebMapServiceImageryProvider.prototype
+         * @type {TimeIntervalCollection}
+         */
+        times : {
+            get : function() {
+                return this._timeDynamicImagery.times;
+            },
+            set : function(value) {
+                this._timeDynamicImagery.times = value;
+            }
         }
     });
 
@@ -404,7 +481,28 @@ define([
      * @exception {DeveloperError} <code>requestImage</code> must not be called before the imagery provider is ready.
      */
     WebMapServiceImageryProvider.prototype.requestImage = function(x, y, level, request) {
-        return this._tileProvider.requestImage(x, y, level, request);
+        var result;
+        var timeDynamicImagery = this._timeDynamicImagery;
+        var currentInterval;
+
+        // Try and load from cache
+        if (defined(timeDynamicImagery)) {
+            currentInterval = timeDynamicImagery.currentInterval;
+            result = timeDynamicImagery.getFromCache(x, y, level, request);
+        }
+
+        // Couldn't load from cache
+        if (!defined(result)) {
+            result = requestImage(this, x, y, level, request, currentInterval);
+        }
+
+        // If we are approaching an interval, preload this tile in the next interval
+        if (defined(result) && defined(timeDynamicImagery)) {
+            timeDynamicImagery.checkApproachingInterval(x, y, level, request);
+        }
+
+        return result;
+
     };
 
     /**
@@ -423,7 +521,10 @@ define([
      * @exception {DeveloperError} <code>pickFeatures</code> must not be called before the imagery provider is ready.
      */
     WebMapServiceImageryProvider.prototype.pickFeatures = function(x, y, level, longitude, latitude) {
-        return this._tileProvider.pickFeatures(x, y, level, longitude, latitude);
+        var timeDynamicImagery = this._timeDynamicImagery;
+        var currentInterval = defined(timeDynamicImagery) ? timeDynamicImagery.currentInterval : undefined;
+
+        return pickFeatures(this, x, y, level, longitude, latitude, currentInterval);
     };
 
     /**
