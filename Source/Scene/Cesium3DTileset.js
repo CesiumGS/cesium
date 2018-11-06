@@ -1917,7 +1917,7 @@ define([
 
         // Update clipping planes
         var clippingPlanes = tileset._clippingPlanes;
-        this._clippingPlanesOriginMatrixDirty = true;
+        tileset._clippingPlanesOriginMatrixDirty = true;
         if (defined(clippingPlanes) && clippingPlanes.enabled) {
             clippingPlanes.update(frameState);
         }
