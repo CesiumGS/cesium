@@ -642,7 +642,7 @@ define([
         var args = ast.arguments;
         // no arguments, return default regex
         if (args.length === 0) {
-            return new Node(ExpressionNodeType.LITERAL_REGEX, new RegExp());
+            return new Node(ExpressionNodeType.LITERAL_REGEX, new RegExp('(?:)'));
         }
 
         var pattern = createRuntimeAst(expression, args[0]);
