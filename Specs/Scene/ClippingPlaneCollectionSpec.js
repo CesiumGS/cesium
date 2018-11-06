@@ -219,6 +219,21 @@ defineSuite([
             scene.destroyForSpecs();
         });
 
+        it('only creates texture when planes are added', function() {
+            var scene = createScene();
+
+            clippingPlanes = new ClippingPlaneCollection();
+            clippingPlanes.update(scene.frameState);
+            expect(clippingPlanes.texture).toBeUndefined();
+
+            clippingPlanes.add(planes[0]);
+            clippingPlanes.update(scene.frameState);
+
+            expect(clippingPlanes.texture).toBeDefined();
+            expect(isNaN(clippingPlanes.texture.width)).toBe(false);
+            expect(isNaN(clippingPlanes.texture.height)).toBe(false);
+        });
+
         it('update fills the clipping plane texture with packed planes', function() {
             var scene = createScene();
 
@@ -394,6 +409,30 @@ defineSuite([
             expect(sampler.wrapT).toEqual(TextureWrap.CLAMP_TO_EDGE);
             expect(sampler.minificationFilter).toEqual(TextureMinificationFilter.NEAREST);
             expect(sampler.magnificationFilter).toEqual(TextureMinificationFilter.NEAREST);
+
+            clippingPlanes.destroy();
+            scene.destroyForSpecs();
+        });
+
+        it('only creates texture when planes are added', function() {
+            var scene = createScene();
+
+            if (!ClippingPlaneCollection.useFloatTexture(scene.context)) {
+                // Don't fail just because float textures aren't supported
+                scene.destroyForSpecs();
+                return;
+            }
+
+            clippingPlanes = new ClippingPlaneCollection();
+            clippingPlanes.update(scene.frameState);
+            expect(clippingPlanes.texture).toBeUndefined();
+
+            clippingPlanes.add(planes[0]);
+            clippingPlanes.update(scene.frameState);
+
+            expect(clippingPlanes.texture).toBeDefined();
+            expect(isNaN(clippingPlanes.texture.width)).toBe(false);
+            expect(isNaN(clippingPlanes.texture.height)).toBe(false);
 
             clippingPlanes.destroy();
             scene.destroyForSpecs();
