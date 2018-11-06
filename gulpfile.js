@@ -346,6 +346,7 @@ function isTravisPullRequest() {
 gulp.task('deploy-s3', function(done) {
     if (isTravisPullRequest()) {
         console.log('Skipping deployment for non-pull request.');
+        done();
         return;
     }
 
@@ -602,7 +603,7 @@ gulp.task('deploy-set-version', function(done) {
 gulp.task('deploy-status', function() {
     if (isTravisPullRequest()) {
         console.log('Skipping deployment status for non-pull request.');
-        return;
+        return Promise.resolve();
     }
 
     var status = yargs.argv.status;
