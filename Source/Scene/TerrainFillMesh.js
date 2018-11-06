@@ -533,10 +533,6 @@ define([
         encoding.encode(typedArray, nextIndex * encoding.getStride(), center, Cartesian2.fromElements(0.5, 0.5, uvScratch), middleHeight, centerEncodedNormal, centerWebMercatorT);
         ++nextIndex;
 
-        if (nextIndex * encoding.getStride() > typedArray.length) {
-            debugger;
-        }
-
         var vertexCount = nextIndex;
         var indices = new Uint16Array((vertexCount - 1) * 3); // one triangle per edge vertex
 
@@ -759,6 +755,8 @@ define([
             Cartesian3.normalize(normal, normal);
             AttributeCompression.octEncode(normal, vertex.encodedNormal);
         } else {
+            // TODO: do we need to actually compute a normal?
+            // It's probably going to be unused to 0,0 is just as good.
             normal = ellipsoid.geodeticSurfaceNormalCartographic(cartographicScratch, cartesianScratch);
             AttributeCompression.octEncode(normal, vertex.encodedNormal);
         }
@@ -929,11 +927,7 @@ define([
         return nextIndex;
     }
 
-    var edgeDetailsScratch = new TerrainTileEdgeDetails();
-
     function addEdgeMesh(terrainFillMesh, ellipsoid, encoding, typedArray, nextIndex, edgeTile, edgeMesh, tileEdge) {
-        var terrainMesh = edgeMesh;
-
         // Handle copying edges across the anti-meridian.
         var sourceRectangle = edgeTile.rectangle;
         if (tileEdge === TileEdge.EAST && terrainFillMesh.tile.x === 0) {
@@ -946,14 +940,8 @@ define([
             sourceRectangle.east += CesiumMath.TWO_PI;
         }
 
-        edgeDetailsScratch.clear();
-        var edgeDetails = terrainMesh.getEdgeVertices(tileEdge, sourceRectangle, terrainFillMesh.tile.rectangle, ellipsoid, edgeDetailsScratch);
+        var targetRectangle = terrainFillMesh.tile.rectangle;
 
-        var vertices = edgeDetails.vertices;
-
-        var i;
-        var u;
-        var v;
         var lastU;
         var lastV;
 
@@ -963,13 +951,57 @@ define([
             lastV = uvScratch.y;
         }
 
-        // Copy all except the corner vertices.
-        var sourceStride = 6 + (terrainMesh.encoding.hasVertexNormals ? 2 : 0) + (terrainMesh.encoding.hasWebMercatorT ? 1 : 0);
-        for (i = 0; i < vertices.length; i += sourceStride) {
-            u = vertices[i + 4];
-            v = vertices[i + 5];
+        var indices;
+        var compareU;
+
+        switch (tileEdge) {
+            case TileEdge.WEST:
+                indices = edgeMesh.westIndicesSouthToNorth;
+                compareU = false;
+                break;
+            case TileEdge.NORTH:
+                indices = edgeMesh.northIndicesWestToEast;
+                compareU = true;
+                break;
+            case TileEdge.EAST:
+                indices = edgeMesh.eastIndicesNorthToSouth;
+                compareU = false;
+                break;
+            case TileEdge.SOUTH:
+                indices = edgeMesh.southIndicesEastToWest;
+                compareU = true;
+                break;
+        }
+
+        var sourceTile = edgeTile;
+        var targetTile = terrainFillMesh.tile;
+        var sourceEncoding = edgeMesh.encoding;
+        var sourceVertices = edgeMesh.vertices;
+        var targetStride = encoding.getStride();
+
+        var southMercatorY;
+        var oneOverMercatorHeight;
+        if (sourceEncoding.hasWebMercatorT) {
+            southMercatorY = WebMercatorProjection.geodeticLatitudeToMercatorAngle(targetRectangle.south);
+            oneOverMercatorHeight = 1.0 / (WebMercatorProjection.geodeticLatitudeToMercatorAngle(targetRectangle.north) - southMercatorY);
+        }
+
+        for (var i = 0; i < indices.length; ++i) {
+            var index = indices[i];
+
+            var uv = sourceEncoding.decodeTextureCoordinates(sourceVertices, index, uvScratch);
+            transformTextureCoordinates(sourceTile, targetTile, uv, uv);
+            var u = uv.x;
+            var v = uv.y;
+            var uOrV = compareU ? u : v;
+
+            if (uOrV < 0.0 || uOrV > 1.0) {
+                // Vertex is outside the target tile - skip it.
+                continue;
+            }
+
             if (Math.abs(u - lastU) < CesiumMath.EPSILON5 && Math.abs(v - lastV) < CesiumMath.EPSILON5) {
-                // Vertex is very close to the previous one, so skip it.
+                // Vertex is very close to the previous one - skip it.
                 continue;
             }
 
@@ -981,29 +1013,25 @@ define([
                 continue;
             }
 
-            var position = Cartesian3.fromElements(vertices[i], vertices[i + 1], vertices[i + 2], cartesianScratch);
-            var uv = Cartesian2.fromElements(u, v, uvScratch);
-            var height = vertices[i + 3];
+            var position = sourceEncoding.decodePosition(sourceVertices, index, cartesianScratch);
+            var height = sourceEncoding.decodeHeight(sourceVertices, index);
 
-            var webMercatorT;
-            var normalIndex = 6;
-            if (terrainMesh.encoding.hasWebMercatorT) {
-                webMercatorT = vertices[i + 6];
-                ++normalIndex;
-            }
-
-            var encodedNormal;
-            if (terrainMesh.encoding.hasVertexNormals) {
-                encodedNormal = Cartesian2.fromElements(vertices[i + normalIndex], vertices[i + normalIndex + 1], encodedNormalScratch);
+            var normal;
+            if (sourceEncoding.hasVertexNormals) {
+                normal = sourceEncoding.getOctEncodedNormal(sourceVertices, index, octEncodedNormalScratch);
             } else {
-                ellipsoid.geodeticSurfaceNormal(position, normalScratch);
-                encodedNormal = AttributeCompression.octEncode(normalScratch, encodedNormalScratch);
+                normal = octEncodedNormalScratch;
+                normal.x = 0.0;
+                normal.y = 0.0;
             }
 
-            encoding.encode(typedArray, nextIndex * encoding.getStride(), position, uv, height, encodedNormal, webMercatorT);
+            var webMercatorT = v;
+            if (sourceEncoding.hasWebMercatorT) {
+                var latitude = CesiumMath.lerp(targetRectangle.south, targetRectangle.north, v);
+                webMercatorT = (WebMercatorProjection.geodeticLatitudeToMercatorAngle(latitude) - southMercatorY) * oneOverMercatorHeight;
+            }
 
-            lastU = u;
-            lastV = v;
+            encoding.encode(typedArray, nextIndex * targetStride, position, uv, height, normal, webMercatorT);
 
             ++nextIndex;
         }
