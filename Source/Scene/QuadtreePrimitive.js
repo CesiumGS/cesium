@@ -151,7 +151,7 @@ define([
          * Setting this to true optimizes the zoom-out experience and provides more detail in
          * newly-exposed areas when panning. The down side is that it requires loading more tiles.
          * @type {Boolean}
-         * @default false
+         * @default true
          */
         this.preloadAncestors = true;
 
