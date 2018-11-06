@@ -578,7 +578,6 @@ require({
         // Apply user HTML to bucket.
         var htmlElement = bucketDoc.createElement('div');
         htmlElement.innerHTML = htmlEditor.getValue();
-        bucketDoc.body.appendChild(htmlElement);
 
         var onScriptTagError = function() {
             if (bucketFrame.contentDocument === bucketDoc) {
@@ -625,7 +624,25 @@ require({
                 bucketDoc.body.appendChild(element);
             }
         };
-        loadScript();
+
+        // Create an observer instance linked to the callback function
+        var observer = new MutationObserver(function(mutationsList){
+            var length = mutationsList.length;
+            for(var i = 0; i < length; i++) {
+                var mutation = mutationsList[i];
+
+                if(defined(mutation.target.dataset) && mutation.target.dataset.sandcastleLoaded === 'yes') {
+                    loadScript();
+                    observer.disconnect();
+                }
+            }
+        });
+
+        // Start observing the target node for configured mutations
+        var config = { attributes: true, childList: true, subtree: true };
+        observer.observe(bucketDoc, config);
+
+        bucketDoc.body.appendChild(htmlElement);
     }
 
     function applyBucket() {
