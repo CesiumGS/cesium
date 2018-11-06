@@ -182,6 +182,10 @@ define([
         }
 
         if (tile._lastSelectionResult === TileSelectionResult.RENDERED) {
+            if (defined(tile.data.vertexArray)) {
+                // No further processing necessary for renderable tiles.
+                return;
+            }
             visitTile(tileProvider, frameState, sourceTile, tile, tileEdge, currentFrameNumber, traversalQueue);
             return;
         }
@@ -227,11 +231,6 @@ define([
     }
 
     function visitTile(tileProvider, frameState, sourceTile, destinationTile, tileEdge, frameNumber, traversalQueue) {
-        if (defined(destinationTile.data.vertexArray)) {
-            // No further processing necessary for renderable tiles.
-            return;
-        }
-
         var destinationSurfaceTile = destinationTile.data;
 
         if (destinationSurfaceTile.fill === undefined) {
@@ -410,77 +409,138 @@ define([
         }
     }
 
-    var tileVerticesScratch = [];
     var cartographicScratch = new Cartographic();
+    var centerCartographicScratch = new Cartographic();
     var cartesianScratch = new Cartesian3();
     var normalScratch = new Cartesian3();
     var octEncodedNormalScratch = new Cartesian2();
+    var uvScratch2 = new Cartesian2();
+    var uvScratch = new Cartesian2();
+
+    function HeightAndNormal() {
+        this.height = 0.0;
+        this.encodedNormal = new Cartesian2();
+    }
+
+    var swVertexScratch = new HeightAndNormal();
+    var seVertexScratch = new HeightAndNormal();
+    var nwVertexScratch = new HeightAndNormal();
+    var neVertexScratch = new HeightAndNormal();
 
     function createFillMesh(tileProvider, frameState, tile) {
         var surfaceTile = tile.data;
         var fill = surfaceTile.fill;
-
-        var tileVertices = tileVerticesScratch;
-        tileVertices.length = 0;
+        var rectangle = tile.rectangle;
 
         var ellipsoid = tile.tilingScheme.ellipsoid;
-        var hasVertexNormals = tileProvider.terrainProvider.hasVertexNormals;
-        var hasWebMercatorT = true; // TODO
-        var stride = 6 + (hasWebMercatorT ? 1 : 0) + (hasVertexNormals ? 2 : 0);
 
-        var northwestIndex = 0;
-        addCorner(fill, ellipsoid, 0.0, 1.0, fill.northwestTile, fill.northwestMesh, fill.northTiles, fill.northMeshes, fill.westTiles, fill.westMeshes, hasVertexNormals, hasWebMercatorT, tileVertices);
-        addEdge(fill, ellipsoid, fill.westTiles, fill.westMeshes, TileEdge.EAST, stride, tileVertices);
-        var southwestIndex = tileVertices.length / stride;
-        addCorner(fill, ellipsoid, 0.0, 0.0, fill.southwestTile, fill.southwestMesh, fill.westTiles, fill.westMeshes, fill.southTiles, fill.southMeshes, hasVertexNormals, hasWebMercatorT, tileVertices);
-        addEdge(fill, ellipsoid, fill.southTiles, fill.southMeshes, TileEdge.NORTH, stride, tileVertices);
-        var southeastIndex = tileVertices.length / stride;
-        addCorner(fill, ellipsoid, 1.0, 0.0, fill.southeastTile, fill.southeastMesh, fill.southTiles, fill.southMeshes, fill.eastTiles, fill.eastMeshes, hasVertexNormals, hasWebMercatorT, tileVertices);
-        addEdge(fill, ellipsoid, fill.eastTiles, fill.eastMeshes, TileEdge.WEST, stride, tileVertices);
-        var northeastIndex = tileVertices.length / stride;
-        addCorner(fill, ellipsoid, 1.0, 1.0, fill.northeastTile, fill.northeastMesh, fill.eastTiles, fill.eastMeshes, fill.northTiles, fill.northMeshes, hasVertexNormals, hasWebMercatorT, tileVertices);
-        addEdge(fill, ellipsoid, fill.northTiles, fill.northMeshes, TileEdge.SOUTH, stride, tileVertices);
+        var nwCorner = getCorner(fill, ellipsoid, 0.0, 1.0, fill.northwestTile, fill.northwestMesh, fill.northTiles, fill.northMeshes, fill.westTiles, fill.westMeshes, nwVertexScratch);
+        var swCorner = getCorner(fill, ellipsoid, 0.0, 0.0, fill.southwestTile, fill.southwestMesh, fill.westTiles, fill.westMeshes, fill.southTiles, fill.southMeshes, swVertexScratch);
+        var seCorner = getCorner(fill, ellipsoid, 1.0, 0.0, fill.southeastTile, fill.southeastMesh, fill.southTiles, fill.southMeshes, fill.eastTiles, fill.eastMeshes, seVertexScratch);
+        var neCorner = getCorner(fill, ellipsoid, 1.0, 1.0, fill.northeastTile, fill.northeastMesh, fill.eastTiles, fill.eastMeshes, fill.northTiles, fill.northMeshes, neVertexScratch);
 
-        // TODO: slight optimization: track min/max as we're adding vertices.
-        var southwestHeight = tileVertices[southwestIndex * stride + 3];
-        var southeastHeight = tileVertices[southeastIndex * stride + 3];
-        var northwestHeight = tileVertices[northwestIndex * stride + 3];
-        var northeastHeight = tileVertices[northeastIndex * stride + 3];
+        var southwestHeight = swCorner.height;
+        var southeastHeight = seCorner.height;
+        var northwestHeight = nwCorner.height;
+        var northeastHeight = neCorner.height;
 
         var minimumHeight = Math.min(southwestHeight, southeastHeight, northwestHeight, northeastHeight);
         var maximumHeight = Math.max(southwestHeight, southeastHeight, northwestHeight, northeastHeight);
 
         var middleHeight = (minimumHeight + maximumHeight) * 0.5;
 
+        var encoding = new TerrainEncoding(undefined, minimumHeight, maximumHeight, undefined, true, true);
+
+        var centerCartographic = centerCartographicScratch;
+        centerCartographic.longitude = (rectangle.east + rectangle.west) * 0.5;
+        centerCartographic.latitude = (rectangle.north + rectangle.south) * 0.5;
+        centerCartographic.height = middleHeight;
+        encoding.center = ellipsoid.cartographicToCartesian(centerCartographic, encoding.center);
+
+        // At _most_, we have vertices for the 4 corners, plus 1 center, plus every adjacent edge vertex.
+        // In reality there will be less most of the time, but close enough; better
+        // to overestimate than to re-allocate/copy/traverse the vertices twice.
+        var maxVertexCount = 5;
+        var i;
+        var len;
+        var meshes;
+
+        meshes = fill.westMeshes;
+        for (i = 0, len = meshes.length; i < len; ++i) {
+            maxVertexCount += meshes[i].eastIndicesNorthToSouth.length;
+        }
+
+        meshes = fill.southMeshes;
+        for (i = 0, len = meshes.length; i < len; ++i) {
+            maxVertexCount += meshes[i].northIndicesWestToEast.length;
+        }
+
+        meshes = fill.eastMeshes;
+        for (i = 0, len = meshes.length; i < len; ++i) {
+            maxVertexCount += meshes[i].westIndicesSouthToNorth.length;
+        }
+
+        meshes = fill.northMeshes;
+        for (i = 0, len = meshes.length; i < len; ++i) {
+            maxVertexCount += meshes[i].southIndicesEastToWest.length;
+        }
+
+        var typedArray = new Float32Array(maxVertexCount * encoding.getStride());
+
+        function addVertexWithComputedPosition(ellipsoid, rectangle, encoding, buffer, index, u, v, height, encodedNormal, webMercatorT) {
+            var cartographic = cartographicScratch;
+            cartographic.longitude = CesiumMath.lerp(rectangle.west, rectangle.east, u);
+            cartographic.latitude = CesiumMath.lerp(rectangle.south, rectangle.north, v);
+            cartographic.height = height;
+            var position = ellipsoid.cartographicToCartesian(cartographic, cartesianScratch);
+
+            var uv = uvScratch2;
+            uv.x = u;
+            uv.y = v;
+
+            encoding.encode(buffer, index * encoding.getStride(), position, uv, height, encodedNormal, webMercatorT);
+
+            return index + 1;
+        }
+
+        var nextIndex = 0;
+        var northwestIndex = nextIndex;
+        nextIndex = addVertexWithComputedPosition(ellipsoid, rectangle, encoding, typedArray, nextIndex, 0.0, 1.0, nwCorner.height, nwCorner.encodedNormal, 1.0);
+        nextIndex = addEdge(fill, ellipsoid, encoding, typedArray, nextIndex, fill.westTiles, fill.westMeshes, TileEdge.EAST);
+        var southwestIndex = nextIndex;
+        nextIndex = addVertexWithComputedPosition(ellipsoid, rectangle, encoding, typedArray, nextIndex, 0.0, 0.0, swCorner.height, swCorner.encodedNormal, 0.0);
+        nextIndex = addEdge(fill, ellipsoid, encoding, typedArray, nextIndex, fill.southTiles, fill.southMeshes, TileEdge.NORTH);
+        var southeastIndex = nextIndex;
+        nextIndex = addVertexWithComputedPosition(ellipsoid, rectangle, encoding, typedArray, nextIndex, 1.0, 0.0, seCorner.height, seCorner.encodedNormal, 0.0);
+        nextIndex = addEdge(fill, ellipsoid, encoding, typedArray, nextIndex, fill.eastTiles, fill.eastMeshes, TileEdge.WEST);
+        var northeastIndex = nextIndex;
+        nextIndex = addVertexWithComputedPosition(ellipsoid, rectangle, encoding, typedArray, nextIndex, 1.0, 1.0, neCorner.height, neCorner.encodedNormal, 1.0);
+        nextIndex = addEdge(fill, ellipsoid, encoding, typedArray, nextIndex, fill.northTiles, fill.northMeshes, TileEdge.SOUTH);
+
         // Add a single vertex at the center of the tile.
-        var obb = OrientedBoundingBox.fromRectangle(tile.rectangle, minimumHeight, maximumHeight, tile.tilingScheme.ellipsoid);
+        // TODO: minimumHeight and maximumHeight only reflect the corners
+        var obb = OrientedBoundingBox.fromRectangle(rectangle, minimumHeight, maximumHeight, tile.tilingScheme.ellipsoid);
         var center = obb.center;
-
-        ellipsoid.cartesianToCartographic(center, cartographicScratch);
-        cartographicScratch.height = middleHeight;
-        var centerVertexPosition = ellipsoid.cartographicToCartesian(cartographicScratch, cartesianScratch);
-
-        var rectangle = tile.rectangle;
-        tileVertices.push(centerVertexPosition.x, centerVertexPosition.y, centerVertexPosition.z, middleHeight);
-        tileVertices.push((cartographicScratch.longitude - rectangle.west) / (rectangle.east - rectangle.west));
-        tileVertices.push((cartographicScratch.latitude - rectangle.south) / (rectangle.north - rectangle.south));
 
         var southMercatorY = WebMercatorProjection.geodeticLatitudeToMercatorAngle(rectangle.south);
         var oneOverMercatorHeight = 1.0 / (WebMercatorProjection.geodeticLatitudeToMercatorAngle(rectangle.north) - southMercatorY);
-        tileVertices.push((WebMercatorProjection.geodeticLatitudeToMercatorAngle(cartographicScratch.latitude) - southMercatorY) * oneOverMercatorHeight);
+        var centerWebMercatorT = (WebMercatorProjection.geodeticLatitudeToMercatorAngle(centerCartographic.latitude) - southMercatorY) * oneOverMercatorHeight;
 
-        if (hasVertexNormals) {
-            ellipsoid.geodeticSurfaceNormalCartographic(cartographicScratch, normalScratch);
-            AttributeCompression.octEncode(normalScratch, octEncodedNormalScratch);
-            tileVertices.push(octEncodedNormalScratch.x, octEncodedNormalScratch.y);
+        ellipsoid.geodeticSurfaceNormalCartographic(cartographicScratch, normalScratch);
+        var centerEncodedNormal = AttributeCompression.octEncode(normalScratch, octEncodedNormalScratch);
+
+        var centerIndex = nextIndex;
+        encoding.encode(typedArray, nextIndex * encoding.getStride(), center, Cartesian2.fromElements(0.5, 0.5, uvScratch), middleHeight, centerEncodedNormal, centerWebMercatorT);
+        ++nextIndex;
+
+        if (nextIndex * encoding.getStride() > typedArray.length) {
+            debugger;
         }
 
-        var vertexCount = tileVertices.length / stride;
+        var vertexCount = nextIndex;
         var indices = new Uint16Array((vertexCount - 1) * 3); // one triangle per edge vertex
-        var centerIndex = vertexCount - 1;
 
         var indexOut = 0;
-        var i;
         for (i = 0; i < vertexCount - 2; ++i) {
             indices[indexOut++] = centerIndex;
             indices[indexOut++] = i;
@@ -511,29 +571,6 @@ define([
         for (i = centerIndex - 1; i >= northeastIndex; --i) {
             northIndicesWestToEast.push(i);
         }
-
-        var packedStride = hasVertexNormals ? stride - 1 : stride; // normal is packed into 1 float
-        var typedArray = new Float32Array(vertexCount * packedStride);
-
-        for (i = 0; i < vertexCount; ++i) {
-            var read = i * stride;
-            var write = i * packedStride;
-            typedArray[write++] = tileVertices[read++] - center.x;
-            typedArray[write++] = tileVertices[read++] - center.y;
-            typedArray[write++] = tileVertices[read++] - center.z;
-            typedArray[write++] = tileVertices[read++];
-            typedArray[write++] = tileVertices[read++];
-            typedArray[write++] = tileVertices[read++];
-
-            typedArray[write++] = tileVertices[read++];
-
-            if (hasVertexNormals) {
-                typedArray[write++] = AttributeCompression.octPackFloat(Cartesian2.fromElements(tileVertices[read++], tileVertices[read++], octEncodedNormalScratch));
-            }
-        }
-
-        var encoding = new TerrainEncoding(undefined, minimumHeight, maximumHeight, undefined, hasVertexNormals, hasWebMercatorT);
-        encoding.center = center;
 
         var mesh = new TerrainMesh(
             obb.center,
@@ -585,7 +622,6 @@ define([
 
         var tileImageryCollection = surfaceTile.imagery;
 
-        var len;
         if (tileImageryCollection.length === 0) {
             var imageryLayerCollection = tileProvider._imageryLayers;
             var terrainProvider = tileProvider.terrainProvider;
@@ -671,34 +707,27 @@ define([
         return result;
     }
 
-    var positionScratch = new Cartesian3();
     var encodedNormalScratch = new Cartesian2();
-    var uvScratch = new Cartesian2();
 
-    function addVertexFromTileAtCorner(sourceMesh, sourceIndex, u, v, tileVertices) {
+    function getVertexFromTileAtCorner(sourceMesh, sourceIndex, u, v, vertex) {
         var sourceEncoding = sourceMesh.encoding;
         var sourceVertices = sourceMesh.vertices;
 
-        sourceEncoding.decodePosition(sourceVertices, sourceIndex, positionScratch);
-        tileVertices.push(positionScratch.x, positionScratch.y, positionScratch.z);
-
-        tileVertices.push(sourceEncoding.decodeHeight(sourceVertices, sourceIndex), u, v);
-
-        // At the corners, the geographic and web mercator vertical texture coordinates
-        // are the same: either 0.0 or 1.0;
-        tileVertices.push(v);
+        vertex.height = sourceEncoding.decodeHeight(sourceVertices, sourceIndex);
 
         if (sourceEncoding.hasVertexNormals) {
-            sourceEncoding.getOctEncodedNormal(sourceVertices, sourceIndex, encodedNormalScratch);
-            tileVertices.push(encodedNormalScratch.x, encodedNormalScratch.y);
+            sourceEncoding.getOctEncodedNormal(sourceVertices, sourceIndex, vertex.encodedNormal);
+        } else {
+            var normal = vertex.encodedNormal;
+            normal.x = 0.0;
+            normal.y = 0.0;
         }
     }
 
-    var uvScratch2 = new Cartesian2();
     var encodedNormalScratch2 = new Cartesian2();
     var cartesianScratch2 = new Cartesian3();
 
-    function addInterpolatedVertexAtCorner(ellipsoid, sourceTile, targetTile, sourceMesh, previousIndex, nextIndex, u, v, interpolateU, tileVertices) {
+    function getInterpolatedVertexAtCorner(ellipsoid, sourceTile, targetTile, sourceMesh, previousIndex, nextIndex, u, v, interpolateU, vertex) {
         var sourceEncoding = sourceMesh.encoding;
         var sourceVertices = sourceMesh.vertices;
 
@@ -718,65 +747,43 @@ define([
         var targetRectangle = targetTile.rectangle;
         cartographicScratch.longitude = CesiumMath.lerp(targetRectangle.west, targetRectangle.east, u);
         cartographicScratch.latitude = CesiumMath.lerp(targetRectangle.south, targetRectangle.north, v);
-        cartographicScratch.height = CesiumMath.lerp(height1, height2, ratio);
-        var position = ellipsoid.cartographicToCartesian(cartographicScratch, cartesianScratch);
+        vertex.height = cartographicScratch.height = CesiumMath.lerp(height1, height2, ratio);
 
-        tileVertices.push(position.x, position.y, position.z);
-        tileVertices.push(cartographicScratch.height, u, v);
-
-        // At the corners, the geographic and web mercator vertical texture coordinates
-        // are the same: either 0.0 or 1.0;
-        tileVertices.push(v);
-
+        var normal;
         if (sourceEncoding.hasVertexNormals) {
             var encodedNormal1 = sourceEncoding.getOctEncodedNormal(sourceVertices, previousIndex, encodedNormalScratch);
             var encodedNormal2 = sourceEncoding.getOctEncodedNormal(sourceVertices, nextIndex, encodedNormalScratch2);
             var normal1 = AttributeCompression.octDecode(encodedNormal1.x, encodedNormal1.y, cartesianScratch);
             var normal2 = AttributeCompression.octDecode(encodedNormal2.x, encodedNormal2.y, cartesianScratch2);
-            var normal = Cartesian3.lerp(normal1, normal2, ratio, cartesianScratch);
+            normal = Cartesian3.lerp(normal1, normal2, ratio, cartesianScratch);
             Cartesian3.normalize(normal, normal);
-            var encodedNormal = AttributeCompression.octEncode(normal, encodedNormalScratch);
-            tileVertices.push(encodedNormal.x, encodedNormal.y);
+            AttributeCompression.octEncode(normal, vertex.encodedNormal);
+        } else {
+            normal = ellipsoid.geodeticSurfaceNormalCartographic(cartographicScratch, cartesianScratch);
+            AttributeCompression.octEncode(normal, vertex.encodedNormal);
         }
     }
 
-    function addVertexWithHeightAtCorner(terrainFillMesh, ellipsoid, u, v, height, hasVertexNormals, hasWebMercatorT, tileVertices) {
-        var rectangle = terrainFillMesh.tile.rectangle;
-
-        cartographicScratch.longitude = CesiumMath.lerp(rectangle.west, rectangle.east, u);
-        cartographicScratch.latitude = CesiumMath.lerp(rectangle.south, rectangle.north, v);
-        cartographicScratch.height = height;
-        var position = ellipsoid.cartographicToCartesian(cartographicScratch, cartesianScratch);
-
-        tileVertices.push(position.x, position.y, position.z);
-        tileVertices.push(height, u, v);
-
-        // At the corners, the geographic and web mercator vertical texture coordinate
-        // is the same: either 0.0 or 1.0;
-        tileVertices.push(v);
-
-        if (hasVertexNormals) {
-            var normal = ellipsoid.geodeticSurfaceNormalCartographic(cartographicScratch, cartesianScratch);
-            var encodedNormal = AttributeCompression.octEncode(normal, encodedNormalScratch);
-            tileVertices.push(encodedNormal.x, encodedNormal.y);
-        }
+    function getVertexWithHeightAtCorner(terrainFillMesh, ellipsoid, u, v, height, vertex) {
+        vertex.height = height;
+        var normal = ellipsoid.geodeticSurfaceNormalCartographic(cartographicScratch, cartesianScratch);
+        AttributeCompression.octEncode(normal, vertex.encodedNormal);
     }
 
-    function addCorner(
+    function getCorner(
         terrainFillMesh,
         ellipsoid,
         u, v,
         cornerTile, cornerMesh,
         previousEdgeTiles, previousEdgeMeshes,
         nextEdgeTiles, nextEdgeMeshes,
-        hasVertexNormals, hasWebMercatorT,
-        tileVertices
+        vertex
     ) {
         var gotCorner =
-            addCornerFromEdge(terrainFillMesh, ellipsoid, previousEdgeMeshes, previousEdgeTiles, false, u, v, tileVertices) ||
-            addCornerFromEdge(terrainFillMesh, ellipsoid, nextEdgeMeshes, nextEdgeTiles, true, u, v, tileVertices);
+            getCornerFromEdge(terrainFillMesh, ellipsoid, previousEdgeMeshes, previousEdgeTiles, false, u, v, vertex) ||
+            getCornerFromEdge(terrainFillMesh, ellipsoid, nextEdgeMeshes, nextEdgeTiles, true, u, v, vertex);
         if (gotCorner) {
-            return;
+            return vertex;
         }
 
         var vertexIndex;
@@ -799,8 +806,8 @@ define([
                 // northeast destination, southwest source
                 vertexIndex = cornerTerrainMesh.westIndicesSouthToNorth[0];
             }
-            addVertexFromTileAtCorner(cornerTerrainMesh, vertexIndex, u, v, tileVertices);
-            return;
+            getVertexFromTileAtCorner(cornerTerrainMesh, vertexIndex, u, v, vertex);
+            return vertex;
         }
 
         // There is no precise vertex available from the corner or from either adjacent edge.
@@ -863,7 +870,8 @@ define([
             height = (minimumHeight + maximumHeight) * 0.5;
         }
 
-        addVertexWithHeightAtCorner(terrainFillMesh, ellipsoid, u, v, height, hasVertexNormals, hasWebMercatorT, tileVertices);
+        getVertexWithHeightAtCorner(terrainFillMesh, ellipsoid, u, v, height, vertex);
+        return vertex;
     }
 
     function getClosestHeightToCorner(
@@ -914,15 +922,16 @@ define([
         return getHeightAtCorner(oppositeCornerMesh, oppositeCornerTile, oppositeCorner, u, v);
     }
 
-    function addEdge(terrainFillMesh, ellipsoid, edgeTiles, edgeMeshes, tileEdge, stride, tileVertices) {
+    function addEdge(terrainFillMesh, ellipsoid, encoding, typedArray, nextIndex, edgeTiles, edgeMeshes, tileEdge) {
         for (var i = 0; i < edgeTiles.length; ++i) {
-            addEdgeMesh(terrainFillMesh, ellipsoid, edgeTiles[i], edgeMeshes[i], tileEdge, stride, tileVertices);
+            nextIndex = addEdgeMesh(terrainFillMesh, ellipsoid, encoding, typedArray, nextIndex, edgeTiles[i], edgeMeshes[i], tileEdge);
         }
+        return nextIndex;
     }
 
     var edgeDetailsScratch = new TerrainTileEdgeDetails();
 
-    function addEdgeMesh(terrainFillMesh, ellipsoid, edgeTile, edgeMesh, tileEdge, stride, tileVertices) {
+    function addEdgeMesh(terrainFillMesh, ellipsoid, encoding, typedArray, nextIndex, edgeTile, edgeMesh, tileEdge) {
         var terrainMesh = edgeMesh;
 
         // Handle copying edges across the anti-meridian.
@@ -942,15 +951,21 @@ define([
 
         var vertices = edgeDetails.vertices;
 
-        var previousVertexIndex = tileVertices.length - stride;
-
-        // Copy all except the corner vertices.
         var i;
         var u;
         var v;
-        var lastU = tileVertices[previousVertexIndex + 4];
-        var lastV = tileVertices[previousVertexIndex + 5];
-        for (i = 0; i < vertices.length; i += stride) {
+        var lastU;
+        var lastV;
+
+        if (nextIndex > 0) {
+            encoding.decodeTextureCoordinates(typedArray, nextIndex - 1, uvScratch);
+            lastU = uvScratch.x;
+            lastV = uvScratch.y;
+        }
+
+        // Copy all except the corner vertices.
+        var sourceStride = 6 + (terrainMesh.encoding.hasVertexNormals ? 2 : 0) + (terrainMesh.encoding.hasWebMercatorT ? 1 : 0);
+        for (i = 0; i < vertices.length; i += sourceStride) {
             u = vertices[i + 4];
             v = vertices[i + 5];
             if (Math.abs(u - lastU) < CesiumMath.EPSILON5 && Math.abs(v - lastV) < CesiumMath.EPSILON5) {
@@ -966,14 +981,34 @@ define([
                 continue;
             }
 
-            var end = i + stride;
-            for (var j = i; j < end; ++j) {
-                tileVertices.push(vertices[j]);
+            var position = Cartesian3.fromElements(vertices[i], vertices[i + 1], vertices[i + 2], cartesianScratch);
+            var uv = Cartesian2.fromElements(u, v, uvScratch);
+            var height = vertices[i + 3];
+
+            var webMercatorT;
+            var normalIndex = 6;
+            if (terrainMesh.encoding.hasWebMercatorT) {
+                webMercatorT = vertices[i + 6];
+                ++normalIndex;
             }
+
+            var encodedNormal;
+            if (terrainMesh.encoding.hasVertexNormals) {
+                encodedNormal = Cartesian2.fromElements(vertices[i + normalIndex], vertices[i + normalIndex + 1], encodedNormalScratch);
+            } else {
+                ellipsoid.geodeticSurfaceNormal(position, normalScratch);
+                encodedNormal = AttributeCompression.octEncode(normalScratch, encodedNormalScratch);
+            }
+
+            encoding.encode(typedArray, nextIndex * encoding.getStride(), position, uv, height, encodedNormal, webMercatorT);
 
             lastU = u;
             lastV = v;
+
+            ++nextIndex;
         }
+
+        return nextIndex;
     }
 
     function getNearestHeightOnEdge(meshes, tiles, isNext, edge, u, v) {
@@ -1055,7 +1090,7 @@ define([
         return undefined;
     }
 
-    function addCornerFromEdge(terrainFillMesh, ellipsoid, edgeMeshes, edgeTiles, isNext, u, v, tileVertices) {
+    function getCornerFromEdge(terrainFillMesh, ellipsoid, edgeMeshes, edgeTiles, isNext, u, v, vertex) {
         var edgeVertices;
         var compareU;
         var increasing;
@@ -1100,7 +1135,7 @@ define([
                 var targetUv = transformTextureCoordinates(sourceTile, terrainFillMesh.tile, uvScratch, uvScratch);
                 if (targetUv.x === u && targetUv.y === v) {
                     // Vertex is good!
-                    addVertexFromTileAtCorner(sourceTerrainMesh, vertexIndex, u, v, tileVertices);
+                    getVertexFromTileAtCorner(sourceTerrainMesh, vertexIndex, u, v, vertex);
                     return true;
                 }
 
@@ -1124,12 +1159,12 @@ define([
 
                     if (vertexIndexIndex > 0 && vertexIndexIndex < edgeVertices.length) {
                         // The corner falls between two vertices, so interpolate between them.
-                        addInterpolatedVertexAtCorner(ellipsoid, sourceTile, terrainFillMesh.tile, sourceTerrainMesh, edgeVertices[vertexIndexIndex - 1], edgeVertices[vertexIndexIndex], u, v, compareU, tileVertices);
+                        getInterpolatedVertexAtCorner(ellipsoid, sourceTile, terrainFillMesh.tile, sourceTerrainMesh, edgeVertices[vertexIndexIndex - 1], edgeVertices[vertexIndexIndex], u, v, compareU, vertex);
                         return true;
                     }
                 } else {
                     // Found a vertex that fits in the corner exactly.
-                    addVertexFromTileAtCorner(sourceTerrainMesh, edgeVertices[vertexIndexIndex], u, v, tileVertices);
+                    getVertexFromTileAtCorner(sourceTerrainMesh, edgeVertices[vertexIndexIndex], u, v, vertex);
                     return true;
                 }
             }

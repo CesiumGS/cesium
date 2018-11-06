@@ -153,7 +153,7 @@ define([
          * @type {Boolean}
          * @default false
          */
-        this.preloadAncestors = false;
+        this.preloadAncestors = true;
 
         /**
          * Gets or sets a value indicating whether the siblings of rendered tiles should be preloaded.
