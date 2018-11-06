@@ -294,6 +294,9 @@ define([
                 var stages = arraySlice(this._stages);
                 while (stages.length > 0) {
                     var stage = stages.pop();
+                    if (!defined(stage)) {
+                        continue;
+                    }
                     if (defined(stage.selected)) {
                         return true;
                     }

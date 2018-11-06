@@ -82,6 +82,10 @@ var activeShape;
 var floatingPoint;
 var handler = new Cesium.ScreenSpaceEventHandler(viewer.canvas);
 handler.setInputAction(function(event) {
+    if (!Cesium.Entity.supportsPolylinesOnTerrain(viewer.scene)) {
+        console.log('This browser does not support polylines on terrain.');
+        return;
+    }
     // We use `viewer.scene.pickPosition` here instead of `viewer.camera.pickEllipsoid` so that
     // we get the correct point when mousing over terrain.
     var earthPosition = viewer.scene.pickPosition(event.position);

@@ -202,10 +202,6 @@ define([
         return !defined(rectangle.coordinates) || GeometryUpdater.prototype._isHidden.call(this, entity, rectangle);
     };
 
-    RectangleGeometryUpdater.prototype._isOnTerrain = function(entity, rectangle) {
-        return this._fillEnabled && !defined(rectangle.height) && !defined(rectangle.extrudedHeight) && GroundPrimitive.isSupported(this._scene);
-    };
-
     RectangleGeometryUpdater.prototype._isDynamic = function(entity, rectangle) {
         return !rectangle.coordinates.isConstant || //
                !Property.isConstant(rectangle.height) || //
@@ -221,10 +217,13 @@ define([
     RectangleGeometryUpdater.prototype._setStaticOptions = function(entity, rectangle) {
         var isColorMaterial = this._materialProperty instanceof ColorMaterialProperty;
 
-        var height = rectangle.height;
-        var heightReference = rectangle.heightReference;
-        var extrudedHeight = rectangle.extrudedHeight;
-        var extrudedHeightReference = rectangle.extrudedHeightReference;
+        var heightValue = Property.getValueOrUndefined(rectangle.height, Iso8601.MINIMUM_VALUE);
+        var heightReferenceValue = Property.getValueOrDefault(rectangle.heightReference, Iso8601.MINIMUM_VALUE, HeightReference.NONE);
+        var extrudedHeightValue = Property.getValueOrUndefined(rectangle.extrudedHeight, Iso8601.MINIMUM_VALUE);
+        var extrudedHeightReferenceValue = Property.getValueOrDefault(rectangle.extrudedHeightReference, Iso8601.MINIMUM_VALUE, HeightReference.NONE);
+        if (defined(extrudedHeightValue) && !defined(heightValue)) {
+            heightValue = 0;
+        }
 
         var options = this._options;
         options.vertexFormat = isColorMaterial ? PerInstanceColorAppearance.VERTEX_FORMAT : MaterialAppearance.MaterialSupport.TEXTURED.vertexFormat;
@@ -232,21 +231,15 @@ define([
         options.granularity = Property.getValueOrUndefined(rectangle.granularity, Iso8601.MINIMUM_VALUE);
         options.stRotation = Property.getValueOrUndefined(rectangle.stRotation, Iso8601.MINIMUM_VALUE);
         options.rotation = Property.getValueOrUndefined(rectangle.rotation, Iso8601.MINIMUM_VALUE);
-        options.offsetAttribute = GroundGeometryUpdater.computeGeometryOffsetAttribute(heightReference, extrudedHeightReference, Iso8601.MINIMUM_VALUE);
-        options.height = GroundGeometryUpdater.getGeometryHeight(height, heightReference, Iso8601.MINIMUM_VALUE);
+        options.offsetAttribute = GroundGeometryUpdater.computeGeometryOffsetAttribute(heightValue, heightReferenceValue, extrudedHeightValue, extrudedHeightReferenceValue);
+        options.height = GroundGeometryUpdater.getGeometryHeight(heightValue, heightReferenceValue);
 
-        var extrudedHeightValue = GroundGeometryUpdater.getGeometryExtrudedHeight(extrudedHeight, extrudedHeightReference, Iso8601.MINIMUM_VALUE);
+        extrudedHeightValue = GroundGeometryUpdater.getGeometryExtrudedHeight(extrudedHeightValue, extrudedHeightReferenceValue);
         if (extrudedHeightValue === GroundGeometryUpdater.CLAMP_TO_GROUND) {
             extrudedHeightValue = ApproximateTerrainHeights.getApproximateTerrainHeights(RectangleGeometry.computeRectangle(options, scratchRectangle)).minimumTerrainHeight;
         }
 
         options.extrudedHeight = extrudedHeightValue;
-    };
-
-    RectangleGeometryUpdater.prototype._getIsClosed = function(options) {
-        var height = options.height;
-        var extrudedHeight = options.extrudedHeight;
-        return height === 0 || defined(extrudedHeight) && extrudedHeight !== height;
     };
 
     RectangleGeometryUpdater.DynamicGeometryUpdater = DynamicRectangleGeometryUpdater;
@@ -269,19 +262,22 @@ define([
 
     DynamicRectangleGeometryUpdater.prototype._setOptions = function(entity, rectangle, time) {
         var options = this._options;
-        var height = rectangle.height;
-        var heightReference = rectangle.heightReference;
-        var extrudedHeight = rectangle.extrudedHeight;
-        var extrudedHeightReference = rectangle.extrudedHeightReference;
+        var heightValue = Property.getValueOrUndefined(rectangle.height, time);
+        var heightReferenceValue = Property.getValueOrDefault(rectangle.heightReference, time, HeightReference.NONE);
+        var extrudedHeightValue = Property.getValueOrUndefined(rectangle.extrudedHeight, time);
+        var extrudedHeightReferenceValue = Property.getValueOrDefault(rectangle.extrudedHeightReference, time, HeightReference.NONE);
+        if (defined(extrudedHeightValue) && !defined(heightValue)) {
+            heightValue = 0;
+        }
 
         options.rectangle = Property.getValueOrUndefined(rectangle.coordinates, time, options.rectangle);
         options.granularity = Property.getValueOrUndefined(rectangle.granularity, time);
         options.stRotation = Property.getValueOrUndefined(rectangle.stRotation, time);
         options.rotation = Property.getValueOrUndefined(rectangle.rotation, time);
-        options.offsetAttribute = GroundGeometryUpdater.computeGeometryOffsetAttribute(heightReference, extrudedHeightReference, time);
-        options.height = GroundGeometryUpdater.getGeometryHeight(height, heightReference, time);
+        options.offsetAttribute = GroundGeometryUpdater.computeGeometryOffsetAttribute(heightValue, heightReferenceValue, extrudedHeightValue, extrudedHeightReferenceValue);
+        options.height = GroundGeometryUpdater.getGeometryHeight(heightValue, heightReferenceValue);
 
-        var extrudedHeightValue = GroundGeometryUpdater.getGeometryExtrudedHeight(extrudedHeight, extrudedHeightReference, time);
+        extrudedHeightValue = GroundGeometryUpdater.getGeometryExtrudedHeight(extrudedHeightValue, extrudedHeightReferenceValue);
         if (extrudedHeightValue === GroundGeometryUpdater.CLAMP_TO_GROUND) {
             extrudedHeightValue = ApproximateTerrainHeights.getApproximateTerrainHeights(RectangleGeometry.computeRectangle(options, scratchRectangle)).minimumTerrainHeight;
         }

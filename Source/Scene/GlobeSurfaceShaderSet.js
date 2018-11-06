@@ -89,6 +89,7 @@ define([
         var clippingPlanes = options.clippingPlanes;
         var clippedByBoundaries = options.clippedByBoundaries;
         var hasImageryLayerCutout = options.hasImageryLayerCutout;
+        var colorCorrect = options.colorCorrect;
         var highlightFillTile = options.highlightFillTile;
 
         var quantization = 0;
@@ -145,10 +146,11 @@ define([
                     (vertexLogDepth << 19) |
                     (cartographicLimitRectangleFlag << 20) |
                     (imageryCutoutFlag << 21) |
-                    (highlightFillTile << 22);
+                    (colorCorrect << 22) |
+                    (highlightFillTile << 23);
 
         var currentClippingShaderState = 0;
-        if (defined(clippingPlanes)) {
+        if (defined(clippingPlanes) && clippingPlanes.length > 0) {
             currentClippingShaderState = enableClippingPlanes ? clippingPlanes.clippingPlanesState : 0;
         }
         var surfaceShader = surfaceTile.surfaceShader;
@@ -238,6 +240,10 @@ define([
 
             if (enableClippingPlanes) {
                 fs.defines.push('ENABLE_CLIPPING_PLANES');
+            }
+
+            if (colorCorrect) {
+                fs.defines.push('COLOR_CORRECT');
             }
 
             if (highlightFillTile) {

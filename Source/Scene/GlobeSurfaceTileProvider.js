@@ -157,6 +157,10 @@ define([
          */
         this.fillHighlightColor = undefined;
 
+        this.hueShift = undefined;
+        this.saturationShift = undefined;
+        this.brightnessShift = undefined;
+
         this._quadtree = undefined;
         this._terrainProvider = options.terrainProvider;
         this._imageryLayers = options.imageryLayers;
@@ -1247,6 +1251,9 @@ define([
             u_minimumBrightness : function() {
                 return frameState.fog.minimumBrightness;
             },
+            u_hsbShift : function() {
+                return this.properties.hsbShift;
+            },
 
             // make a separate object so that changes to the properties are seen on
             // derived commands that combine another uniform map with this one.
@@ -1257,6 +1264,7 @@ define([
                 oceanNormalMap : undefined,
                 lightingFadeDistance : new Cartesian2(6500000.0, 9000000.0),
                 nightFadeDistance : new Cartesian2(10000000.0, 40000000.0),
+                hsbShift : new Cartesian3(),
 
                 center3D : undefined,
                 rtc : new Cartesian3(),
@@ -1450,7 +1458,8 @@ define([
         enableClippingPlanes : undefined,
         clippingPlanes : undefined,
         clippedByBoundaries : undefined,
-        hasImageryLayerCutout : undefined
+        hasImageryLayerCutout : undefined,
+        colorCorrect : undefined
     };
 
     function addDrawCommandsForTile(tileProvider, tile, frameState) {
@@ -1490,6 +1499,14 @@ define([
         var showGroundAtmosphere = tileProvider.showGroundAtmosphere;
         var castShadows = ShadowMode.castShadows(tileProvider.shadows);
         var receiveShadows = ShadowMode.receiveShadows(tileProvider.shadows);
+
+        var hueShift = tileProvider.hueShift;
+        var saturationShift = tileProvider.saturationShift;
+        var brightnessShift = tileProvider.brightnessShift;
+
+        var colorCorrect = !(CesiumMath.equalsEpsilon(hueShift, 0.0, CesiumMath.EPSILON7) &&
+                             CesiumMath.equalsEpsilon(saturationShift, 0.0, CesiumMath.EPSILON7) &&
+                             CesiumMath.equalsEpsilon(brightnessShift, 0.0, CesiumMath.EPSILON7));
 
         var perFragmentGroundAtmosphere = false;
         if (showGroundAtmosphere) {
@@ -1671,6 +1688,8 @@ define([
             var localizedCartographicLimitRectangle = localizedCartographicLimitRectangleScratch;
             var cartographicLimitRectangle = clipRectangleAntimeridian(tile.rectangle, tileProvider.cartographicLimitRectangle);
 
+            Cartesian3.fromElements(hueShift, saturationShift, brightnessShift, uniformMapProperties.hsbShift);
+
             var cartographicTileRectangle = tile.rectangle;
             var inverseTileWidth = 1.0 / cartographicTileRectangle.width;
             var inverseTileHeight = 1.0 / cartographicTileRectangle.height;
@@ -1683,6 +1702,7 @@ define([
 
             // For performance, use fog in the shader only when the tile is in fog.
             var applyFog = enableFog && CesiumMath.fog(tile._distance, frameState.fog.density) > CesiumMath.EPSILON3;
+            colorCorrect = colorCorrect && (applyFog || showGroundAtmosphere);
 
             var applyBrightness = false;
             var applyContrast = false;
@@ -1814,6 +1834,7 @@ define([
             surfaceShaderSetOptions.enableClippingPlanes = clippingPlanesEnabled;
             surfaceShaderSetOptions.clippingPlanes = clippingPlanes;
             surfaceShaderSetOptions.hasImageryLayerCutout = applyCutout;
+            surfaceShaderSetOptions.colorCorrect = colorCorrect;
             surfaceShaderSetOptions.highlightFillTile = highlightFillTile;
 
             command.shaderProgram = tileProvider._surfaceShaderSet.getShaderProgram(surfaceShaderSetOptions);
