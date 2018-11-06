@@ -1,5 +1,6 @@
 defineSuite([
         'Scene/Model',
+        'Core/Cartesian2',
         'Core/Cartesian3',
         'Core/Cartesian4',
         'Core/CesiumTerrainProvider',
@@ -37,6 +38,7 @@ defineSuite([
         'ThirdParty/when'
     ], function(
         Model,
+        Cartesian2,
         Cartesian3,
         Cartesian4,
         CesiumTerrainProvider,
@@ -946,8 +948,11 @@ defineSuite([
             verifyRender(m);
             m.show = true;
 
-            expect(scene).toRenderAndCall(function(rgba) {
-                expect(rgba).toEqualEpsilon([169, 3, 3, 255], 5); // Red
+            expect({
+                scene : scene,
+                time : JulianDate.fromDate(new Date('January 1, 2014 12:00:00 UTC'))
+            }).toRenderAndCall(function(rgba) {
+                expect(rgba).toEqualEpsilon([193, 17, 16, 255], 5); // Red
             });
 
             primitives.remove(m);
@@ -2075,7 +2080,7 @@ defineSuite([
             expect(scene).toRender([0, 0, 0, 255]);
             m.show = true;
             m.zoomTo();
-            expect(scene).toRender([51, 51, 51, 255]); // Cesium has minimum lighting
+            expect(scene).toRender([0, 0, 0, 255]);
             m.show = false;
 
             primitives.remove(m);
@@ -2292,22 +2297,22 @@ defineSuite([
         // Red
         scene.camera.moveLeft(0.5);
         expect(scene).toRenderAndCall(function(rgba) {
-            expect(rgba[0]).toBeGreaterThan(10);
-            expect(rgba[1]).toBeLessThan(10);
-            expect(rgba[2]).toBeLessThan(10);
+            expect(rgba[0]).toBeGreaterThan(20);
+            expect(rgba[1]).toBeLessThan(20);
+            expect(rgba[2]).toBeLessThan(20);
         });
         // Green
         scene.camera.moveRight(0.5);
         expect(scene).toRenderAndCall(function(rgba) {
-            expect(rgba[0]).toBeLessThan(10);
+            expect(rgba[0]).toBeLessThan(20);
             expect(rgba[1]).toBeGreaterThan(20);
-            expect(rgba[2]).toBeLessThan(10);
+            expect(rgba[2]).toBeLessThan(20);
         });
         // Blue
         scene.camera.moveRight(0.5);
         expect(scene).toRenderAndCall(function(rgba) {
-            expect(rgba[0]).toBeLessThan(10);
-            expect(rgba[1]).toBeLessThan(10);
+            expect(rgba[0]).toBeLessThan(20);
+            expect(rgba[1]).toBeLessThan(20);
             expect(rgba[2]).toBeGreaterThan(20);
         });
     }
@@ -2347,9 +2352,9 @@ defineSuite([
             model.zoomTo();
             expect(scene).toRenderAndCall(function(rgba) {
                 // Emissive texture is red
-                expect(rgba[0]).toBeGreaterThan(10);
-                expect(rgba[1]).toBeLessThan(10);
-                expect(rgba[2]).toBeLessThan(10);
+                expect(rgba[0]).toBeGreaterThan(20);
+                expect(rgba[1]).toBeLessThan(20);
+                expect(rgba[2]).toBeLessThan(20);
             });
 
             primitives.remove(model);
@@ -2922,6 +2927,38 @@ defineSuite([
 
                 primitives.remove(model);
                 primitives.remove(model2);
+            });
+        });
+    });
+
+    it('renders with imageBaseLightingFactor', function() {
+        return loadModel(boxPbrUrl).then(function(model) {
+            model.show = true;
+            model.zoomTo();
+            expect(scene).toRenderAndCall(function(rgba) {
+                expect(rgba).not.toEqual([0, 0, 0, 255]);
+                model.imageBasedLightingFactor = new Cartesian2(0.0, 0.0);
+                expect(scene).notToRender(rgba);
+
+                primitives.remove(model);
+            });
+        });
+    });
+
+    it('renders with lightColor', function() {
+        return loadModel(boxPbrUrl).then(function(model) {
+            model.show = true;
+            model.zoomTo();
+            expect(scene).toRenderAndCall(function(rgba) {
+                expect(rgba).not.toEqual([0, 0, 0, 255]);
+                model.imageBasedLightingFactor = new Cartesian2(0.0, 0.0);
+                expect(scene).toRenderAndCall(function(rgba2) {
+                    expect(rgba2).not.toEqual(rgba);
+                    model.lightColor = new Cartesian3(5.0, 5.0, 5.0);
+                    expect(scene).notToRender(rgba2);
+
+                    primitives.remove(model);
+                });
             });
         });
     });

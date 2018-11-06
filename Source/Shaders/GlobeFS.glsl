@@ -33,6 +33,10 @@ uniform float u_dayTextureSaturation[TEXTURE_UNITS];
 uniform float u_dayTextureOneOverGamma[TEXTURE_UNITS];
 #endif
 
+#ifdef APPLY_IMAGERY_CUTOUT
+uniform vec4 u_dayTextureCutoutRectangles[TEXTURE_UNITS];
+#endif
+
 uniform vec4 u_dayTextureTexCoordsRectangle[TEXTURE_UNITS];
 #endif
 
@@ -66,6 +70,10 @@ uniform vec4 u_clippingPlanesEdgeStyle;
 
 #if defined(FOG) && (defined(ENABLE_VERTEX_LIGHTING) || defined(ENABLE_DAYNIGHT_SHADING)) || defined(GROUND_ATMOSPHERE)
 uniform float u_minimumBrightness;
+#endif
+
+#ifdef COLOR_CORRECT
+uniform vec3 u_hsbShift; // Hue, saturation, brightness
 #endif
 
 varying vec3 v_positionMC;
@@ -160,6 +168,20 @@ vec4 sampleAndBlend(
     float outAlpha = mix(previousColor.a, 1.0, sourceAlpha);
     vec3 outColor = mix(previousColor.rgb * previousColor.a, color, sourceAlpha) / outAlpha;
     return vec4(outColor, outAlpha);
+}
+
+vec3 colorCorrect(vec3 rgb) {
+#ifdef COLOR_CORRECT
+    // Convert rgb color to hsb
+    vec3 hsb = czm_RGBToHSB(rgb);
+    // Perform hsb shift
+    hsb.x += u_hsbShift.x; // hue
+    hsb.y = clamp(hsb.y + u_hsbShift.y, 0.0, 1.0); // saturation
+    hsb.z = hsb.z > czm_epsilon7 ? hsb.z + u_hsbShift.z : 0.0; // brightness
+    // Convert shifted hsb back to rgb
+    rgb = czm_HSBToRGB(hsb);
+#endif
+    return rgb;
 }
 
 vec4 computeDayColor(vec4 initialColor, vec3 textureCoordinates);
@@ -281,7 +303,7 @@ void main()
 
 #if defined(FOG) || defined(GROUND_ATMOSPHERE)
     const float fExposure = 2.0;
-    vec3 fogColor = v_fogMieColor + finalColor.rgb * v_fogRayleighColor;
+    vec3 fogColor = colorCorrect(v_fogMieColor) + finalColor.rgb * colorCorrect(v_fogRayleighColor);
     fogColor = vec3(1.0) - exp(-fExposure * fogColor);
 #endif
 
@@ -317,7 +339,7 @@ void main()
     ellipsoidPosition = (czm_inverseView * vec4(ellipsoidPosition, 1.0)).xyz;
     AtmosphereColor atmosColor = computeGroundAtmosphereFromSpace(ellipsoidPosition, true);
 
-    vec3 groundAtmosphereColor = atmosColor.mie + finalColor.rgb * atmosColor.rayleigh;
+    vec3 groundAtmosphereColor = colorCorrect(atmosColor.mie) + finalColor.rgb * colorCorrect(atmosColor.rayleigh);
     groundAtmosphereColor = vec3(1.0) - exp(-fExposure * groundAtmosphereColor);
 
     fadeInDist = u_nightFadeDistance.x;
