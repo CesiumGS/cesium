@@ -14,10 +14,21 @@ defineSuite([
         };
 
         var frozen = freezeRenderState(fresh);
+
+        expect(function() {
+            frozen.a = 2;
+        }).toThrow();
+
+        expect(function() {
+            frozen.b = {};
+        }).toThrow();
+
+        expect(function() {
+            frozen.b.c = 'd';
+        }).toThrow();
+
         expect(Object.isFrozen(frozen)).toBe(true);
-        expect(Object.isFrozen(frozen.a)).toBe(true);
         expect(Object.isFrozen(frozen.b)).toBe(true);
-        expect(Object.isFrozen(frozen.c)).toBe(true);
         expect(Object.isFrozen(frozen._applyFunctions)).toBe(false);
     });
 });
