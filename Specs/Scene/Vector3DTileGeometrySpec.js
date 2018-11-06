@@ -8,6 +8,7 @@ defineSuite([
         'Core/destroyObject',
         'Core/Ellipsoid',
         'Core/GeometryInstance',
+        'Core/InvertClassification',
         'Core/Matrix4',
         'Core/Rectangle',
         'Core/RectangleGeometry',
@@ -30,6 +31,7 @@ defineSuite([
         destroyObject,
         Ellipsoid,
         GeometryInstance,
+        InvertClassification,
         Matrix4,
         Rectangle,
         RectangleGeometry,
@@ -571,6 +573,10 @@ defineSuite([
         });
 
         it('renders with inverted classification' + webglMessage, function() {
+            if (!InvertClassification.isTranslucencySupported(scene.context)) {
+                return;
+            }
+
             var radii = new Cartesian3(100.0, 100.0, 1000.0);
             var ellipsoids = packEllipsoids([{
                 modelMatrix : Matrix4.IDENTITY,

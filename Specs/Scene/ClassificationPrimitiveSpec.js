@@ -447,6 +447,10 @@ defineSuite([
             return;
         }
 
+        if (!InvertClassification.isTranslucencySupported(scene.context)) {
+            return;
+        }
+
         scene.invertClassification = true;
         scene.invertClassificationColor = new Color(0.25, 0.25, 0.25, 1.0);
 

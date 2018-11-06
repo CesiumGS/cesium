@@ -16,6 +16,7 @@ defineSuite([
         'Renderer/Pass',
         'Scene/Cesium3DTileBatchTable',
         'Scene/ColorBlendMode',
+        'Scene/InvertClassification',
         'Scene/PerInstanceColorAppearance',
         'Scene/Primitive',
         'Specs/createContext',
@@ -39,6 +40,7 @@ defineSuite([
         Pass,
         Cesium3DTileBatchTable,
         ColorBlendMode,
+        InvertClassification,
         PerInstanceColorAppearance,
         Primitive,
         createContext,
@@ -418,6 +420,10 @@ defineSuite([
         });
 
         it('renders with inverted classification' + webglMessage, function() {
+            if (!InvertClassification.isTranslucencySupported(scene.context)) {
+                return;
+            }
+
             var rectangle = Rectangle.fromDegrees(-1.0, -1.0, 1.0, 1.0);
             var polygonOptions = createPolygon(rectangle);
 
