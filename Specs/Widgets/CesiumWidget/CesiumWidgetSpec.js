@@ -3,6 +3,7 @@ defineSuite([
         'Core/Clock',
         'Core/defaultValue',
         'Core/EllipsoidTerrainProvider',
+        'Core/FeatureDetection',
         'Core/ScreenSpaceEventHandler',
         'Core/WebMercatorProjection',
         'Scene/Camera',
@@ -19,6 +20,7 @@ defineSuite([
         Clock,
         defaultValue,
         EllipsoidTerrainProvider,
+        FeatureDetection,
         ScreenSpaceEventHandler,
         WebMercatorProjection,
         Camera,
@@ -279,6 +281,8 @@ defineSuite([
     });
 
     it('resizing triggers a render in requestRender mode', function() {
+        spyOn(FeatureDetection, 'supportsImageRenderingPixelated').and.returnValue(true);
+
         widget = createCesiumWidget(container, {
             requestRenderMode : true,
             maximumRenderTimeChange : Number.POSITIVE_INFINITY
