@@ -1,0 +1,13 @@
+{
+  "groups": {
+    "default": {
+      "packages": [
+        "ThirdParty/codemirror-4.6/package.json",
+        "ThirdParty/dojo-release-1.10.4/dijit/package.json",
+        "ThirdParty/dojo-release-1.10.4/dojo/package.json",
+        "Tools/eslint-config-cesium/package.json",
+        "package.json"
+      ]
+    }
+  }
+}
