@@ -694,10 +694,6 @@ define([
             v = 1.0;
         }
 
-        if (!defined(result)) {
-            return new Cartesian2(u, v);
-        }
-
         result.x = u;
         result.y = v;
         return result;
