@@ -626,12 +626,12 @@ require({
         };
 
         // Create an observer instance linked to the callback function
-        var observer = new MutationObserver(function(mutationsList){
+        var observer = new MutationObserver(function (mutationsList) {
             var length = mutationsList.length;
-            for(var i = 0; i < length; i++) {
+            for (var i = 0; i < length; i++) {
                 var mutation = mutationsList[i];
 
-                if(defined(mutation.target.dataset) && mutation.target.dataset.sandcastleLoaded === 'yes') {
+                if (defined(mutation.target.dataset) && mutation.target.dataset.sandcastleLoaded === 'yes') {
                     loadScript();
                     observer.disconnect();
                 }
