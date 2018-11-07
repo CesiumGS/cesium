@@ -1,9 +1,13 @@
 define([
+        './Cartesian2',
         './Cartesian3',
+        './Check',
         './defined',
         './DeveloperError'
     ], function(
+        Cartesian2,
         Cartesian3,
+        Check,
         defined,
         DeveloperError) {
     'use strict';
@@ -276,6 +280,61 @@ define([
             return result;
         }
         return new Cartesian3(l1, l2, l3);
+    };
+
+    /**
+     * Compute the intersection between 2 line segments
+     *
+     * @param {Number} x00 The x coordinate of the first line's first vertex.
+     * @param {Number} y00 The y coordinate of the first line's first vertex.
+     * @param {Number} x01 The x coordinate of the first line's second vertex.
+     * @param {Number} y01 The y coordinate of the first line's second vertex.
+     * @param {Number} x10 The x coordinate of the second line's first vertex.
+     * @param {Number} y10 The y coordinate of the second line's first vertex.
+     * @param {Number} x11 The x coordinate of the second line's second vertex.
+     * @param {Number} y11 The y coordinate of the second line's second vertex.
+     * @param {Cartesian2} [result] The instance into to which to copy the result. If this parameter
+     *                     is undefined, a new instance is created and returned.
+     * @returns {Cartesian2} The intersection point, undefined if there is no intersection point or lines are coincident.
+     *
+     * @example
+     * var result = Cesium.Intersections2D.computeLineSegmentLineSegmentIntersection(0.0, 0.0, 0.0, 2.0, -1, 1, 1, 1);
+     * // result === new Cesium.Cartesian2(0.0, 1.0);
+     */
+    Intersections2D.computeLineSegmentLineSegmentIntersection = function(x00, y00, x01, y01, x10, y10, x11, y11, result) {
+        //>>includeStart('debug', pragmas.debug);
+        Check.typeOf.number('x00', x00);
+        Check.typeOf.number('y00', y00);
+        Check.typeOf.number('x01', x01);
+        Check.typeOf.number('y01', y01);
+        Check.typeOf.number('x10', x10);
+        Check.typeOf.number('y10', y10);
+        Check.typeOf.number('x11', x11);
+        Check.typeOf.number('y11', y11);
+        //>>includeEnd('debug');
+
+        var numerator1A = (x11 - x10) * (y00 - y10) - (y11 - y10) * (x00 - x10);
+        var numerator1B = (x01 - x00) * (y00 - y10) - (y01 - y00) * (x00 - x10);
+        var denominator1 = (y11 - y10) * (x01 - x00) - (x11 - x10) * (y01 - y00);
+
+        // If denominator = 0, then lines are parallel. If denominator = 0 and both numerators are 0, then coincident
+        if (denominator1 === 0) {
+            return;
+        }
+
+        var ua1 = numerator1A / denominator1;
+        var ub1 = numerator1B / denominator1;
+
+        if (ua1 >= 0 && ua1 <= 1 && ub1 >= 0 && ub1 <= 1) {
+            if (!defined(result)) {
+                result = new Cartesian2();
+            }
+
+            result.x = x00 + ua1 * (x01 - x00);
+            result.y = y00 + ua1 * (y01 - y00);
+
+            return result;
+        }
     };
 
     return Intersections2D;
