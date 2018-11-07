@@ -268,11 +268,7 @@ gulp.task('instrumentForCoverage', gulp.series('build', function(done) {
     });
 }));
 
-gulp.task('release', gulp.series('generateStubs', function() {
-    return combine()
-        .then(minifyRelease)
-        .then(generateDocumentation);
-}));
+gulp.task('release', gulp.series('generateStubs', combine, minifyRelease, generateDocumentation));
 
 gulp.task('makeZipFile', gulp.series('release', function() {
     //For now we regenerate the JS glsl to force it to be unminified in the release zip
