@@ -2,10 +2,10 @@ defineSuite([
         'Scene/GlobeSurfaceTile',
         'Core/Cartesian3',
         'Core/Cartesian4',
-        'Core/CesiumTerrainProvider',
         'Core/createWorldTerrain',
         'Core/defined',
         'Core/Ellipsoid',
+        'Core/EllipsoidTerrainProvider',
         'Core/GeographicTilingScheme',
         'Core/Ray',
         'Core/Rectangle',
@@ -25,10 +25,10 @@ defineSuite([
         GlobeSurfaceTile,
         Cartesian3,
         Cartesian4,
-        CesiumTerrainProvider,
         createWorldTerrain,
         defined,
         Ellipsoid,
+        EllipsoidTerrainProvider,
         GeographicTilingScheme,
         Ray,
         Rectangle,
@@ -88,9 +88,10 @@ defineSuite([
                 }
             };
 
-            realTerrainProvider = new CesiumTerrainProvider({
-                url : 'https://s3.amazonaws.com/cesiumjs/smallTerrain'
-            });
+            //realTerrainProvider = new CesiumTerrainProvider({
+            //    url : 'https://s3.amazonaws.com/cesiumjs/smallTerrain'
+            //});
+            realTerrainProvider = new EllipsoidTerrainProvider();
         });
 
         afterAll(function() {

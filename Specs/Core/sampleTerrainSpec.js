@@ -1,16 +1,35 @@
 defineSuite([
         'Core/sampleTerrain',
         'Core/Cartographic',
-        'Core/CesiumTerrainProvider',
-        'Core/createWorldTerrain'
+        'Core/EllipsoidTerrainProvider',
+        'Core/HeightmapTerrainData',
+        'ThirdParty/when'
     ], function(
         sampleTerrain,
         Cartographic,
-        CesiumTerrainProvider,
-        createWorldTerrain) {
+        EllipsoidTerrainProvider,
+        HeightmapTerrainData,
+        when) {
     'use strict';
 
-    var worldTerrain = createWorldTerrain();
+    var ellipsoidTerrain = new EllipsoidTerrainProvider();
+    var heightValue = 10.0;
+
+    beforeEach(function() {
+        // Do not generate tiles beyond level 15 or near the North pole after level 10
+        spyOn(EllipsoidTerrainProvider, '_getTileGeometry').and.callFake(function(x, y, level) {
+            if (level > 15 || (level > 10 && y < 50)) {
+                return when.reject();
+            }
+            var width = 16;
+            var height = 16;
+            return when.resolve(new HeightmapTerrainData({
+                buffer : new Uint8Array(width * height).fill(heightValue),
+                width : width,
+                height : height
+            }));
+        });
+    });
 
     it('queries heights', function() {
         var positions = [
@@ -18,31 +37,10 @@ defineSuite([
                          Cartographic.fromDegrees(87.0, 28.0)
                      ];
 
-        return sampleTerrain(worldTerrain, 11, positions).then(function(passedPositions) {
+        return sampleTerrain(ellipsoidTerrain, 11, positions).then(function(passedPositions) {
             expect(passedPositions).toBe(positions);
-            expect(positions[0].height).toBeGreaterThan(5000);
-            expect(positions[0].height).toBeLessThan(10000);
-            expect(positions[1].height).toBeGreaterThan(5000);
-            expect(positions[1].height).toBeLessThan(10000);
-        });
-    });
-
-    it('queries heights from Small Terrain', function() {
-        var terrainProvider = new CesiumTerrainProvider({
-            url : 'https://s3.amazonaws.com/cesiumjs/smallTerrain'
-        });
-
-        var positions = [
-                         Cartographic.fromDegrees(86.925145, 27.988257),
-                         Cartographic.fromDegrees(87.0, 28.0)
-                     ];
-
-        return sampleTerrain(terrainProvider, 11, positions).then(function(passedPositions) {
-            expect(passedPositions).toBe(positions);
-            expect(positions[0].height).toBeGreaterThan(5000);
-            expect(positions[0].height).toBeLessThan(10000);
-            expect(positions[1].height).toBeGreaterThan(5000);
-            expect(positions[1].height).toBeLessThan(10000);
+            expect(positions[0].height).toEqual(heightValue);
+            expect(positions[1].height).toEqual(heightValue);
         });
     });
 
@@ -51,7 +49,7 @@ defineSuite([
                          Cartographic.fromDegrees(0.0, 0.0, 0.0)
                      ];
 
-        return sampleTerrain(worldTerrain, 18, positions).then(function() {
+        return sampleTerrain(ellipsoidTerrain, 18, positions).then(function() {
             expect(positions[0].height).toBeUndefined();
         });
     });
@@ -63,12 +61,10 @@ defineSuite([
                          Cartographic.fromDegrees(87.0, 28.0)
                      ];
 
-        return sampleTerrain(worldTerrain, 12, positions).then(function() {
-            expect(positions[0].height).toBeGreaterThan(5000);
-            expect(positions[0].height).toBeLessThan(10000);
+        return sampleTerrain(ellipsoidTerrain, 12, positions).then(function() {
+            expect(positions[0].height).toEqual(heightValue);
             expect(positions[1].height).toBeUndefined();
-            expect(positions[2].height).toBeGreaterThan(5000);
-            expect(positions[2].height).toBeLessThan(10000);
+            expect(positions[2].height).toEqual(heightValue);
         });
     });
 
@@ -84,19 +80,11 @@ defineSuite([
         }).toThrowDeveloperError();
 
         expect(function() {
-            sampleTerrain(worldTerrain, undefined, positions);
+            sampleTerrain(ellipsoidTerrain, undefined, positions);
         }).toThrowDeveloperError();
 
         expect(function() {
-            sampleTerrain(worldTerrain, 11, undefined);
+            sampleTerrain(ellipsoidTerrain, 11, undefined);
         }).toThrowDeveloperError();
-    });
-
-    it('works for a dodgy point right near the edge of a tile', function() {
-        var positions = [new Cartographic(0.33179290856829535, 0.7363107781851078)];
-
-        return sampleTerrain(worldTerrain, 12, positions).then(function() {
-            expect(positions[0].height).toBeDefined();
-        });
     });
 });

@@ -1,7 +1,6 @@
 defineSuite([
         'Scene/GlobeSurfaceTileProvider',
         'Core/Cartesian3',
-        'Core/CesiumTerrainProvider',
         'Core/Color',
         'Core/Credit',
         'Core/defined',
@@ -31,7 +30,6 @@ defineSuite([
     ], function(
         GlobeSurfaceTileProvider,
         Cartesian3,
-        CesiumTerrainProvider,
         Color,
         Credit,
         defined,
@@ -682,8 +680,7 @@ defineSuite([
         }));
 
         var terrainCredit = new Credit('terrain credit');
-        scene.terrainProvider = new CesiumTerrainProvider({
-            url : 'https://s3.amazonaws.com/cesiumjs/smallTerrain',
+        scene.terrainProvider = new EllipsoidTerrainProvider({
             credit : terrainCredit
         });
 

@@ -26,10 +26,17 @@ defineSuite([
         scene.destroyForSpecs();
     });
 
-    function sampleTest(sceneMode){
+    function getTerrainProvider() {
         //Pretend we have terrain with availability.
-        var terrainProvider = new EllipsoidTerrainProvider();
-        terrainProvider.availability = {};
+        return new EllipsoidTerrainProvider({
+            tileAvailability : {
+                isTileAvailable : function() {return true;}
+            }
+        });
+    }
+
+    function sampleTest(sceneMode){
+        var terrainProvider = getTerrainProvider();
 
         scene.globe = new Globe();
         scene.terrainProvider = terrainProvider;
@@ -85,8 +92,7 @@ defineSuite([
     });
 
     it('returns height above ellipsoid when in 2D', function() {
-        var terrainProvider = new EllipsoidTerrainProvider();
-        terrainProvider.availability = {};
+        var terrainProvider = getTerrainProvider();
 
         scene.globe = new Globe();
         scene.terrainProvider = terrainProvider;

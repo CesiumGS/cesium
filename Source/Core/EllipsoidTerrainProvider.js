@@ -34,6 +34,8 @@ define([
      * @param {Ellipsoid} [options.ellipsoid] The ellipsoid.  If the tilingScheme is specified,
      * this parameter is ignored and the tiling scheme's ellipsoid is used instead. If neither
      * parameter is specified, the WGS84 ellipsoid is used.
+     * @param {Number} [options.tileAvailability] TileAvailability for limiting the terrain tiles created.
+     * @param {Credit|String} [options.credit] A credit for the data source, which is displayed on the canvas.
      *
      * @see TerrainProvider
      */
@@ -53,6 +55,8 @@ define([
 
         this._errorEvent = new Event();
         this._readyPromise = when.resolve(true);
+        this._tileAvailability = options.tileAvailability;
+        this._credit = options.credit;
     }
 
     defineProperties(EllipsoidTerrainProvider.prototype, {
@@ -77,7 +81,7 @@ define([
          */
         credit : {
             get : function() {
-                return undefined;
+                return this._credit;
             }
         },
 
@@ -140,6 +144,19 @@ define([
             get : function() {
                 return false;
             }
+        },
+
+        /**
+         * Gets an object that can be used to determine availability of terrain from this provider, such as
+         * at points and in rectangles.  This function should not be called before
+         * {@link EllipsoidTerrainProvider#ready} returns true.
+         * @memberof EllipsoidTerrainProvider.prototype
+         * @type {TileAvailability}
+         */
+        availability : {
+            get : function() {
+                return this._tileAvailability;
+            }
         }
     });
 
@@ -158,13 +175,10 @@ define([
      *          pending and the request will be retried later.
      */
     EllipsoidTerrainProvider.prototype.requestTileGeometry = function(x, y, level, request) {
-        var width = 16;
-        var height = 16;
-        return when.resolve(new HeightmapTerrainData({
-            buffer : new Uint8Array(width * height),
-            width : width,
-            height : height
-        }));
+        if (defined(this._tileAvailability) && !this._tileAvailability.isTileAvailable(level, x, y)) {
+            return when.reject();
+        }
+        return EllipsoidTerrainProvider._getTileGeometry(x, y, level);
     };
 
     /**
@@ -186,8 +200,26 @@ define([
      * @returns {Boolean} Undefined if not supported, otherwise true or false.
      */
     EllipsoidTerrainProvider.prototype.getTileDataAvailable = function(x, y, level) {
+        if (defined(this._tileAvailability)) {
+            return this._tileAvailability.isTileAvailable(level, x, y);
+        }
         return undefined;
     };
+
+    function getTileGeometry() {
+        var width = 16;
+        var height = 16;
+        return when.resolve(new HeightmapTerrainData({
+            buffer : new Uint8Array(width * height),
+            width : width,
+            height : height
+        }));
+    }
+
+    /**
+     * @private
+     */
+    EllipsoidTerrainProvider._getTileGeometry = getTileGeometry;
 
     return EllipsoidTerrainProvider;
 });

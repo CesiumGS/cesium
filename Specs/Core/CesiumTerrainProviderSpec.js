@@ -740,8 +740,23 @@ defineSuite([
         });
 
         it('Uses query parameter extensions for ion resource', function() {
+            Resource._Implementations.loadWithXhr = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+                Resource._DefaultImplementations.loadWithXhr('Data/CesiumTerrainTileJson/tile.watermask.terrain', responseType, method, data, headers, deferred);
+            };
+
+            returnWaterMaskTileJson();
+
+            var assetId = 123890213;
+            var endpoint = {
+                type: '3DTILES',
+                url: 'https://assets.cesium.com/' + assetId + '/tileset.json',
+                accessToken: 'not_really_a_refresh_token',
+                attributions: []
+            };
+
+            var endpointResource = IonResource._createEndpointResource(assetId);
             var terrainProvider = new CesiumTerrainProvider({
-                url: IonResource.fromAssetId(1),
+                url: new IonResource(endpoint, endpointResource),
                 requestVertexNormals: true,
                 requestWaterMask: true
             });

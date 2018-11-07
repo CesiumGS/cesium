@@ -2,34 +2,69 @@ defineSuite([
         'Core/sampleTerrainMostDetailed',
         'Core/Cartographic',
         'Core/CesiumTerrainProvider',
-        'Core/createWorldTerrain'
+        'Core/EllipsoidTerrainProvider',
+        'Core/GeographicTilingScheme',
+        'Core/HeightmapTerrainData',
+        'Core/TileAvailability',
+        'ThirdParty/when'
     ], function(
         sampleTerrainMostDetailed,
         Cartographic,
         CesiumTerrainProvider,
-        createWorldTerrain) {
+        EllipsoidTerrainProvider,
+        GeographicTilingScheme,
+        HeightmapTerrainData,
+        TileAvailability,
+        when) {
     'use strict';
 
-    var worldTerrain = createWorldTerrain();
+    var tilingScheme = new GeographicTilingScheme();
 
-    it('queries heights', function() {
-        var positions = [
-            Cartographic.fromDegrees(86.925145, 27.988257),
-            Cartographic.fromDegrees(87.0, 28.0)
-        ];
+    var initialMaximumLevel = 2;
+    var addonLevel = initialMaximumLevel + 1;
+    var modifiedAvailability = new TileAvailability(tilingScheme, addonLevel);
 
-        return sampleTerrainMostDetailed(worldTerrain, positions).then(function(passedPositions) {
-            expect(passedPositions).toBe(positions);
-            expect(positions[0].height).toBeGreaterThan(5000);
-            expect(positions[0].height).toBeLessThan(10000);
-            expect(positions[1].height).toBeGreaterThan(5000);
-            expect(positions[1].height).toBeLessThan(10000);
+    for (var i = 0; i <= initialMaximumLevel; i++) {
+        var xMax = tilingScheme.getNumberOfXTilesAtLevel(i);
+        var yMax = tilingScheme.getNumberOfYTilesAtLevel(i);
+        modifiedAvailability.addAvailableTileRange(i, 0, 0, xMax, yMax);
+    }
+    var addonLevelXMax = tilingScheme.getNumberOfXTilesAtLevel(addonLevel);
+    var addonLevelYMax = tilingScheme.getNumberOfYTilesAtLevel(addonLevel);
+    modifiedAvailability.addAvailableTileRange(addonLevel, 0, 0, addonLevelXMax * 0.5, addonLevelYMax);
+
+    var ellipsoidTerrain = new EllipsoidTerrainProvider({
+        tileAvailability : modifiedAvailability
+    });
+
+    beforeEach(function() {
+        spyOn(EllipsoidTerrainProvider, '_getTileGeometry').and.callFake(function(x, y, level) {
+            var width = 16;
+            var height = 16;
+            return when.resolve(new HeightmapTerrainData({
+                buffer : new Uint8Array(width * height).fill(level),
+                width : width,
+                height : height
+            }));
         });
     });
 
-    it('should throw querying heights from Small Terrain', function() {
+    it('queries heights', function() {
+        var positions = [
+            Cartographic.fromDegrees(-86.925145, 27.988257),
+            Cartographic.fromDegrees(-87.0, 28.0)
+        ];
+
+        return sampleTerrainMostDetailed(ellipsoidTerrain, positions).then(function(passedPositions) {
+            expect(passedPositions).toBe(positions);
+            expect(positions[0].height).toEqual(addonLevel);
+            expect(positions[1].height).toEqual(addonLevel);
+        });
+    });
+
+    it('should throw querying heights when TileAvailability is not available', function() {
         var terrainProvider = new CesiumTerrainProvider({
-            url : 'https://s3.amazonaws.com/cesiumjs/smallTerrain'
+            url : 'made/up/url'
         });
 
         var positions = [
@@ -46,14 +81,12 @@ defineSuite([
     it('uses a suitable common tile height for a range of locations', function() {
         var positions = [
             Cartographic.fromDegrees(86.925145, 27.988257),
-            Cartographic.fromDegrees(87.0, 28.0)
+            Cartographic.fromDegrees(-87.0, 28.0)
         ];
 
-        return sampleTerrainMostDetailed(worldTerrain, positions).then(function() {
-            expect(positions[0].height).toBeGreaterThan(5000);
-            expect(positions[0].height).toBeLessThan(10000);
-            expect(positions[1].height).toBeGreaterThan(5000);
-            expect(positions[1].height).toBeLessThan(10000);
+        return sampleTerrainMostDetailed(ellipsoidTerrain, positions).then(function() {
+            expect(positions[0].height).toEqual(initialMaximumLevel);
+            expect(positions[1].height).toEqual(initialMaximumLevel + 1);
         });
     });
 
@@ -68,17 +101,8 @@ defineSuite([
         }).toThrowDeveloperError();
 
         expect(function() {
-            sampleTerrainMostDetailed(worldTerrain, undefined);
+            sampleTerrainMostDetailed(ellipsoidTerrain, undefined);
         }).toThrowDeveloperError();
 
     });
-
-    it('works for a dodgy point right near the edge of a tile', function() {
-        var positions = [new Cartographic(0.33179290856829535, 0.7363107781851078)];
-
-        return sampleTerrainMostDetailed(worldTerrain, positions).then(function() {
-            expect(positions[0].height).toBeDefined();
-        });
-    });
-
 });
