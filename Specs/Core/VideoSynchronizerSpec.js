@@ -41,6 +41,26 @@ defineSuite([
         return element;
     }
 
+    function MockVideoElement() {
+        this.paused = false;
+    }
+
+    MockVideoElement.prototype.play = function() {
+        this.paused = false;
+    };
+
+    MockVideoElement.prototype.pause = function() {
+        this.paused = true;
+    };
+
+    MockVideoElement.prototype.addEventListener = function() {
+        return;
+    };
+
+    MockVideoElement.prototype.removeEventListener = function() {
+        return;
+    };
+
     it('Can default construct', function() {
         var videoSynchronizer = new VideoSynchronizer();
 
@@ -75,7 +95,7 @@ defineSuite([
         expect(videoSynchronizer.isDestroyed()).toBe(true);
     });
 
-    xit('Syncs time when looping', function() {
+    it('Syncs time when looping', function() {
         var epoch = JulianDate.fromIso8601('2015-11-01T00:00:00Z');
         var clock = new Clock();
         clock.shouldAnimate = false;
@@ -116,7 +136,7 @@ defineSuite([
         });
     });
 
-    xit('Syncs time when not looping', function() {
+    it('Syncs time when not looping', function() {
         var epoch = JulianDate.fromIso8601('2015-11-01T00:00:00Z');
         var clock = new Clock();
         clock.shouldAnimate = false;
@@ -156,11 +176,13 @@ defineSuite([
         });
     });
 
-    xit('Plays/pauses video based on clock', function() {
+    it('Plays/pauses video based on clock', function() {
         var epoch = JulianDate.fromIso8601('2015-11-01T00:00:00Z');
         var clock = new Clock();
 
-        var element = loadVideo();
+        // Since Chrome doesn't allow video playback without user
+        // interaction, we use a mock element.
+        var element = new MockVideoElement();
 
         var videoSynchronizer = new VideoSynchronizer({
             clock : clock,
@@ -168,20 +190,18 @@ defineSuite([
             epoch : epoch
         });
 
-        return pollToPromise(function() {
-            clock.shouldAnimate = false;
-            clock.tick();
-            return element.paused === true;
-        }).then(function() {
-            clock.shouldAnimate = true;
-            clock.tick();
-            return element.paused === false;
-        }).then(function() {
-            clock.shouldAnimate = false;
-            clock.tick();
-            return element.paused === true;
-        }).then(function() {
-            videoSynchronizer.destroy();
-        });
+        clock.shouldAnimate = false;
+        clock.tick();
+        expect(element.paused).toBe(true);
+
+        clock.shouldAnimate = true;
+        clock.tick();
+        expect(element.paused).toBe(false);
+
+        clock.shouldAnimate = false;
+        clock.tick();
+        expect(element.paused).toBe(true);
+
+        videoSynchronizer.destroy();
     });
 });
