@@ -109,6 +109,7 @@ define([
     /**
      * Stop all activeEntries.
      * @param {Array} activeEntries
+     * @exports cancelAllEntries
      */
     function cancelAllEntries(activeEntries) {
         for(var entry = activeEntries.pop(); entry !== undefined; entry = activeEntries.pop()) {
@@ -125,6 +126,8 @@ define([
      * @param {Object} cameraOptions see {@link Camera#flyTo}.
      * @param {Function} allDone a function will be called when all entries from playlist
      * being played or user call {@link KmlTour#stop}.
+     *
+     * @exports playEntry
      */
     function playEntry(viewer, cameraOptions, allDone) {
         var entry = this.playlist[this.playlistIndex];
@@ -161,6 +164,8 @@ define([
      * @param {Function} allDone passed for recursion.
      * @param {Boolean} terminated true if active entry was terminated,
      * and the whole tour should be terminated.
+     *
+     * @exports playNext
      */
     function playNext(viewer, cameraOptions, allDone, terminated) {
         var entry = this.playlist[this.playlistIndex];
