@@ -69,8 +69,13 @@ define([
         }
     }
 
+    /**
+     * @alias UniformFloat
+     * @constructor
+    */
     function UniformFloat(gl, activeUniform, uniformName, location) {
         /**
+         * @type {String}
          * @readonly
          */
         this.name = uniformName;
@@ -91,8 +96,13 @@ define([
 
     ///////////////////////////////////////////////////////////////////////////
 
+    /**
+     * @alias UniformFloatVec2
+     * @constructor
+    */
     function UniformFloatVec2(gl, activeUniform, uniformName, location) {
         /**
+         * @type {String}
          * @readonly
          */
         this.name = uniformName;
@@ -114,8 +124,13 @@ define([
 
     ///////////////////////////////////////////////////////////////////////////
 
+    /**
+     * @alias UniformFloatVec3
+     * @constructor
+    */
     function UniformFloatVec3(gl, activeUniform, uniformName, location) {
         /**
+         * @type {String}
          * @readonly
          */
         this.name = uniformName;
@@ -149,8 +164,13 @@ define([
 
     ///////////////////////////////////////////////////////////////////////////
 
+    /**
+     * @alias UniformFloatVec4
+     * @constructor
+    */
     function UniformFloatVec4(gl, activeUniform, uniformName, location) {
         /**
+         * @type {String}
          * @readonly
          */
         this.name = uniformName;
@@ -184,8 +204,13 @@ define([
 
     ///////////////////////////////////////////////////////////////////////////
 
+    /**
+     * @alias UniformSampler
+     * @constructor
+    */
     function UniformSampler(gl, activeUniform, uniformName, location) {
         /**
+         * @type {String}
          * @readonly
          */
         this.name = uniformName;
@@ -214,8 +239,13 @@ define([
 
     ///////////////////////////////////////////////////////////////////////////
 
+    /**
+     * @alias UniformInt
+     * @constructor
+    */
     function UniformInt(gl, activeUniform, uniformName, location) {
         /**
+         * @type {String}
          * @readonly
          */
         this.name = uniformName;
@@ -235,9 +265,13 @@ define([
     };
 
     ///////////////////////////////////////////////////////////////////////////
-
+    /**
+     * @alias UniformIntVec2
+     * @constructor
+    */
     function UniformIntVec2(gl, activeUniform, uniformName, location) {
         /**
+         * @type {String}
          * @readonly
          */
         this.name = uniformName;
@@ -258,9 +292,13 @@ define([
     };
 
     ///////////////////////////////////////////////////////////////////////////
-
+    /**
+     * @alias UniformIntVec3
+     * @constructor
+    */
     function UniformIntVec3(gl, activeUniform, uniformName, location) {
-        /**
+       /**
+         * @type {String}
          * @readonly
          */
         this.name = uniformName;
@@ -281,9 +319,13 @@ define([
     };
 
     ///////////////////////////////////////////////////////////////////////////
-
+    /**
+     * @alias UniformIntVec4
+     * @constructor
+    */
     function UniformIntVec4(gl, activeUniform, uniformName, location) {
         /**
+         * @type {String}
          * @readonly
          */
         this.name = uniformName;
@@ -306,9 +348,13 @@ define([
     ///////////////////////////////////////////////////////////////////////////
 
     var scratchUniformArray = new Float32Array(4);
-
+    /**
+     * @alias UniformMat2
+     * @constructor
+    */
     function UniformMat2(gl, activeUniform, uniformName, location) {
         /**
+         * @type {String}
          * @readonly
          */
         this.name = uniformName;
@@ -332,9 +378,13 @@ define([
     ///////////////////////////////////////////////////////////////////////////
 
     var scratchMat3Array = new Float32Array(9);
-
+    /**
+     * @alias UniformMat3
+     * @constructor
+    */
     function UniformMat3(gl, activeUniform, uniformName, location) {
         /**
+         * @type {String}
          * @readonly
          */
         this.name = uniformName;
@@ -358,9 +408,13 @@ define([
     ///////////////////////////////////////////////////////////////////////////
 
     var scratchMat4Array = new Float32Array(16);
-
+    /**
+     * @alias UniformMat4
+     * @constructor
+    */
     function UniformMat4(gl, activeUniform, uniformName, location) {
         /**
+         * @type {String}
          * @readonly
          */
         this.name = uniformName;

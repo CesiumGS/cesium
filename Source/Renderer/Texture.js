@@ -36,6 +36,10 @@ define([
         TextureMinificationFilter) {
     'use strict';
 
+    /**
+     * @alias Texture
+     * @constructor
+    */
     function Texture(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 

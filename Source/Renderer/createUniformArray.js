@@ -61,10 +61,15 @@ define([
         }
     }
 
+    /**
+     * @alias UniformArrayFloat
+     * @constructor
+    */
     function UniformArrayFloat(gl, activeUniform, uniformName, locations) {
         var length = locations.length;
 
-        /**
+          /**
+         * @type {String}
          * @readonly
          */
         this.name = uniformName;
@@ -98,10 +103,15 @@ define([
 
     ///////////////////////////////////////////////////////////////////////////
 
+    /**
+     * @alias UniformArrayFloatVec2
+     * @constructor
+    */
     function UniformArrayFloatVec2(gl, activeUniform, uniformName, locations) {
         var length = locations.length;
 
-        /**
+          /**
+         * @type {String}
          * @readonly
          */
         this.name = uniformName;
@@ -137,10 +147,15 @@ define([
 
     ///////////////////////////////////////////////////////////////////////////
 
+    /**
+     * @alias UniformArrayFloatVec3
+     * @constructor
+    */
     function UniformArrayFloatVec3(gl, activeUniform, uniformName, locations) {
         var length = locations.length;
 
-        /**
+          /**
+         * @type {String}
          * @readonly
          */
         this.name = uniformName;
@@ -193,10 +208,15 @@ define([
 
     ///////////////////////////////////////////////////////////////////////////
 
+    /**
+     * @alias UniformArrayFloatVec4
+     * @constructor
+    */
     function UniformArrayFloatVec4(gl, activeUniform, uniformName, locations) {
         var length = locations.length;
 
-        /**
+          /**
+         * @type {String}
          * @readonly
          */
         this.name = uniformName;
@@ -255,10 +275,15 @@ define([
 
     ///////////////////////////////////////////////////////////////////////////
 
+     /**
+     * @alias UniformArraySampler
+     * @constructor
+    */
     function UniformArraySampler(gl, activeUniform, uniformName, locations) {
         var length = locations.length;
 
         /**
+         * @type {String}
          * @readonly
          */
         this.name = uniformName;
@@ -300,10 +325,15 @@ define([
 
     ///////////////////////////////////////////////////////////////////////////
 
+     /**
+     * @alias UniformArrayInt
+     * @constructor
+    */
     function UniformArrayInt(gl, activeUniform, uniformName, locations) {
         var length = locations.length;
 
         /**
+         * @type {String}
          * @readonly
          */
         this.name = uniformName;
@@ -337,10 +367,15 @@ define([
 
     ///////////////////////////////////////////////////////////////////////////
 
+    /**
+     * @alias UniformArrayIntVec2
+     * @constructor
+    */
     function UniformArrayIntVec2(gl, activeUniform, uniformName, locations) {
         var length = locations.length;
 
         /**
+         * @type {String}
          * @readonly
          */
         this.name = uniformName;
@@ -376,10 +411,15 @@ define([
 
     ///////////////////////////////////////////////////////////////////////////
 
+    /**
+     * @alias UniformArrayIntVec3
+     * @constructor
+    */
     function UniformArrayIntVec3(gl, activeUniform, uniformName, locations) {
         var length = locations.length;
 
         /**
+         * @type {String}
          * @readonly
          */
         this.name = uniformName;
@@ -415,10 +455,15 @@ define([
 
     ///////////////////////////////////////////////////////////////////////////
 
+    /**
+     * @alias UniformArrayIntVec4
+     * @constructor
+    */
     function UniformArrayIntVec4(gl, activeUniform, uniformName, locations) {
         var length = locations.length;
 
         /**
+         * @type {String}
          * @readonly
          */
         this.name = uniformName;
@@ -454,10 +499,15 @@ define([
 
     ///////////////////////////////////////////////////////////////////////////
 
+     /**
+     * @alias UniformArrayMat2
+     * @constructor
+    */
     function UniformArrayMat2(gl, activeUniform, uniformName, locations) {
         var length = locations.length;
 
         /**
+         * @type {String}
          * @readonly
          */
         this.name = uniformName;
@@ -493,10 +543,15 @@ define([
 
     ///////////////////////////////////////////////////////////////////////////
 
+     /**
+     * @alias UniformArrayMat3
+     * @constructor
+    */
     function UniformArrayMat3(gl, activeUniform, uniformName, locations) {
         var length = locations.length;
 
         /**
+         * @type {String}
          * @readonly
          */
         this.name = uniformName;
@@ -532,10 +587,15 @@ define([
 
     ///////////////////////////////////////////////////////////////////////////
 
+     /**
+     * @alias UniformArrayMat4
+     * @constructor
+    */
     function UniformArrayMat4(gl, activeUniform, uniformName, locations) {
         var length = locations.length;
 
         /**
+         * @type {String}
          * @readonly
          */
         this.name = uniformName;
