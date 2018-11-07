@@ -1596,11 +1596,18 @@ define([
         var fs = appearance.getFragmentShaderSource();
         fs = appendPickToFragmentShader(fs);
 
+        var vsSource = new ShaderSource({
+            defines : ['DISABLE_GL_POSITION_LOG_DEPTH'],
+            sources : [vs]
+        });
+        var fsSource = new ShaderSource({
+            sources : [fs]
+        });
         primitive._sp = ShaderProgram.replaceCache({
             context : context,
             shaderProgram : primitive._sp,
-            vertexShaderSource : vs,
-            fragmentShaderSource : fs,
+            vertexShaderSource : vsSource,
+            fragmentShaderSource : fsSource,
             attributeLocations : attributeLocations
         });
         validateShaderMatching(primitive._sp, attributeLocations);

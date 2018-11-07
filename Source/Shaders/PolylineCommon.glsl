@@ -33,7 +33,8 @@ void clipLineSegmentToNearPlane(
         }
     }
 
-    positionWC = czm_eyeToWindowCoordinates(vec4(p0, 1.0));
+    //positionWC = czm_eyeToWindowCoordinates(vec4(p0, 1.0));
+    positionWC = vec4(p0, 1.0);
 }
 
 vec4 getPolylineWindowCoordinatesEC(vec4 positionEC, vec4 prevEC, vec4 nextEC, float expandDirection, float width, bool usePrevious, out float angle)
@@ -70,8 +71,12 @@ vec4 getPolylineWindowCoordinatesEC(vec4 positionEC, vec4 prevEC, vec4 nextEC, f
         return vec4(0.0, 0.0, 0.0, 1.0);
     }
 
-    vec2 prevWC = normalize(p0.xy - endPointWC.xy);
-    vec2 nextWC = normalize(p1.xy - endPointWC.xy);
+    vec4 end = czm_eyeToWindowCoordinates(endPointWC);
+    p0 = czm_eyeToWindowCoordinates(p0);
+    p1 = czm_eyeToWindowCoordinates(p1);
+
+    vec2 prevWC = normalize(p0.xy - end.xy);
+    vec2 nextWC = normalize(p1.xy - end.xy);
 
     float expandWidth = width * 0.5;
     vec2 direction;
@@ -117,8 +122,10 @@ vec4 getPolylineWindowCoordinatesEC(vec4 positionEC, vec4 prevEC, vec4 nextEC, f
         expandWidth = clamp(expandWidth / sinAngle, 0.0, width * 2.0);
     }
 
-    vec2 offset = direction * expandDirection * expandWidth * czm_resolutionScale;
-    return vec4(endPointWC.xy + offset, -endPointWC.z, 1.0);
+    float mpp = max(czm_metersPerPixel(endPointWC), czm_epsilon1);
+    vec2 offset = direction * expandDirection * expandWidth * czm_resolutionScale * mpp;
+    //return vec4(endPointWC.xy + offset, -endPointWC.z, 1.0);
+    return vec4(endPointWC.xy + offset, endPointWC.z, 1.0);
 }
 
 vec4 getPolylineWindowCoordinates(vec4 position, vec4 previous, vec4 next, float expandDirection, float width, bool usePrevious, out float angle)

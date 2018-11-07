@@ -27,7 +27,48 @@
 function startup(Cesium) {
     'use strict';
 //Sandcastle_Begin
-var viewer = new Cesium.Viewer('cesiumContainer');
+    var viewer = new Cesium.Viewer('cesiumContainer');
+    var scene = viewer.scene;
+    scene.globe.depthTestAgainstTerrain = true;
+    scene.logarithmicDepthBuffer = true;
+
+    var blueCartographic = new Cesium.Cartographic(-1.3196863177294136, 0.6988508714746624, 30.0);
+    var redCartographic = new Cesium.Cartographic(-1.319681841889412, 0.6989153500784591, 30.0);
+
+    /*
+    var blueSphere = viewer.entities.add({
+        position : Cesium.Cartographic.toCartesian(blueCartographic),
+        ellipsoid : {
+            radii : new Cesium.Cartesian3(10.0, 10.0, 10.0),
+            material : Cesium.Color.BLUE
+        }
+    });
+
+    var redSphere = viewer.entities.add({
+        position : Cesium.Cartographic.toCartesian(redCartographic),
+        ellipsoid : {
+            radii : new Cesium.Cartesian3(10.0, 10.0, 10.0),
+            material : Cesium.Color.RED
+        }
+    });
+    */
+
+    var arrowPositions = [
+        Cesium.Cartographic.toCartesian(blueCartographic),
+        Cesium.Cartographic.toCartesian(redCartographic)
+    ];
+
+    var arrow = viewer.entities.add({
+        polyline : {
+            positions : arrowPositions,
+            width : 10,
+            followSurface : false,
+            material : new Cesium.PolylineArrowMaterialProperty(Cesium.Color.YELLOW)
+        }
+    });
+
+    viewer.zoomTo(viewer.entities);
+
 //Sandcastle_End
     Sandcastle.finishedLoading();
 }
