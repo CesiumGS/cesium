@@ -56,6 +56,10 @@ defineSuite([
         pollToPromise) {
     'use strict';
 
+    // It's not easily possible to mock the asynchronous pick functions
+    // so don't run those tests when using the WebGL stub
+    var webglStub = !!window.webglStub;
+
     var scene;
     var primitives;
     var camera;
@@ -1153,6 +1157,985 @@ defineSuite([
         });
     });
 
+    function pickFromRayMostDetailed(ray, objectsToExclude) {
+        var result;
+        var completed = false;
+        scene.pickFromRayMostDetailed(ray, objectsToExclude).then(function(pickResult) {
+            result = pickResult;
+            completed = true;
+        });
+        return pollToPromise(function() {
+            // Scene requires manual updates in the tests to move along the promise
+            scene.render();
+            return completed;
+        }).then(function() {
+            return result;
+        });
+    }
+
+    function drillPickFromRayMostDetailed(ray, limit, objectsToExclude) {
+        var result;
+        var completed = false;
+        scene.drillPickFromRayMostDetailed(ray, limit, objectsToExclude).then(function(pickResult) {
+            result = pickResult;
+            completed = true;
+        });
+        return pollToPromise(function() {
+            // Scene requires manual updates in the tests to move along the promise
+            scene.render();
+            return completed;
+        }).then(function() {
+            return result;
+        });
+    }
+
+    function sampleHeightMostDetailed(cartographics, objectsToExclude) {
+        var result;
+        var completed = false;
+        scene.sampleHeightMostDetailed(cartographics, objectsToExclude).then(function(pickResult) {
+            result = pickResult;
+            completed = true;
+        });
+        return pollToPromise(function() {
+            // Scene requires manual updates in the tests to move along the promise
+            scene.render();
+            return completed;
+        }).then(function() {
+            return result;
+        });
+    }
+
+    function clampToHeightMostDetailed(cartesians, objectsToExclude) {
+        var result;
+        var completed = false;
+        scene.clampToHeightMostDetailed(cartesians, objectsToExclude).then(function(pickResult) {
+            result = pickResult;
+            completed = true;
+        });
+        return pollToPromise(function() {
+            // Scene requires manual updates in the tests to move along the promise
+            scene.render();
+            return completed;
+        }).then(function() {
+            return result;
+        });
+    }
+
+    describe('pickFromRayMostDetailed', function() {
+        it('picks a tileset', function() {
+            if (webglStub) {
+                return;
+            }
+            scene.camera.setView({ destination : offscreenRectangle });
+            return createTileset().then(function(tileset) {
+                return pickFromRayMostDetailed(primitiveRay).then(function(result) {
+                    var primitive = result.object.primitive;
+                    var position = result.position;
+
+                    expect(primitive).toBe(tileset);
+
+                    if (scene.context.depthTexture) {
+                        var minimumHeight = Cartesian3.fromRadians(0.0, 0.0).x;
+                        var maximumHeight = minimumHeight + 20.0; // Rough height of tile
+                        expect(position.x).toBeGreaterThan(minimumHeight);
+                        expect(position.x).toBeLessThan(maximumHeight);
+                        expect(position.y).toEqualEpsilon(0.0, CesiumMath.EPSILON5);
+                        expect(position.z).toEqualEpsilon(0.0, CesiumMath.EPSILON5);
+                    }
+                });
+            });
+        });
+
+        it('excludes tileset in objectsToExclude list', function() {
+            if (webglStub) {
+                return;
+            }
+            scene.camera.setView({ destination : offscreenRectangle });
+            return createTileset().then(function(tileset) {
+                var objectsToExclude = [tileset];
+                return pickFromRayMostDetailed(primitiveRay, objectsToExclude).then(function(result) {
+                    expect(result).toBeUndefined();
+                });
+            });
+        });
+
+        it('excludes tileset whose show is false', function() {
+            if (webglStub) {
+                return;
+            }
+            scene.camera.setView({ destination : offscreenRectangle });
+            return createTileset().then(function(tileset) {
+                tileset.show = false;
+                return pickFromRayMostDetailed(primitiveRay).then(function(result) {
+                    expect(result).toBeUndefined();
+                });
+            });
+        });
+
+        it('picks a primitive', function() {
+            if (webglStub) {
+                return;
+            }
+            var rectangle = createSmallRectangle(0.0);
+            scene.camera.setView({ destination : offscreenRectangle });
+            return pickFromRayMostDetailed(primitiveRay).then(function(result) {
+                var primitive = result.object.primitive;
+                var position = result.position;
+
+                expect(primitive).toBe(rectangle);
+
+                if (scene.context.depthTexture) {
+                    var expectedPosition = Cartesian3.fromRadians(0.0, 0.0);
+                    expect(position).toEqualEpsilon(expectedPosition, CesiumMath.EPSILON5);
+                }
+            });
+        });
+
+        it('returns undefined if no primitives are picked', function() {
+            if (webglStub) {
+                return;
+            }
+            createLargeRectangle(0.0);
+            scene.camera.setView({ destination : offscreenRectangle });
+            return pickFromRayMostDetailed(offscreenRay).then(function(result) {
+                expect(result).toBeUndefined();
+            });
+        });
+
+        it('picks the top primitive', function() {
+            if (webglStub) {
+                return;
+            }
+            createLargeRectangle(0.0);
+            var rectangle2 = createLargeRectangle(1.0);
+            scene.camera.setView({ destination : offscreenRectangle });
+            return pickFromRayMostDetailed(primitiveRay).then(function(result) {
+                expect(result.object.primitive).toBe(rectangle2);
+            });
+        });
+
+        it('excludes objects', function() {
+            if (webglStub) {
+                return;
+            }
+            var rectangle1 = createLargeRectangle(0.0);
+            var rectangle2 = createLargeRectangle(1.0);
+            var rectangle3 = createLargeRectangle(2.0);
+            var rectangle4 = createLargeRectangle(3.0);
+            rectangle4.show = false;
+
+            scene.camera.setView({ destination : offscreenRectangle });
+            return pickFromRayMostDetailed(primitiveRay, [rectangle2, rectangle3, rectangle4]).then(function(result) {
+                expect(result.object.primitive).toBe(rectangle1);
+            }).then(function() {
+                return pickFromRayMostDetailed(primitiveRay).then(function(result) {
+                    expect(result.object.primitive).toBe(rectangle3);
+                });
+            });
+        });
+
+        it('picks primitive that doesn\'t write depth', function() {
+            if (webglStub) {
+                return;
+            }
+            var collection = scene.primitives.add(new PointPrimitiveCollection());
+            var point = collection.add({
+                position : Cartographic.fromRadians(0.0, 0.0, 100.0),
+                disableDepthTestDistance : Number.POSITIVE_INFINITY
+            });
+
+            scene.camera.setView({ destination : offscreenRectangle });
+            return pickFromRayMostDetailed(primitiveRay).then(function(result) {
+                expect(result.object.primitive).toBe(point);
+                expect(result.position).toBeUndefined();
+            });
+        });
+
+        it('throws if ray is undefined', function() {
+            expect(function() {
+                scene.pickFromRayMostDetailed(undefined);
+            }).toThrowDeveloperError();
+        });
+
+        it('throws if scene camera is in 2D', function() {
+            scene.morphTo2D(0.0);
+            expect(function() {
+                scene.pickFromRayMostDetailed(undefined);
+            }).toThrowDeveloperError();
+        });
+
+        it('throws if scene camera is in CV', function() {
+            scene.morphToColumbusView(0.0);
+            expect(function() {
+                scene.pickFromRayMostDetailed(undefined);
+            }).toThrowDeveloperError();
+        });
+    });
+
+    describe('drillPickFromRayMostDetailed', function() {
+        it('drill picks a primitive', function() {
+            if (webglStub) {
+                return;
+            }
+            var rectangle = createSmallRectangle(0.0);
+            scene.camera.setView({ destination : offscreenRectangle });
+            return drillPickFromRayMostDetailed(primitiveRay).then(function(results) {
+                expect(results.length).toBe(1);
+
+                var primitive = results[0].object.primitive;
+                var position = results[0].position;
+
+                expect(primitive).toBe(rectangle);
+
+                if (scene.context.depthTexture) {
+                    var expectedPosition = Cartesian3.fromRadians(0.0, 0.0);
+                    expect(position).toEqualEpsilon(expectedPosition, CesiumMath.EPSILON5);
+                } else {
+                    expect(position).toBeUndefined();
+                }
+            });
+        });
+
+        it('drill picks multiple primitives', function() {
+            if (webglStub) {
+                return;
+            }
+            var rectangle1 = createSmallRectangle(0.0);
+            var rectangle2 = createSmallRectangle(1.0);
+            scene.camera.setView({ destination : offscreenRectangle });
+            return drillPickFromRayMostDetailed(primitiveRay).then(function(results) {
+                expect(results.length).toBe(2);
+
+                // rectangle2 is picked before rectangle1
+                expect(results[0].object.primitive).toBe(rectangle2);
+                expect(results[1].object.primitive).toBe(rectangle1);
+
+                if (scene.context.depthTexture) {
+                    var rectangleCenter1 = Cartesian3.fromRadians(0.0, 0.0, 0.0);
+                    var rectangleCenter2 = Cartesian3.fromRadians(0.0, 0.0, 1.0);
+                    expect(results[0].position).toEqualEpsilon(rectangleCenter2, CesiumMath.EPSILON5);
+                    expect(results[1].position).toEqualEpsilon(rectangleCenter1, CesiumMath.EPSILON5);
+                } else {
+                    expect(results[0].position).toBeUndefined();
+                    expect(results[1].position).toBeUndefined();
+                }
+            });
+        });
+
+        it('does not drill pick when show is false', function() {
+            if (webglStub) {
+                return;
+            }
+            var rectangle1 = createLargeRectangle(0.0);
+            var rectangle2 = createLargeRectangle(1.0);
+            rectangle2.show = false;
+            scene.camera.setView({ destination : offscreenRectangle });
+            return drillPickFromRayMostDetailed(primitiveRay).then(function(results) {
+                expect(results.length).toEqual(1);
+                expect(results[0].object.primitive).toEqual(rectangle1);
+            });
+        });
+
+        it('does not drill pick when alpha is zero', function() {
+            if (webglStub) {
+                return;
+            }
+            var rectangle1 = createLargeRectangle(0.0);
+            var rectangle2 = createLargeRectangle(1.0);
+            rectangle2.appearance.material.uniforms.color.alpha = 0.0;
+            scene.camera.setView({ destination : offscreenRectangle });
+            return drillPickFromRayMostDetailed(primitiveRay).then(function(results) {
+                expect(results.length).toEqual(1);
+                expect(results[0].object.primitive).toEqual(rectangle1);
+            });
+        });
+
+        it('returns empty array if no primitives are picked', function() {
+            if (webglStub) {
+                return;
+            }
+            createLargeRectangle(0.0);
+            createLargeRectangle(1.0);
+            scene.camera.setView({ destination : offscreenRectangle });
+            return drillPickFromRayMostDetailed(offscreenRay).then(function(results) {
+                expect(results.length).toEqual(0);
+            });
+        });
+
+        it('can drill pick batched Primitives with show attribute', function() {
+            if (webglStub) {
+                return;
+            }
+            var geometry = new RectangleGeometry({
+                rectangle : Rectangle.fromDegrees(-50.0, -50.0, 50.0, 50.0),
+                granularity : CesiumMath.toRadians(20.0),
+                vertexFormat : EllipsoidSurfaceAppearance.VERTEX_FORMAT,
+                height : 0.0
+            });
+
+            var geometryWithHeight = new RectangleGeometry({
+                rectangle : Rectangle.fromDegrees(-50.0, -50.0, 50.0, 50.0),
+                granularity : CesiumMath.toRadians(20.0),
+                vertexFormat : EllipsoidSurfaceAppearance.VERTEX_FORMAT,
+                height : 1.0
+            });
+
+            var instance1 = new GeometryInstance({
+                id : 1,
+                geometry : geometry,
+                attributes : {
+                    show : new ShowGeometryInstanceAttribute(true)
+                }
+            });
+
+            var instance2 = new GeometryInstance({
+                id : 2,
+                geometry : geometry,
+                attributes : {
+                    show : new ShowGeometryInstanceAttribute(false)
+                }
+            });
+
+            var instance3 = new GeometryInstance({
+                id : 3,
+                geometry : geometryWithHeight,
+                attributes : {
+                    show : new ShowGeometryInstanceAttribute(true)
+                }
+            });
+
+            var primitive = primitives.add(new Primitive({
+                geometryInstances : [instance1, instance2, instance3],
+                asynchronous : false,
+                appearance : new EllipsoidSurfaceAppearance()
+            }));
+
+            scene.camera.setView({ destination : offscreenRectangle });
+            return drillPickFromRayMostDetailed(primitiveRay).then(function(results) {
+                expect(results.length).toEqual(2);
+                expect(results[0].object.primitive).toEqual(primitive);
+                expect(results[0].object.id).toEqual(3);
+                expect(results[1].object.primitive).toEqual(primitive);
+                expect(results[1].object.id).toEqual(1);
+            });
+        });
+
+        it('can drill pick without ID', function() {
+            if (webglStub) {
+                return;
+            }
+            var geometry = new RectangleGeometry({
+                rectangle : Rectangle.fromDegrees(-50.0, -50.0, 50.0, 50.0),
+                granularity : CesiumMath.toRadians(20.0),
+                vertexFormat : EllipsoidSurfaceAppearance.VERTEX_FORMAT
+            });
+
+            var instance1 = new GeometryInstance({
+                geometry : geometry,
+                attributes : {
+                    show : new ShowGeometryInstanceAttribute(true)
+                }
+            });
+
+            var instance2 = new GeometryInstance({
+                geometry : geometry,
+                attributes : {
+                    show : new ShowGeometryInstanceAttribute(true)
+                }
+            });
+
+            var primitive = primitives.add(new Primitive({
+                geometryInstances : [instance1, instance2],
+                asynchronous : false,
+                appearance : new EllipsoidSurfaceAppearance()
+            }));
+
+            scene.camera.setView({ destination : offscreenRectangle });
+            return drillPickFromRayMostDetailed(primitiveRay).then(function(results) {
+                expect(results.length).toEqual(1);
+                expect(results[0].object.primitive).toEqual(primitive);
+            });
+        });
+
+        it('can drill pick batched Primitives without show attribute', function() {
+            if (webglStub) {
+                return;
+            }
+            var geometry = new RectangleGeometry({
+                rectangle : Rectangle.fromDegrees(-50.0, -50.0, 50.0, 50.0),
+                granularity : CesiumMath.toRadians(20.0),
+                vertexFormat : EllipsoidSurfaceAppearance.VERTEX_FORMAT,
+                height : 0.0
+            });
+
+            var geometryWithHeight = new RectangleGeometry({
+                rectangle : Rectangle.fromDegrees(-50.0, -50.0, 50.0, 50.0),
+                granularity : CesiumMath.toRadians(20.0),
+                vertexFormat : EllipsoidSurfaceAppearance.VERTEX_FORMAT,
+                height : 1.0
+            });
+
+            var instance1 = new GeometryInstance({
+                id : 1,
+                geometry : geometry
+            });
+
+            var instance2 = new GeometryInstance({
+                id : 2,
+                geometry : geometry
+            });
+
+            var instance3 = new GeometryInstance({
+                id : 3,
+                geometry : geometryWithHeight
+            });
+
+            var primitive = primitives.add(new Primitive({
+                geometryInstances : [instance1, instance2, instance3],
+                asynchronous : false,
+                appearance : new EllipsoidSurfaceAppearance()
+            }));
+
+            scene.camera.setView({ destination : offscreenRectangle });
+            return drillPickFromRayMostDetailed(primitiveRay).then(function(results) {
+                expect(results.length).toEqual(1);
+                expect(results[0].object.primitive).toEqual(primitive);
+                expect(results[0].object.id).toEqual(3);
+            });
+        });
+
+        it('stops drill picking when the limit is reached.', function() {
+            if (webglStub) {
+                return;
+            }
+            createLargeRectangle(0.0);
+            var rectangle2 = createLargeRectangle(1.0);
+            var rectangle3 = createLargeRectangle(2.0);
+            var rectangle4 = createLargeRectangle(3.0);
+
+            scene.camera.setView({ destination : offscreenRectangle });
+            return drillPickFromRayMostDetailed(primitiveRay, 3).then(function(results) {
+                expect(results.length).toEqual(3);
+                expect(results[0].object.primitive).toEqual(rectangle4);
+                expect(results[1].object.primitive).toEqual(rectangle3);
+                expect(results[2].object.primitive).toEqual(rectangle2);
+            });
+        });
+
+        it('excludes objects', function() {
+            if (webglStub) {
+                return;
+            }
+            createLargeRectangle(0.0);
+            var rectangle2 = createLargeRectangle(1.0);
+            var rectangle3 = createLargeRectangle(2.0);
+            var rectangle4 = createLargeRectangle(3.0);
+            var rectangle5 = createLargeRectangle(4.0);
+            scene.camera.setView({ destination : offscreenRectangle });
+            return drillPickFromRayMostDetailed(primitiveRay, 2, [rectangle5, rectangle3]).then(function(results) {
+                expect(results.length).toBe(2);
+                expect(results[0].object.primitive).toBe(rectangle4);
+                expect(results[1].object.primitive).toBe(rectangle2);
+            });
+        });
+
+        it('throws if ray is undefined', function() {
+            expect(function() {
+                scene.drillPickFromRayMostDetailed(undefined);
+            }).toThrowDeveloperError();
+        });
+
+        it('throws if scene camera is in 2D', function() {
+            scene.morphTo2D(0.0);
+            expect(function() {
+                scene.drillPickFromRayMostDetailed(primitiveRay);
+            }).toThrowDeveloperError();
+        });
+
+        it('throws if scene camera is in CV', function() {
+            scene.morphToColumbusView(0.0);
+            expect(function() {
+                scene.drillPickFromRayMostDetailed(primitiveRay);
+            }).toThrowDeveloperError();
+        });
+    });
+
+    describe('sampleHeightMostDetailed', function() {
+        it('samples height from tileset', function() {
+            if (!scene.sampleHeightSupported) {
+                return;
+            }
+
+            var cartographics = [new Cartographic(0.0, 0.0)];
+            return createTileset().then(function() {
+                return sampleHeightMostDetailed(cartographics).then(function(updatedCartographics) {
+                    var height = updatedCartographics[0].height;
+                    expect(height).toBeGreaterThan(0.0);
+                    expect(height).toBeLessThan(20.0); // Rough height of tile
+                });
+            });
+        });
+
+        it('samples height from the globe', function() {
+            if (!scene.sampleHeightSupported) {
+                return;
+            }
+
+            var cartographics = [
+                new Cartographic(0.0, 0.0),
+                new Cartographic(0.0001, 0.0001),
+                new Cartographic(0.0002, 0.0002)
+            ];
+            var clonedCartographics = [new Cartographic(0.0, 0.0), new Cartographic(0.0001, 0.0001), new Cartographic(0.0002, 0.0002)];
+            return createGlobe().then(function() {
+                return sampleHeightMostDetailed(cartographics).then(function(updatedCartographics) {
+                    expect(updatedCartographics).toBe(cartographics);
+                    expect(updatedCartographics.length).toBe(3);
+                    var previousHeight;
+                    for (var i = 0; i < 3; ++i) {
+                        var longitude = updatedCartographics[i].longitude;
+                        var latitude = updatedCartographics[i].latitude;
+                        var height = updatedCartographics[i].height;
+                        expect(longitude).toBe(clonedCartographics[i].longitude);
+                        expect(latitude).toBe(clonedCartographics[i].latitude);
+                        expect(height).toBeDefined();
+                        expect(height).not.toBe(previousHeight);
+                        previousHeight = height;
+                    }
+                });
+            });
+        });
+
+        it('does not sample offscreen globe tiles', function() {
+            if (!scene.sampleHeightSupported) {
+                return;
+            }
+
+            var cartographics = [new Cartographic(0.0, 0.0)];
+            scene.camera.setView({ destination : offscreenRectangle });
+            return createGlobe().then(function() {
+                return sampleHeightMostDetailed(cartographics).then(function(updatedCartographics) {
+                    expect(updatedCartographics[0].height).toBeUndefined();
+                });
+            });
+        });
+
+        it('samples height from multiple primitives', function() {
+            if (!scene.sampleHeightSupported) {
+                return;
+            }
+
+            createRectangle(0.0, smallRectangle);
+            createRectangle(0.0, offscreenRectangle);
+
+            var cartographics = [
+                Rectangle.center(smallRectangle),
+                Rectangle.center(offscreenRectangle),
+                new Cartographic(-2.0, -2.0)
+            ];
+            scene.camera.setView({ destination : offscreenRectangle });
+            return sampleHeightMostDetailed(cartographics).then(function(updatedCartographics) {
+                expect(updatedCartographics[0].height).toBeDefined();
+                expect(updatedCartographics[1].height).toBeDefined();
+                expect(updatedCartographics[2].height).toBeUndefined(); // No primitive occupies this space
+            });
+        });
+
+        it('samples multiple heights from primitive', function() {
+            if (!scene.sampleHeightSupported) {
+                return;
+            }
+
+            createSmallRectangle(0.0);
+            var cartographics = [
+                new Cartographic(0.0, 0.0),
+                new Cartographic(-0.000001, -0.000001),
+                new Cartographic(0.0000005, 0.0000005)
+            ];
+            scene.camera.setView({ destination : offscreenRectangle });
+            return sampleHeightMostDetailed(cartographics).then(function(updatedCartographics) {
+                var previousHeight;
+                for (var i = 0; i < 3; ++i) {
+                    var height = updatedCartographics[i].height;
+                    expect(height).toEqualEpsilon(0.0, CesiumMath.EPSILON3);
+                    expect(height).not.toBe(previousHeight);
+                    previousHeight = height;
+                }
+            });
+        });
+
+        it('samples height from the top primitive', function() {
+            if (!scene.sampleHeightSupported) {
+                return;
+            }
+            createSmallRectangle(0.0);
+            createSmallRectangle(1.0);
+            var cartographics = [new Cartographic(0.0, 0.0)];
+            scene.camera.setView({ destination : offscreenRectangle });
+            return sampleHeightMostDetailed(cartographics).then(function(updatedCartographics) {
+                expect(updatedCartographics[0].height).toEqualEpsilon(1.0, CesiumMath.EPSILON3);
+            });
+        });
+
+        it('excludes objects', function() {
+            if (!scene.sampleHeightSupported) {
+                return;
+            }
+
+            var rectangle1 = createRectangle(0.0, smallRectangle);
+            createRectangle(0.0, offscreenRectangle);
+            var rectangle3 = createRectangle(1.0, offscreenRectangle);
+
+            var cartographics = [
+                Rectangle.center(smallRectangle),
+                Rectangle.center(offscreenRectangle),
+                new Cartographic(-2.0, -2.0)
+            ];
+            scene.camera.setView({ destination : offscreenRectangle });
+            return sampleHeightMostDetailed(cartographics, [rectangle1, rectangle3]).then(function(updatedCartographics) {
+                expect(updatedCartographics[0].height).toBeUndefined(); // This rectangle was excluded
+                expect(updatedCartographics[1].height).toEqualEpsilon(0.0, CesiumMath.EPSILON2);
+                expect(updatedCartographics[2].height).toBeUndefined(); // No primitive occupies this space
+            });
+        });
+
+        it('excludes primitive that doesn\'t write depth', function() {
+            if (!scene.sampleHeightSupported) {
+                return;
+            }
+
+            var rectangle = createSmallRectangle(0.0);
+
+            var height = 100.0;
+            var cartographics = [new Cartographic(0.0, 0.0, height)];
+            var collection = scene.primitives.add(new PointPrimitiveCollection());
+            var point = collection.add({
+                position : Cartographic.toCartesian(cartographics[0])
+            });
+
+            scene.camera.setView({ destination : offscreenRectangle });
+            return sampleHeightMostDetailed(cartographics).then(function(updatedCartographics) {
+                expect(updatedCartographics[0].height).toEqualEpsilon(height, CesiumMath.EPSILON3);
+            }).then(function() {
+                point.disableDepthTestDistance = Number.POSITIVE_INFINITY;
+                return sampleHeightMostDetailed(cartographics).then(function(updatedCartographics) {
+                    expect(updatedCartographics[0].height).toEqualEpsilon(0.0, CesiumMath.EPSILON3);
+                });
+            }).then(function() {
+                rectangle.show = false;
+                return sampleHeightMostDetailed(cartographics).then(function(updatedCartographics) {
+                    expect(updatedCartographics[0].height).toBeUndefined();
+                });
+            });
+        });
+
+        it('handles empty array', function() {
+            if (!scene.sampleHeightSupported) {
+                return;
+            }
+
+            var cartographics = [];
+            return sampleHeightMostDetailed(cartographics).then(function(updatedCartographics) {
+                expect(updatedCartographics.length).toBe(0);
+            });
+        });
+
+        it('throws if positions is undefined', function() {
+            if (!scene.sampleHeightSupported) {
+                return;
+            }
+
+            expect(function() {
+                scene.sampleHeightMostDetailed(undefined);
+            }).toThrowDeveloperError();
+        });
+
+        it('throws if scene camera is in 2D', function() {
+            if (!scene.sampleHeightSupported) {
+                return;
+            }
+
+            scene.morphTo2D(0.0);
+            var cartographics = [new Cartographic(0.0, 0.0)];
+            expect(function() {
+                scene.sampleHeightMostDetailed(cartographics);
+            }).toThrowDeveloperError();
+        });
+
+        it('throws if scene camera is in CV', function() {
+            if (!scene.sampleHeightSupported) {
+                return;
+            }
+
+            scene.morphToColumbusView(0.0);
+            var cartographics = [new Cartographic(0.0, 0.0)];
+            expect(function() {
+                scene.sampleHeightMostDetailed(cartographics);
+            }).toThrowDeveloperError();
+        });
+
+        it('throws if sampleHeight is not supported', function() {
+            if (!scene.sampleHeightSupported) {
+                return;
+            }
+            // Disable extension
+            var depthTexture = scene.context._depthTexture;
+            scene.context._depthTexture = false;
+
+            var cartographics = [new Cartographic(0.0, 0.0)];
+            expect(function() {
+                scene.sampleHeightMostDetailed(cartographics);
+            }).toThrowDeveloperError();
+
+            // Re-enable extension
+            scene.context._depthTexture = depthTexture;
+        });
+    });
+
+    describe('clampToHeightMostDetailed', function() {
+        it('clamps to tileset', function() {
+            if (!scene.clampToHeightSupported) {
+                return;
+            }
+
+            var cartesians = [Cartesian3.fromRadians(0.0, 0.0, 100000.0)];
+            return createTileset().then(function() {
+                return clampToHeightMostDetailed(cartesians).then(function(updatedCartesians) {
+                    var minimumHeight = Cartesian3.fromRadians(0.0, 0.0).x;
+                    var maximumHeight = minimumHeight + 20.0; // Rough height of tile
+                    var position = updatedCartesians[0];
+                    expect(position.x).toBeGreaterThan(minimumHeight);
+                    expect(position.x).toBeLessThan(maximumHeight);
+                    expect(position.y).toEqualEpsilon(0.0, CesiumMath.EPSILON5);
+                    expect(position.z).toEqualEpsilon(0.0, CesiumMath.EPSILON5);
+                });
+            });
+        });
+
+        it('clamps to the globe', function() {
+            if (!scene.clampToHeightSupported) {
+                return;
+            }
+
+            var cartesians = [
+                Cartesian3.fromRadians(0.0, 0.0, 100000.0),
+                Cartesian3.fromRadians(0.0001, 0.0001, 100000.0),
+                Cartesian3.fromRadians(0.0002, 0.0002, 100000.0)
+            ];
+            var clonedCartesians = [
+                Cartesian3.fromRadians(0.0, 0.0, 100000.0),
+                Cartesian3.fromRadians(0.0001, 0.0001, 100000.0),
+                Cartesian3.fromRadians(0.0002, 0.0002, 100000.0)
+            ];
+            return createGlobe().then(function() {
+                return clampToHeightMostDetailed(cartesians).then(function(updatedCartesians) {
+                    expect(updatedCartesians).toBe(cartesians);
+                    expect(updatedCartesians.length).toBe(3);
+                    var previousCartesian;
+                    for (var i = 0; i < 3; ++i) {
+                        expect(updatedCartesians[i]).not.toEqual(clonedCartesians[i]);
+                        expect(updatedCartesians[i]).not.toEqual(previousCartesian);
+                        previousCartesian = updatedCartesians[i];
+                    }
+                });
+            });
+        });
+
+        it('does not clamp to offscreen globe tiles', function() {
+            if (!scene.clampToHeightSupported) {
+                return;
+            }
+
+            var cartesians = [Cartesian3.fromRadians(0.0, 0.0, 100000.0)];
+            scene.camera.setView({ destination : offscreenRectangle });
+            return createGlobe().then(function() {
+                return clampToHeightMostDetailed(cartesians).then(function(updatedCartesians) {
+                    expect(updatedCartesians[0]).toBeUndefined();
+                });
+            });
+        });
+
+        it('clamps to multiple primitives', function() {
+            if (!scene.clampToHeightSupported) {
+                return;
+            }
+
+            createRectangle(0.0, smallRectangle);
+            createRectangle(0.0, offscreenRectangle);
+
+            var cartesians = [
+                Cartographic.toCartesian(Rectangle.center(smallRectangle)),
+                Cartographic.toCartesian(Rectangle.center(offscreenRectangle)),
+                Cartesian3.fromRadians(-2.0, -2.0)
+            ];
+            scene.camera.setView({ destination : offscreenRectangle });
+            return clampToHeightMostDetailed(cartesians).then(function(updatedCartesians) {
+                expect(updatedCartesians[0]).toBeDefined();
+                expect(updatedCartesians[1]).toBeDefined();
+                expect(updatedCartesians[2]).toBeUndefined(); // No primitive occupies this space
+            });
+        });
+
+        it('clamps to primitive', function() {
+            if (!scene.clampToHeightSupported) {
+                return;
+            }
+
+            createSmallRectangle(0.0);
+            var cartesians = [
+                Cartesian3.fromRadians(0.0, 0.0, 100000.0),
+                Cartesian3.fromRadians(-0.000001, -0.000001, 100000.0),
+                Cartesian3.fromRadians(0.0000005, 0.0000005, 100000.0)
+            ];
+            var expectedCartesians = [
+                Cartesian3.fromRadians(0.0, 0.0, 0.0),
+                Cartesian3.fromRadians(-0.000001, -0.000001, 0.0),
+                Cartesian3.fromRadians(0.0000005, 0.0000005, 0.0)
+            ];
+            scene.camera.setView({ destination : offscreenRectangle });
+            return clampToHeightMostDetailed(cartesians).then(function(updatedCartesians) {
+                var previousCartesian;
+                for (var i = 0; i < 3; ++i) {
+                    expect(updatedCartesians[i]).toEqualEpsilon(expectedCartesians[i], CesiumMath.EPSILON5);
+                    expect(updatedCartesians[i]).not.toEqual(previousCartesian);
+                    previousCartesian = updatedCartesians[i];
+                }
+            });
+        });
+
+        it('clamps to top primitive', function() {
+            if (!scene.clampToHeightSupported) {
+                return;
+            }
+            createSmallRectangle(0.0);
+            createSmallRectangle(1.0);
+            var cartesians = [Cartesian3.fromRadians(0.0, 0.0)];
+            scene.camera.setView({ destination : offscreenRectangle });
+            return clampToHeightMostDetailed(cartesians).then(function(updatedCartesians) {
+                var expectedCartesian = Cartesian3.fromRadians(0.0, 0.0, 1.0);
+                expect(updatedCartesians[0]).toEqualEpsilon(expectedCartesian, CesiumMath.EPSILON5);
+            });
+        });
+
+        it('excludes objects', function() {
+            if (!scene.clampToHeightSupported) {
+                return;
+            }
+
+            var rectangle1 = createRectangle(0.0, smallRectangle);
+            createRectangle(0.0, offscreenRectangle);
+            var rectangle3 = createRectangle(1.0, offscreenRectangle);
+
+            var cartesians = [
+                Cartographic.toCartesian(Rectangle.center(smallRectangle)),
+                Cartographic.toCartesian(Rectangle.center(offscreenRectangle)),
+                Cartesian3.fromRadians(-2.0, -2.0)
+            ];
+            scene.camera.setView({ destination : offscreenRectangle });
+            return clampToHeightMostDetailed(cartesians, [rectangle1, rectangle3]).then(function(updatedCartesians) {
+                var expectedCartesian = Cartographic.toCartesian(Rectangle.center(offscreenRectangle));
+                expect(updatedCartesians[0]).toBeUndefined(); // This rectangle was excluded
+                expect(updatedCartesians[1]).toEqualEpsilon(expectedCartesian, CesiumMath.EPSILON2);
+                expect(updatedCartesians[2]).toBeUndefined(); // No primitive occupies this space
+            });
+        });
+
+        it('excludes primitive that doesn\'t write depth', function() {
+            if (!scene.clampToHeightSupported) {
+                return;
+            }
+
+            var rectangle = createSmallRectangle(0.0);
+
+            var height = 100.0;
+            var cartesian = Cartesian3.fromRadians(0.0, 0.0, height);
+            var cartesians1 = [Cartesian3.clone(cartesian)];
+            var cartesians2 = [Cartesian3.clone(cartesian)];
+            var cartesians3 = [Cartesian3.clone(cartesian)];
+            var collection = scene.primitives.add(new PointPrimitiveCollection());
+            var point = collection.add({
+                position : cartesian
+            });
+
+            scene.camera.setView({ destination : offscreenRectangle });
+            return clampToHeightMostDetailed(cartesians1).then(function(updatedCartesians) {
+                expect(updatedCartesians[0]).toEqualEpsilon(cartesian, CesiumMath.EPSILON3);
+            }).then(function() {
+                point.disableDepthTestDistance = Number.POSITIVE_INFINITY;
+                return clampToHeightMostDetailed(cartesians2).then(function(updatedCartesians) {
+                    expect(updatedCartesians[0]).toEqualEpsilon(cartesian, CesiumMath.EPSILON3);
+                });
+            }).then(function() {
+                rectangle.show = false;
+                return clampToHeightMostDetailed(cartesians3).then(function(updatedCartesians) {
+                    expect(updatedCartesians[0]).toBeUndefined();
+                });
+            });
+        });
+
+        it('handles empty array', function() {
+            if (!scene.clampToHeightSupported) {
+                return;
+            }
+
+            var cartesians = [];
+            return sampleHeightMostDetailed(cartesians).then(function(updatedCartesians) {
+                expect(updatedCartesians.length).toBe(0);
+            });
+        });
+
+        it('throws if cartesians is undefined', function() {
+            if (!scene.clampToHeightSupported) {
+                return;
+            }
+
+            expect(function() {
+                scene.clampToHeightMostDetailed(undefined);
+            }).toThrowDeveloperError();
+        });
+
+        it('throws if scene camera is in 2D', function() {
+            if (!scene.clampToHeightSupported) {
+                return;
+            }
+
+            scene.morphTo2D(0.0);
+            var cartesians = [Cartesian3.fromRadians(0.0, 0.0)];
+            expect(function() {
+                scene.clampToHeightMostDetailed(cartesians);
+            }).toThrowDeveloperError();
+        });
+
+        it('throws if scene camera is in CV', function() {
+            if (!scene.clampToHeightSupported) {
+                return;
+            }
+
+            scene.morphToColumbusView(0.0);
+            var cartesians = [Cartesian3.fromRadians(0.0, 0.0)];
+            expect(function() {
+                scene.clampToHeightMostDetailed(cartesians);
+            }).toThrowDeveloperError();
+        });
+
+        it('throws if clampToHeight is not supported', function() {
+            if (!scene.clampToHeightSupported) {
+                return;
+            }
+            // Disable extension
+            var depthTexture = scene.context._depthTexture;
+            scene.context._depthTexture = false;
+
+            var cartesians = [Cartesian3.fromRadians(0.0, 0.0)];
+            expect(function() {
+                scene.clampToHeightMostDetailed(cartesians);
+            }).toThrowDeveloperError();
+
+            // Re-enable extension
+            scene.context._depthTexture = depthTexture;
+        });
+    });
+
     it('calls multiple picking functions within the same frame', function() {
         if (!scene.clampToHeightSupported || !scene.pickPositionSupported) {
             return;
@@ -1167,8 +2150,12 @@ defineSuite([
         // Call render. Lays down depth for the pickPosition call
         scene.renderForSpecs();
 
+        var cartographic = Cartographic.fromRadians(0.0, 0.0, 100000.0);
+        var cartesian = Cartographic.toCartesian(cartographic);
+        var cartesians = [Cartesian3.clone(cartesian)];
+        var cartographics = [cartographic];
+
         // Call clampToHeight
-        var cartesian = Cartesian3.fromRadians(0.0, 0.0, 100000.0);
         expect(scene).toClampToHeightAndCall(function(cartesian) {
             var expectedCartesian = Cartesian3.fromRadians(0.0, 0.0);
             expect(cartesian).toEqualEpsilon(expectedCartesian, CesiumMath.EPSILON5);
@@ -1214,6 +2201,33 @@ defineSuite([
         expect(scene).toPickPositionAndCall(function(cartesian) {
             var expectedCartesian = Cartographic.toCartesian(Rectangle.center(offscreenRectangle));
             expect(cartesian).toEqualEpsilon(expectedCartesian, CesiumMath.EPSILON5);
+        });
+
+        // Mix async and sync requests
+        var results = [];
+        var completed = 0;
+        scene.clampToHeightMostDetailed(cartesians).then(function(updatedCartesians) {
+            results.push(updatedCartesians);
+            completed++;
+        });
+        scene.sampleHeightMostDetailed(cartographics).then(function(updatedCartographics) {
+            results.push(updatedCartographics);
+            completed++;
+        });
+
+        // Call clampToHeight again
+        expect(scene).toClampToHeightAndCall(function(cartesian) {
+            var expectedCartesian = Cartesian3.fromRadians(0.0, 0.0);
+            expect(cartesian).toEqualEpsilon(expectedCartesian, CesiumMath.EPSILON5);
+        }, cartesian);
+
+        return pollToPromise(function() {
+            // Scene requires manual updates in the tests to move along the promise
+            scene.render();
+            return completed === 2;
+        }).then(function() {
+            expect(results[0][0]).toBeDefined();
+            expect(results[1][0].height).toBeDefined();
         });
     });
 

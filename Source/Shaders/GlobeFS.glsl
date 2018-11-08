@@ -359,9 +359,20 @@ void main()
     fadeOutDist = u_nightFadeDistance.y;
 
     float sunlitAtmosphereIntensity = clamp((cameraDist - fadeOutDist) / (fadeInDist - fadeOutDist), 0.0, 1.0);
+
+#ifdef HDR
+    // Some tweaking to make HDR look better
+    sunlitAtmosphereIntensity = max(sunlitAtmosphereIntensity * sunlitAtmosphereIntensity, 0.03);
+#endif
+
     groundAtmosphereColor = mix(groundAtmosphereColor, fogColor, sunlitAtmosphereIntensity);
 #else
     vec3 groundAtmosphereColor = fogColor;
+#endif
+
+#ifdef HDR
+    // Some tweaking to make HDR look better
+    groundAtmosphereColor = czm_saturation(groundAtmosphereColor, 1.6);
 #endif
 
     finalColor = vec4(mix(finalColor.rgb, groundAtmosphereColor, fade), finalColor.a);
