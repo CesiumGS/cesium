@@ -56,6 +56,8 @@ define([
      * @param {Property} [options.colorBlendMode=ColorBlendMode.HIGHLIGHT] An enum Property specifying how the color blends with the model.
      * @param {Property} [options.colorBlendAmount=0.5] A numeric Property specifying the color strength when the <code>colorBlendMode</code> is <code>MIX</code>. A value of 0.0 results in the model's rendered color while a value of 1.0 results in a solid color, with any value in-between resulting in a mix of the two.
      * @param {Property} [options.clippingPlanes] A property specifying the {@link ClippingPlaneCollection} used to selectively disable rendering the model.
+     * @param {Property} [options.imageBasedLightingFactor=new Cartesian2(1.0, 1.0)] A property specifying the contribution from diffuse and specular image-based lighting.
+     * @param {Property} [options.lightColor] A property specifying the light color to use when shading the model. The default sun light color will be used when <code>undefined</code>.
      *
      * @see {@link https://cesiumjs.org/tutorials/3D-Models-Tutorial/|3D Models Tutorial}
      * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=3D%20Models.html|Cesium Sandcastle 3D Models Demo}
@@ -96,6 +98,10 @@ define([
         this._colorBlendAmountSubscription = undefined;
         this._clippingPlanes = undefined;
         this._clippingPlanesSubscription = undefined;
+        this._imageBasedLightingFactor = undefined;
+        this._imageBasedLightingFactorSubscription = undefined;
+        this._lightColor = undefined;
+        this._lightColorSubscription = undefined;
         this._definitionChanged = new Event();
 
         this.merge(defaultValue(options, defaultValue.EMPTY_OBJECT));
@@ -262,7 +268,21 @@ define([
          * @memberof ModelGraphics.prototype
          * @type {Property}
          */
-        clippingPlanes : createPropertyDescriptor('clippingPlanes')
+        clippingPlanes : createPropertyDescriptor('clippingPlanes'),
+
+        /**
+         * A property specifying the {@link Cartesian2} used to scale the diffuse and specular image-based lighting contribution to the final color.
+         * @memberof ModelGraphics.prototype
+         * @type {Property}
+         */
+        imageBasedLightingFactor : createPropertyDescriptor('imageBasedLightingFactor'),
+
+        /**
+         * A property specifying the {@link Cartesian3} color of the light source when shading the model.
+         * @memberOf ModelGraphics.prototype
+         * @type {Property}
+         */
+        lightColor : createPropertyDescriptor('lightColor')
     });
 
     /**
@@ -293,6 +313,8 @@ define([
         result.colorBlendMode = this.colorBlendMode;
         result.colorBlendAmount = this.colorBlendAmount;
         result.clippingPlanes = this.clippingPlanes;
+        result.imageBasedLightingFactor = this.imageBasedLightingFactor;
+        result.lightColor = this.lightColor;
 
         return result;
     };
@@ -327,6 +349,8 @@ define([
         this.colorBlendMode = defaultValue(this.colorBlendMode, source.colorBlendMode);
         this.colorBlendAmount = defaultValue(this.colorBlendAmount, source.colorBlendAmount);
         this.clippingPlanes = defaultValue(this.clippingPlanes, source.clippingPlanes);
+        this.imageBasedLightingFactor = defaultValue(this.imageBasedLightingFactor, source.imageBasedLightingFactor);
+        this.lightColor = defaultValue(this.lightColor, source.lightColor);
 
         var sourceNodeTransformations = source.nodeTransformations;
         if (defined(sourceNodeTransformations)) {

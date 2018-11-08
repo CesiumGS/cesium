@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <meta name="description" content="Sample the most detailed heights of a 3D Tileset.">
+    <meta name="cesium-sandcastle-labels" content="Showcases, 3D Tiles">
+    <title>Cesium Demo</title>
+    <script type="text/javascript" src="../Sandcastle-header.js"></script>
+    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
+    <script type="text/javascript">
+        if(typeof require === 'function') {
+            require.config({
+                baseUrl : '../../../Source',
+                waitSeconds : 120
+            });
+        }
+    </script>
+</head>
+<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
+<style>
+    @import url(../templates/bucket.css);
+</style>
+<div id="cesiumContainer" class="fullSize"></div>
+<div id="loadingOverlay"><h1>Loading...</h1></div>
+<div id="toolbar"></div>
+<script id="cesium_sandcastle_script">
+function startup(Cesium) {
+    'use strict';
+//Sandcastle_Begin
+var viewer = new Cesium.Viewer('cesiumContainer', {
+    terrainProvider : Cesium.createWorldTerrain()
+});
+var scene = viewer.scene;
+
+var tileset = scene.primitives.add(
+    new Cesium.Cesium3DTileset({
+        url: Cesium.IonResource.fromAssetId(6074)
+    })
+);
+
+scene.camera.setView({
+    destination: new Cesium.Cartesian3(1216411.0748779264, -4736313.10747583, 4081359.5125561724),
+    orientation: new Cesium.HeadingPitchRoll(4.239925103568368, -0.4911293834802475, 6.279849292088564),
+    endTransform : Cesium.Matrix4.IDENTITY
+});
+
+Sandcastle.addToolbarButton('Sample heights', function() {
+    sampleHeights();
+});
+
+function sampleHeights() {
+    if (!scene.clampToHeightSupported) {
+        console.log('This browser does not support clampToHeightMostDetailed.');
+    }
+
+    viewer.entities.removeAll();
+
+    var cartesian1 = new Cesium.Cartesian3(1216390.063324395, -4736314.814479433, 4081341.9787972216);
+    var cartesian2 = new Cesium.Cartesian3(1216329.5413318684, -4736272.029009798, 4081407.9342479417);
+
+    var count = 30;
+    var cartesians = new Array(count);
+    for (var i = 0; i < count; ++i) {
+        var offset = i / (count - 1);
+        cartesians[i] = Cesium.Cartesian3.lerp(cartesian1, cartesian2, offset, new Cesium.Cartesian3());
+    }
+
+    scene.clampToHeightMostDetailed(cartesians).then(function(clampedCartesians) {
+        for (var i = 0; i < count; ++i) {
+            viewer.entities.add({
+                position: clampedCartesians[i],
+                ellipsoid : {
+                    radii : new Cesium.Cartesian3(0.2, 0.2, 0.2),
+                    material : Cesium.Color.RED
+                }
+            });
+        }
+
+        viewer.entities.add({
+            polyline : {
+                positions : clampedCartesians,
+                followSurface : false,
+                width : 2,
+                material : new Cesium.PolylineOutlineMaterialProperty({
+                    color : Cesium.Color.YELLOW
+                }),
+                depthFailMaterial : new Cesium.PolylineOutlineMaterialProperty({
+                    color : Cesium.Color.YELLOW
+                })
+            }
+        });
+    });
+}
+//Sandcastle_End
+    Sandcastle.finishedLoading();
+}
+if (typeof Cesium !== 'undefined') {
+    startup(Cesium);
+} else if (typeof require === 'function') {
+    require(['Cesium'], startup);
+}
+</script>
+</body>
+</html>
