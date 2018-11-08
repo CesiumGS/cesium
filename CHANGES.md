@@ -1,34 +1,46 @@
 Change Log
 ==========
 
+### 1.52 - 2018-12-03
+
+##### Additions :tada:
+* Added functions to get the most detailed height of 3D Tiles on-screen or off-screen. [#7115](https://github.com/AnalyticalGraphicsInc/cesium/pull/7115)
+    * Added `Scene.sampleHeightMostDetailed`, an asynchronous version of `Scene.sampleHeight` that uses the maximum level of detail for 3D Tiles.
+    * Added `Scene.clampToHeightMostDetailed`, an asynchronous version of `Scene.clampToHeight` that uses the maximum level of detail for 3D Tiles.
+* Added `Scene.invertClassificationSupported` for checking if invert classification is supported.
+* Added `computeLineSegmentLineSegmentIntersection` to `Intersections2D`. [#7228](https://github.com/AnalyticalGraphicsInc/Cesium/pull/7228)
+
+##### Fixes :wrench:
+* Fixed issue causing polyline to look wavy depending on the position of the camera [#7209](https://github.com/AnalyticalGraphicsInc/cesium/pull/7209)
+* Fixed an issue where polylines intersecting the near plane would cause blinking. [#6955](https://github.com/AnalyticalGraphicsInc/cesium/pull/6955)
+
 ### 1.51 - 2018-11-01
 
 ##### Additions :tada:
-* Added `Ray.clone`. [#7174](https://github.com/AnalyticalGraphicsInc/cesium/pull/7174)
-* Shrink minified and gzipped Cesium.js by 27 KB (~3.7%) by delay loading seldom-used third-party dependencies. [#7140](https://github.com/AnalyticalGraphicsInc/cesium/pull/7140)
 * Added WMS-T (time) support in WebMapServiceImageryProvider [#2581](https://github.com/AnalyticalGraphicsInc/cesium/issues/2581)
-* Added `Transforms.fixedFrameToHeadingPitchRoll`, a helper function for extracting a `HeadingPitchRoll` from a fixed frame transform [#7164](https://github.com/AnalyticalGraphicsInc/cesium/pull/7164)
 * Added `cutoutRectangle` to `ImageryLayer`, which allows cutting out rectangular areas in imagery layers to reveal underlying imagery. [#7056](https://github.com/AnalyticalGraphicsInc/cesium/pull/7056)
-* Added `imageBasedLightingFactor` property to `Cesium3DTileset`, `Model`, and `ModelGraphics` to scale the diffuse and specular image-based lighting contributions to the final color. [#7025](https://github.com/AnalyticalGraphicsInc/cesium/pull/7025)
-* Added `lightColor` property to `Cesium3DTileset`, `Model`, and `ModelGraphics` to change the intensity of the light used when shading model. [#7025](https://github.com/AnalyticalGraphicsInc/cesium/pull/7025)
 * Added `atmosphereHueShift`, `atmosphereSaturationShift`, and `atmosphereBrightnessShift` properties to `Globe` which shift the color of the ground atmosphere to match the hue, saturation, and brightness shifts of the sky atmosphere. [#4195](https://github.com/AnalyticalGraphicsInc/cesium/issues/4195)
+* Shrink minified and gzipped Cesium.js by 27 KB (~3.7%) by delay loading seldom-used third-party dependencies. [#7140](https://github.com/AnalyticalGraphicsInc/cesium/pull/7140)
+* Added `lightColor` property to `Cesium3DTileset`, `Model`, and `ModelGraphics` to change the intensity of the light used when shading model. [#7025](https://github.com/AnalyticalGraphicsInc/cesium/pull/7025)
+* Added `imageBasedLightingFactor` property to `Cesium3DTileset`, `Model`, and `ModelGraphics` to scale the diffuse and specular image-based lighting contributions to the final color. [#7025](https://github.com/AnalyticalGraphicsInc/cesium/pull/7025)
 * Added per-feature selection to the 3D Tiles BIM Sandcastle example. [#7181](https://github.com/AnalyticalGraphicsInc/cesium/pull/7181)
+* Added `Transforms.fixedFrameToHeadingPitchRoll`, a helper function for extracting a `HeadingPitchRoll` from a fixed frame transform. [#7164](https://github.com/AnalyticalGraphicsInc/cesium/pull/7164)
+* Added `Ray.clone`. [#7174](https://github.com/AnalyticalGraphicsInc/cesium/pull/7174)
 
 ##### Fixes :wrench:
 * Fixed issue removing geometry entities with different materials. [#7163](https://github.com/AnalyticalGraphicsInc/cesium/pull/7163)
+* Fixed texture coordinate calculation for polygon entities with `perPositionHeight`. [#7188](https://github.com/AnalyticalGraphicsInc/cesium/pull/7188)
+* Fixed crash when updating polyline attributes twice in one frame. [#7155](https://github.com/AnalyticalGraphicsInc/cesium/pull/7155)
+* Fixed entity visibility issue related to setting an entity show property and altering or adding entity geometry. [#7156](https://github.com/AnalyticalGraphicsInc/cesium/pull/7156)
+* Fixed an issue where dynamic Entities on terrain would cause a crash in platforms that do not support depth textures such as Internet Explorer. [#7103](https://github.com/AnalyticalGraphicsInc/cesium/issues/7103)
+* Fixed an issue that would cause a crash when removing a post process stage. [#7210](https://github.com/AnalyticalGraphicsInc/cesium/issues/7210)
 * Fixed an issue where `pickPosition` would return incorrect results when called after `sampleHeight` or `clampToHeight`. [#7113](https://github.com/AnalyticalGraphicsInc/cesium/pull/7113)
 * Fixed an issue where `sampleHeight` and `clampToHeight` would crash if picking a primitive that doesn't write depth. [#7120](https://github.com/AnalyticalGraphicsInc/cesium/issues/7120)
-* Fixed crash when updating polyline attributes twice in one frame [#7155](https://github.com/AnalyticalGraphicsInc/cesium/pull/7155)
-* Fixed a crash when using `BingMapsGeocoderService` [#7143](https://github.com/AnalyticalGraphicsInc/cesium/issues/7143)
-* Fixed entity visibility issue related to setting an entity show property and altering or adding entity geometry [#7156](https://github.com/AnalyticalGraphicsInc/cesium/pull/7156)
-* Fixed accuracy of rotation matrix generated by `VelocityOrientationProperty` [#6641](https://github.com/AnalyticalGraphicsInc/cesium/pull/6641)
+* Fixed a crash when using `BingMapsGeocoderService`. [#7143](https://github.com/AnalyticalGraphicsInc/cesium/issues/7143)
+* Fixed accuracy of rotation matrix generated by `VelocityOrientationProperty`. [#6641](https://github.com/AnalyticalGraphicsInc/cesium/pull/6641)
 * Fixed clipping plane crash when adding a plane to an empty collection. [#7168](https://github.com/AnalyticalGraphicsInc/cesium/pull/7168)
-* Fixed texture coordinate calculation for polygon entities with `perPositionHeight` [#7188](https://github.com/AnalyticalGraphicsInc/cesium/pull/7188)
 * Fixed clipping planes on tilesets not taking into account the tileset model matrix. [#7182](https://github.com/AnalyticalGraphicsInc/cesium/pull/7182)
-* Fixed middle mouse button locked glitch [#7137](https://github.com/AnalyticalGraphicsInc/cesium/pull/7137)
-* Fixed an issue where dynamic Entities on terrain would cause a crash in platforms that do not support depth textures such as Internet Explorer [#7103](https://github.com/AnalyticalGraphicsInc/cesium/issues/7103)
-* Fixed an issue where polylines intersecting the near plane would cause blinking. [#6955](https://github.com/AnalyticalGraphicsInc/cesium/pull/6955)
-* Fixed an issue that would cause a crash when removing a post process stage. [#7210](https://github.com/AnalyticalGraphicsInc/cesium/issues/7210)
+* Fixed incorrect rendering of models using the `KHR_materials_common` lights extension. [#7206](https://github.com/AnalyticalGraphicsInc/cesium/pull/7206)
 
 ### 1.50 - 2018-10-01
 
