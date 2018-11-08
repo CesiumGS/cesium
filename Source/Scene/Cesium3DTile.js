@@ -17,6 +17,7 @@ define([
         '../Core/Matrix3',
         '../Core/Matrix4',
         '../Core/OrientedBoundingBox',
+        '../Core/OrthographicFrustum',
         '../Core/Rectangle',
         '../Core/Request',
         '../Core/RequestScheduler',
@@ -24,6 +25,7 @@ define([
         '../Core/RequestType',
         '../Core/Resource',
         '../Core/RuntimeError',
+        '../Core/Transforms',
         '../ThirdParty/when',
         './Cesium3DTileContentFactory',
         './Cesium3DTileContentState',
@@ -53,6 +55,7 @@ define([
         Matrix3,
         Matrix4,
         OrientedBoundingBox,
+        OrthographicFrustum,
         Rectangle,
         Request,
         RequestScheduler,
@@ -60,6 +63,7 @@ define([
         RequestType,
         Resource,
         RuntimeError,
+        Transforms,
         when,
         Cesium3DTileContentFactory,
         Cesium3DTileContentState,
@@ -88,7 +92,7 @@ define([
         var contentHeader = header.content;
 
         /**
-         * The local transform of this tile
+         * The local transform of this tile.
          * @type {Matrix4}
          */
         this.transform = defined(header.transform) ? Matrix4.unpack(header.transform) : Matrix4.clone(Matrix4.IDENTITY);
@@ -100,7 +104,7 @@ define([
         this._initialTransform = Matrix4.multiply(parentInitialTransform, this.transform, new Matrix4());
 
         /**
-         * The final computed transform of this tile
+         * The final computed transform of this tile.
          * @type {Matrix4}
          * @readonly
          */
@@ -199,11 +203,6 @@ define([
                 Cesium3DTile._deprecationWarning('contentUrl', 'This tileset JSON uses the "content.url" property which has been deprecated. Use "content.uri" instead.');
                 contentHeaderUri = contentHeader.url;
             }
-
-            if (tileset._brokenUrlWorkaround && contentHeaderUri.length > 0 && (contentHeaderUri[0] === '/')) {
-                contentHeaderUri = contentHeader.uri = contentHeaderUri.substring(1);
-            }
-
             hasEmptyContent = false;
             contentState = Cesium3DTileContentState.UNLOADED;
             contentResource = baseResource.getDerivedResource({
@@ -337,7 +336,6 @@ define([
         this._priority = 0.0;
         this._isClipped = true;
         this._clippingPlanesState = 0; // encapsulates (_isClipped, clippingPlanes.enabled) and number/function
-
         this._debugBoundingVolume = undefined;
         this._debugContentBoundingVolume = undefined;
         this._debugViewerRequestVolume = undefined;
@@ -384,6 +382,21 @@ define([
         },
 
         /**
+         * Get the tile's bounding volume.
+         *
+         * @memberof Cesium3DTile.prototype
+         *
+         * @type {TileBoundingVolume}
+         * @readonly
+         * @private
+         */
+        boundingVolume : {
+            get : function() {
+                return this._boundingVolume;
+            }
+        },
+
+        /**
          * Get the bounding volume of the tile's contents.  This defaults to the
          * tile's bounding volume when the content's bounding volume is
          * <code>undefined</code>.
@@ -411,6 +424,22 @@ define([
         boundingSphere : {
             get : function() {
                 return this._boundingVolume.boundingSphere;
+            }
+        },
+
+        /**
+         * Returns the <code>extras</code> property in the tileset JSON for this tile, which contains application specific metadata.
+         * Returns <code>undefined</code> if <code>extras</code> does not exist.
+         *
+         * @memberof Cesium3DTile.prototype
+         *
+         * @type {*}
+         * @readonly
+         * @see {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/specification#specifying-extensions-and-application-specific-extras|Extras in the 3D Tiles specification.}
+         */
+        extras : {
+            get : function() {
+                return this._header.extras;
             }
         },
 
@@ -581,6 +610,64 @@ define([
     var scratchJulianDate = new JulianDate();
 
     /**
+     * Get the tile's screen space error.
+     *
+     * @private
+     */
+    Cesium3DTile.prototype.getScreenSpaceError = function(frameState, useParentGeometricError) {
+        var tileset = this._tileset;
+        var parentGeometricError = defined(this.parent) ? this.parent.geometricError : tileset._geometricError;
+        var geometricError = useParentGeometricError ? parentGeometricError : this.geometricError;
+        if (geometricError === 0.0) {
+            // Leaf tiles do not have any error so save the computation
+            return 0.0;
+        }
+        var camera = frameState.camera;
+        var frustum = camera.frustum;
+        var context = frameState.context;
+        var width = context.drawingBufferWidth;
+        var height = context.drawingBufferHeight;
+        var error;
+        if (frameState.mode === SceneMode.SCENE2D || frustum instanceof OrthographicFrustum) {
+            if (defined(frustum._offCenterFrustum)) {
+                frustum = frustum._offCenterFrustum;
+            }
+            var pixelSize = Math.max(frustum.top - frustum.bottom, frustum.right - frustum.left) / Math.max(width, height);
+            error = geometricError / pixelSize;
+        } else {
+            // Avoid divide by zero when viewer is inside the tile
+            var distance = Math.max(this._distanceToCamera, CesiumMath.EPSILON7);
+            var sseDenominator = camera.frustum.sseDenominator;
+            error = (geometricError * height) / (distance * sseDenominator);
+            if (tileset.dynamicScreenSpaceError) {
+                var density = tileset._dynamicScreenSpaceErrorComputedDensity;
+                var factor = tileset.dynamicScreenSpaceErrorFactor;
+                var dynamicError = CesiumMath.fog(distance, density) * factor;
+                error -= dynamicError;
+            }
+        }
+        return error;
+    };
+
+    /**
+     * Update the tile's visibility.
+     *
+     * @private
+     */
+    Cesium3DTile.prototype.updateVisibility = function(frameState) {
+        var parent = this.parent;
+        var parentTransform = defined(parent) ? parent.computedTransform : this._tileset.modelMatrix;
+        var parentVisibilityPlaneMask = defined(parent) ? parent._visibilityPlaneMask : CullingVolume.MASK_INDETERMINATE;
+        this.updateTransform(parentTransform);
+        this._distanceToCamera = this.distanceToTile(frameState);
+        this._centerZDepth = this.distanceToTileCenter(frameState);
+        this._screenSpaceError = this.getScreenSpaceError(frameState, false);
+        this._visibilityPlaneMask = this.visibility(frameState, parentVisibilityPlaneMask); // Use parent's plane mask to speed up visibility test
+        this._visible = this._visibilityPlaneMask !== CullingVolume.MASK_OUTSIDE;
+        this._inRequestVolume = this.insideViewerRequestVolume(frameState);
+    };
+
+    /**
      * Update whether the tile has expired.
      *
      * @private
@@ -675,7 +762,6 @@ define([
         }
 
         var contentFailedFunction = getContentFailedFunction(this);
-
         promise.then(function(arrayBuffer) {
             if (that.isDestroyed()) {
                 // Tile is unloaded before the content finishes loading
@@ -712,6 +798,7 @@ define([
 
                 // Refresh style for expired content
                 that._selectedFrame = 0;
+                that.lastStyleTime = 0;
 
                 that._contentState = Cesium3DTileContentState.READY;
                 that._contentReadyPromise.resolve(content);
@@ -793,8 +880,7 @@ define([
         var tileset = this._tileset;
         var clippingPlanes = tileset.clippingPlanes;
         if (defined(clippingPlanes) && clippingPlanes.enabled) {
-            var tileTransform = tileset._root.computedTransform;
-            var intersection = clippingPlanes.computeIntersectionWithBoundingVolume(boundingVolume, tileTransform);
+            var intersection = clippingPlanes.computeIntersectionWithBoundingVolume(boundingVolume, tileset.clippingPlanesOriginMatrix);
             this._isClipped = intersection !== Intersect.INSIDE;
             if (intersection === Intersect.OUTSIDE) {
                 return CullingVolume.MASK_OUTSIDE;
@@ -820,6 +906,12 @@ define([
             return Intersect.INSIDE;
         }
 
+        if (this._visibilityPlaneMask === CullingVolume.MASK_INSIDE) {
+            // The tile's bounding volume is completely inside the culling volume so
+            // the content bounding volume must also be inside.
+            return Intersect.INSIDE;
+        }
+
         // PERFORMANCE_IDEA: is it possible to burn less CPU on this test since we know the
         // tile's (not the content's) bounding volume intersects the culling volume?
         var cullingVolume = frameState.cullingVolume;
@@ -828,8 +920,7 @@ define([
         var tileset = this._tileset;
         var clippingPlanes = tileset.clippingPlanes;
         if (defined(clippingPlanes) && clippingPlanes.enabled) {
-            var tileTransform = tileset._root.computedTransform;
-            var intersection = clippingPlanes.computeIntersectionWithBoundingVolume(boundingVolume, tileTransform);
+            var intersection = clippingPlanes.computeIntersectionWithBoundingVolume(boundingVolume, tileset.clippingPlanesOriginMatrix);
             this._isClipped = intersection !== Intersect.INSIDE;
             if (intersection === Intersect.OUTSIDE) {
                 return Intersect.OUTSIDE;
@@ -1030,6 +1121,10 @@ define([
     };
 
     function applyDebugSettings(tile, tileset, frameState) {
+        if (!frameState.passes.render) {
+            return;
+        }
+
         var hasContentBoundingVolume = defined(tile._header.content) && defined(tile._header.content.boundingVolume);
         var empty = tile.hasEmptyContent || tile.hasTilesetContent;
 

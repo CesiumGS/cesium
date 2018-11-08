@@ -367,10 +367,10 @@ defineSuite([
         createBillboards();
 
         scene.render();
-        expect(scene._frustumCommandsList.length).toEqual(3);
+        expect(scene.frustumCommandsList.length).toEqual(3);
 
         scene.logarithmicDepthBuffer = true;
         scene.render();
-        expect(scene._frustumCommandsList.length).toEqual(1);
+        expect(scene.frustumCommandsList.length).toEqual(1);
     });
 }, 'WebGL');

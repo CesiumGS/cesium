@@ -60,13 +60,11 @@ defineSuite([
         _statistics : {
             texturesByteLength : 0
         },
-        _tileset : {
+        tileset : {
             _statistics : {
                 batchTableByteLength : 0
             },
-            colorBlendMode : ColorBlendMode.HIGHLIGHT
-        },
-        tileset : {
+            colorBlendMode : ColorBlendMode.HIGHLIGHT,
             ellipsoid : Ellipsoid.WGS84
         },
         getFeature : function(id) { return { batchId : id }; }
@@ -156,7 +154,7 @@ defineSuite([
             points.createFeatures(mockTileset, features);
             points.applyStyle(undefined, features);
 
-            scene.camera.lookAt(Cartesian3.fromDegrees(0.0, 0.0, 10.0), new Cartesian3(0.0, 0.0, 50.0));
+            scene.camera.lookAt(Cartesian3.fromDegrees(0.0, 0.0, 30.0), new Cartesian3(0.0, 0.0, 50.0));
             expect(scene).toRender([255, 255, 255, 255]);
         });
     });

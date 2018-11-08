@@ -11,6 +11,7 @@ defineSuite([
         'Core/PerspectiveFrustum',
         'Core/Transforms',
         'Renderer/Pass',
+        'Scene/Cesium3DTileRefine',
         'Scene/Cesium3DTileStyle',
         'Scene/ClippingPlane',
         'Scene/ClippingPlaneCollection',
@@ -34,6 +35,7 @@ defineSuite([
         PerspectiveFrustum,
         Transforms,
         Pass,
+        Cesium3DTileRefine,
         Cesium3DTileStyle,
         ClippingPlane,
         ClippingPlaneCollection,
@@ -184,8 +186,8 @@ defineSuite([
 
     it('gets tileset properties', function() {
         return Cesium3DTilesTester.loadTileset(scene, pointCloudRGBUrl).then(function(tileset) {
-            var root = tileset._root;
-            var content = root._content;
+            var root = tileset.root;
+            var content = root.content;
             expect(content.tileset).toBe(tileset);
             expect(content.tile).toBe(root);
             expect(content.url.indexOf(root._header.content.uri) > -1).toBe(true);
@@ -284,7 +286,7 @@ defineSuite([
             var decoder = DracoLoader._getDecoderTaskProcessor();
             spyOn(decoder, 'scheduleTask').and.returnValue(when.reject({message : 'my error'}));
             return Cesium3DTilesTester.loadTileset(scene, pointCloudDracoUrl).then(function(tileset) {
-                var root = tileset._root;
+                var root = tileset.root;
                 return root.contentReadyPromise.then(function() {
                     fail('should not resolve');
                 }).otherwise(function(error) {
@@ -323,7 +325,7 @@ defineSuite([
             var newTransform = Transforms.headingPitchRollToFixedFrame(newCenter, newHPR);
 
             // Update tile transform
-            tileset._root.transform = newTransform;
+            tileset.root.transform = newTransform;
 
             // Move the camera to the new location
             setCamera(newLongitude, newLatitude);
@@ -332,6 +334,7 @@ defineSuite([
     });
 
     it('renders with debug color', function() {
+        CesiumMath.setRandomNumberSeed(0);
         return Cesium3DTilesTester.loadTileset(scene, pointCloudRGBUrl).then(function(tileset) {
             var color;
             expect(scene).toRenderAndCall(function(rgba) {
@@ -363,7 +366,7 @@ defineSuite([
 
     it('picks', function() {
         return Cesium3DTilesTester.loadTileset(scene, pointCloudRGBUrl).then(function(tileset) {
-            var content = tileset._root.content;
+            var content = tileset.root.content;
             tileset.show = false;
             expect(scene).toPickPrimitive(undefined);
             tileset.show = true;
@@ -404,7 +407,7 @@ defineSuite([
 
     it('point cloud without batch table works', function() {
         return Cesium3DTilesTester.loadTileset(scene, pointCloudRGBUrl).then(function(tileset) {
-            var content = tileset._root.content;
+            var content = tileset.root.content;
             expect(content.featuresLength).toBe(0);
             expect(content.innerContents).toBeUndefined();
             expect(content.hasProperty(0, 'name')).toBe(false);
@@ -414,7 +417,7 @@ defineSuite([
 
     it('batched point cloud works', function() {
         return Cesium3DTilesTester.loadTileset(scene, pointCloudBatchedUrl).then(function(tileset) {
-            var content = tileset._root.content;
+            var content = tileset.root.content;
             expect(content.featuresLength).toBe(8);
             expect(content.innerContents).toBeUndefined();
             expect(content.hasProperty(0, 'name')).toBe(true);
@@ -427,7 +430,7 @@ defineSuite([
         // created. There is no per-point show/color/pickId because the overhead is too high. Instead points are styled
         // based on their properties, and these are not accessible from the API.
         return Cesium3DTilesTester.loadTileset(scene, pointCloudWithPerPointPropertiesUrl).then(function(tileset) {
-            var content = tileset._root.content;
+            var content = tileset.root.content;
             expect(content.featuresLength).toBe(0);
             expect(content.innerContents).toBeUndefined();
             expect(content.hasProperty(0, 'name')).toBe(false);
@@ -437,7 +440,7 @@ defineSuite([
 
     it('throws when calling getFeature with invalid index', function() {
         return Cesium3DTilesTester.loadTileset(scene, pointCloudBatchedUrl).then(function(tileset) {
-            var content = tileset._root.content;
+            var content = tileset.root.content;
             expect(function(){
                 content.getFeature(-1);
             }).toThrowDeveloperError();
@@ -452,7 +455,7 @@ defineSuite([
 
     it('Supports back face culling when there are per-point normals', function() {
         return Cesium3DTilesTester.loadTileset(scene, pointCloudBatchedUrl).then(function(tileset) {
-            var content = tileset._root.content;
+            var content = tileset.root.content;
 
             // Get the number of picked sections with back face culling on
             var pickedCountCulling = 0;
@@ -512,11 +515,12 @@ defineSuite([
         noAttenuationPixelCount = scene.logarithmicDepthBuffer ? 20 : 16;
         var center = new Cartesian3.fromRadians(centerLongitude, centerLatitude, 5.0);
         scene.camera.lookAt(center, new HeadingPitchRange(0.0, -1.57, 5.0));
-        scene.fxaa = false;
+        scene.postProcessStages.fxaa.enabled = false;
         scene.camera.zoomIn(6);
 
         return Cesium3DTilesTester.loadTileset(scene, pointCloudNoColorUrl).then(function(tileset) {
             tileset.pointCloudShading.eyeDomeLighting = false;
+            tileset.root.refine = Cesium3DTileRefine.REPLACE;
             postLoadCallback(scene, tileset);
             scene.destroyForSpecs();
         });
@@ -605,7 +609,7 @@ defineSuite([
 
     it('applies shader style', function() {
         return Cesium3DTilesTester.loadTileset(scene, pointCloudWithPerPointPropertiesUrl).then(function(tileset) {
-            var content = tileset._root.content;
+            var content = tileset.root.content;
 
             // Solid red color
             tileset.style = new Cesium3DTileStyle({
@@ -719,7 +723,9 @@ defineSuite([
 
             tileset.style.color = new Expression('color("blue", 0.5)');
             tileset.makeStyleDirty();
-            expect(scene).toRender([0, 0, 255, 255]);
+            expect(scene).toRenderAndCall(function(rgba) {
+                expect(rgba).toEqualEpsilon([0, 0, 255, 255], 5);
+            });
 
             var i;
             var commands = scene.frameState.commandList;
@@ -797,7 +803,7 @@ defineSuite([
 
     it('does not apply shader style if the point cloud has a batch table', function() {
         return Cesium3DTilesTester.loadTileset(scene, pointCloudBatchedUrl).then(function(tileset) {
-            var content = tileset._root.content;
+            var content = tileset.root.content;
             var shaderProgram = content._pointCloud._drawCommand.shaderProgram;
             tileset.style = new Cesium3DTileStyle({
                 color:'color("red")'
@@ -840,7 +846,7 @@ defineSuite([
         return when.all(promises).then(function(tilesets) {
             var length = tilesets.length;
             for (var i = 0; i < length; ++i) {
-                var content = tilesets[i]._root.content;
+                var content = tilesets[i].root.content;
                 expect(content.geometryByteLength).toEqual(expectedGeometryMemory[i]);
                 expect(content.texturesByteLength).toEqual(0);
             }
@@ -849,7 +855,7 @@ defineSuite([
 
     it('gets memory usage for batch point cloud', function() {
         return Cesium3DTilesTester.loadTileset(scene, pointCloudBatchedUrl).then(function(tileset) {
-            var content = tileset._root.content;
+            var content = tileset.root.content;
 
             // Point cloud consists of positions, colors, normals, and batchIds
             // 3 floats (xyz), 3 floats (normal), 1 byte (batchId)
@@ -881,7 +887,7 @@ defineSuite([
 
     it('rebuilds shaders when clipping planes are enabled, change between union and intersection, or change count', function () {
         return Cesium3DTilesTester.loadTileset(scene, pointCloudRGBUrl).then(function(tileset) {
-            var tile = tileset._root;
+            var tile = tileset.root;
             tile._isClipped = true;
             var content = tile.content;
 
@@ -934,8 +940,7 @@ defineSuite([
             tileset.clippingPlanes = new ClippingPlaneCollection({
                 planes : [
                     clipPlane
-                ],
-                modelMatrix : Transforms.eastNorthUpToFixedFrame(tileset.boundingSphere.center)
+                ]
             });
 
             expect(scene).notToRender(color);
@@ -995,7 +1000,7 @@ defineSuite([
     });
 
     it('clipping planes union regions (Float)', function() {
-        if (!ClippingPlaneCollection.useFloatTexture(scene._context)) {
+        if (!ClippingPlaneCollection.useFloatTexture(scene.context)) {
             // This configuration for the test fails in uint8 mode due to the small context
             return;
         }

@@ -219,6 +219,21 @@ defineSuite([
             scene.destroyForSpecs();
         });
 
+        it('only creates texture when planes are added', function() {
+            var scene = createScene();
+
+            clippingPlanes = new ClippingPlaneCollection();
+            clippingPlanes.update(scene.frameState);
+            expect(clippingPlanes.texture).toBeUndefined();
+
+            clippingPlanes.add(planes[0]);
+            clippingPlanes.update(scene.frameState);
+
+            expect(clippingPlanes.texture).toBeDefined();
+            expect(isNaN(clippingPlanes.texture.width)).toBe(false);
+            expect(isNaN(clippingPlanes.texture.height)).toBe(false);
+        });
+
         it('update fills the clipping plane texture with packed planes', function() {
             var scene = createScene();
 
@@ -367,7 +382,7 @@ defineSuite([
         it('update creates a float texture with no filtering or wrapping to house packed clipping planes', function() {
             var scene = createScene();
 
-            if (!ClippingPlaneCollection.useFloatTexture(scene._context)) {
+            if (!ClippingPlaneCollection.useFloatTexture(scene.context)) {
                 // Don't fail just because float textures aren't supported
                 scene.destroyForSpecs();
                 return;
@@ -399,10 +414,34 @@ defineSuite([
             scene.destroyForSpecs();
         });
 
+        it('only creates texture when planes are added', function() {
+            var scene = createScene();
+
+            if (!ClippingPlaneCollection.useFloatTexture(scene.context)) {
+                // Don't fail just because float textures aren't supported
+                scene.destroyForSpecs();
+                return;
+            }
+
+            clippingPlanes = new ClippingPlaneCollection();
+            clippingPlanes.update(scene.frameState);
+            expect(clippingPlanes.texture).toBeUndefined();
+
+            clippingPlanes.add(planes[0]);
+            clippingPlanes.update(scene.frameState);
+
+            expect(clippingPlanes.texture).toBeDefined();
+            expect(isNaN(clippingPlanes.texture.width)).toBe(false);
+            expect(isNaN(clippingPlanes.texture.height)).toBe(false);
+
+            clippingPlanes.destroy();
+            scene.destroyForSpecs();
+        });
+
         it('update fills the clipping plane texture with packed planes', function() {
             var scene = createScene();
 
-            if (!ClippingPlaneCollection.useFloatTexture(scene._context)) {
+            if (!ClippingPlaneCollection.useFloatTexture(scene.context)) {
                 // Don't fail just because float textures aren't supported
                 scene.destroyForSpecs();
                 return;
@@ -444,7 +483,7 @@ defineSuite([
         it('reallocates textures when above capacity or below 1/4 capacity', function() {
             var scene = createScene();
 
-            if (!ClippingPlaneCollection.useFloatTexture(scene._context)) {
+            if (!ClippingPlaneCollection.useFloatTexture(scene.context)) {
                 // Don't fail just because float textures aren't supported
                 scene.destroyForSpecs();
                 return;
@@ -502,7 +541,7 @@ defineSuite([
         it('performs partial updates when only a single plane has changed and full texture updates otherwise', function() {
             var scene = createScene();
 
-            if (!ClippingPlaneCollection.useFloatTexture(scene._context)) {
+            if (!ClippingPlaneCollection.useFloatTexture(scene.context)) {
                 // Don't fail just because float textures aren't supported
                 scene.destroyForSpecs();
                 return;
