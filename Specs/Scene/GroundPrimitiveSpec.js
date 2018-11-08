@@ -64,19 +64,68 @@ defineSuite([
     var rectangleInstance;
     var primitive;
     var depthPrimitive;
+    var largeScene;
+    var reusablePrimitive;
+    var largeSceneReusablePrimitive;
 
     beforeAll(function() {
         scene = createScene();
+        largeScene = createScene({
+            canvas : createCanvas(2, 2)
+        });
+
         scene.postProcessStages.fxaa.enabled = false;
 
         context = scene.context;
 
         ellipsoid = Ellipsoid.WGS84;
-        return GroundPrimitive.initializeTerrainHeights();
+        return GroundPrimitive.initializeTerrainHeights().then(function(){
+            var depthColorAttribute = ColorGeometryInstanceAttribute.fromColor(new Color(0.0, 0.0, 1.0, 1.0));
+            depthColor = depthColorAttribute.value;
+            var bigRectangle = Rectangle.fromDegrees(-180 + CesiumMath.EPSILON4, -90 + CesiumMath.EPSILON4, 180 - CesiumMath.EPSILON4, 90 - CesiumMath.EPSILON4);
+
+            reusablePrimitive = new Primitive({
+                geometryInstances : new GeometryInstance({
+                    geometry : new RectangleGeometry({
+                        ellipsoid : ellipsoid,
+                        rectangle : bigRectangle
+                    }),
+                    id : 'depth rectangle',
+                    attributes : {
+                        color : depthColorAttribute
+                    }
+                }),
+                appearance : new PerInstanceColorAppearance({
+                    translucent : false,
+                    flat : true
+                }),
+                asynchronous : false
+            });
+
+            largeSceneReusablePrimitive = new Primitive({
+                geometryInstances : new GeometryInstance({
+                    geometry : new RectangleGeometry({
+                        ellipsoid : ellipsoid,
+                        rectangle : bigRectangle
+                    }),
+                    id : 'depth rectangle',
+                    attributes : {
+                        color : depthColorAttribute
+                    }
+                }),
+                appearance : new PerInstanceColorAppearance({
+                    translucent : false,
+                    flat : true
+                }),
+                asynchronous : false
+            });
+        });
     });
 
     afterAll(function() {
+        reusablePrimitive.destroy();
         scene.destroyForSpecs();
+        largeScene.destroyForSpecs();
 
         // Leave ground primitive uninitialized
         ApproximateTerrainHeights._initPromise = undefined;
@@ -104,7 +153,6 @@ defineSuite([
     };
 
     MockGlobePrimitive.prototype.destroy = function() {
-        this._primitive.destroy();
         return destroyObject(this);
     };
 
@@ -114,28 +162,8 @@ defineSuite([
 
         rectangle = Rectangle.fromDegrees(-80.0, 20.0, -70.0, 30.0);
 
-        var depthColorAttribute = ColorGeometryInstanceAttribute.fromColor(new Color(0.0, 0.0, 1.0, 1.0));
-        depthColor = depthColorAttribute.value;
-        var primitive = new Primitive({
-            geometryInstances : new GeometryInstance({
-                geometry : new RectangleGeometry({
-                    ellipsoid : ellipsoid,
-                    rectangle : Rectangle.fromDegrees(-180 + CesiumMath.EPSILON4, -90 + CesiumMath.EPSILON4, 180 - CesiumMath.EPSILON4, 90 - CesiumMath.EPSILON4)
-                }),
-                id : 'depth rectangle',
-                attributes : {
-                    color : depthColorAttribute
-                }
-            }),
-            appearance : new PerInstanceColorAppearance({
-                translucent : false,
-                flat : true
-            }),
-            asynchronous : false
-        });
-
         // wrap rectangle primitive so it gets executed during the globe pass to lay down depth
-        depthPrimitive = new MockGlobePrimitive(primitive);
+        depthPrimitive = new MockGlobePrimitive(reusablePrimitive);
 
         var rectColorAttribute = ColorGeometryInstanceAttribute.fromColor(new Color(1.0, 1.0, 0.0, 1.0));
         rectColor = rectColorAttribute.value;
@@ -153,6 +181,7 @@ defineSuite([
 
     afterEach(function() {
         scene.groundPrimitives.removeAll();
+        largeScene.groundPrimitives.removeAll();
         primitive = primitive && !primitive.isDestroyed() && primitive.destroy();
         depthPrimitive = depthPrimitive && !depthPrimitive.isDestroyed() && depthPrimitive.destroy();
     });
@@ -303,7 +332,8 @@ defineSuite([
         }
 
         primitive = scene.groundPrimitives.add(new GroundPrimitive({
-            geometryInstances : rectangleInstance
+            geometryInstances : rectangleInstance,
+            asynchronous : false
         }));
         primitive.show = false;
 
@@ -463,17 +493,6 @@ defineSuite([
     });
 
     describe('larger scene', function() {
-        var largeScene;
-        beforeEach(function() {
-            largeScene = createScene({
-                canvas : createCanvas(2, 2)
-            });
-        });
-
-        afterEach(function() {
-            largeScene.destroyForSpecs();
-        });
-
         // Screen space techniques may produce unexpected results with 1x1 canvasses
         function verifyLargerScene(groundPrimitive, expectedColor, destination) {
             largeScene.render();
@@ -481,23 +500,7 @@ defineSuite([
             largeScene.postProcessStages.fxaa.enabled = false;
             largeScene.camera.setView({destination : destination});
 
-            var largeSceneDepthPrimitive = new MockGlobePrimitive(new Primitive({
-                geometryInstances : new GeometryInstance({
-                    geometry : new RectangleGeometry({
-                        ellipsoid : ellipsoid,
-                        rectangle : Rectangle.fromDegrees(-180 + CesiumMath.EPSILON4, -90 + CesiumMath.EPSILON4, 180 - CesiumMath.EPSILON4, 90 - CesiumMath.EPSILON4)
-                    }),
-                    id : 'depth rectangle',
-                    attributes : {
-                        color : ColorGeometryInstanceAttribute.fromColor(new Color(0.0, 0.0, 1.0, 1.0))
-                    }
-                }),
-                appearance : new PerInstanceColorAppearance({
-                    translucent : false,
-                    flat : true
-                }),
-                asynchronous : false
-            }));
+            var largeSceneDepthPrimitive = new MockGlobePrimitive(largeSceneReusablePrimitive);
 
             largeScene.groundPrimitives.add(largeSceneDepthPrimitive);
             expect(largeScene).toRenderAndCall(function(rgba) {
@@ -871,28 +874,6 @@ defineSuite([
         var near = 10000.0;
         var far = 1000000.0;
         var rect = Rectangle.fromDegrees(-1.0, -1.0, 1.0, 1.0);
-        var depthColorAttribute = ColorGeometryInstanceAttribute.fromColor(new Color(0.0, 0.0, 1.0, 1.0));
-        depthColor = depthColorAttribute.value;
-        var primitive = new Primitive({
-            geometryInstances : new GeometryInstance({
-                geometry : new RectangleGeometry({
-                    ellipsoid : ellipsoid,
-                    rectangle : rectangle
-                }),
-                id : 'depth rectangle',
-                attributes : {
-                    color : depthColorAttribute
-                }
-            }),
-            appearance : new PerInstanceColorAppearance({
-                translucent : false,
-                flat : true
-            }),
-            asynchronous : false
-        });
-
-        // wrap rectangle primitive so it gets executed during the globe pass to lay down depth
-        depthPrimitive = new MockGlobePrimitive(primitive);
 
         var rectColorAttribute = ColorGeometryInstanceAttribute.fromColor(new Color(1.0, 1.0, 0.0, 1.0));
         var rectInstance = new GeometryInstance({
