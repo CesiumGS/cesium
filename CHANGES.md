@@ -1,6 +1,18 @@
 Change Log
 ==========
 
+### 1.52 - 2018-12-03
+
+##### Additions :tada:
+* Added functions to get the most detailed height of 3D Tiles on-screen or off-screen. [#7115](https://github.com/AnalyticalGraphicsInc/cesium/pull/7115)
+    * Added `Scene.sampleHeightMostDetailed`, an asynchronous version of `Scene.sampleHeight` that uses the maximum level of detail for 3D Tiles.
+    * Added `Scene.clampToHeightMostDetailed`, an asynchronous version of `Scene.clampToHeight` that uses the maximum level of detail for 3D Tiles.
+* Added `Scene.invertClassificationSupported` for checking if invert classification is supported.
+* Added `computeLineSegmentLineSegmentIntersection` to `Intersections2D`. [#7228](https://github.com/AnalyticalGraphicsInc/Cesium/pull/7228)
+
+##### Fixes :wrench:
+* Fixed issue causing polyline to look wavy depending on the position of the camera [#7209](https://github.com/AnalyticalGraphicsInc/cesium/pull/7209)
+
 ### 1.51 - 2018-11-01
 
 ##### Additions :tada:
