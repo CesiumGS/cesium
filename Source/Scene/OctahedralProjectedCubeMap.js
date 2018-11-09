@@ -226,7 +226,7 @@ define([
      * Creates compute commands to generate octahedral projections of each cube map
      * and then renders them to an atlas.
      * <p>
-     * Only needs to be called twice. The first call queues the compute commands to genrate the atlas.
+     * Only needs to be called twice. The first call queues the compute commands to generate the atlas.
      * The second call cleans up unused resources. Every call afterwards is a no-op.
      * </p>
      *
