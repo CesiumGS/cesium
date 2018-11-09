@@ -960,7 +960,7 @@ define([
         }
 
         // Try and load the max level tile at the position. Even if its not there we will
-        //  still end up loading all the BVH tiles below it and its max level of availability.
+        //  still end up loading all the metadata availability tiles below it and its max level of availability.
         var level = this.availability._maximumLevel;
         this._tilingScheme.positionToTileXY(position, level, scratchTileXY);
 
@@ -972,7 +972,7 @@ define([
             // If the tile is listed as available, then we are done
             return true;
         }
-        if (!provider._hasBvh) {
+        if (!provider._hasMetadata) {
             // If we don't have any layers with the bvh extension then we don't have this tile
             return false;
         }
@@ -1005,12 +1005,8 @@ define([
 
     function getAvailabilityTile(layer, x, y, level) {
         var availabilityLevels = layer.availabilityLevels;
-        if (level % availabilityLevels === 0) {
-            return {
-                level: level,
-                x: x,
-                y: y
-            };
+        if (level !== 0 && (level % availabilityLevels === 0)) {
+            level -= availabilityLevels;
         }
 
         var parentLevel = ((level / availabilityLevels) | 0) * availabilityLevels;
