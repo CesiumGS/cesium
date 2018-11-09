@@ -219,7 +219,7 @@ define([
         var granularityX = rectangleWidth / (width - 1);
         var granularityY = rectangleHeight / (height - 1);
 
-		if (!isGeographic) {
+        if (!isGeographic) {
             rectangleWidth *= oneOverGlobeSemimajorAxis;
             rectangleHeight *= oneOverGlobeSemimajorAxis;
         }
@@ -448,7 +448,19 @@ define([
                 westIndicesSouthToNorth.push((height - i2) * arrayWidth + 1);
             }
         } else {
-            westIndicesSouthToNorth = southIndicesEastToWest = eastIndicesNorthToSouth = northIndicesWestToEast = [];
+            northIndicesWestToEast = [];
+            southIndicesEastToWest = [];
+            for (var i3 = 0; i3 < width; ++i3) {
+                northIndicesWestToEast.push(i3);
+                southIndicesEastToWest.push(width * height - 1 - i3);
+            }
+
+            westIndicesSouthToNorth = [];
+            eastIndicesNorthToSouth = [];
+            for (var i4 = 0; i4 < height; ++i4) {
+                eastIndicesNorthToSouth.push((i4 + 1) * width - 1);
+                westIndicesSouthToNorth.push((height - i4 - 1) * width );
+            }
         }
 
         return {

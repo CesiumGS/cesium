@@ -599,6 +599,15 @@ define([
         });
     }
 
+    /**
+     * Gets the level of the nearest ancestor of this tile that Bounding Volume Hierarchy (BVH)
+     * data.
+     *
+     * @param {Number} x The X coordinate of the tile.
+     * @param {Number} y The Y coordinate of the tile.
+     * @param {Number} level The level of the tile.
+     * @returns {Number} The level of the nearest BVH level less than or equal to <code>level</code>, or -1 if no BVH data is available for this tile.
+     */
     CesiumTerrainProvider.prototype.getNearestBvhLevel = function(x, y, level) {
         var layers = this._layers;
         var layerToUse;
@@ -616,11 +625,7 @@ define([
             }
         }
 
-        if (!defined(layerToUse)) {
-            return when.reject(new RuntimeError('Terrain tile doesn\'t exist'));
-        }
-
-        if (!layerToUse.hasBvh) {
+        if (!defined(layerToUse) || !layerToUse.hasBvh) {
             return -1;
         }
 
