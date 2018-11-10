@@ -67,6 +67,7 @@ define([
         this.availabilityTilesLoaded = layer.availabilityTilesLoaded;
         this.littleEndianExtensionSize = layer.littleEndianExtensionSize;
         this.availabilityTilesLoaded = layer.availabilityTilesLoaded;
+        this.availabilityPromiseCache = {};
     }
 
     /**
@@ -1085,8 +1086,23 @@ define([
                     return;
                 }
 
+                // Check the cache
+                var key = level + '-' + x + '-' + y;
+                var promise = layer.availabilityPromiseCache[key];
+                if (defined(promise)) {
+                    return promise;
+                }
+
                 // Load the tile
-                return requestTileGeometry(provider, x, y, level, layer);
+                promise = requestTileGeometry(provider, x, y, level, layer);
+                if (defined(promise)) {
+                    layer.availabilityPromiseCache[key] = promise;
+                }
+
+                return promise
+                    .then(function() {
+                        delete layer.availabilityPromiseCache[key];
+                    });
             });
     }
 
