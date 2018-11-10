@@ -9,6 +9,7 @@ Change Log
     * Added `Scene.clampToHeightMostDetailed`, an asynchronous version of `Scene.clampToHeight` that uses the maximum level of detail for 3D Tiles.
 * Added `Scene.invertClassificationSupported` for checking if invert classification is supported.
 * Added `computeLineSegmentLineSegmentIntersection` to `Intersections2D`. [#7228](https://github.com/AnalyticalGraphicsInc/Cesium/pull/7228)
+* Added ability to load availability from quantized mesh tiles every few levels instead of upfront in layer.json. This should speed up the load time of large tilesets significantly. [#7196](https://github.com/AnalyticalGraphicsInc/cesium/pull/7196)
 
 ##### Fixes :wrench:
 * Fixed issue causing polyline to look wavy depending on the position of the camera [#7209](https://github.com/AnalyticalGraphicsInc/cesium/pull/7209)
