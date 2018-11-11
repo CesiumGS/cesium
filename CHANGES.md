@@ -9,6 +9,7 @@ Change Log
     * Added `Scene.clampToHeightMostDetailed`, an asynchronous version of `Scene.clampToHeight` that uses the maximum level of detail for 3D Tiles.
 * Added `Scene.invertClassificationSupported` for checking if invert classification is supported.
 * Added `computeLineSegmentLineSegmentIntersection` to `Intersections2D`. [#7228](https://github.com/AnalyticalGraphicsInc/Cesium/pull/7228)
+* Added the ability to apply styles to 3D Tilesets that don't contain features. [#7255](https://github.com/AnalyticalGraphicsInc/Cesium/pull/7255)
 
 ##### Fixes :wrench:
 * Fixed issue causing polyline to look wavy depending on the position of the camera [#7209](https://github.com/AnalyticalGraphicsInc/cesium/pull/7209)
