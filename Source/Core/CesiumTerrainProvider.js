@@ -678,13 +678,6 @@ define([
             return when.reject(new RuntimeError('Terrain tile doesn\'t exist'));
         }
 
-        // Do we want a priorityFunction
-        request = defaultValue(request, new Request({
-            throttle : true,
-            throttleByServer : true,
-            type : RequestType.TERRAIN
-        }));
-
         var urlTemplates = layerToUse.tileUrlTemplates;
         if (urlTemplates.length === 0) {
             return undefined;
@@ -974,7 +967,7 @@ define([
             return true;
         }
         if (!provider._hasMetadata) {
-            // If we don't have any layers with the bvh extension then we don't have this tile
+            // If we don't have any layers with the metadata extension then we don't have this tile
             return false;
         }
 
@@ -1094,7 +1087,12 @@ define([
                 }
 
                 // Load the tile
-                promise = requestTileGeometry(provider, x, y, level, layer);
+                var request = new Request({
+                    throttle : true,
+                    throttleByServer : true,
+                    type : RequestType.TERRAIN
+                });
+                promise = requestTileGeometry(provider, x, y, level, layer, request);
                 if (defined(promise)) {
                     layer.availabilityPromiseCache[key] = promise;
                 }
