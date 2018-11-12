@@ -2,6 +2,9 @@ define([
     ], function() {
     'use strict';
 
+    /**
+     * @private
+     */
     var TileEdge = {
         WEST: 0,
         NORTH: 1,

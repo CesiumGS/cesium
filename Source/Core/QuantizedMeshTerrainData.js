@@ -13,8 +13,7 @@ define([
         './OrientedBoundingBox',
         './TaskProcessor',
         './TerrainEncoding',
-        './TerrainMesh',
-        './TileEdge'
+        './TerrainMesh'
     ], function(
         when,
         BoundingSphere,
@@ -30,8 +29,7 @@ define([
         OrientedBoundingBox,
         TaskProcessor,
         TerrainEncoding,
-        TerrainMesh,
-        TileEdge) {
+        TerrainMesh) {
     'use strict';
 
     /**

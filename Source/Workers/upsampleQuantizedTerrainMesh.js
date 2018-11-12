@@ -49,21 +49,7 @@ define([
     var decodeTexCoordsScratch = new Cartesian2();
     var octEncodedNormalScratch = new Cartesian3();
 
-    // var startTime;
-
     function upsampleQuantizedTerrainMesh(parameters, transferableObjects) {
-        // console.log('L' + parameters.level + 'X' + parameters.x + 'Y' + parameters.y);
-        // if (parameters.level === 10 && parameters.x === 349 && parameters.y === 301) {
-        //     if (startTime !== undefined) {
-        //         console.log('****** wut');
-        //     }
-        //     startTime = Date.now();
-        //     console.log('time until start: ' + (startTime - parameters.startTime));
-        // }
-
-        // var startTime = Date.now();
-        // console.log('time until start: ' + (startTime - parameters.startTime));
-
         var isEastChild = parameters.isEastChild;
         var isNorthChild = parameters.isNorthChild;
 
@@ -332,11 +318,6 @@ define([
         } else {
             transferableObjects.push(vertices.buffer, indicesTypedArray.buffer);
         }
-
-        // if (parameters.level === 10 && parameters.x === 349 && parameters.y === 301) {
-        //     var stopTime = Date.now();
-        //     console.log('upsample time: ' + (stopTime - startTime));
-        // }
 
         return {
             vertices : vertices.buffer,

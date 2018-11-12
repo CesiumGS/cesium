@@ -30,7 +30,6 @@ define([
         '../Core/TerrainEncoding',
         '../Core/TerrainMesh',
         '../Core/TerrainQuantization',
-        '../Core/TileEdge',
         '../Core/Visibility',
         '../Core/WebMercatorProjection',
         '../Renderer/Buffer',
@@ -86,7 +85,6 @@ define([
         TerrainEncoding,
         TerrainMesh,
         TerrainQuantization,
-        TileEdge,
         Visibility,
         WebMercatorProjection,
         Buffer,
@@ -754,15 +752,6 @@ define([
             // The renderable tile may have previously deferred to an ancestor.
             // But we know it's renderable now, so mark it as such.
             nearestRenderableTile.data.renderableTile = undefined;
-
-            var myRectangle = tile.rectangle;
-            var ancestorRectangle = nearestRenderableTile.rectangle;
-            var ancestorSubset = surfaceTile.renderableTileSubset;
-
-            ancestorSubset.x = (myRectangle.west - ancestorRectangle.west) / (ancestorRectangle.east - ancestorRectangle.west);
-            ancestorSubset.y = (myRectangle.south - ancestorRectangle.south) / (ancestorRectangle.north - ancestorRectangle.south);
-            ancestorSubset.z = (myRectangle.east - ancestorRectangle.west) / (ancestorRectangle.east - ancestorRectangle.west);
-            ancestorSubset.w = (myRectangle.north - ancestorRectangle.south) / (ancestorRectangle.north - ancestorRectangle.south);
         } else {
             this._hasLoadedTilesThisFrame = true;
             surfaceTile.renderableTile = undefined;
@@ -807,7 +796,7 @@ define([
         // be deemed to be much closer to the camera than it really is, causing us to select tiles that are too detailed.
         // Loading too-detailed tiles is super expensive, so we don't want to do that. We don't know where the child
         // tile really lies within the parent range of heights, but we _do_ know the child tile can't be any closer than
-        // the ancestor height surface (min or max) that is _farthest away_ from the camera. So if we computed distance
+        // the ancestor height surface (min or max) that is _farthest away_ from the camera. So if we compute distance
         // based that conservative metric, we may end up loading tiles that are not detailed enough, but that's much
         // better (faster) than loading tiles that are too detailed.
 

@@ -292,7 +292,6 @@ define([
                     // The ancestor that holds the BVH data isn't loaded yet; load it (terrain only!) instead of this tile.
                     GlobeSurfaceTile.processStateMachine(ancestor, frameState, terrainProvider, imageryLayerCollection, vertexArraysToDestroy, true);
                     return;
-
                 }
             }
         }
