@@ -2009,7 +2009,7 @@ define([
             drawFS = '#define USE_CUSTOM_LIGHT_COLOR \n\n' + drawFS;
         }
 
-        if (model._sourceVersion !== '2.0') {
+        if (model._sourceVersion !== '2.0' || model.extensionsUsed.KHR_techniques_webgl) {
             drawFS = ShaderSource.replaceMain(drawFS, 'non_gamma_corrected_main');
             drawFS =
                 drawFS +
@@ -2070,7 +2070,7 @@ define([
             drawFS = '#define USE_CUSTOM_LIGHT_COLOR \n\n' + drawFS;
         }
 
-        if (model._sourceVersion !== '2.0') {
+        if (model._sourceVersion !== '2.0' || model.extensionsUsed.KHR_techniques_webgl) {
             drawFS = ShaderSource.replaceMain(drawFS, 'non_gamma_corrected_main');
             drawFS =
                 drawFS +
