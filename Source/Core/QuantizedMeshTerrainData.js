@@ -499,7 +499,6 @@ define([
     };
 
     var maxShort = 32767;
-
     var barycentricCoordinateScratch = new Cartesian3();
 
     /**

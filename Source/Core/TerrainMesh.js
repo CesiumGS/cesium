@@ -1,21 +1,9 @@
 define([
-        './AttributeCompression',
-        './Cartesian2',
         './Cartesian3',
-        './defaultValue',
-        './Math',
-        './TerrainTileEdgeDetails',
-        './TileEdge',
-        './WebMercatorProjection'
+        './defaultValue'
     ], function(
-        AttributeCompression,
-        Cartesian2,
         Cartesian3,
-        defaultValue,
-        CesiumMath,
-        TerrainTileEdgeDetails,
-        TileEdge,
-        WebMercatorProjection) {
+        defaultValue) {
     'use strict';
 
     /**
