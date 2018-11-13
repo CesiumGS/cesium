@@ -1,6 +1,10 @@
 define([
+        '../Core/ArbitraryProjectionTilingScheme',
         '../Core/Cartesian2',
+        '../Core/Cartesian3',
         '../Core/Cartesian4',
+        '../Core/Cartographic',
+        '../Core/createGuid',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
@@ -35,14 +39,20 @@ define([
         '../Renderer/VertexArray',
         '../Shaders/ReprojectWebMercatorFS',
         '../Shaders/ReprojectWebMercatorVS',
+        '../Shaders/ReprojectArbitraryFS',
+        '../Shaders/ReprojectArbitraryVS',
         '../ThirdParty/when',
         './Imagery',
         './ImagerySplitDirection',
         './ImageryState',
         './TileImagery'
     ], function(
+        ArbitraryProjectionTilingScheme,
         Cartesian2,
+        Cartesian3,
         Cartesian4,
+        Cartographic,
+        createGuid,
         defaultValue,
         defined,
         defineProperties,
@@ -77,6 +87,8 @@ define([
         VertexArray,
         ReprojectWebMercatorFS,
         ReprojectWebMercatorVS,
+        ReprojectArbitraryFS,
+        ReprojectArbitraryVS,
         when,
         Imagery,
         ImagerySplitDirection,
@@ -281,6 +293,8 @@ define([
 
         this._reprojectComputeCommands = [];
 
+        this._id = createGuid();
+
         /**
          * Rectangle cutout in this layer of imagery.
          *
@@ -313,6 +327,19 @@ define([
         rectangle: {
             get: function() {
                 return this._rectangle;
+            }
+        },
+
+        /**
+         * A unique id for the ImageryLayer
+         * @memberof ImageryLayer.prototype
+         * @type {String}
+         * @readonly
+         * @private
+         */
+        id : {
+            get : function() {
+                return this._id;
             }
         }
     });
@@ -451,6 +478,11 @@ define([
         });
     };
 
+    var tileNativeRectangleScratch = new Rectangle();
+    var intersectionScratch = new Rectangle();
+    var nativeCornerScratch = new Cartesian3();
+    var nativeNorthwestIndexScratch = new Cartesian2();
+    var nativeSoutheastIndexScratch = new Cartesian2();
     /**
      * Create skeletons for the imagery tiles that partially or completely overlap a given terrain
      * tile.
@@ -559,7 +591,71 @@ define([
             }
         }
 
+        // We define "very close" as being within 1/512 of the width of the tile.
+        var veryCloseX = tile.rectangle.width / 512.0;
+        var veryCloseY = tile.rectangle.height / 512.0;
+
         var imageryTilingScheme = imageryProvider.tilingScheme;
+        if (imageryTilingScheme instanceof ArbitraryProjectionTilingScheme) {
+            // Project the tile's rectangle into the projected coordinate system.
+            var tileNativeRectangle = imageryTilingScheme.rectangleToNativeRectangle(rectangle, tileNativeRectangleScratch);
+            var imageryNativeRectangle = imageryTilingScheme.projectedRectangle;
+
+            var corner = nativeCornerScratch;
+
+            corner.x = CesiumMath.clamp(tileNativeRectangle.west, imageryNativeRectangle.west, imageryNativeRectangle.east);
+            corner.y = CesiumMath.clamp(tileNativeRectangle.north, imageryNativeRectangle.south, imageryNativeRectangle.north);
+            var nativeNorthwestIndex = imageryTilingScheme.nativePositionToTileXY(corner, imageryLevel, nativeNorthwestIndexScratch);
+
+            corner.x = CesiumMath.clamp(tileNativeRectangle.east, imageryNativeRectangle.west, imageryNativeRectangle.east);
+            corner.y = CesiumMath.clamp(tileNativeRectangle.south, imageryNativeRectangle.south, imageryNativeRectangle.north);
+            var nativeSoutheastIndex = imageryTilingScheme.nativePositionToTileXY(corner, imageryLevel, nativeSoutheastIndexScratch);
+
+            // For each imagery tile:
+            // * check if the imagery tile possibly touches this terrain tile in cartographic space
+            // * if so, include the tile, compute UVs
+            var tileRectangle = tile.rectangle;
+            var inverseTileWidth = 1.0 / tileRectangle.width;
+            var inverseTileHeight = 1.0 / tileRectangle.height;
+            for (var x = nativeNorthwestIndex.x; x <= nativeSoutheastIndex.x; x++) {
+                for (var y = nativeNorthwestIndex.y; y <= nativeSoutheastIndex.y; y++) {
+                    var geographicImageryRectangle = imageryTilingScheme.tileXYToRectangle(x, y, imageryLevel);
+
+                    var idlSide;
+                    // if the imagery tile's native rectangle crosses the IDL in cartographic space,
+                    // clamp based on which side the surface tile is on
+                    if (geographicImageryRectangle.west > geographicImageryRectangle.east) {
+                        if (tileRectangle.west > 0.0) {
+                            geographicImageryRectangle.east = CesiumMath.PI;
+                            idlSide = 1;
+                        } else {
+                            geographicImageryRectangle.west = -CesiumMath.PI;
+                            idlSide = 2;
+                        }
+                    }
+
+                    var intersection = Rectangle.intersection(rectangle, geographicImageryRectangle, intersectionScratch);
+                    if (!defined(intersection)) {
+                        continue;
+                    }
+                    if (intersection.width < veryCloseX || intersection.height < veryCloseY) {
+                        continue;
+                    }
+
+                    var imageryMinU = (intersection.west - tileRectangle.west) * inverseTileWidth;
+                    var imageryMaxU = (intersection.east - tileRectangle.west) * inverseTileWidth;
+                    var imageryMinV = (intersection.south - tileRectangle.south) * inverseTileHeight;
+                    var imageryMaxV = (intersection.north - tileRectangle.south) * inverseTileHeight;
+
+                    var imageryTexCoordsRectangle = new Cartesian4(imageryMinU, imageryMinV, imageryMaxU, imageryMaxV);
+                    var geographicImagery = this.getImageryFromCache(x, y, imageryLevel, idlSide, geographicImageryRectangle);
+                    surfaceTile.imagery.splice(insertionPoint, 0, new TileImagery(geographicImagery, imageryTexCoordsRectangle, false));
+                    ++insertionPoint;
+                }
+            }
+            return true;
+        }
+
         var northwestTileCoordinates = imageryTilingScheme.positionToTileXY(Rectangle.northwest(rectangle), imageryLevel);
         var southeastTileCoordinates = imageryTilingScheme.positionToTileXY(Rectangle.southeast(rectangle), imageryLevel);
 
@@ -568,10 +664,6 @@ define([
         // tiles.
         // Similarly, if the northwest corner of the rectangle lies very close to the south or east side
         // of the northwest tile, we don't actually need the northernmost or westernmost tiles.
-
-        // We define "very close" as being within 1/512 of the width of the tile.
-        var veryCloseX = tile.rectangle.width / 512.0;
-        var veryCloseY = tile.rectangle.height / 512.0;
 
         var northwestTileRectangle = imageryTilingScheme.tileXYToRectangle(northwestTileCoordinates.x, northwestTileCoordinates.y, imageryLevel);
         if (Math.abs(northwestTileRectangle.south - tile.rectangle.north) < veryCloseY && northwestTileCoordinates.y < southeastTileCoordinates.y) {
@@ -671,7 +763,7 @@ define([
                 }
 
                 var texCoordsRectangle = new Cartesian4(minU, minV, maxU, maxV);
-                var imagery = this.getImageryFromCache(i, j, imageryLevel);
+                var imagery = this.getImageryFromCache(i, j, imageryLevel, 0);
                 surfaceTile.imagery.splice(insertionPoint, 0, new TileImagery(imagery, texCoordsRectangle, useWebMercatorT));
                 ++insertionPoint;
             }
@@ -858,7 +950,7 @@ define([
         }
 
         if (imageryProvider.tilingScheme.projection instanceof WebMercatorProjection) {
-            imagery.textureWebMercator = texture;
+            imagery.preProjectionTexture = texture;
         } else {
             imagery.texture = texture;
         }
@@ -920,6 +1012,7 @@ define([
         imagery.state = ImageryState.READY;
     }
 
+    var nativeRectangleScratch = new Rectangle();
     /**
      * Enqueues a command re-projecting a texture to a {@link GeographicProjection} on the next update, if necessary, and generate
      * mipmaps for the geographic texture.
@@ -931,18 +1024,19 @@ define([
      * @param {Boolean} [needGeographicProjection=true] True to reproject to geographic, or false if Web Mercator is fine.
      */
     ImageryLayer.prototype._reprojectTexture = function(frameState, imagery, needGeographicProjection) {
-        var texture = imagery.textureWebMercator || imagery.texture;
+        var texture = imagery.preProjectionTexture || imagery.texture;
         var rectangle = imagery.rectangle;
         var context = frameState.context;
 
         needGeographicProjection = defaultValue(needGeographicProjection, true);
+        var tilingScheme = this._imageryProvider.tilingScheme;
 
         // Reproject this texture if it is not already in a geographic projection and
         // the pixels are more than 1e-5 radians apart.  The pixel spacing cutoff
         // avoids precision problems in the reprojection transformation while making
         // no noticeable difference in the georeferencing of the image.
         if (needGeographicProjection &&
-            !(this._imageryProvider.tilingScheme.projection instanceof GeographicProjection) &&
+            !(tilingScheme.projection instanceof GeographicProjection) &&
             rectangle.width / texture.width > 1e-5) {
                 var that = this;
                 imagery.addReference();
@@ -952,7 +1046,12 @@ define([
                     // Update render resources right before execution instead of now.
                     // This allows different ImageryLayers to share the same vao and buffers.
                     preExecute : function(command) {
-                        reprojectToGeographic(command, context, texture, imagery.rectangle);
+                        if (tilingScheme instanceof ArbitraryProjectionTilingScheme) {
+                            var nativeRectangle = tilingScheme.tileXYToNativeRectangle(imagery.x, imagery.y, imagery.level, nativeRectangleScratch);
+                            reprojectFromArbitrary(command, context, texture, rectangle, nativeRectangle, tilingScheme.projection);
+                        } else {
+                            reprojectToGeographic(command, context, texture, imagery.rectangle);
+                        }
                     },
                     postExecute : function(outputTexture) {
                         imagery.texture = outputTexture;
@@ -994,12 +1093,13 @@ define([
         this._reprojectComputeCommands.length = 0;
     };
 
-    ImageryLayer.prototype.getImageryFromCache = function(x, y, level, imageryRectangle) {
-        var cacheKey = getImageryCacheKey(x, y, level);
+    ImageryLayer.prototype.getImageryFromCache = function(x, y, level, idlSide, imageryRectangle) {
+        var cacheKey = getImageryCacheKey(x, y, level, idlSide);
+
         var imagery = this._imageryCache[cacheKey];
 
         if (!defined(imagery)) {
-            imagery = new Imagery(this, x, y, level, imageryRectangle);
+            imagery = new Imagery(this, x, y, level, imageryRectangle, idlSide);
             this._imageryCache[cacheKey] = imagery;
         }
 
@@ -1008,12 +1108,12 @@ define([
     };
 
     ImageryLayer.prototype.removeImageryFromCache = function(imagery) {
-        var cacheKey = getImageryCacheKey(imagery.x, imagery.y, imagery.level);
+        var cacheKey = getImageryCacheKey(imagery.x, imagery.y, imagery.level, imagery.idlSide);
         delete this._imageryCache[cacheKey];
     };
 
-    function getImageryCacheKey(x, y, level) {
-        return JSON.stringify([x, y, level]);
+    function getImageryCacheKey(x, y, level, idlSide) {
+        return JSON.stringify([x, y, level, idlSide]);
     }
 
     var uniformMap = {
@@ -1027,6 +1127,161 @@ define([
         textureDimensions : new Cartesian2(),
         texture : undefined
     };
+
+    var geographicCartographicScratch = new Cartographic();
+    var projectedScratch = new Cartesian3();
+    function reprojectFromArbitrary(command, context, texture, cartographicRectangle, tileRectangleInProjection, projection) {
+        var reproject = {
+            vertexArray : undefined,
+            shaderProgram : undefined,
+            sampler : undefined,
+            destroy : function() {
+                if (defined(this.framebuffer)) {
+                    this.framebuffer.destroy();
+                }
+                if (defined(this.vertexArray)) {
+                    this.vertexArray.destroy();
+                }
+                if (defined(this.shaderProgram)) {
+                    this.shaderProgram.destroy();
+                }
+            }
+        };
+
+        var textureWidth = texture.width;
+        var textureHeight = texture.height;
+
+        var verticesWidth = Math.min(texture.width, 128);
+        var verticesHeight = Math.min(texture.height, 128);
+
+        var positions = new Float32Array(verticesWidth * verticesHeight * 2);
+        var index = 0;
+        var widthIncrement = 1.0 / (verticesWidth - 1);
+        var heightIncrement = 1.0 / (verticesHeight - 1);
+        var w;
+        var h;
+        for (w = 0; w < verticesWidth; w++) {
+            for (h = 0; h < verticesHeight; h++) {
+                positions[index++] = w * widthIncrement;
+                positions[index++] = h * heightIncrement;
+            }
+        }
+
+        // For each vertex in the target grid, project into the projection
+        var south = cartographicRectangle.south;
+        var west = cartographicRectangle.west;
+
+        var unprojectedWidthIncrement = cartographicRectangle.width / (verticesWidth - 1);
+        var unprojectedHeightIncrement = cartographicRectangle.height / (verticesHeight - 1);
+        var geographicCartographic = geographicCartographicScratch;
+        var projected = projectedScratch;
+
+        var projectedSouth = tileRectangleInProjection.south;
+        var projectedWest = tileRectangleInProjection.west;
+
+        var texcoords = new Float32Array(verticesWidth * verticesHeight * 2);
+        index = 0;
+        for (w = 0; w < verticesWidth; w++) {
+            for (h = 0; h < verticesHeight; h++) {
+                geographicCartographic.longitude = west + w * unprojectedWidthIncrement;
+                geographicCartographic.latitude = south + h * unprojectedHeightIncrement;
+
+                projection.project(geographicCartographic, projected);
+
+                texcoords[index++] = (projected.x - projectedWest) / tileRectangleInProjection.width;
+                texcoords[index++] = (projected.y - projectedSouth) / tileRectangleInProjection.height;
+            }
+        }
+
+        var reprojectAttributeIndices = {
+            position : 0,
+            textureCoordinates : 1
+        };
+
+        var indices = TerrainProvider.getRegularGridIndices(verticesWidth, verticesHeight);
+        var indexBuffer = Buffer.createIndexBuffer({
+            context : context,
+            typedArray : indices,
+            usage : BufferUsage.STATIC_DRAW,
+            indexDatatype : IndexDatatype.UNSIGNED_SHORT
+        });
+
+        reproject.vertexArray = new VertexArray({
+            context : context,
+            attributes : [{
+                index : reprojectAttributeIndices.position,
+                vertexBuffer : Buffer.createVertexBuffer({
+                    context : context,
+                    typedArray : positions,
+                    usage : BufferUsage.STATIC_DRAW
+                }),
+                componentsPerAttribute : 2
+            },{
+                index : reprojectAttributeIndices.textureCoordinates,
+                vertexBuffer : Buffer.createVertexBuffer({
+                    context : context,
+                    typedArray : texcoords,
+                    usage : BufferUsage.STATIC_DRAW
+                }),
+                componentsPerAttribute : 2
+            }],
+            indexBuffer : indexBuffer
+        });
+
+        // pad out boundaries to avoid cracks between tiles
+        var pixelWidth = 1.0 / textureWidth;
+        var pixelHeight = 1.0 / textureHeight;
+
+        var umin = 'UMIN ' + (0.0 - pixelWidth);
+        var umax = 'UMAX ' + (1.0 + pixelWidth);
+        var vmin = 'VMIN ' + (0.0 - pixelHeight);
+        var vmax = 'VMAX ' + (1.0 + pixelHeight);
+
+        var fs = new ShaderSource({
+            defines : [umin, umax, vmin, vmax],
+            sources : [ReprojectArbitraryFS]
+        });
+
+        reproject.shaderProgram = ShaderProgram.fromCache({
+            context : context,
+            vertexShaderSource : ReprojectArbitraryVS,
+            fragmentShaderSource : fs,
+            attributeLocations : reprojectAttributeIndices
+        });
+
+        reproject.sampler = new Sampler({
+            wrapS : TextureWrap.CLAMP_TO_EDGE,
+            wrapT : TextureWrap.CLAMP_TO_EDGE,
+            minificationFilter : TextureMinificationFilter.LINEAR,
+            magnificationFilter : TextureMagnificationFilter.LINEAR
+        });
+
+        uniformMap.textureDimensions.x = textureWidth;
+        uniformMap.textureDimensions.y = textureHeight;
+        uniformMap.texture = texture;
+
+        var outputTexture = new Texture({
+            context : context,
+            width : textureWidth,
+            height : textureHeight,
+            pixelFormat : texture.pixelFormat,
+            pixelDatatype : texture.pixelDatatype,
+            preMultiplyAlpha : texture.preMultiplyAlpha
+        });
+
+        // Allocate memory for the mipmaps.  Failure to do this before rendering
+        // to the texture via the FBO, and calling generateMipmap later,
+        // will result in the texture appearing blank.  I can't pretend to
+        // understand exactly why this is.
+        if (CesiumMath.isPowerOfTwo(textureWidth) && CesiumMath.isPowerOfTwo(textureHeight)) {
+            outputTexture.generateMipmap(MipmapHint.NICEST);
+        }
+
+        command.shaderProgram = reproject.shaderProgram;
+        command.outputTexture = outputTexture;
+        command.uniformMap = uniformMap;
+        command.vertexArray = reproject.vertexArray;
+    }
 
     var float32ArrayScratch = FeatureDetection.supportsTypedArrays() ? new Float32Array(2 * 64) : undefined;
 

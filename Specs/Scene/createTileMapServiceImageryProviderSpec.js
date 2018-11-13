@@ -1,12 +1,13 @@
 defineSuite([
         'Scene/createTileMapServiceImageryProvider',
+        'Core/ArbitraryProjectionTilingScheme',
         'Core/Cartesian2',
         'Core/Cartographic',
-        'Core/DefaultProxy',
         'Core/GeographicProjection',
         'Core/GeographicTilingScheme',
         'Core/getAbsoluteUri',
         'Core/Math',
+        'Core/Proj4Projection',
         'Core/Rectangle',
         'Core/RequestScheduler',
         'Core/Resource',
@@ -20,13 +21,14 @@ defineSuite([
         'ThirdParty/when'
     ], function(
         createTileMapServiceImageryProvider,
+        ArbitraryProjectionTilingScheme,
         Cartesian2,
         Cartographic,
-        DefaultProxy,
         GeographicProjection,
         GeographicTilingScheme,
         getAbsoluteUri,
         CesiumMath,
+        Proj4Projection,
         Rectangle,
         RequestScheduler,
         Resource,
@@ -717,6 +719,32 @@ defineSuite([
 
             var expectedSW = Cartographic.fromDegrees(-123.0, -10.0);
             var expectedNE = Cartographic.fromDegrees(-110.0, 11.0);
+
+            expect(provider.rectangle.west).toBeCloseTo(expectedSW.longitude, CesiumMath.EPSILON14);
+            expect(provider.rectangle.south).toEqual(expectedSW.latitude);
+            expect(provider.rectangle.east).toBeCloseTo(expectedNE.longitude, CesiumMath.EPSILON14);
+            expect(provider.rectangle.north).toEqual(expectedNE.latitude);
+        });
+    });
+
+    it('supports a raster profile when given a map projection', function() {
+        var epsg3031wkt = '+proj=stere +lat_0=-90 +lat_ts=-71 +lon_0=0 +k=1 +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=m +no_defs';
+        var epsg3031Bounds = Rectangle.fromDegrees(-180.0000, -90.0000, 180.0000, -60.0000);
+        var epsg3031mapProjection = new Proj4Projection(epsg3031wkt, 1.0, epsg3031Bounds);
+
+        var provider = createTileMapServiceImageryProvider({
+            url : 'Data/TMS/LIMAportion',
+            mapProjection : epsg3031mapProjection
+        });
+
+        return pollToPromise(function() {
+            return provider.ready;
+        }).then(function() {
+            expect(provider.tilingScheme).toBeInstanceOf(ArbitraryProjectionTilingScheme);
+            expect(provider.tilingScheme.projection).toBe(epsg3031mapProjection);
+
+            var expectedSW = Rectangle.southwest(epsg3031Bounds);
+            var expectedNE = Rectangle.northeast(epsg3031Bounds);
 
             expect(provider.rectangle.west).toBeCloseTo(expectedSW.longitude, CesiumMath.EPSILON14);
             expect(provider.rectangle.south).toEqual(expectedSW.latitude);

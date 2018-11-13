@@ -26,6 +26,7 @@ defineSuite([
 
     var arcticProjection;
     var antarcticProjection;
+    var mollweideProjection;
 
     beforeAll(function() {
         var epsg3411bounds = Rectangle.fromDegrees(-180.0000, 30.0000, 180.0000, 90.0000);
@@ -35,6 +36,9 @@ defineSuite([
         var epsg3031Bounds = Rectangle.fromDegrees(-180.0000, -90.0000, 180.0000, -60.0000);
         var epsg3031wkt = '+proj=stere +lat_0=-90 +lat_ts=-71 +lon_0=0 +k=1 +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=m +no_defs';
         antarcticProjection = new Proj4Projection(epsg3031wkt, 1.0, epsg3031Bounds);
+
+        var mollweideWellKnownText = '+proj=moll +lon_0=0 +x_0=0 +y_0=0 +a=6371000 +b=6371000 +units=m +no_defs';
+        mollweideProjection = new Proj4Projection(mollweideWellKnownText);
     });
 
     it('default constructor sets expected values.', function() {
@@ -947,6 +951,17 @@ defineSuite([
         var cartographicRectangle = Rectangle.approximateCartographicExtents(projectedRectangle, arcticProjection);
         expect(cartographicRectangle.west > cartographicRectangle.east).toBe(true);
         expect(cartographicRectangle.width < CesiumMath.PI).toBe(true);
+    });
+
+    it('does not count rectangles touching the IDL as crossing the IDL', function() {
+        var mollweideProjectedRectangle = new Rectangle();
+        mollweideProjectedRectangle.west = mollweideProjection.project(Cartographic.fromDegrees(-180, 0)).x;
+        mollweideProjectedRectangle.east = mollweideProjection.project(Cartographic.fromDegrees(180, 0)).x;
+        mollweideProjectedRectangle.north = mollweideProjection.project(Cartographic.fromDegrees(0, 90)).y;
+        mollweideProjectedRectangle.south = mollweideProjection.project(Cartographic.fromDegrees(0, -90)).y;
+
+        var mollweideExtentsRectangle = Rectangle.approximateCartographicExtents(mollweideProjectedRectangle, mollweideProjection);
+        expect(mollweideExtentsRectangle.west < mollweideExtentsRectangle.east).toBe(true);
     });
 
     var rectangle = new Rectangle(west, south, east, north);

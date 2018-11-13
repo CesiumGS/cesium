@@ -906,6 +906,13 @@ Free vector and raster map data @ naturalearthdata.com
 
 Terms of use: http://www.naturalearthdata.com/about/terms-of-use/
 
+### Public domain data from the Landsat Image Mosaic of Antarctica (LIMA)
+
+Antarctic imagery tileset derived from source data available @ lima.usgs.gov.
+
+Terms of use:
+https://lima.usgs.gov/access.php
+
 ### Data from JHT's Planetary Pixel Emporium
 
 Copyright (c) by James Hastings-Trew

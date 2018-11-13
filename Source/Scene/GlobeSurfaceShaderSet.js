@@ -14,12 +14,17 @@ define([
         SceneMode) {
     'use strict';
 
-    function GlobeSurfaceShader(numberOfDayTextures, flags, material, shaderProgram, clippingShaderState) {
+    function GlobeSurfaceShader(numberOfDayTextures, flags, material, shaderProgram, clippingShaderState, arbitraryProjectedImagery) {
         this.numberOfDayTextures = numberOfDayTextures;
         this.flags = flags;
         this.material = material;
         this.shaderProgram = shaderProgram;
         this.clippingShaderState = clippingShaderState;
+        this.arbitraryProjectedImagery = arbitraryProjectedImagery;
+    }
+
+    function generateArbitraryProjectionKey(flags, dayTextureLayerIds) {
+        return JSON.stringify(dayTextureLayerIds) + flags;
     }
 
     /**
@@ -33,6 +38,8 @@ define([
         this.baseFragmentShaderSource = undefined;
 
         this._shadersByTexturesFlags = [];
+
+        this._arbitraryProjectionShaders = [];
 
         this.material = undefined;
     }
@@ -90,6 +97,9 @@ define([
         var clippedByBoundaries = options.clippedByBoundaries;
         var hasImageryLayerCutout = options.hasImageryLayerCutout;
         var colorCorrect = options.colorCorrect;
+        var numberOfImageryLayers = options.numberOfImageryLayers;
+        var dayTextureLayerIds = options.dayTextureLayerIds;
+        var arbitraryProjectedImagery = options.arbitraryProjectedImagery;
 
         var quantization = 0;
         var quantizationDefine = '';
@@ -163,18 +173,32 @@ define([
             surfaceShader.numberOfDayTextures === numberOfDayTextures &&
             surfaceShader.flags === flags &&
             surfaceShader.material === this.material &&
-            surfaceShader.clippingShaderState === currentClippingShaderState) {
+            surfaceShader.clippingShaderState === currentClippingShaderState &&
+            surfaceShader.arbitraryProjectedImagery === arbitraryProjectedImagery) {
 
             return surfaceShader.shaderProgram;
         }
 
-        // New tile, or tile changed number of textures, flags, or clipping planes
-        var shadersByFlags = this._shadersByTexturesFlags[numberOfDayTextures];
-        if (!defined(shadersByFlags)) {
-            shadersByFlags = this._shadersByTexturesFlags[numberOfDayTextures] = [];
-        }
+        var shadersByFlags;
+        var arbitraryProjectionKey;
+        var arbitraryProjectionShaders;
+        if (!arbitraryProjectedImagery) {
+            // New tile, or tile changed number of textures, flags, or clipping planes
+            shadersByFlags = this._shadersByTexturesFlags[numberOfDayTextures];
+            if (!defined(shadersByFlags)) {
+                shadersByFlags = this._shadersByTexturesFlags[numberOfDayTextures] = [];
+            }
 
-        surfaceShader = shadersByFlags[flags];
+            surfaceShader = shadersByFlags[flags];
+        } else {
+            arbitraryProjectionKey = generateArbitraryProjectionKey(flags, dayTextureLayerIds);
+            arbitraryProjectionShaders = this._arbitraryProjectionShaders[numberOfDayTextures];
+            if (!defined(arbitraryProjectionShaders)) {
+                arbitraryProjectionShaders = this._arbitraryProjectionShaders[numberOfDayTextures] = {};
+            }
+
+            surfaceShader = arbitraryProjectionShaders[arbitraryProjectionKey];
+        }
         if (!defined(surfaceShader) || surfaceShader.material !== this.material || surfaceShader.clippingShaderState !== currentClippingShaderState) {
             // Cache miss - we've never seen this combination of numberOfDayTextures and flags before.
             var vs = this.baseVertexShaderSource.clone();
@@ -256,18 +280,32 @@ define([
     {\n\
         vec4 color = initialColor;\n';
 
-        if (hasImageryLayerCutout) {
+        if (hasImageryLayerCutout || arbitraryProjectedImagery) {
             computeDayColor += '\
-        vec4 cutoutAndColorResult;\n\
-        bool texelUnclipped;\n';
+        vec4 computeDayColorResult;\n\
+        bool updateColor = true;\n';
+        }
+
+        if (arbitraryProjectedImagery) {
+            computeDayColor += '\
+        bool layersUsed[' + Math.max(numberOfImageryLayers, 1) + '];\n';
         }
 
             for (var i = 0; i < numberOfDayTextures; ++i) {
+                var dayTextureLayerId = dayTextureLayerIds[i];
+
                 if (hasImageryLayerCutout) {
                     computeDayColor += '\
-        cutoutAndColorResult = u_dayTextureCutoutRectangles[' + i + '];\n\
-        texelUnclipped = v_textureCoordinates.x < cutoutAndColorResult.x || cutoutAndColorResult.z < v_textureCoordinates.x || v_textureCoordinates.y < cutoutAndColorResult.y || cutoutAndColorResult.w < v_textureCoordinates.y;\n\
-        cutoutAndColorResult = sampleAndBlend(\n';
+        computeDayColorResult = u_dayTextureCutoutRectangles[' + i + '];\n\
+        updateColor = v_textureCoordinates.x < computeDayColorResult.x || computeDayColorResult.z < v_textureCoordinates.x || v_textureCoordinates.y < computeDayColorResult.y || computeDayColorResult.w < v_textureCoordinates.y;\n';
+                }
+                if (arbitraryProjectedImagery) {
+                    computeDayColor += '\
+        updateColor = !(layersUsed[' + dayTextureLayerId + '])' + (hasImageryLayerCutout ? ' && updateColor;\n' : ';\n');
+                }
+                if (hasImageryLayerCutout || arbitraryProjectedImagery) {
+                    computeDayColor += '\
+        computeDayColorResult = sampleAndBlend(\n';
                 } else {
                     computeDayColor += '\
         color = sampleAndBlend(\n';
@@ -286,11 +324,16 @@ define([
             ' + (applyGamma ? 'u_dayTextureOneOverGamma[' + i + ']' : '0.0') + ',\n\
             ' + (applySplit ? 'u_dayTextureSplit[' + i + ']' : '0.0') + '\n\
         );\n';
-                if (hasImageryLayerCutout) {
-                    computeDayColor += '\
-        color = czm_branchFreeTernary(texelUnclipped, cutoutAndColorResult, color);\n';
-                }
+
+        if (arbitraryProjectedImagery) {
+            computeDayColor += '\
+        layersUsed[' + dayTextureLayerId + '] = (computeDayColorResult != color) || !(updateColor);\n';
+        }
+        if (hasImageryLayerCutout || arbitraryProjectedImagery) {
+            computeDayColor += '\
+        color = czm_branchFreeTernary(updateColor, computeDayColorResult, color);\n';
             }
+        }
 
             computeDayColor += '\
         return color;\n\
@@ -308,7 +351,12 @@ define([
                 attributeLocations : terrainEncoding.getAttributeLocations()
             });
 
-            surfaceShader = shadersByFlags[flags] = new GlobeSurfaceShader(numberOfDayTextures, flags, this.material, shader, currentClippingShaderState);
+            surfaceShader = new GlobeSurfaceShader(numberOfDayTextures, flags, this.material, shader, currentClippingShaderState, arbitraryProjectedImagery);
+            if (!arbitraryProjectedImagery) {
+                shadersByFlags[flags] = surfaceShader;
+            } else {
+                arbitraryProjectionShaders[arbitraryProjectionKey] = surfaceShader;
+            }
         }
 
         surfaceTile.surfaceShader = surfaceShader;

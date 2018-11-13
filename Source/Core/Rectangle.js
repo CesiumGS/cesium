@@ -956,7 +956,6 @@ define([
     var northPole = new Cartographic(0, CesiumMath.PI_OVER_TWO);
     var southPole = new Cartographic(0, -CesiumMath.PI_OVER_TWO);
     var projectedPoleScratch = new Cartographic();
-    var projectedIdlScratch = new Cartographic();
     /**
      * Approximates a projected rectangle's extents in Cartographic space by unprojecting
      * points along the Rectangle's boundary, checking the poles, and guessing whether or not
@@ -993,6 +992,9 @@ define([
         var projectedHeight = projectedRectangle.height;
         var projectedWidthStep = projectedWidth / (steps - 1);
         var projectedHeightStep = projectedHeight / (steps - 1);
+        var crossedIdl = false;
+        var lastLongitudeTop = 0.0;
+        var lastLongitudeBottom = 0.0;
 
         var projected = projectedScratch;
         var unprojected = unprojectedScratch;
@@ -1006,6 +1008,11 @@ define([
             result.south = Math.min(result.south, unprojected.latitude);
             result.north = Math.max(result.north, unprojected.latitude);
 
+            if (longIndex !== 0 && !CesiumMath.equalsEpsilon(Math.abs(unprojected.longitude), CesiumMath.PI, CesiumMath.EPSILON14)) {
+                crossedIdl = crossedIdl || Math.abs(lastLongitudeTop - unprojected.longitude) > CesiumMath.PI;
+            }
+            lastLongitudeTop = unprojected.longitude;
+
             idlCrossWest = unprojected.longitude > 0.0 ? Math.min(idlCrossWest, unprojected.longitude) : idlCrossWest;
             idlCrossEast = unprojected.longitude < 0.0 ? Math.max(idlCrossEast, unprojected.longitude) : idlCrossEast;
 
@@ -1016,6 +1023,11 @@ define([
             result.east = Math.max(result.east, unprojected.longitude);
             result.south = Math.min(result.south, unprojected.latitude);
             result.north = Math.max(result.north, unprojected.latitude);
+
+            if (longIndex !== 0 && !CesiumMath.equalsEpsilon(Math.abs(unprojected.longitude), CesiumMath.PI, CesiumMath.EPSILON14)) {
+                crossedIdl = crossedIdl || Math.abs(lastLongitudeBottom - unprojected.longitude) > CesiumMath.PI;
+            }
+            lastLongitudeBottom = unprojected.longitude;
 
             idlCrossWest = unprojected.longitude > 0.0 ? Math.min(idlCrossWest, unprojected.longitude) : idlCrossWest;
             idlCrossEast = unprojected.longitude < 0.0 ? Math.max(idlCrossEast, unprojected.longitude) : idlCrossEast;
@@ -1050,10 +1062,10 @@ define([
         var projectionBounds = defaultValue(mapProjection.wgs84Bounds, Rectangle.MAX_VALUE);
         var containsPole;
 
-        var proejctedNorthPole = mapProjection.project(northPole, projectedScratch);
+        var projectedNorthPole = mapProjection.project(northPole, projectedScratch);
         var projectedNorthPoleCartographic = projectedPoleScratch;
-        projectedNorthPoleCartographic.longitude = proejctedNorthPole.x;
-        projectedNorthPoleCartographic.latitude = proejctedNorthPole.y;
+        projectedNorthPoleCartographic.longitude = projectedNorthPole.x;
+        projectedNorthPoleCartographic.latitude = projectedNorthPole.y;
         if (Rectangle.contains(projectionBounds, northPole) && Rectangle.contains(projectedRectangle, projectedNorthPoleCartographic)) {
             result.north = CesiumMath.PI_OVER_TWO;
             result.west = -CesiumMath.PI;
@@ -1073,17 +1085,9 @@ define([
         }
 
         // Check if the rectangle crosses the IDL
-        if (!containsPole) {
-            unprojected.longitude = CesiumMath.PI;
-            unprojected.latitude = (result.north + result.south) * 0.5;
-            var projectedIdlCheckpoint = mapProjection.project(unprojected, projectedScratch);
-            var projectedIdlCartographic = projectedIdlScratch;
-            projectedIdlCartographic.longitude = projectedIdlCheckpoint.x;
-            projectedIdlCartographic.latitude = projectedIdlCheckpoint.y;
-            if (Rectangle.contains(projectedRectangle, projectedIdlCartographic)) {
-                result.west = idlCrossWest;
-                result.east = idlCrossEast;
-            }
+        if (!containsPole && crossedIdl) {
+            result.west = idlCrossWest;
+            result.east = idlCrossEast;
         }
 
         // Clamp

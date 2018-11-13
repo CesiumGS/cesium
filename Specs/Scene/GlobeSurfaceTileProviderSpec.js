@@ -8,13 +8,16 @@ defineSuite([
         'Core/Ellipsoid',
         'Core/EllipsoidTerrainProvider',
         'Core/GeographicProjection',
+        'Core/Proj4Projection',
         'Core/Rectangle',
         'Core/WebMercatorProjection',
         'Renderer/ContextLimits',
         'Renderer/RenderState',
+        'Renderer/TextureMinificationFilter',
         'Scene/BlendingState',
         'Scene/ClippingPlane',
         'Scene/ClippingPlaneCollection',
+        'Scene/createTileMapServiceImageryProvider',
         'Scene/Fog',
         'Scene/Globe',
         'Scene/GlobeSurfaceShaderSet',
@@ -38,13 +41,16 @@ defineSuite([
         Ellipsoid,
         EllipsoidTerrainProvider,
         GeographicProjection,
+        Proj4Projection,
         Rectangle,
         WebMercatorProjection,
         ContextLimits,
         RenderState,
+        TextureMinificationFilter,
         BlendingState,
         ClippingPlane,
         ClippingPlaneCollection,
+        createTileMapServiceImageryProvider,
         Fog,
         Globe,
         GlobeSurfaceShaderSet,
@@ -585,6 +591,41 @@ defineSuite([
         .then(function() {
             expect(scene).toRenderAndCall(function(rgba) {
                 expect(rgba).not.toEqual(baseColor);
+                expect(rgba).not.toEqual([0, 0, 0, 255]);
+            });
+        });
+    });
+
+    it('renders imagery in projections that require Imagery shingling', function() {
+        var epsg3031wkt = '+proj=stere +lat_0=-90 +lat_ts=-71 +lon_0=0 +k=1 +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=m +no_defs';
+        var epsg3031Bounds = Rectangle.fromDegrees(-180.0000, -90.0000, 180.0000, -60.0000);
+        var epsg3031mapProjection = new Proj4Projection(epsg3031wkt, 1.0, epsg3031Bounds);
+
+        var layer = scene.imageryLayers.addImageryProvider(createTileMapServiceImageryProvider({
+            url : 'Data/TMS/LIMAportion',
+            mapProjection : epsg3031mapProjection
+        }));
+        layer.minificationFilter = TextureMinificationFilter.NEAREST;
+        layer.magnificationFilter = TextureMinificationFilter.NEAREST;
+
+        switchViewMode(SceneMode.SCENE3D, new GeographicProjection(Ellipsoid.WGS84));
+        scene.camera.setView({
+            destination : Rectangle.fromDegrees(179, -90, 180, -89)
+        });
+
+        var fullAlphaColor;
+        return updateUntilDone(scene.globe).then(function() {
+            expect(scene).toRenderAndCall(function(rgba) {
+                fullAlphaColor = rgba;
+                expect(rgba).not.toEqual([0, 0, 0, 255]);
+            });
+
+            layer.alpha = 0.5;
+            return updateUntilDone(scene.globe);
+        })
+        .then(function() {
+            expect(scene).toRenderAndCall(function(rgba) {
+                expect(rgba).not.toEqual(fullAlphaColor);
                 expect(rgba).not.toEqual([0, 0, 0, 255]);
             });
         });

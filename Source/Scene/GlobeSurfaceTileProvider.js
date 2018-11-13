@@ -1,4 +1,5 @@
 define([
+        '../Core/ArbitraryProjectionTilingScheme',
         '../Core/BoundingSphere',
         '../Core/BoxOutlineGeometry',
         '../Core/Cartesian2',
@@ -46,6 +47,7 @@ define([
         './SceneMode',
         './ShadowMode'
     ], function(
+        ArbitraryProjectionTilingScheme,
         BoundingSphere,
         BoxOutlineGeometry,
         Cartesian2,
@@ -1179,7 +1181,10 @@ define([
         clippingPlanes : undefined,
         clippedByBoundaries : undefined,
         hasImageryLayerCutout : undefined,
-        colorCorrect : undefined
+        colorCorrect : undefined,
+        arbitraryProjectedImagery : undefined,
+        numberOfImageryLayers : undefined,
+        dayTextureLayerIds : undefined
     };
 
     function addDrawCommandsForTile(tileProvider, tile, frameState) {
@@ -1421,9 +1426,34 @@ define([
             var applyAlpha = false;
             var applySplit = false;
             var applyCutout = false;
+            var arbitraryProjectedImagery = false;
+
+            // Associate each TileImagery with an integer ID according to its ImageryLayer
+            var imageryLayerGuidsToIntegers = {};
+            var numberOfImageryLayers = 0;
+            var tileImageryCollectionLength = tileImageryCollection.length;
+            var tileImageryLayerIds = new Array(tileImageryCollectionLength).fill(0);
+            for (var i = 0; i < tileImageryCollectionLength; i++) {
+                var tileImageryLayer = defined(tileImageryCollection[i].readyImagery) ? tileImageryCollection[i].readyImagery.imageryLayer :
+                    tileImageryCollection[i].loadingImagery.imageryLayer;
+
+                arbitraryProjectedImagery = false;
+                if (tileImageryLayer.imageryProvider.ready) {
+                    arbitraryProjectedImagery = tileImageryLayer.imageryProvider.tilingScheme instanceof ArbitraryProjectionTilingScheme || arbitraryProjectedImagery;
+                }
+                var guid = tileImageryLayer.id;
+                var intId = imageryLayerGuidsToIntegers[guid];
+                if (!defined(intId)) {
+                    intId = imageryLayerGuidsToIntegers[guid] = numberOfImageryLayers;
+                    numberOfImageryLayers++;
+                }
+                tileImageryLayerIds[i] = intId;
+            }
+            var dayTextureLayerIds = [];
 
             while (numberOfDayTextures < maxTextures && imageryIndex < imageryLen) {
                 var tileImagery = tileImageryCollection[imageryIndex];
+                var imageryLayerId = tileImageryLayerIds[imageryIndex];
                 var imagery = tileImagery.readyImagery;
                 ++imageryIndex;
 
@@ -1431,7 +1461,7 @@ define([
                     continue;
                 }
 
-                var texture = tileImagery.useWebMercatorT ? imagery.textureWebMercator : imagery.texture;
+                var texture = tileImagery.useWebMercatorT ? imagery.preProjectionTexture : imagery.texture;
 
                 //>>includeStart('debug', pragmas.debug);
                 if (!defined(texture)) {
@@ -1454,6 +1484,8 @@ define([
                 if (!defined(tileImagery.textureTranslationAndScale)) {
                     tileImagery.textureTranslationAndScale = imageryLayer._calculateTextureTranslationAndScale(tile, tileImagery);
                 }
+
+                dayTextureLayerIds[numberOfDayTextures] = imageryLayerId;
 
                 uniformMapProperties.dayTextures[numberOfDayTextures] = texture;
                 uniformMapProperties.dayTextureTranslationAndScale[numberOfDayTextures] = tileImagery.textureTranslationAndScale;
@@ -1532,6 +1564,9 @@ define([
             }
 
             surfaceShaderSetOptions.numberOfDayTextures = numberOfDayTextures;
+            surfaceShaderSetOptions.arbitraryProjectedImagery = arbitraryProjectedImagery;
+            surfaceShaderSetOptions.numberOfImageryLayers = numberOfImageryLayers;
+            surfaceShaderSetOptions.dayTextureLayerIds = dayTextureLayerIds;
             surfaceShaderSetOptions.applyBrightness = applyBrightness;
             surfaceShaderSetOptions.applyContrast = applyContrast;
             surfaceShaderSetOptions.applyHue = applyHue;

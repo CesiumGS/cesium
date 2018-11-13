@@ -14,7 +14,7 @@ define([
      * @alias Imagery
      * @private
      */
-    function Imagery(imageryLayer, x, y, level, rectangle) {
+    function Imagery(imageryLayer, x, y, level, rectangle, idlSide) {
         this.imageryLayer = imageryLayer;
         this.x = x;
         this.y = y;
@@ -32,7 +32,7 @@ define([
         this.imageUrl = undefined;
         this.image = undefined;
         this.texture = undefined;
-        this.textureWebMercator = undefined;
+        this.preProjectionTexture = undefined;
         this.credits = undefined;
         this.referenceCount = 0;
 
@@ -42,6 +42,7 @@ define([
         }
 
         this.rectangle = rectangle;
+        this.idlSide = idlSide;
     }
     Imagery.createPlaceholder = function(imageryLayer) {
         var result = new Imagery(imageryLayer, 0, 0, 0);
@@ -72,8 +73,8 @@ define([
                 this.texture.destroy();
             }
 
-            if (defined(this.textureWebMercator) && this.texture !== this.textureWebMercator) {
-                this.textureWebMercator.destroy();
+            if (defined(this.preProjectionTexture) && this.texture !== this.preProjectionTexture) {
+                this.preProjectionTexture.destroy();
             }
 
             destroyObject(this);

@@ -18,7 +18,7 @@ defineSuite([
             y: 0,
             state: ImageryState.READY,
             texture: {},
-            textureWebMercator: {},
+            preProjectionTexture: {},
             addReference: function() {}
         };
 
@@ -30,7 +30,7 @@ defineSuite([
             y: 0,
             state: ImageryState.READY,
             texture: undefined,
-            textureWebMercator: {},
+            preProjectionTexture: {},
             processStateMachine: function() {
                 ++this.processStateMachineCalls;
             },

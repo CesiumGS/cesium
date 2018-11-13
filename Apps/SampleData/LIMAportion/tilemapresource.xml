@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+    <TileMap version="1.0.0" tilemapservice="http://tms.osgeo.org/1.0.0">
+      <Title>00000-20080319-092059124.tif</Title>
+      <Abstract></Abstract>
+      <SRS>PROJCS["Polar Stereographic",GEOGCS["WGS 84",DATUM["WGS_1984",SPHEROID["WGS 84",6378137,298.257223563,AUTHORITY["EPSG","7030"]],AUTHORITY["EPSG","6326"]],PRIMEM["Greenwich",0],UNIT["degree",0.0174532925199433],AUTHORITY["EPSG","4326"]],PROJECTION["Polar_Stereographic"],PARAMETER["latitude_of_origin",-71],PARAMETER["central_meridian",0],PARAMETER["scale_factor",1],PARAMETER["false_easting",0],PARAMETER["false_northing",0],UNIT["meters",1]]</SRS>
+      <BoundingBox minx="-2668274.98913123924285" miny="-2294828.83873191755265" maxx="2813804.91989719215780" maxy="2362334.96997994650155"/>
+      <Origin x="-2668274.98913123924285" y="-2294828.83873191755265"/>
+      <TileFormat width="256" height="256" mime-type="image/png" extension="png"/>
+      <TileSets profile="raster">
+        <TileSet href="0" units-per-pixel="30721.34444007001730" order="0"/>
+        <TileSet href="1" units-per-pixel="15360.67222003500865" order="1"/>
+        <TileSet href="2" units-per-pixel="7680.33611001750432" order="2"/>		
+      </TileSets>
+    </TileMap>
+    
