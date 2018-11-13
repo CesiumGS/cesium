@@ -668,6 +668,7 @@ define([
 
         this._keepPipelineExtras = options.keepPipelineExtras; // keep the buffers in memory for use in other applications
         this._sourceVersion = undefined;
+        this._sourceKHRTechniquesWebGL = undefined;
 
         this._imageBasedLightingFactor = new Cartesian2(1.0, 1.0);
         Cartesian2.clone(options.imageBasedLightingFactor, this._imageBasedLightingFactor);
@@ -2098,7 +2099,7 @@ define([
             drawFS = '#define USE_CUSTOM_LIGHT_COLOR \n\n' + drawFS;
         }
 
-        if (model._sourceVersion !== '2.0') {
+        if (model._sourceVersion !== '2.0' || model._sourceKHRTechniquesWebGL) {
             drawFS = ShaderSource.replaceMain(drawFS, 'non_gamma_corrected_main');
             drawFS =
                 drawFS +
@@ -2170,7 +2171,7 @@ define([
             drawFS = '#define USE_CUSTOM_LIGHT_COLOR \n\n' + drawFS;
         }
 
-        if (model._sourceVersion !== '2.0') {
+        if (model._sourceVersion !== '2.0' || model._sourceKHRTechniquesWebGL) {
             drawFS = ShaderSource.replaceMain(drawFS, 'non_gamma_corrected_main');
             drawFS =
                 drawFS +
@@ -4337,6 +4338,7 @@ define([
                         // Add the original version so it remains cached
                         gltf.extras.sourceVersion = ModelUtility.getAssetVersion(gltf);
                         this._sourceVersion = gltf.extras.sourceVersion;
+                        this._sourceKHRTechniquesWebGL = defined(ModelUtility.getUsedExtensions(gltf).KHR_techniques_webgl);
 
                         updateVersion(gltf);
                         addDefaults(gltf);

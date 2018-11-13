@@ -964,7 +964,6 @@ define([
                '{ \n' +
                '    tile_main(); \n' +
                '    tile_featureColor = czm_gammaCorrect(tile_featureColor); \n' +
-               '    gl_FragColor = czm_gammaCorrect(gl_FragColor); \n' +
                '    gl_FragColor.a *= tile_featureColor.a; \n' +
                '    float highlight = ceil(tile_colorBlend); \n' +
                '    gl_FragColor.rgb *= mix(tile_featureColor.rgb, vec3(1.0), highlight); \n' +
