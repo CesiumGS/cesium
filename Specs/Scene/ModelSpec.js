@@ -641,8 +641,10 @@ defineSuite([
             var L22  = new Cartesian3( 0.160417569726332,  0.120896423762313,  0.121102528320197); // L22, irradiance, pre-scaled base
             m.sphericalHarmonicCoefficients = [L00, L1_1, L10, L11, L2_2, L2_1, L20, L21, L22];
 
+            scene.highDynamicRange = true;
             verifyRender(m);
             primitives.remove(m);
+            scene.highDynamicRange = false;
         });
     });
 
@@ -656,11 +658,15 @@ defineSuite([
             m.specularEnvironmentMaps = './Data/EnvironmentMap/kiara_6_afternoon_2k_ibl.ktx';
 
             return pollToPromise(function() {
+                scene.highDynamicRange = true;
                 scene.render();
+                scene.highDynamicRange = false;
                 return defined(m._specularEnvironmentMapAtlas) && m._specularEnvironmentMapAtlas.ready;
             }).then(function() {
+                scene.highDynamicRange = true;
                 verifyRender(m);
                 primitives.remove(m);
+                scene.highDynamicRange = false;
             });
         });
     });

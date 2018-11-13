@@ -3073,10 +3073,11 @@ define([
      * @private
      */
     Scene.prototype.initializeFrame = function() {
-        // Destroy released shaders once every 120 frames to avoid thrashing the cache
+        // Destroy released shaders and textures once every 120 frames to avoid thrashing the cache
         if (this._shaderFrameCount++ === 120) {
             this._shaderFrameCount = 0;
             this._context.shaderCache.destroyReleasedShaderPrograms();
+            this._context.textureCache.destroyReleasedTextures();
         }
 
         this._tweens.update();

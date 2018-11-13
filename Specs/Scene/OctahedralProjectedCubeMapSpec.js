@@ -18,6 +18,7 @@ defineSuite([
 
     var context;
     var computeEngine;
+    var octahedralMap;
 
     var environmentMapUrl = './Data/EnvironmentMap/kiara_6_afternoon_2k_ibl.ktx';
     var fsOctahedralMap =
@@ -52,7 +53,8 @@ defineSuite([
     });
 
     afterEach(function() {
-
+        octahedralMap = octahedralMap && octahedralMap.destroy();
+        context.textureCache.destroyReleasedTextures();
     });
 
     function executeCommands(frameState) {
@@ -123,7 +125,7 @@ defineSuite([
             return;
         }
 
-        var octahedralMap = new OctahedralProjectedCubeMap(environmentMapUrl);
+        octahedralMap = new OctahedralProjectedCubeMap(environmentMapUrl);
         var frameState = createFrameState(context);
 
         return pollToPromise(function() {
@@ -141,7 +143,7 @@ defineSuite([
             return;
         }
 
-        var octahedralMap = new OctahedralProjectedCubeMap(environmentMapUrl);
+        octahedralMap = new OctahedralProjectedCubeMap(environmentMapUrl);
         var frameState = createFrameState(context);
 
         return pollToPromise(function() {
@@ -172,6 +174,28 @@ defineSuite([
                     }
                 }
             }
+        });
+    });
+
+    it('caches projected textures', function() {
+        if (!OctahedralProjectedCubeMap.isSupported(context)) {
+            return;
+        }
+
+        var projection = new OctahedralProjectedCubeMap(environmentMapUrl);
+        var frameState = createFrameState(context);
+
+        return pollToPromise(function() {
+            projection.update(frameState);
+            return projection.ready;
+        }).then(function() {
+            var projection2 = new OctahedralProjectedCubeMap(environmentMapUrl);
+            projection2.update(frameState);
+            expect(projection2.ready).toEqual(true);
+            expect(projection.texture).toEqual(projection2.texture);
+            projection2.destroy();
+        }).always(function() {
+            projection.destroy();
         });
     });
 }, 'WebGL');

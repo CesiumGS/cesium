@@ -70,15 +70,11 @@ define([
     }
 
     defineProperties(OctahedralProjectedCubeMap.prototype, {
-        url : {
-            get : function() {
-                return this._url;
-            }
-        },
         /**
          * A texture containing all the packed convolutions.
-         * @memberof {OctahedralProjectedCubeMap.prototype}
+         * @memberof OctahedralProjectedCubeMap.prototype
          * @type {Texture}
+         * @readonly
          */
         texture : {
             get : function() {
@@ -87,19 +83,32 @@ define([
         },
         /**
          * The maximum number of mip levels.
-         * @memberOf {OctahedralProjectedCubeMap.prototype}
+         * @memberOf OctahedralProjectedCubeMap.prototype
          * @type {Number}
+         * @readonly
          */
         maximumMipmapLevel : {
             get : function() {
                 return this._maximumMipmapLevel;
             }
         },
+        /**
+         * Determines if the texture atlas is complete and ready to use.
+         * @memberof OctahedralProjectedCubeMap.prototype
+         * @type {Boolean}
+         * @readonly
+         */
         ready : {
             get : function() {
                 return this._ready;
             }
         },
+        /**
+         * Gets a promise that resolves when the texture atlas is ready to use.
+         * @memberof OctahedralProjectedCubeMap.prototype
+         * @type {Promise}
+         * @readonly
+         */
         readyPromise : {
             get : function() {
                 return this._readyPromise.promise;
@@ -247,6 +256,17 @@ define([
             return;
         }
 
+        if (!defined(this._texture) && !this._loading && !defined(this._cubeMapBuffers)) {
+            var cachedTexture = context.textureCache.getTexture(this._url);
+            if (defined(cachedTexture)) {
+                this._texture = cachedTexture;
+                this._maximumMipmapLevel = this._texture.maximumMipmapLevel;
+                this._ready = true;
+                this._readyPromise.resolve();
+                return;
+            }
+        }
+
         var cubeMapBuffers = this._cubeMapBuffers;
         if (!defined(cubeMapBuffers) && !this._loading) {
             var that = this;
@@ -329,6 +349,9 @@ define([
             pixelDatatype : pixelDatatype,
             pixelFormat : pixelFormat
         });
+
+        this._texture.maximumMipmapLevel = this._maximumMipmapLevel;
+        context.textureCache.addTexture(this._url, this._texture);
 
         var atlasCommand = new ComputeCommand({
             fragmentShaderSource : OctahedralProjectionAtlasFS,

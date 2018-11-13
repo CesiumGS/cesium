@@ -22,7 +22,17 @@
 </style>
 <div id="cesiumContainer" class="fullSize"></div>
 <div id="loadingOverlay"><h1>Loading...</h1></div>
-<div id="toolbar"></div>
+<div id="toolbar">
+<table><tbody>
+<tr>
+    <td>Luminance at Zenith</td>
+    <td>
+        <input type="range" min="0.0" max="2.0" step="0.01" data-bind="value: luminanceAtZenith, valueUpdate: 'input'">
+        <input type="text" size="4" data-bind="value: luminanceAtZenith">
+    </td>
+</tr>
+</tbody></table>
+</div>
 <script id="cesium_sandcastle_script">
 function startup(Cesium) {
     'use strict';
@@ -75,6 +85,37 @@ model.readyPromise.then(function(model) {
 
     model.sphericalHarmonicCoefficients = coefficients;
     model.specularEnvironmentMaps = environmentMapURL;
+
+    // The viewModel tracks the state of our mini application.
+    var viewModel = {
+        luminanceAtZenith : model.luminanceAtZenith
+    };
+    // Convert the viewModel members into knockout observables.
+    Cesium.knockout.track(viewModel);
+
+    // Bind the viewModel to the DOM elements of the UI that call for it.
+    var toolbar = document.getElementById('toolbar');
+    Cesium.knockout.applyBindings(viewModel, toolbar);
+
+    function subscribeParameter(name) {
+        Cesium.knockout.getObservable(viewModel, name).subscribe(
+            function(newValue) {
+                model[name] = newValue;
+            }
+        );
+    }
+
+    subscribeParameter('luminanceAtZenith');
+
+    Sandcastle.addToggleButton('Use procedural image', true, function(checked) {
+        if (checked) {
+            model.sphericalHarmonicCoefficients = coefficients;
+            model.specularEnvironmentMaps = environmentMapURL;
+        } else {
+            model.sphericalHarmonicCoefficients = undefined;
+            model.specularEnvironmentMaps = undefined;
+        }
+    });
 }).otherwise(function(error){
     window.alert(error);
 });

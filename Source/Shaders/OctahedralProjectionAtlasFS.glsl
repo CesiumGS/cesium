@@ -21,15 +21,20 @@ void main()
 
     float mipLevel = 0.0;
 
-    if (uv.x - pixel.x > (textureSize.y / textureSize.x)) {
+    if (uv.x - pixel.x > (textureSize.y / textureSize.x))
+    {
         mipLevel = 1.0;
-        if (uv.y - pixel.y > yMipLevel1) {
+        if (uv.y - pixel.y > yMipLevel1)
+        {
             mipLevel = 2.0;
-            if (uv.y - pixel.y * 3.0 > yMipLevel2) {
+            if (uv.y - pixel.y * 3.0 > yMipLevel2)
+            {
                 mipLevel = 3.0;
-                if (uv.y - pixel.y * 5.0 > yMipLevel3) {
+                if (uv.y - pixel.y * 5.0 > yMipLevel3)
+                {
                     mipLevel = 4.0;
-                    if (uv.y - pixel.y * 7.0 > yMipLevel4) {
+                    if (uv.y - pixel.y * 7.0 > yMipLevel4)
+                    {
                         mipLevel = 5.0;
                     }
                 }
@@ -37,7 +42,8 @@ void main()
         }
     }
 
-    if (mipLevel > 0.0) {
+    if (mipLevel > 0.0)
+    {
         float scale = pow(2.0, mipLevel);
 
         uv.y -= (pixel.y * (mipLevel - 1.0) * 2.0);
@@ -46,23 +52,38 @@ void main()
         uv.x -= 1.0 + pixel.x;
         uv.y -= (1.0 - (1.0 / pow(2.0, mipLevel - 1.0)));
         uv *= scale;
-    } else {
+    }
+    else
+    {
         uv.x *= (textureSize.x / textureSize.y);
     }
 
-    if(mipLevel == 0.0) {
+    if(mipLevel == 0.0)
+    {
         gl_FragColor = texture2D(texture0, uv);
-    } else if(mipLevel == 1.0) {
+    }
+    else if(mipLevel == 1.0)
+    {
         gl_FragColor = texture2D(texture1, uv);
-    } else if(mipLevel == 2.0) {
+    }
+    else if(mipLevel == 2.0)
+    {
         gl_FragColor = texture2D(texture2, uv);
-    } else if(mipLevel == 3.0) {
+    }
+    else if(mipLevel == 3.0)
+    {
         gl_FragColor = texture2D(texture3, uv);
-    } else if(mipLevel == 4.0) {
+    }
+    else if(mipLevel == 4.0)
+    {
         gl_FragColor = texture2D(texture4, uv);
-    } else if(mipLevel == 5.0) {
+    }
+    else if(mipLevel == 5.0)
+    {
         gl_FragColor = texture2D(texture5, uv);
-    } else {
+    }
+    else
+    {
         gl_FragColor = vec4(0.0);
     }
 }

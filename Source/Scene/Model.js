@@ -1193,7 +1193,6 @@ define([
          * @memberof Model.prototype
          *
          * @type {Cartesian3[]}
-         * @default undefined
          * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Image-Based Lighting.html|Sandcastle Image Based Lighting Demo}
          * @see {@link https://graphics.stanford.edu/papers/envmap/envmap.pdf|An Efficient Representation for Irradiance Environment Maps}
          */
@@ -1219,7 +1218,6 @@ define([
          * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Image-Based Lighting.html|Sandcastle Image Based Lighting Demo}
          * @type {String}
          * @see Model#sphericalHarmonicCoefficients
-         * @default undefined
          */
         specularEnvironmentMaps : {
             get : function() {
@@ -4440,6 +4438,26 @@ define([
             }
         }
 
+        if (this._shouldUpdateSpecularMapAtlas) {
+            this._shouldUpdateSpecularMapAtlas = false;
+            this._specularEnvironmentMapAtlas = this._specularEnvironmentMapAtlas && this._specularEnvironmentMapAtlas.destroy();
+            this._specularEnvironmentMapAtlas = undefined;
+            if (defined(this._specularEnvironmentMaps)) {
+                this._specularEnvironmentMapAtlas = new OctahedralProjectedCubeMap(this._specularEnvironmentMaps);
+                var that = this;
+                this._specularEnvironmentMapAtlas.readyPromise.then(function() {
+                    that._shouldRegenerateShaders = true;
+                });
+            }
+
+            // Regenerate shaders to not use an environment map. Will be set to true again if there was a new environment map and it is ready.
+            this._shouldRegenerateShaders = true;
+        }
+
+        if (defined(this._specularEnvironmentMapAtlas)) {
+            this._specularEnvironmentMapAtlas.update(frameState);
+        }
+
         var silhouette = hasSilhouette(this, frameState);
         var translucent = isTranslucent(this);
         var invisible = isInvisible(this);
@@ -4539,23 +4557,6 @@ define([
                 updateColor(this, frameState, false);
                 updateSilhouette(this, frameState, false);
             }
-        }
-
-        if (this._shouldUpdateSpecularMapAtlas) {
-            this._shouldUpdateSpecularMapAtlas = false;
-            this._specularEnvironmentMapAtlas = this._specularEnvironmentMapAtlas && this._specularEnvironmentMapAtlas.destroy();
-            this._specularEnvironmentMapAtlas = undefined;
-            if (defined(this._specularEnvironmentMaps)) {
-                this._specularEnvironmentMapAtlas = new OctahedralProjectedCubeMap(this._specularEnvironmentMaps);
-                var that = this;
-                this._specularEnvironmentMapAtlas.readyPromise.then(function() {
-                    that._shouldRegenerateShaders = true;
-                });
-            }
-        }
-
-        if (defined(this._specularEnvironmentMapAtlas)) {
-            this._specularEnvironmentMapAtlas.update(frameState);
         }
 
         if (justLoaded) {
@@ -4769,6 +4770,8 @@ define([
             clippingPlaneCollection.destroy();
         }
         this._clippingPlanes = undefined;
+
+        this._specularEnvironmentMapAtlas = this._specularEnvironmentMapAtlas && this._specularEnvironmentMapAtlas.destroy();
 
         return destroyObject(this);
     };
