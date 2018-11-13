@@ -139,7 +139,7 @@ define([
         }
 
         var button = event.button;
-        screenSpaceEventHandler._buttonDown = button;
+        screenSpaceEventHandler._buttonDown[button] = true;
 
         var screenSpaceEventType;
         if (button === MouseButton.LEFT) {
@@ -212,15 +212,23 @@ define([
         }
 
         var button = event.button;
-        screenSpaceEventHandler._buttonDown = undefined;
 
         if (button !== MouseButton.LEFT && button !== MouseButton.MIDDLE && button !== MouseButton.RIGHT){
             return;
         }
 
-        cancelMouseEvent(screenSpaceEventHandler, ScreenSpaceEventType.LEFT_UP, ScreenSpaceEventType.LEFT_CLICK, event);
-        cancelMouseEvent(screenSpaceEventHandler, ScreenSpaceEventType.MIDDLE_UP, ScreenSpaceEventType.MIDDLE_CLICK, event);
-        cancelMouseEvent(screenSpaceEventHandler, ScreenSpaceEventType.RIGHT_UP, ScreenSpaceEventType.RIGHT_CLICK, event);
+        if(screenSpaceEventHandler._buttonDown[MouseButton.LEFT]){
+            cancelMouseEvent(screenSpaceEventHandler, ScreenSpaceEventType.LEFT_UP, ScreenSpaceEventType.LEFT_CLICK, event);
+            screenSpaceEventHandler._buttonDown[MouseButton.LEFT] = false
+        }
+        if(screenSpaceEventHandler._buttonDown[MouseButton.MIDDLE]){
+            cancelMouseEvent(screenSpaceEventHandler, ScreenSpaceEventType.MIDDLE_UP, ScreenSpaceEventType.MIDDLE_CLICK, event);
+            screenSpaceEventHandler._buttonDown[MouseButton.MIDDLE] = false
+        }
+        if(screenSpaceEventHandler._buttonDown[MouseButton.RIGHT]){
+            cancelMouseEvent(screenSpaceEventHandler, ScreenSpaceEventType.RIGHT_UP, ScreenSpaceEventType.RIGHT_CLICK, event);
+            screenSpaceEventHandler._buttonDown[MouseButton.RIGHT] = false
+        }
     }
 
     var mouseMoveEvent = {
@@ -249,7 +257,9 @@ define([
 
         Cartesian2.clone(position, previousPosition);
 
-        if (defined(screenSpaceEventHandler._buttonDown)) {
+        if (screenSpaceEventHandler._buttonDown[MouseButton.LEFT] ||
+            screenSpaceEventHandler._buttonDown[MouseButton.MIDDLE] ||
+            screenSpaceEventHandler._buttonDown[MouseButton.RIGHT]) {
             event.preventDefault();
         }
     }
@@ -398,9 +408,9 @@ define([
         var clickAction;
         var pinching = screenSpaceEventHandler._isPinching;
 
-        if (numberOfTouches !== 1 && screenSpaceEventHandler._buttonDown === MouseButton.LEFT) {
+        if (numberOfTouches !== 1 && screenSpaceEventHandler._buttonDown[MouseButton.LEFT]) {
             // transitioning from single touch, trigger UP and might trigger CLICK
-            screenSpaceEventHandler._buttonDown = undefined;
+            screenSpaceEventHandler._buttonDown[MouseButton.LEFT] = false;
             action = screenSpaceEventHandler.getInputAction(ScreenSpaceEventType.LEFT_UP, modifier);
 
             if (defined(action)) {
@@ -449,7 +459,7 @@ define([
             Cartesian2.clone(position, screenSpaceEventHandler._primaryStartPosition);
             Cartesian2.clone(position, screenSpaceEventHandler._primaryPreviousPosition);
 
-            screenSpaceEventHandler._buttonDown = MouseButton.LEFT;
+            screenSpaceEventHandler._buttonDown[MouseButton.LEFT] = true;
 
             action = screenSpaceEventHandler.getInputAction(ScreenSpaceEventType.LEFT_DOWN, modifier);
 
@@ -534,7 +544,7 @@ define([
         var numberOfTouches = positions.length;
         var action;
 
-        if (numberOfTouches === 1 && screenSpaceEventHandler._buttonDown === MouseButton.LEFT) {
+        if (numberOfTouches === 1 && screenSpaceEventHandler._buttonDown[MouseButton.LEFT]) {
             // moving single touch
             var position = positions.values[0];
             Cartesian2.clone(position, screenSpaceEventHandler._primaryPosition);
@@ -653,7 +663,11 @@ define([
      */
     function ScreenSpaceEventHandler(element) {
         this._inputEvents = {};
-        this._buttonDown = undefined;
+        this._buttonDown = {
+            [MouseButton.LEFT]: false,
+            [MouseButton.MIDDLE]: false,
+            [MouseButton.RIGHT]: false,
+        };
         this._isPinching = false;
         this._lastSeenTouchEvent = -ScreenSpaceEventHandler.mouseEmulationIgnoreMilliseconds;
 
