@@ -387,7 +387,9 @@ define([
                 pickObject : pickObject,
                 imageBasedLightingFactor : tileset.imageBasedLightingFactor,
                 lightColor : tileset.lightColor,
-                luminanceAtZenith : tileset.luminanceAtZenith
+                luminanceAtZenith : tileset.luminanceAtZenith,
+                sphericalHarmonicCoefficients : tileset.sphericalHarmonicCoefficients,
+                specularEnvironmentMaps : tileset.specularEnvironmentMaps
             });
         } else {
             // This transcodes glTF to an internal representation for geometry so we can take advantage of the re-batching of vector data.
@@ -466,6 +468,8 @@ define([
         this._model.imageBasedLightingFactor = this._tileset.imageBasedLightingFactor;
         this._model.lightColor = this._tileset.lightColor;
         this._model.luminanceAtZenith = this._tileset.luminanceAtZenith;
+        this._model.sphericalHarmonicCoefficients = this._tileset.sphericalHarmonicCoefficients;
+        this._model.specularEnvironmentMaps = this._tileset.specularEnvironmentMaps;
         this._model.debugWireframe = this._tileset.debugWireframe;
 
         // Update clipping planes

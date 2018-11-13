@@ -290,7 +290,9 @@ define([
             pickIdLoaded : getPickIdCallback(content),
             imageBasedLightingFactor : tileset.imageBasedLightingFactor,
             lightColor : tileset.lightColor,
-            luminanceAtZenith : tileset.luminanceAtZenith
+            luminanceAtZenith : tileset.luminanceAtZenith,
+            sphericalHarmonicCoefficients : tileset.sphericalHarmonicCoefficients,
+            specularEnvironmentMaps : tileset.specularEnvironmentMaps
         };
 
         if (gltfFormat === 0) {
@@ -471,6 +473,8 @@ define([
         this._modelInstanceCollection.shadows = this._tileset.shadows;
         this._modelInstanceCollection.lightColor = this._tileset.lightColor;
         this._modelInstanceCollection.luminanceAtZenith = this._tileset.luminanceAtZenith;
+        this._modelInstanceCollection.sphericalHarmonicCoefficients = this._tileset.sphericalHarmonicCoefficients;
+        this._modelInstanceCollection.specularEnvironmentMaps = this._tileset.specularEnvironmentMaps;
         this._modelInstanceCollection.debugWireframe = this._tileset.debugWireframe;
 
         var model = this._modelInstanceCollection._model;
