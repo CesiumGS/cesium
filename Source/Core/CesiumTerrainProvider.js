@@ -1093,9 +1093,11 @@ define([
                     type : RequestType.TERRAIN
                 });
                 promise = requestTileGeometry(provider, x, y, level, layer, request);
-                if (defined(promise)) {
-                    layer.availabilityPromiseCache[key] = promise;
+                if (!defined(promise)) {
+                    return;
                 }
+
+                layer.availabilityPromiseCache[key] = promise;
 
                 return promise
                     .then(function() {
