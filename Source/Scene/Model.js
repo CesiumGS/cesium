@@ -662,6 +662,8 @@ define([
         this._rtcCenter2D = undefined;  // in projected world coordinates
 
         this._keepPipelineExtras = options.keepPipelineExtras; // keep the buffers in memory for use in other applications
+        this._sourceVersion = undefined;
+        this._sourceKHRTechniquesWebGL = undefined;
 
         this._imageBasedLightingFactor = new Cartesian2(1.0, 1.0);
         Cartesian2.clone(options.imageBasedLightingFactor, this._imageBasedLightingFactor);
@@ -2008,6 +2010,17 @@ define([
             drawFS = '#define USE_CUSTOM_LIGHT_COLOR \n\n' + drawFS;
         }
 
+        if (model._sourceVersion !== '2.0' || model._sourceKHRTechniquesWebGL) {
+            drawFS = ShaderSource.replaceMain(drawFS, 'non_gamma_corrected_main');
+            drawFS =
+                drawFS +
+                '\n' +
+                'void main() { \n' +
+                '    non_gamma_corrected_main(); \n' +
+                '    gl_FragColor = czm_gammaCorrect(gl_FragColor); \n' +
+                '} \n';
+        }
+
         createAttributesAndProgram(programId, techniqueId, drawFS, drawVS, model, context);
     }
 
@@ -2056,6 +2069,17 @@ define([
 
         if (defined(model._lightColor)) {
             drawFS = '#define USE_CUSTOM_LIGHT_COLOR \n\n' + drawFS;
+        }
+
+        if (model._sourceVersion !== '2.0' || model._sourceKHRTechniquesWebGL) {
+            drawFS = ShaderSource.replaceMain(drawFS, 'non_gamma_corrected_main');
+            drawFS =
+                drawFS +
+                '\n' +
+                'void main() { \n' +
+                '    non_gamma_corrected_main(); \n' +
+                '    gl_FragColor = czm_gammaCorrect(gl_FragColor); \n' +
+                '} \n';
         }
 
         createAttributesAndProgram(programId, techniqueId, drawFS, drawVS, model, context);
@@ -4167,6 +4191,10 @@ define([
                         var gltf = this.gltf;
                         // Add the original version so it remains cached
                         gltf.extras.sourceVersion = ModelUtility.getAssetVersion(gltf);
+                        gltf.extras.sourceKHRTechniquesWebGL = defined(ModelUtility.getUsedExtensions(gltf).KHR_techniques_webgl);
+
+                        this._sourceVersion = gltf.extras.sourceVersion;
+                        this._sourceKHRTechniquesWebGL = gltf.extras.sourceKHRTechniquesWebGL;
 
                         updateVersion(gltf);
                         addDefaults(gltf);
@@ -4178,6 +4206,9 @@ define([
                         processModelMaterialsCommon(gltf, options);
                         processPbrMaterials(gltf, options);
                     }
+
+                    this._sourceVersion = this.gltf.extras.sourceVersion;
+                    this._sourceKHRTechniquesWebGL = this.gltf.extras.sourceKHRTechniquesWebGL;
 
                     // Skip dequantizing in the shader if not encoded
                     this._dequantizeInShader = this._dequantizeInShader && DracoLoader.hasExtension(this);
