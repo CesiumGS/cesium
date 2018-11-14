@@ -219,15 +219,15 @@ define([
 
         if(screenSpaceEventHandler._buttonDown[MouseButton.LEFT]){
             cancelMouseEvent(screenSpaceEventHandler, ScreenSpaceEventType.LEFT_UP, ScreenSpaceEventType.LEFT_CLICK, event);
-            screenSpaceEventHandler._buttonDown[MouseButton.LEFT] = false
+            screenSpaceEventHandler._buttonDown[MouseButton.LEFT] = false;
         }
         if(screenSpaceEventHandler._buttonDown[MouseButton.MIDDLE]){
             cancelMouseEvent(screenSpaceEventHandler, ScreenSpaceEventType.MIDDLE_UP, ScreenSpaceEventType.MIDDLE_CLICK, event);
-            screenSpaceEventHandler._buttonDown[MouseButton.MIDDLE] = false
+            screenSpaceEventHandler._buttonDown[MouseButton.MIDDLE] = false;
         }
         if(screenSpaceEventHandler._buttonDown[MouseButton.RIGHT]){
             cancelMouseEvent(screenSpaceEventHandler, ScreenSpaceEventType.RIGHT_UP, ScreenSpaceEventType.RIGHT_CLICK, event);
-            screenSpaceEventHandler._buttonDown[MouseButton.RIGHT] = false
+            screenSpaceEventHandler._buttonDown[MouseButton.RIGHT] = false;
         }
     }
 
@@ -664,9 +664,9 @@ define([
     function ScreenSpaceEventHandler(element) {
         this._inputEvents = {};
         this._buttonDown = {
-            [MouseButton.LEFT]: false,
-            [MouseButton.MIDDLE]: false,
-            [MouseButton.RIGHT]: false,
+            LEFT: false,
+            MIDDLE: false,
+            RIGHT: false
         };
         this._isPinching = false;
         this._lastSeenTouchEvent = -ScreenSpaceEventHandler.mouseEmulationIgnoreMilliseconds;
