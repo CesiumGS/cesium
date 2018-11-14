@@ -1,4 +1,5 @@
-/*global require,Blob,JSHINT*/
+/*global require,Blob,JSHINT */
+/*global decodeBase64Data, embedInSandcastleTemplate */
 /*global gallery_demos, has_new_gallery_demos, hello_world_index*/// defined in gallery/gallery-index.js, created by build
 /*global sandcastleJsHintOptions*/// defined by jsHintOptions.js, created by build
 require({
@@ -110,6 +111,8 @@ require({
     if (!defined(window.Cesium)) {
         window.Cesium = Cesium;
     }
+    // Used by Sandcastle-helpers.js
+    window.pako = pako;
 
     parser.parse();
 
@@ -383,7 +386,7 @@ require({
         // make a copy of the options, JSHint modifies the object it's given
         var options = JSON.parse(JSON.stringify(sandcastleJsHintOptions));
         /*eslint-disable new-cap*/
-        if (!JSHINT(getScriptFromEditor(false), options)) {
+        if (!JSHINT(embedInSandcastleTemplate(jsEditor.getValue(), false), options)) {
             var hints = JSHINT.errors;
             for (i = 0, len = hints.length; i < len; ++i) {
                 var hint = hints[i];
@@ -540,22 +543,6 @@ require({
         }
     });
 
-    function getScriptFromEditor(addExtraLine) {
-        return 'function startup(Cesium) {\n' +
-               '    \'use strict\';\n' +
-               '//Sandcastle_Begin\n' +
-               (addExtraLine ? '\n' : '') +
-               jsEditor.getValue() +
-               '//Sandcastle_End\n' +
-               '    Sandcastle.finishedLoading();\n' +
-               '}\n' +
-               'if (typeof Cesium !== \'undefined\') {\n' +
-               '    startup(Cesium);\n' +
-               '} else if (typeof require === \'function\') {\n' +
-               '    require([\'Cesium\'], startup);\n' +
-               '}\n';
-    }
-
     var scriptCodeRegex = /\/\/Sandcastle_Begin\s*([\s\S]*)\/\/Sandcastle_End/;
 
     function activateBucketScripts(bucketDoc) {
@@ -620,7 +607,7 @@ require({
                 // Firefox line numbers are zero-based, not one-based.
                 var isFirefox = navigator.userAgent.indexOf('Firefox/') >= 0;
 
-                element.textContent = getScriptFromEditor(isFirefox);
+                element.textContent = embedInSandcastleTemplate(jsEditor.getValue(), isFirefox);
                 bucketDoc.body.appendChild(element);
             }
         };
@@ -775,20 +762,10 @@ require({
 
                 applyLoadedDemo(code, html);
             } else if (window.location.hash.indexOf('#c=') === 0) {
-                // data stored in the hash as:
-                // Base64 encoded, raw DEFLATE compressed JSON array where index 0 is code, index 1 is html
                 var base64String = window.location.hash.substr(3);
-                // restore padding
-                while (base64String.length % 4 !== 0) {
-                    base64String += '=';
-                }
-                var jsonString = pako.inflate(atob(base64String), { raw: true, to: 'string' });
-                // we save a few bytes by omitting the leading [" and trailing "] since they are always the same
-                jsonString = '["' + jsonString + '"]';
-                json = JSON.parse(jsonString);
-                // index 0 is code, index 1 is html
-                code = json[0];
-                html = json[1];
+                var data = decodeBase64Data(base64String);
+                code = data.code;
+                html = data.html;
 
                 applyLoadedDemo(code, html);
             } else {
@@ -1028,7 +1005,7 @@ require({
         return local.headers + '\n' +
                htmlEditor.getValue() +
                '<script id="cesium_sandcastle_script">\n' +
-               getScriptFromEditor(false) +
+               embedInSandcastleTemplate(jsEditor.getValue(), false) +
                '</script>\n' +
                '</body>\n' +
                '</html>\n';

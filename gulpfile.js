@@ -1204,6 +1204,7 @@ var sandcastleJsHintOptions = ' + JSON.stringify(primary, null, 4) + ';\n';
 function buildSandcastle() {
     var appStream = gulp.src([
             'Apps/Sandcastle/**',
+            '!Apps/Sandcastle/standalone.html',
             '!Apps/Sandcastle/images/**',
             '!Apps/Sandcastle/gallery/**.jpg'
         ])
@@ -1227,7 +1228,13 @@ function buildSandcastle() {
         })
         .pipe(gulp.dest('Build/Apps/Sandcastle'));
 
-    return streamToPromise(eventStream.merge(appStream, imageStream));
+    var standaloneStream = gulp.src([
+        'Apps/Sandcastle/standalone.html'
+        ])
+        .pipe(gulpReplace('../../../ThirdParty/requirejs-2.1.20/require.js', '../../CesiumUnminified/Cesium.js'))
+        .pipe(gulp.dest('Build/Apps/Sandcastle'));
+
+    return streamToPromise(eventStream.merge(appStream, imageStream, standaloneStream));
 }
 
 function buildCesiumViewer() {
