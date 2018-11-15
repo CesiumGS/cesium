@@ -84,7 +84,6 @@ defineSuite([
         expect(updater.isDynamic).toBe(false);
     });
 
-
     it('A time-varying position causes geometry to be dynamic', function() {
         var entity = createBasicEllipsoid();
         var updater = new EllipsoidGeometryUpdater(entity, scene);
@@ -138,7 +137,7 @@ defineSuite([
     it('Creates geometry with expected properties', function() {
         var options = {
             radii : new Cartesian3(1, 2, 3),
-            innerRadii: new Cartesian3(.5, 1, 1.5),
+            innerRadii: new Cartesian3(0.5, 1, 1.5),
             minimumClock: CesiumMath.toRadians(90.0),
             maximumClock: CesiumMath.toRadians(270.0),
             minimumCone: CesiumMath.toRadians(45.0),
@@ -334,7 +333,7 @@ defineSuite([
     it('Inner radii should be set when not in 3D mode', function() {
         var ellipsoid = new EllipsoidGraphics();
         ellipsoid.radii = createDynamicProperty(new Cartesian3(1, 2, 3));
-        ellipsoid.innerRadii = createDynamicProperty(new Cartesian3(.5, 1, 1.5));
+        ellipsoid.innerRadii = createDynamicProperty(new Cartesian3(0.5, 1, 1.5));
         // Turns 3d mode path off
         ellipsoid.heightReference = new ConstantProperty(HeightReference.RELATIVE_TO_GROUND);
         ellipsoid.material = new ColorMaterialProperty(Color.RED);

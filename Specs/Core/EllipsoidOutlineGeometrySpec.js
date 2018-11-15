@@ -122,7 +122,7 @@ defineSuite([
 
     it('computes partitions to default to 2 if less than 2', function() {
         var geometry = new EllipsoidOutlineGeometry({
-            radii: new Cartesian3(0.5, 0.5, 0.5),
+            radii: new Cartesian3(0.5, 0.5, 0.5)
         });
 
         geometry._slicePartitions = 0;

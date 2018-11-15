@@ -64,7 +64,6 @@ defineSuite([
             expect(m.boundingSphere.radius).toEqual(1);
         });
 
-
         it('computes offset attribute', function() {
             var m = EllipsoidGeometry.createGeometry(new EllipsoidGeometry({
                 vertexFormat: VertexFormat.POSITION_ONLY,
@@ -177,7 +176,7 @@ defineSuite([
 
         it('computes partitions to default to 2 if less than 2', function() {
             var geometry = new EllipsoidGeometry({
-                radii: new Cartesian3(0.5, 0.5, 0.5),
+                radii: new Cartesian3(0.5, 0.5, 0.5)
             });
 
             geometry._slicePartitions = 0;
@@ -196,7 +195,7 @@ defineSuite([
                 radii: new Cartesian3(1.0, 1.0, 1.0),
                 innerRadii: new Cartesian3(0.5, 0.5, 0.5),
                 minimumCone: CesiumMath.toRadians(60.0),
-                maximumCone: CesiumMath.toRadians(140.0),
+                maximumCone: CesiumMath.toRadians(140.0)
             }));
 
             var positions = m.attributes.position.values;

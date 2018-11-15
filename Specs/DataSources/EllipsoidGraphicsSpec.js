@@ -195,7 +195,7 @@ defineSuite([
         expect(result.distanceDisplayCondition).toBe(source.distanceDisplayCondition);
 
         // Clone with source passed
-        var result = source.clone(source);
+        result = source.clone(source);
         expect(result.material).toBe(source.material);
         expect(result.radii).toBe(source.radii);
         expect(result.show).toBe(source.show);
