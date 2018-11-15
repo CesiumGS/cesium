@@ -21,12 +21,13 @@
 <script type="text/javascript" src="Sandcastle-client.js"></script>
 <script type="text/javascript" src="Sandcastle-helpers.js"></script>
 <script type="text/javascript">
-
+/*global pako,decodeBase64Data,embedInSandcastleTemplate */
 if (typeof require === 'function') {
     require([
         'Source/Cesium'
     ], function(
         Cesium) {
+         'use strict';
         window.Cesium = Cesium;
         loadDemoFromUrl();
     });
@@ -35,16 +36,17 @@ if (typeof require === 'function') {
 }
 
 function loadDemoFromUrl() {
+    'use strict';
     // The helper functions script needs this.
     window.pako = pako;
-    var defined = Cesium.defined; 
+    var defined = Cesium.defined;
 
     if (window.location.hash.indexOf('#c=') === 0) {
         var base64String = window.location.hash.substr(3);
         var data = decodeBase64Data(base64String);
-        var html = data.html; 
+        var html = data.html;
         var code = data.code;
-        // Replace CSS URL since standalone is one level up from the usual bucket.html 
+        // Replace CSS URL since standalone is one level up from the usual bucket.html
         html = html.replace('../templates', 'templates');
 
         // Add the HTML content
@@ -53,16 +55,15 @@ function loadDemoFromUrl() {
         document.body.appendChild(htmlElement);
 
         // Wait for that to load, then add the script
-        // the window load event will re-fire since we've altered the DOM. 
+        // the window load event will re-fire since we've altered the DOM.
         window.addEventListener("load", function(event) {
             var scriptElement = document.createElement('script');
             var isFirefox = navigator.userAgent.indexOf('Firefox/') >= 0;
-            document.head.appendChild(scriptElement);   
+            document.head.appendChild(scriptElement);
             scriptElement.innerHTML = embedInSandcastleTemplate(code, isFirefox);
         });
     }
 }
-
 </script>
 </body>
 </html>
