@@ -81,6 +81,7 @@ define([
      * @param {Resource|String|Promise<Resource>|Promise<String>} options.url The URL of the Cesium terrain server.
      * @param {Boolean} [options.requestVertexNormals=false] Flag that indicates if the client should request additional lighting information from the server, in the form of per vertex normals if available.
      * @param {Boolean} [options.requestWaterMask=false] Flag that indicates if the client should request per tile water masks from the server,  if available.
+     * @param {Boolean} [options.requestMetadata=true] Flag that indicates if the client should request per tile metadata from the server, if available.
      * @param {Ellipsoid} [options.ellipsoid] The ellipsoid.  If not specified, the WGS84 ellipsoid is used.
      * @param {Credit|String} [options.credit] A credit for the data source, which is displayed on the canvas.
      *
@@ -134,8 +135,7 @@ define([
         this._requestWaterMask = defaultValue(options.requestWaterMask, false);
 
         /**
-         * Boolean flag that indicates if the client should request tile metadata
-         * from the server.
+         * Boolean flag that indicates if the client should request tile metadata from the server.
          * @type {Boolean}
          * @default true
          * @private
