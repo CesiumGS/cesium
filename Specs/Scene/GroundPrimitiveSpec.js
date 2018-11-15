@@ -64,15 +64,10 @@ defineSuite([
     var rectangleInstance;
     var primitive;
     var depthPrimitive;
-    var largeScene;
     var reusablePrimitive;
-    var largeSceneReusablePrimitive;
 
     beforeAll(function() {
         scene = createScene();
-        largeScene = createScene({
-            canvas : createCanvas(2, 2)
-        });
 
         scene.postProcessStages.fxaa.enabled = false;
 
@@ -101,32 +96,12 @@ defineSuite([
                 }),
                 asynchronous : false
             });
-
-            largeSceneReusablePrimitive = new Primitive({
-                geometryInstances : new GeometryInstance({
-                    geometry : new RectangleGeometry({
-                        ellipsoid : ellipsoid,
-                        rectangle : bigRectangle
-                    }),
-                    id : 'depth rectangle',
-                    attributes : {
-                        color : depthColorAttribute
-                    }
-                }),
-                appearance : new PerInstanceColorAppearance({
-                    translucent : false,
-                    flat : true
-                }),
-                asynchronous : false
-            });
         });
     });
 
     afterAll(function() {
         reusablePrimitive.destroy();
         scene.destroyForSpecs();
-        largeScene.destroyForSpecs();
-
         // Leave ground primitive uninitialized
         ApproximateTerrainHeights._initPromise = undefined;
         ApproximateTerrainHeights._terrainHeights = undefined;
@@ -181,7 +156,6 @@ defineSuite([
 
     afterEach(function() {
         scene.groundPrimitives.removeAll();
-        largeScene.groundPrimitives.removeAll();
         primitive = primitive && !primitive.isDestroyed() && primitive.destroy();
         depthPrimitive = depthPrimitive && !depthPrimitive.isDestroyed() && depthPrimitive.destroy();
     });
@@ -333,9 +307,9 @@ defineSuite([
 
         primitive = scene.groundPrimitives.add(new GroundPrimitive({
             geometryInstances : rectangleInstance,
-            asynchronous : false
+            asynchronous : false,
+            show : false
         }));
-        primitive.show = false;
 
         var ready = false;
         primitive.readyPromise.then(function() {
@@ -494,6 +468,43 @@ defineSuite([
 
     describe('larger scene', function() {
         // Screen space techniques may produce unexpected results with 1x1 canvasses
+        var largeScene;
+        var largeSceneReusablePrimitive;
+        beforeAll(function() {
+            largeScene = createScene({
+                canvas : createCanvas(2, 2)
+            });
+
+            var depthColorAttribute = ColorGeometryInstanceAttribute.fromColor(new Color(0.0, 0.0, 1.0, 1.0));
+            depthColor = depthColorAttribute.value;
+            var bigRectangle = Rectangle.fromDegrees(-180 + CesiumMath.EPSILON4, -90 + CesiumMath.EPSILON4, 180 - CesiumMath.EPSILON4, 90 - CesiumMath.EPSILON4);
+
+            largeSceneReusablePrimitive = new Primitive({
+                geometryInstances : new GeometryInstance({
+                    geometry : new RectangleGeometry({
+                        ellipsoid : ellipsoid,
+                        rectangle : bigRectangle
+                    }),
+                    id : 'depth rectangle',
+                    attributes : {
+                        color : depthColorAttribute
+                    }
+                }),
+                appearance : new PerInstanceColorAppearance({
+                    translucent : false,
+                    flat : true
+                }),
+                asynchronous : false
+            });
+        });
+        afterAll(function() {
+            largeSceneReusablePrimitive.destroy();
+            largeScene.destroyForSpecs();
+        });
+        afterEach(function(){
+            largeScene.groundPrimitives.removeAll();
+        });
+
         function verifyLargerScene(groundPrimitive, expectedColor, destination) {
             largeScene.render();
 
