@@ -1,4 +1,5 @@
 define([
+        '../Core/defaultValue',
         '../Core/AssociativeArray',
         '../Core/Color',
         '../Core/ColorGeometryInstanceAttribute',
@@ -14,6 +15,7 @@ define([
         './MaterialProperty',
         './Property'
     ], function(
+        defaultValue,
         AssociativeArray,
         Color,
         ColorGeometryInstanceAttribute,
@@ -111,7 +113,7 @@ define([
         return false;
     };
 
-    Batch.prototype.update = function(time) {
+    Batch.prototype.update = function(time, asynchronous) {
         var isUpdated = true;
         var primitive = this.primitive;
         var orderedGroundPrimitives = this.orderedGroundPrimitives;
@@ -133,7 +135,7 @@ define([
 
                 primitive = new GroundPolylinePrimitive({
                     show : false,
-                    asynchronous : true,
+                    asynchronous : asynchronous,
                     geometryInstances : geometries,
                     appearance : new this.appearanceType()
                 });
@@ -314,7 +316,8 @@ define([
         }
     };
 
-    StaticGroundPolylinePerMaterialBatch.prototype.update = function(time) {
+    StaticGroundPolylinePerMaterialBatch.prototype.update = function(time, asynchronous) {
+        asynchronous = defaultValue(asynchronous, true);
         var i;
         var items = this._items;
         var length = items.length;
@@ -334,7 +337,7 @@ define([
 
         var isUpdated = true;
         for (i = 0; i < items.length; i++) {
-            isUpdated = items[i].update(time) && isUpdated;
+            isUpdated = items[i].update(time, asynchronous) && isUpdated;
         }
         return isUpdated;
     };
