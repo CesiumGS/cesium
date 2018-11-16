@@ -13,6 +13,7 @@ define([
         './DeveloperError',
         './Event',
         './GeographicTilingScheme',
+        './getStringFromTypedArray',
         './HeightmapTerrainData',
         './IndexDatatype',
         './Math',
@@ -40,6 +41,7 @@ define([
         DeveloperError,
         Event,
         GeographicTilingScheme,
+        getStringFromTypedArray,
         HeightmapTerrainData,
         IndexDatatype,
         CesiumMath,
@@ -565,8 +567,8 @@ define([
             } else if (extensionId === QuantizedMeshExtensionIds.METADATA && provider._requestMetadata) {
                 var stringLength = view.getUint32(pos, true);
                 if (stringLength > 0) {
-                    var jsonString = String.fromCharCode.apply(null,
-                        new Uint8Array(buffer, pos + Uint32Array.BYTES_PER_ELEMENT, stringLength));
+                    var jsonString =
+                        getStringFromTypedArray(new Uint8Array(buffer), pos + Uint32Array.BYTES_PER_ELEMENT, stringLength);
                     var metadata = JSON.parse(jsonString);
                     var availableTiles = metadata.available;
                     if (defined(availableTiles)) {
@@ -941,40 +943,6 @@ define([
         return this._levelZeroMaximumGeometricError / (1 << level);
     };
 
-    var scratchTileXY = new Cartesian2();
-    /**
-     * Loads the availability for the position if not already loaded.
-     *
-     * @param {Cartographic} position The position to make sure availability is loaded for.
-     * @returns {undefined|Promise} A promise that resolves when the availability is loaded. Undefined if availability isn't supported.
-     */
-    CesiumTerrainProvider.prototype.loadAvailability = function(position) {
-        if (!defined(this._availability)) {
-            return undefined;
-        }
-
-        // Try and load the max level tile at the position. Even if its not there we will
-        //  still end up loading all the metadata availability tiles below it and its max level of availability.
-        var level = this.availability._maximumLevel;
-        this._tilingScheme.positionToTileXY(position, level, scratchTileXY);
-
-        return when(loadTileAvailability(this, scratchTileXY.x, scratchTileXY.y, level));
-    };
-
-    function loadTileAvailability(provider, x, y, level) {
-        if (provider._availability.isTileAvailable(level, x, y)) {
-            // If the tile is listed as available, then we are done
-            return true;
-        }
-        if (!provider._hasMetadata) {
-            // If we don't have any layers with the metadata extension then we don't have this tile
-            return false;
-        }
-
-        // Load any tiles we need to figure out availability
-        return checkAncestorsLayers(provider, x, y, level, 0);
-    }
-
     /**
      * Determines whether data for a tile is available to be loaded.
      *
@@ -991,7 +959,16 @@ define([
             return false;
         }
 
-        var result = loadTileAvailability(this, x, y, level);
+        if (this._availability.isTileAvailable(level, x, y)) {
+            // If the tile is listed as available, then we are done
+            return true;
+        }
+        if (!this._hasMetadata) {
+            // If we don't have any layers with the metadata extension then we don't have this tile
+            return false;
+        }
+
+        var result = checkAncestorsLayers(this, x, y, level, 0);
 
         // If we got a result, return it. If it was a promise return false for now.
         return (typeof result === 'boolean') ? result : false;
@@ -1061,7 +1038,14 @@ define([
             return;
         }
 
-        var promise = when.resolve();
+        // Check the cache
+        var key = level + '-' + x + '-' + y;
+        var promise = layer.availabilityPromiseCache[key];
+        if (defined(promise)) {
+            return promise;
+        }
+
+        promise = when.resolve();
         if (level !== 0) {
             var parent = getAvailabilityTile(layer, x, y, level);
             promise = checkParentTiles(provider, parent.x, parent.y, parent.level, layer);
@@ -1077,13 +1061,6 @@ define([
                 if (!layer.availability.isTileAvailable(level, x, y)) {
                     // All parents are loaded, so if this tile isn't available don't try to load it.
                     return;
-                }
-
-                // Check the cache
-                var key = level + '-' + x + '-' + y;
-                var promise = layer.availabilityPromiseCache[key];
-                if (defined(promise)) {
-                    return promise;
                 }
 
                 // Load the tile
