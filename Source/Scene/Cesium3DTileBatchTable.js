@@ -1057,7 +1057,7 @@ define([
             regex = new RegExp(diffuseAttributeOrUniformName, 'g');
             source = source.replace(regex, replaceDiffuse);
             setColor =
-                '    vec4 source = czm_gammaCorrect(' + sourceDiffuse + '); \n' +
+                '    vec4 source = ' + sourceDiffuse + '; \n' +
                 '    tile_diffuse = tile_diffuse_final(source, tile_featureColor); \n' +
                 '    tile_main(); \n';
         } else if (type === 'sampler2D') {

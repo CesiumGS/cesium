@@ -4352,8 +4352,10 @@ define([
                         var gltf = this.gltf;
                         // Add the original version so it remains cached
                         gltf.extras.sourceVersion = ModelUtility.getAssetVersion(gltf);
+                        gltf.extras.sourceKHRTechniquesWebGL = defined(ModelUtility.getUsedExtensions(gltf).KHR_techniques_webgl);
+
                         this._sourceVersion = gltf.extras.sourceVersion;
-                        this._sourceKHRTechniquesWebGL = defined(ModelUtility.getUsedExtensions(gltf).KHR_techniques_webgl);
+                        this._sourceKHRTechniquesWebGL = gltf.extras.sourceKHRTechniquesWebGL;
 
                         updateVersion(gltf);
                         addDefaults(gltf);
@@ -4365,6 +4367,9 @@ define([
                         processModelMaterialsCommon(gltf, options);
                         processPbrMaterials(gltf, options);
                     }
+
+                    this._sourceVersion = this.gltf.extras.sourceVersion;
+                    this._sourceKHRTechniquesWebGL = this.gltf.extras.sourceKHRTechniquesWebGL;
 
                     // Skip dequantizing in the shader if not encoded
                     this._dequantizeInShader = this._dequantizeInShader && DracoLoader.hasExtension(this);
