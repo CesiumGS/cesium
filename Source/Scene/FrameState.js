@@ -50,6 +50,10 @@ define([
          */
         this.environmentMap = undefined;
 
+        this.sphericalHarmonicCoefficients = undefined;
+        this.specularEnvironmentMaps = undefined;
+        this.specularEnvironmentMapsMaximumLOD = undefined;
+
         /**
          * The current mode of the scene.
          *

@@ -684,6 +684,9 @@ define([
         this._shouldUpdateSpecularMapAtlas = true;
         this._specularEnvironmentMapAtlas = undefined;
 
+        this._useDefaultSphericalHarmonics = false;
+        this._useDefaultSpecularMaps = false;
+
         this._shouldRegenerateShaders = false;
     }
 
@@ -2113,10 +2116,15 @@ define([
         }
 
         if (defined(model._sphericalHarmonicCoefficients)) {
-            drawFS = '#define DIFFUSE_IBL \n' + '#define SPHERICAL_HARMONICS \n' + 'uniform vec3 gltf_sphericalHarmonicCoefficients[9]; \n' + drawFS;
+            drawFS = '#define DIFFUSE_IBL \n' + '#define CUSTOM_SPHERICAL_HARMONICS \n' + 'uniform vec3 gltf_sphericalHarmonicCoefficients[9]; \n' + drawFS;
+        } else if (model._useDefaultSphericalHarmonics) {
+            drawFS = '#define DIFFUSE_IBL \n' + drawFS;
         }
+
         if (defined(model._specularEnvironmentMapAtlas) && model._specularEnvironmentMapAtlas.ready) {
-            drawFS = '#define SPECULAR_IBL \n' + 'uniform sampler2D gltf_specularMap; \n' + 'uniform vec2 gltf_specularMapSize; \n' + 'uniform float gltf_maxSpecularLOD; \n' + drawFS;
+            drawFS = '#define SPECULAR_IBL \n' + '#define CUSTOM_SPECULAR_IBL \n' + 'uniform sampler2D gltf_specularMap; \n' + 'uniform vec2 gltf_specularMapSize; \n' + 'uniform float gltf_maxSpecularLOD; \n' + drawFS;
+        } else if (model._useDefaultSpecularMaps) {
+            drawFS = '#define SPECULAR_IBL \n' + drawFS;
         }
 
         if (defined(model._luminanceAtZenith)) {
@@ -2185,10 +2193,15 @@ define([
         }
 
         if (defined(model._sphericalHarmonicCoefficients)) {
-            drawFS = '#define DIFFUSE_IBL \n' + '#define SPHERICAL_HARMONICS \n' + 'uniform vec3 gltf_sphericalHarmonicCoefficients[9]; \n' + drawFS;
+            drawFS = '#define DIFFUSE_IBL \n' + '#define CUSTOM_SPHERICAL_HARMONICS \n' + 'uniform vec3 gltf_sphericalHarmonicCoefficients[9]; \n' + drawFS;
+        } else if (model._useDefaultSphericalHarmonics) {
+            drawFS = '#define DIFFUSE_IBL \n' + drawFS;
         }
+
         if (defined(model._specularEnvironmentMapAtlas) && model._specularEnvironmentMapAtlas.ready) {
-            drawFS = '#define SPECULAR_IBL \n' + 'uniform sampler2D gltf_specularMap; \n' + 'uniform vec2 gltf_specularMapSize; \n' + 'uniform float gltf_maxSpecularLOD; \n' + drawFS;
+            drawFS = '#define SPECULAR_IBL \n' + '#define CUSTOM_SPECULAR_IBL \n' + 'uniform sampler2D gltf_specularMap; \n' + 'uniform vec2 gltf_specularMapSize; \n' + 'uniform float gltf_maxSpecularLOD; \n' + drawFS;
+        } else if (model._useDefaultSpecularMaps) {
+            drawFS = '#define SPECULAR_IBL \n' + drawFS;
         }
 
         if (defined(model._luminanceAtZenith)) {
@@ -4461,6 +4474,17 @@ define([
         if (defined(this._specularEnvironmentMapAtlas)) {
             this._specularEnvironmentMapAtlas.update(frameState);
         }
+
+        var recompileWithDefaultAtlas = !defined(this._specularEnvironmentMapAtlas) && defined(frameState.specularEnvironmentMaps) && !this._useDefaultSpecularMaps;
+        var recompileWithoutDefaultAtlas = !defined(frameState.specularEnvironmentMaps) && this._useDefaultSpecularMaps;
+
+        var recompileWithDefaultSHCoeffs = !defined(this._sphericalHarmonicCoefficients) && defined(frameState.sphericalHarmonicCoefficients) && !this._useDefaultSphericalHarmonics;
+        var recompileWithoutDefaultSHCoeffs = !defined(frameState.sphericalHarmonicCoefficients) && this._useDefaultSphericalHarmonics;
+
+        this._shouldRegenerateShaders = this._shouldRegenerateShaders || recompileWithDefaultAtlas || recompileWithoutDefaultAtlas || recompileWithDefaultSHCoeffs || recompileWithoutDefaultSHCoeffs;
+
+        this._useDefaultSpecularMaps = !defined(this._specularEnvironmentMapAtlas) && defined(frameState.specularEnvironmentMaps);
+        this._useDefaultSphericalHarmonics = !defined(this._sphericalHarmonicCoefficients) && defined(frameState.sphericalHarmonicCoefficients);
 
         var silhouette = hasSilhouette(this, frameState);
         var translucent = isTranslucent(this);

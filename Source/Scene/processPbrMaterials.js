@@ -729,17 +729,21 @@ define([
             fragmentShader += '    vec3 cubeDir = normalize((czm_inverseModelView * vec4(n, 0.0)).xyz); \n';
             fragmentShader += '    cubeDir = yUpToZUp * cubeDir; \n'; // TODO
             fragmentShader += '#ifdef DIFFUSE_IBL \n';
-            fragmentShader += '#ifdef SPHERICAL_HARMONICS \n';
+            fragmentShader += '#ifdef CUSTOM_SPHERICAL_HARMONICS \n';
             fragmentShader += '    vec3 diffuseIrradiance = czm_sphericalHarmonics(cubeDir, gltf_sphericalHarmonicCoefficients); \n';
             fragmentShader += '#else \n';
-            fragmentShader += '    vec3 diffuseIrradiance = textureCube(gltf_diffuseIrradiance, cubeDir).rgb;\n';
+            fragmentShader += '    vec3 diffuseIrradiance = czm_sphericalHarmonics(cubeDir, czm_sphericalHarmonicCoefficients); \n';
             fragmentShader += '#endif \n';
             fragmentShader += '#else \n';
             fragmentShader += '    vec3 diffuseIrradiance = vec3(0.0); \n';
             fragmentShader += '#endif \n';
             fragmentShader += '#ifdef SPECULAR_IBL \n';
             fragmentShader += '    vec2 brdfLut = texture2D(czm_brdfLut, vec2(NdotV, roughness)).rg;\n';
+            fragmentShader += '#ifdef CUSTOM_SPECULAR_IBL \n';
             fragmentShader += '    vec3 specularIBL = czm_sampleOctahedralProjection(gltf_specularMap, gltf_specularMapSize, cubeDir,  roughness * gltf_maxSpecularLOD, gltf_maxSpecularLOD);\n';
+            fragmentShader += '#else \n';
+            fragmentShader += '    vec3 specularIBL = czm_sampleOctahedralProjection(czm_specularEnvironmentMaps, czm_specularEnvironmentMapSize, cubeDir,  roughness * czm_specularEnvironmentMapsMaximumLOD, czm_specularEnvironmentMapsMaximumLOD);\n';
+            fragmentShader += '#endif \n';
             fragmentShader += '    specularIBL *= F * brdfLut.x + brdfLut.y;\n';
             fragmentShader += '#else \n';
             fragmentShader += '    vec3 specularIBL = vec3(0.0); \n';

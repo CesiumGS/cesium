@@ -162,8 +162,12 @@ define([
         this._orthographicIn3D = false;
         this._backgroundColor = new Color();
 
-        this._brdfLut = new Sampler();
-        this._environmentMap = new Sampler();
+        this._brdfLut = undefined;
+        this._environmentMap = undefined;
+
+        this._sphericalHarmonicCoefficients = undefined;
+        this._specularEnvironmentMaps = undefined;
+        this._specularEnvironmentMapsMaximumLOD = undefined;
 
         this._fogDensity = undefined;
 
@@ -860,7 +864,7 @@ define([
         /**
          * The look up texture used to find the BRDF for a material
          * @memberof UniformState.prototype
-         * @type {Sampler}
+         * @type {Texture}
          */
         brdfLut : {
             get : function() {
@@ -871,11 +875,29 @@ define([
         /**
          * The environment map of the scene
          * @memberof UniformState.prototype
-         * @type {Sampler}
+         * @type {CubeMap}
          */
         environmentMap : {
             get : function() {
                 return this._environmentMap;
+            }
+        },
+
+        sphericalHarmonicCoefficients : {
+            get : function() {
+                return this._sphericalHarmonicCoefficients;
+            }
+        },
+
+        specularEnvironmentMaps : {
+            get : function() {
+                return this._specularEnvironmentMaps;
+            }
+        },
+
+        specularEnvironmentMapsMaximumLOD : {
+            get : function() {
+                return this._specularEnvironmentMapsMaximumLOD;
             }
         },
 
@@ -1092,6 +1114,10 @@ define([
         this._brdfLut = brdfLut;
 
         this._environmentMap = defaultValue(frameState.environmentMap, frameState.context.defaultCubeMap);
+
+        this._sphericalHarmonicCoefficients = frameState.sphericalHarmonicCoefficients;
+        this._specularEnvironmentMaps = frameState.specularEnvironmentMaps;
+        this._specularEnvironmentMapsMaximumLOD = frameState.specularEnvironmentMapsMaximumLOD;
 
         this._fogDensity = frameState.fog.density;
 

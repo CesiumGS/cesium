@@ -1560,6 +1560,38 @@ define([
             }
         }),
 
+        czm_specularEnvironmentMaps : new AutomaticUniform({
+            size : 1,
+            datatype : WebGLConstants.SAMPLER_2D,
+            getValue : function(uniformState) {
+                return uniformState.specularEnvironmentMaps;
+            }
+        }),
+
+        czm_specularEnvironmentMapSize : new AutomaticUniform({
+            size : 1,
+            datatype : WebGLConstants.FLOAT_VEC2,
+            getValue : function(uniformState) {
+                return uniformState.specularEnvironmentMaps.dimensions;
+            }
+        }),
+
+        czm_specularEnvironmentMapsMaximumLOD : new AutomaticUniform({
+            size : 1,
+            datatype : WebGLConstants.FLOAT,
+            getValue : function(uniformState) {
+                return uniformState.specularEnvironmentMapsMaximumLOD;
+            }
+        }),
+
+        czm_sphericalHarmonicCoefficients : new AutomaticUniform({
+            size : 9,
+            datatype : WebGLConstants.FLOAT_VEC3,
+            getValue : function(uniformState) {
+                return uniformState.sphericalHarmonicCoefficients;
+            }
+        }),
+
         /**
          * An automatic GLSL uniform representing a 3x3 rotation matrix that transforms
          * from True Equator Mean Equinox (TEME) axes to the pseudo-fixed axes at the current scene time.

@@ -65,6 +65,7 @@ define([
         './InvertClassification',
         './JobScheduler',
         './MapMode2D',
+        './OctahedralProjectedCubeMap',
         './PerformanceDisplay',
         './PerInstanceColorAppearance',
         './PickDepth',
@@ -146,6 +147,7 @@ define([
         InvertClassification,
         JobScheduler,
         MapMode2D,
+        OctahedralProjectedCubeMap,
         PerformanceDisplay,
         PerInstanceColorAppearance,
         PickDepth,
@@ -794,6 +796,10 @@ define([
         this.highDynamicRange = true;
         this.gamma = 2.2;
         this._sunColor = new Cartesian3(1.8, 1.85, 2.0);
+
+        this.sphericalHarmonicCoefficients = undefined;
+        this.specularEnvironmentMaps = undefined;
+        this._specularEnvironmentMapAtlas = undefined;
 
         // Give frameState, camera, and screen space camera controller initial state before rendering
         updateFrameNumber(this, 0.0, JulianDate.now());
@@ -1707,6 +1713,16 @@ define([
         frameState.invertClassification = scene.invertClassification;
         frameState.useLogDepth = scene._logDepthBuffer && !(scene.camera.frustum instanceof OrthographicFrustum || scene.camera.frustum instanceof OrthographicOffCenterFrustum);
         frameState.sunColor = scene._sunColor;
+
+        if (defined(scene._specularEnvironmentMapAtlas) && scene._specularEnvironmentMapAtlas.ready) {
+            frameState.specularEnvironmentMaps = scene._specularEnvironmentMapAtlas.texture;
+            frameState.specularEnvironmentMapsMaximumLOD = scene._specularEnvironmentMapAtlas.maximumMipmapLevel;
+        } else {
+            frameState.specularEnvironmentMaps = undefined;
+            frameState.specularEnvironmentMapsMaximumLOD = undefined;
+        }
+
+        frameState.sphericalHarmonicCoefficients = scene.sphericalHarmonicCoefficients;
 
         scene._actualInvertClassificationColor = Color.clone(scene.invertClassificationColor, scene._actualInvertClassificationColor);
         if (!InvertClassification.isTranslucencySupported(scene._context)) {
@@ -2821,6 +2837,20 @@ define([
         environmentState.isSkyAtmosphereVisible = defined(environmentState.skyAtmosphereCommand) && environmentState.isReadyForAtmosphere;
         environmentState.isSunVisible = scene.isVisible(environmentState.sunDrawCommand, cullingVolume, occluder);
         environmentState.isMoonVisible = scene.isVisible(environmentState.moonCommand, cullingVolume, occluder);
+
+        var envMaps = scene.specularEnvironmentMaps;
+        var envMapAtlas = scene._specularEnvironmentMapAtlas;
+        if (defined(envMaps) && (!defined(envMapAtlas) || envMapAtlas.url !== envMaps)) {
+            envMapAtlas = envMapAtlas && envMapAtlas.destroy();
+            scene._specularEnvironmentMapAtlas = new OctahedralProjectedCubeMap(envMaps);
+        } else if (!defined(envMaps) && defined(envMapAtlas)) {
+            envMapAtlas.destroy();
+            scene._specularEnvironmentMapAtlas = undefined;
+        }
+
+        if (defined(scene._specularEnvironmentMapAtlas)) {
+            scene._specularEnvironmentMapAtlas.update(frameState);
+        }
     }
 
     function updateDebugFrustumPlanes(scene) {

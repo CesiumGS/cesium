@@ -70,6 +70,11 @@ define([
     }
 
     defineProperties(OctahedralProjectedCubeMap.prototype, {
+        url : {
+            get : function() {
+                return this._url;
+            }
+        },
         /**
          * A texture containing all the packed convolutions.
          * @memberof OctahedralProjectedCubeMap.prototype
