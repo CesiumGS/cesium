@@ -518,15 +518,12 @@ EllipsoidGeometry.createGeometry = function(ellipsoidGeometry) {
                 var tangent = scratchTangent;
 
                 // Use UNIT_X for the poles
-                var offset1 = 0;
-                var offset2 = hasInnerSurface ? vertexCountHalf : vertexCount;
+                var tangetOffset = 0;
                 var unit;
                 if (isInner[i]) {
-                    offset1 = vertexCountHalf;
-                    offset2 = vertexCount;
+                    tangetOffset = vertexCountHalf;
                 }
-                if ((!isTopOpen && (i >= offset1 && i < (offset1 + numThetas*2))) ||
-                    (!isBotOpen && i > offset2 - numThetas*2 - 1)) {
+                if ((!isTopOpen && (i >= tangetOffset && i < (tangetOffset + numThetas*2)))) {
                     unit = Cartesian3.UNIT_X;
                 } else {
                     unit = Cartesian3.UNIT_Z;

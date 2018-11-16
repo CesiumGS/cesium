@@ -99,7 +99,7 @@ defineSuite([
             expect(m.indices.length).toEqual(numTriangles * 3);
         });
 
-        xit('computes attributes for a unit sphere', function() {
+        it('computes attributes for a unit sphere', function() {
             var m = EllipsoidGeometry.createGeometry(new EllipsoidGeometry({
                 vertexFormat: VertexFormat.ALL,
                 slicePartitions: 3,
