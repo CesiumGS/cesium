@@ -40,28 +40,47 @@ function loadDemoFromUrl() {
     // The helper functions script needs this.
     window.pako = pako;
     var defined = Cesium.defined;
+    var loaderElement;
+    var frameDelay = 30;
+    var code;
+
+    function update() {
+        var width = getComputedStyle(loaderElement).getPropertyValue('width');
+        var done = false;
+        if (width === '12px') {
+            frameDelay --;
+            if (frameDelay <= 0) {
+                done = true;
+                var scriptElement = document.createElement('script');
+                var isFirefox = navigator.userAgent.indexOf('Firefox/') >= 0;
+                document.head.appendChild(scriptElement);
+                scriptElement.innerHTML = embedInSandcastleTemplate(code, isFirefox);
+            }
+        }
+
+        if (!done) {
+            requestAnimationFrame(update);
+        }
+    }
 
     if (window.location.hash.indexOf('#c=') === 0) {
         var base64String = window.location.hash.substr(3);
         var data = decodeBase64Data(base64String);
         var html = data.html;
-        var code = data.code;
+        code = data.code;
         // Replace CSS URL since standalone is one level up from the usual bucket.html
         html = html.replace('../templates', 'templates');
+        html += '<div id="loader"></div>';
+        html += '<style>#loader { width : 12px }</style>';
 
         // Add the HTML content
         var htmlElement = document.createElement('div');
         htmlElement.innerHTML = html;
         document.body.appendChild(htmlElement);
+        // Add the JavaScript only when CSS has loaded
+        loaderElement = document.querySelector("#loader");
 
-        // Wait for that to load, then add the script
-        // the window load event will re-fire since we've altered the DOM.
-        window.addEventListener("load", function(event) {
-            var scriptElement = document.createElement('script');
-            var isFirefox = navigator.userAgent.indexOf('Firefox/') >= 0;
-            document.head.appendChild(scriptElement);
-            scriptElement.innerHTML = embedInSandcastleTemplate(code, isFirefox);
-        });
+        requestAnimationFrame(update);
     }
 }
 </script>
