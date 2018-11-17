@@ -137,10 +137,10 @@ define([
         this._layers = options.layers;
 
         this._credit = defaultValue(options.credit, undefined);
-        if (typeof this._credit === "string") {
+        if (typeof this._credit === 'string') {
             this._credit = new Credit(this._credit);
         }
-        
+
         /**
          * Gets or sets a value indicating whether feature picking is enabled.  If true, {@link ArcGisMapServerImageryProvider#pickFeatures} will
          * invoke the "identify" operation on the ArcGIS server and return the features included in the response.  If false,
