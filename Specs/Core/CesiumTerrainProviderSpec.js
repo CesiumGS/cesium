@@ -772,14 +772,11 @@ defineSuite([
                 return terrainProvider.ready;
             }).then(function() {
                 expect(terrainProvider.getTileDataAvailable(0,0,0)).toBe(true);
-                expect(terrainProvider.getTileDataAvailable(0,0,1)).toBe(false);
+                expect(terrainProvider.getTileDataAvailable(0,0,1)).toBeUndefined();
 
-                RequestScheduler.update();
-
-                // The previous call should have kicked off the request for the 0,0,0 tile to get the availability
-                return pollToPromise(function() {
-                    return terrainProvider.getTileDataAvailable(0,0,1);
-                });
+                return terrainProvider.requestTileGeometry(0, 0, 0);
+            }).then(function() {
+                expect(terrainProvider.getTileDataAvailable(0,0,1)).toBe(true);
             });
         });
 
