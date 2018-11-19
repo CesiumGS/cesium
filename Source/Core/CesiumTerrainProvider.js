@@ -968,15 +968,26 @@ define([
             return false;
         }
 
-        var result = checkAncestorsLayers(this, x, y, level, 0);
+        var layers = this._layers;
+        var count = layers.length;
+        for (var i = 0; i < count; ++i) {
+            var layerResult = checkLayer(this, x, y, level, layers[i], (i===0));
+            if (layerResult) {
+                // There is a layer that may or may not have the tile
+                return undefined;
+            }
+        }
 
-        // If we got a result, return it. If it was a promise return false for now.
-        return (typeof result === 'boolean') ? result : false;
+        return false;
     };
 
     function getAvailabilityTile(layer, x, y, level) {
+        if (level === 0) {
+            return;
+        }
+
         var availabilityLevels = layer.availabilityLevels;
-        if (level !== 0 && (level % availabilityLevels === 0)) {
+        if (level % availabilityLevels === 0) {
             level -= availabilityLevels;
         }
 
@@ -992,95 +1003,40 @@ define([
         };
     }
 
-    function checkAncestorsLayers(provider, x, y, level, index) {
-        var layers = provider._layers;
-        var layer = layers[index];
-        var promise;
-        if (defined(layer.availabilityLevels)) {
-            // We only need to check this layer if there wasn't
-            //  an available list and it has the metadata extension
-            var parent = getAvailabilityTile(layer, x, y, level);
-            promise = checkParentTiles(provider, parent.x, parent.y, parent.level, layer);
+    function checkLayer(provider, x, y, level, layer, topLayer) {
+        if (!defined(layer.availabilityLevels)) {
+            // It's definitely not in this layer
+            return false;
         }
 
-        // Nothing to load, so this tile isn't available in this layer
-        if (!defined(promise)) {
-            // This layer doesn't have it so we can move on to check the next layer
-            if (++index === layers.length)
+        var availabilityTilesLoaded = layer.availabilityTilesLoaded;
+        var availability = layer.availability;
+
+        var tile = getAvailabilityTile(layer, x, y, level);
+        while(defined(tile)) {
+            if (availability.isTileAvailable(tile.level, tile.x, tile.y) &&
+                !availabilityTilesLoaded.isTileAvailable(tile.level, tile.x, tile.y))
             {
-                // No more layers left
-                return;
-            }
-            return checkAncestorsLayers(provider, x, y, level, index);
-        }
-
-        return promise
-            .then(function() {
-                if (layer.availability.isTileAvailable(level, x, y)) {
-                    // We now know we have this tile, so we can stop here
-                    return;
-                }
-
-                // This layer doesn't have it so we can move on to check the next layer
-                if (++index === layers.length)
-                {
-                    // No more layers left
-                    return;
-                }
-                return checkAncestorsLayers(provider, x, y, level, index);
-            });
-    }
-
-    function checkParentTiles(provider, x, y, level, layer) {
-        var isLoaded = layer.availabilityTilesLoaded.isTileAvailable(level, x, y);
-        if (isLoaded) {
-            // Tile is loaded, so just return
-            return;
-        }
-
-        // Check the cache
-        var key = level + '-' + x + '-' + y;
-        var promise = layer.availabilityPromiseCache[key];
-        if (defined(promise)) {
-            return promise;
-        }
-
-        promise = when.resolve();
-        if (level !== 0) {
-            var parent = getAvailabilityTile(layer, x, y, level);
-            promise = checkParentTiles(provider, parent.x, parent.y, parent.level, layer);
-        }
-
-        // If all parent tiles are already loaded, then this tile isn't available
-        if (!defined(promise)) {
-            return;
-        }
-
-        return promise
-            .then(function() {
-                if (!layer.availability.isTileAvailable(level, x, y)) {
-                    // All parents are loaded, so if this tile isn't available don't try to load it.
-                    return;
-                }
-
-                // Load the tile
-                var request = new Request({
-                    throttle : true,
-                    throttleByServer : true,
-                    type : RequestType.TERRAIN
-                });
-                promise = requestTileGeometry(provider, x, y, level, layer, request);
-                if (!defined(promise)) {
-                    return;
-                }
-
-                layer.availabilityPromiseCache[key] = promise;
-
-                return promise
-                    .then(function() {
-                        delete layer.availabilityPromiseCache[key];
+                if (!topLayer) {
+                    // For cutout terrain, if this isn't the top layer the availability tiles
+                    //  may never get loaded, so request it here.
+                    var request = new Request({
+                        throttle : true,
+                        throttleByServer : true,
+                        type : RequestType.TERRAIN
                     });
-            });
+                    requestTileGeometry(provider, tile.x, tile.y, tile.level, layer, request);
+                }
+
+                // The availability tile is available, but not loaded, so there
+                //  is still a chance that it may become available at some point
+                return true;
+            }
+
+            tile = getAvailabilityTile(layer, tile.x, tile.y, tile.level);
+        }
+
+        return false;
     }
 
     return CesiumTerrainProvider;
