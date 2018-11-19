@@ -972,13 +972,38 @@ define([
         var count = layers.length;
         for (var i = 0; i < count; ++i) {
             var layerResult = checkLayer(this, x, y, level, layers[i], (i===0));
-            if (layerResult) {
+            if (layerResult.result) {
                 // There is a layer that may or may not have the tile
                 return undefined;
             }
         }
 
         return false;
+    };
+
+    /**
+     * Makes sure we load availability data for a tile
+     *
+     * @param {Number} x The X coordinate of the tile for which to request geometry.
+     * @param {Number} y The Y coordinate of the tile for which to request geometry.
+     * @param {Number} level The level of the tile for which to request geometry.
+     * @returns {undefined|Promise} Undefined if nothing need to be loaded or a Promise that resolves when all required tiles are loaded
+     */
+    CesiumTerrainProvider.prototype.loadTileDataAvailability = function(x, y, level) {
+        if (!defined(this._availability) || (level > this._availability._maximumLevel) ||
+            (this._availability.isTileAvailable(level, x, y) || (!this._hasMetadata))) {
+            // We know the tile is either available or not available so nothing to wait on
+            return undefined;
+        }
+
+        var layers = this._layers;
+        var count = layers.length;
+        for (var i = 0; i < count; ++i) {
+            var layerResult = checkLayer(this, x, y, level, layers[i], (i===0));
+            if (defined(layerResult.promise)) {
+                return layerResult.promise;
+            }
+        }
     };
 
     function getAvailabilityTile(layer, x, y, level) {
@@ -1006,9 +1031,15 @@ define([
     function checkLayer(provider, x, y, level, layer, topLayer) {
         if (!defined(layer.availabilityLevels)) {
             // It's definitely not in this layer
-            return false;
+            return {
+                result: false
+            };
         }
 
+        var cacheKey;
+        var deleteFromCache = function () {
+            delete layer.availabilityPromiseCache[cacheKey];
+        };
         var availabilityTilesLoaded = layer.availabilityTilesLoaded;
         var availability = layer.availability;
 
@@ -1017,26 +1048,40 @@ define([
             if (availability.isTileAvailable(tile.level, tile.x, tile.y) &&
                 !availabilityTilesLoaded.isTileAvailable(tile.level, tile.x, tile.y))
             {
+                var requestPromise;
                 if (!topLayer) {
-                    // For cutout terrain, if this isn't the top layer the availability tiles
-                    //  may never get loaded, so request it here.
-                    var request = new Request({
-                        throttle : true,
-                        throttleByServer : true,
-                        type : RequestType.TERRAIN
-                    });
-                    requestTileGeometry(provider, tile.x, tile.y, tile.level, layer, request);
+                    cacheKey = tile.level + '-' + tile.x + '-' + tile.y;
+                    requestPromise = layer.availabilityPromiseCache[cacheKey];
+                    if (!defined(requestPromise)) {
+                        // For cutout terrain, if this isn't the top layer the availability tiles
+                        //  may never get loaded, so request it here.
+                        var request = new Request({
+                            throttle: true,
+                            throttleByServer: true,
+                            type: RequestType.TERRAIN
+                        });
+                        requestPromise = requestTileGeometry(provider, tile.x, tile.y, tile.level, layer, request);
+                        if (defined(requestPromise)) {
+                            layer.availabilityPromiseCache[cacheKey] = requestPromise;
+                            requestPromise.then(deleteFromCache);
+                        }
+                    }
                 }
 
                 // The availability tile is available, but not loaded, so there
                 //  is still a chance that it may become available at some point
-                return true;
+                return {
+                    result: true,
+                    promise: requestPromise
+                };
             }
 
             tile = getAvailabilityTile(layer, tile.x, tile.y, tile.level);
         }
 
-        return false;
+        return {
+            result: false
+        };
     }
 
     return CesiumTerrainProvider;

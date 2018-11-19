@@ -1,14 +1,18 @@
 define([
         '../ThirdParty/when',
+        './Cartesian2',
         './defined',
         './DeveloperError',
         './sampleTerrain'
     ], function(
         when,
+        Cartesian2,
         defined,
         DeveloperError,
         sampleTerrain) {
     'use strict';
+
+    var scratchCartesian2 = new Cartesian2();
 
     /**
      * Initiates a sampleTerrain() request at the maximum available tile level for a terrain dataset.
@@ -56,10 +60,21 @@ define([
                 }
                 //>>includeEnd('debug');
 
+                var promises = [];
                 for (var i = 0; i < positions.length; ++i) {
                     var position = positions[i];
                     var maxLevel = availability.computeMaximumLevelAtPosition(position);
                     maxLevels[i] = maxLevel;
+                    if (maxLevel === 0) {
+                        // This is a special case where we have a parent terrain and we are requesting
+                        // heights from an area that isn't covered by the top level terrain at all.
+                        // This will essentially trigger the loading of the parent terrains root tile
+                        terrainProvider.tilingScheme.positionToTileXY(position, 1, scratchCartesian2);
+                        var promise = terrainProvider.loadTileDataAvailability(scratchCartesian2.x, scratchCartesian2.y, 1);
+                        if (defined(promise)) {
+                            promises.push(promise);
+                        }
+                    }
 
                     var atLevel = byLevel[maxLevel];
                     if (!defined(atLevel)) {
@@ -68,11 +83,14 @@ define([
                     atLevel.push(position);
                 }
 
-                return when.all(byLevel.map(function(positionsAtLevel, index) {
-                    if (defined(positionsAtLevel)) {
-                        return sampleTerrain(terrainProvider, index, positionsAtLevel);
-                    }
-                }))
+                return when.all(promises)
+                    .then(function() {
+                        return when.all(byLevel.map(function(positionsAtLevel, index) {
+                            if (defined(positionsAtLevel)) {
+                                return sampleTerrain(terrainProvider, index, positionsAtLevel);
+                            }
+                        }));
+                    })
                     .then(function() {
                         var changedPositions = [];
                         for (var i = 0; i < positions.length; ++i) {
