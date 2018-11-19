@@ -10,8 +10,9 @@
     <script type="text/javascript" src="../../ThirdParty/requirejs-2.1.20/require.js"></script>
     <script type="text/javascript">
         if(typeof require === 'function') {
+            var urlParams = new URLSearchParams(window.location.search);
             require.config({
-                baseUrl : '../../',
+                baseUrl : urlParams.has('gallery') ? '../../../' : '../../',
                 waitSeconds : 120
             });
         }
@@ -43,6 +44,9 @@ function loadDemoFromUrl() {
     var loaderElement;
     var frameDelay = 30;
     var code;
+    //Handle case where demo is in a sub-directory by modifying
+    //the HTML to add a base href.
+    var urlParams = new URLSearchParams(window.location.search);
 
     function update() {
         var width = getComputedStyle(loaderElement).getPropertyValue('width');
@@ -64,12 +68,19 @@ function loadDemoFromUrl() {
     }
 
     if (window.location.hash.indexOf('#c=') === 0) {
+        if (urlParams.has('gallery')) {
+            var galleryPath = urlParams.get('gallery');
+            document.head.innerHTML = document.head.innerHTML + '<base href="' + galleryPath + '" />';
+        }
+
         var base64String = window.location.hash.substr(3);
         var data = decodeBase64Data(base64String);
         var html = data.html;
         code = data.code;
         // Replace CSS URL since standalone is one level up from the usual bucket.html
-        html = html.replace('../templates', 'templates');
+        if (!urlParams.has('gallery')) {
+            html = html.replace('../templates', 'templates');
+        }
         html += '<div id="loader"></div>';
         html += '<style>#loader { width : 12px }</style>';
 
@@ -78,7 +89,7 @@ function loadDemoFromUrl() {
         htmlElement.innerHTML = html;
         document.body.appendChild(htmlElement);
         // Add the JavaScript only when CSS has loaded
-        loaderElement = document.querySelector("#loader");
+        loaderElement = document.querySelector('#loader');
 
         requestAnimationFrame(update);
     }

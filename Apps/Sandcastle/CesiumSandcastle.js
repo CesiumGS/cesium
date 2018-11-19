@@ -930,10 +930,7 @@ require({
         return location.protocol + '//' + location.host + location.pathname;
     }
 
-    function makeCompressedBase64String() {
-        var code = jsEditor.getValue();
-        var html = htmlEditor.getValue();
-
+    function makeCompressedBase64String(html, code) {
         // data stored in the hash as:
         // Base64 encoded, raw DEFLATE compressed JSON array where index 0 is code, index 1 is html
         var jsonString = JSON.stringify([code, html]);
@@ -949,7 +946,7 @@ require({
         var code = jsEditor.getValue();
         var html = htmlEditor.getValue();
 
-        var base64String = makeCompressedBase64String();
+        var base64String = makeCompressedBase64String(html, code);
 
         var shareUrlBox = document.getElementById('shareUrl');
         shareUrlBox.value = getBaseUrl() + '#c=' + base64String;
@@ -1030,10 +1027,19 @@ require({
     });
 
     registry.byId('buttonNewWindow').on('click', function() {
+        //Handle case where demo is in a sub-directory by modifying
+        //the demo's HTML to add a base href.
         var baseHref = window.location.href;
-        var data = makeCompressedBase64String();
+        var searchLen = window.location.search.length;
+        if (searchLen > 0) {
+            baseHref = baseHref.substring(0, baseHref.length - searchLen);
+        }
+        var pos = baseHref.lastIndexOf('/');
+        baseHref = baseHref.substring(0, pos) + '/gallery/';
+
+        var data = makeCompressedBase64String(htmlEditor.getValue(), jsEditor.getValue());
         var url = getBaseUrl();
-        url = url.replace('index.html','') + 'standalone.html#c=' + data;
+        url = url.replace('index.html','') + 'standalone.html' + '?gallery=' + baseHref + '#c=' + data;
 
         window.open(url, '_blank');
         window.focus();
