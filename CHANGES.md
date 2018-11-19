@@ -4,7 +4,7 @@ Change Log
 ### 1.52 - 2018-12-03
 
 ##### Breaking Changes :mega:
-* `TerrainProviders` must now implement the `loadTileDataAvailability` method.
+* `TerrainProviders` that implement `availability` must now also implement the `loadTileDataAvailability` method.
 
 ##### Additions :tada:
 * Added functions to get the most detailed height of 3D Tiles on-screen or off-screen. [#7115](https://github.com/AnalyticalGraphicsInc/cesium/pull/7115)
