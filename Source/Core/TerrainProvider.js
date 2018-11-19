@@ -227,7 +227,7 @@ define([
      */
     TerrainProvider.prototype.getTileDataAvailable = DeveloperError.throwInstantiationError;
 
-        /**
+    /**
      * Makes sure we load availability data for a tile
      *
      * @param {Number} x The X coordinate of the tile for which to request geometry.
