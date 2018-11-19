@@ -70,6 +70,12 @@ define([
     }
 
     defineProperties(OctahedralProjectedCubeMap.prototype, {
+        /**
+         * The url to the KTX file containing the specular environment map and convoluted mipmaps.
+         * @memberof OctahedralProjectedCubeMap.prototype
+         * @type {String}
+         * @readonly
+         */
         url : {
             get : function() {
                 return this._url;

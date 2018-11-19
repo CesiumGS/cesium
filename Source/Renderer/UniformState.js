@@ -883,18 +883,33 @@ define([
             }
         },
 
+        /**
+         * The spherical harmonic coefficients of the scene.
+         * @memberof UniformState.prototype
+         * @type {Cartesian3[]}
+         */
         sphericalHarmonicCoefficients : {
             get : function() {
                 return this._sphericalHarmonicCoefficients;
             }
         },
 
+        /**
+         * The specular environment map atlas of the scene.
+         * @memberof UniformState.prototype
+         * @type {Texture}
+         */
         specularEnvironmentMaps : {
             get : function() {
                 return this._specularEnvironmentMaps;
             }
         },
 
+        /**
+         * The maximum level-of-detail of the specular environment map atlas of the scene.
+         * @memberof UniformState.prototype
+         * @type {Number}
+         */
         specularEnvironmentMapsMaximumLOD : {
             get : function() {
                 return this._specularEnvironmentMapsMaximumLOD;

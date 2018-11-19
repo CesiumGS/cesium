@@ -1560,6 +1560,17 @@ define([
             }
         }),
 
+        /**
+         * An automatic GLSL uniform containing the specular environment map atlas used within the scene.
+         *
+         * @alias czm_specularEnvironmentMaps
+         * @namespace
+         * @glslUniform
+         *
+         * @example
+         * // GLSL declaration
+         * uniform sampler2D czm_specularEnvironmentMaps;
+         */
         czm_specularEnvironmentMaps : new AutomaticUniform({
             size : 1,
             datatype : WebGLConstants.SAMPLER_2D,
@@ -1568,6 +1579,17 @@ define([
             }
         }),
 
+        /**
+         * An automatic GLSL uniform containing the size of the specular environment map atlas used within the scene.
+         *
+         * @alias czm_specularEnvironmentMapSize
+         * @namespace
+         * @glslUniform
+         *
+         * @example
+         * // GLSL declaration
+         * uniform vec2 czm_specularEnvironmentMapSize;
+         */
         czm_specularEnvironmentMapSize : new AutomaticUniform({
             size : 1,
             datatype : WebGLConstants.FLOAT_VEC2,
@@ -1576,6 +1598,17 @@ define([
             }
         }),
 
+        /**
+         * An automatic GLSL uniform containing the maximum level-of-detail of the specular environment map atlas used within the scene.
+         *
+         * @alias czm_specularEnvironmentMapsMaximumLOD
+         * @namespace
+         * @glslUniform
+         *
+         * @example
+         * // GLSL declaration
+         * uniform float czm_specularEnvironmentMapsMaximumLOD;
+         */
         czm_specularEnvironmentMapsMaximumLOD : new AutomaticUniform({
             size : 1,
             datatype : WebGLConstants.FLOAT,
@@ -1584,6 +1617,17 @@ define([
             }
         }),
 
+        /**
+         * An automatic GLSL uniform containing the spherical harmonic coefficients used within the scene.
+         *
+         * @alias czm_sphericalHarmonicCoefficients
+         * @namespace
+         * @glslUniform
+         *
+         * @example
+         * // GLSL declaration
+         * uniform vec3[9] czm_sphericalHarmonicCoefficients;
+         */
         czm_sphericalHarmonicCoefficients : new AutomaticUniform({
             size : 9,
             datatype : WebGLConstants.FLOAT_VEC3,
