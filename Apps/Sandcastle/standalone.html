@@ -12,13 +12,6 @@
     <script type="text/javascript" src="../../ThirdParty/requirejs-2.1.20/require.js"></script>
     <script type="text/javascript">
         if(typeof require === 'function') {
-            var urlParams = new URLSearchParams(window.location.search);
-
-            if (urlParams.has('gallery')) {
-                var galleryPath = urlParams.get('gallery');
-                document.head.innerHTML = document.head.innerHTML + '<base href="' + galleryPath + '" />';
-            }
-
             require.config({
                 baseUrl : '../../../',
                 waitSeconds : 120
@@ -50,15 +43,12 @@ function loadDemoFromUrl() {
     var loaderElement;
     var frameDelay = 30;
     var code;
-    //Handle case where demo is in a sub-directory by modifying
-    //the HTML to add a base href.
-    var urlParams = new URLSearchParams(window.location.search);
 
     function update() {
         var width = getComputedStyle(loaderElement).getPropertyValue('width');
         var done = false;
         if (width === '12px') {
-            frameDelay --;
+            frameDelay--;
             if (frameDelay <= 0) {
                 done = true;
                 var scriptElement = document.createElement('script');
@@ -78,10 +68,15 @@ function loadDemoFromUrl() {
         var data = decodeBase64Data(base64String);
         var html = data.html;
         code = data.code;
-        // Replace CSS URL since standalone is one level up from the usual bucket.html
-        if (!urlParams.has('gallery')) {
+        var isIE11 = !!window.MSInputMethodContext && !!document.documentMode;
+        if (isIE11) {
             html = html.replace('../templates', 'templates');
         }
+
+        //Handle case where demo is in a sub-directory by modifying
+        //the HTML to add a base href.
+        document.head.innerHTML = document.head.innerHTML + '<base href="' + data.baseHref + '" />';
+        // This is used as a marker to know when the CSS has loaded. 
         html += '<div id="loader"></div>';
         html += '<style>#loader { width : 12px }</style>';
 

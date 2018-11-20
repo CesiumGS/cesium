@@ -31,10 +31,12 @@
         // index 0 is code, index 1 is html
         var code = json[0];
         var html = json[1];
+        var baseHref = json[2];
 
         return {
             code : code,
-            html : html
+            html : html,
+            baseHref : baseHref
         };
     };
  }());

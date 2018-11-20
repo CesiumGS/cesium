@@ -1231,7 +1231,7 @@ function buildSandcastle() {
     var standaloneStream = gulp.src([
         'Apps/Sandcastle/standalone.html'
         ])
-        .pipe(gulpReplace('../../ThirdParty/requirejs-2.1.20/require.js', '../../CesiumUnminified/Cesium.js'))
+        .pipe(gulpReplace('../../ThirdParty/requirejs-2.1.20/require.js', '/Build/CesiumUnminified/Cesium.js'))
         .pipe(gulp.dest('Build/Apps/Sandcastle'));
 
     return streamToPromise(eventStream.merge(appStream, imageStream, standaloneStream));

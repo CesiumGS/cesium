@@ -930,10 +930,10 @@ require({
         return location.protocol + '//' + location.host + location.pathname;
     }
 
-    function makeCompressedBase64String(html, code) {
+    function makeCompressedBase64String(data) {
         // data stored in the hash as:
         // Base64 encoded, raw DEFLATE compressed JSON array where index 0 is code, index 1 is html
-        var jsonString = JSON.stringify([code, html]);
+        var jsonString = JSON.stringify(data);
         // we save a few bytes by omitting the leading [" and trailing "] since they are always the same
         jsonString = jsonString.substr(2, jsonString.length - 4);
         var base64String = btoa(pako.deflate(jsonString, { raw: true, to: 'string', level: 9 }));
@@ -946,7 +946,7 @@ require({
         var code = jsEditor.getValue();
         var html = htmlEditor.getValue();
 
-        var base64String = makeCompressedBase64String(html, code);
+        var base64String = makeCompressedBase64String([code, html]);
 
         var shareUrlBox = document.getElementById('shareUrl');
         shareUrlBox.value = getBaseUrl() + '#c=' + base64String;
@@ -1037,9 +1037,12 @@ require({
         var pos = baseHref.lastIndexOf('/');
         baseHref = baseHref.substring(0, pos) + '/gallery/';
 
-        var data = makeCompressedBase64String(htmlEditor.getValue(), jsEditor.getValue());
+        var code = jsEditor.getValue();
+        var html = htmlEditor.getValue();
+        var data = makeCompressedBase64String([code, html, baseHref]);
+
         var url = getBaseUrl();
-        url = url.replace('index.html','') + 'standalone.html' + '?gallery=' + baseHref + '#c=' + data;
+        url = url.replace('index.html','') + 'standalone.html' + '#c=' + data;
 
         window.open(url, '_blank');
         window.focus();
