@@ -1,4 +1,4 @@
-fdefineSuite([
+defineSuite([
         'DataSources/StaticGroundPolylinePerMaterialBatch',
         'Core/ApproximateTerrainHeights',
         'Core/BoundingSphere',
