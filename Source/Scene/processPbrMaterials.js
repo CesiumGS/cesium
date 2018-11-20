@@ -727,7 +727,7 @@ define([
 
             fragmentShader += '    const mat3 yUpToZUp = mat3(-1.0, 0.0, 0.0, 0.0, 0.0, -1.0, 0.0, 1.0, 0.0); \n';
             fragmentShader += '    vec3 cubeDir = normalize((czm_inverseModelView * vec4(n, 0.0)).xyz); \n';
-            fragmentShader += '    cubeDir = yUpToZUp * cubeDir; \n'; // TODO
+            fragmentShader += '    cubeDir = yUpToZUp * cubeDir; \n';
             fragmentShader += '#ifdef DIFFUSE_IBL \n';
             fragmentShader += '#ifdef CUSTOM_SPHERICAL_HARMONICS \n';
             fragmentShader += '    vec3 diffuseIrradiance = czm_sphericalHarmonics(cubeDir, gltf_sphericalHarmonicCoefficients); \n';
