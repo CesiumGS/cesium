@@ -37,7 +37,7 @@ define([
     var defaultDistanceDisplayCondition = new DistanceDisplayCondition();
 
     // Encapsulates a Primitive and all the entities that it represents.
-    function Batch(orderedGroundPrimitives, materialProperty, zIndex) {
+    function Batch(orderedGroundPrimitives, materialProperty, zIndex, asynchronous) {
         var appearanceType;
         if (materialProperty instanceof ColorMaterialProperty) {
             appearanceType = PolylineColorAppearance;
@@ -61,6 +61,8 @@ define([
         this.subscriptions = new AssociativeArray();
         this.showsUpdated = new AssociativeArray();
         this.zIndex = zIndex;
+
+        this._asynchronous = defaultValue(asynchronous, true);
     }
 
     Batch.prototype.onMaterialChanged = function() {
@@ -113,7 +115,7 @@ define([
         return false;
     };
 
-    Batch.prototype.update = function(time, asynchronous) {
+    Batch.prototype.update = function(time) {
         var isUpdated = true;
         var primitive = this.primitive;
         var orderedGroundPrimitives = this.orderedGroundPrimitives;
@@ -135,7 +137,7 @@ define([
 
                 primitive = new GroundPolylinePrimitive({
                     show : false,
-                    asynchronous : asynchronous,
+                    asynchronous : this._asynchronous,
                     geometryInstances : geometries,
                     appearance : new this.appearanceType()
                 });
@@ -276,9 +278,10 @@ define([
     /**
      * @private
      */
-    function StaticGroundPolylinePerMaterialBatch(orderedGroundPrimitives) {
+    function StaticGroundPolylinePerMaterialBatch(orderedGroundPrimitives, asynchronous) {
         this._items = [];
         this._orderedGroundPrimitives = orderedGroundPrimitives;
+        this._asynchronous = defaultValue(asynchronous, true);
     }
 
     StaticGroundPolylinePerMaterialBatch.prototype.add = function(time, updater) {
@@ -296,7 +299,7 @@ define([
             }
         }
         // If a compatible batch wasn't found, create a new batch.
-        var batch = new Batch(this._orderedGroundPrimitives, updater.fillMaterialProperty, zIndex);
+        var batch = new Batch(this._orderedGroundPrimitives, updater.fillMaterialProperty, zIndex, this._asynchronous);
         batch.add(time, updater, geometryInstance);
         items.push(batch);
     };
@@ -316,8 +319,7 @@ define([
         }
     };
 
-    StaticGroundPolylinePerMaterialBatch.prototype.update = function(time, asynchronous) {
-        asynchronous = defaultValue(asynchronous, true);
+    StaticGroundPolylinePerMaterialBatch.prototype.update = function(time) {
         var i;
         var items = this._items;
         var length = items.length;
@@ -337,7 +339,7 @@ define([
 
         var isUpdated = true;
         for (i = 0; i < items.length; i++) {
-            isUpdated = items[i].update(time, asynchronous) && isUpdated;
+            isUpdated = items[i].update(time, this._asynchronous) && isUpdated;
         }
         return isUpdated;
     };

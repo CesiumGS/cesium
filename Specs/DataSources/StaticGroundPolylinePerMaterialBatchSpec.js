@@ -1,4 +1,4 @@
-defineSuite([
+fdefineSuite([
         'DataSources/StaticGroundPolylinePerMaterialBatch',
         'Core/ApproximateTerrainHeights',
         'Core/BoundingSphere',
@@ -19,7 +19,6 @@ defineSuite([
         'DataSources/PolylineGraphics',
         'DataSources/TimeIntervalCollectionProperty',
         'Scene/GroundPolylinePrimitive',
-        'Scene/MaterialAppearance',
         'Specs/createScene',
         'Specs/pollToPromise'
     ], function(
@@ -43,7 +42,6 @@ defineSuite([
         PolylineGraphics,
         TimeIntervalCollectionProperty,
         GroundPolylinePrimitive,
-        MaterialAppearance,
         createScene,
         pollToPromise) {
     'use strict';
@@ -93,7 +91,7 @@ defineSuite([
             return;
         }
 
-        batch = new StaticGroundPolylinePerMaterialBatch(scene.groundPrimitives);
+        batch = new StaticGroundPolylinePerMaterialBatch(scene.groundPrimitives, false);
 
         var polyline1 = createGroundPolyline();
         polyline1.material = new PolylineOutlineMaterialProperty();
@@ -116,7 +114,7 @@ defineSuite([
 
         return pollToPromise(function() {
             scene.initializeFrame();
-            var isUpdated = batch.update(time, false);
+            var isUpdated = batch.update(time);
             scene.render(time);
             return isUpdated;
         }).then(function() {
@@ -125,7 +123,7 @@ defineSuite([
 
             return pollToPromise(function() {
                 scene.initializeFrame();
-                var isUpdated = batch.update(time, false);
+                var isUpdated = batch.update(time);
                 scene.render(time);
                 return isUpdated;
             }).then(function() {
@@ -154,14 +152,14 @@ defineSuite([
             polyline: polyline
         });
 
-        batch = new StaticGroundPolylinePerMaterialBatch(scene.groundPrimitives);
+        batch = new StaticGroundPolylinePerMaterialBatch(scene.groundPrimitives, false);
 
         var updater = new PolylineGeometryUpdater(entity, scene);
         batch.add(validTime, updater);
 
         return pollToPromise(function() {
             scene.initializeFrame();
-            var isUpdated = batch.update(validTime, false);
+            var isUpdated = batch.update(validTime);
             scene.render(validTime);
             return isUpdated;
         }).then(function() {
@@ -170,7 +168,7 @@ defineSuite([
             var attributes = primitive.getGeometryInstanceAttributes(entity);
             expect(attributes.color).toEqual([255, 0, 0, 255]);
 
-            batch.update(time, false);
+            batch.update(time);
             scene.render(time);
 
             primitive = scene.groundPrimitives.get(0);
@@ -200,14 +198,14 @@ defineSuite([
             polyline: polyline
         });
 
-        batch = new StaticGroundPolylinePerMaterialBatch(scene.groundPrimitives);
+        batch = new StaticGroundPolylinePerMaterialBatch(scene.groundPrimitives, false);
 
         var updater = new PolylineGeometryUpdater(entity, scene);
         batch.add(validTime, updater);
 
         return pollToPromise(function() {
             scene.initializeFrame();
-            var isUpdated = batch.update(validTime, false);
+            var isUpdated = batch.update(validTime);
             scene.render(validTime);
             return isUpdated;
         }).then(function() {
@@ -216,7 +214,7 @@ defineSuite([
             var attributes = primitive.getGeometryInstanceAttributes(entity);
             expect(attributes.distanceDisplayCondition).toEqualEpsilon([1.0, 2.0], CesiumMath.EPSILON6);
 
-            batch.update(time, false);
+            batch.update(time);
             scene.render(time);
 
             primitive = scene.groundPrimitives.get(0);
@@ -233,7 +231,7 @@ defineSuite([
             return;
         }
 
-        batch = new StaticGroundPolylinePerMaterialBatch(scene.groundPrimitives, MaterialAppearance);
+        batch = new StaticGroundPolylinePerMaterialBatch(scene.groundPrimitives, false);
 
         function buildEntity() {
             var polyline = createGroundPolyline();
@@ -250,7 +248,7 @@ defineSuite([
 
         function renderScene() {
             scene.initializeFrame();
-            var isUpdated = batch.update(time, false);
+            var isUpdated = batch.update(time);
             scene.render(time);
             return isUpdated;
         }
@@ -302,7 +300,7 @@ defineSuite([
             return;
         }
 
-        batch = new StaticGroundPolylinePerMaterialBatch(scene.groundPrimitives, MaterialAppearance);
+        batch = new StaticGroundPolylinePerMaterialBatch(scene.groundPrimitives, false);
         var polyline1 = createGroundPolyline();
         polyline1.material = Color.RED;
         var entity = new Entity({
@@ -322,7 +320,7 @@ defineSuite([
 
         return pollToPromise(function() {
             scene.initializeFrame();
-            var isUpdated = batch.update(time, false);
+            var isUpdated = batch.update(time);
             scene.render(time);
             return isUpdated;
         }).then(function() {
@@ -338,7 +336,7 @@ defineSuite([
             return;
         }
 
-        batch = new StaticGroundPolylinePerMaterialBatch(scene.groundPrimitives);
+        batch = new StaticGroundPolylinePerMaterialBatch(scene.groundPrimitives, false);
 
         var polyline1 = createGroundPolyline();
         polyline1.material = new PolylineOutlineMaterialProperty();
@@ -363,7 +361,7 @@ defineSuite([
 
         return pollToPromise(function() {
             scene.initializeFrame();
-            var isUpdated = batch.update(time, false);
+            var isUpdated = batch.update(time);
             scene.render(time);
             return isUpdated;
         }).then(function() {
@@ -379,7 +377,7 @@ defineSuite([
             return;
         }
 
-        batch = new StaticGroundPolylinePerMaterialBatch(scene.groundPrimitives);
+        batch = new StaticGroundPolylinePerMaterialBatch(scene.groundPrimitives, false);
 
         var polyline1 = createGroundPolyline();
         polyline1.material = new PolylineOutlineMaterialProperty();
@@ -393,7 +391,7 @@ defineSuite([
 
         return pollToPromise(function() {
             scene.initializeFrame();
-            var isUpdated = batch.update(time, false);
+            var isUpdated = batch.update(time);
             scene.render(time);
             return isUpdated;
         }).then(function() {
@@ -403,7 +401,7 @@ defineSuite([
 
             return pollToPromise(function() {
                 scene.initializeFrame();
-                var isUpdated = batch.update(time, false);
+                var isUpdated = batch.update(time);
                 scene.render(time);
                 return isUpdated;
             });
@@ -420,7 +418,7 @@ defineSuite([
         }
 
         var resultSphere = new BoundingSphere();
-        batch = new StaticGroundPolylinePerMaterialBatch(scene.groundPrimitives);
+        batch = new StaticGroundPolylinePerMaterialBatch(scene.groundPrimitives, false);
 
         var polyline1 = createGroundPolyline();
         polyline1.material = new PolylineOutlineMaterialProperty();
@@ -436,13 +434,13 @@ defineSuite([
 
         batch.add(time, updater);
 
-        batch.update(time, false);
+        batch.update(time);
         state = batch.getBoundingSphere(updater, resultSphere);
         expect(state).toEqual(BoundingSphereState.PENDING);
 
         return pollToPromise(function() {
             scene.initializeFrame();
-            var isUpdated = batch.update(time, false);
+            var isUpdated = batch.update(time);
             scene.render(time);
             return isUpdated;
         }).then(function() {
@@ -460,7 +458,7 @@ defineSuite([
             // Don't fail if GroundPolylinePrimitive is not supported
             return;
         }
-        batch = new StaticGroundPolylinePerMaterialBatch(scene.groundPrimitives);
+        batch = new StaticGroundPolylinePerMaterialBatch(scene.groundPrimitives, false);
 
         function buildEntity() {
             var polyline = createGroundPolyline();
@@ -477,7 +475,7 @@ defineSuite([
 
         function renderScene() {
             scene.initializeFrame();
-            var isUpdated = batch.update(time, false);
+            var isUpdated = batch.update(time);
             scene.render(time);
             return isUpdated;
         }
