@@ -75,12 +75,11 @@ fdefineSuite([
     function createGroundPolyline() {
         var polyline = new PolylineGraphics();
         polyline.clampToGround = new ConstantProperty(true);
-        polyline.granularity = 1;
-        polyline.positions = new ConstantProperty(Cartesian3.fromRadiansArray([
+        polyline.positions = new ConstantProperty(Cartesian3.fromDegreesArray([
             0, 0,
-            CesiumMath.EPSILON6, 0,
-            CesiumMath.EPSILON6, CesiumMath.EPSILON6,
-            0, CesiumMath.EPSILON6
+            0.1, 0,
+            0.1, 0.1,
+            0, 0.1
         ]));
         return polyline;
     }
