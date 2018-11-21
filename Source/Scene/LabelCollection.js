@@ -16,7 +16,8 @@ define([
         './Label',
         './LabelStyle',
         './TextureAtlas',
-        './VerticalOrigin'
+        './VerticalOrigin',
+        '../ThirdParty/graphemesplitter'
     ], function(
         BoundingRectangle,
         Cartesian2,
@@ -35,7 +36,8 @@ define([
         Label,
         LabelStyle,
         TextureAtlas,
-        VerticalOrigin) {
+        VerticalOrigin,
+        GraphemeSplitter) {
     'use strict';
 
     // A glyph represents a single character in a particular label.  It may or may
@@ -125,9 +127,12 @@ define([
         });
     }
 
+    var splitter = new GraphemeSplitter();
+
     function rebindAllGlyphs(labelCollection, label) {
         var text = label._renderedText;
-        var textLength = text.length;
+        var graphemes = splitter.splitGraphemes(text);
+        var textLength = graphemes.length;
         var glyphs = label._glyphs;
         var glyphsLength = glyphs.length;
 
@@ -186,7 +191,7 @@ define([
         // walk the text looking for new characters (creating new glyphs for each)
         // or changed characters (rebinding existing glyphs)
         for (textIndex = 0; textIndex < textLength; ++textIndex) {
-            var character = text.charAt(textIndex);
+            var character = graphemes[textIndex];
             var font = label._font;
             var fillColor = label._fillColor;
             var outlineColor = label._outlineColor;
