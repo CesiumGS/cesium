@@ -197,3 +197,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 * [Felix Palmer](https://github.com/felixpalmer)
 * [Cedric Le Roux](https://github.com/cleroux)
 * [Dag Wästberg](https://github.com/dwastberg)
+* [André Borud](https://github.com/andreborud)
