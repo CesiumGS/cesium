@@ -751,6 +751,9 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
                     that.zoomTo(entity);
                 }
             }
+            else if(defined(that.trackedEntity)) {
+                that.trackedEntity = undefined;
+            }
         }
 
         function pickAndSelectObject(e) {
