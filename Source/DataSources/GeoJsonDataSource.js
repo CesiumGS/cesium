@@ -25,7 +25,8 @@ define([
         './EntityCluster',
         './EntityCollection',
         './PolygonGraphics',
-        './PolylineGraphics'
+        './PolylineGraphics',
+        './PolylineArrowMaterialProperty'
     ], function(
         Cartesian3,
         Color,
@@ -53,7 +54,8 @@ define([
         EntityCluster,
         EntityCollection,
         PolygonGraphics,
-        PolylineGraphics) {
+        PolylineGraphics,
+        PolylineArrowMaterialProperty) {
     'use strict';
 
     function defaultCrsFunction(coordinates) {
@@ -75,6 +77,7 @@ define([
     var defaultStrokeWidth = 2;
     var defaultFill = Color.fromBytes(255, 255, 0, 100);
     var defaultClampToGround = false;
+    var defaultArrowMaterial = false;
 
     var sizes = {
         small : 24,
@@ -356,7 +359,9 @@ define([
                 material = new ColorMaterialProperty(color);
             }
         }
-
+        if (options.arrowMaterial) {
+            material = new PolylineArrowMaterialProperty(material.color.getValue());
+        }
         var entity = createObject(geoJson, dataSource._entityCollection, options.describe);
         var polylineGraphics = new PolylineGraphics();
         entity.polyline = polylineGraphics;
@@ -522,6 +527,7 @@ define([
      * @param {Number} [options.strokeWidth=GeoJsonDataSource.strokeWidth] The default width of polylines and polygon outlines.
      * @param {Color} [options.fill=GeoJsonDataSource.fill] The default color for polygon interiors.
      * @param {Boolean} [options.clampToGround=GeoJsonDataSource.clampToGround] true if we want the geometry features (polygons or linestrings) clamped to the ground.
+     * @param {Boolean} [options.arrowMaterial=GeoJsonDataSource.arrowMaterial] true if we want to use the PolylineArrow Material on linestring features.
      *
      * @returns {Promise.<GeoJsonDataSource>} A promise that will resolve when the data is loaded.
      */
@@ -800,6 +806,7 @@ define([
      * @param {Number} [options.strokeWidth=GeoJsonDataSource.strokeWidth] The default width of polylines and polygon outlines.
      * @param {Color} [options.fill=GeoJsonDataSource.fill] The default color for polygon interiors.
      * @param {Boolean} [options.clampToGround=GeoJsonDataSource.clampToGround] true if we want the features clamped to the ground.
+     * @param {Boolean} [options.arrowMaterial=GeoJsonDataSource.arrowMaterial] true if we want to use the PolylineArrow Material on linestring features.
      *
      * @returns {Promise.<GeoJsonDataSource>} a promise that will resolve when the GeoJSON is loaded.
      */
@@ -831,7 +838,8 @@ define([
             strokeWidthProperty : new ConstantProperty(defaultValue(options.strokeWidth, defaultStrokeWidth)),
             strokeMaterialProperty : new ColorMaterialProperty(defaultValue(options.stroke, defaultStroke)),
             fillMaterialProperty : new ColorMaterialProperty(defaultValue(options.fill, defaultFill)),
-            clampToGround : defaultValue(options.clampToGround, defaultClampToGround)
+            clampToGround : defaultValue(options.clampToGround, defaultClampToGround),
+            arrowMaterial: defaultValue(options.arrowMaterial,defaultArrowMaterial)
         };
 
         var that = this;
