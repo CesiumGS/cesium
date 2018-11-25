@@ -55,6 +55,8 @@ var viewer = new Cesium.Viewer('cesiumContainer', {
     selectionIndicator: false
 });
 var scene = viewer.scene;
+var cesiumTerrainProvider = Cesium.createWorldTerrain();
+var ellipsoidTerrainProvider = new Cesium.EllipsoidTerrainProvider();
 
 var clipObjects = ['BIM', 'Point Cloud', 'Instanced', 'Model'];
 var viewModel = {
@@ -200,7 +202,7 @@ function loadModel(url) {
 
 // Power Plant design model provided by Bentley Systems
 var bimUrl = Cesium.IonResource.fromAssetId(8564);
-var pointCloudUrl = Cesium.IonResource.fromAssetId(5714);
+var pointCloudUrl = Cesium.IonResource.fromAssetId(10941);
 var instancedUrl = '../../SampleData/Cesium3DTiles/Instanced/InstancedOrientation/tileset.json';
 var modelUrl = '../../SampleData/models/CesiumAir/Cesium_Air.glb';
 
@@ -216,12 +218,16 @@ Cesium.knockout.getObservable(viewModel, 'currentExampleType').subscribe(functio
 
     if (newValue === clipObjects[0]) {
         loadTileset(bimUrl);
+        viewer.terrainProvider = ellipsoidTerrainProvider;
     } else if (newValue === clipObjects[1]) {
         loadTileset(pointCloudUrl);
+        viewer.terrainProvider = cesiumTerrainProvider;
     } else if (newValue === clipObjects[2]) {
         loadTileset(instancedUrl);
+        viewer.terrainProvider = ellipsoidTerrainProvider;
     } else {
         loadModel(modelUrl);
+        viewer.terrainProvider = ellipsoidTerrainProvider;
     }
 });
 
@@ -244,7 +250,6 @@ function reset() {
     targetY = 0.0;
     tileset = undefined;
 }
-
 //Sandcastle_End
     Sandcastle.finishedLoading();
 }

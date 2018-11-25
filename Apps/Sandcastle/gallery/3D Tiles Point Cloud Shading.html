@@ -158,7 +158,7 @@ function loadStHelens() {
 function loadChurch() {
     // Point Cloud by Prof. Peter Allen, Columbia University Robotics Lab. Scanning by Alejandro Troccoli and Matei Ciocarlie.
     // This tileset uses additive refinement and has geometric error based on the bounding box size for each tile.
-    var tileset = new Cesium.Cesium3DTileset({ url: Cesium.IonResource.fromAssetId(5714) });
+    var tileset = new Cesium.Cesium3DTileset({ url: Cesium.IonResource.fromAssetId(10941) });
     viewer.scene.primitives.add(tileset);
 
     tileset.maximumScreenSpaceError = 1024.0; // For better performance, due to how this tileset treats geometric error.
