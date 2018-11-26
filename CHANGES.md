@@ -6,6 +6,9 @@ Change Log
 ##### Breaking Changes :mega:
 * `TerrainProviders` that implement `availability` must now also implement the `loadTileDataAvailability` method.
 
+##### Deprecated :hourglass_flowing_sand:
+* `Scene.clampToHeight` now takes an optional `width` argument before the `result` argument.  The previous function definition will no longer work in 1.53. [#7287](https://github.com/AnalyticalGraphicsInc/cesium/pull/7287)
+
 ##### Additions :tada:
 * Added functions to get the most detailed height of 3D Tiles on-screen or off-screen. [#7115](https://github.com/AnalyticalGraphicsInc/cesium/pull/7115)
     * Added `Scene.sampleHeightMostDetailed`, an asynchronous version of `Scene.sampleHeight` that uses the maximum level of detail for 3D Tiles.
@@ -15,6 +18,7 @@ Change Log
 * Added `computeLineSegmentLineSegmentIntersection` to `Intersections2D`. [#7228](https://github.com/AnalyticalGraphicsInc/Cesium/pull/7228)
 * Added ability to load availability progressively from a quantized mesh extension instead of upfront. This will speed up load time and reduce memory usage. [#7196](https://github.com/AnalyticalGraphicsInc/cesium/pull/7196)
 * Added the ability to apply styles to 3D Tilesets that don't contain features. [#7255](https://github.com/AnalyticalGraphicsInc/Cesium/pull/7255)
+* Added the ability to specify the width of the intersection volume for `Scene.sampleHeight`, `Scene.clampToHeight`, `Scene.sampleHeightMostDetailed`, and `Scene.clampToHeightMostDetailed`. [#7287](https://github.com/AnalyticalGraphicsInc/cesium/pull/7287)
 
 ##### Fixes :wrench:
 * Fixed issue causing polyline to look wavy depending on the position of the camera [#7209](https://github.com/AnalyticalGraphicsInc/cesium/pull/7209)
