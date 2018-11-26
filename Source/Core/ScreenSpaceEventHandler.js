@@ -133,6 +133,16 @@ define([
         return (getTimestamp() - screenSpaceEventHandler._lastSeenTouchEvent) > ScreenSpaceEventHandler.mouseEmulationIgnoreMilliseconds;
     }
 
+    function checkClickPixelTolerance(screenSpaceEventHandler) {
+        var startPosition = screenSpaceEventHandler._primaryStartPosition;
+        var endPosition = screenSpaceEventHandler._previousPositions.values[0];
+        var xDiff = startPosition.x - endPosition.x;
+        var yDiff = startPosition.y - endPosition.y;
+        var totalPixels = Math.sqrt(xDiff * xDiff + yDiff * yDiff);
+
+        return totalPixels < screenSpaceEventHandler._clickPixelTolerance;
+    }
+
     function handleMouseDown(screenSpaceEventHandler, event) {
         if (!canProcessMouseEvent(screenSpaceEventHandler)) {
             return;
@@ -393,11 +403,13 @@ define([
     var touchClickEvent = {
         position : new Cartesian2()
     };
+    var touchHoldEvent = {
+        position : new Cartesian2()
+    };
 
     function fireTouchEvents(screenSpaceEventHandler, event) {
         var modifier = getModifier(event);
         var positions = screenSpaceEventHandler._positions;
-        var previousPositions = screenSpaceEventHandler._previousPositions;
         var numberOfTouches = positions.length;
         var action;
         var clickAction;
@@ -406,6 +418,12 @@ define([
         if (numberOfTouches !== 1 && screenSpaceEventHandler._buttonDown === MouseButton.LEFT) {
             // transitioning from single touch, trigger UP and might trigger CLICK
             screenSpaceEventHandler._buttonDown = undefined;
+
+            if(defined(screenSpaceEventHandler._touchHoldTimer)) {
+                clearTimeout(screenSpaceEventHandler._touchHoldTimer);
+                screenSpaceEventHandler._touchHoldTimer = undefined;
+            }
+
             action = screenSpaceEventHandler.getInputAction(ScreenSpaceEventType.LEFT_UP, modifier);
 
             if (defined(action)) {
@@ -414,24 +432,20 @@ define([
                 action(touchEndEvent);
             }
 
-            if (numberOfTouches === 0) {
+            if (numberOfTouches === 0 && !screenSpaceEventHandler._isTouchHolding) {
                 // releasing single touch, check for CLICK
                 clickAction = screenSpaceEventHandler.getInputAction(ScreenSpaceEventType.LEFT_CLICK, modifier);
 
                 if (defined(clickAction)) {
-                    var startPosition = screenSpaceEventHandler._primaryStartPosition;
-                    var endPosition = previousPositions.values[0];
-                    var xDiff = startPosition.x - endPosition.x;
-                    var yDiff = startPosition.y - endPosition.y;
-                    var totalPixels = Math.sqrt(xDiff * xDiff + yDiff * yDiff);
-
-                    if (totalPixels < screenSpaceEventHandler._clickPixelTolerance) {
+                    if(checkClickPixelTolerance(screenSpaceEventHandler)) {
                         Cartesian2.clone(screenSpaceEventHandler._primaryPosition, touchClickEvent.position);
 
                         clickAction(touchClickEvent);
                     }
                 }
             }
+
+            screenSpaceEventHandler._isTouchHolding = false;
 
             // Otherwise don't trigger CLICK, because we are adding more touches.
         }
@@ -463,6 +477,21 @@ define([
 
                 action(touchStartEvent);
             }
+
+            screenSpaceEventHandler._touchHoldTimer = setTimeout(function() {
+                screenSpaceEventHandler._touchHoldTimer = undefined;
+                screenSpaceEventHandler._isTouchHolding = true;
+
+                clickAction = screenSpaceEventHandler.getInputAction(ScreenSpaceEventType.RIGHT_CLICK, modifier);
+
+                if (defined(clickAction)) {
+                    if(checkClickPixelTolerance(screenSpaceEventHandler)) {
+                        Cartesian2.clone(screenSpaceEventHandler._primaryPosition, touchHoldEvent.position);
+
+                        clickAction(touchHoldEvent);
+                    }
+                }
+            }, ScreenSpaceEventHandler.touchHoldDelayMilliseconds);
 
             event.preventDefault();
         }
@@ -660,6 +689,7 @@ define([
         this._inputEvents = {};
         this._buttonDown = undefined;
         this._isPinching = false;
+        this._isTouchHolding = false;
         this._lastSeenTouchEvent = -ScreenSpaceEventHandler.mouseEmulationIgnoreMilliseconds;
 
         this._primaryStartPosition = new Cartesian2();
@@ -670,6 +700,8 @@ define([
         this._previousPositions = new AssociativeArray();
 
         this._removalFunctions = [];
+
+        this._touchHoldTimer = undefined;
 
         // TODO: Revisit when doing mobile development. May need to be configurable
         // or determined based on the platform?
@@ -789,6 +821,14 @@ define([
      * @default 800
      */
     ScreenSpaceEventHandler.mouseEmulationIgnoreMilliseconds = 800;
+
+    /**
+     * The amount of time, in milliseconds, before a touch on the screen becomes a
+     * touch and hold.
+     * @type {Number}
+     * @default 1500
+     */
+    ScreenSpaceEventHandler.touchHoldDelayMilliseconds = 1500;
 
     return ScreenSpaceEventHandler;
 });
