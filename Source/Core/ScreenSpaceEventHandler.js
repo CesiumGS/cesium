@@ -479,16 +479,18 @@ define([
             }
 
             screenSpaceEventHandler._touchHoldTimer = setTimeout(function() {
-                screenSpaceEventHandler._touchHoldTimer = undefined;
-                screenSpaceEventHandler._isTouchHolding = true;
+                if(!screenSpaceEventHandler.isDestroyed()) {
+                    screenSpaceEventHandler._touchHoldTimer = undefined;
+                    screenSpaceEventHandler._isTouchHolding = true;
 
-                clickAction = screenSpaceEventHandler.getInputAction(ScreenSpaceEventType.RIGHT_CLICK, modifier);
+                    clickAction = screenSpaceEventHandler.getInputAction(ScreenSpaceEventType.RIGHT_CLICK, modifier);
 
-                if (defined(clickAction)) {
-                    if(checkClickPixelTolerance(screenSpaceEventHandler)) {
-                        Cartesian2.clone(screenSpaceEventHandler._primaryPosition, touchHoldEvent.position);
+                    if (defined(clickAction)) {
+                        if(checkClickPixelTolerance(screenSpaceEventHandler)) {
+                            Cartesian2.clone(screenSpaceEventHandler._primaryPosition, touchHoldEvent.position);
 
-                        clickAction(touchHoldEvent);
+                            clickAction(touchHoldEvent);
+                        }
                     }
                 }
             }, ScreenSpaceEventHandler.touchHoldDelayMilliseconds);
