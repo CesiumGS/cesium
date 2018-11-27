@@ -84,7 +84,6 @@ define([
         this._bvh = undefined;
 
         this.renderableTile = undefined;
-        this.renderableTileSubset = new Cartesian4();
 
         /**
          * A bounding region used to estimate distance to the tile. The horizontal bounds are always tight-fitting,
