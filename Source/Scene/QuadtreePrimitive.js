@@ -634,47 +634,55 @@ define([
         var northeastChild = tile.northeastChild;
 
         var lastFrame = primitive._lastSelectionFrameNumber;
+        var lastFrameSelectionResult = tile._lastSelectionResultFrame === lastFrame ? tile._lastSelectionResult : TileSelectionResult.NONE;
 
         if (meetsSse || ancestorMeetsSse) {
             // This tile (or an ancestor) is the one we want to render this frame, but we'll do different things depending
             // on the state of this tile and on what we did _last_ frame.
 
-            // 1. If this tile is completely loaded (terrain _and_ imagery), render it.
-            //      TODO: technically we only need to ensure that the geometry and any imagery layers previously
-            //            loaded on descendants are loaded on this tile. It doesn't need to be really, totally
-            //            done loading. Hard to determine this though.
-            // 2. If this tile's children were not visited last frame because this tile was culled
-            //    or because this tile or an ancestor tile met the SSE, then render this tile, or a fill if
-            //    this tile isn't renderable yet.
-            var oneCompletelyLoaded = tile.state === QuadtreeTileLoadState.DONE;
-            var twoNoChildrenVisitedLastFrame =
-                southwestChild._frameVisited !== lastFrame &&
-                southeastChild._frameVisited !== lastFrame &&
-                northwestChild._frameVisited !== lastFrame &&
-                northeastChild._frameVisited !== lastFrame;
+            // We can render it if _any_ of the following are true:
+            // 1. We rendered it (or kicked it) last frame.
+            // 2. a) Terrain is ready, and
+            //    b) All necessary iagery is ready. Necessary imagery is imagery that was rendered with this tile
+            //       or any descendants last frame. Such imagery is required because rendering this tile without
+            //       it would cause detail to disappear. But determining which imagery is actually necessary is
+            //       challenging, so instead we are currently requiring that _all_ imagery is ready.
+            // 3. This tile was culled last frame, or it wasn't even visited because an ancestor was culled.
+            //
+            // Note that even if we decide to render a tile here, it may later get "kicked" in favor of an ancestor.
 
-            if (oneCompletelyLoaded || twoNoChildrenVisitedLastFrame) {
+            var oneRenderedLastFrame = TileSelectionResult.originalResult(lastFrameSelectionResult) === TileSelectionResult.RENDERED;
+            var twoCompletelyLoaded = tile.state === QuadtreeTileLoadState.DONE;
+            var threeCulledOrNotVisited = lastFrameSelectionResult === TileSelectionResult.CULLED || lastFrameSelectionResult === TileSelectionResult.NONE;
+
+            if (oneRenderedLastFrame || twoCompletelyLoaded || threeCulledOrNotVisited) {
                 // Only load this tile if it (not just an ancestor) meets the SSE.
                 if (meetsSse) {
                     queueTileLoad(primitive, primitive._tileLoadQueueMedium, tile, frameState);
                 }
                 addTileToRenderList(primitive, tile, nearestRenderableTile);
 
+                traversalDetails.allAreRenderable = tile.renderable;
+                traversalDetails.anyWereRenderedLastFrame = lastFrameSelectionResult === TileSelectionResult.RENDERED;
+                traversalDetails.notYetRenderableCount = tile.renderable ? 0 : 1;
+
                 tile._lastSelectionResultFrame = frameState.frameNumber;
                 tile._lastSelectionResult = TileSelectionResult.RENDERED;
 
-                traversalDetails.allAreRenderable = tile.renderable;
-                traversalDetails.anyWereRenderedLastFrame = tile._frameRendered === primitive._lastSelectionFrameNumber;
-                traversalDetails.notYetRenderableCount = tile.renderable ? 0 : 1;
+                if (!traversalDetails.anyWereRenderedLastFrame) {
+                    // Tile is newly-rendered this frame, so update its heights.
+                    primitive._tileToUpdateHeights.push(tile);
+                }
+
                 return;
             }
 
-            // 3. Otherwise, we can't render this tile (or its fill) because doing so would cause detail to disappear
-            //    that was visible last frame. Instead, keep rendering any still-visible descendants that were rendered
-            //    last frame and render fills for newly-visible descendants. E.g. if we were rendering level 15 last
-            //    frame but this frame we want level 14 and the closest renderable level <= 14 is 0, rendering level
-            //    zero would be pretty jarring so instead we keep rendering level 15 even though its SSE is better
-            //    than required. So fall through to continue traversal...
+            // Otherwise, we can't render this tile (or its fill) because doing so would cause detail to disappear
+            // that was visible last frame. Instead, keep rendering any still-visible descendants that were rendered
+            // last frame and render fills for newly-visible descendants. E.g. if we were rendering level 15 last
+            // frame but this frame we want level 14 and the closest renderable level <= 14 is 0, rendering level
+            // zero would be pretty jarring so instead we keep rendering level 15 even though its SSE is better
+            // than required. So fall through to continue traversal...
             ancestorMeetsSse = true;
 
             // Load this blocker tile with high priority, but only if this tile (not just an ancestor) meets the SSE.
@@ -690,9 +698,6 @@ define([
                                   northwestChild.upsampledFromParent && northeastChild.upsampledFromParent;
 
             if (allAreUpsampled) {
-                tile._lastSelectionResultFrame = frameState.frameNumber;
-                tile._lastSelectionResult = TileSelectionResult.RENDERED;
-
                 // No point in rendering the children because they're all upsampled.  Render this tile instead.
                 addTileToRenderList(primitive, tile, nearestRenderableTile);
 
@@ -706,8 +711,17 @@ define([
                 primitive._tileReplacementQueue.markTileRendered(northeastChild);
 
                 traversalDetails.allAreRenderable = tile.renderable;
-                traversalDetails.anyWereRenderedLastFrame = tile._frameRendered === primitive._lastSelectionFrameNumber;
+                traversalDetails.anyWereRenderedLastFrame = lastFrameSelectionResult === TileSelectionResult.RENDERED;
                 traversalDetails.notYetRenderableCount = tile.renderable ? 0 : 1;
+
+                tile._lastSelectionResultFrame = frameState.frameNumber;
+                tile._lastSelectionResult = TileSelectionResult.RENDERED;
+
+                if (!traversalDetails.anyWereRenderedLastFrame) {
+                    // Tile is newly-rendered this frame, so update its heights.
+                    primitive._tileToUpdateHeights.push(tile);
+                }
+
                 return;
             }
 
@@ -719,6 +733,7 @@ define([
             var loadIndexLow = primitive._tileLoadQueueLow.length;
             var loadIndexMedium = primitive._tileLoadQueueMedium.length;
             var loadIndexHigh = primitive._tileLoadQueueHigh.length;
+            var tilesToUpdateHeightsIndex = primitive._tileToUpdateHeights.length;
 
             // No need to add the children to the load queue because they'll be added (if necessary) when they're visited.
             visitVisibleChildrenNearToFar(primitive, southwestChild, southeastChild, northwestChild, northeastChild, frameState, nearestRenderableTile, ancestorMeetsSse, traversalDetails);
@@ -743,14 +758,15 @@ define([
                     for (var i = firstRenderedDescendantIndex; i < renderList.length; ++i) {
                         var workTile = renderList[i];
                         while (workTile !== undefined && workTile._lastSelectionResult !== TileSelectionResult.KICKED && workTile !== tile) {
-                            workTile._lastSelectionResult = TileSelectionResult.KICKED;
+                            workTile._lastSelectionResult = TileSelectionResult.kick(workTile._lastSelectionResult);
                             workTile = workTile.parent;
                         }
                     }
 
-                    // Remove all descendants from the render list.
+                    // Remove all descendants from the render list and update list.
                     primitive._tilesToRender.length = firstRenderedDescendantIndex;
                     primitive._nearestRenderableTiles.length = firstRenderedDescendantIndex;
+                    primitive._tileToUpdateHeights.length = tilesToUpdateHeightsIndex;
                     addTileToRenderList(primitive, tile, nearestRenderableTile);
 
                     tile._lastSelectionResult = TileSelectionResult.RENDERED;
@@ -758,7 +774,7 @@ define([
                     // If we're waiting on heaps of descendants, the above will take too long. So in that case,
                     // load this tile INSTEAD of loading any of the descendants, and tell the up-level we're only waiting
                     // on this tile. Keep doing this until we actually manage to render this tile.
-                    var wasRenderedLastFrame = tile._frameRendered === primitive._lastSelectionFrameNumber;
+                    var wasRenderedLastFrame = lastFrameSelectionResult === TileSelectionResult.RENDERED;
                     if (!wasRenderedLastFrame && notYetRenderableCount > primitive.loadingDescendantLimit) {
                         // Remove all descendants from the load queues.
                         primitive._tileLoadQueueLow.length = loadIndexLow;
@@ -768,12 +784,13 @@ define([
                         traversalDetails.notYetRenderableCount = tile.renderable ? 0 : 1;
                     }
 
-                    // TODO: consolidate _frameRendered and _lastSelectionResultFrame.
-                    // Will probably need to set anyWereRenderedLastFrame earlier, before we overwrite
-                    // with the new selection result.
-
                     traversalDetails.allAreRenderable = tile.renderable;
-                    traversalDetails.anyWereRenderedLastFrame = tile._frameRendered === primitive._lastSelectionFrameNumber;
+                    traversalDetails.anyWereRenderedLastFrame = wasRenderedLastFrame;
+
+                    if (!wasRenderedLastFrame) {
+                        // Tile is newly-rendered this frame, so update its heights.
+                        primitive._tileToUpdateHeights.push(tile);
+                    }
 
                     ++debug.tilesWaitingForChildren;
                 }
@@ -797,7 +814,7 @@ define([
         queueTileLoad(primitive, primitive._tileLoadQueueHigh, tile, frameState);
 
         traversalDetails.allAreRenderable = tile.renderable;
-        traversalDetails.anyWereRenderedLastFrame = tile._frameRendered === primitive._lastSelectionFrameNumber;
+        traversalDetails.anyWereRenderedLastFrame = lastFrameSelectionResult === TileSelectionResult.RENDERED;
         traversalDetails.notYetRenderableCount = tile.renderable ? 0 : 1;
     }
 
@@ -844,8 +861,6 @@ define([
     }
 
     function visitIfVisible(primitive, tile, tileProvider, frameState, occluders, nearestRenderableTile, ancestorMeetsSse, traversalDetails) {
-        tile._frameVisited = frameState.frameNumber;
-
         if (tileProvider.computeTileVisibility(tile, frameState, occluders) !== Visibility.NONE) {
             return visitTile(primitive, frameState, tile, nearestRenderableTile, ancestorMeetsSse, traversalDetails);
         }
@@ -973,7 +988,11 @@ define([
         while (tilesToUpdateHeights.length > 0) {
             var tile = tilesToUpdateHeights[0];
             if (tile.state !== QuadtreeTileLoadState.DONE) {
-                tryNextFrame.push(tile);
+                // Tile isn't loaded yet, so try again next frame if this tile is still
+                // being rendered.
+                if (tile._lastSelectionResultFrame === primitive._lastSelectionFrameNumber && tile._lastSelectionResult === TileSelectionResult.RENDERED) {
+                    tryNextFrame.push(tile);
+                }
                 tilesToUpdateHeights.shift();
                 primitive._lastTileIndex = 0;
                 continue;
@@ -1075,11 +1094,6 @@ define([
         for (var i = 0, len = tilesToRender.length; i < len; ++i) {
             var tile = tilesToRender[i];
             tileProvider.showTileThisFrame(tile, frameState, nearestRenderableTiles[i]);
-
-            if (tile._frameRendered !== frameState.frameNumber - 1) {
-                tilesToUpdateHeights.push(tile);
-            }
-            tile._frameRendered = frameState.frameNumber;
         }
     }
 

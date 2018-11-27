@@ -72,8 +72,6 @@ define([
 
         this._customData = [];
         this._frameUpdated = undefined;
-        this._frameRendered = undefined;
-        this._frameVisited = undefined;
         this._lastSelectionResult = TileSelectionResult.CULLED;
         this._lastSelectionResultFrame = undefined;
         this._loadedCallbacks = {};
