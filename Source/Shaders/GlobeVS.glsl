@@ -162,7 +162,7 @@ void main()
     vec3 normalMC = czm_octDecode(encodedNormal);
     v_normalMC = normalMC;
     v_normalEC = czm_normal3D * v_normalMC;
-#elif defined(SHOW_REFLECTIVE_OCEAN) || defined(ENABLE_DAYNIGHT_SHADING) || defined(GENERATE_POSITION)
+#elif defined(SHOW_REFLECTIVE_OCEAN) || defined(ENABLE_DAYNIGHT_SHADING) || defined(GENERATE_POSITION) || defined(HDR)
     v_positionEC = (u_modifiedModelView * vec4(position, 1.0)).xyz;
     v_positionMC = position3DWC;  // position in model coordinates
 #endif
