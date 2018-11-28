@@ -276,18 +276,6 @@ define([
             }
         },
         /**
-         * Gets an event that's raised when a surface tile is loaded and ready to be rendered.
-         *
-         * @memberof Globe.prototype
-         * @type {Event}
-         * @readonly
-         */
-        tileLoadedEvent : {
-            get : function() {
-                return this._surface.tileProvider.tileLoadedEvent;
-            }
-        },
-        /**
          * Returns <code>true</code> when the tile load queue is empty, <code>false</code> otherwise.  When the load queue is empty,
          * all terrain and imagery for the current view have been loaded.
          * @memberof Globe.prototype

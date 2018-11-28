@@ -171,7 +171,6 @@ define([
         this._imageryLayers.layerRemoved.addEventListener(GlobeSurfaceTileProvider.prototype._onLayerRemoved, this);
         this._imageryLayers.layerMoved.addEventListener(GlobeSurfaceTileProvider.prototype._onLayerMoved, this);
         this._imageryLayers.layerShownOrHidden.addEventListener(GlobeSurfaceTileProvider.prototype._onLayerShownOrHidden, this);
-        this._tileLoadedEvent = new Event();
         this._imageryLayersUpdatedEvent = new Event();
 
         this._layerOrderChanged = false;
@@ -285,17 +284,6 @@ define([
         errorEvent : {
             get : function() {
                 return this._errorEvent;
-            }
-        },
-
-        /**
-         * Gets an event that is raised when an globe surface tile is loaded and ready to be rendered.
-         * @memberof GlobeSurfaceTileProvider.prototype
-         * @type {Event}
-         */
-        tileLoadedEvent : {
-            get : function() {
-                return this._tileLoadedEvent;
             }
         },
 
@@ -554,13 +542,6 @@ define([
             return;
         }
         GlobeSurfaceTile.processStateMachine(tile, frameState, this._terrainProvider, this._imageryLayers, this._vertexArraysToDestroy);
-        var tileLoadedEvent = this._tileLoadedEvent;
-
-        // TODO: creating a new function for every loaded tile every frame?!
-        tile._loadedCallbacks['tileLoadedEvent'] = function (tile) {
-            tileLoadedEvent.raiseEvent();
-            return true;
-        };
     };
 
     var boundingSphereScratch = new BoundingSphere();

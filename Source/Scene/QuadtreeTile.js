@@ -72,7 +72,7 @@ define([
 
         this._customData = [];
         this._frameUpdated = undefined;
-        this._lastSelectionResult = TileSelectionResult.CULLED;
+        this._lastSelectionResult = TileSelectionResult.NONE;
         this._lastSelectionResultFrame = undefined;
         this._loadedCallbacks = {};
 
