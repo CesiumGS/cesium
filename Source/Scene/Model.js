@@ -2115,6 +2115,13 @@ define([
                 '} \n';
         }
 
+        var usesSH = defined(model._sphericalHarmonicCoefficients) || model._useDefaultSphericalHarmonics;
+        var usesSM = (defined(model._specularEnvironmentMapAtlas) && model._specularEnvironmentMapAtlas.ready) || model._useDefaultSpecularMaps;
+        var addMatrix = usesSH || usesSM;
+        if (addMatrix) {
+            drawFS = 'uniform mat4 gltf_clippingPlanesMatrix; \n' + drawFS;
+        }
+
         if (defined(model._sphericalHarmonicCoefficients)) {
             drawFS = '#define DIFFUSE_IBL \n' + '#define CUSTOM_SPHERICAL_HARMONICS \n' + 'uniform vec3 gltf_sphericalHarmonicCoefficients[9]; \n' + drawFS;
         } else if (model._useDefaultSphericalHarmonics) {
@@ -2190,6 +2197,13 @@ define([
                 '    non_gamma_corrected_main(); \n' +
                 '    gl_FragColor = czm_gammaCorrect(gl_FragColor); \n' +
                 '} \n';
+        }
+
+        var usesSH = defined(model._sphericalHarmonicCoefficients) || model._useDefaultSphericalHarmonics;
+        var usesSM = (defined(model._specularEnvironmentMapAtlas) && model._specularEnvironmentMapAtlas.ready) || model._useDefaultSpecularMaps;
+        var addMatrix = !addClippingPlaneCode && (usesSH || usesSM);
+        if (addMatrix) {
+            drawFS = 'uniform mat4 gltf_clippingPlanesMatrix; \n' + drawFS;
         }
 
         if (defined(model._sphericalHarmonicCoefficients)) {
@@ -3043,10 +3057,11 @@ define([
     function createClippingPlanesMatrixFunction(model) {
         return function() {
             var clippingPlanes = model.clippingPlanes;
-            if (!defined(clippingPlanes)) {
+            if (!defined(clippingPlanes) && !defined(model._sphericalHarmonicCoefficients) && !defined(model._specularEnvironmentMaps)) {
                 return Matrix4.IDENTITY;
             }
-            return Matrix4.multiply(model._clippingPlaneModelViewMatrix, clippingPlanes.modelMatrix, scratchClippingPlaneMatrix);
+            var modelMatrix = defined(clippingPlanes) ? clippingPlanes.modelMatrix : Matrix4.IDENTITY;
+            return Matrix4.multiply(model._clippingPlaneModelViewMatrix, modelMatrix, scratchClippingPlaneMatrix);
         };
     }
 
@@ -4567,9 +4582,15 @@ define([
             // Regenerate shaders if ClippingPlaneCollection state changed or it was removed
             var clippingPlanes = this._clippingPlanes;
             var currentClippingPlanesState = 0;
-            if (defined(clippingPlanes) && clippingPlanes.enabled && clippingPlanes.length > 0) {
+            var useClippingPlanes = defined(clippingPlanes) && clippingPlanes.enabled && clippingPlanes.length > 0;
+            var usesSH = defined(this._sphericalHarmonicCoefficients) || this._useDefaultSphericalHarmonics;
+            var usesSM = (defined(this._specularEnvironmentMapAtlas) && this._specularEnvironmentMapAtlas.ready) || this._useDefaultSpecularMaps;
+            if (useClippingPlanes || usesSH || usesSM) {
                 var clippingPlanesOriginMatrix = defaultValue(this.clippingPlanesOriginMatrix, modelMatrix);
                 Matrix4.multiply(context.uniformState.view3D, clippingPlanesOriginMatrix, this._clippingPlaneModelViewMatrix);
+            }
+
+            if (useClippingPlanes) {
                 currentClippingPlanesState = clippingPlanes.clippingPlanesState;
             }
 

@@ -725,9 +725,12 @@ define([
             // Environment maps were provided, use them for IBL
             fragmentShader += '#else \n'; // defined(DIFFUSE_IBL) || defined(SPECULAR_IBL)
 
+            fragmentShader += '    mat3 fixedToENU = mat3(gltf_clippingPlanesMatrix[0][0], gltf_clippingPlanesMatrix[1][0], gltf_clippingPlanesMatrix[2][0], \n';
+            fragmentShader += '                           gltf_clippingPlanesMatrix[0][1], gltf_clippingPlanesMatrix[1][1], gltf_clippingPlanesMatrix[2][1], \n';
+            fragmentShader += '                           gltf_clippingPlanesMatrix[0][2], gltf_clippingPlanesMatrix[1][2], gltf_clippingPlanesMatrix[2][2]); \n';
             fragmentShader += '    const mat3 yUpToZUp = mat3(-1.0, 0.0, 0.0, 0.0, 0.0, -1.0, 0.0, 1.0, 0.0); \n';
-            fragmentShader += '    vec3 cubeDir = normalize((czm_inverseModelView * vec4(n, 0.0)).xyz); \n';
-            fragmentShader += '    cubeDir = yUpToZUp * cubeDir; \n';
+            fragmentShader += '    vec3 cubeDir = yUpToZUp * fixedToENU * n; \n';
+
             fragmentShader += '#ifdef DIFFUSE_IBL \n';
             fragmentShader += '#ifdef CUSTOM_SPHERICAL_HARMONICS \n';
             fragmentShader += '    vec3 diffuseIrradiance = czm_sphericalHarmonics(cubeDir, gltf_sphericalHarmonicCoefficients); \n';
