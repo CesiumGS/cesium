@@ -267,9 +267,10 @@ define([
             return;
         }
 
-        if (!defined(this._texture) && !this._loading && !defined(this._cubeMapBuffers)) {
+        if (!defined(this._texture) && !this._loading) {
             var cachedTexture = context.textureCache.getTexture(this._url);
             if (defined(cachedTexture)) {
+                cleanupResources(this);
                 this._texture = cachedTexture;
                 this._maximumMipmapLevel = this._texture.maximumMipmapLevel;
                 this._ready = true;
