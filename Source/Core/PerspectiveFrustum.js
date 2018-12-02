@@ -56,6 +56,7 @@ define([
          * @default undefined
          */
         this.fov = options.fov;
+        this.maxFov = defaultValue(options.maxFov, 1.57); // Roughly 90 degrees max
         this._fov = undefined;
         this._fovy = undefined;
 
@@ -192,7 +193,13 @@ define([
 
             frustum._aspectRatio = frustum.aspectRatio;
             frustum._fov = frustum.fov;
-            frustum._fovy = (frustum.aspectRatio <= 1) ? frustum.fov : Math.atan(Math.tan(frustum.fov * 0.5) / frustum.aspectRatio) * 2.0;
+            if ((frustum.aspectRatio <= 1) || (frustum.maxFov > Math.atan(Math.tan(frustum.fov * 0.5) * frustum.aspectRatio) * 2.0)) {
+                // if the window's aspect ratio isn't wide enough to break the maxFov, just use fov as fovy.
+                frustum._fovy = frustum.fov;
+            } else {
+                // Otherwise, the vertical FOV is calculated from the maxFov divided by the aspect ratio.
+                frustum._fovy = Math.atan(Math.tan(frustum.maxFov * 0.5) / frustum.aspectRatio) * 2.0;
+            }
             frustum._near = frustum.near;
             frustum._far = frustum.far;
             frustum._sseDenominator = 2.0 * Math.tan(0.5 * frustum._fovy);

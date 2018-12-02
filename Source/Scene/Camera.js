@@ -88,7 +88,7 @@ define([
      * camera.position = new Cesium.Cartesian3();
      * camera.direction = Cesium.Cartesian3.negate(Cesium.Cartesian3.UNIT_Z, new Cesium.Cartesian3());
      * camera.up = Cesium.Cartesian3.clone(Cesium.Cartesian3.UNIT_Y);
-     * camera.frustum.fov = Cesium.Math.PI_OVER_THREE;
+     * camera.frustum.fov = Cesium.Math.PI_OVER_FOUR;
      * camera.frustum.near = 1.0;
      * camera.frustum.far = 2.0;
      */
@@ -155,7 +155,7 @@ define([
          */
         this.frustum = new PerspectiveFrustum();
         this.frustum.aspectRatio = scene.drawingBufferWidth / scene.drawingBufferHeight;
-        this.frustum.fov = CesiumMath.toRadians(60.0);
+        this.frustum.fov = CesiumMath.toRadians(45.0);
 
         /**
          * The default amount to move the camera when an argument is not
@@ -3191,7 +3191,7 @@ define([
         var scene = this._scene;
         this.frustum = new PerspectiveFrustum();
         this.frustum.aspectRatio = scene.drawingBufferWidth / scene.drawingBufferHeight;
-        this.frustum.fov = CesiumMath.toRadians(60.0);
+        this.frustum.fov = CesiumMath.toRadians(45.0);
     };
 
     /**
