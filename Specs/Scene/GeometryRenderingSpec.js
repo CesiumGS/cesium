@@ -300,7 +300,7 @@ defineSuite([
         var instance;
         beforeAll(function() {
             instance = new GeometryInstance({
-                geometry : PlaneGeometry.fromDimensions({
+                geometry : new PlaneGeometry({
                     vertexFormat : PerInstanceColorAppearance.FLAT_VERTEX_FORMAT
                 }),
                 modelMatrix : Matrix4.multiplyByTranslation(Transforms.eastNorthUpToFixedFrame(
