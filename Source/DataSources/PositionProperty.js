@@ -5,16 +5,22 @@ define([
         '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/Matrix3',
+        '../Core/Matrix4',
+        '../Core/Quaternion',
         '../Core/ReferenceFrame',
-        '../Core/Transforms'
+        '../Core/Transforms',
+        './Entity'
     ], function(
         Cartesian3,
         defined,
         defineProperties,
         DeveloperError,
         Matrix3,
+        Matrix4,
+        Quaternion,
         ReferenceFrame,
-        Transforms) {
+        Transforms,
+        Entity) {
     "use strict";
 
     /**
@@ -99,12 +105,14 @@ define([
      */
     PositionProperty.prototype.equals = DeveloperError.throwInstantiationError;
 
-    var scratchMatrix3 = new Matrix3();
 
     /**
      * @private
      */
-    PositionProperty.convertToReferenceFrame = function(time, value, inputFrame, outputFrame, result) {
+    PositionProperty.convertToReferenceFrame = function(time, value, inputFrame, outputFrame, result, first) {
+        if(!defined(first)){
+            first = true;
+        }
         if (!defined(value)) {
             return value;
         }
@@ -116,14 +124,58 @@ define([
             return Cartesian3.clone(value, result);
         }
 
+        if (!defined(result)) {
+            result = new Cartesian3();
+        }
+
+        var scratchMatrix3 = new Matrix3();
+        var framePositionValue = new Cartesian3();
+        var frameOrientationValue = new Quaternion();
+        var subResult = new Cartesian3();
+
+        if (first && inputFrame instanceof Entity) {
+            var inFramePosition = inputFrame.position;
+            var inFrameReferenceFrame = inFramePosition.referenceFrame;
+            var inFramePositionValue = inFramePosition.getValueInReferenceFrame(time, inFrameReferenceFrame, framePositionValue);
+
+            var inFrameOrientationProperty = inputFrame.orientation;
+            if (defined(inFrameOrientationProperty)) {
+                var inFrameOrientation = inFrameOrientationProperty.getValue(time, frameOrientationValue);
+                Matrix3.fromQuaternion(inFrameOrientation, scratchMatrix3);
+                Matrix3.multiplyByVector(scratchMatrix3, value, result);
+            } else {
+                return Cartesian3.add(inFramePositionValue, value, result);
+            }
+
+            subResult = PositionProperty.convertToReferenceFrame(time, inFramePositionValue, inFrameReferenceFrame, outputFrame, subResult);
+            return Cartesian3.add(subResult, result, result);
+        }
+
+        if (outputFrame instanceof Entity) {
+            var outFramePosition = outputFrame.position;
+            var outFrameReferenceFrame = outFramePosition.referenceFrame;
+            var outFramePositionValue = outFramePosition.getValueInReferenceFrame(time, outFrameReferenceFrame, framePositionValue);
+
+            var outFrameOrientationProperty = outputFrame.orientation;
+            if (defined(outFrameOrientationProperty)) {
+                var outFrameOrientation = outFrameOrientationProperty.getValue(time, frameOrientationValue);
+                Matrix3.fromQuaternion(Quaternion.conjugate(outFrameOrientation, outFrameOrientation), scratchMatrix3);
+                Matrix3.multiplyByVector(scratchMatrix3, value, result);
+                Cartesian3.subtract(result, outFramePositionValue, result);
+            } else {
+                Cartesian3.subtract(value, outFramePositionValue, result);
+            }
+            return PositionProperty.convertToReferenceFrame(time, result, outFrameReferenceFrame, outputFrame, result, false);
+        }
+
         var icrfToFixed = Transforms.computeIcrfToFixedMatrix(time, scratchMatrix3);
         if (!defined(icrfToFixed)) {
             icrfToFixed = Transforms.computeTemeToPseudoFixedMatrix(time, scratchMatrix3);
         }
-        if (inputFrame === ReferenceFrame.INERTIAL) {
+        if (inputFrame === ReferenceFrame.INERTIAL && outputFrame === ReferenceFrame.FIXED) {
             return Matrix3.multiplyByVector(icrfToFixed, value, result);
         }
-        if (inputFrame === ReferenceFrame.FIXED) {
+        if (inputFrame === ReferenceFrame.FIXED && outputFrame === ReferenceFrame.INERTIAL) {
             return Matrix3.multiplyByVector(Matrix3.transpose(icrfToFixed, scratchMatrix3), value, result);
         }
     };
