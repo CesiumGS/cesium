@@ -1,7 +1,7 @@
 Change Log
 ==========
 
-### 1.41 - 2017-01-02
+### 1.41 - 2018-01-02
 
 * Added support for clipping planes
     * Added `clippingPlanes` property to `ModelGraphics`, `Model`, and `Cesium3DTileset`, which specifies a `ClippingPlaneCollection` to selectively disable rendering on the object. [#5913](https://github.com/AnalyticalGraphicsInc/cesium/pull/5913)
@@ -10,6 +10,9 @@ Change Log
     * Added `PlaneGeometry`, `PlaneOutlineGeometry`, `PlaneGeometryUpdater`, and `PlaneOutlineGeometryUpdater` classes to render plane primitives. [#5996](https://github.com/AnalyticalGraphicsInc/cesium/pull/5996)
     * Added `PlaneGraphics` class and `plane` property to `Entity`. [#5996](https://github.com/AnalyticalGraphicsInc/cesium/pull/5996)
 * Fixed point cloud crash in IE [#6051](https://github.com/AnalyticalGraphicsInc/cesium/pull/6051)
+* Fixed globe materials when `Globe.enableLighting` was `false`. [#6042](https://github.com/AnalyticalGraphicsInc/cesium/issues/6042)
+* Fixed shader compilation failure on pick when globe materials were enabled. [#6039](https://github.com/AnalyticalGraphicsInc/cesium/issues/6039)
+* Fixed crash when `invertClassification` was enabled, the invert color had an alpha less than `1.0`, and the window was resized. [#6046](https://github.com/AnalyticalGraphicsInc/cesium/issues/6046)
 
 ### 1.40 - 2017-12-01
 
