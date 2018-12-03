@@ -46,6 +46,7 @@ define([
     var defaultColorBlendMode = ColorBlendMode.HIGHLIGHT;
     var defaultColorBlendAmount = 0.5;
     var defaultImageBasedLightingFactor = new Cartesian2(1.0, 1.0);
+    var defaultSpeedupAnimations = 1.0;
 
     var modelMatrixScratch = new Matrix4();
     var nodeMatrixScratch = new Matrix4();
@@ -138,7 +139,8 @@ define([
                     animationsRunning : false,
                     nodeTransformationsScratch : {},
                     originalNodeMatrixHash : {},
-                    loadFail : false
+                    loadFail : false,
+                    speedup : defaultSpeedupAnimations
                 };
                 modelHash[entity.id] = modelData;
 
@@ -165,6 +167,7 @@ define([
 
             if (model.ready) {
                 var runAnimations = Property.getValueOrDefault(modelGraphics._runAnimations, time, true);
+                var speedup = Property.getValueOrDefault(modelGraphics._speedupAnimations, time, defaultSpeedupAnimations);
                 if (modelData.animationsRunning !== runAnimations) {
                     if (runAnimations) {
                         model.activeAnimations.addAll({
@@ -174,6 +177,16 @@ define([
                         model.activeAnimations.removeAll();
                     }
                     modelData.animationsRunning = runAnimations;
+                }
+
+                // Update the speedup property
+                if (modelData.animationsRunning && modelData.speedup !== speedup) {
+                    var animationLength = model.activeAnimations.length;
+                    for (var animationIndex = 0; animationIndex < animationLength; ++animationIndex) {
+                        var animation = model.activeAnimations.get(animationIndex);
+                        animation.speedup = speedup;
+                    }
+                    modelData.speedup = speedup;
                 }
 
                 // Apply node transformations

@@ -79,6 +79,7 @@ define([
         this._uriSubscription = undefined;
         this._runAnimations = undefined;
         this._clampAnimations = undefined;
+        this._speedupAnimations = undefined;
         this._runAnimationsSubscription = undefined;
         this._nodeTransformations = undefined;
         this._nodeTransformationsSubscription = undefined;
@@ -189,6 +190,14 @@ define([
          * @default true
          */
         runAnimations : createPropertyDescriptor('runAnimations'),
+
+        /**
+         * Gets or sets the numeric Property specifying the relative speed to play the glTF animations.
+         * @memberof ModelGraphics.prototype
+         * @type {Property}
+         * @default 1.0
+         */
+        speedupAnimations : createPropertyDescriptor('speedupAnimations'),
 
         /**
          * Gets or sets the boolean Property specifying if glTF animations should hold the last pose for time durations with no keyframes.

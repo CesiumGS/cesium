@@ -1,6 +1,8 @@
 define([
         '../Core/defaultValue',
         '../Core/defineProperties',
+        '../Core/defined',
+        '../Core/DeveloperError',
         '../Core/Event',
         '../Core/JulianDate',
         './ModelAnimationLoop',
@@ -8,6 +10,8 @@ define([
     ], function(
         defaultValue,
         defineProperties,
+        defined,
+        DeveloperError,
         Event,
         JulianDate,
         ModelAnimationLoop,
@@ -109,6 +113,7 @@ define([
         // Set during animation update
         this._computedStartTime = undefined;
         this._duration = undefined;
+        this._speedupChanged = false;
 
         // To avoid allocations in ModelAnimationCollection.update
         var that = this;
@@ -200,13 +205,19 @@ define([
          * @memberof ModelAnimation.prototype
          *
          * @type {Number}
-         * @readonly
          *
          * @default 1.0
          */
         speedup : {
             get : function() {
                 return this._speedup;
+            },
+            set : function(value) {
+                if (defined(value) && (value <= 0.0)) {
+                    throw new DeveloperError('speedup must be greater than zero.');
+                }
+                this._speedup = value;
+                this._speedupChanged = true;
             }
         },
 
