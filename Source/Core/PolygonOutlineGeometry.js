@@ -20,7 +20,6 @@ define([
         './Math',
         './PolygonGeometryLibrary',
         './PolygonPipeline',
-        './PolylinePipeline',
         './PrimitiveType',
         './Queue',
         './WindingOrder'
@@ -46,7 +45,6 @@ define([
         CesiumMath,
         PolygonGeometryLibrary,
         PolygonPipeline,
-        PolylinePipeline,
         PrimitiveType,
         Queue,
         WindingOrder) {
@@ -73,11 +71,11 @@ define([
         if (!perPositionHeight) {
             var numVertices = 0;
             for (i = 0; i < length; i++) {
-                numVertices += PolylinePipeline.subdivideLineSegmentCount(positions[i], positions[(i + 1) % length], minDistance);
+                numVertices += PolygonGeometryLibrary.subdivideLineCount(positions[i], positions[(i + 1) % length], minDistance);
             }
             subdividedPositions = new Float64Array(numVertices * 3);
             for (i = 0; i < length; i++) {
-                var tempPositions = PolylinePipeline.subdivideLineSegment(positions[i], positions[(i + 1) % length], minDistance, createGeometryFromPositionsSubdivided);
+                var tempPositions = PolygonGeometryLibrary.subdivideLine(positions[i], positions[(i + 1) % length], minDistance, createGeometryFromPositionsSubdivided);
                 var tempPositionsLength = tempPositions.length;
                 for (var j = 0; j < tempPositionsLength; ++j) {
                     subdividedPositions[index++] = tempPositions[j];
@@ -143,13 +141,13 @@ define([
         if (!perPositionHeight) {
             var numVertices = 0;
             for (i = 0; i < length; i++) {
-                numVertices += PolylinePipeline.subdivideLineSegmentCount(positions[i], positions[(i + 1) % length], minDistance);
+                numVertices += PolygonGeometryLibrary.subdivideLineCount(positions[i], positions[(i + 1) % length], minDistance);
             }
 
             subdividedPositions = new Float64Array(numVertices * 3 * 2);
             for (i = 0; i < length; ++i) {
                 corners[i] = index / 3;
-                var tempPositions = PolylinePipeline.subdivideLineSegment(positions[i], positions[(i + 1) % length], minDistance, createGeometryFromPositionsSubdivided);
+                var tempPositions = PolygonGeometryLibrary.subdivideLine(positions[i], positions[(i + 1) % length], minDistance, createGeometryFromPositionsSubdivided);
                 var tempPositionsLength = tempPositions.length;
                 for (var j = 0; j < tempPositionsLength; ++j) {
                     subdividedPositions[index++] = tempPositions[j];

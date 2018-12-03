@@ -14,7 +14,6 @@ define([
         './Math',
         './Matrix3',
         './PolygonPipeline',
-        './PolylinePipeline',
         './PrimitiveType',
         './Quaternion',
         './Queue',
@@ -35,7 +34,6 @@ define([
         CesiumMath,
         Matrix3,
         PolygonPipeline,
-        PolylinePipeline,
         PrimitiveType,
         Quaternion,
         Queue,
@@ -130,6 +128,44 @@ define([
             holes : holes,
             startingIndex : startingIndex
         };
+    };
+
+    var distanceScratch = new Cartesian3();
+    function getPointAtDistance(p0, p1, distance, length) {
+        Cartesian3.subtract(p1, p0, distanceScratch);
+        Cartesian3.multiplyByScalar(distanceScratch, distance / length, distanceScratch);
+        Cartesian3.add(p0, distanceScratch, distanceScratch);
+        return [distanceScratch.x, distanceScratch.y, distanceScratch.z];
+    }
+
+    PolygonGeometryLibrary.subdivideLineCount = function(p0, p1, minDistance) {
+        var distance = Cartesian3.distance(p0, p1);
+        var n = distance / minDistance;
+        var countDivide = Math.max(0, Math.ceil(Math.log(n) / Math.log(2)));
+        return Math.pow(2, countDivide);
+    };
+
+    PolygonGeometryLibrary.subdivideLine = function(p0, p1, minDistance, result) {
+        var numVertices = PolygonGeometryLibrary.subdivideLineCount(p0, p1, minDistance);
+        var length = Cartesian3.distance(p0, p1);
+        var distanceBetweenVertices = length / numVertices;
+
+        if (!defined(result)) {
+            result = [];
+        }
+
+        var positions = result;
+        positions.length = numVertices * 3;
+
+        var index = 0;
+        for ( var i = 0; i < numVertices; i++) {
+            var p = getPointAtDistance(p0, p1, i * distanceBetweenVertices, length);
+            positions[index++] = p[0];
+            positions[index++] = p[1];
+            positions[index++] = p[2];
+        }
+
+        return positions;
     };
 
     var scaleToGeodeticHeightN1 = new Cartesian3();
@@ -428,7 +464,7 @@ define([
 
             var numVertices = 0;
             for (i = 0; i < length; i++) {
-                numVertices += PolylinePipeline.subdivideLineSegmentCount(positions[i], positions[(i + 1) % length], minDistance);
+                numVertices += PolygonGeometryLibrary.subdivideLineCount(positions[i], positions[(i + 1) % length], minDistance);
             }
 
             topEdgeLength = (numVertices + length) * 3;
@@ -437,7 +473,7 @@ define([
                 p1 = positions[i];
                 p2 = positions[(i + 1) % length];
 
-                var tempPositions = PolylinePipeline.subdivideLineSegment(p1, p2, minDistance, computeWallIndicesSubdivided);
+                var tempPositions = PolygonGeometryLibrary.subdivideLine(p1, p2, minDistance, computeWallIndicesSubdivided);
                 var tempPositionsLength = tempPositions.length;
                 for (var j = 0; j < tempPositionsLength; ++j, ++index) {
                     edgePositions[index] = tempPositions[j];

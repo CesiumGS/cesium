@@ -306,7 +306,6 @@ define([
         var i;
         var j;
         var k;
-        var minDistance;
 
         var positions = arrayRemoveDuplicates(polylineGeometry._positions, Cartesian3.equalsEpsilon);
         var positionsLength = positions.length;
@@ -318,8 +317,8 @@ define([
         }
 
         if (followSurface) {
-            minDistance = CesiumMath.chordLength(granularity, ellipsoid.maximumRadius);
             var heights = PolylinePipeline.extractHeights(positions, ellipsoid);
+            var minDistance = CesiumMath.chordLength(granularity, ellipsoid.maximumRadius);
 
             if (defined(colors)) {
                 var colorLength = 1;
@@ -362,12 +361,6 @@ define([
                 ellipsoid: ellipsoid,
                 height: heights
             });
-        } else {
-            // This subdivides a line at a much greater granularity. This may be a workaround for an actual bug
-            // where a polyline blinks in and out during camera movement when log depth is enabled and a segment of
-            // the polyline intersects the near plane.
-            minDistance = ellipsoid.maximumRadius * 0.9;
-            positions = PolylinePipeline.subdivideCartesianLine(positions, minDistance);
         }
 
         positionsLength = positions.length;
