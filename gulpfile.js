@@ -15,7 +15,7 @@ var gulpTap = require('gulp-tap');
 var rimraf = require('rimraf');
 var glslStripComments = require('glsl-strip-comments');
 var mkdirp = require('mkdirp');
-var eventStream = require('event-stream');
+var mergeStream = require('merge-stream');
 var gulp = require('gulp');
 var gulpInsert = require('gulp-insert');
 var gulpZip = require('gulp-zip');
@@ -304,7 +304,7 @@ gulp.task('makeZipFile', gulp.series('release', function() {
 
     var indexSrc = gulp.src('index.release.html').pipe(gulpRename('index.html'));
 
-    return eventStream.merge(builtSrc, staticSrc, indexSrc)
+    return mergeStream(builtSrc, staticSrc, indexSrc)
         .pipe(gulpTap(function(file) {
             // Work around an issue with gulp-zip where archives generated on Windows do
             // not properly have their directory executable mode set.
@@ -1227,7 +1227,7 @@ function buildSandcastle() {
         })
         .pipe(gulp.dest('Build/Apps/Sandcastle'));
 
-    return streamToPromise(eventStream.merge(appStream, imageStream));
+    return streamToPromise(mergeStream(appStream, imageStream));
 }
 
 function buildCesiumViewer() {
@@ -1264,7 +1264,7 @@ function buildCesiumViewer() {
     promise = promise.then(function() {
         var copyrightHeader = fs.readFileSync(path.join('Source', 'copyrightHeader.js'));
 
-        var stream = eventStream.merge(
+        var stream = mergeStream(
             gulp.src(cesiumViewerStartup)
                 .pipe(gulpInsert.prepend(copyrightHeader))
                 .pipe(gulpReplace('../../Source', '.'))
