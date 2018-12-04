@@ -1,6 +1,11 @@
 Change Log
 ==========
 
+### 1.53 - 2019-01-02
+
+##### Fixes :wrench:
+* Fixed 3D Tiles visibility checking when running multiple passes within the same frame. [#7289](https://github.com/AnalyticalGraphicsInc/cesium/pull/7289)
+
 ### 1.52 - 2018-12-03
 
 ##### Breaking Changes :mega:
