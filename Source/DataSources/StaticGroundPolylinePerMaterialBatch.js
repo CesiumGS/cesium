@@ -62,7 +62,7 @@ define([
         this.showsUpdated = new AssociativeArray();
         this.zIndex = zIndex;
 
-        this._asynchronous = defaultValue(asynchronous, true);
+        this._asynchronous = asynchronous;
     }
 
     Batch.prototype.onMaterialChanged = function() {
@@ -339,7 +339,7 @@ define([
 
         var isUpdated = true;
         for (i = 0; i < items.length; i++) {
-            isUpdated = items[i].update(time, this._asynchronous) && isUpdated;
+            isUpdated = items[i].update(time) && isUpdated;
         }
         return isUpdated;
     };
