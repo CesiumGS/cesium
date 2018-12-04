@@ -1,4 +1,5 @@
 define([
+        '../Core/Check',
         '../Core/defaultValue',
         '../Core/defineProperties',
         '../Core/defined',
@@ -8,6 +9,7 @@ define([
         './ModelAnimationLoop',
         './ModelAnimationState'
     ], function(
+        Check,
         defaultValue,
         defineProperties,
         defined,
@@ -212,11 +214,10 @@ define([
             get : function() {
                 return this._speedup;
             },
-            set : function(value) {
-                if (defined(value) && (value <= 0.0)) {
-                    throw new DeveloperError('speedup must be greater than zero.');
-                }
-                this._speedup = value;
+            set : function(speedup) {
+                Check.typeOf.number.greaterThan('speedup', speedup, 0);
+
+                this._speedup = speedup;
                 this._speedupChanged = true;
             }
         },

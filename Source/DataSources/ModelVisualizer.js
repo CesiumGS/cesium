@@ -182,8 +182,8 @@ define([
                 // Update the speedup property
                 if (modelData.animationsRunning && modelData.speedup !== speedup) {
                     var animationLength = model.activeAnimations.length;
-                    for (var animationIndex = 0; animationIndex < animationLength; ++animationIndex) {
-                        var animation = model.activeAnimations.get(animationIndex);
+                    for (var j = 0; j < animationLength; ++j) {
+                        var animation = model.activeAnimations.get(j);
                         animation.speedup = speedup;
                     }
                     modelData.speedup = speedup;
