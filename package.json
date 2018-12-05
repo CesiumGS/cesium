@@ -41,7 +41,6 @@
     "compression": "^1.6.2",
     "eslint": "^5.2.0",
     "eslint-plugin-html": "^4.0.2",
-    "event-stream": "^4.0.1",
     "express": "^4.15.0",
     "globby": "^8.0.1",
     "glsl-strip-comments": "^1.0.0",
@@ -65,10 +64,12 @@
     "karma-requirejs": "^1.1.0",
     "karma-safari-launcher": "^1.0.0",
     "karma-spec-reporter": "^0.0.32",
+    "merge-stream": "^1.0.1",
     "mime": "^2.0.3",
     "mkdirp": "^0.5.1",
     "request": "^2.79.0",
     "rimraf": "^2.6.1",
+    "stream-to-promise": "^2.2.0",
     "yargs": "^12.0.1"
   },
   "scripts": {
