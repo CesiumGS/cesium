@@ -16,6 +16,7 @@ var rimraf = require('rimraf');
 var glslStripComments = require('glsl-strip-comments');
 var mkdirp = require('mkdirp');
 var mergeStream = require('merge-stream');
+var streamToPromise = require('stream-to-promise');
 var gulp = require('gulp');
 var gulpInsert = require('gulp-insert');
 var gulpZip = require('gulp-zip');
@@ -1332,13 +1333,5 @@ function requirejsOptimize(name, config) {
             }
             resolve();
         });
-    });
-}
-
-function streamToPromise(stream) {
-    return new Promise(function(resolve, reject) {
-        stream.on('finish', resolve);
-        stream.on('end', resolve);
-        stream.on('error', reject);
     });
 }
