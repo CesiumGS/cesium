@@ -289,7 +289,8 @@ define([
             opaquePass : Pass.CESIUM_3D_TILE, // Draw opaque portions during the 3D Tiles pass
             pickIdLoaded : getPickIdCallback(content),
             imageBasedLightingFactor : tileset.imageBasedLightingFactor,
-            lightColor : tileset.lightColor
+            lightColor : tileset.lightColor,
+            shadows : tileset.shadows
         };
 
         if (gltfFormat === 0) {
