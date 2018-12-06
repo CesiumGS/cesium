@@ -355,5 +355,17 @@ define([
         return undefined;
     };
 
+    /**
+     * Makes sure we load availability data for a tile
+     *
+     * @param {Number} x The X coordinate of the tile for which to request geometry.
+     * @param {Number} y The Y coordinate of the tile for which to request geometry.
+     * @param {Number} level The level of the tile for which to request geometry.
+     * @returns {undefined|Promise} Undefined if nothing need to be loaded or a Promise that resolves when all required tiles are loaded
+     */
+    VRTheWorldTerrainProvider.prototype.loadTileDataAvailability = function(x, y, level) {
+        return undefined;
+    };
+
     return VRTheWorldTerrainProvider;
 });

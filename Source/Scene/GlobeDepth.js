@@ -60,6 +60,7 @@ define([
         this._scissorRectangle = undefined;
 
         this._useLogDepth = undefined;
+        this._useHdr = undefined;
 
         this._debugGlobeDepthViewportCommand = undefined;
     }
@@ -110,13 +111,14 @@ define([
         globeDepth._copyDepthFramebuffer = globeDepth._copyDepthFramebuffer && !globeDepth._copyDepthFramebuffer.isDestroyed() && globeDepth._copyDepthFramebuffer.destroy();
     }
 
-    function createTextures(globeDepth, context, width, height) {
+    function createTextures(globeDepth, context, width, height, hdr) {
+        var pixelDatatype = hdr ? (context.halfFloatingPointTexture ? PixelDatatype.HALF_FLOAT : PixelDatatype.FLOAT) : PixelDatatype.UNSIGNED_BYTE;
         globeDepth._colorTexture = new Texture({
             context : context,
             width : width,
             height : height,
             pixelFormat : PixelFormat.RGBA,
-            pixelDatatype : PixelDatatype.UNSIGNED_BYTE,
+            pixelDatatype : pixelDatatype,
             sampler : new Sampler({
                 wrapS : TextureWrap.CLAMP_TO_EDGE,
                 wrapT : TextureWrap.CLAMP_TO_EDGE,
@@ -163,13 +165,13 @@ define([
         });
     }
 
-    function updateFramebuffers(globeDepth, context, width, height) {
+    function updateFramebuffers(globeDepth, context, width, height, hdr) {
         var colorTexture = globeDepth._colorTexture;
-        var textureChanged = !defined(colorTexture) || colorTexture.width !== width || colorTexture.height !== height;
+        var textureChanged = !defined(colorTexture) || colorTexture.width !== width || colorTexture.height !== height || hdr !== globeDepth._useHdr;
         if (!defined(globeDepth.framebuffer) || textureChanged) {
             destroyTextures(globeDepth);
             destroyFramebuffers(globeDepth);
-            createTextures(globeDepth, context, width, height);
+            createTextures(globeDepth, context, width, height, hdr);
             createFramebuffers(globeDepth, context);
         }
     }
@@ -239,13 +241,15 @@ define([
         executeDebugGlobeDepth(this, context, passState, useLogDepth);
     };
 
-    GlobeDepth.prototype.update = function(context, passState, viewport) {
+    GlobeDepth.prototype.update = function(context, passState, viewport, hdr) {
         var width = viewport.width;
         var height = viewport.height;
 
-        updateFramebuffers(this, context, width, height);
+        updateFramebuffers(this, context, width, height, hdr);
         updateCopyCommands(this, context, width, height, passState);
         context.uniformState.globeDepthTexture = undefined;
+
+        this._useHdr = hdr;
     };
 
     GlobeDepth.prototype.executeCopyDepth = function(context, passState) {
