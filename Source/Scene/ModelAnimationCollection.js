@@ -98,7 +98,7 @@ define([
      * </p>
      *
      * @param {Object} options Object with the following properties:
-     * @param {String} [options.name] The glTF animation name that identifies the animation. Must be defined if <code>options.id</code> is <code>undefined</code>.
+     * @param {String} [options.name] The glTF animation name that identifies the animation. Must be defined if <code>options.index</code> is <code>undefined</code>.
      * @param {Number} [options.index] The glTF animation index that identifies the animation. Must be defined if <code>options.name</code> is <code>undefined</code>.
      * @param {JulianDate} [options.startTime] The scene time to start playing the animation.  When this is <code>undefined</code>, the animation starts at the next frame.
      * @param {Number} [options.delay=0.0] The delay, in seconds, from <code>startTime</code> to start playing.
