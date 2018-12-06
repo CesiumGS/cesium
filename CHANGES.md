@@ -7,7 +7,7 @@ Change Log
 * `TerrainProviders` that implement `availability` must now also implement the `loadTileDataAvailability` method.
 
 ##### Deprecated :hourglass_flowing_sand:
-* The property `ModelAnimation.speedup` has been deprecated and renamed to `ModelAnimation.timeMultiplier`. `speedup` will be removed in version 1.54. [#7393](https://github.com/AnalyticalGraphicsInc/cesium/pull/7393)
+* The property `ModelAnimation.speedup` has been deprecated and renamed to `ModelAnimation.multiplier`. `speedup` will be removed in version 1.54. [#7393](https://github.com/AnalyticalGraphicsInc/cesium/pull/7393)
 
 ##### Additions :tada:
 * Added functions to get the most detailed height of 3D Tiles on-screen or off-screen. [#7115](https://github.com/AnalyticalGraphicsInc/cesium/pull/7115)

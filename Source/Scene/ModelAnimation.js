@@ -51,11 +51,11 @@ define([
         this.removeOnStop = defaultValue(options.removeOnStop, false);
 
         if (defined(options.speedup)) {
-            deprecationWarning('ModelAnimation.speedup', 'ModelAnimation.speedup is deprecated and will be removed in Cesium 1.54. Use ModelAnimation.timeMultiplier instead.');
-            options.timeMultiplier = options.speedup;
+            deprecationWarning('ModelAnimation.speedup', 'ModelAnimation.speedup is deprecated and will be removed in Cesium 1.54. Use ModelAnimation.multiplier instead.');
+            options.multiplier = options.speedup;
         }
 
-        this._timeMultiplier = defaultValue(options.timeMultiplier, 1.0);
+        this._multiplier = defaultValue(options.multiplier, 1.0);
         this._reverse = defaultValue(options.reverse, false);
         this._loop = defaultValue(options.loop, ModelAnimationLoop.NONE);
 
@@ -203,7 +203,7 @@ define([
          * to the scene clock speed; values less than <code>1.0</code> decrease the speed.  A value of
          * <code>1.0</code> plays the animation at the speed in the glTF animation mapped to the scene
          * clock speed.  For example, if the scene is played at 2x real-time, a two-second glTF animation
-         * will play in one second even if <code>timeMultiplier</code> is <code>1.0</code>.
+         * will play in one second even if <code>multiplier</code> is <code>1.0</code>.
          *
          * @memberof ModelAnimation.prototype
          *
@@ -212,9 +212,9 @@ define([
          *
          * @default 1.0
          */
-        timeMultiplier : {
+        multiplier : {
             get : function() {
-                return this._timeMultiplier;
+                return this._multiplier;
             }
         },
 
@@ -223,19 +223,19 @@ define([
          * to the scene clock speed; values less than <code>1.0</code> decrease the speed.  A value of
          * <code>1.0</code> plays the animation at the speed in the glTF animation mapped to the scene
          * clock speed.  For example, if the scene is played at 2x real-time, a two-second glTF animation
-         * will play in one second even if <code>timeMultiplier</code> is <code>1.0</code>.
+         * will play in one second even if <code>multiplier</code> is <code>1.0</code>.
          * @memberof ModelAnimation.prototype
          *
          * @type {Number}
          * @readonly
-         * @deprecated This property has been deprecated. Use {@link ModelAnimation#timeMultiplier} instead.
+         * @deprecated This property has been deprecated. Use {@link ModelAnimation#multiplier} instead.
          *
          * @default 1.0
          */
         speedup : {
             get : function() {
-                deprecationWarning('ModelAnimation.speedup', 'ModelAnimation.speedup is deprecated and will be removed in Cesium 1.54. Use ModelAnimation.timeMultiplier instead.');
-                return this._timeMultiplier;
+                deprecationWarning('ModelAnimation.speedup', 'ModelAnimation.speedup is deprecated and will be removed in Cesium 1.54. Use ModelAnimation.multiplier instead.');
+                return this._multiplier;
             }
         },
 
