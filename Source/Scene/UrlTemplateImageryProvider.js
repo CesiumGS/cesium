@@ -1084,6 +1084,5 @@ define([
         return false;
     }
 
-
     return UrlTemplateImageryProvider;
 });
