@@ -84,6 +84,8 @@ define([
         descendantTraversal.stack.trim(descendantTraversal.stackMaximumLength);
         selectionTraversal.stack.trim(selectionTraversal.stackMaximumLength);
         selectionTraversal.ancestorStack.trim(selectionTraversal.ancestorStackMaximumLength);
+
+        return true;
     };
 
     function executeBaseTraversal(tileset, root, frameState) {

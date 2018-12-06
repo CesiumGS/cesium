@@ -184,6 +184,10 @@ function highlightTrees() {
 }
 
 function invertClassification(checked) {
+    if (!scene.invertClassificationSupported) {
+        console.log('This browser does not support invert classification');
+    }
+
     scene.invertClassification = checked;
     scene.invertClassificationColor = new Cesium.Color(0.25, 0.25, 0.25, 1.0);
 
