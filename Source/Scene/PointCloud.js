@@ -1163,7 +1163,7 @@ define([
         vs += '    v_color = color; \n' +
               '    gl_Position = czm_modelViewProjection * vec4(position, 1.0); \n';
 
-        if (usesNormals && backFaceCulling) {
+        if (usesNormals && true) {
             vs += '    float visible = step(-normal.z, 0.0); \n' +
                   '    gl_Position *= visible; \n' +
                   '    gl_PointSize *= visible; \n';

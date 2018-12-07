@@ -2149,6 +2149,10 @@ define([
         return result;
     };
 
+
+    var UNIT = new Cartesian3(1, 1, 1);
+    var scratchScale = new Cartesian3();
+
     /**
      * Gets the upper left 3x3 rotation matrix of the provided matrix, assuming the matrix is a affine transformation matrix.
      *
@@ -2186,6 +2190,13 @@ define([
         result[6] = matrix[8];
         result[7] = matrix[9];
         result[8] = matrix[10];
+        Matrix3.multiplyByScale(
+            result,
+            Cartesian3.divideComponents(
+                UNIT, Matrix3.getScale(result, scratchScale), scratchScale
+            ),
+            result
+        )
         return result;
     };
 

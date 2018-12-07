@@ -137,10 +137,10 @@ define([
          * @type {Number}
          * @readonly
          */
-        this.geometricError = header.geometricError;
+        this._geometricError = header.geometricError;
 
-        if (!defined(this.geometricError)) {
-            this.geometricError = defined(parent) ? parent.geometricError : tileset._geometricError;
+        if (!defined(this._geometricError)) {
+            this._geometricError = defined(parent) ? parent.geometricError : tileset._geometricError;
             Cesium3DTile._deprecationWarning('geometricErrorUndefined', 'Required property geometricError is undefined for this tile. Using parent\'s geometric error instead.');
         }
 
@@ -348,6 +348,8 @@ define([
 
     // This can be overridden for testing purposes
     Cesium3DTile._deprecationWarning = deprecationWarning;
+
+    var scratchScale = new Cartesian3();
 
     defineProperties(Cesium3DTile.prototype, {
         /**
@@ -602,7 +604,13 @@ define([
             get : function() {
                 return this._commandsLength;
             }
-        }
+        },
+
+        geometricError : {
+            get : function() {
+                return Cartesian3.maximumComponent(Matrix4.getScale(this.computedTransform, scratchScale)) * this._geometricError;
+            }
+		}
     });
 
     var scratchJulianDate = new JulianDate();
