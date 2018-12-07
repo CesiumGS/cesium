@@ -4,6 +4,7 @@ defineSuite([
         'Core/BoundingSphere',
         'Core/Cartesian3',
         'Core/Color',
+        'Core/defined',
         'Core/DistanceDisplayCondition',
         'Core/JulianDate',
         'Core/Math',
@@ -18,7 +19,6 @@ defineSuite([
         'DataSources/PolylineGraphics',
         'DataSources/TimeIntervalCollectionProperty',
         'Scene/GroundPolylinePrimitive',
-        'Scene/MaterialAppearance',
         'Specs/createScene',
         'Specs/pollToPromise'
     ], function(
@@ -27,6 +27,7 @@ defineSuite([
         BoundingSphere,
         Cartesian3,
         Color,
+        defined,
         DistanceDisplayCondition,
         JulianDate,
         CesiumMath,
@@ -41,12 +42,12 @@ defineSuite([
         PolylineGraphics,
         TimeIntervalCollectionProperty,
         GroundPolylinePrimitive,
-        MaterialAppearance,
         createScene,
         pollToPromise) {
     'use strict';
 
     var time = JulianDate.now();
+    var batch;
     var scene;
     beforeAll(function() {
         scene = createScene();
@@ -64,14 +65,21 @@ defineSuite([
         ApproximateTerrainHeights._terrainHeights = undefined;
     });
 
+    afterEach(function() {
+        if (defined(batch)) {
+            batch.removeAllPrimitives();
+            batch = undefined;
+        }
+    });
+
     function createGroundPolyline() {
         var polyline = new PolylineGraphics();
         polyline.clampToGround = new ConstantProperty(true);
-        polyline.positions = new ConstantProperty(Cartesian3.fromRadiansArray([
+        polyline.positions = new ConstantProperty(Cartesian3.fromDegreesArray([
             0, 0,
-            1, 0,
-            1, 1,
-            0, 1
+            0.1, 0,
+            0.1, 0.1,
+            0, 0.1
         ]));
         return polyline;
     }
@@ -82,7 +90,7 @@ defineSuite([
             return;
         }
 
-        var batch = new StaticGroundPolylinePerMaterialBatch(scene.groundPrimitives);
+        batch = new StaticGroundPolylinePerMaterialBatch(scene.groundPrimitives, false);
 
         var polyline1 = createGroundPolyline();
         polyline1.material = new PolylineOutlineMaterialProperty();
@@ -143,7 +151,7 @@ defineSuite([
             polyline: polyline
         });
 
-        var batch = new StaticGroundPolylinePerMaterialBatch(scene.groundPrimitives);
+        batch = new StaticGroundPolylinePerMaterialBatch(scene.groundPrimitives, false);
 
         var updater = new PolylineGeometryUpdater(entity, scene);
         batch.add(validTime, updater);
@@ -175,13 +183,13 @@ defineSuite([
             // Don't fail if GroundPolylinePrimitive is not supported
             return;
         }
-
         var validTime = JulianDate.fromIso8601('2018-02-14T04:10:00+1100');
         var ddc = new TimeIntervalCollectionProperty();
         ddc.intervals.addInterval(TimeInterval.fromIso8601({
             iso8601: '2018-02-14T04:00:00+1100/2018-02-14T04:15:00+1100',
             data: new DistanceDisplayCondition(1.0, 2.0)
         }));
+
         var polyline = createGroundPolyline();
         polyline.distanceDisplayCondition = ddc;
         var entity = new Entity({
@@ -189,7 +197,7 @@ defineSuite([
             polyline: polyline
         });
 
-        var batch = new StaticGroundPolylinePerMaterialBatch(scene.groundPrimitives);
+        batch = new StaticGroundPolylinePerMaterialBatch(scene.groundPrimitives, false);
 
         var updater = new PolylineGeometryUpdater(entity, scene);
         batch.add(validTime, updater);
@@ -222,7 +230,7 @@ defineSuite([
             return;
         }
 
-        var batch = new StaticGroundPolylinePerMaterialBatch(scene.groundPrimitives, MaterialAppearance);
+        batch = new StaticGroundPolylinePerMaterialBatch(scene.groundPrimitives, false);
 
         function buildEntity() {
             var polyline = createGroundPolyline();
@@ -291,7 +299,7 @@ defineSuite([
             return;
         }
 
-        var batch = new StaticGroundPolylinePerMaterialBatch(scene.groundPrimitives, MaterialAppearance);
+        batch = new StaticGroundPolylinePerMaterialBatch(scene.groundPrimitives, false);
         var polyline1 = createGroundPolyline();
         polyline1.material = Color.RED;
         var entity = new Entity({
@@ -327,7 +335,7 @@ defineSuite([
             return;
         }
 
-        var batch = new StaticGroundPolylinePerMaterialBatch(scene.groundPrimitives);
+        batch = new StaticGroundPolylinePerMaterialBatch(scene.groundPrimitives, false);
 
         var polyline1 = createGroundPolyline();
         polyline1.material = new PolylineOutlineMaterialProperty();
@@ -368,7 +376,7 @@ defineSuite([
             return;
         }
 
-        var batch = new StaticGroundPolylinePerMaterialBatch(scene.groundPrimitives);
+        batch = new StaticGroundPolylinePerMaterialBatch(scene.groundPrimitives, false);
 
         var polyline1 = createGroundPolyline();
         polyline1.material = new PolylineOutlineMaterialProperty();
@@ -409,7 +417,7 @@ defineSuite([
         }
 
         var resultSphere = new BoundingSphere();
-        var batch = new StaticGroundPolylinePerMaterialBatch(scene.groundPrimitives);
+        batch = new StaticGroundPolylinePerMaterialBatch(scene.groundPrimitives, false);
 
         var polyline1 = createGroundPolyline();
         polyline1.material = new PolylineOutlineMaterialProperty();
@@ -449,7 +457,7 @@ defineSuite([
             // Don't fail if GroundPolylinePrimitive is not supported
             return;
         }
-        var batch = new StaticGroundPolylinePerMaterialBatch(scene.groundPrimitives);
+        batch = new StaticGroundPolylinePerMaterialBatch(scene.groundPrimitives, false);
 
         function buildEntity() {
             var polyline = createGroundPolyline();
