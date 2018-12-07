@@ -29,6 +29,7 @@ define([
         './Cesium3DTileContentState',
         './Cesium3DTileOptimizations',
         './Cesium3DTileRefine',
+        './Cesium3DTilesetAsyncTraversal',
         './Cesium3DTilesetCache',
         './Cesium3DTilesetStatistics',
         './Cesium3DTilesetTraversal',
@@ -73,6 +74,7 @@ define([
         Cesium3DTileContentState,
         Cesium3DTileOptimizations,
         Cesium3DTileRefine,
+        Cesium3DTilesetAsyncTraversal,
         Cesium3DTilesetCache,
         Cesium3DTilesetStatistics,
         Cesium3DTilesetTraversal,
@@ -204,6 +206,7 @@ define([
         this._statistics = new Cesium3DTilesetStatistics();
         this._statisticsLastRender = new Cesium3DTilesetStatistics();
         this._statisticsLastPick = new Cesium3DTilesetStatistics();
+        this._statisticsLastAsync = new Cesium3DTilesetStatistics();
 
         this._tilesLoaded = false;
         this._initialTilesLoaded = false;
@@ -1707,9 +1710,9 @@ define([
     function updateTiles(tileset, frameState) {
         tileset._styleEngine.applyStyle(tileset, frameState);
 
+        var statistics = tileset._statistics;
         var passes = frameState.passes;
         var isRender = passes.render;
-        var statistics = tileset._statistics;
         var commandList = frameState.commandList;
         var numberOfInitialCommands = commandList.length;
         var selectedTiles = tileset._selectedTiles;
@@ -1899,69 +1902,76 @@ define([
 
     ///////////////////////////////////////////////////////////////////////////
 
-    /**
-     * @private
-     */
-    Cesium3DTileset.prototype.update = function(frameState) {
+    function update(tileset, frameState) {
         if (frameState.mode === SceneMode.MORPHING) {
-            return;
+            return false;
         }
 
-        if (!this.show || !this.ready) {
-            return;
+        if (!tileset.show || !tileset.ready) {
+            return false;
         }
 
-        if (!defined(this._loadTimestamp)) {
-            this._loadTimestamp = JulianDate.clone(frameState.time);
+        if (!defined(tileset._loadTimestamp)) {
+            tileset._loadTimestamp = JulianDate.clone(frameState.time);
         }
 
         // Update clipping planes
-        var clippingPlanes = this._clippingPlanes;
-        this._clippingPlanesOriginMatrixDirty = true;
+        var clippingPlanes = tileset._clippingPlanes;
+        tileset._clippingPlanesOriginMatrixDirty = true;
         if (defined(clippingPlanes) && clippingPlanes.enabled) {
             clippingPlanes.update(frameState);
         }
 
-        this._timeSinceLoad = Math.max(JulianDate.secondsDifference(frameState.time, this._loadTimestamp) * 1000, 0.0);
+        tileset._timeSinceLoad = Math.max(JulianDate.secondsDifference(frameState.time, tileset._loadTimestamp) * 1000, 0.0);
 
-        this._skipLevelOfDetail = this.skipLevelOfDetail && !defined(this._classificationType) && !this._disableSkipLevelOfDetail && !this._allTilesAdditive;
+        tileset._skipLevelOfDetail = tileset.skipLevelOfDetail && !defined(tileset._classificationType) && !tileset._disableSkipLevelOfDetail && !tileset._allTilesAdditive;
 
         // Do out-of-core operations (new content requests, cache removal,
         // process new tiles) only during the render pass.
         var passes = frameState.passes;
         var isRender = passes.render;
         var isPick = passes.pick;
+        var isAsync = passes.async;
 
-        var statistics = this._statistics;
+        var statistics = tileset._statistics;
         statistics.clear();
 
-        if (this.dynamicScreenSpaceError) {
-            updateDynamicScreenSpaceError(this, frameState);
+        if (tileset.dynamicScreenSpaceError) {
+            updateDynamicScreenSpaceError(tileset, frameState);
         }
 
         if (isRender) {
-            this._cache.reset();
+            tileset._cache.reset();
         }
 
-        Cesium3DTilesetTraversal.selectTiles(this, frameState);
+        var ready;
 
-        if (isRender) {
-            requestTiles(this);
-            processTiles(this, frameState);
+        if (isAsync) {
+            ready = Cesium3DTilesetAsyncTraversal.selectTiles(tileset, frameState);
+        } else {
+            ready = Cesium3DTilesetTraversal.selectTiles(tileset, frameState);
         }
 
-        updateTiles(this, frameState);
+        if (isRender || isAsync) {
+            requestTiles(tileset);
+        }
 
         if (isRender) {
-            unloadTiles(this);
+            processTiles(tileset, frameState);
+        }
+
+        updateTiles(tileset, frameState);
+
+        if (isRender) {
+            unloadTiles(tileset);
 
             // Events are raised (added to the afterRender queue) here since promises
             // may resolve outside of the update loop that then raise events, e.g.,
             // model's readyPromise.
-            raiseLoadProgressEvent(this, frameState);
+            raiseLoadProgressEvent(tileset, frameState);
 
             if (statistics.selected !== 0) {
-                var credits = this._credits;
+                var credits = tileset._credits;
                 if (defined(credits)) {
                     var length = credits.length;
                     for (var i = 0; i < length; i++) {
@@ -1972,8 +1982,24 @@ define([
         }
 
         // Update last statistics
-        var statisticsLast = isPick ? this._statisticsLastPick : this._statisticsLastRender;
+        var statisticsLast = isAsync ? tileset._statisticsLastAsync : (isPick ? tileset._statisticsLastPick : tileset._statisticsLastRender);
         Cesium3DTilesetStatistics.clone(statistics, statisticsLast);
+
+        return ready;
+    }
+
+    /**
+     * @private
+     */
+    Cesium3DTileset.prototype.update = function(frameState) {
+        update(this, frameState);
+    };
+
+    /**
+     * @private
+     */
+    Cesium3DTileset.prototype.updateAsync = function(frameState) {
+        return update(this, frameState);
     };
 
     /**

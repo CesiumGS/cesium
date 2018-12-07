@@ -578,7 +578,6 @@ require({
         // Apply user HTML to bucket.
         var htmlElement = bucketDoc.createElement('div');
         htmlElement.innerHTML = htmlEditor.getValue();
-        bucketDoc.body.appendChild(htmlElement);
 
         var onScriptTagError = function() {
             if (bucketFrame.contentDocument === bucketDoc) {
@@ -625,7 +624,30 @@ require({
                 bucketDoc.body.appendChild(element);
             }
         };
-        loadScript();
+        // If we just add `htmlElement` to the DOM and run
+        // loadScript(), there's a chance it will inject CSS
+        // before the HTML content is fully loaded, leading to a broken page.
+        // So instead we create an observer instance to watch for when
+        // the element has been added.
+        // See https://github.com/AnalyticalGraphicsInc/cesium/issues/5265
+        var observer = new MutationObserver(function (mutationsList) {
+            // See https://developer.mozilla.org/en-US/docs/Web/API/MutationObserver
+            var length = mutationsList.length;
+            for (var i = 0; i < length; i++) {
+                var mutation = mutationsList[i];
+                // Watch for an element with the data-sandcastle-loaded attribute.
+                if (defined(mutation.target.dataset) && mutation.target.dataset.sandcastleLoaded === 'yes') {
+                    loadScript();
+                    observer.disconnect();
+                }
+            }
+        });
+
+        // Start observing the target node for configured mutations
+        var config = { attributes: true, childList: true, subtree: true };
+        observer.observe(bucketDoc, config);
+
+        bucketDoc.body.appendChild(htmlElement);
     }
 
     function applyBucket() {
