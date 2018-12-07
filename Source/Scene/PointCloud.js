@@ -21,6 +21,7 @@ define([
         '../Core/PrimitiveType',
         '../Core/RuntimeError',
         '../Core/Transforms',
+        '../DataSources/ConstantProperty',
         '../Renderer/Buffer',
         '../Renderer/BufferUsage',
         '../Renderer/DrawCommand',
@@ -62,6 +63,7 @@ define([
         PrimitiveType,
         RuntimeError,
         Transforms,
+        ConstantProperty,
         Buffer,
         BufferUsage,
         DrawCommand,
@@ -114,6 +116,8 @@ define([
         Check.typeOf.object('options.arrayBuffer', options.arrayBuffer);
         //>>includeEnd('debug');
 
+        var that = this;
+
         // Hold onto the payload until the render resources are created
         this._parsedContent = undefined;
 
@@ -147,11 +151,13 @@ define([
 
         // Use per-point normals to hide back-facing points.
         this.backFaceCulling = false;
-        this._backFaceCulling = false;
+        bindProperty(this, "backFaceCulling", options.backFaceCulling);
+        this._backFaceCulling = this.backFaceCulling;
 
         // Whether to enable normal shading
         this.normalShading = true;
-        this._normalShading = true;
+        bindProperty(this, "normalShading", options.normalShading);
+        this._normalShading = this.normalShading;
 
         this._opaqueRenderState = undefined;
         this._translucentRenderState = undefined;
@@ -248,6 +254,16 @@ define([
     });
 
     var sizeOfUint32 = Uint32Array.BYTES_PER_ELEMENT;
+
+    function bindProperty(object, field, property) {
+        if (property) {
+            var val = property.getValue();
+            object[field] = val;
+            property.definitionChanged.addEventListener(function(newValue) {
+                object[field] = newValue.getValue();
+            });
+        }
+    }
 
     function initialize(pointCloud, options) {
         var arrayBuffer = options.arrayBuffer;
