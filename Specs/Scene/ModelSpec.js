@@ -1300,10 +1300,10 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('addAll throws when speedup is less than or equal to zero.', function() {
+    it('addAll throws when multiplier is less than or equal to zero.', function() {
         expect(function() {
             return animBoxesModel.activeAnimations.addAll({
-                speedup : 0.0
+                multiplier : 0.0
             });
         }).toThrowDeveloperError();
     });
@@ -1323,7 +1323,7 @@ defineSuite([
         expect(a.delay).toEqual(0.0);
         expect(a.stopTime).not.toBeDefined();
         expect(a.removeOnStop).toEqual(false);
-        expect(a.speedup).toEqual(1.0);
+        expect(a.multiplier).toEqual(1.0);
         expect(a.reverse).toEqual(false);
         expect(a.loop).toEqual(ModelAnimationLoop.NONE);
         expect(a.start).toBeDefined();
@@ -1398,11 +1398,11 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('add throws when speedup is less than or equal to zero.', function() {
+    it('add throws when multiplier is less than or equal to zero.', function() {
         expect(function() {
             return animBoxesModel.activeAnimations.add({
                 name : 'animation_1',
-                speedup : 0.0
+                multiplier : 0.0
             });
         }).toThrowDeveloperError();
     });
@@ -1512,13 +1512,13 @@ defineSuite([
         animBoxesModel.show = false;
     });
 
-    it('Animates with a speedup', function() {
+    it('Animates with a multiplier', function() {
         var time = JulianDate.fromDate(new Date('January 1, 2014 12:00:00 UTC'));
         var animations = animBoxesModel.activeAnimations;
         var a = animations.add({
             name : 'animation_1',
             startTime : time,
-            speedup : 1.5
+            multiplier : 1.5
         });
 
         var spyUpdate = jasmine.createSpy('listener');
