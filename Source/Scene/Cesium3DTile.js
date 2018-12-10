@@ -144,6 +144,8 @@ define([
             Cesium3DTile._deprecationWarning('geometricErrorUndefined', 'Required property geometricError is undefined for this tile. Using parent\'s geometric error instead.');
         }
 
+        this.updateGeometricErrorScale();
+
         var refine;
         if (defined(header.refine)) {
             if (header.refine === 'replace' || header.refine === 'add') {
@@ -348,8 +350,6 @@ define([
 
     // This can be overridden for testing purposes
     Cesium3DTile._deprecationWarning = deprecationWarning;
-
-    var scratchScale = new Cartesian3();
 
     defineProperties(Cesium3DTile.prototype, {
         /**
@@ -604,13 +604,7 @@ define([
             get : function() {
                 return this._commandsLength;
             }
-        },
-
-        geometricError : {
-            get : function() {
-                return Cartesian3.maximumComponent(Matrix4.getScale(this.computedTransform, scratchScale)) * this._geometricError;
-            }
-		}
+        }
     });
 
     var scratchJulianDate = new JulianDate();
@@ -1056,10 +1050,18 @@ define([
             this._viewerRequestVolume = this.createBoundingVolume(header.viewerRequestVolume, this.computedTransform, this._viewerRequestVolume);
         }
 
+        this.updateGeometricErrorScale();
+
         // Destroy the debug bounding volumes. They will be generated fresh.
         this._debugBoundingVolume = this._debugBoundingVolume && this._debugBoundingVolume.destroy();
         this._debugContentBoundingVolume = this._debugContentBoundingVolume && this._debugContentBoundingVolume.destroy();
         this._debugViewerRequestVolume = this._debugViewerRequestVolume && this._debugViewerRequestVolume.destroy();
+    };
+
+    Cesium3DTile.prototype.updateGeometricErrorScale = function() {
+        var scale = Matrix4.getScale(this.computedTransform, scratchScale);
+        var uniformScale = Cartesian3.maximumComponent(scale);
+        this.geometricError = this._geometricError * uniformScale;
     };
 
     function applyDebugSettings(tile, tileset, frameState) {

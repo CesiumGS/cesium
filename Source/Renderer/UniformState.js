@@ -1237,6 +1237,7 @@ define([
 
             var m = uniformState._normal;
             Matrix4.getRotation(uniformState.inverseModelView, m);
+            Matrix3.getRotation(m, m);
             Matrix3.transpose(m, m);
         }
     }
@@ -1254,7 +1255,6 @@ define([
     function cleanInverseNormal(uniformState) {
         if (uniformState._inverseNormalDirty) {
             uniformState._inverseNormalDirty = false;
-
             Matrix4.getRotation(uniformState.inverseModelView, uniformState._inverseNormal);
         }
     }
@@ -1262,7 +1262,6 @@ define([
     function cleanInverseNormal3D(uniformState) {
         if (uniformState._inverseNormal3DDirty) {
             uniformState._inverseNormal3DDirty = false;
-
             Matrix4.getRotation(uniformState.inverseModelView3D, uniformState._inverseNormal3D);
         }
     }
