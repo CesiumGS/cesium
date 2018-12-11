@@ -31,6 +31,7 @@ define([
             height : 1024
         });
         this._rectangle = undefined;
+        this.iteration = 0;
     }
 
     AsynchronousReprojectionWorker.prototype.runTask = function(parameters, transferableObjects) {
@@ -126,6 +127,7 @@ define([
      * @param {Rectangle} rectangle
      * @param {Number} width
      * @param {Number} height
+     * @param {Number} iteration
      */
     AsynchronousReprojectionWorker.prototype.reproject = function(parameters) {
         var requestRectangle = parameters.rectangle;
@@ -158,9 +160,14 @@ define([
             }
         }
 
-        return projectEach(requestRectangle, intersectedImageIndices, this)
-            .then(function() {
-                return targetBitmap;
+        var iteration = this.iteration = parameters.iteration;
+
+        return projectEach(requestRectangle, intersectedImageIndices, iteration, this)
+            .then(function(complete) {
+                return {
+                    iteration : iteration,
+                    bitmap : complete ? targetBitmap : undefined
+                };
             })
             .otherwise(function(error) {
                 console.log(error);
@@ -183,23 +190,30 @@ define([
             });
     }
 
-    function projectEach(requestRectangle, intersectImageIndices, workerClass, index) {
+    function projectEach(requestRectangle, intersectImageIndices, iteration, workerClass, index) {
+        if (workerClass.iteration !== iteration) {
+            return when.resolve(false);
+        }
         if (!defined(index)) {
             index = 0;
         }
         if (index === intersectImageIndices.length) {
-            return when.resolve();
+            return when.resolve(true);
         }
         var imageIndex = intersectImageIndices[index];
         return workerClass.load(workerClass.urls[imageIndex])
             .then(function(sourceBitmap) {
+                if (workerClass.iteration !== iteration) {
+                    return when.resolve(false);
+                }
+
                 var targetBitmap = workerClass.targetBitmap;
                 var sourceRectangle = workerClass.unprojectedRectangles[imageIndex];
                 var sourceProjectedRectangle = workerClass.projectedRectangles[imageIndex];
                 var projection = workerClass.projections[imageIndex];
                 reprojectImage(targetBitmap, requestRectangle, sourceBitmap, sourceRectangle, sourceProjectedRectangle, projection);
 
-                return projectEach(requestRectangle, intersectImageIndices, workerClass, index + 1);
+                return projectEach(requestRectangle, intersectImageIndices, iteration, workerClass, index + 1);
             });
     }
 

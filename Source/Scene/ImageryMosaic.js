@@ -180,11 +180,11 @@ define([
                 that._rectangle = thatRectangle;
 
                 // Create the full-coverage version
-                return requestProjection(taskProcessors, 1024, 1024, thatRectangle);
+                return requestProjection(that, 1024, 1024, thatRectangle, that._iteration);
             })
-            .then(function(reprojectedBitmap) {
+            .then(function(result) {
                 var bitmapImageryProvider = new BitmapImageryProvider({
-                    bitmap : reprojectedBitmap,
+                    bitmap : result.bitmap,
                     rectangle : that._rectangle,
                     credit : that._credit
                 });
@@ -365,8 +365,6 @@ define([
         }
 
         var that = this;
-        this._iteration++;
-        var iteration = this._iteration;
 
         if (defined(this._boundsRectangle)) {
             this._entityCollection.remove(this._boundsRectangle);
@@ -384,13 +382,16 @@ define([
             show : this._debugShowBoundsRectangle
         });
 
-        requestProjection(this._taskProcessors, 1024, 1024, renderingBounds)
-            .then(function(reprojectedBitmap) {
-                if (that._iteration !== iteration) {
-                    // cancel
+        this._iteration++;
+        var that = this;
+        requestProjection(this, 1024, 1024, renderingBounds, this._iteration)
+            .then(function(result) {
+                if (result.iteration !== that._iteration) {
+                    // don't update imagery
                     return;
                 }
 
+                var reprojectedBitmap = result.bitmap;
                 var bitmapImageryProvider = new BitmapImageryProvider({
                     bitmap : reprojectedBitmap,
                     rectangle : renderingBounds,
@@ -403,6 +404,7 @@ define([
                 if (defined(that._localImageryLayer)) {
                     scene.imageryLayers.remove(that._localImageryLayer);
                 }
+
                 that._localImageryLayer = newLocalImageryLayer;
                 that._localRenderingBounds = Rectangle.clone(renderingBounds, that._localRenderingBounds);
                 that._fullCoverageImageryLayer.cutoutRectangle = undefined;
@@ -439,7 +441,8 @@ define([
         return cameraAngle < maxCosineAngle; // TODO: do we need the acos here? something tells me no...
     }
 
-    function requestProjection(taskProcessors, width, height, rectangle) {
+    function requestProjection(workerClass, width, height, rectangle, iteration) {
+        var taskProcessors = workerClass._taskProcessors;
         var concurrency = taskProcessors.length;
         var promises = new Array(concurrency);
         for (var i = 0; i < concurrency; i++) {
@@ -447,16 +450,23 @@ define([
                 reproject : true,
                 width : width,
                 height : height,
-                rectangle : rectangle
+                rectangle : rectangle,
+                iteration : iteration
             });
         }
         return when.all(promises)
-            .then(function(bitmaps) {
+            .then(function(results) {
+                // check if the result is from an earlier iteration and should be ignored
+                var i;
+                if (results[0].iteration !== workerClass._iteration) {
+                    return results[0];
+                }
+
                 // alpha over
-                var targetData = bitmaps[0].data;
+                var targetData = results[0].bitmap.data;
                 var pixelCount = width * height;
                 for (var i = 1; i < concurrency; i++) {
-                    var portionData = bitmaps[i].data;
+                    var portionData = results[i].bitmap.data;
                     for (var j = 0; j < pixelCount; j++) {
                         var index = j * 4;
                         var alpha = portionData[index + 3];
@@ -469,7 +479,7 @@ define([
                     }
                 }
 
-                return bitmaps[0];
+                return results[0];
             });
     }
 

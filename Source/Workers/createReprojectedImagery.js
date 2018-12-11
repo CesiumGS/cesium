@@ -8,9 +8,9 @@ define([
 
     var asynchronousReprojectionWorker = new AsynchronousReprojectionWorker();
 
-    function createVerticesFromHeightmap(parameters, transferableObjects) {
+    function createReprojectedImagery(parameters, transferableObjects) {
         return asynchronousReprojectionWorker.runTask(parameters, transferableObjects);
     }
 
-    return createTaskProcessorWorker(createVerticesFromHeightmap);
+    return createTaskProcessorWorker(createReprojectedImagery);
 });
