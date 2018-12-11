@@ -32,6 +32,12 @@ define([
         });
         this._rectangle = undefined;
         this.iteration = 0;
+
+        this.sampleCount = 0;
+        this.imageBitmapTime = 0.0;
+        this.canvasTime = 0.0;
+        this.projTime = 0.0;
+        this.id = 0.0;
     }
 
     AsynchronousReprojectionWorker.prototype.runTask = function(parameters, transferableObjects) {
@@ -39,7 +45,16 @@ define([
             return this.initialize(parameters);
         }
         if (parameters.reproject) {
-            return this.reproject(parameters);
+            var that = this;
+            return this.reproject(parameters)
+                .then(function(result) {
+                    console.log(that.id + '  samples: ' + that.sampleCount)
+                    console.log(that.id + '    avg imageBitmapTime ' + (that.imageBitmapTime / that.sampleCount));
+                    console.log(that.id + '    avg canvasTime ' + (that.canvasTime / that.sampleCount));
+                    console.log(that.id + '    avg projTime ' + (that.projTime / that.sampleCount));
+                    console.log(that.id + '  total time: ' + (that.imageBitmapTime + that.canvasTime + that.projTime));
+                    return result;
+                });
         }
     };
 
@@ -62,6 +77,7 @@ define([
 
         this.urls = parameters.urls;
         var that = this;
+        this.id = parameters.id;
 
         this.cachedBuffers = new LRUMap(parameters.imageCacheSize);
 
@@ -101,18 +117,29 @@ define([
             cachedBufferPromise = resource.fetchBlob();
         }
 
+        var imageBitmapTime = 0;
+        var canvasTime = 0;
+
+        this.sampleCount++;
+        var that = this;
+
         return cachedBufferPromise
             .then(function(imageBlob) {
                 if (wasCached) {
                     cachedBuffers.set(url, imageBlob);
                 }
+                imageBitmapTime = performance.now();
                 return createImageBitmap(imageBlob);
             })
             .then(function(imageBitmap) {
+                that.imageBitmapTime += performance.now() - imageBitmapTime;
+
+                canvasTime = performance.now();
                 var canvas = new OffscreenCanvas(imageBitmap.width, imageBitmap.height);
                 var context = canvas.getContext('2d');
                 context.drawImage(imageBitmap, 0, 0);
                 var imagedata = context.getImageData(0, 0, imageBitmap.width, imageBitmap.height);
+                that.canvasTime += performance.now() - canvasTime;
                 return new Bitmap(imagedata);
             })
             .otherwise(function(error) {
@@ -211,7 +238,10 @@ define([
                 var sourceRectangle = workerClass.unprojectedRectangles[imageIndex];
                 var sourceProjectedRectangle = workerClass.projectedRectangles[imageIndex];
                 var projection = workerClass.projections[imageIndex];
+
+                var projTime = performance.now();
                 reprojectImage(targetBitmap, requestRectangle, sourceBitmap, sourceRectangle, sourceProjectedRectangle, projection);
+                workerClass.projTime += performance.now() - projTime;
 
                 return projectEach(requestRectangle, intersectImageIndices, iteration, workerClass, index + 1);
             });

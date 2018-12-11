@@ -162,7 +162,8 @@ define([
                 urls : urlGroups[i],
                 serializedMapProjections : serializedProjectionGroups[i],
                 projectedRectangles : projectedRectangleGroups[i],
-                imageCacheSize : defaultValue(options.imageCacheSize, 100)
+                imageCacheSize : defaultValue(options.imageCacheSize, 100),
+                id : i
             });
         }
 
