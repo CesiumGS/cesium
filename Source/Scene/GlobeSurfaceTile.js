@@ -98,7 +98,6 @@ define([
         this.terrainState = TerrainState.UNLOADED;
         this.mesh = undefined;
         this.fill = undefined;
-        this.vertexArray = undefined;
 
         // TODO: probably better to have a bounding sphere for 2D rather than one for picking.
         this.pickBoundingSphere = new BoundingSphere();
@@ -435,8 +434,8 @@ define([
         var surfaceTile = tile.data;
 
         var parent = tile.parent;
-        if (parent !== undefined && !parent.data.isChildAvailable(parent.x, parent.y, tile.x, tile.y)) {
-            // Start upsampling right away.
+        if (parent !== undefined && parent.data.isChildAvailable(parent.x, parent.y, tile.x, tile.y) === false) {
+            // This tile is not available, so mark it failed so we start upsampling right away.
             surfaceTile.terrainState = TerrainState.FAILED;
         }
 

@@ -128,13 +128,10 @@ defineSuite([
             expect(rootTile.state).toBe(QuadtreeTileLoadState.LOADING);
         });
 
-        it('non-root tiles get neither loadedTerrain nor upsampledTerrain when their parent is not loaded nor upsampled', function() {
-            var children = rootTile.children;
-            for (var i = 0; i < children.length; ++i) {
-                GlobeSurfaceTile.processStateMachine(children[i], scene.frameState, alwaysDeferTerrainProvider, imageryLayerCollection, []);
-                expect(children[i].data.loadedTerrain).toBeUndefined();
-                expect(children[i].data.upsampledTerrain).toBeUndefined();
-            }
+        it('transitions to FAILED state immediately if this tile is not available', function() {
+            rootTile.childTileMask = 0; // no child tiles available
+            GlobeSurfaceTile.processStateMachine(rootTile.southwestChild, scene.frameState, alwaysDeferTerrainProvider, imageryLayerCollection, []);
+            expect(rootTile.state).toBe(QuadtreeTileLoadState.FAILED);
         });
 
         it('once a root tile is loaded, its children get both loadedTerrain and upsampledTerrain', function() {
@@ -230,46 +227,6 @@ defineSuite([
                 }).then(function() {
                     expect(grandchildTile.data.upsampledTerrain).not.toBe(grandchildUpsampledTerrain);
                     expect(grandchildTile.data.loadedTerrain).toBeDefined();
-                });
-            });
-        });
-
-        xit('improved upsampled terrain triggers re-upsampling of children', function() {
-            var childTile = rootTile.children[0];
-            var grandchildTile = childTile.children[0];
-            var greatGrandchildTile = grandchildTile.children[0];
-
-            return pollToPromise(function() {
-                GlobeSurfaceTile.processStateMachine(rootTile, scene.frameState, realTerrainProvider, imageryLayerCollection, []);
-                return rootTile.data.loadedTerrain.state >= TerrainState.RECEIVED;
-            }).then(function() {
-                return pollToPromise(function() {
-                    GlobeSurfaceTile.processStateMachine(childTile, scene.frameState, alwaysDeferTerrainProvider, imageryLayerCollection, []);
-                    return childTile.data.upsampledTerrain.state >= TerrainState.RECEIVED;
-                });
-            }).then(function() {
-                return pollToPromise(function() {
-                    GlobeSurfaceTile.processStateMachine(grandchildTile, scene.frameState, alwaysDeferTerrainProvider, imageryLayerCollection, []);
-                    return grandchildTile.data.upsampledTerrain.state >= TerrainState.RECEIVED;
-                });
-            }).then(function() {
-                return pollToPromise(function() {
-                    GlobeSurfaceTile.processStateMachine(greatGrandchildTile, scene.frameState, alwaysDeferTerrainProvider, imageryLayerCollection, []);
-                    return greatGrandchildTile.data.upsampledTerrain.state >= TerrainState.RECEIVED;
-                });
-            }).then(function() {
-               return pollToPromise(function() {
-                   GlobeSurfaceTile.processStateMachine(childTile, scene.frameState, realTerrainProvider, imageryLayerCollection, []);
-                   return childTile.data.loadedTerrain.state >= TerrainState.RECEIVED;
-               });
-            }).then(function() {
-                var greatGrandchildUpsampledTerrain = grandchildTile.data.upsampledTerrain;
-                return pollToPromise(function() {
-                    GlobeSurfaceTile.processStateMachine(grandchildTile, scene.frameState, alwaysDeferTerrainProvider, imageryLayerCollection, []);
-                    return grandchildTile.data.upsampledTerrain.state >= TerrainState.RECEIVED;
-                }).then(function() {
-                    expect(greatGrandchildTile.data.upsampledTerrain).toBeDefined();
-                    expect(greatGrandchildTile.data.upsampledTerrain).not.toBe(greatGrandchildUpsampledTerrain);
                 });
             });
         });
