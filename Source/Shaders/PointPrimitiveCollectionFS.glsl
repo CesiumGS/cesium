@@ -38,6 +38,6 @@ void main()
 #endif
 #endif
 
-    gl_FragColor = color;
+    gl_FragColor = czm_gammaCorrect(color);
     czm_writeLogDepth();
 }
