@@ -180,8 +180,6 @@ define([
         this._uniformMaps = [];
         this._usedDrawCommands = 0;
 
-        this._vertexArraysToDestroy = [];
-
         this._debug = {
             wireframe : false,
             boundingSphereTile : undefined
@@ -410,13 +408,6 @@ define([
 
         // Add credits for terrain and imagery providers.
         updateCredits(this, frameState);
-
-        var vertexArraysToDestroy = this._vertexArraysToDestroy;
-        var length = vertexArraysToDestroy.length;
-        for (var j = 0; j < length; ++j) {
-            freeVertexArray(vertexArraysToDestroy[j]);
-        }
-        vertexArraysToDestroy.length = 0;
     };
 
     /**
@@ -541,7 +532,7 @@ define([
         if (stopLoad) {
             return;
         }
-        GlobeSurfaceTile.processStateMachine(tile, frameState, this._terrainProvider, this._imageryLayers, this._vertexArraysToDestroy);
+        GlobeSurfaceTile.processStateMachine(tile, frameState, this._terrainProvider, this._imageryLayers);
     };
 
     var boundingSphereScratch = new BoundingSphere();
@@ -659,7 +650,10 @@ define([
         // For a tileset with `availability`, we'll always be able to refine.
         // We can ask for availability of _any_ child tile because we only need to confirm
         // that we get a yes or no answer, it doesn't matter what the answer is.
-        var childAvailable = tile.data.isChildAvailable(this.terrainProvider, tile, 0, 0);
+        if (defined(tile.data.terrainData)) {
+            return true;
+        }
+        var childAvailable = this.terrainProvider.getTileDataAvailable(tile.x * 2, tile.y * 2, tile.level + 1);
         return childAvailable !== undefined;
     };
 
@@ -861,7 +855,7 @@ define([
             return tile;
         }
 
-        var bvh = surfaceTile.getBvh(tile, terrainProvider.terrainProvider);
+        var bvh = surfaceTile.getBoundingVolumeHierarchy(tile);
         if (bvh !== undefined && bvh[0] === bvh[0] && bvh[1] === bvh[1]) {
             // Have a BVH that covers this tile and the heights are not NaN.
             tileBoundingRegion.minimumHeight = bvh[0] * frameState.terrainExaggeration;

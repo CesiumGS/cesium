@@ -105,8 +105,6 @@ define([
         this.surfaceShader = undefined;
         this.isClipped = true;
 
-        this.childTileMask = undefined;
-
         this.clippedByBoundaries = false;
     }
 
@@ -140,7 +138,7 @@ define([
         }
     });
 
-    GlobeSurfaceTile.prototype.getBvh = function(tile, terrainProvider) {
+    GlobeSurfaceTile.prototype.getBoundingVolumeHierarchy = function(tile) {
         if (this._bvh === undefined) {
             var terrainData = this.terrainData;
             if (terrainData !== undefined && terrainData.bvh !== undefined) {
@@ -149,7 +147,7 @@ define([
 
             var parent = tile.parent;
             if (parent !== undefined && parent.data !== undefined) {
-                var parentBvh = parent.data.getBvh(parent, terrainProvider);
+                var parentBvh = parent.data.getBoundingVolumeHierarchy(parent);
                 if (parentBvh !== undefined && parentBvh.length > 2) {
                     var subsetLength = (parentBvh.length - 2) / 4;
                     var childIndex = (tile.y === parent.y * 2 ? 2 : 0) + (tile.x === parent.x * 2 ? 0 : 1);
@@ -160,7 +158,7 @@ define([
         }
 
         return this._bvh;
-};
+    };
 
     function getPosition(encoding, mode, projection, vertices, index, result) {
         encoding.decodePosition(vertices, index, result);
@@ -241,7 +239,7 @@ define([
 
             this.vertexArray = this.vertexArray.destroy();
 
-            if (!indexBuffer.isDestroyed() && defined(indexBuffer.referenceCount)) {
+            if (defined(indexBuffer) && !indexBuffer.isDestroyed() && defined(indexBuffer.referenceCount)) {
                 --indexBuffer.referenceCount;
                 if (indexBuffer.referenceCount === 0) {
                     indexBuffer.destroy();
@@ -254,7 +252,7 @@ define([
 
             this.wireframeVertexArray = this.wireframeVertexArray.destroy();
 
-            if (!indexBuffer.isDestroyed() && defined(indexBuffer.referenceCount)) {
+            if (defined(indexBuffer) && !indexBuffer.isDestroyed() && defined(indexBuffer.referenceCount)) {
                 --indexBuffer.referenceCount;
                 if (indexBuffer.referenceCount === 0) {
                     indexBuffer.destroy();
@@ -263,7 +261,7 @@ define([
         }
     };
 
-    GlobeSurfaceTile.processStateMachine = function(tile, frameState, terrainProvider, imageryLayerCollection, vertexArraysToDestroy, terrainOnly) {
+    GlobeSurfaceTile.processStateMachine = function(tile, frameState, terrainProvider, imageryLayerCollection, terrainOnly) {
         var surfaceTile = tile.data;
         if (!defined(surfaceTile)) {
             surfaceTile = tile.data = new GlobeSurfaceTile();
@@ -288,14 +286,14 @@ define([
 
                 if (ancestor.data === undefined || ancestor.data.terrainData === undefined) {
                     // The ancestor that holds the BVH data isn't loaded yet; load it (terrain only!) instead of this tile.
-                    GlobeSurfaceTile.processStateMachine(ancestor, frameState, terrainProvider, imageryLayerCollection, vertexArraysToDestroy, true);
+                    GlobeSurfaceTile.processStateMachine(ancestor, frameState, terrainProvider, imageryLayerCollection, true);
                     return;
                 }
             }
         }
 
         if (tile.state === QuadtreeTileLoadState.LOADING) {
-            processTerrainStateMachine(tile, frameState, terrainProvider, imageryLayerCollection, vertexArraysToDestroy);
+            processTerrainStateMachine(tile, frameState, terrainProvider, imageryLayerCollection);
         }
 
         // From here down we're loading imagery, not terrain. We don't want to load imagery until
@@ -311,7 +309,7 @@ define([
         // The terrain is renderable as soon as we have a valid vertex array.
         var isRenderable = defined(surfaceTile.vertexArray);
 
-        // But it's not done loading until our two state machines are terminated.
+        // But it's not done loading until it's in the READY state.
         var isDoneLoading = surfaceTile.terrainState === TerrainState.READY;
 
         // If this tile's terrain and imagery are just upsampled from its parent, mark the tile as
@@ -379,64 +377,10 @@ define([
         }
     };
 
-    /**
-     * Determines if a given child tile is available.  The given child tile coordinates are assumed
-     * to be one of the four children of this tile.  If non-child tile coordinates are
-     * given, the availability of the southeast child tile is returned. This function determines
-     * the presence of child tiles from `terrainProvider.availability` or from `this.terrainData.childTileMask`.
-     *
-     * @param {TerrainProvider} terrainProvider The terrain provider.
-     * @param {QuatreeTile} tile The parent tile.
-     * @param {Number} childX The tile X coordinate of the child tile to check for availability.
-     * @param {Number} childY The tile Y coordinate of the child tile to check for availability.
-     * @returns {Boolean|undefined} True if the child tile is available; otherwise, false. If tile availability
-     *          cannot be determined, this function returns undefined.
-     */
-    GlobeSurfaceTile.prototype.isChildAvailable = function(terrainProvider, tile, childX, childY) {
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(terrainProvider)) {
-            throw new DeveloperError('terrainProvider is required.');
-        }
-        if (!defined(tile)) {
-            throw new DeveloperError('tile is required.');
-        }
-        if (!defined(childX)) {
-            throw new DeveloperError('childX is required.');
-        }
-        if (!defined(childY)) {
-            throw new DeveloperError('childY is required.');
-        }
-        //>>includeEnd('debug');
-
-        if (this.childTileMask === undefined) {
-            if (terrainProvider.availability !== undefined) {
-                this.childTileMask = terrainProvider.availability.computeChildMaskForTile(tile.level, tile.x, tile.y);
-            } else if (this.terrainData !== undefined && this.terrainData.childTileMask !== undefined) {
-                this.childTileMask = this.terrainData.childTileMask;
-            } else {
-                // No idea if children exist or not.
-                return undefined;
-            }
-        }
-
-        var bitNumber = 2; // northwest child
-        if (childX !== tile.x * 2) {
-            ++bitNumber; // east child
-        }
-        if (childY !== tile.y * 2) {
-            bitNumber -= 2; // south child
-        }
-
-        return (this.childTileMask & (1 << bitNumber)) !== 0;
-    };
-
     function prepareNewTile(tile, terrainProvider, imageryLayerCollection) {
-        var surfaceTile = tile.data;
-
-        var parent = tile.parent;
-        if (parent !== undefined && parent.data.isChildAvailable(parent.x, parent.y, tile.x, tile.y) === false) {
+        if (terrainProvider.getTileDataAvailable(tile.x, tile.y, tile.level) === false) {
             // This tile is not available, so mark it failed so we start upsampling right away.
-            surfaceTile.terrainState = TerrainState.FAILED;
+            tile.data.terrainState = TerrainState.FAILED;
         }
 
         // Map imagery tiles to this terrain tile
@@ -448,17 +392,16 @@ define([
         }
     }
 
-    function processTerrainStateMachine(tile, frameState, terrainProvider, imageryLayerCollection, vertexArraysToDestroy) {
+    function processTerrainStateMachine(tile, frameState, terrainProvider, imageryLayerCollection) {
         var surfaceTile = tile.data;
 
         // If this tile is FAILED, we'll need to upsample from the parent. If the parent isn't
         // ready for that, let's push it along.
         var parent = tile.parent;
         if (surfaceTile.terrainState === TerrainState.FAILED && parent !== undefined) {
-            var parentReady = parent.data !== undefined && parent.data.terrainData !== undefined && parent.data.terrainData._mesh !== undefined;
+            var parentReady = parent.data !== undefined && parent.data.terrainData !== undefined;
             if (!parentReady) {
-                //console.log('Waiting on L' + parent.level + 'X' + parent.x + 'Y' + parent.y);
-                GlobeSurfaceTile.processStateMachine(parent, frameState, terrainProvider, imageryLayerCollection, vertexArraysToDestroy, true);
+                GlobeSurfaceTile.processStateMachine(parent, frameState, terrainProvider, imageryLayerCollection, true);
             }
         }
 
@@ -491,7 +434,8 @@ define([
     function upsample(surfaceTile, tile, frameState, terrainProvider, x, y, level) {
         var parent = tile.parent;
         if (!parent) {
-            // Trying to upsample from a root tile. No can do.
+            // Trying to upsample from a root tile. No can do. This tile is a failure.
+            tile.state = QuadtreeTileLoadState.FAILED;
             return;
         }
 
@@ -500,7 +444,7 @@ define([
         var sourceY = parent.y;
         var sourceLevel = parent.level;
 
-        if (sourceData === undefined || sourceData._mesh === undefined) {
+        if (!defined(sourceData)) {
             // Parent is not available, so we can't upsample this tile yet.
             return;
         }

@@ -343,6 +343,11 @@ define([
         }
         //>>includeEnd('debug');
 
+        var meshData = this._mesh;
+        if (!defined(meshData)) {
+            return undefined;
+        }
+
         var width = this._width;
         var height = this._height;
         var structure = this._structure;
@@ -350,10 +355,6 @@ define([
         var stride = structure.stride;
 
         var heights = new this._bufferType(width * height * stride);
-        var meshData = this._mesh;
-        if (!defined(meshData)) {
-            return undefined;
-        }
 
         var buffer = meshData.vertices;
         var encoding = meshData.encoding;
