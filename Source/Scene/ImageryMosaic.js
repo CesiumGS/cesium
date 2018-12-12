@@ -71,9 +71,9 @@ define([
      * @param {Number} [options.imageCacheSize=100] Number of cached images to hold in memory at once
      */
     function ImageryMosaic(options, viewer) {
-        if (!FeatureDetection.isChrome() || FeatureDetection.chromeVersion()[0] < 69) {
-            throw new DeveloperError('ImageryMosaic is only supported in Chrome version 69 or later.');
-        }
+        //if (!FeatureDetection.isChrome() || FeatureDetection.chromeVersion()[0] < 69) {
+        //    throw new DeveloperError('ImageryMosaic is only supported in Chrome version 69 or later.');
+        //}
 
         //>>includeStart('debug', pragmas.debug);
         Check.defined('options', options);
@@ -112,9 +112,15 @@ define([
         this._rectangle = new Rectangle();
 
         var concurrency = defaultValue(options.concurrency, 2);
+        var initWebAssemblyPromises = [];
         var taskProcessors = new Array(concurrency);
         for (i = 0; i < concurrency; i++) {
             taskProcessors[i] = new TaskProcessor('createReprojectedImagery');
+            var initwasm = taskProcessors[i].initWebAssemblyModule({
+                modulePath : 'ThirdParty/stbi_decode.js',
+                wasmBinaryFile : 'ThirdParty/stbi_decode.wasm'
+            });
+            initWebAssemblyPromises.push(initwasm.promise);
         }
         this._taskProcessors = taskProcessors;
 
@@ -155,19 +161,21 @@ define([
             projectedRectangleGroups[index].push(projectedRectangles[i]);
         }
 
-        var initializationPromises = new Array(concurrency);
-        for (i = 0; i < concurrency; i++) {
-            initializationPromises[i] = taskProcessors[i].scheduleTask({
-                initialize : true,
-                urls : urlGroups[i],
-                serializedMapProjections : serializedProjectionGroups[i],
-                projectedRectangles : projectedRectangleGroups[i],
-                imageCacheSize : defaultValue(options.imageCacheSize, 100),
-                id : i
-            });
-        }
-
-        this.readyPromise = when.all(initializationPromises)
+        this.readyPromise = when.all(initWebAssemblyPromises)
+            .then(function() {
+                var initializationPromises = [];
+                for (i = 0; i < concurrency; i++) {
+                    initializationPromises.push(taskProcessors[i].scheduleTask({
+                        initialize : true,
+                        urls : urlGroups[i],
+                        serializedMapProjections : serializedProjectionGroups[i],
+                        projectedRectangles : projectedRectangleGroups[i],
+                        imageCacheSize : defaultValue(options.imageCacheSize, 100),
+                        id : i
+                    }));
+                }
+                return when.all(initializationPromises);
+            })
             .then(function(rectangles) {
                 // Merge rectangles
                 var thatRectangle = Rectangle.clone(rectangles[0], that._rectangle);

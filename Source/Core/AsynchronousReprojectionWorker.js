@@ -34,10 +34,11 @@ define([
         this.iteration = 0;
 
         this.sampleCount = 0;
-        this.imageBitmapTime = 0.0;
-        this.canvasTime = 0.0;
+        this.stbTime = 0.0;
         this.projTime = 0.0;
         this.id = 0.0;
+
+        this.stb;
     }
 
     AsynchronousReprojectionWorker.prototype.runTask = function(parameters, transferableObjects) {
@@ -49,10 +50,9 @@ define([
             return this.reproject(parameters)
                 .then(function(result) {
                     console.log(that.id + '  samples: ' + that.sampleCount)
-                    console.log(that.id + '    avg imageBitmapTime ' + (that.imageBitmapTime / that.sampleCount));
-                    console.log(that.id + '    avg canvasTime ' + (that.canvasTime / that.sampleCount));
+                    console.log(that.id + '    avg stbTime ' + (that.stbTime / that.sampleCount));
                     console.log(that.id + '    avg projTime ' + (that.projTime / that.sampleCount));
-                    console.log(that.id + '  total time: ' + (that.imageBitmapTime + that.canvasTime + that.projTime));
+                    console.log(that.id + '  total time: ' + (that.stbTime + that.projTime));
                     return result;
                 });
         }
@@ -114,32 +114,47 @@ define([
             cachedBufferPromise = when.resolve(cachedBuffers.get(url));
         } else {
             var resource = Resource.createIfNeeded(url);
-            cachedBufferPromise = resource.fetchBlob();
+            cachedBufferPromise = resource.fetchArrayBuffer();
         }
 
-        var imageBitmapTime = 0;
-        var canvasTime = 0;
-
         this.sampleCount++;
+        var stb = this.stb;
+
         var that = this;
-
+        var imageArrayBuffer;
         return cachedBufferPromise
-            .then(function(imageBlob) {
+            .then(function(result) {
+                imageArrayBuffer = result;
                 if (wasCached) {
-                    cachedBuffers.set(url, imageBlob);
+                    cachedBuffers.set(url, imageArrayBuffer);
                 }
-                imageBitmapTime = performance.now();
-                return createImageBitmap(imageBlob);
-            })
-            .then(function(imageBitmap) {
-                that.imageBitmapTime += performance.now() - imageBitmapTime;
 
-                canvasTime = performance.now();
-                var canvas = new OffscreenCanvas(imageBitmap.width, imageBitmap.height);
-                var context = canvas.getContext('2d');
-                context.drawImage(imageBitmap, 0, 0);
-                var imagedata = context.getImageData(0, 0, imageBitmap.width, imageBitmap.height);
-                that.canvasTime += performance.now() - canvasTime;
+                var stbTime = performance.now();
+
+                var byteLength = imageArrayBuffer.byteLength;
+                var encodedPntr = stb._malloc(byteLength);
+                stb.HEAPU8.set(new Uint8Array(imageArrayBuffer), encodedPntr);
+                var dimmsPntr = stb._malloc(8);
+
+                var decodedPntr = stb._decode(encodedPntr, byteLength, 3, dimmsPntr);
+
+                var dimms = new Uint32Array(stb.HEAPU32.buffer, dimmsPntr, 2);
+                var width = dimms[0];
+                var height = dimms[1];
+
+                var decoded = new Uint8Array(stb.HEAPU8.buffer, decodedPntr, width * height * 3);
+
+                var imagedata = {
+                    width : width,
+                    height : height,
+                    data : decoded
+                };
+                stb._free(encodedPntr);
+                stb._free(decodedPntr);
+                stb._free(dimmsPntr);
+
+                that.stbTime += performance.now() - stbTime;
+
                 return new Bitmap(imagedata);
             })
             .otherwise(function(error) {
