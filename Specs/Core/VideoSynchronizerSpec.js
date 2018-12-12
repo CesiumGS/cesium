@@ -162,16 +162,14 @@ defineSuite([
 
         // Since Chrome doesn't allow video playback without user
         // interaction, we use a mock element.
-        var element = jasmine.createSpyObj('MockVideoElement', ['addEventListener', 'removeEventListener']);
+        var element = jasmine.createSpyObj('MockVideoElement', ['addEventListener', 'removeEventListener', 'play', 'pause']);
         element.paused = false;
-        element.play = function() {
+        element.play.and.callFake(function() {
             this.paused = false;
-        };
-        element.pause = function() {
+        });
+        element.pause.and.callFake(function() {
             this.paused = true;
-        };
-        spyOn(element, 'play').and.callThrough();
-        spyOn(element, 'pause').and.callThrough();
+        });
 
         var videoSynchronizer = new VideoSynchronizer({
             clock : clock,
@@ -181,15 +179,15 @@ defineSuite([
 
         clock.shouldAnimate = false;
         clock.tick();
-        expect(element.pause).toHaveBeenCalledTimes(1);
+        expect(element.pause.calls.count()).toEqual(1);
 
         clock.shouldAnimate = true;
         clock.tick();
-        expect(element.play).toHaveBeenCalledTimes(1);
+        expect(element.play.calls.count()).toEqual(1);
 
         clock.shouldAnimate = false;
         clock.tick();
-        expect(element.pause).toHaveBeenCalledTimes(2);
+        expect(element.pause.calls.count()).toEqual(2);
 
         videoSynchronizer.destroy();
     });
