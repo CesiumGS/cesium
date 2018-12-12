@@ -833,7 +833,7 @@ define([
          * // Play all animations at half-speed when the model is ready to render
          * Cesium.when(model.readyPromise).then(function(model) {
          *   model.activeAnimations.addAll({
-         *     speedup : 0.5
+         *     multiplier : 0.5
          *   });
          * }).otherwise(function(error){
          *   window.alert(error);

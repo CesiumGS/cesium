@@ -1138,9 +1138,9 @@ function createGalleryList() {
     // This includes newly staged local demos as well.
     var newDemos = [];
     try {
-        newDemos = child_process.execSync('git diff --name-only --diff-filter=A ' + tagVersion + ' Apps/Sandcastle/gallery/*.html').toString().trim().split('\n');
+        newDemos = child_process.execSync('git diff --name-only --diff-filter=A ' + tagVersion + ' Apps/Sandcastle/gallery/*.html', { stdio: ['pipe', 'pipe', 'ignore'] }).toString().trim().split('\n');
     } catch (e) {
-        console.log('Failed to retrieve list of new Sandcastle demos from Git.');
+        // On a Cesium fork, tags don't exist so we can't generate the list.
     }
 
     var helloWorld;
