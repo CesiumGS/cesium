@@ -24,6 +24,7 @@ varying vec3 v_normalEC;
 
 #ifdef APPLY_MATERIAL
 varying float v_slope;
+varying float v_aspect;
 varying float v_height;
 #endif
 
@@ -177,7 +178,8 @@ void main()
 #ifdef APPLY_MATERIAL
     vec3 finalNormal = normalMC;
     vec3 ellipsoidNormal = normalize(position3DWC.xyz);
-    v_slope = abs(dot(ellipsoidNormal, finalNormal));
+    v_slope = acos(abs(dot(ellipsoidNormal, finalNormal)));
+    v_aspect = 0.0;     // TODO: Figure out how to calculate this.
     v_height = height;
 #endif
 }
