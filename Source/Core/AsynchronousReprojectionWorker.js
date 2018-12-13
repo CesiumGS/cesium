@@ -132,9 +132,9 @@ define([
                 var stbTime = performance.now();
 
                 var byteLength = imageArrayBuffer.byteLength;
+                var dimmsPntr = stb._malloc(8);
                 var encodedPntr = stb._malloc(byteLength);
                 stb.HEAPU8.set(new Uint8Array(imageArrayBuffer), encodedPntr);
-                var dimmsPntr = stb._malloc(8);
 
                 var decodedPntr = stb._decode(encodedPntr, byteLength, 3, dimmsPntr);
 
@@ -149,9 +149,10 @@ define([
                     height : height,
                     data : decoded
                 };
+
+                stb._free(dimmsPntr);
                 stb._free(encodedPntr);
                 stb._free(decodedPntr);
-                stb._free(dimmsPntr);
 
                 that.stbTime += performance.now() - stbTime;
 
