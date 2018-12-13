@@ -796,6 +796,12 @@ define([
         this._defaultView = new View(this, camera, viewport);
         this._view = this._defaultView;
 
+        this._hdr = undefined;
+        this._hdrDirty = undefined;
+        this.highDynamicRange = true;
+        this.gamma = 2.2;
+        this._sunColor = new Cartesian3(1.8, 1.85, 2.0);
+
         // Give frameState, camera, and screen space camera controller initial state before rendering
         updateFrameNumber(this, 0.0, JulianDate.now());
         updateFrameState(this);
@@ -1484,6 +1490,68 @@ define([
         },
 
         /**
+         * The value used for gamma correction. This is only used when rendering with high dynamic range.
+         * @memberof Scene.prototype
+         * @type {Number}
+         * @default 2.2
+         */
+        gamma : {
+            get : function() {
+                return this._context.uniformState.gamma;
+            },
+            set : function(value) {
+                this._context.uniformState.gamma = value;
+            }
+        },
+
+        /**
+         * Whether or not to use high dynamic range rendering.
+         * @memberof Scene.prototype
+         * @type {Boolean}
+         * @default true
+         */
+        highDynamicRange : {
+            get : function() {
+                return this._hdr;
+            },
+            set : function(value) {
+                var context = this._context;
+                var hdr = value && context.depthTexture && (context.colorBufferFloat || context.colorBufferHalfFloat);
+                this._hdrDirty = hdr !== this._hdr;
+                this._hdr = hdr;
+            }
+        },
+
+        /**
+         * Whether or not high dynamic range rendering is supported.
+         * @memberof Scene.prototype
+         * @type {Boolean}
+         * @default true
+         */
+        highDynamicRangeSupported : {
+            get : function() {
+                var context = this._context;
+                return context.depthTexture && (context.colorBufferFloat || context.colorBufferHalfFloat);
+            }
+        },
+
+        /**
+         * Gets or sets the color of the light emitted by the sun.
+         *
+         * @memberof Scene.prototype
+         * @type {Cartesian3}
+         * @default Cartesian3(1.8, 1.85, 2.0)
+         */
+        sunColor: {
+            get: function() {
+                return this._sunColor;
+            },
+            set: function(value) {
+                this._sunColor = value;
+            }
+        },
+
+        /**
          * @private
          */
         opaqueFrustumNearOffset : {
@@ -1514,12 +1582,24 @@ define([
 
         var derivedCommands = command.derivedCommands;
 
-        if (lightShadowsEnabled && command.receiveShadows) {
-            derivedCommands.shadows = ShadowMap.createReceiveDerivedCommand(lightShadowMaps, command, shadowsDirty, context, derivedCommands.shadows);
-        }
-
         if (defined(command.pickId)) {
             derivedCommands.picking = DerivedCommand.createPickDerivedCommand(scene, command, context, derivedCommands.picking);
+        }
+
+        if (!command.pickOnly) {
+            derivedCommands.depth = DerivedCommand.createDepthOnlyDerivedCommand(scene, command, context, derivedCommands.depth);
+        }
+
+        derivedCommands.originalCommand = command;
+
+        if (scene._hdr) {
+            derivedCommands.hdr = DerivedCommand.createHdrCommand(command, context, derivedCommands.hdr);
+            command = derivedCommands.hdr.command;
+            derivedCommands = command.derivedCommands;
+        }
+
+        if (lightShadowsEnabled && command.receiveShadows) {
+            derivedCommands.shadows = ShadowMap.createReceiveDerivedCommand(lightShadowMaps, command, shadowsDirty, context, derivedCommands.shadows);
         }
 
         if (command.pass === Pass.TRANSLUCENT && defined(oit) && oit.isSupported()) {
@@ -1530,12 +1610,6 @@ define([
                 derivedCommands.oit = oit.createDerivedCommands(command, context, derivedCommands.oit);
             }
         }
-
-        if (!command.pickOnly) {
-            derivedCommands.depth = DerivedCommand.createDepthOnlyDerivedCommand(scene, command, context, derivedCommands.depth);
-        }
-
-        derivedCommands.originalCommand = command;
     }
 
     /**
@@ -1560,12 +1634,15 @@ define([
         }
 
         var useLogDepth = frameState.useLogDepth;
+        var useHdr = this._hdr;
         var derivedCommands = command.derivedCommands;
         var hasLogDepthDerivedCommands = defined(derivedCommands.logDepth);
+        var hasHdrCommands = defined(derivedCommands.hdr);
         var hasDerivedCommands = defined(derivedCommands.originalCommand);
         var needsLogDepthDerivedCommands = useLogDepth && !hasLogDepthDerivedCommands;
-        var needsDerivedCommands = !useLogDepth && !hasDerivedCommands;
-        command.dirty = command.dirty || needsLogDepthDerivedCommands || needsDerivedCommands;
+        var needsHdrCommands = useHdr && !hasHdrCommands;
+        var needsDerivedCommands = (!useLogDepth || !useHdr) && !hasDerivedCommands;
+        command.dirty = command.dirty || needsLogDepthDerivedCommands || needsHdrCommands || needsDerivedCommands;
 
         if (command.dirty) {
             command.dirty = false;
@@ -1637,6 +1714,7 @@ define([
         frameState.minimumDisableDepthTestDistance = scene._minimumDisableDepthTestDistance;
         frameState.invertClassification = scene.invertClassification;
         frameState.useLogDepth = scene._logDepthBuffer && !(scene.camera.frustum instanceof OrthographicFrustum || scene.camera.frustum instanceof OrthographicOffCenterFrustum);
+        frameState.sunColor = scene._sunColor;
 
         scene._actualInvertClassificationColor = Color.clone(scene.invertClassificationColor, scene._actualInvertClassificationColor);
         if (!InvertClassification.isTranslucencySupported(scene._context)) {
@@ -1874,6 +1952,10 @@ define([
         }
 
         var passes = frameState.passes;
+        if (!passes.pick && scene._hdr && defined(command.derivedCommands) && defined(command.derivedCommands.hdr)) {
+            command = command.derivedCommands.hdr.command;
+        }
+
         if (passes.pick || passes.depth) {
             if (passes.pick && !passes.depth && defined(command.derivedCommands.picking)) {
                 command = command.derivedCommands.picking.pickCommand;
@@ -2125,7 +2207,6 @@ define([
             }
 
             if (defined(globeDepth) && environmentState.useGlobeDepthFramebuffer) {
-                globeDepth.update(context, passState, view.viewport);
                 globeDepth.executeCopyDepth(context, passState);
             }
 
@@ -2712,8 +2793,8 @@ define([
                 environmentState.isReadyForAtmosphere = environmentState.isReadyForAtmosphere || globe._surface._tilesToRender.length > 0;
             }
             environmentState.skyAtmosphereCommand = defined(skyAtmosphere) ? skyAtmosphere.update(frameState) : undefined;
-            environmentState.skyBoxCommand = defined(scene.skyBox) ? scene.skyBox.update(frameState) : undefined;
-            var sunCommands = defined(scene.sun) ? scene.sun.update(frameState, view.passState) : undefined;
+            environmentState.skyBoxCommand = defined(scene.skyBox) ? scene.skyBox.update(frameState, scene._hdr) : undefined;
+            var sunCommands = defined(scene.sun) ? scene.sun.update(frameState, view.passState, scene._hdr) : undefined;
             environmentState.sunDrawCommand = defined(sunCommands) ? sunCommands.drawCommand : undefined;
             environmentState.sunComputeCommand = defined(sunCommands) ? sunCommands.computeCommand : undefined;
             environmentState.moonCommand = defined(scene.moon) ? scene.moon.update(frameState) : undefined;
@@ -2864,7 +2945,7 @@ define([
         // Globe depth is copied for the pick pass to support picking batched geometries in GroundPrimitives.
         var useGlobeDepthFramebuffer = environmentState.useGlobeDepthFramebuffer = defined(view.globeDepth);
         if (useGlobeDepthFramebuffer) {
-            view.globeDepth.update(context, passState, view.viewport);
+            view.globeDepth.update(context, passState, view.viewport, scene._hdr);
             view.globeDepth.clear(context, passState, clearColor);
         }
 
@@ -2878,13 +2959,13 @@ define([
         }
 
         var postProcess = scene.postProcessStages;
-        var usePostProcess = environmentState.usePostProcess = !picking && (postProcess.length > 0 || postProcess.ambientOcclusion.enabled || postProcess.fxaa.enabled || postProcess.bloom.enabled);
+        var usePostProcess = environmentState.usePostProcess = !picking && (scene._hdr || postProcess.length > 0 || postProcess.ambientOcclusion.enabled || postProcess.fxaa.enabled || postProcess.bloom.enabled);
         environmentState.usePostProcessSelected = false;
         if (usePostProcess) {
-            view.sceneFramebuffer.update(context, view.viewport);
+            view.sceneFramebuffer.update(context, view.viewport, scene._hdr);
             view.sceneFramebuffer.clear(context, passState, clearColor);
 
-            postProcess.update(context, frameState.useLogDepth);
+            postProcess.update(context, frameState.useLogDepth, scene._hdr);
             postProcess.clear(context);
 
             usePostProcess = environmentState.usePostProcess = postProcess.ready;
@@ -3046,6 +3127,8 @@ define([
         frameState.creditDisplay.update();
     }
 
+    var scratchBackgroundColor = new Color();
+
     function render(scene) {
         scene._pickPositionCacheDirty = true;
 
@@ -3061,6 +3144,12 @@ define([
         frameState.passes.postProcess = scene.postProcessStages.hasSelected;
 
         var backgroundColor = defaultValue(scene.backgroundColor, Color.BLACK);
+        if (scene._hdr) {
+            backgroundColor = Color.clone(backgroundColor, scratchBackgroundColor);
+            backgroundColor.red = Math.pow(backgroundColor.red, scene.gamma);
+            backgroundColor.green = Math.pow(backgroundColor.green, scene.gamma);
+            backgroundColor.blue = Math.pow(backgroundColor.blue, scene.gamma);
+        }
         frameState.backgroundColor = backgroundColor;
 
         frameState.creditDisplay.beginFrame();
@@ -3141,7 +3230,7 @@ define([
         this._jobScheduler.resetBudgets();
 
         var cameraChanged = this._view.checkForCameraUpdates(this);
-        var shouldRender = !this.requestRenderMode || this._renderRequested || cameraChanged || this._logDepthBufferDirty || (this.mode === SceneMode.MORPHING);
+        var shouldRender = !this.requestRenderMode || this._renderRequested || cameraChanged || this._logDepthBufferDirty || this._hdrDirty || (this.mode === SceneMode.MORPHING);
         if (!shouldRender && defined(this.maximumRenderTimeChange) && defined(this._lastRenderTime)) {
             var difference = Math.abs(JulianDate.secondsDifference(this._lastRenderTime, time));
             shouldRender = shouldRender || difference > this.maximumRenderTimeChange;
@@ -3151,6 +3240,8 @@ define([
             this._lastRenderTime = JulianDate.clone(time, this._lastRenderTime);
             this._renderRequested = false;
             this._logDepthBufferDirty = false;
+            this._hdrDirty = false;
+
             var frameNumber = CesiumMath.incrementWrap(frameState.frameNumber, 15000000.0, 1.0);
             updateFrameNumber(this, frameNumber, time);
         }
