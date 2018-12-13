@@ -12,12 +12,14 @@ define([
         '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/FeatureDetection',
+        '../Core/GeographicProjection',
         '../Core/getAbsoluteUri',
         '../Core/Matrix4',
         '../Core/IntersectionTests',
         '../Core/Plane',
-        '../Core/Rectangle',
         '../Core/Ray',
+        '../Core/Rectangle',
+        '../Core/RectangleCollisionChecker',
         '../Core/TaskProcessor',
         '../Core/SerializedMapProjection',
         '../ThirdParty/when',
@@ -38,12 +40,14 @@ define([
         defineProperties,
         DeveloperError,
         FeatureDetection,
+        GeographicProjection,
         getAbsoluteUri,
         Matrix4,
         IntersectionTests,
         Plane,
-        Rectangle,
         Ray,
+        Rectangle,
+        RectangleCollisionChecker,
         TaskProcessor,
         SerializedMapProjection,
         when,
@@ -55,7 +59,6 @@ define([
     var insetWaitFrames = 3;
     /**
      * Manages imagery layers for asynchronous pixel-perfect imagery reprojection.
-     * TODO: only available in Chrome 69+, support coming for Firefox: https://bugzilla.mozilla.org/show_bug.cgi?id=801176
      *
      * @alias ImageryMosaic
      * @constructor
@@ -67,13 +70,14 @@ define([
      * @param {MapProjection[]} options.projections The map projections for each image.
      * @param {Credit|String} [options.credit] A credit for all the images, which is displayed on the canvas.
      * @param {Scene} options.scene The current Cesium scene.
-     * @param {Number} [options.concurrency=2] The number of web workers across which the load should be distributed.
+     * @param {Number} [options.concurrency] The number of web workers across which the load should be distributed.
      * @param {Number} [options.imageCacheSize=100] Number of cached images to hold in memory at once
      */
     function ImageryMosaic(options, viewer) {
-        //if (!FeatureDetection.isChrome() || FeatureDetection.chromeVersion()[0] < 69) {
-        //    throw new DeveloperError('ImageryMosaic is only supported in Chrome version 69 or later.');
-        //}
+        if (!((FeatureDetection.isChrome() && FeatureDetection.chromeVersion()[0] >= 69) ||
+            (FeatureDetection.isFirefox() && FeatureDetection.firefoxVersion()[0] >= 62))) {
+            throw new DeveloperError('ImageryMosaic is only supported in Chrome 69+ and Firefox 62+.');
+        }
 
         //>>includeStart('debug', pragmas.debug);
         Check.defined('options', options);
@@ -89,18 +93,24 @@ define([
 
         var imagesLength = urls.length;
 
-        // Make URLs absolute, serialize projections
+        // Make URLs absolute, serialize projections, insert into collision checker for picking.
         var absoluteUrls = new Array(imagesLength);
         var serializedMapProjections = new Array(imagesLength);
+        var rectangleCollisionChecker = new RectangleCollisionChecker(new GeographicProjection());
         var i;
         for (i = 0; i < imagesLength; i++) {
+            var projection = projections[i];
             absoluteUrls[i] = getAbsoluteUri(urls[i]);
-            serializedMapProjections[i] = new SerializedMapProjection(projections[i]);
+            serializedMapProjections[i] = new SerializedMapProjection(projection);
+
+            var unprojectedRectangle = Rectangle.approximateCartographicExtents(projectedRectangles[i], projection);
+            rectangleCollisionChecker.insert(i, unprojectedRectangle);
         }
 
         this._projectedRectangles = projectedRectangles;
         this._projections = projections;
         this._urls = absoluteUrls;
+        this._rectangleCollisionChecker = rectangleCollisionChecker;
 
         var credit = options.credit;
         var scene = options.scene;
@@ -111,7 +121,7 @@ define([
         this._credit = credit;
         this._rectangle = new Rectangle();
 
-        var concurrency = defaultValue(options.concurrency, 2);
+        var concurrency = defaultValue(options.concurrency, Math.max(FeatureDetection.hardwareConcurrency - 1, 1));
         var initWebAssemblyPromises = [];
         var taskProcessors = new Array(concurrency);
         for (i = 0; i < concurrency; i++) {
@@ -139,6 +149,7 @@ define([
 
         this._entityCollection = viewer.entities;
 
+        this._pickRectangles = [];
         this._boundsRectangle = undefined;
         this._debugShowBoundsRectangle = false;
 
@@ -260,22 +271,6 @@ define([
         }
     });
 
-    ImageryMosaic.prototype.uploadImageToWorker = function(image) {
-        // Read pixels and upload to web worker
-        var canvas = document.createElement('canvas');
-        canvas.width = image.width;
-        canvas.height = image.height;
-        var context = canvas.getContext('2d');
-        context.drawImage(image, 0, 0);
-        var imagedata = context.getImageData(0, 0, image.width, image.height);
-
-        return this._taskProcessor.scheduleTask({
-            upload : true,
-            url : this._url,
-            imageData : imagedata
-        });
-    };
-
     var samplePoint3Scratch = new Cartesian3();
     var surfaceNormalScratch = new Cartesian3();
     var cvPositionScratch = new Cartesian3();
@@ -373,6 +368,7 @@ define([
             return;
         }
 
+        // render bounds debug
         if (defined(this._boundsRectangle)) {
             this._entityCollection.remove(this._boundsRectangle);
         }
@@ -488,6 +484,84 @@ define([
                 return results[0];
             });
     }
+
+    var pickRectangleScratch = new Rectangle();
+    var projectedCartesianScratch = new Cartesian3();
+    var projectedCartographicScratch = new Cartographic();
+    /**
+     *
+     * @param {Cartographic} cartographic Location at which to pick
+     * @returns {String[]} A list of urls for picked images.
+     */
+    ImageryMosaic.prototype.pickCartographic = function(cartographic) {
+        var pickRectangle = pickRectangleScratch;
+        pickRectangle.west = pickRectangle.east = cartographic.longitude;
+        pickRectangle.north = pickRectangle.south = cartographic.latitude;
+
+        var candidateIndices = this._rectangleCollisionChecker.search(pickRectangle);
+        var candidatesLength = candidateIndices.length;
+
+        var projections = this._projections;
+        var projectedRectangles = this._projectedRectangles;
+        var urls = this._urls;
+
+        // debug stuff
+        var entityCollection = this._entityCollection;
+        var pickRectangles = this._pickRectangles;
+        var pickRectanglesLength = pickRectangles.length;
+        for (var j = 0; j < pickRectanglesLength; j++) {
+            entityCollection.remove(pickRectangles[j]);
+        }
+
+        pickRectangles = this._pickRectangles = [];
+
+        var pickedUrls = [];
+        for (var i = 0; i < candidatesLength; i++) {
+            var candidateIndex = candidateIndices[i];
+            var projection = projections[candidateIndex];
+            var projectedRectangle = projectedRectangles[candidateIndex];
+
+            var projectedPickPosition = projection.project(cartographic, projectedCartesianScratch);
+            var projectedCartographic = projectedCartographicScratch;
+            projectedCartographic.longitude = projectedPickPosition.x;
+            projectedCartographic.latitude = projectedPickPosition.y;
+
+            if (Rectangle.contains(projectedRectangle, projectedCartographic)) {
+                pickedUrls.push(urls[candidateIndex]);
+
+                // debug: generate a bounding rectangle entity
+                pickRectangles.push(entityCollection.add({
+                    name : urls[candidateIndex],
+                    polygon : {
+                        hierarchy : getHierarchy(projection, projectedRectangle),
+                        material : Color.GREEN.withAlpha(0.0),
+                        height : 10.0,
+                        outline : true,
+                        outlineWidth : 4.0,
+                        outlineColor : Color.GREEN
+                    }
+                }));
+            }
+        }
+
+        return pickedUrls;
+    };
+
+    function getHierarchy(projection, projectedRectangle) {
+        var unprojectedNorthWest = projection.unproject(new Cartesian3(projectedRectangle.west, projectedRectangle.north));
+        var unprojectedNorthEast = projection.unproject(new Cartesian3(projectedRectangle.east, projectedRectangle.north));
+        var unprojectedSouthWest = projection.unproject(new Cartesian3(projectedRectangle.west, projectedRectangle.south));
+        var unprojectedSouthEast = projection.unproject(new Cartesian3(projectedRectangle.east, projectedRectangle.south));
+
+        return Cartesian3.fromRadiansArray([
+            unprojectedNorthWest.longitude, unprojectedNorthWest.latitude,
+            unprojectedNorthEast.longitude, unprojectedNorthEast.latitude,
+            unprojectedSouthEast.longitude, unprojectedSouthEast.latitude,
+            unprojectedSouthWest.longitude, unprojectedSouthWest.latitude
+        ]);
+    };
+
+    ImageryMosaic._getHierarchy = getHierarchy;
 
     return ImageryMosaic;
 });

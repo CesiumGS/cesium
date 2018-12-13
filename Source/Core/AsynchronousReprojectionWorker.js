@@ -51,13 +51,13 @@ define([
             return this.initialize(parameters);
         }
         if (parameters.reproject) {
-            var that = this;
+            //var that = this;
             return this.reproject(parameters)
                 .then(function(result) {
-                    console.log(that.id + '  samples: ' + that.sampleCount);
-                    console.log(that.id + '    avg stbTime ' + (that.stbTime / that.sampleCount));
-                    console.log(that.id + '    avg projTime ' + (that.projTime / that.sampleCount));
-                    console.log(that.id + '  total time: ' + (that.stbTime + that.projTime));
+                    //console.log(that.id + '  samples: ' + that.sampleCount);
+                    //console.log(that.id + '    avg stbTime ' + (that.stbTime / that.sampleCount));
+                    //console.log(that.id + '    avg projTime ' + (that.projTime / that.sampleCount));
+                    //console.log(that.id + '  total time: ' + (that.stbTime + that.projTime));
                     return result;
                 });
         }
