@@ -1,8 +1,10 @@
 define([
         './Bitmap',
         './defined',
+        './GeographicProjection',
         './reprojectImage',
         './Rectangle',
+        './RectangleCollisionChecker',
         './Resource',
         './SerializedMapProjection',
         '../ThirdParty/lru',
@@ -10,8 +12,10 @@ define([
     ], function(
         Bitmap,
         defined,
+        GeographicProjection,
         reprojectImage,
         Rectangle,
+        RectangleCollisionChecker,
         Resource,
         SerializedMapProjection,
         LRUMap,
@@ -19,7 +23,7 @@ define([
     ) {
     'use strict';
 
-    function AsynchronousReprojectionWorker() {
+    function AsynchronousReprojectionWorker(stbModule) {
         this.projections = [];
         this.urls = [];
         this.projectedRectangles = [];
@@ -33,12 +37,13 @@ define([
         this._rectangle = undefined;
         this.iteration = 0;
 
+        this._stb = stbModule;
+        this._rectangleChecker = new RectangleCollisionChecker(new GeographicProjection());
+
         this.sampleCount = 0;
         this.stbTime = 0.0;
         this.projTime = 0.0;
         this.id = 0.0;
-
-        this.stb;
     }
 
     AsynchronousReprojectionWorker.prototype.runTask = function(parameters, transferableObjects) {
@@ -49,7 +54,7 @@ define([
             var that = this;
             return this.reproject(parameters)
                 .then(function(result) {
-                    console.log(that.id + '  samples: ' + that.sampleCount)
+                    console.log(that.id + '  samples: ' + that.sampleCount);
                     console.log(that.id + '    avg stbTime ' + (that.stbTime / that.sampleCount));
                     console.log(that.id + '    avg projTime ' + (that.projTime / that.sampleCount));
                     console.log(that.id + '  total time: ' + (that.stbTime + that.projTime));
@@ -81,6 +86,8 @@ define([
 
         this.cachedBuffers = new LRUMap(parameters.imageCacheSize);
 
+        var rectangleChecker = this._rectangleChecker;
+
         return getProjections(projections, serializedMapProjections)
             .then(function() {
                 // Compute rectangle over all images in mosaic
@@ -97,6 +104,8 @@ define([
                     east = Math.max(east, unprojected.east);
                     west = Math.min(west, unprojected.west);
                     unprojectedRectangles[i] = unprojected;
+
+                    rectangleChecker.insert(i, unprojected);
                 }
 
                 var rectangle = new Rectangle(west, south, east, north);
@@ -118,7 +127,7 @@ define([
         }
 
         this.sampleCount++;
-        var stb = this.stb;
+        var stb = this._stb;
 
         var that = this;
         var imageArrayBuffer;
@@ -163,7 +172,7 @@ define([
             });
     };
 
-    var rectangleIntersectionScratch = new Rectangle();
+    var requestCloneRectangleScratch = new Rectangle();
     /**
      *
      * @param {Object} parameters
@@ -173,15 +182,9 @@ define([
      * @param {Number} iteration
      */
     AsynchronousReprojectionWorker.prototype.reproject = function(parameters) {
-        var requestRectangle = parameters.rectangle;
+        var requestRectangle = Rectangle.clone(parameters.rectangle, requestCloneRectangleScratch);
         var width = parameters.width;
         var height = parameters.height;
-
-        var unprojectedRectangles = this.unprojectedRectangles;
-        var urls = this.urls;
-
-        var imagesLength = urls.length;
-        var i;
 
         var targetBitmap = this.targetBitmap;
         if (width !== targetBitmap.width || height !== targetBitmap.height) {
@@ -195,14 +198,7 @@ define([
         targetBitmap.clear();
 
         // Compute which images we need for the given reprojection
-        // TODO: don't be a dummy, use rbush here
-        var intersectedImageIndices = [];
-        for (i = 0; i < imagesLength; i++) {
-            if (defined(Rectangle.simpleIntersection(unprojectedRectangles[i], requestRectangle, rectangleIntersectionScratch))) {
-                intersectedImageIndices.push(i);
-            }
-        }
-
+        var intersectedImageIndices = this._rectangleChecker.search(requestRectangle);
         var iteration = this.iteration = parameters.iteration;
 
         return projectEach(requestRectangle, intersectedImageIndices, iteration, this)

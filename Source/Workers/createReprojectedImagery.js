@@ -8,14 +8,14 @@ define([
         createTaskProcessorWorker) {
     'use strict';
 
-    var asynchronousReprojectionWorker = new AsynchronousReprojectionWorker();
+    var asynchronousReprojectionWorker;
 
     function run(parameters) {
         return asynchronousReprojectionWorker.runTask(parameters);
     }
 
     function initWorker(stbModule) {
-        asynchronousReprojectionWorker.stb = stbModule;
+        asynchronousReprojectionWorker = new AsynchronousReprojectionWorker(stbModule);
         self.onmessage = createTaskProcessorWorker(run);
         self.postMessage(true);
     }

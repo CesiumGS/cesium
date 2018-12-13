@@ -373,8 +373,6 @@ define([
             return;
         }
 
-        var that = this;
-
         if (defined(this._boundsRectangle)) {
             this._entityCollection.remove(this._boundsRectangle);
         }
@@ -466,7 +464,6 @@ define([
         return when.all(promises)
             .then(function(results) {
                 // check if the result is from an earlier iteration and should be ignored
-                var i;
                 if (results[0].iteration !== workerClass._iteration) {
                     return results[0];
                 }
