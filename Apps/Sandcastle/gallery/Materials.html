@@ -107,16 +107,20 @@ function applyCompositeMaterial(primitive, scene) {
                     }
                 },
                 source :
-                    'czm_material czm_getMaterial(czm_materialInput materialInput) {' +
-                        'czm_material material = czm_getDefaultMaterial(materialInput);' +
-                        'float heightValue = texture2D(heightField, materialInput.st).r;' +
-                        'material.diffuse = mix(vec3(0.2, 0.6, 0.2), vec3(1.0, 0.5, 0.2), heightValue);' +
-                        'material.alpha = (1.0 - texture2D(image, materialInput.st).r) * 0.7;' +
-                        'material.normal = bumpMap.normal;' +
-                        'material.specular = step(0.1, heightValue);' + // Specular mountain tops
-                        'material.shininess = 8.0;' + // Sharpen highlight
-                        'return material;' +
-                    '}'
+                    'czm_material czm_getMaterial(czm_materialInput materialInput) { \n' +
+                    '    czm_material material = czm_getDefaultMaterial(materialInput); \n' +
+                    '    vec4 color; \n' +
+                    '    float heightValue = texture2D(heightField, materialInput.st).r; \n' +
+                    '    color.rgb = mix(vec3(0.2, 0.6, 0.2), vec3(1.0, 0.5, 0.2), heightValue); \n' +
+                    '    color.a = (1.0 - texture2D(image, materialInput.st).r) * 0.7; \n' +
+                    '    color = czm_gammaCorrect(color); \n' +
+                    '    material.diffuse = color.rgb; \n' +
+                    '    material.alpha = color.a; \n' +
+                    '    material.normal = bumpMap.normal; \n' +
+                    '    material.specular = step(0.1, heightValue); \n' + // Specular mountain tops
+                    '    material.shininess = 8.0; \n' + // Sharpen highlight
+                    '    return material; \n' +
+                    '} \n'
             }
         });
 }

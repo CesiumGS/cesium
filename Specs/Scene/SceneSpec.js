@@ -700,6 +700,34 @@ defineSuite([
         s.destroyForSpecs();
     });
 
+    it('renders with HDR when available', function() {
+        if (!scene.highDynamicRangeSupported) {
+            return;
+        }
+
+        var s = createScene();
+        s.highDynamicRange = true;
+
+        var rectangle = Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0);
+
+        var rectanglePrimitive = createRectangle(rectangle, 1000.0);
+        rectanglePrimitive.appearance.material.uniforms.color = new Color(10.0, 0.0, 0.0, 1.0);
+
+        var primitives = s.primitives;
+        primitives.add(rectanglePrimitive);
+
+        s.camera.setView({ destination : rectangle });
+
+        expect(s).toRenderAndCall(function(rgba) {
+            expect(rgba[0]).toBeGreaterThan(0);
+            expect(rgba[0]).toBeLessThanOrEqualTo(255);
+            expect(rgba[1]).toEqual(0);
+            expect(rgba[2]).toEqual(0);
+        });
+
+        s.destroyForSpecs();
+    });
+
     it('copies the globe depth', function() {
         var scene = createScene();
         if (scene.context.depthTexture) {
