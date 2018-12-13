@@ -176,10 +176,20 @@ void main()
 #endif
 
 #ifdef APPLY_MATERIAL
-    vec3 finalNormal = normalMC;
-    vec3 ellipsoidNormal = normalize(position3DWC.xyz);
-    v_slope = acos(abs(dot(ellipsoidNormal, finalNormal)));
-    v_aspect = 0.0;     // TODO: Figure out how to calculate this.
-    v_height = height;
+    // This needs to be a unit-length normal in the tangent space of the vertex in model space, and pointing East.
+    vec3 vectorEastMC;  // TODO: Take cross between direction to north pole from vertex and ellipsoid normal to get this, then normalize.
+    vec3 ellipsoidNormal = normalize(position3DWC.xyz); // WC = World Coordinates, so this is confusing.  It is not in model space?
+    float dot_prod = abs(dot(ellipsoidNormal, normalMC));
+    v_slope = acos(dot_prod);   // Slope is by definition an angle, and we want linear scale between flat and vertical.
+    vec3 normal_rejected = ellipsoidNormal * dot;  // This is the rejection of the terrain normal from the tangent plane.
+    vec3 normal_projected = normalMC - normal_rejected; // This is the terrain normal projected onto the tangent plane.
+    vec3 aspect_vector = normalize(normal_projected);   // This is our unit-length heading in the tangent space.  (Aspect direction.)
+    v_aspect = acos(dot(aspect_vector, vectorEastMC));  // Finally, here is the aspect angle.
+    v_height = height;  // Store height.
+
+    // There is one final matter to clear up.  Our aspect is in [0,pi), but we need it to be in [0,2pi).
+    float determ = dot(cross(vectorEastMC, aspect_vector), ellipsoidNormal); // Calculate a 3x3 determinant.
+    float determ_sign = sign(determ);   // -1 = left-handed; +1 = right-handed.
+    v_aspect = ((1.0 + determ_sign) / 2.0) * v_aspect + ((1.0 - determ_sign) / 2.0) * (2.0 * 3.1415926536 - v_aspect);
 #endif
 }
