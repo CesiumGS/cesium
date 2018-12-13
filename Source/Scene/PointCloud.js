@@ -116,8 +116,6 @@ define([
         Check.typeOf.object('options.arrayBuffer', options.arrayBuffer);
         //>>includeEnd('debug');
 
-        var that = this;
-
         // Hold onto the payload until the render resources are created
         this._parsedContent = undefined;
 
@@ -151,12 +149,12 @@ define([
 
         // Use per-point normals to hide back-facing points.
         this.backFaceCulling = false;
-        bindProperty(this, "backFaceCulling", options.backFaceCulling);
+        bindProperty(this, 'backFaceCulling', options.backFaceCulling);
         this._backFaceCulling = this.backFaceCulling;
 
         // Whether to enable normal shading
         this.normalShading = true;
-        bindProperty(this, "normalShading", options.normalShading);
+        bindProperty(this, 'normalShading', options.normalShading);
         this._normalShading = this.normalShading;
 
         this._opaqueRenderState = undefined;
