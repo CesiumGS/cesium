@@ -1577,6 +1577,7 @@ define([
                 command.orientedBoundingBox = OrientedBoundingBox.clone(surfaceTile.orientedBoundingBox, orientedBoundingBox);
             }
 
+            command.dirty = true;
             frameState.commandList.push(command);
 
             renderState = otherPassesRenderState;

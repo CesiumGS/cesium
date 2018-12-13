@@ -1686,6 +1686,34 @@ define([
             getValue : function(uniformState) {
                 return uniformState.invertClassificationColor;
             }
+        }),
+
+        /**
+         * An automatic GLSL uniform that is used for gamma correction.
+         *
+         * @alias czm_gamma
+         * @glslUniform
+         */
+        czm_gamma : new AutomaticUniform({
+            size : 1,
+            datatype : WebGLConstants.FLOAT,
+            getValue : function(uniformState) {
+                return uniformState.gamma;
+            }
+        }),
+
+        /**
+         * An automatic GLSL uniform that defines the color of light emitted by the sun.
+         *
+         * @alias czm_sunColor
+         * @glslUniform
+         */
+        czm_sunColor: new AutomaticUniform({
+            size: 1,
+            datatype: WebGLConstants.FLOAT_VEC3,
+            getValue: function(uniformState) {
+                return uniformState.sunColor;
+            }
         })
     };
 
