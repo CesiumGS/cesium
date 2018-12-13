@@ -39,7 +39,7 @@
       "verticalOrigin":"CENTER"
     },
     "model":{
-      "gltf":"models/GroundVehicle/GroundVehicle.glb",
+      "gltf":"models/CesiumMilkTruck/CesiumMilkTruck.glb",
       "minimumPixelSize":100,
       "maximumScale":50
     },
