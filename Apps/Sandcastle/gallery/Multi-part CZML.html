@@ -38,7 +38,6 @@ var statusDisplay = document.createElement('div');
 var fuelDisplay = document.createElement('div');
 var czmlPath = '../../SampleData/';
 var vehicleEntity;
-var lastVehiclePosition;
 
 // Add a blank CzmlDataSource to hold our multi-part entity/entities.
 var dataSource = new Cesium.CzmlDataSource();
@@ -88,8 +87,6 @@ function processPart(part) {
         // Follow the vehicle with the camera.
         if (!viewer.trackedEntity) {
             viewer.trackedEntity = vehicleEntity = dataSource.entities.getById('Vehicle');
-            lastVehiclePosition = vehicleEntity.position.getValue(viewer.clock.currentTime);
-            viewer.clock.multiplier = 0.35;
         }
     });
 }
@@ -100,39 +97,8 @@ processPart(partsToLoad[0]);
 // Load a new section before the clock naturally gets there.
 // Note this can't predict when a user may fast-forward to it.
 var preloadTimeInSeconds = 100;
-var lastTime = new Date();
-var pastRotationSpeed = 0;
-
-function updateAnimationSpeed(rotationsPerSecond) {
-    // Make the animation play at that speed, given that it makes 2 rotations per second by default.
-    var speedup = (rotationsPerSecond * 1.1) / 2;
-    speedup = Math.max(Math.abs(speedup), 0.001);
-    // If it gets too fast it doesn't look great
-    speedup = Math.min(speedup, 15);
-    vehicleEntity.model.speedupAnimations = speedup;
-}
 
 viewer.clock.onTick.addEventListener(function(clock) {
-    if (vehicleEntity) {
-        var timeDiff = ((new Date()).getTime() - lastTime.getTime()) / 1000;
-
-        var currentPosition = vehicleEntity.position.getValue(clock.currentTime);
-        var lastCartographic = Cesium.Cartographic.fromCartesian(lastVehiclePosition);
-        var currentCartographic = Cesium.Cartographic.fromCartesian(currentPosition);
-
-        var distance = measure(currentCartographic.latitude, currentCartographic.longitude, lastCartographic.latitude, lastCartographic.longitude);
-        var velocity = distance / timeDiff;
-        var wheelRadius = 0.52;
-        var rotationsPerSecond = rotationSpeedFromVelocity(velocity, wheelRadius);
-
-        if (Math.abs(pastRotationSpeed - rotationsPerSecond) > 2.5) {
-            updateAnimationSpeed(rotationsPerSecond);
-        }
-        pastRotationSpeed = rotationsPerSecond;
-
-        lastVehiclePosition = currentPosition;
-        lastTime = new Date();
-    }
     // This example uses time offsets from the start to identify which parts need loading.
     var timeOffset = Cesium.JulianDate.secondsDifference(clock.currentTime, clock.startTime);
 
@@ -179,26 +145,6 @@ fuelDisplay.style.background = 'rgba(42, 42, 42, 0.7)';
 fuelDisplay.style.padding = '5px 10px';
 fuelDisplay.style.marginTop = '5px';
 document.getElementById('toolbar').appendChild(fuelDisplay);
-
-function rotationSpeedFromVelocity(velocity, wheelRadius) {
-    // velocity is how fast the vehicle is moving in meters per second.
-    // wheelRadius in meters.
-    var circumference = Math.PI * wheelRadius * 2;
-    return velocity / circumference;
-}
-
-// From https://stackoverflow.com/a/11172685/1278023
-function measure(lat1, lon1, lat2, lon2){  // generally used geo measurement function
-    var R = 6378.137; // Radius of earth in KM
-    var dLat = lat2  - lat1 ;
-    var dLon = lon2  - lon1 ;
-    var a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-    Math.sin(dLon/2) * Math.sin(dLon/2);
-    var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-    var d = R * c;
-    return d * 1000; // meters
-}
 //Sandcastle_End
     Sandcastle.finishedLoading();
 }
