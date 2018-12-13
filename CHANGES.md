@@ -22,6 +22,7 @@ Change Log
 ##### Fixes :wrench:
 * Fixed issue causing polyline to look wavy depending on the position of the camera [#7209](https://github.com/AnalyticalGraphicsInc/cesium/pull/7209)
 * Fixed translucency issues for dynamic geometry entities. [#7364](https://github.com/AnalyticalGraphicsInc/cesium/issues/7364)
+* Fixed image size issue when using multiple particle systems [#7412](https://github.com/AnalyticalGraphicsInc/cesium/pull/7412)
 
 ### 1.51 - 2018-11-01
 
