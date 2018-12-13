@@ -79,7 +79,7 @@ define([
         this._uriSubscription = undefined;
         this._runAnimations = undefined;
         this._clampAnimations = undefined;
-        this._speedupAnimations = undefined;
+        this._animationsMultiplier = undefined;
         this._runAnimationsSubscription = undefined;
         this._nodeTransformations = undefined;
         this._nodeTransformationsSubscription = undefined;
@@ -197,7 +197,7 @@ define([
          * @type {Property}
          * @default 1.0
          */
-        speedupAnimations : createPropertyDescriptor('speedupAnimations'),
+        animationsMultiplier : createPropertyDescriptor('animationsMultiplier'),
 
         /**
          * Gets or sets the boolean Property specifying if glTF animations should hold the last pose for time durations with no keyframes.

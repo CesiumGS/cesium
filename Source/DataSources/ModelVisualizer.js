@@ -46,7 +46,7 @@ define([
     var defaultColorBlendMode = ColorBlendMode.HIGHLIGHT;
     var defaultColorBlendAmount = 0.5;
     var defaultImageBasedLightingFactor = new Cartesian2(1.0, 1.0);
-    var defaultSpeedupAnimations = 1.0;
+    var defaultAnimationMultiplier = 1.0;
 
     var modelMatrixScratch = new Matrix4();
     var nodeMatrixScratch = new Matrix4();
@@ -140,7 +140,7 @@ define([
                     nodeTransformationsScratch : {},
                     originalNodeMatrixHash : {},
                     loadFail : false,
-                    speedup : defaultSpeedupAnimations
+                    multiplier : defaultAnimationMultiplier
                 };
                 modelHash[entity.id] = modelData;
 
@@ -167,7 +167,7 @@ define([
 
             if (model.ready) {
                 var runAnimations = Property.getValueOrDefault(modelGraphics._runAnimations, time, true);
-                var speedup = Property.getValueOrDefault(modelGraphics._speedupAnimations, time, defaultSpeedupAnimations);
+                var multiplier = Property.getValueOrDefault(modelGraphics._animationsMultiplier, time, defaultAnimationMultiplier);
                 if (modelData.animationsRunning !== runAnimations) {
                     if (runAnimations) {
                         model.activeAnimations.addAll({
@@ -179,14 +179,14 @@ define([
                     modelData.animationsRunning = runAnimations;
                 }
 
-                // Update the speedup property
-                if (modelData.animationsRunning && modelData.speedup !== speedup) {
+                // Update the multiplier property
+                if (modelData.animationsRunning && modelData.multiplier !== multiplier) {
                     var animationLength = model.activeAnimations.length;
                     for (var j = 0; j < animationLength; ++j) {
                         var animation = model.activeAnimations.get(j);
-                        animation.speedup = speedup;
+                        animation.multiplier = multiplier;
                     }
-                    modelData.speedup = speedup;
+                    modelData.multiplier = multiplier;
                 }
 
                 // Apply node transformations
