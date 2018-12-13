@@ -70,9 +70,7 @@ define([
             fragmentShaderLoaded : getFragmentShaderLoaded(this),
             uniformMapLoaded : getUniformMapLoaded(this),
             batchTableLoaded : getBatchTableLoaded(this),
-            pickIdLoaded : getPickIdLoaded(this),
-            normalShading : tileset.normalShading,
-            backfaceCulling : tileset.backfaceCulling
+            pickIdLoaded : getPickIdLoaded(this)
         });
     }
 

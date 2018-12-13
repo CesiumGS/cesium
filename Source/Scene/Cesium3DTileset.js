@@ -19,7 +19,6 @@ define([
         '../Core/Resource',
         '../Core/RuntimeError',
         '../Core/Transforms',
-        '../DataSources/ConstantProperty',
         '../Renderer/ClearCommand',
         '../Renderer/Pass',
         '../ThirdParty/when',
@@ -63,7 +62,6 @@ define([
         Resource,
         RuntimeError,
         Transforms,
-        ConstantProperty,
         ClearCommand,
         Pass,
         when,
@@ -286,24 +284,6 @@ define([
          * @default ShadowMode.ENABLED
          */
         this.shadows = defaultValue(options.shadows, ShadowMode.ENABLED);
-
-        /**
-         * Determines whether backfaces of points / mesh are hidden
-         *
-         * @type {boolean}
-         * @default false
-         */
-        var backFaceCulling = defaultValue(options.backFaceCulling, false);
-        this.backFaceCulling = new ConstantProperty(backFaceCulling);
-
-        /**
-         * Determines whether the tileset is lighted by the sun
-         *
-         * @type {boolean}
-         * @default true
-         */
-        var normalShading = defaultValue(options.normalShading, true);
-        this.normalShading = new ConstantProperty(normalShading);
 
         /**
          * Determines if the tileset will be shown.
