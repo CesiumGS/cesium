@@ -4,8 +4,10 @@ SRCS= decode.c
 
 # Using O3 and above requires exporting _malloc/_free OR writing functions that pass these through.
 # This turns out to be slower than just O2 on in my testing on
-# Chrome 71.0.3578.98 (Official Build) (64-bit) on Windows 10
-# with the following build environment:
+# Chrome 71.0.3578.98 (Official Build) (64-bit) on Windows 10 and Ubuntu 18.04.1.
+# Performance may be slightly better in Firefox overall and better for O3 than for O2.
+
+# Built with the following build environment:
 # $ emcc -v
 # emcc (Emscripten gcc/clang-like replacement + linker emulating GNU ld) 1.38.21
 # clang version 6.0.1  (emscripten 1.38.21 : 1.38.21)
