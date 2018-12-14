@@ -99,9 +99,8 @@ gulp.task('build', function(done) {
     glslToJavaScript(minifyShaders, 'Build/minifyShaders.state');
     createCesiumJs();
     createSpecList();
-    createGalleryList();
     createJsHintOptions();
-    done();
+    createGalleryList(done);
 });
 
 gulp.task('build-watch', function() {
@@ -1117,7 +1116,7 @@ function createSpecList() {
     fs.writeFileSync(path.join('Specs', 'SpecList.js'), contents);
 }
 
-function createGalleryList() {
+function createGalleryList(done) {
     var demoObjects = [];
     var demoJSONs = [];
     var output = path.join('Apps', 'Sandcastle', 'gallery', 'gallery-index.js');
@@ -1186,6 +1185,25 @@ var gallery_demos = [' + demoJSONs.join(', ') + '];\n\
 var has_new_gallery_demos = ' + (newDemos.length > 0 ? 'true;' : 'false;') + '\n';
 
     fs.writeFileSync(output, contents);
+
+    // Compile CSS for Sandcastle
+    var outputFile = path.join('Apps', 'Sandcastle', 'templates', 'bucket.css');
+
+    requirejs.optimize({
+        cssIn : path.join('Apps', 'Sandcastle', 'templates', 'bucketRaw.css'),
+        out : outputFile,
+        waitSeconds : 0
+    }, function() {
+        var data = fs.readFileSync(outputFile); //read existing contents into data
+        var fd = fs.openSync(outputFile, 'w+');
+        var buffer = new Buffer('/* This file is automatically rebuilt by the Cesium build process. */\n');
+
+        fs.writeSync(fd, buffer, 0, buffer.length, 0); //write new data
+        fs.writeSync(fd, data, 0, data.length, buffer.length); //append old data
+
+        fs.close(fd);
+        done();
+    }, done);
 }
 
 function createJsHintOptions() {
