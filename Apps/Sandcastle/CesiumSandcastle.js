@@ -104,6 +104,8 @@ require({
         pako) {
     'use strict';
 
+    window.pako = pako; // For Sandcastle-helpers.
+
     // attach clipboard handling to our Copy button
     var clipboardjs = new ClipboardJS('.copyButton');
 

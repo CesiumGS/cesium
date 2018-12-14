@@ -1,14 +1,6 @@
-require({
-  baseUrl: '../../Source',
-  packages: [{
-      name: 'ThirdParty',
-      location: '../Apps/Sandcastle/ThirdParty'
-    }]
-  }, [
-      'ThirdParty/pako.min'
-    ], function(
-        pako) {
+(function() {
     'use strict';
+    var pako = window.pako;
 
      window.embedInSandcastleTemplate = function(code, addExtraLine) {
         return 'function startup(Cesium) {\n' +
@@ -46,4 +38,4 @@ require({
             baseHref : baseHref
         };
     };
- });
+}());
