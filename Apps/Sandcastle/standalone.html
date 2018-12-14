@@ -7,9 +7,8 @@
     <title>Cesium Demo</title>
     <script type="text/javascript" src="Sandcastle-header.js"></script>
     <script type="text/javascript" src="Sandcastle-client.js"></script>
-    <script type="text/javascript" src="Sandcastle-helpers.js"></script>
-    <script type="text/javascript" src="ThirdParty/pako.min.js"></script>
     <script type="text/javascript" src="../../ThirdParty/requirejs-2.1.20/require.js"></script>
+    <script type="text/javascript" src="Sandcastle-helpers.js"></script>
     <script type="text/javascript">
         if(typeof require === 'function') {
             require.config({
@@ -21,7 +20,6 @@
 </head>
 <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
 <script type="text/javascript">
-/*global pako,decodeBase64Data,embedInSandcastleTemplate */
 if (typeof require === 'function') {
     require([
         'Source/Cesium'
@@ -38,34 +36,12 @@ if (typeof require === 'function') {
 function loadDemoFromUrl() {
     'use strict';
     // The helper functions script needs this.
-    window.pako = pako;
     var defined = Cesium.defined;
-    var loaderElement;
-    var frameDelay = 30;
     var code;
-
-    function update() {
-        var width = getComputedStyle(loaderElement).getPropertyValue('width');
-        var done = false;
-        if (width === '12px') {
-            frameDelay--;
-            if (frameDelay <= 0) {
-                done = true;
-                var scriptElement = document.createElement('script');
-                var isFirefox = navigator.userAgent.indexOf('Firefox/') >= 0;
-                document.head.appendChild(scriptElement);
-                scriptElement.innerHTML = embedInSandcastleTemplate(code, isFirefox);
-            }
-        }
-
-        if (!done) {
-            requestAnimationFrame(update);
-        }
-    }
 
     if (window.location.hash.indexOf('#c=') === 0) {
         var base64String = window.location.hash.substr(3);
-        var data = decodeBase64Data(base64String);
+        var data = window.decodeBase64Data(base64String);
         var html = data.html;
         code = data.code;
         var isIE11 = !!window.MSInputMethodContext && !!document.documentMode;
@@ -76,18 +52,16 @@ function loadDemoFromUrl() {
         //Handle case where demo is in a sub-directory by modifying
         //the HTML to add a base href.
         document.head.innerHTML = document.head.innerHTML + '<base href="' + data.baseHref + '" />';
-        // This is used as a marker to know when the CSS has loaded.
-        html += '<div id="loader"></div>';
-        html += '<style>#loader { width : 12px }</style>';
-
         // Add the HTML content
         var htmlElement = document.createElement('div');
         htmlElement.innerHTML = html;
         document.body.appendChild(htmlElement);
-        // Add the JavaScript only when CSS has loaded
-        loaderElement = document.querySelector('#loader');
 
-        requestAnimationFrame(update);
+        // Add the JavaScript
+        var scriptElement = document.createElement('script');
+        var isFirefox = navigator.userAgent.indexOf('Firefox/') >= 0;
+        document.head.appendChild(scriptElement);
+        scriptElement.innerHTML = window.embedInSandcastleTemplate(code, isFirefox);
     }
 }
 </script>
