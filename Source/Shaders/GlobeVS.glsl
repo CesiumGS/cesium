@@ -189,7 +189,7 @@ void main()
 
     // There is one final matter to clear up.  Our aspect is in [0,pi), but we need it to be in [0,2pi).
     float determ = dot(cross(vectorEastMC, aspect_vector), ellipsoidNormal); // Calculate a 3x3 determinant.
-    float determ_sign = sign(determ);   // -1 = left-handed; +1 = right-handed.
-    v_aspect = ((1.0 + determ_sign) / 2.0) * v_aspect + ((1.0 - determ_sign) / 2.0) * (2.0 * 3.1415926536 - v_aspect);
+    if(determ < 0.0)        // GLSL shouldn't actually have to do a branching operation here.
+        v_aspect = 2.0 * 3.1415926536 - v_aspect;
 #endif
 }
