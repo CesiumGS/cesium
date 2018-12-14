@@ -33,9 +33,8 @@ define([
     'use strict';
 
     /**
-     * @alias CubeMap
-     * @constructor
-    */
+     * @private
+     */
     function CubeMap(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 

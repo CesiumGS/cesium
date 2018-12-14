@@ -70,9 +70,8 @@ define([
     }
 
     /**
-     * @alias UniformFloat
-     * @constructor
-    */
+     * @private
+     */
     function UniformFloat(gl, activeUniform, uniformName, location) {
         /**
          * @type {String}
@@ -97,9 +96,8 @@ define([
     ///////////////////////////////////////////////////////////////////////////
 
     /**
-     * @alias UniformFloatVec2
-     * @constructor
-    */
+     * @private
+     */
     function UniformFloatVec2(gl, activeUniform, uniformName, location) {
         /**
          * @type {String}
@@ -125,9 +123,8 @@ define([
     ///////////////////////////////////////////////////////////////////////////
 
     /**
-     * @alias UniformFloatVec3
-     * @constructor
-    */
+     * @private
+     */
     function UniformFloatVec3(gl, activeUniform, uniformName, location) {
         /**
          * @type {String}
@@ -165,9 +162,8 @@ define([
     ///////////////////////////////////////////////////////////////////////////
 
     /**
-     * @alias UniformFloatVec4
-     * @constructor
-    */
+     * @private
+     */
     function UniformFloatVec4(gl, activeUniform, uniformName, location) {
         /**
          * @type {String}
@@ -205,9 +201,8 @@ define([
     ///////////////////////////////////////////////////////////////////////////
 
     /**
-     * @alias UniformSampler
-     * @constructor
-    */
+     * @private
+     */
     function UniformSampler(gl, activeUniform, uniformName, location) {
         /**
          * @type {String}
@@ -240,9 +235,8 @@ define([
     ///////////////////////////////////////////////////////////////////////////
 
     /**
-     * @alias UniformInt
-     * @constructor
-    */
+     * @private
+     */
     function UniformInt(gl, activeUniform, uniformName, location) {
         /**
          * @type {String}
@@ -266,9 +260,8 @@ define([
 
     ///////////////////////////////////////////////////////////////////////////
     /**
-     * @alias UniformIntVec2
-     * @constructor
-    */
+     * @private
+     */
     function UniformIntVec2(gl, activeUniform, uniformName, location) {
         /**
          * @type {String}
@@ -293,9 +286,8 @@ define([
 
     ///////////////////////////////////////////////////////////////////////////
     /**
-     * @alias UniformIntVec3
-     * @constructor
-    */
+     * @private
+     */
     function UniformIntVec3(gl, activeUniform, uniformName, location) {
        /**
          * @type {String}
@@ -320,9 +312,8 @@ define([
 
     ///////////////////////////////////////////////////////////////////////////
     /**
-     * @alias UniformIntVec4
-     * @constructor
-    */
+     * @private
+     */
     function UniformIntVec4(gl, activeUniform, uniformName, location) {
         /**
          * @type {String}
@@ -349,9 +340,8 @@ define([
 
     var scratchUniformArray = new Float32Array(4);
     /**
-     * @alias UniformMat2
-     * @constructor
-    */
+     * @private
+     */
     function UniformMat2(gl, activeUniform, uniformName, location) {
         /**
          * @type {String}
@@ -379,9 +369,8 @@ define([
 
     var scratchMat3Array = new Float32Array(9);
     /**
-     * @alias UniformMat3
-     * @constructor
-    */
+     * @private
+     */
     function UniformMat3(gl, activeUniform, uniformName, location) {
         /**
          * @type {String}
@@ -409,9 +398,8 @@ define([
 
     var scratchMat4Array = new Float32Array(16);
     /**
-     * @alias UniformMat4
-     * @constructor
-    */
+     * @private
+     */
     function UniformMat4(gl, activeUniform, uniformName, location) {
         /**
          * @type {String}

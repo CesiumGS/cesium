@@ -333,11 +333,7 @@ define([
     var Sl8 = -80 * 1e-7;
 
     var scratchDate = new JulianDate(0, 0.0, TimeStandard.TAI);
-    /**
-     * Gets a point describing the motion of the Earth-Moon barycenter according to the equations
-     * described in section 6.
-     * @exports computeSimonEarthMoonBarycenter
-     */
+     // Gets a point describing the motion of the Earth-Moon barycenter according to the equations described in section 6.
     function computeSimonEarthMoonBarycenter(date, result) {
 
         // t is thousands of years from J2000 TDB
@@ -375,10 +371,7 @@ define([
                 longitudeOfNode, meanLongitude, result);
     }
 
-    /**
-     * Gets a point describing the position of the moon according to the equations described in section 4.
-     * @exports computeSimonMoon
-     */
+     // Gets a point describing the position of the moon according to the equations described in section 4.
     function computeSimonMoon(date, result) {
         taiToTdb(date, scratchDate);
         var x = (scratchDate.dayNumber - epoch.dayNumber) + ((scratchDate.secondsOfDay - epoch.secondsOfDay)/TimeConstants.SECONDS_PER_DAY);

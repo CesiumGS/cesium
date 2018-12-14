@@ -24,8 +24,7 @@ define([
     });
 
     /**
-     * @constructor
-     * @alias DoublyLinkedListNode
+     * @private
      */
     function DoublyLinkedListNode(item, previous, next) {
         this.item = item;

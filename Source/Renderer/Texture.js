@@ -37,8 +37,7 @@ define([
     'use strict';
 
     /**
-     * @alias Texture
-     * @constructor
+     * @private
     */
     function Texture(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);

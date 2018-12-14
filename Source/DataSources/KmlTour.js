@@ -106,29 +106,15 @@ define([
         cancelAllEntries(this._activeEntries);
     };
 
-    /**
-     * Stop all activeEntries.
-     * @param {Array} activeEntries
-     * @exports cancelAllEntries
-     */
+    // Stop all activeEntries.
     function cancelAllEntries(activeEntries) {
         for(var entry = activeEntries.pop(); entry !== undefined; entry = activeEntries.pop()) {
             entry.stop();
         }
     }
 
-    /**
-     * Play playlist entry.
-     * This function is called recursevly with playNext
-     * and iterates over all entries from playlist.
-     *
-     * @param {ViewerWidget} viewer Cesium viewer.
-     * @param {Object} cameraOptions see {@link Camera#flyTo}.
-     * @param {Function} allDone a function will be called when all entries from playlist
-     * being played or user call {@link KmlTour#stop}.
-     *
-     * @exports playEntry
-     */
+    // Play playlist entry.
+    // This function is called recursevly with playNext and iterates over all entries from playlist.
     function playEntry(viewer, cameraOptions, allDone) {
         var entry = this.playlist[this.playlistIndex];
         if (entry) {
@@ -155,18 +141,7 @@ define([
         }
     }
 
-    /**
-     * Increment playlistIndex and call playEntry
-     * if terminated isn't true.
-     *
-     * @param {ViewerWidget} viewer passed for recursion.
-     * @param {Object} cameraOptions passed for recursion.
-     * @param {Function} allDone passed for recursion.
-     * @param {Boolean} terminated true if active entry was terminated,
-     * and the whole tour should be terminated.
-     *
-     * @exports playNext
-     */
+    // Increment playlistIndex and call playEntry if terminated isn't true.
     function playNext(viewer, cameraOptions, allDone, terminated) {
         var entry = this.playlist[this.playlistIndex];
         this.entryEnd.raiseEvent(entry, terminated);
