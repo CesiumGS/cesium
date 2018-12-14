@@ -41,7 +41,7 @@ define([
     /**
      * An abstract class for updating ground geometry entities.
      * @constructor
-     *
+     * @alias GroundGeometryUpdater
      * @param {Object} options An object with the following properties:
      * @param {Entity} options.entity The entity containing the geometry to be visualized.
      * @param {Scene} options.scene The scene where visualization is taking place.
