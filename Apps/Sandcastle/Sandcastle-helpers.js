@@ -1,8 +1,16 @@
-/*global pako*/
-(function() {
+require({
+  baseUrl: '../../Source',
+  packages: [{
+      name: 'ThirdParty',
+      location: '../Apps/Sandcastle/ThirdParty'
+    }]
+  }, [
+      'ThirdParty/pako.min'
+    ], function(
+        pako) {
     'use strict';
 
-    window.embedInSandcastleTemplate = function(code, addExtraLine) {
+     window.embedInSandcastleTemplate = function(code, addExtraLine) {
         return 'function startup(Cesium) {\n' +
            '    \'use strict\';\n' +
            '//Sandcastle_Begin\n' +
@@ -32,11 +40,10 @@
         var code = json[0];
         var html = json[1];
         var baseHref = json[2];
-
-        return {
+         return {
             code : code,
             html : html,
             baseHref : baseHref
         };
     };
- }());
+ });
