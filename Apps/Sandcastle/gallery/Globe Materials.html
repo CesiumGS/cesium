@@ -113,13 +113,13 @@ function getSlopeContourMaterial() {
 }
 
 function getAspectContourMaterial() {
-    // Creates a composite material with both aspect shading and countour lines
+    // Creates a composite material with both aspect shading and contour lines
     return new Cesium.Material({
         fabric: {
             type: 'AspectColorContour',
             materials: {
                 contourMaterial: {
-                    type: 'ElevationCountour'
+                    type: 'ElevationContour'
                 },
                 aspectRampMaterial: {
                     type: 'AspectRamp'
