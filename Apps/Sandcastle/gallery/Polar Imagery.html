@@ -56,7 +56,8 @@ var arcticProvider = new Cesium.WebMapTileServiceImageryProvider({
     style : 'default',
     format : 'image/png',
     tileWidth : 512,
-    tileHeight : 512
+    tileHeight : 512,
+    maximumLevel : 5
 });
 
 // Set texture sampling on the ImageryLayer to avoid cracks between low-detail tiles

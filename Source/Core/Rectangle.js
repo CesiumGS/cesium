@@ -879,14 +879,14 @@ define([
     var projectedScratch = new Cartesian3();
     /**
      * Approximates a Cartographic rectangle's extents in some map projection by projecting
-     * points along the rectangle's edges.
+     * points in a grid throughout the rectangle.
      *
      * @function
      *
      * @param {Rectangle} cartographicRectangle An input rectangle in geographic coordinates.
      * @param {MapProjection} mapProjection A MapProjection indicating a projection from geographic coordinates.
      * @param {Rectangle} [result] Rectangle on which to store the projected extents of the input.
-     * @param {Number} [steps=16] Number of points to sample along each side of the geographic Rectangle.
+     * @param {Number} [steps=8] Number of points to sample along each side of the geographic Rectangle.
      */
     Rectangle.approximateProjectedExtents = function(cartographicRectangle, mapProjection, result, steps) {
         //>>includeStart('debug', pragmas.debug);
@@ -895,7 +895,7 @@ define([
         //>>includeEnd('debug');
 
         result = defaultValue(result, new Rectangle());
-        steps = defaultValue(steps, 16);
+        steps = defaultValue(steps, 8);
 
         result.west = Number.MAX_VALUE;
         result.east = -Number.MAX_VALUE;
@@ -913,41 +913,16 @@ define([
         var unprojected = unprojectedScratch;
 
         for (var longIndex = 0; longIndex < steps; longIndex++) {
-            unprojected.longitude = geographicCorner.longitude + geographicWidthStep * longIndex;
-            unprojected.latitude = geographicCorner.latitude;
+            for (var latIndex = 0; latIndex < steps; latIndex++) {
+                unprojected.longitude = geographicCorner.longitude + geographicWidthStep * longIndex;
+                unprojected.latitude = geographicCorner.latitude + geographicHeightStep * latIndex;
 
-            mapProjection.project(unprojected, projected);
-            result.west = Math.min(result.west, projected.x);
-            result.east = Math.max(result.east, projected.x);
-            result.south = Math.min(result.south, projected.y);
-            result.north = Math.max(result.north, projected.y);
-
-            unprojected.latitude = geographicCorner.latitude + geographicHeight;
-
-            mapProjection.project(unprojected, projected);
-            result.west = Math.min(result.west, projected.x);
-            result.east = Math.max(result.east, projected.x);
-            result.south = Math.min(result.south, projected.y);
-            result.north = Math.max(result.north, projected.y);
-        }
-
-        for (var latIndex = 0; latIndex < steps; latIndex++) {
-            unprojected.latitude = geographicCorner.latitude + geographicHeightStep * latIndex;
-            unprojected.longitude = geographicCorner.longitude;
-
-            mapProjection.project(unprojected, projected);
-            result.west = Math.min(result.west, projected.x);
-            result.east = Math.max(result.east, projected.x);
-            result.south = Math.min(result.south, projected.y);
-            result.north = Math.max(result.north, projected.y);
-
-            unprojected.longitude = geographicCorner.longitude + geographicWidth;
-
-            mapProjection.project(unprojected, projected);
-            result.west = Math.min(result.west, projected.x);
-            result.east = Math.max(result.east, projected.x);
-            result.south = Math.min(result.south, projected.y);
-            result.north = Math.max(result.north, projected.y);
+                mapProjection.project(unprojected, projected);
+                result.west = Math.min(result.west, projected.x);
+                result.east = Math.max(result.east, projected.x);
+                result.south = Math.min(result.south, projected.y);
+                result.north = Math.max(result.north, projected.y);
+            }
         }
 
         return result;
