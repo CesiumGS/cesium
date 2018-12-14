@@ -2,7 +2,6 @@ define([
         './Cartesian3',
         './Cartographic',
         './Check',
-        './CustomProjection',
         './defaultValue',
         './defined',
         './Ellipsoid',
@@ -12,13 +11,11 @@ define([
         './Math',
         './Matrix3',
         './Matrix4',
-        './Proj4Projection',
         './Rectangle'
     ], function(
         Cartesian3,
         Cartographic,
         Check,
-        CustomProjection,
         defaultValue,
         defined,
         Ellipsoid,
@@ -28,7 +25,6 @@ define([
         CesiumMath,
         Matrix3,
         Matrix4,
-        Proj4Projection,
         Rectangle) {
     'use strict';
 
@@ -239,16 +235,13 @@ define([
         return BoundingSphere.fromRectangleWithHeights2D(rectangle, projection, 0.0, 0.0, result);
     };
 
-    var projectedPointsScratch = [
-        new Cartesian3(), new Cartesian3(),
-        new Cartesian3(), new Cartesian3(),
-        new Cartesian3(), new Cartesian3(),
-        new Cartesian3(), new Cartesian3(),
-        new Cartesian3(), new Cartesian3(),
-        new Cartesian3(), new Cartesian3(),
-        new Cartesian3(), new Cartesian3(),
-        new Cartesian3(), new Cartesian3()
-    ];
+    var INTERVAL_COUNT = 9;
+    var HALF_PROJECTED_POINTS_COUNT = INTERVAL_COUNT * INTERVAL_COUNT;
+    var PROJECTED_POINTS_COUNT = HALF_PROJECTED_POINTS_COUNT * 2;
+    var projectedPointsScratch = new Array(PROJECTED_POINTS_COUNT);
+    for (var projectedPointIndex = 0; projectedPointIndex < PROJECTED_POINTS_COUNT; projectedPointIndex++) {
+        projectedPointsScratch[projectedPointIndex] = new Cartesian3();
+    }
     var sampleScratch = new Cartographic();
     var cornerScratch = new Cartographic();
 
@@ -298,25 +291,22 @@ define([
         }
 
         var southwest = Rectangle.southwest(rectangle, cornerScratch);
-        var halfWidth = rectangle.width * 0.5;
-        var halfHeight = rectangle.height * 0.5;
+        var widthStep = rectangle.width / (INTERVAL_COUNT - 1);
+        var heightStep = rectangle.height / (INTERVAL_COUNT - 1);
         var sample = sampleScratch;
         var index = 0;
 
-        // Project 18 points, one for each corner, the edge centers, and minimum/maximum height
-        for (var x = 0; x < 3; x++) {
-            for (var y = 0; y < 3; y++) {
-                if (x === 1 && y === 1) {
-                    continue;
-                }
-                sample.longitude = southwest.longitude + x * halfWidth;
-                sample.latitude = southwest.latitude + y * halfHeight;
+        // Project points in a grid over the Rectangle
+        for (var x = 0; x < INTERVAL_COUNT; x++) {
+            for (var y = 0; y < INTERVAL_COUNT; y++) {
+                sample.longitude = southwest.longitude + x * widthStep;
+                sample.latitude = southwest.latitude + y * heightStep;
                 sample.height = minimumHeight;
 
                 projection.project(sample, projectedPointsScratch[index]);
 
                 sample.height = maximumHeight;
-                projection.project(sample, projectedPointsScratch[index + 8]);
+                projection.project(sample, projectedPointsScratch[index + HALF_PROJECTED_POINTS_COUNT]);
 
                 index++;
             }
