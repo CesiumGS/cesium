@@ -1575,7 +1575,7 @@ define([
     Material.AspectRampMaterialType = 'AspectRamp';
     Material._materialCache.addMaterial(Material.AspectRampMaterialType, {
         fabric: {
-            type: Material.AspectRampmaterialType,
+            type: Material.AspectRampMaterialType,
             uniforms: {
                 image: Material.DefaultImageId
             },
