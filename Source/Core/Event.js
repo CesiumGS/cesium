@@ -39,6 +39,7 @@ define([
     defineProperties(Event.prototype, {
         /**
          * The number of listeners currently subscribed to the event.
+         * @memberof Event.prototype
          * @type {Number}
          * @readonly
          */
