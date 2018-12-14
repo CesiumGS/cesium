@@ -23,6 +23,7 @@ define([
         './Primitive',
         './SceneMode',
         './ShadowVolumeAppearance',
+        './StencilConstants',
         './StencilFunction',
         './StencilOperation'
     ], function(
@@ -50,6 +51,7 @@ define([
         Primitive,
         SceneMode,
         ShadowVolumeAppearance,
+        StencilConstants,
         StencilFunction,
         StencilOperation) {
     'use strict';
@@ -379,12 +381,6 @@ define([
         return scene.context.stencilBuffer;
     };
 
-    // The stencil mask only uses the least significant 4 bits.
-    // This is so 3D Tiles with the skip LOD optimization, which uses the most significant 4 bits,
-    // can be classified.
-    var stencilMask = 0x0F;
-    var stencilReference = 0;
-
     function getStencilPreloadRenderState(enableStencil) {
         return {
             colorMask : {
@@ -395,21 +391,22 @@ define([
             },
             stencilTest : {
                 enabled : enableStencil,
-                frontFunction : StencilFunction.ALWAYS,
+                frontFunction : StencilFunction.EQUAL,
                 frontOperation : {
                     fail : StencilOperation.KEEP,
                     zFail : StencilOperation.DECREMENT_WRAP,
                     zPass : StencilOperation.DECREMENT_WRAP
                 },
-                backFunction : StencilFunction.ALWAYS,
+                backFunction : StencilFunction.EQUAL,
                 backOperation : {
                     fail : StencilOperation.KEEP,
                     zFail : StencilOperation.INCREMENT_WRAP,
                     zPass : StencilOperation.INCREMENT_WRAP
                 },
-                reference : stencilReference,
-                mask : stencilMask
+                reference : ~0,
+                mask : StencilConstants.CESIUM_3D_TILE_MASK
             },
+            stencilMask : StencilConstants.CLASSIFICATION_MASK,
             depthTest : {
                 enabled : false
             },
@@ -427,21 +424,22 @@ define([
             },
             stencilTest : {
                 enabled : enableStencil,
-                frontFunction : StencilFunction.ALWAYS,
+                frontFunction : StencilFunction.EQUAL,
                 frontOperation : {
                     fail : StencilOperation.KEEP,
                     zFail : StencilOperation.KEEP,
                     zPass : StencilOperation.INCREMENT_WRAP
                 },
-                backFunction : StencilFunction.ALWAYS,
+                backFunction : StencilFunction.EQUAL,
                 backOperation : {
                     fail : StencilOperation.KEEP,
                     zFail : StencilOperation.KEEP,
                     zPass : StencilOperation.DECREMENT_WRAP
                 },
-                reference : stencilReference,
-                mask : stencilMask
+                reference : ~0,
+                mask : StencilConstants.CESIUM_3D_TILE_MASK
             },
+            stencilMask : StencilConstants.CLASSIFICATION_MASK,
             depthTest : {
                 enabled : true,
                 func : DepthFunction.LESS_OR_EQUAL
@@ -466,9 +464,10 @@ define([
                     zFail : StencilOperation.KEEP,
                     zPass : StencilOperation.DECREMENT_WRAP
                 },
-                reference : stencilReference,
-                mask : stencilMask
+                reference : 0,
+                mask : StencilConstants.CLASSIFICATION_MASK
             },
+            stencilMask : StencilConstants.CLASSIFICATION_MASK,
             depthTest : {
                 enabled : false
             },
@@ -492,9 +491,10 @@ define([
                 zFail : StencilOperation.KEEP,
                 zPass : StencilOperation.DECREMENT_WRAP
             },
-            reference : stencilReference,
-            mask : stencilMask
+            reference : StencilConstants.NONE,
+            mask : StencilConstants.CLASSIFICATION_MASK
         },
+        stencilMask : StencilConstants.CLASSIFICATION_MASK,
         depthTest : {
             enabled : false
         },
