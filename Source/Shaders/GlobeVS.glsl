@@ -177,12 +177,13 @@ void main()
 
 #ifdef APPLY_MATERIAL
     // This needs to be a unit-length normal in the tangent space of the vertex in model space, and pointing East.
-    vec3 vectorEastMC;  // TODO: Take cross between direction to north pole from vertex and ellipsoid normal to get this, then normalize.
-    vec3 ellipsoidNormal = normalize(position3DWC.xyz); // WC = World Coordinates, so this is confusing.  It is not in model space?
-    float dot_prod = abs(dot(ellipsoidNormal, normalMC));
+    vec3 northPolePositionMC = vec3(0.0, 0.0, 6356752.3142451793);
+    vec3 ellipsoidNormal = normalize(v_positionMC); // TODO: For a sphere this is correct, but not generally for an ellipsoid!
+    vec3 vectorEastMC = normalize(cross(northPolePositionMC - v_positionMC, ellipsoidNormal)); // Find true east in the tangent plane to the ground point.
+    float dot_prod = abs(dot(ellipsoidNormal, v_normalMC));
     v_slope = acos(dot_prod);   // Slope is by definition an angle, and we want linear scale between flat and vertical.
     vec3 normal_rejected = ellipsoidNormal * dot_prod;  // This is the rejection of the terrain normal from the tangent plane.
-    vec3 normal_projected = normalMC - normal_rejected; // This is the terrain normal projected onto the tangent plane.
+    vec3 normal_projected = v_normalMC - normal_rejected; // This is the terrain normal projected onto the tangent plane.
     vec3 aspect_vector = normalize(normal_projected);   // This is our unit-length heading in the tangent space.  (Aspect direction.)
     v_aspect = acos(dot(aspect_vector, vectorEastMC));  // Finally, here is the aspect angle.
     v_height = height;  // Store height.
