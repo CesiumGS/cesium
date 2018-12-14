@@ -176,7 +176,6 @@ void main()
 #endif
 
 #ifdef APPLY_MATERIAL
-    // This needs to be a unit-length normal in the tangent space of the vertex in model space, and pointing East.
     vec3 northPolePositionMC = vec3(0.0, 0.0, 6356752.3142451793);
     vec3 ellipsoidNormal = normalize(v_positionMC); // TODO: For a sphere this is correct, but not generally for an ellipsoid!
     vec3 vectorEastMC = normalize(cross(northPolePositionMC - v_positionMC, ellipsoidNormal)); // Find true east in the tangent plane to the ground point.
