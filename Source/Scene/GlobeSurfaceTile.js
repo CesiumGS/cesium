@@ -272,7 +272,7 @@ define([
             tile.state = QuadtreeTileLoadState.LOADING;
         }
 
-        if (surfaceTile.boundingVolumeSourceTile !== tile && terrainProvider.getNearestBvhLevel !== undefined) {
+        if (defined(surfaceTile.boundingVolumeSourceTile) && surfaceTile.boundingVolumeSourceTile !== tile && terrainProvider.getNearestBvhLevel !== undefined) {
             // So here we are loading this tile, but we know our bounding volume isn't very good, and so our
             // judgement that it's visible is kind of suspect. If this terrain source has bounding volume data
             // outside of individual tiles, let's get our hands on that before we waste time downloading
@@ -302,7 +302,7 @@ define([
         // only, which happens in these two scenarios:
         //   * we want ancestor BVH data from this tile but don't plan to render it (see code above).
         //   * we want to upsample from this tile but don't plan to render it (see processTerrainStateMachine).
-        if (terrainOnly || (tile.level !== 0 && tile.data.boundingVolumeSourceTile !== tile)) {
+        if (terrainOnly || (tile.level !== 0 && defined(surfaceTile.boundingVolumeSourceTile) && surfaceTile.boundingVolumeSourceTile !== tile)) {
             return;
         }
 
@@ -352,28 +352,22 @@ define([
                               (tileImagery.loadingImagery.state === ImageryState.FAILED || tileImagery.loadingImagery.state === ImageryState.INVALID);
         }
 
+        tile.renderable = isRenderable;
         tile.upsampledFromParent = isUpsampledOnly;
 
-        // The tile becomes renderable when the terrain and all imagery data are loaded.
-        if (i === len) {
-            if (isRenderable) {
-                tile.renderable = true;
-            }
-
-            if (isDoneLoading) {
-                var callbacks = tile._loadedCallbacks;
-                var newCallbacks = {};
-                for(var layerId in callbacks) {
-                    if (callbacks.hasOwnProperty(layerId)) {
-                        if(!callbacks[layerId](tile)) {
-                            newCallbacks[layerId] = callbacks[layerId];
-                        }
+        if (isDoneLoading) {
+            var callbacks = tile._loadedCallbacks;
+            var newCallbacks = {};
+            for(var layerId in callbacks) {
+                if (callbacks.hasOwnProperty(layerId)) {
+                    if(!callbacks[layerId](tile)) {
+                        newCallbacks[layerId] = callbacks[layerId];
                     }
                 }
-                tile._loadedCallbacks = newCallbacks;
-
-                tile.state = QuadtreeTileLoadState.DONE;
             }
+            tile._loadedCallbacks = newCallbacks;
+
+            tile.state = QuadtreeTileLoadState.DONE;
         }
     };
 
@@ -542,9 +536,7 @@ define([
         });
     }
 
-    function createResources(surfaceTile, context, terrainProvider, x, y, level) {
-        var mesh = surfaceTile.mesh;
-
+    GlobeSurfaceTile._createVertexArrayForMesh = function(context, mesh) {
         var typedArray = mesh.vertices;
         var buffer = Buffer.createVertexBuffer({
             context : context,
@@ -567,19 +559,21 @@ define([
             indexBuffer.vertexArrayDestroyable = false;
             indexBuffer.referenceCount = 1;
             indexBuffers[context.id] = indexBuffer;
-            surfaceTile.mesh.indices.indexBuffers = indexBuffers;
+            mesh.indices.indexBuffers = indexBuffers;
         } else {
             ++indexBuffer.referenceCount;
         }
 
-        surfaceTile.vertexArray = new VertexArray({
+        return new VertexArray({
             context : context,
             attributes : attributes,
             indexBuffer : indexBuffer
         });
+    };
 
+    function createResources(surfaceTile, context, terrainProvider, x, y, level) {
+        surfaceTile.vertexArray = GlobeSurfaceTile._createVertexArrayForMesh(context, surfaceTile.mesh);
         surfaceTile.terrainState = TerrainState.READY;
-
         surfaceTile.fill = surfaceTile.fill && surfaceTile.fill.destroy();
     }
 
@@ -621,20 +615,7 @@ define([
     }
 
     function createWaterMaskTextureIfNeeded(context, surfaceTile) {
-        var previousTexture = surfaceTile.waterMaskTexture;
-        if (defined(previousTexture)) {
-            --previousTexture.referenceCount;
-            if (previousTexture.referenceCount === 0) {
-                previousTexture.destroy();
-            }
-            surfaceTile.waterMaskTexture = undefined;
-        }
-
         var waterMask = surfaceTile.terrainData.waterMask;
-        if (!defined(waterMask)) {
-            return;
-        }
-
         var waterMaskData = getContextWaterMaskData(context);
         var texture;
 

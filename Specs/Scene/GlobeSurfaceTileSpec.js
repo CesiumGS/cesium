@@ -11,7 +11,10 @@ defineSuite([
         'Core/Ray',
         'Core/Rectangle',
         'Core/RequestScheduler',
+        'Core/TerrainEncoding',
+        'Core/TerrainMesh',
         'Core/TileAvailability',
+        'Renderer/Buffer',
         'Scene/Imagery',
         'Scene/ImageryLayer',
         'Scene/ImageryLayerCollection',
@@ -22,7 +25,9 @@ defineSuite([
         'Scene/TileImagery',
         'Specs/createScene',
         'Specs/pollToPromise',
-        'ThirdParty/when'
+        'ThirdParty/when',
+        '../MockImageryProvider',
+        '../MockTerrainProvider'
     ], function(
         GlobeSurfaceTile,
         Cartesian3,
@@ -36,7 +41,10 @@ defineSuite([
         Ray,
         Rectangle,
         RequestScheduler,
+        TerrainEncoding,
+        TerrainMesh,
         TileAvailability,
+        Buffer,
         Imagery,
         ImageryLayer,
         ImageryLayerCollection,
@@ -47,17 +55,25 @@ defineSuite([
         TileImagery,
         createScene,
         pollToPromise,
-        when) {
+        when,
+        MockImageryProvider,
+        MockTerrainProvider) {
     'use strict';
 
     describe('processStateMachine', function() {
-        var frameState = {};
+        var frameState = {
+            context: {
+                cache: {},
+                _gl: {}
+            }
+        };
         var terrainProvider;
 
         var tilingScheme;
         var rootTiles;
         var rootTile;
         var imageryLayerCollection;
+        var mockTerrain;
 
         beforeEach(function() {
             tilingScheme = new GeographicTilingScheme();
@@ -81,6 +97,23 @@ defineSuite([
                     return -1;
                 }
             };
+
+            mockTerrain = new MockTerrainProvider();
+
+            // Skip the WebGL bits
+            spyOn(GlobeSurfaceTile, '_createVertexArrayForMesh').and.callFake(function() {
+                var vertexArray = jasmine.createSpyObj('VertexArray', ['destroy']);
+                return vertexArray;
+            });
+
+            spyOn(ImageryLayer.prototype, '_createTextureWebGL').and.callFake(function(context, imagery) {
+                var texture = jasmine.createSpyObj('Texture', ['destroy']);
+                texture.width = imagery.image.width;
+                texture.height = imagery.image.height;
+                return texture;
+            });
+
+            spyOn(ImageryLayer.prototype, '_finalizeReprojectTexture');
         });
 
         afterEach(function() {
@@ -96,277 +129,456 @@ defineSuite([
             }
         });
 
+        // Processes the given list of tiles until all terrain and imagery states stop changing.
+        function processTiles(tiles) {
+            var deferred = when.defer();
+
+            function getState(tile) {
+                return [
+                    tile.state,
+                    tile.data ? tile.data.terrainState : undefined,
+                    tile.data && tile.data.imagery ? tile.data.imagery.map(function(imagery) {
+                        return [
+                            imagery.readyImagery ? imagery.readyImagery.state : undefined,
+                            imagery.loadingImagery ? imagery.loadingImagery.state : undefined
+                        ];
+                    }) : []
+                ];
+            }
+
+            function statesAreSame(a, b) {
+                if (a.length !== b.length) {
+                    return false;
+                }
+
+                var same = true;
+                for (var i = 0; i < a.length; ++i) {
+                    if (Array.isArray(a[i]) && Array.isArray(b[i])) {
+                        same = same && statesAreSame(a[i], b[i]);
+                    } else if (Array.isArray(a[i]) || Array.isArray(b[i])) {
+                        same = false;
+                    } else {
+                        same = same && a[i] === b[i];
+                    }
+                }
+
+                return same;
+            }
+
+            function next() {
+                // Keep going until all terrain and imagery provider are ready and states are no longer changing.
+                var changed = !mockTerrain.ready;
+
+                for (var i = 0; i < imageryLayerCollection.length; ++i) {
+                    changed = changed || !imageryLayerCollection.get(i).imageryProvider.ready;
+                }
+
+                tiles.forEach(function(tile) {
+                    var beforeState = getState(tile);
+                    GlobeSurfaceTile.processStateMachine(tile, frameState, mockTerrain, imageryLayerCollection);
+                    var afterState = getState(tile);
+                    changed = changed || !statesAreSame(beforeState, afterState);
+                });
+
+                if (changed) {
+                    setTimeout(next, 0);
+                } else {
+                    deferred.resolve();
+                }
+            }
+
+            next();
+
+            return deferred.promise;
+        }
+
         it('transitions to the LOADING state immediately if this tile is available', function() {
-            GlobeSurfaceTile.processStateMachine(rootTile, frameState, terrainProvider, imageryLayerCollection);
-            expect(rootTile.state).toBe(QuadtreeTileLoadState.LOADING);
-            expect(rootTile.data.terrainState).toBe(TerrainState.UNLOADED);
+            mockTerrain
+                .willBeAvailable(rootTile.southwestChild);
+
+            return processTiles([rootTile.southwestChild]).then(function() {
+                expect(rootTile.southwestChild.state).toBe(QuadtreeTileLoadState.LOADING);
+                expect(rootTile.southwestChild.data.terrainState).toBe(TerrainState.UNLOADED);
+            });
         });
 
         it('transitions to the LOADING tile state and FAILED terrain state immediately if this tile is NOT available', function() {
-            makeTerrainReady(rootTile);
-            spyOn(terrainProvider, 'getTileDataAvailable').and.returnValue(false);
-            GlobeSurfaceTile.processStateMachine(rootTile.southwestChild, frameState, terrainProvider, imageryLayerCollection);
-            expect(rootTile.southwestChild.state).toBe(QuadtreeTileLoadState.LOADING);
-            expect(rootTile.southwestChild.data.terrainState).toBe(TerrainState.FAILED);
+            mockTerrain
+                .willBeUnavailable(rootTile.southwestChild);
+
+            return processTiles([rootTile.southwestChild]).then(function() {
+                expect(rootTile.southwestChild.state).toBe(QuadtreeTileLoadState.LOADING);
+                expect(rootTile.southwestChild.data.terrainState).toBe(TerrainState.FAILED);
+            });
         });
 
         it('pushes parent along if waiting on it to be able to upsample', function() {
-            makeTerrainUnloaded(rootTile);
-            spyOn(terrainProvider, 'getTileDataAvailable').and.returnValue(false);
-            spyOn(terrainProvider, 'requestTileGeometry');
-            GlobeSurfaceTile.processStateMachine(rootTile.southwestChild, frameState, terrainProvider, imageryLayerCollection);
-            expect(terrainProvider.requestTileGeometry.calls.count()).toBe(1);
-            expect(terrainProvider.requestTileGeometry.calls.argsFor(0)[0]).toBe(0);
-            expect(terrainProvider.requestTileGeometry.calls.argsFor(0)[1]).toBe(0);
-            expect(terrainProvider.requestTileGeometry.calls.argsFor(0)[2]).toBe(0);
+            mockTerrain
+                .willBeAvailable(rootTile)
+                .requestTileGeometryWillSucceed(rootTile)
+                .willBeUnavailable(rootTile.southwestChild);
+
+            spyOn(mockTerrain, 'requestTileGeometry').and.callThrough();
+
+            return processTiles([rootTile.southwestChild]).then(function() {
+                expect(mockTerrain.requestTileGeometry.calls.count()).toBe(1);
+                expect(mockTerrain.requestTileGeometry.calls.argsFor(0)[0]).toBe(0);
+                expect(mockTerrain.requestTileGeometry.calls.argsFor(0)[1]).toBe(0);
+                expect(mockTerrain.requestTileGeometry.calls.argsFor(0)[2]).toBe(0);
+            });
         });
 
-        it('does nothing when attempting to upsample a failed root tile', function() {
-            makeTerrainFailed(rootTile);
-            GlobeSurfaceTile.processStateMachine(rootTile, frameState, terrainProvider, imageryLayerCollection);
-            expect(rootTile.state).toBe(QuadtreeTileLoadState.FAILED);
-            expect(rootTile.data.terrainState).toBe(TerrainState.FAILED);
+        it('does nothing when a root tile is unavailable', function() {
+            mockTerrain
+                .willBeUnavailable(rootTile);
+
+            return processTiles([rootTile]).then(function() {
+                expect(rootTile.state).toBe(QuadtreeTileLoadState.FAILED);
+                expect(rootTile.data.terrainState).toBe(TerrainState.FAILED);
+            });
+        });
+
+        it('does nothing when a root tile fails to load', function() {
+            mockTerrain
+                .requestTileGeometryWillFail(rootTile);
+
+            return processTiles([rootTile]).then(function() {
+                expect(rootTile.state).toBe(QuadtreeTileLoadState.FAILED);
+                expect(rootTile.data.terrainState).toBe(TerrainState.FAILED);
+            });
         });
 
         it('upsamples failed tiles from parent TerrainData', function() {
-            makeTerrainReceived(rootTile);
-            spyOn(terrainProvider, 'getTileDataAvailable').and.returnValue(false);
-            var sw = rootTile.southwestChild;
-            GlobeSurfaceTile.processStateMachine(sw, frameState, terrainProvider, imageryLayerCollection);
-            expect(rootTile.data.terrainData.upsample).toHaveBeenCalledWith(tilingScheme, rootTile.x, rootTile.y, rootTile.level, sw.x, sw.y, sw.level);
+            mockTerrain
+                .requestTileGeometryWillSucceed(rootTile)
+                .willBeUnavailable(rootTile.southwestChild)
+                .upsampleWillSucceed(rootTile.southwestChild);
+
+            return processTiles([rootTile, rootTile.southwestChild]).then(function() {
+                expect(rootTile.data.terrainState).toBe(TerrainState.RECEIVED);
+                expect(rootTile.southwestChild.data.terrainState).toBe(TerrainState.RECEIVED);
+                expect(rootTile.data.terrainData.wasCreatedByUpsampling()).toBe(false);
+                expect(rootTile.southwestChild.data.terrainData.wasCreatedByUpsampling()).toBe(true);
+            });
         });
 
         it('loads available tiles', function() {
-            var sw = rootTile.southwestChild;
-            terrainProvider.availability.addAvailableTileRange(sw.level, sw.x, sw.y, sw.x, sw.y);
-            spyOn(terrainProvider, 'requestTileGeometry');
-            GlobeSurfaceTile.processStateMachine(sw, frameState, terrainProvider, imageryLayerCollection);
-            expect(terrainProvider.requestTileGeometry.calls.count()).toBe(1);
-            expect(terrainProvider.requestTileGeometry.calls.argsFor(0)[0]).toBe(0);
-            expect(terrainProvider.requestTileGeometry.calls.argsFor(0)[1]).toBe(1);
-            expect(terrainProvider.requestTileGeometry.calls.argsFor(0)[2]).toBe(1);
+            mockTerrain
+                .willBeAvailable(rootTile.southwestChild)
+                .requestTileGeometryWillSucceed(rootTile.southwestChild);
+
+            spyOn(mockTerrain, 'requestTileGeometry').and.callThrough();
+
+            return processTiles([rootTile.southwestChild]).then(function() {
+                expect(mockTerrain.requestTileGeometry.calls.count()).toBe(1);
+                expect(mockTerrain.requestTileGeometry.calls.argsFor(0)[0]).toBe(0);
+                expect(mockTerrain.requestTileGeometry.calls.argsFor(0)[1]).toBe(1);
+                expect(mockTerrain.requestTileGeometry.calls.argsFor(0)[2]).toBe(1);
+            });
         });
 
         it('loads BVH nodes instead when the tile\'s bounding volume is unreliable', function() {
-            var sw = rootTile.southwestChild;
-            makeTerrainUnloaded(rootTile);
-            makeTerrainUnloaded(sw);
+            mockTerrain
+                .requestTileGeometryWillSucceed(rootTile)
+                .willHaveNearestBvhLevel(0, rootTile.southwestChild);
 
-            // Indicate that the SW tile's bounding volume comes from the root.
-            sw.data.boundingVolumeSourceTile = rootTile;
+            return processTiles([rootTile.southwestChild]).then(function() {
+                // Indicate that the SW tile's bounding volume comes from the root.
+                rootTile.southwestChild.data.boundingVolumeSourceTile = rootTile;
 
-            // Indicate that level 0 has BVH data for the SW tile.
-            spyOn(terrainProvider, 'getNearestBvhLevel').and.returnValue(0);
-            spyOn(terrainProvider, 'requestTileGeometry');
+                // Monitor calls to requestTileGeometry - we should only see one for the root tile now.
+                spyOn(mockTerrain, 'requestTileGeometry').and.callThrough();
 
-            GlobeSurfaceTile.processStateMachine(sw, frameState, terrainProvider, imageryLayerCollection);
-
-            // Expect that the rootTile is loaded, not the SW tile.
-            expect(terrainProvider.getNearestBvhLevel).toHaveBeenCalledWith(sw.x, sw.y, sw.level);
-            expect(terrainProvider.requestTileGeometry.calls.count()).toBe(1);
-            expect(terrainProvider.requestTileGeometry.calls.argsFor(0)[0]).toBe(0);
-            expect(terrainProvider.requestTileGeometry.calls.argsFor(0)[1]).toBe(0);
-            expect(terrainProvider.requestTileGeometry.calls.argsFor(0)[2]).toBe(0);
+                return processTiles([rootTile.southwestChild]);
+            }).then(function() {
+                expect(mockTerrain.requestTileGeometry.calls.count()).toBe(1);
+                expect(mockTerrain.requestTileGeometry.calls.argsFor(0)[0]).toBe(0);
+                expect(mockTerrain.requestTileGeometry.calls.argsFor(0)[1]).toBe(0);
+                expect(mockTerrain.requestTileGeometry.calls.argsFor(0)[2]).toBe(0);
+            });
         });
 
         it('loads this tile if the nearest BVH level is unknown', function() {
-            var sw = rootTile.southwestChild;
-            makeTerrainUnloaded(rootTile);
-            makeTerrainUnloaded(sw);
+            mockTerrain
+                .requestTileGeometryWillSucceed(rootTile)
+                .willHaveNearestBvhLevel(-1, rootTile.southwestChild);
 
-            // Indicate that the SW tile's bounding volume comes from the root.
-            sw.data.boundingVolumeSourceTile = rootTile;
+            return processTiles([rootTile.southwestChild]).then(function() {
+                // Indicate that the SW tile's bounding volume comes from the root.
+                rootTile.southwestChild.data.boundingVolumeSourceTile = rootTile;
 
-            // Indicate that no BVH data is available for the SW tile
-            spyOn(terrainProvider, 'getNearestBvhLevel').and.returnValue(-1);
-            spyOn(terrainProvider, 'requestTileGeometry');
+                // Monitor calls to requestTileGeometry - we should only see one for the southwest tile now.
+                spyOn(mockTerrain, 'requestTileGeometry').and.callThrough();
 
-            GlobeSurfaceTile.processStateMachine(sw, frameState, terrainProvider, imageryLayerCollection);
-
-            // Expect that the SW tile is loaded.
-            expect(terrainProvider.getNearestBvhLevel).toHaveBeenCalledWith(sw.x, sw.y, sw.level);
-            expect(terrainProvider.requestTileGeometry.calls.count()).toBe(1);
-            expect(terrainProvider.requestTileGeometry.calls.argsFor(0)[0]).toBe(0);
-            expect(terrainProvider.requestTileGeometry.calls.argsFor(0)[1]).toBe(1);
-            expect(terrainProvider.requestTileGeometry.calls.argsFor(0)[2]).toBe(1);
+                return processTiles([rootTile.southwestChild]);
+            }).then(function() {
+                expect(mockTerrain.requestTileGeometry.calls.count()).toBe(1);
+                expect(mockTerrain.requestTileGeometry.calls.argsFor(0)[0]).toBe(0);
+                expect(mockTerrain.requestTileGeometry.calls.argsFor(0)[1]).toBe(1);
+                expect(mockTerrain.requestTileGeometry.calls.argsFor(0)[2]).toBe(1);
+            });
         });
 
         it('loads this tile if the terrain provider does not implement getNearestBvhLevel', function() {
-            var sw = rootTile.southwestChild;
-            makeTerrainUnloaded(rootTile);
-            makeTerrainUnloaded(sw);
+            mockTerrain.getNearestBvhLevel = undefined;
 
-            // Indicate that the SW tile's bounding volume comes from the root.
-            sw.data.boundingVolumeSourceTile = rootTile;
+            mockTerrain
+                .requestTileGeometryWillSucceed(rootTile);
 
-            // Indicate that no BVH data is available for the SW tile
-            terrainProvider.getNearestBvhLevel = undefined;
-            spyOn(terrainProvider, 'requestTileGeometry');
+            return processTiles([rootTile.southwestChild]).then(function() {
+                // Indicate that the SW tile's bounding volume comes from the root.
+                rootTile.southwestChild.data.boundingVolumeSourceTile = rootTile;
 
-            GlobeSurfaceTile.processStateMachine(sw, frameState, terrainProvider, imageryLayerCollection);
+                // Monitor calls to requestTileGeometry - we should only see one for the southwest tile now.
+                spyOn(mockTerrain, 'requestTileGeometry').and.callThrough();
 
-            // Expect that the SW tile is loaded.
-            expect(terrainProvider.requestTileGeometry.calls.count()).toBe(1);
-            expect(terrainProvider.requestTileGeometry.calls.argsFor(0)[0]).toBe(0);
-            expect(terrainProvider.requestTileGeometry.calls.argsFor(0)[1]).toBe(1);
-            expect(terrainProvider.requestTileGeometry.calls.argsFor(0)[2]).toBe(1);
+                return processTiles([rootTile.southwestChild]);
+            }).then(function() {
+                expect(mockTerrain.requestTileGeometry.calls.count()).toBe(1);
+                expect(mockTerrain.requestTileGeometry.calls.argsFor(0)[0]).toBe(0);
+                expect(mockTerrain.requestTileGeometry.calls.argsFor(0)[1]).toBe(1);
+                expect(mockTerrain.requestTileGeometry.calls.argsFor(0)[2]).toBe(1);
+            });
         });
 
         it('loads only terrain (not imagery) when loading BVH nodes', function() {
-            var sw = rootTile.southwestChild;
-            makeTerrainUnloaded(rootTile);
-            makeTerrainUnloaded(sw);
+            var mockImagery = new MockImageryProvider();
+            imageryLayerCollection.addImageryProvider(mockImagery);
 
-            // Indicate that the SW tile's bounding volume comes from the root.
-            sw.data.boundingVolumeSourceTile = rootTile;
+            mockImagery
+                .requestImageWillSucceed(rootTile)
 
-            // Indicate that level 0 has BVH data for the SW tile.
-            spyOn(terrainProvider, 'getNearestBvhLevel').and.returnValue(0);
-            spyOn(terrainProvider, 'requestTileGeometry');
+            mockTerrain
+                .requestTileGeometryWillSucceed(rootTile)
+                .willHaveNearestBvhLevel(0, rootTile.southwestChild);
 
-            var _createTileImagerySkeletons = jasmine.createSpy('_createTileImagerySkeletons');
-            sw.data.imagery.push({
-                loadingImagery : {
-                    state : ImageryState.PLACEHOLDER,
-                    imageryLayer : {
-                        imageryProvider : {
-                            ready : true
-                        },
-                        _createTileImagerySkeletons : _createTileImagerySkeletons
-                    }
-                },
-                freeResources: function() {}
-            });
+            return processTiles([rootTile.southwestChild]).then(function() {
+                // Indicate that the SW tile's bounding volume comes from the root.
+                rootTile.southwestChild.data.boundingVolumeSourceTile = rootTile;
 
-            GlobeSurfaceTile.processStateMachine(sw, frameState, terrainProvider, imageryLayerCollection);
+                // Monitor calls to requestTileGeometry and requestImage.
+                // We should see a terrain request but not an imagery request.
+                spyOn(mockImagery, 'requestImage').and.callThrough();
+                spyOn(mockTerrain, 'requestTileGeometry').and.callThrough();
 
-            // Expect that the rootTile is loaded, not the SW tile.
-            expect(terrainProvider.getNearestBvhLevel).toHaveBeenCalledWith(sw.x, sw.y, sw.level);
-            expect(terrainProvider.requestTileGeometry.calls.count()).toBe(1);
-            expect(terrainProvider.requestTileGeometry.calls.argsFor(0)[0]).toBe(0);
-            expect(terrainProvider.requestTileGeometry.calls.argsFor(0)[1]).toBe(0);
-            expect(terrainProvider.requestTileGeometry.calls.argsFor(0)[2]).toBe(0);
-
-            // Expect that _createTileImagerySkeletons was _not_ called
-            expect(_createTileImagerySkeletons).not.toHaveBeenCalled();
-        });
-
-        /*it('entirely upsampled tile is marked as such', function() {
-            var childTile = rootTile.children[0];
-
-            return pollToPromise(function() {
-                GlobeSurfaceTile.processStateMachine(rootTile, frameState, realTerrainProvider, imageryLayerCollection);
-                GlobeSurfaceTile.processStateMachine(childTile, frameState, alwaysFailTerrainProvider, imageryLayerCollection);
-                RequestScheduler.update();
-                return rootTile.state >= QuadtreeTileLoadState.DONE &&
-                       childTile.state >= QuadtreeTileLoadState.DONE;
+                return processTiles([rootTile.southwestChild]);
             }).then(function() {
-                expect(rootTile.state).toBe(QuadtreeTileLoadState.DONE);
-                expect(childTile.upsampledFromParent).toBe(true);
+                expect(mockImagery.requestImage.calls.count()).toBe(0);
+                expect(mockTerrain.requestTileGeometry.calls.count()).toBe(1);
+                expect(mockTerrain.requestTileGeometry.calls.argsFor(0)[0]).toBe(0);
+                expect(mockTerrain.requestTileGeometry.calls.argsFor(0)[1]).toBe(0);
+                expect(mockTerrain.requestTileGeometry.calls.argsFor(0)[2]).toBe(0);
             });
         });
 
-        it('uses shared water mask texture for tiles that are entirely water', function() {
-            var allWaterTerrainProvider = {
-                requestTileGeometry : function(x, y, level) {
-                    var real = realTerrainProvider.requestTileGeometry(x, y, level);
-                    if (!defined(real)) {
-                        return real;
-                    }
+        it('marks an upsampled tile as such', function() {
+            mockTerrain
+                .willBeAvailable(rootTile)
+                .requestTileGeometryWillSucceed(rootTile)
+                .createMeshWillSucceed(rootTile)
+                .willBeUnavailable(rootTile.southwestChild)
+                .upsampleWillSucceed(rootTile.southwestChild)
+                .createMeshWillSucceed(rootTile.southwestChild);
 
-                    return when(real, function(terrainData) {
-                        terrainData._waterMask = new Uint8Array([255]);
-                        return terrainData;
-                    });
-                },
-                tilingScheme : realTerrainProvider.tilingScheme,
-                hasWaterMask : function() {
-                    return realTerrainProvider.hasWaterMask();
-                },
-                getTileDataAvailable : function(x, y, level) {
-                    return undefined;
-                }
+            var mockImagery = new MockImageryProvider();
+            imageryLayerCollection.addImageryProvider(mockImagery);
+
+            mockImagery
+                .requestImageWillSucceed(rootTile)
+                .requestImageWillFail(rootTile.southwestChild);
+
+            return processTiles([rootTile, rootTile.southwestChild]).then(function() {
+                expect(rootTile.state).toBe(QuadtreeTileLoadState.DONE);
+                expect(rootTile.upsampledFromParent).toBe(false);
+                expect(rootTile.southwestChild.state).toBe(QuadtreeTileLoadState.DONE);
+                expect(rootTile.southwestChild.upsampledFromParent).toBe(true);
+            });
+        });
+
+        it('does not mark a tile as upsampled if it has fresh imagery', function() {
+            mockTerrain
+                .willBeAvailable(rootTile)
+                .requestTileGeometryWillSucceed(rootTile)
+                .createMeshWillSucceed(rootTile)
+                .willBeUnavailable(rootTile.southwestChild)
+                .upsampleWillSucceed(rootTile.southwestChild)
+                .createMeshWillSucceed(rootTile.southwestChild);
+
+            var mockImagery = new MockImageryProvider();
+            imageryLayerCollection.addImageryProvider(mockImagery);
+
+            mockImagery
+                .requestImageWillSucceed(rootTile)
+                .requestImageWillSucceed(rootTile.southwestChild);
+
+            return processTiles([rootTile, rootTile.southwestChild]).then(function() {
+                expect(rootTile.state).toBe(QuadtreeTileLoadState.DONE);
+                expect(rootTile.upsampledFromParent).toBe(false);
+                expect(rootTile.southwestChild.state).toBe(QuadtreeTileLoadState.DONE);
+                expect(rootTile.southwestChild.upsampledFromParent).toBe(false);
+            });
+        });
+
+        it('does not mark a tile as upsampled if it has fresh terrain', function() {
+            mockTerrain
+                .willBeAvailable(rootTile)
+                .requestTileGeometryWillSucceed(rootTile)
+                .createMeshWillSucceed(rootTile)
+                .willBeAvailable(rootTile.southwestChild)
+                .requestTileGeometryWillSucceed(rootTile.southwestChild)
+                .createMeshWillSucceed(rootTile.southwestChild);
+
+            var mockImagery = new MockImageryProvider();
+            imageryLayerCollection.addImageryProvider(mockImagery);
+
+            mockImagery
+                .requestImageWillSucceed(rootTile)
+                .requestImageWillFail(rootTile.southwestChild);
+
+            return processTiles([rootTile, rootTile.southwestChild]).then(function() {
+                expect(rootTile.state).toBe(QuadtreeTileLoadState.DONE);
+                expect(rootTile.upsampledFromParent).toBe(false);
+                expect(rootTile.southwestChild.state).toBe(QuadtreeTileLoadState.DONE);
+                expect(rootTile.southwestChild.upsampledFromParent).toBe(false);
+            });
+        });
+    });
+
+    describe('water mask', function() {
+        var scene;
+
+        beforeAll(function() {
+            scene = createScene();
+        });
+
+        afterAll(function() {
+            scene.destroyForSpecs();
+        });
+
+        it('is created from one-byte water mask data, if it exists', function() {
+            var tile = new QuadtreeTile({
+                level: 0,
+                x: 0,
+                y: 0,
+                tilingScheme: new GeographicTilingScheme()
+            });
+
+            var terrainProvider = {
+                hasWaterMask: true
             };
 
-            var childTile = rootTile.children[0];
+            makeTerrainReceived(tile);
+            tile.data.terrainData.waterMask = new Uint8Array(1);
+            tile.data.terrainData.waterMask[0] = 1;
+            GlobeSurfaceTile.processStateMachine(tile, scene.frameState, terrainProvider, new ImageryLayerCollection());
 
-            return pollToPromise(function() {
-                if (rootTile.state !== QuadtreeTileLoadState.DONE) {
-                    GlobeSurfaceTile.processStateMachine(rootTile, frameState, allWaterTerrainProvider, imageryLayerCollection);
-                    return false;
-                }
-                GlobeSurfaceTile.processStateMachine(childTile, frameState, allWaterTerrainProvider, imageryLayerCollection);
-                return childTile.state === QuadtreeTileLoadState.DONE;
-            }).then(function() {
-                expect(childTile.data.waterMaskTexture).toBeDefined();
-                expect(childTile.data.waterMaskTexture).toBe(rootTile.data.waterMaskTexture);
-            });
+            expect(tile.data.waterMaskTexture).toBeDefined();
         });
 
         it('uses undefined water mask texture for tiles that are entirely land', function() {
-            var allLandTerrainProvider = {
-                requestTileGeometry : function(x, y, level) {
-                    var real = realTerrainProvider.requestTileGeometry(x, y, level);
-                    if (!defined(real)) {
-                        return real;
-                    }
+            var tile = new QuadtreeTile({
+                level: 0,
+                x: 0,
+                y: 0,
+                tilingScheme: new GeographicTilingScheme()
+            });
 
-                    return when(real, function(terrainData) {
-                        terrainData._waterMask = new Uint8Array([0]);
-                        return terrainData;
-                    });
-                },
-                tilingScheme : realTerrainProvider.tilingScheme,
-                hasWaterMask : function() {
-                    return realTerrainProvider.hasWaterMask();
-                },
-                getTileDataAvailable : function(x, y, level) {
-                    return undefined;
-                }
+            var terrainProvider = {
+                hasWaterMask: true
             };
 
-            var childTile = rootTile.children[0];
+            makeTerrainReceived(tile);
+            tile.data.terrainData.waterMask = new Uint8Array(1);
+            tile.data.terrainData.waterMask[0] = 0;
+            GlobeSurfaceTile.processStateMachine(tile, scene.frameState, terrainProvider, new ImageryLayerCollection());
 
-            return pollToPromise(function() {
-                if (rootTile.state !== QuadtreeTileLoadState.DONE) {
-                    GlobeSurfaceTile.processStateMachine(rootTile, frameState, allLandTerrainProvider, imageryLayerCollection);
-                    return false;
-                }
-                GlobeSurfaceTile.processStateMachine(childTile, frameState, allLandTerrainProvider, imageryLayerCollection);
-                return childTile.state === QuadtreeTileLoadState.DONE;
-            }).then(function() {
-                expect(childTile.data.waterMaskTexture).toBeUndefined();
-            });
+            expect(tile.data.waterMaskTexture).toBeUndefined();
         });
 
-        it('loads parent imagery tile even for root terrain tiles', function() {
+        it('uses shared water mask texture for tiles that are entirely water', function() {
             var tile = new QuadtreeTile({
-                tilingScheme : new GeographicTilingScheme(),
-                level : 0,
-                x : 1,
-                y : 0
+                level: 0,
+                x: 0,
+                y: 0,
+                tilingScheme: new GeographicTilingScheme()
             });
 
-            var imageryLayerCollection = new ImageryLayerCollection();
+            var terrainProvider = {
+                hasWaterMask: true
+            };
 
-            GlobeSurfaceTile.processStateMachine(tile, frameState, alwaysDeferTerrainProvider, imageryLayerCollection);
+            makeTerrainReceived(tile);
+            tile.data.terrainData.waterMask = new Uint8Array(1);
+            tile.data.terrainData.waterMask[0] = 1;
+            GlobeSurfaceTile.processStateMachine(tile, scene.frameState, terrainProvider, new ImageryLayerCollection());
 
-            var layer = new ImageryLayer({
-                requestImage : function() {
-                    return when.reject();
-                }
+            var sw = tile.southwestChild;
+            makeTerrainReceived(sw);
+            sw.data.terrainData.waterMask = new Uint8Array(1);
+            sw.data.terrainData.waterMask[0] = 1;
+            GlobeSurfaceTile.processStateMachine(sw, scene.frameState, terrainProvider, new ImageryLayerCollection());
+
+            expect(tile.data.waterMaskTexture).toBeDefined();
+            expect(tile.data.waterMaskTexture).toBe(sw.data.waterMaskTexture);
+        });
+
+        it('is created from multi-byte water mask data, if it exists', function() {
+            var tile = new QuadtreeTile({
+                level: 0,
+                x: 0,
+                y: 0,
+                tilingScheme: new GeographicTilingScheme()
             });
-            var imagery = new Imagery(layer, 0, 0, 1, Rectangle.MAX_VALUE);
-            tile.data.imagery.push(new TileImagery(imagery, new Cartesian4()));
 
-            expect(imagery.parent.state).toBe(ImageryState.UNLOADED);
+            var terrainProvider = {
+                hasWaterMask: true
+            };
 
-            return pollToPromise(function() {
-                GlobeSurfaceTile.processStateMachine(tile, frameState, alwaysDeferTerrainProvider, imageryLayerCollection);
-                return imagery.parent.state !== ImageryState.UNLOADED;
+            makeTerrainReceived(tile);
+            tile.data.terrainData.waterMask = new Uint8Array(4);
+            tile.data.terrainData.waterMask[0] = 1;
+            tile.data.terrainData.waterMask[1] = 1;
+            tile.data.terrainData.waterMask[2] = 0;
+            tile.data.terrainData.waterMask[3] = 0;
+            GlobeSurfaceTile.processStateMachine(tile, scene.frameState, terrainProvider, new ImageryLayerCollection());
+
+            expect(tile.data.waterMaskTexture).toBeDefined();
+        });
+
+        it('is created by upsampling if data is not available', function() {
+            var tile = new QuadtreeTile({
+                level: 0,
+                x: 0,
+                y: 0,
+                tilingScheme: new GeographicTilingScheme()
             });
-        });*/
-    });
+
+            var terrainProvider = {
+                hasWaterMask: true
+            };
+
+            makeTerrainReceived(tile);
+            tile.data.terrainData.waterMask = new Uint8Array(4);
+            tile.data.terrainData.waterMask[0] = 1;
+            tile.data.terrainData.waterMask[1] = 1;
+            tile.data.terrainData.waterMask[2] = 0;
+            tile.data.terrainData.waterMask[3] = 0;
+
+            var sw = tile.southwestChild;
+            makeTerrainReceived(sw);
+
+            GlobeSurfaceTile.processStateMachine(tile, scene.frameState, terrainProvider, new ImageryLayerCollection());
+
+            // Parent doesn't have a water mask texture yet, so neither will the child
+            expect(sw.data.waterMaskTexture).not.toBeDefined();
+
+            GlobeSurfaceTile.processStateMachine(tile, scene.frameState, terrainProvider, new ImageryLayerCollection());
+            GlobeSurfaceTile.processStateMachine(sw, scene.frameState, terrainProvider, new ImageryLayerCollection());
+
+            // But once the parent's water mask texture is created, the child will upsample from it
+            expect(sw.data.waterMaskTexture).toBeDefined();
+        });
+    }, 'WebGL');
 
     describe('getBoundingVolumeHierarchy', function() {
         it('gets the BVH from the TerrainData if available', function() {
@@ -468,7 +680,6 @@ defineSuite([
             var imageryLayerCollection = new ImageryLayerCollection();
 
             makeLoading(tile);
-            tile.data.boundingVolumeSourceTile = tile;
 
             return pollToPromise(function() {
                 if (!terrainProvider.ready) {
@@ -549,8 +760,8 @@ defineSuite([
 
             tile.data.imagery.push({
                 loadingImagery : {
-                    state : undefined,
-                },
+                    state : undefined
+                }
             });
 
             Object.keys(ImageryState).forEach(function(state) {
