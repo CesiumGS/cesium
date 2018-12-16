@@ -1437,8 +1437,9 @@ define([
     }
 
     function getLastSelectionDepth(stencilCommand) {
+        // Isolate the selection depth from the stencil reference.
         var reference = stencilCommand.renderState.stencilTest.reference;
-        return (reference & ~StencilConstants.CESIUM_3D_TILE_MASK) >>> StencilConstants.CESIUM_3D_TILE_BIT_SHIFT;
+        return (reference & StencilConstants.SKIP_LOD_MASK) >>> StencilConstants.SKIP_LOD_BIT_SHIFT;
     }
 
     function getTranslucentRenderState(renderState) {

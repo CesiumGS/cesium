@@ -9,6 +9,10 @@ define([
     'use strict';
 
     /**
+     * The most significant bit is used to identify whether the pixel is 3D Tiles.
+     * The next three bits store selection depth for the skip LODs optimization.
+     * The last four bits are for increment/decrement shadow volume operations for classification.
+     *
      * @private
      */
     var StencilConstants = {
@@ -33,7 +37,7 @@ define([
                 zFail : StencilOperation.KEEP,
                 zPass : StencilOperation.REPLACE
             },
-            reference : ~0,
+            reference : StencilConstants.CESIUM_3D_TILE_MASK,
             mask : StencilConstants.CESIUM_3D_TILE_MASK
         };
     };

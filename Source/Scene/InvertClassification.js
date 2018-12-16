@@ -16,6 +16,7 @@ define([
         '../Renderer/TextureWrap',
         '../Shaders/PostProcessStages/PassThrough',
         './BlendingState',
+        './StencilConstants',
         './StencilFunction',
         './StencilOperation'
     ], function(
@@ -36,6 +37,7 @@ define([
         TextureWrap,
         PassThrough,
         BlendingState,
+        StencilConstants,
         StencilFunction,
         StencilOperation) {
     'use strict';
@@ -96,12 +98,6 @@ define([
         return context.depthTexture && context.fragmentDepth;
     };
 
-    // The stencil mask only uses the least significant 4 bits.
-    // This is so 3D Tiles with the skip LOD optimization, which uses the most significant 4 bits,
-    // can be classified.
-    var stencilMask = 0x0F;
-    var stencilReference = 0;
-
     var rsUnclassified = {
         depthMask : false,
         stencilTest : {
@@ -113,9 +109,10 @@ define([
                 zPass : StencilOperation.KEEP
             },
             backFunction : StencilFunction.NEVER,
-            reference : stencilReference,
-            mask : stencilMask
+            reference : 0,
+            mask : StencilConstants.CLASSIFICATION_MASK
         },
+        stencilMask : StencilConstants.CLASSIFICATION_MASK,
         blending : BlendingState.ALPHA_BLEND
     };
 
@@ -130,9 +127,10 @@ define([
                 zPass : StencilOperation.KEEP
             },
             backFunction : StencilFunction.NEVER,
-            reference : stencilReference,
-            mask : stencilMask
+            reference : 0,
+            mask : StencilConstants.CLASSIFICATION_MASK
         },
+        stencilMask : StencilConstants.CLASSIFICATION_MASK,
         blending : BlendingState.ALPHA_BLEND
     };
 

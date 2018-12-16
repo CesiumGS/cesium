@@ -739,13 +739,18 @@ define([
             attributes : attributes
         });
 
-        pointCloud._opaqueRenderState = RenderState.fromCache({
+        var opaqueRenderState = {
             depthTest : {
                 enabled : true
-            },
-            stencilTest : StencilConstants.setCesium3DTileBit(),
-            stencilMask : StencilConstants.CESIUM_3D_TILE_MASK
-        });
+            }
+        };
+
+        if (pointCloud._opaquePass === Pass.CESIUM_3D_TILE) {
+            opaqueRenderState.stencilTest = StencilConstants.setCesium3DTileBit();
+            opaqueRenderState.stencilMask = StencilConstants.CESIUM_3D_TILE_MASK;
+        }
+
+        pointCloud._opaqueRenderState = RenderState.fromCache(opaqueRenderState);
 
         pointCloud._translucentRenderState = RenderState.fromCache({
             depthTest : {

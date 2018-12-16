@@ -2214,16 +2214,11 @@ define([
                 executeCommand(commands[j], scene, context, passState);
             }
 
-            // Draw classification marked for both terrain and 3D Tiles classification
-            us.updatePass(Pass.CLASSIFICATION);
-            commands = frustumCommands.commands[Pass.CLASSIFICATION];
-            length = frustumCommands.indices[Pass.CLASSIFICATION];
-            for (j = 0; j < length; ++j) {
-                executeCommand(commands[j], scene, context, passState);
-            }
-
             if (clearGlobeDepth) {
                 clearDepth.execute(context, passState);
+                if (useDepthPlane) {
+                    depthPlane.execute(context, passState);
+                }
             }
 
             if (!environmentState.useInvertClassification || picking) {
@@ -2241,14 +2236,6 @@ define([
                 us.updatePass(Pass.CESIUM_3D_TILE_CLASSIFICATION);
                 commands = frustumCommands.commands[Pass.CESIUM_3D_TILE_CLASSIFICATION];
                 length = frustumCommands.indices[Pass.CESIUM_3D_TILE_CLASSIFICATION];
-                for (j = 0; j < length; ++j) {
-                    executeCommand(commands[j], scene, context, passState);
-                }
-
-                // Draw classification marked for both terrain and 3D Tiles classification
-                us.updatePass(Pass.CLASSIFICATION);
-                commands = frustumCommands.commands[Pass.CLASSIFICATION];
-                length = frustumCommands.indices[Pass.CLASSIFICATION];
                 for (j = 0; j < length; ++j) {
                     executeCommand(commands[j], scene, context, passState);
                 }
@@ -2327,22 +2314,10 @@ define([
                 for (j = 0; j < length; ++j) {
                     executeCommand(commands[j], scene, context, passState);
                 }
-
-                // Draw style over classification marked for both terrain and 3D Tiles classification
-                us.updatePass(Pass.CLASSIFICATION);
-                commands = frustumCommands.commands[Pass.CLASSIFICATION];
-                length = frustumCommands.indices[Pass.CLASSIFICATION];
-                for (j = 0; j < length; ++j) {
-                    executeCommand(commands[j], scene, context, passState);
-                }
             }
 
             if (length > 0 && context.stencilBuffer) {
                 clearStencil.execute(context, passState);
-            }
-
-            if (clearGlobeDepth && useDepthPlane) {
-                depthPlane.execute(context, passState);
             }
 
             us.updatePass(Pass.OPAQUE);
