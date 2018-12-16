@@ -264,6 +264,10 @@ define([
         this.sampler = defined(options.sampler) ? options.sampler : new Sampler();
     }
 
+    Texture.create = function(options) {
+        return new Texture(options);
+    };
+
     /**
      * Creates a texture, and copies a subimage of the framebuffer to it.  When called without arguments,
      * the texture is the same width and height as the framebuffer and contains its contents.

@@ -581,7 +581,7 @@ define([
         var data = context.cache.tile_waterMaskData;
 
         if (!defined(data)) {
-            var allWaterTexture = new Texture({
+            var allWaterTexture = Texture.create({
                 context : context,
                 pixelFormat : PixelFormat.LUMINANCE,
                 pixelDatatype : PixelDatatype.UNSIGNED_BYTE,
@@ -631,7 +631,7 @@ define([
             }
         } else {
             var textureSize = Math.sqrt(waterMaskLength);
-            texture = new Texture({
+            texture = Texture.create({
                 context : context,
                 pixelFormat : PixelFormat.LUMINANCE,
                 pixelDatatype : PixelDatatype.UNSIGNED_BYTE,
@@ -658,7 +658,7 @@ define([
 
         // Find the nearest ancestor with loaded terrain.
         var sourceTile = tile.parent;
-        while (defined(sourceTile) && !defined(sourceTile.data.terrainData) || sourceTile.data.terrainData.wasCreatedByUpsampling()) {
+        while (defined(sourceTile) && (!defined(sourceTile.data) || !defined(sourceTile.data.terrainData) || sourceTile.data.terrainData.wasCreatedByUpsampling())) {
             sourceTile = sourceTile.parent;
         }
 

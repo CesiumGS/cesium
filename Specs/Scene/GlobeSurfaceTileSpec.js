@@ -3,6 +3,7 @@ defineSuite([
         'Core/Cartesian3',
         'Core/Cartesian4',
         'Core/CesiumTerrainProvider',
+        'Core/clone',
         'Core/createWorldTerrain',
         'Core/defined',
         'Core/Ellipsoid',
@@ -15,6 +16,7 @@ defineSuite([
         'Core/TerrainMesh',
         'Core/TileAvailability',
         'Renderer/Buffer',
+        'Renderer/Texture',
         'Scene/Imagery',
         'Scene/ImageryLayer',
         'Scene/ImageryLayerCollection',
@@ -33,6 +35,7 @@ defineSuite([
         Cartesian3,
         Cartesian4,
         CesiumTerrainProvider,
+        clone,
         createWorldTerrain,
         defined,
         Ellipsoid,
@@ -45,6 +48,7 @@ defineSuite([
         TerrainMesh,
         TileAvailability,
         Buffer,
+        Texture,
         Imagery,
         ImageryLayer,
         ImageryLayerCollection,
@@ -60,6 +64,27 @@ defineSuite([
         MockTerrainProvider) {
     'use strict';
 
+    var tilingScheme;
+    var rootTiles;
+    var rootTile;
+    var imageryLayerCollection;
+    var mockTerrain;
+
+    beforeEach(function() {
+        tilingScheme = new GeographicTilingScheme();
+        rootTiles = QuadtreeTile.createLevelZeroTiles(tilingScheme);
+        rootTile = rootTiles[0];
+        imageryLayerCollection = new ImageryLayerCollection();
+
+        mockTerrain = new MockTerrainProvider();
+    });
+
+    afterEach(function() {
+        for (var i = 0; i < rootTiles.length; ++i) {
+            rootTiles[i].freeResources();
+        }
+    });
+
     describe('processStateMachine', function() {
         var frameState = {
             context: {
@@ -67,39 +92,8 @@ defineSuite([
                 _gl: {}
             }
         };
-        var terrainProvider;
-
-        var tilingScheme;
-        var rootTiles;
-        var rootTile;
-        var imageryLayerCollection;
-        var mockTerrain;
 
         beforeEach(function() {
-            tilingScheme = new GeographicTilingScheme();
-            rootTiles = QuadtreeTile.createLevelZeroTiles(tilingScheme);
-            rootTile = rootTiles[0];
-            imageryLayerCollection = new ImageryLayerCollection();
-
-            terrainProvider = {
-                requestTileGeometry : function(x, y, level) {
-                    return undefined;
-                },
-                tilingScheme : tilingScheme,
-                availability : new TileAvailability(tilingScheme, 10),
-                hasWaterMask : function() {
-                    return true;
-                },
-                getTileDataAvailable : function(x, y, level) {
-                    return undefined;
-                },
-                getNearestBvhLevel : function(x, y, level) {
-                    return -1;
-                }
-            };
-
-            mockTerrain = new MockTerrainProvider();
-
             // Skip the WebGL bits
             spyOn(GlobeSurfaceTile, '_createVertexArrayForMesh').and.callFake(function() {
                 var vertexArray = jasmine.createSpyObj('VertexArray', ['destroy']);
@@ -114,12 +108,12 @@ defineSuite([
             });
 
             spyOn(ImageryLayer.prototype, '_finalizeReprojectTexture');
-        });
 
-        afterEach(function() {
-            for (var i = 0; i < rootTiles.length; ++i) {
-                rootTiles[i].freeResources();
-            }
+            spyOn(Texture, 'create').and.callFake(function(options) {
+                var result = clone(options);
+                result.destroy = function() {};
+                return result;
+            });
         });
 
         it('starts in the START state', function() {
@@ -346,7 +340,7 @@ defineSuite([
             imageryLayerCollection.addImageryProvider(mockImagery);
 
             mockImagery
-                .requestImageWillSucceed(rootTile)
+                .requestImageWillSucceed(rootTile);
 
             mockTerrain
                 .requestTileGeometryWillSucceed(rootTile)
@@ -442,143 +436,62 @@ defineSuite([
                 expect(rootTile.southwestChild.upsampledFromParent).toBe(false);
             });
         });
-    });
 
-    describe('water mask', function() {
-        var scene;
+        it('creates water mask texture from one-byte water mask data, if it exists', function() {
+            mockTerrain
+                .willBeAvailable(rootTile)
+                .requestTileGeometryWillSucceed(rootTile)
+                .willHaveWaterMask(false, true, rootTile);
 
-        beforeAll(function() {
-            scene = createScene();
-        });
-
-        afterAll(function() {
-            scene.destroyForSpecs();
-        });
-
-        it('is created from one-byte water mask data, if it exists', function() {
-            var tile = new QuadtreeTile({
-                level: 0,
-                x: 0,
-                y: 0,
-                tilingScheme: new GeographicTilingScheme()
+            return processTiles([rootTile]).then(function() {
+                expect(rootTile.data.waterMaskTexture).toBeDefined();
             });
-
-            var terrainProvider = {
-                hasWaterMask: true
-            };
-
-            makeTerrainReceived(tile);
-            tile.data.terrainData.waterMask = new Uint8Array(1);
-            tile.data.terrainData.waterMask[0] = 1;
-            GlobeSurfaceTile.processStateMachine(tile, scene.frameState, terrainProvider, new ImageryLayerCollection());
-
-            expect(tile.data.waterMaskTexture).toBeDefined();
         });
 
         it('uses undefined water mask texture for tiles that are entirely land', function() {
-            var tile = new QuadtreeTile({
-                level: 0,
-                x: 0,
-                y: 0,
-                tilingScheme: new GeographicTilingScheme()
+            mockTerrain
+                .requestTileGeometryWillSucceed(rootTile)
+                .willHaveWaterMask(true, false, rootTile);
+
+            return processTiles([rootTile]).then(function() {
+                expect(rootTile.data.waterMaskTexture).toBeUndefined();
             });
-
-            var terrainProvider = {
-                hasWaterMask: true
-            };
-
-            makeTerrainReceived(tile);
-            tile.data.terrainData.waterMask = new Uint8Array(1);
-            tile.data.terrainData.waterMask[0] = 0;
-            GlobeSurfaceTile.processStateMachine(tile, scene.frameState, terrainProvider, new ImageryLayerCollection());
-
-            expect(tile.data.waterMaskTexture).toBeUndefined();
         });
 
         it('uses shared water mask texture for tiles that are entirely water', function() {
-            var tile = new QuadtreeTile({
-                level: 0,
-                x: 0,
-                y: 0,
-                tilingScheme: new GeographicTilingScheme()
+            mockTerrain
+                .requestTileGeometryWillSucceed(rootTile)
+                .willHaveWaterMask(false, true, rootTile)
+                .requestTileGeometryWillSucceed(rootTile.southwestChild)
+                .willHaveWaterMask(false, true, rootTile.southwestChild);
+
+            return processTiles([rootTile, rootTile.southwestChild]).then(function() {
+                expect(rootTile.data.waterMaskTexture).toBe(rootTile.southwestChild.data.waterMaskTexture);
             });
-
-            var terrainProvider = {
-                hasWaterMask: true
-            };
-
-            makeTerrainReceived(tile);
-            tile.data.terrainData.waterMask = new Uint8Array(1);
-            tile.data.terrainData.waterMask[0] = 1;
-            GlobeSurfaceTile.processStateMachine(tile, scene.frameState, terrainProvider, new ImageryLayerCollection());
-
-            var sw = tile.southwestChild;
-            makeTerrainReceived(sw);
-            sw.data.terrainData.waterMask = new Uint8Array(1);
-            sw.data.terrainData.waterMask[0] = 1;
-            GlobeSurfaceTile.processStateMachine(sw, scene.frameState, terrainProvider, new ImageryLayerCollection());
-
-            expect(tile.data.waterMaskTexture).toBeDefined();
-            expect(tile.data.waterMaskTexture).toBe(sw.data.waterMaskTexture);
         });
 
-        it('is created from multi-byte water mask data, if it exists', function() {
-            var tile = new QuadtreeTile({
-                level: 0,
-                x: 0,
-                y: 0,
-                tilingScheme: new GeographicTilingScheme()
+        it('creates water mask texture from multi-byte water mask data, if it exists', function() {
+            mockTerrain
+                .requestTileGeometryWillSucceed(rootTile)
+                .willHaveWaterMask(true, true, rootTile);
+
+            return processTiles([rootTile]).then(function() {
+                expect(rootTile.data.waterMaskTexture).toBeDefined();
             });
-
-            var terrainProvider = {
-                hasWaterMask: true
-            };
-
-            makeTerrainReceived(tile);
-            tile.data.terrainData.waterMask = new Uint8Array(4);
-            tile.data.terrainData.waterMask[0] = 1;
-            tile.data.terrainData.waterMask[1] = 1;
-            tile.data.terrainData.waterMask[2] = 0;
-            tile.data.terrainData.waterMask[3] = 0;
-            GlobeSurfaceTile.processStateMachine(tile, scene.frameState, terrainProvider, new ImageryLayerCollection());
-
-            expect(tile.data.waterMaskTexture).toBeDefined();
         });
 
-        it('is created by upsampling if data is not available', function() {
-            var tile = new QuadtreeTile({
-                level: 0,
-                x: 0,
-                y: 0,
-                tilingScheme: new GeographicTilingScheme()
+        it('upsamples water mask if data is not available', function() {
+            mockTerrain
+                .requestTileGeometryWillSucceed(rootTile)
+                .willHaveWaterMask(false, true, rootTile)
+                .requestTileGeometryWillSucceed(rootTile.southwestChild);
+
+            return processTiles([rootTile, rootTile.southwestChild]).then(function() {
+                expect(rootTile.southwestChild.data.waterMaskTexture).toBeDefined();
+                expect(rootTile.southwestChild.data.waterMaskTranslationAndScale).toEqual(new Cartesian4(0.0, 0.0, 0.5, 0.5));
             });
-
-            var terrainProvider = {
-                hasWaterMask: true
-            };
-
-            makeTerrainReceived(tile);
-            tile.data.terrainData.waterMask = new Uint8Array(4);
-            tile.data.terrainData.waterMask[0] = 1;
-            tile.data.terrainData.waterMask[1] = 1;
-            tile.data.terrainData.waterMask[2] = 0;
-            tile.data.terrainData.waterMask[3] = 0;
-
-            var sw = tile.southwestChild;
-            makeTerrainReceived(sw);
-
-            GlobeSurfaceTile.processStateMachine(tile, scene.frameState, terrainProvider, new ImageryLayerCollection());
-
-            // Parent doesn't have a water mask texture yet, so neither will the child
-            expect(sw.data.waterMaskTexture).not.toBeDefined();
-
-            GlobeSurfaceTile.processStateMachine(tile, scene.frameState, terrainProvider, new ImageryLayerCollection());
-            GlobeSurfaceTile.processStateMachine(sw, scene.frameState, terrainProvider, new ImageryLayerCollection());
-
-            // But once the parent's water mask texture is created, the child will upsample from it
-            expect(sw.data.waterMaskTexture).toBeDefined();
         });
-    }, 'WebGL');
+    });
 
     describe('getBoundingVolumeHierarchy', function() {
         it('gets the BVH from the TerrainData if available', function() {
@@ -782,14 +695,6 @@ defineSuite([
         tile.state = QuadtreeTileLoadState.LOADING;
     }
 
-    function makeTerrainFailed(tile) {
-        makeLoading(tile);
-        tile.data.terrainState = TerrainState.FAILED;
-        tile.data.terrainData = undefined;
-        tile.data.vertexArray = undefined;
-        tile.data.mesh = undefined;
-    }
-
     function makeTerrainUnloaded(tile) {
         makeLoading(tile);
         tile.data.terrainState = TerrainState.UNLOADED;
@@ -803,16 +708,6 @@ defineSuite([
         tile.data.terrainState = TerrainState.RECEIVED;
         tile.data.terrainData = jasmine.createSpyObj('TerrainData', ['createMesh', 'upsample', 'wasCreatedByUpsampling']);
         tile.data.terrainData.wasCreatedByUpsampling.and.returnValue(false);
-
-        tile.data.mesh = undefined;
-        tile.data.vertexArray = undefined;
-    }
-
-    function makeTerrainUpsampled(tile) {
-        makeLoading(tile);
-        tile.data.terrainState = TerrainState.RECEIVED;
-        tile.data.terrainData = jasmine.createSpyObj('TerrainData', ['createMesh', 'upsample', 'wasCreatedByUpsampling']);
-        tile.data.terrainData.wasCreatedByUpsampling.and.returnValue(true);
 
         tile.data.mesh = undefined;
         tile.data.vertexArray = undefined;

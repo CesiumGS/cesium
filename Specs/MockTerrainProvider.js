@@ -1,12 +1,12 @@
 define([
-    'Core/defaultValue',
+    'Core/defined',
     'Core/GeographicTilingScheme',
     'Core/RuntimeError',
     'Core/TerrainProvider',
     './createTileKey',
     './runLater'
 ], function(
-    defaultValue,
+    defined,
     GeographicTilingScheme,
     RuntimeError,
     TerrainProvider,
@@ -19,9 +19,11 @@ define([
         this.heightmapWidth = 65;
         this.levelZeroMaximumGeometricError = TerrainProvider.getEstimatedLevelZeroGeometricErrorForAHeightmap(this.tilingScheme.ellipsoid, this.heightmapWidth, this.tilingScheme.getNumberOfXTilesAtLevel(0));
         this.ready = true;
+        this.hasWaterMask = true;
 
         this._tileDataAvailable = {};
         this._requestTileGeometryWillSucceed = {};
+        this._willHaveWaterMask = {};
         this._createMeshWillSucceed = {};
         this._upsampleWillSucceed = {};
         this._nearestBvhLevel = {};
@@ -36,7 +38,24 @@ define([
         var that = this;
         return runLater(function() {
             if (willSucceed) {
-                return createTerrainData(that, x, y, level, false);
+                var terrainData = createTerrainData(that, x, y, level, false);
+                var willHaveWaterMask = that._willHaveWaterMask[createTileKey(x, y, level)];
+                if (defined(willHaveWaterMask)) {
+                    if (willHaveWaterMask.includeLand && willHaveWaterMask.includeWater) {
+                        terrainData.waterMask = new Uint8Array(4);
+                        terrainData.waterMask[0] = 1;
+                        terrainData.waterMask[1] = 1;
+                        terrainData.waterMask[2] = 0;
+                        terrainData.waterMask[3] = 0;
+                    } else if (willHaveWaterMask.includeLand) {
+                        terrainData.waterMask = new Uint8Array(1);
+                        terrainData.waterMask[0] = 0;
+                    } else if (willHaveWaterMask.includeWater) {
+                        terrainData.waterMask = new Uint8Array(1);
+                        terrainData.waterMask[0] = 1;
+                    }
+                }
+                return terrainData;
             }
             throw new RuntimeError('requestTileGeometry failed as requested.');
         });
@@ -66,6 +85,14 @@ define([
 
     MockTerrainProvider.prototype.requestTileGeometryWillDefer = function(xOrTile, y, level) {
         this._requestTileGeometryWillSucceed[createTileKey(xOrTile, y, level)] = undefined;
+        return this;
+    };
+
+    MockTerrainProvider.prototype.willHaveWaterMask = function(includeLand, includeWater, xOrTile, y, level) {
+        this._willHaveWaterMask[createTileKey(xOrTile, y, level)] = includeLand || includeWater ? {
+            includeLand: includeLand,
+            includeWater: includeWater
+        } : undefined;
         return this;
     };
 
