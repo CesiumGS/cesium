@@ -534,33 +534,24 @@ defineSuite([
         });
 
         it('returns undefined if the parent BVH does not extend to this tile', function() {
-            var tile = new QuadtreeTile({
-                level: 0,
-                x: 0,
-                y: 0,
-                tilingScheme: new GeographicTilingScheme()
-            });
-            makeTerrainReceived(tile);
-            tile.data.terrainData.bvh = new Float32Array([1.0, 10.0]);
+            mockTerrain
+                .requestTileGeometryWillSucceed(rootTile)
+                .willHaveBvh(new Float32Array([1.0, 10.0]), rootTile)
+                .requestTileGeometryWillSucceed(rootTile.southwestChild);
 
-            var sw = tile.southwestChild;
-            makeLoading(sw);
-            expect(sw.data.getBoundingVolumeHierarchy(sw)).toBeUndefined();
+            return processTiles([rootTile, rootTile.southwestChild]).then(function() {
+                expect(rootTile.southwestChild.data.getBoundingVolumeHierarchy(rootTile.southwestChild)).toBeUndefined();
+            });
         });
 
         it('returns undefined if the parent does not have a BVH', function() {
-            var tile = new QuadtreeTile({
-                level: 0,
-                x: 0,
-                y: 0,
-                tilingScheme: new GeographicTilingScheme()
-            });
-            makeTerrainReceived(tile);
-            tile.data.terrainData.bvh = undefined;
+            mockTerrain
+                .requestTileGeometryWillSucceed(rootTile)
+                .requestTileGeometryWillSucceed(rootTile.southwestChild);
 
-            var sw = tile.southwestChild;
-            makeLoading(sw);
-            expect(sw.data.getBoundingVolumeHierarchy(sw)).toBeUndefined();
+            return processTiles([rootTile, rootTile.southwestChild]).then(function() {
+                expect(rootTile.southwestChild.data.getBoundingVolumeHierarchy(rootTile.southwestChild)).toBeUndefined();
+            });
         });
     });
 
