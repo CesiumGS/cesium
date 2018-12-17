@@ -22,6 +22,7 @@ Change Log
 ##### Fixes :wrench:
 * Fixed issue causing polyline to look wavy depending on the position of the camera [#7209](https://github.com/AnalyticalGraphicsInc/cesium/pull/7209)
 * Fixed translucency issues for dynamic geometry entities. [#7364](https://github.com/AnalyticalGraphicsInc/cesium/issues/7364)
+* Fixed an issue where polygons, corridors, rectangles, and ellipses on terrain would not render on some mobile devices. [#6739](https://github.com/AnalyticalGraphicsInc/cesium/issues/6739)
 
 ### 1.51 - 2018-11-01
 
