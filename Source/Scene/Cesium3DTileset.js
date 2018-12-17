@@ -187,6 +187,7 @@ define([
         this._selectedTilesToStyle = [];
         this._loadTimestamp = undefined;
         this._timeSinceLoad = 0.0;
+        this._updatedVisibilityFrame = 0;
         this._extras = undefined;
 
         this._cullWithChildrenBounds = defaultValue(options.cullWithChildrenBounds, true);
@@ -1943,6 +1944,8 @@ define([
         if (isRender) {
             tileset._cache.reset();
         }
+
+        ++tileset._updatedVisibilityFrame;
 
         var ready;
 
