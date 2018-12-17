@@ -403,6 +403,75 @@ define([
         });
     }
 
+    function encodeLowLessThan100k(value, valueName, attributes) {
+        // Encode a value like 12,345.678 to 4 uint8 values: 12 34 56 78
+        var fract = Math.abs(value);
+        var d12 = Math.floor(fract / 1000);
+        fract -= d12 * 1000; // 345.678
+        var d34 = Math.floor(fract / 10);
+        fract -= d34 * 10; // 5.678
+        var d56 = Math.floor(fract * 10);
+        fract -= d56 * 0.1; // 0.078
+        var d78 = Math.floor(fract * 1000);
+
+        if (value < 0) {
+            d12 = 255 - d12;
+        }
+
+        attributes[valueName] = new GeometryInstanceAttribute({
+            componentDatatype: ComponentDatatype.UNSIGNED_BYTE,
+            componentsPerAttribute: 4,
+            normalize: false,
+            value : [d12, d34, d56, d78]
+        });
+    }
+
+    function encodeHighLessThan100Million(value, valueName, attributes) {
+        // Encode a value like -12,345,678 to 4 uint8 values: sign+12 34 56 78
+        var fract = Math.abs(value);
+        var d12 = Math.floor(fract / 1000000);
+        fract -= d12 * 1000000; // 345678
+        var d34 = Math.floor(fract / 10000);
+        fract -= d34 * 10000; // 5678
+        var d56 = Math.floor(fract / 100);
+        fract -= d56 * 100; // 78
+        var d78 = Math.floor(fract);
+
+        if (value < 0) {
+            d12 = 255 - d12;
+        }
+
+        attributes[valueName] = new GeometryInstanceAttribute({
+            componentDatatype: ComponentDatatype.UNSIGNED_BYTE,
+            componentsPerAttribute: 4,
+            normalize: false,
+            value : [d12, d34, d56, d78]
+        });
+    }
+
+    function encodeLessThan1000k(value, valueName, attributes) {
+        // Encode a value like -123456.78 to 4 uint8 values sign+12 34 56 78
+        var fract = Math.abs(value);
+        var d12 = Math.floor(fract / 10000);
+        fract -= d12 * 10000; // 3456.78
+        var d34 = Math.floor(fract / 100);
+        fract -= d34 * 100; // 56.78
+        var d56 = Math.floor(fract);
+        fract -= d56; // 0.78
+        var d78 = Math.floor(fract / 0.001);
+
+        if (value < 0) {
+            d12 = 255 - d12;
+        }
+
+        attributes[valueName] = new GeometryInstanceAttribute({
+            componentDatatype: ComponentDatatype.UNSIGNED_BYTE,
+            componentsPerAttribute: 4,
+            normalize: false,
+            value : [d12, d34, d56, d78]
+        });
+    }
+
     var cartographicScratch = new Cartographic();
     var cornerScratch = new Cartesian3();
     var northWestScratch = new Cartesian3();
@@ -432,37 +501,22 @@ define([
         // y: y value for southWestCorner
         // z: y value for northWest
         // w: x value for southEast
-        var valuesHigh = [0, 0, 0, 0];
-        var valuesLow = [0, 0, 0, 0];
+
         var encoded = EncodedCartesian3.encode(southWestCorner.x, highLowScratch);
-        valuesHigh[0] = encoded.high;
-        valuesLow[0] = encoded.low;
+        encodeHighLessThan100Million(encoded.high, 'planes2D_HIGH_x', attributes);
+        encodeLowLessThan100k(encoded.low, 'planes2D_LOW_x', attributes);
 
         encoded = EncodedCartesian3.encode(southWestCorner.y, highLowScratch);
-        valuesHigh[1] = encoded.high;
-        valuesLow[1] = encoded.low;
+        encodeHighLessThan100Million(encoded.high, 'planes2D_HIGH_y', attributes);
+        encodeLowLessThan100k(encoded.low, 'planes2D_LOW_y', attributes);
 
         encoded = EncodedCartesian3.encode(northWest.y, highLowScratch);
-        valuesHigh[2] = encoded.high;
-        valuesLow[2] = encoded.low;
+        encodeHighLessThan100Million(encoded.high, 'planes2D_HIGH_z', attributes);
+        encodeLowLessThan100k(encoded.low, 'planes2D_LOW_z', attributes);
 
         encoded = EncodedCartesian3.encode(southEast.x, highLowScratch);
-        valuesHigh[3] = encoded.high;
-        valuesLow[3] = encoded.low;
-
-        attributes.planes2D_HIGH = new GeometryInstanceAttribute({
-            componentDatatype: ComponentDatatype.FLOAT,
-            componentsPerAttribute: 4,
-            normalize: false,
-            value : valuesHigh
-        });
-
-        attributes.planes2D_LOW = new GeometryInstanceAttribute({
-            componentDatatype: ComponentDatatype.FLOAT,
-            componentsPerAttribute: 4,
-            normalize: false,
-            value : valuesLow
-        });
+        encodeHighLessThan100Million(encoded.high, 'planes2D_HIGH_w', attributes);
+        encodeLowLessThan100k(encoded.low, 'planes2D_LOW_w', attributes);
     }
 
     var enuMatrixScratch = new Matrix4();
@@ -598,30 +652,24 @@ define([
         addTextureCoordinateRotationAttributes(attributes, textureCoordinateRotationPoints);
 
         var encoded = EncodedCartesian3.fromCartesian(corner, encodeScratch);
-        attributes.southWest_HIGH = new GeometryInstanceAttribute({
-            componentDatatype: ComponentDatatype.FLOAT,
-            componentsPerAttribute: 3,
-            normalize: false,
-            value : Cartesian3.pack(encoded.high, [0, 0, 0])
-        });
-        attributes.southWest_LOW = new GeometryInstanceAttribute({
-            componentDatatype: ComponentDatatype.FLOAT,
-            componentsPerAttribute: 3,
-            normalize: false,
-            value : Cartesian3.pack(encoded.low, [0, 0, 0])
-        });
-        attributes.eastward = new GeometryInstanceAttribute({
-            componentDatatype: ComponentDatatype.FLOAT,
-            componentsPerAttribute: 3,
-            normalize: false,
-            value : Cartesian3.pack(eastward, [0, 0, 0])
-        });
-        attributes.northward = new GeometryInstanceAttribute({
-            componentDatatype: ComponentDatatype.FLOAT,
-            componentsPerAttribute: 3,
-            normalize: false,
-            value : Cartesian3.pack(northward, [0, 0, 0])
-        });
+
+        var high = encoded.high;
+        encodeHighLessThan100Million(high.x, 'southWest_HIGH_x', attributes);
+        encodeHighLessThan100Million(high.y, 'southWest_HIGH_y', attributes);
+        encodeHighLessThan100Million(high.z, 'southWest_HIGH_z', attributes);
+
+        var low = encoded.low;
+        encodeLowLessThan100k(low.x, 'southWest_LOW_x', attributes);
+        encodeLowLessThan100k(low.y, 'southWest_LOW_y', attributes);
+        encodeLowLessThan100k(low.z, 'southWest_LOW_z', attributes);
+
+        encodeLessThan1000k(eastward.x, 'eastward_x', attributes);
+        encodeLessThan1000k(eastward.y, 'eastward_y', attributes);
+        encodeLessThan1000k(eastward.z, 'eastward_z', attributes);
+
+        encodeLessThan1000k(northward.x, 'northward_x', attributes);
+        encodeLessThan1000k(northward.y, 'northward_y', attributes);
+        encodeLessThan1000k(northward.z, 'northward_z', attributes);
 
         add2DTextureCoordinateAttributes(boundingRectangle, projection, attributes);
         return attributes;
@@ -726,15 +774,25 @@ define([
     };
 
     ShadowVolumeAppearance.hasAttributesForTextureCoordinatePlanes = function(attributes) {
-        return defined(attributes.southWest_HIGH) && defined(attributes.southWest_LOW) &&
-            defined(attributes.northward) && defined(attributes.eastward) &&
-            defined(attributes.planes2D_HIGH) && defined(attributes.planes2D_LOW) &&
+        return defined(attributes.southWest_HIGH_x) && defined(attributes.southWest_LOW_x) &&
+            defined(attributes.southWest_HIGH_y) && defined(attributes.southWest_LOW_y) &&
+            defined(attributes.southWest_HIGH_z) && defined(attributes.southWest_LOW_z) &&
+            defined(attributes.northward_x) && defined(attributes.eastward_x) &&
+            defined(attributes.northward_y) && defined(attributes.eastward_y) &&
+            defined(attributes.northward_z) && defined(attributes.eastward_z) &&
+            defined(attributes.planes2D_HIGH_x) && defined(attributes.planes2D_LOW_x) &&
+            defined(attributes.planes2D_HIGH_y) && defined(attributes.planes2D_LOW_y) &&
+            defined(attributes.planes2D_HIGH_z) && defined(attributes.planes2D_LOW_z) &&
+            defined(attributes.planes2D_HIGH_w) && defined(attributes.planes2D_LOW_w) &&
             defined(attributes.uMaxVmax) && defined(attributes.uvMinAndExtents);
     };
 
     ShadowVolumeAppearance.hasAttributesForSphericalExtents = function(attributes) {
         return defined(attributes.sphericalExtents) && defined(attributes.longitudeRotation) &&
-        defined(attributes.planes2D_HIGH) && defined(attributes.planes2D_LOW) &&
+        defined(attributes.planes2D_HIGH_x) && defined(attributes.planes2D_LOW_x) &&
+        defined(attributes.planes2D_HIGH_y) && defined(attributes.planes2D_LOW_y) &&
+        defined(attributes.planes2D_HIGH_z) && defined(attributes.planes2D_LOW_z) &&
+        defined(attributes.planes2D_HIGH_w) && defined(attributes.planes2D_LOW_w) &&
         defined(attributes.uMaxVmax) && defined(attributes.uvMinAndExtents);
     };
 
