@@ -24,6 +24,7 @@ define([
         this._tileDataAvailable = {};
         this._requestTileGeometryWillSucceed = {};
         this._willHaveWaterMask = {};
+        this._willHaveBvh = {};
         this._createMeshWillSucceed = {};
         this._upsampleWillSucceed = {};
         this._nearestBvhLevel = {};
@@ -39,6 +40,7 @@ define([
         return runLater(function() {
             if (willSucceed) {
                 var terrainData = createTerrainData(that, x, y, level, false);
+
                 var willHaveWaterMask = that._willHaveWaterMask[createTileKey(x, y, level)];
                 if (defined(willHaveWaterMask)) {
                     if (willHaveWaterMask.includeLand && willHaveWaterMask.includeWater) {
@@ -55,6 +57,12 @@ define([
                         terrainData.waterMask[0] = 1;
                     }
                 }
+
+                var willHaveBvh = that._willHaveBvh[createTileKey(x, y, level)];
+                if (defined(willHaveBvh)) {
+                    terrainData.bvh = willHaveBvh;
+                }
+
                 return terrainData;
             }
             throw new RuntimeError('requestTileGeometry failed as requested.');
@@ -93,6 +101,11 @@ define([
             includeLand: includeLand,
             includeWater: includeWater
         } : undefined;
+        return this;
+    };
+
+    MockTerrainProvider.prototype.willHaveBvh = function(bvh, xOrTile, y, level) {
+        this._willHaveBvh[createTileKey(xOrTile, y, level)] = bvh;
         return this;
     };
 

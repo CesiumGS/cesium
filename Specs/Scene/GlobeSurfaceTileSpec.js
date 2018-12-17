@@ -64,13 +64,105 @@ defineSuite([
         MockTerrainProvider) {
     'use strict';
 
+    var frameState;
     var tilingScheme;
     var rootTiles;
     var rootTile;
     var imageryLayerCollection;
     var mockTerrain;
 
+    function mockWebGL() {
+        spyOn(GlobeSurfaceTile, '_createVertexArrayForMesh').and.callFake(function() {
+            var vertexArray = jasmine.createSpyObj('VertexArray', ['destroy']);
+            return vertexArray;
+        });
+
+        spyOn(ImageryLayer.prototype, '_createTextureWebGL').and.callFake(function(context, imagery) {
+            var texture = jasmine.createSpyObj('Texture', ['destroy']);
+            texture.width = imagery.image.width;
+            texture.height = imagery.image.height;
+            return texture;
+        });
+
+        spyOn(ImageryLayer.prototype, '_finalizeReprojectTexture');
+
+        spyOn(Texture, 'create').and.callFake(function(options) {
+            var result = clone(options);
+            result.destroy = function() {};
+            return result;
+        });
+    }
+
+    // Processes the given list of tiles until all terrain and imagery states stop changing.
+    function processTiles(tiles) {
+        var deferred = when.defer();
+
+        function getState(tile) {
+            return [
+                tile.state,
+                tile.data ? tile.data.terrainState : undefined,
+                tile.data && tile.data.imagery ? tile.data.imagery.map(function(imagery) {
+                    return [
+                        imagery.readyImagery ? imagery.readyImagery.state : undefined,
+                        imagery.loadingImagery ? imagery.loadingImagery.state : undefined
+                    ];
+                }) : []
+            ];
+        }
+
+        function statesAreSame(a, b) {
+            if (a.length !== b.length) {
+                return false;
+            }
+
+            var same = true;
+            for (var i = 0; i < a.length; ++i) {
+                if (Array.isArray(a[i]) && Array.isArray(b[i])) {
+                    same = same && statesAreSame(a[i], b[i]);
+                } else if (Array.isArray(a[i]) || Array.isArray(b[i])) {
+                    same = false;
+                } else {
+                    same = same && a[i] === b[i];
+                }
+            }
+
+            return same;
+        }
+
+        function next() {
+            // Keep going until all terrain and imagery provider are ready and states are no longer changing.
+            var changed = !mockTerrain.ready;
+
+            for (var i = 0; i < imageryLayerCollection.length; ++i) {
+                changed = changed || !imageryLayerCollection.get(i).imageryProvider.ready;
+            }
+
+            tiles.forEach(function(tile) {
+                var beforeState = getState(tile);
+                GlobeSurfaceTile.processStateMachine(tile, frameState, mockTerrain, imageryLayerCollection);
+                var afterState = getState(tile);
+                changed = changed || !statesAreSame(beforeState, afterState);
+            });
+
+            if (changed) {
+                setTimeout(next, 0);
+            } else {
+                deferred.resolve();
+            }
+        }
+
+        next();
+
+        return deferred.promise;
+    }
+
     beforeEach(function() {
+        frameState = {
+            context: {
+                cache: {}
+            }
+        };
+
         tilingScheme = new GeographicTilingScheme();
         rootTiles = QuadtreeTile.createLevelZeroTiles(tilingScheme);
         rootTile = rootTiles[0];
@@ -86,34 +178,8 @@ defineSuite([
     });
 
     describe('processStateMachine', function() {
-        var frameState = {
-            context: {
-                cache: {},
-                _gl: {}
-            }
-        };
-
         beforeEach(function() {
-            // Skip the WebGL bits
-            spyOn(GlobeSurfaceTile, '_createVertexArrayForMesh').and.callFake(function() {
-                var vertexArray = jasmine.createSpyObj('VertexArray', ['destroy']);
-                return vertexArray;
-            });
-
-            spyOn(ImageryLayer.prototype, '_createTextureWebGL').and.callFake(function(context, imagery) {
-                var texture = jasmine.createSpyObj('Texture', ['destroy']);
-                texture.width = imagery.image.width;
-                texture.height = imagery.image.height;
-                return texture;
-            });
-
-            spyOn(ImageryLayer.prototype, '_finalizeReprojectTexture');
-
-            spyOn(Texture, 'create').and.callFake(function(options) {
-                var result = clone(options);
-                result.destroy = function() {};
-                return result;
-            });
+            mockWebGL();
         });
 
         it('starts in the START state', function() {
@@ -122,69 +188,6 @@ defineSuite([
                 expect(tile.state).toBe(QuadtreeTileLoadState.START);
             }
         });
-
-        // Processes the given list of tiles until all terrain and imagery states stop changing.
-        function processTiles(tiles) {
-            var deferred = when.defer();
-
-            function getState(tile) {
-                return [
-                    tile.state,
-                    tile.data ? tile.data.terrainState : undefined,
-                    tile.data && tile.data.imagery ? tile.data.imagery.map(function(imagery) {
-                        return [
-                            imagery.readyImagery ? imagery.readyImagery.state : undefined,
-                            imagery.loadingImagery ? imagery.loadingImagery.state : undefined
-                        ];
-                    }) : []
-                ];
-            }
-
-            function statesAreSame(a, b) {
-                if (a.length !== b.length) {
-                    return false;
-                }
-
-                var same = true;
-                for (var i = 0; i < a.length; ++i) {
-                    if (Array.isArray(a[i]) && Array.isArray(b[i])) {
-                        same = same && statesAreSame(a[i], b[i]);
-                    } else if (Array.isArray(a[i]) || Array.isArray(b[i])) {
-                        same = false;
-                    } else {
-                        same = same && a[i] === b[i];
-                    }
-                }
-
-                return same;
-            }
-
-            function next() {
-                // Keep going until all terrain and imagery provider are ready and states are no longer changing.
-                var changed = !mockTerrain.ready;
-
-                for (var i = 0; i < imageryLayerCollection.length; ++i) {
-                    changed = changed || !imageryLayerCollection.get(i).imageryProvider.ready;
-                }
-
-                tiles.forEach(function(tile) {
-                    var beforeState = getState(tile);
-                    GlobeSurfaceTile.processStateMachine(tile, frameState, mockTerrain, imageryLayerCollection);
-                    var afterState = getState(tile);
-                    changed = changed || !statesAreSame(beforeState, afterState);
-                });
-
-                if (changed) {
-                    setTimeout(next, 0);
-                } else {
-                    deferred.resolve();
-                }
-            }
-
-            next();
-
-            return deferred.promise;
-        }
 
         it('transitions to the LOADING state immediately if this tile is available', function() {
             mockTerrain
@@ -494,45 +497,40 @@ defineSuite([
     });
 
     describe('getBoundingVolumeHierarchy', function() {
-        it('gets the BVH from the TerrainData if available', function() {
-            var tile = new QuadtreeTile({
-                level: 0,
-                x: 0,
-                y: 0,
-                tilingScheme: new GeographicTilingScheme()
-            });
-            makeTerrainReceived(tile);
+        beforeEach(function() {
+            mockWebGL();
+        });
 
-            var bvh = [1.0, 2.0];
-            tile.data.terrainData.bvh = bvh;
-            expect(tile.data.getBoundingVolumeHierarchy(tile)).toBe(bvh);
+        it('gets the BVH from the TerrainData if available', function() {
+            mockTerrain
+                .requestTileGeometryWillSucceed(rootTile)
+                .willHaveBvh(new Float32Array([1.0, 2.0]), rootTile);
+
+            return processTiles([rootTile]).then(function() {
+                expect(rootTile.data.getBoundingVolumeHierarchy(rootTile)).toEqual([1.0, 2.0]);
+            });
         });
 
         it('gets the BVH from the parent tile if available', function() {
-            var tile = new QuadtreeTile({
-                level: 0,
-                x: 0,
-                y: 0,
-                tilingScheme: new GeographicTilingScheme()
+            var sw = rootTile.southwestChild;
+            var nw = rootTile.northwestChild;
+            var se = rootTile.southeastChild;
+            var ne = rootTile.northeastChild;
+
+            mockTerrain
+                .requestTileGeometryWillSucceed(rootTile)
+                .willHaveBvh(new Float32Array([1.0, 10.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0]), rootTile)
+                .requestTileGeometryWillSucceed(sw)
+                .requestTileGeometryWillFail(nw)
+                .requestTileGeometryWillSucceed(ne)
+                .requestTileGeometryWillFail(se);
+
+            return processTiles([rootTile, sw, nw, se, ne]).then(function() {
+                expect(sw.data.getBoundingVolumeHierarchy(sw)).toEqual([3.0, 4.0]);
+                expect(se.data.getBoundingVolumeHierarchy(se)).toEqual([5.0, 6.0]);
+                expect(nw.data.getBoundingVolumeHierarchy(nw)).toEqual([7.0, 8.0]);
+                expect(ne.data.getBoundingVolumeHierarchy(ne)).toEqual([9.0, 10.0]);
             });
-            makeTerrainReceived(tile);
-            tile.data.terrainData.bvh = new Float32Array([1.0, 10.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0]);
-
-            var sw = tile.southwestChild;
-            makeLoading(sw);
-            expect(sw.data.getBoundingVolumeHierarchy(sw)).toEqual([3.0, 4.0]);
-
-            var se = tile.southeastChild;
-            makeLoading(se);
-            expect(se.data.getBoundingVolumeHierarchy(se)).toEqual([5.0, 6.0]);
-
-            var nw = tile.northwestChild;
-            makeLoading(nw);
-            expect(nw.data.getBoundingVolumeHierarchy(nw)).toEqual([7.0, 8.0]);
-
-            var ne = tile.northeastChild;
-            makeLoading(ne);
-            expect(ne.data.getBoundingVolumeHierarchy(ne)).toEqual([9.0, 10.0]);
         });
 
         it('returns undefined if the parent BVH does not extend to this tile', function() {
