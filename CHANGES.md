@@ -1,13 +1,19 @@
 Change Log
 ==========
 
+
+### 1.53 - 2019-01-02
+
+##### Fixes :wrench:
+* Fixed 3D Tiles visibility checking when running multiple passes within the same frame. [#7289](https://github.com/AnalyticalGraphicsInc/cesium/pull/7289)
+
 ### 1.52 - 2018-12-14
 
 ##### Breaking Changes :mega:
 * `czm_materialInput.slope` is now an angle in radians between 0 and pi/2 (flat to vertical), rather than a projected length 1 to 0 (flat to vertical).
 
 ##### Additions :tada:
-* 'czm_materialInput.aspect' was added as an angle in radians between 0 and 2pi (east, north, west to south).
+* `czm_materialInput.aspect` was added as an angle in radians between 0 and 2pi (east, north, west to south).
 
 ### 1.52 - 2018-12-03
 
