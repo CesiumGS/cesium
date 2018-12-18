@@ -4,7 +4,6 @@ defineSuite([
         'Core/Cartesian4',
         'Core/clone',
         'Core/createWorldTerrain',
-        'Core/defaultValue',
         'Core/Ellipsoid',
         'Core/GeographicTilingScheme',
         'Core/Ray',
@@ -17,14 +16,14 @@ defineSuite([
         'Specs/createScene',
         'ThirdParty/when',
         '../MockImageryProvider',
-        '../MockTerrainProvider'
+        '../MockTerrainProvider',
+        '../TerrainTileProcessor'
     ], function(
         GlobeSurfaceTile,
         Cartesian3,
         Cartesian4,
         clone,
         createWorldTerrain,
-        defaultValue,
         Ellipsoid,
         GeographicTilingScheme,
         Ray,
@@ -37,7 +36,8 @@ defineSuite([
         createScene,
         when,
         MockImageryProvider,
-        MockTerrainProvider) {
+        MockTerrainProvider,
+        TerrainTileProcessor) {
     'use strict';
 
     var frameState;
@@ -46,6 +46,7 @@ defineSuite([
     var rootTile;
     var imageryLayerCollection;
     var mockTerrain;
+    var processor;
 
     function mockWebGL() {
         spyOn(GlobeSurfaceTile, '_createVertexArrayForMesh').and.callFake(function() {
@@ -69,83 +70,6 @@ defineSuite([
         });
     }
 
-    // Processes the given list of tiles until all terrain and imagery states stop changing.
-    function processTiles(tiles, maxIterations, overrideFrameState, overrideTerrainProvider, overrideImageryLayerCollection) {
-        overrideFrameState = defaultValue(overrideFrameState, frameState);
-        overrideTerrainProvider = defaultValue(overrideTerrainProvider, mockTerrain);
-        overrideImageryLayerCollection = defaultValue(overrideImageryLayerCollection, imageryLayerCollection);
-
-        var deferred = when.defer();
-
-        function getState(tile) {
-            return [
-                tile.state,
-                tile.data ? tile.data.terrainState : undefined,
-                tile.data && tile.data.imagery ? tile.data.imagery.map(function(imagery) {
-                    return [
-                        imagery.readyImagery ? imagery.readyImagery.state : undefined,
-                        imagery.loadingImagery ? imagery.loadingImagery.state : undefined
-                    ];
-                }) : []
-            ];
-        }
-
-        function statesAreSame(a, b) {
-            if (a.length !== b.length) {
-                return false;
-            }
-
-            var same = true;
-            for (var i = 0; i < a.length; ++i) {
-                if (Array.isArray(a[i]) && Array.isArray(b[i])) {
-                    same = same && statesAreSame(a[i], b[i]);
-                } else if (Array.isArray(a[i]) || Array.isArray(b[i])) {
-                    same = false;
-                } else {
-                    same = same && a[i] === b[i];
-                }
-            }
-
-            return same;
-        }
-
-        var iterations = 0;
-
-        function next() {
-            ++iterations;
-
-            // Keep going until all terrain and imagery provider are ready and states are no longer changing.
-            var changed = !overrideTerrainProvider.ready;
-
-            for (var i = 0; i < overrideImageryLayerCollection.length; ++i) {
-                changed = changed || !overrideImageryLayerCollection.get(i).imageryProvider.ready;
-            }
-
-            if (overrideTerrainProvider.ready) {
-                tiles.forEach(function(tile) {
-                    var beforeState = getState(tile);
-                    GlobeSurfaceTile.processStateMachine(tile, overrideFrameState, overrideTerrainProvider, overrideImageryLayerCollection);
-                    var afterState = getState(tile);
-                    changed =
-                        changed ||
-                        tile.data.terrainState === TerrainState.RECEIVING ||
-                        tile.data.terrainState === TerrainState.TRANSFORMING ||
-                        !statesAreSame(beforeState, afterState);
-                });
-            }
-
-            if (!changed || iterations >= maxIterations) {
-                deferred.resolve(iterations);
-            } else {
-                setTimeout(next, 0);
-            }
-        }
-
-        next();
-
-        return deferred.promise;
-    }
-
     beforeEach(function() {
         frameState = {
             context: {
@@ -159,6 +83,8 @@ defineSuite([
         imageryLayerCollection = new ImageryLayerCollection();
 
         mockTerrain = new MockTerrainProvider();
+
+        processor = new TerrainTileProcessor(frameState, mockTerrain, imageryLayerCollection);
     });
 
     afterEach(function() {
@@ -183,7 +109,7 @@ defineSuite([
             mockTerrain
                 .willBeAvailable(rootTile.southwestChild);
 
-            return processTiles([rootTile.southwestChild]).then(function() {
+            return processor.process([rootTile.southwestChild]).then(function() {
                 expect(rootTile.southwestChild.state).toBe(QuadtreeTileLoadState.LOADING);
                 expect(rootTile.southwestChild.data.terrainState).toBe(TerrainState.UNLOADED);
             });
@@ -193,7 +119,7 @@ defineSuite([
             mockTerrain
                 .willBeUnavailable(rootTile.southwestChild);
 
-            return processTiles([rootTile.southwestChild]).then(function() {
+            return processor.process([rootTile.southwestChild]).then(function() {
                 expect(rootTile.southwestChild.state).toBe(QuadtreeTileLoadState.LOADING);
                 expect(rootTile.southwestChild.data.terrainState).toBe(TerrainState.FAILED);
             });
@@ -207,7 +133,7 @@ defineSuite([
 
             spyOn(mockTerrain, 'requestTileGeometry').and.callThrough();
 
-            return processTiles([rootTile.southwestChild]).then(function() {
+            return processor.process([rootTile.southwestChild]).then(function() {
                 expect(mockTerrain.requestTileGeometry.calls.count()).toBe(1);
                 expect(mockTerrain.requestTileGeometry.calls.argsFor(0)[0]).toBe(0);
                 expect(mockTerrain.requestTileGeometry.calls.argsFor(0)[1]).toBe(0);
@@ -219,7 +145,7 @@ defineSuite([
             mockTerrain
                 .willBeUnavailable(rootTile);
 
-            return processTiles([rootTile]).then(function() {
+            return processor.process([rootTile]).then(function() {
                 expect(rootTile.state).toBe(QuadtreeTileLoadState.FAILED);
                 expect(rootTile.data.terrainState).toBe(TerrainState.FAILED);
             });
@@ -229,7 +155,7 @@ defineSuite([
             mockTerrain
                 .requestTileGeometryWillFail(rootTile);
 
-            return processTiles([rootTile]).then(function() {
+            return processor.process([rootTile]).then(function() {
                 expect(rootTile.state).toBe(QuadtreeTileLoadState.FAILED);
                 expect(rootTile.data.terrainState).toBe(TerrainState.FAILED);
             });
@@ -241,7 +167,7 @@ defineSuite([
                 .willBeUnavailable(rootTile.southwestChild)
                 .upsampleWillSucceed(rootTile.southwestChild);
 
-            return processTiles([rootTile, rootTile.southwestChild]).then(function() {
+            return processor.process([rootTile, rootTile.southwestChild]).then(function() {
                 expect(rootTile.data.terrainState).toBe(TerrainState.RECEIVED);
                 expect(rootTile.southwestChild.data.terrainState).toBe(TerrainState.RECEIVED);
                 expect(rootTile.data.terrainData.wasCreatedByUpsampling()).toBe(false);
@@ -256,7 +182,7 @@ defineSuite([
 
             spyOn(mockTerrain, 'requestTileGeometry').and.callThrough();
 
-            return processTiles([rootTile.southwestChild]).then(function() {
+            return processor.process([rootTile.southwestChild]).then(function() {
                 expect(mockTerrain.requestTileGeometry.calls.count()).toBe(1);
                 expect(mockTerrain.requestTileGeometry.calls.argsFor(0)[0]).toBe(0);
                 expect(mockTerrain.requestTileGeometry.calls.argsFor(0)[1]).toBe(1);
@@ -269,14 +195,14 @@ defineSuite([
                 .requestTileGeometryWillSucceed(rootTile)
                 .willHaveNearestBvhLevel(0, rootTile.southwestChild);
 
-            return processTiles([rootTile.southwestChild]).then(function() {
+            return processor.process([rootTile.southwestChild]).then(function() {
                 // Indicate that the SW tile's bounding volume comes from the root.
                 rootTile.southwestChild.data.boundingVolumeSourceTile = rootTile;
 
                 // Monitor calls to requestTileGeometry - we should only see one for the root tile now.
                 spyOn(mockTerrain, 'requestTileGeometry').and.callThrough();
 
-                return processTiles([rootTile.southwestChild]);
+                return processor.process([rootTile.southwestChild]);
             }).then(function() {
                 expect(mockTerrain.requestTileGeometry.calls.count()).toBe(1);
                 expect(mockTerrain.requestTileGeometry.calls.argsFor(0)[0]).toBe(0);
@@ -290,14 +216,14 @@ defineSuite([
                 .requestTileGeometryWillSucceed(rootTile)
                 .willHaveNearestBvhLevel(-1, rootTile.southwestChild);
 
-            return processTiles([rootTile.southwestChild]).then(function() {
+            return processor.process([rootTile.southwestChild]).then(function() {
                 // Indicate that the SW tile's bounding volume comes from the root.
                 rootTile.southwestChild.data.boundingVolumeSourceTile = rootTile;
 
                 // Monitor calls to requestTileGeometry - we should only see one for the southwest tile now.
                 spyOn(mockTerrain, 'requestTileGeometry').and.callThrough();
 
-                return processTiles([rootTile.southwestChild]);
+                return processor.process([rootTile.southwestChild]);
             }).then(function() {
                 expect(mockTerrain.requestTileGeometry.calls.count()).toBe(1);
                 expect(mockTerrain.requestTileGeometry.calls.argsFor(0)[0]).toBe(0);
@@ -312,14 +238,14 @@ defineSuite([
             mockTerrain
                 .requestTileGeometryWillSucceed(rootTile);
 
-            return processTiles([rootTile.southwestChild]).then(function() {
+            return processor.process([rootTile.southwestChild]).then(function() {
                 // Indicate that the SW tile's bounding volume comes from the root.
                 rootTile.southwestChild.data.boundingVolumeSourceTile = rootTile;
 
                 // Monitor calls to requestTileGeometry - we should only see one for the southwest tile now.
                 spyOn(mockTerrain, 'requestTileGeometry').and.callThrough();
 
-                return processTiles([rootTile.southwestChild]);
+                return processor.process([rootTile.southwestChild]);
             }).then(function() {
                 expect(mockTerrain.requestTileGeometry.calls.count()).toBe(1);
                 expect(mockTerrain.requestTileGeometry.calls.argsFor(0)[0]).toBe(0);
@@ -339,7 +265,7 @@ defineSuite([
                 .requestTileGeometryWillSucceed(rootTile)
                 .willHaveNearestBvhLevel(0, rootTile.southwestChild);
 
-            return processTiles([rootTile.southwestChild]).then(function() {
+            return processor.process([rootTile.southwestChild]).then(function() {
                 // Indicate that the SW tile's bounding volume comes from the root.
                 rootTile.southwestChild.data.boundingVolumeSourceTile = rootTile;
 
@@ -348,7 +274,7 @@ defineSuite([
                 spyOn(mockImagery, 'requestImage').and.callThrough();
                 spyOn(mockTerrain, 'requestTileGeometry').and.callThrough();
 
-                return processTiles([rootTile.southwestChild]);
+                return processor.process([rootTile.southwestChild]);
             }).then(function() {
                 expect(mockImagery.requestImage.calls.count()).toBe(0);
                 expect(mockTerrain.requestTileGeometry.calls.count()).toBe(1);
@@ -374,7 +300,7 @@ defineSuite([
                 .requestImageWillSucceed(rootTile)
                 .requestImageWillFail(rootTile.southwestChild);
 
-            return processTiles([rootTile, rootTile.southwestChild]).then(function() {
+            return processor.process([rootTile, rootTile.southwestChild]).then(function() {
                 expect(rootTile.state).toBe(QuadtreeTileLoadState.DONE);
                 expect(rootTile.upsampledFromParent).toBe(false);
                 expect(rootTile.southwestChild.state).toBe(QuadtreeTileLoadState.DONE);
@@ -398,7 +324,7 @@ defineSuite([
                 .requestImageWillSucceed(rootTile)
                 .requestImageWillSucceed(rootTile.southwestChild);
 
-            return processTiles([rootTile, rootTile.southwestChild]).then(function() {
+            return processor.process([rootTile, rootTile.southwestChild]).then(function() {
                 expect(rootTile.state).toBe(QuadtreeTileLoadState.DONE);
                 expect(rootTile.upsampledFromParent).toBe(false);
                 expect(rootTile.southwestChild.state).toBe(QuadtreeTileLoadState.DONE);
@@ -422,7 +348,7 @@ defineSuite([
                 .requestImageWillSucceed(rootTile)
                 .requestImageWillFail(rootTile.southwestChild);
 
-            return processTiles([rootTile, rootTile.southwestChild]).then(function() {
+            return processor.process([rootTile, rootTile.southwestChild]).then(function() {
                 expect(rootTile.state).toBe(QuadtreeTileLoadState.DONE);
                 expect(rootTile.upsampledFromParent).toBe(false);
                 expect(rootTile.southwestChild.state).toBe(QuadtreeTileLoadState.DONE);
@@ -436,7 +362,7 @@ defineSuite([
                 .requestTileGeometryWillSucceed(rootTile)
                 .willHaveWaterMask(false, true, rootTile);
 
-            return processTiles([rootTile]).then(function() {
+            return processor.process([rootTile]).then(function() {
                 expect(rootTile.data.waterMaskTexture).toBeDefined();
             });
         });
@@ -446,7 +372,7 @@ defineSuite([
                 .requestTileGeometryWillSucceed(rootTile)
                 .willHaveWaterMask(true, false, rootTile);
 
-            return processTiles([rootTile]).then(function() {
+            return processor.process([rootTile]).then(function() {
                 expect(rootTile.data.waterMaskTexture).toBeUndefined();
             });
         });
@@ -458,7 +384,7 @@ defineSuite([
                 .requestTileGeometryWillSucceed(rootTile.southwestChild)
                 .willHaveWaterMask(false, true, rootTile.southwestChild);
 
-            return processTiles([rootTile, rootTile.southwestChild]).then(function() {
+            return processor.process([rootTile, rootTile.southwestChild]).then(function() {
                 expect(rootTile.data.waterMaskTexture).toBe(rootTile.southwestChild.data.waterMaskTexture);
             });
         });
@@ -468,7 +394,7 @@ defineSuite([
                 .requestTileGeometryWillSucceed(rootTile)
                 .willHaveWaterMask(true, true, rootTile);
 
-            return processTiles([rootTile]).then(function() {
+            return processor.process([rootTile]).then(function() {
                 expect(rootTile.data.waterMaskTexture).toBeDefined();
             });
         });
@@ -479,7 +405,7 @@ defineSuite([
                 .willHaveWaterMask(false, true, rootTile)
                 .requestTileGeometryWillSucceed(rootTile.southwestChild);
 
-            return processTiles([rootTile, rootTile.southwestChild]).then(function() {
+            return processor.process([rootTile, rootTile.southwestChild]).then(function() {
                 expect(rootTile.southwestChild.data.waterMaskTexture).toBeDefined();
                 expect(rootTile.southwestChild.data.waterMaskTranslationAndScale).toEqual(new Cartesian4(0.0, 0.0, 0.5, 0.5));
             });
@@ -496,7 +422,7 @@ defineSuite([
                 .requestTileGeometryWillSucceed(rootTile)
                 .willHaveBvh(new Float32Array([1.0, 2.0]), rootTile);
 
-            return processTiles([rootTile]).then(function() {
+            return processor.process([rootTile]).then(function() {
                 expect(rootTile.data.getBoundingVolumeHierarchy(rootTile)).toEqual([1.0, 2.0]);
             });
         });
@@ -515,7 +441,7 @@ defineSuite([
                 .requestTileGeometryWillSucceed(ne)
                 .requestTileGeometryWillFail(se);
 
-            return processTiles([rootTile, sw, nw, se, ne]).then(function() {
+            return processor.process([rootTile, sw, nw, se, ne]).then(function() {
                 expect(sw.data.getBoundingVolumeHierarchy(sw)).toEqual([3.0, 4.0]);
                 expect(se.data.getBoundingVolumeHierarchy(se)).toEqual([5.0, 6.0]);
                 expect(nw.data.getBoundingVolumeHierarchy(nw)).toEqual([7.0, 8.0]);
@@ -529,7 +455,7 @@ defineSuite([
                 .willHaveBvh(new Float32Array([1.0, 10.0]), rootTile)
                 .requestTileGeometryWillSucceed(rootTile.southwestChild);
 
-            return processTiles([rootTile, rootTile.southwestChild]).then(function() {
+            return processor.process([rootTile, rootTile.southwestChild]).then(function() {
                 expect(rootTile.southwestChild.data.getBoundingVolumeHierarchy(rootTile.southwestChild)).toBeUndefined();
             });
         });
@@ -539,7 +465,7 @@ defineSuite([
                 .requestTileGeometryWillSucceed(rootTile)
                 .requestTileGeometryWillSucceed(rootTile.southwestChild);
 
-            return processTiles([rootTile, rootTile.southwestChild]).then(function() {
+            return processor.process([rootTile, rootTile.southwestChild]).then(function() {
                 expect(rootTile.southwestChild.data.getBoundingVolumeHierarchy(rootTile.southwestChild)).toBeUndefined();
             });
         });
@@ -569,7 +495,10 @@ defineSuite([
                 y : 1336
             });
 
-            return processTiles([tile], undefined, scene.frameState, terrainProvider, new ImageryLayerCollection()).then(function() {
+            processor.frameState = scene.frameState;
+            processor.terrainProvider = terrainProvider;
+
+            return processor.process([tile]).then(function() {
                 var ray = new Ray(
                     new Cartesian3(-5052039.459789615, 2561172.040315167, -2936276.999965875),
                     new Cartesian3(0.5036332963145244, 0.6648033332898124, 0.5517155343926082));
@@ -594,11 +523,11 @@ defineSuite([
             mockTerrain
                 .requestTileGeometryWillSucceed(rootTile);
 
-            return processTiles([rootTile]).then(function() {
+            return processor.process([rootTile]).then(function() {
                 expect(rootTile.data.eligibleForUnloading).toBe(true);
                 mockTerrain
                     .createMeshWillSucceed(rootTile);
-                return processTiles([rootTile]);
+                return processor.process([rootTile]);
             }).then(function() {
                 expect(rootTile.data.eligibleForUnloading).toBe(true);
             });
@@ -611,7 +540,7 @@ defineSuite([
                 .requestTileGeometryWillSucceed(rootTile)
                 .requestTileGeometryWillWaitOn(deferred.promise, rootTile);
 
-            return processTiles([rootTile], 5).then(function() {
+            return processor.process([rootTile], 5).then(function() {
                 expect(rootTile.data.eligibleForUnloading).toBe(false);
                 deferred.resolve();
             });
@@ -625,7 +554,7 @@ defineSuite([
                 .createMeshWillSucceed(rootTile)
                 .createMeshWillWaitOn(deferred.promise, rootTile);
 
-            return processTiles([rootTile], 5).then(function() {
+            return processor.process([rootTile], 5).then(function() {
                 expect(rootTile.data.eligibleForUnloading).toBe(false);
                 deferred.resolve();
             });
@@ -643,7 +572,7 @@ defineSuite([
             mockTerrain
                 .requestTileGeometryWillSucceed(rootTile);
 
-            return processTiles([rootTile], 5).then(function() {
+            return processor.process([rootTile], 5).then(function() {
                 expect(rootTile.data.eligibleForUnloading).toBe(false);
                 deferred.resolve();
             });
