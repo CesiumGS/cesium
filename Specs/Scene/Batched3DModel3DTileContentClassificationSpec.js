@@ -104,7 +104,7 @@ defineSuite([
             asynchronous : false
         });
 
-        this.pass = pass;
+        this._pass = pass;
     }
 
     MockPrimitive.prototype.update = function(frameState) {
@@ -114,7 +114,7 @@ defineSuite([
 
         for (var i = startLength; i < commandList.length; ++i) {
             var command = commandList[i];
-            command.pass = this.pass;
+            command.pass = this._pass;
         }
     };
 

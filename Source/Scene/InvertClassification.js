@@ -112,7 +112,6 @@ define([
             reference : 0,
             mask : StencilConstants.CLASSIFICATION_MASK
         },
-        stencilMask : StencilConstants.CLASSIFICATION_MASK,
         blending : BlendingState.ALPHA_BLEND
     };
 
@@ -130,15 +129,19 @@ define([
             reference : 0,
             mask : StencilConstants.CLASSIFICATION_MASK
         },
-        stencilMask : StencilConstants.CLASSIFICATION_MASK,
         blending : BlendingState.ALPHA_BLEND
     };
 
+    // Set the 3D Tiles bit when rendering back into the scene's framebuffer. This is only needed if
+    // invert classification does not use the scene's depth-stencil texture, which is the case if the invert
+    // classification color is translucent.
     var rsDefault = {
         depthMask : true,
         depthTest : {
             enabled : true
         },
+        stencilTest : StencilConstants.setCesium3DTileBit(),
+        stencilMask : StencilConstants.CESIUM_3D_TILE_MASK,
         blending : BlendingState.ALPHA_BLEND
     };
 

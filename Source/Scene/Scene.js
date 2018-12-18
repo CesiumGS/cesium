@@ -46,6 +46,7 @@ define([
         '../Renderer/Framebuffer',
         '../Renderer/Pass',
         '../Renderer/PixelDatatype',
+        '../Renderer/RenderState',
         '../Renderer/ShaderProgram',
         '../Renderer/ShaderSource',
         '../Renderer/Texture',
@@ -76,6 +77,7 @@ define([
         './SceneTransitioner',
         './ScreenSpaceCameraController',
         './ShadowMap',
+        './StencilConstants',
         './SunPostProcess',
         './TweenCollection',
         './View'
@@ -127,6 +129,7 @@ define([
         Framebuffer,
         Pass,
         PixelDatatype,
+        RenderState,
         ShaderProgram,
         ShaderSource,
         Texture,
@@ -157,6 +160,7 @@ define([
         SceneTransitioner,
         ScreenSpaceCameraController,
         ShadowMap,
+        StencilConstants,
         SunPostProcess,
         TweenCollection,
         View) {
@@ -321,6 +325,12 @@ define([
         });
         this._stencilClearCommand = new ClearCommand({
             stencil : 0
+        });
+        this._classificationStencilClearCommand = new ClearCommand({
+            stencil : 0,
+            renderState : RenderState.fromCache({
+                stencilMask : StencilConstants.CLASSIFICATION_MASK
+            })
         });
 
         this._depthOnlyRenderStateCache = {};
@@ -2146,6 +2156,7 @@ define([
         var useDepthPlane = environmentState.useDepthPlane;
         var clearDepth = scene._depthClearCommand;
         var clearStencil = scene._stencilClearCommand;
+        var clearClassificationStencil = scene._classificationStencilClearCommand;
         var depthPlane = scene._depthPlane;
         var usePostProcessSelected = environmentState.usePostProcessSelected;
 
@@ -2304,7 +2315,7 @@ define([
 
                 // Clear stencil set by the classification for the next classification pass
                 if (length > 0 && context.stencilBuffer) {
-                    clearStencil.execute(context, passState);
+                    clearClassificationStencil.execute(context, passState);
                 }
 
                 // Draw style over classification.
