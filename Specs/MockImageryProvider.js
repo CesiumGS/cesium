@@ -1,5 +1,4 @@
 define([
-    'Core/defaultValue',
     'Core/GeographicTilingScheme',
     'Core/Resource',
     'Core/RuntimeError',
@@ -7,7 +6,6 @@ define([
     './createTileKey',
     './runLater'
 ], function(
-    defaultValue,
     GeographicTilingScheme,
     Resource,
     RuntimeError,
