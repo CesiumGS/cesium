@@ -723,7 +723,7 @@ define([
             fragmentShader += '#endif \n';
 
             // Environment maps were provided, use them for IBL
-            fragmentShader += '#else \n'; // defined(DIFFUSE_IBL) || defined(SPECULAR_IBL)
+            fragmentShader += '#elif defined(DIFFUSE_IBL) || defined(SPECULAR_IBL) \n';
 
             fragmentShader += '    mat3 fixedToENU = mat3(gltf_clippingPlanesMatrix[0][0], gltf_clippingPlanesMatrix[1][0], gltf_clippingPlanesMatrix[2][0], \n';
             fragmentShader += '                           gltf_clippingPlanesMatrix[0][1], gltf_clippingPlanesMatrix[1][1], gltf_clippingPlanesMatrix[2][1], \n';
@@ -740,6 +740,7 @@ define([
             fragmentShader += '#else \n';
             fragmentShader += '    vec3 diffuseIrradiance = vec3(0.0); \n';
             fragmentShader += '#endif \n';
+
             fragmentShader += '#ifdef SPECULAR_IBL \n';
             fragmentShader += '    vec2 brdfLut = texture2D(czm_brdfLut, vec2(NdotV, roughness)).rg;\n';
             fragmentShader += '#ifdef CUSTOM_SPECULAR_IBL \n';
@@ -751,6 +752,7 @@ define([
             fragmentShader += '#else \n';
             fragmentShader += '    vec3 specularIBL = vec3(0.0); \n';
             fragmentShader += '#endif \n';
+
             fragmentShader += '    color += diffuseIrradiance * diffuseColor + specularColor * specularIBL;\n';
 
             fragmentShader += '#endif \n';

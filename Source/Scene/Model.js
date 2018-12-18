@@ -2096,7 +2096,8 @@ define([
             drawFS = 'uniform vec4 czm_pickColor;\n' + drawFS;
         }
 
-        if (model._imageBasedLightingFactor.x > 0.0 || model._imageBasedLightingFactor.y > 0.0) {
+        var useIBL = model._imageBasedLightingFactor.x > 0.0 || model._imageBasedLightingFactor.y > 0.0;
+        if (useIBL) {
             drawFS = '#define USE_IBL_LIGHTING \n\n' + drawFS;
         }
 
@@ -2117,7 +2118,7 @@ define([
 
         var usesSH = defined(model._sphericalHarmonicCoefficients) || model._useDefaultSphericalHarmonics;
         var usesSM = (defined(model._specularEnvironmentMapAtlas) && model._specularEnvironmentMapAtlas.ready) || model._useDefaultSpecularMaps;
-        var addMatrix = usesSH || usesSM;
+        var addMatrix = usesSH || usesSM || useIBL;
         if (addMatrix) {
             drawFS = 'uniform mat4 gltf_clippingPlanesMatrix; \n' + drawFS;
         }
@@ -2180,7 +2181,8 @@ define([
             drawFS = 'uniform vec4 czm_pickColor;\n' + drawFS;
         }
 
-        if (model._imageBasedLightingFactor.x > 0.0 || model._imageBasedLightingFactor.y > 0.0) {
+        var useIBL = model._imageBasedLightingFactor.x > 0.0 || model._imageBasedLightingFactor.y > 0.0;
+        if (useIBL) {
             drawFS = '#define USE_IBL_LIGHTING \n\n' + drawFS;
         }
 
@@ -2201,7 +2203,7 @@ define([
 
         var usesSH = defined(model._sphericalHarmonicCoefficients) || model._useDefaultSphericalHarmonics;
         var usesSM = (defined(model._specularEnvironmentMapAtlas) && model._specularEnvironmentMapAtlas.ready) || model._useDefaultSpecularMaps;
-        var addMatrix = !addClippingPlaneCode && (usesSH || usesSM);
+        var addMatrix = !addClippingPlaneCode && (usesSH || usesSM || useIBL);
         if (addMatrix) {
             drawFS = 'uniform mat4 gltf_clippingPlanesMatrix; \n' + drawFS;
         }
