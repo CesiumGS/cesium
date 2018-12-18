@@ -32,6 +32,9 @@ define([
         TextureMinificationFilter) {
     'use strict';
 
+    /**
+     * @private
+     */
     function CubeMap(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 

@@ -1,10 +1,18 @@
 Change Log
 ==========
 
+### 1.53 - 2019-01-02
+
+##### Fixes :wrench:
+* Fixed 3D Tiles visibility checking when running multiple passes within the same frame. [#7289](https://github.com/AnalyticalGraphicsInc/cesium/pull/7289)
+
 ### 1.52 - 2018-12-03
 
 ##### Breaking Changes :mega:
 * `TerrainProviders` that implement `availability` must now also implement the `loadTileDataAvailability` method.
+
+##### Deprecated :hourglass_flowing_sand:
+* The property `ModelAnimation.speedup` has been deprecated and renamed to `ModelAnimation.multiplier`. `speedup` will be removed in version 1.54. [#7393](https://github.com/AnalyticalGraphicsInc/cesium/pull/7393)
 
 ##### Additions :tada:
 * Added functions to get the most detailed height of 3D Tiles on-screen or off-screen. [#7115](https://github.com/AnalyticalGraphicsInc/cesium/pull/7115)

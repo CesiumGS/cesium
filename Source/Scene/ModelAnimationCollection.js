@@ -2,6 +2,7 @@ define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
+        '../Core/deprecationWarning',
         '../Core/DeveloperError',
         '../Core/Event',
         '../Core/JulianDate',
@@ -13,6 +14,7 @@ define([
         defaultValue,
         defined,
         defineProperties,
+        deprecationWarning,
         DeveloperError,
         Event,
         JulianDate,
@@ -104,7 +106,7 @@ define([
      * @param {Number} [options.delay=0.0] The delay, in seconds, from <code>startTime</code> to start playing.
      * @param {JulianDate} [options.stopTime] The scene time to stop playing the animation.  When this is <code>undefined</code>, the animation is played for its full duration.
      * @param {Boolean} [options.removeOnStop=false] When <code>true</code>, the animation is removed after it stops playing.
-     * @param {Number} [options.speedup=1.0] Values greater than <code>1.0</code> increase the speed that the animation is played relative to the scene clock speed; values less than <code>1.0</code> decrease the speed.
+     * @param {Number} [options.multiplier=1.0] Values greater than <code>1.0</code> increase the speed that the animation is played relative to the scene clock speed; values less than <code>1.0</code> decrease the speed.
      * @param {Boolean} [options.reverse=false] When <code>true</code>, the animation is played in reverse.
      * @param {ModelAnimationLoop} [options.loop=ModelAnimationLoop.NONE] Determines if and how the animation is looped.
      * @returns {ModelAnimation} The animation that was added to the collection.
@@ -113,7 +115,7 @@ define([
      * @exception {DeveloperError} options.name must be a valid animation name.
      * @exception {DeveloperError} options.index must be a valid animation index.
      * @exception {DeveloperError} Either options.name or options.index must be defined.
-     * @exception {DeveloperError} options.speedup must be greater than zero.
+     * @exception {DeveloperError} options.multiplier must be greater than zero.
      *
      * @example
      * // Example 1. Add an animation by name
@@ -136,7 +138,7 @@ define([
      *   delay : 0.0,                          // Play at startTime (default)
      *   stopTime : Cesium.JulianDate.addSeconds(startTime, 4.0, new Cesium.JulianDate()),
      *   removeOnStop : false,                 // Do not remove when animation stops (default)
-     *   speedup : 2.0,                        // Play at double speed
+     *   multiplier : 2.0,                        // Play at double speed
      *   reverse : true,                       // Play in reverse
      *   loop : Cesium.ModelAnimationLoop.REPEAT      // Loop the animation
      * });
@@ -164,8 +166,14 @@ define([
         if (!defined(options.name) && !defined(options.index)) {
             throw new DeveloperError('Either options.name or options.index must be defined.');
         }
-        if (defined(options.speedup) && (options.speedup <= 0.0)) {
-            throw new DeveloperError('options.speedup must be greater than zero.');
+
+        if (defined(options.speedup)) {
+            deprecationWarning('options.speedup', 'options.speedup is deprecated and will be removed in Cesium 1.54. Use options.multiplier instead.');
+            options.multiplier = options.speedup;
+        }
+
+        if (defined(options.multiplier) && (options.multiplier <= 0.0)) {
+            throw new DeveloperError('options.multiplier must be greater than zero.');
         }
         if (defined(options.index) && (options.index >= animations.length || options.index < 0)) {
             throw new DeveloperError('options.index must be a valid animation index.');
@@ -207,17 +215,17 @@ define([
      * @param {Number} [options.delay=0.0] The delay, in seconds, from <code>startTime</code> to start playing.
      * @param {JulianDate} [options.stopTime] The scene time to stop playing the animations.  When this is <code>undefined</code>, the animations are played for its full duration.
      * @param {Boolean} [options.removeOnStop=false] When <code>true</code>, the animations are removed after they stop playing.
-     * @param {Number} [options.speedup=1.0] Values greater than <code>1.0</code> increase the speed that the animations play relative to the scene clock speed; values less than <code>1.0</code> decrease the speed.
+     * @param {Number} [options.multiplier=1.0] Values greater than <code>1.0</code> increase the speed that the animations play relative to the scene clock speed; values less than <code>1.0</code> decrease the speed.
      * @param {Boolean} [options.reverse=false] When <code>true</code>, the animations are played in reverse.
      * @param {ModelAnimationLoop} [options.loop=ModelAnimationLoop.NONE] Determines if and how the animations are looped.
      * @returns {ModelAnimation[]} An array of {@link ModelAnimation} objects, one for each animation added to the collection.  If there are no glTF animations, the array is empty.
      *
      * @exception {DeveloperError} Animations are not loaded.  Wait for the {@link Model#readyPromise} to resolve.
-     * @exception {DeveloperError} options.speedup must be greater than zero.
+     * @exception {DeveloperError} options.multiplier must be greater than zero.
      *
      * @example
      * model.activeAnimations.addAll({
-     *   speedup : 0.5,                        // Play at half-speed
+     *   multiplier : 0.5,                        // Play at half-speed
      *   loop : Cesium.ModelAnimationLoop.REPEAT      // Loop the animations
      * });
      */
@@ -229,8 +237,13 @@ define([
             throw new DeveloperError('Animations are not loaded.  Wait for Model.readyPromise to resolve.');
         }
 
-        if (defined(options.speedup) && (options.speedup <= 0.0)) {
-            throw new DeveloperError('options.speedup must be greater than zero.');
+        if (defined(options.speedup)) {
+            deprecationWarning('options.speedup', 'options.speedup is deprecated and will be removed in Cesium 1.54. Use options.multiplier instead.');
+            options.multiplier = options.speedup;
+        }
+
+        if (defined(options.multiplier) && (options.multiplier <= 0.0)) {
+            throw new DeveloperError('options.multiplier must be greater than zero.');
         }
         //>>includeEnd('debug');
 
@@ -385,7 +398,7 @@ define([
             }
 
             if (!defined(scheduledAnimation._duration)) {
-                scheduledAnimation._duration = runtimeAnimation.stopTime * (1.0 / scheduledAnimation.speedup);
+                scheduledAnimation._duration = runtimeAnimation.stopTime * (1.0 / scheduledAnimation.multiplier);
             }
 
             var startTime = scheduledAnimation._computedStartTime;
@@ -431,7 +444,7 @@ define([
                     delta = 1.0 - delta;
                 }
 
-                var localAnimationTime = delta * duration * scheduledAnimation.speedup;
+                var localAnimationTime = delta * duration * scheduledAnimation.multiplier;
                 // Clamp in case floating-point roundoff goes outside the animation's first or last keyframe
                 localAnimationTime = CesiumMath.clamp(localAnimationTime, runtimeAnimation.startTime, runtimeAnimation.stopTime);
 
