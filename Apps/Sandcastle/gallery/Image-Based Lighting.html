@@ -40,7 +40,7 @@ function startup(Cesium) {
 var viewer = new Cesium.Viewer('cesiumContainer');
 
 var environmentMapURL = '../../SampleData/EnvironmentMap/kiara_6_afternoon_2k_ibl.ktx';
-var modelURL = '../../SampleData/models/Spheres/MetalRoughSpheres.glb';
+var modelURL = '../../SampleData/models/Pawns/Pawns.glb';
 
 // This environment map was processed using Google's Filament project. To process your own:
 // 1 - Download the Filament release (https://github.com/google/filament/releases).
@@ -58,7 +58,7 @@ var L21  = new Cesium.Cartesian3(-0.042260855700641, -0.046394335094707, -0.0575
 var L22  = new Cesium.Cartesian3(-0.004953478914091, -0.000479681664876,  0.008508150106928);
 var coefficients = [L00, L1_1, L10, L11, L2_2, L2_1, L20, L21, L22];
 
-var height = 5.0;
+var height = 0.0;
 var hpr = new Cesium.HeadingPitchRoll(0.0, 0.0, 0.0);
 var origin = Cesium.Cartesian3.fromDegrees(-123.0744619, 44.0503706, height);
 var modelMatrix = Cesium.Transforms.headingPitchRollToFixedFrame(origin, hpr);
@@ -107,8 +107,8 @@ model.readyPromise.then(function(model) {
 
     subscribeParameter('luminanceAtZenith');
 
-    Sandcastle.addToggleButton('Use procedural image', true, function(checked) {
-        if (checked) {
+    Sandcastle.addToggleButton('Use procedural image', false, function(checked) {
+        if (!checked) {
             model.sphericalHarmonicCoefficients = coefficients;
             model.specularEnvironmentMaps = environmentMapURL;
         } else {
