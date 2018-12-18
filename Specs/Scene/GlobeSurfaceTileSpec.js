@@ -5,6 +5,7 @@ defineSuite([
         'Core/CesiumTerrainProvider',
         'Core/clone',
         'Core/createWorldTerrain',
+        'Core/defaultValue',
         'Core/defined',
         'Core/Ellipsoid',
         'Core/GeographicTilingScheme',
@@ -29,7 +30,8 @@ defineSuite([
         'Specs/pollToPromise',
         'ThirdParty/when',
         '../MockImageryProvider',
-        '../MockTerrainProvider'
+        '../MockTerrainProvider',
+        '../runLater'
     ], function(
         GlobeSurfaceTile,
         Cartesian3,
@@ -37,6 +39,7 @@ defineSuite([
         CesiumTerrainProvider,
         clone,
         createWorldTerrain,
+        defaultValue,
         defined,
         Ellipsoid,
         GeographicTilingScheme,
@@ -61,7 +64,8 @@ defineSuite([
         pollToPromise,
         when,
         MockImageryProvider,
-        MockTerrainProvider) {
+        MockTerrainProvider,
+        runLater) {
     'use strict';
 
     var frameState;
@@ -94,7 +98,11 @@ defineSuite([
     }
 
     // Processes the given list of tiles until all terrain and imagery states stop changing.
-    function processTiles(tiles) {
+    function processTiles(tiles, maxIterations, overrideFrameState, overrideTerrainProvider, overrideImageryLayerCollection) {
+        overrideFrameState = defaultValue(overrideFrameState, frameState);
+        overrideTerrainProvider = defaultValue(overrideTerrainProvider, mockTerrain);
+        overrideImageryLayerCollection = defaultValue(overrideImageryLayerCollection, imageryLayerCollection);
+
         var deferred = when.defer();
 
         function getState(tile) {
@@ -129,25 +137,35 @@ defineSuite([
             return same;
         }
 
-        function next() {
-            // Keep going until all terrain and imagery provider are ready and states are no longer changing.
-            var changed = !mockTerrain.ready;
+        var iterations = 0;
 
-            for (var i = 0; i < imageryLayerCollection.length; ++i) {
-                changed = changed || !imageryLayerCollection.get(i).imageryProvider.ready;
+        function next() {
+            ++iterations;
+
+            // Keep going until all terrain and imagery provider are ready and states are no longer changing.
+            var changed = !overrideTerrainProvider.ready;
+
+            for (var i = 0; i < overrideImageryLayerCollection.length; ++i) {
+                changed = changed || !overrideImageryLayerCollection.get(i).imageryProvider.ready;
             }
 
-            tiles.forEach(function(tile) {
-                var beforeState = getState(tile);
-                GlobeSurfaceTile.processStateMachine(tile, frameState, mockTerrain, imageryLayerCollection);
-                var afterState = getState(tile);
-                changed = changed || !statesAreSame(beforeState, afterState);
-            });
+            if (overrideTerrainProvider.ready) {
+                tiles.forEach(function(tile) {
+                    var beforeState = getState(tile);
+                    GlobeSurfaceTile.processStateMachine(tile, overrideFrameState, overrideTerrainProvider, overrideImageryLayerCollection);
+                    var afterState = getState(tile);
+                    changed =
+                        changed ||
+                        tile.data.terrainState === TerrainState.RECEIVING ||
+                        tile.data.terrainState === TerrainState.TRANSFORMING ||
+                        !statesAreSame(beforeState, afterState);
+                });
+            }
 
-            if (changed) {
-                setTimeout(next, 0);
+            if (!changed || iterations >= maxIterations) {
+                deferred.resolve(iterations);
             } else {
-                deferred.resolve();
+                setTimeout(next, 0);
             }
         }
 
@@ -579,23 +597,11 @@ defineSuite([
                 y : 1336
             });
 
-            var imageryLayerCollection = new ImageryLayerCollection();
-
-            makeLoading(tile);
-
-            return pollToPromise(function() {
-                if (!terrainProvider.ready) {
-                    return false;
-                }
-
-                GlobeSurfaceTile.processStateMachine(tile, scene.frameState, terrainProvider, imageryLayerCollection);
-                RequestScheduler.update();
-                return tile.state === QuadtreeTileLoadState.DONE;
-            }).then(function() {
+            return processTiles([tile], undefined, scene.frameState, terrainProvider, new ImageryLayerCollection()).then(function() {
                 var ray = new Ray(
                     new Cartesian3(-5052039.459789615, 2561172.040315167, -2936276.999965875),
                     new Cartesian3(0.5036332963145244, 0.6648033332898124, 0.5517155343926082));
-                var pickResult = tile.data.pick(ray, undefined, true);
+                var pickResult = tile.data.pick(ray, undefined, undefined, true);
                 var cartographic = Ellipsoid.WGS84.cartesianToCartographic(pickResult);
                 expect(cartographic.height).toBeGreaterThan(-500.0);
             });
@@ -603,126 +609,72 @@ defineSuite([
     }, 'WebGL');
 
     describe('eligibleForUnloading', function() {
+        beforeEach(function() {
+            mockWebGL();
+        });
+
         it('returns true when no loading has been done', function() {
-            var tile = new QuadtreeTile({
-                level: 0,
-                x: 0,
-                y: 0,
-                tilingScheme: new GeographicTilingScheme()
-            });
-            makeLoading(tile);
-            expect(tile.data.eligibleForUnloading).toBe(true);
+            rootTile.data = new GlobeSurfaceTile();
+            expect(rootTile.data.eligibleForUnloading).toBe(true);
         });
 
         it('returns true when some loading has been done', function() {
-            var tile = new QuadtreeTile({
-                level: 0,
-                x: 0,
-                y: 0,
-                tilingScheme: new GeographicTilingScheme()
+            mockTerrain
+                .requestTileGeometryWillSucceed(rootTile);
+
+            return processTiles([rootTile]).then(function() {
+                expect(rootTile.data.eligibleForUnloading).toBe(true);
+                mockTerrain
+                    .createMeshWillSucceed(rootTile);
+                return processTiles([rootTile]);
+            }).then(function() {
+                expect(rootTile.data.eligibleForUnloading).toBe(true);
             });
-
-            makeTerrainReceived(tile);
-            expect(tile.data.eligibleForUnloading).toBe(true);
-
-            makeTerrainTransformed(tile);
-            expect(tile.data.eligibleForUnloading).toBe(true);
-
-            makeTerrainReady(tile);
-            expect(tile.data.eligibleForUnloading).toBe(true);
         });
 
-        it('returns false when RECEIVING or TRANSITIONING', function() {
-            var tile = new QuadtreeTile({
-                level: 0,
-                x: 0,
-                y: 0,
-                tilingScheme: new GeographicTilingScheme()
+        it('returns false when RECEIVING', function() {
+            var deferred = when.defer();
+
+            mockTerrain
+                .requestTileGeometryWillSucceed(rootTile)
+                .requestTileGeometryWillWaitOn(deferred.promise, rootTile);
+
+            return processTiles([rootTile], 5).then(function() {
+                expect(rootTile.data.eligibleForUnloading).toBe(false);
+                deferred.resolve();
             });
-
-            makeTerrainUnloaded(tile);
-            expect(tile.data.eligibleForUnloading).toBe(true);
-
-            tile.data.terrainState = TerrainState.RECEIVING;
-            expect(tile.data.eligibleForUnloading).toBe(false);
-
-            tile.data.terrainState = TerrainState.TRANSFORMING;
-            expect(tile.data.eligibleForUnloading).toBe(false);
         });
 
-        it('returns false when imagery is TRANSITIONING, true otherwise', function() {
-            var tile = new QuadtreeTile({
-                level: 0,
-                x: 0,
-                y: 0,
-                tilingScheme: new GeographicTilingScheme()
-            });
-            makeTerrainReady(tile);
-            expect(tile.data.eligibleForUnloading).toBe(true);
+        it ('returns false when TRANSFORMING', function() {
+            var deferred = when.defer();
 
-            tile.data.imagery.push({
-                loadingImagery : {
-                    state : undefined
-                }
-            });
+            mockTerrain
+                .requestTileGeometryWillSucceed(rootTile)
+                .createMeshWillSucceed(rootTile)
+                .createMeshWillWaitOn(deferred.promise, rootTile);
 
-            Object.keys(ImageryState).forEach(function(state) {
-                tile.data.imagery[0].loadingImagery.state = state;
-                if (state === ImageryState.TRANSITIONING) {
-                    expect(tile.data.eligibleForUnloading).toBe(false);
-                } else {
-                    expect(tile.data.eligibleForUnloading).toBe(true);
-                }
+            return processTiles([rootTile], 5).then(function() {
+                expect(rootTile.data.eligibleForUnloading).toBe(false);
+                deferred.resolve();
+            });
+        });
+
+        it('returns false when imagery is TRANSITIONING', function() {
+            var deferred = when.defer();
+
+            var mockImagery = new MockImageryProvider();
+            imageryLayerCollection.addImageryProvider(mockImagery);
+
+            mockImagery
+                .requestImageWillWaitOn(deferred.promise, rootTile);
+
+            mockTerrain
+                .requestTileGeometryWillSucceed(rootTile);
+
+            return processTiles([rootTile], 5).then(function() {
+                expect(rootTile.data.eligibleForUnloading).toBe(false);
+                deferred.resolve();
             });
         });
     });
-
-    function makeLoading(tile) {
-        if (!defined(tile.data)) {
-            tile.data = new GlobeSurfaceTile();
-        }
-        tile.state = QuadtreeTileLoadState.LOADING;
-    }
-
-    function makeTerrainUnloaded(tile) {
-        makeLoading(tile);
-        tile.data.terrainState = TerrainState.UNLOADED;
-        tile.data.terrainData = undefined;
-        tile.data.vertexArray = undefined;
-        tile.data.mesh = undefined;
-    }
-
-    function makeTerrainReceived(tile) {
-        makeLoading(tile);
-        tile.data.terrainState = TerrainState.RECEIVED;
-        tile.data.terrainData = jasmine.createSpyObj('TerrainData', ['createMesh', 'upsample', 'wasCreatedByUpsampling']);
-        tile.data.terrainData.wasCreatedByUpsampling.and.returnValue(false);
-
-        tile.data.mesh = undefined;
-        tile.data.vertexArray = undefined;
-    }
-
-    function makeTerrainTransformed(tile) {
-        makeLoading(tile);
-
-        if (!defined(tile.data.terrainData)) {
-            makeTerrainReceived(tile);
-        }
-
-        tile.data.terrainState = TerrainState.TRANSFORMED;
-        tile.data.mesh = {};
-    }
-
-    function makeTerrainReady(tile) {
-        makeLoading(tile);
-
-        if (!defined(tile.data.mesh)) {
-            makeTerrainTransformed(tile);
-        }
-
-        tile.data.terrainState = TerrainState.DONE;
-        tile.data.vertexArray = jasmine.createSpyObj('VertexArray', ['destroy', 'isDestroyed']);
-        tile.data.vertexArray.isDestroyed.and.returnValue(false);
-        tile.data.fill = tile.data.fill && tile.data.fill.destroy();
-    }
 });

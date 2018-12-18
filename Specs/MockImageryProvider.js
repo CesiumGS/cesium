@@ -39,10 +39,15 @@ define([
 
         var that = this;
         return runLater(function() {
-            if (willSucceed) {
+            if (willSucceed === true) {
                 return that._image;
+            } else if (willSucceed === false) {
+                throw new RuntimeError('requestImage failed as request.');
             }
-            throw new RuntimeError('requestImage failed as request.');
+
+            return when(willSucceed).then(function() {
+                return that._image;
+            });
         });
     };
 
@@ -58,6 +63,11 @@ define([
 
     MockImageryProvider.prototype.requestImageWillDefer = function(xOrTile, y, level) {
         this._requestImageWillSucceed[createTileKey(xOrTile, y, level)] = undefined;
+        return this;
+    };
+
+    MockImageryProvider.prototype.requestImageWillWaitOn = function(promise, xOrTile, y, level) {
+        this._requestImageWillSucceed[createTileKey(xOrTile, y, level)] = promise;
         return this;
     };
 

@@ -3,6 +3,7 @@ define([
     'Core/GeographicTilingScheme',
     'Core/RuntimeError',
     'Core/TerrainProvider',
+    'ThirdParty/when',
     './createTileKey',
     './runLater'
 ], function(
@@ -10,6 +11,7 @@ define([
     GeographicTilingScheme,
     RuntimeError,
     TerrainProvider,
+    when,
     createTileKey,
     runLater) {
     'use strict';
@@ -38,34 +40,15 @@ define([
 
         var that = this;
         return runLater(function() {
-            if (willSucceed) {
-                var terrainData = createTerrainData(that, x, y, level, false);
-
-                var willHaveWaterMask = that._willHaveWaterMask[createTileKey(x, y, level)];
-                if (defined(willHaveWaterMask)) {
-                    if (willHaveWaterMask.includeLand && willHaveWaterMask.includeWater) {
-                        terrainData.waterMask = new Uint8Array(4);
-                        terrainData.waterMask[0] = 1;
-                        terrainData.waterMask[1] = 1;
-                        terrainData.waterMask[2] = 0;
-                        terrainData.waterMask[3] = 0;
-                    } else if (willHaveWaterMask.includeLand) {
-                        terrainData.waterMask = new Uint8Array(1);
-                        terrainData.waterMask[0] = 0;
-                    } else if (willHaveWaterMask.includeWater) {
-                        terrainData.waterMask = new Uint8Array(1);
-                        terrainData.waterMask[0] = 1;
-                    }
-                }
-
-                var willHaveBvh = that._willHaveBvh[createTileKey(x, y, level)];
-                if (defined(willHaveBvh)) {
-                    terrainData.bvh = willHaveBvh;
-                }
-
-                return terrainData;
+            if (willSucceed === true) {
+                return createTerrainData(that, x, y, level, false);
+            } else if (willSucceed === false) {
+                throw new RuntimeError('requestTileGeometry failed as requested.');
             }
-            throw new RuntimeError('requestTileGeometry failed as requested.');
+
+            return when(willSucceed).then(function() {
+                return createTerrainData(that, x, y, level, false);
+            });
         });
     };
 
@@ -96,6 +79,11 @@ define([
         return this;
     };
 
+    MockTerrainProvider.prototype.requestTileGeometryWillWaitOn = function(promise, xOrTile, y, level) {
+        this._requestTileGeometryWillSucceed[createTileKey(xOrTile, y, level)] = promise;
+        return this;
+    };
+
     MockTerrainProvider.prototype.willHaveWaterMask = function(includeLand, includeWater, xOrTile, y, level) {
         this._willHaveWaterMask[createTileKey(xOrTile, y, level)] = includeLand || includeWater ? {
             includeLand: includeLand,
@@ -121,6 +109,11 @@ define([
 
     MockTerrainProvider.prototype.createMeshWillDefer = function(xOrTile, y, level) {
         this._createMeshWillSucceed[createTileKey(xOrTile, y, level)] = undefined;
+        return this;
+    };
+
+    MockTerrainProvider.prototype.createMeshWillWaitOn = function(promise, xOrTile, y, level) {
+        this._createMeshWillSucceed[createTileKey(xOrTile, y, level)] = promise;
         return this;
     };
 
@@ -163,6 +156,30 @@ define([
         var terrainData = jasmine.createSpyObj('MockTerrainData', ['createMesh', 'upsample', 'wasCreatedByUpsampling']);
         terrainData.wasCreatedByUpsampling.and.returnValue(upsampled);
 
+        if (!upsampled) {
+            var willHaveWaterMask = terrainProvider._willHaveWaterMask[createTileKey(x, y, level)];
+            if (defined(willHaveWaterMask)) {
+                if (willHaveWaterMask.includeLand && willHaveWaterMask.includeWater) {
+                    terrainData.waterMask = new Uint8Array(4);
+                    terrainData.waterMask[0] = 1;
+                    terrainData.waterMask[1] = 1;
+                    terrainData.waterMask[2] = 0;
+                    terrainData.waterMask[3] = 0;
+                } else if (willHaveWaterMask.includeLand) {
+                    terrainData.waterMask = new Uint8Array(1);
+                    terrainData.waterMask[0] = 0;
+                } else if (willHaveWaterMask.includeWater) {
+                    terrainData.waterMask = new Uint8Array(1);
+                    terrainData.waterMask[0] = 1;
+                }
+            }
+
+            var willHaveBvh = terrainProvider._willHaveBvh[createTileKey(x, y, level)];
+            if (defined(willHaveBvh)) {
+                terrainData.bvh = willHaveBvh;
+            }
+        }
+
         terrainData.createMesh.and.callFake(function(tilingScheme, x, y, level) {
             var willSucceed = terrainProvider._createMeshWillSucceed[createTileKey(x, y, level)];
             if (willSucceed === undefined) {
@@ -170,10 +187,15 @@ define([
             }
 
             return runLater(function() {
-                if (willSucceed) {
+                if (willSucceed === true) {
                     return {};
+                } else if (willSucceed === false) {
+                    throw new RuntimeError('createMesh failed as requested.');
                 }
-                throw new RuntimeError('createMesh failed as requested.');
+
+                return when(willSucceed).then(function() {
+                    return {};
+                });
             });
         });
 
