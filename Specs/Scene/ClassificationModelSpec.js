@@ -62,26 +62,18 @@ defineSuite([
     var batchedModel = './Data/Models/Classification/batched.glb';
     var quantizedModel = './Data/Models/Classification/batchedQuantization.glb';
 
-    function setCamera(longitude, latitude, offset) {
+    var globePrimitive;
+    var tilesetPrimitive;
+    var reusableGlobePrimitive;
+    var reusableTilesetPrimitive;
+
+    function setCamera(longitude, latitude) {
         // One feature is located at the center, point the camera there
         var center = Cartesian3.fromRadians(longitude, latitude);
         scene.camera.lookAt(center, new HeadingPitchRange(0.0, -1.57, 15.0));
-        scene.camera.moveUp(offset);
     }
 
-    function viewCenter() {
-        setCamera(centerLongitude, centerLatitude, 0.0);
-    }
-
-    function viewGlobePrimitive() {
-        setCamera(centerLongitude, centerLatitude, 0.5);
-    }
-
-    function view3DTilesPrimitive() {
-        setCamera(centerLongitude, centerLatitude, -0.5);
-    }
-
-    function MockPrimitive(rectangle, pass) {
+    function createPrimitive(rectangle, pass) {
         var renderState;
         if (pass === Pass.CESIUM_3D_TILE) {
             renderState = RenderState.fromCache({
@@ -93,7 +85,7 @@ defineSuite([
             });
         }
         var depthColorAttribute = ColorGeometryInstanceAttribute.fromColor(new Color(0.0, 0.0, 0.0, 1.0));
-        this._primitive = new Primitive({
+        return new Primitive({
             geometryInstances : new GeometryInstance({
                 geometry : new RectangleGeometry({
                     ellipsoid : Ellipsoid.WGS84,
@@ -111,18 +103,26 @@ defineSuite([
             }),
             asynchronous : false
         });
+    }
 
-        this.pass = pass;
+    function MockPrimitive(primitive, pass) {
+        this._primitive = primitive;
+        this._pass = pass;
+        this.show = true;
     }
 
     MockPrimitive.prototype.update = function(frameState) {
+        if (!this.show) {
+            return;
+        }
+
         var commandList = frameState.commandList;
         var startLength = commandList.length;
         this._primitive.update(frameState);
 
         for (var i = startLength; i < commandList.length; ++i) {
             var command = commandList[i];
-            command.pass = this.pass;
+            command.pass = this._pass;
         }
     };
 
@@ -131,7 +131,6 @@ defineSuite([
     };
 
     MockPrimitive.prototype.destroy = function() {
-        this._primitive.destroy();
         return destroyObject(this);
     };
 
@@ -141,26 +140,34 @@ defineSuite([
         var translation = Ellipsoid.WGS84.geodeticSurfaceNormalCartographic(new Cartographic(centerLongitude, centerLatitude));
         Cartesian3.multiplyByScalar(translation, -5.0, translation);
         modelMatrix = Matrix4.fromTranslation(translation);
+
+        var offset = CesiumMath.toRadians(0.01);
+        var rectangle = new Rectangle(centerLongitude - offset, centerLatitude - offset, centerLongitude + offset, centerLatitude + offset);
+        reusableGlobePrimitive = createPrimitive(rectangle, Pass.GLOBE);
+        reusableTilesetPrimitive = createPrimitive(rectangle, Pass.CESIUM_3D_TILE);
     });
 
     afterAll(function() {
+        reusableGlobePrimitive.destroy();
+        reusableTilesetPrimitive.destroy();
         scene.destroyForSpecs();
     });
 
     beforeEach(function() {
-        var offset = CesiumMath.toRadians(0.01);
-        var rectangle1 = new Rectangle(centerLongitude - offset, centerLatitude, centerLongitude + offset, centerLatitude + offset);
-        var rectangle2 = new Rectangle(centerLongitude - offset, centerLatitude - offset, centerLongitude + offset, centerLatitude);
+        setCamera(centerLongitude, centerLatitude);
 
-        // wrap rectangle primitive so it gets executed during the globe pass or 3D Tiles pass to lay down depth
-        scene.primitives.add(new MockPrimitive(rectangle1, Pass.GLOBE));
-        scene.primitives.add(new MockPrimitive(rectangle2, Pass.CESIUM_3D_TILE));
+        // wrap rectangle primitive so it gets executed during the globe pass and 3D Tiles pass to lay down depth
+        globePrimitive = new MockPrimitive(reusableGlobePrimitive, Pass.GLOBE);
+        tilesetPrimitive = new MockPrimitive(reusableTilesetPrimitive, Pass.CESIUM_3D_TILE);
 
-        viewCenter();
+        scene.primitives.add(globePrimitive);
+        scene.primitives.add(tilesetPrimitive);
     });
 
     afterEach(function() {
         scene.primitives.removeAll();
+        globePrimitive = globePrimitive && !globePrimitive.isDestroyed() && globePrimitive.destroy();
+        tilesetPrimitive = tilesetPrimitive && !tilesetPrimitive.isDestroyed() && tilesetPrimitive.destroy();
     });
 
     function expectRender(scene, model) {
@@ -213,41 +220,45 @@ defineSuite([
 
     it('classifies 3D Tiles', function() {
         return loadClassificationModel(batchedModel, ClassificationType.CESIUM_3D_TILE).then(function(model) {
-            view3DTilesPrimitive();
+            globePrimitive.show = false;
+            tilesetPrimitive.show = true;
             expectRender(scene, model);
-            viewGlobePrimitive();
+            globePrimitive.show = true;
+            tilesetPrimitive.show = false;
             expectRenderBlank(scene, model);
         });
     });
 
     it('classifies globe', function() {
         return loadClassificationModel(batchedModel, ClassificationType.TERRAIN).then(function(model) {
-            view3DTilesPrimitive();
+            globePrimitive.show = false;
+            tilesetPrimitive.show = true;
             expectRenderBlank(scene, model);
-            viewGlobePrimitive();
+            globePrimitive.show = true;
+            tilesetPrimitive.show = false;
             expectRender(scene, model);
         });
     });
 
     it('classifies both 3D Tiles and globe', function() {
         return loadClassificationModel(batchedModel, ClassificationType.BOTH).then(function(model) {
-            view3DTilesPrimitive();
+            globePrimitive.show = false;
+            tilesetPrimitive.show = true;
             expectRender(scene, model);
-            viewGlobePrimitive();
+            globePrimitive.show = true;
+            tilesetPrimitive.show = false;
             expectRender(scene, model);
         });
     });
 
     it('renders batched model', function() {
         return loadClassificationModel(batchedModel, ClassificationType.BOTH).then(function(model) {
-            view3DTilesPrimitive();
             expectRender(scene, model);
         });
     });
 
     it('renders batched model with quantization', function() {
         return loadClassificationModel(quantizedModel, ClassificationType.BOTH).then(function(model) {
-            view3DTilesPrimitive();
             expectRender(scene, model);
         });
     });
