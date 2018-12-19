@@ -13,6 +13,7 @@ Change Log
 ##### Fixes :wrench:
 * Fixed 3D Tiles visibility checking when running multiple passes within the same frame. [#7289](https://github.com/AnalyticalGraphicsInc/cesium/pull/7289)
 * Fixed contrast on imagery layers. [#7382](https://github.com/AnalyticalGraphicsInc/cesium/issues/7382)
+* Fixed rendering transparent background color when `highDynamicRange` is enabled. [#7427](https://github.com/AnalyticalGraphicsInc/cesium/issues/7427)
 
 ### 1.52 - 2018-12-03
 
