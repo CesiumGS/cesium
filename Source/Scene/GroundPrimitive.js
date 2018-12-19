@@ -514,6 +514,41 @@ define([
         return Math.floor((commandIndex % length) / 3);
     }
 
+    function updateAndQueueRenderCommand(groundPrimitive, command, frameState, modelMatrix, cull, boundingVolume, debugShowBoundingVolume) {
+        // Use derived appearance command for 2D if needed
+        var classificationPrimitive = groundPrimitive._primitive;
+        if (frameState.mode !== SceneMode.SCENE3D &&
+            command.shaderProgram === classificationPrimitive._spColor &&
+            classificationPrimitive._needs2DShader) {
+            command = command.derivedCommands.appearance2D;
+        }
+
+        command.owner = groundPrimitive;
+        command.modelMatrix = modelMatrix;
+        command.boundingVolume = boundingVolume;
+        command.cull = cull;
+        command.debugShowBoundingVolume = debugShowBoundingVolume;
+
+        frameState.commandList.push(command);
+    }
+
+    function updateAndQueuePickCommand(groundPrimitive, command, frameState, modelMatrix, cull, boundingVolume) {
+        // Use derived pick command for 2D if needed
+        var classificationPrimitive = groundPrimitive._primitive;
+        if (frameState.mode !== SceneMode.SCENE3D &&
+            command.shaderProgram === classificationPrimitive._spPick &&
+            classificationPrimitive._needs2DShader) {
+            command = command.derivedCommands.pick2D;
+        }
+
+        command.owner = groundPrimitive;
+        command.modelMatrix = modelMatrix;
+        command.boundingVolume = boundingVolume;
+        command.cull = cull;
+
+        frameState.commandList.push(command);
+    }
+
     function updateAndQueueCommands(groundPrimitive, frameState, colorCommands, pickCommands, modelMatrix, cull, debugShowBoundingVolume, twoPasses) {
         var boundingVolumes;
         if (frameState.mode === SceneMode.SCENE3D) {
@@ -522,59 +557,39 @@ define([
             boundingVolumes = groundPrimitive._boundingVolumes2D;
         }
 
-        var pass;
-        switch (groundPrimitive.classificationType) {
-            case ClassificationType.TERRAIN:
-                pass = Pass.TERRAIN_CLASSIFICATION;
-                break;
-            case ClassificationType.CESIUM_3D_TILE:
-                pass = Pass.CESIUM_3D_TILE_CLASSIFICATION;
-                break;
-            default:
-                pass = Pass.CLASSIFICATION;
-        }
+        var classificationType = groundPrimitive.classificationType;
+        var queueTerrainCommands = (classificationType !== ClassificationType.CESIUM_3D_TILE);
+        var queue3DTilesCommands = (classificationType !== ClassificationType.TERRAIN);
 
-        var commandList = frameState.commandList;
         var passes = frameState.passes;
         var classificationPrimitive = groundPrimitive._primitive;
+
+        var i;
+        var boundingVolume;
+        var command;
+
         if (passes.render) {
             var colorLength = colorCommands.length;
-            var i;
-            var colorCommand;
 
             for (i = 0; i < colorLength; ++i) {
-                colorCommand = colorCommands[i];
-
-                // Use derived appearance command for 2D if needed
-                if (frameState.mode !== SceneMode.SCENE3D &&
-                    colorCommand.shaderProgram === classificationPrimitive._spColor &&
-                    classificationPrimitive._needs2DShader) {
-                    colorCommand = colorCommand.derivedCommands.appearance2D;
+                boundingVolume = boundingVolumes[boundingVolumeIndex(i, colorLength)];
+                if (queueTerrainCommands) {
+                    command = colorCommands[i];
+                    updateAndQueueRenderCommand(groundPrimitive, command, frameState, modelMatrix, cull, boundingVolume, debugShowBoundingVolume);
                 }
-
-                colorCommand.owner = groundPrimitive;
-                colorCommand.modelMatrix = modelMatrix;
-                colorCommand.boundingVolume = boundingVolumes[boundingVolumeIndex(i, colorLength)];
-                colorCommand.cull = cull;
-                colorCommand.debugShowBoundingVolume = debugShowBoundingVolume;
-                colorCommand.pass = pass;
-
-                commandList.push(colorCommand);
+                if (queue3DTilesCommands) {
+                    command = colorCommands[i].derivedCommands.tileset;
+                    updateAndQueueRenderCommand(groundPrimitive, command, frameState, modelMatrix, cull, boundingVolume, debugShowBoundingVolume);
+                }
             }
 
             if (frameState.invertClassification) {
                 var ignoreShowCommands = classificationPrimitive._commandsIgnoreShow;
                 var ignoreShowCommandsLength = ignoreShowCommands.length;
-
                 for (i = 0; i < ignoreShowCommandsLength; ++i) {
-                    var bvIndex = Math.floor(i / 2);
-                    colorCommand = ignoreShowCommands[i];
-                    colorCommand.modelMatrix = modelMatrix;
-                    colorCommand.boundingVolume = boundingVolumes[bvIndex];
-                    colorCommand.cull = cull;
-                    colorCommand.debugShowBoundingVolume = debugShowBoundingVolume;
-
-                    commandList.push(colorCommand);
+                    boundingVolume = boundingVolumes[Math.floor(i / 2)];
+                    command = ignoreShowCommands[i];
+                    updateAndQueueRenderCommand(groundPrimitive, command, frameState, modelMatrix, cull, boundingVolume, debugShowBoundingVolume);
                 }
             }
         }
@@ -585,31 +600,22 @@ define([
             var pickOffsets;
             if (!groundPrimitive._useFragmentCulling) {
                 // Must be using pick offsets
-                classificationPrimitive = groundPrimitive._primitive;
                 pickOffsets = classificationPrimitive._primitive._pickOffsets;
             }
-            for (var j = 0; j < pickLength; ++j) {
-                var pickCommand = pickCommands[j];
-
-                // Use derived pick command for 2D if needed
-                if (frameState.mode !== SceneMode.SCENE3D &&
-                    pickCommand.shaderProgram === classificationPrimitive._spPick &&
-                    classificationPrimitive._needs2DShader) {
-                    pickCommand = pickCommand.derivedCommands.pick2D;
-                }
-                var bv = boundingVolumes[boundingVolumeIndex(j, pickLength)];
+            for (i = 0; i < pickLength; ++i) {
+                boundingVolume = boundingVolumes[boundingVolumeIndex(i, pickLength)];
                 if (!groundPrimitive._useFragmentCulling) {
-                    var pickOffset = pickOffsets[boundingVolumeIndex(j, pickLength)];
-                    bv = boundingVolumes[pickOffset.index];
+                    var pickOffset = pickOffsets[boundingVolumeIndex(i, pickLength)];
+                    boundingVolume = boundingVolumes[pickOffset.index];
                 }
-
-                pickCommand.owner = groundPrimitive;
-                pickCommand.modelMatrix = modelMatrix;
-                pickCommand.boundingVolume = bv;
-                pickCommand.cull = cull;
-                pickCommand.pass = pass;
-
-                commandList.push(pickCommand);
+                if (queueTerrainCommands) {
+                    command = pickCommands[i];
+                    updateAndQueuePickCommand(groundPrimitive, command, frameState, modelMatrix, cull, boundingVolume);
+                }
+                if (queue3DTilesCommands) {
+                    command = pickCommands[i].derivedCommands.tileset;
+                    updateAndQueuePickCommand(groundPrimitive, command, frameState, modelMatrix, cull, boundingVolume);
+                }
             }
         }
     }

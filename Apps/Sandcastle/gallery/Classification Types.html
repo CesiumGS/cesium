@@ -30,7 +30,6 @@ function startup(Cesium) {
 var viewer = new Cesium.Viewer('cesiumContainer', {
     terrainProvider: Cesium.createWorldTerrain()
 });
-viewer.scene.globe.depthTestAgainstTerrain = false;
 
 var tileset = new Cesium.Cesium3DTileset({ url: Cesium.IonResource.fromAssetId(6074) });
 viewer.scene.primitives.add(tileset);
