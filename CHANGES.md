@@ -1,6 +1,12 @@
 Change Log
 ==========
 
+### 1.45 - 2019-02-01
+
+##### Fixes :wrench:
+* Fixed an issue where classification primitives with the `CESIUM_3D_TILE` classification type would render on terrain. [#6568](https://github.com/AnalyticalGraphicsInc/cesium/issues/6568)
+* Fixed an issue where 3D Tiles would show through the globe. [#6867](https://github.com/AnalyticalGraphicsInc/cesium/issues/6867)
+
 ### 1.53 - 2019-01-02
 
 ##### Fixes :wrench:
