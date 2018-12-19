@@ -226,6 +226,8 @@ defineSuite([
             globePrimitive.show = true;
             tilesetPrimitive.show = false;
             expectRenderBlank(scene, model);
+            globePrimitive.show = true;
+            tilesetPrimitive.show = true;
         });
     });
 
@@ -237,6 +239,8 @@ defineSuite([
             globePrimitive.show = true;
             tilesetPrimitive.show = false;
             expectRender(scene, model);
+            globePrimitive.show = true;
+            tilesetPrimitive.show = true;
         });
     });
 
@@ -248,6 +252,8 @@ defineSuite([
             globePrimitive.show = true;
             tilesetPrimitive.show = false;
             expectRender(scene, model);
+            globePrimitive.show = true;
+            tilesetPrimitive.show = true;
         });
     });
 

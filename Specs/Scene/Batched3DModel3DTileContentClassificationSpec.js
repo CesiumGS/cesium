@@ -173,6 +173,8 @@ defineSuite([
             globePrimitive.show = true;
             tilesetPrimitive.show = false;
             Cesium3DTilesTester.expectRenderBlank(scene, tileset);
+            globePrimitive.show = true;
+            tilesetPrimitive.show = true;
         });
     });
 
