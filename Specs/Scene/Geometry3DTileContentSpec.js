@@ -283,6 +283,8 @@ defineSuite([
             globePrimitive.show = true;
             tilesetPrimitive.show = false;
             expect(scene).toRender(depthColor);
+            globePrimitive.show = true;
+            tilesetPrimitive.show = true;
         });
     });
 
@@ -301,6 +303,8 @@ defineSuite([
             tilesetPrimitive.show = false;
             verifyRender(tileset, scene);
             verifyPick(scene);
+            globePrimitive.show = true;
+            tilesetPrimitive.show = true;
         });
     });
 
@@ -320,6 +324,8 @@ defineSuite([
             tilesetPrimitive.show = false;
             verifyRender(tileset, scene);
             verifyPick(scene);
+            globePrimitive.show = true;
+            tilesetPrimitive.show = true;
         });
     });
 
