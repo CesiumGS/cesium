@@ -659,12 +659,6 @@ define([
             return;
         }
 
-        //>>includeStart('debug', pragmas.debug);
-        if (this.classificationType !== ClassificationType.TERRAIN && !(this.appearance instanceof PerInstanceColorAppearance)) {
-            throw new DeveloperError('GroundPrimitives with Materials can only classify ClassificationType.TERRAIN at this time.');
-        }
-        //>>includeEnd('debug');
-
         var that = this;
         var primitiveOptions = this._classificationPrimitiveOptions;
 
@@ -712,7 +706,7 @@ define([
             this._minHeight = this._minTerrainHeight * exaggeration;
             this._maxHeight = this._maxTerrainHeight * exaggeration;
 
-            var useFragmentCulling = GroundPrimitive._supportsMaterials(frameState.context) && this.classificationType === ClassificationType.TERRAIN;
+            var useFragmentCulling = GroundPrimitive._supportsMaterials(frameState.context);
             this._useFragmentCulling = useFragmentCulling;
 
             if (useFragmentCulling) {
