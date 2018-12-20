@@ -67,22 +67,20 @@ define([
     };
 
     /**
-     * A ground primitive represents geometry draped over the terrain in the {@link Scene}.
+     * A ground primitive represents geometry draped over terrain or 3D Tiles in the {@link Scene}.
      * <p>
      * A primitive combines geometry instances with an {@link Appearance} that describes the full shading, including
      * {@link Material} and {@link RenderState}.  Roughly, the geometry instance defines the structure and placement,
      * and the appearance defines the visual characteristics.  Decoupling geometry and appearance allows us to mix
      * and match most of them and add a new geometry or appearance independently of each other.
-     *
-     * Only {@link PerInstanceColorAppearance} with the same color across all instances is supported at this time when
-     * classifying {@link ClassificationType}.CESIUM_3D_TILE and {@link ClassificationType}.BOTH.
-     *
+     * </p>
+     * <p>
      * Support for the WEBGL_depth_texture extension is required to use GeometryInstances with different PerInstanceColors
      * or materials besides PerInstanceColorAppearance.
-     *
+     * </p>
+     * <p>
      * Textured GroundPrimitives were designed for notional patterns and are not meant for precisely mapping
      * textures to terrain - for that use case, use {@link SingleTileImageryProvider}.
-     *
      * </p>
      * <p>
      * For correct rendering, this feature requires the EXT_frag_depth WebGL extension. For hardware that do not support this extension, there

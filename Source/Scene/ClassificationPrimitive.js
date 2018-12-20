@@ -67,8 +67,7 @@ define([
      * and match most of them and add a new geometry or appearance independently of each other.
      * Only {@link PerInstanceColorAppearance} with the same color across all instances is supported at this time when using
      * ClassificationPrimitive directly.
-     * For full {@link Appearance} support when classifying terrain use {@link GroundPrimitive} instead.
-     *
+     * For full {@link Appearance} support when classifying terrain or 3D Tiles use {@link GroundPrimitive} instead.
      * </p>
      * <p>
      * For correct rendering, this feature requires the EXT_frag_depth WebGL extension. For hardware that do not support this extension, there

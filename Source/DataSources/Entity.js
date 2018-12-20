@@ -664,7 +664,7 @@ define([
     };
 
     /**
-     * Checks if the given Scene supports materials besides Color on Entities draped on terrain.
+     * Checks if the given Scene supports materials besides Color on Entities draped on terrain or 3D Tiles.
      * If this feature is not supported, Entities with non-color materials but no `height` will
      * instead be rendered as if height is 0.
      *
