@@ -2243,6 +2243,10 @@ define([
                     executeCommand(commands[j], scene, context, passState);
                 }
 
+                if (defined(globeDepth) && environmentState.useGlobeDepthFramebuffer) {
+                    globeDepth.executeUpdateDepth(context, passState, clearGlobeDepth);
+                }
+
                 // Draw classifications. Modifies 3D Tiles color.
                 us.updatePass(Pass.CESIUM_3D_TILE_CLASSIFICATION);
                 commands = frustumCommands.commands[Pass.CESIUM_3D_TILE_CLASSIFICATION];
@@ -2294,6 +2298,10 @@ define([
                 length = frustumCommands.indices[Pass.CESIUM_3D_TILE];
                 for (j = 0; j < length; ++j) {
                     executeCommand(commands[j], scene, context, passState);
+                }
+
+                if (defined(globeDepth) && environmentState.useGlobeDepthFramebuffer) {
+                    globeDepth.executeUpdateDepth(context, passState, clearGlobeDepth);
                 }
 
                 // Set stencil
@@ -2926,7 +2934,7 @@ define([
         // Globe depth is copied for the pick pass to support picking batched geometries in GroundPrimitives.
         var useGlobeDepthFramebuffer = environmentState.useGlobeDepthFramebuffer = defined(view.globeDepth);
         if (useGlobeDepthFramebuffer) {
-            view.globeDepth.update(context, passState, view.viewport, scene._hdr);
+            view.globeDepth.update(context, passState, view.viewport, scene._hdr, environmentState.clearGlobeDepth);
             view.globeDepth.clear(context, passState, clearColor);
         }
 
