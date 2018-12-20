@@ -911,7 +911,7 @@ defineSuite([
         });
     });
 
-    it('batches ground entities classifying terrain by material if ground entity materials is supported', function() {
+    it('batches ground entities by material if ground entity materials is supported', function() {
         if (!GroundPrimitive.isSupported(scene) || !GroundPrimitive.supportsMaterials(scene)) {
             return;
         }
@@ -986,13 +986,22 @@ defineSuite([
                 }
             });
 
+            return pollToPromise(function() {
+                scene.initializeFrame();
+                var isUpdated = visualizer.update(time);
+                scene.render(time);
+                return isUpdated;
+            });
+        }).then(function() {
+            expect(scene.groundPrimitives.length).toEqual(2);
+
             entities.add({
                 position : Cartesian3.fromDegrees(-12, -34),
                 ellipse : {
                     semiMajorAxis : 2,
                     semiMinorAxis : 1,
                     material : './Data/Images/White.png',
-                    classificationType : ClassificationType.BOTH // expect to render as ClassificationType.TERRAIN
+                    classificationType : ClassificationType.CESIUM_3D_TILE
                 }
             });
 
@@ -1003,7 +1012,7 @@ defineSuite([
                 return isUpdated;
             });
         }).then(function() {
-            expect(scene.groundPrimitives.length).toEqual(2);
+            expect(scene.groundPrimitives.length).toEqual(3);
 
             entities.removeAll();
             visualizer.destroy();
