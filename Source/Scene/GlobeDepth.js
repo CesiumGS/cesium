@@ -16,7 +16,10 @@ define([
         '../Renderer/TextureMinificationFilter',
         '../Shaders/PostProcessStages/DepthViewPacked',
         '../Shaders/PostProcessStages/PassThrough',
-        '../Shaders/PostProcessStages/PassThroughDepth'
+        '../Shaders/PostProcessStages/PassThroughDepth',
+        './StencilConstants',
+        './StencilFunction',
+        './StencilOperation'
     ], function(
         BoundingRectangle,
         Color,
@@ -35,7 +38,10 @@ define([
         TextureMinificationFilter,
         DepthViewPacked,
         PassThrough,
-        PassThroughDepth) {
+        PassThroughDepth,
+        StencilConstants,
+        StencilFunction,
+        StencilOperation) {
     'use strict';
 
     /**
@@ -52,6 +58,7 @@ define([
         this._clearColorCommand = undefined;
         this._copyColorCommand = undefined;
         this._copyDepthCommand = undefined;
+        this._updateDepthCommand = undefined;
 
         this._viewport = new BoundingRectangle();
         this._rs = undefined;
@@ -223,6 +230,26 @@ define([
             });
         }
 
+        if (!defined(globeDepth._updateDepthCommand)) {
+            globeDepth._updateDepthCommand = context.createViewportQuadCommand(PassThroughDepth, {
+                owner : globeDepth,
+                renderState : RenderState.fromCache({
+                    stencilTest : {
+                        enabled : true,
+                        frontFunction : StencilFunction.EQUAL,
+                        frontOperation : {
+                            fail : StencilOperation.KEEP,
+                            zFail : StencilOperation.KEEP,
+                            zPass : StencilOperation.KEEP
+                        },
+                        backFunction : StencilFunction.NEVER,
+                        reference : StencilConstants.CESIUM_3D_TILE_MASK,
+                        mask : StencilConstants.CESIUM_3D_TILE_MASK
+                    }
+                })
+            });
+        }
+
         globeDepth._copyDepthCommand.renderState = globeDepth._rs;
         globeDepth._copyColorCommand.renderState = globeDepth._rs;
 
@@ -257,6 +284,10 @@ define([
             this._copyDepthCommand.execute(context, passState);
             context.uniformState.globeDepthTexture = this._globeDepthTexture;
         }
+    };
+
+    GlobeDepth.prototype.updateDepth = function(context, passState) {
+        if (defined(this._copyDepthCommand
     };
 
     GlobeDepth.prototype.executeCopyColor = function(context, passState) {
