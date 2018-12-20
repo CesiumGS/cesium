@@ -48,7 +48,7 @@ var entity = viewer.entities.add({
     }
 });
 
-var options = [{
+var classificationOptions = [{
     text : 'Classify Both',
     onselect : function() {
         entity.polygon.classificationType = Cesium.ClassificationType.BOTH;
@@ -64,7 +64,21 @@ var options = [{
         entity.polygon.classificationType = Cesium.ClassificationType.CESIUM_3D_TILE;
     }
 }];
-Sandcastle.addToolbarMenu(options);
+
+var materialOptions = [{
+    text : 'Red Material',
+    onselect : function() {
+        entity.polygon.material = Cesium.Color.RED.withAlpha(0.5);
+    }
+}, {
+    text : 'Textured Material',
+    onselect : function() {
+        entity.polygon.material = '../images/Cesium_Logo_Color.jpg';
+    }
+}];
+
+Sandcastle.addToolbarMenu(classificationOptions);
+Sandcastle.addToolbarMenu(materialOptions);
 //Sandcastle_End
 Sandcastle.finishedLoading();
 }
