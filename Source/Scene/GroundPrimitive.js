@@ -105,7 +105,7 @@ define([
      * @param {Boolean} [options.releaseGeometryInstances=true] When <code>true</code>, the primitive does not keep a reference to the input <code>geometryInstances</code> to save memory.
      * @param {Boolean} [options.allowPicking=true] When <code>true</code>, each geometry instance will only be pickable with {@link Scene#pick}.  When <code>false</code>, GPU memory is saved.
      * @param {Boolean} [options.asynchronous=true] Determines if the primitive will be created asynchronously or block until ready. If false initializeTerrainHeights() must be called first.
-     * @param {ClassificationType} [options.classificationType=ClassificationType.TERRAIN] Determines whether terrain, 3D Tiles or both will be classified.
+     * @param {ClassificationType} [options.classificationType=ClassificationType.BOTH] Determines whether terrain, 3D Tiles or both will be classified.
      * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Determines if this primitive's commands' bounding spheres are shown.
      * @param {Boolean} [options.debugShowShadowVolume=false] For debugging only. Determines if the shadow volume for each geometry in the primitive is drawn. Must be <code>true</code> on
      *                  creation for the volumes to be created before the geometry is released or options.releaseGeometryInstance must be <code>false</code>.
@@ -214,9 +214,9 @@ define([
          *
          * @type {ClassificationType}
          *
-         * @default ClassificationType.TERRAIN
+         * @default ClassificationType.BOTH
          */
-        this.classificationType = defaultValue(options.classificationType, ClassificationType.TERRAIN);
+        this.classificationType = defaultValue(options.classificationType, ClassificationType.BOTH);
         /**
          * This property is for debugging only; it is not for production use nor is it optimized.
          * <p>
