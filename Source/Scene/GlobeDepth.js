@@ -64,6 +64,8 @@ define([
         this._tempCopyDepthCommand = undefined;
         this._updateDepthCommand = undefined;
 
+        this._requiresUpdateDepthResources = false;
+
         this._viewport = new BoundingRectangle();
         this._rs = undefined;
         this._rsUpdate = undefined;
@@ -73,7 +75,6 @@ define([
 
         this._useLogDepth = undefined;
         this._useHdr = undefined;
-        this._clearGlobeDepth = false;
 
         this._debugGlobeDepthViewportCommand = undefined;
     }
@@ -127,7 +128,34 @@ define([
         globeDepth._updateDepthFramebuffer = globeDepth._updateDepthFramebuffer && !globeDepth._updateDepthFramebuffer.isDestroyed() && globeDepth._updateDepthFramebuffer.destroy();
     }
 
-    function createTextures(globeDepth, context, width, height, hdr, clearGlobeDepth) {
+    function createUpdateDepthResources(globeDepth, context, width, height) {
+        globeDepth._tempGlobeDepthTexture = new Texture({
+            context : context,
+            width : width,
+            height : height,
+            pixelFormat : PixelFormat.RGBA,
+            pixelDatatype : PixelDatatype.UNSIGNED_BYTE,
+            sampler : new Sampler({
+                wrapS : TextureWrap.CLAMP_TO_EDGE,
+                wrapT : TextureWrap.CLAMP_TO_EDGE,
+                minificationFilter : TextureMinificationFilter.NEAREST,
+                magnificationFilter : TextureMagnificationFilter.NEAREST
+            })
+        });
+        globeDepth._tempCopyDepthFramebuffer = new Framebuffer({
+            context : context,
+            colorTextures : [globeDepth._tempGlobeDepthTexture],
+            destroyAttachments : false
+        });
+        globeDepth._updateDepthFramebuffer = new Framebuffer({
+            context : context,
+            colorTextures : [globeDepth._globeDepthTexture],
+            depthStencilTexture : globeDepth._depthStencilTexture,
+            destroyAttachments : false
+        });
+    }
+
+    function createTextures(globeDepth, context, width, height, hdr) {
         var pixelDatatype = hdr ? (context.halfFloatingPointTexture ? PixelDatatype.HALF_FLOAT : PixelDatatype.FLOAT) : PixelDatatype.UNSIGNED_BYTE;
         globeDepth._colorTexture = new Texture({
             context : context,
@@ -164,25 +192,9 @@ define([
                 magnificationFilter : TextureMagnificationFilter.NEAREST
             })
         });
-
-        if (clearGlobeDepth) {
-            globeDepth._tempGlobeDepthTexture = new Texture({
-                context : context,
-                width : width,
-                height : height,
-                pixelFormat : PixelFormat.RGBA,
-                pixelDatatype : PixelDatatype.UNSIGNED_BYTE,
-                sampler : new Sampler({
-                    wrapS : TextureWrap.CLAMP_TO_EDGE,
-                    wrapT : TextureWrap.CLAMP_TO_EDGE,
-                    minificationFilter : TextureMinificationFilter.NEAREST,
-                    magnificationFilter : TextureMagnificationFilter.NEAREST
-                })
-            });
-        }
     }
 
-    function createFramebuffers(globeDepth, context, clearGlobeDepth) {
+    function createFramebuffers(globeDepth, context) {
         globeDepth.framebuffer = new Framebuffer({
             context : context,
             colorTextures : [globeDepth._colorTexture],
@@ -195,31 +207,19 @@ define([
             colorTextures : [globeDepth._globeDepthTexture],
             destroyAttachments : false
         });
-
-        if (clearGlobeDepth) {
-            globeDepth._tempCopyDepthFramebuffer = new Framebuffer({
-                context : context,
-                colorTextures : [globeDepth._tempGlobeDepthTexture],
-                destroyAttachments : false
-            });
-            globeDepth._updateDepthFramebuffer = new Framebuffer({
-                context : context,
-                colorTextures : [globeDepth._globeDepthTexture],
-                depthStencilTexture : globeDepth._depthStencilTexture,
-                destroyAttachments : false
-            });
-        }
     }
 
-    function updateFramebuffers(globeDepth, context, width, height, hdr, clearGlobeDepth) {
+    function updateFramebuffers(globeDepth, context, width, height, hdr) {
         var colorTexture = globeDepth._colorTexture;
         var textureChanged = !defined(colorTexture) || colorTexture.width !== width || colorTexture.height !== height || hdr !== globeDepth._useHdr;
-        var clearGlobeDepthChanged = clearGlobeDepth !== globeDepth._clearGlobeDepth;
-        if (!defined(globeDepth.framebuffer) || textureChanged || clearGlobeDepthChanged) {
+        if (!defined(globeDepth.framebuffer) || textureChanged) {
             destroyTextures(globeDepth);
             destroyFramebuffers(globeDepth);
-            createTextures(globeDepth, context, width, height, hdr, clearGlobeDepth);
-            createFramebuffers(globeDepth, context, clearGlobeDepth);
+            createTextures(globeDepth, context, width, height, hdr);
+            createFramebuffers(globeDepth, context);
+            if (globeDepth._requiresUpdateDepthResources) {
+                createUpdateDepthResources(globeDepth, context, width, height);
+            }
         }
     }
 
@@ -334,16 +334,15 @@ define([
         executeDebugGlobeDepth(this, context, passState, useLogDepth);
     };
 
-    GlobeDepth.prototype.update = function(context, passState, viewport, hdr, clearGlobeDepth) {
+    GlobeDepth.prototype.update = function(context, passState, viewport, hdr) {
         var width = viewport.width;
         var height = viewport.height;
 
-        updateFramebuffers(this, context, width, height, hdr, clearGlobeDepth);
+        updateFramebuffers(this, context, width, height, hdr);
         updateCopyCommands(this, context, width, height, passState);
         context.uniformState.globeDepthTexture = undefined;
 
         this._useHdr = hdr;
-        this._clearGlobeDepth = clearGlobeDepth;
     };
 
     GlobeDepth.prototype.executeCopyDepth = function(context, passState) {
@@ -358,7 +357,14 @@ define([
             // First copy the depth to a temporary globe depth texture, then update the
             // main globe depth texture where the stencil bit for 3D Tiles is set.
             // This preserves the original globe depth except where 3D Tiles is rendered.
+            // The additional texture and framebuffer resources are created on demand.
+            this._requiresUpdateDepthResources = true;
             if (defined(this._tempCopyDepthCommand) && defined(this._updateDepthCommand)) {
+                if (!defined(this._updateDepthFramebuffer)) {
+                    var width = this._globeDepthTexture.width;
+                    var height = this._globeDepthTexture.height;
+                    createUpdateDepthResources(this, context, width, height);
+                }
                 this._tempCopyDepthCommand.execute(context, passState);
                 this._updateDepthCommand.execute(context, passState);
             }
