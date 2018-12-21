@@ -359,11 +359,12 @@ define([
             // This preserves the original globe depth except where 3D Tiles is rendered.
             // The additional texture and framebuffer resources are created on demand.
             this._requiresUpdateDepthResources = true;
-            if (defined(this._tempCopyDepthCommand) && defined(this._updateDepthCommand)) {
+            if (defined(this._updateDepthCommand)) {
                 if (!defined(this._updateDepthFramebuffer)) {
                     var width = this._globeDepthTexture.width;
                     var height = this._globeDepthTexture.height;
                     createUpdateDepthResources(this, context, width, height);
+                    updateCopyCommands(this, context, width, height, passState);
                 }
                 this._tempCopyDepthCommand.execute(context, passState);
                 this._updateDepthCommand.execute(context, passState);
