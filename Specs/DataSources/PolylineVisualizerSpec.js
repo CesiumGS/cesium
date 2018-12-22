@@ -418,6 +418,10 @@ defineSuite([
     });
 
     function createAndRemoveGeometryWithClassificationType(classificationType) {
+        if (!Entity.supportsPolylinesOnTerrain(scene)) {
+            return;
+        }
+
         var objects = new EntityCollection();
         var visualizer = new PolylineVisualizer(scene, objects);
 
