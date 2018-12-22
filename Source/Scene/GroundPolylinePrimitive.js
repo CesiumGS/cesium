@@ -533,7 +533,7 @@ define([
             derived2DCommand.shaderProgram = groundPolylinePrimitive._sp2D;
             command.derivedCommands.color2D = derived2DCommand;
 
-            var derived2DTilesetCommand = DrawCommand.shallowClone(command, derivedTilesetCommand.derivedCommands.color2D);
+            var derived2DTilesetCommand = DrawCommand.shallowClone(derivedTilesetCommand, derivedTilesetCommand.derivedCommands.color2D);
             derived2DTilesetCommand.shaderProgram = groundPolylinePrimitive._sp2D;
             derivedTilesetCommand.derivedCommands.color2D = derived2DTilesetCommand;
 
