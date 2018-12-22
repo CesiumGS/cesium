@@ -37,7 +37,7 @@ define([
     var defaultDistanceDisplayCondition = new DistanceDisplayCondition();
 
     // Encapsulates a Primitive and all the entities that it represents.
-    function Batch(orderedGroundPrimitives, materialProperty, zIndex, asynchronous) {
+    function Batch(orderedGroundPrimitives, classificationType, materialProperty, zIndex, asynchronous) {
         var appearanceType;
         if (materialProperty instanceof ColorMaterialProperty) {
             appearanceType = PolylineColorAppearance;
@@ -46,6 +46,7 @@ define([
         }
 
         this.orderedGroundPrimitives = orderedGroundPrimitives; // scene level primitive collection
+        this.classificationType = classificationType;
         this.appearanceType = appearanceType;
         this.materialProperty = materialProperty;
         this.updaters = new AssociativeArray();
@@ -139,7 +140,8 @@ define([
                     show : false,
                     asynchronous : this._asynchronous,
                     geometryInstances : geometries,
-                    appearance : new this.appearanceType()
+                    appearance : new this.appearanceType(),
+                    classificationType : this.classificationType
                 });
 
                 if (this.appearanceType === PolylineMaterialAppearance) {
@@ -278,9 +280,10 @@ define([
     /**
      * @private
      */
-    function StaticGroundPolylinePerMaterialBatch(orderedGroundPrimitives, asynchronous) {
+    function StaticGroundPolylinePerMaterialBatch(orderedGroundPrimitives, classificationType, asynchronous) {
         this._items = [];
         this._orderedGroundPrimitives = orderedGroundPrimitives;
+        this._classificationType = classificationType;
         this._asynchronous = defaultValue(asynchronous, true);
     }
 
@@ -299,7 +302,7 @@ define([
             }
         }
         // If a compatible batch wasn't found, create a new batch.
-        var batch = new Batch(this._orderedGroundPrimitives, updater.fillMaterialProperty, zIndex, this._asynchronous);
+        var batch = new Batch(this._orderedGroundPrimitives, this._classificationType, updater.fillMaterialProperty, zIndex, this._asynchronous);
         batch.add(time, updater, geometryInstance);
         items.push(batch);
     };

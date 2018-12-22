@@ -676,7 +676,7 @@ define([
     };
 
     /**
-     * Checks if the given Scene supports polylines clamped to the ground..
+     * Checks if the given Scene supports polylines clamped to terrain or 3D Tiles.
      * If this feature is not supported, Entities with PolylineGraphics will be rendered with vertices at
      * the provided heights and using the `followSurface` parameter instead of clamped to the ground.
      *

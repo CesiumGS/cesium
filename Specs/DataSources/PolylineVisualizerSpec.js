@@ -16,6 +16,7 @@ defineSuite([
         'DataSources/EntityCollection',
         'DataSources/PolylineArrowMaterialProperty',
         'DataSources/PolylineGraphics',
+        'Scene/ClassificationType',
         'Scene/PolylineColorAppearance',
         'Scene/PolylineMaterialAppearance',
         'Scene/ShadowMode',
@@ -40,6 +41,7 @@ defineSuite([
         EntityCollection,
         PolylineArrowMaterialProperty,
         PolylineGraphics,
+        ClassificationType,
         PolylineColorAppearance,
         PolylineMaterialAppearance,
         ShadowMode,
@@ -158,7 +160,7 @@ defineSuite([
         }
 
         var objects = new EntityCollection();
-        var visualizer = new PolylineVisualizer(scene, objects, scene.groundPrimitives);
+        var visualizer = new PolylineVisualizer(scene, objects);
 
         var polyline = new PolylineGraphics();
         polyline.positions = new ConstantProperty([Cartesian3.fromDegrees(0.0, 0.0), Cartesian3.fromDegrees(0.0, 1.0)]);
@@ -413,6 +415,54 @@ defineSuite([
                 visualizer.destroy();
             });
         });
+    });
+
+    function createAndRemoveGeometryWithClassificationType(classificationType) {
+        var objects = new EntityCollection();
+        var visualizer = new PolylineVisualizer(scene, objects);
+
+        var polyline = new PolylineGraphics();
+        polyline.positions = new ConstantProperty([Cartesian3.fromDegrees(0.0, 0.0), Cartesian3.fromDegrees(0.0, 1.0)]);
+        polyline.material = new ColorMaterialProperty();
+        polyline.classificationType = new ConstantProperty(classificationType);
+        polyline.clampToGround = true;
+
+        var entity = new Entity();
+        entity.polyline = polyline;
+        objects.add(entity);
+
+        return pollToPromise(function() {
+            scene.initializeFrame();
+            var isUpdated = visualizer.update(time);
+            scene.render(time);
+            return isUpdated;
+        }).then(function() {
+            var primitive = scene.groundPrimitives.get(0);
+            expect(primitive.classificationType).toBe(classificationType);
+
+            objects.remove(entity);
+
+            return pollToPromise(function() {
+                scene.initializeFrame();
+                expect(visualizer.update(time)).toBe(true);
+                scene.render(time);
+                return scene.primitives.length === 0;
+            }).then(function(){
+                visualizer.destroy();
+            });
+        });
+    }
+
+    it('Creates and removes geometry classifying terrain', function() {
+        return createAndRemoveGeometryWithClassificationType(ClassificationType.TERRAIN);
+    });
+
+    it('Creates and removes geometry classifying 3D Tiles', function() {
+        return createAndRemoveGeometryWithClassificationType(ClassificationType.CESIUM_3D_TILE);
+    });
+
+    it('Creates and removes geometry classifying both terrain and 3D Tiles', function() {
+        return createAndRemoveGeometryWithClassificationType(ClassificationType.BOTH);
     });
 
     it('Correctly handles geometry changing batches', function() {
@@ -719,7 +769,7 @@ defineSuite([
         }
 
         var objects = new EntityCollection();
-        var visualizer = new PolylineVisualizer(scene, objects, scene.groundPrimitives);
+        var visualizer = new PolylineVisualizer(scene, objects);
 
         var polyline = new PolylineGraphics();
         polyline.positions = new ConstantProperty([Cartesian3.fromDegrees(0.0, 0.0), Cartesian3.fromDegrees(0.0, 1.0)]);
@@ -759,4 +809,110 @@ defineSuite([
             visualizer.destroy();
         });
     });
+
+    it('batches ground poylines by material if ground polylines are supported', function() {
+        if (!Entity.supportsPolylinesOnTerrain(scene)) {
+            return;
+        }
+
+        var entities = new EntityCollection();
+        var visualizer = new PolylineVisualizer(scene, entities);
+
+        var blueColor = Color.BLUE.withAlpha(0.5);
+        var redColor = Color.RED.withAlpha(0.5);
+        var positions = [Cartesian3.fromDegrees(0.0, 0.0), Cartesian3.fromDegrees(0.0, 1.0)];
+        entities.add({
+            polyline : {
+                positions : positions,
+                material : blueColor,
+                classificationType : ClassificationType.TERRAIN,
+                clampToGround : true
+            }
+        });
+
+        return pollToPromise(function() {
+            scene.initializeFrame();
+            var isUpdated = visualizer.update(time);
+            scene.render(time);
+            return isUpdated;
+        }).then(function() {
+            expect(scene.groundPrimitives.length).toEqual(1);
+
+            entities.add({
+                polyline : {
+                    positions : positions,
+                    material : blueColor,
+                    classificationType : ClassificationType.TERRAIN,
+                    clampToGround : true
+                }
+            });
+
+            return pollToPromise(function() {
+                scene.initializeFrame();
+                var isUpdated = visualizer.update(time);
+                scene.render(time);
+                return isUpdated;
+            });
+        }).then(function() {
+            expect(scene.groundPrimitives.length).toEqual(1);
+
+            entities.add({
+                polyline : {
+                    positions : positions,
+                    material : redColor,
+                    classificationType : ClassificationType.TERRAIN,
+                    clampToGround : true
+                }
+            });
+
+            return pollToPromise(function() {
+                scene.initializeFrame();
+                var isUpdated = visualizer.update(time);
+                scene.render(time);
+                return isUpdated;
+            });
+        }).then(function() {
+            expect(scene.groundPrimitives.length).toEqual(1);
+
+            entities.add({
+                polyline : {
+                    positions : positions,
+                    material : new PolylineArrowMaterialProperty(),
+                    classificationType : ClassificationType.TERRAIN,
+                    clampToGround : true
+                }
+            });
+
+            return pollToPromise(function() {
+                scene.initializeFrame();
+                var isUpdated = visualizer.update(time);
+                scene.render(time);
+                return isUpdated;
+            });
+        }).then(function() {
+            expect(scene.groundPrimitives.length).toEqual(2);
+
+            entities.add({
+                polyline : {
+                    positions : positions,
+                    material : new PolylineArrowMaterialProperty(),
+                    classificationType : ClassificationType.CESIUM_3D_TILE,
+                    clampToGround : true
+                }
+            });
+
+            return pollToPromise(function() {
+                scene.initializeFrame();
+                var isUpdated = visualizer.update(time);
+                scene.render(time);
+                return isUpdated;
+            });
+        }).then(function() {
+            expect(scene.groundPrimitives.length).toEqual(3);
+
+            entities.removeAll();
+            visualizer.destroy();
+        });
+    });
+
 }, 'WebGL');
