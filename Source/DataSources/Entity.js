@@ -681,7 +681,7 @@ define([
      * the provided heights and using the `followSurface` parameter instead of clamped to the ground.
      *
      * @param {Scene} scene The current scene.
-     * @returns {Boolean} Whether or not the current scene supports Polylines on Terrain.
+     * @returns {Boolean} Whether or not the current scene supports polylines on terrain or 3D TIles.
      */
     Entity.supportsPolylinesOnTerrain = function(scene) {
         return GroundPolylinePrimitive.isSupported(scene);

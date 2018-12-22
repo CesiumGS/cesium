@@ -41,7 +41,7 @@ define([
      * @param {Property} [options.granularity=Cesium.Math.RADIANS_PER_DEGREE] A numeric Property specifying the distance between each latitude and longitude.
      * @param {Property} [options.shadows=ShadowMode.DISABLED] An enum Property specifying whether the corridor casts or receives shadows from each light source.
      * @param {Property} [options.distanceDisplayCondition] A Property specifying at what distance from the camera that this corridor will be displayed.
-     * @param {Property} [options.classificationType=ClassificationType.BOTH] A Property specifying whether this corridor will classify terrain, 3D Tiles, or both when on the ground.
+     * @param {Property} [options.classificationType=ClassificationType.BOTH] An enum Property specifying whether this corridor will classify terrain, 3D Tiles, or both when on the ground.
      * @param {ConstantProperty} [options.zIndex] A Property specifying the zIndex of the corridor, used for ordering.  Only has an effect if height and extrudedHeight are undefined, and if the corridor is static.
      *
      * @see Entity

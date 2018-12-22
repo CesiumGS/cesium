@@ -35,7 +35,7 @@ define([
      * @param {Property} [options.granularity=Cesium.Math.RADIANS_PER_DEGREE] A numeric Property specifying the angular distance between each latitude and longitude if followSurface is true.
      * @param {Property} [options.shadows=ShadowMode.DISABLED] An enum Property specifying whether the polyline casts or receives shadows from each light source.
      * @param {Property} [options.distanceDisplayCondition] A Property specifying at what distance from the camera that this polyline will be displayed.
-     * @param {Property} [options.classificationType=ClassificationType.BOTH] A Property specifying whether this polyline will classify terrain, 3D Tiles, or both when on the ground.
+     * @param {Property} [options.classificationType=ClassificationType.BOTH] An enum Property specifying whether this polyline will classify terrain, 3D Tiles, or both when on the ground.
      * @param {Property} [options.zIndex=0] A Property specifying the zIndex used for ordering ground geometry. Only has an effect if `clampToGround` is true and polylines on terrain is supported.
      *
      * @see Entity
