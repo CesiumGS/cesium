@@ -6,6 +6,8 @@ Change Log
 ##### Additions :tada:
 
 * Added support for textured ground entities (entities with unspecified `height`) and `GroundPrimitives` on 3D Tiles.
+* Added support for polylines on 3D Tiles.
+* Added `classificationType` property to `PolylineGraphics` and `GroundPolylinePrimitive` which specifies whether a polyline clamped to ground should be clamped to terrain, 3D Tiles, or both.
 
 ##### Fixes :wrench:
 * Fixed an issue where classification primitives with the `CESIUM_3D_TILE` classification type would render on terrain.
