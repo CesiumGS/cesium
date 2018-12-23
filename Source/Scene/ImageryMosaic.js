@@ -72,6 +72,7 @@ define([
      * @param {Scene} options.scene The current Cesium scene.
      * @param {Number} [options.concurrency] The number of web workers across which the load should be distributed.
      * @param {Number} [options.imageCacheSize=100] Number of cached images to hold in memory at once
+     * @param {Viewer} viewer Cesium viewer.
      */
     function ImageryMosaic(options, viewer) {
         if (!((FeatureDetection.isChrome() && FeatureDetection.chromeVersion()[0] >= 69) ||
@@ -85,6 +86,7 @@ define([
         Check.defined('options.projectedRectangles', options.projectedRectangles);
         Check.defined('options.projections', options.projections);
         Check.defined('options.scene', options.scene);
+        Check.defined('viewer', viewer);
         //>>includeEnd('debug');
 
         var urls = options.urls;
