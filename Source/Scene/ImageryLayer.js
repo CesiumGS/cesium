@@ -1,7 +1,7 @@
 define([
         '../Core/Cartesian2',
-        '../Core/Cartesian4',
         '../Core/Cartesian3',
+        '../Core/Cartesian4',
         '../Core/Cartographic',
         '../Core/defaultValue',
         '../Core/defined',
@@ -43,11 +43,12 @@ define([
         './Imagery',
         './ImagerySplitDirection',
         './ImageryState',
-        './TileImagery'
+        './TileImagery',
+        './SingleTileProjectedImageryProvider'
     ], function(
         Cartesian2,
-        Cartesian4,
         Cartesian3,
+        Cartesian4,
         Cartographic,
         defaultValue,
         defined,
@@ -89,7 +90,8 @@ define([
         Imagery,
         ImagerySplitDirection,
         ImageryState,
-        TileImagery) {
+        TileImagery,
+        SingleTileProjectedImageryProvider) {
     'use strict';
 
     var ARBITRARY_PROJECTION_VERTICES_WIDTH = 128;
@@ -1126,13 +1128,19 @@ define([
             rectangle.width / texture.width > 1e-5) {
                 var that = this;
                 imagery.addReference();
+
                 var computeCommand = new ComputeCommand({
                     persists : true,
                     owner : this,
                     // Update render resources right before execution instead of now.
                     // This allows different ImageryLayers to share the same vao and buffers.
                     preExecute : function(command) {
-                        reprojectToGeographic(command, context, texture, imagery.rectangle);
+                        if (that._imageryProvider instanceof SingleTileProjectedImageryProvider) {
+                            var projection = that._imageryProvider.tilingScheme.projection;
+                            reprojectFromArbitrary(command, context, texture, that._imageryProvider.tilingScheme.tileXYToNativeRectangle(0, 0, 0), projection);
+                        } else {
+                            reprojectToGeographic(command, context, texture, imagery.rectangle);
+                        }
                     },
                     postExecute : function(outputTexture) {
                         imagery.texture = outputTexture;

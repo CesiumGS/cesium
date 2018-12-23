@@ -41,13 +41,13 @@ define([
     /**
      * Insert a rectangle into the collision checker.
      *
-     * @param {String} id Unique string ID for the rectangle being inserted.
+     * @param {String|Number} id Unique ID for the rectangle being inserted.
      * @param {Rectangle} rectangle A Rectangle
      * @private
      */
     RectangleCollisionChecker.prototype.insert = function(id, rectangle) {
         //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.string('id', id);
+        Check.defined('id', id);
         Check.typeOf.object('rectangle', rectangle);
         //>>includeEnd('debug');
 
@@ -91,6 +91,27 @@ define([
 
         var withId = RectangleWithId.fromRectangleAndId('', rectangle, collisionScratch, this._mapProjection);
         return this._tree.collides(withId);
+    };
+
+    var searchScratch = new RectangleWithId();
+    /**
+     * Searches for rectangles that probably collide with the input rectangle.
+     *
+     * @param {Rectangle} rectangle A Rectangle that should be checked against the rectangles in the collision checker.
+     * @returns {String[]} List of data IDs corresponding with rectangles that likely collide with the input rectangle.
+     */
+    RectangleCollisionChecker.prototype.search = function(rectangle) {
+        //>>includeStart('debug', pragmas.debug);
+        Check.typeOf.object('rectangle', rectangle);
+        //>>includeEnd('debug');
+        var searchRectangle = RectangleWithId.fromRectangleAndId(0, rectangle, searchScratch, this._mapProjection);
+        var searchResults = this._tree.search(searchRectangle);
+        var resultsLength = searchResults.length;
+        var resultsIds = new Array(resultsLength);
+        for (var i = 0; i < resultsLength; i++) {
+            resultsIds[i] = searchResults[i].id;
+        }
+        return resultsIds;
     };
 
     return RectangleCollisionChecker;

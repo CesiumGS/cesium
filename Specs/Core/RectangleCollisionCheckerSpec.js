@@ -34,4 +34,13 @@ defineSuite([
 
         expect(collisionChecker.collides(testRectangle2)).toBe(false);
     });
+
+    it('searches for likely collisions', function() {
+        var collisionChecker = new RectangleCollisionChecker(new GeographicProjection());
+        collisionChecker.insert('test1', testRectangle1);
+        collisionChecker.insert('test3', testRectangle3);
+
+        var ids = collisionChecker.search(testRectangle2);
+        expect(ids).toEqual(['test3']);
+    });
 });
