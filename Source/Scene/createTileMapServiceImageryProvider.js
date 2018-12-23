@@ -121,7 +121,10 @@ define([
             var tileSetsRegex = /tilesets/i;
             var bboxRegex = /boundingbox/i;
             var originRegex = /origin/i;
-            var format, bbox, tilesets, origin;
+            var format;
+            var bbox;
+            var tilesets;
+            var origin;
             var tilesetsList = []; //list of TileSets
 
             // Allowing options properties (already copied to that) to override XML values
