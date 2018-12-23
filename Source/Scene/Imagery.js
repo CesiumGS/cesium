@@ -1,10 +1,12 @@
 define([
         '../Core/defined',
         '../Core/destroyObject',
+        '../Core/ProjectedImageryTilingScheme',
         './ImageryState'
     ], function(
         defined,
         destroyObject,
+        ProjectedImageryTilingScheme,
         ImageryState) {
     'use strict';
 
@@ -42,6 +44,10 @@ define([
         }
 
         this.rectangle = rectangle;
+
+        this.projectedRectangles = [];
+        this.projectedImages = [];
+        this.projectedTextures = [];
     }
     Imagery.createPlaceholder = function(imageryLayer) {
         var result = new Imagery(imageryLayer, 0, 0, 0);
@@ -85,14 +91,52 @@ define([
     };
 
     Imagery.prototype.processStateMachine = function(frameState, needGeographicProjection, priorityFunction) {
+        if (!this.imageryLayer.imageryProvider.ready || this.state === ImageryState.EMPTY) {
+            return;
+        }
+
+        var tilingScheme = this.imageryLayer.imageryProvider.tilingScheme;
+        var singleSource = !(tilingScheme instanceof ProjectedImageryTilingScheme);
+        var imageryLayer = this.imageryLayer;
+
         if (this.state === ImageryState.UNLOADED) {
             this.state = ImageryState.TRANSITIONING;
-            this.imageryLayer._requestImagery(this, priorityFunction);
+
+            if (singleSource) {
+                imageryLayer._requestImagery(this, priorityFunction);
+            } else {
+                var level = this.level;
+                var projectedIndices = tilingScheme.getProjectedTilesForNativeTile(this.x, this.y, level);
+                var projectedTilesLength = projectedIndices.length * 0.5;
+
+                this.projectedRectangles.length = projectedTilesLength;
+                this.projectedImages.length = projectedTilesLength;
+                this.projectedTextures.length = projectedTilesLength;
+
+                for (var i = 0; i < projectedTilesLength; i++) {
+                    var index = i * 2;
+                    var x = projectedIndices[index];
+                    var y = projectedIndices[index + 1];
+                    this.projectedRectangles[i] = tilingScheme.getProjectedTileProjectedRectangle(x, y, level);
+                }
+
+                if (projectedTilesLength === 0) {
+                    this.state = ImageryState.EMPTY;
+                    return;
+                }
+
+                imageryLayer._requestProjectedImages(this, projectedIndices, level, 0, priorityFunction);
+            }
         }
 
         if (this.state === ImageryState.RECEIVED) {
             this.state = ImageryState.TRANSITIONING;
-            this.imageryLayer._createTexture(frameState.context, this);
+
+            if (singleSource) {
+                imageryLayer._createTexture(frameState.context, this);
+            } else {
+                imageryLayer._createMultipleTextures(frameState.context, this);
+            }
         }
 
         // If the imagery is already ready, but we need a geographic version and don't have it yet,
@@ -102,7 +146,12 @@ define([
 
         if (this.state === ImageryState.TEXTURE_LOADED || needsReprojection) {
             this.state = ImageryState.TRANSITIONING;
-            this.imageryLayer._reprojectTexture(frameState, this, needGeographicProjection);
+
+            if (singleSource) {
+                imageryLayer._reprojectTexture(frameState, this, needGeographicProjection);
+            } else {
+                imageryLayer._multisourceReprojectTexture(frameState, this);
+            }
         }
     };
 

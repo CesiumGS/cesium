@@ -15,7 +15,8 @@ define([
         READY : 4,
         FAILED : 5,
         INVALID : 6,
-        PLACEHOLDER : 7
+        PLACEHOLDER : 7,
+        EMPTY : 8
     };
 
     return freezeObject(ImageryState);

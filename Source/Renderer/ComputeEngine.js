@@ -104,10 +104,12 @@ define([
         var renderState = createRenderState(width, height);
         var uniformMap = computeCommand.uniformMap;
 
-        var clearCommand = clearCommandScratch;
-        clearCommand.framebuffer = framebuffer;
-        clearCommand.renderState = renderState;
-        clearCommand.execute(context);
+        if (computeCommand.clear) {
+            var clearCommand = clearCommandScratch;
+            clearCommand.framebuffer = framebuffer;
+            clearCommand.renderState = renderState;
+            clearCommand.execute(context);
+        }
 
         var drawCommand = drawCommandScratch;
         drawCommand.vertexArray = vertexArray;

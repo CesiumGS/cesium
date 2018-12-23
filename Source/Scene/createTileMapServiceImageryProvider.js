@@ -1,4 +1,5 @@
 define([
+        '../Core/ProjectedImageryTilingScheme',
         '../Core/Cartesian2',
         '../Core/Cartographic',
         '../Core/defaultValue',
@@ -14,6 +15,7 @@ define([
         '../ThirdParty/when',
         './UrlTemplateImageryProvider'
     ], function(
+        ProjectedImageryTilingScheme,
         Cartesian2,
         Cartographic,
         defaultValue,
@@ -55,6 +57,7 @@ define([
      * @param {Number} [options.tileHeight=256] Pixel height of image tiles.
      * @param {Boolean} [options.flipXY] Older versions of gdal2tiles.py flipped X and Y values in tilemapresource.xml.
      * Specifying this option will do the same, allowing for loading of these incorrect tilesets.
+     * @param {MapProjection} [options.mapProjection] MapProjection for the imagery. Required for TMS using a "raster" profile.
      * @returns {UrlTemplateImageryProvider} The imagery provider.
      *
      * @see ArcGisMapServerImageryProvider
@@ -117,7 +120,8 @@ define([
             var tileSetRegex = /tileset/i;
             var tileSetsRegex = /tilesets/i;
             var bboxRegex = /boundingbox/i;
-            var format, bbox, tilesets;
+            var originRegex = /origin/i;
+            var format, bbox, tilesets, origin;
             var tilesetsList = []; //list of TileSets
 
             // Allowing options properties (already copied to that) to override XML values
@@ -139,6 +143,8 @@ define([
                     }
                 } else if (bboxRegex.test(nodeList.item(i).nodeName)) {
                     bbox = nodeList.item(i);
+                } else if (originRegex.test(nodeList.item(i).nodeName)) {
+                    origin = nodeList.item(i);
                 }
             }
 
@@ -165,8 +171,28 @@ define([
                     tilingScheme = new GeographicTilingScheme({ ellipsoid : options.ellipsoid });
                 } else if (tilingSchemeName === 'mercator' || tilingSchemeName === 'global-mercator') {
                     tilingScheme = new WebMercatorTilingScheme({ ellipsoid : options.ellipsoid });
+                } else if (defined(options.mapProjection)) {
+                    var west = Number.parseFloat(origin.getAttribute('x'));
+                    var south = Number.parseFloat(origin.getAttribute('y'));
+
+                    var width = Number.parseFloat(format.getAttribute('width'));
+                    var height = Number.parseFloat(format.getAttribute('height'));
+                    var unitsPerPixel = Number.parseFloat(tilesets.childNodes[1].getAttribute('units-per-pixel'));
+                    var east = west + unitsPerPixel * width;
+                    var north = south + unitsPerPixel * height;
+                    var projectedRectangle = new Rectangle(west, south, east, north);
+
+                    tilingScheme = new ProjectedImageryTilingScheme({
+                        mapProjection : options.mapProjection,
+                        projectedRectangle : projectedRectangle
+                    });
+
+                    if (!defined(options.rectangle)) {
+                        options.rectangle = Rectangle.approximateCartographicExtents(projectedRectangle, options.mapProjection, new Rectangle(), Math.max(width, height));
+                    }
+
                 } else {
-                    message = xmlResource.url + 'specifies an unsupported profile attribute, ' + tilingSchemeName + '.';
+                    message = xmlResource.url + 'specifies an unsupported profile attribute, ' + tilingSchemeName + ', or required parameters are missing.';
                     metadataError = TileProviderError.handleError(metadataError, imageryProvider, imageryProvider.errorEvent, message, undefined, undefined, undefined, requestMetadata);
                     if(!metadataError.retry) {
                         deferred.reject(new RuntimeError(message));

@@ -102,6 +102,14 @@ define([
          * @see Scene#debugCommandFilter
          */
         this.owner = options.owner;
+
+        /**
+         * Whether or not the compute command should clear the framebuffer before running.
+         *
+         * @type {Boolean}
+         * @default true
+         */
+        this.clear = defaultValue(options.clear, true);
     }
 
     /**

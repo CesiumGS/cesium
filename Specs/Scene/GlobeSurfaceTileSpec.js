@@ -505,7 +505,9 @@ defineSuite([
             var layer = new ImageryLayer({
                 requestImage : function() {
                     return when.reject();
-                }
+                },
+                ready : true,
+                tilingScheme : new GeographicTilingScheme()
             });
             var imagery = new Imagery(layer, 0, 0, 1, Rectangle.MAX_VALUE);
             tile.data.imagery.push(new TileImagery(imagery, new Cartesian4()));
