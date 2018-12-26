@@ -44,7 +44,7 @@ define([
         /**
          * The URL endpoint for the Bing geocoder service
          * @type {String}
-         * @memberof {BingMapsGeocoderService.prototype}
+         * @memberof BingMapsGeocoderService.prototype
          * @readonly
          */
         url : {
@@ -56,7 +56,7 @@ define([
         /**
          * The key for the Bing geocoder service
          * @type {String}
-         * @memberof {BingMapsGeocoderService.prototype}
+         * @memberof BingMapsGeocoderService.prototype
          * @readonly
          */
         key : {

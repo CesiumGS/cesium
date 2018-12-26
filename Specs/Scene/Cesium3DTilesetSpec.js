@@ -1973,6 +1973,18 @@ defineSuite([
         });
     });
 
+    it('applies show style to a tileset without features', function() {
+        return Cesium3DTilesTester.loadTileset(scene, noBatchIdsUrl).then(function(tileset) {
+            var hideStyle = new Cesium3DTileStyle({show : 'false'});
+            tileset.style = hideStyle;
+            expect(tileset.style).toBe(hideStyle);
+            expect(scene).toRender([0, 0, 0, 255]);
+
+            tileset.style = new Cesium3DTileStyle({show : 'true'});
+            expect(scene).notToRender([0, 0, 0, 255]);
+        });
+    });
+
     it('applies style with complex show expression to a tileset', function() {
         return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl).then(function(tileset) {
             // Each feature in the b3dm file has an id property from 0 to 9
@@ -2041,6 +2053,12 @@ defineSuite([
 
     it('applies color style to a tileset with translucent and opaque tiles', function() {
         return Cesium3DTilesTester.loadTileset(scene, translucentOpaqueMixUrl).then(function(tileset) {
+            expectColorStyle(tileset);
+        });
+    });
+
+    it('applies color style to tileset without features', function() {
+        return Cesium3DTilesTester.loadTileset(scene, noBatchIdsUrl).then(function(tileset) {
             expectColorStyle(tileset);
         });
     });
@@ -2216,6 +2234,8 @@ defineSuite([
 
     function testColorBlendMode(url) {
         return Cesium3DTilesTester.loadTileset(scene, url).then(function(tileset) {
+            tileset.luminanceAtZenith = undefined;
+
             // Check that the feature is red
             var sourceRed;
             var renderOptions = {

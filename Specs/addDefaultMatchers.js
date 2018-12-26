@@ -540,6 +540,26 @@ define([
                 };
             },
 
+            contextToRenderAndCall : function(util, customEqualityTesters) {
+                return {
+                    compare : function(actual, expected) {
+                        var actualRgba = contextRenderAndReadPixels(actual).color;
+
+                        var webglStub = !!window.webglStub;
+                        if (!webglStub) {
+                            // The callback may have expectations that fail, which still makes the
+                            // spec fail, as we desired, even though this matcher sets pass to true.
+                            var callback = expected;
+                            callback(actualRgba);
+                        }
+
+                        return {
+                            pass : true
+                        };
+                    }
+                };
+            },
+
             contextToRender : function(util, customEqualityTesters) {
                 return {
                     compare : function(actual, expected) {
@@ -701,8 +721,7 @@ define([
         };
     }
 
-    function expectContextToRender(actual, expected, expectEqual) {
-        var options = actual;
+    function contextRenderAndReadPixels(options) {
         var context = options.context;
         var vs = options.vertexShader;
         var fs = options.fragmentShader;
@@ -711,11 +730,7 @@ define([
         var modelMatrix = options.modelMatrix;
         var depth = defaultValue(options.depth, 0.0);
         var clear = defaultValue(options.clear, true);
-        var epsilon = defaultValue(options.epsilon, 0);
-
-        if (!defined(expected)) {
-            expected = [255, 255, 255, 255];
-        }
+        var clearColor;
 
         if (!defined(context)) {
             throw new DeveloperError('options.context is required.');
@@ -760,12 +775,47 @@ define([
             }]
         });
 
-        var webglStub = !!window.webglStub;
-
         if (clear) {
             ClearCommand.ALL.execute(context);
+            clearColor = context.readPixels();
+        }
 
-            var clearedRgba = context.readPixels();
+        var command = new DrawCommand({
+            primitiveType : PrimitiveType.POINTS,
+            shaderProgram : sp,
+            vertexArray : va,
+            uniformMap : uniformMap,
+            modelMatrix : modelMatrix
+        });
+
+        command.execute(context);
+        var rgba = context.readPixels();
+
+        sp = sp.destroy();
+        va = va.destroy();
+
+        return {
+            color : rgba,
+            clearColor : clearColor
+        };
+    }
+
+    function expectContextToRender(actual, expected, expectEqual) {
+        var options = actual;
+        var context = options.context;
+        var clear = defaultValue(options.clear, true);
+        var epsilon = defaultValue(options.epsilon, 0);
+
+        if (!defined(expected)) {
+            expected = [255, 255, 255, 255];
+        }
+
+        var webglStub = !!window.webglStub;
+
+        var output = contextRenderAndReadPixels(options);
+
+        if (clear) {
+            var clearedRgba = output.clearColor;
             if (!webglStub) {
                 var expectedAlpha = context.options.webgl.alpha ? 0 : 255;
                 if ((clearedRgba[0] !== 0) ||
@@ -780,15 +830,8 @@ define([
             }
         }
 
-        var command = new DrawCommand({
-            primitiveType : PrimitiveType.POINTS,
-            shaderProgram : sp,
-            vertexArray : va,
-            uniformMap : uniformMap,
-            modelMatrix : modelMatrix
-        });
-        command.execute(context);
-        var rgba = context.readPixels();
+        var rgba = output.color;
+
         if (!webglStub) {
             if (expectEqual) {
                 if (!CesiumMath.equalsEpsilon(rgba[0], expected[0], 0, epsilon) ||
@@ -810,9 +853,6 @@ define([
                 };
             }
         }
-
-        sp = sp.destroy();
-        va = va.destroy();
 
         return {
             pass : true

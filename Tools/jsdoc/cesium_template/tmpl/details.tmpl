@@ -32,8 +32,10 @@ var self = this;
     <?js } ?>
 
     <?js if (data.deprecated) { ?>
-    <span class="details-header important">Deprecated:</span>
-    <span><?js= data.deprecated ?></span>
+    <p>
+        <span class="details-header important">Deprecated:</span>
+        <span><?js= data.deprecated ?></span>
+    </p>
     <?js } ?>
 
     <?js if (data.author && author.length) {?>

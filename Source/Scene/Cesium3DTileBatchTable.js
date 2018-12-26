@@ -547,7 +547,7 @@ define([
     Cesium3DTileBatchTable.prototype.applyStyle = function(style) {
         if (!defined(style)) {
             this.setAllColor(DEFAULT_COLOR_VALUE);
-            this.setAllShow(true);
+            this.setAllShow(DEFAULT_SHOW_VALUE);
             return;
         }
 
