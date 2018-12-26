@@ -136,10 +136,11 @@ define([
         this._rectangle = defaultValue(options.rectangle, this._tilingScheme.rectangle);
         this._layers = options.layers;
 
-        this._credit = defaultValue(options.credit, undefined);
-        if (typeof this._credit === 'string') {
-            this._credit = new Credit(this._credit);
+        var credit = options.credit;
+        if (typeof credit === 'string') {
+            credit = new Credit(credit);
         }
+        this._credit = credit;
 
         /**
          * Gets or sets a value indicating whether feature picking is enabled.  If true, {@link ArcGisMapServerImageryProvider#pickFeatures} will
