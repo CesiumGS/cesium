@@ -142,7 +142,7 @@ for (var i = 0; i < localFrames.length; i++) {
 primitives[0].primitive.readyPromise.then(function(model) {
     // Play and loop all animations at half-speed
     model.activeAnimations.addAll({
-        speedup : 0.5,
+        multiplier : 0.5,
         loop : Cesium.ModelAnimationLoop.REPEAT
     });
 

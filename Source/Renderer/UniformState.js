@@ -46,6 +46,10 @@ define([
          * @type {Texture}
          */
         this.globeDepthTexture = undefined;
+        /**
+         * @type {Number}
+         */
+        this.gamma = undefined;
 
         this._viewport = new BoundingRectangle();
         this._viewportCartesian4 = new Cartesian4();
@@ -143,6 +147,7 @@ define([
         this._sunPositionColumbusView = new Cartesian3();
         this._sunDirectionWC = new Cartesian3();
         this._sunDirectionEC = new Cartesian3();
+        this._sunColor = new Cartesian3();
         this._moonDirectionEC = new Cartesian3();
 
         this._pass = undefined;
@@ -157,8 +162,12 @@ define([
         this._orthographicIn3D = false;
         this._backgroundColor = new Color();
 
-        this._brdfLut = new Sampler();
-        this._environmentMap = new Sampler();
+        this._brdfLut = undefined;
+        this._environmentMap = undefined;
+
+        this._sphericalHarmonicCoefficients = undefined;
+        this._specularEnvironmentMaps = undefined;
+        this._specularEnvironmentMapsMaximumLOD = undefined;
 
         this._fogDensity = undefined;
 
@@ -738,6 +747,17 @@ define([
         },
 
         /**
+         * The color of the light emitted by the sun.
+         * @memberof UniformState.prototype
+         * @type {Color}
+         */
+        sunColor: {
+            get: function() {
+                return this._sunColor;
+            }
+        },
+
+        /**
          * A normalized vector to the moon in eye coordinates at the current scene time.  In 3D mode, this
          * returns the actual vector from the camera position to the moon position.  In 2D and Columbus View, it returns
          * the vector from the equivalent 3D camera position to the position of the moon in the 3D scene.
@@ -844,7 +864,7 @@ define([
         /**
          * The look up texture used to find the BRDF for a material
          * @memberof UniformState.prototype
-         * @type {Sampler}
+         * @type {Texture}
          */
         brdfLut : {
             get : function() {
@@ -855,11 +875,44 @@ define([
         /**
          * The environment map of the scene
          * @memberof UniformState.prototype
-         * @type {Sampler}
+         * @type {CubeMap}
          */
         environmentMap : {
             get : function() {
                 return this._environmentMap;
+            }
+        },
+
+        /**
+         * The spherical harmonic coefficients of the scene.
+         * @memberof UniformState.prototype
+         * @type {Cartesian3[]}
+         */
+        sphericalHarmonicCoefficients : {
+            get : function() {
+                return this._sphericalHarmonicCoefficients;
+            }
+        },
+
+        /**
+         * The specular environment map atlas of the scene.
+         * @memberof UniformState.prototype
+         * @type {Texture}
+         */
+        specularEnvironmentMaps : {
+            get : function() {
+                return this._specularEnvironmentMaps;
+            }
+        },
+
+        /**
+         * The maximum level-of-detail of the specular environment map atlas of the scene.
+         * @memberof UniformState.prototype
+         * @type {Number}
+         */
+        specularEnvironmentMapsMaximumLOD : {
+            get : function() {
+                return this._specularEnvironmentMapsMaximumLOD;
             }
         },
 
@@ -1069,12 +1122,17 @@ define([
         }
 
         setSunAndMoonDirections(this, frameState);
+        this._sunColor = Cartesian3.clone(frameState.sunColor, this._sunColor);
 
         var brdfLutGenerator = frameState.brdfLutGenerator;
         var brdfLut = defined(brdfLutGenerator) ? brdfLutGenerator.colorTexture : undefined;
         this._brdfLut = brdfLut;
 
         this._environmentMap = defaultValue(frameState.environmentMap, frameState.context.defaultCubeMap);
+
+        this._sphericalHarmonicCoefficients = frameState.sphericalHarmonicCoefficients;
+        this._specularEnvironmentMaps = frameState.specularEnvironmentMaps;
+        this._specularEnvironmentMapsMaximumLOD = frameState.specularEnvironmentMapsMaximumLOD;
 
         this._fogDensity = frameState.fog.density;
 

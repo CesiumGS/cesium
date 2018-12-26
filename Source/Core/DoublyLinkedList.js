@@ -23,6 +23,9 @@ define([
         }
     });
 
+    /**
+     * @private
+     */
     function DoublyLinkedListNode(item, previous, next) {
         this.item = item;
         this.previous  = previous;
