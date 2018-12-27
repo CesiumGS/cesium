@@ -10,6 +10,7 @@ Change Log
     * The `specularEnvironmentMaps` and `sphericalHarmonicCoefficients` properties of `Model` and `Cesium3DTileset` can be used to override the values from the scene for specific models and tilesets.
     * The `luminanceAtZenith` property of `Model` and `Cesium3DTileset` adjusts the luminance of the procedural image-based lighting.
 * Double click away from an entity to un-track it [#7285](https://github.com/AnalyticalGraphicsInc/cesium/pull/7285)
+* Added a new `animationsMultiplier` property on `ModelGraphics` to control the playback speed of glTF animations. [#7361](https://github.com/AnalyticalGraphicsInc/cesium/pull/7361).
 
 ##### Fixes :wrench:
 * Fixed 3D Tiles visibility checking when running multiple passes within the same frame. [#7289](https://github.com/AnalyticalGraphicsInc/cesium/pull/7289)
