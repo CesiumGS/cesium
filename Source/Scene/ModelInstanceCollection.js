@@ -90,6 +90,11 @@ define([
      * @param {Boolean} [options.asynchronous=true] Determines if model WebGL resource creation will be spread out over several frames or block until completion once all glTF files are loaded.
      * @param {Boolean} [options.incrementallyLoadTextures=true] Determine if textures may continue to stream in after the model is loaded.
      * @param {ShadowMode} [options.shadows=ShadowMode.ENABLED] Determines whether the collection casts or receives shadows from each light source.
+     * @param {Cartesian2} [options.imageBasedLightingFactor=new Cartesian2(1.0, 1.0)] Scales the diffuse and specular image-based lighting from the earth, sky, atmosphere and star skybox.
+     * @param {Cartesian3} [options.lightColor] The color and intensity of the sunlight used to shade models.
+     * @param {Number} [options.luminanceAtZenith=1.0] The sun's luminance at the zenith in kilo candela per meter squared to use for this model's procedural environment map.
+     * @param {Cartesian3[]} [options.sphericalHarmonicCoefficients] The third order spherical harmonic coefficients used for the diffuse color of image-based lighting.
+     * @param {String} [options.specularEnvironmentMaps] A URL to a KTX file that contains a cube map of the specular lighting and the convoluted specular mipmaps.
      * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Draws the bounding sphere for the collection.
      * @param {Boolean} [options.debugWireframe=false] For debugging only. Draws the instances in wireframe.
      *
@@ -174,6 +179,9 @@ define([
         this._imageBasedLightingFactor = new Cartesian2(1.0, 1.0);
         Cartesian2.clone(options.imageBasedLightingFactor, this._imageBasedLightingFactor);
         this.lightColor = options.lightColor;
+        this.luminanceAtZenith = options.luminanceAtZenith;
+        this.sphericalHarmonicCoefficients = options.sphericalHarmonicCoefficients;
+        this.specularEnvironmentMaps = options.specularEnvironmentMaps;
     }
 
     defineProperties(ModelInstanceCollection.prototype, {
@@ -601,7 +609,10 @@ define([
             ignoreCommands : true,
             opaquePass : collection._opaquePass,
             imageBasedLightingFactor : collection.imageBasedLightingFactor,
-            lightColor : collection.lightColor
+            lightColor : collection.lightColor,
+            luminanceAtZenith : collection.luminanceAtZenith,
+            sphericalHarmonicCoefficients : collection.sphericalHarmonicCoefficients,
+            specularEnvironmentMaps : collection.specularEnvironmentMaps
         };
 
         if (!usesBatchTable) {
@@ -897,6 +908,9 @@ define([
 
         model.imageBasedLightingFactor = this.imageBasedLightingFactor;
         model.lightColor = this.lightColor;
+        model.luminanceAtZenith = this.luminanceAtZenith;
+        model.sphericalHarmonicCoefficients = this.sphericalHarmonicCoefficients;
+        model.specularEnvironmentMaps = this.specularEnvironmentMaps;
 
         model.update(frameState);
 

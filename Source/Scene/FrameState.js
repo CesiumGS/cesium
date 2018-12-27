@@ -51,6 +51,24 @@ define([
         this.environmentMap = undefined;
 
         /**
+         * The spherical harmonic coefficients used for image-based lighting for PBR models.
+         * @type {Cartesian3[]}
+         */
+        this.sphericalHarmonicCoefficients = undefined;
+
+        /**
+         * The specular environment atlas used for image-based lighting for PBR models.
+         * @type {Texture}
+         */
+        this.specularEnvironmentMaps = undefined;
+
+        /**
+         * The maximum level-of-detail of the specular environment atlas used for image-based lighting for PBR models.
+         * @type {Number}
+         */
+        this.specularEnvironmentMapsMaximumLOD = undefined;
+
+        /**
          * The current mode of the scene.
          *
          * @type {SceneMode}
