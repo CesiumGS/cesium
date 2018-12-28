@@ -313,6 +313,7 @@ define([
         result.uri = this.uri;
         result.runAnimations = this.runAnimations;
         result.clampAnimations = this.clampAnimations;
+        result.animationsMultiplier = this.animationsMultiplier;
         result.nodeTransformations = this.nodeTransformations;
         result.heightReference = this._heightReference;
         result.distanceDisplayCondition = this.distanceDisplayCondition;
@@ -350,6 +351,7 @@ define([
         this.uri = defaultValue(this.uri, source.uri);
         this.runAnimations = defaultValue(this.runAnimations, source.runAnimations);
         this.clampAnimations = defaultValue(this.clampAnimations, source.clampAnimations);
+        this.animationsMultiplier = defaultValue(this.animationsMultiplier, source.animationsMultiplier);
         this.heightReference = defaultValue(this.heightReference, source.heightReference);
         this.distanceDisplayCondition = defaultValue(this.distanceDisplayCondition, source.distanceDisplayCondition);
         this.silhouetteColor = defaultValue(this.silhouetteColor, source.silhouetteColor);
