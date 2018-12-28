@@ -49,6 +49,7 @@ defineSuite([
     'use strict';
 
     var boxUrl = './Data/Models/Box/CesiumBoxTest.gltf';
+    var animBoxesUrl = './Data/Models/anim-test-1-boxes/anim-test-1-boxes.gltf';
 
     var scene;
     var visualizer;
@@ -260,6 +261,45 @@ defineSuite([
 
         var modelPrimitive = scene.primitives.get(0);
         expect(modelPrimitive.id).toEqual(testObject);
+    });
+
+    it('correctly updates animationsMultiplier property on all animations.', function() {
+        var entityCollection = new EntityCollection();
+        visualizer = new ModelVisualizer(scene, entityCollection);
+
+        var time = JulianDate.now();
+        var testObject = entityCollection.getOrCreateEntity('test');
+        var model = new ModelGraphics();
+        testObject.model = model;
+
+        testObject.position = new ConstantProperty(new Cartesian3(5678, 1234, 1101112));
+        model.uri = new ConstantProperty(animBoxesUrl);
+        visualizer.update(time);
+
+        var modelPrimitive = scene.primitives.get(0);
+
+        return pollToPromise(function() {
+            scene.render();
+            return modelPrimitive.ready;
+        }).then(function() {
+            visualizer.update(time);
+            var animationLength = modelPrimitive.activeAnimations.length;
+            var animation;
+            var i;
+
+            for (i = 0; i < animationLength; ++i) {
+                animation = modelPrimitive.activeAnimations.get(i);
+                expect(animation.multiplier).toEqual(1.0);
+            }
+
+            model.animationsMultiplier = 2.0;
+            visualizer.update(time);
+
+            for (i = 0; i < animationLength; ++i) {
+                animation = modelPrimitive.activeAnimations.get(i);
+                expect(animation.multiplier).toEqual(2.0);
+            }
+        });
     });
 
     it('Computes bounding sphere.', function() {
