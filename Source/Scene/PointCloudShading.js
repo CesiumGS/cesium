@@ -76,6 +76,22 @@ define([
          * @default 1.0
          */
         this.eyeDomeLightingRadius = defaultValue(pointCloudShading.eyeDomeLightingRadius, 1.0);
+
+        /**
+         * Determines whether backfaces of points / mesh are hidden
+         *
+         * @type {boolean}
+         * @default false
+         */
+        this.backFaceCulling = defaultValue(pointCloudShading.backFaceCulling, false);
+
+        /**
+         * Determines whether the tileset is lighted by the sun
+         *
+         * @type {boolean}
+         * @default true
+         */
+        this.normalShading = defaultValue(pointCloudShading.normalShading, true);
     }
 
     /**

@@ -151,6 +151,9 @@ define([
          */
         this.style = options.style;
 
+        this.normalShading = options.normalShading;
+        this.backFaceCulling = options.backFaceCulling;
+
         /**
          * The event fired to indicate that a frame failed to load. A frame may fail to load if the
          * request for its uri fails or processing fails due to invalid content.
@@ -420,7 +423,8 @@ define([
                     cull : true,
                     fragmentShaderLoaded : getFragmentShaderLoaded,
                     uniformMapLoaded : getUniformMapLoaded(that),
-                    pickIdLoaded : getPickIdLoaded
+                    pickIdLoaded : getPickIdLoaded,
+                    shading : that.shading
                 });
                 return frame.pointCloud.readyPromise;
             }).otherwise(handleFrameFailure(that, uri));

@@ -71,8 +71,7 @@ define([
             uniformMapLoaded : getUniformMapLoaded(this),
             batchTableLoaded : getBatchTableLoaded(this),
             pickIdLoaded : getPickIdLoaded(this),
-            normalShading : tileset.normalShading,
-            backfaceCulling : tileset.backfaceCulling
+            shading : tileset.pointCloudShading
         });
     }
 

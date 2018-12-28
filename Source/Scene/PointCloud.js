@@ -147,14 +147,15 @@ define([
         this._quantizedRange = 0.0;
         this._octEncodedRange = 0.0;
 
+        this._pointCloudShading = defaultValue(options.shading, {
+            backFaceCulling : false,
+            normalShading : true
+        });
+
         // Use per-point normals to hide back-facing points.
-        this.backFaceCulling = false;
-        bindProperty(this, 'backFaceCulling', options.backFaceCulling);
         this._backFaceCulling = this.backFaceCulling;
 
         // Whether to enable normal shading
-        this.normalShading = true;
-        bindProperty(this, 'normalShading', options.normalShading);
         this._normalShading = this.normalShading;
 
         this._opaqueRenderState = undefined;
@@ -248,20 +249,22 @@ define([
             set : function(value) {
                 this._boundingSphere = BoundingSphere.clone(value);
             }
+        },
+
+        backFaceCulling : {
+            get : function() {
+                return this._pointCloudShading.backFaceCulling;
+            }
+        },
+
+        normalShading : {
+            get : function() {
+                return this._pointCloudShading.normalShading;
+            }
         }
     });
 
     var sizeOfUint32 = Uint32Array.BYTES_PER_ELEMENT;
-
-    function bindProperty(object, field, property) {
-        if (property) {
-            var val = property.getValue();
-            object[field] = val;
-            property.definitionChanged.addEventListener(function(newValue) {
-                object[field] = newValue.getValue();
-            });
-        }
-    }
 
     function initialize(pointCloud, options) {
         var arrayBuffer = options.arrayBuffer;
@@ -1142,6 +1145,7 @@ define([
             } else {
                 vs += '    vec3 normal = a_normal; \n';
             }
+            vs += '    vec3 view_normal = czm_normal * normal; \n';
         } else {
             vs += '    vec3 normal = vec3(1.0); \n';
         }
@@ -1168,8 +1172,7 @@ define([
         vs += '    color = color * u_highlightColor; \n';
 
         if (usesNormals && normalShading) {
-            vs += '    normal = czm_normal * normal; \n' +
-                  '    float diffuseStrength = czm_getLambertDiffuse(czm_sunDirectionEC, normal); \n' +
+            vs += '    float diffuseStrength = czm_getLambertDiffuse(czm_sunDirectionEC, view_normal); \n' +
                   '    diffuseStrength = max(diffuseStrength, 0.4); \n' + // Apply some ambient lighting
                   '    color.xyz *= diffuseStrength; \n';
         }
@@ -1178,7 +1181,7 @@ define([
               '    gl_Position = czm_modelViewProjection * vec4(position, 1.0); \n';
 
         if (usesNormals && backFaceCulling) {
-            vs += '    float visible = step(-normal.z, 0.0); \n' +
+            vs += '    float visible = step(-view_normal.z, 0.0); \n' +
                   '    gl_Position *= visible; \n' +
                   '    gl_PointSize *= visible; \n';
         }
