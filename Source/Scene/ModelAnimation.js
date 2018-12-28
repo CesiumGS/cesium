@@ -120,7 +120,7 @@ define([
         // Set during animation update
         this._computedStartTime = undefined;
         this._duration = undefined;
-        this._speedupChanged = false;
+        this._multiplierChanged = false;
 
         // To avoid allocations in ModelAnimationCollection.update
         var that = this;
