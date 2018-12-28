@@ -1034,13 +1034,14 @@ define([
      * @returns {Matrix3} The modified result parameter.
      */
     Matrix3.getRotation = function(matrix, result) {
-        Matrix3.multiplyByScale(
-            matrix,
-            Cartesian3.divideComponents(
-                UNIT, Matrix3.getScale(matrix, scaleVector), scaleVector
-            ),
-            result
-        );
+        //>>includeStart('debug', pragmas.debug);
+        Check.typeOf.object('matrix', matrix);
+        Check.typeOf.object('result', result);
+        //>>includeEnd('debug');
+
+        var inverseScale = Cartesian3.divideComponents(UNIT, Matrix3.getScale(matrix, scaleVector), scaleVector);
+        result = Matrix3.multiplyByScale(matrix, inverseScale, result);
+
         return result;
     };
 
