@@ -219,7 +219,9 @@ define([
                 return this._multiplier;
             },
             set : function(multiplier) {
+                //>>includeStart('debug', pragmas.debug);
                 Check.typeOf.number.greaterThan('multiplier', multiplier, 0);
+                //>>includeEnd('debug');
 
                 this._multiplier = multiplier;
                 this._multiplierChanged = true;
