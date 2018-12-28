@@ -21,16 +21,17 @@ float getTime(float t, float coord)
 czm_material czm_getMaterial(czm_materialInput materialInput)
 {
     czm_material material = czm_getDefaultMaterial(materialInput);
-    
+
     vec2 st = materialInput.st;
     float s = getTime(time.x, st.s) * fadeDirection.s;
     float t = getTime(time.y, st.t) * fadeDirection.t;
-    
+
     float u = length(vec2(s, t));
     vec4 color = mix(fadeInColor, fadeOutColor, u);
-    
+
+    color = czm_gammaCorrect(color);
     material.emission = color.rgb;
     material.alpha = color.a;
-    
+
     return material;
 }

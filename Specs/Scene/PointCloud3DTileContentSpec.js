@@ -334,6 +334,7 @@ defineSuite([
     });
 
     it('renders with debug color', function() {
+        CesiumMath.setRandomNumberSeed(0);
         return Cesium3DTilesTester.loadTileset(scene, pointCloudRGBUrl).then(function(tileset) {
             var color;
             expect(scene).toRenderAndCall(function(rgba) {
@@ -722,7 +723,9 @@ defineSuite([
 
             tileset.style.color = new Expression('color("blue", 0.5)');
             tileset.makeStyleDirty();
-            expect(scene).toRender([0, 0, 255, 255]);
+            expect(scene).toRenderAndCall(function(rgba) {
+                expect(rgba).toEqualEpsilon([0, 0, 255, 255], 5);
+            });
 
             var i;
             var commands = scene.frameState.commandList;

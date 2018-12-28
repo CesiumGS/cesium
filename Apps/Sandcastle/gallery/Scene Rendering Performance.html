@@ -193,11 +193,15 @@ function loadCzmlScenario() {
 function pickingScenario() {
     resetScene();
 
+    var color = Cesium.Color.CORNFLOWERBLUE;
+    var colorProperty = new Cesium.CallbackProperty(function() {
+        return color;
+    }, false);
     var entity = viewer.entities.add({
         position : Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883),
         box : {
             dimensions : new Cesium.Cartesian3(1000000.0, 1000000.0, 30000.0),
-            material : Cesium.Color.CORNFLOWERBLUE
+            material : new Cesium.ColorMaterialProperty(colorProperty)
         }
     });
 
@@ -213,12 +217,11 @@ function pickingScenario() {
             if (Cesium.defined(lastPicked)) {
                 return;
             }
-
-            entity.box.material = Cesium.Color.YELLOW;
+            color = Cesium.Color.YELLOW;
             scene.requestRender();
             lastPicked = pickedObject;
         } else if (Cesium.defined(lastPicked)) {
-            entity.box.material = Cesium.Color.CORNFLOWERBLUE;
+            color = Cesium.Color.CORNFLOWERBLUE;
             scene.requestRender();
             lastPicked = undefined;
         }
