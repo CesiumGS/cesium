@@ -481,7 +481,7 @@ define([
     }
 
     function setMinMaxTerrainHeights(primitive, rectangle, ellipsoid) {
-        var result = ApproximateTerrainHeights.getApproximateTerrainHeights(rectangle, ellipsoid);
+        var result = ApproximateTerrainHeights.getMinimumMaximumHeights(rectangle, ellipsoid);
 
         primitive._minTerrainHeight = result.minimumTerrainHeight;
         primitive._maxTerrainHeight = result.maximumTerrainHeight;
@@ -687,7 +687,7 @@ define([
 
                 var id = instance.id;
                 if (defined(id) && defined(instanceRectangle)) {
-                    var boundingSphere = ApproximateTerrainHeights.getInstanceBoundingSphere(instanceRectangle, ellipsoid);
+                    var boundingSphere = ApproximateTerrainHeights.getBoundingSphere(instanceRectangle, ellipsoid);
                     this._boundingSpheresKeys.push(id);
                     this._boundingSpheres.push(boundingSphere);
                 }
