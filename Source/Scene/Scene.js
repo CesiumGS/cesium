@@ -4236,7 +4236,7 @@ define([
         if (width instanceof Cartesian3) {
             result = width;
             width = undefined;
-            deprecationWarning('clampToHeight-parameter-change', 'clampToHeight now takes an optional width argument before the result argument in Cesium 1.52.  The previous function definition will no longer work in 1.53.');
+            deprecationWarning('clampToHeight-parameter-change', 'clampToHeight now takes an optional width argument before the result argument in Cesium 1.54.  The previous function definition will no longer work in 1.56.');
         }
 
         var ray = getRayForClampToHeight(this, cartesian);
