@@ -994,7 +994,7 @@ define([
             var adjustHeightEndTop = adjustHeightEndTopScratch;
 
             var getHeightsRectangle = Rectangle.fromCartographicArray(getHeightCartographics, getHeightRectangleScratch);
-            var minMaxHeights = ApproximateTerrainHeights.getApproximateTerrainHeights(getHeightsRectangle, ellipsoid);
+            var minMaxHeights = ApproximateTerrainHeights.getMinimumMaximumHeights(getHeightsRectangle, ellipsoid);
             var minHeight = minMaxHeights.minimumTerrainHeight;
             var maxHeight = minMaxHeights.maximumTerrainHeight;
 

@@ -200,3 +200,6 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 * [Dag Wästberg](https://github.com/dwastberg)
 * [Mussab Abdalla](https://github.com/baloola)
 * [Spencer Parkin](https://github.com/spencerparkin)
+* [Mirco Kroon](https://github.com/mircokroon)
+* [Rikku-x](https://github.com/Rikku-x)
+* [Adrien David](https://github.com/adridavid)
