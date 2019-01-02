@@ -4,6 +4,7 @@ define([
         '../Core/Cartesian3',
         '../Core/Cartographic',
         '../Core/Check',
+        '../Core/Credit',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
@@ -49,6 +50,7 @@ define([
         Cartesian3,
         Cartographic,
         Check,
+        Credit,
         defaultValue,
         defined,
         defineProperties,
@@ -192,6 +194,7 @@ define([
         this._timeSinceLoad = 0.0;
         this._updatedVisibilityFrame = 0;
         this._extras = undefined;
+        this._credits = undefined;
 
         this._cullWithChildrenBounds = defaultValue(options.cullWithChildrenBounds, true);
         this._allTilesAdditive = true;
@@ -755,7 +758,6 @@ define([
          * @default false
          */
         this.debugShowUrl = defaultValue(options.debugShowUrl, false);
-        this._credits = undefined;
 
         var that = this;
         var resource;
@@ -786,7 +788,23 @@ define([
                 that._geometricError = tilesetJson.geometricError;
                 that._extensionsUsed = tilesetJson.extensionsUsed;
                 that._gltfUpAxis = gltfUpAxis;
-                that._extras = tilesetJson.extras;
+
+                var extras =  tilesetJson.extras;
+
+                if (defined(extras) && defined(extras.cesium) && defined(extras.cesium.credits)) {
+                    var extraCredits = extras.cesium.credits;
+                    var credits = that._credits;
+                    if (!defined(credits)) {
+                        credits = [];
+                        that._credits = credits;
+                    }
+                    for (var i = 0; i < extraCredits.length; i++) {
+                        credits.push(new Credit(extraCredits[i]));
+                    }
+                }
+
+                that._extras = extras;
+
                 // Save the original, untransformed bounding volume position so we can apply
                 // the tile transform and model matrix at run time
                 var boundingVolume = that._root.createBoundingVolume(tilesetJson.root.boundingVolume, Matrix4.IDENTITY);
