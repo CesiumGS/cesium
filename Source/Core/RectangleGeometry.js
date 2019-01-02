@@ -364,7 +364,7 @@ define([
         }
         if (northCap || southCap) {
             var northIndex = size - 1;
-            var southIndex = size -1;
+            var southIndex = size - 1;
             if (northCap && southCap) {
                 northIndex = size - 2;
             }
@@ -414,7 +414,7 @@ define([
         wallPositions[posIndex++] = topPositions[i + 2];
         wallPositions[posIndex++] = bottomPositions[i];
         wallPositions[posIndex++] = bottomPositions[i + 1];
-        wallPositions[posIndex++] = bottomPositions[i + 2];
+        wallPositions[posIndex] = bottomPositions[i + 2];
         return wallPositions;
     }
 
@@ -422,7 +422,7 @@ define([
         wallTextures[stIndex++] = st[i];
         wallTextures[stIndex++] = st[i + 1];
         wallTextures[stIndex++] = st[i];
-        wallTextures[stIndex++] = st[i + 1];
+        wallTextures[stIndex] = st[i + 1];
         return wallTextures;
     }
 
@@ -548,8 +548,31 @@ define([
         }
         topBottomGeo.indices = newIndices;
 
-        var perimeterPositions = 2 * width + 2 * height - 4;
-        var wallCount = (perimeterPositions + 4) * 2;
+        var northCap = computedOptions.northCap;
+        var southCap = computedOptions.southCap;
+
+        var rowHeight = height;
+        var widthMultiplier = 2;
+        var perimeterPositions = 0;
+        var corners = 4;
+        var dupliateCorners = 4;
+        if (northCap) {
+            widthMultiplier -= 1;
+            rowHeight -= 1;
+            perimeterPositions += 1;
+            corners -= 2;
+            dupliateCorners -= 1;
+        }
+        if (southCap) {
+            widthMultiplier -= 1;
+            rowHeight -= 1;
+            perimeterPositions += 1;
+            corners -= 2;
+            dupliateCorners -= 1;
+        }
+        perimeterPositions += (widthMultiplier * width + 2 * rowHeight - corners);
+
+        var wallCount = (perimeterPositions + dupliateCorners) * 2;
 
         var wallPositions = new Float64Array(wallCount * 3);
         var wallExtrudeNormals = shadowVolume ? new Float32Array(wallCount * 3) : undefined;
@@ -566,7 +589,7 @@ define([
         var stIndex = 0;
         var extrudeNormalIndex = 0;
         var wallOffsetIndex = 0;
-        var area = width * height;
+        var area = width * rowHeight;
         var threeI;
         for (i = 0; i < area; i += width) {
             threeI = i * 3;
@@ -588,25 +611,48 @@ define([
             }
         }
 
-        for (i = area - width; i < area; i++) {
-            threeI = i * 3;
-            wallPositions = addWallPositions(wallPositions, posIndex, threeI, topPositions, bottomPositions);
-            posIndex += 6;
-            if (vertexFormat.st) {
-                wallTextures = addWallTextureCoordinates(wallTextures, stIndex, i * 2, topSt);
-                stIndex += 4;
+        if (!southCap) {
+            for (i = area - width; i < area; i++) {
+                threeI = i * 3;
+                wallPositions = addWallPositions(wallPositions, posIndex, threeI, topPositions, bottomPositions);
+                posIndex += 6;
+                if (vertexFormat.st) {
+                    wallTextures = addWallTextureCoordinates(wallTextures, stIndex, i * 2, topSt);
+                    stIndex += 4;
+                }
+                if (shadowVolume) {
+                    extrudeNormalIndex += 3;
+                    wallExtrudeNormals[extrudeNormalIndex++] = topNormals[threeI];
+                    wallExtrudeNormals[extrudeNormalIndex++] = topNormals[threeI + 1];
+                    wallExtrudeNormals[extrudeNormalIndex++] = topNormals[threeI + 2];
+                }
+                if (computeTopOffsets) {
+                    wallOffsetAttribute[wallOffsetIndex++] = 1;
+                    wallOffsetIndex += 1;
+                }
             }
-            if (shadowVolume) {
-                extrudeNormalIndex += 3;
-                wallExtrudeNormals[extrudeNormalIndex++] = topNormals[threeI];
-                wallExtrudeNormals[extrudeNormalIndex++] = topNormals[threeI + 1];
-                wallExtrudeNormals[extrudeNormalIndex++] = topNormals[threeI + 2];
-            }
-            if (computeTopOffsets) {
-                wallOffsetAttribute[wallOffsetIndex++] = 1;
-                wallOffsetIndex += 1;
-            }
+        } else {
+            var southIndex = northCap ? area + 1 : area;
+            threeI = southIndex * 3;
 
+            for (i = 0; i < 2; i++) { // duplicate corner points
+                wallPositions = addWallPositions(wallPositions, posIndex, threeI, topPositions, bottomPositions);
+                posIndex += 6;
+                if (vertexFormat.st) {
+                    wallTextures = addWallTextureCoordinates(wallTextures, stIndex, southIndex * 2, topSt);
+                    stIndex += 4;
+                }
+                if (shadowVolume) {
+                    extrudeNormalIndex += 3;
+                    wallExtrudeNormals[extrudeNormalIndex++] = topNormals[threeI];
+                    wallExtrudeNormals[extrudeNormalIndex++] = topNormals[threeI + 1];
+                    wallExtrudeNormals[extrudeNormalIndex++] = topNormals[threeI + 2];
+                }
+                if (computeTopOffsets) {
+                    wallOffsetAttribute[wallOffsetIndex++] = 1;
+                    wallOffsetIndex += 1;
+                }
+            }
         }
 
         for (i = area - 1; i > 0; i -= width) {
@@ -630,23 +676,47 @@ define([
 
         }
 
-        for (i = width - 1; i >= 0; i--) {
-            threeI = i * 3;
-            wallPositions = addWallPositions(wallPositions, posIndex, threeI, topPositions, bottomPositions);
-            posIndex += 6;
-            if (vertexFormat.st) {
-                wallTextures = addWallTextureCoordinates(wallTextures, stIndex, i * 2, topSt);
-                stIndex += 4;
+        if (!northCap) {
+            for (i = width - 1; i >= 0; i--) {
+                threeI = i * 3;
+                wallPositions = addWallPositions(wallPositions, posIndex, threeI, topPositions, bottomPositions);
+                posIndex += 6;
+                if (vertexFormat.st) {
+                    wallTextures = addWallTextureCoordinates(wallTextures, stIndex, i * 2, topSt);
+                    stIndex += 4;
+                }
+                if (shadowVolume) {
+                    extrudeNormalIndex += 3;
+                    wallExtrudeNormals[extrudeNormalIndex++] = topNormals[threeI];
+                    wallExtrudeNormals[extrudeNormalIndex++] = topNormals[threeI + 1];
+                    wallExtrudeNormals[extrudeNormalIndex++] = topNormals[threeI + 2];
+                }
+                if (computeTopOffsets) {
+                    wallOffsetAttribute[wallOffsetIndex++] = 1;
+                    wallOffsetIndex += 1;
+                }
             }
-            if (shadowVolume) {
-                extrudeNormalIndex += 3;
-                wallExtrudeNormals[extrudeNormalIndex++] = topNormals[threeI];
-                wallExtrudeNormals[extrudeNormalIndex++] = topNormals[threeI + 1];
-                wallExtrudeNormals[extrudeNormalIndex++] = topNormals[threeI + 2];
-            }
-            if (computeTopOffsets) {
-                wallOffsetAttribute[wallOffsetIndex++] = 1;
-                wallOffsetIndex += 1;
+        } else {
+            var northIndex = area;
+            threeI = northIndex * 3;
+
+            for (i = 0; i < 2; i++) { // duplicate corner points
+                wallPositions = addWallPositions(wallPositions, posIndex, threeI, topPositions, bottomPositions);
+                posIndex += 6;
+                if (vertexFormat.st) {
+                    wallTextures = addWallTextureCoordinates(wallTextures, stIndex, northIndex * 2, topSt);
+                    stIndex += 4;
+                }
+                if (shadowVolume) {
+                    extrudeNormalIndex += 3;
+                    wallExtrudeNormals[extrudeNormalIndex++] = topNormals[threeI];
+                    wallExtrudeNormals[extrudeNormalIndex++] = topNormals[threeI + 1];
+                    wallExtrudeNormals[extrudeNormalIndex++] = topNormals[threeI + 2];
+                }
+                if (computeTopOffsets) {
+                    wallOffsetAttribute[wallOffsetIndex++] = 1;
+                    wallOffsetIndex += 1;
+                }
             }
         }
 
