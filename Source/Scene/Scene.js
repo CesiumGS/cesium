@@ -1759,7 +1759,7 @@ define([
                 ((!defined(command.boundingVolume)) ||
                  !command.cull ||
                  ((cullingVolume.computeVisibility(command.boundingVolume) !== Intersect.OUTSIDE) &&
-                  (!defined(occluder) || !command.boundingVolume.isOccluded(occluder)))));
+                  (!defined(occluder) || !command.occlude || !command.boundingVolume.isOccluded(occluder)))));
     };
 
     function getAttributeLocations(shaderProgram) {

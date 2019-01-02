@@ -1,10 +1,10 @@
 defineSuite([
-        'Core/PrimitiveType',
         'Renderer/DrawCommand',
+        'Core/PrimitiveType',
         'Renderer/Pass'
     ], function(
-        PrimitiveType,
         DrawCommand,
+        PrimitiveType,
         Pass) {
     'use strict';
 
@@ -12,6 +12,7 @@ defineSuite([
         var c = new DrawCommand();
         expect(c.boundingVolume).toBeUndefined();
         expect(c.cull).toEqual(true);
+        expect(c.occlude).toEqual(true);
         expect(c.modelMatrix).toBeUndefined();
         expect(c.primitiveType).toEqual(PrimitiveType.TRIANGLES);
         expect(c.vertexArray).toBeUndefined();
@@ -43,6 +44,7 @@ defineSuite([
         var c = new DrawCommand({
             boundingVolume : boundingVolume,
             cull : false,
+            occlude : false,
             modelMatrix :  modelMatrix,
             primitiveType : primitiveType,
             vertexArray : vertexArray,
@@ -61,6 +63,7 @@ defineSuite([
 
         expect(c.boundingVolume).toBe(boundingVolume);
         expect(c.cull).toEqual(false);
+        expect(c.occlude).toEqual(false);
         expect(c.modelMatrix).toBe(modelMatrix);
         expect(c.primitiveType).toEqual(primitiveType);
         expect(c.vertexArray).toBe(vertexArray);
@@ -81,6 +84,7 @@ defineSuite([
         var c = new DrawCommand({
             boundingVolume : {},
             cull : false,
+            occlude : false,
             modelMatrix :  {},
             primitiveType : PrimitiveType.TRIANGLE_FAN,
             vertexArray : {},
@@ -101,6 +105,7 @@ defineSuite([
 
         expect(clone.boundingVolume).toBe(c.boundingVolume);
         expect(clone.cull).toEqual(c.cull);
+        expect(clone.occlude).toEqual(c.occlude);
         expect(clone.modelMatrix).toBe(c.modelMatrix);
         expect(clone.primitiveType).toEqual(c.primitiveType);
         expect(clone.vertexArray).toBe(c.vertexArray);
@@ -121,6 +126,7 @@ defineSuite([
         var c = new DrawCommand({
             boundingVolume : {},
             cull : false,
+            occlude : false,
             modelMatrix :  {},
             primitiveType : PrimitiveType.TRIANGLE_FAN,
             vertexArray : {},
@@ -143,6 +149,7 @@ defineSuite([
         expect(result).toBe(clone);
         expect(clone.boundingVolume).toBe(c.boundingVolume);
         expect(clone.cull).toEqual(c.cull);
+        expect(clone.occlude).toEqual(c.occlude);
         expect(clone.modelMatrix).toBe(c.modelMatrix);
         expect(clone.primitiveType).toEqual(c.primitiveType);
         expect(clone.vertexArray).toBe(c.vertexArray);
