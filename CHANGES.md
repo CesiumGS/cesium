@@ -1,11 +1,19 @@
 Change Log
 ==========
 
-### 1.45 - 2019-02-01
+### 1.54 - 2019-02-01
+
+##### Breaking Changes :mega:
+* Billboards with `HeightReference.CLAMP_TO_GROUND` are now clamped to both terrain and 3D Tiles.
+* The default `classificationType` for `GroundPrimitive`, `CorridorGraphics`, `EllipseGraphics`, `PolygonGraphics` and `RectangleGraphics` is now `ClassificationType.BOTH`.
+
+##### Additions :tada:
+
+* Added support for textured ground entities (entities with unspecified `height`) and `GroundPrimitives` on 3D Tiles.
 
 ##### Fixes :wrench:
-* Fixed an issue where classification primitives with the `CESIUM_3D_TILE` classification type would render on terrain. [#6568](https://github.com/AnalyticalGraphicsInc/cesium/issues/6568)
-* Fixed an issue where 3D Tiles would show through the globe. [#6867](https://github.com/AnalyticalGraphicsInc/cesium/issues/6867)
+* Fixed an issue where classification primitives with the `CESIUM_3D_TILE` classification type would render on terrain.
+* Fixed an issue where 3D Tiles would show through the globe.
 
 ### 1.53 - 2019-01-02
 

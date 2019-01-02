@@ -2243,12 +2243,18 @@ define([
                     executeCommand(commands[j], scene, context, passState);
                 }
 
-                // Draw classifications. Modifies 3D Tiles color.
-                us.updatePass(Pass.CESIUM_3D_TILE_CLASSIFICATION);
-                commands = frustumCommands.commands[Pass.CESIUM_3D_TILE_CLASSIFICATION];
-                length = frustumCommands.indices[Pass.CESIUM_3D_TILE_CLASSIFICATION];
-                for (j = 0; j < length; ++j) {
-                    executeCommand(commands[j], scene, context, passState);
+                if (length > 0) {
+                    if (defined(globeDepth) && environmentState.useGlobeDepthFramebuffer) {
+                        globeDepth.executeUpdateDepth(context, passState, clearGlobeDepth);
+                    }
+
+                    // Draw classifications. Modifies 3D Tiles color.
+                    us.updatePass(Pass.CESIUM_3D_TILE_CLASSIFICATION);
+                    commands = frustumCommands.commands[Pass.CESIUM_3D_TILE_CLASSIFICATION];
+                    length = frustumCommands.indices[Pass.CESIUM_3D_TILE_CLASSIFICATION];
+                    for (j = 0; j < length; ++j) {
+                        executeCommand(commands[j], scene, context, passState);
+                    }
                 }
             } else {
                 // When the invert classification color is opaque:
@@ -2316,6 +2322,10 @@ define([
                 // Clear stencil set by the classification for the next classification pass
                 if (length > 0 && context.stencilBuffer) {
                     clearClassificationStencil.execute(context, passState);
+                }
+
+                if (defined(globeDepth) && environmentState.useGlobeDepthFramebuffer) {
+                    globeDepth.executeUpdateDepth(context, passState, clearGlobeDepth);
                 }
 
                 // Draw style over classification.
