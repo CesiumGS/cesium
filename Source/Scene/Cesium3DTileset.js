@@ -799,7 +799,8 @@ define([
                         that._credits = credits;
                     }
                     for (var i = 0; i < extraCredits.length; i++) {
-                        credits.push(new Credit(extraCredits[i]));
+                        var credit = extraCredits[i];
+                        credits.push(new Credit(credit.html, credit.showOnScreen));
                     }
                 }
 
