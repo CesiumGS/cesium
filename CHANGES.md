@@ -1,6 +1,11 @@
 Change Log
 ==========
 
+### 1.54 - 2019-02-01
+
+##### Fixes :wrench:
+* Fix rectangle positions at the north and south poles [#7451](https://github.com/AnalyticalGraphicsInc/cesium/pull/7451)
+
 ### 1.53 - 2019-01-02
 
 ##### Additions :tada:
