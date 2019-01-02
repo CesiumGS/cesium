@@ -2302,10 +2302,6 @@ define([
                     executeCommand(commands[j], scene, context, passState);
                 }
 
-                if (defined(globeDepth) && environmentState.useGlobeDepthFramebuffer) {
-                    globeDepth.executeUpdateDepth(context, passState, clearGlobeDepth);
-                }
-
                 // Set stencil
                 us.updatePass(Pass.CESIUM_3D_TILE_CLASSIFICATION_IGNORE_SHOW);
                 commands = frustumCommands.commands[Pass.CESIUM_3D_TILE_CLASSIFICATION_IGNORE_SHOW];
@@ -2326,6 +2322,10 @@ define([
                 // Clear stencil set by the classification for the next classification pass
                 if (length > 0 && context.stencilBuffer) {
                     clearClassificationStencil.execute(context, passState);
+                }
+
+                if (defined(globeDepth) && environmentState.useGlobeDepthFramebuffer) {
+                    globeDepth.executeUpdateDepth(context, passState, clearGlobeDepth);
                 }
 
                 // Draw style over classification.
