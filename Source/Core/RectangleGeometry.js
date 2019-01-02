@@ -237,9 +237,26 @@ define([
     function constructRectangle(rectangleGeometry, computedOptions) {
         var vertexFormat = rectangleGeometry._vertexFormat;
         var ellipsoid = rectangleGeometry._ellipsoid;
-        var size = computedOptions.size;
         var height = computedOptions.height;
         var width = computedOptions.width;
+        var northCap = computedOptions.northCap;
+        var southCap = computedOptions.southCap;
+
+        var rowStart = 0;
+        var rowEnd = height;
+        var rowHeight = height;
+        var size = 0;
+        if (northCap) {
+            rowStart = 1;
+            rowHeight -= 1;
+            size += 1;
+        }
+        if (southCap) {
+            rowEnd -= 1;
+            rowHeight -= 1;
+            size += 1;
+        }
+        size += (width * rowHeight);
 
         var positions = (vertexFormat.position) ? new Float64Array(size * 3) : undefined;
         var textureCoordinates = (vertexFormat.st) ? new Float32Array(size * 2) : undefined;
@@ -255,7 +272,7 @@ define([
         var maxX = -Number.MAX_VALUE;
         var maxY = -Number.MAX_VALUE;
 
-        for (var row = 0; row < height; ++row) {
+        for (var row = rowStart; row < rowEnd; ++row) {
             for (var col = 0; col < width; ++col) {
                 RectangleGeometryLibrary.computePosition(computedOptions, ellipsoid, vertexFormat.st, row, col, position, st);
 
@@ -274,6 +291,40 @@ define([
                 }
             }
         }
+        if (northCap) {
+            RectangleGeometryLibrary.computePosition(computedOptions, ellipsoid, vertexFormat.st, 0, 0, position, st);
+
+            positions[posIndex++] = position.x;
+            positions[posIndex++] = position.y;
+            positions[posIndex++] = position.z;
+
+            if (vertexFormat.st) {
+                textureCoordinates[stIndex++] = st.x;
+                textureCoordinates[stIndex++] = st.y;
+
+                minX = st.x;
+                minY = st.y;
+                maxX = st.x;
+                maxY = st.y;
+            }
+        }
+        if (southCap) {
+            RectangleGeometryLibrary.computePosition(computedOptions, ellipsoid, vertexFormat.st, height - 1, 0, position, st);
+
+            positions[posIndex++] = position.x;
+            positions[posIndex++] = position.y;
+            positions[posIndex] = position.z;
+
+            if (vertexFormat.st) {
+                textureCoordinates[stIndex++] = st.x;
+                textureCoordinates[stIndex] = st.y;
+
+                minX = Math.min(minX, st.x);
+                minY = Math.min(minY, st.y);
+                maxX = Math.max(maxX, st.x);
+                maxY = Math.max(maxY, st.y);
+            }
+        }
 
         if (vertexFormat.st && (minX < 0.0 || minY < 0.0 || maxX > 1.0 || maxY > 1.0)) {
             for (var k = 0; k < textureCoordinates.length; k += 2) {
@@ -284,11 +335,18 @@ define([
 
         var geo = calculateAttributes(positions, vertexFormat, ellipsoid, computedOptions.tangentRotationMatrix);
 
-        var indicesSize = 6 * (width - 1) * (height - 1);
+        var indicesSize = 6 * (width - 1) * (rowHeight - 1);
+        if (northCap) {
+            indicesSize += 3 * (width - 1);
+        }
+        if (southCap) {
+            indicesSize += 3 * (width - 1);
+        }
         var indices = IndexDatatype.createTypedArray(size, indicesSize);
         var index = 0;
         var indicesIndex = 0;
-        for (var i = 0; i < height - 1; ++i) {
+        var i;
+        for (i = 0; i < rowHeight - 1; ++i) {
             for (var j = 0; j < width - 1; ++j) {
                 var upperLeft = index;
                 var lowerLeft = upperLeft + width;
@@ -303,6 +361,39 @@ define([
                 ++index;
             }
             ++index;
+        }
+        if (northCap || southCap) {
+            var northIndex = size - 1;
+            var southIndex = size -1;
+            if (northCap && southCap) {
+                northIndex = size - 2;
+            }
+
+            var p1;
+            var p2;
+            index = 0;
+
+            if (northCap) {
+                for (i = 0; i < width - 1; i++) {
+                    p1 = index;
+                    p2 = p1 + 1;
+                    indices[indicesIndex++] = northIndex;
+                    indices[indicesIndex++] = p1;
+                    indices[indicesIndex++] = p2;
+                    ++index;
+                }
+            }
+            if (southCap) {
+                index = (rowHeight - 1) * (width);
+                for (i = 0; i < width - 1; i++) {
+                    p1 = index;
+                    p2 = p1 + 1;
+                    indices[indicesIndex++] = p1;
+                    indices[indicesIndex++] = southIndex;
+                    indices[indicesIndex++] = p2;
+                    ++index;
+                }
+            }
         }
 
         geo.indices = indices;
@@ -911,7 +1002,6 @@ define([
         computedOptions.lonScalar = 1.0 / rectangleGeometry._rectangle.width;
         computedOptions.latScalar = 1.0 / rectangleGeometry._rectangle.height;
         computedOptions.tangentRotationMatrix = tangentRotationMatrix;
-        computedOptions.size = computedOptions.width * computedOptions.height;
 
         var geometry;
         var boundingSphere;
