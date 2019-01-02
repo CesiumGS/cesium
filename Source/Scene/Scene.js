@@ -789,7 +789,11 @@ define([
 
         this._view = new View(this, camera, viewport);
         this._pickOffscreenView = new View(this, pickOffscreenCamera, pickOffscreenViewport);
-        this._pickOffscreenDefaultWidth = pickOffscreenDefaultWidth;
+
+        /**
+         * @private
+         */
+        this.pickOffscreenDefaultWidth = pickOffscreenDefaultWidth;
 
         this._defaultView = new View(this, camera, viewport);
         this._view = this._defaultView;
@@ -1697,7 +1701,7 @@ define([
         passes.depth = false;
         passes.postProcess = false;
         passes.offscreen = false;
-        passes.async = false;
+        passes.asynchronous = false;
     }
 
     function updateFrameNumber(scene, frameNumber, time) {
@@ -3812,7 +3816,7 @@ define([
         camera.up = up;
         camera.right = right;
 
-        camera.frustum.width = defaultValue(width, scene._pickOffscreenDefaultWidth);
+        camera.frustum.width = defaultValue(width, scene.pickOffscreenDefaultWidth);
     }
 
     function updateAsyncRayPick(scene, asyncRayPick) {
@@ -3831,7 +3835,7 @@ define([
 
         updateFrameState(scene);
         frameState.passes.offscreen = true;
-        frameState.passes.async = true;
+        frameState.passes.asynchronous = true;
 
         uniformState.update(frameState);
 
@@ -3850,7 +3854,7 @@ define([
             }
         }
 
-        // Ignore commands pushed during async pass
+        // Ignore commands pushed during asynchronous pass
         commandList.length = commandsLength;
 
         scene._view = scene._defaultView;
@@ -3904,7 +3908,7 @@ define([
                (objectsToExclude.indexOf(object.id) > -1);
     }
 
-    function getRayIntersection(scene, ray, objectsToExclude, width, requirePosition, async) {
+    function getRayIntersection(scene, ray, objectsToExclude, width, requirePosition, asynchronous) {
         var context = scene._context;
         var uniformState = context.uniformState;
         var frameState = scene._frameState;
@@ -3924,7 +3928,7 @@ define([
         frameState.invertClassification = false;
         frameState.passes.pick = true;
         frameState.passes.offscreen = true;
-        frameState.passes.async = async;
+        frameState.passes.asynchronous = asynchronous;
 
         uniformState.update(frameState);
 
@@ -3963,22 +3967,22 @@ define([
         }
     }
 
-    function getRayIntersections(scene, ray, limit, objectsToExclude, width, requirePosition, async) {
+    function getRayIntersections(scene, ray, limit, objectsToExclude, width, requirePosition, asynchronous) {
         var pickCallback = function() {
-            return getRayIntersection(scene, ray, objectsToExclude, width, requirePosition, async);
+            return getRayIntersection(scene, ray, objectsToExclude, width, requirePosition, asynchronous);
         };
         return drillPick(limit, pickCallback);
     }
 
-    function pickFromRay(scene, ray, objectsToExclude, width, requirePosition, async) {
-        var results = getRayIntersections(scene, ray, 1, objectsToExclude, width, requirePosition, async);
+    function pickFromRay(scene, ray, objectsToExclude, width, requirePosition, asynchronous) {
+        var results = getRayIntersections(scene, ray, 1, objectsToExclude, width, requirePosition, asynchronous);
         if (results.length > 0) {
             return results[0];
         }
     }
 
-    function drillPickFromRay(scene, ray, limit, objectsToExclude, width, requirePosition, async) {
-        return getRayIntersections(scene, ray, limit, objectsToExclude, width, requirePosition, async);
+    function drillPickFromRay(scene, ray, limit, objectsToExclude, width, requirePosition, asynchronous) {
+        return getRayIntersections(scene, ray, limit, objectsToExclude, width, requirePosition, asynchronous);
     }
 
     /**
