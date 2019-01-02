@@ -548,9 +548,9 @@ define([
 
     function updateAndQueueCommand(groundPolylinePrimitive, command, frameState, modelMatrix, cull, boundingVolume, debugShowBoundingVolume) {
         // Use derived appearance command for morph and 2D
-        if (frameState.mode === SceneMode.MORPHING && command.shaderProgram !== groundPolylinePrimitive._spMorph) {
+        if (frameState.mode === SceneMode.MORPHING) {
             command = command.derivedCommands.colorMorph;
-        } else if (frameState.mode !== SceneMode.SCENE3D && command.shaderProgram !== groundPolylinePrimitive._sp2D) {
+        } else if (frameState.mode !== SceneMode.SCENE3D) {
             command = command.derivedCommands.color2D;
         }
         command.modelMatrix = modelMatrix;
