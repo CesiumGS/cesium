@@ -14,6 +14,7 @@ define([
         '../Core/GeometryInstance',
         '../Core/GroundPolylineGeometry',
         '../Core/Iso8601',
+        '../Core/oneTimeWarning',
         '../Core/PolylineGeometry',
         '../Core/PolylinePipeline',
         '../Core/ShowGeometryInstanceAttribute',
@@ -44,6 +45,7 @@ define([
         GeometryInstance,
         GroundPolylineGeometry,
         Iso8601,
+        oneTimeWarning,
         PolylineGeometry,
         PolylinePipeline,
         ShowGeometryInstanceAttribute,
@@ -520,6 +522,10 @@ define([
             groundGeometryOptions.width = geometryOptions.width;
 
             this._clampToGround = defined(clampToGround) ? clampToGround.getValue(Iso8601.MINIMUM_VALUE) : false;
+
+            if (!this._clampToGround && defined(zIndex)) {
+                oneTimeWarning('Entity polylines must have clampToGround: true when using zIndex.  zIndex will be ignored.');
+            }
 
             this._dynamic = false;
             this._geometryChanged.raiseEvent(this);
