@@ -500,11 +500,16 @@ define([
          * @memberof DrawCommand.prototype
          * @type {Boolean}
          * @default false
-         * @readonly
          */
         pickOnly : {
             get : function() {
                 return this._pickOnly;
+            },
+            set : function(value) {
+                if (this._pickOnly !== value) {
+                    this._pickOnly = value;
+                    this.dirty = true;
+                }
             }
         }
     });
