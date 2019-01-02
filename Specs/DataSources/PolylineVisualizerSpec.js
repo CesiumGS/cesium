@@ -81,7 +81,7 @@ defineSuite([
         var visualizer = new PolylineVisualizer(scene, objects);
 
         var polyline = new PolylineGraphics();
-        polyline.positions = new ConstantProperty([Cartesian3.fromDegrees(0.0, 0.0), Cartesian3.fromDegrees(0.0, 1.0)]);
+        polyline.positions = new ConstantProperty([Cartesian3.fromDegrees(0.0, 0.0), Cartesian3.fromDegrees(0.0, 0.000001)]);
         polyline.material = new ColorMaterialProperty();
 
         var entity = new Entity();
@@ -120,7 +120,7 @@ defineSuite([
         var visualizer = new PolylineVisualizer(scene, objects);
 
         var polyline = new PolylineGraphics();
-        polyline.positions = new ConstantProperty([Cartesian3.fromDegrees(0.0, 0.0), Cartesian3.fromDegrees(0.0, 1.0)]);
+        polyline.positions = new ConstantProperty([Cartesian3.fromDegrees(0.0, 0.0), Cartesian3.fromDegrees(0.0, 0.000001)]);
         polyline.material = new PolylineArrowMaterialProperty();
 
         var entity = new Entity();
@@ -163,7 +163,7 @@ defineSuite([
         var visualizer = new PolylineVisualizer(scene, objects);
 
         var polyline = new PolylineGraphics();
-        polyline.positions = new ConstantProperty([Cartesian3.fromDegrees(0.0, 0.0), Cartesian3.fromDegrees(0.0, 1.0)]);
+        polyline.positions = new ConstantProperty([Cartesian3.fromDegrees(0.0, 0.0), Cartesian3.fromDegrees(0.0, 0.000001)]);
         polyline.material = new ColorMaterialProperty();
         polyline.clampToGround = new ConstantProperty(true);
 
@@ -203,7 +203,7 @@ defineSuite([
         var visualizer = new PolylineVisualizer(scene, objects);
 
         var polyline = new PolylineGraphics();
-        polyline.positions = new ConstantProperty([Cartesian3.fromDegrees(0.0, 0.0), Cartesian3.fromDegrees(0.0, 1.0)]);
+        polyline.positions = new ConstantProperty([Cartesian3.fromDegrees(0.0, 0.0), Cartesian3.fromDegrees(0.0, 0.000001)]);
         polyline.material = new ColorMaterialProperty();
         polyline.shadows = new ConstantProperty(shadows);
 
@@ -254,7 +254,7 @@ defineSuite([
         var visualizer = new PolylineVisualizer(scene, objects);
 
         var polyline = new PolylineGraphics();
-        polyline.positions = new ConstantProperty([Cartesian3.fromDegrees(0.0, 0.0), Cartesian3.fromDegrees(0.0, 1.0)]);
+        polyline.positions = new ConstantProperty([Cartesian3.fromDegrees(0.0, 0.0), Cartesian3.fromDegrees(0.0, 0.000001)]);
         polyline.material = new ColorMaterialProperty();
         polyline.depthFailMaterial = new ColorMaterialProperty();
 
@@ -296,7 +296,7 @@ defineSuite([
         var visualizer = new PolylineVisualizer(scene, objects);
 
         var polyline = new PolylineGraphics();
-        polyline.positions = new ConstantProperty([Cartesian3.fromDegrees(0.0, 0.0), Cartesian3.fromDegrees(0.0, 1.0)]);
+        polyline.positions = new ConstantProperty([Cartesian3.fromDegrees(0.0, 0.0), Cartesian3.fromDegrees(0.0, 0.000001)]);
         polyline.material = new ColorMaterialProperty();
         polyline.depthFailMaterial = new PolylineArrowMaterialProperty();
 
@@ -338,7 +338,7 @@ defineSuite([
         var visualizer = new PolylineVisualizer(scene, objects);
 
         var polyline = new PolylineGraphics();
-        polyline.positions = new ConstantProperty([Cartesian3.fromDegrees(0.0, 0.0), Cartesian3.fromDegrees(0.0, 1.0)]);
+        polyline.positions = new ConstantProperty([Cartesian3.fromDegrees(0.0, 0.0), Cartesian3.fromDegrees(0.0, 0.000001)]);
         polyline.material = new PolylineArrowMaterialProperty();
         polyline.depthFailMaterial = new PolylineArrowMaterialProperty();
 
@@ -380,7 +380,7 @@ defineSuite([
         var visualizer = new PolylineVisualizer(scene, objects);
 
         var polyline = new PolylineGraphics();
-        polyline.positions = new ConstantProperty([Cartesian3.fromDegrees(0.0, 0.0), Cartesian3.fromDegrees(0.0, 1.0)]);
+        polyline.positions = new ConstantProperty([Cartesian3.fromDegrees(0.0, 0.0), Cartesian3.fromDegrees(0.0, 0.000001)]);
         polyline.material = new PolylineArrowMaterialProperty();
         polyline.depthFailMaterial = new ColorMaterialProperty();
 
@@ -426,7 +426,7 @@ defineSuite([
         var visualizer = new PolylineVisualizer(scene, objects);
 
         var polyline = new PolylineGraphics();
-        polyline.positions = new ConstantProperty([Cartesian3.fromDegrees(0.0, 0.0), Cartesian3.fromDegrees(0.0, 1.0)]);
+        polyline.positions = new ConstantProperty([Cartesian3.fromDegrees(0.0, 0.0), Cartesian3.fromDegrees(0.0, 0.000001)]);
         polyline.material = new ColorMaterialProperty();
         polyline.classificationType = new ConstantProperty(classificationType);
         polyline.clampToGround = true;
@@ -474,7 +474,7 @@ defineSuite([
         var visualizer = new PolylineVisualizer(scene, objects);
 
         var polyline = new PolylineGraphics();
-        polyline.positions = new ConstantProperty([Cartesian3.fromDegrees(0.0, 0.0), Cartesian3.fromDegrees(0.0, 1.0)]);
+        polyline.positions = new ConstantProperty([Cartesian3.fromDegrees(0.0, 0.0), Cartesian3.fromDegrees(0.0, 0.000001)]);
         polyline.material = new ColorMaterialProperty();
 
         var entity = new Entity();
@@ -527,7 +527,7 @@ defineSuite([
 
         var polyline = new PolylineGraphics();
         polyline.positions = new CallbackProperty(function() {
-            return [Cartesian3.fromDegrees(0.0, 0.0), Cartesian3.fromDegrees(0.0, 1.0)];
+            return [Cartesian3.fromDegrees(0.0, 0.0), Cartesian3.fromDegrees(0.0, 0.000001)];
         }, false);
         polyline.material = new ColorMaterialProperty();
 
@@ -574,7 +574,7 @@ defineSuite([
         var visualizer = new PolylineVisualizer(scene, entityCollection);
 
         var polyline = new PolylineGraphics();
-        polyline.positions = new ConstantProperty([Cartesian3.fromDegrees(0.0, 0.0), Cartesian3.fromDegrees(0.0, 1.0)]);
+        polyline.positions = new ConstantProperty([Cartesian3.fromDegrees(0.0, 0.0), Cartesian3.fromDegrees(0.0, 0.000001)]);
         polyline.material = new PolylineArrowMaterialProperty();
 
         var entity = new Entity();
@@ -632,7 +632,7 @@ defineSuite([
         var entity = new Entity({
             id : 'test',
             polyline : {
-                positions: [Cartesian3.fromDegrees(0.0, 0.0), Cartesian3.fromDegrees(0.0, 1.0)],
+                positions: [Cartesian3.fromDegrees(0.0, 0.0), Cartesian3.fromDegrees(0.0, 0.000001)],
                 material: Color.ORANGE
             }
         });
@@ -650,7 +650,7 @@ defineSuite([
                 id : 'test',
                 position : Cartesian3.fromDegrees(0, 0, 0),
                 polyline : {
-                    positions: [Cartesian3.fromDegrees(0.0, 0.0), Cartesian3.fromDegrees(0.0, 1.0)],
+                    positions: [Cartesian3.fromDegrees(0.0, 0.0), Cartesian3.fromDegrees(0.0, 0.000001)],
                     material : Color.BLUE
                 }
             });
@@ -690,7 +690,7 @@ defineSuite([
 
         var entity = entities.add({
             polyline : {
-                positions: [Cartesian3.fromDegrees(0.0, 0.0), Cartesian3.fromDegrees(0.0, 1.0)],
+                positions: [Cartesian3.fromDegrees(0.0, 0.0), Cartesian3.fromDegrees(0.0, 0.000001)],
                 material : new ColorMaterialProperty(createDynamicProperty(Color.BLUE))
             }
         });
@@ -732,7 +732,7 @@ defineSuite([
         var entity = entities.add({
             position : new Cartesian3(1234, 5678, 9101112),
             polyline : {
-                positions: [Cartesian3.fromDegrees(0.0, 0.0), Cartesian3.fromDegrees(0.0, 1.0)],
+                positions: [Cartesian3.fromDegrees(0.0, 0.0), Cartesian3.fromDegrees(0.0, 0.000001)],
                 material : new PolylineArrowMaterialProperty(createDynamicProperty(Color.BLUE))
             }
         });
@@ -776,7 +776,7 @@ defineSuite([
         var visualizer = new PolylineVisualizer(scene, objects);
 
         var polyline = new PolylineGraphics();
-        polyline.positions = new ConstantProperty([Cartesian3.fromDegrees(0.0, 0.0), Cartesian3.fromDegrees(0.0, 1.0)]);
+        polyline.positions = new ConstantProperty([Cartesian3.fromDegrees(0.0, 0.0), Cartesian3.fromDegrees(0.0, 0.000001)]);
         polyline.material = new ColorMaterialProperty();
         polyline.clampToGround = new ConstantProperty(true);
 
@@ -824,7 +824,7 @@ defineSuite([
 
         var blueColor = Color.BLUE.withAlpha(0.5);
         var redColor = Color.RED.withAlpha(0.5);
-        var positions = [Cartesian3.fromDegrees(0.0, 0.0), Cartesian3.fromDegrees(0.0, 1.0)];
+        var positions = [Cartesian3.fromDegrees(0.0, 0.0), Cartesian3.fromDegrees(0.0, 0.000001)];
         entities.add({
             polyline : {
                 positions : positions,
