@@ -179,7 +179,6 @@ define([
                     modelData.animationsRunning = runAnimations;
                 }
 
-                // Update the multiplier property
                 if (modelData.animationsRunning && modelData.multiplier !== multiplier) {
                     var animationLength = model.activeAnimations.length;
                     for (var j = 0; j < animationLength; ++j) {

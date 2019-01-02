@@ -64,7 +64,6 @@ define([
 
         this._model = model;
         this._scheduledAnimations = [];
-        this._multiplierChanged = false;
         this._previousTime = undefined;
     }
 
