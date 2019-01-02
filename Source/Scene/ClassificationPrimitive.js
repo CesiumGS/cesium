@@ -766,7 +766,6 @@ define([
                 // Then derive from the 3D Tiles command
                 derived2DCommand = DrawCommand.shallowClone(derivedCommand, derivedCommand.derivedCommands.appearance2D);
                 derived2DCommand.shaderProgram = classificationPrimitive._spColor2D;
-                derived2DCommand.pass = Pass.CESIUM_3D_TILE_CLASSIFICATION;
                 derivedCommand.derivedCommands.appearance2D = derived2DCommand;
             }
         }
@@ -908,7 +907,6 @@ define([
                 // Then derive from the 3D Tiles command
                 derived2DCommand = DrawCommand.shallowClone(derivedCommand, derivedCommand.derivedCommands.pick2D);
                 derived2DCommand.shaderProgram = classificationPrimitive._spPick2D;
-                derived2DCommand.pass = Pass.CESIUM_3D_TILE_CLASSIFICATION;
                 derivedCommand.derivedCommands.pick2D = derived2DCommand;
             }
         }

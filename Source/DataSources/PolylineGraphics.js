@@ -31,10 +31,11 @@ define([
      * @param {Property} [options.width=1.0] A numeric Property specifying the width in pixels.
      * @param {Property} [options.show=true] A boolean Property specifying the visibility of the polyline.
      * @param {MaterialProperty} [options.material=Color.WHITE] A Property specifying the material used to draw the polyline.
-     * @param {MaterialProperty} [options.depthFailMaterial] A property specifiying the material used to draw the polyline when it is below the terrain.
+     * @param {MaterialProperty} [options.depthFailMaterial] A property specifying the material used to draw the polyline when it is below the terrain.
      * @param {Property} [options.granularity=Cesium.Math.RADIANS_PER_DEGREE] A numeric Property specifying the angular distance between each latitude and longitude if followSurface is true.
      * @param {Property} [options.shadows=ShadowMode.DISABLED] An enum Property specifying whether the polyline casts or receives shadows from each light source.
      * @param {Property} [options.distanceDisplayCondition] A Property specifying at what distance from the camera that this polyline will be displayed.
+     * @param {Property} [options.classificationType=ClassificationType.BOTH] An enum Property specifying whether this polyline will classify terrain, 3D Tiles, or both when on the ground.
      * @param {Property} [options.zIndex=0] A Property specifying the zIndex used for ordering ground geometry. Only has an effect if `clampToGround` is true and polylines on terrain is supported.
      *
      * @see Entity
@@ -62,6 +63,8 @@ define([
         this._shadowsSubscription = undefined;
         this._distanceDisplayCondition = undefined;
         this._distanceDisplayConditionSubscription = undefined;
+        this._classificationType = undefined;
+        this._classificationTypeSubscription = undefined;
         this._zIndex = undefined;
         this._zIndexSubscription = undefined;
 
@@ -171,6 +174,14 @@ define([
         distanceDisplayCondition : createPropertyDescriptor('distanceDisplayCondition'),
 
         /**
+         * Gets or sets the {@link ClassificationType} Property specifying whether this polyline will classify terrain, 3D Tiles, or both when on the ground.
+         * @memberof PolylineGraphics.prototype
+         * @type {Property}
+         * @default ClassificationType.BOTH
+         */
+        classificationType : createPropertyDescriptor('classificationType'),
+
+        /**
          * Gets or sets the zIndex Property specifying the ordering of the polyline. Only has an effect if `clampToGround` is true and polylines on terrain is supported.
          * @memberof RectangleGraphics.prototype
          * @type {ConstantProperty}
@@ -199,6 +210,7 @@ define([
         result.granularity = this.granularity;
         result.shadows = this.shadows;
         result.distanceDisplayCondition = this.distanceDisplayCondition;
+        result.classificationType = this.classificationType;
         result.zIndex = this.zIndex;
 
         return result;
@@ -227,6 +239,7 @@ define([
         this.granularity = defaultValue(this.granularity, source.granularity);
         this.shadows = defaultValue(this.shadows, source.shadows);
         this.distanceDisplayCondition = defaultValue(this.distanceDisplayCondition, source.distanceDisplayCondition);
+        this.classificationType = defaultValue(this.classificationType, source.classificationType);
         this.zIndex = defaultValue(this.zIndex, source.zIndex);
     };
 

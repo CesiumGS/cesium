@@ -18,6 +18,7 @@ define([
         '../Core/PolylinePipeline',
         '../Core/ShowGeometryInstanceAttribute',
         '../DataSources/Entity',
+        '../Scene/ClassificationType',
         '../Scene/GroundPolylinePrimitive',
         '../Scene/PolylineCollection',
         '../Scene/PolylineColorAppearance',
@@ -48,6 +49,7 @@ define([
         PolylinePipeline,
         ShowGeometryInstanceAttribute,
         Entity,
+        ClassificationType,
         GroundPolylinePrimitive,
         PolylineCollection,
         PolylineColorAppearance,
@@ -70,6 +72,7 @@ define([
     var defaultShow = new ConstantProperty(true);
     var defaultShadows = new ConstantProperty(ShadowMode.DISABLED);
     var defaultDistanceDisplayCondition = new ConstantProperty(new DistanceDisplayCondition());
+    var defaultClassificationType = new ConstantProperty(ClassificationType.BOTH);
 
     function GeometryOptions() {
         this.vertexFormat = undefined;
@@ -113,6 +116,7 @@ define([
         this._materialProperty = undefined;
         this._shadowsProperty = undefined;
         this._distanceDisplayConditionProperty = undefined;
+        this._classificationTypeProperty = undefined;
         this._depthFailMaterialProperty = undefined;
         this._geometryOptions = new GeometryOptions();
         this._groundGeometryOptions = new GroundGeometryOptions();
@@ -250,6 +254,18 @@ define([
         distanceDisplayConditionProperty : {
             get : function() {
                 return this._distanceDisplayConditionProperty;
+            }
+        },
+        /**
+         * Gets or sets the {@link ClassificationType} Property specifying if this geometry will classify terrain, 3D Tiles, or both when on the ground.
+         * @memberof PolylineGeometryUpdater.prototype
+         *
+         * @type {Property}
+         * @readonly
+         */
+        classificationTypeProperty : {
+            get : function() {
+                return this._classificationTypeProperty;
             }
         },
         /**
@@ -473,6 +489,7 @@ define([
         this._showProperty = defaultValue(show, defaultShow);
         this._shadowsProperty = defaultValue(polyline.shadows, defaultShadows);
         this._distanceDisplayConditionProperty = defaultValue(polyline.distanceDisplayCondition, defaultDistanceDisplayCondition);
+        this._classificationTypeProperty = defaultValue(polyline.classificationType, defaultClassificationType);
         this._fillEnabled = true;
         this._zIndex = defaultValue(zIndex, defaultZIndex);
 
@@ -493,7 +510,7 @@ define([
             var positions = positionsProperty.getValue(Iso8601.MINIMUM_VALUE, geometryOptions.positions);
 
             //Because of the way we currently handle reference properties,
-            //we can't automatically assume the positions are  always valid.
+            //we can't automatically assume the positions are always valid.
             if (!defined(positions) || positions.length < 2) {
                 if (this._fillEnabled) {
                     this._fillEnabled = false;
@@ -635,6 +652,7 @@ define([
             this._groundPolylinePrimitive = groundPrimitives.add(new GroundPolylinePrimitive({
                 geometryInstances : geometryUpdater.createFillGeometryInstance(time),
                 appearance : appearance,
+                classificationType : geometryUpdater.classificationTypeProperty.getValue(time),
                 asynchronous : false
             }), Property.getValueOrUndefined(geometryUpdater.zIndex, time));
 

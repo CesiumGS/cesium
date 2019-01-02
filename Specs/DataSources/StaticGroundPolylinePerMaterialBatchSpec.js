@@ -18,6 +18,7 @@ defineSuite([
         'DataSources/PolylineGeometryUpdater',
         'DataSources/PolylineGraphics',
         'DataSources/TimeIntervalCollectionProperty',
+        'Scene/ClassificationType',
         'Scene/GroundPolylinePrimitive',
         'Specs/createScene',
         'Specs/pollToPromise'
@@ -41,6 +42,7 @@ defineSuite([
         PolylineGeometryUpdater,
         PolylineGraphics,
         TimeIntervalCollectionProperty,
+        ClassificationType,
         GroundPolylinePrimitive,
         createScene,
         pollToPromise) {
@@ -90,7 +92,7 @@ defineSuite([
             return;
         }
 
-        batch = new StaticGroundPolylinePerMaterialBatch(scene.groundPrimitives, false);
+        batch = new StaticGroundPolylinePerMaterialBatch(scene.groundPrimitives, ClassificationType.BOTH, false);
 
         var polyline1 = createGroundPolyline();
         polyline1.material = new PolylineOutlineMaterialProperty();
@@ -151,7 +153,7 @@ defineSuite([
             polyline: polyline
         });
 
-        batch = new StaticGroundPolylinePerMaterialBatch(scene.groundPrimitives, false);
+        batch = new StaticGroundPolylinePerMaterialBatch(scene.groundPrimitives, ClassificationType.BOTH, false);
 
         var updater = new PolylineGeometryUpdater(entity, scene);
         batch.add(validTime, updater);
@@ -197,7 +199,7 @@ defineSuite([
             polyline: polyline
         });
 
-        batch = new StaticGroundPolylinePerMaterialBatch(scene.groundPrimitives, false);
+        batch = new StaticGroundPolylinePerMaterialBatch(scene.groundPrimitives, ClassificationType.BOTH, false);
 
         var updater = new PolylineGeometryUpdater(entity, scene);
         batch.add(validTime, updater);
@@ -230,7 +232,7 @@ defineSuite([
             return;
         }
 
-        batch = new StaticGroundPolylinePerMaterialBatch(scene.groundPrimitives, false);
+        batch = new StaticGroundPolylinePerMaterialBatch(scene.groundPrimitives, ClassificationType.BOTH, false);
 
         function buildEntity() {
             var polyline = createGroundPolyline();
@@ -299,7 +301,7 @@ defineSuite([
             return;
         }
 
-        batch = new StaticGroundPolylinePerMaterialBatch(scene.groundPrimitives, false);
+        batch = new StaticGroundPolylinePerMaterialBatch(scene.groundPrimitives, ClassificationType.BOTH, false);
         var polyline1 = createGroundPolyline();
         polyline1.material = Color.RED;
         var entity = new Entity({
@@ -335,7 +337,7 @@ defineSuite([
             return;
         }
 
-        batch = new StaticGroundPolylinePerMaterialBatch(scene.groundPrimitives, false);
+        batch = new StaticGroundPolylinePerMaterialBatch(scene.groundPrimitives, ClassificationType.BOTH, false);
 
         var polyline1 = createGroundPolyline();
         polyline1.material = new PolylineOutlineMaterialProperty();
@@ -376,7 +378,7 @@ defineSuite([
             return;
         }
 
-        batch = new StaticGroundPolylinePerMaterialBatch(scene.groundPrimitives, false);
+        batch = new StaticGroundPolylinePerMaterialBatch(scene.groundPrimitives, ClassificationType.BOTH, false);
 
         var polyline1 = createGroundPolyline();
         polyline1.material = new PolylineOutlineMaterialProperty();
@@ -417,7 +419,7 @@ defineSuite([
         }
 
         var resultSphere = new BoundingSphere();
-        batch = new StaticGroundPolylinePerMaterialBatch(scene.groundPrimitives, false);
+        batch = new StaticGroundPolylinePerMaterialBatch(scene.groundPrimitives, ClassificationType.BOTH, false);
 
         var polyline1 = createGroundPolyline();
         polyline1.material = new PolylineOutlineMaterialProperty();
@@ -457,7 +459,7 @@ defineSuite([
             // Don't fail if GroundPolylinePrimitive is not supported
             return;
         }
-        batch = new StaticGroundPolylinePerMaterialBatch(scene.groundPrimitives, false);
+        batch = new StaticGroundPolylinePerMaterialBatch(scene.groundPrimitives, ClassificationType.BOTH, false);
 
         function buildEntity() {
             var polyline = createGroundPolyline();
