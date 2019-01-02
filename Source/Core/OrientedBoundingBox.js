@@ -250,19 +250,6 @@ define([
 
     var scratchOffset = new Cartesian3();
     var scratchScale = new Cartesian3();
-    /**
-     * Computes an OrientedBoundingBox given extents in the east-north-up space of the tangent plane.
-     *
-     * @param {Plane} tangentPlane The tangent place corresponding to east-north-up.
-     * @param {Number} minimumX Minimum X extent in tangent plane space.
-     * @param {Number} maximumX Maximum X extent in tangent plane space.
-     * @param {Number} minimumY Minimum Y extent in tangent plane space.
-     * @param {Number} maximumY Maximum Y extent in tangent plane space.
-     * @param {Number} minimumZ Minimum Z extent in tangent plane space.
-     * @param {Number} maximumZ Maximum Z extent in tangent plane space.
-     * @param {OrientedBoundingBox} [result] The object onto which to store the result.
-     * @returns {OrientedBoundingBox} The modified result parameter or a new OrientedBoundingBox instance if one was not provided.
-     */
     function fromTangentPlaneExtents(tangentPlane, minimumX, maximumX, minimumY, maximumY, minimumZ, maximumZ, result) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(minimumX) ||
