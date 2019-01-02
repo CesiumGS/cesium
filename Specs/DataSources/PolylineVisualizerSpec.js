@@ -66,6 +66,24 @@ defineSuite([
         ApproximateTerrainHeights._terrainHeights = undefined;
     });
 
+    function visualizerUpdated(visualizer) {
+        return pollToPromise(function() {
+            scene.initializeFrame();
+            var isUpdated = visualizer.update(time);
+            scene.render(time);
+            return isUpdated;
+        });
+    }
+
+    function visualizerEmpty(visualizer) {
+        return pollToPromise(function() {
+            scene.initializeFrame();
+            expect(visualizer.update(time)).toBe(true);
+            scene.render(time);
+            return scene.primitives.length === 0 && scene.groundPrimitives.length === 0;
+        });
+    }
+
     it('Can create and destroy', function() {
         var objects = new EntityCollection();
         var visualizer = new PolylineVisualizer(scene, objects);
@@ -88,12 +106,7 @@ defineSuite([
         entity.polyline = polyline;
         objects.add(entity);
 
-        return pollToPromise(function() {
-            scene.initializeFrame();
-            var isUpdated = visualizer.update(time);
-            scene.render(time);
-            return isUpdated;
-        }).then(function() {
+        return visualizerUpdated(visualizer).then(function() {
             var primitive = scene.primitives.get(0);
             var attributes = primitive.getGeometryInstanceAttributes(entity);
             expect(attributes).toBeDefined();
@@ -104,12 +117,7 @@ defineSuite([
 
             objects.remove(entity);
 
-            return pollToPromise(function() {
-                scene.initializeFrame();
-                expect(visualizer.update(time)).toBe(true);
-                scene.render(time);
-                return scene.primitives.length === 0;
-            }).then(function(){
+            return visualizerEmpty(visualizer).then(function(){
                 visualizer.destroy();
             });
         });
@@ -127,12 +135,7 @@ defineSuite([
         entity.polyline = polyline;
         objects.add(entity);
 
-        return pollToPromise(function() {
-            scene.initializeFrame();
-            var isUpdated = visualizer.update(time);
-            scene.render(time);
-            return isUpdated;
-        }).then(function() {
+        return visualizerUpdated(visualizer).then(function() {
             var primitive = scene.primitives.get(0);
             var attributes = primitive.getGeometryInstanceAttributes(entity);
             expect(attributes).toBeDefined();
@@ -143,12 +146,7 @@ defineSuite([
 
             objects.remove(entity);
 
-            return pollToPromise(function() {
-                scene.initializeFrame();
-                expect(visualizer.update(time)).toBe(true);
-                scene.render(time);
-                return scene.primitives.length === 0;
-            }).then(function(){
+            return visualizerEmpty(visualizer).then(function(){
                 visualizer.destroy();
             });
         });
@@ -171,12 +169,7 @@ defineSuite([
         entity.polyline = polyline;
         objects.add(entity);
 
-        return pollToPromise(function() {
-            scene.initializeFrame();
-            var isUpdated = visualizer.update(time);
-            scene.render(time);
-            return isUpdated;
-        }).then(function() {
+        return visualizerUpdated(visualizer).then(function() {
             var primitive = scene.groundPrimitives.get(0);
             var attributes = primitive.getGeometryInstanceAttributes(entity);
             expect(attributes).toBeDefined();
@@ -187,12 +180,7 @@ defineSuite([
 
             objects.remove(entity);
 
-            return pollToPromise(function() {
-                scene.initializeFrame();
-                expect(visualizer.update(time)).toBe(true);
-                scene.render(time);
-                return scene.groundPrimitives.length === 0;
-            }).then(function(){
+            return visualizerEmpty(visualizer).then(function(){
                 visualizer.destroy();
             });
         });
@@ -211,23 +199,13 @@ defineSuite([
         entity.polyline = polyline;
         objects.add(entity);
 
-        return pollToPromise(function() {
-            scene.initializeFrame();
-            var isUpdated = visualizer.update(time);
-            scene.render(time);
-            return isUpdated;
-        }).then(function() {
+        return visualizerUpdated(visualizer).then(function() {
             var primitive = scene.primitives.get(0);
             expect(primitive.shadows).toBe(shadows);
 
             objects.remove(entity);
 
-            return pollToPromise(function() {
-                scene.initializeFrame();
-                expect(visualizer.update(time)).toBe(true);
-                scene.render(time);
-                return scene.primitives.length === 0;
-            }).then(function(){
+            return visualizerEmpty(visualizer).then(function(){
                 visualizer.destroy();
             });
         });
@@ -263,12 +241,7 @@ defineSuite([
         entity.polyline = polyline;
         objects.add(entity);
 
-        return pollToPromise(function() {
-            scene.initializeFrame();
-            var isUpdated = visualizer.update(time);
-            scene.render(time);
-            return isUpdated;
-        }).then(function() {
+        return visualizerUpdated(visualizer).then(function() {
             var primitive = scene.primitives.get(0);
             var attributes = primitive.getGeometryInstanceAttributes(entity);
             expect(attributes).toBeDefined();
@@ -280,12 +253,7 @@ defineSuite([
 
             objects.remove(entity);
 
-            return pollToPromise(function() {
-                scene.initializeFrame();
-                expect(visualizer.update(time)).toBe(true);
-                scene.render(time);
-                return scene.primitives.length === 0;
-            }).then(function(){
+            return visualizerEmpty(visualizer).then(function(){
                 visualizer.destroy();
             });
         });
@@ -305,12 +273,7 @@ defineSuite([
         entity.polyline = polyline;
         objects.add(entity);
 
-        return pollToPromise(function() {
-            scene.initializeFrame();
-            var isUpdated = visualizer.update(time);
-            scene.render(time);
-            return isUpdated;
-        }).then(function() {
+        return visualizerUpdated(visualizer).then(function() {
             var primitive = scene.primitives.get(0);
             var attributes = primitive.getGeometryInstanceAttributes(entity);
             expect(attributes).toBeDefined();
@@ -322,12 +285,7 @@ defineSuite([
 
             objects.remove(entity);
 
-            return pollToPromise(function() {
-                scene.initializeFrame();
-                expect(visualizer.update(time)).toBe(true);
-                scene.render(time);
-                return scene.primitives.length === 0;
-            }).then(function(){
+            return visualizerEmpty(visualizer).then(function(){
                 visualizer.destroy();
             });
         });
@@ -347,12 +305,7 @@ defineSuite([
         entity.polyline = polyline;
         objects.add(entity);
 
-        return pollToPromise(function() {
-            scene.initializeFrame();
-            var isUpdated = visualizer.update(time);
-            scene.render(time);
-            return isUpdated;
-        }).then(function() {
+        return visualizerUpdated(visualizer).then(function() {
             var primitive = scene.primitives.get(0);
             var attributes = primitive.getGeometryInstanceAttributes(entity);
             expect(attributes).toBeDefined();
@@ -364,12 +317,7 @@ defineSuite([
 
             objects.remove(entity);
 
-            return pollToPromise(function() {
-                scene.initializeFrame();
-                expect(visualizer.update(time)).toBe(true);
-                scene.render(time);
-                return scene.primitives.length === 0;
-            }).then(function(){
+            return visualizerEmpty(visualizer).then(function(){
                 visualizer.destroy();
             });
         });
@@ -389,12 +337,7 @@ defineSuite([
         entity.polyline = polyline;
         objects.add(entity);
 
-        return pollToPromise(function() {
-            scene.initializeFrame();
-            var isUpdated = visualizer.update(time);
-            scene.render(time);
-            return isUpdated;
-        }).then(function() {
+        return visualizerUpdated(visualizer).then(function() {
             var primitive = scene.primitives.get(0);
             var attributes = primitive.getGeometryInstanceAttributes(entity);
             expect(attributes).toBeDefined();
@@ -406,12 +349,7 @@ defineSuite([
 
             objects.remove(entity);
 
-            return pollToPromise(function() {
-                scene.initializeFrame();
-                expect(visualizer.update(time)).toBe(true);
-                scene.render(time);
-                return scene.primitives.length === 0;
-            }).then(function(){
+            return visualizerEmpty(visualizer).then(function(){
                 visualizer.destroy();
             });
         });
@@ -435,23 +373,13 @@ defineSuite([
         entity.polyline = polyline;
         objects.add(entity);
 
-        return pollToPromise(function() {
-            scene.initializeFrame();
-            var isUpdated = visualizer.update(time);
-            scene.render(time);
-            return isUpdated;
-        }).then(function() {
+        return visualizerUpdated(visualizer).then(function() {
             var primitive = scene.groundPrimitives.get(0);
             expect(primitive.classificationType).toBe(classificationType);
 
             objects.remove(entity);
 
-            return pollToPromise(function() {
-                scene.initializeFrame();
-                expect(visualizer.update(time)).toBe(true);
-                scene.render(time);
-                return scene.primitives.length === 0;
-            }).then(function(){
+            return visualizerEmpty(visualizer).then(function(){
                 visualizer.destroy();
             });
         });
@@ -481,12 +409,7 @@ defineSuite([
         entity.polyline = polyline;
         objects.add(entity);
 
-        return pollToPromise(function() {
-            scene.initializeFrame();
-            var isUpdated = visualizer.update(time);
-            scene.render(time);
-            return isUpdated;
-        }).then(function() {
+        return visualizerUpdated(visualizer).then(function() {
             var primitive = scene.primitives.get(0);
             var attributes = primitive.getGeometryInstanceAttributes(entity);
             expect(attributes).toBeDefined();
@@ -496,12 +419,7 @@ defineSuite([
 
             polyline.material = new PolylineArrowMaterialProperty();
 
-            return pollToPromise(function() {
-                scene.initializeFrame();
-                var isUpdated = visualizer.update(time);
-                scene.render(time);
-                return isUpdated;
-            }).then(function() {
+            return visualizerUpdated(visualizer).then(function() {
                 primitive = scene.primitives.get(0);
                 attributes = primitive.getGeometryInstanceAttributes(entity);
                 expect(attributes).toBeDefined();
@@ -638,12 +556,7 @@ defineSuite([
         });
         objects.add(entity);
 
-        return pollToPromise(function() {
-            scene.initializeFrame();
-            var isUpdated = visualizer.update(time);
-            scene.render(time);
-            return isUpdated;
-        }).then(function() {
+        return visualizerUpdated(visualizer).then(function() {
             objects.remove(entity);
 
             var entity2 = new Entity({
@@ -656,13 +569,7 @@ defineSuite([
             });
             objects.add(entity2);
 
-            return pollToPromise(function() {
-                scene.initializeFrame();
-                var isUpdated = visualizer.update(time);
-                scene.render(time);
-                return isUpdated;
-            }).then(function() {
-
+            return visualizerUpdated(visualizer).then(function() {
                 var primitive = scene.primitives.get(0);
                 var attributes = primitive.getGeometryInstanceAttributes(entity2);
                 expect(attributes).toBeDefined();
@@ -672,12 +579,7 @@ defineSuite([
 
                 objects.remove(entity);
 
-                return pollToPromise(function() {
-                    scene.initializeFrame();
-                    expect(visualizer.update(time)).toBe(true);
-                    scene.render(time);
-                    return scene.primitives.length === 0;
-                }).then(function() {
+                return visualizerEmpty(visualizer).then(function() {
                     visualizer.destroy();
                 });
             });
@@ -695,12 +597,7 @@ defineSuite([
             }
         });
 
-        return pollToPromise(function() {
-            scene.initializeFrame();
-            var isUpdated = visualizer.update(time);
-            scene.render(time);
-            return isUpdated;
-        }).then(function() {
+        return visualizerUpdated(visualizer).then(function() {
             var primitive = scene.primitives.get(0);
             var attributes = primitive.getGeometryInstanceAttributes(entity);
             expect(attributes).toBeDefined();
@@ -708,12 +605,7 @@ defineSuite([
 
             entity.show = false;
 
-            return pollToPromise(function() {
-                scene.initializeFrame();
-                var isUpdated = visualizer.update(time);
-                scene.render(time);
-                return isUpdated;
-            });
+            return visualizerUpdated(visualizer);
         }).then(function() {
             var primitive = scene.primitives.get(0);
             var attributes = primitive.getGeometryInstanceAttributes(entity);
@@ -737,12 +629,7 @@ defineSuite([
             }
         });
 
-        return pollToPromise(function() {
-            scene.initializeFrame();
-            var isUpdated = visualizer.update(time);
-            scene.render(time);
-            return isUpdated;
-        }).then(function() {
+        return visualizerUpdated(visualizer).then(function() {
             var primitive = scene.primitives.get(0);
             var attributes = primitive.getGeometryInstanceAttributes(entity);
             expect(attributes).toBeDefined();
@@ -750,12 +637,7 @@ defineSuite([
 
             entity.show = false;
 
-            return pollToPromise(function() {
-                scene.initializeFrame();
-                var isUpdated = visualizer.update(time);
-                scene.render(time);
-                return isUpdated;
-            });
+            return visualizerUpdated(visualizer);
         }).then(function() {
             var primitive = scene.primitives.get(0);
             var attributes = primitive.getGeometryInstanceAttributes(entity);
@@ -784,12 +666,7 @@ defineSuite([
         entity.polyline = polyline;
         objects.add(entity);
 
-        return pollToPromise(function() {
-            scene.initializeFrame();
-            var isUpdated = visualizer.update(time);
-            scene.render(time);
-            return isUpdated;
-        }).then(function() {
+        return visualizerUpdated(visualizer).then(function() {
             var primitive = scene.groundPrimitives.get(0);
             var attributes = primitive.getGeometryInstanceAttributes(entity);
             expect(attributes).toBeDefined();
@@ -800,12 +677,7 @@ defineSuite([
 
             entity.polyline.show = false;
 
-            return pollToPromise(function() {
-                scene.initializeFrame();
-                var isUpdated = visualizer.update(time);
-                scene.render(time);
-                return isUpdated;
-            });
+            return visualizerUpdated(visualizer);
         }).then(function() {
             expect(scene.primitives.length).toEqual(0);
 
@@ -834,12 +706,7 @@ defineSuite([
             }
         });
 
-        return pollToPromise(function() {
-            scene.initializeFrame();
-            var isUpdated = visualizer.update(time);
-            scene.render(time);
-            return isUpdated;
-        }).then(function() {
+        return visualizerUpdated(visualizer).then(function() {
             expect(scene.groundPrimitives.length).toEqual(1);
 
             entities.add({
@@ -851,12 +718,7 @@ defineSuite([
                 }
             });
 
-            return pollToPromise(function() {
-                scene.initializeFrame();
-                var isUpdated = visualizer.update(time);
-                scene.render(time);
-                return isUpdated;
-            });
+            return visualizerUpdated(visualizer);
         }).then(function() {
             expect(scene.groundPrimitives.length).toEqual(1);
 
@@ -869,12 +731,7 @@ defineSuite([
                 }
             });
 
-            return pollToPromise(function() {
-                scene.initializeFrame();
-                var isUpdated = visualizer.update(time);
-                scene.render(time);
-                return isUpdated;
-            });
+            return visualizerUpdated(visualizer);
         }).then(function() {
             expect(scene.groundPrimitives.length).toEqual(1);
 
@@ -887,12 +744,7 @@ defineSuite([
                 }
             });
 
-            return pollToPromise(function() {
-                scene.initializeFrame();
-                var isUpdated = visualizer.update(time);
-                scene.render(time);
-                return isUpdated;
-            });
+            return visualizerUpdated(visualizer);
         }).then(function() {
             expect(scene.groundPrimitives.length).toEqual(2);
 
@@ -905,12 +757,7 @@ defineSuite([
                 }
             });
 
-            return pollToPromise(function() {
-                scene.initializeFrame();
-                var isUpdated = visualizer.update(time);
-                scene.render(time);
-                return isUpdated;
-            });
+            return visualizerUpdated(visualizer);
         }).then(function() {
             expect(scene.groundPrimitives.length).toEqual(3);
 
