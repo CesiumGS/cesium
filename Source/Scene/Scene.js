@@ -46,6 +46,7 @@ define([
         '../Renderer/Framebuffer',
         '../Renderer/Pass',
         '../Renderer/PixelDatatype',
+        '../Renderer/RenderState',
         '../Renderer/ShaderProgram',
         '../Renderer/ShaderSource',
         '../Renderer/Texture',
@@ -77,6 +78,7 @@ define([
         './SceneTransitioner',
         './ScreenSpaceCameraController',
         './ShadowMap',
+        './StencilConstants',
         './SunPostProcess',
         './TweenCollection',
         './View'
@@ -128,6 +130,7 @@ define([
         Framebuffer,
         Pass,
         PixelDatatype,
+        RenderState,
         ShaderProgram,
         ShaderSource,
         Texture,
@@ -159,6 +162,7 @@ define([
         SceneTransitioner,
         ScreenSpaceCameraController,
         ShadowMap,
+        StencilConstants,
         SunPostProcess,
         TweenCollection,
         View) {
@@ -324,6 +328,12 @@ define([
         });
         this._stencilClearCommand = new ClearCommand({
             stencil : 0
+        });
+        this._classificationStencilClearCommand = new ClearCommand({
+            stencil : 0,
+            renderState : RenderState.fromCache({
+                stencilMask : StencilConstants.CLASSIFICATION_MASK
+            })
         });
 
         this._depthOnlyRenderStateCache = {};
@@ -2178,6 +2188,7 @@ define([
         var useDepthPlane = environmentState.useDepthPlane;
         var clearDepth = scene._depthClearCommand;
         var clearStencil = scene._stencilClearCommand;
+        var clearClassificationStencil = scene._classificationStencilClearCommand;
         var depthPlane = scene._depthPlane;
         var usePostProcessSelected = environmentState.usePostProcessSelected;
 
@@ -2246,16 +2257,11 @@ define([
                 executeCommand(commands[j], scene, context, passState);
             }
 
-            // Draw classification marked for both terrain and 3D Tiles classification
-            us.updatePass(Pass.CLASSIFICATION);
-            commands = frustumCommands.commands[Pass.CLASSIFICATION];
-            length = frustumCommands.indices[Pass.CLASSIFICATION];
-            for (j = 0; j < length; ++j) {
-                executeCommand(commands[j], scene, context, passState);
-            }
-
             if (clearGlobeDepth) {
                 clearDepth.execute(context, passState);
+                if (useDepthPlane) {
+                    depthPlane.execute(context, passState);
+                }
             }
 
             if (!environmentState.useInvertClassification || picking) {
@@ -2269,20 +2275,18 @@ define([
                     executeCommand(commands[j], scene, context, passState);
                 }
 
-                // Draw classifications. Modifies 3D Tiles color.
-                us.updatePass(Pass.CESIUM_3D_TILE_CLASSIFICATION);
-                commands = frustumCommands.commands[Pass.CESIUM_3D_TILE_CLASSIFICATION];
-                length = frustumCommands.indices[Pass.CESIUM_3D_TILE_CLASSIFICATION];
-                for (j = 0; j < length; ++j) {
-                    executeCommand(commands[j], scene, context, passState);
-                }
+                if (length > 0) {
+                    if (defined(globeDepth) && environmentState.useGlobeDepthFramebuffer) {
+                        globeDepth.executeUpdateDepth(context, passState, clearGlobeDepth);
+                    }
 
-                // Draw classification marked for both terrain and 3D Tiles classification
-                us.updatePass(Pass.CLASSIFICATION);
-                commands = frustumCommands.commands[Pass.CLASSIFICATION];
-                length = frustumCommands.indices[Pass.CLASSIFICATION];
-                for (j = 0; j < length; ++j) {
-                    executeCommand(commands[j], scene, context, passState);
+                    // Draw classifications. Modifies 3D Tiles color.
+                    us.updatePass(Pass.CESIUM_3D_TILE_CLASSIFICATION);
+                    commands = frustumCommands.commands[Pass.CESIUM_3D_TILE_CLASSIFICATION];
+                    length = frustumCommands.indices[Pass.CESIUM_3D_TILE_CLASSIFICATION];
+                    for (j = 0; j < length; ++j) {
+                        executeCommand(commands[j], scene, context, passState);
+                    }
                 }
             } else {
                 // When the invert classification color is opaque:
@@ -2349,7 +2353,11 @@ define([
 
                 // Clear stencil set by the classification for the next classification pass
                 if (length > 0 && context.stencilBuffer) {
-                    clearStencil.execute(context, passState);
+                    clearClassificationStencil.execute(context, passState);
+                }
+
+                if (defined(globeDepth) && environmentState.useGlobeDepthFramebuffer) {
+                    globeDepth.executeUpdateDepth(context, passState, clearGlobeDepth);
                 }
 
                 // Draw style over classification.
@@ -2359,22 +2367,10 @@ define([
                 for (j = 0; j < length; ++j) {
                     executeCommand(commands[j], scene, context, passState);
                 }
-
-                // Draw style over classification marked for both terrain and 3D Tiles classification
-                us.updatePass(Pass.CLASSIFICATION);
-                commands = frustumCommands.commands[Pass.CLASSIFICATION];
-                length = frustumCommands.indices[Pass.CLASSIFICATION];
-                for (j = 0; j < length; ++j) {
-                    executeCommand(commands[j], scene, context, passState);
-                }
             }
 
             if (length > 0 && context.stencilBuffer) {
                 clearStencil.execute(context, passState);
-            }
-
-            if (clearGlobeDepth && useDepthPlane) {
-                depthPlane.execute(context, passState);
             }
 
             us.updatePass(Pass.OPAQUE);
