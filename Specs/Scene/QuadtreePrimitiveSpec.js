@@ -188,8 +188,6 @@ defineSuite([
         });
 
         it('skips levels when tiles are known to be available', function() {
-            console.log('start');
-
             // Mark all tiles through level 2 as available.
             var tiles = [];
             rootTiles.forEach(function(tile) {
@@ -246,7 +244,9 @@ defineSuite([
                 // Process until the lookAtTile is rendered. That tile's parent (level 1)
                 // should never be rendered along the way.
                 expect(quadtree._tilesToRender).not.toContain(lookAtTile.parent);
-                return quadtree._tilesToRender.indexOf(lookAtTile) >= 0;
+                var lookAtTileRendered = quadtree._tilesToRender.indexOf(lookAtTile) >= 0;
+                var continueProcessing = !lookAtTileRendered;
+                return continueProcessing;
             });
         });
     });
