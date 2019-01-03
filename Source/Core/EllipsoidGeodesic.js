@@ -171,14 +171,18 @@ define([
         ellipsoidGeodesic._uSquared = uSquared;
     }
 
+    //>>includeStart('debug', pragmas.debug);
     var scratchCart1 = new Cartesian3();
     var scratchCart2 = new Cartesian3();
+    //>>includeEnd('debug');
     function computeProperties(ellipsoidGeodesic, start, end, ellipsoid) {
-        var firstCartesian = Cartesian3.normalize(ellipsoid.cartographicToCartesian(start, scratchCart2), scratchCart1);
-        var lastCartesian = Cartesian3.normalize(ellipsoid.cartographicToCartesian(end, scratchCart2), scratchCart2);
-
         //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.number.greaterThanOrEquals('value', Math.abs(Math.abs(Cartesian3.angleBetween(firstCartesian, lastCartesian)) - Math.PI), 0.0125);
+        var startCartesian = Cartesian3.normalize(ellipsoid.cartographicToCartesian(start, scratchCart2), scratchCart1);
+        var endCartesian = Cartesian3.normalize(ellipsoid.cartographicToCartesian(end, scratchCart2), scratchCart2);
+        var includedAngle = Math.abs(Math.abs(Cartesian3.angleBetween(startCartesian, endCartesian)) - CesiumMath.PI);
+        // maxLambda is an approximation, assuming an oblate ellipsoid, and zero latitude (equatorial; phi = 0)
+        var maxLambda = (1 - (ellipsoid.maximumRadius - ellipsoid.minimumRadius) / ellipsoid.maximumRadius) * CesiumMath.PI;
+        Check.typeOf.number.lessThanOrEquals('value', includedAngle, maxLambda);
         //>>includeEnd('debug');
 
         vincentyInverseFormula(ellipsoidGeodesic, ellipsoid.maximumRadius, ellipsoid.minimumRadius,
