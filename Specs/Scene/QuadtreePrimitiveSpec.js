@@ -220,33 +220,22 @@ defineSuite([
                 });
             });
 
-            quadtree.preloadAncestors = false;
-
-            // Look down at the center of a level 2 tile.
+            // Look down at the center of a level 2 tile from a distance that will refine to it.
             var lookAtTile = rootTiles[0].southwestChild.northeastChild;
-            expect(lookAtTile.level).toBe(2);
-            expect(lookAtTile.parent.level).toBe(1);
-
-            var lookAtCenter = Ellipsoid.WGS84.cartographicToCartesian(Rectangle.center(lookAtTile.rectangle));
-            camera.lookAt(lookAtCenter, new Cartesian3(0.0, 0.0, 100.0));
-
-            var originalComputeDistanceToTile = quadtree.tileProvider.computeDistanceToTile;
-            spyOn(quadtree.tileProvider, 'computeDistanceToTile').and.callFake(function(tile, frameState) {
-                var result = originalComputeDistanceToTile.apply(this, arguments);
-                if (tile.level === 2) {
-                    // Level 2 is far away so it will definitely meet SSE requirement.
-                    return 9999999999999.0;
-                }
-                return result;
-            });
+            setCameraPosition(quadtree, frameState, Rectangle.center(lookAtTile.rectangle), lookAtTile.level);
 
             return process(quadtree, function() {
                 // Process until the lookAtTile is rendered. That tile's parent (level 1)
-                // should never be rendered along the way.
+                // should not be rendered along the way.
                 expect(quadtree._tilesToRender).not.toContain(lookAtTile.parent);
                 var lookAtTileRendered = quadtree._tilesToRender.indexOf(lookAtTile) >= 0;
                 var continueProcessing = !lookAtTileRendered;
                 return continueProcessing;
+            }).then(function() {
+                // The lookAtTile should be a real tile, not a fill.
+                expect(quadtree._tilesToRender).toContain(lookAtTile);
+                expect(lookAtTile.data.fill).toBeUndefined();
+                expect(lookAtTile.data.vertexArray).toBeDefined();
             });
         });
     });
@@ -762,5 +751,20 @@ defineSuite([
             });
         });
     }, 'WebGL');
+
+    // Sets the camera to look at a given cartographic position from a distance
+    // that will produce a screen-space error at that position that will refine to
+    // a given tile level and no further.
+    function setCameraPosition(quadtree, frameState, position, level) {
+        var camera = frameState.camera;
+        var geometricError = quadtree.tileProvider.getLevelMaximumGeometricError(level);
+        var sse = quadtree.maximumScreenSpaceError * 0.8;
+        var sseDenominator = camera.frustum.sseDenominator;
+        var height = frameState.context.drawingBufferHeight;
+
+        var distance = (geometricError * height) / (sse * sseDenominator);
+        var cartesian = Ellipsoid.WGS84.cartographicToCartesian(position);
+        camera.lookAt(cartesian, new Cartesian3(0.0, 0.0, distance));
+    }
 
 });
