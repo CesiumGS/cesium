@@ -234,33 +234,10 @@ define([
     };
 
     GlobeSurfaceTile.prototype.freeVertexArray = function() {
-        var indexBuffer;
-
-        if (defined(this.vertexArray)) {
-            indexBuffer = this.vertexArray.indexBuffer;
-
-            this.vertexArray = this.vertexArray.destroy();
-
-            if (defined(indexBuffer) && !indexBuffer.isDestroyed() && defined(indexBuffer.referenceCount)) {
-                --indexBuffer.referenceCount;
-                if (indexBuffer.referenceCount === 0) {
-                    indexBuffer.destroy();
-                }
-            }
-        }
-
-        if (defined(this.wireframeVertexArray)) {
-            indexBuffer = this.wireframeVertexArray.indexBuffer;
-
-            this.wireframeVertexArray = this.wireframeVertexArray.destroy();
-
-            if (defined(indexBuffer) && !indexBuffer.isDestroyed() && defined(indexBuffer.referenceCount)) {
-                --indexBuffer.referenceCount;
-                if (indexBuffer.referenceCount === 0) {
-                    indexBuffer.destroy();
-                }
-            }
-        }
+        GlobeSurfaceTile._freeVertexArray(this.vertexArray);
+        this.vertexArray = undefined;
+        GlobeSurfaceTile._freeVertexArray(this.wireframeVertexArray);
+        this.wireframeVertexArray = undefined;
     };
 
     GlobeSurfaceTile.processStateMachine = function(tile, frameState, terrainProvider, imageryLayerCollection, terrainOnly) {
@@ -571,6 +548,22 @@ define([
             attributes : attributes,
             indexBuffer : indexBuffer
         });
+    };
+
+    GlobeSurfaceTile._freeVertexArray = function(vertexArray) {
+        if (defined(vertexArray)) {
+            var indexBuffer = vertexArray.indexBuffer;
+
+            vertexArray.destroy();
+
+            if (defined(indexBuffer) && !indexBuffer.isDestroyed() && defined(indexBuffer.referenceCount)) {
+                --indexBuffer.referenceCount;
+                if (indexBuffer.referenceCount === 0) {
+                    indexBuffer.destroy();
+                }
+            }
+        }
+
     };
 
     function createResources(surfaceTile, context, terrainProvider, x, y, level) {

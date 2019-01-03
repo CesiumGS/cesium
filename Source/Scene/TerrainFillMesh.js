@@ -8,7 +8,6 @@ define([
         '../Core/defined',
         '../Core/Math',
         '../Core/DeveloperError',
-        '../Core/IndexDatatype',
         '../Core/OrientedBoundingBox',
         '../Core/Queue',
         '../Core/Rectangle',
@@ -16,9 +15,7 @@ define([
         '../Core/TerrainEncoding',
         '../Core/TerrainMesh',
         '../Core/WebMercatorProjection',
-        '../Renderer/Buffer',
-        '../Renderer/BufferUsage',
-        '../Renderer/VertexArray',
+        './GlobeSurfaceTile',
         './ImageryState',
         './TileSelectionResult'
     ], function(
@@ -31,7 +28,6 @@ define([
         defined,
         CesiumMath,
         DeveloperError,
-        IndexDatatype,
         OrientedBoundingBox,
         Queue,
         Rectangle,
@@ -39,9 +35,7 @@ define([
         TerrainEncoding,
         TerrainMesh,
         WebMercatorProjection,
-        Buffer,
-        BufferUsage,
-        VertexArray,
+        GlobeSurfaceTile,
         ImageryState,
         TileSelectionResult) {
     'use strict';
@@ -588,31 +582,8 @@ define([
 
         var context = frameState.context;
 
-        if (fill.vertexArray !== undefined) {
-            fill.vertexArray.destroy();
-            fill.vertexArray = undefined;
-        }
-
-        var buffer = Buffer.createVertexBuffer({
-            context : context,
-            typedArray : typedArray,
-            usage : BufferUsage.STATIC_DRAW
-        });
-        var attributes = mesh.encoding.getAttributes(buffer);
-
-        var indexDatatype = (indices.BYTES_PER_ELEMENT === 2) ?  IndexDatatype.UNSIGNED_SHORT : IndexDatatype.UNSIGNED_INT;
-        var indexBuffer = Buffer.createIndexBuffer({
-            context : context,
-            typedArray : mesh.indices,
-            usage : BufferUsage.STATIC_DRAW,
-            indexDatatype : indexDatatype
-        });
-
-        fill.vertexArray = new VertexArray({
-            context : context,
-            attributes : attributes,
-            indexBuffer : indexBuffer
-        });
+        GlobeSurfaceTile._freeVertexArray(fill.vertexArray);
+        fill.vertexArray = GlobeSurfaceTile._createVertexArrayForMesh(context, mesh);
 
         var tileImageryCollection = surfaceTile.imagery;
 

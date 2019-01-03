@@ -471,7 +471,7 @@ define([
 
         this._doFilterTile = createCommand(function() {
             if (!that.filterTile) {
-                //that.suspendUpdates = false;
+                that.suspendUpdates = false;
             } else {
                 that.suspendUpdates = true;
 

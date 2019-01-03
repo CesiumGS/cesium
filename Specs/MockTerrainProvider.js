@@ -35,7 +35,6 @@ define([
     }
 
     MockTerrainProvider.prototype.requestTileGeometry = function(x, y, level, request) {
-        console.log('request ' + createTileKey(x, y, level));
         var willSucceed = this._requestTileGeometryWillSucceed[createTileKey(x, y, level)];
         if (willSucceed === undefined) {
             return undefined; // defer by default
@@ -193,8 +192,6 @@ define([
 
         var originalUpsample = terrainData.upsample;
         terrainData.upsample = function(tilingScheme, thisX, thisY, thisLevel, descendantX, descendantY) {
-            console.log('upsample ' + createTileKey(descendantX, descendantY, thisLevel + 1));
-
             var willSucceed = terrainProvider._upsampleWillSucceed[createTileKey(descendantX, descendantY, thisLevel + 1)];
             if (willSucceed === undefined) {
                 return undefined; // defer by default
@@ -211,8 +208,6 @@ define([
 
         var originalCreateMesh = terrainData.createMesh;
         terrainData.createMesh = function(tilingScheme, x, y, level) {
-            console.log('createMesh ' + createTileKey(x, y, level));
-
             var willSucceed = terrainProvider._createMeshWillSucceed[createTileKey(x, y, level)];
             if (willSucceed === undefined) {
                 return undefined; // defer by default
