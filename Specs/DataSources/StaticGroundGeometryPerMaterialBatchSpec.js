@@ -205,7 +205,7 @@ defineSuite([
             }
         });
 
-        var batch = new StaticGroundGeometryPerMaterialBatch(scene.primitives, MaterialAppearance);
+        var batch = new StaticGroundGeometryPerMaterialBatch(scene.primitives, ClassificationType.BOTH, MaterialAppearance);
 
         var updater = new EllipseGeometryUpdater(entity, scene);
         batch.add(validTime, updater);
