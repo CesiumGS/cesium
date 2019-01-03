@@ -1973,7 +1973,7 @@ define([
         var passes = frameState.passes;
         var isRender = passes.render;
         var isPick = passes.pick;
-        var isAsync = passes.async;
+        var isAsync = passes.asynchronous;
 
         var statistics = tileset._statistics;
         statistics.clear();

@@ -3,6 +3,12 @@ Change Log
 
 ### 1.54 - 2019-02-01
 
+##### Deprecated :hourglass_flowing_sand:
+* `Scene.clampToHeight` now takes an optional `width` argument before the `result` argument.  The previous function definition will no longer work in 1.56. [#7287](https://github.com/AnalyticalGraphicsInc/cesium/pull/7287)
+
+##### Additions :tada:
+* Added the ability to specify the width of the intersection volume for `Scene.sampleHeight`, `Scene.clampToHeight`, `Scene.sampleHeightMostDetailed`, and `Scene.clampToHeightMostDetailed`. [#7287](https://github.com/AnalyticalGraphicsInc/cesium/pull/7287)
+
 ##### Fixes :wrench:
 * Fixed image size issue when using multiple particle systems [#7412](https://github.com/AnalyticalGraphicsInc/cesium/pull/7412)
 
