@@ -338,7 +338,8 @@ define([
      */
     PolylineGeometryUpdater.prototype.isFilled = function(time) {
         var entity = this._entity;
-        return this._fillEnabled && entity.isAvailable(time) && this._showProperty.getValue(time);
+        var visible = this._fillEnabled && entity.isAvailable(time) && this._showProperty.getValue(time);
+        return defaultValue(visible, false);
     };
 
     /**
