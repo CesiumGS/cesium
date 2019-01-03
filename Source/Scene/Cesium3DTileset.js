@@ -783,14 +783,15 @@ define([
             .then(function(tilesetJson) {
                 that._root = that.loadTileset(resource, tilesetJson);
                 var gltfUpAxis = defined(tilesetJson.asset.gltfUpAxis) ? Axis.fromName(tilesetJson.asset.gltfUpAxis) : Axis.Y;
-                that._asset = tilesetJson.asset;
+                var asset = tilesetJson.asset;
+                that._asset = asset;
                 that._properties = tilesetJson.properties;
                 that._geometricError = tilesetJson.geometricError;
                 that._extensionsUsed = tilesetJson.extensionsUsed;
                 that._gltfUpAxis = gltfUpAxis;
+                that._extras = tilesetJson.extras;
 
-                var extras =  tilesetJson.extras;
-
+                var extras = asset.extras;
                 if (defined(extras) && defined(extras.cesium) && defined(extras.cesium.credits)) {
                     var extraCredits = extras.cesium.credits;
                     var credits = that._credits;
@@ -803,8 +804,6 @@ define([
                         credits.push(new Credit(credit.html, credit.showOnScreen));
                     }
                 }
-
-                that._extras = extras;
 
                 // Save the original, untransformed bounding volume position so we can apply
                 // the tile transform and model matrix at run time
