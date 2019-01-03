@@ -73,6 +73,7 @@ var filesToClean = ['Source/Cesium.js',
                     'Specs/SpecList.js',
                     'Apps/Sandcastle/jsHintOptions.js',
                     'Apps/Sandcastle/gallery/gallery-index.js',
+                    'Apps/Sandcastle/templates/bucket.css',
                     'Cesium-*.zip'];
 
 var filesToSortRequires = ['Source/**/*.js',
