@@ -11,6 +11,7 @@ Change Log
 
 ##### Fixes :wrench:
 * Fix rectangle positions at the north and south poles [#7451](https://github.com/AnalyticalGraphicsInc/cesium/pull/7451)
+* Fixed image size issue when using multiple particle systems [#7412](https://github.com/AnalyticalGraphicsInc/cesium/pull/7412)
 
 ### 1.53 - 2019-01-02
 
