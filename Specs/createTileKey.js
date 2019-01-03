@@ -17,7 +17,7 @@ define([
             y = tile.y;
             level = tile.level;
         }
-        return [xOrTile, y, level].join(',');
+        return 'L' + level + 'X' + xOrTile + 'Y' + y;
     }
 
     return createTileKey;

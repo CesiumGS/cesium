@@ -1,9 +1,15 @@
 define([
+    'Core/clone',
+    'Renderer/Texture',
     'Scene/GlobeSurfaceTile',
+    'Scene/ImageryLayer',
     'Scene/TerrainState',
     'ThirdParty/when'
 ], function(
+    clone,
+    Texture,
     GlobeSurfaceTile,
+    ImageryLayer,
     TerrainState,
     when) {
     'use strict';
@@ -87,6 +93,28 @@ define([
         next();
 
         return deferred.promise;
+    };
+
+    TerrainTileProcessor.prototype.mockWebGL = function() {
+        spyOn(GlobeSurfaceTile, '_createVertexArrayForMesh').and.callFake(function() {
+            var vertexArray = jasmine.createSpyObj('VertexArray', ['destroy']);
+            return vertexArray;
+        });
+
+        spyOn(ImageryLayer.prototype, '_createTextureWebGL').and.callFake(function(context, imagery) {
+            var texture = jasmine.createSpyObj('Texture', ['destroy']);
+            texture.width = imagery.image.width;
+            texture.height = imagery.image.height;
+            return texture;
+        });
+
+        spyOn(ImageryLayer.prototype, '_finalizeReprojectTexture');
+
+        spyOn(Texture, 'create').and.callFake(function(options) {
+            var result = clone(options);
+            result.destroy = function() {};
+            return result;
+        });
     };
 
     return TerrainTileProcessor;

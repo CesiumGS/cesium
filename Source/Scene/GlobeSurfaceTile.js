@@ -7,6 +7,7 @@ define([
         '../Core/DeveloperError',
         '../Core/IndexDatatype',
         '../Core/IntersectionTests',
+        '../Core/OrientedBoundingBox',
         '../Core/PixelFormat',
         '../Core/Request',
         '../Core/RequestState',
@@ -36,6 +37,7 @@ define([
         DeveloperError,
         IndexDatatype,
         IntersectionTests,
+        OrientedBoundingBox,
         PixelFormat,
         Request,
         RequestState,
@@ -297,12 +299,12 @@ define([
         }
 
         // From here down we're loading imagery, not terrain. We don't want to load imagery until
-        // we're certain that the terrain tiles are actually visible, though. So if our bounding
-        // volume isn't accurate, stop here. Also stop here if we're explicitly loading terrain
-        // only, which happens in these two scenarios:
+        // we're certain that the terrain tiles are actually visible, though. We'll load terrainOnly
+        // in these scenarios:
+        //   * our bounding volume isn't accurate so we're not certain this tile is really visible (see GlobeSurfaceTileProvider#loadTile).
         //   * we want ancestor BVH data from this tile but don't plan to render it (see code above).
         //   * we want to upsample from this tile but don't plan to render it (see processTerrainStateMachine).
-        if (terrainOnly || (tile.level !== 0 && defined(surfaceTile.boundingVolumeSourceTile) && surfaceTile.boundingVolumeSourceTile !== tile)) {
+        if (terrainOnly) {
             return;
         }
 

@@ -48,28 +48,6 @@ defineSuite([
     var mockTerrain;
     var processor;
 
-    function mockWebGL() {
-        spyOn(GlobeSurfaceTile, '_createVertexArrayForMesh').and.callFake(function() {
-            var vertexArray = jasmine.createSpyObj('VertexArray', ['destroy']);
-            return vertexArray;
-        });
-
-        spyOn(ImageryLayer.prototype, '_createTextureWebGL').and.callFake(function(context, imagery) {
-            var texture = jasmine.createSpyObj('Texture', ['destroy']);
-            texture.width = imagery.image.width;
-            texture.height = imagery.image.height;
-            return texture;
-        });
-
-        spyOn(ImageryLayer.prototype, '_finalizeReprojectTexture');
-
-        spyOn(Texture, 'create').and.callFake(function(options) {
-            var result = clone(options);
-            result.destroy = function() {};
-            return result;
-        });
-    }
-
     beforeEach(function() {
         frameState = {
             context: {
@@ -95,7 +73,7 @@ defineSuite([
 
     describe('processStateMachine', function() {
         beforeEach(function() {
-            mockWebGL();
+            processor.mockWebGL();
         });
 
         it('starts in the START state', function() {
@@ -164,12 +142,11 @@ defineSuite([
         it('upsamples failed tiles from parent TerrainData', function() {
             mockTerrain
                 .requestTileGeometryWillSucceed(rootTile)
+                .createMeshWillSucceed(rootTile)
                 .willBeUnavailable(rootTile.southwestChild)
                 .upsampleWillSucceed(rootTile.southwestChild);
 
             return processor.process([rootTile, rootTile.southwestChild]).then(function() {
-                expect(rootTile.data.terrainState).toBe(TerrainState.RECEIVED);
-                expect(rootTile.southwestChild.data.terrainState).toBe(TerrainState.RECEIVED);
                 expect(rootTile.data.terrainData.wasCreatedByUpsampling()).toBe(false);
                 expect(rootTile.southwestChild.data.terrainData.wasCreatedByUpsampling()).toBe(true);
             });
@@ -414,7 +391,7 @@ defineSuite([
 
     describe('getBoundingVolumeHierarchy', function() {
         beforeEach(function() {
-            mockWebGL();
+            processor.mockWebGL();
         });
 
         it('gets the BVH from the TerrainData if available', function() {
@@ -511,7 +488,7 @@ defineSuite([
 
     describe('eligibleForUnloading', function() {
         beforeEach(function() {
-            mockWebGL();
+            processor.mockWebGL();
         });
 
         it('returns true when no loading has been done', function() {

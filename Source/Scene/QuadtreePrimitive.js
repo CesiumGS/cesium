@@ -195,6 +195,12 @@ define([
             get : function() {
                 return this._tileLoadProgressEvent;
             }
+        },
+
+        occluders : {
+            get : function() {
+                return this._occluders;
+            }
         }
     });
 
@@ -796,6 +802,7 @@ define([
                 }
 
                 if (primitive.preloadAncestors) {
+                    // TODO: don't queue here if this tile was queued at medium above.
                     queueTileLoad(primitive, primitive._tileLoadQueueLow, tile, frameState);
                 }
             }
@@ -963,6 +970,8 @@ define([
             tileProvider.loadTile(frameState, tile);
             didSomething = true;
         }
+
+        return didSomething;
     }
 
     var scratchRay = new Ray();
@@ -971,6 +980,10 @@ define([
     var scratchArray = [];
 
     function updateHeights(primitive, frameState) {
+        if (!primitive.tileProvider.ready) {
+            return;
+        }
+
         var tryNextFrame = scratchArray;
         tryNextFrame.length = 0;
         var tilesToUpdateHeights = primitive._tileToUpdateHeights;
@@ -982,7 +995,7 @@ define([
 
         var mode = frameState.mode;
         var projection = frameState.mapProjection;
-        var ellipsoid = projection.ellipsoid;
+        var ellipsoid = primitive.tileProvider.tilingScheme.ellipsoid;
         var i;
 
         while (tilesToUpdateHeights.length > 0) {
@@ -1089,7 +1102,6 @@ define([
         var tileProvider = primitive._tileProvider;
         var tilesToRender = primitive._tilesToRender;
         var nearestRenderableTiles = primitive._nearestRenderableTiles;
-        var tilesToUpdateHeights = primitive._tileToUpdateHeights;
 
         for (var i = 0, len = tilesToRender.length; i < len; ++i) {
             var tile = tilesToRender[i];

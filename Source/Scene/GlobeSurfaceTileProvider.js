@@ -153,9 +153,9 @@ define([
          */
         this.fillHighlightColor = undefined;
 
-        this.hueShift = undefined;
-        this.saturationShift = undefined;
-        this.brightnessShift = undefined;
+        this.hueShift = 0.0;
+        this.saturationShift = 0.0;
+        this.brightnessShift = 0.0;
 
         this._quadtree = undefined;
         this._terrainProvider = options.terrainProvider;
@@ -362,18 +362,6 @@ define([
         this._imageryLayers._update();
     };
 
-    function freeVertexArray(vertexArray) {
-        var indexBuffer = vertexArray.indexBuffer;
-        vertexArray.destroy();
-
-        if (!indexBuffer.isDestroyed() && defined(indexBuffer.referenceCount)) {
-            --indexBuffer.referenceCount;
-            if (indexBuffer.referenceCount === 0) {
-                indexBuffer.destroy();
-            }
-        }
-    }
-
     function updateCredits(surface, frameState) {
         var creditDisplay = frameState.creditDisplay;
         if (surface._terrainProvider.ready && defined(surface._terrainProvider.credit)) {
@@ -516,8 +504,6 @@ define([
         return this._terrainProvider.getLevelMaximumGeometricError(level);
     };
 
-    var stopLoad = false;
-
     /**
      * Loads, or continues loading, a given tile.  This function will continue to be called
      * until {@link QuadtreeTile#state} is no longer {@link QuadtreeTileLoadState#LOADING}.  This function should
@@ -529,10 +515,33 @@ define([
      * @exception {DeveloperError} <code>loadTile</code> must not be called before the tile provider is ready.
      */
     GlobeSurfaceTileProvider.prototype.loadTile = function(frameState, tile) {
-        if (stopLoad) {
-            return;
+        // We don't want to load imagery until we're certain that the terrain tiles are actually visible.
+        // So if our bounding volume isn't accurate because it came from another tile, load terrain only
+        // initially. If we load some terrain and suddenly have a more accurate bounding volume and the
+        // tile is _still_ visible, give the tile a chance to load imagery immediately rather than
+        // waiting for next frame.
+
+        var surfaceTile = tile.data;
+        var terrainOnly = true;
+        var terrainStateBefore;
+        if (defined(surfaceTile)) {
+            terrainOnly = surfaceTile.boundingVolumeSourceTile !== tile;
+            terrainStateBefore = surfaceTile.terrainState;
         }
-        GlobeSurfaceTile.processStateMachine(tile, frameState, this._terrainProvider, this._imageryLayers);
+
+        GlobeSurfaceTile.processStateMachine(tile, frameState, this.terrainProvider, this._imageryLayers, terrainOnly);
+
+        surfaceTile = tile.data;
+        if (terrainOnly && terrainStateBefore !== tile.data.terrainState) {
+            // Terrain state changed. If:
+            // a) The tile is visible, and
+            // b) The bounding volume is accurate (updated as a side effect of computing visibility)
+            // Then we'll load imagery, too.
+            if (this.computeTileVisibility(tile, frameState, this.quadtree.occluders) && surfaceTile.boundingVolumeSourceTile === tile) {
+                terrainOnly = false;
+                GlobeSurfaceTile.processStateMachine(tile, frameState, this.terrainProvider, this._imageryLayers, terrainOnly);
+            }
+        }
     };
 
     var boundingSphereScratch = new BoundingSphere();
@@ -750,7 +759,7 @@ define([
         Cartesian3.fromRadians(rectangle.east, rectangle.north, height, ellipsoid, cornerPositions[3]);
 
         return ellipsoidalOccluder.computeHorizonCullingPoint(center, cornerPositions, result);
-}
+    }
 
     /**
      * Gets the distance from the camera to the closest point on the tile.  This is used for level-of-detail selection.

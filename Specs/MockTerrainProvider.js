@@ -1,6 +1,7 @@
 define([
     'Core/defined',
     'Core/GeographicTilingScheme',
+    'Core/HeightmapTerrainData',
     'Core/RuntimeError',
     'Core/TerrainProvider',
     'ThirdParty/when',
@@ -9,6 +10,7 @@ define([
 ], function(
     defined,
     GeographicTilingScheme,
+    HeightmapTerrainData,
     RuntimeError,
     TerrainProvider,
     when,
@@ -33,6 +35,7 @@ define([
     }
 
     MockTerrainProvider.prototype.requestTileGeometry = function(x, y, level, request) {
+        console.log('request ' + createTileKey(x, y, level));
         var willSucceed = this._requestTileGeometryWillSucceed[createTileKey(x, y, level)];
         if (willSucceed === undefined) {
             return undefined; // defer by default
@@ -57,7 +60,11 @@ define([
     };
 
     MockTerrainProvider.prototype.getNearestBvhLevel = function(x, y, level) {
-        return this._nearestBvhLevel[createTileKey(x, y, level)];
+        var bvhLevel = this._nearestBvhLevel[createTileKey(x, y, level)];
+        if (!defined(bvhLevel)) {
+            bvhLevel = -1;
+        }
+        return bvhLevel;
     };
 
     MockTerrainProvider.prototype.getLevelMaximumGeometricError = function(level) {
@@ -153,65 +160,80 @@ define([
     };
 
     function createTerrainData(terrainProvider, x, y, level, upsampled) {
-        var terrainData = jasmine.createSpyObj('MockTerrainData', ['createMesh', 'upsample', 'wasCreatedByUpsampling']);
-        terrainData.wasCreatedByUpsampling.and.returnValue(upsampled);
+        var options = {
+            width: 5,
+            height: 5,
+            buffer: new Float32Array(25),
+            createdByUpsampling: upsampled
+        };
 
-        if (!upsampled) {
-            var willHaveWaterMask = terrainProvider._willHaveWaterMask[createTileKey(x, y, level)];
-            if (defined(willHaveWaterMask)) {
-                if (willHaveWaterMask.includeLand && willHaveWaterMask.includeWater) {
-                    terrainData.waterMask = new Uint8Array(4);
-                    terrainData.waterMask[0] = 1;
-                    terrainData.waterMask[1] = 1;
-                    terrainData.waterMask[2] = 0;
-                    terrainData.waterMask[3] = 0;
-                } else if (willHaveWaterMask.includeLand) {
-                    terrainData.waterMask = new Uint8Array(1);
-                    terrainData.waterMask[0] = 0;
-                } else if (willHaveWaterMask.includeWater) {
-                    terrainData.waterMask = new Uint8Array(1);
-                    terrainData.waterMask[0] = 1;
-                }
-            }
-
-            var willHaveBvh = terrainProvider._willHaveBvh[createTileKey(x, y, level)];
-            if (defined(willHaveBvh)) {
-                terrainData.bvh = willHaveBvh;
+        var willHaveWaterMask = terrainProvider._willHaveWaterMask[createTileKey(x, y, level)];
+        if (defined(willHaveWaterMask)) {
+            if (willHaveWaterMask.includeLand && willHaveWaterMask.includeWater) {
+                options.waterMask = new Uint8Array(4);
+                options.waterMask[0] = 1;
+                options.waterMask[1] = 1;
+                options.waterMask[2] = 0;
+                options.waterMask[3] = 0;
+            } else if (willHaveWaterMask.includeLand) {
+                options.waterMask = new Uint8Array(1);
+                options.waterMask[0] = 0;
+            } else if (willHaveWaterMask.includeWater) {
+                options.waterMask = new Uint8Array(1);
+                options.waterMask[0] = 1;
             }
         }
 
-        terrainData.createMesh.and.callFake(function(tilingScheme, x, y, level) {
-            var willSucceed = terrainProvider._createMeshWillSucceed[createTileKey(x, y, level)];
-            if (willSucceed === undefined) {
-                return undefined; // defer by default
-            }
+        var willHaveBvh = terrainProvider._willHaveBvh[createTileKey(x, y, level)];
+        if (defined(willHaveBvh)) {
+            options.bvh = willHaveBvh;
+        }
 
-            return runLater(function() {
-                if (willSucceed === true) {
-                    return {};
-                } else if (willSucceed === false) {
-                    throw new RuntimeError('createMesh failed as requested.');
-                }
+        var terrainData = new HeightmapTerrainData(options);
 
-                return when(willSucceed).then(function() {
-                    return {};
-                });
-            });
-        });
+        var originalUpsample = terrainData.upsample;
+        terrainData.upsample = function(tilingScheme, thisX, thisY, thisLevel, descendantX, descendantY) {
+            console.log('upsample ' + createTileKey(descendantX, descendantY, thisLevel + 1));
 
-        terrainData.upsample.and.callFake(function(tilingScheme, thisX, thisY, thisLevel, descendantX, descendantY) {
             var willSucceed = terrainProvider._upsampleWillSucceed[createTileKey(descendantX, descendantY, thisLevel + 1)];
             if (willSucceed === undefined) {
                 return undefined; // defer by default
             }
 
+            if (willSucceed) {
+                return originalUpsample.apply(terrainData, arguments);
+            }
+
             return runLater(function() {
-                if (willSucceed) {
-                    return createTerrainData(terrainProvider, descendantX, descendantY, thisLevel + 1, true);
-                }
                 throw new RuntimeError('upsample failed as requested.');
             });
-        });
+        };
+
+        var originalCreateMesh = terrainData.createMesh;
+        terrainData.createMesh = function(tilingScheme, x, y, level) {
+            console.log('createMesh ' + createTileKey(x, y, level));
+
+            var willSucceed = terrainProvider._createMeshWillSucceed[createTileKey(x, y, level)];
+            if (willSucceed === undefined) {
+                return undefined; // defer by default
+            }
+
+            if (willSucceed === true) {
+                return originalCreateMesh.apply(terrainData, arguments);
+            } else if (willSucceed === false) {
+                return runLater(function() {
+                    throw new RuntimeError('createMesh failed as requested.');
+                });
+            }
+
+            var args = arguments;
+
+            return runLater(function() {
+                return when(willSucceed).then(function() {
+                    return originalCreateMesh.apply(terrainData, args);
+                });
+            });
+        };
 
         return terrainData;
     }
