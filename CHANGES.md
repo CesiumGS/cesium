@@ -10,6 +10,7 @@ Change Log
 * Added the ability to specify the width of the intersection volume for `Scene.sampleHeight`, `Scene.clampToHeight`, `Scene.sampleHeightMostDetailed`, and `Scene.clampToHeightMostDetailed`. [#7287](https://github.com/AnalyticalGraphicsInc/cesium/pull/7287)
 
 ##### Fixes :wrench:
+* Fixed crash when entity geometry show value is an interval that only covered part of the entity availability range [#7458](https://github.com/AnalyticalGraphicsInc/cesium/pull/7458)
 * Fixed image size issue when using multiple particle systems [#7412](https://github.com/AnalyticalGraphicsInc/cesium/pull/7412)
 
 ### 1.53 - 2019-01-02
