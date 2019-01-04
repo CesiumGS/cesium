@@ -88,7 +88,6 @@ defineSuite([
         expect(line.attributes.color.values.length).toEqual(numVertices * 4);
     });
 
-
     it('constructor computes all vertex attributes, no subdivision', function() {
         var positions = [new Cartesian3(), new Cartesian3(1.0, 0.0, 0.0), new Cartesian3(2.0, 0.0, 0.0)];
         var line = SimplePolylineGeometry.createGeometry(new SimplePolylineGeometry({
@@ -143,7 +142,7 @@ defineSuite([
         ellipsoid : new Ellipsoid(12, 13, 14)
     });
     var packedInstance = [3, 1, 2, 3, 4, 5, 6, 7, 8, 9, 3, 1, 0, 0, 1, 0, 1, 0, 1, 0, 0, 1, 1, 12, 13, 14, 1, 0, 11];
-    createPackableSpecs(SimplePolylineGeometry, line, packedInstance, "per vertex colors");
+    createPackableSpecs(SimplePolylineGeometry, line, packedInstance, 'per vertex colors');
 
     line = new SimplePolylineGeometry({
         positions : positions,

@@ -63,6 +63,7 @@ define([
      *
      * @alias Label
      * @internalConstructor
+     * @class
      *
      * @exception {DeveloperError} translucencyByDistance.far must be greater than translucencyByDistance.near
      * @exception {DeveloperError} pixelOffsetScaleByDistance.far must be greater than pixelOffsetScaleByDistance.near
@@ -142,7 +143,7 @@ define([
         this._scaleByDistance = scaleByDistance;
         this._heightReference = defaultValue(options.heightReference, HeightReference.NONE);
         this._distanceDisplayCondition = distanceDisplayCondition;
-        this._disableDepthTestDistance = defaultValue(options.disableDepthTestDistance, 0.0);
+        this._disableDepthTestDistance = options.disableDepthTestDistance;
 
         this._labelCollection = labelCollection;
         this._glyphs = [];
@@ -929,7 +930,6 @@ define([
          * When set to zero, the depth test is always applied. When set to Number.POSITIVE_INFINITY, the depth test is never applied.
          * @memberof Label.prototype
          * @type {Number}
-         * @default 0.0
          */
         disableDepthTestDistance : {
             get : function() {
@@ -938,7 +938,7 @@ define([
             set : function(value) {
                 if (this._disableDepthTestDistance !== value) {
                     //>>includeStart('debug', pragmas.debug);
-                    if (!defined(value) || value < 0.0) {
+                    if (defined(value) && value < 0.0) {
                         throw new DeveloperError('disableDepthTestDistance must be greater than 0.0.');
                     }
                     //>>includeEnd('debug');
@@ -960,9 +960,9 @@ define([
         },
 
         /**
-         * Gets or sets the user-defined object returned when the label is picked.
+         * Gets or sets the user-defined value returned when the label is picked.
          * @memberof Label.prototype
-         * @type {Object}
+         * @type {*}
          */
         id : {
             get : function() {
@@ -984,6 +984,18 @@ define([
                         backgroundBillboard.id = value;
                     }
                 }
+            }
+        },
+
+        /**
+         * @private
+         */
+        pickId : {
+            get : function() {
+                if (this._glyphs.length === 0 || !defined(this._glyphs[0].billboard)) {
+                    return undefined;
+                }
+                return this._glyphs[0].billboard.pickId;
             }
         },
 

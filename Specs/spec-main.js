@@ -148,6 +148,19 @@
             }, timeout, categories);
         };
 
+        var originalFit = window.fit;
+
+        window.fit = function(description, f, timeout, categories) {
+            originalFit(description, function(done) {
+                var result = f();
+                when(result, function() {
+                    done();
+                }, function(e) {
+                    done.fail('promise rejected: ' + e.toString());
+                });
+            }, timeout, categories);
+        };
+
         var originalBeforeEach = window.beforeEach;
 
         window.beforeEach = function(f) {
@@ -200,7 +213,6 @@
             });
         };
 
-
         /**
          * ## Runner Parameters
          *
@@ -223,7 +235,7 @@
         }
 
         var catchingExceptions = queryString['catch'];
-        env.catchExceptions(typeof catchingExceptions === "undefined" ? true : catchingExceptions);
+        env.catchExceptions(typeof catchingExceptions === 'undefined' ? true : catchingExceptions);
 
         /**
          * ## Reporters

@@ -1,10 +1,10 @@
-All code in Cesium is publicly peer reviewed.  We review code to share knowledge, foster shared ownership, and improve code quality and consistency.
+All code in CesiumJS is publicly peer reviewed.  We review code to share knowledge, foster shared ownership, and improve code quality and consistency.
 
 This guide describes best practices for code reviewers.
 
 * [General](#general)
 * [Reviewing](#reviewing)
-* [Changes to the Public Cesium API](#changes-to-the-public-cesium-api)
+* [Changes to the Public CesiumJS API](#changes-to-the-public-cesium-api)
 * [Testing](#testing)
 * [Merging](#merging)
 * [Useful Git Commit Management](#useful-git-commit-management)
@@ -22,7 +22,7 @@ This guide describes best practices for code reviewers.
 ## Reviewing
 
 * See the forest through the trees.  Don't just review code one line at a time.  Consider the big picture and its implications.
-* _Comments are about code_, not the contributor who wrote the code.  Don't be offended by a reviewer's comments and don't aim to offend when commenting.  We all want the same thing: to improve Cesium.
+* _Comments are about code_, not the contributor who wrote the code.  Don't be offended by a reviewer's comments and don't aim to offend when commenting.  We all want the same thing: to improve CesiumJS.
 * Provide motivation when it isn't obvious.  Suggest why a change should be made.
 * Point contributors to a relevant part of the [Coding Guide](../CodingGuide/README.md) when useful.
 * _Be concise_.  Make every word tell.
@@ -31,9 +31,9 @@ This guide describes best practices for code reviewers.
 * Bring others into the conversation sparingly.  If someone has expertise with a particular language feature or problem domain under review, invite them to comment with an `@mention`.
 * If an experienced contributor makes a occasional whitespace or trivial mistake, just fix it to save on noise and speedup the review.
 
-## Changes to the Public Cesium API
+## Changes to the Public CesiumJS API
 
-* If new identifiers were added to the public Cesium API:
+* If new identifiers were added to the public CesiumJS API:
    * Verify there is new reference doc.  See the [Documentation Guide](../CodingGuide/README.md).
    * Verify that [CHANGES.md](../../../CHANGES.md) was updated.
    * Does the change warrant a new Sandcastle example?
@@ -43,13 +43,13 @@ This guide describes best practices for code reviewers.
 ## Testing
 
 * Don't just review the code; test it by running the unit tests and relevant Sandcastle examples.  See the [Testing Guide](../TestingGuide/README.md).
-* For some changes, it is useful to profile Cesium or step through the code in the debugger.
+* For some changes, it is useful to profile CesiumJS or step through the code in the debugger.
 * Read the new reference doc.  Build the reference doc if the changes are significant.
 
 ## Merging
 
 * When a reviewer hits merge, the ideal is that they have enough knowledge of the new code that they could support it in the future.  In practice, this isn't always realistic but we strive for it.
-* Cesium uses Travis CI for continuous integration.  Travis automatically builds Cesium, runs ESLint, and generates the documentation for each branch pushed to GitHub.  Before merging a pull request, verify that all Travis checks pass, indicated by the green check-mark and green "Merge pull request" button:
+* CesiumJS uses Travis CI for continuous integration.  Travis automatically builds CesiumJS, runs ESLint, and generates the documentation for each branch pushed to GitHub.  Before merging a pull request, verify that all Travis checks pass, indicated by the green check-mark and green "Merge pull request" button:
 
 ![Travis CI checks](Travis.jpg)
 

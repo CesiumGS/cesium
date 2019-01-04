@@ -4,17 +4,13 @@ define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
-        '../Core/deprecationWarning',
         '../Core/DeveloperError',
         '../Core/Event',
         '../Core/freezeObject',
         '../Core/isArray',
-        '../Core/objectToQuery',
-        '../Core/queryToObject',
         '../Core/Rectangle',
         '../Core/Resource',
         '../Core/WebMercatorTilingScheme',
-        '../ThirdParty/Uri',
         '../ThirdParty/when',
         './ImageryProvider',
         './TimeDynamicImagery'
@@ -24,17 +20,13 @@ define([
         defaultValue,
         defined,
         defineProperties,
-        deprecationWarning,
         DeveloperError,
         Event,
         freezeObject,
         isArray,
-        objectToQuery,
-        queryToObject,
         Rectangle,
         Resource,
         WebMercatorTilingScheme,
-        Uri,
         when,
         ImageryProvider,
         TimeDynamicImagery) {
@@ -61,7 +53,7 @@ define([
      * @param {String} options.tileMatrixSetID The identifier of the TileMatrixSet to use for WMTS requests.
      * @param {Array} [options.tileMatrixLabels] A list of identifiers in the TileMatrix to use for WMTS requests, one per TileMatrix level.
      * @param {Clock} [options.clock] A Clock instance that is used when determining the value for the time dimension. Required when options.times is specified.
-     * @param {TimeIntervalCollection} [options.times] TimeIntervalCollection with its data property being an object containing time dynamic dimension and their values.
+     * @param {TimeIntervalCollection} [options.times] TimeIntervalCollection with its <code>data</code> property being an object containing time dynamic dimension and their values.
      * @param {Object} [options.dimensions] A object containing static dimensions and their values.
      * @param {Number} [options.tileWidth=256] The tile width in pixels.
      * @param {Number} [options.tileHeight=256] The tile height in pixels.
@@ -87,7 +79,7 @@ define([
      *     tileMatrixSetID : 'default028mm',
      *     // tileMatrixLabels : ['default028mm:0', 'default028mm:1', 'default028mm:2' ...],
      *     maximumLevel: 19,
-     *     credit : new Cesium.Credit({ text : 'U. S. Geological Survey' })
+     *     credit : new Cesium.Credit('U. S. Geological Survey')
      * });
      * viewer.imageryLayers.addImageryProvider(shadedRelief1);
      *
@@ -100,7 +92,7 @@ define([
      *     format : 'image/jpeg',
      *     tileMatrixSetID : 'default028mm',
      *     maximumLevel: 19,
-     *     credit : new Cesium.Credit({ text : 'U. S. Geological Survey' })
+     *     credit : new Cesium.Credit('U. S. Geological Survey')
      * });
      * viewer.imageryLayers.addImageryProvider(shadedRelief2);
      *
@@ -123,7 +115,7 @@ define([
      *     format : 'image/png',
      *     clock: clock,
      *     times: times,
-     *     credit : new Cesium.Credit({ text : 'NASA Global Imagery Browse Services for EOSDIS' })
+     *     credit : new Cesium.Credit('NASA Global Imagery Browse Services for EOSDIS')
      * });
      * viewer.imageryLayers.addImageryProvider(weather);
      *
@@ -157,13 +149,7 @@ define([
         }
         //>>includeEnd('debug');
 
-        if (defined(options.proxy)) {
-            deprecationWarning('WebMapTileServiceImageryProvider.proxy', 'The options.proxy parameter has been deprecated. Specify options.url as a Resource instance and set the proxy property there.');
-        }
-
-        var resource = Resource.createIfNeeded(options.url, {
-            proxy: options.proxy
-        });
+        var resource = Resource.createIfNeeded(options.url);
 
         var style = options.style;
         var tileMatrixSetID = options.tileMatrixSetID;
@@ -175,10 +161,10 @@ define([
                 TileMatrixSet : tileMatrixSetID
             };
 
-            resource.addTemplateValues(templateValues);
+            resource.setTemplateValues(templateValues);
             this._useKvp = false;
         } else {
-            resource.addQueryParameters(defaultParameters);
+            resource.setQueryParameters(defaultParameters);
             this._useKvp = true;
         }
 
@@ -234,7 +220,7 @@ define([
         this._errorEvent = new Event();
 
         var credit = options.credit;
-        this._credit = typeof credit === 'string' ? new Credit({text: credit}) : credit;
+        this._credit = typeof credit === 'string' ? new Credit(credit) : credit;
 
         this._subdomains = options.subdomains;
         if (isArray(this._subdomains)) {
@@ -265,14 +251,14 @@ define([
             resource = imageryProvider._resource.getDerivedResource({
                 request: request
             });
-            resource.addTemplateValues(templateValues);
+            resource.setTemplateValues(templateValues);
 
             if (defined(staticDimensions)) {
-                resource.addTemplateValues(staticDimensions);
+                resource.setTemplateValues(staticDimensions);
             }
 
             if (defined(dynamicIntervalData)) {
-                resource.addTemplateValues(dynamicIntervalData);
+                resource.setTemplateValues(dynamicIntervalData);
             }
         } else {
             // build KVP request

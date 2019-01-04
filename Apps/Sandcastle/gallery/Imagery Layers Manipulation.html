@@ -10,10 +10,12 @@
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
     <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
     <script type="text/javascript">
-    require.config({
-        baseUrl : '../../../Source',
-        waitSeconds : 60
-    });
+        if(typeof require === 'function') {
+            require.config({
+                baseUrl : '../../../Source',
+                waitSeconds : 120
+            });
+        }
     </script>
 </head>
 <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
@@ -47,13 +49,13 @@
 <div id="toolbar">
 <table><tbody data-bind="foreach: layers">
     <tr data-bind="css: { up: $parent.upLayer === $data, down: $parent.downLayer === $data }">
-        <td><input type="checkbox" data-bind="checked: show"/></td>
+        <td><input type="checkbox" data-bind="checked: show"></td>
         <td>
             <span data-bind="text: name, visible: !$parent.isSelectableLayer($data)"></span>
             <select data-bind="visible: $parent.isSelectableLayer($data), options: $parent.baseLayers, optionsText: 'name', value: $parent.selectedLayer"></select>
         </td>
         <td>
-            <input type="range" min="0" max="1" step="0.01" data-bind="value: alpha, valueUpdate: 'input'"/>
+            <input type="range" min="0" max="1" step="0.01" data-bind="value: alpha, valueUpdate: 'input'">
         </td>
         <td><button type="button" class="cesium-button" data-bind="click: function() { $parent.raise($data, $index()); }, visible: $parent.canRaise($index())">&#9650;</button></td>
         <td><button type="button" class="cesium-button" data-bind="click: function() { $parent.lower($data, $index()); }, visible: $parent.canLower($index())">&#9660;</button></td>
@@ -151,7 +153,7 @@ function setupLayers() {
                 format : 'image/jpeg',
                 tileMatrixSetID : 'default028mm',
                 maximumLevel: 19,
-                credit : new Cesium.Credit({text: 'U. S. Geological Survey'})
+                credit : 'U. S. Geological Survey'
             }));
 
     // Create the additional layers
@@ -257,10 +259,10 @@ Cesium.knockout.getObservable(viewModel, 'selectedLayer').subscribe(function(bas
 //Sandcastle_End
     Sandcastle.finishedLoading();
 }
-if (typeof Cesium !== "undefined") {
+if (typeof Cesium !== 'undefined') {
     startup(Cesium);
-} else if (typeof require === "function") {
-    require(["Cesium"], startup);
+} else if (typeof require === 'function') {
+    require(['Cesium'], startup);
 }
 </script>
 </body>

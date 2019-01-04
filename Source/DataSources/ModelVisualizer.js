@@ -1,6 +1,7 @@
 define([
         '../Core/AssociativeArray',
         '../Core/BoundingSphere',
+        '../Core/Cartesian2',
         '../Core/Color',
         '../Core/defined',
         '../Core/destroyObject',
@@ -17,6 +18,7 @@ define([
     ], function(
         AssociativeArray,
         BoundingSphere,
+        Cartesian2,
         Color,
         defined,
         destroyObject,
@@ -43,6 +45,7 @@ define([
     var defaultColor = Color.WHITE;
     var defaultColorBlendMode = ColorBlendMode.HIGHLIGHT;
     var defaultColorBlendAmount = 0.5;
+    var defaultImageBasedLightingFactor = new Cartesian2(1.0, 1.0);
 
     var modelMatrixScratch = new Matrix4();
     var nodeMatrixScratch = new Matrix4();
@@ -126,9 +129,6 @@ define([
                     incrementallyLoadTextures : Property.getValueOrDefault(modelGraphics._incrementallyLoadTextures, time, defaultIncrementallyLoadTextures),
                     scene : this._scene
                 });
-
-                model.readyPromise.otherwise(onModelError);
-
                 model.id = entity;
                 primitives.add(model);
 
@@ -137,9 +137,12 @@ define([
                     url : resource.url,
                     animationsRunning : false,
                     nodeTransformationsScratch : {},
-                    originalNodeMatrixHash : {}
+                    originalNodeMatrixHash : {},
+                    loadFail : false
                 };
                 modelHash[entity.id] = modelData;
+
+                checkModelLoad(model, entity, modelHash);
             }
 
             model.show = true;
@@ -157,6 +160,8 @@ define([
             model.colorBlendAmount = Property.getValueOrDefault(modelGraphics._colorBlendAmount, time, defaultColorBlendAmount);
             model.clippingPlanes = Property.getValueOrUndefined(modelGraphics._clippingPlanes, time);
             model.clampAnimations = Property.getValueOrDefault(modelGraphics._clampAnimations, time, defaultClampAnimations);
+            model.imageBasedLightingFactor = Property.getValueOrDefault(modelGraphics._imageBasedLightingFactor, time, defaultImageBasedLightingFactor);
+            model.lightColor = Property.getValueOrUndefined(modelGraphics._lightColor, time);
 
             if (model.ready) {
                 var runAnimations = Property.getValueOrDefault(modelGraphics._runAnimations, time, true);
@@ -250,7 +255,7 @@ define([
         //>>includeEnd('debug');
 
         var modelData = this._modelHash[entity.id];
-        if (!defined(modelData)) {
+        if (!defined(modelData) || modelData.loadFail) {
             return BoundingSphereState.FAILED;
         }
 
@@ -324,8 +329,11 @@ define([
         }
     }
 
-    function onModelError(error) {
-        console.error(error);
+    function checkModelLoad(model, entity, modelHash){
+        model.readyPromise.otherwise(function(error){
+            console.error(error);
+            modelHash[entity.id].loadFail = true;
+        });
     }
 
     return ModelVisualizer;

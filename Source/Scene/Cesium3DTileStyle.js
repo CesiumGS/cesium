@@ -24,7 +24,7 @@ define([
      * A style that is applied to a {@link Cesium3DTileset}.
      * <p>
      * Evaluates an expression defined using the
-     * {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/Styling|3D Tiles Styling language}.
+     * {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/specification/Styling|3D Tiles Styling language}.
      * </p>
      *
      * @alias Cesium3DTileStyle
@@ -53,7 +53,7 @@ define([
      *     pointSize : '${Temperature} * 2.0'
      * });
      *
-     * @see {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/Styling|3D Tiles Styling language}
+     * @see {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/specification/Styling|3D Tiles Styling language}
      */
     function Cesium3DTileStyle(style) {
         this._style = undefined;
@@ -176,7 +176,7 @@ define([
     defineProperties(Cesium3DTileStyle.prototype, {
         /**
          * Gets the object defining the style using the
-         * {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/Styling|3D Tiles Styling language}.
+         * {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/specification/Styling|3D Tiles Styling language}.
          *
          * @memberof Cesium3DTileStyle.prototype
          *
@@ -236,6 +236,9 @@ define([
          * <p>
          * The expression must return or convert to a <code>Boolean</code>.
          * </p>
+         * <p>
+         * This expression is applicable to all tile formats.
+         * </p>
          *
          * @memberof Cesium3DTileStyle.prototype
          *
@@ -247,13 +250,13 @@ define([
          * var style = new Cesium3DTileStyle({
          *     show : '(regExp("^Chest").test(${County})) && (${YearBuilt} >= 1970)'
          * });
-         * style.show.evaluate(frameState, feature); // returns true or false depending on the feature's properties
+         * style.show.evaluate(feature); // returns true or false depending on the feature's properties
          *
          * @example
          * var style = new Cesium.Cesium3DTileStyle();
          * // Override show expression with a custom function
          * style.show = {
-         *     evaluate : function(frameState, feature) {
+         *     evaluate : function(feature) {
          *         return true;
          *     }
          * };
@@ -302,6 +305,9 @@ define([
          * <p>
          * The expression must return a <code>Color</code>.
          * </p>
+         * <p>
+         * This expression is applicable to all tile formats.
+         * </p>
          *
          * @memberof Cesium3DTileStyle.prototype
          *
@@ -313,13 +319,13 @@ define([
          * var style = new Cesium3DTileStyle({
          *     color : '(${Temperature} > 90) ? color("red") : color("white")'
          * });
-         * style.color.evaluateColor(frameState, feature, result); // returns a Cesium.Color object
+         * style.color.evaluateColor(feature, result); // returns a Cesium.Color object
          *
          * @example
          * var style = new Cesium.Cesium3DTileStyle();
          * // Override color expression with a custom function
          * style.color = {
-         *     evaluateColor : function(frameState, feature, result) {
+         *     evaluateColor : function(feature, result) {
          *         return Cesium.Color.clone(Cesium.Color.WHITE, result);
          *     }
          * };
@@ -361,6 +367,9 @@ define([
          * <p>
          * The expression must return a <code>Number</code>.
          * </p>
+         * <p>
+         * This expression is only applicable to point features in a Vector tile or a Point Cloud tile.
+         * </p>
          *
          * @memberof Cesium3DTileStyle.prototype
          *
@@ -372,13 +381,13 @@ define([
          * var style = new Cesium3DTileStyle({
          *     pointSize : '(${Temperature} > 90) ? 2.0 : 1.0'
          * });
-         * style.pointSize.evaluate(frameState, feature); // returns a Number
+         * style.pointSize.evaluate(feature); // returns a Number
          *
          * @example
          * var style = new Cesium.Cesium3DTileStyle();
          * // Override pointSize expression with a custom function
          * style.pointSize = {
-         *     evaluate : function(frameState, feature) {
+         *     evaluate : function(feature) {
          *         return 1.0;
          *     }
          * };
@@ -425,6 +434,9 @@ define([
          * <p>
          * The expression must return a <code>Color</code>.
          * </p>
+         * <p>
+         * This expression is only applicable to point features in a Vector tile.
+         * </p>
          *
          * @memberof Cesium3DTileStyle.prototype
          *
@@ -469,6 +481,9 @@ define([
          * The getter will return the internal {@link Expression} or {@link ConditionsExpression}, which may differ from the value provided to the setter.
          * <p>
          * The expression must return a <code>Number</code>.
+         * </p>
+         * <p>
+         * This expression is only applicable to point features in a Vector tile.
          * </p>
          *
          * @memberof Cesium3DTileStyle.prototype
@@ -515,6 +530,9 @@ define([
          * <p>
          * The expression must return a <code>Color</code>.
          * </p>
+         * <p>
+         * This expression is only applicable to point features in a Vector tile.
+         * </p>
          *
          * @memberof Cesium3DTileStyle.prototype
          *
@@ -559,6 +577,9 @@ define([
          * The getter will return the internal {@link Expression} or {@link ConditionsExpression}, which may differ from the value provided to the setter.
          * <p>
          * The expression must return a <code>Color</code>.
+         * </p>
+         * <p>
+         * This expression is only applicable to point features in a Vector tile.
          * </p>
          *
          * @memberof Cesium3DTileStyle.prototype
@@ -605,6 +626,9 @@ define([
          * <p>
          * The expression must return a <code>Number</code>.
          * </p>
+         * <p>
+         * This expression is only applicable to point features in a Vector tile.
+         * </p>
          *
          * @memberof Cesium3DTileStyle.prototype
          *
@@ -650,6 +674,9 @@ define([
          * <p>
          * The expression must return a <code>String</code>.
          * </p>
+         * <p>
+         * This expression is only applicable to point features in a Vector tile.
+         * </p>
          *
          * @memberof Cesium3DTileStyle.prototype
          *
@@ -663,13 +690,13 @@ define([
          * var style = new Cesium3DTileStyle({
          *     font : '(${Temperature} > 90) ? "30px Helvetica" : "24px Helvetica"'
          * });
-         * style.font.evaluate(frameState, feature); // returns a String
+         * style.font.evaluate(feature); // returns a String
          *
          * @example
          * var style = new Cesium.Cesium3DTileStyle();
          * // Override font expression with a custom function
          * style.font = {
-         *     evaluate : function(frameState, feature) {
+         *     evaluate : function(feature) {
          *         return '24px Helvetica';
          *     }
          * };
@@ -695,6 +722,9 @@ define([
          * <p>
          * The expression must return a <code>LabelStyle</code>.
          * </p>
+         * <p>
+         * This expression is only applicable to point features in a Vector tile.
+         * </p>
          *
          * @memberof Cesium3DTileStyle.prototype
          *
@@ -708,13 +738,13 @@ define([
          * var style = new Cesium3DTileStyle({
          *     labelStyle : '(${Temperature} > 90) ? ' + LabelStyle.FILL_AND_OUTLINE + ' : ' + LabelStyle.FILL
          * });
-         * style.labelStyle.evaluate(frameState, feature); // returns a LabelStyle
+         * style.labelStyle.evaluate(feature); // returns a LabelStyle
          *
          * @example
          * var style = new Cesium.Cesium3DTileStyle();
          * // Override labelStyle expression with a custom function
          * style.labelStyle = {
-         *     evaluate : function(frameState, feature) {
+         *     evaluate : function(feature) {
          *         return LabelStyle.FILL;
          *     }
          * };
@@ -740,6 +770,9 @@ define([
          * <p>
          * The expression must return a <code>String</code>.
          * </p>
+         * <p>
+         * This expression is only applicable to point features in a Vector tile.
+         * </p>
          *
          * @memberof Cesium3DTileStyle.prototype
          *
@@ -753,13 +786,13 @@ define([
          * var style = new Cesium3DTileStyle({
          *     labelText : '(${Temperature} > 90) ? ">90" : "<=90"'
          * });
-         * style.labelText.evaluate(frameState, feature); // returns a String
+         * style.labelText.evaluate(feature); // returns a String
          *
          * @example
          * var style = new Cesium.Cesium3DTileStyle();
          * // Override labelText expression with a custom function
          * style.labelText = {
-         *     evaluate : function(frameState, feature) {
+         *     evaluate : function(feature) {
          *         return 'Example label text';
          *     }
          * };
@@ -784,6 +817,9 @@ define([
          * The getter will return the internal {@link Expression} or {@link ConditionsExpression}, which may differ from the value provided to the setter.
          * <p>
          * The expression must return a <code>Color</code>.
+         * </p>
+         * <p>
+         * This expression is only applicable to point features in a Vector tile.
          * </p>
          *
          * @memberof Cesium3DTileStyle.prototype
@@ -830,6 +866,9 @@ define([
          * <p>
          * The expression must return a <code>Cartesian2</code>.
          * </p>
+         * <p>
+         * This expression is only applicable to point features in a Vector tile.
+         * </p>
          *
          * @memberof Cesium3DTileStyle.prototype
          *
@@ -843,7 +882,7 @@ define([
          * var style = new Cesium.Cesium3DTileStyle();
          * // Override backgroundPadding expression with a string
          * style.backgroundPadding = 'vec2(5.0, 7.0)';
-         * style.backgroundPadding.evaluate(frameState, feature); // returns a Cartesian2
+         * style.backgroundPadding.evaluate(feature); // returns a Cartesian2
          */
         backgroundPadding : {
             get : function() {
@@ -865,6 +904,9 @@ define([
          * The getter will return the internal {@link Expression} or {@link ConditionsExpression}, which may differ from the value provided to the setter.
          * <p>
          * The expression must return a <code>Boolean</code>.
+         * </p>
+         * <p>
+         * This expression is only applicable to point features in a Vector tile.
          * </p>
          *
          * @memberof Cesium3DTileStyle.prototype
@@ -911,6 +953,9 @@ define([
          * <p>
          * The expression must return a <code>Cartesian4</code>.
          * </p>
+         * <p>
+         * This expression is only applicable to point features in a Vector tile.
+         * </p>
          *
          * @memberof Cesium3DTileStyle.prototype
          *
@@ -924,7 +969,7 @@ define([
          * var style = new Cesium.Cesium3DTileStyle();
          * // Override scaleByDistance expression with a string
          * style.scaleByDistance = 'vec4(1.5e2, 2.0, 1.5e7, 0.5)';
-         * style.scaleByDistance.evaluate(frameState, feature); // returns a Cartesian4
+         * style.scaleByDistance.evaluate(feature); // returns a Cartesian4
          */
         scaleByDistance : {
             get : function() {
@@ -947,6 +992,9 @@ define([
          * <p>
          * The expression must return a <code>Cartesian4</code>.
          * </p>
+         * <p>
+         * This expression is only applicable to point features in a Vector tile.
+         * </p>
          *
          * @memberof Cesium3DTileStyle.prototype
          *
@@ -960,7 +1008,7 @@ define([
          * var style = new Cesium.Cesium3DTileStyle();
          * // Override translucencyByDistance expression with a string
          * style.translucencyByDistance = 'vec4(1.5e2, 1.0, 1.5e7, 0.2)';
-         * style.translucencyByDistance.evaluate(frameState, feature); // returns a Cartesian4
+         * style.translucencyByDistance.evaluate(feature); // returns a Cartesian4
          */
         translucencyByDistance : {
             get : function() {
@@ -983,6 +1031,9 @@ define([
          * <p>
          * The expression must return a <code>Cartesian2</code>.
          * </p>
+         * <p>
+         * This expression is only applicable to point features in a Vector tile.
+         * </p>
          *
          * @memberof Cesium3DTileStyle.prototype
          *
@@ -996,7 +1047,7 @@ define([
          * var style = new Cesium.Cesium3DTileStyle();
          * // Override distanceDisplayCondition expression with a string
          * style.distanceDisplayCondition = 'vec2(0.0, 5.5e6)';
-         * style.distanceDisplayCondition.evaluate(frameState, feature); // returns a Cartesian2
+         * style.distanceDisplayCondition.evaluate(feature); // returns a Cartesian2
          */
         distanceDisplayCondition : {
             get : function() {
@@ -1018,6 +1069,9 @@ define([
          * The getter will return the internal {@link Expression} or {@link ConditionsExpression}, which may differ from the value provided to the setter.
          * <p>
          * The expression must return a <code>Number</code>.
+         * </p>
+         * <p>
+         * This expression is only applicable to point features in a Vector tile.
          * </p>
          *
          * @memberof Cesium3DTileStyle.prototype
@@ -1064,6 +1118,9 @@ define([
          * <p>
          * The expression must return a <code>Boolean</code>.
          * </p>
+         * <p>
+         * This expression is only applicable to point features in a Vector tile.
+         * </p>
          *
          * @memberof Cesium3DTileStyle.prototype
          *
@@ -1108,6 +1165,9 @@ define([
          * The getter will return the internal {@link Expression} or {@link ConditionsExpression}, which may differ from the value provided to the setter.
          * <p>
          * The expression must return a <code>Color</code>.
+         * </p>
+         * <p>
+         * This expression is only applicable to point features in a Vector tile.
          * </p>
          *
          * @memberof Cesium3DTileStyle.prototype
@@ -1154,6 +1214,9 @@ define([
          * <p>
          * The expression must return a <code>String</code>.
          * </p>
+         * <p>
+         * This expression is only applicable to point features in a Vector tile.
+         * </p>
          *
          * @memberof Cesium3DTileStyle.prototype
          *
@@ -1167,13 +1230,13 @@ define([
          * var style = new Cesium3DTileStyle({
          *     image : '(${Temperature} > 90) ? "/url/to/image1" : "/url/to/image2"'
          * });
-         * style.image.evaluate(frameState, feature); // returns a String
+         * style.image.evaluate(feature); // returns a String
          *
          * @example
          * var style = new Cesium.Cesium3DTileStyle();
          * // Override image expression with a custom function
          * style.image = {
-         *     evaluate : function(frameState, feature) {
+         *     evaluate : function(feature) {
          *         return '/url/to/image';
          *     }
          * };
@@ -1199,6 +1262,9 @@ define([
          * <p>
          * The expression must return a <code>Number</code>.
          * </p>
+         * <p>
+         * This expression is only applicable to point features in a Vector tile.
+         * </p>
          *
          * @memberof Cesium3DTileStyle.prototype
          *
@@ -1212,7 +1278,7 @@ define([
          * var style = new Cesium.Cesium3DTileStyle();
          * // Override disableDepthTestDistance expression with a string
          * style.disableDepthTestDistance = '1000.0';
-         * style.disableDepthTestDistance.evaluate(frameState, feature); // returns a Number
+         * style.disableDepthTestDistance.evaluate(feature); // returns a Number
          */
         disableDepthTestDistance : {
             get : function() {
@@ -1235,6 +1301,9 @@ define([
          * <p>
          * The expression must return a <code>HorizontalOrigin</code>.
          * </p>
+         * <p>
+         * This expression is only applicable to point features in a Vector tile.
+         * </p>
          *
          * @memberof Cesium3DTileStyle.prototype
          *
@@ -1248,13 +1317,13 @@ define([
          * var style = new Cesium3DTileStyle({
          *     horizontalOrigin : HorizontalOrigin.LEFT
          * });
-         * style.horizontalOrigin.evaluate(frameState, feature); // returns a HorizontalOrigin
+         * style.horizontalOrigin.evaluate(feature); // returns a HorizontalOrigin
          *
          * @example
          * var style = new Cesium.Cesium3DTileStyle();
          * // Override horizontalOrigin expression with a custom function
          * style.horizontalOrigin = {
-         *     evaluate : function(frameState, feature) {
+         *     evaluate : function(feature) {
          *         return HorizontalOrigin.CENTER;
          *     }
          * };
@@ -1280,6 +1349,9 @@ define([
          * <p>
          * The expression must return a <code>VerticalOrigin</code>.
          * </p>
+         * <p>
+         * This expression is only applicable to point features in a Vector tile.
+         * </p>
          *
          * @memberof Cesium3DTileStyle.prototype
          *
@@ -1293,13 +1365,13 @@ define([
          * var style = new Cesium3DTileStyle({
          *     verticalOrigin : VerticalOrigin.TOP
          * });
-         * style.verticalOrigin.evaluate(frameState, feature); // returns a VerticalOrigin
+         * style.verticalOrigin.evaluate(feature); // returns a VerticalOrigin
          *
          * @example
          * var style = new Cesium.Cesium3DTileStyle();
          * // Override verticalOrigin expression with a custom function
          * style.verticalOrigin = {
-         *     evaluate : function(frameState, feature) {
+         *     evaluate : function(feature) {
          *         return VerticalOrigin.CENTER;
          *     }
          * };
@@ -1325,6 +1397,9 @@ define([
          * <p>
          * The expression must return a <code>HorizontalOrigin</code>.
          * </p>
+         * <p>
+         * This expression is only applicable to point features in a Vector tile.
+         * </p>
          *
          * @memberof Cesium3DTileStyle.prototype
          *
@@ -1338,13 +1413,13 @@ define([
          * var style = new Cesium3DTileStyle({
          *     labelHorizontalOrigin : HorizontalOrigin.LEFT
          * });
-         * style.labelHorizontalOrigin.evaluate(frameState, feature); // returns a HorizontalOrigin
+         * style.labelHorizontalOrigin.evaluate(feature); // returns a HorizontalOrigin
          *
          * @example
          * var style = new Cesium.Cesium3DTileStyle();
          * // Override labelHorizontalOrigin expression with a custom function
          * style.labelHorizontalOrigin = {
-         *     evaluate : function(frameState, feature) {
+         *     evaluate : function(feature) {
          *         return HorizontalOrigin.CENTER;
          *     }
          * };
@@ -1370,6 +1445,9 @@ define([
          * <p>
          * The expression must return a <code>VerticalOrigin</code>.
          * </p>
+         * <p>
+         * This expression is only applicable to point features in a Vector tile.
+         * </p>
          *
          * @memberof Cesium3DTileStyle.prototype
          *
@@ -1383,13 +1461,13 @@ define([
          * var style = new Cesium3DTileStyle({
          *     labelVerticalOrigin : VerticalOrigin.TOP
          * });
-         * style.labelVerticalOrigin.evaluate(frameState, feature); // returns a VerticalOrigin
+         * style.labelVerticalOrigin.evaluate(feature); // returns a VerticalOrigin
          *
          * @example
          * var style = new Cesium.Cesium3DTileStyle();
          * // Override labelVerticalOrigin expression with a custom function
          * style.labelVerticalOrigin = {
-         *     evaluate : function(frameState, feature) {
+         *     evaluate : function(feature) {
          *         return VerticalOrigin.CENTER;
          *     }
          * };
@@ -1425,7 +1503,7 @@ define([
          *         description : '"Building id ${id} has height ${Height}."'
          *     }
          * });
-         * style.meta.description.evaluate(frameState, feature); // returns a String with the substituted variables
+         * style.meta.description.evaluate(feature); // returns a String with the substituted variables
          */
         meta : {
             get : function() {

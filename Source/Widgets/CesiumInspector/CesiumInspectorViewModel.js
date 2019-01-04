@@ -280,33 +280,6 @@ define([
          */
         this.depthFrustumText = '';
 
-        /**
-         * Gets the text on the general section expand button.  This property is computed.
-         * @type {String}
-         * @default '-'
-         */
-        this.generalSwitchText = knockout.pureComputed(function() {
-            return that.generalVisible ? '-' : '+';
-        });
-
-        /**
-         * Gets the text on the primitives section expand button.  This property is computed.
-         * @type {String}
-         * @default '+'
-         */
-        this.primitivesSwitchText = knockout.pureComputed(function() {
-            return that.primitivesVisible ? '-' : '+';
-        });
-
-        /**
-         * Gets the text on the terrain section expand button.  This property is computed.
-         * @type {String}
-         * @default '+'
-         */
-        this.terrainSwitchText = knockout.pureComputed(function() {
-            return that.terrainVisible ? '-' : '+';
-        });
-
         knockout.track(this, [
             'frustums',
             'frustumPlanes',
@@ -626,7 +599,6 @@ define([
             }
         },
 
-
         /**
          * Gets the command to toggle the visibility of a BoundingSphere for a primitive
          * @memberof CesiumInspectorViewModel.prototype
@@ -663,7 +635,6 @@ define([
             }
         },
 
-
         /**
          * Gets the command to increment the depth frustum index to be shown
          * @memberof CesiumInspectorViewModel.prototype
@@ -687,7 +658,6 @@ define([
                 return this._decrementDepthFrustum;
             }
         },
-
 
         /**
          * Gets the command to toggle the visibility of tile coordinates

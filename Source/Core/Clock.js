@@ -132,6 +132,11 @@ define([
          * @type {Event}
          */
         this.onTick = new Event();
+        /**
+         * An {@link Event} that is fired whenever {@link Clock#stopTime} is reached.
+         * @type {Event}
+         */
+        this.onStop = new Event();
 
         this._currentTime = undefined;
         this._multiplier = undefined;
@@ -227,7 +232,6 @@ define([
             }
         },
 
-
         /**
          * Indicates whether {@link Clock#tick} should attempt to advance time.
          * The clock will only advance time when both
@@ -237,7 +241,7 @@ define([
          * {@link ClockStep.SYSTEM_CLOCK_MULTIPLIER}.
          * @memberof Clock.prototype
          * @type {Boolean}
-         * @default true
+         * @default false
          */
         shouldAnimate : {
             get : function() {
@@ -291,6 +295,7 @@ define([
                         currentTime = JulianDate.clone(startTime, currentTime);
                     } else if (JulianDate.greaterThan(currentTime, stopTime)) {
                         currentTime = JulianDate.clone(stopTime, currentTime);
+                        this.onStop.raiseEvent(this);
                     }
                 } else if (clockRange === ClockRange.LOOP_STOP) {
                     if (JulianDate.lessThan(currentTime, startTime)) {
@@ -298,6 +303,7 @@ define([
                     }
                     while (JulianDate.greaterThan(currentTime, stopTime)) {
                         currentTime = JulianDate.addSeconds(startTime, JulianDate.secondsDifference(currentTime, stopTime), currentTime);
+                        this.onStop.raiseEvent(this);
                     }
                 }
             }

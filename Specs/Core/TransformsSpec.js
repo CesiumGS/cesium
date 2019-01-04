@@ -9,11 +9,11 @@ defineSuite([
         'Core/HeadingPitchRoll',
         'Core/Iau2006XysData',
         'Core/JulianDate',
-        'Core/loadJson',
         'Core/Math',
         'Core/Matrix3',
         'Core/Matrix4',
         'Core/Quaternion',
+        'Core/Resource',
         'Core/TimeInterval'
     ], function(
         Transforms,
@@ -26,11 +26,11 @@ defineSuite([
         HeadingPitchRoll,
         Iau2006XysData,
         JulianDate,
-        loadJson,
         CesiumMath,
         Matrix3,
         Matrix4,
         Quaternion,
+        Resource,
         TimeInterval) {
     'use strict';
 
@@ -587,7 +587,6 @@ defineSuite([
         expect(actual).toEqualEpsilon(expected, CesiumMath.EPSILON11);
     });
 
-
     it('headingPitchRollQuaternion works with a custom fixedFrameTransform', function() {
         var origin = new Cartesian3(1.0, 0.0, 0.0);
         var heading = CesiumMath.toRadians(20.0);
@@ -695,7 +694,7 @@ defineSuite([
             // The rotation data from Components span before and after the EOP data so as to test
             // what happens when we try evaluating at times when we don't have EOP as well as at
             // times where we do.  The samples are not at exact EOP times, in order to test interpolation.
-            return loadJson('Data/EarthOrientationParameters/IcrfToFixedStkComponentsRotationData.json').then(function(componentsData) {
+            return Resource.fetchJson('Data/EarthOrientationParameters/IcrfToFixedStkComponentsRotationData.json').then(function(componentsData) {
                 var start = JulianDate.fromIso8601(componentsData[0].date);
                 var stop = JulianDate.fromIso8601(componentsData[componentsData.length - 1].date);
 
@@ -1120,6 +1119,23 @@ defineSuite([
         var actualTranslation = Matrix4.getTranslation(actual, new Cartesian4());
 
         expect(actualTranslation).toEqualEpsilon(expectedTranslation, CesiumMath.EPSILON14);
+    });
+
+    it('fixedFrameToHeadingPitchRoll returns heading/pitch/roll from a transform', function () {
+        var expected = new HeadingPitchRoll(0.5, 0.6, 0.7);
+
+        var transform = Transforms.eastNorthUpToFixedFrame(Cartesian3.fromDegrees(0, 0));
+        var transform2 = Matrix4.fromTranslationQuaternionRotationScale(new Cartesian3(), Quaternion.fromHeadingPitchRoll(expected), new Cartesian3(1, 1, 1));
+        transform = Matrix4.multiply(transform, transform2, transform2);
+
+        var actual = Transforms.fixedFrameToHeadingPitchRoll(transform);
+        expect(actual).toEqualEpsilon(expected, CesiumMath.EPSILON10);
+    });
+
+    it('fixedFrameToHeadingPitchRoll throws with no transform', function() {
+        expect(function() {
+            return Transforms.fixedFrameToHeadingPitchRoll();
+        }).toThrowDeveloperError();
     });
 
     it('eastNorthUpToFixedFrame throws without an origin', function() {

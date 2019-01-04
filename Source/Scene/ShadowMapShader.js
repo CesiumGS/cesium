@@ -20,6 +20,8 @@ define([
         var defines = vs.defines.slice(0);
         var sources = vs.sources.slice(0);
 
+        defines.push('SHADOW_MAP');
+
         if (isTerrain) {
             defines.push('GENERATE_POSITION');
         }
@@ -130,6 +132,8 @@ define([
         var defines = vs.defines.slice(0);
         var sources = vs.sources.slice(0);
 
+        defines.push('SHADOW_MAP');
+
         if (isTerrain) {
             if (hasTerrainNormal) {
                 defines.push('GENERATE_POSITION_AND_NORMAL');
@@ -202,17 +206,30 @@ define([
             fsSource += 'uniform sampler2D shadowMap_texture; \n';
         }
 
+        var returnPositionEC;
+        if (hasPositionVarying) {
+            returnPositionEC = '    return vec4(' + positionVaryingName + ', 1.0); \n';
+        } else {
+            returnPositionEC =
+                '#ifndef LOG_DEPTH \n' +
+                '    return czm_windowToEyeCoordinates(gl_FragCoord); \n' +
+                '#else \n' +
+                '    return vec4(v_logPositionEC, 1.0); \n' +
+                '#endif \n';
+        }
+
         fsSource +=
             'uniform mat4 shadowMap_matrix; \n' +
             'uniform vec3 shadowMap_lightDirectionEC; \n' +
             'uniform vec4 shadowMap_lightPositionEC; \n' +
             'uniform vec4 shadowMap_normalOffsetScaleDistanceMaxDistanceAndDarkness; \n' +
             'uniform vec4 shadowMap_texelSizeDepthBiasAndNormalShadingSmooth; \n' +
+            '#ifdef LOG_DEPTH \n' +
+            'varying vec3 v_logPositionEC; \n' +
+            '#endif \n' +
             'vec4 getPositionEC() \n' +
             '{ \n' +
-            (hasPositionVarying ?
-            '    return vec4(' + positionVaryingName + ', 1.0); \n' :
-            '    return czm_windowToEyeCoordinates(gl_FragCoord); \n') +
+            returnPositionEC +
             '} \n' +
             'vec3 getNormalEC() \n' +
             '{ \n' +

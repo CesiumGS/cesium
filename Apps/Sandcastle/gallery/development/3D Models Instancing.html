@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">  <!-- Use Chrome Frame in IE -->
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
     <meta name="description" content="Create instanced 3D models.">
     <meta name="cesium-sandcastle-labels" content="Development">
@@ -10,10 +10,12 @@
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
     <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
     <script type="text/javascript">
-    require.config({
-        baseUrl : '../../../Source',
-        waitSeconds : 60
-    });
+        if(typeof require === 'function') {
+            require.config({
+                baseUrl : '../../../Source',
+                waitSeconds : 120
+            });
+        }
     </script>
 </head>
 <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
@@ -27,8 +29,9 @@
 function startup(Cesium) {
     'use strict';
 //Sandcastle_Begin
-
-var viewer = new Cesium.Viewer('cesiumContainer');
+var viewer = new Cesium.Viewer('cesiumContainer', {
+    shouldAnimate: true
+});
 var scene = viewer.scene;
 var context = scene.context;
 var camera = viewer.camera;
@@ -61,7 +64,7 @@ function createCollection(instances) {
     collection.readyPromise.then(function(collection) {
         // Play and loop all animations at half-speed
         collection.activeAnimations.addAll({
-            speedup : 0.5,
+            multiplier : 0.5,
             loop : Cesium.ModelAnimationLoop.REPEAT
         });
         orientCamera(collection._boundingSphere.center, collection._boundingSphere.radius);
@@ -90,7 +93,7 @@ function createModels(instances) {
         model.readyPromise.then(function(model) {
             // Play and loop all animations at half-speed
             model.activeAnimations.addAll({
-                speedup : 0.5,
+                multiplier : 0.5,
                 loop : Cesium.ModelAnimationLoop.REPEAT
             });
         }).otherwise(function(error){
@@ -190,21 +193,21 @@ Sandcastle.addToolbarMenu([ {
         reset();
     }
 }, {
-    text : 'Ground vehicle',
+    text : 'Ground Vehicle',
     onselect : function() {
-        url = '../../SampleData/models/CesiumGround/Cesium_Ground.gltf';
+        url = '../../SampleData/models/GroundVehicle/GroundVehicle.glb';
         spacing = 0.00008;
         reset();
     }
 }, {
-    text : 'Milk truck',
+    text : 'Milk Truck',
     onselect : function() {
         url = '../../SampleData/models/CesiumMilkTruck/CesiumMilkTruck.gltf';
         spacing = 0.00008;
         reset();
     }
 }, {
-    text : 'Skinned character',
+    text : 'Skinned Character',
     onselect : function() {
         url = '../../SampleData/models/CesiumMan/Cesium_Man.gltf';
         spacing = 0.00001;
@@ -247,12 +250,12 @@ Sandcastle.addToolbarButton('3D', function() {
 });
 
 //Sandcastle_End
-Sandcastle.finishedLoading();
+    Sandcastle.finishedLoading();
 }
-if (typeof Cesium !== "undefined") {
+if (typeof Cesium !== 'undefined') {
     startup(Cesium);
-} else if (typeof require === "function") {
-    require(["Cesium"], startup);
+} else if (typeof require === 'function') {
+    require(['Cesium'], startup);
 }
 </script>
 </body>

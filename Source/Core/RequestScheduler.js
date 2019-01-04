@@ -2,6 +2,7 @@ define([
         '../ThirdParty/Uri',
         '../ThirdParty/when',
         './Check',
+        './defaultValue',
         './defined',
         './defineProperties',
         './Event',
@@ -13,6 +14,7 @@ define([
         Uri,
         when,
         Check,
+        defaultValue,
         defined,
         defineProperties,
         Event,
@@ -67,11 +69,20 @@ define([
     RequestScheduler.maximumRequests = 50;
 
     /**
-     * The maximum number of simultaneous active requests per server. Un-throttled requests do not observe this limit.
+     * The maximum number of simultaneous active requests per server. Un-throttled requests or servers specifically
+     * listed in requestsByServer do not observe this limit.
      * @type {Number}
      * @default 6
      */
     RequestScheduler.maximumRequestsPerServer = 6;
+
+    /**
+     * A per serverKey list of overrides to use for throttling instead of maximumRequestsPerServer
+     */
+    RequestScheduler.requestsByServer = {
+        'api.cesium.com:443': 18,
+        'assets.cesium.com:443': 18
+    };
 
     /**
      * Specifies if the request scheduler should throttle incoming requests, or let the browser queue requests under its control.
@@ -146,7 +157,8 @@ define([
     }
 
     function serverHasOpenSlots(serverKey) {
-        return numberOfActiveRequestsByServer[serverKey] < RequestScheduler.maximumRequestsPerServer;
+        var maxRequests = defaultValue(RequestScheduler.requestsByServer[serverKey], RequestScheduler.maximumRequestsPerServer);
+        return numberOfActiveRequestsByServer[serverKey] < maxRequests;
     }
 
     function issueRequest(request) {

@@ -7,6 +7,7 @@ define([
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/FeatureDetection',
+        '../Core/GeographicProjection',
         '../Core/GeographicTilingScheme',
         '../Core/IndexDatatype',
         '../Core/Math',
@@ -48,6 +49,7 @@ define([
         destroyObject,
         DeveloperError,
         FeatureDetection,
+        GeographicProjection,
         GeographicTilingScheme,
         IndexDatatype,
         CesiumMath,
@@ -155,6 +157,7 @@ define([
      *                 or undefined to show it at all levels.  Level zero is the least-detailed level.
      * @param {Number} [options.maximumTerrainLevel] The maximum terrain level-of-detail at which to show this imagery layer,
      *                 or undefined to show it at all levels.  Level zero is the least-detailed level.
+     * @param {Rectangle} [options.cutoutRectangle] Cartographic rectangle for cutting out a portion of this ImageryLayer.
      */
     function ImageryLayer(imageryProvider, options) {
         this._imageryProvider = imageryProvider;
@@ -277,6 +280,13 @@ define([
         this._requestImageError = undefined;
 
         this._reprojectComputeCommands = [];
+
+        /**
+         * Rectangle cutout in this layer of imagery.
+         *
+         * @type {Rectangle}
+         */
+        this.cutoutRectangle = options.cutoutRectangle;
     }
 
     defineProperties(ImageryLayer.prototype, {
@@ -306,7 +316,6 @@ define([
             }
         }
     });
-
 
     /**
      * This value is used as the default brightness for the imagery layer if one is not provided during construction
@@ -403,8 +412,6 @@ define([
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
      * assign the return value (<code>undefined</code>) to the object as done in the example.
      *
-     * @returns {undefined}
-     *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
      *
@@ -483,7 +490,7 @@ define([
         // Use Web Mercator for our texture coordinate computations if this imagery layer uses
         // that projection and the terrain tile falls entirely inside the valid bounds of the
         // projection.
-        var useWebMercatorT = imageryProvider.tilingScheme instanceof WebMercatorTilingScheme &&
+        var useWebMercatorT = imageryProvider.tilingScheme.projection instanceof WebMercatorProjection &&
                               tile.rectangle.north < WebMercatorProjection.MaximumLatitude &&
                               tile.rectangle.south > -WebMercatorProjection.MaximumLatitude;
 
@@ -850,7 +857,7 @@ define([
             });
         }
 
-        if (imageryProvider.tilingScheme instanceof WebMercatorTilingScheme) {
+        if (imageryProvider.tilingScheme.projection instanceof WebMercatorProjection) {
             imagery.textureWebMercator = texture;
         } else {
             imagery.texture = texture;
@@ -935,7 +942,7 @@ define([
         // avoids precision problems in the reprojection transformation while making
         // no noticeable difference in the georeferencing of the image.
         if (needGeographicProjection &&
-            !(this._imageryProvider.tilingScheme instanceof GeographicTilingScheme) &&
+            !(this._imageryProvider.tilingScheme.projection instanceof GeographicProjection) &&
             rectangle.width / texture.width > 1e-5) {
                 var that = this;
                 imagery.addReference();
@@ -1213,7 +1220,7 @@ define([
         var imageryProvider = layer._imageryProvider;
         var tilingScheme = imageryProvider.tilingScheme;
         var ellipsoid = tilingScheme.ellipsoid;
-        var latitudeFactor = !(layer._imageryProvider.tilingScheme instanceof GeographicTilingScheme) ? Math.cos(latitudeClosestToEquator) : 1.0;
+        var latitudeFactor = !(layer._imageryProvider.tilingScheme.projection instanceof GeographicProjection) ? Math.cos(latitudeClosestToEquator) : 1.0;
         var tilingSchemeRectangle = tilingScheme.rectangle;
         var levelZeroMaximumTexelSpacing = ellipsoid.maximumRadius * tilingSchemeRectangle.width * latitudeFactor / (imageryProvider.tileWidth * tilingScheme.getNumberOfXTilesAtLevel(0));
 

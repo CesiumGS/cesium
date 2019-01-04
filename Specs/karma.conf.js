@@ -1,5 +1,5 @@
 /*eslint-env node*/
-"use strict";
+'use strict';
 
 module.exports = function(config) {
     var options = {
@@ -12,6 +12,13 @@ module.exports = function(config) {
         // frameworks to use
         // available frameworks: https://npmjs.org/browse/keyword/karma-adapter
         frameworks : ['jasmine', 'requirejs', 'detectBrowsers'],
+
+        client: {
+            captureConsole: false,
+            jasmine: {
+                random: false
+            }
+        },
 
         detectBrowsers : {
             enabled : false,
@@ -39,7 +46,8 @@ module.exports = function(config) {
         // test results reporter to use
         // possible values: 'dots', 'progress'
         // available reporters: https://npmjs.org/browse/keyword/karma-reporter
-        reporters : ['spec'],
+        reporters : ['spec', 'longest'],
+        longestSpecsToReport : 10,
 
         // web server port
         port : 9876,
@@ -49,7 +57,7 @@ module.exports = function(config) {
 
         // level of logging
         // possible values: config.LOG_DISABLE || config.LOG_ERROR || config.LOG_WARN || config.LOG_INFO || config.LOG_DEBUG
-        logLevel : config.LOG_INFO,
+        logLevel : config.LOG_ERROR,
 
         // enable / disable watching file and executing tests whenever any file changes
         autoWatch : false,
@@ -58,8 +66,14 @@ module.exports = function(config) {
         // available browser launchers: https://npmjs.org/browse/keyword/karma-launcher
         browsers : ['Chrome'],
 
-        electronOpts : {
-            show : false
+        //In Travis, we need to run with the no-sandbox flag
+        customLaunchers: {
+            ChromeCI: {
+                base: 'ChromeHeadless',
+                flags: [
+                    '--no-sandbox'
+                ]
+            }
         },
 
         browserNoActivityTimeout : 30000,

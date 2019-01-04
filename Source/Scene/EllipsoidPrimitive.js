@@ -196,6 +196,8 @@ define([
          */
         this._depthTestEnabled = defaultValue(options.depthTestEnabled, true);
 
+        this._useLogDepth = false;
+
         this._sp = undefined;
         this._rs = undefined;
         this._va = undefined;
@@ -207,7 +209,8 @@ define([
             owner : defaultValue(options._owner, this)
         });
         this._pickCommand = new DrawCommand({
-            owner : defaultValue(options._owner, this)
+            owner : defaultValue(options._owner, this),
+            pickOnly : true
         });
 
         var that = this;
@@ -250,6 +253,11 @@ define([
         context.cache.ellipsoidPrimitive_vertexArray = vertexArray;
         return vertexArray;
     }
+
+    var logDepthExtension =
+        '#ifdef GL_EXT_frag_depth \n' +
+        '#extension GL_EXT_frag_depth : enable \n' +
+        '#endif \n\n';
 
     /**
      * Called when {@link Viewer} or {@link CesiumWidget} render the scene to
@@ -343,11 +351,19 @@ define([
         var lightingChanged = this.onlySunLighting !== this._onlySunLighting;
         this._onlySunLighting = this.onlySunLighting;
 
+        var useLogDepth = frameState.useLogDepth;
+        var useLogDepthChanged = this._useLogDepth !== useLogDepth;
+        this._useLogDepth = useLogDepth;
+
         var colorCommand = this._colorCommand;
+        var vs;
         var fs;
 
         // Recompile shader when material, lighting, or translucency changes
-        if (materialChanged || lightingChanged || translucencyChanged) {
+        if (materialChanged || lightingChanged || translucencyChanged || useLogDepthChanged) {
+            vs = new ShaderSource({
+                sources : [EllipsoidVS]
+            });
             fs = new ShaderSource({
                 sources : [this.material.shaderSource, EllipsoidFS]
             });
@@ -357,11 +373,16 @@ define([
             if (!translucent && context.fragmentDepth) {
                 fs.defines.push('WRITE_DEPTH');
             }
+            if (this._useLogDepth) {
+                vs.defines.push('LOG_DEPTH', 'DISABLE_GL_POSITION_LOG_DEPTH');
+                fs.defines.push('LOG_DEPTH');
+                fs.sources.push(logDepthExtension);
+            }
 
             this._sp = ShaderProgram.replaceCache({
                 context : context,
                 shaderProgram : this._sp,
-                vertexShaderSource : EllipsoidVS,
+                vertexShaderSource : vs,
                 fragmentShaderSource : fs,
                 attributeLocations : attributeLocations
             });
@@ -398,7 +419,10 @@ define([
             }
 
             // Recompile shader when material changes
-            if (materialChanged || lightingChanged || !defined(this._pickSP)) {
+            if (materialChanged || lightingChanged || !defined(this._pickSP) || useLogDepthChanged) {
+                vs = new ShaderSource({
+                    sources : [EllipsoidVS]
+                });
                 fs = new ShaderSource({
                     sources : [this.material.shaderSource, EllipsoidFS],
                     pickColorQualifier : 'uniform'
@@ -409,11 +433,16 @@ define([
                 if (!translucent && context.fragmentDepth) {
                     fs.defines.push('WRITE_DEPTH');
                 }
+                if (this._useLogDepth) {
+                    vs.defines.push('LOG_DEPTH');
+                    fs.defines.push('LOG_DEPTH');
+                    fs.sources.push(logDepthExtension);
+                }
 
                 this._pickSP = ShaderProgram.replaceCache({
                     context : context,
                     shaderProgram : this._pickSP,
-                    vertexShaderSource : EllipsoidVS,
+                    vertexShaderSource : vs,
                     fragmentShaderSource : fs,
                     attributeLocations : attributeLocations
                 });
@@ -454,8 +483,6 @@ define([
      * Once an object is destroyed, it should not be used; calling any function other than
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
      * assign the return value (<code>undefined</code>) to the object as done in the example.
-     *
-     * @returns {undefined}
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *

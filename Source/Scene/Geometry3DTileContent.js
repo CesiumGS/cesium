@@ -73,27 +73,18 @@ define([
     }
 
     defineProperties(Geometry3DTileContent.prototype, {
-        /**
-         * @inheritdoc Cesium3DTileContent#featuresLength
-         */
         featuresLength : {
             get : function() {
                 return defined(this._batchTable) ? this._batchTable.featuresLength : 0;
             }
         },
 
-        /**
-         * @inheritdoc Cesium3DTileContent#pointsLength
-         */
         pointsLength : {
             get : function() {
                 return 0;
             }
         },
 
-        /**
-         * @inheritdoc Cesium3DTileContent#trianglesLength
-         */
         trianglesLength : {
             get : function() {
                 if (defined(this._geometries)) {
@@ -103,9 +94,6 @@ define([
             }
         },
 
-        /**
-         * @inheritdoc Cesium3DTileContent#geometryByteLength
-         */
         geometryByteLength : {
             get : function() {
                 if (defined(this._geometries)) {
@@ -115,72 +103,48 @@ define([
             }
         },
 
-        /**
-         * @inheritdoc Cesium3DTileContent#texturesByteLength
-         */
         texturesByteLength : {
             get : function() {
                 return 0;
             }
         },
 
-        /**
-         * @inheritdoc Cesium3DTileContent#batchTableByteLength
-         */
         batchTableByteLength : {
             get : function() {
                 return defined(this._batchTable) ? this._batchTable.memorySizeInBytes : 0;
             }
         },
 
-        /**
-         * @inheritdoc Cesium3DTileContent#innerContents
-         */
         innerContents : {
             get : function() {
                 return undefined;
             }
         },
 
-        /**
-         * @inheritdoc Cesium3DTileContent#readyPromise
-         */
         readyPromise : {
             get : function() {
                 return this._readyPromise.promise;
             }
         },
 
-        /**
-         * @inheritdoc Cesium3DTileContent#tileset
-         */
         tileset : {
             get : function() {
                 return this._tileset;
             }
         },
 
-        /**
-         * @inheritdoc Cesium3DTileContent#tile
-         */
         tile : {
             get : function() {
                 return this._tile;
             }
         },
 
-        /**
-         * @inheritdoc Cesium3DTileContent#url
-         */
         url : {
             get : function() {
                 return this._resource.getUrlComponent(true);
             }
         },
 
-        /**
-         * @inheritdoc Cesium3DTileContent#batchTable
-         */
         batchTable : {
             get : function() {
                 return this._batchTable;
@@ -353,7 +317,7 @@ define([
             return;
         }
 
-        var modelMatrix = content._tile.computedTransform;
+        var modelMatrix = content.tile.computedTransform;
 
         var center;
         if (defined(featureTableJson.RTC_CENTER)) {
@@ -401,7 +365,7 @@ define([
                 center : center,
                 modelMatrix : modelMatrix,
                 batchTable : batchTable,
-                boundingVolume : content._tile._boundingVolume.boundingVolume
+                boundingVolume : content.tile.boundingVolume.boundingVolume
             });
         }
     }
@@ -417,16 +381,10 @@ define([
         }
     }
 
-    /**
-     * @inheritdoc Cesium3DTileContent#hasProperty
-     */
     Geometry3DTileContent.prototype.hasProperty = function(batchId, name) {
         return this._batchTable.hasProperty(batchId, name);
     };
 
-    /**
-     * @inheritdoc Cesium3DTileContent#getFeature
-     */
     Geometry3DTileContent.prototype.getFeature = function(batchId) {
         //>>includeStart('debug', pragmas.debug);
         var featuresLength = this.featuresLength;
@@ -439,36 +397,27 @@ define([
         return this._features[batchId];
     };
 
-    /**
-     * @inheritdoc Cesium3DTileContent#applyDebugSettings
-     */
     Geometry3DTileContent.prototype.applyDebugSettings = function(enabled, color) {
         if (defined(this._geometries)) {
             this._geometries.applyDebugSettings(enabled, color);
         }
     };
 
-    /**
-     * @inheritdoc Cesium3DTileContent#applyStyle
-     */
-    Geometry3DTileContent.prototype.applyStyle = function(frameState, style) {
+    Geometry3DTileContent.prototype.applyStyle = function(style) {
         createFeatures(this);
         if (defined(this._geometries)) {
-            this._geometries.applyStyle(frameState, style, this._features);
+            this._geometries.applyStyle(style, this._features);
         }
     };
 
-    /**
-     * @inheritdoc Cesium3DTileContent#update
-     */
     Geometry3DTileContent.prototype.update = function(tileset, frameState) {
-        if (defined(this._batchTable)) {
-            this._batchTable.update(tileset, frameState);
-        }
         if (defined(this._geometries)) {
             this._geometries.classificationType = this._tileset.classificationType;
             this._geometries.debugWireframe = this._tileset.debugWireframe;
             this._geometries.update(frameState);
+        }
+        if (defined(this._batchTable) && this._geometries._ready) {
+            this._batchTable.update(tileset, frameState);
         }
 
         if (!defined(this._contentReadyPromise)) {
@@ -479,16 +428,10 @@ define([
         }
     };
 
-    /**
-     * @inheritdoc Cesium3DTileContent#isDestroyed
-     */
     Geometry3DTileContent.prototype.isDestroyed = function() {
         return false;
     };
 
-    /**
-     * @inheritdoc Cesium3DTileContent#destroy
-     */
     Geometry3DTileContent.prototype.destroy = function() {
         this._geometries = this._geometries && this._geometries.destroy();
         this._batchTable = this._batchTable && this._batchTable.destroy();

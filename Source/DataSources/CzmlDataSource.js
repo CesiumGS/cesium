@@ -11,7 +11,6 @@ define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
-        '../Core/deprecationWarning',
         '../Core/DeveloperError',
         '../Core/DistanceDisplayCondition',
         '../Core/Ellipsoid',
@@ -99,7 +98,6 @@ define([
         defaultValue,
         defined,
         defineProperties,
-        deprecationWarning,
         DeveloperError,
         DistanceDisplayCondition,
         Ellipsoid,
@@ -1393,6 +1391,7 @@ define([
         processPacketData(Number, corridor, 'outlineWidth', corridorData.outlineWidth, interval, sourceUri, entityCollection);
         processPacketData(ShadowMode, corridor, 'shadows', corridorData.shadows, interval, sourceUri, entityCollection);
         processPacketData(DistanceDisplayCondition, corridor, 'distanceDisplayCondition', corridorData.distanceDisplayCondition, interval, sourceUri, entityCollection);
+        processPacketData(Number, corridor, 'zIndex', corridorData.zIndex, interval, sourceUri, entityCollection);
     }
 
     function processCylinder(entity, packet, entityCollection, sourceUri) {
@@ -1507,6 +1506,7 @@ define([
         processPacketData(Number, ellipse, 'numberOfVerticalLines', ellipseData.numberOfVerticalLines, interval, sourceUri, entityCollection);
         processPacketData(ShadowMode, ellipse, 'shadows', ellipseData.shadows, interval, sourceUri, entityCollection);
         processPacketData(DistanceDisplayCondition, ellipse, 'distanceDisplayCondition', ellipseData.distanceDisplayCondition, interval, sourceUri, entityCollection);
+        processPacketData(Number, ellipse, 'zIndex', ellipseData.zIndex, interval, sourceUri, entityCollection);
     }
 
     function processEllipsoid(entity, packet, entityCollection, sourceUri) {
@@ -1767,6 +1767,7 @@ define([
         processPacketData(Boolean, polygon, 'closeBottom', polygonData.closeBottom, interval, sourceUri, entityCollection);
         processPacketData(ShadowMode, polygon, 'shadows', polygonData.shadows, interval, sourceUri, entityCollection);
         processPacketData(DistanceDisplayCondition, polygon, 'distanceDisplayCondition', polygonData.distanceDisplayCondition, interval, sourceUri, entityCollection);
+        processPacketData(Number, polygon, 'zIndex', polygonData.zIndex, interval, sourceUri, entityCollection);
     }
 
     function processPolyline(entity, packet, entityCollection, sourceUri) {
@@ -1794,8 +1795,10 @@ define([
         processMaterialPacketData(polyline, 'material', polylineData.material, interval, sourceUri, entityCollection);
         processMaterialPacketData(polyline, 'depthFailMaterial', polylineData.depthFailMaterial, interval, sourceUri, entityCollection);
         processPacketData(Boolean, polyline, 'followSurface', polylineData.followSurface, interval, sourceUri, entityCollection);
+        processPacketData(Boolean, polyline, 'clampToGround', polylineData.clampToGround, interval, sourceUri, entityCollection);
         processPacketData(ShadowMode, polyline, 'shadows', polylineData.shadows, interval, sourceUri, entityCollection);
         processPacketData(DistanceDisplayCondition, polyline, 'distanceDisplayCondition', polylineData.distanceDisplayCondition, interval, sourceUri, entityCollection);
+        processPacketData(Number, polyline, 'zIndex', polylineData.zIndex, interval, sourceUri, entityCollection);
     }
 
     function processRectangle(entity, packet, entityCollection, sourceUri) {
@@ -1828,10 +1831,9 @@ define([
         processPacketData(Boolean, rectangle, 'outline', rectangleData.outline, interval, sourceUri, entityCollection);
         processPacketData(Color, rectangle, 'outlineColor', rectangleData.outlineColor, interval, sourceUri, entityCollection);
         processPacketData(Number, rectangle, 'outlineWidth', rectangleData.outlineWidth, interval, sourceUri, entityCollection);
-        processPacketData(Boolean, rectangle, 'closeTop', rectangleData.closeTop, interval, sourceUri, entityCollection);
-        processPacketData(Boolean, rectangle, 'closeBottom', rectangleData.closeBottom, interval, sourceUri, entityCollection);
         processPacketData(ShadowMode, rectangle, 'shadows', rectangleData.shadows, interval, sourceUri, entityCollection);
         processPacketData(DistanceDisplayCondition, rectangle, 'distanceDisplayCondition', rectangleData.distanceDisplayCondition, interval, sourceUri, entityCollection);
+        processPacketData(Number, rectangle, 'zIndex', rectangleData.zIndex, interval, sourceUri, entityCollection);
     }
 
     function processWall(entity, packet, entityCollection, sourceUri) {
@@ -1971,28 +1973,17 @@ define([
 
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
-        if (defined(options.query)) {
-            deprecationWarning('CzmlDataSource.query', 'The options.query parameter has been deprecated. Specify czml or options.sourceUri as a Resource instance and add query parameters there.');
-        }
-
         var promise = czml;
         var sourceUri = options.sourceUri;
-        var query = options.query;
 
         // If the czml is a URL
         if (typeof czml === 'string' || (czml instanceof Resource)) {
-            czml = Resource.createIfNeeded(czml, {
-                queryParameters: query
-            });
-
+            czml = Resource.createIfNeeded(czml);
             promise = czml.fetchJson();
-
             sourceUri = defaultValue(sourceUri, czml.clone());
         }
 
-        sourceUri = Resource.createIfNeeded(sourceUri, {
-            queryParameters: query
-        });
+        sourceUri = Resource.createIfNeeded(sourceUri);
 
         DataSource.setLoading(dataSource, true);
 

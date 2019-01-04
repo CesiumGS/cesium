@@ -1,11 +1,13 @@
 defineSuite([
         'Core/BoundingSphere',
         'Core/BoxGeometry',
+        'Core/PlaneGeometry',
         'Core/Cartesian2',
         'Core/Cartesian3',
         'Core/CircleGeometry',
         'Core/Color',
         'Core/ColorGeometryInstanceAttribute',
+        'Core/CoplanarPolygonGeometry',
         'Core/ComponentDatatype',
         'Core/CornerType',
         'Core/CorridorGeometry',
@@ -41,11 +43,13 @@ defineSuite([
     ], 'Scene/GeometryRendering', function(
         BoundingSphere,
         BoxGeometry,
+        PlaneGeometry,
         Cartesian2,
         Cartesian3,
         CircleGeometry,
         Color,
         ColorGeometryInstanceAttribute,
+        CoplanarPolygonGeometry,
         ComponentDatatype,
         CornerType,
         CorridorGeometry,
@@ -292,6 +296,45 @@ defineSuite([
         });
     }, 'WebGL');
 
+    describe('PlaneGeometry', function() {
+        var instance;
+        beforeAll(function() {
+            instance = new GeometryInstance({
+                geometry : new PlaneGeometry({
+                    vertexFormat : PerInstanceColorAppearance.FLAT_VERTEX_FORMAT
+                }),
+                modelMatrix : Matrix4.multiplyByTranslation(Transforms.eastNorthUpToFixedFrame(
+                    Cartesian3.fromDegrees(-75.59777, 40.03883)), new Cartesian3(0.0, 0.0, 100000.0), new Matrix4()),
+                id : 'plane',
+                attributes : {
+                    color : new ColorGeometryInstanceAttribute(1.0, 1.0, 0.0, 1.0)
+                }
+            });
+            geometry = PlaneGeometry.createGeometry(instance.geometry);
+            geometry.boundingSphereWC = BoundingSphere.transform(geometry.boundingSphere, instance.modelMatrix);
+        });
+
+        it('3D', function() {
+            render3D(instance);
+        });
+
+        it('Columbus view', function() {
+            renderCV(instance);
+        });
+
+        it('2D', function() {
+            render2D(instance);
+        });
+
+        it('pick', function() {
+            pickGeometry(instance);
+        });
+
+        it('async', function() {
+            return renderAsync(instance);
+        });
+    }, 'WebGL');
+
     describe('CircleGeometry', function() {
         var instance;
         beforeAll(function() {
@@ -331,6 +374,49 @@ defineSuite([
             return renderAsync(instance);
         });
     }, 'WebGL');
+
+    describe('CoplanarPolygonGeometry', function() {
+        var instance;
+        beforeAll(function() {
+            instance = new GeometryInstance({
+                geometry : CoplanarPolygonGeometry.fromPositions({
+                    positions : Cartesian3.fromDegreesArrayHeights([
+                        71.0, -10.0, 0.0,
+                        70.0, 0.0, 20000.0,
+                        69.0, 0.0, 20000.0,
+                        68.0, -10.0, 0.0
+                    ]),
+                    vertexFormat : PerInstanceColorAppearance.FLAT_VERTEX_FORMAT
+                }),
+                id: 'coplanar polygon',
+                attributes : {
+                    color : new ColorGeometryInstanceAttribute(Math.random(), Math.random(), Math.random(), 0.5)
+                }
+            });
+            geometry = CoplanarPolygonGeometry.createGeometry(instance.geometry);
+            geometry.boundingSphereWC = BoundingSphere.transform(geometry.boundingSphere, instance.modelMatrix);
+        });
+
+        it('3D', function() {
+            render3D(instance);
+        });
+
+        it('Columbus view', function() {
+            renderCV(instance);
+        });
+
+        it('2D', function() {
+            render2D(instance);
+        });
+
+        it('pick', function() {
+            pickGeometry(instance);
+        });
+
+        it('async', function() {
+            return renderAsync(instance);
+        });
+    });
 
     describe('CylinderGeometry', function() {
         var instance;
@@ -893,7 +979,6 @@ defineSuite([
         });
     }, 'WebGL');
 
-
     describe('Extruded PolygonGeometry', function() {
         var instance;
         var extrudedHeight;
@@ -1024,7 +1109,6 @@ defineSuite([
             render3D(instance, afterView);
         });
     }, 'WebGL');
-
 
     describe('WallGeometry', function() {
         var instance;
@@ -1350,7 +1434,6 @@ defineSuite([
             render3D(instance, afterView);
         });
     }, 'WebGL');
-
 
     describe('SimplePolylineGeometry', function() {
         var instance;

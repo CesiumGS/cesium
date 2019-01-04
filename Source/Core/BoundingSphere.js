@@ -1,7 +1,6 @@
 define([
         './Cartesian3',
         './Cartographic',
-        './Math',
         './Check',
         './defaultValue',
         './defined',
@@ -9,13 +8,13 @@ define([
         './GeographicProjection',
         './Intersect',
         './Interval',
+        './Math',
         './Matrix3',
         './Matrix4',
         './Rectangle'
     ], function(
         Cartesian3,
         Cartographic,
-        CesiumMath,
         Check,
         defaultValue,
         defined,
@@ -23,6 +22,7 @@ define([
         GeographicProjection,
         Intersect,
         Interval,
+        CesiumMath,
         Matrix3,
         Matrix4,
         Rectangle) {
@@ -178,7 +178,7 @@ define([
         maxBoxPt.y = yMax.y;
         maxBoxPt.z = zMax.z;
 
-        var naiveCenter = Cartesian3.multiplyByScalar(Cartesian3.add(minBoxPt, maxBoxPt, fromPointsScratch), 0.5, fromPointsNaiveCenterScratch);
+        var naiveCenter = Cartesian3.midpoint(minBoxPt, maxBoxPt, fromPointsNaiveCenterScratch);
 
         // Begin 2nd pass to find naive radius and modify the ritter sphere.
         var naiveRadius = 0;
@@ -451,7 +451,7 @@ define([
         maxBoxPt.y = yMax.y;
         maxBoxPt.z = zMax.z;
 
-        var naiveCenter = Cartesian3.multiplyByScalar(Cartesian3.add(minBoxPt, maxBoxPt, fromPointsScratch), 0.5, fromPointsNaiveCenterScratch);
+        var naiveCenter = Cartesian3.midpoint(minBoxPt, maxBoxPt, fromPointsNaiveCenterScratch);
 
         // Begin 2nd pass to find naive radius and modify the ritter sphere.
         var naiveRadius = 0;
@@ -609,7 +609,7 @@ define([
         maxBoxPt.y = yMax.y;
         maxBoxPt.z = zMax.z;
 
-        var naiveCenter = Cartesian3.multiplyByScalar(Cartesian3.add(minBoxPt, maxBoxPt, fromPointsScratch), 0.5, fromPointsNaiveCenterScratch);
+        var naiveCenter = Cartesian3.midpoint(minBoxPt, maxBoxPt, fromPointsNaiveCenterScratch);
 
         // Begin 2nd pass to find naive radius and modify the ritter sphere.
         var naiveRadius = 0;
@@ -673,9 +673,7 @@ define([
             result = new BoundingSphere();
         }
 
-        var center = result.center;
-        Cartesian3.add(corner, oppositeCorner, center);
-        Cartesian3.multiplyByScalar(center, 0.5, center);
+        var center = Cartesian3.midpoint(corner, oppositeCorner, result.center);
         result.radius = Cartesian3.distance(center, oppositeCorner);
         return result;
     };

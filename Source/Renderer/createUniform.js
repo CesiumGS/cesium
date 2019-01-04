@@ -5,6 +5,7 @@ define([
         '../Core/Color',
         '../Core/defined',
         '../Core/DeveloperError',
+        '../Core/FeatureDetection',
         '../Core/Matrix2',
         '../Core/Matrix3',
         '../Core/Matrix4',
@@ -16,11 +17,18 @@ define([
         Color,
         defined,
         DeveloperError,
+        FeatureDetection,
         Matrix2,
         Matrix3,
         Matrix4,
         RuntimeError) {
     'use strict';
+
+    // Bail out if the browser doesn't support typed arrays, to prevent the setup function
+    // from failing, since we won't be able to create a WebGL context anyway.
+    if (!FeatureDetection.supportsTypedArrays()) {
+        return {};
+    }
 
     /**
      * @private
@@ -61,8 +69,12 @@ define([
         }
     }
 
+    /**
+     * @private
+     */
     function UniformFloat(gl, activeUniform, uniformName, location) {
         /**
+         * @type {String}
          * @readonly
          */
         this.name = uniformName;
@@ -83,8 +95,12 @@ define([
 
     ///////////////////////////////////////////////////////////////////////////
 
+    /**
+     * @private
+     */
     function UniformFloatVec2(gl, activeUniform, uniformName, location) {
         /**
+         * @type {String}
          * @readonly
          */
         this.name = uniformName;
@@ -106,8 +122,12 @@ define([
 
     ///////////////////////////////////////////////////////////////////////////
 
+    /**
+     * @private
+     */
     function UniformFloatVec3(gl, activeUniform, uniformName, location) {
         /**
+         * @type {String}
          * @readonly
          */
         this.name = uniformName;
@@ -134,15 +154,19 @@ define([
             }
         } else {
             //>>includeStart('debug', pragmas.debug);
-            throw new DeveloperError('Invalid vec3 value for uniform "' + this._activethis.name + '".');
+            throw new DeveloperError('Invalid vec3 value for uniform "' + this.name + '".');
             //>>includeEnd('debug');
         }
     };
 
     ///////////////////////////////////////////////////////////////////////////
 
+    /**
+     * @private
+     */
     function UniformFloatVec4(gl, activeUniform, uniformName, location) {
         /**
+         * @type {String}
          * @readonly
          */
         this.name = uniformName;
@@ -169,15 +193,19 @@ define([
             }
         } else {
             //>>includeStart('debug', pragmas.debug);
-            throw new DeveloperError('Invalid vec4 value for uniform "' + this._activethis.name + '".');
+            throw new DeveloperError('Invalid vec4 value for uniform "' + this.name + '".');
             //>>includeEnd('debug');
         }
     };
 
     ///////////////////////////////////////////////////////////////////////////
 
+    /**
+     * @private
+     */
     function UniformSampler(gl, activeUniform, uniformName, location) {
         /**
+         * @type {String}
          * @readonly
          */
         this.name = uniformName;
@@ -206,8 +234,12 @@ define([
 
     ///////////////////////////////////////////////////////////////////////////
 
+    /**
+     * @private
+     */
     function UniformInt(gl, activeUniform, uniformName, location) {
         /**
+         * @type {String}
          * @readonly
          */
         this.name = uniformName;
@@ -227,9 +259,12 @@ define([
     };
 
     ///////////////////////////////////////////////////////////////////////////
-
+    /**
+     * @private
+     */
     function UniformIntVec2(gl, activeUniform, uniformName, location) {
         /**
+         * @type {String}
          * @readonly
          */
         this.name = uniformName;
@@ -250,9 +285,12 @@ define([
     };
 
     ///////////////////////////////////////////////////////////////////////////
-
+    /**
+     * @private
+     */
     function UniformIntVec3(gl, activeUniform, uniformName, location) {
-        /**
+       /**
+         * @type {String}
          * @readonly
          */
         this.name = uniformName;
@@ -273,9 +311,12 @@ define([
     };
 
     ///////////////////////////////////////////////////////////////////////////
-
+    /**
+     * @private
+     */
     function UniformIntVec4(gl, activeUniform, uniformName, location) {
         /**
+         * @type {String}
          * @readonly
          */
         this.name = uniformName;
@@ -297,14 +338,19 @@ define([
 
     ///////////////////////////////////////////////////////////////////////////
 
+    var scratchUniformArray = new Float32Array(4);
+    /**
+     * @private
+     */
     function UniformMat2(gl, activeUniform, uniformName, location) {
         /**
+         * @type {String}
          * @readonly
          */
         this.name = uniformName;
 
         this.value = undefined;
-        this._value = new Float32Array(4);
+        this._value = new Matrix2();
 
         this._gl = gl;
         this._location = location;
@@ -312,21 +358,28 @@ define([
 
     UniformMat2.prototype.set = function() {
         if (!Matrix2.equalsArray(this.value, this._value, 0)) {
-            Matrix2.toArray(this.value, this._value);
-            this._gl.uniformMatrix2fv(this._location, false, this._value);
+            Matrix2.clone(this.value, this._value);
+
+            var array = Matrix2.toArray(this.value, scratchUniformArray);
+            this._gl.uniformMatrix2fv(this._location, false, array);
         }
     };
 
     ///////////////////////////////////////////////////////////////////////////
 
+    var scratchMat3Array = new Float32Array(9);
+    /**
+     * @private
+     */
     function UniformMat3(gl, activeUniform, uniformName, location) {
         /**
+         * @type {String}
          * @readonly
          */
         this.name = uniformName;
 
         this.value = undefined;
-        this._value = new Float32Array(9);
+        this._value = new Matrix3();
 
         this._gl = gl;
         this._location = location;
@@ -334,21 +387,28 @@ define([
 
     UniformMat3.prototype.set = function() {
         if (!Matrix3.equalsArray(this.value, this._value, 0)) {
-            Matrix3.toArray(this.value, this._value);
-            this._gl.uniformMatrix3fv(this._location, false, this._value);
+            Matrix3.clone(this.value, this._value);
+
+            var array = Matrix3.toArray(this.value, scratchMat3Array);
+            this._gl.uniformMatrix3fv(this._location, false, array);
         }
     };
 
     ///////////////////////////////////////////////////////////////////////////
 
+    var scratchMat4Array = new Float32Array(16);
+    /**
+     * @private
+     */
     function UniformMat4(gl, activeUniform, uniformName, location) {
         /**
+         * @type {String}
          * @readonly
          */
         this.name = uniformName;
 
         this.value = undefined;
-        this._value = new Float32Array(16);
+        this._value = new Matrix4();
 
         this._gl = gl;
         this._location = location;
@@ -356,8 +416,10 @@ define([
 
     UniformMat4.prototype.set = function() {
         if (!Matrix4.equalsArray(this.value, this._value, 0)) {
-            Matrix4.toArray(this.value, this._value);
-            this._gl.uniformMatrix4fv(this._location, false, this._value);
+            Matrix4.clone(this.value, this._value);
+
+            var array = Matrix4.toArray(this.value, scratchMat4Array);
+            this._gl.uniformMatrix4fv(this._location, false, array);
         }
     };
 

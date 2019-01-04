@@ -252,7 +252,7 @@ WebGLGlobeDataSource.prototype.loadUrl = function(url) {
 
 /**
  * Loads the provided data, replacing any existing data.
- * @param {Object} data The object to be processed.
+ * @param {Array} data The object to be processed.
  */
 WebGLGlobeDataSource.prototype.load = function(data) {
     //>>includeStart('debug', pragmas.debug);
@@ -377,10 +377,10 @@ viewer.dataSources.add(dataSource);
 //Sandcastle_End
     Sandcastle.finishedLoading();
 }
-if (typeof Cesium !== "undefined") {
+if (typeof Cesium !== 'undefined') {
     startup(Cesium);
-} else if (typeof require === "function") {
-    require(["Cesium"], startup);
+} else if (typeof require === 'function') {
+    require(['Cesium'], startup);
 }
 </script>
 </body>

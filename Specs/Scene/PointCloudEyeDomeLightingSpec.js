@@ -5,8 +5,8 @@ defineSuite([
         'Core/HeadingPitchRange',
         'Core/HeadingPitchRoll',
         'Core/Math',
-        'Core/Transforms',
         'Core/PerspectiveFrustum',
+        'Core/Transforms',
         'Scene/PointCloud3DTileContent',
         'Scene/PointCloudEyeDomeLighting',
         'Specs/Cesium3DTilesTester',
@@ -18,8 +18,8 @@ defineSuite([
         HeadingPitchRange,
         HeadingPitchRoll,
         CesiumMath,
-        Transforms,
         PerspectiveFrustum,
+        Transforms,
         PointCloud3DTileContent,
         PointCloudEyeDomeLighting,
         Cesium3DTilesTester,
@@ -30,7 +30,7 @@ defineSuite([
     var centerLongitude = -1.31968;
     var centerLatitude = 0.698874;
 
-    var pointCloudNoColorUrl = './Data/Cesium3DTiles/PointCloud/PointCloudNoColor';
+    var pointCloudNoColorUrl = './Data/Cesium3DTiles/PointCloud/PointCloudNoColor/tileset.json';
 
     function setCamera(longitude, latitude) {
         // Point the camera to the center of the tile

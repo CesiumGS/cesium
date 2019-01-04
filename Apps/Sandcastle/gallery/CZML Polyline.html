@@ -34,7 +34,7 @@ var czml = [{
     "version" : "1.0"
 }, {
     "id" : "redLine",
-    "name" : "Red line on the surface",
+    "name" : "Red line clamped to terain",
     "polyline" : {
         "positions" : {
             "cartographicDegrees" : [
@@ -49,7 +49,8 @@ var czml = [{
                 }
             }
         },
-        "width" : 5
+        "width" : 5,
+        "clampToGround" : true
     }
 }, {
     "id" : "blueLine",
@@ -64,9 +65,9 @@ var czml = [{
         "material" : {
             "polylineGlow" : {
                 "color" : {
-                    "rgba" : [0, 0, 255, 255],
-                    "glowPower" : 0.2
-                }
+                    "rgba" : [0, 0, 255, 255]
+                },
+                "glowPower" : 0.2
             }
         },
         "width" : 10
@@ -143,10 +144,10 @@ viewer.zoomTo(dataSourcePromise);
   //Sandcastle_End
     Sandcastle.finishedLoading();
 }
-if (typeof Cesium !== "undefined") {
+if (typeof Cesium !== 'undefined') {
     startup(Cesium);
-} else if (typeof require === "function") {
-    require(["Cesium"], startup);
+} else if (typeof require === 'function') {
+    require(['Cesium'], startup);
 }
 </script>
 </body>

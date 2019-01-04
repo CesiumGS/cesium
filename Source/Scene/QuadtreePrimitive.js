@@ -100,6 +100,7 @@ define([
         this._tileReplacementQueue = new TileReplacementQueue();
         this._levelZeroTiles = undefined;
         this._loadQueueTimeSlice = 5.0;
+        this._tilesInvalidated = false;
 
         this._addHeightCallbacks = [];
         this._removeHeightCallbacks = [];
@@ -167,16 +168,20 @@ define([
      * @memberof QuadtreePrimitive
      */
     QuadtreePrimitive.prototype.invalidateAllTiles = function() {
+        this._tilesInvalidated = true;
+    };
+
+    function invalidateAllTiles(primitive) {
         // Clear the replacement queue
-        var replacementQueue = this._tileReplacementQueue;
+        var replacementQueue = primitive._tileReplacementQueue;
         replacementQueue.head = undefined;
         replacementQueue.tail = undefined;
         replacementQueue.count = 0;
 
-        clearTileLoadQueue(this);
+        clearTileLoadQueue(primitive);
 
         // Free and recreate the level zero tiles.
-        var levelZeroTiles = this._levelZeroTiles;
+        var levelZeroTiles = primitive._levelZeroTiles;
         if (defined(levelZeroTiles)) {
             for (var i = 0; i < levelZeroTiles.length; ++i) {
                 var tile = levelZeroTiles[i];
@@ -186,17 +191,17 @@ define([
                 for (var j = 0; j < customDataLength; ++j) {
                     var data = customData[j];
                     data.level = 0;
-                    this._addHeightCallbacks.push(data);
+                    primitive._addHeightCallbacks.push(data);
                 }
 
                 levelZeroTiles[i].freeResources();
             }
         }
 
-        this._levelZeroTiles = undefined;
+        primitive._levelZeroTiles = undefined;
 
-        this._tileProvider.cancelReprojections();
-    };
+        primitive._tileProvider.cancelReprojections();
+    }
 
     /**
      * Invokes a specified function for each {@link QuadtreeTile} that is partially
@@ -295,6 +300,11 @@ define([
             return;
         }
 
+        if (this._tilesInvalidated) {
+            invalidateAllTiles(this);
+            this._tilesInvalidated = false;
+        }
+
         // Gets commands for any texture re-projections
         this._tileProvider.initialize(frameState);
 
@@ -335,7 +345,7 @@ define([
     function updateTileLoadProgress(primitive, frameState) {
         var currentLoadQueueLength = primitive._tileLoadQueueHigh.length + primitive._tileLoadQueueMedium.length + primitive._tileLoadQueueLow.length;
 
-        if (currentLoadQueueLength !== primitive._lastTileLoadQueueLength) {
+        if (currentLoadQueueLength !== primitive._lastTileLoadQueueLength || primitive._tilesInvalidated) {
             frameState.afterRender.push(Event.prototype.raiseEvent.bind(primitive._tileLoadProgressEvent, currentLoadQueueLength));
             primitive._lastTileLoadQueueLength = currentLoadQueueLength;
         }
@@ -402,8 +412,6 @@ define([
      * assign the return value (<code>undefined</code>) to the object as done in the example.
      *
      * @memberof QuadtreePrimitive
-     *
-     * @returns {undefined}
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
@@ -762,8 +770,11 @@ define([
     var scratchRay = new Ray();
     var scratchCartographic = new Cartographic();
     var scratchPosition = new Cartesian3();
+    var scratchArray = [];
 
     function updateHeights(primitive, frameState) {
+        var tryNextFrame = scratchArray;
+        tryNextFrame.length = 0;
         var tilesToUpdateHeights = primitive._tileToUpdateHeights;
         var terrainProvider = primitive._tileProvider.terrainProvider;
 
@@ -774,14 +785,20 @@ define([
         var mode = frameState.mode;
         var projection = frameState.mapProjection;
         var ellipsoid = projection.ellipsoid;
+        var i;
 
         while (tilesToUpdateHeights.length > 0) {
             var tile = tilesToUpdateHeights[0];
+            if (tile.state !== QuadtreeTileLoadState.DONE) {
+                tryNextFrame.push(tile);
+                tilesToUpdateHeights.shift();
+                primitive._lastTileIndex = 0;
+                continue;
+            }
             var customData = tile.customData;
             var customDataLength = customData.length;
 
             var timeSliceMax = false;
-            var i;
             for (i = primitive._lastTileIndex; i < customDataLength; ++i) {
                 var data = customData[i];
 
@@ -824,9 +841,8 @@ define([
                     var position = tile.data.pick(scratchRay, mode, projection, false, scratchPosition);
                     if (defined(position)) {
                         data.callback(position);
+                        data.level = tile.level;
                     }
-
-                    data.level = tile.level;
                 } else if (tile.level === data.level) {
                     var children = tile.children;
                     var childrenLength = children.length;
@@ -861,6 +877,9 @@ define([
                 primitive._lastTileIndex = 0;
                 tilesToUpdateHeights.shift();
             }
+        }
+        for (i = 0; i < tryNextFrame.length; i++) {
+            tilesToUpdateHeights.push(tryNextFrame[i]);
         }
     }
 

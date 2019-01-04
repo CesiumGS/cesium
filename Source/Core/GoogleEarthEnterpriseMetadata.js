@@ -1,32 +1,32 @@
 define([
-        '../ThirdParty/google-earth-dbroot-parser',
+        '../ThirdParty/protobuf-minimal',
         '../ThirdParty/when',
-        './appendForwardSlash',
+        './buildModuleUrl',
         './Check',
         './Credit',
         './defaultValue',
         './defined',
         './defineProperties',
-        './deprecationWarning',
         './GoogleEarthEnterpriseTileInformation',
         './isBitSet',
+        './loadAndExecuteScript',
         './Math',
         './Request',
         './Resource',
         './RuntimeError',
         './TaskProcessor'
     ], function(
-        dbrootParser,
+        protobufMinimal,
         when,
-        appendForwardSlash,
+        buildModuleUrl,
         Check,
         Credit,
         defaultValue,
         defined,
         defineProperties,
-        deprecationWarning,
         GoogleEarthEnterpriseTileInformation,
         isBitSet,
+        loadAndExecuteScript,
         CesiumMath,
         Request,
         Resource,
@@ -67,23 +67,16 @@ define([
         //>>includeEnd('debug');
 
         var url = resourceOrUrl;
-        var proxy;
+
         if (typeof url !== 'string' && !(url instanceof Resource)) {
             //>>includeStart('debug', pragmas.debug);
             Check.typeOf.string('resourceOrUrl.url', resourceOrUrl.url);
             //>>includeEnd('debug');
 
-            if (defined(resourceOrUrl.proxy)) {
-                deprecationWarning('GoogleEarthEnterpriseMetadata', 'The options.url & options.proxy parameters have been deprecated. Specify a URL string or a Resource as the only parameter.');
-            }
-
             url = resourceOrUrl.url;
-            proxy = resourceOrUrl.proxy;
         }
 
-        var resource = Resource.createIfNeeded(url, {
-            proxy: proxy
-        });
+        var resource = Resource.createIfNeeded(url);
         resource.appendForwardSlash();
         this._resource = resource;
 
@@ -499,6 +492,8 @@ define([
         });
     }
 
+    var dbrootParser;
+    var dbrootParserPromise;
     function requestDbRoot(that) {
         var resource = that._resource.getDerivedResource({
             url: 'dbRoot.v5',
@@ -507,8 +502,23 @@ define([
             }
         });
 
-        return resource.fetchArrayBuffer()
-            .then(function(buf) {
+        if (!defined(dbrootParserPromise)) {
+            var url = buildModuleUrl('ThirdParty/google-earth-dbroot-parser.js');
+            var oldValue = window.cesiumGoogleEarthDbRootParser;
+            dbrootParserPromise = loadAndExecuteScript(url)
+                .then(function() {
+                    dbrootParser = window.cesiumGoogleEarthDbRootParser(protobufMinimal);
+                    if (defined(oldValue)) {
+                        window.cesiumGoogleEarthDbRootParser = oldValue;
+                    } else {
+                        delete window.cesiumGoogleEarthDbRootParser;
+                    }
+                });
+        }
+
+        return dbrootParserPromise.then(function() {
+            return resource.fetchArrayBuffer();
+            }).then(function(buf) {
                 var encryptedDbRootProto = dbrootParser.EncryptedDbRootProto.decode(new Uint8Array(buf));
 
                 var byteArray = encryptedDbRootProto.encryptionData;
@@ -546,7 +556,7 @@ define([
                     var provider = providerInfo[i];
                     var copyrightString = provider.copyrightString;
                     if (defined(copyrightString)) {
-                        providers[provider.providerId] = new Credit({text: copyrightString.value});
+                        providers[provider.providerId] = new Credit(copyrightString.value);
                     }
                 }
             })

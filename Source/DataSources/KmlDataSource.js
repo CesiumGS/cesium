@@ -11,12 +11,13 @@ define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
-        '../Core/deprecationWarning',
         '../Core/DeveloperError',
         '../Core/Ellipsoid',
         '../Core/Event',
         '../Core/getExtensionFromUri',
         '../Core/getFilenameFromUri',
+        '../Core/HeadingPitchRange',
+        '../Core/HeadingPitchRoll',
         '../Core/Iso8601',
         '../Core/JulianDate',
         '../Core/Math',
@@ -31,8 +32,6 @@ define([
         '../Core/RuntimeError',
         '../Core/TimeInterval',
         '../Core/TimeIntervalCollection',
-        '../Core/HeadingPitchRoll',
-        '../Core/HeadingPitchRange',
         '../Scene/HeightReference',
         '../Scene/HorizontalOrigin',
         '../Scene/LabelStyle',
@@ -43,12 +42,16 @@ define([
         '../ThirdParty/zip',
         './BillboardGraphics',
         './CompositePositionProperty',
-        './CorridorGraphics',
         './DataSource',
         './DataSourceClock',
         './Entity',
         './EntityCluster',
         './EntityCollection',
+        './KmlCamera',
+        './KmlLookAt',
+        './KmlTour',
+        './KmlTourFlyTo',
+        './KmlTourWait',
         './LabelGraphics',
         './PathGraphics',
         './PolygonGraphics',
@@ -59,12 +62,7 @@ define([
         './SampledPositionProperty',
         './ScaledPositionProperty',
         './TimeIntervalCollectionProperty',
-        './WallGraphics',
-        './KmlLookAt',
-        './KmlCamera',
-        './KmlTour',
-        './KmlTourFlyTo',
-        './KmlTourWait'
+        './WallGraphics'
     ], function(
         AssociativeArray,
         BoundingRectangle,
@@ -78,12 +76,13 @@ define([
         defaultValue,
         defined,
         defineProperties,
-        deprecationWarning,
         DeveloperError,
         Ellipsoid,
         Event,
         getExtensionFromUri,
         getFilenameFromUri,
+        HeadingPitchRange,
+        HeadingPitchRoll,
         Iso8601,
         JulianDate,
         CesiumMath,
@@ -98,8 +97,6 @@ define([
         RuntimeError,
         TimeInterval,
         TimeIntervalCollection,
-        HeadingPitchRoll,
-        HeadingPitchRange,
         HeightReference,
         HorizontalOrigin,
         LabelStyle,
@@ -110,12 +107,16 @@ define([
         zip,
         BillboardGraphics,
         CompositePositionProperty,
-        CorridorGraphics,
         DataSource,
         DataSourceClock,
         Entity,
         EntityCluster,
         EntityCollection,
+        KmlCamera,
+        KmlLookAt,
+        KmlTour,
+        KmlTourFlyTo,
+        KmlTourWait,
         LabelGraphics,
         PathGraphics,
         PolygonGraphics,
@@ -126,12 +127,7 @@ define([
         SampledPositionProperty,
         ScaledPositionProperty,
         TimeIntervalCollectionProperty,
-        WallGraphics,
-        KmlLookAt,
-        KmlCamera,
-        KmlTour,
-        KmlTourFlyTo,
-        KmlTourWait) {
+        WallGraphics) {
     'use strict';
 
     // IE 8 doesn't have a DOM parser and can't run Cesium anyway, so just bail.
@@ -378,15 +374,15 @@ define([
         return altitudeMode === 'absolute' || altitudeMode === 'relativeToGround' || gxAltitudeMode === 'relativeToSeaFloor';
     }
 
-    function readCoordinate(value) {
+    function readCoordinate(value, ellipsoid) {
         //Google Earth treats empty or missing coordinates as 0.
         if (!defined(value)) {
-            return Cartesian3.fromDegrees(0, 0, 0);
+            return Cartesian3.fromDegrees(0, 0, 0, ellipsoid);
         }
 
         var digits = value.match(/[^\s,\n]+/g);
         if (!defined(digits)) {
-            return Cartesian3.fromDegrees(0, 0, 0);
+            return Cartesian3.fromDegrees(0, 0, 0, ellipsoid);
         }
 
         var longitude = parseFloat(digits[0]);
@@ -397,10 +393,10 @@ define([
         latitude = isNaN(latitude) ? 0.0 : latitude;
         height = isNaN(height) ? 0.0 : height;
 
-        return Cartesian3.fromDegrees(longitude, latitude, height);
+        return Cartesian3.fromDegrees(longitude, latitude, height, ellipsoid);
     }
 
-    function readCoordinates(element) {
+    function readCoordinates(element, ellipsoid) {
         if (!defined(element)) {
             return undefined;
         }
@@ -414,7 +410,7 @@ define([
         var result = new Array(length);
         var resultIndex = 0;
         for (var i = 0; i < length; i++) {
-            result[resultIndex++] = readCoordinate(tuples[i]);
+            result[resultIndex++] = readCoordinate(tuples[i], ellipsoid);
         }
         return result;
     }
@@ -557,7 +553,14 @@ define([
         return resource;
     }
 
-    var colorOptions = {};
+    var colorOptions = {
+        maximumRed : undefined,
+        red : undefined,
+        maximumGreen : undefined,
+        green : undefined,
+        maximumBlue : undefined,
+        blue : undefined
+    };
 
     function parseColorString(value, isRandom) {
         if (!defined(value) || /^\s*$/gm.test(value)) {
@@ -579,17 +582,23 @@ define([
 
         if (red > 0) {
             colorOptions.maximumRed = red;
+            colorOptions.red = undefined;
         } else {
+            colorOptions.maximumRed = undefined;
             colorOptions.red = 0;
         }
         if (green > 0) {
             colorOptions.maximumGreen = green;
+            colorOptions.green = undefined;
         } else {
+            colorOptions.maximumGreen = undefined;
             colorOptions.green = 0;
         }
         if (blue > 0) {
             colorOptions.maximumBlue = blue;
+            colorOptions.blue = undefined;
         } else {
+            colorOptions.maximumBlue = undefined;
             colorOptions.blue = 0;
         }
         colorOptions.alpha = alpha;
@@ -728,13 +737,14 @@ define([
             var viewFormat = defaultValue(queryStringValue(iconNode, 'viewFormat', namespaces.kml), defaultViewFormat);
             var httpQuery = queryStringValue(iconNode, 'httpQuery', namespaces.kml);
             if (defined(viewFormat)) {
-                hrefResource.addQueryParameters(queryToObject(cleanupString(viewFormat)));
+                hrefResource.setQueryParameters(queryToObject(cleanupString(viewFormat)));
             }
             if (defined(httpQuery)) {
-                hrefResource.addQueryParameters(queryToObject(cleanupString(httpQuery)));
+                hrefResource.setQueryParameters(queryToObject(cleanupString(httpQuery)));
             }
 
-            processNetworkLinkQueryString(hrefResource, dataSource._camera, dataSource._canvas, viewBoundScale, dataSource._lastCameraView.bbox);
+            var ellipsoid = dataSource._ellipsoid;
+            processNetworkLinkQueryString(hrefResource, dataSource._camera, dataSource._canvas, viewBoundScale, dataSource._lastCameraView.bbox, ellipsoid);
 
             return hrefResource;
         }
@@ -1125,7 +1135,7 @@ define([
         return new ScaledPositionProperty(property);
     }
 
-    function createPositionPropertyArrayFromAltitudeMode(properties, altitudeMode, gxAltitudeMode) {
+    function createPositionPropertyArrayFromAltitudeMode(properties, altitudeMode, gxAltitudeMode, ellipsoid) {
         if (!defined(properties)) {
             return undefined;
         }
@@ -1144,7 +1154,7 @@ define([
         var propertiesLength = properties.length;
         for (var i = 0; i < propertiesLength; i++) {
             var property = properties[i];
-            Ellipsoid.WGS84.scaleToGeodeticSurface(property, property);
+            ellipsoid.scaleToGeodeticSurface(property, property);
         }
         return properties;
     }
@@ -1211,8 +1221,8 @@ define([
         var altitudeMode = queryStringValue(geometryNode, 'altitudeMode', namespaces.kml);
         var gxAltitudeMode = queryStringValue(geometryNode, 'altitudeMode', namespaces.gx);
         var extrude = queryBooleanValue(geometryNode, 'extrude', namespaces.kml);
-
-        var position = readCoordinate(coordinatesString);
+        var ellipsoid = dataSource._ellipsoid;
+        var position = readCoordinate(coordinatesString, ellipsoid);
 
         entity.position = position;
         processPositionGraphics(dataSource, entity, styleEntity, heightReferenceFromAltitudeMode(altitudeMode, gxAltitudeMode));
@@ -1231,12 +1241,10 @@ define([
         var extrude = queryBooleanValue(geometryNode, 'extrude', namespaces.kml);
         var tessellate = queryBooleanValue(geometryNode, 'tessellate', namespaces.kml);
         var canExtrude = isExtrudable(altitudeMode, gxAltitudeMode);
+        var zIndex = queryNumericValue(geometryNode, 'drawOrder', namespaces.gx);
 
-        if (defined(queryNumericValue(geometryNode, 'drawOrder', namespaces.gx))) {
-            oneTimeWarning('kml-gx:drawOrder', 'KML - gx:drawOrder is not supported in LineStrings');
-        }
-
-        var coordinates = readCoordinates(coordinatesNode);
+        var ellipsoid = dataSource._ellipsoid;
+        var coordinates = readCoordinates(coordinatesNode, ellipsoid);
         var polyline = styleEntity.polyline;
         if (canExtrude && extrude) {
             var wall = new WallGraphics();
@@ -1258,20 +1266,26 @@ define([
                 wall.outlineColor = defined(polygon.material) ? polygon.material.color : Color.WHITE;
             }
         } else if (dataSource._clampToGround && !canExtrude && tessellate) {
-            var corridor = new CorridorGraphics();
-            entity.corridor = corridor;
-            corridor.positions = coordinates;
+            var polylineGraphics = new PolylineGraphics();
+            polylineGraphics.clampToGround = true;
+            entity.polyline = polylineGraphics;
+            polylineGraphics.positions = coordinates;
             if (defined(polyline)) {
-                corridor.material = defined(polyline.material) ? polyline.material.color.getValue(Iso8601.MINIMUM_VALUE) : Color.WHITE;
-                corridor.width = defaultValue(polyline.width, 1.0);
+                polylineGraphics.material = defined(polyline.material) ? polyline.material.color.getValue(Iso8601.MINIMUM_VALUE) : Color.WHITE;
+                polylineGraphics.width = defaultValue(polyline.width, 1.0);
             } else {
-                corridor.material = Color.WHITE;
-                corridor.width = 1.0;
+                polylineGraphics.material = Color.WHITE;
+                polylineGraphics.width = 1.0;
             }
+            polylineGraphics.zIndex = zIndex;
         } else {
+            if (defined(zIndex)) {
+                oneTimeWarning('kml-gx:drawOrder', 'KML - gx:drawOrder is not supported in LineStrings when clampToGround is false');
+            }
+
             polyline = defined(polyline) ? polyline.clone() : new PolylineGraphics();
             entity.polyline = polyline;
-            polyline.positions = createPositionPropertyArrayFromAltitudeMode(coordinates, altitudeMode, gxAltitudeMode);
+            polyline.positions = createPositionPropertyArrayFromAltitudeMode(coordinates, altitudeMode, gxAltitudeMode, ellipsoid);
             if (!tessellate || canExtrude) {
                 polyline.followSurface = false;
             }
@@ -1284,7 +1298,8 @@ define([
         var outerBoundaryIsNode = queryFirstNode(geometryNode, 'outerBoundaryIs', namespaces.kml);
         var linearRingNode = queryFirstNode(outerBoundaryIsNode, 'LinearRing', namespaces.kml);
         var coordinatesNode = queryFirstNode(linearRingNode, 'coordinates', namespaces.kml);
-        var coordinates = readCoordinates(coordinatesNode);
+        var ellipsoid = dataSource._ellipsoid;
+        var coordinates = readCoordinates(coordinatesNode, ellipsoid);
         var extrude = queryBooleanValue(geometryNode, 'extrude', namespaces.kml);
         var altitudeMode = queryStringValue(geometryNode, 'altitudeMode', namespaces.kml);
         var gxAltitudeMode = queryStringValue(geometryNode, 'altitudeMode', namespaces.gx);
@@ -1313,7 +1328,7 @@ define([
                 linearRingNode = queryChildNodes(innerBoundaryIsNodes[j], 'LinearRing', namespaces.kml);
                 for (var k = 0; k < linearRingNode.length; k++) {
                     coordinatesNode = queryFirstNode(linearRingNode[k], 'coordinates', namespaces.kml);
-                    coordinates = readCoordinates(coordinatesNode);
+                    coordinates = readCoordinates(coordinatesNode, ellipsoid);
                     if (defined(coordinates)) {
                         hierarchy.holes.push(new PolygonHierarchy(coordinates));
                     }
@@ -1333,6 +1348,7 @@ define([
         var timeNodes = queryChildNodes(geometryNode, 'when', namespaces.kml);
         var extrude = queryBooleanValue(geometryNode, 'extrude', namespaces.kml);
         var canExtrude = isExtrudable(altitudeMode, gxAltitudeMode);
+        var ellipsoid = dataSource._ellipsoid;
 
         if (angleNodes.length > 0) {
             oneTimeWarning('kml-gx:angles', 'KML - gx:angles are not supported in gx:Tracks');
@@ -1342,7 +1358,7 @@ define([
         var coordinates = [];
         var times = [];
         for (var i = 0; i < length; i++) {
-            var position = readCoordinate(coordNodes[i].textContent);
+            var position = readCoordinate(coordNodes[i].textContent, ellipsoid);
             coordinates.push(position);
             times.push(JulianDate.fromIso8601(timeNodes[i].textContent));
         }
@@ -1412,6 +1428,7 @@ define([
         var dropShowProperty = new TimeIntervalCollectionProperty();
         var availability = new TimeIntervalCollection();
         var composite = new CompositePositionProperty();
+        var ellipsoid = dataSource._ellipsoid;
         for (var i = 0, len = trackNodes.length; i < len; i++) {
             var trackNode = trackNodes[i];
             var timeNodes = queryChildNodes(trackNode, 'when', namespaces.kml);
@@ -1426,7 +1443,7 @@ define([
             var positions = [];
             times = [];
             for (var x = 0; x < length; x++) {
-                var position = readCoordinate(coordNodes[x].textContent);
+                var position = readCoordinate(coordNodes[x].textContent, ellipsoid);
                 positions.push(position);
                 times.push(JulianDate.fromIso8601(timeNodes[x].textContent));
             }
@@ -1687,8 +1704,10 @@ define([
 
         processExtendedData(featureNode, entity);
         processDescription(featureNode, entity, styleEntity, uriResolver, sourceResource);
-        processLookAt(featureNode, entity);
-        processCamera(featureNode, entity);
+
+        var ellipsoid = dataSource._ellipsoid;
+        processLookAt(featureNode, entity, ellipsoid);
+        processCamera(featureNode, entity, ellipsoid);
 
         if (defined(queryFirstNode(featureNode, 'Region', namespaces.kml))) {
             oneTimeWarning('kml-region', 'KML - Placemark Regions are unsupported');
@@ -1776,13 +1795,14 @@ define([
 
         var playlistNode = queryFirstNode(node, 'Playlist', namespaces.gx);
         if(playlistNode) {
+            var ellipsoid = dataSource._ellipsoid;
             var childNodes = playlistNode.childNodes;
             for(var i = 0; i < childNodes.length; i++) {
                 var entryNode = childNodes[i];
                 if (entryNode.localName) {
                     var playlistNodeProcessor = playlistNodeProcessors[entryNode.localName];
                     if (playlistNodeProcessor) {
-                        playlistNodeProcessor(tour, entryNode);
+                        playlistNodeProcessor(tour, entryNode, ellipsoid);
                     }
                     else {
                         console.log('Unknown KML Tour playlist entry type ' + entryNode.localName);
@@ -1807,14 +1827,14 @@ define([
         tour.addPlaylistEntry(new KmlTourWait(duration));
     }
 
-    function processTourFlyTo(tour, entryNode) {
+    function processTourFlyTo(tour, entryNode, ellipsoid) {
         var duration = queryNumericValue(entryNode, 'duration', namespaces.gx);
         var flyToMode = queryStringValue(entryNode, 'flyToMode', namespaces.gx);
 
         var t = {kml: {}};
 
-        processLookAt(entryNode, t);
-        processCamera(entryNode, t);
+        processLookAt(entryNode, t, ellipsoid);
+        processCamera(entryNode, t, ellipsoid);
 
         var view = t.kml.lookAt || t.kml.camera;
 
@@ -1822,7 +1842,7 @@ define([
         tour.addPlaylistEntry(flyto);
     }
 
-    function processCamera(featureNode, entity) {
+    function processCamera(featureNode, entity, ellipsoid) {
         var camera = queryFirstNode(featureNode, 'Camera', namespaces.kml);
         if(defined(camera)) {
             var lon = defaultValue(queryNumericValue(camera, 'longitude', namespaces.kml), 0.0);
@@ -1833,14 +1853,14 @@ define([
             var tilt = defaultValue(queryNumericValue(camera, 'tilt', namespaces.kml), 0.0);
             var roll = defaultValue(queryNumericValue(camera, 'roll', namespaces.kml), 0.0);
 
-            var position = Cartesian3.fromDegrees(lon, lat, altitude);
+            var position = Cartesian3.fromDegrees(lon, lat, altitude, ellipsoid);
             var hpr = HeadingPitchRoll.fromDegrees(heading, tilt - 90.0, roll);
 
             entity.kml.camera = new KmlCamera(position, hpr);
         }
     }
 
-    function processLookAt(featureNode, entity) {
+    function processLookAt(featureNode, entity, ellipsoid) {
         var lookAt = queryFirstNode(featureNode, 'LookAt', namespaces.kml);
         if(defined(lookAt)) {
             var lon = defaultValue(queryNumericValue(lookAt, 'longitude', namespaces.kml), 0.0);
@@ -1854,7 +1874,7 @@ define([
             heading = CesiumMath.toRadians(defaultValue(heading, 0.0));
 
             var hpr = new HeadingPitchRange(heading, tilt - CesiumMath.PI_OVER_TWO, range);
-            var viewPoint = Cartesian3.fromDegrees(lon, lat, altitude);
+            var viewPoint = Cartesian3.fromDegrees(lon, lat, altitude, ellipsoid);
 
             entity.kml.lookAt = new KmlLookAt(viewPoint, hpr);
         }
@@ -1867,14 +1887,18 @@ define([
         var geometry;
         var isLatLonQuad = false;
 
-        var positions = readCoordinates(queryFirstNode(groundOverlay, 'LatLonQuad', namespaces.gx));
+        var ellipsoid = dataSource._ellipsoid;
+        var positions = readCoordinates(queryFirstNode(groundOverlay, 'LatLonQuad', namespaces.gx), ellipsoid);
+        var zIndex = queryNumericValue(groundOverlay, 'drawOrder', namespaces.kml);
         if (defined(positions)) {
             geometry = createDefaultPolygon();
             geometry.hierarchy = new PolygonHierarchy(positions);
+            geometry.zIndex = zIndex;
             entity.polygon = geometry;
             isLatLonQuad = true;
         } else {
             geometry = new RectangleGraphics();
+            geometry.zIndex = zIndex;
             entity.rectangle = geometry;
 
             var latLonBox = queryFirstNode(groundOverlay, 'LatLonBox', namespaces.kml);
@@ -1935,6 +1959,7 @@ define([
             if (altitudeMode === 'absolute') {
                 //Use height above ellipsoid until we support MSL.
                 geometry.height = queryNumericValue(groundOverlay, 'altitude', namespaces.kml);
+                geometry.zIndex = undefined;
             } else if (altitudeMode !== 'clampToGround') {
                 oneTimeWarning('kml-altitudeMode-unknown', 'KML - Unknown altitudeMode: ' + altitudeMode);
             }
@@ -1944,6 +1969,7 @@ define([
             if (altitudeMode === 'relativeToSeaFloor') {
                 oneTimeWarning('kml-altitudeMode-relativeToSeaFloor', 'KML - altitudeMode relativeToSeaFloor is currently not supported, treating as absolute.');
                 geometry.height = queryNumericValue(groundOverlay, 'altitude', namespaces.kml);
+                geometry.zIndex = undefined;
             } else if (altitudeMode === 'clampToSeaFloor') {
                 oneTimeWarning('kml-altitudeMode-clampToSeaFloor', 'KML - altitudeMode clampToSeaFloor is currently not supported, treating as clampToGround.');
             } else if (defined(altitudeMode)) {
@@ -1981,7 +2007,7 @@ define([
     var scratchCartesian2 = new Cartesian2();
     var scratchCartesian3 = new Cartesian3();
 
-    function processNetworkLinkQueryString(resource, camera, canvas, viewBoundScale, bbox) {
+    function processNetworkLinkQueryString(resource, camera, canvas, viewBoundScale, bbox, ellipsoid) {
         function fixLatitude(value) {
             if (value < -CesiumMath.PI_OVER_TWO) {
                 return -CesiumMath.PI_OVER_TWO;
@@ -2007,7 +2033,6 @@ define([
         queryString = queryString.replace(/%5B/g, '[').replace(/%5D/g, ']');
 
         if (defined(camera) && camera._mode !== SceneMode.MORPHING) {
-            var wgs84 = Ellipsoid.WGS84;
             var centerCartesian;
             var centerCartographic;
 
@@ -2015,14 +2040,14 @@ define([
             if (defined(canvas)) {
                 scratchCartesian2.x = canvas.clientWidth * 0.5;
                 scratchCartesian2.y = canvas.clientHeight * 0.5;
-                centerCartesian = camera.pickEllipsoid(scratchCartesian2, wgs84, scratchCartesian3);
+                centerCartesian = camera.pickEllipsoid(scratchCartesian2, ellipsoid, scratchCartesian3);
             }
 
             if (defined(centerCartesian)) {
-                centerCartographic = wgs84.cartesianToCartographic(centerCartesian, scratchCartographic);
+                centerCartographic = ellipsoid.cartesianToCartographic(centerCartesian, scratchCartographic);
             } else {
                 centerCartographic = Rectangle.center(bbox, scratchCartographic);
-                centerCartesian = wgs84.cartographicToCartesian(centerCartographic);
+                centerCartesian = ellipsoid.cartographicToCartesian(centerCartographic);
             }
 
             if (defined(viewBoundScale) && !CesiumMath.equalsEpsilon(viewBoundScale, 1.0, CesiumMath.EPSILON9)) {
@@ -2051,7 +2076,7 @@ define([
             queryString = queryString.replace('[lookatTerrainLat]', lat);
             queryString = queryString.replace('[lookatTerrainAlt]', centerCartographic.height.toString());
 
-            wgs84.cartesianToCartographic(camera.positionWC, scratchCartographic);
+            ellipsoid.cartesianToCartographic(camera.positionWC, scratchCartographic);
             queryString = queryString.replace('[cameraLon]', CesiumMath.toDegrees(scratchCartographic.longitude).toString());
             queryString = queryString.replace('[cameraLat]', CesiumMath.toDegrees(scratchCartographic.latitude).toString());
             queryString = queryString.replace('[cameraAlt]', CesiumMath.toDegrees(scratchCartographic.height).toString());
@@ -2108,7 +2133,7 @@ define([
         queryString = queryString.replace('[clientName]', 'Cesium');
         queryString = queryString.replace('[language]', 'English');
 
-        resource.addQueryParameters(queryToObject(queryString));
+        resource.setQueryParameters(queryToObject(queryString));
     }
 
     function processNetworkLink(dataSource, parent, node, entityCollection, styleCollection, sourceResource, uriResolver, promises, context) {
@@ -2145,13 +2170,14 @@ define([
                     var viewFormat = defaultValue(queryStringValue(link, 'viewFormat', namespaces.kml), defaultViewFormat);
                     var httpQuery = queryStringValue(link, 'httpQuery', namespaces.kml);
                     if (defined(viewFormat)) {
-                        href.addQueryParameters(queryToObject(cleanupString(viewFormat)));
+                        href.setQueryParameters(queryToObject(cleanupString(viewFormat)));
                     }
                     if (defined(httpQuery)) {
-                        href.addQueryParameters(queryToObject(cleanupString(httpQuery)));
+                        href.setQueryParameters(queryToObject(cleanupString(httpQuery)));
                     }
 
-                    processNetworkLinkQueryString(href, dataSource._camera, dataSource._canvas, viewBoundScale, dataSource._lastCameraView.bbox);
+                    var ellipsoid = dataSource._ellipsoid;
+                    processNetworkLinkQueryString(href, dataSource._camera, dataSource._canvas, viewBoundScale, dataSource._lastCameraView.bbox, ellipsoid);
                 }
 
                 var options = {
@@ -2358,41 +2384,17 @@ define([
         var sourceUri = options.sourceUri;
         var uriResolver = options.uriResolver;
         var context = options.context;
-        var query = options.query;
-
-        if (defined(options.query)) {
-            deprecationWarning('KmlDataSource.query', 'The options.query parameter has been deprecated. Specify data or options.sourceUri as a Resource instance and add query parameters there.');
-        }
-
-        if (defined(dataSource._proxy)) {
-            deprecationWarning('KmlDataSource.proxy', 'The options.proxy parameter has been deprecated. Specify data or options.sourceUri as a Resource instance and set the proxy property there.');
-        }
 
         var promise = data;
         if (typeof data === 'string' || (data instanceof Resource)) {
-            data = Resource.createIfNeeded(data, {
-                proxy: dataSource._proxy,
-                queryParameters: query
-            });
-
+            data = Resource.createIfNeeded(data);
             promise = data.fetchBlob();
-
             sourceUri = defaultValue(sourceUri, data.clone());
         } else {
             sourceUri = defaultValue(sourceUri, Resource.DEFAULT.clone());
         }
 
         sourceUri = Resource.createIfNeeded(sourceUri);
-
-        // Explicitly set these deprecated properties because we can use the default
-        //  resource which won't have these set.
-        if (defined(dataSource._proxy)) {
-            sourceUri.proxy = dataSource._proxy;
-        }
-
-        if (defined(query)) {
-            sourceUri.addQueryParameters(query);
-        }
 
         return when(promise)
             .then(function(dataToLoad) {
@@ -2468,6 +2470,7 @@ define([
      * @param {Object} options An object with the following properties:
      * @param {Camera} options.camera The camera that is used for viewRefreshModes and sending camera properties to network links.
      * @param {Canvas} options.canvas The canvas that is used for sending viewer properties to network links.
+     * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The global ellipsoid used for geographical calculations.
      *
      * @see {@link http://www.opengeospatial.org/standards/kml/|Open Geospatial Consortium KML Standard}
      * @see {@link https://developers.google.com/kml/|Google KML Documentation}
@@ -2507,7 +2510,6 @@ define([
         this._entityCollection = new EntityCollection(this);
         this._name = undefined;
         this._isLoading = false;
-        this._proxy = options.proxy; // TODO: Deprecation warning
         this._pinBuilder = new PinBuilder();
         this._networkLinks = new AssociativeArray();
         this._entityCluster = new EntityCluster();
@@ -2520,17 +2522,20 @@ define([
             up : defined(camera) ? Cartesian3.clone(camera.upWC) : undefined,
             bbox : defined(camera) ? camera.computeViewRectangle() : Rectangle.clone(Rectangle.MAX_VALUE)
         };
+
+        this._ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
     }
 
     /**
      * Creates a Promise to a new instance loaded with the provided KML data.
      *
-     * @param {String|Document|Blob} data A url, parsed KML document, or Blob containing binary KMZ data or a parsed KML document.
+     * @param {Resource|String|Document|Blob} data A url, parsed KML document, or Blob containing binary KMZ data or a parsed KML document.
      * @param {Object} options An object with the following properties:
      * @param {Camera} options.camera The camera that is used for viewRefreshModes and sending camera properties to network links.
      * @param {Canvas} options.canvas The canvas that is used for sending viewer properties to network links.
      * @param {String} [options.sourceUri] Overrides the url to use for resolving relative links and other KML network features.
-     * @param {Boolean} [options.clampToGround=false] true if we want the geometry features (Polygons, LineStrings and LinearRings) clamped to the ground. If true, lines will use corridors so use Entity.corridor instead of Entity.polyline.
+     * @param {Boolean} [options.clampToGround=false] true if we want the geometry features (Polygons, LineStrings and LinearRings) clamped to the ground.
+     * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The global ellipsoid used for geographical calculations.
      *
      * @returns {Promise.<KmlDataSource>} A promise that will resolve to a new KmlDataSource instance once the KML is loaded.
      */
@@ -2681,9 +2686,10 @@ define([
      * @param {Resource|String|Document|Blob} data A url, parsed KML document, or Blob containing binary KMZ data or a parsed KML document.
      * @param {Object} [options] An object with the following properties:
      * @param {Resource|String} [options.sourceUri] Overrides the url to use for resolving relative links and other KML network features.
-     * @returns {Promise.<KmlDataSource>} A promise that will resolve to this instances once the KML is loaded.
      * @param {Boolean} [options.clampToGround=false] true if we want the geometry features (Polygons, LineStrings and LinearRings) clamped to the ground. If true, lines will use corridors so use Entity.corridor instead of Entity.polyline.
-     * @param {Object} [options.query] Key-value pairs which are appended to all URIs in the CZML.
+     * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The global ellipsoid used for geographical calculations.
+     *
+     * @returns {Promise.<KmlDataSource>} A promise that will resolve to this instances once the KML is loaded.
      */
     KmlDataSource.prototype.load = function(data, options) {
         //>>includeStart('debug', pragmas.debug);
@@ -2976,8 +2982,11 @@ define([
                     networkLink.updating = true;
                     var newEntityCollection = new EntityCollection();
                     var href = networkLink.href.clone();
-                    href.addQueryParameters(networkLink.cookie);
-                    processNetworkLinkQueryString(href, that._camera, that._canvas, networkLink.viewBoundScale, lastCameraView.bbox);
+
+                    href.setQueryParameters(networkLink.cookie);
+                    var ellipsoid = defaultValue(that._ellipsoid, Ellipsoid.WGS84);
+                    processNetworkLinkQueryString(href, that._camera, that._canvas, networkLink.viewBoundScale, lastCameraView.bbox, ellipsoid);
+
                     load(that, newEntityCollection, href, {context : entity.id})
                         .then(getNetworkLinkUpdateCallback(that, networkLink, newEntityCollection, newNetworkLinks, href))
                         .otherwise(function(error) {

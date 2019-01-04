@@ -4,6 +4,6 @@ varying vec3 v_texCoord;
 
 void main()
 {
-    vec3 rgb = textureCube(u_cubeMap, normalize(v_texCoord)).rgb;
-    gl_FragColor = vec4(rgb, czm_morphTime);
+    vec4 color = textureCube(u_cubeMap, normalize(v_texCoord));
+    gl_FragColor = vec4(czm_gammaCorrect(color).rgb, czm_morphTime);
 }

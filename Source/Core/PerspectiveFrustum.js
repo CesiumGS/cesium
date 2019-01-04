@@ -4,6 +4,7 @@ define([
         './defined',
         './defineProperties',
         './DeveloperError',
+        './Math',
         './PerspectiveOffCenterFrustum'
     ], function(
         Check,
@@ -11,6 +12,7 @@ define([
         defined,
         defineProperties,
         DeveloperError,
+        CesiumMath,
         PerspectiveOffCenterFrustum) {
     'use strict';
 
@@ -354,7 +356,7 @@ define([
      * @returns {Boolean} <code>true</code> if they are equal, <code>false</code> otherwise.
      */
     PerspectiveFrustum.prototype.equals = function(other) {
-        if (!defined(other)) {
+        if (!defined(other) || !(other instanceof PerspectiveFrustum)) {
             return false;
         }
 
@@ -363,9 +365,30 @@ define([
 
         return (this.fov === other.fov &&
                 this.aspectRatio === other.aspectRatio &&
-                this.near === other.near &&
-                this.far === other.far &&
                 this._offCenterFrustum.equals(other._offCenterFrustum));
+    };
+
+    /**
+     * Compares the provided PerspectiveFrustum componentwise and returns
+     * <code>true</code> if they pass an absolute or relative tolerance test,
+     * <code>false</code> otherwise.
+     *
+     * @param {PerspectiveFrustum} other The right hand side PerspectiveFrustum.
+     * @param {Number} relativeEpsilon The relative epsilon tolerance to use for equality testing.
+     * @param {Number} [absoluteEpsilon=relativeEpsilon] The absolute epsilon tolerance to use for equality testing.
+     * @returns {Boolean} <code>true</code> if this and other are within the provided epsilon, <code>false</code> otherwise.
+     */
+    PerspectiveFrustum.prototype.equalsEpsilon = function(other, relativeEpsilon, absoluteEpsilon) {
+        if (!defined(other) || !(other instanceof PerspectiveFrustum)) {
+            return false;
+        }
+
+        update(this);
+        update(other);
+
+        return (CesiumMath.equalsEpsilon(this.fov, other.fov, relativeEpsilon, absoluteEpsilon) &&
+                CesiumMath.equalsEpsilon(this.aspectRatio, other.aspectRatio, relativeEpsilon, absoluteEpsilon) &&
+                this._offCenterFrustum.equalsEpsilon(other._offCenterFrustum, relativeEpsilon, absoluteEpsilon));
     };
 
     return PerspectiveFrustum;

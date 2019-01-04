@@ -3,7 +3,6 @@ defineSuite([
         'Core/Cartesian3',
         'Core/Ellipsoid',
         'Core/Math',
-        'Core/Rectangle',
         'Core/VertexFormat',
         'Specs/createPackableSpecs'
     ], function(
@@ -11,7 +10,6 @@ defineSuite([
         Cartesian3,
         Ellipsoid,
         CesiumMath,
-        Rectangle,
         VertexFormat,
         createPackableSpecs) {
     'use strict';
@@ -160,15 +158,33 @@ defineSuite([
         });
 
         var r = ellipse.rectangle;
-        expect(r.north).toEqual(0.6989665987920752);
-        expect(r.south).toEqual(0.6986522252554146);
-        expect(r.east).toEqual(-1.3192254919769824);
-        expect(r.west).toEqual(-1.319634495353805);
+        expect(r.north).toEqualEpsilon(0.698966597893341, CesiumMath.EPSILON15);
+        expect(r.south).toEqualEpsilon(0.698652226072367, CesiumMath.EPSILON15);
+        expect(r.east).toEqualEpsilon(-1.3192254919753026, CesiumMath.EPSILON15);
+        expect(r.west).toEqualEpsilon(-1.3196344953554853, CesiumMath.EPSILON15);
+    });
+
+    it('computing textureCoordinateRotationPoints property', function() {
+        var center = Cartesian3.fromDegrees(0, 0);
+        var ellipse = new CircleGeometry({
+            center : center,
+            radius : 1000.0,
+            stRotation : CesiumMath.toRadians(90)
+        });
+
+        // 90 degree rotation means (0, 1) should be the new min and (1, 1) (0, 0) are extents
+        var textureCoordinateRotationPoints = ellipse.textureCoordinateRotationPoints;
+        expect(textureCoordinateRotationPoints.length).toEqual(6);
+        expect(textureCoordinateRotationPoints[0]).toEqualEpsilon(0, CesiumMath.EPSILON7);
+        expect(textureCoordinateRotationPoints[1]).toEqualEpsilon(1, CesiumMath.EPSILON7);
+        expect(textureCoordinateRotationPoints[2]).toEqualEpsilon(1, CesiumMath.EPSILON7);
+        expect(textureCoordinateRotationPoints[3]).toEqualEpsilon(1, CesiumMath.EPSILON7);
+        expect(textureCoordinateRotationPoints[4]).toEqualEpsilon(0, CesiumMath.EPSILON7);
+        expect(textureCoordinateRotationPoints[5]).toEqualEpsilon(0, CesiumMath.EPSILON7);
     });
 
     var center = Cartesian3.fromDegrees(0,0);
     var ellipsoid = Ellipsoid.WGS84;
-    var rectangle = new Rectangle(-1.5678559428873852e-7, -1.578422502906833e-7, 1.5678559428873852e-7, 1.578422502906833e-7);
     var packableInstance = new CircleGeometry({
         vertexFormat : VertexFormat.POSITION_AND_ST,
         ellipsoid : ellipsoid,
@@ -177,6 +193,6 @@ defineSuite([
         radius : 1.0,
         stRotation : CesiumMath.PI_OVER_TWO
     });
-    var packedInstance = [center.x, center.y, center.z, ellipsoid.radii.x, ellipsoid.radii.y, ellipsoid.radii.z, 1.0, 0.0, 1.0, 0.0, 0.0, 0.0, rectangle.west, rectangle.south, rectangle.east, rectangle.north, 1.0, 1.0, 0.0, CesiumMath.PI_OVER_TWO, 0.0, 0.1, 0.0, 0.0, 0.0];
+    var packedInstance = [center.x, center.y, center.z, ellipsoid.radii.x, ellipsoid.radii.y, ellipsoid.radii.z, 1.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 1.0, 0.0, CesiumMath.PI_OVER_TWO, 0.0, 0.1, 0.0, 0.0, -1];
     createPackableSpecs(CircleGeometry, packableInstance, packedInstance);
 });

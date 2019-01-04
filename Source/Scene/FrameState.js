@@ -51,6 +51,24 @@ define([
         this.environmentMap = undefined;
 
         /**
+         * The spherical harmonic coefficients used for image-based lighting for PBR models.
+         * @type {Cartesian3[]}
+         */
+        this.sphericalHarmonicCoefficients = undefined;
+
+        /**
+         * The specular environment atlas used for image-based lighting for PBR models.
+         * @type {Texture}
+         */
+        this.specularEnvironmentMaps = undefined;
+
+        /**
+         * The maximum level-of-detail of the specular environment atlas used for image-based lighting for PBR models.
+         * @type {Number}
+         */
+        this.specularEnvironmentMapsMaximumLOD = undefined;
+
+        /**
          * The current mode of the scene.
          *
          * @type {SceneMode}
@@ -138,6 +156,7 @@ define([
              * @default false
              */
             render : false,
+
             /**
              * <code>true</code> if the primitive should update for a picking pass, <code>false</code> otherwise.
              *
@@ -151,7 +170,28 @@ define([
              * @type {Boolean}
              * @default false
              */
-            depth : false
+            depth : false,
+
+            /**
+             * <code>true</code> if the primitive should update for a per-feature post-process pass, <code>false</code> otherwise.
+             * @type {Boolean}
+             * @default false
+             */
+            postProcess : false,
+
+            /**
+             * <code>true</code> if the primitive should update for an offscreen pass, <code>false</code> otherwise.
+             * @type {Boolean}
+             * @default false
+             */
+            offscreen : false,
+
+            /**
+             * <code>true</code> if the primitive should update for an asynchronous pass, <code>false</code> otherwise.
+             * @type {Boolean}
+             * @default false
+             */
+            asynchronous : false
         };
 
         /**
@@ -225,12 +265,18 @@ define([
          */
         this.terrainExaggeration = 1.0;
 
-        this.shadowHints = {
+        this.shadowState = {
             /**
              * Whether there are any active shadow maps this frame.
              * @type {Boolean}
              */
             shadowsEnabled : true,
+
+            /**
+             * Whether there are any active shadow maps that originate from light sources. Does not
+             * include shadow maps that are used for analytical purposes.
+             */
+            lightShadowsEnabled : true,
 
             /**
              * All shadow maps that are enabled this frame.
@@ -297,6 +343,13 @@ define([
         this.backgroundColor = undefined;
 
         /**
+         * The color of the light emitted by the sun.
+         *
+         * @type {Color}
+         */
+        this.sunColor = undefined;
+
+        /**
          * The distance from the camera at which to disable the depth test of billboards, labels and points
          * to, for example, prevent clipping against terrain. When set to zero, the depth test should always
          * be applied. When less than zero, the depth test should never be applied.
@@ -317,6 +370,14 @@ define([
          * @type {Color}
          */
         this.invertClassificationColor = undefined;
+
+        /**
+         * Whether or not the scene uses a logarithmic depth buffer.
+         *
+         * @type {Boolean}
+         * @default false
+         */
+        this.useLogDepth = false;
     }
 
     /**

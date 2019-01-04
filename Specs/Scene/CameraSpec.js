@@ -2041,7 +2041,6 @@ defineSuite([
         expect(camera.right).toEqual(right);
     });
 
-
     it('get rectangle coordinate returns camera position if scene mode is morphing', function() {
         var rectangle = new Rectangle(
             -CesiumMath.PI_OVER_TWO,
@@ -2262,7 +2261,7 @@ defineSuite([
         var ray = camera.getPickRay(windowCoord);
 
         var cameraPosition = camera.position;
-        var expectedPosition = new Cartesian3(cameraPosition.x + 2.0, cameraPosition.y + 2, cameraPosition.z);
+        var expectedPosition = new Cartesian3(cameraPosition.z, cameraPosition.x + 2.0, cameraPosition.y + 2.0);
         expect(ray.origin).toEqualEpsilon(expectedPosition, CesiumMath.EPSILON14);
         expect(ray.direction).toEqual(camera.directionWC);
     });
@@ -2843,7 +2842,7 @@ defineSuite([
         var correctResult = new Rectangle(-0.05789100547374969, -0.04365869998457809, 0.05789100547374969, 0.04365869998457809);
 
         var rect = camera.computeViewRectangle();
-        expect(rect).toEqual(correctResult);
+        expect(rect).toEqualEpsilon(correctResult, CesiumMath.EPSILON10);
     });
 
     it('computeViewRectangle when zoomed in to pole', function() {
@@ -2875,7 +2874,7 @@ defineSuite([
         var correctResult = new Rectangle(3.0837016481160435, -0.04365869998457809, -3.0837016481160435, 0.04365869998457809);
 
         var rect = camera.computeViewRectangle();
-        expect(rect).toEqual(correctResult);
+        expect(rect).toEqualEpsilon(correctResult, CesiumMath.EPSILON10);
     });
 
     it('computeViewRectangle when zoomed out', function() {

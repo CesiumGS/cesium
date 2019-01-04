@@ -14,8 +14,9 @@ define([
         '../Renderer/TextureMagnificationFilter',
         '../Renderer/TextureMinificationFilter',
         '../Renderer/TextureWrap',
-        '../Shaders/PostProcessFilters/PassThrough',
+        '../Shaders/PostProcessStages/PassThrough',
         './BlendingState',
+        './StencilConstants',
         './StencilFunction',
         './StencilOperation'
     ], function(
@@ -36,6 +37,7 @@ define([
         TextureWrap,
         PassThrough,
         BlendingState,
+        StencilConstants,
         StencilFunction,
         StencilOperation) {
     'use strict';
@@ -72,13 +74,13 @@ define([
 
         var that = this;
         this._uniformMap = {
-            u_texture : function() {
+            colorTexture : function() {
                 return that._texture;
             },
-            u_depth : function() {
+            depthTexture : function() {
                 return that._depthStencilTexture;
             },
-            u_classified : function() {
+            classifiedTexture : function() {
                 return that._classifiedTexture;
             }
         };
@@ -96,12 +98,6 @@ define([
         return context.depthTexture && context.fragmentDepth;
     };
 
-    // The stencil mask only uses the least significant 4 bits.
-    // This is so 3D Tiles with the skip LOD optimization, which uses the most significant 4 bits,
-    // can be classified.
-    var stencilMask = 0x0F;
-    var stencilReference = 0;
-
     var rsUnclassified = {
         depthMask : false,
         stencilTest : {
@@ -113,8 +109,8 @@ define([
                 zPass : StencilOperation.KEEP
             },
             backFunction : StencilFunction.NEVER,
-            reference : stencilReference,
-            mask : stencilMask
+            reference : 0,
+            mask : StencilConstants.CLASSIFICATION_MASK
         },
         blending : BlendingState.ALPHA_BLEND
     };
@@ -130,34 +126,39 @@ define([
                 zPass : StencilOperation.KEEP
             },
             backFunction : StencilFunction.NEVER,
-            reference : stencilReference,
-            mask : stencilMask
+            reference : 0,
+            mask : StencilConstants.CLASSIFICATION_MASK
         },
         blending : BlendingState.ALPHA_BLEND
     };
 
+    // Set the 3D Tiles bit when rendering back into the scene's framebuffer. This is only needed if
+    // invert classification does not use the scene's depth-stencil texture, which is the case if the invert
+    // classification color is translucent.
     var rsDefault = {
         depthMask : true,
         depthTest : {
             enabled : true
         },
+        stencilTest : StencilConstants.setCesium3DTileBit(),
+        stencilMask : StencilConstants.CESIUM_3D_TILE_MASK,
         blending : BlendingState.ALPHA_BLEND
     };
 
     var translucentFS =
         '#extension GL_EXT_frag_depth : enable\n'+
-        'uniform sampler2D u_texture;\n' +
-        'uniform sampler2D u_depth;\n' +
-        'uniform sampler2D u_classified;\n' +
+        'uniform sampler2D colorTexture;\n' +
+        'uniform sampler2D depthTexture;\n' +
+        'uniform sampler2D classifiedTexture;\n' +
         'varying vec2 v_textureCoordinates;\n' +
         'void main()\n' +
         '{\n' +
-        '    vec4 color = texture2D(u_texture, v_textureCoordinates);\n' +
+        '    vec4 color = texture2D(colorTexture, v_textureCoordinates);\n' +
         '    if (color.a == 0.0)\n' +
         '    {\n' +
         '        discard;\n' +
         '    }\n' +
-        '    bool isClassified = all(equal(texture2D(u_classified, v_textureCoordinates), vec4(0.0)));\n' +
+        '    bool isClassified = all(equal(texture2D(classifiedTexture, v_textureCoordinates), vec4(0.0)));\n' +
         '#ifdef UNCLASSIFIED\n' +
         '    vec4 highlightColor = czm_invertClassificationColor;\n' +
         '    if (isClassified)\n' +
@@ -172,15 +173,15 @@ define([
         '    }\n' +
         '#endif\n' +
         '    gl_FragColor = color * highlightColor;\n' +
-        '    gl_FragDepthEXT = texture2D(u_depth, v_textureCoordinates).r;\n' +
+        '    gl_FragDepthEXT = texture2D(depthTexture, v_textureCoordinates).r;\n' +
         '}\n';
 
     var opaqueFS =
-        'uniform sampler2D u_texture;\n' +
+        'uniform sampler2D colorTexture;\n' +
         'varying vec2 v_textureCoordinates;\n' +
         'void main()\n' +
         '{\n' +
-        '    vec4 color = texture2D(u_texture, v_textureCoordinates);\n' +
+        '    vec4 color = texture2D(colorTexture, v_textureCoordinates);\n' +
         '    if (color.a == 0.0)\n' +
         '    {\n' +
         '        discard;\n' +

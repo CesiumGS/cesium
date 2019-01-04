@@ -5,7 +5,7 @@ define([
     'use strict';
 
     /**
-     * @typedef {Object} GeocoderResult
+     * @typedef {Object} GeocoderService~Result
      * @property {String} displayName The display name for a location
      * @property {Rectangle|Cartesian3} destination The bounding box for a location
      */
@@ -17,6 +17,8 @@ define([
      * @constructor
      *
      * @see BingMapsGeocoderService
+     * @see PeliasGeocoderService
+     * @see OpenCageGeocoderService
      */
     function GeocoderService() {
     }
@@ -25,7 +27,8 @@ define([
      * @function
      *
      * @param {String} query The query to be sent to the geocoder service
-     * @returns {Promise<GeocoderResult[]>}
+     * @param {GeocodeType} [type=GeocodeType.SEARCH] The type of geocode to perform.
+     * @returns {Promise<GeocoderService~Result[]>}
      */
     GeocoderService.prototype.geocode = DeveloperError.throwInstantiationError;
 

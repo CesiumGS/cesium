@@ -59,7 +59,7 @@ function getImage() {
 
 var minimumExplosionSize = 30.0;
 var maximumExplosionSize = 100.0;
-var particlePixelSize = 7.0;
+var particlePixelSize = new Cesium.Cartesian2(7.0, 7.0);
 var burstSize = 400.0;
 var lifetime = 10.0;
 var numberOfFireworks = 20.0;
@@ -90,15 +90,14 @@ function createFirework(offset, color, bursts) {
         image : getImage(),
         startColor : color,
         endColor : color.withAlpha(0.0),
-        life : life,
+        particleLife : life,
         speed : 100.0,
-        width : particlePixelSize,
-        height : particlePixelSize,
-        rate : 0,
+        imageSize : particlePixelSize,
+        emissionRate : 0,
         emitter : new Cesium.SphereEmitter(0.1),
         bursts : bursts,
-        lifeTime : lifetime,
-        forces : [force],
+        lifetime : lifetime,
+        updateCallback : force,
         modelMatrix : modelMatrix,
         emitterModelMatrix : emitterModelMatrix
     }));
@@ -161,14 +160,13 @@ var toFireworks = Cesium.Cartesian3.subtract(emitterInitialLocation, cameraOffse
 Cesium.Cartesian3.normalize(toFireworks, toFireworks);
 var angle = Cesium.Math.PI_OVER_TWO - Math.acos(Cesium.Cartesian3.dot(toFireworks, Cesium.Cartesian3.UNIT_Z));
 camera.lookUp(angle);
-
 //Sandcastle_End
     Sandcastle.finishedLoading();
 }
-if (typeof Cesium !== "undefined") {
+if (typeof Cesium !== 'undefined') {
     startup(Cesium);
-} else if (typeof require === "function") {
-    require(["Cesium"], startup);
+} else if (typeof require === 'function') {
+    require(['Cesium'], startup);
 }
 </script>
 

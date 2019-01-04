@@ -3,7 +3,6 @@ define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
-        '../Core/deprecationWarning',
         '../Core/DeveloperError',
         '../Core/Event',
         '../Core/GeographicTilingScheme',
@@ -17,7 +16,6 @@ define([
         defaultValue,
         defined,
         defineProperties,
-        deprecationWarning,
         DeveloperError,
         Event,
         GeographicTilingScheme,
@@ -58,13 +56,7 @@ define([
         }
         //>>includeEnd('debug');
 
-        if (defined(options.proxy)) {
-            deprecationWarning('SingleTileImageryProvider.proxy', 'The options.proxy parameter has been deprecated. Specify options.url as a Resource instance and set the proxy property there.');
-        }
-
-        var resource = Resource.createIfNeeded(options.url, {
-            proxy: options.proxy
-        });
+        var resource = Resource.createIfNeeded(options.url);
 
         var rectangle = defaultValue(options.rectangle, Rectangle.MAX_VALUE);
         var tilingScheme = new GeographicTilingScheme({
@@ -87,7 +79,7 @@ define([
 
         var credit = options.credit;
         if (typeof credit === 'string') {
-            credit = new Credit({text: credit});
+            credit = new Credit(credit);
         }
         this._credit = credit;
 

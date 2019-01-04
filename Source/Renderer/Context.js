@@ -1,65 +1,69 @@
 define([
-    '../Core/Check',
-    '../Core/clone',
-    '../Core/Color',
-    '../Core/ComponentDatatype',
-    '../Core/createGuid',
-    '../Core/defaultValue',
-    '../Core/defined',
-    '../Core/defineProperties',
-    '../Core/destroyObject',
-    '../Core/DeveloperError',
-    '../Core/Geometry',
-    '../Core/GeometryAttribute',
-    '../Core/Matrix4',
-    '../Core/PrimitiveType',
-    '../Core/RuntimeError',
-    '../Core/WebGLConstants',
-    '../Shaders/ViewportQuadVS',
-    './BufferUsage',
-    './ClearCommand',
-    './ContextLimits',
-    './CubeMap',
-    './DrawCommand',
-    './PassState',
-    './PickFramebuffer',
-    './RenderState',
-    './ShaderCache',
-    './ShaderProgram',
-    './Texture',
-    './UniformState',
-    './VertexArray'
-], function(
-    Check,
-    clone,
-    Color,
-    ComponentDatatype,
-    createGuid,
-    defaultValue,
-    defined,
-    defineProperties,
-    destroyObject,
-    DeveloperError,
-    Geometry,
-    GeometryAttribute,
-    Matrix4,
-    PrimitiveType,
-    RuntimeError,
-    WebGLConstants,
-    ViewportQuadVS,
-    BufferUsage,
-    ClearCommand,
-    ContextLimits,
-    CubeMap,
-    DrawCommand,
-    PassState,
-    PickFramebuffer,
-    RenderState,
-    ShaderCache,
-    ShaderProgram,
-    Texture,
-    UniformState,
-    VertexArray) {
+        '../Core/Check',
+        '../Core/clone',
+        '../Core/Color',
+        '../Core/ComponentDatatype',
+        '../Core/createGuid',
+        '../Core/defaultValue',
+        '../Core/defined',
+        '../Core/defineProperties',
+        '../Core/destroyObject',
+        '../Core/DeveloperError',
+        '../Core/Geometry',
+        '../Core/GeometryAttribute',
+        '../Core/Matrix4',
+        '../Core/PixelFormat',
+        '../Core/PrimitiveType',
+        '../Core/RuntimeError',
+        '../Core/WebGLConstants',
+        '../Shaders/ViewportQuadVS',
+        './BufferUsage',
+        './ClearCommand',
+        './ContextLimits',
+        './CubeMap',
+        './DrawCommand',
+        './PassState',
+        './PixelDatatype',
+        './RenderState',
+        './ShaderCache',
+        './ShaderProgram',
+        './Texture',
+        './TextureCache',
+        './UniformState',
+        './VertexArray'
+    ], function(
+        Check,
+        clone,
+        Color,
+        ComponentDatatype,
+        createGuid,
+        defaultValue,
+        defined,
+        defineProperties,
+        destroyObject,
+        DeveloperError,
+        Geometry,
+        GeometryAttribute,
+        Matrix4,
+        PixelFormat,
+        PrimitiveType,
+        RuntimeError,
+        WebGLConstants,
+        ViewportQuadVS,
+        BufferUsage,
+        ClearCommand,
+        ContextLimits,
+        CubeMap,
+        DrawCommand,
+        PassState,
+        PixelDatatype,
+        RenderState,
+        ShaderCache,
+        ShaderProgram,
+        Texture,
+        TextureCache,
+        UniformState,
+        VertexArray) {
     'use strict';
     /*global WebGLRenderingContext*/
 
@@ -232,6 +236,7 @@ define([
         this._throwOnWebGLError = false;
 
         this._shaderCache = new ShaderCache(this);
+        this._textureCache = new TextureCache();
 
         var gl = glContext;
 
@@ -272,11 +277,17 @@ define([
         this._blendMinmax = !!getExtension(gl, ['EXT_blend_minmax']);
         this._elementIndexUint = !!getExtension(gl, ['OES_element_index_uint']);
         this._depthTexture = !!getExtension(gl, ['WEBGL_depth_texture', 'WEBKIT_WEBGL_depth_texture']);
-        this._textureFloat = !!getExtension(gl, ['OES_texture_float']);
         this._fragDepth = !!getExtension(gl, ['EXT_frag_depth']);
         this._debugShaders = getExtension(gl, ['WEBGL_debug_shaders']);
 
-        this._colorBufferFloat = this._webgl2 && !!getExtension(gl, ['EXT_color_buffer_float']);
+        this._textureFloat = !!getExtension(gl, ['OES_texture_float']);
+        this._textureHalfFloat = !!getExtension(gl, ['OES_texture_half_float']);
+
+        this._textureFloatLinear = !!getExtension(gl, ['OES_texture_float_linear']);
+        this._textureHalfFloatLinear = !!getExtension(gl, ['OES_texture_half_float_linear']);
+
+        this._colorBufferFloat = !!getExtension(gl, ['EXT_color_buffer_float', 'WEBGL_color_buffer_float']);
+        this._colorBufferHalfFloat = !!getExtension(gl, ['EXT_color_buffer_half_float']);
 
         this._s3tc = !!getExtension(gl, ['WEBGL_compressed_texture_s3tc', 'MOZ_WEBGL_compressed_texture_s3tc', 'WEBKIT_WEBGL_compressed_texture_s3tc']);
         this._pvrtc = !!getExtension(gl, ['WEBGL_compressed_texture_pvrtc', 'WEBKIT_WEBGL_compressed_texture_pvrtc']);
@@ -461,6 +472,11 @@ define([
                 return this._shaderCache;
             }
         },
+        textureCache : {
+            get : function() {
+                return this._textureCache;
+            }
+        },
         uniformState : {
             get : function() {
                 return this._us;
@@ -560,18 +576,64 @@ define([
         },
 
         /**
-         * <code>true</code> if OES_texture_float is supported.  This extension provides
+         * <code>true</code> if OES_texture_float is supported. This extension provides
          * access to floating point textures that, for example, can be attached to framebuffers for high dynamic range.
          * @memberof Context.prototype
          * @type {Boolean}
-         * @see {@link http://www.khronos.org/registry/gles/extensions/OES/OES_texture_float.txt|OES_texture_float}
+         * @see {@link https://www.khronos.org/registry/webgl/extensions/OES_texture_float/}
          */
         floatingPointTexture : {
             get : function() {
-                return this._textureFloat || this._colorBufferFloat;
+                return this._webgl2 || this._textureFloat;
             }
         },
 
+        /**
+         * <code>true</code> if OES_texture_half_float is supported. This extension provides
+         * access to floating point textures that, for example, can be attached to framebuffers for high dynamic range.
+         * @memberof Context.prototype
+         * @type {Boolean}
+         * @see {@link https://www.khronos.org/registry/webgl/extensions/OES_texture_float/}
+         */
+        halfFloatingPointTexture : {
+            get : function() {
+                return this._webgl2 || this._textureHalfFloat;
+            }
+        },
+
+        /**
+         * <code>true</code> if OES_texture_float_linear is supported. This extension provides
+         * access to linear sampling methods for minification and magnification filters of floating-point textures.
+         * @memberof Context.prototype
+         * @type {Boolean}
+         * @see {@link https://www.khronos.org/registry/webgl/extensions/OES_texture_float_linear/}
+         */
+        textureFloatLinear : {
+            get : function() {
+                return this._textureFloatLinear;
+            }
+        },
+
+        /**
+         * <code>true</code> if OES_texture_half_float_linear is supported. This extension provides
+         * access to linear sampling methods for minification and magnification filters of half floating-point textures.
+         * @memberof Context.prototype
+         * @type {Boolean}
+         * @see {@link https://www.khronos.org/registry/webgl/extensions/OES_texture_half_float_linear/}
+         */
+        textureHalfFloatLinear : {
+            get : function() {
+                return (this._webgl2 && this._textureFloatLinear) || (!this._webgl2 && this._textureHalfFloatLinear);
+            }
+        },
+
+        /**
+         * <code>true</code> if EXT_texture_filter_anisotropic is supported. This extension provides
+         * access to anisotropic filtering for textured surfaces at an oblique angle from the viewer.
+         * @memberof Context.prototype
+         * @type {Boolean}
+         * @see {@link https://www.khronos.org/registry/webgl/extensions/EXT_texture_filter_anisotropic/}
+         */
         textureFilterAnisotropic : {
             get : function() {
                 return !!this._textureFilterAnisotropic;
@@ -661,15 +723,29 @@ define([
 
         /**
          * <code>true</code> if the EXT_color_buffer_float extension is supported.  This
-         * extension makes the formats gl.R16F, gl.RG16F, gl.RGBA16F, gl.R32F, gl.RG32F,
-         * gl.RGBA32F, gl.R11F_G11F_B10F color renderable.
+         * extension makes the gl.RGBA32F format color renderable.
          * @memberof Context.prototype
          * @type {Boolean}
+         * @see {@link https://www.khronos.org/registry/webgl/extensions/WEBGL_color_buffer_float/}
          * @see {@link https://www.khronos.org/registry/webgl/extensions/EXT_color_buffer_float/}
          */
         colorBufferFloat : {
             get : function() {
                 return this._colorBufferFloat;
+            }
+        },
+
+        /**
+         * <code>true</code> if the EXT_color_buffer_half_float extension is supported.  This
+         * extension makes the format gl.RGBA16F format color renderable.
+         * @memberof Context.prototype
+         * @type {Boolean}
+         * @see {@link https://www.khronos.org/registry/webgl/extensions/EXT_color_buffer_half_float/}
+         * @see {@link https://www.khronos.org/registry/webgl/extensions/EXT_color_buffer_float/}
+         */
+        colorBufferHalfFloat : {
+            get : function() {
+                return (this._webgl2 && this._colorBufferFloat) || (!this._webgl2 && this._colorBufferHalfFloat);
             }
         },
 
@@ -720,7 +796,8 @@ define([
                             width : 1,
                             height : 1,
                             arrayBufferView : new Uint8Array([255, 255, 255, 255])
-                        }
+                        },
+                        flipY : false
                     });
                 }
 
@@ -753,7 +830,8 @@ define([
                             negativeY : face,
                             positiveZ : face,
                             negativeZ : face
-                        }
+                        },
+                        flipY : false
                     });
                 }
 
@@ -789,7 +867,7 @@ define([
         /**
          * Gets an object representing the currently bound framebuffer.  While this instance is not an actual
          * {@link Framebuffer}, it is used to represent the default framebuffer in calls to
-         * {@link Texture.FromFramebuffer}.
+         * {@link Texture.fromFramebuffer}.
          * @memberof Context.prototype
          * @type {Object}
          */
@@ -918,27 +996,22 @@ define([
         gl.clear(bitmask);
     };
 
-    function beginDraw(context, framebuffer, drawCommand, passState) {
-        var rs = defaultValue(drawCommand._renderState, context._defaultRenderState);
-
+    function beginDraw(context, framebuffer, passState, shaderProgram, renderState) {
         //>>includeStart('debug', pragmas.debug);
-        if (defined(framebuffer) && rs.depthTest) {
-            if (rs.depthTest.enabled && !framebuffer.hasDepthAttachment) {
+        if (defined(framebuffer) && renderState.depthTest) {
+            if (renderState.depthTest.enabled && !framebuffer.hasDepthAttachment) {
                 throw new DeveloperError('The depth test can not be enabled (drawCommand.renderState.depthTest.enabled) because the framebuffer (drawCommand.framebuffer) does not have a depth or depth-stencil renderbuffer.');
             }
         }
         //>>includeEnd('debug');
 
         bindFramebuffer(context, framebuffer);
-
-        applyRenderState(context, rs, passState, false);
-
-        var sp = drawCommand._shaderProgram;
-        sp._bind();
-        context._maxFrameTextureUnitIndex = Math.max(context._maxFrameTextureUnitIndex, sp.maximumTextureUnitIndex);
+        applyRenderState(context, renderState, passState, false);
+        shaderProgram._bind();
+        context._maxFrameTextureUnitIndex = Math.max(context._maxFrameTextureUnitIndex, shaderProgram.maximumTextureUnitIndex);
     }
 
-    function continueDraw(context, drawCommand) {
+    function continueDraw(context, drawCommand, shaderProgram, uniformMap) {
         var primitiveType = drawCommand._primitiveType;
         var va = drawCommand._vertexArray;
         var offset = drawCommand._offset;
@@ -962,7 +1035,7 @@ define([
         //>>includeEnd('debug');
 
         context._us.model = defaultValue(drawCommand._modelMatrix, Matrix4.IDENTITY);
-        drawCommand._shaderProgram._setUniforms(drawCommand._uniformMap, context._us, context.validateShaderProgram);
+        shaderProgram._setUniforms(uniformMap, context._us, context.validateShaderProgram);
 
         va._bind();
         var indexBuffer = va.indexBuffer;
@@ -987,7 +1060,7 @@ define([
         va._unBind();
     }
 
-    Context.prototype.draw = function(drawCommand, passState) {
+    Context.prototype.draw = function(drawCommand, passState, shaderProgram, uniformMap) {
         //>>includeStart('debug', pragmas.debug);
         Check.defined('drawCommand', drawCommand);
         Check.defined('drawCommand.shaderProgram', drawCommand._shaderProgram);
@@ -996,9 +1069,12 @@ define([
         passState = defaultValue(passState, this._defaultPassState);
         // The command's framebuffer takes presidence over the pass' framebuffer, e.g., for off-screen rendering.
         var framebuffer = defaultValue(drawCommand._framebuffer, passState.framebuffer);
+        var renderState = defaultValue(drawCommand._renderState, this._defaultRenderState);
+        shaderProgram = defaultValue(shaderProgram, drawCommand._shaderProgram);
+        uniformMap = defaultValue(uniformMap, drawCommand._uniformMap);
 
-        beginDraw(this, framebuffer, drawCommand, passState);
-        continueDraw(this, drawCommand);
+        beginDraw(this, framebuffer, passState, shaderProgram, renderState);
+        continueDraw(this, drawCommand, shaderProgram, uniformMap);
     };
 
     Context.prototype.endFrame = function() {
@@ -1026,11 +1102,11 @@ define([
     Context.prototype.readPixels = function(readState) {
         var gl = this._gl;
 
-        readState = readState || {};
-        var x = Math.max(readState.x || 0, 0);
-        var y = Math.max(readState.y || 0, 0);
-        var width = readState.width || gl.drawingBufferWidth;
-        var height = readState.height || gl.drawingBufferHeight;
+        readState = defaultValue(readState, defaultValue.EMPTY_OBJECT);
+        var x = Math.max(defaultValue(readState.x, 0), 0);
+        var y = Math.max(defaultValue(readState.y, 0), 0);
+        var width = defaultValue(readState.width, gl.drawingBufferWidth);
+        var height = defaultValue(readState.height, gl.drawingBufferHeight);
         var framebuffer = readState.framebuffer;
 
         //>>includeStart('debug', pragmas.debug);
@@ -1038,11 +1114,16 @@ define([
         Check.typeOf.number.greaterThan('readState.height', height, 0);
         //>>includeEnd('debug');
 
-        var pixels = new Uint8Array(4 * width * height);
+        var pixelDatatype = PixelDatatype.UNSIGNED_BYTE;
+        if (defined(framebuffer) && framebuffer.numberOfColorAttachments > 0) {
+            pixelDatatype = framebuffer.getColorTexture(0).pixelDatatype;
+        }
+
+        var pixels = PixelFormat.createTypedArray(PixelFormat.RGBA, pixelDatatype, width, height);
 
         bindFramebuffer(this, framebuffer);
 
-        gl.readPixels(x, y, width, height, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
+        gl.readPixels(x, y, width, height, PixelFormat.RGBA, pixelDatatype, pixels);
 
         return pixels;
     };
@@ -1118,10 +1199,6 @@ define([
             framebuffer : overrides.framebuffer,
             pass : overrides.pass
         });
-    };
-
-    Context.prototype.createPickFramebuffer = function() {
-        return new PickFramebuffer(this);
     };
 
     /**
@@ -1219,6 +1296,7 @@ define([
         }
 
         this._shaderCache = this._shaderCache.destroy();
+        this._textureCache = this._textureCache.destroy();
         this._defaultTexture = this._defaultTexture && this._defaultTexture.destroy();
         this._defaultCubeMap = this._defaultCubeMap && this._defaultCubeMap.destroy();
 

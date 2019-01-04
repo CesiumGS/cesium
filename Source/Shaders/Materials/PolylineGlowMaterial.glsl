@@ -10,8 +10,13 @@ czm_material czm_getMaterial(czm_materialInput materialInput)
     vec2 st = materialInput.st;
     float glow = glowPower / abs(st.t - 0.5) - (glowPower / 0.5);
 
-    material.emission = max(vec3(glow - 1.0 + color.rgb), color.rgb);
-    material.alpha = clamp(0.0, 1.0, glow) * color.a;
+    vec4 fragColor;
+    fragColor.rgb = max(vec3(glow - 1.0 + color.rgb), color.rgb);
+    fragColor.a = clamp(0.0, 1.0, glow) * color.a;
+    fragColor = czm_gammaCorrect(fragColor);
+
+    material.emission = fragColor.rgb;
+    material.alpha = fragColor.a;
 
     return material;
 }

@@ -6,9 +6,9 @@ define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
-        '../Core/deprecationWarning',
         '../Core/DeveloperError',
         '../Core/Event',
+        '../Core/GeographicProjection',
         '../Core/GeographicTilingScheme',
         '../Core/Math',
         '../Core/Rectangle',
@@ -29,9 +29,9 @@ define([
         defaultValue,
         defined,
         defineProperties,
-        deprecationWarning,
         DeveloperError,
         Event,
+        GeographicProjection,
         GeographicTilingScheme,
         CesiumMath,
         Rectangle,
@@ -83,6 +83,7 @@ define([
      * @param {Ellipsoid} [options.ellipsoid] The ellipsoid.  If the tilingScheme is specified and used,
      *                    this parameter is ignored and the tiling scheme's ellipsoid is used instead. If neither
      *                    parameter is specified, the WGS84 ellipsoid is used.
+     * @param {Credit|String} [options.credit] A credit for the data source, which is displayed on the canvas.  This parameter is ignored when accessing a tiled server.
      * @param {Number} [options.tileWidth=256] The width of each tile in pixels.  This parameter is ignored when accessing a tiled server.
      * @param {Number} [options.tileHeight=256] The height of each tile in pixels.  This parameter is ignored when accessing a tiled server.
      * @param {Number} [options.maximumLevel] The maximum tile level to request, or undefined if there is no maximum.  This parameter is ignored when accessing
@@ -115,17 +116,11 @@ define([
         }
         //>>includeEnd('debug');
 
-        if (defined(options.proxy)) {
-            deprecationWarning('ArcGisMapServerImageryProvider.proxy', 'The options.proxy parameter has been deprecated. Specify options.url as a Resource instance and set the proxy property there.');
-        }
-
-        var resource = Resource.createIfNeeded(options.url, {
-            proxy: options.proxy
-        });
+        var resource = Resource.createIfNeeded(options.url);
         resource.appendForwardSlash();
 
         if (defined(options.token)) {
-            resource.addQueryParameters({
+            resource.setQueryParameters({
                 token: options.token
             });
         }
@@ -137,10 +132,15 @@ define([
         this._tileHeight = defaultValue(options.tileHeight, 256);
         this._maximumLevel = options.maximumLevel;
         this._tilingScheme = defaultValue(options.tilingScheme, new GeographicTilingScheme({ ellipsoid : options.ellipsoid }));
-        this._credit = undefined;
         this._useTiles = defaultValue(options.usePreCachedTilesIfAvailable, true);
         this._rectangle = defaultValue(options.rectangle, this._tilingScheme.rectangle);
         this._layers = options.layers;
+
+        var credit = options.credit;
+        if (typeof credit === 'string') {
+            credit = new Credit(credit);
+        }
+        this._credit = credit;
 
         /**
          * Gets or sets a value indicating whether feature picking is enabled.  If true, {@link ArcGisMapServerImageryProvider#pickFeatures} will
@@ -216,7 +216,7 @@ define([
             }
 
             if (defined(data.copyrightText) && data.copyrightText.length > 0) {
-                that._credit = new Credit({text: data.copyrightText});
+                that._credit = new Credit(data.copyrightText);
             }
 
             that._ready = true;
@@ -267,7 +267,7 @@ define([
                 f: 'image'
             };
 
-            if (imageryProvider._tilingScheme instanceof GeographicTilingScheme) {
+            if (imageryProvider._tilingScheme.projection instanceof GeographicProjection) {
                 query.bboxSR = 4326;
                 query.imageSR = 4326;
             } else {
@@ -559,7 +559,6 @@ define([
         }
     });
 
-
     /**
      * Gets the credits to be displayed when a given tile is displayed.
      *
@@ -631,7 +630,7 @@ define([
         var horizontal;
         var vertical;
         var sr;
-        if (this._tilingScheme instanceof GeographicTilingScheme) {
+        if (this._tilingScheme.projection instanceof GeographicProjection) {
             horizontal = CesiumMath.toDegrees(longitude);
             vertical = CesiumMath.toDegrees(latitude);
             sr = '4326';

@@ -81,6 +81,8 @@ define([
 
         this.surfaceShader = undefined;
         this.isClipped = true;
+
+        this.clippedByBoundaries = false;
     }
 
     defineProperties(GlobeSurfaceTile.prototype, {
@@ -668,7 +670,8 @@ define([
                     height : textureSize,
                     arrayBufferView : waterMask
                 },
-                sampler : waterMaskData.sampler
+                sampler : waterMaskData.sampler,
+                flipY : false
             });
 
             texture.referenceCount = 0;

@@ -1,9 +1,11 @@
 defineSuite([
         'Core/RectangleGeometry',
+        'Core/arrayFill',
         'Core/Cartesian2',
         'Core/Cartesian3',
         'Core/Ellipsoid',
         'Core/GeographicProjection',
+        'Core/GeometryOffsetAttribute',
         'Core/Math',
         'Core/Matrix2',
         'Core/Rectangle',
@@ -11,10 +13,12 @@ defineSuite([
         'Specs/createPackableSpecs'
     ], function(
         RectangleGeometry,
+        arrayFill,
         Cartesian2,
         Cartesian3,
         Ellipsoid,
         GeographicProjection,
+        GeometryOffsetAttribute,
         CesiumMath,
         Matrix2,
         Rectangle,
@@ -262,6 +266,75 @@ defineSuite([
         expect(m.indices.length).toEqual(numTriangles * 3);
     });
 
+    it('computes offset attribute', function() {
+        var rectangle = new Rectangle(-2.0, -1.0, 0.0, 1.0);
+        var m = RectangleGeometry.createGeometry(new RectangleGeometry({
+            vertexFormat : VertexFormat.POSITION_ONLY,
+            rectangle : rectangle,
+            granularity : 1.0,
+            offsetAttribute : GeometryOffsetAttribute.TOP
+        }));
+        var positions = m.attributes.position.values;
+
+        var numVertices = 9;
+        expect(positions.length).toEqual(numVertices * 3);
+
+        var offset = m.attributes.applyOffset.values;
+        expect(offset.length).toEqual(numVertices);
+        var expected = new Array(offset.length);
+        expected = arrayFill(expected, 1);
+        expect(offset).toEqual(expected);
+    });
+
+    it('computes offset attribute extruded for top vertices', function() {
+        var rectangle = new Rectangle(-2.0, -1.0, 0.0, 1.0);
+        var m = RectangleGeometry.createGeometry(new RectangleGeometry({
+            vertexFormat : VertexFormat.POSITION_ONLY,
+            rectangle : rectangle,
+            granularity : 1.0,
+            extrudedHeight : 2,
+            offsetAttribute : GeometryOffsetAttribute.TOP
+        }));
+        var positions = m.attributes.position.values;
+
+        var numVertices = 42; // (9 fill + 8 edge + 4 corners) * 2 to duplicate for bottom
+        expect(positions.length).toEqual(numVertices * 3);
+
+        var offset = m.attributes.applyOffset.values;
+        expect(offset.length).toEqual(numVertices);
+        var expected = new Array(offset.length);
+        expected = arrayFill(expected, 0);
+        expected = arrayFill(expected, 1, 0, 9);
+        for (var i = 18; i < offset.length; i+=2) {
+            expected[i] = 1;
+        }
+        expect(offset).toEqual(expected);
+    });
+
+    it('computes offset attribute extruded for all vertices', function() {
+        var rectangle = new Rectangle(-2.0, -1.0, 0.0, 1.0);
+        var m = RectangleGeometry.createGeometry(new RectangleGeometry({
+            vertexFormat : VertexFormat.POSITION_ONLY,
+            rectangle : rectangle,
+            granularity : 1.0,
+            extrudedHeight : 2,
+            offsetAttribute : GeometryOffsetAttribute.ALL
+        }));
+        var positions = m.attributes.position.values;
+
+        var numVertices = 42; // (9 fill + 8 edge + 4 corners) * 2 to duplicate for bottom
+        expect(positions.length).toEqual(numVertices * 3);
+
+        var offset = m.attributes.applyOffset.values;
+        expect(offset.length).toEqual(numVertices);
+        var expected = new Array(offset.length);
+        expected = arrayFill(expected, 1);
+        for (var i = 18; i < offset.length; i+=2) {
+            expected[i] = 1;
+        }
+        expect(offset).toEqual(expected);
+    });
+
     it('undefined is returned if any side are of length zero', function() {
         var rectangle0 = new RectangleGeometry({
             rectangle : Rectangle.fromDegrees(-80.0, 39.0, -80.0, 42.0)
@@ -307,10 +380,77 @@ defineSuite([
         });
 
         var r = geometry.rectangle;
-        expect(CesiumMath.toDegrees(r.north)).toEqual(1.4189407575364013);
-        expect(CesiumMath.toDegrees(r.south)).toEqual(-1.4189407575364013);
-        expect(CesiumMath.toDegrees(r.east)).toEqual(1.4094456877799821);
-        expect(CesiumMath.toDegrees(r.west)).toEqual(-1.4094456877799821);
+        expect(CesiumMath.toDegrees(r.north)).toEqualEpsilon(1.414213562373095, CesiumMath.EPSILON15);
+        expect(CesiumMath.toDegrees(r.south)).toEqualEpsilon(-1.414213562373095, CesiumMath.EPSILON15);
+        expect(CesiumMath.toDegrees(r.east)).toEqualEpsilon(1.414213562373095, CesiumMath.EPSILON15);
+        expect(CesiumMath.toDegrees(r.west)).toEqualEpsilon(-1.4142135623730951, CesiumMath.EPSILON15);
+    });
+
+    it('computing textureCoordinateRotationPoints property', function() {
+        var rectangle = new Rectangle.fromDegrees(-1.0, -1.0, 1.0, 1.0);
+        var geometry = new RectangleGeometry({
+            vertexFormat : VertexFormat.POSITION_ONLY,
+            rectangle : rectangle,
+            granularity : 1.0,
+            rotation : CesiumMath.toRadians(90.0)
+        });
+
+        // 90 degree rotation means (0, 1) should be the new min and (1, 1) (0, 0) are extents
+        var textureCoordinateRotationPoints = geometry.textureCoordinateRotationPoints;
+        expect(textureCoordinateRotationPoints.length).toEqual(6);
+        expect(textureCoordinateRotationPoints[0]).toEqualEpsilon(0, CesiumMath.EPSILON7);
+        expect(textureCoordinateRotationPoints[1]).toEqualEpsilon(0, CesiumMath.EPSILON7);
+        expect(textureCoordinateRotationPoints[2]).toEqualEpsilon(0, CesiumMath.EPSILON7);
+        expect(textureCoordinateRotationPoints[3]).toEqualEpsilon(1, CesiumMath.EPSILON7);
+        expect(textureCoordinateRotationPoints[4]).toEqualEpsilon(1, CesiumMath.EPSILON7);
+        expect(textureCoordinateRotationPoints[5]).toEqualEpsilon(0, CesiumMath.EPSILON7);
+
+        geometry = new RectangleGeometry({
+            vertexFormat : VertexFormat.POSITION_ONLY,
+            rectangle : rectangle,
+            granularity : 1.0,
+            rotation : CesiumMath.toRadians(90.0)
+        });
+
+        textureCoordinateRotationPoints = geometry.textureCoordinateRotationPoints;
+        expect(textureCoordinateRotationPoints.length).toEqual(6);
+        expect(textureCoordinateRotationPoints[0]).toEqualEpsilon(0, CesiumMath.EPSILON7);
+        expect(textureCoordinateRotationPoints[1]).toEqualEpsilon(0, CesiumMath.EPSILON7);
+        expect(textureCoordinateRotationPoints[2]).toEqualEpsilon(0, CesiumMath.EPSILON7);
+        expect(textureCoordinateRotationPoints[3]).toEqualEpsilon(1, CesiumMath.EPSILON7);
+        expect(textureCoordinateRotationPoints[4]).toEqualEpsilon(1, CesiumMath.EPSILON7);
+        expect(textureCoordinateRotationPoints[5]).toEqualEpsilon(0, CesiumMath.EPSILON7);
+    });
+
+    it('computeRectangle', function() {
+        var options = {
+            vertexFormat : VertexFormat.POSITION_ONLY,
+            rectangle : new Rectangle.fromDegrees(-1.0, -1.0, 1.0, 1.0),
+            granularity : 1.0,
+            ellipsoid: Ellipsoid.UNIT_SPHERE,
+            rotation: CesiumMath.PI
+        };
+        var geometry = new RectangleGeometry(options);
+
+        var expected = geometry.rectangle;
+        var result = RectangleGeometry.computeRectangle(options);
+
+        expect(result).toEqual(expected);
+    });
+
+    it('computeRectangle with result parameter', function() {
+        var options = {
+            vertexFormat : VertexFormat.POSITION_ONLY,
+            rectangle : new Rectangle.fromDegrees(-1.0, -1.0, 1.0, 1.0)
+        };
+        var geometry = new RectangleGeometry(options);
+
+        var result = new Rectangle();
+        var expected = geometry.rectangle;
+        var returned = RectangleGeometry.computeRectangle(options, result);
+
+        expect(returned).toEqual(expected);
+        expect(returned).toBe(result);
     });
 
     it('computing rectangle property with zero rotation', function() {
@@ -348,6 +488,6 @@ defineSuite([
         granularity : 1.0,
         ellipsoid : Ellipsoid.UNIT_SPHERE
     });
-    var packedInstance = [-2.0, -1.0, 0.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, -2.0, -1.0, 0.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 0.0];
+    var packedInstance = [-2.0, -1.0, 0.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, -1];
     createPackableSpecs(RectangleGeometry, rectangle, packedInstance);
 });

@@ -1,4 +1,5 @@
 defineSuite([
+        'Scene/Scene',
         'Core/BoundingSphere',
         'Core/Cartesian2',
         'Core/Cartesian3',
@@ -8,6 +9,7 @@ defineSuite([
         'Core/Ellipsoid',
         'Core/GeographicProjection',
         'Core/GeometryInstance',
+        'Core/HeadingPitchRoll',
         'Core/JulianDate',
         'Core/Math',
         'Core/PerspectiveFrustum',
@@ -34,7 +36,6 @@ defineSuite([
         'Scene/Material',
         'Scene/Primitive',
         'Scene/PrimitiveCollection',
-        'Scene/Scene',
         'Scene/SceneTransforms',
         'Scene/ScreenSpaceCameraController',
         'Scene/TweenCollection',
@@ -42,7 +43,8 @@ defineSuite([
         'Specs/createScene',
         'Specs/pollToPromise',
         'Specs/render'
-    ], 'Scene/Scene', function(
+    ], function(
+        Scene,
         BoundingSphere,
         Cartesian2,
         Cartesian3,
@@ -52,6 +54,7 @@ defineSuite([
         Ellipsoid,
         GeographicProjection,
         GeometryInstance,
+        HeadingPitchRoll,
         JulianDate,
         CesiumMath,
         PerspectiveFrustum,
@@ -78,7 +81,6 @@ defineSuite([
         Material,
         Primitive,
         PrimitiveCollection,
-        Scene,
         SceneTransforms,
         ScreenSpaceCameraController,
         TweenCollection,
@@ -109,7 +111,7 @@ defineSuite([
     afterEach(function() {
         scene.backgroundColor = new Color(0.0, 0.0, 0.0, 0.0);
         scene.debugCommandFilter = undefined;
-        scene.fxaa = false;
+        scene.postProcessStages.fxaa.enabled = false;
         scene.primitives.removeAll();
         scene.morphTo3D(0.0);
 
@@ -249,6 +251,9 @@ defineSuite([
     });
 
     it('debugCommandFilter does not filter commands', function() {
+        var originalLogDepth = scene.logarithmicDepthBuffer;
+        scene.logarithmicDepthBuffer = false;
+
         var c = new DrawCommand({
             shaderProgram : simpleShaderProgram,
             renderState : simpleRenderState,
@@ -262,9 +267,14 @@ defineSuite([
         expect(scene.debugCommandFilter).toBeUndefined();
         scene.renderForSpecs();
         expect(c.execute).toHaveBeenCalled();
+
+        scene.logarithmicDepthBuffer = originalLogDepth;
     });
 
     it('debugShowBoundingVolume draws a bounding sphere', function() {
+        var originalLogDepth = scene.logarithmicDepthBuffer;
+        scene.logarithmicDepthBuffer = false;
+
         var radius = 10.0;
         var center = Cartesian3.add(scene.camera.position, scene.camera.direction, new Cartesian3());
 
@@ -283,9 +293,14 @@ defineSuite([
         expect(scene).toRenderAndCall(function(rgba) {
             expect(rgba[0]).not.toEqual(0);  // Red bounding sphere
         });
+
+        scene.logarithmicDepthBuffer = originalLogDepth;
     });
 
     it('debugShowCommands tints commands', function() {
+        var originalLogDepth = scene.logarithmicDepthBuffer;
+        scene.logarithmicDepthBuffer = false;
+
         var c = new DrawCommand({
             shaderProgram : simpleShaderProgram,
             renderState : simpleRenderState,
@@ -306,6 +321,8 @@ defineSuite([
         scene.renderForSpecs();
         expect(c._debugColor).toBeDefined();
         scene.debugShowCommands = false;
+
+        scene.logarithmicDepthBuffer = originalLogDepth;
     });
 
     it('debugShowFramesPerSecond', function() {
@@ -316,7 +333,7 @@ defineSuite([
     });
 
     it('debugShowGlobeDepth', function() {
-        if(!defined(scene._globeDepth)){
+        if (!scene.context.depthTexture) {
             return;
         }
 
@@ -330,7 +347,7 @@ defineSuite([
         expect(scene).toRender([255, 0, 0, 255]);
 
         scene.debugShowGlobeDepth = true;
-        expect(scene).toRender([0, 0, 0, 255]);
+        expect(scene).notToRender([255, 0, 0, 255]);
 
         scene.debugShowGlobeDepth = false;
     });
@@ -401,7 +418,7 @@ defineSuite([
         primitives.add(rectanglePrimitive);
 
         scene.camera.setView({ destination : rectangle });
-        scene.fxaa = false;
+        scene.postProcessStages.fxaa.enabled = false;
         expect(scene).toRenderAndCall(function(rgba) {
             expect(rgba[0]).not.toEqual(0);
             expect(rgba[1]).toEqual(0);
@@ -448,7 +465,7 @@ defineSuite([
             s._oit._translucentMultipassSupport = false;
         }
 
-        s.fxaa = true;
+        s.postProcessStages.fxaa.enabled = false;
 
         var rectangle = Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0);
 
@@ -487,7 +504,7 @@ defineSuite([
         scene.globe = globe;
         expect(globe.isDestroyed()).toEqual(false);
 
-        scene.globe = null;
+        scene.globe = undefined;
         expect(globe.isDestroyed()).toEqual(true);
 
         scene.destroyForSpecs();
@@ -683,9 +700,37 @@ defineSuite([
         s.destroyForSpecs();
     });
 
+    it('renders with HDR when available', function() {
+        if (!scene.highDynamicRangeSupported) {
+            return;
+        }
+
+        var s = createScene();
+        s.highDynamicRange = true;
+
+        var rectangle = Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0);
+
+        var rectanglePrimitive = createRectangle(rectangle, 1000.0);
+        rectanglePrimitive.appearance.material.uniforms.color = new Color(10.0, 0.0, 0.0, 1.0);
+
+        var primitives = s.primitives;
+        primitives.add(rectanglePrimitive);
+
+        s.camera.setView({ destination : rectangle });
+
+        expect(s).toRenderAndCall(function(rgba) {
+            expect(rgba[0]).toBeGreaterThan(0);
+            expect(rgba[0]).toBeLessThanOrEqualTo(255);
+            expect(rgba[1]).toEqual(0);
+            expect(rgba[2]).toEqual(0);
+        });
+
+        s.destroyForSpecs();
+    });
+
     it('copies the globe depth', function() {
         var scene = createScene();
-        if (defined(scene._globeDepth)) {
+        if (scene.context.depthTexture) {
             var rectangle = Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0);
 
             var rectanglePrimitive = createRectangle(rectangle, 1000.0);
@@ -699,11 +744,6 @@ defineSuite([
             var uniformState = scene.context.uniformState;
 
             expect(scene).toRenderAndCall(function(rgba) {
-                expect(uniformState.globeDepthTexture).not.toBeDefined();
-            });
-
-            scene.copyGlobeDepth = true;
-            expect(scene).toRenderAndCall(function(rgba) {
                 expect(uniformState.globeDepthTexture).toBeDefined();
             });
         }
@@ -711,15 +751,12 @@ defineSuite([
         scene.destroyForSpecs();
     });
 
-    var pickedPosition3D = new Cartesian3(-455845.46867895435, -5210337.548977215, 3637549.8562320103);
-    var pickedPosition2D = new Cartesian3(-455861.7055871038, -5210523.137686572, 3637866.6638769475);
-
     it('pickPosition', function() {
         if (!scene.pickPositionSupported) {
             return;
         }
 
-        var rectangle = Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0);
+        var rectangle = Rectangle.fromDegrees(-0.0001, -0.0001, 0.0001, 0.0001);
         scene.camera.setView({ destination : rectangle });
 
         var canvas = scene.canvas;
@@ -738,7 +775,9 @@ defineSuite([
 
         expect(scene).toRenderAndCall(function() {
             var position = scene.pickPosition(windowPosition);
-            expect(position).toEqualEpsilon(pickedPosition3D, CesiumMath.EPSILON6);
+            expect(position.x).toBeGreaterThan(Ellipsoid.WGS84.minimumRadius);
+            expect(position.y).toEqualEpsilon(0.0, CesiumMath.EPSILON5);
+            expect(position.z).toEqualEpsilon(0.0, CesiumMath.EPSILON5);
         });
     });
 
@@ -749,7 +788,7 @@ defineSuite([
 
         scene.morphToColumbusView(0.0);
 
-        var rectangle = Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0);
+        var rectangle = Rectangle.fromDegrees(-0.0001, -0.0001, 0.0001, 0.0001);
         scene.camera.setView({ destination : rectangle });
 
         var canvas = scene.canvas;
@@ -768,7 +807,9 @@ defineSuite([
 
         expect(scene).toRenderAndCall(function() {
             var position = scene.pickPosition(windowPosition);
-            expect(position).toEqualEpsilon(pickedPosition2D, CesiumMath.EPSILON6);
+            expect(position.x).toBeGreaterThan(Ellipsoid.WGS84.minimumRadius);
+            expect(position.y).toEqualEpsilon(0.0, CesiumMath.EPSILON5);
+            expect(position.z).toEqualEpsilon(0.0, CesiumMath.EPSILON5);
         });
     });
 
@@ -779,7 +820,7 @@ defineSuite([
 
         scene.morphTo2D(0.0);
 
-        var rectangle = Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0);
+        var rectangle = Rectangle.fromDegrees(-0.0001, -0.0001, 0.0001, 0.0001);
         scene.camera.setView({ destination : rectangle });
 
         var canvas = scene.canvas;
@@ -798,7 +839,9 @@ defineSuite([
 
         expect(scene).toRenderAndCall(function() {
             var position = scene.pickPosition(windowPosition);
-            expect(position).toEqualEpsilon(pickedPosition2D, CesiumMath.EPSILON6);
+            expect(position.x).toBeGreaterThan(Ellipsoid.WGS84.minimumRadius);
+            expect(position.y).toEqualEpsilon(0.0, CesiumMath.EPSILON5);
+            expect(position.z).toEqualEpsilon(0.0, CesiumMath.EPSILON5);
         });
     });
 
@@ -847,11 +890,8 @@ defineSuite([
         var canvas = scene.canvas;
         var windowPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 2);
 
-        var rectanglePrimitive = createRectangle(rectangle);
+        var rectanglePrimitive = scene.primitives.add(createRectangle(rectangle));
         rectanglePrimitive.appearance.material.uniforms.color = new Color(1.0, 0.0, 0.0, 0.5);
-
-        var primitives = scene.primitives;
-        primitives.add(rectanglePrimitive);
 
         scene.useDepthPicking = true;
         scene.pickTranslucentDepth = false;
@@ -864,33 +904,6 @@ defineSuite([
         expect(scene).toRenderAndCall(function() {
             var position = scene.pickPosition(windowPosition);
             expect(position).toBeDefined();
-        });
-
-        var rectanglePrimitive2 = createRectangle(rectangle);
-        rectanglePrimitive2.appearance.material.uniforms.color = new Color(0.0, 1.0, 0.0, 0.5);
-        primitives.add(rectanglePrimitive2);
-
-        expect(scene).toRenderAndCall(function() {
-            var position = scene.pickPosition(windowPosition);
-            expect(position).toBeDefined();
-
-            var commandList = scene.frameState.commandList;
-            expect(commandList.length).toEqual(2);
-
-            var command1 = commandList[0];
-            var command2 = commandList[1];
-
-            expect(command1.derivedCommands).toBeDefined();
-            expect(command2.derivedCommands).toBeDefined();
-
-            expect(command1.derivedCommands.depth).toBeDefined();
-            expect(command2.derivedCommands.depth).toBeDefined();
-
-            expect(command1.derivedCommands.depth.depthOnlyCommand).toBeDefined();
-            expect(command2.derivedCommands.depth.depthOnlyCommand).toBeDefined();
-
-            expect(command1.derivedCommands.depth.depthOnlyCommand.shaderProgram).toEqual(command2.derivedCommands.depth.depthOnlyCommand.shaderProgram);
-            expect(command1.derivedCommands.depth.depthOnlyCommand.renderState).toEqual(command2.derivedCommands.depth.depthOnlyCommand.renderState);
         });
     });
 
@@ -1372,6 +1385,32 @@ defineSuite([
         scene.destroyForSpecs();
     });
 
+    it('changing the camera frustum does not cause continuous rendering in requestRenderMode', function() {
+        var scene = createScene();
+
+        scene.renderForSpecs();
+
+        var lastRenderTime = JulianDate.clone(scene.lastRenderTime, scratchTime);
+        expect(lastRenderTime).toBeDefined();
+        expect(scene._renderRequested).toBe(false);
+
+        scene.requestRenderMode = true;
+        scene.maximumRenderTimeChange = undefined;
+
+        scene.camera.frustum.near *= 1.1;
+
+        // Render once properly
+        scene.renderForSpecs();
+        expect(scene.lastRenderTime).not.toEqual(lastRenderTime);
+
+        // Render again - but this time nothing should happen.
+        lastRenderTime = JulianDate.clone(scene.lastRenderTime, scratchTime);
+        scene.renderForSpecs();
+        expect(scene.lastRenderTime).toEqual(lastRenderTime);
+
+        scene.destroyForSpecs();
+    });
+
     it('successful completed requests causes a new frame to be rendered in requestRenderMode', function() {
         var scene = createScene();
 
@@ -1463,12 +1502,13 @@ defineSuite([
         var ellipsoid = Ellipsoid.UNIT_SPHERE;
         var globe = new Globe(ellipsoid);
         scene.globe = globe;
-        globe.tileLoadedEvent.raiseEvent();
 
+        scene.requestRender();
+        Object.defineProperty(globe, 'tilesLoaded', { value: false });
         scene.renderForSpecs();
+        lastRenderTime = JulianDate.clone(scene.lastRenderTime, scratchTime);
 
         expect(scene._renderRequested).toBe(true);
-
         scene.renderForSpecs();
         expect(scene.lastRenderTime).not.toEqual(lastRenderTime);
 
@@ -1491,6 +1531,33 @@ defineSuite([
         var globe = new Globe(ellipsoid);
         scene.globe = globe;
         globe.imageryLayersUpdatedEvent.raiseEvent();
+
+        scene.renderForSpecs();
+
+        expect(scene._renderRequested).toBe(true);
+
+        scene.renderForSpecs();
+        expect(scene.lastRenderTime).not.toEqual(lastRenderTime);
+
+        scene.destroyForSpecs();
+    });
+
+    it('Globe changing terrain providers triggers a new frame to be rendered in requestRenderMode', function() {
+        var scene = createScene();
+
+        scene.renderForSpecs();
+
+        var lastRenderTime = JulianDate.clone(scene.lastRenderTime, scratchTime);
+        expect(lastRenderTime).toBeDefined();
+        expect(scene._renderRequested).toBe(false);
+
+        scene.requestRenderMode = true;
+        scene.maximumRenderTimeChange = undefined;
+
+        var ellipsoid = Ellipsoid.UNIT_SPHERE;
+        var globe = new Globe(ellipsoid);
+        scene.globe = globe;
+        globe.terrainProviderChanged.raiseEvent();
 
         scene.renderForSpecs();
 
@@ -1615,4 +1682,69 @@ defineSuite([
 
         scene.destroyForSpecs();
     });
+
+    function getFrustumCommandsLength(scene) {
+        var commandsLength = 0;
+        var frustumCommandsList = scene.frustumCommandsList;
+        var frustumsLength = frustumCommandsList.length;
+        for (var i = 0; i < frustumsLength; ++i) {
+            var frustumCommands = frustumCommandsList[i];
+            for (var j = 0; j < Pass.NUMBER_OF_PASSES; ++j) {
+                commandsLength += frustumCommands.indices[j];
+            }
+        }
+        return commandsLength;
+    }
+
+    it('occludes primitive', function() {
+        var scene = createScene();
+        scene.globe = new Globe(Ellipsoid.WGS84);
+
+        var rectangle = Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0);
+        var rectanglePrimitive = createRectangle(rectangle, 10);
+        scene.primitives.add(rectanglePrimitive);
+
+        scene.camera.setView({
+            destination: new Cartesian3(-588536.1057451078, -10512475.371849751, 6737159.100747835),
+            orientation: new HeadingPitchRoll(6.283185307179586, -1.5688261558859757, 0.0)
+        });
+        scene.renderForSpecs();
+        expect(getFrustumCommandsLength(scene)).toBe(1);
+
+        scene.camera.setView({
+            destination: new Cartesian3(-5754647.167415793, 14907694.100240812, -483807.2406259497),
+            orientation: new HeadingPitchRoll(6.283185307179586, -1.5698869547885104, 0.0)
+        });
+        scene.renderForSpecs();
+        expect(getFrustumCommandsLength(scene)).toBe(0);
+
+        // Still on opposite side of globe but now show is false, the command should not be occluded anymore
+        scene.globe.show = false;
+        scene.renderForSpecs();
+        expect(getFrustumCommandsLength(scene)).toBe(1);
+
+        scene.destroyForSpecs();
+    });
+
+    it('does not occlude if DrawCommand.occlude is false', function() {
+        var scene = createScene();
+        scene.globe = new Globe(Ellipsoid.WGS84);
+
+        var rectangle = Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0);
+        var rectanglePrimitive = createRectangle(rectangle, 10);
+        scene.primitives.add(rectanglePrimitive);
+
+        scene.renderForSpecs();
+        rectanglePrimitive._colorCommands[0].occlude = false;
+
+        scene.camera.setView({
+            destination: new Cartesian3(-5754647.167415793, 14907694.100240812, -483807.2406259497),
+            orientation: new HeadingPitchRoll(6.283185307179586, -1.5698869547885104, 0.0)
+        });
+        scene.renderForSpecs();
+        expect(getFrustumCommandsLength(scene)).toBe(1);
+
+        scene.destroyForSpecs();
+    });
+
 }, 'WebGL');

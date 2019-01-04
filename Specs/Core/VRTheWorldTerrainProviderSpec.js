@@ -3,8 +3,6 @@ defineSuite([
         'Core/DefaultProxy',
         'Core/GeographicTilingScheme',
         'Core/HeightmapTerrainData',
-        'Core/loadImage',
-        'Core/loadWithXhr',
         'Core/Math',
         'Core/Request',
         'Core/RequestScheduler',
@@ -17,8 +15,6 @@ defineSuite([
         DefaultProxy,
         GeographicTilingScheme,
         HeightmapTerrainData,
-        loadImage,
-        loadWithXhr,
         CesiumMath,
         Request,
         RequestScheduler,
@@ -30,7 +26,7 @@ defineSuite([
 
     beforeEach(function() {
         RequestScheduler.clearForSpecs();
-        loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+        Resource._Implementations.loadWithXhr = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
             setTimeout(function() {
                 var parser = new DOMParser();
                 var xmlString =
@@ -53,15 +49,15 @@ defineSuite([
                     '<DataExtent minx="24.999584" miny="-0.000417" maxx="30.000417" maxy="5.000417" minlevel="0" maxlevel="13"/>' +
                     '</DataExtents>' +
                     '</TileMap>';
-                var xml = parser.parseFromString(xmlString, "text/xml");
+                var xml = parser.parseFromString(xmlString, 'text/xml');
                 deferred.resolve(xml);
             }, 1);
         };
     });
 
     afterEach(function() {
-        loadImage.createImage = loadImage.defaultCreateImage;
-        loadWithXhr.load = loadWithXhr.defaultLoad;
+        Resource._Implementations.createImage = Resource._DefaultImplementations.createImage;
+        Resource._Implementations.loadWithXhr = Resource._DefaultImplementations.loadWithXhr;
     });
 
     function createRequest() {
@@ -183,7 +179,7 @@ defineSuite([
     });
 
     it('raises an error if the SRS is not supported', function() {
-        loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+        Resource._Implementations.loadWithXhr = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
             setTimeout(function() {
                 var parser = new DOMParser();
                 var xmlString =
@@ -206,7 +202,7 @@ defineSuite([
                     '<DataExtent minx="24.999584" miny="-0.000417" maxx="30.000417" maxy="5.000417" minlevel="0" maxlevel="13"/>' +
                     '</DataExtents>' +
                     '</TileMap>';
-                var xml = parser.parseFromString(xmlString, "text/xml");
+                var xml = parser.parseFromString(xmlString, 'text/xml');
                 deferred.resolve(xml);
             }, 1);
         };
@@ -236,37 +232,14 @@ defineSuite([
             }).toThrowDeveloperError();
         });
 
-        it('uses the proxy if one is supplied', function() {
-            var baseUrl = 'made/up/url';
-
-            loadImage.createImage = function(url, crossOrigin, deferred) {
-                expect(url.indexOf('/proxy/?')).toBe(0);
-                expect(url.indexOf(encodeURIComponent('.tif?cesium=true'))).toBeGreaterThanOrEqualTo(0);
-
-                // Just return any old image.
-                loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
-            };
-
-            var terrainProvider = new VRTheWorldTerrainProvider({
-                url : baseUrl,
-                proxy : new DefaultProxy('/proxy/')
-            });
-
-            return pollToPromise(function() {
-                return terrainProvider.ready;
-            }).then(function() {
-                return terrainProvider.requestTileGeometry(0, 0, 0);
-            });
-        });
-
         it('provides HeightmapTerrainData', function() {
             var baseUrl = 'made/up/url';
 
-            loadImage.createImage = function(url, crossOrigin, deferred) {
+            Resource._Implementations.createImage = function(url, crossOrigin, deferred) {
                 expect(url.indexOf('.tif?cesium=true')).toBeGreaterThanOrEqualTo(0);
 
                 // Just return any old image.
-                loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+                Resource._DefaultImplementations.createImage('Data/Images/Red16x16.png', crossOrigin, deferred);
             };
 
             var terrainProvider = new VRTheWorldTerrainProvider({
@@ -288,7 +261,7 @@ defineSuite([
 
             var deferreds = [];
 
-            loadImage.createImage = function(url, crossOrigin, deferred) {
+            Resource._Implementations.createImage = function(url, crossOrigin, deferred) {
                 // Do nothing, so requests never complete
                 deferreds.push(deferred);
             };

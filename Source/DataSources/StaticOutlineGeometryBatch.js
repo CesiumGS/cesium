@@ -1,10 +1,12 @@
 define([
         '../Core/AssociativeArray',
+        '../Core/Cartesian3',
         '../Core/Color',
         '../Core/ColorGeometryInstanceAttribute',
         '../Core/defined',
         '../Core/DistanceDisplayCondition',
         '../Core/DistanceDisplayConditionGeometryInstanceAttribute',
+        '../Core/OffsetGeometryInstanceAttribute',
         '../Core/ShowGeometryInstanceAttribute',
         '../Scene/PerInstanceColorAppearance',
         '../Scene/Primitive',
@@ -12,17 +14,25 @@ define([
         './Property'
     ], function(
         AssociativeArray,
+        Cartesian3,
         Color,
         ColorGeometryInstanceAttribute,
         defined,
         DistanceDisplayCondition,
         DistanceDisplayConditionGeometryInstanceAttribute,
+        OffsetGeometryInstanceAttribute,
         ShowGeometryInstanceAttribute,
         PerInstanceColorAppearance,
         Primitive,
         BoundingSphereState,
         Property) {
     'use strict';
+
+    var colorScratch = new Color();
+    var distanceDisplayConditionScratch = new DistanceDisplayCondition();
+    var defaultDistanceDisplayCondition = new DistanceDisplayCondition();
+    var defaultOffset = Cartesian3.ZERO;
+    var offsetScratch = new Cartesian3();
 
     function Batch(primitives, translucent, width, shadows) {
         this.translucent = translucent;
@@ -42,24 +52,24 @@ define([
         this.showsUpdated = new AssociativeArray();
     }
     Batch.prototype.add = function(updater, instance) {
-        var id = updater.entity.id;
+        var id = updater.id;
         this.createPrimitive = true;
         this.geometry.set(id, instance);
         this.updaters.set(id, updater);
-        if (!updater.hasConstantOutline || !updater.outlineColorProperty.isConstant || !Property.isConstant(updater.distanceDisplayConditionProperty)) {
+        if (!updater.hasConstantOutline || !updater.outlineColorProperty.isConstant || !Property.isConstant(updater.distanceDisplayConditionProperty) || !Property.isConstant(updater.terrainOffsetProperty)) {
             this.updatersWithAttributes.set(id, updater);
         } else {
             var that = this;
             this.subscriptions.set(id, updater.entity.definitionChanged.addEventListener(function(entity, propertyName, newValue, oldValue) {
                 if (propertyName === 'isShowing') {
-                    that.showsUpdated.set(entity.id, updater);
+                    that.showsUpdated.set(updater.id, updater);
                 }
             }));
         }
     };
 
     Batch.prototype.remove = function(updater) {
-        var id = updater.entity.id;
+        var id = updater.id;
         this.createPrimitive = this.geometry.remove(id) || this.createPrimitive;
         if (this.updaters.remove(id)) {
             this.updatersWithAttributes.remove(id);
@@ -67,19 +77,18 @@ define([
             if (defined(unsubscribe)) {
                 unsubscribe();
                 this.subscriptions.remove(id);
+                this.showsUpdated.remove(id);
             }
+            return true;
         }
+        return false;
     };
-
-    var colorScratch = new Color();
-    var distanceDisplayConditionScratch = new DistanceDisplayCondition();
 
     Batch.prototype.update = function(time) {
         var isUpdated = true;
         var removedCount = 0;
         var primitive = this.primitive;
         var primitives = this.primitives;
-        var attributes;
         var i;
 
         if (this.createPrimitive) {
@@ -94,22 +103,8 @@ define([
                     }
                 }
 
-                for (i = 0; i < geometriesLength; i++) {
-                    var geometryItem = geometries[i];
-                    var originalAttributes = geometryItem.attributes;
-                    attributes = this.attributes.get(geometryItem.id.id);
-
-                    if (defined(attributes)) {
-                        if (defined(originalAttributes.show)) {
-                            originalAttributes.show.value = attributes.show;
-                        }
-                        if (defined(originalAttributes.color)) {
-                            originalAttributes.color.value = attributes.color;
-                        }
-                    }
-                }
-
                 primitive = new Primitive({
+                    show : false,
                     asynchronous : true,
                     geometryInstances : geometries,
                     appearance : new PerInstanceColorAppearance({
@@ -141,6 +136,7 @@ define([
             this.createPrimitive = false;
             this.waitingOnCreate = true;
         } else if (defined(primitive) && primitive.ready) {
+            primitive.show = true;
             if (defined(this.oldPrimitive)) {
                 primitives.remove(this.oldPrimitive);
                 this.oldPrimitive = undefined;
@@ -151,9 +147,9 @@ define([
             var waitingOnCreate = this.waitingOnCreate;
             for (i = 0; i < length; i++) {
                 var updater = updatersWithAttributes[i];
-                var instance = this.geometry.get(updater.entity.id);
+                var instance = this.geometry.get(updater.id);
 
-                attributes = this.attributes.get(instance.id.id);
+                var attributes = this.attributes.get(instance.id.id);
                 if (!defined(attributes)) {
                     attributes = primitive.getGeometryInstanceAttributes(instance.id);
                     this.attributes.set(instance.id.id, attributes);
@@ -161,10 +157,10 @@ define([
 
                 if (!updater.outlineColorProperty.isConstant || waitingOnCreate) {
                     var outlineColorProperty = updater.outlineColorProperty;
-                    outlineColorProperty.getValue(time, colorScratch);
-                    if (!Color.equals(attributes._lastColor, colorScratch)) {
-                        attributes._lastColor = Color.clone(colorScratch, attributes._lastColor);
-                        attributes.color = ColorGeometryInstanceAttribute.toValue(colorScratch, attributes.color);
+                    var outlineColor = Property.getValueOrDefault(outlineColorProperty, time, Color.WHITE, colorScratch);
+                    if (!Color.equals(attributes._lastColor, outlineColor)) {
+                        attributes._lastColor = Color.clone(outlineColor, attributes._lastColor);
+                        attributes.color = ColorGeometryInstanceAttribute.toValue(outlineColor, attributes.color);
                         if ((this.translucent && attributes.color[3] === 255) || (!this.translucent && attributes.color[3] !== 255)) {
                             this.itemsToRemove[removedCount++] = updater;
                         }
@@ -179,10 +175,19 @@ define([
 
                 var distanceDisplayConditionProperty = updater.distanceDisplayConditionProperty;
                 if (!Property.isConstant(distanceDisplayConditionProperty)) {
-                    var distanceDisplayCondition = distanceDisplayConditionProperty.getValue(time, distanceDisplayConditionScratch);
+                    var distanceDisplayCondition = Property.getValueOrDefault(distanceDisplayConditionProperty, time, defaultDistanceDisplayCondition, distanceDisplayConditionScratch);
                     if (!DistanceDisplayCondition.equals(distanceDisplayCondition, attributes._lastDistanceDisplayCondition)) {
                         attributes._lastDistanceDisplayCondition = DistanceDisplayCondition.clone(distanceDisplayCondition, attributes._lastDistanceDisplayCondition);
                         attributes.distanceDisplayCondition = DistanceDisplayConditionGeometryInstanceAttribute.toValue(distanceDisplayCondition, attributes.distanceDisplayCondition);
+                    }
+                }
+
+                var offsetProperty = updater.terrainOffsetProperty;
+                if (!Property.isConstant(offsetProperty)) {
+                    var offset = Property.getValueOrDefault(offsetProperty, time, defaultOffset, offsetScratch);
+                    if (!Cartesian3.equals(offset, attributes._lastOffset)) {
+                        attributes._lastOffset = Cartesian3.clone(offset, attributes._lastOffset);
+                        attributes.offset = OffsetGeometryInstanceAttribute.toValue(offset, attributes.offset);
                     }
                 }
             }
@@ -202,7 +207,7 @@ define([
         var length = showsUpdated.length;
         for (var i = 0; i < length; i++) {
             var updater = showsUpdated[i];
-            var instance = this.geometry.get(updater.entity.id);
+            var instance = this.geometry.get(updater.id);
 
             var attributes = this.attributes.get(instance.id.id);
             if (!defined(attributes)) {
@@ -214,21 +219,22 @@ define([
             var currentShow = attributes.show[0] === 1;
             if (show !== currentShow) {
                 attributes.show = ShowGeometryInstanceAttribute.toValue(show, attributes.show);
+                instance.attributes.show.value[0] = attributes.show[0];
             }
         }
         this.showsUpdated.removeAll();
     };
 
-    Batch.prototype.contains = function(entity) {
-        return this.updaters.contains(entity.id);
+    Batch.prototype.contains = function(updater) {
+        return this.updaters.contains(updater.id);
     };
 
-    Batch.prototype.getBoundingSphere = function(entity, result) {
+    Batch.prototype.getBoundingSphere = function(updater, result) {
         var primitive = this.primitive;
         if (!primitive.ready) {
             return BoundingSphereState.PENDING;
         }
-        var attributes = primitive.getGeometryInstanceAttributes(entity);
+        var attributes = primitive.getGeometryInstanceAttributes(updater.entity);
         if (!defined(attributes) || !defined(attributes.boundingSphere) ||//
             (defined(attributes.show) && attributes.show[0] === 0)) {
             return BoundingSphereState.FAILED;
@@ -365,15 +371,15 @@ define([
         return isUpdated;
     };
 
-    StaticOutlineGeometryBatch.prototype.getBoundingSphere = function(entity, result) {
+    StaticOutlineGeometryBatch.prototype.getBoundingSphere = function(updater, result) {
         var i;
 
         var solidBatches = this._solidBatches.values;
         var solidBatchesLength = solidBatches.length;
         for (i = 0; i < solidBatchesLength; i++) {
             var solidBatch = solidBatches[i];
-            if(solidBatch.contains(entity)){
-                return solidBatch.getBoundingSphere(entity, result);
+            if (solidBatch.contains(updater)){
+                return solidBatch.getBoundingSphere(updater, result);
             }
         }
 
@@ -381,8 +387,8 @@ define([
         var translucentBatchesLength = translucentBatches.length;
         for (i = 0; i < translucentBatchesLength; i++) {
             var translucentBatch = translucentBatches[i];
-            if(translucentBatch.contains(entity)){
-                return translucentBatch.getBoundingSphere(entity, result);
+            if (translucentBatch.contains(updater)){
+                return translucentBatch.getBoundingSphere(updater, result);
             }
         }
 

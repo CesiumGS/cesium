@@ -539,8 +539,6 @@ define([
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
      * assign the return value (<code>undefined</code>) to the object as done in the example.
      *
-     * @returns {undefined}
-     *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
      *
@@ -697,7 +695,13 @@ define([
             if (defined(components)) {
                 for ( var component in components) {
                     if (components.hasOwnProperty(component)) {
-                        material.shaderSource += 'material.' + component + ' = ' + components[component] + ';\n';
+                        if (component === 'diffuse' || component === 'emission') {
+                            material.shaderSource += 'material.' + component + ' = czm_gammaCorrect(' + components[component] + '); \n';
+                        } else if (component === 'alpha') {
+                            material.shaderSource += 'material.alpha = czm_gammaCorrect(vec4(vec3(0.0), ' + components.alpha + ')).a; \n';
+                        } else {
+                            material.shaderSource += 'material.' + component + ' = ' + components[component] + ';\n';
+                        }
                     }
                 }
             }
@@ -790,11 +794,17 @@ define([
                 return;
             }
 
-            if (uniformValue !== material._texturePaths[uniformId]) {
-                if (typeof uniformValue === 'string') {
-                    var resource = new Resource({
-                        url: uniformValue
-                    });
+            // When using the entity layer, the Resource objects get recreated on getValue because
+            //  they are clonable. That's why we check the url property for Resources
+            //  because the instances aren't the same and we keep trying to load the same
+            //  image if it fails to load.
+            var isResource = (uniformValue instanceof Resource);
+            if (!defined(material._texturePaths[uniformId]) ||
+                (isResource && uniformValue.url !== material._texturePaths[uniformId].url) ||
+                (!isResource && uniformValue !== material._texturePaths[uniformId])) {
+                if (typeof uniformValue === 'string' || isResource) {
+                    var resource = isResource ? uniformValue : Resource.createIfNeeded(uniformValue);
+
                     var promise;
                     if (ktxRegex.test(uniformValue)) {
                         promise = loadKTX(resource);
@@ -805,14 +815,14 @@ define([
                     }
                     when(promise, function(image) {
                         material._loadedImages.push({
-                            id : uniformId,
-                            image : image
+                            id: uniformId,
+                            image: image
                         });
                     });
-                } else if (uniformValue instanceof HTMLCanvasElement) {
+                } else if (uniformValue instanceof HTMLCanvasElement || uniformValue instanceof HTMLImageElement) {
                     material._loadedImages.push({
-                        id : uniformId,
-                        image : uniformValue
+                        id: uniformId,
+                        image: uniformValue
                     });
                 }
 
@@ -967,7 +977,7 @@ define([
                 uniformType = 'float';
             } else if (type === 'boolean') {
                 uniformType = 'bool';
-            } else if (type === 'string' || uniformValue instanceof HTMLCanvasElement) {
+            } else if (type === 'string' || uniformValue instanceof Resource ||uniformValue instanceof HTMLCanvasElement || uniformValue instanceof HTMLImageElement) {
                 if (/^([rgba]){1,4}$/i.test(uniformValue)) {
                     uniformType = 'channels';
                 } else if (uniformValue === Material.DefaultCubeMapId) {

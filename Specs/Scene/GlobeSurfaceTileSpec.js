@@ -3,6 +3,7 @@ defineSuite([
         'Core/Cartesian3',
         'Core/Cartesian4',
         'Core/CesiumTerrainProvider',
+        'Core/createWorldTerrain',
         'Core/defined',
         'Core/Ellipsoid',
         'Core/GeographicTilingScheme',
@@ -25,6 +26,7 @@ defineSuite([
         Cartesian3,
         Cartesian4,
         CesiumTerrainProvider,
+        createWorldTerrain,
         defined,
         Ellipsoid,
         GeographicTilingScheme,
@@ -529,9 +531,9 @@ defineSuite([
         });
 
         it('gets correct results even when the mesh includes normals', function() {
-            var terrainProvider = new CesiumTerrainProvider({
-                url : 'https://assets.agi.com/stk-terrain/v1/tilesets/world/tiles',
-                requestVertexNormals : true
+            var terrainProvider = createWorldTerrain({
+                requestVertexNormals: true,
+                requestWaterMask: false
             });
 
             var tile = new QuadtreeTile({

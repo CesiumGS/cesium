@@ -39,6 +39,7 @@ function startup(Cesium) {
 var viewer = new Cesium.Viewer('cesiumContainer');
 var scene = viewer.scene;
 var clock = viewer.clock;
+var referenceFramePrimitive;
 
 function flyToSanDiego() {
     Sandcastle.declare(flyToSanDiego);
@@ -133,7 +134,7 @@ function setReferenceFrame() {
     camera.lookAtTransform(transform, new Cesium.Cartesian3(-120000.0, -120000.0, 120000.0));
 
     // Show reference frame.  Not required.
-    scene.primitives.add(new Cesium.DebugModelMatrixPrimitive({
+    referenceFramePrimitive = scene.primitives.add(new Cesium.DebugModelMatrixPrimitive({
         modelMatrix : transform,
         length : 100000.0
     }));
@@ -364,7 +365,7 @@ Sandcastle.addToolbarMenu([{
 Sandcastle.reset = function() {
     scene.completeMorph();
     viewer.entities.removeAll();
-    scene.primitives.removeAll();
+    scene.primitives.remove(referenceFramePrimitive);
     scene.tweens.removeAll();
 
     if (Cesium.defined(removeStart)) {
@@ -397,10 +398,10 @@ scene.morphComplete.addEventListener(function() {
 //Sandcastle_End
     Sandcastle.finishedLoading();
 }
-if (typeof Cesium !== "undefined") {
+if (typeof Cesium !== 'undefined') {
     startup(Cesium);
-} else if (typeof require === "function") {
-    require(["Cesium"], startup);
+} else if (typeof require === 'function') {
+    require(['Cesium'], startup);
 }
 </script>
 </body>

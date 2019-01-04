@@ -160,11 +160,11 @@ define([
     EllipsoidTerrainProvider.prototype.requestTileGeometry = function(x, y, level, request) {
         var width = 16;
         var height = 16;
-        return new HeightmapTerrainData({
+        return when.resolve(new HeightmapTerrainData({
             buffer : new Uint8Array(width * height),
             width : width,
             height : height
-        });
+        }));
     };
 
     /**
@@ -186,6 +186,18 @@ define([
      * @returns {Boolean} Undefined if not supported, otherwise true or false.
      */
     EllipsoidTerrainProvider.prototype.getTileDataAvailable = function(x, y, level) {
+        return undefined;
+    };
+
+    /**
+     * Makes sure we load availability data for a tile
+     *
+     * @param {Number} x The X coordinate of the tile for which to request geometry.
+     * @param {Number} y The Y coordinate of the tile for which to request geometry.
+     * @param {Number} level The level of the tile for which to request geometry.
+     * @returns {undefined|Promise} Undefined if nothing need to be loaded or a Promise that resolves when all required tiles are loaded
+     */
+    EllipsoidTerrainProvider.prototype.loadTileDataAvailability = function(x, y, level) {
         return undefined;
     };
 

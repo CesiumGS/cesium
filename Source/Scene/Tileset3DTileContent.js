@@ -16,7 +16,7 @@ define([
 
     /**
      * Represents content for a tile in a
-     * {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/blob/master/README.md|3D Tiles} tileset whose
+     * {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/specification|3D Tiles} tileset whose
      * content points to another 3D Tiles tileset.
      * <p>
      * Implements the {@link Cesium3DTileContent} interface.
@@ -33,117 +33,78 @@ define([
         this._resource = resource;
         this._readyPromise = when.defer();
 
-        /**
-         * @inheritdoc Cesium3DTileContent#featurePropertiesDirty
-         */
         this.featurePropertiesDirty = false;
 
         initialize(this, arrayBuffer, byteOffset);
     }
 
     defineProperties(Tileset3DTileContent.prototype, {
-        /**
-         * @inheritdoc Cesium3DTileContent#featuresLength
-         */
         featuresLength : {
             get : function() {
                 return 0;
             }
         },
 
-        /**
-         * @inheritdoc Cesium3DTileContent#pointsLength
-         */
         pointsLength : {
             get : function() {
                 return 0;
             }
         },
 
-        /**
-         * @inheritdoc Cesium3DTileContent#trianglesLength
-         */
         trianglesLength : {
             get : function() {
                 return 0;
             }
         },
 
-        /**
-         * @inheritdoc Cesium3DTileContent#geometryByteLength
-         */
         geometryByteLength : {
             get : function() {
                 return 0;
             }
         },
 
-        /**
-         * @inheritdoc Cesium3DTileContent#texturesByteLength
-         */
         texturesByteLength : {
             get : function() {
                 return 0;
             }
         },
 
-        /**
-         * @inheritdoc Cesium3DTileContent#batchTableByteLength
-         */
         batchTableByteLength : {
             get : function() {
                 return 0;
             }
         },
 
-        /**
-         * @inheritdoc Cesium3DTileContent#innerContents
-         */
         innerContents : {
             get : function() {
                 return undefined;
             }
         },
 
-        /**
-         * @inheritdoc Cesium3DTileContent#readyPromise
-         */
         readyPromise : {
             get : function() {
                 return this._readyPromise.promise;
             }
         },
 
-        /**
-         * @inheritdoc Cesium3DTileContent#tileset
-         */
         tileset : {
             get : function() {
                 return this._tileset;
             }
         },
 
-        /**
-         * @inheritdoc Cesium3DTileContent#tile
-         */
         tile : {
             get : function() {
                 return this._tile;
             }
         },
 
-        /**
-         * @inheritdoc Cesium3DTileContent#url
-         */
         url : {
             get : function() {
                 return this._resource.getUrlComponent(true);
             }
         },
 
-        /**
-         * @inheritdoc Cesium3DTileContent#batchTable
-         */
         batchTable : {
             get : function() {
                 return undefined;
@@ -184,34 +145,19 @@ define([
         return undefined;
     };
 
-    /**
-     * @inheritdoc Cesium3DTileContent#applyDebugSettings
-     */
     Tileset3DTileContent.prototype.applyDebugSettings = function(enabled, color) {
     };
 
-    /**
-     * @inheritdoc Cesium3DTileContent#applyStyle
-     */
-    Tileset3DTileContent.prototype.applyStyle = function(frameState, style) {
+    Tileset3DTileContent.prototype.applyStyle = function(style) {
     };
 
-    /**
-     * @inheritdoc Cesium3DTileContent#update
-     */
     Tileset3DTileContent.prototype.update = function(tileset, frameState) {
     };
 
-    /**
-     * @inheritdoc Cesium3DTileContent#isDestroyed
-     */
     Tileset3DTileContent.prototype.isDestroyed = function() {
         return false;
     };
 
-    /**
-     * @inheritdoc Cesium3DTileContent#destroy
-     */
     Tileset3DTileContent.prototype.destroy = function() {
         return destroyObject(this);
     };
