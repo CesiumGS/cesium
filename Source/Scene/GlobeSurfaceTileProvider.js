@@ -1441,9 +1441,7 @@ define([
                 // No fill was created for this tile, probably because this tile is not connected to
                 // any renderable tiles. So create a simple tile in the middle of the tile's possible
                 // height range.
-                surfaceTile.fill = new TerrainFillMesh();
-                surfaceTile.fill.tile = tile;
-                surfaceTile.fill.changedThisFrame = true;
+                surfaceTile.fill = new TerrainFillMesh(tile);
             }
             surfaceTile.fill.update(tileProvider, frameState);
         }

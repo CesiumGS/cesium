@@ -40,8 +40,8 @@ define([
         TileSelectionResult) {
     'use strict';
 
-    function TerrainFillMesh() {
-        this.tile = undefined;
+    function TerrainFillMesh(tile) {
+        this.tile = tile;
         this.frameLastUpdated = undefined;
         this.westMeshes = []; // north to south (CCW)
         this.westTiles = [];
@@ -59,7 +59,7 @@ define([
         this.northwestTile = undefined;
         this.northeastMesh = undefined;
         this.northeastTile = undefined;
-        this.changedThisFrame = false;
+        this.changedThisFrame = true;
         this.visitedFrame = undefined;
         this.mesh = undefined;
         this.vertexArray = undefined;
@@ -73,7 +73,8 @@ define([
     };
 
     TerrainFillMesh.prototype.destroy = function() {
-        this.vertexArray = this.vertexArray && this.vertexArray.destroy();
+        GlobeSurfaceTile._freeVertexArray(this.vertexArray);
+        this.vertexArray = undefined;
         return undefined;
     };
 
@@ -226,8 +227,7 @@ define([
         var destinationSurfaceTile = destinationTile.data;
 
         if (destinationSurfaceTile.fill === undefined) {
-            destinationSurfaceTile.fill = new TerrainFillMesh();
-            destinationSurfaceTile.fill.tile = destinationTile;
+            destinationSurfaceTile.fill = new TerrainFillMesh(destinationTile);
         }
 
         if (destinationSurfaceTile.fill.visitedFrame !== frameNumber) {
@@ -828,8 +828,12 @@ define([
             // No heights available whatsoever, so use the average of this tile's minimum and maximum height.
             var surfaceTile = terrainFillMesh.tile.data;
             var tileBoundingRegion = surfaceTile.tileBoundingRegion;
-            var minimumHeight = tileBoundingRegion.minimumHeight;
-            var maximumHeight = tileBoundingRegion.maximumHeight;
+            var minimumHeight = 0.0;
+            var maximumHeight = 0.0;
+            if (defined(tileBoundingRegion)) {
+                minimumHeight = tileBoundingRegion.minimumHeight;
+                maximumHeight = tileBoundingRegion.maximumHeight;
+            }
             height = (minimumHeight + maximumHeight) * 0.5;
         }
 
