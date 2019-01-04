@@ -5,6 +5,7 @@ define([
     '../Core/defined',
     '../Core/deprecationWarning',
     '../Core/DeveloperError',
+    '../Core/GeographicProjection',
     '../Core/GeographicTilingScheme',
     '../Core/Rectangle',
     '../Core/Resource',
@@ -20,6 +21,7 @@ define([
     defined,
     deprecationWarning,
     DeveloperError,
+    GeographicProjection,
     GeographicTilingScheme,
     Rectangle,
     Resource,
@@ -106,6 +108,8 @@ define([
                 that._xmlResource = resource.getDerivedResource({
                     url : 'tilemapresource.xml'
                 });
+
+                that._requestMetadata();
             })
             .otherwise(function(e) {
                 deferred.reject(e);
@@ -120,8 +124,6 @@ define([
         this._metadataSuccess = this._metadataSuccess.bind(this);
         this._metadataFailure = this._metadataFailure.bind(this);
         this._requestMetadata = this._requestMetadata.bind(this);
-
-        this._requestMetadata();
     }
 
     if (defined(Object.create)) {

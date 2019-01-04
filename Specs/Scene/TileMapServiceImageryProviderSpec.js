@@ -68,7 +68,7 @@ defineSuite([
     });
 
     it('resolves readyPromise when promise url is used', function() {
-        var provider = createTileMapServiceImageryProvider({
+        var provider = new TileMapServiceImageryProvider({
             url : when.resolve('made/up/tms/server/')
         });
 
@@ -95,7 +95,7 @@ defineSuite([
 
     it('rejects readyPromise if options.url rejects', function() {
         var error = new Error();
-        var provider = createTileMapServiceImageryProvider({
+        var provider = new TileMapServiceImageryProvider({
             url : when.reject(error)
         });
         return provider.readyPromise.then(function() {
