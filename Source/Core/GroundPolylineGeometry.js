@@ -70,7 +70,7 @@ define([
     var WALL_INITIAL_MAX_HEIGHT = 1000.0;
 
     /**
-     * A description of a polyline on terrain. Only to be used with {@link GroundPolylinePrimitive}.
+     * A description of a polyline on terrain or 3D Tiles. Only to be used with {@link GroundPolylinePrimitive}.
      *
      * @alias GroundPolylineGeometry
      * @constructor
@@ -159,7 +159,7 @@ define([
      * Set the GroundPolylineGeometry's projection and ellipsoid.
      * Used by GroundPolylinePrimitive to signal scene information to the geometry for generating 2D attributes.
      *
-     * @param {GroundPolylineGeometry} groundPolylineGeometry GroundPolylinGeometry describing a polyline on terrain.
+     * @param {GroundPolylineGeometry} groundPolylineGeometry GroundPolylinGeometry describing a polyline on terrain or 3D Tiles.
      * @param {Projection} mapProjection A MapProjection used for projecting cartographic coordinates to 2D.
      * @private
      */
@@ -386,7 +386,7 @@ define([
     var intersectionScratch = new Cartesian3();
     /**
      * Computes shadow volumes for the ground polyline, consisting of its vertices, indices, and a bounding sphere.
-     * Vertices are "fat," packing all the data needed in each volume to describe a line on terrain.
+     * Vertices are "fat," packing all the data needed in each volume to describe a line on terrain or 3D Tiles.
      * Should not be called independent of {@link GroundPolylinePrimitive}.
      *
      * @param {GroundPolylineGeometry} groundPolylineGeometry
@@ -994,7 +994,7 @@ define([
             var adjustHeightEndTop = adjustHeightEndTopScratch;
 
             var getHeightsRectangle = Rectangle.fromCartographicArray(getHeightCartographics, getHeightRectangleScratch);
-            var minMaxHeights = ApproximateTerrainHeights.getApproximateTerrainHeights(getHeightsRectangle, ellipsoid);
+            var minMaxHeights = ApproximateTerrainHeights.getMinimumMaximumHeights(getHeightsRectangle, ellipsoid);
             var minHeight = minMaxHeights.minimumTerrainHeight;
             var maxHeight = minMaxHeights.maximumTerrainHeight;
 

@@ -173,16 +173,10 @@ define([
         var groundColorBatches = new Array(numberOfClassificationTypes);
         var groundMaterialBatches = [];
         if (supportsMaterialsforEntitiesOnTerrain) {
-            // Culling, phong shading only supported for ClassificationType.TERRAIN at the moment because
-            // tileset depth information not yet available.
-            groundColorBatches[ClassificationType.TERRAIN] = new StaticGroundGeometryPerMaterialBatch(groundPrimitives, PerInstanceColorAppearance);
             for (i = 0; i < numberOfClassificationTypes; ++i) {
-                if (i !== ClassificationType.TERRAIN) {
-                    groundColorBatches[i] = new StaticGroundGeometryColorBatch(groundPrimitives, i);
-                }
+                groundMaterialBatches.push(new StaticGroundGeometryPerMaterialBatch(groundPrimitives, i, MaterialAppearance));
+                groundColorBatches[i] = new StaticGroundGeometryPerMaterialBatch(groundPrimitives, i, PerInstanceColorAppearance);
             }
-            groundMaterialBatches[0] = new StaticGroundGeometryPerMaterialBatch(groundPrimitives, MaterialAppearance);
-            this._groundTerrainMaterialBatch = groundMaterialBatches[0];
         } else {
             for (i = 0; i < numberOfClassificationTypes; ++i) {
                 groundColorBatches[i] = new StaticGroundGeometryColorBatch(groundPrimitives, i);
@@ -190,10 +184,11 @@ define([
         }
 
         this._groundColorBatches = groundColorBatches;
+        this._groundMaterialBatches = groundMaterialBatches;
 
         this._dynamicBatch = new DynamicGeometryBatch(primitives, groundPrimitives);
 
-        this._batches = this._outlineBatches.concat(this._closedColorBatches, this._closedMaterialBatches, this._openColorBatches, this._openMaterialBatches, this._groundColorBatches, groundMaterialBatches, this._dynamicBatch);
+        this._batches = this._outlineBatches.concat(this._closedColorBatches, this._closedMaterialBatches, this._openColorBatches, this._openMaterialBatches, this._groundColorBatches, this._groundMaterialBatches, this._dynamicBatch);
 
         this._subscriptions = new AssociativeArray();
         this._updaterSets = new AssociativeArray();
@@ -414,10 +409,7 @@ define([
                     this._groundColorBatches[classificationType].add(time, updater);
                 } else {
                     // If unsupported, updater will not be on terrain.
-                    // If the updater has a material, ignore input ClassificationType for now and only classify terrain.
-                    // Culling, phong shading only supported for ClassificationType.TERRAIN at the moment because
-                    // tileset depth information not yet available.
-                    this._groundTerrainMaterialBatch.add(time, updater);
+                    this._groundMaterialBatches[classificationType].add(time, updater);
                 }
             } else if (updater.isClosed) {
                 if (updater.fillMaterialProperty instanceof ColorMaterialProperty) {

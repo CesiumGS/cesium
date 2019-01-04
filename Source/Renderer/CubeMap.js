@@ -32,6 +32,9 @@ define([
         TextureMinificationFilter) {
     'use strict';
 
+    /**
+     * @private
+     */
     function CubeMap(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
@@ -127,6 +130,10 @@ define([
         function createFace(target, sourceFace, preMultiplyAlpha, flipY) {
             // TODO: gl.pixelStorei(gl._UNPACK_ALIGNMENT, 4);
             var arrayBufferView = sourceFace.arrayBufferView;
+            if (!defined(arrayBufferView)) {
+                arrayBufferView = sourceFace.bufferView;
+            }
+
             if (arrayBufferView) {
                 gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
                 gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);

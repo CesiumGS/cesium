@@ -15,7 +15,8 @@ var gulpTap = require('gulp-tap');
 var rimraf = require('rimraf');
 var glslStripComments = require('glsl-strip-comments');
 var mkdirp = require('mkdirp');
-var eventStream = require('event-stream');
+var mergeStream = require('merge-stream');
+var streamToPromise = require('stream-to-promise');
 var gulp = require('gulp');
 var gulpInsert = require('gulp-insert');
 var gulpZip = require('gulp-zip');
@@ -304,7 +305,7 @@ gulp.task('makeZipFile', gulp.series('release', function() {
 
     var indexSrc = gulp.src('index.release.html').pipe(gulpRename('index.html'));
 
-    return eventStream.merge(builtSrc, staticSrc, indexSrc)
+    return mergeStream(builtSrc, staticSrc, indexSrc)
         .pipe(gulpTap(function(file) {
             // Work around an issue with gulp-zip where archives generated on Windows do
             // not properly have their directory executable mode set.
@@ -1137,9 +1138,9 @@ function createGalleryList() {
     // This includes newly staged local demos as well.
     var newDemos = [];
     try {
-        newDemos = child_process.execSync('git diff --name-only --diff-filter=A ' + tagVersion + ' Apps/Sandcastle/gallery/*.html').toString().trim().split('\n');
+        newDemos = child_process.execSync('git diff --name-only --diff-filter=A ' + tagVersion + ' Apps/Sandcastle/gallery/*.html', { stdio: ['pipe', 'pipe', 'ignore'] }).toString().trim().split('\n');
     } catch (e) {
-        console.log('Failed to retrieve list of new Sandcastle demos from Git.');
+        // On a Cesium fork, tags don't exist so we can't generate the list.
     }
 
     var helloWorld;
@@ -1227,7 +1228,7 @@ function buildSandcastle() {
         })
         .pipe(gulp.dest('Build/Apps/Sandcastle'));
 
-    return streamToPromise(eventStream.merge(appStream, imageStream));
+    return streamToPromise(mergeStream(appStream, imageStream));
 }
 
 function buildCesiumViewer() {
@@ -1264,7 +1265,7 @@ function buildCesiumViewer() {
     promise = promise.then(function() {
         var copyrightHeader = fs.readFileSync(path.join('Source', 'copyrightHeader.js'));
 
-        var stream = eventStream.merge(
+        var stream = mergeStream(
             gulp.src(cesiumViewerStartup)
                 .pipe(gulpInsert.prepend(copyrightHeader))
                 .pipe(gulpReplace('../../Source', '.'))
@@ -1332,13 +1333,5 @@ function requirejsOptimize(name, config) {
             }
             resolve();
         });
-    });
-}
-
-function streamToPromise(stream) {
-    return new Promise(function(resolve, reject) {
-        stream.on('finish', resolve);
-        stream.on('end', resolve);
-        stream.on('error', reject);
     });
 }
