@@ -167,8 +167,9 @@ define([
         }),
 
         /**
-         * An automatic GLSL uniform representing the depth after
-         * only the globe has been rendered and packed into an RGBA texture.
+         * An automatic GLSL uniform representing the depth of the scene
+         * after the globe pass and then updated after the 3D Tiles pass.
+         * The depth is packed into an RGBA texture.
          *
          * @private
          *

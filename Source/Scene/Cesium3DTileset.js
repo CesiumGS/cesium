@@ -22,6 +22,7 @@ define([
         '../Core/Transforms',
         '../Renderer/ClearCommand',
         '../Renderer/Pass',
+        '../Renderer/RenderState',
         '../ThirdParty/when',
         './Axis',
         './Cesium3DTile',
@@ -40,6 +41,7 @@ define([
         './PointCloudShading',
         './SceneMode',
         './ShadowMode',
+        './StencilConstants',
         './TileBoundingRegion',
         './TileBoundingSphere',
         './TileOrientedBoundingBox'
@@ -67,6 +69,7 @@ define([
         Transforms,
         ClearCommand,
         Pass,
+        RenderState,
         when,
         Axis,
         Cesium3DTile,
@@ -85,6 +88,7 @@ define([
         PointCloudShading,
         SceneMode,
         ShadowMode,
+        StencilConstants,
         TileBoundingRegion,
         TileBoundingSphere,
         TileOrientedBoundingBox) {
@@ -198,6 +202,7 @@ define([
 
         this._hasMixedContent = false;
 
+        this._stencilClearCommand = undefined;
         this._backfaceCommands = new ManagedArray();
 
         this._maximumScreenSpaceError = defaultValue(options.maximumScreenSpaceError, 16);
@@ -1744,11 +1749,6 @@ define([
         tileset._tileDebugLabels.update(frameState);
     }
 
-    var stencilClearCommand = new ClearCommand({
-        stencil : 0,
-        pass : Pass.CESIUM_3D_TILE
-    });
-
     function updateTiles(tileset, frameState) {
         tileset._styleEngine.applyStyle(tileset, frameState);
 
@@ -1770,7 +1770,16 @@ define([
         tileset._backfaceCommands.length = 0;
 
         if (bivariateVisibilityTest) {
-            commandList.push(stencilClearCommand);
+            if (!defined(tileset._stencilClearCommand)) {
+                tileset._stencilClearCommand = new ClearCommand({
+                    stencil : 0,
+                    pass : Pass.CESIUM_3D_TILE,
+                    renderState : RenderState.fromCache({
+                        stencilMask : StencilConstants.SKIP_LOD_MASK
+                    })
+                });
+            }
+            commandList.push(tileset._stencilClearCommand);
         }
 
         var lengthBeforeUpdate = commandList.length;

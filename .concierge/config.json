@@ -1,5 +1,5 @@
 {
-    "contributorsUrl": "https://api.github.com/repos/AnalyticalGraphicsInc/cesium/contents/CONTRIBUTORS.md",
+    "contributorsPath": "CONTRIBUTORS.md",
     "unitTestPath" : "Specs/",
     "maxDaysSinceUpdate": 30
 }
