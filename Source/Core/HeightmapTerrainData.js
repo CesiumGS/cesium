@@ -30,7 +30,7 @@ define([
 
     /**
      * Terrain data for a single tile where the terrain data is represented as a heightmap.  A heightmap
-     * is a rectangular array of heights in row-major order from south to north and west to east.
+     * is a rectangular array of heights in row-major order from north to south and west to east.
      *
      * @alias HeightmapTerrainData
      * @constructor
