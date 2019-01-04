@@ -649,7 +649,7 @@ defineSuite([
             verifyPick(scene);
             globePrimitive.show = true;
             tilesetPrimitive.show = false;
-            expect(scene).toRender(depthColor);
+            expectRender(scene, depthColor);
             globePrimitive.show = true;
             tilesetPrimitive.show = true;
         });
@@ -665,7 +665,7 @@ defineSuite([
         return loadTileset(tileset).then(function(tileset) {
             globePrimitive.show = false;
             tilesetPrimitive.show = true;
-            expect(scene).toRender(depthColor);
+            expectRender(scene, depthColor);
             globePrimitive.show = true;
             tilesetPrimitive.show = false;
             verifyRender(tileset, scene);
