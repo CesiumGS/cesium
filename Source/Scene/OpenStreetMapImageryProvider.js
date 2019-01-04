@@ -44,13 +44,16 @@ define([
     UrlTemplateImageryProvider) {
     'use strict';
 
-    var defaultCredit = new Credit({text: 'MapQuest, Open Street Map and contributors, CC-BY-SA'});
+    var defaultCredit = new Credit('MapQuest, Open Street Map and contributors, CC-BY-SA');
 
     /**
      * An imagery provider that provides tiled imagery hosted by OpenStreetMap
      * or another provider of Slippy tiles.  The default url connects to OpenStreetMap's volunteer-run
      * servers, so you must conform to their
      * {@link http://wiki.openstreetmap.org/wiki/Tile_usage_policy|Tile Usage Policy}.
+     *
+     * @alias OpenStreetMapImageryProvider
+     * @constructor
      *
      * @param {Object} [options] Object with the following properties:
      * @param {String} [options.url='https://a.tile.openstreetmap.org'] The OpenStreetMap server url.
@@ -88,14 +91,7 @@ define([
         var url = defaultValue(options.url, 'https://a.tile.openstreetmap.org/');
         url = appendForwardSlash(url);
         url += '{z}/{x}/{y}.' + defaultValue(options.fileExtension, 'png');
-
-        if (defined(options.proxy)) {
-            deprecationWarning('OpenStreetMapImageryProvider.proxy', 'The options.proxy parameter has been deprecated. Specify options.url as a Resource instance and set the proxy property there.');
-        }
-
-        var resource = Resource.createIfNeeded(url, {
-            proxy: options.proxy
-        });
+        var resource = Resource.createIfNeeded(url);
 
         var tilingScheme = new WebMercatorTilingScheme({ ellipsoid : options.ellipsoid });
 
@@ -121,7 +117,7 @@ define([
 
         var credit = defaultValue(options.credit, defaultCredit);
         if (typeof credit === 'string') {
-            credit = new Credit({text: credit});
+            credit = new Credit(credit);
         }
 
         UrlTemplateImageryProvider.call(this, {

@@ -9,12 +9,14 @@ Change Log
 
 ##### Deprecated :hourglass_flowing_sand:
 * `Scene.clampToHeight` now takes an optional `width` argument before the `result` argument.  The previous function definition will no longer work in 1.56. [#7287](https://github.com/AnalyticalGraphicsInc/cesium/pull/7287)
+* `createTileMapServiceImageryProvider` and `createOpenStreetMapImageryProvider` have been deprecated and will be removed in Cesium 1.46.  Instead, pass the same options to `new TileMapServiceImageryProvider` and `new OpenStreetMapImageryProvider` respectively.
 
 ##### Additions :tada:
 * Added support for textured ground entities (entities with unspecified `height`) and `GroundPrimitives` on 3D Tiles. [#7434](https://github.com/AnalyticalGraphicsInc/cesium/pull/7434)
 * Added support for polylines on 3D Tiles. [#7437](https://github.com/AnalyticalGraphicsInc/cesium/pull/7437)
 * Added `classificationType` property to `PolylineGraphics` and `GroundPolylinePrimitive` which specifies whether a polyline clamped to ground should be clamped to terrain, 3D Tiles, or both. [#7437](https://github.com/AnalyticalGraphicsInc/cesium/pull/7437)
 * Added the ability to specify the width of the intersection volume for `Scene.sampleHeight`, `Scene.clampToHeight`, `Scene.sampleHeightMostDetailed`, and `Scene.clampToHeightMostDetailed`. [#7287](https://github.com/AnalyticalGraphicsInc/cesium/pull/7287)
+* Added `TileMapResourceImageryProvider` and `OpenStreetMapImageryProvider` classes to improve API consistency: [#4812](https://github.com/AnalyticalGraphicsInc/cesium/issues/4812)
 
 ##### Fixes :wrench:
 * Fixed an issue where classification primitives with the `CESIUM_3D_TILE` classification type would render on terrain. [#7422](https://github.com/AnalyticalGraphicsInc/cesium/pull/7422)
