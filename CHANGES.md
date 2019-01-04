@@ -20,8 +20,9 @@ Change Log
 * Fixed an issue where classification primitives with the `CESIUM_3D_TILE` classification type would render on terrain. [#7422](https://github.com/AnalyticalGraphicsInc/cesium/pull/7422)
 * Fixed an issue where 3D Tiles would show through the globe. [#7422](https://github.com/AnalyticalGraphicsInc/cesium/pull/7422)
 * Fixed crash when entity geometry show value is an interval that only covered part of the entity availability range [#7458](https://github.com/AnalyticalGraphicsInc/cesium/pull/7458)
-* Fix rectangle positions at the north and south poles [#7451](https://github.com/AnalyticalGraphicsInc/cesium/pull/7451)
-* Fixed image size issue when using multiple particle systems [#7412](https://github.com/AnalyticalGraphicsInc/cesium/pull/7412)
+* Fix rectangle positions at the north and south poles. [#7451](https://github.com/AnalyticalGraphicsInc/cesium/pull/7451)
+* Fixed image size issue when using multiple particle systems. [#7412](https://github.com/AnalyticalGraphicsInc/cesium/pull/7412)
+* Fixed Sandcastle's "Open in New Window" button not displaying imagery due to blob URI limitations. [#7250](https://github.com/AnalyticalGraphicsInc/cesium/pull/7250)
 
 ### 1.53 - 2019-01-02
 
