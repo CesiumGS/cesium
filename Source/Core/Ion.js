@@ -9,7 +9,7 @@ define([
     'use strict';
 
     var defaultTokenCredit;
-    var defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiI3ODRkMGNmYS1iYmMwLTQ5MjgtYTYzOC1lYzMzNDk2YjIyMGUiLCJpZCI6MjU5LCJzY29wZXMiOlsiYXNyIiwiZ2MiXSwiaWF0IjoxNTQzODQ5NzQ1fQ.80vzOtxheq1XsMJOKrSRdh3ybJu1XttfE7P47UxGxpY';
+    var defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJhMjZlY2NjMy01ODliLTQzNjEtOTkxYy03ZjM3MzlkZjJiYjgiLCJpZCI6MjU5LCJzY29wZXMiOlsiYXNyIiwiZ2MiXSwiaWF0IjoxNTQ2NDQ1NDExfQ.9TWMUlBZ-YJL0aGxr5ltSktgp8Y9r0ieycAljlKClEo';
 
     /**
      * Default settings for accessing the Cesium ion API.

@@ -22,6 +22,7 @@ define([
         '../Core/Transforms',
         '../Renderer/ClearCommand',
         '../Renderer/Pass',
+        '../Renderer/RenderState',
         '../ThirdParty/when',
         './Axis',
         './Cesium3DTile',
@@ -40,6 +41,7 @@ define([
         './PointCloudShading',
         './SceneMode',
         './ShadowMode',
+        './StencilConstants',
         './TileBoundingRegion',
         './TileBoundingSphere',
         './TileOrientedBoundingBox'
@@ -67,6 +69,7 @@ define([
         Transforms,
         ClearCommand,
         Pass,
+        RenderState,
         when,
         Axis,
         Cesium3DTile,
@@ -85,6 +88,7 @@ define([
         PointCloudShading,
         SceneMode,
         ShadowMode,
+        StencilConstants,
         TileBoundingRegion,
         TileBoundingSphere,
         TileOrientedBoundingBox) {
@@ -121,6 +125,9 @@ define([
      * @param {Object} [options.pointCloudShading] Options for constructing a {@link PointCloudShading} object to control point attenuation based on geometric error and lighting.
      * @param {Cartesian2} [options.imageBasedLightingFactor=new Cartesian2(1.0, 1.0)] Scales the diffuse and specular image-based lighting from the earth, sky, atmosphere and star skybox.
      * @param {Cartesian3} [options.lightColor] The color and intensity of the sunlight used to shade models.
+     * @param {Number} [options.luminanceAtZenith=0.5] The sun's luminance at the zenith in kilo candela per meter squared to use for this model's procedural environment map.
+     * @param {Cartesian3[]} [options.sphericalHarmonicCoefficients] The third order spherical harmonic coefficients used for the diffuse color of image-based lighting.
+     * @param {String} [options.specularEnvironmentMaps] A URL to a KTX file that contains a cube map of the specular lighting and the convoluted specular mipmaps.
      * @param {Boolean} [options.debugFreezeFrame=false] For debugging only. Determines if only the tiles from last frame should be used for rendering.
      * @param {Boolean} [options.debugColorizeTiles=false] For debugging only. When true, assigns a random color to each tile.
      * @param {Boolean} [options.debugWireframe=false] For debugging only. When true, render's each tile's content as a wireframe.
@@ -187,6 +194,7 @@ define([
         this._selectedTilesToStyle = [];
         this._loadTimestamp = undefined;
         this._timeSinceLoad = 0.0;
+        this._updatedVisibilityFrame = 0;
         this._extras = undefined;
 
         this._cullWithChildrenBounds = defaultValue(options.cullWithChildrenBounds, true);
@@ -194,6 +202,7 @@ define([
 
         this._hasMixedContent = false;
 
+        this._stencilClearCommand = undefined;
         this._backfaceCommands = new ManagedArray();
 
         this._maximumScreenSpaceError = defaultValue(options.maximumScreenSpaceError, 16);
@@ -591,6 +600,44 @@ define([
          * @default undefined
          */
         this.lightColor = options.lightColor;
+
+        /**
+         * The sun's luminance at the zenith in kilo candela per meter squared to use for this model's procedural environment map.
+         * This is used when {@link Cesium3DTileset#specularEnvironmentMaps} and {@link Cesium3DTileset#sphericalHarmonicCoefficients} are not defined.
+         *
+         * @type Number
+         *
+         * @default 0.5
+         *
+         */
+        this.luminanceAtZenith = defaultValue(options.luminanceAtZenith, 0.5);
+
+        /**
+         * The third order spherical harmonic coefficients used for the diffuse color of image-based lighting. When <code>undefined</code>, a diffuse irradiance
+         * computed from the atmosphere color is used.
+         * <p>
+         * There are nine <code>Cartesian3</code> coefficients.
+         * The order of the coefficients is: L<sub>00</sub>, L<sub>1-1</sub>, L<sub>10</sub>, L<sub>11</sub>, L<sub>2-2</sub>, L<sub>2-1</sub>, L<sub>20</sub>, L<sub>21</sub>, L<sub>22</sub>
+         * </p>
+         *
+         * These values can be obtained by preprocessing the environment map using the <code>cmgen</code> tool of
+         * {@link https://github.com/google/filament/releases | Google's Filament project}. This will also generate a KTX file that can be
+         * supplied to {@link Cesium3DTileset#specularEnvironmentMaps}.
+         *
+         * @type {Cartesian3[]}
+         * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Image-Based Lighting.html|Sandcastle Image Based Lighting Demo}
+         * @see {@link https://graphics.stanford.edu/papers/envmap/envmap.pdf|An Efficient Representation for Irradiance Environment Maps}
+         */
+        this.sphericalHarmonicCoefficients = options.sphericalHarmonicCoefficients;
+
+        /**
+         * A URL to a KTX file that contains a cube map of the specular lighting and the convoluted specular mipmaps.
+         *
+         * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Image-Based Lighting.html|Sandcastle Image Based Lighting Demo}
+         * @type {String}
+         * @see Cesium3DTileset#sphericalHarmonicCoefficients
+         */
+        this.specularEnvironmentMaps = options.specularEnvironmentMaps;
 
         /**
          * This property is for debugging only; it is not optimized for production use.
@@ -1702,11 +1749,6 @@ define([
         tileset._tileDebugLabels.update(frameState);
     }
 
-    var stencilClearCommand = new ClearCommand({
-        stencil : 0,
-        pass : Pass.CESIUM_3D_TILE
-    });
-
     function updateTiles(tileset, frameState) {
         tileset._styleEngine.applyStyle(tileset, frameState);
 
@@ -1728,7 +1770,16 @@ define([
         tileset._backfaceCommands.length = 0;
 
         if (bivariateVisibilityTest) {
-            commandList.push(stencilClearCommand);
+            if (!defined(tileset._stencilClearCommand)) {
+                tileset._stencilClearCommand = new ClearCommand({
+                    stencil : 0,
+                    pass : Pass.CESIUM_3D_TILE,
+                    renderState : RenderState.fromCache({
+                        stencilMask : StencilConstants.SKIP_LOD_MASK
+                    })
+                });
+            }
+            commandList.push(tileset._stencilClearCommand);
         }
 
         var lengthBeforeUpdate = commandList.length;
@@ -1931,7 +1982,7 @@ define([
         var passes = frameState.passes;
         var isRender = passes.render;
         var isPick = passes.pick;
-        var isAsync = passes.async;
+        var isAsync = passes.asynchronous;
 
         var statistics = tileset._statistics;
         statistics.clear();
@@ -1943,6 +1994,8 @@ define([
         if (isRender) {
             tileset._cache.reset();
         }
+
+        ++tileset._updatedVisibilityFrame;
 
         var ready;
 

@@ -333,11 +333,7 @@ define([
     var Sl8 = -80 * 1e-7;
 
     var scratchDate = new JulianDate(0, 0.0, TimeStandard.TAI);
-    /**
-     * Gets a point describing the motion of the Earth-Moon barycenter according to the equations
-     * described in section 6.
-     */
-
+     // Gets a point describing the motion of the Earth-Moon barycenter according to the equations described in section 6.
     function computeSimonEarthMoonBarycenter(date, result) {
 
         // t is thousands of years from J2000 TDB
@@ -375,9 +371,7 @@ define([
                 longitudeOfNode, meanLongitude, result);
     }
 
-    /**
-     * Gets a point describing the position of the moon according to the equations described in section 4.
-     */
+     // Gets a point describing the position of the moon according to the equations described in section 4.
     function computeSimonMoon(date, result) {
         taiToTdb(date, scratchDate);
         var x = (scratchDate.dayNumber - epoch.dayNumber) + ((scratchDate.secondsOfDay - epoch.secondsOfDay)/TimeConstants.SECONDS_PER_DAY);
@@ -481,11 +475,9 @@ define([
                                    longitudeOfNode, meanLongitude, result);
     }
 
-    /**
-     * Gets a point describing the motion of the Earth.  This point uses the Moon point and
-     * the 1992 mu value (ratio between Moon and Earth masses) in Table 2 of the paper in order
-     * to determine the position of the Earth relative to the Earth-Moon barycenter.
-     */
+    // Gets a point describing the motion of the Earth.  This point uses the Moon point and
+    // the 1992 mu value (ratio between Moon and Earth masses) in Table 2 of the paper in order
+    // to determine the position of the Earth relative to the Earth-Moon barycenter.
     var moonEarthMassRatio = 0.012300034; // From 1992 mu value in Table 2
     var factor = moonEarthMassRatio / (moonEarthMassRatio + 1.0) * -1;
     function computeSimonEarth(date, result) {
