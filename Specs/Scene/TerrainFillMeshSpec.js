@@ -115,54 +115,94 @@ defineSuite([
             northeast = east.findTileToNorth(rootTiles);
 
             spyOn(mockTerrain, 'requestTileGeometry').and.callFake(function(x, y, level) {
-                var buffer = new Float32Array(4);
+                var buffer = new Float32Array(9);
                 if (x === center.x && y === center.y) {
                     return undefined;
                 } else if (x === west.x && y === west.y) {
+                    buffer[0] = 15.0;
+                    buffer[1] = 16.0;
+                    buffer[2] = 17.0;
+                    buffer[3] = 22.0;
+                    buffer[4] = 23.0;
+                    buffer[5] = 24.0;
+                    buffer[6] = 29.0;
+                    buffer[7] = 30.0;
+                    buffer[8] = 31.0;
+                } else if (x === south.x && y === south.y) {
+                    buffer[0] = 31.0;
+                    buffer[1] = 32.0;
+                    buffer[2] = 33.0;
+                    buffer[3] = 38.0;
+                    buffer[4] = 39.0;
+                    buffer[5] = 40.0;
+                    buffer[6] = 45.0;
+                    buffer[7] = 46.0;
+                    buffer[8] = 47.0;
+                } else if (x === east.x && y === east.y) {
+                    buffer[0] = 19.0;
+                    buffer[1] = 20.0;
+                    buffer[2] = 21.0;
+                    buffer[3] = 26.0;
+                    buffer[4] = 27.0;
+                    buffer[5] = 28.0;
+                    buffer[6] = 33.0;
+                    buffer[7] = 34.0;
+                    buffer[8] = 35.0;
+                } else if (x === north.x && y === north.y) {
                     buffer[0] = 3.0;
                     buffer[1] = 4.0;
-                    buffer[2] = 1.0;
-                    buffer[3] = 2.0;
-                } else if (x === south.x && y === south.y) {
-                    buffer[0] = 2.0;
-                    buffer[1] = 7.0;
                     buffer[2] = 5.0;
-                    buffer[3] = 6.0;
-                } else if (x === east.x && y === east.y) {
-                    buffer[0] = 9.0;
-                    buffer[1] = 10.0;
-                    buffer[2] = 7.0;
-                    buffer[3] = 8.0;
-                } else if (x === north.x && y === north.y) {
-                    buffer[0] = 11.0;
-                    buffer[1] = 12.0;
-                    buffer[2] = 4.0;
-                    buffer[3] = 9.0;
+                    buffer[3] = 10.0;
+                    buffer[4] = 11.0;
+                    buffer[5] = 12.0;
+                    buffer[6] = 17.0;
+                    buffer[7] = 18.0;
+                    buffer[8] = 19.0;
                 } else if (x === southwest.x && y === southwest.y) {
+                    buffer[0] = 29.0;
+                    buffer[1] = 30.0;
+                    buffer[2] = 31.0;
+                    buffer[3] = 36.0;
+                    buffer[4] = 37.0;
+                    buffer[5] = 38.0;
+                    buffer[6] = 43.0;
+                    buffer[7] = 44.0;
+                    buffer[8] = 45.0;
+                } else if (x === southeast.x && y === southeast.y) {
+                    buffer[0] = 33.0;
+                    buffer[1] = 34.0;
+                    buffer[2] = 35.0;
+                    buffer[3] = 40.0;
+                    buffer[4] = 41.0;
+                    buffer[5] = 42.0;
+                    buffer[6] = 47.0;
+                    buffer[7] = 48.0;
+                    buffer[8] = 49.0;
+                } else if (x === northwest.x && y === northwest.y) {
                     buffer[0] = 1.0;
                     buffer[1] = 2.0;
-                    buffer[2] = 13.0;
-                    buffer[3] = 5.0;
-                } else if (x === southeast.x && y === southeast.y) {
-                    buffer[0] = 7.0;
-                    buffer[1] = 8.0;
-                    buffer[2] = 6.0;
-                    buffer[3] = 14.0;
-                } else if (x === northwest.x && y === northwest.y) {
-                    buffer[0] = 15.0;
-                    buffer[1] = 11.0;
                     buffer[2] = 3.0;
-                    buffer[3] = 4.0;
+                    buffer[3] = 8.0;
+                    buffer[4] = 9.0;
+                    buffer[5] = 10.0;
+                    buffer[6] = 15.0;
+                    buffer[7] = 16.0;
+                    buffer[8] = 17.0;
                 } else if (x === northeast.x && y === northeast.y) {
-                    buffer[0] = 12.0;
-                    buffer[1] = 16.0;
-                    buffer[2] = 9.0;
-                    buffer[3] = 10.0;
+                    buffer[0] = 5.0;
+                    buffer[1] = 6.0;
+                    buffer[2] = 7.0;
+                    buffer[3] = 12.0;
+                    buffer[4] = 13.0;
+                    buffer[5] = 14.0;
+                    buffer[6] = 19.0;
+                    buffer[7] = 20.0;
+                    buffer[8] = 21.0;
                 }
 
                 var terrainData = new HeightmapTerrainData({
-                    width: 2,
-                    height: 2,
+                    width: 3,
+                    height: 3,
                     buffer: buffer,
                     createdByUpsampling: false
                 });
@@ -220,12 +260,16 @@ defineSuite([
 
                 fill.update(tileProvider, frameState);
 
-                expectVertexCount(fill, 5);
-                expectVertex(fill, 0.0, 0.0, 2.0);
-                expectVertex(fill, 1.0, 0.0, 7.0);
-                expectVertex(fill, 0.0, 1.0, 4.0);
-                expectVertex(fill, 1.0, 1.0, 9.0);
-                expectVertex(fill, 0.5, 0.5, (9.0 + 2.0) / 2.0);
+                expectVertexCount(fill, 9);
+                expectVertex(fill, 0.0, 0.0, 31.0);
+                expectVertex(fill, 0.5, 0.0, 32.0);
+                expectVertex(fill, 1.0, 0.0, 33.0);
+                expectVertex(fill, 0.0, 0.5, 24.0);
+                expectVertex(fill, 0.5, 0.5, (33.0 + 17.0) / 2);
+                expectVertex(fill, 1.0, 0.5, 26.0);
+                expectVertex(fill, 0.0, 1.0, 17.0);
+                expectVertex(fill, 0.5, 1.0, 18.0);
+                expectVertex(fill, 1.0, 1.0, 19.0);
             });
         });
 
@@ -245,11 +289,11 @@ defineSuite([
                 fill.update(tileProvider, frameState);
 
                 expectVertexCount(fill, 5);
-                expectVertex(fill, 0.0, 0.0, 2.0);
-                expectVertex(fill, 1.0, 0.0, 7.0);
-                expectVertex(fill, 0.0, 1.0, 4.0);
-                expectVertex(fill, 1.0, 1.0, 9.0);
-                expectVertex(fill, 0.5, 0.5, (9.0 + 2.0) / 2.0);
+                expectVertex(fill, 0.0, 0.0, 31.0);
+                expectVertex(fill, 1.0, 0.0, 33.0);
+                expectVertex(fill, 0.0, 1.0, 17.0);
+                expectVertex(fill, 1.0, 1.0, 19.0);
+                expectVertex(fill, 0.5, 0.5, (17.0 + 33.0) / 2.0);
             });
         });
     });
