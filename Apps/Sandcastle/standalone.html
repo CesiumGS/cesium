@@ -10,42 +10,45 @@
     <script type="text/javascript" src="ThirdParty/pako.min.js"></script>
     <script type="text/javascript" src="../../ThirdParty/requirejs-2.1.20/require.js"></script>
     <script type="text/javascript" src="Sandcastle-helpers.js"></script>
-    <script type="text/javascript">
-        if(typeof require === 'function') {
-            require.config({
-                baseUrl : '../../../',
-                waitSeconds : 120
-            });
-        }
-    </script>
 </head>
 <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
 <script type="text/javascript">
-    /*global pako */
-if (typeof require === 'function') {
-    require([
-        'Source/Cesium'
-    ], function(
-        Cesium) {
-         'use strict';
-        window.Cesium = Cesium;
-        loadDemoFromUrl();
-    });
-} else {
-    loadDemoFromUrl();
+/*global pako */
+if (window.location.hash.indexOf('#c=') === 0) {
+    var base64String = window.location.hash.substr(3);
+    var data = window.decodeBase64Data(base64String);
+    //Handle case where demo is in a sub-directory by modifying
+    //the HTML to add a base href.
+    document.head.innerHTML = document.head.innerHTML + '<base href="' + data.baseHref + '" />';
+    window.sandcastleData = data;
 }
 
-function loadDemoFromUrl() {
-    'use strict';
+require({
+    baseUrl : '../../../',
+    waitSeconds : 120,
+    packages: [{
+        name: 'CesiumUnminified',
+        location: '../Build/CesiumUnminified',
+        main: 'Cesium'
+    }]
+},[
+    'Source/Cesium'
+], function(
+    Cesium) {
+     'use strict';
+     if (window.Cesium === undefined) {
+        window.Cesium = Cesium;
+     }
+
     // The helper functions script needs this.
     window.pako = pako;
 
-    var defined = Cesium.defined;
+    var defined = window.Cesium.defined;
     var code;
 
-    if (window.location.hash.indexOf('#c=') === 0) {
+    if (defined(window.sandcastleData)) {
         var base64String = window.location.hash.substr(3);
-        var data = window.decodeBase64Data(base64String);
+        var data = window.sandcastleData;
         var html = data.html;
         code = data.code;
         var isIE11 = !!window.MSInputMethodContext && !!document.documentMode;
@@ -53,9 +56,6 @@ function loadDemoFromUrl() {
             html = html.replace('../templates', 'templates');
         }
 
-        //Handle case where demo is in a sub-directory by modifying
-        //the HTML to add a base href.
-        document.head.innerHTML = document.head.innerHTML + '<base href="' + data.baseHref + '" />';
         // Add the HTML content
         var htmlElement = document.createElement('div');
         htmlElement.innerHTML = html;
@@ -67,7 +67,8 @@ function loadDemoFromUrl() {
         document.head.appendChild(scriptElement);
         scriptElement.innerHTML = window.embedInSandcastleTemplate(code, isFirefox);
     }
-}
+});
+
 </script>
 </body>
 </html>
