@@ -14,12 +14,14 @@ defineSuite([
         'Core/RectangleGeometry',
         'Core/Transforms',
         'Renderer/Pass',
+        'Renderer/RenderState',
         'Scene/Cesium3DTileBatchTable',
         'Scene/Cesium3DTileset',
         'Scene/Cesium3DTileStyle',
         'Scene/ClassificationType',
         'Scene/PerInstanceColorAppearance',
         'Scene/Primitive',
+        'Scene/StencilConstants',
         'Specs/Cesium3DTilesTester',
         'Specs/createScene'
     ], function(
@@ -38,12 +40,14 @@ defineSuite([
         RectangleGeometry,
         Transforms,
         Pass,
+        RenderState,
         Cesium3DTileBatchTable,
         Cesium3DTileset,
         Cesium3DTileStyle,
         ClassificationType,
         PerInstanceColorAppearance,
         Primitive,
+        StencilConstants,
         Cesium3DTilesTester,
         createScene) {
     'use strict';
@@ -82,52 +86,32 @@ defineSuite([
 
     var scene;
     var rectangle;
-    var depthPrimitive;
     var tileset;
+    var globePrimitive;
+    var tilesetPrimitive;
+    var reusableGlobePrimitive;
+    var reusableTilesetPrimitive;
+    var depthColor;
 
     var ellipsoid = Ellipsoid.WGS84;
 
-    beforeAll(function() {
-        scene = createScene();
-    });
-
-    afterAll(function() {
-        scene.destroyForSpecs();
-    });
-
-    function MockGlobePrimitive(primitive) {
-        this._primitive = primitive;
-        this.pass = Pass.CESIUM_3D_TILE;
-    }
-
-    MockGlobePrimitive.prototype.update = function(frameState) {
-        var commandList = frameState.commandList;
-        var startLength = commandList.length;
-        this._primitive.update(frameState);
-
-        for (var i = startLength; i < commandList.length; ++i) {
-            var command = commandList[i];
-            command.pass = this.pass;
+    function createPrimitive(rectangle, pass) {
+        var renderState;
+        if (pass === Pass.CESIUM_3D_TILE) {
+            renderState = RenderState.fromCache({
+                stencilTest : StencilConstants.setCesium3DTileBit(),
+                stencilMask : StencilConstants.CESIUM_3D_TILE_MASK,
+                depthTest : {
+                    enabled : true
+                }
+            });
         }
-    };
-
-    MockGlobePrimitive.prototype.isDestroyed = function() {
-        return false;
-    };
-
-    MockGlobePrimitive.prototype.destroy = function() {
-        this._primitive.destroy();
-        return destroyObject(this);
-    };
-
-    beforeEach(function() {
-        rectangle = Rectangle.fromDegrees(-40.0, -40.0, 40.0, 40.0);
-
         var depthColorAttribute = ColorGeometryInstanceAttribute.fromColor(new Color(1.0, 0.0, 0.0, 1.0));
-        var primitive = new Primitive({
+        depthColor = depthColorAttribute.value;
+        return new Primitive({
             geometryInstances : new GeometryInstance({
                 geometry : new RectangleGeometry({
-                    ellipsoid : ellipsoid,
+                    ellipsoid : Ellipsoid.WGS84,
                     rectangle : rectangle
                 }),
                 id : 'depth rectangle',
@@ -137,18 +121,66 @@ defineSuite([
             }),
             appearance : new PerInstanceColorAppearance({
                 translucent : false,
-                flat : true
+                flat : true,
+                renderState : renderState
             }),
             asynchronous : false
         });
+    }
 
-        // wrap rectangle primitive so it gets executed during the globe pass to lay down depth
-        depthPrimitive = new MockGlobePrimitive(primitive);
+    function MockPrimitive(primitive, pass) {
+        this._primitive = primitive;
+        this._pass = pass;
+        this.show = true;
+    }
+
+    MockPrimitive.prototype.update = function(frameState) {
+        if (!this.show) {
+            return;
+        }
+
+        var commandList = frameState.commandList;
+        var startLength = commandList.length;
+        this._primitive.update(frameState);
+
+        for (var i = startLength; i < commandList.length; ++i) {
+            var command = commandList[i];
+            command.pass = this._pass;
+        }
+    };
+
+    MockPrimitive.prototype.isDestroyed = function() {
+        return false;
+    };
+
+    MockPrimitive.prototype.destroy = function() {
+        return destroyObject(this);
+    };
+
+    beforeAll(function() {
+        scene = createScene();
+
+        rectangle = Rectangle.fromDegrees(-40.0, -40.0, 40.0, 40.0);
+        reusableGlobePrimitive = createPrimitive(rectangle, Pass.GLOBE);
+        reusableTilesetPrimitive = createPrimitive(rectangle, Pass.CESIUM_3D_TILE);
+    });
+
+    afterAll(function() {
+        reusableGlobePrimitive.destroy();
+        reusableTilesetPrimitive.destroy();
+        scene.destroyForSpecs();
+    });
+
+    beforeEach(function() {
+        // wrap rectangle primitive so it gets executed during the globe pass and 3D Tiles pass to lay down depth
+        globePrimitive = new MockPrimitive(reusableGlobePrimitive, Pass.GLOBE);
+        tilesetPrimitive = new MockPrimitive(reusableTilesetPrimitive, Pass.CESIUM_3D_TILE);
     });
 
     afterEach(function() {
         scene.primitives.removeAll();
-        depthPrimitive = depthPrimitive && !depthPrimitive.isDestroyed() && depthPrimitive.destroy();
+        globePrimitive = globePrimitive && !globePrimitive.isDestroyed() && globePrimitive.destroy();
+        tilesetPrimitive = tilesetPrimitive && !tilesetPrimitive.isDestroyed() && tilesetPrimitive.destroy();
         tileset = tileset && !tileset.isDestroyed() && tileset.destroy();
     });
 
@@ -236,8 +268,69 @@ defineSuite([
         expectRender(scene, [0, 0, 255, 255]);
     }
 
+    it('renders on 3D Tiles', function() {
+        scene.primitives.add(globePrimitive);
+        scene.primitives.add(tilesetPrimitive);
+        tileset = scene.primitives.add(new Cesium3DTileset({
+            url : geometryBoxes,
+            classificationType : ClassificationType.CESIUM_3D_TILE
+        }));
+        return loadTileset(tileset).then(function(tileset) {
+            globePrimitive.show = false;
+            tilesetPrimitive.show = true;
+            verifyRender(tileset, scene);
+            verifyPick(scene);
+            globePrimitive.show = true;
+            tilesetPrimitive.show = false;
+            expectRender(scene, depthColor);
+            globePrimitive.show = true;
+            tilesetPrimitive.show = true;
+        });
+    });
+
+    it('renders on globe', function() {
+        scene.primitives.add(globePrimitive);
+        scene.primitives.add(tilesetPrimitive);
+        tileset = scene.primitives.add(new Cesium3DTileset({
+            url : geometryBoxes,
+            classificationType : ClassificationType.TERRAIN
+        }));
+        return loadTileset(tileset).then(function(tileset) {
+            globePrimitive.show = false;
+            tilesetPrimitive.show = true;
+            expectRender(scene, depthColor);
+            globePrimitive.show = true;
+            tilesetPrimitive.show = false;
+            verifyRender(tileset, scene);
+            verifyPick(scene);
+            globePrimitive.show = true;
+            tilesetPrimitive.show = true;
+        });
+    });
+
+    it('renders on 3D Tiles and globe', function() {
+        scene.primitives.add(globePrimitive);
+        scene.primitives.add(tilesetPrimitive);
+        tileset = scene.primitives.add(new Cesium3DTileset({
+            url : geometryBoxes,
+            classificationType : ClassificationType.BOTH
+        }));
+        return loadTileset(tileset).then(function(tileset) {
+            globePrimitive.show = false;
+            tilesetPrimitive.show = true;
+            verifyRender(tileset, scene);
+            verifyPick(scene);
+            globePrimitive.show = true;
+            tilesetPrimitive.show = false;
+            verifyRender(tileset, scene);
+            verifyPick(scene);
+            globePrimitive.show = true;
+            tilesetPrimitive.show = true;
+        });
+    });
+
     it('renders boxes', function() {
-        scene.primitives.add(depthPrimitive);
+        scene.primitives.add(globePrimitive);
         tileset = scene.primitives.add(new Cesium3DTileset({
             url : geometryBoxes
         }));
@@ -248,7 +341,7 @@ defineSuite([
     });
 
     it('renders batched boxes', function() {
-        scene.primitives.add(depthPrimitive);
+        scene.primitives.add(globePrimitive);
         tileset = scene.primitives.add(new Cesium3DTileset({
             url : geometryBoxesBatchedChildren
         }));
@@ -259,7 +352,7 @@ defineSuite([
     });
 
     it('renders boxes with a batch table', function() {
-        scene.primitives.add(depthPrimitive);
+        scene.primitives.add(globePrimitive);
         tileset = scene.primitives.add(new Cesium3DTileset({
             url : geometryBoxesWithBatchTable
         }));
@@ -270,7 +363,7 @@ defineSuite([
     });
 
     it('renders batched boxes with a batch table', function() {
-        scene.primitives.add(depthPrimitive);
+        scene.primitives.add(globePrimitive);
         tileset = scene.primitives.add(new Cesium3DTileset({
             url : geometryBoxesBatchedChildrenWithBatchTable
         }));
@@ -281,7 +374,7 @@ defineSuite([
     });
 
     it('renders boxes with batch ids', function() {
-        scene.primitives.add(depthPrimitive);
+        scene.primitives.add(globePrimitive);
         tileset = scene.primitives.add(new Cesium3DTileset({
             url : geometryBoxesWithBatchIds
         }));
@@ -292,7 +385,7 @@ defineSuite([
     });
 
     it('renders cylinders', function() {
-        scene.primitives.add(depthPrimitive);
+        scene.primitives.add(globePrimitive);
         tileset = scene.primitives.add(new Cesium3DTileset({
             url : geometryCylinders
         }));
@@ -303,7 +396,7 @@ defineSuite([
     });
 
     it('renders batched cylinders', function() {
-        scene.primitives.add(depthPrimitive);
+        scene.primitives.add(globePrimitive);
         tileset = scene.primitives.add(new Cesium3DTileset({
             url : geometryCylindersBatchedChildren
         }));
@@ -314,7 +407,7 @@ defineSuite([
     });
 
     it('renders cylinders with a batch table', function() {
-        scene.primitives.add(depthPrimitive);
+        scene.primitives.add(globePrimitive);
         tileset = scene.primitives.add(new Cesium3DTileset({
             url : geometryCylindersWithBatchTable
         }));
@@ -325,7 +418,7 @@ defineSuite([
     });
 
     it('renders batched cylinders with a batch table', function() {
-        scene.primitives.add(depthPrimitive);
+        scene.primitives.add(globePrimitive);
         tileset = scene.primitives.add(new Cesium3DTileset({
             url : geometryCylindersBatchedChildrenWithBatchTable
         }));
@@ -336,7 +429,7 @@ defineSuite([
     });
 
     it('renders cylinders with batch ids', function() {
-        scene.primitives.add(depthPrimitive);
+        scene.primitives.add(globePrimitive);
         tileset = scene.primitives.add(new Cesium3DTileset({
             url : geometryCylindersWithBatchIds
         }));
@@ -347,7 +440,7 @@ defineSuite([
     });
 
     it('renders ellipsoids', function() {
-        scene.primitives.add(depthPrimitive);
+        scene.primitives.add(globePrimitive);
         tileset = scene.primitives.add(new Cesium3DTileset({
             url : geometryEllipsoids
         }));
@@ -358,7 +451,7 @@ defineSuite([
     });
 
     it('renders batched ellipsoids', function() {
-        scene.primitives.add(depthPrimitive);
+        scene.primitives.add(globePrimitive);
         tileset = scene.primitives.add(new Cesium3DTileset({
             url : geometryEllipsoidsBatchedChildren
         }));
@@ -369,7 +462,7 @@ defineSuite([
     });
 
     it('renders ellipsoids with a batch table', function() {
-        scene.primitives.add(depthPrimitive);
+        scene.primitives.add(globePrimitive);
         tileset = scene.primitives.add(new Cesium3DTileset({
             url : geometryEllipsoidsWithBatchTable
         }));
@@ -380,7 +473,7 @@ defineSuite([
     });
 
     it('renders batched ellipsoids with a batch table', function() {
-        scene.primitives.add(depthPrimitive);
+        scene.primitives.add(globePrimitive);
         tileset = scene.primitives.add(new Cesium3DTileset({
             url : geometryEllipsoidsBatchedChildrenWithBatchTable
         }));
@@ -391,7 +484,7 @@ defineSuite([
     });
 
     it('renders ellipsoids with batch ids', function() {
-        scene.primitives.add(depthPrimitive);
+        scene.primitives.add(globePrimitive);
         tileset = scene.primitives.add(new Cesium3DTileset({
             url : geometryEllipsoidsWithBatchIds
         }));
@@ -402,7 +495,7 @@ defineSuite([
     });
 
     it('renders spheres', function() {
-        scene.primitives.add(depthPrimitive);
+        scene.primitives.add(globePrimitive);
         tileset = scene.primitives.add(new Cesium3DTileset({
             url : geometrySpheres
         }));
@@ -413,7 +506,7 @@ defineSuite([
     });
 
     it('renders batched spheres', function() {
-        scene.primitives.add(depthPrimitive);
+        scene.primitives.add(globePrimitive);
         tileset = scene.primitives.add(new Cesium3DTileset({
             url : geometrySpheresBatchedChildren
         }));
@@ -424,7 +517,7 @@ defineSuite([
     });
 
     it('renders spheres with a batch table', function() {
-        scene.primitives.add(depthPrimitive);
+        scene.primitives.add(globePrimitive);
         tileset = scene.primitives.add(new Cesium3DTileset({
             url : geometrySpheresWithBatchTable
         }));
@@ -435,7 +528,7 @@ defineSuite([
     });
 
     it('renders batched spheres with a batch table', function() {
-        scene.primitives.add(depthPrimitive);
+        scene.primitives.add(globePrimitive);
         tileset = scene.primitives.add(new Cesium3DTileset({
             url : geometrySpheresBatchedChildrenWithBatchTable
         }));
@@ -446,7 +539,7 @@ defineSuite([
     });
 
     it('renders spheres with batch ids', function() {
-        scene.primitives.add(depthPrimitive);
+        scene.primitives.add(globePrimitive);
         tileset = scene.primitives.add(new Cesium3DTileset({
             url : geometrySpheresWithBatchIds
         }));
@@ -457,7 +550,7 @@ defineSuite([
     });
 
     it('renders all geometries', function() {
-        scene.primitives.add(depthPrimitive);
+        scene.primitives.add(globePrimitive);
         tileset = scene.primitives.add(new Cesium3DTileset({
             url : geometryAll
         }));
@@ -468,7 +561,7 @@ defineSuite([
     });
 
     it('renders batched all geometries', function() {
-        scene.primitives.add(depthPrimitive);
+        scene.primitives.add(globePrimitive);
         tileset = scene.primitives.add(new Cesium3DTileset({
             url : geometryAllBatchedChildren
         }));
@@ -479,7 +572,7 @@ defineSuite([
     });
 
     it('renders all geometries with a batch table', function() {
-        scene.primitives.add(depthPrimitive);
+        scene.primitives.add(globePrimitive);
         tileset = scene.primitives.add(new Cesium3DTileset({
             url : geometryAllWithBatchTable
         }));
@@ -490,7 +583,7 @@ defineSuite([
     });
 
     it('renders batched all geometries with a batch table', function() {
-        scene.primitives.add(depthPrimitive);
+        scene.primitives.add(globePrimitive);
         tileset = scene.primitives.add(new Cesium3DTileset({
             url : geometryAllBatchedChildrenWithBatchTable
         }));
@@ -501,7 +594,7 @@ defineSuite([
     });
 
     it('renders all geometries with batch ids', function() {
-        scene.primitives.add(depthPrimitive);
+        scene.primitives.add(globePrimitive);
         tileset = scene.primitives.add(new Cesium3DTileset({
             url : geometryAllWithBatchIds
         }));
@@ -512,7 +605,7 @@ defineSuite([
     });
 
     it('renders all geometries with debug color', function() {
-        scene.primitives.add(depthPrimitive);
+        scene.primitives.add(globePrimitive);
         tileset = scene.primitives.add(new Cesium3DTileset({
             url : geometryAllWithBatchTable,
             debugColorizeTiles : true

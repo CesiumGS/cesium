@@ -1,6 +1,27 @@
 Change Log
 ==========
 
+### 1.54 - 2019-02-01
+
+##### Breaking Changes :mega:
+* Billboards with `HeightReference.CLAMP_TO_GROUND` are now clamped to both terrain and 3D Tiles. [#7434](https://github.com/AnalyticalGraphicsInc/cesium/pull/7434)
+* The default `classificationType` for `GroundPrimitive`, `CorridorGraphics`, `EllipseGraphics`, `PolygonGraphics` and `RectangleGraphics` is now `ClassificationType.BOTH`. [#7434](https://github.com/AnalyticalGraphicsInc/cesium/pull/7434)
+
+##### Deprecated :hourglass_flowing_sand:
+* `Scene.clampToHeight` now takes an optional `width` argument before the `result` argument.  The previous function definition will no longer work in 1.56. [#7287](https://github.com/AnalyticalGraphicsInc/cesium/pull/7287)
+
+##### Additions :tada:
+* Added support for textured ground entities (entities with unspecified `height`) and `GroundPrimitives` on 3D Tiles. [#7434](https://github.com/AnalyticalGraphicsInc/cesium/pull/7434)
+* Added support for polylines on 3D Tiles. [#7437](https://github.com/AnalyticalGraphicsInc/cesium/pull/7437)
+* Added `classificationType` property to `PolylineGraphics` and `GroundPolylinePrimitive` which specifies whether a polyline clamped to ground should be clamped to terrain, 3D Tiles, or both. [#7437](https://github.com/AnalyticalGraphicsInc/cesium/pull/7437)
+* Added the ability to specify the width of the intersection volume for `Scene.sampleHeight`, `Scene.clampToHeight`, `Scene.sampleHeightMostDetailed`, and `Scene.clampToHeightMostDetailed`. [#7287](https://github.com/AnalyticalGraphicsInc/cesium/pull/7287)
+
+##### Fixes :wrench:
+* Fixed an issue where classification primitives with the `CESIUM_3D_TILE` classification type would render on terrain. [#7422](https://github.com/AnalyticalGraphicsInc/cesium/pull/7422)
+* Fixed an issue where 3D Tiles would show through the globe. [#7422](https://github.com/AnalyticalGraphicsInc/cesium/pull/7422)
+* Fixed crash when entity geometry show value is an interval that only covered part of the entity availability range [#7458](https://github.com/AnalyticalGraphicsInc/cesium/pull/7458)
+* Fixed image size issue when using multiple particle systems [#7412](https://github.com/AnalyticalGraphicsInc/cesium/pull/7412)
+
 ### 1.53 - 2019-01-02
 
 ##### Additions :tada:
@@ -16,6 +37,7 @@ Change Log
 * Fixed 3D Tiles visibility checking when running multiple passes within the same frame. [#7289](https://github.com/AnalyticalGraphicsInc/cesium/pull/7289)
 * Fixed contrast on imagery layers. [#7382](https://github.com/AnalyticalGraphicsInc/cesium/issues/7382)
 * Fixed rendering transparent background color when `highDynamicRange` is enabled. [#7427](https://github.com/AnalyticalGraphicsInc/cesium/issues/7427)
+* Fixed translucent geometry when `highDynamicRange` is toggled. [#7451](https://github.com/AnalyticalGraphicsInc/cesium/pull/7451)
 
 ### 1.52 - 2018-12-03
 
