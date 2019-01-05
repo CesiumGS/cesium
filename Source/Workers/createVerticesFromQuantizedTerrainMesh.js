@@ -134,16 +134,16 @@ define([
             Cartesian3.maximumByComponent(cartesian3Scratch, maximum, maximum);
         }
 
-        var westIndicesSouthToNorth = parameters.westIndices.slice().sort(function(a, b) {
+        var westIndicesSouthToNorth = copyAndSort(parameters.westIndices, function(a, b) {
             return uvs[a].y - uvs[b].y;
         });
-        var eastIndicesNorthToSouth = parameters.eastIndices.slice().sort(function(a, b) {
+        var eastIndicesNorthToSouth = copyAndSort(parameters.eastIndices, function(a, b) {
             return uvs[b].y - uvs[a].y;
         });
-        var southIndicesEastToWest = parameters.southIndices.slice().sort(function(a, b) {
+        var southIndicesEastToWest = copyAndSort(parameters.southIndices, function(a, b) {
             return uvs[b].x - uvs[a].x;
         });
-        var northIndicesWestToEast = parameters.northIndices.slice().sort(function(a, b) {
+        var northIndicesWestToEast = copyAndSort(parameters.northIndices, function(a, b) {
             return uvs[a].x - uvs[b].x;
         });
 
@@ -356,6 +356,25 @@ define([
         }
 
         return indexBufferIndex;
+    }
+
+    function copyAndSort(typedArray, comparator) {
+        var copy;
+        if (typeof typedArray.slice === 'function') {
+            copy = typedArray.slice();
+            if (typeof copy.sort !== 'function') {
+                // Sliced typed array isn't sortable, so we can't use it.
+                copy = undefined;
+            }
+        }
+
+        if (!defined(copy)) {
+            copy = Array.prototype.slice.call(typedArray)
+        }
+
+        copy.sort(comparator);
+
+        return copy;
     }
 
     return createTaskProcessorWorker(createVerticesFromQuantizedTerrainMesh);
