@@ -71,6 +71,8 @@ define([
             return;
         }
 
+        tileset.resetMinMax();
+
         if (!skipLevelOfDetail(tileset)) {
             executeBaseTraversal(tileset, root, frameState);
         } else if (tileset.immediatelyLoadDesiredLevelOfDetail) {
@@ -128,6 +130,7 @@ define([
                 // Tile is newly selected; it is selected this frame, but was not selected last frame.
                 tileset._selectedTilesToStyle.push(tile);
             }
+            tile.colorize(tileset._heatMapVariable); // Skipped if heatMapVariable is undefined
             tile._selectedFrame = frameState.frameNumber;
             tileset._selectedTiles.push(tile);
         }
@@ -209,6 +212,7 @@ define([
     }
 
     function loadTile(tileset, tile, frameState) {
+        tileset.updateMinMax(tile);
         if (hasUnloadedContent(tile) || tile.contentExpired) {
             tile._requestedFrame = frameState.frameNumber;
             tile._priority = getPriority(tileset, tile);
