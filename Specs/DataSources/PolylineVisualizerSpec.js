@@ -16,6 +16,7 @@ defineSuite([
         'DataSources/EntityCollection',
         'DataSources/PolylineArrowMaterialProperty',
         'DataSources/PolylineGraphics',
+        'Scene/ClassificationType',
         'Scene/PolylineColorAppearance',
         'Scene/PolylineMaterialAppearance',
         'Scene/ShadowMode',
@@ -40,6 +41,7 @@ defineSuite([
         EntityCollection,
         PolylineArrowMaterialProperty,
         PolylineGraphics,
+        ClassificationType,
         PolylineColorAppearance,
         PolylineMaterialAppearance,
         ShadowMode,
@@ -64,6 +66,24 @@ defineSuite([
         ApproximateTerrainHeights._terrainHeights = undefined;
     });
 
+    function visualizerUpdated(visualizer) {
+        return pollToPromise(function() {
+            scene.initializeFrame();
+            var isUpdated = visualizer.update(time);
+            scene.render(time);
+            return isUpdated;
+        });
+    }
+
+    function visualizerEmpty(visualizer) {
+        return pollToPromise(function() {
+            scene.initializeFrame();
+            expect(visualizer.update(time)).toBe(true);
+            scene.render(time);
+            return scene.primitives.length === 0 && scene.groundPrimitives.length === 0;
+        });
+    }
+
     it('Can create and destroy', function() {
         var objects = new EntityCollection();
         var visualizer = new PolylineVisualizer(scene, objects);
@@ -79,19 +99,14 @@ defineSuite([
         var visualizer = new PolylineVisualizer(scene, objects);
 
         var polyline = new PolylineGraphics();
-        polyline.positions = new ConstantProperty([Cartesian3.fromDegrees(0.0, 0.0), Cartesian3.fromDegrees(0.0, 1.0)]);
+        polyline.positions = new ConstantProperty([Cartesian3.fromDegrees(0.0, 0.0), Cartesian3.fromDegrees(0.0, 0.000001)]);
         polyline.material = new ColorMaterialProperty();
 
         var entity = new Entity();
         entity.polyline = polyline;
         objects.add(entity);
 
-        return pollToPromise(function() {
-            scene.initializeFrame();
-            var isUpdated = visualizer.update(time);
-            scene.render(time);
-            return isUpdated;
-        }).then(function() {
+        return visualizerUpdated(visualizer).then(function() {
             var primitive = scene.primitives.get(0);
             var attributes = primitive.getGeometryInstanceAttributes(entity);
             expect(attributes).toBeDefined();
@@ -102,12 +117,7 @@ defineSuite([
 
             objects.remove(entity);
 
-            return pollToPromise(function() {
-                scene.initializeFrame();
-                expect(visualizer.update(time)).toBe(true);
-                scene.render(time);
-                return scene.primitives.length === 0;
-            }).then(function(){
+            return visualizerEmpty(visualizer).then(function(){
                 visualizer.destroy();
             });
         });
@@ -118,19 +128,14 @@ defineSuite([
         var visualizer = new PolylineVisualizer(scene, objects);
 
         var polyline = new PolylineGraphics();
-        polyline.positions = new ConstantProperty([Cartesian3.fromDegrees(0.0, 0.0), Cartesian3.fromDegrees(0.0, 1.0)]);
+        polyline.positions = new ConstantProperty([Cartesian3.fromDegrees(0.0, 0.0), Cartesian3.fromDegrees(0.0, 0.000001)]);
         polyline.material = new PolylineArrowMaterialProperty();
 
         var entity = new Entity();
         entity.polyline = polyline;
         objects.add(entity);
 
-        return pollToPromise(function() {
-            scene.initializeFrame();
-            var isUpdated = visualizer.update(time);
-            scene.render(time);
-            return isUpdated;
-        }).then(function() {
+        return visualizerUpdated(visualizer).then(function() {
             var primitive = scene.primitives.get(0);
             var attributes = primitive.getGeometryInstanceAttributes(entity);
             expect(attributes).toBeDefined();
@@ -141,12 +146,7 @@ defineSuite([
 
             objects.remove(entity);
 
-            return pollToPromise(function() {
-                scene.initializeFrame();
-                expect(visualizer.update(time)).toBe(true);
-                scene.render(time);
-                return scene.primitives.length === 0;
-            }).then(function(){
+            return visualizerEmpty(visualizer).then(function(){
                 visualizer.destroy();
             });
         });
@@ -158,10 +158,10 @@ defineSuite([
         }
 
         var objects = new EntityCollection();
-        var visualizer = new PolylineVisualizer(scene, objects, scene.groundPrimitives);
+        var visualizer = new PolylineVisualizer(scene, objects);
 
         var polyline = new PolylineGraphics();
-        polyline.positions = new ConstantProperty([Cartesian3.fromDegrees(0.0, 0.0), Cartesian3.fromDegrees(0.0, 1.0)]);
+        polyline.positions = new ConstantProperty([Cartesian3.fromDegrees(0.0, 0.0), Cartesian3.fromDegrees(0.0, 0.000001)]);
         polyline.material = new ColorMaterialProperty();
         polyline.clampToGround = new ConstantProperty(true);
 
@@ -169,12 +169,7 @@ defineSuite([
         entity.polyline = polyline;
         objects.add(entity);
 
-        return pollToPromise(function() {
-            scene.initializeFrame();
-            var isUpdated = visualizer.update(time);
-            scene.render(time);
-            return isUpdated;
-        }).then(function() {
+        return visualizerUpdated(visualizer).then(function() {
             var primitive = scene.groundPrimitives.get(0);
             var attributes = primitive.getGeometryInstanceAttributes(entity);
             expect(attributes).toBeDefined();
@@ -185,12 +180,7 @@ defineSuite([
 
             objects.remove(entity);
 
-            return pollToPromise(function() {
-                scene.initializeFrame();
-                expect(visualizer.update(time)).toBe(true);
-                scene.render(time);
-                return scene.groundPrimitives.length === 0;
-            }).then(function(){
+            return visualizerEmpty(visualizer).then(function(){
                 visualizer.destroy();
             });
         });
@@ -201,7 +191,7 @@ defineSuite([
         var visualizer = new PolylineVisualizer(scene, objects);
 
         var polyline = new PolylineGraphics();
-        polyline.positions = new ConstantProperty([Cartesian3.fromDegrees(0.0, 0.0), Cartesian3.fromDegrees(0.0, 1.0)]);
+        polyline.positions = new ConstantProperty([Cartesian3.fromDegrees(0.0, 0.0), Cartesian3.fromDegrees(0.0, 0.000001)]);
         polyline.material = new ColorMaterialProperty();
         polyline.shadows = new ConstantProperty(shadows);
 
@@ -209,23 +199,13 @@ defineSuite([
         entity.polyline = polyline;
         objects.add(entity);
 
-        return pollToPromise(function() {
-            scene.initializeFrame();
-            var isUpdated = visualizer.update(time);
-            scene.render(time);
-            return isUpdated;
-        }).then(function() {
+        return visualizerUpdated(visualizer).then(function() {
             var primitive = scene.primitives.get(0);
             expect(primitive.shadows).toBe(shadows);
 
             objects.remove(entity);
 
-            return pollToPromise(function() {
-                scene.initializeFrame();
-                expect(visualizer.update(time)).toBe(true);
-                scene.render(time);
-                return scene.primitives.length === 0;
-            }).then(function(){
+            return visualizerEmpty(visualizer).then(function(){
                 visualizer.destroy();
             });
         });
@@ -252,7 +232,7 @@ defineSuite([
         var visualizer = new PolylineVisualizer(scene, objects);
 
         var polyline = new PolylineGraphics();
-        polyline.positions = new ConstantProperty([Cartesian3.fromDegrees(0.0, 0.0), Cartesian3.fromDegrees(0.0, 1.0)]);
+        polyline.positions = new ConstantProperty([Cartesian3.fromDegrees(0.0, 0.0), Cartesian3.fromDegrees(0.0, 0.000001)]);
         polyline.material = new ColorMaterialProperty();
         polyline.depthFailMaterial = new ColorMaterialProperty();
 
@@ -261,12 +241,7 @@ defineSuite([
         entity.polyline = polyline;
         objects.add(entity);
 
-        return pollToPromise(function() {
-            scene.initializeFrame();
-            var isUpdated = visualizer.update(time);
-            scene.render(time);
-            return isUpdated;
-        }).then(function() {
+        return visualizerUpdated(visualizer).then(function() {
             var primitive = scene.primitives.get(0);
             var attributes = primitive.getGeometryInstanceAttributes(entity);
             expect(attributes).toBeDefined();
@@ -278,12 +253,7 @@ defineSuite([
 
             objects.remove(entity);
 
-            return pollToPromise(function() {
-                scene.initializeFrame();
-                expect(visualizer.update(time)).toBe(true);
-                scene.render(time);
-                return scene.primitives.length === 0;
-            }).then(function(){
+            return visualizerEmpty(visualizer).then(function(){
                 visualizer.destroy();
             });
         });
@@ -294,7 +264,7 @@ defineSuite([
         var visualizer = new PolylineVisualizer(scene, objects);
 
         var polyline = new PolylineGraphics();
-        polyline.positions = new ConstantProperty([Cartesian3.fromDegrees(0.0, 0.0), Cartesian3.fromDegrees(0.0, 1.0)]);
+        polyline.positions = new ConstantProperty([Cartesian3.fromDegrees(0.0, 0.0), Cartesian3.fromDegrees(0.0, 0.000001)]);
         polyline.material = new ColorMaterialProperty();
         polyline.depthFailMaterial = new PolylineArrowMaterialProperty();
 
@@ -303,12 +273,7 @@ defineSuite([
         entity.polyline = polyline;
         objects.add(entity);
 
-        return pollToPromise(function() {
-            scene.initializeFrame();
-            var isUpdated = visualizer.update(time);
-            scene.render(time);
-            return isUpdated;
-        }).then(function() {
+        return visualizerUpdated(visualizer).then(function() {
             var primitive = scene.primitives.get(0);
             var attributes = primitive.getGeometryInstanceAttributes(entity);
             expect(attributes).toBeDefined();
@@ -320,12 +285,7 @@ defineSuite([
 
             objects.remove(entity);
 
-            return pollToPromise(function() {
-                scene.initializeFrame();
-                expect(visualizer.update(time)).toBe(true);
-                scene.render(time);
-                return scene.primitives.length === 0;
-            }).then(function(){
+            return visualizerEmpty(visualizer).then(function(){
                 visualizer.destroy();
             });
         });
@@ -336,7 +296,7 @@ defineSuite([
         var visualizer = new PolylineVisualizer(scene, objects);
 
         var polyline = new PolylineGraphics();
-        polyline.positions = new ConstantProperty([Cartesian3.fromDegrees(0.0, 0.0), Cartesian3.fromDegrees(0.0, 1.0)]);
+        polyline.positions = new ConstantProperty([Cartesian3.fromDegrees(0.0, 0.0), Cartesian3.fromDegrees(0.0, 0.000001)]);
         polyline.material = new PolylineArrowMaterialProperty();
         polyline.depthFailMaterial = new PolylineArrowMaterialProperty();
 
@@ -345,12 +305,7 @@ defineSuite([
         entity.polyline = polyline;
         objects.add(entity);
 
-        return pollToPromise(function() {
-            scene.initializeFrame();
-            var isUpdated = visualizer.update(time);
-            scene.render(time);
-            return isUpdated;
-        }).then(function() {
+        return visualizerUpdated(visualizer).then(function() {
             var primitive = scene.primitives.get(0);
             var attributes = primitive.getGeometryInstanceAttributes(entity);
             expect(attributes).toBeDefined();
@@ -362,12 +317,7 @@ defineSuite([
 
             objects.remove(entity);
 
-            return pollToPromise(function() {
-                scene.initializeFrame();
-                expect(visualizer.update(time)).toBe(true);
-                scene.render(time);
-                return scene.primitives.length === 0;
-            }).then(function(){
+            return visualizerEmpty(visualizer).then(function(){
                 visualizer.destroy();
             });
         });
@@ -378,7 +328,7 @@ defineSuite([
         var visualizer = new PolylineVisualizer(scene, objects);
 
         var polyline = new PolylineGraphics();
-        polyline.positions = new ConstantProperty([Cartesian3.fromDegrees(0.0, 0.0), Cartesian3.fromDegrees(0.0, 1.0)]);
+        polyline.positions = new ConstantProperty([Cartesian3.fromDegrees(0.0, 0.0), Cartesian3.fromDegrees(0.0, 0.000001)]);
         polyline.material = new PolylineArrowMaterialProperty();
         polyline.depthFailMaterial = new ColorMaterialProperty();
 
@@ -387,12 +337,7 @@ defineSuite([
         entity.polyline = polyline;
         objects.add(entity);
 
-        return pollToPromise(function() {
-            scene.initializeFrame();
-            var isUpdated = visualizer.update(time);
-            scene.render(time);
-            return isUpdated;
-        }).then(function() {
+        return visualizerUpdated(visualizer).then(function() {
             var primitive = scene.primitives.get(0);
             var attributes = primitive.getGeometryInstanceAttributes(entity);
             expect(attributes).toBeDefined();
@@ -404,15 +349,52 @@ defineSuite([
 
             objects.remove(entity);
 
-            return pollToPromise(function() {
-                scene.initializeFrame();
-                expect(visualizer.update(time)).toBe(true);
-                scene.render(time);
-                return scene.primitives.length === 0;
-            }).then(function(){
+            return visualizerEmpty(visualizer).then(function(){
                 visualizer.destroy();
             });
         });
+    });
+
+    function createAndRemoveGeometryWithClassificationType(classificationType) {
+        if (!Entity.supportsPolylinesOnTerrain(scene)) {
+            return;
+        }
+
+        var objects = new EntityCollection();
+        var visualizer = new PolylineVisualizer(scene, objects);
+
+        var polyline = new PolylineGraphics();
+        polyline.positions = new ConstantProperty([Cartesian3.fromDegrees(0.0, 0.0), Cartesian3.fromDegrees(0.0, 0.000001)]);
+        polyline.material = new ColorMaterialProperty();
+        polyline.classificationType = new ConstantProperty(classificationType);
+        polyline.clampToGround = true;
+
+        var entity = new Entity();
+        entity.polyline = polyline;
+        objects.add(entity);
+
+        return visualizerUpdated(visualizer).then(function() {
+            var primitive = scene.groundPrimitives.get(0);
+            expect(primitive.classificationType).toBe(classificationType);
+
+            objects.remove(entity);
+
+            return visualizerEmpty(visualizer).then(function(){
+                visualizer.destroy();
+            });
+        });
+    }
+
+    it('Creates and removes geometry classifying terrain', function() {
+        return createAndRemoveGeometryWithClassificationType(ClassificationType.TERRAIN);
+    });
+
+    it('Creates and removes geometry classifying 3D Tiles', function() {
+        return createAndRemoveGeometryWithClassificationType(ClassificationType.CESIUM_3D_TILE);
+    });
+
+    it('Creates and removes geometry classifying both terrain and 3D Tiles', function() {
+        return createAndRemoveGeometryWithClassificationType(ClassificationType.BOTH);
     });
 
     it('Correctly handles geometry changing batches', function() {
@@ -420,19 +402,14 @@ defineSuite([
         var visualizer = new PolylineVisualizer(scene, objects);
 
         var polyline = new PolylineGraphics();
-        polyline.positions = new ConstantProperty([Cartesian3.fromDegrees(0.0, 0.0), Cartesian3.fromDegrees(0.0, 1.0)]);
+        polyline.positions = new ConstantProperty([Cartesian3.fromDegrees(0.0, 0.0), Cartesian3.fromDegrees(0.0, 0.000001)]);
         polyline.material = new ColorMaterialProperty();
 
         var entity = new Entity();
         entity.polyline = polyline;
         objects.add(entity);
 
-        return pollToPromise(function() {
-            scene.initializeFrame();
-            var isUpdated = visualizer.update(time);
-            scene.render(time);
-            return isUpdated;
-        }).then(function() {
+        return visualizerUpdated(visualizer).then(function() {
             var primitive = scene.primitives.get(0);
             var attributes = primitive.getGeometryInstanceAttributes(entity);
             expect(attributes).toBeDefined();
@@ -442,12 +419,7 @@ defineSuite([
 
             polyline.material = new PolylineArrowMaterialProperty();
 
-            return pollToPromise(function() {
-                scene.initializeFrame();
-                var isUpdated = visualizer.update(time);
-                scene.render(time);
-                return isUpdated;
-            }).then(function() {
+            return visualizerUpdated(visualizer).then(function() {
                 primitive = scene.primitives.get(0);
                 attributes = primitive.getGeometryInstanceAttributes(entity);
                 expect(attributes).toBeDefined();
@@ -473,7 +445,7 @@ defineSuite([
 
         var polyline = new PolylineGraphics();
         polyline.positions = new CallbackProperty(function() {
-            return [Cartesian3.fromDegrees(0.0, 0.0), Cartesian3.fromDegrees(0.0, 1.0)];
+            return [Cartesian3.fromDegrees(0.0, 0.0), Cartesian3.fromDegrees(0.0, 0.000001)];
         }, false);
         polyline.material = new ColorMaterialProperty();
 
@@ -520,7 +492,7 @@ defineSuite([
         var visualizer = new PolylineVisualizer(scene, entityCollection);
 
         var polyline = new PolylineGraphics();
-        polyline.positions = new ConstantProperty([Cartesian3.fromDegrees(0.0, 0.0), Cartesian3.fromDegrees(0.0, 1.0)]);
+        polyline.positions = new ConstantProperty([Cartesian3.fromDegrees(0.0, 0.0), Cartesian3.fromDegrees(0.0, 0.000001)]);
         polyline.material = new PolylineArrowMaterialProperty();
 
         var entity = new Entity();
@@ -578,37 +550,26 @@ defineSuite([
         var entity = new Entity({
             id : 'test',
             polyline : {
-                positions: [Cartesian3.fromDegrees(0.0, 0.0), Cartesian3.fromDegrees(0.0, 1.0)],
+                positions: [Cartesian3.fromDegrees(0.0, 0.0), Cartesian3.fromDegrees(0.0, 0.000001)],
                 material: Color.ORANGE
             }
         });
         objects.add(entity);
 
-        return pollToPromise(function() {
-            scene.initializeFrame();
-            var isUpdated = visualizer.update(time);
-            scene.render(time);
-            return isUpdated;
-        }).then(function() {
+        return visualizerUpdated(visualizer).then(function() {
             objects.remove(entity);
 
             var entity2 = new Entity({
                 id : 'test',
                 position : Cartesian3.fromDegrees(0, 0, 0),
                 polyline : {
-                    positions: [Cartesian3.fromDegrees(0.0, 0.0), Cartesian3.fromDegrees(0.0, 1.0)],
+                    positions: [Cartesian3.fromDegrees(0.0, 0.0), Cartesian3.fromDegrees(0.0, 0.000001)],
                     material : Color.BLUE
                 }
             });
             objects.add(entity2);
 
-            return pollToPromise(function() {
-                scene.initializeFrame();
-                var isUpdated = visualizer.update(time);
-                scene.render(time);
-                return isUpdated;
-            }).then(function() {
-
+            return visualizerUpdated(visualizer).then(function() {
                 var primitive = scene.primitives.get(0);
                 var attributes = primitive.getGeometryInstanceAttributes(entity2);
                 expect(attributes).toBeDefined();
@@ -618,12 +579,7 @@ defineSuite([
 
                 objects.remove(entity);
 
-                return pollToPromise(function() {
-                    scene.initializeFrame();
-                    expect(visualizer.update(time)).toBe(true);
-                    scene.render(time);
-                    return scene.primitives.length === 0;
-                }).then(function() {
+                return visualizerEmpty(visualizer).then(function() {
                     visualizer.destroy();
                 });
             });
@@ -636,17 +592,12 @@ defineSuite([
 
         var entity = entities.add({
             polyline : {
-                positions: [Cartesian3.fromDegrees(0.0, 0.0), Cartesian3.fromDegrees(0.0, 1.0)],
+                positions: [Cartesian3.fromDegrees(0.0, 0.0), Cartesian3.fromDegrees(0.0, 0.000001)],
                 material : new ColorMaterialProperty(createDynamicProperty(Color.BLUE))
             }
         });
 
-        return pollToPromise(function() {
-            scene.initializeFrame();
-            var isUpdated = visualizer.update(time);
-            scene.render(time);
-            return isUpdated;
-        }).then(function() {
+        return visualizerUpdated(visualizer).then(function() {
             var primitive = scene.primitives.get(0);
             var attributes = primitive.getGeometryInstanceAttributes(entity);
             expect(attributes).toBeDefined();
@@ -654,12 +605,7 @@ defineSuite([
 
             entity.show = false;
 
-            return pollToPromise(function() {
-                scene.initializeFrame();
-                var isUpdated = visualizer.update(time);
-                scene.render(time);
-                return isUpdated;
-            });
+            return visualizerUpdated(visualizer);
         }).then(function() {
             var primitive = scene.primitives.get(0);
             var attributes = primitive.getGeometryInstanceAttributes(entity);
@@ -678,17 +624,12 @@ defineSuite([
         var entity = entities.add({
             position : new Cartesian3(1234, 5678, 9101112),
             polyline : {
-                positions: [Cartesian3.fromDegrees(0.0, 0.0), Cartesian3.fromDegrees(0.0, 1.0)],
+                positions: [Cartesian3.fromDegrees(0.0, 0.0), Cartesian3.fromDegrees(0.0, 0.000001)],
                 material : new PolylineArrowMaterialProperty(createDynamicProperty(Color.BLUE))
             }
         });
 
-        return pollToPromise(function() {
-            scene.initializeFrame();
-            var isUpdated = visualizer.update(time);
-            scene.render(time);
-            return isUpdated;
-        }).then(function() {
+        return visualizerUpdated(visualizer).then(function() {
             var primitive = scene.primitives.get(0);
             var attributes = primitive.getGeometryInstanceAttributes(entity);
             expect(attributes).toBeDefined();
@@ -696,12 +637,7 @@ defineSuite([
 
             entity.show = false;
 
-            return pollToPromise(function() {
-                scene.initializeFrame();
-                var isUpdated = visualizer.update(time);
-                scene.render(time);
-                return isUpdated;
-            });
+            return visualizerUpdated(visualizer);
         }).then(function() {
             var primitive = scene.primitives.get(0);
             var attributes = primitive.getGeometryInstanceAttributes(entity);
@@ -719,10 +655,10 @@ defineSuite([
         }
 
         var objects = new EntityCollection();
-        var visualizer = new PolylineVisualizer(scene, objects, scene.groundPrimitives);
+        var visualizer = new PolylineVisualizer(scene, objects);
 
         var polyline = new PolylineGraphics();
-        polyline.positions = new ConstantProperty([Cartesian3.fromDegrees(0.0, 0.0), Cartesian3.fromDegrees(0.0, 1.0)]);
+        polyline.positions = new ConstantProperty([Cartesian3.fromDegrees(0.0, 0.0), Cartesian3.fromDegrees(0.0, 0.000001)]);
         polyline.material = new ColorMaterialProperty();
         polyline.clampToGround = new ConstantProperty(true);
 
@@ -730,12 +666,7 @@ defineSuite([
         entity.polyline = polyline;
         objects.add(entity);
 
-        return pollToPromise(function() {
-            scene.initializeFrame();
-            var isUpdated = visualizer.update(time);
-            scene.render(time);
-            return isUpdated;
-        }).then(function() {
+        return visualizerUpdated(visualizer).then(function() {
             var primitive = scene.groundPrimitives.get(0);
             var attributes = primitive.getGeometryInstanceAttributes(entity);
             expect(attributes).toBeDefined();
@@ -746,12 +677,7 @@ defineSuite([
 
             entity.polyline.show = false;
 
-            return pollToPromise(function() {
-                scene.initializeFrame();
-                var isUpdated = visualizer.update(time);
-                scene.render(time);
-                return isUpdated;
-            });
+            return visualizerUpdated(visualizer);
         }).then(function() {
             expect(scene.primitives.length).toEqual(0);
 
@@ -759,4 +685,85 @@ defineSuite([
             visualizer.destroy();
         });
     });
+
+    it('batches ground poylines by material if ground polylines are supported', function() {
+        if (!Entity.supportsPolylinesOnTerrain(scene)) {
+            return;
+        }
+
+        var entities = new EntityCollection();
+        var visualizer = new PolylineVisualizer(scene, entities);
+
+        var blueColor = Color.BLUE.withAlpha(0.5);
+        var redColor = Color.RED.withAlpha(0.5);
+        var positions = [Cartesian3.fromDegrees(0.0, 0.0), Cartesian3.fromDegrees(0.0, 0.000001)];
+        entities.add({
+            polyline : {
+                positions : positions,
+                material : blueColor,
+                classificationType : ClassificationType.TERRAIN,
+                clampToGround : true
+            }
+        });
+
+        return visualizerUpdated(visualizer).then(function() {
+            expect(scene.groundPrimitives.length).toEqual(1);
+
+            entities.add({
+                polyline : {
+                    positions : positions,
+                    material : blueColor,
+                    classificationType : ClassificationType.TERRAIN,
+                    clampToGround : true
+                }
+            });
+
+            return visualizerUpdated(visualizer);
+        }).then(function() {
+            expect(scene.groundPrimitives.length).toEqual(1);
+
+            entities.add({
+                polyline : {
+                    positions : positions,
+                    material : redColor,
+                    classificationType : ClassificationType.TERRAIN,
+                    clampToGround : true
+                }
+            });
+
+            return visualizerUpdated(visualizer);
+        }).then(function() {
+            expect(scene.groundPrimitives.length).toEqual(1);
+
+            entities.add({
+                polyline : {
+                    positions : positions,
+                    material : new PolylineArrowMaterialProperty(),
+                    classificationType : ClassificationType.TERRAIN,
+                    clampToGround : true
+                }
+            });
+
+            return visualizerUpdated(visualizer);
+        }).then(function() {
+            expect(scene.groundPrimitives.length).toEqual(2);
+
+            entities.add({
+                polyline : {
+                    positions : positions,
+                    material : new PolylineArrowMaterialProperty(),
+                    classificationType : ClassificationType.CESIUM_3D_TILE,
+                    clampToGround : true
+                }
+            });
+
+            return visualizerUpdated(visualizer);
+        }).then(function() {
+            expect(scene.groundPrimitives.length).toEqual(3);
+
+            entities.removeAll();
+            visualizer.destroy();
+        });
+    });
+
 }, 'WebGL');
