@@ -217,6 +217,21 @@ define([
         this._statisticsLastPick = new Cesium3DTilesetStatistics();
         this._statisticsLastAsync = new Cesium3DTilesetStatistics();
 
+        this._min = { centerZDepth: Number.MAX_VALUE, screenSpaceError: Number.MAX_VALUE, dynamicSSEDistance: Number.MAX_VALUE };
+        this._max = { centerZDepth: -Number.MAX_VALUE, screenSpaceError: -Number.MAX_VALUE, dynamicSSEDistance: -Number.MAX_VALUE };
+        this._previousMin = { centerZDepth: Number.MAX_VALUE, screenSpaceError: Number.MAX_VALUE, dynamicSSEDistance: Number.MAX_VALUE};
+        this._previousMax = { centerZDepth: -Number.MAX_VALUE, screenSpaceError: -Number.MAX_VALUE, dynamicSSEDistance: -Number.MAX_VALUE};
+        this._heatMapVariable = defaultValue(options.heatMapVariable, undefined);
+        if (defined(this._heatMapVariable)) {
+            // Init the min and max values for the tracked variable for the heat map
+            this._min[this._heatMapVariable] = Number.MAX_VALUE;
+            this._max[this._heatMapVariable] = -Number.MAX_VALUE;
+        }
+
+        this._totalTilesLoaded = 0;
+        this._startedLoadingTime = undefined;
+
+
         this._tilesLoaded = false;
         this._initialTilesLoaded = false;
 
@@ -382,6 +397,20 @@ define([
          * @see Cesium3DTileset#tilesLoaded
          */
         this.allTilesLoaded = new Event();
+        this.allTilesLoaded.addEventListener(function(tileset, frameState) {
+            // console.log('min Dist: ' + tileset._min.centerZDepth);
+            // console.log('max Dist: ' + tileset._max.centerZDepth);
+            // console.log('min SSE Dist: ' + tileset._min.dynamicSSEDistance);
+            // console.log('max SSE Dist: ' + tileset._max.dynamicSSEDistance);
+            // var date = new Date();
+            // var currentTime = date.getTime();
+            // var timeSinceStartedLoading = (currentTime - tileset._startedLoadingTime) / 1000; // getTime() is milliseconds since 1970
+            // console.log('loadTime(s): ' + timeSinceStartedLoading);
+            console.log('totalLoaded: ' + tileset._totalTilesLoaded);
+            tileset._startedLoadingTime = undefined;
+            tileset._totalTilesLoaded = 0;
+        });
+
 
         /**
          * The event fired to indicate that all tiles that meet the screen space error this frame are loaded. This event
@@ -1508,6 +1537,68 @@ define([
         tileset._dynamicScreenSpaceErrorComputedDensity = density;
     }
 
+    var scratchReview = new Cartesian3();
+    var scratchWorldCenter = new Cartesian3(0, 0, 0);
+    function reviewRequestsAfterTraversal(tileset, frameState) {
+        // Distance based SSE:
+        // Basically want to crank it up more and more when the view becomes a horizon view, but in a non-linear way,
+        // we don't really need distance based sse from a top-down view to a 45 view but after that need to start to introduce it
+        // in order to do this take abs(directionWC.y) and then feed this into an exposure tone map with a fast ramp
+        // then to find the far sse for a given view (used in another interp later), you interpolate between regular sse and maxDistanceSSE with this tone mapped value 
+        // interp val of 0 maps to the maxDistance sse and 1 to map to the regular sse val
+        // the flat part of the curve that maps high values to high values will be for views that are looking down, the fast ramp part of the curve is for when
+        // we start to look out to the horizon and want to ramp to a higher sse
+        // The other problem: don't have knowledge of the min and max before the req is pushed onto the req queue, so we need to post process
+        var requestedTiles = tileset._requestedTiles;
+        var length = requestedTiles.length;
+        if (length <= 1) { // Only run if there a range of requests
+            return;
+        }
+
+        // This step uses tone mapping to warp one range of values to another, specifically exposure mapping.
+        // See https://www.wolframalpha.com/input/?i=plot+1+-+e%5E(-x*4%2F(1000))+,+x%3D0..1000,+y%3D0..1
+        // The 4 in that example controls the sholder of the curve, the lower it is the more linear it looks, the higher it is the faster it ramps to 1 and stays there.
+        // The known max value is the denominator, knowing the max enables fine-tuning of the curve shape.
+        var toCenter = Cartesian3.subtract(scratchWorldCenter, frameState.camera.positionWC, scratchReview);
+        toCenter = Cartesian3.normalize(toCenter, scratchReview);
+        var topdownLookAmount = Math.abs(Cartesian3.dot(frameState.camera.directionWC, toCenter));
+        var exposureCurvature = 15; // Faster 0-1 ramp, pushes most of the input space up near 1, only very horizontal views (those really close to 0) should start to have the horizonSSE close to maxDistanceSSE
+        var maxValue = 1;
+        topdownLookAmount = 1 - Math.exp(-topdownLookAmount * exposureCurvature/maxValue);
+
+        // Determine SSE used for far away tiles (based on view direction, the more we look at the horizon the higher this number is (up to maxDistanceSSE))
+        var baseSSE = tileset._min.screenSpaceError;
+        var maxDistanceSSE = 2.0 * tileset._maximumScreenSpaceError;
+        var horizonSSE =  topdownLookAmount * baseSSE + (1 - topdownLookAmount) * maxDistanceSSE; // Only very horizontal views (views where the original non tone mapped topdownLookAmount was close to 0) will start to have a horizonSSE close to maxDistanceSSE
+        tileset._max.dynamicSSEDistance = horizonSSE; 
+        tileset._min.dynamicSSEDistance = baseSSE;
+
+        // NOTE: actually want to it so that the max value maps to 0 and the min value maps to 1 so that the tone mapping shape is appropriate for what we are trying to do
+        // So take abs to get distances to these values, or flip the order of subtraction
+        // Basically we want the fast ramping of sse to occur on tiles in the back of the frustum
+        var min = tileset._max.centerZDepth;
+        var shiftedMax = (min - tileset._min.centerZDepth) + 0.01; // prevent divide by 0
+
+        var removeCount = 0;
+        var linear = true;
+        var usePreviousFrameMinMax = false;
+        for (var i = 0; i < length; ++i) {
+            var tile = requestedTiles[i];
+            tile.setSSEDistance(shiftedMax, usePreviousFrameMinMax);
+
+            if (tile._screenSpaceError < tile._dynamicSSEDistance) {
+                ++removeCount;
+                continue;
+            }
+
+            if (removeCount > 0) {
+                // Shift back to fill in vacated slots from removed requests
+                requestedTiles[i - removeCount] = tile;
+            }
+        }
+        requestedTiles.length -= removeCount;
+    }
+
     ///////////////////////////////////////////////////////////////////////////
 
     function requestContent(tileset, tile) {
@@ -1940,7 +2031,7 @@ define([
 
         if (progressChanged && tileset._tilesLoaded) {
             frameState.afterRender.push(function() {
-                tileset.allTilesLoaded.raiseEvent();
+                tileset.allTilesLoaded.raiseEvent(tileset, frameState);
             });
             if (!tileset._initialTilesLoaded) {
                 tileset._initialTilesLoaded = true;
@@ -1948,6 +2039,9 @@ define([
                     tileset.initialTilesLoaded.raiseEvent();
                 });
             }
+        } else if (progressChanged && !defined(tileset._startedLoadingTime)) {
+            var date = new Date();
+            tileset._startedLoadingTime = date.getTime();
         }
     }
 
@@ -2004,6 +2098,9 @@ define([
         } else {
             ready = Cesium3DTilesetTraversal.selectTiles(tileset, frameState);
         }
+
+        // TODO: push functionality into request tiles. For things that can only be done after a pass over the data (ex: gathering min max values)
+        reviewRequestsAfterTraversal(tileset, frameState);
 
         if (isRender || isAsync) {
             requestTiles(tileset);
@@ -2122,6 +2219,54 @@ define([
         this._root = undefined;
         return destroyObject(this);
     };
+
+    /**
+     * Resets any tracked min max values used for priority generation or dynamic SSE. Happens before traversal.
+     *
+     * @example
+     * tileset.resetMinMax();
+     */
+    Cesium3DTileset.prototype.resetMinMax = function() {
+        // For heat map colorization: save the previous frames min max range.
+        var variableName = this._heatMapVariable;
+        if (defined(variableName)) {
+            if (variableName === 'dynamicSSEDistance') {
+                // dynamicSSEDistance needs these as well
+                this._previousMin.centerZDepth = this._min.centerZDepth;
+                this._previousMax.centerZDepth = this._max.centerZDepth;
+            }
+            this._previousMin[variableName] = this._min[variableName];
+            this._previousMax[variableName] = this._max[variableName];
+            this._min[variableName] = Number.MAX_VALUE;
+            this._max[variableName] = -Number.MAX_VALUE;
+        }
+
+        this._min.centerZDepth = Number.MAX_VALUE;
+        this._max.centerZDepth = -Number.MAX_VALUE;
+        this._min.screenSpaceError = Number.MAX_VALUE;
+        this._max.screenSpaceError = -Number.MAX_VALUE;
+        // dynamicSSEDistance doesn't need a reset (not really calculated iteratively via min and max of a set)
+    };
+
+    /**
+     * Updates any tracked min max values used for priority generation or dynamic SSE. Happens inside traversal during any attempt to load a tile.
+     *
+     * @example
+     * tileset.updateMinMax(tile);
+     */
+    Cesium3DTileset.prototype.updateMinMax = function(tile) {
+        this._max.centerZDepth = Math.max(tile._centerZDepth, this._max.centerZDepth);
+        this._min.centerZDepth = Math.min(tile._centerZDepth, this._min.centerZDepth);
+        this._max.screenSpaceError = Math.max(tile._screenSpaceError, this._max.screenSpaceError);
+        this._min.screenSpaceError = Math.min(tile._screenSpaceError, this._min.screenSpaceError);
+        
+        // For heat map colorization
+        var variableName = this._heatMapVariable;
+        if (defined(variableName)) { // Possible recalcuation of the ones above but covers a lot of cases for variables that aren't tracked
+            this._max[variableName] = Math.max(tile['_' + variableName], this._max[variableName]);
+            this._min[variableName] = Math.min(tile['_' + variableName], this._min[variableName]);
+        }
+    }
 
     return Cesium3DTileset;
 });
