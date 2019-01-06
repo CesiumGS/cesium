@@ -342,6 +342,8 @@ define([
         this._debugColor = Color.fromRandom({ alpha : 1.0 });
         this._debugColorizeTiles = false;
 
+        this._dynamicSSEDistance = 0;
+
         this._commandsLength = 0;
 
         this._color = undefined;
@@ -946,7 +948,7 @@ define([
     var scratchToTileCenter = new Cartesian3();
 
     /**
-     * Computes the distance from the center of the tile's bounding volume to the camera.
+     * Computes the distance from the center of the tile's bounding volume to the camera's plane defined by its position and view direction.
      *
      * @param {FrameState} frameState The frame state.
      * @returns {Number} The distance, in meters.
@@ -957,10 +959,7 @@ define([
         var tileBoundingVolume = getBoundingVolume(this, frameState);
         var boundingVolume = tileBoundingVolume.boundingVolume; // Gets the underlying OrientedBoundingBox or BoundingSphere
         var toCenter = Cartesian3.subtract(boundingVolume.center, frameState.camera.positionWC, scratchToTileCenter);
-        var distance = Cartesian3.magnitude(toCenter);
-        Cartesian3.divideByScalar(toCenter, distance, toCenter);
-        var dot = Cartesian3.dot(frameState.camera.directionWC, toCenter);
-        return distance * dot;
+        return Cartesian3.dot(frameState.camera.directionWC, toCenter);
     };
 
     /**
@@ -1277,6 +1276,96 @@ define([
         this._debugViewerRequestVolume = this._debugViewerRequestVolume && this._debugViewerRequestVolume.destroy();
         return destroyObject(this);
     };
+
+    /**
+     * Determine the dynamicSSEDistance. This is a dynamic sse threshold for the tile depending on how far it is away from the camera relative to other tiles.
+     * @param {shiftedMax} The shifted max value. The min max window is shifted down to 0 before the calculation. This is caculated outside this function and passed since this is function usually called in a tight loop.
+     * @param {usePreviousFrameMinMax} Whether or not to use the previous frames min max values for this calculation (heat map colorization).
+     *
+     * @private
+     */
+    Cesium3DTile.prototype.setSSEDistance = function (shiftedMax, usePreviousFrameMinMax) {
+        var exposureCurvature = 7;
+        var linear = true;
+        var tileset = this.tileset;
+        var baseSSE, horizonSSE, shiftedPriority;
+        if (usePreviousFrameMinMax) {
+            baseSSE = tileset._previousMin.dynamicSSEDistance;
+            horizonSSE = tileset._previousMax.dynamicSSEDistance;
+            shiftedPriority = tileset._previousMax.centerZDepth - this._centerZDepth;
+        } else {
+            baseSSE = tileset._min.dynamicSSEDistance;
+            horizonSSE = tileset._max.dynamicSSEDistance;
+            shiftedPriority = tileset._max.centerZDepth - this._centerZDepth;
+        }
+        var zeroToOneDistance = linear ? Math.min(shiftedPriority / shiftedMax, 1) : 1 - Math.exp(-shiftedPriority * exposureCurvature/shiftedMax);
+        this._dynamicSSEDistance = zeroToOneDistance * baseSSE + (1 - zeroToOneDistance) * horizonSSE; // When it's 0 (at tileset._max.centerZDepth) we want the sse to be horizonSSE, as you come away from the horizon we want to quickly ramp back down to the normal base SSE
+    }
+
+    function getTileValue(tile, variableName) {
+        var tileValue;
+        if (variableName === 'dynamicSSEDistance') {
+            // dynamicSSEDistance is a special case that needs to be recalculated if you want a debug colorization of it. Outside of debug use cases, it really only needs to be caculated on tiles before they go out to cull any requests.
+            // Ex: very distant tiles on horizon views will have more relaxed sse requirements so they don't need requests
+            var usePreviousFrameMinMax = true;
+            var tileset = tile.tileset;
+            var shiftedMax = (tileset._max.centerZDepth - tileset._min.centerZDepth) + 0.01; // prevent divide by 0
+            tile.setSSEDistance(shiftedMax, usePreviousFrameMinMax);
+            tileValue = tile._dynamicSSEDistance;
+        } else {
+            tileValue = tile['_' + variableName];
+        }
+        return tileValue;
+    }
+
+    var heatMapColors = [];
+    heatMapColors[0] = new Color(0,0,0,1);
+    heatMapColors[1] = new Color(0,0,1,1);
+    heatMapColors[2] = new Color(0,1,0,1);
+    heatMapColors[3] = new Color(1,0,0,1);
+    heatMapColors[4] = new Color(1,1,1,1);
+    /**
+     * Colorize the tile in heat map style base on where it lies within the min max window.
+     * Heatmap colors are black, blue, green, red, white. 'Cold' or low numbers will be black and blue, 'Hot' or high numbers will be red and white, 
+     * @param {variableName} the name of the variable we want to colorize relative to min max of the rendered tiles
+     *
+     * @private
+     */
+    Cesium3DTile.prototype.colorize = function (variableName) {
+        // Check if turned off
+        if (!defined(variableName)) {
+            return;
+        }
+
+        // Use the string to get the actual values. TODO: during tileset init warn about possible mispellings, i.e. can't find the var
+        var tileset = this.tileset;
+        var min = tileset._previousMin[variableName];
+        var max = tileset._previousMax[variableName];
+        var tileValue = getTileValue(this, variableName);
+
+        // Shift the min max window down to 0
+        var shiftedValue = tileValue - min;
+        var shiftedMax = (max - min) + 0.001; // Prevent divide by 0
+
+        // Get position between min and max and convert that to a position in the color array
+        var zeroToOne = Math.max(Math.min(shiftedValue / shiftedMax, 1.0), 0);
+        var lastIndex = heatMapColors.length - 1;
+        var colorPosition = zeroToOne * lastIndex;
+
+        // Take floor and ceil of the value to get the two colors to lerp between, lerp using the fractional portion
+        var colorPositionFloor = Math.floor(colorPosition);
+        var colorPositionCeil = Math.min(Math.ceil(colorPosition), lastIndex);
+        var lerpValue = colorPosition - colorPositionFloor;
+        var colorA = heatMapColors[colorPositionFloor];
+        var colorB = heatMapColors[colorPositionCeil];
+
+        // Perform the lerp
+        var finalColor = heatMapColors[4]; // Init to white
+        finalColor.red = colorA.red * (1 - lerpValue) + colorB.red * lerpValue;
+        finalColor.green = colorA.green * (1 - lerpValue) + colorB.green * lerpValue;
+        finalColor.blue = colorA.blue * (1 - lerpValue) + colorB.blue * lerpValue;
+        this.color = finalColor;
+    }
 
     return Cesium3DTile;
 });
