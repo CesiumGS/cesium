@@ -369,7 +369,7 @@ define([
         }
 
         if (!defined(copy)) {
-            copy = Array.prototype.slice.call(typedArray)
+            copy = Array.prototype.slice.call(typedArray);
         }
 
         copy.sort(comparator);
