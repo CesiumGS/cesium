@@ -2015,10 +2015,8 @@ define([
             ready = Cesium3DTilesetTraversal.selectTiles(tileset, frameState);
         }
 
-        // TODO: push functionality into request tiles. For things that can only be done after a pass over the data (ex: gathering min max values)
-        if (tileset.dynamicScreenSpaceError) { 
-            reviewRequestsAfterTraversal(tileset, frameState);
-        }
+        // For things that can't be done during traversal
+        reviewRequestsAfterTraversal(tileset, frameState);
 
         if (isRender || isAsync) {
             requestTiles(tileset);
