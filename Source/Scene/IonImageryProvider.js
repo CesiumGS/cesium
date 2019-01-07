@@ -165,7 +165,7 @@ define([
                 var imageryProvider;
                 var externalType = endpoint.externalType;
                 if (!defined(externalType)) {
-                    imageryProvider = createTileMapServiceImageryProvider({
+                    imageryProvider = new TileMapServiceImageryProvider({
                         url: new IonResource(endpoint, endpointResource)
                     });
                 } else {
