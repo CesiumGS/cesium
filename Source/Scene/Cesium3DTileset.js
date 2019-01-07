@@ -397,17 +397,12 @@ define([
          * @see Cesium3DTileset#tilesLoaded
          */
         this.allTilesLoaded = new Event();
-        this.allTilesLoaded.addEventListener(function(tileset, frameState) {
+        this.allTilesLoaded.addEventListener(function(tileset) {
             // console.log('min Dist: ' + tileset._min.centerZDepth);
             // console.log('max Dist: ' + tileset._max.centerZDepth);
             // console.log('min SSE Dist: ' + tileset._min.dynamicSSEDistance);
             // console.log('max SSE Dist: ' + tileset._max.dynamicSSEDistance);
-            // var date = new Date();
-            // var currentTime = date.getTime();
-            // var timeSinceStartedLoading = (currentTime - tileset._startedLoadingTime) / 1000; // getTime() is milliseconds since 1970
-            // console.log('loadTime(s): ' + timeSinceStartedLoading);
             console.log('totalLoaded: ' + tileset._totalTilesLoaded);
-            tileset._startedLoadingTime = undefined;
             tileset._totalTilesLoaded = 0;
         });
 
@@ -2031,7 +2026,7 @@ define([
 
         if (progressChanged && tileset._tilesLoaded) {
             frameState.afterRender.push(function() {
-                tileset.allTilesLoaded.raiseEvent(tileset, frameState);
+                tileset.allTilesLoaded.raiseEvent(tileset);
             });
             if (!tileset._initialTilesLoaded) {
                 tileset._initialTilesLoaded = true;
@@ -2039,9 +2034,6 @@ define([
                     tileset.initialTilesLoaded.raiseEvent();
                 });
             }
-        } else if (progressChanged && !defined(tileset._startedLoadingTime)) {
-            var date = new Date();
-            tileset._startedLoadingTime = date.getTime();
         }
     }
 

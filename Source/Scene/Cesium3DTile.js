@@ -1285,8 +1285,8 @@ define([
      * @private
      */
     Cesium3DTile.prototype.setSSEDistance = function (shiftedMax, usePreviousFrameMinMax) {
-        var exposureCurvature = 7;
-        var linear = true;
+        var exposureCurvature = 4;
+        var linear = false; // If not linear, only tiles in the very back of horizon-like views will get sse relaxation, worth experimenting between the two. I think linear is fine, but exposure mapping is airing on the safe side.
         var tileset = this.tileset;
         var baseSSE, horizonSSE, shiftedPriority;
         if (usePreviousFrameMinMax) {
@@ -1305,8 +1305,7 @@ define([
     function getTileValue(tile, variableName) {
         var tileValue;
         if (variableName === 'dynamicSSEDistance') {
-            // dynamicSSEDistance is a special case that needs to be recalculated if you want a debug colorization of it. Outside of debug use cases, it really only needs to be caculated on tiles before they go out to cull any requests.
-            // Ex: very distant tiles on horizon views will have more relaxed sse requirements so they don't need requests
+            // If doing a heatmap dubug vis, dynamicSSEDistance needs to be recalculated using last frames info. dynamicSSEDistance normally get's updated on requested tiles so they can be culled if need be. 
             var usePreviousFrameMinMax = true;
             var tileset = tile.tileset;
             var shiftedMax = (tileset._max.centerZDepth - tileset._min.centerZDepth) + 0.01; // prevent divide by 0
