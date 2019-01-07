@@ -229,8 +229,6 @@ define([
         }
 
         this._totalTilesLoaded = 0;
-        this._startedLoadingTime = undefined;
-
 
         this._tilesLoaded = false;
         this._initialTilesLoaded = false;
@@ -446,6 +444,9 @@ define([
          * });
          */
         this.tileLoad = new Event();
+        this.tileLoad.addEventListener(function(tile) {
+            tile.tileset._totalTilesLoaded++;
+        });
 
         /**
          * The event fired to indicate that a tile's content was unloaded.
@@ -1473,13 +1474,13 @@ define([
         var toCenter = Cartesian3.subtract(scratchWorldCenter, frameState.camera.positionWC, scratchReview);
         toCenter = Cartesian3.normalize(toCenter, scratchReview);
         var topdownLookAmount = Math.abs(Cartesian3.dot(frameState.camera.directionWC, toCenter));
-        var exposureCurvature = 15; // Faster 0-1 ramp, pushes most of the input space up near 1, only very horizontal views (those really close to 0) should start to have the horizonSSE close to maxDistanceSSE
+        var exposureCurvature = 8.0; // Faster 0-1 ramp, pushes most of the input space up near 1, only very horizontal views (those really close to 0) should start to have the horizonSSE close to maxDistanceSSE
         var maxValue = 1;
         topdownLookAmount = 1 - Math.exp(-topdownLookAmount * exposureCurvature/maxValue);
 
         // Determine SSE used for far away tiles (based on view direction, the more we look at the horizon the higher this number is (up to maxDistanceSSE))
         var baseSSE = tileset._min.screenSpaceError;
-        var maxDistanceSSE = 2.0 * tileset._maximumScreenSpaceError; // Allow control of this?
+        var maxDistanceSSE = 8.0 * tileset._maximumScreenSpaceError; // Allow control of this?
         var horizonSSE =  topdownLookAmount * baseSSE + (1 - topdownLookAmount) * maxDistanceSSE; // Only very horizontal views (views where the original non tone mapped topdownLookAmount was close to 0) will start to have a horizonSSE close to maxDistanceSSE
         tileset._max.dynamicSSEDistance = horizonSSE; 
         tileset._min.dynamicSSEDistance = baseSSE;

@@ -1285,8 +1285,6 @@ define([
      * @private
      */
     Cesium3DTile.prototype.setSSEDistance = function (shiftedMax, usePreviousFrameMinMax) {
-        var exposureCurvature = 4;
-        var linear = false; // If not linear, only tiles in the very back of horizon-like views will get sse relaxation, worth experimenting between the two. I think linear is fine, but exposure mapping is airing on the safe side.
         var tileset = this.tileset;
         var baseSSE, horizonSSE, shiftedPriority;
         if (usePreviousFrameMinMax) {
@@ -1298,6 +1296,8 @@ define([
             horizonSSE = tileset._max.dynamicSSEDistance;
             shiftedPriority = tileset._max.centerZDepth - this._centerZDepth;
         }
+        var linear = true; // If not linear, only tiles in the very back of horizon-like views will get sse relaxation, worth experimenting between the two. I think linear is fine, but exposure mapping is airing on the safe side.
+        var exposureCurvature = 4;
         var zeroToOneDistance = linear ? Math.min(shiftedPriority / shiftedMax, 1) : 1 - Math.exp(-shiftedPriority * exposureCurvature/shiftedMax);
         this._dynamicSSEDistance = zeroToOneDistance * baseSSE + (1 - zeroToOneDistance) * horizonSSE; // When it's 0 (at tileset._max.centerZDepth) we want the sse to be horizonSSE, as you come away from the horizon we want to quickly ramp back down to the normal base SSE
     }
