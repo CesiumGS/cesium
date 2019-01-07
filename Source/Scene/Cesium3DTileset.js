@@ -1491,7 +1491,9 @@ define([
     function reviewRequestsAfterTraversal(tileset, frameState) {
         var requestedTiles = tileset._requestedTiles;
         var length = requestedTiles.length;
-        if (length <= 1) { // Only run if there a range of requests
+
+        // Only run if there are range of requests
+        if (length <= 1) {
             return;
         }
 
