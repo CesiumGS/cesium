@@ -219,8 +219,6 @@ define([
 
         this._min = { centerZDepth: Number.MAX_VALUE, screenSpaceError: Number.MAX_VALUE, dynamicSSEDistance: Number.MAX_VALUE };
         this._max = { centerZDepth: -Number.MAX_VALUE, screenSpaceError: -Number.MAX_VALUE, dynamicSSEDistance: -Number.MAX_VALUE };
-        this._previousMin = { centerZDepth: Number.MAX_VALUE, screenSpaceError: Number.MAX_VALUE, dynamicSSEDistance: Number.MAX_VALUE};
-        this._previousMax = { centerZDepth: -Number.MAX_VALUE, screenSpaceError: -Number.MAX_VALUE, dynamicSSEDistance: -Number.MAX_VALUE};
         this._heatMapVariable = defaultValue(options.heatMapVariable, undefined);
         if (defined(this._heatMapVariable)) {
             // Init the min and max values for the tracked variable for the heat map
@@ -1590,7 +1588,7 @@ define([
             var tile = requestedTiles[i];
 
             if (tileset.dynamicScreenSpaceErrorDistance) {
-                tile.setSSEDistance(dynamicSSEDistanceShiftedMax, false);
+                tile.setSSEDistance(dynamicSSEDistanceShiftedMax);
                 if (tile._screenSpaceError < tile._dynamicSSEDistance) {
                     ++removeCount;
                     continue;
@@ -2233,13 +2231,6 @@ define([
         // For heat map colorization: save the previous frames min max range.
         var variableName = this._heatMapVariable;
         if (defined(variableName)) {
-            if (variableName === 'dynamicSSEDistance') {
-                // dynamicSSEDistance needs these as well
-                this._previousMin.centerZDepth = this._min.centerZDepth;
-                this._previousMax.centerZDepth = this._max.centerZDepth;
-            }
-            this._previousMin[variableName] = this._min[variableName];
-            this._previousMax[variableName] = this._max[variableName];
             this._min[variableName] = Number.MAX_VALUE;
             this._max[variableName] = -Number.MAX_VALUE;
         }

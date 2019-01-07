@@ -1176,6 +1176,7 @@ define([
             tile.color = Color.WHITE;
         }
 
+        tile.colorize(tileset._heatMapVariable); // Skipped if heatMapVariable is undefined
         if (tile._colorDirty) {
             tile._colorDirty = false;
             tile._content.applyDebugSettings(true, tile._color);
@@ -1284,19 +1285,12 @@ define([
      *
      * @private
      */
-    Cesium3DTile.prototype.setSSEDistance = function (shiftedMax, usePreviousFrameMinMax) {
+    Cesium3DTile.prototype.setSSEDistance = function (shiftedMax) {
         var tileset = this.tileset;
-        var baseSSE, horizonSSE, shiftedPriority;
-        if (usePreviousFrameMinMax) {
-            baseSSE = tileset._previousMin.dynamicSSEDistance;
-            horizonSSE = tileset._previousMax.dynamicSSEDistance;
-            shiftedPriority = tileset._previousMax.centerZDepth - this._centerZDepth;
-        } else {
-            baseSSE = tileset._min.dynamicSSEDistance;
-            horizonSSE = tileset._max.dynamicSSEDistance;
-            shiftedPriority = tileset._max.centerZDepth - this._centerZDepth;
-        }
-        var linear = true; // If not linear, only tiles in the very back of horizon-like views will get sse relaxation, worth experimenting between the two. I think linear is fine, but exposure mapping is airing on the safe side.
+        var baseSSE = tileset._min.dynamicSSEDistance;
+        var horizonSSE = tileset._max.dynamicSSEDistance;
+        var shiftedPriority = tileset._max.centerZDepth - this._centerZDepth;
+        var linear = true; // Linear is more aggressive falloff, exposure tone mapping can more finely control how dynamic sse kicks in as tiles get further away
         var exposureCurvature = 4;
         var zeroToOneDistance = linear ? Math.min(shiftedPriority / shiftedMax, 1) : 1 - Math.exp(-shiftedPriority * exposureCurvature/shiftedMax);
         this._dynamicSSEDistance = zeroToOneDistance * baseSSE + (1 - zeroToOneDistance) * horizonSSE; // When it's 0 (at tileset._max.centerZDepth) we want the sse to be horizonSSE, as you come away from the horizon we want to quickly ramp back down to the normal base SSE
@@ -1305,11 +1299,10 @@ define([
     function getTileValue(tile, variableName) {
         var tileValue;
         if (variableName === 'dynamicSSEDistance') {
-            // If doing a heatmap dubug vis, dynamicSSEDistance needs to be recalculated using last frames info. dynamicSSEDistance normally get's updated on requested tiles so they can be culled if need be. 
-            var usePreviousFrameMinMax = true;
+            // If doing a heatmap dubug vis, dynamicSSEDistance needs to be recalculated. Normally dynamicSSEDistance get's updated only on requested tiles so they can be culled if need be. 
             var tileset = tile.tileset;
             var shiftedMax = (tileset._max.centerZDepth - tileset._min.centerZDepth) + 0.01; // prevent divide by 0
-            tile.setSSEDistance(shiftedMax, usePreviousFrameMinMax);
+            tile.setSSEDistance(shiftedMax);
             tileValue = tile._dynamicSSEDistance;
         } else {
             tileValue = tile['_' + variableName];
@@ -1331,15 +1324,17 @@ define([
      * @private
      */
     Cesium3DTile.prototype.colorize = function (variableName) {
-        // Check if turned off
         if (!defined(variableName)) {
             return;
         }
 
         // Use the string to get the actual values. TODO: during tileset init warn about possible mispellings, i.e. can't find the var
         var tileset = this.tileset;
-        var min = tileset._previousMin[variableName];
-        var max = tileset._previousMax[variableName];
+        var min = tileset._min[variableName];
+        var max = tileset._max[variableName];
+        if (min === Number.MAX_VALUE || max === -Number.MAX_VALUE) {
+            return;
+        }
         var tileValue = getTileValue(this, variableName);
 
         // Shift the min max window down to 0
