@@ -97,6 +97,16 @@ define([
         var deferred = when.defer();
         UrlTemplateImageryProvider.call(this, deferred.promise);
 
+        this._tmsResource = undefined;
+        this._xmlResource = undefined;
+        this._options = options;
+        this._deferred = deferred;
+        this._metadataError = undefined;
+
+        this._metadataSuccess = this._metadataSuccess.bind(this);
+        this._metadataFailure = this._metadataFailure.bind(this);
+        this._requestMetadata = this._requestMetadata.bind(this);
+
         var resource;
         var that = this;
         when(options.url)
@@ -114,16 +124,6 @@ define([
             .otherwise(function(e) {
                 deferred.reject(e);
             });
-
-        this._tmsResource = undefined;
-        this._xmlResource = undefined;
-        this._options = options;
-        this._deferred = deferred;
-        this._metadataError = undefined;
-
-        this._metadataSuccess = this._metadataSuccess.bind(this);
-        this._metadataFailure = this._metadataFailure.bind(this);
-        this._requestMetadata = this._requestMetadata.bind(this);
     }
 
     if (defined(Object.create)) {
