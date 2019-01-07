@@ -414,6 +414,37 @@ define([
         this.encodedNormal = new Cartesian2();
     }
 
+    function fillMissingCorner(fill, ellipsoid, u, v, corner, adjacentCorner1, adjacentCorner2, oppositeCorner, vertex) {
+        if (defined(corner)) {
+            return corner;
+        }
+
+        var height;
+
+        if (defined(adjacentCorner1) && defined(adjacentCorner2)) {
+            height = (adjacentCorner1.height + adjacentCorner2.height) * 0.5;
+        } else if (defined(adjacentCorner1)) {
+            height = adjacentCorner1.height;
+        } else if (defined(adjacentCorner2)) {
+            height = adjacentCorner2.height;
+        } else if (defined(oppositeCorner)) {
+            height = oppositeCorner.height;
+        } else {
+            var surfaceTile = fill.tile.data;
+            var tileBoundingRegion = surfaceTile.tileBoundingRegion;
+            var minimumHeight = 0.0;
+            var maximumHeight = 0.0;
+            if (defined(tileBoundingRegion)) {
+                minimumHeight = tileBoundingRegion.minimumHeight;
+                maximumHeight = tileBoundingRegion.maximumHeight;
+            }
+            height = (minimumHeight + maximumHeight) * 0.5;
+        }
+
+        getVertexWithHeightAtCorner(fill, ellipsoid, u, v, height, vertex);
+        return vertex;
+    }
+
     var swVertexScratch = new HeightAndNormal();
     var seVertexScratch = new HeightAndNormal();
     var nwVertexScratch = new HeightAndNormal();
@@ -430,6 +461,11 @@ define([
         var swCorner = getCorner(fill, ellipsoid, 0.0, 0.0, fill.southwestTile, fill.southwestMesh, fill.westTiles, fill.westMeshes, fill.southTiles, fill.southMeshes, swVertexScratch);
         var seCorner = getCorner(fill, ellipsoid, 1.0, 0.0, fill.southeastTile, fill.southeastMesh, fill.southTiles, fill.southMeshes, fill.eastTiles, fill.eastMeshes, seVertexScratch);
         var neCorner = getCorner(fill, ellipsoid, 1.0, 1.0, fill.northeastTile, fill.northeastMesh, fill.eastTiles, fill.eastMeshes, fill.northTiles, fill.northMeshes, neVertexScratch);
+
+        nwCorner = fillMissingCorner(fill, ellipsoid, 0.0, 1.0, nwCorner, swCorner, neCorner, seCorner, nwVertexScratch);
+        swCorner = fillMissingCorner(fill, ellipsoid, 0.0, 0.0, swCorner, nwCorner, seCorner, neCorner, swVertexScratch);
+        seCorner = fillMissingCorner(fill, ellipsoid, 1.0, 1.0, seCorner, swCorner, neCorner, nwCorner, seVertexScratch);
+        neCorner = fillMissingCorner(fill, ellipsoid, 1.0, 1.0, neCorner, seCorner, nwCorner, swCorner, neVertexScratch);
 
         var southwestHeight = swCorner.height;
         var southeastHeight = seCorner.height;
@@ -774,7 +810,10 @@ define([
         }
 
         // There is no precise vertex available from the corner or from either adjacent edge.
-        // So use the height from the closest vertex anywhere on the perimeter of this tile.
+        // This is either because there are no tiles at all at the edges and corner, or
+        // because the tiles at the edge are higher-level-number and don't extend all the way
+        // to the corner.
+        // Try to grab a height from the adjacent edges.
         var height;
         if (u === 0.0) {
             if (v === 0.0) {
@@ -782,22 +821,12 @@ define([
                 height = getClosestHeightToCorner(
                     terrainFillMesh.southMeshes, terrainFillMesh.southTiles, TileEdge.NORTH,
                     terrainFillMesh.westMeshes, terrainFillMesh.westTiles, TileEdge.EAST,
-                    terrainFillMesh.southeastMesh, terrainFillMesh.southeastTile, TileEdge.NORTHWEST,
-                    terrainFillMesh.northwestMesh, terrainFillMesh.northwestTile, TileEdge.SOUTHEAST,
-                    terrainFillMesh.eastMeshes, terrainFillMesh.eastTiles, TileEdge.WEST,
-                    terrainFillMesh.northMeshes, terrainFillMesh.northTiles, TileEdge.SOUTH,
-                    terrainFillMesh.northeastMesh, terrainFillMesh.northeastTile, TileEdge.SOUTHWEST,
                     u, v);
             } else {
                 // northwest
                 height = getClosestHeightToCorner(
                     terrainFillMesh.northMeshes, terrainFillMesh.northTiles, TileEdge.SOUTH,
                     terrainFillMesh.westMeshes, terrainFillMesh.westTiles, TileEdge.EAST,
-                    terrainFillMesh.southwestMesh, terrainFillMesh.southwestTile, TileEdge.NORTHEAST,
-                    terrainFillMesh.northeastMesh, terrainFillMesh.northeastTile, TileEdge.SOUTHWEST,
-                    terrainFillMesh.eastMeshes, terrainFillMesh.eastTiles, TileEdge.WEST,
-                    terrainFillMesh.southMeshes, terrainFillMesh.southTiles, TileEdge.NORTH,
-                    terrainFillMesh.southeastMesh, terrainFillMesh.southeastTile, TileEdge.NORTHWEST,
                     u, v);
             }
         } else if (v === 0.0) {
@@ -805,88 +834,39 @@ define([
             height = getClosestHeightToCorner(
                 terrainFillMesh.southMeshes, terrainFillMesh.southTiles, TileEdge.NORTH,
                 terrainFillMesh.eastMeshes, terrainFillMesh.eastTiles, TileEdge.WEST,
-                terrainFillMesh.southwestMesh, terrainFillMesh.southwestTile, TileEdge.NORTHEAST,
-                terrainFillMesh.northeastMesh, terrainFillMesh.northeastTile, TileEdge.SOUTHWEST,
-                terrainFillMesh.westMeshes, terrainFillMesh.westTiles, TileEdge.EAST,
-                terrainFillMesh.northMeshes, terrainFillMesh.northTiles, TileEdge.SOUTH,
-                terrainFillMesh.northwestMesh, terrainFillMesh.northwestTile, TileEdge.SOUTHEAST,
                 u, v);
         } else {
             // northeast
             height = getClosestHeightToCorner(
                 terrainFillMesh.northMeshes, terrainFillMesh.northTiles, TileEdge.SOUTH,
                 terrainFillMesh.eastMeshes, terrainFillMesh.eastTiles, TileEdge.WEST,
-                terrainFillMesh.southeastMesh, terrainFillMesh.southeastTile, TileEdge.NORTHWEST,
-                terrainFillMesh.northwestMesh, terrainFillMesh.northwestTile, TileEdge.SOUTHEAST,
-                terrainFillMesh.westMeshes, terrainFillMesh.westTiles, TileEdge.EAST,
-                terrainFillMesh.southMeshes, terrainFillMesh.southTiles,TileEdge.NORTH,
-                terrainFillMesh.southwestMesh, terrainFillMesh.southwestTile, TileEdge.NORTHEAST,
                 u, v);
         }
 
-        if (!defined(height)) {
-            // No heights available whatsoever, so use the average of this tile's minimum and maximum height.
-            var surfaceTile = terrainFillMesh.tile.data;
-            var tileBoundingRegion = surfaceTile.tileBoundingRegion;
-            var minimumHeight = 0.0;
-            var maximumHeight = 0.0;
-            if (defined(tileBoundingRegion)) {
-                minimumHeight = tileBoundingRegion.minimumHeight;
-                maximumHeight = tileBoundingRegion.maximumHeight;
-            }
-            height = (minimumHeight + maximumHeight) * 0.5;
+        if (defined(height)) {
+            getVertexWithHeightAtCorner(terrainFillMesh, ellipsoid, u, v, height, vertex);
+            return vertex;
         }
 
-        getVertexWithHeightAtCorner(terrainFillMesh, ellipsoid, u, v, height, vertex);
-        return vertex;
+        // No heights available that are closer than the adjacent corners.
+        return undefined;
     }
 
     function getClosestHeightToCorner(
         adjacentEdge1Meshes, adjacentEdge1Tiles, adjacentEdge1,
         adjacentEdge2Meshes, adjacentEdge2Tiles, adjacentEdge2,
-        adjacentCorner1Mesh, adjacentCorner1Tile, adjacentCorner1,
-        adjacentCorner2Mesh, adjacentCorner2Tile, adjacentCorner2,
-        oppositeEdge1Meshes, oppositeEdge1Tiles, oppositeEdge1,
-        oppositeEdge2Meshes, oppositeEdge2Tiles, oppositeEdge2,
-        oppositeCornerMesh, oppositeCornerTile, oppositeCorner,
         u, v
     ) {
-        // To find a height to use for this corner, we'll first look at the two adjacent edges,
-        // then the two adjacent corners, then the two opposite edges, then the two opposite
-        // corners. When e.g. both adjacent edges have a height, it would be better to choose
-        // the closest height rather than always choosing adjacentEdge1's height, as we're
-        // doing here, but it probably doesn't matter too much.
-        var height = getNearestHeightOnEdge(adjacentEdge1Meshes, adjacentEdge1Tiles, false, adjacentEdge1, u, v);
-        if (defined(height)) {
-            return height;
+        var height1 = getNearestHeightOnEdge(adjacentEdge1Meshes, adjacentEdge1Tiles, false, adjacentEdge1, u, v);
+        var height2 = getNearestHeightOnEdge(adjacentEdge2Meshes, adjacentEdge2Tiles, true, adjacentEdge2, u, v);
+        if (defined(height1) && defined(height2)) {
+            // It would be slightly better to do a weighted average of the two heights
+            // based on their distance from the corner, but it shouldn't matter much in practice.
+            return (height1 + height2) * 0.5;
+        } else if (defined(height1)) {
+            return height1;
         }
-
-        height = getNearestHeightOnEdge(adjacentEdge2Meshes, adjacentEdge2Tiles, true, adjacentEdge2, u, v);
-        if (defined(height)) {
-            return height;
-        }
-
-        height = getHeightAtCorner(adjacentCorner1Mesh, adjacentCorner1Tile, adjacentCorner1, u, v);
-        if (defined(height)) {
-            return height;
-        }
-
-        height = getHeightAtCorner(adjacentCorner2Mesh, adjacentCorner2Tile, adjacentCorner2, u, v);
-        if (defined(height)) {
-            return height;
-        }
-
-        height = getNearestHeightOnEdge(oppositeEdge1Meshes, oppositeEdge1Tiles, false, oppositeEdge1, u, v);
-        if (defined(height)) {
-            return height;
-        }
-
-        height = getNearestHeightOnEdge(oppositeEdge2Meshes, oppositeEdge2Tiles, true, oppositeEdge2, u, v);
-        if (defined(height)) {
-            return height;
-        }
-
-        return getHeightAtCorner(oppositeCornerMesh, oppositeCornerTile, oppositeCorner, u, v);
+        return height2;
     }
 
     function addEdge(terrainFillMesh, ellipsoid, encoding, typedArray, nextIndex, edgeTiles, edgeMeshes, tileEdge) {
