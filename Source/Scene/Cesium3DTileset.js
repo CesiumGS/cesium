@@ -253,7 +253,7 @@ define([
          * @type {Boolean}
          * @default false
          */
-        this.dynamicScreenSpaceError = defaultValue(options.dynamicScreenSpaceError, false)
+        this.dynamicScreenSpaceError = defaultValue(options.dynamicScreenSpaceError, false);
 
         /**
          * Optimization option. Whether the tileset should refine based on a dynamic screen space error. Tiles that are further
@@ -412,7 +412,6 @@ define([
             console.log('totalLoaded: ' + tileset._totalTilesLoaded);
             tileset._totalTilesLoaded = 0;
         });
-
 
         /**
          * The event fired to indicate that all tiles that meet the screen space error this frame are loaded. This event
@@ -1563,10 +1562,10 @@ define([
         var baseSSE = tileset._min.screenSpaceError;
         var maxDistanceSSE = 8.0 * tileset._maximumScreenSpaceError; // Allow control of this?
         var horizonSSE =  topdownLookAmount * baseSSE + (1 - topdownLookAmount) * maxDistanceSSE; // Only very horizontal views (views where the original non tone mapped topdownLookAmount was close to 0) will start to have a horizonSSE close to maxDistanceSSE
-        tileset._max.dynamicSSEDistance = horizonSSE; 
+        tileset._max.dynamicSSEDistance = horizonSSE;
         tileset._min.dynamicSSEDistance = baseSSE;
 
-        return (tileset._max.centerZDepth - tileset._min.centerZDepth) + 0.01; // prevent divide by 0
+        return (tileset._max.centerZDepth - tileset._min.centerZDepth) + 0.01; // Prevent divide by 0
     }
 
     function reviewRequestsAfterTraversal(tileset, frameState) {
@@ -2253,14 +2252,14 @@ define([
         this._min.centerZDepth = Math.min(tile._centerZDepth, this._min.centerZDepth);
         this._max.screenSpaceError = Math.max(tile._screenSpaceError, this._max.screenSpaceError);
         this._min.screenSpaceError = Math.min(tile._screenSpaceError, this._min.screenSpaceError);
-        
+
         // For heat map colorization
         var variableName = this._heatMapVariable;
         if (defined(variableName)) { // Possible recalcuation of the ones above but covers a lot of cases for variables that aren't tracked
             this._max[variableName] = Math.max(tile['_' + variableName], this._max[variableName]);
             this._min[variableName] = Math.min(tile['_' + variableName], this._min[variableName]);
         }
-    }
+    };
 
     return Cesium3DTileset;
 });

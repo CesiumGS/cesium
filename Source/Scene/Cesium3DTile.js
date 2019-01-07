@@ -1294,12 +1294,13 @@ define([
         var exposureCurvature = 4;
         var zeroToOneDistance = linear ? Math.min(shiftedPriority / shiftedMax, 1) : 1 - Math.exp(-shiftedPriority * exposureCurvature/shiftedMax);
         this._dynamicSSEDistance = zeroToOneDistance * baseSSE + (1 - zeroToOneDistance) * horizonSSE; // When it's 0 (at tileset._max.centerZDepth) we want the sse to be horizonSSE, as you come away from the horizon we want to quickly ramp back down to the normal base SSE
-    }
+    };
 
     function getTileValue(tile, variableName) {
         var tileValue;
         if (variableName === 'dynamicSSEDistance') {
-            // If doing a heatmap dubug vis, dynamicSSEDistance needs to be recalculated. Normally dynamicSSEDistance get's updated only on requested tiles so they can be culled if need be. 
+            // If doing a heatmap dubug vis, dynamicSSEDistance needs to be recalculated.
+            // Normally dynamicSSEDistance get's updated only on requested tiles so they can be culled if need be.
             var tileset = tile.tileset;
             var shiftedMax = (tileset._max.centerZDepth - tileset._min.centerZDepth) + 0.01; // prevent divide by 0
             tile.setSSEDistance(shiftedMax);
@@ -1318,7 +1319,7 @@ define([
     heatMapColors[4] = new Color(1,1,1,1);
     /**
      * Colorize the tile in heat map style base on where it lies within the min max window.
-     * Heatmap colors are black, blue, green, red, white. 'Cold' or low numbers will be black and blue, 'Hot' or high numbers will be red and white, 
+     * Heatmap colors are black, blue, green, red, white. 'Cold' or low numbers will be black and blue, 'Hot' or high numbers will be red and white,
      * @param {variableName} the name of the variable we want to colorize relative to min max of the rendered tiles
      *
      * @private
@@ -1359,7 +1360,7 @@ define([
         finalColor.green = colorA.green * (1 - lerpValue) + colorB.green * lerpValue;
         finalColor.blue = colorA.blue * (1 - lerpValue) + colorB.blue * lerpValue;
         this.color = finalColor;
-    }
+    };
 
     return Cesium3DTile;
 });
