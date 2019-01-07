@@ -103,9 +103,6 @@ require({
         ClipboardJS,
         pako) {
     'use strict';
-
-    window.pako = pako; // For Sandcastle-helpers.
-
     // attach clipboard handling to our Copy button
     var clipboardjs = new ClipboardJS('.copyButton');
 
@@ -742,7 +739,7 @@ require({
                 applyLoadedDemo(code, html);
             } else if (window.location.hash.indexOf('#c=') === 0) {
                 var base64String = window.location.hash.substr(3);
-                var data = decodeBase64Data(base64String);
+                var data = decodeBase64Data(base64String, pako);
                 code = data.code;
                 html = data.html;
 
@@ -1008,11 +1005,7 @@ require({
     registry.byId('buttonNewWindow').on('click', function() {
         //Handle case where demo is in a sub-directory by modifying
         //the demo's HTML to add a base href.
-        var baseHref = window.location.href;
-        var searchLen = window.location.search.length;
-        if (searchLen > 0) {
-            baseHref = baseHref.substring(0, baseHref.length - searchLen);
-        }
+        var baseHref = getBaseUrl();
         var pos = baseHref.lastIndexOf('/');
         baseHref = baseHref.substring(0, pos) + '/gallery/';
 
