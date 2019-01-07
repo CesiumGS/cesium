@@ -1,6 +1,5 @@
 (function() {
     'use strict';
-    var pako = window.pako;
 
      window.embedInSandcastleTemplate = function(code, addExtraLine) {
         return 'function startup(Cesium) {\n' +
@@ -17,7 +16,7 @@
            '    require([\'Cesium\'], startup);\n' +
            '}\n';
     };
-    window.decodeBase64Data = function(base64String) {
+    window.decodeBase64Data = function(base64String, pako) {
         // data stored in the hash as:
         // Base64 encoded, raw DEFLATE compressed JSON array where index 0 is code, index 1 is html
         // restore padding

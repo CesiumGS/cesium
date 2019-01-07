@@ -16,7 +16,7 @@
 /*global pako */
 if (window.location.hash.indexOf('#c=') === 0) {
     var base64String = window.location.hash.substr(3);
-    var data = window.decodeBase64Data(base64String);
+    var data = window.decodeBase64Data(base64String, pako);
     //Handle case where demo is in a sub-directory by modifying
     //the HTML to add a base href.
     document.head.innerHTML = document.head.innerHTML + '<base href="' + data.baseHref + '" />';
@@ -39,9 +39,6 @@ require({
      if (window.Cesium === undefined) {
         window.Cesium = Cesium;
      }
-
-    // The helper functions script needs this.
-    window.pako = pako;
 
     var defined = window.Cesium.defined;
     var code;
