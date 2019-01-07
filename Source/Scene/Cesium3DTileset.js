@@ -257,7 +257,7 @@ define([
          * @type {Boolean}
          * @default false
          */
-        this.dynamicScreenSpaceError = defaultValue(options.dynamicScreenSpaceError, false);
+        this.dynamicScreenSpaceError = defaultValue(options.dynamicScreenSpaceError, false) || (defined(this._heatMapVariable) && this._heatMapVariable.match(/dynamicSSE.*/));
 
         /**
          * A scalar that determines the density used to adjust the dynamic screen space error, similar to {@link Fog}. Increasing this
@@ -1460,96 +1460,12 @@ define([
     var scratchPosition = new Cartesian3();
     var scratchDirection = new Cartesian3();
 
-    function updateDynamicScreenSpaceError(tileset, frameState) {
-        var up;
-        var direction;
-        var height;
-        var minimumHeight;
-        var maximumHeight;
-
-        var camera = frameState.camera;
-        var root = tileset._root;
-        var tileBoundingVolume = root.contentBoundingVolume;
-
-        if (tileBoundingVolume instanceof TileBoundingRegion) {
-            up = Cartesian3.normalize(camera.positionWC, scratchPositionNormal);
-            direction = camera.directionWC;
-            height = camera.positionCartographic.height;
-            minimumHeight = tileBoundingVolume.minimumHeight;
-            maximumHeight = tileBoundingVolume.maximumHeight;
-        } else {
-            // Transform camera position and direction into the local coordinate system of the tileset
-            var transformLocal = Matrix4.inverseTransformation(root.computedTransform, scratchMatrix);
-            var ellipsoid = frameState.mapProjection.ellipsoid;
-            var boundingVolume = tileBoundingVolume.boundingVolume;
-            var centerLocal = Matrix4.multiplyByPoint(transformLocal, boundingVolume.center, scratchCenter);
-            if (Cartesian3.magnitude(centerLocal) > ellipsoid.minimumRadius) {
-                // The tileset is defined in WGS84. Approximate the minimum and maximum height.
-                var centerCartographic = Cartographic.fromCartesian(centerLocal, ellipsoid, scratchCartographic);
-                up = Cartesian3.normalize(camera.positionWC, scratchPositionNormal);
-                direction = camera.directionWC;
-                height = camera.positionCartographic.height;
-                minimumHeight = 0.0;
-                maximumHeight = centerCartographic.height * 2.0;
-            } else {
-                // The tileset is defined in local coordinates (z-up)
-                var positionLocal = Matrix4.multiplyByPoint(transformLocal, camera.positionWC, scratchPosition);
-                up = Cartesian3.UNIT_Z;
-                direction = Matrix4.multiplyByPointAsVector(transformLocal, camera.directionWC, scratchDirection);
-                direction = Cartesian3.normalize(direction, direction);
-                height = positionLocal.z;
-                if (tileBoundingVolume instanceof TileOrientedBoundingBox) {
-                    // Assuming z-up, the last component stores the half-height of the box
-                    var boxHeight = root._header.boundingVolume.box[11];
-                    minimumHeight = centerLocal.z - boxHeight;
-                    maximumHeight = centerLocal.z + boxHeight;
-                } else if (tileBoundingVolume instanceof TileBoundingSphere) {
-                    var radius = boundingVolume.radius;
-                    minimumHeight = centerLocal.z - radius;
-                    maximumHeight = centerLocal.z + radius;
-                }
-            }
-        }
-
-        // The range where the density starts to lessen. Start at the quarter height of the tileset.
-        var heightFalloff = tileset.dynamicScreenSpaceErrorHeightFalloff;
-        var heightClose = minimumHeight + (maximumHeight - minimumHeight) * heightFalloff;
-        var heightFar = maximumHeight;
-
-        var t = CesiumMath.clamp((height - heightClose) / (heightFar - heightClose), 0.0, 1.0);
-
-        // Increase density as the camera tilts towards the horizon
-        var dot = Math.abs(Cartesian3.dot(direction, up));
-        var horizonFactor = 1.0 - dot;
-
-        // Weaken the horizon factor as the camera height increases, implying the camera is further away from the tileset.
-        // The goal is to increase density for the "street view", not when viewing the tileset from a distance.
-        horizonFactor = horizonFactor * (1.0 - t);
-
-        var density = tileset.dynamicScreenSpaceErrorDensity;
-        density *= horizonFactor;
-
-        tileset._dynamicScreenSpaceErrorComputedDensity = density;
-    }
-
     var scratchReview = new Cartesian3();
     var scratchWorldCenter = new Cartesian3(0, 0, 0);
-    function reviewRequestsAfterTraversal(tileset, frameState) {
-        // Distance based SSE:
-        // Basically want to crank it up more and more when the view becomes a horizon view, but in a non-linear way,
-        // we don't really need distance based sse from a top-down view to a 45 view but after that need to start to introduce it
-        // in order to do this take abs(directionWC.y) and then feed this into an exposure tone map with a fast ramp
-        // then to find the far sse for a given view (used in another interp later), you interpolate between regular sse and maxDistanceSSE with this tone mapped value 
-        // interp val of 0 maps to the maxDistance sse and 1 to map to the regular sse val
-        // the flat part of the curve that maps high values to high values will be for views that are looking down, the fast ramp part of the curve is for when
-        // we start to look out to the horizon and want to ramp to a higher sse
-        // The other problem: don't have knowledge of the min and max before the req is pushed onto the req queue, so we need to post process
-        var requestedTiles = tileset._requestedTiles;
-        var length = requestedTiles.length;
-        if (length <= 1) { // Only run if there a range of requests
-            return;
-        }
-
+    function setupDynamicSSEDistanceMinMax(tileset, frameState) {
+        // Distance based SSE: basically want to relax the max sse threshold more when the view becomes a horizon view, but in a non-linear way.
+        // We don't really need distance based sse from a top-down view to a 45 view but after that need to start to relax sse requirements for distant tiles.
+        // In order to do this we determine how "topdown" our view is and then feed this into an exposure tone map with a fast ramp
         // This step uses tone mapping to warp one range of values to another, specifically exposure mapping.
         // See https://www.wolframalpha.com/input/?i=plot+1+-+e%5E(-x*4%2F(1000))+,+x%3D0..1000,+y%3D0..1
         // The 4 in that example controls the sholder of the curve, the lower it is the more linear it looks, the higher it is the faster it ramps to 1 and stays there.
@@ -1563,27 +1479,36 @@ define([
 
         // Determine SSE used for far away tiles (based on view direction, the more we look at the horizon the higher this number is (up to maxDistanceSSE))
         var baseSSE = tileset._min.screenSpaceError;
-        var maxDistanceSSE = 2.0 * tileset._maximumScreenSpaceError;
+        var maxDistanceSSE = 2.0 * tileset._maximumScreenSpaceError; // Allow control of this?
         var horizonSSE =  topdownLookAmount * baseSSE + (1 - topdownLookAmount) * maxDistanceSSE; // Only very horizontal views (views where the original non tone mapped topdownLookAmount was close to 0) will start to have a horizonSSE close to maxDistanceSSE
         tileset._max.dynamicSSEDistance = horizonSSE; 
         tileset._min.dynamicSSEDistance = baseSSE;
 
-        // NOTE: actually want to it so that the max value maps to 0 and the min value maps to 1 so that the tone mapping shape is appropriate for what we are trying to do
-        // So take abs to get distances to these values, or flip the order of subtraction
-        // Basically we want the fast ramping of sse to occur on tiles in the back of the frustum
-        var min = tileset._max.centerZDepth;
-        var shiftedMax = (min - tileset._min.centerZDepth) + 0.01; // prevent divide by 0
+        return (tileset._max.centerZDepth - tileset._min.centerZDepth) + 0.01; // prevent divide by 0
+    }
+
+    function reviewRequestsAfterTraversal(tileset, frameState) {
+        var requestedTiles = tileset._requestedTiles;
+        var length = requestedTiles.length;
+        if (length <= 1) { // Only run if there a range of requests
+            return;
+        }
+
+        var dynamicSSEDistanceShiftedMax;
+        if (tileset.dynamicScreenSpaceError) {
+            dynamicSSEDistanceShiftedMax = setupDynamicSSEDistanceMinMax(tileset, frameState);
+        }
 
         var removeCount = 0;
-        var linear = true;
-        var usePreviousFrameMinMax = false;
         for (var i = 0; i < length; ++i) {
             var tile = requestedTiles[i];
-            tile.setSSEDistance(shiftedMax, usePreviousFrameMinMax);
 
-            if (tile._screenSpaceError < tile._dynamicSSEDistance) {
-                ++removeCount;
-                continue;
+            if (tileset.dynamicScreenSpaceError) {
+                tile.setSSEDistance(dynamicSSEDistanceShiftedMax, false);
+                if (tile._screenSpaceError < tile._dynamicSSEDistance) {
+                    ++removeCount;
+                    continue;
+                }
             }
 
             if (removeCount > 0) {
@@ -2073,10 +1998,6 @@ define([
         var statistics = tileset._statistics;
         statistics.clear();
 
-        if (tileset.dynamicScreenSpaceError) {
-            updateDynamicScreenSpaceError(tileset, frameState);
-        }
-
         if (isRender) {
             tileset._cache.reset();
         }
@@ -2092,7 +2013,9 @@ define([
         }
 
         // TODO: push functionality into request tiles. For things that can only be done after a pass over the data (ex: gathering min max values)
-        reviewRequestsAfterTraversal(tileset, frameState);
+        if (tileset.dynamicScreenSpaceError) { 
+            reviewRequestsAfterTraversal(tileset, frameState);
+        }
 
         if (isRender || isAsync) {
             requestTiles(tileset);
