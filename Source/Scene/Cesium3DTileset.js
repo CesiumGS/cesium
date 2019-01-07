@@ -255,7 +255,18 @@ define([
          * @type {Boolean}
          * @default false
          */
-        this.dynamicScreenSpaceError = defaultValue(options.dynamicScreenSpaceError, false) || (defined(this._heatMapVariable) && this._heatMapVariable.match(/dynamicSSE.*/));
+        this.dynamicScreenSpaceError = defaultValue(options.dynamicScreenSpaceError, false)
+
+        /**
+         * Optimization option. Whether the tileset should refine based on a dynamic screen space error. Tiles that are further
+         * away will be rendered with lower detail than closer tiles. This improves performance by rendering fewer
+         * tiles and making less requests, but may result in a slight drop in visual quality for tiles in the distance.
+         * The algorithm is biased towards "horizon views" where the camera is  looking at the horizon.
+         *
+         * @type {Boolean}
+         * @default false
+         */
+        this.dynamicScreenSpaceErrorDistance = defaultValue(options.dynamicScreenSpaceErrorDistance, false) || (defined(this._heatMapVariable) && this._heatMapVariable === 'dynamicSSEDistance');
 
         /**
          * A scalar that determines the density used to adjust the dynamic screen space error, similar to {@link Fog}. Increasing this
@@ -1461,6 +1472,78 @@ define([
     var scratchPosition = new Cartesian3();
     var scratchDirection = new Cartesian3();
 
+    function updateDynamicScreenSpaceError(tileset, frameState) {
+        var up;
+        var direction;
+        var height;
+        var minimumHeight;
+        var maximumHeight;
+
+        var camera = frameState.camera;
+        var root = tileset._root;
+        var tileBoundingVolume = root.contentBoundingVolume;
+
+        if (tileBoundingVolume instanceof TileBoundingRegion) {
+            up = Cartesian3.normalize(camera.positionWC, scratchPositionNormal);
+            direction = camera.directionWC;
+            height = camera.positionCartographic.height;
+            minimumHeight = tileBoundingVolume.minimumHeight;
+            maximumHeight = tileBoundingVolume.maximumHeight;
+        } else {
+            // Transform camera position and direction into the local coordinate system of the tileset
+            var transformLocal = Matrix4.inverseTransformation(root.computedTransform, scratchMatrix);
+            var ellipsoid = frameState.mapProjection.ellipsoid;
+            var boundingVolume = tileBoundingVolume.boundingVolume;
+            var centerLocal = Matrix4.multiplyByPoint(transformLocal, boundingVolume.center, scratchCenter);
+            if (Cartesian3.magnitude(centerLocal) > ellipsoid.minimumRadius) {
+                // The tileset is defined in WGS84. Approximate the minimum and maximum height.
+                var centerCartographic = Cartographic.fromCartesian(centerLocal, ellipsoid, scratchCartographic);
+                up = Cartesian3.normalize(camera.positionWC, scratchPositionNormal);
+                direction = camera.directionWC;
+                height = camera.positionCartographic.height;
+                minimumHeight = 0.0;
+                maximumHeight = centerCartographic.height * 2.0;
+            } else {
+                // The tileset is defined in local coordinates (z-up)
+                var positionLocal = Matrix4.multiplyByPoint(transformLocal, camera.positionWC, scratchPosition);
+                up = Cartesian3.UNIT_Z;
+                direction = Matrix4.multiplyByPointAsVector(transformLocal, camera.directionWC, scratchDirection);
+                direction = Cartesian3.normalize(direction, direction);
+                height = positionLocal.z;
+                if (tileBoundingVolume instanceof TileOrientedBoundingBox) {
+                    // Assuming z-up, the last component stores the half-height of the box
+                    var boxHeight = root._header.boundingVolume.box[11];
+                    minimumHeight = centerLocal.z - boxHeight;
+                    maximumHeight = centerLocal.z + boxHeight;
+                } else if (tileBoundingVolume instanceof TileBoundingSphere) {
+                    var radius = boundingVolume.radius;
+                    minimumHeight = centerLocal.z - radius;
+                    maximumHeight = centerLocal.z + radius;
+                }
+            }
+        }
+
+        // The range where the density starts to lessen. Start at the quarter height of the tileset.
+        var heightFalloff = tileset.dynamicScreenSpaceErrorHeightFalloff;
+        var heightClose = minimumHeight + (maximumHeight - minimumHeight) * heightFalloff;
+        var heightFar = maximumHeight;
+
+        var t = CesiumMath.clamp((height - heightClose) / (heightFar - heightClose), 0.0, 1.0);
+
+        // Increase density as the camera tilts towards the horizon
+        var dot = Math.abs(Cartesian3.dot(direction, up));
+        var horizonFactor = 1.0 - dot;
+
+        // Weaken the horizon factor as the camera height increases, implying the camera is further away from the tileset.
+        // The goal is to increase density for the "street view", not when viewing the tileset from a distance.
+        horizonFactor = horizonFactor * (1.0 - t);
+
+        var density = tileset.dynamicScreenSpaceErrorDensity;
+        density *= horizonFactor;
+
+        tileset._dynamicScreenSpaceErrorComputedDensity = density;
+    }
+
     var scratchReview = new Cartesian3();
     var scratchWorldCenter = new Cartesian3(0, 0, 0);
     function setupDynamicSSEDistanceMinMax(tileset, frameState) {
@@ -1498,7 +1581,7 @@ define([
         }
 
         var dynamicSSEDistanceShiftedMax;
-        if (tileset.dynamicScreenSpaceError) {
+        if (tileset.dynamicScreenSpaceErrorDistance) {
             dynamicSSEDistanceShiftedMax = setupDynamicSSEDistanceMinMax(tileset, frameState);
         }
 
@@ -1506,7 +1589,7 @@ define([
         for (var i = 0; i < length; ++i) {
             var tile = requestedTiles[i];
 
-            if (tileset.dynamicScreenSpaceError) {
+            if (tileset.dynamicScreenSpaceErrorDistance) {
                 tile.setSSEDistance(dynamicSSEDistanceShiftedMax, false);
                 if (tile._screenSpaceError < tile._dynamicSSEDistance) {
                     ++removeCount;
@@ -2000,6 +2083,10 @@ define([
 
         var statistics = tileset._statistics;
         statistics.clear();
+
+        if (tileset.dynamicScreenSpaceError) {
+            updateDynamicScreenSpaceError(tileset, frameState);
+        }
 
         if (isRender) {
             tileset._cache.reset();
