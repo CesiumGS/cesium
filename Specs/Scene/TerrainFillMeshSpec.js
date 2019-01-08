@@ -344,6 +344,30 @@ defineSuite([
             });
         });
 
+        it('propagates multiple adjacent source tiles to a destination edge', function() {
+            var tiles = [center, west, south, east, north];
+            [west, south, east, north].forEach(function(tile) {
+                tile.children.forEach(function(child) {
+                    mockTerrain.willBeUnavailable(child);
+                    mockTerrain.upsampleWillSucceed(child);
+                    tiles.push(child);
+                });
+            });
+
+            return processor.process(tiles).then(function() {
+                tiles.forEach(markRendered);
+
+                TerrainFillMesh.updateFillTiles(tileProvider, tiles, frameState);
+
+                var fill = center.data.fill;
+                expect(fill).toBeDefined();
+                expect(fill.westTiles).toEqual([west.northeastChild, west.southeastChild]);
+                expect(fill.southTiles).toEqual([south.northwestChild, south.northeastChild]);
+                expect(fill.eastTiles).toEqual([east.southwestChild, east.northwestChild]);
+                expect(fill.northTiles).toEqual([north.southeastChild, north.southwestChild]);
+            });
+        });
+
         // Mark all the tiles rendered.
         function markRendered(tile) {
             tile._lastSelectionResultFrame = frameState.frameNumber;
@@ -582,6 +606,99 @@ defineSuite([
             });
         });
 
+        it('uses the height of the closest vertex when an edge does not include the corner', function() {
+            var westN = west.northeastChild.southeastChild;
+            var westS = west.southeastChild.northeastChild;
+            var eastN = east.northwestChild.southwestChild;
+            var eastS = east.southwestChild.northwestChild;
+            var northW = north.southwestChild.southeastChild;
+            var northE = north.southeastChild.southwestChild;
+            var southW = south.northwestChild.northeastChild;
+            var southE = south.northeastChild.northwestChild;
+
+            mockTerrain.requestTileGeometry.and.callFake(function(x, y, level) {
+                var buffer = new Float32Array(4);
+                if (level === westN.level && x === westN.x && y === westN.y) {
+                    buffer[0] = 1.0;
+                    buffer[1] = 1.0;
+                    buffer[2] = 1.5;
+                    buffer[3] = 1.5;
+                } else if (level === westS.level && x === westS.x && y === westS.y) {
+                    buffer[0] = 1.5;
+                    buffer[1] = 1.5;
+                    buffer[2] = 2.0;
+                    buffer[3] = 2.0;
+                } else if (level === eastN.level && x === eastN.x && y === eastN.y) {
+                    buffer[0] = 3.0;
+                    buffer[1] = 3.0;
+                    buffer[2] = 3.5;
+                    buffer[3] = 3.5;
+                } else if (level === eastS.level && x === eastS.x && y === eastS.y) {
+                    buffer[0] = 3.5;
+                    buffer[1] = 3.5;
+                    buffer[2] = 4.0;
+                    buffer[3] = 4.0;
+                } else if (level === northW.level && x === northW.x && y === northW.y) {
+                    buffer[0] = 5.0;
+                    buffer[1] = 5.5;
+                    buffer[2] = 5.0;
+                    buffer[3] = 5.5;
+                } else if (level === northE.level && x === northE.x && y === northE.y) {
+                    buffer[0] = 5.5;
+                    buffer[1] = 6.0;
+                    buffer[2] = 5.5;
+                    buffer[3] = 6.0;
+                } else if (level === southW.level && x === southW.x && y === southW.y) {
+                    buffer[0] = 7.0;
+                    buffer[1] = 7.5;
+                    buffer[2] = 7.0;
+                    buffer[3] = 7.5;
+                } else if (level === southE.level && x === southE.x && y === southE.y) {
+                    buffer[0] = 7.5;
+                    buffer[1] = 8.0;
+                    buffer[2] = 7.5;
+                    buffer[3] = 8.0;
+                } else {
+                    return undefined;
+                }
+
+                var terrainData = new HeightmapTerrainData({
+                    width: 2,
+                    height: 2,
+                    buffer: buffer,
+                    createdByUpsampling: false
+                });
+                return when(terrainData);
+            });
+
+            return processor.process([center, westN, westS, eastN, eastS, northE, northW, southE, southW]).then(function() {
+                var fill = center.data.fill = new TerrainFillMesh(center);
+
+                fill.westTiles.push(westN, westS);
+                fill.westMeshes.push(westN.data.mesh, westS.data.mesh);
+                fill.eastTiles.push(eastS, eastN);
+                fill.eastMeshes.push(eastS.data.mesh, eastN.data.mesh);
+                fill.northTiles.push(northE, northW);
+                fill.northMeshes.push(northE.data.mesh, northW.data.mesh);
+                fill.southTiles.push(southW, southE);
+                fill.southMeshes.push(southW.data.mesh, southE.data.mesh);
+
+                fill.update(tileProvider, frameState);
+
+                expectVertexCount(fill, 17);
+                expectVertex(fill, 0.0, 0.0, (2.0 + 7.0) / 2);
+                expectVertex(fill, 0.0, 0.25, 2.0);
+                expectVertex(fill, 0.0, 0.5, 1.5);
+                expectVertex(fill, 0.0, 0.75, 1.0);
+                expectVertex(fill, 0.0, 1.0, (1.0 + 5.0) / 2);
+                expectVertex(fill, 1.0, 0.0, (4.0 + 8.0) / 2);
+                expectVertex(fill, 1.0, 0.25, 4.0);
+                expectVertex(fill, 1.0, 0.5, 3.5);
+                expectVertex(fill, 1.0, 0.75, 3.0);
+                expectVertex(fill, 1.0, 1.0, (3.0 + 6.0) / 2);
+            });
+        });
+
         describe('correctly transforms texture coordinates across the anti-meridian', function() {
             var westernHemisphere;
             var easternHemisphere;
@@ -694,10 +811,6 @@ defineSuite([
                     expectVertex(fill, 0.5, 0.5, (10.0 + 18.0) / 2);
                 });
             });
-        });
-
-        describe('across levels', function() {
-
         });
     });
 

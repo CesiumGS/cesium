@@ -819,8 +819,8 @@ define([
             if (v === 0.0) {
                 // southwest
                 height = getClosestHeightToCorner(
-                    terrainFillMesh.southMeshes, terrainFillMesh.southTiles, TileEdge.NORTH,
                     terrainFillMesh.westMeshes, terrainFillMesh.westTiles, TileEdge.EAST,
+                    terrainFillMesh.southMeshes, terrainFillMesh.southTiles, TileEdge.NORTH,
                     u, v);
             } else {
                 // northwest
@@ -838,8 +838,8 @@ define([
         } else {
             // northeast
             height = getClosestHeightToCorner(
-                terrainFillMesh.northMeshes, terrainFillMesh.northTiles, TileEdge.SOUTH,
                 terrainFillMesh.eastMeshes, terrainFillMesh.eastTiles, TileEdge.WEST,
+                terrainFillMesh.northMeshes, terrainFillMesh.northTiles, TileEdge.SOUTH,
                 u, v);
         }
 
@@ -853,12 +853,12 @@ define([
     }
 
     function getClosestHeightToCorner(
-        adjacentEdge1Meshes, adjacentEdge1Tiles, adjacentEdge1,
-        adjacentEdge2Meshes, adjacentEdge2Tiles, adjacentEdge2,
+        previousMeshes, previousTiles, previousEdge,
+        nextMeshes, nextTiles, nextEdge,
         u, v
     ) {
-        var height1 = getNearestHeightOnEdge(adjacentEdge1Meshes, adjacentEdge1Tiles, false, adjacentEdge1, u, v);
-        var height2 = getNearestHeightOnEdge(adjacentEdge2Meshes, adjacentEdge2Tiles, true, adjacentEdge2, u, v);
+        var height1 = getNearestHeightOnEdge(previousMeshes, previousTiles, false, previousEdge, u, v);
+        var height2 = getNearestHeightOnEdge(nextMeshes, nextTiles, true, nextEdge, u, v);
         if (defined(height1) && defined(height2)) {
             // It would be slightly better to do a weighted average of the two heights
             // based on their distance from the corner, but it shouldn't matter much in practice.
