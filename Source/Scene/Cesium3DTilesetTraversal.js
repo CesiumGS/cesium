@@ -211,7 +211,6 @@ define([
     }
 
     function loadTile(tileset, tile, frameState) {
-        tileset.updateMinMax(tile);
         if (hasUnloadedContent(tile) || tile.contentExpired) {
             tile._requestedFrame = frameState.frameNumber;
             tile._priority = getPriority(tileset, tile);

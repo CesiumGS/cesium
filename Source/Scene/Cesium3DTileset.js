@@ -219,11 +219,15 @@ define([
 
         this._min = {};
         this._max = {};
+        this._previousMin = {};
+        this._previousMax = {};
         this._heatMapVariable = defaultValue(options.heatMapVariable, undefined);
         if (defined(this._heatMapVariable)) {
             // Init the min and max values for the tracked variable for the heat map
             this._min[this._heatMapVariable] = Number.MAX_VALUE;
             this._max[this._heatMapVariable] = -Number.MAX_VALUE;
+            this._previousMin[this._heatMapVariable] = Number.MAX_VALUE;
+            this._previousMax[this._heatMapVariable] = -Number.MAX_VALUE;
         }
 
         this._totalTilesLoaded = 0;
@@ -2175,6 +2179,8 @@ define([
         // For heat map colorization
         var variableName = this._heatMapVariable;
         if (defined(variableName)) {
+            this._previousMin[variableName] = this._min[variableName];
+            this._previousMax[variableName] = this._max[variableName];
             this._min[variableName] = Number.MAX_VALUE;
             this._max[variableName] = -Number.MAX_VALUE;
         }
@@ -2186,7 +2192,7 @@ define([
      * @example
      * tileset.updateMinMax(tile);
      */
-    Cesium3DTileset.prototype.updateMinMax = function(tile) {
+    Cesium3DTileset.prototype.updateHeatMapMinMax = function(tile) {
         // Implicitly tracked vars (priority)
 
         // For heat map colorization

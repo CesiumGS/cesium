@@ -1294,18 +1294,20 @@ define([
             return;
         }
 
+
         // Use the string to get the actual values. TODO: during tileset init warn about possible mispellings, i.e. can't find the var
         var tileset = this.tileset;
-        var min = tileset._min[variableName];
-        var max = tileset._max[variableName];
+        tileset.updateHeatMapMinMax(this);
+        var min = tileset._previousMin[variableName];
+        var max = tileset._previousMax[variableName];
         if (min === Number.MAX_VALUE || max === -Number.MAX_VALUE) {
             return;
         }
         var tileValue = this['_' + variableName];
 
         // Shift the min max window down to 0
-        var shiftedValue = tileValue - min;
         var shiftedMax = (max - min) + 0.001; // Prevent divide by 0
+        var shiftedValue = Math.max(Math.min(tileValue - min, shiftedMax), 0);
 
         // Get position between min and max and convert that to a position in the color array
         var zeroToOne = Math.max(Math.min(shiftedValue / shiftedMax, 1.0), 0);
