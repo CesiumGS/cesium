@@ -219,28 +219,11 @@ defineSuite([
         });
 
         it('propagates edges and corners to an unloaded tile', function() {
-            var tiles = [west, south, east, north, southwest, southeast, northwest, northeast];
+            var tiles = [center, west, south, east, north, southwest, southeast, northwest, northeast];
 
             tiles.forEach(mockTerrain.createMeshWillSucceed.bind(mockTerrain));
 
-            tiles.push(center);
-
             return processor.process(tiles).then(function() {
-                // Mark all the tiles rendered.
-                function markRendered(tile) {
-                    tile._lastSelectionResultFrame = frameState.frameNumber;
-                    tile._lastSelectionResult = TileSelectionResult.RENDERED;
-
-                    var parent = tile.parent;
-                    while (parent) {
-                        if (parent._lastSelectionResultFrame !== frameState.frameNumber) {
-                            parent._lastSelectionResultFrame = frameState.frameNumber;
-                            parent._lastSelectionResult = TileSelectionResult.REFINED;
-                        }
-                        parent = parent.parent;
-                    }
-                }
-
                 tiles.forEach(markRendered);
 
                 TerrainFillMesh.updateFillTiles(tileProvider, tiles, frameState);
@@ -265,6 +248,116 @@ defineSuite([
                 expect(fill.northeastMesh).toEqual(northeast.data.mesh);
             });
         });
+
+        it('propagates fill tile edges to an unloaded tile', function() {
+            var centerSW = center.southwestChild;
+            var centerSE = center.southeastChild;
+            var centerNW = center.northwestChild;
+            var centerNE = center.northeastChild;
+
+            var tiles = [centerSW, centerSE, centerNW, centerNE, west, south, east, north, southwest, southeast, northwest, northeast];
+
+            tiles.forEach(mockTerrain.createMeshWillSucceed.bind(mockTerrain));
+
+            return processor.process(tiles).then(function() {
+                tiles.forEach(markRendered);
+
+                TerrainFillMesh.updateFillTiles(tileProvider, tiles, frameState);
+
+                var sw = centerSW.data.fill;
+                var se = centerSE.data.fill;
+                var nw = centerNW.data.fill;
+                var ne = centerNE.data.fill;
+
+                expect(sw).toBeDefined();
+                expect(sw.westTiles).toEqual([west]);
+                expect(sw.westMeshes).toEqual([west.data.mesh]);
+                expect(sw.southTiles).toEqual([south]);
+                expect(sw.southMeshes).toEqual([south.data.mesh]);
+                expect(sw.southwestTile).toEqual(southwest);
+                expect(sw.southwestMesh).toEqual(southwest.data.mesh);
+                expect(sw.southeastTile).toBeUndefined();
+                expect(sw.southeastMesh).toBeUndefined();
+                expect(sw.northwestTile).toBeUndefined();
+                expect(sw.northwestMesh).toBeUndefined();
+
+                expect(se).toBeDefined();
+                expect(se.eastTiles).toEqual([east]);
+                expect(se.eastMeshes).toEqual([east.data.mesh]);
+                expect(se.southTiles).toEqual([south]);
+                expect(se.southMeshes).toEqual([south.data.mesh]);
+                expect(se.southeastTile).toEqual(southeast);
+                expect(se.southeastMesh).toEqual(southeast.data.mesh);
+                expect(se.southwestTile).toBeUndefined();
+                expect(se.southwestMesh).toBeUndefined();
+                expect(se.northeastTile).toBeUndefined();
+                expect(se.northeastMesh).toBeUndefined();
+
+                expect(nw).toBeDefined();
+                expect(nw.westTiles).toEqual([west]);
+                expect(nw.westMeshes).toEqual([west.data.mesh]);
+                expect(nw.northTiles).toEqual([north]);
+                expect(nw.northMeshes).toEqual([north.data.mesh]);
+                expect(nw.northwestTile).toEqual(northwest);
+                expect(nw.northwestMesh).toEqual(northwest.data.mesh);
+                expect(nw.southwestTile).toBeUndefined();
+                expect(nw.southwestMesh).toBeUndefined();
+                expect(nw.northeastTile).toBeUndefined();
+                expect(nw.northeastMesh).toBeUndefined();
+
+                expect(ne).toBeDefined();
+                expect(ne.eastTiles).toEqual([east]);
+                expect(ne.eastMeshes).toEqual([east.data.mesh]);
+                expect(ne.northTiles).toEqual([north]);
+                expect(ne.northMeshes).toEqual([north.data.mesh]);
+                expect(ne.northeastTile).toEqual(northeast);
+                expect(ne.northeastMesh).toEqual(northeast.data.mesh);
+                expect(ne.southeastTile).toBeUndefined();
+                expect(ne.southeastMesh).toBeUndefined();
+                expect(ne.northwestTile).toBeUndefined();
+                expect(ne.northwestMesh).toBeUndefined();
+
+                expect(sw.eastTiles[0] === centerSE || se.westTiles[0] === centerSW).toBe(true);
+                expect(nw.eastTiles[0] === centerNE || ne.westTiles[0] === centerNW).toBe(true);
+
+                expect(sw.northTiles[0] === centerNW || nw.southTiles[0] === centerSW).toBe(true);
+                expect(se.northTiles[0] === centerNE || ne.southTiles[0] === centerSE).toBe(true);
+
+                expect(sw.northeastTile === centerNE || ne.southwestTile === centerSW).toBe(true);
+                expect(nw.southeastTile === centerSE || se.northwestTile === centerNW).toBe(true);
+            });
+        });
+
+        it('does not touch disconnected tiles', function() {
+            var disconnected = center.southwestChild.northeastChild;
+
+            var tiles = [disconnected, west, south, east, north, southwest, southeast, northwest, northeast];
+
+            tiles.forEach(mockTerrain.createMeshWillSucceed.bind(mockTerrain));
+
+            return processor.process(tiles).then(function() {
+                tiles.forEach(markRendered);
+
+                TerrainFillMesh.updateFillTiles(tileProvider, tiles, frameState);
+
+                expect(disconnected.data.fill).toBeUndefined();
+            });
+        });
+
+        // Mark all the tiles rendered.
+        function markRendered(tile) {
+            tile._lastSelectionResultFrame = frameState.frameNumber;
+            tile._lastSelectionResult = TileSelectionResult.RENDERED;
+
+            var parent = tile.parent;
+            while (parent) {
+                if (parent._lastSelectionResultFrame !== frameState.frameNumber) {
+                    parent._lastSelectionResultFrame = frameState.frameNumber;
+                    parent._lastSelectionResult = TileSelectionResult.REFINED;
+                }
+                parent = parent.parent;
+            }
+        }
     });
 
     describe('update', function() {
