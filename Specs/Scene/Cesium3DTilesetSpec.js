@@ -3510,27 +3510,45 @@ defineSuite([
         });
     });
 
-    it('updateMinMax', function() {
-        // need a tile, tileset(with stuff already set) then update twice with a new min and max and verify they go through
-            var tile = new Cesium3DTile(mockTileset, '/some_url', tileWithBoundingRegion, undefined);
-            tile._centerZDepth = (mockTileset._max.centerZDepth + mockTileset._min.centerZDepth) / 2; // In the middle of the min max window
-            tile.update(mockTileset, scene.frameState);
-            var expectedColor = new Color(0, 1, 0, 1); // Green is in the middle
-            var tileColor = tile.color;
-            var diff = new Color (
-                                  Math.abs(expectedColor.red   - tileColor.red),
-                                  Math.abs(expectedColor.green - tileColor.green),
-                                  Math.abs(expectedColor.blue  - tileColor.blue)
-            );
 
-            var threshold = 0.01;
-            expect(diff.red).toBeLessThan(threshold);
-            expect(diff.green).toBeLessThan(threshold);
-            expect(diff.blue).toBeLessThan(threshold);
+    it('manipulate tracked min max', function() {
+        var tileset = new Cesium3DTileset({ url: '/some_url', heatMapVariable: 'distanceToCamera' });
 
+        var tileWithBoundingRegion = {
+            geometricError : 1,
+            refine : 'REPLACE',
+            children : [],
+            boundingVolume: {
+                region : [-1.2, -1.2, 0.0, 0.0, -30, -34]
+            }
+        };
+        var tile = new Cesium3DTile(tileset, '/some_url', tileWithBoundingRegion, undefined);
+
+        // Min gets overwritten
+        tile._centerZDepth = -1;
+        tile._screenSpaceError = -1;
+        tile._distanceToCamera = -1;
+        tileset.updateMinMax(tile);
+        expect(tileset._min.centerZDepth).toEqual(tile._centerZDepth);
+        expect(tileset._min.screenSpaceError).toEqual(tile._screenSpaceError);
+        expect(tileset._min.distanceToCamera).toEqual(tile._distanceToCamera);
+
+        // Max gets overwritten
+        tile._centerZDepth = 1;
+        tile._screenSpaceError = 1;
+        tile._distanceToCamera = 1;
+        tileset.updateMinMax(tile);
+        expect(tileset._max.centerZDepth).toEqual(tile._centerZDepth);
+        expect(tileset._max.screenSpaceError).toEqual(tile._screenSpaceError);
+        expect(tileset._max.distanceToCamera).toEqual(tile._distanceToCamera);
+
+        tileset.resetMinMax();
+        expect(tileset._max.centerZDepth).toEqual(-Number.MAX_VALUE);
+        expect(tileset._max.screenSpaceError).toEqual(-Number.MAX_VALUE);
+        expect(tileset._max.distanceToCamera).toEqual(-Number.MAX_VALUE);
+        expect(tileset._min.centerZDepth).toEqual(Number.MAX_VALUE);
+        expect(tileset._min.screenSpaceError).toEqual(Number.MAX_VALUE);
+        expect(tileset._min.distanceToCamera).toEqual(Number.MAX_VALUE);
     });
 
-    it('resetMinMax', function() {
-        // same as above but make sure everything gets reset
-    });
 }, 'WebGL');
