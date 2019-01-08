@@ -15,6 +15,7 @@ define([
         '../Core/GeometryOffsetAttribute',
         '../Core/isArray',
         '../Core/Iso8601',
+        '../Core/LineType',
         '../Core/oneTimeWarning',
         '../Core/OffsetGeometryInstanceAttribute',
         '../Core/PolygonGeometry',
@@ -48,6 +49,7 @@ define([
         GeometryOffsetAttribute,
         isArray,
         Iso8601,
+        LineType,
         oneTimeWarning,
         OffsetGeometryInstanceAttribute,
         PolygonGeometry,
@@ -88,6 +90,7 @@ define([
         this.granularity = undefined;
         this.stRotation = undefined;
         this.offsetAttribute = undefined;
+        this.lineType = undefined;
     }
 
     /**
@@ -275,6 +278,7 @@ define([
                !Property.isConstant(polygon.closeTop) || //
                !Property.isConstant(polygon.closeBottom) || //
                !Property.isConstant(polygon.zIndex) || //
+               !Property.isConstant(polygon.lineType) || //
                (this._onTerrain && !Property.isConstant(this._materialProperty));
     };
 
@@ -322,6 +326,7 @@ define([
         options.closeBottom = Property.getValueOrDefault(polygon.closeBottom, Iso8601.MINIMUM_VALUE, true);
         options.offsetAttribute = offsetAttribute;
         options.height = heightValue;
+        options.lineType = Property.getValueOrDefault(polygon.lineType, Iso8601.MINIMUM_VALUE, LineType.GEODESIC);
 
         extrudedHeightValue = GroundGeometryUpdater.getGeometryExtrudedHeight(extrudedHeightValue, extrudedHeightReferenceValue);
         if (extrudedHeightValue === GroundGeometryUpdater.CLAMP_TO_GROUND) {
@@ -399,6 +404,7 @@ define([
         options.closeBottom = Property.getValueOrDefault(polygon.closeBottom, time, true);
         options.offsetAttribute = offsetAttribute;
         options.height = heightValue;
+        options.lineType = Property.getValueOrDefault(polygon.lineType, time, LineType.GEODESIC);
 
         extrudedHeightValue = GroundGeometryUpdater.getGeometryExtrudedHeight(extrudedHeightValue, extrudedHeightReferenceValue);
         if (extrudedHeightValue === GroundGeometryUpdater.CLAMP_TO_GROUND) {
