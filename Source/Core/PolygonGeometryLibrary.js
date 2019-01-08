@@ -11,6 +11,7 @@ define([
         './GeometryAttributes',
         './GeometryPipeline',
         './IndexDatatype',
+        './LineType',
         './Math',
         './Matrix3',
         './PolygonPipeline',
@@ -31,6 +32,7 @@ define([
         GeometryAttributes,
         GeometryPipeline,
         IndexDatatype,
+        LineType,
         CesiumMath,
         Matrix3,
         PolygonPipeline,
@@ -403,7 +405,7 @@ define([
         return result;
     };
 
-    PolygonGeometryLibrary.createGeometryFromPositions = function(ellipsoid, polygon, granularity, perPositionHeight, vertexFormat) {
+    PolygonGeometryLibrary.createGeometryFromPositions = function(ellipsoid, polygon, granularity, perPositionHeight, vertexFormat, lineType) {
         var indices = PolygonPipeline.triangulate(polygon.positions2D, polygon.holes);
 
         /* If polygon is completely unrenderable, just use the first three vertices */
@@ -442,7 +444,11 @@ define([
             return geometry;
         }
 
-        return PolygonPipeline.computeSubdivision(ellipsoid, positions, indices, granularity);
+        if (lineType === LineType.GEODESIC) {
+            return PolygonPipeline.computeSubdivision(ellipsoid, positions, indices, granularity);
+        } else if (lineType === LineType.RHUMB) {
+            return PolygonPipeline.computeRhumbLineSubdivision(ellipsoid, positions, indices, granularity);
+        }
     };
 
     var computeWallIndicesSubdivided = [];
