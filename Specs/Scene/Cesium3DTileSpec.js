@@ -333,7 +333,7 @@ defineSuite([
         });
     });
 
-    fdescribe('debug bounding volumes', function() {
+    describe('debug bounding volumes', function() {
         it('can be a bounding region', function() {
             var tile = new Cesium3DTile(mockTileset, '/some_url', tileWithBoundingRegion, undefined);
             tile.update(mockTileset, scene.frameState);
@@ -359,7 +359,7 @@ defineSuite([
         });
     });
 
-    fdescribe('heat map colorize', function() {
+    describe('heat map colorize', function() {
         it('has expected color', function() {
             var tile = new Cesium3DTile(mockTileset, '/some_url', tileWithBoundingRegion, undefined);
             tile._centerZDepth = (mockTileset._max.centerZDepth + mockTileset._min.centerZDepth) / 2; // In the middle of the min max window
