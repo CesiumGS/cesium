@@ -561,7 +561,7 @@ define([
             unprojectedSouthEast.longitude, unprojectedSouthEast.latitude,
             unprojectedSouthWest.longitude, unprojectedSouthWest.latitude
         ]);
-    };
+    }
 
     ImageryMosaic._getHierarchy = getHierarchy;
 
