@@ -757,7 +757,7 @@ define([
             AttributeCompression.octEncode(normal, vertex.encodedNormal);
         } else {
             // TODO: do we need to actually compute a normal?
-            // It's probably going to be unused to 0,0 is just as good.
+            // It's probably going to be unused so 0,0 is just as good.
             normal = ellipsoid.geodeticSurfaceNormalCartographic(cartographicScratch, cartesianScratch);
             AttributeCompression.octEncode(normal, vertex.encodedNormal);
         }
@@ -1036,37 +1036,6 @@ define([
         return undefined;
     }
 
-    function getHeightAtCorner(mesh, tile, edge, u, v) {
-        if (!defined(mesh) || mesh.changedThisFrame) {
-            return undefined;
-        }
-
-        var terrainMesh = mesh;
-
-        var indices;
-        switch (edge) {
-            case TileEdge.SOUTHWEST:
-                indices = terrainMesh.westIndicesSouthToNorth;
-                break;
-            case TileEdge.SOUTHEAST:
-                indices = terrainMesh.southIndicesEastToWest;
-                break;
-            case TileEdge.NORTHEAST:
-                indices = terrainMesh.eastIndicesNorthToSouth;
-                break;
-            case TileEdge.NORTHWEST:
-                indices = terrainMesh.northIndicesWestToEast;
-                break;
-        }
-
-        var index = indices[0];
-        if (defined(index)) {
-            return mesh.encoding.decodeHeight(terrainMesh.vertices, index);
-        }
-
-        return undefined;
-    }
-
     function getCornerFromEdge(terrainFillMesh, ellipsoid, edgeMeshes, edgeTiles, isNext, u, v, vertex) {
         var edgeVertices;
         var compareU;
@@ -1122,13 +1091,13 @@ define([
                     var targetUv = transformTextureCoordinates(sourceTile, terrainFillMesh.tile, uvScratch, uvScratch);
                     if (increasing) {
                         if (compareU) {
-                            return u - targetUv.x;
+                            return targetUv.x - u;
                         }
-                        return v - targetUv.y;
+                        return targetUv.y - v;
                     } else if (compareU) {
-                        return targetUv.x - u;
+                        return u - targetUv.x;
                     }
-                    return targetUv.y - v;
+                    return v - targetUv.y;
                 });
 
                 if (vertexIndexIndex < 0) {

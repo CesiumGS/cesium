@@ -34,18 +34,67 @@ defineSuite([
         TerrainTileProcessor) {
     'use strict';
 
-    describe('update', function() {
-        var processor;
-        var scene;
-        var camera;
-        var frameState;
-        var imageryLayerCollection;
-        var surfaceShaderSet;
-        var mockTerrain;
-        var tileProvider;
-        var quadtree;
-        var rootTiles;
+    var processor;
+    var scene;
+    var camera;
+    var frameState;
+    var imageryLayerCollection;
+    var surfaceShaderSet;
+    var mockTerrain;
+    var tileProvider;
+    var quadtree;
+    var rootTiles;
 
+    beforeEach(function() {
+        scene = {
+            mapProjection: new GeographicProjection(),
+            drawingBufferWidth: 1000,
+            drawingBufferHeight: 1000
+        };
+
+        camera = new Camera(scene);
+
+        frameState = {
+            frameNumber: 0,
+            passes: {
+                render: true
+            },
+            camera: camera,
+            fog: {
+                enabled: false
+            },
+            context: {
+                drawingBufferWidth: scene.drawingBufferWidth,
+                drawingBufferHeight: scene.drawingBufferHeight
+            },
+            mode: SceneMode.SCENE3D,
+            commandList: [],
+            cullingVolume: jasmine.createSpyObj('CullingVolume', ['computeVisibility']),
+            afterRender: []
+        };
+
+        frameState.cullingVolume.computeVisibility.and.returnValue(Intersect.INTERSECTING);
+
+        imageryLayerCollection = new ImageryLayerCollection();
+        surfaceShaderSet = jasmine.createSpyObj('SurfaceShaderSet', ['getShaderProgram']);
+        mockTerrain = new MockTerrainProvider();
+        tileProvider = new GlobeSurfaceTileProvider({
+            terrainProvider: mockTerrain,
+            imageryLayers: imageryLayerCollection,
+            surfaceShaderSet: surfaceShaderSet
+        });
+        quadtree = new QuadtreePrimitive({
+            tileProvider: tileProvider
+        });
+
+        processor = new TerrainTileProcessor(frameState, mockTerrain, imageryLayerCollection);
+        processor.mockWebGL();
+
+        quadtree.render(frameState);
+        rootTiles = quadtree._levelZeroTiles;
+    });
+
+    describe('update', function() {
         var center;
         var west;
         var south;
@@ -57,53 +106,6 @@ defineSuite([
         var northeast;
 
         beforeEach(function() {
-            scene = {
-                mapProjection: new GeographicProjection(),
-                drawingBufferWidth: 1000,
-                drawingBufferHeight: 1000
-            };
-
-            camera = new Camera(scene);
-
-            frameState = {
-                frameNumber: 0,
-                passes: {
-                    render: true
-                },
-                camera: camera,
-                fog: {
-                    enabled: false
-                },
-                context: {
-                    drawingBufferWidth: scene.drawingBufferWidth,
-                    drawingBufferHeight: scene.drawingBufferHeight
-                },
-                mode: SceneMode.SCENE3D,
-                commandList: [],
-                cullingVolume: jasmine.createSpyObj('CullingVolume', ['computeVisibility']),
-                afterRender: []
-            };
-
-            frameState.cullingVolume.computeVisibility.and.returnValue(Intersect.INTERSECTING);
-
-            imageryLayerCollection = new ImageryLayerCollection();
-            surfaceShaderSet = jasmine.createSpyObj('SurfaceShaderSet', ['getShaderProgram']);
-            mockTerrain = new MockTerrainProvider();
-            tileProvider = new GlobeSurfaceTileProvider({
-                terrainProvider: mockTerrain,
-                imageryLayers: imageryLayerCollection,
-                surfaceShaderSet: surfaceShaderSet
-            });
-            quadtree = new QuadtreePrimitive({
-                tileProvider: tileProvider
-            });
-
-            processor = new TerrainTileProcessor(frameState, mockTerrain, imageryLayerCollection);
-            processor.mockWebGL();
-
-            quadtree.render(frameState);
-            rootTiles = quadtree._levelZeroTiles;
-
             center = rootTiles[0].northeastChild.southwestChild;
             west = center.findTileToWest(rootTiles);
             south = center.findTileToSouth(rootTiles);
@@ -359,6 +361,73 @@ defineSuite([
                 expectVertex(fillNE, 0.0, 1.0, 18.0);
                 expectVertex(fillNE, 1.0, 1.0, 19.0);
                 expectVertex(fillNE, 0.5, 0.5, (18.0 + 26.0) / 2);
+            });
+        });
+
+        it('interpolates a suitable corner vertex from a less detailed tile', function() {
+            var sw = center.southwestChild.southwestChild;
+            var se = center.southeastChild.southeastChild;
+            var nw = center.northwestChild.northwestChild;
+            var ne = center.northeastChild.northeastChild;
+
+            return processor.process([sw, se, nw, ne, west, south, east, north]).then(function() {
+                var fillSW = sw.data.fill = new TerrainFillMesh(sw);
+                var fillSE = se.data.fill = new TerrainFillMesh(se);
+                var fillNW = nw.data.fill = new TerrainFillMesh(nw);
+                var fillNE = ne.data.fill = new TerrainFillMesh(ne);
+
+                fillSW.westTiles.push(west);
+                fillSW.westMeshes.push(west.data.mesh);
+                fillSW.southTiles.push(south);
+                fillSW.southMeshes.push(south.data.mesh);
+
+                fillSE.eastTiles.push(east);
+                fillSE.eastMeshes.push(east.data.mesh);
+                fillSE.southTiles.push(south);
+                fillSE.southMeshes.push(south.data.mesh);
+
+                fillNW.westTiles.push(west);
+                fillNW.westMeshes.push(west.data.mesh);
+                fillNW.northTiles.push(north);
+                fillNW.northMeshes.push(north.data.mesh);
+
+                fillNE.eastTiles.push(east);
+                fillNE.eastMeshes.push(east.data.mesh);
+                fillNE.northTiles.push(north);
+                fillNE.northMeshes.push(north.data.mesh);
+
+                fillSW.update(tileProvider, frameState);
+                fillSE.update(tileProvider, frameState);
+                fillNW.update(tileProvider, frameState);
+                fillNE.update(tileProvider, frameState);
+
+                expectVertexCount(fillSW, 5);
+                expectVertex(fillSW, 0.0, 0.0, 31.0);
+                expectVertex(fillSW, 1.0, 0.0, (31.0 + 32.0) / 2);
+                expectVertex(fillSW, 0.0, 1.0, (31.0 + 24.0) / 2);
+                expectVertex(fillSW, 1.0, 1.0, ((31.0 + 32.0) / 2 + (31.0 + 24.0) / 2) / 2);
+                expectVertex(fillSW, 0.5, 0.5, ((31.0 + 32.0) / 2 + (31.0 + 24.0) / 2) / 2);
+
+                expectVertexCount(fillSE, 5);
+                expectVertex(fillSE, 0.0, 0.0, (32.0 + 33.0) / 2);
+                expectVertex(fillSE, 1.0, 0.0, 33.0);
+                expectVertex(fillSE, 0.0, 1.0, ((32.0 + 33.0) / 2 + (33.0 + 26.0) / 2) / 2);
+                expectVertex(fillSE, 1.0, 1.0, (33.0 + 26.0) / 2);
+                expectVertex(fillSE, 0.5, 0.5, (33.0 + (33.0 + 26.0) / 2) / 2);
+
+                expectVertexCount(fillNW, 5);
+                expectVertex(fillNW, 0.0, 0.0, (17.0 + 24.0) / 2);
+                expectVertex(fillNW, 1.0, 0.0, ((17.0 + 18.0) / 2 + (17.0 + 24.0) / 2) / 2);
+                expectVertex(fillNW, 0.0, 1.0, 17.0);
+                expectVertex(fillNW, 1.0, 1.0, (17.0 + 18.0) / 2);
+                expectVertex(fillNW, 0.5, 0.5, (17.0 + (17.0 + 24.0) / 2) / 2);
+
+                expectVertexCount(fillNE, 5);
+                expectVertex(fillNE, 0.0, 0.0, ((19.0 + 26.0) / 2 + (18.0 + 19.0) / 2) / 2);
+                expectVertex(fillNE, 1.0, 0.0, (19.0 + 26.0) / 2);
+                expectVertex(fillNE, 0.0, 1.0, (18.0 + 19.0) / 2);
+                expectVertex(fillNE, 1.0, 1.0, 19.0);
+                expectVertex(fillNE, 0.5, 0.5, ((18.0 + 19.0) / 2 + (19.0 + 26.0) / 2) / 2);
             });
         });
 
