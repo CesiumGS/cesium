@@ -2,6 +2,7 @@ defineSuite([
         'Scene/Cesium3DTile',
         'Core/Cartesian3',
         'Core/clone',
+        'Core/Color',
         'Core/HeadingPitchRoll',
         'Core/Math',
         'Core/Matrix3',
@@ -16,6 +17,7 @@ defineSuite([
         Cesium3DTile,
         Cartesian3,
         clone,
+        Color,
         HeadingPitchRoll,
         CesiumMath,
         Matrix3,
@@ -116,7 +118,10 @@ defineSuite([
         debugShowBoundingVolume : true,
         debugShowViewerRequestVolume : true,
         modelMatrix : Matrix4.IDENTITY,
-        _geometricError : 2
+        _geometricError : 2,
+        _min : { centerZDepth: -1, dynamicSSEDistance: 1 },
+        _max : { centerZDepth:  1, dynamicSSEDistance: 64 },
+        _heatMapVariable: 'dynamicSSEDistance'
     };
 
     var centerLongitude = -1.31968;
@@ -352,6 +357,36 @@ defineSuite([
             var tile = new Cesium3DTile(mockTileset, '/some_url', tileWithViewerRequestVolume, undefined);
             tile.update(mockTileset, scene.frameState);
             expect(tile._debugViewerRequestVolume).toBeDefined();
+        });
+    });
+
+    describe('heat map colorize', function() {
+        var scene;
+        beforeEach(function() {
+            scene = createScene();
+            scene.frameState.passes.render = true;
+        });
+
+        afterEach(function() {
+            scene.destroyForSpecs();
+        });
+
+        it('has expected color', function() {
+            var tile = new Cesium3DTile(mockTileset, '/some_url', tileWithBoundingRegion, undefined);
+            tile._centerZDepth = (mockTileset._max.centerZDepth + mockTileset._min.centerZDepth) / 2; // In the middle of the min max window
+            tile.update(mockTileset, scene.frameState);
+            var expectedColor = new Color(0, 1, 0, 1); // Green is in the middle
+            var tileColor = tile.color;
+            var diff = new Color (
+                                  Math.abs(expectedColor.red   - tileColor.red),
+                                  Math.abs(expectedColor.green - tileColor.green),
+                                  Math.abs(expectedColor.blue  - tileColor.blue)
+            );
+
+            var threshold = 0.01;
+            expect(diff.red).toBeLessThan(threshold);
+            expect(diff.green).toBeLessThan(threshold);
+            expect(diff.blue).toBeLessThan(threshold);
         });
     });
 }, 'WebGL');
