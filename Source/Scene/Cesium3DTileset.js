@@ -217,8 +217,8 @@ define([
         this._statisticsLastPick = new Cesium3DTilesetStatistics();
         this._statisticsLastAsync = new Cesium3DTilesetStatistics();
 
-        this._min = { centerZDepth: Number.MAX_VALUE, screenSpaceError: Number.MAX_VALUE, dynamicSSEDistance: Number.MAX_VALUE };
-        this._max = { centerZDepth: -Number.MAX_VALUE, screenSpaceError: -Number.MAX_VALUE, dynamicSSEDistance: -Number.MAX_VALUE };
+        this._min = {};
+        this._max = {};
         this._heatMapVariable = defaultValue(options.heatMapVariable, undefined);
         if (defined(this._heatMapVariable)) {
             // Init the min and max values for the tracked variable for the heat map
@@ -416,8 +416,6 @@ define([
         this.allTilesLoaded.addEventListener(function(tileset) {
             // console.log('min Dist: ' + tileset._min.centerZDepth);
             // console.log('max Dist: ' + tileset._max.centerZDepth);
-            // console.log('min SSE Dist: ' + tileset._min.dynamicSSEDistance);
-            // console.log('max SSE Dist: ' + tileset._max.dynamicSSEDistance);
             console.log('totalLoaded: ' + tileset._totalTilesLoaded);
             tileset._totalTilesLoaded = 0;
         });
@@ -1550,67 +1548,6 @@ define([
         tileset._dynamicScreenSpaceErrorComputedDensity = density;
     }
 
-    var scratchReview = new Cartesian3();
-    var scratchWorldCenter = new Cartesian3(0, 0, 0);
-    function setupDynamicSSEDistanceMinMax(tileset, frameState) {
-        // Distance based SSE: basically want to relax the max sse threshold more when the view becomes a horizon view, but in a non-linear way.
-        // We don't really need distance based sse from a top-down view to a 45 view but after that need to start to relax sse requirements for distant tiles.
-        // In order to do this we determine how "topdown" our view is and then feed this into an exposure tone map with a fast ramp
-        // This step uses tone mapping to warp one range of values to another, specifically exposure mapping.
-        // See https://www.wolframalpha.com/input/?i=plot+1+-+e%5E(-x*4%2F(1000))+,+x%3D0..1000,+y%3D0..1
-        // The 4 in that example controls the sholder of the curve, the lower it is the more linear it looks, the higher it is the faster it ramps to 1 and stays there.
-        // The known max value is the denominator, knowing the max enables fine-tuning of the curve shape.
-        var toCenter = Cartesian3.subtract(scratchWorldCenter, frameState.camera.positionWC, scratchReview);
-        toCenter = Cartesian3.normalize(toCenter, scratchReview);
-        var topdownLookAmount = Math.abs(Cartesian3.dot(frameState.camera.directionWC, toCenter));
-        var exposureCurvature = 8.0; // Faster 0-1 ramp, pushes most of the input space up near 1, only very horizontal views (those really close to 0) should start to have the horizonSSE close to maxDistanceSSE
-        var maxValue = 1;
-        topdownLookAmount = 1 - Math.exp(-topdownLookAmount * exposureCurvature/maxValue);
-
-        // Determine SSE used for far away tiles (based on view direction, the more we look at the horizon the higher this number is (up to maxDistanceSSE))
-        var baseSSE = tileset._min.screenSpaceError;
-        var maxDistanceSSE = tileset.dynamicScreenSpaceErrorDistanceFactor * tileset._maximumScreenSpaceError;
-        var horizonSSE =  topdownLookAmount * baseSSE + (1 - topdownLookAmount) * maxDistanceSSE; // Only very horizontal views (views where the original non tone mapped topdownLookAmount was close to 0) will start to have a horizonSSE close to maxDistanceSSE
-        tileset._max.dynamicSSEDistance = horizonSSE;
-        tileset._min.dynamicSSEDistance = baseSSE;
-
-        return (tileset._max.centerZDepth - tileset._min.centerZDepth) + 0.01; // Prevent divide by 0
-    }
-
-    function reviewRequestsAfterTraversal(tileset, frameState) {
-        var requestedTiles = tileset._requestedTiles;
-        var length = requestedTiles.length;
-
-        // Only run if there are range of requests
-        if (length <= 1) {
-            return;
-        }
-
-        var dynamicSSEDistanceShiftedMax;
-        if (tileset.dynamicScreenSpaceErrorDistance) {
-            dynamicSSEDistanceShiftedMax = setupDynamicSSEDistanceMinMax(tileset, frameState);
-        }
-
-        var removeCount = 0;
-        for (var i = 0; i < length; ++i) {
-            var tile = requestedTiles[i];
-
-            if (tileset.dynamicScreenSpaceErrorDistance) {
-                tile.setSSEDistance(dynamicSSEDistanceShiftedMax);
-                if (tile._screenSpaceError < tile._dynamicSSEDistance) {
-                    ++removeCount;
-                    continue;
-                }
-            }
-
-            if (removeCount > 0) {
-                // Shift back to fill in vacated slots from removed requests
-                requestedTiles[i - removeCount] = tile;
-            }
-        }
-        requestedTiles.length -= removeCount;
-    }
-
     ///////////////////////////////////////////////////////////////////////////
 
     function requestContent(tileset, tile) {
@@ -2108,9 +2045,6 @@ define([
             ready = Cesium3DTilesetTraversal.selectTiles(tileset, frameState);
         }
 
-        // For things that can't be done during traversal
-        reviewRequestsAfterTraversal(tileset, frameState);
-
         if (isRender || isAsync) {
             requestTiles(tileset);
         }
@@ -2230,37 +2164,30 @@ define([
     };
 
     /**
-     * Resets any tracked min max values used for priority generation or dynamic SSE. Happens before traversal.
+     * Resets any tracked min max values (needed for priority mapping, heatmap colorization). Happens before traversal.
      *
      * @example
      * tileset.resetMinMax();
      */
     Cesium3DTileset.prototype.resetMinMax = function() {
-        // For heat map colorization: save the previous frames min max range.
+        // Implicitly tracked vars (priority)
+
+        // For heat map colorization
         var variableName = this._heatMapVariable;
         if (defined(variableName)) {
             this._min[variableName] = Number.MAX_VALUE;
             this._max[variableName] = -Number.MAX_VALUE;
         }
-
-        this._min.centerZDepth = Number.MAX_VALUE;
-        this._max.centerZDepth = -Number.MAX_VALUE;
-        this._min.screenSpaceError = Number.MAX_VALUE;
-        this._max.screenSpaceError = -Number.MAX_VALUE;
-        // dynamicSSEDistance doesn't need a reset (not really calculated iteratively via min and max of a set)
     };
 
     /**
-     * Updates any tracked min max values used for priority generation or dynamic SSE. Happens inside traversal during any attempt to load a tile.
+     * Updates any tracked min max values used for priority generation. Happens inside traversal during any attempt to load a tile.
      *
      * @example
      * tileset.updateMinMax(tile);
      */
     Cesium3DTileset.prototype.updateMinMax = function(tile) {
-        this._max.centerZDepth = Math.max(tile._centerZDepth, this._max.centerZDepth);
-        this._min.centerZDepth = Math.min(tile._centerZDepth, this._min.centerZDepth);
-        this._max.screenSpaceError = Math.max(tile._screenSpaceError, this._max.screenSpaceError);
-        this._min.screenSpaceError = Math.min(tile._screenSpaceError, this._min.screenSpaceError);
+        // Implicitly tracked vars (priority)
 
         // For heat map colorization
         var variableName = this._heatMapVariable;

@@ -342,8 +342,6 @@ define([
         this._debugColor = Color.fromRandom({ alpha : 1.0 });
         this._debugColorizeTiles = false;
 
-        this._dynamicSSEDistance = 0;
-
         this._commandsLength = 0;
 
         this._color = undefined;
@@ -1278,38 +1276,6 @@ define([
         return destroyObject(this);
     };
 
-    /**
-     * Determine the dynamicSSEDistance. This is a dynamic sse threshold for the tile depending on how far it is away from the camera relative to other tiles.
-     * @param {shiftedMax} The shifted max value. The min max window is shifted down to 0 before the calculation. This is caculated outside this function and passed since this is function usually called in a tight loop.
-     *
-     * @private
-     */
-    Cesium3DTile.prototype.setSSEDistance = function (shiftedMax) {
-        var tileset = this.tileset;
-        var baseSSE = tileset._min.dynamicSSEDistance;
-        var horizonSSE = tileset._max.dynamicSSEDistance;
-        var shiftedPriority = tileset._max.centerZDepth - this._centerZDepth;
-        var linear = true; // Linear is more aggressive falloff, exposure tone mapping can more finely control how dynamic sse kicks in as tiles get further away
-        var exposureCurvature = 4;
-        var zeroToOneDistance = linear ? Math.min(shiftedPriority / shiftedMax, 1) : 1 - Math.exp(-shiftedPriority * exposureCurvature/shiftedMax);
-        this._dynamicSSEDistance = zeroToOneDistance * baseSSE + (1 - zeroToOneDistance) * horizonSSE; // When it's 0 (at tileset._max.centerZDepth) we want the sse to be horizonSSE, as you come away from the horizon we want to quickly ramp back down to the normal base SSE
-    };
-
-    function getTileValue(tile, variableName) {
-        var tileValue;
-        if (variableName === 'dynamicSSEDistance') {
-            // If doing a heatmap dubug vis, dynamicSSEDistance needs to be recalculated.
-            // Normally dynamicSSEDistance get's updated only on requested tiles so they can be culled if need be.
-            var tileset = tile.tileset;
-            var shiftedMax = (tileset._max.centerZDepth - tileset._min.centerZDepth) + 0.01; // prevent divide by 0
-            tile.setSSEDistance(shiftedMax);
-            tileValue = tile._dynamicSSEDistance;
-        } else {
-            tileValue = tile['_' + variableName];
-        }
-        return tileValue;
-    }
-
     var heatMapColors = [];
     heatMapColors[0] = new Color(0,0,0,1);
     heatMapColors[1] = new Color(0,0,1,1);
@@ -1335,7 +1301,7 @@ define([
         if (min === Number.MAX_VALUE || max === -Number.MAX_VALUE) {
             return;
         }
-        var tileValue = getTileValue(this, variableName);
+        var tileValue = this['_' + variableName];
 
         // Shift the min max window down to 0
         var shiftedValue = tileValue - min;

@@ -121,7 +121,7 @@ defineSuite([
         _geometricError : 2,
         _min : { centerZDepth: -1, dynamicSSEDistance: 1 },
         _max : { centerZDepth:  1, dynamicSSEDistance: 64 },
-        _heatMapVariable: 'dynamicSSEDistance'
+        _heatMapVariable: 'centerZDepth'
     };
 
     var centerLongitude = -1.31968;

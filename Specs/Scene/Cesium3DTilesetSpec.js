@@ -3511,8 +3511,8 @@ defineSuite([
     });
 
 
-    it('manipulate tracked min max', function() {
-        var tileset = new Cesium3DTileset({ url: '/some_url', heatMapVariable: 'distanceToCamera' });
+    fit('manipulate tracked min max', function() {
+        var tileset = new Cesium3DTileset({ url: '/some_url', heatMapVariable: 'centerZDepth' });
 
         var tileWithBoundingRegion = {
             geometricError : 1,
@@ -3526,29 +3526,17 @@ defineSuite([
 
         // Min gets overwritten
         tile._centerZDepth = -1;
-        tile._screenSpaceError = -1;
-        tile._distanceToCamera = -1;
         tileset.updateMinMax(tile);
         expect(tileset._min.centerZDepth).toEqual(tile._centerZDepth);
-        expect(tileset._min.screenSpaceError).toEqual(tile._screenSpaceError);
-        expect(tileset._min.distanceToCamera).toEqual(tile._distanceToCamera);
 
         // Max gets overwritten
         tile._centerZDepth = 1;
-        tile._screenSpaceError = 1;
-        tile._distanceToCamera = 1;
         tileset.updateMinMax(tile);
         expect(tileset._max.centerZDepth).toEqual(tile._centerZDepth);
-        expect(tileset._max.screenSpaceError).toEqual(tile._screenSpaceError);
-        expect(tileset._max.distanceToCamera).toEqual(tile._distanceToCamera);
 
         tileset.resetMinMax();
-        expect(tileset._max.centerZDepth).toEqual(-Number.MAX_VALUE);
-        expect(tileset._max.screenSpaceError).toEqual(-Number.MAX_VALUE);
-        expect(tileset._max.distanceToCamera).toEqual(-Number.MAX_VALUE);
         expect(tileset._min.centerZDepth).toEqual(Number.MAX_VALUE);
-        expect(tileset._min.screenSpaceError).toEqual(Number.MAX_VALUE);
-        expect(tileset._min.distanceToCamera).toEqual(Number.MAX_VALUE);
+        expect(tileset._max.centerZDepth).toEqual(-Number.MAX_VALUE);
     });
 
 }, 'WebGL');
