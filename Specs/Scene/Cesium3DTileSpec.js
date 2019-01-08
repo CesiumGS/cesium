@@ -125,7 +125,16 @@ defineSuite([
     };
 
     var centerLongitude = -1.31968;
-    var centerLatitude = 0.698874;
+
+    var scene;
+    beforeEach(function() {
+        scene = createScene();
+        scene.frameState.passes.render = true;
+    });
+
+    afterEach(function() {
+        scene.destroyForSpecs();
+    });   var centerLatitude = 0.698874;
 
     function getTileTransform(longitude, latitude) {
         var transformCenter = Cartesian3.fromRadians(longitude, latitude, 0.0);
@@ -324,17 +333,7 @@ defineSuite([
         });
     });
 
-    describe('debug bounding volumes', function() {
-        var scene;
-        beforeEach(function() {
-            scene = createScene();
-            scene.frameState.passes.render = true;
-        });
-
-        afterEach(function() {
-            scene.destroyForSpecs();
-        });
-
+    fdescribe('debug bounding volumes', function() {
         it('can be a bounding region', function() {
             var tile = new Cesium3DTile(mockTileset, '/some_url', tileWithBoundingRegion, undefined);
             tile.update(mockTileset, scene.frameState);
@@ -360,17 +359,7 @@ defineSuite([
         });
     });
 
-    describe('heat map colorize', function() {
-        var scene;
-        beforeEach(function() {
-            scene = createScene();
-            scene.frameState.passes.render = true;
-        });
-
-        afterEach(function() {
-            scene.destroyForSpecs();
-        });
-
+    fdescribe('heat map colorize', function() {
         it('has expected color', function() {
             var tile = new Cesium3DTile(mockTileset, '/some_url', tileWithBoundingRegion, undefined);
             tile._centerZDepth = (mockTileset._max.centerZDepth + mockTileset._min.centerZDepth) / 2; // In the middle of the min max window
