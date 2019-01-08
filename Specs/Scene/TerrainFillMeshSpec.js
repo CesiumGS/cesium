@@ -12,6 +12,7 @@ defineSuite([
         'Scene/QuadtreePrimitive',
         'Scene/SceneMode',
         'Scene/TileBoundingRegion',
+        'Scene/TileSelectionResult',
         'ThirdParty/when',
         '../MockTerrainProvider',
         '../TerrainTileProcessor'
@@ -29,6 +30,7 @@ defineSuite([
         QuadtreePrimitive,
         SceneMode,
         TileBoundingRegion,
+        TileSelectionResult,
         when,
         MockTerrainProvider,
         TerrainTileProcessor) {
@@ -44,6 +46,16 @@ defineSuite([
     var tileProvider;
     var quadtree;
     var rootTiles;
+
+    var center;
+    var west;
+    var south;
+    var east;
+    var north;
+    var southwest;
+    var southeast;
+    var northwest;
+    var northeast;
 
     beforeEach(function() {
         scene = {
@@ -92,124 +104,170 @@ defineSuite([
 
         quadtree.render(frameState);
         rootTiles = quadtree._levelZeroTiles;
+
+        center = rootTiles[0].northeastChild.southwestChild;
+        west = center.findTileToWest(rootTiles);
+        south = center.findTileToSouth(rootTiles);
+        east = center.findTileToEast(rootTiles);
+        north = center.findTileToNorth(rootTiles);
+        southwest = west.findTileToSouth(rootTiles);
+        southeast = east.findTileToSouth(rootTiles);
+        northwest = west.findTileToNorth(rootTiles);
+        northeast = east.findTileToNorth(rootTiles);
+
+        spyOn(mockTerrain, 'requestTileGeometry').and.callFake(function(x, y, level) {
+            var buffer = new Float32Array(9);
+            if (level === west.level && x === west.x && y === west.y) {
+                buffer[0] = 15.0;
+                buffer[1] = 16.0;
+                buffer[2] = 17.0;
+                buffer[3] = 22.0;
+                buffer[4] = 23.0;
+                buffer[5] = 24.0;
+                buffer[6] = 29.0;
+                buffer[7] = 30.0;
+                buffer[8] = 31.0;
+            } else if (level === south.level && x === south.x && y === south.y) {
+                buffer[0] = 31.0;
+                buffer[1] = 32.0;
+                buffer[2] = 33.0;
+                buffer[3] = 38.0;
+                buffer[4] = 39.0;
+                buffer[5] = 40.0;
+                buffer[6] = 45.0;
+                buffer[7] = 46.0;
+                buffer[8] = 47.0;
+            } else if (level === east.level && x === east.x && y === east.y) {
+                buffer[0] = 19.0;
+                buffer[1] = 20.0;
+                buffer[2] = 21.0;
+                buffer[3] = 26.0;
+                buffer[4] = 27.0;
+                buffer[5] = 28.0;
+                buffer[6] = 33.0;
+                buffer[7] = 34.0;
+                buffer[8] = 35.0;
+            } else if (level === north.level && x === north.x && y === north.y) {
+                buffer[0] = 3.0;
+                buffer[1] = 4.0;
+                buffer[2] = 5.0;
+                buffer[3] = 10.0;
+                buffer[4] = 11.0;
+                buffer[5] = 12.0;
+                buffer[6] = 17.0;
+                buffer[7] = 18.0;
+                buffer[8] = 19.0;
+            } else if (level === southwest.level && x === southwest.x && y === southwest.y) {
+                buffer[0] = 29.0;
+                buffer[1] = 30.0;
+                buffer[2] = 31.0;
+                buffer[3] = 36.0;
+                buffer[4] = 37.0;
+                buffer[5] = 38.0;
+                buffer[6] = 43.0;
+                buffer[7] = 44.0;
+                buffer[8] = 45.0;
+            } else if (level === southeast.level && x === southeast.x && y === southeast.y) {
+                buffer[0] = 33.0;
+                buffer[1] = 34.0;
+                buffer[2] = 35.0;
+                buffer[3] = 40.0;
+                buffer[4] = 41.0;
+                buffer[5] = 42.0;
+                buffer[6] = 47.0;
+                buffer[7] = 48.0;
+                buffer[8] = 49.0;
+            } else if (level === northwest.level && x === northwest.x && y === northwest.y) {
+                buffer[0] = 1.0;
+                buffer[1] = 2.0;
+                buffer[2] = 3.0;
+                buffer[3] = 8.0;
+                buffer[4] = 9.0;
+                buffer[5] = 10.0;
+                buffer[6] = 15.0;
+                buffer[7] = 16.0;
+                buffer[8] = 17.0;
+            } else if (level === northeast.level && x === northeast.x && y === northeast.y) {
+                buffer[0] = 5.0;
+                buffer[1] = 6.0;
+                buffer[2] = 7.0;
+                buffer[3] = 12.0;
+                buffer[4] = 13.0;
+                buffer[5] = 14.0;
+                buffer[6] = 19.0;
+                buffer[7] = 20.0;
+                buffer[8] = 21.0;
+            } else {
+                return undefined;
+            }
+
+            var terrainData = new HeightmapTerrainData({
+                width: 3,
+                height: 3,
+                buffer: buffer,
+                createdByUpsampling: false
+            });
+            return when(terrainData);
+        });
+    });
+
+    describe('updateFillTiles', function() {
+        it('does nothing if no rendered tiles are provided', function() {
+            expect(function() {
+                TerrainFillMesh.updateFillTiles(tileProvider, [], frameState);
+            }).not.toThrow();
+        });
+
+        it('propagates edges and corners to an unloaded tile', function() {
+            var tiles = [west, south, east, north, southwest, southeast, northwest, northeast];
+
+            tiles.forEach(mockTerrain.createMeshWillSucceed.bind(mockTerrain));
+
+            tiles.push(center);
+
+            return processor.process(tiles).then(function() {
+                // Mark all the tiles rendered.
+                function markRendered(tile) {
+                    tile._lastSelectionResultFrame = frameState.frameNumber;
+                    tile._lastSelectionResult = TileSelectionResult.RENDERED;
+
+                    var parent = tile.parent;
+                    while (parent) {
+                        if (parent._lastSelectionResultFrame !== frameState.frameNumber) {
+                            parent._lastSelectionResultFrame = frameState.frameNumber;
+                            parent._lastSelectionResult = TileSelectionResult.REFINED;
+                        }
+                        parent = parent.parent;
+                    }
+                }
+
+                tiles.forEach(markRendered);
+
+                TerrainFillMesh.updateFillTiles(tileProvider, tiles, frameState);
+
+                var fill = center.data.fill;
+                expect(fill).toBeDefined();
+                expect(fill.westTiles).toEqual([west]);
+                expect(fill.westMeshes).toEqual([west.data.mesh]);
+                expect(fill.southTiles).toEqual([south]);
+                expect(fill.southMeshes).toEqual([south.data.mesh]);
+                expect(fill.eastTiles).toEqual([east]);
+                expect(fill.eastMeshes).toEqual([east.data.mesh]);
+                expect(fill.northTiles).toEqual([north]);
+                expect(fill.northMeshes).toEqual([north.data.mesh]);
+                expect(fill.southwestTile).toEqual(southwest);
+                expect(fill.southwestMesh).toEqual(southwest.data.mesh);
+                expect(fill.southeastTile).toEqual(southeast);
+                expect(fill.southeastMesh).toEqual(southeast.data.mesh);
+                expect(fill.northwestTile).toEqual(northwest);
+                expect(fill.northwestMesh).toEqual(northwest.data.mesh);
+                expect(fill.northeastTile).toEqual(northeast);
+                expect(fill.northeastMesh).toEqual(northeast.data.mesh);
+            });
+        });
     });
 
     describe('update', function() {
-        var center;
-        var west;
-        var south;
-        var east;
-        var north;
-        var southwest;
-        var southeast;
-        var northwest;
-        var northeast;
-
-        beforeEach(function() {
-            center = rootTiles[0].northeastChild.southwestChild;
-            west = center.findTileToWest(rootTiles);
-            south = center.findTileToSouth(rootTiles);
-            east = center.findTileToEast(rootTiles);
-            north = center.findTileToNorth(rootTiles);
-            southwest = west.findTileToSouth(rootTiles);
-            southeast = east.findTileToSouth(rootTiles);
-            northwest = west.findTileToNorth(rootTiles);
-            northeast = east.findTileToNorth(rootTiles);
-
-            spyOn(mockTerrain, 'requestTileGeometry').and.callFake(function(x, y, level) {
-                var buffer = new Float32Array(9);
-                if (level === west.level && x === west.x && y === west.y) {
-                    buffer[0] = 15.0;
-                    buffer[1] = 16.0;
-                    buffer[2] = 17.0;
-                    buffer[3] = 22.0;
-                    buffer[4] = 23.0;
-                    buffer[5] = 24.0;
-                    buffer[6] = 29.0;
-                    buffer[7] = 30.0;
-                    buffer[8] = 31.0;
-                } else if (level === south.level && x === south.x && y === south.y) {
-                    buffer[0] = 31.0;
-                    buffer[1] = 32.0;
-                    buffer[2] = 33.0;
-                    buffer[3] = 38.0;
-                    buffer[4] = 39.0;
-                    buffer[5] = 40.0;
-                    buffer[6] = 45.0;
-                    buffer[7] = 46.0;
-                    buffer[8] = 47.0;
-                } else if (level === east.level && x === east.x && y === east.y) {
-                    buffer[0] = 19.0;
-                    buffer[1] = 20.0;
-                    buffer[2] = 21.0;
-                    buffer[3] = 26.0;
-                    buffer[4] = 27.0;
-                    buffer[5] = 28.0;
-                    buffer[6] = 33.0;
-                    buffer[7] = 34.0;
-                    buffer[8] = 35.0;
-                } else if (level === north.level && x === north.x && y === north.y) {
-                    buffer[0] = 3.0;
-                    buffer[1] = 4.0;
-                    buffer[2] = 5.0;
-                    buffer[3] = 10.0;
-                    buffer[4] = 11.0;
-                    buffer[5] = 12.0;
-                    buffer[6] = 17.0;
-                    buffer[7] = 18.0;
-                    buffer[8] = 19.0;
-                } else if (level === southwest.level && x === southwest.x && y === southwest.y) {
-                    buffer[0] = 29.0;
-                    buffer[1] = 30.0;
-                    buffer[2] = 31.0;
-                    buffer[3] = 36.0;
-                    buffer[4] = 37.0;
-                    buffer[5] = 38.0;
-                    buffer[6] = 43.0;
-                    buffer[7] = 44.0;
-                    buffer[8] = 45.0;
-                } else if (level === southeast.level && x === southeast.x && y === southeast.y) {
-                    buffer[0] = 33.0;
-                    buffer[1] = 34.0;
-                    buffer[2] = 35.0;
-                    buffer[3] = 40.0;
-                    buffer[4] = 41.0;
-                    buffer[5] = 42.0;
-                    buffer[6] = 47.0;
-                    buffer[7] = 48.0;
-                    buffer[8] = 49.0;
-                } else if (level === northwest.level && x === northwest.x && y === northwest.y) {
-                    buffer[0] = 1.0;
-                    buffer[1] = 2.0;
-                    buffer[2] = 3.0;
-                    buffer[3] = 8.0;
-                    buffer[4] = 9.0;
-                    buffer[5] = 10.0;
-                    buffer[6] = 15.0;
-                    buffer[7] = 16.0;
-                    buffer[8] = 17.0;
-                } else if (level === northeast.level && x === northeast.x && y === northeast.y) {
-                    buffer[0] = 5.0;
-                    buffer[1] = 6.0;
-                    buffer[2] = 7.0;
-                    buffer[3] = 12.0;
-                    buffer[4] = 13.0;
-                    buffer[5] = 14.0;
-                    buffer[6] = 19.0;
-                    buffer[7] = 20.0;
-                    buffer[8] = 21.0;
-                }
-
-                var terrainData = new HeightmapTerrainData({
-                    width: 3,
-                    height: 3,
-                    buffer: buffer,
-                    createdByUpsampling: false
-                });
-                return when(terrainData);
-            });
-        });
-
         it('puts a middle height at the four corners and center when there are no adjacent tiles', function() {
             return processor.process([center]).then(function() {
                 center.data.tileBoundingRegion = new TileBoundingRegion({
