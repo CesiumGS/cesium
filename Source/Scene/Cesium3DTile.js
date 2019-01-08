@@ -1281,7 +1281,6 @@ define([
     /**
      * Determine the dynamicSSEDistance. This is a dynamic sse threshold for the tile depending on how far it is away from the camera relative to other tiles.
      * @param {shiftedMax} The shifted max value. The min max window is shifted down to 0 before the calculation. This is caculated outside this function and passed since this is function usually called in a tight loop.
-     * @param {usePreviousFrameMinMax} Whether or not to use the previous frames min max values for this calculation (heat map colorization).
      *
      * @private
      */

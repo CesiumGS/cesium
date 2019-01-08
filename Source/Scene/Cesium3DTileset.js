@@ -267,6 +267,15 @@ define([
         this.dynamicScreenSpaceErrorDistance = defaultValue(options.dynamicScreenSpaceErrorDistance, false) || (defined(this._heatMapVariable) && this._heatMapVariable === 'dynamicSSEDistance');
 
         /**
+         * Optimization option. The maximum screen space error relaxation scaling for dynamicScreenSpaceErrorDistance option.
+         * Affects distant tiles in horizon views.
+         *
+         * @type {Number}
+         * @default 8
+         */
+        this.dynamicScreenSpaceErrorDistanceFactor = defaultValue(options.dynamicScreenSpaceErrorDistanceFactor, 8);
+
+        /**
          * A scalar that determines the density used to adjust the dynamic screen space error, similar to {@link Fog}. Increasing this
          * value has the effect of increasing the maximum screen space error for all tiles, but in a non-linear fashion.
          * The error starts at 0.0 and increases exponentially until a midpoint is reached, and then approaches 1.0 asymptotically.
@@ -1560,7 +1569,7 @@ define([
 
         // Determine SSE used for far away tiles (based on view direction, the more we look at the horizon the higher this number is (up to maxDistanceSSE))
         var baseSSE = tileset._min.screenSpaceError;
-        var maxDistanceSSE = 8.0 * tileset._maximumScreenSpaceError; // Allow control of this?
+        var maxDistanceSSE = tileset.dynamicScreenSpaceErrorDistanceFactor * tileset._maximumScreenSpaceError;
         var horizonSSE =  topdownLookAmount * baseSSE + (1 - topdownLookAmount) * maxDistanceSSE; // Only very horizontal views (views where the original non tone mapped topdownLookAmount was close to 0) will start to have a horizonSSE close to maxDistanceSSE
         tileset._max.dynamicSSEDistance = horizonSSE;
         tileset._min.dynamicSSEDistance = baseSSE;
