@@ -1176,7 +1176,7 @@ define([
             tile.color = Color.WHITE;
         }
 
-        tile.colorize(tileset._heatMapVariable); // Skipped if heatMapVariable is undefined
+        tile.heatMapColorize(tileset._heatMapVariable); // Skipped if heatMapVariable is undefined
         if (tile._colorDirty) {
             tile._colorDirty = false;
             tile._content.applyDebugSettings(true, tile._color);
@@ -1323,7 +1323,7 @@ define([
      *
      * @private
      */
-    Cesium3DTile.prototype.colorize = function (variableName) {
+    Cesium3DTile.prototype.heatMapColorize = function (variableName) {
         if (!defined(variableName)) {
             return;
         }
