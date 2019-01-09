@@ -217,6 +217,11 @@ define([
         this._statisticsLastPick = new Cesium3DTilesetStatistics();
         this._statisticsLastAsync = new Cesium3DTilesetStatistics();
 
+        this._requestedTilesInFlight = [];
+        this._outOfViewThreshold = 1;
+        this._stats = {cancelledReqs: 0, cancelledProcs: 0};
+
+        this._totalTilesLoaded = 0;
         this._tilesLoaded = false;
         this._initialTilesLoaded = false;
 
@@ -382,6 +387,10 @@ define([
          * @see Cesium3DTileset#tilesLoaded
          */
         this.allTilesLoaded = new Event();
+        this.allTilesLoaded.addEventListener(function(tileset) {
+            console.log('totalLoaded: ' + tileset._totalTilesLoaded);
+            tileset._totalTilesLoaded = 0;
+        });
 
         /**
          * The event fired to indicate that all tiles that meet the screen space error this frame are loaded. This event
@@ -422,6 +431,9 @@ define([
          * });
          */
         this.tileLoad = new Event();
+        this.tileLoad.addEventListener(function(tile) {
+            tile.tileset._totalTilesLoaded++;
+        });
 
         /**
          * The event fired to indicate that a tile's content was unloaded.
@@ -1534,6 +1546,7 @@ define([
         }
 
         ++statistics.numberOfPendingRequests;
+        tileset._requestedTilesInFlight.push(tile);
 
         tile.contentReadyToProcessPromise.then(addToProcessingQueue(tileset, tile));
         tile.contentReadyPromise.then(handleTileSuccess(tileset, tile)).otherwise(handleTileFailure(tileset, tile));
@@ -1541,6 +1554,48 @@ define([
 
     function sortRequestByPriority(a, b) {
         return a._priority - b._priority;
+    }
+
+    function cancelOutOfViewRequestedTiles(tileset, frameState) {
+        // outOfView just means a tile's visisted frame is old enough to be considered no longer worth loading because its been out of frame for long enough
+        // This is framerate dependant so keep the threshold small (1 frame should be fine)
+        var requestedTiles = tileset._requestedTilesInFlight;
+        var removeCount = 0;
+        var removedCancelledCount = 0;
+        var length = requestedTiles.length;
+        for (var i = 0; i < length; ++i) {
+            var tile = requestedTiles[i];
+
+            var outOfView = (frameState.frameNumber - tile._touchedFrame) >= tileset._outOfViewThreshold;
+            if (tile._contentState !== Cesium3DTileContentState.LOADING) {
+                // Gets marked as LOADING in Cesium3DTile::requestContent()
+                // No longer fetching from host, don't need to track it anymore
+                ++removeCount;
+                continue;
+            } else if(outOfView) {
+                ++removeCount;
+                ++removedCancelledCount;
+                tile._request.cancel();
+
+                continue;
+            }
+            if (removeCount > 0) {
+                requestedTiles[i - removeCount] = tile;
+            }
+        }
+
+        requestedTiles.length -= removeCount;
+
+        // if (removedNotLoadingCount > 0) {
+        //     console.log('NOTLOADING: ' + removedNotLoadingCount);
+        // }
+        if (removedCancelledCount > 0) {
+            tileset._stats.cancelledReqs += removedCancelledCount;
+            console.log('CANCEL REQ: ' + tileset._stats.cancelledReqs);
+        }
+        if (removeCount > 0 && requestedTiles.length === 0) {
+            console.log('NO in-flight requests');
+        }
     }
 
     function requestTiles(tileset) {
@@ -1940,7 +1995,7 @@ define([
 
         if (progressChanged && tileset._tilesLoaded) {
             frameState.afterRender.push(function() {
-                tileset.allTilesLoaded.raiseEvent();
+                tileset.allTilesLoaded.raiseEvent(tileset);
             });
             if (!tileset._initialTilesLoaded) {
                 tileset._initialTilesLoaded = true;
@@ -2033,6 +2088,9 @@ define([
                 }
             }
         }
+
+        // TODO: move this into requestTiles
+        cancelOutOfViewRequestedTiles(tileset, frameState);
 
         // Update last statistics
         var statisticsLast = isAsync ? tileset._statisticsLastAsync : (isPick ? tileset._statisticsLastPick : tileset._statisticsLastRender);
