@@ -71,7 +71,7 @@ define([
             return;
         }
 
-        tileset.resetMinMax();
+        tileset.resetAllMinMax();
 
         if (!skipLevelOfDetail(tileset)) {
             executeBaseTraversal(tileset, root, frameState);

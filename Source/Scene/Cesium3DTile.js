@@ -1174,7 +1174,7 @@ define([
             tile.color = Color.WHITE;
         }
 
-        tile.heatMapColorize(tileset._heatMapVariable); // Skipped if heatMapVariable is undefined
+        tile.heatMapColorize(tileset._heatMapVariable); // Skipped if tileset._heatMapVariable is undefined
         if (tile._colorDirty) {
             tile._colorDirty = false;
             tile._content.applyDebugSettings(true, tile._color);
@@ -1294,28 +1294,27 @@ define([
             return;
         }
 
-
         // Use the string to get the actual values. TODO: during tileset init warn about possible mispellings, i.e. can't find the var
         var tileset = this.tileset;
         tileset.updateHeatMapMinMax(this);
-        var min = tileset._previousMin[variableName];
-        var max = tileset._previousMax[variableName];
+        var min = tileset._previousMinHeatMap[variableName];
+        var max = tileset._previousMaxHeatMap[variableName];
         if (min === Number.MAX_VALUE || max === -Number.MAX_VALUE) {
             return;
         }
-        var tileValue = this['_' + variableName];
 
         // Shift the min max window down to 0
-        var shiftedMax = (max - min) + 0.001; // Prevent divide by 0
-        var shiftedValue = Math.max(Math.min(tileValue - min, shiftedMax), 0);
+        var shiftedMax = (max - min) + CesiumMath.EPSILON3; // Prevent divide by 0
+        var tileValue = this['_' + variableName];
+        var shiftedValue = CesiumMath.clamp(tileValue - min, 0, shiftedMax);
 
         // Get position between min and max and convert that to a position in the color array
-        var zeroToOne = Math.max(Math.min(shiftedValue / shiftedMax, 1.0), 0);
+        var zeroToOne = CesiumMath.clamp(shiftedValue / shiftedMax, 0, 1);
         var lastIndex = heatMapColors.length - 1;
         var colorPosition = zeroToOne * lastIndex;
 
         // Take floor and ceil of the value to get the two colors to lerp between, lerp using the fractional portion
-        var colorPositionFloor = Math.floor(colorPosition);
+        var colorPositionFloor = Math.max(Math.floor(colorPosition), 0);
         var colorPositionCeil = Math.min(Math.ceil(colorPosition), lastIndex);
         var lerpValue = colorPosition - colorPositionFloor;
         var colorA = heatMapColors[colorPositionFloor];

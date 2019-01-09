@@ -3510,8 +3510,7 @@ defineSuite([
         });
     });
 
-
-    fit('manipulate tracked min max', function() {
+    it('manipulate tracked min max', function() {
         var tileset = new Cesium3DTileset({ url: '/some_url', heatMapVariable: 'centerZDepth' });
 
         var tileWithBoundingRegion = {
@@ -3526,17 +3525,19 @@ defineSuite([
 
         // Min gets overwritten
         tile._centerZDepth = -1;
-        tileset.updateMinMax(tile);
-        expect(tileset._min.centerZDepth).toEqual(tile._centerZDepth);
+        tileset.updateHeatMapMinMax(tile);
+        expect(tileset._minHeatMap.centerZDepth).toEqual(tile._centerZDepth);
 
         // Max gets overwritten
         tile._centerZDepth = 1;
-        tileset.updateMinMax(tile);
-        expect(tileset._max.centerZDepth).toEqual(tile._centerZDepth);
+        tileset.updateHeatMapMinMax(tile);
+        expect(tileset._maxHeatMap.centerZDepth).toEqual(tile._centerZDepth);
 
-        tileset.resetMinMax();
-        expect(tileset._min.centerZDepth).toEqual(Number.MAX_VALUE);
-        expect(tileset._max.centerZDepth).toEqual(-Number.MAX_VALUE);
+        tileset.resetAllMinMax();
+        expect(tileset._minHeatMap.centerZDepth).toEqual(Number.MAX_VALUE);
+        expect(tileset._maxHeatMap.centerZDepth).toEqual(-Number.MAX_VALUE);
+        expect(tileset._previousMinHeatMap.centerZDepth).toEqual(-1);
+        expect(tileset._previousMaxHeatMap.centerZDepth).toEqual( 1);
     });
 
 }, 'WebGL');

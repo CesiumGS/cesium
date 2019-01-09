@@ -1,5 +1,6 @@
 defineSuite([
         'Scene/Cesium3DTile',
+        'Scene/Cesium3DTileset',
         'Core/Cartesian3',
         'Core/clone',
         'Core/Color',
@@ -15,6 +16,7 @@ defineSuite([
         'Specs/createScene'
     ], function(
         Cesium3DTile,
+        Cesium3DTileset,
         Cartesian3,
         clone,
         Color,
@@ -118,10 +120,7 @@ defineSuite([
         debugShowBoundingVolume : true,
         debugShowViewerRequestVolume : true,
         modelMatrix : Matrix4.IDENTITY,
-        _geometricError : 2,
-        _min : { centerZDepth: -1, dynamicSSEDistance: 1 },
-        _max : { centerZDepth:  1, dynamicSSEDistance: 64 },
-        _heatMapVariable: 'centerZDepth'
+        _geometricError : 2
     };
 
     var centerLongitude = -1.31968;
@@ -361,9 +360,15 @@ defineSuite([
 
     describe('heat map colorize', function() {
         it('has expected color', function() {
-            var tile = new Cesium3DTile(mockTileset, '/some_url', tileWithBoundingRegion, undefined);
-            tile._centerZDepth = (mockTileset._max.centerZDepth + mockTileset._min.centerZDepth) / 2; // In the middle of the min max window
-            tile.update(mockTileset, scene.frameState);
+            var tileset = new Cesium3DTileset({ url: '/some_url', heatMapVariable: 'centerZDepth' });
+            var tile = new Cesium3DTile(tileset, '/some_url', tileWithBoundingRegion, undefined);
+
+            tileset._previousMinHeatMap = { centerZDepth: -1 };
+            tileset._previousMaxHeatMap = { centerZDepth:  1 };
+            tile._centerZDepth = (tileset._previousMaxHeatMap.centerZDepth + tileset._previousMinHeatMap.centerZDepth) / 2; // In the middle of the min max window
+
+            tile.update(tileset, scene.frameState);
+
             var expectedColor = new Color(0, 1, 0, 1); // Green is in the middle
             var tileColor = tile.color;
             var diff = new Color (

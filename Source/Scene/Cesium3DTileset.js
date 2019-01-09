@@ -217,17 +217,17 @@ define([
         this._statisticsLastPick = new Cesium3DTilesetStatistics();
         this._statisticsLastAsync = new Cesium3DTilesetStatistics();
 
-        this._min = {};
-        this._max = {};
-        this._previousMin = {};
-        this._previousMax = {};
+        this._minHeatMap = {};
+        this._maxHeatMap = {};
+        this._previousMinHeatMap = {};
+        this._previousMaxHeatMap = {};
         this._heatMapVariable = defaultValue(options.heatMapVariable, undefined);
         if (defined(this._heatMapVariable)) {
             // Init the min and max values for the tracked variable for the heat map
-            this._min[this._heatMapVariable] = Number.MAX_VALUE;
-            this._max[this._heatMapVariable] = -Number.MAX_VALUE;
-            this._previousMin[this._heatMapVariable] = Number.MAX_VALUE;
-            this._previousMax[this._heatMapVariable] = -Number.MAX_VALUE;
+            this._minHeatMap[this._heatMapVariable] = Number.MAX_VALUE;
+            this._maxHeatMap[this._heatMapVariable] = -Number.MAX_VALUE;
+            this._previousMinHeatMap[this._heatMapVariable] = Number.MAX_VALUE;
+            this._previousMaxHeatMap[this._heatMapVariable] = -Number.MAX_VALUE;
         }
 
         this._totalTilesLoaded = 0;
@@ -258,26 +258,6 @@ define([
          * @default false
          */
         this.dynamicScreenSpaceError = defaultValue(options.dynamicScreenSpaceError, false);
-
-        /**
-         * Optimization option. Whether the tileset should refine based on a dynamic screen space error. Tiles that are further
-         * away will be rendered with lower detail than closer tiles. This improves performance by rendering fewer
-         * tiles and making less requests, but may result in a slight drop in visual quality for tiles in the distance.
-         * The algorithm is biased towards "horizon views" where the camera is  looking at the horizon.
-         *
-         * @type {Boolean}
-         * @default false
-         */
-        this.dynamicScreenSpaceErrorDistance = defaultValue(options.dynamicScreenSpaceErrorDistance, false) || (defined(this._heatMapVariable) && this._heatMapVariable === 'dynamicSSEDistance');
-
-        /**
-         * Optimization option. The maximum screen space error relaxation scaling for dynamicScreenSpaceErrorDistance option.
-         * Affects distant tiles in horizon views.
-         *
-         * @type {Number}
-         * @default 8
-         */
-        this.dynamicScreenSpaceErrorDistanceFactor = defaultValue(options.dynamicScreenSpaceErrorDistanceFactor, 8);
 
         /**
          * A scalar that determines the density used to adjust the dynamic screen space error, similar to {@link Fog}. Increasing this
@@ -418,8 +398,8 @@ define([
          */
         this.allTilesLoaded = new Event();
         this.allTilesLoaded.addEventListener(function(tileset) {
-            // console.log('min Dist: ' + tileset._min.centerZDepth);
-            // console.log('max Dist: ' + tileset._max.centerZDepth);
+            // console.log('heatMapMin: ' + tileset._minHeatMap[tileset._heatMapVariable]);
+            // console.log('heatMapMax: ' + tileset._maxHeatMap[tileset._heatMapVariable]);
             console.log('totalLoaded: ' + tileset._totalTilesLoaded);
             tileset._totalTilesLoaded = 0;
         });
@@ -2168,29 +2148,29 @@ define([
     };
 
     /**
-     * Resets any tracked min max values (needed for priority mapping, heatmap colorization). Happens before traversal.
+     * Resets any tracked min max values (needed for priority mapping, heatmap colorization). Happens right before traversal.
      *
      * @example
-     * tileset.resetMinMax();
+     * tileset.resetAllMinMax();
      */
-    Cesium3DTileset.prototype.resetMinMax = function() {
+    Cesium3DTileset.prototype.resetAllMinMax = function() {
         // Implicitly tracked vars (priority)
 
         // For heat map colorization
         var variableName = this._heatMapVariable;
         if (defined(variableName)) {
-            this._previousMin[variableName] = this._min[variableName];
-            this._previousMax[variableName] = this._max[variableName];
-            this._min[variableName] = Number.MAX_VALUE;
-            this._max[variableName] = -Number.MAX_VALUE;
+            this._previousMinHeatMap[variableName] = this._minHeatMap[variableName];
+            this._previousMaxHeatMap[variableName] = this._maxHeatMap[variableName];
+            this._minHeatMap[variableName] = Number.MAX_VALUE;
+            this._maxHeatMap[variableName] = -Number.MAX_VALUE;
         }
     };
 
     /**
-     * Updates any tracked min max values used for priority generation. Happens inside traversal during any attempt to load a tile.
+     * Updates any tracked min max values used for heat map visualization.
      *
      * @example
-     * tileset.updateMinMax(tile);
+     * tileset.updateHeatMapMinMax(tile);
      */
     Cesium3DTileset.prototype.updateHeatMapMinMax = function(tile) {
         // Implicitly tracked vars (priority)
@@ -2198,8 +2178,8 @@ define([
         // For heat map colorization
         var variableName = this._heatMapVariable;
         if (defined(variableName)) { // Possible recalcuation of the ones above but covers a lot of cases for variables that aren't tracked
-            this._max[variableName] = Math.max(tile['_' + variableName], this._max[variableName]);
-            this._min[variableName] = Math.min(tile['_' + variableName], this._min[variableName]);
+            this._maxHeatMap[variableName] = Math.max(tile['_' + variableName], this._maxHeatMap[variableName]);
+            this._minHeatMap[variableName] = Math.min(tile['_' + variableName], this._minHeatMap[variableName]);
         }
     };
 
