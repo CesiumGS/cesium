@@ -114,9 +114,9 @@ define([
         /**
          * What this tile will classify.
          * @type {ClassificationType}
-         * @default ClassificationType.CESIUM_3D_TILE
+         * @default ClassificationType.BOTH
          */
-        this.classificationType = ClassificationType.CESIUM_3D_TILE;
+        this.classificationType = ClassificationType.BOTH;
     }
 
     defineProperties(Vector3DTileGeometry.prototype, {

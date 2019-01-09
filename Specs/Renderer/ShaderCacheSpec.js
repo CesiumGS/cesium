@@ -193,6 +193,49 @@ defineSuite([
         cache.destroy();
     });
 
+    it('replaces derived shader program', function() {
+        var vs = 'attribute vec4 position; void main() { gl_Position = position; }';
+        var fs = 'void main() { gl_FragColor = vec4(1.0); }';
+
+        var cache = new ShaderCache(context);
+        var sp = cache.getShaderProgram({
+            vertexShaderSource : vs,
+            fragmentShaderSource : fs,
+            attributeLocations : {
+                position : 0
+            }
+        });
+        var derivedKeywords = sp._cachedShader.derivedKeywords;
+
+        var keyword = 'derived';
+        var fsDerived = 'void main() { gl_FragColor = vec4(vec3(1.0), 0.5); }';
+        var spDerived = cache.replaceDerivedShaderProgram(sp, keyword, {
+            vertexShaderSource : vs,
+            fragmentShaderSource : fsDerived,
+            attributeLocations : {
+                position : 0
+            }
+        });
+
+        expect(spDerived).toBeDefined();
+        expect(derivedKeywords.length).toBe(1);
+
+        var fsDerived2 = 'void main() { gl_FragColor = vec4(vec3(0.5), 0.5); }';
+        var spDerived2 = cache.replaceDerivedShaderProgram(sp, keyword, {
+            vertexShaderSource : vs,
+            fragmentShaderSource : fsDerived2,
+            attributeLocations : {
+                position : 0
+            }
+        });
+
+        expect(spDerived.isDestroyed()).toBe(true);
+        expect(spDerived2.isDestroyed()).toBe(false);
+        expect(derivedKeywords.length).toBe(1);
+
+        cache.destroy();
+    });
+
     it('destroying a shader program destroys its derived shaders', function() {
         var vs = 'attribute vec4 position; void main() { gl_Position = position; }';
         var fs = 'void main() { gl_FragColor = vec4(1.0); }';

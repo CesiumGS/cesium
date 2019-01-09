@@ -16,6 +16,7 @@ define([
         '../Renderer/TextureWrap',
         '../Shaders/PostProcessStages/PassThrough',
         './BlendingState',
+        './StencilConstants',
         './StencilFunction',
         './StencilOperation'
     ], function(
@@ -36,6 +37,7 @@ define([
         TextureWrap,
         PassThrough,
         BlendingState,
+        StencilConstants,
         StencilFunction,
         StencilOperation) {
     'use strict';
@@ -96,12 +98,6 @@ define([
         return context.depthTexture && context.fragmentDepth;
     };
 
-    // The stencil mask only uses the least significant 4 bits.
-    // This is so 3D Tiles with the skip LOD optimization, which uses the most significant 4 bits,
-    // can be classified.
-    var stencilMask = 0x0F;
-    var stencilReference = 0;
-
     var rsUnclassified = {
         depthMask : false,
         stencilTest : {
@@ -113,8 +109,8 @@ define([
                 zPass : StencilOperation.KEEP
             },
             backFunction : StencilFunction.NEVER,
-            reference : stencilReference,
-            mask : stencilMask
+            reference : 0,
+            mask : StencilConstants.CLASSIFICATION_MASK
         },
         blending : BlendingState.ALPHA_BLEND
     };
@@ -130,17 +126,22 @@ define([
                 zPass : StencilOperation.KEEP
             },
             backFunction : StencilFunction.NEVER,
-            reference : stencilReference,
-            mask : stencilMask
+            reference : 0,
+            mask : StencilConstants.CLASSIFICATION_MASK
         },
         blending : BlendingState.ALPHA_BLEND
     };
 
+    // Set the 3D Tiles bit when rendering back into the scene's framebuffer. This is only needed if
+    // invert classification does not use the scene's depth-stencil texture, which is the case if the invert
+    // classification color is translucent.
     var rsDefault = {
         depthMask : true,
         depthTest : {
             enabled : true
         },
+        stencilTest : StencilConstants.setCesium3DTileBit(),
+        stencilMask : StencilConstants.CESIUM_3D_TILE_MASK,
         blending : BlendingState.ALPHA_BLEND
     };
 
