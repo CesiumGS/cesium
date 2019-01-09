@@ -1149,17 +1149,24 @@ define([
         }
     };
 
-    var uniformMap = {
-        u_textureDimensions : function() {
-            return this.textureDimensions;
-        },
-        u_texture : function() {
-            return this.texture;
-        },
+    function MakeCommandOptions() {
+        this.context = undefined;
+        this.outputTexture = undefined;
+        this.imagery = undefined;
+        this.imageryLayer = undefined;
+        this.vertexArray = undefined;
+        this.projectedRectangle = undefined;
+        this.projectedTexture = undefined;
+        this.final = undefined;
+    }
 
-        textureDimensions : new Cartesian2(),
-        texture : undefined
+    var arbitraryReprojectAttributeIndices = {
+        position : 0,
+        projectedCoordinates : 1
     };
+
+    var geographicCartographicScratch = new Cartographic();
+    var projectedScratch = new Cartesian3();
 
     /**
      * Enqueues commands re-projecting multiple textures to a {@link GeographicProjection} on the next update
@@ -1188,10 +1195,9 @@ define([
         }
 
         var projection = this._imageryProvider.tilingScheme.sourceProjection;
-        var rectangle = imagery.rectangle;
         var context = frameState.context;
 
-        // Create reusable positions buffer
+        // Create vertex buffers
         var positions = new Float32Array(ARBITRARY_PROJECTION_VERTICES_WIDTH * ARBITRARY_PROJECTION_VERTICES_HEIGHT * 2);
         var index = 0;
         var widthIncrement = 1.0 / (ARBITRARY_PROJECTION_VERTICES_WIDTH - 1);
@@ -1211,54 +1217,8 @@ define([
             usage : BufferUsage.STATIC_DRAW
         });
 
-        for (var i = 0; i < projectedTexturesLength; i++) {
-            imagery.addReference();
-            var final = (i === projectedTexturesLength - 1);
-            var computeCommand = makeCommand(context, projectedTextures[i], outputTexture, rectangle, projectedRectangles[i], projection, imagery, this, final, positionsBuffer);
-            this._reprojectComputeCommands.push(computeCommand);
-        }
-    };
-
-    function makeCommand(context, projectedTexture, outputTexture, rectangle, projectedRectangle, projection, imagery, that, final, positionsBuffer) {
-        return new ComputeCommand({
-            persists : true,
-            owner : this,
-            // Update render resources right before execution instead of now.
-            // This allows different ImageryLayers to share the same vao and buffers.
-            preExecute : function(command) {
-                reprojectFromArbitrary(command, context, projectedTexture, outputTexture, rectangle, projectedRectangle, projection, positionsBuffer);
-            },
-            postExecute : function(outputTexture) {
-                if (final) {
-                    finalizeReprojectTexture(that, context, imagery, outputTexture);
-                    imagery.projectedTextures.length = 0;
-                }
-                imagery.releaseReference();
-            }
-        });
-    }
-
-    var geographicCartographicScratch = new Cartographic();
-    var projectedScratch = new Cartesian3();
-    function reprojectFromArbitrary(command, context, texture, outputTexture, cartographicRectangle, projectedRectangle, projection, positionsBuffer) {
-        var reproject = {
-            vertexArray : undefined,
-            shaderProgram : undefined,
-            sampler : undefined,
-            destroy : function() {
-                if (defined(this.framebuffer)) {
-                    this.framebuffer.destroy();
-                }
-                if (defined(this.vertexArray)) {
-                    this.vertexArray.destroy();
-                }
-                if (defined(this.shaderProgram)) {
-                    this.shaderProgram.destroy();
-                }
-            }
-        };
-
         // For each vertex in the target grid, project into the projection
+        var cartographicRectangle = imagery.rectangle;
         var south = cartographicRectangle.south;
         var west = cartographicRectangle.west;
 
@@ -1267,27 +1227,24 @@ define([
         var geographicCartographic = geographicCartographicScratch;
         var projected = projectedScratch;
 
-        var projectedSouth = projectedRectangle.south;
-        var projectedWest = projectedRectangle.west;
-
-        var texcoords = new Float32Array(ARBITRARY_PROJECTION_VERTICES_WIDTH * ARBITRARY_PROJECTION_VERTICES_HEIGHT * 2);
-        var index = 0;
-        for (var w = 0; w < ARBITRARY_PROJECTION_VERTICES_WIDTH; w++) {
-            for (var h = 0; h < ARBITRARY_PROJECTION_VERTICES_HEIGHT; h++) {
+        var projectedCoordinates = new Float32Array(ARBITRARY_PROJECTION_VERTICES_WIDTH * ARBITRARY_PROJECTION_VERTICES_HEIGHT * 2);
+        index = 0;
+        for (w = 0; w < ARBITRARY_PROJECTION_VERTICES_WIDTH; w++) {
+            for (h = 0; h < ARBITRARY_PROJECTION_VERTICES_HEIGHT; h++) {
                 geographicCartographic.longitude = west + w * unprojectedWidthIncrement;
                 geographicCartographic.latitude = south + h * unprojectedHeightIncrement;
 
                 projection.project(geographicCartographic, projected);
 
-                texcoords[index++] = (projected.x - projectedWest) / projectedRectangle.width;
-                texcoords[index++] = (projected.y - projectedSouth) / projectedRectangle.height;
+                projectedCoordinates[index++] = projected.x;
+                projectedCoordinates[index++] = projected.y;
             }
         }
-
-        var reprojectAttributeIndices = {
-            position : 0,
-            textureCoordinates : 1
-        };
+        var projectedBuffer = Buffer.createVertexBuffer({
+            context : context,
+            typedArray : projectedCoordinates,
+            usage : BufferUsage.STATIC_DRAW
+        });
 
         var indices = TerrainProvider.getRegularGridIndices(ARBITRARY_PROJECTION_VERTICES_WIDTH, ARBITRARY_PROJECTION_VERTICES_HEIGHT);
         var indexBuffer = Buffer.createIndexBuffer({
@@ -1297,29 +1254,100 @@ define([
             indexDatatype : IndexDatatype.UNSIGNED_SHORT
         });
 
-        reproject.vertexArray = new VertexArray({
-            context : context,
-            attributes : [{
-                index : reprojectAttributeIndices.position,
-                vertexBuffer : positionsBuffer,
-                componentsPerAttribute : 2
-            },{
-                index : reprojectAttributeIndices.textureCoordinates,
-                vertexBuffer : Buffer.createVertexBuffer({
-                    context : context,
-                    typedArray : texcoords,
-                    usage : BufferUsage.STATIC_DRAW
-                }),
-                componentsPerAttribute : 2
+        var vertexArray = new VertexArray({
+            context: context,
+            attributes: [{
+                index: arbitraryReprojectAttributeIndices.position,
+                vertexBuffer: positionsBuffer,
+                componentsPerAttribute: 2
+            }, {
+                index: arbitraryReprojectAttributeIndices.projectedCoordinates,
+                vertexBuffer: projectedBuffer,
+                componentsPerAttribute: 2
             }],
-            indexBuffer : indexBuffer
+            indexBuffer: indexBuffer
         });
 
+        for (var i = 0; i < projectedTexturesLength; i++) {
+            imagery.addReference();
+            var makeCommandOptions = new MakeCommandOptions();
+            makeCommandOptions.context = context;
+            makeCommandOptions.outputTexture = outputTexture;
+            makeCommandOptions.imagery = imagery;
+            makeCommandOptions.imageryLayer = this;
+            makeCommandOptions.vertexArray = vertexArray;
+            makeCommandOptions.projectedTexture = projectedTextures[i];
+            makeCommandOptions.projectedRectangle = projectedRectangles[i];
+            makeCommandOptions.final = (i === projectedTexturesLength - 1);
+
+            var computeCommand = makeCommand(makeCommandOptions);
+            this._reprojectComputeCommands.push(computeCommand);
+        }
+    };
+
+    function makeCommand(makeCommandOptions) {
+        var imagery = makeCommandOptions.imagery;
+        return new ComputeCommand({
+            persists : true,
+            owner : this,
+            // Update render resources right before execution instead of now.
+            // This allows different ImageryLayers to share the same vao and buffers.
+            preExecute : function(command) {
+                reprojectFromArbitrary(command, makeCommandOptions);
+            },
+            postExecute : function(outputTexture) {
+                if (makeCommandOptions.final) {
+                    finalizeReprojectTexture(makeCommandOptions.imageryLayer, makeCommandOptions.context, imagery, outputTexture);
+                    imagery.projectedTextures.length = 0;
+                }
+                imagery.releaseReference();
+            }
+        });
+    }
+
+    var arbitraryUniformMap = {
+        u_textureDimensions : function() {
+            return this.textureDimensions;
+        },
+        u_texture : function() {
+            return this.texture;
+        },
+        u_westSouthInverseWidthHeight : function() {
+            return this.westSouthInverseWidthHeight;
+        },
+        westSouthInverseWidthHeight : new Cartesian4(),
+        textureDimensions : new Cartesian2(),
+        texture : undefined
+    };
+
+    function reprojectFromArbitrary(command, makeCommandOptions) {
+        var context = makeCommandOptions.context;
+        var texture = makeCommandOptions.projectedTexture;
+        var projectedRectangle = makeCommandOptions.projectedRectangle;
+
+        var reproject = {
+            vertexArray : undefined,
+            shaderProgram : undefined,
+            sampler : undefined,
+            destroy : function() {
+                if (defined(this.framebuffer)) {
+                    this.framebuffer.destroy();
+                }
+                if (defined(this.vertexArray) && makeCommandOptions.final) {
+                    this.vertexArray.destroy();
+                }
+                if (defined(this.shaderProgram)) {
+                    this.shaderProgram.destroy();
+                }
+            }
+        };
+
+        reproject.vertexArray = makeCommandOptions.vertexArray;
         reproject.shaderProgram = ShaderProgram.fromCache({
             context : context,
             vertexShaderSource : ReprojectArbitraryVS,
             fragmentShaderSource : ReprojectArbitraryFS,
-            attributeLocations : reprojectAttributeIndices
+            attributeLocations : arbitraryReprojectAttributeIndices
         });
 
         reproject.sampler = new Sampler({
@@ -1329,14 +1357,19 @@ define([
             magnificationFilter : TextureMagnificationFilter.LINEAR
         });
 
-        uniformMap.textureDimensions.x = texture.width;
-        uniformMap.textureDimensions.y = texture.height;
-        uniformMap.texture = texture;
+        arbitraryUniformMap.textureDimensions.x = texture.width;
+        arbitraryUniformMap.textureDimensions.y = texture.height;
+        arbitraryUniformMap.texture = texture;
+
+        arbitraryUniformMap.westSouthInverseWidthHeight.x = projectedRectangle.west;
+        arbitraryUniformMap.westSouthInverseWidthHeight.y = projectedRectangle.south;
+        arbitraryUniformMap.westSouthInverseWidthHeight.z = 1.0 / projectedRectangle.width;
+        arbitraryUniformMap.westSouthInverseWidthHeight.w = 1.0 / projectedRectangle.height;
 
         command.clear = false;
         command.shaderProgram = reproject.shaderProgram;
-        command.outputTexture = outputTexture;
-        command.uniformMap = uniformMap;
+        command.outputTexture = makeCommandOptions.outputTexture;
+        command.uniformMap = arbitraryUniformMap;
         command.vertexArray = reproject.vertexArray;
     }
 
@@ -1386,6 +1419,18 @@ define([
     function getImageryCacheKey(x, y, level) {
         return JSON.stringify([x, y, level]);
     }
+
+    var uniformMap = {
+        u_textureDimensions : function() {
+            return this.textureDimensions;
+        },
+        u_texture : function() {
+            return this.texture;
+        },
+
+        textureDimensions : new Cartesian2(),
+        texture : undefined
+    };
 
     var float32ArrayScratch = FeatureDetection.supportsTypedArrays() ? new Float32Array(2 * 64) : undefined;
 
