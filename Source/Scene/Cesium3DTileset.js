@@ -1586,15 +1586,12 @@ define([
 
         requestedTiles.length -= removeCount;
 
-        // if (removedNotLoadingCount > 0) {
-        //     console.log('NOTLOADING: ' + removedNotLoadingCount);
-        // }
         if (removedCancelledCount > 0) {
             tileset._stats.cancelledReqs += removedCancelledCount;
-            console.log('CANCEL REQ: ' + tileset._stats.cancelledReqs);
+            console.log('Total Cancelled Reqs: ' + tileset._stats.cancelledReqs);
         }
         if (removeCount > 0 && requestedTiles.length === 0) {
-            console.log('NO in-flight requests');
+            console.log('No In-flight Requests');
         }
     }
 
