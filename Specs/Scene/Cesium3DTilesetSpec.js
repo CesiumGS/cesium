@@ -3510,7 +3510,7 @@ defineSuite([
         });
     });
 
-    fit('manipulate tracked min max', function() {
+    it('manipulate tracked min max', function() {
         var tileset = new Cesium3DTileset({ url: '/some_url', heatMapVariable: 'centerZDepth' });
 
         var tileWithBoundingRegion = {
