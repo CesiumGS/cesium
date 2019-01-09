@@ -2192,11 +2192,11 @@ define([
                 } else {
                     this._tileHeatMapVariable = '_' + variableName;
                 }
-            }
 
-            // Couldn't find tile variable name
-            if (!defined(this._heatMapVariable)) {
-                return;
+                // Couldn't find tile variable name
+                if (!defined(this._heatMapVariable)) {
+                    return;
+                }
             }
 
             var tileValue = tile[this._tileHeatMapVariable];
