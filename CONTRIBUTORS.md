@@ -199,3 +199,6 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 * [Cedric Le Roux](https://github.com/cleroux)
 * [Dag Wästberg](https://github.com/dwastberg)
 * [Mussab Abdalla](https://github.com/baloola)
+* [Mirco Kroon](https://github.com/mircokroon)
+* [Rikku-x](https://github.com/Rikku-x)
+* [Adrien David](https://github.com/adridavid)
