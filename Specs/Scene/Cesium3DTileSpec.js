@@ -359,7 +359,7 @@ defineSuite([
         });
     });
 
-    fit('expected heat map color', function() {
+    it('expected heat map color', function() {
         var tileset = new Cesium3DTileset({ url: '/some_url', heatMapVariable: 'centerZDepth' });
         var tile = new Cesium3DTile(tileset, '/some_url', tileWithBoundingRegion, undefined);
 
