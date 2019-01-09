@@ -58,6 +58,7 @@
         'Specs/customizeJasmine'
     ], function(
         customizeJasmine) {
+                    jasmine.DEFAULT_TIMEOUT_INTERVAL = 5000 * 4;
                     customizeJasmine(jasmine.getEnv(), included, excluded, webglValidation, webglStub, release);
 
                     var specFiles = Object.keys(__karma__.files).filter(function(file) {
