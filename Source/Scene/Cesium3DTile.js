@@ -1290,7 +1290,7 @@ define([
      * @private
      */
     Cesium3DTile.prototype.heatMapColorize = function (variableName) {
-        if (!defined(variableName)) {
+        if (!defined(variableName) || this._hasEmptyContent || this._hasTilesetContent) {
             return;
         }
 
@@ -1316,15 +1316,16 @@ define([
         // Take floor and ceil of the value to get the two colors to lerp between, lerp using the fractional portion
         var colorPositionFloor = Math.floor(colorPosition);
         var colorPositionCeil = Math.ceil(colorPosition);
-        var lerpValue = colorPosition - colorPositionFloor;
-        var colorA = heatMapColors[colorPositionFloor];
-        var colorB = heatMapColors[colorPositionCeil];
+        var t = colorPosition - colorPositionFloor;
+        var colorZero = heatMapColors[colorPositionFloor];
+        var colorOne = heatMapColors[colorPositionCeil];
 
         // Perform the lerp
-        var finalColor = heatMapColors[4]; // Init to white
-        finalColor.red = colorA.red * (1 - lerpValue) + colorB.red * lerpValue;
-        finalColor.green = colorA.green * (1 - lerpValue) + colorB.green * lerpValue;
-        finalColor.blue = colorA.blue * (1 - lerpValue) + colorB.blue * lerpValue;
+        var finalColor = new Color(1,1,1,1);
+        var oneMinusT = 1 - t;
+        finalColor.red = colorZero.red * oneMinusT + colorOne.red * t;
+        finalColor.green = colorZero.green * oneMinusT + colorOne.green * t;
+        finalColor.blue = colorZero.blue * oneMinusT + colorOne.blue * t;
         this.color = finalColor;
     };
 
