@@ -390,8 +390,6 @@ define([
          * @see Cesium3DTileset#tilesLoaded
          */
         this.allTilesLoaded = new Event();
-        this.allTilesLoaded.addEventListener(function(tileset) {
-        });
 
         /**
          * The event fired to indicate that all tiles that meet the screen space error this frame are loaded. This event
