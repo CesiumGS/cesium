@@ -2186,13 +2186,17 @@ define([
                     tileValueTest =  tile[variableName];
                     if (!defined(tileValueTest)) {
                         this._heatMapVariable = undefined;
-                        return;
                     } else {
                         this._tileHeatMapVariable = variableName;
                     }
                 } else {
                     this._tileHeatMapVariable = '_' + variableName;
                 }
+            }
+
+            // Couldn't find tile variable name
+            if (!defined(this._heatMapVariable)) {
+                return;
             }
 
             var tileValue = tile[this._tileHeatMapVariable];
