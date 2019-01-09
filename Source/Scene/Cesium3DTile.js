@@ -1174,7 +1174,6 @@ define([
             tile.color = Color.WHITE;
         }
 
-        tile.heatMapColorize(tileset._heatMapVariable); // Skipped if tileset._heatMapVariable is undefined
         if (tile._colorDirty) {
             tile._colorDirty = false;
             tile._content.applyDebugSettings(true, tile._color);

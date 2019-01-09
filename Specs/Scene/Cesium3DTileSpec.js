@@ -367,7 +367,7 @@ defineSuite([
         tileset._previousMaxHeatMap = { centerZDepth:  1 };
         tile._centerZDepth = (tileset._previousMaxHeatMap.centerZDepth + tileset._previousMinHeatMap.centerZDepth) / 2; // In the middle of the min max window
 
-        tile.update(tileset, scene.frameState);
+        tile.heatMapColorize(tileset._heatMapVariable);
 
         var expectedColor = new Color(0, 1, 0, 1); // Green is in the middle
         var tileColor = tile.color;

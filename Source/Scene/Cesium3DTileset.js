@@ -1813,6 +1813,7 @@ define([
             // Raise the tileVisible event before update in case the tileVisible event
             // handler makes changes that update needs to apply to WebGL resources
             if (isRender) {
+                tile.heatMapColorize(tileset._heatMapVariable); // Skipped if tileset._heatMapVariable is undefined
                 tileVisible.raiseEvent(tile);
             }
             tile.update(tileset, frameState);
