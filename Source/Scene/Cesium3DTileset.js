@@ -391,12 +391,6 @@ define([
          */
         this.allTilesLoaded = new Event();
         this.allTilesLoaded.addEventListener(function(tileset) {
-            if (defined(tileset._heatMapVariable)) {
-                console.log('heatMapMin: ' + tileset._previousMinHeatMap);
-                console.log('heatMapMax: ' + tileset._previousMaxHeatMap);
-            }
-            console.log('totalLoaded: ' + tileset._totalTilesLoaded);
-            tileset._totalTilesLoaded = 0;
         });
 
         /**
@@ -438,9 +432,6 @@ define([
          * });
          */
         this.tileLoad = new Event();
-        this.tileLoad.addEventListener(function(tile) {
-            tile.tileset._totalTilesLoaded++;
-        });
 
         /**
          * The event fired to indicate that a tile's content was unloaded.
@@ -1609,6 +1600,7 @@ define([
     function handleTileSuccess(tileset, tile) {
         return function() {
             --tileset._statistics.numberOfTilesProcessing;
+            tileset._totalTilesLoaded++;
 
             if (!tile.hasTilesetContent) {
                 // RESEARCH_IDEA: ability to unload tiles (without content) for an
@@ -1958,6 +1950,14 @@ define([
         tileset._tilesLoaded = (statistics.numberOfPendingRequests === 0) && (statistics.numberOfTilesProcessing === 0) && (statistics.numberOfAttemptedRequests === 0);
 
         if (progressChanged && tileset._tilesLoaded) {
+            // TODO: remove prints
+            if (defined(tileset._heatMapVariable)) {
+                console.log('heatMapMin: ' + tileset._previousMinHeatMap);
+                console.log('heatMapMax: ' + tileset._previousMaxHeatMap);
+            }
+            console.log('totalLoaded: ' + tileset._totalTilesLoaded);
+            tileset._totalTilesLoaded = 0;
+
             frameState.afterRender.push(function() {
                 tileset.allTilesLoaded.raiseEvent(tileset);
             });
