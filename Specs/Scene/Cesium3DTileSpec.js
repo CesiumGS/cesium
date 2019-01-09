@@ -124,6 +124,7 @@ defineSuite([
     };
 
     var centerLongitude = -1.31968;
+    var centerLatitude = 0.698874;
 
     var scene;
     beforeEach(function() {
@@ -133,7 +134,7 @@ defineSuite([
 
     afterEach(function() {
         scene.destroyForSpecs();
-    });   var centerLatitude = 0.698874;
+    });
 
     function getTileTransform(longitude, latitude) {
         var transformCenter = Cartesian3.fromRadians(longitude, latitude, 0.0);
@@ -358,29 +359,25 @@ defineSuite([
         });
     });
 
-    describe('heat map colorize', function() {
-        it('has expected color', function() {
-            var tileset = new Cesium3DTileset({ url: '/some_url', heatMapVariable: 'centerZDepth' });
-            var tile = new Cesium3DTile(tileset, '/some_url', tileWithBoundingRegion, undefined);
+    fit('expected heat map color', function() {
+        var tileset = new Cesium3DTileset({ url: '/some_url', heatMapVariable: 'centerZDepth' });
+        var tile = new Cesium3DTile(tileset, '/some_url', tileWithBoundingRegion, undefined);
 
-            tileset._previousMinHeatMap = { centerZDepth: -1 };
-            tileset._previousMaxHeatMap = { centerZDepth:  1 };
-            tile._centerZDepth = (tileset._previousMaxHeatMap.centerZDepth + tileset._previousMinHeatMap.centerZDepth) / 2; // In the middle of the min max window
+        tileset._previousMinHeatMap = { centerZDepth: -1 };
+        tileset._previousMaxHeatMap = { centerZDepth:  1 };
+        tile._centerZDepth = (tileset._previousMaxHeatMap.centerZDepth + tileset._previousMinHeatMap.centerZDepth) / 2; // In the middle of the min max window
 
-            tile.update(tileset, scene.frameState);
+        tile.update(tileset, scene.frameState);
 
-            var expectedColor = new Color(0, 1, 0, 1); // Green is in the middle
-            var tileColor = tile.color;
-            var diff = new Color (
-                                  Math.abs(expectedColor.red   - tileColor.red),
-                                  Math.abs(expectedColor.green - tileColor.green),
-                                  Math.abs(expectedColor.blue  - tileColor.blue)
-            );
+        var expectedColor = new Color(0, 1, 0, 1); // Green is in the middle
+        var tileColor = tile.color;
+        var diff = new Color (Math.abs(expectedColor.red   - tileColor.red),
+                              Math.abs(expectedColor.green - tileColor.green),
+                              Math.abs(expectedColor.blue  - tileColor.blue));
 
-            var threshold = 0.01;
-            expect(diff.red).toBeLessThan(threshold);
-            expect(diff.green).toBeLessThan(threshold);
-            expect(diff.blue).toBeLessThan(threshold);
-        });
+        var threshold = 0.01;
+        expect(diff.red).toBeLessThan(threshold);
+        expect(diff.green).toBeLessThan(threshold);
+        expect(diff.blue).toBeLessThan(threshold);
     });
 }, 'WebGL');
