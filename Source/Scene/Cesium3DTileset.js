@@ -222,6 +222,7 @@ define([
         this._previousMinHeatMap = {};
         this._previousMaxHeatMap = {};
         this._heatMapVariable = defaultValue(options.heatMapVariable, undefined);
+        this._tileHeatMapVariable = undefined;
         if (defined(this._heatMapVariable)) {
             // Init the min and max values for the tracked variable for the heat map
             this._minHeatMap[this._heatMapVariable] = Number.MAX_VALUE;
@@ -398,8 +399,8 @@ define([
          */
         this.allTilesLoaded = new Event();
         this.allTilesLoaded.addEventListener(function(tileset) {
-            // console.log('heatMapMin: ' + tileset._minHeatMap[tileset._heatMapVariable]);
-            // console.log('heatMapMax: ' + tileset._maxHeatMap[tileset._heatMapVariable]);
+            console.log('heatMapMin: ' + tileset._previousMinHeatMap[tileset._heatMapVariable]);
+            console.log('heatMapMax: ' + tileset._previousMaxHeatMap[tileset._heatMapVariable]);
             console.log('totalLoaded: ' + tileset._totalTilesLoaded);
             tileset._totalTilesLoaded = 0;
         });
@@ -2178,8 +2179,25 @@ define([
         // For heat map colorization
         var variableName = this._heatMapVariable;
         if (defined(variableName)) { // Possible recalcuation of the ones above but covers a lot of cases for variables that aren't tracked
-            this._maxHeatMap[variableName] = Math.max(tile['_' + variableName], this._maxHeatMap[variableName]);
-            this._minHeatMap[variableName] = Math.min(tile['_' + variableName], this._minHeatMap[variableName]);
+            // Verify we can find a tile variable with the specified name, otherwise turn heatmap off
+            if (!defined(this._tileHeatMapVariable)) {
+                var tileValueTest = tile['_' + variableName];
+                if (!defined(tileValueTest)) {
+                    tileValueTest =  tile[variableName];
+                    if (!defined(tileValueTest)) {
+                        this._heatMapVariable = undefined;
+                        return;
+                    } else {
+                        this._tileHeatMapVariable = variableName;
+                    }
+                } else {
+                    this._tileHeatMapVariable = '_' + variableName;
+                }
+            }
+
+            var tileValue = tile[this._tileHeatMapVariable];
+            this._maxHeatMap[variableName] = Math.max(tileValue, this._maxHeatMap[variableName]);
+            this._minHeatMap[variableName] = Math.min(tileValue, this._minHeatMap[variableName]);
         }
     };
 

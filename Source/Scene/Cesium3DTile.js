@@ -1304,18 +1304,18 @@ define([
         }
 
         // Shift the min max window down to 0
-        var shiftedMax = (max - min) + CesiumMath.EPSILON3; // Prevent divide by 0
-        var tileValue = this['_' + variableName];
+        var shiftedMax = (max - min) + CesiumMath.EPSILON7; // Prevent divide by 0
+        var tileValue = this[tileset._tileHeatMapVariable];
         var shiftedValue = CesiumMath.clamp(tileValue - min, 0, shiftedMax);
 
         // Get position between min and max and convert that to a position in the color array
-        var zeroToOne = CesiumMath.clamp(shiftedValue / shiftedMax, 0, 1);
+        var zeroToOne = shiftedValue / shiftedMax;
         var lastIndex = heatMapColors.length - 1;
         var colorPosition = zeroToOne * lastIndex;
 
         // Take floor and ceil of the value to get the two colors to lerp between, lerp using the fractional portion
-        var colorPositionFloor = Math.max(Math.floor(colorPosition), 0);
-        var colorPositionCeil = Math.min(Math.ceil(colorPosition), lastIndex);
+        var colorPositionFloor = Math.floor(colorPosition);
+        var colorPositionCeil = Math.ceil(colorPosition);
         var lerpValue = colorPosition - colorPositionFloor;
         var colorA = heatMapColors[colorPositionFloor];
         var colorB = heatMapColors[colorPositionCeil];
