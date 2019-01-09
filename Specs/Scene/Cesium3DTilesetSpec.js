@@ -3510,8 +3510,8 @@ defineSuite([
         });
     });
 
-    it('manipulate tracked min max', function() {
-        var tileset = new Cesium3DTileset({ url: '/some_url', heatMapVariable: 'centerZDepth' });
+    fit('manipulate tracked min max', function() {
+        var tileset = new Cesium3DTileset({ url: '/some_url', heatMapVariable: '_centerZDepth' });
 
         var tileWithBoundingRegion = {
             geometricError : 1,
@@ -3526,18 +3526,18 @@ defineSuite([
         // Min gets overwritten
         tile._centerZDepth = -1;
         tileset.updateHeatMapMinMax(tile);
-        expect(tileset._minHeatMap.centerZDepth).toEqual(tile._centerZDepth);
+        expect(tileset._minHeatMap).toEqual(tile._centerZDepth);
 
         // Max gets overwritten
         tile._centerZDepth = 1;
         tileset.updateHeatMapMinMax(tile);
-        expect(tileset._maxHeatMap.centerZDepth).toEqual(tile._centerZDepth);
+        expect(tileset._maxHeatMap).toEqual(tile._centerZDepth);
 
         tileset.resetAllMinMax();
-        expect(tileset._minHeatMap.centerZDepth).toEqual(Number.MAX_VALUE);
-        expect(tileset._maxHeatMap.centerZDepth).toEqual(-Number.MAX_VALUE);
-        expect(tileset._previousMinHeatMap.centerZDepth).toEqual(-1);
-        expect(tileset._previousMaxHeatMap.centerZDepth).toEqual( 1);
+        expect(tileset._minHeatMap).toEqual(Number.MAX_VALUE);
+        expect(tileset._maxHeatMap).toEqual(-Number.MAX_VALUE);
+        expect(tileset._previousMinHeatMap).toEqual(-1);
+        expect(tileset._previousMaxHeatMap).toEqual( 1);
     });
 
 }, 'WebGL');

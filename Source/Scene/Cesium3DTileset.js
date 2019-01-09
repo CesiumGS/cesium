@@ -217,19 +217,11 @@ define([
         this._statisticsLastPick = new Cesium3DTilesetStatistics();
         this._statisticsLastAsync = new Cesium3DTilesetStatistics();
 
-        this._minHeatMap = {};
-        this._maxHeatMap = {};
-        this._previousMinHeatMap = {};
-        this._previousMaxHeatMap = {};
+        this._minHeatMap = Number.MAX_VALUE;
+        this._maxHeatMap = -Number.MAX_VALUE;
+        this._previousMinHeatMap = Number.MAX_VALUE;
+        this._previousMaxHeatMap = -Number.MAX_VALUE;
         this._heatMapVariable = defaultValue(options.heatMapVariable, undefined);
-        this._tileHeatMapVariable = undefined;
-        if (defined(this._heatMapVariable)) {
-            // Init the min and max values for the tracked variable for the heat map
-            this._minHeatMap[this._heatMapVariable] = Number.MAX_VALUE;
-            this._maxHeatMap[this._heatMapVariable] = -Number.MAX_VALUE;
-            this._previousMinHeatMap[this._heatMapVariable] = Number.MAX_VALUE;
-            this._previousMaxHeatMap[this._heatMapVariable] = -Number.MAX_VALUE;
-        }
 
         this._totalTilesLoaded = 0;
 
@@ -399,8 +391,10 @@ define([
          */
         this.allTilesLoaded = new Event();
         this.allTilesLoaded.addEventListener(function(tileset) {
-            console.log('heatMapMin: ' + tileset._previousMinHeatMap[tileset._heatMapVariable]);
-            console.log('heatMapMax: ' + tileset._previousMaxHeatMap[tileset._heatMapVariable]);
+            if (defined(tileset._heatMapVariable)) {
+                console.log('heatMapMin: ' + tileset._previousMinHeatMap);
+                console.log('heatMapMax: ' + tileset._previousMaxHeatMap);
+            }
             console.log('totalLoaded: ' + tileset._totalTilesLoaded);
             tileset._totalTilesLoaded = 0;
         });
@@ -1813,7 +1807,6 @@ define([
             // Raise the tileVisible event before update in case the tileVisible event
             // handler makes changes that update needs to apply to WebGL resources
             if (isRender) {
-                tile.heatMapColorize(tileset._heatMapVariable); // Skipped if tileset._heatMapVariable is undefined
                 tileVisible.raiseEvent(tile);
             }
             tile.update(tileset, frameState);
@@ -2156,15 +2149,13 @@ define([
      * tileset.resetAllMinMax();
      */
     Cesium3DTileset.prototype.resetAllMinMax = function() {
-        // Implicitly tracked vars (priority)
-
         // For heat map colorization
         var variableName = this._heatMapVariable;
         if (defined(variableName)) {
-            this._previousMinHeatMap[variableName] = this._minHeatMap[variableName];
-            this._previousMaxHeatMap[variableName] = this._maxHeatMap[variableName];
-            this._minHeatMap[variableName] = Number.MAX_VALUE;
-            this._maxHeatMap[variableName] = -Number.MAX_VALUE;
+            this._previousMinHeatMap = this._minHeatMap;
+            this._previousMaxHeatMap = this._maxHeatMap;
+            this._minHeatMap = Number.MAX_VALUE;
+            this._maxHeatMap = -Number.MAX_VALUE;
         }
     };
 
@@ -2175,34 +2166,15 @@ define([
      * tileset.updateHeatMapMinMax(tile);
      */
     Cesium3DTileset.prototype.updateHeatMapMinMax = function(tile) {
-        // Implicitly tracked vars (priority)
-
-        // For heat map colorization
         var variableName = this._heatMapVariable;
-        if (defined(variableName)) { // Possible recalcuation of the ones above but covers a lot of cases for variables that aren't tracked
-            // Verify we can find a tile variable with the specified name, otherwise turn heatmap off
-            if (!defined(this._tileHeatMapVariable)) {
-                var tileValueTest = tile['_' + variableName];
-                if (!defined(tileValueTest)) {
-                    tileValueTest =  tile[variableName];
-                    if (!defined(tileValueTest)) {
-                        this._heatMapVariable = undefined;
-                    } else {
-                        this._tileHeatMapVariable = variableName;
-                    }
-                } else {
-                    this._tileHeatMapVariable = '_' + variableName;
-                }
-
-                // Couldn't find tile variable name
-                if (!defined(this._heatMapVariable)) {
-                    return;
-                }
+        if (defined(variableName)) {
+            var tileValue = tile[variableName];
+            if (!defined(tileValue)) {
+                this._heatMapVariable = undefined;
+                return;
             }
-
-            var tileValue = tile[this._tileHeatMapVariable];
-            this._maxHeatMap[variableName] = Math.max(tileValue, this._maxHeatMap[variableName]);
-            this._minHeatMap[variableName] = Math.min(tileValue, this._minHeatMap[variableName]);
+            this._maxHeatMap = Math.max(tileValue, this._maxHeatMap);
+            this._minHeatMap = Math.min(tileValue, this._minHeatMap);
         }
     };
 

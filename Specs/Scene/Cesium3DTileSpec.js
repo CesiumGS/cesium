@@ -359,15 +359,16 @@ defineSuite([
         });
     });
 
-    it('expected heat map color', function() {
-        var tileset = new Cesium3DTileset({ url: '/some_url', heatMapVariable: 'centerZDepth' });
+    fit('expected heat map color', function() {
+        var tileset = new Cesium3DTileset({ url: '/some_url', heatMapVariable: '_centerZDepth' });
         var tile = new Cesium3DTile(tileset, '/some_url', tileWithBoundingRegion, undefined);
 
-        tileset._previousMinHeatMap = { centerZDepth: -1 };
-        tileset._previousMaxHeatMap = { centerZDepth:  1 };
-        tile._centerZDepth = (tileset._previousMaxHeatMap.centerZDepth + tileset._previousMinHeatMap.centerZDepth) / 2; // In the middle of the min max window
+        tileset._previousMinHeatMap = -1;
+        tileset._previousMaxHeatMap =  1;
+        tile._centerZDepth = (tileset._previousMaxHeatMap + tileset._previousMinHeatMap) / 2; // In the middle of the min max window
+        scene.frameState.frameNumber = tile._selectedFrame = 1;
 
-        tile.heatMapColorize(tileset._heatMapVariable);
+        tile.heatMapColorize(tileset._heatMapVariable, scene.frameState);
 
         var expectedColor = new Color(0, 1, 0, 1); // Green is in the middle
         var tileColor = tile.color;
