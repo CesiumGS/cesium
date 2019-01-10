@@ -1326,7 +1326,6 @@ define([
         finalColor.green = CesiumMath.lerp(colorZero.green, colorOne.green, t);
         finalColor.blue = CesiumMath.lerp(colorZero.blue, colorOne.blue, t);
         this.color = finalColor;
-        return;
     };
 
     return Cesium3DTile;
