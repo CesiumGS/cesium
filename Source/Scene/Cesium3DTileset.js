@@ -1977,7 +1977,7 @@ define([
             tileset._totalTilesLoaded = 0;
 
             frameState.afterRender.push(function() {
-                tileset.allTilesLoaded.raiseEvent(tileset);
+                tileset.allTilesLoaded.raiseEvent();
             });
             if (!tileset._initialTilesLoaded) {
                 tileset._initialTilesLoaded = true;
