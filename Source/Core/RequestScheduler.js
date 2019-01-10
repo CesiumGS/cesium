@@ -34,7 +34,8 @@ define([
         numberOfCancelledRequests : 0,
         numberOfCancelledActiveRequests : 0,
         numberOfFailedRequests : 0,
-        numberOfActiveRequestsEver : 0
+        numberOfActiveRequestsEver : 0,
+        lastNumberOfActiveRequests : 0
     };
 
     var priorityHeapLength = 20;
@@ -96,7 +97,7 @@ define([
      * @type {Boolean}
      * @default false
      */
-    RequestScheduler.debugShowStatistics = true;
+    RequestScheduler.debugShowStatistics = false;
 
     /**
      * An event that's raised when a request is completed.  Event handlers are passed
@@ -373,36 +374,34 @@ define([
         return issueRequest(request);
     };
 
-    function clearStatistics() {
-        statistics.numberOfAttemptedRequests = 0;
-        // statistics.numberOfCancelledRequests = 0;
-        // statistics.numberOfCancelledActiveRequests = 0;
-    }
-
     function updateStatistics() {
-        // if (!RequestScheduler.debugShowStatistics) {
-        //     return;
-        // }
-
-        // if (statistics.numberOfAttemptedRequests > 0) {
-        //     console.log('Number of attempted requests: ' + statistics.numberOfAttemptedRequests);
-        // }
+        if (!RequestScheduler.debugShowStatistics) {
+            return;
+        }
 
         if (statistics.numberOfActiveRequests === 0 && statistics.lastNumberOfActiveRequests > 0) {
+            if (statistics.numberOfAttemptedRequests > 0) {
+                console.log('Number of attempted requests: ' + statistics.numberOfAttemptedRequests);
+                statistics.numberOfAttemptedRequests = 0;
+            }
+
             if (statistics.numberOfCancelledRequests > 0) {
                 console.log('Number of cancelled requests: ' + statistics.numberOfCancelledRequests);
+                statistics.numberOfCancelledRequests = 0;
             }
+
             if (statistics.numberOfCancelledActiveRequests > 0) {
                 console.log('Number of cancelled active requests: ' + statistics.numberOfCancelledActiveRequests);
+                statistics.numberOfCancelledActiveRequests = 0;
+            }
+
+            if (statistics.numberOfFailedRequests > 0) {
+                console.log('Number of failed requests: ' + statistics.numberOfFailedRequests);
+                statistics.numberOfFailedRequests = 0;
             }
         }
+
         statistics.lastNumberOfActiveRequests = statistics.numberOfActiveRequests;
-
-        // if (statistics.numberOfFailedRequests > 0) {
-        //     console.log('Number of failed requests: ' + statistics.numberOfFailedRequests);
-        // }
-
-        clearStatistics();
     }
 
     /**
@@ -429,6 +428,7 @@ define([
         statistics.numberOfCancelledActiveRequests = 0;
         statistics.numberOfFailedRequests = 0;
         statistics.numberOfActiveRequestsEver = 0;
+        statistics.lastNumberOfActiveRequests = 0;
     };
 
     /**

@@ -218,8 +218,6 @@ define([
         this._statisticsLastAsync = new Cesium3DTilesetStatistics();
 
         this._requestedTilesInFlight = [];
-        this._outOfViewThreshold = 1;
-        this._cancelledReqs = 0;
 
         this._totalTilesLoaded = 0;
         this._tilesLoaded = false;
@@ -1550,42 +1548,31 @@ define([
     }
 
     function cancelOutOfViewRequestedTiles(tileset, frameState) {
-        // outOfView just means a tile's visisted frame is old enough to be considered no longer worth loading because its been out of frame for long enough
-        // This is framerate dependant so keep the threshold small (1 frame should be fine)
-        var requestedTiles = tileset._requestedTilesInFlight;
+        var requestedTilesInFlight = tileset._requestedTilesInFlight;
         var removeCount = 0;
-        var removedCancelledCount = 0;
-        var length = requestedTiles.length;
+        var length = requestedTilesInFlight.length;
         for (var i = 0; i < length; ++i) {
-            var tile = requestedTiles[i];
+            var tile = requestedTilesInFlight[i];
 
-            var outOfView = (frameState.frameNumber - tile._touchedFrame) >= tileset._outOfViewThreshold;
+            // NOTE: This is framerate dependant so make sure the threshold check is small
+            var outOfView = (frameState.frameNumber - tile._touchedFrame) >= 1;
             if (tile._contentState !== Cesium3DTileContentState.LOADING) {
-                // Gets marked as LOADING in Cesium3DTile::requestContent()
-                // No longer fetching from host, don't need to track it anymore
+                // No longer fetching from host, don't need to track it anymore. Gets marked as LOADING in Cesium3DTile::requestContent().
                 ++removeCount;
                 continue;
             } else if(outOfView) {
-                ++removeCount;
-                ++removedCancelledCount;
+                // RequestScheduler will take care of cancelling it
                 tile._request.cancel();
-
+                ++removeCount;
                 continue;
             }
+
             if (removeCount > 0) {
-                requestedTiles[i - removeCount] = tile;
+                requestedTilesInFlight[i - removeCount] = tile;
             }
         }
 
-        requestedTiles.length -= removeCount;
-
-        if (removedCancelledCount > 0) {
-            tileset._cancelledReqs += removedCancelledCount;
-            // console.log('Total Cancelled Reqs: ' + tileset._cancelledReqs);
-        }
-        if (removeCount > 0 && requestedTiles.length === 0) {
-            // console.log('No In-flight Requests');
-        }
+        requestedTilesInFlight.length -= removeCount;
     }
 
     function requestTiles(tileset) {
@@ -1985,9 +1972,6 @@ define([
         tileset._tilesLoaded = (statistics.numberOfPendingRequests === 0) && (statistics.numberOfTilesProcessing === 0) && (statistics.numberOfAttemptedRequests === 0);
 
         if (progressChanged && tileset._tilesLoaded) {
-
-            console.log('totalCancelledReqs: ' + tileset._cancelledReqs);
-            tileset._cancelledReqs = 0;
 
             console.log('totalLoaded: ' + tileset._totalTilesLoaded);
             tileset._totalTilesLoaded = 0;
