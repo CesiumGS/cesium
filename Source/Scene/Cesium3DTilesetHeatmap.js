@@ -59,7 +59,7 @@ define([
             this._maxHeatMap = Math.max(tileValue, this._maxHeatMap);
             this._minHeatMap = Math.min(tileValue, this._minHeatMap);
         }
-    };
+    }
 
     var heatMapColors = [new Color(0,0,0,1),
                          new Color(0,0,1,1),
@@ -128,5 +128,5 @@ define([
         }
     };
 
-    return Cesium3DTile;
+    return Cesium3DTilesetHeatmap;
 });
