@@ -219,7 +219,7 @@ define([
 
         this._requestedTilesInFlight = [];
         this._outOfViewThreshold = 1;
-        this._stats = {cancelledReqs: 0, cancelledProcs: 0};
+        this._cancelledReqs = 0;
 
         this._totalTilesLoaded = 0;
         this._tilesLoaded = false;
@@ -387,10 +387,6 @@ define([
          * @see Cesium3DTileset#tilesLoaded
          */
         this.allTilesLoaded = new Event();
-        this.allTilesLoaded.addEventListener(function(tileset) {
-            console.log('totalLoaded: ' + tileset._totalTilesLoaded);
-            tileset._totalTilesLoaded = 0;
-        });
 
         /**
          * The event fired to indicate that all tiles that meet the screen space error this frame are loaded. This event
@@ -431,9 +427,6 @@ define([
          * });
          */
         this.tileLoad = new Event();
-        this.tileLoad.addEventListener(function(tile) {
-            tile.tileset._totalTilesLoaded++;
-        });
 
         /**
          * The event fired to indicate that a tile's content was unloaded.
@@ -1587,11 +1580,11 @@ define([
         requestedTiles.length -= removeCount;
 
         if (removedCancelledCount > 0) {
-            tileset._stats.cancelledReqs += removedCancelledCount;
-            console.log('Total Cancelled Reqs: ' + tileset._stats.cancelledReqs);
+            tileset._cancelledReqs += removedCancelledCount;
+            // console.log('Total Cancelled Reqs: ' + tileset._cancelledReqs);
         }
         if (removeCount > 0 && requestedTiles.length === 0) {
-            console.log('No In-flight Requests');
+            // console.log('No In-flight Requests');
         }
     }
 
@@ -1648,6 +1641,7 @@ define([
                 // external tileset when all the tiles are unloaded.
                 tileset._statistics.incrementLoadCounts(tile.content);
                 ++tileset._statistics.numberOfTilesWithContentReady;
+                tileset._totalTilesLoaded++;
 
                 // Add to the tile cache. Previously expired tiles are already in the cache and won't get re-added.
                 tileset._cache.add(tile);
@@ -1991,6 +1985,13 @@ define([
         tileset._tilesLoaded = (statistics.numberOfPendingRequests === 0) && (statistics.numberOfTilesProcessing === 0) && (statistics.numberOfAttemptedRequests === 0);
 
         if (progressChanged && tileset._tilesLoaded) {
+
+            console.log('totalCancelledReqs: ' + tileset._cancelledReqs);
+            tileset._cancelledReqs = 0;
+
+            console.log('totalLoaded: ' + tileset._totalTilesLoaded);
+            tileset._totalTilesLoaded = 0;
+
             frameState.afterRender.push(function() {
                 tileset.allTilesLoaded.raiseEvent(tileset);
             });
@@ -2058,6 +2059,7 @@ define([
         }
 
         if (isRender || isAsync) {
+            cancelOutOfViewRequestedTiles(tileset, frameState);
             requestTiles(tileset);
         }
 
@@ -2085,9 +2087,6 @@ define([
                 }
             }
         }
-
-        // TODO: move this into requestTiles
-        cancelOutOfViewRequestedTiles(tileset, frameState);
 
         // Update last statistics
         var statisticsLast = isAsync ? tileset._statisticsLastAsync : (isPick ? tileset._statisticsLastPick : tileset._statisticsLastRender);

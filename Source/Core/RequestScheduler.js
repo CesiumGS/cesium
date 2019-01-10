@@ -96,7 +96,7 @@ define([
      * @type {Boolean}
      * @default false
      */
-    RequestScheduler.debugShowStatistics = false;
+    RequestScheduler.debugShowStatistics = true;
 
     /**
      * An event that's raised when a request is completed.  Event handlers are passed
@@ -375,30 +375,32 @@ define([
 
     function clearStatistics() {
         statistics.numberOfAttemptedRequests = 0;
-        statistics.numberOfCancelledRequests = 0;
-        statistics.numberOfCancelledActiveRequests = 0;
+        // statistics.numberOfCancelledRequests = 0;
+        // statistics.numberOfCancelledActiveRequests = 0;
     }
 
     function updateStatistics() {
-        if (!RequestScheduler.debugShowStatistics) {
-            return;
-        }
+        // if (!RequestScheduler.debugShowStatistics) {
+        //     return;
+        // }
 
-        if (statistics.numberOfAttemptedRequests > 0) {
-            console.log('Number of attempted requests: ' + statistics.numberOfAttemptedRequests);
+        // if (statistics.numberOfAttemptedRequests > 0) {
+        //     console.log('Number of attempted requests: ' + statistics.numberOfAttemptedRequests);
+        // }
+
+        if (statistics.numberOfActiveRequests === 0 && statistics.lastNumberOfActiveRequests > 0) {
+            if (statistics.numberOfCancelledRequests > 0) {
+                console.log('Number of cancelled requests: ' + statistics.numberOfCancelledRequests);
+            }
+            if (statistics.numberOfCancelledActiveRequests > 0) {
+                console.log('Number of cancelled active requests: ' + statistics.numberOfCancelledActiveRequests);
+            }
         }
-        if (statistics.numberOfActiveRequests > 0) {
-            console.log('Number of active requests: ' + statistics.numberOfActiveRequests);
-        }
-        if (statistics.numberOfCancelledRequests > 0) {
-            console.log('Number of cancelled requests: ' + statistics.numberOfCancelledRequests);
-        }
-        if (statistics.numberOfCancelledActiveRequests > 0) {
-            console.log('Number of cancelled active requests: ' + statistics.numberOfCancelledActiveRequests);
-        }
-        if (statistics.numberOfFailedRequests > 0) {
-            console.log('Number of failed requests: ' + statistics.numberOfFailedRequests);
-        }
+        statistics.lastNumberOfActiveRequests = statistics.numberOfActiveRequests;
+
+        // if (statistics.numberOfFailedRequests > 0) {
+        //     console.log('Number of failed requests: ' + statistics.numberOfFailedRequests);
+        // }
 
         clearStatistics();
     }
