@@ -221,7 +221,7 @@ define([
         this._maxHeatMap = -Number.MAX_VALUE;
         this._previousMinHeatMap = Number.MAX_VALUE;
         this._previousMaxHeatMap = -Number.MAX_VALUE;
-        this._heatMapVariable = defaultValue(options.heatMapVariable, undefined);
+        this.heatMapVariable = defaultValue(options.heatMapVariable, undefined);
 
         this._totalTilesLoaded = 0;
 
@@ -1949,7 +1949,7 @@ define([
 
         if (progressChanged && tileset._tilesLoaded) {
             // TODO: remove prints
-            if (defined(tileset._heatMapVariable)) {
+            if (defined(tileset.heatMapVariable)) {
                 console.log('heatMapMin: ' + tileset._previousMinHeatMap);
                 console.log('heatMapMax: ' + tileset._previousMaxHeatMap);
             }
@@ -2143,12 +2143,11 @@ define([
     /**
      * Resets any tracked min max values (needed for priority mapping, heatmap colorization). Happens right before traversal.
      *
-     * @example
-     * tileset.resetAllMinMax();
+     * @private
      */
     Cesium3DTileset.prototype.resetAllMinMax = function() {
         // For heat map colorization
-        var variableName = this._heatMapVariable;
+        var variableName = this.heatMapVariable;
         if (defined(variableName)) {
             this._previousMinHeatMap = this._minHeatMap;
             this._previousMaxHeatMap = this._maxHeatMap;
@@ -2159,16 +2158,16 @@ define([
 
     /**
      * Updates any tracked min max values used for heat map visualization.
+     * @param { Cesium3DTile } tile The tile containing the value to be considered for min and max
      *
-     * @example
-     * tileset.updateHeatMapMinMax(tile);
+     * @private
      */
     Cesium3DTileset.prototype.updateHeatMapMinMax = function(tile) {
-        var variableName = this._heatMapVariable;
+        var variableName = this.heatMapVariable;
         if (defined(variableName)) {
             var tileValue = tile[variableName];
             if (!defined(tileValue)) {
-                this._heatMapVariable = undefined;
+                this.heatMapVariable = undefined;
                 return;
             }
             this._maxHeatMap = Math.max(tileValue, this._maxHeatMap);

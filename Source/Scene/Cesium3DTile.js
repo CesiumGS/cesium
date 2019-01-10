@@ -1179,7 +1179,7 @@ define([
             tile.color = Color.WHITE;
         }
 
-        tile.heatMapColorize(tileset._heatMapVariable, frameState); // Skipped if tileset._heatMapVariable is undefined
+        tile.heatMapColorize(tileset.heatMapVariable, frameState); // Skipped if tileset.heatMapVariable is undefined
         if (tile._colorDirty) {
             tile._colorDirty = false;
             tile._content.applyDebugSettings(true, tile._color);
@@ -1284,12 +1284,13 @@ define([
     /**
      * Colorize the tile in heat map style base on where it lies within the min max window.
      * Heatmap colors are black, blue, green, red, white. 'Cold' or low numbers will be black and blue, 'Hot' or high numbers will be red and white,
-     * @param {variableName} the name of the variable we want to colorize relative to min max of the rendered tiles
+     * @param {String} variableName The name of the variable we want to colorize relative to min max of the rendered tiles
+     * @param {FrameState} frameState The frame state.
      *
      * @private
      */
     Cesium3DTile.prototype.heatMapColorize = function (variableName, frameState) {
-        if (!defined(variableName) || this._hasEmptyContent || this._hasTilesetContent || this._selectedFrame !== frameState.frameNumber) {
+        if (!defined(variableName) || !this.contentAvailable || this._selectedFrame !== frameState.frameNumber) {
             return;
         }
 
@@ -1321,11 +1322,11 @@ define([
 
         // Perform the lerp
         var finalColor = new Color(1,1,1,1);
-        var oneMinusT = 1 - t;
-        finalColor.red = colorZero.red * oneMinusT + colorOne.red * t;
-        finalColor.green = colorZero.green * oneMinusT + colorOne.green * t;
-        finalColor.blue = colorZero.blue * oneMinusT + colorOne.blue * t;
+        finalColor.red = CesiumMath.lerp(colorZero.red, colorOne.red, t);
+        finalColor.green = CesiumMath.lerp(colorZero.green, colorOne.green, t);
+        finalColor.blue = CesiumMath.lerp(colorZero.blue, colorOne.blue, t);
         this.color = finalColor;
+        return;
     };
 
     return Cesium3DTile;

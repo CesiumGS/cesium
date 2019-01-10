@@ -10,6 +10,7 @@ defineSuite([
         'Core/Matrix4',
         'Core/Rectangle',
         'Core/Transforms',
+        'Scene/Cesium3DTileContentState',
         'Scene/Cesium3DTileRefine',
         'Scene/TileBoundingRegion',
         'Scene/TileOrientedBoundingBox',
@@ -26,6 +27,7 @@ defineSuite([
         Matrix4,
         Rectangle,
         Transforms,
+        Cesium3DTileContentState,
         Cesium3DTileRefine,
         TileBoundingRegion,
         TileOrientedBoundingBox,
@@ -361,14 +363,18 @@ defineSuite([
 
     it('expected heat map color', function() {
         var tileset = new Cesium3DTileset({ url: '/some_url', heatMapVariable: '_centerZDepth' });
-        var tile = new Cesium3DTile(tileset, '/some_url', tileWithBoundingRegion, undefined);
-
         tileset._previousMinHeatMap = -1;
         tileset._previousMaxHeatMap =  1;
+
+        var tile = new Cesium3DTile(tileset, '/some_url', tileWithBoundingRegion, undefined);
         tile._centerZDepth = (tileset._previousMaxHeatMap + tileset._previousMinHeatMap) / 2; // In the middle of the min max window
+        tile._contentState = Cesium3DTileContentState.READY;
+        tile.hasEmptyContent = false;
+
+        var savedFrameNumber = scene.frameState.frameNumber;
         scene.frameState.frameNumber = tile._selectedFrame = 1;
 
-        tile.heatMapColorize(tileset._heatMapVariable, scene.frameState);
+        tile.heatMapColorize(tileset.heatMapVariable, scene.frameState);
 
         var expectedColor = new Color(0, 1, 0, 1); // Green is in the middle
         var tileColor = tile.color;
@@ -380,5 +386,6 @@ defineSuite([
         expect(diff.red).toBeLessThan(threshold);
         expect(diff.green).toBeLessThan(threshold);
         expect(diff.blue).toBeLessThan(threshold);
+        scene.frameState.frameNumber = savedFrameNumber;
     });
 }, 'WebGL');
