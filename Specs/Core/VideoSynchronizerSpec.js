@@ -24,17 +24,17 @@ defineSuite([
     function loadVideo() {
         var element = document.createElement('video');
         var source = document.createElement('source');
-        source.setAttribute('src', 'http://cesiumjs.org/videos/Sandcastle/big-buck-bunny_trailer.webm');
+        source.setAttribute('src', './Data/Videos/big-buck-bunny-trailer-small.webm');
         source.setAttribute('type', 'video/webm');
         element.appendChild(source);
 
         source = document.createElement('source');
-        source.setAttribute('src', 'http://cesiumjs.org/videos/Sandcastle/big-buck-bunny_trailer.mp4');
+        source.setAttribute('src', './Data/Videos/big-buck-bunny-trailer-small.mp4');
         source.setAttribute('type', 'video/mp4');
         element.appendChild(source);
 
         source = document.createElement('source');
-        source.setAttribute('src', 'http://cesiumjs.org/videos/Sandcastle/big-buck-bunny_trailer.mov');
+        source.setAttribute('src', './Data/Videos/big-buck-bunny-trailer-small.mov');
         source.setAttribute('type', 'video/quicktime');
         element.appendChild(source);
 
