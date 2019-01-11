@@ -61,7 +61,7 @@ define([
             }
 
             visitTile(tileset);
-            touchTile(tileset, tile);
+            touchTile(tileset, tile, frameState);
         }
 
         asyncTraversal.stack.trim(asyncTraversal.stackMaximumLength);
@@ -119,8 +119,9 @@ define([
         }
     }
 
-    function touchTile(tileset, tile) {
+    function touchTile(tileset, tile, frameState) {
         tileset._cache.touch(tile);
+        tile._touchedFrame = frameState.frameNumber;
     }
 
     function visitTile(tileset) {
