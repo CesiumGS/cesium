@@ -25,7 +25,7 @@ define([
          *
          * @type {String}
          */
-        this.variableName = defaultValue(heatmapVariable, undefined);
+        this._variableName = heatmapVariable;
 
         // Members that are updated every time a tile is colorized
         this._min = Number.MAX_VALUE;
@@ -51,11 +51,11 @@ define([
     };
 
     function updateMinMax(heatmap, tile) {
-        var variableName = heatmap.variableName;
+        var variableName = heatmap._variableName;
         if (defined(variableName)) {
             var tileValue = tile[variableName];
             if (!defined(tileValue)) {
-                heatmap.variableName = undefined;
+                heatmap._variableName = undefined;
                 return;
             }
             heatmap._max = Math.max(tileValue, heatmap._max);
@@ -79,7 +79,7 @@ define([
      * @private
      */
     Cesium3DTilesetHeatmap.prototype.colorize = function (tile, frameState) {
-        var variableName = this.variableName;
+        var variableName = this._variableName;
         if (!defined(variableName) || !tile.contentAvailable || tile._selectedFrame !== frameState.frameNumber) {
             return;
         }
@@ -123,7 +123,7 @@ define([
      */
     Cesium3DTilesetHeatmap.prototype.resetMinMax = function() {
         // For heat map colorization
-        var variableName = this.variableName;
+        var variableName = this._variableName;
         if (defined(variableName)) {
             this._previousMin = this._min;
             this._previousMax = this._max;
