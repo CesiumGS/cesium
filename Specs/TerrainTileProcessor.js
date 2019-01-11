@@ -62,6 +62,7 @@ define([
 
         function next() {
             ++iterations;
+            ++that.frameState.frameNumber;
 
             // Keep going until all terrain and imagery provider are ready and states are no longer changing.
             var changed = !that.terrainProvider.ready;

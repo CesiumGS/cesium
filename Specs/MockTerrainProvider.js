@@ -27,6 +27,7 @@ define([
 
         this._tileDataAvailable = {};
         this._requestTileGeometryWillSucceed = {};
+        this._requestTileGeometryWillSucceedWith = {};
         this._willHaveWaterMask = {};
         this._willHaveBvh = {};
         this._createMeshWillSucceed = {};
@@ -72,6 +73,12 @@ define([
 
     MockTerrainProvider.prototype.requestTileGeometryWillSucceed = function(xOrTile, y, level) {
         this._requestTileGeometryWillSucceed[createTileKey(xOrTile, y, level)] = true;
+        return this;
+    };
+
+    MockTerrainProvider.prototype.requestTileGeometryWillSucceedWith = function(terrainData, xOrTile, y, level) {
+        this._requestTileGeometryWillSucceed[createTileKey(xOrTile, y, level)] = true;
+        this._requestTileGeometryWillSucceedWith[createTileKey(xOrTile, y, level)] = terrainData;
         return this;
     };
 
@@ -159,36 +166,40 @@ define([
     };
 
     function createTerrainData(terrainProvider, x, y, level, upsampled) {
-        var options = {
-            width: 5,
-            height: 5,
-            buffer: new Float32Array(25),
-            createdByUpsampling: upsampled
-        };
+        var terrainData = terrainProvider._requestTileGeometryWillSucceedWith[createTileKey(x, y, level)];
 
-        var willHaveWaterMask = terrainProvider._willHaveWaterMask[createTileKey(x, y, level)];
-        if (defined(willHaveWaterMask)) {
-            if (willHaveWaterMask.includeLand && willHaveWaterMask.includeWater) {
-                options.waterMask = new Uint8Array(4);
-                options.waterMask[0] = 1;
-                options.waterMask[1] = 1;
-                options.waterMask[2] = 0;
-                options.waterMask[3] = 0;
-            } else if (willHaveWaterMask.includeLand) {
-                options.waterMask = new Uint8Array(1);
-                options.waterMask[0] = 0;
-            } else if (willHaveWaterMask.includeWater) {
-                options.waterMask = new Uint8Array(1);
-                options.waterMask[0] = 1;
+        if (!defined(terrainData)) {
+            var options = {
+                width: 5,
+                height: 5,
+                buffer: new Float32Array(25),
+                createdByUpsampling: upsampled
+            };
+
+            var willHaveWaterMask = terrainProvider._willHaveWaterMask[createTileKey(x, y, level)];
+            if (defined(willHaveWaterMask)) {
+                if (willHaveWaterMask.includeLand && willHaveWaterMask.includeWater) {
+                    options.waterMask = new Uint8Array(4);
+                    options.waterMask[0] = 1;
+                    options.waterMask[1] = 1;
+                    options.waterMask[2] = 0;
+                    options.waterMask[3] = 0;
+                } else if (willHaveWaterMask.includeLand) {
+                    options.waterMask = new Uint8Array(1);
+                    options.waterMask[0] = 0;
+                } else if (willHaveWaterMask.includeWater) {
+                    options.waterMask = new Uint8Array(1);
+                    options.waterMask[0] = 1;
+                }
             }
-        }
 
-        var willHaveBvh = terrainProvider._willHaveBvh[createTileKey(x, y, level)];
-        if (defined(willHaveBvh)) {
-            options.bvh = willHaveBvh;
-        }
+            var willHaveBvh = terrainProvider._willHaveBvh[createTileKey(x, y, level)];
+            if (defined(willHaveBvh)) {
+                options.bvh = willHaveBvh;
+            }
 
-        var terrainData = new HeightmapTerrainData(options);
+            terrainData = new HeightmapTerrainData(options);
+        }
 
         var originalUpsample = terrainData.upsample;
         terrainData.upsample = function(tilingScheme, thisX, thisY, thisLevel, descendantX, descendantY) {

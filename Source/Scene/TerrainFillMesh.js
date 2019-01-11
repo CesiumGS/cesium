@@ -61,6 +61,7 @@ define([
         this.northeastTile = undefined;
         this.changedThisFrame = true;
         this.visitedFrame = undefined;
+        this.enqueuedFrame = undefined;
         this.mesh = undefined;
         this.vertexArray = undefined;
     }
@@ -228,11 +229,14 @@ define([
 
         if (destinationSurfaceTile.fill === undefined) {
             destinationSurfaceTile.fill = new TerrainFillMesh(destinationTile);
+        } else if (destinationSurfaceTile.fill.visitedFrame === frameNumber) {
+            // Don't propagate edges to tiles that have already been visited this frame.
+            return;
         }
 
-        if (destinationSurfaceTile.fill.visitedFrame !== frameNumber) {
+        if (destinationSurfaceTile.fill.enqueuedFrame !== frameNumber) {
             // First time visiting this tile this frame, add it to the traversal queue.
-            destinationSurfaceTile.fill.visitedFrame = frameNumber;
+            destinationSurfaceTile.fill.enqueuedFrame = frameNumber;
             destinationSurfaceTile.fill.changedThisFrame = false;
             traversalQueue.enqueue(destinationTile);
         }
@@ -242,16 +246,20 @@ define([
 
     function propagateEdge(tileProvider, frameState, sourceTile, destinationTile, tileEdge) {
         var destinationFill = destinationTile.data.fill;
-        var sourceMesh = sourceTile.data.mesh;
 
-        if (sourceMesh === undefined) {
+        var sourceMesh;
+        var sourceFill = sourceTile.data.fill;
+        if (defined(sourceFill)) {
+            sourceFill.visitedFrame = frameState.frameNumber;
+
             // Source is a fill, create/update it if necessary.
-            var sourceFill = sourceTile.data.fill;
             if (sourceFill.changedThisFrame) {
                 createFillMesh(tileProvider, frameState, sourceTile);
-                sourceTile.data.fill.changedThisFrame = false;
+                sourceFill.changedThisFrame = false;
             }
             sourceMesh = sourceTile.data.fill.mesh;
+        } else {
+            sourceMesh = sourceTile.data.mesh;
         }
 
         var edgeMeshes;
@@ -787,25 +795,24 @@ define([
 
         var vertexIndex;
 
-        if (cornerMesh !== undefined && !cornerMesh.changedThisFrame) {
+        if (meshIsUsable(cornerTile, cornerMesh)) {
             // Corner mesh is valid, copy its corner vertex to this mesh.
-            var cornerTerrainMesh = cornerMesh.mesh === undefined ? cornerMesh : cornerMesh.mesh;
             if (u === 0.0) {
                 if (v === 0.0) {
                     // southwest destination, northeast source
-                    vertexIndex = cornerTerrainMesh.eastIndicesNorthToSouth[0];
+                    vertexIndex = cornerMesh.eastIndicesNorthToSouth[0];
                 } else {
                     // northwest destination, southeast source
-                    vertexIndex = cornerTerrainMesh.southIndicesEastToWest[0];
+                    vertexIndex = cornerMesh.southIndicesEastToWest[0];
                 }
             } else if (v === 0.0) {
                 // southeast destination, northwest source
-                vertexIndex = cornerTerrainMesh.northIndicesWestToEast[0];
+                vertexIndex = cornerMesh.northIndicesWestToEast[0];
             } else {
                 // northeast destination, southwest source
-                vertexIndex = cornerTerrainMesh.westIndicesSouthToNorth[0];
+                vertexIndex = cornerMesh.westIndicesSouthToNorth[0];
             }
-            getVertexFromTileAtCorner(cornerTerrainMesh, vertexIndex, u, v, vertex);
+            getVertexFromTileAtCorner(cornerMesh, vertexIndex, u, v, vertex);
             return vertex;
         }
 
@@ -1005,35 +1012,38 @@ define([
 
         for (var meshIndex = meshStart; meshIndex !== meshEnd; meshIndex += meshStep) {
             var mesh = meshes[meshIndex];
-            if (!defined(mesh) || mesh.changedThisFrame) {
+            var tile = tiles[meshIndex];
+            if (!meshIsUsable(tile, mesh)) {
                 continue;
             }
-
-            var terrainMesh = mesh;
 
             var indices;
             switch (edge) {
                 case TileEdge.WEST:
-                    indices = terrainMesh.westIndicesSouthToNorth;
+                    indices = mesh.westIndicesSouthToNorth;
                     break;
                 case TileEdge.SOUTH:
-                    indices = terrainMesh.southIndicesEastToWest;
+                    indices = mesh.southIndicesEastToWest;
                     break;
                 case TileEdge.EAST:
-                    indices = terrainMesh.eastIndicesNorthToSouth;
+                    indices = mesh.eastIndicesNorthToSouth;
                     break;
                 case TileEdge.NORTH:
-                    indices = terrainMesh.northIndicesWestToEast;
+                    indices = mesh.northIndicesWestToEast;
                     break;
             }
 
             var index = indices[isNext ? 0 : indices.length - 1];
             if (defined(index)) {
-                return mesh.encoding.decodeHeight(terrainMesh.vertices, index);
+                return mesh.encoding.decodeHeight(mesh.vertices, index);
             }
         }
 
         return undefined;
+    }
+
+    function meshIsUsable(tile, mesh) {
+        return defined(mesh) && (!defined(tile.data.fill) || !tile.data.fill.changedThisFrame);
     }
 
     function getCornerFromEdge(terrainFillMesh, ellipsoid, edgeMeshes, edgeTiles, isNext, u, v, vertex) {
@@ -1042,52 +1052,50 @@ define([
         var increasing;
         var vertexIndexIndex;
         var vertexIndex;
+        var sourceTile = edgeTiles[isNext ? 0 : edgeMeshes.length - 1];
         var sourceMesh = edgeMeshes[isNext ? 0 : edgeMeshes.length - 1];
 
-        if (sourceMesh !== undefined && !sourceMesh.changedThisFrame) {
+        if (meshIsUsable(sourceTile, sourceMesh)) {
             // Previous mesh is valid, but we don't know yet if it covers this corner.
-            var sourceTerrainMesh = sourceMesh.mesh === undefined ? sourceMesh : sourceMesh.mesh;
-
             if (u === 0.0) {
                 if (v === 0.0) {
                     // southwest
-                    edgeVertices = isNext ? sourceTerrainMesh.northIndicesWestToEast : sourceTerrainMesh.eastIndicesNorthToSouth;
+                    edgeVertices = isNext ? sourceMesh.northIndicesWestToEast : sourceMesh.eastIndicesNorthToSouth;
                     compareU = isNext;
                     increasing = isNext;
                 } else {
                     // northwest
-                    edgeVertices = isNext ? sourceTerrainMesh.eastIndicesNorthToSouth : sourceTerrainMesh.southIndicesEastToWest;
+                    edgeVertices = isNext ? sourceMesh.eastIndicesNorthToSouth : sourceMesh.southIndicesEastToWest;
                     compareU = !isNext;
                     increasing = false;
                 }
             } else if (v === 0.0) {
                 // southeast
-                edgeVertices = isNext ? sourceTerrainMesh.westIndicesSouthToNorth : sourceTerrainMesh.northIndicesWestToEast;
+                edgeVertices = isNext ? sourceMesh.westIndicesSouthToNorth : sourceMesh.northIndicesWestToEast;
                 compareU = !isNext;
                 increasing = true;
             } else {
                 // northeast
-                edgeVertices = isNext ? sourceTerrainMesh.southIndicesEastToWest : sourceTerrainMesh.westIndicesSouthToNorth;
+                edgeVertices = isNext ? sourceMesh.southIndicesEastToWest : sourceMesh.westIndicesSouthToNorth;
                 compareU = isNext;
                 increasing = !isNext;
             }
 
             if (edgeVertices.length > 0) {
                 // The vertex we want will very often be the first/last vertex so check that first.
-                var sourceTile = edgeTiles[isNext ? 0 : edgeTiles.length - 1];
                 vertexIndexIndex = isNext ? 0 : edgeVertices.length - 1;
                 vertexIndex = edgeVertices[vertexIndexIndex];
-                sourceTerrainMesh.encoding.decodeTextureCoordinates(sourceTerrainMesh.vertices, vertexIndex, uvScratch);
+                sourceMesh.encoding.decodeTextureCoordinates(sourceMesh.vertices, vertexIndex, uvScratch);
                 var targetUv = transformTextureCoordinates(sourceTile, terrainFillMesh.tile, uvScratch, uvScratch);
                 if (targetUv.x === u && targetUv.y === v) {
                     // Vertex is good!
-                    getVertexFromTileAtCorner(sourceTerrainMesh, vertexIndex, u, v, vertex);
+                    getVertexFromTileAtCorner(sourceMesh, vertexIndex, u, v, vertex);
                     return true;
                 }
 
                 // The last vertex is not the one we need, try binary searching for the right one.
                 vertexIndexIndex = binarySearch(edgeVertices, compareU ? u : v, function(vertexIndex, textureCoordinate) {
-                    sourceTerrainMesh.encoding.decodeTextureCoordinates(sourceTerrainMesh.vertices, vertexIndex, uvScratch);
+                    sourceMesh.encoding.decodeTextureCoordinates(sourceMesh.vertices, vertexIndex, uvScratch);
                     var targetUv = transformTextureCoordinates(sourceTile, terrainFillMesh.tile, uvScratch, uvScratch);
                     if (increasing) {
                         if (compareU) {
@@ -1105,12 +1113,12 @@ define([
 
                     if (vertexIndexIndex > 0 && vertexIndexIndex < edgeVertices.length) {
                         // The corner falls between two vertices, so interpolate between them.
-                        getInterpolatedVertexAtCorner(ellipsoid, sourceTile, terrainFillMesh.tile, sourceTerrainMesh, edgeVertices[vertexIndexIndex - 1], edgeVertices[vertexIndexIndex], u, v, compareU, vertex);
+                        getInterpolatedVertexAtCorner(ellipsoid, sourceTile, terrainFillMesh.tile, sourceMesh, edgeVertices[vertexIndexIndex - 1], edgeVertices[vertexIndexIndex], u, v, compareU, vertex);
                         return true;
                     }
                 } else {
                     // Found a vertex that fits in the corner exactly.
-                    getVertexFromTileAtCorner(sourceTerrainMesh, edgeVertices[vertexIndexIndex], u, v, vertex);
+                    getVertexFromTileAtCorner(sourceMesh, edgeVertices[vertexIndexIndex], u, v, vertex);
                     return true;
                 }
             }

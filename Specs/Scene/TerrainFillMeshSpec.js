@@ -115,100 +115,93 @@ defineSuite([
         northwest = west.findTileToNorth(rootTiles);
         northeast = east.findTileToNorth(rootTiles);
 
-        spyOn(mockTerrain, 'requestTileGeometry').and.callFake(function(x, y, level) {
-            var buffer = new Float32Array(9);
-            if (level === west.level && x === west.x && y === west.y) {
-                buffer[0] = 15.0;
-                buffer[1] = 16.0;
-                buffer[2] = 17.0;
-                buffer[3] = 22.0;
-                buffer[4] = 23.0;
-                buffer[5] = 24.0;
-                buffer[6] = 29.0;
-                buffer[7] = 30.0;
-                buffer[8] = 31.0;
-            } else if (level === south.level && x === south.x && y === south.y) {
-                buffer[0] = 31.0;
-                buffer[1] = 32.0;
-                buffer[2] = 33.0;
-                buffer[3] = 38.0;
-                buffer[4] = 39.0;
-                buffer[5] = 40.0;
-                buffer[6] = 45.0;
-                buffer[7] = 46.0;
-                buffer[8] = 47.0;
-            } else if (level === east.level && x === east.x && y === east.y) {
-                buffer[0] = 19.0;
-                buffer[1] = 20.0;
-                buffer[2] = 21.0;
-                buffer[3] = 26.0;
-                buffer[4] = 27.0;
-                buffer[5] = 28.0;
-                buffer[6] = 33.0;
-                buffer[7] = 34.0;
-                buffer[8] = 35.0;
-            } else if (level === north.level && x === north.x && y === north.y) {
-                buffer[0] = 3.0;
-                buffer[1] = 4.0;
-                buffer[2] = 5.0;
-                buffer[3] = 10.0;
-                buffer[4] = 11.0;
-                buffer[5] = 12.0;
-                buffer[6] = 17.0;
-                buffer[7] = 18.0;
-                buffer[8] = 19.0;
-            } else if (level === southwest.level && x === southwest.x && y === southwest.y) {
-                buffer[0] = 29.0;
-                buffer[1] = 30.0;
-                buffer[2] = 31.0;
-                buffer[3] = 36.0;
-                buffer[4] = 37.0;
-                buffer[5] = 38.0;
-                buffer[6] = 43.0;
-                buffer[7] = 44.0;
-                buffer[8] = 45.0;
-            } else if (level === southeast.level && x === southeast.x && y === southeast.y) {
-                buffer[0] = 33.0;
-                buffer[1] = 34.0;
-                buffer[2] = 35.0;
-                buffer[3] = 40.0;
-                buffer[4] = 41.0;
-                buffer[5] = 42.0;
-                buffer[6] = 47.0;
-                buffer[7] = 48.0;
-                buffer[8] = 49.0;
-            } else if (level === northwest.level && x === northwest.x && y === northwest.y) {
-                buffer[0] = 1.0;
-                buffer[1] = 2.0;
-                buffer[2] = 3.0;
-                buffer[3] = 8.0;
-                buffer[4] = 9.0;
-                buffer[5] = 10.0;
-                buffer[6] = 15.0;
-                buffer[7] = 16.0;
-                buffer[8] = 17.0;
-            } else if (level === northeast.level && x === northeast.x && y === northeast.y) {
-                buffer[0] = 5.0;
-                buffer[1] = 6.0;
-                buffer[2] = 7.0;
-                buffer[3] = 12.0;
-                buffer[4] = 13.0;
-                buffer[5] = 14.0;
-                buffer[6] = 19.0;
-                buffer[7] = 20.0;
-                buffer[8] = 21.0;
-            } else {
-                return undefined;
-            }
+        mockTerrain.requestTileGeometryWillSucceedWith(new HeightmapTerrainData({
+            width: 3,
+            height: 3,
+            createdByUpsampling: false,
+            buffer: new Float32Array([
+                15.0, 16.0, 17.0,
+                22.0, 23.0, 24.0,
+                29.0, 30.0, 31.0
+            ])
+        }), west).createMeshWillSucceed(west);
 
-            var terrainData = new HeightmapTerrainData({
-                width: 3,
-                height: 3,
-                buffer: buffer,
-                createdByUpsampling: false
-            });
-            return when(terrainData);
-        });
+        mockTerrain.requestTileGeometryWillSucceedWith(new HeightmapTerrainData({
+            width: 3,
+            height: 3,
+            createdByUpsampling: false,
+            buffer: new Float32Array([
+                31.0, 32.0, 33.0,
+                38.0, 39.0, 40.0,
+                45.0, 46.0, 47.0
+            ])
+        }), south).createMeshWillSucceed(south);
+
+        mockTerrain.requestTileGeometryWillSucceedWith(new HeightmapTerrainData({
+            width: 3,
+            height: 3,
+            createdByUpsampling: false,
+            buffer: new Float32Array([
+                19.0, 20.0, 21.0,
+                26.0, 27.0, 28.0,
+                33.0, 34.0, 35.0
+            ])
+        }), east).createMeshWillSucceed(east);
+
+        mockTerrain.requestTileGeometryWillSucceedWith(new HeightmapTerrainData({
+            width: 3,
+            height: 3,
+            createdByUpsampling: false,
+            buffer: new Float32Array([
+                3.0, 4.0, 5.0,
+                10.0, 11.0, 12.0,
+                17.0, 18.0, 19.0
+            ])
+        }), north).createMeshWillSucceed(north);
+
+        mockTerrain.requestTileGeometryWillSucceedWith(new HeightmapTerrainData({
+            width: 3,
+            height: 3,
+            createdByUpsampling: false,
+            buffer: new Float32Array([
+                29.0, 30.0, 31.0,
+                36.0, 37.0, 38.0,
+                43.0, 44.0, 45.0
+            ])
+        }), southwest).createMeshWillSucceed(southwest);
+
+        mockTerrain.requestTileGeometryWillSucceedWith(new HeightmapTerrainData({
+            width: 3,
+            height: 3,
+            createdByUpsampling: false,
+            buffer: new Float32Array([
+                33.0, 34.0, 35.0,
+                40.0, 41.0, 42.0,
+                47.0, 48.0, 49.0
+            ])
+        }), southeast).createMeshWillSucceed(southeast);
+
+        mockTerrain.requestTileGeometryWillSucceedWith(new HeightmapTerrainData({
+            width: 3,
+            height: 3,
+            createdByUpsampling: false,
+            buffer: new Float32Array([
+                1.0, 2.0, 3.0,
+                8.0, 9.0, 10.0,
+                15.0, 16.0, 17.0
+            ])
+        }), northwest).createMeshWillSucceed(northwest);
+
+        mockTerrain.requestTileGeometryWillSucceedWith(new HeightmapTerrainData({
+            width: 3,
+            height: 3,
+            createdByUpsampling: false,
+            buffer: new Float32Array([
+                5.0, 6.0, 7.0,
+                12.0, 13.0, 14.0,
+                19.0, 20.0, 21.0
+            ])
+        }), northeast).createMeshWillSucceed(northeast);
     });
 
     describe('updateFillTiles', function() {
@@ -368,8 +361,147 @@ defineSuite([
             });
         });
 
+        it('adjusts existing fill tiles when adjacent tiles are loaded', function() {
+            var tiles = [center, west, south, north];
+
+            tiles.forEach(mockTerrain.createMeshWillSucceed.bind(mockTerrain));
+
+            return processor.process(tiles).then(function() {
+                tiles.forEach(markRendered);
+
+                TerrainFillMesh.updateFillTiles(tileProvider, tiles, frameState);
+
+                var fill = center.data.fill;
+                expect(fill).toBeDefined();
+                expect(fill.westTiles).toEqual([west]);
+                expect(fill.westMeshes).toEqual([west.data.mesh]);
+                expect(fill.southTiles).toEqual([south]);
+                expect(fill.southMeshes).toEqual([south.data.mesh]);
+                expect(fill.eastTiles).toEqual([]);
+                expect(fill.eastMeshes).toEqual([]);
+                expect(fill.northTiles).toEqual([north]);
+                expect(fill.northMeshes).toEqual([north.data.mesh]);
+
+                fill.update(tileProvider, frameState);
+
+                expectVertexCount(fill, 8);
+
+                tiles.push(east);
+
+                return processor.process(tiles);
+            }).then(function() {
+                tiles.forEach(markRendered);
+
+                TerrainFillMesh.updateFillTiles(tileProvider, tiles, frameState);
+
+                var fill = center.data.fill;
+                expect(fill).toBeDefined();
+                expect(fill.westTiles).toEqual([west]);
+                expect(fill.westMeshes).toEqual([west.data.mesh]);
+                expect(fill.southTiles).toEqual([south]);
+                expect(fill.southMeshes).toEqual([south.data.mesh]);
+                expect(fill.eastTiles).toEqual([east]);
+                expect(fill.eastMeshes).toEqual([east.data.mesh]);
+                expect(fill.northTiles).toEqual([north]);
+                expect(fill.northMeshes).toEqual([north.data.mesh]);
+
+                fill.update(tileProvider, frameState);
+
+                expectVertexCount(fill, 9);
+                expectVertex(fill, 1.0, 0.5, 26.0);
+            });
+        });
+
+        it('adjusts existing fill tiles when an adjacent fill tile changes', function() {
+            var dontLoad = [east, south, southeast];
+            dontLoad.forEach(mockTerrain.requestTileGeometryWillDefer.bind(mockTerrain));
+
+            var tiles = [center, west, south, east, north, southwest, southeast, northwest, northeast];
+
+            return processor.process(tiles).then(function() {
+                tiles.forEach(markRendered);
+
+                TerrainFillMesh.updateFillTiles(tileProvider, tiles, frameState);
+                center.data.fill.update(tileProvider, frameState);
+                south.data.fill.update(tileProvider, frameState);
+                east.data.fill.update(tileProvider, frameState);
+                southeast.data.fill.update(tileProvider, frameState);
+
+                expectVertexCount(center.data.fill, 7);
+                expectVertex(center.data.fill, 0.0, 0.0, 31.0);
+                expectVertex(center.data.fill, 0.0, 0.5, 24.0);
+                expectVertex(center.data.fill, 0.0, 1.0, 17.0);
+                expectVertex(center.data.fill, 0.5, 1.0, 18.0);
+                expectVertex(center.data.fill, 1.0, 1.0, 19.0);
+
+                expectVertexCount(south.data.fill, 6);
+                expectVertex(south.data.fill, 0.0, 1.0, 31.0);
+                expectVertex(south.data.fill, 0.0, 0.5, 38.0);
+                expectVertex(south.data.fill, 0.0, 0.0, 45.0);
+
+                expectVertexCount(east.data.fill, 6);
+                expectVertex(east.data.fill, 0.0, 1.0, 19.0);
+                expectVertex(east.data.fill, 0.5, 1.0, 20.0);
+                expectVertex(east.data.fill, 1.0, 1.0, 21.0);
+
+                expectVertexCount(southeast.data.fill, 5);
+
+                expect(getHeight(center.data.fill, 1.0, 0.0)).toBe(getHeight(southeast.data.fill, 0.0, 1.0));
+                expect(getHeight(center.data.fill, 1.0, 0.0)).toBe(getHeight(south.data.fill, 1.0, 1.0));
+                expect(getHeight(center.data.fill, 1.0, 0.0)).toBe(getHeight(east.data.fill, 0.0, 0.0));
+                expect(getHeight(center.data.fill, 1.0, 1.0)).toBe(getHeight(east.data.fill, 0.0, 1.0));
+                expect(getHeight(east.data.fill, 1.0, 0.0)).toBe(getHeight(southeast.data.fill, 1.0, 1.0));
+                expect(getHeight(south.data.fill, 1.0, 0.0)).toBe(getHeight(southeast.data.fill, 0.0, 0.0));
+
+                // Now load the south tile.
+                mockTerrain.requestTileGeometryWillSucceedWith(new HeightmapTerrainData({
+                    width: 3,
+                    height: 3,
+                    createdByUpsampling: false,
+                    buffer: new Float32Array([
+                        31.0, 32.0, 33.0,
+                        38.0, 39.0, 40.0,
+                        45.0, 46.0, 47.0
+                    ])
+                }), south).createMeshWillSucceed(south);
+
+                return processor.process(tiles);
+            }).then(function() {
+                tiles.forEach(markRendered);
+
+                TerrainFillMesh.updateFillTiles(tileProvider, tiles, frameState);
+                center.data.fill.update(tileProvider, frameState);
+                east.data.fill.update(tileProvider, frameState);
+                southeast.data.fill.update(tileProvider, frameState);
+
+                expect(south.data.fill).toBeUndefined();
+
+                expectVertexCount(center.data.fill, 8);
+                expectVertex(center.data.fill, 0.0, 0.0, 31.0);
+                expectVertex(center.data.fill, 0.0, 0.5, 24.0);
+                expectVertex(center.data.fill, 0.0, 1.0, 17.0);
+                expectVertex(center.data.fill, 0.5, 1.0, 18.0);
+                expectVertex(center.data.fill, 1.0, 1.0, 19.0);
+                expectVertex(center.data.fill, 1.0, 0.0, 33.0);
+
+                expectVertexCount(east.data.fill, 6);
+                expectVertex(east.data.fill, 0.0, 1.0, 19.0);
+                expectVertex(east.data.fill, 0.5, 1.0, 20.0);
+                expectVertex(east.data.fill, 1.0, 1.0, 21.0);
+                expectVertex(east.data.fill, 0.0, 0.0, 33.0);
+
+                expectVertexCount(southeast.data.fill, 6);
+                expectVertex(southeast.data.fill, 0.0, 0.0, 47.0);
+                expectVertex(southeast.data.fill, 0.0, 0.5, 40.0);
+                expectVertex(southeast.data.fill, 0.0, 1.0, 33.0);
+
+                expect(getHeight(east.data.fill, 1.0, 0.0)).toBe(getHeight(southeast.data.fill, 1.0, 1.0));
+            });
+        });
+
         // Mark all the tiles rendered.
         function markRendered(tile) {
+            quadtree._lastSelectionFrameNumber = frameState.frameNumber;
             tile._lastSelectionResultFrame = frameState.frameNumber;
             tile._lastSelectionResult = TileSelectionResult.RENDERED;
 
@@ -616,60 +748,85 @@ defineSuite([
             var southW = south.northwestChild.northeastChild;
             var southE = south.northeastChild.northwestChild;
 
-            mockTerrain.requestTileGeometry.and.callFake(function(x, y, level) {
-                var buffer = new Float32Array(4);
-                if (level === westN.level && x === westN.x && y === westN.y) {
-                    buffer[0] = 1.0;
-                    buffer[1] = 1.0;
-                    buffer[2] = 1.5;
-                    buffer[3] = 1.5;
-                } else if (level === westS.level && x === westS.x && y === westS.y) {
-                    buffer[0] = 1.5;
-                    buffer[1] = 1.5;
-                    buffer[2] = 2.0;
-                    buffer[3] = 2.0;
-                } else if (level === eastN.level && x === eastN.x && y === eastN.y) {
-                    buffer[0] = 3.0;
-                    buffer[1] = 3.0;
-                    buffer[2] = 3.5;
-                    buffer[3] = 3.5;
-                } else if (level === eastS.level && x === eastS.x && y === eastS.y) {
-                    buffer[0] = 3.5;
-                    buffer[1] = 3.5;
-                    buffer[2] = 4.0;
-                    buffer[3] = 4.0;
-                } else if (level === northW.level && x === northW.x && y === northW.y) {
-                    buffer[0] = 5.0;
-                    buffer[1] = 5.5;
-                    buffer[2] = 5.0;
-                    buffer[3] = 5.5;
-                } else if (level === northE.level && x === northE.x && y === northE.y) {
-                    buffer[0] = 5.5;
-                    buffer[1] = 6.0;
-                    buffer[2] = 5.5;
-                    buffer[3] = 6.0;
-                } else if (level === southW.level && x === southW.x && y === southW.y) {
-                    buffer[0] = 7.0;
-                    buffer[1] = 7.5;
-                    buffer[2] = 7.0;
-                    buffer[3] = 7.5;
-                } else if (level === southE.level && x === southE.x && y === southE.y) {
-                    buffer[0] = 7.5;
-                    buffer[1] = 8.0;
-                    buffer[2] = 7.5;
-                    buffer[3] = 8.0;
-                } else {
-                    return undefined;
-                }
+            mockTerrain.requestTileGeometryWillSucceedWith(new HeightmapTerrainData({
+                width: 2,
+                height: 2,
+                createdByUpsampling: false,
+                buffer: new Float32Array([
+                    1.0, 1.0,
+                    1.5, 1.5
+                ])
+            }), westN).createMeshWillSucceed(westN);
 
-                var terrainData = new HeightmapTerrainData({
-                    width: 2,
-                    height: 2,
-                    buffer: buffer,
-                    createdByUpsampling: false
-                });
-                return when(terrainData);
-            });
+            mockTerrain.requestTileGeometryWillSucceedWith(new HeightmapTerrainData({
+                width: 2,
+                height: 2,
+                createdByUpsampling: false,
+                buffer: new Float32Array([
+                    1.5, 1.5,
+                    2.0, 2.0
+                ])
+            }), westS).createMeshWillSucceed(westS);
+
+            mockTerrain.requestTileGeometryWillSucceedWith(new HeightmapTerrainData({
+                width: 2,
+                height: 2,
+                createdByUpsampling: false,
+                buffer: new Float32Array([
+                    3.0, 3.0,
+                    3.5, 3.5
+                ])
+            }), eastN).createMeshWillSucceed(eastN);
+
+            mockTerrain.requestTileGeometryWillSucceedWith(new HeightmapTerrainData({
+                width: 2,
+                height: 2,
+                createdByUpsampling: false,
+                buffer: new Float32Array([
+                    3.5, 3.5,
+                    4.0, 4.0
+                ])
+            }), eastS).createMeshWillSucceed(eastS);
+
+            mockTerrain.requestTileGeometryWillSucceedWith(new HeightmapTerrainData({
+                width: 2,
+                height: 2,
+                createdByUpsampling: false,
+                buffer: new Float32Array([
+                    5.0, 5.5,
+                    5.0, 5.5
+                ])
+            }), northW).createMeshWillSucceed(northW);
+
+            mockTerrain.requestTileGeometryWillSucceedWith(new HeightmapTerrainData({
+                width: 2,
+                height: 2,
+                createdByUpsampling: false,
+                buffer: new Float32Array([
+                    5.5, 6.0,
+                    6.5, 6.0
+                ])
+            }), northE).createMeshWillSucceed(northE);
+
+            mockTerrain.requestTileGeometryWillSucceedWith(new HeightmapTerrainData({
+                width: 2,
+                height: 2,
+                createdByUpsampling: false,
+                buffer: new Float32Array([
+                    7.0, 7.5,
+                    7.0, 7.5
+                ])
+            }), southW).createMeshWillSucceed(southW);
+
+            mockTerrain.requestTileGeometryWillSucceedWith(new HeightmapTerrainData({
+                width: 2,
+                height: 2,
+                createdByUpsampling: false,
+                buffer: new Float32Array([
+                    7.5, 8.0,
+                    7.5, 8.0
+                ])
+            }), southE).createMeshWillSucceed(southE);
 
             return processor.process([center, westN, westS, eastN, eastS, northE, northW, southE, southW]).then(function() {
                 var fill = center.data.fill = new TerrainFillMesh(center);
@@ -715,32 +872,17 @@ defineSuite([
             });
 
             it('western hemisphere to eastern hemisphere', function() {
-                mockTerrain.requestTileGeometry.and.callFake(function(x, y, level) {
-                    var buffer = new Float32Array(9);
-                    if (x === easternHemisphere.x) {
-                        // eastern hemisphere tile
-                        return undefined;
-                    }
-
-                    // western hemisphere tile
-                    buffer[0] = 1.0;
-                    buffer[1] = 2.0;
-                    buffer[2] = 3.0;
-                    buffer[3] = 4.0;
-                    buffer[4] = 5.0;
-                    buffer[5] = 6.0;
-                    buffer[6] = 7.0;
-                    buffer[7] = 8.0;
-                    buffer[8] = 9.0;
-
-                    var terrainData = new HeightmapTerrainData({
-                        width: 3,
-                        height: 3,
-                        buffer: buffer,
-                        createdByUpsampling: false
-                    });
-                    return when(terrainData);
-                });
+                mockTerrain.requestTileGeometryWillDefer(easternHemisphere);
+                mockTerrain.requestTileGeometryWillSucceedWith(new HeightmapTerrainData({
+                    width: 3,
+                    height: 3,
+                    createdByUpsampling: false,
+                    buffer: new Float32Array([
+                        1.0, 2.0, 3.0,
+                        4.0, 5.0, 6.0,
+                        7.0, 8.0, 9.0
+                    ])
+                }), westernHemisphere).createMeshWillSucceed(westernHemisphere);
 
                 return processor.process([westernHemisphere, easternHemisphere]).then(function() {
                     var fill = easternHemisphere.data.fill = new TerrainFillMesh(easternHemisphere);
@@ -764,32 +906,17 @@ defineSuite([
             });
 
             it('eastern hemisphere to western hemisphere', function() {
-                mockTerrain.requestTileGeometry.and.callFake(function(x, y, level) {
-                    var buffer = new Float32Array(9);
-                    if (x === westernHemisphere.x) {
-                        // western hemisphere tile
-                        return undefined;
-                    }
-
-                    // eastern hemisphere tile
-                    buffer[0] = 10.0;
-                    buffer[1] = 11.0;
-                    buffer[2] = 12.0;
-                    buffer[3] = 13.0;
-                    buffer[4] = 14.0;
-                    buffer[5] = 15.0;
-                    buffer[6] = 16.0;
-                    buffer[7] = 17.0;
-                    buffer[8] = 18.0;
-
-                    var terrainData = new HeightmapTerrainData({
-                        width: 3,
-                        height: 3,
-                        buffer: buffer,
-                        createdByUpsampling: false
-                    });
-                    return when(terrainData);
-                });
+                mockTerrain.requestTileGeometryWillSucceedWith(new HeightmapTerrainData({
+                    width: 3,
+                    height: 3,
+                    createdByUpsampling: false,
+                    buffer: new Float32Array([
+                        10.0, 11.0, 12.0,
+                        13.0, 14.0, 15.0,
+                        16.0, 17.0, 18.0
+                    ])
+                }), easternHemisphere).createMeshWillSucceed(easternHemisphere);
+                mockTerrain.requestTileGeometryWillDefer(westernHemisphere);
 
                 return processor.process([westernHemisphere, easternHemisphere]).then(function() {
                     var fill = westernHemisphere.data.fill = new TerrainFillMesh(westernHemisphere);
@@ -818,7 +945,7 @@ defineSuite([
     var positionScratch = new Cartesian3();
     var expectedPositionScratch = new Cartesian3();
 
-    function expectVertex(fill, u, v, height) {
+    function getHeight(fill, u, v) {
         var mesh = fill.mesh;
         var rectangle = fill.tile.rectangle;
         var encoding = mesh.encoding;
@@ -831,17 +958,20 @@ defineSuite([
             var vertexHeight = encoding.decodeHeight(vertices, i);
             var vertexPosition = encoding.decodePosition(vertices, i, positionScratch);
             if (Math.abs(u - tc.x) < 1e-5 && Math.abs(v - tc.y) < CesiumMath.EPSILON5) {
-                expect(vertexHeight).toEqualEpsilon(height, CesiumMath.EPSILON5);
-
                 var longitude = CesiumMath.lerp(rectangle.west, rectangle.east, u);
                 var latitude = CesiumMath.lerp(rectangle.south, rectangle.north, v);
                 var expectedPosition = Cartesian3.fromRadians(longitude, latitude, vertexHeight, undefined, expectedPositionScratch);
                 expect(vertexPosition).toEqualEpsilon(expectedPosition, 1);
-                return;
+                return vertexHeight;
             }
         }
 
         fail('Vertex with u=' + u + ', v=' + v + ' does not exist.');
+    }
+
+    function expectVertex(fill, u, v, height) {
+        var vertexHeight = getHeight(fill, u, v);
+        expect(vertexHeight).toEqualEpsilon(height, CesiumMath.EPSILON5);
     }
 
     function expectVertexCount(fill, count) {
