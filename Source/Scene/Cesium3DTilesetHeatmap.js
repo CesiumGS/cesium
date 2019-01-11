@@ -1,10 +1,12 @@
 define([
         '../Core/Color',
+        '../Core/defaultValue',
         '../Core/defined',
         '../Core/destroyObject',
         '../Core/Math'
     ], function(
         Color,
+        defaultValue,
         defined,
         destroyObject,
         CesiumMath) {
@@ -16,22 +18,22 @@ define([
      * @alias Cesium3DTilesetHeatmap
      * @constructor
      */
-    function Cesium3DTilesetHeatmap() {
+    function Cesium3DTilesetHeatmap(heatmapVariable) {
         /**
          * The tile variable to track for heatmap colorization.
          * Tile's will be colorized relative to the other visible tile's values for this variable.
          *
          * @type {String}
          */
-        this.heatMapVariable = undefined;
+        this.variableName = defaultValue(heatmapVariable, undefined);
 
         // Members that are updated every time a tile is colorized
-        this._minHeatMap = Number.MAX_VALUE;
-        this._maxHeatMap = -Number.MAX_VALUE;
+        this._min = Number.MAX_VALUE;
+        this._max = -Number.MAX_VALUE;
 
         // Members that are updated once every frame
-        this._previousMinHeatMap = Number.MAX_VALUE;
-        this._previousMaxHeatMap = -Number.MAX_VALUE;
+        this._previousMin = Number.MAX_VALUE;
+        this._previousMax = -Number.MAX_VALUE;
     }
 
      /**
@@ -48,24 +50,26 @@ define([
         return destroyObject(this);
     };
 
-    function updateHeatMapMinMax(tile) {
-        var variableName = this.heatMapVariable;
+    function updateMinMax(heatmap, tile) {
+        var variableName = heatmap.variableName;
         if (defined(variableName)) {
             var tileValue = tile[variableName];
             if (!defined(tileValue)) {
-                this.heatMapVariable = undefined;
+                heatmap.variableName = undefined;
                 return;
             }
-            this._maxHeatMap = Math.max(tileValue, this._maxHeatMap);
-            this._minHeatMap = Math.min(tileValue, this._minHeatMap);
+            heatmap._max = Math.max(tileValue, heatmap._max);
+            heatmap._min = Math.min(tileValue, heatmap._min);
         }
     }
 
-    var heatMapColors = [new Color(0,0,0,1),
-                         new Color(0,0,1,1),
-                         new Color(0,1,0,1),
-                         new Color(1,0,0,1),
-                         new Color(1,1,1,1)];
+    var heatmapColors = [new Color(0.000, 0.000, 0.000, 1),  // Black
+                         new Color(0.153, 0.278, 0.878, 1),  // Blue
+                         new Color(0.827, 0.231, 0.490, 1),  // Pink
+                         new Color(0.827, 0.188, 0.220, 1),  // Red
+                         new Color(1.000, 0.592, 0.259, 1),  // Orange
+                         new Color(1.000, 0.843, 0.000, 1),  // Yellow
+                         new Color(1.000, 1.000, 1.000, 1)]; // White
     /**
      * Colorize the tile in heat map style base on where it lies within the min max window.
      * Heatmap colors are black, blue, green, red, white. 'Cold' or low numbers will be black and blue, 'Hot' or high numbers will be red and white,
@@ -74,15 +78,15 @@ define([
      *
      * @private
      */
-    Cesium3DTilesetHeatmap.prototype.heatMapColorize = function (tile, frameState) {
-        var variableName = this.heatMapVariable;
+    Cesium3DTilesetHeatmap.prototype.colorize = function (tile, frameState) {
+        var variableName = this.variableName;
         if (!defined(variableName) || !tile.contentAvailable || tile._selectedFrame !== frameState.frameNumber) {
             return;
         }
 
-        updateHeatMapMinMax(tile);
-        var min = this._previousMinHeatMap;
-        var max = this._previousMaxHeatMap;
+        updateMinMax(this, tile);
+        var min = this._previousMin;
+        var max = this._previousMax;
         if (min === Number.MAX_VALUE || max === -Number.MAX_VALUE) {
             return;
         }
@@ -94,15 +98,15 @@ define([
 
         // Get position between min and max and convert that to a position in the color array
         var zeroToOne = shiftedValue / shiftedMax;
-        var lastIndex = heatMapColors.length - 1;
+        var lastIndex = heatmapColors.length - 1;
         var colorPosition = zeroToOne * lastIndex;
 
         // Take floor and ceil of the value to get the two colors to lerp between, lerp using the fractional portion
         var colorPositionFloor = Math.floor(colorPosition);
         var colorPositionCeil = Math.ceil(colorPosition);
         var t = colorPosition - colorPositionFloor;
-        var colorZero = heatMapColors[colorPositionFloor];
-        var colorOne = heatMapColors[colorPositionCeil];
+        var colorZero = heatmapColors[colorPositionFloor];
+        var colorOne = heatmapColors[colorPositionCeil];
 
         // Perform the lerp
         var finalColor = new Color(1,1,1,1);
@@ -117,14 +121,14 @@ define([
      *
      * @private
      */
-    Cesium3DTilesetHeatmap.prototype.resetAllMinMax = function() {
+    Cesium3DTilesetHeatmap.prototype.resetMinMax = function() {
         // For heat map colorization
-        var variableName = this.heatMapVariable;
+        var variableName = this.variableName;
         if (defined(variableName)) {
-            this._previousMinHeatMap = this._minHeatMap;
-            this._previousMaxHeatMap = this._maxHeatMap;
-            this._minHeatMap = Number.MAX_VALUE;
-            this._maxHeatMap = -Number.MAX_VALUE;
+            this._previousMin = this._min;
+            this._previousMax = this._max;
+            this._min = Number.MAX_VALUE;
+            this._max = -Number.MAX_VALUE;
         }
     };
 

@@ -3509,35 +3509,4 @@ defineSuite([
             });
         });
     });
-
-    it('manipulate tracked min max', function() {
-        var tileset = new Cesium3DTileset({ url: '/some_url', heatMapVariable: '_centerZDepth' });
-
-        var tileWithBoundingRegion = {
-            geometricError : 1,
-            refine : 'REPLACE',
-            children : [],
-            boundingVolume: {
-                region : [-1.2, -1.2, 0.0, 0.0, -30, -34]
-            }
-        };
-        var tile = new Cesium3DTile(tileset, '/some_url', tileWithBoundingRegion, undefined);
-
-        // Min gets overwritten
-        tile._centerZDepth = -1;
-        tileset.updateHeatMapMinMax(tile);
-        expect(tileset._minHeatMap).toEqual(tile._centerZDepth);
-
-        // Max gets overwritten
-        tile._centerZDepth = 1;
-        tileset.updateHeatMapMinMax(tile);
-        expect(tileset._maxHeatMap).toEqual(tile._centerZDepth);
-
-        tileset.resetAllMinMax();
-        expect(tileset._minHeatMap).toEqual(Number.MAX_VALUE);
-        expect(tileset._maxHeatMap).toEqual(-Number.MAX_VALUE);
-        expect(tileset._previousMinHeatMap).toEqual(-1);
-        expect(tileset._previousMaxHeatMap).toEqual( 1);
-    });
-
 }, 'WebGL');

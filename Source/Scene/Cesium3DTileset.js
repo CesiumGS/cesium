@@ -32,6 +32,7 @@ define([
         './Cesium3DTileRefine',
         './Cesium3DTilesetAsyncTraversal',
         './Cesium3DTilesetCache',
+        './Cesium3DTilesetHeatmap',
         './Cesium3DTilesetStatistics',
         './Cesium3DTilesetTraversal',
         './Cesium3DTileStyleEngine',
@@ -79,6 +80,7 @@ define([
         Cesium3DTileRefine,
         Cesium3DTilesetAsyncTraversal,
         Cesium3DTilesetCache,
+        Cesium3DTilesetHeatmap,
         Cesium3DTilesetStatistics,
         Cesium3DTilesetTraversal,
         Cesium3DTileStyleEngine,
@@ -217,11 +219,7 @@ define([
         this._statisticsLastPick = new Cesium3DTilesetStatistics();
         this._statisticsLastAsync = new Cesium3DTilesetStatistics();
 
-        this._minHeatMap = Number.MAX_VALUE;
-        this._maxHeatMap = -Number.MAX_VALUE;
-        this._previousMinHeatMap = Number.MAX_VALUE;
-        this._previousMaxHeatMap = -Number.MAX_VALUE;
-        this.heatMapVariable = defaultValue(options.heatMapVariable, undefined);
+        this._heatmap = new Cesium3DTilesetHeatmap(options.heatmapVariable);
 
         this._totalTilesLoaded = 0;
 
@@ -1948,11 +1946,6 @@ define([
         tileset._tilesLoaded = (statistics.numberOfPendingRequests === 0) && (statistics.numberOfTilesProcessing === 0) && (statistics.numberOfAttemptedRequests === 0);
 
         if (progressChanged && tileset._tilesLoaded) {
-            // TODO: remove prints
-            if (defined(tileset.heatMapVariable)) {
-                console.log('heatMapMin: ' + tileset._previousMinHeatMap);
-                console.log('heatMapMax: ' + tileset._previousMaxHeatMap);
-            }
             console.log('totalLoaded: ' + tileset._totalTilesLoaded);
             tileset._totalTilesLoaded = 0;
 
@@ -2146,33 +2139,7 @@ define([
      * @private
      */
     Cesium3DTileset.prototype.resetAllMinMax = function() {
-        // For heat map colorization
-        var variableName = this.heatMapVariable;
-        if (defined(variableName)) {
-            this._previousMinHeatMap = this._minHeatMap;
-            this._previousMaxHeatMap = this._maxHeatMap;
-            this._minHeatMap = Number.MAX_VALUE;
-            this._maxHeatMap = -Number.MAX_VALUE;
-        }
-    };
-
-    /**
-     * Updates any tracked min max values used for heat map visualization.
-     * @param { Cesium3DTile } tile The tile containing the value to be considered for min and max
-     *
-     * @private
-     */
-    Cesium3DTileset.prototype.updateHeatMapMinMax = function(tile) {
-        var variableName = this.heatMapVariable;
-        if (defined(variableName)) {
-            var tileValue = tile[variableName];
-            if (!defined(tileValue)) {
-                this.heatMapVariable = undefined;
-                return;
-            }
-            this._maxHeatMap = Math.max(tileValue, this._maxHeatMap);
-            this._minHeatMap = Math.min(tileValue, this._minHeatMap);
-        }
+        this._heatmap.resetMinMax();
     };
 
     return Cesium3DTileset;

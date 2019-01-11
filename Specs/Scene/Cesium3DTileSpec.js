@@ -12,6 +12,7 @@ defineSuite([
         'Core/Transforms',
         'Scene/Cesium3DTileContentState',
         'Scene/Cesium3DTileRefine',
+        'Scene/Cesium3DTilesetHeatmap',
         'Scene/TileBoundingRegion',
         'Scene/TileOrientedBoundingBox',
         'Specs/createScene'
@@ -29,6 +30,7 @@ defineSuite([
         Transforms,
         Cesium3DTileContentState,
         Cesium3DTileRefine,
+        Cesium3DTilesetHeatmap,
         TileBoundingRegion,
         TileOrientedBoundingBox,
         createScene) {
@@ -122,7 +124,8 @@ defineSuite([
         debugShowBoundingVolume : true,
         debugShowViewerRequestVolume : true,
         modelMatrix : Matrix4.IDENTITY,
-        _geometricError : 2
+        _geometricError : 2,
+        _heatmap : new Cesium3DTilesetHeatmap()
     };
 
     var centerLongitude = -1.31968;
@@ -359,33 +362,5 @@ defineSuite([
             tile.update(mockTileset, scene.frameState);
             expect(tile._debugViewerRequestVolume).toBeDefined();
         });
-    });
-
-    it('expected heat map color', function() {
-        var tileset = new Cesium3DTileset({ url: '/some_url', heatMapVariable: '_centerZDepth' });
-        tileset._previousMinHeatMap = -1;
-        tileset._previousMaxHeatMap =  1;
-
-        var tile = new Cesium3DTile(tileset, '/some_url', tileWithBoundingRegion, undefined);
-        tile._centerZDepth = (tileset._previousMaxHeatMap + tileset._previousMinHeatMap) / 2; // In the middle of the min max window
-        tile._contentState = Cesium3DTileContentState.READY;
-        tile.hasEmptyContent = false;
-
-        var savedFrameNumber = scene.frameState.frameNumber;
-        scene.frameState.frameNumber = tile._selectedFrame = 1;
-
-        tile.heatMapColorize(tileset.heatMapVariable, scene.frameState);
-
-        var expectedColor = new Color(0, 1, 0, 1); // Green is in the middle
-        var tileColor = tile.color;
-        var diff = new Color (Math.abs(expectedColor.red   - tileColor.red),
-                              Math.abs(expectedColor.green - tileColor.green),
-                              Math.abs(expectedColor.blue  - tileColor.blue));
-
-        var threshold = 0.01;
-        expect(diff.red).toBeLessThan(threshold);
-        expect(diff.green).toBeLessThan(threshold);
-        expect(diff.blue).toBeLessThan(threshold);
-        scene.frameState.frameNumber = savedFrameNumber;
     });
 }, 'WebGL');
