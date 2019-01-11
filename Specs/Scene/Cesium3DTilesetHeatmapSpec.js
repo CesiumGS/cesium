@@ -57,14 +57,14 @@ defineSuite([
         expect(diff.blue).toBeLessThan(threshold);
     }
 
-    fit('destroys', function() {
+    it('destroys', function() {
         var heatmap = new Cesium3DTilesetHeatmap();
         expect(heatmap.isDestroyed()).toEqual(false);
         heatmap.destroy();
         expect(heatmap.isDestroyed()).toEqual(true);
     });
 
-    fit('expected heat map color', function() {
+    it('expected heat map color', function() {
         var heatmap = new Cesium3DTilesetHeatmap('_centerZDepth');
 
         var tile = new Cesium3DTile(mockTileset, '/some_url', tileWithBoundingSphere, undefined);
