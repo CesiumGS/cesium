@@ -221,8 +221,6 @@ define([
 
         this._heatmap = new Cesium3DTilesetHeatmap(options.heatmapVariable);
 
-        this._totalTilesLoaded = 0;
-
         this._tilesLoaded = false;
         this._initialTilesLoaded = false;
 
@@ -1596,7 +1594,6 @@ define([
     function handleTileSuccess(tileset, tile) {
         return function() {
             --tileset._statistics.numberOfTilesProcessing;
-            tileset._totalTilesLoaded++;
 
             if (!tile.hasTilesetContent) {
                 // RESEARCH_IDEA: ability to unload tiles (without content) for an
@@ -1946,9 +1943,6 @@ define([
         tileset._tilesLoaded = (statistics.numberOfPendingRequests === 0) && (statistics.numberOfTilesProcessing === 0) && (statistics.numberOfAttemptedRequests === 0);
 
         if (progressChanged && tileset._tilesLoaded) {
-            console.log('totalLoaded: ' + tileset._totalTilesLoaded);
-            tileset._totalTilesLoaded = 0;
-
             frameState.afterRender.push(function() {
                 tileset.allTilesLoaded.raiseEvent();
             });

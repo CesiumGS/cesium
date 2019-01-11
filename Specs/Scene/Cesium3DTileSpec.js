@@ -131,16 +131,6 @@ defineSuite([
     var centerLongitude = -1.31968;
     var centerLatitude = 0.698874;
 
-    var scene;
-    beforeEach(function() {
-        scene = createScene();
-        scene.frameState.passes.render = true;
-    });
-
-    afterEach(function() {
-        scene.destroyForSpecs();
-    });
-
     function getTileTransform(longitude, latitude) {
         var transformCenter = Cartesian3.fromRadians(longitude, latitude, 0.0);
         var hpr = new HeadingPitchRoll();
@@ -339,6 +329,16 @@ defineSuite([
     });
 
     describe('debug bounding volumes', function() {
+        var scene;
+        beforeEach(function() {
+            scene = createScene();
+            scene.frameState.passes.render = true;
+        });
+
+        afterEach(function() {
+            scene.destroyForSpecs();
+        });
+
         it('can be a bounding region', function() {
             var tile = new Cesium3DTile(mockTileset, '/some_url', tileWithBoundingRegion, undefined);
             tile.update(mockTileset, scene.frameState);

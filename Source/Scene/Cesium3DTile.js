@@ -344,11 +344,6 @@ define([
 
         this._commandsLength = 0;
 
-        this._heatMapColors = [new Color(0,0,0,1),
-                               new Color(0,0,1,1),
-                               new Color(0,1,0,1),
-                               new Color(1,0,0,1),
-                               new Color(1,1,1,1)];
         this._color = undefined;
         this._colorDirty = false;
     }
@@ -1279,53 +1274,6 @@ define([
         this._debugContentBoundingVolume = this._debugContentBoundingVolume && this._debugContentBoundingVolume.destroy();
         this._debugViewerRequestVolume = this._debugViewerRequestVolume && this._debugViewerRequestVolume.destroy();
         return destroyObject(this);
-    };
-
-    /**
-     * Colorize the tile in heat map style base on where it lies within the min max window.
-     * Heatmap colors are black, blue, green, red, white. 'Cold' or low numbers will be black and blue, 'Hot' or high numbers will be red and white,
-     * @param {String} variableName The name of the variable we want to colorize relative to min max of the rendered tiles
-     * @param {FrameState} frameState The frame state.
-     *
-     * @private
-     */
-    Cesium3DTile.prototype.heatMapColorize = function (variableName, frameState) {
-        if (!defined(variableName) || !this.contentAvailable || this._selectedFrame !== frameState.frameNumber) {
-            return;
-        }
-
-        var tileset = this.tileset;
-        tileset.updateHeatMapMinMax(this);
-        var min = tileset._previousMinHeatMap;
-        var max = tileset._previousMaxHeatMap;
-        if (min === Number.MAX_VALUE || max === -Number.MAX_VALUE) {
-            return;
-        }
-
-        // Shift the min max window down to 0
-        var shiftedMax = (max - min) + CesiumMath.EPSILON7; // Prevent divide by 0
-        var tileValue = this[variableName];
-        var shiftedValue = CesiumMath.clamp(tileValue - min, 0, shiftedMax);
-
-        // Get position between min and max and convert that to a position in the color array
-        var heatMapColors = this._heatMapColors;
-        var zeroToOne = shiftedValue / shiftedMax;
-        var lastIndex = heatMapColors.length - 1;
-        var colorPosition = zeroToOne * lastIndex;
-
-        // Take floor and ceil of the value to get the two colors to lerp between, lerp using the fractional portion
-        var colorPositionFloor = Math.floor(colorPosition);
-        var colorPositionCeil = Math.ceil(colorPosition);
-        var t = colorPosition - colorPositionFloor;
-        var colorZero = heatMapColors[colorPositionFloor];
-        var colorOne = heatMapColors[colorPositionCeil];
-
-        // Perform the lerp
-        var finalColor = new Color(1,1,1,1);
-        finalColor.red = CesiumMath.lerp(colorZero.red, colorOne.red, t);
-        finalColor.green = CesiumMath.lerp(colorZero.green, colorOne.green, t);
-        finalColor.blue = CesiumMath.lerp(colorZero.blue, colorOne.blue, t);
-        this.color = finalColor;
     };
 
     return Cesium3DTile;
