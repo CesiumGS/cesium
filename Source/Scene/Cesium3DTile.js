@@ -1167,6 +1167,7 @@ define([
         var debugColorizeTilesOff = !tileset.debugColorizeTiles && tile._debugColorizeTiles;
 
         if (debugColorizeTilesOn) {
+            tileset._heatmap.colorize(tile, frameState); // Skipped if tileset._heatmap.variableName is undefined
             tile._debugColorizeTiles = true;
             tile.color = tile._debugColor;
         } else if (debugColorizeTilesOff) {
@@ -1174,7 +1175,6 @@ define([
             tile.color = Color.WHITE;
         }
 
-        tileset._heatmap.colorize(tile, frameState); // Skipped if tileset._heatmap.variableName is undefined
         if (tile._colorDirty) {
             tile._colorDirty = false;
             tile._content.applyDebugSettings(true, tile._color);
