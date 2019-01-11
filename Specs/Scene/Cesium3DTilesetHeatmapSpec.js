@@ -64,7 +64,7 @@ defineSuite([
         expect(heatmap.isDestroyed()).toEqual(true);
     });
 
-    it('expected heat map color', function() {
+    it('expected color', function() {
         var heatmap = new Cesium3DTilesetHeatmap('_centerZDepth');
 
         var tile = new Cesium3DTile(mockTileset, '/some_url', tileWithBoundingSphere, undefined);
