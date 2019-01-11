@@ -9,6 +9,7 @@ define([
         '../../Scene/Cesium3DTileColorBlendMode',
         '../../Scene/Cesium3DTileFeature',
         '../../Scene/Cesium3DTileset',
+        '../../Scene/Cesium3DTilesetHeatmapOption',
         '../../Scene/Cesium3DTileStyle',
         '../../Scene/PerformanceDisplay',
         '../../ThirdParty/knockout'
@@ -23,6 +24,7 @@ define([
         Cesium3DTileColorBlendMode,
         Cesium3DTileFeature,
         Cesium3DTileset,
+        Cesium3DTilesetHeatmapOption,
         Cesium3DTileStyle,
         PerformanceDisplay,
         knockout) {
@@ -138,6 +140,26 @@ define([
     }, {
         text : 'Mix',
         value : Cesium3DTileColorBlendMode.MIX
+    }];
+
+    var heatmapOptions = [{
+        text : 'NONE',
+        value : Cesium3DTilesetHeatmapOption.NONE
+    }, {
+        text : 'Camera Depth',
+        value : Cesium3DTilesetHeatmapOption.CAMERA_DEPTH
+    }, {
+        text : 'Camera Distance',
+        value : Cesium3DTilesetHeatmapOption.CAMERA_DISTANCE
+    }, {
+        text : 'Geometric Error',
+        value : Cesium3DTilesetHeatmapOption.GEOMETRIC_ERROR
+    }, {
+        text : 'Screen Space Error',
+        value : Cesium3DTilesetHeatmapOption.SCREEN_SPACE_ERROR
+    }, {
+        text : 'Tree Depth',
+        value : Cesium3DTilesetHeatmapOption.TREE_DEPTH
     }];
 
     var highlightColor = new Color(1.0, 1.0, 0.0, 0.4);
@@ -335,6 +357,27 @@ define([
          * @default Cesium3DTileColorBlendMode.HIGHLIGHT
          */
         this.colorBlendMode = Cesium3DTileColorBlendMode.HIGHLIGHT;
+
+        var heatmapOption = knockout.observable();
+        knockout.defineProperty(this, 'heatmapOption', {
+            get : function() {
+                return heatmapOption();
+            },
+            set : function(value) {
+                heatmapOption(value);
+                if (defined(that._tileset)) {
+                    that._tileset._heatmap.variableName = value;
+                    that._scene.requestRender();
+                }
+            }
+        });
+        /**
+         * Gets or sets the heatmap option.  This property is observable.
+         *
+         * @type {Cesium3DTilesetHeatmapOption}
+         * @default Cesium3DTilesetHeatmapOption.NONE
+         */
+        this.heatmapOption = Cesium3DTilesetHeatmapOption.NONE;
 
         var picking = knockout.observable();
         knockout.defineProperty(this, 'picking', {
@@ -1017,7 +1060,7 @@ define([
 
         this._style = undefined;
         this._shouldStyle = false;
-        this._definedProperties = ['properties', 'dynamicScreenSpaceError', 'colorBlendMode', 'picking', 'colorize', 'wireframe', 'showBoundingVolumes',
+        this._definedProperties = ['properties', 'dynamicScreenSpaceError', 'colorBlendMode', 'heatmapOption', 'picking', 'colorize', 'wireframe', 'showBoundingVolumes',
                                    'showContentBoundingVolumes', 'showRequestVolumes', 'freezeFrame', 'maximumScreenSpaceError', 'dynamicScreenSpaceErrorDensity', 'baseScreenSpaceError',
                                    'skipScreenSpaceErrorFactor', 'skipLevelOfDetail', 'skipLevels', 'immediatelyLoadDesiredLevelOfDetail', 'loadSiblings', 'dynamicScreenSpaceErrorDensitySliderValue',
                                    'dynamicScreenSpaceErrorFactor', 'pickActive', 'showOnlyPickedTileDebugLabel', 'showGeometricError', 'showRenderingStatistics', 'showMemoryUsage', 'showUrl',
@@ -1091,6 +1134,18 @@ define([
         },
 
         /**
+         * Gets the available heatmap options
+         * @memberof Cesium3DTilesInspectorViewModel.prototype
+         * @type {Object[]}
+         * @readonly
+         */
+        heatmapOptions : {
+            get : function() {
+                return heatmapOptions;
+            }
+        },
+
+        /**
          * Gets the editor error message
          * @memberof Cesium3DTilesInspectorViewModel.prototype
          * @type {String}
@@ -1150,6 +1205,7 @@ define([
                     this.dynamicScreenSpaceErrorDensity = tileset.dynamicScreenSpaceErrorDensity;
                     this.dynamicScreenSpaceErrorFactor = tileset.dynamicScreenSpaceErrorFactor;
                     this.colorBlendMode = tileset.colorBlendMode;
+                    this.heatmapOption = tileset._heatmap.variableName;
                     this.skipLevelOfDetail = tileset.skipLevelOfDetail;
                     this.skipScreenSpaceErrorFactor = tileset.skipScreenSpaceErrorFactor;
                     this.baseScreenSpaceError = tileset.baseScreenSpaceError;

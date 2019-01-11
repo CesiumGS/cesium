@@ -99,6 +99,13 @@ define([
         pointCloudShadingContainer.appendChild(createCheckbox('Eye Dome Lighting (EDL)', 'eyeDomeLighting'));
         displayPanelContents.appendChild(pointCloudShadingContainer);
 
+        displayPanelContents.appendChild(document.createTextNode('Heatmap Option: '));
+        var heatmapDropdown = document.createElement('select');
+        heatmapDropdown.setAttribute('data-bind', 'options: heatmapOptions, ' +
+                                                'optionsText: "text", ' +
+                                                'optionsValue: "value", ' +
+                                                'value: heatmapOption');
+
         var edlContainer = document.createElement('div');
         edlContainer.setAttribute('data-bind', 'visible: eyeDomeLighting');
         edlContainer.appendChild(makeRangeInput('eyeDomeLightingStrength', 0, 2.0, 0.1, 'EDL Strength'));
