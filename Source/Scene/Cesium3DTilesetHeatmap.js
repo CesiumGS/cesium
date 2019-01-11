@@ -113,7 +113,7 @@ define([
         finalColor.red = CesiumMath.lerp(colorZero.red, colorOne.red, t);
         finalColor.green = CesiumMath.lerp(colorZero.green, colorOne.green, t);
         finalColor.blue = CesiumMath.lerp(colorZero.blue, colorOne.blue, t);
-        tile.color = finalColor;
+        tile._debugColor = finalColor;
     };
 
     /**

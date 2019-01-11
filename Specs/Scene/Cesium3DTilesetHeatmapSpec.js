@@ -72,7 +72,7 @@ defineSuite([
         tile.hasEmptyContent = false;
         var frameState = scene.frameState;
         tile._selectedFrame = frameState.frameNumber;
-        var originalColor = tile.color;
+        var originalColor = tile._debugColor;
 
         // This is first frame, previousMin/Max are unititialized so no coloring occurs
         tile._centerZDepth = 1;
@@ -82,7 +82,7 @@ defineSuite([
 
         expect(heatmap._min).toBe(-1);
         expect(heatmap._max).toBe( 1);
-        verifyColor(tile.color, originalColor);
+        verifyColor(tile._debugColor, originalColor);
 
         // Preparing for next frame, previousMin/Max are take current frame's values
         heatmap.resetMinMax();
@@ -95,6 +95,6 @@ defineSuite([
         heatmap.colorize(tile, frameState);
 
         var expectedColor = new Color(0,0,0,1);
-        verifyColor(tile.color, expectedColor);
+        verifyColor(tile._debugColor, expectedColor);
     });
 });
