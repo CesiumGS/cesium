@@ -51,6 +51,24 @@ define([
         this.environmentMap = undefined;
 
         /**
+         * The spherical harmonic coefficients used for image-based lighting for PBR models.
+         * @type {Cartesian3[]}
+         */
+        this.sphericalHarmonicCoefficients = undefined;
+
+        /**
+         * The specular environment atlas used for image-based lighting for PBR models.
+         * @type {Texture}
+         */
+        this.specularEnvironmentMaps = undefined;
+
+        /**
+         * The maximum level-of-detail of the specular environment atlas used for image-based lighting for PBR models.
+         * @type {Number}
+         */
+        this.specularEnvironmentMapsMaximumLOD = undefined;
+
+        /**
          * The current mode of the scene.
          *
          * @type {SceneMode}
@@ -166,7 +184,14 @@ define([
              * @type {Boolean}
              * @default false
              */
-            offscreen : false
+            offscreen : false,
+
+            /**
+             * <code>true</code> if the primitive should update for an async pass, <code>false</code> otherwise.
+             * @type {Boolean}
+             * @default false
+             */
+            async : false
         };
 
         /**
@@ -316,6 +341,13 @@ define([
          * @type {Color}
          */
         this.backgroundColor = undefined;
+
+        /**
+         * The color of the light emitted by the sun.
+         *
+         * @type {Color}
+         */
+        this.sunColor = undefined;
 
         /**
          * The distance from the camera at which to disable the depth test of billboards, labels and points

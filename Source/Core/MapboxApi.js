@@ -6,6 +6,9 @@ define([
         defined) {
     'use strict';
 
+    /**
+     * @exports MapboxApi
+     */
     var MapboxApi = {};
 
     /**

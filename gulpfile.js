@@ -1,4 +1,3 @@
-/*jslint node: true, latedef: nofunc*/
 /*eslint-env node*/
 'use strict';
 
@@ -16,7 +15,8 @@ var gulpTap = require('gulp-tap');
 var rimraf = require('rimraf');
 var glslStripComments = require('glsl-strip-comments');
 var mkdirp = require('mkdirp');
-var eventStream = require('event-stream');
+var mergeStream = require('merge-stream');
+var streamToPromise = require('stream-to-promise');
 var gulp = require('gulp');
 var gulpInsert = require('gulp-insert');
 var gulpZip = require('gulp-zip');
@@ -24,7 +24,7 @@ var gulpRename = require('gulp-rename');
 var gulpReplace = require('gulp-replace');
 var Promise = require('bluebird');
 var requirejs = require('requirejs');
-var Karma = require('karma').Server;
+var Karma = require('karma');
 var yargs = require('yargs');
 var AWS = require('aws-sdk');
 var mime = require('mime');
@@ -44,6 +44,8 @@ var travisDeployUrl = 'http://cesium-dev.s3-website-us-east-1.amazonaws.com/cesi
 var taskName = process.argv[2];
 var noDevelopmentGallery = taskName === 'release' || taskName === 'makeZipFile';
 var minifyShaders = taskName === 'minify' || taskName === 'minifyRelease' || taskName === 'release' || taskName === 'makeZipFile' || taskName === 'buildApps';
+
+var verbose = yargs.argv.verbose;
 
 var concurrency = yargs.argv.concurrency;
 if (!concurrency) {
@@ -92,8 +94,6 @@ var filesToSortRequires = ['Source/**/*.js',
                            '!Apps/Sandcastle/Sandcastle-warn.js',
                            '!Apps/Sandcastle/gallery/gallery-index.js'];
 
-gulp.task('default', ['combine']);
-
 gulp.task('build', function(done) {
     mkdirp.sync('Build');
     glslToJavaScript(minifyShaders, 'Build/minifyShaders.state');
@@ -105,7 +105,7 @@ gulp.task('build', function(done) {
 });
 
 gulp.task('build-watch', function() {
-    gulp.watch(buildFiles, ['build']);
+    return gulp.watch(buildFiles, 'build');
 });
 
 gulp.task('buildApps', function() {
@@ -133,7 +133,7 @@ gulp.task('requirejs', function(done) {
     }, done);
 });
 
-gulp.task('cloc', ['clean'], function() {
+function cloc() {
     var cmdLine;
     var clocPath = path.join('node_modules', 'cloc', 'lib', 'cloc');
 
@@ -169,7 +169,46 @@ gulp.task('cloc', ['clean'], function() {
             });
         });
     });
-});
+}
+
+gulp.task('cloc', gulp.series('clean', cloc));
+
+function generateStubs(done) {
+    mkdirp.sync(path.join('Build', 'Stubs'));
+
+    var contents = '\
+/*global define,Cesium*/\n\
+(function() {\n\
+\'use strict\';\n';
+    var modulePathMappings = [];
+
+    globby.sync(sourceFiles).forEach(function(file) {
+        file = path.relative('Source', file);
+        var moduleId = filePathToModuleId(file);
+
+        contents += '\
+define(\'' + moduleId + '\', function() {\n\
+    return Cesium[\'' + path.basename(file, path.extname(file)) + '\'];\n\
+});\n\n';
+
+        modulePathMappings.push('        \'' + moduleId + '\' : \'../Stubs/Cesium\'');
+    });
+
+    contents += '})();\n';
+
+    var paths = '\
+define(function() {\n\
+    \'use strict\';\n\
+    return {\n' + modulePathMappings.join(',\n') + '\n\
+    };\n\
+});';
+
+    fs.writeFileSync(path.join('Build', 'Stubs', 'Cesium.js'), contents);
+    fs.writeFileSync(path.join('Build', 'Stubs', 'paths.js'), paths);
+    done();
+}
+
+gulp.task('generateStubs', gulp.series('build', generateStubs));
 
 function combine() {
     var outputDirectory = path.join('Build', 'CesiumUnminified');
@@ -180,16 +219,19 @@ function combine() {
     });
 }
 
-gulp.task('combine', ['generateStubs'], combine);
+gulp.task('combine', gulp.series('generateStubs', combine));
+gulp.task('default', gulp.series('combine'));
 
-gulp.task('combineRelease', ['generateStubs'], function() {
+function combineRelease() {
     var outputDirectory = path.join('Build', 'CesiumUnminified');
     return combineJavaScript({
-        removePragmas : true,
-        optimizer : 'none',
-        outputDirectory : outputDirectory
+        removePragmas: true,
+        optimizer: 'none',
+        outputDirectory: outputDirectory
     });
-});
+}
+
+gulp.task('combineRelease', gulp.series('generateStubs', combineRelease));
 
 //Builds the documentation
 function generateDocumentation() {
@@ -214,7 +256,7 @@ function generateDocumentation() {
 }
 gulp.task('generateDocumentation', generateDocumentation);
 
-gulp.task('instrumentForCoverage', ['build'], function(done) {
+gulp.task('instrumentForCoverage', gulp.series('build', function(done) {
     var jscoveragePath = path.join('Tools', 'jscoverage-0.5.1', 'jscoverage.exe');
     var cmdLine = jscoveragePath + ' Source Instrumented --no-instrument=./ThirdParty';
     child_process.exec(cmdLine, function(error, stdout, stderr) {
@@ -225,9 +267,11 @@ gulp.task('instrumentForCoverage', ['build'], function(done) {
         console.log(stdout);
         done();
     });
-});
+}));
 
-gulp.task('makeZipFile', ['release'], function() {
+gulp.task('release', gulp.series('generateStubs', combine, minifyRelease, generateDocumentation));
+
+gulp.task('makeZipFile', gulp.series('release', function() {
     //For now we regenerate the JS glsl to force it to be unminified in the release zip
     //See https://github.com/AnalyticalGraphicsInc/cesium/pull/3106#discussion_r42793558 for discussion.
     glslToJavaScript(false, 'Build/minifyShaders.state');
@@ -261,7 +305,7 @@ gulp.task('makeZipFile', ['release'], function() {
 
     var indexSrc = gulp.src('index.release.html').pipe(gulpRename('index.html'));
 
-    return eventStream.merge(builtSrc, staticSrc, indexSrc)
+    return mergeStream(builtSrc, staticSrc, indexSrc)
         .pipe(gulpTap(function(file) {
             // Work around an issue with gulp-zip where archives generated on Windows do
             // not properly have their directory executable mode set.
@@ -272,15 +316,15 @@ gulp.task('makeZipFile', ['release'], function() {
         }))
         .pipe(gulpZip('Cesium-' + version + '.zip'))
         .pipe(gulp.dest('.'));
-});
+}));
 
-gulp.task('minify', ['generateStubs'], function() {
+gulp.task('minify', gulp.series('generateStubs', function() {
     return combineJavaScript({
         removePragmas : false,
         optimizer : 'uglify2',
         outputDirectory : path.join('Build', 'Cesium')
     });
-});
+}));
 
 function minifyRelease() {
     return combineJavaScript({
@@ -290,7 +334,7 @@ function minifyRelease() {
     });
 }
 
-gulp.task('minifyRelease', ['generateStubs'], minifyRelease);
+gulp.task('minifyRelease', gulp.series('generateStubs', minifyRelease));
 
 function isTravisPullRequest() {
     return process.env.TRAVIS_PULL_REQUEST !== undefined && process.env.TRAVIS_PULL_REQUEST !== 'false';
@@ -299,6 +343,7 @@ function isTravisPullRequest() {
 gulp.task('deploy-s3', function(done) {
     if (isTravisPullRequest()) {
         console.log('Skipping deployment for non-pull request.');
+        done();
         return;
     }
 
@@ -426,7 +471,9 @@ function deployCesium(bucketName, uploadDirectory, cacheControl, done) {
                         return;
                     }
 
-                    console.log('Uploading ' + blobName + '...');
+                    if (verbose) {
+                        console.log('Uploading ' + blobName + '...');
+                    }
                     var params = {
                         Bucket : bucketName,
                         Key : blobName,
@@ -477,7 +524,9 @@ function deployCesium(bucketName, uploadDirectory, cacheControl, done) {
                             Objects: objects
                         }
                     }).promise().then(function() {
-                        console.log('Cleaned ' + objects.length + ' files.');
+                        if (verbose) {
+                            console.log('Cleaned ' + objects.length + ' files.');
+                        }
                     });
                 }, {concurrency : concurrency});
             }
@@ -538,19 +587,20 @@ function listAll(s3, bucketName, prefix, files, marker) {
     });
 }
 
-gulp.task('deploy-set-version', function() {
+gulp.task('deploy-set-version', function(done) {
     var buildVersion = yargs.argv.buildVersion;
     if (buildVersion) {
         // NPM versions can only contain alphanumeric and hyphen characters
         packageJson.version += '-' + buildVersion.replace(/[^[0-9A-Za-z-]/g, '');
         fs.writeFileSync('package.json', JSON.stringify(packageJson, undefined, 2));
     }
+    done();
 });
 
 gulp.task('deploy-status', function() {
     if (isTravisPullRequest()) {
         console.log('Skipping deployment status for non-pull request.');
-        return;
+        return Promise.resolve();
     }
 
     var status = yargs.argv.status;
@@ -590,12 +640,6 @@ function setStatus(state, targetUrl, description, context) {
      });
 }
 
-gulp.task('release', ['generateStubs'], function() {
-    return combine()
-        .then(minifyRelease)
-        .then(generateDocumentation);
-});
-
 gulp.task('test', function(done) {
     var argv = yargs.argv;
 
@@ -623,7 +667,7 @@ gulp.task('test', function(done) {
         files.push({pattern : 'Build/**', included : false});
     }
 
-    var karma = new Karma({
+    var karma = new Karma.Server({
         configFile: karmaConfigFile,
         browsers: browsers,
         specReporter: {
@@ -635,49 +679,16 @@ gulp.task('test', function(done) {
         detectBrowsers: {
             enabled: enableAllBrowsers
         },
+        logLevel: verbose ? Karma.constants.LOG_INFO : Karma.constants.LOG_ERROR,
         files: files,
         client: {
+            captureConsole: verbose,
             args: [includeCategory, excludeCategory, webglValidation, webglStub, release]
         }
     }, function(e) {
         return done(failTaskOnError ? e : undefined);
     });
     karma.start();
-});
-
-gulp.task('generateStubs', ['build'], function(done) {
-    mkdirp.sync(path.join('Build', 'Stubs'));
-
-    var contents = '\
-/*global define,Cesium*/\n\
-(function() {\n\
-\'use strict\';\n';
-    var modulePathMappings = [];
-
-    globby.sync(sourceFiles).forEach(function(file) {
-        file = path.relative('Source', file);
-        var moduleId = filePathToModuleId(file);
-
-        contents += '\
-define(\'' + moduleId + '\', function() {\n\
-    return Cesium[\'' + path.basename(file, path.extname(file)) + '\'];\n\
-});\n\n';
-
-        modulePathMappings.push('        \'' + moduleId + '\' : \'../Stubs/Cesium\'');
-    });
-
-    contents += '})();\n';
-
-    var paths = '\
-define(function() {\n\
-    \'use strict\';\n\
-    return {\n' + modulePathMappings.join(',\n') + '\n\
-    };\n\
-});';
-
-    fs.writeFileSync(path.join('Build', 'Stubs', 'Cesium.js'), contents);
-    fs.writeFileSync(path.join('Build', 'Stubs', 'paths.js'), paths);
-    done();
 });
 
 gulp.task('sortRequires', function() {
@@ -1127,9 +1138,9 @@ function createGalleryList() {
     // This includes newly staged local demos as well.
     var newDemos = [];
     try {
-        newDemos = child_process.execSync('git diff --name-only --diff-filter=A ' + tagVersion + ' Apps/Sandcastle/gallery/*.html').toString().trim().split('\n');
+        newDemos = child_process.execSync('git diff --name-only --diff-filter=A ' + tagVersion + ' Apps/Sandcastle/gallery/*.html', { stdio: ['pipe', 'pipe', 'ignore'] }).toString().trim().split('\n');
     } catch (e) {
-        console.log('Failed to retrieve list of new Sandcastle demos from Git.');
+        // On a Cesium fork, tags don't exist so we can't generate the list.
     }
 
     var helloWorld;
@@ -1217,7 +1228,7 @@ function buildSandcastle() {
         })
         .pipe(gulp.dest('Build/Apps/Sandcastle'));
 
-    return streamToPromise(eventStream.merge(appStream, imageStream));
+    return streamToPromise(mergeStream(appStream, imageStream));
 }
 
 function buildCesiumViewer() {
@@ -1254,7 +1265,7 @@ function buildCesiumViewer() {
     promise = promise.then(function() {
         var copyrightHeader = fs.readFileSync(path.join('Source', 'copyrightHeader.js'));
 
-        var stream = eventStream.merge(
+        var stream = mergeStream(
             gulp.src(cesiumViewerStartup)
                 .pipe(gulpInsert.prepend(copyrightHeader))
                 .pipe(gulpReplace('../../Source', '.'))
@@ -1306,7 +1317,9 @@ function removeExtension(p) {
 }
 
 function requirejsOptimize(name, config) {
-    console.log('Building ' + name);
+    if (verbose) {
+        console.log('Building ' + name);
+    }
     return new Promise(function(resolve, reject) {
         var cmd = 'npm run requirejs -- --' + new Buffer(JSON.stringify(config)).toString('base64') + ' --silent';
         child_process.exec(cmd, function(e) {
@@ -1315,35 +1328,15 @@ function requirejsOptimize(name, config) {
                 reject(e);
                 return;
             }
-            console.log('Finished ' + name);
+            if (verbose) {
+                console.log('Finished ' + name);
+            }
             resolve();
         });
     });
 }
 
-function streamToPromise(stream) {
-    return new Promise(function(resolve, reject) {
-        stream.on('finish', resolve);
-        stream.on('end', resolve);
-        stream.on('error', reject);
-    });
-}
-
 // TerriajS-specific tasks.
-var workerGlob = [
-    './Source/Workers/*.js',
-    '!./Source/Workers/*.profile.js',
-    '!./Source/Workers/cesiumWorkerBootstrapper.js',
-    '!./Source/Workers/transferTypedArrayTest.js',
-    '!./Source/Workers/createTaskProcessorWorker.js'
-];
-
-function createExorcistTransform(name) {
-    return transform(function () { return exorcist('wwwroot/build/Workers/' + name + '.map'); });
-}
-
-gulp.task('terria-prepare-cesium', ['build', 'generateStubs', 'terria-copy-cesium-assets', 'terria-copy-cesiumWorkerBootstrapper']);
-
 gulp.task('terria-copy-cesium-assets', function() {
     return gulp.src([
             'Source/Workers/transferTypedArrayTest.js',
@@ -1355,9 +1348,5 @@ gulp.task('terria-copy-cesium-assets', function() {
         .pipe(gulp.dest('wwwroot/build/'));
 });
 
-gulp.task('terria-copy-cesiumWorkerBootstrapper', function() {
-    return gulp.src('Source/Workers/cesiumWorkerBootstrapper.js')
-        .pipe(gulp.dest('wwwroot/build/Workers'));
-});
-
-gulp.task('terria-default', ['terria-prepare-cesium']);
+gulp.task('terria-prepare-cesium', gulp.series('generateStubs', 'terria-copy-cesium-assets'));
+gulp.task('terria-default', gulp.series('terria-prepare-cesium'));

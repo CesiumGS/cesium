@@ -84,6 +84,8 @@ define([
         descendantTraversal.stack.trim(descendantTraversal.stackMaximumLength);
         selectionTraversal.stack.trim(selectionTraversal.stackMaximumLength);
         selectionTraversal.ancestorStack.trim(selectionTraversal.ancestorStackMaximumLength);
+
+        return true;
     };
 
     function executeBaseTraversal(tileset, root, frameState) {
@@ -215,14 +217,14 @@ define([
     }
 
     function updateVisibility(tileset, tile, frameState) {
-        if (tile._updatedVisibilityFrame === frameState.frameNumber) {
+        if (tile._updatedVisibilityFrame === tileset._updatedVisibilityFrame) {
             // Return early if visibility has already been checked during the traversal.
             // The visibility may have already been checked if the cullWithChildrenBounds optimization is used.
             return;
         }
 
         tile.updateVisibility(frameState);
-        tile._updatedVisibilityFrame = frameState.frameNumber;
+        tile._updatedVisibilityFrame = tileset._updatedVisibilityFrame;
     }
 
     function anyChildrenVisible(tileset, tile, frameState) {
@@ -468,7 +470,6 @@ define([
             visitTile(tileset, tile, frameState);
             touchTile(tileset, tile, frameState);
             tile._refines = refines;
-            tile._updatedVisibilityFrame = 0; // Reset so visibility is checked during the next pass which may use a different camera
         }
     }
 
