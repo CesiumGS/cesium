@@ -189,23 +189,23 @@ define([
         }
 
         // This tile was refined, so find rendered children, if any.
-        // Return the tiles in clockwise order.
+        // Visit the tiles in counter-clockwise order.
         switch (tileEdge) {
             case TileEdge.WEST:
-                visitRenderedTiles(tileProvider, frameState, sourceTile, startTile.southwestChild, currentFrameNumber, tileEdge, true, traversalQueue);
                 visitRenderedTiles(tileProvider, frameState, sourceTile, startTile.northwestChild, currentFrameNumber, tileEdge, true, traversalQueue);
+                visitRenderedTiles(tileProvider, frameState, sourceTile, startTile.southwestChild, currentFrameNumber, tileEdge, true, traversalQueue);
                 break;
             case TileEdge.EAST:
-                visitRenderedTiles(tileProvider, frameState, sourceTile, startTile.northeastChild, currentFrameNumber, tileEdge, true, traversalQueue);
                 visitRenderedTiles(tileProvider, frameState, sourceTile, startTile.southeastChild, currentFrameNumber, tileEdge, true, traversalQueue);
+                visitRenderedTiles(tileProvider, frameState, sourceTile, startTile.northeastChild, currentFrameNumber, tileEdge, true, traversalQueue);
                 break;
             case TileEdge.SOUTH:
-                visitRenderedTiles(tileProvider, frameState, sourceTile, startTile.southeastChild, currentFrameNumber, tileEdge, true, traversalQueue);
                 visitRenderedTiles(tileProvider, frameState, sourceTile, startTile.southwestChild, currentFrameNumber, tileEdge, true, traversalQueue);
+                visitRenderedTiles(tileProvider, frameState, sourceTile, startTile.southeastChild, currentFrameNumber, tileEdge, true, traversalQueue);
                 break;
             case TileEdge.NORTH:
-                visitRenderedTiles(tileProvider, frameState, sourceTile, startTile.northwestChild, currentFrameNumber, tileEdge, true, traversalQueue);
                 visitRenderedTiles(tileProvider, frameState, sourceTile, startTile.northeastChild, currentFrameNumber, tileEdge, true, traversalQueue);
+                visitRenderedTiles(tileProvider, frameState, sourceTile, startTile.northwestChild, currentFrameNumber, tileEdge, true, traversalQueue);
                 break;
             case TileEdge.NORTHWEST:
                 visitRenderedTiles(tileProvider, frameState, sourceTile, startTile.northwestChild, currentFrameNumber, tileEdge, true, traversalQueue);
@@ -556,7 +556,6 @@ define([
         // Add a single vertex at the center of the tile.
         // TODO: minimumHeight and maximumHeight only reflect the corners
         var obb = OrientedBoundingBox.fromRectangle(rectangle, minimumHeight, maximumHeight, tile.tilingScheme.ellipsoid);
-        var center = obb.center;
 
         var southMercatorY = WebMercatorProjection.geodeticLatitudeToMercatorAngle(rectangle.south);
         var oneOverMercatorHeight = 1.0 / (WebMercatorProjection.geodeticLatitudeToMercatorAngle(rectangle.north) - southMercatorY);
@@ -566,7 +565,7 @@ define([
         var centerEncodedNormal = AttributeCompression.octEncode(normalScratch, octEncodedNormalScratch);
 
         var centerIndex = nextIndex;
-        encoding.encode(typedArray, nextIndex * encoding.getStride(), center, Cartesian2.fromElements(0.5, 0.5, uvScratch), middleHeight, centerEncodedNormal, centerWebMercatorT);
+        encoding.encode(typedArray, nextIndex * encoding.getStride(), obb.center, Cartesian2.fromElements(0.5, 0.5, uvScratch), middleHeight, centerEncodedNormal, centerWebMercatorT);
         ++nextIndex;
 
         var vertexCount = nextIndex;
@@ -605,13 +604,13 @@ define([
         }
 
         var mesh = new TerrainMesh(
-            obb.center,
+            encoding.center,
             typedArray,
             indices,
             minimumHeight,
             maximumHeight,
             BoundingSphere.fromOrientedBoundingBox(obb),
-            computeOccludeePoint(tileProvider, center, rectangle, maximumHeight),
+            computeOccludeePoint(tileProvider, obb.center, rectangle, maximumHeight),
             encoding.getStride(),
             obb,
             encoding,

@@ -351,11 +351,12 @@ define([
         // Gets commands for any texture re-projections
         this._tileProvider.initialize(frameState);
 
+        clearTileLoadQueue(this);
+
         if (this._debug.suspendLodUpdate) {
             return;
         }
 
-        clearTileLoadQueue(this);
         this._tileReplacementQueue.markStartOfRenderFrame();
     };
 
