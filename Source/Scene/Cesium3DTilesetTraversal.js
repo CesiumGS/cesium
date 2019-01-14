@@ -285,11 +285,29 @@ define([
     }
 
     function updateTile(tileset, tile, frameState) {
-        updateTileVisibility(tileset, tile, frameState);
+        // Reset some of the tile's flags to neutral and re-evaluate visability, and ancestor content pointers
+        tile.updateVisibility(frameState);
+        tile._priorityDistance = getPriority(tileset, tile, frameState); // TODO: Make sure priority value is established first time it is updated in a frame i.e. right here. Change this to whatever the 'distance' should be
+        tile._priorityDistanceHolder = tile;
         tile.updateExpiration();
 
+        // Alpha blending
+        tile._decendantsThatHaveFadedIn = 0;
+        tile._decendantsThatHaveFadedInLastFrame = 0;
+        tile._decendantsCount = 0;
+
+        // Priority scheme
+        tile._wasMinChild = false;
+
+        // SkipLOD
         tile._shouldSelect = false;
         tile._finalResolution = true;
+
+        // TODO: _ancestorwithContent had no chance of getting linked up in skipLOD, need to wait until tile is requested so call this in the body of selectTiles on root and at the end of the loop in executeTraversal
+        // moved to updateTileAncestorContentLinks
+    }
+
+    function updateTileAncestorContentLinks(tile, frameState) {
         tile._ancestorWithContent = undefined;
         tile._ancestorWithContentAvailable = undefined;
 
@@ -299,10 +317,32 @@ define([
             // content. Used in conjunction with tileset.skipLevels to know when to skip a tile.
             // ancestorWithContentAvailable is an ancestor that is rendered if a desired tile is not loaded.
             var hasContent = !hasUnloadedContent(parent) || (parent._requestedFrame === frameState.frameNumber);
-            tile._ancestorWithContent = hasContent ? parent : parent._ancestorWithContent;
+            tile._ancestorWithContent = hasContent ? parent : parent._ancestorWithContent; // Used for inBaseTraversal and reachedSkippingThreshold
+            // TODO: this line is what links a decendent up to its contentAvailable ancestor, as the traversal progresses
             tile._ancestorWithContentAvailable = parent.contentAvailable ? parent : parent._ancestorWithContentAvailable;
         }
     }
+
+
+    // function updateTile(tileset, tile, frameState) {
+    //     updateTileVisibility(tileset, tile, frameState);
+    //     tile.updateExpiration();
+    //
+    //     tile._shouldSelect = false;
+    //     tile._finalResolution = true;
+    //     tile._ancestorWithContent = undefined;
+    //     tile._ancestorWithContentAvailable = undefined;
+    //
+    //     var parent = tile.parent;
+    //     if (defined(parent)) {
+    //         // ancestorWithContent is an ancestor that has content or has the potential to have
+    //         // content. Used in conjunction with tileset.skipLevels to know when to skip a tile.
+    //         // ancestorWithContentAvailable is an ancestor that is rendered if a desired tile is not loaded.
+    //         var hasContent = !hasUnloadedContent(parent) || (parent._requestedFrame === frameState.frameNumber);
+    //         tile._ancestorWithContent = hasContent ? parent : parent._ancestorWithContent;
+    //         tile._ancestorWithContentAvailable = parent.contentAvailable ? parent : parent._ancestorWithContentAvailable;
+    //     }
+    // }
 
     function hasEmptyContent(tile) {
         return tile.hasEmptyContent || tile.hasTilesetContent;
