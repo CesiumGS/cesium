@@ -1650,6 +1650,10 @@ define([
             var gltfImage = images[imageId];
             var extras = gltfImage.extras;
 
+            if (defined(gltfImage.extensions) && defined(gltfImage.extensions.EXT_image_webp)) {
+                gltfImage = gltfImage.extensions.EXT_image_webp;
+            }
+
             var bufferViewId = gltfImage.bufferView;
             var mimeType = gltfImage.mimeType;
             uri = gltfImage.uri;

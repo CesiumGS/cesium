@@ -491,7 +491,8 @@ define([
         'KHR_techniques_webgl' : true,
         'KHR_materials_unlit' : true,
         'KHR_materials_pbrSpecularGlossiness' : true,
-        'WEB3D_quantized_attributes' : true
+        'WEB3D_quantized_attributes' : true,
+        'EXT_image_webp' : true
     };
 
     ModelUtility.checkSupportedExtensions = function(extensionsRequired) {
