@@ -3509,4 +3509,26 @@ defineSuite([
             });
         });
     });
+
+    it('cancels out-of-view tiles', function() {
+        if (webglStub) {
+            return;
+        }
+
+        viewNothing();
+        return Cesium3DTilesTester.loadTileset(scene, tilesetUniform).then(function(tileset) {
+            var frameState = scene.frameState;
+            // Make requests
+            viewAllTiles();
+            tileset.update(frameState);
+            expect(tileset._requestedTilesInFlight.length).toBeGreaterThan(0);
+
+            // Cancel requests
+            viewNothing();
+            frameState.frameNumber++;
+            tileset.update(frameState);
+            expect(tileset._requestedTilesInFlight.length).toBe(0);
+        });
+    });
+
 }, 'WebGL');
