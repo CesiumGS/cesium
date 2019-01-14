@@ -105,7 +105,7 @@ defineSuite([
         quadtree.render(frameState);
         rootTiles = quadtree._levelZeroTiles;
 
-        center = rootTiles[0].northeastChild.southwestChild;
+        center = rootTiles[0].northeastChild.southwestChild.northeastChild.southwestChild;
         west = center.findTileToWest(rootTiles);
         south = center.findTileToSouth(rootTiles);
         east = center.findTileToEast(rootTiles);
@@ -861,14 +861,14 @@ defineSuite([
             var easternHemisphere;
 
             beforeEach(function() {
-                westernHemisphere = rootTiles[0];
-                easternHemisphere = rootTiles[1];
+                westernHemisphere = rootTiles[0].southwestChild.northwestChild.southwestChild.northwestChild;
+                easternHemisphere = rootTiles[1].southeastChild.northeastChild.southeastChild.northeastChild;
 
                 // Make sure we have a standard geographic tiling scheme with two root tiles,
                 // the first covering the western hemisphere and the second the eastern.
                 expect(rootTiles.length).toBe(2);
                 expect(westernHemisphere.x).toBe(0);
-                expect(easternHemisphere.x).toBe(1);
+                expect(easternHemisphere.x).toBe(31);
             });
 
             it('western hemisphere to eastern hemisphere', function() {
@@ -889,19 +889,13 @@ defineSuite([
 
                     fill.eastTiles.push(westernHemisphere);
                     fill.eastMeshes.push(westernHemisphere.data.mesh);
-                    fill.westTiles.push(westernHemisphere);
-                    fill.westMeshes.push(westernHemisphere.data.mesh);
 
                     fill.update(tileProvider, frameState);
 
-                    expectVertexCount(fill, 7);
-                    expectVertex(fill, 0.0, 0.0, 9.0);
-                    expectVertex(fill, 0.0, 0.5, 6.0);
-                    expectVertex(fill, 0.0, 1.0, 3.0);
+                    expectVertexCount(fill, 6);
                     expectVertex(fill, 1.0, 0.0, 7.0);
                     expectVertex(fill, 1.0, 0.5, 4.0);
                     expectVertex(fill, 1.0, 1.0, 1.0);
-                    expectVertex(fill, 0.5, 0.5, (1.0 + 9.0) / 2);
                 });
             });
 
@@ -921,21 +915,15 @@ defineSuite([
                 return processor.process([westernHemisphere, easternHemisphere]).then(function() {
                     var fill = westernHemisphere.data.fill = new TerrainFillMesh(westernHemisphere);
 
-                    fill.eastTiles.push(easternHemisphere);
-                    fill.eastMeshes.push(easternHemisphere.data.mesh);
                     fill.westTiles.push(easternHemisphere);
                     fill.westMeshes.push(easternHemisphere.data.mesh);
 
                     fill.update(tileProvider, frameState);
 
-                    expectVertexCount(fill, 7);
+                    expectVertexCount(fill, 6);
                     expectVertex(fill, 0.0, 0.0, 18.0);
                     expectVertex(fill, 0.0, 0.5, 15.0);
                     expectVertex(fill, 0.0, 1.0, 12.0);
-                    expectVertex(fill, 1.0, 0.0, 16.0);
-                    expectVertex(fill, 1.0, 0.5, 13.0);
-                    expectVertex(fill, 1.0, 1.0, 10.0);
-                    expectVertex(fill, 0.5, 0.5, (10.0 + 18.0) / 2);
                 });
             });
         });
