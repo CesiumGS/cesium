@@ -217,6 +217,9 @@ define([
         this._statisticsLastPick = new Cesium3DTilesetStatistics();
         this._statisticsLastAsync = new Cesium3DTilesetStatistics();
 
+        this._maxPriority = { level: -Number.MAX_VALUE, distance: -Number.MAX_VALUE };
+        this._minPriority = { level: Number.MAX_VALUE, distance: Number.MAX_VALUE, minPriorityHolder: undefined, minDistanceTile: undefined};
+
         this._tilesLoaded = false;
         this._initialTilesLoaded = false;
 
@@ -1920,6 +1923,16 @@ define([
 
     ///////////////////////////////////////////////////////////////////////////
 
+
+    function resetMinMaxProrities(tileset) {
+        tileset._minPriority.level = Number.MAX_VALUE;
+        tileset._minPriority.distance = Number.MAX_VALUE;
+        tileset._maxPriority.level = -Number.MAX_VALUE;
+        tileset._maxPriority.distance = -Number.MAX_VALUE;
+        tileset._minPriorityHolder = undefined;
+        tileset._minDistanceTile = undefined;
+    }
+
     function raiseLoadProgressEvent(tileset, frameState) {
         var statistics = tileset._statistics;
         var statisticsLast = tileset._statisticsLastRender;
@@ -1939,6 +1952,10 @@ define([
         tileset._tilesLoaded = (statistics.numberOfPendingRequests === 0) && (statistics.numberOfTilesProcessing === 0) && (statistics.numberOfAttemptedRequests === 0);
 
         if (progressChanged && tileset._tilesLoaded) {
+
+            // TODO: Better spot?
+            resetMinMaxPriority(tileset);
+
             frameState.afterRender.push(function() {
                 tileset.allTilesLoaded.raiseEvent();
             });
@@ -1948,6 +1965,7 @@ define([
                     tileset.initialTilesLoaded.raiseEvent();
                 });
             }
+
         }
     }
 

@@ -198,20 +198,101 @@ define([
         // Replacement tiles are prioritized by screen space error.
         // A tileset that has both additive and replacement tiles may not prioritize tiles as effectively since SSE and distance
         // are different types of values. Maybe all priorities need to be normalized to 0-1 range.
-        if (tile.refine === Cesium3DTileRefine.ADD) {
-            return tile._distanceToCamera;
+        // if (tile.refine === Cesium3DTileRefine.ADD) {
+        //     return tile._distanceToCamera;
+        // }
+        var boundingSphere = tile._boundingVolume.boundingSphere;
+        var tileCenter = boundingSphere.center;
+        var toCenter = Cartesian3.subtract(tileCenter, frameState.camera.positionWC, scratchHeyHo);
+
+        // ABS VAL FOR DISTANCE
+        // var camSpaceDepth = Math.abs(Cartesian3.dot(frameState.camera.directionWC, toCenter));
+        // var distanceFromCenterPlane = Math.abs(Cartesian3.dot(toCenter, frameState.camera.rightWC));
+
+        // THINGS BEHIND SET NEGATIVE (handled by tile._priority)
+        var camSpaceDepth = Cartesian3.dot(frameState.camera.directionWC, toCenter);
+        var sign = camSpaceDepth < 0 ? -1 : 1;
+        var distanceFromCenterPlane = sign * Math.abs(Cartesian3.dot(toCenter, frameState.camera.rightWC));
+        var toCenterLength = Cartesian3.magnitude(toCenter) * sign;
+
+        // Center Line Distance
+        var cameraSpaceDepthVec = Cartesian3.multiplyByScalar(frameState.camera.directionWC, camSpaceDepth, scratchHeyHo);
+        var cameraCenterDepthPoint = Cartesian3.add(frameState.camera.positionWC, cameraSpaceDepthVec, scratchHeyHo);
+        var centerLineToBoundCenter = Cartesian3.subtract(tileCenter, cameraCenterDepthPoint, scratchHeyHo);
+        var distanceFromCenterLine = Cartesian3.magnitude(centerLineToBoundCenter);
+        // return distanceFromCenterLine;
+
+        var topdownViewPriority = distanceFromCenterLine;
+        var horizonViewPriority = distanceFromCenterPlane + camSpaceDepth;        // Center Plane is better metric than center line (and cheaper)
+        // return horizonViewPriority;
+        // return topdownViewPriority;
+        var interpValue = Math.abs(frameState.camera.directionWC.y);
+        // return interpValue * topdownViewPriority + (1 - interpValue) * horizonViewPriority;
+        // return horizonViewPriority;
+        // return tile._depth;
+        // return distanceFromCenterPlane;
+        // return camSpaceDepth;
+
+        // ALREADY CALCULATED:
+        // this._distanceToCamera = this.distanceToTile(frameState);// dist to closest point on the aabb??
+        // this._centerZDepth = this.distanceToTileCenter(frameState); // camera space depth
+
+        // BEST SO FAR:
+        var priority = CesiumMath.clamp(tile._centerZDepth - boundingSphere.radius, 0, tile._centerZDepth); // Any negative z depth will get clamped to 0. If inside sphere then clamped to 0. Maybe we want to deferr negatives? we really only want closest positive? closest to 0?
+        return priority;
+
+        // if (tile._centerZDepth >= 0) {
+        //     return CesiumMath.clamp(tile._centerZDepth - boundingSphere.radius, 0, tile._centerZDepth);
+        // } else {
+        //     return CesiumMath.clamp(tile._centerZDepth + boundingSphere.radius, tile._centerZDepth, 0);
+        // }
+        // return CesiumMath.clamp(toCenterLength - boundingSphere.radius, 0, toCenterLength);
+        // return toCenterLength;
+        // return tile._centerZDepth;
+        // return tile._distanceToCamera;
+
+
+        // TODO: For multi-dimensional priorities, you need some way of treating the priority like a digit
+        // in a traditional number system. Higher priorities will be a higher digit than lower priorities.
+        // Since each priority dimension will have a different range of values I think trying to monitor the ranges
+        // of each priority so that they can be better tone mapped into 0-1 then shifted into its priority range
+        // ex: if you had 3 priorities you want to sort by each with a more important priority than the other
+        // then you would 0-1 tone map each then the low would stay the same at 0-1, the next highest would be 1-2
+        // and the next hightest would be 2-3. If there isn't a clear boundary of importance amongst the priorities then maybe you would
+        // let the boundaries bleed into one another: lowest-ish priority would be 0-2, next would be 1-3 and next would be 2-4 or something like that
+        // Maybe 0-10, 10-99, 100-999 is better for the distinct levels case.
+
+
+        // var parent = tile.parent;
+        // var useParentScreenSpaceError = defined(parent) && (!skipLevelOfDetail(tileset) || (tile._screenSpaceError === 0.0) || parent.hasTilesetContent);
+        // var screenSpaceError = useParentScreenSpaceError ? parent._screenSpaceError : tile._screenSpaceError;
+        // var rootScreenSpaceError = tileset.root._screenSpaceError;
+        // return rootScreenSpaceError - screenSpaceError; // Map higher SSE to lower values (e.g. root tile is highest priority)
+
+
+    }
+
+    function updateMinMaxPriority(tileset, tile, frameState) {
+        if (tile._requestedFrame === frameState.frameNumber) {
+            // TODO: track max and min (when allTilesLoaded, reset)
+            tileset._maxPriority.distance = Math.max(tile._priorityDistanceHolder._priorityDistance, tileset._maxPriority.distance);
+            if (tile._priorityDistance < tileset._minPriority.distance) {
+                tileset._minPriority.distance = tile._priorityDistance;
+                tileset._minPriority.minDistanceTile = tile;
+            }
+            if (tile._priorityDistanceHolder._priorityDistance <= tileset._minPriority.distance) {
+                tileset._minPriority.minPriorityHolder = tile;
+            }
+            tileset._maxPriority.level = Math.max(tile._depth, tileset._maxPriority.level);
+            tileset._minPriority.level = Math.min(tile._depth, tileset._minPriority.level);
         }
-        var parent = tile.parent;
-        var useParentScreenSpaceError = defined(parent) && (!skipLevelOfDetail(tileset) || (tile._screenSpaceError === 0.0) || parent.hasTilesetContent);
-        var screenSpaceError = useParentScreenSpaceError ? parent._screenSpaceError : tile._screenSpaceError;
-        var rootScreenSpaceError = tileset.root._screenSpaceError;
-        return rootScreenSpaceError - screenSpaceError; // Map higher SSE to lower values (e.g. root tile is highest priority)
     }
 
     function loadTile(tileset, tile, frameState) {
         if (hasUnloadedContent(tile) || tile.contentExpired) {
             tile._requestedFrame = frameState.frameNumber;
             tile._priority = getPriority(tileset, tile);
+            updateMinMaxPriority(tileset, tile, frameState);
             tileset._requestedTiles.push(tile);
         }
     }
@@ -302,9 +383,6 @@ define([
         // SkipLOD
         tile._shouldSelect = false;
         tile._finalResolution = true;
-
-        // TODO: _ancestorwithContent had no chance of getting linked up in skipLOD, need to wait until tile is requested so call this in the body of selectTiles on root and at the end of the loop in executeTraversal
-        // moved to updateTileAncestorContentLinks
     }
 
     function updateTileAncestorContentLinks(tile, frameState) {
@@ -313,13 +391,9 @@ define([
 
         var parent = tile.parent;
         if (defined(parent)) {
-            // ancestorWithContent is an ancestor that has content or has the potential to have
-            // content. Used in conjunction with tileset.skipLevels to know when to skip a tile.
-            // ancestorWithContentAvailable is an ancestor that is rendered if a desired tile is not loaded.
             var hasContent = !hasUnloadedContent(parent) || (parent._requestedFrame === frameState.frameNumber);
-            tile._ancestorWithContent = hasContent ? parent : parent._ancestorWithContent; // Used for inBaseTraversal and reachedSkippingThreshold
-            // TODO: this line is what links a decendent up to its contentAvailable ancestor, as the traversal progresses
-            tile._ancestorWithContentAvailable = parent.contentAvailable ? parent : parent._ancestorWithContentAvailable;
+            tile._ancestorWithContent = hasContent ? parent : parent._ancestorWithContent;
+            tile._ancestorWithContentAvailable = parent.contentAvailable ? parent : parent._ancestorWithContentAvailable; // Links a decendent up to its contentAvailable ancestor as the traversal progresses.
         }
     }
 
@@ -463,6 +537,8 @@ define([
             traversal.stackMaximumLength = Math.max(traversal.stackMaximumLength, stack.length);
 
             var tile = stack.pop();
+
+            updateTileAncestorContentLinks(tile, frameState);
             var baseTraversal = inBaseTraversal(tileset, tile, baseScreenSpaceError);
             var add = tile.refine === Cesium3DTileRefine.ADD;
             var replace = tile.refine === Cesium3DTileRefine.REPLACE;
