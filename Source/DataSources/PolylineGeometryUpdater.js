@@ -6,6 +6,7 @@ define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
+        '../Core/deprecationWarning',
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/DistanceDisplayCondition',
@@ -14,6 +15,7 @@ define([
         '../Core/GeometryInstance',
         '../Core/GroundPolylineGeometry',
         '../Core/Iso8601',
+        '../Core/LineType',
         '../Core/oneTimeWarning',
         '../Core/PolylineGeometry',
         '../Core/PolylinePipeline',
@@ -38,6 +40,7 @@ define([
         defaultValue,
         defined,
         defineProperties,
+        deprecationWarning,
         destroyObject,
         DeveloperError,
         DistanceDisplayCondition,
@@ -46,6 +49,7 @@ define([
         GeometryInstance,
         GroundPolylineGeometry,
         Iso8601,
+        LineType,
         oneTimeWarning,
         PolylineGeometry,
         PolylinePipeline,
@@ -81,6 +85,7 @@ define([
         this.positions = undefined;
         this.width = undefined;
         this.followSurface = undefined;
+        this.lineType = undefined;
         this.granularity = undefined;
     }
 
@@ -498,11 +503,12 @@ define([
 
         var width = polyline.width;
         var followSurface = polyline.followSurface;
+        var lineType = polyline.lineType;
         var clampToGround = polyline.clampToGround;
         var granularity = polyline.granularity;
 
         if (!positionsProperty.isConstant || !Property.isConstant(width) ||
-            !Property.isConstant(followSurface) || !Property.isConstant(granularity) ||
+            !Property.isConstant(followSurface) || !Property.isConstant(lineType) || !Property.isConstant(granularity) ||
             !Property.isConstant(clampToGround) || !Property.isConstant(zIndex)) {
             if (!this._dynamic) {
                 this._dynamic = true;
@@ -533,6 +539,7 @@ define([
             geometryOptions.positions = positions;
             geometryOptions.width = defined(width) ? width.getValue(Iso8601.MINIMUM_VALUE) : undefined;
             geometryOptions.followSurface = defined(followSurface) ? followSurface.getValue(Iso8601.MINIMUM_VALUE) : undefined;
+            geometryOptions.lineType = defined(lineType) ? lineType.getValue(Iso8601.MINIMUM_VALUE) : undefined;
             geometryOptions.granularity = defined(granularity) ? granularity.getValue(Iso8601.MINIMUM_VALUE) : undefined;
 
             var groundGeometryOptions = this._groundGeometryOptions;
@@ -682,9 +689,15 @@ define([
             return;
         }
 
-        var followSurface = Property.getValueOrDefault(polyline._followSurface, time, true);
+        var followSurface = Property.getValueOrUndefined(polyline._followSurface, time);
+        var lineType = LineType.GEODESIC;
+        if (defined(followSurface)) {
+            lineType = followSurface ? LineType.GEODESIC : LineType.STRAIGHT;
+        }
+        lineType = Property.getValueOrDefault(polyline._lineType, time, lineType);
+
         var globe = geometryUpdater._scene.globe;
-        if (followSurface && defined(globe)) {
+        if (lineType !== LineType.STRAIGHT && defined(globe)) {
             generateCartesianArcOptions.ellipsoid = globe.ellipsoid;
             generateCartesianArcOptions.positions = positions;
             generateCartesianArcOptions.granularity = Property.getValueOrUndefined(polyline._granularity, time);

@@ -457,7 +457,7 @@ define([
             outerRing = outerRing.slice().reverse();
         }
 
-        var wallGeo = PolygonGeometryLibrary.computeWallGeometry(outerRing, ellipsoid, granularity, perPositionHeight);
+        var wallGeo = PolygonGeometryLibrary.computeWallGeometry(outerRing, ellipsoid, granularity, perPositionHeight, lineType);
         geos.walls.push(new GeometryInstance({
             geometry : wallGeo
         }));
@@ -474,7 +474,7 @@ define([
                 hole = hole.slice().reverse();
             }
 
-            wallGeo = PolygonGeometryLibrary.computeWallGeometry(hole, ellipsoid, granularity);
+            wallGeo = PolygonGeometryLibrary.computeWallGeometry(hole, ellipsoid, granularity, perPositionHeight, lineType);
             geos.walls.push(new GeometryInstance({
                 geometry : wallGeo
             }));

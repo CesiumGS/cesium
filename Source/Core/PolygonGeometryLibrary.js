@@ -2,10 +2,12 @@ define([
         './arrayRemoveDuplicates',
         './Cartesian2',
         './Cartesian3',
+        './Cartographic',
         './ComponentDatatype',
         './defaultValue',
         './defined',
         './Ellipsoid',
+        './EllipsoidRhumb',
         './Geometry',
         './GeometryAttribute',
         './GeometryAttributes',
@@ -23,10 +25,12 @@ define([
         arrayRemoveDuplicates,
         Cartesian2,
         Cartesian3,
+        Cartographic,
         ComponentDatatype,
         defaultValue,
         defined,
         Ellipsoid,
+        EllipsoidRhumb,
         Geometry,
         GeometryAttribute,
         GeometryAttributes,
@@ -147,6 +151,20 @@ define([
         return Math.pow(2, countDivide);
     };
 
+    var scratchEllipsoidRhumb = new EllipsoidRhumb();
+    var scratchCartographic0 = new Cartographic();
+    var scratchCartographic1 = new Cartographic();
+    var scratchCartographic2 = new Cartographic();
+    var scratchCartesian0 = new Cartesian3();
+    PolygonGeometryLibrary.subdivideRhumbLineCount = function(ellipsoid, p0, p1, minDistance) {
+        var c0 = ellipsoid.cartesianToCartographic(p0, scratchCartographic0);
+        var c1 = ellipsoid.cartesianToCartographic(p1, scratchCartographic1);
+        var rhumb = EllipsoidRhumb.fromStartAndEnd(c0, c1, ellipsoid, scratchEllipsoidRhumb);
+        var n = rhumb.surfaceDistance / minDistance;
+        var countDivide = Math.max(0, Math.ceil(Math.log(n) / Math.log(2)));
+        return Math.pow(2, countDivide);
+    };
+
     PolygonGeometryLibrary.subdivideLine = function(p0, p1, minDistance, result) {
         var numVertices = PolygonGeometryLibrary.subdivideLineCount(p0, p1, minDistance);
         var length = Cartesian3.distance(p0, p1);
@@ -165,6 +183,32 @@ define([
             positions[index++] = p[0];
             positions[index++] = p[1];
             positions[index++] = p[2];
+        }
+
+        return positions;
+    };
+
+    PolygonGeometryLibrary.subdivideRhumbLine = function(ellipsoid, p0, p1, minDistance, result) {
+        var numVertices = PolygonGeometryLibrary.subdivideRhumbLineCount(ellipsoid, p0, p1, minDistance);
+        var c0 = ellipsoid.cartesianToCartographic(p0, scratchCartographic0);
+        var c1 = ellipsoid.cartesianToCartographic(p1, scratchCartographic1);
+        var rhumb = EllipsoidRhumb.fromStartAndEnd(c0, c1, ellipsoid, scratchEllipsoidRhumb);
+        var distanceBetweenVertices = rhumb.surfaceDistance / numVertices;
+
+        if (!defined(result)) {
+            result = [];
+        }
+
+        var positions = result;
+        positions.length = numVertices * 3;
+
+        var index = 0;
+        for ( var i = 0; i < numVertices; i++) {
+            var c = rhumb.interpolateUsingSurfaceDistance(i * distanceBetweenVertices, scratchCartographic2);
+            var p = ellipsoid.cartographicToCartesian(c, scratchCartesian0);
+            positions[index++] = p.x;
+            positions[index++] = p.y;
+            positions[index++] = p.z;
         }
 
         return positions;
@@ -455,7 +499,7 @@ define([
     var p1Scratch = new Cartesian3();
     var p2Scratch = new Cartesian3();
 
-    PolygonGeometryLibrary.computeWallGeometry = function(positions, ellipsoid, granularity, perPositionHeight) {
+    PolygonGeometryLibrary.computeWallGeometry = function(positions, ellipsoid, granularity, perPositionHeight, lineType) {
         var edgePositions;
         var topEdgeLength;
         var i;
@@ -469,8 +513,14 @@ define([
             var minDistance = CesiumMath.chordLength(granularity, ellipsoid.maximumRadius);
 
             var numVertices = 0;
-            for (i = 0; i < length; i++) {
-                numVertices += PolygonGeometryLibrary.subdivideLineCount(positions[i], positions[(i + 1) % length], minDistance);
+            if (lineType === LineType.GEODESIC) {
+                for (i = 0; i < length; i++) {
+                    numVertices += PolygonGeometryLibrary.subdivideLineCount(positions[i], positions[(i + 1) % length], minDistance);
+                }
+            } else if (lineType === LineType.RHUMB) {
+                for (i = 0; i < length; i++) {
+                    numVertices += PolygonGeometryLibrary.subdivideRhumbLineCount(ellipsoid, positions[i], positions[(i + 1) % length], minDistance);
+                }
             }
 
             topEdgeLength = (numVertices + length) * 3;
@@ -479,7 +529,12 @@ define([
                 p1 = positions[i];
                 p2 = positions[(i + 1) % length];
 
-                var tempPositions = PolygonGeometryLibrary.subdivideLine(p1, p2, minDistance, computeWallIndicesSubdivided);
+                var tempPositions;
+                if (lineType === LineType.GEODESIC) {
+                    tempPositions = PolygonGeometryLibrary.subdivideLine(p1, p2, minDistance, computeWallIndicesSubdivided);
+                } else if (lineType === LineType.RHUMB) {
+                    tempPositions = PolygonGeometryLibrary.subdivideRhumbLine(ellipsoid, p1, p2, minDistance, computeWallIndicesSubdivided);
+                }
                 var tempPositionsLength = tempPositions.length;
                 for (var j = 0; j < tempPositionsLength; ++j, ++index) {
                     edgePositions[index] = tempPositions[j];

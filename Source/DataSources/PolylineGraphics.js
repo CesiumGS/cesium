@@ -2,16 +2,20 @@ define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
+        '../Core/deprecationWarning',
         '../Core/DeveloperError',
         '../Core/Event',
+        '../Core/LineType',
         './createMaterialPropertyDescriptor',
         './createPropertyDescriptor'
     ], function(
         defaultValue,
         defined,
         defineProperties,
+        deprecationWarning,
         DeveloperError,
         Event,
+        LineType,
         createMaterialPropertyDescriptor,
         createPropertyDescriptor) {
     'use strict';
@@ -27,12 +31,13 @@ define([
      * @param {Object} [options] Object with the following properties:
      * @param {Property} [options.positions] A Property specifying the array of {@link Cartesian3} positions that define the line strip.
      * @param {Property} [options.followSurface=true] A boolean Property specifying whether the line segments should be great arcs or linearly connected.
+     * @param {LineType} [options.lineType=LineType.GEODESIC] The type of line the polyline segments must follow.
      * @param {Property} [options.clampToGround=false] A boolean Property specifying whether the Polyline should be clamped to the ground.
      * @param {Property} [options.width=1.0] A numeric Property specifying the width in pixels.
      * @param {Property} [options.show=true] A boolean Property specifying the visibility of the polyline.
      * @param {MaterialProperty} [options.material=Color.WHITE] A Property specifying the material used to draw the polyline.
      * @param {MaterialProperty} [options.depthFailMaterial] A property specifying the material used to draw the polyline when it is below the terrain.
-     * @param {Property} [options.granularity=Cesium.Math.RADIANS_PER_DEGREE] A numeric Property specifying the angular distance between each latitude and longitude if followSurface is true.
+     * @param {Property} [options.granularity=Cesium.Math.RADIANS_PER_DEGREE] A numeric Property specifying the angular distance between each latitude and longitude if lineType is now LineType.STRAIGHT.
      * @param {Property} [options.shadows=ShadowMode.DISABLED] An enum Property specifying whether the polyline casts or receives shadows from each light source.
      * @param {Property} [options.distanceDisplayCondition] A Property specifying at what distance from the camera that this polyline will be displayed.
      * @param {Property} [options.classificationType=ClassificationType.BOTH] An enum Property specifying whether this polyline will classify terrain, 3D Tiles, or both when on the ground.
@@ -52,6 +57,8 @@ define([
         this._positionsSubscription = undefined;
         this._followSurface = undefined;
         this._followSurfaceSubscription = undefined;
+        this._lineType = undefined;
+        this._lineTypeSubscription = undefined;
         this._clampToGround = undefined;
         this._clampToGroundSubscription = undefined;
         this._granularity = undefined;
@@ -136,9 +143,19 @@ define([
          * should be great arcs or linearly connected.
          * @memberof PolylineGraphics.prototype
          * @type {Property}
+         * @deprecated This property has been deprecated. Use {@link PolylineGraphics#lineType} instead.
          * @default true
          */
         followSurface : createPropertyDescriptor('followSurface'),
+
+        /**
+         * Gets or sets the {@link LineType} Property specifying whether the line segments should be great arcs, rhumb lines or linearly connected.
+         * @memberof PolylineGraphics.prototype
+         * @type {Property}
+         * @deprecated This property has been deprecated. Use {@link PolylineGraphics#lineType} instead.
+         * @default LineType.GEODESIC
+         */
+        lineType : createPropertyDescriptor('lineType'),
 
         /**
          * Gets or sets the boolean Property specifying whether the polyline
@@ -150,7 +167,7 @@ define([
         clampToGround : createPropertyDescriptor('clampToGround'),
 
         /**
-         * Gets or sets the numeric Property specifying the angular distance between each latitude and longitude if followSurface is true and clampToGround is false.
+         * Gets or sets the numeric Property specifying the angular distance between each latitude and longitude if lineType is not LineType.STRAIGHT and clampToGround is false.
          * @memberof PolylineGraphics.prototype
          * @type {Property}
          * @default Cesium.Math.RADIANS_PER_DEGREE
@@ -206,6 +223,7 @@ define([
         result.positions = this.positions;
         result.width = this.width;
         result.followSurface = this.followSurface;
+        result.lineType = this.lineType;
         result.clampToGround = this.clampToGround;
         result.granularity = this.granularity;
         result.shadows = this.shadows;
@@ -235,6 +253,7 @@ define([
         this.positions = defaultValue(this.positions, source.positions);
         this.width = defaultValue(this.width, source.width);
         this.followSurface = defaultValue(this.followSurface, source.followSurface);
+        this.lineType = defaultValue(this.lineType, source.lineType);
         this.clampToGround = defaultValue(this.clampToGround, source.clampToGround);
         this.granularity = defaultValue(this.granularity, source.granularity);
         this.shadows = defaultValue(this.shadows, source.shadows);
