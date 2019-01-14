@@ -17,6 +17,7 @@ Change Log
 * Added the ability to specify the width of the intersection volume for `Scene.sampleHeight`, `Scene.clampToHeight`, `Scene.sampleHeightMostDetailed`, and `Scene.clampToHeightMostDetailed`. [#7287](https://github.com/AnalyticalGraphicsInc/cesium/pull/7287)
 
 ##### Fixes :wrench:
+* Fixed 3D Tiles performance regression. [#7482](https://github.com/AnalyticalGraphicsInc/cesium/pull/7482)
 * Fixed an issue where classification primitives with the `CESIUM_3D_TILE` classification type would render on terrain. [#7422](https://github.com/AnalyticalGraphicsInc/cesium/pull/7422)
 * Fixed an issue where 3D Tiles would show through the globe. [#7422](https://github.com/AnalyticalGraphicsInc/cesium/pull/7422)
 * Fixed crash when entity geometry show value is an interval that only covered part of the entity availability range [#7458](https://github.com/AnalyticalGraphicsInc/cesium/pull/7458)
