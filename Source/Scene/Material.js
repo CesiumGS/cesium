@@ -404,7 +404,7 @@ define([
 
     /**
      * Gets whether or not this material is translucent.
-     * @returns <code>true</code> if this material is translucent, <code>false</code> otherwise.
+     * @returns {Boolean} <code>true</code> if this material is translucent, <code>false</code> otherwise.
      */
     Material.prototype.isTranslucent = function() {
         if (defined(this.translucent)) {

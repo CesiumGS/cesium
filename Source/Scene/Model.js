@@ -442,8 +442,6 @@ define([
         /**
          * Returns the height reference of the model
          *
-         * @memberof Model.prototype
-         *
          * @type {HeightReference}
          *
          * @default HeightReference.NONE
