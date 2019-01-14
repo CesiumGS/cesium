@@ -3523,7 +3523,7 @@ defineSuite([
             tileset.update(frameState);
             var requestedTilesInFlight = tileset._requestedTilesInFlight;
             var requestedTilesInFlightLength = requestedTilesInFlight.length;
-            expect(requestedTilesInFlight.length).toBeGreaterThan(0);
+            expect(requestedTilesInFlightLength).toBeGreaterThan(0);
 
             // Save off old requests
             var oldRequests = []; 
@@ -3531,7 +3531,7 @@ defineSuite([
             for(i = 0; i < requestedTilesInFlightLength; i++) {
                 oldRequests.push(requestedTilesInFlight[i]);
             }
-            console.log(oldRequests.length);
+            var oldRequestsLength = oldRequests.length;
 
             // Cancel requests
             viewNothing();
@@ -3540,7 +3540,6 @@ defineSuite([
             expect(requestedTilesInFlight.length).toBe(0);
 
             // Make sure old requets were marked for cancelling
-            var oldRequestsLength = oldRequests.length;
             var allCancelled = true;
             for(i = 0; i < oldRequestsLength; i++) {
                 var tile = oldRequests[i];
