@@ -487,34 +487,37 @@ define([
 
         var middleHeight = (minimumHeight + maximumHeight) * 0.5;
 
-        fill.mesh = undefined;
+        var i;
+        var len;
 
         // For low-detail tiles, our usual fill tile approach will create tiles that
         // look really blocky because they don't have enough vertices to account for the
         // Earth's curvature. But the height range will also typically be well within
         // the allowed geometric error for those levels. So fill such tiles with a
         // constant-height heightmap.
-        var boundingRegion = surfaceTile.tileBoundingRegion;
-        if (tile.level <= 4 && defined(boundingRegion)) {
-            var heightRange = boundingRegion.maximumHeight - boundingRegion.minimumHeight;
-            var geometricError = tileProvider.getLevelMaximumGeometricError(tile.level);
-            if (geometricError >= heightRange) {
-                var terrainData = new HeightmapTerrainData({
-                    width: 9,
-                    height: 9,
-                    buffer: new Uint8Array(9 * 9),
-                    structure: {
-                        heightOffset: middleHeight
-                    }
-                });
-                fill.mesh = terrainData._createMeshSync(tile.tilingScheme, tile.x, tile.y, tile.level, 1.0);
-            }
-        }
+        var geometricError = tileProvider.getLevelMaximumGeometricError(tile.level);
+        var minCutThroughRadius = ellipsoid.maximumRadius - geometricError;
+        var maxTileWidth = Math.acos(minCutThroughRadius / ellipsoid.maximumRadius) * 4.0;
 
-        var i;
-        var len;
+        // When the tile width is greater than maxTileWidth as computed above, the error
+        // of a normal fill tile from globe curvature alone will exceed the allowed geometric
+        // error. Terrain won't change that much. However, we can allow more error than that.
+        // A little blockiness during load is acceptable. For the WGS84 ellipsoid and
+        // standard geometric error setup, the value here will have us use a heightmap
+        // at levels 1, 2, and 3.
+        maxTileWidth *= 1.5;
 
-        if (!defined(fill.mesh)) {
+        if (rectangle.width > maxTileWidth) {
+            var terrainData = new HeightmapTerrainData({
+                width: 9,
+                height: 9,
+                buffer: new Uint8Array(9 * 9),
+                structure: {
+                    heightOffset: middleHeight
+                }
+            });
+            fill.mesh = terrainData._createMeshSync(tile.tilingScheme, tile.x, tile.y, tile.level, 1.0);
+        } else {
             var encoding = new TerrainEncoding(undefined, minimumHeight, maximumHeight, undefined, true, true);
 
             var centerCartographic = centerCartographicScratch;
