@@ -459,6 +459,7 @@ define([
     var seVertexScratch = new HeightAndNormal();
     var nwVertexScratch = new HeightAndNormal();
     var neVertexScratch = new HeightAndNormal();
+    var heightmapBuffer = typeof Uint8Array !== 'undefined' ? new Uint8Array(9 * 9) : undefined;
 
     function createFillMesh(tileProvider, frameState, tile) {
         var surfaceTile = tile.data;
@@ -511,7 +512,7 @@ define([
             var terrainData = new HeightmapTerrainData({
                 width: 9,
                 height: 9,
-                buffer: new Uint8Array(9 * 9),
+                buffer: heightmapBuffer,
                 structure: {
                     heightOffset: middleHeight
                 }
