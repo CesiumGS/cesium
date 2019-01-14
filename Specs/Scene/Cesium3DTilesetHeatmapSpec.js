@@ -64,6 +64,18 @@ defineSuite([
         expect(heatmap.isDestroyed()).toEqual(true);
     });
 
+    it('resetMinMax', function() {
+        var heatmap = new Cesium3DTilesetHeatmap('_centerZDepth');
+        heatmap._min = -1;
+        heatmap._max =  1;
+        heatmap.resetMinMax();
+        // Preparing for next frame, previousMin/Max are take current frame's values
+        expect(heatmap._min).toBe(Number.MAX_VALUE);
+        expect(heatmap._max).toBe(-Number.MAX_VALUE);
+        expect(heatmap._previousMin).toBe(-1);
+        expect(heatmap._previousMax).toBe( 1);
+    });
+
     it('expected color', function() {
         var heatmap = new Cesium3DTilesetHeatmap('_centerZDepth');
 
@@ -86,10 +98,6 @@ defineSuite([
 
         // Preparing for next frame, previousMin/Max are take current frame's values
         heatmap.resetMinMax();
-        expect(heatmap._min).toBe(Number.MAX_VALUE);
-        expect(heatmap._max).toBe(-Number.MAX_VALUE);
-        expect(heatmap._previousMin).toBe(-1);
-        expect(heatmap._previousMax).toBe( 1);
 
         tile._centerZDepth = -1;
         heatmap.colorize(tile, frameState);

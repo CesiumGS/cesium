@@ -2127,14 +2127,5 @@ define([
         return destroyObject(this);
     };
 
-    /**
-     * Resets any tracked min max values (needed for priority mapping, heatmap colorization). Happens right before traversal.
-     *
-     * @private
-     */
-    Cesium3DTileset.prototype.resetAllMinMax = function() {
-        this._heatmap.resetMinMax();
-    };
-
     return Cesium3DTileset;
 });
