@@ -3521,13 +3521,32 @@ defineSuite([
             // Make requests
             viewAllTiles();
             tileset.update(frameState);
-            expect(tileset._requestedTilesInFlight.length).toBeGreaterThan(0);
+            var requestedTilesInFlight = tileset._requestedTilesInFlight;
+            var requestedTilesInFlightLength = requestedTilesInFlight.length;
+            expect(requestedTilesInFlight.length).toBeGreaterThan(0);
+
+            // Save off old requests
+            var oldRequests = []; 
+            var i;
+            for(i = 0; i < requestedTilesInFlightLength; i++) {
+                oldRequests.push(requestedTilesInFlight[i]);
+            }
+            console.log(oldRequests.length);
 
             // Cancel requests
             viewNothing();
             frameState.frameNumber++;
             tileset.update(frameState);
-            expect(tileset._requestedTilesInFlight.length).toBe(0);
+            expect(requestedTilesInFlight.length).toBe(0);
+
+            // Make sure old requets were marked for cancelling
+            var oldRequestsLength = oldRequests.length;
+            var allCancelled = true;
+            for(i = 0; i < oldRequestsLength; i++) {
+                var tile = oldRequests[i];
+                allCancelled = allCancelled && tile._request.cancelled;
+            }
+            expect(allCancelled).toBe(true);
         });
     });
 
