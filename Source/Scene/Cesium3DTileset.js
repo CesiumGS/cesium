@@ -220,6 +220,8 @@ define([
         this._statisticsLastAsync = new Cesium3DTilesetStatistics();
 
         this._heatmap = new Cesium3DTilesetHeatmap(options.heatmapVariable);
+        this._maxPriority = { level: -Number.MAX_VALUE, distance: -Number.MAX_VALUE };
+        this._minPriority = { level: Number.MAX_VALUE, distance: Number.MAX_VALUE, minPriorityHolder: undefined };
 
         this._tilesLoaded = false;
         this._initialTilesLoaded = false;
@@ -1552,8 +1554,12 @@ define([
         // This makes it less likely that requests will be cancelled after being issued.
         var requestedTiles = tileset._requestedTiles;
         var length = requestedTiles.length;
+        var i;
+        for (i = 0; i < length; ++i) {
+            requestedTiles[i].updatePriority();
+        }
         requestedTiles.sort(sortRequestByPriority);
-        for (var i = 0; i < length; ++i) {
+        for (i = 0; i < length; ++i) {
             requestContent(tileset, requestedTiles[i]);
         }
     }
@@ -1943,6 +1949,10 @@ define([
         tileset._tilesLoaded = (statistics.numberOfPendingRequests === 0) && (statistics.numberOfTilesProcessing === 0) && (statistics.numberOfAttemptedRequests === 0);
 
         if (progressChanged && tileset._tilesLoaded) {
+
+            // TODO: better spot?
+            tileset.resetMinMaxPriority();
+
             frameState.afterRender.push(function() {
                 tileset.allTilesLoaded.raiseEvent();
             });
@@ -1952,6 +1962,7 @@ define([
                     tileset.initialTilesLoaded.raiseEvent();
                 });
             }
+
         }
     }
 
@@ -2125,6 +2136,19 @@ define([
 
         this._root = undefined;
         return destroyObject(this);
+    };
+
+    /**
+     * Resets the min and max every traversal so that new requests can get prioritized 
+     *
+     * @private
+     */
+    Cesium3DTileset.prototype.resetMinMaxPriority = function() {
+        this._minPriority.level = Number.MAX_VALUE;
+        this._maxPriority.level = -Number.MAX_VALUE;
+        this._minPriority.distance = Number.MAX_VALUE;
+        this._maxPriority.distance = -Number.MAX_VALUE;
+        this._minPriorityHolder = undefined;
     };
 
     return Cesium3DTileset;

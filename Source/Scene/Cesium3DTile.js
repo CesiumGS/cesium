@@ -329,11 +329,10 @@ define([
         this._visitedFrame = 0;
         this._selectedFrame = 0;
         this._requestedFrame = 0;
-        this._ancestorWithContent = undefined;
-        this._ancestorWithContentAvailable = undefined;
+        this._ancestorWithContent = undefined; // Content being requested. Used to know when to skip a tile in skipLOD.
+        this._ancestorWithContentAvailable = undefined; // Rendered if a desired tile is not loaded in skipLOD.
         this._refines = false;
         this._shouldSelect = false;
-        this._priority = 0.0;
         this._isClipped = true;
         this._clippingPlanesState = 0; // encapsulates (_isClipped, clippingPlanes.enabled) and number/function
         this._debugBoundingVolume = undefined;
@@ -341,6 +340,11 @@ define([
         this._debugViewerRequestVolume = undefined;
         this._debugColor = Color.fromRandom({ alpha : 1.0 });
         this._debugColorizeTiles = false;
+
+        this._priority = 0.0; // The priority used for request sorting
+        this._priorityDistance = Number.MAX_VALUE; // Want to link up priorities so that any blobby LODs will inherit its highest priority visible decendant so that it refines quickly in both skipLOD and non-skipLOD
+        this._priorityDistanceHolder = this; // Reference to the tile up the tree that holds the priority for all tiles in the refinement chain.
+        this._wasMinChild = false; // Gets reset to false in updateTile (traversal)
 
         this._commandsLength = 0;
 
@@ -352,6 +356,8 @@ define([
     Cesium3DTile._deprecationWarning = deprecationWarning;
 
     defineProperties(Cesium3DTile.prototype, {
+
+
         /**
          * The tileset containing this tile.
          *
@@ -1274,6 +1280,42 @@ define([
         this._debugContentBoundingVolume = this._debugContentBoundingVolume && this._debugContentBoundingVolume.destroy();
         this._debugViewerRequestVolume = this._debugViewerRequestVolume && this._debugViewerRequestVolume.destroy();
         return destroyObject(this);
+    };
+
+    /**
+     * Sets the priority of the tile based on distance and level
+     * @private
+     */
+    Cesium3DTile.prototype.updatePriority = function() {
+        var linear = true;
+        var exposureCurvature = 4; // Bigger val, faster curve
+
+        // Mix priorities by encoding them into numbers (base 10 in this case)
+        var base = 10;
+        var levelScale = 1;
+        var distanceScale = 10;
+
+        // Tone map distance
+        // TODO: helper func
+        var minPriority = this._tileset._minPriority.distance;
+        var shiftedMax = this._tileset._maxPriority.distance - minPriority;
+        // var shiftedPriority = this._priorityDistance.val < 0 ? shiftedMax : this._priorityDistance.val - minPriority;
+        // var shiftedPriority = this._priorityDistance.val - minPriority;
+        var shiftedPriority = this._priorityDistanceHolder._priorityDistance - minPriority;
+        var zeroToOneDistance = linear ? Math.min(shiftedPriority / shiftedMax, 1) : 1 - Math.exp(-shiftedPriority * (exposureCurvature / shiftedMax)); // exposure map to a 0-1 value
+        zeroToOneDistance *= base * distanceScale;
+
+        // Tone map level
+        minPriority = this._tileset._minPriority.level;
+        shiftedMax = this._tileset._maxPriority.level - minPriority;
+        shiftedPriority = this._depth - minPriority;
+        var zeroToOneLevel = linear ? Math.min(shiftedPriority / shiftedMax, 1) : 1 - Math.exp(-shiftedPriority * (4 / shiftedMax)); // exposure map to a 0-1 value
+        zeroToOneLevel *= base * levelScale;
+
+        var sum = zeroToOneDistance + zeroToOneLevel;
+        var maxSum = base * (distanceScale + levelScale);
+
+        this._priority = linear ? Math.min(sum / maxSum, 1) : 1 - Math.exp(-(sum) * (exposureCurvature / maxSum));
     };
 
     return Cesium3DTile;

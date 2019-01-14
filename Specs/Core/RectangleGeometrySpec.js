@@ -63,6 +63,28 @@ defineSuite([
         expect(new Cartesian3(positions[length - 3], positions[length - 2], positions[length - 1])).toEqualEpsilon(expectedSECorner, CesiumMath.EPSILON8);
     });
 
+    it('computes positions at north pole', function() {
+        var rectangle = Rectangle.fromDegrees(-180.0, 89.0, -179.0, 90.0);
+        var m = RectangleGeometry.createGeometry(new RectangleGeometry({
+            vertexFormat : VertexFormat.POSITION_ONLY,
+            rectangle : rectangle
+        }));
+        var positions = m.attributes.position.values;
+        expect(positions.length).toEqual(5 * 3);
+        expect(m.indices.length).toEqual(3 * 3);
+    });
+
+    it('computes positions at south pole', function() {
+        var rectangle = Rectangle.fromDegrees(-180.0, -90.0, -179.0, -89.0);
+        var m = RectangleGeometry.createGeometry(new RectangleGeometry({
+            vertexFormat : VertexFormat.POSITION_ONLY,
+            rectangle : rectangle
+        }));
+        var positions = m.attributes.position.values;
+        expect(positions.length).toEqual(5 * 3);
+        expect(m.indices.length).toEqual(3 * 3);
+    });
+
     it('computes all attributes', function() {
         var m = RectangleGeometry.createGeometry(new RectangleGeometry({
             vertexFormat : VertexFormat.ALL,
@@ -205,6 +227,32 @@ defineSuite([
 
         expect(positions.length).toEqual(42 * 3); // (9 fill + 8 edge + 4 corners) * 2 to duplicate for bottom
         expect(m.indices.length).toEqual(32 * 3); // 8 * 2 for fill top and bottom + 4 triangles * 4 walls
+    });
+
+    it('computes positions extruded at the north pole', function() {
+        var rectangle = Rectangle.fromDegrees(-180.0, 89.0, -179.0, 90.0);
+        var m = RectangleGeometry.createGeometry(new RectangleGeometry({
+            vertexFormat : VertexFormat.POSITION_ONLY,
+            rectangle : rectangle,
+            extrudedHeight : 2
+        }));
+        var positions = m.attributes.position.values;
+
+        expect(positions.length).toEqual(26 * 3); // (5 fill + 5 edge + 3 corners) * 2 to duplicate for bottom
+        expect(m.indices.length).toEqual(16 * 3); // 3 * 2 for fill top and bottom + 2 triangles * 5 walls
+    });
+
+    it('computes positions extruded at the south pole', function() {
+        var rectangle = Rectangle.fromDegrees(-180.0, -90.0, -179.0, -89.0);
+        var m = RectangleGeometry.createGeometry(new RectangleGeometry({
+            vertexFormat : VertexFormat.POSITION_ONLY,
+            rectangle : rectangle,
+            extrudedHeight : 2
+        }));
+        var positions = m.attributes.position.values;
+
+        expect(positions.length).toEqual(26 * 3); // (5 fill + 5 edge + 3 corners) * 2 to duplicate for bottom
+        expect(m.indices.length).toEqual(16 * 3); // 3 * 2 for fill top and bottom + 2 triangles * 5 walls
     });
 
     it('computes all attributes extruded', function() {
