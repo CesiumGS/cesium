@@ -581,6 +581,9 @@ define([
         if (defined(options.perPositionHeight) && options.perPositionHeight && defined(options.height)) {
             throw new DeveloperError('Cannot use both options.perPositionHeight and options.height');
         }
+        if (defined(options.lineType) && options.lineType === LineType.STRAIGHT) {
+            throw new DeveloperError('Cannot use option.lineType as LineType.STRAIGHT');
+        }
         //>>includeEnd('debug');
 
         var polygonHierarchy = options.polygonHierarchy;

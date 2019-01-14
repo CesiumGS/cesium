@@ -24,7 +24,15 @@ define([
          * @type {Number}
          * @constant
          */
-        RHUMB : 1
+        RHUMB : 1,
+
+        /**
+         * Straight line that does not conform to the surface of the ellipsoid.
+         *
+         * @type {Number}
+         * @constant
+         */
+        STRAIGHT : 2
     };
 
     return freezeObject(LineType);
