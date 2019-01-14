@@ -218,7 +218,7 @@ define([
         this._statisticsLastAsync = new Cesium3DTilesetStatistics();
 
         this._maxPriority = { level: -Number.MAX_VALUE, distance: -Number.MAX_VALUE };
-        this._minPriority = { level: Number.MAX_VALUE, distance: Number.MAX_VALUE, minPriorityHolder: undefined, minDistanceTile: undefined};
+        this._minPriority = { level: Number.MAX_VALUE, distance: Number.MAX_VALUE, minPriorityHolder: undefined };
 
         this._tilesLoaded = false;
         this._initialTilesLoaded = false;
@@ -1551,8 +1551,12 @@ define([
         // This makes it less likely that requests will be cancelled after being issued.
         var requestedTiles = tileset._requestedTiles;
         var length = requestedTiles.length;
+        var i;
+        for (i = 0; i < length; ++i) {
+            requestedTiles[i].updatePriority();
+        }
         requestedTiles.sort(sortRequestByPriority);
-        for (var i = 0; i < length; ++i) {
+        for (i = 0; i < length; ++i) {
             requestContent(tileset, requestedTiles[i]);
         }
     }
@@ -1923,16 +1927,6 @@ define([
 
     ///////////////////////////////////////////////////////////////////////////
 
-
-    function resetMinMaxProrities(tileset) {
-        tileset._minPriority.level = Number.MAX_VALUE;
-        tileset._minPriority.distance = Number.MAX_VALUE;
-        tileset._maxPriority.level = -Number.MAX_VALUE;
-        tileset._maxPriority.distance = -Number.MAX_VALUE;
-        tileset._minPriorityHolder = undefined;
-        tileset._minDistanceTile = undefined;
-    }
-
     function raiseLoadProgressEvent(tileset, frameState) {
         var statistics = tileset._statistics;
         var statisticsLast = tileset._statisticsLastRender;
@@ -1953,8 +1947,8 @@ define([
 
         if (progressChanged && tileset._tilesLoaded) {
 
-            // TODO: Better spot?
-            resetMinMaxPriority(tileset);
+            // TODO: better spot?
+            tileset.resetMinMaxPriority();
 
             frameState.afterRender.push(function() {
                 tileset.allTilesLoaded.raiseEvent();
@@ -2139,6 +2133,19 @@ define([
 
         this._root = undefined;
         return destroyObject(this);
+    };
+
+    /**
+     * Resets the min and max every traversal so that new requests can get prioritized 
+     *
+     * @private
+     */
+    Cesium3DTileset.prototype.resetMinMaxPriority = function() {
+        this._minPriority.level = Number.MAX_VALUE;
+        this._maxPriority.level = -Number.MAX_VALUE;
+        this._minPriority.distance = Number.MAX_VALUE;
+        this._maxPriority.distance = -Number.MAX_VALUE;
+        this._minPriorityHolder = undefined;
     };
 
     return Cesium3DTileset;

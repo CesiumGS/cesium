@@ -2,12 +2,14 @@ define([
         '../Core/defined',
         '../Core/Intersect',
         '../Core/ManagedArray',
+        '../Core/Math',
         './Cesium3DTileOptimizationHint',
         './Cesium3DTileRefine'
     ], function(
         defined,
         Intersect,
         ManagedArray,
+        CesiumMath,
         Cesium3DTileOptimizationHint,
         Cesium3DTileRefine) {
     'use strict';
@@ -70,7 +72,6 @@ define([
         if (root.getScreenSpaceError(frameState, true) <= tileset._maximumScreenSpaceError) {
             return;
         }
-
         if (!skipLevelOfDetail(tileset)) {
             executeBaseTraversal(tileset, root, frameState);
         } else if (tileset.immediatelyLoadDesiredLevelOfDetail) {
@@ -202,40 +203,40 @@ define([
         //     return tile._distanceToCamera;
         // }
         var boundingSphere = tile._boundingVolume.boundingSphere;
-        var tileCenter = boundingSphere.center;
-        var toCenter = Cartesian3.subtract(tileCenter, frameState.camera.positionWC, scratchHeyHo);
-
-        // ABS VAL FOR DISTANCE
-        // var camSpaceDepth = Math.abs(Cartesian3.dot(frameState.camera.directionWC, toCenter));
-        // var distanceFromCenterPlane = Math.abs(Cartesian3.dot(toCenter, frameState.camera.rightWC));
-
-        // THINGS BEHIND SET NEGATIVE (handled by tile._priority)
-        var camSpaceDepth = Cartesian3.dot(frameState.camera.directionWC, toCenter);
-        var sign = camSpaceDepth < 0 ? -1 : 1;
-        var distanceFromCenterPlane = sign * Math.abs(Cartesian3.dot(toCenter, frameState.camera.rightWC));
-        var toCenterLength = Cartesian3.magnitude(toCenter) * sign;
-
-        // Center Line Distance
-        var cameraSpaceDepthVec = Cartesian3.multiplyByScalar(frameState.camera.directionWC, camSpaceDepth, scratchHeyHo);
-        var cameraCenterDepthPoint = Cartesian3.add(frameState.camera.positionWC, cameraSpaceDepthVec, scratchHeyHo);
-        var centerLineToBoundCenter = Cartesian3.subtract(tileCenter, cameraCenterDepthPoint, scratchHeyHo);
-        var distanceFromCenterLine = Cartesian3.magnitude(centerLineToBoundCenter);
-        // return distanceFromCenterLine;
-
-        var topdownViewPriority = distanceFromCenterLine;
-        var horizonViewPriority = distanceFromCenterPlane + camSpaceDepth;        // Center Plane is better metric than center line (and cheaper)
-        // return horizonViewPriority;
-        // return topdownViewPriority;
-        var interpValue = Math.abs(frameState.camera.directionWC.y);
-        // return interpValue * topdownViewPriority + (1 - interpValue) * horizonViewPriority;
-        // return horizonViewPriority;
-        // return tile._depth;
-        // return distanceFromCenterPlane;
-        // return camSpaceDepth;
-
-        // ALREADY CALCULATED:
-        // this._distanceToCamera = this.distanceToTile(frameState);// dist to closest point on the aabb??
-        // this._centerZDepth = this.distanceToTileCenter(frameState); // camera space depth
+        // var tileCenter = boundingSphere.center;
+        // var toCenter = Cartesian3.subtract(tileCenter, frameState.camera.positionWC, scratchHeyHo);
+        //
+        // // ABS VAL FOR DISTANCE
+        // // var camSpaceDepth = Math.abs(Cartesian3.dot(frameState.camera.directionWC, toCenter));
+        // // var distanceFromCenterPlane = Math.abs(Cartesian3.dot(toCenter, frameState.camera.rightWC));
+        //
+        // // THINGS BEHIND SET NEGATIVE (handled by tile._priority)
+        // var camSpaceDepth = Cartesian3.dot(frameState.camera.directionWC, toCenter);
+        // var sign = camSpaceDepth < 0 ? -1 : 1;
+        // var distanceFromCenterPlane = sign * Math.abs(Cartesian3.dot(toCenter, frameState.camera.rightWC));
+        // var toCenterLength = Cartesian3.magnitude(toCenter) * sign;
+        //
+        // // Center Line Distance
+        // var cameraSpaceDepthVec = Cartesian3.multiplyByScalar(frameState.camera.directionWC, camSpaceDepth, scratchHeyHo);
+        // var cameraCenterDepthPoint = Cartesian3.add(frameState.camera.positionWC, cameraSpaceDepthVec, scratchHeyHo);
+        // var centerLineToBoundCenter = Cartesian3.subtract(tileCenter, cameraCenterDepthPoint, scratchHeyHo);
+        // var distanceFromCenterLine = Cartesian3.magnitude(centerLineToBoundCenter);
+        // // return distanceFromCenterLine;
+        //
+        // var topdownViewPriority = distanceFromCenterLine;
+        // var horizonViewPriority = distanceFromCenterPlane + camSpaceDepth;        // Center Plane is better metric than center line (and cheaper)
+        // // return horizonViewPriority;
+        // // return topdownViewPriority;
+        // var interpValue = Math.abs(frameState.camera.directionWC.y);
+        // // return interpValue * topdownViewPriority + (1 - interpValue) * horizonViewPriority;
+        // // return horizonViewPriority;
+        // // return tile._depth;
+        // // return distanceFromCenterPlane;
+        // // return camSpaceDepth;
+        //
+        // // ALREADY CALCULATED:
+        // // this._distanceToCamera = this.distanceToTile(frameState);// dist to closest point on the aabb??
+        // // this._centerZDepth = this.distanceToTileCenter(frameState); // camera space depth
 
         // BEST SO FAR:
         var priority = CesiumMath.clamp(tile._centerZDepth - boundingSphere.radius, 0, tile._centerZDepth); // Any negative z depth will get clamped to 0. If inside sphere then clamped to 0. Maybe we want to deferr negatives? we really only want closest positive? closest to 0?
@@ -272,27 +273,24 @@ define([
 
     }
 
-    function updateMinMaxPriority(tileset, tile, frameState) {
-        if (tile._requestedFrame === frameState.frameNumber) {
-            // TODO: track max and min (when allTilesLoaded, reset)
-            tileset._maxPriority.distance = Math.max(tile._priorityDistanceHolder._priorityDistance, tileset._maxPriority.distance);
-            if (tile._priorityDistance < tileset._minPriority.distance) {
-                tileset._minPriority.distance = tile._priorityDistance;
-                tileset._minPriority.minDistanceTile = tile;
-            }
-            if (tile._priorityDistanceHolder._priorityDistance <= tileset._minPriority.distance) {
-                tileset._minPriority.minPriorityHolder = tile;
-            }
-            tileset._maxPriority.level = Math.max(tile._depth, tileset._maxPriority.level);
-            tileset._minPriority.level = Math.min(tile._depth, tileset._minPriority.level);
+
+    function updateMinMaxPriority(tileset, tile) {
+        tileset._maxPriority.distance = Math.max(tile._priorityDistanceHolder._priorityDistance, tileset._maxPriority.distance);
+        if (tile._priorityDistance < tileset._minPriority.distance) {
+            tileset._minPriority.distance = tile._priorityDistance;
+            tileset._minPriority.minDistanceTile = tile;
         }
+        if (tile._priorityDistanceHolder._priorityDistance <= tileset._minPriority.distance) {
+            tileset._minPriority.minPriorityHolder = tile;
+        }
+        tileset._maxPriority.level = Math.max(tile._depth, tileset._maxPriority.level);
+        tileset._minPriority.level = Math.min(tile._depth, tileset._minPriority.level);
     }
 
     function loadTile(tileset, tile, frameState) {
         if (hasUnloadedContent(tile) || tile.contentExpired) {
             tile._requestedFrame = frameState.frameNumber;
-            tile._priority = getPriority(tileset, tile);
-            updateMinMaxPriority(tileset, tile, frameState);
+            updateMinMaxPriority(tileset, tile);
             tileset._requestedTiles.push(tile);
         }
     }
@@ -368,8 +366,9 @@ define([
     function updateTile(tileset, tile, frameState) {
         // Reset some of the tile's flags to neutral and re-evaluate visability, and ancestor content pointers
         tile.updateVisibility(frameState);
-        tile._priorityDistance = getPriority(tileset, tile, frameState); // TODO: Make sure priority value is established first time it is updated in a frame i.e. right here. Change this to whatever the 'distance' should be
+        tile._priorityDistance = getPriority(tileset, tile, frameState); // updateAndPushChildren() needs this value for the priority chaining so it must be determined here and not loadTile
         tile._priorityDistanceHolder = tile;
+        // updateMinMaxPriority(tileset, tile);
         tile.updateExpiration();
 
         // Alpha blending
@@ -460,16 +459,28 @@ define([
         // Empty tiles are exempt since it looks better if children stream in as they are loaded to fill the empty space.
         var checkRefines = !skipLevelOfDetail(tileset) && replace && !hasEmptyContent(tile);
         var refines = true;
-
         var anyChildrenVisible = false;
+
+        // _wasMinChild
+        var minIndex = -1;
+        var minDistancePriority = Number.MAX_VALUE;
+
         for (i = 0; i < length; ++i) {
             var child = children[i];
             if (isVisible(child)) {
                 stack.push(child);
+                if (child._priorityDistance < minDistancePriority) {
+                    minIndex = i;
+                    minDistancePriority = child._priorityDistance;
+                }
                 anyChildrenVisible = true;
             } else if (checkRefines || tileset.loadSiblings) {
                 // Keep non-visible children loaded since they are still needed before the parent can refine.
                 // Or loadSiblings is true so always load tiles regardless of visibility.
+                if (child._priorityDistance < minDistancePriority) {
+                    minIndex = i;
+                    minDistancePriority = child._priorityDistance;
+                }
                 loadTile(tileset, child, frameState);
                 touchTile(tileset, child, frameState);
             }
@@ -488,6 +499,21 @@ define([
 
         if (!anyChildrenVisible) {
             refines = false;
+        }
+
+        // For the priority scheme, priorites are inherited up the tree as needed.       
+        // Only link up if the tile hasn't already been linked to something else (this will be the case if the tile is the root or the closest child tile amongst its siblings in a previous updateAndPushChildren)
+        // Need siblings to link their minPriority their siblings to help refinement along, otherwise it will get held up the renfinement dependencies will be out of sync priority wise (important for non-skipLOD in general and important for skipLOD to remove higher lod artifacts as fast as possible (giant triangles cutting through the near parts of the scene) helps alpha blending look nicer)
+        if (minIndex !== -1) {
+            var minPriorityChild = children[minIndex];
+            minPriorityChild._wasMinChild = true;
+            var priorityHolder = tile._wasMinChild || tile === tileset.root ? tile._priorityDistanceHolder : tile; // This is where priority dependencies chains are wired up and existing one or started anew.
+            priorityHolder._priorityDistance = minPriorityChild._priorityDistance;
+
+            for (i = 0; i < length; ++i) {
+                var child = children[i];
+                child._priorityDistanceHolder = priorityHolder;
+            }
         }
 
         return refines;
