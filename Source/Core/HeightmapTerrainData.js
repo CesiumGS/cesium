@@ -279,6 +279,83 @@ define([
     };
 
     /**
+     * @private
+     */
+    HeightmapTerrainData.prototype._createMeshSync = function(tilingScheme, x, y, level, exaggeration) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(tilingScheme)) {
+            throw new DeveloperError('tilingScheme is required.');
+        }
+        if (!defined(x)) {
+            throw new DeveloperError('x is required.');
+        }
+        if (!defined(y)) {
+            throw new DeveloperError('y is required.');
+        }
+        if (!defined(level)) {
+            throw new DeveloperError('level is required.');
+        }
+        //>>includeEnd('debug');
+
+        var ellipsoid = tilingScheme.ellipsoid;
+        var nativeRectangle = tilingScheme.tileXYToNativeRectangle(x, y, level);
+        var rectangle = tilingScheme.tileXYToRectangle(x, y, level);
+        exaggeration = defaultValue(exaggeration, 1.0);
+
+        // Compute the center of the tile for RTC rendering.
+        var center = ellipsoid.cartographicToCartesian(Rectangle.center(rectangle));
+
+        var structure = this._structure;
+
+        var levelZeroMaxError = TerrainProvider.getEstimatedLevelZeroGeometricErrorForAHeightmap(ellipsoid, this._width, tilingScheme.getNumberOfXTilesAtLevel(0));
+        var thisLevelMaxError = levelZeroMaxError / (1 << level);
+        this._skirtHeight = Math.min(thisLevelMaxError * 4.0, 1000.0);
+
+        var result = HeightmapTessellator.computeVertices({
+            heightmap : this._buffer,
+            structure : structure,
+            includeWebMercatorT : true,
+            width : this._width,
+            height : this._height,
+            nativeRectangle : nativeRectangle,
+            rectangle : rectangle,
+            relativeToCenter : center,
+            ellipsoid : ellipsoid,
+            skirtHeight : this._skirtHeight,
+            isGeographic : tilingScheme.projection instanceof GeographicProjection,
+            exaggeration : exaggeration
+        });
+
+        // Free memory received from server after mesh is created.
+        this._buffer = undefined;
+
+        var arrayWidth = this._width;
+        var arrayHeight = this._height;
+
+        if (this._skirtHeight > 0.0) {
+            arrayWidth += 2;
+            arrayHeight += 2;
+        }
+
+        return new TerrainMesh(
+            center,
+            result.vertices,
+            TerrainProvider.getRegularGridIndices(arrayWidth, arrayHeight),
+            result.minimumHeight,
+            result.maximumHeight,
+            result.boundingSphere3D,
+            result.occludeePointInScaledSpace,
+            result.encoding.getStride(),
+            result.orientedBoundingBox,
+            TerrainEncoding.clone(result.encoding),
+            exaggeration,
+            result.westIndicesSouthToNorth,
+            result.southIndicesEastToWest,
+            result.eastIndicesNorthToSouth,
+            result.northIndicesWestToEast);
+    };
+
+    /**
      * Computes the terrain height at a specified longitude and latitude.
      *
      * @param {Rectangle} rectangle The rectangle covered by this terrain data.
