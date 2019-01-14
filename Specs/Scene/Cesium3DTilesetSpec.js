@@ -3526,7 +3526,7 @@ defineSuite([
             expect(requestedTilesInFlightLength).toBeGreaterThan(0);
 
             // Save off old requests
-            var oldRequests = []; 
+            var oldRequests = [];
             var i;
             for(i = 0; i < requestedTilesInFlightLength; i++) {
                 oldRequests.push(requestedTilesInFlight[i]);
