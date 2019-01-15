@@ -3528,7 +3528,7 @@ defineSuite([
             // Save off old requests
             var oldRequests = [];
             var i;
-            for(i = 0; i < requestedTilesInFlightLength; i++) {
+            for (i = 0; i < requestedTilesInFlightLength; i++) {
                 oldRequests.push(requestedTilesInFlight[i]);
             }
             var oldRequestsLength = oldRequests.length;
@@ -3541,7 +3541,7 @@ defineSuite([
 
             // Make sure old requets were marked for cancelling
             var allCancelled = true;
-            for(i = 0; i < oldRequestsLength; i++) {
+            for (i = 0; i < oldRequestsLength; i++) {
                 var tile = oldRequests[i];
                 allCancelled = allCancelled && tile._request.cancelled;
             }

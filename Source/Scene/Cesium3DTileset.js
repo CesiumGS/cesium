@@ -1560,7 +1560,7 @@ define([
                 // No longer fetching from host, don't need to track it anymore. Gets marked as LOADING in Cesium3DTile::requestContent().
                 ++removeCount;
                 continue;
-            } else if(outOfView) {
+            } else if (outOfView) {
                 // RequestScheduler will take care of cancelling it
                 tile._request.cancel();
                 ++removeCount;
