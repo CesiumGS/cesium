@@ -360,8 +360,6 @@ define([
     Cesium3DTile._deprecationWarning = deprecationWarning;
 
     defineProperties(Cesium3DTile.prototype, {
-
-
         /**
          * The tileset containing this tile.
          *
@@ -717,6 +715,7 @@ define([
 
     function createPriorityFunction(tile) {
         return function() {
+            tile.updatePriority();
             return tile._priority;
         };
     }
@@ -1268,31 +1267,11 @@ define([
     };
 
     /**
-     * @private
-     */
-    Cesium3DTile.prototype.isDestroyed = function() {
-        return false;
-    };
-
-    /**
-     * @private
-     */
-    Cesium3DTile.prototype.destroy = function() {
-        // For the interval between new content being requested and downloaded, expiredContent === content, so don't destroy twice
-        this._content = this._content && this._content.destroy();
-        this._expiredContent = this._expiredContent && !this._expiredContent.isDestroyed() && this._expiredContent.destroy();
-        this._debugBoundingVolume = this._debugBoundingVolume && this._debugBoundingVolume.destroy();
-        this._debugContentBoundingVolume = this._debugContentBoundingVolume && this._debugContentBoundingVolume.destroy();
-        this._debugViewerRequestVolume = this._debugViewerRequestVolume && this._debugViewerRequestVolume.destroy();
-        return destroyObject(this);
-    };
-
-    /**
      * Sets the priority of the tile based on distance and level
      * @private
      */
     Cesium3DTile.prototype.updatePriority = function() {
-        var linear = true;
+        var linear = false;
         var exposureCurvature = 4; // Bigger val, faster curve
 
         // Mix priorities by encoding them into numbers (base 10 in this case)
@@ -1321,6 +1300,26 @@ define([
         var maxSum = base * (distanceScale + levelScale);
 
         this._priority = linear ? Math.min(sum / maxSum, 1) : 1 - Math.exp(-(sum) * (exposureCurvature / maxSum));
+    };
+
+    /**
+     * @private
+     */
+    Cesium3DTile.prototype.isDestroyed = function() {
+        return false;
+    };
+
+    /**
+     * @private
+     */
+    Cesium3DTile.prototype.destroy = function() {
+        // For the interval between new content being requested and downloaded, expiredContent === content, so don't destroy twice
+        this._content = this._content && this._content.destroy();
+        this._expiredContent = this._expiredContent && !this._expiredContent.isDestroyed() && this._expiredContent.destroy();
+        this._debugBoundingVolume = this._debugBoundingVolume && this._debugBoundingVolume.destroy();
+        this._debugContentBoundingVolume = this._debugContentBoundingVolume && this._debugContentBoundingVolume.destroy();
+        this._debugViewerRequestVolume = this._debugViewerRequestVolume && this._debugViewerRequestVolume.destroy();
+        return destroyObject(this);
     };
 
     return Cesium3DTile;

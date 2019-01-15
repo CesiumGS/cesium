@@ -72,7 +72,7 @@ define([
         // var min = this._previousMin;
         // var max = this._previousMax;
         // TODO: remove
-        var min; 
+        var min;
         var max;
         if (variableName === '_time') {
             min = 0;

@@ -1986,9 +1986,7 @@ define([
         tileset._tilesLoaded = (statistics.numberOfPendingRequests === 0) && (statistics.numberOfTilesProcessing === 0) && (statistics.numberOfAttemptedRequests === 0);
 
         if (progressChanged && tileset._tilesLoaded) {
-
-            // TODO: better spot? have the tile's priority function update the priority before returning the priority
-            tileset.resetMinMaxPriority();
+            // TODO: remove
             tileset._startedLoadingTime = undefined;
 
             frameState.afterRender.push(function() {
@@ -1999,7 +1997,7 @@ define([
                 frameState.afterRender.push(function() {
                     tileset.initialTilesLoaded.raiseEvent();
                 });
-            } 
+            }
         } else if (progressChanged && !defined(tileset._startedLoadingTime)) {
             // TODO: remove
             tileset._startedLoadingTime = Date.now();
@@ -2054,7 +2052,7 @@ define([
         ++tileset._updatedVisibilityFrame;
 
         // Update any tracked min max values
-        tileset._heatmap.resetMinMax();
+        tileset.resetMinMax();
 
         var ready;
 
@@ -2133,6 +2131,20 @@ define([
     };
 
     /**
+     * Resets tracked min and max values
+     *
+     * @private
+     */
+    Cesium3DTileset.prototype.resetMinMax = function() {
+        this._heatmap.resetMinMax();
+        this._minPriority.level = Number.MAX_VALUE;
+        this._maxPriority.level = -Number.MAX_VALUE;
+        this._minPriority.distance = Number.MAX_VALUE;
+        this._maxPriority.distance = -Number.MAX_VALUE;
+        this._minPriorityHolder = undefined;
+    };
+
+    /**
      * Returns true if this object was destroyed; otherwise, false.
      * <br /><br />
      * If this object was destroyed, it should not be used; calling any function other than
@@ -2184,19 +2196,6 @@ define([
 
         this._root = undefined;
         return destroyObject(this);
-    };
-
-    /**
-     * Resets the min and max every traversal so that new requests can get prioritized 
-     *
-     * @private
-     */
-    Cesium3DTileset.prototype.resetMinMaxPriority = function() {
-        this._minPriority.level = Number.MAX_VALUE;
-        this._maxPriority.level = -Number.MAX_VALUE;
-        this._minPriority.distance = Number.MAX_VALUE;
-        this._maxPriority.distance = -Number.MAX_VALUE;
-        this._minPriorityHolder = undefined;
     };
 
     return Cesium3DTileset;

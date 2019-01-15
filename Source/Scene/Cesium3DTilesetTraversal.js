@@ -195,9 +195,8 @@ define([
     }
 
     function getPriority(tileset, tile) {
-        var boundingSphere = tile._boundingVolume.boundingSphere;
-
         var priority = tile._distanceToCamera; // pretty good
+        // var boundingSphere = tile._boundingVolume.boundingSphere;
         // var priority = CesiumMath.clamp(tile._centerZDepth - boundingSphere.radius, 0, tile._centerZDepth); // Pretty good, any negative z depth will get clamped to 0. If inside sphere then clamped to 0. Maybe we want to deferr negatives? we really only want closest positive? closest to 0?
         // var priority = tile._centerZDepth - boundingSphere.radius; // allow negative, not as good as the clamped version
         // var priority = Math.max(tile._centerZDepth + boundingSphere.radius, 0); // Huge pauses.
@@ -206,15 +205,11 @@ define([
         return priority;
     }
 
-
     function updateMinMaxPriority(tileset, tile) {
         tileset._maxPriority.distance = Math.max(tile._priorityDistanceHolder._priorityDistance, tileset._maxPriority.distance);
         if (tile._priorityDistance < tileset._minPriority.distance) {
             tileset._minPriority.distance = tile._priorityDistance;
             tileset._minPriority.minDistanceTile = tile;
-        }
-        if (tile._priorityDistanceHolder._priorityDistance <= tileset._minPriority.distance) {
-            tileset._minPriority.minPriorityHolder = tile;
         }
         tileset._maxPriority.level = Math.max(tile._depth, tileset._maxPriority.level);
         tileset._minPriority.level = Math.min(tile._depth, tileset._minPriority.level);
@@ -223,112 +218,77 @@ define([
     function loadTile(tileset, tile, frameState) {
         if (hasUnloadedContent(tile) || tile.contentExpired) {
             tile._requestedFrame = frameState.frameNumber;
-            updateMinMaxPriority(tileset, tile);
             tileset._requestedTiles.push(tile);
         }
     }
 
-    function updateVisibility(tileset, tile, frameState) {
-        if (tile._updatedVisibilityFrame === tileset._updatedVisibilityFrame) {
-            // Return early if visibility has already been checked during the traversal.
-            // The visibility may have already been checked if the cullWithChildrenBounds optimization is used.
-            return;
-        }
+    // function updateVisibility(tileset, tile, frameState) {
+    //     if (tile._updatedVisibilityFrame === tileset._updatedVisibilityFrame) {
+    //         // Return early if visibility has already been checked during the traversal.
+    //         // The visibility may have already been checked if the cullWithChildrenBounds optimization is used.
+    //         return;
+    //     }
+    //
+    //     tile.updateVisibility(frameState);
+    //     tile._updatedVisibilityFrame = tileset._updatedVisibilityFrame;
+    // }
 
-        tile.updateVisibility(frameState);
-        tile._updatedVisibilityFrame = tileset._updatedVisibilityFrame;
-    }
+    // function anyChildrenVisible(tileset, tile, frameState) {
+    //     var anyVisible = false;
+    //     var children = tile.children;
+    //     var length = children.length;
+    //     for (var i = 0; i < length; ++i) {
+    //         var child = children[i];
+    //         updateVisibility(tileset, child, frameState);
+    //         anyVisible = anyVisible || isVisible(child);
+    //     }
+    //     return anyVisible;
+    // }
 
-    function anyChildrenVisible(tileset, tile, frameState) {
-        var anyVisible = false;
-        var children = tile.children;
-        var length = children.length;
-        for (var i = 0; i < length; ++i) {
-            var child = children[i];
-            updateVisibility(tileset, child, frameState);
-            anyVisible = anyVisible || isVisible(child);
-        }
-        return anyVisible;
-    }
+    // function meetsScreenSpaceErrorEarly(tileset, tile, frameState) {
+    //     var parent = tile.parent;
+    //     if (!defined(parent) || parent.hasTilesetContent || (parent.refine !== Cesium3DTileRefine.ADD)) {
+    //         return false;
+    //     }
+    //
+    //     // Use parent's geometric error with child's box to see if the tile already meet the SSE
+    //     return tile.getScreenSpaceError(frameState, true) <= tileset._maximumScreenSpaceError;
+    // }
 
-    function meetsScreenSpaceErrorEarly(tileset, tile, frameState) {
-        var parent = tile.parent;
-        if (!defined(parent) || parent.hasTilesetContent || (parent.refine !== Cesium3DTileRefine.ADD)) {
-            return false;
-        }
-
-        // Use parent's geometric error with child's box to see if the tile already meet the SSE
-        return tile.getScreenSpaceError(frameState, true) <= tileset._maximumScreenSpaceError;
-    }
-
-    function updateTileVisibility(tileset, tile, frameState) {
-        updateVisibility(tileset, tile, frameState);
-
-        if (!isVisible(tile)) {
-            return;
-        }
-
-        var hasChildren = tile.children.length > 0;
-        if (tile.hasTilesetContent && hasChildren) {
-            // Use the root tile's visibility instead of this tile's visibility.
-            // The root tile may be culled by the children bounds optimization in which
-            // case this tile should also be culled.
-            var child = tile.children[0];
-            updateTileVisibility(tileset, child, frameState);
-            tile._visible = child._visible;
-            return;
-        }
-
-        if (meetsScreenSpaceErrorEarly(tileset, tile, frameState)) {
-            tile._visible = false;
-            return;
-        }
-
-        // Optimization - if none of the tile's children are visible then this tile isn't visible
-        var replace = tile.refine === Cesium3DTileRefine.REPLACE;
-        var useOptimization = tile._optimChildrenWithinParent === Cesium3DTileOptimizationHint.USE_OPTIMIZATION;
-        if (replace && useOptimization && hasChildren) {
-            if (!anyChildrenVisible(tileset, tile, frameState)) {
-                ++tileset._statistics.numberOfTilesCulledWithChildrenUnion;
-                tile._visible = false;
-                return;
-            }
-        }
-    }
-
-    function updateTile(tileset, tile, frameState) {
-        // Reset some of the tile's flags to neutral and re-evaluate visability, and ancestor content pointers
-        tile.updateVisibility(frameState);
-        tile._priorityDistance = getPriority(tileset, tile, frameState); // updateAndPushChildren() needs this value for the priority chaining so it must be determined here and not loadTile
-        tile._priorityDistanceHolder = tile;
-        // updateMinMaxPriority(tileset, tile);
-        tile.updateExpiration();
-
-        // Alpha blending
-        tile._decendantsThatHaveFadedIn = 0;
-        tile._decendantsThatHaveFadedInLastFrame = 0;
-        tile._decendantsCount = 0;
-
-        // Priority scheme
-        tile._wasMinChild = false;
-
-        // SkipLOD
-        tile._shouldSelect = false;
-        tile._finalResolution = true;
-    }
-
-    function updateTileAncestorContentLinks(tile, frameState) {
-        tile._ancestorWithContent = undefined;
-        tile._ancestorWithContentAvailable = undefined;
-
-        var parent = tile.parent;
-        if (defined(parent)) {
-            var hasContent = !hasUnloadedContent(parent) || (parent._requestedFrame === frameState.frameNumber);
-            tile._ancestorWithContent = hasContent ? parent : parent._ancestorWithContent;
-            tile._ancestorWithContentAvailable = parent.contentAvailable ? parent : parent._ancestorWithContentAvailable; // Links a decendent up to its contentAvailable ancestor as the traversal progresses.
-        }
-    }
-
+    // function updateTileVisibility(tileset, tile, frameState) {
+    //     updateVisibility(tileset, tile, frameState);
+    //
+    //     if (!isVisible(tile)) {
+    //         return;
+    //     }
+    //
+    //     var hasChildren = tile.children.length > 0;
+    //     if (tile.hasTilesetContent && hasChildren) {
+    //         // Use the root tile's visibility instead of this tile's visibility.
+    //         // The root tile may be culled by the children bounds optimization in which
+    //         // case this tile should also be culled.
+    //         var child = tile.children[0];
+    //         updateTileVisibility(tileset, child, frameState);
+    //         tile._visible = child._visible;
+    //         return;
+    //     }
+    //
+    //     if (meetsScreenSpaceErrorEarly(tileset, tile, frameState)) {
+    //         tile._visible = false;
+    //         return;
+    //     }
+    //
+    //     // Optimization - if none of the tile's children are visible then this tile isn't visible
+    //     var replace = tile.refine === Cesium3DTileRefine.REPLACE;
+    //     var useOptimization = tile._optimChildrenWithinParent === Cesium3DTileOptimizationHint.USE_OPTIMIZATION;
+    //     if (replace && useOptimization && hasChildren) {
+    //         if (!anyChildrenVisible(tileset, tile, frameState)) {
+    //             ++tileset._statistics.numberOfTilesCulledWithChildrenUnion;
+    //             tile._visible = false;
+    //             return;
+    //         }
+    //     }
+    // }
 
     // function updateTile(tileset, tile, frameState) {
     //     updateTileVisibility(tileset, tile, frameState);
@@ -349,6 +309,34 @@ define([
     //         tile._ancestorWithContentAvailable = parent.contentAvailable ? parent : parent._ancestorWithContentAvailable;
     //     }
     // }
+
+    function updateTile(tileset, tile, frameState) {
+        // Reset some of the tile's flags to neutral and re-evaluate visability
+        tile.updateVisibility(frameState);
+        tile.updateExpiration();
+
+        // Request priority
+        tile._wasMinChild = false;
+        tile._priorityDistance = getPriority(tileset, tile, frameState); // updateAndPushChildren() needs this value for the priority chaining so it must be determined here and not loadTile
+        tile._priorityDistanceHolder = tile;
+        updateMinMaxPriority(tileset, tile);
+
+        // SkipLOD
+        tile._shouldSelect = false;
+        tile._finalResolution = true;
+    }
+
+    function updateTileAncestorContentLinks(tile, frameState) {
+        tile._ancestorWithContent = undefined;
+        tile._ancestorWithContentAvailable = undefined;
+
+        var parent = tile.parent;
+        if (defined(parent)) {
+            var hasContent = !hasUnloadedContent(parent) || (parent._requestedFrame === frameState.frameNumber);
+            tile._ancestorWithContent = hasContent ? parent : parent._ancestorWithContent;
+            tile._ancestorWithContentAvailable = parent.contentAvailable ? parent : parent._ancestorWithContentAvailable; // Links a decendent up to its contentAvailable ancestor as the traversal progresses.
+        }
+    }
 
     function hasEmptyContent(tile) {
         return tile.hasEmptyContent || tile.hasTilesetContent;
@@ -434,7 +422,7 @@ define([
             refines = false;
         }
 
-        // For the priority scheme, priorites are inherited up the tree as needed.       
+        // For the priority scheme, priorites are inherited up the tree as needed.
         // Only link up if the tile hasn't already been linked to something else (this will be the case if the tile is the root or the closest child tile amongst its siblings in a previous updateAndPushChildren)
         // Need siblings to link their minPriority their siblings to help refinement along, otherwise it will get held up the renfinement dependencies will be out of sync priority wise (important for non-skipLOD in general and important for skipLOD to remove higher lod artifacts as fast as possible (giant triangles cutting through the near parts of the scene) helps alpha blending look nicer)
         if (minIndex !== -1) {
@@ -443,11 +431,11 @@ define([
             var priorityHolder = tile._wasMinChild || tile === tileset.root ? tile._priorityDistanceHolder : tile; // This is where priority dependencies chains are wired up and existing one or started anew.
             var thisMin =  minPriorityChild._priorityDistance;
             var currentMin = priorityHolder._priorityDistance;
-            priorityHolder._priorityDistance = thisMin < currentMin ? thisMin : currentMin; 
+            priorityHolder._priorityDistance = thisMin < currentMin ? thisMin : currentMin;
 
             for (i = 0; i < length; ++i) {
-                var child = children[i];
-                child._priorityDistanceHolder = priorityHolder;
+                var theChild = children[i];
+                theChild._priorityDistanceHolder = priorityHolder;
             }
         }
 
