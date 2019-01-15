@@ -2037,8 +2037,11 @@ define([
             ready = Cesium3DTilesetTraversal.selectTiles(tileset, frameState);
         }
 
-        if (isRender || isAsync) {
+        if (isRender) {
             cancelOutOfViewRequestedTiles(tileset, frameState);
+        }
+
+        if (isRender || isAsync) {
             requestTiles(tileset);
         }
 
