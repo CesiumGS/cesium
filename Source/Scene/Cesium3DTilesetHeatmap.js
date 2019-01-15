@@ -69,8 +69,19 @@ define([
         }
 
         updateMinMax(this, tile);
-        var min = this._previousMin;
-        var max = this._previousMax;
+        // var min = this._previousMin;
+        // var max = this._previousMax;
+        // TODO: remove
+        var min; 
+        var max;
+        if (variableName === '_time') {
+            min = 0;
+            max = 6;
+        } else {
+            min = this._previousMin;
+            max = this._previousMax;
+        }
+
         if (min === Number.MAX_VALUE || max === -Number.MAX_VALUE) {
             return;
         }
@@ -109,6 +120,7 @@ define([
         if (defined(variableName)) {
             this._previousMin = this._min;
             this._previousMax = this._max;
+
             this._min = Number.MAX_VALUE;
             this._max = -Number.MAX_VALUE;
         }

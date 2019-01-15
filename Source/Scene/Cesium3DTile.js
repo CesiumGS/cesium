@@ -345,6 +345,8 @@ define([
         this._priorityDistance = Number.MAX_VALUE; // Want to link up priorities so that any blobby LODs will inherit its highest priority visible decendant so that it refines quickly in both skipLOD and non-skipLOD
         this._priorityDistanceHolder = this; // Reference to the tile up the tree that holds the priority for all tiles in the refinement chain.
         this._wasMinChild = false; // Gets reset to false in updateTile (traversal)
+        // TODO: remove
+        this._time = 0;
 
         this._commandsLength = 0;
 

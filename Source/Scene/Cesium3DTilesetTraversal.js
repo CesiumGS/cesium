@@ -240,7 +240,10 @@ define([
         // // this._centerZDepth = this.distanceToTileCenter(frameState); // camera space depth
 
         // BEST SO FAR:
-        var priority = CesiumMath.clamp(tile._centerZDepth - boundingSphere.radius, 0, tile._centerZDepth); // Any negative z depth will get clamped to 0. If inside sphere then clamped to 0. Maybe we want to deferr negatives? we really only want closest positive? closest to 0?
+        // var priority = CesiumMath.clamp(tile._centerZDepth - boundingSphere.radius, 0, tile._centerZDepth); // Any negative z depth will get clamped to 0. If inside sphere then clamped to 0. Maybe we want to deferr negatives? we really only want closest positive? closest to 0?
+        // var priority = Math.max(tile._centerZDepth + boundingSphere.radius, 0); // Junk, huge pauses.
+        // var priority = Math.max(tile._centerZDepth, 0);
+        var priority = tile._distanceToCamera; // pretty good
         return priority;
 
         // if (tile._centerZDepth >= 0) {
