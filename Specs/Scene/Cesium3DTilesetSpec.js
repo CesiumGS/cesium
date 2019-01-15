@@ -3509,4 +3509,39 @@ defineSuite([
             });
         });
     });
+
+    it('cancels out-of-view tiles', function() {
+        viewNothing();
+
+        return Cesium3DTilesTester.loadTileset(scene, tilesetUniform).then(function(tileset) {
+            // Make requests
+            viewAllTiles();
+            scene.renderForSpecs();
+            var requestedTilesInFlight = tileset._requestedTilesInFlight;
+            var requestedTilesInFlightLength = requestedTilesInFlight.length;
+            expect(requestedTilesInFlightLength).toBeGreaterThan(0);
+
+            // Save off old requests
+            var oldRequests = [];
+            var i;
+            for (i = 0; i < requestedTilesInFlightLength; i++) {
+                oldRequests.push(requestedTilesInFlight[i]);
+            }
+
+            // Cancel requests
+            viewNothing();
+            scene.renderForSpecs();
+            expect(requestedTilesInFlight.length).toBe(0);
+
+            // Make sure old requests were marked for cancelling
+            var allCancelled = true;
+            var oldRequestsLength = oldRequests.length;
+            for (i = 0; i < oldRequestsLength; i++) {
+                var tile = oldRequests[i];
+                allCancelled = allCancelled && tile._request.cancelled;
+            }
+            expect(allCancelled).toBe(true);
+        });
+    });
+
 }, 'WebGL');
