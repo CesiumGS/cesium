@@ -162,6 +162,13 @@ define([
         return {};
     }
 
+    // Cache the value of supportsWebp since it can take up to 300 ms to resolve.
+    var supportsWebp;
+    FeatureDetection.supportsWebp()
+    .then(function(result) {
+        supportsWebp = result;
+    });
+
     var boundingSphereCartesian3Scratch = new Cartesian3();
 
     var ModelState = ModelUtility.ModelState;
@@ -1650,7 +1657,7 @@ define([
             var gltfImage = images[imageId];
             var extras = gltfImage.extras;
 
-            if (defined(gltfImage.extensions) && defined(gltfImage.extensions.EXT_image_webp)) {
+            if (defined(gltfImage.extensions) && defined(gltfImage.extensions.EXT_image_webp) && supportsWebp) {
                 gltfImage = gltfImage.extensions.EXT_image_webp;
             }
 

@@ -45,6 +45,13 @@ define([
      */
     var ModelUtility = {};
 
+    // Cache the value of supportsWebp since it can take up to 300 ms to resolve.
+    var supportsWebp;
+    FeatureDetection.supportsWebp()
+    .then(function(result) {
+        supportsWebp = result;
+    });
+
     /**
      * Updates the model's forward axis if the model is not a 2.0 model.
      *
@@ -500,6 +507,10 @@ define([
             if (extensionsRequired.hasOwnProperty(extension)) {
                 if (!ModelUtility.supportedExtensions[extension]) {
                     throw new RuntimeError('Unsupported glTF Extension: ' + extension);
+                }
+
+                if (extension == 'EXT_image_webp' && supportsWebp === false) {
+                    throw new RuntimeError('Loaded model requires WebP but browser does not support it.');
                 }
             }
         }
