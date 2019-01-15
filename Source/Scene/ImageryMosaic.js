@@ -127,7 +127,7 @@ define([
         for (i = 0; i < concurrency; i++) {
             taskProcessors[i] = new TaskProcessor('createReprojectedImagery');
             var initwasm = taskProcessors[i].initWebAssemblyModule({
-                modulePath : 'ThirdParty/stbi_decode.js',
+                modulePath : 'ThirdParty/Workers/stbi_decode.js',
                 wasmBinaryFile : 'ThirdParty/stbi_decode.wasm'
             });
             initWebAssemblyPromises.push(initwasm.promise);
@@ -559,7 +559,7 @@ define([
             unprojectedSouthEast.longitude, unprojectedSouthEast.latitude,
             unprojectedSouthWest.longitude, unprojectedSouthWest.latitude
         ]);
-    };
+    }
 
     ImageryMosaic._getHierarchy = getHierarchy;
 
