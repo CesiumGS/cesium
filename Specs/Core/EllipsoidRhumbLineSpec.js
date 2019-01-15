@@ -193,16 +193,6 @@ defineSuite([
         expect(CesiumMath.PI).toEqualEpsilon(rhumb2.heading, CesiumMath.EPSILON12);
     });
 
-    it('computes no distance', function() {
-        var ellipsoid = new Ellipsoid(6, 6, 3);
-        var start = new Cartographic(CesiumMath.PI_OVER_TWO, 0.0);
-        var end = new Cartographic(CesiumMath.PI_OVER_TWO, 0.0);
-
-        var rhumb = new EllipsoidRhumbLine(start, end, ellipsoid);
-        expect(0).toEqualEpsilon(rhumb.surfaceDistance, CesiumMath.EPSILON12);
-        expect(0).toEqualEpsilon(rhumb.heading, CesiumMath.EPSILON12);
-    });
-
     it('computes distance at equator', function() {
         var ellipsoid = new Ellipsoid(6, 6, 3);
         var start = new Cartographic(-CesiumMath.PI_OVER_FOUR, 0.0);
@@ -221,7 +211,7 @@ defineSuite([
         expect(thirtyDegrees * 6).toEqualEpsilon(rhumb.surfaceDistance, CesiumMath.EPSILON12);
     });
 
-    it('computes distance for sphere 90 degrees along meridian and equator and check equality', function() {
+    it('computes equal distance on sphere for 90 degrees arcs along meridian and equator', function() {
         var ellipsoid = new Ellipsoid(6, 6, 6);
         var fortyFiveSouth = new Cartographic(0.0, -CesiumMath.PI_OVER_FOUR);
         var fortyFiveNorth = new Cartographic(0.0, CesiumMath.PI_OVER_FOUR);
@@ -251,7 +241,18 @@ defineSuite([
         expect(distance).toEqualEpsilon(rhumb.surfaceDistance, CesiumMath.EPSILON12);
     });
 
-    it('tests sphere', function() {
+    it('fromStartHeadingDistance throws if distance is 0', function() {
+        var radius = 6378137.0;
+        var ellipsoid = new Ellipsoid(radius, radius, radius);
+        var initial = new Cartographic(fifteenDegrees, fifteenDegrees);
+
+        expect(function() {
+            var rhumb = EllipsoidRhumbLine.fromStartHeadingDistance(initial, fifteenDegrees, 0.0, ellipsoid);
+            return rhumb.interpolateUsingSurfaceDistance(0);
+        }).toThrowDeveloperError();
+    });
+
+    it('computes heading and distance given endpoints on sphere ', function() {
         var radius = 6378137.0;
         var ellipsoid = new Ellipsoid(radius, radius, radius);
         var initial = new Cartographic(fifteenDegrees, fifteenDegrees);
@@ -264,7 +265,7 @@ defineSuite([
         expect(distance).toEqualEpsilon(rhumb2.surfaceDistance, CesiumMath.EPSILON6);
     });
 
-    it('tests sphereoid', function() {
+    it('computes heading and distance given endpoints on sphereoid', function() {
         var ellipsoid = Ellipsoid.WGS84;
         var initial = new Cartographic(fifteenDegrees, fifteenDegrees);
         var distance = ellipsoid.maximumRadius * fifteenDegrees;
@@ -328,27 +329,27 @@ defineSuite([
         var rhumb1 = EllipsoidRhumbLine.fromStartHeadingDistance(initial, eightyNineDegrees, distance, ellipsoid);
         var rhumb2 = new EllipsoidRhumbLine(initial, rhumb1.end, ellipsoid);
         expect(rhumb1.heading).toEqualEpsilon(rhumb2.heading, CesiumMath.EPSILON12);
-        expect(rhumb1.surfaceDistance).toEqualEpsilon(rhumb2.surfaceDistance, CesiumMath.EPSILON3);
+        expect(rhumb1.surfaceDistance).toEqualEpsilon(rhumb2.surfaceDistance, CesiumMath.EPSILON6);
 
         rhumb1 = EllipsoidRhumbLine.fromStartHeadingDistance(initial, eightyNinePointNineDegrees, distance, ellipsoid);
         rhumb2 = new EllipsoidRhumbLine(initial, rhumb1.end, ellipsoid);
         expect(rhumb1.heading).toEqualEpsilon(rhumb2.heading, CesiumMath.EPSILON12);
-        expect(rhumb1.surfaceDistance).toEqualEpsilon(rhumb2.surfaceDistance, CesiumMath.EPSILON3);
+        expect(rhumb1.surfaceDistance).toEqualEpsilon(rhumb2.surfaceDistance, CesiumMath.EPSILON6);
 
         rhumb1 = EllipsoidRhumbLine.fromStartHeadingDistance(initial, ninetyDegrees, distance, ellipsoid);
         rhumb2 = new EllipsoidRhumbLine(initial, rhumb1.end, ellipsoid);
         expect(rhumb1.heading).toEqualEpsilon(rhumb2.heading, CesiumMath.EPSILON12);
-        expect(rhumb1.surfaceDistance).toEqualEpsilon(rhumb2.surfaceDistance, CesiumMath.EPSILON3);
+        expect(rhumb1.surfaceDistance).toEqualEpsilon(rhumb2.surfaceDistance, CesiumMath.EPSILON6);
 
         rhumb1 = EllipsoidRhumbLine.fromStartHeadingDistance(initial, ninetyPointOneDegrees, distance, ellipsoid);
         rhumb2 = new EllipsoidRhumbLine(initial, rhumb1.end, ellipsoid);
         expect(rhumb1.heading).toEqualEpsilon(rhumb2.heading, CesiumMath.EPSILON12);
-        expect(rhumb1.surfaceDistance).toEqualEpsilon(rhumb2.surfaceDistance, CesiumMath.EPSILON3);
+        expect(rhumb1.surfaceDistance).toEqualEpsilon(rhumb2.surfaceDistance, CesiumMath.EPSILON6);
 
         rhumb1 = EllipsoidRhumbLine.fromStartHeadingDistance(initial, ninetyPointZeroTwoDegrees, distance, ellipsoid);
         rhumb2 = new EllipsoidRhumbLine(initial, rhumb1.end, ellipsoid);
         expect(rhumb1.heading).toEqualEpsilon(rhumb2.heading, CesiumMath.EPSILON12);
-        expect(rhumb1.surfaceDistance).toEqualEpsilon(rhumb2.surfaceDistance, CesiumMath.EPSILON3);
+        expect(rhumb1.surfaceDistance).toEqualEpsilon(rhumb2.surfaceDistance, CesiumMath.EPSILON6);
     });
 
     it('test sphereoid across meridian', function() {
@@ -375,14 +376,14 @@ defineSuite([
         var rhumb2 = new EllipsoidRhumbLine.fromStartHeadingDistance(initial, 3.0 * CesiumMath.PI_OVER_TWO, distance, ellipsoid);
 
         expect(-CesiumMath.PI_OVER_TWO).toEqualEpsilon(rhumb1.heading, CesiumMath.EPSILON12);
-        expect(CesiumMath.PI / 6 * ellipsoid.maximumRadius).toEqualEpsilon(rhumb1.surfaceDistance, CesiumMath.EPSILON6);
+        expect(distance).toEqualEpsilon(rhumb1.surfaceDistance, CesiumMath.EPSILON6);
         expect(rhumb1.heading).toEqualEpsilon(rhumb2.heading, CesiumMath.EPSILON12);
         expect(rhumb1.surfaceDistance).toEqualEpsilon(rhumb2.surfaceDistance, CesiumMath.EPSILON6);
 
         var rhumb3 = new EllipsoidRhumbLine(final, initial, ellipsoid);
         var rhumb4 = new EllipsoidRhumbLine.fromStartHeadingDistance(final, CesiumMath.PI_OVER_TWO, distance, ellipsoid);
         expect(CesiumMath.PI_OVER_TWO).toEqualEpsilon(rhumb3.heading, CesiumMath.EPSILON12);
-        expect(CesiumMath.PI / 6 * ellipsoid.maximumRadius).toEqualEpsilon(rhumb3.surfaceDistance, CesiumMath.EPSILON6);
+        expect(distance).toEqualEpsilon(rhumb3.surfaceDistance, CesiumMath.EPSILON6);
         expect(rhumb3.heading).toEqualEpsilon(rhumb4.heading, CesiumMath.EPSILON12);
         expect(rhumb3.surfaceDistance).toEqualEpsilon(rhumb4.surfaceDistance, CesiumMath.EPSILON6);
     });
@@ -397,6 +398,7 @@ defineSuite([
         var geodesic = new EllipsoidGeodesic(initial, final, ellipsoid);
         expect(0.0).toEqualEpsilon(rhumb.heading, CesiumMath.EPSILON12);
         expect(geodesic.startHeading).toEqualEpsilon(rhumb.heading, CesiumMath.EPSILON12);
+        expect(geodesic.surfaceDistance).toEqualEpsilon(rhumb.surfaceDistance, CesiumMath.EPSILON6);
     });
 
     it('test on equator', function() {
@@ -409,7 +411,7 @@ defineSuite([
         var geodesic = new EllipsoidGeodesic(initial, final, ellipsoid);
         expect(CesiumMath.PI_OVER_TWO).toEqualEpsilon(rhumb.heading, CesiumMath.EPSILON12);
         expect(geodesic.startHeading).toEqualEpsilon(rhumb.heading, CesiumMath.EPSILON12);
-        expect(geodesic.surfaceDistance).toEqualEpsilon(rhumb.surfaceDistance, CesiumMath.EPSILON4);
+        expect(geodesic.surfaceDistance).toEqualEpsilon(rhumb.surfaceDistance, CesiumMath.EPSILON4); // Due to computational difference, slightly larger tolerance
     });
 
     it('test close to poles', function() {

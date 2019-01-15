@@ -300,6 +300,7 @@ define([
         Check.defined('start', start);
         Check.defined('heading', heading);
         Check.defined('distance', distance);
+        Check.typeOf.number.greaterThan('distance', distance, 0.0);
         //>>includeEnd('debug');
 
         var e = defaultValue(ellipsoid, Ellipsoid.WGS84);
@@ -354,7 +355,7 @@ define([
     EllipsoidRhumbLine.prototype.interpolateUsingSurfaceDistance = function(distance, result) {
         //>>includeStart('debug', pragmas.debug);
         Check.defined('distance', distance);
-        Check.defined('this._distance', this._distance);
+        Check.typeOf.number.greaterThan('this._distance', this._distance, CesiumMath.EPSILON12);
         //>>includeEnd('debug');
 
         var ellipsoid = this._ellipsoid;
