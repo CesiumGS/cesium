@@ -52,7 +52,8 @@ define([
         './QuadtreeTileLoadState',
         './SceneMode',
         './ShadowMode',
-        './TerrainFillMesh'
+        './TerrainFillMesh',
+        './TerrainState'
     ], function(
         AttributeCompression,
         BoundingSphere,
@@ -107,7 +108,8 @@ define([
         QuadtreeTileLoadState,
         SceneMode,
         ShadowMode,
-        TerrainFillMesh) {
+        TerrainFillMesh,
+        TerrainState) {
     'use strict';
 
     /**
@@ -664,6 +666,103 @@ define([
         }
         var childAvailable = this.terrainProvider.getTileDataAvailable(tile.x * 2, tile.y * 2, tile.level + 1);
         return childAvailable !== undefined;
+    };
+
+    var readyImageryScratch = [];
+    var canRenderTraversalStack = [];
+
+    /**
+     * Determines if the given not-fully-loaded tile can be rendered without losing detail that
+     * was present last frame as a result of rendering descendant tiles. This method will only be
+     * called if this tile's descendants were rendered last frame. If the tile is fully loaded,
+     * it is assumed that this method will return true and it will not be called.
+     * @param {QuadtreeTile} tile The tile to check.
+     * @returns {boolean} True if the tile can be rendered without losing detail.
+     */
+    GlobeSurfaceTileProvider.prototype.canRenderWithoutLosingDetail = function(tile, frameState) {
+        var surfaceTile = tile.data;
+
+        var readyImagery = readyImageryScratch;
+        readyImagery.length = this._imageryLayers.length;
+
+        var terrainReady = false;
+        var initialImageryState = false;
+        var imagery;
+
+        if (defined(surfaceTile)) {
+            // We can render even with non-ready terrain as long as all our rendered descendants
+            // are missing terrain geometry too. i.e. if we rendered fills for more detailed tiles
+            // last frame, it's ok to render a fill for this tile this frame.
+            terrainReady = surfaceTile.terrainState === TerrainState.READY;
+
+            // Initially assume all imagery layers are ready, unless imagery hasn't been initialized at all.
+            initialImageryState = true;
+
+            imagery = surfaceTile.imagery;
+        }
+
+        var i;
+        var len;
+
+        for (i = 0, len = readyImagery.length; i < len; ++i) {
+            readyImagery[i] = initialImageryState;
+        }
+
+        if (defined(imagery)) {
+            for (i = 0, len = imagery.length; i < len; ++i) {
+                var tileImagery = imagery[i];
+                var loadingImagery = tileImagery.loadingImagery;
+                var isReady = !defined(loadingImagery) || loadingImagery.state === ImageryState.FAILED || loadingImagery.state === ImageryState.INVALID;
+                var layerIndex = (tileImagery.loadingImagery || tileImagery.readyImagery).imageryLayer._layerIndex;
+
+                // For a layer to be ready, all tiles belonging to that layer must be ready.
+                readyImagery[layerIndex] = isReady && readyImagery[layerIndex];
+            }
+        }
+
+        var lastFrame = this.quadtree._lastSelectionFrameNumber;
+
+        // Traverse the descendants looking for one with terrain or imagery that is not loaded on this tile.
+        var stack = canRenderTraversalStack;
+        stack.length = 0;
+        stack.push(tile.southwestChild, tile.southeastChild, tile.northwestChild, tile.northeastChild);
+
+        while (stack.length > 0) {
+            var descendant = stack.pop();
+            var lastFrameSelectionResult = descendant._lastSelectionResultFrame === lastFrame ? descendant._lastSelectionResult : TileSelectionResult.NONE;
+
+            if (lastFrameSelectionResult === TileSelectionResult.RENDERED) {
+                var descendantSurface = descendant.data;
+
+                if (!defined(descendantSurface)) {
+                    // Descendant has no data, so it can't block rendering.
+                    continue;
+                }
+
+                if (!terrainReady && descendant.data.terrainState === TerrainState.READY) {
+                    // Rendered descendant has real terrain, but we don't. Rendering is blocked.
+                    return false;
+                }
+
+                var descendantImagery = descendant.data.imagery;
+                for (i = 0, len = descendantImagery.length; i < len; ++i) {
+                    var descendantTileImagery = descendantImagery[i];
+                    var descendantLoadingImagery = descendantTileImagery.loadingImagery;
+                    var descendantIsReady = !defined(descendantLoadingImagery) || descendantLoadingImagery.state === ImageryState.FAILED || descendantLoadingImagery.state === ImageryState.INVALID;
+                    var descendantLayerIndex = (descendantTileImagery.loadingImagery || descendantTileImagery.readyImagery).imageryLayer._layerIndex;
+
+                    // If this imagery tile of a descendant is ready but the layer isn't ready in this tile,
+                    // then rendering is blocked.
+                    if (descendantIsReady && !readyImagery[descendantLayerIndex]) {
+                        return false;
+                    }
+                }
+            } else if (lastFrameSelectionResult === TileSelectionResult.REFINED) {
+                stack.push(descendant.southwestChild, descendant.southeastChild, descendant.northwestChild, descendant.northeastChild);
+            }
+        }
+
+        return true;
     };
 
     var tileDirectionScratch = new Cartesian3();

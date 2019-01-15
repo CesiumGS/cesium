@@ -643,26 +643,40 @@ define([
         var lastFrame = primitive._lastSelectionFrameNumber;
         var lastFrameSelectionResult = tile._lastSelectionResultFrame === lastFrame ? tile._lastSelectionResult : TileSelectionResult.NONE;
 
+        var tileProvider = primitive.tileProvider;
+
         if (meetsSse || ancestorMeetsSse) {
             // This tile (or an ancestor) is the one we want to render this frame, but we'll do different things depending
             // on the state of this tile and on what we did _last_ frame.
 
             // We can render it if _any_ of the following are true:
             // 1. We rendered it (or kicked it) last frame.
-            // 2. a) Terrain is ready, and
-            //    b) All necessary iagery is ready. Necessary imagery is imagery that was rendered with this tile
+            // 2. This tile was culled last frame, or it wasn't even visited because an ancestor was culled.
+            // 3. The tile is completely done loading.
+            // 4. a) Terrain is ready, and
+            //    b) All necessary imagery is ready. Necessary imagery is imagery that was rendered with this tile
             //       or any descendants last frame. Such imagery is required because rendering this tile without
-            //       it would cause detail to disappear. But determining which imagery is actually necessary is
-            //       challenging, so instead we are currently requiring that _all_ imagery is ready.
-            // 3. This tile was culled last frame, or it wasn't even visited because an ancestor was culled.
+            //       it would cause detail to disappear.
+            //
+            // Determining condition 4 is more expensive, so we check the others first..
             //
             // Note that even if we decide to render a tile here, it may later get "kicked" in favor of an ancestor.
 
             var oneRenderedLastFrame = TileSelectionResult.originalResult(lastFrameSelectionResult) === TileSelectionResult.RENDERED;
-            var twoCompletelyLoaded = tile.state === QuadtreeTileLoadState.DONE;
-            var threeCulledOrNotVisited = lastFrameSelectionResult === TileSelectionResult.CULLED || lastFrameSelectionResult === TileSelectionResult.NONE;
+            var twoCulledOrNotVisited = lastFrameSelectionResult === TileSelectionResult.CULLED || lastFrameSelectionResult === TileSelectionResult.NONE;
+            var threeCompletelyLoaded = tile.state === QuadtreeTileLoadState.DONE;
 
-            if (oneRenderedLastFrame || twoCompletelyLoaded || threeCulledOrNotVisited) {
+            var renderable = oneRenderedLastFrame || twoCulledOrNotVisited || threeCompletelyLoaded;
+
+            if (!renderable) {
+                // Check the more expensive condition 4 above. This requires details of the thing
+                // we're rendering (e.g. the globe surface), so delegate it to the tile provider.
+                if (defined(tileProvider.canRenderWithoutLosingDetail)) {
+                    renderable = tileProvider.canRenderWithoutLosingDetail(tile);
+                }
+            }
+
+            if (renderable) {
                 // Only load this tile if it (not just an ancestor) meets the SSE.
                 if (meetsSse) {
                     queueTileLoad(primitive, primitive._tileLoadQueueMedium, tile, frameState);
@@ -697,8 +711,6 @@ define([
                 queueTileLoad(primitive, primitive._tileLoadQueueHigh, tile, frameState);
             }
         }
-
-        var tileProvider = primitive.tileProvider;
 
         if (tileProvider.canRefine(tile)) {
             var allAreUpsampled = southwestChild.upsampledFromParent && southeastChild.upsampledFromParent &&
