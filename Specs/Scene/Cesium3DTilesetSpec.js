@@ -3533,7 +3533,7 @@ defineSuite([
             scene.renderForSpecs();
             expect(requestedTilesInFlight.length).toBe(0);
 
-            // Make sure old requets were marked for cancelling
+            // Make sure old requests were marked for cancelling
             var allCancelled = true;
             var oldRequestsLength = oldRequests.length;
             for (i = 0; i < oldRequestsLength; i++) {
