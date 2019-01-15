@@ -222,94 +222,6 @@ define([
         }
     }
 
-    // function updateVisibility(tileset, tile, frameState) {
-    //     if (tile._updatedVisibilityFrame === tileset._updatedVisibilityFrame) {
-    //         // Return early if visibility has already been checked during the traversal.
-    //         // The visibility may have already been checked if the cullWithChildrenBounds optimization is used.
-    //         return;
-    //     }
-    //
-    //     tile.updateVisibility(frameState);
-    //     tile._updatedVisibilityFrame = tileset._updatedVisibilityFrame;
-    // }
-
-    // function anyChildrenVisible(tileset, tile, frameState) {
-    //     var anyVisible = false;
-    //     var children = tile.children;
-    //     var length = children.length;
-    //     for (var i = 0; i < length; ++i) {
-    //         var child = children[i];
-    //         updateVisibility(tileset, child, frameState);
-    //         anyVisible = anyVisible || isVisible(child);
-    //     }
-    //     return anyVisible;
-    // }
-
-    // function meetsScreenSpaceErrorEarly(tileset, tile, frameState) {
-    //     var parent = tile.parent;
-    //     if (!defined(parent) || parent.hasTilesetContent || (parent.refine !== Cesium3DTileRefine.ADD)) {
-    //         return false;
-    //     }
-    //
-    //     // Use parent's geometric error with child's box to see if the tile already meet the SSE
-    //     return tile.getScreenSpaceError(frameState, true) <= tileset._maximumScreenSpaceError;
-    // }
-
-    // function updateTileVisibility(tileset, tile, frameState) {
-    //     updateVisibility(tileset, tile, frameState);
-    //
-    //     if (!isVisible(tile)) {
-    //         return;
-    //     }
-    //
-    //     var hasChildren = tile.children.length > 0;
-    //     if (tile.hasTilesetContent && hasChildren) {
-    //         // Use the root tile's visibility instead of this tile's visibility.
-    //         // The root tile may be culled by the children bounds optimization in which
-    //         // case this tile should also be culled.
-    //         var child = tile.children[0];
-    //         updateTileVisibility(tileset, child, frameState);
-    //         tile._visible = child._visible;
-    //         return;
-    //     }
-    //
-    //     if (meetsScreenSpaceErrorEarly(tileset, tile, frameState)) {
-    //         tile._visible = false;
-    //         return;
-    //     }
-    //
-    //     // Optimization - if none of the tile's children are visible then this tile isn't visible
-    //     var replace = tile.refine === Cesium3DTileRefine.REPLACE;
-    //     var useOptimization = tile._optimChildrenWithinParent === Cesium3DTileOptimizationHint.USE_OPTIMIZATION;
-    //     if (replace && useOptimization && hasChildren) {
-    //         if (!anyChildrenVisible(tileset, tile, frameState)) {
-    //             ++tileset._statistics.numberOfTilesCulledWithChildrenUnion;
-    //             tile._visible = false;
-    //             return;
-    //         }
-    //     }
-    // }
-
-    // function updateTile(tileset, tile, frameState) {
-    //     updateTileVisibility(tileset, tile, frameState);
-    //     tile.updateExpiration();
-    //
-    //     tile._shouldSelect = false;
-    //     tile._finalResolution = true;
-    //     tile._ancestorWithContent = undefined;
-    //     tile._ancestorWithContentAvailable = undefined;
-    //
-    //     var parent = tile.parent;
-    //     if (defined(parent)) {
-    //         // ancestorWithContent is an ancestor that has content or has the potential to have
-    //         // content. Used in conjunction with tileset.skipLevels to know when to skip a tile.
-    //         // ancestorWithContentAvailable is an ancestor that is rendered if a desired tile is not loaded.
-    //         var hasContent = !hasUnloadedContent(parent) || (parent._requestedFrame === frameState.frameNumber);
-    //         tile._ancestorWithContent = hasContent ? parent : parent._ancestorWithContent;
-    //         tile._ancestorWithContentAvailable = parent.contentAvailable ? parent : parent._ancestorWithContentAvailable;
-    //     }
-    // }
-
     function updateTile(tileset, tile, frameState) {
         // Reset some of the tile's flags to neutral and re-evaluate visability
         tile.updateVisibility(frameState);
@@ -332,7 +244,7 @@ define([
 
         var parent = tile.parent;
         if (defined(parent)) {
-            var hasContent = !hasUnloadedContent(parent) || (parent._requestedFrame === frameState.frameNumber);
+            var hasContent = !hasUnloadedContent(parent) || (parent._requestedFrame === frameState.frameNumber); // In order for the second bool to work, this must be called after the tile has been requested and not during updateTile
             tile._ancestorWithContent = hasContent ? parent : parent._ancestorWithContent;
             tile._ancestorWithContentAvailable = parent.contentAvailable ? parent : parent._ancestorWithContentAvailable; // Links a decendent up to its contentAvailable ancestor as the traversal progresses.
         }
