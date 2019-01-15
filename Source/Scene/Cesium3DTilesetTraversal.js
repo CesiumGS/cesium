@@ -244,6 +244,9 @@ define([
 
         var parent = tile.parent;
         if (defined(parent)) {
+            // ancestorWithContent is an ancestor that has content or has the potential to have
+            // content. Used in conjunction with tileset.skipLevels to know when to skip a tile.
+            // ancestorWithContentAvailable is an ancestor that is rendered if a desired tile is not loaded.
             var hasContent = !hasUnloadedContent(parent) || (parent._requestedFrame === frameState.frameNumber); // In order for the second bool to work, this must be called after the tile has been requested and not during updateTile
             tile._ancestorWithContent = hasContent ? parent : parent._ancestorWithContent;
             tile._ancestorWithContentAvailable = parent.contentAvailable ? parent : parent._ancestorWithContentAvailable; // Links a decendent up to its contentAvailable ancestor as the traversal progresses.
