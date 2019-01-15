@@ -32,6 +32,7 @@ define([
         './Cesium3DTileRefine',
         './Cesium3DTilesetAsyncTraversal',
         './Cesium3DTilesetCache',
+        './Cesium3DTilesetHeatmap',
         './Cesium3DTilesetStatistics',
         './Cesium3DTilesetTraversal',
         './Cesium3DTileStyleEngine',
@@ -79,6 +80,7 @@ define([
         Cesium3DTileRefine,
         Cesium3DTilesetAsyncTraversal,
         Cesium3DTilesetCache,
+        Cesium3DTilesetHeatmap,
         Cesium3DTilesetStatistics,
         Cesium3DTilesetTraversal,
         Cesium3DTileStyleEngine,
@@ -216,6 +218,8 @@ define([
         this._statisticsLastRender = new Cesium3DTilesetStatistics();
         this._statisticsLastPick = new Cesium3DTilesetStatistics();
         this._statisticsLastAsync = new Cesium3DTilesetStatistics();
+
+        this._heatmap = new Cesium3DTilesetHeatmap(options.heatmapVariable);
 
         this._tilesLoaded = false;
         this._initialTilesLoaded = false;
@@ -1996,6 +2000,9 @@ define([
         }
 
         ++tileset._updatedVisibilityFrame;
+
+        // Update any tracked min max values
+        tileset._heatmap.resetMinMax();
 
         var ready;
 

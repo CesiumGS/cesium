@@ -946,7 +946,7 @@ define([
     var scratchToTileCenter = new Cartesian3();
 
     /**
-     * Computes the distance from the center of the tile's bounding volume to the camera.
+     * Computes the distance from the center of the tile's bounding volume to the camera's plane defined by its position and view direction.
      *
      * @param {FrameState} frameState The frame state.
      * @returns {Number} The distance, in meters.
@@ -957,10 +957,7 @@ define([
         var tileBoundingVolume = getBoundingVolume(this, frameState);
         var boundingVolume = tileBoundingVolume.boundingVolume; // Gets the underlying OrientedBoundingBox or BoundingSphere
         var toCenter = Cartesian3.subtract(boundingVolume.center, frameState.camera.positionWC, scratchToTileCenter);
-        var distance = Cartesian3.magnitude(toCenter);
-        Cartesian3.divideByScalar(toCenter, distance, toCenter);
-        var dot = Cartesian3.dot(frameState.camera.directionWC, toCenter);
-        return distance * dot;
+        return Cartesian3.dot(frameState.camera.directionWC, toCenter);
     };
 
     /**
@@ -1166,10 +1163,11 @@ define([
             tile._debugViewerRequestVolume = tile._debugViewerRequestVolume.destroy();
         }
 
-        var debugColorizeTilesOn = tileset.debugColorizeTiles && !tile._debugColorizeTiles;
+        var debugColorizeTilesOn = (tileset.debugColorizeTiles && !tile._debugColorizeTiles) || defined(tileset._heatmap.variableName);
         var debugColorizeTilesOff = !tileset.debugColorizeTiles && tile._debugColorizeTiles;
 
         if (debugColorizeTilesOn) {
+            tileset._heatmap.colorize(tile, frameState); // Skipped if tileset._heatmap.variableName is undefined
             tile._debugColorizeTiles = true;
             tile.color = tile._debugColor;
         } else if (debugColorizeTilesOff) {
