@@ -1290,7 +1290,7 @@ define([
         // Because the mappings are fuzzy you need a digit of separation so priorities don't bleed into each other
         // Maybe this mental model is terrible and just rename to weights?
         var depthScale = 1; // One's "digit", digit in quotes here because instead of being an integer in [0..9] it will be a double in [0..10). We want it continuous anyway, not discrete.
-        var distanceScale = 100; // Hundreds's "digit"
+        var distanceScale = 100; // Hundreds's "digit", digit of separation from previous
 
         // Map 0-1 then convert to digit
         var distanceDigit = distanceScale * normalizeValue(this._priorityDistanceHolder._priorityDistance, minPriority.distance, maxPriority.distance);
