@@ -1267,39 +1267,47 @@ define([
     };
 
     /**
-     * Sets the priority of the tile based on distance and level
+     * Takes a value and maps it down to a 0-1 value given a min and max
+     */
+    function normalizeValue(value, min, max) {
+        // Shift min max window to 0
+        var shiftedMax = (max - min) + CesiumMath.EPSILON7; // Prevent divide by zero
+        var shiftedValue = value - min;
+
+        // https://www.wolframalpha.com/input/?i=plot+1+-+e%5E(-x*4%2F(1000))+,+x%3D0..1000,+y%3D0..1
+        // exposureCurvature will control the shoulder of the curve (how fast it ramps to 1), 4 seems balanced between linear and a fast ramp
+        var linear = false; // For some reason linear mapping isn't as good as tone mapping
+        var exposureCurvature = 4;
+        var zeroToOne = linear ? Math.min(shiftedValue / shiftedMax, 1) : 1 - Math.exp(-shiftedValue * (exposureCurvature / shiftedMax)); // exposure map to a 0-1 value
+        return zeroToOne;
+    }
+
+    /**
+     * Sets the priority of the tile based on distance and depth
      * @private
      */
     Cesium3DTile.prototype.updatePriority = function() {
-        var linear = false;
-        var exposureCurvature = 4; // Bigger val, faster curve
+        // TODO: Maybe only call this on all active and current requests? Getting called multiple times in a frame (like during a sort)
+        var tileset = this.tileset;
+        var minPriority = tileset._minPriority;
+        var maxPriority = tileset._maxPriority;
 
-        // Mix priorities by encoding them into numbers (base 10 in this case)
+        // Mix priorities by encoding them into base 10 numbers
         var base = 10;
-        var levelScale = 1;
-        var distanceScale = 10;
+        var depthScale = base * 1;     // One's digit
+        var distanceScale = base * 10; // Ten's digit
 
-        // Tone map distance
-        // TODO: helper func
-        var minPriority = this._tileset._minPriority.distance;
-        var shiftedMax = this._tileset._maxPriority.distance - minPriority;
-        // var shiftedPriority = this._priorityDistance.val < 0 ? shiftedMax : this._priorityDistance.val - minPriority;
-        // var shiftedPriority = this._priorityDistance.val - minPriority;
-        var shiftedPriority = this._priorityDistanceHolder._priorityDistance - minPriority;
-        var zeroToOneDistance = linear ? Math.min(shiftedPriority / shiftedMax, 1) : 1 - Math.exp(-shiftedPriority * (exposureCurvature / shiftedMax)); // exposure map to a 0-1 value
-        zeroToOneDistance *= base * distanceScale;
+        // Tone map _priorityDistance
+        var zeroToOneDistance = normalizeValue(this._priorityDistanceHolder._priorityDistance, minPriority.distance, maxPriority.distance);
+        zeroToOneDistance *= distanceScale;
 
-        // Tone map level
-        minPriority = this._tileset._minPriority.level;
-        shiftedMax = this._tileset._maxPriority.level - minPriority;
-        shiftedPriority = this._depth - minPriority;
-        var zeroToOneLevel = linear ? Math.min(shiftedPriority / shiftedMax, 1) : 1 - Math.exp(-shiftedPriority * (4 / shiftedMax)); // exposure map to a 0-1 value
-        zeroToOneLevel *= base * levelScale;
+        // Tone map _depth
+        var zeroToOneDepth = normalizeValue(this._depth, minPriority.depth, maxPriority.depth);
+        zeroToOneDepth *= depthScale;
 
-        var sum = zeroToOneDistance + zeroToOneLevel;
-        var maxSum = base * (distanceScale + levelScale);
-
-        this._priority = linear ? Math.min(sum / maxSum, 1) : 1 - Math.exp(-(sum) * (exposureCurvature / maxSum));
+        // Get the final base 10 number
+        var sum = zeroToOneDistance + zeroToOneDepth;
+        this._priority = sum;
     };
 
     /**

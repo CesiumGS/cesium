@@ -211,8 +211,8 @@ define([
             tileset._minPriority.distance = tile._priorityDistance;
             tileset._minPriority.minDistanceTile = tile;
         }
-        tileset._maxPriority.level = Math.max(tile._depth, tileset._maxPriority.level);
-        tileset._minPriority.level = Math.min(tile._depth, tileset._minPriority.level);
+        tileset._maxPriority.depth = Math.max(tile._depth, tileset._maxPriority.depth);
+        tileset._minPriority.depth = Math.min(tile._depth, tileset._minPriority.depth);
     }
 
     function loadTile(tileset, tile, frameState) {

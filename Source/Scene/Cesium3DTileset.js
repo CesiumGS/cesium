@@ -222,8 +222,8 @@ define([
         this._requestedTilesInFlight = [];
 
         this._heatmap = new Cesium3DTilesetHeatmap(options.heatmapVariable);
-        this._maxPriority = { level: -Number.MAX_VALUE, distance: -Number.MAX_VALUE };
-        this._minPriority = { level: Number.MAX_VALUE, distance: Number.MAX_VALUE, minPriorityHolder: undefined };
+        this._maxPriority = { depth: -Number.MAX_VALUE, distance: -Number.MAX_VALUE };
+        this._minPriority = { depth: Number.MAX_VALUE, distance: Number.MAX_VALUE, minPriorityHolder: undefined };
         // TODO: remove
         this._startedLoadingTime = undefined; // ms since 1970
 
@@ -2137,8 +2137,8 @@ define([
      */
     Cesium3DTileset.prototype.resetMinMax = function() {
         this._heatmap.resetMinMax();
-        this._minPriority.level = Number.MAX_VALUE;
-        this._maxPriority.level = -Number.MAX_VALUE;
+        this._minPriority.depth = Number.MAX_VALUE;
+        this._maxPriority.depth = -Number.MAX_VALUE;
         this._minPriority.distance = Number.MAX_VALUE;
         this._maxPriority.distance = -Number.MAX_VALUE;
         this._minPriorityHolder = undefined;
