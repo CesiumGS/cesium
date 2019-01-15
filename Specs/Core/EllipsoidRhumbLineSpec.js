@@ -241,7 +241,7 @@ defineSuite([
         expect(distance).toEqualEpsilon(rhumb.surfaceDistance, CesiumMath.EPSILON12);
     });
 
-    it('fromStartHeadingDistance throws if distance is 0', function() {
+    it('throws when interpolating rhumb line of zero length', function() {
         var radius = 6378137.0;
         var ellipsoid = new Ellipsoid(radius, radius, radius);
         var initial = new Cartographic(fifteenDegrees, fifteenDegrees);
@@ -555,27 +555,19 @@ defineSuite([
 
         var midpointUsingInterpolation = rhumb.interpolateUsingFraction(0.5);
         var midpointUsingIntersection = rhumb.findIntersectionWithLongitude(midpointUsingInterpolation.longitude);
-
-        expect(midpointUsingInterpolation.longitude).toEqualEpsilon(midpointUsingIntersection.longitude, CesiumMath.EPSILON12);
-        expect(midpointUsingInterpolation.latitude).toEqualEpsilon(midpointUsingIntersection.latitude, CesiumMath.EPSILON12);
+        expect(Cartographic.equalsEpsilon(midpointUsingInterpolation, midpointUsingIntersection, CesiumMath.EPSILON12)).toBe(true);
 
         var pointUsingInterpolation = rhumb.interpolateUsingFraction(0.1);
         var pointUsingIntersection = rhumb.findIntersectionWithLongitude(pointUsingInterpolation.longitude);
-
-        expect(pointUsingInterpolation.longitude).toEqualEpsilon(pointUsingIntersection.longitude, CesiumMath.EPSILON12);
-        expect(pointUsingInterpolation.latitude).toEqualEpsilon(pointUsingIntersection.latitude, CesiumMath.EPSILON12);
+        expect(Cartographic.equalsEpsilon(pointUsingInterpolation, pointUsingIntersection, CesiumMath.EPSILON12)).toBe(true);
 
         pointUsingInterpolation = rhumb.interpolateUsingFraction(0.75);
         pointUsingIntersection = rhumb.findIntersectionWithLongitude(pointUsingInterpolation.longitude);
-
-        expect(pointUsingInterpolation.longitude).toEqualEpsilon(pointUsingIntersection.longitude, CesiumMath.EPSILON12);
-        expect(pointUsingInterpolation.latitude).toEqualEpsilon(pointUsingIntersection.latitude, CesiumMath.EPSILON12);
+        expect(Cartographic.equalsEpsilon(pointUsingInterpolation, pointUsingIntersection, CesiumMath.EPSILON12)).toBe(true);
 
         pointUsingInterpolation = rhumb.interpolateUsingFraction(1.1);
         pointUsingIntersection = rhumb.findIntersectionWithLongitude(pointUsingInterpolation.longitude);
-
-        expect(pointUsingInterpolation.longitude).toEqualEpsilon(pointUsingIntersection.longitude, CesiumMath.EPSILON12);
-        expect(pointUsingInterpolation.latitude).toEqualEpsilon(pointUsingIntersection.latitude, CesiumMath.EPSILON12);
+        expect(Cartographic.equalsEpsilon(pointUsingInterpolation, pointUsingIntersection, CesiumMath.EPSILON12)).toBe(true);
     });
 
     it('intersection with longitude handles E-W lines', function() {
@@ -586,9 +578,7 @@ defineSuite([
 
         var midpointUsingInterpolation = rhumb.interpolateUsingFraction(0.5);
         var midpointUsingIntersection = rhumb.findIntersectionWithLongitude(midpointUsingInterpolation.longitude);
-
-        expect(midpointUsingInterpolation.longitude).toEqualEpsilon(midpointUsingIntersection.longitude, CesiumMath.EPSILON12);
-        expect(midpointUsingInterpolation.latitude).toEqualEpsilon(midpointUsingIntersection.latitude, CesiumMath.EPSILON12);
+        expect(Cartographic.equalsEpsilon(midpointUsingInterpolation, midpointUsingIntersection, CesiumMath.EPSILON12)).toBe(true);
     });
 
     it('intersection with longitude handles N-S lines', function() {
@@ -603,6 +593,17 @@ defineSuite([
         expect(midpointUsingIntersection).not.toBeDefined();
     });
 
+    it('intersection with longitude handles N-S lines with different longitude', function() {
+        var start = new Cartographic(fifteenDegrees, 0.0);
+        var end = new Cartographic(fifteenDegrees, thirtyDegrees);
+
+        var rhumb = new EllipsoidRhumbLine(start, end);
+
+        var midpointUsingIntersection = rhumb.findIntersectionWithLongitude(thirtyDegrees);
+
+        expect(midpointUsingIntersection.latitude).toEqualEpsilon(CesiumMath.PI_OVER_TWO, CesiumMath.EPSILON12);
+    });
+
     it('finds midpoint and other points using intersection with latitude', function() {
         var start = new Cartographic(fifteenDegrees, 0.0);
         var end = new Cartographic(fortyfiveDegrees, thirtyDegrees);
@@ -611,27 +612,19 @@ defineSuite([
 
         var midpointUsingInterpolation = rhumb.interpolateUsingFraction(0.5);
         var midpointUsingIntersection = rhumb.findIntersectionWithLatitude(midpointUsingInterpolation.latitude);
-
-        expect(midpointUsingInterpolation.longitude).toEqualEpsilon(midpointUsingIntersection.longitude, CesiumMath.EPSILON12);
-        expect(midpointUsingInterpolation.latitude).toEqualEpsilon(midpointUsingIntersection.latitude, CesiumMath.EPSILON12);
+        expect(Cartographic.equalsEpsilon(midpointUsingInterpolation, midpointUsingIntersection, CesiumMath.EPSILON12)).toBe(true);
 
         var pointUsingInterpolation = rhumb.interpolateUsingFraction(0.1);
         var pointUsingIntersection = rhumb.findIntersectionWithLatitude(pointUsingInterpolation.latitude);
-
-        expect(pointUsingInterpolation.longitude).toEqualEpsilon(pointUsingIntersection.longitude, CesiumMath.EPSILON12);
-        expect(pointUsingInterpolation.latitude).toEqualEpsilon(pointUsingIntersection.latitude, CesiumMath.EPSILON12);
+        expect(Cartographic.equalsEpsilon(pointUsingInterpolation, pointUsingIntersection, CesiumMath.EPSILON12)).toBe(true);
 
         pointUsingInterpolation = rhumb.interpolateUsingFraction(0.75);
         pointUsingIntersection = rhumb.findIntersectionWithLatitude(pointUsingInterpolation.latitude);
-
-        expect(pointUsingInterpolation.longitude).toEqualEpsilon(pointUsingIntersection.longitude, CesiumMath.EPSILON12);
-        expect(pointUsingInterpolation.latitude).toEqualEpsilon(pointUsingIntersection.latitude, CesiumMath.EPSILON12);
+        expect(Cartographic.equalsEpsilon(pointUsingInterpolation, pointUsingIntersection, CesiumMath.EPSILON12)).toBe(true);
 
         pointUsingInterpolation = rhumb.interpolateUsingFraction(1.1);
         pointUsingIntersection = rhumb.findIntersectionWithLatitude(pointUsingInterpolation.latitude);
-
-        expect(pointUsingInterpolation.longitude).toEqualEpsilon(pointUsingIntersection.longitude, CesiumMath.EPSILON12);
-        expect(pointUsingInterpolation.latitude).toEqualEpsilon(pointUsingIntersection.latitude, CesiumMath.EPSILON12);
+        expect(Cartographic.equalsEpsilon(pointUsingInterpolation, pointUsingIntersection, CesiumMath.EPSILON12)).toBe(true);
     });
 
     it('intersection with latitude handles E-W lines', function() {
@@ -654,9 +647,6 @@ defineSuite([
 
         var midpointUsingInterpolation = rhumb.interpolateUsingFraction(0.5);
         var midpointUsingIntersection = rhumb.findIntersectionWithLatitude(midpointUsingInterpolation.latitude);
-
-        expect(midpointUsingInterpolation.longitude).toEqualEpsilon(midpointUsingIntersection.longitude, CesiumMath.EPSILON12);
-        expect(midpointUsingInterpolation.latitude).toEqualEpsilon(midpointUsingIntersection.latitude, CesiumMath.EPSILON12);
+        expect(Cartographic.equalsEpsilon(midpointUsingInterpolation, midpointUsingIntersection, CesiumMath.EPSILON12)).toBe(true);
     });
-
 });

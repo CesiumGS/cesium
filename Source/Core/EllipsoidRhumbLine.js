@@ -5,6 +5,7 @@ define([
         './defaultValue',
         './defined',
         './defineProperties',
+        './DeveloperError',
         './Ellipsoid',
         './Math'
     ], function(
@@ -14,6 +15,7 @@ define([
         defaultValue,
         defined,
         defineProperties,
+        DeveloperError,
         Ellipsoid,
         CesiumMath) {
     'use strict';
@@ -354,8 +356,10 @@ define([
      */
     EllipsoidRhumbLine.prototype.interpolateUsingSurfaceDistance = function(distance, result) {
         //>>includeStart('debug', pragmas.debug);
-        Check.defined('distance', distance);
-        Check.typeOf.number.greaterThan('this._distance', this._distance, CesiumMath.EPSILON12);
+        Check.typeOf.number('distance', distance);
+        if (!defined(this._distance) || this._distance === 0.0) {
+            throw new DeveloperError('EllipsoidRhumbLine must have distinct start and end set.');
+        }
         //>>includeEnd('debug');
 
         var ellipsoid = this._ellipsoid;
@@ -418,14 +422,16 @@ define([
      *
      * @param {Number} intersectionLongitude The longitude, in radians, at which to find the intersection point from the starting point using the heading.
      * @param {Cartographic} [result] The object in which to store the result.
-     * @returns {Cartographic} The location of the intersection point along the rhumb line.
+     * @returns {Cartographic} The location of the intersection point along the rhumb line, undefined if there is no intersection or infinite intersections.
      *
      * @exception {DeveloperError} start and end must be set before calling function findIntersectionWithLongitude.
      */
     EllipsoidRhumbLine.prototype.findIntersectionWithLongitude = function(intersectionLongitude, result) {
         //>>includeStart('debug', pragmas.debug);
-        Check.defined('intersectionLongitude', intersectionLongitude);
-        Check.defined('distance', this._distance);
+        Check.typeOf.number('intersectionLongitude', intersectionLongitude);
+        if (!defined(this._distance) || this._distance === 0.0) {
+            throw new DeveloperError('EllipsoidRhumbLine must have distinct start and end set.');
+        }
         //>>includeEnd('debug');
 
         var ellipticity = this._ellipticity;
@@ -452,7 +458,7 @@ define([
             }
 
             result.longitude = intersectionLongitude;
-            result.latitude = CesiumMath.PI_OVER_TWO * Math.sign(heading);
+            result.latitude = CesiumMath.PI_OVER_TWO * Math.sign(CesiumMath.PI_OVER_TWO - heading);
             result.height = 0;
             return result;
         }
@@ -483,14 +489,16 @@ define([
      *
      * @param {Number} intersectionLatitude The latitude, in radians, at which to find the intersection point from the starting point using the heading.
      * @param {Cartographic} [result] The object in which to store the result.
-     * @returns {Cartographic} The location of the intersection point along the rhumb line, undefined if there is no intersection, infinite intersections or if intersection point is not between start and end.
+     * @returns {Cartographic} The location of the intersection point along the rhumb line, undefined if there is no intersection or infinite intersections.
      *
      * @exception {DeveloperError} start and end must be set before calling function findIntersectionWithLongitude.
      */
     EllipsoidRhumbLine.prototype.findIntersectionWithLatitude = function(intersectionLatitude, result) {
         //>>includeStart('debug', pragmas.debug);
-        Check.defined('intersectionLatitude', intersectionLatitude);
-        Check.defined('distance', this._distance);
+        Check.typeOf.number('intersectionLatitude', intersectionLatitude);
+        if (!defined(this._distance) || this._distance === 0.0) {
+            throw new DeveloperError('EllipsoidRhumbLine must have distinct start and end set.');
+        }
         //>>includeEnd('debug');
 
         var ellipticity = this._ellipticity;
