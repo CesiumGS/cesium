@@ -98,18 +98,18 @@ define([
         return Math.log(Math.tan(0.5 * (CesiumMath.PI_OVER_TWO + latitude))) - (ellipticity / 2.0 * Math.log((1 + eSinL) / (1 - eSinL)));
     }
 
-    function calculateHeading(ellipsoidRhumb, major, minor, firstLongitude, firstLatitude, secondLongitude, secondLatitude) {
-        var sigma1 = calculateSigma(ellipsoidRhumb._ellipticity, firstLatitude);
-        var sigma2 = calculateSigma(ellipsoidRhumb._ellipticity, secondLatitude);
+    function calculateHeading(ellipsoidRhumbLine, major, minor, firstLongitude, firstLatitude, secondLongitude, secondLatitude) {
+        var sigma1 = calculateSigma(ellipsoidRhumbLine._ellipticity, firstLatitude);
+        var sigma2 = calculateSigma(ellipsoidRhumbLine._ellipticity, secondLatitude);
         return Math.atan2(CesiumMath.negativePiToPi(secondLongitude - firstLongitude), sigma2 - sigma1);
     }
 
-    function calculateArcLength(ellipsoidRhumb, major, minor, firstLongitude, firstLatitude, secondLongitude, secondLatitude) {
+    function calculateArcLength(ellipsoidRhumbLine, major, minor, firstLongitude, firstLatitude, secondLongitude, secondLatitude) {
         //>>includeStart('debug', pragmas.debug);
-        Check.defined('heading', ellipsoidRhumb._heading);
+        Check.defined('heading', ellipsoidRhumbLine._heading);
         //>>includeEnd('debug');
 
-        var heading = ellipsoidRhumb._heading;
+        var heading = ellipsoidRhumbLine._heading;
         var deltaLongitude = secondLongitude - firstLongitude;
 
         var distance = 0.0;
@@ -121,11 +121,11 @@ define([
                 distance = major * Math.cos(firstLatitude) * CesiumMath.negativePiToPi(deltaLongitude);
             } else {
                 var sinPhi = Math.sin(firstLatitude);
-                distance = major * Math.cos(firstLatitude) * CesiumMath.negativePiToPi(deltaLongitude) / Math.sqrt(1 - ellipsoidRhumb._ellipticitySquared * sinPhi * sinPhi);
+                distance = major * Math.cos(firstLatitude) * CesiumMath.negativePiToPi(deltaLongitude) / Math.sqrt(1 - ellipsoidRhumbLine._ellipticitySquared * sinPhi * sinPhi);
             }
         } else {
-            var M1 = calculateM(ellipsoidRhumb._ellipticity, major, firstLatitude);
-            var M2 = calculateM(ellipsoidRhumb._ellipticity, major, secondLatitude);
+            var M1 = calculateM(ellipsoidRhumbLine._ellipticity, major, firstLatitude);
+            var M2 = calculateM(ellipsoidRhumbLine._ellipticity, major, secondLatitude);
 
             distance = (M2 - M1) / Math.cos(heading);
         }
@@ -135,25 +135,25 @@ define([
     var scratchCart1 = new Cartesian3();
     var scratchCart2 = new Cartesian3();
 
-    function initiailize(ellipsoidRhumb, start, end, ellipsoid) {
+    function initiailize(ellipsoidRhumbLine, start, end, ellipsoid) {
         var major = ellipsoid.maximumRadius;
         var minor = ellipsoid.minimumRadius;
         var majorSquared = major * major;
         var minorSquared = minor * minor;
-        ellipsoidRhumb._ellipticitySquared = (majorSquared - minorSquared) / majorSquared;
-        ellipsoidRhumb._ellipticity = Math.sqrt(ellipsoidRhumb._ellipticitySquared);
+        ellipsoidRhumbLine._ellipticitySquared = (majorSquared - minorSquared) / majorSquared;
+        ellipsoidRhumbLine._ellipticity = Math.sqrt(ellipsoidRhumbLine._ellipticitySquared);
 
         if (defined(start)) {
-            ellipsoidRhumb._start = Cartographic.clone(start, ellipsoidRhumb._start);
-            ellipsoidRhumb._start.height = 0;
+            ellipsoidRhumbLine._start = Cartographic.clone(start, ellipsoidRhumbLine._start);
+            ellipsoidRhumbLine._start.height = 0;
         }
         if (defined(end)) {
-            ellipsoidRhumb._end = Cartographic.clone(end, ellipsoidRhumb._end);
-            ellipsoidRhumb._end.height = 0;
+            ellipsoidRhumbLine._end = Cartographic.clone(end, ellipsoidRhumbLine._end);
+            ellipsoidRhumbLine._end.height = 0;
         }
     }
 
-    function computeProperties(ellipsoidRhumb, start, end, ellipsoid) {
+    function computeProperties(ellipsoidRhumbLine, start, end, ellipsoid) {
         var firstCartesian = Cartesian3.normalize(ellipsoid.cartographicToCartesian(start, scratchCart2), scratchCart1);
         var lastCartesian = Cartesian3.normalize(ellipsoid.cartographicToCartesian(end, scratchCart2), scratchCart2);
 
@@ -161,25 +161,25 @@ define([
         Check.typeOf.number.greaterThanOrEquals('value', Math.abs(Math.abs(Cartesian3.angleBetween(firstCartesian, lastCartesian)) - Math.PI), 0.0125);
         //>>includeEnd('debug');
 
-        initiailize(ellipsoidRhumb, start, end, ellipsoid);
+        initiailize(ellipsoidRhumbLine, start, end, ellipsoid);
 
-        ellipsoidRhumb._heading = calculateHeading(ellipsoidRhumb, ellipsoid.maximumRadius, ellipsoid.minimumRadius,
-                                                   start.longitude, start.latitude, end.longitude, end.latitude);
-        ellipsoidRhumb._distance = calculateArcLength(ellipsoidRhumb, ellipsoid.maximumRadius, ellipsoid.minimumRadius,
-                                                      start.longitude, start.latitude, end.longitude, end.latitude);
+        ellipsoidRhumbLine._heading = calculateHeading(ellipsoidRhumbLine, ellipsoid.maximumRadius, ellipsoid.minimumRadius,
+                                                       start.longitude, start.latitude, end.longitude, end.latitude);
+        ellipsoidRhumbLine._distance = calculateArcLength(ellipsoidRhumbLine, ellipsoid.maximumRadius, ellipsoid.minimumRadius,
+                                                          start.longitude, start.latitude, end.longitude, end.latitude);
     }
 
     /**
      * Initializes a rhumb line on the ellipsoid connecting the two provided planetodetic points.
      *
-     * @alias EllipsoidRhumb
+     * @alias EllipsoidRhumbLine
      * @constructor
      *
      * @param {Cartographic} [start] The initial planetodetic point on the path.
      * @param {Cartographic} [end] The final planetodetic point on the path.
      * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid on which the rhumb line lies.
      */
-    function EllipsoidRhumb(start, end, ellipsoid) {
+    function EllipsoidRhumbLine(start, end, ellipsoid) {
         var e = defaultValue(ellipsoid, Ellipsoid.WGS84);
         this._ellipsoid = e;
         this._start = new Cartographic();
@@ -195,10 +195,10 @@ define([
         }
     }
 
-    defineProperties(EllipsoidRhumb.prototype, {
+    defineProperties(EllipsoidRhumbLine.prototype, {
         /**
          * Gets the ellipsoid.
-         * @memberof EllipsoidRhumb.prototype
+         * @memberof EllipsoidRhumbLine.prototype
          * @type {Ellipsoid}
          * @readonly
          */
@@ -210,7 +210,7 @@ define([
 
         /**
          * Gets the surface distance between the start and end point
-         * @memberof EllipsoidRhumb.prototype
+         * @memberof EllipsoidRhumbLine.prototype
          * @type {Number}
          * @readonly
          */
@@ -226,7 +226,7 @@ define([
 
         /**
          * Gets the initial planetodetic point on the path.
-         * @memberof EllipsoidRhumb.prototype
+         * @memberof EllipsoidRhumbLine.prototype
          * @type {Cartographic}
          * @readonly
          */
@@ -238,7 +238,7 @@ define([
 
         /**
          * Gets the final planetodetic point on the path.
-         * @memberof EllipsoidRhumb.prototype
+         * @memberof EllipsoidRhumbLine.prototype
          * @type {Cartographic}
          * @readonly
          */
@@ -250,7 +250,7 @@ define([
 
         /**
          * Gets the heading from the start point to the end point.
-         * @memberof EllipsoidRhumb.prototype
+         * @memberof EllipsoidRhumbLine.prototype
          * @type {Number}
          * @readonly
          */
@@ -271,10 +271,10 @@ define([
      * @param {Cartographic} start The initial planetodetic point on the path.
      * @param {Cartographic} end The final planetodetic point on the path.
      * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid on which the rhumb line lies.
-     * @param {EllipsoidRhumb} [result] The object in whice to store the result.
-     * @returns {EllipsoidRhumb} The EllipsoidRhumb object.
+     * @param {EllipsoidRhumbLine} [result] The object in whice to store the result.
+     * @returns {EllipsoidRhumbLine} The EllipsoidRhumbLine object.
      */
-    EllipsoidRhumb.fromStartAndEnd = function(start, end, ellipsoid, result) {
+    EllipsoidRhumbLine.fromStartAndEnd = function(start, end, ellipsoid, result) {
         //>>includeStart('debug', pragmas.debug);
         Check.defined('start', start);
         Check.defined('end', end);
@@ -287,7 +287,7 @@ define([
             result.setEndPoints(start, end);
             return result;
         }
-        return new EllipsoidRhumb(start, end, e);
+        return new EllipsoidRhumbLine(start, end, e);
     };
 
     /**
@@ -297,10 +297,10 @@ define([
      * @param {Number} heading The heading in radians.
      * @param {Number} distance The rhumb line distance between the start and end point.
      * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid on which the rhumb line lies.
-     * @param {EllipsoidRhumb} [result] The object in whice to store the result.
-     * @returns {EllipsoidRhumb} The EllipsoidRhumb object.
+     * @param {EllipsoidRhumbLine} [result] The object in which to store the result.
+     * @returns {EllipsoidRhumbLine} The EllipsoidRhumbLine object.
      */
-    EllipsoidRhumb.fromStartHeadingDistance = function(start, heading, distance, ellipsoid, result) {
+    EllipsoidRhumbLine.fromStartHeadingDistance = function(start, heading, distance, ellipsoid, result) {
         //>>includeStart('debug', pragmas.debug);
         Check.defined('start', start);
         Check.defined('heading', heading);
@@ -319,22 +319,22 @@ define([
             return result;
         }
 
-        var rhumb = new EllipsoidRhumb(undefined, undefined, e);
-        initiailize(rhumb, start, undefined, e);
-        rhumb._heading = CesiumMath.negativePiToPi(heading);
-        rhumb._distance = distance;
-        rhumb._end = rhumb.interpolateUsingSurfaceDistance(distance, new Cartographic());
+        var rhumbLine = new EllipsoidRhumbLine(undefined, undefined, e);
+        initiailize(rhumbLine, start, undefined, e);
+        rhumbLine._heading = CesiumMath.negativePiToPi(heading);
+        rhumbLine._distance = distance;
+        rhumbLine._end = rhumbLine.interpolateUsingSurfaceDistance(distance, new Cartographic());
 
-        return rhumb;
+        return rhumbLine;
     };
 
     /**
-     * Sets the start and end points of the geodesic
+     * Sets the start and end points of the rhumb line.
      *
      * @param {Cartographic} start The initial planetodetic point on the path.
      * @param {Cartographic} end The final planetodetic point on the path.
      */
-    EllipsoidRhumb.prototype.setEndPoints = function(start, end) {
+    EllipsoidRhumbLine.prototype.setEndPoints = function(start, end) {
         //>>includeStart('debug', pragmas.debug);
         Check.defined('start', start);
         Check.defined('end', end);
@@ -350,7 +350,7 @@ define([
      * @param {Cartographic} result The object in which to store the result.
      * @returns {Cartographic} The location of the point along the rhumb line.
      */
-    EllipsoidRhumb.prototype.interpolateUsingFraction = function(fraction, result) {
+    EllipsoidRhumbLine.prototype.interpolateUsingFraction = function(fraction, result) {
         //>>includeStart('debug', pragmas.debug);
         Check.typeOf.number('distance', this._distance);
         //>>includeEnd('debug');
@@ -361,13 +361,13 @@ define([
     /**
      * Provides the location of a point at the indicated distance along the rhumb line.
      *
-     * @param {Number} distance The distance from the inital point to the point of interest along the rhumb.
+     * @param {Number} distance The distance from the inital point to the point of interest along the rhumbLine.
      * @param {Cartographic} result The object in which to store the result.
-     * @returns {Cartographic} The location of the point along the geodesic.
+     * @returns {Cartographic} The location of the point along the rhumb line.
      *
      * @exception {DeveloperError} start and end must be set before calling function interpolateUsingSurfaceDistance
      */
-    EllipsoidRhumb.prototype.interpolateUsingSurfaceDistance = function(distance, result) {
+    EllipsoidRhumbLine.prototype.interpolateUsingSurfaceDistance = function(distance, result) {
         //>>includeStart('debug', pragmas.debug);
         Check.defined('distance', this._distance);
         //>>includeEnd('debug');
@@ -427,5 +427,5 @@ define([
         return new Cartographic(longitude, latitude, 0);
     };
 
-    return EllipsoidRhumb;
+    return EllipsoidRhumbLine;
 });
