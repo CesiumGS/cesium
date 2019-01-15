@@ -43,7 +43,8 @@ var pixelPerfectReprojection = new Cesium.ImageryMosaic({
     urls : ['../../SampleData/Brazil_elevation_ESRI53009.png'],
     projectedRectangles : [new Cesium.Rectangle(-8309084.8709259927272797,-6474832.4202510649338365,-2331162.9914685478433967,1661637.9380288750398904)],
     projections : [mollweideProjection],
-    scene : viewer.scene
+    scene : viewer.scene,
+    concurrency : 1
 }, viewer);
 
 var layers = viewer.imageryLayers;
