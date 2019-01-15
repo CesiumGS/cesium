@@ -12,6 +12,11 @@ defineSuite([
         CesiumMath) {
     'use strict';
 
+    var oneDegree = CesiumMath.RADIANS_PER_DEGREE;
+    var fifteenDegrees = Math.PI / 12;
+    var thirtyDegrees = Math.PI / 6;
+    var fortyfiveDegrees = Math.PI / 4;
+
     it('throws without start', function() {
         expect(function() {
             var rhumb = new EllipsoidRhumbLine();
@@ -50,9 +55,7 @@ defineSuite([
     });
 
     it('can create using fromStartAndEnd function', function() {
-        var fifteenDegrees = Math.PI / 12;
         var start = new Cartographic(fifteenDegrees, fifteenDegrees);
-        var thirtyDegrees = Math.PI / 6;
         var end = new Cartographic(thirtyDegrees, thirtyDegrees);
 
         var rhumb = EllipsoidRhumbLine.fromStartAndEnd(start, end);
@@ -64,9 +67,7 @@ defineSuite([
         var scratch = new EllipsoidRhumbLine();
 
         var ellipsoid = new Ellipsoid(6, 6, 3);
-        var fifteenDegrees = Math.PI / 12;
         var start = new Cartographic(fifteenDegrees, fifteenDegrees);
-        var thirtyDegrees = Math.PI / 6;
         var end = new Cartographic(thirtyDegrees, thirtyDegrees);
 
         var rhumb = EllipsoidRhumbLine.fromStartAndEnd(start, end, ellipsoid, scratch);
@@ -78,7 +79,6 @@ defineSuite([
 
     it('can create using fromStartHeadingDistance function', function() {
         var ellipsoid = new Ellipsoid(6, 6, 3);
-        var fifteenDegrees = Math.PI / 12;
         var start = new Cartographic(fifteenDegrees, fifteenDegrees);
         var heading = fifteenDegrees;
         var distance = 6 * fifteenDegrees;
@@ -90,10 +90,9 @@ defineSuite([
     });
 
     it('can create using fromStartHeadingDistance function with result', function() {
-        var scratch = new EllipsoidRhumbLine();
-
         var ellipsoid = new Ellipsoid(6, 6, 3);
-        var fifteenDegrees = Math.PI / 12;
+        var scratch = new EllipsoidRhumbLine(undefined, undefined, ellipsoid);
+
         var start = new Cartographic(fifteenDegrees, fifteenDegrees);
         var heading = fifteenDegrees;
         var distance = 6 * fifteenDegrees;
@@ -121,9 +120,7 @@ defineSuite([
     });
 
     it('works with two points', function() {
-        var fifteenDegrees = Math.PI / 12;
         var start = new Cartographic(fifteenDegrees, fifteenDegrees);
-        var thirtyDegrees = Math.PI / 6;
         var end = new Cartographic(thirtyDegrees, thirtyDegrees);
 
         var rhumb = new EllipsoidRhumbLine(start, end);
@@ -217,13 +214,10 @@ defineSuite([
 
     it('computes distance at meridian', function() {
         var ellipsoid = new Ellipsoid(6, 6, 6);
-        var fifteenDegrees = Math.PI / 12;
         var start = new Cartographic(CesiumMath.PI_OVER_TWO, fifteenDegrees);
-        var fortyfiveDegrees = Math.PI / 4;
         var end = new Cartographic(CesiumMath.PI_OVER_TWO, fortyfiveDegrees);
 
         var rhumb = new EllipsoidRhumbLine(start, end, ellipsoid);
-        var thirtyDegrees = Math.PI / 6;
         expect(thirtyDegrees * 6).toEqualEpsilon(rhumb.surfaceDistance, CesiumMath.EPSILON12);
     });
 
@@ -249,7 +243,6 @@ defineSuite([
 
     it('computes distance at same latitude', function() {
         var ellipsoid = new Ellipsoid(6, 6, 6);
-        var fortyfiveDegrees = Math.PI / 4;
         var start = new Cartographic(0, -fortyfiveDegrees);
         var end = new Cartographic(CesiumMath.PI_OVER_TWO, -fortyfiveDegrees);
 
@@ -261,7 +254,6 @@ defineSuite([
     it('tests sphere', function() {
         var radius = 6378137.0;
         var ellipsoid = new Ellipsoid(radius, radius, radius);
-        var fifteenDegrees = Math.PI / 12;
         var initial = new Cartographic(fifteenDegrees, fifteenDegrees);
         var distance = radius * fifteenDegrees;
 
@@ -274,7 +266,6 @@ defineSuite([
 
     it('tests sphereoid', function() {
         var ellipsoid = Ellipsoid.WGS84;
-        var fifteenDegrees = Math.PI / 12;
         var initial = new Cartographic(fifteenDegrees, fifteenDegrees);
         var distance = ellipsoid.maximumRadius * fifteenDegrees;
 
@@ -288,11 +279,9 @@ defineSuite([
     it('tests sphere close to 90 degrees', function() {
         var radius = 6378137.0;
         var ellipsoid = new Ellipsoid(radius, radius, radius);
-        var fifteenDegrees = Math.PI / 12;
         var initial = new Cartographic(fifteenDegrees, fifteenDegrees);
         var distance = radius * fifteenDegrees;
 
-        var oneDegree = CesiumMath.RADIANS_PER_DEGREE;
         var eightyNineDegrees = 89 * oneDegree;
         var eightyNinePointNineDegrees = 89.9 * oneDegree;
         var ninetyDegrees = 90 * oneDegree;
@@ -327,11 +316,9 @@ defineSuite([
 
     it('tests spheroid close to 90 degrees', function() {
         var ellipsoid = Ellipsoid.WGS84;
-        var fifteenDegrees = Math.PI / 12;
         var initial = new Cartographic(fifteenDegrees, fifteenDegrees);
         var distance = ellipsoid.maximumRadius * fifteenDegrees;
 
-        var oneDegree = CesiumMath.RADIANS_PER_DEGREE;
         var eightyNineDegrees = 89 * oneDegree;
         var eightyNinePointNineDegrees = 89.9 * oneDegree;
         var ninetyDegrees = 90 * oneDegree;
@@ -366,7 +353,6 @@ defineSuite([
 
     it('test sphereoid across meridian', function() {
         var ellipsoid = Ellipsoid.WGS84;
-        var fifteenDegrees = Math.PI / 12;
         var initial = new Cartographic(-fifteenDegrees, 0.0);
         var final = new Cartographic(fifteenDegrees, 0.0);
         var distance = ellipsoid.maximumRadius * 2 * fifteenDegrees;
@@ -380,7 +366,6 @@ defineSuite([
 
     it('test across IDL with -PI to PI range of longitude', function() {
         var ellipsoid = Ellipsoid.WGS84;
-        var fifteenDegrees = Math.PI / 12.0;
         var initial = new Cartographic(-CesiumMath.PI + fifteenDegrees, 0.0);
         var final = new Cartographic(CesiumMath.PI - fifteenDegrees, 0.0);
 
@@ -404,8 +389,6 @@ defineSuite([
 
     it('test across equator', function() {
         var ellipsoid = Ellipsoid.WGS84;
-        var fifteenDegrees = Math.PI / 12.0;
-        var oneDegree = Math.PI / 180.0;
         var initial = new Cartographic(fifteenDegrees, -oneDegree);
         var final = new Cartographic(fifteenDegrees, oneDegree);
 
@@ -432,7 +415,6 @@ defineSuite([
     it('test close to poles', function() {
         var ellipsoid = Ellipsoid.WGS84;
         var fiveDegrees = CesiumMath.PI / 36.0;
-        var fifteenDegrees = 3 * fiveDegrees;
         var eightyDegrees = 16 * fiveDegrees;
 
         var distance = fifteenDegrees * ellipsoid.maximumRadius;
@@ -475,9 +457,7 @@ defineSuite([
     });
 
     it('interpolates start and end points', function() {
-        var fifteenDegrees = Math.PI / 12;
         var start = new Cartographic(fifteenDegrees, fifteenDegrees);
-        var thirtyDegrees = Math.PI / 6;
         var end = new Cartographic(thirtyDegrees, thirtyDegrees);
 
         var rhumb = new EllipsoidRhumbLine(start, end);
@@ -493,11 +473,8 @@ defineSuite([
     });
 
     it('interpolates midpoint', function() {
-        var fifteenDegrees = Math.PI / 12;
         var start = new Cartographic(fifteenDegrees, 0.0);
-        var fortyfiveDegrees = Math.PI / 4;
         var end = new Cartographic(fortyfiveDegrees, 0.0);
-        var thirtyDegrees = Math.PI / 6;
         var expectedMid = new Cartographic(thirtyDegrees, 0.0);
 
         var rhumb = new EllipsoidRhumbLine(start, end);
@@ -510,9 +487,7 @@ defineSuite([
     });
 
     it('interpolates start and end points using fraction', function() {
-        var fifteenDegrees = Math.PI / 12;
         var start = new Cartographic(fifteenDegrees, fifteenDegrees);
-        var thirtyDegrees = Math.PI / 6;
         var end = new Cartographic(thirtyDegrees, thirtyDegrees);
 
         var rhumb = new EllipsoidRhumbLine(start, end);
@@ -527,11 +502,8 @@ defineSuite([
     });
 
     it('interpolates midpoint using fraction', function() {
-        var fifteenDegrees = Math.PI / 12;
         var start = new Cartographic(fifteenDegrees, 0.0);
-        var fortyfiveDegrees = Math.PI / 4;
         var end = new Cartographic(fortyfiveDegrees, 0.0);
-        var thirtyDegrees = Math.PI / 6;
         var expectedMid = new Cartographic(thirtyDegrees, 0.0);
 
         var rhumb = new EllipsoidRhumbLine(start, end);
@@ -543,11 +515,8 @@ defineSuite([
     });
 
     it('interpolates midpoint fraction using result parameter', function() {
-        var fifteenDegrees = Math.PI / 12;
         var start = new Cartographic(fifteenDegrees, 0.0);
-        var fortyfiveDegrees = Math.PI / 4;
         var end = new Cartographic(fortyfiveDegrees, 0.0);
-        var thirtyDegrees = Math.PI / 6;
         var expectedMid = new Cartographic(thirtyDegrees, 0.0);
 
         var rhumb = new EllipsoidRhumbLine(start, end);
@@ -560,11 +529,8 @@ defineSuite([
     });
 
     it('interpolates midpoint using result parameter', function() {
-        var fifteenDegrees = Math.PI / 12;
         var start = new Cartographic(fifteenDegrees, 0.0);
-        var fortyfiveDegrees = Math.PI / 4;
         var end = new Cartographic(fortyfiveDegrees, 0.0);
-        var thirtyDegrees = Math.PI / 6;
         var expectedMid = new Cartographic(thirtyDegrees, 0.0);
 
         var rhumb = new EllipsoidRhumbLine(start, end);
