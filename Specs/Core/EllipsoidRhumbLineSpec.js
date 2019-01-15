@@ -546,4 +546,117 @@ defineSuite([
         expect(expectedMid.longitude).toEqualEpsilon(result.longitude, CesiumMath.EPSILON12);
         expect(expectedMid.latitude).toEqualEpsilon(result.latitude, CesiumMath.EPSILON12);
     });
+
+    it('finds midpoint and other points using intersection with longitude', function() {
+        var start = new Cartographic(fifteenDegrees, 0.0);
+        var end = new Cartographic(fortyfiveDegrees, thirtyDegrees);
+
+        var rhumb = new EllipsoidRhumbLine(start, end);
+
+        var midpointUsingInterpolation = rhumb.interpolateUsingFraction(0.5);
+        var midpointUsingIntersection = rhumb.findIntersectionWithLongitude(midpointUsingInterpolation.longitude);
+
+        expect(midpointUsingInterpolation.longitude).toEqualEpsilon(midpointUsingIntersection.longitude, CesiumMath.EPSILON12);
+        expect(midpointUsingInterpolation.latitude).toEqualEpsilon(midpointUsingIntersection.latitude, CesiumMath.EPSILON12);
+
+        var pointUsingInterpolation = rhumb.interpolateUsingFraction(0.1);
+        var pointUsingIntersection = rhumb.findIntersectionWithLongitude(pointUsingInterpolation.longitude);
+
+        expect(pointUsingInterpolation.longitude).toEqualEpsilon(pointUsingIntersection.longitude, CesiumMath.EPSILON12);
+        expect(pointUsingInterpolation.latitude).toEqualEpsilon(pointUsingIntersection.latitude, CesiumMath.EPSILON12);
+
+        pointUsingInterpolation = rhumb.interpolateUsingFraction(0.75);
+        pointUsingIntersection = rhumb.findIntersectionWithLongitude(pointUsingInterpolation.longitude);
+
+        expect(pointUsingInterpolation.longitude).toEqualEpsilon(pointUsingIntersection.longitude, CesiumMath.EPSILON12);
+        expect(pointUsingInterpolation.latitude).toEqualEpsilon(pointUsingIntersection.latitude, CesiumMath.EPSILON12);
+
+        pointUsingInterpolation = rhumb.interpolateUsingFraction(1.1);
+        pointUsingIntersection = rhumb.findIntersectionWithLongitude(pointUsingInterpolation.longitude);
+
+        expect(pointUsingInterpolation.longitude).toEqualEpsilon(pointUsingIntersection.longitude, CesiumMath.EPSILON12);
+        expect(pointUsingInterpolation.latitude).toEqualEpsilon(pointUsingIntersection.latitude, CesiumMath.EPSILON12);
+    });
+
+    it('intersection with longitude handles E-W lines', function() {
+        var start = new Cartographic(fifteenDegrees, 0.0);
+        var end = new Cartographic(fortyfiveDegrees, 0.0);
+
+        var rhumb = new EllipsoidRhumbLine(start, end);
+
+        var midpointUsingInterpolation = rhumb.interpolateUsingFraction(0.5);
+        var midpointUsingIntersection = rhumb.findIntersectionWithLongitude(midpointUsingInterpolation.longitude);
+
+        expect(midpointUsingInterpolation.longitude).toEqualEpsilon(midpointUsingIntersection.longitude, CesiumMath.EPSILON12);
+        expect(midpointUsingInterpolation.latitude).toEqualEpsilon(midpointUsingIntersection.latitude, CesiumMath.EPSILON12);
+    });
+
+    it('intersection with longitude handles N-S lines', function() {
+        var start = new Cartographic(fifteenDegrees, 0.0);
+        var end = new Cartographic(fifteenDegrees, thirtyDegrees);
+
+        var rhumb = new EllipsoidRhumbLine(start, end);
+
+        var midpointUsingInterpolation = rhumb.interpolateUsingFraction(0.5);
+        var midpointUsingIntersection = rhumb.findIntersectionWithLongitude(midpointUsingInterpolation.longitude);
+
+        expect(midpointUsingIntersection).not.toBeDefined();
+    });
+
+    it('finds midpoint and other points using intersection with latitude', function() {
+        var start = new Cartographic(fifteenDegrees, 0.0);
+        var end = new Cartographic(fortyfiveDegrees, thirtyDegrees);
+
+        var rhumb = new EllipsoidRhumbLine(start, end);
+
+        var midpointUsingInterpolation = rhumb.interpolateUsingFraction(0.5);
+        var midpointUsingIntersection = rhumb.findIntersectionWithLatitude(midpointUsingInterpolation.latitude);
+
+        expect(midpointUsingInterpolation.longitude).toEqualEpsilon(midpointUsingIntersection.longitude, CesiumMath.EPSILON12);
+        expect(midpointUsingInterpolation.latitude).toEqualEpsilon(midpointUsingIntersection.latitude, CesiumMath.EPSILON12);
+
+        var pointUsingInterpolation = rhumb.interpolateUsingFraction(0.1);
+        var pointUsingIntersection = rhumb.findIntersectionWithLatitude(pointUsingInterpolation.latitude);
+
+        expect(pointUsingInterpolation.longitude).toEqualEpsilon(pointUsingIntersection.longitude, CesiumMath.EPSILON12);
+        expect(pointUsingInterpolation.latitude).toEqualEpsilon(pointUsingIntersection.latitude, CesiumMath.EPSILON12);
+
+        pointUsingInterpolation = rhumb.interpolateUsingFraction(0.75);
+        pointUsingIntersection = rhumb.findIntersectionWithLatitude(pointUsingInterpolation.latitude);
+
+        expect(pointUsingInterpolation.longitude).toEqualEpsilon(pointUsingIntersection.longitude, CesiumMath.EPSILON12);
+        expect(pointUsingInterpolation.latitude).toEqualEpsilon(pointUsingIntersection.latitude, CesiumMath.EPSILON12);
+
+        pointUsingInterpolation = rhumb.interpolateUsingFraction(1.1);
+        pointUsingIntersection = rhumb.findIntersectionWithLatitude(pointUsingInterpolation.latitude);
+
+        expect(pointUsingInterpolation.longitude).toEqualEpsilon(pointUsingIntersection.longitude, CesiumMath.EPSILON12);
+        expect(pointUsingInterpolation.latitude).toEqualEpsilon(pointUsingIntersection.latitude, CesiumMath.EPSILON12);
+    });
+
+    it('intersection with latitude handles E-W lines', function() {
+        var start = new Cartographic(fifteenDegrees, 0.0);
+        var end = new Cartographic(fortyfiveDegrees, 0.0);
+
+        var rhumb = new EllipsoidRhumbLine(start, end);
+
+        var midpointUsingInterpolation = rhumb.interpolateUsingFraction(0.5);
+        var midpointUsingIntersection = rhumb.findIntersectionWithLatitude(midpointUsingInterpolation.latitude);
+
+        expect(midpointUsingIntersection).not.toBeDefined();
+    });
+
+    it('intersection with latitude handles N-S lines', function() {
+        var start = new Cartographic(fifteenDegrees, 0.0);
+        var end = new Cartographic(fifteenDegrees, thirtyDegrees);
+
+        var rhumb = new EllipsoidRhumbLine(start, end);
+
+        var midpointUsingInterpolation = rhumb.interpolateUsingFraction(0.5);
+        var midpointUsingIntersection = rhumb.findIntersectionWithLatitude(midpointUsingInterpolation.latitude);
+
+        expect(midpointUsingInterpolation.longitude).toEqualEpsilon(midpointUsingIntersection.longitude, CesiumMath.EPSILON12);
+        expect(midpointUsingInterpolation.latitude).toEqualEpsilon(midpointUsingIntersection.latitude, CesiumMath.EPSILON12);
+    });
+
 });

@@ -413,5 +413,111 @@ define([
         return new Cartographic(longitude, latitude, 0);
     };
 
+    /**
+     * Provides the location of a point at the indicated longitude along the rhumb line.
+     *
+     * @param {Number} intersectionLongitude The longitude, in radians, at which to find the intersection point from the starting point using the heading.
+     * @param {Cartographic} [result] The object in which to store the result.
+     * @returns {Cartographic} The location of the intersection point along the rhumb line.
+     *
+     * @exception {DeveloperError} start and end must be set before calling function findIntersectionWithLongitude.
+     */
+    EllipsoidRhumbLine.prototype.findIntersectionWithLongitude = function(intersectionLongitude, result) {
+        //>>includeStart('debug', pragmas.debug);
+        Check.defined('intersectionLongitude', intersectionLongitude);
+        Check.defined('distance', this._distance);
+        //>>includeEnd('debug');
+
+        var ellipticity = this._ellipticity;
+        var heading = this._heading;
+        var absHeading = Math.abs(heading);
+        var start = this._start;
+
+        intersectionLongitude = CesiumMath.negativePiToPi(intersectionLongitude);
+
+        if (!defined(result)) {
+            result = new Cartographic();
+        }
+
+        // If heading is -PI/2 or PI/2, this is an E-W rhumb line
+        // If heading is 0 or PI, this is an N-S rhumb line
+        if (Math.abs(CesiumMath.PI_OVER_TWO - absHeading) <= CesiumMath.EPSILON8) {
+            result.longitude = intersectionLongitude;
+            result.latitude = start.latitude;
+            result.height = 0;
+            return result;
+        } else if (CesiumMath.equalsEpsilon(Math.abs(CesiumMath.PI_OVER_TWO - absHeading), CesiumMath.PI_OVER_TWO, CesiumMath.EPSILON8)) {
+            if (CesiumMath.equalsEpsilon(intersectionLongitude, start.longitude, CesiumMath.EPSILON12)) {
+                return undefined;
+            }
+
+            result.longitude = intersectionLongitude;
+            result.latitude = CesiumMath.PI_OVER_TWO * Math.sign(heading);
+            result.height = 0;
+            return result;
+        }
+
+        // Use iterative solver from Equation 9 from http://edwilliams.org/ellipsoid/ellipsoid.pdf
+        var phi1 = start.latitude;
+        var eSinPhi1 = ellipticity * Math.sin(phi1);
+        var leftComponent = Math.tan(0.5 * (CesiumMath.PI_OVER_TWO + phi1)) * Math.exp((intersectionLongitude - start.longitude) / Math.tan(heading));
+        var denominator = (1 + eSinPhi1) / (1 - eSinPhi1);
+
+        var newPhi = start.latitude;
+        var phi;
+        do {
+            phi = newPhi;
+            var eSinPhi = ellipticity * Math.sin(phi);
+            var numerator = (1 + eSinPhi) / (1 - eSinPhi);
+            newPhi = 2 * Math.atan(leftComponent * Math.pow(numerator / denominator, ellipticity / 2)) - CesiumMath.PI_OVER_TWO;
+        } while (!CesiumMath.equalsEpsilon(newPhi, phi, CesiumMath.EPSILON12));
+
+        result.longitude = intersectionLongitude;
+        result.latitude = phi;
+        result.height = 0;
+        return result;
+    };
+
+    /**
+     * Provides the location of a point at the indicated latitude along the rhumb line.
+     *
+     * @param {Number} intersectionLatitude The latitude, in radians, at which to find the intersection point from the starting point using the heading.
+     * @param {Cartographic} [result] The object in which to store the result.
+     * @returns {Cartographic} The location of the intersection point along the rhumb line, undefined if there is no intersection, infinite intersections or if intersection point is not between start and end.
+     *
+     * @exception {DeveloperError} start and end must be set before calling function findIntersectionWithLongitude.
+     */
+    EllipsoidRhumbLine.prototype.findIntersectionWithLatitude = function(intersectionLatitude, result) {
+        //>>includeStart('debug', pragmas.debug);
+        Check.defined('intersectionLatitude', intersectionLatitude);
+        Check.defined('distance', this._distance);
+        //>>includeEnd('debug');
+
+        var ellipticity = this._ellipticity;
+        var heading = this._heading;
+        var start = this._start;
+
+        // If start and end have same latitude, return undefined since it's either no intersection or infinite intersections
+        if (CesiumMath.equalsEpsilon(Math.abs(heading), CesiumMath.PI_OVER_TWO, CesiumMath.EPSILON8)) {
+            return;
+        }
+
+        // Can be solved using the same equations from interpolateUsingSurfaceDistance
+        var sigma1 = calculateSigma(ellipticity, start.latitude);
+        var sigma2 = calculateSigma(ellipticity, intersectionLatitude);
+        var deltaLongitude = Math.tan(heading) * (sigma2 - sigma1);
+        var longitude = CesiumMath.negativePiToPi(start.longitude + deltaLongitude);
+
+        if (defined(result)) {
+            result.longitude = longitude;
+            result.latitude = intersectionLatitude;
+            result.height = 0;
+
+            return result;
+        }
+
+        return new Cartographic(longitude, intersectionLatitude, 0);
+    };
+
     return EllipsoidRhumbLine;
 });
