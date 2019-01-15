@@ -195,86 +195,15 @@ define([
     }
 
     function getPriority(tileset, tile) {
-        // If skipLevelOfDetail is off try to load child tiles as soon as possible so that their parent can refine sooner.
-        // Additive tiles are prioritized by distance because it subjectively looks better.
-        // Replacement tiles are prioritized by screen space error.
-        // A tileset that has both additive and replacement tiles may not prioritize tiles as effectively since SSE and distance
-        // are different types of values. Maybe all priorities need to be normalized to 0-1 range.
-        // if (tile.refine === Cesium3DTileRefine.ADD) {
-        //     return tile._distanceToCamera;
-        // }
         var boundingSphere = tile._boundingVolume.boundingSphere;
-        // var tileCenter = boundingSphere.center;
-        // var toCenter = Cartesian3.subtract(tileCenter, frameState.camera.positionWC, scratchHeyHo);
-        //
-        // // ABS VAL FOR DISTANCE
-        // // var camSpaceDepth = Math.abs(Cartesian3.dot(frameState.camera.directionWC, toCenter));
-        // // var distanceFromCenterPlane = Math.abs(Cartesian3.dot(toCenter, frameState.camera.rightWC));
-        //
-        // // THINGS BEHIND SET NEGATIVE (handled by tile._priority)
-        // var camSpaceDepth = Cartesian3.dot(frameState.camera.directionWC, toCenter);
-        // var sign = camSpaceDepth < 0 ? -1 : 1;
-        // var distanceFromCenterPlane = sign * Math.abs(Cartesian3.dot(toCenter, frameState.camera.rightWC));
-        // var toCenterLength = Cartesian3.magnitude(toCenter) * sign;
-        //
-        // // Center Line Distance
-        // var cameraSpaceDepthVec = Cartesian3.multiplyByScalar(frameState.camera.directionWC, camSpaceDepth, scratchHeyHo);
-        // var cameraCenterDepthPoint = Cartesian3.add(frameState.camera.positionWC, cameraSpaceDepthVec, scratchHeyHo);
-        // var centerLineToBoundCenter = Cartesian3.subtract(tileCenter, cameraCenterDepthPoint, scratchHeyHo);
-        // var distanceFromCenterLine = Cartesian3.magnitude(centerLineToBoundCenter);
-        // // return distanceFromCenterLine;
-        //
-        // var topdownViewPriority = distanceFromCenterLine;
-        // var horizonViewPriority = distanceFromCenterPlane + camSpaceDepth;        // Center Plane is better metric than center line (and cheaper)
-        // // return horizonViewPriority;
-        // // return topdownViewPriority;
-        // var interpValue = Math.abs(frameState.camera.directionWC.y);
-        // // return interpValue * topdownViewPriority + (1 - interpValue) * horizonViewPriority;
-        // // return horizonViewPriority;
-        // // return tile._depth;
-        // // return distanceFromCenterPlane;
-        // // return camSpaceDepth;
-        //
-        // // ALREADY CALCULATED:
-        // // this._distanceToCamera = this.distanceToTile(frameState);// dist to closest point on the aabb??
-        // // this._centerZDepth = this.distanceToTileCenter(frameState); // camera space depth
 
-        // BEST SO FAR:
-        // var priority = CesiumMath.clamp(tile._centerZDepth - boundingSphere.radius, 0, tile._centerZDepth); // Any negative z depth will get clamped to 0. If inside sphere then clamped to 0. Maybe we want to deferr negatives? we really only want closest positive? closest to 0?
-        // var priority = Math.max(tile._centerZDepth + boundingSphere.radius, 0); // Junk, huge pauses.
-        // var priority = Math.max(tile._centerZDepth, 0);
         var priority = tile._distanceToCamera; // pretty good
+        // var priority = CesiumMath.clamp(tile._centerZDepth - boundingSphere.radius, 0, tile._centerZDepth); // Pretty good, any negative z depth will get clamped to 0. If inside sphere then clamped to 0. Maybe we want to deferr negatives? we really only want closest positive? closest to 0?
+        // var priority = tile._centerZDepth - boundingSphere.radius; // allow negative, not as good as the clamped version
+        // var priority = Math.max(tile._centerZDepth + boundingSphere.radius, 0); // Huge pauses.
+        // var priority = Math.max(tile._centerZDepth, 0); // pause on topdown kinds of views
+        // var priority = tile._centerZDepth;
         return priority;
-
-        // if (tile._centerZDepth >= 0) {
-        //     return CesiumMath.clamp(tile._centerZDepth - boundingSphere.radius, 0, tile._centerZDepth);
-        // } else {
-        //     return CesiumMath.clamp(tile._centerZDepth + boundingSphere.radius, tile._centerZDepth, 0);
-        // }
-        // return CesiumMath.clamp(toCenterLength - boundingSphere.radius, 0, toCenterLength);
-        // return toCenterLength;
-        // return tile._centerZDepth;
-        // return tile._distanceToCamera;
-
-
-        // TODO: For multi-dimensional priorities, you need some way of treating the priority like a digit
-        // in a traditional number system. Higher priorities will be a higher digit than lower priorities.
-        // Since each priority dimension will have a different range of values I think trying to monitor the ranges
-        // of each priority so that they can be better tone mapped into 0-1 then shifted into its priority range
-        // ex: if you had 3 priorities you want to sort by each with a more important priority than the other
-        // then you would 0-1 tone map each then the low would stay the same at 0-1, the next highest would be 1-2
-        // and the next hightest would be 2-3. If there isn't a clear boundary of importance amongst the priorities then maybe you would
-        // let the boundaries bleed into one another: lowest-ish priority would be 0-2, next would be 1-3 and next would be 2-4 or something like that
-        // Maybe 0-10, 10-99, 100-999 is better for the distinct levels case.
-
-
-        // var parent = tile.parent;
-        // var useParentScreenSpaceError = defined(parent) && (!skipLevelOfDetail(tileset) || (tile._screenSpaceError === 0.0) || parent.hasTilesetContent);
-        // var screenSpaceError = useParentScreenSpaceError ? parent._screenSpaceError : tile._screenSpaceError;
-        // var rootScreenSpaceError = tileset.root._screenSpaceError;
-        // return rootScreenSpaceError - screenSpaceError; // Map higher SSE to lower values (e.g. root tile is highest priority)
-
-
     }
 
 
@@ -512,7 +441,9 @@ define([
             var minPriorityChild = children[minIndex];
             minPriorityChild._wasMinChild = true;
             var priorityHolder = tile._wasMinChild || tile === tileset.root ? tile._priorityDistanceHolder : tile; // This is where priority dependencies chains are wired up and existing one or started anew.
-            priorityHolder._priorityDistance = minPriorityChild._priorityDistance;
+            var thisMin =  minPriorityChild._priorityDistance;
+            var currentMin = priorityHolder._priorityDistance;
+            priorityHolder._priorityDistance = thisMin < currentMin ? thisMin : currentMin; 
 
             for (i = 0; i < length; ++i) {
                 var child = children[i];

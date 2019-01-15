@@ -2003,7 +2003,6 @@ define([
         } else if (progressChanged && !defined(tileset._startedLoadingTime)) {
             // TODO: remove
             tileset._startedLoadingTime = Date.now();
-            console.log('START TIME: ' + tileset._startedLoadingTime);
         }
 
     }
