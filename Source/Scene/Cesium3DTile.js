@@ -715,7 +715,6 @@ define([
 
     function createPriorityFunction(tile) {
         return function() {
-            tile.updatePriority();
             return tile._priority;
         };
     }
@@ -1274,12 +1273,8 @@ define([
         var shiftedMax = (max - min) + CesiumMath.EPSILON7; // Prevent divide by zero
         var shiftedValue = value - min;
 
-        // https://www.wolframalpha.com/input/?i=plot+1+-+e%5E(-x*4%2F(1000))+,+x%3D0..1000,+y%3D0..1
-        // exposureCurvature will control the shoulder of the curve (how fast it ramps to 1), 4 seems balanced between linear and a fast ramp
-        var linear = true;
-        var exposureCurvature = 4;
-        var zeroToOne = linear ? Math.min(shiftedValue / shiftedMax, 1) : 1 - Math.exp(-shiftedValue * (exposureCurvature / shiftedMax)); // exposure map to a 0-1 value
-        return zeroToOne;
+        // Map to [0..1]
+        return Math.min(shiftedValue / shiftedMax, 1);
     }
 
     /**
@@ -1287,27 +1282,24 @@ define([
      * @private
      */
     Cesium3DTile.prototype.updatePriority = function() {
-        // TODO: Maybe only call this on all active and current requests? Getting called multiple times in a frame (like during a sort)
         var tileset = this.tileset;
         var minPriority = tileset._minPriority;
         var maxPriority = tileset._maxPriority;
 
         // Mix priorities by mapping them into base 10 numbers
-        // Because the mappings are fuzzy you need a digit of separation so priorities don't bleed into eachother
+        // Because the mappings are fuzzy you need a digit of separation so priorities don't bleed into each other
         // Maybe this mental model is terrible and just rename to weights?
         var depthScale = 1;     // One's "digit", digit in quotes here because instead of being an integer in [0..9] it will be a double in [0..10). We want it continuous anyway, not discrete.
         var distanceScale = 100; // Hundreds's "digit"
 
         // Map 0-1 then convert to digit
-        var zeroToOneDistance = normalizeValue(this._priorityDistanceHolder._priorityDistance, minPriority.distance, maxPriority.distance);
-        zeroToOneDistance *= distanceScale;
+        var distanceDigit = distanceScale * normalizeValue(this._priorityDistanceHolder._priorityDistance, minPriority.distance, maxPriority.distance);
 
         // Map 0-1 then convert to digit
-        var zeroToOneDepth = normalizeValue(this._depth, minPriority.depth, maxPriority.depth);
-        zeroToOneDepth *= depthScale;
+        var depthDigit = depthScale * normalizeValue(this._depth, minPriority.depth, maxPriority.depth);
 
         // Get the final base 10 number
-        var sum = zeroToOneDistance + zeroToOneDepth;
+        var sum = distanceDigit + depthDigit;
         this._priority = sum;
     };
 
