@@ -92,6 +92,8 @@ define([
     function GroundGeometryOptions() {
         this.positions = undefined;
         this.width = undefined;
+        this.lineType = undefined;
+        this.granularity = undefined;
     }
 
     /**
@@ -545,6 +547,8 @@ define([
             var groundGeometryOptions = this._groundGeometryOptions;
             groundGeometryOptions.positions = positions;
             groundGeometryOptions.width = geometryOptions.width;
+            groundGeometryOptions.lineType = geometryOptions.lineType;
+            groundGeometryOptions.granularity = geometryOptions.granularity;
 
             this._clampToGround = defined(clampToGround) ? clampToGround.getValue(Iso8601.MINIMUM_VALUE) : false;
 
@@ -633,6 +637,8 @@ define([
         geometryUpdater._clampToGround = Property.getValueOrDefault(polyline._clampToGround, time, false);
         geometryUpdater._groundGeometryOptions.positions = positions;
         geometryUpdater._groundGeometryOptions.width = Property.getValueOrDefault(polyline._width, time, 1);
+        geometryUpdater._groundGeometryOptions.lineType = Property.getValueOrDefault(polyline._lineType, time, LineType.GEODESIC);
+        geometryUpdater._groundGeometryOptions.granularity = Property.getValueOrDefault(polyline._granulatiry, time, 9999);
 
         var groundPrimitives = this._groundPrimitives;
 

@@ -165,7 +165,7 @@ define([
          */
         packedLength: {
             get: function() {
-                return 1.0 + this._positions.length * 3 + 1.0 + 1.0 + Ellipsoid.packedLength + 1.0 + 1.0 + 1.0;
+                return 1.0 + this._positions.length * 3 + 1.0 + 1.0 + 1.0 + Ellipsoid.packedLength + 1.0 + 1.0;
             }
         }
     });
@@ -410,6 +410,10 @@ define([
     var nextBottomScratch = new Cartesian3();
     var vertexNormalScratch = new Cartesian3();
     var intersectionScratch = new Cartesian3();
+    var cartographicScratch0 = new Cartographic();
+    var cartographicScratch1 = new Cartographic();
+    var cartographicIntersectionScratch = new Cartographic();
+    var rhumbLineScratch = new EllipsoidRhumbLine();
     /**
      * Computes shadow volumes for the ground polyline, consisting of its vertices, indices, and a bounding sphere.
      * Vertices are "fat," packing all the data needed in each volume to describe a line on terrain or 3D Tiles.
@@ -444,7 +448,12 @@ define([
         // may get split by the plane of IDL + Prime Meridian.
         var p0;
         var p1;
+        var c0;
+        var c1;
+        var rhumbLine;
         var intersection;
+        var intersectionCartographic;
+        var intersectionLongitude;
         var splitPositions = [positions[0]];
         for (i = 0; i < positionsLength - 1; i++) {
             p0 = positions[i];
@@ -453,7 +462,21 @@ define([
             if (defined(intersection) &&
                 !Cartesian3.equalsEpsilon(intersection, p0, CesiumMath.EPSILON7) &&
                 !Cartesian3.equalsEpsilon(intersection, p1, CesiumMath.EPSILON7)) {
-                splitPositions.push(Cartesian3.clone(intersection));
+                if (groundPolylineGeometry.lineType === LineType.GEODESIC) {
+                    splitPositions.push(Cartesian3.clone(intersection));
+                } else if (groundPolylineGeometry.lineType === LineType.RHUMB) {
+                    intersectionLongitude = ellipsoid.cartesianToCartographic(intersection, cartographicScratch0).longitude;
+                    c0 = ellipsoid.cartesianToCartographic(p0, cartographicScratch0);
+                    c1 = ellipsoid.cartesianToCartographic(p1, cartographicScratch1);
+                    rhumbLine = EllipsoidRhumbLine.fromStartAndEnd(c0, c1, ellipsoid, rhumbLineScratch);
+                    intersectionCartographic = rhumbLine.findIntersectionWithLongitude(intersectionLongitude, cartographicIntersectionScratch);
+                    intersection = ellipsoid.cartographicToCartesian(intersectionCartographic, intersectionScratch);
+                    if (defined(intersection) &&
+                        !Cartesian3.equalsEpsilon(intersection, p0, CesiumMath.EPSILON7) &&
+                        !Cartesian3.equalsEpsilon(intersection, p1, CesiumMath.EPSILON7)) {
+                        splitPositions.push(Cartesian3.clone(intersection));
+                    }
+                }
             }
             splitPositions.push(p1);
         }
@@ -465,7 +488,21 @@ define([
             if (defined(intersection) &&
                 !Cartesian3.equalsEpsilon(intersection, p0, CesiumMath.EPSILON7) &&
                 !Cartesian3.equalsEpsilon(intersection, p1, CesiumMath.EPSILON7)) {
-                splitPositions.push(Cartesian3.clone(intersection));
+                if (groundPolylineGeometry.lineType === LineType.GEODESIC) {
+                    splitPositions.push(Cartesian3.clone(intersection));
+                } else if (groundPolylineGeometry.lineType === LineType.RHUMB) {
+                    intersectionLongitude = ellipsoid.cartesianToCartographic(intersection, cartographicScratch0).longitude;
+                    c0 = ellipsoid.cartesianToCartographic(p0, cartographicScratch0);
+                    c1 = ellipsoid.cartesianToCartographic(p1, cartographicScratch1);
+                    rhumbLine = EllipsoidRhumbLine.fromStartAndEnd(c0, c1, ellipsoid, rhumbLineScratch);
+                    intersectionCartographic = rhumbLine.findIntersectionWithLongitude(intersectionLongitude, cartographicIntersectionScratch);
+                    intersection = ellipsoid.cartographicToCartesian(intersectionCartographic, intersectionScratch);
+                    if (defined(intersection) &&
+                        !Cartesian3.equalsEpsilon(intersection, p0, CesiumMath.EPSILON7) &&
+                        !Cartesian3.equalsEpsilon(intersection, p1, CesiumMath.EPSILON7)) {
+                        splitPositions.push(Cartesian3.clone(intersection));
+                    }
+                }
             }
         }
         var cartographicsLength = splitPositions.length;
