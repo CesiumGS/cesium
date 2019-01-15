@@ -71,8 +71,6 @@ define([
             return;
         }
 
-        tileset._heatmap.resetMinMax();
-
         if (!skipLevelOfDetail(tileset)) {
             executeBaseTraversal(tileset, root, frameState);
         } else if (tileset.immediatelyLoadDesiredLevelOfDetail) {

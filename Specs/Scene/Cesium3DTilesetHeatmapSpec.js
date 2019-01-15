@@ -102,7 +102,7 @@ defineSuite([
         tile._centerZDepth = -1;
         heatmap.colorize(tile, frameState);
 
-        var expectedColor = new Color(0,0,0,1);
+        var expectedColor = Color.BLACK;
         verifyColor(tile._debugColor, expectedColor);
     });
 });

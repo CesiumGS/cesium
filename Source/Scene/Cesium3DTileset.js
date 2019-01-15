@@ -2001,6 +2001,9 @@ define([
 
         ++tileset._updatedVisibilityFrame;
 
+        // Update any tracked min max values
+        tileset._heatmap.resetMinMax();
+
         var ready;
 
         if (isAsync) {

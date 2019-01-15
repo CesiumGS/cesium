@@ -17,6 +17,7 @@ define([
      *
      * @alias Cesium3DTilesetHeatmap
      * @constructor
+     * @private
      */
     function Cesium3DTilesetHeatmap(heatmapVariable) {
         /**
@@ -25,7 +26,7 @@ define([
          *
          * @type {String}
          */
-        this._variableName = heatmapVariable;
+        this.variableName = heatmapVariable;
 
         // Members that are updated every time a tile is colorized
         this._min = Number.MAX_VALUE;
@@ -36,26 +37,12 @@ define([
         this._previousMax = -Number.MAX_VALUE;
     }
 
-     /**
-     * @private
-     */
-    Cesium3DTilesetHeatmap.prototype.isDestroyed = function() {
-        return false;
-    };
-
-    /**
-     * @private
-     */
-    Cesium3DTilesetHeatmap.prototype.destroy = function() {
-        return destroyObject(this);
-    };
-
     function updateMinMax(heatmap, tile) {
-        var variableName = heatmap._variableName;
+        var variableName = heatmap.variableName;
         if (defined(variableName)) {
             var tileValue = tile[variableName];
             if (!defined(tileValue)) {
-                heatmap._variableName = undefined;
+                heatmap.variableName = undefined;
                 return;
             }
             heatmap._max = Math.max(tileValue, heatmap._max);
@@ -68,18 +55,15 @@ define([
                          new Color(0.827, 0.231, 0.490, 1),  // Pink
                          new Color(0.827, 0.188, 0.220, 1),  // Red
                          new Color(1.000, 0.592, 0.259, 1),  // Orange
-                         new Color(1.000, 0.843, 0.000, 1),  // Yellow
-                         new Color(1.000, 1.000, 1.000, 1)]; // White
+                         new Color(1.000, 0.843, 0.000, 1)]; // Yellow
     /**
      * Colorize the tile in heat map style based on where it lies within the min max window.
-     * Heatmap colors are black, blue, green, red, white. 'Cold' or low numbers will be black and blue, 'Hot' or high numbers will be red and white,
+     * Heatmap colors are black, blue, pink, red, orange, yellow. 'Cold' or low numbers will be black and blue, 'Hot' or high numbers will be orange and yellow,
      * @param {Cesium3DTile} tile The tile to colorize relative to last frame's min and max values of all visible tiles.
      * @param {FrameState} frameState The frame state.
-     *
-     * @private
      */
     Cesium3DTilesetHeatmap.prototype.colorize = function (tile, frameState) {
-        var variableName = this._variableName;
+        var variableName = this.variableName;
         if (!defined(variableName) || !tile.contentAvailable || tile._selectedFrame !== frameState.frameNumber) {
             return;
         }
@@ -118,18 +102,24 @@ define([
 
     /**
      * Resets the tracked min max values for heatmap colorization. Happens right before tileset traversal.
-     *
-     * @private
      */
     Cesium3DTilesetHeatmap.prototype.resetMinMax = function() {
         // For heat map colorization
-        var variableName = this._variableName;
+        var variableName = this.variableName;
         if (defined(variableName)) {
             this._previousMin = this._min;
             this._previousMax = this._max;
             this._min = Number.MAX_VALUE;
             this._max = -Number.MAX_VALUE;
         }
+    };
+
+    Cesium3DTilesetHeatmap.prototype.isDestroyed = function() {
+        return false;
+    };
+
+    Cesium3DTilesetHeatmap.prototype.destroy = function() {
+        return destroyObject(this);
     };
 
     return Cesium3DTilesetHeatmap;
