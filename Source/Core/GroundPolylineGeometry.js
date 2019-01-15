@@ -13,7 +13,7 @@ define([
         './defineProperties',
         './Ellipsoid',
         './EllipsoidGeodesic',
-        './EllipsoidRhumb',
+        './EllipsoidRhumbLine',
         './EncodedCartesian3',
         './GeographicProjection',
         './Geometry',
@@ -40,7 +40,7 @@ define([
         defineProperties,
         Ellipsoid,
         EllipsoidGeodesic,
-        EllipsoidRhumb,
+        EllipsoidRhumbLine,
         EncodedCartesian3,
         GeographicProjection,
         Geometry,
@@ -219,7 +219,7 @@ define([
         if (lineType === LineType.GEODESIC) {
             ellipsoidLine = new EllipsoidGeodesic(start, end, ellipsoid);
         } else if (lineType === LineType.RHUMB) {
-            ellipsoidLine = new EllipsoidRhumb(start, end, ellipsoid);
+            ellipsoidLine = new EllipsoidRhumbLine(start, end, ellipsoid);
         }
 
         var surfaceDistance = ellipsoidLine.surfaceDistance;

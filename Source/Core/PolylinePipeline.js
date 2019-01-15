@@ -6,7 +6,7 @@ define([
         './DeveloperError',
         './Ellipsoid',
         './EllipsoidGeodesic',
-        './EllipsoidRhumb',
+        './EllipsoidRhumbLine',
         './IntersectionTests',
         './isArray',
         './Math',
@@ -20,7 +20,7 @@ define([
         DeveloperError,
         Ellipsoid,
         EllipsoidGeodesic,
-        EllipsoidRhumb,
+        EllipsoidRhumbLine,
         IntersectionTests,
         isArray,
         CesiumMath,
@@ -94,7 +94,7 @@ define([
     var scaleFirst = new Cartesian3();
     var scaleLast = new Cartesian3();
     var ellipsoidGeodesic = new EllipsoidGeodesic();
-    var ellipsoidRhumb = new EllipsoidRhumb();
+    var ellipsoidRhumb = new EllipsoidRhumbLine();
 
     //Returns subdivided line scaled to ellipsoid surface starting at p1 and ending at p2.
     //Result includes p1, but not include p2.  This function is called for a sequence of line segments,

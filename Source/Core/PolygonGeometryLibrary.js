@@ -7,7 +7,7 @@ define([
         './defaultValue',
         './defined',
         './Ellipsoid',
-        './EllipsoidRhumb',
+        './EllipsoidRhumbLine',
         './Geometry',
         './GeometryAttribute',
         './GeometryAttributes',
@@ -30,7 +30,7 @@ define([
         defaultValue,
         defined,
         Ellipsoid,
-        EllipsoidRhumb,
+        EllipsoidRhumbLine,
         Geometry,
         GeometryAttribute,
         GeometryAttributes,
@@ -151,7 +151,7 @@ define([
         return Math.pow(2, countDivide);
     };
 
-    var scratchEllipsoidRhumb = new EllipsoidRhumb();
+    var scratchEllipsoidRhumb = new EllipsoidRhumbLine();
     var scratchCartographic0 = new Cartographic();
     var scratchCartographic1 = new Cartographic();
     var scratchCartographic2 = new Cartographic();
@@ -159,7 +159,7 @@ define([
     PolygonGeometryLibrary.subdivideRhumbLineCount = function(ellipsoid, p0, p1, minDistance) {
         var c0 = ellipsoid.cartesianToCartographic(p0, scratchCartographic0);
         var c1 = ellipsoid.cartesianToCartographic(p1, scratchCartographic1);
-        var rhumb = EllipsoidRhumb.fromStartAndEnd(c0, c1, ellipsoid, scratchEllipsoidRhumb);
+        var rhumb = EllipsoidRhumbLine.fromStartAndEnd(c0, c1, ellipsoid, scratchEllipsoidRhumb);
         var n = rhumb.surfaceDistance / minDistance;
         var countDivide = Math.max(0, Math.ceil(Math.log(n) / Math.log(2)));
         return Math.pow(2, countDivide);
@@ -192,7 +192,7 @@ define([
         var numVertices = PolygonGeometryLibrary.subdivideRhumbLineCount(ellipsoid, p0, p1, minDistance);
         var c0 = ellipsoid.cartesianToCartographic(p0, scratchCartographic0);
         var c1 = ellipsoid.cartesianToCartographic(p1, scratchCartographic1);
-        var rhumb = EllipsoidRhumb.fromStartAndEnd(c0, c1, ellipsoid, scratchEllipsoidRhumb);
+        var rhumb = EllipsoidRhumbLine.fromStartAndEnd(c0, c1, ellipsoid, scratchEllipsoidRhumb);
         var distanceBetweenVertices = rhumb.surfaceDistance / numVertices;
 
         if (!defined(result)) {
