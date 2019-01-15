@@ -71,9 +71,9 @@ define([
                          new Color(1.000, 0.843, 0.000, 1),  // Yellow
                          new Color(1.000, 1.000, 1.000, 1)]; // White
     /**
-     * Colorize the tile in heat map style base on where it lies within the min max window.
+     * Colorize the tile in heat map style based on where it lies within the min max window.
      * Heatmap colors are black, blue, green, red, white. 'Cold' or low numbers will be black and blue, 'Hot' or high numbers will be red and white,
-     * @param {Cesium3DTile} tile The tile to colorize relative to last frames min and max values of all visible tiles.
+     * @param {Cesium3DTile} tile The tile to colorize relative to last frame's min and max values of all visible tiles.
      * @param {FrameState} frameState The frame state.
      *
      * @private

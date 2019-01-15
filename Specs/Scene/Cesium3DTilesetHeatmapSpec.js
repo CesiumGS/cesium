@@ -69,7 +69,7 @@ defineSuite([
         heatmap._min = -1;
         heatmap._max =  1;
         heatmap.resetMinMax();
-        // Preparing for next frame, previousMin/Max are take current frame's values
+        // Preparing for next frame, previousMin/Max take current frame's values
         expect(heatmap._min).toBe(Number.MAX_VALUE);
         expect(heatmap._max).toBe(-Number.MAX_VALUE);
         expect(heatmap._previousMin).toBe(-1);
@@ -96,7 +96,7 @@ defineSuite([
         expect(heatmap._max).toBe( 1);
         verifyColor(tile._debugColor, originalColor);
 
-        // Preparing for next frame, previousMin/Max are take current frame's values
+        // Preparing for next frame, previousMin/Max take current frame's values
         heatmap.resetMinMax();
 
         tile._centerZDepth = -1;
