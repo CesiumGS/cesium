@@ -214,11 +214,13 @@ define([
             image.onload = function () {
                 supportsWebpResult = (image.width > 0) && (image.height > 0);
                 supportsWebpPromise.resolve(supportsWebpResult);
-            }
+            };
+
             image.onerror = function () {
                 supportsWebpResult = false;
                 supportsWebpPromise.resolve(supportsWebpResult);
-            }
+            };
+
             image.src = 'data:image/webp;base64,' + webpDataUri;
 
             return supportsWebpPromise;

@@ -10,6 +10,7 @@ define([
         '../Core/Matrix3',
         '../Core/Matrix4',
         '../Core/Quaternion',
+        '../Core/FeatureDetection',
         '../Core/RuntimeError',
         '../Core/WebGLConstants',
         '../Renderer/ShaderSource',
@@ -30,6 +31,7 @@ define([
         Matrix3,
         Matrix4,
         Quaternion,
+        FeatureDetection,
         RuntimeError,
         WebGLConstants,
         ShaderSource,
@@ -509,7 +511,7 @@ define([
                     throw new RuntimeError('Unsupported glTF Extension: ' + extension);
                 }
 
-                if (extension == 'EXT_image_webp' && supportsWebp === false) {
+                if (extension === 'EXT_image_webp' && supportsWebp === false) {
                     throw new RuntimeError('Loaded model requires WebP but browser does not support it.');
                 }
             }
