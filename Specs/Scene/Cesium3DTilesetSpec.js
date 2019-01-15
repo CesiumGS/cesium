@@ -3511,16 +3511,12 @@ defineSuite([
     });
 
     it('cancels out-of-view tiles', function() {
-        if (webglStub) {
-            return;
-        }
-
         viewNothing();
+
         return Cesium3DTilesTester.loadTileset(scene, tilesetUniform).then(function(tileset) {
-            var frameState = scene.frameState;
             // Make requests
             viewAllTiles();
-            tileset.update(frameState);
+            scene.renderForSpecs();
             var requestedTilesInFlight = tileset._requestedTilesInFlight;
             var requestedTilesInFlightLength = requestedTilesInFlight.length;
             expect(requestedTilesInFlightLength).toBeGreaterThan(0);
@@ -3531,16 +3527,15 @@ defineSuite([
             for (i = 0; i < requestedTilesInFlightLength; i++) {
                 oldRequests.push(requestedTilesInFlight[i]);
             }
-            var oldRequestsLength = oldRequests.length;
 
             // Cancel requests
             viewNothing();
-            frameState.frameNumber++;
-            tileset.update(frameState);
+            scene.renderForSpecs();
             expect(requestedTilesInFlight.length).toBe(0);
 
             // Make sure old requets were marked for cancelling
             var allCancelled = true;
+            var oldRequestsLength = oldRequests.length;
             for (i = 0; i < oldRequestsLength; i++) {
                 var tile = oldRequests[i];
                 allCancelled = allCancelled && tile._request.cancelled;

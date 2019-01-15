@@ -219,7 +219,6 @@ define([
 
         this._requestedTilesInFlight = [];
 
-        this._totalTilesLoaded = 0;
         this._tilesLoaded = false;
         this._initialTilesLoaded = false;
 
@@ -1628,7 +1627,7 @@ define([
                 // external tileset when all the tiles are unloaded.
                 tileset._statistics.incrementLoadCounts(tile.content);
                 ++tileset._statistics.numberOfTilesWithContentReady;
-                tileset._totalTilesLoaded++;
+                ++tileset._statistics.numberOfLoadedTilesTotal;
 
                 // Add to the tile cache. Previously expired tiles are already in the cache and won't get re-added.
                 tileset._cache.add(tile);
@@ -1972,10 +1971,6 @@ define([
         tileset._tilesLoaded = (statistics.numberOfPendingRequests === 0) && (statistics.numberOfTilesProcessing === 0) && (statistics.numberOfAttemptedRequests === 0);
 
         if (progressChanged && tileset._tilesLoaded) {
-
-            console.log('totalLoaded: ' + tileset._totalTilesLoaded);
-            tileset._totalTilesLoaded = 0;
-
             frameState.afterRender.push(function() {
                 tileset.allTilesLoaded.raiseEvent();
             });
