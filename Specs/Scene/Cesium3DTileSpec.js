@@ -9,6 +9,7 @@ defineSuite([
         'Core/Rectangle',
         'Core/Transforms',
         'Scene/Cesium3DTileRefine',
+        'Scene/Cesium3DTilesetHeatmap',
         'Scene/TileBoundingRegion',
         'Scene/TileOrientedBoundingBox',
         'Specs/createScene'
@@ -23,6 +24,7 @@ defineSuite([
         Rectangle,
         Transforms,
         Cesium3DTileRefine,
+        Cesium3DTilesetHeatmap,
         TileBoundingRegion,
         TileOrientedBoundingBox,
         createScene) {
@@ -116,7 +118,8 @@ defineSuite([
         debugShowBoundingVolume : true,
         debugShowViewerRequestVolume : true,
         modelMatrix : Matrix4.IDENTITY,
-        _geometricError : 2
+        _geometricError : 2,
+        _heatmap : new Cesium3DTilesetHeatmap()
     };
 
     var centerLongitude = -1.31968;
