@@ -219,6 +219,8 @@ define([
         this._statisticsLastPick = new Cesium3DTilesetStatistics();
         this._statisticsLastAsync = new Cesium3DTilesetStatistics();
 
+        this._requestedTilesInFlight = [];
+
         this._heatmap = new Cesium3DTilesetHeatmap(options.heatmapVariable);
         this._maxPriority = { level: -Number.MAX_VALUE, distance: -Number.MAX_VALUE };
         this._minPriority = { level: Number.MAX_VALUE, distance: Number.MAX_VALUE, minPriorityHolder: undefined };
@@ -1540,6 +1542,7 @@ define([
         }
 
         ++statistics.numberOfPendingRequests;
+        tileset._requestedTilesInFlight.push(tile);
 
         tile.contentReadyToProcessPromise.then(addToProcessingQueue(tileset, tile));
         tile.contentReadyPromise.then(handleTileSuccess(tileset, tile)).otherwise(handleTileFailure(tileset, tile));
@@ -1547,6 +1550,34 @@ define([
 
     function sortRequestByPriority(a, b) {
         return a._priority - b._priority;
+    }
+
+    function cancelOutOfViewRequestedTiles(tileset, frameState) {
+        var requestedTilesInFlight = tileset._requestedTilesInFlight;
+        var removeCount = 0;
+        var length = requestedTilesInFlight.length;
+        for (var i = 0; i < length; ++i) {
+            var tile = requestedTilesInFlight[i];
+
+            // NOTE: This is framerate dependant so make sure the threshold check is small
+            var outOfView = (frameState.frameNumber - tile._touchedFrame) >= 1;
+            if (tile._contentState !== Cesium3DTileContentState.LOADING) {
+                // No longer fetching from host, don't need to track it anymore. Gets marked as LOADING in Cesium3DTile::requestContent().
+                ++removeCount;
+                continue;
+            } else if (outOfView) {
+                // RequestScheduler will take care of cancelling it
+                tile._request.cancel();
+                ++removeCount;
+                continue;
+            }
+
+            if (removeCount > 0) {
+                requestedTilesInFlight[i - removeCount] = tile;
+            }
+        }
+
+        requestedTilesInFlight.length -= removeCount;
     }
 
     function requestTiles(tileset) {
@@ -1606,6 +1637,7 @@ define([
                 // external tileset when all the tiles are unloaded.
                 tileset._statistics.incrementLoadCounts(tile.content);
                 ++tileset._statistics.numberOfTilesWithContentReady;
+                ++tileset._statistics.numberOfLoadedTilesTotal;
 
                 // Add to the tile cache. Previously expired tiles are already in the cache and won't get re-added.
                 tileset._cache.add(tile);
@@ -2021,6 +2053,10 @@ define([
             ready = Cesium3DTilesetAsyncTraversal.selectTiles(tileset, frameState);
         } else {
             ready = Cesium3DTilesetTraversal.selectTiles(tileset, frameState);
+        }
+
+        if (isRender) {
+            cancelOutOfViewRequestedTiles(tileset, frameState);
         }
 
         if (isRender || isAsync) {

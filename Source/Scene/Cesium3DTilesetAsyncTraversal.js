@@ -53,6 +53,7 @@ define([
 
             if (add || (replace && !traverse)) {
                 loadTile(tileset, tile);
+                touchTile(tileset, tile, frameState);
                 selectDesiredTile(tileset, tile, frameState);
 
                 if (!hasEmptyContent(tile) && !tile.contentAvailable) {
@@ -61,7 +62,6 @@ define([
             }
 
             visitTile(tileset);
-            touchTile(tileset, tile);
         }
 
         asyncTraversal.stack.trim(asyncTraversal.stackMaximumLength);
@@ -119,8 +119,13 @@ define([
         }
     }
 
-    function touchTile(tileset, tile) {
+    function touchTile(tileset, tile, frameState) {
+        if (tile._touchedFrame === frameState.frameNumber) {
+            // Prevents another pass from touching the frame again
+            return;
+        }
         tileset._cache.touch(tile);
+        tile._touchedFrame = frameState.frameNumber;
     }
 
     function visitTile(tileset) {

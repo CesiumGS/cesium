@@ -350,6 +350,8 @@ define([
 
         this._color = undefined;
         this._colorDirty = false;
+
+        this._request = undefined;
     }
 
     // This can be overridden for testing purposes
@@ -750,6 +752,7 @@ define([
             serverKey : this._serverKey
         });
 
+        this._request = request;
         resource.request = request;
 
         var promise = resource.fetchArrayBuffer();
