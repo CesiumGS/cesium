@@ -30,7 +30,7 @@ define([
             return require([wasmConfig.modulePath], function(stbModule) {
                 if (defined(wasmConfig.wasmBinaryFile)) {
                     if (!defined(stbModule)) {
-                        stbModule = self.Module;
+                        stbModule = self.StbDecoderModule;
                     }
 
                     stbModule(wasmConfig).then(function (compiledModule) {
