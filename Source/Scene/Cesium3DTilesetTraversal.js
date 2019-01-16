@@ -194,23 +194,9 @@ define([
         tile._touchedFrame = frameState.frameNumber;
     }
 
-    function getPriority(tileset, tile) {
-        var priority = tile._distanceToCamera; // pretty good
-        // var boundingSphere = tile._boundingVolume.boundingSphere;
-        // var priority = CesiumMath.clamp(tile._centerZDepth - boundingSphere.radius, 0, tile._centerZDepth); // Pretty good, any negative z depth will get clamped to 0. If inside sphere then clamped to 0. Maybe we want to deferr negatives? we really only want closest positive? closest to 0?
-        // var priority = tile._centerZDepth - boundingSphere.radius; // allow negative, not as good as the clamped version
-        // var priority = Math.max(tile._centerZDepth + boundingSphere.radius, 0); // Huge pauses.
-        // var priority = Math.max(tile._centerZDepth, 0); // pause on topdown kinds of views
-        // var priority = tile._centerZDepth;
-        return priority;
-    }
-
     function updateMinMaxPriority(tileset, tile) {
         tileset._maxPriority.distance = Math.max(tile._priorityDistanceHolder._priorityDistance, tileset._maxPriority.distance);
-        if (tile._priorityDistance < tileset._minPriority.distance) {
-            tileset._minPriority.distance = tile._priorityDistance;
-            tileset._minPriority.minDistanceTile = tile;
-        }
+        tileset._minPriority.distance = Math.min(tile._priorityDistanceHolder._priorityDistance, tileset._minPriority.distance);
         tileset._maxPriority.depth = Math.max(tile._depth, tileset._maxPriority.depth);
         tileset._minPriority.depth = Math.min(tile._depth, tileset._minPriority.depth);
     }
@@ -228,8 +214,8 @@ define([
         tile.updateExpiration();
 
         // Request priority
-        tile._wasMinChild = false;
-        tile._priorityDistance = getPriority(tileset, tile, frameState); // updateAndPushChildren() needs this value for the priority chaining so it must be determined here and not loadTile
+        tile._wasMinChild = false; // Needed for knowing when to continue dependency chain
+        tile._priorityDistance = tile._distanceToCamera; // updateAndPushChildren() needs this value for the priority chaining so it must be determined here and not loadTile
         tile._priorityDistanceHolder = tile;
         updateMinMaxPriority(tileset, tile);
 

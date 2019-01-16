@@ -223,7 +223,7 @@ define([
 
         this._heatmap = new Cesium3DTilesetHeatmap(options.heatmapVariable);
         this._maxPriority = { depth: -Number.MAX_VALUE, distance: -Number.MAX_VALUE };
-        this._minPriority = { depth: Number.MAX_VALUE, distance: Number.MAX_VALUE, minPriorityHolder: undefined };
+        this._minPriority = { depth: Number.MAX_VALUE, distance: Number.MAX_VALUE };
         // TODO: remove
         this._startedLoadingTime = undefined; // ms since 1970
 
@@ -1589,7 +1589,7 @@ define([
         var length = requestedTiles.length;
         var i;
         for (i = 0; i < length; ++i) {
-            requestedTiles[i].updatePriority(); // Cannot determine priority during traversal, and do not want to use a previous frame scheme to achieve that.
+            requestedTiles[i].updatePriority(); // Cannot determine priority during traversal, and do not want to use a previous frame scheme to achieve that
         }
         requestedTiles.sort(sortRequestByPriority);
         for (i = 0; i < length; ++i) {
@@ -2141,7 +2141,6 @@ define([
         this._maxPriority.depth = -Number.MAX_VALUE;
         this._minPriority.distance = Number.MAX_VALUE;
         this._maxPriority.distance = -Number.MAX_VALUE;
-        this._minPriorityHolder = undefined;
     };
 
     /**
