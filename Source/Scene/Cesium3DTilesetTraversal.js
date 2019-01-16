@@ -278,7 +278,6 @@ define([
 
     function updateTile(tileset, tile, frameState) {
         // Reset some of the tile's flags and re-evaluate visability
-        // tile.updateVisibility(frameState);
         updateTileVisibility(tileset, tile, frameState);
         tile.updateExpiration();
 
