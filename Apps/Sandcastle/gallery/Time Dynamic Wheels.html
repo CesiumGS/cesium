@@ -48,9 +48,6 @@ var endPosition = new Cesium.Cartesian3(-2379603.7074103747, -4665623.48990283, 
 // A velocity vector property will give us the entity's speed and direction at any given time.
 var velocityVectorProperty = new Cesium.VelocityVectorProperty(position, false);
 var velocityVector = new Cesium.Cartesian3();
-// Store the wheel's rotation over time in a SampledProperty.
-var wheelAngleProperty = new Cesium.SampledProperty(Number);
-var wheelAngle = 0;
 
 var numberOfSamples = 100;
 for (var i = 0; i <= numberOfSamples; ++i) {
@@ -61,15 +58,6 @@ for (var i = 0; i <= numberOfSamples; ++i) {
     var locationFactor = Math.pow(factor, 2);
     var location = Cesium.Cartesian3.lerp(startPosition, endPosition, locationFactor, new Cesium.Cartesian3());
     position.addSample(time, location);
-    // Rotate the wheels based on how fast the vehicle is moving at each timestep.
-    velocityVectorProperty.getValue(time, velocityVector);
-    var metersPerSecond = Cesium.Cartesian3.magnitude(velocityVector);
-    var wheelRadius = 0.52;//in meters.
-    var circumference = Math.PI * wheelRadius * 2;
-    var rotationsPerSecond = metersPerSecond / circumference;
-
-    wheelAngle += ((Math.PI * 2 * totalSeconds) / numberOfSamples) * rotationsPerSecond;
-    wheelAngleProperty.addSample(time, wheelAngle);
 }
 
 function updateSpeedLabel(time, result) {
@@ -79,6 +67,40 @@ function updateSpeedLabel(time, result) {
 
     return kmPerHour + ' km/hr';
 }
+
+var scratchJulianDate = new Cesium.JulianDate();
+
+var wheelAngleProperty = new Cesium.CallbackProperty(function (time, result) {
+    // In order to compute the angle of the wheel at any given time,
+    // we need to take samples of velocity from the start position
+    // all the way up to the current time.
+    var start = viewer.clock.startTime;
+    var secondsUpToNow = Cesium.JulianDate.secondsDifference(time, start);
+
+    if (secondsUpToNow == 0) {
+        return 0;
+    }
+
+    var timeStep = 0.016;//Take 60 velocity samples per second.
+    var numberOfAngleSamples = secondsUpToNow / timeStep;
+
+    var wheelAngle = 0;
+    for (var i = 0; i <= numberOfAngleSamples; ++i) {
+        var factor = (i / numberOfAngleSamples);
+        var currentTime = Cesium.JulianDate.addSeconds(start, factor * secondsUpToNow, scratchJulianDate);
+        // Get the velocity at this sampled time.
+        velocityVectorProperty.getValue(currentTime, velocityVector);
+        var metersPerSecond = Cesium.Cartesian3.magnitude(velocityVector);
+        var wheelRadius = 0.52;//in meters.
+        var circumference = Math.PI * wheelRadius * 2;
+        var rotationsPerSecond = metersPerSecond / circumference;
+
+        wheelAngle += ((Math.PI * 2 * secondsUpToNow) / numberOfAngleSamples) * rotationsPerSecond;
+    }
+
+    return wheelAngle;
+
+}, false);
 
 var rotationProperty = new Cesium.CallbackProperty(function(time, result) {
     return Cesium.Quaternion.fromAxisAngle(Cesium.Cartesian3.UNIT_X, wheelAngleProperty.getValue(time), result);
@@ -100,8 +122,6 @@ var vehicleEntity = viewer.entities.add({
     orientation : new Cesium.VelocityOrientationProperty(position), // Automatically set the vehicle's orientation to the direction it's facing.
     model : {
         uri : '../../../../Apps/SampleData/models/GroundVehicle/GroundVehicle.glb',
-        minimumPixelSize : 128,
-        maximumScale : 20000,
         runAnimations : false,
         nodeTransformations : nodeTransformations
     },
