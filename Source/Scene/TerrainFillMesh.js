@@ -462,6 +462,8 @@ define([
     var heightmapBuffer = typeof Uint8Array !== 'undefined' ? new Uint8Array(9 * 9) : undefined;
 
     function createFillMesh(tileProvider, frameState, tile) {
+        GlobeSurfaceTile.initialize(tile, tileProvider.terrainProvider, tileProvider._imageryLayers);
+
         var surfaceTile = tile.data;
         var fill = surfaceTile.fill;
         var rectangle = tile.rectangle;
@@ -642,42 +644,7 @@ define([
 
         GlobeSurfaceTile._freeVertexArray(fill.vertexArray);
         fill.vertexArray = GlobeSurfaceTile._createVertexArrayForMesh(context, fill.mesh);
-
-        var tileImageryCollection = surfaceTile.imagery;
-
-        if (tileImageryCollection.length === 0) {
-            var imageryLayerCollection = tileProvider._imageryLayers;
-            var terrainProvider = tileProvider.terrainProvider;
-            for (i = 0, len = imageryLayerCollection.length; i < len; ++i) {
-                var layer = imageryLayerCollection.get(i);
-                if (layer.show) {
-                    layer._createTileImagerySkeletons(tile, terrainProvider);
-                }
-            }
-        }
-
-        for (i = 0, len = tileImageryCollection.length; i < len; ++i) {
-            var tileImagery = tileImageryCollection[i];
-            if (!defined(tileImagery.loadingImagery)) {
-                continue;
-            }
-
-            if (tileImagery.loadingImagery.state === ImageryState.PLACEHOLDER) {
-                var imageryLayer = tileImagery.loadingImagery.imageryLayer;
-                if (imageryLayer.imageryProvider.ready) {
-                    // Remove the placeholder and add the actual skeletons (if any)
-                    // at the same position.  Then continue the loop at the same index.
-                    tileImagery.freeResources();
-                    tileImageryCollection.splice(i, 1);
-                    imageryLayer._createTileImagerySkeletons(tile, tileProvider.terrainProvider, i);
-                    --i;
-                    len = tileImageryCollection.length;
-                    continue;
-                }
-            }
-
-            tileImagery.processStateMachine(tile, frameState, true);
-        }
+        surfaceTile.processImagery(tile, tileProvider.terrainProvider, frameState, true);
     }
 
     function addVertexWithComputedPosition(ellipsoid, rectangle, encoding, buffer, index, u, v, height, encodedNormal, webMercatorT) {
