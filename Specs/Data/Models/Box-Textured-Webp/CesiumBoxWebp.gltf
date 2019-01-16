@@ -152,21 +152,25 @@
   "textures": [
     {
       "sampler": 0,
-      "source": 0
+      "source": 0,
+      "extensions": {
+        "EXT_image_webp": {
+          "source": 1,
+          "sampler": 1
+        }
+      }
     }
   ],
   "images": [
     {
-      "extensions": {
-        "EXT_image_webp": {
-          "name": "cesium logo",
-          "bufferView": 3,
-          "mimeType": "image/webp"
-        }
-      },
       "name": "cesium logo",
       "bufferView": 4,
       "mimeType": "image/png"
+    },
+    {
+      "name": "cesium logo",
+      "bufferView": 3,
+      "mimeType": "image/webp"
     }
   ],
   "samplers": [

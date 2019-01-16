@@ -1654,12 +1654,13 @@ define([
         var uri;
         ForEach.texture(gltf, function(texture, id) {
             var imageId = texture.source;
+
+            if (defined(texture.extensions) && defined(texture.extensions.EXT_image_webp) && supportsWebp) {
+                imageId = texture.extensions.EXT_image_webp.source;
+            }
+
             var gltfImage = images[imageId];
             var extras = gltfImage.extras;
-
-            if (defined(gltfImage.extensions) && defined(gltfImage.extensions.EXT_image_webp) && supportsWebp) {
-                gltfImage = gltfImage.extensions.EXT_image_webp;
-            }
 
             var bufferViewId = gltfImage.bufferView;
             var mimeType = gltfImage.mimeType;
