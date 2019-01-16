@@ -76,8 +76,8 @@ define([
         var max;
         if (variableName === '_time') {
             min = 0;
-            // max = 6; // Melborne
-            max = 10; // NYC
+            // max = 2.5; // Melborne 2.5 skip, 6non
+            max = 6; // NYC 6 skip, 10non
         } else {
             min = this._previousMin;
             max = this._previousMax;
