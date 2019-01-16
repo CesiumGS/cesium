@@ -1,5 +1,4 @@
 define([
-        '../Core/Check',
         '../Core/defaultValue',
         '../Core/defineProperties',
         '../Core/defined',
@@ -9,7 +8,6 @@ define([
         './ModelAnimationLoop',
         './ModelAnimationState'
     ], function(
-        Check,
         defaultValue,
         defineProperties,
         defined,
@@ -120,7 +118,6 @@ define([
         // Set during animation update
         this._computedStartTime = undefined;
         this._duration = undefined;
-        this._multiplierChanged = false;
 
         // To avoid allocations in ModelAnimationCollection.update
         var that = this;
@@ -211,20 +208,13 @@ define([
          * @memberof ModelAnimation.prototype
          *
          * @type {Number}
+         * @readonly
          *
          * @default 1.0
          */
         multiplier : {
             get : function() {
                 return this._multiplier;
-            },
-            set : function(multiplier) {
-                //>>includeStart('debug', pragmas.debug);
-                Check.typeOf.number.greaterThan('multiplier', multiplier, 0);
-                //>>includeEnd('debug');
-
-                this._multiplier = multiplier;
-                this._multiplierChanged = true;
             }
         },
 

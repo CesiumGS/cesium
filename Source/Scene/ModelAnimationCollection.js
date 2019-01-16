@@ -397,9 +397,8 @@ define([
                 scheduledAnimation._computedStartTime = JulianDate.addSeconds(defaultValue(scheduledAnimation.startTime, sceneTime), scheduledAnimation.delay, new JulianDate());
             }
 
-            if (!defined(scheduledAnimation._duration) || scheduledAnimation._multiplierChanged) {
+            if (!defined(scheduledAnimation._duration)) {
                 scheduledAnimation._duration = runtimeAnimation.stopTime * (1.0 / scheduledAnimation.multiplier);
-                scheduledAnimation._multiplierChanged = false;
             }
 
             var startTime = scheduledAnimation._computedStartTime;

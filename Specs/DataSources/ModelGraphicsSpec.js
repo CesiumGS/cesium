@@ -40,7 +40,6 @@ defineSuite([
             incrementallyLoadTextures : false,
             runAnimations : false,
             clampAnimations : false,
-            animationsMultiplier : 1.5,
             shadows : ShadowMode.DISABLED,
             heightReference : HeightReference.CLAMP_TO_GROUND,
             distanceDisplayCondition : new DistanceDisplayCondition(),
@@ -81,7 +80,6 @@ defineSuite([
         expect(model.lightColor).toBeInstanceOf(ConstantProperty);
         expect(model.runAnimations).toBeInstanceOf(ConstantProperty);
         expect(model.clampAnimations).toBeInstanceOf(ConstantProperty);
-        expect(model.animationsMultiplier).toBeInstanceOf(ConstantProperty);
 
         expect(model.nodeTransformations).toBeInstanceOf(PropertyBag);
 
@@ -104,7 +102,6 @@ defineSuite([
         expect(model.lightColor.getValue()).toEqual(options.lightColor);
         expect(model.runAnimations.getValue()).toEqual(options.runAnimations);
         expect(model.clampAnimations.getValue()).toEqual(options.clampAnimations);
-        expect(model.animationsMultiplier.getValue()).toEqual(options.animationsMultiplier);
 
         var actualNodeTransformations = model.nodeTransformations.getValue(new JulianDate());
         var expectedNodeTransformations = options.nodeTransformations;
@@ -136,7 +133,6 @@ defineSuite([
         source.lightColor = new ConstantProperty(new Color(1.0, 1.0, 0.0, 1.0));
         source.runAnimations = new ConstantProperty(true);
         source.clampAnimations = new ConstantProperty(true);
-        source.animationsMultiplier = new ConstantProperty(1.5);
         source.nodeTransformations = {
             node1 : new NodeTransformationProperty({
                 translation : Cartesian3.UNIT_Y,
@@ -170,7 +166,6 @@ defineSuite([
         expect(target.lightColor).toBe(source.lightColor);
         expect(target.runAnimations).toBe(source.runAnimations);
         expect(target.clampAnimations).toBe(source.clampAnimations);
-        expect(target.animationsMultiplier).toBe(source.animationsMultiplier);
         expect(target.nodeTransformations).toEqual(source.nodeTransformations);
     });
 
@@ -195,7 +190,6 @@ defineSuite([
         source.lightColor = new ConstantProperty(new Color(1.0, 1.0, 0.0, 1.0));
         source.runAnimations = new ConstantProperty(true);
         source.clampAnimations = new ConstantProperty(true);
-        source.animationsMultiplier = new ConstantProperty(1.5);
         source.nodeTransformations = {
             transform : new NodeTransformationProperty()
         };
@@ -219,7 +213,6 @@ defineSuite([
         var lightColor = new ConstantProperty(new Color(1.0, 1.0, 0.0, 1.0));
         var runAnimations = new ConstantProperty(true);
         var clampAnimations = new ConstantProperty(true);
-        var animationsMultiplier = new ConstantProperty(2.0);
         var nodeTransformations = new PropertyBag({
             transform : new NodeTransformationProperty()
         });
@@ -244,7 +237,6 @@ defineSuite([
         target.lightColor = lightColor;
         target.runAnimations = runAnimations;
         target.clampAnimations = clampAnimations;
-        target.animationsMultiplier = animationsMultiplier;
         target.nodeTransformations = nodeTransformations;
 
         target.merge(source);
@@ -268,7 +260,6 @@ defineSuite([
         expect(target.lightColor).toBe(lightColor);
         expect(target.runAnimations).toBe(runAnimations);
         expect(target.clampAnimations).toBe(clampAnimations);
-        expect(target.animationsMultiplier).toBe(animationsMultiplier);
         expect(target.nodeTransformations).toBe(nodeTransformations);
     });
 
@@ -293,7 +284,6 @@ defineSuite([
         source.lightColor = new ConstantProperty(new Color(1.0, 1.0, 0.0, 1.0));
         source.runAnimations = new ConstantProperty(true);
         source.clampAnimations = new ConstantProperty(true);
-        source.animationsMultiplier = new ConstantProperty(1.5);
         source.nodeTransformations = {
             node1 : new NodeTransformationProperty(),
             node2 : new NodeTransformationProperty()
@@ -319,7 +309,6 @@ defineSuite([
         expect(result.lightColor).toBe(source.lightColor);
         expect(result.runAnimations).toBe(source.runAnimations);
         expect(result.clampAnimations).toBe(source.clampAnimations);
-        expect(result.animationsMultiplier).toBe(source.animationsMultiplier);
         expect(result.nodeTransformations).toEqual(source.nodeTransformations);
     });
 

@@ -15,6 +15,7 @@ Change Log
 * Added support for polylines on 3D Tiles. [#7437](https://github.com/AnalyticalGraphicsInc/cesium/pull/7437)
 * Added `classificationType` property to `PolylineGraphics` and `GroundPolylinePrimitive` which specifies whether a polyline clamped to ground should be clamped to terrain, 3D Tiles, or both. [#7437](https://github.com/AnalyticalGraphicsInc/cesium/pull/7437)
 * Added the ability to specify the width of the intersection volume for `Scene.sampleHeight`, `Scene.clampToHeight`, `Scene.sampleHeightMostDetailed`, and `Scene.clampToHeightMostDetailed`. [#7287](https://github.com/AnalyticalGraphicsInc/cesium/pull/7287)
+* Added a [new Sandcastle example](https://cesiumjs.org/Cesium/Build/Apps/Sandcastle/?src=Time%20Dynamic%20Wheels.html) on using `nodeTransformations` to rotate a model's wheels based on its velocity. [#7361](https://github.com/AnalyticalGraphicsInc/cesium/pull/7361)
 
 ##### Fixes :wrench:
 * Fixed an issue where classification primitives with the `CESIUM_3D_TILE` classification type would render on terrain. [#7422](https://github.com/AnalyticalGraphicsInc/cesium/pull/7422)
@@ -31,7 +32,6 @@ Change Log
     * The `specularEnvironmentMaps` and `sphericalHarmonicCoefficients` properties of `Model` and `Cesium3DTileset` can be used to override the values from the scene for specific models and tilesets.
     * The `luminanceAtZenith` property of `Model` and `Cesium3DTileset` adjusts the luminance of the procedural image-based lighting.
 * Double click away from an entity to un-track it [#7285](https://github.com/AnalyticalGraphicsInc/cesium/pull/7285)
-* Added a new `animationsMultiplier` property on `ModelGraphics` to control the playback speed of glTF animations. [#7361](https://github.com/AnalyticalGraphicsInc/cesium/pull/7361).
 
 ##### Fixes :wrench:
 * Fixed 3D Tiles visibility checking when running multiple passes within the same frame. [#7289](https://github.com/AnalyticalGraphicsInc/cesium/pull/7289)

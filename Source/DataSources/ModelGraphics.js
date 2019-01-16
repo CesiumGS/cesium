@@ -46,7 +46,7 @@ define([
      * @param {Property} [options.incrementallyLoadTextures=true] Determine if textures may continue to stream in after the model is loaded.
      * @param {Property} [options.runAnimations=true] A boolean Property specifying if glTF animations specified in the model should be started.
      * @param {Property} [options.clampAnimations=true] A boolean Property specifying if glTF animations should hold the last pose for time durations with no keyframes.
-     * @param {Property} [options.nodeTransformations] An object, where keys are names of nodes, and values are {@link TranslationRotationScale} Properties describing the transformation to apply to that node.
+     * @param {PropertyBag} [options.nodeTransformations] An object, where keys are names of nodes, and values are {@link TranslationRotationScale} Properties describing the transformation to apply to that node.
      * @param {Property} [options.shadows=ShadowMode.ENABLED] An enum Property specifying whether the model casts or receives shadows from each light source.
      * @param {Property} [options.heightReference=HeightReference.NONE] A Property specifying what the height is relative to.
      * @param {Property} [options.distanceDisplayCondition] A Property specifying at what distance from the camera that this model will be displayed.
@@ -79,7 +79,6 @@ define([
         this._uriSubscription = undefined;
         this._runAnimations = undefined;
         this._clampAnimations = undefined;
-        this._animationsMultiplier = undefined;
         this._runAnimationsSubscription = undefined;
         this._nodeTransformations = undefined;
         this._nodeTransformationsSubscription = undefined;
@@ -190,14 +189,6 @@ define([
          * @default true
          */
         runAnimations : createPropertyDescriptor('runAnimations'),
-
-        /**
-         * Gets or sets the numeric Property specifying the relative speed to play the glTF animations.
-         * @memberof ModelGraphics.prototype
-         * @type {Property}
-         * @default 1.0
-         */
-        animationsMultiplier : createPropertyDescriptor('animationsMultiplier'),
 
         /**
          * Gets or sets the boolean Property specifying if glTF animations should hold the last pose for time durations with no keyframes.
@@ -313,7 +304,6 @@ define([
         result.uri = this.uri;
         result.runAnimations = this.runAnimations;
         result.clampAnimations = this.clampAnimations;
-        result.animationsMultiplier = this.animationsMultiplier;
         result.nodeTransformations = this.nodeTransformations;
         result.heightReference = this._heightReference;
         result.distanceDisplayCondition = this.distanceDisplayCondition;
@@ -351,7 +341,6 @@ define([
         this.uri = defaultValue(this.uri, source.uri);
         this.runAnimations = defaultValue(this.runAnimations, source.runAnimations);
         this.clampAnimations = defaultValue(this.clampAnimations, source.clampAnimations);
-        this.animationsMultiplier = defaultValue(this.animationsMultiplier, source.animationsMultiplier);
         this.heightReference = defaultValue(this.heightReference, source.heightReference);
         this.distanceDisplayCondition = defaultValue(this.distanceDisplayCondition, source.distanceDisplayCondition);
         this.silhouetteColor = defaultValue(this.silhouetteColor, source.silhouetteColor);
