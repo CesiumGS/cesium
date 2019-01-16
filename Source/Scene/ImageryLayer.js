@@ -92,9 +92,6 @@ define([
         TileImagery) {
     'use strict';
 
-    var ARBITRARY_PROJECTION_VERTICES_WIDTH = 128;
-    var ARBITRARY_PROJECTION_VERTICES_HEIGHT = 128;
-
     /**
      * An imagery layer that displays tiled image data from a single imagery provider
      * on a {@link Globe}.
@@ -169,6 +166,7 @@ define([
      * @param {Number} [options.maximumTerrainLevel] The maximum terrain level-of-detail at which to show this imagery layer,
      *                 or undefined to show it at all levels.  Level zero is the least-detailed level.
      * @param {Rectangle} [options.cutoutRectangle] Cartographic rectangle for cutting out a portion of this ImageryLayer.
+     * @param {Number} [options.projectedImageryReprojectionWidth=128] Width of the grid for reprojecting imagery that uses a {@link ProjectedImageryTilingScheme}. Clamps between 2-255 (inclusive).
      */
     function ImageryLayer(imageryProvider, options) {
         this._imageryProvider = imageryProvider;
@@ -292,6 +290,9 @@ define([
 
         this._reprojectComputeCommands = [];
 
+        var reprojectionVertexWidth = defaultValue(options.projectedImageryReprojectionWidth, ImageryLayer.DEFAULT_PROJECTED_IMAGERY_REPROJECTION_WIDTH);
+        this._projectedImageryReprojectionWidth = CesiumMath.clamp(reprojectionVertexWidth, 2, 255);
+
         /**
          * Rectangle cutout in this layer of imagery.
          *
@@ -387,6 +388,13 @@ define([
      * @default TextureMagnificationFilter.LINEAR
      */
     ImageryLayer.DEFAULT_MAGNIFICATION_FILTER = TextureMagnificationFilter.LINEAR;
+
+    /**
+     * This value is used as the default grid width when reprojecting imagery that uses a {@link ProjectedImageryTilingScheme}.
+     * @type {Number}
+     * @default 128
+     */
+    ImageryLayer.DEFAULT_PROJECTED_IMAGERY_REPROJECTION_WIDTH = 128;
 
     /**
      * Gets a value indicating whether this layer is the base layer in the
@@ -977,14 +985,14 @@ define([
      *
      * @param {Context} context The rendered context to use to create textures.
      * @param {Imagery} imagery The imagery for which to create a texture.
-     * @param
      */
     ImageryLayer.prototype._createMultipleTextures = function(context, imagery) {
         var imageryProvider = this._imageryProvider;
         var projectedImages = imagery.projectedImages;
+        var projectedImagesLength = projectedImages.length;
 
-        // If this imagery provider has a discard policy, use it to check if this
-        // image should be discarded.
+        // If this imagery provider has a discard policy, use it to check if the
+        // images should be discarded.
         if (defined(imageryProvider.tileDiscardPolicy)) {
             var discardPolicy = imageryProvider.tileDiscardPolicy;
             if (defined(discardPolicy)) {
@@ -1015,8 +1023,6 @@ define([
             magnificationFilter : this.magnificationFilter
         });
 
-        var projectedImagesLength = projectedImages.length;
-
         for (var i = 0; i < projectedImagesLength; i++) {
             var image = projectedImages[i];
 
@@ -1040,6 +1046,10 @@ define([
                     sampler : sampler
                 });
             }
+            if (defined(image.destroy)) {
+                image.destroy();
+            }
+
             imagery.projectedTextures[i] = texture;
         }
         imagery.projectedImages.length = 0;
@@ -1190,22 +1200,27 @@ define([
             preMultiplyAlpha : someTexture.preMultiplyAlpha
         });
 
+        // Allocate memory for the mipmaps.  Failure to do this before rendering
+        // to the texture via the FBO, and calling generateMipmap later,
+        // will result in the texture appearing blank.  I can't pretend to
+        // understand exactly why this is.
         if (CesiumMath.isPowerOfTwo(width) && CesiumMath.isPowerOfTwo(height)) {
             outputTexture.generateMipmap(MipmapHint.NICEST);
         }
 
         var projection = this._imageryProvider.tilingScheme.sourceProjection;
         var context = frameState.context;
+        var verticesWidth = this._projectedImageryReprojectionWidth;
 
         // Create vertex buffers
-        var positions = new Float32Array(ARBITRARY_PROJECTION_VERTICES_WIDTH * ARBITRARY_PROJECTION_VERTICES_HEIGHT * 2);
+        var positions = new Float32Array(verticesWidth * verticesWidth * 2);
         var index = 0;
-        var widthIncrement = 1.0 / (ARBITRARY_PROJECTION_VERTICES_WIDTH - 1);
-        var heightIncrement = 1.0 / (ARBITRARY_PROJECTION_VERTICES_HEIGHT - 1);
+        var widthIncrement = 1.0 / (verticesWidth - 1);
+        var heightIncrement = 1.0 / (verticesWidth - 1);
         var w;
         var h;
-        for (w = 0; w < ARBITRARY_PROJECTION_VERTICES_WIDTH; w++) {
-            for (h = 0; h < ARBITRARY_PROJECTION_VERTICES_HEIGHT; h++) {
+        for (w = 0; w < verticesWidth; w++) {
+            for (h = 0; h < verticesWidth; h++) {
                 positions[index++] = w * widthIncrement;
                 positions[index++] = h * heightIncrement;
             }
@@ -1222,15 +1237,15 @@ define([
         var south = cartographicRectangle.south;
         var west = cartographicRectangle.west;
 
-        var unprojectedWidthIncrement = cartographicRectangle.width / (ARBITRARY_PROJECTION_VERTICES_WIDTH - 1);
-        var unprojectedHeightIncrement = cartographicRectangle.height / (ARBITRARY_PROJECTION_VERTICES_HEIGHT - 1);
+        var unprojectedWidthIncrement = cartographicRectangle.width / (verticesWidth - 1);
+        var unprojectedHeightIncrement = cartographicRectangle.height / (verticesWidth - 1);
         var geographicCartographic = geographicCartographicScratch;
         var projected = projectedScratch;
 
-        var projectedCoordinates = new Float32Array(ARBITRARY_PROJECTION_VERTICES_WIDTH * ARBITRARY_PROJECTION_VERTICES_HEIGHT * 2);
+        var projectedCoordinates = new Float32Array(verticesWidth * verticesWidth * 2);
         index = 0;
-        for (w = 0; w < ARBITRARY_PROJECTION_VERTICES_WIDTH; w++) {
-            for (h = 0; h < ARBITRARY_PROJECTION_VERTICES_HEIGHT; h++) {
+        for (w = 0; w < verticesWidth; w++) {
+            for (h = 0; h < verticesWidth; h++) {
                 geographicCartographic.longitude = west + w * unprojectedWidthIncrement;
                 geographicCartographic.latitude = south + h * unprojectedHeightIncrement;
 
@@ -1246,7 +1261,7 @@ define([
             usage : BufferUsage.STATIC_DRAW
         });
 
-        var indices = TerrainProvider.getRegularGridIndices(ARBITRARY_PROJECTION_VERTICES_WIDTH, ARBITRARY_PROJECTION_VERTICES_HEIGHT);
+        var indices = TerrainProvider.getRegularGridIndices(verticesWidth, verticesWidth);
         var indexBuffer = Buffer.createIndexBuffer({
             context : context,
             typedArray : indices,
@@ -1297,6 +1312,12 @@ define([
             },
             postExecute : function(outputTexture) {
                 if (makeCommandOptions.final) {
+                    var projectedTextures = imagery.projectedTextures;
+                    var projectedTexturesLength = projectedTextures.length;
+                    for (var i = 0; i < projectedTexturesLength; i++) {
+                        projectedTextures[i].destroy();
+                    }
+
                     finalizeReprojectTexture(makeCommandOptions.imageryLayer, makeCommandOptions.context, imagery, outputTexture);
                     imagery.projectedTextures.length = 0;
                 }

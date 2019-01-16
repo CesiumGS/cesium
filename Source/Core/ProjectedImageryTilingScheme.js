@@ -120,6 +120,8 @@ define([
         }
     });
 
+    var tileRectangleScratch = new Rectangle();
+    var tileProjectedRectangleScratch = new Rectangle();
     /**
      * Utility function that gets all the tile indices (x, y) at the requested level for the
      * native imagery tiles needed to generate the given projected tile.
@@ -130,8 +132,8 @@ define([
      * @returns {Number[]} Array of numbers containing x and y for the native imagery tiles at the same level
      */
     ProjectedImageryTilingScheme.prototype.getProjectedTilesForNativeTile = function(x, y, level) {
-        var tileRectangle = this.tileXYToRectangle(x, y, level, new Rectangle());
-        var tileProjectedRectangle = Rectangle.approximateProjectedExtents(tileRectangle, this._projection, new Rectangle());
+        var tileRectangle = this.tileXYToRectangle(x, y, level, tileRectangleScratch);
+        var tileProjectedRectangle = Rectangle.approximateProjectedExtents(tileRectangle, this._projection, tileProjectedRectangleScratch);
 
         // Figure out which tiles at this level the projected rectangle covers.
         // March over to get a list.
