@@ -148,6 +148,7 @@ define([
             options.lineType = options.followSurface ? LineType.GEODESIC : LineType.STRAIGHT;
         }
         this._lineType = defaultValue(options.lineType, LineType.GEODESIC);
+        this._followSurface = (this._lineType !== LineType.STRAIGHT);
 
         this._granularity = defaultValue(options.granularity, CesiumMath.RADIANS_PER_DEGREE);
         this._ellipsoid = Ellipsoid.clone(defaultValue(options.ellipsoid, Ellipsoid.WGS84));

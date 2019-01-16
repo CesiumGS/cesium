@@ -5,6 +5,7 @@ defineSuite([
         'Core/Cartesian3',
         'Core/Ellipsoid',
         'Core/GeometryOffsetAttribute',
+        'Core/LineType',
         'Core/Math',
         'Specs/createPackableSpecs'
     ], function(
@@ -14,6 +15,7 @@ defineSuite([
         Cartesian3,
         Ellipsoid,
         GeometryOffsetAttribute,
+        LineType,
         CesiumMath,
         createPackableSpecs) {
     'use strict';
@@ -51,6 +53,17 @@ defineSuite([
                 positions : [Cartesian3.fromDegrees(0, 0)]
             }
         }))).toBeUndefined();
+    });
+
+    it('throws if lineType is not valid', function() {
+        expect(function() {
+            return new PolygonOutlineGeometry({
+                positions : [Cartesian3.fromDegrees(0, 0),
+                             Cartesian3.fromDegrees(1, 0),
+                             Cartesian3.fromDegrees(1, 1)],
+                lineType: LineType.STRAIGHT
+            });
+        }).toThrowDeveloperError();
     });
 
     it('createGeometry returns undefined due to duplicate positions', function() {
@@ -162,6 +175,78 @@ defineSuite([
         var p = PolygonOutlineGeometry.createGeometry(PolygonOutlineGeometry.fromPositions({
             positions : positions,
             perPositionHeight : true
+        }));
+
+        expect(ellipsoid.cartesianToCartographic(Cartesian3.fromArray(p.attributes.position.values, 0)).height).toEqualEpsilon(height, CesiumMath.EPSILON6);
+        expect(ellipsoid.cartesianToCartographic(Cartesian3.fromArray(p.attributes.position.values, 3)).height).toEqualEpsilon(0, CesiumMath.EPSILON6);
+    });
+
+    it('create geometry creates with rhumb lines', function() {
+        var p = PolygonOutlineGeometry.createGeometry(PolygonOutlineGeometry.fromPositions({
+            positions : Cartesian3.fromDegreesArray([
+                -1.0, -1.0,
+                1.0, -1.0,
+                1.0, 1.0,
+                -1.0, 1.0
+            ]),
+            granularity : CesiumMath.RADIANS_PER_DEGREE,
+            lineType : LineType.RHUMB
+        }));
+
+        expect(p.attributes.position.values.length).toEqual(8 * 3); // 8 around edge
+        expect(p.indices.length).toEqual(16); // 4 squares
+    });
+
+    it('create geometry throws if lineType is STRAIGHT', function() {
+        expect(function() {
+            PolygonOutlineGeometry.createGeometry(PolygonOutlineGeometry.fromPositions({
+                positions: Cartesian3.fromDegreesArray([
+                    -1.0, -1.0,
+                    1.0, -1.0,
+                    1.0, 1.0,
+                    -1.0, 1.0
+                ]),
+                granularity: CesiumMath.RADIANS_PER_DEGREE,
+                lineType: LineType.STRAIGHT
+            }));
+        }).toThrowDeveloperError();
+    });
+
+    it('create geometry creates with lines with different number of subdivisions for geodesic and rhumb', function() {
+        var positions = Cartesian3.fromDegreesArray([
+            -80.0, 75.0,
+            80.0, 75.0,
+            80.0, 45.0,
+            -80.0, 45.0
+        ]);
+        var geodesic = PolygonOutlineGeometry.createGeometry(PolygonOutlineGeometry.fromPositions({
+            positions : positions,
+            granularity : CesiumMath.RADIANS_PER_DEGREE,
+            lineType : LineType.GEODESIC
+        }));
+        var rhumb = PolygonOutlineGeometry.createGeometry(PolygonOutlineGeometry.fromPositions({
+            positions : positions,
+            granularity : CesiumMath.RADIANS_PER_DEGREE,
+            lineType : LineType.RHUMB
+        }));
+
+        expect(geodesic.attributes.position.values.length).not.toEqual(rhumb.attributes.position.values.length);
+        expect(geodesic.indices.length).not.toEqual(rhumb.indices.length);
+    });
+
+    it('computes positions with per position heights for rhumb lines', function() {
+        var ellipsoid = Ellipsoid.WGS84;
+        var height = 100.0;
+        var positions = Cartesian3.fromDegreesArrayHeights([
+           -1.0, -1.0, height,
+           1.0, -1.0, 0.0,
+           1.0, 1.0, 0.0,
+           -1.0, 1.0, 0.0
+       ]);
+        var p = PolygonOutlineGeometry.createGeometry(PolygonOutlineGeometry.fromPositions({
+            positions : positions,
+            perPositionHeight : true,
+            lineType : LineType.RHUMB
         }));
 
         expect(ellipsoid.cartesianToCartographic(Cartesian3.fromArray(p.attributes.position.values, 0)).height).toEqualEpsilon(height, CesiumMath.EPSILON6);
@@ -524,6 +609,6 @@ defineSuite([
     packedInstance.push(3.0, 0.0);
     addPositions(packedInstance, holePositions1);
     packedInstance.push(Ellipsoid.WGS84.radii.x, Ellipsoid.WGS84.radii.y, Ellipsoid.WGS84.radii.z);
-    packedInstance.push(0.0, 0.0, CesiumMath.PI_OVER_THREE, 0.0, 1.0, -1, 43);
+    packedInstance.push(0.0, 0.0, CesiumMath.PI_OVER_THREE, 0.0, 1.0, LineType.GEODESIC, -1, 44);
     createPackableSpecs(PolygonOutlineGeometry, polygon, packedInstance);
 });

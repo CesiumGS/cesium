@@ -317,6 +317,19 @@ define([
         },
 
         /**
+         * Gets a value indicating if the path of the line.
+         * @memberof PolylineGeometryUpdater.prototype
+         *
+         * @type {LineType}
+         * @readonly
+         */
+        lineType : {
+            get : function() {
+                return this._lineType;
+            }
+        },
+
+        /**
          * Gets a value indicating if the geometry is clamped to the ground.
          * Returns false if polylines on terrain is not supported.
          * @memberof PolylineGeometryUpdater.prototype
