@@ -419,6 +419,7 @@ define([
 
     /**
      * Provides the location of a point at the indicated longitude along the rhumb line.
+     * If the longitude is outside the range of start and end points, the first intersection with the longitude from the start point in the direction of the heading is returned. This follows the spiral property of a rhumb line.
      *
      * @param {Number} intersectionLongitude The longitude, in radians, at which to find the intersection point from the starting point using the heading.
      * @param {Cartographic} [result] The object in which to store the result.
@@ -486,6 +487,7 @@ define([
 
     /**
      * Provides the location of a point at the indicated latitude along the rhumb line.
+     * If the latitude is outside the range of start and end points, the first intersection with the latitude from that start point in the direction of the heading is returned. This follows the spiral property of a rhumb line.
      *
      * @param {Number} intersectionLatitude The latitude, in radians, at which to find the intersection point from the starting point using the heading.
      * @param {Cartographic} [result] The object in which to store the result.
