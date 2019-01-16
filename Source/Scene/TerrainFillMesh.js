@@ -510,13 +510,15 @@ define([
         // at levels 1, 2, and 3.
         maxTileWidth *= 1.5;
 
-        if (rectangle.width > maxTileWidth) {
+        if (rectangle.width > maxTileWidth && (maximumHeight - minimumHeight) <= geometricError) {
             var terrainData = new HeightmapTerrainData({
                 width: 9,
                 height: 9,
                 buffer: heightmapBuffer,
                 structure: {
-                    heightOffset: middleHeight
+                    // Use the maximum as the constant height so that this tile's skirt
+                    // covers any cracks with adjacent tiles.
+                    heightOffset: maximumHeight
                 }
             });
             fill.mesh = terrainData._createMeshSync(tile.tilingScheme, tile.x, tile.y, tile.level, 1.0);
