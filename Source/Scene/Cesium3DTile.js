@@ -1299,8 +1299,8 @@ define([
         var depthDigit = depthScale * normalizeValue(this._depth, minPriority.depth, maxPriority.depth);
 
         // Get the final base 10 number
-        var sum = distanceDigit + depthDigit;
-        this._priority = sum;
+        var number = distanceDigit + depthDigit;
+        this._priority = number;
     };
 
     /**
