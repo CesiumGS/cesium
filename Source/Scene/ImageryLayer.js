@@ -291,7 +291,7 @@ define([
         this._reprojectComputeCommands = [];
 
         var reprojectionVertexWidth = defaultValue(options.projectedImageryReprojectionWidth, ImageryLayer.DEFAULT_PROJECTED_IMAGERY_REPROJECTION_WIDTH);
-        this._projectedImageryReprojectionWidth = CesiumMath.clamp(reprojectionVertexWidth, 2, 255);
+        this._arbitraryReprojectionWidth = CesiumMath.clamp(reprojectionVertexWidth, 2, 255);
 
         /**
          * Rectangle cutout in this layer of imagery.
@@ -1160,6 +1160,8 @@ define([
     };
 
     function MakeCommandOptions() {
+        this.projectedCoordinates = undefined;
+        this.shaderProgram = undefined;
         this.context = undefined;
         this.outputTexture = undefined;
         this.imagery = undefined;
@@ -1207,30 +1209,81 @@ define([
         if (CesiumMath.isPowerOfTwo(width) && CesiumMath.isPowerOfTwo(height)) {
             outputTexture.generateMipmap(MipmapHint.NICEST);
         }
+        var index;
+        var w;
+        var h;
 
         var projection = this._imageryProvider.tilingScheme.sourceProjection;
         var context = frameState.context;
-        var verticesWidth = this._projectedImageryReprojectionWidth;
+        var verticesWidth = this._arbitraryReprojectionWidth;
+        var contextCache = context.cache;
 
-        // Create vertex buffers
-        var positions = new Float32Array(verticesWidth * verticesWidth * 2);
-        var index = 0;
-        var widthIncrement = 1.0 / (verticesWidth - 1);
-        var heightIncrement = 1.0 / (verticesWidth - 1);
-        var w;
-        var h;
-        for (w = 0; w < verticesWidth; w++) {
-            for (h = 0; h < verticesWidth; h++) {
-                positions[index++] = w * widthIncrement;
-                positions[index++] = h * heightIncrement;
-            }
+        var sampler = contextCache.imageryLayer_arbitraryReprojectionSampler;
+        if (!defined(sampler)) {
+            sampler = contextCache.imageryLayer_arbitraryReprojectionSampler = new Sampler({
+                wrapS : TextureWrap.CLAMP_TO_EDGE,
+                wrapT : TextureWrap.CLAMP_TO_EDGE,
+                minificationFilter : TextureMinificationFilter.LINEAR,
+                magnificationFilter : TextureMagnificationFilter.LINEAR
+            });
         }
 
-        var positionsBuffer = Buffer.createVertexBuffer({
-            context : context,
-            typedArray : positions,
-            usage : BufferUsage.STATIC_DRAW
-        });
+        var shaderProgram = contextCache.imageryLayer_arbitraryReprojectionShader;
+        if (!defined(shaderProgram)) {
+            shaderProgram = contextCache.imageryLayer_arbitraryReprojectionShader = ShaderProgram.fromCache({
+                context : context,
+                vertexShaderSource : ReprojectArbitraryVS,
+                fragmentShaderSource : ReprojectArbitraryFS,
+                attributeLocations : arbitraryReprojectAttributeIndices
+            });
+        }
+
+        var cachedVertexArrayKey = 'imageryLayer_reproject' + verticesWidth + '_vertexArray';
+        var vertexArray = contextCache[cachedVertexArrayKey];
+        if (!defined(vertexArray)) {
+            // Create reuseable position and index buffers
+            var positions = new Float32Array(verticesWidth * verticesWidth * 2);
+            index = 0;
+            var widthIncrement = 1.0 / (verticesWidth - 1);
+            var heightIncrement = 1.0 / (verticesWidth - 1);
+            for (w = 0; w < verticesWidth; w++) {
+                for (h = 0; h < verticesWidth; h++) {
+                    positions[index++] = w * widthIncrement;
+                    positions[index++] = h * heightIncrement;
+                }
+            }
+
+            var positionsBuffer = Buffer.createVertexBuffer({
+                context : context,
+                typedArray : positions,
+                usage : BufferUsage.STATIC_DRAW
+            });
+
+            var indexBuffer = Buffer.createIndexBuffer({
+                context : context,
+                typedArray : TerrainProvider.getRegularGridIndices(verticesWidth, verticesWidth),
+                usage : BufferUsage.STATIC_DRAW,
+                indexDatatype : IndexDatatype.UNSIGNED_SHORT
+            });
+
+            vertexArray = contextCache[cachedVertexArrayKey] = new VertexArray({
+                context: context,
+                attributes: [{
+                    index: arbitraryReprojectAttributeIndices.position,
+                    vertexBuffer: positionsBuffer,
+                    componentsPerAttribute: 2
+                }, {
+                    index: arbitraryReprojectAttributeIndices.projectedCoordinates,
+                    vertexBuffer : Buffer.createVertexBuffer({
+                        context : context,
+                        sizeInBytes : verticesWidth * verticesWidth * 2 * 4,
+                        usage : BufferUsage.STREAM_DRAW
+                    }),
+                    componentsPerAttribute: 2
+                }],
+                indexBuffer: indexBuffer
+            });
+        }
 
         // For each vertex in the target grid, project into the projection
         var cartographicRectangle = imagery.rectangle;
@@ -1255,43 +1308,21 @@ define([
                 projectedCoordinates[index++] = projected.y;
             }
         }
-        var projectedBuffer = Buffer.createVertexBuffer({
-            context : context,
-            typedArray : projectedCoordinates,
-            usage : BufferUsage.STATIC_DRAW
-        });
-
-        var indices = TerrainProvider.getRegularGridIndices(verticesWidth, verticesWidth);
-        var indexBuffer = Buffer.createIndexBuffer({
-            context : context,
-            typedArray : indices,
-            usage : BufferUsage.STATIC_DRAW,
-            indexDatatype : IndexDatatype.UNSIGNED_SHORT
-        });
-
-        var vertexArray = new VertexArray({
-            context: context,
-            attributes: [{
-                index: arbitraryReprojectAttributeIndices.position,
-                vertexBuffer: positionsBuffer,
-                componentsPerAttribute: 2
-            }, {
-                index: arbitraryReprojectAttributeIndices.projectedCoordinates,
-                vertexBuffer: projectedBuffer,
-                componentsPerAttribute: 2
-            }],
-            indexBuffer: indexBuffer
-        });
 
         for (var i = 0; i < projectedTexturesLength; i++) {
             imagery.addReference();
+            var projectedTexture = projectedTextures[i];
+            projectedTexture.sampler = sampler;
+
             var makeCommandOptions = new MakeCommandOptions();
+            makeCommandOptions.shaderProgram = shaderProgram;
+            makeCommandOptions.projectedCoordinates = projectedCoordinates;
             makeCommandOptions.context = context;
             makeCommandOptions.outputTexture = outputTexture;
             makeCommandOptions.imagery = imagery;
             makeCommandOptions.imageryLayer = this;
             makeCommandOptions.vertexArray = vertexArray;
-            makeCommandOptions.projectedTexture = projectedTextures[i];
+            makeCommandOptions.projectedTexture = projectedTexture;
             makeCommandOptions.projectedRectangle = projectedRectangles[i];
             makeCommandOptions.final = (i === projectedTexturesLength - 1);
 
@@ -1342,41 +1373,11 @@ define([
     };
 
     function reprojectFromArbitrary(command, makeCommandOptions) {
-        var context = makeCommandOptions.context;
+        var vertexArray = makeCommandOptions.vertexArray;
+        vertexArray.getAttribute(arbitraryReprojectAttributeIndices.projectedCoordinates).vertexBuffer.copyFromArrayView(makeCommandOptions.projectedCoordinates);
+
         var texture = makeCommandOptions.projectedTexture;
         var projectedRectangle = makeCommandOptions.projectedRectangle;
-
-        var reproject = {
-            vertexArray : undefined,
-            shaderProgram : undefined,
-            sampler : undefined,
-            destroy : function() {
-                if (defined(this.framebuffer)) {
-                    this.framebuffer.destroy();
-                }
-                if (defined(this.vertexArray) && makeCommandOptions.final) {
-                    this.vertexArray.destroy();
-                }
-                if (defined(this.shaderProgram)) {
-                    this.shaderProgram.destroy();
-                }
-            }
-        };
-
-        reproject.vertexArray = makeCommandOptions.vertexArray;
-        reproject.shaderProgram = ShaderProgram.fromCache({
-            context : context,
-            vertexShaderSource : ReprojectArbitraryVS,
-            fragmentShaderSource : ReprojectArbitraryFS,
-            attributeLocations : arbitraryReprojectAttributeIndices
-        });
-
-        reproject.sampler = new Sampler({
-            wrapS : TextureWrap.CLAMP_TO_EDGE,
-            wrapT : TextureWrap.CLAMP_TO_EDGE,
-            minificationFilter : TextureMinificationFilter.LINEAR,
-            magnificationFilter : TextureMagnificationFilter.LINEAR
-        });
 
         arbitraryUniformMap.textureDimensions.x = texture.width;
         arbitraryUniformMap.textureDimensions.y = texture.height;
@@ -1388,10 +1389,10 @@ define([
         arbitraryUniformMap.westSouthInverseWidthHeight.w = 1.0 / projectedRectangle.height;
 
         command.clear = false;
-        command.shaderProgram = reproject.shaderProgram;
+        command.shaderProgram = makeCommandOptions.shaderProgram;
         command.outputTexture = makeCommandOptions.outputTexture;
         command.uniformMap = arbitraryUniformMap;
-        command.vertexArray = reproject.vertexArray;
+        command.vertexArray = vertexArray;
     }
 
     /**
