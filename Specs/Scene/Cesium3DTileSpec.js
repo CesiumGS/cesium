@@ -358,7 +358,7 @@ defineSuite([
         });
     });
 
-    fit('updates priority', function() {
+    it('updates priority', function() {
         var tile1 = new Cesium3DTile(mockTileset, '/some_url', tileWithBoundingSphere, undefined);
         tile1._priorityDistanceHolder = tile1;
         tile1._priorityDistance = 0;
@@ -375,11 +375,11 @@ defineSuite([
         tile1.updatePriority();
         tile2.updatePriority();
 
-        var theshold = 0.01;
+        var threshold = 0.01;
         var tile1ExpectedPriority = 0;
         var tile2ExpectedPriority = 1;
-        expect(Math.abs(tile1._priority - tile1ExpectedPriority).toBeLessThan(threshold);
-        expect(Math.abs(tile2._priority - tile2ExpectedPriority).toBeLessThan(threshold);
+        expect(Math.abs(tile1._priority - tile1ExpectedPriority)).toBeLessThan(threshold);
+        expect(Math.abs(tile2._priority - tile2ExpectedPriority)).toBeLessThan(threshold);
     });
 
 }, 'WebGL');
