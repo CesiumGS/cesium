@@ -291,6 +291,8 @@ define([
             return;
         }
 
+        var wasAlreadyRenderable = tile.renderable;
+
         // The terrain is renderable as soon as we have a valid vertex array.
         tile.renderable = defined(surfaceTile.vertexArray);
 
@@ -316,6 +318,14 @@ define([
             tile._loadedCallbacks = newCallbacks;
 
             tile.state = QuadtreeTileLoadState.DONE;
+        }
+
+        // Once a tile is renderable, it stays renderable, because doing otherwise would
+        // cause detail (or maybe even the entire globe) to vanish when adding a new
+        // imagery layer. `GlobeSurfaceTileProvider._onLayerAdded` sets renderable to
+        // false for all affected tiles that are not currently being rendered.
+        if (wasAlreadyRenderable) {
+            tile.renderable = true;
         }
     };
 

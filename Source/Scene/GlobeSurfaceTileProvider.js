@@ -1141,6 +1141,12 @@ define([
             this._quadtree.forEachLoadedTile(function(tile) {
                 if (layer._createTileImagerySkeletons(tile, terrainProvider)) {
                     tile.state = QuadtreeTileLoadState.LOADING;
+
+                    // Tiles that are not currently being rendered need to load the new layer before they're renderable.
+                    // We don't mark the rendered tiles non-renderable, though, because that would make the globe disappear.
+                    if (tile.level !== 0 && (tile._lastSelectionResultFrame !== that.quadtree._lastSelectionFrameNumber || tile._lastSelectionResult !== TileSelectionResult.RENDERED)) {
+                        tile.renderable = false;
+                    }
                 }
             });
 
