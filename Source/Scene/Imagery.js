@@ -92,7 +92,7 @@ define([
 
     Imagery.prototype.processStateMachine = function(frameState, needGeographicProjection, priorityFunction) {
         var imageryLayer = this.imageryLayer;
-        if (!imageryLayer.imageryProvider.ready || this.state === ImageryState.EMPTY) {
+        if (!imageryLayer.imageryProvider.ready) {
             return;
         }
 
@@ -122,7 +122,7 @@ define([
                 }
 
                 if (projectedTilesLength === 0) {
-                    this.state = ImageryState.EMPTY;
+                    this.state = ImageryState.INVALID;
                     return;
                 }
 
