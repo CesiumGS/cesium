@@ -240,6 +240,12 @@ define([
             get : function() {
                 return this._bvh;
             }
+        },
+
+        canUpsample : {
+            get : function() {
+                return defined(this._mesh);
+            }
         }
     });
 

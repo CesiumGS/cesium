@@ -399,7 +399,7 @@ define([
         // ready for that, let's push it along.
         var parent = tile.parent;
         if (surfaceTile.terrainState === TerrainState.FAILED && parent !== undefined) {
-            var parentReady = parent.data !== undefined && parent.data.terrainData !== undefined;
+            var parentReady = parent.data !== undefined && parent.data.terrainData !== undefined && parent.data.terrainData.canUpsample !== false;
             if (!parentReady) {
                 GlobeSurfaceTile.processStateMachine(parent, frameState, terrainProvider, imageryLayerCollection, true);
             }
