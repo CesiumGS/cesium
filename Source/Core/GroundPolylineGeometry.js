@@ -413,7 +413,6 @@ define([
     var cartographicScratch0 = new Cartographic();
     var cartographicScratch1 = new Cartographic();
     var cartographicIntersectionScratch = new Cartographic();
-    var rhumbLineScratch = new EllipsoidRhumbLine();
     /**
      * Computes shadow volumes for the ground polyline, consisting of its vertices, indices, and a bounding sphere.
      * Vertices are "fat," packing all the data needed in each volume to describe a line on terrain or 3D Tiles.
@@ -450,7 +449,7 @@ define([
         var p1;
         var c0;
         var c1;
-        var rhumbLine;
+        var rhumbLine = new EllipsoidRhumbLine(undefined, undefined, ellipsoid);
         var intersection;
         var intersectionCartographic;
         var intersectionLongitude;
@@ -468,7 +467,7 @@ define([
                     intersectionLongitude = ellipsoid.cartesianToCartographic(intersection, cartographicScratch0).longitude;
                     c0 = ellipsoid.cartesianToCartographic(p0, cartographicScratch0);
                     c1 = ellipsoid.cartesianToCartographic(p1, cartographicScratch1);
-                    rhumbLine = EllipsoidRhumbLine.fromStartAndEnd(c0, c1, ellipsoid, rhumbLineScratch);
+                    rhumbLine.setEndPoints(c0, c1);
                     intersectionCartographic = rhumbLine.findIntersectionWithLongitude(intersectionLongitude, cartographicIntersectionScratch);
                     intersection = ellipsoid.cartographicToCartesian(intersectionCartographic, intersectionScratch);
                     if (defined(intersection) &&
@@ -494,7 +493,7 @@ define([
                     intersectionLongitude = ellipsoid.cartesianToCartographic(intersection, cartographicScratch0).longitude;
                     c0 = ellipsoid.cartesianToCartographic(p0, cartographicScratch0);
                     c1 = ellipsoid.cartesianToCartographic(p1, cartographicScratch1);
-                    rhumbLine = EllipsoidRhumbLine.fromStartAndEnd(c0, c1, ellipsoid, rhumbLineScratch);
+                    rhumbLine.setEndPoints(c0, c1);
                     intersectionCartographic = rhumbLine.findIntersectionWithLongitude(intersectionLongitude, cartographicIntersectionScratch);
                     intersection = ellipsoid.cartographicToCartesian(intersectionCartographic, intersectionScratch);
                     if (defined(intersection) &&
