@@ -963,10 +963,6 @@ defineSuite([
     }
 
     function expectVertexCount(fill, count) {
-        // A fill tile may have space allocated for extra vertices, but not all will be used.
-        var actualCount = fill.mesh.indices.reduce(function(high, current) {
-            return Math.max(high, current);
-        }, -1) + 1;
-        expect(actualCount).toBe(count);
+        expect(fill.mesh.vertices.length).toBe(count * fill.mesh.encoding.getStride());
     }
 });

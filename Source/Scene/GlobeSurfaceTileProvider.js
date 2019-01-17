@@ -1422,8 +1422,10 @@ define([
      * @returns {VertexArray} The vertex array for wireframe rendering.
      */
     function createWireframeVertexArray(context, vertexArray, terrainMesh) {
+        var indices = terrainMesh.indices;
+
         var geometry = {
-            indices : terrainMesh.indices,
+            indices : indices,
             primitiveType : PrimitiveType.TRIANGLES
         };
 
@@ -1434,7 +1436,7 @@ define([
             context : context,
             typedArray : wireframeIndices,
             usage : BufferUsage.STATIC_DRAW,
-            indexDatatype : IndexDatatype.UNSIGNED_SHORT
+            indexDatatype : IndexDatatype.fromSizeInBytes(wireframeIndices.BYTES_PER_ELEMENT)
         });
         return new VertexArray({
             context : context,

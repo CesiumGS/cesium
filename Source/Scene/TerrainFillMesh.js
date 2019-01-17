@@ -534,6 +534,7 @@ define([
             // At _most_, we have vertices for the 4 corners, plus 1 center, plus every adjacent edge vertex.
             // In reality there will be less most of the time, but close enough; better
             // to overestimate than to re-allocate/copy/traverse the vertices twice.
+            // Also, we'll often be able to squeeze the index data into the extra space in the buffer.
             var maxVertexCount = 5;
             var meshes;
 
@@ -557,7 +558,8 @@ define([
                 maxVertexCount += meshes[i].southIndicesEastToWest.length;
             }
 
-            var typedArray = new Float32Array(maxVertexCount * encoding.getStride());
+            var stride = encoding.getStride();
+            var typedArray = new Float32Array(maxVertexCount * stride);
 
             var nextIndex = 0;
             var northwestIndex = nextIndex;
@@ -585,11 +587,29 @@ define([
             var centerEncodedNormal = AttributeCompression.octEncode(normalScratch, octEncodedNormalScratch);
 
             var centerIndex = nextIndex;
-            encoding.encode(typedArray, nextIndex * encoding.getStride(), obb.center, Cartesian2.fromElements(0.5, 0.5, uvScratch), middleHeight, centerEncodedNormal, centerWebMercatorT);
+            encoding.encode(typedArray, nextIndex * stride, obb.center, Cartesian2.fromElements(0.5, 0.5, uvScratch), middleHeight, centerEncodedNormal, centerWebMercatorT);
             ++nextIndex;
 
             var vertexCount = nextIndex;
-            var indices = new Uint16Array((vertexCount - 1) * 3); // one triangle per edge vertex
+
+            var bytesPerIndex = vertexCount < 256 ? 1 : 2;
+            var indexCount = (vertexCount - 1) * 3; // one triangle per edge vertex
+            var indexDataBytes = indexCount * bytesPerIndex;
+            var availableBytesInBuffer = (typedArray.length - vertexCount * stride) * Float32Array.BYTES_PER_ELEMENT;
+
+            var indices;
+            if (availableBytesInBuffer >= indexDataBytes) {
+                // Store the index data in the same buffer as the vertex data.
+                var startIndex = vertexCount * stride * Float32Array.BYTES_PER_ELEMENT;
+                indices = vertexCount < 256
+                    ? new Uint8Array(typedArray.buffer, startIndex, indexCount)
+                    : new Uint16Array(typedArray.buffer, startIndex, indexCount);
+            } else {
+                // Allocate a new buffer for the index data.
+                indices = vertexCount < 256 ? new Uint8Array(indexCount) : new Uint16Array(indexCount);
+            }
+
+            typedArray = new Float32Array(typedArray.buffer, 0, vertexCount * stride);
 
             var indexOut = 0;
             for (i = 0; i < vertexCount - 2; ++i) {

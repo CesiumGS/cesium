@@ -555,12 +555,11 @@ define([
         var indexBuffer = indexBuffers[context.id];
         if (!defined(indexBuffer) || indexBuffer.isDestroyed()) {
             var indices = mesh.indices;
-            var indexDatatype = (indices.BYTES_PER_ELEMENT === 2) ?  IndexDatatype.UNSIGNED_SHORT : IndexDatatype.UNSIGNED_INT;
             indexBuffer = Buffer.createIndexBuffer({
                 context : context,
                 typedArray : indices,
                 usage : BufferUsage.STATIC_DRAW,
-                indexDatatype : indexDatatype
+                indexDatatype : IndexDatatype.fromSizeInBytes(indices.BYTES_PER_ELEMENT)
             });
             indexBuffer.vertexArrayDestroyable = false;
             indexBuffer.referenceCount = 1;
