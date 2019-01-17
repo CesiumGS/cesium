@@ -554,7 +554,6 @@ define([
                 ++debug.tilesWaitingForChildren;
             } else {
                 visitIfVisible(primitive, tile, tileProvider, frameState, occluders, tile, false, rootTraversalDetails[i]);
-                queueTileLoad(primitive, primitive._tileLoadQueueLow, tile, frameState);
             }
         }
 
@@ -895,7 +894,9 @@ define([
         traversalDetails.anyWereRenderedLastFrame = false;
         traversalDetails.notYetRenderableCount = 0;
 
-        if (primitive.preloadSiblings) {
+        // Load culled level zero tiles with low priority.
+        // For all other levels, only load culled tiles if preloadSiblings is enabled.
+        if (primitive.preloadSiblings || tile.level === 0) {
             queueTileLoad(primitive, primitive._tileLoadQueueLow, tile, frameState);
         }
     }
