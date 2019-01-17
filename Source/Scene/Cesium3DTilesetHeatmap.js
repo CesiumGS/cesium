@@ -69,19 +69,8 @@ define([
         }
 
         updateMinMax(this, tile);
-        // var min = this._previousMin;
-        // var max = this._previousMax;
-        // TODO: remove
-        var min;
-        var max;
-        if (variableName === '_time') {
-            min = 0;
-            // max = 2.5; // Melborne 2.5 skip, 6non
-            max = 6; // NYC 6 skip, 10non
-        } else {
-            min = this._previousMin;
-            max = this._previousMax;
-        }
+        var min = this._previousMin;
+        var max = this._previousMax;
 
         if (min === Number.MAX_VALUE || max === -Number.MAX_VALUE) {
             return;

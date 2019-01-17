@@ -345,8 +345,6 @@ define([
         this._priorityDistance = Number.MAX_VALUE; // The value to update in the priority refinement chain
         this._priorityDistanceHolder = this; // Reference to the tile up the tree that holds the priorityDistance for all tiles in the refinement chain.
         this._wasMinChild = false; // Needed for knowing when to continue a refinement chain, gets reset in updateTile in traversal, gets set in updateAndPushChildren in traversal
-        // TODO: remove
-        this._time = 0;
 
         this._commandsLength = 0;
 

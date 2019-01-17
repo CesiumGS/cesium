@@ -224,8 +224,6 @@ define([
         this._heatmap = new Cesium3DTilesetHeatmap(options.heatmapVariable);
         this._maxPriority = { depth: -Number.MAX_VALUE, distance: -Number.MAX_VALUE };
         this._minPriority = { depth: Number.MAX_VALUE, distance: Number.MAX_VALUE };
-        // TODO: remove
-        this._startedLoadingTime = undefined; // ms since 1970
 
         this._tilesLoaded = false;
         this._initialTilesLoaded = false;
@@ -1641,9 +1639,6 @@ define([
                 ++tileset._statistics.numberOfTilesWithContentReady;
                 ++tileset._statistics.numberOfLoadedTilesTotal;
 
-                // TODO: Remove
-                tile._time = (Date.now() - tileset._startedLoadingTime) / 1000;
-
                 // Add to the tile cache. Previously expired tiles are already in the cache and won't get re-added.
                 tileset._cache.add(tile);
             }
@@ -1986,9 +1981,6 @@ define([
         tileset._tilesLoaded = (statistics.numberOfPendingRequests === 0) && (statistics.numberOfTilesProcessing === 0) && (statistics.numberOfAttemptedRequests === 0);
 
         if (progressChanged && tileset._tilesLoaded) {
-            // TODO: remove
-            tileset._startedLoadingTime = undefined;
-
             frameState.afterRender.push(function() {
                 tileset.allTilesLoaded.raiseEvent();
             });
@@ -1998,11 +1990,7 @@ define([
                     tileset.initialTilesLoaded.raiseEvent();
                 });
             }
-        } else if (progressChanged && !defined(tileset._startedLoadingTime)) {
-            // TODO: remove
-            tileset._startedLoadingTime = Date.now();
         }
-
     }
 
     ///////////////////////////////////////////////////////////////////////////
