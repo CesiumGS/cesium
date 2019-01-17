@@ -80,12 +80,14 @@ define([
             enableDebugOutput : false,
 
             maxDepth : 0,
+            maxDepthVisited : 0,
             tilesVisited : 0,
             tilesCulled : 0,
             tilesRendered : 0,
             tilesWaitingForChildren : 0,
 
             lastMaxDepth : -1,
+            lastMaxDepthVisited : -1,
             lastTilesVisited : -1,
             lastTilesCulled : -1,
             lastTilesRendered : -1,
@@ -139,7 +141,7 @@ define([
          * its descendants are loaded and rendered. This means more feedback for the user that something
          * is happening at the cost of a longer overall load time. Setting this to 0 will cause each
          * tile level to be loaded successively, significantly increasing load time. Setting it to a large
-         * number (e.g. 100000) will minimize the number of tiles that are loaded but tend to make
+         * number (e.g. 1000) will minimize the number of tiles that are loaded but tend to make
          * detail appear all at once after a long wait.
          * @type {Number}
          * @default 20
@@ -323,6 +325,7 @@ define([
     function clearTileLoadQueue(primitive) {
         var debug = primitive._debug;
         debug.maxDepth = 0;
+        debug.maxDepthVisited = 0;
         debug.tilesVisited = 0;
         debug.tilesCulled = 0;
         debug.tilesRendered = 0;
@@ -395,20 +398,27 @@ define([
         }
 
         var debug = primitive._debug;
-        if (debug.enableDebugOutput  && !debug.suspendLodUpdate) {
+        if (debug.enableDebugOutput && !debug.suspendLodUpdate) {
+            debug.maxDepth = primitive._tilesToRender.reduce(function(max, tile) {
+                return Math.max(max, tile.level);
+            }, -1);
+            debug.tilesRendered = primitive._tilesToRender.length;
+
             if (debug.tilesVisited !== debug.lastTilesVisited ||
                 debug.tilesRendered !== debug.lastTilesRendered ||
                 debug.tilesCulled !== debug.lastTilesCulled ||
                 debug.maxDepth !== debug.lastMaxDepth ||
-                debug.tilesWaitingForChildren !== debug.lastTilesWaitingForChildren) {
+                debug.tilesWaitingForChildren !== debug.lastTilesWaitingForChildren ||
+                debug.maxDepthVisited !== debug.lastMaxDepthVisited) {
 
-                console.log('Visited ' + debug.tilesVisited + ', Rendered: ' + debug.tilesRendered + ', Culled: ' + debug.tilesCulled + ', Max Depth: ' + debug.maxDepth + ', Waiting for children: ' + debug.tilesWaitingForChildren);
+                console.log('Visited ' + debug.tilesVisited + ', Rendered: ' + debug.tilesRendered + ', Culled: ' + debug.tilesCulled + ', Max Depth Rendered: ' + debug.maxDepth + ', Max Depth Visited: ' + debug.maxDepthVisited + ', Waiting for children: ' + debug.tilesWaitingForChildren);
 
                 debug.lastTilesVisited = debug.tilesVisited;
                 debug.lastTilesRendered = debug.tilesRendered;
                 debug.lastTilesCulled = debug.tilesCulled;
                 debug.lastMaxDepth = debug.maxDepth;
                 debug.lastTilesWaitingForChildren = debug.tilesWaitingForChildren;
+                debug.lastMaxDepthVisited = debug.maxDepthVisited;
             }
         }
     }
@@ -625,8 +635,8 @@ define([
         primitive._tileReplacementQueue.markTileRendered(tile);
         tile._updateCustomData(frameState.frameNumber);
 
-        if (tile.level > debug.maxDepth) {
-            debug.maxDepth = tile.level;
+        if (tile.level > debug.maxDepthVisited) {
+            debug.maxDepthVisited = tile.level;
         }
 
         if (tile.renderable) {
@@ -782,7 +792,7 @@ define([
                         }
                     }
 
-                    // Remove all descendants from the render list and update list.
+                    // Remove all descendants from the render list and add this tile.
                     primitive._tilesToRender.length = firstRenderedDescendantIndex;
                     primitive._nearestRenderableTiles.length = firstRenderedDescendantIndex;
                     primitive._tileToUpdateHeights.length = tilesToUpdateHeightsIndex;
@@ -946,7 +956,6 @@ define([
     function addTileToRenderList(primitive, tile, nearestRenderableTile) {
         primitive._tilesToRender.push(tile);
         primitive._nearestRenderableTiles.push(nearestRenderableTile);
-        ++primitive._debug.tilesRendered;
     }
 
     function processTileLoadQueue(primitive, frameState) {
