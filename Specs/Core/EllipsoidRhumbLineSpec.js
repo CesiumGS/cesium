@@ -54,29 +54,6 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('can create using fromStartAndEnd function', function() {
-        var start = new Cartographic(fifteenDegrees, fifteenDegrees);
-        var end = new Cartographic(thirtyDegrees, thirtyDegrees);
-
-        var rhumb = EllipsoidRhumbLine.fromStartAndEnd(start, end);
-        expect(start).toEqual(rhumb.start);
-        expect(end).toEqual(rhumb.end);
-    });
-
-    it('can create using fromStartAndEnd function with result', function() {
-        var scratch = new EllipsoidRhumbLine();
-
-        var ellipsoid = new Ellipsoid(6, 6, 3);
-        var start = new Cartographic(fifteenDegrees, fifteenDegrees);
-        var end = new Cartographic(thirtyDegrees, thirtyDegrees);
-
-        var rhumb = EllipsoidRhumbLine.fromStartAndEnd(start, end, ellipsoid, scratch);
-        expect(rhumb).toBe(scratch);
-        expect(rhumb.ellipsoid).toBe(ellipsoid);
-        expect(start).toEqual(rhumb.start);
-        expect(end).toEqual(rhumb.end);
-    });
-
     it('can create using fromStartHeadingDistance function', function() {
         var ellipsoid = new Ellipsoid(6, 6, 3);
         var start = new Cartographic(fifteenDegrees, fifteenDegrees);

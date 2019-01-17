@@ -263,31 +263,6 @@ define([
     });
 
     /**
-     * Create a rhumb line using an initial and final position.
-     *
-     * @param {Cartographic} start The initial planetodetic point on the path.
-     * @param {Cartographic} end The final planetodetic point on the path.
-     * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid on which the rhumb line lies.
-     * @param {EllipsoidRhumbLine} [result] The object in which to store the result.
-     * @returns {EllipsoidRhumbLine} The EllipsoidRhumbLine object.
-     */
-    EllipsoidRhumbLine.fromStartAndEnd = function(start, end, ellipsoid, result) {
-        //>>includeStart('debug', pragmas.debug);
-        Check.defined('start', start);
-        Check.defined('end', end);
-        //>>includeEnd('debug');
-
-        var e = defaultValue(ellipsoid, Ellipsoid.WGS84);
-
-        if (defined(result)) {
-            result._ellipsoid = e;
-            result.setEndPoints(start, end);
-            return result;
-        }
-        return new EllipsoidRhumbLine(start, end, e);
-    };
-
-    /**
      * Create a rhumb line using an initial position with a heading and distance.
      *
      * @param {Cartographic} start The initial planetodetic point on the path.
