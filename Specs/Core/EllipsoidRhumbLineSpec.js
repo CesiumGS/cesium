@@ -55,30 +55,30 @@ defineSuite([
     });
 
     it('can create using fromStartHeadingDistance function', function() {
-        var ellipsoid = new Ellipsoid(6, 6, 3);
+        var ellipsoid = Ellipsoid.WGS84;
         var start = new Cartographic(fifteenDegrees, fifteenDegrees);
         var heading = fifteenDegrees;
-        var distance = 6 * fifteenDegrees;
+        var distance = fifteenDegrees * ellipsoid.maximumRadius;
 
         var rhumb = EllipsoidRhumbLine.fromStartHeadingDistance(start, heading, distance, ellipsoid);
         expect(start).toEqual(rhumb.start);
-        expect(distance).toEqualEpsilon(rhumb.surfaceDistance, CesiumMath.EPSILON12);
+        expect(distance).toEqualEpsilon(rhumb.surfaceDistance, CesiumMath.EPSILON6);
         expect(heading).toEqualEpsilon(rhumb.heading, CesiumMath.EPSILON12);
     });
 
     it('can create using fromStartHeadingDistance function with result', function() {
-        var ellipsoid = new Ellipsoid(6, 6, 3);
+        var ellipsoid = Ellipsoid.WGS84;
         var scratch = new EllipsoidRhumbLine(undefined, undefined, ellipsoid);
 
         var start = new Cartographic(fifteenDegrees, fifteenDegrees);
         var heading = fifteenDegrees;
-        var distance = 6 * fifteenDegrees;
+        var distance = fifteenDegrees * ellipsoid.maximumRadius;
 
         var rhumb = EllipsoidRhumbLine.fromStartHeadingDistance(start, heading, distance, ellipsoid, scratch);
         expect(rhumb).toBe(scratch);
         expect(rhumb.ellipsoid).toBe(ellipsoid);
         expect(start).toEqual(rhumb.start);
-        expect(distance).toEqualEpsilon(rhumb.surfaceDistance, CesiumMath.EPSILON12);
+        expect(distance).toEqualEpsilon(rhumb.surfaceDistance, CesiumMath.EPSILON6);
         expect(heading).toEqualEpsilon(rhumb.heading, CesiumMath.EPSILON12);
     });
 

@@ -133,24 +133,6 @@ define([
     var scratchCart1 = new Cartesian3();
     var scratchCart2 = new Cartesian3();
 
-    function initialize(ellipsoidRhumbLine, start, end, ellipsoid) {
-        var major = ellipsoid.maximumRadius;
-        var minor = ellipsoid.minimumRadius;
-        var majorSquared = major * major;
-        var minorSquared = minor * minor;
-        ellipsoidRhumbLine._ellipticitySquared = (majorSquared - minorSquared) / majorSquared;
-        ellipsoidRhumbLine._ellipticity = Math.sqrt(ellipsoidRhumbLine._ellipticitySquared);
-
-        if (defined(start)) {
-            ellipsoidRhumbLine._start = Cartographic.clone(start, ellipsoidRhumbLine._start);
-            ellipsoidRhumbLine._start.height = 0;
-        }
-        if (defined(end)) {
-            ellipsoidRhumbLine._end = Cartographic.clone(end, ellipsoidRhumbLine._end);
-            ellipsoidRhumbLine._end.height = 0;
-        }
-    }
-
     function computeProperties(ellipsoidRhumbLine, start, end, ellipsoid) {
         var firstCartesian = Cartesian3.normalize(ellipsoid.cartographicToCartesian(start, scratchCart2), scratchCart1);
         var lastCartesian = Cartesian3.normalize(ellipsoid.cartographicToCartesian(end, scratchCart2), scratchCart2);
@@ -159,11 +141,74 @@ define([
         Check.typeOf.number.greaterThanOrEquals('value', Math.abs(Math.abs(Cartesian3.angleBetween(firstCartesian, lastCartesian)) - Math.PI), 0.0125);
         //>>includeEnd('debug');
 
-        initialize(ellipsoidRhumbLine, start, end, ellipsoid);
+        var major = ellipsoid.maximumRadius;
+        var minor = ellipsoid.minimumRadius;
+        var majorSquared = major * major;
+        var minorSquared = minor * minor;
+        ellipsoidRhumbLine._ellipticitySquared = (majorSquared - minorSquared) / majorSquared;
+        ellipsoidRhumbLine._ellipticity = Math.sqrt(ellipsoidRhumbLine._ellipticitySquared);
+
+        ellipsoidRhumbLine._start = Cartographic.clone(start, ellipsoidRhumbLine._start);
+        ellipsoidRhumbLine._start.height = 0;
+
+        ellipsoidRhumbLine._end = Cartographic.clone(end, ellipsoidRhumbLine._end);
+        ellipsoidRhumbLine._end.height = 0;
 
         ellipsoidRhumbLine._heading = calculateHeading(ellipsoidRhumbLine, start.longitude, start.latitude, end.longitude, end.latitude);
         ellipsoidRhumbLine._distance = calculateArcLength(ellipsoidRhumbLine, ellipsoid.maximumRadius, ellipsoid.minimumRadius,
                                                           start.longitude, start.latitude, end.longitude, end.latitude);
+    }
+
+    function interpolateUsingSurfaceDistance(start, heading, distance, major, ellipticity, result)
+    {
+        var ellipticitySquared = ellipticity * ellipticity;
+
+        var longitude;
+        var latitude;
+        var deltaLongitude;
+
+        //Check to see if the rhumb line has constant latitude
+        //This won't converge if heading is close to 90 degrees
+        if (Math.abs(CesiumMath.PI_OVER_TWO - Math.abs(heading)) > CesiumMath.EPSILON8) {
+            //Calculate latitude of the second point
+            var M1 = calculateM(ellipticity, major, start.latitude);
+            var deltaM = distance * Math.cos(heading);
+            var M2 = M1 + deltaM;
+            latitude = calculateInverseM(M2, ellipticity, major);
+
+            //Now find the longitude of the second point
+            var sigma1 = calculateSigma(ellipticity, start.latitude);
+            var sigma2 = calculateSigma(ellipticity, latitude);
+            deltaLongitude = Math.tan(heading) * (sigma2 - sigma1);
+            longitude = CesiumMath.negativePiToPi(start.longitude + deltaLongitude);
+        } else { //If heading is close to 90 degrees
+            latitude = start.latitude;
+            var localRad;
+
+            if (ellipticity === 0.0) { // sphere
+                localRad = major * Math.cos(start.latitude);
+            } else {
+                var sinPhi = Math.sin(start.latitude);
+                localRad = major * Math.cos(start.latitude) / Math.sqrt(1 - ellipticitySquared * sinPhi * sinPhi);
+            }
+
+            deltaLongitude = distance / localRad;
+            if (heading > 0.0) {
+                longitude = CesiumMath.negativePiToPi(start.longitude + deltaLongitude);
+            } else {
+                longitude = CesiumMath.negativePiToPi(start.longitude - deltaLongitude);
+            }
+        }
+
+        if (defined(result)) {
+            result.longitude = longitude;
+            result.latitude = latitude;
+            result.height = 0;
+
+            return result;
+        }
+
+        return new Cartographic(longitude, latitude, 0);
     }
 
     /**
@@ -281,16 +326,20 @@ define([
         //>>includeEnd('debug');
 
         var e = defaultValue(ellipsoid, Ellipsoid.WGS84);
+        var major = e.maximumRadius;
+        var minor = e.minimumRadius;
+        var majorSquared = major * major;
+        var minorSquared = minor * minor;
+        var ellipticity = Math.sqrt((majorSquared - minorSquared) / majorSquared);
 
-        if (!defined(result)) {
-            result = new EllipsoidRhumbLine(undefined, undefined, e);
+        heading = CesiumMath.negativePiToPi(heading);
+        var end = interpolateUsingSurfaceDistance(start, heading, distance, e.maximumRadius, ellipticity);
+
+        if (!defined(result) || (defined(ellipsoid) && !ellipsoid.equals(result.ellipsoid))) {
+            return new EllipsoidRhumbLine(start, end, e);
         }
 
-        initialize(result, start, undefined, e);
-        result._heading = CesiumMath.negativePiToPi(heading);
-        result._distance = distance;
-
-        result._end = result.interpolateUsingSurfaceDistance(distance, new Cartographic());
+        result.setEndPoints(start, end);
         return result;
     };
 
@@ -337,59 +386,7 @@ define([
         }
         //>>includeEnd('debug');
 
-        var ellipsoid = this._ellipsoid;
-        var major = ellipsoid.maximumRadius;
-        var ellipticity = this._ellipticity;
-        var ellipticitySquared = this._ellipticitySquared;
-        var heading = this._heading;
-        var start = this._start;
-
-        var longitude;
-        var latitude;
-        var deltaLongitude;
-
-        //Check to see if the rhumb line has constant latitude
-        //This won't converge if heading is close to 90 degrees
-        if (Math.abs(CesiumMath.PI_OVER_TWO - Math.abs(heading)) > CesiumMath.EPSILON8) {
-            //Calculate latitude of the second point
-            var M1 = calculateM(ellipticity, major, start.latitude);
-            var deltaM = distance * Math.cos(heading);
-            var M2 = M1 + deltaM;
-            latitude = calculateInverseM(M2, ellipticity, major);
-
-            //Now find the longitude of the second point
-            var sigma1 = calculateSigma(ellipticity, start.latitude);
-            var sigma2 = calculateSigma(ellipticity, latitude);
-            deltaLongitude = Math.tan(heading) * (sigma2 - sigma1);
-            longitude = CesiumMath.negativePiToPi(start.longitude + deltaLongitude);
-        } else { //If heading is close to 90 degrees
-            latitude = start.latitude;
-            var localRad;
-
-            if (ellipticity === 0.0) { // sphere
-                localRad = major * Math.cos(start.latitude);
-            } else {
-                var sinPhi = Math.sin(start.latitude);
-                localRad = major * Math.cos(start.latitude) / Math.sqrt(1 - ellipticitySquared * sinPhi * sinPhi);
-            }
-
-            deltaLongitude = distance / localRad;
-            if (heading > 0.0) {
-                longitude = CesiumMath.negativePiToPi(start.longitude + deltaLongitude);
-            } else {
-                longitude = CesiumMath.negativePiToPi(start.longitude - deltaLongitude);
-            }
-        }
-
-        if (defined(result)) {
-            result.longitude = longitude;
-            result.latitude = latitude;
-            result.height = 0;
-
-            return result;
-        }
-
-        return new Cartographic(longitude, latitude, 0);
+        return interpolateUsingSurfaceDistance(this._start, this._heading, distance, this._ellipsoid.maximumRadius, this._ellipticity, result);
     };
 
     /**
