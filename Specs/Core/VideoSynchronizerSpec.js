@@ -24,17 +24,17 @@ defineSuite([
     function loadVideo() {
         var element = document.createElement('video');
         var source = document.createElement('source');
-        source.setAttribute('src', '/Data/Videos/big-buck-bunny-trailer-small.webm');
+        source.setAttribute('src', 'Data/Videos/big-buck-bunny-trailer-small.webm');
         source.setAttribute('type', 'video/webm');
         element.appendChild(source);
 
         source = document.createElement('source');
-        source.setAttribute('src', '/Data/Videos/big-buck-bunny-trailer-small.mp4');
+        source.setAttribute('src', 'Data/Videos/big-buck-bunny-trailer-small.mp4');
         source.setAttribute('type', 'video/mp4');
         element.appendChild(source);
 
         source = document.createElement('source');
-        source.setAttribute('src', '/Data/Videos/big-buck-bunny-trailer-small.mov');
+        source.setAttribute('src', 'Data/Videos/big-buck-bunny-trailer-small.mov');
         source.setAttribute('type', 'video/quicktime');
         element.appendChild(source);
 
