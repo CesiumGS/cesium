@@ -975,7 +975,8 @@ define([
             extrudedHeight : minHeight,
             height : maxHeight,
             vertexFormat : VertexFormat.POSITION_ONLY,
-            shadowVolume: true
+            shadowVolume: true,
+            lineType : polygonGeometry._lineType
         });
     };
 
