@@ -36,7 +36,9 @@ define([
         this._previousMin = Number.MAX_VALUE;
         this._previousMax = -Number.MAX_VALUE;
 
-        // _time is an example where it's better to have some fixed reference value. Add any others here. It can help debug other tile member knowing that tiles are colored from a reference min max that you set.
+        // If defined uses a reference min max to colorize by instead of using last frames min max of rendered tiles.
+        // _time uses reference value by default since last frame's min/max aren't useful in it's case.
+        // For example, the approximate scene load time can be set with setReferenceMinMax in order to take accurate colored timing diffs of various scenes.
         this._referenceMin = { _time: 0 };
         this._referenceMax = { _time: 10 };
     }
