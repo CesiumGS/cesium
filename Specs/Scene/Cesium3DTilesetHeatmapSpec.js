@@ -69,7 +69,7 @@ defineSuite([
         heatmap._min = -1;
         heatmap._max =  1;
         heatmap.resetMinMax(); // Preparing for next frame, previousMin/Max take current frame's values
-        
+
         expect(heatmap._min).toBe(Number.MAX_VALUE);
         expect(heatmap._max).toBe(-Number.MAX_VALUE);
         expect(heatmap._previousMin).toBe(-1);
