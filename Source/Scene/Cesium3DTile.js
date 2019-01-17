@@ -342,6 +342,8 @@ define([
         this._debugColor = Color.fromRandom({ alpha : 1.0 });
         this._debugColorizeTiles = false;
 
+        this._time = 0; // Seconds since tileset._sceneStartTime that the request was received.
+
         this._commandsLength = 0;
 
         this._color = undefined;
