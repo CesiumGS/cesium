@@ -342,7 +342,7 @@ define([
         this._debugColor = Color.fromRandom({ alpha : 1.0 });
         this._debugColorizeTiles = false;
 
-        this._time = 0; // Seconds since tileset._sceneStartTime that the request was received.
+        this._loadTimestamp = 0; // Milliseconds since 1970 that this tile was loaded
 
         this._commandsLength = 0;
 
@@ -805,6 +805,7 @@ define([
                 that._selectedFrame = 0;
                 that.lastStyleTime = 0;
 
+                that._loadTimestamp = Date.now();
                 that._contentState = Cesium3DTileContentState.READY;
                 that._contentReadyPromise.resolve(content);
             });
