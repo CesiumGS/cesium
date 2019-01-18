@@ -220,6 +220,8 @@ define([
      * @param {Cartographic} [start] The initial planetodetic point on the path.
      * @param {Cartographic} [end] The final planetodetic point on the path.
      * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid on which the rhumb line lies.
+     *
+     * @exception {DeveloperError} angle between start and end must be at least 0.0125 radians.
      */
     function EllipsoidRhumbLine(start, end, ellipsoid) {
         var e = defaultValue(ellipsoid, Ellipsoid.WGS84);
