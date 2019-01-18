@@ -589,6 +589,10 @@ defineSuite([
     });
 
     it('lineType can be dynamic', function() {
+        if (!Entity.supportsPolylinesOnTerrain(scene)) {
+            return;
+        }
+
         var entity = new Entity();
         var polyline = new PolylineGraphics();
         entity.polyline = polyline;
@@ -842,6 +846,10 @@ defineSuite([
     });
 
     it('followSurface true with undefined globe does not call generateCartesianArc', function() {
+        if (!Entity.supportsPolylinesOnTerrain(scene)) {
+            return;
+        }
+
         var entity = createBasicPolyline();
         entity.polyline.width = createDynamicProperty(1);
         scene.globe = undefined;
@@ -860,6 +868,10 @@ defineSuite([
     });
 
     it('lineType GEODESIC with undefined globe does not call generateCartesianArc', function() {
+        if (!Entity.supportsPolylinesOnTerrain(scene)) {
+            return;
+        }
+
         var entity = createBasicPolyline();
         entity.polyline.width = createDynamicProperty(1);
         scene.globe = undefined;
