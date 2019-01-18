@@ -77,7 +77,7 @@ defineSuite([
     });
 
     it('uses reference min max', function() {
-        var variableName = '_time';
+        var variableName = '_loadTimeStamp';
         var heatmap = new Cesium3DTilesetHeatmap(variableName);
 
         var setMin = 3;

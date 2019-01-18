@@ -39,8 +39,8 @@ define([
         // If defined uses a reference min max to colorize by instead of using last frames min max of rendered tiles.
         // _time uses reference value by default since last frame's min/max aren't useful in it's case.
         // For example, the approximate scene load time can be set with setReferenceMinMax in order to take accurate colored timing diffs of various scenes.
-        this._referenceMin = { _time: 0 };
-        this._referenceMax = { _time: 10 };
+        this._referenceMin = { };
+        this._referenceMax = { };
     }
 
     /**
