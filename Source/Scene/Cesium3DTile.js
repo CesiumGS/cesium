@@ -342,6 +342,8 @@ define([
         this._debugColor = Color.fromRandom({ alpha : 1.0 });
         this._debugColorizeTiles = false;
 
+        this._loadTimestamp = new JulianDate();
+
         this._commandsLength = 0;
 
         this._color = undefined;
@@ -803,6 +805,7 @@ define([
                 that._selectedFrame = 0;
                 that.lastStyleTime = 0;
 
+                JulianDate.now(that._loadTimestamp);
                 that._contentState = Cesium3DTileContentState.READY;
                 that._contentReadyPromise.resolve(content);
             });

@@ -111,6 +111,7 @@ define([
      * @param {Number} [options.maximumScreenSpaceError=16] The maximum screen space error used to drive level of detail refinement.
      * @param {Number} [options.maximumMemoryUsage=512] The maximum amount of memory in MB that can be used by the tileset.
      * @param {Boolean} [options.cullWithChildrenBounds=true] Optimization option. Whether to cull tiles using the union of their children bounding volumes.
+     * @param {String} [options.debugHeatmapTileVariableName=undefined] The tile variable to colorize as a heatmap. All rendered tiles will be colorized relative to each other's specified variable value.
      * @param {Boolean} [options.dynamicScreenSpaceError=false] Optimization option. Reduce the screen space error for tiles that are further away from the camera.
      * @param {Number} [options.dynamicScreenSpaceErrorDensity=0.00278] Density used to adjust the dynamic screen space error, similar to fog density.
      * @param {Number} [options.dynamicScreenSpaceErrorFactor=4.0] A factor used to increase the computed dynamic screen space error.
@@ -221,7 +222,7 @@ define([
 
         this._requestedTilesInFlight = [];
 
-        this._heatmap = new Cesium3DTilesetHeatmap(options.heatmapVariable);
+        this._heatmap = new Cesium3DTilesetHeatmap(options.debugHeatmapTileVariableName);
 
         this._tilesLoaded = false;
         this._initialTilesLoaded = false;
