@@ -40,8 +40,8 @@ define([
 
         // If defined uses a reference min max to colorize by instead of using last frames min max of rendered tiles.
         // For example, the _loadTimestamp can get a better colorization using setReferenceMinMax in order to take accurate colored timing diffs of various scenes.
-        this._referenceMin = { };
-        this._referenceMax = { };
+        this._referenceMin = {};
+        this._referenceMax = {};
     }
 
     /**
