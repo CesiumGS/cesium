@@ -54,6 +54,40 @@ define([
         if (tileset.debugFreezeFrame) {
             return;
         }
+        
+        // TODO: camera percentageChanged threshold is at 50% it seems, record our own changes for now
+        var camera = frameState.camera;
+        var cameraChanges = camera.cameraChanges;
+        // if (defined(cameraChanges.positionAmount)) {
+        if (defined(cameraChanges)) {
+            var positionDelta = new Cartesian3(camera.positionWC - cameraChanges.oldPosition);
+            cameraChanges.positionAmount = Cartesian3.dot(positionDelta, positionDelta);
+            cameraChanges.oldPosition = Cartesian3.clone(camera.positionWC, cameraChanges.oldPosition);
+            cameraChanges.directionAmount = 0.5 * (-Cartesian3.dot(camera.directionWC, cameraChanges.oldDirection) + 1.0);
+            cameraChanges.oldDirection = Cartesian3.clone(camera.directionWC, cameraChanges.oldDirection);
+        } else {
+            camera.cameraChanges = {
+                positionAmount: undefined, // squared length
+                oldPosition: new Cartesian3(),
+                directionAmount: 0, // value [0, 1]
+                oldDirection: new Cartesian3(),
+                sseFudge: 0
+            };
+            cameraChanges = camera.cameraChanges;
+
+            cameraChanges.positionAmount = 0;
+            cameraChanges.oldPosition = Cartesian3.clone(camera.positionWC, cameraChanges.oldPosition);
+            cameraChanges.directionAmount = 0;
+            cameraChanges.oldDirection = Cartesian3.clone(camera.directionWC, cameraChanges.oldDirection);
+            cameraChanges.sseFudge = 0;
+        }
+
+        var fudgeAmount = 512;
+        cameraChanges.sseFudge = cameraChanges.positionAmount > 0 ? fudgeAmount : 0;
+        cameraChanges.sseFudge += cameraChanges.directionAmount > 0 ? fudgeAmount : 0; // can lerp on this one since value is normalized [0, 1]
+        if (cameraChanges.sseFudge > 0) {
+            console.log('moving');
+        }
 
         tileset._selectedTiles.length = 0;
         tileset._selectedTilesToStyle.length = 0;
