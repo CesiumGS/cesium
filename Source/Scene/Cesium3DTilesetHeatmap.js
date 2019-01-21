@@ -69,7 +69,7 @@ define([
         this._referenceMax[variableName] = getHeatmapValue(max, variableName);
     };
 
-    function updateMinMax(heatmap, tile) {
+    function getHeatmapValueAndUpdateMinMax(heatmap, tile) {
         var variableName = heatmap.variableName;
         if (defined(variableName)) {
             var heatmapValue = getHeatmapValue(tile[variableName], variableName);
@@ -101,7 +101,7 @@ define([
             return;
         }
 
-        var heatmapValue = updateMinMax(this, tile);
+        var heatmapValue = getHeatmapValueAndUpdateMinMax(this, tile);
         var min = this._previousMin;
         var max = this._previousMax;
         if (min === Number.MAX_VALUE || max === -Number.MAX_VALUE) {
