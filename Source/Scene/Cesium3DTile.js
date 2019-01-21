@@ -329,8 +329,8 @@ define([
         this._visitedFrame = 0;
         this._selectedFrame = 0;
         this._requestedFrame = 0;
-        this._ancestorWithContent = undefined; // Content being requested. Used to know when to skip a tile in skipLOD.
-        this._ancestorWithContentAvailable = undefined; // Rendered if a desired tile is not loaded in skipLOD.
+        this._ancestorWithContent = undefined;
+        this._ancestorWithContentAvailable = undefined;
         this._refines = false;
         this._shouldSelect = false;
         this._isClipped = true;
@@ -1269,12 +1269,16 @@ define([
      * Takes a value and maps it down to a 0-1 value given a min and max
      */
     function normalizeValue(value, min, max) {
+        if (max === min) {
+            return 0;
+        }
+
         // Shift min max window to 0
-        var shiftedMax = (max - min) + CesiumMath.EPSILON7; // Prevent divide by zero
+        var shiftedMax = max - min;
         var shiftedValue = value - min;
 
         // Map to [0..1]
-        return Math.min(shiftedValue / shiftedMax, 1);
+        return CesiumMath.fromSNorm(shiftedValue, shiftedMax) * 2 - 1;
     }
 
     /**
