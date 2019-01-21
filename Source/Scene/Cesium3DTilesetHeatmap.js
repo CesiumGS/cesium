@@ -39,16 +39,13 @@ define([
         this._previousMax = -Number.MAX_VALUE;
 
         // If defined uses a reference min max to colorize by instead of using last frames min max of rendered tiles.
-        // NOTE: For special cases, the references must be in the converted form (simple number).
-        // _loadTimeStamp uses reference value by default since last frame's min/max aren't useful in it's case.
-        // For example, the approximate scene load time can be set with setReferenceMinMax in order to take accurate colored timing diffs of various scenes.
+        // For example, the _loadTimestamp can get a better colorization using setReferenceMinMax in order to take accurate colored timing diffs of various scenes.
         this._referenceMin = { };
         this._referenceMax = { };
     }
 
     /**
-     * Convert to a usable heatmap value. Ensures that tile values that aren't stored as numbers can be used for colorization (if they can be converted to a number).
-     * Also makes sure that external code can use this to set their reference min and max so the conversions are consistant or if they change they only change here.
+     * Convert to a usable heatmap value (i.e. a number). Ensures that tile values that aren't stored as numbers can be used for colorization.
      *
      * @param {Object} value The value for the specified variableName.
      * @param {String} variableName The name of the tile variable that will be colorized.
@@ -65,10 +62,10 @@ define([
     }
 
     /**
-     * Sets the reference min and max for the variable name.
+     * Sets the reference min and max for the variable name. Converted to numbers before they are stored.
      *
-     * @param {Number} min The min reference value.
-     * @param {Number} max The max reference value.
+     * @param {Object} min The min reference value.
+     * @param {Object} max The max reference value.
      * @param {String} variableName The tile variable that will use these reference values when it is colorized.
      */
     Cesium3DTilesetHeatmap.prototype.setReferenceMinMax = function(min, max, variableName) {
