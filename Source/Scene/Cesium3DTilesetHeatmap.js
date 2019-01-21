@@ -46,10 +46,6 @@ define([
 
     /**
      * Convert to a usable heatmap value (i.e. a number). Ensures that tile values that aren't stored as numbers can be used for colorization.
-     *
-     * @param {Object} value The value for the specified variableName.
-     * @param {String} variableName The name of the tile variable that will be colorized.
-     * @returns {Number} The number value used in the heatmap.
      */
      function getHeatmapValue(tileValue, variableName) {
         var value;
@@ -76,13 +72,14 @@ define([
     function updateMinMax(heatmap, tile) {
         var variableName = heatmap.variableName;
         if (defined(variableName)) {
-            var tileValue = getHeatmapValue(tile[variableName], variableName);
-            if (!defined(tileValue)) {
+            var heatmapValue = getHeatmapValue(tile[variableName], variableName);
+            if (!defined(heatmapValue)) {
                 heatmap.variableName = undefined;
-                return;
+                return heatmapValue;
             }
-            heatmap._max = Math.max(tileValue, heatmap._max);
-            heatmap._min = Math.min(tileValue, heatmap._min);
+            heatmap._max = Math.max(heatmapValue, heatmap._max);
+            heatmap._min = Math.min(heatmapValue, heatmap._min);
+            return heatmapValue;
         }
     }
 
@@ -104,7 +101,7 @@ define([
             return;
         }
 
-        updateMinMax(this, tile);
+        var heatmapValue = updateMinMax(this, tile);
         var min = this._previousMin;
         var max = this._previousMax;
         if (min === Number.MAX_VALUE || max === -Number.MAX_VALUE) {
@@ -113,8 +110,7 @@ define([
 
         // Shift the min max window down to 0
         var shiftedMax = (max - min) + CesiumMath.EPSILON7; // Prevent divide by 0
-        var value = getHeatmapValue(tile[variableName], variableName);
-        var shiftedValue = CesiumMath.clamp(value - min, 0, shiftedMax);
+        var shiftedValue = CesiumMath.clamp(heatmapValue - min, 0, shiftedMax);
 
         // Get position between min and max and convert that to a position in the color array
         var zeroToOne = shiftedValue / shiftedMax;
