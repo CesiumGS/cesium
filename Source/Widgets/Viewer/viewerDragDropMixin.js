@@ -27,6 +27,7 @@ define([
      * Rather than being called directly, this function is normally passed as
      * a parameter to {@link Viewer#extend}, as shown in the example below.
      * @exports viewerDragDropMixin
+     * @constructor
      *
      * @param {Viewer} viewer The viewer instance.
      * @param {Object} [options] Object with the following properties:
