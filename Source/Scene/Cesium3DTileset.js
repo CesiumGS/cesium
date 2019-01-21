@@ -111,6 +111,7 @@ define([
      * @param {Number} [options.maximumScreenSpaceError=16] The maximum screen space error used to drive level of detail refinement.
      * @param {Number} [options.maximumMemoryUsage=512] The maximum amount of memory in MB that can be used by the tileset.
      * @param {Boolean} [options.cullWithChildrenBounds=true] Optimization option. Whether to cull tiles using the union of their children bounding volumes.
+     * @param {String} [options.debugHeatmapTileVariableName=undefined] The tile variable to colorize as a heatmap. All rendered tiles will be colorized relative to each other's specified variable value.
      * @param {Boolean} [options.dynamicScreenSpaceError=false] Optimization option. Reduce the screen space error for tiles that are further away from the camera.
      * @param {Number} [options.dynamicScreenSpaceErrorDensity=0.00278] Density used to adjust the dynamic screen space error, similar to fog density.
      * @param {Number} [options.dynamicScreenSpaceErrorFactor=4.0] A factor used to increase the computed dynamic screen space error.
@@ -224,7 +225,7 @@ define([
         this._heatmap = new Cesium3DTilesetHeatmap(options.heatmapVariable);
         this._maxPriority = { depth: -Number.MAX_VALUE, distance: -Number.MAX_VALUE };
         this._minPriority = { depth: Number.MAX_VALUE, distance: Number.MAX_VALUE };
-        this._sceneStartTime = undefined; // ms since 1970
+        this._heatmap = new Cesium3DTilesetHeatmap(options.debugHeatmapTileVariableName);
 
         this._tilesLoaded = false;
         this._initialTilesLoaded = false;
@@ -1640,8 +1641,6 @@ define([
                 ++tileset._statistics.numberOfTilesWithContentReady;
                 ++tileset._statistics.numberOfLoadedTilesTotal;
 
-                tile._time = (Date.now() - tileset._sceneStartTime) / 1000; // Seconds since the scene started loading.
-
                 // Add to the tile cache. Previously expired tiles are already in the cache and won't get re-added.
                 tileset._cache.add(tile);
             }
@@ -1984,7 +1983,6 @@ define([
         tileset._tilesLoaded = (statistics.numberOfPendingRequests === 0) && (statistics.numberOfTilesProcessing === 0) && (statistics.numberOfAttemptedRequests === 0);
 
         if (progressChanged && tileset._tilesLoaded) {
-            tileset._sceneStartTime = undefined;
 
             frameState.afterRender.push(function() {
                 tileset.allTilesLoaded.raiseEvent();
@@ -1995,8 +1993,6 @@ define([
                     tileset.initialTilesLoaded.raiseEvent();
                 });
             }
-        } else if (progressChanged && !defined(tileset._sceneStartTime)) {
-            tileset._sceneStartTime = Date.now();
         }
     }
 

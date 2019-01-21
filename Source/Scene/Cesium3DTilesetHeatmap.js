@@ -36,9 +36,11 @@ define([
         this._previousMin = Number.MAX_VALUE;
         this._previousMax = -Number.MAX_VALUE;
 
-        // _time is an example where it's better to have some fixed reference value. Add any others here. It can help debug other tile member knowing that tiles are colored from a reference min max that you set.
-        this._referenceMin = { _time: 0 };
-        this._referenceMax = { _time: 10 };
+        // If defined uses a reference min max to colorize by instead of using last frames min max of rendered tiles.
+        // _time uses reference value by default since last frame's min/max aren't useful in it's case.
+        // For example, the approximate scene load time can be set with setReferenceMinMax in order to take accurate colored timing diffs of various scenes.
+        this._referenceMin = { };
+        this._referenceMax = { };
     }
 
     /**
@@ -118,24 +120,17 @@ define([
     };
 
     /**
-     * Determines if reference min max should be used. It will use the reference only if it exists.
-     * Either the user set it or it's setup in this file because it's the use case for the particular variable (ex: _time)
-     */
-     function useReferenceMinMax(heatmap) {
-         var variableName = heatmap.variableName;
-         return defined(heatmap._referenceMin[variableName]) && defined(heatmap._referenceMax[variableName]);
-     }
-
-    /**
      * Resets the tracked min max values for heatmap colorization. Happens right before tileset traversal.
      */
     Cesium3DTilesetHeatmap.prototype.resetMinMax = function() {
         // For heat map colorization
         var variableName = this.variableName;
         if (defined(variableName)) {
-            var useReference = useReferenceMinMax(this);
-            this._previousMin = useReference ? this._referenceMin[variableName] : this._min;
-            this._previousMax = useReference ? this._referenceMax[variableName] : this._max;
+            var referenceMin = this._referenceMin[variableName];
+            var referenceMax = this._referenceMax[variableName];
+            var useReference = defined(referenceMin) && defined(referenceMax);
+            this._previousMin = useReference ? referenceMin : this._min;
+            this._previousMax = useReference ? referenceMax : this._max;
             this._min = Number.MAX_VALUE;
             this._max = -Number.MAX_VALUE;
         }

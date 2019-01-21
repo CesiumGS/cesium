@@ -76,11 +76,8 @@ defineSuite([
         expect(heatmap._previousMax).toBe( 1);
     });
 
-    it('reference min max', function() {
-        // _time uses a fixed reference min max by default.
-        // The min/max determined over a frame aren't useful since we want an approx. min max for the scene resolve time.
-        // This is usually set by the user for taking timing colorize diffs, but has a default window of [0..10]
-        var variableName = '_time';
+    it('uses reference min max', function() {
+        var variableName = '_loadTimeStamp';
         var heatmap = new Cesium3DTilesetHeatmap(variableName);
 
         var setMin = 3;
