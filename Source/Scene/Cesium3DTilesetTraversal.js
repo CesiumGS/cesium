@@ -1,4 +1,5 @@
 define([
+        '../Core/Cartesian3',
         '../Core/defined',
         '../Core/Intersect',
         '../Core/ManagedArray',
@@ -6,6 +7,7 @@ define([
         './Cesium3DTileOptimizationHint',
         './Cesium3DTileRefine'
     ], function(
+        Cartesian3,
         defined,
         Intersect,
         ManagedArray,
@@ -48,6 +50,13 @@ define([
 
     var descendantSelectionDepth = 2;
 
+    function fudgeMaxSSE(tileset, frameState) {
+        // return tileset._maximumScreenSpaceError + cameraChanges.sseFudge;
+        return tileset._maximumScreenSpaceError + frameState.camera.cameraChanges.sseFudge;
+        // return tileset._maximumScreenSpaceError;
+    }
+
+    var scratchCartesian3 = new Cartesian3();
     Cesium3DTilesetTraversal.selectTiles = function(tileset, frameState) {
         tileset._requestedTiles.length = 0;
 
@@ -85,9 +94,9 @@ define([
         var fudgeAmount = 512;
         cameraChanges.sseFudge = cameraChanges.positionAmount > 0 ? fudgeAmount : 0;
         cameraChanges.sseFudge += cameraChanges.directionAmount > 0 ? fudgeAmount : 0; // can lerp on this one since value is normalized [0, 1]
-        if (cameraChanges.sseFudge > 0) {
-            console.log('moving');
-        }
+        // if (cameraChanges.sseFudge > 0) {
+        //     console.log('moving');
+        // }
 
         tileset._selectedTiles.length = 0;
         tileset._selectedTilesToStyle.length = 0;
@@ -464,7 +473,7 @@ define([
         return tile._screenSpaceError > baseScreenSpaceError;
     }
 
-    function canTraverse(tileset, tile) {
+    function canTraverse(tileset, tile, frameState) {
         if (tile.children.length === 0) {
             return false;
         }
@@ -473,7 +482,9 @@ define([
             // Don't traverse if the subtree is expired because it will be destroyed
             return !tile.contentExpired;
         }
-        return tile._screenSpaceError > tileset._maximumScreenSpaceError;
+        // return tile._screenSpaceError > tileset._maximumScreenSpaceError;
+
+        return tile.contentAvailable ? tile._screenSpaceError > tileset._maximumScreenSpaceError : tile._screenSpaceError > fudgeMaxSSE(tileset, frameState);
     }
 
     function executeTraversal(tileset, root, baseScreenSpaceError, maximumScreenSpaceError, frameState) {
@@ -499,7 +510,7 @@ define([
             var parentRefines = !defined(parent) || parent._refines;
             var refines = false;
 
-            if (canTraverse(tileset, tile)) {
+            if (canTraverse(tileset, tile, frameState)) {
                 refines = updateAndPushChildren(tileset, tile, stack, frameState) && parentRefines;
             }
 
@@ -556,7 +567,7 @@ define([
             var childrenLength = children.length;
 
             // Only traverse if the tile is empty - traversal stop at descendants with content
-            var traverse = hasEmptyContent(tile) && canTraverse(tileset, tile);
+            var traverse = hasEmptyContent(tile) && canTraverse(tileset, tile, frameState);
 
             // Traversal stops but the tile does not have content yet.
             // There will be holes if the parent tries to refine to its children, so don't refine.
@@ -631,7 +642,7 @@ define([
             var shouldSelect = tile._shouldSelect;
             var children = tile.children;
             var childrenLength = children.length;
-            var traverse = canTraverse(tileset, tile);
+            var traverse = canTraverse(tileset, tile, frameState);
 
             if (shouldSelect) {
                 if (add) {
