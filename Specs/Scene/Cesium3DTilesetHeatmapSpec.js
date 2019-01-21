@@ -4,6 +4,7 @@ defineSuite([
         'Scene/Cesium3DTileset',
         'Core/clone',
         'Core/Color',
+        'Core/JulianDate',
         'Core/Math',
         'Core/Matrix4',
         'Scene/Cesium3DTileContentState',
@@ -14,6 +15,7 @@ defineSuite([
         Cesium3DTileset,
         clone,
         Color,
+        JulianDate,
         CesiumMath,
         Matrix4,
         Cesium3DTileContentState,
@@ -77,21 +79,26 @@ defineSuite([
     });
 
     it('uses reference min max', function() {
-        var variableName = '_loadTimeStamp';
+        var variableName = '_loadTimestamp';
         var heatmap = new Cesium3DTilesetHeatmap(variableName);
 
-        var setMin = 3;
-        var setMax = 4;
-        heatmap.setReferenceMinMax(setMin, setMax, variableName); // User wants to colorize to a fixed reference.
+        var refMinJulianDate = new JulianDate();
+        var refMaxJulianDate = new JulianDate();
+        JulianDate.now(refMinJulianDate);
+        JulianDate.addSeconds(refMinJulianDate, 10, refMaxJulianDate);
+
+        heatmap.setReferenceMinMax(refMinJulianDate, refMaxJulianDate, variableName); // User wants to colorize to a fixed reference.
+        var refMin = heatmap._referenceMin[variableName];
+        var refMax = heatmap._referenceMax[variableName];
 
         heatmap._min = -1;
         heatmap._max =  1;
-        heatmap.resetMinMax(); // Preparing for next frame, previousMin/Max always the reference values if they exist for the variable.
+        heatmap.resetMinMax(); // Preparing for next frame, previousMin/Max always uses the reference values if they exist for the variable.
 
         expect(heatmap._min).toBe(Number.MAX_VALUE);
         expect(heatmap._max).toBe(-Number.MAX_VALUE);
-        expect(heatmap._previousMin).toBe(setMin);
-        expect(heatmap._previousMax).toBe(setMax);
+        expect(heatmap._previousMin).toBe(refMin);
+        expect(heatmap._previousMax).toBe(refMax);
     });
 
     it('expected color', function() {
