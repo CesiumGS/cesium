@@ -1,4 +1,5 @@
 define([
+        '../Core/Cartesian3',
         '../Core/defined',
         '../Core/Intersect',
         '../Core/ManagedArray',
@@ -6,6 +7,7 @@ define([
         './Cesium3DTileOptimizationHint',
         './Cesium3DTileRefine'
     ], function(
+        Cartesian3,
         defined,
         Intersect,
         ManagedArray,
@@ -201,8 +203,24 @@ define([
         tileset._minPriority.depth = Math.min(tile._depth, tileset._minPriority.depth);
     }
 
+    var scratchCartesian = new Cartesian3();
     function loadTile(tileset, tile, frameState) {
-        if (hasUnloadedContent(tile) || tile.contentExpired) {
+        var boundingVolume = tile._boundingVolume.boundingSphere;
+        var toCenter = Cartesian3.subtract(boundingVolume.center, frameState.camera.positionWC, scratchCartesian);
+        var toCenterNormalize = Cartesian3.normalize(toCenter, scratchCartesian);
+        var lerpOffCenter = Math.abs(Cartesian3.dot(toCenterNormalize, frameState.camera.directionWC));
+        var revLerpOffCenter = 1 - lerpOffCenter;
+        var lerpOffCenter2 = revLerpOffCenter * revLerpOffCenter; // slower fall off in the center faster fall off near the edge, but want the flat part of the curve to be the center of screen so do 1- on the lerp value and then 1- goes on the min
+        var lerpOffCenter4 = lerpOffCenter2 * lerpOffCenter2; // even slower fall off in the center faster fall off near the edge, but want the flat part of the curve to be the center of screen so do 1- on the lerp value and then 1- goes on the min
+        var min = tileset._maximumScreenSpaceError;// can also lower this (8 instead of 16 for example) for higher detail in center, also makes falloff less severe since you're starting from a more aggressive point
+        var max = 128;
+        tile._foveatedSSE = lerpOffCenter * min + (1 - lerpOffCenter) * max;
+        // tile._foveatedSSE = (1 - lerpOffCenter2) * min +  lerpOffCenter2 * max;
+        // tile._foveatedSSE = (1 - lerpOffCenter4) * min +  lerpOffCenter4 * max;
+        var inFoveaRange = defined(tile.parent) ? tile.parent._screenSpaceError > tile._foveatedSSE : true;
+        // var inFoveaRange = true; // Disable for now
+
+        if (inFoveaRange && (hasUnloadedContent(tile) || tile.contentExpired)) {
             tile._requestedFrame = frameState.frameNumber;
             tileset._requestedTiles.push(tile);
         }
