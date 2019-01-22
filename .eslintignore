@@ -1,11 +1,13 @@
 Apps/HelloWorld.html
 Apps/Sandcastle/ThirdParty/**
+Apps/SampleData/**
 Build/**
 Documentation/**
 Instrumented/**
 Source/Shaders/**
 Source/ThirdParty/**
 Source/Workers/cesiumWorkerBootstrapper.js
+Specs/Data/**
 ThirdParty/**
 Tools/**
 Apps/Sandcastle/jsHintOptions.js
