@@ -162,13 +162,6 @@ define([
         return {};
     }
 
-    // Cache the value of supportsWebp since it can take up to 300 ms to resolve.
-    var supportsWebp;
-    FeatureDetection.supportsWebp()
-    .then(function(result) {
-        supportsWebp = result;
-    });
-
     var boundingSphereCartesian3Scratch = new Cartesian3();
 
     var ModelState = ModelUtility.ModelState;
@@ -695,6 +688,13 @@ define([
         this._useDefaultSpecularMaps = false;
 
         this._shouldRegenerateShaders = false;
+        this._supportsWebp = undefined;
+
+        var that = this;
+        FeatureDetection.supportsWebp()
+            .then(function(result) {
+                that._supportsWebp = result;
+            });
     }
 
     defineProperties(Model.prototype, {
@@ -1655,7 +1655,7 @@ define([
         ForEach.texture(gltf, function(texture, id) {
             var imageId = texture.source;
 
-            if (defined(texture.extensions) && defined(texture.extensions.EXT_image_webp) && supportsWebp) {
+            if (defined(texture.extensions) && defined(texture.extensions.EXT_image_webp) && model._supportsWebp) {
                 imageId = texture.extensions.EXT_image_webp.source;
             }
 
@@ -4299,6 +4299,10 @@ define([
             return;
         }
 
+        if(!defined(this._supportsWebp)) {
+            return;
+        }
+
         var context = frameState.context;
         this._defaultTexture = context.defaultTexture;
 
@@ -4373,7 +4377,7 @@ define([
                 if (!loadResources.initialized) {
                     frameState.brdfLutGenerator.update(frameState);
 
-                    ModelUtility.checkSupportedExtensions(this.extensionsRequired);
+                    ModelUtility.checkSupportedExtensions(this.extensionsRequired, this._supportsWebp);
                     ModelUtility.updateForwardAxis(this);
 
                     // glTF pipeline updates, not needed if loading from cache

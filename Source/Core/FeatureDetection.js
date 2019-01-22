@@ -203,34 +203,28 @@ define([
         return supportsImageRenderingPixelated() ? imageRenderingValueResult : undefined;
     }
 
-    var supportsWebpResult;
     var supportsWebpPromise;
     function supportsWebp() {
         // From https://developers.google.com/speed/webp/faq#how_can_i_detect_browser_support_for_webp
-        if (!defined(supportsWebpPromise)) {
-            var webpDataUri = 'UklGRiIAAABXRUJQVlA4IBYAAAAwAQCdASoBAAEADsD+JaQAA3AAAAAA';
-            var image = new Image();
-            supportsWebpPromise = when.defer();
-            image.onload = function () {
-                supportsWebpResult = (image.width > 0) && (image.height > 0);
-                supportsWebpPromise.resolve(supportsWebpResult);
-            };
-
-            image.onerror = function () {
-                supportsWebpResult = false;
-                supportsWebpPromise.resolve(supportsWebpResult);
-            };
-
-            image.src = 'data:image/webp;base64,' + webpDataUri;
-
+        if (defined(supportsWebpPromise)) {
             return supportsWebpPromise;
         }
 
-        if (!defined(supportsWebpResult)) {
-            return supportsWebpPromise;
-        }
+        var webpDataUri = 'UklGRiIAAABXRUJQVlA4IBYAAAAwAQCdASoBAAEADsD+JaQAA3AAAAAA';
+        var image = new Image();
+        supportsWebpPromise = when.defer();
+        image.onload = function () {
+            var success = (image.width > 0) && (image.height > 0);
+            supportsWebpPromise.resolve(success);
+        };
 
-        return when(supportsWebpResult);
+        image.onerror = function () {
+            supportsWebpPromise.resolve(false);
+        };
+
+        image.src = 'data:image/webp;base64,' + webpDataUri;
+
+        return supportsWebpPromise;
     }
 
     var typedArrayTypes = [];
