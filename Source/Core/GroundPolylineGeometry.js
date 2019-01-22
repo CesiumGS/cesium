@@ -84,7 +84,7 @@ define([
      * @param {Number} [options.width=1.0] The screen space width in pixels.
      * @param {Number} [options.granularity=9999.0] The distance interval in meters used for interpolating options.points. Defaults to 9999.0 meters. Zero indicates no interpolation.
      * @param {Boolean} [options.loop=false] Whether during geometry creation a line segment will be added between the last and first line positions to make this Polyline a loop.
-     * @param {LineType} [options.lineType=LineType.GEODESIC] The type of line the polyline segments must follow.
+     * @param {LineType} [options.lineType=LineType.GEODESIC] The type of line the polyline segments must follow. Valid options are {@link LineType.GEODESIC} and {@link LineType.RHUMB}.
      *
      * @exception {DeveloperError} At least two positions are required.
      *
@@ -139,7 +139,7 @@ define([
         this.loop = defaultValue(options.loop, false);
 
         /**
-         * The type of path the polyline must follow.
+         * The type of path the polyline must follow. Valid options are {@link LineType.GEODESIC} and {@link LineType.RHUMB}.
          * @type {LineType}
          * @default LineType.GEODESIC
          */

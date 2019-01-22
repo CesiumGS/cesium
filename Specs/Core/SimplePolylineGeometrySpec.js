@@ -73,7 +73,7 @@ defineSuite([
         var cartesian3Array = [];
         Cartesian3.packArray(positions, cartesian3Array);
 
-        expect(line.attributes.position.values).toEqualEpsilon(cartesian3Array, CesiumMath.EPSILON10);
+        expect(line.attributes.position.values).toEqualEpsilon(cartesian3Array, CesiumMath.EPSILON8);
         expect(line.indices).toEqual([0, 1, 1, 2]);
         expect(line.primitiveType).toEqual(PrimitiveType.LINES);
         expect(line.boundingSphere).toEqual(BoundingSphere.fromPoints(positions));

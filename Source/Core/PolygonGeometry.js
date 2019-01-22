@@ -500,7 +500,7 @@ define([
      * @param {Boolean} [options.perPositionHeight=false] Use the height of options.positions for each position instead of using options.height to determine the height.
      * @param {Boolean} [options.closeTop=true] When false, leaves off the top of an extruded polygon open.
      * @param {Boolean} [options.closeBottom=true] When false, leaves off the bottom of an extruded polygon open.
-     * @param {LineType} [options.lineType=LineType.GEODESIC] The type of line the polygon edges must follow.
+     * @param {LineType} [options.lineType=LineType.GEODESIC] The type of line the polygon edges must follow. Valid options are {@link LineType.GEODESIC} and {@link LineType.RHUMB}.
      *
      * @see PolygonGeometry#createGeometry
      * @see PolygonGeometry#fromPositions
@@ -582,7 +582,7 @@ define([
             throw new DeveloperError('Cannot use both options.perPositionHeight and options.height');
         }
         if (defined(options.lineType) && options.lineType === LineType.STRAIGHT) {
-            throw new DeveloperError('Cannot use option.lineType as LineType.STRAIGHT');
+            throw new DeveloperError('Cannot use {@link LineType.STRAIGHT} as option.lineType');
         }
         //>>includeEnd('debug');
 
@@ -642,6 +642,7 @@ define([
      * @param {Boolean} [options.perPositionHeight=false] Use the height of options.positions for each position instead of using options.height to determine the height.
      * @param {Boolean} [options.closeTop=true] When false, leaves off the top of an extruded polygon open.
      * @param {Boolean} [options.closeBottom=true] When false, leaves off the bottom of an extruded polygon open.
+     * @param {LineType} [options.lineType=LineType.GEODESIC] The type of line the polygon edges must follow. Valid options are {@link LineType.GEODESIC} and {@link LineType.RHUMB}.
      * @returns {PolygonGeometry}
      *
      *

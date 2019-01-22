@@ -527,7 +527,7 @@ define([
      * @param {Number} [options.strokeWidth=GeoJsonDataSource.strokeWidth] The default width of polylines and polygon outlines.
      * @param {Color} [options.fill=GeoJsonDataSource.fill] The default color for polygon interiors.
      * @param {Boolean} [options.clampToGround=GeoJsonDataSource.clampToGround] true if we want the geometry features (polygons or linestrings) clamped to the ground.
-     * @param {LineType} [options.lineType=GeoJsonDataSource.lineType] The line type used to interpolate between points.
+     * @param {LineType} [options.lineType=GeoJsonDataSource.lineType] The line type used to interpolate between points. Valid options are {@link LineType.GEODESIC} and {@link LineType.RHUMB}.
      *
      * @returns {Promise.<GeoJsonDataSource>} A promise that will resolve when the data is loaded.
      */
@@ -636,7 +636,7 @@ define([
             }
         },
         /**
-         * Gets or sets default of the path interpolation type.
+         * Gets or sets default of the path interpolation type. Valid options are {@link LineType.GEODESIC} and {@link LineType.RHUMB}.
          * @memberof GeoJsonDataSource
          * @type {LineType}
          * @default false
@@ -820,7 +820,7 @@ define([
      * @param {Number} [options.strokeWidth=GeoJsonDataSource.strokeWidth] The default width of polylines and polygon outlines.
      * @param {Color} [options.fill=GeoJsonDataSource.fill] The default color for polygon interiors.
      * @param {Boolean} [options.clampToGround=GeoJsonDataSource.clampToGround] true if we want the features clamped to the ground.
-     * @param {LineType} [options.lineType=GeoJsonDataSource.lineType] The line type used to interpolate between points.
+     * @param {LineType} [options.lineType=GeoJsonDataSource.lineType] The line type used to interpolate between points. Valid options are {@link LineType.GEODESIC} and {@link LineType.RHUMB}.
      *
      * @returns {Promise.<GeoJsonDataSource>} a promise that will resolve when the GeoJSON is loaded.
      */

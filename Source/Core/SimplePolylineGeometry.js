@@ -294,16 +294,34 @@ define([
         var color;
         var offset = 0;
 
-        if (lineType === LineType.GEODESIC) {
+        if (lineType === LineType.GEODESIC || lineType === LineType.RHUMB) {
+            var subdivisionSize;
+            var numberOfPointsFunction;
+            var generateArcFunction;
+            if (lineType === LineType.GEODESIC) {
+                subdivisionSize = CesiumMath.chordLength(granularity, ellipsoid.maximumRadius);
+                numberOfPointsFunction = PolylinePipeline.numberOfPoints;
+                generateArcFunction = PolylinePipeline.generateArc;
+            } else {
+                subdivisionSize = granularity;
+                numberOfPointsFunction = PolylinePipeline.numberOfPointsRhumbLine;
+                generateArcFunction = PolylinePipeline.generateRhumbArc;
+            }
+
             var heights = PolylinePipeline.extractHeights(positions, ellipsoid);
+
             var generateArcOptions = generateArcOptionsScratch;
-            generateArcOptions.minDistance = minDistance;
+            if (lineType === LineType.GEODESIC) {
+                generateArcOptions.minDistance = minDistance;
+            } else {
+                generateArcOptions.granularity = granularity;
+            }
             generateArcOptions.ellipsoid = ellipsoid;
 
             if (perSegmentColors) {
                 var positionCount = 0;
                 for (i = 0; i < length - 1; i++) {
-                    positionCount += PolylinePipeline.numberOfPoints(positions[i], positions[i+1], minDistance) + 1;
+                    positionCount += numberOfPointsFunction(positions[i], positions[i+1], subdivisionSize) + 1;
                 }
 
                 positionValues = new Float64Array(positionCount * 3);
@@ -320,7 +338,7 @@ define([
                     scratchArray2[0] = heights[i];
                     scratchArray2[1] = heights[i + 1];
 
-                    var pos = PolylinePipeline.generateArc(generateArcOptions);
+                    var pos = generateArcFunction(generateArcOptions);
 
                     if (defined(colors)) {
                         var segLen = pos.length / 3;
@@ -339,7 +357,7 @@ define([
             } else {
                 generateArcOptions.positions = positions;
                 generateArcOptions.height= heights;
-                positionValues = new Float64Array(PolylinePipeline.generateArc(generateArcOptions));
+                positionValues = new Float64Array(generateArcFunction(generateArcOptions));
 
                 if (defined(colors)) {
                     colorValues = new Uint8Array(positionValues.length / 3 * 4);

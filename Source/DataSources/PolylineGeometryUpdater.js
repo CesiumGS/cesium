@@ -6,7 +6,6 @@ define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
-        '../Core/deprecationWarning',
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/DistanceDisplayCondition',
@@ -40,7 +39,6 @@ define([
         defaultValue,
         defined,
         defineProperties,
-        deprecationWarning,
         destroyObject,
         DeveloperError,
         DistanceDisplayCondition,
@@ -651,7 +649,7 @@ define([
         geometryUpdater._groundGeometryOptions.positions = positions;
         geometryUpdater._groundGeometryOptions.width = Property.getValueOrDefault(polyline._width, time, 1);
         geometryUpdater._groundGeometryOptions.lineType = Property.getValueOrDefault(polyline._lineType, time, LineType.GEODESIC);
-        geometryUpdater._groundGeometryOptions.granularity = Property.getValueOrDefault(polyline._granulatiry, time, 9999);
+        geometryUpdater._groundGeometryOptions.granularity = Property.getValueOrDefault(polyline._granularity, time, 9999);
 
         var groundPrimitives = this._groundPrimitives;
 

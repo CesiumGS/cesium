@@ -589,10 +589,6 @@ defineSuite([
     });
 
     it('lineType can be dynamic', function() {
-        if (!Entity.supportsPolylinesOnTerrain(scene)) {
-            return;
-        }
-
         var entity = new Entity();
         var polyline = new PolylineGraphics();
         entity.polyline = polyline;
@@ -610,32 +606,33 @@ defineSuite([
         polyline.material = new ColorMaterialProperty(Color.RED);
         polyline.followSurface = new ConstantProperty(true);
         polyline.granularity = new ConstantProperty(0.001);
-        polyline.clampToGround = new ConstantProperty(true);
+        polyline.clampToGround = new ConstantProperty(false);
         polyline.lineType = lineType;
 
         var updater = new PolylineGeometryUpdater(entity, scene);
 
-        var groundPrimitives = scene.groundPrimitives;
-        expect(groundPrimitives.length).toBe(0);
+        var primitives = scene.primitives;
+        expect(primitives.length).toBe(0);
 
-        var dynamicUpdater = updater.createDynamicUpdater(scene.primitives, groundPrimitives);
+        var dynamicUpdater = updater.createDynamicUpdater(primitives, scene.groundPrimitives);
         expect(dynamicUpdater.isDestroyed()).toBe(false);
-        expect(groundPrimitives.length).toBe(0);
+        expect(primitives.length).toBe(0);
 
         dynamicUpdater.update(time);
 
-        expect(groundPrimitives.length).toBe(1);
-        var primitive = groundPrimitives.get(0);
+        expect(primitives.length).toBe(1);
+        var polylineCollection = primitives.get(0);
+        var primitive = polylineCollection.get(0);
 
         expect(primitive.show).toEqual(true);
 
-        lineTypeVar = false;
+        lineTypeVar = LineType.STRAIGHT;
         dynamicUpdater.update(time);
 
         dynamicUpdater.destroy();
 
         expect(scene.primitives.length).toBe(0);
-        expect(groundPrimitives.length).toBe(0);
+        expect(primitives.length).toBe(0);
 
         updater.destroy();
     });

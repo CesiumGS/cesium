@@ -147,7 +147,7 @@ define([
     PolygonGeometryLibrary.subdivideLineCount = function(p0, p1, minDistance) {
         var distance = Cartesian3.distance(p0, p1);
         var n = distance / minDistance;
-        var countDivide = Math.max(0, Math.ceil(Math.log(n) / Math.log(2)));
+        var countDivide = Math.max(0, Math.ceil(CesiumMath.log2(n)));
         return Math.pow(2, countDivide);
     };
 
@@ -160,7 +160,7 @@ define([
         var c1 = ellipsoid.cartesianToCartographic(p1, scratchCartographic1);
         var rhumb = new EllipsoidRhumbLine(c0, c1, ellipsoid);
         var n = rhumb.surfaceDistance / minDistance;
-        var countDivide = Math.max(0, Math.ceil(Math.log(n) / Math.log(2)));
+        var countDivide = Math.max(0, Math.ceil(CesiumMath.log2(n)));
         return Math.pow(2, countDivide);
     };
 

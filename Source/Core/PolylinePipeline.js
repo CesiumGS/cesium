@@ -139,6 +139,9 @@ define([
         var numPoints = PolylinePipeline.numberOfPointsRhumbLine(start, end, granularity);
         var heights = subdivideHeights(numPoints, h0, h1);
 
+        if (!ellipsoidRhumb.ellipsoid.equals(ellipsoid)) {
+            ellipsoidRhumb = new EllipsoidRhumbLine(undefined, undefined, ellipsoid);
+        }
         ellipsoidRhumb.setEndPoints(start, end);
         var surfaceDistanceBetweenPoints = ellipsoidRhumb.surfaceDistance / numPoints;
 

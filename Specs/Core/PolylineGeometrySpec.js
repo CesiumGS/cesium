@@ -52,7 +52,6 @@ defineSuite([
             positions: [Cartesian3.ZERO, Cartesian3.UNIT_X, Cartesian3.UNIT_Y],
             followSurface: true
         });
-        console.log(line);
 
         expect(line._followSurface).toBe(true);
         expect(line._lineType).toBe(LineType.GEODESIC);
@@ -200,7 +199,7 @@ defineSuite([
         ellipsoid : new Ellipsoid(12, 13, 14)
     });
     packedInstance = [3, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 12, 13, 14, 1, 0, 0, 0, 0, 0, 10, 0, 2, 11];
-    createPackableSpecs(PolylineGeometry, line, packedInstance);
+    createPackableSpecs(PolylineGeometry, line, packedInstance, 'straight line');
 
     line = new PolylineGeometry({
         positions : positions,
@@ -225,16 +224,4 @@ defineSuite([
     });
     packedInstance = [3, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 12, 13, 14, 1, 0, 0, 0, 0, 0, 10, 0, 1, 11];
     createPackableSpecs(PolylineGeometry, line, packedInstance, 'rhumb line');
-
-    line = new PolylineGeometry({
-        positions : positions,
-        width : 10.0,
-        colorsPerVertex : false,
-        lineType : LineType.STRAIGHT,
-        granularity : 11,
-        vertexFormat : VertexFormat.POSITION_ONLY,
-        ellipsoid : new Ellipsoid(12, 13, 14)
-    });
-    packedInstance = [3, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 12, 13, 14, 1, 0, 0, 0, 0, 0, 10, 0, 2, 11];
-    createPackableSpecs(PolylineGeometry, line, packedInstance, 'straight line');
 });

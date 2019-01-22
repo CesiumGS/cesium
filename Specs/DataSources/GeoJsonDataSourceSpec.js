@@ -679,7 +679,6 @@ defineSuite([
             var entityCollection = dataSource.entities;
             var entity = entityCollection.values[0];
             expect(entity.properties).toBe(lineString.properties);
-            console.log(entity.polyline);
             expect(entity.polyline.positions.getValue(time)).toEqual(coordinatesArrayToCartesian(lineString.coordinates));
             expect(entity.polyline.material.color.getValue(time)).toEqual(GeoJsonDataSource.stroke);
             expect(entity.polyline.width.getValue(time)).toEqual(2);

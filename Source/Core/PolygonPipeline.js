@@ -310,8 +310,7 @@ define([
             var midHeight;
             var midCartesian3;
 
-            // if the max length squared of a triangle edge is greater than the chord length of squared
-            // of the granularity, subdivide the triangle
+            // if the max length squared of a triangle edge is greater than squared granularity, subdivide the triangle
             if (max > granularitySqrd) {
                 if (g0 === max) {
                     edge = Math.min(i0, i1) + ' ' + Math.max(i0, i1);
@@ -320,7 +319,7 @@ define([
                     if (!defined(i)) {
                         mid = Cartesian2.add(c0Cart2, c1Cart2, subdivisionMidCart2Scratch);
                         Cartesian2.multiplyByScalar(mid, 0.5, mid);
-                        midHeight = (c0.height + c1.height) / 2.0;
+                        midHeight = (c0.height + c1.height) * 0.5;
                         midCartesian3 = Cartesian3.fromRadians(mid.x, mid.y, midHeight, ellipsoid, subdivisionMidScratch);
                         subdividedPositions.push(midCartesian3.x, midCartesian3.y, midCartesian3.z);
                         i = subdividedPositions.length / 3 - 1;
@@ -336,7 +335,7 @@ define([
                     if (!defined(i)) {
                         mid = Cartesian2.add(c1Cart2, c2Cart2, subdivisionMidCart2Scratch);
                         Cartesian2.multiplyByScalar(mid, 0.5, mid);
-                        midHeight = (c1.height + c2.height) / 2.0;
+                        midHeight = (c1.height + c2.height) * 0.5;
                         midCartesian3 = Cartesian3.fromRadians(mid.x, mid.y, midHeight, ellipsoid, subdivisionMidScratch);
                         subdividedPositions.push(midCartesian3.x, midCartesian3.y, midCartesian3.z);
                         i = subdividedPositions.length / 3 - 1;
@@ -352,7 +351,7 @@ define([
                     if (!defined(i)) {
                         mid = Cartesian2.add(c2Cart2, c0Cart2, subdivisionMidCart2Scratch);
                         Cartesian2.multiplyByScalar(mid, 0.5, mid);
-                        midHeight = (c2.height + c0.height) / 2.0;
+                        midHeight = (c2.height + c0.height) * 0.5;
                         midCartesian3 = Cartesian3.fromRadians(mid.x, mid.y, midHeight, ellipsoid, subdivisionMidScratch);
                         subdividedPositions.push(midCartesian3.x, midCartesian3.y, midCartesian3.z);
                         i = subdividedPositions.length / 3 - 1;

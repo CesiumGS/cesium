@@ -256,7 +256,7 @@ defineSuite([
         expect(subdivision.indices[2]).toEqual(2);
     });
 
-    it('computeRhumbLineSubdivision with subvisisions', function() {
+    it('computeRhumbLineSubdivision with subdivisions', function() {
         var positions = Cartesian3.fromDegreesArray([
                         0, 0,
                         1, 0,

@@ -329,40 +329,38 @@ define([
             return undefined;
         }
 
-        var heights;
-        var colorLength;
-        var newColors;
-        var newColorIndex;
-        var numColors;
-        var p0;
-        var p1;
-        var c0;
-        var c1;
-        var interpolatedColors;
-        var interpolatedColorsLength;
-        if (lineType === LineType.GEODESIC) {
-            heights = PolylinePipeline.extractHeights(positions, ellipsoid);
-            var minDistance = CesiumMath.chordLength(granularity, ellipsoid.maximumRadius);
+        if (lineType === LineType.GEODESIC || lineType === LineType.RHUMB) {
+            var subdivisionSize;
+            var numberOfPointsFunction;
+            if (lineType === LineType.GEODESIC) {
+                subdivisionSize = CesiumMath.chordLength(granularity, ellipsoid.maximumRadius);
+                numberOfPointsFunction = PolylinePipeline.numberOfPoints;
+            } else {
+                subdivisionSize = granularity;
+                numberOfPointsFunction = PolylinePipeline.numberOfPointsRhumbLine;
+            }
+
+            var heights = PolylinePipeline.extractHeights(positions, ellipsoid);
 
             if (defined(colors)) {
-                colorLength = 1;
+                var colorLength = 1;
                 for (i = 0; i < positionsLength - 1; ++i) {
-                    colorLength += PolylinePipeline.numberOfPoints(positions[i], positions[i+1], minDistance);
+                    colorLength += numberOfPointsFunction(positions[i], positions[i + 1], subdivisionSize);
                 }
 
-                newColors = new Array(colorLength);
-                newColorIndex = 0;
+                var newColors = new Array(colorLength);
+                var newColorIndex = 0;
 
                 for (i = 0; i < positionsLength - 1; ++i) {
-                    p0 = positions[i];
-                    p1 = positions[i+1];
-                    c0 = colors[i];
+                    var p0 = positions[i];
+                    var p1 = positions[i + 1];
+                    var c0 = colors[i];
 
-                    numColors = PolylinePipeline.numberOfPoints(p0, p1, minDistance);
+                    var numColors = numberOfPointsFunction(p0, p1, subdivisionSize);
                     if (colorsPerVertex && i < colorLength) {
-                        c1 = colors[i+1];
-                        interpolatedColors = interpolateColors(p0, p1, c0, c1, numColors);
-                        interpolatedColorsLength = interpolatedColors.length;
+                        var c1 = colors[i + 1];
+                        var interpolatedColors = interpolateColors(p0, p1, c0, c1, numColors);
+                        var interpolatedColorsLength = interpolatedColors.length;
                         for (j = 0; j < interpolatedColorsLength; ++j) {
                             newColors[newColorIndex++] = interpolatedColors[j];
                         }
@@ -373,62 +371,27 @@ define([
                     }
                 }
 
-                newColors[newColorIndex] = Color.clone(colors[colors.length-1]);
+                newColors[newColorIndex] = Color.clone(colors[colors.length - 1]);
                 colors = newColors;
 
                 scratchInterpolateColorsArray.length = 0;
             }
 
-            positions = PolylinePipeline.generateCartesianArc({
-                positions: positions,
-                minDistance: minDistance,
-                ellipsoid: ellipsoid,
-                height: heights
-            });
-        } else if (lineType === LineType.RHUMB) {
-            heights = PolylinePipeline.extractHeights(positions, ellipsoid);
-
-            if (defined(colors)) {
-                colorLength = 1;
-                for (i = 0; i < positionsLength - 1; ++i) {
-                    colorLength += PolylinePipeline.numberOfPointsRhumbLine(positions[i], positions[i+1], granularity);
-                }
-
-                newColors = new Array(colorLength);
-                newColorIndex = 0;
-
-                for (i = 0; i < positionsLength - 1; ++i) {
-                    p0 = positions[i];
-                    p1 = positions[i+1];
-                    c0 = colors[i];
-
-                    numColors = PolylinePipeline.numberOfPointsRhumbLine(p0, p1, granularity);
-                    if (colorsPerVertex && i < colorLength) {
-                        c1 = colors[i+1];
-                        interpolatedColors = interpolateColors(p0, p1, c0, c1, numColors);
-                        interpolatedColorsLength = interpolatedColors.length;
-                        for (j = 0; j < interpolatedColorsLength; ++j) {
-                            newColors[newColorIndex++] = interpolatedColors[j];
-                        }
-                    } else {
-                        for (j = 0; j < numColors; ++j) {
-                            newColors[newColorIndex++] = Color.clone(c0);
-                        }
-                    }
-                }
-
-                newColors[newColorIndex] = Color.clone(colors[colors.length-1]);
-                colors = newColors;
-
-                scratchInterpolateColorsArray.length = 0;
+            if (lineType === LineType.GEODESIC) {
+                positions = PolylinePipeline.generateCartesianArc({
+                    positions: positions,
+                    minDistance: subdivisionSize,
+                    ellipsoid: ellipsoid,
+                    height: heights
+                });
+            } else {
+                positions = PolylinePipeline.generateCartesianRhumbArc({
+                    positions: positions,
+                    granularity: subdivisionSize,
+                    ellipsoid: ellipsoid,
+                    height: heights
+                });
             }
-
-            positions = PolylinePipeline.generateCartesianRhumbArc({
-                positions: positions,
-                granularity: granularity,
-                ellipsoid: ellipsoid,
-                height: heights
-            });
         }
 
         positionsLength = positions.length;

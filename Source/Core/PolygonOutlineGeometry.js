@@ -54,7 +54,7 @@ define([
     var createGeometryFromPositionsPositions = [];
     var createGeometryFromPositionsSubdivided = [];
 
-    function createGeometryFromPositions(ellipsoid, positions, granularity, perPositionHeight, lineType) {
+    function createGeometryFromPositions(ellipsoid, positions, minDistance, perPositionHeight, lineType) {
         var tangentPlane = EllipsoidTangentPlane.fromPoints(positions, ellipsoid);
         var positions2D = tangentPlane.projectPointsOntoPlane(positions, createGeometryFromPositionsPositions);
 
@@ -63,8 +63,6 @@ define([
             positions2D.reverse();
             positions = positions.slice().reverse();
         }
-
-        var minDistance = CesiumMath.chordLength(granularity, ellipsoid.maximumRadius);
 
         var subdividedPositions;
         var i;
@@ -136,7 +134,7 @@ define([
         });
     }
 
-    function createGeometryFromPositionsExtruded(ellipsoid, positions, granularity, perPositionHeight, lineType) {
+    function createGeometryFromPositionsExtruded(ellipsoid, positions, minDistance, perPositionHeight, lineType) {
         var tangentPlane = EllipsoidTangentPlane.fromPoints(positions, ellipsoid);
         var positions2D = tangentPlane.projectPointsOntoPlane(positions, createGeometryFromPositionsPositions);
 
@@ -145,8 +143,6 @@ define([
             positions2D.reverse();
             positions = positions.slice().reverse();
         }
-
-        var minDistance = CesiumMath.chordLength(granularity, ellipsoid.maximumRadius);
 
         var subdividedPositions;
         var i;
@@ -246,7 +242,7 @@ define([
      * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid to be used as a reference.
      * @param {Number} [options.granularity=CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
      * @param {Boolean} [options.perPositionHeight=false] Use the height of options.positions for each position instead of using options.height to determine the height.
-     * @param {LineType} [options.lineType=LineType.GEODESIC] The type of path the outline must follow.
+     * @param {LineType} [options.lineType=LineType.GEODESIC] The type of path the outline must follow. Valid options are {@link LineType.GEODESIC} and {@link LineType.RHUMB}.
      *
      * @see PolygonOutlineGeometry#createGeometry
      * @see PolygonOutlineGeometry#fromPositions
@@ -463,7 +459,7 @@ define([
      * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid to be used as a reference.
      * @param {Number} [options.granularity=CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
      * @param {Boolean} [options.perPositionHeight=false] Use the height of options.positions for each position instead of using options.height to determine the height.
-     * @param {LineType} [options.lineType=LineType.GEODESIC] The type of path the outline must follow.
+     * @param {LineType} [options.lineType=LineType.GEODESIC] The type of path the outline must follow. Valid options are {@link LinkType.GEODESIC} and {@link LineType.RHUMB}.
      * @returns {PolygonOutlineGeometry}
      *
      *
@@ -525,6 +521,7 @@ define([
 
         var geometryInstance;
         var geometries = [];
+        var minDistance = CesiumMath.chordLength(granularity, ellipsoid.maximumRadius);
 
         var height = polygonGeometry._height;
         var extrudedHeight = polygonGeometry._extrudedHeight;
@@ -533,7 +530,7 @@ define([
         var i;
         if (extrude) {
             for (i = 0; i < polygons.length; i++) {
-                geometryInstance = createGeometryFromPositionsExtruded(ellipsoid, polygons[i], granularity, perPositionHeight, lineType);
+                geometryInstance = createGeometryFromPositionsExtruded(ellipsoid, polygons[i], minDistance, perPositionHeight, lineType);
                 geometryInstance.geometry = PolygonGeometryLibrary.scaleToGeodeticHeightExtruded(geometryInstance.geometry, height, extrudedHeight, ellipsoid, perPositionHeight);
                 if (defined(polygonGeometry._offsetAttribute)) {
                     var size = geometryInstance.geometry.attributes.position.values.length / 3;
@@ -555,7 +552,7 @@ define([
             }
         } else {
             for (i = 0; i < polygons.length; i++) {
-                geometryInstance = createGeometryFromPositions(ellipsoid, polygons[i], granularity, perPositionHeight, lineType);
+                geometryInstance = createGeometryFromPositions(ellipsoid, polygons[i], minDistance, perPositionHeight, lineType);
                 geometryInstance.geometry.attributes.position.values = PolygonPipeline.scaleToGeodeticHeight(geometryInstance.geometry.attributes.position.values, height, ellipsoid, !perPositionHeight);
 
                 if (defined(polygonGeometry._offsetAttribute)) {
