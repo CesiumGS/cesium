@@ -72,6 +72,8 @@ define([
      * @param {Scene} options.scene The current Cesium scene.
      * @param {Number} [options.concurrency] The number of web workers across which the load should be distributed.
      * @param {Number} [options.imageCacheSize=100] Number of cached images to hold in memory at once
+     * @param {Boolean} [options.flipY=false] If true, flips Y on images.
+     * @param {Viewer} viewer Cesium viewer.
      */
     function ImageryMosaic(options, viewer) {
         if (!((FeatureDetection.isChrome() && FeatureDetection.chromeVersion()[0] >= 69) ||
@@ -90,6 +92,7 @@ define([
         var urls = options.urls;
         var projectedRectangles = options.projectedRectangles;
         var projections = options.projections;
+        var flipY = defaultValue(options.flipY, false);
 
         var imagesLength = urls.length;
 
@@ -178,6 +181,7 @@ define([
                 for (i = 0; i < concurrency; i++) {
                     initializationPromises.push(taskProcessors[i].scheduleTask({
                         initialize : true,
+                        flipY : flipY,
                         urls : urlGroups[i],
                         serializedMapProjections : serializedProjectionGroups[i],
                         projectedRectangles : projectedRectangleGroups[i],
