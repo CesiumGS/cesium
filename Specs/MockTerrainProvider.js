@@ -29,10 +29,8 @@ define([
         this._requestTileGeometryWillSucceed = {};
         this._requestTileGeometryWillSucceedWith = {};
         this._willHaveWaterMask = {};
-        this._willHaveBvh = {};
         this._createMeshWillSucceed = {};
         this._upsampleWillSucceed = {};
-        this._nearestBvhLevel = {};
     }
 
     MockTerrainProvider.prototype.requestTileGeometry = function(x, y, level, request) {
@@ -57,14 +55,6 @@ define([
 
     MockTerrainProvider.prototype.getTileDataAvailable = function(xOrTile, y, level) {
         return this._tileDataAvailable[createTileKey(xOrTile, y, level)];
-    };
-
-    MockTerrainProvider.prototype.getNearestBvhLevel = function(x, y, level) {
-        var bvhLevel = this._nearestBvhLevel[createTileKey(x, y, level)];
-        if (!defined(bvhLevel)) {
-            bvhLevel = -1;
-        }
-        return bvhLevel;
     };
 
     MockTerrainProvider.prototype.getLevelMaximumGeometricError = function(level) {
@@ -102,11 +92,6 @@ define([
             includeLand: includeLand,
             includeWater: includeWater
         } : undefined;
-        return this;
-    };
-
-    MockTerrainProvider.prototype.willHaveBvh = function(bvh, xOrTile, y, level) {
-        this._willHaveBvh[createTileKey(xOrTile, y, level)] = bvh;
         return this;
     };
 
@@ -160,11 +145,6 @@ define([
         return this;
     };
 
-    MockTerrainProvider.prototype.willHaveNearestBvhLevel = function(nearestBvhLevel, xOrTile, y, level) {
-        this._nearestBvhLevel[createTileKey(xOrTile, y, level)] = nearestBvhLevel;
-        return this;
-    };
-
     function createTerrainData(terrainProvider, x, y, level, upsampled) {
         var terrainData = terrainProvider._requestTileGeometryWillSucceedWith[createTileKey(x, y, level)];
 
@@ -191,11 +171,6 @@ define([
                     options.waterMask = new Uint8Array(1);
                     options.waterMask[0] = 1;
                 }
-            }
-
-            var willHaveBvh = terrainProvider._willHaveBvh[createTileKey(x, y, level)];
-            if (defined(willHaveBvh)) {
-                options.bvh = willHaveBvh;
             }
 
             terrainData = new HeightmapTerrainData(options);

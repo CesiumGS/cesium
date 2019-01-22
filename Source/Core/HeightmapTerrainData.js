@@ -53,7 +53,6 @@ define([
      * @param {Uint8Array} [options.waterMask] The water mask included in this terrain data, if any.  A water mask is a square
      *                     Uint8Array or image where a value of 255 indicates water and a value of 0 indicates land.
      *                     Values in between 0 and 255 are allowed as well to smoothly blend between land and water.
-     * @param {Float32Array} [options.bvh] The bounding-volume hierarchy for this tile and its descendents. TODO: describe its structure
      * @param {Object} [options.structure] An object describing the structure of the height data.
      * @param {Number} [options.structure.heightScale=1.0] The factor by which to multiply height samples in order to obtain
      *                 the height above the heightOffset, in meters.  The heightOffset is added to the resulting
@@ -121,7 +120,6 @@ define([
         this._width = options.width;
         this._height = options.height;
         this._childTileMask = defaultValue(options.childTileMask, 15);
-        this._bvh = options.bvh;
 
         var defaultStructure = HeightmapTessellator.DEFAULT_STRUCTURE;
         var structure = options.structure;
@@ -172,17 +170,6 @@ define([
         childTileMask : {
             get : function() {
                 return this._childTileMask;
-            }
-        },
-
-        /**
-         * Gets the bounding-volume hierarchy (BVH) starting with this tile.
-         * @memberof HeightmapTerrainData.prototype
-         * @type {Float32Array}
-         */
-        bvh : {
-            get : function() {
-                return this._bvh;
             }
         }
     });

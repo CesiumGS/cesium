@@ -83,7 +83,6 @@ define([
         this.vertexArray = undefined;
         this.orientedBoundingBox = undefined;
         this.boundingVolumeSourceTile = undefined;
-        this._bvh = undefined;
 
         this.renderableTile = undefined;
 
@@ -139,28 +138,6 @@ define([
             }
         }
     });
-
-    GlobeSurfaceTile.prototype.getBoundingVolumeHierarchy = function(tile) {
-        if (this._bvh === undefined) {
-            var terrainData = this.terrainData;
-            if (terrainData !== undefined && terrainData.bvh !== undefined) {
-                this._bvh = terrainData.bvh;
-            }
-
-            var parent = tile.parent;
-            if (parent !== undefined && parent.data !== undefined) {
-                var parentBvh = parent.data.getBoundingVolumeHierarchy(parent);
-                if (parentBvh !== undefined && parentBvh.length > 2) {
-                    var subsetLength = (parentBvh.length - 2) / 4;
-                    var childIndex = (tile.y === parent.y * 2 ? 2 : 0) + (tile.x === parent.x * 2 ? 0 : 1);
-                    var start = 2 + subsetLength * childIndex;
-                    this._bvh = parentBvh.subarray(start, start + subsetLength);
-                }
-            }
-        }
-
-        return this._bvh;
-    };
 
     function getPosition(encoding, mode, projection, vertices, index, result) {
         encoding.decodePosition(vertices, index, result);
@@ -257,26 +234,6 @@ define([
 
         var surfaceTile = tile.data;
 
-        if (defined(surfaceTile.boundingVolumeSourceTile) && surfaceTile.boundingVolumeSourceTile !== tile && terrainProvider.getNearestBvhLevel !== undefined) {
-            // So here we are loading this tile, but we know our bounding volume isn't very good, and so our
-            // judgement that it's visible is kind of suspect. If this terrain source has bounding volume data
-            // outside of individual tiles, let's get our hands on that before we waste time downloading
-            // potentially not-actually-visible tiles like this one.
-            var bvhLevel = terrainProvider.getNearestBvhLevel(tile.x, tile.y, tile.level);
-            if (bvhLevel !== -1 && bvhLevel !== tile.level) {
-                var ancestor = tile.parent;
-                while (ancestor.level !== bvhLevel) {
-                    ancestor = ancestor.parent;
-                }
-
-                if (ancestor.data === undefined || ancestor.data.terrainData === undefined) {
-                    // The ancestor that holds the BVH data isn't loaded yet; load it (terrain only!) instead of this tile.
-                    GlobeSurfaceTile.processStateMachine(ancestor, frameState, terrainProvider, imageryLayerCollection, true);
-                    return;
-                }
-            }
-        }
-
         if (tile.state === QuadtreeTileLoadState.LOADING) {
             processTerrainStateMachine(tile, frameState, terrainProvider, imageryLayerCollection);
         }
@@ -285,7 +242,6 @@ define([
         // we're certain that the terrain tiles are actually visible, though. We'll load terrainOnly
         // in these scenarios:
         //   * our bounding volume isn't accurate so we're not certain this tile is really visible (see GlobeSurfaceTileProvider#loadTile).
-        //   * we want ancestor BVH data from this tile but don't plan to render it (see code above).
         //   * we want to upsample from this tile but don't plan to render it (see processTerrainStateMachine).
         if (terrainOnly) {
             return;

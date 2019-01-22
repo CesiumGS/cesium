@@ -963,15 +963,7 @@ define([
             return tile;
         }
 
-        var bvh = surfaceTile.getBoundingVolumeHierarchy(tile);
-        if (bvh !== undefined && bvh[0] === bvh[0] && bvh[1] === bvh[1]) {
-            // Have a BVH that covers this tile and the heights are not NaN.
-            tileBoundingRegion.minimumHeight = bvh[0] * frameState.terrainExaggeration;
-            tileBoundingRegion.maximumHeight = bvh[1] * frameState.terrainExaggeration;
-            return tile;
-        }
-
-        // No accurate BVH data available, so we're stuck with min/max heights from an ancestor tile.
+        // No accurate min/max heights available, so we're stuck with min/max heights from an ancestor tile.
         tileBoundingRegion.minimumHeight = Number.NaN;
         tileBoundingRegion.maximumHeight = Number.NaN;
 
@@ -990,13 +982,6 @@ define([
                 if (ancestorTerrainData !== undefined && ancestorTerrainData._minimumHeight !== undefined && ancestorTerrainData._maximumHeight !== undefined) {
                     tileBoundingRegion.minimumHeight = ancestorTerrainData._minimumHeight * frameState.terrainExaggeration;
                     tileBoundingRegion.maximumHeight = ancestorTerrainData._maximumHeight * frameState.terrainExaggeration;
-                    return ancestor;
-                }
-
-                var ancestorBvh = ancestorSurfaceTile._bvh;
-                if (ancestorBvh !== undefined && ancestorBvh[0] === ancestorBvh[0] && ancestorBvh[1] === ancestorBvh[1]) {
-                    tileBoundingRegion.minimumHeight = ancestorBvh[0] * frameState.terrainExaggeration;
-                    tileBoundingRegion.maximumHeight = ancestorBvh[1] * frameState.terrainExaggeration;
                     return ancestor;
                 }
             }
