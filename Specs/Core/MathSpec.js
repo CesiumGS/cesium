@@ -78,44 +78,24 @@ defineSuite([
     });
 
     //////////////////////////////////////////////////////////////////////
-    it('toNorm 0.0', function() {
-        expect(CesiumMath.toNorm(0.0)).toEqual(0);
+    it('normalize 0 with max 10 min -10', function() {
+        expect(CesiumMath.normalize(0, -10, 10)).toEqual(0.5);
     });
 
-    it('toNorm 1.0', function() {
-        expect(CesiumMath.toNorm(1.0)).toEqual(255);
+    it('normalize 10 with max 10 min -10', function() {
+        expect(CesiumMath.normalize(10, -10, 10)).toEqual(1.0);
     });
 
-    it('toNorm -1.0001', function() {
-        expect(CesiumMath.toNorm(-0.0001)).toEqual(0);
+    it('normalize -10 with max 10 min -10', function() {
+        expect(CesiumMath.normalize(-10, -10, 10)).toEqual(0.0);
     });
 
-    it('toNorm 1.0001', function() {
-        expect(CesiumMath.toNorm(1.0001)).toEqual(255);
+    it('normalize -10.0001 with max 10 min -10', function() {
+        expect(CesiumMath.normalize(-10.0001, -10, 10)).toEqual(0.0);
     });
 
-    it('toNorm 0.0', function() {
-        expect(CesiumMath.toNorm(0.5)).toEqual(127.5);
-    });
-
-    it('fromNorm 0', function() {
-        expect(CesiumMath.fromNorm(0)).toEqual(0.0);
-    });
-
-    it('fromNorm 255', function() {
-        expect(CesiumMath.fromNorm(255)).toEqual(1.0);
-    });
-
-    it('fromNorm -0.0001', function() {
-        expect(CesiumMath.fromNorm(-0.0001)).toEqual(0.0);
-    });
-
-    it('fromNorm 255.00001', function() {
-        expect(CesiumMath.fromNorm(255.00001)).toEqual(1.0);
-    });
-
-    it('fromNorm 128', function() {
-        expect(CesiumMath.fromNorm(255.0 / 2)).toEqual(0.5);
+    it('normalize 10.00001 with max 10 min -10', function() {
+        expect(CesiumMath.normalize(10.00001, -10, 10)).toEqual(1.0);
     });
 
     //////////////////////////////////////////////////////////////////////

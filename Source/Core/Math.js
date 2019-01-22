@@ -253,29 +253,15 @@ define([
     };
 
     /**
-     * Converts a scalar value in the range [0.0, 1.0] to a NORM in the range [0, rangeMax]
-     * @param {Number} value The scalar value in the range [0.0, 1.0]
-     * @param {Number} [rangeMax=255] The maximum value in the mapped range, 255 by default.
-     * @returns {Number} A NORM value, where 0.0 maps to 0.0 and rangeMax maps to 1.0.
-     *
-     * @see CesiumMath.fromNorm
+     * Converts a scalar value in the range [rangeMin, rangeMax] to a scalar in the range [0.0, 1.0]
+     * @param {Number} value The scalar value in the range [rangeMin, rangeMax]
+     * @param {Number} rangeMin The minimum value in the mapped range.
+     * @param {Number} rangeMax The maximum value in the mapped range.
+     * @returns {Number} A scalar value, where rangeMin maps to 0.0 and rangeMax maps to 1.0.
      */
-    CesiumMath.toNorm = function(value, rangeMax) {
-        rangeMax = defaultValue(rangeMax, 255);
-        return CesiumMath.clamp(value * rangeMax, 0.0, rangeMax);
-    };
-
-    /**
-     * Converts a NORM value in the range [0.0, rangeMax] to a scalar in the range [0.0, 1.0].
-     * @param {Number} value NORM value in the range [0.0, rangeMax]
-     * @param {Number} [rangeMax=255] The maximum value in the NORM range, 255 by default.
-     * @returns {Number} Scalar in the range [0.0, 1.0].
-     *
-     * @see CesiumMath.toNorm
-     */
-    CesiumMath.fromNorm = function(value, rangeMax) {
-        rangeMax = defaultValue(rangeMax, 255);
-        return rangeMax === 0.0 ? 0.0 : CesiumMath.clamp(value / rangeMax, 0.0, 1.0);
+    CesiumMath.normalize = function(value, rangeMin, rangeMax) {
+        rangeMax = Math.max(rangeMax - rangeMin, 0);
+        return rangeMax === 0.0 ? 0.0 : CesiumMath.clamp((value - rangeMin) / rangeMax, 0.0, 1.0);
     };
 
     /**
