@@ -39,6 +39,7 @@ define([
 
         this._stb = stbModule;
         this._rectangleChecker = new RectangleCollisionChecker(new GeographicProjection());
+        this.flipY = false;
 
         this.sampleCount = 0;
         this.stbTime = 0.0;
@@ -70,6 +71,7 @@ define([
      * @param {String[]} parameters.urls
      * @param {SerializedMapProjection[]} parameters.serializedMapProjections
      * @param {Rectangle[]} parameters.projectedRectangles
+     * @param {Boolean} parameters.flipY
      */
     AsynchronousReprojectionWorker.prototype.initialize = function(parameters) {
         var serializedMapProjections = parameters.serializedMapProjections;
@@ -85,6 +87,7 @@ define([
         this.id = parameters.id;
 
         this.cachedBuffers = new LRUMap(parameters.imageCacheSize);
+        this.flipY = parameters.flipY;
 
         var rectangleChecker = this._rectangleChecker;
 
@@ -252,7 +255,7 @@ define([
                 var projection = workerClass.projections[imageIndex];
 
                 var projTime = performance.now();
-                reprojectImage(targetBitmap, requestRectangle, sourceBitmap, sourceRectangle, sourceProjectedRectangle, projection);
+                reprojectImage(targetBitmap, requestRectangle, sourceBitmap, sourceRectangle, sourceProjectedRectangle, projection, workerClass.flipY);
                 workerClass.projTime += performance.now() - projTime;
 
                 return projectEach(requestRectangle, intersectImageIndices, iteration, workerClass, index + 1);

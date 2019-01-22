@@ -28,8 +28,9 @@ define([
      * @param {Rectangle} sourceRectangle Rectangle that the source bitmap covers in geographic coordinates
      * @param {Rectangle} sourceProjectedRectangle Rectangle that the source bitmap covers in its own coordinate system
      * @param {MapProjection} projection Projection for the source image's coordinate system
+     * @param {Boolean} flipY Whether or not the image's Y coordinates should be flipped.
      */
-    function reprojectImage(target, targetRectangle, source, sourceRectangle, sourceProjectedRectangle, projection) {
+    function reprojectImage(target, targetRectangle, source, sourceRectangle, sourceProjectedRectangle, projection, flipY) {
         var targetWidth = target.width;
         var targetHeight = target.height;
 
@@ -69,6 +70,8 @@ define([
             endY = Math.floor((targetRectangle.north - sourceRectangle.south) / latitudeStep);
         }
 
+        var computeTexcoord = flipY ? computeTexcoordFlip : computeTexcoordNoFlip;
+
         for (var y = startY; y < endY; y++) {
             for (var x = startX; x < endX; x++) {
                 cartographic.longitude = (x + 0.5) * longitudeStep + west;
@@ -85,14 +88,23 @@ define([
                     continue;
                 }
 
-                sourceTexcoord.x = (projected.x - projectedWidthOrigin) * inverseProjectedWidth;
-                sourceTexcoord.y = 1.0 - (projected.y - projectedHeightOrigin) * inverseProjectedHeight;
+                computeTexcoord(sourceTexcoord, projected, projectedWidthOrigin, projectedHeightOrigin, inverseProjectedWidth, inverseProjectedHeight);
 
                 source.texture2D(sourceTexcoord, color);
                 target.writePixel(targetPixcoord, color);
             }
         }
         return target;
+    }
+
+    function computeTexcoordFlip(result, projected, projectedWidthOrigin, projectedHeightOrigin, inverseProjectedWidth, inverseProjectedHeight) {
+        result.x = (projected.x - projectedWidthOrigin) * inverseProjectedWidth;
+        result.y = 1.0 - (projected.y - projectedHeightOrigin) * inverseProjectedHeight;
+    }
+
+    function computeTexcoordNoFlip(result, projected, projectedWidthOrigin, projectedHeightOrigin, inverseProjectedWidth, inverseProjectedHeight) {
+        result.x = (projected.x - projectedWidthOrigin) * inverseProjectedWidth;
+        result.y = (projected.y - projectedHeightOrigin) * inverseProjectedHeight;
     }
 
     return reprojectImage;
