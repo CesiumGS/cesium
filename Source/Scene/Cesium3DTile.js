@@ -1269,16 +1269,12 @@ define([
      * Takes a value and maps it down to a 0-1 value given a min and max
      */
     function normalizeValue(value, min, max) {
-        if (max === min) {
-            return 0;
-        }
-
         // Shift min max window to 0
         var shiftedMax = max - min;
         var shiftedValue = value - min;
 
         // Map to [0..1]
-        return (CesiumMath.fromSNorm(shiftedValue, shiftedMax) + 1) * 0.5;
+        return CesiumMath.fromNorm(shiftedValue, shiftedMax);
     }
 
     /**
