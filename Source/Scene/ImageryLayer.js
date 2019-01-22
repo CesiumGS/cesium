@@ -990,6 +990,7 @@ define([
         var imageryProvider = this._imageryProvider;
         var projectedImages = imagery.projectedImages;
         var projectedImagesLength = projectedImages.length;
+        var i;
 
         // If this imagery provider has a discard policy, use it to check if the
         // images should be discarded.
@@ -1003,10 +1004,13 @@ define([
                     return;
                 }
 
-                // Mark discarded imagery tiles invalid.  Parent imagery will be used instead.
-                if (discardPolicy.shouldDiscardImage(projectedImages[0])) {
-                    imagery.state = ImageryState.INVALID;
-                    return;
+                // If any imagery tiles are invalid, mark the generated imagery tile as invalid.
+                // Parent imagery will be used instead.
+                for (i = 0; i < projectedImagesLength; i++) {
+                    if (discardPolicy.shouldDiscardImage(projectedImages[i])) {
+                        imagery.state = ImageryState.INVALID;
+                        return;
+                    }
                 }
             }
         }
@@ -1023,7 +1027,7 @@ define([
             magnificationFilter : this.magnificationFilter
         });
 
-        for (var i = 0; i < projectedImagesLength; i++) {
+        for (i = 0; i < projectedImagesLength; i++) {
             var image = projectedImages[i];
 
             var texture;

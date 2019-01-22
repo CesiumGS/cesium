@@ -81,7 +81,7 @@ defineSuite([
         return this.shouldDiscard;
     };
 
-    it('discards tiles when the ImageryProviders discard policy says to do so', function() {
+    it('discards tiles when the ImageryProvider\'s discard policy says to do so', function() {
         Resource._Implementations.createImage = function(url, crossOrigin, deferred) {
             Resource._DefaultImplementations.createImage('Data/Images/Red16x16.png', crossOrigin, deferred);
         };
@@ -113,6 +113,41 @@ defineSuite([
                 return imagery.state === ImageryState.RECEIVED;
             }).then(function() {
                 layer._createTexture(scene.context, imagery);
+                expect(imagery.state).toEqual(ImageryState.INVALID);
+                imagery.releaseReference();
+            });
+        });
+    });
+
+    it('discards tiles generated from images in arbitrary projections when the ImageryProvider\'s discard policy says to do so', function() {
+        var epsg3031wkt = '+proj=stere +lat_0=-90 +lat_ts=-71 +lon_0=0 +k=1 +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=m +no_defs';
+        var epsg3031Bounds = Rectangle.fromDegrees(-180.0000, -90.0000, 180.0000, -60.0000);
+        var epsg3031mapProjection = new Proj4Projection(epsg3031wkt, 1.0, epsg3031Bounds);
+
+        var discardPolicy = new CustomDiscardPolicy();
+
+        var provider = createTileMapServiceImageryProvider({
+            url : 'Data/TMS/LIMAportion',
+            mapProjection : epsg3031mapProjection,
+            tileDiscardPolicy : discardPolicy
+        });
+        var layer = new ImageryLayer(provider);
+
+        return pollToPromise(function() {
+            return provider.ready;
+        }).then(function() {
+            discardPolicy.shouldDiscard = true;
+
+            var imagery = new Imagery(layer, 0, 0, 0);
+            imagery.addReference();
+            imagery.projectedRectangles[0] = epsg3031Bounds;
+            layer._requestProjectedImages(imagery, [0, 0], 0, 0);
+            RequestScheduler.update();
+
+            return pollToPromise(function() {
+                return imagery.state === ImageryState.RECEIVED;
+            }).then(function() {
+                layer._createMultipleTextures(scene.context, imagery);
                 expect(imagery.state).toEqual(ImageryState.INVALID);
                 imagery.releaseReference();
             });
