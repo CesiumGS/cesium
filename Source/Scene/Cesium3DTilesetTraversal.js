@@ -69,9 +69,11 @@ define([
         var cameraChanges = camera.cameraChanges;
         // if (defined(cameraChanges.positionAmount)) {
         if (defined(cameraChanges)) {
-            var positionDelta = new Cartesian3(camera.positionWC - cameraChanges.oldPosition);
+            // var positionDelta = new Cartesian3(camera.positionWC - cameraChanges.oldPosition);
+            var positionDelta = new Cartesian3(camera.position - cameraChanges.oldPosition);
             cameraChanges.positionAmount = Cartesian3.dot(positionDelta, positionDelta);
-            cameraChanges.oldPosition = Cartesian3.clone(camera.positionWC, cameraChanges.oldPosition);
+            // cameraChanges.oldPosition = Cartesian3.clone(camera.positionWC, cameraChanges.oldPosition);
+            cameraChanges.oldPosition = Cartesian3.clone(camera.position, cameraChanges.oldPosition);
             cameraChanges.directionAmount = 0.5 * (-Cartesian3.dot(camera.directionWC, cameraChanges.oldDirection) + 1.0);
             cameraChanges.oldDirection = Cartesian3.clone(camera.directionWC, cameraChanges.oldDirection);
         } else {
@@ -85,18 +87,19 @@ define([
             cameraChanges = camera.cameraChanges;
 
             cameraChanges.positionAmount = 0;
-            cameraChanges.oldPosition = Cartesian3.clone(camera.positionWC, cameraChanges.oldPosition);
+            // cameraChanges.oldPosition = Cartesian3.clone(camera.positionWC, cameraChanges.oldPosition);
+            cameraChanges.oldPosition = Cartesian3.clone(camera.position, cameraChanges.oldPosition);
             cameraChanges.directionAmount = 0;
             cameraChanges.oldDirection = Cartesian3.clone(camera.directionWC, cameraChanges.oldDirection);
             cameraChanges.sseFudge = 0;
         }
 
-        var fudgeAmount = 512;
+        var fudgeAmount = 51200000;
         cameraChanges.sseFudge = cameraChanges.positionAmount > 0 ? fudgeAmount : 0;
         cameraChanges.sseFudge += cameraChanges.directionAmount > 0 ? fudgeAmount : 0; // can lerp on this one since value is normalized [0, 1]
-        // if (cameraChanges.sseFudge > 0) {
-        //     console.log('moving');
-        // }
+        if (cameraChanges.sseFudge > 0) {
+            console.log('moving');
+        }
 
         tileset._selectedTiles.length = 0;
         tileset._selectedTilesToStyle.length = 0;
@@ -484,7 +487,9 @@ define([
         }
         // return tile._screenSpaceError > tileset._maximumScreenSpaceError;
 
-        return tile.contentAvailable ? tile._screenSpaceError > tileset._maximumScreenSpaceError : tile._screenSpaceError > fudgeMaxSSE(tileset, frameState);
+        var fudge = frameState.camera.cameraChanges.sseFudge;
+        var threshold = fudge > 0 && !tile.contentReady ? (tileset._maximumScreenSpaceError + fudge) : tileset._maximumScreenSpaceError;
+        return tile._screenSpaceError > threshold;
     }
 
     function executeTraversal(tileset, root, baseScreenSpaceError, maximumScreenSpaceError, frameState) {
