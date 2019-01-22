@@ -13,6 +13,7 @@ define([
         '../Core/GeographicTilingScheme',
         '../Core/IndexDatatype',
         '../Core/Math',
+        '../Core/oneTimeWarning',
         '../Core/PixelFormat',
         '../Core/Rectangle',
         '../Core/Request',
@@ -59,6 +60,7 @@ define([
         GeographicTilingScheme,
         IndexDatatype,
         CesiumMath,
+        oneTimeWarning,
         PixelFormat,
         Rectangle,
         Request,
@@ -1008,6 +1010,11 @@ define([
                 // Parent imagery will be used instead.
                 for (i = 0; i < projectedImagesLength; i++) {
                     if (discardPolicy.shouldDiscardImage(projectedImages[i])) {
+
+                        //>>includeStart('debug', pragmas.debug);
+                        oneTimeWarning('Discarding images from an imagery tileset in this projection may cause portions of other images to also be discarded.');
+                        //>>includeEnd('debug');
+
                         imagery.state = ImageryState.INVALID;
                         return;
                     }

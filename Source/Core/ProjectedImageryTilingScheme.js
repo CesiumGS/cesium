@@ -27,6 +27,9 @@ define([
      * ProjectedImageryTilingScheme is intended for generating geographic {@link Imagery} tiles that draw from
      * multiple source images.
      *
+     * Geographic tiles are not generated if any of their source images should be discarded according to the
+     * ImageryProvider's {@link TileDiscardPolicy}.
+     *
      * @param {Object} options Object with the following properties:
      * @param {MapProjection} options.mapProjection MapProjection to the imagery's CRS.
      * @param {Rectangle} options.projectedRectangle Rectangle covered by the imagery in its CRS.
