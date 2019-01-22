@@ -222,7 +222,6 @@ define([
 
         this._requestedTilesInFlight = [];
 
-        this._heatmap = new Cesium3DTilesetHeatmap(options.heatmapVariable);
         this._maxPriority = { depth: -Number.MAX_VALUE, distance: -Number.MAX_VALUE };
         this._minPriority = { depth: Number.MAX_VALUE, distance: Number.MAX_VALUE };
         this._heatmap = new Cesium3DTilesetHeatmap(options.debugHeatmapTileVariableName);

@@ -1278,7 +1278,7 @@ define([
         var shiftedValue = value - min;
 
         // Map to [0..1]
-        return CesiumMath.fromSNorm(shiftedValue, shiftedMax) * 2 - 1;
+        return (CesiumMath.fromSNorm(shiftedValue, shiftedMax) + 1) * 0.5;
     }
 
     /**
